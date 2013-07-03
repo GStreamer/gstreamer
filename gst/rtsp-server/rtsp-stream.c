@@ -17,8 +17,9 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 
 #include <gio/gio.h>
 
@@ -297,7 +298,7 @@ gst_rtsp_stream_get_control (GstRTSPStream * stream)
 
   g_mutex_lock (&priv->lock);
   if ((result = g_strdup (priv->control)) == NULL)
-    result = g_strdup_printf ("stream=%d", priv->idx);
+    result = g_strdup_printf ("stream=%u", priv->idx);
   g_mutex_unlock (&priv->lock);
 
   return result;
@@ -323,6 +324,38 @@ gst_rtsp_stream_set_control (GstRTSPStream * stream, const gchar * control)
   g_free (priv->control);
   priv->control = g_strdup (control);
   g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_stream_has_control:
+ * @stream: a #GstRTSPStream
+ * @control: a control string
+ *
+ * Check if @stream has the control string @control.
+ *
+ * Returns: %TRUE is @stream has @control as the control string
+ */
+gboolean
+gst_rtsp_stream_has_control (GstRTSPStream * stream, const gchar * control)
+{
+  GstRTSPStreamPrivate *priv;
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if (priv->control)
+    res = g_strcmp0 (priv->control, control);
+  else {
+    guint streamid;
+    sscanf (control, "stream=%u", &streamid);
+    res = (streamid == priv->idx);
+  }
+  g_mutex_unlock (&priv->lock);
+
+  return res;
 }
 
 /**
@@ -1233,7 +1266,8 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
     GstElement * rtpbin, GstState state)
 {
   GstRTSPStreamPrivate *priv;
-  gint i, idx;
+  gint i;
+  guint idx;
   gchar *name;
   GstPad *pad, *teepad, *queuepad, *selpad;
   GstPadLinkReturn ret;
@@ -1251,7 +1285,7 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
   /* create a session with the same index as the stream */
   idx = priv->idx;
 
-  GST_INFO ("stream %p joining bin as session %d", stream, idx);
+  GST_INFO ("stream %p joining bin as session %u", stream, idx);
 
   if (!alloc_ports (stream))
     goto no_ports;
@@ -1448,12 +1482,12 @@ was_joined:
 no_ports:
   {
     g_mutex_unlock (&priv->lock);
-    GST_WARNING ("failed to allocate ports %d", idx);
+    GST_WARNING ("failed to allocate ports %u", idx);
     return FALSE;
   }
 link_failed:
   {
-    GST_WARNING ("failed to link stream %d", idx);
+    GST_WARNING ("failed to link stream %u", idx);
     gst_object_unref (priv->send_rtp_sink);
     priv->send_rtp_sink = NULL;
     g_mutex_unlock (&priv->lock);
