@@ -31,6 +31,34 @@
 #include <gst/mpegts/mpegts.h>
 
 static const gchar *
+descriptor_name (gint val)
+{
+  GEnumValue *en;
+
+  en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+          (GST_TYPE_MPEG_TS_DESCRIPTOR_TYPE)), val);
+  if (en == NULL)
+    /* Else try with DVB enum types */
+    en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+            (GST_TYPE_MPEG_TS_DVB_DESCRIPTOR_TYPE)), val);
+  if (en == NULL)
+    /* Else try with ATSC enum types */
+    en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+            (GST_TYPE_MPEG_TS_ATSC_DESCRIPTOR_TYPE)), val);
+  if (en == NULL)
+    /* Else try with ISB enum types */
+    en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+            (GST_TYPE_MPEG_TS_ISDB_DESCRIPTOR_TYPE)), val);
+  if (en == NULL)
+    /* Else try with misc enum types */
+    en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+            (GST_TYPE_MPEG_TS_MISC_DESCRIPTOR_TYPE)), val);
+  if (en == NULL)
+    return "UNKNOWN/PRIVATE";
+  return en->value_nick;
+}
+
+static const gchar *
 enum_name (GType instance_type, gint val)
 {
   GEnumValue *en;
@@ -43,9 +71,9 @@ enum_name (GType instance_type, gint val)
 }
 
 static void
-dump_cable_delivery_descriptor (GstMpegTSDescriptor * desc, guint spacing)
+dump_cable_delivery_descriptor (GstMpegTsDescriptor * desc, guint spacing)
 {
-  GstMpegTSCableDeliverySystemDescriptor res;
+  GstMpegTsCableDeliverySystemDescriptor res;
 
   if (gst_mpegts_descriptor_parse_cable_delivery_system (desc, &res)) {
     g_printf ("%*s Cable Delivery Descriptor\n", spacing, "");
@@ -58,16 +86,16 @@ dump_cable_delivery_descriptor (GstMpegTSDescriptor * desc, guint spacing)
 }
 
 static void
-dump_logical_channel_descriptor (GstMpegTSDescriptor * desc, guint spacing)
+dump_logical_channel_descriptor (GstMpegTsDescriptor * desc, guint spacing)
 {
-  GstMpegTSLogicalChannelDescriptor res;
+  GstMpegTsLogicalChannelDescriptor res;
   guint i;
 
   if (gst_mpegts_descriptor_parse_logical_channel (desc, &res)) {
     g_printf ("%*s Logical Channel Descriptor (%d channels)\n", spacing, "",
         res.nb_channels);
     for (i = 0; i < res.nb_channels; i++) {
-      GstMpegTSLogicalChannel *chann = &res.channels[i];
+      GstMpegTsLogicalChannel *chann = &res.channels[i];
       g_printf ("%*s   service_id: 0x%04x, logical channel number:%4d\n",
           spacing, "", chann->service_id, chann->logical_channel_number);
     }
@@ -75,10 +103,10 @@ dump_logical_channel_descriptor (GstMpegTSDescriptor * desc, guint spacing)
 }
 
 static void
-dump_iso_639_language (GstMpegTSDescriptor * desc, guint spacing)
+dump_iso_639_language (GstMpegTsDescriptor * desc, guint spacing)
 {
   guint i;
-  GstMpegTSISO639LanguageDescriptor res;
+  GstMpegTsISO639LanguageDescriptor res;
 
   if (gst_mpegts_descriptor_parse_iso_639_language (desc, &res)) {
     for (i = 0; i < res.nb_language; i++)
@@ -97,11 +125,10 @@ dump_descriptors (GArray * descriptors, guint spacing)
   guint i;
 
   for (i = 0; i < descriptors->len; i++) {
-    GstMpegTSDescriptor *desc =
-        &g_array_index (descriptors, GstMpegTSDescriptor, i);
+    GstMpegTsDescriptor *desc =
+        &g_array_index (descriptors, GstMpegTsDescriptor, i);
     g_printf ("%*s [descriptor 0x%02x (%s)]\n", spacing, "",
-        desc->descriptor_tag, enum_name (GST_TYPE_MPEG_TS_DESCRIPTOR_TYPE,
-            desc->descriptor_tag));
+        desc->descriptor_tag, descriptor_name (desc->descriptor_tag));
     switch (desc->descriptor_tag) {
       case GST_MTS_DESC_DVB_NETWORK_NAME:
       {
@@ -121,11 +148,11 @@ dump_descriptors (GArray * descriptors, guint spacing)
       case GST_MTS_DESC_DVB_SERVICE:
       {
         gchar *service_name, *provider_name;
-        GstMpegTSDVBServiceType service_type;
+        GstMpegTsDVBServiceType service_type;
         if (gst_mpegts_descriptor_parse_dvb_service (desc, &service_type,
                 &service_name, &provider_name)) {
           g_printf ("%*s   Service Descriptor, type:0x%02x (%s)\n", spacing, "",
-              service_type, enum_name (GST_TYPE_MPEG_TSDVB_SERVICE_TYPE,
+              service_type, enum_name (GST_TYPE_MPEG_TS_DVB_SERVICE_TYPE,
                   service_type));
           g_printf ("%*s      service_name  : %s\n", spacing, "", service_name);
           g_printf ("%*s      provider_name : %s\n", spacing, "",
@@ -161,7 +188,7 @@ dump_descriptors (GArray * descriptors, guint spacing)
 }
 
 static void
-dump_pat (GstMpegTSSection * section)
+dump_pat (GstMpegTsSection * section)
 {
   GArray *pat = gst_mpegts_section_get_pat (section);
   guint i, len;
@@ -170,7 +197,7 @@ dump_pat (GstMpegTSSection * section)
   g_printf ("   %d program(s):\n", len);
 
   for (i = 0; i < len; i++) {
-    GstMpegTSPatProgram *patp = &g_array_index (pat, GstMpegTSPatProgram, i);
+    GstMpegTsPatProgram *patp = &g_array_index (pat, GstMpegTsPatProgram, i);
 
     g_print
         ("     program_number:%6d (0x%04x), network_or_program_map_PID:0x%04x\n",
@@ -182,9 +209,9 @@ dump_pat (GstMpegTSSection * section)
 }
 
 static void
-dump_pmt (GstMpegTSSection * section)
+dump_pmt (GstMpegTsSection * section)
 {
-  const GstMpegTSPMT *pmt = gst_mpegts_section_get_pmt (section);
+  const GstMpegTsPMT *pmt = gst_mpegts_section_get_pmt (section);
   guint i, len;
 
   g_printf ("     program_number : 0x%04x\n", section->subtable_extension);
@@ -193,7 +220,7 @@ dump_pmt (GstMpegTSSection * section)
   len = pmt->streams->len;
   g_printf ("     %d Streams:\n", len);
   for (i = 0; i < len; i++) {
-    GstMpegTSPMTStream *stream = g_ptr_array_index (pmt->streams, i);
+    GstMpegTsPMTStream *stream = g_ptr_array_index (pmt->streams, i);
     g_printf ("       pid:0x%04x , stream_type:0x%02x\n", stream->pid,
         stream->stream_type);
     dump_descriptors (stream->descriptors, 9);
@@ -201,9 +228,9 @@ dump_pmt (GstMpegTSSection * section)
 }
 
 static void
-dump_eit (GstMpegTSSection * section)
+dump_eit (GstMpegTsSection * section)
 {
-  const GstMpegTSEIT *eit = gst_mpegts_section_get_eit (section);
+  const GstMpegTsEIT *eit = gst_mpegts_section_get_eit (section);
   guint i, len;
 
   g_assert (eit);
@@ -221,7 +248,7 @@ dump_eit (GstMpegTSSection * section)
   g_printf ("     %d Event(s):\n", len);
   for (i = 0; i < len; i++) {
     gchar *tmp;
-    GstMpegTSEITEvent *event = g_ptr_array_index (eit->events, i);
+    GstMpegTsEITEvent *event = g_ptr_array_index (eit->events, i);
 
     tmp = gst_date_time_to_iso8601_string (event->start_time);
     g_printf ("       event_id:0x%04x, start_time:%s, duration:%"
@@ -237,9 +264,9 @@ dump_eit (GstMpegTSSection * section)
 }
 
 static void
-dump_nit (GstMpegTSSection * section)
+dump_nit (GstMpegTsSection * section)
 {
-  const GstMpegTSNIT *nit = gst_mpegts_section_get_nit (section);
+  const GstMpegTsNIT *nit = gst_mpegts_section_get_nit (section);
   guint i, len;
 
   g_assert (nit);
@@ -251,7 +278,7 @@ dump_nit (GstMpegTSSection * section)
   len = nit->streams->len;
   g_printf ("     %d Streams:\n", len);
   for (i = 0; i < len; i++) {
-    GstMpegTSNITStream *stream = g_ptr_array_index (nit->streams, i);
+    GstMpegTsNITStream *stream = g_ptr_array_index (nit->streams, i);
     g_printf
         ("       transport_stream_id:0x%04x , original_network_id:0x%02x\n",
         stream->transport_stream_id, stream->original_network_id);
@@ -260,9 +287,9 @@ dump_nit (GstMpegTSSection * section)
 }
 
 static void
-dump_sdt (GstMpegTSSection * section)
+dump_sdt (GstMpegTsSection * section)
 {
-  const GstMpegTSSDT *sdt = gst_mpegts_section_get_sdt (section);
+  const GstMpegTsSDT *sdt = gst_mpegts_section_get_sdt (section);
   guint i, len;
 
   g_assert (sdt);
@@ -273,7 +300,7 @@ dump_sdt (GstMpegTSSection * section)
   len = sdt->services->len;
   g_printf ("     %d Services:\n", len);
   for (i = 0; i < len; i++) {
-    GstMpegTSSDTService *service = g_ptr_array_index (sdt->services, i);
+    GstMpegTsSDTService *service = g_ptr_array_index (sdt->services, i);
     g_print
         ("       service_id:0x%04x, EIT_schedule_flag:%d, EIT_present_following_flag:%d\n",
         service->service_id, service->EIT_schedule_flag,
@@ -289,7 +316,7 @@ dump_sdt (GstMpegTSSection * section)
 }
 
 static void
-dump_tdt (GstMpegTSSection * section)
+dump_tdt (GstMpegTsSection * section)
 {
   GstDateTime *date = gst_mpegts_section_get_tdt (section);
   gchar *str = gst_date_time_to_iso8601_string (date);
@@ -300,7 +327,7 @@ dump_tdt (GstMpegTSSection * section)
 }
 
 static void
-dump_section (GstMpegTSSection * section)
+dump_section (GstMpegTsSection * section)
 {
   switch (GST_MPEGTS_SECTION_TYPE (section)) {
     case GST_MPEGTS_SECTION_PAT:
@@ -339,7 +366,7 @@ _on_bus_message (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
       break;
     case GST_MESSAGE_ELEMENT:
     {
-      GstMpegTSSection *section;
+      GstMpegTsSection *section;
       if ((section = gst_message_parse_mpegts_section (message))) {
         g_print
             ("Got section: PID:0x%04x type:%s (table_id 0x%02x (%s)) at offset %"
@@ -391,8 +418,12 @@ main (int argc, gchar ** argv)
   g_type_class_ref (GST_TYPE_MPEG_TS_SECTION_TABLE_ID);
   g_type_class_ref (GST_TYPE_MPEG_TS_RUNNING_STATUS);
   g_type_class_ref (GST_TYPE_MPEG_TS_DESCRIPTOR_TYPE);
+  g_type_class_ref (GST_TYPE_MPEG_TS_DVB_DESCRIPTOR_TYPE);
+  g_type_class_ref (GST_TYPE_MPEG_TS_ATSC_DESCRIPTOR_TYPE);
+  g_type_class_ref (GST_TYPE_MPEG_TS_ISDB_DESCRIPTOR_TYPE);
+  g_type_class_ref (GST_TYPE_MPEG_TS_MISC_DESCRIPTOR_TYPE);
   g_type_class_ref (GST_TYPE_MPEG_TS_ISO639_AUDIO_TYPE);
-  g_type_class_ref (GST_TYPE_MPEG_TSDVB_SERVICE_TYPE);
+  g_type_class_ref (GST_TYPE_MPEG_TS_DVB_SERVICE_TYPE);
 
   mainloop = g_main_loop_new (NULL, FALSE);
 
