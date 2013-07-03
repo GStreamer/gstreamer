@@ -432,10 +432,9 @@ gst_dash_demux_change_state (GstElement * element, GstStateChange transition)
 
 static gboolean
 _check_queue_full (GstDataQueue * q, guint visible, guint bytes, guint64 time,
-    GstDashDemuxStream * stream)
+    GstDashDemux * demux)
 {
-  /* TODO add limits */
-  return FALSE;
+  return time <= demux->max_buffering_time;
 }
 
 static void
@@ -703,7 +702,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     caps = gst_dash_demux_get_input_caps (demux, active_stream);
     stream->queue =
         gst_data_queue_new ((GstDataQueueCheckFullFunction) _check_queue_full,
-        NULL, NULL, stream);
+        NULL, NULL, demux);
 
     stream->index = i;
     stream->input_caps = caps;
