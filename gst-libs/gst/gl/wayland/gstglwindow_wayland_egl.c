@@ -194,9 +194,6 @@ create_surface (GstGLWindowWaylandEGL * window_egl)
 
   wl_shell_surface_set_toplevel (window_egl->window.shell_surface);
 
-  wl_shell_surface_set_fullscreen (window_egl->window.shell_surface,
-      WL_SHELL_SURFACE_FULLSCREEN_METHOD_SCALE, 0, NULL);
-
   return TRUE;
 }
 
