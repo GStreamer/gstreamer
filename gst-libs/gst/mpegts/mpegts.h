@@ -25,6 +25,7 @@
 #define _GST_MPEGTS_H_
 
 #include <gst/mpegts/gstmpegtsdescriptor.h>
+#include <gst/mpegts/gst-dvb-descriptor.h>
 #include <gst/mpegts/gstmpegtssection.h>
 #include <gst/mpegts/gst-atsc-section.h>
 #include <gst/mpegts/gst-dvb-section.h>

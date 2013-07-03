@@ -3,6 +3,7 @@ lib_LTLIBRARIES = libgstmpegts-@GST_API_VERSION@.la
 libgstmpegts_@GST_API_VERSION@_la_SOURCES = \
 	gstmpegtssection.c \
 	gstmpegtsdescriptor.c \
+	gst-dvb-descriptor.c \
 	gst-dvb-section.c
 
 libgstmpegts_@GST_API_VERSION@includedir = \
@@ -15,6 +16,7 @@ libgstmpegts_@GST_API_VERSION@include_HEADERS = \
 	gst-atsc-section.h			\
 	gst-dvb-section.h			\
 	gstmpegtsdescriptor.h			\
+	gst-dvb-descriptor.h			\
 	mpegts.h
 
 
@@ -35,7 +37,9 @@ libgstmpegts_@GST_API_VERSION@_la_LDFLAGS = \
 glib_enum_headers=gstmpegtssection.h	\
 	gstmpegtsdescriptor.h		\
 	gst-atsc-section.h		\
-	gst-dvb-section.h
+	gst-dvb-section.h		\
+	gst-dvb-descriptor.h
+
 glib_enum_define=GST_MPEGTS
 glib_gen_prefix=gst_mpegts
 glib_gen_basename=gstmpegts
