@@ -39,7 +39,8 @@ struct _GstUriDownloaderPrivate
   GstPad *pad;
   GTimeVal *timeout;
   GstFragment *download;
-  GMutex lock;
+  GMutex download_lock;         /* used to restrict to one download only */
+
   GCond cond;
   gboolean cancelled;
 };
@@ -99,7 +100,7 @@ gst_uri_downloader_init (GstUriDownloader * downloader)
   /* Create a bus to handle error and warning message from the source element */
   downloader->priv->bus = gst_bus_new ();
 
-  g_mutex_init (&downloader->priv->lock);
+  g_mutex_init (&downloader->priv->download_lock);
   g_cond_init (&downloader->priv->cond);
 }
 
@@ -136,7 +137,7 @@ gst_uri_downloader_finalize (GObject * object)
 {
   GstUriDownloader *downloader = GST_URI_DOWNLOADER (object);
 
-  g_mutex_clear (&downloader->priv->lock);
+  g_mutex_clear (&downloader->priv->download_lock);
   g_cond_clear (&downloader->priv->cond);
 
   G_OBJECT_CLASS (gst_uri_downloader_parent_class)->finalize (object);
@@ -166,14 +167,10 @@ gst_uri_downloader_sink_event (GstPad * pad, GstObject * parent,
         downloader->priv->download->completed = TRUE;
         downloader->priv->download->download_stop_time =
             gst_util_get_timestamp ();
-        GST_OBJECT_UNLOCK (downloader);
         GST_DEBUG_OBJECT (downloader, "Signaling chain funtion");
-        g_mutex_lock (&downloader->priv->lock);
         g_cond_signal (&downloader->priv->cond);
-        g_mutex_unlock (&downloader->priv->lock);
-      } else {
-        GST_OBJECT_UNLOCK (downloader);
       }
+      GST_OBJECT_UNLOCK (downloader);
       gst_event_unref (event);
       break;
     }
@@ -267,21 +264,15 @@ gst_uri_downloader_stop (GstUriDownloader * downloader)
   urisrc = downloader->priv->urisrc;
   downloader->priv->urisrc = NULL;
 
-  /* unlock so it doesn't block on chain function while changing state */
-  g_mutex_unlock (&downloader->priv->lock);
-
   GST_DEBUG_OBJECT (downloader, "Stopping source element %s",
       GST_ELEMENT_NAME (urisrc));
 
   /* set the element state to NULL */
+  gst_bus_set_flushing (downloader->priv->bus, TRUE);
   gst_element_set_state (urisrc, GST_STATE_NULL);
   gst_element_get_state (urisrc, NULL, NULL, GST_CLOCK_TIME_NONE);
   gst_element_set_bus (urisrc, NULL);
   gst_object_unref (urisrc);
-
-  /* caller expects the mutex to be locked */
-  g_mutex_lock (&downloader->priv->lock);
-  gst_bus_set_flushing (downloader->priv->bus, TRUE);
 }
 
 void
@@ -303,21 +294,18 @@ gst_uri_downloader_cancel (GstUriDownloader * downloader)
     g_object_unref (downloader->priv->download);
     downloader->priv->download = NULL;
     downloader->priv->cancelled = TRUE;
-    GST_OBJECT_UNLOCK (downloader);
     GST_DEBUG_OBJECT (downloader, "Signaling chain funtion");
-    g_mutex_lock (&downloader->priv->lock);
     g_cond_signal (&downloader->priv->cond);
-    g_mutex_unlock (&downloader->priv->lock);
   } else {
     gboolean cancelled;
 
     cancelled = downloader->priv->cancelled;
     downloader->priv->cancelled = TRUE;
-    GST_OBJECT_UNLOCK (downloader);
     if (cancelled)
       GST_DEBUG_OBJECT (downloader,
           "Trying to cancell a download that was alredy cancelled");
   }
+  GST_OBJECT_UNLOCK (downloader);
 }
 
 static gboolean
@@ -390,8 +378,9 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
   GstStateChangeReturn ret;
   GstFragment *download = NULL;
 
-  g_mutex_lock (&downloader->priv->lock);
+  g_mutex_lock (&downloader->priv->download_lock);
 
+  GST_OBJECT_LOCK (downloader);
   if (downloader->priv->cancelled) {
     goto quit;
   }
@@ -402,8 +391,15 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
   }
 
   gst_bus_set_flushing (downloader->priv->bus, FALSE);
+  GST_OBJECT_UNLOCK (downloader);
   ret = gst_element_set_state (downloader->priv->urisrc, GST_STATE_READY);
+  GST_OBJECT_LOCK (downloader);
   if (ret == GST_STATE_CHANGE_FAILURE) {
+    goto quit;
+  }
+
+  /* might have been cancelled because of failures in state change */
+  if (downloader->priv->cancelled) {
     goto quit;
   }
 
@@ -413,10 +409,17 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
   }
 
   downloader->priv->download = gst_fragment_new ();
+  GST_OBJECT_UNLOCK (downloader);
   ret = gst_element_set_state (downloader->priv->urisrc, GST_STATE_PLAYING);
+  GST_OBJECT_LOCK (downloader);
   if (ret == GST_STATE_CHANGE_FAILURE) {
     g_object_unref (downloader->priv->download);
     downloader->priv->download = NULL;
+    goto quit;
+  }
+
+  /* might have been cancelled because of failures in state change */
+  if (downloader->priv->cancelled) {
     goto quit;
   }
 
@@ -426,7 +429,7 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
    *   - the download was canceled
    */
   GST_DEBUG_OBJECT (downloader, "Waiting to fetch the URI %s", uri);
-  g_cond_wait (&downloader->priv->cond, &downloader->priv->lock);
+  g_cond_wait (&downloader->priv->cond, GST_OBJECT_GET_LOCK (downloader));
 
   if (downloader->priv->cancelled) {
     if (downloader->priv->download) {
@@ -436,10 +439,8 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
     goto quit;
   }
 
-  GST_OBJECT_LOCK (downloader);
   download = downloader->priv->download;
   downloader->priv->download = NULL;
-  GST_OBJECT_UNLOCK (downloader);
 
   if (download != NULL)
     GST_INFO_OBJECT (downloader, "URI fetched successfully");
@@ -449,7 +450,8 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
 quit:
   {
     gst_uri_downloader_stop (downloader);
-    g_mutex_unlock (&downloader->priv->lock);
+    GST_OBJECT_UNLOCK (downloader);
+    g_mutex_unlock (&downloader->priv->download_lock);
     return download;
   }
 }
