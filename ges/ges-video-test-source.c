@@ -61,19 +61,20 @@ static GstElement *
 ges_video_test_source_create_source (GESTrackElement * self)
 {
   gint pattern;
-  GstElement *ret;
-  gchar *bin_desc;
+  GstElement *testsrc, *capsfilter;
+  const gchar *props[] = { "pattern", NULL };
 
-
+  testsrc = gst_element_factory_make ("videotestsrc", NULL);
+  capsfilter = gst_element_factory_make ("capsfilter", NULL);
   pattern = ((GESVideoTestSource *) self)->priv->pattern;
-  bin_desc =
-      g_strdup_printf
-      ("videotestsrc pattern=%i name=testsrc ! capsfilter caps=video/x-raw",
-      pattern);
-  ret = gst_parse_bin_from_description (bin_desc, TRUE, NULL);
-  g_free (bin_desc);
 
-  return ret;
+  g_object_set (testsrc, "pattern", pattern, NULL);
+  g_object_set (capsfilter, "caps", gst_caps_new_empty_simple ("video/x-raw"),
+      NULL);
+
+  ges_track_element_add_children_props (self, testsrc, NULL, NULL, props);
+
+  return create_bin ("videotestsrc", testsrc, capsfilter, NULL);
 }
 
 /**
@@ -92,9 +93,14 @@ ges_video_test_source_set_pattern (GESVideoTestSource
 
   self->priv->pattern = pattern;
 
-  if (element)
-    gst_child_proxy_set (GST_CHILD_PROXY (element), "testsrc::pattern",
-        (gint) pattern, NULL);
+  if (element) {
+    GValue val = { 0 };
+
+    g_value_init (&val, GES_VIDEO_TEST_PATTERN_TYPE);
+    g_value_set_enum (&val, pattern);
+    ges_track_element_set_child_property (GES_TRACK_ELEMENT (self), "pattern",
+        &val);
+  }
 }
 
 /**
@@ -108,7 +114,11 @@ ges_video_test_source_set_pattern (GESVideoTestSource
 GESVideoTestPattern
 ges_video_test_source_get_pattern (GESVideoTestSource * source)
 {
-  return source->priv->pattern;
+  GValue val = { 0 };
+
+  ges_track_element_get_child_property (GES_TRACK_ELEMENT (source), "pattern",
+      &val);
+  return g_value_get_enum (&val);
 }
 
 /**

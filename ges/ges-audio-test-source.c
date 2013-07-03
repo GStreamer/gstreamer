@@ -102,11 +102,14 @@ ges_audio_test_source_create_source (GESTrackElement * trksrc)
 {
   GESAudioTestSource *self;
   GstElement *ret;
+  const gchar *props[] = { "volume", "freq", NULL };
 
   self = (GESAudioTestSource *) trksrc;
   ret = gst_element_factory_make ("audiotestsrc", NULL);
   g_object_set (ret, "volume", (gdouble) self->priv->volume, "freq", (gdouble)
       self->priv->freq, NULL);
+
+  ges_track_element_add_children_props (trksrc, ret, NULL, NULL, props);
 
   return ret;
 }
@@ -125,8 +128,14 @@ ges_audio_test_source_set_freq (GESAudioTestSource * self, gdouble freq)
       ges_track_element_get_element (GES_TRACK_ELEMENT (self));
 
   self->priv->freq = freq;
-  if (element)
-    g_object_set (element, "freq", (gdouble) freq, NULL);
+  if (element) {
+    GValue val = { 0 };
+
+    g_value_init (&val, G_TYPE_DOUBLE);
+    g_value_set_double (&val, freq);
+    ges_track_element_set_child_property (GES_TRACK_ELEMENT (self), "freq",
+        &val);
+  }
 }
 
 /**
@@ -143,8 +152,14 @@ ges_audio_test_source_set_volume (GESAudioTestSource * self, gdouble volume)
       ges_track_element_get_element (GES_TRACK_ELEMENT (self));
 
   self->priv->volume = volume;
-  if (element)
-    g_object_set (element, "volume", (gdouble) volume, NULL);
+  if (element) {
+    GValue val = { 0 };
+
+    g_value_init (&val, G_TYPE_DOUBLE);
+    g_value_set_double (&val, volume);
+    ges_track_element_set_child_property (GES_TRACK_ELEMENT (self), "volume",
+        &val);
+  }
 }
 
 /**
@@ -158,7 +173,10 @@ ges_audio_test_source_set_volume (GESAudioTestSource * self, gdouble volume)
 double
 ges_audio_test_source_get_freq (GESAudioTestSource * self)
 {
-  return self->priv->freq;
+  GValue val = { 0 };
+
+  ges_track_element_get_child_property (GES_TRACK_ELEMENT (self), "freq", &val);
+  return g_value_get_double (&val);
 }
 
 /**
@@ -172,7 +190,11 @@ ges_audio_test_source_get_freq (GESAudioTestSource * self)
 double
 ges_audio_test_source_get_volume (GESAudioTestSource * self)
 {
-  return self->priv->volume;
+  GValue val = { 0 };
+
+  ges_track_element_get_child_property (GES_TRACK_ELEMENT (self), "volume",
+      &val);
+  return g_value_get_double (&val);
 }
 
 /**
