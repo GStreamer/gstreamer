@@ -27,5 +27,34 @@
 	<!-- Element is not abstract but should not be instantiable from managed -->
 	<remove-attr path="/api/namespace/object[@cname='GstElement']" name="abstract" />
 	<attr path="/api/namespace/object[@cname='GstElement']" name="defaultconstructoraccess" >protected</attr>
+	<!-- API improvements -->
+	<add-node path="/api/namespace[@name='Gst']"><class name="Parse" cname="GstParse" disable_void_ctor="1"></class></add-node>
+	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_parse')]">/api/namespace/class[@name='Parse']</move-node>
+	
+	<remove-node path="/api/namespace/object[@name='Global']//method[@cname = 'gst_caps_from_string']" />
+	<move-node path="/api/namespace/object[@name='Global']//method[contains(@cname, 'caps')]">/api/namespace/boxed[@cname='GstCaps']</move-node>
+	
+	<add-node path="/api/namespace[@name='Gst']"><class name="Debug" cname="GstDebug" disable_void_ctor="1"></class></add-node>
+	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_debug')]">/api/namespace/class[@cname='GstDebug']</move-node>
+	
+	<add-node path="/api/namespace[@name='Gst']"><class name="Application" cname="GstApplication" disable_void_ctor="1"></class></add-node>
+	<move-node path="/api/namespace/object[@name='Global']//method[contains(@cname, 'init') or starts-with(@cname, 'gst_version')]">/api/namespace/class[@cname='GstApplication']</move-node>
+	
+	<add-node path="/api/namespace[@name='Gst']"><class name="Value" cname="GstValue" disable_void_ctor="1"></class></add-node>
+	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_value')]">/api/namespace/class[@cname='GstValue']</move-node>
+	
+	<add-node path="/api/namespace[@name='Gst']"><class name="Tag" cname="GstTag" disable_void_ctor="1"></class></add-node>
+	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_tag')]">/api/namespace/class[@cname='GstTag']</move-node>
+	
+	<add-node path="/api/namespace[@name='Gst']"><class name="Util" cname="GstUtil" disable_void_ctor="1"></class></add-node>
+	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_format') or starts-with(@cname, 'gst_uri') or starts-with(@cname, 'gst_util') or @cname='gst_filename_to_uri']">/api/namespace/class[@cname='GstUtil']</move-node>
+	
+	<move-node path="/api/namespace/object[@name='Global']//method[contains(@cname, 'registry')]">/api/namespace/object[@cname='GstRegistry']</move-node>
+	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_poll')]">/api/namespace/struct[@cname='GstPoll']</move-node>
+	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_message')]">/api/namespace/boxed[@cname='GstMessage']</move-node>
+	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_event')]">/api/namespace/boxed[@cname='GstEvent']</move-node>
+	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_query')]">/api/namespace/boxed[@cname='GstQuery']</move-node>
+	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_pad')]">/api/namespace/object[@cname='GstPad']</move-node>
+	<attr path="/api/namespace/object[@name='Global']" name ="hidden">true</attr>
 </metadata>
 
