@@ -3566,7 +3566,8 @@ gst_mpd_client_get_segment_index_at_time (GstMpdClient * client,
 
   /* TODO: Assumes all fragments are roughly the same duration */
   seg_duration = gst_mpd_client_get_next_fragment_duration (client, stream);
-  g_assert (seg_duration > 0);
+  if (seg_duration == 0)
+    return -1;
   return diff / seg_duration;
 }
 
