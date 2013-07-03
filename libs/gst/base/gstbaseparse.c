@@ -4130,6 +4130,7 @@ gst_base_parse_handle_seek (GstBaseParse * parse, GstEvent * event)
       parse->priv->seen_keyframe = FALSE;
       parse->priv->discont = TRUE;
       parse->priv->next_dts = start_ts;
+      parse->priv->next_pts = GST_CLOCK_TIME_NONE;
       parse->priv->last_dts = GST_CLOCK_TIME_NONE;
       parse->priv->last_pts = GST_CLOCK_TIME_NONE;
       parse->priv->sync_offset = seekpos;
