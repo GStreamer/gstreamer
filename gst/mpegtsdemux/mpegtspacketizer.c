@@ -482,12 +482,12 @@ mpegts_packetizer_parse_packet (MpegTSPacketizer2 * packetizer,
   return PACKET_OK;
 }
 
-static GstMpegTSSection *
+static GstMpegTsSection *
 mpegts_packetizer_parse_section_header (MpegTSPacketizer2 * packetizer,
     MpegTSPacketizerStream * stream)
 {
   MpegTSPacketizerStreamSubtable *subtable;
-  GstMpegTSSection *res;
+  GstMpegTsSection *res;
 
   subtable =
       find_subtable (stream->subtables, stream->table_id,
@@ -838,18 +838,18 @@ mpegts_packetizer_clear_packet (MpegTSPacketizer2 * packetizer,
  * * The section applies now (current_next_indicator)
  * * The section is an update or was never seen
  *
- * The section should be a new GstMpegTSSection:
+ * The section should be a new GstMpegTsSection:
  * * properly initialized
  * * With pid, table_id AND section_type set (move logic from mpegtsbase)
  * * With data copied into it (yes, minor overhead)
  *
  * In all other cases it should just return NULL
  * */
-GstMpegTSSection *
+GstMpegTsSection *
 mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
     MpegTSPacketizerPacket * packet)
 {
-  GstMpegTSSection *res = NULL;
+  GstMpegTsSection *res = NULL;
   MpegTSPacketizerStream *stream;
   gboolean long_packet;
   guint8 pointer, table_id;

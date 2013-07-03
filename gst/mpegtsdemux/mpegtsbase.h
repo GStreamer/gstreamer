@@ -59,7 +59,7 @@ struct _MpegTSBaseStream
 {
   guint16 pid;
   guint8 stream_type;
-  GstMpegTSPMTStream *stream;
+  GstMpegTsPMTStream *stream;
 };
 
 struct _MpegTSBaseProgram
@@ -67,8 +67,8 @@ struct _MpegTSBaseProgram
   gint program_number;
   guint16 pmt_pid;
   guint16 pcr_pid;
-  GstMpegTSSection *section;
-  const GstMpegTSPMT *pmt;
+  GstMpegTsSection *section;
+  const GstMpegTsPMT *pmt;
   MpegTSBaseStream **streams;
   GList *stream_list;
   gint patcount;
@@ -146,7 +146,7 @@ struct _MpegTSBaseClass {
 
   /* Virtual methods */
   void (*reset) (MpegTSBase *base);
-  GstFlowReturn (*push) (MpegTSBase *base, MpegTSPacketizerPacket *packet, GstMpegTSSection * section);
+  GstFlowReturn (*push) (MpegTSBase *base, MpegTSPacketizerPacket *packet, GstMpegTsSection * section);
   /* takes ownership of @event */
   gboolean (*push_event) (MpegTSBase *base, GstEvent * event);
 

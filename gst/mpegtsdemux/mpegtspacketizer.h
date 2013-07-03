@@ -181,7 +181,7 @@ G_GNUC_INTERNAL void mpegts_packetizer_clear_packet (MpegTSPacketizer2 *packetiz
 G_GNUC_INTERNAL void mpegts_packetizer_remove_stream(MpegTSPacketizer2 *packetizer,
   gint16 pid);
 
-G_GNUC_INTERNAL GstMpegTSSection *mpegts_packetizer_push_section (MpegTSPacketizer2 *packetzer,
+G_GNUC_INTERNAL GstMpegTsSection *mpegts_packetizer_push_section (MpegTSPacketizer2 *packetzer,
   MpegTSPacketizerPacket *packet);
 
 /* Only valid if calculate_offset is TRUE */

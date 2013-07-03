@@ -227,7 +227,7 @@ gst_ts_demux_program_stopped (MpegTSBase * base, MpegTSBaseProgram * program);
 static void gst_ts_demux_reset (MpegTSBase * base);
 static GstFlowReturn
 gst_ts_demux_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
-    GstMpegTSSection * section);
+    GstMpegTsSection * section);
 static void gst_ts_demux_flush (MpegTSBase * base, gboolean hard);
 static void
 gst_ts_demux_stream_added (MpegTSBase * base, MpegTSBaseStream * stream,
@@ -1545,7 +1545,7 @@ beach:
 
 static GstFlowReturn
 gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
-    MpegTSPacketizerPacket * packet, GstMpegTSSection * section)
+    MpegTSPacketizerPacket * packet, GstMpegTsSection * section)
 {
   GstFlowReturn res = GST_FLOW_OK;
 
@@ -1598,7 +1598,7 @@ gst_ts_demux_flush (MpegTSBase * base, gboolean hard)
 
 static GstFlowReturn
 gst_ts_demux_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
-    GstMpegTSSection * section)
+    GstMpegTsSection * section)
 {
   GstTSDemux *demux = GST_TS_DEMUX_CAST (base);
   TSDemuxStream *stream = NULL;
