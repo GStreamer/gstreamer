@@ -28,6 +28,7 @@
 #include <EGL/egl.h>
 
 #include "gstglwindow.h"
+#include "gstglegl.h"
 
 G_BEGIN_DECLS
 
@@ -74,10 +75,7 @@ struct _GstGLWindowWaylandEGL {
   /*< private >*/
   GstGLWindow parent;
   
-  EGLContext egl_context;
-  EGLDisplay egl_display;
-  EGLSurface egl_surface;
-  EGLConfig  egl_config;
+  GstGLEGL *egl;
 
   struct display display;
   struct window  window;
@@ -85,8 +83,6 @@ struct _GstGLWindowWaylandEGL {
   GSource *wl_source;
   GMainContext *main_context;
   GMainLoop *loop;
-
-  GstGLAPI gl_api;
 
   gpointer _reserved[GST_PADDING];
 };

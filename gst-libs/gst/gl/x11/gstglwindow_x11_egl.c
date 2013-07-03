@@ -108,50 +108,10 @@ gst_gl_window_x11_egl_choose_format (GstGLWindowX11 * window_x11,
 }
 
 static gboolean
-_gst_gl_window_x11_egl_choose_config (GstGLWindowX11EGL * window_egl,
-    GError ** error)
-{
-  EGLint numConfigs;
-  gint i = 0;
-  EGLint config_attrib[20];
-
-  config_attrib[i++] = EGL_SURFACE_TYPE;
-  config_attrib[i++] = EGL_WINDOW_BIT;
-  config_attrib[i++] = EGL_RENDERABLE_TYPE;
-  if (window_egl->gl_api & GST_GL_API_GLES2)
-    config_attrib[i++] = EGL_OPENGL_ES2_BIT;
-  else
-    config_attrib[i++] = EGL_OPENGL_BIT;
-  config_attrib[i++] = EGL_DEPTH_SIZE;
-  config_attrib[i++] = 16;
-  config_attrib[i++] = EGL_NONE;
-
-  if (eglChooseConfig (window_egl->egl_display, config_attrib,
-          &window_egl->egl_config, 1, &numConfigs))
-    GST_INFO ("config set: %ld, %ld", (gulong) window_egl->egl_config,
-        (gulong) numConfigs);
-  else {
-    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
-        "Failed to set window configuration: %s", X11EGLErrorString ());
-    goto failure;
-  }
-
-  return TRUE;
-
-failure:
-  return FALSE;
-}
-
-static gboolean
 gst_gl_window_x11_egl_create_context (GstGLWindowX11 * window_x11,
     GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
 {
   GstGLWindowX11EGL *window_egl;
-
-  gint i = 0;
-  EGLint context_attrib[3];
-  EGLint majorVersion;
-  EGLint minorVersion;
 
   if ((gl_api & GST_GL_API_OPENGL) == GST_GL_API_NONE &&
       (gl_api & GST_GL_API_GLES2) == GST_GL_API_NONE) {
@@ -162,94 +122,13 @@ gst_gl_window_x11_egl_create_context (GstGLWindowX11 * window_x11,
 
   window_egl = GST_GL_WINDOW_X11_EGL (window_x11);
 
-  window_egl->egl_display =
-      eglGetDisplay ((EGLNativeDisplayType) window_x11->device);
-
-  if (eglInitialize (window_egl->egl_display, &majorVersion, &minorVersion))
-    GST_INFO ("egl initialized, version: %d.%d", majorVersion, minorVersion);
-  else {
-    g_set_error (error, GST_GL_WINDOW_ERROR,
-        GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
-        "Failed to initialize egl: %s", X11EGLErrorString ());
+  window_egl->egl =
+      gst_gl_egl_create_context (eglGetDisplay ((EGLNativeDisplayType)
+          window_x11->device),
+      (EGLNativeWindowType) window_x11->internal_win_id, gl_api,
+      external_gl_context, error);
+  if (!window_egl->egl)
     goto failure;
-  }
-
-  if (gl_api & GST_GL_API_OPENGL) {
-    /* egl + opengl only available with EGL 1.4+ */
-    if (majorVersion == 1 && minorVersion <= 3) {
-      if ((gl_api & ~GST_GL_API_OPENGL) == GST_GL_API_NONE) {
-        g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_OLD_LIBS,
-            "EGL version (%i.%i) too old for OpenGL support, (needed at least 1.4)",
-            majorVersion, minorVersion);
-        goto failure;
-      } else {
-        GST_WARNING
-            ("EGL version (%i.%i) too old for OpenGL support, (needed at least 1.4)",
-            majorVersion, minorVersion);
-        if (gl_api & GST_GL_API_GLES2) {
-          goto try_gles2;
-        } else {
-          g_set_error (error, GST_GL_WINDOW_ERROR,
-              GST_GL_WINDOW_ERROR_WRONG_CONFIG,
-              "Failed to choose a suitable OpenGL API");
-          goto failure;
-        }
-      }
-    }
-
-    if (!eglBindAPI (EGL_OPENGL_API)) {
-      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_FAILED,
-          "Failed to bind OpenGL|ES API: %s", X11EGLErrorString ());
-      goto failure;
-    }
-
-    window_egl->gl_api = GST_GL_API_OPENGL;
-  } else if (gl_api & GST_GL_API_GLES2) {
-  try_gles2:
-    if (!eglBindAPI (EGL_OPENGL_ES_API)) {
-      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_FAILED,
-          "Failed to bind OpenGL|ES API: %s", X11EGLErrorString ());
-      goto failure;
-    }
-
-    window_egl->gl_api = GST_GL_API_GLES2;
-  }
-
-  if (!_gst_gl_window_x11_egl_choose_config (window_egl, error)) {
-    g_assert (error == NULL || *error != NULL);
-    goto failure;
-  }
-
-  window_egl->egl_surface =
-      eglCreateWindowSurface (window_egl->egl_display, window_egl->egl_config,
-      (EGLNativeWindowType) window_x11->internal_win_id, NULL);
-  if (window_egl->egl_surface != EGL_NO_SURFACE)
-    GST_INFO ("surface created");
-  else {
-    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_FAILED,
-        "Failed to create window surface: %s", X11EGLErrorString ());
-    goto failure;
-  }
-
-  GST_DEBUG ("about to create gl context\n");
-
-  if (window_egl->gl_api & GST_GL_API_GLES2) {
-    context_attrib[i++] = EGL_CONTEXT_CLIENT_VERSION;
-    context_attrib[i++] = 2;
-  }
-  context_attrib[i++] = EGL_NONE;
-
-  window_egl->egl_context =
-      eglCreateContext (window_egl->egl_display, window_egl->egl_config,
-      (EGLContext) external_gl_context, context_attrib);
-
-  if (window_egl->egl_context != EGL_NO_CONTEXT)
-    GST_INFO ("gl context created: %ld", (gulong) window_egl->egl_context);
-  else {
-    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
-        "Failed to create a OpenGL context: %s", X11EGLErrorString ());
-    goto failure;
-  }
 
   return TRUE;
 
@@ -264,35 +143,28 @@ gst_gl_window_x11_egl_destroy_context (GstGLWindowX11 * window_x11)
 
   window_egl = GST_GL_WINDOW_X11_EGL (window_x11);
 
-  if (window_egl->egl_context)
-    eglDestroyContext (window_x11->device, window_egl->egl_context);
-
-  if (window_x11->device)
-    eglTerminate (window_x11->device);
+  gst_gl_egl_destroy_context (window_egl->egl);
+  window_egl->egl = NULL;
 }
 
 static gboolean
 gst_gl_window_x11_egl_activate (GstGLWindowX11 * window_x11, gboolean activate)
 {
-  gboolean result;
   GstGLWindowX11EGL *window_egl;
 
   window_egl = GST_GL_WINDOW_X11_EGL (window_x11);
 
-  if (activate)
-    result = eglMakeCurrent (window_egl->egl_display, window_egl->egl_surface,
-        window_egl->egl_surface, window_egl->egl_context);
-  else
-    result = eglMakeCurrent (window_egl->egl_display, EGL_NO_SURFACE,
-        EGL_NO_SURFACE, EGL_NO_CONTEXT);
-
-  return result;
+  return gst_gl_egl_activate (window_egl->egl, activate);
 }
 
 static guintptr
 gst_gl_window_x11_egl_get_gl_context (GstGLWindowX11 * window_x11)
 {
-  return (guintptr) GST_GL_WINDOW_X11_EGL (window_x11)->egl_context;
+  GstGLWindowX11EGL *window_egl;
+
+  window_egl = GST_GL_WINDOW_X11_EGL (window_x11);
+
+  return gst_gl_egl_get_gl_context (window_egl->egl);
 }
 
 static void
@@ -300,7 +172,7 @@ gst_gl_window_x11_egl_swap_buffers (GstGLWindowX11 * window_x11)
 {
   GstGLWindowX11EGL *window_egl = GST_GL_WINDOW_X11_EGL (window_x11);
 
-  eglSwapBuffers (window_egl->egl_display, window_egl->egl_surface);
+  gst_gl_egl_swap_buffers (window_egl->egl);
 }
 
 GstGLAPI
@@ -308,57 +180,20 @@ gst_gl_window_x11_egl_get_gl_api (GstGLWindow * window)
 {
   GstGLWindowX11EGL *window_egl = GST_GL_WINDOW_X11_EGL (window);
 
-  return window_egl->gl_api ? window_egl->
-      gl_api : GST_GL_API_GLES2 | GST_GL_API_OPENGL;
+  return window_egl->egl ? gst_gl_egl_get_gl_api (window_egl->
+      egl) : GST_GL_API_GLES2 | GST_GL_API_OPENGL;
 }
 
 static gpointer
 gst_gl_window_x11_egl_get_proc_address (GstGLWindow * window,
     const gchar * name)
 {
+  GstGLWindowX11EGL *window_egl = GST_GL_WINDOW_X11_EGL (window);
   gpointer result;
 
-  if (!(result = eglGetProcAddress (name))) {
+  if (!(result = gst_gl_egl_get_proc_address (window_egl->egl, name))) {
     result = gst_gl_window_default_get_proc_address (window, name);
   }
 
   return result;
-}
-
-const gchar *
-X11EGLErrorString ()
-{
-  EGLint nErr = eglGetError ();
-  switch (nErr) {
-    case EGL_SUCCESS:
-      return "EGL_SUCCESS";
-    case EGL_BAD_DISPLAY:
-      return "EGL_BAD_DISPLAY";
-    case EGL_NOT_INITIALIZED:
-      return "EGL_NOT_INITIALIZED";
-    case EGL_BAD_ACCESS:
-      return "EGL_BAD_ACCESS";
-    case EGL_BAD_ALLOC:
-      return "EGL_BAD_ALLOC";
-    case EGL_BAD_ATTRIBUTE:
-      return "EGL_BAD_ATTRIBUTE";
-    case EGL_BAD_CONFIG:
-      return "EGL_BAD_CONFIG";
-    case EGL_BAD_CONTEXT:
-      return "EGL_BAD_CONTEXT";
-    case EGL_BAD_CURRENT_SURFACE:
-      return "EGL_BAD_CURRENT_SURFACE";
-    case EGL_BAD_MATCH:
-      return "EGL_BAD_MATCH";
-    case EGL_BAD_NATIVE_PIXMAP:
-      return "EGL_BAD_NATIVE_PIXMAP";
-    case EGL_BAD_NATIVE_WINDOW:
-      return "EGL_BAD_NATIVE_WINDOW";
-    case EGL_BAD_PARAMETER:
-      return "EGL_BAD_PARAMETER";
-    case EGL_BAD_SURFACE:
-      return "EGL_BAD_SURFACE";
-    default:
-      return "unknown";
-  }
 }

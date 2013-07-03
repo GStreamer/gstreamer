@@ -3,6 +3,8 @@ lib_LTLIBRARIES = libgstgl-@GST_API_VERSION@.la
 
 SUBDIRS =
 
+noinst_HEADERS =
+
 libgstgl_@GST_API_VERSION@_la_SOURCES = \
 	gstgldisplay.c \
 	gstglmemory.c \
@@ -44,6 +46,22 @@ endif
 if HAVE_WINDOW_WAYLAND
 SUBDIRS += wayland
 libgstgl_@GST_API_VERSION@_la_LIBADD += wayland/libgstgl-wayland.la
+endif
+
+if USE_EGL
+
+if HAVE_WINDOW_WAYLAND
+libgstgl_@GST_API_VERSION@_la_SOURCES += gstglegl.c
+noinst_HEADERS += gstglegl.h
+endif
+
+if !HAVE_WINDOW_WAYLAND
+if HAVE_WINDOW_X11
+libgstgl_@GST_API_VERSION@_la_SOURCES += gstglegl.c
+noinst_HEADERS += gstglegl.h
+endif
+endif
+
 endif
 
 libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl

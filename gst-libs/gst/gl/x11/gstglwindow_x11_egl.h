@@ -22,6 +22,7 @@
 #define __GST_GL_WINDOW_X11_EGL_H__
 
 #include "gstglwindow_x11.h"
+#include "gstglegl.h"
 
 #include <EGL/egl.h>
 
@@ -41,12 +42,7 @@ struct _GstGLWindowX11EGL {
   /*< private >*/
   GstGLWindowX11 parent;
   
-  EGLContext egl_context;
-  EGLDisplay egl_display;
-  EGLSurface egl_surface;
-  EGLConfig  egl_config;
-
-  GstGLAPI gl_api;
+  GstGLEGL *egl;
   
   gpointer _reserved[GST_PADDING];
 };
