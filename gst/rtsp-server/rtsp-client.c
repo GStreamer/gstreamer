@@ -727,6 +727,10 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPClientState * state)
   if (!sessmedia)
     goto not_found;
 
+  /* only aggregate control for now.. */
+  if (path[matched] != '\0')
+    goto no_aggregate;
+
   state->sessmedia = sessmedia;
 
   /* we emit the signal before closing the connection */
@@ -773,6 +777,13 @@ not_found:
   {
     GST_ERROR ("client %p: no media for uri", client);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
+    return FALSE;
+  }
+no_aggregate:
+  {
+    GST_ERROR ("client %p: no aggregate path %s", client, path);
+    send_generic_response (client,
+        GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, state);
     return FALSE;
   }
 }
@@ -894,6 +905,9 @@ handle_pause_request (GstRTSPClient * client, GstRTSPClientState * state)
   if (!sessmedia)
     goto not_found;
 
+  if (path[matched] != '\0')
+    goto no_aggregate;
+
   state->sessmedia = sessmedia;
 
   rtspstate = gst_rtsp_session_media_get_rtsp_state (sessmedia);
@@ -942,6 +956,13 @@ not_found:
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
     return FALSE;
   }
+no_aggregate:
+  {
+    GST_ERROR ("client %p: no aggregate path %s", client, path);
+    send_generic_response (client,
+        GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, state);
+    return FALSE;
+  }
 invalid_state:
   {
     GST_ERROR ("client %p: not PLAYING or RECORDING", client);
@@ -980,6 +1001,9 @@ handle_play_request (GstRTSPClient * client, GstRTSPClientState * state)
   sessmedia = gst_rtsp_session_get_media (session, path, &matched);
   if (!sessmedia)
     goto not_found;
+
+  if (path[matched] != '\0')
+    goto no_aggregate;
 
   state->sessmedia = sessmedia;
   state->media = media = gst_rtsp_session_media_get_media (sessmedia);
@@ -1087,6 +1111,13 @@ not_found:
   {
     GST_ERROR ("client %p: media not found", client);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
+    return FALSE;
+  }
+no_aggregate:
+  {
+    GST_ERROR ("client %p: no aggregate path %s", client, path);
+    send_generic_response (client,
+        GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, state);
     return FALSE;
   }
 invalid_state:
