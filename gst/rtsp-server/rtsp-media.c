@@ -1095,6 +1095,45 @@ gst_rtsp_media_get_stream (GstRTSPMedia * media, guint idx)
 }
 
 /**
+ * gst_rtsp_media_find_stream:
+ * @media: a #GstRTSPMedia
+ * @control: the control of the stream
+ *
+ * Find a stream in @media with @control as the control uri.
+ *
+ * Returns: (transfer none): the #GstRTSPStream with control uri @control
+ * or %NULL when a stream with that control did not exist.
+ */
+GstRTSPStream *
+gst_rtsp_media_find_stream (GstRTSPMedia * media, const gchar * control)
+{
+  GstRTSPMediaPrivate *priv;
+  GstRTSPStream *res;
+  gint i;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+  g_return_val_if_fail (control != NULL, NULL);
+
+  priv = media->priv;
+
+  res = NULL;
+
+  g_mutex_lock (&priv->lock);
+  for (i = 0; i < priv->streams->len; i++) {
+    GstRTSPStream *test;
+
+    test = g_ptr_array_index (priv->streams, i);
+    if (gst_rtsp_stream_has_control (test, control)) {
+      res = test;
+      break;
+    }
+  }
+  g_mutex_unlock (&priv->lock);
+
+  return res;
+}
+
+/**
  * gst_rtsp_media_get_range_string:
  * @media: a #GstRTSPMedia
  * @play: for the PLAY request

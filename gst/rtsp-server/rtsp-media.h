@@ -167,6 +167,7 @@ GstClockTime          gst_rtsp_media_get_base_time    (GstRTSPMedia *media);
 
 guint                 gst_rtsp_media_n_streams        (GstRTSPMedia *media);
 GstRTSPStream *       gst_rtsp_media_get_stream       (GstRTSPMedia *media, guint idx);
+GstRTSPStream *       gst_rtsp_media_find_stream      (GstRTSPMedia *media, const gchar * control);
 
 gboolean              gst_rtsp_media_seek             (GstRTSPMedia *media, GstRTSPTimeRange *range);
 gchar *               gst_rtsp_media_get_range_string (GstRTSPMedia *media,
