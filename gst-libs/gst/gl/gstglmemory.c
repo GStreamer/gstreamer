@@ -22,6 +22,8 @@
 #include "config.h"
 #endif
 
+#include <string.h>
+
 #include <gst/video/video.h>
 
 #include "gstglmemory.h"
@@ -281,24 +283,33 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
   GstGLMemory *dest;
   GstGLMemoryCopyParams copy_params;
 
-  copy_params = (GstGLMemoryCopyParams) {
-  src, 0,};
+  if (GST_GL_MEMORY_FLAG_IS_SET (src, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
+    dest = _gl_mem_new (src->mem.allocator, NULL, src->display, src->v_format,
+        src->width, src->height, NULL, NULL);
+    dest->data = g_malloc (src->mem.maxsize);
+    memcpy (dest->data, src->data, src->mem.maxsize);
+    GST_GL_MEMORY_FLAG_SET (dest, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
+  } else {
+    copy_params = (GstGLMemoryCopyParams) {
+    src, 0,};
 
-  gst_gl_display_thread_add (src->display, _gl_mem_copy_thread, &copy_params);
+    gst_gl_display_thread_add (src->display, _gl_mem_copy_thread, &copy_params);
 
-  dest = g_slice_alloc (sizeof (GstGLMemory));
-  _gl_mem_init (dest, src->mem.allocator, NULL, src->display, src->v_format,
-      src->width, src->height, NULL, NULL);
+    dest = g_slice_alloc (sizeof (GstGLMemory));
+    _gl_mem_init (dest, src->mem.allocator, NULL, src->display, src->v_format,
+        src->width, src->height, NULL, NULL);
 
-  if (!copy_params.tex_id)
-    GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
+    if (!copy_params.tex_id)
+      GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
 
-  dest->tex_id = copy_params.tex_id;
-  dest->data = g_malloc (src->mem.maxsize);
-  if (dest->data == NULL) {
-    GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
-    gst_memory_unref ((GstMemory *) dest);
-    return NULL;
+    dest->tex_id = copy_params.tex_id;
+    dest->data = g_malloc (src->mem.maxsize);
+    if (dest->data == NULL) {
+      GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
+      gst_memory_unref ((GstMemory *) dest);
+      return NULL;
+    }
+    GST_GL_MEMORY_FLAG_SET (dest, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
   }
 
   GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "copied texture:%u into texture %u",
