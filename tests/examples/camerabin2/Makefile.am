@@ -15,6 +15,8 @@ gst_camera2_CFLAGS  = \
         -DGST_USE_UNSTABLE_API
 gst_camera2_LDADD   = \
         $(top_builddir)/gst-libs/gst/interfaces/libgstphotography-@GST_API_VERSION@.la \
+        $(top_builddir)/gst-libs/gst/basecamerabinsrc/libgstbasecamerabinsrc-@GST_API_VERSION@.la \
+        $(GST_PLUGINS_BAD_LIBS) \
         $(GST_PLUGINS_BASE_LIBS) \
         -lgstpbutils-@GST_API_VERSION@ \
 	-lgstvideo-@GST_API_VERSION@ \
