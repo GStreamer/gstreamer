@@ -941,6 +941,22 @@ gst_dash_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_LATENCY:
+    {
+      gboolean live;
+      GstClockTime min, max;
+
+      gst_query_parse_latency (query, &live, &min, &max);
+
+      if (dashdemux->client && gst_mpd_client_is_live (dashdemux->client))
+        live = TRUE;
+
+      if (dashdemux->max_buffering_time > 0)
+        max += dashdemux->max_buffering_time;
+
+      gst_query_set_latency (query, live, min, max);
+      break;
+    }
     default:{
       /* By default, do not forward queries upstream */
       break;
