@@ -51,7 +51,7 @@ enum
   LAST_SIGNAL
 };
 
-static void gst_color_balance_class_init (GstColorBalanceInterface * iface);
+static void gst_color_balance_base_init (GstColorBalanceInterface * iface);
 
 static guint gst_color_balance_signals[LAST_SIGNAL] = { 0 };
 
@@ -63,7 +63,7 @@ gst_color_balance_get_type (void)
   if (!gst_color_balance_type) {
     static const GTypeInfo gst_color_balance_info = {
       sizeof (GstColorBalanceInterface),
-      (GBaseInitFunc) gst_color_balance_class_init,
+      (GBaseInitFunc) gst_color_balance_base_init,
       NULL,
       NULL,
       NULL,
@@ -81,7 +81,7 @@ gst_color_balance_get_type (void)
 }
 
 static void
-gst_color_balance_class_init (GstColorBalanceInterface * iface)
+gst_color_balance_base_init (GstColorBalanceInterface * iface)
 {
   static gboolean initialized = FALSE;
 
