@@ -89,8 +89,11 @@ main (int argc, char *argv[])
 
   /* make a new authentication manager */
   auth = gst_rtsp_auth_new ();
-  basic = gst_rtsp_auth_make_basic ("user", "admin");
-  gst_rtsp_auth_set_basic (auth, basic);
+  basic = gst_rtsp_auth_make_basic ("user", "password");
+  gst_rtsp_auth_add_basic (auth, basic, "user");
+  g_free (basic);
+  basic = gst_rtsp_auth_make_basic ("admin", "power");
+  gst_rtsp_auth_add_basic (auth, basic, "admin");
   g_free (basic);
   gst_rtsp_media_factory_set_auth (factory, auth);
   g_object_unref (auth);
@@ -104,8 +107,8 @@ main (int argc, char *argv[])
       "x264enc ! rtph264pay name=pay0 pt=96 )");
   /* make a new authentication manager */
   auth = gst_rtsp_auth_new ();
-  basic = gst_rtsp_auth_make_basic ("user2", "admin2");
-  gst_rtsp_auth_set_basic (auth, basic);
+  basic = gst_rtsp_auth_make_basic ("admin2", "power2");
+  gst_rtsp_auth_add_basic (auth, basic, "admin");
   g_free (basic);
   gst_rtsp_media_factory_set_auth (factory, auth);
   g_object_unref (auth);
@@ -123,8 +126,9 @@ main (int argc, char *argv[])
   g_timeout_add_seconds (10, (GSourceFunc) remove_sessions, server);
 
   /* start serving */
-  g_print ("stream with user:admin ready at rtsp://127.0.0.1:8554/test\n");
-  g_print ("stream with user2:admin2 ready at rtsp://127.0.0.1:8554/test2\n");
+  g_print ("stream with user:password ready at rtsp://127.0.0.1:8554/test\n");
+  g_print ("stream with admin:power ready at rtsp://127.0.0.1:8554/test\n");
+  g_print ("stream with admin2:power2 ready at rtsp://127.0.0.1:8554/test2\n");
   g_main_loop_run (loop);
 
   return 0;

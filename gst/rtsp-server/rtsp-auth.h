@@ -63,7 +63,9 @@ GType               gst_rtsp_auth_get_type          (void);
 
 GstRTSPAuth *       gst_rtsp_auth_new               (void);
 
-void                gst_rtsp_auth_set_basic         (GstRTSPAuth *auth, const gchar * basic);
+void                gst_rtsp_auth_add_basic         (GstRTSPAuth *auth, const gchar * basic,
+                                                     const gchar *authgroup);
+void                gst_rtsp_auth_remove_basic      (GstRTSPAuth *auth, const gchar * basic);
 
 gboolean            gst_rtsp_auth_setup_auth        (GstRTSPAuth *auth, GstRTSPClient * client,
                                                      GQuark hint, GstRTSPClientState *state);

@@ -51,6 +51,7 @@ typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
  * @request: the complete request
  * @uri: the complete url parsed from @request
  * @method: the parsed method of @uri
+ * @authgroup: authorisation group
  * @session: the session, can be NULL
  * @sessmedia: the session media for the url can be NULL
  * @factory: the media factory for the url, can be NULL.
@@ -64,6 +65,7 @@ struct _GstRTSPClientState {
   GstRTSPMessage      *request;
   GstRTSPUrl          *uri;
   GstRTSPMethod        method;
+  const gchar         *authgroup;
   GstRTSPSession      *session;
   GstRTSPSessionMedia *sessmedia;
   GstRTSPMediaFactory *factory;

@@ -27,7 +27,7 @@
 struct _GstRTSPAuthPrivate
 {
   GMutex lock;
-  gchar *basic;                 /* protected by lock */
+  GHashTable *basic;            /* protected by lock */
   GstRTSPMethod methods;
 };
 
@@ -75,11 +75,16 @@ gst_rtsp_auth_class_init (GstRTSPAuthClass * klass)
 static void
 gst_rtsp_auth_init (GstRTSPAuth * auth)
 {
-  auth->priv = GST_RTSP_AUTH_GET_PRIVATE (auth);
+  GstRTSPAuthPrivate *priv;
 
-  g_mutex_init (&auth->priv->lock);
+  auth->priv = priv = GST_RTSP_AUTH_GET_PRIVATE (auth);
+
+  g_mutex_init (&priv->lock);
+
+  priv->basic = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+
   /* bitwise or of all methods that need authentication */
-  auth->priv->methods = GST_RTSP_DESCRIBE |
+  priv->methods = GST_RTSP_DESCRIBE |
       GST_RTSP_ANNOUNCE |
       GST_RTSP_GET_PARAMETER |
       GST_RTSP_SET_PARAMETER |
@@ -94,7 +99,7 @@ gst_rtsp_auth_finalize (GObject * obj)
   GstRTSPAuthPrivate *priv = auth->priv;
 
   GST_INFO ("finalize auth %p", auth);
-  g_free (priv->basic);
+  g_hash_table_unref (priv->basic);
   g_mutex_clear (&priv->lock);
 
   G_OBJECT_CLASS (gst_rtsp_auth_parent_class)->finalize (obj);
@@ -138,24 +143,51 @@ gst_rtsp_auth_new (void)
 }
 
 /**
- * gst_rtsp_auth_set_basic:
+ * gst_rtsp_auth_add_basic:
  * @auth: a #GstRTSPAuth
  * @basic: the basic token
+ * @authgroup: authorisation group
  *
- * Set the basic token for the default authentication algorithm.
+ * Add a basic token for the default authentication algorithm that
+ * enables the client qith privileges from @authgroup.
  */
 void
-gst_rtsp_auth_set_basic (GstRTSPAuth * auth, const gchar * basic)
+gst_rtsp_auth_add_basic (GstRTSPAuth * auth, const gchar * basic,
+    const gchar * authgroup)
 {
   GstRTSPAuthPrivate *priv;
 
   g_return_if_fail (GST_IS_RTSP_AUTH (auth));
+  g_return_if_fail (basic != NULL);
+  g_return_if_fail (authgroup != NULL);
 
   priv = auth->priv;
 
   g_mutex_lock (&priv->lock);
-  g_free (priv->basic);
-  priv->basic = g_strdup (basic);
+  g_hash_table_replace (priv->basic, g_strdup (basic), g_strdup (authgroup));
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_auth_remove_basic:
+ * @auth: a #GstRTSPAuth
+ * @basic: (transfer none): the basic token
+ *
+ * Add a basic token for the default authentication algorithm that
+ * enables the client qith privileges from @authgroup.
+ */
+void
+gst_rtsp_auth_remove_basic (GstRTSPAuth * auth, const gchar * basic)
+{
+  GstRTSPAuthPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_AUTH (auth));
+  g_return_if_fail (basic != NULL);
+
+  priv = auth->priv;
+
+  g_mutex_lock (&priv->lock);
+  g_hash_table_remove (priv->basic, basic);
   g_mutex_unlock (&priv->lock);
 }
 
@@ -226,10 +258,14 @@ default_check_method (GstRTSPAuth * auth, GstRTSPClient * client,
 
     /* parse type */
     if (g_ascii_strncasecmp (authorization, "basic ", 6) == 0) {
+      gchar *authgroup;
+
       GST_DEBUG_OBJECT (auth, "check Basic auth");
       g_mutex_lock (&priv->lock);
-      if (priv->basic && strcmp (&authorization[6], priv->basic) == 0)
+      if ((authgroup = g_hash_table_lookup (priv->basic, &authorization[6]))) {
         result = TRUE;
+        state->authgroup = authgroup;
+      }
       g_mutex_unlock (&priv->lock);
     } else if (g_ascii_strncasecmp (authorization, "digest ", 7) == 0) {
       GST_DEBUG_OBJECT (auth, "check Digest auth");
