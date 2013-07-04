@@ -27,75 +27,8 @@
 #ifndef __GST_MPEG_DEFS_H__
 #define __GST_MPEG_DEFS_H__
 
-/* Stream type assignments
- * 
- *   0x00    ITU-T | ISO/IEC Reserved
- *   0x01    ISO/IEC 11172 Video
- *   0x02    ITU-T Rec. H.262 | ISO/IEC 13818-2 Video or
- *           ISO/IEC 11172-2 constrained parameter video
- *           stream
- *   0x03    ISO/IEC 11172 Audio
- *   0x04    ISO/IEC 13818-3 Audio
- *   0x05    ITU-T Rec. H.222.0 | ISO/IEC 13818-1
- *           private_sections
- *   0x06    ITU-T Rec. H.222.0 | ISO/IEC 13818-1 PES
- *           packets containing private data
- *   0x07    ISO/IEC 13522 MHEG
- *   0x08    ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Annex A
- *           DSM CC
- *   0x09    ITU-T Rec. H.222.1
- *   0x0A    ISO/IEC 13818-6 type A
- *   0x0B    ISO/IEC 13818-6 type B
- *   0x0C    ISO/IEC 13818-6 type C
- *   0x0D    ISO/IEC 13818-6 type D
- *   0x0E    ISO/IEC 13818-1 auxiliary
- *   0x0F    ISO/IEC 13818-7 Audio with ADTS transport syntax
- *   0x10    ISO/IEC 14496-2 Visual
- *   0x11    ISO/IEC 14496-3 Audio with the LATM transport syntax as
- *           defined in ISO/IEC 14496-3
- *   0x12    ISO/IEC 14496-1 SL-packetized stream or FlexMux stream
- *           carried in PES packets
- *   0x13    ISO/IEC 14496-1 SL-packetized stream or FlexMux stream
- *           carried in ISO/IEC 14496_sections
- *   0x14    ISO/IEC 13818-6 Synchronized Download Protocol
- *   0x15    Metadata carried in PES packets
- *   0x16    Metadata carried in metadata_sections
- *   0x17    Metadata carried in ISO/IEC 13818-6 Data Carousel
- *   0x18    Metadata carried in ISO/IEC 13818-6 Object Carousel
- *   0x19    Metadata carried in ISO/IEC 13818-6 Synchronized Donwnload Protocol
- *   0x1A    IPMP stream (ISO/IEC 13818-11, MPEG-2 IPMP)
- *   0x1B    AVC video stream (ITU-T H.264 | ISO/IEC 14496-10 Video)
- * 0x1C-0x7E ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved
- *   0x7F    IPMP stream
- * 0x80-0xFF User Private
- */
-
-/* FIXME : Move well-defined Stream type to an enum in the mpegts library */
-
-#define ST_RESERVED                     0x00
-#define ST_VIDEO_MPEG1                  0x01
-#define ST_VIDEO_MPEG2                  0x02
-#define ST_AUDIO_MPEG1                  0x03
-#define ST_AUDIO_MPEG2                  0x04
-#define ST_PRIVATE_SECTIONS             0x05
-#define ST_PRIVATE_DATA                 0x06
-#define ST_MHEG                         0x07
-#define ST_DSMCC                        0x08
-#define ST_H222_1                       0x09
-#define ST_DSMCC_A                      0x0a
-#define ST_DSMCC_B                      0x0b
-#define ST_DSMCC_C                      0x0c
-#define ST_DSMCC_D                      0x0d
-#define ST_13818_1_AUXILIARY		0x0e
-#define ST_AUDIO_AAC_ADTS               0x0f
-#define ST_VIDEO_MPEG4                  0x10
-#define ST_AUDIO_AAC_LATM               0x11
-
-#define ST_IPMP_MPEG2			0x1a
-#define ST_VIDEO_H264                   0x1b
-
-#define ST_IPMP_STREAM			0x7f
-
+/* Stream type assignments */
+/* FIXME: Put these in mpegts lib separate stream type enums */
 /* Un-official Dirac extension */
 #define ST_VIDEO_DIRAC                  0xd1
 
@@ -106,7 +39,7 @@
 #define ST_PS_AUDIO_LPCM                0x8b
 #define ST_PS_DVD_SUBPICTURE            0xff
 
-/* Blu-ray related */
+/* Blu-ray related (registration: 'HDMV'*/
 #define ST_BD_AUDIO_LPCM                0x80
 #define ST_BD_AUDIO_AC3                 0x81
 #define ST_BD_AUDIO_DTS                 0x82
@@ -124,6 +57,9 @@
 /* defined for VC1 extension in RP227 */
 #define ST_PRIVATE_EA                   0xea
 
+/* Following only apply for streams identified as HDV,
+ * According to specification 61834-11 the PMT will use
+ * a registration descriptor with values TSMV or TSHV */
 /* HDV AUX stream mapping
  * 0xA0      ISO/IEC 61834-11
  * 0xA1      ISO/IEC 61834-11

@@ -756,22 +756,26 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
 
   /* Handle non-BluRay stream types */
   switch (bstream->stream_type) {
-    case ST_VIDEO_MPEG1:
-    case ST_VIDEO_MPEG2:
+    case GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG1:
+    case GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG2:
     case ST_PS_VIDEO_MPEG2_DCII:
       /* FIXME : Use DCII registration code (ETV1 ?) to handle that special
        * Stream type (ST_PS_VIDEO_MPEG2_DCII) */
+      /* FIXME : Use video decriptor (0x1) to refine caps with:
+       * * frame_rate
+       * * profile_and_level
+       */
       GST_LOG ("mpeg video");
       template = gst_static_pad_template_get (&video_template);
       name = g_strdup_printf ("video_%04x", bstream->pid);
       caps = gst_caps_new_simple ("video/mpeg",
           "mpegversion", G_TYPE_INT,
-          bstream->stream_type == ST_VIDEO_MPEG1 ? 1 : 2, "systemstream",
-          G_TYPE_BOOLEAN, FALSE, NULL);
+          bstream->stream_type == GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG1 ? 1 : 2,
+          "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
 
       break;
-    case ST_AUDIO_MPEG1:
-    case ST_AUDIO_MPEG2:
+    case GST_MPEG_TS_STREAM_TYPE_AUDIO_MPEG1:
+    case GST_MPEG_TS_STREAM_TYPE_AUDIO_MPEG2:
       GST_LOG ("mpeg audio");
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
@@ -779,7 +783,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
           gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
           NULL);
       break;
-    case ST_PRIVATE_DATA:
+    case GST_MPEG_TS_STREAM_TYPE_PRIVATE_PES_PACKETS:
       GST_LOG ("private data");
       /* FIXME: Move all of this into a common method (there might be other
        * types also, depending on registratino descriptors also
@@ -869,37 +873,40 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       /* name = g_strdup_printf ("private_%04x", bstream->pid); */
       /* caps = gst_caps_new_simple ("hdv/aux-a", NULL); */
       break;
-    case ST_PRIVATE_SECTIONS:
-    case ST_MHEG:
-    case ST_DSMCC:
-    case ST_DSMCC_A:
-    case ST_DSMCC_B:
-    case ST_DSMCC_C:
-    case ST_DSMCC_D:
+    case GST_MPEG_TS_STREAM_TYPE_PRIVATE_SECTIONS:
+    case GST_MPEG_TS_STREAM_TYPE_MHEG:
+    case GST_MPEG_TS_STREAM_TYPE_DSM_CC:
+    case GST_MPEG_TS_STREAM_TYPE_DSMCC_A:
+    case GST_MPEG_TS_STREAM_TYPE_DSMCC_B:
+    case GST_MPEG_TS_STREAM_TYPE_DSMCC_C:
+    case GST_MPEG_TS_STREAM_TYPE_DSMCC_D:
+      /* FIXME: Unsetting them from the PES table makes sense since they 
+       * are sections .. but then why don't we set them as know PSI ?
+       * Also: shouldn't this be handled in mpegtsbase ? */
       MPEGTS_BIT_UNSET (base->is_pes, bstream->pid);
       break;
-    case ST_AUDIO_AAC_ADTS:
+    case GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_ADTS:
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 2,
           "stream-format", G_TYPE_STRING, "adts", NULL);
       break;
-    case ST_AUDIO_AAC_LATM:
+    case GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_LATM:
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
       caps = gst_caps_new_simple ("audio/mpeg",
           "mpegversion", G_TYPE_INT, 4,
           "stream-format", G_TYPE_STRING, "loas", NULL);
       break;
-    case ST_VIDEO_MPEG4:
+    case GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG4:
       template = gst_static_pad_template_get (&video_template);
       name = g_strdup_printf ("video_%04x", bstream->pid);
       caps = gst_caps_new_simple ("video/mpeg",
           "mpegversion", G_TYPE_INT, 4,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
-    case ST_VIDEO_H264:
+    case GST_MPEG_TS_STREAM_TYPE_VIDEO_H264:
       template = gst_static_pad_template_get (&video_template);
       name = g_strdup_printf ("video_%04x", bstream->pid);
       caps = gst_caps_new_simple ("video/x-h264",
