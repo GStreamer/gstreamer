@@ -79,66 +79,8 @@ gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
 
   gl->GenTextures (1, pTexture);
   gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture);
-
-  switch (v_format) {
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    {
-      gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-          width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-      break;
-    }
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-    {
-#if 0
-      switch (display->colorspace_conversion) {
-        case GST_GL_DISPLAY_CONVERSION_GLSL:
-        case GST_GL_DISPLAY_CONVERSION_MATRIX:
-#endif
-          gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-              width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-#if 0
-          break;
-        case GST_GL_DISPLAY_CONVERSION_MESA:
-          if (display->upload_width != display->upload_data_width ||
-              display->upload_height != display->upload_data_height)
-            gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-                width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-          else
-            gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, width,
-                height, 0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
-          break;
-        default:
-          gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
-              display->colorspace_conversion);
-      }
-#endif
-      break;
-    }
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_AYUV:
-    {
-      gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-          width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-      break;
-    }
-    default:
-    {
-      gst_gl_display_set_error (display, "Unsupported upload video format %d",
-          v_format);
-      break;
-    }
-  }
+  gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, width, height, 0,
+      GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
   gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
       GL_LINEAR);
