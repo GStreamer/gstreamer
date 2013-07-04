@@ -834,10 +834,10 @@ gst_adder_sink_event (GstCollectPads * pads, GstCollectData * pad,
     }
     case GST_EVENT_FLUSH_START:
       /* ensure that we will send a flush stop */
-      GST_COLLECT_PADS_STREAM_LOCK (adder->collect);
-      adder->flush_stop_pending = TRUE;
       res = gst_collect_pads_event_default (pads, pad, event, discard);
       event = NULL;
+      GST_COLLECT_PADS_STREAM_LOCK (adder->collect);
+      adder->flush_stop_pending = TRUE;
       GST_COLLECT_PADS_STREAM_UNLOCK (adder->collect);
       break;
     case GST_EVENT_FLUSH_STOP:
