@@ -376,11 +376,9 @@ get_encoding_and_convert (const gchar * text, guint length)
     if (__iconvs[encoding] == ((GIConv) - 1))
       __iconvs[encoding] = g_iconv_open ("utf-8", iconvtablename[encoding]);
     giconv = __iconvs[encoding];
-  }
-
-  if (giconv == ((GIConv) - 1)) {
-    GST_WARNING ("Could not detect encoding");
-    converted_str = g_strndup (text, length);
+  } else {
+    GST_FIXME ("Could not detect encoding. Returning NULL string");
+    converted_str = NULL;
     goto beach;
   }
 
