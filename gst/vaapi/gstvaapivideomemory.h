@@ -42,6 +42,10 @@ typedef struct _GstVaapiVideoAllocatorClass     GstVaapiVideoAllocatorClass;
 
 #define GST_VAAPI_VIDEO_MEMORY_NAME             "GstVaapiVideoMemory"
 
+#if GST_CHECK_VERSION(1,1,0)
+#define GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE   "memory:VASurface"
+#endif
+
 /**
  * GstVaapiVideoMemoryMapType:
  * @GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_SURFACE: map with gst_buffer_map()

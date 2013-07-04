@@ -84,6 +84,10 @@ GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapisink);
 
 /* Default template */
 static const char gst_vaapisink_sink_caps_str[] =
+#if GST_CHECK_VERSION(1,1,0)
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
+        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, GST_VIDEO_FORMATS_ALL);
+#else
 #if GST_CHECK_VERSION(1,0,0)
     GST_VIDEO_CAPS_MAKE(GST_VIDEO_FORMATS_ALL) "; "
 #else
@@ -92,6 +96,7 @@ static const char gst_vaapisink_sink_caps_str[] =
     "height = (int) [ 1, MAX ]; "
 #endif
     GST_VAAPI_SURFACE_CAPS;
+#endif
 
 static GstStaticPadTemplate gst_vaapisink_sink_factory =
     GST_STATIC_PAD_TEMPLATE(
@@ -719,14 +724,20 @@ gst_vaapisink_get_caps_impl(GstBaseSink *base_sink)
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstCaps *out_caps, *yuv_caps;
 
+#if GST_CHECK_VERSION(1,1,0)
+    out_caps = gst_static_pad_template_get_caps(&gst_vaapisink_sink_factory);
+#else
     out_caps = gst_caps_from_string(GST_VAAPI_SURFACE_CAPS);
+#endif
     if (!out_caps)
         return NULL;
 
     if (gst_vaapisink_ensure_uploader(sink)) {
         yuv_caps = gst_vaapi_uploader_get_caps(sink->uploader);
-        if (yuv_caps)
+        if (yuv_caps) {
+            out_caps = gst_caps_make_writable(out_caps);
             gst_caps_append(out_caps, gst_caps_copy(yuv_caps));
+	}
     }
     return out_caps;
 }

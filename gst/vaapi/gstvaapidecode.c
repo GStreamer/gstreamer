@@ -67,7 +67,12 @@ static const char gst_vaapidecode_sink_caps_str[] =
     ;
 
 static const char gst_vaapidecode_src_caps_str[] =
+#if GST_CHECK_VERSION(1,1,0)
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
+        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, GST_VIDEO_FORMATS_ALL);
+#else
     GST_VAAPI_SURFACE_CAPS;
+#endif
 
 static GstStaticPadTemplate gst_vaapidecode_sink_factory =
     GST_STATIC_PAD_TEMPLATE(
@@ -180,6 +185,9 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
     }
     gst_video_codec_state_unref(state);
 
+#if GST_CHECK_VERSION(1,1,0)
+    state->caps = gst_video_info_to_caps(&vis);
+#else
     /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
        reconstruct suitable caps for "encoded" video formats */
     state->caps = gst_caps_from_string(GST_VAAPI_SURFACE_CAPS_NAME);
@@ -200,6 +208,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
             gst_caps_get_structure(state->caps, 0);
         gst_structure_set_interlaced(structure, TRUE);
     }
+#endif
     gst_caps_replace(&decode->srcpad_caps, state->caps);
     return TRUE;
 }
