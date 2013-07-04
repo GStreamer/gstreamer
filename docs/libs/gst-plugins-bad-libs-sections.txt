@@ -261,6 +261,7 @@ gst_mpegts_section_get_pat
 <SUBSECTION PMT>
 GstMpegTsPMT
 GstMpegTsPMTStream
+GstMpegTsStreamType
 gst_mpegts_section_get_pmt
 <SUBSECTION BAT>
 GstMpegTsBAT
@@ -290,6 +291,7 @@ GST_TYPE_MPEG_TS_SECTION_TYPE
 GST_TYPE_MPEG_TS_SECTION_ATSC_TABLE_ID
 GST_TYPE_MPEG_TS_SECTION_DVB_TABLE_ID
 GST_MPEGTS_SECTION
+GST_TYPE_MPEG_TS_STREAM_TYPE
 GST_TYPE_MPEGTS_BAT
 GST_TYPE_MPEGTS_EIT
 GST_TYPE_MPEGTS_EIT_EVENT
@@ -316,6 +318,7 @@ gst_mpegts_sdt_get_type
 gst_mpegts_sdt_service_get_type
 gst_mpegts_section_get_type
 gst_mpegts_tot_get_type
+gst_mpeg_ts_stream_type_get_type
 </SECTION>
 
 <SECTION>

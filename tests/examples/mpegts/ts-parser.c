@@ -221,8 +221,9 @@ dump_pmt (GstMpegTsSection * section)
   g_printf ("     %d Streams:\n", len);
   for (i = 0; i < len; i++) {
     GstMpegTsPMTStream *stream = g_ptr_array_index (pmt->streams, i);
-    g_printf ("       pid:0x%04x , stream_type:0x%02x\n", stream->pid,
-        stream->stream_type);
+    g_printf ("       pid:0x%04x , stream_type:0x%02x (%s)\n", stream->pid,
+        stream->stream_type,
+        enum_name (GST_TYPE_MPEG_TS_STREAM_TYPE, stream->stream_type));
     dump_descriptors (stream->descriptors, 9);
   }
 }
@@ -438,6 +439,7 @@ main (int argc, gchar ** argv)
   g_type_class_ref (GST_TYPE_MPEG_TS_MISC_DESCRIPTOR_TYPE);
   g_type_class_ref (GST_TYPE_MPEG_TS_ISO639_AUDIO_TYPE);
   g_type_class_ref (GST_TYPE_MPEG_TS_DVB_SERVICE_TYPE);
+  g_type_class_ref (GST_TYPE_MPEG_TS_STREAM_TYPE);
 
   mainloop = g_main_loop_new (NULL, FALSE);
 

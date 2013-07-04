@@ -184,8 +184,123 @@ typedef struct _GstMpegTsPMT GstMpegTsPMT;
 #define GST_TYPE_MPEGTS_PMT_STREAM (gst_mpegts_pmt_stream_get_type())
 
 /**
+ * GstMpegTsStreamType:
+ * @GST_MPEG_TS_STREAM_TYPE_RESERVED_00: ITU-T | ISO/IEC Reserved
+ * @GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG1: ISO/IEC 11172-2 Video
+ * @GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG2: Rec. ITU-T H.262 | ISO/IEC 13818-2
+ * Video or ISO/IEC 11172-2 constrained parameter video stream
+ * @GST_MPEG_TS_STREAM_TYPE_AUDIO_MPEG1: ISO/IEC 11172-3 Audio
+ * @GST_MPEG_TS_STREAM_TYPE_AUDIO_MPEG2: ISO/IEC 13818-3 Audio
+ * @GST_MPEG_TS_STREAM_TYPE_PRIVATE_SECTIONS: private sections
+ * @GST_MPEG_TS_STREAM_TYPE_PRIVATE_PES_PACKETS: PES packets containing private data
+ * @GST_MPEG_TS_STREAM_TYPE_MHEG: ISO/IEC 13522 MHEG
+ * @GST_MPEG_TS_STREAM_TYPE_DSM_CC: Annex A DSM-CC
+ * @GST_MPEG_TS_STREAM_TYPE_H_222_1: Rec. ITU-T H.222.1
+ * @GST_MPEG_TS_STREAM_TYPE_DSMCC_A: ISO/IEC 13818-6 type A
+ * @GST_MPEG_TS_STREAM_TYPE_DSMCC_B: ISO/IEC 13818-6 type B
+ * @GST_MPEG_TS_STREAM_TYPE_DSMCC_C: ISO/IEC 13818-6 type C
+ * @GST_MPEG_TS_STREAM_TYPE_DSMCC_D: ISO/IEC 13818-6 type D
+ * @GST_MPEG_TS_STREAM_TYPE_AUXILIARY: auxiliary streams
+ * @GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_ADTS: ISO/IEC 13818-7 Audio with ADTS
+ * transport syntax
+ * @GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG4: ISO/IEC 14496-2 Visual
+ * @GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_LATM: ISO/IEC 14496-3 Audio with the LATM
+ * transport syntax as defined in ISO/IEC 14496-3
+ * @GST_MPEG_TS_STREAM_TYPE_SL_FLEXMUX_PES_PACKETS: ISO/IEC 14496-1
+ * SL-packetized stream or FlexMux stream carried in PES packets
+ * @GST_MPEG_TS_STREAM_TYPE_SL_FLEXMUX_SECTIONS: ISO/IEC 14496-1 SL-packetized
+ * stream or FlexMux stream carried in ISO/IEC 14496_sections
+ * @GST_MPEG_TS_STREAM_TYPE_SYNCHRONIZED_DOWNLOAD: ISO/IEC 13818-6 Synchronized
+ * Download Protocol
+ * @GST_MPEG_TS_STREAM_TYPE_METADATA_PES_PACKETS: Metadata carried in PES packets
+ * @GST_MPEG_TS_STREAM_TYPE_METADATA_SECTIONS: Metadata carried in metadata_sections
+ * @GST_MPEG_TS_STREAM_TYPE_METADATA_DATA_CAROUSEL: Metadata carried in ISO/IEC
+ * 13818-6 Data Carousel
+ * @GST_MPEG_TS_STREAM_TYPE_METADATA_OBJECT_CAROUSEL: Metadata carried in
+ * ISO/IEC 13818-6 Object Carousel
+ * @GST_MPEG_TS_STREAM_TYPE_METADATA_SYNCHRONIZED_DOWNLOAD: Metadata carried in
+ * ISO/IEC 13818-6 Synchronized Download Protocol
+ * @GST_MPEG_TS_STREAM_TYPE_MPEG2_IPMP: IPMP stream (defined in ISO/IEC 13818-11,
+ * MPEG-2 IPMP)
+ * @GST_MPEG_TS_STREAM_TYPE_VIDEO_H264: AVC video stream conforming to one or
+ * more profiles defined in Annex A of Rec. ITU-T H.264 | ISO/IEC 14496-10 or
+ * AVC video sub-bitstream of SVC as defined in 2.1.78 or MVC base view
+ * sub-bitstream, as defined in 2.1.85, or AVC video sub-bitstream of MVC, as
+ * defined in 2.1.88
+ * @GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_CLEAN: ISO/IEC 14496-3 Audio, without
+ * using any additional transport syntax, such as DST, ALS and SLS
+ * @GST_MPEG_TS_STREAM_TYPE_MPEG4_TIMED_TEXT: ISO/IEC 14496-17 Text
+ * @GST_MPEG_TS_STREAM_TYPE_VIDEO_RVC: Auxiliary video stream as defined in
+ * ISO/IEC 23002-3
+ * @GST_MPEG_TS_STREAM_TYPE_VIDEO_H264_SVC_SUB_BITSTREAM: SVC video sub-bitstream
+ * of an AVC video stream conforming to one or more profiles defined in Annex G
+ * of Rec. ITU-T H.264 | ISO/IEC 14496-10
+ * @GST_MPEG_TS_STREAM_TYPE_VIDEO_H264_MVC_SUB_BITSTREAM: MVC video sub-bitstream
+ * of an AVC video stream conforming to one or more profiles defined in Annex H
+ * of Rec. ITU-T H.264 | ISO/IEC 14496-10
+ * @GST_MPEG_TS_STREAM_TYPE_VIDEO_JP2K: Video stream conforming to one or more
+ * profiles as defined in Rec. ITU-T T.800 | ISO/IEC 15444-1
+ * @GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG2_STEREO_ADDITIONAL_VIEW: Additional view
+ * Rec. ITU-T H.262 | ISO/IEC 13818-2 video stream for service-compatible
+ * stereoscopic 3D services
+ * @GST_MPEG_TS_STREAM_TYPE_VIDEO_H264_STEREO_ADDITIONAL_VIEW: Additional view
+ * Rec. ITU-T H.264 | ISO/IEC 14496-10 video stream conforming to one or more
+ * profiles defined in Annex A for service-compatible stereoscopic 3D services
+ * @GST_MPEG_TS_STREAM_TYPE_IPMP_STREAM: IPMP stream
+ *
+ * Type of mpeg-ts stream type.
+ *
+ * These values correspond to the base standard registered types. Depending
+ * on the variant of mpeg-ts being used (Bluray, ATSC, DVB, ...), other
+ * types might also be used, but will not conflict with these.
+ *
+ * Corresponds to table 2-34 of ITU H.222.0 | ISO/IEC 13818-1
+ */
+typedef enum {
+  GST_MPEG_TS_STREAM_TYPE_RESERVED_00                  = 0x00,
+  GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG1                  = 0x01,
+  GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG2                  = 0x02,
+  GST_MPEG_TS_STREAM_TYPE_AUDIO_MPEG1                  = 0x03,
+  GST_MPEG_TS_STREAM_TYPE_AUDIO_MPEG2                  = 0x04,
+  GST_MPEG_TS_STREAM_TYPE_PRIVATE_SECTIONS             = 0x05,
+  GST_MPEG_TS_STREAM_TYPE_PRIVATE_PES_PACKETS          = 0x06,
+  GST_MPEG_TS_STREAM_TYPE_MHEG                         = 0x07,
+  GST_MPEG_TS_STREAM_TYPE_DSM_CC                       = 0x08,
+  GST_MPEG_TS_STREAM_TYPE_H_222_1                      = 0x09,
+  GST_MPEG_TS_STREAM_TYPE_DSMCC_A                      = 0x0a,
+  GST_MPEG_TS_STREAM_TYPE_DSMCC_B                      = 0x0b,
+  GST_MPEG_TS_STREAM_TYPE_DSMCC_C                      = 0x0c,
+  GST_MPEG_TS_STREAM_TYPE_DSMCC_D                      = 0x0d,
+  GST_MPEG_TS_STREAM_TYPE_AUXILIARY                    = 0x0e,
+  GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_ADTS               = 0x0f,
+  GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG4                  = 0x10,
+  GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_LATM               = 0x11,
+  GST_MPEG_TS_STREAM_TYPE_SL_FLEXMUX_PES_PACKETS       = 0x12,
+  GST_MPEG_TS_STREAM_TYPE_SL_FLEXMUX_SECTIONS          = 0x13,
+  GST_MPEG_TS_STREAM_TYPE_SYNCHRONIZED_DOWNLOAD        = 0x14,
+  GST_MPEG_TS_STREAM_TYPE_METADATA_PES_PACKETS         = 0x15,
+  GST_MPEG_TS_STREAM_TYPE_METADATA_SECTIONS            = 0x16,
+  GST_MPEG_TS_STREAM_TYPE_METADATA_DATA_CAROUSEL       = 0x17,
+  GST_MPEG_TS_STREAM_TYPE_METADATA_OBJECT_CAROUSEL     = 0x18,
+  GST_MPEG_TS_STREAM_TYPE_METADATA_SYNCHRONIZED_DOWNLOAD  = 0x19,
+  GST_MPEG_TS_STREAM_TYPE_MPEG2_IPMP                   = 0x1a,
+  GST_MPEG_TS_STREAM_TYPE_VIDEO_H264                   = 0x1b,
+  GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_CLEAN              = 0x1c,
+  GST_MPEG_TS_STREAM_TYPE_MPEG4_TIMED_TEXT             = 0x1d,
+  GST_MPEG_TS_STREAM_TYPE_VIDEO_RVC                    = 0x1e,
+  GST_MPEG_TS_STREAM_TYPE_VIDEO_H264_SVC_SUB_BITSTREAM = 0x1f,
+  GST_MPEG_TS_STREAM_TYPE_VIDEO_H264_MVC_SUB_BITSTREAM = 0x20,
+  GST_MPEG_TS_STREAM_TYPE_VIDEO_JP2K                   = 0x21,
+  GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG2_STEREO_ADDITIONAL_VIEW = 0x22,
+  GST_MPEG_TS_STREAM_TYPE_VIDEO_H264_STEREO_ADDITIONAL_VIEW  = 0x23,
+  /* 0x24 - 0x7e : Rec. ITU-T H.222.0 | ISO/IEC 13818-1 Reserved */
+  GST_MPEG_TS_STREAM_TYPE_IPMP_STREAM                  = 0x7f
+  /* 0x80 - 0xff : User Private (or defined in other specs) */
+} GstMpegTsStreamType;
+
+/**
  * GstMpegTsPMTStream:
- * @stream_type: the type of stream
+ * @stream_type: the type of stream. See #GstMpegTsStreamType
  * @pid: the PID of the stream
  * @descriptors: (element-type GstMpegTsDescriptor): the descriptors of the
  * stream
