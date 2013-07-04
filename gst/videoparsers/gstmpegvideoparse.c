@@ -266,10 +266,10 @@ static gboolean
 gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
     guint size)
 {
-  guint8 *data;
+  GstMpegVideoPacket packet;
   guint8 *data_with_prefix;
   GstMapInfo map;
-  gint i, offset;
+  gint i;
 
   if (mpvparse->seq_offset < 4) {
     /* This shouldn't happen, but just in case... */
@@ -278,11 +278,14 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
   }
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
-  data = map.data + mpvparse->seq_offset;
   g_assert (size <= map.size);
+  packet.data = map.data;
+  packet.type = GST_MPEG_VIDEO_PACKET_SEQUENCE;
+  packet.offset = mpvparse->seq_offset;
+  packet.size = size - mpvparse->seq_offset;
   /* pointer to sequence header data including the start code prefix -
      used for codec private data */
-  data_with_prefix = data - 4;
+  data_with_prefix = (guint8 *) packet.data + packet.offset - 4;
 
   /* only do stuff if something new; only compare first 11 bytes, changes in
      quantiser matrix doesn't matter here. Also changing the matrices in
@@ -294,8 +297,8 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
     return TRUE;
   }
 
-  if (!gst_mpeg_video_parse_sequence_header (&mpvparse->sequencehdr, data,
-          size - mpvparse->seq_offset, 0)) {
+  if (!gst_mpeg_video_packet_parse_sequence_header (&packet,
+          &mpvparse->sequencehdr)) {
     GST_DEBUG_OBJECT (mpvparse,
         "failed to parse config data (size %d) at offset %d",
         size, mpvparse->seq_offset);
@@ -310,23 +313,35 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
   /* Set mpeg version, and parse sequence extension */
   mpvparse->config_flags = FLAG_NONE;
   for (i = 0; i < mpvparse->ext_count; ++i) {
-    offset = mpvparse->ext_offsets[i];
+    packet.type = GST_MPEG_VIDEO_PACKET_EXTENSION;
+    packet.offset = mpvparse->ext_offsets[i];
+    packet.size = (gint) size - mpvparse->ext_offsets[i];
     mpvparse->config_flags |= FLAG_MPEG2;
-    if (offset < size) {
-      if (gst_mpeg_video_parse_sequence_extension (&mpvparse->sequenceext,
-              map.data, size, offset)) {
-        GST_LOG_OBJECT (mpvparse, "Read Sequence Extension");
-        mpvparse->config_flags |= FLAG_SEQUENCE_EXT;
-        mpvparse->seqext_updated = TRUE;
-      } else if (gst_mpeg_video_parse_sequence_display_extension
-          (&mpvparse->sequencedispext, map.data, size, offset)) {
-        GST_LOG_OBJECT (mpvparse, "Read Sequence Display Extension");
-        mpvparse->config_flags |= FLAG_SEQUENCE_DISPLAY_EXT;
-        mpvparse->seqdispext_updated = TRUE;
-      } else if (gst_mpeg_video_parse_quant_matrix_extension
-          (&mpvparse->quantmatrext, map.data, size, offset)) {
-        GST_LOG_OBJECT (mpvparse, "Read Quantization Matrix Extension");
-        mpvparse->quantmatrext_updated = TRUE;
+    if (packet.size > 1) {
+      switch (packet.data[packet.offset] >> 4) {
+        case GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE:
+          if (gst_mpeg_video_packet_parse_sequence_extension (&packet,
+                  &mpvparse->sequenceext)) {
+            GST_LOG_OBJECT (mpvparse, "Read Sequence Extension");
+            mpvparse->config_flags |= FLAG_SEQUENCE_EXT;
+            mpvparse->seqext_updated = TRUE;
+          }
+          break;
+        case GST_MPEG_VIDEO_PACKET_EXT_SEQUENCE_DISPLAY:
+          if (gst_mpeg_video_packet_parse_sequence_display_extension (&packet,
+                  &mpvparse->sequencedispext)) {
+            GST_LOG_OBJECT (mpvparse, "Read Sequence Display Extension");
+            mpvparse->config_flags |= FLAG_SEQUENCE_DISPLAY_EXT;
+            mpvparse->seqdispext_updated = TRUE;
+          }
+          break;
+        case GST_MPEG_VIDEO_PACKET_EXT_QUANT_MATRIX:
+          if (gst_mpeg_video_packet_parse_quant_matrix_extension (&packet,
+                  &mpvparse->quantmatrext)) {
+            GST_LOG_OBJECT (mpvparse, "Read Quantization Matrix Extension");
+            mpvparse->quantmatrext_updated = TRUE;
+          }
+          break;
       }
     }
   }
@@ -428,12 +443,18 @@ static void
 parse_packet_extension (GstMpegvParse * mpvparse, GstBuffer * buf, guint off)
 {
   GstMapInfo map;
+  GstMpegVideoPacket packet;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
+  packet.data = map.data;
+  packet.type = GST_MPEG_VIDEO_PACKET_EXTENSION;
+  packet.offset = off;
+  packet.size = map.size - off;
+
   /* FIXME : WE ARE ASSUMING IT IS A *PICTURE* EXTENSION */
-  if (gst_mpeg_video_parse_picture_extension (&mpvparse->picext, map.data,
-          map.size, off)) {
+  if (gst_mpeg_video_packet_parse_picture_extension (&packet,
+          &mpvparse->picext)) {
     mpvparse->frame_repeat_count = 1;
 
     if (mpvparse->picext.repeat_first_field) {
@@ -521,10 +542,14 @@ gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse,
   /* extract some picture info if there is any in the frame being terminated */
   if (ret && mpvparse->pic_offset >= 0 && mpvparse->pic_offset < off) {
     GstMapInfo map;
+    GstMpegVideoPacket packet;
 
     gst_buffer_map (buf, &map, GST_MAP_READ);
-    if (gst_mpeg_video_parse_picture_header (&mpvparse->pichdr,
-            map.data, map.size, mpvparse->pic_offset))
+    packet.data = map.data;
+    packet.type = GST_MPEG_VIDEO_PACKET_PICTURE;
+    packet.offset = mpvparse->pic_offset;
+    packet.size = map.size - mpvparse->pic_offset;
+    if (gst_mpeg_video_packet_parse_picture_header (&packet, &mpvparse->pichdr))
       GST_LOG_OBJECT (mpvparse, "picture_coding_type %d (%s), ending"
           "frame of size %d", mpvparse->pichdr.pic_type,
           picture_type_name (mpvparse->pichdr.pic_type), off - 4);
