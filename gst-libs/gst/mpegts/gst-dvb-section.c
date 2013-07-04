@@ -35,6 +35,15 @@
 #include "mpegts.h"
 #include "gstmpegts-private.h"
 
+/**
+ * SECTION:gst-dvb-section
+ * @title: DVB variants of MPEG-TS sections
+ * @short_description: Sections for the various DVB specifications
+ * @include: gst/mpegts/mpegts.h
+ *
+ */
+
+
 /*
  * TODO
  *

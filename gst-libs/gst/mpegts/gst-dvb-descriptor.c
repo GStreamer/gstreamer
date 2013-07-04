@@ -27,6 +27,14 @@
 #include "gstmpegts-private.h"
 
 
+/**
+ * SECTION:gst-dvb-descriptor
+ * @title: DVB variants of MPEG-TS descriptors
+ * @short_description: Descriptors for the various DVB specifications
+ * @include: gst/mpegts/mpegts.h
+ *
+ */
+
 /*
  * TODO
  *

@@ -36,11 +36,29 @@
 #include "gstmpegts-private.h"
 
 /**
+ * SECTION:gstmpegts
+ * @title: Mpeg-ts helper library
+ * @short_description: Mpeg-ts helper library for plugins and applications
+ * @include: gst/mpegts/mpegts.h
+ */
+
+/**
  * SECTION:gstmpegtssection
- * @short_description: Convenience library for using MPEG-TS sections 
+ * @title: Base MPEG-TS sections
+ * @short_description: Sections for ITU H.222.0 | ISO/IEC 13818-1 
+ * @include: gst/mpegts/mpegts.h
  *
  * For more details, refer to the ITU H.222.0 or ISO/IEC 13818-1 specifications
  * and other specifications mentionned in the documentation.
+ */
+
+/* FIXME : Move this to proper file once we have a C file for it */
+/**
+ * SECTION:gst-atsc-section
+ * @title: ATSC variants of MPEG-TS sections
+ * @short_description: Sections for the various ATSC specifications
+ * @include: gst/mpegts/mpegts.h
+ *
  */
 
 /*

@@ -129,7 +129,7 @@ typedef struct _GstMpegTsNIT GstMpegTsNIT;
  * GstMpegTsNITStream:
  * @transport_stream_id:
  * @original_network_id:
- * @descriptors: (element-type GstMpegTsDescriptor)
+ * @descriptors: (element-type GstMpegTsDescriptor):
  *
  */
 struct _GstMpegTsNITStream
@@ -143,8 +143,8 @@ struct _GstMpegTsNITStream
 /**
  * GstMpegTsNIT:
  * @actual_network: Whether this NIT corresponds to the actual stream
- * @descriptors: (element-type GstMpegTsDescriptor) the global descriptors
- * @streams: (element-type GstMpegTsNITStream) the streams
+ * @descriptors: (element-type GstMpegTsDescriptor): the global descriptors
+ * @streams: (element-type GstMpegTsNITStream): the streams
  *
  * Network Information Table (ISO/IEC 13818-1 / EN 300 468)
  *
@@ -182,13 +182,13 @@ struct _GstMpegTsBATStream
 
 /**
  * GstMpegTsBAT:
+ * @descriptors: (element-type GstMpegTsDescriptor):
+ * @streams: (element-type GstMpegTsBATStream):
  *
  * DVB Bouquet Association Table (EN 300 468)
  */
 struct _GstMpegTsBAT
 {
-  gboolean    actual_network;
-
   GArray     *descriptors;
 
   GPtrArray  *streams;

@@ -28,11 +28,33 @@
 
 /**
  * SECTION:gstmpegtsdescriptor
- * @short_description: Convenience library for using MPEG-TS descriptors
+ * @title: Base MPEG-TS descriptors
+ * @short_description: Descriptors for ITU H.222.0 | ISO/IEC 13818-1 
+ * @include: gst/mpegts/mpegts.h
+ *
+ * These are the base descriptor types and methods.
  *
  * For more details, refer to the ITU H.222.0 or ISO/IEC 13818-1 specifications
  * and other specifications mentionned in the documentation.
  */
+
+/* FIXME : Move this to proper file once we have a C file for ATSC/ISDB descriptors */
+/**
+ * SECTION:gst-atsc-descriptor
+ * @title: ATSC variants of MPEG-TS descriptors
+ * @short_description: Descriptors for the various ATSC specifications
+ * @include: gst/mpegts/mpegts.h
+ *
+ */
+
+/**
+ * SECTION:gst-isdb-descriptor
+ * @title: ISDB variants of MPEG-TS descriptors
+ * @short_description: Descriptors for the various ISDB specifications
+ * @include: gst/mpegts/mpegts.h
+ *
+ */
+
 
 /*
  * TODO

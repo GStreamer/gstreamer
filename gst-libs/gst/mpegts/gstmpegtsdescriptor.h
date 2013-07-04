@@ -64,6 +64,9 @@
  *
  * The type of #GstMpegTsDescriptor
  *
+ * These values correspond to the registered descriptor type from
+ * the base MPEG-TS specifications (ITU H.222.0 | ISO/IEC 13818-1).
+ *
  * Consult the relevant specifications for more details.
  */
 typedef enum {
@@ -132,12 +135,28 @@ typedef enum {
   /* 55-63 ITU-T Rec. H.222.0 | ISO/IEC 13818-1 Reserved */
 } GstMpegTsDescriptorType;
 
+/**
+ * GstMpegTsMiscDescriptorType:
+ *
+ * The type of #GstMpegTsDescriptor
+ *
+ * These values correspond to miscellaneous descriptor types that are
+ * not yet identified from known specifications.
+ */
 typedef enum {
   /* 0x80 - 0xFE are user defined */
   GST_MTS_DESC_AC3_AUDIO_STREAM                 = 0x81,
   GST_MTS_DESC_DTG_LOGICAL_CHANNEL              = 0x83,    /* from DTG D-Book */
 } GstMpegTsMiscDescriptorType;
 
+/**
+ * GstMpegTsATSCDescriptorType:
+ *
+ * These values correspond to the registered descriptor type from
+ * the various ATSC specifications.
+ *
+ * Consult the relevant specifications for more details.
+ */
 typedef enum {
   /* ATSC A/65 2009 */
   GST_MTS_DESC_ATSC_STUFFING                    = 0x80,
@@ -167,6 +186,14 @@ typedef enum {
   GST_MTS_DESC_ATSC_GROUP_LINK                  = 0xB8,
 } GstMpegTsATSCDescriptorType;
 
+/**
+ * GstMpegTsISDBDescriptorType:
+ *
+ * These values correspond to the registered descriptor type from
+ * the various ISDB specifications.
+ *
+ * Consult the relevant specifications for more details.
+ */
 typedef enum {
   /* ISDB ARIB B10 v4.6 */
   GST_MTS_DESC_ISDB_HIERARCHICAL_TRANSMISSION   = 0xC0,

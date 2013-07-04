@@ -42,8 +42,14 @@
         <filename>gstreamer-plugins-bad-&GST_API_VERSION;.pc</filename> and adding
         <filename>-lgstmpegts-&GST_API_VERSION;</filename> to the library flags.
       </para>
+      <xi:include href="xml/gstmpegts.xml" />
       <xi:include href="xml/gstmpegtssection.xml" />
       <xi:include href="xml/gstmpegtsdescriptor.xml" />
+      <xi:include href="xml/gst-atsc-section.xml" />
+      <xi:include href="xml/gst-dvb-section.xml" />
+      <xi:include href="xml/gst-atsc-descriptor.xml" />
+      <xi:include href="xml/gst-dvb-descriptor.xml" />
+      <xi:include href="xml/gst-isdb-descriptor.xml" />
     </chapter>
 
     <chapter id="tools">

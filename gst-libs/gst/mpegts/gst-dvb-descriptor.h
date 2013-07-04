@@ -34,6 +34,16 @@
 
 #include <gst/gst.h>
 
+/**
+ * GstMpegTsDVBDescriptorType:
+ *
+ * The type of #GstMpegTsDescriptor
+ *
+ * These values correspond to the registered descriptor type from
+ * the various DVB specifications.
+ *
+ * Consult the relevant specifications for more details.
+ */
 typedef enum {
   /* 64-127 DVB tags ETSI EN 300 468
    * (Specification for Service Information (SI) in DVB systems)
@@ -197,8 +207,6 @@ gboolean gst_mpegts_descriptor_parse_satellite_delivery_system (const GstMpegTsD
 								GstMpegTsSatelliteDeliverySystemDescriptor *res);
 
 
-/* FIXME : Implement */
-
 /* GST_MTS_DESC_DVB_CABLE_DELIVERY_SYSTEM (0x44) */
 typedef enum {
   GST_MPEGTS_CABLE_OUTER_FEC_UNDEFINED = 0,
@@ -273,7 +281,6 @@ typedef enum {
   GST_DVB_SERVICE_RESERVED_FF
 } GstMpegTsDVBServiceType;
 
-/* FIXME : enum type for service_type ? */
 gboolean gst_mpegts_descriptor_parse_dvb_service (const GstMpegTsDescriptor *descriptor,
 						  GstMpegTsDVBServiceType *service_type,
 						  gchar **service_name,
