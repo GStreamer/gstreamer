@@ -323,7 +323,7 @@ gst_mpeg_video_packet_parse_sequence_header (const GstMpegVideoPacket * packet,
 
   g_return_val_if_fail (seqhdr != NULL, FALSE);
 
-  if (packet->size < 4)
+  if (packet->size < 8)
     return FALSE;
 
   gst_bit_reader_init (&br, &packet->data[packet->offset], packet->size);
@@ -543,7 +543,7 @@ gboolean
 
   g_return_val_if_fail (seqscaleext != NULL, FALSE);
 
-  if (packet->size < 5) {
+  if (packet->size < 2) {
     GST_DEBUG ("not enough bytes to parse the extension");
     return FALSE;
   }
@@ -962,7 +962,7 @@ gst_mpeg_video_packet_parse_slice_header (const GstMpegVideoPacket * packet,
 
   g_return_val_if_fail (seqhdr != NULL, FALSE);
 
-  if (packet->size < 5)
+  if (packet->size < 1)
     return FALSE;
 
   gst_bit_reader_init (&br, &packet->data[packet->offset], packet->size);
