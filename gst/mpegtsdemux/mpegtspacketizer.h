@@ -65,7 +65,6 @@ G_BEGIN_DECLS
 
 typedef struct _MpegTSPacketizer2 MpegTSPacketizer2;
 typedef struct _MpegTSPacketizer2Class MpegTSPacketizer2Class;
-typedef struct _MpegTSPacketizerPrivate MpegTSPacketizerPrivate;
 
 typedef struct
 {
@@ -92,6 +91,43 @@ typedef struct
   guint64 offset;
 } MpegTSPacketizerStream;
 
+/* Maximum number of MpegTSPcr
+ * 256 should be sufficient for most multiplexes */
+#define MAX_PCR_OBS_CHANNELS 256
+
+typedef struct _MpegTSPCR
+{
+  guint16 pid;
+
+  /* Following variables are only active/used when
+   * calculate_skew is TRUE */
+  GstClockTime base_time;
+  GstClockTime base_pcrtime;
+  GstClockTime prev_out_time;
+  GstClockTime prev_in_time;
+  GstClockTime last_pcrtime;
+  gint64 window[MAX_WINDOW];
+  guint window_pos;
+  guint window_size;
+  gboolean window_filling;
+  gint64 window_min;
+  gint64 skew;
+  gint64 prev_send_diff;
+
+  /* Offset to apply to PCR to handle wraparounds */
+  guint64 pcroffset;
+
+  /* Used for bitrate calculation */
+  /* FIXME : Replace this later on with a balanced tree or sequence */
+  guint64 first_offset;
+  guint64 first_pcr;
+  GstClockTime first_pcr_ts;
+  guint64 last_offset;
+  guint64 last_pcr;
+  GstClockTime last_pcr_ts;
+
+} MpegTSPCR;
+
 struct _MpegTSPacketizer2 {
   GObject     parent;
 
@@ -112,7 +148,24 @@ struct _MpegTSPacketizer2 {
   /* offset/bitrate calculator */
   gboolean       calculate_offset;
 
-  MpegTSPacketizerPrivate *priv;
+  /* Shortcuts for adapter usage */
+  guint8 *map_data;
+  gsize map_offset;
+  gsize map_size;
+  gboolean need_sync;
+
+  /* Reference offset */
+  guint64 refoffset;
+
+  guint nb_seen_offsets;
+
+  /* Last inputted timestamp */
+  GstClockTime last_in_time;
+
+  /* offset to observations table */
+  guint8 pcrtablelut[0x2000];
+  MpegTSPCR *observations[MAX_PCR_OBS_CHANNELS];
+  guint8 lastobsid;
 };
 
 struct _MpegTSPacketizer2Class {
