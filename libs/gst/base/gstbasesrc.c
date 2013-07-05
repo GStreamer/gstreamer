@@ -1706,13 +1706,13 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       event = NULL;
       break;
     case GST_EVENT_FLUSH_STOP:
-      GST_LIVE_LOCK (src->srcpad);
+      GST_LIVE_LOCK (src);
       src->priv->segment_pending = TRUE;
       /* sending random flushes downstream can break stuff,
        * especially sync since all segment info will get flushed */
       GST_DEBUG_OBJECT (src, "pushing flush-stop event downstream");
       result = gst_pad_push_event (src->srcpad, event);
-      GST_LIVE_UNLOCK (src->srcpad);
+      GST_LIVE_UNLOCK (src);
       event = NULL;
       break;
 
