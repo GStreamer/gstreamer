@@ -40,7 +40,6 @@ struct _GstRTSPMediaPrivate
   gboolean reused;
   gboolean eos_shutdown;
   guint buffer_size;
-  GstRTSPAuth *auth;
   GstRTSPAddressPool *pool;
 
   GstElement *element;
@@ -262,8 +261,6 @@ gst_rtsp_media_finalize (GObject * obj)
   if (priv->nettime)
     gst_object_unref (priv->nettime);
   gst_object_unref (priv->element);
-  if (priv->auth)
-    g_object_unref (priv->auth);
   if (priv->pool)
     g_object_unref (priv->pool);
   g_mutex_clear (&priv->lock);
@@ -782,63 +779,6 @@ gst_rtsp_media_is_time_provider (GstRTSPMedia * media)
   g_mutex_unlock (&priv->lock);
 
   return res;
-}
-
-/**
- * gst_rtsp_media_set_auth:
- * @media: a #GstRTSPMedia
- * @auth: a #GstRTSPAuth
- *
- * configure @auth to be used as the authentication manager of @media.
- */
-void
-gst_rtsp_media_set_auth (GstRTSPMedia * media, GstRTSPAuth * auth)
-{
-  GstRTSPMediaPrivate *priv;
-  GstRTSPAuth *old;
-
-  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
-
-  priv = media->priv;
-
-  GST_LOG_OBJECT (media, "set auth %p", auth);
-
-  g_mutex_lock (&priv->lock);
-  if ((old = priv->auth) != auth)
-    priv->auth = auth ? g_object_ref (auth) : NULL;
-  else
-    old = NULL;
-  g_mutex_unlock (&priv->lock);
-
-  if (old)
-    g_object_unref (old);
-}
-
-/**
- * gst_rtsp_media_get_auth:
- * @media: a #GstRTSPMedia
- *
- * Get the #GstRTSPAuth used as the authentication manager of @media.
- *
- * Returns: (transfer full): the #GstRTSPAuth of @media. g_object_unref() after
- * usage.
- */
-GstRTSPAuth *
-gst_rtsp_media_get_auth (GstRTSPMedia * media)
-{
-  GstRTSPMediaPrivate *priv;
-  GstRTSPAuth *result;
-
-  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
-
-  priv = media->priv;
-
-  g_mutex_lock (&priv->lock);
-  if ((result = priv->auth))
-    g_object_ref (result);
-  g_mutex_unlock (&priv->lock);
-
-  return result;
 }
 
 /**

@@ -456,7 +456,7 @@ handle_unauthorized_request (GstRTSPClient * client, GstRTSPAuth * auth,
 
   if (auth) {
     /* and let the authentication manager setup the auth tokens */
-    gst_rtsp_auth_setup_auth (auth, client, 0, state);
+    gst_rtsp_auth_setup (auth, client, state);
   }
 
   send_message (client, state->session, state->response, FALSE);
@@ -487,7 +487,6 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state, gint * matched)
   GstRTSPClientPrivate *priv = client->priv;
   GstRTSPMediaFactory *factory;
   GstRTSPMedia *media;
-  GstRTSPAuth *auth;
   gchar *path;
   gint path_len;
 
@@ -517,17 +516,6 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state, gint * matched)
       g_object_unref (priv->media);
     }
     priv->media = NULL;
-
-    /* check if we have access to the factory */
-    if ((auth = gst_rtsp_media_factory_get_auth (factory))) {
-      state->factory = factory;
-
-      if (!gst_rtsp_auth_check (auth, client, 0, state))
-        goto not_allowed;
-
-      state->factory = NULL;
-      g_object_unref (auth);
-    }
 
     /* prepare the media and add it to the pipeline */
     if (!(media = gst_rtsp_media_factory_construct (factory, state->uri)))
@@ -566,15 +554,6 @@ no_factory:
   {
     GST_ERROR ("client %p: no factory for uri %s", client, path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
-    return NULL;
-  }
-not_allowed:
-  {
-    GST_ERROR ("client %p: unauthorized request", client);
-    handle_unauthorized_request (client, auth, state);
-    g_object_unref (factory);
-    state->factory = NULL;
-    g_object_unref (auth);
     return NULL;
   }
 no_media:
@@ -1847,6 +1826,8 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   if (priv->auth) {
     if (!gst_rtsp_auth_check (priv->auth, client, 0, &state))
       goto not_authorized;
+
+    state.auth = priv->auth;
   }
 
   /* now see what is asked and dispatch to a dedicated handler */

@@ -46,10 +46,12 @@ static void gst_rtsp_auth_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_auth_finalize (GObject * obj);
 
-static gboolean default_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
+static gboolean default_setup (GstRTSPAuth * auth, GstRTSPClient * client,
+    GstRTSPClientState * state);
+static gboolean default_validate (GstRTSPAuth * auth,
+    GstRTSPClient * client, GstRTSPClientState * state);
+static gboolean default_check (GstRTSPAuth * auth, GstRTSPClient * client,
     GQuark hint, GstRTSPClientState * state);
-static gboolean default_check_method (GstRTSPAuth * auth,
-    GstRTSPClient * client, GQuark hint, GstRTSPClientState * state);
 
 G_DEFINE_TYPE (GstRTSPAuth, gst_rtsp_auth, G_TYPE_OBJECT);
 
@@ -66,8 +68,9 @@ gst_rtsp_auth_class_init (GstRTSPAuthClass * klass)
   gobject_class->set_property = gst_rtsp_auth_set_property;
   gobject_class->finalize = gst_rtsp_auth_finalize;
 
-  klass->setup_auth = default_setup_auth;
-  klass->check_method = default_check_method;
+  klass->setup = default_setup;
+  klass->validate = default_validate;
+  klass->check = default_check;
 
   GST_DEBUG_CATEGORY_INIT (rtsp_auth_debug, "rtspauth", 0, "GstRTSPAuth");
 }
@@ -192,8 +195,8 @@ gst_rtsp_auth_remove_basic (GstRTSPAuth * auth, const gchar * basic)
 }
 
 static gboolean
-default_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
-    GQuark hint, GstRTSPClientState * state)
+default_setup (GstRTSPAuth * auth, GstRTSPClient * client,
+    GstRTSPClientState * state)
 {
   if (state->response == NULL)
     return FALSE;
@@ -206,10 +209,9 @@ default_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
 }
 
 /**
- * gst_rtsp_auth_setup_auth:
+ * gst_rtsp_auth_setup:
  * @auth: a #GstRTSPAuth
  * @client: the client
- * @hint: TODO
  * @state: TODO
  *
  * Add authentication tokens to @response.
@@ -217,8 +219,8 @@ default_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
  * Returns: FALSE if something is wrong.
  */
 gboolean
-gst_rtsp_auth_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
-    GQuark hint, GstRTSPClientState * state)
+gst_rtsp_auth_setup (GstRTSPAuth * auth, GstRTSPClient * client,
+    GstRTSPClientState * state)
 {
   gboolean result = FALSE;
   GstRTSPAuthClass *klass;
@@ -231,53 +233,83 @@ gst_rtsp_auth_setup_auth (GstRTSPAuth * auth, GstRTSPClient * client,
 
   GST_DEBUG_OBJECT (auth, "setup auth");
 
-  if (klass->setup_auth)
-    result = klass->setup_auth (auth, client, hint, state);
+  if (klass->setup)
+    result = klass->setup (auth, client, state);
 
   return result;
 }
 
 static gboolean
-default_check_method (GstRTSPAuth * auth, GstRTSPClient * client,
-    GQuark hint, GstRTSPClientState * state)
+default_validate (GstRTSPAuth * auth, GstRTSPClient * client,
+    GstRTSPClientState * state)
 {
   GstRTSPAuthPrivate *priv = auth->priv;
-  gboolean result = TRUE;
   GstRTSPResult res;
+  gchar *authorization;
 
-  if ((state->method & priv->methods) != 0) {
-    gchar *authorization;
+  GST_DEBUG_OBJECT (auth, "validate");
 
-    result = FALSE;
+  res =
+      gst_rtsp_message_get_header (state->request, GST_RTSP_HDR_AUTHORIZATION,
+      &authorization, 0);
+  if (res < 0)
+    goto no_auth;
 
-    res =
-        gst_rtsp_message_get_header (state->request, GST_RTSP_HDR_AUTHORIZATION,
-        &authorization, 0);
-    if (res < 0)
-      goto no_auth;
+  /* parse type */
+  if (g_ascii_strncasecmp (authorization, "basic ", 6) == 0) {
+    gchar *authgroup;
 
-    /* parse type */
-    if (g_ascii_strncasecmp (authorization, "basic ", 6) == 0) {
-      gchar *authgroup;
-
-      GST_DEBUG_OBJECT (auth, "check Basic auth");
-      g_mutex_lock (&priv->lock);
-      if ((authgroup = g_hash_table_lookup (priv->basic, &authorization[6]))) {
-        result = TRUE;
-        state->authgroup = authgroup;
-      }
-      g_mutex_unlock (&priv->lock);
-    } else if (g_ascii_strncasecmp (authorization, "digest ", 7) == 0) {
-      GST_DEBUG_OBJECT (auth, "check Digest auth");
-      /* not implemented yet */
-      result = FALSE;
+    GST_DEBUG_OBJECT (auth, "check Basic auth");
+    g_mutex_lock (&priv->lock);
+    if ((authgroup = g_hash_table_lookup (priv->basic, &authorization[6]))) {
+      GST_DEBUG_OBJECT (auth, "setting authgroup %s", authgroup);
+      state->authgroup = authgroup;
     }
+    g_mutex_unlock (&priv->lock);
+  } else if (g_ascii_strncasecmp (authorization, "digest ", 7) == 0) {
+    GST_DEBUG_OBJECT (auth, "check Digest auth");
+    /* not implemented yet */
   }
-  return result;
+  return TRUE;
 
 no_auth:
   {
     GST_DEBUG_OBJECT (auth, "no authorization header found");
+    return TRUE;
+  }
+}
+
+static gboolean
+default_check (GstRTSPAuth * auth, GstRTSPClient * client,
+    GQuark hint, GstRTSPClientState * state)
+{
+  GstRTSPAuthPrivate *priv = auth->priv;
+  GstRTSPAuthClass *klass;
+
+  klass = GST_RTSP_AUTH_GET_CLASS (auth);
+
+  if ((state->method & priv->methods) != 0) {
+    /* we need an authgroup to check */
+    if (state->authgroup == NULL) {
+      if (klass->validate) {
+        if (!klass->validate (auth, client, state))
+          goto validate_failed;
+      }
+    }
+
+    if (state->authgroup == NULL)
+      goto no_auth;
+  }
+  return TRUE;
+
+validate_failed:
+  {
+    GST_DEBUG_OBJECT (auth, "validation failed");
+    return FALSE;
+  }
+no_auth:
+  {
+    GST_DEBUG_OBJECT (auth, "no authorization group found");
     return FALSE;
   }
 }
@@ -289,9 +321,10 @@ no_auth:
  * @hint: a hint
  * @state: client state
  *
- * Check if @client is allowed to perform the actions of @state.
+ * Check if @client with state is authorized to perform @hint in the
+ * current @state.
  *
- * Returns: FALSE if the action is not allowed.
+ * Returns: FALSE if check failed.
  */
 gboolean
 gst_rtsp_auth_check (GstRTSPAuth * auth, GstRTSPClient * client,
@@ -306,10 +339,10 @@ gst_rtsp_auth_check (GstRTSPAuth * auth, GstRTSPClient * client,
 
   klass = GST_RTSP_AUTH_GET_CLASS (auth);
 
-  GST_DEBUG_OBJECT (auth, "check state");
+  GST_DEBUG_OBJECT (auth, "check auth");
 
-  if (klass->check_method)
-    result = klass->check_method (auth, client, hint, state);
+  if (klass->check)
+    result = klass->check (auth, client, hint, state);
 
   return result;
 }

@@ -137,9 +137,6 @@ GstRTSPLowerTrans     gst_rtsp_media_get_protocols    (GstRTSPMedia *media);
 void                  gst_rtsp_media_set_eos_shutdown (GstRTSPMedia *media, gboolean eos_shutdown);
 gboolean              gst_rtsp_media_is_eos_shutdown  (GstRTSPMedia *media);
 
-void                  gst_rtsp_media_set_auth         (GstRTSPMedia *media, GstRTSPAuth *auth);
-GstRTSPAuth *         gst_rtsp_media_get_auth         (GstRTSPMedia *media);
-
 void                  gst_rtsp_media_set_address_pool (GstRTSPMedia *media, GstRTSPAddressPool *pool);
 GstRTSPAddressPool *  gst_rtsp_media_get_address_pool (GstRTSPMedia *media);
 

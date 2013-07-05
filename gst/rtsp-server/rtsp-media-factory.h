@@ -114,9 +114,6 @@ gboolean              gst_rtsp_media_factory_is_eos_shutdown    (GstRTSPMediaFac
 void                  gst_rtsp_media_factory_set_protocols  (GstRTSPMediaFactory *factory, GstRTSPLowerTrans protocols);
 GstRTSPLowerTrans     gst_rtsp_media_factory_get_protocols  (GstRTSPMediaFactory *factory);
 
-void                  gst_rtsp_media_factory_set_auth     (GstRTSPMediaFactory *factory, GstRTSPAuth *auth);
-GstRTSPAuth *         gst_rtsp_media_factory_get_auth     (GstRTSPMediaFactory *factory);
-
 void                  gst_rtsp_media_factory_set_address_pool   (GstRTSPMediaFactory * factory,
                                                                  GstRTSPAddressPool * pool);
 GstRTSPAddressPool *  gst_rtsp_media_factory_get_address_pool   (GstRTSPMediaFactory * factory);

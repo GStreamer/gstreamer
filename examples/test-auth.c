@@ -87,16 +87,6 @@ main (int argc, char *argv[])
       "audiotestsrc ! audio/x-raw,rate=8000 ! "
       "alawenc ! rtppcmapay name=pay1 pt=97 " ")");
 
-  /* make a new authentication manager */
-  auth = gst_rtsp_auth_new ();
-  basic = gst_rtsp_auth_make_basic ("user", "password");
-  gst_rtsp_auth_add_basic (auth, basic, "user");
-  g_free (basic);
-  basic = gst_rtsp_auth_make_basic ("admin", "power");
-  gst_rtsp_auth_add_basic (auth, basic, "admin");
-  g_free (basic);
-  gst_rtsp_media_factory_set_auth (factory, auth);
-  g_object_unref (auth);
   /* attach the test factory to the /test url */
   gst_rtsp_mount_points_add_factory (mounts, "/test", factory);
 
@@ -105,18 +95,26 @@ main (int argc, char *argv[])
   gst_rtsp_media_factory_set_launch (factory, "( "
       "videotestsrc ! video/x-raw,width=352,height=288,framerate=30/1 ! "
       "x264enc ! rtph264pay name=pay0 pt=96 )");
-  /* make a new authentication manager */
-  auth = gst_rtsp_auth_new ();
-  basic = gst_rtsp_auth_make_basic ("admin2", "power2");
-  gst_rtsp_auth_add_basic (auth, basic, "admin");
-  g_free (basic);
-  gst_rtsp_media_factory_set_auth (factory, auth);
-  g_object_unref (auth);
   /* attach the test factory to the /test url */
   gst_rtsp_mount_points_add_factory (mounts, "/test2", factory);
 
   /* don't need the ref to the mapper anymore */
   g_object_unref (mounts);
+
+  /* make a new authentication manager */
+  auth = gst_rtsp_auth_new ();
+  basic = gst_rtsp_auth_make_basic ("user", "password");
+  gst_rtsp_auth_add_basic (auth, basic, "user");
+  g_free (basic);
+  basic = gst_rtsp_auth_make_basic ("admin", "power");
+  gst_rtsp_auth_add_basic (auth, basic, "admin");
+  g_free (basic);
+  basic = gst_rtsp_auth_make_basic ("admin2", "power2");
+  gst_rtsp_auth_add_basic (auth, basic, "admin");
+  g_free (basic);
+  /* set as the server authentication manager */
+  gst_rtsp_server_set_auth (server, auth);
+  g_object_unref (auth);
 
   /* attach the server to the default maincontext */
   if (gst_rtsp_server_attach (server, NULL) == 0)

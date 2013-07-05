@@ -53,10 +53,12 @@ struct _GstRTSPAuth {
 struct _GstRTSPAuthClass {
   GObjectClass  parent_class;
 
-  gboolean (*setup_auth)   (GstRTSPAuth *auth, GstRTSPClient * client,
-                            GQuark hint, GstRTSPClientState *state);
-  gboolean (*check_method) (GstRTSPAuth *auth, GstRTSPClient * client,
-                            GQuark hint, GstRTSPClientState *state);
+  gboolean (*setup)         (GstRTSPAuth *auth, GstRTSPClient * client,
+                             GstRTSPClientState *state);
+  gboolean (*validate)      (GstRTSPAuth *auth, GstRTSPClient * client,
+                             GstRTSPClientState *state);
+  gboolean (*check)         (GstRTSPAuth *auth, GstRTSPClient * client,
+                             GQuark hint, GstRTSPClientState *state);
 };
 
 GType               gst_rtsp_auth_get_type          (void);
@@ -67,10 +69,12 @@ void                gst_rtsp_auth_add_basic         (GstRTSPAuth *auth, const gc
                                                      const gchar *authgroup);
 void                gst_rtsp_auth_remove_basic      (GstRTSPAuth *auth, const gchar * basic);
 
-gboolean            gst_rtsp_auth_setup_auth        (GstRTSPAuth *auth, GstRTSPClient * client,
-                                                     GQuark hint, GstRTSPClientState *state);
+gboolean            gst_rtsp_auth_setup             (GstRTSPAuth *auth, GstRTSPClient * client,
+                                                     GstRTSPClientState *state);
+
 gboolean            gst_rtsp_auth_check             (GstRTSPAuth *auth, GstRTSPClient * client,
                                                      GQuark hint, GstRTSPClientState *state);
+
 /* helpers */
 gchar *             gst_rtsp_auth_make_basic        (const gchar * user, const gchar * pass);
 

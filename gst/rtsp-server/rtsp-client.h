@@ -65,6 +65,7 @@ struct _GstRTSPClientState {
   GstRTSPMessage      *request;
   GstRTSPUrl          *uri;
   GstRTSPMethod        method;
+  GstRTSPAuth         *auth;
   const gchar         *authgroup;
   GstRTSPSession      *session;
   GstRTSPSessionMedia *sessmedia;

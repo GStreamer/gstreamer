@@ -33,7 +33,6 @@ struct _GstRTSPMediaFactoryPrivate
   gboolean shared;
   gboolean eos_shutdown;
   GstRTSPLowerTrans protocols;
-  GstRTSPAuth *auth;
   guint buffer_size;
   GstRTSPAddressPool *pool;
 
@@ -194,8 +193,6 @@ gst_rtsp_media_factory_finalize (GObject * obj)
   g_mutex_clear (&priv->medias_lock);
   g_free (priv->launch);
   g_mutex_clear (&priv->lock);
-  if (priv->auth)
-    g_object_unref (priv->auth);
   if (priv->pool)
     g_object_unref (priv->pool);
 
@@ -536,62 +533,6 @@ gst_rtsp_media_factory_get_address_pool (GstRTSPMediaFactory * factory)
 }
 
 /**
- * gst_rtsp_media_factory_set_auth:
- * @factory: a #GstRTSPMediaFactory
- * @auth: a #GstRTSPAuth
- *
- * configure @auth to be used as the authentication manager of @factory.
- */
-void
-gst_rtsp_media_factory_set_auth (GstRTSPMediaFactory * factory,
-    GstRTSPAuth * auth)
-{
-  GstRTSPMediaFactoryPrivate *priv;
-  GstRTSPAuth *old;
-
-  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
-
-  priv = factory->priv;
-
-  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
-  if ((old = priv->auth) != auth)
-    priv->auth = auth ? g_object_ref (auth) : NULL;
-  else
-    old = NULL;
-  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
-
-  if (old)
-    g_object_unref (old);
-}
-
-/**
- * gst_rtsp_media_factory_get_auth:
- * @factory: a #GstRTSPMediaFactory
- *
- * Get the #GstRTSPAuth used as the authentication manager of @factory.
- *
- * Returns: (transfer full): the #GstRTSPAuth of @factory. g_object_unref() after
- * usage.
- */
-GstRTSPAuth *
-gst_rtsp_media_factory_get_auth (GstRTSPMediaFactory * factory)
-{
-  GstRTSPMediaFactoryPrivate *priv;
-  GstRTSPAuth *result;
-
-  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
-
-  priv = factory->priv;
-
-  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
-  if ((result = priv->auth))
-    g_object_ref (result);
-  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
-
-  return result;
-}
-
-/**
  * gst_rtsp_media_factory_set_protocols:
  * @factory: a #GstRTSPMediaFactory
  * @protocols: the new flags
@@ -896,7 +837,6 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   GstRTSPMediaFactoryPrivate *priv = factory->priv;
   gboolean shared, eos_shutdown;
   guint size;
-  GstRTSPAuth *auth;
   GstRTSPLowerTrans protocols;
   GstRTSPAddressPool *pool;
 
@@ -913,10 +853,6 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   gst_rtsp_media_set_buffer_size (media, size);
   gst_rtsp_media_set_protocols (media, protocols);
 
-  if ((auth = gst_rtsp_media_factory_get_auth (factory))) {
-    gst_rtsp_media_set_auth (media, auth);
-    g_object_unref (auth);
-  }
   if ((pool = gst_rtsp_media_factory_get_address_pool (factory))) {
     gst_rtsp_media_set_address_pool (media, pool);
     g_object_unref (pool);
