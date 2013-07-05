@@ -131,7 +131,7 @@ gst_webvtt_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     gst_buffer_unmap (buf, &map_info);
   }
 
-  g_string_append_c (s, '\n');
+  g_string_append (s, "\n\n");
 
   buf_size = s->len;
   new_buffer = gst_buffer_new_wrapped (g_string_free (s, FALSE), buf_size);
