@@ -509,7 +509,7 @@ gint gst_mpdparser_get_rep_idx_with_min_bandwidth (GList * Representations);
 
 /* URL management */
 const gchar *gst_mpdparser_get_baseURL (GstMpdClient *client, guint indexStream);
-GstMediaSegment *gst_mpdparser_get_chunk_by_index (GstMpdClient *client, guint indexStream, guint indexChunk);
+gboolean gst_mpdparser_get_chunk_by_index (GstMpdClient *client, guint indexStream, guint indexChunk, GstMediaSegment * segment);
 
 /* Active stream */
 guint gst_mpdparser_get_nb_active_stream (GstMpdClient *client);
