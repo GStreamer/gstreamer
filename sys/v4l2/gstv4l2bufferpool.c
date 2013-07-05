@@ -1262,8 +1262,10 @@ gst_v4l2_buffer_pool_process (GstV4l2BufferPool * pool, GstBuffer * buf)
             /* all buffers are queued, try to dequeue one and release it back
              * into the pool so that _acquire can get to it again. */
             ret = gst_v4l2_buffer_pool_dqbuf (pool, &out);
-            if (ret != GST_FLOW_OK)
+            if (ret != GST_FLOW_OK) {
+              gst_buffer_unref (to_queue);
               goto done;
+            }
 
             /* release the rendered buffer back into the pool. This wakes up any
              * thread waiting for a buffer in _acquire(). If the buffer still has
