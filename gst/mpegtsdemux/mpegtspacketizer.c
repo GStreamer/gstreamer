@@ -853,9 +853,7 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
   MpegTSPacketizerStream *stream;
   gboolean long_packet;
   guint8 pointer, table_id;
-#ifndef GST_DISABLE_GST_DEBUG
   guint16 subtable_extension = 0;
-#endif
   guint section_length;
   guint8 *data, *data_start;
   guint8 packet_cc;
