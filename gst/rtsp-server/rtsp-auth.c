@@ -48,7 +48,7 @@ static void gst_rtsp_auth_finalize (GObject * obj);
 
 static gboolean default_setup (GstRTSPAuth * auth, GstRTSPClient * client,
     GstRTSPClientState * state);
-static gboolean default_validate (GstRTSPAuth * auth,
+static gboolean default_authenticate (GstRTSPAuth * auth,
     GstRTSPClient * client, GstRTSPClientState * state);
 static gboolean default_check (GstRTSPAuth * auth, GstRTSPClient * client,
     GQuark hint, GstRTSPClientState * state);
@@ -69,7 +69,7 @@ gst_rtsp_auth_class_init (GstRTSPAuthClass * klass)
   gobject_class->finalize = gst_rtsp_auth_finalize;
 
   klass->setup = default_setup;
-  klass->validate = default_validate;
+  klass->authenticate = default_authenticate;
   klass->check = default_check;
 
   GST_DEBUG_CATEGORY_INIT (rtsp_auth_debug, "rtspauth", 0, "GstRTSPAuth");
@@ -84,7 +84,8 @@ gst_rtsp_auth_init (GstRTSPAuth * auth)
 
   g_mutex_init (&priv->lock);
 
-  priv->basic = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
+  priv->basic = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+      (GDestroyNotify) gst_rtsp_token_unref);
 
   /* bitwise or of all methods that need authentication */
   priv->methods = GST_RTSP_DESCRIBE |
@@ -156,18 +157,19 @@ gst_rtsp_auth_new (void)
  */
 void
 gst_rtsp_auth_add_basic (GstRTSPAuth * auth, const gchar * basic,
-    const gchar * authgroup)
+    GstRTSPToken * token)
 {
   GstRTSPAuthPrivate *priv;
 
   g_return_if_fail (GST_IS_RTSP_AUTH (auth));
   g_return_if_fail (basic != NULL);
-  g_return_if_fail (authgroup != NULL);
+  g_return_if_fail (GST_IS_RTSP_TOKEN (token));
 
   priv = auth->priv;
 
   g_mutex_lock (&priv->lock);
-  g_hash_table_replace (priv->basic, g_strdup (basic), g_strdup (authgroup));
+  g_hash_table_replace (priv->basic, g_strdup (basic),
+      gst_rtsp_token_ref (token));
   g_mutex_unlock (&priv->lock);
 }
 
@@ -240,14 +242,14 @@ gst_rtsp_auth_setup (GstRTSPAuth * auth, GstRTSPClient * client,
 }
 
 static gboolean
-default_validate (GstRTSPAuth * auth, GstRTSPClient * client,
+default_authenticate (GstRTSPAuth * auth, GstRTSPClient * client,
     GstRTSPClientState * state)
 {
   GstRTSPAuthPrivate *priv = auth->priv;
   GstRTSPResult res;
   gchar *authorization;
 
-  GST_DEBUG_OBJECT (auth, "validate");
+  GST_DEBUG_OBJECT (auth, "authenticate");
 
   res =
       gst_rtsp_message_get_header (state->request, GST_RTSP_HDR_AUTHORIZATION,
@@ -257,13 +259,13 @@ default_validate (GstRTSPAuth * auth, GstRTSPClient * client,
 
   /* parse type */
   if (g_ascii_strncasecmp (authorization, "basic ", 6) == 0) {
-    gchar *authgroup;
+    GstRTSPToken *token;
 
     GST_DEBUG_OBJECT (auth, "check Basic auth");
     g_mutex_lock (&priv->lock);
-    if ((authgroup = g_hash_table_lookup (priv->basic, &authorization[6]))) {
-      GST_DEBUG_OBJECT (auth, "setting authgroup %s", authgroup);
-      state->authgroup = authgroup;
+    if ((token = g_hash_table_lookup (priv->basic, &authorization[6]))) {
+      GST_DEBUG_OBJECT (auth, "setting token %p", token);
+      state->token = token;
     }
     g_mutex_unlock (&priv->lock);
   } else if (g_ascii_strncasecmp (authorization, "digest ", 7) == 0) {
@@ -290,21 +292,21 @@ default_check (GstRTSPAuth * auth, GstRTSPClient * client,
 
   if ((state->method & priv->methods) != 0) {
     /* we need an authgroup to check */
-    if (state->authgroup == NULL) {
-      if (klass->validate) {
-        if (!klass->validate (auth, client, state))
-          goto validate_failed;
+    if (state->token == NULL) {
+      if (klass->authenticate) {
+        if (!klass->authenticate (auth, client, state))
+          goto authenticate_failed;
       }
     }
 
-    if (state->authgroup == NULL)
+    if (state->token == NULL)
       goto no_auth;
   }
   return TRUE;
 
-validate_failed:
+authenticate_failed:
   {
-    GST_DEBUG_OBJECT (auth, "validation failed");
+    GST_DEBUG_OBJECT (auth, "check failed");
     return FALSE;
   }
 no_auth:

@@ -27,6 +27,7 @@ typedef struct _GstRTSPAuthClass GstRTSPAuthClass;
 typedef struct _GstRTSPAuthPrivate GstRTSPAuthPrivate;
 
 #include "rtsp-client.h"
+#include "rtsp-token.h"
 
 G_BEGIN_DECLS
 
@@ -50,15 +51,31 @@ struct _GstRTSPAuth {
   GstRTSPAuthPrivate *priv;
 };
 
+/**
+ * GstRTSPAuthClass:
+ * @setup: called when an unauthorized resource has been accessed and
+ *         authentication needs to be requested to the client. The default
+ *         implementation adds basic authentication to the response.
+ * @authenticate: check the authentication of a client. The default implementation
+ *         checks if the authentication in the header matches one of the basic
+ *         authentication tokens. This function should set the authgroup field
+ *         in the state.
+ * @check: check if a resource can be accessed. this function should
+ *         call validate to authenticate the client when needed. The default
+ *         implementation disallows unauthenticated access to all methods
+ *         except OPTIONS.
+ *
+ * The authentication class.
+ */
 struct _GstRTSPAuthClass {
   GObjectClass  parent_class;
 
-  gboolean (*setup)         (GstRTSPAuth *auth, GstRTSPClient * client,
-                             GstRTSPClientState *state);
-  gboolean (*validate)      (GstRTSPAuth *auth, GstRTSPClient * client,
-                             GstRTSPClientState *state);
-  gboolean (*check)         (GstRTSPAuth *auth, GstRTSPClient * client,
-                             GQuark hint, GstRTSPClientState *state);
+  gboolean           (*setup)        (GstRTSPAuth *auth, GstRTSPClient * client,
+                                      GstRTSPClientState *state);
+  gboolean           (*authenticate) (GstRTSPAuth *auth, GstRTSPClient * client,
+                                      GstRTSPClientState *state);
+  gboolean           (*check)        (GstRTSPAuth *auth, GstRTSPClient * client,
+                                      GQuark hint, GstRTSPClientState *state);
 };
 
 GType               gst_rtsp_auth_get_type          (void);
@@ -66,7 +83,7 @@ GType               gst_rtsp_auth_get_type          (void);
 GstRTSPAuth *       gst_rtsp_auth_new               (void);
 
 void                gst_rtsp_auth_add_basic         (GstRTSPAuth *auth, const gchar * basic,
-                                                     const gchar *authgroup);
+                                                     GstRTSPToken *token);
 void                gst_rtsp_auth_remove_basic      (GstRTSPAuth *auth, const gchar * basic);
 
 gboolean            gst_rtsp_auth_setup             (GstRTSPAuth *auth, GstRTSPClient * client,

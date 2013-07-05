@@ -35,6 +35,7 @@ typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
 #include "rtsp-session-pool.h"
 #include "rtsp-session-media.h"
 #include "rtsp-auth.h"
+#include "rtsp-token.h"
 #include "rtsp-sdp.h"
 
 #define GST_TYPE_RTSP_CLIENT              (gst_rtsp_client_get_type ())
@@ -51,7 +52,8 @@ typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
  * @request: the complete request
  * @uri: the complete url parsed from @request
  * @method: the parsed method of @uri
- * @authgroup: authorisation group
+ * @auth: the current auth object or NULL
+ * @token: authorisation token
  * @session: the session, can be NULL
  * @sessmedia: the session media for the url can be NULL
  * @factory: the media factory for the url, can be NULL.
@@ -66,7 +68,7 @@ struct _GstRTSPClientState {
   GstRTSPUrl          *uri;
   GstRTSPMethod        method;
   GstRTSPAuth         *auth;
-  const gchar         *authgroup;
+  GstRTSPToken        *token;
   GstRTSPSession      *session;
   GstRTSPSessionMedia *sessmedia;
   GstRTSPMediaFactory *factory;

@@ -62,7 +62,9 @@ main (int argc, char *argv[])
   GstRTSPMountPoints *mounts;
   GstRTSPMediaFactory *factory;
   GstRTSPAuth *auth;
+  GstRTSPToken *token;
   gchar *basic;
+  GstStructure *s;
 
   gst_init (&argc, &argv);
 
@@ -103,15 +105,34 @@ main (int argc, char *argv[])
 
   /* make a new authentication manager */
   auth = gst_rtsp_auth_new ();
+
+  /* make user token */
+  token = gst_rtsp_token_new ();
+  s = gst_rtsp_token_writable_structure (token);
+  gst_structure_set (s, "manager.cgroup", G_TYPE_STRING, "user", NULL);
   basic = gst_rtsp_auth_make_basic ("user", "password");
-  gst_rtsp_auth_add_basic (auth, basic, "user");
+  gst_rtsp_auth_add_basic (auth, basic, token);
   g_free (basic);
+  gst_rtsp_token_unref (token);
+
+  /* make admin token */
+  token = gst_rtsp_token_new ();
+  s = gst_rtsp_token_writable_structure (token);
+  gst_structure_set (s, "manager.cgroup", G_TYPE_STRING, "admin", NULL);
   basic = gst_rtsp_auth_make_basic ("admin", "power");
-  gst_rtsp_auth_add_basic (auth, basic, "admin");
+  gst_rtsp_auth_add_basic (auth, basic, token);
   g_free (basic);
+  gst_rtsp_token_unref (token);
+
+  /* make admin2 token */
+  token = gst_rtsp_token_new ();
+  s = gst_rtsp_token_writable_structure (token);
+  gst_structure_set (s, "manager.cgroup", G_TYPE_STRING, "admin", NULL);
   basic = gst_rtsp_auth_make_basic ("admin2", "power2");
-  gst_rtsp_auth_add_basic (auth, basic, "admin");
+  gst_rtsp_auth_add_basic (auth, basic, token);
   g_free (basic);
+  gst_rtsp_token_unref (token);
+
   /* set as the server authentication manager */
   gst_rtsp_server_set_auth (server, auth);
   g_object_unref (auth);
