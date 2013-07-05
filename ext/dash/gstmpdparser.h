@@ -130,7 +130,7 @@ struct _GstSNode
 struct _GstSegmentTimelineNode
 {
   /* list of S nodes */
-  GList *S;
+  GQueue S;
 };
 
 struct _GstURLType
@@ -454,7 +454,7 @@ struct _GstActiveStream
   GstSegmentListNode *cur_segment_list;       /* active segment list */
   GstSegmentTemplateNode *cur_seg_template;   /* active segment template */
   guint segment_idx;                          /* index of next sequence chunk */
-  GList *segments;                            /* list of GstMediaSegment */
+  GPtrArray *segments;                        /* array of GstMediaSegment */
 };
 
 struct _GstMpdClient

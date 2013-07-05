@@ -571,15 +571,15 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         /* Update the current sequence on all streams */
         for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
           GstDashDemuxStream *stream = iter->data;
+          gint seg_i;
 
           active_stream =
               gst_mpdparser_get_active_stream_by_index (demux->client,
               stream->index);
           current_pos = 0;
           current_sequence = 0;
-          for (list = g_list_first (active_stream->segments); list;
-              list = g_list_next (list)) {
-            chunk = list->data;
+          for (seg_i = 0; seg_i < active_stream->segments->len; seg_i++) {
+            chunk = g_ptr_array_index (active_stream->segments, seg_i);
             current_pos = chunk->start_time;
             /* current_sequence = chunk->number; */
             GST_DEBUG_OBJECT (demux, "current_pos:%" GST_TIME_FORMAT

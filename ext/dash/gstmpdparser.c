@@ -85,7 +85,7 @@ static void gst_mpdparser_parse_url_type_node (GstURLType ** pointer,
     xmlNode * a_node);
 static void gst_mpdparser_parse_seg_base_type_ext (GstSegmentBaseType **
     pointer, xmlNode * a_node, GstSegmentBaseType * parent);
-static void gst_mpdparser_parse_s_node (GList ** list, xmlNode * a_node);
+static void gst_mpdparser_parse_s_node (GQueue * queue, xmlNode * a_node);
 static void gst_mpdparser_parse_segment_timeline_node (GstSegmentTimelineNode **
     pointer, xmlNode * a_node);
 static void gst_mpdparser_parse_mult_seg_base_type_ext (GstMultSegmentBaseType
@@ -173,6 +173,8 @@ static GstSegmentListNode *gst_mpdparser_get_segment_list (GstPeriodNode *
 static guint gst_mpd_client_get_segments_counts (GstActiveStream * stream);
 
 /* Memory management */
+static GstSegmentTimelineNode *
+gst_mpdparser_segment_timeline_node_new (void);
 static void gst_mpdparser_free_mpd_node (GstMPDNode * mpd_node);
 static void gst_mpdparser_free_prog_info_node (GstProgramInformationNode *
     prog_info_node);
@@ -1264,7 +1266,7 @@ gst_mpdparser_clone_s_node (GstSNode * pointer)
 }
 
 static void
-gst_mpdparser_parse_s_node (GList ** list, xmlNode * a_node)
+gst_mpdparser_parse_s_node (GQueue * queue, xmlNode * a_node)
 {
   GstSNode *new_s_node;
 
@@ -1273,7 +1275,7 @@ gst_mpdparser_parse_s_node (GList ** list, xmlNode * a_node)
     GST_WARNING ("Allocation of S node failed!");
     return;
   }
-  *list = g_list_append (*list, new_s_node);
+  g_queue_push_tail (queue, new_s_node);
 
   GST_LOG ("attributes of S node:");
   gst_mpdparser_get_xml_prop_unsigned_integer_64 (a_node, "t", 0,
@@ -1289,14 +1291,14 @@ gst_mpdparser_clone_segment_timeline (GstSegmentTimelineNode * pointer)
   GstSegmentTimelineNode *clone = NULL;
 
   if (pointer) {
-    clone = g_slice_new0 (GstSegmentTimelineNode);
+    clone = gst_mpdparser_segment_timeline_node_new ();
     if (clone) {
       GList *list;
-      for (list = g_list_first (pointer->S); list; list = g_list_next (list)) {
+      for (list = g_queue_peek_head_link (&pointer->S); list; list = g_list_next (list)) {
         GstSNode *s_node;
         s_node = (GstSNode *) list->data;
         if (s_node) {
-          clone->S = g_list_append (clone->S,
+          g_queue_push_tail (&clone->S,
               gst_mpdparser_clone_s_node (s_node));
         }
       }
@@ -1316,7 +1318,7 @@ gst_mpdparser_parse_segment_timeline_node (GstSegmentTimelineNode ** pointer,
   GstSegmentTimelineNode *new_seg_timeline;
 
   gst_mpdparser_free_segment_timeline_node (*pointer);
-  *pointer = new_seg_timeline = g_slice_new0 (GstSegmentTimelineNode);
+  *pointer = new_seg_timeline = gst_mpdparser_segment_timeline_node_new ();
   if (new_seg_timeline == NULL) {
     GST_WARNING ("Allocation of SegmentTimeline node failed!");
     return;
@@ -2442,12 +2444,23 @@ gst_mpdparser_free_s_node (GstSNode * s_node)
   }
 }
 
+static GstSegmentTimelineNode *
+gst_mpdparser_segment_timeline_node_new (void)
+{
+  GstSegmentTimelineNode *node = g_slice_new0 (GstSegmentTimelineNode);
+
+  g_queue_init (&node->S);
+
+  return node;
+}
+
 static void
 gst_mpdparser_free_segment_timeline_node (GstSegmentTimelineNode * seg_timeline)
 {
   if (seg_timeline) {
-    g_list_free_full (seg_timeline->S,
-        (GDestroyNotify) gst_mpdparser_free_s_node);
+    g_queue_foreach (&seg_timeline->S,
+        (GFunc) gst_mpdparser_free_s_node, NULL);
+    g_queue_clear (&seg_timeline->S);
     g_slice_free (GstSegmentTimelineNode, seg_timeline);
   }
 }
@@ -2581,6 +2594,14 @@ gst_mpdparser_free_media_segment (GstMediaSegment * media_segment)
 }
 
 static void
+gst_mpdparser_init_active_stream_segments (GstActiveStream * stream)
+{
+  g_assert (stream->segments == NULL);
+  stream->segments = g_ptr_array_new ();
+  g_ptr_array_set_free_func (stream->segments, (GDestroyNotify) gst_mpdparser_free_media_segment);
+}
+
+static void
 gst_mpdparser_free_active_stream (GstActiveStream * active_stream)
 {
   if (active_stream) {
@@ -2588,8 +2609,7 @@ gst_mpdparser_free_active_stream (GstActiveStream * active_stream)
     active_stream->baseURL = NULL;
     g_free (active_stream->queryURL);
     active_stream->queryURL = NULL;
-    g_list_free_full (active_stream->segments,
-        (GDestroyNotify) gst_mpdparser_free_media_segment);
+    g_ptr_array_unref (active_stream->segments);
     g_slice_free (GstActiveStream, active_stream);
   }
 }
@@ -2989,8 +3009,12 @@ gst_mpdparser_get_chunk_by_index (GstMpdClient * client, guint indexStream,
   g_return_val_if_fail (client->active_streams != NULL, NULL);
   stream = g_list_nth_data (client->active_streams, indexStream);
   g_return_val_if_fail (stream != NULL, NULL);
+  g_return_val_if_fail (stream->segments != NULL, NULL);
 
-  return (GstMediaSegment *) g_list_nth_data (stream->segments, indexChunk);
+  if (indexChunk >= stream->segments->len)
+    return NULL;
+
+  return (GstMediaSegment *) g_ptr_array_index (stream->segments, indexChunk);
 }
 
 static gboolean
@@ -3000,17 +3024,21 @@ gst_mpd_client_add_media_segment (GstActiveStream * stream,
 {
   GstMediaSegment *media_segment;
 
+  g_return_val_if_fail (stream->segments != NULL, FALSE);
+
   media_segment = g_slice_new0 (GstMediaSegment);
   if (media_segment == NULL) {
     GST_WARNING ("Allocation of GstMediaSegment struct failed!");
     return FALSE;
   }
-  stream->segments = g_list_append (stream->segments, media_segment);
+
   media_segment->SegmentURL = url_node;
   media_segment->number = number;
   media_segment->start = start;
   media_segment->start_time = start_time;
   media_segment->duration = duration;
+
+  g_ptr_array_add (stream->segments, media_segment);
 
   return TRUE;
 }
@@ -3037,10 +3065,9 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
 
   /* clean the old segment list, if any */
   if (stream->segments) {
-    g_list_foreach (stream->segments,
-        (GFunc) gst_mpdparser_free_media_segment, NULL);
-    g_list_free (stream->segments);
+    g_ptr_array_unref (stream->segments);
     stream->segments = NULL;
+    gst_mpdparser_init_active_stream_segments (stream);
   }
 
   stream_period = gst_mpdparser_get_stream_period (client);
@@ -3098,7 +3125,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
         GList *list;
 
         timeline = stream->cur_segment_list->MultSegBaseType->SegmentTimeline;
-        for (list = g_list_first (timeline->S); list; list = g_list_next (list)) {
+        for (list = g_queue_peek_head_link (&timeline->S); list; list = g_list_next (list)) {
           guint j, timescale;
 
           S = (GstSNode *) list->data;
@@ -3172,7 +3199,7 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
         GList *list;
 
         timeline = stream->cur_seg_template->MultSegBaseType->SegmentTimeline;
-        for (list = g_list_first (timeline->S); list; list = g_list_next (list)) {
+        for (list = g_queue_peek_head_link (&timeline->S); list; list = g_list_next (list)) {
           guint j, timescale;
 
           S = (GstSNode *) list->data;
@@ -3220,8 +3247,9 @@ gst_mpd_client_setup_representation (GstMpdClient * client,
   }
 
   /* check duration of last segment */
-  last_media_segment =
-      stream->segments ? g_list_last (stream->segments)->data : NULL;
+  last_media_segment = stream->segments->len ?
+      g_ptr_array_index (stream->segments, stream->segments->len - 1) : NULL;
+
   if (last_media_segment && GST_CLOCK_TIME_IS_VALID (PeriodEnd)) {
     if (last_media_segment->start_time + last_media_segment->duration >
         PeriodEnd) {
@@ -3428,6 +3456,7 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
     GST_WARNING ("Allocation of active stream struct failed!");
     return FALSE;
   }
+  gst_mpdparser_init_active_stream_segments (stream);
   client->active_streams = g_list_append (client->active_streams, stream);
 
   stream->baseURL_idx = 0;
@@ -3476,13 +3505,13 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
 {
   gint segment_idx = 0;
   GstMediaSegment *selectedChunk = NULL;
-  GList *iter;
+  gint i;
 
   g_return_val_if_fail (stream != NULL, 0);
 
   GST_MPD_CLIENT_LOCK (client);
-  for (iter = stream->segments; iter; iter = g_list_next (iter), segment_idx++) {
-    GstMediaSegment *segment = iter->data;
+  for (i = 0; i < stream->segments->len; i++, segment_idx++) {
+    GstMediaSegment *segment = g_ptr_array_index (stream->segments, i);
     GST_DEBUG ("Looking at fragment sequence chunk %d", segment_idx);
     if (segment->start_time >= ts) {
       selectedChunk = segment;
@@ -3862,13 +3891,15 @@ GstClockTime
 gst_mpd_client_get_next_fragment_duration (GstMpdClient * client,
     GstActiveStream * stream)
 {
-  GstMediaSegment *media_segment;
+  GstMediaSegment *media_segment = NULL;
+  guint seg_idx;
 
   g_return_val_if_fail (stream != NULL, 0);
 
-  media_segment =
-      g_list_nth_data (stream->segments,
-      gst_mpd_client_get_segment_index (stream));
+  seg_idx = gst_mpd_client_get_segment_index (stream);
+
+  if (seg_idx < stream->segments->len)
+    media_segment = g_ptr_array_index (stream->segments, seg_idx);
 
   return media_segment == NULL ? 0 : media_segment->duration;
 }
@@ -4022,7 +4053,7 @@ gst_mpd_client_get_segments_counts (GstActiveStream * stream)
 {
   g_return_val_if_fail (stream != NULL, 0);
 
-  return g_list_length (stream->segments);
+  return stream->segments->len;
 }
 
 gboolean
