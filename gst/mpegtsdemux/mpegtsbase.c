@@ -595,86 +595,6 @@ mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
   GST_DEBUG_OBJECT (base, "new pmt activated");
 }
 
-/* FIXME : This method is fundamentally wrong (and potentially expensive)
- * A packet is only a PSI if it's from a known PSI stream.
- *
- * The proper fix is to ensure the rest of mpegtsbase properly ensures
- * that PSI streams are properly detected.
- *
- * This requires:
- * * Initially setting all PSI PID which are generic accross formats
- * * When we know the "variant" of the stream (Bluray, DVB, ATSC, ISDB,...)
- *   we properly set the expected PSI
- * * Properly unsetting expected know-PSI PID the moment we see a program
- *   using that PID for PES (it's not uncommon for example for ATSC streams
- *   to use 0x0010 as a PES PID).
- **/
-static inline gboolean
-mpegts_base_is_psi (MpegTSBase * base, MpegTSPacketizerPacket * packet)
-{
-  gboolean retval = FALSE;
-  guint8 *data, table_id = GST_MTS_TABLE_ID_UNSET, pointer;
-  int i;
-
-  static const guint8 si_tables[] =
-      { 0x00, 0x01, 0x02, 0x03, 0x40, 0x41, 0x42, 0x46, 0x4A,
-    0x4E, 0x4F, 0x50, 0x51, 0x52, 0x53, 0x54, 0x55, 0x56, 0x57, 0x58, 0x59,
-    0x5A, 0x5B, 0x5C, 0x5D, 0x5E, 0x5F, 0x60, 0x61, 0x62, 0x63, 0x64, 0x65,
-    0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F, 0x70, 0x71,
-    0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x7E, 0x7F,
-    GST_MTS_TABLE_ID_UNSET
-  };
-
-  /* check if it is a pes pid */
-  if (MPEGTS_BIT_IS_SET (base->is_pes, packet->pid))
-    goto invalid_pid;
-
-  /* check if it part of the PIDs we know contain PSI */
-  if (!MPEGTS_BIT_IS_SET (base->known_psi, packet->pid))
-    goto invalid_pid;
-
-  if (packet->payload_unit_start_indicator) {
-    data = packet->data;
-    pointer = *data++;
-    data += pointer;
-
-    /* 'pointer' value may be invalid on malformed packet
-     * so we need to avoid out of range */
-    if (!(data < packet->data_end)) {
-      GST_WARNING_OBJECT (base,
-          "Section pointer value exceeds packet size: 0x%x", pointer);
-      return FALSE;
-    }
-
-    table_id = *(packet->data);
-  } else {
-    MpegTSPacketizerStream *stream = (MpegTSPacketizerStream *)
-        base->packetizer->streams[packet->pid];
-
-    if (stream)
-      table_id = stream->table_id;
-  }
-
-  if (G_UNLIKELY (table_id == GST_MTS_TABLE_ID_UNSET))
-    goto beach;
-
-  for (i = 0; si_tables[i] != GST_MTS_TABLE_ID_UNSET; i++) {
-    if (G_UNLIKELY (si_tables[i] == table_id)) {
-      retval = TRUE;
-      break;
-    }
-  }
-
-beach:
-  GST_DEBUG_OBJECT (base, "Packet of pid 0x%04x (table_id 0x%02x) is psi: %d",
-      packet->pid, table_id, retval);
-  return retval;
-
-invalid_pid:
-  GST_LOG_OBJECT (base, "Packet of pid 0x%04x doesn't belong to a SI stream",
-      packet->pid);
-  return FALSE;
-}
 
 static gboolean
 mpegts_base_apply_pat (MpegTSBase * base, GstMpegTsSection * section)
@@ -1071,8 +991,13 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       goto next;
     }
 
-    /* base PSI data */
-    if (packet.payload != NULL && mpegts_base_is_psi (base, &packet)) {
+    /* If it's a known PES, push it */
+    if (MPEGTS_BIT_IS_SET (base->is_pes, packet.pid)) {
+      /* push the packet downstream */
+      res = klass->push (base, &packet, NULL);
+    } else if (packet.payload
+        && MPEGTS_BIT_IS_SET (base->known_psi, packet.pid)) {
+      /* base PSI data */
       GstMpegTsSection *section;
 
       section = mpegts_packetizer_push_section (packetizer, &packet);
@@ -1082,10 +1007,8 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       /* we need to push section packet downstream */
       res = klass->push (base, &packet, section);
 
-    } else if (MPEGTS_BIT_IS_SET (base->is_pes, packet.pid)) {
-      /* push the packet downstream */
-      res = klass->push (base, &packet, NULL);
-    }
+    } else if (packet.payload && packet.pid != 0x1fff)
+      GST_LOG ("PID 0x%04x Saw packet on a pid we don't handle", packet.pid);
 
   next:
     mpegts_packetizer_clear_packet (base->packetizer, &packet);
