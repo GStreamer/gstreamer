@@ -522,7 +522,7 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state, gint * matched)
       goto no_media;
 
     /* prepare the media */
-    if (!(gst_rtsp_media_prepare (media)))
+    if (!(gst_rtsp_media_prepare (media, NULL)))
       goto no_prepare;
 
     /* now keep track of the uri and the media */

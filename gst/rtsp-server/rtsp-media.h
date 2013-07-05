@@ -149,7 +149,7 @@ GstNetTimeProvider *  gst_rtsp_media_get_time_provider (GstRTSPMedia *media,
                                                         const gchar *address, guint16 port);
 
 /* prepare the media for playback */
-gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media);
+gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media, GMainContext *context);
 gboolean              gst_rtsp_media_unprepare        (GstRTSPMedia *media);
 
 /* creating streams */

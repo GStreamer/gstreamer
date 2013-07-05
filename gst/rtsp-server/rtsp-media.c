@@ -1507,6 +1507,7 @@ struct _DynPaySignalHandlers
 /**
  * gst_rtsp_media_prepare:
  * @media: a #GstRTSPMedia
+ * @context: a #GMainContext to run the bus handler or %NULL
  *
  * Prepare @media for streaming. This function will create the objects
  * to manage the streaming. A pipeline must have been set on @media with
@@ -1518,7 +1519,7 @@ struct _DynPaySignalHandlers
  * Returns: %TRUE on success.
  */
 gboolean
-gst_rtsp_media_prepare (GstRTSPMedia * media)
+gst_rtsp_media_prepare (GstRTSPMedia * media, GMainContext * context)
 {
   GstRTSPMediaPrivate *priv;
   GstStateChangeReturn ret;
@@ -1570,7 +1571,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media)
       g_object_ref (media), (GDestroyNotify) watch_destroyed);
 
   klass = GST_RTSP_MEDIA_GET_CLASS (media);
-  priv->id = g_source_attach (priv->source, klass->context);
+  priv->id = g_source_attach (priv->source, context ? context : klass->context);
 
   /* add stuff to the bin */
   gst_bin_add (GST_BIN (priv->pipeline), priv->rtpbin);

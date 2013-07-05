@@ -53,7 +53,7 @@ GST_START_TEST (test_launch)
   /* fails, need to be prepared */
   fail_if (gst_rtsp_media_seek (media, range));
 
-  fail_unless (gst_rtsp_media_prepare (media));
+  fail_unless (gst_rtsp_media_prepare (media, NULL));
 
   str = gst_rtsp_media_get_range_string (media, FALSE, GST_RTSP_RANGE_NPT);
   fail_unless (g_str_equal (str, "npt=0-"));
@@ -132,10 +132,10 @@ GST_START_TEST (test_media_prepare)
   fail_unless (GST_IS_RTSP_MEDIA (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
 
-  fail_unless (gst_rtsp_media_prepare (media));
+  fail_unless (gst_rtsp_media_prepare (media, NULL));
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
-  fail_if (gst_rtsp_media_prepare (media));
+  fail_if (gst_rtsp_media_prepare (media, NULL));
 
   g_object_unref (media);
   gst_rtsp_url_free (url);
@@ -155,10 +155,10 @@ GST_START_TEST (test_media_prepare)
 
   g_object_set (G_OBJECT (media), "reusable", TRUE, NULL);
 
-  fail_unless (gst_rtsp_media_prepare (media));
+  fail_unless (gst_rtsp_media_prepare (media, NULL));
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
-  fail_unless (gst_rtsp_media_prepare (media));
+  fail_unless (gst_rtsp_media_prepare (media, NULL));
   fail_unless (gst_rtsp_media_unprepare (media));
 
   g_object_unref (media);
@@ -220,13 +220,13 @@ GST_START_TEST (test_media_dyn_prepare)
   g_signal_connect (srcpad, "notify::caps", (GCallback) on_notify_caps, pay);
 
   fail_unless (gst_rtsp_media_n_streams (media) == 0);
-  fail_unless (gst_rtsp_media_prepare (media));
+  fail_unless (gst_rtsp_media_prepare (media, NULL));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 0);
 
   fail_unless (gst_rtsp_media_n_streams (media) == 0);
-  fail_unless (gst_rtsp_media_prepare (media));
+  fail_unless (gst_rtsp_media_prepare (media, NULL));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 0);
