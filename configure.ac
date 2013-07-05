@@ -315,6 +315,10 @@ AC_CACHE_CHECK([for MPEG-2 parser],
             [[GstMpegVideoSequenceHdr seq_hdr;
               GstMpegVideoSequenceExt seq_ext;
               GstMpegVideoSequenceDisplayExt seq_dpy;
+              GstMpegVideoSliceHdr slice_hdr;
+              GstMpegVideoPacket packet;
+              gst_mpeg_video_packet_parse_slice_header(&packet, &slice_hdr,
+                  &seq_hdr, NULL);
               gst_mpeg_video_finalise_mpeg2_sequence_header(&seq_hdr,
                   &seq_ext, &seq_dpy);]])],
         [ac_cv_have_gst_mpeg2_parser="yes"],
