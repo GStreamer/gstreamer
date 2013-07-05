@@ -3,4 +3,10 @@ ext/audiofile/gstafsrc.c
 sys/dxr3/dxr3audiosink.c
 sys/dxr3/dxr3spusink.c
 sys/dxr3/dxr3videosink.c
+tests/examples/camerabin2/gst-camera2.ui
+tests/examples/uvch264/boolean_property.glade
+tests/examples/uvch264/enum_property.glade
+tests/examples/uvch264/enum_property_gtk2.glade
+tests/examples/uvch264/int_property.glade
+tests/examples/uvch264/window.glade
 tests/icles/metadata_editor.ui
