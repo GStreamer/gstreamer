@@ -85,8 +85,10 @@ typedef struct
   gint program_number;
   guint16 pmt_pid;
   guint16 pcr_pid;
-  GstMpegTsPMT *pmt;
-  GstMpegTsPMT *old_pmt;
+  GstMpegTsSection *section;
+  GstMpegTsSection *old_section;
+  const GstMpegTsPMT *pmt;
+  const GstMpegTsPMT *old_pmt;
   gboolean selected;
   gboolean pmt_active;
   gboolean active;
@@ -661,7 +663,8 @@ dvb_base_bin_rebuild_filter (DvbBaseBin * dvbbasebin)
 }
 
 static void
-dvb_base_bin_remove_pmt_streams (DvbBaseBin * dvbbasebin, GstMpegTsPMT * pmt)
+dvb_base_bin_remove_pmt_streams (DvbBaseBin * dvbbasebin,
+    const GstMpegTsPMT * pmt)
 {
   gint i;
   DvbBaseBinStream *stream;
@@ -681,7 +684,7 @@ dvb_base_bin_remove_pmt_streams (DvbBaseBin * dvbbasebin, GstMpegTsPMT * pmt)
 }
 
 static void
-dvb_base_bin_add_pmt_streams (DvbBaseBin * dvbbasebin, GstMpegTsPMT * pmt)
+dvb_base_bin_add_pmt_streams (DvbBaseBin * dvbbasebin, const GstMpegTsPMT * pmt)
 {
   DvbBaseBinStream *stream;
   gint i;
@@ -735,7 +738,8 @@ dvb_base_bin_activate_program (DvbBaseBin * dvbbasebin,
     stream->usecount += 1;
 
     dvb_base_bin_add_pmt_streams (dvbbasebin, program->pmt);
-    dvbbasebin->pmtlist = g_list_append (dvbbasebin->pmtlist, program->pmt);
+    dvbbasebin->pmtlist =
+        g_list_append (dvbbasebin->pmtlist, (gpointer) program->pmt);
     dvbbasebin->pmtlist_changed = TRUE;
     program->active = TRUE;
   }
@@ -846,9 +850,15 @@ dvb_base_bin_pat_info_cb (DvbBaseBin * dvbbasebin, GstMpegTsSection * section)
 static void
 dvb_base_bin_pmt_info_cb (DvbBaseBin * dvbbasebin, GstMpegTsSection * section)
 {
-  GstMpegTsPMT *pmt = (GstMpegTsPMT *) section;
+  const GstMpegTsPMT *pmt;
   DvbBaseBinProgram *program;
   guint program_number;
+
+  pmt = gst_mpegts_section_get_pmt (section);
+  if (G_UNLIKELY (pmt == NULL)) {
+    GST_WARNING_OBJECT (dvbbasebin, "Received invalid PMT");
+    return;
+  }
 
   program_number = section->subtable_extension;
 
@@ -860,7 +870,9 @@ dvb_base_bin_pmt_info_cb (DvbBaseBin * dvbbasebin, GstMpegTsSection * section)
   }
 
   program->old_pmt = program->pmt;
-  program->pmt = (GstMpegTsPMT *) gst_mpegts_section_ref (pmt);
+  program->old_section = program->section;
+  program->pmt = pmt;
+  program->section = gst_mpegts_section_ref (section);
 
   /* activate the program if it's selected and either it's not active or its pmt
    * changed */
@@ -868,7 +880,7 @@ dvb_base_bin_pmt_info_cb (DvbBaseBin * dvbbasebin, GstMpegTsSection * section)
     dvb_base_bin_activate_program (dvbbasebin, program);
 
   if (program->old_pmt) {
-    gst_mpegts_section_unref (program->old_pmt);
+    gst_mpegts_section_unref (program->old_section);
     program->old_pmt = NULL;
   }
 }
@@ -964,8 +976,10 @@ dvb_base_bin_program_destroy (gpointer data)
 
   program = (DvbBaseBinProgram *) data;
 
-  if (program->pmt)
-    gst_mpegts_section_unref (program->pmt);
+  if (program->pmt) {
+    program->pmt = NULL;
+    gst_mpegts_section_unref (program->section);
+  }
 
   g_free (program);
 }
