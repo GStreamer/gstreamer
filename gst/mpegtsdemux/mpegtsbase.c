@@ -390,6 +390,23 @@ mpegts_base_remove_program (MpegTSBase * base, gint program_number)
   g_hash_table_remove (base->programs, GINT_TO_POINTER (program_number));
 }
 
+static guint32
+get_registration_from_descriptors (GArray * descriptors)
+{
+  const GstMpegTsDescriptor *desc;
+
+  if ((desc =
+          gst_mpegts_find_descriptor (descriptors,
+              GST_MTS_DESC_REGISTRATION))) {
+    if (G_UNLIKELY (desc->descriptor_length < 4)) {
+      GST_WARNING ("Registration descriptor with length < 4. (Corrupted ?)");
+    } else
+      return GST_READ_UINT32_BE (desc->descriptor_data + 2);
+  }
+
+  return 0;
+}
+
 static MpegTSBaseStream *
 mpegts_base_program_add_stream (MpegTSBase * base,
     MpegTSBaseProgram * program, guint16 pid, guint8 stream_type,
@@ -410,6 +427,13 @@ mpegts_base_program_add_stream (MpegTSBase * base,
   bstream->pid = pid;
   bstream->stream_type = stream_type;
   bstream->stream = stream;
+  if (stream) {
+    bstream->registration_id =
+        get_registration_from_descriptors (stream->descriptors);
+    GST_DEBUG ("PID 0x%04x, registration_id %" SAFE_FOURCC_FORMAT,
+        bstream->pid, SAFE_FOURCC_ARGS (bstream->registration_id));
+  }
+
 
   program->streams[pid] = bstream;
   program->stream_list = g_list_append (program->stream_list, bstream);
@@ -561,6 +585,12 @@ mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
   program->pmt = pmt;
   program->pmt_pid = pmt_pid;
   program->pcr_pid = pmt->pcr_pid;
+
+  /* extract top-level registration_id if present */
+  program->registration_id =
+      get_registration_from_descriptors (pmt->descriptors);
+  GST_DEBUG ("program 0x%04x, registration_id %" SAFE_FOURCC_FORMAT,
+      program->program_number, SAFE_FOURCC_ARGS (program->registration_id));
 
   for (i = 0; i < pmt->streams->len; ++i) {
     GstMpegTsPMTStream *stream = g_ptr_array_index (pmt->streams, i);

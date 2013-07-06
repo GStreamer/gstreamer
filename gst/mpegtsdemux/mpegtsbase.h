@@ -57,21 +57,30 @@ typedef struct _MpegTSBaseProgram MpegTSBaseProgram;
 
 struct _MpegTSBaseStream
 {
-  guint16 pid;
-  guint8 stream_type;
+  guint16             pid;
+  guint8              stream_type;
+
+  /* Content of the registration descriptor (if present) */
+  guint32             registration_id;
+
   GstMpegTsPMTStream *stream;
 };
 
 struct _MpegTSBaseProgram
 {
-  gint program_number;
-  guint16 pmt_pid;
-  guint16 pcr_pid;
-  GstMpegTsSection *section;
+  gint                program_number;
+  guint16             pmt_pid;
+  guint16             pcr_pid;
+
+  /* Content of the registration descriptor (if present) */
+  guint32             registration_id;
+
+  GstMpegTsSection   *section;
   const GstMpegTsPMT *pmt;
-  MpegTSBaseStream **streams;
-  GList *stream_list;
-  gint patcount;
+
+  MpegTSBaseStream  **streams;
+  GList              *stream_list;
+  gint                patcount;
 
   /* Pending Tags for the program */
   GstTagList *tags;

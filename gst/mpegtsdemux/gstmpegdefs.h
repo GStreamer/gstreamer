@@ -26,6 +26,19 @@
 
 #ifndef __GST_MPEG_DEFS_H__
 #define __GST_MPEG_DEFS_H__
+#include <glib/gprintf.h>
+
+#define SAFE_FOURCC_FORMAT "02x%02x%02x%02x (%c%c%c%c)"
+#define SAFE_CHAR(a) (g_ascii_isalnum((gchar) (a)) ? ((gchar)(a)) : '.')
+#define SAFE_FOURCC_ARGS(a)				\
+  ((guint8) ((a)>>24)),					\
+    ((guint8) ((a) >> 16 & 0xff)),			\
+    ((guint8) a >> 8 & 0xff),				\
+    ((guint8) a & 0xff),				\
+    SAFE_CHAR((a)>>24),					\
+    SAFE_CHAR((a) >> 16 & 0xff),			\
+    SAFE_CHAR((a) >> 8 & 0xff),				\
+    SAFE_CHAR(a & 0xff)
 
 /* Stream type assignments */
 /* FIXME: Put these in mpegts lib separate stream type enums */
