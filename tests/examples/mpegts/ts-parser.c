@@ -127,9 +127,20 @@ dump_descriptors (GArray * descriptors, guint spacing)
   for (i = 0; i < descriptors->len; i++) {
     GstMpegTsDescriptor *desc =
         &g_array_index (descriptors, GstMpegTsDescriptor, i);
-    g_printf ("%*s [descriptor 0x%02x (%s)]\n", spacing, "",
-        desc->descriptor_tag, descriptor_name (desc->descriptor_tag));
+    g_printf ("%*s [descriptor 0x%02x (%s) length:%d]\n", spacing, "",
+        desc->descriptor_tag, descriptor_name (desc->descriptor_tag),
+        desc->descriptor_length);
     switch (desc->descriptor_tag) {
+      case GST_MTS_DESC_REGISTRATION:
+      {
+        const guint8 *data = desc->descriptor_data + 2;
+#define SAFE_CHAR(a) (g_ascii_isalnum(a) ? a : '.')
+        g_printf ("%*s   Registration : %c%c%c%c\n", spacing, "",
+            SAFE_CHAR (data[0]), SAFE_CHAR (data[1]),
+            SAFE_CHAR (data[2]), SAFE_CHAR (data[3]));
+
+        break;
+      }
       case GST_MTS_DESC_DVB_NETWORK_NAME:
       {
         gchar *network_name;
