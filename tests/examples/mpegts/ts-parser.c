@@ -259,10 +259,11 @@ dump_eit (GstMpegTsSection * section)
   len = eit->events->len;
   g_printf ("     %d Event(s):\n", len);
   for (i = 0; i < len; i++) {
-    gchar *tmp;
+    gchar *tmp = (gchar *) "<NO TIME>";
     GstMpegTsEITEvent *event = g_ptr_array_index (eit->events, i);
 
-    tmp = gst_date_time_to_iso8601_string (event->start_time);
+    if (event->start_time)
+      tmp = gst_date_time_to_iso8601_string (event->start_time);
     g_printf ("       event_id:0x%04x, start_time:%s, duration:%"
         GST_TIME_FORMAT "\n", event->event_id, tmp,
         GST_TIME_ARGS (event->duration * GST_SECOND));
@@ -270,7 +271,8 @@ dump_eit (GstMpegTsSection * section)
         event->running_status, enum_name (GST_TYPE_MPEG_TS_RUNNING_STATUS,
             event->running_status), event->free_CA_mode,
         event->free_CA_mode ? "MAYBE SCRAMBLED" : "NOT SCRAMBLED");
-    g_free (tmp);
+    if (event->start_time)
+      g_free (tmp);
     dump_descriptors (event->descriptors, 9);
   }
 }
@@ -331,11 +333,15 @@ static void
 dump_tdt (GstMpegTsSection * section)
 {
   GstDateTime *date = gst_mpegts_section_get_tdt (section);
-  gchar *str = gst_date_time_to_iso8601_string (date);
 
-  g_printf ("     utc_time : %s\n", str);
-  g_free (str);
-  gst_date_time_unref (date);
+  if (date) {
+    gchar *str = gst_date_time_to_iso8601_string (date);
+    g_printf ("     utc_time : %s\n", str);
+    g_free (str);
+    gst_date_time_unref (date);
+  } else {
+    g_printf ("     No utc_time present\n");
+  }
 }
 
 static void

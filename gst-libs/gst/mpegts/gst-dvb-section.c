@@ -82,9 +82,12 @@ _parse_utc_time (guint8 * data)
 
   utc_ptr = data + 2;
 
-  hour = ((utc_ptr[0] & 0xF0) >> 4) * 10 + (utc_ptr[0] & 0x0F);
-  minute = ((utc_ptr[1] & 0xF0) >> 4) * 10 + (utc_ptr[1] & 0x0F);
-  second = ((utc_ptr[2] & 0xF0) >> 4) * 10 + (utc_ptr[2] & 0x0F);
+  /* First digit of hours cannot exceeed 2 (max: 23 hours) */
+  hour = ((utc_ptr[0] & 0x30) >> 4) * 10 + (utc_ptr[0] & 0x0F);
+  /* First digit of minutes cannot exced 5 (max: 59 mins) */
+  minute = ((utc_ptr[1] & 0x70) >> 4) * 10 + (utc_ptr[1] & 0x0F);
+  /* first digit of seconds cannot exceed 5 (max: 59 seconds) */
+  second = ((utc_ptr[2] & 0x70) >> 4) * 10 + (utc_ptr[2] & 0x0F);
 
   /* Time is UTC */
   return gst_date_time_new (0.0, year, month, day, hour, minute,
@@ -102,7 +105,8 @@ _gst_mpegts_eit_event_copy (GstMpegTsEITEvent * eit)
 static void
 _gst_mpegts_eit_event_free (GstMpegTsEITEvent * eit)
 {
-  gst_date_time_unref (eit->start_time);
+  if (eit->start_time)
+    gst_date_time_unref (eit->start_time);
   g_array_unref (eit->descriptors);
   g_slice_free (GstMpegTsEITEvent, eit);
 }
@@ -703,7 +707,8 @@ _gst_mpegts_tot_copy (GstMpegTsTOT * tot)
 static void
 _gst_mpegts_tot_free (GstMpegTsTOT * tot)
 {
-  gst_date_time_unref (tot->utc_time);
+  if (tot->utc_time)
+    gst_date_time_unref (tot->utc_time);
   g_array_unref (tot->descriptors);
   g_slice_free (GstMpegTsTOT, tot);
 }
