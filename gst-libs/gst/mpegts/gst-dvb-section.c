@@ -324,14 +324,14 @@ static GstMpegTsNIT *
 _parse_nit (GstMpegTsSection * section)
 {
   GstMpegTsNIT *nit = NULL;
-  guint i = 0, j, allocated_streams = 12;
+  guint i = 0, allocated_streams = 12;
   guint8 *data, *end, *entry_begin;
   guint16 descriptors_loop_length, transport_stream_loop_length;
 
   GST_DEBUG ("NIT");
 
-  /* fixed header + CRC == 16 */
-  if (section->section_length < 23) {
+  /* fixed header (no streams) + CRC == 16 */
+  if (section->section_length < 16) {
     GST_WARNING ("PID %d invalid NIT size %d",
         section->pid, section->section_length);
     goto error;
@@ -381,7 +381,7 @@ _parse_nit (GstMpegTsSection * section)
 
     g_ptr_array_add (nit->streams, stream);
 
-    if (transport_stream_loop_length < 10) {
+    if (transport_stream_loop_length < 6) {
       /* each entry must be at least 6 bytes (+ 4bytes CRC) */
       GST_WARNING ("PID %d invalid NIT entry size %d",
           section->pid, transport_stream_loop_length);
@@ -414,24 +414,6 @@ _parse_nit (GstMpegTsSection * section)
       goto error;
 
     data += descriptors_loop_length;
-
-    /* At least notify the descriptors we are not handling :( */
-
-    for (j = 0; j < stream->descriptors->len; j++) {
-      GstMpegTsDescriptor *desc =
-          &g_array_index (stream->descriptors, GstMpegTsDescriptor, j);
-
-      switch (desc->descriptor_tag) {
-        case GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM:
-        case GST_MTS_DESC_DVB_FREQUENCY_LIST:
-          GST_FIXME ("Not handling previously handled tag 0x%02x",
-              desc->descriptor_tag);
-          break;
-        default:
-          GST_LOG ("Not handling tag 0x%02x", desc->descriptor_tag);
-          break;
-      }
-    }
 
     i += 1;
     transport_stream_loop_length -= data - entry_begin;
