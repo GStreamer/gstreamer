@@ -335,9 +335,11 @@ gst_ts_demux_reset (MpegTSBase * base)
 static void
 gst_ts_demux_init (GstTSDemux * demux)
 {
-  GST_MPEGTS_BASE (demux)->stream_size = sizeof (TSDemuxStream);
+  MpegTSBase *base = (MpegTSBase *) demux;
 
-  gst_ts_demux_reset ((MpegTSBase *) demux);
+  base->stream_size = sizeof (TSDemuxStream);
+  base->parse_private_sections = TRUE;
+  gst_ts_demux_reset (base);
 }
 
 
@@ -860,18 +862,6 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       /* template = gst_static_pad_template_get (&private_template); */
       /* name = g_strdup_printf ("private_%04x", bstream->pid); */
       /* caps = gst_caps_new_simple ("hdv/aux-a", NULL); */
-      break;
-    case GST_MPEG_TS_STREAM_TYPE_PRIVATE_SECTIONS:
-    case GST_MPEG_TS_STREAM_TYPE_MHEG:
-    case GST_MPEG_TS_STREAM_TYPE_DSM_CC:
-    case GST_MPEG_TS_STREAM_TYPE_DSMCC_A:
-    case GST_MPEG_TS_STREAM_TYPE_DSMCC_B:
-    case GST_MPEG_TS_STREAM_TYPE_DSMCC_C:
-    case GST_MPEG_TS_STREAM_TYPE_DSMCC_D:
-      /* FIXME: Unsetting them from the PES table makes sense since they 
-       * are sections .. but then why don't we set them as know PSI ?
-       * Also: shouldn't this be handled in mpegtsbase ? */
-      MPEGTS_BIT_UNSET (base->is_pes, bstream->pid);
       break;
     case GST_MPEG_TS_STREAM_TYPE_AUDIO_AAC_ADTS:
       template = gst_static_pad_template_get (&audio_template);

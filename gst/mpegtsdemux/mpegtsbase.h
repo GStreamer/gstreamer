@@ -148,6 +148,9 @@ struct _MpegTSBase {
 
   /* Upstream segment */
   GstSegment segment;
+
+  /* Whether to parse private section or not */
+  gboolean parse_private_sections;
 };
 
 struct _MpegTSBaseClass {

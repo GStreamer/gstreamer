@@ -64,12 +64,18 @@ static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
 
 enum
 {
-  ARG_0,
+  PROP_0,
+  PROP_PARSE_PRIVATE_SECTIONS,
   /* FILL ME */
 };
 
 static void mpegts_base_dispose (GObject * object);
 static void mpegts_base_finalize (GObject * object);
+static void mpegts_base_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void mpegts_base_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+
 static void mpegts_base_free_program (MpegTSBaseProgram * program);
 static gboolean mpegts_base_sink_activate (GstPad * pad, GstObject * parent);
 static gboolean mpegts_base_sink_activate_mode (GstPad * pad,
@@ -115,7 +121,46 @@ mpegts_base_class_init (MpegTSBaseClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   gobject_class->dispose = mpegts_base_dispose;
   gobject_class->finalize = mpegts_base_finalize;
+  gobject_class->set_property = mpegts_base_set_property;
+  gobject_class->get_property = mpegts_base_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_PARSE_PRIVATE_SECTIONS,
+      g_param_spec_boolean ("parse-private-sections", "Parse private sections",
+          "Parse private sections", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
 }
+
+static void
+mpegts_base_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  MpegTSBase *base = GST_MPEGTS_BASE (object);
+
+  switch (prop_id) {
+    case PROP_PARSE_PRIVATE_SECTIONS:
+      base->parse_private_sections = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
+static void
+mpegts_base_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  MpegTSBase *base = GST_MPEGTS_BASE (object);
+
+  switch (prop_id) {
+    case PROP_PARSE_PRIVATE_SECTIONS:
+      g_value_set_boolean (value, base->parse_private_sections);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+  }
+}
+
 
 static void
 mpegts_base_reset (MpegTSBase * base)
@@ -185,6 +230,7 @@ mpegts_base_init (MpegTSBase * base)
   base->programs = g_hash_table_new_full (g_direct_hash, g_direct_equal,
       NULL, (GDestroyNotify) mpegts_base_free_program);
 
+  base->parse_private_sections = FALSE;
   base->is_pes = g_new0 (guint8, 1024);
   base->known_psi = g_new0 (guint8, 1024);
   base->program_size = sizeof (MpegTSBaseProgram);
@@ -544,10 +590,28 @@ mpegts_base_deactivate_program (MpegTSBase * base, MpegTSBaseProgram * program)
 
       mpegts_base_program_remove_stream (base, program, stream->pid);
 
-      /* Only unset the is_pes bit if the PID isn't used in any other active
+      /* Only unset the is_pes/known_psi bit if the PID isn't used in any other active
        * program */
-      if (!mpegts_pid_in_active_programs (base, stream->pid))
-        MPEGTS_BIT_UNSET (base->is_pes, stream->pid);
+      if (!mpegts_pid_in_active_programs (base, stream->pid)) {
+        switch (stream->stream_type) {
+          case GST_MPEG_TS_STREAM_TYPE_PRIVATE_SECTIONS:
+          case GST_MPEG_TS_STREAM_TYPE_MHEG:
+          case GST_MPEG_TS_STREAM_TYPE_DSM_CC:
+          case GST_MPEG_TS_STREAM_TYPE_DSMCC_A:
+          case GST_MPEG_TS_STREAM_TYPE_DSMCC_B:
+          case GST_MPEG_TS_STREAM_TYPE_DSMCC_C:
+          case GST_MPEG_TS_STREAM_TYPE_DSMCC_D:
+          case GST_MPEG_TS_STREAM_TYPE_SL_FLEXMUX_SECTIONS:
+          case GST_MPEG_TS_STREAM_TYPE_METADATA_SECTIONS:
+            /* Set known PSI streams */
+            if (base->parse_private_sections)
+              MPEGTS_BIT_UNSET (base->known_psi, stream->pid);
+            break;
+          default:
+            MPEGTS_BIT_UNSET (base->is_pes, stream->pid);
+            break;
+        }
+      }
     }
 
     /* remove pcr stream */
@@ -595,17 +659,35 @@ mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
   for (i = 0; i < pmt->streams->len; ++i) {
     GstMpegTsPMTStream *stream = g_ptr_array_index (pmt->streams, i);
 
-    if (G_UNLIKELY (MPEGTS_BIT_IS_SET (base->is_pes, stream->pid)))
-      GST_FIXME ("Refcounting issue. Setting twice a PID (0x%04x) as known PES",
-          stream->pid);
-    if (G_UNLIKELY (MPEGTS_BIT_IS_SET (base->known_psi, stream->pid))) {
-      GST_FIXME
-          ("Refcounting issue. Setting a known PSI PID (0x%04x) as known PES",
-          stream->pid);
-      MPEGTS_BIT_UNSET (base->known_psi, stream->pid);
-    }
+    switch (stream->stream_type) {
+      case GST_MPEG_TS_STREAM_TYPE_PRIVATE_SECTIONS:
+      case GST_MPEG_TS_STREAM_TYPE_MHEG:
+      case GST_MPEG_TS_STREAM_TYPE_DSM_CC:
+      case GST_MPEG_TS_STREAM_TYPE_DSMCC_A:
+      case GST_MPEG_TS_STREAM_TYPE_DSMCC_B:
+      case GST_MPEG_TS_STREAM_TYPE_DSMCC_C:
+      case GST_MPEG_TS_STREAM_TYPE_DSMCC_D:
+      case GST_MPEG_TS_STREAM_TYPE_SL_FLEXMUX_SECTIONS:
+      case GST_MPEG_TS_STREAM_TYPE_METADATA_SECTIONS:
+        /* Set known PSI streams */
+        if (base->parse_private_sections)
+          MPEGTS_BIT_SET (base->known_psi, stream->pid);
+        break;
+      default:
+        if (G_UNLIKELY (MPEGTS_BIT_IS_SET (base->is_pes, stream->pid)))
+          GST_FIXME
+              ("Refcounting issue. Setting twice a PID (0x%04x) as known PES",
+              stream->pid);
+        if (G_UNLIKELY (MPEGTS_BIT_IS_SET (base->known_psi, stream->pid))) {
+          GST_FIXME
+              ("Refcounting issue. Setting a known PSI PID (0x%04x) as known PES",
+              stream->pid);
+          MPEGTS_BIT_UNSET (base->known_psi, stream->pid);
+        }
 
-    MPEGTS_BIT_SET (base->is_pes, stream->pid);
+        MPEGTS_BIT_SET (base->is_pes, stream->pid);
+        break;
+    }
     mpegts_base_program_add_stream (base, program,
         stream->pid, stream->stream_type, stream);
 
