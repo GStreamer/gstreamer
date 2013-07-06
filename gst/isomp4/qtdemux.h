@@ -123,6 +123,8 @@ struct _GstQTDemux {
   guint64 fragment_start;
     
   gint64 chapters_track_id;
+
+  GstClockTime min_elst_offset;
 };
 
 struct _GstQTDemuxClass {

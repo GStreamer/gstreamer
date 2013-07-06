@@ -353,6 +353,8 @@ struct _QtDemuxStream
   guint32 def_sample_flags;
 
   gboolean disabled;
+
+  GstClockTime elst_offset;     /* sample offset from edit list */
 };
 
 enum QtDemuxState
@@ -721,7 +723,7 @@ gst_qtdemux_get_duration (GstQTDemux * qtdemux, gint64 * duration)
   if (qtdemux->duration != 0) {
     if (qtdemux->duration != G_MAXINT64 && qtdemux->timescale != 0) {
       *duration = gst_util_uint64_scale (qtdemux->duration,
-          GST_SECOND, qtdemux->timescale);
+          GST_SECOND, qtdemux->timescale) - qtdemux->min_elst_offset;
     }
   }
   return res;
@@ -3923,6 +3925,13 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
 {
   GstFlowReturn ret = GST_FLOW_OK;
 
+  /* offset the timestamps according to the edit list */
+  if (GST_CLOCK_TIME_IS_VALID (pts))
+    pts += stream->elst_offset;
+  if (GST_CLOCK_TIME_IS_VALID (dts))
+    dts += stream->elst_offset;
+  position += stream->elst_offset;
+
   if (G_UNLIKELY (stream->fourcc == FOURCC_rtsp)) {
     gchar *url;
     GstMapInfo map;
@@ -6565,12 +6574,17 @@ qtdemux_parse_segments (GstQTDemux * qtdemux, QtDemuxStream * stream,
       guint32 rate_int;
 
       media_time = QT_UINT32 (buffer + 20 + i * 12);
+      duration = QT_UINT32 (buffer + 16 + i * 12);
 
       /* -1 media time is an empty segment, just ignore it */
-      if (media_time == G_MAXUINT32)
+      if (media_time == G_MAXUINT32) {
+        if (i == 0) {
+          /* first empty segment specifies sample offset (if movie timescale) */
+          stream->elst_offset =
+              gst_util_uint64_scale (duration, GST_SECOND, qtdemux->timescale);
+        }
         continue;
-
-      duration = QT_UINT32 (buffer + 16 + i * 12);
+      }
 
       segment = &stream->segments[count++];
 
@@ -9566,6 +9580,7 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
   guint64 creation_time;
   GstDateTime *datetime = NULL;
   gint version;
+  int i;
 
   /* make sure we have a usable taglist */
   if (!qtdemux->tag_list) {
@@ -9638,6 +9653,31 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
       qtdemux_parse_mehd (qtdemux, &mehd_data);
   }
 
+  /* parse all traks */
+  trak = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_trak);
+  while (trak) {
+    qtdemux_parse_trak (qtdemux, trak);
+    /* iterate all siblings */
+    trak = qtdemux_tree_get_sibling_by_type (trak, FOURCC_trak);
+  }
+
+  /* make sure we don't offset samples more than we have to */
+  qtdemux->min_elst_offset = GST_CLOCK_TIME_NONE;
+  for (i = 0; i < qtdemux->n_streams; ++i) {
+    QtDemuxStream *stream = qtdemux->streams[i];
+    if (!GST_CLOCK_TIME_IS_VALID (qtdemux->min_elst_offset)
+        || stream->elst_offset < qtdemux->min_elst_offset) {
+      qtdemux->min_elst_offset = stream->elst_offset;
+    }
+  }
+  if (!GST_CLOCK_TIME_IS_VALID (qtdemux->min_elst_offset)) {
+    qtdemux->min_elst_offset = 0;
+  }
+  for (i = 0; i < qtdemux->n_streams; ++i) {
+    QtDemuxStream *stream = qtdemux->streams[i];
+    stream->elst_offset -= qtdemux->min_elst_offset;
+  }
+
   /* set duration in the segment info */
   gst_qtdemux_get_duration (qtdemux, &duration);
   if (duration) {
@@ -9646,14 +9686,6 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
      * and segment activation falls back to duration,
      * whereas loop only checks stop, so let's align this here as well */
     qtdemux->segment.stop = duration;
-  }
-
-  /* parse all traks */
-  trak = qtdemux_tree_get_child_by_type (qtdemux->moov_node, FOURCC_trak);
-  while (trak) {
-    qtdemux_parse_trak (qtdemux, trak);
-    /* iterate all siblings */
-    trak = qtdemux_tree_get_sibling_by_type (trak, FOURCC_trak);
   }
 
   /* find tags */
