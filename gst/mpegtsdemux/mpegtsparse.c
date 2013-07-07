@@ -185,7 +185,7 @@ mpegts_parse_reset (MpegTSBase * base)
 static void
 prepare_src_pad (MpegTSBase * base, MpegTSParse2 * parse)
 {
-  if (base->packetizer->know_packet_size) {
+  if (base->packetizer->packet_size) {
     gchar *stream_id;
     GstCaps *caps;
 

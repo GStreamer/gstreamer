@@ -94,9 +94,7 @@ struct _MpegTSPacketizer2 {
   /* FIXME : be more memory efficient (see how it's done in mpegtsbase) */
   MpegTSPacketizerStream **streams;
   gboolean    disposed;
-  gboolean    know_packet_size;
   guint16     packet_size;
-  GstCaps    *caps;
 
   /* current offset of the tip of the adapter */
   guint64  offset;
@@ -135,7 +133,6 @@ typedef struct
   guint64 pcr;
   guint64 opcr;
   guint64 offset;
-  GstClockTime origts;
 } MpegTSPacketizerPacket;
 
 typedef struct
