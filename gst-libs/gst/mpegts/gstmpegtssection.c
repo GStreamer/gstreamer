@@ -272,7 +272,7 @@ gst_message_new_mpegts_section (GstObject * parent, GstMpegTsSection * section)
       quark = QUARK_TOT;
       break;
     default:
-      GST_WARNING ("Creating message for unknown GstMpegTsSection");
+      GST_DEBUG ("Creating message for unknown GstMpegTsSection");
       quark = QUARK_SECTION;
       break;
   }
@@ -654,11 +654,13 @@ gst_mpegts_initialize (void)
 /* FIXME : Later on we might need to use more than just the table_id
  * to figure out which type of section this is. */
 static GstMpegTsSectionType
-_identify_section (guint8 table_id)
+_identify_section (guint16 pid, guint8 table_id)
 {
   switch (table_id) {
     case GST_MTS_TABLE_ID_PROGRAM_ASSOCIATION:
-      return GST_MPEGTS_SECTION_PAT;
+      if (pid == 0x00)
+        return GST_MPEGTS_SECTION_PAT;
+      break;
     case GST_MTS_TABLE_ID_CONDITIONAL_ACCESS:
       return GST_MPEGTS_SECTION_CAT;
     case GST_MTS_TABLE_ID_TS_PROGRAM_MAP:
@@ -667,22 +669,34 @@ _identify_section (guint8 table_id)
       return GST_MPEGTS_SECTION_BAT;
     case GST_MTS_TABLE_ID_NETWORK_INFORMATION_ACTUAL_NETWORK:
     case GST_MTS_TABLE_ID_NETWORK_INFORMATION_OTHER_NETWORK:
-      return GST_MPEGTS_SECTION_NIT;
+      if (pid == 0x0010)
+        return GST_MPEGTS_SECTION_NIT;
+      break;
     case GST_MTS_TABLE_ID_SERVICE_DESCRIPTION_ACTUAL_TS:
     case GST_MTS_TABLE_ID_SERVICE_DESCRIPTION_OTHER_TS:
-      return GST_MPEGTS_SECTION_SDT;
+      if (pid == 0x0011)
+        return GST_MPEGTS_SECTION_SDT;
+      break;
     case GST_MTS_TABLE_ID_TIME_DATE:
-      return GST_MPEGTS_SECTION_TDT;
+      if (pid == 0x0014)
+        return GST_MPEGTS_SECTION_TDT;
+      break;
     case GST_MTS_TABLE_ID_TIME_OFFSET:
-      return GST_MPEGTS_SECTION_TOT;
+      if (pid == 0x0014)
+        return GST_MPEGTS_SECTION_TOT;
+      break;
       /* FIXME : FILL */
     default:
       /* Handle ranges */
       if (table_id >= GST_MTS_TABLE_ID_EVENT_INFORMATION_ACTUAL_TS_PRESENT &&
-          table_id <= GST_MTS_TABLE_ID_EVENT_INFORMATION_OTHER_TS_SCHEDULE_N)
-        return GST_MPEGTS_SECTION_EIT;
+          table_id <= GST_MTS_TABLE_ID_EVENT_INFORMATION_OTHER_TS_SCHEDULE_N) {
+        if (pid == 0x0012)
+          return GST_MPEGTS_SECTION_EIT;
+      }
       return GST_MPEGTS_SECTION_UNKNOWN;
   }
+  return GST_MPEGTS_SECTION_UNKNOWN;
+
 }
 
 /**
@@ -750,7 +764,7 @@ gst_mpegts_section_new (guint16 pid, guint8 * data, gsize data_size)
     res->last_section_number = *data;
   }
 
-  res->section_type = _identify_section (res->table_id);
+  res->section_type = _identify_section (res->pid, res->table_id);
 
   return res;
 
