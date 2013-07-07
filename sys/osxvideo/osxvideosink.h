@@ -83,7 +83,6 @@ struct _GstOSXVideoSink {
   void *osxvideosinkobject;
   NSView *superview;
   gboolean keep_par;
-  gboolean embed;
   GstVideoInfo info;
 };
 

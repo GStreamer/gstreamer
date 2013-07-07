@@ -29,11 +29,6 @@
  * The OSXVideoSink renders video frames to a MacOSX window. The video output
  * must be directed to a window embedded in an existing NSApp.
  *
- * When the NSView to be embedded is created an element #GstMessage with a
- * name of 'have-ns-view' will be created and posted on the bus.
- * The pointer to the NSView to embed will be in the 'nsview' field of that
- * message. The application MUST handle this message and embed the view
- * appropriately.
  */
 
 #include "config.h"
@@ -228,8 +223,6 @@ gst_osx_video_sink_osxwindow_create (GstOSXVideoSink * osxvideosink, gint width,
 {
   NSRect rect;
   GstOSXWindow *osxwindow = NULL;
-  GstStructure *s;
-  GstMessage *msg;
   gboolean res = TRUE;
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
@@ -252,51 +245,29 @@ gst_osx_video_sink_osxwindow_create (GstOSXVideoSink * osxvideosink, gint width,
   rect.size.height = (float) osxwindow->height;
   osxwindow->gstview =[[GstGLView alloc] initWithFrame:rect];
 
-  s = gst_structure_new ("have-ns-view",
-     "nsview", G_TYPE_POINTER, osxwindow->gstview,
-     nil);
-
-  msg = gst_message_new_element (GST_OBJECT (osxvideosink), s);
-  gst_element_post_message (GST_ELEMENT (osxvideosink), msg);
-
-  GST_INFO_OBJECT (osxvideosink, "'have-ns-view' message sent");
 
   gst_osx_video_sink_run_cocoa_loop (osxvideosink);
   [osxwindow->gstview setMainThread:sink_class->ns_app_thread];
 
-  /* check if have-ns-view was handled and osxwindow->gstview was added to a
-   * superview
-   */
-  if ([osxwindow->gstview haveSuperview] == NO) {
-    /* have-ns-view wasn't handled, post prepare-xwindow-id */
-    if (osxvideosink->superview == NULL) {
-      GST_INFO_OBJECT (osxvideosink, "emitting prepare-xwindow-id");
-      gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (osxvideosink));
-    }
+  if (osxvideosink->superview == NULL) {
+    GST_INFO_OBJECT (osxvideosink, "emitting prepare-xwindow-id");
+    gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (osxvideosink));
+  }
 
-    if (osxvideosink->superview != NULL) {
-      /* prepare-xwindow-id was handled, we have the superview in
-       * osxvideosink->superview. We now add osxwindow->gstview to the superview
-       * from the main thread
-       */
-      GST_INFO_OBJECT (osxvideosink, "we have a superview, adding our view to it");
-      gst_osx_video_sink_call_from_main_thread(osxvideosink, osxwindow->gstview,
-          @selector(addToSuperview:), osxvideosink->superview, NO);
+  if (osxvideosink->superview != NULL) {
+    /* prepare-xwindow-id was handled, we have the superview in
+     * osxvideosink->superview. We now add osxwindow->gstview to the superview
+     * from the main thread
+     */
+    GST_INFO_OBJECT (osxvideosink, "we have a superview, adding our view to it");
+    gst_osx_video_sink_call_from_main_thread(osxvideosink, osxwindow->gstview,
+        @selector(addToSuperview:), osxvideosink->superview, NO);
 
-    } else {
-      if (osxvideosink->embed) {
-        /* the view wasn't added to a superview. It's possible that the
-         * application handled have-ns-view, stored our view internally and is
-         * going to add it to a superview later (webkit does that now).
-         */
-        GST_INFO_OBJECT (osxvideosink, "no superview");
-      } else {
-        gst_osx_video_sink_call_from_main_thread(osxvideosink,
-          osxvideosink->osxvideosinkobject,
-          @selector(createInternalWindow), nil, YES);
-        GST_INFO_OBJECT (osxvideosink, "No superview, creating an internal window.");
-      }
-    }
+  } else {
+    gst_osx_video_sink_call_from_main_thread(osxvideosink,
+      osxvideosink->osxvideosinkobject,
+      @selector(createInternalWindow), nil, YES);
+    GST_INFO_OBJECT (osxvideosink, "No superview, creating an internal window.");
   }
   [osxwindow->gstview setNavigation: GST_NAVIGATION(osxvideosink)];
   [osxvideosink->osxwindow->gstview setKeepAspectRatio: osxvideosink->keep_par];
@@ -474,9 +445,8 @@ gst_osx_video_sink_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_EMBED:
-      osxvideosink->embed = g_value_get_boolean(value);
       g_warning ("The \"embed\" property of osxvideosink is deprecated and "
-          "will be removed in the near future. Use the GstVideoOverlay "
+          "has no effect anymore. Use the GstVideoOverlay "
           "instead.");
       break;
     case ARG_FORCE_PAR:
@@ -503,7 +473,7 @@ gst_osx_video_sink_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case ARG_EMBED:
-      g_value_set_boolean (value, osxvideosink->embed);
+      g_value_set_boolean (value, FALSE);
       break;
     case ARG_FORCE_PAR:
       g_value_set_boolean (value, osxvideosink->keep_par);
@@ -589,7 +559,7 @@ gst_osx_video_sink_class_init (GstOSXVideoSinkClass * klass)
   /**
    * GstOSXVideoSink:embed
    *
-   * Set to #TRUE if you are embedding the video window in an application.
+   * For ABI comatibility onyl, do not use
    *
    **/
 
