@@ -674,6 +674,7 @@ gst_osx_video_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle
 {
   GstOSXVideoSink *osxvideosink = GST_OSX_VIDEO_SINK (overlay);
   gulong window_id = (gulong) handle_id;
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
   if (osxvideosink->superview) {
     GST_INFO_OBJECT (osxvideosink, "old xwindow id %p", osxvideosink->superview);
@@ -683,6 +684,14 @@ gst_osx_video_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle
           @selector(removeFromSuperview:), (id)nil, YES);
     }
     [osxvideosink->superview release];
+  }
+  if (osxvideosink->osxwindow != NULL && window_id != 0) {
+    if (osxvideosink->osxwindow->internal) {
+      GST_INFO_OBJECT (osxvideosink, "closing internal window");
+      osxvideosink->osxwindow->closed = TRUE;
+      [osxvideosink->osxwindow->win close];
+      [osxvideosink->osxwindow->win release];
+    }
   }
 
   GST_INFO_OBJECT (osxvideosink, "set xwindow id 0x%lx", window_id);
@@ -696,6 +705,7 @@ gst_osx_video_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle
     }
   }
 
+  [pool release];
 }
 
 static void
@@ -770,6 +780,9 @@ gst_osx_video_sink_get_type (void)
 - (void)windowWillClose:(NSNotification *)notification {
   /* Only handle close events if the window was closed manually by the user
    * and not becuase of a state change state to READY */
+  if (osxvideosink->osxwindow == NULL) {
+    return;
+  }
   if (!osxvideosink->osxwindow->closed) {
     osxvideosink->osxwindow->closed = TRUE;
     GST_ELEMENT_ERROR (osxvideosink, RESOURCE, NOT_FOUND, ("Output window was closed"), (NULL));
@@ -821,12 +834,12 @@ gst_osx_video_sink_get_type (void)
       SetFrontProcess(&psn);
   }
 
-  osxwindow->win =[[GstOSXVideoSinkWindow alloc]
+  osxwindow->win =[[[GstOSXVideoSinkWindow alloc]
                        initWithContentNSRect: rect
                        styleMask: mask
                        backing: NSBackingStoreBuffered
                        defer: NO
-                       screen: nil];
+                       screen: nil] retain];
   GST_DEBUG("VideoSinkWindow created, %p", osxwindow->win);
   [osxwindow->win makeKeyAndOrderFront:NSApp];
   osxwindow->gstview =[osxwindow->win gstView];
@@ -907,6 +920,7 @@ gst_osx_video_sink_get_type (void)
     if (osxwindow->internal) {
       if (!osxwindow->closed) {
         osxwindow->closed = TRUE;
+        [osxwindow->win close];
         [osxwindow->win release];
       }
     }
