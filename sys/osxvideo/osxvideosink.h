@@ -68,6 +68,12 @@ typedef struct _GstOSXVideoSinkClass GstOSXVideoSinkClass;
 
 #define GST_TYPE_OSXVIDEOBUFFER (gst_osxvideobuffer_get_type())
 
+typedef enum {
+  GST_OSX_VIDEO_SINK_RUN_LOOP_STATE_NOT_RUNNING = 0,
+  GST_OSX_VIDEO_SINK_RUN_LOOP_STATE_RUNNING = 1,
+  GST_OSX_VIDEO_SINK_RUN_LOOP_STATE_UNKNOWN = 2,
+} GstOSXVideoSinkRunLoopState;
+
 /* OSXWindow stuff */
 struct _GstOSXWindow {
   gint width, height;
@@ -83,24 +89,19 @@ struct _GstOSXVideoSink {
   GstOSXWindow *osxwindow;
   void *osxvideosinkobject;
   NSView *superview;
-  NSThread *ns_app_thread;
-#ifdef RUN_NS_APP_THREAD
-  GMutex loop_thread_lock;
-  GCond loop_thread_cond;
-#else
-  guint cocoa_timeout;
-#endif
-  GMutex mrl_check_lock;
-  GCond mrl_check_cond;
-  gboolean mrl_check_done;
-  gboolean main_run_loop_running;
-  gboolean app_started;
   gboolean keep_par;
   gboolean embed;
 };
 
 struct _GstOSXVideoSinkClass {
   GstVideoSinkClass parent_class;
+
+  GstOSXVideoSinkRunLoopState run_loop_state;
+#ifdef RUN_NS_APP_THREAD
+  NSThread *ns_app_thread;
+#else
+  guint cocoa_timeout;
+#endif
 };
 
 GType gst_osx_video_sink_get_type(void);
