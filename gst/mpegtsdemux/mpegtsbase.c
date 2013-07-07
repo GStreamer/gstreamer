@@ -236,6 +236,9 @@ mpegts_base_init (MpegTSBase * base)
   base->program_size = sizeof (MpegTSBaseProgram);
   base->stream_size = sizeof (MpegTSBaseStream);
 
+  base->push_data = TRUE;
+  base->push_section = TRUE;
+
   mpegts_base_reset (base);
 }
 
@@ -1106,7 +1109,8 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     /* If it's a known PES, push it */
     if (MPEGTS_BIT_IS_SET (base->is_pes, packet.pid)) {
       /* push the packet downstream */
-      res = klass->push (base, &packet, NULL);
+      if (base->push_data)
+        res = klass->push (base, &packet, NULL);
     } else if (packet.payload
         && MPEGTS_BIT_IS_SET (base->known_psi, packet.pid)) {
       /* base PSI data */
@@ -1123,7 +1127,8 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       }
 
       /* we need to push section packet downstream */
-      res = klass->push (base, &packet, section);
+      if (base->push_section)
+        res = klass->push (base, &packet, section);
 
     } else if (packet.payload && packet.pid != 0x1fff)
       GST_LOG ("PID 0x%04x Saw packet on a pid we don't handle", packet.pid);

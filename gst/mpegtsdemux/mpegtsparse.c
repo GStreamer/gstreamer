@@ -146,7 +146,12 @@ mpegts_parse_class_init (MpegTSParse2Class * klass)
 static void
 mpegts_parse_init (MpegTSParse2 * parse)
 {
-  GST_MPEGTS_BASE (parse)->program_size = sizeof (MpegTSParseProgram);
+  MpegTSBase *base = (MpegTSBase *) parse;
+
+  base->program_size = sizeof (MpegTSParseProgram);
+  /* We will only need to handle data/section if we have request pads */
+  base->push_data = FALSE;
+  base->push_section = FALSE;
 
   parse->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   parse->first = TRUE;
@@ -269,6 +274,7 @@ static void
 mpegts_parse_pad_removed (GstElement * element, GstPad * pad)
 {
   MpegTSParsePad *tspad;
+  MpegTSBase *base = (MpegTSBase *) element;
   MpegTSParse2 *parse = GST_MPEGTS_PARSE (element);
 
   if (gst_pad_get_direction (pad) == GST_PAD_SINK)
@@ -280,6 +286,10 @@ mpegts_parse_pad_removed (GstElement * element, GstPad * pad)
 
     parse->srcpads = g_list_remove_all (parse->srcpads, pad);
   }
+  if (parse->srcpads == NULL) {
+    base->push_data = FALSE;
+    base->push_section = FALSE;
+  }
 
   if (GST_ELEMENT_CLASS (parent_class)->pad_removed)
     GST_ELEMENT_CLASS (parent_class)->pad_removed (element, pad);
@@ -289,6 +299,7 @@ static GstPad *
 mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
     const gchar * padname, const GstCaps * caps)
 {
+  MpegTSBase *base = (MpegTSBase *) element;
   MpegTSParse2 *parse;
   MpegTSParsePad *tspad;
   MpegTSParseProgram *parseprogram;
@@ -320,6 +331,8 @@ mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
 
   pad = tspad->pad;
   parse->srcpads = g_list_append (parse->srcpads, pad);
+  base->push_data = TRUE;
+  base->push_section = TRUE;
 
   gst_pad_set_active (pad, TRUE);
 
@@ -429,10 +442,6 @@ mpegts_parse_push (MpegTSBase * base, MpegTSPacketizerPacket * packet,
   MpegTSParsePad *tspad;
   GstFlowReturn ret;
   GList *srcpads;
-
-  /* Shortcut: If no request pads exist, just return */
-  if (parse->srcpads == NULL)
-    return GST_FLOW_OK;
 
   GST_OBJECT_LOCK (parse);
   srcpads = parse->srcpads;

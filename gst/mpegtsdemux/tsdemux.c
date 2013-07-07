@@ -339,6 +339,9 @@ gst_ts_demux_init (GstTSDemux * demux)
 
   base->stream_size = sizeof (TSDemuxStream);
   base->parse_private_sections = TRUE;
+  /* We are not interested in sections (all handled by mpegtsbase) */
+  base->push_section = FALSE;
+
   gst_ts_demux_reset (base);
 }
 
@@ -1525,11 +1528,6 @@ gst_ts_demux_handle_packet (GstTSDemux * demux, TSDemuxStream * stream,
   GST_LOG ("pid 0x%04x pusi:%d, afc:%d, cont:%d, payload:%p", packet->pid,
       packet->payload_unit_start_indicator, packet->scram_afc_cc & 0x30,
       FLAGS_CONTINUITY_COUNTER (packet->scram_afc_cc), packet->payload);
-
-  if (section) {
-    GST_LOG ("Got section, returning");
-    return res;
-  }
 
   if (G_UNLIKELY (packet->payload_unit_start_indicator) &&
       FLAGS_HAS_PAYLOAD (packet->scram_afc_cc))

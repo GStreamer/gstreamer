@@ -151,6 +151,10 @@ struct _MpegTSBase {
 
   /* Whether to parse private section or not */
   gboolean parse_private_sections;
+
+  /* Whether to push data and/or sections to subclasses */
+  gboolean push_data;
+  gboolean push_section;
 };
 
 struct _MpegTSBaseClass {
