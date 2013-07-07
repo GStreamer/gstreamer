@@ -899,8 +899,8 @@ mpegts_base_handle_psi (MpegTSBase * base, GstMpegTsSection * section)
         GST_DEBUG ("First PAT offset: %" G_GUINT64_FORMAT, section->offset);
         mpegts_packetizer_set_reference_offset (base->packetizer,
             section->offset);
-        break;
       }
+      break;
     case GST_MPEGTS_SECTION_PMT:
       post_message = mpegts_base_apply_pmt (base, section);
       break;
