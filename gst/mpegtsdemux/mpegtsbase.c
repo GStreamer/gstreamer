@@ -1110,11 +1110,17 @@ mpegts_base_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     } else if (packet.payload
         && MPEGTS_BIT_IS_SET (base->known_psi, packet.pid)) {
       /* base PSI data */
+      GList *others, *tmp;
       GstMpegTsSection *section;
 
-      section = mpegts_packetizer_push_section (packetizer, &packet);
+      section = mpegts_packetizer_push_section (packetizer, &packet, &others);
       if (section)
         mpegts_base_handle_psi (base, section);
+      if (G_UNLIKELY (others)) {
+        for (tmp = others; tmp; tmp = tmp->next)
+          mpegts_base_handle_psi (base, (GstMpegTsSection *) tmp->data);
+        g_list_free (others);
+      }
 
       /* we need to push section packet downstream */
       res = klass->push (base, &packet, section);

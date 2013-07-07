@@ -68,8 +68,6 @@ typedef struct
 
   /* Section data (always newly allocated) */
   guint8 *section_data;
-  /* Allocated length of section_data */
-  guint   section_allocated;
   /* Current offset in section_data */
   guint16 section_offset;
 
@@ -182,7 +180,7 @@ G_GNUC_INTERNAL void mpegts_packetizer_remove_stream(MpegTSPacketizer2 *packetiz
   gint16 pid);
 
 G_GNUC_INTERNAL GstMpegTsSection *mpegts_packetizer_push_section (MpegTSPacketizer2 *packetzer,
-  MpegTSPacketizerPacket *packet);
+								  MpegTSPacketizerPacket *packet, GList **remaining);
 
 /* Only valid if calculate_offset is TRUE */
 G_GNUC_INTERNAL guint mpegts_packetizer_get_seen_pcr (MpegTSPacketizer2 *packetizer);

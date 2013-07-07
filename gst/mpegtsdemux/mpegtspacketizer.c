@@ -517,8 +517,9 @@ mpegts_packetizer_parse_section_header (MpegTSPacketizer2 * packetizer,
    * pre-parsed header data) */
   res =
       gst_mpegts_section_new (stream->pid, stream->section_data,
-      stream->section_allocated);
+      stream->section_length);
   stream->section_data = NULL;
+  mpegts_packetizer_clear_section (stream);
 
   if (res) {
     /* NOTE : Due to the new mpegts-si system, There is a insanely low probability
@@ -844,81 +845,31 @@ mpegts_packetizer_clear_packet (MpegTSPacketizer2 * packetizer,
  * * With data copied into it (yes, minor overhead)
  *
  * In all other cases it should just return NULL
+ *
+ * If more than one section is available, the 'remaining' field will
+ * be set to the beginning of a valid GList containing other sections.
  * */
 GstMpegTsSection *
 mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
-    MpegTSPacketizerPacket * packet)
+    MpegTSPacketizerPacket * packet, GList ** remaining)
 {
+  GstMpegTsSection *section;
   GstMpegTsSection *res = NULL;
   MpegTSPacketizerStream *stream;
   gboolean long_packet;
-  guint8 pointer, table_id;
+  guint8 pointer = 0, table_id;
   guint16 subtable_extension = 0;
+  gsize to_read;
   guint section_length;
+  /* data points to the current read location
+   * data_start points to the beginning of the data to accumulate */
   guint8 *data, *data_start;
   guint8 packet_cc;
+  GList *others = NULL;
+  guint8 version_number, section_number, last_section_number;
 
   data = packet->data;
   packet_cc = FLAGS_CONTINUITY_COUNTER (packet->scram_afc_cc);
-
-  GST_MEMDUMP ("section data", packet->data, packet->data_end - packet->data);
-
-  /* FIXME: If pointer is different from zero, this means the data should be accumulated
-   * to the previous section ! */
-  if (packet->payload_unit_start_indicator) {
-    pointer = *data++;
-    /* Sanity check for enough data */
-    if (data + pointer > packet->data_end) {
-      GST_DEBUG ("PID 0x%04x PSI section pointer points past the end "
-          "of the buffer", packet->pid);
-      goto out;
-    }
-    if (G_UNLIKELY (pointer != 0)) {
-      GST_FIXME ("PID 0x%04x PSI pointer %d != 0. Handle previous data",
-          packet->pid, pointer);
-      GST_MEMDUMP ("previous data", data, pointer);
-    }
-
-    data += pointer;
-  }
-
-  /*
-   * section_syntax_indicator means that the header is of the following format:
-   * * table_id (8bit)
-   * * section_syntax_indicator (1bit) == 0
-   * * reserved/private fields (3bit)
-   * * section_length (12bit)
-   * * data (of size section_length)
-   * * NO CRC !
-   */
-  long_packet = data[1] & 0x80;
-
-  /* Fast path for short packets */
-  if (!long_packet && packet->payload_unit_start_indicator) {
-    /* We can create the section now (function will check for size) */
-    GST_DEBUG ("Short packet");
-    section_length = (GST_READ_UINT16_BE (data + 1) & 0xfff) + 3;
-    /* Only do fast-path if we have enough byte */
-    if (section_length < packet->data_end - data) {
-      res =
-          gst_mpegts_section_new (packet->pid, g_memdup (data,
-              section_length), section_length);
-      if (data[section_length] != 0xff) {
-        GST_FIXME
-            ("Potentially more data after short section (report in bug #677443)");
-        GST_MEMDUMP ("Remainder", data + section_length,
-            packet->data_end - data - section_length);
-
-      }
-      if (res)
-        res->offset = packet->offset;
-      /* And exit */
-      goto out;
-    }
-    /* We don't have enough bytes to do short section shortcut */
-  }
-
-  data_start = data;
 
   /* Get our filter */
   stream = packetizer->streams[packet->pid];
@@ -932,34 +883,166 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
     packetizer->streams[packet->pid] = stream;
   }
 
-  /* If not a new section, and we were expecting a new section or
-   * there is a discontinuity, bail out. */
-  if (!packet->payload_unit_start_indicator) {
-    if (stream->continuity_counter == CONTINUITY_UNSET) {
-      GST_DEBUG ("PID 0x%04x  waiting for section start", packet->pid);
-      goto out;
-    }
-    if ((stream->continuity_counter + 1) % 16 != packet_cc) {
-      GST_WARNING ("PID 0x%04x section discontinuity (%d vs %d)", packet->pid,
-          stream->continuity_counter, packet_cc);
-      mpegts_packetizer_clear_section (stream);
-      goto out;
+  GST_MEMDUMP ("Full packet data", packet->data,
+      packet->data_end - packet->data);
+
+  /* This function is split into several parts:
+   *
+   * Pre checks (packet-wide). Determines where we go next
+   * accumulate_data: store data and check if section is complete
+   * section_start: handle beginning of a section, if needed loop back to
+   *                accumulate_data
+   *
+   * The trigger that makes the loop stop and return is if:
+   * 1) We do not have enough data for the current packet
+   * 2) There is remaining data after a packet which is only made
+   *    of stuffing bytes (0xff).
+   *
+   * Pre-loop checks, related to the whole incoming packet:
+   *
+   * If there is a CC-discont:
+   *  If it is a PUSI, skip the pointer and handle section_start
+   *  If not a PUSI, reset and return nothing
+   * If there is not a CC-discont:
+   *  If it is a PUSI
+   *    If pointer, accumulate that data and check for complete section
+   *    (loop)
+   *  If it is not a PUSI
+   *    Accumulate the expected data and check for complete section
+   *    (loop)
+   *    
+   **/
+
+  if (packet->payload_unit_start_indicator) {
+    pointer = *data++;
+    /* If the pointer is zero, we're guaranteed to be able to handle it */
+    if (pointer == 0) {
+      GST_LOG
+          ("PID 0x%04x PUSI and pointer == 0, skipping straight to section_start parsing",
+          packet->pid);
+      goto section_start;
     }
   }
 
-  if (packet->payload_unit_start_indicator) {
-    guint8 version_number, section_number, last_section_number;
+  if (stream->continuity_counter == CONTINUITY_UNSET ||
+      (stream->continuity_counter + 1) % 16 != packet_cc) {
+    if (stream->continuity_counter != CONTINUITY_UNSET)
+      GST_WARNING ("PID 0x%04x section discontinuity (%d vs %d)", packet->pid,
+          stream->continuity_counter, packet_cc);
+    mpegts_packetizer_clear_section (stream);
+    /* If not a PUSI, not much we can do */
+    if (!packet->payload_unit_start_indicator) {
+      GST_LOG ("PID 0x%04x continuity discont/unset and not PUSI, bailing out",
+          packet->pid);
+      goto out;
+    }
+    /* If PUSI, skip pointer data and carry on to section start */
+    data += pointer;
+    pointer = 0;
+    GST_LOG ("discont, but PUSI, skipped %d bytes and doing section start",
+        pointer);
+    goto section_start;
+  }
 
-    /* Beginning of a new section, do as much pre-parsing as possible */
-    /* table_id                        : 8  bit */
-    table_id = *data++;
+  GST_LOG ("Accumulating data from beginning of packet");
 
-    /* section_syntax_indicator        : 1  bit
-     * other_fields (reserved)         : 3  bit
-     * section_length                  : 12 bit */
-    section_length = (GST_READ_UINT16_BE (data) & 0x0FFF) + 3;
-    data += 2;
+  data_start = data;
 
+accumulate_data:
+  /* If not the beginning of a new section, accumulate what we have */
+  stream->continuity_counter = packet_cc;
+  to_read = MIN (stream->section_length - stream->section_offset,
+      packet->data_end - data_start);
+  memcpy (stream->section_data + stream->section_offset, data_start, to_read);
+  stream->section_offset += to_read;
+  /* Point data to after the data we accumulated */
+  data = data_start + to_read;
+  GST_DEBUG ("Appending data (need %d, have %d)", stream->section_length,
+      stream->section_offset);
+
+  /* Check if we have enough */
+  if (stream->section_offset < stream->section_length) {
+    GST_DEBUG ("PID 0x%04x, section not complete (Got %d, need %d)",
+        stream->pid, stream->section_offset, stream->section_length);
+    goto out;
+  }
+
+  /* Small sanity check. We should have collected *exactly* the right amount */
+  if (G_UNLIKELY (stream->section_offset != stream->section_length))
+    GST_WARNING ("PID 0x%04x Accumulated too much data (%d vs %d) !",
+        stream->pid, stream->section_offset, stream->section_length);
+  GST_DEBUG ("PID 0x%04x Section complete", stream->pid);
+
+  if ((section = mpegts_packetizer_parse_section_header (packetizer, stream))) {
+    if (res)
+      others = g_list_append (others, section);
+    else
+      res = section;
+  }
+
+  if (data == packet->data_end || *data == 0xff) {
+    /* flush stuffing bytes and leave */
+    mpegts_packetizer_clear_section (stream);
+    goto out;
+  }
+
+  /* We have more data to process ... */
+  GST_DEBUG ("PID 0x%04x, More section present in packet (remaining bytes:%"
+      G_GSIZE_FORMAT ")", stream->pid, packet->data_end - data);
+
+section_start:
+  GST_MEMDUMP ("section_start", data, packet->data_end - data);
+  data_start = data;
+  /* Beginning of a new section */
+  /*
+   * section_syntax_indicator means that the header is of the following format:
+   * * table_id (8bit)
+   * * section_syntax_indicator (1bit) == 0
+   * * reserved/private fields (3bit)
+   * * section_length (12bit)
+   * * data (of size section_length)
+   * * NO CRC !
+   */
+  long_packet = data[1] & 0x80;
+
+  /* Fast path for short packets */
+  if (!long_packet) {
+    /* We can create the section now (function will check for size) */
+    GST_DEBUG ("Short packet");
+    section_length = (GST_READ_UINT16_BE (data + 1) & 0xfff) + 3;
+    /* Only do fast-path if we have enough byte */
+    if (section_length < packet->data_end - data) {
+      if ((section =
+              gst_mpegts_section_new (packet->pid, g_memdup (data,
+                      section_length), section_length))) {
+        GST_DEBUG ("PID 0x%04x Short section complete !", packet->pid);
+        section->offset = packet->offset;
+        if (res)
+          others = g_list_append (others, section);
+        else
+          res = section;
+      }
+      /* Advance reader and potentially read another section */
+      data += section_length;
+      if (data < packet->data_end && *data != 0xff)
+        goto section_start;
+      /* If not, exit */
+      goto out;
+    }
+    /* We don't have enough bytes to do short section shortcut */
+  }
+
+  /* Beginning of a new section, do as much pre-parsing as possible */
+  /* table_id                        : 8  bit */
+  table_id = *data++;
+
+  /* section_syntax_indicator        : 1  bit
+   * other_fields (reserved)         : 3  bit
+   * section_length                  : 12 bit */
+  section_length = (GST_READ_UINT16_BE (data) & 0x0FFF) + 3;
+  data += 2;
+
+  if (long_packet) {
     /* subtable_extension (always present, we are in a long section) */
     /* subtable extension              : 16 bit */
     subtable_extension = GST_READ_UINT16_BE (data);
@@ -981,89 +1064,65 @@ mpegts_packetizer_push_section (MpegTSPacketizer2 * packetizer,
     section_number = *data++;
     /* last_section_number                : 8  bit */
     last_section_number = *data++;
+  } else {
+    subtable_extension = 0;
+    version_number = 0;
+    section_number = 0;
+    last_section_number = 0;
+  }
+  GST_DEBUG
+      ("PID 0x%04x length:%d table_id:0x%02x subtable_extension:0x%04x version_number:%d section_number:%d(last:%d)",
+      packet->pid, section_length, table_id, subtable_extension, version_number,
+      section_number, last_section_number);
 
+  to_read = MIN (section_length, packet->data_end - data_start);
+
+  /* Check as early as possible whether we already saw this section
+   * i.e. that we saw a subtable with:
+   * * same subtable_extension (might be zero)
+   * * same version_number
+   * * same last_section_number
+   * * same section_number was seen
+   */
+  if (seen_section_before (stream, table_id, subtable_extension,
+          version_number, section_number, last_section_number)) {
     GST_DEBUG
-        ("PID 0x%04x table_id:0x%02x subtable_extension:0x%04x version_number:%d section_number:%d(last:%d)",
+        ("PID 0x%04x Already processed table_id:0x%02x subtable_extension:0x%04x, version_number:%d, section_number:%d",
         packet->pid, table_id, subtable_extension, version_number,
-        section_number, last_section_number);
-
-    /* Check as early as possible whether we already saw this section
-     * i.e. that we saw a subtable with:
-     * * same subtable_extension (might be zero)
-     * * same version_number
-     * * same last_section_number
-     * * same section_number was seen
-     */
-    if (seen_section_before (stream, table_id, subtable_extension,
-            version_number, section_number, last_section_number)) {
-      GST_DEBUG
-          ("PID 0x%04x Already processed table_id:0x%02x subtable_extension:0x%04x, version_number:%d, section_number:%d",
-          packet->pid, table_id, subtable_extension, version_number,
-          section_number);
+        section_number);
+    /* skip data and see if we have more sections after */
+    data = data_start + to_read;
+    if (data == packet->data_end || *data == 0xff)
       goto out;
-    }
-    if (G_UNLIKELY (section_number > last_section_number)) {
-      GST_WARNING
-          ("PID 0x%04x corrupted packet (section_number:%d > last_section_number:%d)",
-          packet->pid, section_number, last_section_number);
-      goto out;
-    }
-
-    stream->continuity_counter = packet_cc;
-
-    /* Copy over already parsed values */
-    stream->table_id = table_id;
-    stream->section_length = section_length;
-    stream->version_number = version_number;
-    stream->subtable_extension = subtable_extension;
-    stream->section_number = section_number;
-    stream->last_section_number = last_section_number;
-
-    /* Create enough room to store chunks of sections, including FF padding */
-    stream->section_allocated = stream->section_length + 188;
-    stream->section_data = g_malloc (stream->section_allocated);
-    memcpy (stream->section_data, data_start, packet->data_end - data_start);
-    stream->section_offset = packet->data_end - data_start;
-
-    stream->offset = packet->offset;
-  } else {
-    /* valid continuation of an existing section */
-    stream->continuity_counter = packet_cc;
-
-    memcpy (stream->section_data + stream->section_offset, data_start,
-        packet->data_end - data_start);
-    stream->section_offset += packet->data_end - data_start;
-    GST_DEBUG ("Appending data (need %d, have %d)", stream->section_length,
-        stream->section_offset);
+    goto section_start;
+  }
+  if (G_UNLIKELY (section_number > last_section_number)) {
+    GST_WARNING
+        ("PID 0x%04x corrupted packet (section_number:%d > last_section_number:%d)",
+        packet->pid, section_number, last_section_number);
+    goto out;
   }
 
-  /* we pushed some data in the section adapter, see if the section is
-   * complete now */
-  /* >= as sections can be padded and padding is not included in
-   * section_length */
-  if (stream->section_offset >= stream->section_length) {
-    GST_DEBUG ("PID 0x%04x Section complete (Got %d, need %d)",
-        stream->pid, stream->section_offset, stream->section_length);
-    /* Remainder of section data should be padding (0xff) */
-    /* Adding a warning so people can report it in the bug reported regarding
-     * multiple sections after another (still not seen any samples in the wild) */
-    if (stream->section_offset > stream->section_length &&
-        stream->section_data[stream->section_length] != 0xff) {
-      GST_FIXME ("Potentially more data after section (report in bug #677443)");
-      GST_MEMDUMP ("Remainder", stream->section_data + stream->section_length,
-          stream->section_offset - stream->section_length);
-    }
-    res = mpegts_packetizer_parse_section_header (packetizer, stream);
 
-    /* flush stuffing bytes */
-    mpegts_packetizer_clear_section (stream);
-  } else {
-    GST_DEBUG ("PID 0x%04x, section not complete (Got %d, need %d)",
-        stream->pid, stream->section_offset, stream->section_length);
-  }
+  /* Copy over already parsed values */
+  stream->table_id = table_id;
+  stream->section_length = section_length;
+  stream->version_number = version_number;
+  stream->subtable_extension = subtable_extension;
+  stream->section_number = section_number;
+  stream->last_section_number = last_section_number;
+  stream->offset = packet->offset;
+
+  /* Create enough room to store chunks of sections */
+  stream->section_data = g_malloc (stream->section_length);
+  stream->section_offset = 0;
+
+  /* Finally, accumulate and check if we parsed enough */
+  goto accumulate_data;
 
 out:
   packet->data = data;
+  *remaining = others;
 
   GST_DEBUG ("result: %p", res);
 
