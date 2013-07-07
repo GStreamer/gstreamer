@@ -24,11 +24,58 @@
 #include "config.h"
 #endif
 
+#define DUMP_DESCRIPTORS 0
+
 #include <glib.h>
 #include <glib-object.h>
 #include <glib/gprintf.h>
 #include <gst/gst.h>
 #include <gst/mpegts/mpegts.h>
+
+static void
+gst_info_dump_mem_line (gchar * linebuf, gsize linebuf_size,
+    const guint8 * mem, gsize mem_offset, gsize mem_size)
+{
+  gchar hexstr[50], ascstr[18], digitstr[4];
+
+  if (mem_size > 16)
+    mem_size = 16;
+
+  hexstr[0] = '\0';
+  ascstr[0] = '\0';
+
+  if (mem != NULL) {
+    guint i = 0;
+
+    mem += mem_offset;
+    while (i < mem_size) {
+      ascstr[i] = (g_ascii_isprint (mem[i])) ? mem[i] : '.';
+      g_snprintf (digitstr, sizeof (digitstr), "%02x ", mem[i]);
+      g_strlcat (hexstr, digitstr, sizeof (hexstr));
+      ++i;
+    }
+    ascstr[i] = '\0';
+  }
+
+  g_snprintf (linebuf, linebuf_size, "%08x: %-48.48s %-16.16s",
+      (guint) mem_offset, hexstr, ascstr);
+}
+
+static void
+dump_memory_content (GstMpegTsDescriptor * desc, guint spacing)
+{
+  gsize off = 0;
+
+  while (off < desc->length) {
+    gchar buf[128];
+
+    /* gst_info_dump_mem_line will process 16 bytes at most */
+    gst_info_dump_mem_line (buf, sizeof (buf), desc->data, off + 2,
+        desc->length - off);
+    g_printf ("%*s  %s\n", spacing, "", buf);
+    off += 16;
+  }
+}
 
 static const gchar *
 descriptor_name (gint val)
@@ -128,14 +175,16 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
     GstMpegTsDescriptor *desc = g_ptr_array_index (descriptors, i);
     g_printf ("%*s [descriptor 0x%02x (%s) length:%d]\n", spacing, "",
         desc->tag, descriptor_name (desc->tag), desc->length);
+    if (DUMP_DESCRIPTORS)
+      dump_memory_content (desc, spacing + 2);
     switch (desc->tag) {
       case GST_MTS_DESC_REGISTRATION:
       {
         const guint8 *data = desc->data + 2;
-#define SAFE_CHAR(a) (g_ascii_isalnum(a) ? a : '.')
-        g_printf ("%*s   Registration : %c%c%c%c\n", spacing, "",
-            SAFE_CHAR (data[0]), SAFE_CHAR (data[1]),
-            SAFE_CHAR (data[2]), SAFE_CHAR (data[3]));
+#define SAFE_CHAR(a) (g_ascii_isprint(a) ? a : '.')
+        g_printf ("%*s   Registration : %c%c%c%c [%02x%02x%02x%02x]\n", spacing,
+            "", SAFE_CHAR (data[0]), SAFE_CHAR (data[1]), SAFE_CHAR (data[2]),
+            SAFE_CHAR (data[3]), data[0], data[1], data[2], data[3]);
 
         break;
       }
