@@ -972,7 +972,9 @@ accumulate_data:
       res = section;
   }
 
-  if (data == packet->data_end || *data == 0xff) {
+  /* FIXME : We need at least 8 bytes with current algorithm :(
+   * We might end up losing sections that start across two packets (srsl...) */
+  if (data > packet->data_end - 8 || *data == 0xff) {
     /* flush stuffing bytes and leave */
     mpegts_packetizer_clear_section (stream);
     goto out;
