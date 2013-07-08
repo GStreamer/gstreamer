@@ -171,10 +171,9 @@ decoder_put_buffers(GstVaapiDecoder *decoder)
     return TRUE;
 }
 
-GstVaapiSurface *
+GstVaapiSurfaceProxy *
 decoder_get_surface(GstVaapiDecoder *decoder)
 {
-    GstVaapiSurface *surface;
     GstVaapiSurfaceProxy *proxy;
     GstVaapiDecoderStatus status;
 
@@ -185,12 +184,7 @@ decoder_get_surface(GstVaapiDecoder *decoder)
         GST_ERROR("failed to get decoded surface (decoder status %d)", status);
         return NULL;
     }
-
-    /* Note: we only have a single I-frame to decode, so this is fine
-       to just release the surface proxy right away */
-    surface = gst_vaapi_surface_proxy_get_surface(proxy);
-    gst_vaapi_surface_proxy_unref(proxy);
-    return surface;
+    return proxy;
 }
 
 const gchar *

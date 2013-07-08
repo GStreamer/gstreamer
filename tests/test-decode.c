@@ -51,7 +51,9 @@ main(int argc, char *argv[])
     GstVaapiDisplay      *display, *display2;
     GstVaapiWindow       *window;
     GstVaapiDecoder      *decoder;
+    GstVaapiSurfaceProxy *proxy;
     GstVaapiSurface      *surface;
+    const GstVaapiRectangle *crop_rect;
 
     static const guint win_width  = 640;
     static const guint win_height = 480;
@@ -85,18 +87,22 @@ main(int argc, char *argv[])
     if (!decoder_put_buffers(decoder))
         g_error("could not fill decoder with sample data");
 
-    surface = decoder_get_surface(decoder);
-    if (!surface)
+    proxy = decoder_get_surface(decoder);
+    if (!proxy)
         g_error("could not get decoded surface");
+
+    surface = gst_vaapi_surface_proxy_get_surface(proxy);
+    crop_rect = gst_vaapi_surface_proxy_get_crop_rect(proxy);
 
     gst_vaapi_window_show(window);
 
-    if (!gst_vaapi_window_put_surface(window, surface, NULL, NULL,
+    if (!gst_vaapi_window_put_surface(window, surface, crop_rect, NULL,
             GST_VAAPI_PICTURE_STRUCTURE_FRAME))
         g_error("could not render surface");
 
     pause();
 
+    gst_vaapi_surface_proxy_unref(proxy);
     gst_vaapi_decoder_unref(decoder);
     gst_vaapi_window_unref(window);
     gst_vaapi_display_unref(display);

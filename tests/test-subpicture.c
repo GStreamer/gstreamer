@@ -77,6 +77,7 @@ main(int argc, char *argv[])
     GstVaapiDisplay      *display;
     GstVaapiWindow       *window;
     GstVaapiDecoder      *decoder;
+    GstVaapiSurfaceProxy *proxy;
     GstVaapiSurface      *surface;
     GstBuffer            *buffer;
     VideoSubpictureInfo   subinfo;
@@ -113,9 +114,11 @@ main(int argc, char *argv[])
     if (!decoder_put_buffers(decoder))
         g_error("could not fill decoder with sample data");
 
-    surface = decoder_get_surface(decoder);
-    if (!surface)
+    proxy = decoder_get_surface(decoder);
+    if (!proxy)
         g_error("could not get decoded surface");
+
+    surface = gst_vaapi_surface_proxy_get_surface(proxy);
 
     subpicture_get_info(&subinfo);
     buffer = gst_buffer_new_and_alloc(subinfo.data_size);
@@ -171,6 +174,7 @@ main(int argc, char *argv[])
     pause();
 
     gst_video_overlay_composition_unref(compo);
+    gst_vaapi_surface_proxy_unref(proxy);
     gst_vaapi_decoder_unref(decoder);
     gst_vaapi_window_unref(window);
     gst_vaapi_display_unref(display);

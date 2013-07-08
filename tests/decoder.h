@@ -30,7 +30,7 @@ decoder_new(GstVaapiDisplay *display, const gchar *codec_name);
 gboolean
 decoder_put_buffers(GstVaapiDecoder *decoder);
 
-GstVaapiSurface *
+GstVaapiSurfaceProxy *
 decoder_get_surface(GstVaapiDecoder *decoder);
 
 const gchar *
