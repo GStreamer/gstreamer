@@ -513,7 +513,7 @@ _parse_binding (GMarkupParseContext * context, const gchar * element_name,
     GESXmlFormatter * self, GError ** error)
 {
   const gchar *type = NULL, *source_type = NULL, *timed_values =
-      NULL, *property_name = NULL, *mode = NULL;
+      NULL, *property_name = NULL, *mode = NULL, *track_id = NULL;
   gchar **pairs, **tmp;
   gchar *pair;
   GSList *list = NULL;
@@ -524,6 +524,7 @@ _parse_binding (GMarkupParseContext * context, const gchar * element_name,
           G_MARKUP_COLLECT_STRING, "source_type", &source_type,
           G_MARKUP_COLLECT_STRING, "property", &property_name,
           G_MARKUP_COLLECT_STRING, "mode", &mode,
+          G_MARKUP_COLLECT_STRING, "track_id", &track_id,
           G_MARKUP_COLLECT_STRING, "values", &timed_values,
           G_MARKUP_COLLECT_INVALID)) {
     return;
@@ -549,10 +550,11 @@ _parse_binding (GMarkupParseContext * context, const gchar * element_name,
   }
 
   g_strfreev (pairs);
+
   ges_base_xml_formatter_add_control_binding (GES_BASE_XML_FORMATTER (self),
       type,
       source_type,
-      property_name, (gint) g_ascii_strtoll (mode, NULL, 10), list);
+      property_name, (gint) g_ascii_strtoll (mode, NULL, 10), track_id, list);
 }
 
 static inline void
@@ -809,7 +811,7 @@ _save_tracks (GString * str, GESTimeline * timeline)
 
 /* TODO : Use this function for every track element with controllable properties */
 static inline void
-_save_keyframes (GString * str, GESTrackElement * trackelement)
+_save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
 {
   GHashTable *bindings_hashtable;
   GHashTableIter iter;
@@ -839,6 +841,7 @@ _save_keyframes (GString * str, GESTrackElement * trackelement)
                 (gchar *) key));
         g_object_get (source, "mode", &mode, NULL);
         append_escaped (str, g_markup_printf_escaped (" mode='%d'", mode));
+        append_escaped (str, g_markup_printf_escaped (" track_id='%d'", index));
         append_escaped (str, g_markup_printf_escaped (" values ='"));
         timed_values =
             gst_timed_value_control_source_get_all
@@ -917,7 +920,7 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
       g_markup_printf_escaped (" children-properties='%s'>\n",
           gst_structure_to_string (structure)));
 
-  _save_keyframes (str, trackelement);
+  _save_keyframes (str, trackelement, -1);
 
   append_escaped (str, g_markup_printf_escaped ("</effect>\n"));
   gst_structure_free (structure);
@@ -950,6 +953,8 @@ _save_layers (GString * str, GESTimeline * timeline)
     clips = ges_layer_get_clips (layer);
     for (tmpclip = clips; tmpclip; tmpclip = tmpclip->next) {
       GList *effects, *tmpeffect;
+      GList *tmptrackelement;
+      GList *tracks;
 
       clip = GES_CLIP (tmpclip->data);
       effects = ges_clip_get_top_effects (clip);
@@ -973,6 +978,24 @@ _save_layers (GString * str, GESTimeline * timeline)
       for (tmpeffect = effects; tmpeffect; tmpeffect = tmpeffect->next)
         _save_effect (str, nbclips, GES_TRACK_ELEMENT (tmpeffect->data),
             timeline);
+
+      tracks = ges_timeline_get_tracks (timeline);
+
+      for (tmptrackelement = GES_CONTAINER_CHILDREN (clip); tmptrackelement;
+          tmptrackelement = tmptrackelement->next) {
+        gint index;
+
+        if (!GES_IS_SOURCE (tmptrackelement->data))
+          continue;
+
+        index =
+            g_list_index (tracks,
+            ges_track_element_get_track (tmptrackelement->data));
+        _save_keyframes (str, tmptrackelement->data, index);
+      }
+
+      g_list_free_full (tracks, gst_object_unref);
+
       g_string_append (str, "</clip>\n");
       nbclips++;
     }

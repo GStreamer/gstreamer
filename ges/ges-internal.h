@@ -212,7 +212,7 @@ void ges_base_xml_formatter_add_encoding_profile               (GESBaseXmlFormat
                                                                  gboolean variableframerate,
                                                                  GstStructure * properties,
                                                                  GError ** error);
-G_GNUC_INTERNAL void ges_base_xml_formatter_add_track_element    (GESBaseXmlFormatter *self,
+G_GNUC_INTERNAL void ges_base_xml_formatter_add_track_element   (GESBaseXmlFormatter *self,
                                                                  GType effect_type,
                                                                  const gchar *asset_id,
                                                                  const gchar * track_id,
@@ -222,12 +222,13 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_track_element    (GESBaseXmlForm
                                                                  const gchar *metadatas,
                                                                  GError **error);
 
-G_GNUC_INTERNAL void ges_base_xml_formatter_add_control_binding(GESBaseXmlFormatter * self,
-                const gchar * binding_type,
-                const gchar * source_type,
-                const gchar * property_name,
-                gint mode,
-                GSList * timed_values);
+G_GNUC_INTERNAL void ges_base_xml_formatter_add_control_bindingi (GESBaseXmlFormatter * self,
+                                                                  const gchar * binding_type,
+                                                                  const gchar * source_type,
+                                                                  const gchar * property_name,
+                                                                  gint mode,
+                                                                  const gchar *track_id,
+                                                                  GSList * timed_values);
 
 G_GNUC_INTERNAL void set_property_foreach                       (GQuark field_id,
                                                                  const GValue * value,

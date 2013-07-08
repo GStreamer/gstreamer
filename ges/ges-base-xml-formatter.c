@@ -40,6 +40,14 @@ typedef struct PendingEffects
 
 } PendingEffects;
 
+typedef struct PendingBinding
+{
+  gchar *track_id;
+  GstControlSource *source;
+  gchar *propname;
+  gchar *binding_type;
+} PendingBinding;
+
 typedef struct PendingClip
 {
   gchar *id;
@@ -55,6 +63,8 @@ typedef struct PendingClip
   gchar *metadatas;
 
   GList *effects;
+
+  GList *pending_bindings;
 
   /* TODO Implement asset effect management
    * PendingTrackElements *track_elements; */
@@ -98,6 +108,9 @@ struct _GESBaseXmlFormatterPrivate
 
   /* current track element */
   GESTrackElement *current_track_element;
+
+  GESClip *current_clip;
+  PendingClip *current_pending_clip;
 };
 
 static void
@@ -341,6 +354,8 @@ ges_base_xml_formatter_init (GESBaseXmlFormatter * self)
   priv->layers = g_hash_table_new_full (g_direct_hash,
       g_direct_equal, NULL, (GDestroyNotify) _free_layer_entry);
   priv->current_track_element = NULL;
+  priv->current_clip = NULL;
+  priv->current_pending_clip = NULL;
 }
 
 static void
@@ -365,6 +380,16 @@ ges_base_xml_formatter_class_init (GESBaseXmlFormatterClass * self_class)
  *             Private methods                 *
  *                                             *
  ***********************************************/
+
+
+static GESTrackElement *
+_get_element_by_track_id (GESBaseXmlFormatterPrivate * priv,
+    const gchar * track_id, GESClip * clip)
+{
+  GESTrack *track = g_hash_table_lookup (priv->tracks, track_id);
+
+  return ges_clip_find_track_element (clip, track, GES_TYPE_SOURCE);
+}
 
 static void
 _set_auto_transition (gpointer prio, LayerEntry * entry, gpointer udata)
@@ -460,6 +485,14 @@ _add_track_element (GESFormatter * self, GESClip * clip,
 }
 
 static void
+_free_pending_binding (PendingBinding * pend)
+{
+  g_free (pend->propname);
+  g_free (pend->binding_type);
+  g_free (pend->track_id);
+}
+
+static void
 _free_pending_effect (PendingEffects * pend)
 {
   g_free (pend->track_id);
@@ -480,6 +513,8 @@ _free_pending_clip (GESBaseXmlFormatterPrivate * priv, PendingClip * pend)
   if (pend->properties)
     gst_structure_free (pend->properties);
   g_list_free_full (pend->effects, (GDestroyNotify) _free_pending_effect);
+  g_list_free_full (pend->pending_bindings,
+      (GDestroyNotify) _free_pending_binding);
   g_hash_table_remove (priv->clipid_pendings, pend->id);
   g_slice_free (PendingClip, pend);
 }
@@ -494,6 +529,22 @@ _free_pending_asset (GESBaseXmlFormatterPrivate * priv, PendingAsset * passet)
   g_slice_free (PendingAsset, passet);
 
   priv->pending_assets = g_list_remove (priv->pending_assets, passet);
+}
+
+static void
+_add_pending_bindings (GESBaseXmlFormatterPrivate * priv, GList * bindings,
+    GESClip * clip)
+{
+  GList *tmpbinding;
+
+  for (tmpbinding = bindings; tmpbinding; tmpbinding = tmpbinding->next) {
+    PendingBinding *pbinding = tmpbinding->data;
+    GESTrackElement *element =
+        _get_element_by_track_id (priv, pbinding->track_id, clip);
+    if (element)
+      ges_track_element_set_control_source (element,
+          pbinding->source, pbinding->propname, pbinding->binding_type);
+  }
 }
 
 static void
@@ -569,6 +620,8 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
 
     if (clip == NULL)
       continue;
+
+    _add_pending_bindings (priv, pend->pending_bindings, clip);
 
     GST_DEBUG_OBJECT (self, "Adding %i effect to new object",
         g_list_length (pend->effects));
@@ -739,6 +792,9 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
         g_list_append (pendings, pclip));
     g_hash_table_insert (priv->clipid_pendings, g_strdup (id), pclip);
 
+    priv->current_clip = NULL;
+    priv->current_pending_clip = pclip;
+
     return;
   }
 
@@ -747,6 +803,8 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
 
   if (!nclip)
     return;
+
+  priv->current_clip = nclip;
 }
 
 void
@@ -831,12 +889,35 @@ ges_base_xml_formatter_add_track (GESBaseXmlFormatter * self,
 void
 ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
     const gchar * binding_type, const gchar * source_type,
-    const gchar * property_name, gint mode, GSList * timed_values)
+    const gchar * property_name, gint mode, const gchar * track_id,
+    GSList * timed_values)
 {
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
-  GESTrackElement *element;
+  GESTrackElement *element = NULL;
 
-  element = priv->current_track_element;
+  if (track_id[0] != '-' && priv->current_clip)
+    element = _get_element_by_track_id (priv, track_id, priv->current_clip);
+
+  else if (track_id[0] != '-' && priv->current_pending_clip) {
+    PendingBinding *pbinding;
+
+    pbinding = g_slice_new0 (PendingBinding);
+    pbinding->source = gst_interpolation_control_source_new ();
+    g_object_set (pbinding->source, "mode", mode, NULL);
+    gst_timed_value_control_source_set_from_list (GST_TIMED_VALUE_CONTROL_SOURCE
+        (pbinding->source), timed_values);
+    pbinding->propname = g_strdup (property_name);
+    pbinding->binding_type = g_strdup (binding_type);
+    pbinding->track_id = g_strdup (track_id);
+    priv->current_pending_clip->pending_bindings =
+        g_list_append (priv->current_pending_clip->pending_bindings, pbinding);
+    return;
+  }
+
+  else {
+    element = priv->current_track_element;
+  }
+
   if (element == NULL) {
     GST_WARNING ("No current track element to which we can append a binding");
     return;
