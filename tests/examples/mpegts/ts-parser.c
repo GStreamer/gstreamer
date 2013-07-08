@@ -301,6 +301,27 @@ dump_nit (GstMpegTsSection * section)
 }
 
 static void
+dump_bat (GstMpegTsSection * section)
+{
+  const GstMpegTsBAT *bat = gst_mpegts_section_get_bat (section);
+  guint i, len;
+
+  g_assert (bat);
+
+  g_printf ("     bouquet_id     : 0x%04x\n", section->subtable_extension);
+  dump_descriptors (bat->descriptors, 7);
+  len = bat->streams->len;
+  g_printf ("     %d Streams:\n", len);
+  for (i = 0; i < len; i++) {
+    GstMpegTsBATStream *stream = g_ptr_array_index (bat->streams, i);
+    g_printf
+        ("       transport_stream_id:0x%04x , original_network_id:0x%02x\n",
+        stream->transport_stream_id, stream->original_network_id);
+    dump_descriptors (stream->descriptors, 9);
+  }
+}
+
+static void
 dump_sdt (GstMpegTsSection * section)
 {
   const GstMpegTsSDT *sdt = gst_mpegts_section_get_sdt (section);
@@ -376,6 +397,9 @@ dump_section (GstMpegTsSection * section)
       break;
     case GST_MPEGTS_SECTION_NIT:
       dump_nit (section);
+      break;
+    case GST_MPEGTS_SECTION_BAT:
+      dump_bat (section);
       break;
     case GST_MPEGTS_SECTION_EIT:
       dump_eit (section);
