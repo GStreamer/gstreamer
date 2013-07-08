@@ -42,6 +42,7 @@ struct _GstVaapiSurfaceProxy {
     GDestroyNotify      destroy_func;
     gpointer            destroy_data;
     GstVaapiRectangle   crop_rect;
+    guint               has_crop_rect   : 1;
 };
 
 #define GST_VAAPI_SURFACE_PROXY_FLAGS       GST_VAAPI_MINI_OBJECT_FLAGS
@@ -109,6 +110,7 @@ struct _GstVaapiSurfaceProxy {
  */
 #undef  GST_VAAPI_SURFACE_PROXY_CROP_RECT
 #define GST_VAAPI_SURFACE_PROXY_CROP_RECT(proxy) \
-    &GST_VAAPI_SURFACE_PROXY(proxy)->crop_rect
+    (GST_VAAPI_SURFACE_PROXY(proxy)->has_crop_rect ? \
+     &GST_VAAPI_SURFACE_PROXY(proxy)->crop_rect : NULL)
 
 #endif /* GST_VAAPI_SURFACE_PROXY_PRIV_H */

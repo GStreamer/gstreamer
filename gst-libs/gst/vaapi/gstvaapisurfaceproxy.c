@@ -33,24 +33,6 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-static inline void
-set_crop_rect_from_surface(GstVaapiSurfaceProxy *proxy)
-{
-    proxy->crop_rect.x = 0;
-    proxy->crop_rect.y = 0;
-    proxy->crop_rect.width = GST_VAAPI_SURFACE_WIDTH(proxy->surface);
-    proxy->crop_rect.height = GST_VAAPI_SURFACE_HEIGHT(proxy->surface);
-}
-
-static inline void
-set_crop_rect(GstVaapiSurfaceProxy *proxy, const GstVaapiRectangle *crop_rect)
-{
-    if (crop_rect)
-        proxy->crop_rect = *crop_rect;
-    else
-        set_crop_rect_from_surface(proxy);
-}
-
 static void
 gst_vaapi_surface_proxy_finalize(GstVaapiSurfaceProxy *proxy)
 {
@@ -92,11 +74,10 @@ gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool)
     proxy->surface = gst_vaapi_video_pool_get_object(proxy->pool);
     if (!proxy->surface)
         goto error;
-    set_crop_rect_from_surface(proxy);
-
     proxy->timestamp = GST_CLOCK_TIME_NONE;
     proxy->duration = GST_CLOCK_TIME_NONE;
     proxy->destroy_func = NULL;
+    proxy->has_crop_rect = FALSE;
     gst_vaapi_object_ref(proxy->surface);
     return proxy;
 
@@ -267,7 +248,11 @@ gst_vaapi_surface_proxy_set_destroy_notify(GstVaapiSurfaceProxy *proxy,
  * represents the cropping rectangle for the underlying surface to be
  * used for rendering.
  *
- * Return value: the #GstVaapiRectangle
+ * If no cropping rectangle was associated with the @proxy, then this
+ * function returns %NULL.
+ *
+ * Return value: the #GstVaapiRectangle, or %NULL if none was
+ *   associated with the surface proxy
  */
 const GstVaapiRectangle *
 gst_vaapi_surface_proxy_get_crop_rect(GstVaapiSurfaceProxy *proxy)
@@ -290,5 +275,7 @@ gst_vaapi_surface_proxy_set_crop_rect(GstVaapiSurfaceProxy *proxy,
 {
     g_return_if_fail(proxy != NULL);
 
-    set_crop_rect(proxy, crop_rect);
+    proxy->has_crop_rect = crop_rect != NULL;
+    if (proxy->has_crop_rect)
+        proxy->crop_rect = *crop_rect;
 }
