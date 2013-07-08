@@ -2,6 +2,7 @@ noinst_PROGRAMS = \
 	simple-decoder			\
 	test-decode			\
 	test-display			\
+	test-filter			\
 	test-surfaces			\
 	test-windows			\
 	test-subpicture			\
@@ -84,6 +85,11 @@ test_decode_LDADD	= libutils.la libutils_dec.la $(TEST_LIBS)
 test_display_SOURCES	= test-display.c
 test_display_CFLAGS	= $(TEST_CFLAGS)
 test_display_LDADD	= libutils.la $(TEST_LIBS)
+
+test_filter_SOURCES	= test-filter.c
+test_filter_CFLAGS	= $(TEST_CFLAGS) $(GST_VIDEO_CFLAGS)
+test_filter_LDADD	= libutils.la $(TEST_LIBS) $(GST_VIDEO_LIBS) \
+	$(top_builddir)/gst-libs/gst/video/libgstvaapi-videoutils.la
 
 test_surfaces_SOURCES	= test-surfaces.c
 test_surfaces_CFLAGS	= $(TEST_CFLAGS) $(GST_VIDEO_CFLAGS)
