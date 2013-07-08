@@ -885,6 +885,42 @@ render_reflection(GstVaapiSink *sink)
 }
 
 static gboolean
+gst_vaapisink_ensure_texture(GstVaapiSink *sink, GstVaapiSurface *surface)
+{
+    GstVideoRectangle tex_rect, dis_rect, out_rect;
+    guint width, height;
+
+    if (sink->texture)
+        return TRUE;
+
+    gst_vaapi_surface_get_size(surface, &width, &height);
+    tex_rect.x = 0;
+    tex_rect.y = 0;
+    tex_rect.w = width;
+    tex_rect.h = height;
+
+    gst_vaapi_display_get_size(sink->display, &width, &height);
+    dis_rect.x = 0;
+    dis_rect.y = 0;
+    dis_rect.w = width;
+    dis_rect.h = height;
+
+    gst_video_sink_center_rect(tex_rect, dis_rect, &out_rect, TRUE);
+
+    /* XXX: use surface size for now since some VA drivers have issues
+       with downscaling to the provided texture size. i.e. we should be
+       using the resulting out_rect size, which preserves the aspect
+       ratio of the surface */
+    width = tex_rect.w;
+    height = tex_rect.h;
+    GST_INFO("texture size %ux%u", width, height);
+
+    sink->texture = gst_vaapi_texture_new(sink->display,
+        GL_TEXTURE_2D, GL_BGRA, width, height);
+    return sink->texture != NULL;
+}
+
+static gboolean
 gst_vaapisink_show_frame_glx(
     GstVaapiSink               *sink,
     GstVaapiSurface            *surface,
@@ -897,17 +933,8 @@ gst_vaapisink_show_frame_glx(
     GLuint texture;
 
     gst_vaapi_window_glx_make_current(window);
-    if (!sink->texture) {
-        sink->texture = gst_vaapi_texture_new(
-            sink->display,
-            GL_TEXTURE_2D,
-            GL_BGRA,
-            sink->video_width,
-            sink->video_height
-        );
-        if (!sink->texture)
-            goto error_create_texture;
-    }
+    if (!gst_vaapisink_ensure_texture(sink, surface))
+        goto error_create_texture;
     if (!gst_vaapi_texture_put_surface(sink->texture, surface, flags))
         goto error_transfer_surface;
 
