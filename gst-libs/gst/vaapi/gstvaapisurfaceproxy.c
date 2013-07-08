@@ -33,16 +33,13 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-static void
+static inline void
 set_crop_rect_from_surface(GstVaapiSurfaceProxy *proxy)
 {
-    guint width, height;
-
-    gst_vaapi_surface_get_size(proxy->surface, &width, &height);
     proxy->crop_rect.x = 0;
     proxy->crop_rect.y = 0;
-    proxy->crop_rect.width = width;
-    proxy->crop_rect.height = height;
+    proxy->crop_rect.width = GST_VAAPI_SURFACE_WIDTH(proxy->surface);
+    proxy->crop_rect.height = GST_VAAPI_SURFACE_HEIGHT(proxy->surface);
 }
 
 static inline void

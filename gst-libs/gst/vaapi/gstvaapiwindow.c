@@ -28,6 +28,7 @@
 #include "sysdeps.h"
 #include "gstvaapiwindow.h"
 #include "gstvaapiwindow_priv.h"
+#include "gstvaapisurface_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -366,13 +367,10 @@ gst_vaapi_window_set_size(GstVaapiWindow *window, guint width, guint height)
 static inline void
 get_surface_rect(GstVaapiSurface *surface, GstVaapiRectangle *rect)
 {
-    guint width, height;
-
-    gst_vaapi_surface_get_size(surface, &width, &height);
     rect->x      = 0;
     rect->y      = 0;
-    rect->width  = width;
-    rect->height = height;
+    rect->width  = GST_VAAPI_SURFACE_WIDTH(surface);
+    rect->height = GST_VAAPI_SURFACE_HEIGHT(surface);
 }
 
 static inline void

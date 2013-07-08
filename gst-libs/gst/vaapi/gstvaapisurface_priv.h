@@ -24,6 +24,71 @@
 
 #include <gst/vaapi/gstvaapicontext.h>
 #include <gst/vaapi/gstvaapisurface.h>
+#include "gstvaapiobject_priv.h"
+
+typedef struct _GstVaapiSurfaceClass            GstVaapiSurfaceClass;
+
+/**
+ * GstVaapiSurface:
+ *
+ * A VA surface wrapper.
+ */
+struct _GstVaapiSurface {
+    /*< private >*/
+    GstVaapiObject      parent_instance;
+
+    guint               width;
+    guint               height;
+    GstVaapiChromaType  chroma_type;
+    GPtrArray          *subpictures;
+    GstVaapiContext    *parent_context;
+};
+
+/**
+ * GstVaapiSurfaceClass:
+ *
+ * A VA surface wrapper class.
+ */
+struct _GstVaapiSurfaceClass {
+    /*< private >*/
+    GstVaapiObjectClass parent_class;
+};
+
+/**
+ * GST_VAAPI_SURFACE_SURFACE_CHROMA_TYPE:
+ * @surface: a #GstVaapiSurface
+ *
+ * Macro that evaluates to the @surface chroma type.
+ *
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_SURFACE_CHROMA_TYPE
+#define GST_VAAPI_SURFACE_CHROMA_TYPE(surface) \
+    GST_VAAPI_SURFACE(surface)->chroma_type
+
+/**
+ * GST_VAAPI_SURFACE_SURFACE_WIDTH:
+ * @surface: a #GstVaapiSurface
+ *
+ * Macro that evaluates to the @surface width in pixels.
+ *
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_SURFACE_WIDTH
+#define GST_VAAPI_SURFACE_WIDTH(surface) \
+    GST_VAAPI_SURFACE(surface)->width
+
+/**
+ * GST_VAAPI_SURFACE_SURFACE_HEIGHT:
+ * @surface: a #GstVaapiSurface
+ *
+ * Macro that evaluates to the @surface height in pixels.
+ *
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_SURFACE_HEIGHT
+#define GST_VAAPI_SURFACE_HEIGHT(surface) \
+    GST_VAAPI_SURFACE(surface)->height
 
 G_GNUC_INTERNAL
 void

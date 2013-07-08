@@ -30,40 +30,11 @@
 #include "gstvaapiutils.h"
 #include "gstvaapisurface.h"
 #include "gstvaapisurface_priv.h"
-#include "gstvaapiobject_priv.h"
 #include "gstvaapicontext.h"
 #include "gstvaapiimage.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
-
-typedef struct _GstVaapiSurfaceClass            GstVaapiSurfaceClass;
-
-/**
- * GstVaapiSurface:
- *
- * A VA surface wrapper.
- */
-struct _GstVaapiSurface {
-    /*< private >*/
-    GstVaapiObject      parent_instance;
-
-    guint               width;
-    guint               height;
-    GstVaapiChromaType  chroma_type;
-    GPtrArray          *subpictures;
-    GstVaapiContext    *parent_context;
-};
-
-/**
- * GstVaapiSurfaceClass:
- *
- * A VA surface wrapper class.
- */
-struct _GstVaapiSurfaceClass {
-    /*< private >*/
-    GstVaapiObjectClass parent_class;
-};
 
 static gboolean
 _gst_vaapi_surface_associate_subpicture(
@@ -236,7 +207,7 @@ gst_vaapi_surface_get_chroma_type(GstVaapiSurface *surface)
 {
     g_return_val_if_fail(surface != NULL, 0);
 
-    return surface->chroma_type;
+    return GST_VAAPI_SURFACE_CHROMA_TYPE(surface);
 }
 
 /**
@@ -252,7 +223,7 @@ gst_vaapi_surface_get_width(GstVaapiSurface *surface)
 {
     g_return_val_if_fail(surface != NULL, 0);
 
-    return surface->width;
+    return GST_VAAPI_SURFACE_WIDTH(surface);
 }
 
 /**
@@ -268,7 +239,7 @@ gst_vaapi_surface_get_height(GstVaapiSurface *surface)
 {
     g_return_val_if_fail(surface != NULL, 0);
 
-    return surface->height;
+    return GST_VAAPI_SURFACE_HEIGHT(surface);
 }
 
 /**
@@ -289,10 +260,10 @@ gst_vaapi_surface_get_size(
     g_return_if_fail(surface != NULL);
 
     if (pwidth)
-        *pwidth = gst_vaapi_surface_get_width(surface);
+        *pwidth = GST_VAAPI_SURFACE_WIDTH(surface);
 
     if (pheight)
-        *pheight = gst_vaapi_surface_get_height(surface);
+        *pheight = GST_VAAPI_SURFACE_HEIGHT(surface);
 }
 
 /**
