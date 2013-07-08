@@ -149,6 +149,37 @@ _calc_crc32 (const guint8 * data, guint datalen)
   return crc;
 }
 
+gpointer
+__common_desc_checks (GstMpegTsSection * section, guint min_size,
+    GstMpegTsParseFunc parsefunc, GDestroyNotify destroynotify)
+{
+  gpointer res;
+
+  /* Check section is big enough */
+  if (section->section_length < min_size) {
+    GST_WARNING
+        ("PID:0x%04x table_id:0x%02x, section too small (Got %d, need at least %d)",
+        section->pid, section->table_id, section->section_length, min_size);
+    return NULL;
+  }
+
+  /* If section has a CRC, check it */
+  if (!section->short_section
+      && (_calc_crc32 (section->data, section->section_length) != 0)) {
+    GST_WARNING ("PID:0x%04x table_id:0x%02x, Bad CRC on section", section->pid,
+        section->table_id);
+    return NULL;
+  }
+
+  /* Finally parse and set the destroy notify */
+  res = parsefunc (section);
+  if (res == NULL)
+    GST_WARNING ("PID:0x%04x table_id:0x%02x, Failed to parse section",
+        section->pid, section->table_id);
+  else
+    section->destroy_parsed = destroynotify;
+  return res;
+}
 
 
 /*
@@ -287,7 +318,7 @@ gst_message_new_mpegts_section (GstObject * parent, GstMpegTsSection * section)
 
 
 /* Program Association Table */
-static GArray *
+static gpointer
 _parse_pat (GstMpegTsSection * section)
 {
   GArray *pat;
@@ -326,7 +357,7 @@ _parse_pat (GstMpegTsSection * section)
     return NULL;
   }
 
-  return pat;
+  return (gpointer) pat;
 }
 
 /**
@@ -350,29 +381,14 @@ gst_mpegts_section_get_pat (GstMpegTsSection * section)
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_PAT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
 
-  if (!section->cached_parsed) {
-    if (G_UNLIKELY (_calc_crc32 (section->data, section->section_length) != 0))
-      goto bad_crc;
+  if (!section->cached_parsed)
+    section->cached_parsed =
+        __common_desc_checks (section, 12, _parse_pat,
+        (GDestroyNotify) g_array_unref);
 
-    section->cached_parsed = (gpointer) _parse_pat (section);
-    section->destroy_parsed = (GDestroyNotify) g_array_unref;
-    if (section->cached_parsed == NULL)
-      goto parse_failure;
-  }
-
-  return g_array_ref ((GArray *) section->cached_parsed);
-
-bad_crc:
-  {
-    GST_WARNING ("Bad CRC on section");
-    return NULL;
-  }
-
-parse_failure:
-  {
-    GST_WARNING ("Failure to parse section");
-    return NULL;
-  }
+  if (section->cached_parsed)
+    return g_array_ref ((GArray *) section->cached_parsed);
+  return NULL;
 }
 
 
@@ -415,7 +431,7 @@ G_DEFINE_BOXED_TYPE (GstMpegTsPMT, gst_mpegts_pmt,
     (GBoxedCopyFunc) _gst_mpegts_pmt_copy, (GFreeFunc) _gst_mpegts_pmt_free);
 
 
-static GstMpegTsPMT *
+static gpointer
 _parse_pmt (GstMpegTsSection * section)
 {
   GstMpegTsPMT *pmt = NULL;
@@ -423,13 +439,6 @@ _parse_pmt (GstMpegTsSection * section)
   guint8 *data, *end;
   guint program_info_length;
   guint stream_info_length;
-
-  /* fixed header + CRC == 16 */
-  if (section->section_length < 16) {
-    GST_WARNING ("PID %d invalid PMT size %d",
-        section->pid, section->section_length);
-    goto error;
-  }
 
   pmt = g_slice_new0 (GstMpegTsPMT);
 
@@ -496,11 +505,11 @@ _parse_pmt (GstMpegTsSection * section)
 
   g_assert (data == end - 4);
 
-  return pmt;
+  return (gpointer) pmt;
 
 error:
   if (pmt)
-    gst_mpegts_section_unref (pmt);
+    _gst_mpegts_pmt_free (pmt);
 
   return NULL;
 }
@@ -520,34 +529,17 @@ gst_mpegts_section_get_pmt (GstMpegTsSection * section)
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_PMT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
 
-  if (!section->cached_parsed) {
-    if (G_UNLIKELY (_calc_crc32 (section->data, section->section_length) != 0))
-      goto bad_crc;
-
-    section->cached_parsed = (gpointer) _parse_pmt (section);
-    section->destroy_parsed = (GDestroyNotify) _gst_mpegts_pmt_free;
-    if (section->cached_parsed == NULL)
-      goto parse_failure;
-  }
+  if (!section->cached_parsed)
+    section->cached_parsed =
+        __common_desc_checks (section, 16, _parse_pmt,
+        (GDestroyNotify) _gst_mpegts_pmt_free);
 
   return (const GstMpegTsPMT *) section->cached_parsed;
-
-bad_crc:
-  {
-    GST_WARNING ("Bad CRC on section");
-    return NULL;
-  }
-
-parse_failure:
-  {
-    GST_WARNING ("Failure to parse section");
-    return NULL;
-  }
 }
 
 
 /* Conditional Access Table */
-static GArray *
+static gpointer
 _parse_cat (GstMpegTsSection * section)
 {
   guint8 *data;
@@ -558,7 +550,7 @@ _parse_cat (GstMpegTsSection * section)
 
   /* descriptors */
   desc_len = section->section_length - 4 - 8;
-  return gst_mpegts_parse_descriptors (data, desc_len);
+  return (gpointer) gst_mpegts_parse_descriptors (data, desc_len);
 }
 
 /**
@@ -578,20 +570,14 @@ gst_mpegts_section_get_cat (GstMpegTsSection * section)
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_CAT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
 
-  if (!section->cached_parsed) {
-    section->cached_parsed = (gpointer) _parse_cat (section);
-    section->destroy_parsed = (GDestroyNotify) g_array_unref;
-    if (section->cached_parsed == NULL)
-      goto parse_failure;
-  }
+  if (!section->cached_parsed)
+    section->cached_parsed =
+        __common_desc_checks (section, 12, _parse_cat,
+        (GDestroyNotify) g_array_unref);
 
-  return g_array_ref ((GArray *) section->cached_parsed);
-
-parse_failure:
-  {
-    GST_WARNING ("Failure to parse section");
-    return NULL;
-  }
+  if (section->cached_parsed)
+    return g_array_ref ((GArray *) section->cached_parsed);
+  return NULL;
 }
 
 /* Transport Stream Description Table (TSDT) */
@@ -662,11 +648,15 @@ _identify_section (guint16 pid, guint8 table_id)
         return GST_MPEGTS_SECTION_PAT;
       break;
     case GST_MTS_TABLE_ID_CONDITIONAL_ACCESS:
-      return GST_MPEGTS_SECTION_CAT;
+      if (pid == 0x01)
+        return GST_MPEGTS_SECTION_CAT;
+      break;
     case GST_MTS_TABLE_ID_TS_PROGRAM_MAP:
       return GST_MPEGTS_SECTION_PMT;
     case GST_MTS_TABLE_ID_BOUQUET_ASSOCIATION:
-      return GST_MPEGTS_SECTION_BAT;
+      if (pid == 0x0011)
+        return GST_MPEGTS_SECTION_BAT;
+      break;
     case GST_MTS_TABLE_ID_NETWORK_INFORMATION_ACTUAL_NETWORK:
     case GST_MTS_TABLE_ID_NETWORK_INFORMATION_OTHER_NETWORK:
       if (pid == 0x0010)

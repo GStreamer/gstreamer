@@ -31,4 +31,10 @@ G_GNUC_INTERNAL void __initialize_descriptors (void);
 G_GNUC_INTERNAL guint32 _calc_crc32 (const guint8 *data, guint datalen);
 G_GNUC_INTERNAL gchar *get_encoding_and_convert (const gchar *text, guint length);
 
+typedef gpointer (*GstMpegTsParseFunc) (GstMpegTsSection *section);
+G_GNUC_INTERNAL gpointer __common_desc_checks (GstMpegTsSection *section,
+					       guint minsize,
+					       GstMpegTsParseFunc parsefunc,
+					       GDestroyNotify destroynotify);
+
 #endif	/* _GST_MPEGTS_PRIVATE_H_ */

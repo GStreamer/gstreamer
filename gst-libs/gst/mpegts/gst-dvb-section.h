@@ -171,6 +171,7 @@ typedef struct _GstMpegTsBATStream GstMpegTsBATStream;
 typedef struct _GstMpegTsBAT GstMpegTsBAT;
 
 #define GST_TYPE_MPEGTS_BAT (gst_mpegts_bat_get_type())
+#define GST_TYPE_MPEGTS_BAT_STREAM (gst_mpegts_bat_get_type())
 
 struct _GstMpegTsBATStream
 {
@@ -195,6 +196,9 @@ struct _GstMpegTsBAT
 };
 
 GType gst_mpegts_bat_get_type (void);
+GType gst_mpegts_bat_stream_get_type (void);
+
+const GstMpegTsBAT *gst_mpegts_section_get_bat (GstMpegTsSection *section);
 
 /* SDT */
 #define GST_TYPE_MPEGTS_SDT (gst_mpegts_sdt_get_type())

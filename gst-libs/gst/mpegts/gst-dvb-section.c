@@ -133,20 +133,13 @@ G_DEFINE_BOXED_TYPE (GstMpegTsEIT, gst_mpegts_eit,
     (GBoxedCopyFunc) _gst_mpegts_eit_copy, (GFreeFunc) _gst_mpegts_eit_free);
 
 
-static GstMpegTsEIT *
+static gpointer
 _parse_eit (GstMpegTsSection * section)
 {
   GstMpegTsEIT *eit = NULL;
   guint i = 0, allocated_events = 12;
   guint8 *data, *end, *duration_ptr;
   guint16 descriptors_loop_length;
-
-  /* fixed header + CRC == 16 */
-  if (section->section_length < 18) {
-    GST_WARNING ("PID %d invalid EIT size %d",
-        section->pid, section->section_length);
-    goto error;
-  }
 
   eit = g_slice_new0 (GstMpegTsEIT);
 
@@ -218,11 +211,11 @@ _parse_eit (GstMpegTsSection * section)
     goto error;
   }
 
-  return eit;
+  return (gpointer) eit;
 
 error:
   if (eit)
-    gst_mpegts_section_unref (eit);
+    _gst_mpegts_eit_free (eit);
 
   return NULL;
 
@@ -243,32 +236,32 @@ gst_mpegts_section_get_eit (GstMpegTsSection * section)
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_EIT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
 
-  if (!section->cached_parsed) {
-    if (G_UNLIKELY (_calc_crc32 (section->data, section->section_length) != 0))
-      goto bad_crc;
-
-    section->cached_parsed = (gpointer) _parse_eit (section);
-    section->destroy_parsed = (GDestroyNotify) _gst_mpegts_eit_free;
-    if (section->cached_parsed == NULL)
-      goto parse_failure;
-  }
+  if (!section->cached_parsed)
+    section->cached_parsed = __common_desc_checks (section, 18, _parse_eit,
+        (GDestroyNotify) _gst_mpegts_eit_free);
 
   return (const GstMpegTsEIT *) section->cached_parsed;
-
-bad_crc:
-  {
-    GST_WARNING ("Bad CRC on section");
-    return NULL;
-  }
-
-parse_failure:
-  {
-    GST_WARNING ("Failure to parse section");
-    return NULL;
-  }
 }
 
 /* Bouquet Association Table */
+static GstMpegTsBATStream *
+_gst_mpegts_bat_stream_copy (GstMpegTsBATStream * bat)
+{
+  /* FIXME : IMPLEMENT */
+  return NULL;
+}
+
+static void
+_gst_mpegts_bat_stream_free (GstMpegTsBATStream * bat)
+{
+  g_array_unref (bat->descriptors);
+  g_slice_free (GstMpegTsBATStream, bat);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegTsBATStream, gst_mpegts_bat_stream,
+    (GBoxedCopyFunc) _gst_mpegts_bat_stream_copy,
+    (GFreeFunc) _gst_mpegts_bat_stream_free);
+
 static GstMpegTsBAT *
 _gst_mpegts_bat_copy (GstMpegTsBAT * bat)
 {
@@ -279,11 +272,142 @@ _gst_mpegts_bat_copy (GstMpegTsBAT * bat)
 static void
 _gst_mpegts_bat_free (GstMpegTsBAT * bat)
 {
-  /* FIXME: IMPLEMENT */
+  g_array_unref (bat->descriptors);
+  g_ptr_array_unref (bat->streams);
+  g_slice_free (GstMpegTsBAT, bat);
 }
 
 G_DEFINE_BOXED_TYPE (GstMpegTsBAT, gst_mpegts_bat,
     (GBoxedCopyFunc) _gst_mpegts_bat_copy, (GFreeFunc) _gst_mpegts_bat_free);
+
+static gpointer
+_parse_bat (GstMpegTsSection * section)
+{
+  GstMpegTsBAT *bat = NULL;
+  guint i = 0, allocated_streams = 12;
+  guint8 *data, *end, *entry_begin;
+  guint16 descriptors_loop_length, transport_stream_loop_length;
+
+  GST_DEBUG ("BAT");
+
+  bat = g_slice_new0 (GstMpegTsBAT);
+
+  data = section->data;
+  end = data + section->section_length;
+
+  /* Skip already parsed data */
+  data += 8;
+
+  descriptors_loop_length = GST_READ_UINT16_BE (data) & 0x0FFF;
+  data += 2;
+
+  /* see if the buffer is large enough */
+  if (descriptors_loop_length && (data + descriptors_loop_length > end - 4)) {
+    GST_WARNING ("PID %d invalid BAT descriptors loop length %d",
+        section->pid, descriptors_loop_length);
+    goto error;
+  }
+  bat->descriptors =
+      gst_mpegts_parse_descriptors (data, descriptors_loop_length);
+  if (bat->descriptors == NULL)
+    goto error;
+  data += descriptors_loop_length;
+
+  transport_stream_loop_length = GST_READ_UINT16_BE (data) & 0x0FFF;
+  data += 2;
+  if (G_UNLIKELY (transport_stream_loop_length > (end - 4 - data))) {
+    GST_WARNING
+        ("PID 0x%04x invalid BAT (transport_stream_loop_length too big)",
+        section->pid);
+    goto error;
+  }
+
+  bat->streams =
+      g_ptr_array_new_full (allocated_streams,
+      (GDestroyNotify) _gst_mpegts_bat_stream_free);
+
+  /* read up to the CRC */
+  while (transport_stream_loop_length - 4 > 0) {
+    GstMpegTsBATStream *stream = g_slice_new0 (GstMpegTsBATStream);
+
+    g_ptr_array_add (bat->streams, stream);
+
+    if (transport_stream_loop_length < 6) {
+      /* each entry must be at least 6 bytes (+ 4bytes CRC) */
+      GST_WARNING ("PID %d invalid BAT entry size %d",
+          section->pid, transport_stream_loop_length);
+      goto error;
+    }
+
+    entry_begin = data;
+
+    stream->transport_stream_id = GST_READ_UINT16_BE (data);
+    data += 2;
+
+    stream->original_network_id = GST_READ_UINT16_BE (data);
+    data += 2;
+
+    descriptors_loop_length = GST_READ_UINT16_BE (data) & 0x0FFF;
+    data += 2;
+
+    GST_DEBUG ("descriptors_loop_length %d", descriptors_loop_length);
+
+    if (descriptors_loop_length && (data + descriptors_loop_length > end - 4)) {
+      GST_WARNING
+          ("PID %d invalid BAT entry %d descriptors loop length %d (only have %"
+          G_GSIZE_FORMAT ")", section->pid, section->subtable_extension,
+          descriptors_loop_length, end - 4 - data);
+      goto error;
+    }
+    stream->descriptors =
+        gst_mpegts_parse_descriptors (data, descriptors_loop_length);
+    if (stream->descriptors == NULL)
+      goto error;
+
+    data += descriptors_loop_length;
+
+    i += 1;
+    transport_stream_loop_length -= data - entry_begin;
+  }
+
+  if (data != end - 4) {
+    GST_WARNING ("PID %d invalid BAT parsed %d length %d",
+        section->pid, (gint) (data - section->data), section->section_length);
+    goto error;
+  }
+
+  return (gpointer) bat;
+
+error:
+  if (bat)
+    _gst_mpegts_bat_free (bat);
+
+  return NULL;
+}
+
+/**
+ * gst_mpegts_section_get_bat:
+ * @section: a #GstMpegTsSection of type %GST_MPEGTS_SECTION_BAT
+ *
+ * Returns the #GstMpegTsBAT contained in the @section.
+ *
+ * Returns: The #GstMpegTsBAT contained in the section, or %NULL if an error
+ * happened.
+ */
+const GstMpegTsBAT *
+gst_mpegts_section_get_bat (GstMpegTsSection * section)
+{
+  g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_BAT, NULL);
+  g_return_val_if_fail (section->cached_parsed || section->data, NULL);
+
+  if (!section->cached_parsed)
+    section->cached_parsed =
+        __common_desc_checks (section, 16, _parse_bat,
+        (GDestroyNotify) _gst_mpegts_bat_free);
+
+  return (const GstMpegTsBAT *) section->cached_parsed;
+}
+
 
 /* Network Information Table */
 
@@ -324,7 +448,7 @@ G_DEFINE_BOXED_TYPE (GstMpegTsNIT, gst_mpegts_nit,
     (GBoxedCopyFunc) _gst_mpegts_nit_copy, (GFreeFunc) _gst_mpegts_nit_free);
 
 
-static GstMpegTsNIT *
+static gpointer
 _parse_nit (GstMpegTsSection * section)
 {
   GstMpegTsNIT *nit = NULL;
@@ -333,13 +457,6 @@ _parse_nit (GstMpegTsSection * section)
   guint16 descriptors_loop_length, transport_stream_loop_length;
 
   GST_DEBUG ("NIT");
-
-  /* fixed header (no streams) + CRC == 16 */
-  if (section->section_length < 16) {
-    GST_WARNING ("PID %d invalid NIT size %d",
-        section->pid, section->section_length);
-    goto error;
-  }
 
   nit = g_slice_new0 (GstMpegTsNIT);
 
@@ -429,11 +546,11 @@ _parse_nit (GstMpegTsSection * section)
     goto error;
   }
 
-  return nit;
+  return (gpointer) nit;
 
 error:
   if (nit)
-    gst_mpegts_section_unref (nit);
+    _gst_mpegts_nit_free (nit);
 
   return NULL;
 }
@@ -453,29 +570,12 @@ gst_mpegts_section_get_nit (GstMpegTsSection * section)
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_NIT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
 
-  if (!section->cached_parsed) {
-    if (G_UNLIKELY (_calc_crc32 (section->data, section->section_length) != 0))
-      goto bad_crc;
-
-    section->cached_parsed = (gpointer) _parse_nit (section);
-    section->destroy_parsed = (GDestroyNotify) _gst_mpegts_nit_free;
-    if (section->cached_parsed == NULL)
-      goto parse_failure;
-  }
+  if (!section->cached_parsed)
+    section->cached_parsed =
+        __common_desc_checks (section, 16, _parse_nit,
+        (GDestroyNotify) _gst_mpegts_nit_free);
 
   return (const GstMpegTsNIT *) section->cached_parsed;
-
-bad_crc:
-  {
-    GST_WARNING ("Bad CRC on section");
-    return NULL;
-  }
-
-parse_failure:
-  {
-    GST_WARNING ("Failure to parse section");
-    return NULL;
-  }
 }
 
 
@@ -517,7 +617,7 @@ G_DEFINE_BOXED_TYPE (GstMpegTsSDT, gst_mpegts_sdt,
     (GBoxedCopyFunc) _gst_mpegts_sdt_copy, (GFreeFunc) _gst_mpegts_sdt_free);
 
 
-static GstMpegTsSDT *
+static gpointer
 _parse_sdt (GstMpegTsSection * section)
 {
   GstMpegTsSDT *sdt = NULL;
@@ -528,13 +628,6 @@ _parse_sdt (GstMpegTsSection * section)
   guint descriptors_loop_length;
 
   GST_DEBUG ("SDT");
-
-  /* fixed header + CRC == 16 */
-  if (section->section_length < 14) {
-    GST_WARNING ("PID %d invalid SDT size %d",
-        section->pid, section->section_length);
-    goto error;
-  }
 
   sdt = g_slice_new0 (GstMpegTsSDT);
 
@@ -564,7 +657,7 @@ _parse_sdt (GstMpegTsSection * section)
 
     entry_begin = data;
 
-    if (sdt_info_length < 9) {
+    if (sdt_info_length + 5 < 4) {
       /* each entry must be at least 5 bytes (+4 bytes for the CRC) */
       GST_WARNING ("PID %d invalid SDT entry size %d",
           section->pid, sdt_info_length);
@@ -631,37 +724,19 @@ gst_mpegts_section_get_sdt (GstMpegTsSection * section)
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_SDT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
 
-  if (!section->cached_parsed) {
-    if (G_UNLIKELY (_calc_crc32 (section->data, section->section_length) != 0))
-      goto bad_crc;
-
-    section->cached_parsed = (gpointer) _parse_sdt (section);
-    section->destroy_parsed = (GDestroyNotify) _gst_mpegts_sdt_free;
-    if (section->cached_parsed == NULL)
-      goto parse_failure;
-  }
+  if (!section->cached_parsed)
+    section->cached_parsed =
+        __common_desc_checks (section, 15, _parse_sdt,
+        (GDestroyNotify) _gst_mpegts_sdt_free);
 
   return (const GstMpegTsSDT *) section->cached_parsed;
-
-bad_crc:
-  {
-    GST_WARNING ("Bad CRC on section");
-    return NULL;
-  }
-
-parse_failure:
-  {
-    GST_WARNING ("Failure to parse section");
-    return NULL;
-  }
 }
 
 /* Time and Date Table (TDT) */
-static GstDateTime *
+static gpointer
 _parse_tdt (GstMpegTsSection * section)
 {
-  /* FIXME : Add length check */
-  return _parse_utc_time (section->data + 3);
+  return (gpointer) _parse_utc_time (section->data + 3);
 }
 
 /**
@@ -679,20 +754,14 @@ gst_mpegts_section_get_tdt (GstMpegTsSection * section)
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_TDT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
 
-  if (!section->cached_parsed) {
-    section->cached_parsed = (gpointer) _parse_tdt (section);
-    section->destroy_parsed = (GDestroyNotify) gst_date_time_unref;
-    if (section->cached_parsed == NULL)
-      goto parse_failure;
-  }
+  if (!section->cached_parsed)
+    section->cached_parsed =
+        __common_desc_checks (section, 8, _parse_tdt,
+        (GDestroyNotify) gst_date_time_unref);
 
-  return gst_date_time_ref ((GstDateTime *) section->cached_parsed);
-
-parse_failure:
-  {
-    GST_WARNING ("Failure to parse section");
-    return NULL;
-  }
+  if (section->cached_parsed)
+    return gst_date_time_ref ((GstDateTime *) section->cached_parsed);
+  return NULL;
 }
 
 
@@ -716,14 +785,12 @@ _gst_mpegts_tot_free (GstMpegTsTOT * tot)
 G_DEFINE_BOXED_TYPE (GstMpegTsTOT, gst_mpegts_tot,
     (GBoxedCopyFunc) _gst_mpegts_tot_copy, (GFreeFunc) _gst_mpegts_tot_free);
 
-static GstMpegTsTOT *
+static gpointer
 _parse_tot (GstMpegTsSection * section)
 {
   guint8 *data;
   GstMpegTsTOT *tot;
   guint16 desc_len;
-
-  /* FIXME : Check minimum length */
 
   GST_DEBUG ("TOT");
 
@@ -738,7 +805,7 @@ _parse_tot (GstMpegTsSection * section)
   data += 2;
   tot->descriptors = gst_mpegts_parse_descriptors (data, desc_len);
 
-  return tot;
+  return (gpointer) tot;
 }
 
 /**
@@ -756,27 +823,10 @@ gst_mpegts_section_get_tot (GstMpegTsSection * section)
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_TOT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
 
-  if (!section->cached_parsed) {
-    if (G_UNLIKELY (_calc_crc32 (section->data, section->section_length) != 0))
-      goto bad_crc;
-
-    section->cached_parsed = (gpointer) _parse_tot (section);
-    section->destroy_parsed = (GDestroyNotify) _gst_mpegts_tot_free;
-    if (section->cached_parsed == NULL)
-      goto parse_failure;
-  }
+  if (!section->cached_parsed)
+    section->cached_parsed =
+        __common_desc_checks (section, 14, _parse_tot,
+        (GDestroyNotify) _gst_mpegts_tot_free);
 
   return (const GstMpegTsTOT *) section->cached_parsed;
-
-bad_crc:
-  {
-    GST_WARNING ("Bad CRC on section");
-    return NULL;
-  }
-
-parse_failure:
-  {
-    GST_WARNING ("Failure to parse section");
-    return NULL;
-  }
 }
