@@ -41,6 +41,18 @@ G_BEGIN_DECLS
 #define GST_RTSP_AUTH_CLASS_CAST(klass) ((GstRTSPAuthClass*)(klass))
 
 /**
+ * GstRTSPAuthCheck:
+ * @GST_RTSP_AUTH_CHECK_URL: Check url and method
+ * @GST_RTSP_AUTH_CHECK_FACTORY: Check access to factory
+ *
+ * Different authorization checks
+ */
+typedef enum {
+  GST_RTSP_AUTH_CHECK_URL,
+  GST_RTSP_AUTH_CHECK_FACTORY,
+} GstRTSPAuthCheck;
+
+/**
  * GstRTSPAuth:
  *
  * The authentication structure.
@@ -75,7 +87,7 @@ struct _GstRTSPAuthClass {
   gboolean           (*authenticate) (GstRTSPAuth *auth, GstRTSPClient * client,
                                       GstRTSPClientState *state);
   gboolean           (*check)        (GstRTSPAuth *auth, GstRTSPClient * client,
-                                      GQuark hint, GstRTSPClientState *state);
+                                      GstRTSPAuthCheck check, GstRTSPClientState *state);
 };
 
 GType               gst_rtsp_auth_get_type          (void);
@@ -90,7 +102,7 @@ gboolean            gst_rtsp_auth_setup             (GstRTSPAuth *auth, GstRTSPC
                                                      GstRTSPClientState *state);
 
 gboolean            gst_rtsp_auth_check             (GstRTSPAuth *auth, GstRTSPClient * client,
-                                                     GQuark hint, GstRTSPClientState *state);
+                                                     GstRTSPAuthCheck check, GstRTSPClientState *state);
 
 /* helpers */
 gchar *             gst_rtsp_auth_make_basic        (const gchar * user, const gchar * pass);

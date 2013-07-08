@@ -283,35 +283,48 @@ no_auth:
 
 static gboolean
 default_check (GstRTSPAuth * auth, GstRTSPClient * client,
-    GQuark hint, GstRTSPClientState * state)
+    GstRTSPAuthCheck check, GstRTSPClientState * state)
 {
   GstRTSPAuthPrivate *priv = auth->priv;
   GstRTSPAuthClass *klass;
+  gboolean need_authorized = FALSE;
+  gboolean res = FALSE;
 
   klass = GST_RTSP_AUTH_GET_CLASS (auth);
 
-  if ((state->method & priv->methods) != 0) {
-    /* we need an authgroup to check */
+  switch (check) {
+    case GST_RTSP_AUTH_CHECK_URL:
+      if ((state->method & priv->methods) != 0)
+        need_authorized = TRUE;
+      else
+        res = TRUE;
+      break;
+    case GST_RTSP_AUTH_CHECK_FACTORY:
+      res = TRUE;
+      break;
+  }
+
+  if (need_authorized) {
+    /* we need a token to check */
     if (state->token == NULL) {
       if (klass->authenticate) {
         if (!klass->authenticate (auth, client, state))
           goto authenticate_failed;
       }
     }
-
     if (state->token == NULL)
       goto no_auth;
   }
-  return TRUE;
+  return res;
 
 authenticate_failed:
   {
-    GST_DEBUG_OBJECT (auth, "check failed");
+    GST_DEBUG_OBJECT (auth, "authenticate failed");
     return FALSE;
   }
 no_auth:
   {
-    GST_DEBUG_OBJECT (auth, "no authorization group found");
+    GST_DEBUG_OBJECT (auth, "no authorization token found");
     return FALSE;
   }
 }
@@ -320,17 +333,17 @@ no_auth:
  * gst_rtsp_auth_check:
  * @auth: a #GstRTSPAuth
  * @client: the client
- * @hint: a hint
+ * @check: the item to check
  * @state: client state
  *
- * Check if @client with state is authorized to perform @hint in the
+ * Check if @client with state is authorized to perform @check in the
  * current @state.
  *
  * Returns: FALSE if check failed.
  */
 gboolean
 gst_rtsp_auth_check (GstRTSPAuth * auth, GstRTSPClient * client,
-    GQuark hint, GstRTSPClientState * state)
+    GstRTSPAuthCheck check, GstRTSPClientState * state)
 {
   gboolean result = FALSE;
   GstRTSPAuthClass *klass;
@@ -344,7 +357,7 @@ gst_rtsp_auth_check (GstRTSPAuth * auth, GstRTSPClient * client,
   GST_DEBUG_OBJECT (auth, "check auth");
 
   if (klass->check)
-    result = klass->check (auth, client, hint, state);
+    result = klass->check (auth, client, check, state);
 
   return result;
 }

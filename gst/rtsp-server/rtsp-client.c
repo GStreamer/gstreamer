@@ -500,6 +500,12 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state, gint * matched)
               path, matched)))
     goto no_factory;
 
+  state->factory = factory;
+
+  if (!gst_rtsp_auth_check (priv->auth, client, GST_RTSP_AUTH_CHECK_FACTORY,
+          state))
+    goto not_authorized;
+
   if (matched)
     path_len = *matched;
   else
@@ -537,6 +543,7 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state, gint * matched)
   }
 
   g_object_unref (factory);
+  state->factory = NULL;
 
   if (media)
     g_object_ref (media);
@@ -556,11 +563,18 @@ no_factory:
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
     return NULL;
   }
+not_authorized:
+  {
+    GST_ERROR ("client %p: not authorized for factory %p", client, factory);
+    handle_unauthorized_request (client, priv->auth, state);
+    return NULL;
+  }
 no_media:
   {
     GST_ERROR ("client %p: can't create media", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
     g_object_unref (factory);
+    state->factory = NULL;
     return NULL;
   }
 no_prepare:
@@ -568,7 +582,9 @@ no_prepare:
     GST_ERROR ("client %p: can't prepare media", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
     g_object_unref (media);
+    state->media = media;
     g_object_unref (factory);
+    state->factory = NULL;
     return NULL;
   }
 }
@@ -1824,7 +1840,8 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   state.session = session;
 
   if (priv->auth) {
-    if (!gst_rtsp_auth_check (priv->auth, client, 0, &state))
+    if (!gst_rtsp_auth_check (priv->auth, client, GST_RTSP_AUTH_CHECK_URL,
+            &state))
       goto not_authorized;
 
     state.auth = priv->auth;
