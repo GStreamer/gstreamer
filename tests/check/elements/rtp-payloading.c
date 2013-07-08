@@ -98,12 +98,13 @@ rtp_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 
       element_name = (message->src) ? gst_object_get_name (message->src) : NULL;
       gst_message_parse_error (message, &err, &debug);
-      /* FIXME: should we fail the test here? */
       g_print ("\nError from element %s: %s\n%s\n\n",
           GST_STR_NULL (element_name), err->message, (debug) ? debug : "");
       g_error_free (err);
       g_free (debug);
       g_free (element_name);
+
+      fail_if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR);
 
       g_main_loop_quit (mainloop);
     }
