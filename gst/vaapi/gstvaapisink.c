@@ -827,20 +827,37 @@ render_background(GstVaapiSink *sink)
 }
 
 static void
-render_frame(GstVaapiSink *sink)
+render_frame(GstVaapiSink *sink, GstVaapiSurface *surface,
+    const GstVaapiRectangle *surface_rect)
 {
     const guint x1 = sink->display_rect.x;
     const guint x2 = sink->display_rect.x + sink->display_rect.width;
     const guint y1 = sink->display_rect.y;
     const guint y2 = sink->display_rect.y + sink->display_rect.height;
+    gfloat tx1, tx2, ty1, ty2;
+    guint width, height;
+
+    if (surface_rect) {
+        gst_vaapi_surface_get_size(surface, &width, &height);
+        tx1 = (gfloat)surface_rect->x / width;
+        ty1 = (gfloat)surface_rect->y / height;
+        tx2 = (gfloat)(surface_rect->x + surface_rect->width) / width;
+        ty2 = (gfloat)(surface_rect->y + surface_rect->height) / height;
+    }
+    else {
+        tx1 = 0.0f;
+        ty1 = 0.0f;
+        tx2 = 1.0f;
+        ty2 = 1.0f;
+    }
 
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
     glBegin(GL_QUADS);
     {
-        glTexCoord2f(0.0f, 0.0f); glVertex2i(x1, y1);
-        glTexCoord2f(0.0f, 1.0f); glVertex2i(x1, y2);
-        glTexCoord2f(1.0f, 1.0f); glVertex2i(x2, y2);
-        glTexCoord2f(1.0f, 0.0f); glVertex2i(x2, y1);
+        glTexCoord2f(tx1, ty1); glVertex2i(x1, y1);
+        glTexCoord2f(tx1, ty2); glVertex2i(x1, y2);
+        glTexCoord2f(tx2, ty2); glVertex2i(x2, y2);
+        glTexCoord2f(tx2, ty1); glVertex2i(x2, y1);
     }
     glEnd();
 }
@@ -869,9 +886,10 @@ render_reflection(GstVaapiSink *sink)
 
 static gboolean
 gst_vaapisink_show_frame_glx(
-    GstVaapiSink    *sink,
-    GstVaapiSurface *surface,
-    guint            flags
+    GstVaapiSink               *sink,
+    GstVaapiSurface            *surface,
+    const GstVaapiRectangle    *surface_rect,
+    guint                       flags
 )
 {
     GstVaapiWindowGLX * const window = GST_VAAPI_WINDOW_GLX(sink->window);
@@ -909,7 +927,7 @@ gst_vaapisink_show_frame_glx(
             glRotatef(20.0f, 0.0f, 1.0f, 0.0f);
             glTranslatef(50.0f, 0.0f, 0.0f);
         }
-        render_frame(sink);
+        render_frame(sink, surface, surface_rect);
         if (sink->use_reflection) {
             glPushMatrix();
             glTranslatef(0.0, (GLfloat)sink->display_rect.height + 5.0f, 0.0f);
@@ -939,13 +957,14 @@ error_transfer_surface:
 
 static inline gboolean
 gst_vaapisink_put_surface(
-    GstVaapiSink    *sink,
-    GstVaapiSurface *surface,
-    guint            flags
+    GstVaapiSink               *sink,
+    GstVaapiSurface            *surface,
+    const GstVaapiRectangle    *surface_rect,
+    guint                       flags
 )
 {
     if (!gst_vaapi_window_put_surface(sink->window, surface,
-                NULL, &sink->display_rect, flags)) {
+                surface_rect, &sink->display_rect, flags)) {
         GST_DEBUG("could not render VA surface");
         return FALSE;
     }
@@ -961,12 +980,26 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
     GstBuffer *buffer;
     guint flags;
     gboolean success;
+    GstVaapiRectangle *surface_rect = NULL;
+#if GST_CHECK_VERSION(1,0,0)
+    GstVaapiRectangle tmp_rect;
+#endif
 
     meta = gst_buffer_get_vaapi_video_meta(src_buffer);
 #if GST_CHECK_VERSION(1,0,0)
     if (!meta)
         return GST_FLOW_EOS;
     buffer = gst_buffer_ref(src_buffer);
+
+    GstVideoCropMeta * const crop_meta =
+        gst_buffer_get_video_crop_meta(buffer);
+    if (crop_meta) {
+        surface_rect = &tmp_rect;
+        surface_rect->x = crop_meta->x;
+        surface_rect->y = crop_meta->y;
+        surface_rect->width = crop_meta->width;
+        surface_rect->height = crop_meta->height;
+    }
 #else
     if (meta)
         buffer = gst_buffer_ref(src_buffer);
@@ -1004,6 +1037,15 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
     GST_DEBUG("render surface %" GST_VAAPI_ID_FORMAT,
               GST_VAAPI_ID_ARGS(gst_vaapi_surface_get_id(surface)));
 
+    if (!surface_rect)
+        surface_rect = (GstVaapiRectangle *)
+            gst_vaapi_video_meta_get_render_rect(meta);
+
+    if (surface_rect)
+        GST_DEBUG("render rect (%d,%d), size %ux%u",
+                  surface_rect->x, surface_rect->y,
+                  surface_rect->width, surface_rect->height);
+
     flags = gst_vaapi_video_meta_get_render_flags(meta);
 
     if (!gst_vaapi_apply_composition(surface, src_buffer))
@@ -1019,18 +1061,19 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
     case GST_VAAPI_DISPLAY_TYPE_GLX:
         if (!sink->use_glx)
             goto put_surface_x11;
-        success = gst_vaapisink_show_frame_glx(sink, surface, flags);
+        success = gst_vaapisink_show_frame_glx(sink, surface, surface_rect,
+            flags);
         break;
 #endif
 #if USE_X11
     case GST_VAAPI_DISPLAY_TYPE_X11:
     put_surface_x11:
-        success = gst_vaapisink_put_surface(sink, surface, flags);
+        success = gst_vaapisink_put_surface(sink, surface, surface_rect, flags);
         break;
 #endif
 #if USE_WAYLAND
     case GST_VAAPI_DISPLAY_TYPE_WAYLAND:
-        success = gst_vaapisink_put_surface(sink, surface, flags);
+        success = gst_vaapisink_put_surface(sink, surface, surface_rect, flags);
         break;
 #endif
     default:
@@ -1075,6 +1118,8 @@ gst_vaapisink_propose_allocation(GstBaseSink *base_sink, GstQuery *query)
         GST_VAAPI_VIDEO_META_API_TYPE, NULL);
     gst_query_add_allocation_meta(query,
         GST_VIDEO_META_API_TYPE, NULL);
+    gst_query_add_allocation_meta(query,
+        GST_VIDEO_CROP_META_API_TYPE, NULL);
     gst_query_add_allocation_meta(query,
         GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
     return TRUE;

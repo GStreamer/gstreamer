@@ -637,6 +637,7 @@ gst_vaapi_video_meta_set_surface_proxy(GstVaapiVideoMeta *meta,
     GstVaapiSurfaceProxy *proxy)
 {
     GstVaapiSurface *surface;
+    const GstVaapiRectangle *crop_rect;
 
     g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
 
@@ -648,6 +649,10 @@ gst_vaapi_video_meta_set_surface_proxy(GstVaapiVideoMeta *meta,
             return;
         set_surface(meta, surface);
         meta->proxy = gst_vaapi_surface_proxy_ref(proxy);
+
+        crop_rect = gst_vaapi_surface_proxy_get_crop_rect(proxy);
+        if (crop_rect)
+            gst_vaapi_video_meta_set_render_rect(meta, crop_rect);
     }
 }
 

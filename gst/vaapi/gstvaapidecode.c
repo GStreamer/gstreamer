@@ -276,10 +276,13 @@ gst_vaapidecode_push_decoded_frame(GstVideoDecoder *vdec)
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
     GstVaapiSurfaceProxy *proxy;
     GstVaapiDecoderStatus status;
-    GstVaapiVideoMeta *meta;
     GstVideoCodecFrame *out_frame;
     GstFlowReturn ret;
+#if GST_CHECK_VERSION(1,0,0)
+    const GstVaapiRectangle *crop_rect;
+    GstVaapiVideoMeta *meta;
     guint flags;
+#endif
 
     status = gst_vaapi_decoder_get_frame_with_timeout(decode->decoder,
         &out_frame, 100000);
@@ -312,6 +315,18 @@ gst_vaapidecode_push_decoded_frame(GstVideoDecoder *vdec)
             if (flags & GST_VAAPI_SURFACE_PROXY_FLAG_ONEFIELD)
                 out_flags |= GST_VIDEO_BUFFER_FLAG_ONEFIELD;
             GST_BUFFER_FLAG_SET(out_frame->output_buffer, out_flags);
+        }
+
+        crop_rect = gst_vaapi_surface_proxy_get_crop_rect(proxy);
+        if (crop_rect) {
+            GstVideoCropMeta * const crop_meta =
+                gst_buffer_add_video_crop_meta(out_frame->output_buffer);
+            if (crop_meta) {
+                crop_meta->x = crop_rect->x;
+                crop_meta->y = crop_rect->y;
+                crop_meta->width = crop_rect->width;
+                crop_meta->height = crop_rect->height;
+            }
         }
 #else
         out_frame->output_buffer =
