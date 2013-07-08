@@ -775,7 +775,7 @@ _save_assets (GString * str, GESProject * project)
     metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (asset));
     append_escaped (str,
         g_markup_printf_escaped
-        ("<asset id='%s' extractable-type-name='%s' properties='%s' metadatas='%s' />\n",
+        ("      <asset id='%s' extractable-type-name='%s' properties='%s' metadatas='%s' />\n",
             ges_asset_get_id (asset),
             g_type_name (ges_asset_get_extractable_type (asset)), properties,
             metas));
@@ -801,7 +801,7 @@ _save_tracks (GString * str, GESTimeline * timeline)
     metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (track));
     append_escaped (str,
         g_markup_printf_escaped
-        ("<track caps='%s' track-type='%i' track-id='%i' metadatas='%s'/>\n",
+        ("      <track caps='%s' track-type='%i' track-id='%i' metadatas='%s'/>\n",
             strtmp, track->type, nb_tracks++, metas));
     g_free (strtmp);
     g_free (metas);
@@ -837,7 +837,7 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
 
         append_escaped (str,
             g_markup_printf_escaped
-            ("<binding type='direct' source_type='interpolation' property='%s'",
+            ("            <binding type='direct' source_type='interpolation' property='%s'",
                 (gchar *) key));
         g_object_get (source, "mode", &mode, NULL);
         append_escaped (str, g_markup_printf_escaped (" mode='%d'", mode));
@@ -892,7 +892,7 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
   metas =
       ges_meta_container_metas_to_string (GES_META_CONTAINER (trackelement));
   append_escaped (str,
-      g_markup_printf_escaped ("<effect asset-id='%s' clip-id='%u'"
+      g_markup_printf_escaped ("          <effect asset-id='%s' clip-id='%u'"
           " type-name='%s' track-type='%i' track-id='%i' properties='%s' metadatas='%s'",
           ges_extractable_get_id (GES_EXTRACTABLE (trackelement)), clip_id,
           g_type_name (G_OBJECT_TYPE (trackelement)), tck->type, track_id,
@@ -922,7 +922,7 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
 
   _save_keyframes (str, trackelement, -1);
 
-  append_escaped (str, g_markup_printf_escaped ("</effect>\n"));
+  append_escaped (str, g_markup_printf_escaped ("          </effect>\n"));
   gst_structure_free (structure);
 }
 
@@ -945,8 +945,8 @@ _save_layers (GString * str, GESTimeline * timeline)
     metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (layer));
     append_escaped (str,
         g_markup_printf_escaped
-        ("<layer priority='%i' properties='%s' metadatas='%s'>\n", priority,
-            properties, metas));
+        ("      <layer priority='%i' properties='%s' metadatas='%s'>\n",
+            priority, properties, metas));
     g_free (properties);
     g_free (metas);
 
@@ -965,7 +965,7 @@ _save_layers (GString * str, GESTimeline * timeline)
           "supported-formats", "rate", "in-point", "start", "duration",
           "max-duration", "priority", "vtype", "uri", NULL);
       append_escaped (str,
-          g_markup_printf_escaped ("<clip id='%i' asset-id='%s'"
+          g_markup_printf_escaped ("        <clip id='%i' asset-id='%s'"
               " type-name='%s' layer-priority='%i' track-types='%i' start='%"
               G_GUINT64_FORMAT "' duration='%" G_GUINT64_FORMAT "' inpoint='%"
               G_GUINT64_FORMAT "' rate='%d' properties='%s' >\n", nbclips,
@@ -996,10 +996,11 @@ _save_layers (GString * str, GESTimeline * timeline)
 
       g_list_free_full (tracks, gst_object_unref);
 
-      g_string_append (str, "</clip>\n");
+      g_string_append (str, "        </clip>\n");
+
       nbclips++;
     }
-    g_string_append (str, "</layer>\n");
+    g_string_append (str, "      </layer>\n");
   }
 }
 
@@ -1014,13 +1015,13 @@ _save_timeline (GString * str, GESTimeline * timeline)
 
   metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (timeline));
   append_escaped (str,
-      g_markup_printf_escaped ("<timeline properties='%s' metadatas='%s'>\n",
-          properties, metas));
+      g_markup_printf_escaped
+      ("    <timeline properties='%s' metadatas='%s'>\n", properties, metas));
 
   _save_tracks (str, timeline);
   _save_layers (str, timeline);
 
-  g_string_append (str, "</timeline>\n");
+  g_string_append (str, "    </timeline>\n");
 
   g_free (properties);
   g_free (metas);
@@ -1035,7 +1036,8 @@ _save_stream_profiles (GString * str, GstEncodingProfile * sprof,
   const gchar *preset, *preset_name, *name, *description;
 
   append_escaped (str,
-      g_markup_printf_escaped ("<stream-profile parent='%s' id='%d' type='%s' "
+      g_markup_printf_escaped
+      ("        <stream-profile parent='%s' id='%d' type='%s' "
           "presence='%d' ", profilename, id,
           gst_encoding_profile_get_type_nick (sprof),
           gst_encoding_profile_get_presence (sprof)));
@@ -1105,8 +1107,8 @@ _save_encoding_profiles (GString * str, GESProject * project)
 
     append_escaped (str,
         g_markup_printf_escaped
-        ("<encoding-profile name='%s' description='%s' type='%s' ", profname,
-            profdesc, proftype));
+        ("      <encoding-profile name='%s' description='%s' type='%s' ",
+            profname, profdesc, proftype));
 
     if (profpreset)
       append_escaped (str, g_markup_printf_escaped ("preset='%s' ",
@@ -1138,7 +1140,8 @@ _save_encoding_profiles (GString * str, GESProject * project)
         _save_stream_profiles (str, sprof, profname, i);
       }
     }
-    append_escaped (str, g_markup_printf_escaped ("</encoding-profile>\n"));
+    append_escaped (str,
+        g_markup_printf_escaped ("      </encoding-profile>\n"));
   }
 }
 
@@ -1161,18 +1164,18 @@ _save (GESFormatter * formatter, GESTimeline * timeline, GError ** error)
   properties = _serialize_properties (G_OBJECT (project), NULL);
   metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (project));
   append_escaped (str,
-      g_markup_printf_escaped ("<project properties='%s' metadatas='%s'>\n",
+      g_markup_printf_escaped ("  <project properties='%s' metadatas='%s'>\n",
           properties, metas));
   g_free (properties);
   g_free (metas);
 
-  g_string_append (str, "<encoding-profiles>\n");
+  g_string_append (str, "    <encoding-profiles>\n");
   _save_encoding_profiles (str, project);
-  g_string_append (str, "</encoding-profiles>\n");
+  g_string_append (str, "    </encoding-profiles>\n");
 
-  g_string_append (str, "<ressources>\n");
+  g_string_append (str, "    <ressources>\n");
   _save_assets (str, project);
-  g_string_append (str, "</ressources>\n");
+  g_string_append (str, "    </ressources>\n");
 
   _save_timeline (str, timeline);
   g_string_append (str, "</project>\n</ges>");
