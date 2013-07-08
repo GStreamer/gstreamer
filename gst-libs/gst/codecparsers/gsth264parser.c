@@ -1565,18 +1565,19 @@ gst_h264_parse_sps (GstH264NalUnit * nalu, GstH264SPS * sps,
   sps->height = height;
 
   if (sps->frame_cropping_flag) {
+    const guint crop_unit_x = subwc[sps->chroma_format_idc];
+    const guint crop_unit_y =
+        subhc[sps->chroma_format_idc] * (2 - sps->frame_mbs_only_flag);
+
     width -= (sps->frame_crop_left_offset + sps->frame_crop_right_offset)
-        * subwc[sps->chroma_format_idc];
-    height -= (sps->frame_crop_top_offset + sps->frame_crop_bottom_offset
-        * subhc[sps->chroma_format_idc] * (2 - sps->frame_mbs_only_flag));
+        * crop_unit_x;
+    height -= (sps->frame_crop_top_offset + sps->frame_crop_bottom_offset)
+        * crop_unit_y;
 
     sps->crop_rect_width = width;
     sps->crop_rect_height = height;
-    sps->crop_rect_x =
-        sps->frame_crop_left_offset * subwc[sps->chroma_format_idc];
-    sps->crop_rect_y =
-        sps->frame_crop_top_offset * subhc[sps->chroma_format_idc] * (2 -
-        sps->frame_mbs_only_flag);
+    sps->crop_rect_x = sps->frame_crop_left_offset * crop_unit_x;
+    sps->crop_rect_y = sps->frame_crop_top_offset * crop_unit_y;
 
     GST_LOG ("crop_rectangle x=%u y=%u width=%u, height=%u", sps->crop_rect_x,
         sps->crop_rect_y, width, height);
