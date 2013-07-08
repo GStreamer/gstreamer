@@ -359,7 +359,7 @@ struct _GstSourceGroup
   gulong block_id;
 
   GMutex stream_changed_pending_lock;
-  GList *stream_changed_pending;
+  gboolean stream_changed_pending;
 
   /* to prevent that suburidecodebin seek flushes disrupt playback */
   GMutex suburi_flushes_to_drop_lock;
@@ -1274,6 +1274,10 @@ init_group (GstPlayBin * playbin, GstSourceGroup * group)
   group->audio_channels = g_ptr_array_new ();
   group->text_channels = g_ptr_array_new ();
   g_mutex_init (&group->lock);
+
+  group->stream_changed_pending = FALSE;
+  g_mutex_init (&group->stream_changed_pending_lock);
+
   /* init combiners. The combiner is found by finding the first prefix that
    * matches the media. */
   group->playbin = playbin;
@@ -1320,12 +1324,8 @@ free_group (GstPlayBin * playbin, GstSourceGroup * group)
     gst_object_unref (group->text_sink);
   group->text_sink = NULL;
 
-  g_list_free (group->stream_changed_pending);
-  group->stream_changed_pending = NULL;
-
-  if (group->stream_changed_pending_lock.p)
-    g_mutex_clear (&group->stream_changed_pending_lock);
-  group->stream_changed_pending_lock.p = NULL;
+  group->stream_changed_pending = FALSE;
+  g_mutex_clear (&group->stream_changed_pending_lock);
 
   g_slist_free (group->suburi_flushes_to_drop);
   group->suburi_flushes_to_drop = NULL;
@@ -2605,13 +2605,9 @@ gst_play_bin_query (GstElement * element, GstQuery * query)
     gboolean pending;
 
     GST_SOURCE_GROUP_LOCK (group);
-    if (group->stream_changed_pending_lock.p) {
-      g_mutex_lock (&group->stream_changed_pending_lock);
-      pending = group->pending || group->stream_changed_pending;
-      g_mutex_unlock (&group->stream_changed_pending_lock);
-    } else {
-      pending = group->pending;
-    }
+
+    pending = group->pending || group->stream_changed_pending;
+
     if (pending) {
       GstFormat fmt;
       gint i;
@@ -2691,6 +2687,10 @@ gst_play_bin_handle_message (GstBin * bin, GstMessage * msg)
       gst_message_unref (msg);
       msg = NULL;
     }
+  } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_STREAM_START) {
+    GstSourceGroup *new_group = playbin->curr_group;
+
+    new_group->stream_changed_pending = FALSE;
   } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
     /* If we get an error of the subtitle uridecodebin transform
      * them into warnings and disable the subtitles */
@@ -4783,11 +4783,6 @@ activate_group (GstPlayBin * playbin, GstSourceGroup * group, GstState target)
     }
   }
 
-  g_list_free (group->stream_changed_pending);
-  group->stream_changed_pending = NULL;
-  if (!group->stream_changed_pending_lock.p)
-    g_mutex_init (&group->stream_changed_pending_lock);
-
   g_slist_free (group->suburi_flushes_to_drop);
   group->suburi_flushes_to_drop = NULL;
   if (!group->suburi_flushes_to_drop_lock.p)
@@ -5123,6 +5118,8 @@ setup_next_source (GstPlayBin * playbin, GstState target)
   if (!new_group || !new_group->valid)
     goto no_next_group;
 
+  new_group->stream_changed_pending = TRUE;
+
   /* first unlink the current source, if any */
   old_group = playbin->curr_group;
   if (old_group && old_group->valid && old_group->active) {
@@ -5155,6 +5152,7 @@ no_next_group:
   }
 activate_failed:
   {
+    new_group->stream_changed_pending = FALSE;
     GST_DEBUG_OBJECT (playbin, "activate failed");
     GST_PLAY_BIN_UNLOCK (playbin);
     return FALSE;
