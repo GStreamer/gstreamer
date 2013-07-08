@@ -58,15 +58,15 @@ struct _GstAllocatorPrivate
 };
 
 #if defined(MEMORY_ALIGNMENT_MALLOC)
-size_t gst_memory_alignment = 7;
+gsize gst_memory_alignment = 7;
 #elif defined(MEMORY_ALIGNMENT_PAGESIZE)
 /* we fill this in in the _init method */
-size_t gst_memory_alignment = 0;
+gsize gst_memory_alignment = 0;
 #elif defined(MEMORY_ALIGNMENT)
-size_t gst_memory_alignment = MEMORY_ALIGNMENT - 1;
+gsize gst_memory_alignment = MEMORY_ALIGNMENT - 1;
 #else
 #error "No memory alignment configured"
-size_t gst_memory_alignment = 0;
+gsize gst_memory_alignment = 0;
 #endif
 
 /* the default allocator */
