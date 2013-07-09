@@ -56,7 +56,6 @@ libgstvaapi_source_c =				\
 	gstvaapidisplay.c			\
 	gstvaapidisplaycache.c			\
 	gstvaapiimage.c				\
-	gstvaapiimageformat.c			\
 	gstvaapiimagepool.c			\
 	gstvaapiminiobject.c			\
 	gstvaapiobject.c			\
@@ -83,7 +82,6 @@ libgstvaapi_source_h =				\
 	gstvaapidisplay.h			\
 	gstvaapidisplaycache.h			\
 	gstvaapiimage.h				\
-	gstvaapiimageformat.h			\
 	gstvaapiimagepool.h			\
 	gstvaapiobject.h			\
 	gstvaapiprofile.h			\
