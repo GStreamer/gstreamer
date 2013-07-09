@@ -75,6 +75,10 @@ string_of_VADisplayAttributeType(VADisplayAttribType attribute_type);
 
 G_GNUC_INTERNAL
 guint
+from_GstVaapiChromaType(guint chroma_type);
+
+G_GNUC_INTERNAL
+guint
 from_GstVaapiSubpictureFlags(guint flags);
 
 G_GNUC_INTERNAL

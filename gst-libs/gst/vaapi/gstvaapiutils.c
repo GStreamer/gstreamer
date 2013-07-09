@@ -204,6 +204,49 @@ string_of_VADisplayAttributeType(VADisplayAttribType attribute_type)
 }
 
 /**
+ * from_GstVaapiChromaType:
+ * @chroma_type: the #GstVaapiChromaType
+ *
+ * Converts #GstVaapiChromaType to a chroma format suitable for
+ * vaCreateSurfaces().
+ */
+guint
+from_GstVaapiChromaType(guint chroma_type)
+{
+    guint format;
+
+    switch (chroma_type) {
+    case GST_VAAPI_CHROMA_TYPE_YUV420:
+        format = VA_RT_FORMAT_YUV420;
+        break;
+    case GST_VAAPI_CHROMA_TYPE_YUV422:
+        format = VA_RT_FORMAT_YUV422;
+        break;
+    case GST_VAAPI_CHROMA_TYPE_YUV444:
+        format = VA_RT_FORMAT_YUV444;
+        break;
+#if VA_CHECK_VERSION(0,34,0)
+    case GST_VAAPI_CHROMA_TYPE_YUV411:
+        format = VA_RT_FORMAT_YUV411;
+        break;
+    case GST_VAAPI_CHROMA_TYPE_YUV400:
+        format = VA_RT_FORMAT_YUV400;
+        break;
+    case GST_VAAPI_CHROMA_TYPE_RGB32:
+        format = VA_RT_FORMAT_RGB32;
+        break;
+    case GST_VAAPI_CHROMA_TYPE_RGB16:
+        format = VA_RT_FORMAT_RGB16;
+        break;
+#endif
+    default:
+        format = 0;
+        break;
+    }
+    return format;
+}
+
+/**
  * from_GstVaapiSubpictureFlags:
  * @flags: the #GstVaapiSubpictureFlags
  *

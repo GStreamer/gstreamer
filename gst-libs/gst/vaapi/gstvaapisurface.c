@@ -102,27 +102,16 @@ gst_vaapi_surface_create(GstVaapiSurface *surface,
     GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(surface);
     VASurfaceID surface_id;
     VAStatus status;
-    guint format;
+    guint va_chroma_format;
 
-    switch (chroma_type) {
-    case GST_VAAPI_CHROMA_TYPE_YUV420:
-        format = VA_RT_FORMAT_YUV420;
-        break;
-    case GST_VAAPI_CHROMA_TYPE_YUV422:
-        format = VA_RT_FORMAT_YUV422;
-        break;
-    case GST_VAAPI_CHROMA_TYPE_YUV444:
-        format = VA_RT_FORMAT_YUV444;
-        break;
-    default:
-        GST_DEBUG("unsupported chroma-type %u\n", chroma_type);
-        return FALSE;
-    }
+    va_chroma_format = from_GstVaapiChromaType(chroma_type);
+    if (!va_chroma_format)
+        goto error_unsupported_chroma_type;
 
     GST_VAAPI_DISPLAY_LOCK(display);
     status = vaCreateSurfaces(
         GST_VAAPI_DISPLAY_VADISPLAY(display),
-        width, height, format,
+        width, height, va_chroma_format,
         1, &surface_id
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
@@ -136,6 +125,11 @@ gst_vaapi_surface_create(GstVaapiSurface *surface,
     GST_DEBUG("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(surface_id));
     GST_VAAPI_OBJECT_ID(surface) = surface_id;
     return TRUE;
+
+    /* ERRORS */
+error_unsupported_chroma_type:
+    GST_ERROR("unsupported chroma-type %u", chroma_type);
+    return FALSE;
 }
 
 #define gst_vaapi_surface_finalize gst_vaapi_surface_destroy
