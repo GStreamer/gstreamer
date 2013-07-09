@@ -247,6 +247,7 @@ gst_rtp_mux_init (GstRTPMux * rtp_mux)
           "src"), "src");
   gst_pad_set_event_function (rtp_mux->srcpad,
       GST_DEBUG_FUNCPTR (gst_rtp_mux_src_event));
+  GST_PAD_SET_PROXY_CAPS (rtp_mux->srcpad);
   gst_element_add_pad (GST_ELEMENT (rtp_mux), rtp_mux->srcpad);
 
   rtp_mux->ssrc = DEFAULT_SSRC;
