@@ -132,7 +132,7 @@ gst_vaapi_subpicture_new(GstVaapiImage *image, guint flags)
 {
     GstVaapiSubpicture *subpicture;
     GstVaapiDisplay *display;
-    GstVaapiImageFormat format;
+    GstVideoFormat format;
     guint va_flags;
 
     g_return_val_if_fail(image != NULL, NULL);
@@ -180,7 +180,7 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
 )
 {
     GstVaapiSubpicture *subpicture;
-    GstVaapiImageFormat format;
+    GstVideoFormat format;
     GstVaapiImage *image;
     GstVaapiImageRaw raw_image;
     GstBuffer *buffer;
@@ -197,9 +197,9 @@ gst_vaapi_subpicture_new_from_overlay_rectangle(
 
     /* XXX: use gst_vaapi_image_format_from_video() */
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-    format = GST_VAAPI_IMAGE_BGRA;
+    format = GST_VIDEO_FORMAT_BGRA;
 #else
-    format = GST_VAAPI_IMAGE_ARGB;
+    format = GST_VIDEO_FORMAT_ARGB;
 #endif
     if (!gst_vaapi_display_has_subpicture_format(display, format, &hw_flags))
         return NULL;

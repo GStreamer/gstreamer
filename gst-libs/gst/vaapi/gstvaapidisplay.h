@@ -26,8 +26,8 @@
 #include <va/va.h>
 #include <gst/gst.h>
 #include <gst/vaapi/gstvaapitypes.h>
-#include <gst/vaapi/gstvaapiimageformat.h>
 #include <gst/vaapi/gstvaapiprofile.h>
+#include <gst/vaapi/video-format.h>
 
 G_BEGIN_DECLS
 
@@ -161,7 +161,7 @@ gst_vaapi_display_get_image_caps(GstVaapiDisplay *display);
 gboolean
 gst_vaapi_display_has_image_format(
     GstVaapiDisplay    *display,
-    GstVaapiImageFormat format
+    GstVideoFormat      format
 );
 
 GstCaps *
@@ -170,7 +170,7 @@ gst_vaapi_display_get_subpicture_caps(GstVaapiDisplay *display);
 gboolean
 gst_vaapi_display_has_subpicture_format(
     GstVaapiDisplay    *display,
-    GstVaapiImageFormat format,
+    GstVideoFormat      format,
     guint              *flags_ptr
 );
 

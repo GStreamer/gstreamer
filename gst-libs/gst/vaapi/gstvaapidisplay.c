@@ -59,7 +59,7 @@ struct _GstVaapiProperty {
 
 typedef struct _GstVaapiFormatInfo GstVaapiFormatInfo;
 struct _GstVaapiFormatInfo {
-    GstVaapiImageFormat format;
+    GstVideoFormat      format;
     guint               flags;
 };
 
@@ -174,9 +174,9 @@ gst_vaapi_display_type_get_type(void)
     return g_type;
 }
 
-/* Append GstVaapiImageFormat to formats array */
+/* Append GstVideoFormat to formats array */
 static inline void
-append_format(GArray *formats, GstVaapiImageFormat format, guint flags)
+append_format(GArray *formats, GstVideoFormat format, guint flags)
 {
     GstVaapiFormatInfo fi;
 
@@ -190,7 +190,7 @@ static void
 append_formats(GArray *formats, const VAImageFormat *va_formats,
     guint *flags, guint n)
 {
-    GstVaapiImageFormat format;
+    GstVideoFormat format;
     const GstVaapiFormatInfo *YV12_fip = NULL;
     const GstVaapiFormatInfo *I420_fip = NULL;
     guint i;
@@ -199,8 +199,8 @@ append_formats(GArray *formats, const VAImageFormat *va_formats,
         const VAImageFormat * const va_format = &va_formats[i];
         const GstVaapiFormatInfo **fipp;
 
-        format = gst_vaapi_image_format(va_format);
-        if (!format) {
+        format = gst_video_format_from_va_format(va_format);
+        if (format == GST_VIDEO_FORMAT_UNKNOWN) {
             GST_DEBUG("unsupported format %" GST_FOURCC_FORMAT,
                       GST_FOURCC_ARGS(va_format->fourcc));
             continue;
@@ -208,10 +208,10 @@ append_formats(GArray *formats, const VAImageFormat *va_formats,
         append_format(formats, format, flags ? flags[i] : 0);
 
         switch (format) {
-        case GST_VAAPI_IMAGE_YV12:
+        case GST_VIDEO_FORMAT_YV12:
             fipp = &YV12_fip;
             break;
-        case GST_VAAPI_IMAGE_I420:
+        case GST_VIDEO_FORMAT_I420:
             fipp = &I420_fip;
             break;
         default:
@@ -226,43 +226,43 @@ append_formats(GArray *formats, const VAImageFormat *va_formats,
     /* Append I420 (resp. YV12) format if YV12 (resp. I420) is not
        supported by the underlying driver */
     if (YV12_fip && !I420_fip)
-        append_format(formats, GST_VAAPI_IMAGE_I420, YV12_fip->flags);
+        append_format(formats, GST_VIDEO_FORMAT_I420, YV12_fip->flags);
     else if (I420_fip && !YV12_fip)
-        append_format(formats, GST_VAAPI_IMAGE_YV12, I420_fip->flags);
+        append_format(formats, GST_VIDEO_FORMAT_YV12, I420_fip->flags);
 }
 
 /* Sort image formats. Prefer YUV formats first */
 static gint
 compare_yuv_formats(gconstpointer a, gconstpointer b)
 {
-    const GstVaapiImageFormat fmt1 = ((GstVaapiFormatInfo *)a)->format;
-    const GstVaapiImageFormat fmt2 = ((GstVaapiFormatInfo *)b)->format;
+    const GstVideoFormat fmt1 = ((GstVaapiFormatInfo *)a)->format;
+    const GstVideoFormat fmt2 = ((GstVaapiFormatInfo *)b)->format;
 
-    const gboolean is_fmt1_yuv = gst_vaapi_image_format_is_yuv(fmt1);
-    const gboolean is_fmt2_yuv = gst_vaapi_image_format_is_yuv(fmt2);
+    const gboolean is_fmt1_yuv = gst_video_format_is_yuv(fmt1);
+    const gboolean is_fmt2_yuv = gst_video_format_is_yuv(fmt2);
 
     if (is_fmt1_yuv != is_fmt2_yuv)
         return is_fmt1_yuv ? -1 : 1;
 
-    return ((gint)gst_vaapi_image_format_get_score(fmt1) -
-            (gint)gst_vaapi_image_format_get_score(fmt2));
+    return ((gint)gst_video_format_get_score(fmt1) -
+            (gint)gst_video_format_get_score(fmt2));
 }
 
 /* Sort subpicture formats. Prefer RGB formats first */
 static gint
 compare_rgb_formats(gconstpointer a, gconstpointer b)
 {
-    const GstVaapiImageFormat fmt1 = ((GstVaapiFormatInfo *)a)->format;
-    const GstVaapiImageFormat fmt2 = ((GstVaapiFormatInfo *)b)->format;
+    const GstVideoFormat fmt1 = ((GstVaapiFormatInfo *)a)->format;
+    const GstVideoFormat fmt2 = ((GstVaapiFormatInfo *)b)->format;
 
-    const gboolean is_fmt1_rgb = gst_vaapi_image_format_is_rgb(fmt1);
-    const gboolean is_fmt2_rgb = gst_vaapi_image_format_is_rgb(fmt2);
+    const gboolean is_fmt1_rgb = gst_video_format_is_rgb(fmt1);
+    const gboolean is_fmt2_rgb = gst_video_format_is_rgb(fmt2);
 
     if (is_fmt1_rgb != is_fmt2_rgb)
         return is_fmt1_rgb ? -1 : 1;
 
-    return ((gint)gst_vaapi_image_format_get_score(fmt1) -
-            (gint)gst_vaapi_image_format_get_score(fmt2));
+    return ((gint)gst_video_format_get_score(fmt1) -
+            (gint)gst_video_format_get_score(fmt2));
 }
 
 /* Check if configs array contains profile at entrypoint */
@@ -343,7 +343,7 @@ get_profile_caps(GArray *configs)
 
 /* Find format info */
 static const GstVaapiFormatInfo *
-find_format_info(GArray *formats, GstVaapiImageFormat format)
+find_format_info(GArray *formats, GstVideoFormat format)
 {
     const GstVaapiFormatInfo *fip;
     guint i;
@@ -358,7 +358,7 @@ find_format_info(GArray *formats, GstVaapiImageFormat format)
 
 /* Check if formats array contains format */
 static inline gboolean
-find_format(GArray *formats, GstVaapiImageFormat format)
+find_format(GArray *formats, GstVideoFormat format)
 {
     return find_format_info(formats, format) != NULL;
 }
@@ -377,7 +377,7 @@ get_format_caps(GArray *formats)
 
     for (i = 0; i < formats->len; i++) {
         fip = &g_array_index(formats, GstVaapiFormatInfo, i);
-        caps = gst_vaapi_image_format_get_caps(fip->format);
+        caps = gst_video_format_to_caps(fip->format);
         if (caps)
             gst_caps_append(out_caps, caps);
     }
@@ -1360,7 +1360,7 @@ gst_vaapi_display_get_image_caps(GstVaapiDisplay *display)
 /**
  * gst_vaapi_display_has_image_format:
  * @display: a #GstVaapiDisplay
- * @format: a #GstVaapiFormat
+ * @format: a #GstVideoFormat
  *
  * Returns whether VA @display supports @format image format.
  *
@@ -1369,7 +1369,7 @@ gst_vaapi_display_get_image_caps(GstVaapiDisplay *display)
 gboolean
 gst_vaapi_display_has_image_format(
     GstVaapiDisplay    *display,
-    GstVaapiImageFormat format
+    GstVideoFormat      format
 )
 {
     g_return_val_if_fail(display != NULL, FALSE);
@@ -1412,7 +1412,7 @@ gst_vaapi_display_get_subpicture_caps(GstVaapiDisplay *display)
 /**
  * gst_vaapi_display_has_subpicture_format:
  * @display: a #GstVaapiDisplay
- * @format: a #GstVaapiFormat
+ * @format: a #GstVideoFormat
  * @flags_ptr: pointer to #GstVaapiSubpictureFlags, or zero
  *
  * Returns whether VA @display supports @format subpicture format with
@@ -1423,7 +1423,7 @@ gst_vaapi_display_get_subpicture_caps(GstVaapiDisplay *display)
 gboolean
 gst_vaapi_display_has_subpicture_format(
     GstVaapiDisplay    *display,
-    GstVaapiImageFormat format,
+    GstVideoFormat      format,
     guint              *flags_ptr
 )
 {

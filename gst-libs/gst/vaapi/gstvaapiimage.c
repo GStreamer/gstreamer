@@ -49,8 +49,8 @@ struct _GstVaapiImage {
     VAImage             internal_image;
     VAImage             image;
     guchar             *image_data;
-    GstVaapiImageFormat internal_format;
-    GstVaapiImageFormat format;
+    GstVideoFormat      internal_format;
+    GstVideoFormat      format;
     guint               width;
     guint               height;
     guint               is_linear       : 1;
@@ -143,7 +143,7 @@ gst_vaapi_image_destroy(GstVaapiImage *image)
 }
 
 static gboolean
-_gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format)
+_gst_vaapi_image_create(GstVaapiImage *image, GstVideoFormat format)
 {
     GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(image);
     const VAImageFormat *va_format;
@@ -152,7 +152,7 @@ _gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format)
     if (!gst_vaapi_display_has_image_format(display, format))
         return FALSE;
 
-    va_format = gst_vaapi_image_format_get_va_format(format);
+    va_format = gst_video_format_to_va_format(format);
     if (!va_format)
         return FALSE;
 
@@ -174,7 +174,7 @@ _gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format)
 }
 
 static gboolean
-gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format,
+gst_vaapi_image_create(GstVaapiImage *image, GstVideoFormat format,
     guint width, guint height)
 {
     const VAImageFormat *va_format;
@@ -186,11 +186,11 @@ gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format,
 
     if (!_gst_vaapi_image_create(image, format)) {
         switch (format) {
-        case GST_VAAPI_IMAGE_I420:
-            format = GST_VAAPI_IMAGE_YV12;
+        case GST_VIDEO_FORMAT_I420:
+            format = GST_VIDEO_FORMAT_YV12;
             break;
-        case GST_VAAPI_IMAGE_YV12:
-            format = GST_VAAPI_IMAGE_I420;
+        case GST_VIDEO_FORMAT_YV12:
+            format = GST_VIDEO_FORMAT_I420;
             break;
         default:
             format = 0;
@@ -204,9 +204,9 @@ gst_vaapi_image_create(GstVaapiImage *image, GstVaapiImageFormat format,
 
     if (image->format != image->internal_format) {
         switch (image->format) {
-        case GST_VAAPI_IMAGE_YV12:
-        case GST_VAAPI_IMAGE_I420:
-            va_format = gst_vaapi_image_format_get_va_format(image->format);
+        case GST_VIDEO_FORMAT_YV12:
+        case GST_VIDEO_FORMAT_I420:
+            va_format = gst_video_format_to_va_format(image->format);
             if (!va_format)
                 return FALSE;
             image->image.format = *va_format;
@@ -251,7 +251,7 @@ GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE(
 /**
  * gst_vaapi_image_new:
  * @display: a #GstVaapiDisplay
- * @format: a #GstVaapiImageFormat
+ * @format: a #GstVideoFormat
  * @width: the requested image width
  * @height: the requested image height
  *
@@ -263,7 +263,7 @@ GST_VAAPI_OBJECT_DEFINE_CLASS_WITH_CODE(
 GstVaapiImage *
 gst_vaapi_image_new(
     GstVaapiDisplay    *display,
-    GstVaapiImageFormat format,
+    GstVideoFormat      format,
     guint               width,
     guint               height
 )
@@ -381,12 +381,12 @@ gst_vaapi_image_get_image(GstVaapiImage *image, VAImage *va_image)
 gboolean
 _gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image)
 {
-    GstVaapiImageFormat format;
+    GstVideoFormat format;
     VAImage alt_va_image;
     const VAImageFormat *alt_va_format;
 
-    format = gst_vaapi_image_format(&va_image->format);
-    if (!format)
+    format = gst_video_format_from_va_format(&va_image->format);
+    if (format == GST_VIDEO_FORMAT_UNKNOWN)
         return FALSE;
 
     image->internal_image  = *va_image;
@@ -402,18 +402,18 @@ _gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image)
     /* Try to linearize image */
     if (!image->is_linear) {
         switch (format) {
-        case GST_VAAPI_IMAGE_I420:
-            format = GST_VAAPI_IMAGE_YV12;
+        case GST_VIDEO_FORMAT_I420:
+            format = GST_VIDEO_FORMAT_YV12;
             break;
-        case GST_VAAPI_IMAGE_YV12:
-            format = GST_VAAPI_IMAGE_I420;
+        case GST_VIDEO_FORMAT_YV12:
+            format = GST_VIDEO_FORMAT_I420;
             break;
         default:
             format = 0;
             break;
         }
         if (format &&
-            (alt_va_format = gst_vaapi_image_format_get_va_format(format))) {
+            (alt_va_format = gst_video_format_to_va_format(format))) {
             alt_va_image = *va_image;
             alt_va_image.format = *alt_va_format;
             SWAP_UINT(alt_va_image.offsets[1], alt_va_image.offsets[2]);
@@ -434,11 +434,11 @@ _gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image)
  * gst_vaapi_image_get_format:
  * @image: a #GstVaapiImage
  *
- * Returns the #GstVaapiImageFormat the @image was created with.
+ * Returns the #GstVideoFormat the @image was created with.
  *
- * Return value: the #GstVaapiImageFormat
+ * Return value: the #GstVideoFormat
  */
-GstVaapiImageFormat
+GstVideoFormat
 gst_vaapi_image_get_format(GstVaapiImage *image)
 {
     g_return_val_if_fail(image != NULL, 0);
@@ -737,7 +737,7 @@ init_image_from_buffer(GstVaapiImageRaw *raw_image, GstBuffer *buffer)
 {
     GstStructure *structure;
     GstCaps *caps;
-    GstVaapiImageFormat format;
+    GstVideoFormat format;
     guint width2, height2, size2;
     gint width, height;
     guchar *data;
@@ -750,7 +750,7 @@ init_image_from_buffer(GstVaapiImageRaw *raw_image, GstBuffer *buffer)
     if (!caps)
         return FALSE;
 
-    format = gst_vaapi_image_format_from_caps(caps);
+    format = gst_video_format_from_caps(caps);
 
     structure = gst_caps_get_structure(caps, 0);
     gst_structure_get_int(structure, "width",  &width);
@@ -764,7 +764,7 @@ init_image_from_buffer(GstVaapiImageRaw *raw_image, GstBuffer *buffer)
     height2 = (height + 1) / 2;
     size2   = 0;
     switch (format) {
-    case GST_VAAPI_IMAGE_NV12:
+    case GST_VIDEO_FORMAT_NV12:
         raw_image->num_planes = 2;
         raw_image->pixels[0]  = data;
         raw_image->stride[0]  = GST_ROUND_UP_4(width);
@@ -773,8 +773,8 @@ init_image_from_buffer(GstVaapiImageRaw *raw_image, GstBuffer *buffer)
         raw_image->stride[1]  = raw_image->stride[0];
         size2                += height2 * raw_image->stride[1];
         break;
-    case GST_VAAPI_IMAGE_YV12:
-    case GST_VAAPI_IMAGE_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_I420:
         raw_image->num_planes = 3;
         raw_image->pixels[0]  = data;
         raw_image->stride[0]  = GST_ROUND_UP_4(width);
@@ -786,10 +786,10 @@ init_image_from_buffer(GstVaapiImageRaw *raw_image, GstBuffer *buffer)
         raw_image->stride[2]  = raw_image->stride[1];
         size2                += height2 * raw_image->stride[2];
         break;
-    case GST_VAAPI_IMAGE_ARGB:
-    case GST_VAAPI_IMAGE_RGBA:
-    case GST_VAAPI_IMAGE_ABGR:
-    case GST_VAAPI_IMAGE_BGRA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_BGRA:
         raw_image->num_planes = 1;
         raw_image->pixels[0]  = data;
         raw_image->stride[0]  = width * 4;
@@ -937,17 +937,17 @@ copy_image(
     }
 
     switch (dst_image->format) {
-    case GST_VAAPI_IMAGE_NV12:
+    case GST_VIDEO_FORMAT_NV12:
         copy_image_NV12(dst_image, src_image, rect);
         break;
-    case GST_VAAPI_IMAGE_YV12:
-    case GST_VAAPI_IMAGE_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_I420:
         copy_image_YV12(dst_image, src_image, rect);
         break;
-    case GST_VAAPI_IMAGE_ARGB:
-    case GST_VAAPI_IMAGE_RGBA:
-    case GST_VAAPI_IMAGE_ABGR:
-    case GST_VAAPI_IMAGE_BGRA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_BGRA:
         copy_image_RGBA(dst_image, src_image, rect);
         break;
     default:

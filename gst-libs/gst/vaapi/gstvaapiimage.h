@@ -26,7 +26,7 @@
 #include <gst/gstbuffer.h>
 #include <gst/vaapi/gstvaapiobject.h>
 #include <gst/vaapi/gstvaapidisplay.h>
-#include <gst/vaapi/gstvaapiimageformat.h>
+#include <gst/vaapi/video-format.h>
 
 G_BEGIN_DECLS
 
@@ -37,7 +37,7 @@ G_BEGIN_DECLS
  * GST_VAAPI_IMAGE_FORMAT:
  * @image: a #GstVaapiImage
  *
- * Macro that evaluates to the #GstVaapiImageFormat of @image.
+ * Macro that evaluates to the #GstVideoFormat of @image.
  */
 #define GST_VAAPI_IMAGE_FORMAT(image)   gst_vaapi_image_get_format(image)
 
@@ -67,7 +67,7 @@ typedef struct _GstVaapiImageRaw                GstVaapiImageRaw;
  * the fields with sensible values.
  */
 struct _GstVaapiImageRaw {
-    GstVaapiImageFormat format;
+    GstVideoFormat      format;
     guint               width;
     guint               height;
     guint               num_planes;
@@ -78,7 +78,7 @@ struct _GstVaapiImageRaw {
 GstVaapiImage *
 gst_vaapi_image_new(
     GstVaapiDisplay    *display,
-    GstVaapiImageFormat format,
+    GstVideoFormat      format,
     guint               width,
     guint               height
 );
@@ -92,7 +92,7 @@ gst_vaapi_image_get_id(GstVaapiImage *image);
 gboolean
 gst_vaapi_image_get_image(GstVaapiImage *image, VAImage *va_image);
 
-GstVaapiImageFormat
+GstVideoFormat
 gst_vaapi_image_get_format(GstVaapiImage *image);
 
 guint

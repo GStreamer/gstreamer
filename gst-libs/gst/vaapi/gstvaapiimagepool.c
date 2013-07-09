@@ -41,7 +41,7 @@ struct _GstVaapiImagePool {
     /*< private >*/
     GstVaapiVideoPool   parent_instance;
 
-    GstVaapiImageFormat format;
+    GstVideoFormat      format;
     guint               width;
     guint               height;
 };
@@ -55,7 +55,7 @@ gst_vaapi_image_pool_set_caps(GstVaapiVideoPool *base_pool, GstCaps *caps)
     if (!gst_video_info_from_caps(&vi, caps))
         return FALSE;
 
-    pool->format = gst_vaapi_image_format_from_video(GST_VIDEO_INFO_FORMAT(&vi));
+    pool->format = GST_VIDEO_INFO_FORMAT(&vi);
     pool->width  = GST_VIDEO_INFO_WIDTH(&vi);
     pool->height = GST_VIDEO_INFO_HEIGHT(&vi);
     return TRUE;
