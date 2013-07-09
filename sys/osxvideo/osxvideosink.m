@@ -680,39 +680,11 @@ static void
 gst_osx_video_sink_set_window_handle (GstVideoOverlay * overlay, guintptr handle_id)
 {
   GstOSXVideoSink *osxvideosink = GST_OSX_VIDEO_SINK (overlay);
-  gulong window_id = (gulong) handle_id;
-  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+  NSView *view = (NSView *) handle_id;
 
-  if (osxvideosink->superview) {
-    GST_INFO_OBJECT (osxvideosink, "old xwindow id %p", osxvideosink->superview);
-    if (osxvideosink->osxwindow) {
-      gst_osx_video_sink_call_from_main_thread(osxvideosink,
-          osxvideosink->osxwindow->gstview,
-          @selector(removeFromSuperview:), (id)nil, YES);
-    }
-    [osxvideosink->superview release];
-  }
-  if (osxvideosink->osxwindow != NULL && window_id != 0) {
-    if (osxvideosink->osxwindow->internal) {
-      GST_INFO_OBJECT (osxvideosink, "closing internal window");
-      osxvideosink->osxwindow->closed = TRUE;
-      [osxvideosink->osxwindow->win close];
-      [osxvideosink->osxwindow->win release];
-    }
-  }
-
-  GST_INFO_OBJECT (osxvideosink, "set xwindow id 0x%lx", window_id);
-  osxvideosink->superview = [((NSView *) window_id) retain];
-  if (osxvideosink->osxwindow) {
-      gst_osx_video_sink_call_from_main_thread(osxvideosink,
-        osxvideosink->osxwindow->gstview,
-        @selector(addToSuperview:), osxvideosink->superview, YES);
-    if (window_id) {
-      osxvideosink->osxwindow->internal = FALSE;
-    }
-  }
-
-  [pool release];
+  gst_osx_video_sink_call_from_main_thread(osxvideosink,
+      osxvideosink->osxvideosinkobject,
+      @selector(setView:), view, YES);
 }
 
 static void
@@ -862,6 +834,38 @@ gst_osx_video_sink_get_type (void)
   return YES;
 }
 #endif
+
+- (void) setView: (NSView*)view
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
+  if (osxvideosink->superview) {
+    GST_INFO_OBJECT (osxvideosink, "old xwindow id %p", osxvideosink->superview);
+    if (osxvideosink->osxwindow) {
+      [osxvideosink->osxwindow->gstview removeFromSuperview];
+    }
+    [osxvideosink->superview release];
+  }
+  if (osxvideosink->osxwindow != NULL && view != NULL) {
+    if (osxvideosink->osxwindow->internal) {
+      GST_INFO_OBJECT (osxvideosink, "closing internal window");
+      osxvideosink->osxwindow->closed = TRUE;
+      [osxvideosink->osxwindow->win close];
+      [osxvideosink->osxwindow->win release];
+    }
+  }
+
+  GST_INFO_OBJECT (osxvideosink, "set xwindow id %p", view);
+  osxvideosink->superview = [view retain];
+  if (osxvideosink->osxwindow) {
+    [osxvideosink->osxwindow->gstview addToSuperview: osxvideosink->superview];
+    if (view) {
+      osxvideosink->osxwindow->internal = FALSE;
+    }
+  }
+
+  [pool release];
+}
 
 - (void) resize
 {

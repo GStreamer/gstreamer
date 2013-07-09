@@ -145,6 +145,7 @@ GType gst_osx_video_sink_get_type(void);
 -(void) resize;
 -(void) destroy;
 -(void) showFrame: (GstBufferObject*) buf;
+-(void) setView: (NSView*) view;
 #ifdef RUN_NS_APP_THREAD
 + (BOOL) isMainThread;
 -(void) nsAppThread;
