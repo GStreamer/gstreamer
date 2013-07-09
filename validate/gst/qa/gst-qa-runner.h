@@ -25,7 +25,7 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
-#include "gst-qa-element-wrapper.h"
+#include "gst-qa-element-monitor.h"
 
 G_BEGIN_DECLS
 
@@ -56,7 +56,7 @@ struct _GstQaRunner {
 
   /*< private >*/
   GstElement    *pipeline;
-  GstQaElementWrapper *wrapper;
+  GstQaElementMonitor *monitor;
 };
 
 /**

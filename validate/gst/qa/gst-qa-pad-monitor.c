@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2013 Thiago Santos <thiago.sousa.santos@collabora.com>
  *
- * gst-qa-pad_wrapper.c - QA PadWrapper class
+ * gst-qa-pad-monitor.c - QA PadMonitor class
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,79 +19,77 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gst-qa-pad-wrapper.h"
+#include "gst-qa-pad-monitor.h"
 
 /**
- * SECTION:gst-qa-pad-wrapper
+ * SECTION:gst-qa-pad-monitor
  * @short_description: Class that wraps a #GstPad for QA checks
  *
  * TODO
  */
 
-GST_DEBUG_CATEGORY_STATIC (gst_qa_pad_wrapper_debug);
-#define GST_CAT_DEFAULT gst_qa_pad_wrapper_debug
+GST_DEBUG_CATEGORY_STATIC (gst_qa_pad_monitor_debug);
+#define GST_CAT_DEFAULT gst_qa_pad_monitor_debug
 
 #define _do_init \
-  GST_DEBUG_CATEGORY_INIT (gst_qa_pad_wrapper_debug, "qa_pad_wrapper", 0, "QA PadWrapper");
-#define gst_qa_pad_wrapper_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstQaPadWrapper, gst_qa_pad_wrapper,
+  GST_DEBUG_CATEGORY_INIT (gst_qa_pad_monitor_debug, "qa_pad_monitor", 0, "QA PadMonitor");
+#define gst_qa_pad_monitor_parent_class parent_class
+G_DEFINE_TYPE_WITH_CODE (GstQaPadMonitor, gst_qa_pad_monitor,
     G_TYPE_OBJECT, _do_init);
 
 
 static void
-gst_qa_pad_wrapper_dispose (GObject * object)
+gst_qa_pad_monitor_dispose (GObject * object)
 {
-  GstQaPadWrapper *wrapper = GST_QA_PAD_WRAPPER_CAST (object);
+  GstQaPadMonitor *monitor = GST_QA_PAD_MONITOR_CAST (object);
 
-  if (wrapper->pad)
-    gst_object_unref (wrapper->pad);
+  if (monitor->pad)
+    gst_object_unref (monitor->pad);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 
 static void
-gst_qa_pad_wrapper_class_init (GstQaPadWrapperClass * klass)
+gst_qa_pad_monitor_class_init (GstQaPadMonitorClass * klass)
 {
   GObjectClass *gobject_class;
 
   gobject_class = G_OBJECT_CLASS (klass);
 
-  gobject_class->dispose = gst_qa_pad_wrapper_dispose;
+  gobject_class->dispose = gst_qa_pad_monitor_dispose;
 }
 
 static void
-gst_qa_pad_wrapper_init (GstQaPadWrapper * pad_wrapper)
+gst_qa_pad_monitor_init (GstQaPadMonitor * pad_monitor)
 {
-  pad_wrapper->setup = FALSE;
+  pad_monitor->setup = FALSE;
 }
 
 /**
- * gst_qa_pad_wrapper_new:
+ * gst_qa_pad_monitor_new:
  * @pad: (transfer-none): a #GstPad to run QA on
  */
-GstQaPadWrapper *
-gst_qa_pad_wrapper_new (GstPad * pad)
+GstQaPadMonitor *
+gst_qa_pad_monitor_new (GstPad * pad)
 {
-  GstQaPadWrapper *wrapper =
-      g_object_new (GST_TYPE_QA_PAD_WRAPPER, NULL);
+  GstQaPadMonitor *monitor = g_object_new (GST_TYPE_QA_PAD_MONITOR, NULL);
 
   g_return_val_if_fail (pad != NULL, NULL);
 
-  wrapper->pad = gst_object_ref (pad);
-  return wrapper;
+  monitor->pad = gst_object_ref (pad);
+  return monitor;
 }
 
 gboolean
-gst_qa_pad_wrapper_setup (GstQaPadWrapper * wrapper)
+gst_qa_pad_monitor_setup (GstQaPadMonitor * monitor)
 {
-  if (wrapper->setup)
+  if (monitor->setup)
     return TRUE;
 
-  GST_DEBUG_OBJECT (wrapper, "Setting up wrapper for pad %" GST_PTR_FORMAT,
-      wrapper->pad);
+  GST_DEBUG_OBJECT (monitor, "Setting up monitor for pad %" GST_PTR_FORMAT,
+      monitor->pad);
 
-  wrapper->setup = TRUE;
+  monitor->setup = TRUE;
   return TRUE;
 }
-

@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2013 Thiago Santos <thiago.sousa.santos@collabora.com>
  *
- * gst-qa-wrapper-factory.c - QA Element wrappers factory utility functions
+ * gst-qa-monitor-factory.h - QA Element monitors factory utility functions
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,12 +19,18 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#include "gst-qa-wrapper-factory.h"
+#ifndef __GST_QA_MONITOR_FACTORY_H__
+#define __GST_QA_MONITOR_FACTORY_H__
 
-GstQaElementWrapper *
-gst_qa_wrapper_factory_create (GstElement * element)
-{
-  g_return_val_if_fail (element != NULL, NULL);
+#include <glib-object.h>
+#include <gst/gst.h>
+#include "gst-qa-element-monitor.h"
 
-  return gst_qa_element_wrapper_new (element);
-}
+G_BEGIN_DECLS
+
+GstQaElementMonitor *       gst_qa_monitor_factory_create (GstElement * element);
+
+G_END_DECLS
+
+#endif /* __GST_QA_MONITOR_FACTORY_H__ */
+

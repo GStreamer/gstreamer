@@ -20,7 +20,7 @@
  */
 
 #include "gst-qa-runner.h"
-#include "gst-qa-wrapper-factory.h"
+#include "gst-qa-monitor-factory.h"
 
 /**
  * SECTION:gst-qa-runner
@@ -44,8 +44,8 @@ gst_qa_runner_dispose (GObject * object)
   if (runner->pipeline)
     gst_object_unref (runner->pipeline);
 
-  if (runner->wrapper)
-    g_object_unref (runner->wrapper);
+  if (runner->monitor)
+    g_object_unref (runner->monitor);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -88,8 +88,8 @@ gst_qa_runner_setup (GstQaRunner * runner)
     return TRUE;
 
   GST_INFO_OBJECT (runner, "Starting QA Runner setup");
-  runner->wrapper = gst_qa_wrapper_factory_create (runner->pipeline);
-  if (runner->wrapper == NULL) {
+  runner->monitor = gst_qa_monitor_factory_create (runner->pipeline);
+  if (runner->monitor == NULL) {
     GST_WARNING_OBJECT (runner, "Setup failed");
     return FALSE;
   }
