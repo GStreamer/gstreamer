@@ -426,8 +426,10 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
   ret = gst_element_set_state (downloader->priv->urisrc, GST_STATE_PLAYING);
   GST_OBJECT_LOCK (downloader);
   if (ret == GST_STATE_CHANGE_FAILURE) {
-    g_object_unref (downloader->priv->download);
-    downloader->priv->download = NULL;
+    if (downloader->priv->download) {
+      g_object_unref (downloader->priv->download);
+      downloader->priv->download = NULL;
+    }
     goto quit;
   }
 
