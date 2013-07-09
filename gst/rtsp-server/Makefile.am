@@ -7,6 +7,7 @@ public_headers = \
 		rtsp-media-factory.h \
 		rtsp-media-factory-uri.h \
 		rtsp-mount-points.h \
+		rtsp-permissions.h \
 		rtsp-stream.h \
 		rtsp-stream-transport.h \
 		rtsp-session.h \
@@ -25,6 +26,7 @@ c_sources = \
 	rtsp-media-factory.c \
 	rtsp-media-factory-uri.c \
 	rtsp-mount-points.c \
+	rtsp-permissions.c \
 	rtsp-stream.c \
 	rtsp-stream-transport.c \
 	rtsp-session.c \
