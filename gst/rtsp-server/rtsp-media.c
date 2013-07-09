@@ -34,6 +34,7 @@ struct _GstRTSPMediaPrivate
   GCond cond;
 
   /* protected by lock */
+  GstRTSPPermissions *permissions;
   gboolean shared;
   gboolean reusable;
   GstRTSPLowerTrans protocols;
@@ -494,6 +495,57 @@ gst_rtsp_media_take_pipeline (GstRTSPMedia * media, GstPipeline * pipeline)
     gst_object_unref (nettime);
 
   gst_bin_add (GST_BIN_CAST (pipeline), priv->element);
+}
+
+/**
+ * gst_rtsp_media_set_permissions:
+ * @media: a #GstRTSPMedia
+ * @permissions: a #GstRTSPPermissions
+ *
+ * Set @permissions on @media.
+ */
+void
+gst_rtsp_media_set_permissions (GstRTSPMedia * media,
+    GstRTSPPermissions * permissions)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  if (priv->permissions)
+    gst_rtsp_permissions_unref (priv->permissions);
+  if ((priv->permissions = permissions))
+    gst_rtsp_permissions_ref (permissions);
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_get_permissions:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the permissions object from @media.
+ *
+ * Returns: (transfer full): a #GstRTSPPermissions object, unref after usage.
+ */
+GstRTSPPermissions *
+gst_rtsp_media_get_permissions (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  GstRTSPPermissions *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->permissions))
+    gst_rtsp_permissions_ref (result);
+  g_mutex_unlock (&priv->lock);
+
+  return result;
 }
 
 /**

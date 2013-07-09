@@ -42,7 +42,7 @@ typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
 typedef struct _GstRTSPMediaPrivate GstRTSPMediaPrivate;
 
 #include "rtsp-stream.h"
-#include "rtsp-auth.h"
+#include "rtsp-permissions.h"
 #include "rtsp-address-pool.h"
 
 /**
@@ -124,6 +124,10 @@ GstElement *          gst_rtsp_media_get_element      (GstRTSPMedia *media);
 void                  gst_rtsp_media_take_pipeline    (GstRTSPMedia *media, GstPipeline *pipeline);
 
 GstRTSPMediaStatus    gst_rtsp_media_get_status       (GstRTSPMedia *media);
+
+void                  gst_rtsp_media_set_permissions  (GstRTSPMedia *media,
+                                                       GstRTSPPermissions *permissions);
+GstRTSPPermissions *  gst_rtsp_media_get_permissions  (GstRTSPMedia *media);
 
 void                  gst_rtsp_media_set_shared       (GstRTSPMedia *media, gboolean shared);
 gboolean              gst_rtsp_media_is_shared        (GstRTSPMedia *media);

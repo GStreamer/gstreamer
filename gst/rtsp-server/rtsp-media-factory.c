@@ -29,6 +29,7 @@
 struct _GstRTSPMediaFactoryPrivate
 {
   GMutex lock;                  /* protects everything but medias */
+  GstRTSPPermissions *permissions;
   gchar *launch;
   gboolean shared;
   gboolean eos_shutdown;
@@ -270,6 +271,57 @@ gst_rtsp_media_factory_new (void)
   GstRTSPMediaFactory *result;
 
   result = g_object_new (GST_TYPE_RTSP_MEDIA_FACTORY, NULL);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_media_factory_set_permissions:
+ * @factory: a #GstRTSPMediaFactory
+ * @permissions: a #GstRTSPPermissions
+ *
+ * Set @permissions on @factory.
+ */
+void
+gst_rtsp_media_factory_set_permissions (GstRTSPMediaFactory * factory,
+    GstRTSPPermissions * permissions)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  if (priv->permissions)
+    gst_rtsp_permissions_unref (priv->permissions);
+  if ((priv->permissions = permissions))
+    gst_rtsp_permissions_ref (permissions);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_get_permissions:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Get the permissions object from @factory.
+ *
+ * Returns: (transfer full): a #GstRTSPPermissions object, unref after usage.
+ */
+GstRTSPPermissions *
+gst_rtsp_media_factory_get_permissions (GstRTSPMediaFactory * factory)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  GstRTSPPermissions *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory), NULL);
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  if ((result = priv->permissions))
+    gst_rtsp_permissions_ref (result);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   return result;
 }

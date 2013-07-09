@@ -21,7 +21,7 @@
 #include <gst/rtsp/gstrtspurl.h>
 
 #include "rtsp-media.h"
-#include "rtsp-auth.h"
+#include "rtsp-permissions.h"
 #include "rtsp-address-pool.h"
 
 #ifndef __GST_RTSP_MEDIA_FACTORY_H__
@@ -99,34 +99,40 @@ GType                 gst_rtsp_media_factory_get_type     (void);
 GstRTSPMediaFactory * gst_rtsp_media_factory_new          (void);
 
 /* configuring the factory */
-void                  gst_rtsp_media_factory_set_launch   (GstRTSPMediaFactory *factory,
-                                                           const gchar *launch);
-gchar *               gst_rtsp_media_factory_get_launch   (GstRTSPMediaFactory *factory);
+void                  gst_rtsp_media_factory_set_permissions  (GstRTSPMediaFactory *factory,
+                                                               GstRTSPPermissions *permissions);
+GstRTSPPermissions *  gst_rtsp_media_factory_get_permissions  (GstRTSPMediaFactory *factory);
 
-void                  gst_rtsp_media_factory_set_shared   (GstRTSPMediaFactory *factory,
-                                                           gboolean shared);
-gboolean              gst_rtsp_media_factory_is_shared    (GstRTSPMediaFactory *factory);
+void                  gst_rtsp_media_factory_set_launch       (GstRTSPMediaFactory *factory,
+                                                               const gchar *launch);
+gchar *               gst_rtsp_media_factory_get_launch       (GstRTSPMediaFactory *factory);
 
-void                  gst_rtsp_media_factory_set_eos_shutdown   (GstRTSPMediaFactory *factory,
-                                                                 gboolean eos_shutdown);
-gboolean              gst_rtsp_media_factory_is_eos_shutdown    (GstRTSPMediaFactory *factory);
+void                  gst_rtsp_media_factory_set_shared       (GstRTSPMediaFactory *factory,
+                                                               gboolean shared);
+gboolean              gst_rtsp_media_factory_is_shared        (GstRTSPMediaFactory *factory);
 
-void                  gst_rtsp_media_factory_set_protocols  (GstRTSPMediaFactory *factory, GstRTSPLowerTrans protocols);
-GstRTSPLowerTrans     gst_rtsp_media_factory_get_protocols  (GstRTSPMediaFactory *factory);
+void                  gst_rtsp_media_factory_set_eos_shutdown (GstRTSPMediaFactory *factory,
+                                                               gboolean eos_shutdown);
+gboolean              gst_rtsp_media_factory_is_eos_shutdown  (GstRTSPMediaFactory *factory);
 
-void                  gst_rtsp_media_factory_set_address_pool   (GstRTSPMediaFactory * factory,
-                                                                 GstRTSPAddressPool * pool);
-GstRTSPAddressPool *  gst_rtsp_media_factory_get_address_pool   (GstRTSPMediaFactory * factory);
+void                  gst_rtsp_media_factory_set_protocols    (GstRTSPMediaFactory *factory,
+                                                               GstRTSPLowerTrans protocols);
+GstRTSPLowerTrans     gst_rtsp_media_factory_get_protocols    (GstRTSPMediaFactory *factory);
 
-void                  gst_rtsp_media_factory_set_buffer_size    (GstRTSPMediaFactory * factory, guint size);
-guint                 gst_rtsp_media_factory_get_buffer_size    (GstRTSPMediaFactory * factory);
+void                  gst_rtsp_media_factory_set_address_pool (GstRTSPMediaFactory * factory,
+                                                               GstRTSPAddressPool * pool);
+GstRTSPAddressPool *  gst_rtsp_media_factory_get_address_pool (GstRTSPMediaFactory * factory);
+
+void                  gst_rtsp_media_factory_set_buffer_size  (GstRTSPMediaFactory * factory,
+                                                               guint size);
+guint                 gst_rtsp_media_factory_get_buffer_size  (GstRTSPMediaFactory * factory);
 
 /* creating the media from the factory and a url */
-GstRTSPMedia *        gst_rtsp_media_factory_construct       (GstRTSPMediaFactory *factory,
-                                                              const GstRTSPUrl *url);
+GstRTSPMedia *        gst_rtsp_media_factory_construct        (GstRTSPMediaFactory *factory,
+                                                               const GstRTSPUrl *url);
 
-GstElement *          gst_rtsp_media_factory_create_element  (GstRTSPMediaFactory *factory,
-                                                              const GstRTSPUrl *url);
+GstElement *          gst_rtsp_media_factory_create_element   (GstRTSPMediaFactory *factory,
+                                                               const GstRTSPUrl *url);
 
 G_END_DECLS
 
