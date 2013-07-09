@@ -47,6 +47,8 @@ platform as well as Windows. It is released under the GNU Library General Public
     <xi:include href="xml/ges-track.xml"/>
     <xi:include href="xml/ges-track-element.xml"/>
     <xi:include href="xml/ges-source.xml"/>
+    <xi:include href="xml/ges-video-source.xml"/>
+    <xi:include href="xml/ges-audio-source.xml"/>
     <xi:include href="xml/ges-base-effect.xml"/>
     <xi:include href="xml/ges-operation.xml"/>
     <xi:include href="xml/ges-base-transition-clip.xml"/>
@@ -66,7 +68,8 @@ platform as well as Windows. It is released under the GNU Library General Public
 
   <chapter>
     <title>Track objects</title>
-    <xi:include href="xml/ges-uri-source.xml"/>
+    <xi:include href="xml/ges-audio-uri-source.xml"/>
+    <xi:include href="xml/ges-video-uri-source.xml"/>
     <xi:include href="xml/ges-title-source.xml"/>
     <xi:include href="xml/ges-audio-test-source.xml"/>
     <xi:include href="xml/ges-video-test-source.xml"/>

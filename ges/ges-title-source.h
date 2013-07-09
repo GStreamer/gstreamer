@@ -23,7 +23,7 @@
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-source.h>
+#include <ges/ges-video-source.h>
 
 G_BEGIN_DECLS
 
@@ -51,7 +51,7 @@ typedef struct _GESTitleSourcePrivate GESTitleSourcePrivate;
  *
  */
 struct _GESTitleSource {
-  GESSource parent;
+  GESVideoSource parent;
 
   /*< private >*/
   GESTitleSourcePrivate *priv;
@@ -66,7 +66,7 @@ struct _GESTitleSource {
  */
 
 struct _GESTitleSourceClass {
-  GESSourceClass parent_class;
+  GESVideoSourceClass parent_class;
 
   /*< private >*/
 

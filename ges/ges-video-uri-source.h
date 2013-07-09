@@ -18,62 +18,62 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_URI_SOURCE
-#define _GES_URI_SOURCE
+#ifndef _GES_VIDEO_URI_SOURCE
+#define _GES_VIDEO_URI_SOURCE
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-source.h>
+#include <ges/ges-video-source.h>
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_URI_SOURCE ges_track_filesource_get_type()
+#define GES_TYPE_VIDEO_URI_SOURCE ges_video_uri_source_get_type()
 
-#define GES_URI_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_URI_SOURCE, GESUriSource))
+#define GES_VIDEO_URI_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_VIDEO_URI_SOURCE, GESVideoUriSource))
 
-#define GES_URI_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_URI_SOURCE, GESUriSourceClass))
+#define GES_VIDEO_URI_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_VIDEO_URI_SOURCE, GESVideoUriSourceClass))
 
-#define GES_IS_URI_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_URI_SOURCE))
+#define GES_IS_VIDEO_URI_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_VIDEO_URI_SOURCE))
 
-#define GES_IS_URI_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_URI_SOURCE))
+#define GES_IS_VIDEO_URI_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_VIDEO_URI_SOURCE))
 
-#define GES_URI_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_URI_SOURCE, GESUriSourceClass))
+#define GES_VIDEO_URI_SOURCE_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_VIDEO_URI_SOURCE, GESVideoUriSourceClass))
 
-typedef struct _GESUriSourcePrivate GESUriSourcePrivate;
+typedef struct _GESVideoUriSourcePrivate GESVideoUriSourcePrivate;
 
 /**
- * GESUriSource:
+ * GESVideoUriSource:
  */
-struct _GESUriSource {
+struct _GESVideoUriSource {
   /*< private >*/
-  GESSource parent;
+  GESVideoSource parent;
 
   gchar *uri;
 
-  GESUriSourcePrivate *priv;
+  GESVideoUriSourcePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-struct _GESUriSourceClass {
+struct _GESVideoUriSourceClass {
   /*< private >*/
-  GESSourceClass parent_class;
+  GESVideoSourceClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_track_filesource_get_type (void);
+GType ges_video_uri_source_get_type (void);
 
-GESUriSource* ges_track_filesource_new (gchar *uri);
+GESVideoUriSource* ges_video_uri_source_new (gchar *uri);
 
 G_END_DECLS
 
-#endif /* _GES_URI_SOURCE */
+#endif /* _GES_VIDEO_URI_SOURCE */
 

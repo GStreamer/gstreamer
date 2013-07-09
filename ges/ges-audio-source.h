@@ -18,67 +18,73 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_SOURCE
-#define _GES_SOURCE
+#ifndef _GES_AUDIO_SOURCE
+#define _GES_AUDIO_SOURCE
 
 #include <glib-object.h>
 #include <gst/gst.h>
 #include <ges/ges-types.h>
 #include <ges/ges-track-element.h>
+#include <ges/ges-source.h>
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_SOURCE ges_source_get_type()
+#define GES_TYPE_AUDIO_SOURCE ges_audio_source_get_type()
 
-#define GES_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_SOURCE, GESSource))
+#define GES_AUDIO_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_AUDIO_SOURCE, GESAudioSource))
 
-#define GES_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_SOURCE, GESSourceClass))
+#define GES_AUDIO_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_AUDIO_SOURCE, GESAudioSourceClass))
 
-#define GES_IS_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_SOURCE))
+#define GES_IS_AUDIO_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_AUDIO_SOURCE))
 
-#define GES_IS_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_SOURCE))
+#define GES_IS_AUDIO_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_AUDIO_SOURCE))
 
-#define GES_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_SOURCE, GESSourceClass))
+#define GES_AUDIO_SOURCE_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_AUDIO_SOURCE, GESAudioSourceClass))
 
-typedef struct _GESSourcePrivate GESSourcePrivate;
+typedef struct _GESAudioSourcePrivate GESAudioSourcePrivate;
 
 /**
- * GESSource:
+ * GESAudioSource:
  *
- * Base class for single-media sources
+ * Base class for audio sources
  */
 
-struct _GESSource {
+struct _GESAudioSource {
   /*< private >*/
-  GESTrackElement parent;
+  GESSource parent;
 
-  GESSourcePrivate *priv;
+  GESAudioSourcePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
- * GESSourceClass:
+ * GESAudioSourceClass:
  * @create_source: method to return the GstElement to put in the source topbin.
+ * Other elements will be queued, like a volume.
+ * In the case of a AudioUriSource, for example, the subclass will return a decodebin,
+ * and we will append a volume.
  */
-
-struct _GESSourceClass {
+struct _GESAudioSourceClass {
   /*< private >*/
-  GESTrackElementClass parent_class;
+  GESSourceClass parent_class;
+
+  /*< public >*/
+  GstElement*  (*create_source)           (GESTrackElement * object);
 
   /*< private >*/
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_source_get_type (void);
+GType ges_audio_source_get_type (void);
 
 G_END_DECLS
 
-#endif /* _GES_SOURCE */
+#endif /* _GES_AUDIO_SOURCE */

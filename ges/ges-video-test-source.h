@@ -24,7 +24,7 @@
 #include <glib-object.h>
 #include <ges/ges-enums.h>
 #include <ges/ges-types.h>
-#include <ges/ges-source.h>
+#include <ges/ges-video-source.h>
 
 G_BEGIN_DECLS
 
@@ -52,7 +52,7 @@ typedef struct _GESVideoTestSourcePrivate GESVideoTestSourcePrivate;
  */
 struct _GESVideoTestSource {
   /*< private >*/
-  GESSource parent;
+  GESVideoSource parent;
 
   GESVideoTestSourcePrivate *priv;
 
@@ -61,7 +61,7 @@ struct _GESVideoTestSource {
 };
 
 struct _GESVideoTestSourceClass {
-  GESSourceClass parent_class;
+  GESVideoSourceClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];

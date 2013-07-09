@@ -31,7 +31,8 @@
 #include "ges-track-element.h"
 #include "ges-audio-test-source.h"
 
-G_DEFINE_TYPE (GESAudioTestSource, ges_audio_test_source, GES_TYPE_SOURCE);
+G_DEFINE_TYPE (GESAudioTestSource, ges_audio_test_source,
+    GES_TYPE_AUDIO_SOURCE);
 #define DEFAULT_VOLUME 1.0
 
 struct _GESAudioTestSourcePrivate
@@ -57,7 +58,7 @@ static void
 ges_audio_test_source_class_init (GESAudioTestSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESSourceClass *source_class = GES_SOURCE_CLASS (klass);
+  GESAudioSourceClass *source_class = GES_AUDIO_SOURCE_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESAudioTestSourcePrivate));
 

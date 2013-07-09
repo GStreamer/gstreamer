@@ -29,7 +29,8 @@
 #include "ges-internal.h"
 #include "ges-uri-clip.h"
 #include "ges-source-clip.h"
-#include "ges-uri-source.h"
+#include "ges-video-uri-source.h"
+#include "ges-audio-uri-source.h"
 #include "ges-uri-asset.h"
 #include "ges-track-element-asset.h"
 #include "ges-extractable.h"
@@ -424,7 +425,7 @@ static GESTrackElement *
 ges_uri_clip_create_track_element (GESClip * clip, GESTrackType type)
 {
   GESUriClipPrivate *priv = GES_URI_CLIP (clip)->priv;
-  GESTrackElement *res;
+  GESTrackElement *res = NULL;
 
   if (priv->is_image) {
     if (type != GES_TRACK_TYPE_VIDEO) {
@@ -439,7 +440,10 @@ ges_uri_clip_create_track_element (GESClip * clip, GESTrackType type)
     GST_DEBUG ("Creating a GESUriSource");
 
     /* FIXME : Implement properly ! */
-    res = (GESTrackElement *) ges_track_filesource_new (priv->uri);
+    if (type == GES_TRACK_TYPE_VIDEO)
+      res = (GESTrackElement *) ges_video_uri_source_new (priv->uri);
+    else if (type == GES_TRACK_TYPE_AUDIO)
+      res = (GESTrackElement *) ges_audio_uri_source_new (priv->uri);
 
     /* If mute and track is audio, deactivate the track element */
     if (type == GES_TRACK_TYPE_AUDIO && priv->mute)

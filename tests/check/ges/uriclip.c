@@ -68,7 +68,8 @@ asset_created_cb (GObject * source, GAsyncResult * res, gpointer udata)
     GList *trackelements = ges_track_get_elements (GES_TRACK (tmp->data));
 
     assert_equals_int (g_list_length (trackelements), 1);
-    fail_unless (GES_IS_URI_SOURCE (trackelements->data));
+    fail_unless (GES_IS_VIDEO_URI_SOURCE (trackelements->data)
+        || GES_IS_AUDIO_URI_SOURCE (trackelements->data));
     g_list_free_full (trackelements, gst_object_unref);
   }
   g_list_free_full (tracks, gst_object_unref);

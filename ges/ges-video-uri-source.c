@@ -19,21 +19,18 @@
  */
 
 /**
- * SECTION:ges-uri-source
- * @short_description: outputs a single media stream from a given file
- *
- * Outputs a single media stream from a given file. The stream chosen depends on
- * the type of the track which contains the object.
+ * SECTION:ges-video-uri-source
+ * @short_description: outputs a single video stream from a given file
  */
 
 #include "ges-utils.h"
 #include "ges-internal.h"
 #include "ges-track-element.h"
-#include "ges-uri-source.h"
+#include "ges-video-uri-source.h"
 #include "ges-uri-asset.h"
 #include "ges-extractable.h"
 
-struct _GESUriSourcePrivate
+struct _GESVideoUriSourcePrivate
 {
   void *nothing;
 };
@@ -46,13 +43,13 @@ enum
 
 /* GESSource VMethod */
 static GstElement *
-ges_uri_source_create_source (GESTrackElement * trksrc)
+ges_video_uri_source_create_source (GESTrackElement * trksrc)
 {
-  GESUriSource *self;
+  GESVideoUriSource *self;
   GESTrack *track;
   GstElement *decodebin;
 
-  self = (GESUriSource *) trksrc;
+  self = (GESVideoUriSource *) trksrc;
 
   track = ges_track_element_get_track (trksrc);
 
@@ -94,8 +91,8 @@ ges_extractable_interface_init (GESExtractableInterface * iface)
   iface->set_asset = extractable_set_asset;
 }
 
-G_DEFINE_TYPE_WITH_CODE (GESUriSource, ges_track_filesource,
-    GES_TYPE_SOURCE,
+G_DEFINE_TYPE_WITH_CODE (GESVideoUriSource, ges_video_uri_source,
+    GES_TYPE_VIDEO_SOURCE,
     G_IMPLEMENT_INTERFACE (GES_TYPE_EXTRACTABLE,
         ges_extractable_interface_init));
 
@@ -103,10 +100,10 @@ G_DEFINE_TYPE_WITH_CODE (GESUriSource, ges_track_filesource,
 /* GObject VMethods */
 
 static void
-ges_track_filesource_get_property (GObject * object, guint property_id,
+ges_video_uri_source_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESUriSource *uriclip = GES_URI_SOURCE (object);
+  GESVideoUriSource *uriclip = GES_VIDEO_URI_SOURCE (object);
 
   switch (property_id) {
     case PROP_URI:
@@ -118,10 +115,10 @@ ges_track_filesource_get_property (GObject * object, guint property_id,
 }
 
 static void
-ges_track_filesource_set_property (GObject * object, guint property_id,
+ges_video_uri_source_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESUriSource *uriclip = GES_URI_SOURCE (object);
+  GESVideoUriSource *uriclip = GES_VIDEO_URI_SOURCE (object);
 
   switch (property_id) {
     case PROP_URI:
@@ -137,30 +134,30 @@ ges_track_filesource_set_property (GObject * object, guint property_id,
 }
 
 static void
-ges_track_filesource_dispose (GObject * object)
+ges_video_uri_source_dispose (GObject * object)
 {
-  GESUriSource *uriclip = GES_URI_SOURCE (object);
+  GESVideoUriSource *uriclip = GES_VIDEO_URI_SOURCE (object);
 
   if (uriclip->uri)
     g_free (uriclip->uri);
 
-  G_OBJECT_CLASS (ges_track_filesource_parent_class)->dispose (object);
+  G_OBJECT_CLASS (ges_video_uri_source_parent_class)->dispose (object);
 }
 
 static void
-ges_track_filesource_class_init (GESUriSourceClass * klass)
+ges_video_uri_source_class_init (GESVideoUriSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESSourceClass *source_class = GES_SOURCE_CLASS (klass);
+  GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_CLASS (klass);
 
-  g_type_class_add_private (klass, sizeof (GESUriSourcePrivate));
+  g_type_class_add_private (klass, sizeof (GESVideoUriSourcePrivate));
 
-  object_class->get_property = ges_track_filesource_get_property;
-  object_class->set_property = ges_track_filesource_set_property;
-  object_class->dispose = ges_track_filesource_dispose;
+  object_class->get_property = ges_video_uri_source_get_property;
+  object_class->set_property = ges_video_uri_source_set_property;
+  object_class->dispose = ges_video_uri_source_dispose;
 
   /**
-   * GESUriSource:uri:
+   * GESVideoUriSource:uri:
    *
    * The location of the file/resource to use.
    */
@@ -168,27 +165,27 @@ ges_track_filesource_class_init (GESUriSourceClass * klass)
       g_param_spec_string ("uri", "URI", "uri of the resource",
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
-  source_class->create_source = ges_uri_source_create_source;
+  source_class->create_source = ges_video_uri_source_create_source;
 }
 
 static void
-ges_track_filesource_init (GESUriSource * self)
+ges_video_uri_source_init (GESVideoUriSource * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_URI_SOURCE, GESUriSourcePrivate);
+      GES_TYPE_VIDEO_URI_SOURCE, GESVideoUriSourcePrivate);
 }
 
 /**
- * ges_track_filesource_new:
+ * ges_video_uri_source_new:
  * @uri: the URI the source should control
  *
- * Creates a new #GESUriSource for the provided @uri.
+ * Creates a new #GESVideoUriSource for the provided @uri.
  *
- * Returns: The newly created #GESUriSource, or %NULL if there was an
+ * Returns: The newly created #GESVideoUriSource, or %NULL if there was an
  * error.
  */
-GESUriSource *
-ges_track_filesource_new (gchar * uri)
+GESVideoUriSource *
+ges_video_uri_source_new (gchar * uri)
 {
-  return g_object_new (GES_TYPE_URI_SOURCE, "uri", uri, NULL);
+  return g_object_new (GES_TYPE_VIDEO_URI_SOURCE, "uri", uri, NULL);
 }

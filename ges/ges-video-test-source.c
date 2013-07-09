@@ -27,7 +27,8 @@
 #include "ges-track-element.h"
 #include "ges-video-test-source.h"
 
-G_DEFINE_TYPE (GESVideoTestSource, ges_video_test_source, GES_TYPE_SOURCE);
+G_DEFINE_TYPE (GESVideoTestSource, ges_video_test_source,
+    GES_TYPE_VIDEO_SOURCE);
 
 #define DEFAULT_VPATTERN GES_VIDEO_TEST_PATTERN_SMPTE
 
@@ -41,7 +42,7 @@ static GstElement *ges_video_test_source_create_source (GESTrackElement * self);
 static void
 ges_video_test_source_class_init (GESVideoTestSourceClass * klass)
 {
-  GESSourceClass *source_class = GES_SOURCE_CLASS (klass);
+  GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESVideoTestSourcePrivate));
 
@@ -74,7 +75,7 @@ ges_video_test_source_create_source (GESTrackElement * self)
 
   ges_track_element_add_children_props (self, testsrc, NULL, NULL, props);
 
-  return create_bin ("videotestsrc", testsrc, capsfilter, NULL);
+  return ges_source_create_topbin ("videotestsrc", testsrc, capsfilter, NULL);
 }
 
 /**

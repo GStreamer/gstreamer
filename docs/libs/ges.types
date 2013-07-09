@@ -22,7 +22,8 @@ ges_text_overlay_clip_get_type
 ges_title_clip_get_type
 ges_audio_test_source_get_type
 ges_audio_transition_get_type
-ges_track_filesource_get_type
+ges_video_uri_source_get_type
+ges_audio_uri_source_get_type
 ges_track_get_type
 ges_image_source_get_type
 ges_track_element_get_type

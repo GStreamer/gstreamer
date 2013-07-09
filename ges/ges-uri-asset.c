@@ -238,8 +238,12 @@ _create_uri_source_asset (GESUriClipAsset * asset,
     stream_id = g_strdup_printf ("%i", GPOINTER_TO_INT (sinfo));
   }
 
-  tck_filesource_asset = ges_asset_request (GES_TYPE_URI_SOURCE,
-      stream_id, NULL);
+  if (type == GES_TRACK_TYPE_VIDEO)
+    tck_filesource_asset = ges_asset_request (GES_TYPE_VIDEO_URI_SOURCE,
+        stream_id, NULL);
+  else
+    tck_filesource_asset = ges_asset_request (GES_TYPE_AUDIO_URI_SOURCE,
+        stream_id, NULL);
   g_free (stream_id);
 
   priv_tckasset = GES_URI_SOURCE_ASSET (tck_filesource_asset)->priv;
@@ -547,9 +551,13 @@ _extract (GESAsset * asset, GError ** error)
           priv->sinfo))
     trackelement =
         GES_TRACK_ELEMENT (ges_image_source_new (g_strdup (priv->uri)));
+  else if (GST_IS_DISCOVERER_VIDEO_INFO (priv->sinfo))
+    trackelement =
+        GES_TRACK_ELEMENT (ges_video_uri_source_new (g_strdup (priv->uri)));
   else
     trackelement =
-        GES_TRACK_ELEMENT (ges_track_filesource_new (g_strdup (priv->uri)));
+        GES_TRACK_ELEMENT (ges_audio_uri_source_new (g_strdup (priv->uri)));
+
   ges_track_element_set_track_type (trackelement,
       ges_track_element_asset_get_track_type (GES_TRACK_ELEMENT_ASSET (asset)));
 

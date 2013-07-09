@@ -29,7 +29,7 @@
 #include "ges-title-source.h"
 #include "ges-video-test-source.h"
 
-G_DEFINE_TYPE (GESTitleSource, ges_title_source, GES_TYPE_SOURCE);
+G_DEFINE_TYPE (GESTitleSource, ges_title_source, GES_TYPE_VIDEO_SOURCE);
 
 struct _GESTitleSourcePrivate
 {
@@ -64,7 +64,7 @@ static void
 ges_title_source_class_init (GESTitleSourceClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-  GESSourceClass *source_class = GES_SOURCE_CLASS (klass);
+  GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_CLASS (klass);
 
   g_type_class_add_private (klass, sizeof (GESTitleSourcePrivate));
 

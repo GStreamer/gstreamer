@@ -18,61 +18,62 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_IMAGE_SOURCE
-#define _GES_IMAGE_SOURCE
+#ifndef _GES_AUDIO_URI_SOURCE
+#define _GES_AUDIO_URI_SOURCE
 
 #include <glib-object.h>
 #include <ges/ges-types.h>
-#include <ges/ges-video-source.h>
+#include <ges/ges-audio-source.h>
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_IMAGE_SOURCE ges_image_source_get_type()
+#define GES_TYPE_AUDIO_URI_SOURCE ges_audio_uri_source_get_type()
 
-#define GES_IMAGE_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_IMAGE_SOURCE, GESImageSource))
+#define GES_AUDIO_URI_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_AUDIO_URI_SOURCE, GESAudioUriSource))
 
-#define GES_IMAGE_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_IMAGE_SOURCE, GESImageSourceClass))
+#define GES_AUDIO_URI_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_AUDIO_URI_SOURCE, GESAudioUriSourceClass))
 
-#define GES_IS_IMAGE_SOURCE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_IMAGE_SOURCE))
+#define GES_IS_AUDIO_URI_SOURCE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_AUDIO_URI_SOURCE))
 
-#define GES_IS_IMAGE_SOURCE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_IMAGE_SOURCE))
+#define GES_IS_AUDIO_URI_SOURCE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_AUDIO_URI_SOURCE))
 
-#define GES_IMAGE_SOURCE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_IMAGE_SOURCE, GESImageSourceClass))
+#define GES_AUDIO_URI_SOURCE_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_AUDIO_URI_SOURCE, GESAudioUriSourceClass))
 
-typedef struct _GESImageSourcePrivate GESImageSourcePrivate;
+typedef struct _GESAudioUriSourcePrivate GESAudioUriSourcePrivate;
 
 /**
- * GESImageSource:
+ * GESAudioUriSource:
  */
-struct _GESImageSource {
+struct _GESAudioUriSource {
   /*< private >*/
-  GESVideoSource parent;
+  GESAudioSource parent;
 
   gchar *uri;
 
-  GESImageSourcePrivate *priv;
+  GESAudioUriSourcePrivate *priv;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-struct _GESImageSourceClass {
-  GESVideoSourceClass parent_class;
+struct _GESAudioUriSourceClass {
+  /*< private >*/
+  GESAudioSourceClass parent_class;
 
   /* Padding for API extension */
   gpointer _ges_reserved[GES_PADDING];
 };
 
-GType ges_image_source_get_type (void);
+GType ges_audio_uri_source_get_type (void);
 
-GESImageSource* ges_image_source_new (gchar *uri);
+GESAudioUriSource* ges_audio_uri_source_new (gchar *uri);
 
 G_END_DECLS
 
-#endif /* _GES_IMAGE_SOURCE */
+#endif /* _GES_AUDIO_URI_SOURCE */
 
