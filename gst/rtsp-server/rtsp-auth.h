@@ -41,18 +41,6 @@ G_BEGIN_DECLS
 #define GST_RTSP_AUTH_CLASS_CAST(klass) ((GstRTSPAuthClass*)(klass))
 
 /**
- * GstRTSPAuthCheck:
- * @GST_RTSP_AUTH_CHECK_URL: Check url and method
- * @GST_RTSP_AUTH_CHECK_FACTORY: Check access to factory
- *
- * Different authorization checks
- */
-typedef enum {
-  GST_RTSP_AUTH_CHECK_URL,
-  GST_RTSP_AUTH_CHECK_FACTORY,
-} GstRTSPAuthCheck;
-
-/**
  * GstRTSPAuth:
  *
  * The authentication structure.
@@ -82,12 +70,10 @@ struct _GstRTSPAuth {
 struct _GstRTSPAuthClass {
   GObjectClass  parent_class;
 
-  gboolean           (*setup)        (GstRTSPAuth *auth, GstRTSPClient * client,
-                                      GstRTSPClientState *state);
-  gboolean           (*authenticate) (GstRTSPAuth *auth, GstRTSPClient * client,
-                                      GstRTSPClientState *state);
-  gboolean           (*check)        (GstRTSPAuth *auth, GstRTSPClient * client,
-                                      GstRTSPAuthCheck check, GstRTSPClientState *state);
+  gboolean           (*setup)        (GstRTSPAuth *auth, GstRTSPClientState *state);
+  gboolean           (*authenticate) (GstRTSPAuth *auth, GstRTSPClientState *state);
+  gboolean           (*check)        (GstRTSPAuth *auth, GstRTSPClientState *state,
+                                      const gchar *check);
 };
 
 GType               gst_rtsp_auth_get_type          (void);
@@ -98,14 +84,59 @@ void                gst_rtsp_auth_add_basic         (GstRTSPAuth *auth, const gc
                                                      GstRTSPToken *token);
 void                gst_rtsp_auth_remove_basic      (GstRTSPAuth *auth, const gchar * basic);
 
-gboolean            gst_rtsp_auth_setup             (GstRTSPAuth *auth, GstRTSPClient * client,
-                                                     GstRTSPClientState *state);
+gboolean            gst_rtsp_auth_setup             (GstRTSPAuth *auth, GstRTSPClientState *state);
 
-gboolean            gst_rtsp_auth_check             (GstRTSPAuth *auth, GstRTSPClient * client,
-                                                     GstRTSPAuthCheck check, GstRTSPClientState *state);
+gboolean            gst_rtsp_auth_check             (const gchar *check);
+
 
 /* helpers */
 gchar *             gst_rtsp_auth_make_basic        (const gchar * user, const gchar * pass);
+
+/* checks */
+/**
+ * GST_RTSP_AUTH_CHECK_URL:
+ *
+ * Check the URL and methods
+ */
+#define GST_RTSP_AUTH_CHECK_URL                      "auth.check.url"
+/**
+ * GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_ACCESS:
+ *
+ * Check if access is allowed to a factory
+ */
+#define GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_ACCESS     "auth.check.media.factory.access"
+/**
+ * GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_CONSTRUCT:
+ *
+ * Check if media can be constructed from a media factory
+ */
+#define GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_CONSTRUCT  "auth.check.media.factory.construct"
+
+
+/* tokens */
+/**
+ * GST_RTSP_MEDIA_FACTORY_ROLE:
+ *
+ * G_TYPE_STRING, the role to use when dealing with media factories
+ */
+#define GST_RTSP_MEDIA_FACTORY_ROLE      "media.factory.role"
+
+/* permissions */
+/**
+ * GST_RTSP_MEDIA_FACTORY_PERM_ACCESS:
+ *
+ * G_TYPE_BOOLEAN, %TRUE if the media can be accessed, %FALSE will
+ * return a 404 Not Found error when trying to access the media.
+ */
+#define GST_RTSP_MEDIA_FACTORY_PERM_ACCESS      "media.factory.access"
+/**
+ * GST_RTSP_MEDIA_FACTORY_PERM_CONSTRUCT:
+ *
+ * G_TYPE_BOOLEAN, %TRUE if the media can be constructed, %FALSE will
+ * return a 404 Not Found error when trying to access the media.
+ */
+#define GST_RTSP_MEDIA_FACTORY_PERM_CONSTRUCT   "media.factory.construct"
+
 
 G_END_DECLS
 

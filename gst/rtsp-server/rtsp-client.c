@@ -456,7 +456,7 @@ handle_unauthorized_request (GstRTSPClient * client, GstRTSPAuth * auth,
 
   if (auth) {
     /* and let the authentication manager setup the auth tokens */
-    gst_rtsp_auth_setup (auth, client, state);
+    gst_rtsp_auth_setup (auth, state);
   }
 
   send_message (client, state->session, state->response, FALSE);
@@ -502,8 +502,10 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state, gint * matched)
 
   state->factory = factory;
 
-  if (!gst_rtsp_auth_check (priv->auth, client, GST_RTSP_AUTH_CHECK_FACTORY,
-          state))
+  if (!gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_ACCESS))
+    goto no_factory_access;
+
+  if (!gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_CONSTRUCT))
     goto not_authorized;
 
   if (matched)
@@ -563,9 +565,15 @@ no_factory:
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
     return NULL;
   }
+no_factory_access:
+  {
+    GST_ERROR ("client %p: not authorized to see factory uri %s", client, path);
+    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
+    return NULL;
+  }
 not_authorized:
   {
-    GST_ERROR ("client %p: not authorized for factory %p", client, factory);
+    GST_ERROR ("client %p: not authorized for factory uri %s", client, path);
     handle_unauthorized_request (client, priv->auth, state);
     return NULL;
   }
@@ -1858,13 +1866,8 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   state.uri = uri;
   state.session = session;
 
-  if (priv->auth) {
-    if (!gst_rtsp_auth_check (priv->auth, client, GST_RTSP_AUTH_CHECK_URL,
-            &state))
-      goto not_authorized;
-
-    state.auth = priv->auth;
-  }
+  if (!gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_URL))
+    goto not_authorized;
 
   /* now see what is asked and dispatch to a dedicated handler */
   switch (method) {

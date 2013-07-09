@@ -46,12 +46,11 @@ static void gst_rtsp_auth_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_auth_finalize (GObject * obj);
 
-static gboolean default_setup (GstRTSPAuth * auth, GstRTSPClient * client,
-    GstRTSPClientState * state);
+static gboolean default_setup (GstRTSPAuth * auth, GstRTSPClientState * state);
 static gboolean default_authenticate (GstRTSPAuth * auth,
-    GstRTSPClient * client, GstRTSPClientState * state);
-static gboolean default_check (GstRTSPAuth * auth, GstRTSPClient * client,
-    GQuark hint, GstRTSPClientState * state);
+    GstRTSPClientState * state);
+static gboolean default_check (GstRTSPAuth * auth, GstRTSPClientState * state,
+    const gchar * check);
 
 G_DEFINE_TYPE (GstRTSPAuth, gst_rtsp_auth, G_TYPE_OBJECT);
 
@@ -197,8 +196,7 @@ gst_rtsp_auth_remove_basic (GstRTSPAuth * auth, const gchar * basic)
 }
 
 static gboolean
-default_setup (GstRTSPAuth * auth, GstRTSPClient * client,
-    GstRTSPClientState * state)
+default_setup (GstRTSPAuth * auth, GstRTSPClientState * state)
 {
   if (state->response == NULL)
     return FALSE;
@@ -221,14 +219,12 @@ default_setup (GstRTSPAuth * auth, GstRTSPClient * client,
  * Returns: FALSE if something is wrong.
  */
 gboolean
-gst_rtsp_auth_setup (GstRTSPAuth * auth, GstRTSPClient * client,
-    GstRTSPClientState * state)
+gst_rtsp_auth_setup (GstRTSPAuth * auth, GstRTSPClientState * state)
 {
   gboolean result = FALSE;
   GstRTSPAuthClass *klass;
 
   g_return_val_if_fail (GST_IS_RTSP_AUTH (auth), FALSE);
-  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), FALSE);
   g_return_val_if_fail (state != NULL, FALSE);
 
   klass = GST_RTSP_AUTH_GET_CLASS (auth);
@@ -236,14 +232,13 @@ gst_rtsp_auth_setup (GstRTSPAuth * auth, GstRTSPClient * client,
   GST_DEBUG_OBJECT (auth, "setup auth");
 
   if (klass->setup)
-    result = klass->setup (auth, client, state);
+    result = klass->setup (auth, state);
 
   return result;
 }
 
 static gboolean
-default_authenticate (GstRTSPAuth * auth, GstRTSPClient * client,
-    GstRTSPClientState * state)
+default_authenticate (GstRTSPAuth * auth, GstRTSPClientState * state)
 {
   GstRTSPAuthPrivate *priv = auth->priv;
   GstRTSPResult res;
@@ -282,41 +277,25 @@ no_auth:
 }
 
 static gboolean
-default_check (GstRTSPAuth * auth, GstRTSPClient * client,
-    GstRTSPAuthCheck check, GstRTSPClientState * state)
+ensure_authenticated (GstRTSPAuth * auth, GstRTSPClientState * state)
 {
-  GstRTSPAuthPrivate *priv = auth->priv;
   GstRTSPAuthClass *klass;
-  gboolean need_authorized = FALSE;
-  gboolean res = FALSE;
 
   klass = GST_RTSP_AUTH_GET_CLASS (auth);
 
-  switch (check) {
-    case GST_RTSP_AUTH_CHECK_URL:
-      if ((state->method & priv->methods) != 0)
-        need_authorized = TRUE;
-      else
-        res = TRUE;
-      break;
-    case GST_RTSP_AUTH_CHECK_FACTORY:
-      res = TRUE;
-      break;
-  }
-
-  if (need_authorized) {
-    /* we need a token to check */
-    if (state->token == NULL) {
-      if (klass->authenticate) {
-        if (!klass->authenticate (auth, client, state))
-          goto authenticate_failed;
-      }
+  /* we need a token to check */
+  if (state->token == NULL) {
+    if (klass->authenticate) {
+      if (!klass->authenticate (auth, state))
+        goto authenticate_failed;
     }
-    if (state->token == NULL)
-      goto no_auth;
   }
-  return res;
+  if (state->token == NULL)
+    goto no_auth;
 
+  return TRUE;
+
+/* ERRORS */
 authenticate_failed:
   {
     GST_DEBUG_OBJECT (auth, "authenticate failed");
@@ -329,37 +308,82 @@ no_auth:
   }
 }
 
+static gboolean
+default_check (GstRTSPAuth * auth, GstRTSPClientState * state,
+    const gchar * check)
+{
+  GstRTSPAuthPrivate *priv = auth->priv;
+  gboolean res = FALSE;
+
+  if (g_str_equal (check, GST_RTSP_AUTH_CHECK_URL)) {
+    if ((state->method & priv->methods) != 0)
+      res = ensure_authenticated (auth, state);
+    else
+      res = TRUE;
+  } else if (g_str_has_prefix (check, "auth.check.media.factory.")) {
+    const gchar *role;
+    GstRTSPPermissions *perms;
+
+    if (!(role =
+            gst_rtsp_token_get_string (state->token,
+                GST_RTSP_MEDIA_FACTORY_ROLE)))
+      goto done;
+    if (!(perms = gst_rtsp_media_factory_get_permissions (state->factory)))
+      goto done;
+
+    if (g_str_equal (check, "auth.check.media.factory.access"))
+      res =
+          gst_rtsp_permissions_is_allowed (perms, role,
+          GST_RTSP_MEDIA_FACTORY_PERM_ACCESS);
+    else if (g_str_equal (check, "auth.check.media.factory.construct"))
+      res =
+          gst_rtsp_permissions_is_allowed (perms, role,
+          GST_RTSP_MEDIA_FACTORY_PERM_CONSTRUCT);
+  }
+done:
+  return res;
+}
+
 /**
  * gst_rtsp_auth_check:
- * @auth: a #GstRTSPAuth
- * @client: the client
  * @check: the item to check
- * @state: client state
  *
- * Check if @client with state is authorized to perform @check in the
- * current @state.
+ * Check if @check is allowed in the current context.
  *
  * Returns: FALSE if check failed.
  */
 gboolean
-gst_rtsp_auth_check (GstRTSPAuth * auth, GstRTSPClient * client,
-    GstRTSPAuthCheck check, GstRTSPClientState * state)
+gst_rtsp_auth_check (const gchar * check)
 {
   gboolean result = FALSE;
   GstRTSPAuthClass *klass;
+  GstRTSPClientState *state;
+  GstRTSPAuth *auth;
 
-  g_return_val_if_fail (GST_IS_RTSP_AUTH (auth), FALSE);
-  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), FALSE);
-  g_return_val_if_fail (state != NULL, FALSE);
+  g_return_val_if_fail (check != NULL, FALSE);
+
+  if (!(state = gst_rtsp_client_state_get_current ()))
+    goto no_state;
+
+  /* no auth, we don't need to check */
+  if (!(auth = state->auth))
+    return TRUE;
 
   klass = GST_RTSP_AUTH_GET_CLASS (auth);
 
   GST_DEBUG_OBJECT (auth, "check auth");
 
   if (klass->check)
-    result = klass->check (auth, client, check, state);
+    result = klass->check (auth, state, check);
 
   return result;
+
+  /* ERRORS */
+no_state:
+  {
+    GST_ERROR ("no clientstate found");
+    return FALSE;
+  }
 }
 
 /**
