@@ -194,7 +194,7 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
     width = GST_VIDEO_INFO_WIDTH (&mpad->info);
     height = GST_VIDEO_INFO_HEIGHT (&mpad->info);
 
-    if (fps_n == 0 || fps_d == 0 || width == 0 || height == 0)
+    if (width == 0 || height == 0)
       continue;
 
     this_width = width + MAX (mpad->xpos, 0);
@@ -217,7 +217,7 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
     }
   }
 
-  if (best_fps_n <= 0 && best_fps_d <= 0) {
+  if (best_fps_n <= 0 || best_fps_d <= 0 || best_fps == 0.0) {
     best_fps_n = 25;
     best_fps_d = 1;
     best_fps = 25.0;
@@ -1660,7 +1660,7 @@ gst_videomixer2_sink_clip (GstCollectPads * pads,
   }
 
   end_time = GST_BUFFER_DURATION (buf);
-  if (end_time == -1)
+  if (end_time == -1 && GST_VIDEO_INFO_FPS_N (&pad->info) != 0)
     end_time =
         gst_util_uint64_scale_int (GST_SECOND,
         GST_VIDEO_INFO_FPS_D (&pad->info), GST_VIDEO_INFO_FPS_N (&pad->info));
