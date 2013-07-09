@@ -1556,77 +1556,13 @@ struct _DynPaySignalHandlers
   gulong no_more_pads_handler;
 };
 
-/**
- * gst_rtsp_media_prepare:
- * @media: a #GstRTSPMedia
- * @context: a #GMainContext to run the bus handler or %NULL
- *
- * Prepare @media for streaming. This function will create the objects
- * to manage the streaming. A pipeline must have been set on @media with
- * gst_rtsp_media_take_pipeline().
- *
- * It will preroll the pipeline and collect vital information about the streams
- * such as the duration.
- *
- * Returns: %TRUE on success.
- */
-gboolean
-gst_rtsp_media_prepare (GstRTSPMedia * media, GMainContext * context)
+static gboolean
+start_prepare (GstRTSPMedia * media)
 {
-  GstRTSPMediaPrivate *priv;
+  GstRTSPMediaPrivate *priv = media->priv;
   GstStateChangeReturn ret;
-  GstRTSPMediaStatus status;
   guint i;
-  GstRTSPMediaClass *klass;
-  GstBus *bus;
   GList *walk;
-
-  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
-
-  priv = media->priv;
-
-  g_rec_mutex_lock (&priv->state_lock);
-  priv->prepare_count++;
-
-  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED)
-    goto was_prepared;
-
-  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
-    goto wait_status;
-
-  if (priv->status != GST_RTSP_MEDIA_STATUS_UNPREPARED)
-    goto not_unprepared;
-
-  if (!priv->reusable && priv->reused)
-    goto is_reused;
-
-  priv->rtpbin = gst_element_factory_make ("rtpbin", NULL);
-  if (priv->rtpbin == NULL)
-    goto no_rtpbin;
-
-  GST_INFO ("preparing media %p", media);
-
-  /* reset some variables */
-  priv->is_live = FALSE;
-  priv->seekable = FALSE;
-  priv->buffering = FALSE;
-  /* we're preparing now */
-  priv->status = GST_RTSP_MEDIA_STATUS_PREPARING;
-
-  bus = gst_pipeline_get_bus (GST_PIPELINE_CAST (priv->pipeline));
-
-  /* add the pipeline bus to our custom mainloop */
-  priv->source = gst_bus_create_watch (bus);
-  gst_object_unref (bus);
-
-  g_source_set_callback (priv->source, (GSourceFunc) bus_message,
-      g_object_ref (media), (GDestroyNotify) watch_destroyed);
-
-  klass = GST_RTSP_MEDIA_GET_CLASS (media);
-  priv->id = g_source_attach (priv->source, context ? context : klass->context);
-
-  /* add stuff to the bin */
-  gst_bin_add (GST_BIN (priv->pipeline), priv->rtpbin);
 
   /* link streams we already have, other streams might appear when we have
    * dynamic elements */
@@ -1688,6 +1624,97 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GMainContext * context)
     case GST_STATE_CHANGE_FAILURE:
       goto state_failed;
   }
+
+  return FALSE;
+
+state_failed:
+  {
+    GST_WARNING ("failed to preroll pipeline");
+    gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_ERROR);
+    return FALSE;
+  }
+}
+
+/**
+ * gst_rtsp_media_prepare:
+ * @media: a #GstRTSPMedia
+ * @context: a #GMainContext to run the bus handler or %NULL
+ *
+ * Prepare @media for streaming. This function will create the objects
+ * to manage the streaming. A pipeline must have been set on @media with
+ * gst_rtsp_media_take_pipeline().
+ *
+ * It will preroll the pipeline and collect vital information about the streams
+ * such as the duration.
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_rtsp_media_prepare (GstRTSPMedia * media, GMainContext * context)
+{
+  GstRTSPMediaPrivate *priv;
+  GstRTSPMediaStatus status;
+  GstRTSPMediaClass *klass;
+  GstBus *bus;
+  GSource *source;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  priv = media->priv;
+
+  g_rec_mutex_lock (&priv->state_lock);
+  priv->prepare_count++;
+
+  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED)
+    goto was_prepared;
+
+  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
+    goto wait_status;
+
+  if (priv->status != GST_RTSP_MEDIA_STATUS_UNPREPARED)
+    goto not_unprepared;
+
+  if (!priv->reusable && priv->reused)
+    goto is_reused;
+
+  priv->rtpbin = gst_element_factory_make ("rtpbin", NULL);
+  if (priv->rtpbin == NULL)
+    goto no_rtpbin;
+
+  GST_INFO ("preparing media %p", media);
+
+  /* reset some variables */
+  priv->is_live = FALSE;
+  priv->seekable = FALSE;
+  priv->buffering = FALSE;
+  /* we're preparing now */
+  priv->status = GST_RTSP_MEDIA_STATUS_PREPARING;
+
+  klass = GST_RTSP_MEDIA_GET_CLASS (media);
+
+  if (context == NULL)
+    context = klass->context;
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE_CAST (priv->pipeline));
+
+  /* add the pipeline bus to our custom mainloop */
+  priv->source = gst_bus_create_watch (bus);
+  gst_object_unref (bus);
+
+  g_source_set_callback (priv->source, (GSourceFunc) bus_message,
+      g_object_ref (media), (GDestroyNotify) watch_destroyed);
+
+  priv->id = g_source_attach (priv->source, context);
+
+  /* add stuff to the bin */
+  gst_bin_add (GST_BIN (priv->pipeline), priv->rtpbin);
+
+  /* do remainder in context */
+  source = g_idle_source_new ();
+  g_source_set_callback (source, (GSourceFunc) start_prepare, media, NULL);
+  g_source_attach (source, context);
+  g_source_unref (source);
+
 wait_status:
   g_rec_mutex_unlock (&priv->state_lock);
 
@@ -1737,7 +1764,6 @@ state_failed:
   {
     GST_WARNING ("failed to preroll pipeline");
     gst_rtsp_media_unprepare (media);
-    g_rec_mutex_unlock (&priv->state_lock);
     return FALSE;
   }
 }
