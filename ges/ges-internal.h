@@ -222,7 +222,7 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_track_element   (GESBaseXmlForma
                                                                  const gchar *metadatas,
                                                                  GError **error);
 
-G_GNUC_INTERNAL void ges_base_xml_formatter_add_control_bindingi (GESBaseXmlFormatter * self,
+G_GNUC_INTERNAL void ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
                                                                   const gchar * binding_type,
                                                                   const gchar * source_type,
                                                                   const gchar * property_name,
