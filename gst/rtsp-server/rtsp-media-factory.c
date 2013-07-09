@@ -891,6 +891,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   guint size;
   GstRTSPLowerTrans protocols;
   GstRTSPAddressPool *pool;
+  GstRTSPPermissions *perms;
 
   /* configure the sharedness */
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
@@ -908,6 +909,10 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   if ((pool = gst_rtsp_media_factory_get_address_pool (factory))) {
     gst_rtsp_media_set_address_pool (media, pool);
     g_object_unref (pool);
+  }
+  if ((perms = gst_rtsp_media_factory_get_permissions (factory))) {
+    gst_rtsp_media_set_permissions (media, perms);
+    gst_rtsp_permissions_unref (perms);
   }
 }
 
