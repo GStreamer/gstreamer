@@ -90,9 +90,16 @@ gst_osx_video_sink_call_from_main_thread(GstOSXVideoSink *osxvideosink,
     NSObject * object, SEL function, NSObject *data, BOOL waitUntilDone)
 {
 
+  NSThread *thread;
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-  [object performSelector:function onThread:sink_class->ns_app_thread
+  if (sink_class->ns_app_thread == NULL){
+    thread = [NSThread mainThread];
+  } else {
+    thread = sink_class->ns_app_thread;
+  }
+
+  [object performSelector:function onThread:thread
           withObject:data waitUntilDone:waitUntilDone];
   [pool release];
 }
