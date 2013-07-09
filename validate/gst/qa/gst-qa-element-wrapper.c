@@ -79,7 +79,7 @@ gst_qa_element_wrapper_init (GstQaElementWrapper * element_wrapper)
 
 /**
  * gst_qa_element_wrapper_new:
- * @element: (transfer-full): a #GstElement to run QA on
+ * @element: (transfer-none): a #GstElement to run QA on
  */
 GstQaElementWrapper *
 gst_qa_element_wrapper_new (GstElement * element)
@@ -89,7 +89,7 @@ gst_qa_element_wrapper_new (GstElement * element)
 
   g_return_val_if_fail (element != NULL, NULL);
 
-  wrapper->element = element;
+  wrapper->element = gst_object_ref (element);
   return wrapper;
 }
 

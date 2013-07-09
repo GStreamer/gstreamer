@@ -4,6 +4,7 @@ public_headers = \
 c_sources = \
 	gst-qa-runner.c \
 	gst-qa-element-wrapper.c \
+	gst-qa-pad-wrapper.c \
 	gst-qa-wrapper-factory.c
 
 noinst_HEADERS = 

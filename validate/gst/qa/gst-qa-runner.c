@@ -68,7 +68,7 @@ gst_qa_runner_init (GstQaRunner * runner)
 
 /**
  * gst_qa_runner_new:
- * @pipeline: (transfer-full): a #GstElement to run QA on
+ * @pipeline: (transfer-none): a #GstElement to run QA on
  */
 GstQaRunner *
 gst_qa_runner_new (GstElement * pipeline)
@@ -77,7 +77,7 @@ gst_qa_runner_new (GstElement * pipeline)
 
   g_return_val_if_fail (pipeline != NULL, NULL);
 
-  runner->pipeline = pipeline;
+  runner->pipeline = gst_object_ref (pipeline);
   return runner;
 }
 
