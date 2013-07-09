@@ -63,18 +63,29 @@ static const GstVideoFormatMap gst_video_formats[] = {
     DEF_YUV(NV12, ('N','V','1','2'), LSB, 12),
     DEF_YUV(YV12, ('Y','V','1','2'), LSB, 12),
     DEF_YUV(I420, ('I','4','2','0'), LSB, 12),
+    DEF_YUV(YUY2, ('Y','U','Y','2'), LSB, 16),
+    DEF_YUV(UYVY, ('U','Y','V','Y'), LSB, 16),
     DEF_YUV(AYUV, ('A','Y','U','V'), LSB, 32),
 #if G_BYTE_ORDER == G_BIG_ENDIAN
     DEF_RGB(ARGB, ('A','R','G','B'), MSB, 32,
             32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000),
     DEF_RGB(ABGR, ('A','B','G','R'), MSB, 32,
             32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000),
+    DEF_RGB(xRGB, ('X','R','G','B'), MSB, 32,
+            24, 0x00ff0000, 0x0000ff00, 0x000000ff, 0x00000000),
+    DEF_RGB(xBGR, ('X','B','G','R'), MSB, 32,
+            24, 0x000000ff, 0x0000ff00, 0x00ff0000, 0x00000000),
 #elif G_BYTE_ORDER == G_LITTLE_ENDIAN
     DEF_RGB(BGRA, ('B','G','R','A'), LSB, 32,
             32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000),
     DEF_RGB(RGBA, ('R','G','B','A'), LSB, 32,
             32, 0x000000ff, 0x0000ff00, 0x00ff0000, 0xff000000),
+    DEF_RGB(BGRx, ('B','G','R','X'), LSB, 32,
+            24, 0x00ff0000, 0x0000ff00, 0x000000ff, 0x00000000),
+    DEF_RGB(RGBx, ('R','G','B','X'), LSB, 32,
+            24, 0x000000ff, 0x0000ff00, 0x00ff0000, 0x00000000),
 #endif
+    DEF_YUV(GRAY8, ('Y','8','0','0'), LSB, 8),
     { 0, }
 };
 

@@ -105,15 +105,27 @@ vaapi_image_is_linear(const VAImage *va_image)
     case VA_FOURCC('I','4','2','0'):
         data_size = width * height + 2 * width2 * height2;
         break;
+    case VA_FOURCC('Y','U','Y','2'):
+    case VA_FOURCC('U','Y','V','Y'):
+        data_size = 2 * width * height;
+        break;
+    case VA_FOURCC('Y','8','0','0'):
+        data_size = width * height;
+        break;
     case VA_FOURCC('A','Y','U','V'):
     case VA_FOURCC('A','R','G','B'):
     case VA_FOURCC('R','G','B','A'):
     case VA_FOURCC('A','B','G','R'):
     case VA_FOURCC('B','G','R','A'):
+    case VA_FOURCC('X','R','G','B'):
+    case VA_FOURCC('R','G','B','X'):
+    case VA_FOURCC('X','B','G','R'):
+    case VA_FOURCC('B','G','R','X'):
         data_size = 4 * width * height;
         break;
     default:
-        g_error("FIXME: incomplete formats");
+        g_error("FIXME: incomplete formats %" GST_FOURCC_FORMAT,
+                GST_FOURCC_ARGS(va_image->format.fourcc));
         break;
     }
     return va_image->data_size == data_size;
