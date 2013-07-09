@@ -38,8 +38,37 @@ G_DEFINE_TYPE_WITH_CODE (GstQaElementWrapper, gst_qa_element_wrapper,
     G_TYPE_OBJECT, _do_init);
 
 static void
+gst_qa_element_wrapper_wrap_pad (GstQaElementWrapper * wrapper, GstPad * pad);
+
+static void
+_qa_element_pad_added (GstElement * element, GstPad * pad,
+    GstQaElementWrapper * wrapper);
+
+static void
+gst_qa_element_wrapper_dispose (GObject * object)
+{
+  GstQaElementWrapper *wrapper = GST_QA_ELEMENT_WRAPPER_CAST (object);
+
+  if (wrapper->pad_added_id)
+      g_signal_handler_disconnect (wrapper->element, wrapper->pad_added_id);
+
+  g_list_free_full (wrapper->pad_wrappers, g_object_unref);
+
+  if (wrapper->element)
+    gst_object_unref (wrapper->element);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+
+static void
 gst_qa_element_wrapper_class_init (GstQaElementWrapperClass * klass)
 {
+  GObjectClass *gobject_class;
+
+  gobject_class = G_OBJECT_CLASS (klass);
+
+  gobject_class->dispose = gst_qa_element_wrapper_dispose;
 }
 
 static void
@@ -67,12 +96,56 @@ gst_qa_element_wrapper_new (GstElement * element)
 gboolean
 gst_qa_element_wrapper_setup (GstQaElementWrapper * wrapper)
 {
+  GstIterator *iterator;
+  gboolean done;
+  GstPad *pad;
+
   if (wrapper->setup)
     return TRUE;
 
   GST_DEBUG_OBJECT (wrapper, "Setting up wrapper for element %" GST_PTR_FORMAT,
       wrapper->element);
 
+  wrapper->pad_added_id = g_signal_connect (wrapper->element, "pad-added",
+      G_CALLBACK (_qa_element_pad_added), wrapper);
+
+  iterator = gst_element_iterate_pads (wrapper->element);
+  done = FALSE;
+  while (!done) {
+    switch (gst_iterator_next (iterator, (gpointer *) &pad)) {
+      case GST_ITERATOR_OK:
+        gst_qa_element_wrapper_wrap_pad (wrapper, pad);
+        gst_object_unref (pad);
+        break;
+      case GST_ITERATOR_RESYNC:
+        /* TODO how to handle this? */
+        gst_iterator_resync (iterator);
+        break;
+      case GST_ITERATOR_ERROR:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iterator);
+
   wrapper->setup = TRUE;
   return TRUE;
+}
+
+static void
+gst_qa_element_wrapper_wrap_pad (GstQaElementWrapper * wrapper, GstPad * pad)
+{
+  GST_DEBUG_OBJECT (wrapper, "Wrapping pad %s:%s", GST_DEBUG_PAD_NAME (pad));
+  /* TODO */
+}
+
+static void
+_qa_element_pad_added (GstElement * element, GstPad * pad,
+    GstQaElementWrapper * wrapper)
+{
+  g_return_if_fail (wrapper->element == element);
+  gst_qa_element_wrapper_wrap_pad (wrapper, pad);
 }

@@ -53,6 +53,8 @@ struct _GstQaElementWrapper {
   GstElement    *element;
 
   /*< private >*/
+  gulong         pad_added_id;
+  GList         *pad_wrappers;
 };
 
 /**
