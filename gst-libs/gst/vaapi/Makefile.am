@@ -70,6 +70,7 @@ libgstvaapi_source_c =				\
 	gstvaapivalue.c				\
 	gstvaapivideopool.c			\
 	gstvaapiwindow.c			\
+	video-format.c				\
 	$(NULL)
 
 libgstvaapi_source_h =				\
@@ -94,6 +95,7 @@ libgstvaapi_source_h =				\
 	gstvaapivalue.h				\
 	gstvaapivideopool.h			\
 	gstvaapiwindow.h			\
+	video-format.h				\
 	$(NULL)
 
 libgstvaapi_source_priv_h =			\
@@ -227,7 +229,7 @@ libgstvaapi_@GST_API_VERSION@_la_LIBADD =	\
 libgstvaapi_@GST_API_VERSION@_la_LDFLAGS =	\
 	$(GST_ALL_LDFLAGS)			\
 	$(GST_VAAPI_LT_LDFLAGS)			\
-	-export-symbols-regex "^gst_.*vaapi.*"	\
+	-export-symbols-regex "^gst_(.*vaapi|video_format).*" \
 	$(NULL)
 
 libgstvaapi_drm_@GST_API_VERSION@_la_SOURCES =	\
