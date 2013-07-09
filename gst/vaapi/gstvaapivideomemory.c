@@ -37,13 +37,7 @@ GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapivideomemory);
 static GstVaapiImage *
 new_image(GstVaapiDisplay *display, const GstVideoInfo *vip)
 {
-    GstVaapiImageFormat format;
-
-    format = gst_vaapi_image_format_from_video(GST_VIDEO_INFO_FORMAT(vip));
-    if (!format)
-        return NULL;
-
-    return gst_vaapi_image_new(display, format,
+    return gst_vaapi_image_new(display, GST_VIDEO_INFO_FORMAT(vip),
         GST_VIDEO_INFO_WIDTH(vip), GST_VIDEO_INFO_HEIGHT(vip));
 }
 

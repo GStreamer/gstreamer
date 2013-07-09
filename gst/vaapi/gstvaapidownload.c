@@ -79,7 +79,7 @@ struct _GstVaapiDownload {
     GstCaps            *allowed_caps;
     TransformSizeCache  transform_size_cache[2];
     GstVaapiVideoPool  *images;
-    GstVaapiImageFormat image_format;
+    GstVideoFormat      image_format;
     guint               image_width;
     guint               image_height;
     unsigned int        images_reset    : 1;
@@ -252,7 +252,7 @@ gst_vaapidownload_init(GstVaapiDownload *download)
     download->allowed_caps      = NULL;
     download->images            = NULL;
     download->images_reset      = FALSE;
-    download->image_format      = (GstVaapiImageFormat)0;
+    download->image_format      = GST_VIDEO_FORMAT_UNKNOWN;
     download->image_width       = 0;
     download->image_height      = 0;
 
@@ -293,11 +293,11 @@ gst_vaapidownload_stop(GstBaseTransform *trans)
     return TRUE;
 }
 
-static GstVaapiImageFormat
+static GstVideoFormat
 get_surface_format(GstVaapiSurface *surface)
 {
     GstVaapiImage *image;
-    GstVaapiImageFormat format = GST_VAAPI_IMAGE_NV12;
+    GstVideoFormat format = GST_VIDEO_FORMAT_NV12;
 
     /* XXX: NV12 is assumed by default */
     image = gst_vaapi_surface_derive_image(surface);
@@ -313,7 +313,7 @@ gst_vaapidownload_update_src_caps(GstVaapiDownload *download, GstBuffer *buffer)
 {
     GstVaapiVideoMeta *meta;
     GstVaapiSurface *surface;
-    GstVaapiImageFormat format;
+    GstVideoFormat format;
     GstPad *srcpad;
     GstCaps *in_caps, *out_caps;
 
@@ -334,7 +334,7 @@ gst_vaapidownload_update_src_caps(GstVaapiDownload *download, GstBuffer *buffer)
         return FALSE;
     }
 
-    out_caps = gst_vaapi_image_format_get_caps(format);
+    out_caps = gst_video_format_to_caps(format);
     if (!out_caps) {
         GST_WARNING("failed to create caps from format %" GST_FOURCC_FORMAT,
                     GST_FOURCC_ARGS(format));
@@ -485,10 +485,10 @@ static gboolean
 gst_vaapidownload_ensure_image_pool(GstVaapiDownload *download, GstCaps *caps)
 {
     GstStructure * const structure = gst_caps_get_structure(caps, 0);
-    GstVaapiImageFormat format;
+    GstVideoFormat format;
     gint width, height;
 
-    format = gst_vaapi_image_format_from_caps(caps);
+    format = gst_video_format_from_caps(caps);
     gst_structure_get_int(structure, "width",  &width);
     gst_structure_get_int(structure, "height", &height);
 

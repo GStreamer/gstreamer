@@ -141,10 +141,10 @@ ensure_allowed_caps(GstVaapiUploader *uploader)
     for (i = 0; i < n_structures; i++) {
         GstStructure * const structure = gst_caps_get_structure(image_caps, i);
         GstVaapiImage *image;
-        GstVaapiImageFormat format;
+        GstVideoFormat format;
 
-        format = gst_vaapi_image_format_from_structure(structure);
-        if (!format)
+        format = gst_video_format_from_structure(structure);
+        if (format == GST_VIDEO_FORMAT_UNKNOWN)
             continue;
         image = gst_vaapi_image_new(priv->display, format, WIDTH, HEIGHT);
         if (!image)
@@ -309,7 +309,7 @@ gst_vaapi_uploader_ensure_caps(
 {
     GstVaapiUploaderPrivate *priv;
     GstVaapiImage *image;
-    GstVaapiImageFormat vaformat;
+    GstVideoFormat format;
     GstVideoInfo vi;
 
     g_return_val_if_fail(GST_VAAPI_IS_UPLOADER(uploader), FALSE);
@@ -323,19 +323,17 @@ gst_vaapi_uploader_ensure_caps(
     priv = uploader->priv;
     priv->direct_rendering = 0;
 
-    /* Translate from Gst video format to VA image format */
+    /* Strip out non-YUV formats */
     if (!gst_video_info_from_caps(&vi, src_caps))
         return FALSE;
     if (!GST_VIDEO_INFO_IS_YUV(&vi))
         return FALSE;
-    vaformat = gst_vaapi_image_format_from_video(GST_VIDEO_INFO_FORMAT(&vi));
-    if (!vaformat)
-        return FALSE;
+    format = GST_VIDEO_INFO_FORMAT(&vi);
 
     /* Check if we can alias source and output buffers (same data_size) */
     image = gst_vaapi_video_pool_get_object(priv->images);
     if (image) {
-        if (gst_vaapi_image_get_format(image) == vaformat &&
+        if (gst_vaapi_image_get_format(image) == format &&
             gst_vaapi_image_is_linear(image) &&
             gst_vaapi_image_get_data_size(image) == GST_VIDEO_INFO_SIZE(&vi))
             priv->direct_rendering = 1;
