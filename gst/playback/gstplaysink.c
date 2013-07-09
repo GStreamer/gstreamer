@@ -3226,6 +3226,8 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
     playsink->colorbalance_element = NULL;
     GST_OBJECT_UNLOCK (playsink);
 
+    if (playsink->video_sink)
+      gst_element_set_state (playsink->video_sink, GST_STATE_NULL);
   }
 
   if (need_audio) {
@@ -3287,6 +3289,9 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       GST_DEBUG_OBJECT (playsink, "creating new audio chain");
       playsink->audiochain = gen_audio_chain (playsink, raw);
     }
+
+    if (!playsink->audiochain)
+      goto no_chain;
 
     if (!playsink->audio_sinkpad_stream_synchronizer) {
       GValue item = { 0, };
@@ -3353,6 +3358,9 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
       add_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
       activate_chain (GST_PLAY_CHAIN (playsink->audiochain), FALSE);
     }
+
+    if (playsink->audio_sink)
+      gst_element_set_state (playsink->audio_sink, GST_STATE_NULL);
   }
 
   if (need_vis) {
@@ -3500,6 +3508,9 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
 
     if (playsink->text_pad && !playsink->textchain)
       gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (playsink->text_pad), NULL);
+
+    if (playsink->text_sink)
+      gst_element_set_state (playsink->text_sink, GST_STATE_NULL);
   }
   update_av_offset (playsink);
   do_async_done (playsink);
