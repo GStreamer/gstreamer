@@ -699,6 +699,8 @@ gst_videomixer2_fill_queues (GstVideoMixer2 * mix,
 
         if (end_time == -1) {
           mixcol->queued = buf;
+          buf = gst_collect_pads_pop (mix->collect, &mixcol->collect);
+          gst_buffer_unref (buf);
           need_more_data = TRUE;
           continue;
         }
