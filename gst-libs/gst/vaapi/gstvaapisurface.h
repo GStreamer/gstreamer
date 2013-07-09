@@ -27,6 +27,7 @@
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiimage.h>
 #include <gst/vaapi/gstvaapisubpicture.h>
+#include <gst/video/video.h>
 #include <gst/video/video-overlay-composition.h>
 
 G_BEGIN_DECLS
@@ -53,9 +54,6 @@ G_BEGIN_DECLS
 
 /**
  * GstVaapiChromaType:
- * @GST_VAAPI_CHROMA_TYPE_YUV420: 4:2:0 chroma format
- * @GST_VAAPI_CHROMA_TYPE_YUV422: 4:2:2 chroma format
- * @GST_VAAPI_CHROMA_TYPE_YUV444: 4:4:4 chroma format
  * @GST_VAAPI_CHROMA_TYPE_YUV420: YUV 4:2:0 chroma format
  * @GST_VAAPI_CHROMA_TYPE_YUV422: YUV 4:2:2 chroma format
  * @GST_VAAPI_CHROMA_TYPE_YUV444: YUV 4:4:4 chroma format
@@ -139,11 +137,22 @@ gst_vaapi_surface_new(
     guint               height
 );
 
+GstVaapiSurface *
+gst_vaapi_surface_new_with_format(
+    GstVaapiDisplay    *display,
+    GstVideoFormat      format,
+    guint               width,
+    guint               height
+);
+
 GstVaapiID
 gst_vaapi_surface_get_id(GstVaapiSurface *surface);
 
 GstVaapiChromaType
 gst_vaapi_surface_get_chroma_type(GstVaapiSurface *surface);
+
+GstVideoFormat
+gst_vaapi_surface_get_format(GstVaapiSurface *surface);
 
 guint
 gst_vaapi_surface_get_width(GstVaapiSurface *surface);

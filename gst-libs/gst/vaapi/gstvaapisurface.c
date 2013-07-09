@@ -118,6 +118,7 @@ gst_vaapi_surface_create(GstVaapiSurface *surface,
     if (!vaapi_check_status(status, "vaCreateSurfaces()"))
         return FALSE;
 
+    surface->format = GST_VIDEO_FORMAT_ENCODED;
     surface->chroma_type = chroma_type;
     surface->width = width;
     surface->height = height;
@@ -130,6 +131,64 @@ gst_vaapi_surface_create(GstVaapiSurface *surface,
 error_unsupported_chroma_type:
     GST_ERROR("unsupported chroma-type %u", chroma_type);
     return FALSE;
+}
+
+static gboolean
+gst_vaapi_surface_create_with_format(GstVaapiSurface *surface,
+    GstVideoFormat format, guint width, guint height)
+{
+#if VA_CHECK_VERSION(0,34,0)
+    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(surface);
+    VASurfaceID surface_id;
+    VAStatus status;
+    guint chroma_type, va_chroma_format;
+    const VAImageFormat *va_format;
+    VASurfaceAttrib attrib;
+
+    va_format = gst_video_format_to_va_format(format);
+    if (!va_format)
+        goto error_unsupported_format;
+
+    chroma_type = gst_video_format_get_chroma_type(format);
+    if (!chroma_type)
+        goto error_unsupported_format;
+
+    va_chroma_format = from_GstVaapiChromaType(chroma_type);
+    if (!va_chroma_format)
+        goto error_unsupported_format;
+
+    attrib.flags = VA_SURFACE_ATTRIB_SETTABLE;
+    attrib.type = VASurfaceAttribPixelFormat;
+    attrib.value.type = VAGenericValueTypeInteger;
+    attrib.value.value.i = va_format->fourcc;
+
+    GST_VAAPI_DISPLAY_LOCK(display);
+    status = vaCreateSurfaces(
+        GST_VAAPI_DISPLAY_VADISPLAY(display),
+        va_chroma_format, width, height,
+        &surface_id, 1,
+        &attrib, 1
+    );
+    GST_VAAPI_DISPLAY_UNLOCK(display);
+    if (!vaapi_check_status(status, "vaCreateSurfaces()"))
+        return FALSE;
+
+    surface->format = format;
+    surface->chroma_type = chroma_type;
+    surface->width = width;
+    surface->height = height;
+
+    GST_DEBUG("surface %" GST_VAAPI_ID_FORMAT, GST_VAAPI_ID_ARGS(surface_id));
+    GST_VAAPI_OBJECT_ID(surface) = surface_id;
+    return TRUE;
+
+    /* ERRORS */
+error_unsupported_format:
+    GST_ERROR("unsupported format %u", gst_video_format_to_string(format));
+    return FALSE;
+#else
+    return FALSE;
+#endif
 }
 
 #define gst_vaapi_surface_finalize gst_vaapi_surface_destroy
@@ -173,6 +232,46 @@ error:
 }
 
 /**
+ * gst_vaapi_surface_new_with_format:
+ * @display: a #GstVaapiDisplay
+ * @format: the surface format
+ * @width: the requested surface width
+ * @height: the requested surface height
+ *
+ * Creates a new #GstVaapiSurface with the specified pixel format and
+ * dimensions.
+ *
+ * Return value: the newly allocated #GstVaapiSurface object, or %NULL
+ *   if creation of VA surface with explicit pixel format is not
+ *   supported or failed.
+ */
+GstVaapiSurface *
+gst_vaapi_surface_new_with_format(
+    GstVaapiDisplay    *display,
+    GstVideoFormat      format,
+    guint               width,
+    guint               height
+)
+{
+    GstVaapiSurface *surface;
+
+    GST_DEBUG("size %ux%u, format %s", width, height,
+              gst_video_format_to_string(format));
+
+    surface = gst_vaapi_object_new(gst_vaapi_surface_class(), display);
+    if (!surface)
+        return NULL;
+
+    if (!gst_vaapi_surface_create_with_format(surface, format, width, height))
+        goto error;
+    return surface;
+
+error:
+    gst_vaapi_object_unref(surface);
+    return NULL;
+}
+
+/**
  * gst_vaapi_surface_get_id:
  * @surface: a #GstVaapiSurface
  *
@@ -202,6 +301,24 @@ gst_vaapi_surface_get_chroma_type(GstVaapiSurface *surface)
     g_return_val_if_fail(surface != NULL, 0);
 
     return GST_VAAPI_SURFACE_CHROMA_TYPE(surface);
+}
+
+/**
+ * gst_vaapi_surface_get_format:
+ * @surface: a #GstVaapiSurface
+ *
+ * Returns the #GstVideoFormat the @surface was created with.
+ *
+ * Return value: the #GstVideoFormat, or %GST_VIDEO_FORMAT_ENCODED if
+ *   the surface was not created with an explicit video format, or if
+ *   the underlying video format could not be determined
+ */
+GstVideoFormat
+gst_vaapi_surface_get_format(GstVaapiSurface *surface)
+{
+    g_return_val_if_fail(surface != NULL, 0);
+
+    return GST_VAAPI_SURFACE_FORMAT(surface);
 }
 
 /**

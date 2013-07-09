@@ -37,6 +37,7 @@ struct _GstVaapiSurface {
     /*< private >*/
     GstVaapiObject      parent_instance;
 
+    GstVideoFormat      format;
     guint               width;
     guint               height;
     GstVaapiChromaType  chroma_type;
@@ -65,6 +66,18 @@ struct _GstVaapiSurfaceClass {
 #undef  GST_VAAPI_SURFACE_CHROMA_TYPE
 #define GST_VAAPI_SURFACE_CHROMA_TYPE(surface) \
     GST_VAAPI_SURFACE(surface)->chroma_type
+
+/**
+ * GST_VAAPI_SURFACE_SURFACE_FORMAT:
+ * @surface: a #GstVaapiSurface
+ *
+ * Macro that evaluates to the @surface format.
+ *
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_SURFACE_FORMAT
+#define GST_VAAPI_SURFACE_FORMAT(surface) \
+    GST_VAAPI_SURFACE(surface)->format
 
 /**
  * GST_VAAPI_SURFACE_SURFACE_WIDTH:
