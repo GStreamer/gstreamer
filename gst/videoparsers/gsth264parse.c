@@ -1159,12 +1159,22 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   if (G_UNLIKELY (!sps)) {
     caps = gst_caps_copy (sink_caps);
   } else {
-    if (G_UNLIKELY (h264parse->width != sps->width ||
-            h264parse->height != sps->height)) {
+    gint crop_width, crop_height;
+
+    if (sps->frame_cropping_flag) {
+      crop_width = sps->crop_rect_width;
+      crop_height = sps->crop_rect_height;
+    } else {
+      crop_width = sps->width;
+      crop_height = sps->height;
+    }
+
+    if (G_UNLIKELY (h264parse->width != crop_width ||
+            h264parse->height != crop_height)) {
       GST_INFO_OBJECT (h264parse, "resolution changed %dx%d",
-          sps->width, sps->height);
-      h264parse->width = sps->width;
-      h264parse->height = sps->height;
+          crop_width, crop_height);
+      h264parse->width = crop_width;
+      h264parse->height = crop_height;
       modified = TRUE;
     }
 
@@ -1214,12 +1224,12 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       if (s && gst_structure_has_field (s, "width"))
         gst_structure_get_int (s, "width", &width);
       else
-        width = sps->width;
+        width = h264parse->width;
 
       if (s && gst_structure_has_field (s, "height"))
         gst_structure_get_int (s, "height", &height);
       else
-        height = sps->height;
+        height = h264parse->height;
 
       gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
           "height", G_TYPE_INT, height, NULL);
