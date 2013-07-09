@@ -638,34 +638,30 @@ gst_rtp_mux_getcaps (GstPad * pad, GstRTPMux * mux, GstCaps * filter)
   GValue v = { 0 };
   GstIteratorResult res;
   GstCaps *peercaps;
-  GstCaps *othercaps = NULL;
-  GstCaps *filtered_caps;
+  GstCaps *othercaps;
 
   peercaps = gst_pad_peer_query_caps (mux->srcpad, filter);
 
   if (peercaps) {
-    othercaps = gst_caps_intersect (peercaps,
-        gst_pad_get_pad_template_caps (pad));
+    othercaps = gst_caps_intersect_full (peercaps,
+        gst_pad_get_pad_template_caps (pad), GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
   } else {
-    othercaps = gst_caps_copy (gst_pad_get_pad_template_caps (mux->srcpad));
+    if (filter)
+      othercaps = gst_caps_intersect_full (filter,
+          gst_pad_get_pad_template_caps (mux->srcpad),
+          GST_CAPS_INTERSECT_FIRST);
+    else
+      othercaps = gst_caps_copy (gst_pad_get_pad_template_caps (mux->srcpad));
   }
 
-  if (filter) {
-    filtered_caps = gst_caps_intersect (othercaps, filter);
-    gst_caps_unref (othercaps);
-  } else {
-    filtered_caps = othercaps;
-  }
-
-  filtered_caps = gst_caps_make_writable (filtered_caps);
-  clear_caps (filtered_caps, FALSE);
+  clear_caps (othercaps, FALSE);
 
   g_value_init (&v, GST_TYPE_CAPS);
 
   iter = gst_element_iterate_sink_pads (GST_ELEMENT (mux));
   do {
-    gst_value_set_caps (&v, filtered_caps);
+    gst_value_set_caps (&v, othercaps);
     res = gst_iterator_fold (iter, same_clock_rate_fold, &v, pad);
     gst_iterator_resync (iter);
   } while (res == GST_ITERATOR_RESYNC);
@@ -678,7 +674,7 @@ gst_rtp_mux_getcaps (GstPad * pad, GstRTPMux * mux, GstCaps * filter)
     caps = gst_caps_new_empty ();
   }
 
-  gst_caps_unref (filtered_caps);
+  gst_caps_unref (othercaps);
 
   return caps;
 }
