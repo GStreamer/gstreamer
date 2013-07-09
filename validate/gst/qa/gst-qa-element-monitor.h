@@ -65,6 +65,8 @@ struct _GstQaElementMonitor {
  */
 struct _GstQaElementMonitorClass {
   GObjectClass	parent_class;
+
+  gboolean (* setup) (GstQaElementMonitor * monitor);
 };
 
 /* normal GObject stuff */
