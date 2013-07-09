@@ -203,7 +203,16 @@ gst_uri_downloader_bus_handler (GstBus * bus,
 
     /* remove the sync handler to avoid duplicated messages */
     gst_bus_set_sync_handler (downloader->priv->bus, NULL, NULL, NULL);
-    gst_uri_downloader_cancel (downloader);
+
+    /* stop the download */
+    GST_OBJECT_LOCK (downloader);
+    if (downloader->priv->download != NULL) {
+      GST_DEBUG_OBJECT (downloader, "Stopping download");
+      g_object_unref (downloader->priv->download);
+      downloader->priv->download = NULL;
+      g_cond_signal (&downloader->priv->cond);
+    }
+    GST_OBJECT_UNLOCK (downloader);
   }
 
   gst_message_unref (message);
@@ -303,7 +312,7 @@ gst_uri_downloader_cancel (GstUriDownloader * downloader)
     downloader->priv->cancelled = TRUE;
     if (cancelled)
       GST_DEBUG_OBJECT (downloader,
-          "Trying to cancell a download that was alredy cancelled");
+          "Trying to cancel a download that was alredy cancelled");
   }
   GST_OBJECT_UNLOCK (downloader);
 }
@@ -378,10 +387,13 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
   GstStateChangeReturn ret;
   GstFragment *download = NULL;
 
+  GST_DEBUG_OBJECT (downloader, "Fetching URI %s", uri);
+
   g_mutex_lock (&downloader->priv->download_lock);
 
   GST_OBJECT_LOCK (downloader);
   if (downloader->priv->cancelled) {
+    GST_DEBUG_OBJECT (downloader, "Cancelled, aborting fetch");
     goto quit;
   }
 
@@ -391,10 +403,12 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
   }
 
   gst_bus_set_flushing (downloader->priv->bus, FALSE);
+  downloader->priv->download = gst_fragment_new ();
   GST_OBJECT_UNLOCK (downloader);
   ret = gst_element_set_state (downloader->priv->urisrc, GST_STATE_READY);
   GST_OBJECT_LOCK (downloader);
-  if (ret == GST_STATE_CHANGE_FAILURE) {
+  if (ret == GST_STATE_CHANGE_FAILURE || downloader->priv->download == NULL) {
+    GST_WARNING_OBJECT (downloader, "Failed to set src to READY");
     goto quit;
   }
 
@@ -408,7 +422,6 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
     goto quit;
   }
 
-  downloader->priv->download = gst_fragment_new ();
   GST_OBJECT_UNLOCK (downloader);
   ret = gst_element_set_state (downloader->priv->urisrc, GST_STATE_PLAYING);
   GST_OBJECT_LOCK (downloader);
