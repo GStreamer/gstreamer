@@ -434,7 +434,7 @@ static gboolean
 _check_queue_full (GstDataQueue * q, guint visible, guint bytes, guint64 time,
     GstDashDemux * demux)
 {
-  return time <= demux->max_buffering_time;
+  return time >= demux->max_buffering_time;
 }
 
 static void
