@@ -71,7 +71,7 @@ main(int argc, char *argv[])
     if (!surface)
         g_error("could not create VA surface");
 
-    image = image_generate(display, GST_VAAPI_IMAGE_NV12, width, height);
+    image = image_generate(display, GST_VIDEO_FORMAT_NV12, width, height);
     if (!image)
         g_error("could not create VA image");
     if (!image_upload(image, surface))

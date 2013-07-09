@@ -52,24 +52,24 @@ create_test_surface(GstVaapiDisplay *display, guint width, guint height)
     guint i;
 
     static const GstVaapiChromaType  chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
-    static const GstVaapiImageFormat image_formats[] = {
-        GST_VAAPI_IMAGE_NV12,
-        GST_VAAPI_IMAGE_YV12,
-        GST_VAAPI_IMAGE_I420,
-        GST_VAAPI_IMAGE_AYUV,
-        GST_VAAPI_IMAGE_ARGB,
-        GST_VAAPI_IMAGE_BGRA,
-        GST_VAAPI_IMAGE_RGBA,
-        GST_VAAPI_IMAGE_ABGR,
-        0
+    static const GstVideoFormat image_formats[] = {
+        GST_VIDEO_FORMAT_NV12,
+        GST_VIDEO_FORMAT_YV12,
+        GST_VIDEO_FORMAT_I420,
+        GST_VIDEO_FORMAT_AYUV,
+        GST_VIDEO_FORMAT_ARGB,
+        GST_VIDEO_FORMAT_BGRA,
+        GST_VIDEO_FORMAT_RGBA,
+        GST_VIDEO_FORMAT_ABGR,
+        GST_VIDEO_FORMAT_UNKNOWN
     };
 
     surface = gst_vaapi_surface_new(display, chroma_type, width, height);
     if (!surface)
         g_error("could not create Gst/VA surface");
 
-    for (i = 0; image_formats[i]; i++) {
-        const GstVaapiImageFormat format = image_formats[i];
+    for (i = 0; image_formats[i] != GST_VIDEO_FORMAT_UNKNOWN; i++) {
+        const GstVideoFormat format = image_formats[i];
 
         image = image_generate(display, format, width, height);
         if (!image)

@@ -28,7 +28,7 @@
 GstVaapiImage *
 image_generate(
     GstVaapiDisplay    *display,
-    GstVaapiImageFormat format,
+    GstVideoFormat      format,
     guint               width,
     guint               height
 );

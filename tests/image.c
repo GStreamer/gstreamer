@@ -24,7 +24,7 @@
 GstVaapiImage *
 image_generate(
     GstVaapiDisplay    *display,
-    GstVaapiImageFormat format,
+    GstVideoFormat      format,
     guint               width,
     guint               height
 )
@@ -257,7 +257,7 @@ image_draw_rectangle(
     guint32        color
 )
 {
-    const GstVaapiImageFormat image_format = gst_vaapi_image_get_format(image);
+    const GstVideoFormat      image_format = gst_vaapi_image_get_format(image);
     const guint               image_width  = gst_vaapi_image_get_width(image);
     const guint               image_height = gst_vaapi_image_get_height(image);
     GstVaapiDisplay          *display;
@@ -267,11 +267,11 @@ image_draw_rectangle(
     guint                     i;
 
     static const struct {
-        GstVaapiImageFormat   format;
+        GstVideoFormat        format;
         DrawRectFunc          draw_rect;
     }
     map[] = {
-#define _(FORMAT) { GST_VAAPI_IMAGE_##FORMAT, draw_rect_##FORMAT }
+#define _(FORMAT) { GST_VIDEO_FORMAT_##FORMAT, draw_rect_##FORMAT }
         _(ARGB),
         _(BGRA),
         _(RGBA),
@@ -302,7 +302,7 @@ image_draw_rectangle(
         stride[i] = gst_vaapi_image_get_pitch(image, i);
     }
 
-    if (gst_vaapi_image_format_is_yuv(image_format))
+    if (gst_video_format_is_yuv(image_format))
         color = argb2yuv(color);
 
     if (x < 0)
@@ -324,7 +324,7 @@ gboolean
 image_upload(GstVaapiImage *image, GstVaapiSurface *surface)
 {
     GstVaapiDisplay    *display;
-    GstVaapiImageFormat format;
+    GstVideoFormat      format;
     GstVaapiSubpicture *subpicture;
 
     display = gst_vaapi_object_get_display(GST_VAAPI_OBJECT(surface));

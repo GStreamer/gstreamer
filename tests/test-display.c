@@ -126,22 +126,22 @@ print_format_caps(GstCaps *caps, const gchar *name)
     for (i = 0; i < gst_caps_get_size(caps); i++) {
         GstStructure * const structure = gst_caps_get_structure(caps, i);
         const VAImageFormat *va_format;
-        GstVaapiImageFormat format;
+        GstVideoFormat format;
 
         if (!structure)
             g_error("could not get caps structure %d", i);
 
         g_print("  %s:", gst_structure_get_name(structure));
 
-        format = gst_vaapi_image_format_from_structure(structure);
-        if (!format)
+        format = gst_video_format_from_structure(structure);
+        if (format == GST_VIDEO_FORMAT_UNKNOWN)
             g_error("could not determine format");
 
-        va_format = gst_vaapi_image_format_get_va_format(format);
+        va_format = gst_video_format_to_va_format(format);
         if (!va_format)
             g_error("could not determine VA format");
 
-        if (gst_vaapi_image_format_is_yuv(format))
+        if (gst_video_format_is_yuv(format))
             print_format_caps_yuv(va_format);
         else
             print_format_caps_rgb(va_format);
