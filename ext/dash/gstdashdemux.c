@@ -1435,6 +1435,155 @@ gst_dash_demux_all_streams_have_data (GstDashDemux * demux)
   return TRUE;
 }
 
+static GstFlowReturn
+gst_dash_demux_refresh_mpd (GstDashDemux * demux)
+{
+  GstFragment *download;
+  GstBuffer *buffer;
+  GstClockTime duration, now = gst_util_get_timestamp ();
+  gint64 update_period = demux->client->mpd_node->minimumUpdatePeriod;
+
+  if (update_period == -1) {
+    GST_DEBUG_OBJECT (demux, "minimumUpdatePeriod unspecified, "
+        "will not update MPD");
+    return GST_FLOW_OK;
+  }
+
+  /* init reference time for manifest file updates */
+  if (!GST_CLOCK_TIME_IS_VALID (demux->last_manifest_update))
+    demux->last_manifest_update = now;
+
+  GST_DEBUG_OBJECT (demux,
+      "Next update: %" GST_TIME_FORMAT " now: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS ((demux->last_manifest_update +
+              update_period * GST_MSECOND)), GST_TIME_ARGS (now));
+
+  /* update the manifest file */
+  if (now >= demux->last_manifest_update + update_period * GST_MSECOND) {
+    GST_DEBUG_OBJECT (demux, "Updating manifest file from URL %s",
+        demux->client->mpd_uri);
+    download = gst_uri_downloader_fetch_uri (demux->downloader,
+        demux->client->mpd_uri);
+    if (download) {
+      GstMpdClient *new_client = NULL;
+
+      buffer = gst_fragment_get_buffer (download);
+      g_object_unref (download);
+      /* parse the manifest file */
+      if (buffer != NULL) {
+        GstMapInfo mapinfo;
+
+        new_client = gst_mpd_client_new ();
+        new_client->mpd_uri = g_strdup (demux->client->mpd_uri);
+
+        gst_buffer_map (buffer, &mapinfo, GST_MAP_READ);
+
+        if (gst_mpd_parse (new_client, (gchar *) mapinfo.data, mapinfo.size)) {
+          const gchar *period_id;
+          guint period_idx;
+          GSList *iter;
+
+          /* prepare the new manifest and try to transfer the stream position
+           * status from the old manifest client  */
+
+          gst_buffer_unmap (buffer, &mapinfo);
+          gst_buffer_unref (buffer);
+
+          GST_DEBUG_OBJECT (demux, "Updating manifest");
+
+          period_id = gst_mpd_client_get_period_id (demux->client);
+          period_idx = gst_mpd_client_get_period_index (demux->client);
+
+          /* setup video, audio and subtitle streams, starting from current Period */
+          if (!gst_mpd_client_setup_media_presentation (new_client)) {
+            /* TODO */
+          }
+
+          if (period_idx) {
+            if (!gst_mpd_client_set_period_id (new_client, period_id)) {
+              GST_DEBUG_OBJECT (demux,
+                  "Error setting up the updated manifest file");
+              return GST_FLOW_EOS;
+            }
+          } else {
+            if (!gst_mpd_client_set_period_index (new_client, period_idx)) {
+              GST_DEBUG_OBJECT (demux,
+                  "Error setting up the updated manifest file");
+              return GST_FLOW_EOS;
+            }
+          }
+
+          gst_dash_demux_setup_mpdparser_streams (demux, new_client);
+
+          /* update the streams to play from the next segment */
+          for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+            GstDashDemuxStream *demux_stream = iter->data;
+            GstActiveStream *new_stream;
+            GstClockTime ts;
+
+            new_stream =
+                gst_mpdparser_get_active_stream_by_index (new_client,
+                demux_stream->index);
+
+            if (!new_stream) {
+              GST_DEBUG_OBJECT (demux,
+                 "Stream of index %d is missing from manifest update",
+                  demux_stream->index);
+              return GST_FLOW_EOS;
+            }
+
+            if (gst_mpd_client_get_next_fragment_timestamp (demux->client,
+                    demux_stream->index, &ts)) {
+              gst_mpd_client_stream_seek (new_client, new_stream, ts);
+            } else
+                if (gst_mpd_client_get_last_fragment_timestamp (demux->client,
+                    demux_stream->index, &ts)) {
+              /* try to set to the old timestamp + 1 */
+              gst_mpd_client_stream_seek (new_client, new_stream, ts + 1);
+            }
+          }
+
+          gst_mpd_client_free (demux->client);
+          demux->client = new_client;
+
+          /* Send an updated duration message */
+          duration =
+              gst_mpd_client_get_media_presentation_duration (demux->client);
+
+          if (duration != GST_CLOCK_TIME_NONE) {
+            GST_DEBUG_OBJECT (demux,
+                "Sending duration message : %" GST_TIME_FORMAT,
+                GST_TIME_ARGS (duration));
+            gst_element_post_message (GST_ELEMENT (demux),
+                gst_message_new_duration_changed (GST_OBJECT (demux)));
+          } else {
+            GST_DEBUG_OBJECT (demux,
+                "mediaPresentationDuration unknown, can not send the duration message");
+          }
+          demux->last_manifest_update = gst_util_get_timestamp ();
+          GST_DEBUG_OBJECT (demux, "Manifest file successfully updated");
+        } else {
+          /* In most cases, this will happen if we set a wrong url in the
+           * source element and we have received the 404 HTML response instead of
+           * the manifest */
+          GST_WARNING_OBJECT (demux, "Error parsing the manifest.");
+          gst_buffer_unmap (buffer, &mapinfo);
+          gst_buffer_unref (buffer);
+        }
+      } else {
+        /* download suceeded, but resulting buffer is NULL */
+        GST_WARNING_OBJECT (demux, "Error validating the manifest.");
+      }
+    } else {
+      /* download failed */
+      GST_WARNING_OBJECT (demux,
+          "Failed to update the manifest file from URL %s",
+          demux->client->mpd_uri);
+    }
+  }
+  return GST_FLOW_OK;
+}
+
 /* gst_dash_demux_download_loop:
  * 
  * Loop for the "download' task that fetches fragments based on the 
@@ -1466,145 +1615,18 @@ gst_dash_demux_all_streams_have_data (GstDashDemux * demux)
 void
 gst_dash_demux_download_loop (GstDashDemux * demux)
 {
-  gint64 update_period = demux->client->mpd_node->minimumUpdatePeriod;
   GstClockTime fragment_ts = GST_CLOCK_TIME_NONE;
   GstActiveStream *fragment_stream = NULL;
 
   GST_LOG_OBJECT (demux, "Starting download loop");
 
   if (gst_mpd_client_is_live (demux->client)
-      && demux->client->mpd_uri != NULL && update_period != -1) {
-    GstFragment *download;
-    GstBuffer *buffer;
-    GstClockTime duration, now = gst_util_get_timestamp ();
-
-    /* init reference time for manifest file updates */
-    if (!GST_CLOCK_TIME_IS_VALID (demux->last_manifest_update))
-      demux->last_manifest_update = now;
-
-    GST_DEBUG_OBJECT (demux,
-        "Next update: %" GST_TIME_FORMAT " now: %" GST_TIME_FORMAT,
-        GST_TIME_ARGS ((demux->last_manifest_update +
-                update_period * GST_MSECOND)), GST_TIME_ARGS (now));
-    /* update the manifest file */
-    if (now >= demux->last_manifest_update + update_period * GST_MSECOND) {
-      GST_DEBUG_OBJECT (demux, "Updating manifest file from URL %s",
-          demux->client->mpd_uri);
-      download =
-          gst_uri_downloader_fetch_uri (demux->downloader,
-          demux->client->mpd_uri);
-      if (download == NULL) {
-        GST_WARNING_OBJECT (demux,
-            "Failed to update the manifest file from URL %s",
-            demux->client->mpd_uri);
-      } else {
-        GstMpdClient *new_client = NULL;
-        buffer = gst_fragment_get_buffer (download);
-        g_object_unref (download);
-        /* parse the manifest file */
-        if (buffer == NULL) {
-          GST_WARNING_OBJECT (demux, "Error validating the manifest.");
-        } else {
-          GstMapInfo mapinfo;
-          new_client = gst_mpd_client_new ();
-          new_client->mpd_uri = g_strdup (demux->client->mpd_uri);
-
-          gst_buffer_map (buffer, &mapinfo, GST_MAP_READ);
-
-          if (!gst_mpd_parse (new_client, (gchar *) mapinfo.data, mapinfo.size)) {
-            /* In most cases, this will happen if we set a wrong url in the
-             * source element and we have received the 404 HTML response instead of
-             * the manifest */
-            GST_WARNING_OBJECT (demux, "Error parsing the manifest.");
-            gst_buffer_unmap (buffer, &mapinfo);
-            gst_buffer_unref (buffer);
-          } else {
-            const gchar *period_id;
-            guint period_idx;
-            GSList *iter;
-
-            /* prepare the new manifest and try to transfer the stream position
-             * status from the old manifest client  */
-
-            gst_buffer_unmap (buffer, &mapinfo);
-            gst_buffer_unref (buffer);
-
-            GST_DEBUG_OBJECT (demux, "Updating manifest");
-
-            period_id = gst_mpd_client_get_period_id (demux->client);
-            period_idx = gst_mpd_client_get_period_index (demux->client);
-
-            /* setup video, audio and subtitle streams, starting from current Period */
-            if (!gst_mpd_client_setup_media_presentation (new_client)) {
-              /* TODO */
-            }
-
-            if (period_idx) {
-              if (!gst_mpd_client_set_period_id (new_client, period_id)) {
-                GST_DEBUG_OBJECT (demux,
-                    "Error setting up the updated manifest file");
-                goto end_of_manifest;
-              }
-            } else {
-              if (!gst_mpd_client_set_period_index (new_client, period_idx)) {
-                GST_DEBUG_OBJECT (demux,
-                    "Error setting up the updated manifest file");
-                goto end_of_manifest;
-              }
-            }
-
-            gst_dash_demux_setup_mpdparser_streams (demux, new_client);
-
-            /* update the streams to play from the next segment */
-            for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
-              GstDashDemuxStream *demux_stream = iter->data;
-              GstActiveStream *new_stream;
-              GstClockTime ts;
-
-              new_stream =
-                  gst_mpdparser_get_active_stream_by_index (new_client,
-                  demux_stream->index);
-
-              if (!new_stream) {
-                GST_DEBUG_OBJECT (demux,
-                    "Stream of index %d is missing from manifest update",
-                    demux_stream->index);
-                goto end_of_manifest;
-              }
-
-              if (gst_mpd_client_get_next_fragment_timestamp (demux->client,
-                      demux_stream->index, &ts)) {
-                gst_mpd_client_stream_seek (new_client, new_stream, ts);
-              } else
-                  if (gst_mpd_client_get_last_fragment_timestamp (demux->client,
-                      demux_stream->index, &ts)) {
-                /* try to set to the old timestamp + 1 */
-                gst_mpd_client_stream_seek (new_client, new_stream, ts + 1);
-              }
-            }
-
-            gst_mpd_client_free (demux->client);
-            demux->client = new_client;
-
-            /* Send an updated duration message */
-            duration =
-                gst_mpd_client_get_media_presentation_duration (demux->client);
-
-            if (duration != GST_CLOCK_TIME_NONE) {
-              GST_DEBUG_OBJECT (demux,
-                  "Sending duration message : %" GST_TIME_FORMAT,
-                  GST_TIME_ARGS (duration));
-              gst_element_post_message (GST_ELEMENT (demux),
-                  gst_message_new_duration_changed (GST_OBJECT (demux)));
-            } else {
-              GST_DEBUG_OBJECT (demux,
-                  "mediaPresentationDuration unknown, can not send the duration message");
-            }
-            demux->last_manifest_update = gst_util_get_timestamp ();
-            GST_DEBUG_OBJECT (demux, "Manifest file successfully updated");
-          }
-        }
-      }
+      && demux->client->mpd_uri != NULL) {
+    switch (gst_dash_demux_refresh_mpd (demux)) {
+      case GST_FLOW_EOS:
+        goto end_of_manifest;
+      default:
+        break;
     }
   }
 
@@ -1632,9 +1654,12 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
       /* start playing from the first segment of the new period */
       gst_mpd_client_set_segment_index_for_all_streams (demux->client, 0);
       demux->end_of_period = FALSE;
+
     } else if (!demux->cancelled) {
-      /* in case this is live, we might be ahead or before playback, so we
-       * either wait or jump ahead */
+      /* Download failed 'by itself'
+       * in case this is live, we might be ahead or before playback, where
+       * segments don't exist (are still being created or were already deleted)
+       * so we either wait or jump ahead */
       if (gst_mpd_client_is_live (demux->client)) {
         gint64 time_diff;
         gint pos;
@@ -1659,6 +1684,9 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
 
         } else if (pos > 0) {
           /* we're ahead, wait a little */
+
+          GST_DEBUG_OBJECT (demux,
+              "Waiting for next segment to be created");
           gst_mpd_client_set_segment_index (fragment_stream,
               fragment_stream->segment_idx - 1);
           gst_dash_demux_download_wait (demux, time_diff);
@@ -1670,6 +1698,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
       } else {
         demux->client->update_failed_count++;
       }
+
       if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
         GST_WARNING_OBJECT (demux, "Could not fetch the next fragment");
         goto quit;
@@ -1678,10 +1707,9 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
       }
     } else if (demux->cancelled) {
       goto cancelled;
-    } else {
-      goto quit;
     }
   }
+
   GST_INFO_OBJECT (demux, "Internal buffering : %" PRIu64 " s",
       gst_dash_demux_get_buffering_time (demux) / GST_SECOND);
   demux->client->update_failed_count = 0;
