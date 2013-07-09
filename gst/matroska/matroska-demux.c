@@ -2052,6 +2052,7 @@ next:
   /* ouch */
   if (!update) {
     GST_PAD_STREAM_LOCK (demux->common.sinkpad);
+    pad_locked = TRUE;
     goto exit;
   }
 
