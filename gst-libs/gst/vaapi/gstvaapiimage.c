@@ -735,13 +735,11 @@ init_image_from_buffer(GstVaapiImageRaw *raw_image, GstBuffer *buffer)
 static gboolean
 init_image_from_buffer(GstVaapiImageRaw *raw_image, GstBuffer *buffer)
 {
-    GstStructure *structure;
     GstCaps *caps;
-    GstVideoFormat format;
-    guint width2, height2, size2;
-    gint width, height;
     guchar *data;
     guint32 data_size;
+    GstVideoInfo vi;
+    guint i, frame_size;
 
     data      = GST_BUFFER_DATA(buffer);
     data_size = GST_BUFFER_SIZE(buffer);
@@ -750,63 +748,33 @@ init_image_from_buffer(GstVaapiImageRaw *raw_image, GstBuffer *buffer)
     if (!caps)
         return FALSE;
 
-    format = gst_video_format_from_caps(caps);
+    if (!gst_video_info_from_caps(&vi, caps))
+        goto error_unsupported_caps;
 
-    structure = gst_caps_get_structure(caps, 0);
-    gst_structure_get_int(structure, "width",  &width);
-    gst_structure_get_int(structure, "height", &height);
+    /* Check for compatible data size */
+    frame_size = GST_VIDEO_INFO_SIZE(&vi);
+    if (frame_size != data_size)
+        goto error_incompatible_size;
 
-    /* XXX: copied from gst_video_format_get_row_stride() -- no NV12? */
-    raw_image->format = format;
-    raw_image->width  = width;
-    raw_image->height = height;
-    width2  = (width + 1) / 2;
-    height2 = (height + 1) / 2;
-    size2   = 0;
-    switch (format) {
-    case GST_VIDEO_FORMAT_NV12:
-        raw_image->num_planes = 2;
-        raw_image->pixels[0]  = data;
-        raw_image->stride[0]  = GST_ROUND_UP_4(width);
-        size2                += height * raw_image->stride[0];
-        raw_image->pixels[1]  = data + size2;
-        raw_image->stride[1]  = raw_image->stride[0];
-        size2                += height2 * raw_image->stride[1];
-        break;
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_I420:
-        raw_image->num_planes = 3;
-        raw_image->pixels[0]  = data;
-        raw_image->stride[0]  = GST_ROUND_UP_4(width);
-        size2                += height * raw_image->stride[0];
-        raw_image->pixels[1]  = data + size2;
-        raw_image->stride[1]  = GST_ROUND_UP_4(width2);
-        size2                += height2 * raw_image->stride[1];
-        raw_image->pixels[2]  = data + size2;
-        raw_image->stride[2]  = raw_image->stride[1];
-        size2                += height2 * raw_image->stride[2];
-        break;
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_BGRA:
-        raw_image->num_planes = 1;
-        raw_image->pixels[0]  = data;
-        raw_image->stride[0]  = width * 4;
-        size2                += height * raw_image->stride[0];
-        break;
-    default:
-        g_error("could not compute row-stride for %" GST_FOURCC_FORMAT,
-                GST_FOURCC_ARGS(format));
-        return FALSE;
-    }
+    raw_image->format = GST_VIDEO_INFO_FORMAT(&vi);
+    raw_image->width  = GST_VIDEO_INFO_WIDTH(&vi);
+    raw_image->height = GST_VIDEO_INFO_HEIGHT(&vi);
 
-    if (size2 != data_size) {
-        g_error("data_size mismatch %d / %u", size2, data_size);
-        if (size2 > data_size)
-            return FALSE;
+    raw_image->num_planes = GST_VIDEO_INFO_N_PLANES(&vi);
+    for (i = 0; i < raw_image->num_planes; i++) {
+        raw_image->pixels[i] = data + GST_VIDEO_INFO_PLANE_OFFSET(&vi, i);
+        raw_image->stride[i] = GST_VIDEO_INFO_PLANE_STRIDE(&vi, i);
     }
     return TRUE;
+
+    /* ERRORS */
+error_unsupported_caps:
+    GST_ERROR("unsupported caps %" GST_PTR_FORMAT, caps);
+    return FALSE;
+error_incompatible_size:
+    GST_ERROR("incompatible frame size (%u) with buffer size (%u)",
+              frame_size, data_size);
+    return FALSE;
 }
 #endif
 
