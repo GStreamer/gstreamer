@@ -1780,6 +1780,22 @@ client_session_finalized (GstRTSPClient * client, GstRTSPSession * session)
   }
 }
 
+static GPrivate state_key;
+
+/**
+ * gst_rtsp_client_state_get_current:
+ *
+ * Get the current #GstRTSPClientState. This object is retrieved from the
+ * current thread that is handling the request for a client.
+ *
+ * Returns: a #GstRTSPClientState
+ */
+GstRTSPClientState *
+gst_rtsp_client_state_get_current (void)
+{
+  return g_private_get (&state_key);
+}
+
 static void
 handle_request (GstRTSPClient * client, GstRTSPMessage * request)
 {
@@ -1794,8 +1810,11 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   GstRTSPMessage response = { 0 };
   gchar *sessid;
 
+  state.client = client;
   state.request = request;
   state.response = &response;
+  state.auth = priv->auth;
+  g_private_set (&state_key, &state);
 
   if (gst_debug_category_get_threshold (rtsp_client_debug) >= GST_LEVEL_LOG) {
     gst_rtsp_message_dump (request);
@@ -1883,6 +1902,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   }
 
 done:
+  g_private_set (&state_key, NULL);
   if (session)
     g_object_unref (session);
   if (uri)

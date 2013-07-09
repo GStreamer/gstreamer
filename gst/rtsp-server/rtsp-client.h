@@ -49,6 +49,7 @@ typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
 
 /**
  * GstRTSPClientState:
+ * @client: the client
  * @request: the complete request
  * @uri: the complete url parsed from @request
  * @method: the parsed method of @uri
@@ -64,6 +65,7 @@ typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
  * Information passed around containing the client state of a request.
  */
 struct _GstRTSPClientState {
+  GstRTSPClient       *client;
   GstRTSPMessage      *request;
   GstRTSPUrl          *uri;
   GstRTSPMethod        method;
@@ -76,6 +78,8 @@ struct _GstRTSPClientState {
   GstRTSPStream       *stream;
   GstRTSPMessage      *response;
 };
+
+GstRTSPClientState * gst_rtsp_client_state_get_current   (void);
 
 /**
  * GstRTSPClientSendFunc:
