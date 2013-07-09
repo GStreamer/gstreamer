@@ -216,8 +216,11 @@ static void gst_dash_demux_resume_stream_task (GstDashDemux * demux);
 static void gst_dash_demux_resume_download_task (GstDashDemux * demux);
 static gboolean gst_dash_demux_setup_all_streams (GstDashDemux * demux);
 static gboolean gst_dash_demux_select_representations (GstDashDemux * demux);
-static gboolean gst_dash_demux_get_next_fragment (GstDashDemux * demux);
+static gboolean gst_dash_demux_get_next_fragment (GstDashDemux * demux,
+    GstActiveStream ** stream, GstClockTime * next_ts);
 static gboolean gst_dash_demux_advance_period (GstDashDemux * demux);
+static void gst_dash_demux_download_wait (GstDashDemux * demux,
+    GstClockTime time_diff);
 
 static void gst_dash_demux_expose_streams (GstDashDemux * demux);
 static void gst_dash_demux_remove_streams (GstDashDemux * demux,
@@ -254,6 +257,8 @@ gst_dash_demux_dispose (GObject * obj)
     g_rec_mutex_clear (&demux->download_task_lock);
     demux->download_task = NULL;
   }
+  g_cond_clear (&demux->download_cond);
+  g_mutex_clear (&demux->download_mutex);
 
   if (demux->downloader != NULL) {
     g_object_unref (demux->downloader);
@@ -342,6 +347,8 @@ gst_dash_demux_init (GstDashDemux * demux)
       gst_task_new ((GstTaskFunction) gst_dash_demux_download_loop, demux,
       NULL);
   gst_task_set_lock (demux->download_task, &demux->download_task_lock);
+  g_cond_init (&demux->download_cond);
+  g_mutex_init (&demux->download_mutex);
 
   /* Streaming task */
   g_rec_mutex_init (&demux->stream_task_lock);
@@ -998,6 +1005,9 @@ gst_dash_demux_stop (GstDashDemux * demux)
   if (GST_TASK_STATE (demux->download_task) != GST_TASK_STOPPED) {
     GST_TASK_SIGNAL (demux->download_task);
     gst_task_stop (demux->download_task);
+    g_mutex_lock (&demux->download_mutex);
+    g_cond_signal (&demux->download_cond);
+    g_mutex_unlock (&demux->download_mutex);
     g_rec_mutex_lock (&demux->download_task_lock);
     g_rec_mutex_unlock (&demux->download_task_lock);
     gst_task_join (demux->download_task);
@@ -1457,6 +1467,8 @@ void
 gst_dash_demux_download_loop (GstDashDemux * demux)
 {
   gint64 update_period = demux->client->mpd_node->minimumUpdatePeriod;
+  GstClockTime fragment_ts = GST_CLOCK_TIME_NONE;
+  GstActiveStream *fragment_stream = NULL;
 
   GST_LOG_OBJECT (demux, "Starting download loop");
 
@@ -1604,7 +1616,8 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
   }
 
   /* fetch the next fragment */
-  while (!gst_dash_demux_get_next_fragment (demux)) {
+  while (!gst_dash_demux_get_next_fragment (demux, &fragment_stream,
+          &fragment_ts)) {
     if (demux->end_of_period) {
       GST_INFO_OBJECT (demux, "Reached the end of the Period");
       /* setup video, audio and subtitle streams, starting from the next Period */
@@ -1620,7 +1633,43 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
       gst_mpd_client_set_segment_index_for_all_streams (demux->client, 0);
       demux->end_of_period = FALSE;
     } else if (!demux->cancelled) {
-      demux->client->update_failed_count++;
+      /* in case this is live, we might be ahead or before playback, so we
+       * either wait or jump ahead */
+      if (gst_mpd_client_is_live (demux->client)) {
+        gint64 time_diff;
+        gint pos;
+
+        pos =
+            gst_mpd_client_check_time_position (demux->client, fragment_stream,
+            fragment_ts, &time_diff);
+        GST_DEBUG_OBJECT (demux,
+            "Checked position for fragment ts %" GST_TIME_FORMAT
+            ", res: %d, diff: %" G_GINT64_FORMAT, GST_TIME_ARGS (fragment_ts),
+            pos, time_diff);
+
+        time_diff *= GST_USECOND;
+        if (pos < 0) {
+          /* we're behind, try moving to the 'present' */
+          GDateTime *now = g_date_time_new_now_utc ();
+
+          GST_DEBUG_OBJECT (demux,
+              "Falling behind live stream, moving forward");
+          gst_mpd_client_seek_to_time (demux->client, now);
+          g_date_time_unref (now);
+
+        } else if (pos > 0) {
+          /* we're ahead, wait a little */
+          gst_mpd_client_set_segment_index (fragment_stream,
+              fragment_stream->segment_idx - 1);
+          gst_dash_demux_download_wait (demux, time_diff);
+        } else {
+          gst_mpd_client_set_segment_index (fragment_stream,
+              fragment_stream->segment_idx - 1);
+          demux->client->update_failed_count++;
+        }
+      } else {
+        demux->client->update_failed_count++;
+      }
       if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
         GST_WARNING_OBJECT (demux, "Could not fetch the next fragment");
         goto quit;
@@ -1920,6 +1969,8 @@ gst_dash_demux_get_input_caps (GstDashDemux * demux, GstActiveStream * stream)
 /* gst_dash_demux_get_next_fragment:
  *
  * Get the next fragments for the stream with the earlier timestamp.
+ * It returns the selected timestamp so the caller can deal with
+ * sync issues in case the stream is live.
  * 
  * This function uses the generic URI downloader API.
  *
@@ -1927,7 +1978,8 @@ gst_dash_demux_get_input_caps (GstDashDemux * demux, GstActiveStream * stream)
  * 
  */
 static gboolean
-gst_dash_demux_get_next_fragment (GstDashDemux * demux)
+gst_dash_demux_get_next_fragment (GstDashDemux * demux,
+    GstActiveStream ** stream, GstClockTime * selected_ts)
 {
   GstActiveStream *active_stream;
   GstFragment *download;
@@ -1985,6 +2037,12 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
       gst_dash_demux_stream_push_event (stream, event);
     }
   }
+  if (selected_ts)
+    *selected_ts = best_time;
+  if (stream && selected_stream)
+    *stream =
+        gst_mpdparser_get_active_stream_by_index (demux->client,
+        selected_stream->index);
 
   /* Get the fragment corresponding to each stream index */
   if (selected_stream) {
@@ -2096,4 +2154,15 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux)
         brate / 1000, size_buffer / 1024, ((double) diff / GST_SECOND));
   }
   return TRUE;
+}
+
+static void
+gst_dash_demux_download_wait (GstDashDemux * demux, GstClockTime time_diff)
+{
+  gint64 end_time = g_get_monotonic_time () + time_diff / GST_USECOND;
+
+  GST_DEBUG_OBJECT (demux, "Download waiting for %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (time_diff));
+  g_cond_wait_until (&demux->download_cond, &demux->download_mutex, end_time);
+  GST_DEBUG_OBJECT (demux, "Download finished waiting");
 }

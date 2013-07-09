@@ -132,6 +132,8 @@ struct _GstDashDemux
   /* Download task */
   GstTask *download_task;
   GRecMutex download_task_lock;
+  GMutex download_mutex;
+  GCond download_cond;
   gboolean cancelled;
 
   /* Manifest update */

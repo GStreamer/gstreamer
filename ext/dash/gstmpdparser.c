@@ -4284,6 +4284,91 @@ gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient * client,
   return nb_adapatation_set;
 }
 
+gint
+gst_mpd_client_check_time_position (GstMpdClient * client,
+    GstActiveStream * stream, GstClockTime ts, gint64 * diff)
+{
+  GDateTime *now = g_date_time_new_now_utc ();
+  GDateTime *start =
+      gst_date_time_to_g_date_time (client->mpd_node->availabilityStartTime);
+  GTimeSpan stream_now;
+  GTimeSpan ts_microseconds;
+  GstClockTime duration;
+
+  g_return_val_if_fail (gst_mpd_client_is_live (client), 0);
+
+  duration = gst_mpd_client_get_segment_duration (client, stream);
+  stream_now = g_date_time_difference (now, start);
+  g_date_time_unref (now);
+  g_date_time_unref (start);
+
+  /* sum duration to check if the segment is fully ready */
+  ts_microseconds = (ts + duration) / GST_USECOND;
+
+  /*
+   * This functions checks if a given ts is in the 'available range' of
+   * a DASH presentation. This only makes sense for live streams, which
+   * are continuously adding new segments and removing old ones.
+   *
+   * Note: Both the client and the server should use UTC as a time reference.
+   *
+   * @ts is the time since the beginning of the stream and we need to find out
+   * if it is currently available. The server should be hosting segments
+   *
+   * * ---------------- ... --- * ----------- * ---- ...
+   * |
+   * | past(unavailable) |      | available   | future(unavailable yet)
+   * |
+   * * ---------------- ... --- * ----------- * ---- ...
+   * |                          |             |
+   * availabilitStartTime       |             UTC now
+   *                            UTC now - timeShiftBufferDepth
+   *
+   * This function should return 0 if @ts is in the 'available' area, 1 for
+   * 'future' and '-1' for past and the corresponding distance to the
+   * 'available' area is set to @diff
+   *
+   * TODO untested with live presentations with multiple periods as no
+   * examples for it could be found/generated
+   */
+
+  if (ts_microseconds > stream_now) {
+    *diff = ts_microseconds - stream_now;
+    return 1;
+  }
+  if (client->mpd_node->timeShiftBufferDepth
+      && ts_microseconds <
+      stream_now - client->mpd_node->timeShiftBufferDepth) {
+    *diff = ts_microseconds - stream_now;
+    return -1;
+  }
+
+  *diff = 0;
+  return 0;
+}
+
+gboolean
+gst_mpd_client_seek_to_time (GstMpdClient * client, GDateTime * time)
+{
+  GDateTime *start =
+      gst_date_time_to_g_date_time (client->mpd_node->availabilityStartTime);
+  GTimeSpan ts_microseconds;
+  GstClockTime ts;
+  gboolean ret = TRUE;
+  GList *stream;
+
+  g_return_val_if_fail (gst_mpd_client_is_live (client), 0);
+
+  ts_microseconds = g_date_time_difference (time, start);
+  g_date_time_unref (start);
+
+  ts = ts_microseconds * GST_USECOND;
+  for (stream = client->active_streams; stream; stream = g_list_next (stream)) {
+    ret = ret & gst_mpd_client_stream_seek (client, stream->data, ts);
+  }
+  return ret;
+}
+
 void
 gst_media_fragment_info_clear (GstMediaFragmentInfo * fragment)
 {
