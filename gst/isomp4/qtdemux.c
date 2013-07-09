@@ -5542,7 +5542,7 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
         stream->fps_d = factor;
       else
         stream->fps_d =
-            gst_util_uint64_scale_int_round (factor, stream->duration,
+            gst_util_uint64_scale_int_round (stream->duration, factor,
             stream->n_samples);
     }
 
