@@ -42,6 +42,7 @@ struct _GstVaapiSurfacePool {
     GstVaapiVideoPool   parent_instance;
 
     GstVaapiChromaType  chroma_type;
+    GstVideoFormat      format;
     guint               width;
     guint               height;
 };
@@ -49,9 +50,19 @@ struct _GstVaapiSurfacePool {
 static gboolean
 surface_pool_init(GstVaapiSurfacePool *pool, const GstVideoInfo *vip)
 {
-    pool->chroma_type   = GST_VAAPI_CHROMA_TYPE_YUV420;
-    pool->width         = GST_VIDEO_INFO_WIDTH(vip);
-    pool->height        = GST_VIDEO_INFO_HEIGHT(vip);
+    pool->format = GST_VIDEO_INFO_FORMAT(vip);
+    pool->width  = GST_VIDEO_INFO_WIDTH(vip);
+    pool->height = GST_VIDEO_INFO_HEIGHT(vip);
+
+    if (pool->format == GST_VIDEO_FORMAT_UNKNOWN)
+        return FALSE;
+
+    if (pool->format == GST_VIDEO_FORMAT_ENCODED)
+        pool->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
+    else
+        pool->chroma_type = gst_video_format_get_chroma_type(pool->format);
+    if (!pool->chroma_type)
+        return FALSE;
     return TRUE;
 }
 
@@ -60,6 +71,15 @@ gst_vaapi_surface_pool_alloc_object(GstVaapiVideoPool *base_pool)
 {
     GstVaapiSurfacePool * const pool = GST_VAAPI_SURFACE_POOL(base_pool);
 
+    /* Try to allocate a surface with an explicit pixel format first */
+    if (pool->format != GST_VIDEO_FORMAT_ENCODED) {
+        GstVaapiSurface * const surface = gst_vaapi_surface_new_with_format(
+            base_pool->display, pool->format, pool->width, pool->height);
+        if (surface)
+            return surface;
+    }
+
+    /* Otherwise, fallback to the original interface, based on chroma format */
     return gst_vaapi_surface_new(base_pool->display,
         pool->chroma_type, pool->width, pool->height);
 }
