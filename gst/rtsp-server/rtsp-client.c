@@ -49,6 +49,7 @@ struct _GstRTSPClientPrivate
   GstRTSPSessionPool *session_pool;
   GstRTSPMountPoints *mount_points;
   GstRTSPAuth *auth;
+  GstRTSPThreadPool *thread_pool;
 
   /* used to cache the media in the last requested DESCRIBE so that
    * we can pick it up in the next SETUP immediately */
@@ -590,7 +591,7 @@ no_prepare:
     GST_ERROR ("client %p: can't prepare media", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
     g_object_unref (media);
-    state->media = media;
+    state->media = NULL;
     g_object_unref (factory);
     state->factory = NULL;
     return NULL;
@@ -2217,6 +2218,63 @@ gst_rtsp_client_get_auth (GstRTSPClient * client)
 
   g_mutex_lock (&priv->lock);
   if ((result = priv->auth))
+    g_object_ref (result);
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_client_set_thread_pool:
+ * @client: a #GstRTSPClient
+ * @pool: a #GstRTSPThreadPool
+ *
+ * configure @pool to be used as the thread pool of @client.
+ */
+void
+gst_rtsp_client_set_thread_pool (GstRTSPClient * client,
+    GstRTSPThreadPool * pool)
+{
+  GstRTSPClientPrivate *priv;
+  GstRTSPThreadPool *old;
+
+  g_return_if_fail (GST_IS_RTSP_CLIENT (client));
+
+  priv = client->priv;
+
+  if (pool)
+    g_object_ref (pool);
+
+  g_mutex_lock (&priv->lock);
+  old = priv->thread_pool;
+  priv->thread_pool = pool;
+  g_mutex_unlock (&priv->lock);
+
+  if (old)
+    g_object_unref (old);
+}
+
+/**
+ * gst_rtsp_client_get_thread_pool:
+ * @client: a #GstRTSPClient
+ *
+ * Get the #GstRTSPThreadPool used as the thread pool of @client.
+ *
+ * Returns: (transfer full): the #GstRTSPThreadPool of @client. g_object_unref() after
+ * usage.
+ */
+GstRTSPThreadPool *
+gst_rtsp_client_get_thread_pool (GstRTSPClient * client)
+{
+  GstRTSPClientPrivate *priv;
+  GstRTSPThreadPool *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
+
+  priv = client->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->thread_pool))
     g_object_ref (result);
   g_mutex_unlock (&priv->lock);
 

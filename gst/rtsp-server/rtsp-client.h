@@ -36,6 +36,7 @@ typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
 #include "rtsp-session-pool.h"
 #include "rtsp-session-media.h"
 #include "rtsp-auth.h"
+#include "rtsp-thread-pool.h"
 #include "rtsp-token.h"
 #include "rtsp-sdp.h"
 
@@ -162,6 +163,9 @@ gboolean              gst_rtsp_client_get_use_client_settings (GstRTSPClient * c
 
 void                  gst_rtsp_client_set_auth          (GstRTSPClient *client, GstRTSPAuth *auth);
 GstRTSPAuth *         gst_rtsp_client_get_auth          (GstRTSPClient *client);
+
+void                  gst_rtsp_client_set_thread_pool   (GstRTSPClient *client, GstRTSPThreadPool *pool);
+GstRTSPThreadPool *   gst_rtsp_client_get_thread_pool   (GstRTSPClient *client);
 
 gboolean              gst_rtsp_client_set_connection    (GstRTSPClient *client, GstRTSPConnection *conn);
 GstRTSPConnection *   gst_rtsp_client_get_connection    (GstRTSPClient *client);
