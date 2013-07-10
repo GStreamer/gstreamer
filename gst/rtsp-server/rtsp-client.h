@@ -30,6 +30,7 @@ typedef struct _GstRTSPClientClass GstRTSPClientClass;
 typedef struct _GstRTSPClientState GstRTSPClientState;
 typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
 
+#include "rtsp-server.h"
 #include "rtsp-media.h"
 #include "rtsp-mount-points.h"
 #include "rtsp-session-pool.h"
@@ -49,6 +50,7 @@ typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
 
 /**
  * GstRTSPClientState:
+ * @server: the server
  * @client: the client
  * @request: the complete request
  * @uri: the complete url parsed from @request
@@ -65,6 +67,7 @@ typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
  * Information passed around containing the client state of a request.
  */
 struct _GstRTSPClientState {
+  GstRTSPServer       *server;
   GstRTSPClient       *client;
   GstRTSPMessage      *request;
   GstRTSPUrl          *uri;

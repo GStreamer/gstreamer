@@ -100,8 +100,8 @@ GstRTSPMountPoints *  gst_rtsp_server_get_mount_points     (GstRTSPServer *serve
 void                  gst_rtsp_server_set_auth             (GstRTSPServer *server, GstRTSPAuth *auth);
 GstRTSPAuth *         gst_rtsp_server_get_auth             (GstRTSPServer *server);
 
-void                  gst_rtsp_server_set_max_threads      (GstRTSPServer *server, gint max_threads);
-gint                  gst_rtsp_server_get_max_threads      (GstRTSPServer *server);
+void                  gst_rtsp_server_set_thread_pool      (GstRTSPServer *server, GstRTSPThreadPool *pool);
+GstRTSPThreadPool *   gst_rtsp_server_get_thread_pool      (GstRTSPServer *server);
 
 void                  gst_rtsp_server_set_use_client_settings (GstRTSPServer *server,
                                                                gboolean use_client_settings);
