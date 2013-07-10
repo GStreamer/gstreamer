@@ -3,6 +3,7 @@ public_headers = \
 		rtsp-address-pool.h \
 		rtsp-params.h \
 		rtsp-sdp.h \
+		rtsp-thread-pool.h \
 		rtsp-media.h \
 		rtsp-media-factory.h \
 		rtsp-media-factory-uri.h \
@@ -22,6 +23,7 @@ c_sources = \
 	rtsp-address-pool.c \
 	rtsp-params.c \
 	rtsp-sdp.c \
+	rtsp-thread-pool.c \
 	rtsp-media.c \
 	rtsp-media-factory.c \
 	rtsp-media-factory-uri.c \
