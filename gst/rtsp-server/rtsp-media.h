@@ -42,6 +42,7 @@ typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
 typedef struct _GstRTSPMediaPrivate GstRTSPMediaPrivate;
 
 #include "rtsp-stream.h"
+#include "rtsp-thread-pool.h"
 #include "rtsp-permissions.h"
 #include "rtsp-address-pool.h"
 
@@ -91,11 +92,6 @@ struct _GstRTSPMedia {
  */
 struct _GstRTSPMediaClass {
   GObjectClass  parent_class;
-
-  /* thread for the mainloop */
-  GMainContext *context;
-  GMainLoop    *loop;
-  GThread      *thread;
 
   /* vmethods */
   gboolean        (*handle_message)  (GstRTSPMedia *media, GstMessage *message);
@@ -153,7 +149,7 @@ GstNetTimeProvider *  gst_rtsp_media_get_time_provider (GstRTSPMedia *media,
                                                         const gchar *address, guint16 port);
 
 /* prepare the media for playback */
-gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media, GMainContext *context);
+gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media, GstRTSPThread *thread);
 gboolean              gst_rtsp_media_unprepare        (GstRTSPMedia *media);
 
 /* creating streams */

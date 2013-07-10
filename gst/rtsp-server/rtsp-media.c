@@ -57,6 +57,7 @@ struct _GstRTSPMediaPrivate
   GstElement *fakesink;         /* protected by lock */
   GSource *source;
   guint id;
+  GstRTSPThread *thread;
 
   gboolean time_provider;
   GstNetTimeProvider *nettime;
@@ -118,7 +119,6 @@ static void gst_rtsp_media_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_media_finalize (GObject * obj);
 
-static gpointer do_loop (GstRTSPMediaClass * klass);
 static gboolean default_handle_message (GstRTSPMedia * media,
     GstMessage * message);
 static void finish_unprepare (GstRTSPMedia * media);
@@ -208,12 +208,7 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
       G_STRUCT_OFFSET (GstRTSPMediaClass, new_state), NULL, NULL,
       g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 0, G_TYPE_INT);
 
-  klass->context = g_main_context_new ();
-  klass->loop = g_main_loop_new (klass->context, TRUE);
-
   GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmedia", 0, "GstRTSPMedia");
-
-  klass->thread = g_thread_new ("Bus Thread", (GThreadFunc) do_loop, klass);
 
   klass->handle_message = default_handle_message;
   klass->unprepare = default_unprepare;
@@ -336,16 +331,6 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
-}
-
-static gpointer
-do_loop (GstRTSPMediaClass * klass)
-{
-  GST_INFO ("enter mainloop");
-  g_main_loop_run (klass->loop);
-  GST_INFO ("exit mainloop");
-
-  return NULL;
 }
 
 /* must be called with state lock */
@@ -1638,7 +1623,7 @@ state_failed:
 /**
  * gst_rtsp_media_prepare:
  * @media: a #GstRTSPMedia
- * @context: a #GMainContext to run the bus handler or %NULL
+ * @thread: a #GstRTSPThread to run the bus handler or %NULL
  *
  * Prepare @media for streaming. This function will create the objects
  * to manage the streaming. A pipeline must have been set on @media with
@@ -1650,15 +1635,15 @@ state_failed:
  * Returns: %TRUE on success.
  */
 gboolean
-gst_rtsp_media_prepare (GstRTSPMedia * media, GMainContext * context)
+gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
 {
   GstRTSPMediaPrivate *priv;
   GstRTSPMediaStatus status;
-  GstRTSPMediaClass *klass;
   GstBus *bus;
   GSource *source;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+  g_return_val_if_fail (GST_IS_RTSP_THREAD (thread), FALSE);
 
   priv = media->priv;
 
@@ -1687,13 +1672,9 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GMainContext * context)
   priv->is_live = FALSE;
   priv->seekable = FALSE;
   priv->buffering = FALSE;
+  priv->thread = thread;
   /* we're preparing now */
   priv->status = GST_RTSP_MEDIA_STATUS_PREPARING;
-
-  klass = GST_RTSP_MEDIA_GET_CLASS (media);
-
-  if (context == NULL)
-    context = klass->context;
 
   bus = gst_pipeline_get_bus (GST_PIPELINE_CAST (priv->pipeline));
 
@@ -1704,7 +1685,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GMainContext * context)
   g_source_set_callback (priv->source, (GSourceFunc) bus_message,
       g_object_ref (media), (GDestroyNotify) watch_destroyed);
 
-  priv->id = g_source_attach (priv->source, context);
+  priv->id = g_source_attach (priv->source, thread->context);
 
   /* add stuff to the bin */
   gst_bin_add (GST_BIN (priv->pipeline), priv->rtpbin);
@@ -1712,7 +1693,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GMainContext * context)
   /* do remainder in context */
   source = g_idle_source_new ();
   g_source_set_callback (source, (GSourceFunc) start_prepare, media, NULL);
-  g_source_attach (source, context);
+  g_source_attach (source, thread->context);
   g_source_unref (source);
 
 wait_status:
@@ -1828,6 +1809,10 @@ finish_unprepare (GstRTSPMedia * media)
     GST_DEBUG ("destroy source");
     g_source_destroy (priv->source);
     g_source_unref (priv->source);
+  }
+  if (priv->thread) {
+    GST_DEBUG ("stop thread");
+    gst_rtsp_thread_stop (priv->thread);
   }
 }
 
