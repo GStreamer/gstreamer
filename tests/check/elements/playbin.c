@@ -98,8 +98,8 @@ GST_START_TEST (test_sink_usage_video_only_stream)
   fakeaudiosink = gst_element_factory_make ("fakesink", "fakeaudiosink");
   fail_unless (fakeaudiosink != NULL, "Failed to create fakeaudiosink element");
 
-  /* video-only stream, audiosink will error out in null => ready if used */
-  g_object_set (fakeaudiosink, "state-error", 1, NULL);
+  /* video-only stream, audiosink will error out in ready => paused if used */
+  g_object_set (fakeaudiosink, "state-error", 2, NULL);
 
   g_object_set (playbin, "video-sink", fakevideosink, NULL);
   g_object_set (playbin, "audio-sink", fakeaudiosink, NULL);
@@ -481,9 +481,9 @@ GST_START_TEST (test_refcount)
 
   ASSERT_OBJECT_REFCOUNT (playbin, "playbin", 1);
 
-  /* we have two refs now, one from ourselves and one from playbin */
-  ASSERT_OBJECT_REFCOUNT (audiosink, "myaudiosink", 2);
-  ASSERT_OBJECT_REFCOUNT (videosink, "myvideosink", 2);
+  /* we have 3 refs now, one from ourselves, one from playbin and one from playsink */
+  ASSERT_OBJECT_REFCOUNT (audiosink, "myaudiosink", 3);
+  ASSERT_OBJECT_REFCOUNT (videosink, "myvideosink", 3);
   ASSERT_OBJECT_REFCOUNT (vis, "myvis", 2);
 
   fail_unless_equals_int (gst_element_set_state (playbin, GST_STATE_PAUSED),
