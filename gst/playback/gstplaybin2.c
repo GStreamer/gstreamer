@@ -4006,10 +4006,12 @@ activate_sink (GstPlayBin * playbin, GstElement * sink, gboolean * activated)
     gst_context_unref (context);
   }
 
-  bus = gst_bus_new ();
-  gst_bus_set_sync_handler (bus, (GstBusSyncHandler) activate_sink_bus_handler,
-      playbin, NULL);
-  gst_element_set_bus (sink, bus);
+  if (!GST_OBJECT_PARENT (sink)) {
+    bus = gst_bus_new ();
+    gst_bus_set_sync_handler (bus,
+        (GstBusSyncHandler) activate_sink_bus_handler, playbin, NULL);
+    gst_element_set_bus (sink, bus);
+  }
 
   sret = gst_element_set_state (sink, GST_STATE_READY);
   if (sret == GST_STATE_CHANGE_FAILURE)
