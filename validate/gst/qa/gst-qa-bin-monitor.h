@@ -37,6 +37,8 @@ G_BEGIN_DECLS
 #define GST_QA_BIN_MONITOR_CAST(obj)            ((GstQaBinMonitor*)(obj))
 #define GST_QA_BIN_MONITOR_CLASS_CAST(klass)    ((GstQaBinMonitorClass*)(klass))
 
+#define GST_QA_BIN_MONITOR_GET_BIN(m) (GST_BIN_CAST (GST_QA_ELEMENT_MONITOR_GET_ELEMENT (m)))
+
 typedef struct _GstQaBinMonitor GstQaBinMonitor;
 typedef struct _GstQaBinMonitorClass GstQaBinMonitorClass;
 

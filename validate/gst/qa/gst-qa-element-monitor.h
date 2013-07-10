@@ -25,6 +25,8 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
+#include "gst-qa-monitor.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_QA_ELEMENT_MONITOR			(gst_qa_element_monitor_get_type ())
@@ -35,6 +37,8 @@ G_BEGIN_DECLS
 #define GST_QA_ELEMENT_MONITOR_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_QA_ELEMENT_MONITOR, GstQaElementMonitorClass))
 #define GST_QA_ELEMENT_MONITOR_CAST(obj)                ((GstQaElementMonitor*)(obj))
 #define GST_QA_ELEMENT_MONITOR_CLASS_CAST(klass)        ((GstQaElementMonitorClass*)(klass))
+
+#define GST_QA_ELEMENT_MONITOR_GET_ELEMENT(m) (GST_ELEMENT_CAST (GST_QA_MONITOR_GET_OBJECT (m)))
 
 typedef struct _GstQaElementMonitor GstQaElementMonitor;
 typedef struct _GstQaElementMonitorClass GstQaElementMonitorClass;
@@ -47,10 +51,7 @@ typedef struct _GstQaElementMonitorClass GstQaElementMonitorClass;
  * Class that wraps a #GstElement for QA checks
  */
 struct _GstQaElementMonitor {
-  GObject 	 object;
-
-  gboolean       setup;
-  GstElement    *element;
+  GstQaMonitor 	 parent;
 
   /*< private >*/
   gulong         pad_added_id;
@@ -64,16 +65,13 @@ struct _GstQaElementMonitor {
  * GStreamer QA ElementMonitor object class.
  */
 struct _GstQaElementMonitorClass {
-  GObjectClass	parent_class;
-
-  gboolean (* setup) (GstQaElementMonitor * monitor);
+  GstQaMonitorClass	parent_class;
 };
 
 /* normal GObject stuff */
 GType		gst_qa_element_monitor_get_type		(void);
 
 GstQaElementMonitor *   gst_qa_element_monitor_new      (GstElement * element);
-gboolean                gst_qa_element_monitor_setup    (GstQaElementMonitor * element_monitor);
 
 G_END_DECLS
 

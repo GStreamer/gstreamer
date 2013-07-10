@@ -25,6 +25,8 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
+#include "gst-qa-monitor.h"
+
 G_BEGIN_DECLS
 
 #define GST_TYPE_QA_PAD_MONITOR			(gst_qa_pad_monitor_get_type ())
@@ -35,6 +37,8 @@ G_BEGIN_DECLS
 #define GST_QA_PAD_MONITOR_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_QA_PAD_MONITOR, GstQaPadMonitorClass))
 #define GST_QA_PAD_MONITOR_CAST(obj)            ((GstQaPadMonitor*)(obj))
 #define GST_QA_PAD_MONITOR_CLASS_CAST(klass)    ((GstQaPadMonitorClass*)(klass))
+
+#define GST_QA_PAD_MONITOR_GET_PAD(m) (GST_PAD_CAST (GST_QA_MONITOR_GET_OBJECT (m)))
 
 typedef struct _GstQaPadMonitor GstQaPadMonitor;
 typedef struct _GstQaPadMonitorClass GstQaPadMonitorClass;
@@ -47,7 +51,7 @@ typedef struct _GstQaPadMonitorClass GstQaPadMonitorClass;
  * Class that wraps a #GstPad for QA checks
  */
 struct _GstQaPadMonitor {
-  GObject 	 object;
+  GstQaMonitor 	 parent;
 
   gboolean       setup;
   GstPad        *pad;
@@ -62,14 +66,13 @@ struct _GstQaPadMonitor {
  * GStreamer QA PadMonitor object class.
  */
 struct _GstQaPadMonitorClass {
-  GObjectClass	parent_class;
+  GstQaMonitorClass	parent_class;
 };
 
 /* normal GObject stuff */
 GType		gst_qa_pad_monitor_get_type		(void);
 
 GstQaPadMonitor *   gst_qa_pad_monitor_new      (GstPad * pad);
-gboolean            gst_qa_pad_monitor_setup    (GstQaPadMonitor * pad_monitor);
 
 G_END_DECLS
 

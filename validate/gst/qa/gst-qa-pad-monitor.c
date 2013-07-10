@@ -35,35 +35,33 @@ GST_DEBUG_CATEGORY_STATIC (gst_qa_pad_monitor_debug);
   GST_DEBUG_CATEGORY_INIT (gst_qa_pad_monitor_debug, "qa_pad_monitor", 0, "QA PadMonitor");
 #define gst_qa_pad_monitor_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstQaPadMonitor, gst_qa_pad_monitor,
-    G_TYPE_OBJECT, _do_init);
+    GST_TYPE_QA_MONITOR, _do_init);
 
+static gboolean gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor);
 
 static void
 gst_qa_pad_monitor_dispose (GObject * object)
 {
-  GstQaPadMonitor *monitor = GST_QA_PAD_MONITOR_CAST (object);
-
-  if (monitor->pad)
-    gst_object_unref (monitor->pad);
-
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
-
 
 static void
 gst_qa_pad_monitor_class_init (GstQaPadMonitorClass * klass)
 {
   GObjectClass *gobject_class;
+  GstQaMonitorClass *monitor_klass;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  monitor_klass = GST_QA_MONITOR_CLASS (klass);
 
   gobject_class->dispose = gst_qa_pad_monitor_dispose;
+
+  monitor_klass->setup = gst_qa_pad_monitor_do_setup;
 }
 
 static void
 gst_qa_pad_monitor_init (GstQaPadMonitor * pad_monitor)
 {
-  pad_monitor->setup = FALSE;
 }
 
 /**
@@ -73,23 +71,24 @@ gst_qa_pad_monitor_init (GstQaPadMonitor * pad_monitor)
 GstQaPadMonitor *
 gst_qa_pad_monitor_new (GstPad * pad)
 {
-  GstQaPadMonitor *monitor = g_object_new (GST_TYPE_QA_PAD_MONITOR, NULL);
+  GstQaPadMonitor *monitor = g_object_new (GST_TYPE_QA_PAD_MONITOR,
+      "object", G_TYPE_OBJECT, pad, NULL);
 
-  g_return_val_if_fail (pad != NULL, NULL);
-
-  monitor->pad = gst_object_ref (pad);
+  if (GST_QA_PAD_MONITOR_GET_PAD (monitor) == NULL) {
+    g_object_unref (monitor);
+    return NULL;
+  }
   return monitor;
 }
 
-gboolean
-gst_qa_pad_monitor_setup (GstQaPadMonitor * monitor)
+static gboolean
+gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor)
 {
-  if (monitor->setup)
-    return TRUE;
+  if (!GST_IS_PAD (GST_QA_MONITOR_GET_OBJECT (monitor))) {
+    GST_WARNING_OBJECT (monitor, "Trying to create pad monitor with other "
+        "type of object");
+    return FALSE;
+  }
 
-  GST_DEBUG_OBJECT (monitor, "Setting up monitor for pad %" GST_PTR_FORMAT,
-      monitor->pad);
-
-  monitor->setup = TRUE;
   return TRUE;
 }

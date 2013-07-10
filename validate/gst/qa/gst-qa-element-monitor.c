@@ -35,11 +35,11 @@ GST_DEBUG_CATEGORY_STATIC (gst_qa_element_monitor_debug);
   GST_DEBUG_CATEGORY_INIT (gst_qa_element_monitor_debug, "qa_element_monitor", 0, "QA ElementMonitor");
 #define gst_qa_element_monitor_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstQaElementMonitor, gst_qa_element_monitor,
-    G_TYPE_OBJECT, _do_init);
+    GST_TYPE_QA_MONITOR, _do_init);
 
 static void
 gst_qa_element_monitor_wrap_pad (GstQaElementMonitor * monitor, GstPad * pad);
-static gboolean gst_qa_element_monitor_do_setup (GstQaElementMonitor * monitor);
+static gboolean gst_qa_element_monitor_do_setup (GstQaMonitor * monitor);
 
 static void
 _qa_element_pad_added (GstElement * element, GstPad * pad,
@@ -51,12 +51,10 @@ gst_qa_element_monitor_dispose (GObject * object)
   GstQaElementMonitor *monitor = GST_QA_ELEMENT_MONITOR_CAST (object);
 
   if (monitor->pad_added_id)
-    g_signal_handler_disconnect (monitor->element, monitor->pad_added_id);
+    g_signal_handler_disconnect (GST_QA_MONITOR_GET_OBJECT (monitor),
+        monitor->pad_added_id);
 
   g_list_free_full (monitor->pad_monitors, g_object_unref);
-
-  if (monitor->element)
-    gst_object_unref (monitor->element);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -66,18 +64,19 @@ static void
 gst_qa_element_monitor_class_init (GstQaElementMonitorClass * klass)
 {
   GObjectClass *gobject_class;
+  GstQaMonitorClass *monitor_klass;
 
   gobject_class = G_OBJECT_CLASS (klass);
+  monitor_klass = GST_QA_MONITOR_CLASS (klass);
 
   gobject_class->dispose = gst_qa_element_monitor_dispose;
 
-  klass->setup = gst_qa_element_monitor_do_setup;
+  monitor_klass->setup = gst_qa_element_monitor_do_setup;
 }
 
 static void
 gst_qa_element_monitor_init (GstQaElementMonitor * element_monitor)
 {
-  element_monitor->setup = FALSE;
 }
 
 /**
@@ -87,34 +86,52 @@ gst_qa_element_monitor_init (GstQaElementMonitor * element_monitor)
 GstQaElementMonitor *
 gst_qa_element_monitor_new (GstElement * element)
 {
-  GstQaElementMonitor *monitor =
-      g_object_new (GST_TYPE_QA_ELEMENT_MONITOR, NULL);
+  GstQaElementMonitor *monitor;
 
   g_return_val_if_fail (element != NULL, NULL);
 
-  monitor->element = gst_object_ref (element);
+  monitor =
+      g_object_new (GST_TYPE_QA_ELEMENT_MONITOR, "object",
+      G_TYPE_OBJECT, element, NULL);
+
+  if (GST_QA_ELEMENT_MONITOR_GET_ELEMENT (monitor) == NULL) {
+    g_object_unref (monitor);
+    return NULL;
+  }
+
   return monitor;
 }
 
 static gboolean
-gst_qa_element_monitor_do_setup (GstQaElementMonitor * monitor)
+gst_qa_element_monitor_do_setup (GstQaMonitor * monitor)
 {
   GstIterator *iterator;
   gboolean done;
   GstPad *pad;
+  GstQaElementMonitor *elem_monitor;
+
+  if (!GST_IS_ELEMENT (GST_QA_MONITOR_GET_OBJECT (monitor))) {
+    GST_WARNING_OBJECT (monitor, "Trying to create element monitor with other "
+        "type of object");
+    return FALSE;
+  }
+
+  elem_monitor = GST_QA_ELEMENT_MONITOR_CAST (monitor);
 
   GST_DEBUG_OBJECT (monitor, "Setting up monitor for element %" GST_PTR_FORMAT,
-      monitor->element);
+      GST_QA_MONITOR_GET_OBJECT (monitor));
 
-  monitor->pad_added_id = g_signal_connect (monitor->element, "pad-added",
+  elem_monitor->pad_added_id =
+      g_signal_connect (GST_QA_MONITOR_GET_OBJECT (monitor), "pad-added",
       G_CALLBACK (_qa_element_pad_added), monitor);
 
-  iterator = gst_element_iterate_pads (monitor->element);
+  iterator =
+      gst_element_iterate_pads (GST_QA_ELEMENT_MONITOR_GET_ELEMENT (monitor));
   done = FALSE;
   while (!done) {
     switch (gst_iterator_next (iterator, (gpointer *) & pad)) {
       case GST_ITERATOR_OK:
-        gst_qa_element_monitor_wrap_pad (monitor, pad);
+        gst_qa_element_monitor_wrap_pad (elem_monitor, pad);
         gst_object_unref (pad);
         break;
       case GST_ITERATOR_RESYNC:
@@ -133,19 +150,6 @@ gst_qa_element_monitor_do_setup (GstQaElementMonitor * monitor)
   return TRUE;
 }
 
-gboolean
-gst_qa_element_monitor_setup (GstQaElementMonitor * monitor)
-{
-  gboolean ret;
-  if (monitor->setup)
-    return TRUE;
-
-  ret = GST_QA_ELEMENT_MONITOR_GET_CLASS (monitor)->setup (monitor);
-  if (ret)
-    monitor->setup = TRUE;
-  return ret;
-}
-
 static void
 gst_qa_element_monitor_wrap_pad (GstQaElementMonitor * monitor, GstPad * pad)
 {
@@ -157,6 +161,6 @@ static void
 _qa_element_pad_added (GstElement * element, GstPad * pad,
     GstQaElementMonitor * monitor)
 {
-  g_return_if_fail (monitor->element == element);
+  g_return_if_fail (GST_QA_ELEMENT_MONITOR_GET_ELEMENT (monitor) == element);
   gst_qa_element_monitor_wrap_pad (monitor, pad);
 }

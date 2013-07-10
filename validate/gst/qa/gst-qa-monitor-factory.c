@@ -28,7 +28,9 @@ gst_qa_monitor_factory_create (GstElement * element)
   g_return_val_if_fail (element != NULL, NULL);
 
   if (GST_IS_BIN (element)) {
-    return gst_qa_bin_monitor_new (GST_BIN_CAST (element));
+    return
+        GST_QA_ELEMENT_MONITOR_CAST (gst_qa_bin_monitor_new (GST_BIN_CAST
+            (element)));
   }
 
   return gst_qa_element_monitor_new (element);
