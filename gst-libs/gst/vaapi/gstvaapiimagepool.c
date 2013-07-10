@@ -54,7 +54,7 @@ image_pool_init(GstVaapiVideoPool *base_pool, const GstVideoInfo *vip)
     pool->format = GST_VIDEO_INFO_FORMAT(vip);
     pool->width  = GST_VIDEO_INFO_WIDTH(vip);
     pool->height = GST_VIDEO_INFO_HEIGHT(vip);
-    return TRUE;
+    return gst_vaapi_display_has_image_format(base_pool->display, pool->format);
 }
 
 static gpointer
