@@ -839,7 +839,7 @@ gst_play_sink_set_sink (GstPlaySink * playsink, GstPlaySinkType type,
   if (elem) {
     old = *elem;
     if (sink)
-      gst_object_ref (sink);
+      gst_object_ref_sink (sink);
     *elem = sink;
   }
   GST_PLAY_SINK_UNLOCK (playsink);
