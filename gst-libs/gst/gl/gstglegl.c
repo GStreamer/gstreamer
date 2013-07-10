@@ -274,6 +274,11 @@ gst_gl_egl_get_proc_address (GstGLEGL * egl, const gchar * name)
 {
   gpointer result;
 
+  /* FIXME: On Android this returns wrong addresses for non-EGL functions */
+#ifdef GST_GL_HAVE_WINDOW_ANDROID
+  return NULL;
+#endif
+
   result = eglGetProcAddress (name);
 
   return result;

@@ -2,7 +2,7 @@
 lib_LTLIBRARIES = libgstgl-@GST_API_VERSION@.la
 
 SUBDIRS = glprototypes
-DIST_SUBDIRS = glprototypes x11 win32 cocoa wayland
+DIST_SUBDIRS = glprototypes android x11 win32 cocoa wayland
 
 noinst_HEADERS =
 
@@ -49,20 +49,14 @@ SUBDIRS += wayland
 libgstgl_@GST_API_VERSION@_la_LIBADD += wayland/libgstgl-wayland.la
 endif
 
+if HAVE_WINDOW_ANDROID
+SUBDIRS += android
+libgstgl_@GST_API_VERSION@_la_LIBADD += android/libgstgl-android.la
+endif
+
 if USE_EGL
-
-if HAVE_WINDOW_WAYLAND
 libgstgl_@GST_API_VERSION@_la_SOURCES += gstglegl.c
 noinst_HEADERS += gstglegl.h
-endif
-
-if !HAVE_WINDOW_WAYLAND
-if HAVE_WINDOW_X11
-libgstgl_@GST_API_VERSION@_la_SOURCES += gstglegl.c
-noinst_HEADERS += gstglegl.h
-endif
-endif
-
 endif
 
 libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl
