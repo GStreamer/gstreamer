@@ -380,6 +380,11 @@ _child_added (GESContainer * group, GESTimelineElement * child)
   GESGroupPrivate *priv = GES_GROUP (group)->priv;
   GstClockTime last_child_end = 0, first_child_start = G_MAXUINT64;
 
+  if (!GES_TIMELINE_ELEMENT_TIMELINE (group)) {
+    timeline_add_group (GES_TIMELINE_ELEMENT_TIMELINE (child),
+        GES_GROUP (group));
+  }
+
   children = GES_CONTAINER_CHILDREN (group);
 
   for (tmp = children; tmp; tmp = tmp->next) {
@@ -432,6 +437,8 @@ _child_removed (GESContainer * group, GESTimelineElement * child)
 
   if (children == NULL) {
     GST_FIXME_OBJECT (group, "Auto destroy myself?");
+    timeline_remove_group (GES_TIMELINE_ELEMENT_TIMELINE (group),
+        GES_GROUP (group));
     return;
   }
 
@@ -460,8 +467,7 @@ _ungroup (GESContainer * group, gboolean recursive)
   }
   g_list_free_full (children, gst_object_unref);
 
-  timeline_remove_group (GES_TIMELINE_ELEMENT_TIMELINE (group),
-      GES_GROUP (group));
+  /* No need to remove from the timeline here, this will be done in _child_removed */
 
   return ret;
 }
@@ -472,6 +478,9 @@ _group (GList * containers)
   GList *tmp;
   GESTimeline *timeline = NULL;
   GESContainer *ret = g_object_new (GES_TYPE_GROUP, NULL);
+
+  if (!containers)
+    return ret;
 
   for (tmp = containers; tmp; tmp = tmp->next) {
     if (!timeline) {
@@ -485,7 +494,7 @@ _group (GList * containers)
     ges_container_add (ret, tmp->data);
   }
 
-  timeline_add_group (timeline, GES_GROUP (ret));
+  /* No need to add to the timeline here, this will be done in _child_added */
 
   return ret;
 }

@@ -643,7 +643,7 @@ ges_container_ungroup (GESContainer * container, gboolean recursive)
 
 /**
  * ges_container_group:
- * @containers: (transfer none)(element-type GESContainer): The
+ * @containers: (transfer none)(element-type GESContainer) (allow-none): The
  * #GESContainer to group, they must all be in a same #GESTimeline
  *
  * Groups the #GESContainer-s provided in @containers. It creates a subclass
@@ -669,10 +669,11 @@ ges_container_group (GList * containers)
   guint i = 0;
   GESContainer *ret = NULL;
 
-  g_return_val_if_fail (containers, NULL);
-  element = GES_TIMELINE_ELEMENT (containers->data);
-  timeline = GES_TIMELINE_ELEMENT_TIMELINE (element);
-  g_return_val_if_fail (timeline, NULL);
+  if (containers) {
+    element = GES_TIMELINE_ELEMENT (containers->data);
+    timeline = GES_TIMELINE_ELEMENT_TIMELINE (element);
+    g_return_val_if_fail (timeline, NULL);
+  }
 
   if (g_list_length (containers) == 1)
     return containers->data;

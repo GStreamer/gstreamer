@@ -440,6 +440,9 @@ _group (GList * containers)
 
   start = inpoint = duration = GST_CLOCK_TIME_NONE;
 
+  if (!containers)
+    return NULL;
+
   /* First check if all the containers are clips, if they
    * all have the same start/inpoint/duration and are in the same
    * layer.
