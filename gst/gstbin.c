@@ -3440,7 +3440,7 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
     {
       GstClock **provided_clock_p;
       GstElement **clock_provider_p;
-      gboolean playing, provided, forward;
+      gboolean playing, toplevel, provided, forward;
       GstClock *clock;
 
       gst_message_parse_clock_lost (message, &clock);
@@ -3448,10 +3448,14 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       GST_OBJECT_LOCK (bin);
       bin->clock_dirty = TRUE;
       /* if we lost the clock that we provided, post to parent but
-       * only if we are PLAYING. */
+       * only if we are not a top-level bin or PLAYING.
+       * The reason for this is that applications should be able
+       * to PAUSE/PLAY if they receive this message without worrying
+       * about the state of the pipeline. */
       provided = (clock == bin->provided_clock);
       playing = (GST_STATE (bin) == GST_STATE_PLAYING);
-      forward = playing & provided;
+      toplevel = GST_OBJECT_PARENT (bin) == NULL;
+      forward = provided && (playing || !toplevel);
       if (provided) {
         GST_DEBUG_OBJECT (bin,
             "Lost clock %" GST_PTR_FORMAT " provided by %" GST_PTR_FORMAT,
