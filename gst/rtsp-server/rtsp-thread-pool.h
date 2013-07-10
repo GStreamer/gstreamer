@@ -48,6 +48,19 @@ GType gst_rtsp_thread_get_type (void);
 #define GST_RTSP_THREAD(obj)        (GST_RTSP_THREAD_CAST(obj))
 
 /**
+ * GstRTSPThreadType:
+ * @GST_RTSP_THREAD_TYPE_CLIENT: a thread to handle the client communication
+ * @GST_RTSP_THREAD_TYPE_MEDIA: a thread to handle media 
+ *
+ * Different thread types
+ */
+typedef enum
+{
+  GST_RTSP_THREAD_TYPE_CLIENT,
+  GST_RTSP_THREAD_TYPE_MEDIA
+} GstRTSPThreadType;
+
+/**
  * GstRTSPThread:
  *
  * Structure holding info about a mainloop running in a thread
@@ -55,11 +68,12 @@ GType gst_rtsp_thread_get_type (void);
 struct _GstRTSPThread {
   GstMiniObject mini_object;
 
+  GstRTSPThreadType type;
   GMainContext *context;
   GMainLoop *loop;
 };
 
-GstRTSPThread *   gst_rtsp_thread_new      (void);
+GstRTSPThread *   gst_rtsp_thread_new      (GstRTSPThreadType type);
 
 void              gst_rtsp_thread_reuse    (GstRTSPThread * thread);
 void              gst_rtsp_thread_stop     (GstRTSPThread * thread);
@@ -98,19 +112,6 @@ gst_rtsp_thread_unref (GstRTSPThread * thread)
 {
   gst_mini_object_unref (GST_MINI_OBJECT_CAST (thread));
 }
-
-/**
- * GstRTSPThreadType:
- * @GST_RTSP_THREAD_TYPE_CLIENT: a thread to handle the client communication
- * @GST_RTSP_THREAD_TYPE_MEDIA: a thread to handle media 
- *
- * Different thread types
- */
-typedef enum
-{
-  GST_RTSP_THREAD_TYPE_CLIENT,
-  GST_RTSP_THREAD_TYPE_MEDIA
-} GstRTSPThreadType;
 
 /**
  * GstRTSPThreadPool:

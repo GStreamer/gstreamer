@@ -70,19 +70,21 @@ gst_rtsp_thread_init (GstRTSPThreadImpl * impl)
 
 /**
  * gst_rtsp_thread_new:
+ * @type: the thread type
  *
  * Create a new thread object that can run a mainloop.
  *
  * Returns: a #GstRTSPThread.
  */
 GstRTSPThread *
-gst_rtsp_thread_new (void)
+gst_rtsp_thread_new (GstRTSPThreadType type)
 {
   GstRTSPThreadImpl *impl;
 
   impl = g_slice_new0 (GstRTSPThreadImpl);
 
   gst_rtsp_thread_init (impl);
+  impl->thread.type = type;
   impl->thread.context = g_main_context_new ();
   impl->thread.loop = g_main_loop_new (impl->thread.context, TRUE);
 
@@ -355,14 +357,15 @@ gst_rtsp_thread_pool_get_max_threads (GstRTSPThreadPool * pool)
 }
 
 static GstRTSPThread *
-make_thread (GstRTSPThreadPool * pool, GstRTSPClientState * state)
+make_thread (GstRTSPThreadPool * pool, GstRTSPThreadType type,
+    GstRTSPClientState * state)
 {
   GstRTSPThreadPoolClass *klass;
   GstRTSPThread *thread;
 
   klass = GST_RTSP_THREAD_POOL_GET_CLASS (pool);
 
-  thread = gst_rtsp_thread_new ();
+  thread = gst_rtsp_thread_new (type);
   gst_mini_object_set_qdata (GST_MINI_OBJECT (thread), thread_pool,
       g_object_ref (pool), g_object_unref);
 
@@ -401,7 +404,7 @@ default_get_thread (GstRTSPThreadPool * pool,
         } else {
           /* make more threads */
           GST_DEBUG_OBJECT (pool, "make new client thread");
-          thread = make_thread (pool, state);
+          thread = make_thread (pool, type, state);
 
           if (!g_thread_pool_push (klass->pool, thread, &error))
             goto thread_error;
@@ -411,7 +414,7 @@ default_get_thread (GstRTSPThreadPool * pool,
       break;
     case GST_RTSP_THREAD_TYPE_MEDIA:
       GST_DEBUG_OBJECT (pool, "make new media thread");
-      thread = make_thread (pool, state);
+      thread = make_thread (pool, type, state);
 
       if (!g_thread_pool_push (klass->pool, thread, &error))
         goto thread_error;
