@@ -162,8 +162,7 @@ static void gst_rtsp_thread_pool_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_thread_pool_finalize (GObject * obj);
 
-static gpointer do_loop (GstRTSPThread * thread,
-    GstRTSPThreadPoolClass * klass);
+static gpointer do_loop (GstRTSPThread * thread);
 static GstRTSPThread *default_get_thread (GstRTSPThreadPool * pool,
     GstRTSPThreadType type, GstRTSPClientState * state);
 
@@ -262,13 +261,16 @@ gst_rtsp_thread_pool_set_property (GObject * object, guint propid,
 }
 
 static gpointer
-do_loop (GstRTSPThread * thread, GstRTSPThreadPoolClass * klass)
+do_loop (GstRTSPThread * thread)
 {
   GstRTSPThreadPoolPrivate *priv;
+  GstRTSPThreadPoolClass *klass;
   GstRTSPThreadPool *pool;
 
   pool = gst_mini_object_get_qdata (GST_MINI_OBJECT (thread), thread_pool);
   priv = pool->priv;
+
+  klass = GST_RTSP_THREAD_POOL_GET_CLASS (pool);
 
   if (klass->thread_enter)
     klass->thread_enter (pool, thread);
