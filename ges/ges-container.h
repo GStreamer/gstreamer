@@ -137,7 +137,7 @@ struct _GESContainerClass
 GType ges_container_get_type (void);
 
 /* Children handling */
-GList* ges_container_get_children (GESContainer *container);
+GList* ges_container_get_children (GESContainer *container, gboolean recursive);
 gboolean ges_container_add        (GESContainer *container, GESTimelineElement *child);
 gboolean ges_container_remove     (GESContainer *container, GESTimelineElement *child);
 GList * ges_container_ungroup     (GESContainer * container, gboolean recursive);

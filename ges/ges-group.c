@@ -450,7 +450,7 @@ _ungroup (GESContainer * group, gboolean recursive)
 {
   GList *children, *tmp, *ret = NULL;
 
-  children = ges_container_get_children (group);
+  children = ges_container_get_children (group, FALSE);
   for (tmp = children; tmp; tmp = tmp->next) {
     GESTimelineElement *child = tmp->data;
 

@@ -2014,7 +2014,7 @@ layer_object_removed_cb (GESLayer * layer, GESClip * clip,
   /* Go over the clip's track element and figure out which one belongs to
    * the list of tracks we control */
 
-  trackelements = ges_container_get_children (GES_CONTAINER (clip));
+  trackelements = ges_container_get_children (GES_CONTAINER (clip), FALSE);
   for (tmp = trackelements; tmp; tmp = tmp->next) {
     GESTrackElement *track_element = (GESTrackElement *) tmp->data;
     GESTrack *track = ges_track_element_get_track (track_element);

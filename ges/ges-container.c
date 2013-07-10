@@ -564,9 +564,27 @@ ges_container_remove (GESContainer * container, GESTimelineElement * child)
   return TRUE;
 }
 
+static void
+_get_children_recursively (GESContainer * container, GList ** children)
+{
+  GList *tmp;
+
+  *children =
+      g_list_concat (*children, g_list_copy_deep (container->children,
+          (GCopyFunc) gst_object_ref, NULL));
+
+  for (tmp = container->children; tmp; tmp = tmp->next) {
+    GESTimelineElement *element = tmp->data;
+
+    if (GES_IS_CONTAINER (element))
+      _get_children_recursively (tmp->data, children);
+  }
+}
+
 /**
  * ges_container_get_children:
  * @container: a #GESContainer
+ * @recursive:  Whether to recursively get children in @container
  *
  * Get the list of #GESTimelineElement contained in @container
  * The user is responsible for unreffing the contained objects
@@ -576,12 +594,18 @@ ges_container_remove (GESContainer * container, GESTimelineElement * child)
  * timeline element contained in @container.
  */
 GList *
-ges_container_get_children (GESContainer * container)
+ges_container_get_children (GESContainer * container, gboolean recursive)
 {
+  GList *children = NULL;
+
   g_return_val_if_fail (GES_IS_CONTAINER (container), NULL);
 
-  return g_list_copy_deep (container->children, (GCopyFunc) gst_object_ref,
-      NULL);
+  if (!recursive)
+    return g_list_copy_deep (container->children, (GCopyFunc) gst_object_ref,
+        NULL);
+
+  _get_children_recursively (container, &children);
+  return children;
 }
 
 /**

@@ -383,7 +383,7 @@ _ungroup (GESContainer * container, gboolean recursive)
   }
 
   /* We need a copy of the current list of tracks */
-  children = ges_container_get_children (container);
+  children = ges_container_get_children (container, FALSE);
   for (tmp = children; tmp; tmp = tmp->next) {
     track_element = GES_TRACK_ELEMENT (tmp->data);
     track_type = ges_track_element_get_track_type (track_element);
@@ -546,7 +546,7 @@ _group (GList * containers)
   supported_formats = GES_CLIP (ret)->priv->supportedformats;
   for (tmpclip = containers->next; tmpclip; tmpclip = tmpclip->next) {
     GESClip *cclip = tmpclip->data;
-    GList *children = ges_container_get_children (GES_CONTAINER (cclip));
+    GList *children = ges_container_get_children (GES_CONTAINER (cclip), FALSE);
 
     for (tmpelement = children; tmpelement; tmpelement = tmpelement->next) {
       GESTimelineElement *celement = GES_TIMELINE_ELEMENT (tmpelement->data);
