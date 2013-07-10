@@ -22,16 +22,16 @@
 #define __GST_GL_COMPAT_H__
 
 /* undefined typedefs */
-#ifndef GLeglImageOES
+#ifndef HAVE_GLEGLIMAGEOES
 typedef gpointer GLeglImageOES;
 #endif
-#ifndef GLchar
+#ifndef HAVE_GLCHAR
 typedef gchar GLchar;
 #endif
-#ifndef GLsizeiptr
+#ifndef HAVE_GLSIZEIPTR
 typedef ptrdiff_t GLsizeiptr;
 #endif
-#ifndef GLintptr
+#ifndef HAVE_GLINTPTR
 typedef ptrdiff_t GLintptr;
 #endif
 
