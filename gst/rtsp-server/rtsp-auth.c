@@ -371,7 +371,7 @@ gst_rtsp_auth_check (const gchar * check)
 
   klass = GST_RTSP_AUTH_GET_CLASS (auth);
 
-  GST_DEBUG_OBJECT (auth, "check auth");
+  GST_DEBUG_OBJECT (auth, "check authorization '%s'", check);
 
   if (klass->check)
     result = klass->check (auth, state, check);
