@@ -515,6 +515,8 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state, gint * matched)
     path_len = strlen (path);
 
   if (!paths_are_equal (priv->path, path, path_len)) {
+    GstRTSPThread *thread;
+
     /* remove any previously cached values before we try to construct a new
      * media for uri */
     if (priv->path)
@@ -530,14 +532,20 @@ find_media (GstRTSPClient * client, GstRTSPClientState * state, gint * matched)
     if (!(media = gst_rtsp_media_factory_construct (factory, state->uri)))
       goto no_media;
 
+    state->media = media;
+
+    thread = gst_rtsp_thread_pool_get_thread (priv->thread_pool,
+        GST_RTSP_THREAD_TYPE_MEDIA, state);
+    if (thread == NULL)
+      goto no_thread;
+
     /* prepare the media */
-    if (!(gst_rtsp_media_prepare (media, NULL)))
+    if (!(gst_rtsp_media_prepare (media, thread)))
       goto no_prepare;
 
     /* now keep track of the uri and the media */
     priv->path = g_strndup (path, path_len);
     priv->media = media;
-    state->media = media;
   } else {
     /* we have seen this path before, used cached media */
     media = priv->media;
@@ -582,6 +590,16 @@ no_media:
   {
     GST_ERROR ("client %p: can't create media", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
+    g_object_unref (factory);
+    state->factory = NULL;
+    return NULL;
+  }
+no_thread:
+  {
+    GST_ERROR ("client %p: can't create thread", client);
+    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, state);
+    g_object_unref (media);
+    state->media = NULL;
     g_object_unref (factory);
     state->factory = NULL;
     return NULL;
