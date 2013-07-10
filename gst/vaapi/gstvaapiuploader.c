@@ -51,7 +51,6 @@ struct _GstVaapiUploaderPrivate {
     GstCaps            *allowed_caps;
     GstVaapiVideoPool  *images;
     GstVideoInfo        image_info;
-    GstCaps            *image_caps;
     GstVaapiVideoPool  *surfaces;
     GstVideoInfo        surface_info;
     guint               direct_rendering;
@@ -68,9 +67,7 @@ gst_vaapi_uploader_destroy(GstVaapiUploader *uploader)
 {
     GstVaapiUploaderPrivate * const priv = uploader->priv;
 
-    gst_caps_replace(&priv->image_caps, NULL);
     gst_caps_replace(&priv->allowed_caps, NULL);
-
     gst_vaapi_video_pool_replace(&priv->images, NULL);
     gst_vaapi_video_pool_replace(&priv->surfaces, NULL);
     gst_vaapi_display_replace(&priv->display, NULL);
@@ -193,7 +190,6 @@ ensure_image_pool(GstVaapiUploader *uploader, GstCaps *caps,
         return FALSE;
 
     gst_video_info_set_format(&priv->image_info, format, width, height);
-    gst_caps_replace(&priv->image_caps, caps);
     gst_vaapi_video_pool_replace(&priv->images, pool);
     gst_vaapi_video_pool_unref(pool);
     return TRUE;
@@ -336,8 +332,6 @@ gst_vaapi_uploader_ensure_caps(
 {
     GstVaapiUploaderPrivate *priv;
     GstVaapiImage *image;
-    GstVideoFormat format;
-    GstVideoInfo vi;
     gboolean image_caps_changed, surface_caps_changed;
 
     g_return_val_if_fail(GST_VAAPI_IS_UPLOADER(uploader), FALSE);
@@ -356,22 +350,19 @@ gst_vaapi_uploader_ensure_caps(
     priv = uploader->priv;
     priv->direct_rendering = 0;
 
-    /* Strip out non-YUV formats */
-    if (!gst_video_info_from_caps(&vi, src_caps))
-        return FALSE;
-    if (!GST_VIDEO_INFO_IS_YUV(&vi))
-        return FALSE;
-    format = GST_VIDEO_INFO_FORMAT(&vi);
-
     /* Check if we can alias source and output buffers (same data_size) */
     image = gst_vaapi_video_pool_get_object(priv->images);
     if (image) {
-        if (gst_vaapi_image_get_format(image) == format &&
+        if ((gst_vaapi_image_get_format(image) ==
+             GST_VIDEO_INFO_FORMAT(&priv->image_info)) &&
             gst_vaapi_image_is_linear(image) &&
-            gst_vaapi_image_get_data_size(image) == GST_VIDEO_INFO_SIZE(&vi))
+            (gst_vaapi_image_get_data_size(image) ==
+             GST_VIDEO_INFO_SIZE(&priv->image_info)))
             priv->direct_rendering = 1;
         gst_vaapi_video_pool_put_object(priv->images, image);
     }
+
+    GST_INFO("direct-rendering: level %u", priv->direct_rendering);
     return TRUE;
 }
 
@@ -472,8 +463,6 @@ gst_vaapi_uploader_get_buffer(GstVaapiUploader *uploader)
 #if !GST_CHECK_VERSION(1,0,0)
     GST_BUFFER_DATA(buffer) = gst_vaapi_image_get_plane(image, 0);
     GST_BUFFER_SIZE(buffer) = gst_vaapi_image_get_data_size(image);
-
-    gst_buffer_set_caps(buffer, priv->image_caps);
 #endif
     return buffer;
 
