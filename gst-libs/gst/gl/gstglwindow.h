@@ -22,12 +22,9 @@
 #ifndef __GST_GL_WINDOW_H__
 #define __GST_GL_WINDOW_H__
 
-typedef struct _GstGLDisplay GstGLDisplay;
-
 #include <gst/gst.h>
 
-#include "gstglapi.h"
-#include "gstgldisplay.h"
+#include "gstgl_fwd.h"
 
 G_BEGIN_DECLS
 
@@ -69,10 +66,6 @@ typedef void (*GstGLWindowResizeCB) (gpointer data, guint width, guint height);
 
 #define	GST_GL_WINDOW_CB(f)			 ((GstGLWindowCB) (f))
 #define	GST_GL_WINDOW_RESIZE_CB(f)		 ((GstGLWindowResizeCB) (f))
-
-typedef struct _GstGLWindow        GstGLWindow;
-typedef struct _GstGLWindowPrivate GstGLWindowPrivate;
-typedef struct _GstGLWindowClass   GstGLWindowClass;
 
 struct _GstGLWindow {
   /*< private >*/

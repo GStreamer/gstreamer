@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include "gl.h"
 #include "gstglegl.h"
 
 static const gchar *

@@ -21,12 +21,9 @@
 #ifndef __GST_GL_SHADER_H__
 #define __GST_GL_SHADER_H__
 
-#include "gstgldisplay.h"
-#include <gst/gst.h>
+#include "gstgl_fwd.h"
 
 G_BEGIN_DECLS
-
-typedef struct _GstGLDisplay GstGLDisplay;
 
 #define GST_GL_TYPE_SHADER         (gst_gl_shader_get_type())
 #define GST_GL_SHADER(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_SHADER, GstGLShader))
@@ -47,10 +44,6 @@ typedef enum {
   GST_GL_SHADER_FRAGMENT_SOURCE,
   GST_GL_SHADER_VERTEX_SOURCE
 } GstGLShaderSourceType;
-
-typedef struct _GstGLShader        GstGLShader;
-typedef struct _GstGLShaderPrivate GstGLShaderPrivate;
-typedef struct _GstGLShaderClass   GstGLShaderClass;
 
 struct _GstGLShader {
   /*< private >*/

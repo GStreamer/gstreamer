@@ -24,14 +24,9 @@
 #include <gst/video/video.h>
 #include <gst/gstmemory.h>
 
-#include "gstglshader.h"
-#include "gstgldisplay.h"
+#include "gstgl_fwd.h"
 
 G_BEGIN_DECLS
-
-/* forward declare */
-typedef struct _GstGLMemory GstGLMemory;
-typedef struct _GstGLDisplay GstGLDisplay;
 
 GType gst_gl_upload_get_type (void);
 #define GST_TYPE_GL_UPLOAD (gst_gl_upload_get_type())
@@ -40,10 +35,6 @@ GType gst_gl_upload_get_type (void);
 #define GST_IS_GL_UPLOAD(obj) (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_UPLOAD))
 #define GST_IS_GL_UPLOAD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_GL_UPLOAD))
 #define GST_GL_UPLOAD_CAST(obj) ((GstGLUpload*)(obj))
-
-typedef struct _GstGLUpload GstGLUpload;
-typedef struct _GstGLUploadClass GstGLUploadClass;
-typedef struct _GstGLUploadPrivate GstGLUploadPrivate;
 
 /**
  * GstGLUpload

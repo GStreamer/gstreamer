@@ -24,8 +24,8 @@
 
 #include <stdio.h>
 
+#include "gl.h"
 #include "gstgldownload.h"
-#include "gstglmemory.h"
 
 /**
  * SECTION:gstgldownload

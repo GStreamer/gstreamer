@@ -22,6 +22,7 @@
 #include "config.h"
 #endif
 
+#include "gl.h"
 #include "gstglshader.h"
 
 #ifndef GL_COMPILE_STATUS

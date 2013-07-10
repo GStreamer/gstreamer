@@ -21,6 +21,7 @@
 #include "config.h"
 #endif
 
+#include "gl.h"
 #include "gstglframebuffer.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_framebuffer_debug);

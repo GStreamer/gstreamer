@@ -24,9 +24,8 @@
 
 #include <string.h>
 
+#include "gl.h"
 #include "gstglfeature.h"
-
-#include "gstglapi.h"
 
 gboolean
 gst_gl_check_extension (const char *name, const gchar * ext)
