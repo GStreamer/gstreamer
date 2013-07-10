@@ -1144,6 +1144,8 @@ default_create_client (GstRTSPServer * server)
   gst_rtsp_client_set_mount_points (client, priv->mount_points);
   /* set authentication manager */
   gst_rtsp_client_set_auth (client, priv->auth);
+  /* set threadpool */
+  gst_rtsp_client_set_thread_pool (client, priv->thread_pool);
   /* check if client transport settings for multicast are allowed */
   gst_rtsp_client_set_use_client_settings (client, priv->use_client_settings);
   GST_RTSP_SERVER_UNLOCK (server);
