@@ -27,8 +27,7 @@
 #include <gst/video/gstvideosink.h>
 #include <gst/video/video.h>
 
-#include "gstglbufferpool.h"
-#include <gst/gl/gstglconfig.h>
+#include "gl.h"
 
 G_BEGIN_DECLS
 

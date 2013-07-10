@@ -22,12 +22,11 @@
 #define _GST_GL_MEMORY_H_
 
 #include <gst/gst.h>
-#include <gst/gstmemory.h>
 #include <gst/gstallocator.h>
+#include <gst/gstmemory.h>
+#include <gst/video/video.h>
 
-#include "gstgldisplay.h"
-#include "gstgldownload.h"
-#include "gstglupload.h"
+#include "gl.h"
 
 G_BEGIN_DECLS
 
@@ -40,10 +39,6 @@ GType gst_gl_allocator_get_type(void);
 #define GST_GL_ALLOCATOR(obj)                 (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_GL_ALLOCATOR, GstGLAllocator))
 #define GST_GL_ALLOCATOR_CLASS(klass)         (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_GL_ALLOCATOR, GstGLAllocatorClass))
 #define GST_GL_ALLOCATOR_CAST(obj)            ((GstGLAllocator *)(obj))
-
-typedef struct _GstGLMemory GstGLMemory;
-typedef struct _GstGLAllocator GstGLAllocator;
-typedef struct _GstGLAllocatorClass GstGLAllocatorClass;
 
 /**
  * GstGLMemoryFlags:

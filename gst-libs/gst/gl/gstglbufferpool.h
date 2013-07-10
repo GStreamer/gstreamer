@@ -25,8 +25,7 @@
 #include <gst/video/gstvideometa.h>
 #include <gst/video/gstvideopool.h>
 
-#include "gstgldisplay.h"
-#include "gstglmemory.h"
+#include "gstgl_fwd.h"
 
 G_BEGIN_DECLS
 

@@ -24,12 +24,7 @@
 #ifndef __GST_GL_DISPLAY_H__
 #define __GST_GL_DISPLAY_H__
 
-#include "gstglconfig.h"
-
-typedef struct _GstGLWindow GstGLWindow;
-
-#include "gstglwindow.h"
-#include "gstglutils.h"
+#include "gstgl_fwd.h"
 
 G_BEGIN_DECLS
 
@@ -41,10 +36,6 @@ GType gst_gl_display_get_type (void);
 #define GST_IS_GL_DISPLAY(obj)          (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_GL_DISPLAY))
 #define GST_IS_GL_DISPLAY_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE((klass), GST_TYPE_GL_DISPLAY))
 #define GST_GL_DISPLAY_CAST(obj)        ((GstGLDisplay*)(obj))
-
-typedef struct _GstGLDisplay GstGLDisplay;
-typedef struct _GstGLDisplayClass GstGLDisplayClass;
-typedef struct _GstGLDisplayPrivate GstGLDisplayPrivate;
 
 /**
  * GstGLDisplayThreadFunc:

@@ -25,7 +25,7 @@
 #include <gst/video/video.h>
 #include "gstglmixerpad.h"
 
-#include "gstglbufferpool.h"
+#include "gl.h"
 
 G_BEGIN_DECLS
 

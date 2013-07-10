@@ -25,9 +25,8 @@
 
 #include <gst/gst.h>
 
+#include "gl.h"
 #include "gstglutils.h"
-#include "gstglfeature.h"
-#include "gstglframebuffer.h"
 
 #ifndef GL_FRAMEBUFFER_UNDEFINED
 #define GL_FRAMEBUFFER_UNDEFINED          0x8219

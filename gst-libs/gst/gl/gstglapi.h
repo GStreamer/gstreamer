@@ -37,6 +37,7 @@
 # if __APPLE__
 #  include <OpenGL/OpenGL.h>
 #  include <OpenGL/gl.h>
+#  include <OpenGL/glu.h>
 # else
 #  include <GL/glu.h>
 #  include <GL/gl.h>
@@ -52,9 +53,9 @@
 #define GSTGLAPI
 #endif
 
-#include "glprototypes/gstgl_compat.h"
-
 #include <gst/gst.h>
+
+#include "glprototypes/gstgl_compat.h"
 
 G_BEGIN_DECLS
 

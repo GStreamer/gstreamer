@@ -25,6 +25,7 @@
 #include <gmodule.h>
 #include <stdio.h>
 
+#include "gl.h"
 #include "gstglwindow.h"
 
 #if GST_GL_HAVE_WINDOW_X11
@@ -39,8 +40,6 @@
 #if GST_GL_HAVE_WINDOW_WAYLAND
 #include "wayland/gstglwindow_wayland_egl.h"
 #endif
-
-#include "gstglfeature.h"
 
 #define USING_OPENGL(display) (display->gl_api & GST_GL_API_OPENGL)
 #define USING_OPENGL3(display) (display->gl_api & GST_GL_API_OPENGL3)

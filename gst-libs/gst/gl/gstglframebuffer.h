@@ -21,7 +21,7 @@
 #ifndef __GST_GL_FRAMEBUFFER_H__
 #define __GST_GL_FRAMEBUFFER_H__
 
-#include "gstgldisplay.h"
+#include "gstgl_fwd.h"
 
 G_BEGIN_DECLS
 

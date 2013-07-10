@@ -74,14 +74,16 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglfilter.h \
 	gstglmixer.h \
 	gstglmixerpad.h \
-    gstglshadervariables.h \
+	gstglshadervariables.h \
 	gstglshader.h \
 	gstgldownload.h \
 	gstglupload.h \
 	gstglapi.h \
 	gstglfeature.h \
 	gstglutils.h \
-	gstglframebuffer.h
+	gstglframebuffer.h \
+	gstgl_fwd.h \
+	gl.h
 
 libgstgl_@GST_API_VERSION@_la_CFLAGS = \
 	$(GL_CFLAGS) \

@@ -45,7 +45,7 @@
 
 #include <gst/gst.h>
 
-#include "gstgldisplay.h"
+#include "gstgl_fwd.h"
 
 #define GST_GL_CHECK_GL_VERSION(driver_major, driver_minor, \
                                 target_major, target_minor) \

@@ -25,8 +25,7 @@
 #include "config.h"
 #endif
 
-#include "gstglmemory.h"
-
+#include "gl.h"
 #include "gstgldisplay.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
