@@ -867,6 +867,13 @@ gst_riff_create_video_caps (guint32 codec_fcc,
 
       break;
 
+    case GST_MAKE_FOURCC ('D', 'X', 'S', 'B'):
+      caps = gst_caps_new_empty_simple ("subpicture/x-xsub");
+      if (codec_name)
+        *codec_name = g_strdup ("XSUB subpicture stream");
+
+      break;
+
     default:
       GST_WARNING ("Unknown video fourcc %" GST_FOURCC_FORMAT,
           GST_FOURCC_ARGS (codec_fcc));
