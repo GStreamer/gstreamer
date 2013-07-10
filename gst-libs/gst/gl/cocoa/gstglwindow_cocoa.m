@@ -22,10 +22,9 @@
 #include "config.h"
 #endif
 
-#include "gstglwindow_cocoa.h"
-
 #include <Cocoa/Cocoa.h>
 
+#include "gstglwindow_cocoa.h"
 
 /* =============================================================*/
 /*                                                              */
@@ -164,6 +163,10 @@ static void
 gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
 {
   GstGLWindowClass *window_class;
+  
+#ifndef GNUSTEP
+  NSAutoreleasePool* pool = nil;
+#endif
 
   window_class = (GstGLWindowClass *) klass;
 
@@ -186,9 +189,9 @@ gst_gl_window_cocoa_class_init (GstGLWindowCocoaClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_window_cocoa_get_gl_api);
 
 #ifndef GNUSTEP
-  NSAutoreleasePool* pool = [[NSAutoreleasePool alloc] init];
+  pool = [[NSAutoreleasePool alloc] init];
   [NSApplication sharedApplication];
-  
+
   [pool release];
 #endif
 }
@@ -521,7 +524,7 @@ gst_gl_window_cocoa_get_gl_api (GstGLWindow * window)
 
   GST_DEBUG ("NSOpenGL context created: %lud\n", (gulong) glContext);
 
-  priv->gl_context = glContext;
+  m_cocoa->priv->gl_context = glContext;
   
   [glView setOpenGLContext:glContext];
 #else
@@ -769,7 +772,9 @@ gst_gl_window_cocoa_get_gl_api (GstGLWindow * window)
 }
 
 - (void) stopApp {
-  NSAutoreleasePool *pool;
+#ifdef GNUSTEP
+  NSAutoreleasePool *pool = nil;
+#endif
 
   m_cocoa->priv->running = FALSE;
   if (m_callback)
