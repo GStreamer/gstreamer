@@ -67,9 +67,18 @@ ensure_image(GstVaapiVideoMemory *mem)
 static GstVaapiSurface *
 new_surface(GstVaapiDisplay *display, const GstVideoInfo *vip)
 {
+    GstVaapiSurface *surface;
+
+    /* Try with explicit format first */
+    surface = gst_vaapi_surface_new_with_format(display,
+        GST_VIDEO_INFO_FORMAT(vip), GST_VIDEO_INFO_WIDTH(vip),
+        GST_VIDEO_INFO_HEIGHT(vip));
+    if (surface)
+        return surface;
+
+    /* Try to pick something compatible. Best bet: NV12 (YUV 4:2:0) */
     if (GST_VIDEO_INFO_FORMAT(vip) != GST_VIDEO_FORMAT_NV12)
         return NULL;
-
     return gst_vaapi_surface_new(display, GST_VAAPI_CHROMA_TYPE_YUV420,
         GST_VIDEO_INFO_WIDTH(vip), GST_VIDEO_INFO_HEIGHT(vip));
 }
@@ -383,8 +392,14 @@ gst_vaapi_video_allocator_init(GstVaapiVideoAllocator *allocator)
 static gboolean
 gst_video_info_update_from_image(GstVideoInfo *vip, GstVaapiImage *image)
 {
+    GstVideoFormat format;
     const guchar *data;
-    guint i, num_planes, data_size;
+    guint i, num_planes, data_size, width, height;
+
+    /* Reset format from image */
+    format = gst_vaapi_image_get_format(image);
+    gst_vaapi_image_get_size(image, &width, &height);
+    gst_video_info_set_format(vip, format, width, height);
 
     num_planes = gst_vaapi_image_get_plane_count(image);
     g_return_val_if_fail(num_planes == GST_VIDEO_INFO_N_PLANES(vip), FALSE);
