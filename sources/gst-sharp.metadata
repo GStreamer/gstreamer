@@ -12,10 +12,16 @@
 	<!-- Handle is missing in GstBuffer -->
 	<attr path="/api/namespace/boxed[@cname='GstBuffer']/method[@cname='gst_buffer_set_size']" name="hidden">true</attr>
 	<!-- MiniObject issues -->
-	<attr path="/api/namespace/boxed[@cname='GstMessage']/field[@cname='cond']" name="type">GCond*</attr>
 	<attr path="/api/namespace/struct[@cname='GstMiniObject']/field[@cname='copy']" name="type">gpointer</attr>
 	<attr path="/api/namespace/struct[@cname='GstMiniObject']/field[@cname='free']" name="type">gpointer</attr>
 	<attr path="/api/namespace/struct[@cname='GstMiniObject']/field[@cname='dispose']" name="type">gpointer</attr>
+	<attr path="/api/namespace/struct[@cname='GstMessage']/field[@cname='cond']" name="type">GCond*</attr>
+	<!-- add native attribute to all structs which need special handling -->
+	<change-node-type path="/api/namespace//boxed[field/@cname='mini_object']">struct</change-node-type>
+	<attr path="/api/namespace//struct[field/@cname='mini_object']" name="native">true</attr>
+	<change-node-type path="/api/namespace//boxed[@cname='GstStructure']">struct</change-node-type>
+	<attr path="/api/namespace/struct[@cname='GstStructure']" name="native">true</attr>
+	<remove-node path="/api/namespace/boxed[@cname='GstStructure']/field[@cname='name']" />
 	<!-- Maybe some problems with the name -->
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/class_struct/method[@vm='get_type']" name="vm" />
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/virtual_method[@cname='get_type']" name="hidden" />
