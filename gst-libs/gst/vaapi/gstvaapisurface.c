@@ -118,7 +118,7 @@ gst_vaapi_surface_create(GstVaapiSurface *surface,
     if (!vaapi_check_status(status, "vaCreateSurfaces()"))
         return FALSE;
 
-    surface->format = GST_VIDEO_FORMAT_ENCODED;
+    surface->format = GST_VIDEO_FORMAT_UNKNOWN;
     surface->chroma_type = chroma_type;
     surface->width = width;
     surface->height = height;
@@ -318,6 +318,16 @@ gst_vaapi_surface_get_format(GstVaapiSurface *surface)
 {
     g_return_val_if_fail(surface != NULL, 0);
 
+    /* Try to determine the underlying VA surface format */
+    if (surface->format == GST_VIDEO_FORMAT_UNKNOWN) {
+        GstVaapiImage * const image = gst_vaapi_surface_derive_image(surface);
+        if (image) {
+            surface->format = gst_vaapi_image_get_format(image);
+            gst_vaapi_object_unref(image);
+        }
+        if (surface->format == GST_VIDEO_FORMAT_UNKNOWN)
+            surface->format = GST_VIDEO_FORMAT_ENCODED;
+    }
     return GST_VAAPI_SURFACE_FORMAT(surface);
 }
 
