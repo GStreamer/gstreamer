@@ -50,13 +50,10 @@ struct _GstVaapiUploaderPrivate {
     GstVaapiDisplay    *display;
     GstCaps            *allowed_caps;
     GstVaapiVideoPool  *images;
+    GstVideoInfo        image_info;
     GstCaps            *image_caps;
-    GstVideoFormat      image_format;
-    guint               image_width;
-    guint               image_height;
     GstVaapiVideoPool  *surfaces;
-    guint               surface_width;
-    guint               surface_height;
+    GstVideoInfo        surface_info;
     guint               direct_rendering;
 };
 
@@ -168,9 +165,11 @@ end:
 }
 
 static gboolean
-ensure_image_pool(GstVaapiUploader *uploader, GstCaps *caps)
+ensure_image_pool(GstVaapiUploader *uploader, GstCaps *caps,
+    gboolean *caps_changed_ptr)
 {
     GstVaapiUploaderPrivate * const priv = uploader->priv;
+    GstVaapiVideoPool *pool;
     GstVideoInfo vi;
     GstVideoFormat format;
     guint width, height;
@@ -182,42 +181,55 @@ ensure_image_pool(GstVaapiUploader *uploader, GstCaps *caps)
     width  = GST_VIDEO_INFO_WIDTH(&vi);
     height = GST_VIDEO_INFO_HEIGHT(&vi);
 
-    if (format != priv->image_format ||
-        width  != priv->image_width  ||
-        height != priv->image_height) {
-        priv->image_format = format;
-        priv->image_width  = width;
-        priv->image_height = height;
-        gst_vaapi_video_pool_replace(&priv->images, NULL);
-        priv->images = gst_vaapi_image_pool_new(priv->display, &vi);
-        if (!priv->images)
-            return FALSE;
-        gst_caps_replace(&priv->image_caps, caps);
-    }
+    *caps_changed_ptr =
+        format != GST_VIDEO_INFO_FORMAT(&priv->image_info) ||
+        width  != GST_VIDEO_INFO_WIDTH(&priv->image_info)  ||
+        height != GST_VIDEO_INFO_HEIGHT(&priv->image_info);
+    if (!*caps_changed_ptr)
+        return TRUE;
+
+    pool = gst_vaapi_image_pool_new(priv->display, &vi);
+    if (!pool)
+        return FALSE;
+
+    gst_video_info_set_format(&priv->image_info, format, width, height);
+    gst_caps_replace(&priv->image_caps, caps);
+    gst_vaapi_video_pool_replace(&priv->images, pool);
+    gst_vaapi_video_pool_unref(pool);
     return TRUE;
 }
 
 static gboolean
-ensure_surface_pool(GstVaapiUploader *uploader, GstCaps *caps)
+ensure_surface_pool(GstVaapiUploader *uploader, GstCaps *caps,
+    gboolean *caps_changed_ptr)
 {
     GstVaapiUploaderPrivate * const priv = uploader->priv;
+    GstVaapiVideoPool *pool;
     GstVideoInfo vi;
+    GstVideoFormat format;
     guint width, height;
 
     if (!gst_video_info_from_caps(&vi, caps))
         return FALSE;
 
+    format = GST_VIDEO_INFO_FORMAT(&vi);
     width  = GST_VIDEO_INFO_WIDTH(&vi);
     height = GST_VIDEO_INFO_HEIGHT(&vi);
 
-    if (width != priv->surface_width || height != priv->surface_height) {
-        priv->surface_width  = width;
-        priv->surface_height = height;
-        gst_vaapi_video_pool_replace(&priv->surfaces, NULL);
-        priv->surfaces = gst_vaapi_surface_pool_new(priv->display, &vi);
-        if (!priv->surfaces)
-            return FALSE;
-    }
+    *caps_changed_ptr =
+        format != GST_VIDEO_INFO_FORMAT(&priv->surface_info) ||
+        width  != GST_VIDEO_INFO_WIDTH(&priv->surface_info)  ||
+        height != GST_VIDEO_INFO_HEIGHT(&priv->surface_info);
+    if (!*caps_changed_ptr)
+        return TRUE;
+
+    pool = gst_vaapi_surface_pool_new(priv->display, &vi);
+    if (!pool)
+        return FALSE;
+
+    gst_video_info_set_format(&priv->surface_info, format, width, height);
+    gst_vaapi_video_pool_replace(&priv->surfaces, pool);
+    gst_vaapi_video_pool_unref(pool);
     return TRUE;
 }
 
@@ -292,6 +304,9 @@ gst_vaapi_uploader_init(GstVaapiUploader *uploader)
 
     priv                = GST_VAAPI_UPLOADER_GET_PRIVATE(uploader);
     uploader->priv      = priv;
+
+    gst_video_info_init(&priv->image_info);
+    gst_video_info_init(&priv->surface_info);
 }
 
 GstVaapiUploader *
@@ -323,14 +338,20 @@ gst_vaapi_uploader_ensure_caps(
     GstVaapiImage *image;
     GstVideoFormat format;
     GstVideoInfo vi;
+    gboolean image_caps_changed, surface_caps_changed;
 
     g_return_val_if_fail(GST_VAAPI_IS_UPLOADER(uploader), FALSE);
     g_return_val_if_fail(src_caps != NULL, FALSE);
 
-    if (!ensure_image_pool(uploader, src_caps))
+    if (!out_caps)
+        out_caps = src_caps;
+
+    if (!ensure_image_pool(uploader, src_caps, &image_caps_changed))
         return FALSE;
-    if (!ensure_surface_pool(uploader, out_caps ? out_caps : src_caps))
+    if (!ensure_surface_pool(uploader, out_caps, &surface_caps_changed))
         return FALSE;
+    if (!image_caps_changed && !surface_caps_changed)
+        return TRUE;
 
     priv = uploader->priv;
     priv->direct_rendering = 0;
