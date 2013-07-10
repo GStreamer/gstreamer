@@ -47,17 +47,13 @@ struct _GstVaapiImagePool {
 };
 
 static gboolean
-gst_vaapi_image_pool_set_caps(GstVaapiVideoPool *base_pool, GstCaps *caps)
+image_pool_init(GstVaapiVideoPool *base_pool, const GstVideoInfo *vip)
 {
     GstVaapiImagePool * const pool = GST_VAAPI_IMAGE_POOL(base_pool);
-    GstVideoInfo vi;
 
-    if (!gst_video_info_from_caps(&vi, caps))
-        return FALSE;
-
-    pool->format = GST_VIDEO_INFO_FORMAT(&vi);
-    pool->width  = GST_VIDEO_INFO_WIDTH(&vi);
-    pool->height = GST_VIDEO_INFO_HEIGHT(&vi);
+    pool->format = GST_VIDEO_INFO_FORMAT(vip);
+    pool->width  = GST_VIDEO_INFO_WIDTH(vip);
+    pool->height = GST_VIDEO_INFO_HEIGHT(vip);
     return TRUE;
 }
 
@@ -85,20 +81,20 @@ gst_vaapi_image_pool_class(void)
 /**
  * gst_vaapi_image_pool_new:
  * @display: a #GstVaapiDisplay
- * @caps: a #GstCaps
+ * @vip: the #GstVideoInfo
  *
  * Creates a new #GstVaapiVideoPool of #GstVaapiImage with the
- * specified dimensions in @caps.
+ * specified format and dimensions in @vip.
  *
  * Return value: the newly allocated #GstVaapiVideoPool
  */
 GstVaapiVideoPool *
-gst_vaapi_image_pool_new(GstVaapiDisplay *display, GstCaps *caps)
+gst_vaapi_image_pool_new(GstVaapiDisplay *display, const GstVideoInfo *vip)
 {
     GstVaapiVideoPool *pool;
 
     g_return_val_if_fail(display != NULL, NULL);
-    g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
+    g_return_val_if_fail(vip != NULL, NULL);
 
     pool = (GstVaapiVideoPool *)
         gst_vaapi_mini_object_new(gst_vaapi_image_pool_class());
@@ -107,7 +103,8 @@ gst_vaapi_image_pool_new(GstVaapiDisplay *display, GstCaps *caps)
 
     gst_vaapi_video_pool_init(pool, display,
         GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE);
-    if (!gst_vaapi_image_pool_set_caps(pool, caps))
+
+    if (!image_pool_init(pool, vip))
         goto error;
     return pool;
 

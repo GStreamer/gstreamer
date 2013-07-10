@@ -86,8 +86,9 @@ test_display_CFLAGS	= $(TEST_CFLAGS)
 test_display_LDADD	= libutils.la $(TEST_LIBS)
 
 test_surfaces_SOURCES	= test-surfaces.c
-test_surfaces_CFLAGS	= $(TEST_CFLAGS)
-test_surfaces_LDADD	= libutils.la $(TEST_LIBS)
+test_surfaces_CFLAGS	= $(TEST_CFLAGS) $(GST_VIDEO_CFLAGS)
+test_surfaces_LDADD	= libutils.la $(TEST_LIBS) $(GST_VIDEO_LIBS) \
+	$(top_builddir)/gst-libs/gst/video/libgstvaapi-videoutils.la
 
 test_subpicture_SOURCES = test-subpicture.c test-subpicture-data.c
 test_subpicture_CFLAGS  = $(TEST_CFLAGS) $(GST_VIDEO_CFLAGS)

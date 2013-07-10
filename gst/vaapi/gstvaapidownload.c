@@ -484,13 +484,16 @@ gst_vaapidownload_transform_caps(
 static gboolean
 gst_vaapidownload_ensure_image_pool(GstVaapiDownload *download, GstCaps *caps)
 {
-    GstStructure * const structure = gst_caps_get_structure(caps, 0);
+    GstVideoInfo vi;
     GstVideoFormat format;
-    gint width, height;
+    guint width, height;
 
-    format = gst_video_format_from_caps(caps);
-    gst_structure_get_int(structure, "width",  &width);
-    gst_structure_get_int(structure, "height", &height);
+    if (!gst_video_info_from_caps(&vi, caps))
+        return FALSE;
+
+    format = GST_VIDEO_INFO_FORMAT(&vi);
+    width  = GST_VIDEO_INFO_WIDTH(&vi);
+    height = GST_VIDEO_INFO_HEIGHT(&vi);
 
     if (format != download->image_format ||
         width  != download->image_width  ||
@@ -499,7 +502,7 @@ gst_vaapidownload_ensure_image_pool(GstVaapiDownload *download, GstCaps *caps)
         download->image_width  = width;
         download->image_height = height;
         gst_vaapi_video_pool_replace(&download->images, NULL);
-        download->images = gst_vaapi_image_pool_new(download->display, caps);
+        download->images = gst_vaapi_image_pool_new(download->display, &vi);
         if (!download->images)
             return FALSE;
         download->images_reset = TRUE;

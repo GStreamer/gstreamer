@@ -51,6 +51,7 @@ struct _GstVaapiUploaderPrivate {
     GstCaps            *allowed_caps;
     GstVaapiVideoPool  *images;
     GstCaps            *image_caps;
+    GstVideoFormat      image_format;
     guint               image_width;
     guint               image_height;
     GstVaapiVideoPool  *surfaces;
@@ -170,17 +171,25 @@ static gboolean
 ensure_image_pool(GstVaapiUploader *uploader, GstCaps *caps)
 {
     GstVaapiUploaderPrivate * const priv = uploader->priv;
-    GstStructure * const structure = gst_caps_get_structure(caps, 0);
-    gint width, height;
+    GstVideoInfo vi;
+    GstVideoFormat format;
+    guint width, height;
 
-    gst_structure_get_int(structure, "width",  &width);
-    gst_structure_get_int(structure, "height", &height);
+    if (!gst_video_info_from_caps(&vi, caps))
+        return FALSE;
 
-    if (width != priv->image_width || height != priv->image_height) {
+    format = GST_VIDEO_INFO_FORMAT(&vi);
+    width  = GST_VIDEO_INFO_WIDTH(&vi);
+    height = GST_VIDEO_INFO_HEIGHT(&vi);
+
+    if (format != priv->image_format ||
+        width  != priv->image_width  ||
+        height != priv->image_height) {
+        priv->image_format = format;
         priv->image_width  = width;
         priv->image_height = height;
         gst_vaapi_video_pool_replace(&priv->images, NULL);
-        priv->images = gst_vaapi_image_pool_new(priv->display, caps);
+        priv->images = gst_vaapi_image_pool_new(priv->display, &vi);
         if (!priv->images)
             return FALSE;
         gst_caps_replace(&priv->image_caps, caps);
@@ -192,17 +201,20 @@ static gboolean
 ensure_surface_pool(GstVaapiUploader *uploader, GstCaps *caps)
 {
     GstVaapiUploaderPrivate * const priv = uploader->priv;
-    GstStructure * const structure = gst_caps_get_structure(caps, 0);
-    gint width, height;
+    GstVideoInfo vi;
+    guint width, height;
 
-    gst_structure_get_int(structure, "width",  &width);
-    gst_structure_get_int(structure, "height", &height);
+    if (!gst_video_info_from_caps(&vi, caps))
+        return FALSE;
+
+    width  = GST_VIDEO_INFO_WIDTH(&vi);
+    height = GST_VIDEO_INFO_HEIGHT(&vi);
 
     if (width != priv->surface_width || height != priv->surface_height) {
         priv->surface_width  = width;
         priv->surface_height = height;
         gst_vaapi_video_pool_replace(&priv->surfaces, NULL);
-        priv->surfaces = gst_vaapi_surface_pool_new(priv->display, caps);
+        priv->surfaces = gst_vaapi_surface_pool_new(priv->display, &vi);
         if (!priv->surfaces)
             return FALSE;
     }

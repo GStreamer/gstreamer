@@ -47,17 +47,11 @@ struct _GstVaapiSurfacePool {
 };
 
 static gboolean
-gst_vaapi_surface_pool_set_caps(GstVaapiVideoPool *base_pool, GstCaps *caps)
+surface_pool_init(GstVaapiSurfacePool *pool, const GstVideoInfo *vip)
 {
-    GstVaapiSurfacePool * const pool = GST_VAAPI_SURFACE_POOL(base_pool);
-    GstVideoInfo vi;
-
-    if (!gst_video_info_from_caps(&vi, caps))
-        return FALSE;
-
     pool->chroma_type   = GST_VAAPI_CHROMA_TYPE_YUV420;
-    pool->width         = GST_VIDEO_INFO_WIDTH(&vi);
-    pool->height        = GST_VIDEO_INFO_HEIGHT(&vi);
+    pool->width         = GST_VIDEO_INFO_WIDTH(vip);
+    pool->height        = GST_VIDEO_INFO_HEIGHT(vip);
     return TRUE;
 }
 
@@ -85,20 +79,20 @@ gst_vaapi_surface_pool_class(void)
 /**
  * gst_vaapi_surface_pool_new:
  * @display: a #GstVaapiDisplay
- * @caps: a #GstCaps
+ * @vip: a #GstVideoInfo
  *
  * Creates a new #GstVaapiVideoPool of #GstVaapiSurface with the
- * specified dimensions in @caps.
+ * specified format and dimensions in @vip.
  *
  * Return value: the newly allocated #GstVaapiVideoPool
  */
 GstVaapiVideoPool *
-gst_vaapi_surface_pool_new(GstVaapiDisplay *display, GstCaps *caps)
+gst_vaapi_surface_pool_new(GstVaapiDisplay *display, const GstVideoInfo *vip)
 {
     GstVaapiVideoPool *pool;
 
     g_return_val_if_fail(display != NULL, NULL);
-    g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
+    g_return_val_if_fail(vip != NULL, NULL);
 
     pool = (GstVaapiVideoPool *)
         gst_vaapi_mini_object_new(gst_vaapi_surface_pool_class());
@@ -107,7 +101,7 @@ gst_vaapi_surface_pool_new(GstVaapiDisplay *display, GstCaps *caps)
 
     gst_vaapi_video_pool_init(pool, display,
         GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE);
-    if (!gst_vaapi_surface_pool_set_caps(pool, caps))
+    if (!surface_pool_init(GST_VAAPI_SURFACE_POOL(pool), vip))
         goto error;
     return pool;
 

@@ -24,7 +24,6 @@
 #define GST_VAAPI_VIDEO_POOL_H
 
 #include <glib.h>
-#include <gst/gstcaps.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 
 G_BEGIN_DECLS

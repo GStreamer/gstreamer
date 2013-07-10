@@ -25,6 +25,7 @@
 
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapivideopool.h>
+#include <gst/vaapi/video-format.h>
 
 G_BEGIN_DECLS
 
@@ -34,7 +35,7 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiSurfacePool             GstVaapiSurfacePool;
 
 GstVaapiVideoPool *
-gst_vaapi_surface_pool_new(GstVaapiDisplay *display, GstCaps *caps);
+gst_vaapi_surface_pool_new(GstVaapiDisplay *display, const GstVideoInfo *vip);
 
 G_END_DECLS
 

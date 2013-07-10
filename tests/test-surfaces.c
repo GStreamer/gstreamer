@@ -34,7 +34,7 @@ main(int argc, char *argv[])
     GstVaapiID          surface_id;
     GstVaapiSurface    *surfaces[MAX_SURFACES];
     GstVaapiVideoPool  *pool;
-    GstCaps            *caps;
+    GstVideoInfo        vi;
     gint                i;
 
     static const GstVaapiChromaType chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
@@ -58,17 +58,9 @@ main(int argc, char *argv[])
 
     gst_vaapi_object_unref(surface);
 
-    caps = gst_caps_new_simple(
-        GST_VAAPI_SURFACE_CAPS_NAME,
-        "type", G_TYPE_STRING, "vaapi",
-        "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height,
-        NULL
-    );
-    if (!caps)
-        g_error("cound not create Gst/VA surface caps");
+    gst_video_info_set_format(&vi, GST_VIDEO_FORMAT_ENCODED, width, height);
 
-    pool = gst_vaapi_surface_pool_new(display, caps);
+    pool = gst_vaapi_surface_pool_new(display, &vi);
     if (!pool)
         g_error("could not create Gst/VA surface pool");
 
@@ -107,7 +99,6 @@ main(int argc, char *argv[])
 
     /* Unref in random order to check objects are correctly refcounted */
     gst_vaapi_display_unref(display);
-    gst_caps_unref(caps);
     gst_vaapi_video_pool_unref(pool);
     gst_vaapi_object_unref(surface);
     video_output_exit();

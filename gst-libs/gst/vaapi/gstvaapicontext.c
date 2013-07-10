@@ -469,7 +469,7 @@ static gboolean
 gst_vaapi_context_create_surfaces(GstVaapiContext *context)
 {
     const GstVaapiContextInfo * const cip = &context->info;
-    GstCaps *caps;
+    GstVideoInfo vi;
     GstVaapiSurface *surface;
     guint i, num_surfaces;
 
@@ -486,20 +486,10 @@ gst_vaapi_context_create_surfaces(GstVaapiContext *context)
     }
 
     if (!context->surfaces_pool) {
-        caps = gst_caps_new_simple(
-            GST_VAAPI_SURFACE_CAPS_NAME,
-            "type", G_TYPE_STRING, "vaapi",
-            "width",  G_TYPE_INT, cip->width,
-            "height", G_TYPE_INT, cip->height,
-            NULL
-        );
-        if (!caps)
-            return FALSE;
+        gst_video_info_set_format(&vi, GST_VIDEO_FORMAT_ENCODED,
+            cip->width, cip->height);
         context->surfaces_pool = gst_vaapi_surface_pool_new(
-            GST_VAAPI_OBJECT_DISPLAY(context),
-            caps
-        );
-        gst_caps_unref(caps);
+            GST_VAAPI_OBJECT_DISPLAY(context), &vi);
         if (!context->surfaces_pool)
             return FALSE;
     }
