@@ -32,6 +32,9 @@
  * FBO (Frame Buffer Object) and GLSL (OpenGL Shading Language) are required.
  * </refsect2>
  */
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -39,10 +42,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
-
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
 #include <gst/gst.h>
 #include "gstglfiltershader.h"

@@ -17,7 +17,9 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #define CLUTTER_VERSION_MIN_REQUIRED CLUTTER_VERSION_1_8
 
