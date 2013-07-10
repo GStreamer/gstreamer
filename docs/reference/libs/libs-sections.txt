@@ -4,6 +4,7 @@
 gst_video_format_from_caps
 gst_video_format_from_structure
 gst_video_format_from_va_format
+gst_video_format_get_chroma_type
 gst_video_format_get_score
 gst_video_format_is_rgb
 gst_video_format_is_yuv

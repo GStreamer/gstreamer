@@ -50,6 +50,9 @@ const VAImageFormat *
 gst_video_format_to_va_format(GstVideoFormat format);
 
 guint
+gst_video_format_get_chroma_type(GstVideoFormat format);
+
+guint
 gst_video_format_get_score(GstVideoFormat format);
 
 G_END_DECLS

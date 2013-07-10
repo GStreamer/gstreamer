@@ -28,11 +28,13 @@
 #include "sysdeps.h"
 #include <gst/video/video.h>
 #include "gstvaapicompat.h"
+#include "gstvaapisurface.h"
 #include "video-format.h"
 
 typedef struct _GstVideoFormatMap GstVideoFormatMap;
 struct _GstVideoFormatMap {
     GstVideoFormat      format;
+    GstVaapiChromaType  chroma_type;
     const char         *caps_str;
     VAImageFormat       va_format;
 };
@@ -49,23 +51,26 @@ struct _GstVideoFormatMap {
     GST_VIDEO_CAPS_##FORMAT
 #endif
 
-#define DEF_YUV(FORMAT, FOURCC, ENDIAN, BPP)                            \
+#define DEF_YUV(FORMAT, FOURCC, ENDIAN, BPP, SUB)                       \
     { G_PASTE(GST_VIDEO_FORMAT_,FORMAT),                                \
+      G_PASTE(GST_VAAPI_CHROMA_TYPE_YUV,SUB),                           \
       GST_VIDEO_CAPS_MAKE_YUV(FORMAT),                                  \
       { VA_FOURCC FOURCC, VA_##ENDIAN##_FIRST, BPP, }, }
+
 #define DEF_RGB(FORMAT, FOURCC, ENDIAN, BPP, DEPTH, R,G,B,A)            \
     { G_PASTE(GST_VIDEO_FORMAT_,FORMAT),                                \
+      G_PASTE(GST_VAAPI_CHROMA_TYPE_RGB,BPP),                           \
       GST_VIDEO_CAPS_MAKE_RGB(FORMAT),                                  \
       { VA_FOURCC FOURCC, VA_##ENDIAN##_FIRST, BPP, DEPTH, R,G,B,A }, }
 
 /* Image formats, listed in HW order preference */
 static const GstVideoFormatMap gst_video_formats[] = {
-    DEF_YUV(NV12, ('N','V','1','2'), LSB, 12),
-    DEF_YUV(YV12, ('Y','V','1','2'), LSB, 12),
-    DEF_YUV(I420, ('I','4','2','0'), LSB, 12),
-    DEF_YUV(YUY2, ('Y','U','Y','2'), LSB, 16),
-    DEF_YUV(UYVY, ('U','Y','V','Y'), LSB, 16),
-    DEF_YUV(AYUV, ('A','Y','U','V'), LSB, 32),
+    DEF_YUV(NV12, ('N','V','1','2'), LSB, 12, 420),
+    DEF_YUV(YV12, ('Y','V','1','2'), LSB, 12, 420),
+    DEF_YUV(I420, ('I','4','2','0'), LSB, 12, 420),
+    DEF_YUV(YUY2, ('Y','U','Y','2'), LSB, 16, 422),
+    DEF_YUV(UYVY, ('U','Y','V','Y'), LSB, 16, 422),
+    DEF_YUV(AYUV, ('A','Y','U','V'), LSB, 32, 444),
 #if G_BYTE_ORDER == G_BIG_ENDIAN
     DEF_RGB(ARGB, ('A','R','G','B'), MSB, 32,
             32, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000),
@@ -85,7 +90,7 @@ static const GstVideoFormatMap gst_video_formats[] = {
     DEF_RGB(RGBx, ('R','G','B','X'), LSB, 32,
             24, 0x000000ff, 0x0000ff00, 0x00ff0000, 0x00000000),
 #endif
-    DEF_YUV(GRAY8, ('Y','8','0','0'), LSB, 8),
+    DEF_YUV(GRAY8, ('Y','8','0','0'), LSB, 8, 400),
     { 0, }
 };
 
@@ -308,6 +313,24 @@ gst_video_format_to_va_format(GstVideoFormat format)
     const GstVideoFormatMap * const m = get_map(format);
 
     return m ? &m->va_format : NULL;
+}
+
+/**
+ * gst_video_format_get_chroma_type:
+ * @format: a #GstVideoFormat
+ *
+ * Converts a #GstVideoFormat into the corresponding #GstVaapiChromaType
+ * format.
+ *
+ * Return value: the #GstVaapiChromaType format, or zero if no match
+ *   was found.
+ */
+guint
+gst_video_format_get_chroma_type(GstVideoFormat format)
+{
+    const GstVideoFormatMap * const m = get_map(format);
+
+    return m ? m->chroma_type : 0;
 }
 
 /**
