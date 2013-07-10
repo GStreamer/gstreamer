@@ -1760,6 +1760,17 @@ timeline_context_to_layer (GESTimeline * timeline, gint offset)
 
         ret &= ges_clip_move_to_layer (GES_CLIP (key), new_layer);
       } else if (GES_IS_GROUP (value)) {
+        guint32 last_prio = _PRIORITY (value) + offset +
+            GES_CONTAINER_HEIGHT (value) - 1;
+
+        new_layer = GES_LAYER (g_list_nth_data (timeline->layers, last_prio));
+
+        if (new_layer == NULL) {
+          do {
+            new_layer = ges_timeline_append_layer (timeline);
+          } while (ges_layer_get_priority (new_layer) < last_prio);
+        }
+
         _set_priority0 (GES_TIMELINE_ELEMENT (value),
             _PRIORITY (value) + offset);
       }
