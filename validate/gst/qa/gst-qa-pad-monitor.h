@@ -56,6 +56,12 @@ struct _GstQaPadMonitor {
   gboolean       setup;
   GstPad        *pad;
 
+  GstPadBufferAllocFunction bufferalloc_func;
+  GstPadChainFunction chain_func;
+  GstPadEventFunction event_func;
+  GstPadGetRangeFunction getrange_func;
+  GstPadQueryFunction query_func;
+
   /*< private >*/
 };
 

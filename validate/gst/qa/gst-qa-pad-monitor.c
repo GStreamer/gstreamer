@@ -81,14 +81,91 @@ gst_qa_pad_monitor_new (GstPad * pad)
   return monitor;
 }
 
+static GstFlowReturn
+gst_qa_pad_monitor_chain_func (GstPad * pad, GstBuffer * buffer)
+{
+  GstQaPadMonitor *pad_monitor =
+      g_object_get_data ((GObject *) pad, "qa-monitor");
+  GstFlowReturn ret;
+  ret = pad_monitor->chain_func (pad, buffer);
+  return ret;
+}
+
+static gboolean
+gst_qa_pad_monitor_event_func (GstPad * pad, GstEvent * event)
+{
+  GstQaPadMonitor *pad_monitor =
+      g_object_get_data ((GObject *) pad, "qa-monitor");
+  GstFlowReturn ret;
+  ret = pad_monitor->event_func (pad, event);
+  return ret;
+}
+
+static gboolean
+gst_qa_pad_monitor_query_func (GstPad * pad, GstQuery * query)
+{
+  GstQaPadMonitor *pad_monitor =
+      g_object_get_data ((GObject *) pad, "qa-monitor");
+  GstFlowReturn ret;
+  ret = pad_monitor->query_func (pad, query);
+  return ret;
+}
+
+static gboolean
+gst_qa_pad_buffer_alloc_func (GstPad * pad, guint64 offset, guint size,
+    GstCaps * caps, GstBuffer ** buffer)
+{
+  GstQaPadMonitor *pad_monitor =
+      g_object_get_data ((GObject *) pad, "qa-monitor");
+  GstFlowReturn ret;
+  ret = pad_monitor->bufferalloc_func (pad, offset, size, caps, buffer);
+  return ret;
+}
+
+static gboolean
+gst_qa_pad_get_range_func (GstPad * pad, guint64 offset, guint size,
+    GstBuffer ** buffer)
+{
+  GstQaPadMonitor *pad_monitor =
+      g_object_get_data ((GObject *) pad, "qa-monitor");
+  GstFlowReturn ret;
+  ret = pad_monitor->getrange_func (pad, offset, size, buffer);
+  return ret;
+}
+
 static gboolean
 gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor)
 {
+  GstQaPadMonitor *pad_monitor = GST_QA_PAD_MONITOR_CAST (monitor);
+  GstPad *pad;
   if (!GST_IS_PAD (GST_QA_MONITOR_GET_OBJECT (monitor))) {
     GST_WARNING_OBJECT (monitor, "Trying to create pad monitor with other "
         "type of object");
     return FALSE;
   }
+
+  pad = GST_QA_PAD_MONITOR_GET_PAD (pad_monitor);
+
+  if (g_object_get_data ((GObject *) pad, "qa-monitor")) {
+    GST_WARNING_OBJECT (pad_monitor, "Pad already has a qa-monitor associated");
+    return FALSE;
+  }
+
+  g_object_set_data ((GObject *) pad, "qa-monitor", pad_monitor);
+
+  if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
+    pad_monitor->bufferalloc_func = GST_PAD_BUFFERALLOCFUNC (pad);
+    gst_pad_set_bufferalloc_function (pad, gst_qa_pad_buffer_alloc_func);
+    pad_monitor->chain_func = GST_PAD_CHAINFUNC (pad);
+    gst_pad_set_chain_function (pad, gst_qa_pad_monitor_chain_func);
+  } else {
+    pad_monitor->getrange_func = GST_PAD_GETRANGEFUNC (pad);
+    gst_pad_set_getrange_function (pad, gst_qa_pad_get_range_func);
+  }
+  pad_monitor->event_func = GST_PAD_EVENTFUNC (pad);
+  pad_monitor->query_func = GST_PAD_QUERYFUNC (pad);
+  gst_pad_set_event_function (pad, gst_qa_pad_monitor_event_func);
+  gst_pad_set_query_function (pad, gst_qa_pad_monitor_query_func);
 
   return TRUE;
 }
