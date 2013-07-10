@@ -504,6 +504,7 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
           gst_event_set_seqnum (event, selpad->segment_seqnum);
         }
       }
+
       GST_DEBUG_OBJECT (pad, "configured SEGMENT %" GST_SEGMENT_FORMAT,
           &selpad->segment);
       break;
@@ -1037,9 +1038,6 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     g_object_notify (G_OBJECT (active_sinkpad), "active");
     g_object_notify (G_OBJECT (sel), "active-pad");
   }
-  if (prev_active_sinkpad)
-    gst_object_unref (prev_active_sinkpad);
-  prev_active_sinkpad = NULL;
 
   /* if we have a pending events, push them now */
   if (G_UNLIKELY (prev_active_sinkpad != active_sinkpad
@@ -1048,6 +1046,10 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         sel);
     selpad->events_pending = FALSE;
   }
+
+  if (prev_active_sinkpad)
+    gst_object_unref (prev_active_sinkpad);
+  prev_active_sinkpad = NULL;
 
   if (selpad->discont) {
     buf = gst_buffer_make_writable (buf);
