@@ -229,6 +229,10 @@ AC_SUBST([GST_OBJ_CFLAGS])
 GST_OBJ_LIBS="\$(top_builddir)/gst/rtsp-server/libgstrtspserver-$GST_API_VERSION.la \$(GST_ALL_LIBS)"
 AC_SUBST([GST_OBJ_LIBS])
 
+PKG_CHECK_MODULES(LIBCGROUP, libcgroup >= 0.26, HAVE_LIBCGROUP="yes", HAVE_LIBCGROUP="no")
+AC_SUBST(LIBCGROUP_CFLAGS)
+AC_SUBST(LIBCGROUP_LIBS)
+
 dnl this really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 
