@@ -2158,11 +2158,15 @@ no_channels:
 
 static void
 gst_play_bin_set_sink (GstPlayBin * playbin, GstPlaySinkType type,
-    const gchar * dbg, GstElement * sink)
+    const gchar * dbg, GstElement ** elem, GstElement * sink)
 {
   GST_INFO_OBJECT (playbin, "Setting %s sink to %" GST_PTR_FORMAT, dbg, sink);
 
   gst_play_sink_set_sink (playbin->playsink, type, sink);
+
+  if (*elem)
+    gst_object_unref (*elem);
+  *elem = gst_object_ref (sink);
 }
 
 static void
@@ -2240,11 +2244,11 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_VIDEO_SINK:
       gst_play_bin_set_sink (playbin, GST_PLAY_SINK_TYPE_VIDEO, "video",
-          g_value_get_object (value));
+          &playbin->video_sink, g_value_get_object (value));
       break;
     case PROP_AUDIO_SINK:
       gst_play_bin_set_sink (playbin, GST_PLAY_SINK_TYPE_AUDIO, "audio",
-          g_value_get_object (value));
+          &playbin->audio_sink, g_value_get_object (value));
       break;
     case PROP_VIS_PLUGIN:
       gst_play_sink_set_vis_plugin (playbin->playsink,
@@ -2252,7 +2256,7 @@ gst_play_bin_set_property (GObject * object, guint prop_id,
       break;
     case PROP_TEXT_SINK:
       gst_play_bin_set_sink (playbin, GST_PLAY_SINK_TYPE_TEXT, "text",
-          g_value_get_object (value));
+          &playbin->text_sink, g_value_get_object (value));
       break;
     case PROP_VIDEO_STREAM_COMBINER:
       gst_play_bin_set_stream_combiner (playbin,
