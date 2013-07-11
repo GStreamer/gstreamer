@@ -100,7 +100,7 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (gst_gl_gstgl_debug, "gstopengl", 0, "gstopengl");
 
   if (!gst_element_register (plugin, "glimagesink",
-          GST_RANK_NONE, GST_TYPE_GLIMAGE_SINK)) {
+          GST_RANK_MARGINAL, GST_TYPE_GLIMAGE_SINK)) {
     return FALSE;
   }
 
