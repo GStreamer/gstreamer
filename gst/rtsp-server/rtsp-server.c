@@ -1093,6 +1093,7 @@ free_client_context (ClientContext * ctx)
   GST_RTSP_SERVER_UNLOCK (ctx->server);
 
   g_object_unref (ctx->client);
+  g_object_unref (ctx->server);
   g_slice_free (ClientContext, ctx);
 
   return G_SOURCE_REMOVE;
@@ -1105,8 +1106,6 @@ unmanage_client (GstRTSPClient * client, ClientContext * ctx)
   GstRTSPServerPrivate *priv = server->priv;
 
   GST_DEBUG_OBJECT (server, "unmanage client %p", client);
-
-  g_object_ref (server);
 
   GST_RTSP_SERVER_LOCK (server);
   priv->clients = g_list_remove (priv->clients, ctx);
@@ -1122,8 +1121,6 @@ unmanage_client (GstRTSPClient * client, ClientContext * ctx)
   } else {
     free_client_context (ctx);
   }
-
-  g_object_unref (server);
 }
 
 /* add the client context to the active list of clients, takes ownership
@@ -1139,7 +1136,7 @@ manage_client (GstRTSPServer * server, GstRTSPClient * client)
   GST_DEBUG_OBJECT (server, "manage client %p", client);
 
   ctx = g_slice_new0 (ClientContext);
-  ctx->server = server;
+  ctx->server = g_object_ref (server);
   ctx->client = client;
 
   GST_RTSP_SERVER_LOCK (server);
