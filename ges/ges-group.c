@@ -417,6 +417,7 @@ _child_removed (GESContainer * group, GESTimelineElement * child)
 {
   GList *children;
   GstClockTime first_child_start;
+  GESGroupPrivate *priv = GES_GROUP (group)->priv;
 
   _ges_container_sort_children (group);
 
@@ -434,12 +435,14 @@ _child_removed (GESContainer * group, GESTimelineElement * child)
     return;
   }
 
+  priv->setting_value = TRUE;
   first_child_start = GES_TIMELINE_ELEMENT_START (children->data);
   if (first_child_start > GES_TIMELINE_ELEMENT_START (group)) {
     group->children_control_mode = GES_CHILDREN_IGNORE_NOTIFIES;
     _set_start0 (GES_TIMELINE_ELEMENT (group), first_child_start);
     group->children_control_mode = GES_CHILDREN_UPDATE;
   }
+  priv->setting_value = FALSE;
 }
 
 static GList *
