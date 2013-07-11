@@ -1,9 +1,91 @@
-=== release 1.1.1 ===
+=== release 1.1.2 ===
 
-2013-06-05  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-07-11  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.1
+	  releasing 1.1.2
+
+2013-07-09 16:19:11 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: update libav from v9.6 to v9.8
+	  version 9.8:
+	  - kmvc: Clip pixel position to valid range
+	  - kmvc: Use fixed sized arrays in the context
+	  - indeo: Reject negative array indexes
+	  - indeo: Check for reference when inheriting motion vectors
+	  - indeo: Properly forward the error codes
+	  - mjpeg: Check the unescaped size for overflows
+	  - wmapro: Error out on impossible scale factor offsets
+	  - wmapro: Check the min_samples_per_subframe
+	  - wmapro: Return early on unsupported condition
+	  - wmapro: Check num_vec_coeffs against the actual available buffer
+	  - wmapro: Make sure there is room to store the current packet
+	  - lavc: Move put_bits_left in put_bits.h
+	  - 4xm: Do not overread the source buffer in decode_p_block
+	  - 4xm: Check bitstream_size boundary before using it
+	  version 9.7:
+	  Most of the following fixes resulted from test samples that the Google
+	  Security Team has kindly made available to us:
+	  - 4xm: fix several programming errors to avoid crashes, etc.
+	  - apetag: use int64_t for filesize
+	  - jpegls: Fix invalid writes to memory
+	  - ljpeg: use the correct number of components in YUV
+	  - mjpeg: Validate sampling factors
+	  - mjpegdec: properly report unsupported disabled features
+	  - mjpegdec: validate parameters in mjpeg_decode_scan_progressive_ac
+	  - mpegvideo: allocate sufficiently large scratch buffer for interlaced vid
+	  - pixdesc: mark gray8 as pseudopal
+	  - smacker: fix several programming errors to avoid crashes, etc.
+	  - tiff: do not overread the source buffer
+	  - vmd: drop incomplete chunks and spurious samples
+	  - vmdav: convert to bytestream2 to avoid invalid reads and writes
+	  - wavpack: check packet size early
+	  - wavpack: use bytestream2 in wavpack_decode_block
+	  - wavpack: validate samples size parsed in wavpack_decode_block
+
+2013-06-25 14:03:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/libav/gstavcodecmap.c:
+	  codecmap: realvideo does not have systemstream property
+	  realvideo does not have the systemstream property and nobody ever sets it so
+	  better remove it here to make it link to something else.
+
+2013-06-18 13:36:01 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* autogen.sh:
+	* common:
+	  autogen.sh: generate from common module, fixing srcdir != builddir build
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702319
+
+2013-06-11 08:24:17 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: reset coded_width/_height before trying to open codec
+	  If coded_width/_height is supplied, the codec might use it as the
+	  width/height and if it is wrong can lead to segfaults or video
+	  corruption.
+	  This is specially harmful on renegotiation scenarios where the
+	  resolution changed. There seems to be no specific function for reseting
+	  the AV Context in libav, so just set it directly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702003
+
+2013-06-05 18:36:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.1 ===
+
+2013-06-05 17:58:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* common:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.1.1
 
 2013-06-05 15:16:55 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

@@ -1,5 +1,5 @@
 
-Release notes for GStreamer libav Plugins 1.1.1
+Release notes for GStreamer libav Plugins 1.1.2
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -41,22 +41,9 @@ Features of this release
 
 Bugs fixed in this release
      
-      * 532422 : avenc_dvvideo: Add non-exposed framerate/width/height/format limitations to caps
-      * 595286 : [ffdec_dvvideo] doesn't handle PAR correctly
-      * 600895 : ffenc_dvvideo : doesn't list resolution/details it supports
-      * 666435 : avdec: use new avcodec_decode_audio4() API
-      * 679200 : [0.10] regression: crash with apple smc codec
-      * 680487 : avenc_wmav1: errors out with default bitrate - output buffer size is too small
-      * 685074 : G.726 decoder failure.
-      * 688644 : Update gst-libav to libav 9 API
-      * 689398 : avenc_wmav1: audio encoder timestamps broken, can't transcode videos to WMV anymore
-      * 689565 : [audiodec] Must push one buffer (and only one) for each input buffer
-      * 689751 : Missing include in gstavutils.c
-      * 689981 : avviddec: 0.9 port - opaque pointer sometimes NULL - causing crashes - make check fails
-      * 690940 : avdec_aac: produces garbled output (regression in master)
-      * 691665 : avdec_aac: garbled audio (regression in git master)
-      * 694416 : Passing of $AS, etc to libav configure breaks on some platforms
-      * 698256 : Using avdec_mp3 decoder appliction can't retrieve the audio codec info.
+      * 684808 : avdec_rv40: bad timestamping with rtsp clip, stop-and-go video
+      * 702003 : [libav] renegotiation might cause corrupted video
+      * 702319 : build: fixes non source directory build.
 
 ==== Download ====
 
@@ -93,21 +80,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Andoni Morales Alastruey
-      * Christiaan Welvaart
-      * David Schleef
-      * Luca Barbato
-      * Matej Knopp
-      * Nicolas Dufresne
-      * Olivier Crête
-      * Rasmus Rohde
-      * Rico Tzschichholz
       * Sebastian Dröge
-      * Siva Chandran P
-      * Stefan Sauer
       * Thiago Santos
-      * Thijs Vermeir
       * Tim-Philipp Müller
       * Wim Taymans
-      * Руслан Ижбулатов
  
