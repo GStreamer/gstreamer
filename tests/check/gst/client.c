@@ -115,6 +115,7 @@ setup_client (const gchar * launch_line)
   GstRTSPSessionPool *session_pool;
   GstRTSPMountPoints *mount_points;
   GstRTSPMediaFactory *factory;
+  GstRTSPThreadPool *thread_pool;
 
   client = gst_rtsp_client_new ();
 
@@ -132,8 +133,12 @@ setup_client (const gchar * launch_line)
   gst_rtsp_mount_points_add_factory (mount_points, "/test", factory);
   gst_rtsp_client_set_mount_points (client, mount_points);
 
+  thread_pool = gst_rtsp_thread_pool_new ();
+  gst_rtsp_client_set_thread_pool (client, thread_pool);
+
   g_object_unref (mount_points);
   g_object_unref (session_pool);
+  g_object_unref (thread_pool);
 
   return client;
 }
@@ -359,6 +364,7 @@ setup_multicast_client (void)
   GstRTSPMountPoints *mount_points;
   GstRTSPMediaFactory *factory;
   GstRTSPAddressPool *address_pool;
+  GstRTSPThreadPool *thread_pool;
 
   client = gst_rtsp_client_new ();
 
@@ -376,9 +382,13 @@ setup_multicast_client (void)
   gst_rtsp_mount_points_add_factory (mount_points, "/test", factory);
   gst_rtsp_client_set_mount_points (client, mount_points);
 
+  thread_pool = gst_rtsp_thread_pool_new ();
+  gst_rtsp_client_set_thread_pool (client, thread_pool);
+
   g_object_unref (mount_points);
   g_object_unref (session_pool);
   g_object_unref (address_pool);
+  g_object_unref (thread_pool);
 
   return client;
 }
