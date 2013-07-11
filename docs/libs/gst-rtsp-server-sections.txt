@@ -1,6 +1,8 @@
 <SECTION>
 <FILE>rtsp-address-pool</FILE>
 <TITLE>GstRTSPAddressPool</TITLE>
+
+<SUBSECTION Address>
 GST_RTSP_ADDRESS_POOL_ANY_IPV4
 GST_RTSP_ADDRESS_POOL_ANY_IPV6
 GstRTSPAddress
@@ -8,6 +10,7 @@ GstRTSPAddressFlags
 gst_rtsp_address_copy
 gst_rtsp_address_free
 
+<SUBSECTION AddressPool>
 GstRTSPAddressPool
 GstRTSPAddressPoolClass
 gst_rtsp_address_pool_new
@@ -45,10 +48,12 @@ gst_rtsp_auth_remove_basic
 gst_rtsp_auth_setup
 gst_rtsp_auth_check
 
+<SUBSECTION AuthChecks>
 GST_RTSP_AUTH_CHECK_URL
 GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_ACCESS
 GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_CONSTRUCT
 
+<SUBSECTION AuthPermissions>
 GST_RTSP_MEDIA_FACTORY_ROLE
 GST_RTSP_MEDIA_FACTORY_PERM_ACCESS
 GST_RTSP_MEDIA_FACTORY_PERM_CONSTRUCT
@@ -68,9 +73,11 @@ gst_rtsp_auth_get_type
 <SECTION>
 <FILE>rtsp-client</FILE>
 <TITLE>GstRTSPClient</TITLE>
+<SUBSECTION ClientState>
 GstRTSPClientState
 gst_rtsp_client_state_get_current
 
+<SUBSECTION Client>
 GstRTSPClient
 GstRTSPClientClass
 
@@ -82,24 +89,25 @@ gst_rtsp_client_set_session_pool
 gst_rtsp_client_get_mount_points
 gst_rtsp_client_set_mount_points
 
-gst_rtsp_client_get_use_client_settings
-gst_rtsp_client_set_use_client_settings
-
 gst_rtsp_client_get_auth
 gst_rtsp_client_set_auth
 
 gst_rtsp_client_get_thread_pool
 gst_rtsp_client_set_thread_pool
 
+gst_rtsp_client_get_use_client_settings
+gst_rtsp_client_set_use_client_settings
+
 gst_rtsp_client_get_connection
 gst_rtsp_client_set_connection
+
+gst_rtsp_client_attach
 
 GstRTSPClientSendFunc
 gst_rtsp_client_set_send_func
 
 gst_rtsp_client_handle_message
 gst_rtsp_client_send_request
-gst_rtsp_client_attach
 
 GstRTSPClientSessionFilterFunc
 gst_rtsp_client_session_filter
@@ -190,8 +198,20 @@ GstRTSPMediaFactoryClass
 
 gst_rtsp_media_factory_new
 
-gst_rtsp_media_factory_construct
-gst_rtsp_media_factory_create_element
+gst_rtsp_media_factory_get_launch
+gst_rtsp_media_factory_set_launch
+
+gst_rtsp_media_factory_get_permissions
+gst_rtsp_media_factory_set_permissions
+
+gst_rtsp_media_factory_set_shared
+gst_rtsp_media_factory_is_shared
+
+gst_rtsp_media_factory_is_eos_shutdown
+gst_rtsp_media_factory_set_eos_shutdown
+
+gst_rtsp_media_factory_get_protocols
+gst_rtsp_media_factory_set_protocols
 
 gst_rtsp_media_factory_get_address_pool
 gst_rtsp_media_factory_set_address_pool
@@ -199,20 +219,9 @@ gst_rtsp_media_factory_set_address_pool
 gst_rtsp_media_factory_get_buffer_size
 gst_rtsp_media_factory_set_buffer_size
 
-gst_rtsp_media_factory_get_launch
-gst_rtsp_media_factory_set_launch
+gst_rtsp_media_factory_construct
+gst_rtsp_media_factory_create_element
 
-gst_rtsp_media_factory_get_permissions
-gst_rtsp_media_factory_set_permissions
-
-gst_rtsp_media_factory_get_protocols
-gst_rtsp_media_factory_set_protocols
-
-gst_rtsp_media_factory_is_eos_shutdown
-gst_rtsp_media_factory_set_eos_shutdown
-
-gst_rtsp_media_factory_set_shared
-gst_rtsp_media_factory_is_shared
 <SUBSECTION Standard>
 GST_RTSP_MEDIA_FACTORY_CAST
 GST_RTSP_MEDIA_FACTORY_CLASS_CAST
@@ -316,10 +325,13 @@ gst_rtsp_server_set_address
 gst_rtsp_server_get_service
 gst_rtsp_server_set_service
 
-gst_rtsp_server_get_bound_port
-
 gst_rtsp_server_get_backlog
 gst_rtsp_server_set_backlog
+
+gst_rtsp_server_get_tls_certificate
+gst_rtsp_server_set_tls_certificate
+
+gst_rtsp_server_get_bound_port
 
 gst_rtsp_server_get_mount_points
 gst_rtsp_server_set_mount_points
@@ -332,9 +344,6 @@ gst_rtsp_server_set_thread_pool
 
 gst_rtsp_server_get_auth
 gst_rtsp_server_set_auth
-
-gst_rtsp_server_get_tls_certificate
-gst_rtsp_server_set_tls_certificate
 
 gst_rtsp_server_get_use_client_settings
 gst_rtsp_server_set_use_client_settings
@@ -562,6 +571,7 @@ gst_rtsp_stream_transport_get_type
 <SECTION>
 <FILE>rtsp-thread-pool</FILE>
 <TITLE>GstRTSPThreadPool</TITLE>
+<SUBSECTION Thread>
 GstRTSPThreadType
 GstRTSPThread
 
@@ -571,6 +581,7 @@ gst_rtsp_thread_unref
 gst_rtsp_thread_reuse
 gst_rtsp_thread_stop
 
+<SUBSECTION ThreadPool>
 GstRTSPThreadPool
 GstRTSPThreadPoolClass
 gst_rtsp_thread_pool_new

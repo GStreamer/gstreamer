@@ -16,6 +16,13 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:rtsp-address-pool
+ * @short_description: A pool of network addresses
+ * @see_also: #GstRTSPStream, #GstRTSPStreamTransport
+ *
+ * Last reviewed on 2013-07-11 (1.0.0)
+ */
 
 #include <string.h>
 #include <gio/gio.h>

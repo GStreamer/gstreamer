@@ -160,32 +160,32 @@ void                  gst_rtsp_client_set_mount_points  (GstRTSPClient *client,
                                                          GstRTSPMountPoints *mounts);
 GstRTSPMountPoints *  gst_rtsp_client_get_mount_points  (GstRTSPClient *client);
 
-void                  gst_rtsp_client_set_use_client_settings (GstRTSPClient * client,
-                                                               gboolean use_client_settings);
-gboolean              gst_rtsp_client_get_use_client_settings (GstRTSPClient * client);
-
 void                  gst_rtsp_client_set_auth          (GstRTSPClient *client, GstRTSPAuth *auth);
 GstRTSPAuth *         gst_rtsp_client_get_auth          (GstRTSPClient *client);
 
 void                  gst_rtsp_client_set_thread_pool   (GstRTSPClient *client, GstRTSPThreadPool *pool);
 GstRTSPThreadPool *   gst_rtsp_client_get_thread_pool   (GstRTSPClient *client);
 
+void                  gst_rtsp_client_set_use_client_settings (GstRTSPClient * client,
+                                                               gboolean use_client_settings);
+gboolean              gst_rtsp_client_get_use_client_settings (GstRTSPClient * client);
+
 gboolean              gst_rtsp_client_set_connection    (GstRTSPClient *client, GstRTSPConnection *conn);
 GstRTSPConnection *   gst_rtsp_client_get_connection    (GstRTSPClient *client);
+
+guint                 gst_rtsp_client_attach            (GstRTSPClient *client,
+                                                         GMainContext *context);
 
 void                  gst_rtsp_client_set_send_func     (GstRTSPClient *client,
                                                          GstRTSPClientSendFunc func,
                                                          gpointer user_data,
                                                          GDestroyNotify notify);
+
 GstRTSPResult         gst_rtsp_client_handle_message    (GstRTSPClient *client,
                                                          GstRTSPMessage *message);
-
 GstRTSPResult         gst_rtsp_client_send_request      (GstRTSPClient * client,
                                                          GstRTSPSession *session,
                                                          GstRTSPMessage *request);
-guint                 gst_rtsp_client_attach            (GstRTSPClient *client,
-                                                         GMainContext *context);
-
 /**
  * GstRTSPClientSessionFilterFunc:
  * @client: a #GstRTSPClient object

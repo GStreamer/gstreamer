@@ -16,6 +16,14 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:rtsp-params
+ * @short_description: Param get and set implementation
+ * @see_also: #GstRTSPClient
+ *
+ * Last reviewed on 2013-07-11 (1.0.0)
+ */
+
 #include <string.h>
 
 #include "rtsp-params.h"

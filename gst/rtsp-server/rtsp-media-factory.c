@@ -16,6 +16,25 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:rtsp-media-factory
+ * @short_description: A factory for media pipelines
+ * @see_also: #GstRTSPMountPoints, #GstRTSPMedia
+ *
+ * The #GstRTSPMediaFactory is responsible for creating or recycling
+ * #GstRTSPMedia objects based on the passed URL.
+ *
+ * The default implementation of the object can create #GstRTSPMedia objects
+ * containing a pipeline created from a launch description set with
+ * gst_rtsp_media_factory_set_launch().
+ *
+ * Media from a factory can be shared by setting the shared flag with
+ * gst_rtsp_media_factory_set_shared(). When a factory is shared,
+ * gst_rtsp_media_factory_construct() will return the same #GstRTSPMedia when
+ * the url matches.
+ *
+ * Last reviewed on 2013-07-11 (1.0.0)
+ */
 
 #include "rtsp-media-factory.h"
 

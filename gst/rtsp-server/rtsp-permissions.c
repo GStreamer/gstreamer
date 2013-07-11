@@ -16,6 +16,14 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:rtsp-permissions
+ * @short_description: Roles and associated permissions
+ * @see_also: #GstRTSPToken, #GstRTSPAuth
+ *
+ * Last reviewed on 2013-07-11 (1.0.0)
+ */
+
 
 #include <string.h>
 

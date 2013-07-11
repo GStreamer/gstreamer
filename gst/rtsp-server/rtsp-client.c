@@ -16,6 +16,28 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:rtsp-client
+ * @short_description: A client connection state
+ * @see_also: #GstRTSPServer, #GstRTSPThreadPool
+ *
+ * The client object handles the connection with a client for as long as a TCP
+ * connection is open.
+ *
+ * A #GstRTSPClient is created by #GstRTSPServer when a new connection is
+ * accepted and it inherits the #GstRTSPMountPoints, #GstRTSPSessionPool,
+ * #GstRTSPAuth and #GstRTSPThreadPool from the server.
+ *
+ * The client connection should be configured with the #GstRTSPConnection using
+ * gst_rtsp_client_set_connection() before it can be attached to a #GMainContext
+ * using gst_rtsp_client_attach(). From then on the client will handle requests
+ * on the connection.
+ *
+ * Use gst_rtsp_client_session_filter() to iterate or modify all the
+ * #GstRTSPSession objects managed by the client object.
+ *
+ * Last reviewed on 2013-07-11 (1.0.0)
+ */
 
 #include <stdio.h>
 #include <string.h>
@@ -2391,6 +2413,9 @@ gst_rtsp_client_get_connection (GstRTSPClient * client)
  * Set @func as the callback that will be called when a new message needs to be
  * sent to the client. @user_data is passed to @func and @notify is called when
  * @user_data is no longer in use.
+ *
+ * By default, the client will send the messages on the #GstRTSPConnection that
+ * was configured with gst_rtsp_client_attach() was called.
  */
 void
 gst_rtsp_client_set_send_func (GstRTSPClient * client,
@@ -2453,7 +2478,8 @@ gst_rtsp_client_handle_message (GstRTSPClient * client,
  * @session: a #GstRTSPSession to send the request to or %NULL
  * @request: The request #GstRTSPMessage to send
  *
- * Send a request message to the client.
+ * Send a request message to the remote end. @request must be a
+ * #GST_RTSP_MESSAGE_REQUEST.
  */
 GstRTSPResult
 gst_rtsp_client_send_request (GstRTSPClient * client, GstRTSPSession * session,
@@ -2733,6 +2759,7 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
 
   g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), 0);
   priv = client->priv;
+  g_return_val_if_fail (priv->connection != NULL, 0);
   g_return_val_if_fail (priv->watch == NULL, 0);
 
   /* create watch for the connection and attach */

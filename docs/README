@@ -93,8 +93,8 @@ can build simple server applications with it.
      g_main_loop_run (loop);
    }
 
- The server manages two other objects: GstRTSPSessionPool and
- GstRTSPMountPoints. 
+ The server manages four other objects: GstRTSPSessionPool,
+ GstRTSPMountPoints, GstRTSPAuth and GstRTSPThreadPool.
 
  The GstRTSPSessionPool is an object that keeps track of all the active sessions
  in the server. A session will usually be kept for each client that performed a
@@ -108,6 +108,12 @@ can build simple server applications with it.
  before the server object is useful. This object manages the mapping from a
  request URL to a specific stream and its configuration. We explain in the next
  topic how to configure this object.
+
+ GstRTSPAuth is an object that authenticates users and authorizes actions
+ performed by users.
+
+ GstRTSPThreadPool manages the threads used for client connections and media
+ pipelines.
 
 
 * Making url mount points

@@ -16,6 +16,29 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:rtsp-session-pool
+ * @short_description: An object for managing sessions
+ * @see_also: #GstRTSPSession
+ *
+ * The #GstRTSPSessionPool object manages a list of #GstRTSPSession objects.
+ *
+ * The maximum number of sessions can be configured with
+ * gst_rtsp_session_pool_set_max_sessions(). The current number of sessions can
+ * be retrieved with gst_rtsp_session_pool_get_n_sessions().
+ *
+ * Use gst_rtsp_session_pool_create() to create a new #GstRTSPSession object.
+ * The session object can be found again with its id and
+ * gst_rtsp_session_pool_find().
+ *
+ * All sessions can be iterated with gst_rtsp_session_pool_filter().
+ *
+ * Run gst_rtsp_session_pool_cleanup() periodically to remove timed out sessions
+ * or use gst_rtsp_session_pool_create_watch() to be notified when session
+ * cleanup should be performed.
+ *
+ * Last reviewed on 2013-07-11 (1.0.0)
+ */
 
 #include "rtsp-session-pool.h"
 

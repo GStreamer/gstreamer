@@ -16,7 +16,24 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-
+/**
+ * SECTION:rtsp-mount-points
+ * @short_description: Map a path to media
+ * @see_also: #GstRTSPMediaFactory, #GstRTSPClient
+ *
+ * A #GstRTSPMountPoints object maintains a relation between paths
+ * and #GstRTSPMediaFactory objects. This object is usually given to
+ * #GstRTSPClient and used to find the media attached to a path.
+ *
+ * With gst_rtsp_mount_points_add_factory () and
+ * gst_rtsp_mount_points_remove_factory(), factories can be added and
+ * removed.
+ *
+ * With gst_rtsp_mount_points_match() you can find the #GstRTSPMediaFactory
+ * object that completely matches the given path.
+ *
+ * Last reviewed on 2013-07-11 (1.0.0)
+ */
 #include <string.h>
 
 #include "rtsp-mount-points.h"

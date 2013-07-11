@@ -69,10 +69,10 @@ struct _GstRTSPMediaFactory {
  *       #GstRTSPMedia for @url. The default implementation of this
  *       function calls create_element to retrieve an element and then looks for
  *       pay%d to create the streams.
- * @configure: configure the media created with @construct. The default
- *       implementation will configure the 'shared' property of the media.
  * @create_pipeline: create a new pipeline or re-use an existing one and
  *       add the #GstRTSPMedia's element created by @construct to the pipeline.
+ * @configure: configure the media created with @construct. The default
+ *       implementation will configure the 'shared' property of the media.
  * @media_constructed: signal emited when a media was constructed
  * @media_configure: signal emited when a media should be configured
  *
@@ -85,8 +85,8 @@ struct _GstRTSPMediaFactoryClass {
 
   GstElement *    (*create_element)     (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
   GstRTSPMedia *  (*construct)          (GstRTSPMediaFactory *factory, const GstRTSPUrl *url);
-  void            (*configure)          (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
   GstElement *    (*create_pipeline)    (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
+  void            (*configure)          (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
 
   /* signals */
   void            (*media_constructed)  (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
@@ -99,13 +99,13 @@ GType                 gst_rtsp_media_factory_get_type     (void);
 GstRTSPMediaFactory * gst_rtsp_media_factory_new          (void);
 
 /* configuring the factory */
-void                  gst_rtsp_media_factory_set_permissions  (GstRTSPMediaFactory *factory,
-                                                               GstRTSPPermissions *permissions);
-GstRTSPPermissions *  gst_rtsp_media_factory_get_permissions  (GstRTSPMediaFactory *factory);
-
 void                  gst_rtsp_media_factory_set_launch       (GstRTSPMediaFactory *factory,
                                                                const gchar *launch);
 gchar *               gst_rtsp_media_factory_get_launch       (GstRTSPMediaFactory *factory);
+
+void                  gst_rtsp_media_factory_set_permissions  (GstRTSPMediaFactory *factory,
+                                                               GstRTSPPermissions *permissions);
+GstRTSPPermissions *  gst_rtsp_media_factory_get_permissions  (GstRTSPMediaFactory *factory);
 
 void                  gst_rtsp_media_factory_set_shared       (GstRTSPMediaFactory *factory,
                                                                gboolean shared);

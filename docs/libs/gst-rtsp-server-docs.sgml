@@ -19,11 +19,15 @@
     <xi:include href="xml/rtsp-mount-points.xml"/>
     <xi:include href="xml/rtsp-media-factory.xml"/>
     <xi:include href="xml/rtsp-media-factory-uri.xml"/>
+    <xi:include href="xml/rtsp-media.xml"/>
+    <xi:include href="xml/rtsp-stream.xml"/>
     <xi:include href="xml/rtsp-session-pool.xml"/>
     <xi:include href="xml/rtsp-session.xml"/>
-    <xi:include href="xml/rtsp-media.xml"/>
+    <xi:include href="xml/rtsp-session-media.xml"/>
+    <xi:include href="xml/rtsp-stream-transport.xml"/>
     <xi:include href="xml/rtsp-sdp.xml"/>
     <xi:include href="xml/rtsp-address-pool.xml"/>
+    <xi:include href="xml/rtsp-thread-pool.xml"/>
     <xi:include href="xml/rtsp-auth.xml"/>
     <xi:include href="xml/rtsp-token.xml"/>
     <xi:include href="xml/rtsp-permissions.xml"/>

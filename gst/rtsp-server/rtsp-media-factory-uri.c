@@ -16,6 +16,19 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:rtsp-media-factory-uri
+ * @short_description: A factory for URI sources
+ * @see_also: #GstRTSPMediaFactory, #GstRTSPMedia
+ *
+ * This specialized #GstRTSPMediaFactory constructs media pipelines from a URI,
+ * given with gst_rtsp_media_factory_uri_set_uri().
+ *
+ * It will automatically demux and payload the different streams found in the
+ * media at URL.
+ *
+ * Last reviewed on 2013-07-11 (1.0.0)
+ */
 
 #include <string.h>
 

@@ -16,7 +16,42 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
-
+/**
+ * SECTION:rtsp-server
+ * @short_description: The main server object
+ * @see_also: #GstRTSPClient, #GstRTSPThreadPool
+ *
+ * The server object is the object listening for connections on a port and
+ * creating #GstRTSPClient objects to handle those connections.
+ *
+ * The server will listen on the address set with gst_rtsp_server_set_address()
+ * and the port or service configured with gst_rtsp_server_set_service().
+ * Use gst_rtsp_server_set_backlog() to configure the amount of pending requests
+ * that the server will keep. By default the server listens on the current
+ * network (0.0.0.0) and port 8554.
+ *
+ * The server will require an SSL connection when a TLS certificate has been
+ * set with gst_rtsp_server_set_tls_certificate().
+ *
+ * To start the server, use gst_rtsp_server_attach() to attach it to a
+ * #GMainContext. For more control, gst_rtsp_server_create_source() and
+ * gst_rtsp_server_create_socket() can be used to get a #GSource and #GSocket
+ * respectively.
+ *
+ * gst_rtsp_server_transfer_connection() can be used to transfer an existing
+ * socket to the RTSP server, for example from an HTTP server.
+ *
+ * Once the server socket is attached to a mainloop, it will start accepting
+ * connections. When a new connection is received, a new #GstRTSPClient object
+ * is created to handle the connection. The new client will be configured with
+ * the server #GstRTSPAuth, #GstRTSPMountPoints, #GstRTSPSessionPool and
+ * #GstRTSPThreadPool.
+ *
+ * The server uses the configured #GstRTSPThreadPool object to handle the
+ * remainder of the communication with this client.
+ *
+ * Last reviewed on 2013-07-11 (1.0.0)
+ */
 #include <stdlib.h>
 #include <string.h>
 
@@ -99,7 +134,6 @@ GST_DEBUG_CATEGORY_STATIC (rtsp_server_debug);
 #define GST_CAT_DEFAULT rtsp_server_debug
 
 typedef struct _ClientContext ClientContext;
-typedef struct _Loop Loop;
 
 static guint gst_rtsp_server_signals[SIGNAL_LAST] = { 0 };
 
@@ -165,7 +199,7 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
    * pending connections for the server may grow. If a connection request arrives
    * when the queue is full, the client may receive an error with an indication of
    * ECONNREFUSED or, if the underlying protocol supports retransmission, the
-   * request may be ignored so that a later reattempt at  connection succeeds.
+   * request may be ignored so that a later reattempt at connection succeeds.
    */
   g_object_class_install_property (gobject_class, PROP_BACKLOG,
       g_param_spec_int ("backlog", "Backlog",
@@ -375,6 +409,10 @@ out:
  * Configure @server to accept connections on the given service.
  * @service should be a string containing the service name (see services(5)) or
  * a string containing a port number between 1 and 65535.
+ *
+ * When @service is set to "0", the server will listen on a random free
+ * port. The actual used port can be retrieved with
+ * gst_rtsp_server_get_bound_port().
  *
  * This function must be called before the server is bound.
  */

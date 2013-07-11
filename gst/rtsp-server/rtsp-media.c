@@ -16,6 +16,13 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:rtsp-media
+ * @short_description: The media pipeline
+ * @see_also: #GstRTSPMediaFactory, #GstRTSPStream
+ *
+ * Last reviewed on 2013-07-11 (1.0.0)
+ */
 
 #include <string.h>
 #include <stdlib.h>

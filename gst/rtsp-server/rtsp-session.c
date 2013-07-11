@@ -16,6 +16,33 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+/**
+ * SECTION:rtsp-session
+ * @short_description: An object to manage media
+ * @see_also: #GstRTSPSessionPool, #GstRTSPSessionMedia, #GstRTSPMedia
+ *
+ * The #GstRTSPSession is identified by an id, unique in the
+ * #GstRTSPSessionPool that created the session and manages media and its
+ * configuration.
+ *
+ * A #GstRTSPSession has a timeout that can be retrieved with
+ * gst_rtsp_session_get_timeout(). You can check if the sessions is expired with
+ * gst_rtsp_session_is_expired(). gst_rtsp_session_touch() will reset the
+ * expiration counter of the session.
+ *
+ * When a client configures a media with SETUP, a session will be created to
+ * keep track of the configuration of that media. With
+ * gst_rtsp_session_manage_media(), the media is added to the managed media
+ * in the session. With gst_rtsp_session_release_media() the media can be
+ * released again from the session. Managed media is identified in the sessions
+ * with a url. Use gst_rtsp_session_get_media() to get the media that matches
+ * (part of) the given url.
+ *
+ * The media in a session can be iterated with gst_rtsp_session_filter().
+ *
+ * Last reviewed on 2013-07-11 (1.0.0)
+ */
+
 #include <string.h>
 
 #include "rtsp-session.h"

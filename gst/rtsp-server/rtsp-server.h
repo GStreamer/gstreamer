@@ -56,19 +56,18 @@ struct _GstRTSPServer {
 
 /**
  * GstRTSPServerClass:
- *
  * @create_client: Create, configure a new GstRTSPClient
- *          object that handles the new connection on @socket.
+ *          object that handles the new connection on @socket. The default
+ *          implementation will create a GstRTSPClient and will configure the
+ *          mount-points, auth, session-pool and thread-pool on the client.
  * @setup_connection: Setup the new client connection. The default
- *          implementation will configure the TLS certificate.
+ *          implementation will configure the TLS certificate when specified.
  * @client_connected: emited when a new client connected.
  *
  * The RTSP server class structure
  */
 struct _GstRTSPServerClass {
   GObjectClass  parent_class;
-
-  GThreadPool *pool;
 
   GstRTSPClient * (*create_client)      (GstRTSPServer *server);
   gboolean        (*setup_connection)   (GstRTSPServer *server, GstRTSPClient *client,
@@ -87,10 +86,13 @@ gchar *               gst_rtsp_server_get_address          (GstRTSPServer *serve
 void                  gst_rtsp_server_set_service          (GstRTSPServer *server, const gchar *service);
 gchar *               gst_rtsp_server_get_service          (GstRTSPServer *server);
 
-int                   gst_rtsp_server_get_bound_port       (GstRTSPServer *server);
-
 void                  gst_rtsp_server_set_backlog          (GstRTSPServer *server, gint backlog);
 gint                  gst_rtsp_server_get_backlog          (GstRTSPServer *server);
+
+void                  gst_rtsp_server_set_tls_certificate  (GstRTSPServer *server, GTlsCertificate *cert);
+GTlsCertificate *     gst_rtsp_server_get_tls_certificate  (GstRTSPServer *server);
+
+int                   gst_rtsp_server_get_bound_port       (GstRTSPServer *server);
 
 void                  gst_rtsp_server_set_session_pool     (GstRTSPServer *server, GstRTSPSessionPool *pool);
 GstRTSPSessionPool *  gst_rtsp_server_get_session_pool     (GstRTSPServer *server);
@@ -107,9 +109,6 @@ GstRTSPThreadPool *   gst_rtsp_server_get_thread_pool      (GstRTSPServer *serve
 void                  gst_rtsp_server_set_use_client_settings (GstRTSPServer *server,
                                                                gboolean use_client_settings);
 gboolean              gst_rtsp_server_get_use_client_settings (GstRTSPServer *server);
-
-void                  gst_rtsp_server_set_tls_certificate  (GstRTSPServer *server, GTlsCertificate *cert);
-GTlsCertificate *     gst_rtsp_server_get_tls_certificate  (GstRTSPServer *server);
 
 gboolean              gst_rtsp_server_transfer_connection  (GstRTSPServer * server, GSocket *socket,
                                                             const gchar * ip, gint port,
