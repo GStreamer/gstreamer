@@ -422,6 +422,15 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         window = gst_gl_window_new (glimage_sink->display);
         gst_gl_display_set_window (glimage_sink->display, window);
 
+        if (!glimage_sink->window_id && !glimage_sink->new_window_id)
+          gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY
+              (glimage_sink));
+
+        if (glimage_sink->window_id != glimage_sink->new_window_id) {
+          glimage_sink->window_id = glimage_sink->new_window_id;
+          gst_gl_window_set_window_handle (window, glimage_sink->window_id);
+        }
+
         if (!gst_gl_window_create_context (window, 0, &error)) {
           GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
               ("%s", error->message), (NULL));
@@ -595,9 +604,6 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
       GST_VIDEO_SINK_HEIGHT (glimage_sink));
 
   glimage_sink->info = vinfo;
-
-  if (!glimage_sink->window_id && !glimage_sink->new_window_id)
-    gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY (glimage_sink));
 
   return TRUE;
 }
