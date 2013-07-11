@@ -231,7 +231,6 @@ gst_gl_window_x11_create_context (GstGLWindow * window,
 
   window_x11->running = TRUE;
   window_x11->visible = FALSE;
-  window_x11->parent_win = 0;
   window_x11->allow_extra_expose_events = TRUE;
 
   g_assert (window_x11->device);
@@ -290,9 +289,7 @@ gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
   unsigned long mask;
   const gchar *title = "OpenGL renderer";
   Atom wm_atoms[1];
-
-  static gint x = 0;
-  static gint y = 0;
+  gint x = 0, y = 0, width = 1, height = 1;
 
   if (window_x11->visual_info->visual != window_x11->visual)
     GST_LOG ("selected visual is different from the default");
@@ -320,11 +317,10 @@ gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
 
   mask = CWBackPixmap | CWBorderPixel | CWColormap | CWEventMask;
 
-  x += 20;
-  y += 20;
-
   window_x11->internal_win_id =
-      XCreateWindow (window_x11->device, window_x11->root, x, y, 1, 1, 0,
+      XCreateWindow (window_x11->device,
+      window_x11->parent_win ? window_x11->parent_win : window_x11->root,
+      x, y, width, height, 0,
       window_x11->visual_info->depth, InputOutput,
       window_x11->visual_info->visual, mask, &win_attr);
 
@@ -367,7 +363,6 @@ gst_gl_window_x11_close (GstGLWindow * window)
 
   GST_GL_WINDOW_LOCK (window_x11);
 
-  window_x11->parent_win = 0;
   if (window_x11->device) {
     if (window_x11->internal_win_id)
       XUnmapWindow (window_x11->device, window_x11->internal_win_id);
@@ -471,17 +466,19 @@ gst_gl_window_x11_set_window_handle (GstGLWindow * window, guintptr id)
 
   window_x11->parent_win = (Window) id;
 
-  GST_LOG ("set parent window id: %lud", id);
+  if (window_x11->running) {
+    GST_LOG ("set parent window id: %lud", id);
 
-  XGetWindowAttributes (window_x11->disp_send, window_x11->parent_win, &attr);
+    XGetWindowAttributes (window_x11->disp_send, window_x11->parent_win, &attr);
 
-  XResizeWindow (window_x11->disp_send, window_x11->internal_win_id, attr.width,
-      attr.height);
+    XResizeWindow (window_x11->disp_send, window_x11->internal_win_id,
+        attr.width, attr.height);
 
-  XReparentWindow (window_x11->disp_send, window_x11->internal_win_id,
-      window_x11->parent_win, 0, 0);
+    XReparentWindow (window_x11->disp_send, window_x11->internal_win_id,
+        window_x11->parent_win, 0, 0);
 
-  XSync (window_x11->disp_send, FALSE);
+    XSync (window_x11->disp_send, FALSE);
+  }
 }
 
 /* Called in the gl thread */
