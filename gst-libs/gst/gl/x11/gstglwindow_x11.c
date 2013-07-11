@@ -408,6 +408,15 @@ gst_gl_window_x11_close (GstGLWindow * window)
     GST_DEBUG ("display sender closed");
   }
 
+  g_source_destroy (window_x11->x11_source);
+  g_source_unref (window_x11->x11_source);
+  window_x11->x11_source = NULL;
+  g_main_loop_unref (window_x11->loop);
+  window_x11->loop = NULL, g_main_context_unref (window_x11->main_context);
+  window_x11->main_context = NULL;
+
+  window_x11->running = FALSE;
+
   GST_GL_WINDOW_UNLOCK (window_x11);
 }
 
