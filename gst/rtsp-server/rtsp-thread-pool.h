@@ -62,6 +62,10 @@ typedef enum
 
 /**
  * GstRTSPThread:
+ * @mini_object: parent #GstMiniObject
+ * @type: the thread type
+ * @context: a #GMainContext
+ * @loop: a #GMainLoop
  *
  * Structure holding info about a mainloop running in a thread
  */
@@ -121,11 +125,13 @@ gst_rtsp_thread_unref (GstRTSPThread * thread)
 struct _GstRTSPThreadPool {
   GObject       parent;
 
+  /*< private >*/
   GstRTSPThreadPoolPrivate *priv;
 };
 
 /**
  * GstRTSPThreadPoolClass:
+ * @pool: a #GThreadPool used internally
  * @get_thread: get or reuse a thread object
  * @configure_thread: configure a thread object
  * @thread_enter: called from the thread when it is entered

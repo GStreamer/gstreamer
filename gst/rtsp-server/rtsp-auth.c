@@ -149,10 +149,10 @@ gst_rtsp_auth_new (void)
  * gst_rtsp_auth_add_basic:
  * @auth: a #GstRTSPAuth
  * @basic: the basic token
- * @authgroup: authorisation group
+ * @token: authorisation token
  *
  * Add a basic token for the default authentication algorithm that
- * enables the client qith privileges from @authgroup.
+ * enables the client with privileges listed in @token.
  */
 void
 gst_rtsp_auth_add_basic (GstRTSPAuth * auth, const gchar * basic,

@@ -774,8 +774,9 @@ gst_rtsp_media_get_buffer_size (GstRTSPMedia * media)
 /**
  * gst_rtsp_media_use_time_provider:
  * @media: a #GstRTSPMedia
+ * @time_provider: if a #GstNetTimeProvider should be used
  *
- * Set @media to provide a GstNetTimeProvider.
+ * Set @media to provide a #GstNetTimeProvider.
  */
 void
 gst_rtsp_media_use_time_provider (GstRTSPMedia * media, gboolean time_provider)

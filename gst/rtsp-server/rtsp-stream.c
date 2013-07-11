@@ -951,6 +951,7 @@ alloc_ports (GstRTSPStream * stream)
  * gst_rtsp_stream_get_server_port:
  * @stream: a #GstRTSPStream
  * @server_port: (out): result server port
+ * @family: the port family to get
  *
  * Fill @server_port with the port pair used by the server. This function can
  * only be called when @stream has been joined.

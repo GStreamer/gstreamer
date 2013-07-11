@@ -356,7 +356,7 @@ gst_rtsp_session_media_set_rtsp_state (GstRTSPSessionMedia * media,
 }
 
 /**
- * gst_rtsp_session_media_set_rtsp_state:
+ * gst_rtsp_session_media_get_rtsp_state:
  * @media: a #GstRTSPSessionMedia
  *
  * Get the current RTSP state of @media.

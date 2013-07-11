@@ -110,6 +110,8 @@ gst_rtsp_permissions_new (void)
 /**
  * gst_rtsp_permissions_add_role:
  * @permissions: a #GstRTSPPermissions
+ * @role: a role
+ * @structure: the permissions structure
  *
  * Add the configuration in @structure to @permissions for @role.
  */
@@ -151,7 +153,9 @@ gst_rtsp_permissions_add_role (GstRTSPPermissions * permissions,
 /**
  * gst_rtsp_permissions_remove_role:
  * @permissions: a #GstRTSPPermissions
+ * @role: a role
  *
+ * Remove all permissions for @role in @permissions.
  */
 void
 gst_rtsp_permissions_remove_role (GstRTSPPermissions * permissions,
@@ -165,7 +169,11 @@ gst_rtsp_permissions_remove_role (GstRTSPPermissions * permissions,
 /**
  * gst_rtsp_permissions_get_role:
  * @permissions: a #GstRTSPPermissions
+ * @role: a role
  *
+ * Get all permissions for @role in @permissions.
+ *
+ * Returns: the structure with permissions for @role.
  */
 const GstStructure *
 gst_rtsp_permissions_get_role (GstRTSPPermissions * permissions,
@@ -187,6 +195,16 @@ gst_rtsp_permissions_get_role (GstRTSPPermissions * permissions,
   return NULL;
 }
 
+/**
+ * gst_rtsp_permissions_is_allowed:
+ * @permissions: a #GstRTSPPermissions
+ * @role: a role
+ * @permission: a permission
+ *
+ * Check if @role in @permissions is given permission for @permission.
+ *
+ * Returns: %TRUE if @role is allowed @permission.
+ */
 gboolean
 gst_rtsp_permissions_is_allowed (GstRTSPPermissions * permissions,
     const gchar * role, const gchar * permission)

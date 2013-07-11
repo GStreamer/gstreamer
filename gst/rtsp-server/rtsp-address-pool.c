@@ -22,6 +22,14 @@
 
 #include "rtsp-address-pool.h"
 
+/**
+ * gst_rtsp_address_copy:
+ * @addr: a #GstRTSPAddress
+ *
+ * Make a copy of @addr.
+ *
+ * Returns: a copy of @addr.
+ */
 GstRTSPAddress *
 gst_rtsp_address_copy (GstRTSPAddress * addr)
 {
@@ -41,6 +49,13 @@ gst_rtsp_address_copy (GstRTSPAddress * addr)
 static void gst_rtsp_address_pool_release_address (GstRTSPAddressPool * pool,
     GstRTSPAddress * addr);
 
+/**
+ * gst_rtsp_address_free:
+ * @addr: a #GstRTSPAddress
+ *
+ * Free @addr and releasing it back into the pool when owned by a
+ * pool.
+ */
 void
 gst_rtsp_address_free (GstRTSPAddress * addr)
 {
@@ -53,7 +68,6 @@ gst_rtsp_address_free (GstRTSPAddress * addr)
   g_free (addr->address);
   g_slice_free (GstRTSPAddress, addr);
 }
-
 
 G_DEFINE_BOXED_TYPE (GstRTSPAddress, gst_rtsp_address,
     (GBoxedCopyFunc) gst_rtsp_address_copy,

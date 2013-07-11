@@ -67,6 +67,7 @@ typedef enum
 struct _GstRTSPSession {
   GObject       parent;
 
+  /*< private >*/
   GstRTSPSessionPrivate *priv;
 };
 

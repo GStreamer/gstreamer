@@ -34,12 +34,21 @@ G_BEGIN_DECLS
 #define GST_RTSP_ADDRESS_POOL_CLASS_CAST(klass) ((GstRTSPAddressPoolClass*)(klass))
 
 typedef struct _GstRTSPAddress GstRTSPAddress;
-typedef struct _GstRTSPAddressClass GstRTSPAddressClass;
 
 typedef struct _GstRTSPAddressPool GstRTSPAddressPool;
 typedef struct _GstRTSPAddressPoolClass GstRTSPAddressPoolClass;
 typedef struct _GstRTSPAddressPoolPrivate GstRTSPAddressPoolPrivate;
 
+/**
+ * GstRTSPAddress:
+ * @pool: the #GstRTSPAddressPool owner of this address
+ * @address: the address
+ * @port: the port number
+ * @n_ports: number of ports
+ * @ttl: TTL or 0 for unicast addresses
+ *
+ * An address
+ */
 struct _GstRTSPAddress {
   GstRTSPAddressPool *pool;
 
@@ -48,6 +57,7 @@ struct _GstRTSPAddress {
   gint n_ports;
   guint8 ttl;
 
+  /*<private >*/
   gpointer priv;
 };
 
@@ -56,6 +66,17 @@ GType gst_rtsp_address_get_type        (void);
 GstRTSPAddress * gst_rtsp_address_copy (GstRTSPAddress *addr);
 void             gst_rtsp_address_free (GstRTSPAddress *addr);
 
+/**
+ * GstRTSPAddressFlags:
+ * @GST_RTSP_ADDRESS_FLAG_NONE: no flags
+ * @GST_RTSP_ADDRESS_FLAG_IPV4: an IPv4 address
+ * @GST_RTSP_ADDRESS_FLAG_IPV6: and IPv6 address
+ * @GST_RTSP_ADDRESS_FLAG_EVEN_PORT: address with an even port
+ * @GST_RTSP_ADDRESS_FLAG_MULTICAST: a multicast address
+ * @GST_RTSP_ADDRESS_FLAG_UNICAST: a unicast address
+ *
+ * Flags used to control allocation of addresses
+ */
 typedef enum {
   GST_RTSP_ADDRESS_FLAG_NONE      = 0,
   GST_RTSP_ADDRESS_FLAG_IPV4      = (1 << 0),
@@ -71,6 +92,7 @@ typedef enum {
  * Used with gst_rtsp_address_pool_add_range_unicast() to bind to all
  * IPv4 addresses
  */
+#define GST_RTSP_ADDRESS_POOL_ANY_IPV4  "0.0.0.0"
 
 /**
  * GST_RTSP_ADDRESS_POOL_ANY_IPV6:
@@ -78,22 +100,26 @@ typedef enum {
  * Used with gst_rtsp_address_pool_add_range_unicast() to bind to all
  * IPv6 addresses
  */
-
-#define GST_RTSP_ADDRESS_POOL_ANY_IPV4  "0.0.0.0"
 #define GST_RTSP_ADDRESS_POOL_ANY_IPV6  "::"
 
 /**
  * GstRTSPAddressPool:
  * @parent: the parent GObject
  *
- * An address pool, all member are prive
+ * An address pool, all member are private
  */
 struct _GstRTSPAddressPool {
   GObject       parent;
 
+  /*< private >*/
   GstRTSPAddressPoolPrivate *priv;
 };
 
+/**
+ * GstRTSPAddressPoolClass:
+ *
+ * Opaque Address pool class.
+ */
 struct _GstRTSPAddressPoolClass {
   GObjectClass  parent_class;
 };

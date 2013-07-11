@@ -105,7 +105,7 @@ typedef gboolean (*GstRTSPClientSendFunc)      (GstRTSPClient *client,
 /**
  * GstRTSPClient:
  *
- * The client structure.
+ * The client object represents the connection and its state with a client.
  */
 struct _GstRTSPClient {
   GObject       parent;
@@ -115,10 +115,13 @@ struct _GstRTSPClient {
 
 /**
  * GstRTSPClientClass:
+ * @create_sdp: called when the SDP needs to be created for media.
+ * @configure_client_transport: called when the client transport needs to be
+ *    configured.
  * @params_set: set parameters. This function should also initialize the
- * RTSP response(state->response) via a call to gst_rtsp_message_init_response()
+ *    RTSP response(state->response) via a call to gst_rtsp_message_init_response()
  * @params_get: get parameters. This function should also initialize the
- * RTSP response(state->response) via a call to gst_rtsp_message_init_response()
+ *    RTSP response(state->response) via a call to gst_rtsp_message_init_response()
  *
  * The client class structure.
  */

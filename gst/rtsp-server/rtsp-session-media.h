@@ -48,6 +48,7 @@ struct _GstRTSPSessionMedia
 {
   GObject  parent;
 
+  /*< private >*/
   GstRTSPSessionMediaPrivate *priv;
 };
 

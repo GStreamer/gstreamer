@@ -76,6 +76,7 @@ typedef enum {
 struct _GstRTSPMedia {
   GObject            parent;
 
+  /*< private >*/
   GstRTSPMediaPrivate *priv;
 };
 

@@ -61,6 +61,7 @@ struct _GstRTSPServer {
  *          object that handles the new connection on @socket.
  * @setup_connection: Setup the new client connection. The default
  *          implementation will configure the TLS certificate.
+ * @client_connected: emited when a new client connected.
  *
  * The RTSP server class structure
  */

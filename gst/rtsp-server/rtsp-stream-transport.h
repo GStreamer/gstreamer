@@ -42,7 +42,25 @@ typedef struct _GstRTSPStreamTransportPrivate GstRTSPStreamTransportPrivate;
 
 #include "rtsp-stream.h"
 
+/**
+ * GstRTSPSendFunc:
+ * @buffer: a #GstBuffer
+ * @channel: a channel
+ * @user_data: user data
+ *
+ * Function registered with gst_rtsp_stream_transport_set_callbacks() and
+ * called when @buffer must be sent on @channel.
+ *
+ * Returns: %TRUE on success
+ */
 typedef gboolean (*GstRTSPSendFunc)      (GstBuffer *buffer, guint8 channel, gpointer user_data);
+/**
+ * GstRTSPKeepAliveFunc:
+ * @user_data: user data
+ *
+ * Function registered with gst_rtsp_stream_transport_set_keepalive() and called
+ * when the stream is active.
+ */
 typedef void     (*GstRTSPKeepAliveFunc) (gpointer user_data);
 
 /**
@@ -54,6 +72,7 @@ typedef void     (*GstRTSPKeepAliveFunc) (gpointer user_data);
 struct _GstRTSPStreamTransport {
   GObject              parent;
 
+  /*< private >*/
   GstRTSPStreamTransportPrivate *priv;
 };
 

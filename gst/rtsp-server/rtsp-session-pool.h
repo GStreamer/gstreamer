@@ -52,6 +52,7 @@ typedef struct _GstRTSPSessionPoolPrivate GstRTSPSessionPoolPrivate;
 struct _GstRTSPSessionPool {
   GObject       parent;
 
+  /*< private >*/
   GstRTSPSessionPoolPrivate *priv;
 };
 

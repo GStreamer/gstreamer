@@ -33,7 +33,6 @@ GType gst_rtsp_permissions_get_type (void);
 #define GST_RTSP_PERMISSIONS_CAST(obj)   ((GstRTSPPermissions*)(obj))
 #define GST_RTSP_PERMISSIONS(obj)        (GST_RTSP_PERMISSIONS_CAST(obj))
 
-
 /**
  * GstRTSPPermissions:
  *

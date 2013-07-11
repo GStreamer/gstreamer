@@ -53,6 +53,7 @@ typedef struct _GstRTSPMediaFactoryPrivate GstRTSPMediaFactoryPrivate;
 struct _GstRTSPMediaFactory {
   GObject            parent;
 
+  /*< private >*/
   GstRTSPMediaFactoryPrivate *priv;
 };
 
