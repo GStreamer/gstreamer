@@ -462,7 +462,6 @@ gst_rtsp_thread_pool_get_thread (GstRTSPThreadPool * pool,
   GstRTSPThread *result = NULL;
 
   g_return_val_if_fail (GST_IS_RTSP_THREAD_POOL (pool), NULL);
-  g_return_val_if_fail (state != NULL, NULL);
 
   klass = GST_RTSP_THREAD_POOL_GET_CLASS (pool);
 
