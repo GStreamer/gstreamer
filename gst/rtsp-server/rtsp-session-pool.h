@@ -22,7 +22,6 @@
 #ifndef __GST_RTSP_SESSION_POOL_H__
 #define __GST_RTSP_SESSION_POOL_H__
 
-
 G_BEGIN_DECLS
 
 typedef struct _GstRTSPSessionPool GstRTSPSessionPool;
@@ -57,11 +56,13 @@ struct _GstRTSPSessionPool {
  * GstRTSPSessionPoolClass:
  * @create_session_id: create a new random session id. Subclasses can create
  *    custom session ids and should not check if the session exists.
+ * @create_session: make a new session object.
  */
 struct _GstRTSPSessionPoolClass {
   GObjectClass  parent_class;
 
-  gchar * (*create_session_id)   (GstRTSPSessionPool *pool);
+  gchar *          (*create_session_id)   (GstRTSPSessionPool *pool);
+  GstRTSPSession * (*create_session)      (GstRTSPSessionPool *pool, const gchar *id);
 };
 
 /**
@@ -108,7 +109,7 @@ GType                 gst_rtsp_session_pool_get_type          (void);
 /* creating a session pool */
 GstRTSPSessionPool *  gst_rtsp_session_pool_new               (void);
 
-/* counting sessionss */
+/* counting sessions */
 void                  gst_rtsp_session_pool_set_max_sessions  (GstRTSPSessionPool *pool, guint max);
 guint                 gst_rtsp_session_pool_get_max_sessions  (GstRTSPSessionPool *pool);
 

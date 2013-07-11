@@ -56,6 +56,8 @@ static void gst_rtsp_session_pool_set_property (GObject * object, guint propid,
 static void gst_rtsp_session_pool_finalize (GObject * object);
 
 static gchar *create_session_id (GstRTSPSessionPool * pool);
+static GstRTSPSession *create_session (GstRTSPSessionPool * pool,
+    const gchar * id);
 
 G_DEFINE_TYPE (GstRTSPSessionPool, gst_rtsp_session_pool, G_TYPE_OBJECT);
 
@@ -79,6 +81,7 @@ gst_rtsp_session_pool_class_init (GstRTSPSessionPoolClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   klass->create_session_id = create_session_id;
+  klass->create_session = create_session;
 
   GST_DEBUG_CATEGORY_INIT (rtsp_session_debug, "rtspsessionpool", 0,
       "GstRTSPSessionPool");
@@ -279,6 +282,12 @@ create_session_id (GstRTSPSessionPool * pool)
   return g_strndup (id, 16);
 }
 
+static GstRTSPSession *
+create_session (GstRTSPSessionPool * pool, const gchar * id)
+{
+  return gst_rtsp_session_new (id);
+}
+
 /**
  * gst_rtsp_session_pool_create:
  * @pool: a #GstRTSPSessionPool
@@ -330,7 +339,10 @@ gst_rtsp_session_pool_create (GstRTSPSessionPool * pool)
         goto collision;
     } else {
       /* not found, create session and insert it in the pool */
-      result = gst_rtsp_session_new (id);
+      if (klass->create_session)
+        result = create_session (pool, id);
+      if (result == NULL)
+        goto too_many_sessions;
       /* take additional ref for the pool */
       g_object_ref (result);
       g_hash_table_insert (priv->sessions,
