@@ -155,7 +155,7 @@ GstRTSPResult         gst_rtsp_client_send_message      (GstRTSPClient * client,
  * A return value of #GST_RTSP_FILTER_KEEP will leave @sess untouched in
  * @client.
  *
- * A value of GST_RTSP_FILTER_REF will add @sess to the result #GList of
+ * A value of #GST_RTSP_FILTER_REF will add @sess to the result #GList of
  * gst_rtsp_client_session_filter().
  *
  * Returns: a #GstRTSPFilterResult.
