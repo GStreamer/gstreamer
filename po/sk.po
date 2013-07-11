@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2010-11-08 15:34+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -79,6 +79,10 @@ msgid "Internal data stream error."
 msgstr "Vnútorná chyba prúdu údajov."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Chýa prvok '%s' - skontrolujte svoju inštaláciu GStreamer."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 "Na prehratie tohto prúdu údajov je vyžadovaný zásuvný modul %s, ktorý nie je "
@@ -90,9 +94,9 @@ msgstr "Nepodarilo sa zistiť typ prádu údajov"
 msgid "This appears to be a text file"
 msgstr "Tento súbor je asi textový"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Chýa prvok '%s' - skontrolujte svoju inštaláciu GStreamer."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Nepodarilo sa vytvoriť prvok \"decodebin\""
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -164,173 +168,11 @@ msgstr "Zdrojový prvok je chybný."
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Chyba pri posielaní údajov do \"%s:%d\"."
 
-msgid "This CD has no audio tracks"
-msgstr "Toto CD nemá zvukové stopy"
-
 msgid "Can't record audio fast enough"
 msgstr "Zvuk sa nedá nahrávať dostatočne rýchlo"
 
-msgid "Failed to read tag: not enough data"
-msgstr "Načítanie značky zlyhalo: málo údajov"
-
-msgid "track ID"
-msgstr "ID stopy"
-
-msgid "MusicBrainz track ID"
-msgstr "ID stopy MusicBrainz"
-
-msgid "artist ID"
-msgstr "ID umelca"
-
-msgid "MusicBrainz artist ID"
-msgstr "ID umelca MusicBrainz"
-
-msgid "album ID"
-msgstr "ID albumu"
-
-msgid "MusicBrainz album ID"
-msgstr "ID albumu MusicBrainz"
-
-msgid "album artist ID"
-msgstr "ID umelca albumu"
-
-msgid "MusicBrainz album artist ID"
-msgstr "ID umelca albumu MusicBrainz"
-
-msgid "track TRM ID"
-msgstr "ID TRM stopy"
-
-msgid "MusicBrainz TRM ID"
-msgstr "ID TRM MusicBrainz"
-
-msgid "capturing shutter speed"
-msgstr "zachytávacia rýchlosť uzávierky"
-
-msgid "Shutter speed used when capturing an image, in seconds"
-msgstr "Rýchlosť uzávierky použitá pri zachytávaní obrázku, v sekundách"
-
-msgid "capturing focal ratio"
-msgstr "zachytávacií pomer F"
-
-msgid "Focal ratio (f-number) used when capturing the image"
-msgstr "Pomer (číslo F) použitý pri zachytávaní obrázku"
-
-msgid "capturing focal length"
-msgstr "zachytávacia ohnisková vzdialenosť"
-
-msgid "Focal length of the lens used capturing the image, in mm"
-msgstr "Ohnisková vzdialenosť objektívu pri zachytávaní obrázku, v mm"
-
-msgid "capturing digital zoom ratio"
-msgstr "zachytávací pomer digitálneho priblíženia"
-
-msgid "Digital zoom ratio used when capturing an image"
-msgstr "Pomer digitálneho priblíženia použitý pri zachytávaní obrázku"
-
-msgid "capturing iso speed"
-msgstr "zachytávacia rýchlosť ISO"
-
-msgid "The ISO speed used when capturing an image"
-msgstr "Rýchlosť ISO použítá pri zachytávaní obrázku"
-
-msgid "capturing exposure program"
-msgstr "zachytávací program expozície"
-
-msgid "The exposure program used when capturing an image"
-msgstr "Program expozície použitý pri zachytávaní obrázko"
-
-msgid "capturing exposure mode"
-msgstr "zachytávací režim expozície"
-
-msgid "The exposure mode used when capturing an image"
-msgstr "Režim expozície použitý pri zachytávaní obrázku"
-
-#, fuzzy
-msgid "capturing exposure compensation"
-msgstr "zachytávací režim expozície"
-
-#, fuzzy
-msgid "The exposure compensation used when capturing an image"
-msgstr "Režim expozície použitý pri zachytávaní obrázku"
-
-msgid "capturing scene capture type"
-msgstr "zachytávací typ zachytenia scény"
-
-msgid "The scene capture mode used when capturing an image"
-msgstr "Režim zachytenia scény použitý pri zachytávaní obrázku"
-
-msgid "capturing gain adjustment"
-msgstr "zachytávacie nastavenie zisku"
-
-msgid "The overall gain adjustment applied on an image"
-msgstr "Celkové nastavenie zisku aplikovaného na obrázok"
-
-msgid "capturing white balance"
-msgstr "zachytávacie vyváženie bielej"
-
-msgid "The white balance mode set when capturing an image"
-msgstr "Režim vyváženia bielej nastavený pri zachytávaní obrázku"
-
-msgid "capturing contrast"
-msgstr "zachytávací kontrast"
-
-msgid "The direction of contrast processing applied when capturing an image"
-msgstr "Smerovanie spracovania kontrastu použitého pri zachytávaní obrázku"
-
-msgid "capturing saturation"
-msgstr "zachytávacia sýtosť"
-
-msgid "The direction of saturation processing applied when capturing an image"
-msgstr "Smerovanie spracovania sýtosti použitého pri zachytávaní obrázku"
-
-msgid "capturing sharpness"
-msgstr "zachytávacia ostrosť"
-
-msgid "The direction of sharpness processing applied when capturing an image"
-msgstr "Smerovanie spracovania ostrosti použitého pri zachytávaní obrázku"
-
-msgid "capturing flash fired"
-msgstr "zachytávací blesk"
-
-msgid "If the flash fired while capturing an image"
-msgstr "Bol alebo nebol použitý blesk pri zachytávaní obrázku"
-
-msgid "capturing flash mode"
-msgstr "zachytávací režim blesku"
-
-msgid "The selected flash mode while capturing an image"
-msgstr "Vybraný režim blesku pri zachytávaní obrázku"
-
-msgid "capturing metering mode"
-msgstr "zachytávacie meranie blesku"
-
-msgid ""
-"The metering mode used while determining exposure for capturing an image"
-msgstr "Režim merania blesku pri zisťovaní expozície pre zachytenie obrázku"
-
-msgid "capturing source"
-msgstr "zachytávací zdroj"
-
-msgid "The source or type of device used for the capture"
-msgstr "Zdroj alebo typ zariadenia použitý na zachytenie"
-
-msgid "image horizontal ppi"
-msgstr "vodorovné ppi obrázku"
-
-msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr "Cieľová vodorovná hustota pixlov média (obrázku/videa) v ppi"
-
-msgid "image vertical ppi"
-msgstr "zvislé ppi obrázku"
-
-msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr "Cieľová zvislá hustota pixlov média (obrázku/videa) v ppi"
-
-msgid "ID3v2 frame"
-msgstr ""
-
-msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgid "This CD has no audio tracks"
+msgstr "Toto CD nemá zvukové stopy"
 
 msgid "ID3 tag"
 msgstr "ID3 značka"
@@ -495,6 +337,168 @@ msgstr "Neznámy prvok enkodéra"
 msgid "Plugin or element of unknown type"
 msgstr "Neznámy typ zásuvného modulu alebo prvku"
 
+msgid "Failed to read tag: not enough data"
+msgstr "Načítanie značky zlyhalo: málo údajov"
+
+msgid "track ID"
+msgstr "ID stopy"
+
+msgid "MusicBrainz track ID"
+msgstr "ID stopy MusicBrainz"
+
+msgid "artist ID"
+msgstr "ID umelca"
+
+msgid "MusicBrainz artist ID"
+msgstr "ID umelca MusicBrainz"
+
+msgid "album ID"
+msgstr "ID albumu"
+
+msgid "MusicBrainz album ID"
+msgstr "ID albumu MusicBrainz"
+
+msgid "album artist ID"
+msgstr "ID umelca albumu"
+
+msgid "MusicBrainz album artist ID"
+msgstr "ID umelca albumu MusicBrainz"
+
+msgid "track TRM ID"
+msgstr "ID TRM stopy"
+
+msgid "MusicBrainz TRM ID"
+msgstr "ID TRM MusicBrainz"
+
+msgid "capturing shutter speed"
+msgstr "zachytávacia rýchlosť uzávierky"
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr "Rýchlosť uzávierky použitá pri zachytávaní obrázku, v sekundách"
+
+msgid "capturing focal ratio"
+msgstr "zachytávacií pomer F"
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr "Pomer (číslo F) použitý pri zachytávaní obrázku"
+
+msgid "capturing focal length"
+msgstr "zachytávacia ohnisková vzdialenosť"
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Ohnisková vzdialenosť objektívu pri zachytávaní obrázku, v mm"
+
+msgid "capturing digital zoom ratio"
+msgstr "zachytávací pomer digitálneho priblíženia"
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr "Pomer digitálneho priblíženia použitý pri zachytávaní obrázku"
+
+msgid "capturing iso speed"
+msgstr "zachytávacia rýchlosť ISO"
+
+msgid "The ISO speed used when capturing an image"
+msgstr "Rýchlosť ISO použítá pri zachytávaní obrázku"
+
+msgid "capturing exposure program"
+msgstr "zachytávací program expozície"
+
+msgid "The exposure program used when capturing an image"
+msgstr "Program expozície použitý pri zachytávaní obrázko"
+
+msgid "capturing exposure mode"
+msgstr "zachytávací režim expozície"
+
+msgid "The exposure mode used when capturing an image"
+msgstr "Režim expozície použitý pri zachytávaní obrázku"
+
+#, fuzzy
+msgid "capturing exposure compensation"
+msgstr "zachytávací režim expozície"
+
+#, fuzzy
+msgid "The exposure compensation used when capturing an image"
+msgstr "Režim expozície použitý pri zachytávaní obrázku"
+
+msgid "capturing scene capture type"
+msgstr "zachytávací typ zachytenia scény"
+
+msgid "The scene capture mode used when capturing an image"
+msgstr "Režim zachytenia scény použitý pri zachytávaní obrázku"
+
+msgid "capturing gain adjustment"
+msgstr "zachytávacie nastavenie zisku"
+
+msgid "The overall gain adjustment applied on an image"
+msgstr "Celkové nastavenie zisku aplikovaného na obrázok"
+
+msgid "capturing white balance"
+msgstr "zachytávacie vyváženie bielej"
+
+msgid "The white balance mode set when capturing an image"
+msgstr "Režim vyváženia bielej nastavený pri zachytávaní obrázku"
+
+msgid "capturing contrast"
+msgstr "zachytávací kontrast"
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr "Smerovanie spracovania kontrastu použitého pri zachytávaní obrázku"
+
+msgid "capturing saturation"
+msgstr "zachytávacia sýtosť"
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr "Smerovanie spracovania sýtosti použitého pri zachytávaní obrázku"
+
+msgid "capturing sharpness"
+msgstr "zachytávacia ostrosť"
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr "Smerovanie spracovania ostrosti použitého pri zachytávaní obrázku"
+
+msgid "capturing flash fired"
+msgstr "zachytávací blesk"
+
+msgid "If the flash fired while capturing an image"
+msgstr "Bol alebo nebol použitý blesk pri zachytávaní obrázku"
+
+msgid "capturing flash mode"
+msgstr "zachytávací režim blesku"
+
+msgid "The selected flash mode while capturing an image"
+msgstr "Vybraný režim blesku pri zachytávaní obrázku"
+
+msgid "capturing metering mode"
+msgstr "zachytávacie meranie blesku"
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr "Režim merania blesku pri zisťovaní expozície pre zachytenie obrázku"
+
+msgid "capturing source"
+msgstr "zachytávací zdroj"
+
+msgid "The source or type of device used for the capture"
+msgstr "Zdroj alebo typ zariadenia použitý na zachytenie"
+
+msgid "image horizontal ppi"
+msgstr "vodorovné ppi obrázku"
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr "Cieľová vodorovná hustota pixlov média (obrázku/videa) v ppi"
+
+msgid "image vertical ppi"
+msgstr "zvislé ppi obrázku"
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr "Cieľová zvislá hustota pixlov média (obrázku/videa) v ppi"
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
+
 #~ msgid "Master"
 #~ msgstr "Hlavný"
 
@@ -587,9 +591,6 @@ msgstr "Neznámy typ zásuvného modulu alebo prvku"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "RTSP prúdy sa teraz nedajú prehrávať."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "Nepodarilo sa vytvoriť prvok \"decodebin\""
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

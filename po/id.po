@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2012-01-28 11:31+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -74,6 +74,10 @@ msgid "Internal data stream error."
 msgstr "Galat arus data internal."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Elemen '%s' hilang - cek instalasi GStreamer anda."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "Plugin %s dibutuhkan untuk memutar arus ini, tapi tidak diinstal."
 
@@ -83,9 +87,9 @@ msgstr "Tak dapat menentukan tipe arus"
 msgid "This appears to be a text file"
 msgstr "Ini kelihatannya merupakan berkas teks"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Elemen '%s' hilang - cek instalasi GStreamer anda."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Tak dapat membuat elemen \"decodebin\""
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -157,173 +161,11 @@ msgstr "Elemen sumber tidak sah."
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Galat ketika mengirim data ke \"%s:%d\"."
 
-msgid "This CD has no audio tracks"
-msgstr "CD ini tidak memiliki jalur audio"
-
 msgid "Can't record audio fast enough"
 msgstr "Tak dapat merekam audio cukup cepat"
 
-msgid "Failed to read tag: not enough data"
-msgstr "Gagal membaca tanda: tak cukup data"
-
-msgid "track ID"
-msgstr "ID jalur"
-
-msgid "MusicBrainz track ID"
-msgstr "ID jalur MusicBrainz"
-
-msgid "artist ID"
-msgstr "ID artis"
-
-msgid "MusicBrainz artist ID"
-msgstr "ID artis MusicBrainz"
-
-msgid "album ID"
-msgstr "ID album"
-
-msgid "MusicBrainz album ID"
-msgstr "ID album MusicBrainz"
-
-msgid "album artist ID"
-msgstr "ID artis album"
-
-msgid "MusicBrainz album artist ID"
-msgstr "ID artis album MusicBrainz"
-
-msgid "track TRM ID"
-msgstr "ID TRM jalur"
-
-msgid "MusicBrainz TRM ID"
-msgstr "ID TRM MusicBrainz"
-
-msgid "capturing shutter speed"
-msgstr "menangkap kecepatan rana"
-
-msgid "Shutter speed used when capturing an image, in seconds"
-msgstr "Kecepatan rana digunakan saat menangkap gambar, dalam detik"
-
-msgid "capturing focal ratio"
-msgstr "menangkap bukaan"
-
-msgid "Focal ratio (f-number) used when capturing the image"
-msgstr "Bukaan (angka-f) digunakan ketika menangkap gambar"
-
-msgid "capturing focal length"
-msgstr "menangkap panjang fokal"
-
-msgid "Focal length of the lens used capturing the image, in mm"
-msgstr "Panjang fokal dari lensa digunakan ketika menangkap gambar, dalam mm"
-
-msgid "capturing digital zoom ratio"
-msgstr "menangkap rasio pembesaran digital"
-
-msgid "Digital zoom ratio used when capturing an image"
-msgstr "Rasio pembesaran digital digunakan ketika menangkap gambar"
-
-msgid "capturing iso speed"
-msgstr "menangkap kecepatan iso"
-
-msgid "The ISO speed used when capturing an image"
-msgstr "Kecepatan ISO digunakan menangkap gambar"
-
-msgid "capturing exposure program"
-msgstr "menangkap program pajanan"
-
-msgid "The exposure program used when capturing an image"
-msgstr "Program pajanan digunakan ketika menangkap gambar"
-
-msgid "capturing exposure mode"
-msgstr "menangkap mode pajanan"
-
-msgid "The exposure mode used when capturing an image"
-msgstr "Mode pajanan digunakan ketika menangkap gambar"
-
-msgid "capturing exposure compensation"
-msgstr "menangkap kompensasi pajanan"
-
-msgid "The exposure compensation used when capturing an image"
-msgstr "Kompensasi pajanan digunakan ketika menangkap gambar"
-
-msgid "capturing scene capture type"
-msgstr "menangkap tipe pengambilan scene"
-
-msgid "The scene capture mode used when capturing an image"
-msgstr "Mode penangkapan scene digunakan ketika menangkap gambar"
-
-msgid "capturing gain adjustment"
-msgstr "menangkap penyesuaian bati"
-
-msgid "The overall gain adjustment applied on an image"
-msgstr "Keseluruhan penyesuaian bati diterapkan pada gambar"
-
-msgid "capturing white balance"
-msgstr "menangkap white balance"
-
-msgid "The white balance mode set when capturing an image"
-msgstr "Pengaturan mode white balance ketika menangkap gambar"
-
-msgid "capturing contrast"
-msgstr "menangkap kontras"
-
-msgid "The direction of contrast processing applied when capturing an image"
-msgstr "Arah pemrosesan kontras diterapkan ketika menangkap gambar"
-
-msgid "capturing saturation"
-msgstr "menangkap saturasi"
-
-msgid "The direction of saturation processing applied when capturing an image"
-msgstr "Arah pemrosesan saturasi diterapkan ketika menangkap gambar"
-
-msgid "capturing sharpness"
-msgstr "menangkap ketajaman"
-
-msgid "The direction of sharpness processing applied when capturing an image"
-msgstr "Arah pemrosesan ketajaman diterapkan ketika menangkap gambar"
-
-msgid "capturing flash fired"
-msgstr "menangkap blitz ditembakkan"
-
-msgid "If the flash fired while capturing an image"
-msgstr "Apakah blitz ditembakkan ketika menangkap gambar"
-
-msgid "capturing flash mode"
-msgstr "menangkap mode blitz"
-
-msgid "The selected flash mode while capturing an image"
-msgstr "Mode blitz terpilih ketika menangkap gambar"
-
-msgid "capturing metering mode"
-msgstr "menangkap mode meter"
-
-msgid ""
-"The metering mode used while determining exposure for capturing an image"
-msgstr "Mode meter digunakan untuk menentukan pajanan ketika menangkap gambar"
-
-msgid "capturing source"
-msgstr "menangkap sumber"
-
-msgid "The source or type of device used for the capture"
-msgstr "Sumber atau tipe divais digunakan untuk menangkap"
-
-msgid "image horizontal ppi"
-msgstr "ppi horizontal gambar"
-
-msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
-"Kerapatan pixel horizontal yang diinginkan media (gambar/video) dalam ppi"
-
-msgid "image vertical ppi"
-msgstr "ppi vertikal gambar"
-
-msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
-"Kerapatan pixel vertikal yang diinginkan media (gambar/video) dalam ppi"
-
-msgid "ID3v2 frame"
-msgstr ""
-
-msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgid "This CD has no audio tracks"
+msgstr "CD ini tidak memiliki jalur audio"
 
 msgid "ID3 tag"
 msgstr "Tag ID3"
@@ -488,6 +330,168 @@ msgstr "Elemen penyandi tak diketahui"
 msgid "Plugin or element of unknown type"
 msgstr "Plugin atau elemen dari tipe yang tak diketahui"
 
+msgid "Failed to read tag: not enough data"
+msgstr "Gagal membaca tanda: tak cukup data"
+
+msgid "track ID"
+msgstr "ID jalur"
+
+msgid "MusicBrainz track ID"
+msgstr "ID jalur MusicBrainz"
+
+msgid "artist ID"
+msgstr "ID artis"
+
+msgid "MusicBrainz artist ID"
+msgstr "ID artis MusicBrainz"
+
+msgid "album ID"
+msgstr "ID album"
+
+msgid "MusicBrainz album ID"
+msgstr "ID album MusicBrainz"
+
+msgid "album artist ID"
+msgstr "ID artis album"
+
+msgid "MusicBrainz album artist ID"
+msgstr "ID artis album MusicBrainz"
+
+msgid "track TRM ID"
+msgstr "ID TRM jalur"
+
+msgid "MusicBrainz TRM ID"
+msgstr "ID TRM MusicBrainz"
+
+msgid "capturing shutter speed"
+msgstr "menangkap kecepatan rana"
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr "Kecepatan rana digunakan saat menangkap gambar, dalam detik"
+
+msgid "capturing focal ratio"
+msgstr "menangkap bukaan"
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr "Bukaan (angka-f) digunakan ketika menangkap gambar"
+
+msgid "capturing focal length"
+msgstr "menangkap panjang fokal"
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Panjang fokal dari lensa digunakan ketika menangkap gambar, dalam mm"
+
+msgid "capturing digital zoom ratio"
+msgstr "menangkap rasio pembesaran digital"
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr "Rasio pembesaran digital digunakan ketika menangkap gambar"
+
+msgid "capturing iso speed"
+msgstr "menangkap kecepatan iso"
+
+msgid "The ISO speed used when capturing an image"
+msgstr "Kecepatan ISO digunakan menangkap gambar"
+
+msgid "capturing exposure program"
+msgstr "menangkap program pajanan"
+
+msgid "The exposure program used when capturing an image"
+msgstr "Program pajanan digunakan ketika menangkap gambar"
+
+msgid "capturing exposure mode"
+msgstr "menangkap mode pajanan"
+
+msgid "The exposure mode used when capturing an image"
+msgstr "Mode pajanan digunakan ketika menangkap gambar"
+
+msgid "capturing exposure compensation"
+msgstr "menangkap kompensasi pajanan"
+
+msgid "The exposure compensation used when capturing an image"
+msgstr "Kompensasi pajanan digunakan ketika menangkap gambar"
+
+msgid "capturing scene capture type"
+msgstr "menangkap tipe pengambilan scene"
+
+msgid "The scene capture mode used when capturing an image"
+msgstr "Mode penangkapan scene digunakan ketika menangkap gambar"
+
+msgid "capturing gain adjustment"
+msgstr "menangkap penyesuaian bati"
+
+msgid "The overall gain adjustment applied on an image"
+msgstr "Keseluruhan penyesuaian bati diterapkan pada gambar"
+
+msgid "capturing white balance"
+msgstr "menangkap white balance"
+
+msgid "The white balance mode set when capturing an image"
+msgstr "Pengaturan mode white balance ketika menangkap gambar"
+
+msgid "capturing contrast"
+msgstr "menangkap kontras"
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr "Arah pemrosesan kontras diterapkan ketika menangkap gambar"
+
+msgid "capturing saturation"
+msgstr "menangkap saturasi"
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr "Arah pemrosesan saturasi diterapkan ketika menangkap gambar"
+
+msgid "capturing sharpness"
+msgstr "menangkap ketajaman"
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr "Arah pemrosesan ketajaman diterapkan ketika menangkap gambar"
+
+msgid "capturing flash fired"
+msgstr "menangkap blitz ditembakkan"
+
+msgid "If the flash fired while capturing an image"
+msgstr "Apakah blitz ditembakkan ketika menangkap gambar"
+
+msgid "capturing flash mode"
+msgstr "menangkap mode blitz"
+
+msgid "The selected flash mode while capturing an image"
+msgstr "Mode blitz terpilih ketika menangkap gambar"
+
+msgid "capturing metering mode"
+msgstr "menangkap mode meter"
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr "Mode meter digunakan untuk menentukan pajanan ketika menangkap gambar"
+
+msgid "capturing source"
+msgstr "menangkap sumber"
+
+msgid "The source or type of device used for the capture"
+msgstr "Sumber atau tipe divais digunakan untuk menangkap"
+
+msgid "image horizontal ppi"
+msgstr "ppi horizontal gambar"
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr ""
+"Kerapatan pixel horizontal yang diinginkan media (gambar/video) dalam ppi"
+
+msgid "image vertical ppi"
+msgstr "ppi vertikal gambar"
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr ""
+"Kerapatan pixel vertikal yang diinginkan media (gambar/video) dalam ppi"
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
+
 #~ msgid "Master"
 #~ msgstr "Utama"
 
@@ -538,9 +542,6 @@ msgstr "Plugin atau elemen dari tipe yang tak diketahui"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "Arus RTSP belum dapat dimainkan."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "Tak dapat membuat elemen \"decodebin\""
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

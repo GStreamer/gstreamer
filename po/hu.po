@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2010-11-03 02:48+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -79,6 +79,10 @@ msgid "Internal data stream error."
 msgstr "Belső adatfolyam-hiba."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "A(z) „%s” elem hiányzik - ellenőrizze a Gstreamer telepítését."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 "Az adatfolyam lejátszásához egy %s bővítmény szükséges, de az nincs "
@@ -90,9 +94,9 @@ msgstr "Nem határozható meg az adatfolyam típusa"
 msgid "This appears to be a text file"
 msgstr "Ez egy szövegfájlnak tűnik"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "A(z) „%s” elem hiányzik - ellenőrizze a Gstreamer telepítését."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Nem hozható létre „decodebin” elem"
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -164,173 +168,11 @@ msgstr "A forráselem érvénytelen."
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Hiba adatok küldése során a következőnek: „%s:%d”."
 
-msgid "This CD has no audio tracks"
-msgstr "Ez a CD nem rendelkezik hangsávokkal"
-
 msgid "Can't record audio fast enough"
 msgstr "Nem lehet elég gyorsan rögzíteni a hangot"
 
-msgid "Failed to read tag: not enough data"
-msgstr "A címke nem olvasható: nincs elég adat"
-
-msgid "track ID"
-msgstr "számazonosító"
-
-msgid "MusicBrainz track ID"
-msgstr "MusicBrainz számazonosító"
-
-msgid "artist ID"
-msgstr "előadó-azonosító"
-
-msgid "MusicBrainz artist ID"
-msgstr "MusicBrainz előadó-azonosító"
-
-msgid "album ID"
-msgstr "Albumazonosító"
-
-msgid "MusicBrainz album ID"
-msgstr "MusicBrainz albumazonosító"
-
-msgid "album artist ID"
-msgstr "Albumelőadó azonosítója"
-
-msgid "MusicBrainz album artist ID"
-msgstr "MusicBrainz albumelőadó azonosítója"
-
-msgid "track TRM ID"
-msgstr "szám TRM azonosítója"
-
-msgid "MusicBrainz TRM ID"
-msgstr "MusicBrainz szám TRM azonosítója"
-
-msgid "capturing shutter speed"
-msgstr "felvétel zársebessége"
-
-msgid "Shutter speed used when capturing an image, in seconds"
-msgstr "Kép felvételéhez használt zársebesség másodpercben"
-
-msgid "capturing focal ratio"
-msgstr "felvétel fókuszaránya"
-
-msgid "Focal ratio (f-number) used when capturing the image"
-msgstr "A kép felvételéhez használt fókuszarány (f-szám)"
-
-msgid "capturing focal length"
-msgstr "felvétel fókusztávolsága"
-
-msgid "Focal length of the lens used capturing the image, in mm"
-msgstr "A kép felvételéhez használt lencse fókusztávolsága mm-ben"
-
-msgid "capturing digital zoom ratio"
-msgstr "felvétel digitális nagyítási aránya"
-
-msgid "Digital zoom ratio used when capturing an image"
-msgstr "A kép felvételéhez használt digitális nagyítási arány"
-
-msgid "capturing iso speed"
-msgstr "felvétel ISO sebessége"
-
-msgid "The ISO speed used when capturing an image"
-msgstr "A kép felvételéhez használt ISO sebesség"
-
-msgid "capturing exposure program"
-msgstr "felvétel expozíciós programja"
-
-msgid "The exposure program used when capturing an image"
-msgstr "A kép felvételéhez használt expozíciós program"
-
-msgid "capturing exposure mode"
-msgstr "felvétel expozíciós módja"
-
-msgid "The exposure mode used when capturing an image"
-msgstr "A kép felvételéhez használt expozíciós mód"
-
-#, fuzzy
-msgid "capturing exposure compensation"
-msgstr "felvétel expozíciós módja"
-
-#, fuzzy
-msgid "The exposure compensation used when capturing an image"
-msgstr "A kép felvételéhez használt expozíciós mód"
-
-msgid "capturing scene capture type"
-msgstr "felvétel helyszínfelvételi módja"
-
-msgid "The scene capture mode used when capturing an image"
-msgstr "A kép felvételéhez használt helyszínfelvételi mód"
-
-msgid "capturing gain adjustment"
-msgstr "felvétel erősítésmódosítása"
-
-msgid "The overall gain adjustment applied on an image"
-msgstr "A képre alkalmazott általános erősítésmódosítás"
-
-msgid "capturing white balance"
-msgstr "felvétel fehéregyensúlya"
-
-msgid "The white balance mode set when capturing an image"
-msgstr "A kép felvételéhez használt fehéregyensúlymód"
-
-msgid "capturing contrast"
-msgstr "felvétel kontrasztja"
-
-msgid "The direction of contrast processing applied when capturing an image"
-msgstr "A kép felvételekor használt kontrasztfeldolgozás iránya"
-
-msgid "capturing saturation"
-msgstr "felvétel telítettsége"
-
-msgid "The direction of saturation processing applied when capturing an image"
-msgstr "A kép felvételekor alkalmazott telítettségfeldolgozás iránya"
-
-msgid "capturing sharpness"
-msgstr "felvétel élessége"
-
-msgid "The direction of sharpness processing applied when capturing an image"
-msgstr "A kép felvételekor alkalmazott élességfeldolgozás iránya"
-
-msgid "capturing flash fired"
-msgstr "felvétel vakuja"
-
-msgid "If the flash fired while capturing an image"
-msgstr "A kép felvételéhez használt vaku"
-
-msgid "capturing flash mode"
-msgstr "felvétel vakumódja"
-
-msgid "The selected flash mode while capturing an image"
-msgstr "A kép felvételéhez használt kijelölt vakumód"
-
-msgid "capturing metering mode"
-msgstr "felvétel mérési módja"
-
-msgid ""
-"The metering mode used while determining exposure for capturing an image"
-msgstr "A kép felvételekor az expozíció meghatározásához használt mérési mód"
-
-msgid "capturing source"
-msgstr "felvétel forrása"
-
-msgid "The source or type of device used for the capture"
-msgstr "A felvételhez használt forrás vagy eszköz típusa"
-
-msgid "image horizontal ppi"
-msgstr "kép vízszintes ppi"
-
-msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr "A média (kép/videó) tervezett vízszintes képpontsűrűsége ppi-ben"
-
-msgid "image vertical ppi"
-msgstr "kép függőleges ppi"
-
-msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr "A média (kép/videó) tervezett függőleges képpontsűrűsége ppi-ben"
-
-msgid "ID3v2 frame"
-msgstr ""
-
-msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgid "This CD has no audio tracks"
+msgstr "Ez a CD nem rendelkezik hangsávokkal"
 
 msgid "ID3 tag"
 msgstr "ID3 címke"
@@ -495,6 +337,168 @@ msgstr "Ismeretlen kódolóelem"
 msgid "Plugin or element of unknown type"
 msgstr "Ismeretlen típusú bővítmény vagy elem"
 
+msgid "Failed to read tag: not enough data"
+msgstr "A címke nem olvasható: nincs elég adat"
+
+msgid "track ID"
+msgstr "számazonosító"
+
+msgid "MusicBrainz track ID"
+msgstr "MusicBrainz számazonosító"
+
+msgid "artist ID"
+msgstr "előadó-azonosító"
+
+msgid "MusicBrainz artist ID"
+msgstr "MusicBrainz előadó-azonosító"
+
+msgid "album ID"
+msgstr "Albumazonosító"
+
+msgid "MusicBrainz album ID"
+msgstr "MusicBrainz albumazonosító"
+
+msgid "album artist ID"
+msgstr "Albumelőadó azonosítója"
+
+msgid "MusicBrainz album artist ID"
+msgstr "MusicBrainz albumelőadó azonosítója"
+
+msgid "track TRM ID"
+msgstr "szám TRM azonosítója"
+
+msgid "MusicBrainz TRM ID"
+msgstr "MusicBrainz szám TRM azonosítója"
+
+msgid "capturing shutter speed"
+msgstr "felvétel zársebessége"
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr "Kép felvételéhez használt zársebesség másodpercben"
+
+msgid "capturing focal ratio"
+msgstr "felvétel fókuszaránya"
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr "A kép felvételéhez használt fókuszarány (f-szám)"
+
+msgid "capturing focal length"
+msgstr "felvétel fókusztávolsága"
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "A kép felvételéhez használt lencse fókusztávolsága mm-ben"
+
+msgid "capturing digital zoom ratio"
+msgstr "felvétel digitális nagyítási aránya"
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr "A kép felvételéhez használt digitális nagyítási arány"
+
+msgid "capturing iso speed"
+msgstr "felvétel ISO sebessége"
+
+msgid "The ISO speed used when capturing an image"
+msgstr "A kép felvételéhez használt ISO sebesség"
+
+msgid "capturing exposure program"
+msgstr "felvétel expozíciós programja"
+
+msgid "The exposure program used when capturing an image"
+msgstr "A kép felvételéhez használt expozíciós program"
+
+msgid "capturing exposure mode"
+msgstr "felvétel expozíciós módja"
+
+msgid "The exposure mode used when capturing an image"
+msgstr "A kép felvételéhez használt expozíciós mód"
+
+#, fuzzy
+msgid "capturing exposure compensation"
+msgstr "felvétel expozíciós módja"
+
+#, fuzzy
+msgid "The exposure compensation used when capturing an image"
+msgstr "A kép felvételéhez használt expozíciós mód"
+
+msgid "capturing scene capture type"
+msgstr "felvétel helyszínfelvételi módja"
+
+msgid "The scene capture mode used when capturing an image"
+msgstr "A kép felvételéhez használt helyszínfelvételi mód"
+
+msgid "capturing gain adjustment"
+msgstr "felvétel erősítésmódosítása"
+
+msgid "The overall gain adjustment applied on an image"
+msgstr "A képre alkalmazott általános erősítésmódosítás"
+
+msgid "capturing white balance"
+msgstr "felvétel fehéregyensúlya"
+
+msgid "The white balance mode set when capturing an image"
+msgstr "A kép felvételéhez használt fehéregyensúlymód"
+
+msgid "capturing contrast"
+msgstr "felvétel kontrasztja"
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr "A kép felvételekor használt kontrasztfeldolgozás iránya"
+
+msgid "capturing saturation"
+msgstr "felvétel telítettsége"
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr "A kép felvételekor alkalmazott telítettségfeldolgozás iránya"
+
+msgid "capturing sharpness"
+msgstr "felvétel élessége"
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr "A kép felvételekor alkalmazott élességfeldolgozás iránya"
+
+msgid "capturing flash fired"
+msgstr "felvétel vakuja"
+
+msgid "If the flash fired while capturing an image"
+msgstr "A kép felvételéhez használt vaku"
+
+msgid "capturing flash mode"
+msgstr "felvétel vakumódja"
+
+msgid "The selected flash mode while capturing an image"
+msgstr "A kép felvételéhez használt kijelölt vakumód"
+
+msgid "capturing metering mode"
+msgstr "felvétel mérési módja"
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr "A kép felvételekor az expozíció meghatározásához használt mérési mód"
+
+msgid "capturing source"
+msgstr "felvétel forrása"
+
+msgid "The source or type of device used for the capture"
+msgstr "A felvételhez használt forrás vagy eszköz típusa"
+
+msgid "image horizontal ppi"
+msgstr "kép vízszintes ppi"
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr "A média (kép/videó) tervezett vízszintes képpontsűrűsége ppi-ben"
+
+msgid "image vertical ppi"
+msgstr "kép függőleges ppi"
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr "A média (kép/videó) tervezett függőleges képpontsűrűsége ppi-ben"
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
+
 #~ msgid "Master"
 #~ msgstr "Fő hangerő"
 
@@ -587,9 +591,6 @@ msgstr "Ismeretlen típusú bővítmény vagy elem"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "Az RTSP adatfolyamok még nem játszhatók le."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "Nem hozható létre „decodebin” elem"
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

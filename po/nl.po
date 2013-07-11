@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2011-04-27 00:12+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -76,6 +76,10 @@ msgid "Internal data stream error."
 msgstr "Interne fout in gegevensstroom."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Ontbrekend element '%s' - controleer de instalatie van uw GStreamer."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 "Een %s plugin is vereist voor het afspelen van deze gegevens, echter deze is "
@@ -87,9 +91,9 @@ msgstr "Kan het type stream niet bepalen"
 msgid "This appears to be a text file"
 msgstr "Dit lijkt een tekstbestand te zijn"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Ontbrekend element '%s' - controleer de instalatie van uw GStreamer."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Kan \"decodebin\"-element niet aanmaken."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -161,11 +165,174 @@ msgstr "Bronelement is ongeldig."
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Fout bij het zenden van gegevens naar \"%s:%d\"."
 
+msgid "Can't record audio fast enough"
+msgstr "Kan geluid niet snel genoeg opslaan"
+
 msgid "This CD has no audio tracks"
 msgstr "Deze CD heeft geen audiotracks"
 
-msgid "Can't record audio fast enough"
-msgstr "Kan geluid niet snel genoeg opslaan"
+msgid "ID3 tag"
+msgstr "ID3-tag"
+
+msgid "APE tag"
+msgstr "APE-tag"
+
+msgid "ICY internet radio"
+msgstr "ICY-internetradio"
+
+msgid "Apple Lossless Audio (ALAC)"
+msgstr "Apple Lossless Audio (ALAC)"
+
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr "Free Lossless Audio Codec (FLAC)"
+
+msgid "Lossless True Audio (TTA)"
+msgstr "Lossless True Audio (TTA)"
+
+msgid "Windows Media Speech"
+msgstr "Windows Media Speech"
+
+msgid "CYUV Lossless"
+msgstr "CYUV Lossless"
+
+msgid "FFMpeg v1"
+msgstr "FFMpeg v1"
+
+msgid "Lossless MSZH"
+msgstr "Lossless MSZH"
+
+msgid "Run-length encoding"
+msgstr "Run-length encoding (RLE)"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "TMPlayer ondertitelformaat"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Sami ondertitelformaat"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Kate ondertitelformaat"
+
+msgid "Sami subtitle format"
+msgstr "Sami ondertitelformaat"
+
+msgid "TMPlayer subtitle format"
+msgstr "TMPlayer ondertitelformaat"
+
+msgid "Kate subtitle format"
+msgstr "Kate ondertitelformaat"
+
+#, fuzzy
+msgid "Uncompressed video"
+msgstr "Niet-gecomprimeerde YUV"
+
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Niet-gecomprimeerde grijze afbeelding"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "Niet-gecomprimeerde YUV"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
+msgstr "Niet-gecomprimeerde, gepaletteerde %d-bits %s"
+
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr "DivX MPEG-4 versie %d"
+
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Niet-gecomprimeerde YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
+msgstr "Raw %d-bits PCM-audio"
+
+msgid "Audio CD source"
+msgstr "Audio-CD-bron"
+
+msgid "DVD source"
+msgstr "DVD-bron"
+
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr "Real Time Streaming Protocol (RTSP)-bron"
+
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr "Microsoft Media Server (MMS) protocol-bron"
+
+#, c-format
+msgid "%s protocol source"
+msgstr "%s protocol-bron"
+
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr "%s video-RTP-depayloader"
+
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr "%s audio-RTP-depayloader"
+
+#, c-format
+msgid "%s RTP depayloader"
+msgstr "%s RTP-depayloader"
+
+#, c-format
+msgid "%s demuxer"
+msgstr "%s demuxer"
+
+#, c-format
+msgid "%s decoder"
+msgstr "%s decoder"
+
+#, c-format
+msgid "%s video RTP payloader"
+msgstr "%s video-RTP-payloader"
+
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr "%s audio-RTP-payloader"
+
+#, c-format
+msgid "%s RTP payloader"
+msgstr "%s RTP-payloader"
+
+#, c-format
+msgid "%s muxer"
+msgstr "%s muxer"
+
+#, c-format
+msgid "%s encoder"
+msgstr "%s encoder"
+
+#, c-format
+msgid "GStreamer element %s"
+msgstr "GStreamer element %s"
+
+msgid "Unknown source element"
+msgstr "Onbekend bronelement"
+
+msgid "Unknown sink element"
+msgstr "Onbekend bestemmingselement"
+
+msgid "Unknown element"
+msgstr "Onbekend element"
+
+msgid "Unknown decoder element"
+msgstr "Onbekend decoder-element"
+
+msgid "Unknown encoder element"
+msgstr "Onbekend encoder-element"
+
+msgid "Plugin or element of unknown type"
+msgstr "Plugin of element van onbekend type"
 
 msgid "Failed to read tag: not enough data"
 msgstr "Lezen van tag is mislukt: niet genoeg gegevens"
@@ -336,169 +503,6 @@ msgstr ""
 msgid "unparsed id3v2 tag frame"
 msgstr ""
 
-msgid "ID3 tag"
-msgstr "ID3-tag"
-
-msgid "APE tag"
-msgstr "APE-tag"
-
-msgid "ICY internet radio"
-msgstr "ICY-internetradio"
-
-msgid "Apple Lossless Audio (ALAC)"
-msgstr "Apple Lossless Audio (ALAC)"
-
-msgid "Free Lossless Audio Codec (FLAC)"
-msgstr "Free Lossless Audio Codec (FLAC)"
-
-msgid "Lossless True Audio (TTA)"
-msgstr "Lossless True Audio (TTA)"
-
-msgid "Windows Media Speech"
-msgstr "Windows Media Speech"
-
-msgid "CYUV Lossless"
-msgstr "CYUV Lossless"
-
-msgid "FFMpeg v1"
-msgstr "FFMpeg v1"
-
-msgid "Lossless MSZH"
-msgstr "Lossless MSZH"
-
-msgid "Run-length encoding"
-msgstr "Run-length encoding (RLE)"
-
-msgid "Subtitle"
-msgstr ""
-
-#, fuzzy
-msgid "MPL2 subtitle format"
-msgstr "TMPlayer ondertitelformaat"
-
-#, fuzzy
-msgid "DKS subtitle format"
-msgstr "Sami ondertitelformaat"
-
-#, fuzzy
-msgid "QTtext subtitle format"
-msgstr "Kate ondertitelformaat"
-
-msgid "Sami subtitle format"
-msgstr "Sami ondertitelformaat"
-
-msgid "TMPlayer subtitle format"
-msgstr "TMPlayer ondertitelformaat"
-
-msgid "Kate subtitle format"
-msgstr "Kate ondertitelformaat"
-
-#, fuzzy
-msgid "Uncompressed video"
-msgstr "Niet-gecomprimeerde YUV"
-
-#, fuzzy
-msgid "Uncompressed gray"
-msgstr "Niet-gecomprimeerde grijze afbeelding"
-
-#, fuzzy, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr "Niet-gecomprimeerde YUV"
-
-#, fuzzy, c-format
-msgid "Uncompressed %s%d-bit %s"
-msgstr "Niet-gecomprimeerde, gepaletteerde %d-bits %s"
-
-#, c-format
-msgid "DivX MPEG-4 Version %d"
-msgstr "DivX MPEG-4 versie %d"
-
-#, fuzzy
-msgid "Uncompressed audio"
-msgstr "Niet-gecomprimeerde YUV"
-
-#, fuzzy, c-format
-msgid "Raw %d-bit %s audio"
-msgstr "Raw %d-bits PCM-audio"
-
-msgid "Audio CD source"
-msgstr "Audio-CD-bron"
-
-msgid "DVD source"
-msgstr "DVD-bron"
-
-msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr "Real Time Streaming Protocol (RTSP)-bron"
-
-msgid "Microsoft Media Server (MMS) protocol source"
-msgstr "Microsoft Media Server (MMS) protocol-bron"
-
-#, c-format
-msgid "%s protocol source"
-msgstr "%s protocol-bron"
-
-#, c-format
-msgid "%s video RTP depayloader"
-msgstr "%s video-RTP-depayloader"
-
-#, c-format
-msgid "%s audio RTP depayloader"
-msgstr "%s audio-RTP-depayloader"
-
-#, c-format
-msgid "%s RTP depayloader"
-msgstr "%s RTP-depayloader"
-
-#, c-format
-msgid "%s demuxer"
-msgstr "%s demuxer"
-
-#, c-format
-msgid "%s decoder"
-msgstr "%s decoder"
-
-#, c-format
-msgid "%s video RTP payloader"
-msgstr "%s video-RTP-payloader"
-
-#, c-format
-msgid "%s audio RTP payloader"
-msgstr "%s audio-RTP-payloader"
-
-#, c-format
-msgid "%s RTP payloader"
-msgstr "%s RTP-payloader"
-
-#, c-format
-msgid "%s muxer"
-msgstr "%s muxer"
-
-#, c-format
-msgid "%s encoder"
-msgstr "%s encoder"
-
-#, c-format
-msgid "GStreamer element %s"
-msgstr "GStreamer element %s"
-
-msgid "Unknown source element"
-msgstr "Onbekend bronelement"
-
-msgid "Unknown sink element"
-msgstr "Onbekend bestemmingselement"
-
-msgid "Unknown element"
-msgstr "Onbekend element"
-
-msgid "Unknown decoder element"
-msgstr "Onbekend decoder-element"
-
-msgid "Unknown encoder element"
-msgstr "Onbekend encoder-element"
-
-msgid "Plugin or element of unknown type"
-msgstr "Plugin of element van onbekend type"
-
 #~ msgid "Master"
 #~ msgstr "Master"
 
@@ -591,9 +595,6 @@ msgstr "Plugin of element van onbekend type"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "RTSP-gegevensstromen zijn nog niet af te spelen."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "Kan \"decodebin\"-element niet aanmaken."
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

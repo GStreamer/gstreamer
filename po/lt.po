@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.15.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2008-03-07 23:43+0200\n"
 "Last-Translator: Gintautas Miliauskas <gintas@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -78,6 +78,10 @@ msgid "Internal data stream error."
 msgstr "Vidinė duomenų srauto klaida."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Trūksta elemento „%s“ - patikrinkite GStreamer įdiegimą."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "Šiam srautui groti reikalingas %s įskiepis, bet jis nėra įdiegtas."
 
@@ -88,9 +92,9 @@ msgstr "Nepavyko sukurti „decodebin“ elemento."
 msgid "This appears to be a text file"
 msgstr "Atrodo, kad šis failas tekstinis"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Trūksta elemento „%s“ - patikrinkite GStreamer įdiegimą."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Nepavyko sukurti „decodebin“ elemento."
 
 #, fuzzy, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -166,171 +170,11 @@ msgstr "Šaltinio elementas nekorektiškas."
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Klaida siunčiant duomenis į „%s:%d“."
 
-msgid "This CD has no audio tracks"
-msgstr "Šiame CD nėra audio takelių"
-
 msgid "Can't record audio fast enough"
 msgstr "Nepakankamai greitai įrašomas garsas"
 
-msgid "Failed to read tag: not enough data"
-msgstr ""
-
-msgid "track ID"
-msgstr "takelio ID"
-
-msgid "MusicBrainz track ID"
-msgstr "MusicBrainz takelio ID"
-
-msgid "artist ID"
-msgstr "atlikėjo ID"
-
-msgid "MusicBrainz artist ID"
-msgstr "MusicBrainz atlikėjo ID"
-
-msgid "album ID"
-msgstr "albumo ID"
-
-msgid "MusicBrainz album ID"
-msgstr "MusicBrainz albumo ID"
-
-msgid "album artist ID"
-msgstr "albumo atlikėjo ID"
-
-msgid "MusicBrainz album artist ID"
-msgstr "MusicBrainz albumo atlikėjo ID"
-
-msgid "track TRM ID"
-msgstr "takelio TRM ID"
-
-msgid "MusicBrainz TRM ID"
-msgstr "MusicBrainz TRM ID"
-
-msgid "capturing shutter speed"
-msgstr ""
-
-msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
-
-msgid "capturing focal ratio"
-msgstr ""
-
-msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
-
-msgid "capturing focal length"
-msgstr ""
-
-msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
-
-msgid "capturing digital zoom ratio"
-msgstr ""
-
-msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
-
-msgid "capturing iso speed"
-msgstr ""
-
-msgid "The ISO speed used when capturing an image"
-msgstr ""
-
-msgid "capturing exposure program"
-msgstr ""
-
-msgid "The exposure program used when capturing an image"
-msgstr ""
-
-msgid "capturing exposure mode"
-msgstr ""
-
-msgid "The exposure mode used when capturing an image"
-msgstr ""
-
-msgid "capturing exposure compensation"
-msgstr ""
-
-msgid "The exposure compensation used when capturing an image"
-msgstr ""
-
-msgid "capturing scene capture type"
-msgstr ""
-
-msgid "The scene capture mode used when capturing an image"
-msgstr ""
-
-msgid "capturing gain adjustment"
-msgstr ""
-
-msgid "The overall gain adjustment applied on an image"
-msgstr ""
-
-msgid "capturing white balance"
-msgstr ""
-
-msgid "The white balance mode set when capturing an image"
-msgstr ""
-
-msgid "capturing contrast"
-msgstr ""
-
-msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
-
-msgid "capturing saturation"
-msgstr ""
-
-msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
-
-msgid "capturing sharpness"
-msgstr ""
-
-msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
-
-msgid "capturing flash fired"
-msgstr ""
-
-msgid "If the flash fired while capturing an image"
-msgstr ""
-
-msgid "capturing flash mode"
-msgstr ""
-
-msgid "The selected flash mode while capturing an image"
-msgstr ""
-
-msgid "capturing metering mode"
-msgstr ""
-
-msgid ""
-"The metering mode used while determining exposure for capturing an image"
-msgstr ""
-
-msgid "capturing source"
-msgstr ""
-
-msgid "The source or type of device used for the capture"
-msgstr ""
-
-msgid "image horizontal ppi"
-msgstr ""
-
-msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
-
-msgid "image vertical ppi"
-msgstr ""
-
-msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
-
-msgid "ID3v2 frame"
-msgstr ""
-
-msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgid "This CD has no audio tracks"
+msgstr "Šiame CD nėra audio takelių"
 
 msgid "ID3 tag"
 msgstr "ID3 žymė"
@@ -496,6 +340,166 @@ msgstr "Nežinomas kodavimo elementas"
 msgid "Plugin or element of unknown type"
 msgstr "Nežinomo tipo įskiepis ar elementas"
 
+msgid "Failed to read tag: not enough data"
+msgstr ""
+
+msgid "track ID"
+msgstr "takelio ID"
+
+msgid "MusicBrainz track ID"
+msgstr "MusicBrainz takelio ID"
+
+msgid "artist ID"
+msgstr "atlikėjo ID"
+
+msgid "MusicBrainz artist ID"
+msgstr "MusicBrainz atlikėjo ID"
+
+msgid "album ID"
+msgstr "albumo ID"
+
+msgid "MusicBrainz album ID"
+msgstr "MusicBrainz albumo ID"
+
+msgid "album artist ID"
+msgstr "albumo atlikėjo ID"
+
+msgid "MusicBrainz album artist ID"
+msgstr "MusicBrainz albumo atlikėjo ID"
+
+msgid "track TRM ID"
+msgstr "takelio TRM ID"
+
+msgid "MusicBrainz TRM ID"
+msgstr "MusicBrainz TRM ID"
+
+msgid "capturing shutter speed"
+msgstr ""
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr ""
+
+msgid "capturing focal ratio"
+msgstr ""
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr ""
+
+msgid "capturing focal length"
+msgstr ""
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr ""
+
+msgid "capturing digital zoom ratio"
+msgstr ""
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr ""
+
+msgid "capturing iso speed"
+msgstr ""
+
+msgid "The ISO speed used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure program"
+msgstr ""
+
+msgid "The exposure program used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure mode"
+msgstr ""
+
+msgid "The exposure mode used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure compensation"
+msgstr ""
+
+msgid "The exposure compensation used when capturing an image"
+msgstr ""
+
+msgid "capturing scene capture type"
+msgstr ""
+
+msgid "The scene capture mode used when capturing an image"
+msgstr ""
+
+msgid "capturing gain adjustment"
+msgstr ""
+
+msgid "The overall gain adjustment applied on an image"
+msgstr ""
+
+msgid "capturing white balance"
+msgstr ""
+
+msgid "The white balance mode set when capturing an image"
+msgstr ""
+
+msgid "capturing contrast"
+msgstr ""
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing saturation"
+msgstr ""
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing sharpness"
+msgstr ""
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing flash fired"
+msgstr ""
+
+msgid "If the flash fired while capturing an image"
+msgstr ""
+
+msgid "capturing flash mode"
+msgstr ""
+
+msgid "The selected flash mode while capturing an image"
+msgstr ""
+
+msgid "capturing metering mode"
+msgstr ""
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr ""
+
+msgid "capturing source"
+msgstr ""
+
+msgid "The source or type of device used for the capture"
+msgstr ""
+
+msgid "image horizontal ppi"
+msgstr ""
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr ""
+
+msgid "image vertical ppi"
+msgstr ""
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr ""
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
+
 #~ msgid "Master"
 #~ msgstr "Pagrindinis"
 
@@ -588,9 +592,6 @@ msgstr "Nežinomo tipo įskiepis ar elementas"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "RTSP srautai dar negali būti rodomi."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "Nepavyko sukurti „decodebin“ elemento."
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

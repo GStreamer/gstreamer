@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2009-01-14 12:41+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -70,6 +70,10 @@ msgid "Internal data stream error."
 msgstr "内部数据流错误。"
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "未找到组件‘%s’－请检查您的 GStreamer 安装情况。"
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "播放此数据流需要 %s 插件，但它未安装。"
 
@@ -80,9 +84,9 @@ msgstr "无法创建“typefind”组件。"
 msgid "This appears to be a text file"
 msgstr "此文件是个文本文件"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "未找到组件‘%s’－请检查您的 GStreamer 安装情况。"
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "无法创建“decodebin”组件。"
 
 #, fuzzy, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -159,171 +163,11 @@ msgstr "无效的源组件。"
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "发送数据至“%s:%d”时出错。"
 
-msgid "This CD has no audio tracks"
-msgstr "此 CD 无音轨"
-
 msgid "Can't record audio fast enough"
 msgstr "无法足够快的录音"
 
-msgid "Failed to read tag: not enough data"
-msgstr "无法读取标签: 数据不足"
-
-msgid "track ID"
-msgstr "音轨 ID"
-
-msgid "MusicBrainz track ID"
-msgstr "MusicBrainz 音轨 ID"
-
-msgid "artist ID"
-msgstr "艺人 ID"
-
-msgid "MusicBrainz artist ID"
-msgstr "MusicBrainz 艺人 ID"
-
-msgid "album ID"
-msgstr "专辑 ID"
-
-msgid "MusicBrainz album ID"
-msgstr "MusicBrainz 专辑 ID"
-
-msgid "album artist ID"
-msgstr "音轨艺人 ID"
-
-msgid "MusicBrainz album artist ID"
-msgstr "MusicBrainz 专辑艺人 ID"
-
-msgid "track TRM ID"
-msgstr "音轨 TRM ID"
-
-msgid "MusicBrainz TRM ID"
-msgstr "MusicBrainz TRM ID"
-
-msgid "capturing shutter speed"
-msgstr ""
-
-msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
-
-msgid "capturing focal ratio"
-msgstr ""
-
-msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
-
-msgid "capturing focal length"
-msgstr ""
-
-msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
-
-msgid "capturing digital zoom ratio"
-msgstr ""
-
-msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
-
-msgid "capturing iso speed"
-msgstr ""
-
-msgid "The ISO speed used when capturing an image"
-msgstr ""
-
-msgid "capturing exposure program"
-msgstr ""
-
-msgid "The exposure program used when capturing an image"
-msgstr ""
-
-msgid "capturing exposure mode"
-msgstr ""
-
-msgid "The exposure mode used when capturing an image"
-msgstr ""
-
-msgid "capturing exposure compensation"
-msgstr ""
-
-msgid "The exposure compensation used when capturing an image"
-msgstr ""
-
-msgid "capturing scene capture type"
-msgstr ""
-
-msgid "The scene capture mode used when capturing an image"
-msgstr ""
-
-msgid "capturing gain adjustment"
-msgstr ""
-
-msgid "The overall gain adjustment applied on an image"
-msgstr ""
-
-msgid "capturing white balance"
-msgstr ""
-
-msgid "The white balance mode set when capturing an image"
-msgstr ""
-
-msgid "capturing contrast"
-msgstr ""
-
-msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
-
-msgid "capturing saturation"
-msgstr ""
-
-msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
-
-msgid "capturing sharpness"
-msgstr ""
-
-msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
-
-msgid "capturing flash fired"
-msgstr ""
-
-msgid "If the flash fired while capturing an image"
-msgstr ""
-
-msgid "capturing flash mode"
-msgstr ""
-
-msgid "The selected flash mode while capturing an image"
-msgstr ""
-
-msgid "capturing metering mode"
-msgstr ""
-
-msgid ""
-"The metering mode used while determining exposure for capturing an image"
-msgstr ""
-
-msgid "capturing source"
-msgstr ""
-
-msgid "The source or type of device used for the capture"
-msgstr ""
-
-msgid "image horizontal ppi"
-msgstr ""
-
-msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
-
-msgid "image vertical ppi"
-msgstr ""
-
-msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
-
-msgid "ID3v2 frame"
-msgstr ""
-
-msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgid "This CD has no audio tracks"
+msgstr "此 CD 无音轨"
 
 msgid "ID3 tag"
 msgstr "ID3 标识"
@@ -488,6 +332,166 @@ msgstr "未知的编码组件"
 msgid "Plugin or element of unknown type"
 msgstr "未知类型的插件或组件"
 
+msgid "Failed to read tag: not enough data"
+msgstr "无法读取标签: 数据不足"
+
+msgid "track ID"
+msgstr "音轨 ID"
+
+msgid "MusicBrainz track ID"
+msgstr "MusicBrainz 音轨 ID"
+
+msgid "artist ID"
+msgstr "艺人 ID"
+
+msgid "MusicBrainz artist ID"
+msgstr "MusicBrainz 艺人 ID"
+
+msgid "album ID"
+msgstr "专辑 ID"
+
+msgid "MusicBrainz album ID"
+msgstr "MusicBrainz 专辑 ID"
+
+msgid "album artist ID"
+msgstr "音轨艺人 ID"
+
+msgid "MusicBrainz album artist ID"
+msgstr "MusicBrainz 专辑艺人 ID"
+
+msgid "track TRM ID"
+msgstr "音轨 TRM ID"
+
+msgid "MusicBrainz TRM ID"
+msgstr "MusicBrainz TRM ID"
+
+msgid "capturing shutter speed"
+msgstr ""
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr ""
+
+msgid "capturing focal ratio"
+msgstr ""
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr ""
+
+msgid "capturing focal length"
+msgstr ""
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr ""
+
+msgid "capturing digital zoom ratio"
+msgstr ""
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr ""
+
+msgid "capturing iso speed"
+msgstr ""
+
+msgid "The ISO speed used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure program"
+msgstr ""
+
+msgid "The exposure program used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure mode"
+msgstr ""
+
+msgid "The exposure mode used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure compensation"
+msgstr ""
+
+msgid "The exposure compensation used when capturing an image"
+msgstr ""
+
+msgid "capturing scene capture type"
+msgstr ""
+
+msgid "The scene capture mode used when capturing an image"
+msgstr ""
+
+msgid "capturing gain adjustment"
+msgstr ""
+
+msgid "The overall gain adjustment applied on an image"
+msgstr ""
+
+msgid "capturing white balance"
+msgstr ""
+
+msgid "The white balance mode set when capturing an image"
+msgstr ""
+
+msgid "capturing contrast"
+msgstr ""
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing saturation"
+msgstr ""
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing sharpness"
+msgstr ""
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing flash fired"
+msgstr ""
+
+msgid "If the flash fired while capturing an image"
+msgstr ""
+
+msgid "capturing flash mode"
+msgstr ""
+
+msgid "The selected flash mode while capturing an image"
+msgstr ""
+
+msgid "capturing metering mode"
+msgstr ""
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr ""
+
+msgid "capturing source"
+msgstr ""
+
+msgid "The source or type of device used for the capture"
+msgstr ""
+
+msgid "image horizontal ppi"
+msgstr ""
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr ""
+
+msgid "image vertical ppi"
+msgstr ""
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr ""
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
+
 #~ msgid "Master"
 #~ msgstr "主音量"
 
@@ -538,9 +542,6 @@ msgstr "未知类型的插件或组件"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "RTSP 流尚不能播放。"
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "无法创建“decodebin”组件。"
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

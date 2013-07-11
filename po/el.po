@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2010-10-27 12:05+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -79,6 +79,10 @@ msgid "Internal data stream error."
 msgstr "Σφάλμα εσωτερικής ροής δεδομένων."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Λείπει το στοιχείο '%s' - ελέγξτε την εγκατάσταση του GStreamer."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 "Απαιτείται μια πρόσθετη λειτουργία %s για την αναπαραγωγή αυτής της ροής, "
@@ -90,9 +94,9 @@ msgstr "Αδυναμία προσδιορισμού τύπου ροής"
 msgid "This appears to be a text file"
 msgstr "Αυτό φαίνεται να είναι αρχείο κειμένου"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Λείπει το στοιχείο '%s' - ελέγξτε την εγκατάσταση του GStreamer."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Αδυναμία δημιουργία στοιχείου «decodebin»."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -164,11 +168,174 @@ msgstr "Το στοιχείο προέλευσης δεν είναι έγκυρ�
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Σφάλμα κατά την αποστολή δεδομένων σε «%s:%d»."
 
+msgid "Can't record audio fast enough"
+msgstr "Αδυναμία εγγραφής ήχου αρκετά γρήγορα"
+
 msgid "This CD has no audio tracks"
 msgstr "Αυτό το CD δεν έχει ηχητικά κομμάτια"
 
-msgid "Can't record audio fast enough"
-msgstr "Αδυναμία εγγραφής ήχου αρκετά γρήγορα"
+msgid "ID3 tag"
+msgstr "Ετικέτα ID3"
+
+msgid "APE tag"
+msgstr "Ετικέτα APE"
+
+msgid "ICY internet radio"
+msgstr "Διαδικτυακό ραδιόφωνο ICY"
+
+msgid "Apple Lossless Audio (ALAC)"
+msgstr "Μη απωλεστικός ήχος της Apple (ALAC)"
+
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr "Ελεύθερος μη απωλεστικός κωδικοποιητής ήχου (FLAC)"
+
+msgid "Lossless True Audio (TTA)"
+msgstr "Μη απωλεστικός αληθής ήχος (TTA)"
+
+msgid "Windows Media Speech"
+msgstr "Windows Media Speech"
+
+msgid "CYUV Lossless"
+msgstr "Μη απωλεστικός CYUV"
+
+msgid "FFMpeg v1"
+msgstr "FFMpeg v1"
+
+msgid "Lossless MSZH"
+msgstr "Μη απωλεστικός MSZH"
+
+msgid "Run-length encoding"
+msgstr "Κωδικοποίηση Run-length"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "Μορφή υποτίτλων TMPlayer"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Μορφή υποτίτλων Sami "
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Μορφή υποτίτλων Kate"
+
+msgid "Sami subtitle format"
+msgstr "Μορφή υποτίτλων Sami "
+
+msgid "TMPlayer subtitle format"
+msgstr "Μορφή υποτίτλων TMPlayer"
+
+msgid "Kate subtitle format"
+msgstr "Μορφή υποτίτλων Kate"
+
+#, fuzzy
+msgid "Uncompressed video"
+msgstr "Ασυμπίεστο YUV"
+
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Ασυμπίεστη εικόνα κλίμακας του γκρι"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "Ασυμπίεστο YUV"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
+msgstr "Ασυμπίεστο palettized %d-bit %s"
+
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr "DivX MPEG-4 Έκδοση %d"
+
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Ασυμπίεστο YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
+msgstr "Καθαρός %d-bit PCM ήχος"
+
+msgid "Audio CD source"
+msgstr "Πηγή CD ήχου"
+
+msgid "DVD source"
+msgstr "Πηγή DVD"
+
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr "Πηγή Real Time Streaming Protocol (RTSP)"
+
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr "Πηγή πρωτοκόλλου Microsoft Media Server (MMS)"
+
+#, c-format
+msgid "%s protocol source"
+msgstr "Πηγή πρωτοκόλλου %s"
+
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr "RTP depayloader βίντεο %s"
+
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr "RTP depayloader ήχου %s"
+
+#, c-format
+msgid "%s RTP depayloader"
+msgstr "%s RTP depayloader"
+
+#, c-format
+msgid "%s demuxer"
+msgstr "Αποπλέκτης %s"
+
+#, c-format
+msgid "%s decoder"
+msgstr "Αποκωδικοποιητής %s"
+
+#, c-format
+msgid "%s video RTP payloader"
+msgstr "RTP payloader βίντεο %s"
+
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr "RTP payloader ήχου %s"
+
+#, c-format
+msgid "%s RTP payloader"
+msgstr "%s RTP payloader"
+
+#, c-format
+msgid "%s muxer"
+msgstr "Πολυπλέκτης %s"
+
+#, c-format
+msgid "%s encoder"
+msgstr "Κωδικοποιητής %s"
+
+#, c-format
+msgid "GStreamer element %s"
+msgstr "Στοιχείο %s του GStreamer"
+
+msgid "Unknown source element"
+msgstr "Άγνωστο στοιχείο πηγής"
+
+msgid "Unknown sink element"
+msgstr "Άγνωστο στοιχείο απαγωγής"
+
+msgid "Unknown element"
+msgstr "Άγνωστο στοιχείο"
+
+msgid "Unknown decoder element"
+msgstr "Άγνωστο στοιχείο αποκωδικοποιητή"
+
+msgid "Unknown encoder element"
+msgstr "Άγνωστο στοιχείο κωδικοποιητή"
+
+msgid "Plugin or element of unknown type"
+msgstr "Πρόσθετη λειτουργία ή στοιχείο άγνωστου τύπου"
 
 msgid "Failed to read tag: not enough data"
 msgstr "Αποτυχία ανάγνωσης ετικέτας: δεν υπάρχουν αρκετά δεδομένα"
@@ -347,169 +514,6 @@ msgstr ""
 msgid "unparsed id3v2 tag frame"
 msgstr ""
 
-msgid "ID3 tag"
-msgstr "Ετικέτα ID3"
-
-msgid "APE tag"
-msgstr "Ετικέτα APE"
-
-msgid "ICY internet radio"
-msgstr "Διαδικτυακό ραδιόφωνο ICY"
-
-msgid "Apple Lossless Audio (ALAC)"
-msgstr "Μη απωλεστικός ήχος της Apple (ALAC)"
-
-msgid "Free Lossless Audio Codec (FLAC)"
-msgstr "Ελεύθερος μη απωλεστικός κωδικοποιητής ήχου (FLAC)"
-
-msgid "Lossless True Audio (TTA)"
-msgstr "Μη απωλεστικός αληθής ήχος (TTA)"
-
-msgid "Windows Media Speech"
-msgstr "Windows Media Speech"
-
-msgid "CYUV Lossless"
-msgstr "Μη απωλεστικός CYUV"
-
-msgid "FFMpeg v1"
-msgstr "FFMpeg v1"
-
-msgid "Lossless MSZH"
-msgstr "Μη απωλεστικός MSZH"
-
-msgid "Run-length encoding"
-msgstr "Κωδικοποίηση Run-length"
-
-msgid "Subtitle"
-msgstr ""
-
-#, fuzzy
-msgid "MPL2 subtitle format"
-msgstr "Μορφή υποτίτλων TMPlayer"
-
-#, fuzzy
-msgid "DKS subtitle format"
-msgstr "Μορφή υποτίτλων Sami "
-
-#, fuzzy
-msgid "QTtext subtitle format"
-msgstr "Μορφή υποτίτλων Kate"
-
-msgid "Sami subtitle format"
-msgstr "Μορφή υποτίτλων Sami "
-
-msgid "TMPlayer subtitle format"
-msgstr "Μορφή υποτίτλων TMPlayer"
-
-msgid "Kate subtitle format"
-msgstr "Μορφή υποτίτλων Kate"
-
-#, fuzzy
-msgid "Uncompressed video"
-msgstr "Ασυμπίεστο YUV"
-
-#, fuzzy
-msgid "Uncompressed gray"
-msgstr "Ασυμπίεστη εικόνα κλίμακας του γκρι"
-
-#, fuzzy, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr "Ασυμπίεστο YUV"
-
-#, fuzzy, c-format
-msgid "Uncompressed %s%d-bit %s"
-msgstr "Ασυμπίεστο palettized %d-bit %s"
-
-#, c-format
-msgid "DivX MPEG-4 Version %d"
-msgstr "DivX MPEG-4 Έκδοση %d"
-
-#, fuzzy
-msgid "Uncompressed audio"
-msgstr "Ασυμπίεστο YUV"
-
-#, fuzzy, c-format
-msgid "Raw %d-bit %s audio"
-msgstr "Καθαρός %d-bit PCM ήχος"
-
-msgid "Audio CD source"
-msgstr "Πηγή CD ήχου"
-
-msgid "DVD source"
-msgstr "Πηγή DVD"
-
-msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr "Πηγή Real Time Streaming Protocol (RTSP)"
-
-msgid "Microsoft Media Server (MMS) protocol source"
-msgstr "Πηγή πρωτοκόλλου Microsoft Media Server (MMS)"
-
-#, c-format
-msgid "%s protocol source"
-msgstr "Πηγή πρωτοκόλλου %s"
-
-#, c-format
-msgid "%s video RTP depayloader"
-msgstr "RTP depayloader βίντεο %s"
-
-#, c-format
-msgid "%s audio RTP depayloader"
-msgstr "RTP depayloader ήχου %s"
-
-#, c-format
-msgid "%s RTP depayloader"
-msgstr "%s RTP depayloader"
-
-#, c-format
-msgid "%s demuxer"
-msgstr "Αποπλέκτης %s"
-
-#, c-format
-msgid "%s decoder"
-msgstr "Αποκωδικοποιητής %s"
-
-#, c-format
-msgid "%s video RTP payloader"
-msgstr "RTP payloader βίντεο %s"
-
-#, c-format
-msgid "%s audio RTP payloader"
-msgstr "RTP payloader ήχου %s"
-
-#, c-format
-msgid "%s RTP payloader"
-msgstr "%s RTP payloader"
-
-#, c-format
-msgid "%s muxer"
-msgstr "Πολυπλέκτης %s"
-
-#, c-format
-msgid "%s encoder"
-msgstr "Κωδικοποιητής %s"
-
-#, c-format
-msgid "GStreamer element %s"
-msgstr "Στοιχείο %s του GStreamer"
-
-msgid "Unknown source element"
-msgstr "Άγνωστο στοιχείο πηγής"
-
-msgid "Unknown sink element"
-msgstr "Άγνωστο στοιχείο απαγωγής"
-
-msgid "Unknown element"
-msgstr "Άγνωστο στοιχείο"
-
-msgid "Unknown decoder element"
-msgstr "Άγνωστο στοιχείο αποκωδικοποιητή"
-
-msgid "Unknown encoder element"
-msgstr "Άγνωστο στοιχείο κωδικοποιητή"
-
-msgid "Plugin or element of unknown type"
-msgstr "Πρόσθετη λειτουργία ή στοιχείο άγνωστου τύπου"
-
 #~ msgid "Master"
 #~ msgstr "Γενικός"
 
@@ -602,9 +606,6 @@ msgstr "Πρόσθετη λειτουργία ή στοιχείο άγνωστο
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "Ροές RTSP δεν μπορούν να αναπαραχθούν ακόμα."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "Αδυναμία δημιουργία στοιχείου «decodebin»."
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

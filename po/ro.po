@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2010-08-16 01:21+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -77,6 +77,10 @@ msgid "Internal data stream error."
 msgstr "Eroare internă a fluxului de date."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Element %s lipsă - verificați instalarea GStreamer."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 "Un modul de extensie %s este necesar pentru a reda acest flux, dar acesta nu "
@@ -88,9 +92,9 @@ msgstr "Nu s-a putut determina tipul fluxului"
 msgid "This appears to be a text file"
 msgstr "Acesta pare să fie un fișier text."
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Element %s lipsă - verificați instalarea GStreamer."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Nu se poate crea elementul „decodebin”."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -162,171 +166,11 @@ msgstr "Element sursă nevalid."
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Eroare la trimiterea datelor către „%s:%d”."
 
-msgid "This CD has no audio tracks"
-msgstr "Acest CD nu conține piste audio"
-
 msgid "Can't record audio fast enough"
 msgstr "Nu se poate înregistra sunetul destul de repede"
 
-msgid "Failed to read tag: not enough data"
-msgstr "Citirea etichetei a eșuat: date insuficiente"
-
-msgid "track ID"
-msgstr "ID pistă"
-
-msgid "MusicBrainz track ID"
-msgstr "ID pistă MusicBrainz"
-
-msgid "artist ID"
-msgstr "ID artist"
-
-msgid "MusicBrainz artist ID"
-msgstr "ID artist MusicBrainz"
-
-msgid "album ID"
-msgstr "ID album"
-
-msgid "MusicBrainz album ID"
-msgstr "ID album MusicBrainz"
-
-msgid "album artist ID"
-msgstr "ID artist album"
-
-msgid "MusicBrainz album artist ID"
-msgstr "ID album artist MusicBrainz"
-
-msgid "track TRM ID"
-msgstr "TRM ID pistă"
-
-msgid "MusicBrainz TRM ID"
-msgstr "ID TRM MusicBrainz"
-
-msgid "capturing shutter speed"
-msgstr ""
-
-msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
-
-msgid "capturing focal ratio"
-msgstr ""
-
-msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
-
-msgid "capturing focal length"
-msgstr ""
-
-msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
-
-msgid "capturing digital zoom ratio"
-msgstr ""
-
-msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
-
-msgid "capturing iso speed"
-msgstr ""
-
-msgid "The ISO speed used when capturing an image"
-msgstr ""
-
-msgid "capturing exposure program"
-msgstr ""
-
-msgid "The exposure program used when capturing an image"
-msgstr ""
-
-msgid "capturing exposure mode"
-msgstr ""
-
-msgid "The exposure mode used when capturing an image"
-msgstr ""
-
-msgid "capturing exposure compensation"
-msgstr ""
-
-msgid "The exposure compensation used when capturing an image"
-msgstr ""
-
-msgid "capturing scene capture type"
-msgstr ""
-
-msgid "The scene capture mode used when capturing an image"
-msgstr ""
-
-msgid "capturing gain adjustment"
-msgstr ""
-
-msgid "The overall gain adjustment applied on an image"
-msgstr ""
-
-msgid "capturing white balance"
-msgstr ""
-
-msgid "The white balance mode set when capturing an image"
-msgstr ""
-
-msgid "capturing contrast"
-msgstr ""
-
-msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
-
-msgid "capturing saturation"
-msgstr ""
-
-msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
-
-msgid "capturing sharpness"
-msgstr ""
-
-msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
-
-msgid "capturing flash fired"
-msgstr ""
-
-msgid "If the flash fired while capturing an image"
-msgstr ""
-
-msgid "capturing flash mode"
-msgstr ""
-
-msgid "The selected flash mode while capturing an image"
-msgstr ""
-
-msgid "capturing metering mode"
-msgstr ""
-
-msgid ""
-"The metering mode used while determining exposure for capturing an image"
-msgstr ""
-
-msgid "capturing source"
-msgstr ""
-
-msgid "The source or type of device used for the capture"
-msgstr ""
-
-msgid "image horizontal ppi"
-msgstr ""
-
-msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr ""
-
-msgid "image vertical ppi"
-msgstr ""
-
-msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr ""
-
-msgid "ID3v2 frame"
-msgstr ""
-
-msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgid "This CD has no audio tracks"
+msgstr "Acest CD nu conține piste audio"
 
 msgid "ID3 tag"
 msgstr "etichetă ID3"
@@ -491,6 +335,166 @@ msgstr "Element codor necunoscut"
 msgid "Plugin or element of unknown type"
 msgstr "Modul de extensie sau element de tip necunoscut"
 
+msgid "Failed to read tag: not enough data"
+msgstr "Citirea etichetei a eșuat: date insuficiente"
+
+msgid "track ID"
+msgstr "ID pistă"
+
+msgid "MusicBrainz track ID"
+msgstr "ID pistă MusicBrainz"
+
+msgid "artist ID"
+msgstr "ID artist"
+
+msgid "MusicBrainz artist ID"
+msgstr "ID artist MusicBrainz"
+
+msgid "album ID"
+msgstr "ID album"
+
+msgid "MusicBrainz album ID"
+msgstr "ID album MusicBrainz"
+
+msgid "album artist ID"
+msgstr "ID artist album"
+
+msgid "MusicBrainz album artist ID"
+msgstr "ID album artist MusicBrainz"
+
+msgid "track TRM ID"
+msgstr "TRM ID pistă"
+
+msgid "MusicBrainz TRM ID"
+msgstr "ID TRM MusicBrainz"
+
+msgid "capturing shutter speed"
+msgstr ""
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr ""
+
+msgid "capturing focal ratio"
+msgstr ""
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr ""
+
+msgid "capturing focal length"
+msgstr ""
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr ""
+
+msgid "capturing digital zoom ratio"
+msgstr ""
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr ""
+
+msgid "capturing iso speed"
+msgstr ""
+
+msgid "The ISO speed used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure program"
+msgstr ""
+
+msgid "The exposure program used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure mode"
+msgstr ""
+
+msgid "The exposure mode used when capturing an image"
+msgstr ""
+
+msgid "capturing exposure compensation"
+msgstr ""
+
+msgid "The exposure compensation used when capturing an image"
+msgstr ""
+
+msgid "capturing scene capture type"
+msgstr ""
+
+msgid "The scene capture mode used when capturing an image"
+msgstr ""
+
+msgid "capturing gain adjustment"
+msgstr ""
+
+msgid "The overall gain adjustment applied on an image"
+msgstr ""
+
+msgid "capturing white balance"
+msgstr ""
+
+msgid "The white balance mode set when capturing an image"
+msgstr ""
+
+msgid "capturing contrast"
+msgstr ""
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing saturation"
+msgstr ""
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing sharpness"
+msgstr ""
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr ""
+
+msgid "capturing flash fired"
+msgstr ""
+
+msgid "If the flash fired while capturing an image"
+msgstr ""
+
+msgid "capturing flash mode"
+msgstr ""
+
+msgid "The selected flash mode while capturing an image"
+msgstr ""
+
+msgid "capturing metering mode"
+msgstr ""
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr ""
+
+msgid "capturing source"
+msgstr ""
+
+msgid "The source or type of device used for the capture"
+msgstr ""
+
+msgid "image horizontal ppi"
+msgstr ""
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr ""
+
+msgid "image vertical ppi"
+msgstr ""
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr ""
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
+
 #~ msgid "Master"
 #~ msgstr "Principal"
 
@@ -583,9 +587,6 @@ msgstr "Modul de extensie sau element de tip necunoscut"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "Fluxurile RTSP nu pot fi redate încă."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "Nu se poate crea elementul „decodebin”."
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

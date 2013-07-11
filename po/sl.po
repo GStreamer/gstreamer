@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2011-04-26 15:56+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -80,6 +80,10 @@ msgid "Internal data stream error."
 msgstr "Notranja napaka pretoka podatkov."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Predmet '%s' manjka - preverite namestitev paketa GStreamer."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "Za predvajanje tega pretoka je potreben vstavek %s, ki pa ni nameščen."
 
@@ -89,9 +93,9 @@ msgstr "Vrste pretoka ni mogoče določiti."
 msgid "This appears to be a text file"
 msgstr "Datoteka je videti kot besedilna datoteka"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Predmet '%s' manjka - preverite namestitev paketa GStreamer."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Predmeta \"decodebin\" ni mogoče ustvariti."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -163,172 +167,11 @@ msgstr "Izvorni predmet je neveljaven."
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Napaka med pošiljanjem podatkov na \"%s:%d\"."
 
-msgid "This CD has no audio tracks"
-msgstr "Ta CD nima zvočnih sledi"
-
 msgid "Can't record audio fast enough"
 msgstr "Ni mogoče dovolj hitro snemati zvoka"
 
-msgid "Failed to read tag: not enough data"
-msgstr "Oznake ni mogoče prebrati: ni dovolj podatkov"
-
-msgid "track ID"
-msgstr "ID sledi"
-
-msgid "MusicBrainz track ID"
-msgstr "ID sledi MusicBrainz"
-
-msgid "artist ID"
-msgstr "ID izvajalca"
-
-msgid "MusicBrainz artist ID"
-msgstr "ID izvajalca MusicBrainz"
-
-msgid "album ID"
-msgstr "ID albuma"
-
-msgid "MusicBrainz album ID"
-msgstr "ID albuma MusicBrainz"
-
-msgid "album artist ID"
-msgstr "ID izvajalca albuma"
-
-msgid "MusicBrainz album artist ID"
-msgstr "ID izvajalca albuma MusicBrainz"
-
-msgid "track TRM ID"
-msgstr "TRM ID sledi"
-
-msgid "MusicBrainz TRM ID"
-msgstr "TRM ID MusicBrainz"
-
-msgid "capturing shutter speed"
-msgstr "hitrost zaslonke"
-
-msgid "Shutter speed used when capturing an image, in seconds"
-msgstr "Hitrost zaslonke, uporabljene med zajemanjem slike (v sekundah)"
-
-msgid "capturing focal ratio"
-msgstr "goriščno razmerje med zajemanjem"
-
-msgid "Focal ratio (f-number) used when capturing the image"
-msgstr "Goriščno razmerje, uporabljeno med zajemanjem slike"
-
-msgid "capturing focal length"
-msgstr "goriščna razdalja med zajemanjem"
-
-msgid "Focal length of the lens used capturing the image, in mm"
-msgstr "Goriščna razdalja leč, uporabljena med zajemanjem slike"
-
-msgid "capturing digital zoom ratio"
-msgstr "razmerje digitalnega približevanja med zajemanjem"
-
-msgid "Digital zoom ratio used when capturing an image"
-msgstr "Razmerje digitalnega približevanja, uporabljeno med zajemanjem slike"
-
-msgid "capturing iso speed"
-msgstr "hitrost ISO zajema"
-
-msgid "The ISO speed used when capturing an image"
-msgstr "Hitrost ISO, uporabljena med zajemanjem slike"
-
-msgid "capturing exposure program"
-msgstr "program osvetlitve zajema"
-
-msgid "The exposure program used when capturing an image"
-msgstr "Program osvetlitve, uporabljen med zajemanjem slike"
-
-msgid "capturing exposure mode"
-msgstr "način osvetlitve zajema"
-
-msgid "The exposure mode used when capturing an image"
-msgstr "Program osvetlitve, uporabljen med zajemanjem slike"
-
-msgid "capturing exposure compensation"
-msgstr "nadomestitev osvetlitve zajema"
-
-msgid "The exposure compensation used when capturing an image"
-msgstr "Nadomestitev osvetlitve, uporabljena med zajemanjem slike"
-
-msgid "capturing scene capture type"
-msgstr "vrsta zajemanja scene med zajemanjem"
-
-msgid "The scene capture mode used when capturing an image"
-msgstr "Način zajemanja scene, uporabljen med zajemanjem slike"
-
-msgid "capturing gain adjustment"
-msgstr "prilagoditev ojačitve med zajemanjem"
-
-msgid "The overall gain adjustment applied on an image"
-msgstr "Skupna prilagoditev ojačitve slike"
-
-msgid "capturing white balance"
-msgstr "ravnotežje bele barve zajema"
-
-msgid "The white balance mode set when capturing an image"
-msgstr "Način ravnotežja bele barve, uporabljen med zajemanjem slike"
-
-msgid "capturing contrast"
-msgstr "kontrast zajema"
-
-msgid "The direction of contrast processing applied when capturing an image"
-msgstr "Smer kontrasta, uporabljenega med zajemanjem slike"
-
-msgid "capturing saturation"
-msgstr "nasičenost zajema"
-
-msgid "The direction of saturation processing applied when capturing an image"
-msgstr "Smer nasičenosti, uporabljene med zajemanjem slike"
-
-msgid "capturing sharpness"
-msgstr "ostrina zajema"
-
-msgid "The direction of sharpness processing applied when capturing an image"
-msgstr "Smer ostrine, uporabljene med zajemanjem slike"
-
-msgid "capturing flash fired"
-msgstr "sproženje bliskavice med zajemanjem"
-
-msgid "If the flash fired while capturing an image"
-msgstr "Ali je med zajemanjem slike bliskavica sprožena"
-
-msgid "capturing flash mode"
-msgstr "način bliskavice med zajemanjem"
-
-msgid "The selected flash mode while capturing an image"
-msgstr "Izbrani način bliskavice, uporabljene med zajemanjem slike"
-
-msgid "capturing metering mode"
-msgstr "način umerjanja med zajemanjem"
-
-msgid ""
-"The metering mode used while determining exposure for capturing an image"
-msgstr ""
-"Način umerjanja, uporabljen med določevanjem osvetljenosti zajemanja slike"
-
-msgid "capturing source"
-msgstr "vir zajema"
-
-msgid "The source or type of device used for the capture"
-msgstr "Vir ali vrsta naprave, uporabljene za zajemanje"
-
-msgid "image horizontal ppi"
-msgstr "vodoravne slikovne točke slike (ppi)"
-
-msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr "Gostota vodoravnih slikovnih točk (v ppi)"
-
-msgid "image vertical ppi"
-msgstr "navpične slikovne točke slike (ppi)"
-
-msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr "Gostota navpičnih slikovnih točk (v ppi)"
-
-msgid "ID3v2 frame"
-msgstr ""
-
-msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgid "This CD has no audio tracks"
+msgstr "Ta CD nima zvočnih sledi"
 
 msgid "ID3 tag"
 msgstr "Oznaka ID3"
@@ -493,6 +336,167 @@ msgstr "Neznan predmet kodirnika"
 msgid "Plugin or element of unknown type"
 msgstr "Vstavek ali predmet neznane vrste"
 
+msgid "Failed to read tag: not enough data"
+msgstr "Oznake ni mogoče prebrati: ni dovolj podatkov"
+
+msgid "track ID"
+msgstr "ID sledi"
+
+msgid "MusicBrainz track ID"
+msgstr "ID sledi MusicBrainz"
+
+msgid "artist ID"
+msgstr "ID izvajalca"
+
+msgid "MusicBrainz artist ID"
+msgstr "ID izvajalca MusicBrainz"
+
+msgid "album ID"
+msgstr "ID albuma"
+
+msgid "MusicBrainz album ID"
+msgstr "ID albuma MusicBrainz"
+
+msgid "album artist ID"
+msgstr "ID izvajalca albuma"
+
+msgid "MusicBrainz album artist ID"
+msgstr "ID izvajalca albuma MusicBrainz"
+
+msgid "track TRM ID"
+msgstr "TRM ID sledi"
+
+msgid "MusicBrainz TRM ID"
+msgstr "TRM ID MusicBrainz"
+
+msgid "capturing shutter speed"
+msgstr "hitrost zaslonke"
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr "Hitrost zaslonke, uporabljene med zajemanjem slike (v sekundah)"
+
+msgid "capturing focal ratio"
+msgstr "goriščno razmerje med zajemanjem"
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr "Goriščno razmerje, uporabljeno med zajemanjem slike"
+
+msgid "capturing focal length"
+msgstr "goriščna razdalja med zajemanjem"
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Goriščna razdalja leč, uporabljena med zajemanjem slike"
+
+msgid "capturing digital zoom ratio"
+msgstr "razmerje digitalnega približevanja med zajemanjem"
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr "Razmerje digitalnega približevanja, uporabljeno med zajemanjem slike"
+
+msgid "capturing iso speed"
+msgstr "hitrost ISO zajema"
+
+msgid "The ISO speed used when capturing an image"
+msgstr "Hitrost ISO, uporabljena med zajemanjem slike"
+
+msgid "capturing exposure program"
+msgstr "program osvetlitve zajema"
+
+msgid "The exposure program used when capturing an image"
+msgstr "Program osvetlitve, uporabljen med zajemanjem slike"
+
+msgid "capturing exposure mode"
+msgstr "način osvetlitve zajema"
+
+msgid "The exposure mode used when capturing an image"
+msgstr "Program osvetlitve, uporabljen med zajemanjem slike"
+
+msgid "capturing exposure compensation"
+msgstr "nadomestitev osvetlitve zajema"
+
+msgid "The exposure compensation used when capturing an image"
+msgstr "Nadomestitev osvetlitve, uporabljena med zajemanjem slike"
+
+msgid "capturing scene capture type"
+msgstr "vrsta zajemanja scene med zajemanjem"
+
+msgid "The scene capture mode used when capturing an image"
+msgstr "Način zajemanja scene, uporabljen med zajemanjem slike"
+
+msgid "capturing gain adjustment"
+msgstr "prilagoditev ojačitve med zajemanjem"
+
+msgid "The overall gain adjustment applied on an image"
+msgstr "Skupna prilagoditev ojačitve slike"
+
+msgid "capturing white balance"
+msgstr "ravnotežje bele barve zajema"
+
+msgid "The white balance mode set when capturing an image"
+msgstr "Način ravnotežja bele barve, uporabljen med zajemanjem slike"
+
+msgid "capturing contrast"
+msgstr "kontrast zajema"
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr "Smer kontrasta, uporabljenega med zajemanjem slike"
+
+msgid "capturing saturation"
+msgstr "nasičenost zajema"
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr "Smer nasičenosti, uporabljene med zajemanjem slike"
+
+msgid "capturing sharpness"
+msgstr "ostrina zajema"
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr "Smer ostrine, uporabljene med zajemanjem slike"
+
+msgid "capturing flash fired"
+msgstr "sproženje bliskavice med zajemanjem"
+
+msgid "If the flash fired while capturing an image"
+msgstr "Ali je med zajemanjem slike bliskavica sprožena"
+
+msgid "capturing flash mode"
+msgstr "način bliskavice med zajemanjem"
+
+msgid "The selected flash mode while capturing an image"
+msgstr "Izbrani način bliskavice, uporabljene med zajemanjem slike"
+
+msgid "capturing metering mode"
+msgstr "način umerjanja med zajemanjem"
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr ""
+"Način umerjanja, uporabljen med določevanjem osvetljenosti zajemanja slike"
+
+msgid "capturing source"
+msgstr "vir zajema"
+
+msgid "The source or type of device used for the capture"
+msgstr "Vir ali vrsta naprave, uporabljene za zajemanje"
+
+msgid "image horizontal ppi"
+msgstr "vodoravne slikovne točke slike (ppi)"
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr "Gostota vodoravnih slikovnih točk (v ppi)"
+
+msgid "image vertical ppi"
+msgstr "navpične slikovne točke slike (ppi)"
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr "Gostota navpičnih slikovnih točk (v ppi)"
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
+
 #~ msgid "Master"
 #~ msgstr "Glavni"
 
@@ -585,9 +589,6 @@ msgstr "Vstavek ali predmet neznane vrste"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "Pretokov RTSP še ni mogoče predvajati."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "Predmeta \"decodebin\" ni mogoče ustvariti."
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

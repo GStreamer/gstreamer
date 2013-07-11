@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -81,6 +81,10 @@ msgid "Internal data stream error."
 msgstr ""
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 
@@ -91,9 +95,9 @@ msgstr "\"%s\" faylına yazıla bilmədi."
 msgid "This appears to be a text file"
 msgstr ""
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "\"%s\" faylına yazıla bilmədi."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -165,10 +169,167 @@ msgstr ""
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "\"%s\" faylı bağlana bilmədi."
 
+msgid "Can't record audio fast enough"
+msgstr ""
+
 msgid "This CD has no audio tracks"
 msgstr ""
 
-msgid "Can't record audio fast enough"
+msgid "ID3 tag"
+msgstr ""
+
+msgid "APE tag"
+msgstr ""
+
+msgid "ICY internet radio"
+msgstr ""
+
+msgid "Apple Lossless Audio (ALAC)"
+msgstr ""
+
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr ""
+
+msgid "Lossless True Audio (TTA)"
+msgstr ""
+
+msgid "Windows Media Speech"
+msgstr ""
+
+msgid "CYUV Lossless"
+msgstr ""
+
+msgid "FFMpeg v1"
+msgstr ""
+
+msgid "Lossless MSZH"
+msgstr ""
+
+msgid "Run-length encoding"
+msgstr ""
+
+msgid "Subtitle"
+msgstr ""
+
+msgid "MPL2 subtitle format"
+msgstr ""
+
+msgid "DKS subtitle format"
+msgstr ""
+
+msgid "QTtext subtitle format"
+msgstr ""
+
+msgid "Sami subtitle format"
+msgstr ""
+
+msgid "TMPlayer subtitle format"
+msgstr ""
+
+msgid "Kate subtitle format"
+msgstr ""
+
+msgid "Uncompressed video"
+msgstr ""
+
+msgid "Uncompressed gray"
+msgstr ""
+
+#, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr ""
+
+#, c-format
+msgid "Uncompressed %s%d-bit %s"
+msgstr ""
+
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr ""
+
+msgid "Uncompressed audio"
+msgstr ""
+
+#, c-format
+msgid "Raw %d-bit %s audio"
+msgstr ""
+
+msgid "Audio CD source"
+msgstr ""
+
+msgid "DVD source"
+msgstr ""
+
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr ""
+
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr ""
+
+#, c-format
+msgid "%s protocol source"
+msgstr ""
+
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr ""
+
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr ""
+
+#, c-format
+msgid "%s RTP depayloader"
+msgstr ""
+
+#, c-format
+msgid "%s demuxer"
+msgstr ""
+
+#, c-format
+msgid "%s decoder"
+msgstr ""
+
+#, c-format
+msgid "%s video RTP payloader"
+msgstr ""
+
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr ""
+
+#, c-format
+msgid "%s RTP payloader"
+msgstr ""
+
+#, c-format
+msgid "%s muxer"
+msgstr ""
+
+#, c-format
+msgid "%s encoder"
+msgstr ""
+
+#, c-format
+msgid "GStreamer element %s"
+msgstr ""
+
+msgid "Unknown source element"
+msgstr ""
+
+msgid "Unknown sink element"
+msgstr ""
+
+msgid "Unknown element"
+msgstr ""
+
+msgid "Unknown decoder element"
+msgstr ""
+
+msgid "Unknown encoder element"
+msgstr ""
+
+msgid "Plugin or element of unknown type"
 msgstr ""
 
 msgid "Failed to read tag: not enough data"
@@ -331,163 +492,6 @@ msgstr ""
 msgid "unparsed id3v2 tag frame"
 msgstr ""
 
-msgid "ID3 tag"
-msgstr ""
-
-msgid "APE tag"
-msgstr ""
-
-msgid "ICY internet radio"
-msgstr ""
-
-msgid "Apple Lossless Audio (ALAC)"
-msgstr ""
-
-msgid "Free Lossless Audio Codec (FLAC)"
-msgstr ""
-
-msgid "Lossless True Audio (TTA)"
-msgstr ""
-
-msgid "Windows Media Speech"
-msgstr ""
-
-msgid "CYUV Lossless"
-msgstr ""
-
-msgid "FFMpeg v1"
-msgstr ""
-
-msgid "Lossless MSZH"
-msgstr ""
-
-msgid "Run-length encoding"
-msgstr ""
-
-msgid "Subtitle"
-msgstr ""
-
-msgid "MPL2 subtitle format"
-msgstr ""
-
-msgid "DKS subtitle format"
-msgstr ""
-
-msgid "QTtext subtitle format"
-msgstr ""
-
-msgid "Sami subtitle format"
-msgstr ""
-
-msgid "TMPlayer subtitle format"
-msgstr ""
-
-msgid "Kate subtitle format"
-msgstr ""
-
-msgid "Uncompressed video"
-msgstr ""
-
-msgid "Uncompressed gray"
-msgstr ""
-
-#, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr ""
-
-#, c-format
-msgid "Uncompressed %s%d-bit %s"
-msgstr ""
-
-#, c-format
-msgid "DivX MPEG-4 Version %d"
-msgstr ""
-
-msgid "Uncompressed audio"
-msgstr ""
-
-#, c-format
-msgid "Raw %d-bit %s audio"
-msgstr ""
-
-msgid "Audio CD source"
-msgstr ""
-
-msgid "DVD source"
-msgstr ""
-
-msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr ""
-
-msgid "Microsoft Media Server (MMS) protocol source"
-msgstr ""
-
-#, c-format
-msgid "%s protocol source"
-msgstr ""
-
-#, c-format
-msgid "%s video RTP depayloader"
-msgstr ""
-
-#, c-format
-msgid "%s audio RTP depayloader"
-msgstr ""
-
-#, c-format
-msgid "%s RTP depayloader"
-msgstr ""
-
-#, c-format
-msgid "%s demuxer"
-msgstr ""
-
-#, c-format
-msgid "%s decoder"
-msgstr ""
-
-#, c-format
-msgid "%s video RTP payloader"
-msgstr ""
-
-#, c-format
-msgid "%s audio RTP payloader"
-msgstr ""
-
-#, c-format
-msgid "%s RTP payloader"
-msgstr ""
-
-#, c-format
-msgid "%s muxer"
-msgstr ""
-
-#, c-format
-msgid "%s encoder"
-msgstr ""
-
-#, c-format
-msgid "GStreamer element %s"
-msgstr ""
-
-msgid "Unknown source element"
-msgstr ""
-
-msgid "Unknown sink element"
-msgstr ""
-
-msgid "Unknown element"
-msgstr ""
-
-msgid "Unknown decoder element"
-msgstr ""
-
-msgid "Unknown encoder element"
-msgstr ""
-
-msgid "Plugin or element of unknown type"
-msgstr ""
-
 #~ msgid "Bass"
 #~ msgstr "Bas"
 
@@ -544,10 +548,6 @@ msgstr ""
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "\"%s\" avadanlığı oxuma və yazma üçün açıla bilmədi."
-
-#, fuzzy
-#~ msgid "Could not create \"typefind\" element."
-#~ msgstr "\"%s\" faylına yazıla bilmədi."
 
 #, fuzzy
 #~ msgid "No Temp directory specified."

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2011-12-05 09:10+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -79,6 +79,10 @@ msgid "Internal data stream error."
 msgstr "Унутрашња грешка тока података."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Недостаје елемент „%s“ — проверите вашу инсталацију Гстримера."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "За пуштање овог тока потребан је прикључак „%s“, али није инсталиран."
 
@@ -88,9 +92,9 @@ msgstr "Не могу да утврдим врсту тока"
 msgid "This appears to be a text file"
 msgstr "Изгледа да је ово текстуална датотека"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Недостаје елемент „%s“ — проверите вашу инсталацију Гстримера."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Не могу да направим „декодебин“ елемент."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -162,171 +166,11 @@ msgstr "Изворни елемент је неисправан."
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Грешка приликом слања података у „%s:%d“."
 
-msgid "This CD has no audio tracks"
-msgstr "Овај ЦД нема звучних нумера"
-
 msgid "Can't record audio fast enough"
 msgstr "Не могу да снимам звук довољно брзо"
 
-msgid "Failed to read tag: not enough data"
-msgstr "Нисам успео да прочитам ознаку: нема довољно података"
-
-msgid "track ID"
-msgstr "ИБ нумере"
-
-msgid "MusicBrainz track ID"
-msgstr "ИБ нумере Мозгића музике"
-
-msgid "artist ID"
-msgstr "ИБ извођача"
-
-msgid "MusicBrainz artist ID"
-msgstr "ИБ извођача Мозгића музике"
-
-msgid "album ID"
-msgstr "ИБ албума"
-
-msgid "MusicBrainz album ID"
-msgstr "ИБ албума Мозгића музике"
-
-msgid "album artist ID"
-msgstr "ИБ извођача албума"
-
-msgid "MusicBrainz album artist ID"
-msgstr "ИБ извођача албума Мозгића музике"
-
-msgid "track TRM ID"
-msgstr "ТРМ ИБ стазе"
-
-msgid "MusicBrainz TRM ID"
-msgstr "ИБ ТРМ-а Мозгића музике"
-
-msgid "capturing shutter speed"
-msgstr "брзина затварача снимања"
-
-msgid "Shutter speed used when capturing an image, in seconds"
-msgstr "Брзина затварача коришћена приликом снимања слике, у секундама"
-
-msgid "capturing focal ratio"
-msgstr "жижни однос снимања"
-
-msgid "Focal ratio (f-number) used when capturing the image"
-msgstr "Жижни однос (ф-број) коришћен приликом снимања слике"
-
-msgid "capturing focal length"
-msgstr "жижна даљина снимања"
-
-msgid "Focal length of the lens used capturing the image, in mm"
-msgstr "Жижна даљина објектива коришћеног за снимање слика, у мииметрима"
-
-msgid "capturing digital zoom ratio"
-msgstr "однос дигиталног зума снимања"
-
-msgid "Digital zoom ratio used when capturing an image"
-msgstr "Однос дигиталног зума коришћен приликом снимања слике"
-
-msgid "capturing iso speed"
-msgstr "брзина изо снимања"
-
-msgid "The ISO speed used when capturing an image"
-msgstr "ИЗО брзина коришћена приликом снимања слике"
-
-msgid "capturing exposure program"
-msgstr "програм изложености снимања"
-
-msgid "The exposure program used when capturing an image"
-msgstr "Програм изложености коришћен приликом снимања слике"
-
-msgid "capturing exposure mode"
-msgstr "режим изложености снимања"
-
-msgid "The exposure mode used when capturing an image"
-msgstr "Режим изложености коришћен приликом снимања слике"
-
-msgid "capturing exposure compensation"
-msgstr "поправка изложености снимања"
-
-msgid "The exposure compensation used when capturing an image"
-msgstr "Поправка изложености коришћена приликом снимања слике"
-
-msgid "capturing scene capture type"
-msgstr "врста снимка сцене снимања"
-
-msgid "The scene capture mode used when capturing an image"
-msgstr "Режим снимања сцене коришћен приликом снимања слике"
-
-msgid "capturing gain adjustment"
-msgstr "подешавање добитка снимања"
-
-msgid "The overall gain adjustment applied on an image"
-msgstr "Подешавање укупног добитка примењено на слици"
-
-msgid "capturing white balance"
-msgstr "баланс белог снимања"
-
-msgid "The white balance mode set when capturing an image"
-msgstr "Режим баланса белог приликом снимања слике"
-
-msgid "capturing contrast"
-msgstr "контраст снимања"
-
-msgid "The direction of contrast processing applied when capturing an image"
-msgstr "Усмерење обраде контраста примењеног приликом снимања слике"
-
-msgid "capturing saturation"
-msgstr "засићење снимања"
-
-msgid "The direction of saturation processing applied when capturing an image"
-msgstr "Усмерење обраде засићења примењеног приликом снимања слике"
-
-msgid "capturing sharpness"
-msgstr "оштрина снимања"
-
-msgid "The direction of sharpness processing applied when capturing an image"
-msgstr "Усмерење обраде оштрине примењене приликом снимања слике"
-
-msgid "capturing flash fired"
-msgstr "одрада блица снимања"
-
-msgid "If the flash fired while capturing an image"
-msgstr "Ако је блиц одрадио приликом снимања слике"
-
-msgid "capturing flash mode"
-msgstr "режим блица снимања"
-
-msgid "The selected flash mode while capturing an image"
-msgstr "Изабрани режим рада блица приликом снимања слике"
-
-msgid "capturing metering mode"
-msgstr "режим мерења снимања"
-
-msgid ""
-"The metering mode used while determining exposure for capturing an image"
-msgstr "Режим мерења коришћен приликом одређивања излагања за снимање слике"
-
-msgid "capturing source"
-msgstr "извор снимања"
-
-msgid "The source or type of device used for the capture"
-msgstr "Извор или врста уређаја коришћеног за снимање"
-
-msgid "image horizontal ppi"
-msgstr "водоравних тпи слике"
-
-msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr "Очекивана густина водоравних тачака медија (слике/видеа) у тпи"
-
-msgid "image vertical ppi"
-msgstr "усправних тпи слике "
-
-msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr "Очекивана густина усправних тачака медија (слике/видеа) у тпи"
-
-msgid "ID3v2 frame"
-msgstr ""
-
-msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgid "This CD has no audio tracks"
+msgstr "Овај ЦД нема звучних нумера"
 
 msgid "ID3 tag"
 msgstr "ИБ3 ознака"
@@ -491,6 +335,166 @@ msgstr "Непознати елемент кодера"
 msgid "Plugin or element of unknown type"
 msgstr "Прикључак или елемент непознате врсте"
 
+msgid "Failed to read tag: not enough data"
+msgstr "Нисам успео да прочитам ознаку: нема довољно података"
+
+msgid "track ID"
+msgstr "ИБ нумере"
+
+msgid "MusicBrainz track ID"
+msgstr "ИБ нумере Мозгића музике"
+
+msgid "artist ID"
+msgstr "ИБ извођача"
+
+msgid "MusicBrainz artist ID"
+msgstr "ИБ извођача Мозгића музике"
+
+msgid "album ID"
+msgstr "ИБ албума"
+
+msgid "MusicBrainz album ID"
+msgstr "ИБ албума Мозгића музике"
+
+msgid "album artist ID"
+msgstr "ИБ извођача албума"
+
+msgid "MusicBrainz album artist ID"
+msgstr "ИБ извођача албума Мозгића музике"
+
+msgid "track TRM ID"
+msgstr "ТРМ ИБ стазе"
+
+msgid "MusicBrainz TRM ID"
+msgstr "ИБ ТРМ-а Мозгића музике"
+
+msgid "capturing shutter speed"
+msgstr "брзина затварача снимања"
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr "Брзина затварача коришћена приликом снимања слике, у секундама"
+
+msgid "capturing focal ratio"
+msgstr "жижни однос снимања"
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr "Жижни однос (ф-број) коришћен приликом снимања слике"
+
+msgid "capturing focal length"
+msgstr "жижна даљина снимања"
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Жижна даљина објектива коришћеног за снимање слика, у мииметрима"
+
+msgid "capturing digital zoom ratio"
+msgstr "однос дигиталног зума снимања"
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr "Однос дигиталног зума коришћен приликом снимања слике"
+
+msgid "capturing iso speed"
+msgstr "брзина изо снимања"
+
+msgid "The ISO speed used when capturing an image"
+msgstr "ИЗО брзина коришћена приликом снимања слике"
+
+msgid "capturing exposure program"
+msgstr "програм изложености снимања"
+
+msgid "The exposure program used when capturing an image"
+msgstr "Програм изложености коришћен приликом снимања слике"
+
+msgid "capturing exposure mode"
+msgstr "режим изложености снимања"
+
+msgid "The exposure mode used when capturing an image"
+msgstr "Режим изложености коришћен приликом снимања слике"
+
+msgid "capturing exposure compensation"
+msgstr "поправка изложености снимања"
+
+msgid "The exposure compensation used when capturing an image"
+msgstr "Поправка изложености коришћена приликом снимања слике"
+
+msgid "capturing scene capture type"
+msgstr "врста снимка сцене снимања"
+
+msgid "The scene capture mode used when capturing an image"
+msgstr "Режим снимања сцене коришћен приликом снимања слике"
+
+msgid "capturing gain adjustment"
+msgstr "подешавање добитка снимања"
+
+msgid "The overall gain adjustment applied on an image"
+msgstr "Подешавање укупног добитка примењено на слици"
+
+msgid "capturing white balance"
+msgstr "баланс белог снимања"
+
+msgid "The white balance mode set when capturing an image"
+msgstr "Режим баланса белог приликом снимања слике"
+
+msgid "capturing contrast"
+msgstr "контраст снимања"
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr "Усмерење обраде контраста примењеног приликом снимања слике"
+
+msgid "capturing saturation"
+msgstr "засићење снимања"
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr "Усмерење обраде засићења примењеног приликом снимања слике"
+
+msgid "capturing sharpness"
+msgstr "оштрина снимања"
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr "Усмерење обраде оштрине примењене приликом снимања слике"
+
+msgid "capturing flash fired"
+msgstr "одрада блица снимања"
+
+msgid "If the flash fired while capturing an image"
+msgstr "Ако је блиц одрадио приликом снимања слике"
+
+msgid "capturing flash mode"
+msgstr "режим блица снимања"
+
+msgid "The selected flash mode while capturing an image"
+msgstr "Изабрани режим рада блица приликом снимања слике"
+
+msgid "capturing metering mode"
+msgstr "режим мерења снимања"
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr "Режим мерења коришћен приликом одређивања излагања за снимање слике"
+
+msgid "capturing source"
+msgstr "извор снимања"
+
+msgid "The source or type of device used for the capture"
+msgstr "Извор или врста уређаја коришћеног за снимање"
+
+msgid "image horizontal ppi"
+msgstr "водоравних тпи слике"
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr "Очекивана густина водоравних тачака медија (слике/видеа) у тпи"
+
+msgid "image vertical ppi"
+msgstr "усправних тпи слике "
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr "Очекивана густина усправних тачака медија (слике/видеа) у тпи"
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
+
 #~ msgid "Master"
 #~ msgstr "Главни"
 
@@ -544,9 +548,6 @@ msgstr "Прикључак или елемент непознате врсте"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "РТСП токови још увек не могу бити пуштени."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "Не могу да направим „декодебин“ елемент."
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

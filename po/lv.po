@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2011-09-02 12:02-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -81,6 +81,10 @@ msgid "Internal data stream error."
 msgstr "Iekšējās datu plūsmas kļūda."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Trūkst elements \"%s\" - pārbaudiet savu GStreamer instalāciju."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 "Nepieciešamas %s spraudnis, lai atskaņotu šo plūsmu, bet tas nav instalēts."
@@ -91,9 +95,9 @@ msgstr "Nevarēja noteikts straumes tipu"
 msgid "This appears to be a text file"
 msgstr "Tiek atpazīts kā teksta fails"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Trūkst elements \"%s\" - pārbaudiet savu GStreamer instalāciju."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Nevarēja izveidot \"decodebin\" elementu."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -165,171 +169,11 @@ msgstr "Avota elements ir nederīgs."
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Radās kļūda nosūtot datus uz \"%s:%d\"."
 
-msgid "This CD has no audio tracks"
-msgstr "Šajā CD nav neviena audio celiņa"
-
 msgid "Can't record audio fast enough"
 msgstr "Nevar ierakstīt audio pietiekami ātri"
 
-msgid "Failed to read tag: not enough data"
-msgstr "Neizdevās nolasīt atzīmi: nepietiek datu"
-
-msgid "track ID"
-msgstr "celiņa ID"
-
-msgid "MusicBrainz track ID"
-msgstr "MusicBrainz celiņa ID"
-
-msgid "artist ID"
-msgstr "izpildītāja ID"
-
-msgid "MusicBrainz artist ID"
-msgstr "MusicBrainz izpildītāja ID"
-
-msgid "album ID"
-msgstr "albuma ID"
-
-msgid "MusicBrainz album ID"
-msgstr "MusicBrainz albuma ID"
-
-msgid "album artist ID"
-msgstr "albuma izpildītāja ID"
-
-msgid "MusicBrainz album artist ID"
-msgstr "MusicBrainz albuma izpildītāja ID"
-
-msgid "track TRM ID"
-msgstr "celiņa TRM ID"
-
-msgid "MusicBrainz TRM ID"
-msgstr "MusicBrainz TRM ID"
-
-msgid "capturing shutter speed"
-msgstr "Tveršanā aizvara ātrums"
-
-msgid "Shutter speed used when capturing an image, in seconds"
-msgstr "Attēla tveršanā izmantotais aizvara ātrums sekundēs"
-
-msgid "capturing focal ratio"
-msgstr "tveršanā fokusa attiecība"
-
-msgid "Focal ratio (f-number) used when capturing the image"
-msgstr "Attēla tveršanā izmantotā fokusa attiecība (f-cipars)"
-
-msgid "capturing focal length"
-msgstr "tveršanā fokusa attālums"
-
-msgid "Focal length of the lens used capturing the image, in mm"
-msgstr "Attēla tveršanā izmantotā lēcas fokusa attālums milimetros"
-
-msgid "capturing digital zoom ratio"
-msgstr "tveršanā digitālais tālummaiņas attiecība"
-
-msgid "Digital zoom ratio used when capturing an image"
-msgstr "Attēla tveršanā izmantotais digitālās tālummaiņas attiecība"
-
-msgid "capturing iso speed"
-msgstr "tveršanā iso ātrums"
-
-msgid "The ISO speed used when capturing an image"
-msgstr "Attēla tveršanā izmantotais ISO ātrums"
-
-msgid "capturing exposure program"
-msgstr "tveršanā atseguma programma"
-
-msgid "The exposure program used when capturing an image"
-msgstr "Attēla tveršanā izmantotā atseguma programma"
-
-msgid "capturing exposure mode"
-msgstr "tveršanā atseguma režīms"
-
-msgid "The exposure mode used when capturing an image"
-msgstr "Attēla tveršanā izmantotais atseguma režīms"
-
-msgid "capturing exposure compensation"
-msgstr "tveršanā atseguma kompensācija"
-
-msgid "The exposure compensation used when capturing an image"
-msgstr "Attēla tveršanā izmantotais atseguma kompensācija"
-
-msgid "capturing scene capture type"
-msgstr "tveršanā ainas tveršanas tips"
-
-msgid "The scene capture mode used when capturing an image"
-msgstr "Attēla tveršanā izmantotas ainas tveršanas režīms"
-
-msgid "capturing gain adjustment"
-msgstr "tveršanā pieaguma korekcija"
-
-msgid "The overall gain adjustment applied on an image"
-msgstr "Attēla tveršanā izmantotais vispārējā pieauguma korekcija"
-
-msgid "capturing white balance"
-msgstr "tveršanas baltais balanss"
-
-msgid "The white balance mode set when capturing an image"
-msgstr "Lietotais baltais balanss virziens attēla tveršanā"
-
-msgid "capturing contrast"
-msgstr "tveršanā kontrasts"
-
-msgid "The direction of contrast processing applied when capturing an image"
-msgstr "Lietotais kontrasts virziens attēla tveršanā"
-
-msgid "capturing saturation"
-msgstr "tveršanā piesātinājums"
-
-msgid "The direction of saturation processing applied when capturing an image"
-msgstr "Lietotais piesātinājuma virziens attēla tveršanā"
-
-msgid "capturing sharpness"
-msgstr "tveršanā asumss"
-
-msgid "The direction of sharpness processing applied when capturing an image"
-msgstr "Lietotais asuma virziens attēla tveršanā"
-
-msgid "capturing flash fired"
-msgstr "tveršanā zibsnis palaists"
-
-msgid "If the flash fired while capturing an image"
-msgstr "Ja zibsnis palaists attēla tveršanā"
-
-msgid "capturing flash mode"
-msgstr "tveršanā zibšņa režīms"
-
-msgid "The selected flash mode while capturing an image"
-msgstr "Atlasītais zibšņa režīms priekš attēla tveršanas"
-
-msgid "capturing metering mode"
-msgstr "tveršanā mērīšanas režīms"
-
-msgid ""
-"The metering mode used while determining exposure for capturing an image"
-msgstr "Mērīšanas režīms, lai noteiktu atsegumu attēla tveršanai"
-
-msgid "capturing source"
-msgstr "tveršanā avots"
-
-msgid "The source or type of device used for the capture"
-msgstr "Tveršanas avots vai iekārtas tips"
-
-msgid "image horizontal ppi"
-msgstr "attēla horizontālais ppi"
-
-msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr "Medija (attēls/video) domātā horizontālā pikseļu blīvums ppi"
-
-msgid "image vertical ppi"
-msgstr "attēla vertikālais ppi"
-
-msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr "Medija (attēls/video) domātā vertikālā pikseļu blīvums ppi"
-
-msgid "ID3v2 frame"
-msgstr ""
-
-msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgid "This CD has no audio tracks"
+msgstr "Šajā CD nav neviena audio celiņa"
 
 msgid "ID3 tag"
 msgstr "ID3 atzīme"
@@ -494,6 +338,166 @@ msgstr "Nezināms kodētāja elements"
 msgid "Plugin or element of unknown type"
 msgstr "Nezināma veida spraudnis vai elements"
 
+msgid "Failed to read tag: not enough data"
+msgstr "Neizdevās nolasīt atzīmi: nepietiek datu"
+
+msgid "track ID"
+msgstr "celiņa ID"
+
+msgid "MusicBrainz track ID"
+msgstr "MusicBrainz celiņa ID"
+
+msgid "artist ID"
+msgstr "izpildītāja ID"
+
+msgid "MusicBrainz artist ID"
+msgstr "MusicBrainz izpildītāja ID"
+
+msgid "album ID"
+msgstr "albuma ID"
+
+msgid "MusicBrainz album ID"
+msgstr "MusicBrainz albuma ID"
+
+msgid "album artist ID"
+msgstr "albuma izpildītāja ID"
+
+msgid "MusicBrainz album artist ID"
+msgstr "MusicBrainz albuma izpildītāja ID"
+
+msgid "track TRM ID"
+msgstr "celiņa TRM ID"
+
+msgid "MusicBrainz TRM ID"
+msgstr "MusicBrainz TRM ID"
+
+msgid "capturing shutter speed"
+msgstr "Tveršanā aizvara ātrums"
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr "Attēla tveršanā izmantotais aizvara ātrums sekundēs"
+
+msgid "capturing focal ratio"
+msgstr "tveršanā fokusa attiecība"
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr "Attēla tveršanā izmantotā fokusa attiecība (f-cipars)"
+
+msgid "capturing focal length"
+msgstr "tveršanā fokusa attālums"
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Attēla tveršanā izmantotā lēcas fokusa attālums milimetros"
+
+msgid "capturing digital zoom ratio"
+msgstr "tveršanā digitālais tālummaiņas attiecība"
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr "Attēla tveršanā izmantotais digitālās tālummaiņas attiecība"
+
+msgid "capturing iso speed"
+msgstr "tveršanā iso ātrums"
+
+msgid "The ISO speed used when capturing an image"
+msgstr "Attēla tveršanā izmantotais ISO ātrums"
+
+msgid "capturing exposure program"
+msgstr "tveršanā atseguma programma"
+
+msgid "The exposure program used when capturing an image"
+msgstr "Attēla tveršanā izmantotā atseguma programma"
+
+msgid "capturing exposure mode"
+msgstr "tveršanā atseguma režīms"
+
+msgid "The exposure mode used when capturing an image"
+msgstr "Attēla tveršanā izmantotais atseguma režīms"
+
+msgid "capturing exposure compensation"
+msgstr "tveršanā atseguma kompensācija"
+
+msgid "The exposure compensation used when capturing an image"
+msgstr "Attēla tveršanā izmantotais atseguma kompensācija"
+
+msgid "capturing scene capture type"
+msgstr "tveršanā ainas tveršanas tips"
+
+msgid "The scene capture mode used when capturing an image"
+msgstr "Attēla tveršanā izmantotas ainas tveršanas režīms"
+
+msgid "capturing gain adjustment"
+msgstr "tveršanā pieaguma korekcija"
+
+msgid "The overall gain adjustment applied on an image"
+msgstr "Attēla tveršanā izmantotais vispārējā pieauguma korekcija"
+
+msgid "capturing white balance"
+msgstr "tveršanas baltais balanss"
+
+msgid "The white balance mode set when capturing an image"
+msgstr "Lietotais baltais balanss virziens attēla tveršanā"
+
+msgid "capturing contrast"
+msgstr "tveršanā kontrasts"
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr "Lietotais kontrasts virziens attēla tveršanā"
+
+msgid "capturing saturation"
+msgstr "tveršanā piesātinājums"
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr "Lietotais piesātinājuma virziens attēla tveršanā"
+
+msgid "capturing sharpness"
+msgstr "tveršanā asumss"
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr "Lietotais asuma virziens attēla tveršanā"
+
+msgid "capturing flash fired"
+msgstr "tveršanā zibsnis palaists"
+
+msgid "If the flash fired while capturing an image"
+msgstr "Ja zibsnis palaists attēla tveršanā"
+
+msgid "capturing flash mode"
+msgstr "tveršanā zibšņa režīms"
+
+msgid "The selected flash mode while capturing an image"
+msgstr "Atlasītais zibšņa režīms priekš attēla tveršanas"
+
+msgid "capturing metering mode"
+msgstr "tveršanā mērīšanas režīms"
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr "Mērīšanas režīms, lai noteiktu atsegumu attēla tveršanai"
+
+msgid "capturing source"
+msgstr "tveršanā avots"
+
+msgid "The source or type of device used for the capture"
+msgstr "Tveršanas avots vai iekārtas tips"
+
+msgid "image horizontal ppi"
+msgstr "attēla horizontālais ppi"
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr "Medija (attēls/video) domātā horizontālā pikseļu blīvums ppi"
+
+msgid "image vertical ppi"
+msgstr "attēla vertikālais ppi"
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr "Medija (attēls/video) domātā vertikālā pikseļu blīvums ppi"
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
+
 #~ msgid "Master"
 #~ msgstr "Galvenais"
 
@@ -547,9 +551,6 @@ msgstr "Nezināma veida spraudnis vai elements"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "RTSP plūsmas pagaidām nevar tikt atskaņotas."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "Nevarēja izveidot \"decodebin\" elementu."
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

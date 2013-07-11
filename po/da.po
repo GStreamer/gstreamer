@@ -33,7 +33,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2011-04-28 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -100,6 +100,10 @@ msgid "Internal data stream error."
 msgstr "Intern datastrømsfejl."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "'%s' elementet mangler - check din GStreamer installation."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 "Et %s plugin er nødvendigt ved afspilning af denne sekvens, men ikke "
@@ -111,9 +115,9 @@ msgstr "Kunne ikke afgøre strømtypen"
 msgid "This appears to be a text file"
 msgstr "Denne fremstår som en tekstfil"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "'%s' elementet mangler - check din GStreamer installation."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Kunne ikke danne et \"decodebin\" element."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -186,11 +190,177 @@ msgstr "Kildeelement er ugyldigt."
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Der opstod en fejl under data-overførsel til \"%s:%d\"."
 
+msgid "Can't record audio fast enough"
+msgstr "Kan ikke optage lyd hurtigt nok"
+
 msgid "This CD has no audio tracks"
 msgstr "Denne cd har ingen lydspor"
 
-msgid "Can't record audio fast enough"
-msgstr "Kan ikke optage lyd hurtigt nok"
+msgid "ID3 tag"
+msgstr "ID3-mærke"
+
+msgid "APE tag"
+msgstr "APE-mærke"
+
+msgid "ICY internet radio"
+msgstr "ICY-internetradio"
+
+msgid "Apple Lossless Audio (ALAC)"
+msgstr "Apple Lossless Audio (ALAC)"
+
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr "Free Lossless Audio Codec (FLAC)"
+
+msgid "Lossless True Audio (TTA)"
+msgstr "Lossless True Audio (TTA)"
+
+msgid "Windows Media Speech"
+msgstr "Windows Media Speech"
+
+msgid "CYUV Lossless"
+msgstr "CYUV Lossless"
+
+msgid "FFMpeg v1"
+msgstr "FFMpeg v1"
+
+msgid "Lossless MSZH"
+msgstr "Lossless MSZH"
+
+msgid "Run-length encoding"
+msgstr "Kørsels-længde indkodning"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "TMPlayer undertekstformat"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Sami undertekstformat"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Undertekstformat Kate"
+
+msgid "Sami subtitle format"
+msgstr "Sami undertekstformat"
+
+msgid "TMPlayer subtitle format"
+msgstr "TMPlayer undertekstformat"
+
+msgid "Kate subtitle format"
+msgstr "Undertekstformat Kate"
+
+#, fuzzy
+msgid "Uncompressed video"
+msgstr "Ukomprimeret YUV"
+
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Ukomprimeret gråtonebillede"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "Ukomprimeret YUV"
+
+# Findes dette ord palettet på dansk ? evt. indekseret
+# Ukomprimeret palettet %d-bit %s
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
+msgstr "Ukomprimeret indekseret %d-bit %s"
+
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr "DivX MPEG-4 version %d"
+
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Ukomprimeret YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
+msgstr "Ufiltreret %d-bit PCM audio"
+
+msgid "Audio CD source"
+msgstr "Audio cd kilde"
+
+msgid "DVD source"
+msgstr "DVD kilde"
+
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr "Real Time Streaming Protocol (RTSP) kilde"
+
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr "Microsoft Media Server (MMS) protokol kilde"
+
+#, c-format
+msgid "%s protocol source"
+msgstr "%s protokol kilde"
+
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr "%s video RTP-depayloader"
+
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr "%s lyd RTP-depayloader"
+
+#, c-format
+msgid "%s RTP depayloader"
+msgstr "%s RTP-depayloader"
+
+#, c-format
+msgid "%s demuxer"
+msgstr "%s demuxer"
+
+#, c-format
+msgid "%s decoder"
+msgstr "%s afkoder"
+
+#, c-format
+msgid "%s video RTP payloader"
+msgstr "%s video RTP-payloader"
+
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr "%s lyd RTP-payloader"
+
+#, c-format
+msgid "%s RTP payloader"
+msgstr "%s RTP-payloader"
+
+#, c-format
+msgid "%s muxer"
+msgstr "%s muxer"
+
+#, c-format
+msgid "%s encoder"
+msgstr "%s indkoder"
+
+#, c-format
+msgid "GStreamer element %s"
+msgstr "GStreamer element %s"
+
+msgid "Unknown source element"
+msgstr "Ukendt kildeelement"
+
+# sink ? (afløb, kanal)
+msgid "Unknown sink element"
+msgstr "Ukendt afløbselement"
+
+msgid "Unknown element"
+msgstr "Ukendt element"
+
+msgid "Unknown decoder element"
+msgstr "Ukendt afkodeelement"
+
+msgid "Unknown encoder element"
+msgstr "Ukendt indkodeelement"
+
+msgid "Plugin or element of unknown type"
+msgstr "Plugin eller element af ukendt type"
 
 msgid "Failed to read tag: not enough data"
 msgstr "Kunne ikke læse mærke: Ikke nok data"
@@ -366,172 +536,6 @@ msgstr ""
 msgid "unparsed id3v2 tag frame"
 msgstr ""
 
-msgid "ID3 tag"
-msgstr "ID3-mærke"
-
-msgid "APE tag"
-msgstr "APE-mærke"
-
-msgid "ICY internet radio"
-msgstr "ICY-internetradio"
-
-msgid "Apple Lossless Audio (ALAC)"
-msgstr "Apple Lossless Audio (ALAC)"
-
-msgid "Free Lossless Audio Codec (FLAC)"
-msgstr "Free Lossless Audio Codec (FLAC)"
-
-msgid "Lossless True Audio (TTA)"
-msgstr "Lossless True Audio (TTA)"
-
-msgid "Windows Media Speech"
-msgstr "Windows Media Speech"
-
-msgid "CYUV Lossless"
-msgstr "CYUV Lossless"
-
-msgid "FFMpeg v1"
-msgstr "FFMpeg v1"
-
-msgid "Lossless MSZH"
-msgstr "Lossless MSZH"
-
-msgid "Run-length encoding"
-msgstr "Kørsels-længde indkodning"
-
-msgid "Subtitle"
-msgstr ""
-
-#, fuzzy
-msgid "MPL2 subtitle format"
-msgstr "TMPlayer undertekstformat"
-
-#, fuzzy
-msgid "DKS subtitle format"
-msgstr "Sami undertekstformat"
-
-#, fuzzy
-msgid "QTtext subtitle format"
-msgstr "Undertekstformat Kate"
-
-msgid "Sami subtitle format"
-msgstr "Sami undertekstformat"
-
-msgid "TMPlayer subtitle format"
-msgstr "TMPlayer undertekstformat"
-
-msgid "Kate subtitle format"
-msgstr "Undertekstformat Kate"
-
-#, fuzzy
-msgid "Uncompressed video"
-msgstr "Ukomprimeret YUV"
-
-#, fuzzy
-msgid "Uncompressed gray"
-msgstr "Ukomprimeret gråtonebillede"
-
-#, fuzzy, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr "Ukomprimeret YUV"
-
-# Findes dette ord palettet på dansk ? evt. indekseret
-# Ukomprimeret palettet %d-bit %s
-#, fuzzy, c-format
-msgid "Uncompressed %s%d-bit %s"
-msgstr "Ukomprimeret indekseret %d-bit %s"
-
-#, c-format
-msgid "DivX MPEG-4 Version %d"
-msgstr "DivX MPEG-4 version %d"
-
-#, fuzzy
-msgid "Uncompressed audio"
-msgstr "Ukomprimeret YUV"
-
-#, fuzzy, c-format
-msgid "Raw %d-bit %s audio"
-msgstr "Ufiltreret %d-bit PCM audio"
-
-msgid "Audio CD source"
-msgstr "Audio cd kilde"
-
-msgid "DVD source"
-msgstr "DVD kilde"
-
-msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr "Real Time Streaming Protocol (RTSP) kilde"
-
-msgid "Microsoft Media Server (MMS) protocol source"
-msgstr "Microsoft Media Server (MMS) protokol kilde"
-
-#, c-format
-msgid "%s protocol source"
-msgstr "%s protokol kilde"
-
-#, c-format
-msgid "%s video RTP depayloader"
-msgstr "%s video RTP-depayloader"
-
-#, c-format
-msgid "%s audio RTP depayloader"
-msgstr "%s lyd RTP-depayloader"
-
-#, c-format
-msgid "%s RTP depayloader"
-msgstr "%s RTP-depayloader"
-
-#, c-format
-msgid "%s demuxer"
-msgstr "%s demuxer"
-
-#, c-format
-msgid "%s decoder"
-msgstr "%s afkoder"
-
-#, c-format
-msgid "%s video RTP payloader"
-msgstr "%s video RTP-payloader"
-
-#, c-format
-msgid "%s audio RTP payloader"
-msgstr "%s lyd RTP-payloader"
-
-#, c-format
-msgid "%s RTP payloader"
-msgstr "%s RTP-payloader"
-
-#, c-format
-msgid "%s muxer"
-msgstr "%s muxer"
-
-#, c-format
-msgid "%s encoder"
-msgstr "%s indkoder"
-
-#, c-format
-msgid "GStreamer element %s"
-msgstr "GStreamer element %s"
-
-msgid "Unknown source element"
-msgstr "Ukendt kildeelement"
-
-# sink ? (afløb, kanal)
-msgid "Unknown sink element"
-msgstr "Ukendt afløbselement"
-
-msgid "Unknown element"
-msgstr "Ukendt element"
-
-msgid "Unknown decoder element"
-msgstr "Ukendt afkodeelement"
-
-msgid "Unknown encoder element"
-msgstr "Ukendt indkodeelement"
-
-msgid "Plugin or element of unknown type"
-msgstr "Plugin eller element af ukendt type"
-
 #~ msgid "Master"
 #~ msgstr "Master"
 
@@ -624,9 +628,6 @@ msgstr "Plugin eller element af ukendt type"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "RTSP sekvenser kan endnu ikke afspilles."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "Kunne ikke danne et \"decodebin\" element."
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

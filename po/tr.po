@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2011-04-26 19:22+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
@@ -73,6 +73,10 @@ msgid "Internal data stream error."
 msgstr "İç veri akışı hatası."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Kayıp öğe '%s' - GStreamer kurulumunu denetleyin."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "Bir %s eklenti bu akışı çalmak için gerekli, fakat kurulu değil."
 
@@ -82,9 +86,9 @@ msgstr "Akışın türü belirlenemiyor"
 msgid "This appears to be a text file"
 msgstr "Bu bir metin dosyasına benziyor"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Kayıp öğe '%s' - GStreamer kurulumunu denetleyin."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "\"decodebin\" öğesi oluşturulamıyor."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -156,171 +160,11 @@ msgstr "Kaynak öğesi geçersiz."
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Dosyayı şuraya gönderirken hata \"%s:%d\"."
 
-msgid "This CD has no audio tracks"
-msgstr "Bu CD hiç ses izi içermiyor"
-
 msgid "Can't record audio fast enough"
 msgstr "Sesi yeterince hızlı kaydedemiyor"
 
-msgid "Failed to read tag: not enough data"
-msgstr "Etiketi okunamadı: yetersiz veri"
-
-msgid "track ID"
-msgstr "iz BAŞLIĞI"
-
-msgid "MusicBrainz track ID"
-msgstr "MusicBrainz iz BAŞLIĞI ID"
-
-msgid "artist ID"
-msgstr "sanatçı BAŞLIĞI"
-
-msgid "MusicBrainz artist ID"
-msgstr "MusicBrainz sanatçı BAŞLIĞI ID"
-
-msgid "album ID"
-msgstr "albüm BAŞLIĞI"
-
-msgid "MusicBrainz album ID"
-msgstr "MusicBrainz albümü BAŞLIĞI"
-
-msgid "album artist ID"
-msgstr "albüm sanatçısı BAŞLIĞI"
-
-msgid "MusicBrainz album artist ID"
-msgstr "MusicBrainz albüm sanatçısı BAŞLIĞI"
-
-msgid "track TRM ID"
-msgstr "iz TRM BAŞLIĞI"
-
-msgid "MusicBrainz TRM ID"
-msgstr "MusicBrainz TRM BAŞLIĞI"
-
-msgid "capturing shutter speed"
-msgstr "objektif hızını yakalıyor"
-
-msgid "Shutter speed used when capturing an image, in seconds"
-msgstr "Saniye bazında, bir resim çekerken kullanılan objektif hızı"
-
-msgid "capturing focal ratio"
-msgstr "odaksal oranı yakalıyor"
-
-msgid "Focal ratio (f-number) used when capturing the image"
-msgstr "Resim çekerken kullanılan odaksal oran (f-numarası)"
-
-msgid "capturing focal length"
-msgstr "odaksal uzunluğu yakalıyor"
-
-msgid "Focal length of the lens used capturing the image, in mm"
-msgstr "Mm bazında, resim çekerken kullanılan odaksal uzunluk"
-
-msgid "capturing digital zoom ratio"
-msgstr "sayısal zum oranını yakalıyor"
-
-msgid "Digital zoom ratio used when capturing an image"
-msgstr "Bir resim çekerken kullanılan sayısal yakınlaştırma oranı"
-
-msgid "capturing iso speed"
-msgstr "iso hızını yakalıyor"
-
-msgid "The ISO speed used when capturing an image"
-msgstr "Bir resim çekerken kulllanılan ISO hızı"
-
-msgid "capturing exposure program"
-msgstr "pozlandırma programını yakalıyor"
-
-msgid "The exposure program used when capturing an image"
-msgstr "Bir resim çekerken kullanılan pozlandırma programı"
-
-msgid "capturing exposure mode"
-msgstr "pozlandırma kipini yakalıyor"
-
-msgid "The exposure mode used when capturing an image"
-msgstr "Bir resim çekerken kullanılan pozlandırma kipi"
-
-msgid "capturing exposure compensation"
-msgstr "pozlandırma kipini yakalanıyor"
-
-msgid "The exposure compensation used when capturing an image"
-msgstr "Bir resim çekerken kullanılan pozlandırma kipi"
-
-msgid "capturing scene capture type"
-msgstr "manzara çekme türünü yakalıyor"
-
-msgid "The scene capture mode used when capturing an image"
-msgstr "Bir resim çekerken kullanılan manzara yakalama kipi"
-
-msgid "capturing gain adjustment"
-msgstr "kazanç ayarı yakalanıyor"
-
-msgid "The overall gain adjustment applied on an image"
-msgstr "Bir resime uygulanan kapsamlı kazanç ayarı"
-
-msgid "capturing white balance"
-msgstr "beyaz dengesi yakalanıyor"
-
-msgid "The white balance mode set when capturing an image"
-msgstr "Bir resim çekerken kullanılan beyaz dengesi kipi"
-
-msgid "capturing contrast"
-msgstr "zıtlık yakalanıyor"
-
-msgid "The direction of contrast processing applied when capturing an image"
-msgstr "Bir resim çekerken uygulanan zıtlık işleminin yönü"
-
-msgid "capturing saturation"
-msgstr "canlılık yakalanıyor"
-
-msgid "The direction of saturation processing applied when capturing an image"
-msgstr "Bir resim çekerken uygulanan doygunluk işleminin yönü"
-
-msgid "capturing sharpness"
-msgstr "keskinlik yakalanıyor"
-
-msgid "The direction of sharpness processing applied when capturing an image"
-msgstr "Bir resim çekerken uygulanan keskinlik işleminin yönü"
-
-msgid "capturing flash fired"
-msgstr "flaşın yanışı yakalanıyor"
-
-msgid "If the flash fired while capturing an image"
-msgstr "Bir resim çekerken eğer flaş patlamışsa"
-
-msgid "capturing flash mode"
-msgstr "flaş kipi yakalanıyor"
-
-msgid "The selected flash mode while capturing an image"
-msgstr "Bir resim çekerken kullanılan flaş kipi"
-
-msgid "capturing metering mode"
-msgstr "metreleme kipi yakalanıyor"
-
-msgid ""
-"The metering mode used while determining exposure for capturing an image"
-msgstr "Bir resim çekmek için pozlandırmanın metreleme kipi"
-
-msgid "capturing source"
-msgstr "kaynak yakalanıyor"
-
-msgid "The source or type of device used for the capture"
-msgstr "Resim çekerken kullanılan aygıtın kaynak türü"
-
-msgid "image horizontal ppi"
-msgstr "yatay resim ppi değeri"
-
-msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr "Medya (resim/vidyo)'nın ppi değerinden yatay piksel yoğunluğu"
-
-msgid "image vertical ppi"
-msgstr "resim dikey ppi değeri"
-
-msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr "Medya (resim/vidyo)'nun ppi değerinden dikey piksel yoğunluğu"
-
-msgid "ID3v2 frame"
-msgstr ""
-
-msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgid "This CD has no audio tracks"
+msgstr "Bu CD hiç ses izi içermiyor"
 
 msgid "ID3 tag"
 msgstr "ID3 etiketi"
@@ -485,6 +329,166 @@ msgstr "Bilinmeyen kodlama öğesi"
 msgid "Plugin or element of unknown type"
 msgstr "Bilinmeyen türde eklenti veya öğe"
 
+msgid "Failed to read tag: not enough data"
+msgstr "Etiketi okunamadı: yetersiz veri"
+
+msgid "track ID"
+msgstr "iz BAŞLIĞI"
+
+msgid "MusicBrainz track ID"
+msgstr "MusicBrainz iz BAŞLIĞI ID"
+
+msgid "artist ID"
+msgstr "sanatçı BAŞLIĞI"
+
+msgid "MusicBrainz artist ID"
+msgstr "MusicBrainz sanatçı BAŞLIĞI ID"
+
+msgid "album ID"
+msgstr "albüm BAŞLIĞI"
+
+msgid "MusicBrainz album ID"
+msgstr "MusicBrainz albümü BAŞLIĞI"
+
+msgid "album artist ID"
+msgstr "albüm sanatçısı BAŞLIĞI"
+
+msgid "MusicBrainz album artist ID"
+msgstr "MusicBrainz albüm sanatçısı BAŞLIĞI"
+
+msgid "track TRM ID"
+msgstr "iz TRM BAŞLIĞI"
+
+msgid "MusicBrainz TRM ID"
+msgstr "MusicBrainz TRM BAŞLIĞI"
+
+msgid "capturing shutter speed"
+msgstr "objektif hızını yakalıyor"
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr "Saniye bazında, bir resim çekerken kullanılan objektif hızı"
+
+msgid "capturing focal ratio"
+msgstr "odaksal oranı yakalıyor"
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr "Resim çekerken kullanılan odaksal oran (f-numarası)"
+
+msgid "capturing focal length"
+msgstr "odaksal uzunluğu yakalıyor"
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Mm bazında, resim çekerken kullanılan odaksal uzunluk"
+
+msgid "capturing digital zoom ratio"
+msgstr "sayısal zum oranını yakalıyor"
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr "Bir resim çekerken kullanılan sayısal yakınlaştırma oranı"
+
+msgid "capturing iso speed"
+msgstr "iso hızını yakalıyor"
+
+msgid "The ISO speed used when capturing an image"
+msgstr "Bir resim çekerken kulllanılan ISO hızı"
+
+msgid "capturing exposure program"
+msgstr "pozlandırma programını yakalıyor"
+
+msgid "The exposure program used when capturing an image"
+msgstr "Bir resim çekerken kullanılan pozlandırma programı"
+
+msgid "capturing exposure mode"
+msgstr "pozlandırma kipini yakalıyor"
+
+msgid "The exposure mode used when capturing an image"
+msgstr "Bir resim çekerken kullanılan pozlandırma kipi"
+
+msgid "capturing exposure compensation"
+msgstr "pozlandırma kipini yakalanıyor"
+
+msgid "The exposure compensation used when capturing an image"
+msgstr "Bir resim çekerken kullanılan pozlandırma kipi"
+
+msgid "capturing scene capture type"
+msgstr "manzara çekme türünü yakalıyor"
+
+msgid "The scene capture mode used when capturing an image"
+msgstr "Bir resim çekerken kullanılan manzara yakalama kipi"
+
+msgid "capturing gain adjustment"
+msgstr "kazanç ayarı yakalanıyor"
+
+msgid "The overall gain adjustment applied on an image"
+msgstr "Bir resime uygulanan kapsamlı kazanç ayarı"
+
+msgid "capturing white balance"
+msgstr "beyaz dengesi yakalanıyor"
+
+msgid "The white balance mode set when capturing an image"
+msgstr "Bir resim çekerken kullanılan beyaz dengesi kipi"
+
+msgid "capturing contrast"
+msgstr "zıtlık yakalanıyor"
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr "Bir resim çekerken uygulanan zıtlık işleminin yönü"
+
+msgid "capturing saturation"
+msgstr "canlılık yakalanıyor"
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr "Bir resim çekerken uygulanan doygunluk işleminin yönü"
+
+msgid "capturing sharpness"
+msgstr "keskinlik yakalanıyor"
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr "Bir resim çekerken uygulanan keskinlik işleminin yönü"
+
+msgid "capturing flash fired"
+msgstr "flaşın yanışı yakalanıyor"
+
+msgid "If the flash fired while capturing an image"
+msgstr "Bir resim çekerken eğer flaş patlamışsa"
+
+msgid "capturing flash mode"
+msgstr "flaş kipi yakalanıyor"
+
+msgid "The selected flash mode while capturing an image"
+msgstr "Bir resim çekerken kullanılan flaş kipi"
+
+msgid "capturing metering mode"
+msgstr "metreleme kipi yakalanıyor"
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr "Bir resim çekmek için pozlandırmanın metreleme kipi"
+
+msgid "capturing source"
+msgstr "kaynak yakalanıyor"
+
+msgid "The source or type of device used for the capture"
+msgstr "Resim çekerken kullanılan aygıtın kaynak türü"
+
+msgid "image horizontal ppi"
+msgstr "yatay resim ppi değeri"
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr "Medya (resim/vidyo)'nın ppi değerinden yatay piksel yoğunluğu"
+
+msgid "image vertical ppi"
+msgstr "resim dikey ppi değeri"
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr "Medya (resim/vidyo)'nun ppi değerinden dikey piksel yoğunluğu"
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
+
 #~ msgid "Master"
 #~ msgstr "Ana"
 
@@ -535,9 +539,6 @@ msgstr "Bilinmeyen türde eklenti veya öğe"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "RTSP akışları henüz çalınamıyor."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "\"decodebin\" öğesi oluşturulamıyor."
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

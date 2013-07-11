@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2010-12-31 23:21+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -80,6 +80,10 @@ msgid "Internal data stream error."
 msgstr "Sisäisen tietovirran virhe."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr "Puuttuva elementti \"%s\" - tarkista GStreamer-asennuksesi."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 "Virran toistamiseen tarvitaan %s-liitännäinen, mutta se ei ole asennettu."
@@ -90,9 +94,9 @@ msgstr "Virran tyyppiä ei voitu määrittää"
 msgid "This appears to be a text file"
 msgstr "Tämä näyttää olevan tekstitiedosto"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Puuttuva elementti \"%s\" - tarkista GStreamer-asennuksesi."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Elementtiä \"decodebin\" ei voitu luoda."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -164,173 +168,11 @@ msgstr "Lähde-elementti on virheellinen."
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Virhe lähetettäessä tietoa kohteeseen \"%s:%d\"."
 
-msgid "This CD has no audio tracks"
-msgstr "Tällä CD-levyllä ei ole ääniraitoja"
-
 msgid "Can't record audio fast enough"
 msgstr "Ääntä ei voi nauhoittaa tarpeeksi nopeasti"
 
-msgid "Failed to read tag: not enough data"
-msgstr "Tagin lukeminen epäonnistui: ei riittävästi dataa"
-
-msgid "track ID"
-msgstr "kappaletunniste"
-
-msgid "MusicBrainz track ID"
-msgstr "MusicBrainz-kappaletunniste"
-
-msgid "artist ID"
-msgstr "esittäjätunniste"
-
-msgid "MusicBrainz artist ID"
-msgstr "MusicBrainz-esittäjätunniste"
-
-msgid "album ID"
-msgstr "levytunniste"
-
-msgid "MusicBrainz album ID"
-msgstr "MusicBrainz-levytunniste"
-
-msgid "album artist ID"
-msgstr "levyn esittäjätunniste"
-
-msgid "MusicBrainz album artist ID"
-msgstr "MusicBrainz levyn esittäjätunniste"
-
-msgid "track TRM ID"
-msgstr "kappaleen TRM-tunniste"
-
-msgid "MusicBrainz TRM ID"
-msgstr "MusicBrainz TRM-tunniste"
-
-msgid "capturing shutter speed"
-msgstr "kuvaamisen suljinnopeus"
-
-msgid "Shutter speed used when capturing an image, in seconds"
-msgstr "Suljinnopeus kuvattaessa, sekunteina"
-
-msgid "capturing focal ratio"
-msgstr "kuvaamisen aukkosuhde"
-
-msgid "Focal ratio (f-number) used when capturing the image"
-msgstr "Aukkosuhde (f-luku) kuvattaessa"
-
-msgid "capturing focal length"
-msgstr "kuvaamisen polttoväli"
-
-msgid "Focal length of the lens used capturing the image, in mm"
-msgstr "Linssin polttoväli kuvattaessa, millimetriä"
-
-msgid "capturing digital zoom ratio"
-msgstr "kuvaamisen digitaalinen zoomaus"
-
-msgid "Digital zoom ratio used when capturing an image"
-msgstr "Digitaalinen suurennuskerroin kuvattaessa"
-
-msgid "capturing iso speed"
-msgstr "kuvaamisen ISO-nopeus"
-
-msgid "The ISO speed used when capturing an image"
-msgstr "ISO-nopeus kuvattaessa"
-
-msgid "capturing exposure program"
-msgstr "kuvaamisen valotusohjelma"
-
-msgid "The exposure program used when capturing an image"
-msgstr "Valotusohjelma kuvattaessa"
-
-msgid "capturing exposure mode"
-msgstr "kuvaamisen valotustapa"
-
-msgid "The exposure mode used when capturing an image"
-msgstr "Valotustapa kuvattaessa"
-
-#, fuzzy
-msgid "capturing exposure compensation"
-msgstr "kuvaamisen valotustapa"
-
-#, fuzzy
-msgid "The exposure compensation used when capturing an image"
-msgstr "Valotustapa kuvattaessa"
-
-msgid "capturing scene capture type"
-msgstr "kuvaamisen kuvausmoodi"
-
-msgid "The scene capture mode used when capturing an image"
-msgstr "Kuvausmoodi kuvattaessa"
-
-msgid "capturing gain adjustment"
-msgstr "kuvaamisen kirkkauskorjaus"
-
-msgid "The overall gain adjustment applied on an image"
-msgstr "Yleinen kirkkauskorjaus, joka kuvalle on tehty"
-
-msgid "capturing white balance"
-msgstr "kuvaamisen valkotasapaino"
-
-msgid "The white balance mode set when capturing an image"
-msgstr "Valittu valkotasapainotila kuvattaessa"
-
-msgid "capturing contrast"
-msgstr "kuvaamisen kontrasti"
-
-msgid "The direction of contrast processing applied when capturing an image"
-msgstr "Käytetty kontrastikäsittelyn suunta kuvattessa"
-
-msgid "capturing saturation"
-msgstr "kuvaamisen saturaatio"
-
-msgid "The direction of saturation processing applied when capturing an image"
-msgstr "Käytetty saturaatiokäsittelyn suunta kuvattessa"
-
-msgid "capturing sharpness"
-msgstr "kuvaamisen terävyys"
-
-msgid "The direction of sharpness processing applied when capturing an image"
-msgstr "Käytetty terävyyskäsittelyn suunta kuvattessa"
-
-msgid "capturing flash fired"
-msgstr "kuvaamisen salamankäyttö"
-
-msgid "If the flash fired while capturing an image"
-msgstr "Syttyikö salama kuvattaessa"
-
-msgid "capturing flash mode"
-msgstr "kuvaamisen salamamoodi"
-
-msgid "The selected flash mode while capturing an image"
-msgstr "Valittu salamamoodi kuvattessa"
-
-msgid "capturing metering mode"
-msgstr "kuvaamisen mittausmoodi"
-
-msgid ""
-"The metering mode used while determining exposure for capturing an image"
-msgstr "Käytetty mittausmoodi päätettäessä valotusta kuvattaessa"
-
-msgid "capturing source"
-msgstr "kuvaamisen lähde"
-
-msgid "The source or type of device used for the capture"
-msgstr "Lähde tai laitetyyppi kuvattaessa"
-
-msgid "image horizontal ppi"
-msgstr "kuvan vaakasuora ppi"
-
-msgid "Media (image/video) intended horizontal pixel density in ppi"
-msgstr "Median (kuva tai video) tarkoitettu vaakasuora pikselitiheys ppi:nä"
-
-msgid "image vertical ppi"
-msgstr "kuvan pystysuora ppi"
-
-msgid "Media (image/video) intended vertical pixel density in ppi"
-msgstr "Median (kuva tai video) tarkoitettu pystysuora pikselitiheys ppi:nä"
-
-msgid "ID3v2 frame"
-msgstr ""
-
-msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgid "This CD has no audio tracks"
+msgstr "Tällä CD-levyllä ei ole ääniraitoja"
 
 msgid "ID3 tag"
 msgstr "ID3-tagi"
@@ -495,6 +337,168 @@ msgstr "Tuntematon kodekkielementti"
 msgid "Plugin or element of unknown type"
 msgstr "Liitännäisen tai elementin tyyppi on tuntematon"
 
+msgid "Failed to read tag: not enough data"
+msgstr "Tagin lukeminen epäonnistui: ei riittävästi dataa"
+
+msgid "track ID"
+msgstr "kappaletunniste"
+
+msgid "MusicBrainz track ID"
+msgstr "MusicBrainz-kappaletunniste"
+
+msgid "artist ID"
+msgstr "esittäjätunniste"
+
+msgid "MusicBrainz artist ID"
+msgstr "MusicBrainz-esittäjätunniste"
+
+msgid "album ID"
+msgstr "levytunniste"
+
+msgid "MusicBrainz album ID"
+msgstr "MusicBrainz-levytunniste"
+
+msgid "album artist ID"
+msgstr "levyn esittäjätunniste"
+
+msgid "MusicBrainz album artist ID"
+msgstr "MusicBrainz levyn esittäjätunniste"
+
+msgid "track TRM ID"
+msgstr "kappaleen TRM-tunniste"
+
+msgid "MusicBrainz TRM ID"
+msgstr "MusicBrainz TRM-tunniste"
+
+msgid "capturing shutter speed"
+msgstr "kuvaamisen suljinnopeus"
+
+msgid "Shutter speed used when capturing an image, in seconds"
+msgstr "Suljinnopeus kuvattaessa, sekunteina"
+
+msgid "capturing focal ratio"
+msgstr "kuvaamisen aukkosuhde"
+
+msgid "Focal ratio (f-number) used when capturing the image"
+msgstr "Aukkosuhde (f-luku) kuvattaessa"
+
+msgid "capturing focal length"
+msgstr "kuvaamisen polttoväli"
+
+msgid "Focal length of the lens used capturing the image, in mm"
+msgstr "Linssin polttoväli kuvattaessa, millimetriä"
+
+msgid "capturing digital zoom ratio"
+msgstr "kuvaamisen digitaalinen zoomaus"
+
+msgid "Digital zoom ratio used when capturing an image"
+msgstr "Digitaalinen suurennuskerroin kuvattaessa"
+
+msgid "capturing iso speed"
+msgstr "kuvaamisen ISO-nopeus"
+
+msgid "The ISO speed used when capturing an image"
+msgstr "ISO-nopeus kuvattaessa"
+
+msgid "capturing exposure program"
+msgstr "kuvaamisen valotusohjelma"
+
+msgid "The exposure program used when capturing an image"
+msgstr "Valotusohjelma kuvattaessa"
+
+msgid "capturing exposure mode"
+msgstr "kuvaamisen valotustapa"
+
+msgid "The exposure mode used when capturing an image"
+msgstr "Valotustapa kuvattaessa"
+
+#, fuzzy
+msgid "capturing exposure compensation"
+msgstr "kuvaamisen valotustapa"
+
+#, fuzzy
+msgid "The exposure compensation used when capturing an image"
+msgstr "Valotustapa kuvattaessa"
+
+msgid "capturing scene capture type"
+msgstr "kuvaamisen kuvausmoodi"
+
+msgid "The scene capture mode used when capturing an image"
+msgstr "Kuvausmoodi kuvattaessa"
+
+msgid "capturing gain adjustment"
+msgstr "kuvaamisen kirkkauskorjaus"
+
+msgid "The overall gain adjustment applied on an image"
+msgstr "Yleinen kirkkauskorjaus, joka kuvalle on tehty"
+
+msgid "capturing white balance"
+msgstr "kuvaamisen valkotasapaino"
+
+msgid "The white balance mode set when capturing an image"
+msgstr "Valittu valkotasapainotila kuvattaessa"
+
+msgid "capturing contrast"
+msgstr "kuvaamisen kontrasti"
+
+msgid "The direction of contrast processing applied when capturing an image"
+msgstr "Käytetty kontrastikäsittelyn suunta kuvattessa"
+
+msgid "capturing saturation"
+msgstr "kuvaamisen saturaatio"
+
+msgid "The direction of saturation processing applied when capturing an image"
+msgstr "Käytetty saturaatiokäsittelyn suunta kuvattessa"
+
+msgid "capturing sharpness"
+msgstr "kuvaamisen terävyys"
+
+msgid "The direction of sharpness processing applied when capturing an image"
+msgstr "Käytetty terävyyskäsittelyn suunta kuvattessa"
+
+msgid "capturing flash fired"
+msgstr "kuvaamisen salamankäyttö"
+
+msgid "If the flash fired while capturing an image"
+msgstr "Syttyikö salama kuvattaessa"
+
+msgid "capturing flash mode"
+msgstr "kuvaamisen salamamoodi"
+
+msgid "The selected flash mode while capturing an image"
+msgstr "Valittu salamamoodi kuvattessa"
+
+msgid "capturing metering mode"
+msgstr "kuvaamisen mittausmoodi"
+
+msgid ""
+"The metering mode used while determining exposure for capturing an image"
+msgstr "Käytetty mittausmoodi päätettäessä valotusta kuvattaessa"
+
+msgid "capturing source"
+msgstr "kuvaamisen lähde"
+
+msgid "The source or type of device used for the capture"
+msgstr "Lähde tai laitetyyppi kuvattaessa"
+
+msgid "image horizontal ppi"
+msgstr "kuvan vaakasuora ppi"
+
+msgid "Media (image/video) intended horizontal pixel density in ppi"
+msgstr "Median (kuva tai video) tarkoitettu vaakasuora pikselitiheys ppi:nä"
+
+msgid "image vertical ppi"
+msgstr "kuvan pystysuora ppi"
+
+msgid "Media (image/video) intended vertical pixel density in ppi"
+msgstr "Median (kuva tai video) tarkoitettu pystysuora pikselitiheys ppi:nä"
+
+msgid "ID3v2 frame"
+msgstr ""
+
+msgid "unparsed id3v2 tag frame"
+msgstr ""
+
 #~ msgid "Master"
 #~ msgstr "Pääkanava"
 
@@ -587,9 +591,6 @@ msgstr "Liitännäisen tai elementin tyyppi on tuntematon"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "RTSP-virtoja ei voi vielä soittaa."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "Elementtiä \"decodebin\" ei voitu luoda."
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

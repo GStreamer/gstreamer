@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2011-04-27 17:49+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -78,6 +78,11 @@ msgid "Internal data stream error."
 msgstr "Помилка внутрішнього потоку даних."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+"Відсутній елемент «%s». Перевірте чи встановлено GStreamer належним чином."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "Для відтворення потоку потрібен модуль %s, але він не встановлений."
 
@@ -87,10 +92,9 @@ msgstr "Не вдалося визначити тип даних потоку"
 msgid "This appears to be a text file"
 msgstr "Файл схожий на текстовий файл"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
-"Відсутній елемент «%s». Перевірте чи встановлено GStreamer належним чином."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Не вдалося створити елемент \"decodebin\"."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -163,11 +167,174 @@ msgstr "Неправильний вхідний елемент."
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Помилка при надсиланні даних до \"%s:%d\"."
 
+msgid "Can't record audio fast enough"
+msgstr "Не вдалося запис аудіоданих з потрібною швидкістю"
+
 msgid "This CD has no audio tracks"
 msgstr "На цьому компакт-диску немає звукових доріжок"
 
-msgid "Can't record audio fast enough"
-msgstr "Не вдалося запис аудіоданих з потрібною швидкістю"
+msgid "ID3 tag"
+msgstr "Мітка ID3"
+
+msgid "APE tag"
+msgstr "Мітка APE"
+
+msgid "ICY internet radio"
+msgstr "Інтернет-радіо ICY"
+
+msgid "Apple Lossless Audio (ALAC)"
+msgstr "Аудіо без втрат від Apple (ALAC)"
+
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr "Вільний алгоритм аудіо без втрат (FLAC)"
+
+msgid "Lossless True Audio (TTA)"
+msgstr "Lossless True Audio (TTA)"
+
+msgid "Windows Media Speech"
+msgstr "Windows Media Speech"
+
+msgid "CYUV Lossless"
+msgstr "CYUV без втрат"
+
+msgid "FFMpeg v1"
+msgstr "FFMpeg v1"
+
+msgid "Lossless MSZH"
+msgstr "MSZH без втрат"
+
+msgid "Run-length encoding"
+msgstr "Кодування Run-length"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "Формат субтитрів TMPlayer"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Формат субтитрів Sami"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Формат субтитрів Kate"
+
+msgid "Sami subtitle format"
+msgstr "Формат субтитрів Sami"
+
+msgid "TMPlayer subtitle format"
+msgstr "Формат субтитрів TMPlayer"
+
+msgid "Kate subtitle format"
+msgstr "Формат субтитрів Kate"
+
+#, fuzzy
+msgid "Uncompressed video"
+msgstr "Нестиснений YUV"
+
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Нестиснене сіре зображення"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "Нестиснений YUV"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
+msgstr "Нестиснений пакетний %d-бітовий %s"
+
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr "DivX MPEG-4 версії %d"
+
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "Нестиснений YUV"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
+msgstr "Необроблений %d-бітовий PCM-звук"
+
+msgid "Audio CD source"
+msgstr "Джерело аудіо-CD"
+
+msgid "DVD source"
+msgstr "Джерело DVD"
+
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr "Джерело потокового протоколу реального часу (RTSP)"
+
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr "Джерело протоколу Microsoft Media Server (MMS)"
+
+#, c-format
+msgid "%s protocol source"
+msgstr "Джерело протоколу %s"
+
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr "RTP модуль розпаковування відеоданих %s"
+
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr "RTP модуль розпаковування аудіоданих %s"
+
+#, c-format
+msgid "%s RTP depayloader"
+msgstr "RTP модуль розпаковування даних %s"
+
+#, c-format
+msgid "%s demuxer"
+msgstr "демультиплексор %s"
+
+#, c-format
+msgid "%s decoder"
+msgstr "декодер %s"
+
+#, c-format
+msgid "%s video RTP payloader"
+msgstr "RTP модуль запаковування відеоданих %s"
+
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr "RTP модуль запаковування аудіоданих %s"
+
+#, c-format
+msgid "%s RTP payloader"
+msgstr "RTP модуль запаковування даних %s"
+
+#, c-format
+msgid "%s muxer"
+msgstr "мультиплексор %s"
+
+#, c-format
+msgid "%s encoder"
+msgstr "кодер %s"
+
+#, c-format
+msgid "GStreamer element %s"
+msgstr "Елемент GStreamer %s"
+
+msgid "Unknown source element"
+msgstr "Невідомий елемент джерела"
+
+msgid "Unknown sink element"
+msgstr "Невідомий елемент приймача"
+
+msgid "Unknown element"
+msgstr "Невідомий елемент"
+
+msgid "Unknown decoder element"
+msgstr "Невідомий елемент декодера"
+
+msgid "Unknown encoder element"
+msgstr "Невідомий елемент кодера"
+
+msgid "Plugin or element of unknown type"
+msgstr "Модуль або елемент невідомого типу"
 
 msgid "Failed to read tag: not enough data"
 msgstr "Не вдалося прочитати мітку: недостатньо даних"
@@ -340,169 +507,6 @@ msgstr ""
 msgid "unparsed id3v2 tag frame"
 msgstr ""
 
-msgid "ID3 tag"
-msgstr "Мітка ID3"
-
-msgid "APE tag"
-msgstr "Мітка APE"
-
-msgid "ICY internet radio"
-msgstr "Інтернет-радіо ICY"
-
-msgid "Apple Lossless Audio (ALAC)"
-msgstr "Аудіо без втрат від Apple (ALAC)"
-
-msgid "Free Lossless Audio Codec (FLAC)"
-msgstr "Вільний алгоритм аудіо без втрат (FLAC)"
-
-msgid "Lossless True Audio (TTA)"
-msgstr "Lossless True Audio (TTA)"
-
-msgid "Windows Media Speech"
-msgstr "Windows Media Speech"
-
-msgid "CYUV Lossless"
-msgstr "CYUV без втрат"
-
-msgid "FFMpeg v1"
-msgstr "FFMpeg v1"
-
-msgid "Lossless MSZH"
-msgstr "MSZH без втрат"
-
-msgid "Run-length encoding"
-msgstr "Кодування Run-length"
-
-msgid "Subtitle"
-msgstr ""
-
-#, fuzzy
-msgid "MPL2 subtitle format"
-msgstr "Формат субтитрів TMPlayer"
-
-#, fuzzy
-msgid "DKS subtitle format"
-msgstr "Формат субтитрів Sami"
-
-#, fuzzy
-msgid "QTtext subtitle format"
-msgstr "Формат субтитрів Kate"
-
-msgid "Sami subtitle format"
-msgstr "Формат субтитрів Sami"
-
-msgid "TMPlayer subtitle format"
-msgstr "Формат субтитрів TMPlayer"
-
-msgid "Kate subtitle format"
-msgstr "Формат субтитрів Kate"
-
-#, fuzzy
-msgid "Uncompressed video"
-msgstr "Нестиснений YUV"
-
-#, fuzzy
-msgid "Uncompressed gray"
-msgstr "Нестиснене сіре зображення"
-
-#, fuzzy, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr "Нестиснений YUV"
-
-#, fuzzy, c-format
-msgid "Uncompressed %s%d-bit %s"
-msgstr "Нестиснений пакетний %d-бітовий %s"
-
-#, c-format
-msgid "DivX MPEG-4 Version %d"
-msgstr "DivX MPEG-4 версії %d"
-
-#, fuzzy
-msgid "Uncompressed audio"
-msgstr "Нестиснений YUV"
-
-#, fuzzy, c-format
-msgid "Raw %d-bit %s audio"
-msgstr "Необроблений %d-бітовий PCM-звук"
-
-msgid "Audio CD source"
-msgstr "Джерело аудіо-CD"
-
-msgid "DVD source"
-msgstr "Джерело DVD"
-
-msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr "Джерело потокового протоколу реального часу (RTSP)"
-
-msgid "Microsoft Media Server (MMS) protocol source"
-msgstr "Джерело протоколу Microsoft Media Server (MMS)"
-
-#, c-format
-msgid "%s protocol source"
-msgstr "Джерело протоколу %s"
-
-#, c-format
-msgid "%s video RTP depayloader"
-msgstr "RTP модуль розпаковування відеоданих %s"
-
-#, c-format
-msgid "%s audio RTP depayloader"
-msgstr "RTP модуль розпаковування аудіоданих %s"
-
-#, c-format
-msgid "%s RTP depayloader"
-msgstr "RTP модуль розпаковування даних %s"
-
-#, c-format
-msgid "%s demuxer"
-msgstr "демультиплексор %s"
-
-#, c-format
-msgid "%s decoder"
-msgstr "декодер %s"
-
-#, c-format
-msgid "%s video RTP payloader"
-msgstr "RTP модуль запаковування відеоданих %s"
-
-#, c-format
-msgid "%s audio RTP payloader"
-msgstr "RTP модуль запаковування аудіоданих %s"
-
-#, c-format
-msgid "%s RTP payloader"
-msgstr "RTP модуль запаковування даних %s"
-
-#, c-format
-msgid "%s muxer"
-msgstr "мультиплексор %s"
-
-#, c-format
-msgid "%s encoder"
-msgstr "кодер %s"
-
-#, c-format
-msgid "GStreamer element %s"
-msgstr "Елемент GStreamer %s"
-
-msgid "Unknown source element"
-msgstr "Невідомий елемент джерела"
-
-msgid "Unknown sink element"
-msgstr "Невідомий елемент приймача"
-
-msgid "Unknown element"
-msgstr "Невідомий елемент"
-
-msgid "Unknown decoder element"
-msgstr "Невідомий елемент декодера"
-
-msgid "Unknown encoder element"
-msgstr "Невідомий елемент кодера"
-
-msgid "Plugin or element of unknown type"
-msgstr "Модуль або елемент невідомого типу"
-
 #~ msgid "Master"
 #~ msgstr "Головний"
 
@@ -596,9 +600,6 @@ msgstr "Модуль або елемент невідомого типу"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "Відтворення потоків RTSP поки-що не підтримується."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "Не вдалося створити елемент \"decodebin\"."
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "

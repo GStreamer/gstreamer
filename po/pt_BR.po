@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:29+0200\n"
+"POT-Creation-Date: 2013-07-11 15:27+0200\n"
 "PO-Revision-Date: 2011-01-08 01:02-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -78,6 +78,11 @@ msgid "Internal data stream error."
 msgstr "Erro interno no fluxo de dados."
 
 #, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+"O elemento \"%s\" está faltando, verifique a instalação do seu GStreamer."
+
+#, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr ""
 "O plug-in %s é necessário para reproduzir este fluxo, mas não está instalado."
@@ -88,10 +93,9 @@ msgstr "Não foi possível determinar o tipo de fluxo"
 msgid "This appears to be a text file"
 msgstr "Este parece ser um arquivo de texto"
 
-#, c-format
-msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
-"O elemento \"%s\" está faltando, verifique a instalação do seu GStreamer."
+#, fuzzy
+msgid "Could not create \"uridecodebin\" element."
+msgstr "Não foi possível criar o elemento \"decodebin\"."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -164,11 +168,174 @@ msgstr "O elemente de origem é inválido."
 msgid "Error while sending data to \"%s:%d\"."
 msgstr "Erro ao enviar dados para \"%s:%d\"."
 
+msgid "Can't record audio fast enough"
+msgstr "Não é possível gravar o áudio rápido suficiente"
+
 msgid "This CD has no audio tracks"
 msgstr "Este CD não tem trilhas de áudio"
 
-msgid "Can't record audio fast enough"
-msgstr "Não é possível gravar o áudio rápido suficiente"
+msgid "ID3 tag"
+msgstr "Etiqueta ID3"
+
+msgid "APE tag"
+msgstr "Etiqueta APE"
+
+msgid "ICY internet radio"
+msgstr "Rádio on-line ICY"
+
+msgid "Apple Lossless Audio (ALAC)"
+msgstr "Áudio Sem Perdas da Apple (ALAC)"
+
+msgid "Free Lossless Audio Codec (FLAC)"
+msgstr "Codec Livre de Áudio Sem Perdas (FLAC)"
+
+msgid "Lossless True Audio (TTA)"
+msgstr "Áudio Real Sem Perdas (TTA)"
+
+msgid "Windows Media Speech"
+msgstr "Mídia de Voz do Windows (WMS)"
+
+msgid "CYUV Lossless"
+msgstr "CYUV Sem Perdas"
+
+msgid "FFMpeg v1"
+msgstr "FFMpeg v1"
+
+msgid "Lossless MSZH"
+msgstr "MSZH Sem Perdas"
+
+msgid "Run-length encoding"
+msgstr "Codificação Run-length"
+
+msgid "Subtitle"
+msgstr ""
+
+#, fuzzy
+msgid "MPL2 subtitle format"
+msgstr "Formato de legendas TMPlayer"
+
+#, fuzzy
+msgid "DKS subtitle format"
+msgstr "Formato de legendas Sami"
+
+#, fuzzy
+msgid "QTtext subtitle format"
+msgstr "Formato de legendas Kate"
+
+msgid "Sami subtitle format"
+msgstr "Formato de legendas Sami"
+
+msgid "TMPlayer subtitle format"
+msgstr "Formato de legendas TMPlayer"
+
+msgid "Kate subtitle format"
+msgstr "Formato de legendas Kate"
+
+#, fuzzy
+msgid "Uncompressed video"
+msgstr "YUV sem compressão"
+
+#, fuzzy
+msgid "Uncompressed gray"
+msgstr "Imagem Monocromática Sem Compressão"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s YUV %s"
+msgstr "YUV sem compressão"
+
+#, fuzzy, c-format
+msgid "Uncompressed %s%d-bit %s"
+msgstr "%2$s de %1$d bits com paletas sem compressão"
+
+#, c-format
+msgid "DivX MPEG-4 Version %d"
+msgstr "DivX MPEG-4 Versão %d"
+
+#, fuzzy
+msgid "Uncompressed audio"
+msgstr "YUV sem compressão"
+
+#, fuzzy, c-format
+msgid "Raw %d-bit %s audio"
+msgstr "Áudio PCM Raw de %d bits"
+
+msgid "Audio CD source"
+msgstr "Origem: CD de áudio"
+
+msgid "DVD source"
+msgstr "Origem: DVD"
+
+msgid "Real Time Streaming Protocol (RTSP) source"
+msgstr "Origem: Protocolo de Fluxo Contínuo em Tempo Real (RTSP)"
+
+msgid "Microsoft Media Server (MMS) protocol source"
+msgstr "Origem: protocolo do Servidor de Mídia da Microsoft (MMS)"
+
+#, c-format
+msgid "%s protocol source"
+msgstr "Origem: protocolo %s"
+
+#, c-format
+msgid "%s video RTP depayloader"
+msgstr "decodificador de vídeo RTP %s"
+
+#, c-format
+msgid "%s audio RTP depayloader"
+msgstr "decodificador de áudio RTP %s"
+
+#, c-format
+msgid "%s RTP depayloader"
+msgstr "decodificador RTP %s"
+
+#, c-format
+msgid "%s demuxer"
+msgstr "Demultiplexador %s"
+
+#, c-format
+msgid "%s decoder"
+msgstr "Decodificador %s"
+
+#, c-format
+msgid "%s video RTP payloader"
+msgstr "codificador de vídeo RTP %s"
+
+#, c-format
+msgid "%s audio RTP payloader"
+msgstr "codificador de áudio RTP %s"
+
+#, c-format
+msgid "%s RTP payloader"
+msgstr "codificador RTP %s"
+
+#, c-format
+msgid "%s muxer"
+msgstr "Multiplexador %s"
+
+#, c-format
+msgid "%s encoder"
+msgstr "Codificador %s"
+
+#, c-format
+msgid "GStreamer element %s"
+msgstr "Elemento \"%s\" do GStreamer"
+
+msgid "Unknown source element"
+msgstr "Elemento de origem desconhecida"
+
+msgid "Unknown sink element"
+msgstr "Elemento consumidor desconhecido"
+
+msgid "Unknown element"
+msgstr "Elemento desconhecido"
+
+msgid "Unknown decoder element"
+msgstr "Elemento decodificador desconhecido"
+
+msgid "Unknown encoder element"
+msgstr "Elemento codificador desconhecido"
+
+msgid "Plugin or element of unknown type"
+msgstr "Elemento ou plug-in de tipo desconhecido"
 
 msgid "Failed to read tag: not enough data"
 msgstr "Falha ao ler etiqueta: dados insuficientes"
@@ -339,169 +506,6 @@ msgstr ""
 msgid "unparsed id3v2 tag frame"
 msgstr ""
 
-msgid "ID3 tag"
-msgstr "Etiqueta ID3"
-
-msgid "APE tag"
-msgstr "Etiqueta APE"
-
-msgid "ICY internet radio"
-msgstr "Rádio on-line ICY"
-
-msgid "Apple Lossless Audio (ALAC)"
-msgstr "Áudio Sem Perdas da Apple (ALAC)"
-
-msgid "Free Lossless Audio Codec (FLAC)"
-msgstr "Codec Livre de Áudio Sem Perdas (FLAC)"
-
-msgid "Lossless True Audio (TTA)"
-msgstr "Áudio Real Sem Perdas (TTA)"
-
-msgid "Windows Media Speech"
-msgstr "Mídia de Voz do Windows (WMS)"
-
-msgid "CYUV Lossless"
-msgstr "CYUV Sem Perdas"
-
-msgid "FFMpeg v1"
-msgstr "FFMpeg v1"
-
-msgid "Lossless MSZH"
-msgstr "MSZH Sem Perdas"
-
-msgid "Run-length encoding"
-msgstr "Codificação Run-length"
-
-msgid "Subtitle"
-msgstr ""
-
-#, fuzzy
-msgid "MPL2 subtitle format"
-msgstr "Formato de legendas TMPlayer"
-
-#, fuzzy
-msgid "DKS subtitle format"
-msgstr "Formato de legendas Sami"
-
-#, fuzzy
-msgid "QTtext subtitle format"
-msgstr "Formato de legendas Kate"
-
-msgid "Sami subtitle format"
-msgstr "Formato de legendas Sami"
-
-msgid "TMPlayer subtitle format"
-msgstr "Formato de legendas TMPlayer"
-
-msgid "Kate subtitle format"
-msgstr "Formato de legendas Kate"
-
-#, fuzzy
-msgid "Uncompressed video"
-msgstr "YUV sem compressão"
-
-#, fuzzy
-msgid "Uncompressed gray"
-msgstr "Imagem Monocromática Sem Compressão"
-
-#, fuzzy, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr "YUV sem compressão"
-
-#, fuzzy, c-format
-msgid "Uncompressed %s%d-bit %s"
-msgstr "%2$s de %1$d bits com paletas sem compressão"
-
-#, c-format
-msgid "DivX MPEG-4 Version %d"
-msgstr "DivX MPEG-4 Versão %d"
-
-#, fuzzy
-msgid "Uncompressed audio"
-msgstr "YUV sem compressão"
-
-#, fuzzy, c-format
-msgid "Raw %d-bit %s audio"
-msgstr "Áudio PCM Raw de %d bits"
-
-msgid "Audio CD source"
-msgstr "Origem: CD de áudio"
-
-msgid "DVD source"
-msgstr "Origem: DVD"
-
-msgid "Real Time Streaming Protocol (RTSP) source"
-msgstr "Origem: Protocolo de Fluxo Contínuo em Tempo Real (RTSP)"
-
-msgid "Microsoft Media Server (MMS) protocol source"
-msgstr "Origem: protocolo do Servidor de Mídia da Microsoft (MMS)"
-
-#, c-format
-msgid "%s protocol source"
-msgstr "Origem: protocolo %s"
-
-#, c-format
-msgid "%s video RTP depayloader"
-msgstr "decodificador de vídeo RTP %s"
-
-#, c-format
-msgid "%s audio RTP depayloader"
-msgstr "decodificador de áudio RTP %s"
-
-#, c-format
-msgid "%s RTP depayloader"
-msgstr "decodificador RTP %s"
-
-#, c-format
-msgid "%s demuxer"
-msgstr "Demultiplexador %s"
-
-#, c-format
-msgid "%s decoder"
-msgstr "Decodificador %s"
-
-#, c-format
-msgid "%s video RTP payloader"
-msgstr "codificador de vídeo RTP %s"
-
-#, c-format
-msgid "%s audio RTP payloader"
-msgstr "codificador de áudio RTP %s"
-
-#, c-format
-msgid "%s RTP payloader"
-msgstr "codificador RTP %s"
-
-#, c-format
-msgid "%s muxer"
-msgstr "Multiplexador %s"
-
-#, c-format
-msgid "%s encoder"
-msgstr "Codificador %s"
-
-#, c-format
-msgid "GStreamer element %s"
-msgstr "Elemento \"%s\" do GStreamer"
-
-msgid "Unknown source element"
-msgstr "Elemento de origem desconhecida"
-
-msgid "Unknown sink element"
-msgstr "Elemento consumidor desconhecido"
-
-msgid "Unknown element"
-msgstr "Elemento desconhecido"
-
-msgid "Unknown decoder element"
-msgstr "Elemento decodificador desconhecido"
-
-msgid "Unknown encoder element"
-msgstr "Elemento codificador desconhecido"
-
-msgid "Plugin or element of unknown type"
-msgstr "Elemento ou plug-in de tipo desconhecido"
-
 #~ msgid "Master"
 #~ msgstr "Principal"
 
@@ -594,9 +598,6 @@ msgstr "Elemento ou plug-in de tipo desconhecido"
 
 #~ msgid "RTSP streams cannot be played yet."
 #~ msgstr "Os fluxos RTSP ainda não podem ser reproduzidos."
-
-#~ msgid "Could not create \"decodebin\" element."
-#~ msgstr "Não foi possível criar o elemento \"decodebin\"."
 
 #~ msgid ""
 #~ "Only a subtitle stream was detected. Either you are loading a subtitle "
