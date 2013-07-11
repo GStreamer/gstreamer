@@ -1,9 +1,155 @@
-=== release 1.0.7 ===
+=== release 1.0.8 ===
 
-2013-04-26  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-07-12  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.7
+	  releasing 1.0.8
+
+2013-07-08 15:26:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstallocator.c:
+	  allocator: fix type of gst_memory_alignment to match declaration
+	  Fixes compiler warnings such as
+	  gstallocator.c:61:8: error: conflicting types for 'gst_memory_alignment'
+	  ../gst/gstallocator.h:52:18: note: previous declaration of 'gst_memory_alignment' was here
+
+2013-07-04 20:39:26 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Do not lock a mutex that does not exist
+	  The GST_LIVE_LOCK is on GstBaseSrc, not on its source pad.
+
+2013-06-19 10:45:45 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* tests/check/gst/gstbuffer.c:
+	  buffer: Add unit test for map_range()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702617
+
+2013-06-19 08:36:22 +0200  Paul HENRYS <visechelle@gmail.com>
+
+	* gst/gstbuffer.c:
+	  buffer: Fix wrong size/index handling when merging memory
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702617
+
+2013-07-03 13:03:49 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstallocator.c:
+	* gst/gstevent.c:
+	* gst/gstghostpad.c:
+	* gst/gstinfo.h:
+	* gst/gstmessage.c:
+	* gst/gstminiobject.c:
+	* gst/gstpad.c:
+	* gst/gstplugin.c:
+	* gst/gsttaglist.c:
+	* gst/gsttypefind.c:
+	* gst/gstutils.c:
+	* libs/gst/base/gstcollectpads.c:
+	* libs/gst/base/gsttypefindhelper.c:
+	* libs/gst/base/gsttypefindhelper.h:
+	  Add few missing allow-none annotation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703562
+	  Conflicts:
+	  gst/gstmessage.c
+
+2013-05-30 07:03:40 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/generic/sinks.c:
+	  check: fix position unit test
+
+2013-05-30 06:51:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: improve position reporting without clock
+	  When no base time or when sync is disabled, use the same logic as
+	  in paused to report position. The logic in PLAYING assumes we use the
+	  clock.
+
+2013-05-25 22:03:53 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* plugins/elements/gstvalve.c:
+	  valve: Don't read sticky flag from unrefed event
+
+2013-02-13 10:46:37 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gststructure.c:
+	* tests/check/gst/gstcaps.c:
+	  structure: Make sure that subsets have all fields of the superset
+	  "video/x-h264,parsed=(boolean)true" is not a superset of
+	  "video/x-h264,stream-format=(string)byte-stream,alignment=(string)nal"
+	  for example.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=693365
+
+2013-03-26 19:22:18 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/gstallocator.c:
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	  buffer: fix gobject-introspection annotations, esp. for gst_buffer_fill
+
+2013-05-08 10:25:36 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstbuffer.c:
+	  buffer: allow calling _fill() with a NULL data pointer if size is 0 bytes
+
+2013-04-27 00:05:45 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* plugins/elements/gsttypefindelement.c:
+	* tests/check/pipelines/simple-launch-lines.c:
+	  typefind: fix caps leak when used in connection with uridecodebin and playbin
+	  Don't leak forced sink caps.
+
+=== release 1.0.7 ===
+
+2013-04-26 12:11:02 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gstreamer.doap:
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.0.7
 
 2013-04-25 16:38:49 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

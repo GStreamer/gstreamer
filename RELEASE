@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 1.0.7
+Release notes for GStreamer 1.0.8
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -42,14 +42,16 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * Add better support for static plugins
+      * basesink: improve position reporting without clock
+      * fix caps leak in typefind/decodebin/playbin
+      * gobject-introspection fixes for bindings
 
 Bugs fixed in this release
      
-      * 667305 : build: Add --enable-static-plugins configure argument
-      * 696357 : Basesrc may send not-neg error when flushed
-      * 696435 : gst_static_caps_get(GST_STATIC_CAPS_NONE) doesn't work properly
-      * 697791 : gst-inspect: shows action signal return pointers as pointers
+      * 693365 : gst_structure_is_subset false positive
+      * 702617 : buffer: Wrong size/index handling when merging memory
+      * 702778 : REGRESSION : Backward seeking doesn't work with mp3 files.
+      * 703562 : Missing few allow-none annotation
 
 ==== Download ====
 
@@ -86,8 +88,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Jose Antonio Santos Cadenas
       * Nicolas Dufresne
+      * Olivier Crête
+      * Paul HENRYS
       * Sebastian Dröge
       * Thibault Saunier
       * Tim-Philipp Müller

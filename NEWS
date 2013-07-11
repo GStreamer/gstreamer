@@ -1,4 +1,17 @@
-This is GStreamer 1.0.7
+This is GStreamer 1.0.8
+
+Changes since 1.0.7:
+
+      * basesink: improve position reporting without clock
+      * fix caps leak in typefind/decodebin/playbin
+      * gobject-introspection fixes for bindings
+
+Bugs fixed since 1.0.7:
+
+      * 693365 : gst_structure_is_subset false positive
+      * 702617 : buffer: Wrong size/index handling when merging memory
+      * 702778 : REGRESSION : Backward seeking doesn't work with mp3 files.
+      * 703562 : Missing few allow-none annotation
 
 Changes since 1.0.6:
 
