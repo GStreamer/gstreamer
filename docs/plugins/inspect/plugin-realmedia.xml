@@ -3,7 +3,7 @@
   <description>RealMedia support plugins</description>
   <filename>../../gst/realmedia/.libs/libgstrmdemux.so</filename>
   <basename>libgstrmdemux.so</basename>
-  <version>1.1.1</version>
+  <version>1.1.2</version>
   <license>LGPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>
@@ -71,7 +71,7 @@
       <longname>RTP Decoder</longname>
       <class>Codec/Parser/Network</class>
       <description>Accepts raw RTP and RTCP packets and sends them forward</description>
-      <author>Wim Taymans &lt;wim@fluendo.com&gt;</author>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;</author>
       <pads>
         <caps>
           <name>recv_rtcp_sink_%u</name>

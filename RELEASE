@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plugins 1.1.1
+Release notes for GStreamer Ugly Plugins 1.1.2
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -61,8 +61,7 @@ Features of this release
 
 Bugs fixed in this release
      
-      * 691935 : [x264] Should detect bit depth and color formats at runtime
-      * 377280 : cdiocddasrc: issue if drive endianness != machine endianness
+      * 702502 : [regression] mpeg2dec:  gst_segment_to_stream_time: assertion `segment- > format == format' failed
 
 ==== Download ====
 
@@ -99,18 +98,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Andreas Frisch
-      * Benjamin Gaignard
-      * David Schleef
-      * Gautier Portet
-      * Martin Pitt
-      * Michael Smith
-      * Olivier Crête
+      * Mark Nauwelaerts
       * Sebastian Dröge
-      * Sreerenj Balachandran
-      * Stefan Sauer
-      * Thijs Vermeir
-      * Tim-Philipp Müller
-      * Tom Greenwood
       * Wim Taymans
  
