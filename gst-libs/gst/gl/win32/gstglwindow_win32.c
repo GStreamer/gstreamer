@@ -269,8 +269,13 @@ gst_gl_window_win32_set_window_handle (GstGLWindow * window, guintptr id)
 
   window_win32 = GST_GL_WINDOW_WIN32 (window);
 
+  if (!window_win32->internal_win_id) {
+    window_win32->parent_win_id = id;
+    return;
+  }
+
   /* retrieve parent if previously set */
-  parent_id = GetProp (window_win32->internal_win_id, "gl_window_parent_id");
+  parent_id = window_win32->parent_win_id;
 
   if (window_win32->visible) {
     ShowWindow (window_win32->internal_win_id, SW_HIDE);
@@ -288,7 +293,6 @@ gst_gl_window_win32_set_window_handle (GstGLWindow * window, guintptr id)
     SetParent (window_win32->internal_win_id, NULL);
 
     RemoveProp (parent_id, "gl_window_parent_proc");
-    RemoveProp (window_win32->internal_win_id, "gl_window_parent_id");
   }
   //not 0
   if (id) {
@@ -298,7 +302,6 @@ gst_gl_window_win32_set_window_handle (GstGLWindow * window, guintptr id)
 
     GST_DEBUG ("set parent %" G_GUINTPTR_FORMAT "\n", id);
 
-    SetProp (window_win32->internal_win_id, "gl_window_parent_id", (HWND) id);
     SetProp ((HWND) id, "gl_window_id", window_win32->internal_win_id);
     SetProp ((HWND) id, "gl_window_parent_proc", (WNDPROC) window_parent_proc);
     SetWindowLongPtr ((HWND) id, GWLP_WNDPROC, (LONG_PTR) sub_class_proc);
@@ -320,6 +323,7 @@ gst_gl_window_win32_set_window_handle (GstGLWindow * window, guintptr id)
     SetWindowLongPtr (window_win32->internal_win_id, GWL_STYLE,
         WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW);
   }
+  window_win32->parent_win_id = id;
 }
 
 /* Thread safe */
@@ -329,8 +333,9 @@ gst_gl_window_win32_draw (GstGLWindow * window, guint width, guint height)
   GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
 
   if (!window_win32->visible) {
-    HWND parent_id =
-        GetProp (window_win32->internal_win_id, "gl_window_parent_id");
+    HWND parent_id =;
+    window_win32->parent_win_id;
+
     /* if no parent the real size has to be set now because this has not been done
      * when at window creation */
     if (!parent_id) {
@@ -528,7 +533,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         if (destroy_cb)
           destroy_cb ((gpointer) wParam);
 
-        parent_id = GetProp (hWnd, "gl_window_parent_id");
+        parent_id = window_win32->parent_win_id;
         if (parent_id) {
           WNDPROC parent_proc = GetProp (parent_id, "gl_window_parent_proc");
 
@@ -538,7 +543,6 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
           SetParent (hWnd, NULL);
 
           RemoveProp (parent_id, "gl_window_parent_proc");
-          RemoveProp (hWnd, "gl_window_parent_id");
         }
 
         window_win32->is_closed = TRUE;
@@ -591,7 +595,7 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       default:
       {
         /* transmit messages to the parrent (ex: mouse/keyboard input) */
-        HWND parent_id = GetProp (hWnd, "gl_window_parent_id");
+        HWND parent_id = window_win32->parent_win_id;
         if (parent_id)
           PostMessage (parent_id, uMsg, wParam, lParam);
         return DefWindowProc (hWnd, uMsg, wParam, lParam);
