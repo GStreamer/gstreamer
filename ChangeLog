@@ -1,9 +1,326 @@
-=== release 1.1.1 ===
+=== release 1.1.2 ===
 
-2013-06-05  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-07-11  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.1
+	  releasing 1.1.2
+
+2013-07-10 15:52:10 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstbin.c:
+	  bin: Always forward clock-lost message if we're not a top-level bin
+	  This makes sure that no bin misses the clock-lost messages, independent
+	  of the state, and could return an old, non-working clock from
+	  gst_bin_provide_clock_func().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701997
+
+2013-07-10 14:30:31 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Keep previous active sinkpad around until we're done with it
+	  Otherwise we'll send a new segment event downstream for each buffer.
+
+2013-07-08 15:26:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstallocator.c:
+	  allocator: fix type of gst_memory_alignment to match declaration
+	  Fixes compiler warnings such as
+	  gstallocator.c:61:8: error: conflicting types for 'gst_memory_alignment'
+	  ../gst/gstallocator.h:52:18: note: previous declaration of 'gst_memory_alignment' was here
+
+2013-07-05 21:36:27 +0200  Piotr Drąg <piotrdrag@gmail.com>
+
+	* po/POTFILES.in:
+	  po: update POTFILES.in
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703682
+
+2013-07-04 20:39:26 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Do not lock a mutex that does not exist
+	  The GST_LIVE_LOCK is on GstBaseSrc, not on its source pad.
+
+2013-07-03 21:23:44 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: reset PTS after seek
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=702778
+
+2013-07-03 13:03:49 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/gstallocator.c:
+	* gst/gstevent.c:
+	* gst/gstghostpad.c:
+	* gst/gstinfo.h:
+	* gst/gstmessage.c:
+	* gst/gstminiobject.c:
+	* gst/gstpad.c:
+	* gst/gstplugin.c:
+	* gst/gsttaglist.c:
+	* gst/gsttypefind.c:
+	* gst/gstutils.c:
+	* libs/gst/base/gstcollectpads.c:
+	* libs/gst/base/gsttypefindhelper.c:
+	* libs/gst/base/gsttypefindhelper.h:
+	  Add few missing allow-none annotation
+
+2013-07-03 09:27:13 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* scripts/gst-uninstalled:
+	  gst-uninstalled: add new -bad mpegts lib
+	  And remove signalprocessor/video libs from -bad which have gone
+	  away or were merged into -base.
+
+2013-07-01 20:35:21 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* plugins/elements/gstfunnel.c:
+	* plugins/elements/gstfunnel.h:
+	* tests/check/elements/funnel.c:
+	  funnel: Re-push all sticky events when buffers come from a different pad
+	  Don't special case segment/caps, just push all sticky events when they are
+	  received on the currently active pad or when the active pad changes.
+
+2013-07-01 20:21:10 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* plugins/elements/gstfunnel.c:
+	  funnel: Use default pad function for upstream event/queries
+	  The default functions in 1.x already do the right thing
+
+2013-07-01 20:18:58 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* tests/check/elements/funnel.c:
+	  tests: Remove funnel pad_alloc test
+
+2013-07-01 20:07:03 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* libs/gst/check/gstcheck.h:
+	  check: Change stream_id parameter name to match GtkDoc
+
+2013-07-01 11:10:00 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/check/Makefile.am:
+	* libs/gst/check/gstcheck.c:
+	* libs/gst/check/gstcheck.h:
+	* tests/check/elements/funnel.c:
+	  check: Added gst_check_setup_events_with_stream_id()
+	  Added a new function gst_check_setup_events_with_stream_id(), since
+	  gst_check_setup_events() does not work with multiple pads.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703377
+
+2013-06-30 18:39:03 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstpad.c:
+	  pad: Don't consider flushing pads as needing reconfiguration
+	  Renegotiation and reconfiguration will fail because all queries
+	  and events won't be accepted by the pad if it's flushing. In the
+	  best case this just causes unneeded work and spurious warnings in
+	  the debug logs, in the worst case it causes elements to fail completely.
+
+2013-06-24 23:25:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: only block serialized query when it's safe
+	  We must be certain that we don't cause a deadlock when blocking the serialized
+	  queries. One such deadlock can happen when we are buffering and downstream is
+	  blocked in preroll and a serialized query arrives. Downstream will not unblock
+	  (and allow our query to execute) until we complete buffering and buffering will
+	  not complete until we can answer the query..
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=702840
+
+2013-06-19 12:30:47 +0200  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* gst/gstpad.c:
+	  pad: Add a filter to the caps_query done by acceptcaps
+	  Use the caps that the pad is asked to accept as filter for the query
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702632
+
+2013-06-19 12:19:02 +0200  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: optimize default acceptcaps implementation
+	  Pass the fixed caps we're asked to accept as a filter for the caps
+	  query, so we don't get a fully-expanded set of caps back (which we don't
+	  need and can take a lot of time for intersection).
+	  This reduces the time for camerabin to produce a second frame on a
+	  logitech C910 camera from around 52 seconds to a bit less then 16
+	  seconds on my system.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702632
+
+2013-06-19 09:19:53 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/gsttaglist.c:
+	  taglist: Avoid combinatorial explosion when merging tags
+	  When appending/prepending tags, avoid re-creating (and copying) lists if we already
+	  have one and instead just append/prepend the GValue to the list.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702545
+
+2013-06-19 10:53:21 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Don't hold the queue mutex while doing serialized queries downstream
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702520
+
+2013-06-19 10:45:45 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* tests/check/gst/gstbuffer.c:
+	  buffer: Add unit test for map_range()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702617
+
+2013-06-19 08:36:22 +0200  Paul HENRYS <visechelle@gmail.com>
+
+	* gst/gstbuffer.c:
+	  buffer: Fix wrong size/index handling when merging memory
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702617
+
+2013-06-18 11:39:55 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/list-ulink.xsl:
+	  docs: add missing file for doc-link check
+
+2013-06-17 11:12:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/benchmarks/Makefile.am:
+	* tests/benchmarks/gstpoolstress.c:
+	  tests: add stress test for buffers and pools
+
+2013-06-17 10:25:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: call state change in all cases
+	  When we asynchronously go from READY to PLAYING, also call the
+	  state change function so that subclasses can update their state for PLAYING.
+	  Because the PREROLL lock is not recursive, we can't make this without
+	  races and we must assume for now that the subclass can handle concurrent calls
+	  to PAUSED->PLAYING and PLAYING->PAUSED. We can make this assumption because not
+	  many elements actually do something in those state changes and the ones that
+	  did would be broken even more without this change.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702282
+
+2013-06-16 15:07:35 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/faq/dependencies.xml:
+	* docs/manual/appendix-integration.xml:
+	* docs/manual/basics-pads.xml:
+	* docs/manual/intro-motivation.xml:
+	  docs: fix some external links
+
+2013-06-16 14:45:08 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/manuals.mak:
+	  docs: check for broken links in docs
+	  The check is done using curl (if available). It lists the curl exit code + http
+	  status code (for those > 399) together with the use of the url in the code. The
+	  check is not fatal.
+
+2013-06-16 13:05:21 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/manual/basics-elements.xml:
+	* docs/pwg/intro-preface.xml:
+	  docs: change https to http urls
+	  Thank you browser for needlessly changing to https for static doc pages.
+
+2013-06-16 11:41:52 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* docs/faq/developing.xml:
+	* docs/manual/basics-elements.xml:
+	* docs/manual/basics-init.xml:
+	* docs/pwg/intro-preface.xml:
+	  docs: update links to developer.gnome.org
+	  The URL layout has changed. Fix the links and comment out one paragraph where
+	  the doc is gone.
+	  Fixes #702135
+
+2013-06-14 13:05:38 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gststructure.c:
+	* gst/gststructure.h:
+	* win32/common/libgstreamer.def:
+	  structure: Add gst_structure_new_from_string()
+	  Convenience API for bindings, gst_structure_from_string() returns
+	  a tuple (structure, end_ptr) in bindings and is unintuitive to use
+	  because of that.
+
+2013-06-13 08:36:23 +0200  Hans de Goede <hdegoede@redhat.com>
+
+	* gst/gst.c:
+	  gst: Don't intercept --help in gst_init()
+	  Before this patch gst_init would intercept --help, causing for example
+	  cheese's --help to look like this:
+	  [hans@shalem cheese]$ cheese --help
+	  Usage:
+	  cheese [OPTION...] - GStreamer initialization
+	  Help Options:
+	  -h, --help                        Show help options
+	  --help-all                        Show all help options
+	  --help-gst                        Show GStreamer Options
+	  gst_init is the only gfoo_init function which does this.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702089
+
+2013-06-12 09:45:56 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* scripts/gst-uninstalled:
+	  gst-uninstalled: add uridownloader lib in -bad to search paths
+	  Even if it might not be around for long.
+
+2013-06-11 10:25:02 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* tools/gst-launch.c:
+	  gst-launch: Remove unref that should not be there
+	  We keep a reference to the context around all the time.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701985
+
+2013-06-09 17:20:22 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* tools/gst-launch.c:
+	  gst-launch: Improve GstContext handling
+	  https://bugzilla.gnome.org/show_bug.cgi?id=700967
+
+2013-06-07 13:07:37 +0200  Kim Lam <kim@redgiantsoftware.com>
+
+	* win32/vs10/base/base.vcxproj:
+	  win32: Don't include gstcollectpads.c twice
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701603
+
+2013-05-31 09:39:55 -0600  Brendan Long <b.long@cablelabs.com>
+
+	* plugins/elements/gstinputselector.c:
+	  input-selector: send notify::active signal for input-selector pads.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701319
+
+2013-06-06 16:46:12 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Only force-update the duration for dynamic sources when doing the DURATION query
+	  Doing it after every single create() is not very efficient and not necessary.
+	  Especially on network file systems fstat() is not cached and causes network
+	  traffic, making the source possibly unusable slow.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=652037
+
+2013-06-05 18:36:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.1 ===
+
+2013-06-05 17:58:51 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* common:
+	* configure.ac:
+	* docs/plugins/gstreamer-plugins.args:
+	* docs/plugins/gstreamer-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstenumtypes.h:
+	* win32/common/gstversion.h:
+	  Release 1.1.1
 
 2013-06-05 16:06:35 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

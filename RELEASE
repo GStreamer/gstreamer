@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 1.1.1
+Release notes for GStreamer 1.1.2
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -45,59 +45,14 @@ Features of this release
 
 Bugs fixed in this release
      
-      * 571832 : [API] add gst_plugin_feature_get_plugin_name()
-      * 613081 : info: make GST_PTR_FORMAT etc. work on win32, OSX and non-glibc systems
-      * 638749 : (Duration) queries on a source-only bin are currently not supported
-      * 679152 : add gst_debug_set_threshold_from_string function ()
-      * 679315 : g-i: avoid multiple libraries in the shared-library tag
-      * 683012 : check: add GstTestClock for use in unit testing
-      * 685555 : collectpads unit test fails
-      * 685650 : GStreamer should not set the locale
-      * 687523 : gst-launch: use GST_TIME_FORMAT to report execution time
-      * 687899 : queue event handling broken with unlinked queue and sticky events
-      * 688130 : Compilation error when debugging disabled
-      * 688785 : Provide single include headers
-      * 688824 : queue: Dropping sticky events on flush without resending them later
-      * 689043 : gstreamer-1.0.pc declares public dependency on libgthread
-      * 690515 : tools: bash tab-completion for gst-launch pipelines
-      * 690557 : Corrected the control of whether a SingleQueue is full or not
-      * 690908 : adapter: wrong return value on gst_adapter_masked_scan_*
-      * 690936 : [basesink] Lateness check should be done before ::prepare()
-      * 691370 : caps intersection is broken for channel-layout / bitmasks
-      * 691475 : [API] baseparse: need vfunc to intercept queries
-      * 691828 : GstABI and LibsABI checks fail on ARM
-      * 692612 : tests: use g_timeout_add_seconds where possible
-      * 692784 : typefind element pushes caps event before stream_start
-      * 692809 : gstbitreader-docs.h : Align the comments correctly with the API declaration
-      * 693314 : gst_element_send_event on GstBin without sink/src element but with sink/src ghostpads
-      * 693481 : gst-launch: Use signalfd() to handle keyboard interruption
-      * 694717 : gst_memory_share: assertion `!GST_MEMORY_FLAG_IS_SET (mem, GST_MEMORY_FLAG_NO_SHARE)' failed in flacparse unit test
-      * 695035 : Recent GstMemory changes cause leaks all over the place
-      * 695599 : tests: test_read_macros doesn't pass on ARM / raspberry pi
-      * 695937 : gst-uninstalled script should add gst-editing-services typelib path to GI_TYPELIB_PATH
-      * 696911 : GstSegment adds lot of warning noise
-      * 697058 :  " git-update.sh " script is missing some modules.
-      * 697093 : gst-uninstalled script should add orc/orc-test/.libs paths
-      * 697549 : clock: Make use of HAVE_CLOCK_GETTIME
-      * 697550 : clock: Winpthreads compatibility
-      * 697551 : libsabi: W32-compatible ABI tests
-      * 697608 : netclientclock: gst_net_client_clock_start() always fails on windows
-      * 697609 : tests: skip GstPoll tests on windows as they are broken
-      * 697610 : gstpad test fails due to unclean buffers list
-      * 697872 : plugin: fix name expansion in GST_PLUGIN_DEFINE() macro
-      * 697970 : info: glibc " %n in writable segment detected " with new printf implementation
-      * 697990 : pluginfeature: Fix the GstPluginFeature name comparison.
-      * 698209 : READMEs all claim to be part of 0.10 or 0.9 releases
-      * 698242 : printf: abort() in custom printf with old printf extension specifiers
-      * 699767 : typefind: send stream-start after caps
-      * 699827 : controller: Fix the function signature and a minor typo fix
-      * 699937 : pad: Event mis-orderng caused by " 418dcd72 pad: Remove SEGMENT sticky events when flushing " 
-      * 699968 : capsfilter: Send caps after segment if source has no caps
-      * 700806 : pad: Sticky events are dropped before stored on a pad and nothing is resending them
-      * 701177 : scripts: improve git-update.sh status message
-      * 701323 : input-selector: crash when requesting " active " property of pad with no selector
-      * 701632 : gstvalue: Add _append_and_take_value() public variants
-      * 701633 : gstbuffer: Use internal function for buffer_new_wrapped
+      * 652037 : basesrc: less persistent caching of size
+      * 701985 : gst-launch: Unreffing GstContext that is still used
+      * 702089 : gst_init: Don't intercept --help
+      * 702520 : queue: deadlock when reconfigure event
+      * 702632 : acceptcaps query can be very very slow
+      * 703267 : funnel: Needs to be usable in playbin
+      * 703377 : gst_check_setup_events() and multiple src or sink pads
+      * 703682 : POTFILES.in is out of date
 
 ==== Download ====
 
@@ -134,48 +89,19 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alessandro Decina
-      * Alexander Schrab
-      * Andre Moreira Magalhaes (andrunko)
-      * Andrzej Bieniek
-      * Arnaud Vrac
-      * B.Prathibha
-      * Branko Subasic
       * Brendan Long
-      * Christian Fredrik Kalager Schaller
-      * Daniel Díaz
-      * David Rothlisberger
-      * David Schleef
-      * Douglas Bagnall
       * Edward Hervey
-      * Evan Nemerson
-      * Gert Michael Kulyk
-      * Gwenole Beauchesne
-      * Jan Schmidt
+      * Hans de Goede
       * Jonas Holmberg
-      * Jose Antonio Santos Cadenas
-      * Josep Torra
-      * Krzysztof Konopko
-      * Luis de Bethencourt
-      * Mark Nauwelaerts
-      * Matthew Waters
-      * Nate Bogdanowicz
+      * Kim Lam
       * Nicolas Dufresne
-      * Niv Sardi
       * Olivier Crête
-      * Philippe Normand
+      * Paul HENRYS
+      * Piotr Drąg
       * Sebastian Dröge
-      * Sebastian Rasmussen
-      * Simon Feltman
-      * Sreerenj Balachandran
+      * Sjoerd Simons
       * Stefan Sauer
-      * Thiago Santos
       * Thibault Saunier
-      * Thijs Vermeir
-      * Tim 'mithro' Ansell
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Wim Taymans
-      * italarab@gmail.com
-      * Руслан Ижбулатов
  
