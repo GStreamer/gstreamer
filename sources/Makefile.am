@@ -4,7 +4,7 @@ METADATA = $(ASSEMBLY_NAME).metadata
 DLL = $(top_srcdir)/out/$(ASSEMBLY_NAME).dll
 DLLMAP = $(top_srcdir)/out/$(ASSEMBLY_NAME).dll.config
 
-sources = 
+sources = custom/*.cs
 
 build_sources = AssemblyInfo.cs $(sources)
 
