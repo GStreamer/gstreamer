@@ -20,6 +20,7 @@
  */
 
 #include "gst-qa-bin-monitor.h"
+#include "gst-qa-monitor-factory.h"
 
 /**
  * SECTION:gst-qa-bin-monitor
@@ -148,8 +149,16 @@ static void
 gst_qa_bin_monitor_wrap_element (GstQaBinMonitor * monitor,
     GstElement * element)
 {
+  GstQaElementMonitor *element_monitor;
   GST_DEBUG_OBJECT (monitor, "Wrapping element %s", GST_ELEMENT_NAME (element));
-  /* TODO */
+
+  element_monitor = gst_qa_monitor_factory_create (element);
+  g_return_if_fail (element_monitor != NULL);
+
+  GST_QA_MONITOR_LOCK (monitor);
+  monitor->element_monitors = g_list_prepend (monitor->element_monitors,
+      element_monitor);
+  GST_QA_MONITOR_UNLOCK (monitor);
 }
 
 static void

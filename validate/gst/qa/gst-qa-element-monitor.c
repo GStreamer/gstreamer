@@ -20,6 +20,7 @@
  */
 
 #include "gst-qa-element-monitor.h"
+#include "gst-qa-pad-monitor.h"
 
 /**
  * SECTION:gst-qa-element-monitor
@@ -151,8 +152,15 @@ gst_qa_element_monitor_do_setup (GstQaMonitor * monitor)
 static void
 gst_qa_element_monitor_wrap_pad (GstQaElementMonitor * monitor, GstPad * pad)
 {
+  GstQaPadMonitor *pad_monitor;
   GST_DEBUG_OBJECT (monitor, "Wrapping pad %s:%s", GST_DEBUG_PAD_NAME (pad));
-  /* TODO */
+
+  pad_monitor = gst_qa_pad_monitor_new (pad);
+  g_return_if_fail (pad_monitor != NULL);
+
+  GST_QA_MONITOR_LOCK (monitor);
+  monitor->pad_monitors = g_list_prepend (monitor->pad_monitors, pad_monitor);
+  GST_QA_MONITOR_UNLOCK (monitor);
 }
 
 static void
