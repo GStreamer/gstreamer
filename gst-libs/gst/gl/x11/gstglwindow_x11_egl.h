@@ -22,7 +22,7 @@
 #define __GST_GL_WINDOW_X11_EGL_H__
 
 #include "gstglwindow_x11.h"
-#include "gstglegl.h"
+#include "../gstglegl.h"
 
 #include <EGL/egl.h>
 

@@ -23,7 +23,7 @@
 
 #include <gst/video/video.h>
 
-#include "gstgl_fwd.h"
+#include <gst/gl/gstgl_fwd.h>
 
 /**
  * GstGLDisplayProjection:

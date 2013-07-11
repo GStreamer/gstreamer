@@ -21,7 +21,7 @@
 #ifndef __GST_GL_WINDOW_WIN32_H__
 #define __GST_GL_WINDOW_WIN32_H__
 
-#include "gstglwindow.h"
+#include <gst/gl/gl.h>
 
 #undef UNICODE
 #include <windows.h>

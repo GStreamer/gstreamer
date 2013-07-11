@@ -27,7 +27,7 @@
 #include <gst/base/gstbasetransform.h>
 #include <gst/video/video.h>
 
-#include "gl.h"
+#include <gst/gl/gl.h>
 
 G_BEGIN_DECLS
 

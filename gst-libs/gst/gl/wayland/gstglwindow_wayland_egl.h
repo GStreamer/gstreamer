@@ -27,8 +27,8 @@
 
 #include <EGL/egl.h>
 
-#include "gstglwindow.h"
-#include "gstglegl.h"
+#include <gst/gl/gl.h>
+#include "../gstglegl.h"
 
 G_BEGIN_DECLS
 

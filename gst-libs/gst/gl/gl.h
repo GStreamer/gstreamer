@@ -21,21 +21,21 @@
 #ifndef __GL_H__
 #define __GL_H__
 
-#include "gstgl_fwd.h"
-#include "gstglconfig.h"
-#include "gstglapi.h"
-#include "gstgldisplay.h"
-#include "gstglfeature.h"
-#include "gstglutils.h"
-#include "gstglwindow.h"
-#include "gstglshader.h"
-#include "gstglupload.h"
-#include "gstgldownload.h"
-#include "gstglmemory.h"
-#include "gstglbufferpool.h"
-#include "gstglframebuffer.h"
-#include "gstglfilter.h"
-#include "gstglmixer.h"
-#include "gstglshadervariables.h"
+#include <gst/gl/gstgl_fwd.h>
+#include <gst/gl/gstglconfig.h>
+#include <gst/gl/gstglapi.h>
+#include <gst/gl/gstgldisplay.h>
+#include <gst/gl/gstglfeature.h>
+#include <gst/gl/gstglutils.h>
+#include <gst/gl/gstglwindow.h>
+#include <gst/gl/gstglshader.h>
+#include <gst/gl/gstglupload.h>
+#include <gst/gl/gstgldownload.h>
+#include <gst/gl/gstglmemory.h>
+#include <gst/gl/gstglbufferpool.h>
+#include <gst/gl/gstglframebuffer.h>
+#include <gst/gl/gstglfilter.h>
+#include <gst/gl/gstglmixer.h>
+#include <gst/gl/gstglshadervariables.h>
 
 #endif /* __GL_H__ */
