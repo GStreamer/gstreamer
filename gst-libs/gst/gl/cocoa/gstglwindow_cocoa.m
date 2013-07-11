@@ -226,7 +226,6 @@ gst_gl_window_cocoa_create_context (GstGLWindow *window, GstGLAPI gl_api,
   priv->gl_context = nil;
   priv->external_gl_context = (NSOpenGLContext *) external_gl_context;
   priv->visible = FALSE;
-  priv->parent = nil;
   priv->thread = nil;
   priv->running = TRUE;
 
@@ -249,13 +248,13 @@ gst_gl_window_cocoa_create_context (GstGLWindow *window, GstGLAPI gl_api,
     backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: window_cocoa];
 
   GST_DEBUG ("NSWindow id: %lud\n", (gulong) priv->internal_win_id);
-
+  
   priv->thread = [NSThread currentThread];
 
   [NSApp setDelegate: priv->internal_win_id];
 
   [pool release];
-  
+
 #ifndef GNUSTEP
   priv->source_id = g_timeout_add_seconds (1, gst_gl_window_cocoa_nsapp_iteration, NULL);
 #endif
@@ -297,22 +296,24 @@ gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
   window_cocoa = GST_GL_WINDOW_COCOA (window);
   priv = window_cocoa->priv;
 
-  g_source_remove (priv->source_id);
+  priv->parent = (NSWindow*) handle;
+  if (priv->internal_win_id) {
+    g_source_remove (priv->source_id);
 
-  if (GSRegisterCurrentThread()) {
-    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    if (GSRegisterCurrentThread()) {
+      NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 
-    AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc] init:window_cocoa];
-    priv->parent = (NSWindow*) handle;
-    [app_thread_performer performSelectorOnMainThread:@selector(setWindow) 
-        withObject:0 waitUntilDone:YES];
+      AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc] init:window_cocoa];
+      [app_thread_performer performSelectorOnMainThread:@selector(setWindow) 
+          withObject:0 waitUntilDone:YES];
 
-    [pool release];
+      [pool release];
 
-    GSUnregisterCurrentThread();
+      GSUnregisterCurrentThread();
+    } else {
+      GST_DEBUG ("failed to register current thread, cannot set external window id\n");
+    }
   }
-  else
-    GST_DEBUG ("failed to register current thread, cannot set external window id\n");
 }
 
 /* Thread safe */
@@ -563,6 +564,12 @@ gst_gl_window_cocoa_get_gl_api (GstGLWindow * window)
   [self setBackgroundColor:[NSColor clearColor]];
   
   [self orderOut:m_cocoa->priv->internal_win_id];
+
+
+  if (m_cocoa->priv->parent) {
+    NSWindow *window = m_cocoa->priv->parent;
+    [window setContentView: [m_cocoa->priv->internal_win_id contentView]];
+  }
 
   return self;
 }
