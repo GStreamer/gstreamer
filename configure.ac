@@ -232,6 +232,7 @@ AC_SUBST([GST_OBJ_LIBS])
 PKG_CHECK_MODULES(LIBCGROUP, libcgroup >= 0.26, HAVE_LIBCGROUP="yes", HAVE_LIBCGROUP="no")
 AC_SUBST(LIBCGROUP_CFLAGS)
 AC_SUBST(LIBCGROUP_LIBS)
+AM_CONDITIONAL(HAVE_LIBCGROUP, test "x$HAVE_LIBCGROUP" = "xyes")
 
 dnl this really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
@@ -265,6 +266,7 @@ Configuration
 	Source code location       : ${srcdir}
 	Prefix                     : ${prefix}
 	Compiler                   : ${CC}
+	CGroups example            : ${HAVE_LIBCGROUP}
 
 gst-rtsp-server configured. Type 'make' to build.
 "
