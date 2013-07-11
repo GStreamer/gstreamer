@@ -486,6 +486,9 @@ gst_osx_video_sink_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case ARG_EMBED:
       osxvideosink->embed = g_value_get_boolean(value);
+      g_warning ("The \"embed\" property of osxvideosink is deprecated and "
+          "will be removed in the near future. Use the GstVideoOverlay "
+          "instead.");
       break;
     case ARG_FORCE_PAR:
       osxvideosink->keep_par = g_value_get_boolean(value);
