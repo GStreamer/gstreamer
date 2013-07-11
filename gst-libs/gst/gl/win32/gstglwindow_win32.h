@@ -45,6 +45,7 @@ struct _GstGLWindowWin32 {
   GstGLWindow parent;
   
   HWND internal_win_id;
+  HWND parent_win_id;
   HDC device;
   gboolean is_closed;
   gboolean visible;
