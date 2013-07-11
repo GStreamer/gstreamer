@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:53+0200\n"
+"POT-Creation-Date: 2013-07-11 16:29+0200\n"
 "PO-Revision-Date: 2011-09-02 12:04-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -40,6 +40,18 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Nevar nolasīt  DVD."
 
+msgid "This file contains no playable streams."
+msgstr ""
+
+msgid "Couldn't get the Manifest's URI"
+msgstr ""
+
+msgid "Failed to get fragment URL."
+msgstr ""
+
+msgid "Couldn't download fragments"
+msgstr ""
+
 msgid "No file name specified for writing."
 msgstr "Ierakstīšanai nav norādīts neviens faila nosaukums."
 
@@ -54,8 +66,39 @@ msgstr "Iekšējās datu plūsmas kļūda."
 msgid "Could not write to file \"%s\"."
 msgstr "Nevarēja ierakstīt failā \"%s\"."
 
+msgid "Could not establish connection to sndio"
+msgstr ""
+
+msgid "Failed to query sndio capabilities"
+msgstr ""
+
+#, fuzzy
+msgid "Could not configure sndio"
+msgstr "Nav iespējams atvērt failu \"%s\" lasīšanai."
+
+#, fuzzy
+msgid "Could not start sndio"
+msgstr "Nevar nolasīt  DVD."
+
 msgid "Internal data flow error."
 msgstr "Iekšējā datu plūsmas kļūda."
+
+msgid "Generated file has a larger preroll time than its streams duration"
+msgstr ""
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
+msgid "File location is set to NULL, please set it to a valid filename"
+msgstr ""
+
+msgid "Subpicture format was not configured before data flow"
+msgstr ""
+
+#, c-format
+msgid "Given file name \"%s\" can't be converted to local file name encoding."
+msgstr ""
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -72,6 +115,21 @@ msgstr "Nav iespējams iegūt uzstādījumus no priekšējās ierīces  \"%s\"."
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nav iespējams atvērt failu \"%s\" lasīšanai."
+
+#, fuzzy
+msgid "Couldn't find DVB channel configuration file"
+msgstr "Virtuālā jaucēja kanālu konfigurācija"
+
+#, fuzzy, c-format
+msgid "Couldn't load DVB channel configuration file: %s"
+msgstr "Virtuālā jaucēja kanālu konfigurācija"
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr ""
+
+#, c-format
+msgid "Couldn't find details for DVB channel %s"
+msgstr ""
 
 #~ msgid "Internal clock error."
 #~ msgstr "Iekšējā pulksteņa kļūda."
@@ -490,6 +548,3 @@ msgstr "Nav iespējams atvērt failu \"%s\" lasīšanai."
 
 #~ msgid "Yellow front panel connector function"
 #~ msgstr "Dzeltenā priekšējā paneļa savienotāja funkcija"
-
-#~ msgid "Virtual mixer channel configuration"
-#~ msgstr "Virtuālā jaucēja kanālu konfigurācija"

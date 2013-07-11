@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:53+0200\n"
+"POT-Creation-Date: 2013-07-11 16:29+0200\n"
 "PO-Revision-Date: 2009-08-29 01:48+0200\n"
 "Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -37,6 +37,18 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Nezdařilo se přečtení informací o titulu DVD."
 
+msgid "This file contains no playable streams."
+msgstr ""
+
+msgid "Couldn't get the Manifest's URI"
+msgstr ""
+
+msgid "Failed to get fragment URL."
+msgstr ""
+
+msgid "Couldn't download fragments"
+msgstr ""
+
 msgid "No file name specified for writing."
 msgstr "K zápisu nebyl zadán žádný název souboru."
 
@@ -51,8 +63,39 @@ msgstr "Chyba proudu vnitřních dat."
 msgid "Could not write to file \"%s\"."
 msgstr "Nezdařil se zápis do souboru \"%s\"."
 
+msgid "Could not establish connection to sndio"
+msgstr ""
+
+msgid "Failed to query sndio capabilities"
+msgstr ""
+
+#, fuzzy
+msgid "Could not configure sndio"
+msgstr "Nezdařilo se otevření souboru \"%s\" ke čtení."
+
+#, fuzzy
+msgid "Could not start sndio"
+msgstr "Nezdařilo se přečtení informací o titulu DVD."
+
 msgid "Internal data flow error."
 msgstr "Vnitřní chyba datového toku."
+
+msgid "Generated file has a larger preroll time than its streams duration"
+msgstr ""
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
+msgid "File location is set to NULL, please set it to a valid filename"
+msgstr ""
+
+msgid "Subpicture format was not configured before data flow"
+msgstr ""
+
+#, c-format
+msgid "Given file name \"%s\" can't be converted to local file name encoding."
+msgstr ""
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -69,6 +112,21 @@ msgstr "Ze zařízení rozhraní \"%s\" se nezdařilo získat nastavení."
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Nezdařilo se otevření souboru \"%s\" ke čtení."
+
+#, fuzzy
+msgid "Couldn't find DVB channel configuration file"
+msgstr "Konfigurace kanálu virtuálního směšovače"
+
+#, fuzzy, c-format
+msgid "Couldn't load DVB channel configuration file: %s"
+msgstr "Konfigurace kanálu virtuálního směšovače"
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr ""
+
+#, c-format
+msgid "Couldn't find details for DVB channel %s"
+msgstr ""
 
 #~ msgid "%s %d"
 #~ msgstr "%s %d"
@@ -153,6 +211,3 @@ msgstr "Nezdařilo se otevření souboru \"%s\" ke čtení."
 
 #~ msgid "Yellow front panel connector function"
 #~ msgstr "Funkce žlutého konektoru na předním panelu"
-
-#~ msgid "Virtual mixer channel configuration"
-#~ msgstr "Konfigurace kanálu virtuálního směšovače"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:53+0200\n"
+"POT-Creation-Date: 2013-07-11 16:29+0200\n"
 "PO-Revision-Date: 2011-04-28 11:28+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -37,6 +37,19 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Kunne ikke læse dvd."
 
+#, fuzzy
+msgid "This file contains no playable streams."
+msgstr "Denne fil er korrupt og kan ikke afspilles."
+
+msgid "Couldn't get the Manifest's URI"
+msgstr ""
+
+msgid "Failed to get fragment URL."
+msgstr ""
+
+msgid "Couldn't download fragments"
+msgstr ""
+
 msgid "No file name specified for writing."
 msgstr "Intet filnavn er angivet til skrivning."
 
@@ -51,8 +64,39 @@ msgstr "Intern datastrømfejl."
 msgid "Could not write to file \"%s\"."
 msgstr "Kunne ikke skrive til fil »%s«."
 
+msgid "Could not establish connection to sndio"
+msgstr ""
+
+msgid "Failed to query sndio capabilities"
+msgstr ""
+
+#, fuzzy
+msgid "Could not configure sndio"
+msgstr "Kunne ikke åbne filen »%s« for læsning."
+
+#, fuzzy
+msgid "Could not start sndio"
+msgstr "Kunne ikke læse dvd."
+
 msgid "Internal data flow error."
 msgstr "Intern datastrømfejl."
+
+msgid "Generated file has a larger preroll time than its streams duration"
+msgstr ""
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
+msgid "File location is set to NULL, please set it to a valid filename"
+msgstr ""
+
+msgid "Subpicture format was not configured before data flow"
+msgstr ""
+
+#, c-format
+msgid "Given file name \"%s\" can't be converted to local file name encoding."
+msgstr ""
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -69,6 +113,21 @@ msgstr "Kunne ikke hente indstillinger fra forende-enheden »%s«."
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kunne ikke åbne filen »%s« for læsning."
+
+#, fuzzy
+msgid "Couldn't find DVB channel configuration file"
+msgstr "Virtuel mikserkanalkonfiguration"
+
+#, fuzzy, c-format
+msgid "Couldn't load DVB channel configuration file: %s"
+msgstr "Virtuel mikserkanalkonfiguration"
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr ""
+
+#, c-format
+msgid "Couldn't find details for DVB channel %s"
+msgstr ""
 
 #~ msgid "Internal clock error."
 #~ msgstr "Intern urfejl."
@@ -498,9 +557,6 @@ msgstr "Kunne ikke åbne filen »%s« for læsning."
 #~ msgid "Yellow front panel connector function"
 #~ msgstr "Gul frontpanelforbindelsesfunktion"
 
-#~ msgid "Virtual mixer channel configuration"
-#~ msgstr "Virtuel mikserkanalkonfiguration"
-
 #~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
 #~ msgstr ""
 #~ "Mislykkedes i at konfigurere TwoLAME-koder. Undersøg dine "
@@ -512,9 +568,6 @@ msgstr "Kunne ikke åbne filen »%s« for læsning."
 #~ msgstr ""
 #~ "Den anmodede bitrate %d kbit/s for egenskab »%s« er ikke tilladt. "
 #~ "Bitraten blev ændret til %d kbit/s."
-
-#~ msgid "This file is corrupt and cannot be played."
-#~ msgstr "Denne fil er korrupt og kan ikke afspilles."
 
 #~ msgid "This file is encrypted and cannot be played."
 #~ msgstr "Denne fil er krypteret og kan ikke afspilles."

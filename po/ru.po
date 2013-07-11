@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:53+0200\n"
+"POT-Creation-Date: 2013-07-11 16:29+0200\n"
 "PO-Revision-Date: 2011-04-26 20:31+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -40,6 +40,18 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Не удалось прочесть DVD."
 
+msgid "This file contains no playable streams."
+msgstr ""
+
+msgid "Couldn't get the Manifest's URI"
+msgstr ""
+
+msgid "Failed to get fragment URL."
+msgstr ""
+
+msgid "Couldn't download fragments"
+msgstr ""
+
 msgid "No file name specified for writing."
 msgstr "Не указано имя файла для записи."
 
@@ -54,8 +66,39 @@ msgstr "Внутренняя ошибка потока данных."
 msgid "Could not write to file \"%s\"."
 msgstr "Не удалось осуществить запись в файл «%s»."
 
+msgid "Could not establish connection to sndio"
+msgstr ""
+
+msgid "Failed to query sndio capabilities"
+msgstr ""
+
+#, fuzzy
+msgid "Could not configure sndio"
+msgstr "Не удалось открыть для чтения файл «%s»."
+
+#, fuzzy
+msgid "Could not start sndio"
+msgstr "Не удалось прочесть DVD."
+
 msgid "Internal data flow error."
 msgstr "Внутренняя ошибка передачи данных."
+
+msgid "Generated file has a larger preroll time than its streams duration"
+msgstr ""
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
+msgid "File location is set to NULL, please set it to a valid filename"
+msgstr ""
+
+msgid "Subpicture format was not configured before data flow"
+msgstr ""
+
+#, c-format
+msgid "Given file name \"%s\" can't be converted to local file name encoding."
+msgstr ""
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -72,6 +115,21 @@ msgstr "Не удалось получить параметры DVB-декоде
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не удалось открыть для чтения файл «%s»."
+
+#, fuzzy
+msgid "Couldn't find DVB channel configuration file"
+msgstr "Конфигурация виртуальных каналов микшера"
+
+#, fuzzy, c-format
+msgid "Couldn't load DVB channel configuration file: %s"
+msgstr "Конфигурация виртуальных каналов микшера"
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr ""
+
+#, c-format
+msgid "Couldn't find details for DVB channel %s"
+msgstr ""
 
 #~ msgid "Internal clock error."
 #~ msgstr "Внутренняя ошибка синхронизации."
@@ -292,9 +350,6 @@ msgstr "Не удалось открыть для чтения файл «%s»."
 
 #~ msgid "Virtual mixer output"
 #~ msgstr "Виртуальный выход микшера"
-
-#~ msgid "Virtual mixer channel configuration"
-#~ msgstr "Конфигурация виртуальных каналов микшера"
 
 #~ msgid ""
 #~ "Could not open audio device for playback. Device is being used by another "

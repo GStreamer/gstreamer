@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:53+0200\n"
+"POT-Creation-Date: 2013-07-11 16:29+0200\n"
 "PO-Revision-Date: 2011-04-26 22:30+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -38,6 +38,18 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "DVD-то не може да бъде прочетено."
 
+msgid "This file contains no playable streams."
+msgstr ""
+
+msgid "Couldn't get the Manifest's URI"
+msgstr ""
+
+msgid "Failed to get fragment URL."
+msgstr ""
+
+msgid "Couldn't download fragments"
+msgstr ""
+
 msgid "No file name specified for writing."
 msgstr "Не е указано име на файл за запис."
 
@@ -52,8 +64,39 @@ msgstr "Вътрешна грешка в потока на данни."
 msgid "Could not write to file \"%s\"."
 msgstr "Не може да се записва във файла „%s“."
 
+msgid "Could not establish connection to sndio"
+msgstr ""
+
+msgid "Failed to query sndio capabilities"
+msgstr ""
+
+#, fuzzy
+msgid "Could not configure sndio"
+msgstr "Файлът „%s“ не може да се отвори за четене."
+
+#, fuzzy
+msgid "Could not start sndio"
+msgstr "DVD-то не може да бъде прочетено."
+
 msgid "Internal data flow error."
 msgstr "Вътрешна грешка в потока на данни."
+
+msgid "Generated file has a larger preroll time than its streams duration"
+msgstr ""
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
+msgid "File location is set to NULL, please set it to a valid filename"
+msgstr ""
+
+msgid "Subpicture format was not configured before data flow"
+msgstr ""
+
+#, c-format
+msgid "Given file name \"%s\" can't be converted to local file name encoding."
+msgstr ""
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -70,3 +113,17 @@ msgstr "Настройките на устройството „%s“ не мо�
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Файлът „%s“ не може да се отвори за четене."
+
+msgid "Couldn't find DVB channel configuration file"
+msgstr ""
+
+#, c-format
+msgid "Couldn't load DVB channel configuration file: %s"
+msgstr ""
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr ""
+
+#, c-format
+msgid "Couldn't find details for DVB channel %s"
+msgstr ""

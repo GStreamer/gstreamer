@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad-0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:53+0200\n"
+"POT-Creation-Date: 2013-07-11 16:29+0200\n"
 "PO-Revision-Date: 2011-12-04 09:59+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -40,6 +40,18 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Не могу да читам ДВД."
 
+msgid "This file contains no playable streams."
+msgstr ""
+
+msgid "Couldn't get the Manifest's URI"
+msgstr ""
+
+msgid "Failed to get fragment URL."
+msgstr ""
+
+msgid "Couldn't download fragments"
+msgstr ""
+
 msgid "No file name specified for writing."
 msgstr "Није наведен назив датотеке за упис."
 
@@ -54,8 +66,39 @@ msgstr "Унутрашња грешка тока података."
 msgid "Could not write to file \"%s\"."
 msgstr "Не могу да пишем у датотеку „%s“."
 
+msgid "Could not establish connection to sndio"
+msgstr ""
+
+msgid "Failed to query sndio capabilities"
+msgstr ""
+
+#, fuzzy
+msgid "Could not configure sndio"
+msgstr "Не могу да подесим звучни уређај „%s“."
+
+#, fuzzy
+msgid "Could not start sndio"
+msgstr "Не могу да читам ДВД."
+
 msgid "Internal data flow error."
 msgstr "Унутрашња грешка протока података."
+
+msgid "Generated file has a larger preroll time than its streams duration"
+msgstr ""
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
+msgid "File location is set to NULL, please set it to a valid filename"
+msgstr ""
+
+msgid "Subpicture format was not configured before data flow"
+msgstr ""
+
+#, c-format
+msgid "Given file name \"%s\" can't be converted to local file name encoding."
+msgstr ""
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -72,6 +115,20 @@ msgstr "Не могу да добавим подешавања са управљ
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Не могу да отворим датотеку „%s“ за читање."
+
+msgid "Couldn't find DVB channel configuration file"
+msgstr ""
+
+#, c-format
+msgid "Couldn't load DVB channel configuration file: %s"
+msgstr ""
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr ""
+
+#, c-format
+msgid "Couldn't find details for DVB channel %s"
+msgstr ""
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Не могу да отворим уређај „%s“ ради читања и уписа."
@@ -90,9 +147,6 @@ msgstr "Не могу да отворим датотеку „%s“ за чит�
 
 #~ msgid "Could not open control device \"%s\" for writing."
 #~ msgstr "Не могу да отворим управљачки уређај „%s“ ради уписа."
-
-#~ msgid "Could not configure audio device \"%s\"."
-#~ msgstr "Не могу да подесим звучни уређај „%s“."
 
 #~ msgid "Could not set audio device \"%s\" to %d Hz."
 #~ msgstr "Не могу да поставим звучни уређај „%s“ на %d Hz."

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:53+0200\n"
+"POT-Creation-Date: 2013-07-11 16:29+0200\n"
 "PO-Revision-Date: 2011-04-27 00:16+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -39,6 +39,18 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Kon de dvd niet lezen."
 
+msgid "This file contains no playable streams."
+msgstr ""
+
+msgid "Couldn't get the Manifest's URI"
+msgstr ""
+
+msgid "Failed to get fragment URL."
+msgstr ""
+
+msgid "Couldn't download fragments"
+msgstr ""
+
 msgid "No file name specified for writing."
 msgstr "Geen bestandsnaam gespecificeerd voor de uitvoer."
 
@@ -53,8 +65,39 @@ msgstr "Interne fout in gegevensstroom."
 msgid "Could not write to file \"%s\"."
 msgstr "Kan niet in bestand \"%s\" schrijven."
 
+msgid "Could not establish connection to sndio"
+msgstr ""
+
+msgid "Failed to query sndio capabilities"
+msgstr ""
+
+#, fuzzy
+msgid "Could not configure sndio"
+msgstr "Kan bestand \"%s\" niet openen om te lezen."
+
+#, fuzzy
+msgid "Could not start sndio"
+msgstr "Kon de dvd niet lezen."
+
 msgid "Internal data flow error."
 msgstr "Interne fout met gegevensdoorvoer."
+
+msgid "Generated file has a larger preroll time than its streams duration"
+msgstr ""
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
+msgid "File location is set to NULL, please set it to a valid filename"
+msgstr ""
+
+msgid "Subpicture format was not configured before data flow"
+msgstr ""
+
+#, c-format
+msgid "Given file name \"%s\" can't be converted to local file name encoding."
+msgstr ""
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -71,6 +114,20 @@ msgstr "Kan de instellingen van het frontend-apparaat \"%s\" niet verkrijgen."
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "Kan bestand \"%s\" niet openen om te lezen."
+
+msgid "Couldn't find DVB channel configuration file"
+msgstr ""
+
+#, c-format
+msgid "Couldn't load DVB channel configuration file: %s"
+msgstr ""
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr ""
+
+#, c-format
+msgid "Couldn't find details for DVB channel %s"
+msgstr ""
 
 #~ msgid "Internal clock error."
 #~ msgstr "Interne fout met de klok."

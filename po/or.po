@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:53+0200\n"
+"POT-Creation-Date: 2013-07-11 16:29+0200\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -37,6 +37,18 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
 
+msgid "This file contains no playable streams."
+msgstr ""
+
+msgid "Couldn't get the Manifest's URI"
+msgstr ""
+
+msgid "Failed to get fragment URL."
+msgstr ""
+
+msgid "Couldn't download fragments"
+msgstr ""
+
 #, fuzzy
 msgid "No file name specified for writing."
 msgstr "କୌଣସି ଫାଇଲନାମ ଉଲ୍ଲେଖିତ ହୋଇ ନାହିଁ."
@@ -52,7 +64,38 @@ msgstr ""
 msgid "Could not write to file \"%s\"."
 msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
 
+msgid "Could not establish connection to sndio"
+msgstr ""
+
+msgid "Failed to query sndio capabilities"
+msgstr ""
+
+#, fuzzy
+msgid "Could not configure sndio"
+msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ବିନ୍ଯାସ କରିହେଲା ନାହିଁ."
+
+#, fuzzy
+msgid "Could not start sndio"
+msgstr "\"%s\" ଫାଇଲ ଲେଖିହେଲା ନାହିଁ."
+
 msgid "Internal data flow error."
+msgstr ""
+
+msgid "Generated file has a larger preroll time than its streams duration"
+msgstr ""
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
+msgid "File location is set to NULL, please set it to a valid filename"
+msgstr ""
+
+msgid "Subpicture format was not configured before data flow"
+msgstr ""
+
+#, c-format
+msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
 
 #, c-format
@@ -70,6 +113,20 @@ msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ପର୍ଯ୍ଯାପ୍ତ ଅସ୍
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "\"%s\" ଫାଇଲ ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+
+msgid "Couldn't find DVB channel configuration file"
+msgstr ""
+
+#, c-format
+msgid "Couldn't load DVB channel configuration file: %s"
+msgstr ""
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr ""
+
+#, c-format
+msgid "Couldn't find details for DVB channel %s"
+msgstr ""
 
 #, fuzzy
 #~ msgid "PCM 1"
@@ -101,9 +158,6 @@ msgstr "\"%s\" ଫାଇଲ ପଢ଼ିବା ପାଇଁ ଖୋଲିହେ�
 
 #~ msgid "Could not open control device \"%s\" for writing."
 #~ msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
-
-#~ msgid "Could not configure audio device \"%s\"."
-#~ msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ବିନ୍ଯାସ କରିହେଲା ନାହିଁ."
 
 #~ msgid "Could not set audio device \"%s\" to %d Hz."
 #~ msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ରକୁ %d ହର୍ଜରେ ବିନ୍ଯାସ କରିହେଲା ନାହିଁ."

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.7.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:53+0200\n"
+"POT-Creation-Date: 2013-07-11 16:29+0200\n"
 "PO-Revision-Date: 2008-08-15 16:07+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <translation-team-sq@lists.sourceforge.net>\n"
@@ -35,6 +35,18 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "I pamundur shkrimi tek file \"%s\"."
 
+msgid "This file contains no playable streams."
+msgstr ""
+
+msgid "Couldn't get the Manifest's URI"
+msgstr ""
+
+msgid "Failed to get fragment URL."
+msgstr ""
+
+msgid "Couldn't download fragments"
+msgstr ""
+
 msgid "No file name specified for writing."
 msgstr "Asnjë emër file specifikuar për shkrim."
 
@@ -49,9 +61,40 @@ msgstr "Gabim i brendshëm tek stream i të dhënave."
 msgid "Could not write to file \"%s\"."
 msgstr "I pamundur shkrimi tek file \"%s\"."
 
+msgid "Could not establish connection to sndio"
+msgstr ""
+
+msgid "Failed to query sndio capabilities"
+msgstr ""
+
+#, fuzzy
+msgid "Could not configure sndio"
+msgstr "I pamundur konfigurimi i dispozitivit të zërit \"%s\"."
+
+#, fuzzy
+msgid "Could not start sndio"
+msgstr "I pamundur shkrimi tek file \"%s\"."
+
 #, fuzzy
 msgid "Internal data flow error."
 msgstr "Gabim i brendshëm tek stream i të dhënave."
+
+msgid "Generated file has a larger preroll time than its streams duration"
+msgstr ""
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
+msgid "File location is set to NULL, please set it to a valid filename"
+msgstr ""
+
+msgid "Subpicture format was not configured before data flow"
+msgstr ""
+
+#, c-format
+msgid "Given file name \"%s\" can't be converted to local file name encoding."
+msgstr ""
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -68,6 +111,20 @@ msgstr "E pamundur marrja e rregullimeve nga dispozitivi frontend \"%s\"."
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "E pamundur hapja e file \"%s\" për lexim."
+
+msgid "Couldn't find DVB channel configuration file"
+msgstr ""
+
+#, c-format
+msgid "Couldn't load DVB channel configuration file: %s"
+msgstr ""
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr ""
+
+#, c-format
+msgid "Couldn't find details for DVB channel %s"
+msgstr ""
 
 #, fuzzy
 #~ msgid "Internal clock error."
@@ -87,9 +144,6 @@ msgstr "E pamundur hapja e file \"%s\" për lexim."
 
 #~ msgid "Could not open control device \"%s\" for writing."
 #~ msgstr "E pamundur hapja e dispozitivit të kontrollit \"%s\" për shkrim."
-
-#~ msgid "Could not configure audio device \"%s\"."
-#~ msgstr "I pamundur konfigurimi i dispozitivit të zërit \"%s\"."
 
 #~ msgid "Could not set audio device \"%s\" to %d Hz."
 #~ msgstr "I pamundur rregullimi i dispozitivit audio \"%s\" në %d Hz."

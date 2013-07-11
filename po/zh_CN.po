@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-bad 0.10.16.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:53+0200\n"
+"POT-Creation-Date: 2013-07-11 16:29+0200\n"
 "PO-Revision-Date: 2009-11-20 18:12中国标准时间\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -37,6 +37,18 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "无法读取 DVD 的标题信息。"
 
+msgid "This file contains no playable streams."
+msgstr ""
+
+msgid "Couldn't get the Manifest's URI"
+msgstr ""
+
+msgid "Failed to get fragment URL."
+msgstr ""
+
+msgid "Couldn't download fragments"
+msgstr ""
+
 msgid "No file name specified for writing."
 msgstr "未指定写入文件名。"
 
@@ -51,8 +63,39 @@ msgstr "内部数据流错误。"
 msgid "Could not write to file \"%s\"."
 msgstr "无法写入文件“%s”。"
 
+msgid "Could not establish connection to sndio"
+msgstr ""
+
+msgid "Failed to query sndio capabilities"
+msgstr ""
+
+#, fuzzy
+msgid "Could not configure sndio"
+msgstr "无法以读方式打开文件“%s”。"
+
+#, fuzzy
+msgid "Could not start sndio"
+msgstr "无法读取 DVD 的标题信息。"
+
 msgid "Internal data flow error."
 msgstr "内部数据流错误。"
+
+msgid "Generated file has a larger preroll time than its streams duration"
+msgstr ""
+
+#, c-format
+msgid "Missing element '%s' - check your GStreamer installation."
+msgstr ""
+
+msgid "File location is set to NULL, please set it to a valid filename"
+msgstr ""
+
+msgid "Subpicture format was not configured before data flow"
+msgstr ""
+
+#, c-format
+msgid "Given file name \"%s\" can't be converted to local file name encoding."
+msgstr ""
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -69,6 +112,21 @@ msgstr "无法从前端设备“%s”获取设置。"
 #, c-format
 msgid "Could not open file \"%s\" for reading."
 msgstr "无法以读方式打开文件“%s”。"
+
+#, fuzzy
+msgid "Couldn't find DVB channel configuration file"
+msgstr "模拟混音器设置"
+
+#, fuzzy, c-format
+msgid "Couldn't load DVB channel configuration file: %s"
+msgstr "模拟混音器设置"
+
+msgid "DVB channel configuration file doesn't contain any channels"
+msgstr ""
+
+#, c-format
+msgid "Couldn't find details for DVB channel %s"
+msgstr ""
 
 #~ msgid "%s %d"
 #~ msgstr "%s %d"
@@ -151,6 +209,3 @@ msgstr "无法以读方式打开文件“%s”。"
 #, fuzzy
 #~ msgid "Yellow front panel connector function"
 #~ msgstr "MIDI 输出音效面板"
-
-#~ msgid "Virtual mixer channel configuration"
-#~ msgstr "模拟混音器设置"
