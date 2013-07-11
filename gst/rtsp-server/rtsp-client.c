@@ -1086,7 +1086,8 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   /* add the range */
   str = gst_rtsp_media_get_range_string (media, TRUE, unit);
-  gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_RANGE, str);
+  if (str)
+    gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_RANGE, str);
 
   send_message (client, session, ctx->response, FALSE);
 
