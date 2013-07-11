@@ -29,6 +29,8 @@ GST_START_TEST (test_launch)
   GstRTSPStream *stream;
   GstRTSPTimeRange *range;
   gchar *str;
+  GstRTSPThreadPool *pool;
+  GstRTSPThread *thread;
 
   factory = gst_rtsp_media_factory_new ();
   fail_if (gst_rtsp_media_factory_is_shared (factory));
@@ -53,7 +55,11 @@ GST_START_TEST (test_launch)
   /* fails, need to be prepared */
   fail_if (gst_rtsp_media_seek (media, range));
 
-  fail_unless (gst_rtsp_media_prepare (media, NULL));
+  pool = gst_rtsp_thread_pool_new ();
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+
+  fail_unless (gst_rtsp_media_prepare (media, thread));
 
   str = gst_rtsp_media_get_range_string (media, FALSE, GST_RTSP_RANGE_NPT);
   fail_unless (g_str_equal (str, "npt=0-"));
@@ -119,6 +125,10 @@ GST_START_TEST (test_media_prepare)
   GstRTSPMediaFactory *factory;
   GstRTSPMedia *media;
   GstRTSPUrl *url;
+  GstRTSPThreadPool *pool;
+  GstRTSPThread *thread;
+
+  pool = gst_rtsp_thread_pool_new ();
 
   /* test non-reusable media first */
   factory = gst_rtsp_media_factory_new ();
@@ -132,10 +142,15 @@ GST_START_TEST (test_media_prepare)
   fail_unless (GST_IS_RTSP_MEDIA (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
 
-  fail_unless (gst_rtsp_media_prepare (media, NULL));
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+  fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
-  fail_if (gst_rtsp_media_prepare (media, NULL));
+
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+  fail_if (gst_rtsp_media_prepare (media, thread));
 
   g_object_unref (media);
   gst_rtsp_url_free (url);
@@ -155,10 +170,15 @@ GST_START_TEST (test_media_prepare)
 
   g_object_set (G_OBJECT (media), "reusable", TRUE, NULL);
 
-  fail_unless (gst_rtsp_media_prepare (media, NULL));
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+  fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
-  fail_unless (gst_rtsp_media_prepare (media, NULL));
+
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+  fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless (gst_rtsp_media_unprepare (media));
 
   g_object_unref (media);
@@ -191,6 +211,8 @@ GST_START_TEST (test_media_dyn_prepare)
   GstElement *bin, *src, *pay;
   GstElement *pipeline;
   GstPad *srcpad;
+  GstRTSPThreadPool *pool;
+  GstRTSPThread *thread;
 
   bin = gst_bin_new ("bin");
   fail_if (bin == NULL);
@@ -219,14 +241,22 @@ GST_START_TEST (test_media_dyn_prepare)
 
   g_signal_connect (srcpad, "notify::caps", (GCallback) on_notify_caps, pay);
 
+  pool = gst_rtsp_thread_pool_new ();
+
   fail_unless (gst_rtsp_media_n_streams (media) == 0);
-  fail_unless (gst_rtsp_media_prepare (media, NULL));
+
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+  fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 0);
 
   fail_unless (gst_rtsp_media_n_streams (media) == 0);
-  fail_unless (gst_rtsp_media_prepare (media, NULL));
+
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+  fail_unless (gst_rtsp_media_prepare (media, thread));
   fail_unless (gst_rtsp_media_n_streams (media) == 1);
   fail_unless (gst_rtsp_media_unprepare (media));
   fail_unless (gst_rtsp_media_n_streams (media) == 0);
