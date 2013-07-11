@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2012-03-01 14:05+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -252,6 +252,10 @@ msgstr "Splošno sporočilo napake za domeno %s in kodo %d ne obstaja."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Izbrane ure ni mogoče uporabiti v cevovodu."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr ""
 
 msgid "title"
 msgstr "naslov"
@@ -793,6 +797,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "NAPAKA: predmet %s: %s\n"
 
@@ -858,15 +870,6 @@ msgstr "predmeta korita za naslov URI \"%s\" ni mogoče povezati"
 msgid "empty pipeline not allowed"
 msgstr "cevovod brez vsebine ni dovoljen"
 
-msgid "Internal clock error."
-msgstr "Notranja napaka ure."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Notranja napaka toka podatkov."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Veliko medpomnilnikov se prazni."
 
@@ -875,6 +878,15 @@ msgstr "Notranja težava toka podatkov."
 
 msgid "Internal data stream error."
 msgstr "Notranja napaka pretoka podatkov."
+
+msgid "Internal data flow error."
+msgstr "Notranja napaka toka podatkov."
+
+msgid "Internal clock error."
+msgstr "Notranja napaka ure."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Filtriraj velikost črk"

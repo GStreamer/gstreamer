@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2010-10-03 19:09+1030\n"
 "Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
 "Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
@@ -245,6 +245,10 @@ msgstr "Không có thông điệp chuẩn cho miền %s và mã %d."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Đồng hồ đã chọn không thể dùng trong đường ống."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr ""
 
 msgid "title"
 msgstr "tựa"
@@ -797,6 +801,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "LỖI: từ yếu tố %s: %s\n"
 
@@ -866,15 +878,6 @@ msgstr ""
 msgid "empty pipeline not allowed"
 msgstr "không cho phép đường ống trống"
 
-msgid "Internal clock error."
-msgstr "Lỗi đồng hồ nội bộ."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Lỗi luồng dữ liệu nội bộ."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Nhiều bộ đệm bị bỏ."
 
@@ -883,6 +886,15 @@ msgstr "Vấn đề luồng dữ liệu nội bộ."
 
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
+
+msgid "Internal data flow error."
+msgstr "Lỗi luồng dữ liệu nội bộ."
+
+msgid "Internal clock error."
+msgstr "Lỗi đồng hồ nội bộ."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Lọc tối đa"

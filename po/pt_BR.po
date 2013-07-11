@@ -17,7 +17,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.31.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2011-01-08 01:36-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
 "Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
@@ -264,6 +264,10 @@ msgstr "Nenhuma mensagem de erro predefinida para o domínio %s e código %d."
 msgid "Selected clock cannot be used in pipeline."
 msgstr ""
 "O temporizador selecionado não pôde ser usado na fila de processamento."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr ""
 
 msgid "title"
 msgstr "título"
@@ -810,6 +814,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ERRO: do elemento %s: %s\n"
 
@@ -876,15 +888,6 @@ msgstr "não foi possível vincular o elemento consumidor para o URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "não é permitido que a fila de processamento seja vazia"
 
-msgid "Internal clock error."
-msgstr "Erro interno no temporizador."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Erro interno no fluxo de dados."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Uma grande quantidade de buffers está sendo descartada."
 
@@ -893,6 +896,15 @@ msgstr "Problema interno no fluxo de dados."
 
 msgid "Internal data stream error."
 msgstr "Erro interno no fluxo de dados."
+
+msgid "Internal data flow error."
+msgstr "Erro interno no fluxo de dados."
+
+msgid "Internal clock error."
+msgstr "Erro interno no temporizador."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Caps do filtro"

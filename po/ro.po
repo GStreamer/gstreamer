@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2010-08-16 01:10+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -253,6 +253,10 @@ msgstr "Niciun mesaj standard de eroare pentru domeniul %s și codul %d."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Ceasul selectat nu poate fi utilizat în linia de asamblare."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr ""
 
 msgid "title"
 msgstr "titlu"
@@ -813,6 +817,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "EROARE: de la elementul %s: %s\n"
 
@@ -878,15 +890,6 @@ msgstr "nu se poate lega elementul derivat pentru URI „%s”"
 msgid "empty pipeline not allowed"
 msgstr "linia de asamblare vidă nu este permisă"
 
-msgid "Internal clock error."
-msgstr "Eroare internă de ceas."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Eroare internă de flux al datelor."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Multe zone de memorie tampon sunt abandonate."
 
@@ -895,6 +898,15 @@ msgstr "Problemă internă de flux al datelor."
 
 msgid "Internal data stream error."
 msgstr "Eroare internă a fluxului de date."
+
+msgid "Internal data flow error."
+msgstr "Eroare internă de flux al datelor."
+
+msgid "Internal clock error."
+msgstr "Eroare internă de ceas."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Filtrare majuscule"

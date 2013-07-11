@@ -106,7 +106,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2010-10-25 10:03+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -368,6 +368,10 @@ msgstr "Nessun messaggio d'errore standard per il dominio %s e il codice %d."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Il clock selezionato non può essere usato nella pipeline."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr "Errore nello scrivere la cache di registro su %s: %s"
 
 # questo e i successivi sono nome + descrizione delle proprietà
 # dei tag ID3 (o simili); le descrizioni per omogeneità iniziano
@@ -945,6 +949,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ERRORE: dall'elemento %s: %s\n"
 
@@ -1009,15 +1021,6 @@ msgstr "impossibile collegare l'elemento sink per l'URI «%s»"
 msgid "empty pipeline not allowed"
 msgstr "pipeline vuota non consentito"
 
-msgid "Internal clock error."
-msgstr "Errore interno di clock."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Errore interno nel flusso di dati."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Stanno per essere scartati molti buffer."
 
@@ -1026,6 +1029,15 @@ msgstr "Problema interno nel flusso di dati."
 
 msgid "Internal data stream error."
 msgstr "Errore interno nello stream di dati."
+
+msgid "Internal data flow error."
+msgstr "Errore interno nel flusso di dati."
+
+msgid "Internal clock error."
+msgstr "Errore interno di clock."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Caps di filtro"
@@ -1463,9 +1475,6 @@ msgstr "Esecuzione di free sulla pipeline...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Non installa i gestori di segnale per SIGUSR1 e SIGUSR2"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Errore nello scrivere la cache di registro su %s: %s"
 
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "Errore nel ri-scansionare il registro %s: %s"

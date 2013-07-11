@@ -15,7 +15,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.8.8\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2005-04-04 10:55-0700\n"
 "Last-Translator: Steven Michael Murphy <murf@e-tools.com>\n"
 "Language-Team: Kinyarwanda <translation-team-rw@lists.sourceforge.net>\n"
@@ -319,6 +319,10 @@ msgid "No standard error message for domain %s and code %d."
 msgstr "Bisanzwe Ikosa Ubutumwa kugirango Urwego Na ITEGEKONGENGA"
 
 msgid "Selected clock cannot be used in pipeline."
+msgstr ""
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
 msgstr ""
 
 msgid "title"
@@ -956,6 +960,14 @@ msgstr ""
 msgid ", "
 msgstr ", "
 
+#, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
 #, fuzzy, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "Bivuye Ikigize:"
@@ -1022,15 +1034,6 @@ msgstr "OYA Ihuza Ikigize: kugirango"
 msgid "empty pipeline not allowed"
 msgstr "ubusa OYA"
 
-msgid "Internal clock error."
-msgstr ""
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr ""
-
 msgid "A lot of buffers are being dropped."
 msgstr ""
 
@@ -1038,6 +1041,15 @@ msgid "Internal data flow problem."
 msgstr ""
 
 msgid "Internal data stream error."
+msgstr ""
+
+msgid "Internal data flow error."
+msgstr ""
+
+msgid "Internal clock error."
+msgstr ""
+
+msgid "Failed to map buffer."
 msgstr ""
 
 msgid "Filter caps"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2010-11-06 22:52+0100\n"
 "Last-Translator: Mogens Jaeger <mogensjaeger@gmail.com>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -256,6 +256,10 @@ msgstr "Ingen standard fejlmeddelelse for domæne %s og kode %d."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Valgt tid kan ikke bruges i rørledningen."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr "Kunne ikke skrive registraturcache til %s: %s"
 
 msgid "title"
 msgstr "titel"
@@ -795,6 +799,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "FEJL: fra element %s: %s\n"
 
@@ -859,15 +871,6 @@ msgstr "kunne ikke lænke udgangselement for URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "tom rørledning ikke tilladt"
 
-msgid "Internal clock error."
-msgstr "Fejl i internt ur."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Intern datastrømsfejl."
-
 msgid "A lot of buffers are being dropped."
 msgstr "En masse af bufferens indhold smides væk."
 
@@ -876,6 +879,15 @@ msgstr "Intern datastrømsproblem."
 
 msgid "Internal data stream error."
 msgstr "Intern datastrømsfejl."
+
+msgid "Internal data flow error."
+msgstr "Intern datastrømsfejl."
+
+msgid "Internal clock error."
+msgstr "Fejl i internt ur."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Filterkapabilitet"
@@ -1285,9 +1297,6 @@ msgstr "Rørledning frigøres ...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Undlad installering af signalhåndtering for SIGUSR1 og SIGUSR2"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Kunne ikke skrive registraturcache til %s: %s"
 
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "Kunne ikke genskanne registratur %s: %s"

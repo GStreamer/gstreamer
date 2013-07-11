@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2011-12-05 10:40+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -252,6 +252,10 @@ msgstr "Нема уобичајене поруке о грешци за доме
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Изабрани сат не може бити коришћен у спојци низа."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr ""
 
 msgid "title"
 msgstr "наслов"
@@ -797,6 +801,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ГРЕШКА: из елемента %s: %s\n"
 
@@ -861,15 +873,6 @@ msgstr "не могу да вежем елемент усклађивања за
 msgid "empty pipeline not allowed"
 msgstr "није допуштена празна спојка низа"
 
-msgid "Internal clock error."
-msgstr "Унутрашња грешка сата."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Унутрaшња грешка протока података."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Много помоћне меморије је одбачено."
 
@@ -878,6 +881,15 @@ msgstr "Унутрaшњи проблем протока података."
 
 msgid "Internal data stream error."
 msgstr "Унутрашња грешка тока података."
+
+msgid "Internal data flow error."
+msgstr "Унутрaшња грешка протока података."
+
+msgid "Internal clock error."
+msgstr "Унутрашња грешка сата."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Филтрира могућности"

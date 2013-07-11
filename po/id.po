@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2012-01-28 11:44+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -249,6 +249,10 @@ msgstr "Tak ada pesan galat standar untuk domain %s dan kode %d."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Jam terpilih tak dapat digunakan dalam baris pipa."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr "Galat menulis tembolok registry ke %s: %s"
 
 msgid "title"
 msgstr "judul"
@@ -794,6 +798,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "GALAT: dari elemen %s: %s\n"
 
@@ -858,15 +870,6 @@ msgstr "tak dapat menautkan elemen buang untuk URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "baris pipa kosong tak diizinkan"
 
-msgid "Internal clock error."
-msgstr "Galat jam internal."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Galat aliran data internal."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Banyak penyangga yang didrop."
 
@@ -875,6 +878,15 @@ msgstr "Masalah aliran data internal."
 
 msgid "Internal data stream error."
 msgstr "Galat arus data internal."
+
+msgid "Internal data flow error."
+msgstr "Galat aliran data internal."
+
+msgid "Internal clock error."
+msgstr "Galat jam internal."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Filter huruf"
@@ -1273,9 +1285,6 @@ msgstr "Membebaskan baris pipa ...\n"
 
 #~ msgid "Print alloc trace (if enabled at compile time)"
 #~ msgstr "Cetak jejak alokasi (jika diaktifkan sewaktu kompilasi)"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Galat menulis tembolok registry ke %s: %s"
 
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "Galat memindai ulang registry %s: %s"

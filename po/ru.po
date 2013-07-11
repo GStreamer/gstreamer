@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2011-04-26 20:25+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
@@ -254,6 +254,10 @@ msgstr "Нет стандартного сообщения об ошибке д�
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Выбранные часы не могут быть использованы в конвейере."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr "Ошибка записи кэша реестра в %s: %s"
 
 msgid "title"
 msgstr "название"
@@ -796,6 +800,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ОШИБКА: из элемента %s: %s\n"
 
@@ -860,15 +872,6 @@ msgstr "не удалось соединить элемент-приёмник �
 msgid "empty pipeline not allowed"
 msgstr "пустой конвейер недопустим"
 
-msgid "Internal clock error."
-msgstr "Внутренняя ошибка синхронизации."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Внутренняя ошибка передачи данных."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Многое из буфера было отброшено."
 
@@ -877,6 +880,15 @@ msgstr "Внутренняя проблема передачи данных."
 
 msgid "Internal data stream error."
 msgstr "Внутренняя ошибка потока данных."
+
+msgid "Internal data flow error."
+msgstr "Внутренняя ошибка передачи данных."
+
+msgid "Internal clock error."
+msgstr "Внутренняя ошибка синхронизации."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Фильтровать возможности"
@@ -1283,9 +1295,6 @@ msgstr "Освобождение конвейера...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Не устанавливать обработчики сигналов SIGUSR1 и SIGUSR2"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Ошибка записи кэша реестра в %s: %s"
 
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "Ошибка повторного сканирования реестра %s: %s"

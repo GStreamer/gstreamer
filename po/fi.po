@@ -12,7 +12,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2010-11-17 23:10+0200\n"
 "Last-Translator: Tommi Vainikainen <Tommi.Vainikainen@iki.fi>\n"
 "Language-Team: Finnish <translation-team-fi@lists.sourceforge.net>\n"
@@ -253,6 +253,10 @@ msgstr "Standardia virheviestiä alueelle %s ja koodille %d ei ole."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Valittua kelloa ei voi käyttää liukuhihnassa."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr "Virhe kirjoitettaessa rekisterivälimuistia kohteeseen %s: %s"
 
 msgid "title"
 msgstr "nimi"
@@ -798,6 +802,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "VIRHE: elementiltä %s: %s\n"
 
@@ -862,16 +874,6 @@ msgstr "nieluelementtiä ei voitu linkittää URIlle ”%s”"
 msgid "empty pipeline not allowed"
 msgstr "tyhjää liukuhihnaa ei sallita"
 
-msgid "Internal clock error."
-msgstr "Sisäinen kellovirhe."
-
-#, fuzzy
-msgid "Failed to map buffer."
-msgstr "Kuvan koodaus epäonnistui."
-
-msgid "Internal data flow error."
-msgstr "Sisäinen tiedon virtausvirhe."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Useita puskureita putoilee."
 
@@ -880,6 +882,16 @@ msgstr "Sisäinen tiedon virtausongelma."
 
 msgid "Internal data stream error."
 msgstr "Sisäinen tietovirtavirhe."
+
+msgid "Internal data flow error."
+msgstr "Sisäinen tiedon virtausvirhe."
+
+msgid "Internal clock error."
+msgstr "Sisäinen kellovirhe."
+
+#, fuzzy
+msgid "Failed to map buffer."
+msgstr "Kuvan koodaus epäonnistui."
 
 msgid "Filter caps"
 msgstr "Kykysuodatus"
@@ -1284,9 +1296,6 @@ msgstr "Vapautetaan liukuhihna...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Älä asenna SIGUSR1- ja SIGUSR2-signaalinkäsittelijöitä"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Virhe kirjoitettaessa rekisterivälimuistia kohteeseen %s: %s"
 
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "Virhe uudelleenskannatessa rekisteriä %s: %s"

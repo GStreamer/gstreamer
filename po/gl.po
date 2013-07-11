@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2011-09-05 12:49+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
@@ -250,6 +250,10 @@ msgstr "Non hai unha mensaxe de erro estándar par ao dominio %s e código %d."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Non é posíbel usar o reloxo seleccionado na canalización."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr ""
 
 msgid "title"
 msgstr "título"
@@ -794,6 +798,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ERRO: do elemento %s: %s\n"
 
@@ -858,15 +870,6 @@ msgstr "non foi posíbel ligar o elemento sumidoiro para o URI «%s»"
 msgid "empty pipeline not allowed"
 msgstr "non se permite unha canalización baleira"
 
-msgid "Internal clock error."
-msgstr "Produciuse un erro no reloxo interno."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Produciuse un erro no fluxo interno de datos."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Estanse a desbotar moitos búferes."
 
@@ -875,6 +878,15 @@ msgstr "Hai un problema no fluxo interno de datos."
 
 msgid "Internal data stream error."
 msgstr "Produciuse un erro no fluxo interno de datos."
+
+msgid "Internal data flow error."
+msgstr "Produciuse un erro no fluxo interno de datos."
+
+msgid "Internal clock error."
+msgstr "Produciuse un erro no reloxo interno."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Filtro de capacidades"

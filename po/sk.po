@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2010-11-08 16:13+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -268,6 +268,10 @@ msgstr "Žiadna štandardná chybová správa pre doménu %s a kód %d."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Vybraný časovač sa nedá použiť v rúre."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr "Chyba pri zápise vyrovnávacej pamäte registrov do %s: %s"
 
 msgid "title"
 msgstr "názov"
@@ -808,6 +812,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "CHYBA: od prvku %s: %s\n"
 
@@ -872,15 +884,6 @@ msgstr "nepodarilo sa pripojiť prvok sink pre URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "prázdna rúra sa nepripúšťa"
 
-msgid "Internal clock error."
-msgstr "Vnútorná chyba časovača."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Vnútorná chyba toku údajov."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Veľa vyrovnávacej pamäte sa zahadzuje."
 
@@ -889,6 +892,15 @@ msgstr "Vnútorný problém v toku údajov."
 
 msgid "Internal data stream error."
 msgstr "Vnútorná chyba prúdu údajov."
+
+msgid "Internal data flow error."
+msgstr "Vnútorná chyba toku údajov."
+
+msgid "Internal clock error."
+msgstr "Vnútorná chyba časovača."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Filtrovať schopnosti"
@@ -1299,9 +1311,6 @@ msgstr "Uvoľňujem rúru ...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Neinštalovať obsluhu signálov SIGUSR1 a SIGUSR2"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Chyba pri zápise vyrovnávacej pamäte registrov do %s: %s"
 
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "Chyba pri opätovnom skenovaní registrov %s: %s"

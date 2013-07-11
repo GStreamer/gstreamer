@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.20.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2008-10-16 19:57+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -238,6 +238,10 @@ msgstr ""
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr ""
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr "%s へのレジストリキャッシュの書き込み中にエラーが発生しました: %s"
 
 msgid "title"
 msgstr "タイトル"
@@ -774,6 +778,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr ""
 
@@ -838,15 +850,6 @@ msgstr ""
 msgid "empty pipeline not allowed"
 msgstr "空のパイプラインは許可されません"
 
-msgid "Internal clock error."
-msgstr ""
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "内部データフローエラー"
-
 msgid "A lot of buffers are being dropped."
 msgstr ""
 
@@ -855,6 +858,15 @@ msgstr ""
 
 msgid "Internal data stream error."
 msgstr "内部データストリームエラー"
+
+msgid "Internal data flow error."
+msgstr "内部データフローエラー"
+
+msgid "Internal clock error."
+msgstr ""
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr ""
@@ -1252,9 +1264,6 @@ msgstr "パイプラインを解放 (FREEING) しています...\n"
 #, fuzzy
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "フォールトハンドラをインストールしない"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "%s へのレジストリキャッシュの書き込み中にエラーが発生しました: %s"
 
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "レジストリ %s の再スキャン中にエラーが発生しました: %s"

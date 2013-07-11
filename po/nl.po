@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2011-04-26 23:10+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -255,6 +255,10 @@ msgstr "Geen standaard foutboodschap voor domein %s en code %d."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Geselecteerde klok kan niet gebruikt worden in de pijplijn."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr ""
 
 msgid "title"
 msgstr "titel"
@@ -803,6 +807,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "FOUT: van element %s: %s\n"
 
@@ -867,15 +879,6 @@ msgstr "kon doelelement niet verbinden voor URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "lege pijplijn niet toegelaten"
 
-msgid "Internal clock error."
-msgstr "Interne fout met de klok."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Interne fout met gegevensdoorvoer."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Er worden veel buffers gedropt."
 
@@ -884,6 +887,15 @@ msgstr "Intern probleem met gegevensdoorvoer."
 
 msgid "Internal data stream error."
 msgstr "Interne fout in gegevensstroom."
+
+msgid "Internal data flow error."
+msgstr "Interne fout met gegevensdoorvoer."
+
+msgid "Internal clock error."
+msgstr "Interne fout met de klok."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Filteropzetstukken"

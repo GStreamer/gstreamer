@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2010-03-25 13:10+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -257,6 +257,10 @@ msgstr "Ez dago errore-mezu estandarrik %s domeinua eta %d kodea dutenentzat."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Hautatutako erlojua ezin da kanalizazioan erabili."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr ""
 
 msgid "title"
 msgstr "izenburua"
@@ -801,6 +805,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ERROREA: %s elementuarena: %s\n"
 
@@ -866,15 +878,6 @@ msgstr "ezin izan da kolektore-elementua estekatu \"%s\" URIarentzat"
 msgid "empty pipeline not allowed"
 msgstr "ez dira onartzen kanalizazio hutsak"
 
-msgid "Internal clock error."
-msgstr "Erlojuaren barne-errorea."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Datu-fluxuaren barne-errorea."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Buffer asko jaregiten ari dira."
 
@@ -883,6 +886,15 @@ msgstr "Datu-fluxuaren barne-arazoa."
 
 msgid "Internal data stream error."
 msgstr "Datu-korrontearen barne-errorea."
+
+msgid "Internal data flow error."
+msgstr "Datu-fluxuaren barne-errorea."
+
+msgid "Internal clock error."
+msgstr "Erlojuaren barne-errorea."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Iragazpen-ahalmena"

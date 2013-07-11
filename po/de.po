@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2011-04-27 23:44+0200\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
@@ -265,6 +265,10 @@ msgstr "Keine Standardfehlermeldung für den Bereich %s und Fehlercode %d."
 msgid "Selected clock cannot be used in pipeline."
 msgstr ""
 "Der ausgewählte Referenztakt kann nicht in der Pipeline verwendet werden."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr "Fehler beim Schreiben des Zwischenspeichers der Registry nach %s: %s"
 
 msgid "title"
 msgstr "Titel"
@@ -817,6 +821,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "FEHLER: Von Element %s: %s\n"
 
@@ -882,15 +894,6 @@ msgstr "Zielelement für URI »%s« nicht verknüpft werden"
 msgid "empty pipeline not allowed"
 msgstr "Leere Leitung ist nicht erlaubt"
 
-msgid "Internal clock error."
-msgstr "Interner Zeitfehler"
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Interner Fehler im Datenfluss."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Es werden viele Puffer verworfen."
 
@@ -899,6 +902,15 @@ msgstr "Internes Problem im Datenfluss."
 
 msgid "Internal data stream error."
 msgstr "Interner Fehler im Datenstrom."
+
+msgid "Internal data flow error."
+msgstr "Interner Fehler im Datenfluss."
+
+msgid "Internal clock error."
+msgstr "Interner Zeitfehler"
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Filterfähigkeiten"
@@ -1307,10 +1319,6 @@ msgstr "Leitung wird geleert ...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Keine Routinen für SIGUSR1 und SIGUSR2 installieren"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr ""
-#~ "Fehler beim Schreiben des Zwischenspeichers der Registry nach %s: %s"
 
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "Fehler beim erneuten Einlesen der Registry %s : %s"

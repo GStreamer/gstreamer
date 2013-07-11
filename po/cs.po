@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2011-12-01 08:17+0100\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
@@ -250,6 +250,10 @@ msgstr "Pro doménu %s a kód %d není žádná standardní zpráva o chybě."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Vybrané hodiny nelze použít v rouře."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr ""
 
 msgid "title"
 msgstr "název"
@@ -792,6 +796,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "CHYBA: od prvku %s: %s\n"
 
@@ -856,15 +868,6 @@ msgstr "nelze připojit cílový prvek pro adresu URI „%s“"
 msgid "empty pipeline not allowed"
 msgstr "prázdná roura není povolena"
 
-msgid "Internal clock error."
-msgstr "Interní chyba hodin."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Interní chyba toku dat."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Většina vyrovnávacích pamětí je vyřazena."
 
@@ -873,6 +876,15 @@ msgstr "Interní problém toku dat."
 
 msgid "Internal data stream error."
 msgstr "Interní chyba proudu dat."
+
+msgid "Internal data flow error."
+msgstr "Interní chyba toku dat."
+
+msgid "Internal clock error."
+msgstr "Interní chyba hodin."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Filtrovat schopnosti"

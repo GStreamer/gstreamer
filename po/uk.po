@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2011-04-30 20:26+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -249,6 +249,10 @@ msgstr "Немає стандартного повідомлення про по
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Обраний годинник не може використовуватись у конвеєрі."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr "Помилка при записі кешу реєстру у %s: %s"
 
 msgid "title"
 msgstr "назва"
@@ -793,6 +797,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "ПОМИЛКА: у елементі %s: %s\n"
 
@@ -857,15 +869,6 @@ msgstr "не вдалося прив'язати елемент-споживач 
 msgid "empty pipeline not allowed"
 msgstr "не можна використовувати порожній канал"
 
-msgid "Internal clock error."
-msgstr "Помилка внутрішньої синхронізації."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Помилка внутрішнього перенесення даних."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Викинуто багато буферів."
 
@@ -874,6 +877,15 @@ msgstr "Помилка внутрішнього перенесення дани�
 
 msgid "Internal data stream error."
 msgstr "Помилка внутрішнього потоку даних."
+
+msgid "Internal data flow error."
+msgstr "Помилка внутрішнього перенесення даних."
+
+msgid "Internal clock error."
+msgstr "Помилка внутрішньої синхронізації."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Фільтр можливостей"
@@ -1282,9 +1294,6 @@ msgstr "Спорожнення каналу...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Не встановлювати обробники сигналів для SIGUSR1 і SIGUSR2"
-
-#~ msgid "Error writing registry cache to %s: %s"
-#~ msgstr "Помилка при записі кешу реєстру у %s: %s"
 
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "Помилка при повторному скануванні реєстру модулів %s: %s"

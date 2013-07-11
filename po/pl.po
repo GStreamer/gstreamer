@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:24+0200\n"
+"POT-Creation-Date: 2013-07-11 15:09+0200\n"
 "PO-Revision-Date: 2011-04-26 17:54+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -249,6 +249,10 @@ msgstr "Brak standardowego komunikatu o błędzie dla domeny %s i kodu %d."
 
 msgid "Selected clock cannot be used in pipeline."
 msgstr "Wybrany zegar nie może być używany w potoku."
+
+#, c-format
+msgid "Error writing registry cache to %s: %s"
+msgstr ""
 
 msgid "title"
 msgstr "tytuł"
@@ -796,6 +800,14 @@ msgid ", "
 msgstr ", "
 
 #, c-format
+msgid "No URI handler for the %s protocol found"
+msgstr ""
+
+#, c-format
+msgid "URI scheme '%s' not supported"
+msgstr ""
+
+#, c-format
 msgid "ERROR: from element %s: %s\n"
 msgstr "BŁĄD: od elementu %s: %s\n"
 
@@ -860,15 +872,6 @@ msgstr "nie udało się dowiązać elementu osadzającego dla URI \"%s\""
 msgid "empty pipeline not allowed"
 msgstr "pusty potok nie jest dozwolony"
 
-msgid "Internal clock error."
-msgstr "Wewnętrzny błąd zegara."
-
-msgid "Failed to map buffer."
-msgstr ""
-
-msgid "Internal data flow error."
-msgstr "Wewnętrzny błąd przepływu danych."
-
 msgid "A lot of buffers are being dropped."
 msgstr "Wiele buforów zostało zgubionych."
 
@@ -877,6 +880,15 @@ msgstr "Wewnętrzny problem przepływu danych."
 
 msgid "Internal data stream error."
 msgstr "Wewnętrzny błąd strumienia danych."
+
+msgid "Internal data flow error."
+msgstr "Wewnętrzny błąd przepływu danych."
+
+msgid "Internal clock error."
+msgstr "Wewnętrzny błąd zegara."
+
+msgid "Failed to map buffer."
+msgstr ""
 
 msgid "Filter caps"
 msgstr "Filtrowanie możliwości"
