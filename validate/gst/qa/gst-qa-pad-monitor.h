@@ -63,6 +63,12 @@ struct _GstQaPadMonitor {
   GstPadQueryFunction query_func;
 
   /*< private >*/
+  GstSegment segment;
+
+  gboolean pending_flush_stop;
+  guint32 pending_flush_stop_seqnum;
+  guint32 pending_flush_start_seqnum;
+  guint32 pending_newsegment_seqnum;
 };
 
 /**

@@ -62,6 +62,7 @@ gst_qa_pad_monitor_class_init (GstQaPadMonitorClass * klass)
 static void
 gst_qa_pad_monitor_init (GstQaPadMonitor * pad_monitor)
 {
+  gst_segment_init (&pad_monitor->segment, GST_FORMAT_BYTES);
 }
 
 /**
@@ -97,7 +98,121 @@ gst_qa_pad_monitor_event_func (GstPad * pad, GstEvent * event)
   GstQaPadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "qa-monitor");
   GstFlowReturn ret;
+  gboolean update;
+  gdouble rate, applied_rate;
+  GstFormat format;
+  gint64 start, stop, position;
+  GstSeekFlags seek_flags;
+  GstSeekType start_type, stop_type;
+  guint32 seqnum = gst_event_get_seqnum (event);
+
+  /* pre checks */
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+      /* parse newsegment data to be used if event is handled */
+      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
+          &format, &start, &stop, &position);
+
+      if (pad_monitor->pending_newsegment_seqnum) {
+        if (pad_monitor->pending_newsegment_seqnum == seqnum) {
+          pad_monitor->pending_newsegment_seqnum = 0;
+        } else {
+          /* TODO is this an error? could be a segment from the start
+           * received just before the seek segment */
+        }
+      }
+      break;
+    case GST_EVENT_SEEK:
+    {
+      gst_event_parse_seek (event, &rate, &format, &seek_flags, &start_type,
+          &start, &stop_type, &stop);
+      /* upstream seek - store the seek event seqnum to check
+       * flushes and newsegments share the same */
+
+      /* TODO we might need to use a list as multiple seeks can be sent
+       * before the flushes arrive here */
+      if (seek_flags & GST_SEEK_FLAG_FLUSH) {
+        pad_monitor->pending_flush_start_seqnum = seqnum;
+        pad_monitor->pending_flush_stop_seqnum = seqnum;
+      }
+      pad_monitor->pending_newsegment_seqnum = seqnum;
+    }
+      break;
+    case GST_EVENT_FLUSH_START:
+    {
+      if (pad_monitor->pending_flush_start_seqnum) {
+        if (seqnum == pad_monitor->pending_flush_start_seqnum) {
+          pad_monitor->pending_flush_start_seqnum = 0;
+        } else {
+          /* TODO error */
+        }
+      }
+
+      if (pad_monitor->pending_flush_stop) {
+        /* TODO ERROR, do report */
+      }
+    }
+      break;
+    case GST_EVENT_FLUSH_STOP:
+    {
+      if (pad_monitor->pending_flush_stop_seqnum) {
+        if (seqnum == pad_monitor->pending_flush_stop_seqnum) {
+          pad_monitor->pending_flush_stop_seqnum = 0;
+        } else {
+          /* TODO error */
+        }
+      }
+
+      if (!pad_monitor->pending_flush_stop) {
+        /* TODO ERROR, do report */
+      }
+    }
+      break;
+    case GST_EVENT_NAVIGATION:
+    case GST_EVENT_LATENCY:
+    case GST_EVENT_STEP:
+    case GST_EVENT_EOS:
+    case GST_EVENT_TAG:
+    case GST_EVENT_SINK_MESSAGE:
+    case GST_EVENT_QOS:
+    default:
+      break;
+  }
+
+  gst_event_ref (event);
   ret = pad_monitor->event_func (pad, event);
+
+  /* post checks */
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+      if (ret) {
+        gst_segment_set_newsegment_full (&pad_monitor->segment, update, rate,
+            applied_rate, format, start, stop, position);
+      }
+      break;
+    case GST_EVENT_FLUSH_START:
+      if (ret) {
+        pad_monitor->pending_flush_stop = TRUE;
+      }
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      if (ret) {
+        pad_monitor->pending_flush_stop = FALSE;
+      }
+      break;
+    case GST_EVENT_EOS:
+    case GST_EVENT_TAG:
+    case GST_EVENT_SINK_MESSAGE:
+    case GST_EVENT_QOS:
+    case GST_EVENT_SEEK:
+    case GST_EVENT_NAVIGATION:
+    case GST_EVENT_LATENCY:
+    case GST_EVENT_STEP:
+    default:
+      break;
+  }
+
+  gst_event_unref (event);
   return ret;
 }
 
