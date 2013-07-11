@@ -76,7 +76,7 @@ data_item_dump (gconstpointer a, gpointer prefix)
 {
   const DataItem *item = a;
 
-  GST_DEBUG ("%s%s %p\n", (gchar *) prefix, item->path, item->factory);
+  GST_DEBUG ("%s%s %p", (gchar *) prefix, item->path, item->factory);
 }
 
 static gint
