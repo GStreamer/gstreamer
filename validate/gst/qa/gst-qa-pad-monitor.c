@@ -155,12 +155,17 @@ gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor)
 
   if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
     pad_monitor->bufferalloc_func = GST_PAD_BUFFERALLOCFUNC (pad);
-    gst_pad_set_bufferalloc_function (pad, gst_qa_pad_buffer_alloc_func);
+    if (pad_monitor->bufferalloc_func)
+      gst_pad_set_bufferalloc_function (pad, gst_qa_pad_buffer_alloc_func);
+
     pad_monitor->chain_func = GST_PAD_CHAINFUNC (pad);
-    gst_pad_set_chain_function (pad, gst_qa_pad_monitor_chain_func);
+    if (pad_monitor->chain_func)
+      gst_pad_set_chain_function (pad, gst_qa_pad_monitor_chain_func);
+
   } else {
     pad_monitor->getrange_func = GST_PAD_GETRANGEFUNC (pad);
-    gst_pad_set_getrange_function (pad, gst_qa_pad_get_range_func);
+    if (pad_monitor->getrange_func)
+      gst_pad_set_getrange_function (pad, gst_qa_pad_get_range_func);
   }
   pad_monitor->event_func = GST_PAD_EVENTFUNC (pad);
   pad_monitor->query_func = GST_PAD_QUERYFUNC (pad);
