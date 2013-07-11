@@ -378,6 +378,7 @@ void
 ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
 {
   GESTimelineElementClass *klass;
+  GESTimelineElement *toplevel_container;
 
   g_return_if_fail (GES_IS_TIMELINE_ELEMENT (self));
 
@@ -387,6 +388,17 @@ ges_timeline_element_set_start (GESTimelineElement * self, GstClockTime start)
       " new start: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GES_TIMELINE_ELEMENT_START (self)), GST_TIME_ARGS (start));
 
+  toplevel_container = ges_timeline_element_get_toplevel_parent (self);
+
+  if (((gint64) (_START (toplevel_container) + start - _START (self))) < 0) {
+    GST_INFO_OBJECT (self, "Can not move the object as it would imply its"
+        "container to have a negative start value");
+
+    gst_object_unref (toplevel_container);
+    return;
+  }
+
+  gst_object_unref (toplevel_container);
   if (klass->set_start) {
     if (klass->set_start (self, start)) {
       self->start = start;

@@ -69,6 +69,10 @@ GST_START_TEST (test_move_group)
   ASSERT_OBJECT_REFCOUNT (group, "1 ref for the timeline", 1);
   fail_unless (g_list_length (GES_CONTAINER_CHILDREN (group)) == 3);
   assert_equals_int (GES_CONTAINER_HEIGHT (group), 2);
+
+  /* Nothing should move */
+  ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (clip1), 5);
+
   CHECK_OBJECT_PROPS (clip, 0, 0, 10);
   CHECK_OBJECT_PROPS (clip1, 10, 0, 10);
   CHECK_OBJECT_PROPS (clip2, 50, 0, 60);
