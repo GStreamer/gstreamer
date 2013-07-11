@@ -336,8 +336,8 @@ gst_vaapidownload_update_src_caps(GstVaapiDownload *download, GstBuffer *buffer)
 
     out_caps = gst_video_format_to_caps(format);
     if (!out_caps) {
-        GST_WARNING("failed to create caps from format %" GST_FOURCC_FORMAT,
-                    GST_FOURCC_ARGS(format));
+        GST_WARNING("failed to create caps from format %s",
+                    gst_video_format_to_string(format));
         return FALSE;
     }
 
@@ -397,9 +397,9 @@ gst_vaapidownload_transform(
 
 error_get_image:
     {
-        GST_WARNING("failed to download %" GST_FOURCC_FORMAT " image "
-                    "from surface 0x%08x",
-                    GST_FOURCC_ARGS(gst_vaapi_image_get_format(image)),
+        const GstVideoFormat format = gst_vaapi_image_get_format(image);
+        GST_WARNING("failed to download %s image from surface 0x%08x",
+                    gst_video_format_to_string(format),
                     gst_vaapi_surface_get_id(surface));
         gst_vaapi_video_pool_put_object(download->images, image);
         return GST_FLOW_UNEXPECTED;
