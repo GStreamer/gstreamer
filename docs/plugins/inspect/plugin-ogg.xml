@@ -3,7 +3,7 @@
   <description>ogg stream manipulation (info about ogg: http://xiph.org)</description>
   <filename>../../ext/ogg/.libs/libgstogg.so</filename>
   <basename>libgstogg.so</basename>
-  <version>1.1.1</version>
+  <version>1.1.2</version>
   <license>LGPL</license>
   <source>gst-plugins-base</source>
   <package>GStreamer Base Plug-ins source release</package>
@@ -74,7 +74,7 @@
           <name>video_%u</name>
           <direction>sink</direction>
           <presence>request</presence>
-          <details>video/x-theora; application/x-ogm-video; video/x-dirac; video/x-smoke; video/x-vp8</details>
+          <details>video/x-theora; application/x-ogm-video; video/x-dirac; video/x-smoke; video/x-vp8; video/x-daala</details>
         </caps>
         <caps>
           <name>src</name>

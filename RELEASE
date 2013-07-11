@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.1.1
+Release notes for GStreamer Base Plugins 1.1.2
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -63,93 +63,26 @@ Features of this release
 
 Bugs fixed in this release
      
-      * 700342 : decodebin: Crashes and deadlocks when setting to READY while still autoplugging
-      * 690197 : alsasrc: gets stuck in infinite loop if usb audio device is disconnected while being used
-      * 697112 : GLTextureUploadMeta: No support for multi-texture formats
-      * 634407 : decodebin should expose pads in a deterministic order
-      * 636753 : pbutils function to map (container) caps to filename extension
-      * 654830 : discoverer, uridecodebin, encodebin and multiple audio streams
-      * 663350 : theoraenc: do not reset the encoder when we need a keyframe
-      * 665751 : video: define for formats supported by gst_video_overlay_composition_blend()
-      * 676884 : audiotestsrc: segment one sample too short due to rounding errors
-      * 678892 : uridecodebin: differentiate between no URI handler found and URI not accepted by handler
-      * 679456 : videodecoder: fix compiler optimization hint macro usage
-      * 681719 : audiovisualizer does not handle VideoMeta
-      * 685637 : [audioresample] Performance improvements & ARM NEON support
-      * 687146 : rtpbasedepay: remove unused variable
-      * 687284 : audioconvert: prefer output formats with the same depth or at least a higher depth
-      * 687466 : audiobasesink: use the same type as the internal type to return it
-      * 687472 : video-blend: fix memory leak
-      * 687817 : textoverlay: support shaded background drawing for all formats
-      * 689326 : multifdsink: document that adding fd in NULL is not allowed
-      * 689845 : Encodebin API to handle multiple streams lacking
-      * 690240 : encodebin: remove test of encoder name vs preset name
-      * 690591 : No decoder available for type 'audio/x-avi-unknown, codec_id=(int)65534'.
-      * 690994 : videodecoder: Allow parse function to not use all data on the adapter
-      * 691072 : decodebin: Doesn't expose pads if no data is received before EOS
-      * 692358 : appsrc deadlock setting the pipeline to NULL state
-      * 692613 : tests: reduce number of wake-ups in test applications
-      * 692930 : avidemux: add raw 8-bit monochrome
-      * 693302 : decodebin: g_mutex_new is deprecated
-      * 693401 : gstdecodebin2 doesn't set send event on pad before exposing pad
-      * 693484 : uridecodebin: query URI to source element and fallback to decoder's URI
-      * 693750 : Riffmedia doesn't set systemstream=false for some video/mpeg caps
-      * 693862 : Crash in videoscale (with Orc enabled) on Raspberry Pi
-      * 694346 : pbutils, typefinding: improve handling of MVC/SVC H.264 streams
-      * 694389 : non flushing seeks after a segment done, don't sync the ringbuffer
-      * 694443 : libgstaudio: add support for AAC pass-through
-      * 694553 : adder: rhythmbox crossfading stopped working after commit a86ca53
-      * 695203 : xvimagesink: crash in gst_xvimagesink_xvimage_put() with HLS bip-bop stream after a while
-      * 695276 : libsabi test needs an update for i386
-      * 695540 : riff: support raw avi with negative height
-      * 695658 : build: Link libgstrtsp-1.0.so to libm for pow()
-      * 695660 : appsink: update the emit-signal description
-      * 695832 : audio: a print causes a floating point exception
-      * 696100 : videoconvert/videoscale: broken conversion for interlaced Y41B
-      * 696411 : audiotestsrc: incorrect data size in last buffer
-      * 696550 : riff: add " note " tag
-      * 696598 : decodebin pads no longer match order in file
-      * 696818 : rtsprange: use gst_util_gdouble_to_guint64 in get_seconds
-      * 696915 : decodebin: get_sticky event STREAM_START fails on newly-exposed pad
-      * 696916 : videofilter doesn't add caps in pool config
-      * 697628 : ximagesink: Compile error without HAVE_XSHM
-      * 697631 : videoscale and videoconvert unit tests need to be updated for latest changes
-      * 697665 : Add format=WMV3 for WMV 3 video
-      * 697672 : VP8 passed through rtpbin decodes a single frame and then fails to decode until a key frame passed through
-      * 697723 : audioringbuffer: Reset segdone when releasing audioringbuffer
-      * 697808 : sdp: add boxed type for GstSDPMessage
-      * 698277 : Use gst_plugin_feature_rank_compare() API instead of duplicating the code in many places
-      * 698410 : Adder: Can not send flush_start and flush_stop in a row
-      * 698558 : sdp: make it possible to modify session/media attributes
-      * 698712 : playbin: autoplug video decoder and sink based on caps features
-      * 698851 : playbin: ability to mix or play multiple audio and text streams simultaneously
-      * 698888 : SDP session bandwidth not duplicated, causing segfault when freeing...
-      * 699124 : vorbisdec: crash on shutdown in webkit unit test
-      * 699187 : videorate: ends up outputting buffers with incorrect duration
-      * 699470 : dmabuf: handle mmap failure
-      * 699563 : dmabuf: fix formating
-      * 699565 : dmabuf: fix memory initialization
-      * 699566 : dmabuf: don't touch the GstMemory size
-      * 699744 : alsasrc: timestamps provided by audiosrc subclass not used when running under slave clock
-      * 699792 : oggmux: Never emitting EOS in GES
-      * 699894 : videoencoder: Caps event sent before stream-start
-      * 699960 : videodecoder: Reordering sticky events
-      * 699971 : oggmux: Sends a segment event before sending a caps event.
-      * 700006 : audio/video: base classes have suboptimal error handling when allocating a buffer not via a bufferpool
-      * 700222 : rtpbasepayload: Need to delay segments event after caps event
-      * 700259 : audio: fix buffer overflow for channels > 64
-      * 700272 : playback: Use subset checks instead of intersections
-      * 700324 : playbin hangs trying to play 4K video, and hangs again on interrupt
-      * 700377 : video: add NV16 pixel format support
-      * 700400 : video: can't build without orc support - implicit declaration of function 'video_orc_pack_NV16'
-      * 700411 : dmabuf: Make sure that memory is unmapped before releasing it
-      * 700413 : ximagesink: add alpha mask support
-      * 700427 : dmabuf: set the initial memory size to the full size
-      * 701202 : playsink: Badly initialized contrast/brightness
-      * 701234 : SIGSEGV in videoconvert_convert_free when using fastpath
-      * 701316 : rtspconnection: using g_pollable_stream_read and write breaks builds on Ubuntu and Debian stable
-      * 589242 : videoconvert: need special handling for interlaced I420
-      * 648359 : baseaudiosrc: ringbuffer: segbase/segdone not updated when ring buffer cleared leads to incorrect timestamps
+      * 696300 : H264 video is playing too fast because of invalid PTS:
+      * 698562 : rtpbuffer: broken language bindings for gst_rtp_buffer_get_payload
+      * 700967 : playbin: sink messages are not received in the bus
+      * 701798 : rtspsrc: Regression with connections to certain live stream
+      * 701924 : tests: add playbin test for autoplugging of decoder-sink combination based on capsfeatures
+      * 701943 : playbin: unit tests fail
+      * 701997 : [regression] playbin: loses audio clock and hangs when switching songs after about-to-finish
+      * 702195 : playbin: Emit {audio,text,video}-changed signals when pads are removed
+      * 702215 : pbutils: descriptions: Allow smart codec tag handling
+      * 702465 : playsink: Fix the block diagram of deinterlace bin.
+      * 702467 : audiobasesrc: missing calls to gst_buffer_unmap
+      * 702545 : tags: xmp: adding tags is very slow
+      * 702652 : rtspconnection: tunneled connections do not work
+      * 702840 : queue2 does not work with use-buffering=true
+      * 703088 : rtspsrc parse error race condition
+      * 703119 : rtpbasepayload leaks the segment event
+      * 703196 : videoencoder: Send all pending events with type < CAPS before sending caps.
+      * 703256 : typefind: Fix low probability typefinding for video/mpeg on small amount of data
+      * 703477 : audioresample: disable NEON code path for 16-bit integer
+      * 703684 : POTFILES.in is out of date
 
 ==== Download ====
 
@@ -186,63 +119,20 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Akihiro Tsukada
-      * Alessandro Decina
-      * Alexander Schrab
-      * Andoni Morales Alastruey
-      * Anton Belka
-      * Arnaud Vrac
-      * B.Prathibha
-      * Benjamin Gaignard
+      * Branko Subasic
       * Brendan Long
       * Carlos Rafael Giani
-      * Christian Fredrik Kalager Schaller
-      * Daniel Drake
-      * David Schleef
-      * David Svensson Fors
-      * Dirk Van Haerenborgh
       * Edward Hervey
-      * Emanuele Aina
-      * Evan Nemerson
-      * Greg Rutz
-      * Jan Schmidt
-      * Jan Schole
-      * Jihyun Cho
       * Jonas Holmberg
-      * Jonathan Liu
-      * Jose Antonio Santos Cadenas
-      * Josep Torra
-      * Julien Moutte
-      * Marc Leeman
-      * Martin Pitt
-      * Matej Knopp
+      * Marcin Lewandowski
       * Mathieu Duponchelle
-      * Matthew Waters
-      * Michael Olbrich
-      * Miguel Angel Cabrera Moya
-      * Nicola Murino
-      * Nicolas Dufresne
       * Ognyan Tonchev
-      * Olivier Crête
       * Patricia Muscalu
-      * Paul HENRYS
-      * Pete Beardmore
-      * Philippe Normand
-      * Rasmus Rohde
-      * Rico Tzschichholz
+      * Piotr Drąg
       * Sebastian Dröge
-      * Sebastian Rasmussen
-      * Simon Berg
       * Sreerenj Balachandran
-      * Stefan Sauer
-      * Thiago Santos
       * Thibault Saunier
-      * Thijs Vermeir
-      * Thomas Scheuermann
       * Tim-Philipp Müller
-      * Tom Greenwood
       * Vincent Penquerc'h
-      * Víctor Manuel Jáquez Leal
       * Wim Taymans
-      * yanghuolin
  
