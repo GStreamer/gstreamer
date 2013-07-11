@@ -3,7 +3,7 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>1.1.1</version>
+  <version>1.1.2</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -818,7 +818,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)MP2T; application/x-rtp, media=(string)video, payload=(int)33, clock-rate=(int)[ 1, 2147483647 ]</details>
+          <details>application/x-rtp, media=(string)video, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string){ MP2T, MP2T-ES }; application/x-rtp, media=(string)video, payload=(int)33, clock-rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>src</name>

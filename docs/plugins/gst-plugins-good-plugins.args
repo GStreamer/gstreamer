@@ -959,6 +959,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTSPSrc::use-pipeline-clock</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use pipeline clock</NICK>
+<BLURB>Use the pipeline running-time to set the NTP time in the RTCP SR messages.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDec::skip</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
@@ -22884,7 +22894,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>X Offset</NICK>
-<BLURB>Horizontal offset of overlay image in pixels from top-left corner of video image.</BLURB>
+<BLURB>For positive value, horizontal offset of overlay image in pixels from left of video image. For negative value, horizontal offset of overlay image in pixels from right of video image.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -22894,7 +22904,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Y Offset</NICK>
-<BLURB>Vertical offset of overlay image in pixels from top-left corner of video image.</BLURB>
+<BLURB>For positive value, vertical offset of overlay image in pixels from top of video image. For negative value, vertical offset of overlay image in pixels from bottom of video image.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
@@ -23806,5 +23816,15 @@
 <NICK>Interval between tone packets</NICK>
 <BLURB>Interval in ms between two tone packets.</BLURB>
 <DEFAULT>50</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpVorbisPay::config-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 3600</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Config Send Interval</NICK>
+<BLURB>Send Config Insertion Interval in seconds (configuration headers will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 

@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plugins 1.1.1
+Release notes for GStreamer Good Plugins 1.1.2
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -60,116 +60,31 @@ Features of this release
 
 Bugs fixed in this release
      
-      * 654853 : multifilesrc: always honour stop-index
-      * 663458 : qtdemux: add support for LPCM QuickTime 7 uncompressed audio
-      * 395427 : rtspsrc: add 'proxy-id' and 'proxy-pw' properties to match souphttpsrc
-      * 534243 : [win/macosx] udpsink no longer supports IPv4, only IPv6
-      * 540891 : flacparse: handle toc-select event
-      * 627204 : Some audio-based depayloaders are sometimes incorrectly indicating discont flag and RTP-marker bit.
-      * 631053 : oss4sink: totem does not show correct volume on startup
-      * 632206 : SRTP support
-      * 639292 : remove pt value from selected rtp pay/depayloaders
-      * 640023 : Jitterbuffer: does not put the same gst timestamp on packets with the same RTP timestamp
-      * 654259 : matroska: track INVISIBLE flag for vp8
-      * 660156 : rtpbin: free_stream() does not remove the stream reference from the associated client's stream list
-      * 667815 : rtpssrcdemux: Safely push on pads that might be removed due to a RTCP BYE
-      * 667816 : rtpsession: mt-safe event-push
-      * 667826 : rtpsession: Ensure MT safe event handling and plug event leak
-      * 667838 : jitterbuffer: don't produce lost-events for expired packets
-      * 668355 : rtpsession: dead code in check_collision handling
-      * 680998 : wavenc: add TOC support
-      * 681891 : wavenc: support LIST INFO chunk
-      * 682448 : Matroska: per-track tags support
-      * 682524 : Matroska: Support tag targets
-      * 682615 : Matroska: expand tag mapping
-      * 682644 : Matroska: recursive SimpleTags
-      * 682714 : vp8enc: memory leak if auto-alt-ref-frames=1
-      * 683912 : rtspsrc: allow client not to reconnect
-      * 684399 : videomixer: can't compile orc_overlay_argb on x86, not enough registers, crash
-      * 684955 : rtpjpegpay doesn't support width or height greater than 2040
-      * 687376 : Short circuit gst_vp8_dec_handle_frame if keyframe is missing
-      * 687380 : videomixer: Y offset should be compared to height, not width
-      * 687436 : vp8enc: not robust enough for RTP, errors out on packet loss
-      * 687761 : videocrop: Add support for automatic cropping (GST 1.0)
-      * 687782 : udpsrc does not handle EHOSTUNREACH for Linux as it does for Win32
-      * 687964 : videocrop: Add NV12/NV21 support
-      * 688092 : vp8dec: aspect ratio lost after seeking
-      * 688225 : videoflip: Add NV12/NV21 support
-      * 688677 : videoflip: Add gray 8/16 support
-      * 690124 : Directsound plugins fail to compile
-      * 690233 : tell configure and the v4l2 plugin where videodev2.h is
-      * 690267 : interleave: negotiation failure on sinkpads when channel-mask is specified
-      * 690358 : matroskademux: empty string on taglist field warning
-      * 690639 : pngdec: decoded frames are not pushed out
-      * 691481 : avidemux: a/v sync off on sample video when activated in push mode
-      * 692042 : v4l2src doesn't emit the prepare-format signal anymore
-      * 692615 : tests: use g_timeout_add_seconds
-      * 692932 : avimux: add raw 8-bit monochrome support
-      * 693327 : Fixing leak in avimux in gst_avi_mux_do_buffer
-      * 693826 : dmabuf-based GstMemory and GstAllocator incl. v4l2src support
-      * 694257 : pulsesink: Update segdone periodically
-      * 694374 : alpha: improve descriptions of chroma keying-related properties and enums
-      * 695541 : avidemux: support raw avi with negative height
-      * 695543 : avimux: support raw BGR video
-      * 695981 : Segmentation fault on gst_v4l2_buffer_pool_process after sending " start-capture " signal to camerabin2 just after setting the pipeline state to PLAYING
-      * 696057 : udpsink does not work with IPv4 addresses on MacOSX
-      * 696282 : y4mdec: doesn't work with playbin
-      * 696333 : qtmux should use provided DTS and not make up its own
-      * 696549 : wavparse: add 'note' chunk support
-      * 696684 : Problems feeding wavparse with 0-byte file
-      * 696714 : wavenc: add 'note' chunk support
-      * 696906 : ac3parse: handle audio/x-private1-ac3 and convert to audio/x-ac3
-      * 697074 : The level element doesn't respect accurately the " interval " property.
-      * 697227 : rtpsbcdepay is not selected from decodebin
-      * 697232 : vp8dec reports decoding errors as " No key frame " giving no extra information
-      * 697343 : rtpsbcdepay: fix compilation using mingw
-      * 697463 : rtpsbcdebay: incorrect frame length calculation for mono and full stereo modes
-      * 697467 : deinterlace: mode=interlaced doesn't force deinterlacing
-      * 698156 : souphttpsrc: proper SCHEDULING query support
-      * 698727 : mulawenc: send maximum bitrate tag downstream
-      * 698807 : osx_audio: miscellaneous improvements
-      * 698821 : v4l2: bufferpool: remove unused includes
-      * 698822 : v4l2: bufferpool: reset buffer size in release_buffer
-      * 698825 : v4l2: handle return value -ENOTTY for unimplemented VIDIOC_G_PARM
-      * 698826 : v4l2: add support for mpeg4 and H.263
-      * 698827 : v4l2: handle ENODATA return value for VIDIOC_ENUMSTD
-      * 698837 : v4l2: cache CIDs until the device is opened
-      * 698894 : mulawdec: Change base class to GstAudioDecoder
-      * 698949 : v4l2: fix copying of encoded buffers
-      * 698992 : v4l2: also poll for output devices
-      * 699010 : qtdemux: enable VP6F codec to allow playback for the Flash video embedded in MP4
-      * 699294 : v4l2: fix broken boolean expression to detect non-frame buffers
-      * 699337 : v4l2: fix and cleanup VIDIOC_EXPBUF handling
-      * 699447 : v4l2: try to allocate new buffers with VIDIOC_CREATE_BUFS if needed
-      * 699570 : v4l2: always generate video info from caps
-      * 699598 : v4l2: fill out v4l2_buffer.bytesused field for v4l2sink
-      * 699637 : rtpgstpay: uses an already-unreffed event in its sink_event handler
-      * 699793 : videomixer: resets its current segment when receiving a flush stop
-      * 699835 : v4l2: request 0 buffers when stopping
-      * 699895 : videomixer: Sends caps event before stream-start
-      * 699964 : doc: audiowsinclimit frequency property now called cutoff
-      * 699966 : tests: Some unit test in good sends SEGMENT before caps
-      * 700033 : tests: New runtime check force unit tests to send initial events
-      * 700044 : shapewipe sample pipeline won't work
-      * 700213 : rtpgstpay: sticky events are not forwarded to to the src pad
-      * 700224 : test: Fix some more misordering issues in plugins-good
-      * 700265 : deinterlace: Doesn't set caps for buffer pool
-      * 700280 : v4l2: only add interlace-mode to the caps for raw formats
-      * 700282 : v4l2: copy and set the actual size of the content
-      * 700285 : v4l2: set pixel-aspect-ratio for capture devices only
-      * 700331 : videocrop: Add support for GRAY16_LE/GRAY16_BE
-      * 700503 : v4l2: don't stop streaming when set_caps is called with unchanged caps
-      * 700748 : rtpjpegpay/depay: Add framerate and optional framesize SDP attribute to payloaded caps
-      * 700781 : v4l2: keep a reference to all queued buffers
-      * 701046 : rtspsrc: parse SDP framerate and dimension attributes
-      * 701109 : videomixer: z-ordering breaks if pads are added without setting zorder on it
-      * 701237 : videomixer : on query caps, we should return FALSE if the source pad has no current caps.
-      * 701375 : v4l2: rework sink buffer refcounting
-      * 701540 : v4l2: iterate controls with V4L2_CTRL_FLAG_NEXT_CTRL
-      * 701543 : v4l2: call VIDIOC_REQBUFS with count = 0 in pool_finalize
-      * 701595 : Latest GIT version of v4l2src fails to compile on older kernels
-      * 640589 : matroskademux: set streamheader on vorbis/theora srcpad caps for easier remuxing
-      * 696244 : qtdemux: send GAP events for subtitles, handle subtitles with SBLT subtype
+      * 612406 : [PATCH] rtspsrc: Race condition
+      * 632207 : [rtspsrc] GET_PARAMETER / SET_PARAMETER support
+      * 651434 : rtspsrc: don't discard data in interleaved mode
+      * 657079 : JPEG RTP Payloader Change to support FaceVsion Webcams
+      * 664312 : rtpvorbispay does not handle headers in caps
+      * 686459 : pulsesink: playbin uri=x.mp3 audio-sink='identity ! pulsesink' = > not-negotiated flow error
+      * 700799 : matroskademux: Got data flow before segment event
+      * 701385 : videomixer: Incorrect timestamp calculations for non trivial segments
+      * 701519 : videomixer: pushes an incorrect segment event when all its sink pads are EOS
+      * 701650 : v4l2: make sure the element is not deleted before the pool
+      * 701856 : qtdemux: Does allocation queries before setting caps on all pads
+      * 702046 : rtspsrc doesn't produce buffers
+      * 702625 : avidemux: duration query returns " zero " for the DV containter format in a AVI file
+      * 702638 : v4l2:  Optimize negotiation by removing the query filter
+      * 702819 : udpsink multicast-iface does not seem to work correctly
+      * 702826 : gdkpixbufoverlay: image overlay doesn't work for -ve offset
+      * 703114 : deinterleave: deadlock while pushing pending events on all source pads
+      * 703182 : multipartmux does not push new segment after flushing seek
+      * 703312 : matroskademux: missing profile field in caps for aac audio
+      * 703350 : qtdemux: Reports wrong framerate
+      * 703399 : v4l2: don't extract data from caps twice
+      * 703426 : Fix doc and comment references to gstrtpbin element
+      * 703685 : POTFILES.in is out of date
+      * 703743 : videomixer: Handling of variable fps streams broken
+      * 703764 : v4l2: bufferpool: don't forget to release buffer on error
 
 ==== Download ====
 
@@ -206,99 +121,28 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aha Unsworth
-      * Aleix Conchillo Flaque
-      * Alessandro Decina
-      * Alexander Schrab
-      * Alexey Chernov
-      * Alexey Fisher
+      * Alban Browaeys
+      * Alex Ashley
       * Andoni Morales Alastruey
-      * Andre Moreira Magalhaes (andrunko)
-      * Andreas Fenkart
-      * Andrzej Bieniek
-      * Antoine Tremblay
-      * Anton Belka
-      * Arnaud Vrac
       * Arun Raghavan
-      * B.Prathibha
-      * Bastian Hecht
-      * Bastien Nocera
-      * Benjamin Gaignard
-      * Benjamin Otte
-      * Chris E Jones
-      * Christian Fredrik Kalager Schaller
-      * Danilo Cesar Lemes de Paula
-      * David Schleef
-      * Debarshi Ray
-      * Diogo Carbonera Luvizon
-      * Dirk Van Haerenborgh
-      * Douglas Bagnall
-      * Edward Hervey
-      * Haakon Sporsheim
-      * Havard Graff
-      * Håvard Graff
-      * Idar Tollefsen
-      * Jean-François Fortin Tam
-      * Johan Hedberg
+      * Brendan Long
+      * Bruno Gonzalez
+      * David Svensson Fors
+      * J. Rick Ramstetter
+      * Jens Georg
       * Jonas Holmberg
-      * Josep Torra
-      * Joshua M. Doe
       * Kishore Arepalli
-      * Koop Mast
-      * Laurent Glayal
-      * Louis-Francis Ratté-Boulianne
-      * Luiz Augusto von Dentz
-      * Marc Leeman
-      * Marcel Holtmann
-      * Mark Nauwelaerts
-      * Markovtsev Vadim
-      * Martin Pitt
       * Matej Knopp
       * Mathieu Duponchelle
-      * Matthew Waters
-      * Maximilian Högner
       * Michael Olbrich
-      * Michael Smith
-      * Nicola Murino
-      * Nicolas Dufresne
-      * Norbert Waschbuesch
       * Ognyan Tonchev
-      * Olivier Crete
       * Olivier Crête
-      * Pascal Buhler
-      * Paul HENRYS
-      * Philipp Zabel
-      * Philippe Normand
-      * Rico Tzschichholz
-      * Robert Krakora
-      * Rodolfo Schulz de Lima
-      * Roland Krikava
-      * Rov Juvano
+      * Piotr Drąg
       * Sebastian Dröge
-      * Sebastian Rasmussen
       * Sjoerd Simons
-      * Sreerenj Balachandran
-      * Stas Sergeev
-      * Stefan Kost
       * Stefan Sauer
-      * Stirling Westrup
-      * Takashi Nakajima
       * Thiago Santos
-      * Thibault Saunier
-      * Thijs Vermeir
-      * Thomas Vander Stichele
-      * Tim 'mithro' Ansell
       * Tim-Philipp Müller
-      * Todd Agulnick
-      * Tom Greenwood
-      * Vincent Penquerc'h
       * Wim Taymans
       * Youness Alaoui
-      * Yury Delendik
-      * Zeeshan Ali
-      * ted-n
-      * unknown
-      * zeenix@gmail.com
-      * zeeshan.ali@nokia.com
-      * Руслан Ижбулатов
  

@@ -698,3 +698,20 @@ gpointer  arg1
 gpointer  arg2
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstRTSPSrc::on-sdp</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS></FLAGS>
+GstRTSPSrc *gstrtspsrc
+GstSDPMessage *arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstRTSPSrc::select-stream</NAME>
+<RETURNS>gboolean</RETURNS>
+<FLAGS>fc</FLAGS>
+GstRTSPSrc *gstrtspsrc
+guint  arg1
+GstCaps *arg2
+</SIGNAL>
+
