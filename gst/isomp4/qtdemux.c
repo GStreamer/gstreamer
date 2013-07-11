@@ -351,6 +351,8 @@ struct _QtDemuxStream
   guint32 def_sample_duration;
   guint32 def_sample_size;
   guint32 def_sample_flags;
+
+  gboolean disabled;
 };
 
 enum QtDemuxState
@@ -1813,6 +1815,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->duration = 0;
     qtdemux->mfra_offset = 0;
     qtdemux->moof_offset = 0;
+    qtdemux->chapters_track_id = 0;
   }
   qtdemux->offset = 0;
   gst_adapter_clear (qtdemux->adapter);
@@ -4094,8 +4097,9 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
   /* gap events for subtitle streams */
   for (i = 0; i < qtdemux->n_streams; i++) {
     stream = qtdemux->streams[i];
-    if (stream->subtype == FOURCC_subp || stream->subtype == FOURCC_text
-        || stream->subtype == FOURCC_sbtl) {
+    if (stream->pad && (stream->subtype == FOURCC_subp
+            || stream->subtype == FOURCC_text
+            || stream->subtype == FOURCC_sbtl)) {
       /* send one second gap events until the stream catches up */
       /* gaps can only be sent after segment is activated (segment.stop is no longer -1) */
       while (GST_CLOCK_TIME_IS_VALID (stream->segment.stop) &&
@@ -5672,11 +5676,16 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
     GST_DEBUG_OBJECT (qtdemux, "setting caps %" GST_PTR_FORMAT, stream->caps);
     if (stream->new_stream) {
       gchar *stream_id;
+      GstEvent *event;
 
       stream->new_stream = FALSE;
       stream_id =
           gst_pad_create_stream_id_printf (stream->pad,
           GST_ELEMENT_CAST (qtdemux), "%03u", stream->track_id);
+      event = gst_event_new_stream_start (stream_id);
+      if (stream->disabled) {
+        gst_event_set_stream_flags (event, GST_STREAM_FLAG_UNSELECT);
+      }
       gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
       g_free (stream_id);
     }
@@ -6909,6 +6918,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GNode *wave;
   GNode *esds;
   GNode *pasp;
+  GNode *tref;
+
   QtDemuxStream *stream = NULL;
   GstTagList *list = NULL;
   gchar *codec = NULL;
@@ -6928,9 +6939,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       || !gst_byte_reader_get_uint24_be (&tkhd, &tkhd_flags))
     goto corrupt_file;
 
-  if ((tkhd_flags & 1) == 0)
-    goto track_disabled;
-
   /* pick between 64 or 32 bits */
   value_size = tkhd_version == 1 ? 8 : 4;
   if (!gst_byte_reader_skip (&tkhd, value_size * 2) ||
@@ -6949,6 +6957,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       goto skip_track;
     }
   }
+
+  if ((tkhd_flags & 1) == 0)
+    stream->disabled = TRUE;
 
   GST_LOG_OBJECT (qtdemux, "track[tkhd] version/flags/id: 0x%02x/%06x/%u",
       tkhd_version, tkhd_flags, stream->track_id);
@@ -6998,6 +7009,21 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   if (G_UNLIKELY (stream->timescale == 0 || qtdemux->timescale == 0))
     goto corrupt_file;
+
+  if ((tref = qtdemux_tree_get_child_by_type (trak, FOURCC_tref))) {
+    /* chapters track reference */
+    GNode *chap = qtdemux_tree_get_child_by_type (tref, FOURCC_chap);
+    if (chap) {
+      gsize length = GST_READ_UINT32_BE (chap->data);
+      if (qtdemux->chapters_track_id)
+        GST_FIXME_OBJECT (qtdemux, "Multiple CHAP tracks");
+
+      if (length >= 12) {
+        qtdemux->chapters_track_id =
+            GST_READ_UINT32_BE ((gint8 *) chap->data + 8);
+      }
+    }
+  }
 
   /* fragmented files may have bogus duration in moov */
   if (!qtdemux->fragmented &&
@@ -8126,7 +8152,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
 /* ERRORS */
 skip_track:
-track_disabled:
   {
     GST_INFO_OBJECT (qtdemux, "skip disabled track");
     g_free (stream);
@@ -8362,6 +8387,13 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
 
     GST_DEBUG_OBJECT (qtdemux, "stream %d, id %d, fourcc %" GST_FOURCC_FORMAT,
         i, stream->track_id, GST_FOURCC_ARGS (stream->fourcc));
+
+    if ((stream->subtype == FOURCC_text || stream->subtype == FOURCC_sbtl) &&
+        stream->track_id == qtdemux->chapters_track_id) {
+      /* TODO - parse chapters track and expose it as GstToc; For now just ignore it
+         so that it doesn't look like a subtitle track */
+      continue;
+    }
 
     /* now we have all info and can expose */
     list = stream->pending_tags;

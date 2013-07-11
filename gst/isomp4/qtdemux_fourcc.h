@@ -240,6 +240,9 @@ G_BEGIN_DECLS
 /* MPEG DASH */
 #define FOURCC_tfdt     GST_MAKE_FOURCC('t','f','d','t')
 
+/* Chapters reference */
+#define FOURCC_chap     GST_MAKE_FOURCC('c','h','a','p')
+
 G_END_DECLS
 
 #endif /* __GST_QTDEMUX_FOURCC_H__ */
