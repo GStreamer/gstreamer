@@ -1,9 +1,214 @@
-=== release 1.0.7 ===
+=== release 1.0.8 ===
 
-2013-04-26  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-07-12  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.7
+	  releasing 1.0.8
+
+2013-06-19 13:21:45 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* gst-libs/gst/audio/gstaudioencoder.c:
+	  audioencoder: unref before memset
+	  Unref allocator and input_caps in encoder context before memsetting the
+	  context.
+
+2013-06-19 09:22:50 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst-libs/gst/tag/gstxmptag.c:
+	  xmptag: More efficient GSList usage
+	  Instead of constantly appending (which gets more and more expensive), just
+	  prepend to the list (O(1)) and reverse the list before usage.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702545
+
+2013-05-29 16:39:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/alsa/gstalsasink.c:
+	  alsasink: Update internal buffer/period times with the values that were configured on the device
+
+2013-05-24 17:43:53 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: Ensure we have enough data when reading the sync marker in the AAC/LOAS typefinder
+
+2013-07-05 00:47:08 +0100  Marcin Lewandowski <marcin@saepia.net>
+
+	* gst-libs/gst/tag/id3v2frames.c:
+	  tag: ignore malformed ID3v2 TDAT frames
+	  Just skip them, don't cause criticals.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703283
+
+2013-05-24 13:41:46 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin: Lock the state of child elements as long as we manage their states
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690420
+
+2013-05-24 11:47:13 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gstdecodebin2.c:
+	  Revert "decodebin2: use NO_RESYNC flag"
+	  This reverts commit 0feecef2754ef208372eb39332b4f6fa2067d3d5.
+
+2013-02-13 23:28:01 +0100  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riffmedia: add systemstream to all mpeg video caps
+
+2013-02-13 21:00:28 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefinding: add parsed=true to mp3 and mpeg2 video ES caps
+	  Because we can, and that's also what we do for other formats.
+
+2013-02-13 11:25:02 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/decodebin.c:
+	  decodebin: Fix MP3 parser unit test
+	  The MP3 parser required fields on its caps that it
+	  didn't need and never got from (e.g.) typefind.
+
+2013-05-28 11:36:58 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/playback/gstplaysinkconvertbin.c:
+	  playsinkconvertbin: Fix leak of the downstream caps filter
+
+2013-02-16 12:09:53 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/gst/audio/audio-info.h:
+	  audio: fix GST_AUDIO_INFO_ENDIANNESS macro
+
+2013-05-10 11:31:37 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/vorbis/gstvorbisparse.c:
+	  vorbisparse: Fix event handling
+	  Internal state should only be reset on FLUSH_STOP, not FLUSH_START.
+	  Also forward pre-caps events immediately and don't queue them.
+
+2012-12-16 16:53:30 +0100  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: fix detection of HLS playlists with alternative renditions
+	  https://bugzilla.gnome.org/show_bug.cgi?id=699923
+
+2013-05-08 14:52:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/playback/gsturidecodebin.c:
+	  uridecodebin: Always store queue2 elements for later removal
+	  Otherwise we accumulate more and more queue2 elements, and let each
+	  of them start a thread doing nothing but waiting each time uridecodebin
+	  goes to PAUSED.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=699794
+
+2013-05-07 15:00:05 +0200  Julien Moutte <julien@moutte.net>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff: Manually calculate bitrate of ADPCM streams
+	  Some ADPCM encoding tools like Oxelon generate WAV files with
+	  wrong format header declaring an invalid bitrate.
+	  As wavparse uses the average bitrate to calculate timestamps
+	  and duration the decoder can be confused by receiving timestamps
+	  completely out of sync with the decoded samples.
+	  ADPCM is a CBR audio codec so we can calculate the average bitrate
+	  instead of trusting the format header.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=636245
+
+2013-05-07 10:16:48 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/theora/gsttheoraenc.c:
+	  theoraenc: Don't call gst_buffer_fill() for empty Theora packets
+	  gst_buffer_fill() does not like a NULL source data pointer.
+
+2013-05-07 10:13:18 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/theora/gsttheoraenc.c:
+	  theoraenc: Fix error handling when reading or writing multipass cache data fails
+
+2013-05-03 16:24:55 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff: wma can have more than 6 channels
+	  Some versions anyway.
+
+2013-05-02 23:41:02 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/pango/gsttextrender.c:
+	  textrender: actually fixate output caps when fixating output caps
+
+2013-05-01 00:15:38 +0100  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gst/encoding/gststreamsplitter.c:
+	  streamsplitter: Keep srcpad alive while querying peer
+
+=== release 1.0.7 ===
+
+2013-04-26 12:35:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libs/gst/audio/gstaudiopack-dist.c:
+	* gst-libs/gst/audio/gstaudiopack-dist.h:
+	* gst-libs/gst/video/video-orc-dist.c:
+	* gst-libs/gst/video/video-orc-dist.h:
+	* gst-plugins-base.doap:
+	* gst/adder/gstadderorc-dist.c:
+	* gst/adder/gstadderorc-dist.h:
+	* gst/audioconvert/gstaudioconvertorc-dist.c:
+	* gst/audioconvert/gstaudioconvertorc-dist.h:
+	* gst/videoconvert/gstvideoconvertorc-dist.c:
+	* gst/videoconvert/gstvideoconvertorc-dist.h:
+	* gst/videoscale/gstvideoscaleorc-dist.c:
+	* gst/videoscale/gstvideoscaleorc-dist.h:
+	* gst/videotestsrc/gstvideotestsrcorc-dist.c:
+	* gst/videotestsrc/gstvideotestsrcorc-dist.h:
+	* gst/volume/gstvolumeorc-dist.c:
+	* gst/volume/gstvolumeorc-dist.h:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.0.7
+
+2013-04-26 12:35:27 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2012-11-21 10:28:31 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

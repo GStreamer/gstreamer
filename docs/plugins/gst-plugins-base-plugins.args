@@ -1991,7 +1991,7 @@
 <ARG>
 <NAME>GstVideoScale::envelope</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,5]</RANGE>
+<RANGE>[1,5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Envelope</NICK>
 <BLURB>Size of filter envelope.</BLURB>
@@ -2011,7 +2011,7 @@
 <ARG>
 <NAME>GstVideoScale::sharpness</NAME>
 <TYPE>gdouble</TYPE>
-<RANGE>[0,2]</RANGE>
+<RANGE>[0.5,1.5]</RANGE>
 <FLAGS>rwx</FLAGS>
 <NICK>Sharpness</NICK>
 <BLURB>Sharpness of filter.</BLURB>

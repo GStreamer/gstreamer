@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.0.7
+Release notes for GStreamer Base Plugins 1.0.8
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -60,19 +60,19 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * streamsynchronizer is now a public element, useful in HLS pipelines for example
+      * tag: ignore malformed ID3v2 TDAT frames
 
 Bugs fixed in this release
      
-      * 682171 : videoscale: assertion failed: (envelope ((x - (xi - 1)) * ex) == 0)
-      * 688240 : streamsynchronizer: make element public
-      * 696540 : Ring buffer released after parsing caps when setting caps
-      * 696899 : oggdemux: non flushing segment seek makes buffers late
-      * 697092 : rtspconnection: The " x-server-ip-address " header with wrong IP address is added to the GET response
-      * 697162 : SDP library is not parsing correctly
-      * 697277 : SDP library does not include timing line if there is not timing information
-      * 697820 : playbin: Enabling visualizations during playback stops the pipeline
-      * 697824 : videometa: gst_buffer_add_meta() can return NULL
+      * 636245 : [riff] For ADPCM codecs the average bitrate should be calculated instead of trusting the format header
+      * 688803 : playbin: converters don't work? not-negotiated error with non-1/1 PAR and ximagesink
+      * 690420 : decodebin: Race between GstBin and decodebin trying to change states of child elements
+      * 698896 : liveadder: What is the unit for " latency " ?
+      * 699923 : typefind: fix detection of HLS playlists with alternative renditions
+      * 701976 : flvdemux: Forwards CAPS events from upstream
+      * 703128 : videotestsrc leaks memory
+      * 703283 : id3: gst_date_time_new: assertion `(month > 0 &  & month < = 12) || month == -1' failed with malformed TDAT frames
+      * 699794 : uridecodebin: Leaking queue2 elements in playbin gapless mode
 
 ==== Download ====
 
@@ -109,14 +109,13 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * David Schleef
-      * Jose Antonio Santos Cadenas
-      * Nicolas Dufresne
-      * Paul HENRYS
+      * Andoni Morales Alastruey
+      * Edward Hervey
+      * Jonas Holmberg
+      * Julien Moutte
+      * Marcin Lewandowski
+      * Matej Knopp
       * Sebastian Dröge
-      * Stefan Sauer
+      * Thibault Saunier
       * Tim-Philipp Müller
-      * Tom Greenwood
-      * Víctor Manuel Jáquez Leal
-      * Wim Taymans
  

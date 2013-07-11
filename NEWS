@@ -1,4 +1,20 @@
-This is GStreamer Base Plugins 1.0.7
+This is GStreamer Base Plugins 1.0.8
+
+Changes since 1.0.7:
+
+      * tag: ignore malformed ID3v2 TDAT frames
+
+Bugs fixed since 1.0.7:
+
+      * 636245 : riff: for ADPCM codecs the average bitrate should be calculated instead of trusting the format header
+      * 688803 : playbin: converters don't work? not-negotiated error with non-1/1 PAR and ximagesink
+      * 690420 : decodebin: Race between GstBin and decodebin trying to change states of child elements
+      * 698896 : liveadder: What is the unit for " latency " ?
+      * 699923 : typefind: fix detection of HLS playlists with alternative renditions
+      * 701976 : flvdemux: Forwards CAPS events from upstream
+      * 703128 : videotestsrc leaks memory
+      * 703283 : id3: gst_date_time_new: assertion `(month > 0 &  & month < = 12) || month == -1' failed with malformed TDAT frames
+      * 699794 : uridecodebin: Leaking queue2 elements in playbin gapless mode
 
 Changes since 1.0.6:
 
