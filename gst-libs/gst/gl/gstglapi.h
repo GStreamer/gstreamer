@@ -39,8 +39,8 @@
 #  include <OpenGL/gl.h>
 #  include <OpenGL/glu.h>
 # else
-#  include <GL/glu.h>
 #  include <GL/gl.h>
+#  include <GL/glu.h>
 #  if __WIN32__ || _WIN32
 #   include <GL/glext.h>
 #  endif
