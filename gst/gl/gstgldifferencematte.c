@@ -38,8 +38,9 @@
 
 #include <stdlib.h>
 #include <png.h>
+
 #include "gstgldifferencematte.h"
-#include <gstgleffectssources.h>
+#include "effects/gstgleffectssources.h"
 
 #if PNG_LIBPNG_VER >= 10400
 #define int_p_NULL         NULL

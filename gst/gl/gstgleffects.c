@@ -36,9 +36,8 @@
 #include "config.h"
 #endif
 
-#include <gstglconfig.h>
-
-#include <gstgleffects.h>
+#include <gst/gl/gstglconfig.h>
+#include "gstgleffects.h"
 
 #define GST_TYPE_GL_EFFECTS            (gst_gl_effects_get_type())
 #define GST_GL_EFFECTS(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_GL_EFFECTS,GstGLEffects))

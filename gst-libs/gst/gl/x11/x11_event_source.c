@@ -24,7 +24,6 @@
 
 #include <stdint.h>
 #include <stdlib.h>
-#include <wayland-client.h>
 
 #include "x11_event_source.h"
 

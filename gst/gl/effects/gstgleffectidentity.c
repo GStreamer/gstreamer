@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include <gstgleffects.h>
+#include "../gstgleffects.h"
 
 #define USING_OPENGL(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL)
 #define USING_OPENGL3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL3)

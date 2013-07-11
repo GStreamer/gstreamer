@@ -21,8 +21,8 @@
 #include "config.h"
 #endif
 
-#include <gstgleffects.h>
-#include <gstgleffectlumatocurve.h>
+#include "../gstgleffects.h"
+#include "gstgleffectlumatocurve.h"
 
 void
 gst_gl_effects_luma_to_curve (GstGLEffects * effects,

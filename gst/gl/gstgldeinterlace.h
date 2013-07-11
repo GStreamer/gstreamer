@@ -21,7 +21,7 @@
 #ifndef _GST_GL_DEINTERLACE_H_
 #define _GST_GL_DEINTERLACE_H_
 
-#include <gstglfilter.h>
+#include <gst/gl/gstglfilter.h>
 
 G_BEGIN_DECLS
 

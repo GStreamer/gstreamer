@@ -21,7 +21,7 @@
 #ifndef __GST_GL_LUMA_TO_CURVE_H__
 #define __GST_GL_LUMA_TO_CURVE_H__
 
-#include <gstgleffectscurves.h>
+#include "gstgleffectscurves.h"
 
 G_BEGIN_DECLS
 

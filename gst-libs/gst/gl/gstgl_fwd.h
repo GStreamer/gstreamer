@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 
-#include "gstglapi.h"
+#include <gst/gl/gstglapi.h>
 
 G_BEGIN_DECLS
 

@@ -21,7 +21,7 @@
 #ifndef _GST_GL_FILTERGLASS_H_
 #define _GST_GL_FILTERGLASS_H_
 
-#include <gstglfilter.h>
+#include <gst/gl/gstglfilter.h>
 
 G_BEGIN_DECLS
 

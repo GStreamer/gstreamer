@@ -21,9 +21,9 @@
 #include "config.h"
 #endif
 
-#include <gstgleffects.h>
-#include <gstgleffectscurves.h>
-#include <gstgleffectlumatocurve.h>
+#include "../gstgleffects.h"
+#include "gstgleffectscurves.h"
+#include "gstgleffectlumatocurve.h"
 
 static gboolean kernel_ready = FALSE;
 static float gauss_kernel[7];

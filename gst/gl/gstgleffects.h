@@ -21,8 +21,8 @@
 #ifndef __GST_GL_EFFECTS_H__
 #define __GST_GL_EFFECTS_H__
 
-#include <gstglfilter.h>
-#include <gstgleffectssources.h>
+#include <gst/gl/gstglfilter.h>
+#include "effects/gstgleffectssources.h"
 
 G_BEGIN_DECLS
 

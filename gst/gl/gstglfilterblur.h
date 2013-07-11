@@ -21,7 +21,7 @@
 #ifndef _GST_GL_FILTERBLUR_H_
 #define _GST_GL_FILTERBLUR_H_
 
-#include <gstglfilter.h>
+#include <gst/gl/gstglfilter.h>
 
 #define GST_TYPE_GL_FILTERBLUR            (gst_gl_filterblur_get_type())
 #define GST_GL_FILTERBLUR(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_FILTERBLUR,GstGLFilterBlur))

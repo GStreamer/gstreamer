@@ -2,13 +2,10 @@
 
 noinst_LTLIBRARIES = libgstgl-cocoa.la
 
-libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl
-libgstglcocoaincludedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl/cocoa
-
 libgstgl_cocoa_la_SOURCES = \
 	gstglwindow_cocoa.m
 
-libgstglcocoainclude_HEADERS = \
+noinst_HEADERS = \
 	gstglwindow_cocoa.h
 
 libgstgl_cocoa_la_CFLAGS = \
@@ -17,7 +14,7 @@ libgstgl_cocoa_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
-	-I$(top_srcdir)/gst-libs/gst/gl
+	-I$(top_srcdir)/gst-libs
 
 libgstgl_cocoa_la_OBJCFLAGS = \
 	$(GL_CFLAGS) \
@@ -26,7 +23,7 @@ libgstgl_cocoa_la_OBJCFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
 	$(GST_CFLAGS) \
-	-I$(top_srcdir)/gst-libs/gst/gl
+	-I$(top_srcdir)/gst-libs
 
 libgstgl_cocoa_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) \

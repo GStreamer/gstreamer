@@ -37,7 +37,7 @@
 #endif
 
 #include "gstglfiltersobel.h"
-#include <gstgleffectssources.h>
+#include "effects/gstgleffectssources.h"
 
 enum
 {

@@ -44,8 +44,9 @@
 #include <string.h>
 
 #include <gst/gst.h>
+#include <gst/gl/gstglshadervariables.h>
+
 #include "gstglfiltershader.h"
-#include <gstglshadervariables.h>
 
 /* horizontal filter */
 static gchar *hfilter_fragment_source;

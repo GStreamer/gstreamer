@@ -78,9 +78,7 @@ libgstopengl_la_SOURCES = \
 # (like in AM_CFLAGS)?
 libgstopengl_la_CFLAGS = $(GST_CFLAGS) $(X_CFLAGS) $(GST_BASE_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GL_CFLAGS) $(LIBPNG_CFLAGS) \
-	-I$(top_srcdir)/gst-libs \
-	-I$(top_srcdir)/gst-libs/gst/gl \
-	-I$(top_srcdir)/gst/gl/effects
+	-I$(top_srcdir)/gst-libs
 
 libgstopengl_la_LIBADD = \
 	$(top_builddir)/gst-libs/gst/gl/libgstgl-$(GST_API_VERSION).la \

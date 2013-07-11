@@ -27,7 +27,7 @@
 
 #include <gst/gst.h>
 
-#include <gstglfeature.h>
+#include <gst/gl/gl.h>
 #include "gstglwindow_x11_glx.h"
 
 #define GST_CAT_DEFAULT gst_gl_window_debug

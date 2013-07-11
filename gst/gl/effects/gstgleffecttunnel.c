@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include <gstgleffects.h>
+#include "../gstgleffects.h"
 
 static void
 gst_gl_effects_tunnel_callback (gint width, gint height, guint texture,

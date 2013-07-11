@@ -21,7 +21,7 @@
 #include "config.h"
 #endif
 
-#include <gstgleffects.h>
+#include "../gstgleffects.h"
 
 static gboolean kernel_ready = FALSE;
 static float gauss_kernel[7];

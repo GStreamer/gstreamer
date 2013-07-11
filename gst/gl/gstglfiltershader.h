@@ -22,7 +22,7 @@
 #ifndef _GST_GL_FILTERSHADER_H_
 #define _GST_GL_FILTERSHADER_H_
 
-#include <gstglfilter.h>
+#include <gst/gl/gstglfilter.h>
 
 #define GST_TYPE_GL_FILTERSHADER            (gst_gl_filtershader_get_type())
 #define GST_GL_FILTERSHADER(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_FILTERSHADER,GstGLFilterShader))

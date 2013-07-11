@@ -21,7 +21,7 @@
 #ifndef _GST_GL_FILTERSOBEL_H_
 #define _GST_GL_FILTERSOBEL_H_
 
-#include <gstglfilter.h>
+#include <gst/gl/gstglfilter.h>
 
 #define GST_TYPE_GL_FILTERSOBEL            (gst_gl_filtersobel_get_type())
 #define GST_GL_FILTERSOBEL(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_GL_FILTERSOBEL,GstGLFilterSobel))

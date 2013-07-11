@@ -21,14 +21,14 @@
 #ifndef __GST_GL_API_H__
 #define __GST_GL_API_H__
 
-#include "gstglconfig.h"
+#include <gst/gl/gstglconfig.h>
 
 /* OpenGL 2.0 for Embedded Systems */
 #if GST_GL_HAVE_GLES2
 # include <GLES2/gl2.h>
 # include <GLES2/gl2ext.h>
 # if !GST_GL_HAVE_OPENGL
-#  include "gstgles2.h"
+#  include <gst/gl/gstgles2.h>
 # endif
 #endif
 
@@ -54,8 +54,6 @@
 #endif
 
 #include <gst/gst.h>
-
-#include "glprototypes/gstgl_compat.h"
 
 G_BEGIN_DECLS
 
@@ -88,21 +86,21 @@ typedef enum
 
 typedef struct _GstGLFuncs
 {
-#include "glprototypes/opengl.h"
+#include <gst/gl/glprototypes/opengl.h>
   gpointer padding1[GST_PADDING_LARGE];
-#include "glprototypes/gles1.h"
+#include <gst/gl/glprototypes/gles1.h>
   gpointer padding2[GST_PADDING_LARGE];
-#include "glprototypes/gles1gles2.h"
+#include <gst/gl/glprototypes/gles1gles2.h>
   gpointer padding3[GST_PADDING_LARGE];
-#include "glprototypes/gles1opengl.h"
+#include <gst/gl/glprototypes/gles1opengl.h>
   gpointer padding4[GST_PADDING_LARGE*2];
-#include "glprototypes/gles2.h"
+#include <gst/gl/glprototypes/gles2.h>
   gpointer padding5[GST_PADDING_LARGE*2];
-#include "glprototypes/gles2opengl.h"
+#include <gst/gl/glprototypes/gles2opengl.h>
   gpointer padding6[GST_PADDING_LARGE*2];
-#include "glprototypes/gles1gles2opengl.h"
+#include <gst/gl/glprototypes/gles1gles2opengl.h>
   gpointer padding7[GST_PADDING_LARGE*2];
-#include "glprototypes/gles3opengl.h"
+#include <gst/gl/glprototypes/gles3opengl.h>
   gpointer padding8[GST_PADDING_LARGE*4];
 } GstGLFuncs;
 

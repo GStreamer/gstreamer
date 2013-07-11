@@ -24,7 +24,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <gstglshader.h>
+#include <gst/gl/gstglshader.h>
 
 #define VALID_VARNAME_CHARS "abcdefghijklmnopqurstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"
 

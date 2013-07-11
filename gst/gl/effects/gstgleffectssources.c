@@ -22,10 +22,10 @@
 #include "config.h"
 #endif
 
-#include <gstglconfig.h>
+#include <gst/gl/gstglconfig.h>
 
-#include <gstgleffects.h>
-#include <gstgleffectssources.h>
+#include "../gstgleffects.h"
+#include "gstgleffectssources.h"
 #include <math.h>
 
 /* A common file for sources is needed since shader sources can be

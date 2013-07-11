@@ -1,7 +1,8 @@
 
 lib_LTLIBRARIES = libgstgl-@GST_API_VERSION@.la
 
-SUBDIRS =
+SUBDIRS = glprototypes
+DIST_SUBDIRS = glprototypes x11 win32 cocoa wayland
 
 noinst_HEADERS =
 
@@ -66,6 +67,7 @@ endif
 
 libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl
 libgstgl_@GST_API_VERSION@include_HEADERS = \
+	gstglconfig.h \
 	gstglwindow.h \
 	gstgldisplay.h \
 	gstglmemory.h \
@@ -86,6 +88,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gl.h
 
 libgstgl_@GST_API_VERSION@_la_CFLAGS = \
+	-I$(top_srcdir)/gst-libs \
 	$(GL_CFLAGS) \
 	$(X_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \

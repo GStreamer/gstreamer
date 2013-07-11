@@ -21,8 +21,8 @@
 #include "config.h"
 #endif
 
-#include <gstgleffects.h>
-#include <gstgleffectscurves.h>
+#include "../gstgleffects.h"
+#include "gstgleffectscurves.h"
 
 static void
 gst_gl_effects_rgb_to_curve (GstGLEffects * effects,

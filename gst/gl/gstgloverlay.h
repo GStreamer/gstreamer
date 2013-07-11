@@ -21,7 +21,7 @@
 #ifndef _GST_GL_OVERLAY_H_
 #define _GST_GL_OVERLAY_H_
 
-#include <gstglfilter.h>
+#include <gst/gl/gstglfilter.h>
 
 #define GST_TYPE_GL_OVERLAY            (gst_gl_overlay_get_type())
 #define GST_GL_OVERLAY(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_GL_OVERLAY,GstGLOverlay))

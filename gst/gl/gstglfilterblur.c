@@ -37,7 +37,7 @@
 #endif
 
 #include "gstglfilterblur.h"
-#include <gstgleffectssources.h>
+#include "effects/gstgleffectssources.h"
 
 #define GST_CAT_DEFAULT gst_gl_filterblur_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);

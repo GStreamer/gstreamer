@@ -43,7 +43,7 @@
 #include "config.h"
 #endif
 
-#include <gstglconfig.h>
+#include <gst/gl/gstglconfig.h>
 
 #include "gstglimagesink.h"
 

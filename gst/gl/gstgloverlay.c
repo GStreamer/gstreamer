@@ -36,10 +36,10 @@
 #include "config.h"
 #endif
 
-#include <gstglconfig.h>
+#include <gst/gl/gstglconfig.h>
 
 #include "gstgloverlay.h"
-#include <gstgleffectssources.h>
+#include "effects/gstgleffectssources.h"
 
 #include <stdio.h>
 #include <stdlib.h>
