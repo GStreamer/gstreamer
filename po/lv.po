@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:34+0200\n"
+"POT-Creation-Date: 2013-07-11 15:56+0200\n"
 "PO-Revision-Date: 2011-09-02 11:23-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -20,16 +20,22 @@ msgstr ""
 "2);\n"
 "X-Generator: Lokalize 1.0\n"
 
+msgid "Jack server not found"
+msgstr ""
+
+msgid "Failed to decode JPEG image"
+msgstr "Neizdevās atkodēt JPEG attēlu"
+
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "\"%s\"ko \"%s\""
 
-msgid "Failed to decode JPEG image"
-msgstr "Neizdevās atkodēt JPEG attēlu"
-
 msgid "Could not connect to server"
 msgstr "Nevar savienoties ar serveri"
+
+msgid "No URL set."
+msgstr "URL nav uzstādīts."
 
 msgid "Server does not support seeking."
 msgstr "Serveris neatbalsta meklēšanu."
@@ -49,9 +55,6 @@ msgstr "Notika tīkla kļūda, vai serveris negaidīti aizvēra savienojumu."
 
 msgid "Server sent bad data."
 msgstr "Serveris nosūtija sliktus datus."
-
-msgid "No URL set."
-msgstr "URL nav uzstādīts."
 
 msgid "Internal data stream error."
 msgstr "Iekšējās datu plūsmas kļūda."
@@ -120,16 +123,6 @@ msgid "Could not open audio device for playback."
 msgstr "Nav iespējams atvērt audio ierīci atskaņošanai."
 
 msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr ""
-"Nevar atvērt audio ierīci ierakstīšanai. Jums nav nepieciešamo piekļuves "
-"tiesību, lai atvērtu ierīci."
-
-msgid "Could not open audio device for recording."
-msgstr "Nevarēja atvērt audio ierīci ierakstīšanai."
-
-msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
@@ -147,6 +140,45 @@ msgstr "Šī audio ierīce neatablsta ierkastīšanu."
 
 msgid "Error recording from audio device."
 msgstr "Kļūda ierakstot no audio iekārtas."
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Nevar atvērt audio ierīci ierakstīšanai. Jums nav nepieciešamo piekļuves "
+"tiesību, lai atvērtu ierīci."
+
+msgid "Could not open audio device for recording."
+msgstr "Nevarēja atvērt audio ierīci ierakstīšanai."
+
+msgid "Record Source"
+msgstr "Ierakstīšanas avots"
+
+msgid "Microphone"
+msgstr "Mikrofons"
+
+msgid "Line In"
+msgstr "Līnijas ieeja"
+
+msgid "Internal CD"
+msgstr "Iekšējais CD"
+
+msgid "SPDIF In"
+msgstr "SPDIF ieeja"
+
+msgid "AUX 1 In"
+msgstr "AUX 1 ieeja"
+
+msgid "AUX 2 In"
+msgstr "AUX 2 ieeja"
+
+#, fuzzy
+msgid "Codec Loopback"
+msgstr "Atpakaļcikls"
+
+#, fuzzy
+msgid "SunVTS Loopback"
+msgstr "Atpakaļcikls"
 
 msgid "Volume"
 msgstr "Skaļums"
@@ -249,6 +281,10 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Neizdevās saņemt signāla stiprumu no ierīces \"%s\"."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Nevar atpazīt ierīci \"%s\""
+
+#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -271,10 +307,6 @@ msgstr "Neizdevās noskaidrot normu ierīcei \"%s\"."
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Neizdevās iegūt kontroles atribūtus ierīcei \"%s\"."
-
-#, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Nevar atpazīt ierīci \"%s\""
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -366,9 +398,6 @@ msgstr "Nevar veikt darbības bez pulksteņa"
 
 #~ msgid "Line-in"
 #~ msgstr "Skaņas ieeja"
-
-#~ msgid "Microphone"
-#~ msgstr "Mikrofons"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -467,20 +496,8 @@ msgstr "Nevar veikt darbības bez pulksteņa"
 #~ msgid "Telephone"
 #~ msgstr "Telefons"
 
-#~ msgid "Line In"
-#~ msgstr "Līnijas ieeja"
-
-#~ msgid "Internal CD"
-#~ msgstr "Iekšējais CD"
-
 #~ msgid "Video In"
 #~ msgstr "Video ieeja"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "AUX 1 ieeja"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "AUX 2 ieeja"
 
 #~ msgid "AUX In"
 #~ msgstr "AUC ieeja"
@@ -494,9 +511,6 @@ msgstr "Nevar veikt darbības bez pulksteņa"
 #~ msgid "Microphone Boost"
 #~ msgstr "Mikrofona pastiprinājums"
 
-#~ msgid "Loopback"
-#~ msgstr "Atpakaļcikls"
-
 #~ msgid "Diagnostic"
 #~ msgstr "Diagnostika"
 
@@ -508,9 +522,6 @@ msgstr "Nevar veikt darbības bez pulksteņa"
 
 #~ msgid "Input"
 #~ msgstr "Ievads"
-
-#~ msgid "Record Source"
-#~ msgstr "Ierakstīšanas avots"
 
 #~ msgid "Monitor Source"
 #~ msgstr "Monitora avots"
@@ -550,9 +561,6 @@ msgstr "Nevar veikt darbības bez pulksteņa"
 
 #~ msgid "Input Mix"
 #~ msgstr "Ieejas mikseris"
-
-#~ msgid "SPDIF In"
-#~ msgstr "SPDIF ieeja"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Mikrofons 1"

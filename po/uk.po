@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:34+0200\n"
+"POT-Creation-Date: 2013-07-11 15:56+0200\n"
 "PO-Revision-Date: 2011-05-01 11:55+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
@@ -19,16 +19,22 @@ msgstr ""
 "X-Generator: Lokalize 1.2\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+msgid "Jack server not found"
+msgstr ""
+
+msgid "Failed to decode JPEG image"
+msgstr "Помилка при декодуванні зображення JPEG"
+
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "«%s» виконує %s"
 
-msgid "Failed to decode JPEG image"
-msgstr "Помилка при декодуванні зображення JPEG"
-
 msgid "Could not connect to server"
 msgstr "Не вдалося з'єднатись з сервером"
+
+msgid "No URL set."
+msgstr "Не вказано адресу"
 
 msgid "Server does not support seeking."
 msgstr "Сервером не підтримується позиціювання."
@@ -50,9 +56,6 @@ msgstr ""
 
 msgid "Server sent bad data."
 msgstr "Сервером надіслано помилкові дані."
-
-msgid "No URL set."
-msgstr "Не вказано адресу"
 
 msgid "Internal data stream error."
 msgstr "Внутрішня помилка потоку даних."
@@ -124,16 +127,6 @@ msgid "Could not open audio device for playback."
 msgstr "Не вдалося відкрити пристрій для відтворення."
 
 msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr ""
-"Не вдалося відкрити пристрій для запису. У вас недостатньо прав для "
-"відкриття пристрою."
-
-msgid "Could not open audio device for recording."
-msgstr "Не вдалося відкрити пристрій для запису."
-
-msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
@@ -151,6 +144,45 @@ msgstr "Запис не підтримується цим звуковим пр�
 
 msgid "Error recording from audio device."
 msgstr "Помилка записування зі звукового пристрою."
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Не вдалося відкрити пристрій для запису. У вас недостатньо прав для "
+"відкриття пристрою."
+
+msgid "Could not open audio device for recording."
+msgstr "Не вдалося відкрити пристрій для запису."
+
+msgid "Record Source"
+msgstr "Запис джерела"
+
+msgid "Microphone"
+msgstr "Мікрофон"
+
+msgid "Line In"
+msgstr "Лінійний вхід"
+
+msgid "Internal CD"
+msgstr "Вбудований КД"
+
+msgid "SPDIF In"
+msgstr "Вхід SPDIF"
+
+msgid "AUX 1 In"
+msgstr "Вхід AUX 1"
+
+msgid "AUX 2 In"
+msgstr "Вхід AUX 2"
+
+#, fuzzy
+msgid "Codec Loopback"
+msgstr "Заглушка"
+
+#, fuzzy
+msgid "SunVTS Loopback"
+msgstr "Заглушка"
 
 msgid "Volume"
 msgstr "Гучність"
@@ -254,6 +286,10 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Помилка при отриманні сили сигналу пристрою «%s»."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Не вдалося ідентифікувати пристрій «%s»."
+
+#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -276,10 +312,6 @@ msgstr "Помилка при запиті норми пристрою «%s»."
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Не вдалося отримати атрибути регуляторів керування пристрою «%s»."
-
-#, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Не вдалося ідентифікувати пристрій «%s»."
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -371,9 +403,6 @@ msgstr "Робота без годинника неможлива"
 
 #~ msgid "Line-in"
 #~ msgstr "Лінійний вхід"
-
-#~ msgid "Microphone"
-#~ msgstr "Мікрофон"
 
 #~ msgid "CD"
 #~ msgstr "КД"
@@ -472,20 +501,8 @@ msgstr "Робота без годинника неможлива"
 #~ msgid "Telephone"
 #~ msgstr "Телефон"
 
-#~ msgid "Line In"
-#~ msgstr "Лінійний вхід"
-
-#~ msgid "Internal CD"
-#~ msgstr "Вбудований КД"
-
 #~ msgid "Video In"
 #~ msgstr "Відеовхід"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "Вхід AUX 1"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "Вхід AUX 2"
 
 #~ msgid "AUX In"
 #~ msgstr "Вхід AUX"
@@ -499,9 +516,6 @@ msgstr "Робота без годинника неможлива"
 #~ msgid "Microphone Boost"
 #~ msgstr "Підсилення мікрофона"
 
-#~ msgid "Loopback"
-#~ msgstr "Заглушка"
-
 #~ msgid "Diagnostic"
 #~ msgstr "Діагностика"
 
@@ -513,9 +527,6 @@ msgstr "Робота без годинника неможлива"
 
 #~ msgid "Input"
 #~ msgstr "Вхід"
-
-#~ msgid "Record Source"
-#~ msgstr "Запис джерела"
 
 #~ msgid "Monitor Source"
 #~ msgstr "Спостереження за джерелом"
@@ -555,9 +566,6 @@ msgstr "Робота без годинника неможлива"
 
 #~ msgid "Input Mix"
 #~ msgstr "Мікшер вх. даних"
-
-#~ msgid "SPDIF In"
-#~ msgstr "Вхід SPDIF"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Мікрофон 1"

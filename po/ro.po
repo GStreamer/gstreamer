@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:34+0200\n"
+"POT-Creation-Date: 2013-07-11 15:56+0200\n"
 "PO-Revision-Date: 2010-08-16 03:22+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -18,16 +18,22 @@ msgstr ""
 "X-Generator: Virtaal 0.6.1\n"
 "X-Launchpad-Export-Date: 2010-08-16 00:08+0000\n"
 
+msgid "Jack server not found"
+msgstr ""
+
+msgid "Failed to decode JPEG image"
+msgstr "Nu s-a putut decoda imaginea JPEG"
+
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "„%s” de „%s”"
 
-msgid "Failed to decode JPEG image"
-msgstr "Nu s-a putut decoda imaginea JPEG"
-
 msgid "Could not connect to server"
 msgstr "Nu se poate stabili o conexiune la server"
+
+msgid "No URL set."
+msgstr ""
 
 msgid "Server does not support seeking."
 msgstr ""
@@ -48,9 +54,6 @@ msgid ""
 msgstr ""
 
 msgid "Server sent bad data."
-msgstr ""
-
-msgid "No URL set."
 msgstr ""
 
 msgid "Internal data stream error."
@@ -122,16 +125,6 @@ msgid "Could not open audio device for playback."
 msgstr "Nu s-a putut deschide dispozitivul audio pentru redare."
 
 msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr ""
-"Nu s-a putut deschide dispozitivul audio pentru înregistrare Nu aveți "
-"permisiunea de a deschide dispozitivul."
-
-msgid "Could not open audio device for recording."
-msgstr "Nu s-a putut deschide dispozitivul audio pentru înregistrare."
-
-msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
@@ -149,6 +142,45 @@ msgstr "Înregistrarea nu este suportată de acest dispozitiv audio."
 
 msgid "Error recording from audio device."
 msgstr "Eroare la înregistrarea de la dispozitivul audio."
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Nu s-a putut deschide dispozitivul audio pentru înregistrare Nu aveți "
+"permisiunea de a deschide dispozitivul."
+
+msgid "Could not open audio device for recording."
+msgstr "Nu s-a putut deschide dispozitivul audio pentru înregistrare."
+
+msgid "Record Source"
+msgstr "Sursă înregistrare"
+
+msgid "Microphone"
+msgstr "Microfon"
+
+msgid "Line In"
+msgstr "Linie intrare"
+
+msgid "Internal CD"
+msgstr "CD intern"
+
+msgid "SPDIF In"
+msgstr "Intrare SPDIF"
+
+msgid "AUX 1 In"
+msgstr "Intrare AUX 1"
+
+msgid "AUX 2 In"
+msgstr "Intrare AUX 2"
+
+#, fuzzy
+msgid "Codec Loopback"
+msgstr "Buclă"
+
+#, fuzzy
+msgid "SunVTS Loopback"
+msgstr "Buclă"
 
 msgid "Volume"
 msgstr "Volum"
@@ -255,6 +287,10 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Obținerea nivelului semnalului pentru dispozitivul „%s” a eșuat."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Dispozitivul „%s” nu poate fi identificat."
+
+#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -278,10 +314,6 @@ msgstr "Interogarea normei pentru dispozitivul „%s” a eșuat."
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Obținerea atributelor de control pentru dispozitivul „%s” a eșuat."
-
-#, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Dispozitivul „%s” nu poate fi identificat."
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -375,9 +407,6 @@ msgstr "Nu se poate opera fără un ceas"
 
 #~ msgid "Line-in"
 #~ msgstr "Linie intrare"
-
-#~ msgid "Microphone"
-#~ msgstr "Microfon"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -479,20 +508,8 @@ msgstr "Nu se poate opera fără un ceas"
 #~ msgid "Telephone"
 #~ msgstr "Telefon"
 
-#~ msgid "Line In"
-#~ msgstr "Linie intrare"
-
-#~ msgid "Internal CD"
-#~ msgstr "CD intern"
-
 #~ msgid "Video In"
 #~ msgstr "Intrare video"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "Intrare AUX 1"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "Intrare AUX 2"
 
 #~ msgid "AUX In"
 #~ msgstr "Intrare AUX"
@@ -506,9 +523,6 @@ msgstr "Nu se poate opera fără un ceas"
 #~ msgid "Microphone Boost"
 #~ msgstr "Amplificare microfon"
 
-#~ msgid "Loopback"
-#~ msgstr "Buclă"
-
 #~ msgid "Diagnostic"
 #~ msgstr "Diagnostic"
 
@@ -520,9 +534,6 @@ msgstr "Nu se poate opera fără un ceas"
 
 #~ msgid "Input"
 #~ msgstr "Intrare"
-
-#~ msgid "Record Source"
-#~ msgstr "Sursă înregistrare"
 
 #~ msgid "Monitor Source"
 #~ msgstr "Sursă monitor"
@@ -562,9 +573,6 @@ msgstr "Nu se poate opera fără un ceas"
 
 #~ msgid "Input Mix"
 #~ msgstr "Mix intrare"
-
-#~ msgid "SPDIF In"
-#~ msgstr "Intrare SPDIF"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Microfon 1"

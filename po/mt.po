@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.10.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:34+0200\n"
+"POT-Creation-Date: 2013-07-11 15:56+0200\n"
 "PO-Revision-Date: 2008-10-26 19:09+0100\n"
 "Last-Translator: Michel Bugeja <michelbugeja@rabatmalta.com>\n"
 "Language-Team: Maltese <translation-team-mt@lists.sourceforge.net>\n"
@@ -16,16 +16,22 @@ msgstr ""
 "X-Poedit-Language: Maltese\n"
 "X-Poedit-Country: MALTA\n"
 
-#. TRANSLATORS: 'song title' by 'artist name'
-#, c-format
-msgid "'%s' by '%s'"
+msgid "Jack server not found"
 msgstr ""
 
 msgid "Failed to decode JPEG image"
 msgstr "Problem fid-decoding tal-istampa JPEG"
 
+#. TRANSLATORS: 'song title' by 'artist name'
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
+
 msgid "Could not connect to server"
 msgstr "Mhux possibli naqbad mas-server"
+
+msgid "No URL set."
+msgstr ""
 
 #, fuzzy
 msgid "Server does not support seeking."
@@ -47,9 +53,6 @@ msgid ""
 msgstr ""
 
 msgid "Server sent bad data."
-msgstr ""
-
-msgid "No URL set."
 msgstr ""
 
 msgid "Internal data stream error."
@@ -111,16 +114,6 @@ msgstr "Audio device ma jistax jintuża. M'għandex aċċess għalih."
 msgid "Could not open audio device for playback."
 msgstr "Audio device ma jistax jintuża."
 
-#, fuzzy
-msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr ""
-"Audio device ma jistax jintuża biex tirrekordja. M'għandex aċċess għalih."
-
-msgid "Could not open audio device for recording."
-msgstr "Audio device ma jistax jintuża biex tirrekordja."
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -139,6 +132,45 @@ msgstr "Irrekordjar mhux issapportjat minn dan l-apparat tal-awdjo."
 
 msgid "Error recording from audio device."
 msgstr "Żball fl-irrekordjar mill-apparat tal-awdjo."
+
+#, fuzzy
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Audio device ma jistax jintuża biex tirrekordja. M'għandex aċċess għalih."
+
+msgid "Could not open audio device for recording."
+msgstr "Audio device ma jistax jintuża biex tirrekordja."
+
+#, fuzzy
+msgid "Record Source"
+msgstr "Record"
+
+msgid "Microphone"
+msgstr "Mikrofonu"
+
+#, fuzzy
+msgid "Line In"
+msgstr "Line-in"
+
+msgid "Internal CD"
+msgstr ""
+
+msgid "SPDIF In"
+msgstr ""
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "Codec Loopback"
+msgstr ""
+
+msgid "SunVTS Loopback"
+msgstr ""
 
 msgid "Volume"
 msgstr "Volum"
@@ -243,6 +275,10 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Problema biex inġib signal strength fuq l-apparat '%s'."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Device '%s' mhux identifikat."
+
+#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -265,10 +301,6 @@ msgstr "Ma stajx nfittex norm fuq apparat '%s'."
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "L-attributi ta' kontroll ta' device '%s' ma nqrawx."
-
-#, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Device '%s' mhux identifikat."
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -363,9 +395,6 @@ msgstr "Ma nistax nħaddem mingħajr arloġġ"
 #~ msgid "Line-in"
 #~ msgstr "Line-in"
 
-#~ msgid "Microphone"
-#~ msgstr "Mikrofonu"
-
 #~ msgid "CD"
 #~ msgstr "CD"
 
@@ -374,9 +403,6 @@ msgstr "Ma nistax nħaddem mingħajr arloġġ"
 
 #~ msgid "PCM-2"
 #~ msgstr "PCM-2"
-
-#~ msgid "Record"
-#~ msgstr "Record"
 
 #~ msgid "In-gain"
 #~ msgstr "In-gain"
@@ -451,10 +477,6 @@ msgstr "Ma nistax nħaddem mingħajr arloġġ"
 #, fuzzy
 #~ msgid "Telephone"
 #~ msgstr "Headphones"
-
-#, fuzzy
-#~ msgid "Line In"
-#~ msgstr "Line-in"
 
 #, fuzzy
 #~ msgid "Microphone Boost"

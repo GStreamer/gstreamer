@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:34+0200\n"
+"POT-Creation-Date: 2013-07-11 15:56+0200\n"
 "PO-Revision-Date: 2004-08-07 20:29+0200\n"
 "Last-Translator: Laurent Dhima <laurenti@alblinux.net>\n"
 "Language-Team: Albanian <begraj@hotmail.com>\n"
@@ -15,17 +15,23 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#. TRANSLATORS: 'song title' by 'artist name'
-#, c-format
-msgid "'%s' by '%s'"
+msgid "Jack server not found"
 msgstr ""
 
 msgid "Failed to decode JPEG image"
 msgstr ""
 
+#. TRANSLATORS: 'song title' by 'artist name'
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
+
 #, fuzzy
 msgid "Could not connect to server"
 msgstr "E pamundur mbyllja e dispozitivit të kontrollit \"%s\"."
+
+msgid "No URL set."
+msgstr ""
 
 #, fuzzy
 msgid "Server does not support seeking."
@@ -47,9 +53,6 @@ msgid ""
 msgstr ""
 
 msgid "Server sent bad data."
-msgstr ""
-
-msgid "No URL set."
 msgstr ""
 
 msgid "Internal data stream error."
@@ -112,15 +115,6 @@ msgid "Could not open audio device for playback."
 msgstr "E pamundur hapja e dispozitivit të zërit \"%s\" për shkrim."
 
 msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr ""
-
-#, fuzzy
-msgid "Could not open audio device for recording."
-msgstr "I pamundur hapja e dispozitivit CD për lexim."
-
-msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
@@ -135,6 +129,44 @@ msgid "Recording is not supported by this audio device."
 msgstr ""
 
 msgid "Error recording from audio device."
+msgstr ""
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+
+#, fuzzy
+msgid "Could not open audio device for recording."
+msgstr "I pamundur hapja e dispozitivit CD për lexim."
+
+#, fuzzy
+msgid "Record Source"
+msgstr "Regjistrimi"
+
+msgid "Microphone"
+msgstr "Mikrofoni"
+
+#, fuzzy
+msgid "Line In"
+msgstr "Linja-hyrje"
+
+msgid "Internal CD"
+msgstr ""
+
+msgid "SPDIF In"
+msgstr ""
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "Codec Loopback"
+msgstr ""
+
+msgid "SunVTS Loopback"
 msgstr ""
 
 msgid "Volume"
@@ -235,6 +267,10 @@ msgstr "E pamundur mbyllja e dispozitivit audio \"%s\"."
 msgid "Failed to change mute state for device '%s'."
 msgstr "E pamundur marrja e buffers nga dispozitivi \"%s\"."
 
+#, fuzzy, c-format
+msgid "Cannot identify device '%s'."
+msgstr "I pamundur shkrimi në dispozitivin \"%s\"."
+
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
@@ -256,10 +292,6 @@ msgstr ""
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr ""
-
-#, fuzzy, c-format
-msgid "Cannot identify device '%s'."
-msgstr "I pamundur shkrimi në dispozitivin \"%s\"."
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -342,9 +374,6 @@ msgstr ""
 #~ msgid "Line-in"
 #~ msgstr "Linja-hyrje"
 
-#~ msgid "Microphone"
-#~ msgstr "Mikrofoni"
-
 #~ msgid "CD"
 #~ msgstr "CD"
 
@@ -406,10 +435,6 @@ msgstr ""
 #~ msgstr "Video"
 
 #, fuzzy
-#~ msgid "Line In"
-#~ msgstr "Linja-hyrje"
-
-#, fuzzy
 #~ msgid "Video In"
 #~ msgstr "Video"
 
@@ -424,10 +449,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Microphone Boost"
 #~ msgstr "Mikrofoni"
-
-#, fuzzy
-#~ msgid "Record Source"
-#~ msgstr "Regjistrimi"
 
 #, fuzzy
 #~ msgid "Monitor Source"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:34+0200\n"
+"POT-Creation-Date: 2013-07-11 15:56+0200\n"
 "PO-Revision-Date: 2010-11-08 15:48+0100\n"
 "Last-Translator: Peter Tuhársky <tuharsky@misbb.sk>\n"
 "Language-Team: Slovak <sk-i18n@lists.linux.sk>\n"
@@ -18,16 +18,22 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 "X-Poedit-Country: SLOVAKIA\n"
 
+msgid "Jack server not found"
+msgstr ""
+
+msgid "Failed to decode JPEG image"
+msgstr "Nepodarilo sa dekódovať obrázok JPEG"
+
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "'%s' od '%s'"
 
-msgid "Failed to decode JPEG image"
-msgstr "Nepodarilo sa dekódovať obrázok JPEG"
-
 msgid "Could not connect to server"
 msgstr "Nepodarilo sa pripojiť k serveru"
+
+msgid "No URL set."
+msgstr "Nebolo nastavené URL."
 
 msgid "Server does not support seeking."
 msgstr "Server nepodporuje zmenu pozície"
@@ -47,9 +53,6 @@ msgstr "Vyskytla sa sieťová chyba, alebo server neočakávane uzavrel spojenie
 
 msgid "Server sent bad data."
 msgstr "Server odoslal chybné údaje."
-
-msgid "No URL set."
-msgstr "Nebolo nastavené URL."
 
 msgid "Internal data stream error."
 msgstr "Vnútorná chyba prúdu údajov."
@@ -119,16 +122,6 @@ msgid "Could not open audio device for playback."
 msgstr "Nepodarilo sa otvoriť zvukové zariadenie vrežime prehrávania."
 
 msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr ""
-"Nepodarilo sa otvoriť zvukové zariadenie v režime záznamu. Nemáte oprávnenie "
-"na otvorenie tohto zariadenia."
-
-msgid "Could not open audio device for recording."
-msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime záznamu."
-
-msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
@@ -146,6 +139,45 @@ msgstr "Záznam nie je podporovaný týmto zvukovým zariadením."
 
 msgid "Error recording from audio device."
 msgstr "Chyba pri zázname zo zvukového zariadenia."
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Nepodarilo sa otvoriť zvukové zariadenie v režime záznamu. Nemáte oprávnenie "
+"na otvorenie tohto zariadenia."
+
+msgid "Could not open audio device for recording."
+msgstr "Nepodarilo sa otvoriť zvukové zariadenie v režime záznamu."
+
+msgid "Record Source"
+msgstr "Zdroj záznamu"
+
+msgid "Microphone"
+msgstr "Mikrofón"
+
+msgid "Line In"
+msgstr "Linkový vstup"
+
+msgid "Internal CD"
+msgstr "Vnútorne CD"
+
+msgid "SPDIF In"
+msgstr "SPDIF vstup"
+
+msgid "AUX 1 In"
+msgstr "AUX 1 vstup"
+
+msgid "AUX 2 In"
+msgstr "AUX 2 vstup"
+
+#, fuzzy
+msgid "Codec Loopback"
+msgstr "Spätná slučka"
+
+#, fuzzy
+msgid "SunVTS Loopback"
+msgstr "Spätná slučka"
 
 msgid "Volume"
 msgstr "Hlasitosť"
@@ -251,6 +283,10 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Nepodarilo sa zistiť silu signálu pre zariadenie '%s'."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Neviem identifikovať zariadenie '%s'."
+
+#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -273,10 +309,6 @@ msgstr "Zlyhala požiadavka norm na zariadení '%s'."
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Nepodarilo sa získať atribúty ovládacích prvkov na zariadení '%s'."
-
-#, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Neviem identifikovať zariadenie '%s'."
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -369,9 +401,6 @@ msgstr "Nemôžem fungovať bez hodín"
 
 #~ msgid "Line-in"
 #~ msgstr "Linkový vstup"
-
-#~ msgid "Microphone"
-#~ msgstr "Mikrofón"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -470,20 +499,8 @@ msgstr "Nemôžem fungovať bez hodín"
 #~ msgid "Telephone"
 #~ msgstr "Telefón"
 
-#~ msgid "Line In"
-#~ msgstr "Linkový vstup"
-
-#~ msgid "Internal CD"
-#~ msgstr "Vnútorne CD"
-
 #~ msgid "Video In"
 #~ msgstr "Video vstup"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "AUX 1 vstup"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "AUX 2 vstup"
 
 #~ msgid "AUX In"
 #~ msgstr "AUX vstup"
@@ -497,9 +514,6 @@ msgstr "Nemôžem fungovať bez hodín"
 #~ msgid "Microphone Boost"
 #~ msgstr "Zosilnenie mikrofónu"
 
-#~ msgid "Loopback"
-#~ msgstr "Spätná slučka"
-
 #~ msgid "Diagnostic"
 #~ msgstr "Diagnostika"
 
@@ -511,9 +525,6 @@ msgstr "Nemôžem fungovať bez hodín"
 
 #~ msgid "Input"
 #~ msgstr "Vstup"
-
-#~ msgid "Record Source"
-#~ msgstr "Zdroj záznamu"
 
 #~ msgid "Monitor Source"
 #~ msgstr "Monitor zdroja"
@@ -553,9 +564,6 @@ msgstr "Nemôžem fungovať bez hodín"
 
 #~ msgid "Input Mix"
 #~ msgstr "Vstup Mix"
-
-#~ msgid "SPDIF In"
-#~ msgstr "SPDIF vstup"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Mikrofón 1"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.23.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:34+0200\n"
+"POT-Creation-Date: 2013-07-11 15:56+0200\n"
 "PO-Revision-Date: 2010-07-16 19:34+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -19,16 +19,22 @@ msgstr ""
 "%100<10 || n%100>=20) ? 1 : 2);\n"
 "X-Generator: Virtaal 0.6.1\n"
 
+msgid "Jack server not found"
+msgstr ""
+
+msgid "Failed to decode JPEG image"
+msgstr "Nepavyko dekoduoti JPEG paveikslėlio"
+
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "„%s“ atlieka „%s“"
 
-msgid "Failed to decode JPEG image"
-msgstr "Nepavyko dekoduoti JPEG paveikslėlio"
-
 msgid "Could not connect to server"
 msgstr "Nepavyko prisijungti prie serverio"
+
+msgid "No URL set."
+msgstr ""
 
 msgid "Server does not support seeking."
 msgstr ""
@@ -49,9 +55,6 @@ msgid ""
 msgstr ""
 
 msgid "Server sent bad data."
-msgstr ""
-
-msgid "No URL set."
 msgstr ""
 
 msgid "Internal data stream error."
@@ -120,16 +123,6 @@ msgid "Could not open audio device for playback."
 msgstr "Nepavyko atverti garso įrenginio grojimui. "
 
 msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr ""
-"Nepavyko atverti garso įrenginio įrašymui. Jūs neturite leidimo atverti "
-"įrenginį."
-
-msgid "Could not open audio device for recording."
-msgstr "Nepavyko atverti garso įrenginio įrašymui."
-
-msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
@@ -147,6 +140,45 @@ msgstr "Šis garso įrenginys nepalaiko grojimo."
 
 msgid "Error recording from audio device."
 msgstr "Klaida įrašant iš garso įrenginio."
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Nepavyko atverti garso įrenginio įrašymui. Jūs neturite leidimo atverti "
+"įrenginį."
+
+msgid "Could not open audio device for recording."
+msgstr "Nepavyko atverti garso įrenginio įrašymui."
+
+msgid "Record Source"
+msgstr "Įrašymo šaltinis"
+
+msgid "Microphone"
+msgstr "Mikrofonas"
+
+msgid "Line In"
+msgstr "Įeinanti linija"
+
+msgid "Internal CD"
+msgstr "Vidinis CD"
+
+msgid "SPDIF In"
+msgstr "SPDIF įvestis"
+
+msgid "AUX 1 In"
+msgstr "AUX 1 įvestis"
+
+msgid "AUX 2 In"
+msgstr "AUX 2 įvestis"
+
+#, fuzzy
+msgid "Codec Loopback"
+msgstr "Perduoti ratu"
+
+#, fuzzy
+msgid "SunVTS Loopback"
+msgstr "Perduoti ratu"
 
 msgid "Volume"
 msgstr "Garsumas"
@@ -247,6 +279,10 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Nepavyko gauti įrenginio „%s“ signalo stiprumo."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Nepavyko nustatyti įrenginio „%s“."
+
+#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -269,10 +305,6 @@ msgstr "Nepavyko užklausti normalės įrenginyje „%s“."
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Nepavyko gauti valdymo atributų įrenginyje „%s“."
-
-#, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Nepavyko nustatyti įrenginio „%s“."
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -363,9 +395,6 @@ msgstr "Negali veikti be laikrodžio"
 
 #~ msgid "Line-in"
 #~ msgstr "Įvedimas"
-
-#~ msgid "Microphone"
-#~ msgstr "Mikrofonas"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -464,20 +493,8 @@ msgstr "Negali veikti be laikrodžio"
 #~ msgid "Telephone"
 #~ msgstr "Telefonas"
 
-#~ msgid "Line In"
-#~ msgstr "Įeinanti linija"
-
-#~ msgid "Internal CD"
-#~ msgstr "Vidinis CD"
-
 #~ msgid "Video In"
 #~ msgstr "Vaizdo įvestis"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "AUX 1 įvestis"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "AUX 2 įvestis"
 
 #~ msgid "AUX In"
 #~ msgstr "AUX įvestis"
@@ -491,9 +508,6 @@ msgstr "Negali veikti be laikrodžio"
 #~ msgid "Microphone Boost"
 #~ msgstr "Mikrofono pagarsinimas"
 
-#~ msgid "Loopback"
-#~ msgstr "Perduoti ratu"
-
 #~ msgid "Diagnostic"
 #~ msgstr "Diagnostika"
 
@@ -505,9 +519,6 @@ msgstr "Negali veikti be laikrodžio"
 
 #~ msgid "Input"
 #~ msgstr "Įvestis"
-
-#~ msgid "Record Source"
-#~ msgstr "Įrašymo šaltinis"
 
 #~ msgid "Monitor Source"
 #~ msgstr "Monitoriaus šaltinis"
@@ -547,9 +558,6 @@ msgstr "Negali veikti be laikrodžio"
 
 #~ msgid "Input Mix"
 #~ msgstr "Įvesties maiša"
-
-#~ msgid "SPDIF In"
-#~ msgstr "SPDIF įvestis"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Mikrofonas 1"

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.0\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:34+0200\n"
+"POT-Creation-Date: 2013-07-11 15:56+0200\n"
 "PO-Revision-Date: 2004-03-19 18:29+0200\n"
 "Last-Translator: Metin Amiroff <metin@karegen.com>\n"
 "Language-Team: Azerbaijani <translation-team-az@lists.sourceforge.net>\n"
@@ -17,17 +17,23 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: KBabel 1.0.2\n"
 
-#. TRANSLATORS: 'song title' by 'artist name'
-#, c-format
-msgid "'%s' by '%s'"
+msgid "Jack server not found"
 msgstr ""
 
 msgid "Failed to decode JPEG image"
 msgstr ""
 
+#. TRANSLATORS: 'song title' by 'artist name'
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
+
 #, fuzzy
 msgid "Could not connect to server"
 msgstr "\"%s\" idarə avadanlığı bağlana bilmədi."
+
+msgid "No URL set."
+msgstr ""
 
 msgid "Server does not support seeking."
 msgstr ""
@@ -48,9 +54,6 @@ msgid ""
 msgstr ""
 
 msgid "Server sent bad data."
-msgstr ""
-
-msgid "No URL set."
 msgstr ""
 
 msgid "Internal data stream error."
@@ -113,15 +116,6 @@ msgid "Could not open audio device for playback."
 msgstr "\"%s\" audio avadanlığı yazma üçün açıla bilmədi."
 
 msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr ""
-
-#, fuzzy
-msgid "Could not open audio device for recording."
-msgstr "CD avadanlığı oxuma üçün açıla bilmədi."
-
-msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
@@ -136,6 +130,44 @@ msgid "Recording is not supported by this audio device."
 msgstr ""
 
 msgid "Error recording from audio device."
+msgstr ""
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+
+#, fuzzy
+msgid "Could not open audio device for recording."
+msgstr "CD avadanlığı oxuma üçün açıla bilmədi."
+
+#, fuzzy
+msgid "Record Source"
+msgstr "Qeyd"
+
+msgid "Microphone"
+msgstr "Mikrofon"
+
+#, fuzzy
+msgid "Line In"
+msgstr "Xətd-giriş"
+
+msgid "Internal CD"
+msgstr ""
+
+msgid "SPDIF In"
+msgstr ""
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "Codec Loopback"
+msgstr ""
+
+msgid "SunVTS Loopback"
 msgstr ""
 
 msgid "Volume"
@@ -236,6 +268,10 @@ msgstr "\"%s\" audio avadanlığı bağlana bilmədi."
 msgid "Failed to change mute state for device '%s'."
 msgstr "\"%s\" avadanlığından bufferlər alına bilmədi."
 
+#, fuzzy, c-format
+msgid "Cannot identify device '%s'."
+msgstr "\"%s\" avadanlığına yazıla bilmədi."
+
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
@@ -257,10 +293,6 @@ msgstr ""
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr ""
-
-#, fuzzy, c-format
-msgid "Cannot identify device '%s'."
-msgstr "\"%s\" avadanlığına yazıla bilmədi."
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -343,9 +375,6 @@ msgstr ""
 #~ msgid "Line-in"
 #~ msgstr "Xətd-giriş"
 
-#~ msgid "Microphone"
-#~ msgstr "Mikrofon"
-
 #~ msgid "CD"
 #~ msgstr "CD"
 
@@ -407,10 +436,6 @@ msgstr ""
 #~ msgstr "Video"
 
 #, fuzzy
-#~ msgid "Line In"
-#~ msgstr "Xətd-giriş"
-
-#, fuzzy
 #~ msgid "Video In"
 #~ msgstr "Video"
 
@@ -425,10 +450,6 @@ msgstr ""
 #, fuzzy
 #~ msgid "Microphone Boost"
 #~ msgstr "Mikrofon"
-
-#, fuzzy
-#~ msgid "Record Source"
-#~ msgstr "Qeyd"
 
 #, fuzzy
 #~ msgid "Monitor Source"

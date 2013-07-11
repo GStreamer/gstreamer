@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.25.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:34+0200\n"
+"POT-Creation-Date: 2013-07-11 15:56+0200\n"
 "PO-Revision-Date: 2010-10-25 10:11+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -16,16 +16,22 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "Jack server not found"
+msgstr ""
+
+msgid "Failed to decode JPEG image"
+msgstr "Decodifica dell'immagine JPEG non riuscita"
+
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "«%s» di «%s»"
 
-msgid "Failed to decode JPEG image"
-msgstr "Decodifica dell'immagine JPEG non riuscita"
-
 msgid "Could not connect to server"
 msgstr "Impossibile connettersi al server"
+
+msgid "No URL set."
+msgstr "Nessun URL impostato."
 
 msgid "Server does not support seeking."
 msgstr "Il server non supporta il posizionamento."
@@ -47,9 +53,6 @@ msgstr ""
 
 msgid "Server sent bad data."
 msgstr "In server ha inviato dati errati."
-
-msgid "No URL set."
-msgstr "Nessun URL impostato."
 
 msgid "Internal data stream error."
 msgstr "Errore interno nello stream dei dati."
@@ -121,16 +124,6 @@ msgid "Could not open audio device for playback."
 msgstr "Impossibile aprire il dispositivo audio per la riproduzione."
 
 msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr ""
-"Impossibile aprire il dispositivo audio per la registrazione. Permessi non "
-"sufficienti per aprire il dispositivo."
-
-msgid "Could not open audio device for recording."
-msgstr "Impossibile aprire il dispositivo audio per la registrazione."
-
-msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
@@ -148,6 +141,45 @@ msgstr "Questo dispositivo audio non supporta la registrazione."
 
 msgid "Error recording from audio device."
 msgstr "Errore nel registrare dal dispositivo audio."
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Impossibile aprire il dispositivo audio per la registrazione. Permessi non "
+"sufficienti per aprire il dispositivo."
+
+msgid "Could not open audio device for recording."
+msgstr "Impossibile aprire il dispositivo audio per la registrazione."
+
+msgid "Record Source"
+msgstr "Sorgente registrazione"
+
+msgid "Microphone"
+msgstr "Microfono"
+
+msgid "Line In"
+msgstr "Linea in"
+
+msgid "Internal CD"
+msgstr "CD interno"
+
+msgid "SPDIF In"
+msgstr "SPDIF in"
+
+msgid "AUX 1 In"
+msgstr "AUX 1 in"
+
+msgid "AUX 2 In"
+msgstr "AUX 2 in"
+
+#, fuzzy
+msgid "Codec Loopback"
+msgstr "Loopback"
+
+#, fuzzy
+msgid "SunVTS Loopback"
+msgstr "Loopback"
 
 msgid "Volume"
 msgstr "Volume"
@@ -251,6 +283,10 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Recupero dell'intensità del segnale per il device «%s» non riuscito."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Impossibile identificare il device «%s»."
+
+#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -282,10 +318,6 @@ msgstr "Interrogazione di norm sul device «%s» non riuscita."
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Recupero degli attributi dei controlli sul device «%s» non riuscito."
-
-#, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Impossibile identificare il device «%s»."
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -383,9 +415,6 @@ msgstr "Impossibile operare senza un clock"
 
 #~ msgid "Line-in"
 #~ msgstr "Linea in"
-
-#~ msgid "Microphone"
-#~ msgstr "Microfono"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -488,20 +517,8 @@ msgstr "Impossibile operare senza un clock"
 #~ msgid "Telephone"
 #~ msgstr "Telefono"
 
-#~ msgid "Line In"
-#~ msgstr "Linea in"
-
-#~ msgid "Internal CD"
-#~ msgstr "CD interno"
-
 #~ msgid "Video In"
 #~ msgstr "Video in"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "AUX 1 in"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "AUX 2 in"
 
 #~ msgid "AUX In"
 #~ msgstr "AUX in"
@@ -515,9 +532,6 @@ msgstr "Impossibile operare senza un clock"
 #~ msgid "Microphone Boost"
 #~ msgstr "Incremento microfono"
 
-#~ msgid "Loopback"
-#~ msgstr "Loopback"
-
 #~ msgid "Diagnostic"
 #~ msgstr "Diagnostica"
 
@@ -529,9 +543,6 @@ msgstr "Impossibile operare senza un clock"
 
 #~ msgid "Input"
 #~ msgstr "Input"
-
-#~ msgid "Record Source"
-#~ msgstr "Sorgente registrazione"
 
 #~ msgid "Monitor Source"
 #~ msgstr "Sorgente monitor"
@@ -572,9 +583,6 @@ msgstr "Impossibile operare senza un clock"
 
 #~ msgid "Input Mix"
 #~ msgstr "Mix ingresso"
-
-#~ msgid "SPDIF In"
-#~ msgstr "SPDIF in"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Microfono 1"

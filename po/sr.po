@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:34+0200\n"
+"POT-Creation-Date: 2013-07-11 15:56+0200\n"
 "PO-Revision-Date: 2011-12-04 16:44+0200\n"
 "Last-Translator: Мирослав Николић <miroslavnikolic@rocketmail.com>\n"
 "Language-Team: Serbian <gnu@prevod.org>\n"
@@ -20,16 +20,22 @@ msgstr ""
 "X-Generator: Virtaal 0.7.0\n"
 "X-Project-Style: gnome\n"
 
+msgid "Jack server not found"
+msgstr ""
+
+msgid "Failed to decode JPEG image"
+msgstr "Нисам успео да декодирам ЈПЕГ слику"
+
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "„%s“ изводи „%s“"
 
-msgid "Failed to decode JPEG image"
-msgstr "Нисам успео да декодирам ЈПЕГ слику"
-
 msgid "Could not connect to server"
 msgstr "Не могу да се повежем са сервером"
+
+msgid "No URL set."
+msgstr "Није подешена адреса."
 
 msgid "Server does not support seeking."
 msgstr "Сервер не подржава позиционирање."
@@ -49,9 +55,6 @@ msgstr "Дошло је до грешке на мрежи, или је серв�
 
 msgid "Server sent bad data."
 msgstr "Сервер је послао лоше податке."
-
-msgid "No URL set."
-msgstr "Није подешена адреса."
 
 msgid "Internal data stream error."
 msgstr "Унутрашња грешка тока података."
@@ -121,16 +124,6 @@ msgid "Could not open audio device for playback."
 msgstr "Не могу да покренем звучни уређај ради пуштања."
 
 msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr ""
-"Не могу да покренем аудио уређај ради снимања. Немате овлашћење за покретање "
-"уређаја."
-
-msgid "Could not open audio device for recording."
-msgstr "Не могу да покренем звучни уређај ради снимања."
-
-msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
@@ -148,6 +141,45 @@ msgstr "Снимање није подржано од стране овог зв
 
 msgid "Error recording from audio device."
 msgstr "Грешка приликом снимања са звучног уређаја."
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Не могу да покренем аудио уређај ради снимања. Немате овлашћење за покретање "
+"уређаја."
+
+msgid "Could not open audio device for recording."
+msgstr "Не могу да покренем звучни уређај ради снимања."
+
+msgid "Record Source"
+msgstr "Извор снимања"
+
+msgid "Microphone"
+msgstr "Микрофон"
+
+msgid "Line In"
+msgstr "Линијски улаз"
+
+msgid "Internal CD"
+msgstr "Унутрашњи ЦД"
+
+msgid "SPDIF In"
+msgstr "СПДИФ улаз"
+
+msgid "AUX 1 In"
+msgstr "АУХ 1 улаз"
+
+msgid "AUX 2 In"
+msgstr "АУХ 2 улаз"
+
+#, fuzzy
+msgid "Codec Loopback"
+msgstr "Повратна петља"
+
+#, fuzzy
+msgid "SunVTS Loopback"
+msgstr "Повратна петља"
 
 msgid "Volume"
 msgstr "Јачина звука"
@@ -250,6 +282,10 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Нисам успео да добавим јачину сигнала за уређај „%s“."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Не могу да распознам уређај „%s“."
+
+#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -272,10 +308,6 @@ msgstr "Нисам успео да пропитам норму на уређај
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Нисам успео да добавим својства контрола на уређају „%s“."
-
-#, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Не могу да распознам уређај „%s“."
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -366,9 +398,6 @@ msgstr "Не могу да радим без сата"
 
 #~ msgid "Line-in"
 #~ msgstr "Линијски улаз"
-
-#~ msgid "Microphone"
-#~ msgstr "Микрофон"
 
 #~ msgid "CD"
 #~ msgstr "ЦД"
@@ -467,20 +496,8 @@ msgstr "Не могу да радим без сата"
 #~ msgid "Telephone"
 #~ msgstr "Телефон"
 
-#~ msgid "Line In"
-#~ msgstr "Линијски улаз"
-
-#~ msgid "Internal CD"
-#~ msgstr "Унутрашњи ЦД"
-
 #~ msgid "Video In"
 #~ msgstr "Видео улаз"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "АУХ 1 улаз"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "АУХ 2 улаз"
 
 #~ msgid "AUX In"
 #~ msgstr "АУХ улаз"
@@ -494,9 +511,6 @@ msgstr "Не могу да радим без сата"
 #~ msgid "Microphone Boost"
 #~ msgstr "Појачање микрофона"
 
-#~ msgid "Loopback"
-#~ msgstr "Повратна петља"
-
 #~ msgid "Diagnostic"
 #~ msgstr "Дијагностика"
 
@@ -508,9 +522,6 @@ msgstr "Не могу да радим без сата"
 
 #~ msgid "Input"
 #~ msgstr "Улаз"
-
-#~ msgid "Record Source"
-#~ msgstr "Извор снимања"
 
 #~ msgid "Monitor Source"
 #~ msgstr "Извор праћења"
@@ -550,9 +561,6 @@ msgstr "Не могу да радим без сата"
 
 #~ msgid "Input Mix"
 #~ msgstr "Улазни микс"
-
-#~ msgid "SPDIF In"
-#~ msgstr "СПДИФ улаз"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Микрофон 1"

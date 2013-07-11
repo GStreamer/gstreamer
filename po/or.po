@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-0.8.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:34+0200\n"
+"POT-Creation-Date: 2013-07-11 15:56+0200\n"
 "PO-Revision-Date: 2004-09-27 13:32+0530\n"
 "Last-Translator: Gora Mohanty <gora_mohanty@yahoo.co.in>\n"
 "Language-Team: Oriya <gora_mohanty@yahoo.co.in>\n"
@@ -17,17 +17,23 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#. TRANSLATORS: 'song title' by 'artist name'
-#, c-format
-msgid "'%s' by '%s'"
+msgid "Jack server not found"
 msgstr ""
 
 msgid "Failed to decode JPEG image"
 msgstr ""
 
+#. TRANSLATORS: 'song title' by 'artist name'
+#, c-format
+msgid "'%s' by '%s'"
+msgstr ""
+
 #, fuzzy
 msgid "Could not connect to server"
 msgstr "\"%s\" ନିୟନ୍ତ୍ରଣ ଯନ୍ତ୍ର ବନ୍ଦ କରିହେଲା ନାହିଁ."
+
+msgid "No URL set."
+msgstr ""
 
 #, fuzzy
 msgid "Server does not support seeking."
@@ -49,9 +55,6 @@ msgid ""
 msgstr ""
 
 msgid "Server sent bad data."
-msgstr ""
-
-msgid "No URL set."
 msgstr ""
 
 msgid "Internal data stream error."
@@ -114,16 +117,6 @@ msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ଲେଖିବା ପାଇ�
 msgid "Could not open audio device for playback."
 msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ଲେଖିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
 
-#, fuzzy
-msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr "ସି.ଡି. ଯନ୍ତ୍ର ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
-
-#, fuzzy
-msgid "Could not open audio device for recording."
-msgstr "ସି.ଡି. ଯନ୍ତ୍ର ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
-
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
@@ -139,6 +132,45 @@ msgid "Recording is not supported by this audio device."
 msgstr ""
 
 msgid "Error recording from audio device."
+msgstr ""
+
+#, fuzzy
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr "ସି.ଡି. ଯନ୍ତ୍ର ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+
+#, fuzzy
+msgid "Could not open audio device for recording."
+msgstr "ସି.ଡି. ଯନ୍ତ୍ର ପଢ଼ିବା ପାଇଁ ଖୋଲିହେଲା ନାହିଁ."
+
+#, fuzzy
+msgid "Record Source"
+msgstr "ପ୍ରଦର୍ଶିକା"
+
+msgid "Microphone"
+msgstr "ମାଇକ୍ରୋଫୋନ୍"
+
+#, fuzzy
+msgid "Line In"
+msgstr "ଲାଇନ-ଇନ"
+
+msgid "Internal CD"
+msgstr ""
+
+msgid "SPDIF In"
+msgstr ""
+
+msgid "AUX 1 In"
+msgstr ""
+
+msgid "AUX 2 In"
+msgstr ""
+
+msgid "Codec Loopback"
+msgstr ""
+
+msgid "SunVTS Loopback"
 msgstr ""
 
 msgid "Volume"
@@ -239,6 +271,10 @@ msgstr "\"%s\" ଧ୍ବନି ଯନ୍ତ୍ର ବନ୍ଦ କରିହେ�
 msgid "Failed to change mute state for device '%s'."
 msgstr "\"%s\" ଯନ୍ତ୍ରରୁ ଅସ୍ଥାୟୀ ସଞ୍ଚୟ ସ୍ଥାନ ଆଣିହେଲା ନାହିଁ."
 
+#, fuzzy, c-format
+msgid "Cannot identify device '%s'."
+msgstr "\"%s\" ଯନ୍ତ୍ରରେ ଲେଖିହେଲା ନାହିଁ."
+
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
@@ -260,10 +296,6 @@ msgstr ""
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr ""
-
-#, fuzzy, c-format
-msgid "Cannot identify device '%s'."
-msgstr "\"%s\" ଯନ୍ତ୍ରରେ ଲେଖିହେଲା ନାହିଁ."
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -346,9 +378,6 @@ msgstr ""
 #~ msgid "Line-in"
 #~ msgstr "ଲାଇନ-ଇନ"
 
-#~ msgid "Microphone"
-#~ msgstr "ମାଇକ୍ରୋଫୋନ୍"
-
 #~ msgid "CD"
 #~ msgstr "ସି.ଡି."
 
@@ -416,20 +445,12 @@ msgstr ""
 #~ msgstr "ଭିଡିଓ"
 
 #, fuzzy
-#~ msgid "Line In"
-#~ msgstr "ଲାଇନ-ଇନ"
-
-#, fuzzy
 #~ msgid "Output Gain"
 #~ msgstr "ନିର୍ଗମ-ବୃଦ୍ଧି"
 
 #, fuzzy
 #~ msgid "Microphone Boost"
 #~ msgstr "ମାଇକ୍ରୋଫୋନ୍"
-
-#, fuzzy
-#~ msgid "Monitor Source"
-#~ msgstr "ପ୍ରଦର୍ଶିକା"
 
 #, fuzzy
 #~ msgid "Microphone Gain"

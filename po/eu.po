@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good-0.10.18.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:34+0200\n"
+"POT-Creation-Date: 2013-07-11 15:56+0200\n"
 "PO-Revision-Date: 2010-03-25 12:37+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -19,16 +19,22 @@ msgstr ""
 "X-Generator: KBabel 1.11.4\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
+msgid "Jack server not found"
+msgstr ""
+
+msgid "Failed to decode JPEG image"
+msgstr "Huts egin du JPEG irudia deskodetzean"
+
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "'%s' - '%s'"
 
-msgid "Failed to decode JPEG image"
-msgstr "Huts egin du JPEG irudia deskodetzean"
-
 msgid "Could not connect to server"
 msgstr "Ezin izan da konektatu zerbitzariarekin"
+
+msgid "No URL set."
+msgstr ""
 
 msgid "Server does not support seeking."
 msgstr ""
@@ -49,9 +55,6 @@ msgid ""
 msgstr ""
 
 msgid "Server sent bad data."
-msgstr ""
-
-msgid "No URL set."
 msgstr ""
 
 msgid "Internal data stream error."
@@ -125,16 +128,6 @@ msgid "Could not open audio device for playback."
 msgstr "Ezin izan da audioaren gailua ireki erreproduzitzeko."
 
 msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr ""
-"Ezin izan da audioaren gailua ireki grabatzeko. Ez duzu baimenik gailua "
-"irekitzeko."
-
-msgid "Could not open audio device for recording."
-msgstr "Ezin izan da audioaren gailua ireki grabatzeko."
-
-msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
@@ -152,6 +145,45 @@ msgstr "Audio gailu honek ez du grabatzea onartzen."
 
 msgid "Error recording from audio device."
 msgstr "Errorea audioko gailutik grabatzean."
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Ezin izan da audioaren gailua ireki grabatzeko. Ez duzu baimenik gailua "
+"irekitzeko."
+
+msgid "Could not open audio device for recording."
+msgstr "Ezin izan da audioaren gailua ireki grabatzeko."
+
+msgid "Record Source"
+msgstr "Grabazioaren iturburua"
+
+msgid "Microphone"
+msgstr "Mikrofonoa"
+
+msgid "Line In"
+msgstr "Sarrerako linea"
+
+msgid "Internal CD"
+msgstr "Barneko CDa"
+
+msgid "SPDIF In"
+msgstr "SPDIF sarrera"
+
+msgid "AUX 1 In"
+msgstr "1. sarrera lagungarria"
+
+msgid "AUX 2 In"
+msgstr "2. sarrera lagungarria"
+
+#, fuzzy
+msgid "Codec Loopback"
+msgstr "Atzera-begizta"
+
+#, fuzzy
+msgid "SunVTS Loopback"
+msgstr "Atzera-begizta"
 
 msgid "Volume"
 msgstr "Bolumena"
@@ -257,6 +289,10 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Huts egin du '%s' gailuaren seinalearen indarra eskuratzean."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Ezin da '%s' gailua identifikatu."
+
+#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -280,10 +316,6 @@ msgstr "Huts egin du '%s' gailuaren araua kontsultatzean."
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Huts egin dut '%s' gailuaren kontrol-atributuak eskuratzean."
-
-#, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Ezin da '%s' gailua identifikatu."
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -378,9 +410,6 @@ msgstr "Ezin du funtzionatu erlojurik gabe"
 
 #~ msgid "Line-in"
 #~ msgstr "Linea-sarrera"
-
-#~ msgid "Microphone"
-#~ msgstr "Mikrofonoa"
 
 #~ msgid "CD"
 #~ msgstr "CDa"
@@ -480,20 +509,8 @@ msgstr "Ezin du funtzionatu erlojurik gabe"
 #~ msgid "Telephone"
 #~ msgstr "Telefonoa"
 
-#~ msgid "Line In"
-#~ msgstr "Sarrerako linea"
-
-#~ msgid "Internal CD"
-#~ msgstr "Barneko CDa"
-
 #~ msgid "Video In"
 #~ msgstr "Bideo-sarrera"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "1. sarrera lagungarria"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "2. sarrera lagungarria"
 
 #~ msgid "AUX In"
 #~ msgstr "Sarrera lagungarria"
@@ -507,9 +524,6 @@ msgstr "Ezin du funtzionatu erlojurik gabe"
 #~ msgid "Microphone Boost"
 #~ msgstr "Mikrofonoaren bultzada"
 
-#~ msgid "Loopback"
-#~ msgstr "Atzera-begizta"
-
 #~ msgid "Diagnostic"
 #~ msgstr "Diagnostikoa"
 
@@ -521,9 +535,6 @@ msgstr "Ezin du funtzionatu erlojurik gabe"
 
 #~ msgid "Input"
 #~ msgstr "Sarrera"
-
-#~ msgid "Record Source"
-#~ msgstr "Grabazioaren iturburua"
 
 #~ msgid "Monitor Source"
 #~ msgstr "Monitorearen iturburua"
@@ -563,9 +574,6 @@ msgstr "Ezin du funtzionatu erlojurik gabe"
 
 #~ msgid "Input Mix"
 #~ msgstr "Sarrerako nahasketa"
-
-#~ msgid "SPDIF In"
-#~ msgstr "SPDIF sarrera"
 
 #~ msgid "Microphone 1"
 #~ msgstr "1. mikrofonoa"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:34+0200\n"
+"POT-Creation-Date: 2013-07-11 15:56+0200\n"
 "PO-Revision-Date: 2011-08-28 23:59+0900\n"
 "Last-Translator: Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -19,16 +19,22 @@ msgstr ""
 "X-Generator: Lokalize 0.3\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
+msgid "Jack server not found"
+msgstr ""
+
+msgid "Failed to decode JPEG image"
+msgstr "JPEG画像のデコードに失敗しました"
+
 #. TRANSLATORS: 'song title' by 'artist name'
 #, fuzzy, c-format
 msgid "'%s' by '%s'"
 msgstr "対"
 
-msgid "Failed to decode JPEG image"
-msgstr "JPEG画像のデコードに失敗しました"
-
 msgid "Could not connect to server"
 msgstr "サーバーへ接続できません"
+
+msgid "No URL set."
+msgstr "URLが指定されていません。"
 
 msgid "Server does not support seeking."
 msgstr "サーバーはシークをサポートしていません。"
@@ -49,9 +55,6 @@ msgstr "ネットワークエラーが発生したか、サーバーが予期せ
 #, fuzzy
 msgid "Server sent bad data."
 msgstr "データストリーム (サーバープッシュ型)"
-
-msgid "No URL set."
-msgstr "URLが指定されていません。"
 
 msgid "Internal data stream error."
 msgstr "内部データストリームエラー"
@@ -125,17 +128,6 @@ msgid "Could not open audio device for playback."
 msgstr "音声デバイスを読み取り用に開くことができません。"
 
 msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr ""
-"録音用にオーディオデバイスを開くことができませんでした。デバイスを開くための"
-"権限がありません。"
-
-# SUN REVIEWED
-msgid "Could not open audio device for recording."
-msgstr "音声デバイスを録音用に開くことができません。"
-
-msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
@@ -153,6 +145,47 @@ msgstr "このオーディオデバイスによって録音はサポートされ
 
 msgid "Error recording from audio device."
 msgstr "オーディオデバイスからの録音時にエラーが発生しました。"
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"録音用にオーディオデバイスを開くことができませんでした。デバイスを開くための"
+"権限がありません。"
+
+# SUN REVIEWED
+msgid "Could not open audio device for recording."
+msgstr "音声デバイスを録音用に開くことができません。"
+
+msgid "Record Source"
+msgstr "録音ソース"
+
+# SUN REVIEWED
+msgid "Microphone"
+msgstr "マイクロフォン"
+
+msgid "Line In"
+msgstr "ライン入力"
+
+msgid "Internal CD"
+msgstr "内蔵CD"
+
+msgid "SPDIF In"
+msgstr "SPDIF入力"
+
+msgid "AUX 1 In"
+msgstr "AUX 1入力"
+
+msgid "AUX 2 In"
+msgstr "AUX 2入力"
+
+#, fuzzy
+msgid "Codec Loopback"
+msgstr "ループバック"
+
+#, fuzzy
+msgid "SunVTS Loopback"
+msgstr "ループバック"
 
 # SUN REVIEWED
 msgid "Volume"
@@ -264,6 +297,10 @@ msgstr ""
 msgid "Failed to change mute state for device '%s'."
 msgstr "デバイス '%s' の現在のチューナーの周波数の取得に失敗しました"
 
+#, fuzzy, c-format
+msgid "Cannot identify device '%s'."
+msgstr "ミキサーデバイス'%s'を開けません"
+
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
@@ -287,10 +324,6 @@ msgstr "デバイス '%2$s' 上のチューナー %1$d の設定の取得に失�
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "デバイス '%s' のコントロール属性の取得に失敗しました"
-
-#, fuzzy, c-format
-msgid "Cannot identify device '%s'."
-msgstr "ミキサーデバイス'%s'を開けません"
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -392,10 +425,6 @@ msgstr "クロックなしでは動作できません。"
 
 #~ msgid "Line-in"
 #~ msgstr "ライン入力"
-
-# SUN REVIEWED
-#~ msgid "Microphone"
-#~ msgstr "マイクロフォン"
 
 # SUN REVIEWED
 #~ msgid "CD"
@@ -514,20 +543,8 @@ msgstr "クロックなしでは動作できません。"
 #~ msgid "Telephone"
 #~ msgstr "電話"
 
-#~ msgid "Line In"
-#~ msgstr "ライン入力"
-
-#~ msgid "Internal CD"
-#~ msgstr "内蔵CD"
-
 #~ msgid "Video In"
 #~ msgstr "ビデオ入力"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "AUX 1入力"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "AUX 2入力"
 
 #~ msgid "AUX In"
 #~ msgstr "AUX入力"
@@ -541,9 +558,6 @@ msgstr "クロックなしでは動作できません。"
 #~ msgid "Microphone Boost"
 #~ msgstr "マイクロフォンブースト"
 
-#~ msgid "Loopback"
-#~ msgstr "ループバック"
-
 #~ msgid "Diagnostic"
 #~ msgstr "診断"
 
@@ -555,9 +569,6 @@ msgstr "クロックなしでは動作できません。"
 
 #~ msgid "Input"
 #~ msgstr "入力"
-
-#~ msgid "Record Source"
-#~ msgstr "録音ソース"
 
 #~ msgid "Monitor Source"
 #~ msgstr "モニターソース"
@@ -598,9 +609,6 @@ msgstr "クロックなしでは動作できません。"
 
 #~ msgid "Input Mix"
 #~ msgstr "入力ミックス"
-
-#~ msgid "SPDIF In"
-#~ msgstr "SPDIF入力"
 
 #~ msgid "Microphone 1"
 #~ msgstr "マイクロフォン1"

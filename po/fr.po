@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-good 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-06-05 16:34+0200\n"
+"POT-Creation-Date: 2013-07-11 15:56+0200\n"
 "PO-Revision-Date: 2011-04-28 09:22+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -18,16 +18,22 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
+msgid "Jack server not found"
+msgstr ""
+
+msgid "Failed to decode JPEG image"
+msgstr "Échec de décodage de l'image JPEG"
+
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
 msgstr "« %s » par « %s »"
 
-msgid "Failed to decode JPEG image"
-msgstr "Échec de décodage de l'image JPEG"
-
 msgid "Could not connect to server"
 msgstr "Impossible de se connecter au serveur"
+
+msgid "No URL set."
+msgstr "Aucun URL défini."
 
 msgid "Server does not support seeking."
 msgstr "Le serveur ne gère pas le positionnement."
@@ -49,9 +55,6 @@ msgstr ""
 
 msgid "Server sent bad data."
 msgstr "Le serveur a envoyé de mauvaises données."
-
-msgid "No URL set."
-msgstr "Aucun URL défini."
 
 msgid "Internal data stream error."
 msgstr "Erreur interne de flux de données."
@@ -123,16 +126,6 @@ msgid "Could not open audio device for playback."
 msgstr "Impossible d'ouvrir le périphérique audio pour la lecture."
 
 msgid ""
-"Could not open audio device for recording. You don't have permission to open "
-"the device."
-msgstr ""
-"Impossible d'ouvrir le périphérique audio pour l'enregistrement. Vous n'avez "
-"pas les droits nécessaires pour ouvrir le périphérique."
-
-msgid "Could not open audio device for recording."
-msgstr "Impossible d'ouvrir le périphérique audio pour l'enregistrement."
-
-msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
@@ -150,6 +143,45 @@ msgstr "L'enregistrement n'est pas pris en charge par ce périphérique audio."
 
 msgid "Error recording from audio device."
 msgstr "Erreur lors de l'enregistrement à partir du périphérique audio."
+
+msgid ""
+"Could not open audio device for recording. You don't have permission to open "
+"the device."
+msgstr ""
+"Impossible d'ouvrir le périphérique audio pour l'enregistrement. Vous n'avez "
+"pas les droits nécessaires pour ouvrir le périphérique."
+
+msgid "Could not open audio device for recording."
+msgstr "Impossible d'ouvrir le périphérique audio pour l'enregistrement."
+
+msgid "Record Source"
+msgstr "Source d'enregistrement"
+
+msgid "Microphone"
+msgstr "Micro"
+
+msgid "Line In"
+msgstr "Entrée ligne"
+
+msgid "Internal CD"
+msgstr "CD interne"
+
+msgid "SPDIF In"
+msgstr "Entrée SPDIF"
+
+msgid "AUX 1 In"
+msgstr "Entrée AUX 1"
+
+msgid "AUX 2 In"
+msgstr "Entrée AUX 2"
+
+#, fuzzy
+msgid "Codec Loopback"
+msgstr "Boucle interne"
+
+#, fuzzy
+msgid "SunVTS Loopback"
+msgstr "Boucle interne"
 
 msgid "Volume"
 msgstr "Volume"
@@ -257,6 +289,10 @@ msgid "Failed to change mute state for device '%s'."
 msgstr "Impossible d'obtenir la force du signal du périphérique « %s »."
 
 #, c-format
+msgid "Cannot identify device '%s'."
+msgstr "Impossible d'identifier le périphérique « %s »."
+
+#, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
@@ -280,10 +316,6 @@ msgstr "Impossible d'obtenir la norme du périphérique « %s »."
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
 msgstr "Impossible d'obtenir les attributs de contrôle du périphérique « %s »."
-
-#, c-format
-msgid "Cannot identify device '%s'."
-msgstr "Impossible d'identifier le périphérique « %s »."
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -381,9 +413,6 @@ msgstr "Impossible de fonctionner sans horloge"
 
 #~ msgid "Line-in"
 #~ msgstr "Entrée ligne"
-
-#~ msgid "Microphone"
-#~ msgstr "Micro"
 
 #~ msgid "CD"
 #~ msgstr "CD"
@@ -485,20 +514,8 @@ msgstr "Impossible de fonctionner sans horloge"
 #~ msgid "Telephone"
 #~ msgstr "Téléphone"
 
-#~ msgid "Line In"
-#~ msgstr "Entrée ligne"
-
-#~ msgid "Internal CD"
-#~ msgstr "CD interne"
-
 #~ msgid "Video In"
 #~ msgstr "Entrée vidéo"
-
-#~ msgid "AUX 1 In"
-#~ msgstr "Entrée AUX 1"
-
-#~ msgid "AUX 2 In"
-#~ msgstr "Entrée AUX 2"
 
 #~ msgid "AUX In"
 #~ msgstr "Entrée AUX"
@@ -512,9 +529,6 @@ msgstr "Impossible de fonctionner sans horloge"
 #~ msgid "Microphone Boost"
 #~ msgstr "Amplification micro"
 
-#~ msgid "Loopback"
-#~ msgstr "Boucle interne"
-
 #~ msgid "Diagnostic"
 #~ msgstr "Diagnostic"
 
@@ -526,9 +540,6 @@ msgstr "Impossible de fonctionner sans horloge"
 
 #~ msgid "Input"
 #~ msgstr "Entrée"
-
-#~ msgid "Record Source"
-#~ msgstr "Source d'enregistrement"
 
 #~ msgid "Monitor Source"
 #~ msgstr "Source de moniteur"
@@ -568,9 +579,6 @@ msgstr "Impossible de fonctionner sans horloge"
 
 #~ msgid "Input Mix"
 #~ msgstr "Mélangeur d'entrée"
-
-#~ msgid "SPDIF In"
-#~ msgstr "Entrée SPDIF"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Microphone 1"
