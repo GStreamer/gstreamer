@@ -63,6 +63,7 @@ struct _GstQaPadMonitor {
   GstPadQueryFunction query_func;
 
   /*< private >*/
+  gboolean has_segment;
   GstSegment segment;
 
   gboolean pending_flush_stop;

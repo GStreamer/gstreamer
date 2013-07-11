@@ -186,8 +186,12 @@ gst_qa_pad_monitor_event_func (GstPad * pad, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_NEWSEGMENT:
       if (ret) {
+        if (!pad_monitor->has_segment && pad_monitor->segment.format != format) {
+          gst_segment_init (&pad_monitor->segment, format);
+        }
         gst_segment_set_newsegment_full (&pad_monitor->segment, update, rate,
             applied_rate, format, start, stop, position);
+        pad_monitor->has_segment = TRUE;
       }
       break;
     case GST_EVENT_FLUSH_START:
