@@ -737,8 +737,26 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
       "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
 
   if (mpvparse->sequencehdr.width > 0 && mpvparse->sequencehdr.height > 0) {
-    gst_caps_set_simple (caps, "width", G_TYPE_INT, mpvparse->sequencehdr.width,
-        "height", G_TYPE_INT, mpvparse->sequencehdr.height, NULL);
+    GstMpegVideoSequenceDisplayExt *seqdispext;
+    gint width, height;
+
+    width = mpvparse->sequencehdr.width;
+    height = mpvparse->sequencehdr.height;
+
+    if (mpvparse->config_flags & FLAG_SEQUENCE_DISPLAY_EXT) {
+      seqdispext = &mpvparse->sequencedispext;
+
+      if (seqdispext->display_horizontal_size <= width
+          && seqdispext->display_vertical_size <= height) {
+        width = seqdispext->display_horizontal_size;
+        height = seqdispext->display_vertical_size;
+        GST_INFO_OBJECT (mpvparse,
+            "stream has display extension: display_width=%d display_height=%d",
+            width, height);
+      }
+    }
+    gst_caps_set_simple (caps, "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height, NULL);
   }
 
   /* perhaps we have a framerate */
