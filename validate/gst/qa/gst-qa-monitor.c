@@ -80,7 +80,7 @@ gst_qa_monitor_class_init (GstQaMonitorClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_OBJECT,
       g_param_spec_object ("object", "Object", "The object to be monitored",
-          G_TYPE_OBJECT, G_PARAM_CONSTRUCT_ONLY | G_PARAM_READABLE));
+          G_TYPE_OBJECT, G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 }
 
 static void
@@ -132,7 +132,7 @@ gst_qa_monitor_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_OBJECT:
       g_assert (monitor->object == NULL);
-      monitor->object = g_value_get_object (value);
+      monitor->object = g_value_dup_object (value);
       gst_qa_monitor_setup (monitor);
       break;
     default:

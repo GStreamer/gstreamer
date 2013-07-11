@@ -90,9 +90,7 @@ gst_qa_element_monitor_new (GstElement * element)
 
   g_return_val_if_fail (element != NULL, NULL);
 
-  monitor =
-      g_object_new (GST_TYPE_QA_ELEMENT_MONITOR, "object",
-      G_TYPE_OBJECT, element, NULL);
+  monitor = g_object_new (GST_TYPE_QA_ELEMENT_MONITOR, "object", element, NULL);
 
   if (GST_QA_ELEMENT_MONITOR_GET_ELEMENT (monitor) == NULL) {
     g_object_unref (monitor);

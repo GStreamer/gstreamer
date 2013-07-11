@@ -35,7 +35,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_qa_bin_monitor_debug);
   GST_DEBUG_CATEGORY_INIT (gst_qa_bin_monitor_debug, "qa_bin_monitor", 0, "QA BinMonitor");
 #define gst_qa_bin_monitor_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstQaBinMonitor, gst_qa_bin_monitor,
-    G_TYPE_OBJECT, _do_init);
+    GST_TYPE_QA_ELEMENT_MONITOR, _do_init);
 
 static void
 gst_qa_bin_monitor_wrap_element (GstQaBinMonitor * monitor,
@@ -88,7 +88,7 @@ GstQaBinMonitor *
 gst_qa_bin_monitor_new (GstBin * bin)
 {
   GstQaBinMonitor *monitor = g_object_new (GST_TYPE_QA_BIN_MONITOR, "object",
-      G_TYPE_OBJECT, bin, NULL);
+      bin, NULL);
 
   if (GST_QA_MONITOR_GET_OBJECT (monitor) == NULL) {
     g_object_unref (monitor);

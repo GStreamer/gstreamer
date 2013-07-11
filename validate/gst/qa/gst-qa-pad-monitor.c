@@ -72,7 +72,7 @@ GstQaPadMonitor *
 gst_qa_pad_monitor_new (GstPad * pad)
 {
   GstQaPadMonitor *monitor = g_object_new (GST_TYPE_QA_PAD_MONITOR,
-      "object", G_TYPE_OBJECT, pad, NULL);
+      "object", pad, NULL);
 
   if (GST_QA_PAD_MONITOR_GET_PAD (monitor) == NULL) {
     g_object_unref (monitor);
