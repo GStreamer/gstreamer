@@ -215,6 +215,13 @@ destroy_surface (GstGLWindowWaylandEGL * window_egl)
 
   if (window_egl->window.callback)
     wl_callback_destroy (window_egl->window.callback);
+
+  g_source_destroy (window_egl->wl_source);
+  g_source_unref (window_egl->wl_source);
+  window_egl->wl_source = NULL;
+  g_main_loop_unref (window_egl->loop);
+  window_egl->loop = NULL, g_main_context_unref (window_egl->main_context);
+  window_egl->main_context = NULL;
 }
 
 static void
