@@ -82,12 +82,12 @@ struct _GstRTSPMedia {
 
 /**
  * GstRTSPMediaClass:
- * @context: the main context for dispatching messages
- * @loop: the mainloop for message.
- * @thread: the thread dispatching messages.
  * @handle_message: handle a message
  * @unprepare: the default implementation sets the pipeline's state
  *             to GST_STATE_NULL and removes all elements.
+ * @convert_range: convert a range to the given unit
+ * @query_position: query the current posision in the pipeline
+ * @query_stop: query when playback will stop
  *
  * The RTSP media class
  */

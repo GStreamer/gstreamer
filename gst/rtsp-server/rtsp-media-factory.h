@@ -45,7 +45,6 @@ typedef struct _GstRTSPMediaFactoryPrivate GstRTSPMediaFactoryPrivate;
 
 /**
  * GstRTSPMediaFactory:
- * @parent: the parent GObject
  *
  * The definition and logic for constructing the pipeline for a media. The media
  * can contain multiple streams like audio and video.

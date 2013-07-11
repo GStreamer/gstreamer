@@ -211,10 +211,9 @@ default_setup (GstRTSPAuth * auth, GstRTSPClientState * state)
 /**
  * gst_rtsp_auth_setup:
  * @auth: a #GstRTSPAuth
- * @client: the client
- * @state: TODO
+ * @state: the client state
  *
- * Add authentication tokens to @response.
+ * Add authentication tokens to @response in @state.
  *
  * Returns: FALSE if something is wrong.
  */

@@ -46,13 +46,13 @@ typedef struct _GstRTSPStreamPrivate GstRTSPStreamPrivate;
 
 /**
  * GstRTSPStream:
- * @parent: the parent instance
  *
  * The definition of a media stream.
  */
 struct _GstRTSPStream {
   GObject       parent;
 
+  /*< private >*/
   GstRTSPStreamPrivate *priv;
 };
 

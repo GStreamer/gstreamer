@@ -41,23 +41,18 @@ typedef struct _GstRTSPMountPointsPrivate GstRTSPMountPointsPrivate;
 
 /**
  * GstRTSPMountPoints:
- * @parent: parent GObject
- * @mounts: the mountpoints to mediafactory mapping
  *
  * Creates a #GstRTSPMediaFactory object for a given url.
  */
 struct _GstRTSPMountPoints {
   GObject       parent;
 
+  /*< private >*/
   GstRTSPMountPointsPrivate *priv;
 };
 
 /**
  * GstRTSPMountPointsClass:
- * @parent_class: parent GObject class
- * @find_factory: Create or return a previously cached #GstRTSPMediaFactory object
- *        for the given url. the default implementation will use the factory
- *        added with gst_rtsp_mount_points_add_factory().
  *
  * The class for the media mounts object.
  */
