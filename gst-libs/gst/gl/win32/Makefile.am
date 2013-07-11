@@ -10,11 +10,11 @@ noinst_HEADERS = \
 
 if USE_WGL
 libgstgl_win32_la_SOURCES += gstglwindow_win32_wgl.c
-libgstglwin32include_HEADERS += gstglwindow_win32_wgl.h
+noinst_HEADERS += gstglwindow_win32_wgl.h
 endif
 if USE_EGL
 libgstgl_win32_la_SOURCES += gstglwindow_win32_egl.c
-libgstglwin32include_HEADERS += gstglwindow_win32_egl.h
+noinst_HEADERS += gstglwindow_win32_egl.h
 endif
 
 libgstgl_win32_la_CFLAGS = \
