@@ -56,6 +56,8 @@ struct _GstQaElementMonitor {
   /*< private >*/
   gulong         pad_added_id;
   GList         *pad_monitors;
+
+  gboolean       is_decoder;
 };
 
 /**

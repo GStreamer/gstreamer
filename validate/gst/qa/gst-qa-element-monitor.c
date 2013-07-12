@@ -21,6 +21,7 @@
 
 #include "gst-qa-element-monitor.h"
 #include "gst-qa-pad-monitor.h"
+#include <string.h>
 
 /**
  * SECTION:gst-qa-element-monitor
@@ -102,6 +103,18 @@ gst_qa_element_monitor_new (GstElement * element, GstQaRunner * runner)
   return monitor;
 }
 
+static void
+gst_qa_element_monitor_inspect (GstQaElementMonitor * monitor)
+{
+  GstElement *element;
+  GstElementClass *klass;
+
+  element = GST_QA_ELEMENT_MONITOR_GET_ELEMENT (monitor);
+  klass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
+
+  monitor->is_decoder = strstr (klass->details.klass, "Decoder") != NULL;
+}
+
 static gboolean
 gst_qa_element_monitor_do_setup (GstQaMonitor * monitor)
 {
@@ -109,6 +122,7 @@ gst_qa_element_monitor_do_setup (GstQaMonitor * monitor)
   gboolean done;
   GstPad *pad;
   GstQaElementMonitor *elem_monitor;
+  GstElement *element;
 
   if (!GST_IS_ELEMENT (GST_QA_MONITOR_GET_OBJECT (monitor))) {
     GST_WARNING_OBJECT (monitor, "Trying to create element monitor with other "
@@ -120,13 +134,14 @@ gst_qa_element_monitor_do_setup (GstQaMonitor * monitor)
 
   GST_DEBUG_OBJECT (monitor, "Setting up monitor for element %" GST_PTR_FORMAT,
       GST_QA_MONITOR_GET_OBJECT (monitor));
+  element = GST_QA_ELEMENT_MONITOR_GET_ELEMENT (monitor);
 
-  elem_monitor->pad_added_id =
-      g_signal_connect (GST_QA_MONITOR_GET_OBJECT (monitor), "pad-added",
+  gst_qa_element_monitor_inspect (elem_monitor);
+
+  elem_monitor->pad_added_id = g_signal_connect (element, "pad-added",
       G_CALLBACK (_qa_element_pad_added), monitor);
 
-  iterator =
-      gst_element_iterate_pads (GST_QA_ELEMENT_MONITOR_GET_ELEMENT (monitor));
+  iterator = gst_element_iterate_pads (element);
   done = FALSE;
   while (!done) {
     switch (gst_iterator_next (iterator, (gpointer *) & pad)) {
