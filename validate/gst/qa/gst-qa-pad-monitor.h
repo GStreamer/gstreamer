@@ -62,6 +62,9 @@ struct _GstQaPadMonitor {
   GstPadGetRangeFunction getrange_func;
   GstPadQueryFunction query_func;
 
+  gulong buffer_probe_id;
+  gulong event_probe_id;
+
   /*< private >*/
   gboolean has_segment;
   GstSegment segment;

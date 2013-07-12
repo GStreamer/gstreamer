@@ -42,6 +42,13 @@ static gboolean gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor);
 static void
 gst_qa_pad_monitor_dispose (GObject * object)
 {
+  GstQaPadMonitor *monitor = GST_QA_PAD_MONITOR_CAST (object);
+  GstPad *pad = GST_QA_PAD_MONITOR_GET_PAD (monitor);
+
+  if (monitor->buffer_probe_id)
+    gst_pad_remove_data_probe (pad, monitor->buffer_probe_id);
+  if (monitor->event_probe_id)
+    gst_pad_remove_data_probe (pad, monitor->event_probe_id);
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -82,22 +89,11 @@ gst_qa_pad_monitor_new (GstPad * pad, GstQaRunner * runner)
   return monitor;
 }
 
-static GstFlowReturn
-gst_qa_pad_monitor_chain_func (GstPad * pad, GstBuffer * buffer)
-{
-  GstQaPadMonitor *pad_monitor =
-      g_object_get_data ((GObject *) pad, "qa-monitor");
-  GstFlowReturn ret;
-  ret = pad_monitor->chain_func (pad, buffer);
-  return ret;
-}
-
 static gboolean
-gst_qa_pad_monitor_event_func (GstPad * pad, GstEvent * event)
+gst_qa_pad_monitor_event_check (GstQaPadMonitor * pad_monitor,
+    GstEvent * event, GstPadEventFunction handler)
 {
-  GstQaPadMonitor *pad_monitor =
-      g_object_get_data ((GObject *) pad, "qa-monitor");
-  GstFlowReturn ret;
+  gboolean ret = TRUE;
   gboolean update;
   gdouble rate, applied_rate;
   GstFormat format;
@@ -105,6 +101,7 @@ gst_qa_pad_monitor_event_func (GstPad * pad, GstEvent * event)
   GstSeekFlags seek_flags;
   GstSeekType start_type, stop_type;
   guint32 seqnum = gst_event_get_seqnum (event);
+  GstPad *pad = GST_QA_PAD_MONITOR_GET_PAD (pad_monitor);
 
   /* pre checks */
   switch (GST_EVENT_TYPE (event)) {
@@ -188,8 +185,10 @@ gst_qa_pad_monitor_event_func (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_event_ref (event);
-  ret = pad_monitor->event_func (pad, event);
+  if (handler) {
+    gst_event_ref (event);
+    ret = pad_monitor->event_func (pad, event);
+  }
 
   /* post checks */
   switch (GST_EVENT_TYPE (event)) {
@@ -225,8 +224,29 @@ gst_qa_pad_monitor_event_func (GstPad * pad, GstEvent * event)
       break;
   }
 
-  gst_event_unref (event);
+  if (handler)
+    gst_event_unref (event);
   return ret;
+}
+
+static GstFlowReturn
+gst_qa_pad_monitor_chain_func (GstPad * pad, GstBuffer * buffer)
+{
+  GstQaPadMonitor *pad_monitor =
+      g_object_get_data ((GObject *) pad, "qa-monitor");
+  GstFlowReturn ret;
+  ret = pad_monitor->chain_func (pad, buffer);
+  return ret;
+}
+
+static gboolean
+gst_qa_pad_monitor_event_func (GstPad * pad, GstEvent * event)
+{
+  GstQaPadMonitor *pad_monitor =
+      g_object_get_data ((GObject *) pad, "qa-monitor");
+
+  return gst_qa_pad_monitor_event_check (pad_monitor, event,
+      pad_monitor->event_func);
 }
 
 static gboolean
@@ -262,6 +282,20 @@ gst_qa_pad_get_range_func (GstPad * pad, guint64 offset, guint size,
 }
 
 static gboolean
+gst_qa_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
+    gpointer udata)
+{
+  return TRUE;
+}
+
+static gboolean
+gst_qa_pad_monitor_event_probe (GstPad * pad, GstEvent * event, gpointer udata)
+{
+  GstQaPadMonitor *monitor = GST_QA_PAD_MONITOR_CAST (udata);
+  return gst_qa_pad_monitor_event_check (monitor, event, NULL);
+}
+
+static gboolean
 gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor)
 {
   GstQaPadMonitor *pad_monitor = GST_QA_PAD_MONITOR_CAST (monitor);
@@ -294,6 +328,12 @@ gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor)
     pad_monitor->getrange_func = GST_PAD_GETRANGEFUNC (pad);
     if (pad_monitor->getrange_func)
       gst_pad_set_getrange_function (pad, gst_qa_pad_get_range_func);
+
+    /* add buffer/event probes */
+    pad_monitor->buffer_probe_id = gst_pad_add_buffer_probe (pad,
+        (GCallback) gst_qa_pad_monitor_buffer_probe, pad_monitor);
+    pad_monitor->event_probe_id = gst_pad_add_event_probe (pad,
+        (GCallback) gst_qa_pad_monitor_event_probe, pad_monitor);
   }
   pad_monitor->event_func = GST_PAD_EVENTFUNC (pad);
   pad_monitor->query_func = GST_PAD_QUERYFUNC (pad);
