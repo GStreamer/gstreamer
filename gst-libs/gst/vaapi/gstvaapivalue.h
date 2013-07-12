@@ -68,6 +68,15 @@ G_BEGIN_DECLS
  */
 #define GST_VAAPI_TYPE_ROTATION gst_vaapi_rotation_get_type()
 
+/**
+ * GST_VAAPI_TYPE_RATE_CONTROL:
+ *
+ * A type that represents the VA rate control.
+ *
+ * Return value: the #GType of GstVaapiRateControl
+ */
+#define GST_VAAPI_TYPE_RATE_CONTROL gst_vaapi_rate_control_get_type()
+
 GType
 gst_vaapi_point_get_type(void) G_GNUC_CONST;
 
@@ -79,6 +88,9 @@ gst_vaapi_render_mode_get_type(void) G_GNUC_CONST;
 
 GType
 gst_vaapi_rotation_get_type(void) G_GNUC_CONST;
+
+GType
+gst_vaapi_rate_control_get_type(void) G_GNUC_CONST;
 
 G_END_DECLS
 

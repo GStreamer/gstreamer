@@ -210,6 +210,21 @@ string_of_VADisplayAttributeType(VADisplayAttribType attribute_type)
     return "<unknown>";
 }
 
+const char *
+string_of_VARateControl(guint rate_control)
+{
+    switch (rate_control) {
+    case VA_RC_NONE:            return "None";
+    case VA_RC_CQP:             return "CQP";
+    case VA_RC_CBR:             return "CBR";
+    case VA_RC_VCM:             return "VCM";
+    case VA_RC_VBR:             return "VBR";
+    case VA_RC_VBR_CONSTRAINED: return "VBR-Constrained";
+    default: break;
+    }
+    return "<unknown>";
+}
+
 /**
  * from_GstVaapiChromaType:
  * @chroma_type: the #GstVaapiChromaType
@@ -439,6 +454,36 @@ to_GstVaapiRotation(guint value)
     }
     GST_ERROR("unsupported VA-API rotation value %d", value);
     return GST_VAAPI_ROTATION_0;
+}
+
+guint
+from_GstVaapiRateControl(guint value)
+{
+    switch (value) {
+    case GST_VAAPI_RATECONTROL_NONE:            return VA_RC_NONE;
+    case GST_VAAPI_RATECONTROL_CQP:             return VA_RC_CQP;
+    case GST_VAAPI_RATECONTROL_CBR:             return VA_RC_CBR;
+    case GST_VAAPI_RATECONTROL_VCM:             return VA_RC_VCM;
+    case GST_VAAPI_RATECONTROL_VBR:             return VA_RC_VBR;
+    case GST_VAAPI_RATECONTROL_VBR_CONSTRAINED: return VA_RC_VBR_CONSTRAINED;
+    }
+    GST_ERROR("unsupported GstVaapiRateControl value %u", value);
+    return VA_RC_NONE;
+}
+
+guint
+to_GstVaapiRateControl(guint value)
+{
+    switch (value) {
+    case VA_RC_NONE:            return GST_VAAPI_RATECONTROL_NONE;
+    case VA_RC_CQP:             return GST_VAAPI_RATECONTROL_CQP;
+    case VA_RC_CBR:             return GST_VAAPI_RATECONTROL_CBR;
+    case VA_RC_VCM:             return GST_VAAPI_RATECONTROL_VCM;
+    case VA_RC_VBR:             return GST_VAAPI_RATECONTROL_VBR;
+    case VA_RC_VBR_CONSTRAINED: return GST_VAAPI_RATECONTROL_VBR_CONSTRAINED;
+    }
+    GST_ERROR("unsupported VA-API Rate Control value %u", value);
+    return GST_VAAPI_RATECONTROL_NONE;
 }
 
 /* VPP: translate GstVaapiDeinterlaceMethod to VA deinterlacing algorithm */
