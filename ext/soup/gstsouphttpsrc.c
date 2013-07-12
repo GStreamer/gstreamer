@@ -299,6 +299,7 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src)
   g_mutex_init (&src->mutex);
   g_cond_init (&src->request_finished_cond);
   src->location = NULL;
+  src->redirection_uri = NULL;
   src->automatic_redirect = TRUE;
   src->user_agent = g_strdup (DEFAULT_USER_AGENT);
   src->user_id = NULL;
@@ -331,6 +332,9 @@ gst_soup_http_src_finalize (GObject * gobject)
   g_mutex_clear (&src->mutex);
   g_cond_clear (&src->request_finished_cond);
   g_free (src->location);
+  if (src->redirection_uri) {
+    g_free (src->redirection_uri);
+  }
   g_free (src->user_agent);
   if (src->proxy != NULL) {
     soup_uri_free (src->proxy);
@@ -744,8 +748,10 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
     return;
 
   if (src->automatic_redirect && SOUP_STATUS_IS_REDIRECTION (msg->status_code)) {
+    src->redirection_uri = g_strdup (soup_message_headers_get
+        (msg->response_headers, "Location"));
     GST_DEBUG_OBJECT (src, "%u redirect to \"%s\"", msg->status_code,
-        soup_message_headers_get_one (msg->response_headers, "Location"));
+        src->redirection_uri);
     return;
   }
 
@@ -1460,6 +1466,7 @@ gst_soup_http_src_query (GstBaseSrc * bsrc, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_URI:
       gst_query_set_uri (query, src->location);
+      gst_query_set_uri_redirection (query, src->redirection_uri);
       ret = TRUE;
       break;
     default:
@@ -1504,6 +1511,11 @@ gst_soup_http_src_set_location (GstSoupHTTPSrc * src, const gchar * uri,
           g_strdup_printf ("http://%s", uri + strlen (alt_schemes[i]));
       return TRUE;
     }
+  }
+
+  if (src->redirection_uri) {
+    g_free (src->redirection_uri);
+    src->redirection_uri = NULL;
   }
 
   src->location = g_strdup (uri);
