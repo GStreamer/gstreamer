@@ -110,12 +110,10 @@ GType gst_pulsesink_get_type (void);
       "channels = (int) [ 1, 32 ]; "
 #define _PULSE_SINK_CAPS_ALAW \
     "audio/x-alaw, " \
-      "layout = (string) interleaved, " \
       "rate = (int) [ 1, MAX], " \
       "channels = (int) [ 1, 32 ]; "
 #define _PULSE_SINK_CAPS_MULAW \
     "audio/x-mulaw, " \
-      "layout = (string) interleaved, " \
       "rate = (int) [ 1, MAX], " \
       "channels = (int) [ 1, 32 ]; "
 
