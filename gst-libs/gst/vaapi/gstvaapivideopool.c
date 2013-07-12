@@ -70,7 +70,8 @@ void
 gst_vaapi_video_pool_finalize(GstVaapiVideoPool *pool)
 {
     g_list_free_full(pool->used_objects, gst_vaapi_object_unref);
-    g_queue_free_full(&pool->free_objects, gst_vaapi_object_unref);
+    g_queue_foreach(&pool->free_objects, (GFunc)gst_vaapi_object_unref, NULL);
+    g_queue_clear(&pool->free_objects);
     gst_vaapi_display_replace(&pool->display, NULL);
 }
 
