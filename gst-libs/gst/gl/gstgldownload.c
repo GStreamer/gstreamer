@@ -787,13 +787,10 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
       /* attach the depth render buffer to the FBO */
       gl->FramebufferRenderbuffer (GL_FRAMEBUFFER,
           GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, download->depth_buffer);
-
-#if GST_GL_HAVE_GLES2
-      if (USING_GLES2 (display)) {
+      if (USING_OPENGL (display)) {
         gl->FramebufferRenderbuffer (GL_FRAMEBUFFER,
             GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, download->depth_buffer);
       }
-#endif
 
       if (!gst_gl_display_check_framebuffer_status (display))
         gst_gl_display_set_error (display, "GL framebuffer status incomplete");
