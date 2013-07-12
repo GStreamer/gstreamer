@@ -79,7 +79,7 @@ static void _do_upload_draw_gles2 (GstGLDisplay * display,
 #if GST_GL_HAVE_OPENGL
 /* YUY2:r,g,a
    UYVY:a,b,r */
-static gchar *text_shader_YUY2_UYVY_opengl =
+static const gchar *text_shader_YUY2_UYVY_opengl =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect Ytex, UVtex;\n"
     YUV_TO_RGB_COEFFICIENTS
@@ -100,7 +100,7 @@ static gchar *text_shader_YUY2_UYVY_opengl =
 
 /* ATI: "*0.5", ""
    normal: "", "*0.5" */
-static gchar *text_shader_I420_YV12_opengl =
+static const gchar *text_shader_I420_YV12_opengl =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect Ytex,Utex,Vtex;\n"
     YUV_TO_RGB_COEFFICIENTS
@@ -118,7 +118,7 @@ static gchar *text_shader_I420_YV12_opengl =
     "  gl_FragColor=vec4(r,g,b,1.0);\n"
     "}\n";
 
-static gchar *text_shader_AYUV_opengl =
+static const gchar *text_shader_AYUV_opengl =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect tex;\n"
     YUV_TO_RGB_COEFFICIENTS
@@ -140,7 +140,7 @@ static gchar *text_shader_AYUV_opengl =
 #if GST_GL_HAVE_GLES2
 /* YUY2:r,g,a
    UYVY:a,b,r */
-static gchar *text_shader_YUY2_UYVY_gles2 =
+static const gchar *text_shader_YUY2_UYVY_gles2 =
     "precision mediump float;\n"
     "varying vec2 v_texCoord;\n"
     "uniform sampler2D Ytex, UVtex;\n"
@@ -160,7 +160,7 @@ static gchar *text_shader_YUY2_UYVY_gles2 =
     "  gl_FragColor = vec4(r, g, b, 1.0);\n"
     "}\n";
 
-static gchar *text_shader_I420_YV12_gles2 =
+static const gchar *text_shader_I420_YV12_gles2 =
     "precision mediump float;\n"
     "varying vec2 v_texCoord;\n"
     "uniform sampler2D Ytex,Utex,Vtex;\n"
@@ -179,7 +179,7 @@ static gchar *text_shader_I420_YV12_gles2 =
     "  gl_FragColor=vec4(r,g,b,1.0);\n"
     "}\n";
 
-static gchar *text_shader_AYUV_gles2 =
+static const gchar *text_shader_AYUV_gles2 =
     "precision mediump float;\n"
     "varying vec2 v_texCoord;\n"
     "uniform sampler2D tex;\n"
@@ -196,7 +196,7 @@ static gchar *text_shader_AYUV_gles2 =
     "  gl_FragColor=vec4(r,g,b,1.0);\n"
     "}\n";
 
-static gchar *text_vertex_shader_gles2 =
+static const gchar *text_vertex_shader_gles2 =
     "attribute vec4 a_position;   \n"
     "attribute vec2 a_texCoord;   \n"
     "varying vec2 v_texCoord;     \n"

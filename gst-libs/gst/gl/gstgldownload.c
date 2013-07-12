@@ -81,7 +81,7 @@ static void _do_download_draw_yuv_gles2 (GstGLDisplay * display,
 #if GST_GL_HAVE_OPENGL
 /* YUY2:y2,u,y1,v
    UYVY:v,y1,u,y2 */
-static gchar *text_shader_YUY2_UYVY_opengl =
+static const gchar *text_shader_YUY2_UYVY_opengl =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect tex;\n"
     RGB_TO_YUV_COEFFICIENTS
@@ -103,7 +103,7 @@ static gchar *text_shader_YUY2_UYVY_opengl =
     "  gl_FragColor=vec4(%s);\n"
     "}\n";
 
-static gchar *text_shader_I420_YV12_opengl =
+static const gchar *text_shader_I420_YV12_opengl =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect tex;\n"
     "uniform float w, h;\n"
@@ -126,7 +126,7 @@ static gchar *text_shader_I420_YV12_opengl =
     "  gl_FragData[2] = vec4(v, 0.0, 0.0, 1.0);\n"
     "}\n";
 
-static gchar *text_shader_AYUV_opengl =
+static const gchar *text_shader_AYUV_opengl =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect tex;\n"
     RGB_TO_YUV_COEFFICIENTS
@@ -148,7 +148,7 @@ static gchar *text_shader_AYUV_opengl =
 #endif /* GST_GL_HAVE_OPENGL */
 
 #if GST_GL_HAVE_GLES2
-static gchar *text_shader_YUY2_UYVY_gles2 =
+static const gchar *text_shader_YUY2_UYVY_gles2 =
     "precision mediump float;\n"
     "varying vec2 v_texCoord;\n"
     "uniform sampler2D tex;\n"
@@ -176,7 +176,7 @@ static gchar *text_shader_YUY2_UYVY_gles2 =
  */
 #define text_shader_I420_YV12_gles2 NULL
 
-static gchar *text_shader_AYUV_gles2 =
+static const gchar *text_shader_AYUV_gles2 =
     "precision mediump float;\n"
     "varying vec2 v_texCoord;\n"
     "uniform sampler2D tex;\n"
@@ -195,7 +195,7 @@ static gchar *text_shader_AYUV_gles2 =
     "  gl_FragColor=vec4(1.0,y,u,v);\n"
     "}\n";
 
-static gchar *text_vertex_shader_gles2 =
+static const gchar *text_vertex_shader_gles2 =
     "attribute vec4 a_position;   \n"
     "attribute vec2 a_texCoord;   \n"
     "varying vec2 v_texCoord;     \n"
@@ -205,7 +205,7 @@ static gchar *text_vertex_shader_gles2 =
     "   v_texCoord = a_texCoord;  \n"
     "}                            \n";
 
-static gchar *text_shader_RGB_gles2 =
+static const gchar *text_shader_RGB_gles2 =
     "precision mediump float;                            \n"
     "varying vec2 v_texCoord;                            \n"
     "uniform sampler2D s_texture;                        \n"
