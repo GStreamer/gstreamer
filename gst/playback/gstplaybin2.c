@@ -4233,6 +4233,7 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
           } else {
             if (!activate_sink (playbin, *sinkp, NULL)) {
               gst_object_unref (*sinkp);
+              *sinkp = NULL;
               GST_WARNING_OBJECT (playbin,
                   "Could not activate sink %s",
                   gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (ave->sink)));
@@ -4381,6 +4382,8 @@ autoplug_select_cb (GstElement * decodebin, GstPad * pad,
   if (!activate_sink (playbin, element, NULL)) {
     GST_WARNING_OBJECT (playbin, "Could not activate sink %s",
         gst_plugin_feature_get_name (GST_PLUGIN_FEATURE (factory)));
+    *sinkp = NULL;
+    gst_object_unref (element);
     GST_SOURCE_GROUP_UNLOCK (group);
     return GST_AUTOPLUG_SELECT_SKIP;
   }
