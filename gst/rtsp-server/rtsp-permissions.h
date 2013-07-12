@@ -79,15 +79,22 @@ gst_rtsp_permissions_unref (GstRTSPPermissions * permissions)
 }
 
 
-GstRTSPPermissions *  gst_rtsp_permissions_new          (void);
+GstRTSPPermissions *  gst_rtsp_permissions_new             (void);
 
-void                  gst_rtsp_permissions_add_role     (GstRTSPPermissions *permissions, const gchar *role,
-                                                         GstStructure *structure);
-void                  gst_rtsp_permissions_remove_role  (GstRTSPPermissions *permissions, const gchar *role);
-const GstStructure *  gst_rtsp_permissions_get_role     (GstRTSPPermissions *permissions, const gchar *role);
+void                  gst_rtsp_permissions_add_role        (GstRTSPPermissions *permissions,
+                                                            const gchar *role,
+                                                            const gchar *field_name, ...);
+void                  gst_rtsp_permissions_add_role_valist (GstRTSPPermissions *permissions,
+                                                            const gchar *role,
+                                                            const gchar *field_name,
+                                                            va_list var_args);
+void                  gst_rtsp_permissions_remove_role     (GstRTSPPermissions *permissions,
+                                                            const gchar *role);
+const GstStructure *  gst_rtsp_permissions_get_role        (GstRTSPPermissions *permissions,
+                                                            const gchar *role);
 
-gboolean              gst_rtsp_permissions_is_allowed   (GstRTSPPermissions *permissions,
-                                                         const gchar *role, const gchar *permission);
+gboolean              gst_rtsp_permissions_is_allowed      (GstRTSPPermissions *permissions,
+                                                            const gchar *role, const gchar *permission);
 
 G_END_DECLS
 

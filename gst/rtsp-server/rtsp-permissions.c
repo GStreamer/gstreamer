@@ -33,22 +33,15 @@ typedef struct _GstRTSPPermissionsImpl
 {
   GstRTSPPermissions permissions;
 
-  /* Roles, array of RoleEntry */
-  GArray *roles;
+  /* Roles, array of GstStructure */
+  GPtrArray *roles;
 } GstRTSPPermissionsImpl;
 
-typedef struct
-{
-  gchar *role;
-  GstStructure *structure;
-} RoleEntry;
-
 static void
-clear_role_entry (RoleEntry * role)
+free_structure (GstStructure * structure)
 {
-  g_free (role->role);
-  gst_structure_set_parent_refcount (role->structure, NULL);
-  gst_structure_free (role->structure);
+  gst_structure_set_parent_refcount (structure, NULL);
+  gst_structure_free (structure);
 }
 
 //GST_DEBUG_CATEGORY_STATIC (rtsp_permissions_debug);
@@ -64,7 +57,7 @@ _gst_rtsp_permissions_free (GstRTSPPermissions * permissions)
 {
   GstRTSPPermissionsImpl *impl = (GstRTSPPermissionsImpl *) permissions;
 
-  g_array_free (impl->roles, TRUE);
+  g_ptr_array_free (impl->roles, TRUE);
 
   g_slice_free1 (sizeof (GstRTSPPermissionsImpl), permissions);
 }
@@ -90,9 +83,8 @@ gst_rtsp_permissions_init (GstRTSPPermissionsImpl * permissions,
       (GstMiniObjectCopyFunction) _gst_rtsp_permissions_copy, NULL,
       (GstMiniObjectFreeFunction) _gst_rtsp_permissions_free);
 
-  permissions->roles = g_array_new (FALSE, TRUE, sizeof (RoleEntry));
-  g_array_set_clear_func (permissions->roles,
-      (GDestroyNotify) clear_role_entry);
+  permissions->roles =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) free_structure);
 }
 
 /**
@@ -119,43 +111,68 @@ gst_rtsp_permissions_new (void)
  * gst_rtsp_permissions_add_role:
  * @permissions: a #GstRTSPPermissions
  * @role: a role
- * @structure: the permissions structure
+ * @fielname: the first field name
+ * @...: additional arguments
  *
- * Add the configuration in @structure to @permissions for @role.
+ * Add a new @role to @permissions with the given variables. The fields
+ * are the same layout as gst_structure_new().
  */
 void
 gst_rtsp_permissions_add_role (GstRTSPPermissions * permissions,
-    const gchar * role, GstStructure * structure)
+    const gchar * role, const gchar * fieldname, ...)
+{
+  va_list var_args;
+
+  va_start (var_args, fieldname);
+  gst_rtsp_permissions_add_role_valist (permissions, role, fieldname, var_args);
+  va_end (var_args);
+}
+
+/**
+ * gst_rtsp_permissions_add_role_valist:
+ * @permissions: a #GstRTSPPermissions
+ * @role: a role
+ * @fielname: the first field name
+ * @var_args: additional fields to add
+ *
+ * Add a new @role to @permissions with the given variables. Structure fields
+ * are set according to the varargs in a manner similar to gst_structure_new().
+ */
+void
+gst_rtsp_permissions_add_role_valist (GstRTSPPermissions * permissions,
+    const gchar * role, const gchar * fieldname, va_list var_args)
 {
   GstRTSPPermissionsImpl *impl = (GstRTSPPermissionsImpl *) permissions;
+  GstStructure *structure;
   gint i, len;
-  RoleEntry item;
   gboolean found;
 
   g_return_if_fail (GST_IS_RTSP_PERMISSIONS (permissions));
   g_return_if_fail (gst_mini_object_is_writable (&permissions->mini_object));
   g_return_if_fail (role != NULL);
+  g_return_if_fail (fieldname != NULL);
+
+  structure = gst_structure_new_valist (role, fieldname, var_args);
   g_return_if_fail (structure != NULL);
 
   len = impl->roles->len;
   found = FALSE;
   for (i = 0; i < len; i++) {
-    RoleEntry *entry = &g_array_index (impl->roles, RoleEntry, i);
+    GstStructure *entry = g_ptr_array_index (impl->roles, i);
 
-    if (g_str_equal (entry->role, role)) {
-      gst_structure_free (entry->structure);
-      entry->structure = structure;
+    if (gst_structure_has_name (entry, role)) {
+      gst_structure_free (entry);
       found = TRUE;
       break;
     }
   }
-  if (!found) {
-    item.role = g_strdup (role);
-    item.structure = structure;
-    gst_structure_set_parent_refcount (structure,
-        &impl->permissions.mini_object.refcount);
-    g_array_append_val (impl->roles, item);
-  }
+
+  gst_structure_set_parent_refcount (structure,
+      &impl->permissions.mini_object.refcount);
+  if (!found)
+    g_ptr_array_add (impl->roles, structure);
+  else
+    g_ptr_array_index (impl->roles, i) = structure;
 }
 
 /**
@@ -195,10 +212,10 @@ gst_rtsp_permissions_get_role (GstRTSPPermissions * permissions,
 
   len = impl->roles->len;
   for (i = 0; i < len; i++) {
-    RoleEntry *entry = &g_array_index (impl->roles, RoleEntry, i);
+    GstStructure *entry = g_ptr_array_index (impl->roles, i);
 
-    if (g_str_equal (entry->role, role))
-      return entry->structure;
+    if (gst_structure_has_name (entry, role))
+      return entry;
   }
   return NULL;
 }

@@ -194,13 +194,11 @@ main (int argc, char *argv[])
   /* allow user and admin to access this resource */
   permissions = gst_rtsp_permissions_new ();
   gst_rtsp_permissions_add_role (permissions, "user",
-      gst_structure_new ("user",
-          "media.factory.access", G_TYPE_BOOLEAN, TRUE,
-          "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL));
+      "media.factory.access", G_TYPE_BOOLEAN, TRUE,
+      "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL);
   gst_rtsp_permissions_add_role (permissions, "admin",
-      gst_structure_new ("admin",
-          "media.factory.access", G_TYPE_BOOLEAN, TRUE,
-          "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL));
+      "media.factory.access", G_TYPE_BOOLEAN, TRUE,
+      "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL);
   gst_rtsp_media_factory_set_permissions (factory, permissions);
   gst_rtsp_permissions_unref (permissions);
 
