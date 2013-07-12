@@ -406,7 +406,7 @@ check_factory (GstRTSPAuth * auth, GstRTSPClientState * state,
             GST_RTSP_MEDIA_FACTORY_PERM_ACCESS))
       goto no_access;
   } else if (g_str_equal (check, "auth.check.media.factory.construct")) {
-    if (gst_rtsp_permissions_is_allowed (perms, role,
+    if (!gst_rtsp_permissions_is_allowed (perms, role,
             GST_RTSP_MEDIA_FACTORY_PERM_CONSTRUCT))
       goto no_construct;
   }
