@@ -1699,10 +1699,10 @@ gst_input_selector_release_pad (GstElement * element, GstPad * pad)
     sel->active_sinkpad = NULL;
   }
   sel->n_pads--;
+  GST_INPUT_SELECTOR_UNLOCK (sel);
 
   gst_pad_set_active (pad, FALSE);
   gst_element_remove_pad (GST_ELEMENT (sel), pad);
-  GST_INPUT_SELECTOR_UNLOCK (sel);
 }
 
 static void
