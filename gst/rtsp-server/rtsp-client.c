@@ -2521,24 +2521,24 @@ gst_rtsp_client_handle_message (GstRTSPClient * client,
 }
 
 /**
- * gst_rtsp_client_send_request:
+ * gst_rtsp_client_send_message:
  * @client: a #GstRTSPClient
- * @session: a #GstRTSPSession to send the request to or %NULL
- * @request: The request #GstRTSPMessage to send
+ * @session: a #GstRTSPSession to send the message to or %NULL
+ * @message: The #GstRTSPMessage to send
  *
- * Send a request message to the remote end. @request must be a
- * #GST_RTSP_MESSAGE_REQUEST.
+ * Send a message message to the remote end. @message must be a
+ * #GST_RTSP_MESSAGE_REQUEST or a #GST_RTSP_MESSAGE_RESPONSE.
  */
 GstRTSPResult
-gst_rtsp_client_send_request (GstRTSPClient * client, GstRTSPSession * session,
-    GstRTSPMessage * request)
+gst_rtsp_client_send_message (GstRTSPClient * client, GstRTSPSession * session,
+    GstRTSPMessage * message)
 {
   g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), GST_RTSP_EINVAL);
-  g_return_val_if_fail (request != NULL, GST_RTSP_EINVAL);
-  g_return_val_if_fail (request->type == GST_RTSP_MESSAGE_REQUEST,
-      GST_RTSP_EINVAL);
+  g_return_val_if_fail (message != NULL, GST_RTSP_EINVAL);
+  g_return_val_if_fail (message->type == GST_RTSP_MESSAGE_REQUEST ||
+      message->type == GST_RTSP_MESSAGE_RESPONSE, GST_RTSP_EINVAL);
 
-  send_message (client, session, request, FALSE);
+  send_message (client, session, message, FALSE);
 
   return GST_RTSP_OK;
 }

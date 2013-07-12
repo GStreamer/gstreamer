@@ -188,9 +188,9 @@ void                  gst_rtsp_client_set_send_func     (GstRTSPClient *client,
 
 GstRTSPResult         gst_rtsp_client_handle_message    (GstRTSPClient *client,
                                                          GstRTSPMessage *message);
-GstRTSPResult         gst_rtsp_client_send_request      (GstRTSPClient * client,
+GstRTSPResult         gst_rtsp_client_send_message      (GstRTSPClient * client,
                                                          GstRTSPSession *session,
-                                                         GstRTSPMessage *request);
+                                                         GstRTSPMessage *message);
 /**
  * GstRTSPClientSessionFilterFunc:
  * @client: a #GstRTSPClient object
