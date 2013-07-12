@@ -52,6 +52,7 @@ typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
 /**
  * GstRTSPClientState:
  * @server: the server
+ * @conn: the connection
  * @client: the client
  * @request: the complete request
  * @uri: the complete url parsed from @request
@@ -69,6 +70,7 @@ typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
  */
 struct _GstRTSPClientState {
   GstRTSPServer       *server;
+  GstRTSPConnection   *conn;
   GstRTSPClient       *client;
   GstRTSPMessage      *request;
   GstRTSPUrl          *uri;

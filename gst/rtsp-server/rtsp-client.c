@@ -1859,6 +1859,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   GstRTSPMessage response = { 0 };
   gchar *sessid;
 
+  state.conn = priv->connection;
   state.client = client;
   state.request = request;
   state.response = &response;
