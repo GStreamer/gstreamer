@@ -72,7 +72,7 @@ struct _GstQaBinMonitorClass {
 /* normal GObject stuff */
 GType		gst_qa_bin_monitor_get_type		(void);
 
-GstQaBinMonitor *   gst_qa_bin_monitor_new      (GstBin * bin, GstQaRunner * runner);
+GstQaBinMonitor *   gst_qa_bin_monitor_new      (GstBin * bin, GstQaRunner * runner, GstQaMonitor * parent);
 
 G_END_DECLS
 

@@ -23,15 +23,16 @@
 #include "gst-qa-bin-monitor.h"
 
 GstQaElementMonitor *
-gst_qa_monitor_factory_create (GstElement * element, GstQaRunner * runner)
+gst_qa_monitor_factory_create (GstElement * element, GstQaRunner * runner,
+    GstQaMonitor * parent)
 {
   g_return_val_if_fail (element != NULL, NULL);
 
   if (GST_IS_BIN (element)) {
     return
         GST_QA_ELEMENT_MONITOR_CAST (gst_qa_bin_monitor_new (GST_BIN_CAST
-            (element), runner));
+            (element), runner, parent));
   }
 
-  return gst_qa_element_monitor_new (element, runner);
+  return gst_qa_element_monitor_new (element, runner, parent);
 }

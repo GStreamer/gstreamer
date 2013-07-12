@@ -33,6 +33,7 @@ enum
   PROP_0,
   PROP_OBJECT,
   PROP_RUNNER,
+  PROP_QA_PARENT,
   PROP_LAST
 };
 
@@ -64,8 +65,8 @@ gst_qa_monitor_dispose (GObject * object)
 
   g_mutex_clear (&monitor->mutex);
 
-  if (monitor->object)
-    g_object_unref (monitor->object);
+  if (monitor->target)
+    g_object_unref (monitor->target);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -91,6 +92,11 @@ gst_qa_monitor_class_init (GstQaMonitorClass * klass)
   g_object_class_install_property (gobject_class, PROP_RUNNER,
       g_param_spec_object ("qa-runner", "QA Runner", "The QA runner to "
           "report errors to", GST_TYPE_QA_RUNNER,
+          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_QA_PARENT,
+      g_param_spec_object ("qa-parent", "QA parent monitor", "The QA monitor "
+          "that is the parent of this one", GST_TYPE_QA_MONITOR,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 }
 
@@ -155,13 +161,16 @@ gst_qa_monitor_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_OBJECT:
-      g_assert (monitor->object == NULL);
-      monitor->object = g_value_dup_object (value);
+      g_assert (monitor->target == NULL);
+      monitor->target = g_value_dup_object (value);
       break;
     case PROP_RUNNER:
       /* we assume the runner is valid as long as this monitor is,
        * no ref taken */
       monitor->runner = g_value_get_object (value);
+      break;
+    case PROP_QA_PARENT:
+      monitor->parent = g_value_get_object (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -182,10 +191,10 @@ gst_qa_monitor_get_property (GObject * object, guint prop_id,
       g_value_set_object (value, GST_QA_MONITOR_GET_OBJECT (monitor));
       break;
     case PROP_RUNNER:
-      if (GST_QA_MONITOR_GET_RUNNER (monitor))
-        g_value_set_object (value, GST_QA_MONITOR_GET_RUNNER (monitor));
-      else
-        g_value_set_object (value, NULL);
+      g_value_set_object (value, GST_QA_MONITOR_GET_RUNNER (monitor));
+      break;
+    case PROP_QA_PARENT:
+      g_value_set_object (value, GST_QA_MONITOR_GET_PARENT (monitor));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -38,8 +38,9 @@ G_BEGIN_DECLS
 #define GST_QA_MONITOR_CAST(obj)                ((GstQaMonitor*)(obj))
 #define GST_QA_MONITOR_CLASS_CAST(klass)        ((GstQaMonitorClass*)(klass))
 
-#define GST_QA_MONITOR_GET_OBJECT(m) (GST_QA_MONITOR_CAST (m)->object)
+#define GST_QA_MONITOR_GET_OBJECT(m) (GST_QA_MONITOR_CAST (m)->target)
 #define GST_QA_MONITOR_GET_RUNNER(m) (GST_QA_MONITOR_CAST (m)->runner)
+#define GST_QA_MONITOR_GET_PARENT(m) (GST_QA_MONITOR_CAST (m)->parent)
 #define GST_QA_MONITOR_LOCK(m) (g_mutex_lock (&GST_QA_MONITOR_CAST(m)->mutex))
 #define GST_QA_MONITOR_UNLOCK(m) (g_mutex_unlock (&GST_QA_MONITOR_CAST(m)->mutex))
 
@@ -54,10 +55,12 @@ typedef struct _GstQaMonitorClass GstQaMonitorClass;
  * Class that wraps a #GObject for QA checks
  */
 struct _GstQaMonitor {
-  GObject 	 parent;
+  GObject 	 object;
 
-  GstObject     *object;
+  GstObject     *target;
   GMutex         mutex;
+
+  GstQaMonitor  *parent;
 
   GstQaRunner   *runner;
 

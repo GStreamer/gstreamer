@@ -29,7 +29,7 @@
 
 G_BEGIN_DECLS
 
-GstQaElementMonitor *       gst_qa_monitor_factory_create (GstElement * element, GstQaRunner * runner);
+GstQaElementMonitor *       gst_qa_monitor_factory_create (GstElement * element, GstQaRunner * runner, GstQaMonitor * parent);
 
 G_END_DECLS
 

@@ -86,10 +86,11 @@ gst_qa_bin_monitor_init (GstQaBinMonitor * bin_monitor)
  * @bin: (transfer-none): a #GstBin to run QA on
  */
 GstQaBinMonitor *
-gst_qa_bin_monitor_new (GstBin * bin, GstQaRunner * runner)
+gst_qa_bin_monitor_new (GstBin * bin, GstQaRunner * runner,
+    GstQaMonitor * parent)
 {
   GstQaBinMonitor *monitor = g_object_new (GST_TYPE_QA_BIN_MONITOR, "object",
-      bin, "qa-runner", runner, NULL);
+      bin, "qa-runner", runner, "qa-parent", parent, NULL);
 
   if (GST_QA_MONITOR_GET_OBJECT (monitor) == NULL) {
     g_object_unref (monitor);
@@ -154,7 +155,7 @@ gst_qa_bin_monitor_wrap_element (GstQaBinMonitor * monitor,
 
   element_monitor =
       gst_qa_monitor_factory_create (element,
-      GST_QA_MONITOR_GET_RUNNER (monitor));
+      GST_QA_MONITOR_GET_RUNNER (monitor), GST_QA_MONITOR_CAST (monitor));
   g_return_if_fail (element_monitor != NULL);
 
   GST_QA_MONITOR_LOCK (monitor);

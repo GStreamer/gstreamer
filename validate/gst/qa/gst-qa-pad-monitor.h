@@ -53,6 +53,8 @@ typedef struct _GstQaPadMonitorClass GstQaPadMonitorClass;
 struct _GstQaPadMonitor {
   GstQaMonitor 	 parent;
 
+  GstQaElementMonitor *element_monitor;
+
   gboolean       setup;
   GstPad        *pad;
 
@@ -88,7 +90,7 @@ struct _GstQaPadMonitorClass {
 /* normal GObject stuff */
 GType		gst_qa_pad_monitor_get_type		(void);
 
-GstQaPadMonitor *   gst_qa_pad_monitor_new      (GstPad * pad, GstQaRunner * runner);
+GstQaPadMonitor *   gst_qa_pad_monitor_new      (GstPad * pad, GstQaRunner * runner, GstQaElementMonitor *element_monitor);
 
 G_END_DECLS
 

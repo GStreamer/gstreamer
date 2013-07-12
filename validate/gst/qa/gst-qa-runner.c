@@ -91,7 +91,8 @@ gst_qa_runner_setup (GstQaRunner * runner)
     return TRUE;
 
   GST_INFO_OBJECT (runner, "Starting QA Runner setup");
-  runner->monitor = gst_qa_monitor_factory_create (runner->pipeline, runner);
+  runner->monitor =
+      gst_qa_monitor_factory_create (runner->pipeline, runner, NULL);
   if (runner->monitor == NULL) {
     GST_WARNING_OBJECT (runner, "Setup failed");
     return FALSE;
