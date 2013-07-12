@@ -219,6 +219,21 @@ ensure_surface_pool(GstVaapiUploader *uploader, GstCaps *caps,
     if (!*caps_changed_ptr)
         return TRUE;
 
+    /* Always try to downsample source buffers to YUV 4:2:0 format as
+       this saves memory bandwidth for further rendering */
+    /* XXX: this also means that visual quality is not preserved */
+    if (format != GST_VIDEO_FORMAT_ENCODED) {
+        const GstVaapiChromaType chroma_type =
+            gst_video_format_get_chroma_type(format);
+        if (chroma_type != GST_VAAPI_CHROMA_TYPE_YUV420) {
+            const GstVideoFormat image_format =
+                GST_VIDEO_INFO_FORMAT(&priv->image_info);
+            GST_INFO("use implicit conversion of %s buffers to NV12 surfaces",
+                     gst_video_format_to_string(image_format));
+            gst_video_info_set_format(&vi, GST_VIDEO_FORMAT_NV12, width, height);
+        }
+    }
+
     pool = gst_vaapi_surface_pool_new(priv->display, &vi);
     if (!pool)
         return FALSE;
