@@ -38,6 +38,7 @@ enum {
 };
 
 struct _GstVaapiVideoBufferPoolPrivate {
+    GstCaps            *caps;
     GstAllocator       *allocator;
     GstVaapiDisplay    *display;
     guint               has_video_meta  : 1;
@@ -58,6 +59,7 @@ gst_vaapi_video_buffer_pool_finalize(GObject *object)
 
     gst_vaapi_display_replace(&priv->display, NULL);
     g_clear_object(&priv->allocator);
+    gst_caps_replace(&priv->caps, NULL);
 }
 
 static void
@@ -118,10 +120,13 @@ gst_vaapi_video_buffer_pool_set_config(GstBufferPool *pool,
     if (!caps)
         goto error_no_caps;
 
-    g_clear_object(&priv->allocator);
-    priv->allocator = gst_vaapi_video_allocator_new(priv->display, caps);
-    if (!priv->allocator)
-        goto error_create_allocator;
+    if (!priv->caps || !gst_caps_is_equal(priv->caps, caps)) {
+        g_clear_object(&priv->allocator);
+        priv->allocator = gst_vaapi_video_allocator_new(priv->display, caps);
+        if (!priv->allocator)
+            goto error_create_allocator;
+        gst_caps_replace(&priv->caps, caps);
+    }
 
     if (!gst_buffer_pool_config_has_option(config,
             GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META))
