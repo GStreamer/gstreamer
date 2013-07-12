@@ -70,25 +70,31 @@ static void _do_upload_draw_gles2 (GstGLDisplay * display,
 
 /* *INDENT-OFF* */
 
+#define YUV_TO_RGB_COEFFICIENTS \
+      "const vec3 offset = vec3(-0.0625, -0.5, -0.5);\n" \
+      "const vec3 rcoeff = vec3(1.164, 0.000, 1.596);\n" \
+      "const vec3 gcoeff = vec3(1.164,-0.391,-0.813);\n" \
+      "const vec3 bcoeff = vec3(1.164, 2.018, 0.000);\n"
+
 #if GST_GL_HAVE_OPENGL
 /* YUY2:r,g,a
    UYVY:a,b,r */
 static gchar *text_shader_YUY2_UYVY_opengl =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect Ytex, UVtex;\n"
+    YUV_TO_RGB_COEFFICIENTS
     "void main(void) {\n"
-    "  float fx, fy, y, u, v, r, g, b;\n"
+    "  vec3 yuv;\n"
+    "  float fx, fy, r, g, b;\n"
     "  fx = gl_TexCoord[0].x;\n"
     "  fy = gl_TexCoord[0].y;\n"
-    "  y = texture2DRect(Ytex,vec2(fx,fy)).%c;\n"
-    "  u = texture2DRect(UVtex,vec2(fx*0.5,fy)).%c;\n"
-    "  v = texture2DRect(UVtex,vec2(fx*0.5,fy)).%c;\n"
-    "  y=1.164*(y-0.0627);\n"
-    "  u=u-0.5;\n"
-    "  v=v-0.5;\n"
-    "  r = y+1.5958*v;\n"
-    "  g = y-0.39173*u-0.81290*v;\n"
-    "  b = y+2.017*u;\n"
+    "  yuv.x = texture2DRect(Ytex,vec2(fx,fy)).%c;\n"
+    "  yuv.y = texture2DRect(UVtex,vec2(fx*0.5,fy)).%c;\n"
+    "  yuv.z = texture2DRect(UVtex,vec2(fx*0.5,fy)).%c;\n"
+    "  yuv+=offset;\n"
+    "  r = dot(yuv, rcoeff);\n"
+    "  g = dot(yuv, gcoeff);\n"
+    "  b = dot(yuv, bcoeff);\n"
     "  gl_FragColor = vec4(r, g, b, 1.0);\n"
     "}\n";
 
@@ -97,36 +103,34 @@ static gchar *text_shader_YUY2_UYVY_opengl =
 static gchar *text_shader_I420_YV12_opengl =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect Ytex,Utex,Vtex;\n"
+    YUV_TO_RGB_COEFFICIENTS
     "void main(void) {\n"
-    "  float r,g,b,y,u,v;\n"
+    "  vec3 yuv;\n"
+    "  float r,g,b;\n"
     "  vec2 nxy = gl_TexCoord[0].xy;\n"
-    "  y=texture2DRect(Ytex,nxy%s).r;\n"
-    "  u=texture2DRect(Utex,nxy%s).r;\n"
-    "  v=texture2DRect(Vtex,nxy*0.5).r;\n"
-    "  y=1.1643*(y-0.0625);\n"
-    "  u=u-0.5;\n"
-    "  v=v-0.5;\n"
-    "  r=y+1.5958*v;\n"
-    "  g=y-0.39173*u-0.81290*v;\n"
-    "  b=y+2.017*u;\n"
+    "  yuv.x=texture2DRect(Ytex,nxy%s).r;\n"
+    "  yuv.y=texture2DRect(Utex,nxy%s).r;\n"
+    "  yuv.z=texture2DRect(Vtex,nxy*0.5).r;\n"
+    "  yuv+=offset;\n"
+    "  r = dot(yuv, rcoeff);\n"
+    "  g = dot(yuv, gcoeff);\n"
+    "  b = dot(yuv, bcoeff);\n"
     "  gl_FragColor=vec4(r,g,b,1.0);\n"
     "}\n";
 
 static gchar *text_shader_AYUV_opengl =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect tex;\n"
+    YUV_TO_RGB_COEFFICIENTS
     "void main(void) {\n"
-    "  float r,g,b,y,u,v;\n"
+    "  vec3 yuv;\n"
+    "  float r,g,b;\n"
     "  vec2 nxy=gl_TexCoord[0].xy;\n"
-    "  y=texture2DRect(tex,nxy).r;\n"
-    "  u=texture2DRect(tex,nxy).g;\n"
-    "  v=texture2DRect(tex,nxy).b;\n"
-    "  y=1.1643*(y-0.0625);\n"
-    "  u=u-0.5;\n"
-    "  v=v-0.5;\n"
-    "  r=y+1.5958*v;\n"
-    "  g=y-0.39173*u-0.81290*v;\n"
-    "  b=y+2.017*u;\n"
+    "  yuv=texture2DRect(tex,nxy).rgb;\n"
+    "  yuv+=offset;\n"
+    "  r = dot(yuv, rcoeff);\n"
+    "  g = dot(yuv, gcoeff);\n"
+    "  b = dot(yuv, bcoeff);\n"
     "  gl_FragColor=vec4(r,g,b,1.0);\n"
     "}\n";
 
@@ -140,19 +144,19 @@ static gchar *text_shader_YUY2_UYVY_gles2 =
     "precision mediump float;\n"
     "varying vec2 v_texCoord;\n"
     "uniform sampler2D Ytex, UVtex;\n"
+    YUV_TO_RGB_COEFFICIENTS
     "void main(void) {\n"
+    "  vec3 yuv;\n"
     "  float fx, fy, y, u, v, r, g, b;\n"
     "  fx = v_texCoord.x;\n"
     "  fy = v_texCoord.y;\n"
-    "  y = texture2D(Ytex,vec2(fx,fy)).%c;\n"
-    "  u = texture2D(UVtex,vec2(fx*0.5,fy)).%c;\n"
-    "  v = texture2D(UVtex,vec2(fx*0.5,fy)).%c;\n"
-    "  y=1.164*(y-0.0627);\n"
-    "  u=u-0.5;\n"
-    "  v=v-0.5;\n"
-    "  r = y+1.5958*v;\n"
-    "  g = y-0.39173*u-0.81290*v;\n"
-    "  b = y+2.017*u;\n"
+    "  yuv.x = texture2D(Ytex,vec2(fx,fy)).%c;\n"
+    "  yuv.y = texture2D(UVtex,vec2(fx*0.5,fy)).%c;\n"
+    "  yuv.z = texture2D(UVtex,vec2(fx*0.5,fy)).%c;\n"
+    "  yuv+=offset;\n"
+    "  r = dot(yuv, rcoeff);\n"
+    "  g = dot(yuv, gcoeff);\n"
+    "  b = dot(yuv, bcoeff);\n"
     "  gl_FragColor = vec4(r, g, b, 1.0);\n"
     "}\n";
 
@@ -160,18 +164,18 @@ static gchar *text_shader_I420_YV12_gles2 =
     "precision mediump float;\n"
     "varying vec2 v_texCoord;\n"
     "uniform sampler2D Ytex,Utex,Vtex;\n"
+    YUV_TO_RGB_COEFFICIENTS
     "void main(void) {\n"
-    "  float r,g,b,y,u,v;\n"
+    "  vec3 yuv;\n"
+    "  float r, g, b;\n"
     "  vec2 nxy = v_texCoord.xy;\n"
-    "  y=texture2D(Ytex,nxy).r;\n"
-    "  u=texture2D(Utex,nxy).r;\n"
-    "  v=texture2D(Vtex,nxy).r;\n"
-    "  y=1.1643*(y-0.0625);\n"
-    "  u=u-0.5;\n"
-    "  v=v-0.5;\n"
-    "  r=y+1.5958*v;\n"
-    "  g=y-0.39173*u-0.81290*v;\n"
-    "  b=y+2.017*u;\n"
+    "  yuv.x=texture2D(Ytex,nxy).r;\n"
+    "  yuv.y=texture2D(Utex,nxy).r;\n"
+    "  yuv.z=texture2D(Vtex,nxy).r;\n"
+    "  yuv+=offset;\n"
+    "  r = dot(yuv, rcoeff);\n"
+    "  g = dot(yuv, gcoeff);\n"
+    "  b = dot(yuv, bcoeff);\n"
     "  gl_FragColor=vec4(r,g,b,1.0);\n"
     "}\n";
 
@@ -179,18 +183,16 @@ static gchar *text_shader_AYUV_gles2 =
     "precision mediump float;\n"
     "varying vec2 v_texCoord;\n"
     "uniform sampler2D tex;\n"
+    YUV_TO_RGB_COEFFICIENTS
     "void main(void) {\n"
-    "  float r,g,b,y,u,v;\n"
+    "  vec3 yuv;\n"
+    "  float r,g,b;\n"
     "  vec2 nxy = v_texCoord.xy;\n"
-    "  y=texture2D(tex,nxy).g;\n"
-    "  u=texture2D(tex,nxy).b;\n"
-    "  v=texture2D(tex,nxy).a;\n"
-    "  y=1.1643*(y-0.0625);\n"
-    "  u=u-0.5;\n"
-    "  v=v-0.5;\n"
-    "  r=y+1.5958*v;\n"
-    "  g=y-0.39173*u-0.81290*v;\n"
-    "  b=y+2.017*u;\n"
+    "  yuv=texture2D(tex,nxy).gba;\n"
+    "  yuv+=offset;\n"
+    "  r = dot(yuv, rcoeff);\n"
+    "  g = dot(yuv, gcoeff);\n"
+    "  b = dot(yuv, bcoeff);\n"
     "  gl_FragColor=vec4(r,g,b,1.0);\n"
     "}\n";
 
