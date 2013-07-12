@@ -32,6 +32,7 @@ enum
 {
   PROP_0,
   PROP_OBJECT,
+  PROP_RUNNER,
   PROP_LAST
 };
 
@@ -81,6 +82,10 @@ gst_qa_monitor_class_init (GstQaMonitorClass * klass)
   g_object_class_install_property (gobject_class, PROP_OBJECT,
       g_param_spec_object ("object", "Object", "The object to be monitored",
           G_TYPE_OBJECT, G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
+
+  g_object_class_install_property (gobject_class, PROP_RUNNER,
+      g_param_spec_object ("qa-runner", "QA Runner", "The QA runner to "
+          "report errors to", GST_TYPE_QA_RUNNER, G_PARAM_READWRITE));
 }
 
 static void
@@ -118,6 +123,7 @@ gst_qa_monitor_do_setup (GstQaMonitor * monitor)
 gboolean
 gst_qa_monitor_setup (GstQaMonitor * monitor)
 {
+  GST_DEBUG_OBJECT (monitor, "Starting monitor setup");
   return GST_QA_MONITOR_GET_CLASS (monitor)->setup (monitor);
 }
 
@@ -134,6 +140,11 @@ gst_qa_monitor_set_property (GObject * object, guint prop_id,
       g_assert (monitor->object == NULL);
       monitor->object = g_value_dup_object (value);
       gst_qa_monitor_setup (monitor);
+      break;
+    case PROP_RUNNER:
+      /* we assume the runner is valid as long as this monitor is,
+       * no ref taken */
+      monitor->runner = g_value_get_object (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -152,6 +163,12 @@ gst_qa_monitor_get_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_OBJECT:
       g_value_set_object (value, GST_QA_MONITOR_GET_OBJECT (monitor));
+      break;
+    case PROP_RUNNER:
+      if (GST_QA_MONITOR_GET_RUNNER (monitor))
+        g_value_set_object (value, GST_QA_MONITOR_GET_RUNNER (monitor));
+      else
+        g_value_set_object (value, NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

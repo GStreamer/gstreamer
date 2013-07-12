@@ -25,6 +25,7 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 #include "gst-qa-element-monitor.h"
+#include "gst-qa-runner.h"
 
 G_BEGIN_DECLS
 
@@ -71,7 +72,7 @@ struct _GstQaBinMonitorClass {
 /* normal GObject stuff */
 GType		gst_qa_bin_monitor_get_type		(void);
 
-GstQaBinMonitor *   gst_qa_bin_monitor_new      (GstBin * bin);
+GstQaBinMonitor *   gst_qa_bin_monitor_new      (GstBin * bin, GstQaRunner * runner);
 
 G_END_DECLS
 

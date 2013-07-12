@@ -25,10 +25,11 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 #include "gst-qa-element-monitor.h"
+#include "gst-qa-runner.h"
 
 G_BEGIN_DECLS
 
-GstQaElementMonitor *       gst_qa_monitor_factory_create (GstElement * element);
+GstQaElementMonitor *       gst_qa_monitor_factory_create (GstElement * element, GstQaRunner * runner);
 
 G_END_DECLS
 

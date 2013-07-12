@@ -85,7 +85,7 @@ struct _GstQaPadMonitorClass {
 /* normal GObject stuff */
 GType		gst_qa_pad_monitor_get_type		(void);
 
-GstQaPadMonitor *   gst_qa_pad_monitor_new      (GstPad * pad);
+GstQaPadMonitor *   gst_qa_pad_monitor_new      (GstPad * pad, GstQaRunner * runner);
 
 G_END_DECLS
 

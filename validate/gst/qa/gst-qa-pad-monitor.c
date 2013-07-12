@@ -70,10 +70,10 @@ gst_qa_pad_monitor_init (GstQaPadMonitor * pad_monitor)
  * @pad: (transfer-none): a #GstPad to run QA on
  */
 GstQaPadMonitor *
-gst_qa_pad_monitor_new (GstPad * pad)
+gst_qa_pad_monitor_new (GstPad * pad, GstQaRunner * runner)
 {
   GstQaPadMonitor *monitor = g_object_new (GST_TYPE_QA_PAD_MONITOR,
-      "object", pad, NULL);
+      "object", pad, "qa-runner", runner, NULL);
 
   if (GST_QA_PAD_MONITOR_GET_PAD (monitor) == NULL) {
     g_object_unref (monitor);

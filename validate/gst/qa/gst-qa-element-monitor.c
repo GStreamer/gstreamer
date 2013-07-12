@@ -85,13 +85,14 @@ gst_qa_element_monitor_init (GstQaElementMonitor * element_monitor)
  * @element: (transfer-none): a #GstElement to run QA on
  */
 GstQaElementMonitor *
-gst_qa_element_monitor_new (GstElement * element)
+gst_qa_element_monitor_new (GstElement * element, GstQaRunner * runner)
 {
   GstQaElementMonitor *monitor;
 
   g_return_val_if_fail (element != NULL, NULL);
 
-  monitor = g_object_new (GST_TYPE_QA_ELEMENT_MONITOR, "object", element, NULL);
+  monitor = g_object_new (GST_TYPE_QA_ELEMENT_MONITOR, "object", element,
+      "qa-runner", runner, NULL);
 
   if (GST_QA_ELEMENT_MONITOR_GET_ELEMENT (monitor) == NULL) {
     g_object_unref (monitor);
@@ -155,7 +156,8 @@ gst_qa_element_monitor_wrap_pad (GstQaElementMonitor * monitor, GstPad * pad)
   GstQaPadMonitor *pad_monitor;
   GST_DEBUG_OBJECT (monitor, "Wrapping pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
-  pad_monitor = gst_qa_pad_monitor_new (pad);
+  pad_monitor =
+      gst_qa_pad_monitor_new (pad, GST_QA_MONITOR_GET_RUNNER (monitor));
   g_return_if_fail (pad_monitor != NULL);
 
   GST_QA_MONITOR_LOCK (monitor);

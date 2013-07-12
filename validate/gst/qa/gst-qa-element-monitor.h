@@ -71,7 +71,7 @@ struct _GstQaElementMonitorClass {
 /* normal GObject stuff */
 GType		gst_qa_element_monitor_get_type		(void);
 
-GstQaElementMonitor *   gst_qa_element_monitor_new      (GstElement * element);
+GstQaElementMonitor *   gst_qa_element_monitor_new      (GstElement * element, GstQaRunner * runner);
 
 G_END_DECLS
 

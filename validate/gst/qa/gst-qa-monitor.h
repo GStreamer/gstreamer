@@ -24,6 +24,7 @@
 
 #include <glib-object.h>
 #include <gst/gst.h>
+#include "gst-qa-runner.h"
 
 G_BEGIN_DECLS
 
@@ -37,6 +38,7 @@ G_BEGIN_DECLS
 #define GST_QA_MONITOR_CLASS_CAST(klass)        ((GstQaMonitorClass*)(klass))
 
 #define GST_QA_MONITOR_GET_OBJECT(m) (GST_QA_MONITOR_CAST (m)->object)
+#define GST_QA_MONITOR_GET_RUNNER(m) (GST_QA_MONITOR_CAST (m)->runner)
 #define GST_QA_MONITOR_LOCK(m) (g_mutex_lock (&GST_QA_MONITOR_CAST(m)->mutex))
 #define GST_QA_MONITOR_UNLOCK(m) (g_mutex_unlock (&GST_QA_MONITOR_CAST(m)->mutex))
 
@@ -55,6 +57,8 @@ struct _GstQaMonitor {
 
   GObject       *object;
   GMutex         mutex;
+
+  GstQaRunner   *runner;
 
   /*< private >*/
 };

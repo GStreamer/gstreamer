@@ -25,9 +25,10 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
-#include "gst-qa-element-monitor.h"
-
 G_BEGIN_DECLS
+
+/* forward declaration */
+typedef struct _GstQaElementMonitor GstQaElementMonitor;
 
 #define GST_TYPE_QA_RUNNER			(gst_qa_runner_get_type ())
 #define GST_IS_QA_RUNNER(obj)		        (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_QA_RUNNER))
