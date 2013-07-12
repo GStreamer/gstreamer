@@ -1829,7 +1829,7 @@ client_session_finalized (GstRTSPClient * client, GstRTSPSession * session)
   }
 }
 
-static GPrivate state_key;
+static GPrivate current_state;
 
 /**
  * gst_rtsp_client_state_get_current:
@@ -1842,7 +1842,54 @@ static GPrivate state_key;
 GstRTSPClientState *
 gst_rtsp_client_state_get_current (void)
 {
-  return g_private_get (&state_key);
+  GSList *l;
+
+  l = g_private_get (&current_state);
+  if (l == NULL)
+    return NULL;
+
+  return (GstRTSPClientState *) (l->data);
+
+}
+
+/**
+ * gst_rtsp_client_state_push_current:
+ * @state: a ##GstRTSPClientState
+ *
+ * Pushes @state onto the state stack. The current
+ * state can then be received using gst_rtsp_client_state_get_current().
+ **/
+void
+gst_rtsp_client_state_push_current (GstRTSPClientState * state)
+{
+  GSList *l;
+
+  g_return_if_fail (state != NULL);
+
+  l = g_private_get (&current_state);
+  l = g_slist_prepend (l, state);
+  g_private_set (&current_state, l);
+}
+
+/**
+ * gst_rtsp_client_state_pop_current:
+ * @state: a #GstRTSPClientState
+ *
+ * Pops @state off the state stack (verifying that @state
+ * is on the top of the stack).
+ **/
+void
+gst_rtsp_client_state_pop_current (GstRTSPClientState * state)
+{
+  GSList *l;
+
+  l = g_private_get (&current_state);
+
+  g_return_if_fail (l != NULL);
+  g_return_if_fail (l->data == state);
+
+  l = g_slist_delete_link (l, l);
+  g_private_set (&current_state, l);
 }
 
 static void
@@ -1864,7 +1911,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   state.request = request;
   state.response = &response;
   state.auth = priv->auth;
-  g_private_set (&state_key, &state);
+  gst_rtsp_client_state_push_current (&state);
 
   if (gst_debug_category_get_threshold (rtsp_client_debug) >= GST_LEVEL_LOG) {
     gst_rtsp_message_dump (request);
@@ -1947,7 +1994,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   }
 
 done:
-  g_private_set (&state_key, NULL);
+  gst_rtsp_client_state_pop_current (&state);
   if (session)
     g_object_unref (session);
   if (uri)

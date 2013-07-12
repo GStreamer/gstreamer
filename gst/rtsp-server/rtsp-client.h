@@ -86,6 +86,9 @@ struct _GstRTSPClientState {
 };
 
 GstRTSPClientState * gst_rtsp_client_state_get_current   (void);
+void                 gst_rtsp_client_state_push_current  (GstRTSPClientState * state);
+void                 gst_rtsp_client_state_pop_current   (GstRTSPClientState * state);
+
 
 /**
  * GstRTSPClientSendFunc:
