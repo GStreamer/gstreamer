@@ -144,12 +144,17 @@ gst_qa_pad_monitor_event_func (GstPad * pad, GstEvent * event)
         if (seqnum == pad_monitor->pending_flush_start_seqnum) {
           pad_monitor->pending_flush_start_seqnum = 0;
         } else {
-          /* TODO error */
+          gst_qa_monitor_post_error (GST_QA_MONITOR_CAST (pad_monitor),
+              GST_QA_ERROR_AREA_EVENT, "Wrong flush-start seqnum",
+              "The expected flush-start seqnum should be the same as the "
+              "one from the event that caused it (probably a seek)");
         }
       }
 
       if (pad_monitor->pending_flush_stop) {
-        /* TODO ERROR, do report */
+        gst_qa_monitor_post_error (GST_QA_MONITOR_CAST (pad_monitor),
+            GST_QA_ERROR_AREA_EVENT, "Received flush-start when flush-stop was "
+            "expected", NULL);
       }
     }
       break;
@@ -159,12 +164,16 @@ gst_qa_pad_monitor_event_func (GstPad * pad, GstEvent * event)
         if (seqnum == pad_monitor->pending_flush_stop_seqnum) {
           pad_monitor->pending_flush_stop_seqnum = 0;
         } else {
-          /* TODO error */
+          gst_qa_monitor_post_error (GST_QA_MONITOR_CAST (pad_monitor),
+              GST_QA_ERROR_AREA_EVENT, "Wrong flush-stop seqnum",
+              "The expected flush-stop seqnum should be the same as the "
+              "one from the event that caused it (probably a seek)");
         }
       }
 
       if (!pad_monitor->pending_flush_stop) {
-        /* TODO ERROR, do report */
+        gst_qa_monitor_post_error (GST_QA_MONITOR_CAST (pad_monitor),
+            GST_QA_ERROR_AREA_EVENT, "Unexpected flush-stop", NULL);
       }
     }
       break;

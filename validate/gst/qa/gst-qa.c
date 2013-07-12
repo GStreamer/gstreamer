@@ -113,11 +113,13 @@ main (int argc, gchar ** argv)
     goto exit;
   g_main_loop_run (mainloop);
 
-  /* TODO get report from QA runner */
+  g_print ("Pipeline finished, printing issues found: \n");
+  gst_qa_runner_print_error_reports (runner);
 
 exit:
   gst_element_set_state (pipeline, GST_STATE_NULL);
   g_main_loop_unref (mainloop);
   g_object_unref (runner);
+  g_object_unref (pipeline);
   return 0;
 }

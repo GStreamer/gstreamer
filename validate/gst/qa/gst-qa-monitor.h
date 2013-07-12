@@ -24,6 +24,7 @@
 
 #include <glib-object.h>
 #include <gst/gst.h>
+#include "gst-qa-report.h"
 #include "gst-qa-runner.h"
 
 G_BEGIN_DECLS
@@ -55,7 +56,7 @@ typedef struct _GstQaMonitorClass GstQaMonitorClass;
 struct _GstQaMonitor {
   GObject 	 parent;
 
-  GObject       *object;
+  GstObject     *object;
   GMutex         mutex;
 
   GstQaRunner   *runner;
@@ -77,6 +78,8 @@ struct _GstQaMonitorClass {
 
 /* normal GObject stuff */
 GType		gst_qa_monitor_get_type		(void);
+
+void            gst_qa_monitor_post_error       (GstQaMonitor * monitor, GstQaErrorArea area, const gchar * message, const gchar * detail);
 
 G_END_DECLS
 

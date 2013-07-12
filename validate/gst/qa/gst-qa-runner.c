@@ -44,6 +44,9 @@ gst_qa_runner_dispose (GObject * object)
   if (runner->pipeline)
     gst_object_unref (runner->pipeline);
 
+  g_slist_free_full (runner->error_reports,
+      (GDestroyNotify) gst_qa_error_report_free);
+
   if (runner->monitor)
     g_object_unref (runner->monitor);
 
@@ -97,4 +100,22 @@ gst_qa_runner_setup (GstQaRunner * runner)
   runner->setup = TRUE;
   GST_DEBUG_OBJECT (runner, "Setup successful");
   return TRUE;
+}
+
+void
+gst_qa_runner_add_error_report (GstQaRunner * runner, GstQaErrorReport * report)
+{
+  runner->error_reports = g_slist_prepend (runner->error_reports, report);
+}
+
+void
+gst_qa_runner_print_error_reports (GstQaRunner * runner)
+{
+  GSList *iter;
+
+  for (iter = runner->error_reports; iter; iter = g_slist_next (iter)) {
+    GstQaErrorReport *report = iter->data;
+
+    gst_qa_error_report_printf (report);
+  }
 }
