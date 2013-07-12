@@ -255,7 +255,7 @@ check_rendered_file_properties (GstClockTime duration)
 
 /* Test seeking in various situations */
 static void
-_seeking_playback (void)
+test_seeking (gboolean render)
 {
   GESTimeline *timeline;
   GESLayer *layer;
@@ -296,34 +296,6 @@ _seeking_playback (void)
 
   fail_unless (test_timeline_with_profile (timeline, PROFILE_OGG, FALSE));
 }
-
-GST_START_TEST (test_seeking_playback_webm)
-{
-  testfilename1 = "test1.webm";
-  testfilename2 = "test2.webm";
-  _seeking_playback ();
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_seeking_playback_ogv)
-{
-  testfilename1 = "test1.ogv";
-  testfilename2 = "test2.ogv";
-  _seeking_playback ();
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_seeking_playback_mov)
-{
-  testfilename1 = "test1.MOV";
-  testfilename2 = "test2.MOV";
-  _seeking_playback ();
-}
-
-GST_END_TEST;
-
 
 /* Test adding an effect [E] marks the effect */
 static void
@@ -504,201 +476,50 @@ test_image (gboolean render)
     fail_unless (check_rendered_file_properties (1 * GST_SECOND));
 }
 
-GST_START_TEST (test_basic_render_webm)
-{
-  testfilename1 = "test1.webm";
-  testfilename2 = "test2.webm";
-  test_image_filename = "test.png";
-  test_basic (TRUE);
-}
-
+#define CREATE_TEST(name, func, render)                                        \
+GST_START_TEST (test_##name##_mov )                                            \
+{                                                                              \
+  testfilename1 = "test1.MOV";                                                 \
+  testfilename2 = "test2.MOV";                                                 \
+  func (render);                                                               \
+}                                                                              \
+GST_END_TEST;                                                                  \
+GST_START_TEST (test_##name##_ogv )                                            \
+{                                                                              \
+  testfilename1 = "test1.ogv";                                                 \
+  testfilename2 = "test2.ogv";                                                 \
+  func (render);                                                               \
+}                                                                              \
+GST_END_TEST;                                                                  \
+GST_START_TEST (test_##name##_webm )                                           \
+{                                                                              \
+  testfilename1 = "test1.webm";                                                \
+  testfilename2 = "test2.webm";                                                \
+  func (render);                                                               \
+}                                                                              \
 GST_END_TEST;
 
-GST_START_TEST (test_basic_playback_webm)
-{
-  testfilename1 = "test1.webm";
-  testfilename2 = "test2.webm";
-  test_image_filename = "test.png";
-  test_basic (FALSE);
-}
+#define ADD_TESTS(name)                                                        \
+  tcase_add_test (tc_chain, test_##name##_webm);                               \
+  tcase_add_test (tc_chain, test_##name##_ogv);                                \
+  tcase_add_test (tc_chain, test_##name##_mov);                                \
 
-GST_END_TEST;
 
-GST_START_TEST (test_effect_render_webm)
-{
-  testfilename1 = "test1.webm";
-  testfilename2 = "test2.webm";
-  test_image_filename = "test.png";
-  test_effect (TRUE);
-}
 
-GST_END_TEST;
+/* *INDENT-OFF* */
+CREATE_TEST(basic_playback, test_basic, FALSE)
+CREATE_TEST(basic_render, test_basic, TRUE)
 
-GST_START_TEST (test_effect_playback_webm)
-{
-  testfilename1 = "test1.webm";
-  testfilename2 = "test2.webm";
-  test_image_filename = "test.png";
-  test_effect (FALSE);
-}
+CREATE_TEST(transition_playback, test_transition, FALSE)
+CREATE_TEST(transition_render, test_transition, TRUE)
 
-GST_END_TEST;
+CREATE_TEST(effect_playback, test_effect, FALSE)
+CREATE_TEST(effect_render, test_effect, TRUE)
 
-GST_START_TEST (test_transition_render_webm)
-{
-  testfilename1 = "test1.webm";
-  testfilename2 = "test2.webm";
-  test_image_filename = "test.png";
-  test_transition (TRUE);
-}
+CREATE_TEST(seeking_playback, test_seeking, FALSE)
 
-GST_END_TEST;
-
-GST_START_TEST (test_transition_playback_webm)
-{
-  testfilename1 = "test1.webm";
-  testfilename2 = "test2.webm";
-  test_image_filename = "test.png";
-  test_transition (FALSE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_image_playback_webm)
-{
-  testfilename1 = "test1.webm";
-  testfilename2 = "test2.webm";
-  test_image_filename = "test.png";
-  test_image (FALSE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_basic_render_ogv)
-{
-  testfilename1 = "test1.ogv";
-  testfilename2 = "test2.ogv";
-  test_basic (TRUE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_basic_playback_ogv)
-{
-  testfilename1 = "test1.ogv";
-  testfilename2 = "test2.ogv";
-  test_basic (FALSE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_effect_render_ogv)
-{
-  testfilename1 = "test1.ogv";
-  testfilename2 = "test2.ogv";
-  test_effect (TRUE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_effect_playback_ogv)
-{
-  testfilename1 = "test1.ogv";
-  testfilename2 = "test2.ogv";
-  test_effect (FALSE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_transition_render_ogv)
-{
-  testfilename1 = "test1.ogv";
-  testfilename2 = "test2.ogv";
-  test_transition (TRUE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_transition_playback_ogv)
-{
-  testfilename1 = "test1.ogv";
-  testfilename2 = "test2.ogv";
-  test_transition (FALSE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_image_playback_ogv)
-{
-  testfilename1 = "test1.ogv";
-  testfilename2 = "test2.ogv";
-  test_image (FALSE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_basic_render_mov)
-{
-  testfilename1 = "test1.MOV";
-  testfilename2 = "test2.MOV";
-  test_basic (TRUE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_basic_playback_mov)
-{
-  testfilename1 = "test1.MOV";
-  testfilename2 = "test2.MOV";
-  test_basic (FALSE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_effect_render_mov)
-{
-  testfilename1 = "test1.MOV";
-  testfilename2 = "test2.MOV";
-  test_effect (TRUE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_effect_playback_mov)
-{
-  testfilename1 = "test1.MOV";
-  testfilename2 = "test2.MOV";
-  test_effect (FALSE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_transition_render_mov)
-{
-  testfilename1 = "test1.MOV";
-  testfilename2 = "test2.MOV";
-  test_transition (TRUE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_transition_playback_mov)
-{
-  testfilename1 = "test1.MOV";
-  testfilename2 = "test2.MOV";
-  test_transition (FALSE);
-}
-
-GST_END_TEST;
-
-GST_START_TEST (test_image_playback_mov)
-{
-  testfilename1 = "test1.MOV";
-  testfilename2 = "test2.MOV";
-  test_image (FALSE);
-}
-
-GST_END_TEST;
+CREATE_TEST(image_playback, test_image, FALSE)
+/* *INDENT-ON* */
 
 static Suite *
 ges_suite (void)
@@ -708,37 +529,18 @@ ges_suite (void)
 
   suite_add_tcase (s, tc_chain);
 
-  tcase_add_test (tc_chain, test_basic_render_webm);
-  tcase_add_test (tc_chain, test_basic_render_ogv);
-  tcase_add_test (tc_chain, test_basic_render_mov);
+  ADD_TESTS (basic_playback);
+  ADD_TESTS (basic_render);
 
-  tcase_add_test (tc_chain, test_basic_playback_webm);
-  tcase_add_test (tc_chain, test_basic_playback_ogv);
-  tcase_add_test (tc_chain, test_basic_playback_mov);
+  ADD_TESTS (effect_render);
+  ADD_TESTS (effect_playback);
 
-  tcase_add_test (tc_chain, test_effect_render_webm);
-  tcase_add_test (tc_chain, test_effect_render_ogv);
-  tcase_add_test (tc_chain, test_effect_render_mov);
+  ADD_TESTS (transition_render);
+  ADD_TESTS (transition_playback);
 
-  tcase_add_test (tc_chain, test_effect_playback_webm);
-  tcase_add_test (tc_chain, test_effect_playback_ogv);
-  tcase_add_test (tc_chain, test_effect_playback_mov);
+  ADD_TESTS (image_playback);
 
-  tcase_add_test (tc_chain, test_transition_render_webm);
-  tcase_add_test (tc_chain, test_transition_render_ogv);
-  tcase_add_test (tc_chain, test_transition_render_mov);
-
-  tcase_add_test (tc_chain, test_transition_playback_webm);
-  tcase_add_test (tc_chain, test_transition_playback_ogv);
-  tcase_add_test (tc_chain, test_transition_playback_mov);
-
-  tcase_add_test (tc_chain, test_image_playback_webm);
-  tcase_add_test (tc_chain, test_image_playback_ogv);
-  tcase_add_test (tc_chain, test_image_playback_mov);
-
-  tcase_add_test (tc_chain, test_seeking_playback_webm);
-  tcase_add_test (tc_chain, test_seeking_playback_ogv);
-  tcase_add_test (tc_chain, test_seeking_playback_mov);
+  ADD_TESTS (seeking_playback);
 
   /* TODO : next test case : complex timeline created from project. */
   /* TODO : deep checking of rendered clips */
