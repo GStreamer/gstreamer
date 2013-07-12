@@ -105,11 +105,9 @@ GType gst_pulsesink_get_type (void);
       "rate = (int) [ 1, MAX ], " \
       "channels = (int) [ 1, 32 ];" \
     "audio/x-alaw, " \
-      "layout = (string) interleaved, " \
       "rate = (int) [ 1, MAX], " \
       "channels = (int) [ 1, 32 ];" \
     "audio/x-mulaw, " \
-      "layout = (string) interleaved, " \
       "rate = (int) [ 1, MAX], " \
       "channels = (int) [ 1, 32 ];"
 
