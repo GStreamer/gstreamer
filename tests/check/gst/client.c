@@ -526,12 +526,21 @@ GST_START_TEST (test_client_multicast_invalid_transport_specific)
   GstRTSPMessage request = { 0, };
   gchar *str;
   GstRTSPSessionPool *session_pool;
+  GstRTSPClientState state = { NULL };
 
   client = setup_multicast_client ();
 
+  state.client = client;
+  state.auth = gst_rtsp_auth_new ();
+  state.token =
+      gst_rtsp_token_new (GST_RTSP_TRANSPORT_PERM_CLIENT_SETTINGS,
+      G_TYPE_BOOLEAN, TRUE, NULL);
+  gst_rtsp_client_state_push_current (&state);
+
+#if 0
   gst_rtsp_client_set_use_client_settings (client, TRUE);
   fail_unless (gst_rtsp_client_get_use_client_settings (client));
-
+#endif
 
   /* simple SETUP with a valid URI and multicast, but an invalid ip */
   fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
@@ -596,6 +605,9 @@ GST_START_TEST (test_client_multicast_invalid_transport_specific)
 
 
   g_object_unref (client);
+  g_object_unref (state.auth);
+  gst_rtsp_token_unref (state.token);
+  gst_rtsp_client_state_pop_current (&state);
 }
 
 GST_END_TEST;
@@ -606,11 +618,21 @@ GST_START_TEST (test_client_multicast_transport_specific)
   GstRTSPMessage request = { 0, };
   gchar *str;
   GstRTSPSessionPool *session_pool;
+  GstRTSPClientState state = { NULL };
 
   client = setup_multicast_client ();
 
+  state.client = client;
+  state.auth = gst_rtsp_auth_new ();
+  state.token =
+      gst_rtsp_token_new (GST_RTSP_TRANSPORT_PERM_CLIENT_SETTINGS,
+      G_TYPE_BOOLEAN, TRUE, NULL);
+  gst_rtsp_client_state_push_current (&state);
+
+#if 0
   gst_rtsp_client_set_use_client_settings (client, TRUE);
   fail_unless (gst_rtsp_client_get_use_client_settings (client));
+#endif
 
   expected_transport = "RTP/AVP;multicast;destination=233.252.0.1;"
       "ttl=1;port=5000-5001;mode=\"PLAY\"";
@@ -638,6 +660,9 @@ GST_START_TEST (test_client_multicast_transport_specific)
   g_object_unref (session_pool);
 
   g_object_unref (client);
+  g_object_unref (state.auth);
+  gst_rtsp_token_unref (state.token);
+  gst_rtsp_client_state_pop_current (&state);
 }
 
 GST_END_TEST;
