@@ -65,7 +65,6 @@ main (int argc, char *argv[])
   GstRTSPToken *token;
   gchar *basic;
   GstStructure *s;
-  GstRTSPPermissions *permissions;
 
   gst_init (&argc, &argv);
 
@@ -93,20 +92,17 @@ main (int argc, char *argv[])
   gst_rtsp_mount_points_add_factory (mounts, "/test", factory);
 
   /* allow user and admin to access this resource */
-  permissions = gst_rtsp_permissions_new ();
-  gst_rtsp_permissions_add_role (permissions, "user",
+  gst_rtsp_media_factory_add_role (factory, "user",
       "media.factory.access", G_TYPE_BOOLEAN, TRUE,
       "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL);
-  gst_rtsp_permissions_add_role (permissions, "admin",
+  gst_rtsp_media_factory_add_role (factory, "admin",
       "media.factory.access", G_TYPE_BOOLEAN, TRUE,
       "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL);
   /* admin2 can look at the media but not construct so he gets a
    * 401 Unauthorized */
-  gst_rtsp_permissions_add_role (permissions, "admin2",
+  gst_rtsp_media_factory_add_role (factory, "admin2",
       "media.factory.access", G_TYPE_BOOLEAN, TRUE,
       "media.factory.construct", G_TYPE_BOOLEAN, FALSE, NULL);
-  gst_rtsp_media_factory_set_permissions (factory, permissions);
-  gst_rtsp_permissions_unref (permissions);
 
   /* make another factory */
   factory = gst_rtsp_media_factory_new ();
@@ -117,14 +113,11 @@ main (int argc, char *argv[])
   gst_rtsp_mount_points_add_factory (mounts, "/test2", factory);
 
   /* allow admin2 to access this resource */
-  permissions = gst_rtsp_permissions_new ();
   /* user and admin have no permissions so they can't even see the
    * media and get a 404 Not Found */
-  gst_rtsp_permissions_add_role (permissions, "admin2",
+  gst_rtsp_media_factory_add_role (factory, "admin2",
       "media.factory.access", G_TYPE_BOOLEAN, TRUE,
       "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL);
-  gst_rtsp_media_factory_set_permissions (factory, permissions);
-  gst_rtsp_permissions_unref (permissions);
 
   /* don't need the ref to the mapper anymore */
   g_object_unref (mounts);

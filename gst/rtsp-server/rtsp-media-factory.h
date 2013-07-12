@@ -106,6 +106,9 @@ gchar *               gst_rtsp_media_factory_get_launch       (GstRTSPMediaFacto
 void                  gst_rtsp_media_factory_set_permissions  (GstRTSPMediaFactory *factory,
                                                                GstRTSPPermissions *permissions);
 GstRTSPPermissions *  gst_rtsp_media_factory_get_permissions  (GstRTSPMediaFactory *factory);
+void                  gst_rtsp_media_factory_add_role         (GstRTSPMediaFactory *factory,
+                                                               const gchar *role,
+                                                               const gchar *fieldname, ...);
 
 void                  gst_rtsp_media_factory_set_shared       (GstRTSPMediaFactory *factory,
                                                                gboolean shared);
