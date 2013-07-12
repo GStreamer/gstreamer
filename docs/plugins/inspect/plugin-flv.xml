@@ -3,7 +3,7 @@
   <description>FLV muxing and demuxing plugin</description>
   <filename>../../gst/flv/.libs/libgstflv.so</filename>
   <basename>libgstflv.so</basename>
-  <version>1.0.6</version>
+  <version>1.0.8</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -32,7 +32,7 @@
           <name>video</name>
           <direction>source</direction>
           <presence>sometimes</presence>
-          <details>video/x-flash-video; video/x-flash-screen; video/x-vp6-flash; video/x-vp6-alpha; video/x-h264, stream-format=(string)avc</details>
+          <details>video/x-flash-video, flvversion=(int)1; video/x-flash-screen; video/x-vp6-flash; video/x-vp6-alpha; video/x-h264, stream-format=(string)avc</details>
         </caps>
       </pads>
     </element>

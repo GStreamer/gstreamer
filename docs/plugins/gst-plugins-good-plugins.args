@@ -3814,8 +3814,8 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>iradio-mode</NICK>
-<BLURB>Enable internet radio mode (extraction of shoutcast/icecast metadata).</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<BLURB>Enable internet radio mode (ask server to send shoutcast/icecast metadata interleaved with the actual stream data).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>

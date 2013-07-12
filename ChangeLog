@@ -1,9 +1,356 @@
-=== release 1.0.7 ===
+=== release 1.0.8 ===
 
-2013-04-26  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-07-12  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.7
+	  releasing 1.0.8
+
+2013-07-09 15:34:04 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: defer the window handle setup to the main thread
+
+2013-07-09 15:33:18 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: default to the main in case we are not setup yet
+
+2013-07-07 22:16:05 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: close the internal window correctly
+
+2013-07-07 21:14:22 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: only create the NS app thread for Cocoa once
+	  The helper thread for Cocoa, in case no NS run loop is running,
+	  should be started only once and shared across all the instances
+	  running
+
+2013-06-05 17:02:49 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/cocoawindow.m:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: fix support in VM's without hardware acceleration
+
+2013-04-15 14:32:46 +0000  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: fix segfault accessing osxwindow when not set yet
+
+2013-07-09 12:42:17 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: Fix handling of buffers without a duration
+	  We'll have to pop buffer from collectpads and store it
+	  internally only to get the timestamp of the next buffer.
+	  If we continue to keep it in collectpads, no new buffer
+	  to calculate the end time will ever arrive.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703743
+
+2013-07-09 11:53:07 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: Fix negotiation with 0/1 framerates
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703743
+
+2013-07-09 11:17:59 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Unlock stream lock after use
+	  Stream lock of sink pad was not unlocked after non-updating seek.
+
+2013-07-08 14:09:37 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/rtp/gstrtph263ppay.c:
+	  rtph263ppay: Don't pass upstream filter caps to downstream
+	  Downstream usually can't accept video/x-h263 but only application/x-rtp,
+	  so we would always get an empty intersection here.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702632
+
+2013-06-25 21:16:38 +0200  Alban Browaeys <prahal@yahoo.com>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: Add flvversion 1 to the flash-video caps
+	  This allows using avdec_flv which requires this field to be
+	  present in the caps. FLV only supports flash-video version 1
+	  right now.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703076
+
+2013-06-27 07:40:29 +0200  David Svensson Fors <davidsf@axis.com>
+
+	* gst/rtp/gstrtph264pay.c:
+	  rtph264pay: avoid double buffer unmap on error
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=703171
+
+2013-06-20 15:35:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* sys/v4l2/gstv4l2.c:
+	  v4l2: don't redefine the PERFORMANCE debug variable
+	  It is already defined in core.
+	  fixes https://bugzilla.gnome.org/show_bug.cgi?id=702732
+
+2013-06-20 14:43:47 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: fix race in state change to paused
+	  When we go to paused, we first flush the connection and then send the pause
+	  command. As a result of the flushing, the scheduled paused command can get
+	  lost. Wait until the connection is completely flushed and the rtsp task is
+	  waiting before issuing the paused or playing request.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=702705
+
+2013-06-15 12:29:31 +0200  Jens Georg <mail@jensge.org>
+
+	* gst/rtp/gstrtpmp2tdepay.c:
+	  rtpmp2tdepay: accept mislabelled streams from GStreamer 0.10 as well
+	  The mp2t payloader in 0.10 mislabelled the streams as MP2T-ES
+	  instead of MP2T, so accept that as well for compatibility reasons.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702457
+	  Conflicts:
+	  gst/rtp/gstrtpmp2tdepay.c
+
+2013-06-07 15:38:25 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libpng/Makefile.am:
+	  png: Link with libgstbase for GstByteReader and GstAdapter
+
+2013-06-14 14:07:42 +0200  Bruno Gonzalez <stenyak@gmail.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Don't unlock stream lock without locking it first
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702167
+
+2013-06-11 12:25:46 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: Don't forward CAPS events from upstream
+	  Just use the default pad event handler.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701976
+
+2013-06-05 12:12:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/udp/gstudpsink.c:
+	  udpsink: avoid leaking the host
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=701586
+
+2013-04-24 16:24:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpvrawdepay.c:
+	  vrawdepay: return output buffer from process
+	  Return the output buffer from the process function instead of pushing
+	  it ourselves. This way, the subclass can actually deal with the return
+	  value of the push.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=693727
+
+2013-05-27 22:43:25 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: Maintain z-order when new pad are added
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701109
+
+2013-05-28 14:31:31 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/jpeg/gstjpegenc.c:
+	  jpegenc: Fix for single-includes that are not in 1.0 yet
+
+2013-02-14 14:13:27 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: remove sof-marker from template caps for now
+	  Now that the subset check actually works, this breaks
+	  things with demuxers that don't put a "sof-marker"
+	  in their jpeg caps, and we don't have a good parser
+	  to plug either yet.
+
+2013-02-13 12:32:10 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/jpeg/gstjpegenc.c:
+	* ext/jpeg/gstjpegenc.h:
+	  jpegenc: Put the SOF marker into the caps
+
+2013-02-13 12:02:46 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rtp/gstrtpamrdepay.c:
+	* tests/check/elements/rtp-payloading.c:
+	  rtp-payloading: Fix unit test caps and AMR depayloader sink template caps
+	  Fields were missing from the actual caps, or too many fields
+	  existed in the template caps.
+
+2013-02-13 11:53:01 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/aacparse.c:
+	  aacparse: Fix caps used in the unit test
+	  The AAC caps passed were incomplete.
+
+2013-02-13 11:49:40 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/wavpackenc.c:
+	* tests/check/elements/wavpackparse.c:
+	  wavpack: Fix unit tests, width is now called depth in the caps in 1.0
+
+2013-05-23 18:10:10 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/udp/gstdynudpsink.c:
+	* gst/udp/gstmultiudpsink.c:
+	  (dyn|multi)udpsink: Bind socket before using it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=700878
+
+2013-05-17 12:37:59 +0200  Michael Olbrich <m.olbrich@pengutronix.de>
+
+	* gst/rtp/gstrtpmp4apay.c:
+	  rtpmp4apay: clear config buffer before using it
+	  This is necessary because parts of the memory are only modified with "|="
+	  https://bugzilla.gnome.org/show_bug.cgi?id=700514
+
+2013-05-14 15:23:08 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: set alac caps using info from codec buffer
+	  The samplerate field in the STSD atom is not right for some ALAC files
+	  (usually when audio is 96kHz/24bits), so the audio caps must be
+	  extracted from the codec data.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=700382
+
+2013-05-15 11:13:12 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: do not push discont buffers if they aren't discont
+	  https://bugzilla.gnome.org/show_bug.cgi?id=682110
+
+2013-04-17 16:54:22 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: do not push discont buffers if they aren't discont
+	  qtdemux takes its buffers from a GstAdapter. Those buffers are created
+	  from the larger buffer that it obtained from upstream and they carry
+	  the same flags, including DISCONT if it is set. In these cases, all
+	  buffers that qtdemux is going to push would be marked as DISCONT.
+	  This scenario can make parsers/decoders flush on every buffer leading
+	  to no decoding at all hapenning. This patch prevents this by unsetting
+	  the flag if it shouldn't be set.
+
+2013-04-15 17:37:01 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/osxvideosink.h:
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: fix setting window handle after transition
+	  The destroyed flag was not reset properly and it's also not needed
+	  as we can check osxwindow != NULL
+
+2013-05-07 16:32:03 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: By default assume that we're working on non-packetized input
+	  Only detecting this in set_format() does not work because we might
+	  not get any caps at all, e.g. from filesrc.
+
+2013-05-07 16:30:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/libpng/gstpngdec.c:
+	  pngdec: Implement parsing functionality
+	  This allows to plug pngdec directly without a parser if that
+	  is desired.
+	  Parsing code is based on pngparse.
+
+2013-05-01 15:49:45 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/rtp/gstrtph264pay.c:
+	  rtph264pay: If the adapter is empty on EOS don't try to map its content
+	  https://bugzilla.gnome.org/show_bug.cgi?id=699314
+
+2013-04-30 14:36:38 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: add stream-format=raw to aac caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=699303
+
+2013-03-04 15:49:06 -0800  David Schleef <ds@schleef.org>
+
+	* ext/libpng/gstpngenc.c:
+	  pngenc: unmap source frame when done to fix memory leak
+	  https://bugzilla.gnome.org/show_bug.cgi?id=699260
+
+2013-04-27 11:16:54 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/udp/gstudpsrc.c:
+	  udpsrc: add includes to get socklen_t defined on Windows
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692400
+
+2013-02-15 14:11:36 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/udp/gstudpsrc.c:
+	  udpsrc: use g_socket_set_option() to set buffer size with newer GLib versions
+	  So we have to worry less about portability.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692400
+	  Conflicts:
+	  gst/udp/gstudpsrc.c
+
+=== release 1.0.7 ===
+
+2013-04-26 12:52:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-plugins-good.doap:
+	* gst/deinterlace/tvtime-dist.c:
+	* gst/deinterlace/tvtime-dist.h:
+	* gst/videobox/gstvideoboxorc-dist.c:
+	* gst/videobox/gstvideoboxorc-dist.h:
+	* gst/videomixer/blendorc-dist.c:
+	* gst/videomixer/blendorc-dist.h:
+	* win32/common/config.h:
+	  Release 1.0.7
+
+2013-04-26 12:52:08 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2013-03-06 13:17:54 +0000  Tom Greenwood <tgreenwood@Toms-MacBook-Pro.local>
 

@@ -3,7 +3,7 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>1.0.6</version>
+  <version>1.0.8</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -125,7 +125,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)AMR, encoding-params=(string)1, octet-align=(string)1, crc=(string){ 0, 1 }, robust-sorting=(string)0, interleaving=(string)0; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)AMR-WB, encoding-params=(string)1, octet-align=(string)1, crc=(string){ 0, 1 }, robust-sorting=(string)0, interleaving=(string)0</details>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)AMR, encoding-params=(string)1, octet-align=(string)1; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)AMR-WB, encoding-params=(string)1, octet-align=(string)1</details>
         </caps>
         <caps>
           <name>src</name>
@@ -818,7 +818,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)MP2T; application/x-rtp, media=(string)video, payload=(int)33, clock-rate=(int)[ 1, 2147483647 ]</details>
+          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string){ MP2T, MP2T-ES }; application/x-rtp, media=(string)video, payload=(int)33, clock-rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>src</name>

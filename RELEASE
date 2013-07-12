@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plugins 1.0.7
+Release notes for GStreamer Good Plugins 1.0.8
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -57,22 +57,33 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * osxaudio plugin ported to 1.0
+      * pngenc: fix massive memory leak
+      * pngdec: parse incoming data into frames before decoding
+      * osvideo: many osxvideosink fixes
+      * udpsink, multiudpsink, dynudpsink: bind socket before using it, fixes sending udp on windows
 
 Bugs fixed in this release
      
-      * 695709 : vp8enc plugin has invalid parameter error when framerate is " 0/1 " 
-      * 697103 : osxaudio: port to 1.0
-      * 677560 : rtpjpegdepay: crash in copy_into_unchecked
-      * 685209 : gst_v4l2_object_get_nearest_size VIDIOC_G_FMT bug
-      * 693005 : capssetter: do not return a copy of sink caps upstream
+      * 682110 : qtdemux: discont flag set on multiple buffers in push mode
+      * 692400 : udpsrc: fix socket options not getting set on windows, resulting in packet drop in high bitrate movie
       * 693727 : rtpvrawpay/depay negotiation broken
-      * 696052 : qtmux expose mulaw
-      * 696651 : v4l2loopback:gst_buffer_get_meta: assertion `buffer != NULL' failed. " 
-      * 697113 : matroskademux: add TrueHD audio codec support
-      * 697303 : osxvideosink: compiler warning: implicit declaration of function 'pthread_self'
-      * 697984 : souphttpsrc: direct stream dump results in broken audio with internet radio
-      * 698224 : [osxaudio] caps negotiation fails due to invalid channel-mask
+      * 699260 : pngenc: unmap source frame when done
+      * 699303 : matroskademux: stream-format=raw missing from aac caps
+      * 699314 : rtph264pay: CRITICAL **: gst_adapter_map: assertion `size > 0' failed
+      * 700047 : pngdec: make decoding work without png parser
+      * 700382 : qtdemux: handle 96kHz/24 bits ALAC audio
+      * 700514 : rtpmp4apay: clear config buffer before using it
+      * 700878 : udpsink: Not sending anything on Windows
+      * 701586 : rtspsrc memleak
+      * 702167 : matroskademux: missing mutex unlock leading to wrong STREAM_LOCK count
+      * 702457 : rtpmp2tdepay: unable to depay MPEG2-TS RTP streams from GStreamer 0.10
+      * 702705 : rtspsrc does not pause properly (race condition)
+      * 702732 : v4l2: Does not link statically on linux
+      * 703076 : flvdemux: Add flvversion 1 to flash-video caps
+      * 703100 : osxvideosink: deadlock on re-use
+      * 703171 : rtph264pay: segfault because of double buffer unmap on error
+      * 703729 : osxvideosink doesn't display video anymore if once set to READY
+      * 691419 : osxvideosink: doesn't close internal window in case of window-id assignment
 
 ==== Download ====
 
@@ -109,22 +120,19 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alexander Schrab
+      * Alban Browaeys
       * Andoni Morales Alastruey
       * Arnaud Vrac
+      * Bruno Gonzalez
       * David Schleef
-      * Diogo Carbonera Luvizon
-      * Dirk Van Haerenborgh
-      * Josep Torra
-      * Matej Knopp
-      * Nicola Murino
-      * Olivier Crête
-      * Philippe Normand
+      * David Svensson Fors
+      * Jens Georg
+      * Jonas Holmberg
+      * Michael Olbrich
+      * Nicolas Dufresne
+      * Ognyan Tonchev
       * Sebastian Dröge
-      * Takashi Nakajima
+      * Thiago Santos
       * Tim-Philipp Müller
-      * Todd Agulnick
-      * Tom Greenwood
       * Wim Taymans
-      * ted-n
  
