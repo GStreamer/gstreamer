@@ -56,7 +56,6 @@ static void gst_rtsp_auth_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_auth_finalize (GObject * obj);
 
-static gboolean default_setup (GstRTSPAuth * auth, GstRTSPClientState * state);
 static gboolean default_authenticate (GstRTSPAuth * auth,
     GstRTSPClientState * state);
 static gboolean default_check (GstRTSPAuth * auth, GstRTSPClientState * state,
@@ -77,7 +76,6 @@ gst_rtsp_auth_class_init (GstRTSPAuthClass * klass)
   gobject_class->set_property = gst_rtsp_auth_set_property;
   gobject_class->finalize = gst_rtsp_auth_finalize;
 
-  klass->setup = default_setup;
   klass->authenticate = default_authenticate;
   klass->check = default_check;
 
@@ -267,47 +265,6 @@ gst_rtsp_auth_remove_basic (GstRTSPAuth * auth, const gchar * basic)
 }
 
 static gboolean
-default_setup (GstRTSPAuth * auth, GstRTSPClientState * state)
-{
-  if (state->response == NULL)
-    return FALSE;
-
-  /* we only have Basic for now */
-  gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_WWW_AUTHENTICATE,
-      "Basic realm=\"GStreamer RTSP Server\"");
-
-  return TRUE;
-}
-
-/**
- * gst_rtsp_auth_setup:
- * @auth: a #GstRTSPAuth
- * @state: the client state
- *
- * Add authentication tokens to @response in @state.
- *
- * Returns: FALSE if something is wrong.
- */
-gboolean
-gst_rtsp_auth_setup (GstRTSPAuth * auth, GstRTSPClientState * state)
-{
-  gboolean result = FALSE;
-  GstRTSPAuthClass *klass;
-
-  g_return_val_if_fail (GST_IS_RTSP_AUTH (auth), FALSE);
-  g_return_val_if_fail (state != NULL, FALSE);
-
-  klass = GST_RTSP_AUTH_GET_CLASS (auth);
-
-  GST_DEBUG_OBJECT (auth, "setup auth");
-
-  if (klass->setup)
-    result = klass->setup (auth, state);
-
-  return result;
-}
-
-static gboolean
 default_authenticate (GstRTSPAuth * auth, GstRTSPClientState * state)
 {
   GstRTSPAuthPrivate *priv = auth->priv;
@@ -378,51 +335,124 @@ no_auth:
   }
 }
 
+static void
+send_response (GstRTSPAuth * auth, GstRTSPStatusCode code,
+    GstRTSPClientState * state)
+{
+  gst_rtsp_message_init_response (state->response, code,
+      gst_rtsp_status_as_text (code), state->request);
+
+  if (code == GST_RTSP_STS_UNAUTHORIZED) {
+    /* we only have Basic for now */
+    gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_WWW_AUTHENTICATE,
+        "Basic realm=\"GStreamer RTSP Server\"");
+  }
+  gst_rtsp_client_send_message (state->client, state->session, state->response);
+}
+
+/* new connection */
+static gboolean
+check_connect (GstRTSPAuth * auth, GstRTSPClientState * state,
+    const gchar * check)
+{
+  GstRTSPAuthPrivate *priv = auth->priv;
+
+  if (priv->certificate) {
+    GTlsConnection *tls;
+
+    /* configure the connection */
+    tls = gst_rtsp_connection_get_tls (state->conn, NULL);
+    g_tls_connection_set_certificate (tls, priv->certificate);
+  }
+  return TRUE;
+}
+
+/* check url and methods */
+static gboolean
+check_url (GstRTSPAuth * auth, GstRTSPClientState * state, const gchar * check)
+{
+  GstRTSPAuthPrivate *priv = auth->priv;
+
+  if ((state->method & priv->methods) != 0)
+    if (!ensure_authenticated (auth, state))
+      goto not_authenticated;
+
+  return TRUE;
+
+  /* ERRORS */
+not_authenticated:
+  {
+    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, state);
+    return FALSE;
+  }
+}
+
+/* check access to media factory */
+static gboolean
+check_factory (GstRTSPAuth * auth, GstRTSPClientState * state,
+    const gchar * check)
+{
+  const gchar *role;
+  GstRTSPPermissions *perms;
+
+  if (!(role = gst_rtsp_token_get_string (state->token,
+              GST_RTSP_MEDIA_FACTORY_ROLE)))
+    goto no_media_role;
+  if (!(perms = gst_rtsp_media_factory_get_permissions (state->factory)))
+    goto no_permissions;
+
+  if (g_str_equal (check, "auth.check.media.factory.access")) {
+    if (!gst_rtsp_permissions_is_allowed (perms, role,
+            GST_RTSP_MEDIA_FACTORY_PERM_ACCESS))
+      goto no_access;
+  } else if (g_str_equal (check, "auth.check.media.factory.construct")) {
+    if (gst_rtsp_permissions_is_allowed (perms, role,
+            GST_RTSP_MEDIA_FACTORY_PERM_CONSTRUCT))
+      goto no_construct;
+  }
+  return TRUE;
+
+  /* ERRORS */
+no_media_role:
+  {
+    GST_DEBUG_OBJECT (auth, "no media factory role found");
+    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, state);
+    return FALSE;
+  }
+no_permissions:
+  {
+    GST_DEBUG_OBJECT (auth, "no permissions on media factory found");
+    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, state);
+    return FALSE;
+  }
+no_access:
+  {
+    GST_DEBUG_OBJECT (auth, "no permissions to access media factory");
+    send_response (auth, GST_RTSP_STS_NOT_FOUND, state);
+    return FALSE;
+  }
+no_construct:
+  {
+    GST_DEBUG_OBJECT (auth, "no permissions to construct media factory");
+    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, state);
+    return FALSE;
+  }
+}
+
 static gboolean
 default_check (GstRTSPAuth * auth, GstRTSPClientState * state,
     const gchar * check)
 {
-  GstRTSPAuthPrivate *priv = auth->priv;
   gboolean res = FALSE;
 
+  /* FIXME, use hastable or so */
   if (g_str_equal (check, GST_RTSP_AUTH_CHECK_CONNECT)) {
-    /* new connection */
-    if (priv->certificate) {
-      GTlsConnection *tls;
-
-      /* configure the connection */
-      tls = gst_rtsp_connection_get_tls (state->conn, NULL);
-      g_tls_connection_set_certificate (tls, priv->certificate);
-    }
-    res = TRUE;
+    res = check_connect (auth, state, check);
   } else if (g_str_equal (check, GST_RTSP_AUTH_CHECK_URL)) {
-    /* check url and methods */
-    if ((state->method & priv->methods) != 0)
-      res = ensure_authenticated (auth, state);
-    else
-      res = TRUE;
+    res = check_url (auth, state, check);
   } else if (g_str_has_prefix (check, "auth.check.media.factory.")) {
-    /* check access to media factory */
-    const gchar *role;
-    GstRTSPPermissions *perms;
-
-    if (!(role =
-            gst_rtsp_token_get_string (state->token,
-                GST_RTSP_MEDIA_FACTORY_ROLE)))
-      goto done;
-    if (!(perms = gst_rtsp_media_factory_get_permissions (state->factory)))
-      goto done;
-
-    if (g_str_equal (check, "auth.check.media.factory.access"))
-      res =
-          gst_rtsp_permissions_is_allowed (perms, role,
-          GST_RTSP_MEDIA_FACTORY_PERM_ACCESS);
-    else if (g_str_equal (check, "auth.check.media.factory.construct"))
-      res =
-          gst_rtsp_permissions_is_allowed (perms, role,
-          GST_RTSP_MEDIA_FACTORY_PERM_CONSTRUCT);
+    res = check_factory (auth, state, check);
   }
-done:
   return res;
 }
 

@@ -470,22 +470,6 @@ send_generic_response (GstRTSPClient * client, GstRTSPStatusCode code,
   send_message (client, NULL, state->response, FALSE);
 }
 
-static void
-handle_unauthorized_request (GstRTSPClient * client, GstRTSPAuth * auth,
-    GstRTSPClientState * state)
-{
-  gst_rtsp_message_init_response (state->response, GST_RTSP_STS_UNAUTHORIZED,
-      gst_rtsp_status_as_text (GST_RTSP_STS_UNAUTHORIZED), state->request);
-
-  if (auth) {
-    /* and let the authentication manager setup the auth tokens */
-    gst_rtsp_auth_setup (auth, state);
-  }
-
-  send_message (client, state->session, state->response, FALSE);
-}
-
-
 static gboolean
 paths_are_equal (const gchar * path1, const gchar * path2, gint len2)
 {
@@ -599,13 +583,11 @@ no_factory:
 no_factory_access:
   {
     GST_ERROR ("client %p: not authorized to see factory uri %s", client, path);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, state);
     return NULL;
   }
 not_authorized:
   {
     GST_ERROR ("client %p: not authorized for factory uri %s", client, path);
-    handle_unauthorized_request (client, priv->auth, state);
     return NULL;
   }
 no_media:
@@ -2030,7 +2012,6 @@ session_not_found:
 not_authorized:
   {
     GST_ERROR ("client %p: not allowed", client);
-    handle_unauthorized_request (client, priv->auth, &state);
     goto done;
   }
 not_implemented:

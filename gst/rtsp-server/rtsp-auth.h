@@ -53,24 +53,20 @@ struct _GstRTSPAuth {
 
 /**
  * GstRTSPAuthClass:
- * @setup: called when an unauthorized resource has been accessed and
- *         authentication needs to be requested to the client. The default
- *         implementation adds basic authentication to the response.
  * @authenticate: check the authentication of a client. The default implementation
  *         checks if the authentication in the header matches one of the basic
  *         authentication tokens. This function should set the authgroup field
  *         in the state.
  * @check: check if a resource can be accessed. this function should
- *         call validate to authenticate the client when needed. The default
- *         implementation disallows unauthenticated access to all methods
- *         except OPTIONS.
+ *         call authenticate to authenticate the client when needed. The method
+ *         should also construct and send an appropriate response message on
+ *         error.
  *
  * The authentication class.
  */
 struct _GstRTSPAuthClass {
   GObjectClass  parent_class;
 
-  gboolean           (*setup)        (GstRTSPAuth *auth, GstRTSPClientState *state);
   gboolean           (*authenticate) (GstRTSPAuth *auth, GstRTSPClientState *state);
   gboolean           (*check)        (GstRTSPAuth *auth, GstRTSPClientState *state,
                                       const gchar *check);
@@ -86,8 +82,6 @@ GTlsCertificate *   gst_rtsp_auth_get_tls_certificate (GstRTSPAuth *auth);
 void                gst_rtsp_auth_add_basic         (GstRTSPAuth *auth, const gchar * basic,
                                                      GstRTSPToken *token);
 void                gst_rtsp_auth_remove_basic      (GstRTSPAuth *auth, const gchar * basic);
-
-gboolean            gst_rtsp_auth_setup             (GstRTSPAuth *auth, GstRTSPClientState *state);
 
 gboolean            gst_rtsp_auth_check             (const gchar *check);
 
