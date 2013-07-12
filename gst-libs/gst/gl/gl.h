@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GL_H__
-#define __GL_H__
+#ifndef __GST_GL_H__
+#define __GST_GL_H__
 
 #include <gst/gl/gstgl_fwd.h>
 #include <gst/gl/gstglconfig.h>
@@ -38,4 +38,4 @@
 #include <gst/gl/gstglmixer.h>
 #include <gst/gl/gstglshadervariables.h>
 
-#endif /* __GL_H__ */
+#endif /* __GST_GL_H__ */
