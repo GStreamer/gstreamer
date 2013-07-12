@@ -146,12 +146,10 @@ gst_pulse_fill_format_info (GstAudioRingBufferSpec * spec, pa_format_info ** f,
 
   format = pa_format_info_new ();
 
-  if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MU_LAW
-      && GST_AUDIO_INFO_WIDTH (ainfo) == 8) {
+  if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_MU_LAW) {
     format->encoding = PA_ENCODING_PCM;
     sf = PA_SAMPLE_ULAW;
-  } else if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_A_LAW
-      && GST_AUDIO_INFO_WIDTH (ainfo) == 8) {
+  } else if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_A_LAW) {
     format->encoding = PA_ENCODING_PCM;
     sf = PA_SAMPLE_ALAW;
   } else if (spec->type == GST_AUDIO_RING_BUFFER_FORMAT_TYPE_RAW) {
