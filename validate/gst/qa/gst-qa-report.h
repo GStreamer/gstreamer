@@ -38,13 +38,21 @@ typedef struct {
   GstQaErrorArea area;
   gchar *message;
   gchar *detail;
+  GDateTime *timestamp;
 
   GstObject *source;
 } GstQaErrorReport;
 
-#define GST_QA_ERROR_REPORT_PRINT_FORMAT "%d - %s - %s) %s (%s)"
-#define GST_QA_REPORT_PRINT_ARGS(r) r->area, gst_qa_error_area_get_name(r->area), \
+#define GST_QA_ERROR_REPORT_PRINT_FORMAT "%04d-%02d-%02dT%02d:%02d:%02d.%06d: %s, %s(%d)) %s (%s)"
+#define GST_QA_REPORT_PRINT_ARGS(r) g_date_time_get_year (r->timestamp), \
+                                    g_date_time_get_month (r->timestamp), \
+                                    g_date_time_get_day_of_month (r->timestamp), \
+                                    g_date_time_get_hour (r->timestamp), \
+                                    g_date_time_get_minute (r->timestamp), \
+                                    g_date_time_get_second (r->timestamp), \
+                                    g_date_time_get_microsecond (r->timestamp), \
                                     r->source ? GST_OBJECT_NAME(r->source) : "null", \
+                                    gst_qa_error_area_get_name(r->area), r->area, \
                                     r->message, r->detail
 
 GstQaErrorReport * gst_qa_error_report_new (GstObject * source, GstQaErrorArea area, const gchar * message, const gchar * detail);

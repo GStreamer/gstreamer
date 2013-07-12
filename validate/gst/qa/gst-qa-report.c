@@ -51,6 +51,7 @@ gst_qa_error_report_new (GstObject * source, GstQaErrorArea area,
   report->area = area;
   report->message = g_strdup (message);
   report->detail = g_strdup (detail);
+  report->timestamp = g_date_time_new_now_local ();
 
   return report;
 }
@@ -61,6 +62,7 @@ gst_qa_error_report_free (GstQaErrorReport * report)
   g_free (report->message);
   g_free (report->detail);
   g_object_unref (report->source);
+  g_date_time_unref (report->timestamp);
   g_slice_free (GstQaErrorReport, report);
 }
 
