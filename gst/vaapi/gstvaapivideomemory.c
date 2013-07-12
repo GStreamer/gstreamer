@@ -167,11 +167,6 @@ gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
     if (!ensure_image (mem))
       goto error_ensure_image;
 
-    // Check that we can actually map the surface, or image
-    if ((flags & GST_MAP_READWRITE) == GST_MAP_READWRITE &&
-        !mem->use_direct_rendering)
-      goto error_unsupported_map;
-
     // Load VA image from surface
     if ((flags & GST_MAP_READ) && !mem->use_direct_rendering)
       gst_vaapi_surface_get_image (mem->surface, mem->image);
@@ -190,11 +185,6 @@ gst_video_meta_map_vaapi_memory (GstVideoMeta * meta, guint plane,
 error_incompatible_map:
   {
     GST_ERROR ("incompatible map type (%d)", mem->map_type);
-    return FALSE;
-  }
-error_unsupported_map:
-  {
-    GST_ERROR ("unsupported map flags (0x%x)", flags);
     return FALSE;
   }
 error_ensure_surface:
