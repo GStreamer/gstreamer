@@ -1116,44 +1116,43 @@ gst_soup_http_src_response_cb (SoupSession * session, SoupMessage * msg,
 static void
 gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
 {
-  if (SOUP_STATUS_IS_TRANSPORT_ERROR (msg->status_code)) {
-    if (msg->method == SOUP_METHOD_HEAD) {
+  if (msg->method == SOUP_METHOD_HEAD) {
+    if (!SOUP_STATUS_IS_SUCCESSFUL (msg->status_code))
       GST_DEBUG_OBJECT (src, "Ignoring error %d during HEAD request",
           msg->status_code);
-    } else {
-      switch (msg->status_code) {
-        case SOUP_STATUS_CANT_RESOLVE:
-        case SOUP_STATUS_CANT_RESOLVE_PROXY:
-          SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, NOT_FOUND,
-              _("Could not resolve server name."));
-          src->ret = GST_FLOW_ERROR;
-          break;
-        case SOUP_STATUS_CANT_CONNECT:
-        case SOUP_STATUS_CANT_CONNECT_PROXY:
-          SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, OPEN_READ,
-              _("Could not establish connection to server."));
-          src->ret = GST_FLOW_ERROR;
-          break;
-        case SOUP_STATUS_SSL_FAILED:
-          SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, OPEN_READ,
-              _("Secure connection setup failed."));
-          src->ret = GST_FLOW_ERROR;
-          break;
-        case SOUP_STATUS_IO_ERROR:
-          SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, READ,
-              _("A network error occured, or the server closed the connection "
-                  "unexpectedly."));
-          src->ret = GST_FLOW_ERROR;
-          break;
-        case SOUP_STATUS_MALFORMED:
-          SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, READ,
-              _("Server sent bad data."));
-          src->ret = GST_FLOW_ERROR;
-          break;
-        case SOUP_STATUS_CANCELLED:
-          /* No error message when interrupted by program. */
-          break;
-      }
+  } else if (SOUP_STATUS_IS_TRANSPORT_ERROR (msg->status_code)) {
+    switch (msg->status_code) {
+      case SOUP_STATUS_CANT_RESOLVE:
+      case SOUP_STATUS_CANT_RESOLVE_PROXY:
+        SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, NOT_FOUND,
+            _("Could not resolve server name."));
+        src->ret = GST_FLOW_ERROR;
+        break;
+      case SOUP_STATUS_CANT_CONNECT:
+      case SOUP_STATUS_CANT_CONNECT_PROXY:
+        SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, OPEN_READ,
+            _("Could not establish connection to server."));
+        src->ret = GST_FLOW_ERROR;
+        break;
+      case SOUP_STATUS_SSL_FAILED:
+        SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, OPEN_READ,
+            _("Secure connection setup failed."));
+        src->ret = GST_FLOW_ERROR;
+        break;
+      case SOUP_STATUS_IO_ERROR:
+        SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, READ,
+            _("A network error occured, or the server closed the connection "
+                "unexpectedly."));
+        src->ret = GST_FLOW_ERROR;
+        break;
+      case SOUP_STATUS_MALFORMED:
+        SOUP_HTTP_SRC_ERROR (src, msg, RESOURCE, READ,
+            _("Server sent bad data."));
+        src->ret = GST_FLOW_ERROR;
+        break;
+      case SOUP_STATUS_CANCELLED:
+        /* No error message when interrupted by program. */
+        break;
     }
   } else if (SOUP_STATUS_IS_CLIENT_ERROR (msg->status_code) ||
       SOUP_STATUS_IS_REDIRECTION (msg->status_code) ||
