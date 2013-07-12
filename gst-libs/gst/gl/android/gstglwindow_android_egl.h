@@ -44,6 +44,7 @@ struct _GstGLWindowAndroidEGL {
   GstGLWindow parent;
   
   GstGLEGL *egl;
+  /* This is actually an ANativeWindow */
   EGLNativeWindowType native_window;
 
   GMainContext *main_context;
