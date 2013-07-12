@@ -22,7 +22,7 @@
 #include <gst/rtsp-server/rtsp-server.h>
 
 /* define this if you want the resource to only be available when using
- * user/admin as the password */
+ * user/password as the password */
 #undef WITH_AUTH
 
 /* define this if you want the server to use TLS */
@@ -52,7 +52,10 @@ main (int argc, char *argv[])
   GstRTSPMediaFactory *factory;
 #ifdef WITH_AUTH
   GstRTSPAuth *auth;
+  GstRTSPToken *token;
+  GstStructure *s;
   gchar *basic;
+  GstRTSPPermissions *permissions;
 #endif
 #ifdef WITH_TLS
   GTlsCertificate *cert;
@@ -64,6 +67,11 @@ main (int argc, char *argv[])
 
   /* create a server instance */
   server = gst_rtsp_server_new ();
+
+#ifdef WITH_AUTH
+  /* make a new authentication manager. it can be added to control access to all
+   * the factories on the server or on individual factories. */
+  auth = gst_rtsp_auth_new ();
 #ifdef WITH_TLS
   cert = g_tls_certificate_new_from_pem ("-----BEGIN CERTIFICATE-----"
       "MIICJjCCAY+gAwIBAgIBBzANBgkqhkiG9w0BAQUFADCBhjETMBEGCgmSJomT8ixk"
@@ -88,24 +96,26 @@ main (int argc, char *argv[])
       "DwIga8PqH5Sf5sHedy2+CiK0V4MRfoU4c3zQ6kArI+bEgSkCIQCLA1vXBiE31B5s"
       "bdHoYa1BXebfZVd+1Hd95IfEM5mbRwIgSkDuQwV55BBlvWph3U8wVIMIb4GStaH8"
       "W535W8UBbEg=" "-----END PRIVATE KEY-----", -1, NULL);
-  gst_rtsp_server_set_tls_certificate (server, cert);
+  gst_rtsp_auth_set_tls_certificate (auth, cert);
   g_object_unref (cert);
+#endif
+
+  /* make user token */
+  token = gst_rtsp_token_new ();
+  s = gst_rtsp_token_writable_structure (token);
+  gst_structure_set (s, "media.factory.role", G_TYPE_STRING, "user", NULL);
+  basic = gst_rtsp_auth_make_basic ("user", "password");
+  gst_rtsp_auth_add_basic (auth, basic, token);
+  g_free (basic);
+  gst_rtsp_token_unref (token);
+
+  /* configure in the server */
+  gst_rtsp_server_set_auth (server, auth);
 #endif
 
   /* get the mount points for this server, every server has a default object
    * that be used to map uri mount points to media factories */
   mounts = gst_rtsp_server_get_mount_points (server);
-
-#ifdef WITH_AUTH
-  /* make a new authentication manager. it can be added to control access to all
-   * the factories on the server or on individual factories. */
-  auth = gst_rtsp_auth_new ();
-  basic = gst_rtsp_auth_make_basic ("user", "admin");
-  gst_rtsp_auth_set_basic (auth, basic);
-  g_free (basic);
-  /* configure in the server */
-  gst_rtsp_server_set_auth (server, auth);
-#endif
 
   /* make a media factory for a test stream. The default media factory can use
    * gst-launch syntax to create pipelines. 
@@ -117,6 +127,16 @@ main (int argc, char *argv[])
       "x264enc ! rtph264pay name=pay0 pt=96 "
       "audiotestsrc ! audio/x-raw,rate=8000 ! "
       "alawenc ! rtppcmapay name=pay1 pt=97 " ")");
+#ifdef WITH_AUTH
+  /* add permissions for the user media role */
+  permissions = gst_rtsp_permissions_new ();
+  gst_rtsp_permissions_add_role (permissions, "user",
+      gst_structure_new ("user",
+          "media.factory.access", G_TYPE_BOOLEAN, TRUE,
+          "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL));
+  gst_rtsp_media_factory_set_permissions (factory, permissions);
+  gst_rtsp_permissions_unref (permissions);
+#endif
 
   /* attach the test factory to the /test url */
   gst_rtsp_mount_points_add_factory (mounts, "/test", factory);

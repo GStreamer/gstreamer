@@ -31,7 +31,7 @@
  * network (0.0.0.0) and port 8554.
  *
  * The server will require an SSL connection when a TLS certificate has been
- * set with gst_rtsp_server_set_tls_certificate().
+ * set in the auth object with gst_rtsp_auth_set_tls_certificate().
  *
  * To start the server, use gst_rtsp_server_attach() to attach it to a
  * #GMainContext. For more control, gst_rtsp_server_create_source() and
@@ -89,9 +89,6 @@ struct _GstRTSPServerPrivate
   /* resource manager */
   GstRTSPThreadPool *thread_pool;
 
-  /* the TLS certificate */
-  GTlsCertificate *certificate;
-
   /* the clients that are connected */
   GList *clients;
 };
@@ -144,8 +141,6 @@ static void gst_rtsp_server_set_property (GObject * object, guint propid,
 static void gst_rtsp_server_finalize (GObject * object);
 
 static GstRTSPClient *default_create_client (GstRTSPServer * server);
-static gboolean default_setup_connection (GstRTSPServer * server,
-    GstRTSPClient * client, GstRTSPConnection * conn);
 
 static void
 gst_rtsp_server_class_init (GstRTSPServerClass * klass)
@@ -248,7 +243,6 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
       gst_rtsp_client_get_type ());
 
   klass->create_client = default_create_client;
-  klass->setup_connection = default_setup_connection;
 
   GST_DEBUG_CATEGORY_INIT (rtsp_server_debug, "rtspserver", 0, "GstRTSPServer");
 }
@@ -294,9 +288,6 @@ gst_rtsp_server_finalize (GObject * object)
 
   if (priv->auth)
     g_object_unref (priv->auth);
-
-  if (priv->certificate)
-    g_object_unref (priv->certificate);
 
   g_mutex_clear (&priv->lock);
 
@@ -784,64 +775,6 @@ gst_rtsp_server_get_use_client_settings (GstRTSPServer * server)
   return res;
 }
 
-/**
- * gst_rtsp_server_set_tls_certificate:
- * @server: a #GstRTSPServer
- * @cert: (allow none): a #GTlsCertificate
- *
- * Set the TLS certificate for the server. Client connections will only
- * be accepted when TLS is negotiated.
- */
-void
-gst_rtsp_server_set_tls_certificate (GstRTSPServer * server,
-    GTlsCertificate * cert)
-{
-  GstRTSPServerPrivate *priv;
-  GTlsCertificate *old;
-
-  g_return_if_fail (GST_IS_RTSP_SERVER (server));
-
-  priv = server->priv;
-
-  if (cert)
-    g_object_ref (cert);
-
-  GST_RTSP_SERVER_LOCK (server);
-  old = priv->certificate;
-  priv->certificate = cert;
-  GST_RTSP_SERVER_UNLOCK (server);
-
-  if (old)
-    g_object_unref (old);
-}
-
-/**
- * gst_rtsp_server_get_tls_certificate:
- * @server: a #GstRTSPServer
- *
- * Get the #GTlsCertificate used for negotiating TLS @server.
- *
- * Returns: (transfer full): the #GTlsCertificate of @server. g_object_unref() after
- * usage.
- */
-GTlsCertificate *
-gst_rtsp_server_get_tls_certificate (GstRTSPServer * server)
-{
-  GstRTSPServerPrivate *priv;
-  GTlsCertificate *result;
-
-  g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
-
-  priv = server->priv;
-
-  GST_RTSP_SERVER_LOCK (server);
-  if ((result = priv->certificate))
-    g_object_ref (result);
-  GST_RTSP_SERVER_UNLOCK (server);
-
-  return result;
-}
-
 static void
 gst_rtsp_server_get_property (GObject * object, guint propid,
     GValue * value, GParamSpec * pspec)
@@ -1188,25 +1121,6 @@ default_create_client (GstRTSPServer * server)
   return client;
 }
 
-static gboolean
-default_setup_connection (GstRTSPServer * server, GstRTSPClient * client,
-    GstRTSPConnection * conn)
-{
-  GstRTSPServerPrivate *priv = server->priv;
-
-  GST_RTSP_SERVER_LOCK (server);
-  if (priv->certificate) {
-    GTlsConnection *tls;
-
-    /* configure the connection */
-    tls = gst_rtsp_connection_get_tls (conn, NULL);
-    g_tls_connection_set_certificate (tls, priv->certificate);
-  }
-  GST_RTSP_SERVER_UNLOCK (server);
-
-  return TRUE;
-}
-
 /**
  * gst_rtsp_server_transfer_connection:
  * @server: a #GstRTSPServer
@@ -1282,28 +1196,32 @@ gboolean
 gst_rtsp_server_io_func (GSocket * socket, GIOCondition condition,
     GstRTSPServer * server)
 {
+  GstRTSPServerPrivate *priv = server->priv;
   GstRTSPClient *client = NULL;
   GstRTSPServerClass *klass;
   GstRTSPResult res;
   GstRTSPConnection *conn = NULL;
+  GstRTSPClientState state = { NULL };
 
   if (condition & G_IO_IN) {
+    /* a new client connected. */
+    GST_RTSP_CHECK (gst_rtsp_connection_accept (socket, &conn, NULL),
+        accept_failed);
+
+    state.server = server;
+    state.conn = conn;
+    state.auth = priv->auth;
+    gst_rtsp_client_state_push_current (&state);
+
+    if (!gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_CONNECT))
+      goto connection_refused;
 
     klass = GST_RTSP_SERVER_GET_CLASS (server);
-
     /* a new client connected, create a client object to handle the client. */
     if (klass->create_client)
       client = klass->create_client (server);
     if (client == NULL)
       goto client_failed;
-
-    /* a new client connected. */
-    GST_RTSP_CHECK (gst_rtsp_connection_accept (socket, &conn, NULL),
-        accept_failed);
-
-    if (klass->setup_connection)
-      if (!klass->setup_connection (server, client, conn))
-        goto setup_failed;
 
     /* set connection on the client now */
     gst_rtsp_client_set_connection (client, conn);
@@ -1316,29 +1234,31 @@ gst_rtsp_server_io_func (GSocket * socket, GIOCondition condition,
   } else {
     GST_WARNING_OBJECT (server, "received unknown event %08x", condition);
   }
+exit:
+  gst_rtsp_client_state_pop_current (&state);
+
   return G_SOURCE_CONTINUE;
 
   /* ERRORS */
-client_failed:
-  {
-    GST_ERROR_OBJECT (server, "failed to create a client");
-    return G_SOURCE_CONTINUE;
-  }
 accept_failed:
   {
     gchar *str = gst_rtsp_strresult (res);
     GST_ERROR_OBJECT (server, "Could not accept client on socket %p: %s",
         socket, str);
     g_free (str);
-    g_object_unref (client);
-    return G_SOURCE_CONTINUE;
+    goto exit;
   }
-setup_failed:
+connection_refused:
   {
-    GST_ERROR_OBJECT (server, "failed to setup client connection");
+    GST_ERROR_OBJECT (server, "connection refused");
     gst_rtsp_connection_free (conn);
-    g_object_unref (client);
-    return G_SOURCE_CONTINUE;
+    goto exit;
+  }
+client_failed:
+  {
+    GST_ERROR_OBJECT (server, "failed to create a client");
+    gst_rtsp_connection_free (conn);
+    goto exit;
   }
 }
 

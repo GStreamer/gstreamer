@@ -34,6 +34,9 @@
 struct _GstRTSPAuthPrivate
 {
   GMutex lock;
+
+  /* the TLS certificate */
+  GTlsCertificate *certificate;
   GHashTable *basic;            /* protected by lock */
   GstRTSPMethod methods;
 };
@@ -109,6 +112,9 @@ gst_rtsp_auth_finalize (GObject * obj)
   GstRTSPAuthPrivate *priv = auth->priv;
 
   GST_INFO ("finalize auth %p", auth);
+
+  if (priv->certificate)
+    g_object_unref (priv->certificate);
   g_hash_table_unref (priv->basic);
   g_mutex_clear (&priv->lock);
 
@@ -151,6 +157,64 @@ gst_rtsp_auth_new (void)
 
   return result;
 }
+
+/**
+ * gst_rtsp_auth_set_tls_certificate:
+ * @auth: a #GstRTSPAuth
+ * @cert: (allow none): a #GTlsCertificate
+ *
+ * Set the TLS certificate for the auth. Client connections will only
+ * be accepted when TLS is negotiated.
+ */
+void
+gst_rtsp_auth_set_tls_certificate (GstRTSPAuth * auth, GTlsCertificate * cert)
+{
+  GstRTSPAuthPrivate *priv;
+  GTlsCertificate *old;
+
+  g_return_if_fail (GST_IS_RTSP_AUTH (auth));
+
+  priv = auth->priv;
+
+  if (cert)
+    g_object_ref (cert);
+
+  g_mutex_lock (&priv->lock);
+  old = priv->certificate;
+  priv->certificate = cert;
+  g_mutex_unlock (&priv->lock);
+
+  if (old)
+    g_object_unref (old);
+}
+
+/**
+ * gst_rtsp_auth_get_tls_certificate:
+ * @auth: a #GstRTSPAuth
+ *
+ * Get the #GTlsCertificate used for negotiating TLS @auth.
+ *
+ * Returns: (transfer full): the #GTlsCertificate of @auth. g_object_unref() after
+ * usage.
+ */
+GTlsCertificate *
+gst_rtsp_auth_get_tls_certificate (GstRTSPAuth * auth)
+{
+  GstRTSPAuthPrivate *priv;
+  GTlsCertificate *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_AUTH (auth), NULL);
+
+  priv = auth->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->certificate))
+    g_object_ref (result);
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
+
 
 /**
  * gst_rtsp_auth_add_basic:
@@ -321,12 +385,24 @@ default_check (GstRTSPAuth * auth, GstRTSPClientState * state,
   GstRTSPAuthPrivate *priv = auth->priv;
   gboolean res = FALSE;
 
-  if (g_str_equal (check, GST_RTSP_AUTH_CHECK_URL)) {
+  if (g_str_equal (check, GST_RTSP_AUTH_CHECK_CONNECT)) {
+    /* new connection */
+    if (priv->certificate) {
+      GTlsConnection *tls;
+
+      /* configure the connection */
+      tls = gst_rtsp_connection_get_tls (state->conn, NULL);
+      g_tls_connection_set_certificate (tls, priv->certificate);
+    }
+    res = TRUE;
+  } else if (g_str_equal (check, GST_RTSP_AUTH_CHECK_URL)) {
+    /* check url and methods */
     if ((state->method & priv->methods) != 0)
       res = ensure_authenticated (auth, state);
     else
       res = TRUE;
   } else if (g_str_has_prefix (check, "auth.check.media.factory.")) {
+    /* check access to media factory */
     const gchar *role;
     GstRTSPPermissions *perms;
 

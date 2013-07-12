@@ -80,6 +80,9 @@ GType               gst_rtsp_auth_get_type          (void);
 
 GstRTSPAuth *       gst_rtsp_auth_new               (void);
 
+void                gst_rtsp_auth_set_tls_certificate (GstRTSPAuth *auth, GTlsCertificate *cert);
+GTlsCertificate *   gst_rtsp_auth_get_tls_certificate (GstRTSPAuth *auth);
+
 void                gst_rtsp_auth_add_basic         (GstRTSPAuth *auth, const gchar * basic,
                                                      GstRTSPToken *token);
 void                gst_rtsp_auth_remove_basic      (GstRTSPAuth *auth, const gchar * basic);
@@ -93,6 +96,12 @@ gboolean            gst_rtsp_auth_check             (const gchar *check);
 gchar *             gst_rtsp_auth_make_basic        (const gchar * user, const gchar * pass);
 
 /* checks */
+/**
+ * GST_RTSP_AUTH_CHECK_CONNECT:
+ *
+ * Check a new connection
+ */
+#define GST_RTSP_AUTH_CHECK_CONNECT                  "auth.check.connect"
 /**
  * GST_RTSP_AUTH_CHECK_URL:
  *

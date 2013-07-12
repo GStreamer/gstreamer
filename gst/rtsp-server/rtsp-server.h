@@ -70,8 +70,7 @@ struct _GstRTSPServerClass {
   GObjectClass  parent_class;
 
   GstRTSPClient * (*create_client)      (GstRTSPServer *server);
-  gboolean        (*setup_connection)   (GstRTSPServer *server, GstRTSPClient *client,
-                                         GstRTSPConnection *conn);
+
   /* signals */
   void            (*client_connected)   (GstRTSPServer *server, GstRTSPClient *client);
 };
