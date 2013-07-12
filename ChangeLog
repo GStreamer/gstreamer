@@ -1,9 +1,78 @@
-=== release 1.0.7 ===
+=== release 1.0.8 ===
 
-2013-04-26  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-07-12  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.7
+	  releasing 1.0.8
+
+2013-07-09 17:57:06 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: update from libav v0.8.6 to v0.8.8
+	  version 0.8.8:
+	  - kmvc: Clip pixel position to valid range
+	  - kmvc: use fixed sized arrays in the context
+	  - indeo: use a typedef for the mc function pointer
+	  - lavc: check for overflow in init_get_bits
+	  - mjpegdec: properly report unsupported disabled features
+	  - jpegls: return meaningful errors
+	  - jpegls: factorize return paths
+	  - jpegls: check the scan offset
+	  - wavpack: validate samples size parsed in wavpack_decode_block
+	  - ljpeg: use the correct number of components in yuv
+	  - mjpeg: Validate sampling factors
+	  - mjpegdec: validate parameters in mjpeg_decode_scan_progressive_ac
+	  - wavpack: check packet size early
+	  - wavpack: return meaningful errors
+	  - apetag: use int64_t for filesize
+	  - tiff: do not overread the source buffer
+	  - Prepare for 0.8.8 Release
+	  - smacker: fix an off by one in huff.length computation
+	  - smacker: check the return value of smacker_decode_tree
+	  - smacker: pad the extradata allocation
+	  - smacker: check frame size validity
+	  - vmdav: convert to bytestream2
+	  - 4xm: don't rely on get_buffer() initializing the frame.
+	  - 4xm: check the return value of read_huffman_tables().
+	  - 4xm: use the correct logging context
+	  - 4xm: reject frames not compatible with the declared version
+	  - 4xm: check bitstream_size boundary before using it
+	  - 4xm: do not overread the source buffer in decode_p_block
+	  version 0.8.7:
+	  - avfiltergraph: check for sws opts being non-NULL before using them
+	  - bmv: check for len being valid in bmv_decode_frame()
+	  - dfa: check for invalid access in decode_wdlt()
+	  - indeo3: check motion vectors
+	  - indeo3: fix data size check
+	  - indeo3: switch parsing the header to bytestream2
+	  - lavf: make sure stream probe data gets freed.
+	  - oggdec: fix faulty cleanup prototype
+	  - oma: Validate sample rates
+	  - qdm2: check that the FFT size is a power of 2
+	  - rv10: check that extradata is large enough
+	  - xmv: check audio track parameters validity
+	  - xmv: do not leak memory in the error paths in xmv_read_header()
+	  - aac: check the maximum number of channels
+	  - indeo3: fix off by one in MV validity check, Bug #503
+	  - id3v2: check for end of file while unescaping tags
+	  - wav: Always seek to an even offset, Bug #500, LP: #1174737
+	  - proresdec: support mixed interlaced/non-interlaced content
+
+2013-05-20 11:08:43 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v0.8.7
+
+=== release 1.0.7 ===
+
+2013-04-26 13:30:38 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.0.7
 
 2013-04-23 14:12:23 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 

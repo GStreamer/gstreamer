@@ -1,5 +1,5 @@
 
-Release notes for GStreamer libav Plugins 1.0.7
+Release notes for GStreamer libav Plugins 1.0.8
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -38,16 +38,10 @@ contains a set of less supported plugins that haven't passed the
 
 Features of this release
     
-      * Update to libav 0.8.6
-      * Now uses frame based threading if possible and disables slice
-    based threading until libav 9 is used. This provides potentially better
-    performance and fixes some display corruptions caused by bugs in the
-    slice based threading
+      * gst-libav: internal libav snapshot version bumped to v0.8.8
 
-Bugs fixed in this release
-     
-      * 697548 : avviddec: Setting same caps resets decoder
-      * 697617 : gst-libav renders incorrectly in multithread mode
+There were no bugs fixed in this release
+    
 
 ==== Download ====
 
@@ -84,7 +78,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Andoni Morales Alastruey
       * Sebastian Dröge
-      * Siva Chandran P
+      * Tim-Philipp Müller
  

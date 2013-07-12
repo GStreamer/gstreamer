@@ -1,4 +1,8 @@
-This is GStreamer Libav Plugins 1.0.7
+This is GStreamer Libav Plugins 1.0.8
+
+Changes since 1.0.7:
+
+      * gst-libav: internal libav snapshot version bumped to v0.8.8
 
 Changes since 1.0.6:
 
