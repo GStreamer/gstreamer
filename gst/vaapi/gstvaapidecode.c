@@ -30,12 +30,10 @@
 
 #include "gst/vaapi/sysdeps.h"
 #include <gst/vaapi/gstvaapidisplay.h>
-#if !GST_CHECK_VERSION(1,1,0)
-#include <gst/video/videocontext.h>
-#endif
 
 #include "gstvaapidecode.h"
 #include "gstvaapipluginutil.h"
+#include "gstvaapivideocontext.h"
 #include "gstvaapivideobuffer.h"
 #if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideobufferpool.h"
@@ -544,6 +542,20 @@ error_create_pool:
 }
 #endif
 
+#if GST_CHECK_VERSION(1,1,0)
+static void
+gst_vaapidecode_set_context(GstElement *element, GstContext *context)
+{
+    GstVaapiDecode * const decode = GST_VAAPIDECODE(element);
+    GstVaapiDisplay *display = NULL;
+
+    if (gst_vaapi_video_context_get_display(context, &display)) {
+        GST_INFO_OBJECT(element, "set display %p", display);
+        gst_vaapi_display_replace(&decode->display, display);
+    }
+}
+#endif
+
 static inline gboolean
 gst_vaapidecode_ensure_display(GstVaapiDecode *decode)
 {
@@ -777,6 +789,10 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
         GST_DEBUG_FUNCPTR(gst_vaapidecode_decide_allocation);
 #endif
 
+#if GST_CHECK_VERSION(1,1,0)
+    element_class->set_context = GST_DEBUG_FUNCPTR(gst_vaapidecode_set_context);
+#endif
+
     gst_element_class_set_static_metadata(element_class,
         "VA-API decoder",
         "Codec/Decoder/Video",
@@ -879,6 +895,24 @@ gst_vaapidecode_query(GST_PAD_QUERY_FUNCTION_ARGS)
             gst_caps_unref(caps);
             res = TRUE;
             break;
+        }
+#endif
+#if GST_CHECK_VERSION(1,1,0)
+        case GST_QUERY_CONTEXT: {
+            const gchar *context_type = NULL;
+
+            if (gst_query_parse_context_type(query, &context_type) &&
+                !g_strcmp0(context_type, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME) &&
+                decode->display) {
+                GstContext *context;
+
+                context = gst_vaapi_video_context_new_with_display(
+                    decode->display, FALSE);
+                gst_query_set_context(query, context);
+                gst_context_unref(context);
+                return TRUE;
+            }
+            // fall-through
         }
 #endif
         default:
