@@ -1,0 +1,28 @@
+<plugin>
+  <name>rfbsrc</name>
+  <description>Connects to a VNC server and decodes RFB stream</description>
+  <filename>../../gst/librfb/.libs/libgstrfbsrc.so</filename>
+  <basename>libgstrfbsrc.so</basename>
+  <version>1.1.2.1</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins git</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>rfbsrc</name>
+      <longname>Rfb source</longname>
+      <class>Source/Video</class>
+      <description>Creates a rfb video stream</description>
+      <author>David A. Schleef &lt;ds@schleef.org&gt;, Andre Moreira Magalhaes &lt;andre.magalhaes@indt.org.br&gt;, Thijs Vermeir &lt;thijsvermeir@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)RGB, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw, format=(string)BGR, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw, format=(string)RGBx, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw, format=(string)BGRx, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw, format=(string)xRGB, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]; video/x-raw, format=(string)xBGR, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
