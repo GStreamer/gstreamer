@@ -205,3 +205,24 @@ gst_rtsp_token_get_string (GstRTSPToken * token, const gchar * field)
 {
   return gst_structure_get_string (GST_RTSP_TOKEN_STRUCTURE (token), field);
 }
+
+/**
+ * gst_rtsp_token_is_allowed:
+ * @token: a #GstRTSPToken
+ * @field: a field name
+ *
+ * Check if @token has a boolean @field and if it is set to %TRUE.
+ *
+ * Returns: %TRUE if @token has a boolean field named @field set to %TRUE.
+ */
+gboolean
+gst_rtsp_token_is_allowed (GstRTSPToken * token, const gchar * field)
+{
+  gboolean result;
+
+  if (!gst_structure_get_boolean (GST_RTSP_TOKEN_STRUCTURE (token), field,
+          &result))
+    result = FALSE;
+
+  return result;
+}

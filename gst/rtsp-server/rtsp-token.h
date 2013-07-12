@@ -90,6 +90,8 @@ GstStructure *       gst_rtsp_token_writable_structure (GstRTSPToken *token);
 
 const gchar *        gst_rtsp_token_get_string         (GstRTSPToken *token,
                                                         const gchar *field);
+gboolean             gst_rtsp_token_is_allowed         (GstRTSPToken *token,
+                                                        const gchar *field);
 G_END_DECLS
 
 #endif /* __GST_RTSP_TOKEN_H__ */
