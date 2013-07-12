@@ -7,7 +7,8 @@ c_sources = \
 	gst-qa-element-monitor.c \
 	gst-qa-bin-monitor.c \
 	gst-qa-pad-monitor.c \
-	gst-qa-monitor-factory.c
+	gst-qa-monitor-factory.c \
+	gst-qa-monitor-preload.c
 
 noinst_HEADERS = 
 
