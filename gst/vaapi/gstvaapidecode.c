@@ -882,10 +882,12 @@ gst_vaapidecode_query(GST_PAD_QUERY_FUNCTION_ARGS)
         GST_VAAPIDECODE(gst_pad_get_parent_element(pad));
     gboolean res;
 
-    GST_DEBUG("sharing display %p", decode->display);
+    GST_INFO_OBJECT(decode, "query type %s", GST_QUERY_TYPE_NAME(query));
 
-    if (gst_vaapi_reply_to_query(query, decode->display))
+    if (gst_vaapi_reply_to_query(query, decode->display)) {
+        GST_DEBUG("sharing display %p", decode->display);
         res = TRUE;
+    }
     else if (GST_PAD_IS_SINK(pad)) {
         switch (GST_QUERY_TYPE(query)) {
 #if GST_CHECK_VERSION(1,0,0)

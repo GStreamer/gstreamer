@@ -1347,6 +1347,8 @@ gst_vaapisink_query(GstBaseSink *base_sink, GstQuery *query)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
 
+    GST_INFO_OBJECT(sink, "query type %s", GST_QUERY_TYPE_NAME(query));
+
     if (gst_vaapi_reply_to_query(query, sink->display)) {
         GST_DEBUG("sharing display %p", sink->display);
         return TRUE;
