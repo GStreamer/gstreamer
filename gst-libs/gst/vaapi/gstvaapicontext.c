@@ -522,7 +522,9 @@ gst_vaapi_context_create(GstVaapiContext *context)
     GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(context);
     VAProfile va_profile;
     VAEntrypoint va_entrypoint;
-    VAConfigAttrib attrib;
+    guint va_rate_control;
+    VAConfigAttrib attribs[2];
+    guint num_attribs;
     VAContextID context_id;
     VASurfaceID surface_id;
     VAStatus status;
@@ -557,26 +559,42 @@ gst_vaapi_context_create(GstVaapiContext *context)
     va_profile    = gst_vaapi_profile_get_va_profile(cip->profile);
     va_entrypoint = gst_vaapi_entrypoint_get_va_entrypoint(cip->entrypoint);
 
+    num_attribs = 0;
+    attribs[num_attribs++].type = VAConfigAttribRTFormat;
+    if (cip->entrypoint == GST_VAAPI_ENTRYPOINT_SLICE_ENCODE)
+        attribs[num_attribs++].type = VAConfigAttribRateControl;
+
     GST_VAAPI_DISPLAY_LOCK(display);
-    attrib.type = VAConfigAttribRTFormat;
     status = vaGetConfigAttributes(
         GST_VAAPI_DISPLAY_VADISPLAY(display),
         va_profile,
         va_entrypoint,
-        &attrib, 1
+        attribs, num_attribs
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
     if (!vaapi_check_status(status, "vaGetConfigAttributes()"))
         goto end;
-    if (!(attrib.value & VA_RT_FORMAT_YUV420))
+    if (!(attribs[0].value & VA_RT_FORMAT_YUV420))
         goto end;
+
+    if (cip->entrypoint == GST_VAAPI_ENTRYPOINT_SLICE_ENCODE) {
+        va_rate_control = from_GstVaapiRateControl(cip->rc_mode);
+        if (va_rate_control == VA_RC_NONE)
+            attribs[1].value = VA_RC_NONE;
+        if ((attribs[1].value & va_rate_control) != va_rate_control) {
+            GST_ERROR("unsupported %s rate control",
+                      string_of_VARateControl(va_rate_control));
+            goto end;
+        }
+        attribs[1].value = va_rate_control;
+    }
 
     GST_VAAPI_DISPLAY_LOCK(display);
     status = vaCreateConfig(
         GST_VAAPI_DISPLAY_VADISPLAY(display),
         va_profile,
         va_entrypoint,
-        &attrib, 1,
+        attribs, num_attribs,
         &context->config_id
     );
     GST_VAAPI_DISPLAY_UNLOCK(display);
@@ -651,6 +669,7 @@ gst_vaapi_context_new(
 
     info.profile    = profile;
     info.entrypoint = entrypoint;
+    info.rc_mode    = GST_VAAPI_RATECONTROL_NONE;
     info.width      = width;
     info.height     = height;
     info.ref_frames = get_max_ref_frames(profile);
@@ -719,6 +738,7 @@ gst_vaapi_context_reset(
 
     info.profile    = profile;
     info.entrypoint = entrypoint;
+    info.rc_mode    = GST_VAAPI_RATECONTROL_NONE;
     info.width      = width;
     info.height     = height;
     info.ref_frames = context->info.ref_frames;
@@ -742,7 +762,7 @@ gst_vaapi_context_reset_full(GstVaapiContext *context,
     const GstVaapiContextInfo *new_cip)
 {
     GstVaapiContextInfo * const cip = &context->info;
-    gboolean size_changed, codec_changed;
+    gboolean size_changed, codec_changed, rc_mode_changed;
 
     size_changed = cip->width != new_cip->width ||
         cip->height != new_cip->height;
@@ -758,6 +778,14 @@ gst_vaapi_context_reset_full(GstVaapiContext *context,
         gst_vaapi_context_destroy(context);
         cip->profile    = new_cip->profile;
         cip->entrypoint = new_cip->entrypoint;
+    }
+
+    if (new_cip->entrypoint == GST_VAAPI_ENTRYPOINT_SLICE_ENCODE) {
+        rc_mode_changed = cip->rc_mode != cip->rc_mode;
+        if (rc_mode_changed) {
+            gst_vaapi_context_destroy(context);
+            cip->rc_mode = new_cip->rc_mode;
+        }
     }
 
     if (size_changed && !gst_vaapi_context_create_surfaces(context))

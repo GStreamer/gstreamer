@@ -45,10 +45,14 @@ typedef struct _GstVaapiContextInfo             GstVaapiContextInfo;
  * Structure holding VA context info like encoded size, decoder
  * profile and entry-point to use, and maximum number of reference
  * frames reported by the bitstream.
+ *
+ * Note: @rc_mode is only valid for VA context used for encoding,
+ * i.e. if @entrypoint is set to @GST_VAAPI_ENTRYPOINT_SLICE_ENCODE.
  */
 struct _GstVaapiContextInfo {
     GstVaapiProfile     profile;
     GstVaapiEntrypoint  entrypoint;
+    GstVaapiRateControl rc_mode;
     guint               width;
     guint               height;
     guint               ref_frames;
