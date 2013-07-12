@@ -216,12 +216,21 @@ struct _GstVideoGLTextureUploadMeta {
   GBoxedFreeFunc user_data_free;
 };
 
-#define gst_buffer_get_video_gl_texture_upload_meta(b) ((GstVideoGLTextureUploadMeta*)gst_buffer_get_meta((b),GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE))
-GstVideoGLTextureUploadMeta * gst_buffer_add_video_gl_texture_upload_meta (GstBuffer *buffer, GstVideoGLTextureOrientation texture_orientation, guint n_textures, GstVideoGLTextureType texture_type[4], GstVideoGLTextureUpload upload, gpointer user_data, GBoxedCopyFunc user_data_copy, GBoxedFreeFunc user_data_free);
-gboolean gst_video_gl_texture_upload_meta_upload (GstVideoGLTextureUploadMeta *meta, guint texture_id[4]);
-
 GType gst_video_gl_texture_upload_meta_api_get_type (void);
 const GstMetaInfo * gst_video_gl_texture_upload_meta_get_info (void);
+
+#define gst_buffer_get_video_gl_texture_upload_meta(b) ((GstVideoGLTextureUploadMeta*)gst_buffer_get_meta((b),GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE))
+GstVideoGLTextureUploadMeta *
+          gst_buffer_add_video_gl_texture_upload_meta (GstBuffer *buffer,
+                                                       GstVideoGLTextureOrientation texture_orientation,
+                                                       guint n_textures,
+                                                       GstVideoGLTextureType texture_type[4],
+                                                       GstVideoGLTextureUpload upload,
+                                                       gpointer user_data,
+                                                       GBoxedCopyFunc user_data_copy,
+                                                       GBoxedFreeFunc user_data_free);
+gboolean  gst_video_gl_texture_upload_meta_upload     (GstVideoGLTextureUploadMeta *meta,
+                                                       guint texture_id[4]);
 
 G_END_DECLS
 
