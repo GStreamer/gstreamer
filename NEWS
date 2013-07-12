@@ -1,4 +1,23 @@
-This is GStreamer Bad Plugins 1.0.7
+This is GStreamer Bad Plugins 1.0.8
+
+Changes since 1.0.7:
+
+      * rfbsrc, neonhttpsrc, ofa, and openal plugins ported to 1.0
+      * mpegvideoparse: don't announce incomplete source caps
+      * tsdemux: many fixes
+
+Bugs fixed since 1.0.7:
+
+      * 702495 : sdpdemux fails if not explicitly added to the pipeline
+      * 674536 : tsdemux: Freeze on pts-wrap with streaming sources
+      * 685103 : mpegvideoparse: wrong pixel-aspect-ratio
+      * 695412 : mpegtsmux AAC ADTS header seems incorrect
+      * 695879 : mpegvideoparse: outputs incomplete caps with different mpegversion before outputting proper caps
+      * 697283 : mpegdemux: accept  ID_PRIVATE_STREAM_1 to avoid loosing sync
+      * 699786 : mpegtsmux: memory leak when using prepare_func
+      * 700038 : rfbsrc: port to 1.0
+      * 700402 : openalsink: 'AL_FORMAT_MONO_ALAW_EXT' undeclared
+      * 702597 : shmsink: events not propagated to basesink
 
 Changes since 1.0.6:
 

@@ -594,8 +594,8 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>iradio-mode</NICK>
-<BLURB>Enable internet radio mode (extraction of shoutcast/icecast metadata).</BLURB>
-<DEFAULT>FALSE</DEFAULT>
+<BLURB>Enable internet radio mode (ask server to send shoutcast/icecast metadata interleaved with the actual stream data).</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>
@@ -23688,8 +23688,8 @@
 <TYPE>guint</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Buffer latency in ms</NICK>
-<BLURB>Amount of data to buffer.</BLURB>
+<NICK>Buffering latency</NICK>
+<BLURB>Amount of data to buffer (in milliseconds).</BLURB>
 <DEFAULT>60</DEFAULT>
 </ARG>
 
@@ -26900,7 +26900,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>6.79039e-313</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27000,7 +27000,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>1.58992e-316</DEFAULT>
+<DEFAULT>2.07227e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27380,7 +27380,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>1.58658e-316</DEFAULT>
+<DEFAULT>7.06238e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27570,7 +27570,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>9.88131e-324</DEFAULT>
+<DEFAULT>1.99084e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27580,7 +27580,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>1.37429e-309</DEFAULT>
+<DEFAULT>7.90505e-322</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58398,8 +58398,8 @@
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
-<NICK>Device</NICK>
-<BLURB>Specific capture device to open, NULL indicate default device.</BLURB>
+<NICK>ALCdevice</NICK>
+<BLURB>User device, default device if NULL.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -58409,7 +58409,7 @@
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Device name</NICK>
-<BLURB>Readable name of device.</BLURB>
+<BLURB>Human-readable name of the device.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -58429,7 +58429,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Device</NICK>
-<BLURB>OpenAL device string.</BLURB>
+<BLURB>Human-readable name of the device.</BLURB>
 <DEFAULT>NULL</DEFAULT>
 </ARG>
 
@@ -58449,7 +58449,7 @@
 <RANGE></RANGE>
 <FLAGS>r</FLAGS>
 <NICK>Device name</NICK>
-<BLURB>Opened OpenAL device name.</BLURB>
+<BLURB>Human-readable name of the opened device.</BLURB>
 <DEFAULT>""</DEFAULT>
 </ARG>
 
@@ -58460,6 +58460,36 @@
 <FLAGS>rw</FLAGS>
 <NICK>Source ID</NICK>
 <BLURB>Custom playback sID.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenALSink::user-context</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ALCcontext</NICK>
+<BLURB>User context.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenALSink::user-device</NAME>
+<TYPE>gpointer</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ALCdevice</NICK>
+<BLURB>User device.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenALSink::user-source</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>ALsource</NICK>
+<BLURB>User source.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 

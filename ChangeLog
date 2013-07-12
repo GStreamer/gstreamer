@@ -1,9 +1,374 @@
-=== release 1.0.7 ===
+=== release 1.0.8 ===
 
-2013-04-26  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-07-12  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.7
+	  releasing 1.0.8
+
+2013-05-27 22:22:32 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  tsdemux: fix M2TS stream resync
+	  Sync byte scan is incorrect for M2TS streams because the timestamp 4
+	  bytes were not included in the flush size. This can result in an
+	  infinite loop.
+	  Rework the scan code to be clearer and work in all cases.
+
+2013-05-24 10:59:59 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtsbase.h:
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: fixes seeking in pull mode
+	  Preserve the current segment and observations in pull mode seeks with
+	  flushing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=698050
+
+2013-07-05 11:20:49 -0600  Brendan Long <b.long@cablelabs.com>
+
+	* gst/subenc/gstwebvttenc.c:
+	  webvttenc: Separate cues with two line breaks instead of one.
+	  See http://dev.w3.org/html5/webvtt/#syntax
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703673
+
+2013-07-04 02:12:30 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* tests/examples/camerabin2/Makefile.am:
+	  camerabin: examples: add missing lib to makefile
+	  Fixes initialization of sample application
+
+2013-06-28 12:25:59 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* gst/frei0r/gstfrei0r.c:
+	  frei0r: add the build prefix path in the search dirs
+
+2013-06-18 12:29:41 -0700  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	* sys/shm/gstshmsink.c:
+	  shmsink: propagate events to basesink class
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702597
+
+2013-06-05 16:16:36 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.c:
+	  mpegvideoparser: Fix the pixel-aspect-ratio calculation
+	  Ignore the display_extension values if they are greater than the width/height
+	  values provided by seqhdr and calculate the PAR based on the seqhdr values.T
+	  his is what DVD players are doing.
+	  Thanks to "David Schleef <ds@schleef.org>"
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685103
+
+2013-04-04 18:22:52 +0200  Alban Browaeys <prahal@yahoo.com>
+
+	* gst/mpegdemux/gstpesfilter.c:
+	  mpegdemux: accept ID_PRIVATE_STREAM_1 to avoid loosing sync
+	  Current fallback to lost_sync seems to impede a delay to restore
+	  sync. Let the parser parse and skip the private stream.
+	  Here it contains the digital camera brand (in 2010 bytes)
+	  and is repeated twice.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697283
+
+2013-03-07 22:19:15 +0000  Kevin Thornberry <gimmeamilkbttf@gmail.com>
+
+	* gst/mpegtsmux/mpegtsmux_aac.c:
+	  mpegtsmux: fix creation of ADTS header for AAC audio in MPEG-TS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=695412
+
+2013-06-07 15:18:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/librfb/Makefile.am:
+	  rfb: Link with libgstbase for GstPushSrc
+
+2013-02-14 10:43:42 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/mpegtsmux.c:
+	  tests: fix h264 caps in mpegtsmux test
+	  Needs to be stream-format=byte-stream, not format=byte-stream.
+
+2013-02-14 10:40:36 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/check/elements/faad.c:
+	  tests: fix faad unit test for gst_caps_is_subset() fix in core
+	  Need to specify the stream-format.
+
+2013-02-13 12:51:58 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* tests/check/elements/h263parse.c:
+	* tests/check/elements/mpeg4videoparse.c:
+	* tests/check/elements/mpegvideoparse.c:
+	  videoparsers: Use complete and valid caps in the tests
+
+2013-02-19 11:14:11 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/dvbsuboverlay/gstdvbsuboverlay.c:
+	  dvbsuboverlay: don't forward CAPS event from subtitle pad
+	  May results in not-negotiated flow errors otherwise.
+
+2013-05-18 12:23:05 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/openal/gstopenalsink.h:
+	* ext/openal/gstopenalsrc.h:
+	  openal: fix includes for 1.0 branch
+	  In the 1.0 branch audio.h doesn't yet include everything
+	  from libgstaudio, so we need class-specific includes for
+	  the audiosink and src base classes.
+
+2013-05-15 11:57:07 -0600  Brendan Long <b.long@cablelabs.com>
+
+	* configure.ac:
+	  openal: require OpenAL >= 1.14 to build the OpenAL plugin
+	  For AL_FORMAT_MONO_ALAW_EXT and AL_FORMAT_STEREO_ALAW_EXT.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=700402
+
+2013-04-17 02:18:58 +0200  Juan Manuel Borges Caño <juanmabcmail@gmail.com>
+
+	* configure.ac:
+	* ext/openal/gstopenal.c:
+	* ext/openal/gstopenalsink.c:
+	* ext/openal/gstopenalsink.h:
+	* ext/openal/gstopenalsrc.c:
+	* ext/openal/gstopenalsrc.h:
+	  openal: improved port to 1.0
+	  https://bugzilla.gnome.org/show_bug.cgi?id=698013
+	  Conflicts:
+	  configure.ac
+	  ext/openal/gstopenalsrc.h
+
+2013-05-12 22:41:32 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* ext/ofa/Makefile.am:
+	* ext/ofa/gstofa.c:
+	* ext/ofa/gstofa.h:
+	* tests/check/elements/ofa.c:
+	  ofa: port to 1.0
+	  Conflicts:
+	  configure.ac
+
+2013-05-12 18:47:32 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/neon/gstneonhttpsrc.h:
+	  neonhttpsrc: add iradio-mode property and post icy metadata as tags
+
+2013-05-12 18:28:18 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	* ext/neon/gstneonhttpsrc.c:
+	* ext/neon/gstneonhttpsrc.h:
+	  neonhttpsrc: port to 1.0
+	  Conflicts:
+	  configure.ac
+
+2013-05-11 12:07:03 -0700  David Schleef <ds@schleef.org>
+
+	* gst/inter/gstintervideosrc.c:
+	  intervideosrc: Fix timestamp generation
+
+2013-04-27 11:56:48 -0700  David Schleef <ds@schleef.org>
+
+	* gst/y4m/gsty4mdec.c:
+	  y4mdec: set timestamps when restriding buffer
+
+2013-05-11 19:41:22 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/librfb/gstrfbsrc.c:
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/rfbdecoder.h:
+	  rfbsrc: post error messages on errors
+
+2013-05-11 00:36:06 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/librfb/gstrfbsrc.c:
+	* gst/librfb/rfbdecoder.c:
+	  rfbsrc: fix rfbdecoder new/free asymetry and wrong free in error case
+	  If rfb_decoder_new() allocates the decoder sructure, rfb_decoder_free()
+	  should free the structure. We should not free the decoder when an
+	  error occurs during connection - it holds lots of configuration/state
+	  and will be freed later in finalize.
+
+2013-05-11 00:29:40 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/librfb/d3des.c:
+	* gst/librfb/d3des.h:
+	* gst/librfb/rfbdecoder.c:
+	  rfbsrc: make authentication handshake safe for multiple instances
+	  Move DES key into context struct.
+
+2013-05-10 23:09:30 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/librfb/Makefile.am:
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/vncauth.c:
+	* gst/librfb/vncauth.h:
+	  rfbsrc: remove GPL-licensed source file
+	  and replace the 1% of it that we need with new code, so we
+	  don't have to change the runtime license of rfbsrc to GPL.
+
+2013-05-10 09:49:46 -0700  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	* gst/librfb/Makefile.am:
+	* gst/librfb/gstrfbsrc.c:
+	* gst/librfb/rfbdecoder.c:
+	* gst/librfb/rfbdecoder.h:
+	  rfbsrc: use glib gio sockets for network access
+	  https://bugzilla.gnome.org/show_bug.cgi?id=700038
+
+2013-05-09 16:41:32 -0700  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	* configure.ac:
+	* gst/librfb/Makefile.am:
+	* gst/librfb/gstrfbsrc.c:
+	* gst/librfb/gstrfbsrc.h:
+	  rfbsrc: port to 1.0
+	  https://bugzilla.gnome.org/show_bug.cgi?id=700038
+	  Conflicts:
+	  configure.ac
+
+2013-05-07 08:26:03 -0600  Greg Rutz <greg@gsr-tek.com>
+
+	* gst/mpegtsmux/mpegtsmux.c:
+	  mpegtsmux: Fix memory leak when using prepare_func
+	  prepare_func will allocate a new buffer to replace the original
+	  one. Instead of using gst_buffer_replace (which causes an extra
+	  refcount increment on the new buffer), we just unref the original
+	  buffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=699786
+
+2013-05-01 17:36:47 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: don't announce incomplete source caps
+	  Don't send any source caps yet if we're still in
+	  drop-buffers-until-we-get-a-sequence-header mode.
+	  Fixes transmuxing of many MPEG-TS/PS streams into
+	  formats which require things like width, height or
+	  codec_data on the input caps.
+	  Also fixes issues when using playbin with decoder
+	  sinks that want width/height etc.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=695879
+
+2013-04-26 15:33:18 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/liveadder/liveadder.c:
+	  liveadder: Document that the latency is in milliseconds
+	  Bug #698896
+
+2013-04-26 15:39:30 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: convert packet PTS/DTS as soon as possible
+	  We let the mpegtspacketizer deal with pcr wraparound/resets.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=674536
+
+2013-04-26 12:18:20 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/gstmpegdefs.h:
+	  mpegtsdemux: header cleanups/updates
+
+2013-04-15 16:01:29 -0700  David Schleef <ds@schleef.org>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtsdemux: check value before using as denominator
+
+2013-04-11 13:08:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: Check the continuity counter for non-section packets too
+	  And if we detect a discontinuity there (like... when losing packets
+	  or having MPEGTS over raw UDP with out-of-order packets) we just
+	  drop the corresponding packet.
+	  A future version could try to implement a re-ordering algorithm based
+	  on that, similar to what rtpjitterbuffer does.
+
+2013-04-10 16:19:00 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  mpegtsbase: Call ::program_stopped after removing all streams
+	  Subclasses want to access the program while removing the streams
+	  and will currently crash because of dereferencing NULL in some cases.
+
+2013-03-10 12:17:05 +1300  Douglas Bagnall <douglas@paradise.net.nz>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	* gst/mpegtsdemux/tsdemux.h:
+	  tsdemux: remove unused current_program_number field
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690934
+
+2013-03-03 12:30:32 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/pesparse.c:
+	  mpegtsdemux: Fix various compiler warnings
+
+2013-04-23 15:19:14 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: Fix caps string leak
+
+=== release 1.0.7 ===
+
+2013-04-26 13:25:22 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-plugins-bad.doap:
+	* gst/bayer/gstbayerorc-dist.c:
+	* gst/bayer/gstbayerorc-dist.h:
+	* gst/fieldanalysis/gstfieldanalysisorc-dist.c:
+	* gst/fieldanalysis/gstfieldanalysisorc-dist.h:
+	* gst/gaudieffects/gstgaudieffectsorc-dist.c:
+	* gst/gaudieffects/gstgaudieffectsorc-dist.h:
+	* win32/common/config.h:
+	  Release 1.0.7
+
+2013-04-26 13:25:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2012-10-25 11:31:41 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
 

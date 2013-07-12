@@ -1,0 +1,34 @@
+<plugin>
+  <name>ofa</name>
+  <description>Calculate MusicIP fingerprint from audio files</description>
+  <filename>../../ext/ofa/.libs/libgstofa.so</filename>
+  <basename>libgstofa.so</basename>
+  <version>1.0.8</version>
+  <license>GPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>ofa</name>
+      <longname>OFA</longname>
+      <class>MusicIP Fingerprinting element</class>
+      <description>Find a music fingerprint using MusicIP&apos;s libofa</description>
+      <author>Milosz Derezynski &lt;internalerror@gmail.com&gt;, Eric Buehl &lt;eric.buehl@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S16LE, S16BE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string){ S16LE, S16BE }, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>

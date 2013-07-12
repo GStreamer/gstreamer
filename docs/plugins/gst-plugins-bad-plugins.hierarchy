@@ -3,8 +3,13 @@ GObject
     GstObject
       GstAllocator
         GstDefaultAllocator
+      GstAudioRingBuffer
+        GstAudioSinkRingBuffer
+        GstAudioSrcRingBuffer
       GstBus
       GstClock
+        GstSystemClock
+          GstAudioClock
       GstControlBinding
       GstControlSource
       GstElement
@@ -43,6 +48,9 @@ GObject
           GstMpegvParse
           GstOpusParse
         GstBaseSink
+          GstAudioBaseSink
+            GstAudioSink
+              GstOpenALSink
           GstChecksumSink
           GstCurlBaseSink
             GstCurlFileSink
@@ -63,9 +71,14 @@ GObject
           GstInterSubSrc
           GstInterVideoSrc
           GstPushSrc
+            GstAudioBaseSrc
+              GstAudioSrc
+                GstOpenalSrc
             GstDvbSrc
             GstMMS
+            GstNeonhttpSrc
             GstRTMPSrc
+            GstRfbSrc
             GstShmSrc
             frei0r-src-ising0r
             frei0r-src-lissajous0r
@@ -78,6 +91,7 @@ GObject
           GstAudioFilter
             GstBPMDetect
             GstChromaprint
+            GstOFA
           GstBayer2RGB
           GstDebugSpy
           GstDtmfDetect

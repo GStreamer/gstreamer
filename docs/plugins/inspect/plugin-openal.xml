@@ -1,0 +1,43 @@
+<plugin>
+  <name>openal</name>
+  <description>OpenAL plugin library</description>
+  <filename>../../ext/openal/.libs/libgstopenal.so</filename>
+  <basename>libgstopenal.so</basename>
+  <version>1.0.8</version>
+  <license>LGPL</license>
+  <source>gst-plugins-bad</source>
+  <package>GStreamer Bad Plug-ins source release</package>
+  <origin>Unknown package origin</origin>
+  <elements>
+    <element>
+      <name>openalsink</name>
+      <longname>OpenAL Audio Sink</longname>
+      <class>Sink/Audio</class>
+      <description>Output audio through OpenAL</description>
+      <author>Juan Manuel Borges Caño &lt;juanmabcmail@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)F64LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2 ]; audio/x-raw, format=(string)F32LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw, format=(string)S16LE, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]; audio/x-raw, format=(string)U8, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>openalsrc</name>
+      <longname>OpenAL Audio Source</longname>
+      <class>Source/Audio</class>
+      <description>Input audio through OpenAL</description>
+      <author>Juan Manuel Borges Caño &lt;juanmabcmail@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)[ 1, 2147483647 ], channels=(int)1; audio/x-raw, format=(string)U8, rate=(int)[ 1, 2147483647 ], channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
+  </elements>
+</plugin>
