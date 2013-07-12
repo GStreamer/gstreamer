@@ -1,4 +1,10 @@
-This is GStreamer Ugly Plugins 1.0.7
+This is GStreamer Ugly Plugins 1.0.8
+
+Changes since 1.0.7:
+
+      * lamemp3enc: fix timestamping of outgoing buffers if the encoder
+        resamples internally, which fixes transcoding pipelines
+        deadlocking after a while
 
 Bugs fixed since 1.0.6:
 

@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plugins 1.0.7
+Release notes for GStreamer Ugly Plugins 1.0.8
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -56,9 +56,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Bugs fixed in this release
-     
-      * 695728 : x264enc plugin has a divide by zero error when framerate is " 0/1 " 
+Features of this release
+
+      * lamemp3enc: fix timestamping of outgoing buffers if the encoder resamples internally, which fixes transcoding pipelines deadlocking after a while
+
 
 ==== Download ====
 
@@ -95,6 +96,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Sebastian Dröge
-      * Tom Greenwood
+      * Mark Nauwelaerts
+      * Olivier Crête
+      * Sreerenj Balachandran
  

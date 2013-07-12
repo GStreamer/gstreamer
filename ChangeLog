@@ -1,9 +1,88 @@
-=== release 1.0.7 ===
+=== release 1.0.8 ===
 
-2013-04-26  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-07-12  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.7
+	  releasing 1.0.8
+
+2013-06-18 20:06:24 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* ext/dvdread/dvdreadsrc.c:
+	  dvdreadsrc: correctly determine last chapter's duration
+	  This (mostly) reverts 683f5eeae7b830e4e4b790f3817ff6b8ce517b1c.
+	  It worked just fine before ...
+
+2013-06-04 16:12:27 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: make the aspect ratio calculation more accurate.
+	  Utilize the libmpeg2 api: mpeg2_guess_aspect() to guess the
+	  aspect-ratio if we don't have a valid upstream PAR.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685103
+
+2013-05-09 19:40:49 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/lame/gstlamemp3enc.c:
+	  lamemp3enc: Tell GstAudioEncoder about the number of incoming samples
+	  lame does internal resampling, but the base class only cares about
+	  the number of raw samples, so tell finish frames about that, not
+	  the number of samples in the outgoing frame.:
+
+=== release 1.0.7 ===
+
+2013-04-26 13:08:42 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.0.7
+
+2013-04-26 13:08:35 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-03-06 13:28:37 +0000  Tom Greenwood <tgreenwood@Toms-MacBook-Pro.local>
 
