@@ -3,7 +3,7 @@
   <description>Wayland Video Sink</description>
   <filename>../../ext/wayland/.libs/libgstwaylandsink.so</filename>
   <basename>libgstwaylandsink.so</basename>
-  <version>1.1.1</version>
+  <version>1.1.2</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins source release</package>
@@ -20,7 +20,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string)BGRA, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ]</details>
+          <details>video/x-raw, format=(string){ BGRx, BGRA }, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>

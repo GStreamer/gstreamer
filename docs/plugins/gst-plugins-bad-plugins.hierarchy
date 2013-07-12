@@ -37,6 +37,7 @@ GObject
           GstSirenEnc
           GstVoAacEnc
           GstVoAmrWbEnc
+        GstAudioMixer
         GstAudioVisualizer-BadGstAudioVisualizers
           GstSpaceScope
           GstSpectraScope
@@ -150,18 +151,6 @@ GObject
               GstMirror
               GstRotate
               GstSquare
-            GstOpencvVideoFilter
-              GstCvDilateErode
-                GstCvDilate
-                GstCvErode
-              GstCvEqualizeHist
-              GstCvLaplace
-              GstCvSmooth
-              GstCvSobel
-              GstFaceDetect
-              GstHanddetect
-              GstSkinDetect
-            GstRetinex
             GstRsvgOverlay
             GstSceneChange
             GstSmooth
@@ -244,11 +233,8 @@ GObject
         GstDVDSpu
         GstDashDemux
         GstDecklinkSrc
-        GstEdgeDetect
-        GstFaceBlur
         GstFestival
         GstFieldAnalysis
-        GstFluidDec
         GstGDPDepay
         GstGDPPay
         GstGmeDec
@@ -266,15 +252,12 @@ GObject
         GstMimDec
         GstMimEnc
         GstModPlug
-        GstMotioncells
         GstMpegPSDemux
         GstMssDemux
-        GstOpencvTextOverlay
         GstPcapParse
         GstPitch
         GstPnmdec
         GstPnmenc
-        GstPyramidSegment
         GstRTPBaseDepayload
           GstRTPOpusDepay
           GstRtpDTMFDepay
@@ -291,15 +274,16 @@ GObject
         GstSrtEnc
         GstTagMux
           GstId3Mux
-        GstTemplateMatch
         GstUvcH264MjpgDemux
         GstVideoDecoder
+          GstDaalaDec
           GstOpenJPEGDec
           GstRsvgDec
           GstSchroDec
           GstVdpDecoder
             GstVdpMpegDec
         GstVideoEncoder
+          GstDaalaEnc
           GstOpenJPEGEnc
           GstSchroEnc
         GstWebvttEnc
@@ -427,7 +411,6 @@ GObject
 GInterface
   GTypePlugin
   GstChildProxy
-  GstNavigation
   GstPhotography
   GstPreset
   GstTagSetter

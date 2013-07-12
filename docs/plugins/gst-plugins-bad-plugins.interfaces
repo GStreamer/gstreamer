@@ -5,6 +5,7 @@ GstAmrWbEnc GstPreset
 GstApExSink GstImplementsInterface GstMixer
 GstAsfMux GstTagSetter
 GstAudioEncoder GstPreset
+GstAudioMixer GstChildProxy
 GstAutoConvert GstChildProxy
 GstAutoVideoConvert GstChildProxy
 GstBaseCameraSrc GstChildProxy
@@ -16,6 +17,7 @@ GstCameraBin GstChildProxy GstTagSetter
 GstCameraBin2 GstChildProxy GstTagSetter
 GstCeltEnc GstPreset GstTagSetter
 GstCeltEnc GstTagSetter GstPreset
+GstDaalaEnc GstPreset
 GstDataURISrc GstURIHandler
 GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
 GstDiracEnc GstPreset

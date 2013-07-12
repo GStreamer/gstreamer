@@ -26820,7 +26820,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>4.63015e-299</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26860,7 +26860,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash (Y)</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>8.20251e-304</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26870,7 +26870,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash (X)</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>8.20251e-304</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26910,7 +26910,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>8.20251e-304</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26920,7 +26920,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>1.07509e-316</DEFAULT>
+<DEFAULT>1.09189e-321</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26950,7 +26950,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color (B)</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>9.40395e-38</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27300,7 +27300,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>1.07175e-316</DEFAULT>
+<DEFAULT>1.48009e-310</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27680,7 +27680,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>1.07185e-316</DEFAULT>
+<DEFAULT>1.6587e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -60505,5 +60505,55 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Max queue size in buffers</NICK>
 <BLURB>Maximum buffers that can be stored in each internal stream queue (0 = infinite).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioMixer::alignment-threshold</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= 18446744073709551614</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Alignment Threshold</NICK>
+<BLURB>Timestamp alignment threshold in nanoseconds.</BLURB>
+<DEFAULT>40000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioMixer::caps</NAME>
+<TYPE>GstCaps*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Target caps</NICK>
+<BLURB>Set target format for mixing (NULL means ANY). Setting this property takes a reference to the supplied GstCaps object.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioMixer::discont-wait</NAME>
+<TYPE>guint64</TYPE>
+<RANGE><= 18446744073709551614</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Discont Wait</NICK>
+<BLURB>Window of time in nanoseconds to wait before creating a discontinuity.</BLURB>
+<DEFAULT>1000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDaalaEnc::keyframe-rate</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 1</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Keyframe Rate</NICK>
+<BLURB>Keyframe Rate.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDaalaEnc::quant</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[0,511]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Quant</NICK>
+<BLURB>Quant.</BLURB>
+<DEFAULT>10</DEFAULT>
 </ARG>
 

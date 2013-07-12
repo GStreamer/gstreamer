@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.1.1
+Release notes for GStreamer Bad Plugins 1.1.2
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -65,83 +65,35 @@ Features of this release
 
 Bugs fixed in this release
      
-      * 689191 : d3dvideosink improvements
-      * 683142 : h264parse: should proxy demuxer width+height (incorrectly reports Canon MOV resolution as 1920x1088 instead of 1920x1080)
-      * 685103 : mpegvideoparse: wrong pixel-aspect-ratio
-      * 629117 : Move rtpmux elements to -good
-      * 638578 : Add support for 12 bit sRGB JPEG-2000 images
-      * 642669 : interlace: Improve and extend field patterns
-      * 654479 : Support DVB-S2
-      * 660866 : [videoparsers] Should passthrough framerate/pixel-aspect-ratio/etc in caps
-      * 675625 : dashdemux: a streaming client supporting the new MPEG DASH standard
-      * 677575 : [mxf] Port mxfmux/mxfdemux to 0.11/1.0
-      * 677701 : MJPEG2000 playback stutters
-      * 680200 : tsdemux: extract language-code of dvb subtitles into tags
-      * 680700 : decklinksrc does not forward EOS events passed via send_event
-      * 681359 : shmsink segfaults under certain conditions
-      * 683169 : mpeg4videoparse doesn't handle VOP_coded=0 properly
-      * 683192 : assrender: stuck on first video frame with mewmew-vorbis-ssa.mkv
-      * 684339 : shm: use O_CLOEXEC where appropriate in shmpipe
-      * 684568 : codecparsers: h264: fix error code for invalid size parsed in SPS
-      * 684683 : assrender: fix unit tests
-      * 685163 : accuraterip: new element for AccurateRip calculation
-      * 685655 : opencv: added OpenCV-based hand gesture detection plugin
-      * 686948 : Wrong name for GstStructure representing CAT
-      * 687176 : mpg123: finalizer function is unnecessary
-      * 687237 : OpenCV elements compile with 2.4.2
-      * 687262 : Move scaletempo to -good
-      * 687263 : [PLUGIN-MOVE] move VP8 RTP elements to -good
-      * 687416 : Move DTMF plugin to -good
-      * 687520 : gstdvbsuboverlay.h contains old FSF address
-      * 687840 : Gst-plugins-bad fails to build
-      * 688486 : GstPhotography: add new enum values for android
-      * 689562 : vdpau: port to 1.0
-      * 689822 : hlssink: Memory leak and minor fixes
-      * 690030 : HLS makefile is missing gst_plugins_base_libs
-      * 690033 : mmssrc: fails to compile on windows, error: format '%I64i'
-      * 690128 : Directsoundsrc fails to compile
-      * 690555 : Dynamic Adaptive Streaming over HTTP (DASH) plugin
-      * 690582 : Import bluez plugins into -bad and port to 1.0
-      * 690892 : switch midi support from libwildmidi to libfluidsynth or libtimidity
-      * 691117 : shmsink perms get only a copy and past of set
-      * 691843 : mxf unit test hangs forever until it times out
-      * 692012 : assrender: fix, re-enable and add overlay support
-      * 692045 : uvch264src: port to 1.0
-      * 692272 : codecparsers: vc1: drop superfluous DQBEDGE
-      * 692388 : [API] codecparsers: vc1: parse slice headers
-      * 692461 : codecparsers: vc1: fix bitplanes decoding (DIFF6 or NORM6)
-      * 692789 : H264parse overwrites codec_data field before comparing old one and new one
-      * 693140 : [API] codecparsers: h264: add profile enums
-      * 693322 : Don't use deprecated GLib threading API
-      * 693628 : mxfdemux: add a second MXF UL for uncompressed audio; ignore missing metadata descriptors
-      * 693665 : eglglessink: add support for Raspberry Pi
-      * 695412 : mpegtsmux AAC ADTS header seems incorrect
-      * 695897 : Compilation errors on srtp
-      * 696041 : Port a midi decoder to 1.0
-      * 696392 : gst-plugins-bad fails to build unless gnutls is present...
-      * 696597 : hls: fails to build with older gnutls versions
-      * 697176 : d3dvideosink: use the bilinear scalling filter as much as possible
-      * 697305 : opencv: handdetect: compile error on OS/X
-      * 697694 : watchdog: race causing deadlock in stop
-      * 697834 : mpegpsdemux: decrease logging priority for repeating messages
-      * 697892 : mpegtsdemux: Add support for DigiCipher II stream type.
-      * 698013 : openal: port to 1.0
-      * 698349 : mssdemux: new plugin for smoothstreaming support
-      * 698649 : eglglessink: Wrong picture scaling on RPi
-      * 698679 : h264parse doesn't set proper caps on src pad on changes in the sink pad
-      * 698854 : [applemedia] Several improvements for the applemedia plugins
-      * 698927 : LADSPA improved port to gstreamer 1.0
-      * 699398 : mpegvideoparse: couple of issues
-      * 699446 : d3dvideosink: Don't use deprecated GLib threading API
-      * 699919 : vdpau: Add VdpVideoSurface caps feature
-      * 699921 : smoothstreaming: Padname '':audio_00 does not belong to element mssdemux0 when removing
-      * 700058 : The EGL display wrapper should allow delegate the eglTerminate call
-      * 700328 : ladspa: Build issues when lrdf is found
-      * 700420 : mimic: Missing segment event
-      * 700521 : androidmedia: crop_top should be divided by 2 in COLOR_FormatYUV420 converting
-      * 700654 : opencv skin colour detection plugin
-      * 700886 : curlsmtpsink: terminate transfer thread properly
-      * 700903 : tsdemux: possible descriptor string leak
+      * 694068 : h264parser: Parse the cropping-rectangle separately.
+      * 560631 : [tsdemux] Handle carousel data (MHP, MHEG, ...)
+      * 614479 : [mpegtspacketizer] Use CRC to check if tables are duplicate
+      * 646327 : h264parse: Drop data before receiving the first PPS/SPS
+      * 664274 : [API] codecparsers: add gst_mpeg_video_parse_slice() and gst_mpeg_video_parse_sequence_scalable_extension()
+      * 677443 : [tsdemux/tsparse] Handle multiple SI in one packet
+      * 678148 : [tsdemux] missing timestamp on DVB subtitles
+      * 692933 : [API] codecparsers: mpeg2: add new API that takes  GstMpegVideoPacket arguments
+      * 695475 : h264parser: Fix the return value type for the SEI palyload parsing methods.
+      * 698050 : tsdemux: seeking doesn't even work in pull mode
+      * 700489 : [dashdemux] Initialization blocks without URLs generate spurious critical errors
+      * 701421 : opencv: add foreground/background segmentation element
+      * 701509 : dashdemux selects first fragment in the manifest for live streams
+      * 701953 : wrappercamerabinsrc: Add video-source-filter during construction
+      * 701961 : dashdemux: Spurious critical if there is no initialization segment
+      * 702036 : curlsmtpsink: incorrect assert in gst_curl_smtp_sink_set_payload_headers_unlocked
+      * 702112 : waylandsink: add support for RGBx and RGBA formats
+      * 702174 : mpegvideoparse: Crash while transcoding to MPEG2 with encodebin while attaching parse meta
+      * 702206 : dashdemux: media range requests not supported
+      * 702297 : opencv: build broken - c++ header indirectly included into c code (gstsegmentation.h contains a .hpp)
+      * 702422 : tsparse: Ensure initial events are sent in the right order
+      * 702677 : dashdemux: SegmentTemplates at multiple levels not aggregated
+      * 702684 : shmsink: shared memory filled when no clients connected
+      * 702724 : first-class miniobjects/API for mpeg-ts related SI (Service Information)
+      * 702837 : dashdemux: Cleanup use of xmlFree vs g_free
+      * 703264 : srtp: Key is required even if cipher and auth are null
+      * 703667 : codecparsers: mpeg2: add missing gtk-doc entries
+      * 703668 : codecparsers: mpeg2: fix video packet header size checks
+      * 703683 : POTFILES are out of date
 
 ==== Download ====
 
@@ -178,94 +130,28 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Alban Browaeys
       * Aleix Conchillo Flaque
-      * Alessandro Decina
-      * Alexander Olsson
-      * Alexander Schrab
-      * Anderson Lizardo
-      * Andol Li
+      * Alex Ashley
       * Andoni Morales Alastruey
-      * Andre Moreira Magalhaes (andrunko)
-      * Anton Belka
       * Arnaud Vrac
-      * Arun Raghavan
+      * Arthur Shipkowski
       * Benjamin Gaignard
-      * Blake Tregre
-      * Branko Subasic
       * Brendan Long
-      * Carlos Rafael Giani
-      * Chan-yeol Park
       * Chen Jie
-      * Christian Fredrik Kalager Schaller
-      * Christophe Fergeau
-      * Cong Zhong
-      * David Corvoysier
-      * David Schleef
-      * Douglas Bagnall
       * Edward Hervey
-      * Emmanuel Durand
-      * Fabricio Costa Alisedo
-      * Filippo Giunchedi
-      * Gianluca Gennari
       * Greg Rutz
       * Gwenole Beauchesne
-      * Hamid ZAKARI
-      * Jan Schmidt
-      * Jean-François Fortin Tam
-      * Joe Konno
-      * Johan Hedberg
-      * Jonas Holmberg
-      * Jose Antonio Santos Cadenas
+      * Hans de Goede
+      * Ilya Smelykh
       * Josep Torra
-      * Juan Manuel Borges Caño
-      * Julian Scheel
-      * Kevin Thornberry
-      * Krzysztof Konopko
-      * Louis-Francis Ratté-Boulianne
-      * Lucas De Marchi
-      * Luciana Fujii Pontello
-      * Luiz Augusto von Dentz
-      * Marc Leeman
-      * Marcel Holtmann
-      * Mark Nauwelaerts
-      * Martin Pitt
-      * Matej Knopp
-      * Matthew Waters
-      * Matthias Hardt
-      * Michael Esemplare
-      * Michael Rubinstein
-      * Michael Smith
       * Miguel Casas-Sanchez
-      * Nicolas Dufresne
-      * Ole André Vadla Ravnås
-      * Olivier Blin
       * Olivier Crête
       * Patricia Muscalu
-      * Rico Tzschichholz
-      * Robert Swain
-      * Roland Elek
-      * Roland Krikava
+      * Piotr Drąg
       * Sebastian Dröge
-      * Sebastian Pölsterl
-      * Sebastian Rasmussen
-      * Siarhei Siamashka
-      * Sjoerd Simons
       * Sreerenj Balachandran
-      * Stefan Sauer
-      * Syam Sidhardhan
-      * Szymon Janc
       * Thiago Santos
-      * Thibault Saunier
-      * Thijs Vermeir
-      * Tim 'mithro' Ansell
-      * Tim Ansell
       * Tim-Philipp Müller
-      * Todd Agulnick
-      * Victor Gottardi
-      * Vincent Penquerc'h
-      * Will Thompson
-      * Wim Taymans
-      * Youness Alaoui
-      * hzakari
-      * Руслан Ижбулатов
+      * Xavi Artigas
  

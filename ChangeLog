@@ -1,9 +1,1358 @@
-=== release 1.1.1 ===
+=== release 1.1.2 ===
 
-2013-06-05  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-07-11  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.1
+	  releasing 1.1.2
+
+2013-07-10 12:28:38 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/mpegpsmux/mpegpsmux.c:
+	  mpegpsmux: Send stream-start event before any data
+
+2013-07-08 08:44:43 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtsdemux: Avoid parsing section without enough data
+	  This is actually a workaround (we'll be skipping the upcoming section)
+	  This will only happen for sections where the beginning is located within
+	  the last 8 bytes of a packet (which is the minimum we need to properly
+	  identify any section beginning).
+	  Later we should figure out a way to store those bytes and mark that
+	  some analysis needs to happen. The probability of this happening is
+	  too low for me to care right now and do that fix. There is a good chance
+	  that section will eventually be repeated and won't end up on such border.
+
+2013-07-08 08:43:50 +0200  Edward Hervey <edward@collabora.com>
+
+	* tests/examples/mpegts/ts-parser.c:
+	  examples: Add BAT support to mpegts example
+
+2013-07-08 08:42:18 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst-libs/gst/mpegts/gst-dvb-section.c:
+	* gst-libs/gst/mpegts/gst-dvb-section.h:
+	* gst-libs/gst/mpegts/gstmpegts-private.h:
+	* gst-libs/gst/mpegts/gstmpegtssection.c:
+	  mpegts: Unify section checks and add BAT parsing
+	  * Avoid repeating code everywhere, and instead provide all parsing
+	  information in one go.
+	  * Add BAT support
+	  * Refine BAT/CAT identification (by adding PID checks)
+
+2013-07-07 11:42:50 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtsbase.h:
+	* gst/mpegtsdemux/mpegtsparse.c:
+	* gst/mpegtsdemux/tsdemux.c:
+	  mpegtsdemux: Avoid vmethod calls
+	  Depending on usage, tsparse and tsdemux might not need to be called
+	  when new section/pes-data is available.
+
+2013-07-07 10:25:27 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	* gst/mpegtsdemux/mpegtsparse.c:
+	  mpegtsdemux: Remove unneeded variables
+	  * packet.origts is no longer used since the PCR refactoring done ages ago
+	  * known_packet_size is a duplicate of packet_size != 0
+	  * caps was never used outside of the packetizer
+
+2013-07-09 11:39:46 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parser: fix size caps to report cropped dimensions.
+	  Restore the original h264parser behaviour to report cropped dimensions
+	  in size caps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=694068
+	  Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+2013-07-08 18:44:24 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+	* gst-libs/gst/codecparsers/gsth264parser.c:
+	  codecparsers: h264: fix calculation of the frame cropping rectangle.
+	  Fix calculation of the frame cropping rectangle, and more precisely
+	  the actual cropped height. The frame_crop_top_offset subtraction
+	  was not scaled up with SubHeightC.
+	  Also clean-up variables to align more with (7-18) to (7-21).
+	  Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+2013-02-15 14:18:49 +0200  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/codecparsers/gsth264parser.c:
+	* gst-libs/gst/codecparsers/gsth264parser.h:
+	  h264parser: Parse the cropping-rectangle separately.
+	  Assign the un-cropped width/height to sps->width/sps->height
+	  during sps header parsing. Added new fields to SPS header structure
+	  to provide the crop-rectangle dimensions.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=694068
+
+2013-07-03 16:38:33 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	  dashdemux: implement queue full check function
+	  Checks if the queue is full according to max buffering time
+	  set by the user
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701404
+
+2013-07-09 00:47:07 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	  dashdemux: minor refactor
+	  Split one very large function into 2 smaller but still large functions.
+	  Also change the if conditions to positive checks to improve readability.
+
+2013-07-08 23:24:28 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	* ext/dash/gstdashdemux.h:
+	* ext/dash/gstmpdparser.c:
+	* ext/dash/gstmpdparser.h:
+	  dashdemux: handle live playback resync
+	  During a live stream it is possible for dashdemux to lag behind on a
+	  slow connection or to rush ahead of the connection os too fast.
+	  For the first case it is necessary to jump some segments ahead to be able to
+	  continue playback as old segments are usually deleted from the server.
+	  For the later, dashdemux should wait a little before attempting another
+	  download do give time to the server to produce a new segment
+
+2013-07-05 13:22:17 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstmpdparser.c:
+	* ext/dash/gstmpdparser.h:
+	  dashdemux: fix template based segment generation
+	  When using a template based segment list, do not try to
+	  contruct a finite segment list for the limits of the available periods.
+	  We might not know when the period ends (for live streams) and we can
+	  always create the segment on demand when requested by dashdemux,
+	  avoiding use of some memory and cpu when re-creating this list.
+
+2013-07-04 23:42:23 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	* ext/dash/gstmpdparser.c:
+	* ext/dash/gstmpdparser.h:
+	  dashdemux: use more appropriate data structures for parsing
+	  Replaces the 2 likely larger lists with more appropriate structures
+	  to improve performance.
+	  Replaces S nodes GList for a GQueue, this reduces latency to startup
+	  because of traversing the list just append an element.
+	  Replaces the processed media segments GList for a GPtrArray as it is
+	  constantly acessed by index during playback.
+
+2013-07-04 15:14:00 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	  dashdemux: answer to latency queries
+	  Set live if stream is live and also add to the max latency the
+	  max internal buffering
+
+2013-07-08 22:01:58 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst-libs/gst/uridownloader/gsturidownloader.c:
+	  uridownloader: fix crash when download is null
+	  Do no try to unref a NULL download attribute
+
+2013-07-08 22:00:48 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst-libs/gst/uridownloader/gsturidownloader.c:
+	  uridownloader: do not set cancelled unless explicitly called by user
+	  Cancelled is a 'permanent' state of the uridownloader and is only
+	  removed by a call to _reset. When a download fails we just want to
+	  return NULL on the fetch function and leave the downloader ready
+	  for another fetch, otherwise the user has to call _reset after
+	  failed downloader, even when it didn't call _cancel.
+
+2013-07-07 08:35:02 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst-libs/gst/mpegts/gstmpegtssection.c:
+	  mpegts: Avoid false-positives in section type detection
+	  Due to the variety of section types out there, we need to add
+	  some checks when identifying section types.
+	  We check here that the PID is also consistent with the table_id.
+
+2013-07-07 08:29:37 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	  mpegtsdemux: Fix multiple-SI detection/parsing
+	  We had two issues with the previous code:
+	  1) We were badly handling PUSI-flagged packets. We were discarding the
+	  initial data (if pointer != 0) whereas we should have been accumulating
+	  it with the previous data (if there was a continuity of course).
+	  => First series of information loss
+	  2) We were not checking whether there were more sections after the end
+	  of one (i.e. when the following byte was not a stuff byte).
+	  This fixes those two issues.
+	  Fixes #677443
+	  https://bugzilla.gnome.org/show_bug.cgi?id=677443
+
+2013-07-07 07:21:46 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  mpegtbase: Fix switch/case typo
+	  Ended up trying to analyze PMT ... with a PAT :(
+
+2013-07-06 14:50:52 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtsbase.h:
+	* gst/mpegtsdemux/tsdemux.c:
+	  mpegtsdemux: Handle private section streams
+	  Until now we simply ignored those streams (since we couldn't do anything
+	  with it anyway). Now that we have the mpegts library and we offload the
+	  section handling to the application side we can properly identify and
+	  extract them.
+	  By default it is disabled for tsparse and enabled for tsdemux, but there is
+	  a property to change that.
+	  This should open the way to properly handle all private section streams,
+	  including:
+	  * DSM-CC
+	  * MHEG
+	  * Carousel data
+	  * Metadata streams (though I haven't seen any of those in the wild)
+	  * ... And all other specs/protocols making use of those
+	  Partially fixes #560631
+
+2013-07-06 12:39:49 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst-libs/gst/mpegts/gst-dvb-section.c:
+	* tests/examples/mpegts/ts-parser.c:
+	  mpegts: Properly handle UTC time in sections
+	  * don't unref inexistant GstDateTime
+	  * Fine-tune hour/min/sec BCD reading code
+	  * Update example code accordingly
+
+2013-07-06 10:59:08 +0200  Edward Hervey <edward@collabora.com>
+
+	* tests/examples/mpegts/ts-parser.c:
+	  examples: Registration descriptor support
+	  And output the length of the descriptors
+
+2013-07-06 10:38:26 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst-libs/gst/mpegts/gst-dvb-section.c:
+	  mpegts: Fix NIT parsing
+	  The size checks were wrong. The smallest size for a NIT is 16 bytes
+	  (12 for the smallest content + 4 for crc) and the smallest size for
+	  a inner stream loop is 6 bytes (without any descriptors).
+	  Also remove FIXME that has already moved elsewhere
+
+2013-07-06 10:36:33 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/gstmpegdefs.h:
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtsbase.h:
+	* gst/mpegtsdemux/tsdemux.c:
+	  mpegtsdemux: Handle registration descriptor for programs and streams
+	  * Allows us to simplify some code and prepare for future cleanups.
+	  * Remove useless casts
+	  * Add some FIXME regarding VC1
+
+2013-07-05 21:49:48 +0200  Piotr Drąg <piotrdrag@gmail.com>
+
+	* po/POTFILES.in:
+	* po/POTFILES.skip:
+	  po: update POTFILES
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703683
+
+2013-07-05 11:20:49 -0600  Brendan Long <b.long@cablelabs.com>
+
+	* gst/subenc/gstwebvttenc.c:
+	  webvttenc: Separate cues with two line breaks instead of one.
+	  See http://dev.w3.org/html5/webvtt/#syntax
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703673
+
+2013-07-05 18:33:42 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.c:
+	  codecparsers: mpeg2: fix video packet header size checks.
+	  Fix video packet header size checks for:
+	  - Sequence Header: 64 bits ;
+	  - Sequence Scalable Extension: 10 bits ;
+	  - Slice Header: 6 bits.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703668
+	  Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+2013-07-05 14:58:25 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+	* docs/libs/gst-plugins-bad-libs-sections.txt:
+	  codecparsers: mpeg2: add missing gtk-doc entries.
+	  The following functions were missing gtk-doc entries:
+	  - gst_mpeg_video_parse_sequence_display_extension
+	  - gst_mpeg_video_finalise_mpeg2_sequence_header
+	  - gst_mpeg_video_quant_matrix_get_raster_from_zigzag
+	  - gst_mpeg_video_quant_matrix_get_zigzag_from_raster
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703667
+	  Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+2013-01-31 11:57:54 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+	* tests/check/libs/mpegvideoparser.c:
+	  codecparsers: mpeg2: update test program with new GstMpegVideoPacket API.
+	  This is the lost hunk from:
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692933
+	  Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+2013-01-30 16:56:15 +0200  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.c:
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.h:
+	  codecparsers: mpeg2: add slice header parsing API.
+	  Add API to parse the Slice header. This also calculates the macroblock
+	  position as specified in 6.3.16.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=664274
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+	  Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+2013-01-25 15:48:58 +0200  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.c:
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.h:
+	  codecparsers: mpeg2: add sequence scalable extension parsing API.
+	  Add API to parse the Sequence Scalable Extension header.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=664274
+	  Signed-off-by: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+	  Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+2013-07-04 14:22:14 +0200  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: cope with new parser API.
+	  Migrate the code to use the new parser API based on GstMpegVideoPacket.
+	  Also try to optimize gst_mpegv_parse_process_config() by using more of
+	  GstMpegVideoPacket and determining the extension_start_code_identifier
+	  prior to calling the parser function for that extension packet.
+	  Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+2013-01-31 11:57:54 +0100  Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.c:
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.h:
+	  codecparsers: mpeg2: add new API that takes GstMpegVideoPacket arguments.
+	  Add new interface to MPEG-2 video parser that takes GstMpegVideoPacket
+	  arguments instead of data, size, and offset. New functions are called
+	  after gst_mpeg_video_packet_*() and provide the default implementation.
+	  Older API is moved to the deprecated namespace and uses the new functions.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=692933
+	  Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+2013-07-05 16:46:42 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  mpegtsbase: Remove no-longer needed code
+	  Since we now send all sections to the packetizer, we no longer need to do
+	  anymore in-depth checks for the validity of a section.
+	  The choice boils down to:
+	  1) Is it from a known PES pid ? If so pass it on (which might be just pushing
+	  downstream in the case of tsparse, or accumulating PES data for tsdemux)
+	  2) Is it from a known SI pid ? If so pass it to the section packetizer
+
+2013-07-05 13:53:06 +0200  Edward Hervey <edward@collabora.com>
+
+	* sys/dvb/dvbbasebin.c:
+	  dvb: Fix PMT handling
+	  Was using an older (temporary) version of the mpegts library API.
+
+2013-07-05 10:57:34 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtsdemux: Fix compilation with debugging disabling
+	  We previously weren't using that variable ...
+
+2013-07-04 08:43:37 +0200  Edward Hervey <edward@collabora.com>
+
+	* docs/libs/gst-plugins-bad-libs-docs.sgml:
+	* docs/libs/gst-plugins-bad-libs-sections.txt:
+	* gst-libs/gst/mpegts/gst-dvb-descriptor.c:
+	* gst-libs/gst/mpegts/gst-dvb-descriptor.h:
+	* gst-libs/gst/mpegts/gst-dvb-section.c:
+	* gst-libs/gst/mpegts/gst-dvb-section.h:
+	* gst-libs/gst/mpegts/gstmpegtsdescriptor.c:
+	* gst-libs/gst/mpegts/gstmpegtsdescriptor.h:
+	* gst-libs/gst/mpegts/gstmpegtssection.c:
+	  mpegts: Improve documentation
+	  * Add a base page for the library
+	  * Add pages for the base MPEG-TS section and descriptors
+	  * Add pages for the known variants
+	  * Add documentation on more fields/sections/types
+	  * Remove some fixmes that were ... fixed
+
+2013-07-04 07:49:37 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/gstmpegdefs.h:
+	* gst/mpegtsdemux/tsdemux.c:
+	  mpegtsdemux: Switch to using GstMpegTsStreamType
+	  We still have some other stream types which haven't been ported, but
+	  we will do so once we have defined the enums in the mpegts library.
+	  Also add some FIXMEs regarding items discovered during analysis
+
+2013-07-04 07:48:10 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst-libs/gst/mpegts/gstmpegtsdescriptor.c:
+	  mpegtsdescriptor: Fix handling of unknown stream encodings
+	  If we cannot identify the encoding used for a string, return a NULL
+	  string instead of garbage and add a FIXME so we can detect and later
+	  fix it.
+
+2013-07-04 07:45:12 +0200  Edward Hervey <edward@collabora.com>
+
+	* docs/libs/gst-plugins-bad-libs-sections.txt:
+	* docs/libs/gst-plugins-bad-libs.types:
+	* gst-libs/gst/mpegts/gstmpegtssection.h:
+	* tests/examples/mpegts/ts-parser.c:
+	  mpegts: Add registered mpeg-ts stream types
+	  These are the values officially registered in the base specification
+	  (H.222.0/13818-1). Later on we can add other enums for other variants
+	  Note that the enum is not used in the structure fields (such as a pmt
+	  stream stream_type field) since it can contain values from other
+	  variants.
+
+2013-07-04 02:12:30 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* tests/examples/camerabin2/Makefile.am:
+	  camerabin: examples: add missing lib to makefile
+	  Fixes initialization of sample application
+
+2013-07-03 19:11:45 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstmpdparser.c:
+	  dashdemux: prevent assertion when duration is unknown
+	  Duration from segment being unknown is a issue from the MPD and not
+	  a programming issue, so the assert isn't useful here. Instead check
+	  and return an error code so the caller can fallback to alternatives
+
+2013-07-03 19:11:11 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	  dashdemux: Fix event leak when parsing manifest fails
+	  Always remember to unref the event before proceeding, in both success
+	  and failure cases
+
+2013-07-03 12:30:28 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	* ext/dash/gstmpdparser.c:
+	* ext/dash/gstmpdparser.h:
+	  dashdemux: various cleanups
+	  Removing unused function, replacing // comments with /* */ and
+	  replacing some GST_WARNING with GST_INFO/_DEBUG as they are meant
+	  to be
+
+2013-06-11 14:28:53 +0100  Alex Ashley <bugzilla@ashley-family.net>
+
+	* ext/dash/gstdashdemux.c:
+	* ext/dash/gstmpdparser.c:
+	* ext/dash/gstmpdparser.h:
+	  dashdemux: Change first fragment selection for live streams
+	  When dashdemux selects its first fragment, it always selects the
+	  first fragment listed in the manifest. For on-demand content,
+	  this is the correct behaviour. However for live content, this
+	  behaviour is undesirable because the first fragment listed in the
+	  manifest might be some considerable time behind "now".
+	  The commit uses the host's idea of UTC and tries to find the
+	  oldest fragment that contains samples for this time of day.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701509
+
+2013-07-03 18:52:18 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst-libs/gst/mpegts/Makefile.am:
+	* gst-libs/gst/mpegts/gst-dvb-descriptor.c:
+	* gst-libs/gst/mpegts/gst-dvb-descriptor.h:
+	* gst-libs/gst/mpegts/gstmpegts-private.h:
+	* gst-libs/gst/mpegts/gstmpegtsdescriptor.c:
+	* gst-libs/gst/mpegts/gstmpegtsdescriptor.h:
+	* gst-libs/gst/mpegts/mpegts.h:
+	  mpegts: split dvb descriptors/enums into a separate file
+	  We will do the same once we have ATSC/ISDB/... descriptor parsing
+
+2013-07-03 18:44:54 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst-libs/gst/mpegts/gst-dvb-section.c:
+	* tests/examples/mpegts/ts-parser.c:
+	  mpegts: Fix TOT section parsing
+	  And use it in example
+
+2013-07-03 18:00:55 +0200  Edward Hervey <edward@collabora.com>
+
+	* tests/examples/mpegts/ts-parser.c:
+	  examples: Fix a leak
+
+2013-07-03 17:59:02 +0200  Edward Hervey <edward@collabora.com>
+
+	  mpegts: Split files and implement free functions
+	  * In order to avoid future clashing between table_id for the various
+	  mpeg-ts variants, use different enums.
+	  * In order to keep everything clean(ish) and allow for cleaner growth,
+	  split into different files (will need the same for descriptors later)
+	  * Also ... implement free functions for all table types :)
+
+2013-07-03 15:30:01 +0200  Edward Hervey <edward@collabora.com>
+
+	* win32/common/config.h:
+	  win32: back to feature development
+
+2013-07-03 10:16:29 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstmpdparser.c:
+	  dashdemux: only generate index segment uri if there is a template
+	  Simple fix to avoid an assertion.
+
+2013-06-21 17:09:30 -0600  Greg Rutz <greg@gsr-tek.com>
+
+	* ext/dash/gstmpdparser.c:
+	  dashdemux: Implement inheritance for certain MPD elements
+	  According to the MPEG-DASH spec, certain elements (i.e.
+	  SegmentBase, SegmentTemplate, and SegmentList) should inherit
+	  attributes from the same elements in the containing AdaptationSet
+	  or Period.
+	  Updated the SegmentBase, SegmentTemplate, and SegmentList parsers
+	  to properly inherit attributes from the corresponding elements in
+	  AdaptationSet and/or Period.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702677
+
+2013-06-21 15:51:46 -0600  Greg Rutz <greg@gsr-tek.com>
+
+	* ext/dash/gstmpdparser.c:
+	  dashdemux: Properly detect presence of xml attributes
+	  Convert all xml attribute/content parsing functions to return a
+	  boolean value indicating whether or not the attribute/content was
+	  present.  We need this finer-grained control in order to properly
+	  implement the inheritance policies described in the spec
+	  Also fixed several memory leak conditions when handling errors in
+	  the xml attribute/content parsing functions.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702677
+
+2013-07-02 21:31:48 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstmpdparser.c:
+	  dashdemux: change debug message from warning to info
+	  It isn't a warning/issue.
+
+2013-07-02 21:28:26 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstmpdparser.c:
+	  dashdemux: protect from access to empty list data
+	  Check if the list has elements before trying to access the last one
+	  and causing a segfault
+
+2013-07-02 23:16:59 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst-libs/gst/uridownloader/gsturidownloader.c:
+	  uridownloader: Simplify locking to fix deadlocks
+	  Use object lock to protect variables from concurrent access and
+	  use download_lock to only allow one download running
+
+2013-07-02 16:04:45 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	  dashdemux: protect against failed header downloads
+	  Avoids criticals when downloaded fragment is NULL
+
+2013-07-03 13:59:04 +0200  Edward Hervey <edward@collabora.com>
+
+	* tests/examples/mpegts/ts-parser.c:
+	  examples: GstMpegTS => GstMpegTs
+
+2013-07-03 13:57:57 +0200  Edward Hervey <edward@collabora.com>
+
+	* sys/dvb/camconditionalaccess.c:
+	* sys/dvb/camconditionalaccess.h:
+	* sys/dvb/camdevice.c:
+	* sys/dvb/camdevice.h:
+	* sys/dvb/camswclient.c:
+	* sys/dvb/camswclient.h:
+	* sys/dvb/camutils.c:
+	* sys/dvb/camutils.h:
+	* sys/dvb/dvbbasebin.c:
+	  dvb: GstMpegTS => GstMpegTs
+
+2013-07-03 13:57:38 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtsbase.h:
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	* gst/mpegtsdemux/mpegtsparse.c:
+	* gst/mpegtsdemux/tsdemux.c:
+	  mpegtsdemux: GstMpegTS => GstMpegTs
+
+2013-07-03 13:56:22 +0200  Edward Hervey <edward@collabora.com>
+
+	* docs/libs/gst-plugins-bad-libs.types:
+	* gst-libs/gst/mpegts/Makefile.am:
+	* gst-libs/gst/mpegts/gstmpegtsdescriptor.c:
+	* gst-libs/gst/mpegts/gstmpegtsdescriptor.h:
+	* gst-libs/gst/mpegts/gstmpegtssection.c:
+	* gst-libs/gst/mpegts/gstmpegtssection.h:
+	  libs/mpegts: Rename GstMpegTS => GstMpegTs
+	  Sorry for this :( But this makes it more in sync with expected type
+	  naming in gobject (i.e. CamelCase and not CamelMAYBECase).
+	  Also split descriptor type enums into the different variants:
+	  * ISO H.222.0 / 13818-1 (i.e. standard mpeg-ts)
+	  * DVB
+	  * ATSC
+	  * ISDB
+	  * miscellaneous
+	  This will avoid future clashes when specs use the same descriptor type
+
+2013-07-01 08:35:26 +0200  Edward Hervey <edward@collabora.com>
+
+	* configure.ac:
+	* tests/examples/Makefile.am:
+	* tests/examples/mpegts/Makefile.am:
+	* tests/examples/mpegts/ts-parser.c:
+	  examples: Add an example of a mpeg-ts SI extractor
+	  Serves as an example of usage of the new mpegts library from an
+	  application.
+	  Will parse/dump all sections received on a bus.
+	  Usage is ./tsparse <any gst-launch line using tsdemux or tsparse>
+	  Examples:
+	  ./tsparse file:///some/mpegtsfile ! tsparse ! fakesink
+	  ./tsparse dvb://CHANNEL ! tsparse ! fakesink
+	  ./tsparse playbin uri=dvb://CHANNEL
+	  ./tsparse playbin uri=file:///some/mpegtsfile
+	  ...
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702724
+
+2013-06-23 08:44:08 +0200  Edward Hervey <edward@collabora.com>
+
+	* sys/dvb/Makefile.am:
+	* sys/dvb/camconditionalaccess.c:
+	* sys/dvb/camconditionalaccess.h:
+	* sys/dvb/camdevice.c:
+	* sys/dvb/camdevice.h:
+	* sys/dvb/camswclient.c:
+	* sys/dvb/camswclient.h:
+	* sys/dvb/camutils.c:
+	* sys/dvb/camutils.h:
+	* sys/dvb/dvbbasebin.c:
+	  dvb: Switch to MPEG-TS SI library
+	  Also serves as an example of using mpegts library from a plugin
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702724
+
+2013-06-23 08:43:23 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/Makefile.am:
+	* gst/mpegtsdemux/gstmpegdefs.h:
+	* gst/mpegtsdemux/gstmpegdesc.c:
+	* gst/mpegtsdemux/gstmpegdesc.h:
+	* gst/mpegtsdemux/gsttsdemux.c:
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtsbase.h:
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	* gst/mpegtsdemux/mpegtsparse.c:
+	* gst/mpegtsdemux/pesparse.h:
+	* gst/mpegtsdemux/tsdemux.c:
+	  mpegtsdemux: Switch to MPEG-TS SI library
+	  * Only mpeg-ts section packetization remains.
+	  * Improve code to detect duplicated sections as early as possible
+	  * Add FIXME for various issues that need fixing (but are not regressions)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702724
+
+2013-06-23 08:41:12 +0200  Edward Hervey <edward@collabora.com>
+
+	* configure.ac:
+	* docs/libs/Makefile.am:
+	* docs/libs/gst-plugins-bad-libs-docs.sgml:
+	* docs/libs/gst-plugins-bad-libs-sections.txt:
+	* docs/libs/gst-plugins-bad-libs.types:
+	* gst-libs/gst/Makefile.am:
+	* gst-libs/gst/mpegts/Makefile.am:
+	* gst-libs/gst/mpegts/gstmpegts-private.h:
+	* gst-libs/gst/mpegts/gstmpegtsdescriptor.c:
+	* gst-libs/gst/mpegts/gstmpegtsdescriptor.h:
+	* gst-libs/gst/mpegts/gstmpegtssection.c:
+	* gst-libs/gst/mpegts/gstmpegtssection.h:
+	* gst-libs/gst/mpegts/mpegts.h:
+	  gst-libs: New Mpeg-TS support library
+	  Exposes various MPEG-TS (ISO/IEC 13818-1) and DVB (EN 300 468) Section
+	  Information as well as descriptors for usage by plugins and applications.
+	  This replaces entirely the old GstStructure-based system for conveying
+	  mpeg-ts information to applications and other plugins.
+	  Parsing and validation is done on a "when-needed" basis. This ensures
+	  the minimal overhead for elements and applications creating and using
+	  sections and descriptors.
+	  Since all information is made available, this also allows applications
+	  to parse custom sections and descriptors.
+	  Right now the library is targeted towards parsing, but the structures
+	  could be used in the future to allow applications to create and inject
+	  sections and descriptors (for usage by various mpeg-ts elements).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702724
+
+2013-06-10 18:01:14 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	* ext/dash/gstmpdparser.c:
+	  dashdemux: Handle case without an initialization segment
+	  If no initialization segment is defined, then don't print a
+	  critical or a warning, just ignore it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701961
+
+2013-07-01 18:22:46 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstmpdparser.c:
+	  dash: save 1 or 2 string copies when getting fragment uris
+	  Only create new string if required, saving maybe 1 or 2 str copies per
+	  fragment.
+
+2013-07-01 18:15:43 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* docs/libs/Makefile.am:
+	  docs: add uridownloader lib to gtk-doc libs
+	  fixes runtime linking error on windows
+
+2013-07-01 17:50:37 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	* ext/dash/gstmpdparser.c:
+	* ext/dash/gstmpdparser.h:
+	  dashdemux: each fragment can have its own index
+	  Return index URI/range to dashdemux from the mpdparser to be able
+	  to download and deliver them downstream for playback.
+
+2013-07-01 13:19:15 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	* ext/dash/gstmpdparser.c:
+	* ext/dash/gstmpdparser.h:
+	  dashdemux: handle top-level index urls
+	  Parse and provide access to top-level index segments if available.
+	  dashdemux should push those whenever a header is pushed.
+	  Fixes #700489
+
+2013-05-06 17:08:54 -0400  Arthur Shipkowski <art@videon-central.com>
+
+	* ext/dash/gstmpdparser.c:
+	  dashdemux: Fix critical error output when Initialization has no URL
+	  Issue evinced by
+	  http://yt-dash-mse-test.commondatastorage.googleapis.com/car-20120827-manifest.mpd
+	  which produces output like ** (gst-launch-1.0:8060): CRITICAL **:
+	  gst_mpdparser_get_initializationURL: assertion `InitializationURL->sourceURL
+	  != NULL' failed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=700489
+
+2013-07-01 14:35:02 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstmpdparser.c:
+	  dashdemux: prevent crash by checking if the segment node is present
+	  Do not try to access range data if there is no segment node
+
+2013-06-25 18:34:13 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/Makefile.am:
+	* ext/dash/gstdash_debug.h:
+	* ext/dash/gstdashdemux.c:
+	* ext/dash/gstmpdparser.c:
+	  dash: use same debug category for dashdemux and the mpd parser
+	  Makes debugging easier
+
+2013-06-20 03:52:31 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	* ext/dash/gstmpdparser.c:
+	* ext/dash/gstmpdparser.h:
+	  dashdemux: add support for range based segments
+	  Use the mediaRange information and pass it to the uridownloader
+	  to correctly download only the segment ranges indicated in the
+	  MPD
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702206
+
+2013-06-19 18:28:15 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst-libs/gst/uridownloader/gsturidownloader.c:
+	* gst-libs/gst/uridownloader/gsturidownloader.h:
+	  uridownloader: add support for range based downloads
+	  Adds a new API gst_uri_downloader_fetch_uri_with_range that allows
+	  downloading only a byte range from an URI. It uses a seek event
+	  sent to the source to signal the range to be downloaded.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702206
+
+2013-03-09 01:49:23 +0200  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/codecparsers/gsth264parser.c:
+	  h264parser: Fix the return value type for the SEI palyload parsing methods.
+	  The return value type of SEI payload parsing functions
+	  are GstH264ParserResult.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=695475
+
+2013-06-28 20:15:08 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/srtp/gstsrtpdec.c:
+	* ext/srtp/gstsrtpenc.c:
+	  srtp: Don't require a key if both auth and cipher are null
+
+2013-06-28 20:32:36 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/srtp/Makefile.am:
+	* ext/srtp/gstsrtp.c:
+	* ext/srtp/gstsrtp.h:
+	* ext/srtp/gstsrtpdec.c:
+	* ext/srtp/gstsrtpenc.h:
+	  srtp: Move the enums to the common header
+	  The types are used in both the encoder and decoder
+
+2013-06-28 20:13:38 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/srtp/gstsrtpenc.c:
+	  srtp: Remove unused code
+
+2013-06-28 12:25:59 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* gst/frei0r/gstfrei0r.c:
+	  frei0r: add the build prefix path in the search dirs
+
+2013-06-25 10:26:24 -0600  Greg Rutz <greg@gsr-tek.com>
+
+	* ext/dash/gstmpdparser.c:
+	  dashdemux: Cleanup memory allocation/deallocation
+	  Ensure that g_free/xmlFree is used correctly based on how the
+	  memory was allocated.
+	  When deallocating GLists, there were many places that were using
+	  g_list_foreach and g_list_free.  Converted these occurrences to
+	  call g_list_free_full.
+	  Add NULL checks to all xmlFree calls since the documentation does
+	  not guarantee that passing NULL is safe
+	  In places where we are strdup'ing memory allocated by libxml2,
+	  changed those calls to use xmlMemStrdup().
+	  There were several places where we were missing g_slice_free when
+	  deallocating a top-level node structure.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702837
+
+2013-06-24 13:02:40 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/gstmpegdesc.h:
+	  mpegdesc: Extend list of known descriptors
+	  Add the various ATSC ones
+
+2013-06-24 08:24:58 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  mpegtsbase: Only warn for added streams when needed
+	  We use add_stream(stream_type:-1) to ensure a programs' PCR Stream is
+	  also taken into account. For most programs this will re-use an
+	  existing ES stream.
+	  So only warn that we are re-adding a stream if it was already present
+	  AND it is not to ensure the PCR stream is taken into account.
+
+2013-06-23 15:12:58 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtspacketizer: Speed up section parsing
+	  Only create subtables when needed. It was previously creating one every
+	  single time ... to check if one was present.
+	  And speed up code to detect whether a subtable was already present or not.
+	  Overall makes section pushing 2 times faster.
+
+2013-06-24 07:40:20 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/gstmpegdesc.h:
+	  mpegdesc: Extend list of known descriptors
+	  From ITU-T H222.0 (06/2012). Freely available from itu.int
+
+2013-06-23 15:26:14 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	* gst/mpegtsdemux/tsdemux.c:
+	  mpegtspacketizer: Speedup packet parsing
+	  Avoid using bitshifting where not needed.
+	  Speeds up packet parsing by 3% (this is *the* hotspot of mpeg-ts elements).
+
+2013-06-22 08:57:12 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst-libs/gst/codecparsers/gsth264parser.h:
+	* gst-libs/gst/codecparsers/gstmpeg4parser.h:
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.h:
+	* gst-libs/gst/codecparsers/gstvc1parser.c:
+	* gst-libs/gst/codecparsers/gstvc1parser.h:
+	  codecparsers: Fix gtk-doc
+	  Detected by initial pre-run of gi-scanner.
+
+2013-06-23 11:29:23 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/daala/gstdaala.c:
+	* ext/daala/gstdaaladec.c:
+	* ext/daala/gstdaaladec.h:
+	  daaladec: Add decoder element
+
+2013-06-23 10:04:29 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* ext/daala/gstdaala.c:
+	* ext/daala/gstdaalaenc.c:
+	* ext/daala/gstdaalaenc.h:
+	  daalaenc: Add encoder element
+
+2013-06-22 11:27:37 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/daala/Makefile.am:
+	* ext/daala/gstdaala.c:
+	* ext/daala/gstdaaladec.c:
+	* ext/daala/gstdaaladec.h:
+	* ext/daala/gstdaalaenc.c:
+	* ext/daala/gstdaalaenc.h:
+	  daala: Initial version of a Daala plugin
+
+2013-06-23 09:05:29 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/srtp/Makefile.am:
+	  srtp: Fix dist
+	  The enums should not be dist-ed and instead be re-generated when
+	  compiling.
+
+2013-06-19 20:39:54 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	  mpegtspacketizer: Better detect already seen section
+	  In some cases (NIT on highly-populated DVB-C operator for example), there
+	  will be more than one section emitted for the same subtable and version
+	  number.
+	  In order not to lose those updates for the same version number, we checked
+	  against the CRC of the previous section we parsed.
+	  The problem is that, while it made sure we didn't lose any information, it
+	  also meant that if the same section came back (same version, same CRC) later
+	  on we would re-process it, re-parse it and re-emit it.
+	  This version improves on that by keeping a list of previously observed CRC
+	  for identical PID/subtable/version-number and will only process sections if
+	  they really were never seen in the past (as opposed to just before).
+	  On a 30s clip, this brings down the number of NIT section parsing from 4541
+	  down to 663.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=614479
+
+2013-06-20 22:12:11 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	* sys/Makefile.am:
+	* sys/winscreencap/Makefile.am:
+	* sys/winscreencap/gstdx9screencapsrc.c:
+	* sys/winscreencap/gstdx9screencapsrc.h:
+	* sys/winscreencap/gstgdiscreencapsrc.c:
+	* sys/winscreencap/gstgdiscreencapsrc.h:
+	* sys/winscreencap/gstwinscreencap.h:
+	  winscreencap: Initial port to 1.0
+
+2013-06-20 09:52:31 +0200  Xavi Artigas <xartigas@fluendo.com>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  androidmedia: Fix copying of raw video frames on Samsung Galaxy S3 with Exynos 4 SOC
+
+2013-06-19 12:52:52 -0700  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	* sys/shm/gstshmsink.c:
+	  shmsink: unref buffer if no clients are connected
+	  If no client has received the command, unref the buffer. This will
+	  make sure that the shared memory area does not get filled with buffers
+	  no one knows about.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702684
+
+2013-06-19 19:29:27 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtspacketizer: Speed up NIT parsing
+	  Avoid duplicating the delivery structure, and instead give it to the
+	  receiving container.
+
+2013-06-07 12:53:08 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  mpegtbase: simplify code
+	  We don't need generic methods for push/flush since we know all the
+	  subclass that we control
+
+2013-06-05 15:51:58 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/gstmpegdesc.c:
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/tsdemux.c:
+	  mpegtsdemux: Fix for compiling without GST_DEBUG
+	  Protect debug-only variables/usage, and in one case remove a useless
+	  variable.
+
+2013-06-17 08:15:54 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtsparse.c:
+	* gst/mpegtsdemux/mpegtsparse.h:
+	  tsparse: Ensure initial events are sent in the right order
+	  First send stream-start, then caps, then segment.
+	  The segment we push is from upstream in push-mode. If we work in pull-mode
+	  then we initialize the base segment to BYTES.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702422
+
+2013-06-18 12:29:41 -0700  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	* sys/shm/gstshmsink.c:
+	  shmsink: propagate events to basesink class
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702597
+
+2013-06-18 13:47:54 +0200  Benjamin Gaignard <benjamin.gaignard@linaro.org>
+
+	* ext/wayland/gstwaylandsink.c:
+	* ext/wayland/gstwaylandsink.h:
+	* ext/wayland/waylandpool.c:
+	  wayland: Add support for RGBx and RGBA formats
+	  Wayland interface could offer two buffers pixels formats: WL_SHM_FORMAT_XRGB8888 and WL_SHM_FORMAT_ARGB8888.
+	  Update waylandsink to support them and check if the format is really available.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702112
+
+2013-06-18 12:46:07 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ext/opencv/Makefile.am:
+	  opencv: fix CFLAGS order and add plugins base libs includes to CXXFLAGS
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702297
+
+2013-06-15 00:12:18 +0200  Alban Browaeys <prahal@yahoo.com>
+
+	* ext/opencv/gstsegmentation.cpp:
+	* ext/opencv/gstsegmentation.h:
+	  opencv: fixes build by moving the c++ header to gstsegmentation.cpp
+	  Fixes:
+	  In file included from gstsegmentation.h:51:0,
+	  from gstopencv.c:42:
+	  /usr/include/opencv2/video/background_segm.hpp:47:16: fatal error: list:
+	  No such file or directory
+	  #include <list>
+	  ^
+	  compilation terminated.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702297
+
+2013-06-18 13:33:14 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/applemedia/vtdec.c:
+	  applemedia: fix release of null pointer
+
+2013-06-18 13:17:52 +0200  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* sys/applemedia/coremediabuffer.c:
+	  applemedia: coremediabuffer: fix leaking of apple media structs
+	  remember to release the apple's api buffers to avoid huge leaking
+
+2013-06-18 13:02:42 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/applemedia/Makefile.am:
+	  applemedia: move defines to CPPFLAGS for obj-c files
+
+2013-06-11 11:54:41 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/dshowsrcwrapper/gstdshow.cpp:
+	* sys/dshowsrcwrapper/gstdshow.h:
+	* sys/dshowsrcwrapper/gstdshowaudiosrc.cpp:
+	  dshowaudiosrc: fix audiocapture producing silence
+	  Configure the capture latency using the IAMBufferNegotiation
+	  interface and try to respect the configured latency-time and buffer-time
+
+2013-06-14 14:52:07 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: Make sure the buffer is writable before we add the MPEG video meta
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702174
+
+2013-06-13 13:34:37 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* sys/applemedia-nonpublic/Makefile.am:
+	* tests/examples/camerabin2/Makefile.am:
+	  build: Fix some automake warnings
+
+2013-05-27 22:22:32 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  tsdemux: fix M2TS stream resync
+	  Sync byte scan is incorrect for M2TS streams because the timestamp 4
+	  bytes were not included in the flush size. This can result in an
+	  infinite loop.
+	  Rework the scan code to be clearer and work in all cases.
+
+2013-05-24 10:59:55 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: move some debug prints at the log level
+
+2013-05-24 10:59:59 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtsbase.h:
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: fixes seeking in pull mode
+	  Preserve the current segment and observations in pull mode seeks with
+	  flushing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=698050
+
+2013-06-11 19:45:31 +0200  Patricia Muscalu <patricia@axis.com>
+
+	* ext/curl/gstcurlsmtpsink.c:
+	  curlsmtpsink: removed an incorrect assert
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702036
+
+2013-06-11 14:32:43 +0200  Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>
+
+	* ext/opencv/Makefile.am:
+	* ext/opencv/gstopencv.c:
+	* ext/opencv/gstsegmentation.cpp:
+	* ext/opencv/gstsegmentation.h:
+	  opencv: add foreground/background segmentation element
+	  Add an element to the opencv plugin for foregroung/background image
+	  sequence segmentation, using one out of 3 algorithms.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701421
+
+2013-06-10 17:00:42 +0200  Hans de Goede <hdegoede@redhat.com>
+
+	* gst/camerabin2/gstwrappercamerabinsrc.c:
+	  wrappercamerabinsrc: Add video-source-filter during construction
+	  By adding the video-source-filter during construction time, rather then
+	  patching it in later (*), we can greatly reduce the amount of caps involved
+	  in negotation, speeding up pipeline creation.
+	  I wrote this while working on speeding up the startup of cheese. My cheese
+	  has been modified to add a capsfilter, filtering for only the configured
+	  resolution, with that cheese patch + this patch, the pipeline creation time
+	  goes from aprox 1.1 seconds to aprox 350ms. This is with a Logitech 9000
+	  pro camera, which supports lots of different resolutions at many different
+	  framerates per resolution, causing a caps "explosion" if not filtered.
+	  *) Note the code for this is left in, as it is still necessary if the
+	  video-source-filter is changed between a stop + re-start.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701953
+
+2013-06-10 18:00:13 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	  dashdemux: Make gst-indent happy
+
+2013-06-10 10:05:56 +0200  Hans de Goede <hdegoede@redhat.com>
+
+	* gst/camerabin2/camerabingeneral.c:
+	* gst/camerabin2/gstwrappercamerabinsrc.c:
+	  wrappercamerabinsrc: Don't unset the video-source property on pipeline start
+	  check_and_replace_src() was setting self->app_vid_src to NULL, which
+	  means that an app setting the video-source property, and then starting,
+	  stopping and re-starting the pipeline (ie to make changes to the
+	  video-source-filter property) would after the restart no longer have
+	  a video-source.
+	  This patch fixes this by making gst_camerabin_setup_default_element return a
+	  ref to the passed in user_element, rather then returning the user_element as
+	  is, so that that ref can be passed on to the bin, and the app_vid_src ref
+	  stays valid.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701915
+
+2013-06-08 14:48:03 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/eglgles/gstegladaptation_egl.c:
+	  eglglessink: Remove workaround for a bug in the RPi EGL implementation
+	  It's fixed in the latest firmware since a few weeks.
+
+2013-05-06 16:56:01 -0400  Arthur Shipkowski <art@videon-central.com>
+
+	* ext/dash/gstdashdemux.c:
+	  dashdemux: Fix issue with get returning a value for max-buffering-time
+	  It was not properly divided by GST_SECONDS. Also fix issue with
+	  max-buffering-time being multiplied by GST_SECONDS every time the
+	  property is retrieved.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=700487
+
+2013-06-07 15:18:15 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/librfb/Makefile.am:
+	  rfb: Link with libgstbase for GstPushSrc
+
+2013-06-07 14:01:46 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  androidmedia: Fix string comparison
+
+2013-04-04 18:22:52 +0200  Alban Browaeys <prahal@yahoo.com>
+
+	* gst/mpegdemux/gstpesfilter.c:
+	  mpegdemux: accept ID_PRIVATE_STREAM_1 to avoid loosing sync
+	  Current fallback to lost_sync seems to impede a delay to restore
+	  sync. Let the parser parse and skip the private stream.
+	  Here it contains the digital camera brand (in 2010 bytes)
+	  and is repeated twice.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697283
+
+2013-06-07 12:10:08 +0200  Ilya Smelykh <ilya.smelykh@gmail.com>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: Wait until SPS/PPS before outputting any data
+	  https://bugzilla.gnome.org/show_bug.cgi?id=646327
+
+2013-06-07 14:06:56 +0800  Chen Jie <chenj@lemote.com>
+
+	* sys/androidmedia/gstamc.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  androidmedia: Hacks for HuaweiMediaPad which reports wrong color format
+	  COLOR_FormatYCbYCr is reported but it is actually COLOR_TI_FormatYUV420PackedSemiPlanar.
+
+2013-06-05 16:16:36 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.c:
+	  mpegvideoparser: Fix the pixel-aspect-ratio calculation
+	  Ignore the display_extension values if they are greater than the width/height
+	  values provided by seqhdr and calculate the PAR based on the seqhdr values.T
+	  his is what DVD players are doing.
+	  Thanks to "David Schleef <ds@schleef.org>"
+	  https://bugzilla.gnome.org/show_bug.cgi?id=685103
+
+2013-06-05 18:36:40 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.1 ===
+
+2013-06-05 18:10:29 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* common:
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.signals:
+	* docs/plugins/inspect/plugin-accurip.xml:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-eglglessink.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-waylandsink.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* gst-plugins-bad.doap:
+	* gst/bayer/gstbayerorc-dist.c:
+	* gst/bayer/gstbayerorc-dist.h:
+	* gst/fieldanalysis/gstfieldanalysisorc-dist.c:
+	* gst/fieldanalysis/gstfieldanalysisorc-dist.h:
+	* gst/gaudieffects/gstgaudieffectsorc-dist.c:
+	* gst/gaudieffects/gstgaudieffectsorc-dist.h:
+	* win32/common/config.h:
+	  Release 1.1.1
+
+2013-06-05 18:28:17 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/vdpau/Makefile.am:
+	  vdpau: Add some missing headers to dist
+
+2013-06-05 18:01:10 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* ext/Makefile.am:
+	  dash: Add to Makefile.am for make dist
+
+2013-06-05 17:49:59 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* sys/Makefile.am:
+	  applemedia-nonpublic: Add to the Makefile.am for dist
+
+2013-06-05 16:54:57 +0200  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-06-05 15:20:52 +0200  Edward Hervey <edward@collabora.com>
 
