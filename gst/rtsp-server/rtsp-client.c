@@ -62,7 +62,6 @@ struct _GstRTSPClientPrivate
   guint close_seq;
   gchar *server_ip;
   gboolean is_ipv6;
-  gboolean use_client_settings;
 
   GstRTSPClientSendFunc send_func;      /* protected by send_lock */
   gpointer send_data;           /* protected by send_lock */
@@ -87,14 +86,12 @@ static GHashTable *tunnels;     /* protected by tunnels_lock */
 
 #define DEFAULT_SESSION_POOL            NULL
 #define DEFAULT_MOUNT_POINTS            NULL
-#define DEFAULT_USE_CLIENT_SETTINGS     FALSE
 
 enum
 {
   PROP_0,
   PROP_SESSION_POOL,
   PROP_MOUNT_POINTS,
-  PROP_USE_CLIENT_SETTINGS,
   PROP_LAST
 };
 
@@ -166,12 +163,6 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_param_spec_object ("mount-points", "Mount Points",
           "The mount points to use for client session",
           GST_TYPE_RTSP_MOUNT_POINTS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (gobject_class, PROP_USE_CLIENT_SETTINGS,
-      g_param_spec_boolean ("use-client-settings", "Use Client Settings",
-          "Use client settings for ttl and destination in multicast",
-          DEFAULT_USE_CLIENT_SETTINGS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_rtsp_client_signals[SIGNAL_CLOSED] =
@@ -248,7 +239,6 @@ gst_rtsp_client_init (GstRTSPClient * client)
 
   g_mutex_init (&priv->lock);
   g_mutex_init (&priv->send_lock);
-  priv->use_client_settings = DEFAULT_USE_CLIENT_SETTINGS;
   priv->close_seq = 0;
 }
 
@@ -379,10 +369,6 @@ gst_rtsp_client_get_property (GObject * object, guint propid,
     case PROP_MOUNT_POINTS:
       g_value_take_object (value, gst_rtsp_client_get_mount_points (client));
       break;
-    case PROP_USE_CLIENT_SETTINGS:
-      g_value_set_boolean (value,
-          gst_rtsp_client_get_use_client_settings (client));
-      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
@@ -400,10 +386,6 @@ gst_rtsp_client_set_property (GObject * object, guint propid,
       break;
     case PROP_MOUNT_POINTS:
       gst_rtsp_client_set_mount_points (client, g_value_get_object (value));
-      break;
-    case PROP_USE_CLIENT_SETTINGS:
-      gst_rtsp_client_set_use_client_settings (client,
-          g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -1251,7 +1233,12 @@ default_configure_client_transport (GstRTSPClient * client,
 
   /* we have a valid transport now, set the destination of the client. */
   if (ct->lower_transport == GST_RTSP_LOWER_TRANS_UDP_MCAST) {
-    if (ct->destination && priv->use_client_settings) {
+    gboolean use_client_settings;
+
+    use_client_settings =
+        gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_TRANSPORT_CLIENT_SETTINGS);
+
+    if (ct->destination && use_client_settings) {
       GstRTSPAddress *addr;
 
       addr = gst_rtsp_stream_reserve_address (state->stream, ct->destination,
@@ -2186,54 +2173,6 @@ gst_rtsp_client_get_mount_points (GstRTSPClient * client)
   g_mutex_unlock (&priv->lock);
 
   return result;
-}
-
-/**
- * gst_rtsp_client_set_use_client_settings:
- * @client: a #GstRTSPClient
- * @use_client_settings: whether to use client settings for multicast
- *
- * Use client transport settings (destination and ttl) for multicast.
- * When @use_client_settings is %FALSE, the server settings will be
- * used.
- */
-void
-gst_rtsp_client_set_use_client_settings (GstRTSPClient * client,
-    gboolean use_client_settings)
-{
-  GstRTSPClientPrivate *priv;
-
-  g_return_if_fail (GST_IS_RTSP_CLIENT (client));
-
-  priv = client->priv;
-
-  g_mutex_lock (&priv->lock);
-  priv->use_client_settings = use_client_settings;
-  g_mutex_unlock (&priv->lock);
-}
-
-/**
- * gst_rtsp_client_get_use_client_settings:
- * @client: a #GstRTSPClient
- *
- * Check if client transport settings (destination and ttl) for multicast
- * will be used.
- */
-gboolean
-gst_rtsp_client_get_use_client_settings (GstRTSPClient * client)
-{
-  GstRTSPClientPrivate *priv;
-  gboolean res;
-
-  g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), FALSE);
-
-  priv = client->priv;
-
-  g_mutex_lock (&priv->lock);
-  res = priv->use_client_settings;
-  g_mutex_unlock (&priv->lock);
-
-  return res;
 }
 
 /**

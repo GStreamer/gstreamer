@@ -440,6 +440,14 @@ no_construct:
 }
 
 static gboolean
+check_client_settings (GstRTSPAuth * auth, GstRTSPClientState * state,
+    const gchar * check)
+{
+  return gst_rtsp_token_is_allowed (state->token,
+      GST_RTSP_TRANSPORT_PERM_CLIENT_SETTINGS);
+}
+
+static gboolean
 default_check (GstRTSPAuth * auth, GstRTSPClientState * state,
     const gchar * check)
 {
@@ -452,6 +460,8 @@ default_check (GstRTSPAuth * auth, GstRTSPClientState * state,
     res = check_url (auth, state, check);
   } else if (g_str_has_prefix (check, "auth.check.media.factory.")) {
     res = check_factory (auth, state, check);
+  } else if (g_str_equal (check, GST_RTSP_AUTH_CHECK_TRANSPORT_CLIENT_SETTINGS)) {
+    res = check_client_settings (auth, state, check);
   }
   return res;
 }

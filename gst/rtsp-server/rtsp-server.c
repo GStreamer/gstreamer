@@ -73,7 +73,6 @@ struct _GstRTSPServerPrivate
   gchar *address;
   gchar *service;
   gint backlog;
-  gboolean use_client_settings;
 
   GSocket *socket;
 
@@ -98,7 +97,6 @@ struct _GstRTSPServerPrivate
 /* #define DEFAULT_ADDRESS         "::0" */
 #define DEFAULT_SERVICE         "8554"
 #define DEFAULT_BACKLOG         5
-#define DEFAULT_USE_CLIENT_SETTINGS     FALSE
 
 /* Define to use the SO_LINGER option so that the server sockets can be resused
  * sooner. Disabled for now because it is not very well implemented by various
@@ -115,7 +113,6 @@ enum
 
   PROP_SESSION_POOL,
   PROP_MOUNT_POINTS,
-  PROP_USE_CLIENT_SETTINGS,
   PROP_LAST
 };
 
@@ -224,17 +221,6 @@ gst_rtsp_server_class_init (GstRTSPServerClass * klass)
           "The mount points to use for client session",
           GST_TYPE_RTSP_MOUNT_POINTS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  /**
-   * GstRTSPServer::use-client-settings:
-   *
-   * Use client transport settings (destination, port pair and ttl for
-   * multicast. FALSE means that the server settings will be used.
-   */
-  g_object_class_install_property (gobject_class, PROP_USE_CLIENT_SETTINGS,
-      g_param_spec_boolean ("use-client-settings", "Use Client Settings",
-          "Use client settings for ttl, destination and port pair in multicast",
-          DEFAULT_USE_CLIENT_SETTINGS,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_rtsp_server_signals[SIGNAL_CLIENT_CONNECTED] =
       g_signal_new ("client-connected", G_TYPE_FROM_CLASS (gobject_class),
@@ -262,7 +248,6 @@ gst_rtsp_server_init (GstRTSPServer * server)
   priv->session_pool = gst_rtsp_session_pool_new ();
   priv->mount_points = gst_rtsp_mount_points_new ();
   priv->thread_pool = gst_rtsp_thread_pool_new ();
-  priv->use_client_settings = DEFAULT_USE_CLIENT_SETTINGS;
 }
 
 static void
@@ -726,55 +711,6 @@ gst_rtsp_server_get_thread_pool (GstRTSPServer * server)
   return result;
 }
 
-/**
- * gst_rtsp_server_set_use_client_settings:
- * @server: a #GstRTSPServer
- * @use_client_settings: whether to use client settings for multicast
- *
- * Use client transport settings (destination, port pair and ttl) for
- * multicast.
- * When @use_client_settings is %FALSE, the server settings will be
- * used.
- */
-void
-gst_rtsp_server_set_use_client_settings (GstRTSPServer * server,
-    gboolean use_client_settings)
-{
-  GstRTSPServerPrivate *priv;
-
-  g_return_if_fail (GST_IS_RTSP_SERVER (server));
-
-  priv = server->priv;
-
-  GST_RTSP_SERVER_LOCK (server);
-  priv->use_client_settings = use_client_settings;
-  GST_RTSP_SERVER_UNLOCK (server);
-}
-
-/**
- * gst_rtsp_server_get_use_client_settings:
- * @server: a #GstRTSPServer
- *
- * Check if client transport settings (destination, port pair and ttl) for
- * multicast will be used.
- */
-gboolean
-gst_rtsp_server_get_use_client_settings (GstRTSPServer * server)
-{
-  GstRTSPServerPrivate *priv;
-  gboolean res;
-
-  g_return_val_if_fail (GST_IS_RTSP_SERVER (server), FALSE);
-
-  priv = server->priv;
-
-  GST_RTSP_SERVER_LOCK (server);
-  res = priv->use_client_settings;
-  GST_RTSP_SERVER_UNLOCK (server);
-
-  return res;
-}
-
 static void
 gst_rtsp_server_get_property (GObject * object, guint propid,
     GValue * value, GParamSpec * pspec)
@@ -799,10 +735,6 @@ gst_rtsp_server_get_property (GObject * object, guint propid,
       break;
     case PROP_MOUNT_POINTS:
       g_value_take_object (value, gst_rtsp_server_get_mount_points (server));
-      break;
-    case PROP_USE_CLIENT_SETTINGS:
-      g_value_set_boolean (value,
-          gst_rtsp_server_get_use_client_settings (server));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -830,10 +762,6 @@ gst_rtsp_server_set_property (GObject * object, guint propid,
       break;
     case PROP_MOUNT_POINTS:
       gst_rtsp_server_set_mount_points (server, g_value_get_object (value));
-      break;
-    case PROP_USE_CLIENT_SETTINGS:
-      gst_rtsp_server_set_use_client_settings (server,
-          g_value_get_boolean (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
@@ -1114,8 +1042,6 @@ default_create_client (GstRTSPServer * server)
   gst_rtsp_client_set_auth (client, priv->auth);
   /* set threadpool */
   gst_rtsp_client_set_thread_pool (client, priv->thread_pool);
-  /* check if client transport settings for multicast are allowed */
-  gst_rtsp_client_set_use_client_settings (client, priv->use_client_settings);
   GST_RTSP_SERVER_UNLOCK (server);
 
   return client;

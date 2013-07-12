@@ -171,10 +171,6 @@ GstRTSPAuth *         gst_rtsp_client_get_auth          (GstRTSPClient *client);
 void                  gst_rtsp_client_set_thread_pool   (GstRTSPClient *client, GstRTSPThreadPool *pool);
 GstRTSPThreadPool *   gst_rtsp_client_get_thread_pool   (GstRTSPClient *client);
 
-void                  gst_rtsp_client_set_use_client_settings (GstRTSPClient * client,
-                                                               gboolean use_client_settings);
-gboolean              gst_rtsp_client_get_use_client_settings (GstRTSPClient * client);
-
 gboolean              gst_rtsp_client_set_connection    (GstRTSPClient *client, GstRTSPConnection *conn);
 GstRTSPConnection *   gst_rtsp_client_get_connection    (GstRTSPClient *client);
 

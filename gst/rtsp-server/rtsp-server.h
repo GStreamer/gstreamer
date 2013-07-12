@@ -100,10 +100,6 @@ GstRTSPAuth *         gst_rtsp_server_get_auth             (GstRTSPServer *serve
 void                  gst_rtsp_server_set_thread_pool      (GstRTSPServer *server, GstRTSPThreadPool *pool);
 GstRTSPThreadPool *   gst_rtsp_server_get_thread_pool      (GstRTSPServer *server);
 
-void                  gst_rtsp_server_set_use_client_settings (GstRTSPServer *server,
-                                                               gboolean use_client_settings);
-gboolean              gst_rtsp_server_get_use_client_settings (GstRTSPServer *server);
-
 gboolean              gst_rtsp_server_transfer_connection  (GstRTSPServer * server, GSocket *socket,
                                                             const gchar * ip, gint port,
                                                             const gchar *initial_buffer);

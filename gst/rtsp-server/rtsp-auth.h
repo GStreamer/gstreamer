@@ -105,15 +105,25 @@ gchar *             gst_rtsp_auth_make_basic        (const gchar * user, const g
 /**
  * GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_ACCESS:
  *
- * Check if access is allowed to a factory
+ * Check if access is allowed to a factory.
+ * When access is not allowed an 404 Not Found is sent in the response.
  */
 #define GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_ACCESS     "auth.check.media.factory.access"
 /**
  * GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_CONSTRUCT:
  *
  * Check if media can be constructed from a media factory
+ * The response is sent on error.
  */
 #define GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_CONSTRUCT  "auth.check.media.factory.construct"
+/**
+ * GST_RTSP_AUTH_CHECK_TRANSPORT_CLIENT_SETTINGS:
+ *
+ * Check if the client can specify TTL, destination and
+ * port pair in multicast. No response is sent when the check returns
+ * %FALSE.
+ */
+#define GST_RTSP_AUTH_CHECK_TRANSPORT_CLIENT_SETTINGS  "auth.check.transport.client-settings"
 
 
 /* tokens */
@@ -139,6 +149,13 @@ gchar *             gst_rtsp_auth_make_basic        (const gchar * user, const g
  * return a 404 Not Found error when trying to access the media.
  */
 #define GST_RTSP_MEDIA_FACTORY_PERM_CONSTRUCT   "media.factory.construct"
+/**
+ * GST_RTSP_MEDIA_FACTORY_PERM_CLIENT_SETTINGS:
+ *
+ * G_TYPE_BOOLEAN, %TRUE if the client can specify TTL, destination and
+ *     port pair in multicast.
+ */
+#define GST_RTSP_TRANSPORT_PERM_CLIENT_SETTINGS   "transport.client-settings"
 
 
 G_END_DECLS
