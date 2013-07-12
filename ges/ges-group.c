@@ -560,3 +560,24 @@ ges_group_init (GESGroup * self)
 
   self->priv->setting_value = FALSE;
 }
+
+/****************************************************
+ *                                                  *
+ *              API implementation                  *
+ *                                                  *
+ ****************************************************/
+
+/**
+ * ges_group_new:
+ *
+ * Created a new empty #GESGroup, if you want to group several container
+ * together, it is recommanded to use the #ges_container_group method so the
+ * proper subclass is selected.
+ *
+ * Returns: The new empty group.
+ */
+GESGroup *
+ges_group_new (void)
+{
+  return g_object_new (GES_TYPE_GROUP, NULL);
+}

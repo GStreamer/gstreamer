@@ -51,6 +51,7 @@ struct _GESGroupClass {
 };
 
 GType ges_group_get_type          (void);
+GESGroup *ges_group_new           (void);
 
 G_END_DECLS
 #endif /* _GES_GROUP_H */
