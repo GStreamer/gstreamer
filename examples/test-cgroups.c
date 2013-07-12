@@ -163,7 +163,6 @@ main (int argc, char *argv[])
   GstRTSPAuth *auth;
   GstRTSPToken *token;
   gchar *basic;
-  GstStructure *s;
   GstRTSPThreadPool *thread_pool;
 
   gst_init (&argc, &argv);
@@ -205,21 +204,16 @@ main (int argc, char *argv[])
   auth = gst_rtsp_auth_new ();
 
   /* make user token */
-  token = gst_rtsp_token_new ();
-  s = gst_rtsp_token_writable_structure (token);
-  gst_structure_set (s, "cgroup.pool.media.class", G_TYPE_STRING, "user", NULL);
-  gst_structure_set (s, "media.factory.role", G_TYPE_STRING, "user", NULL);
+  token = gst_rtsp_token_new ("cgroup.pool.media.class", G_TYPE_STRING, "user",
+      "media.factory.role", G_TYPE_STRING, "user", NULL);
   basic = gst_rtsp_auth_make_basic ("user", "password");
   gst_rtsp_auth_add_basic (auth, basic, token);
   g_free (basic);
   gst_rtsp_token_unref (token);
 
   /* make admin token */
-  token = gst_rtsp_token_new ();
-  s = gst_rtsp_token_writable_structure (token);
-  gst_structure_set (s, "cgroup.pool.media.class", G_TYPE_STRING, "admin",
-      NULL);
-  gst_structure_set (s, "media.factory.role", G_TYPE_STRING, "admin", NULL);
+  token = gst_rtsp_token_new ("cgroup.pool.media.class", G_TYPE_STRING, "admin",
+      "media.factory.role", G_TYPE_STRING, "admin", NULL);
   basic = gst_rtsp_auth_make_basic ("admin", "power");
   gst_rtsp_auth_add_basic (auth, basic, token);
   g_free (basic);

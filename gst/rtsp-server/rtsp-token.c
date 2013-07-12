@@ -84,20 +84,64 @@ gst_rtsp_token_init (GstRTSPTokenImpl * token, GstStructure * structure)
 }
 
 /**
- * gst_rtsp_token_new:
+ * gst_rtsp_token_new_empty:
  *
  * Create a new empty Authorization token.
  *
  * Returns: (transfer full): a new empty authorization token.
  */
 GstRTSPToken *
-gst_rtsp_token_new (void)
+gst_rtsp_token_new_empty (void)
+{
+  return gst_rtsp_token_new (NULL, NULL);
+}
+
+/**
+ * gst_rtsp_token_new:
+ * @firstfield: the first fieldname
+ * @...: additional arguments
+ *
+ * Create a new Authorization token with the given fieldnames and values.
+ * Arguments are given similar to gst_structure_new().
+ *
+ * Returns: (transfer full): a new authorization token.
+ */
+GstRTSPToken *
+gst_rtsp_token_new (const gchar * firstfield, ...)
+{
+  GstRTSPToken *result;
+  va_list var_args;
+
+  va_start (var_args, firstfield);
+  result = gst_rtsp_token_new_valist (firstfield, var_args);
+  va_end (var_args);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_token_new:
+ * @firstfield: the first fieldname
+ * @var_args additional arguments
+ *
+ * Create a new Authorization token with the given fieldnames and values.
+ * Arguments are given similar to gst_structure_new_valist().
+ *
+ * Returns: (transfer full): a new authorization token.
+ */
+GstRTSPToken *
+gst_rtsp_token_new_valist (const gchar * firstfield, va_list var_args)
 {
   GstRTSPTokenImpl *token;
+  GstStructure *s;
+
+  g_return_val_if_fail (firstfield != NULL, NULL);
+
+  s = gst_structure_new_valist ("GstRTSPToken", firstfield, var_args);
+  g_return_val_if_fail (s != NULL, NULL);
 
   token = g_slice_new0 (GstRTSPTokenImpl);
-
-  gst_rtsp_token_init (token, gst_structure_new_empty ("GstRTSPToken"));
+  gst_rtsp_token_init (token, s);
 
   return (GstRTSPToken *) token;
 }

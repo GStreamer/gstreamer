@@ -81,7 +81,9 @@ gst_rtsp_token_unref (GstRTSPToken * token)
 }
 
 
-GstRTSPToken *       gst_rtsp_token_new                (void);
+GstRTSPToken *       gst_rtsp_token_new_empty          (void);
+GstRTSPToken *       gst_rtsp_token_new                (const gchar * firstfield, ...);
+GstRTSPToken *       gst_rtsp_token_new_valist         (const gchar * firstfield, va_list var_args);
 
 const GstStructure * gst_rtsp_token_get_structure      (GstRTSPToken *token);
 GstStructure *       gst_rtsp_token_writable_structure (GstRTSPToken *token);
