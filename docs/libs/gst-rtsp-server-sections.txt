@@ -42,6 +42,8 @@ GstRTSPAuth
 GstRTSPAuthClass
 gst_rtsp_auth_new
 
+gst_rtsp_auth_get_tls_certificate
+gst_rtsp_auth_set_tls_certificate
 gst_rtsp_auth_make_basic
 gst_rtsp_auth_add_basic
 gst_rtsp_auth_remove_basic
@@ -49,6 +51,7 @@ gst_rtsp_auth_setup
 gst_rtsp_auth_check
 
 <SUBSECTION AuthChecks>
+GST_RTSP_AUTH_CHECK_CONNECT
 GST_RTSP_AUTH_CHECK_URL
 GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_ACCESS
 GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_CONSTRUCT
@@ -327,9 +330,6 @@ gst_rtsp_server_set_service
 
 gst_rtsp_server_get_backlog
 gst_rtsp_server_set_backlog
-
-gst_rtsp_server_get_tls_certificate
-gst_rtsp_server_set_tls_certificate
 
 gst_rtsp_server_get_bound_port
 

@@ -60,8 +60,6 @@ struct _GstRTSPServer {
  *          object that handles the new connection on @socket. The default
  *          implementation will create a GstRTSPClient and will configure the
  *          mount-points, auth, session-pool and thread-pool on the client.
- * @setup_connection: Setup the new client connection. The default
- *          implementation will configure the TLS certificate when specified.
  * @client_connected: emited when a new client connected.
  *
  * The RTSP server class structure
@@ -87,9 +85,6 @@ gchar *               gst_rtsp_server_get_service          (GstRTSPServer *serve
 
 void                  gst_rtsp_server_set_backlog          (GstRTSPServer *server, gint backlog);
 gint                  gst_rtsp_server_get_backlog          (GstRTSPServer *server);
-
-void                  gst_rtsp_server_set_tls_certificate  (GstRTSPServer *server, GTlsCertificate *cert);
-GTlsCertificate *     gst_rtsp_server_get_tls_certificate  (GstRTSPServer *server);
 
 int                   gst_rtsp_server_get_bound_port       (GstRTSPServer *server);
 
