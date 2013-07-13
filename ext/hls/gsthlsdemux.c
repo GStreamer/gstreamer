@@ -470,7 +470,9 @@ gst_hls_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       query = gst_query_new_uri ();
       ret = gst_pad_peer_query (demux->sinkpad, query);
       if (ret) {
-        gst_query_parse_uri (query, &uri);
+        gst_query_parse_uri_redirection (query, &uri);
+        if (uri == NULL)
+          gst_query_parse_uri (query, &uri);
         gst_hls_demux_set_location (demux, uri);
         g_free (uri);
       }
