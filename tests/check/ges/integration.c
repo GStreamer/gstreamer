@@ -44,8 +44,18 @@ typedef struct _PresetInfos
 
 } PresetInfos;
 
+typedef struct SeekInfo
+{
+  GstClockTime position;        /* position to seek to */
+  GstClockTime seeking_position;        /* position to do seek from */
+} SeekInfo;
+
 static GMainLoop *loop;
 static GESTimelinePipeline *pipeline = NULL;
+static gint64 seeked_position = GST_CLOCK_TIME_NONE;    /* last seeked position */
+static gint64 seek_tol = 0.05 * GST_SECOND;     /* tolerance seek interval */
+static GList *seeks;            /* list of seeks */
+static gboolean got_async_done = FALSE;
 
 /* This allow us to run the tests multiple times with different input files */
 static const gchar *testfilename1 = NULL;
@@ -54,6 +64,15 @@ static const gchar *test_image_filename = NULL;
 
 #define DEFAULT_PROFILE_TYPE PROFILE_MP4
 #define DURATION_TOLERANCE 0.1 * GST_SECOND
+
+static SeekInfo *
+new_seek_info (GstClockTime seeking_position, GstClockTime position)
+{
+  SeekInfo *info = g_new0 (SeekInfo, 1);
+  info->seeking_position = seeking_position;
+  info->position = position;
+  return info;
+}
 
 static GstEncodingProfile *
 create_profile (const char *container, const char *container_preset,
@@ -167,9 +186,48 @@ my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       *ret = TRUE;
       g_main_loop_quit (loop);
       break;
+    case GST_MESSAGE_ASYNC_DONE:
+      got_async_done = TRUE;
+      if (GST_CLOCK_TIME_IS_VALID (seeked_position))
+        seeked_position = GST_CLOCK_TIME_NONE;
+      break;
     default:
       /* unhandled message */
       break;
+  }
+  return TRUE;
+}
+
+static gboolean
+get_position (void)
+{
+  GList *tmp;
+  gint64 position;
+  gst_element_query_position (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
+      &position);
+  tmp = seeks;
+
+  while (tmp) {
+    SeekInfo *seek = tmp->data;
+    if ((position >= (seek->seeking_position - seek_tol))
+        && (position <= (seek->seeking_position + seek_tol))) {
+
+      fail_if (GST_CLOCK_TIME_IS_VALID (seeked_position));
+      got_async_done = FALSE;
+
+      g_print ("<SEEK TO Position: %" GST_TIME_FORMAT "/>\n",
+          GST_TIME_ARGS (seek->position));
+
+      seeked_position = seek->position;
+      fail_unless (gst_element_seek_simple (GST_ELEMENT (pipeline),
+              GST_FORMAT_TIME,
+              GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, seek->position));
+
+      seeks = seeks->next;
+      g_free (seek);
+      break;
+    }
+    tmp = tmp->next;
   }
   return TRUE;
 }
@@ -208,6 +266,9 @@ test_timeline_with_profile (GESTimeline * timeline,
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
+
+  if (seeks != NULL)
+    g_timeout_add (50, (GSourceFunc) get_position, NULL);
 
   g_main_loop_run (loop);
 
@@ -294,6 +355,12 @@ test_seeking (gboolean render)
    * time     0--------10--------1
    */
 
+  seeks =
+      g_list_append (seeks, new_seek_info (0.2 * GST_SECOND, 0.6 * GST_SECOND));
+  seeks =
+      g_list_append (seeks, new_seek_info (1.0 * GST_SECOND, 1.2 * GST_SECOND));
+  seeks =
+      g_list_append (seeks, new_seek_info (1.5 * GST_SECOND, 1.8 * GST_SECOND));
   fail_unless (test_timeline_with_profile (timeline, PROFILE_OGG, FALSE));
 }
 
