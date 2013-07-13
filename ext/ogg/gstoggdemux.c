@@ -2695,7 +2695,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
 static gboolean
 do_binary_search (GstOggDemux * ogg, GstOggChain * chain, gint64 begin,
     gint64 end, gint64 begintime, gint64 endtime, gint64 target,
-    gint64 * offset)
+    gint64 * offset, gboolean only_serial_no, gint serialno)
 {
   gint64 best;
   GstFlowReturn ret;
@@ -2768,6 +2768,11 @@ do_binary_search (GstOggDemux * ogg, GstOggChain * chain, gint64 begin,
           GST_LOG_OBJECT (ogg, "granulepos of next page is -1");
           continue;
         }
+
+        /* Avoid seeking to an incorrect granuletime by only considering 
+           the stream for which we found the earliest time */
+        if (only_serial_no && ogg_page_serialno (&og) != serialno)
+          continue;
 
         /* get the stream */
         pad = gst_ogg_chain_get_stream (chain, ogg_page_serialno (&og));
@@ -2887,6 +2892,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
   gint64 result = 0;
   GstFlowReturn ret;
   gint i, pending;
+  gint serialno = 0;
 
   position = segment->position;
 
@@ -2985,8 +2991,10 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
     /* collect smallest value */
     if (keyframe_time != -1) {
       keyframe_time += begintime;
-      if (keyframe_time < keytarget)
+      if (keyframe_time < keytarget) {
+        serialno = pad->map.serialno;
         keytarget = keyframe_time;
+      }
     }
 
   next:
@@ -3005,7 +3013,7 @@ gst_ogg_demux_do_seek (GstOggDemux * ogg, GstSegment * segment,
 
     /* last step, seek to the location of the keyframe */
     if (!do_binary_search (ogg, chain, begin, end, begintime, endtime,
-            keytarget, &best))
+            keytarget, &best, TRUE, serialno))
       goto seek_error;
   } else {
     /* seek back to previous position */
