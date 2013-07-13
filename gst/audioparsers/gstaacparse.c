@@ -557,7 +557,7 @@ gst_aac_parse_read_loas_config (GstAacParse * aacparse, const guint8 * data,
         }
       }
     }
-    GST_WARNING_OBJECT (aacparse, "More data ignored");
+    GST_LOG_OBJECT (aacparse, "More data ignored");
   } else {
     GST_WARNING_OBJECT (aacparse, "Spec says \"TBD\"...");
   }
