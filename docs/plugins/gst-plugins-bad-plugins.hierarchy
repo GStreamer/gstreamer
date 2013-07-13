@@ -27,6 +27,7 @@ GObject
           GstGSMDec
           GstMpg123AudioDec
           GstOpusDec
+          GstSbcDec
           GstSirenDec
         GstAudioEncoder
           ADPCMEnc
@@ -34,10 +35,10 @@ GObject
           GstFaac
           GstGSMEnc
           GstOpusEnc
+          GstSbcEnc
           GstSirenEnc
           GstVoAacEnc
           GstVoAmrWbEnc
-        GstAudioMixer
         GstAudioVisualizer-BadGstAudioVisualizers
           GstSpaceScope
           GstSpectraScope
@@ -71,19 +72,19 @@ GObject
           GstRTMPSink
           GstShmSink
           GstVideoSink
-            GstEglGlesSink
             GstFBDEVSink
-            GstWaylandSink
         GstBaseSrc
           GstAvdtpSrc
-          GstDTMFSrc
           GstDataURISrc
           GstFliteTestSrc
           GstInterAudioSrc
           GstInterSubSrc
           GstInterVideoSrc
           GstLADSPASource
+            ladspasrc-analogue-osc-1416-so-analogueosc
+            ladspasrc-impulse-1885-so-impulse-fc
             ladspasrc-noise-so-noise-white
+            ladspasrc-sin-cos-1881-so-sincos
             ladspasrc-sine-so-sine-fcac
           GstPushSrc
             GstAudioBaseSrc
@@ -101,7 +102,6 @@ GObject
             frei0r-src-onecol0r
             frei0r-src-partik0l
             frei0r-src-plasma
-          GstRTPDTMFSrc
         GstBaseTransform
           GstAudioFilter
             GstAccurip
@@ -109,17 +109,153 @@ GObject
             GstBPMDetect
             GstChromaprint
             GstLADSPAFilter
+              ladspa-alias-1407-so-alias
+              ladspa-allpass-1895-so-allpass-c
+              ladspa-allpass-1895-so-allpass-l
+              ladspa-allpass-1895-so-allpass-n
+              ladspa-am-pitchshift-1433-so-ampitchshift
+              ladspa-amp-1181-so-amp
               ladspa-amp-so-amp-mono
               ladspa-amp-so-amp-stereo
+              ladspa-bandpass-a-iir-1893-so-bandpass-a-iir
+              ladspa-bandpass-iir-1892-so-bandpass-iir
+              ladspa-bode-shifter-1431-so-bodeshifter
+              ladspa-bode-shifter-cv-1432-so-bodeshiftercv
+              ladspa-butterworth-1902-so-butthigh-iir
+              ladspa-butterworth-1902-so-buttlow-iir
+              ladspa-butterworth-1902-so-bwxover-iir
+              ladspa-chebstortion-1430-so-chebstortion
+              ladspa-comb-1190-so-comb
+              ladspa-comb-1887-so-comb-c
+              ladspa-comb-1887-so-comb-l
+              ladspa-comb-1887-so-comb-n
+              ladspa-comb-splitter-1411-so-combsplitter
+              ladspa-const-1909-so-const
+              ladspa-crossover-dist-1404-so-crossoverdist
+              ladspa-cs-chorus-so-chorus1
+              ladspa-cs-chorus-so-chorus2
+              ladspa-cs-chorus-so-triplechorus
+              ladspa-cs-phaser-so-phaser1
+              ladspa-cs-phaser-so-phaser1+lfo
+              ladspa-dc-remove-1207-so-dcremove
+              ladspa-decay-1886-so-decay
+              ladspa-decimator-1202-so-decimator
+              ladspa-declip-1195-so-declip
+              ladspa-delay-1898-so-delay-c
+              ladspa-delay-1898-so-delay-l
+              ladspa-delay-1898-so-delay-n
               ladspa-delay-so-delay-5s
+              ladspa-delayorama-1402-so-delayorama
+              ladspa-diode-1185-so-diode
+              ladspa-divider-1186-so-divider
+              ladspa-dj-eq-1901-so-dj-eq
+              ladspa-dj-eq-1901-so-dj-eq-mono
+              ladspa-dj-flanger-1438-so-djflanger
+              ladspa-dyson-compress-1403-so-dysoncompress
+              ladspa-fad-delay-1192-so-faddelay
+              ladspa-fast-lookahead-limiter-1913-so-fastlookaheadlimiter
               ladspa-filter-so-hpf
               ladspa-filter-so-lpf
+              ladspa-flanger-1191-so-flanger
+              ladspa-fm-osc-1415-so-fmosc
+              ladspa-foldover-1213-so-foldover
+              ladspa-foverdrive-1196-so-foverdrive
+              ladspa-freq-tracker-1418-so-freqtracker
+              ladspa-g2reverb-so-g2reverb
+              ladspa-gate-1410-so-gate
+              ladspa-giant-flange-1437-so-giantflange
+              ladspa-gong-1424-so-gong
+              ladspa-gong-beater-1439-so-gongbeater
+              ladspa-gsm-1215-so-gsm
+              ladspa-gverb-1216-so-gverb
+              ladspa-hard-limiter-1413-so-hardlimiter
+              ladspa-harmonic-gen-1220-so-harmonicgen
+              ladspa-hermes-filter-1200-so-hermesfilter
+              ladspa-highpass-iir-1890-so-highpass-iir
+              ladspa-hilbert-1440-so-hilbert
+              ladspa-imp-1199-so-imp
+              ladspa-inv-1429-so-inv
+              ladspa-karaoke-1409-so-karaoke
+              ladspa-latency-1914-so-artificiallatency
+              ladspa-lcr-delay-1436-so-lcrdelay
+              ladspa-lowpass-iir-1891-so-lowpass-iir
+              ladspa-ls-filter-1908-so-lsfilter
+              ladspa-matrix-ms-st-1421-so-matrixmsst
+              ladspa-matrix-spatialiser-1422-so-matrixspatialiser
+              ladspa-matrix-st-ms-1420-so-matrixstms
+              ladspa-mbeq-1197-so-mbeq
+              ladspa-mod-delay-1419-so-moddelay
+              ladspa-multivoice-chorus-1201-so-multivoicechorus
+              ladspa-mvchpf24-so-mvchpf-1
+              ladspa-mvclpf24-so-mvclpf-1
+              ladspa-mvclpf24-so-mvclpf-2
+              ladspa-mvclpf24-so-mvclpf-3
+              ladspa-mvclpf24-so-mvclpf-4
+              ladspa-notch-iir-1894-so-notch-iir
+              ladspa-phasers-1217-so-autophaser
+              ladspa-phasers-1217-so-fourbyfourpole
+              ladspa-phasers-1217-so-lfophaser
+              ladspa-pitch-scale-1193-so-pitchscale
+              ladspa-pitch-scale-1194-so-pitchscalehq
+              ladspa-plate-1423-so-plate
+              ladspa-pointer-cast-1910-so-pointercastdistortion
+              ladspa-rate-shifter-1417-so-rateshifter
+              ladspa-retro-flange-1208-so-retroflange
+              ladspa-revdelay-1605-so-revdelay
+              ladspa-ringmod-1188-so-ringmod-1i1o1l
+              ladspa-ringmod-1188-so-ringmod-2i1o
+              ladspa-satan-maximiser-1408-so-satanmaximiser
+              ladspa-sc1-1425-so-sc1
+              ladspa-sc2-1426-so-sc2
+              ladspa-sc3-1427-so-sc3
+              ladspa-sc4-1882-so-sc4
+              ladspa-sc4m-1916-so-sc4m
+              ladspa-se4-1883-so-se4
+              ladspa-shaper-1187-so-shaper
+              ladspa-sifter-1210-so-sifter
               ladspa-sine-so-sine-faaa
               ladspa-sine-so-sine-faac
               ladspa-sine-so-sine-fcaa
+              ladspa-single-para-1203-so-singlepara
+              ladspa-sinus-wavewrapper-1198-so-sinuswavewrapper
+              ladspa-smooth-decimate-1414-so-smoothdecimate
+              ladspa-split-1406-so-split
+              ladspa-step-muxer-1212-so-stepmuxer
+              ladspa-surround-encoder-1401-so-surroundencoder
+              ladspa-svf-1214-so-svf
+              ladspa-tap-autopan-so-tap-autopan
+              ladspa-tap-chorusflanger-so-tap-chorusflanger
+              ladspa-tap-deesser-so-tap-deesser
+              ladspa-tap-doubler-so-tap-doubler
+              ladspa-tap-dynamics-m-so-tap-dynamics-m
+              ladspa-tap-dynamics-st-so-tap-dynamics-st
+              ladspa-tap-echo-so-tap-stereo-echo
+              ladspa-tap-eq-so-tap-equalizer
+              ladspa-tap-eqbw-so-tap-equalizer-bw
+              ladspa-tap-limiter-so-tap-limiter
+              ladspa-tap-pinknoise-so-tap-pinknoise
+              ladspa-tap-pitch-so-tap-pitch
+              ladspa-tap-reflector-so-tap-reflector
+              ladspa-tap-reverb-so-tap-reverb
+              ladspa-tap-rotspeak-so-tap-rotspeak
+              ladspa-tap-sigmoid-so-tap-sigmoid
+              ladspa-tap-tremolo-so-tap-tremolo
+              ladspa-tap-tubewarmth-so-tap-tubewarmth
+              ladspa-tap-vibrato-so-tap-vibrato
+              ladspa-tape-delay-1211-so-tapedelay
+              ladspa-transient-1206-so-transient
+              ladspa-triple-para-1204-so-triplepara
+              ladspa-valve-1209-so-valve
+              ladspa-valve-rect-1405-so-valverect
+              ladspa-vynil-1905-so-vynil
+              ladspa-wave-terrain-1412-so-waveterrain
+              ladspa-xfade-1915-so-xfade
+              ladspa-xfade-1915-so-xfade4
+              ladspa-zm1-1428-so-zm1
             GstOFA
           GstBayer2RGB
           GstDebugSpy
+          GstDtmfDetect
           GstFreeverb
           GstIvtc
           GstRGB2Bayer
@@ -151,8 +287,21 @@ GObject
               GstMirror
               GstRotate
               GstSquare
+            GstOpencvVideoFilter
+              GstCvDilateErode
+                GstCvDilate
+                GstCvErode
+              GstCvEqualizeHist
+              GstCvLaplace
+              GstCvSmooth
+              GstCvSobel
+              GstFaceDetect
+              GstHanddetect
+              GstSkinDetect
+            GstRetinex
             GstRsvgOverlay
             GstSceneChange
+            GstSegmentation
             GstSmooth
             GstSolarize
             GstVideoDiff
@@ -188,6 +337,7 @@ GObject
             frei0r-filter-mask0mate
             frei0r-filter-nervous
             frei0r-filter-nosync0r
+            frei0r-filter-opencvfacedetect
             frei0r-filter-perspective
             frei0r-filter-pixeliz0r
             frei0r-filter-primaries
@@ -233,8 +383,11 @@ GObject
         GstDVDSpu
         GstDashDemux
         GstDecklinkSrc
+        GstEdgeDetect
+        GstFaceBlur
         GstFestival
         GstFieldAnalysis
+        GstFluidDec
         GstGDPDepay
         GstGDPPay
         GstGmeDec
@@ -252,15 +405,19 @@ GObject
         GstMimDec
         GstMimEnc
         GstModPlug
+        GstMotioncells
+        GstMpeg2enc
         GstMpegPSDemux
+        GstMplex
         GstMssDemux
+        GstOpencvTextOverlay
         GstPcapParse
         GstPitch
         GstPnmdec
         GstPnmenc
+        GstPyramidSegment
         GstRTPBaseDepayload
           GstRTPOpusDepay
-          GstRtpDTMFDepay
         GstRTPBasePayload
           GstRtpAsfPay
           GstRtpOPUSPay
@@ -270,20 +427,22 @@ GObject
         GstSegmentClip
           GstAudioSegmentClip
           GstVideoSegmentClip
+        GstSpanPlc
         GstSpeed
         GstSrtEnc
+        GstSrtpDec
+        GstSrtpEnc
         GstTagMux
           GstId3Mux
+        GstTemplateMatch
         GstUvcH264MjpgDemux
         GstVideoDecoder
-          GstDaalaDec
           GstOpenJPEGDec
           GstRsvgDec
           GstSchroDec
           GstVdpDecoder
             GstVdpMpegDec
         GstVideoEncoder
-          GstDaalaEnc
           GstOpenJPEGEnc
           GstSchroEnc
         GstWebvttEnc
@@ -411,10 +570,10 @@ GObject
 GInterface
   GTypePlugin
   GstChildProxy
+  GstNavigation
   GstPhotography
   GstPreset
   GstTagSetter
   GstTagXmpWriter
   GstURIHandler
-  GstVideoOverlay
   MXFDescriptiveMetadataFrameworkInterface

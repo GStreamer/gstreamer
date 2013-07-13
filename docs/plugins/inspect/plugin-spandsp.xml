@@ -3,12 +3,33 @@
   <description>libspandsp plugin</description>
   <filename>../../ext/spandsp/.libs/libgstspandsp.so</filename>
   <basename>libgstspandsp.so</basename>
-  <version>1.1.0.1</version>
+  <version>1.1.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
   <origin>Unknown package origin</origin>
   <elements>
+    <element>
+      <name>dtmfdetect</name>
+      <longname>DTMF detector element</longname>
+      <class>Filter/Analyzer/Audio</class>
+      <description>This element detects DTMF tones</description>
+      <author>Olivier Crete &lt;olivier.crete@collabora.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)8000, channels=(int)1</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S16LE, rate=(int)8000, channels=(int)1</details>
+        </caps>
+      </pads>
+    </element>
     <element>
       <name>spanplc</name>
       <longname>SpanDSP PLC</longname>

@@ -3,7 +3,7 @@
   <description>GStreamer OpenCV Plugins</description>
   <filename>../../ext/opencv/.libs/libgstopencv.so</filename>
   <basename>libgstopencv.so</basename>
-  <version>1.1.0.1</version>
+  <version>1.1.2.1</version>
   <license>LGPL</license>
   <source>gst-plugins-bad</source>
   <package>GStreamer Bad Plug-ins git</package>
@@ -300,6 +300,27 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>video/x-raw, format=(string)RGB, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>segmentation</name>
+      <longname>Foreground/background video sequence segmentation</longname>
+      <class>Filter/Effect/Video</class>
+      <description>Create a Foregound/Background mask applying a particular algorithm</description>
+      <author>Miguel Casas-Sanchez &lt;miguelecasassanchez@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>video/x-raw, format=(string)RGBA, width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], framerate=(fraction)[ 0/1, 2147483647/1 ]</details>
         </caps>
       </pads>
     </element>

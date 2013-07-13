@@ -551,3 +551,42 @@ gpointer  arg3
 gpointer  arg4
 </SIGNAL>
 
+<SIGNAL>
+<NAME>GstSrtpEnc::soft-limit</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>l</FLAGS>
+GstSrtpEnc *gstsrtpenc
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSrtpDec::clear-keys</NAME>
+<RETURNS>void</RETURNS>
+<FLAGS>la</FLAGS>
+GstSrtpDec *gstsrtpdec
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSrtpDec::hard-limit</NAME>
+<RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstSrtpDec *gstsrtpdec
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSrtpDec::request-key</NAME>
+<RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstSrtpDec *gstsrtpdec
+guint  arg1
+</SIGNAL>
+
+<SIGNAL>
+<NAME>GstSrtpDec::soft-limit</NAME>
+<RETURNS>GstCaps*</RETURNS>
+<FLAGS>l</FLAGS>
+GstSrtpDec *gstsrtpdec
+guint  arg1
+</SIGNAL>
+
