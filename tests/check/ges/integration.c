@@ -68,7 +68,7 @@ static const gchar *test_image_filename = NULL;
 static SeekInfo *
 new_seek_info (GstClockTime seeking_position, GstClockTime position)
 {
-  SeekInfo *info = g_new0 (SeekInfo, 1);
+  SeekInfo *info = g_slice_new0 (SeekInfo);
   info->seeking_position = seeking_position;
   info->position = position;
   return info;
@@ -223,8 +223,9 @@ get_position (void)
               GST_FORMAT_TIME,
               GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, seek->position));
 
-      seeks = seeks->next;
-      g_free (seek);
+      seeks = g_list_remove_link (seeks, tmp);
+      g_slice_free (SeekInfo, seek);
+      g_list_free (tmp);
       break;
     }
     tmp = tmp->next;
@@ -324,6 +325,7 @@ test_seeking (gboolean render)
   GESUriClipAsset *asset1;
   GESEffect *effect;
   GESClip *clip;
+  GList *tmp;
   gchar *uri = ges_test_file_name (testfilename1);
 
   asset1 = ges_uri_clip_asset_request_sync (uri, &error);
@@ -362,6 +364,21 @@ test_seeking (gboolean render)
   seeks =
       g_list_append (seeks, new_seek_info (1.5 * GST_SECOND, 1.8 * GST_SECOND));
   fail_unless (test_timeline_with_profile (timeline, PROFILE_OGG, FALSE));
+  if (seeks != NULL) {
+    /* free failed seeks */
+    while (seeks) {
+      SeekInfo *info = seeks->data;
+
+      tmp = seeks;
+      GST_ERROR ("Seeking at %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT
+          " did not happen \n", GST_TIME_ARGS (info->seeking_position),
+          GST_TIME_ARGS (info->position));
+      seeks = g_list_remove_link (seeks, tmp);
+      g_slice_free (SeekInfo, info);
+      g_list_free (tmp);
+    }
+    fail_if (TRUE, "Got EOS before being able to execute all seeks");
+  }
 }
 
 /* Test adding an effect [E] marks the effect */
