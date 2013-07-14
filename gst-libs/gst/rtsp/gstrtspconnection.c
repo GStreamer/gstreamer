@@ -2978,6 +2978,16 @@ gst_rtsp_source_dispatch_write (GPollableOutputStream * stream,
         if (watch->write_added) {
           g_source_remove_child_source ((GSource *) watch, watch->writesrc);
           watch->write_added = FALSE;
+
+          /* Need to create a new source as once removed/destroyed sources
+           * can't be attached again later */
+          g_source_unref (watch->writesrc);
+          watch->writesrc =
+              g_pollable_output_stream_create_source (G_POLLABLE_OUTPUT_STREAM
+              (watch->conn->output_stream), NULL);
+          g_source_set_callback (watch->writesrc,
+              (GSourceFunc) gst_rtsp_source_dispatch_write, watch, NULL);
+          /* we add the write source when we actually have something to write */
         }
         break;
       }
