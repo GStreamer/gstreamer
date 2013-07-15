@@ -41,12 +41,10 @@ G_DEFINE_TYPE_WITH_CODE (GstGLDisplay, gst_gl_display, G_TYPE_OBJECT,
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_DISPLAY, GstGLDisplayPrivate))
 
 static void gst_gl_display_finalize (GObject * object);
-static void _gst_gl_display_thread_run_generic (GstGLDisplay * display);
 
 struct _GstGLDisplayPrivate
 {
-  GstGLDisplayThreadFunc func;
-  gpointer data;
+  gint dummy;
 };
 
 /*------------------------------------------------------------
@@ -91,13 +89,21 @@ gst_gl_display_finalize (GObject * object)
   G_OBJECT_CLASS (gst_gl_display_parent_class)->finalize (object);
 }
 
-static void
-_gst_gl_display_thread_run_generic (GstGLDisplay * display)
+typedef struct
 {
-  GST_TRACE ("running function:%p data:%p",
-      display->priv->func, display->priv->data);
+  GstGLDisplay *display;
+  GstGLDisplayThreadFunc func;
+  gpointer data;
+} RunGenericData;
 
-  display->priv->func (display, display->priv->data);
+static void
+_gst_gl_display_thread_run_generic (RunGenericData * data)
+{
+  GST_TRACE ("running function:%p data:%p", data->func, data->data);
+
+  data->func (data->display, data->data);
+  g_object_unref (data->display);
+  g_slice_free (RunGenericData, data);
 }
 
 GstGLDisplay *
@@ -110,19 +116,19 @@ void
 gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data)
 {
+  RunGenericData *rdata;
+
   g_return_if_fail (GST_IS_GL_DISPLAY (display));
   g_return_if_fail (GST_GL_IS_WINDOW (display->window));
   g_return_if_fail (func != NULL);
 
-  gst_gl_display_lock (display);
-
-  display->priv->data = data;
-  display->priv->func = func;
+  rdata = g_slice_new (RunGenericData);
+  rdata->display = g_object_ref (display);
+  rdata->data = data;
+  rdata->func = func;
 
   gst_gl_window_send_message (display->window,
-      GST_GL_WINDOW_CB (_gst_gl_display_thread_run_generic), display);
-
-  gst_gl_display_unlock (display);
+      GST_GL_WINDOW_CB (_gst_gl_display_thread_run_generic), rdata);
 }
 
 GstGLAPI
