@@ -92,7 +92,7 @@ gst_qa_pad_monitor_new (GstPad * pad, GstQaRunner * runner,
 }
 
 static gboolean
-gst_qa_pad_monitor_event_check (GstQaPadMonitor * pad_monitor,
+gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
     GstEvent * event, GstPadEventFunction handler)
 {
   gboolean ret = TRUE;
@@ -100,8 +100,6 @@ gst_qa_pad_monitor_event_check (GstQaPadMonitor * pad_monitor,
   gdouble rate, applied_rate;
   GstFormat format;
   gint64 start, stop, position;
-  GstSeekFlags seek_flags;
-  GstSeekType start_type, stop_type;
   guint32 seqnum = gst_event_get_seqnum (event);
   GstPad *pad = GST_QA_PAD_MONITOR_GET_PAD (pad_monitor);
 
@@ -121,6 +119,106 @@ gst_qa_pad_monitor_event_check (GstQaPadMonitor * pad_monitor,
         }
       }
       break;
+    case GST_EVENT_FLUSH_START:
+    {
+      if (pad_monitor->pending_flush_start_seqnum) {
+        if (seqnum == pad_monitor->pending_flush_start_seqnum) {
+          pad_monitor->pending_flush_start_seqnum = 0;
+        } else {
+          gst_qa_monitor_post_error (GST_QA_MONITOR_CAST (pad_monitor),
+              GST_QA_ERROR_AREA_EVENT, "Wrong flush-start seqnum",
+              "The expected flush-start seqnum should be the same as the "
+              "one from the event that caused it (probably a seek)");
+        }
+      }
+
+      if (pad_monitor->pending_flush_stop) {
+        gst_qa_monitor_post_error (GST_QA_MONITOR_CAST (pad_monitor),
+            GST_QA_ERROR_AREA_EVENT, "Received flush-start when flush-stop was "
+            "expected", NULL);
+      }
+    }
+      break;
+    case GST_EVENT_FLUSH_STOP:
+    {
+      if (pad_monitor->pending_flush_stop_seqnum) {
+        if (seqnum == pad_monitor->pending_flush_stop_seqnum) {
+          pad_monitor->pending_flush_stop_seqnum = 0;
+        } else {
+          gst_qa_monitor_post_error (GST_QA_MONITOR_CAST (pad_monitor),
+              GST_QA_ERROR_AREA_EVENT, "Wrong flush-stop seqnum",
+              "The expected flush-stop seqnum should be the same as the "
+              "one from the event that caused it (probably a seek)");
+        }
+      }
+
+      if (!pad_monitor->pending_flush_stop) {
+        gst_qa_monitor_post_error (GST_QA_MONITOR_CAST (pad_monitor),
+            GST_QA_ERROR_AREA_EVENT, "Unexpected flush-stop", NULL);
+      }
+    }
+      break;
+    case GST_EVENT_EOS:
+    case GST_EVENT_TAG:
+    case GST_EVENT_SINK_MESSAGE:
+    default:
+      break;
+  }
+
+  if (handler) {
+    gst_event_ref (event);
+    ret = pad_monitor->event_func (pad, event);
+  }
+
+  /* post checks */
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_NEWSEGMENT:
+      if (ret) {
+        if (!pad_monitor->has_segment && pad_monitor->segment.format != format) {
+          gst_segment_init (&pad_monitor->segment, format);
+        }
+        gst_segment_set_newsegment_full (&pad_monitor->segment, update, rate,
+            applied_rate, format, start, stop, position);
+        pad_monitor->has_segment = TRUE;
+      }
+      break;
+    case GST_EVENT_FLUSH_START:
+      if (ret) {
+        pad_monitor->pending_flush_stop = TRUE;
+      }
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      if (ret) {
+        pad_monitor->pending_flush_stop = FALSE;
+      }
+      break;
+    case GST_EVENT_EOS:
+    case GST_EVENT_TAG:
+    case GST_EVENT_SINK_MESSAGE:
+    default:
+      break;
+  }
+
+  if (handler)
+    gst_event_unref (event);
+  return ret;
+}
+
+static gboolean
+gst_qa_pad_monitor_src_event_check (GstQaPadMonitor * pad_monitor,
+    GstEvent * event, GstPadEventFunction handler)
+{
+  gboolean ret = TRUE;
+  gdouble rate;
+  GstFormat format;
+  gint64 start, stop;
+  GstSeekFlags seek_flags;
+  GstSeekType start_type, stop_type;
+  guint32 seqnum = gst_event_get_seqnum (event);
+  GstPad *pad = GST_QA_PAD_MONITOR_GET_PAD (pad_monitor);
+
+  /* pre checks */
+  switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
     {
       gst_event_parse_seek (event, &rate, &format, &seek_flags, &start_type,
@@ -179,9 +277,6 @@ gst_qa_pad_monitor_event_check (GstQaPadMonitor * pad_monitor,
     case GST_EVENT_NAVIGATION:
     case GST_EVENT_LATENCY:
     case GST_EVENT_STEP:
-    case GST_EVENT_EOS:
-    case GST_EVENT_TAG:
-    case GST_EVENT_SINK_MESSAGE:
     case GST_EVENT_QOS:
     default:
       break;
@@ -194,16 +289,6 @@ gst_qa_pad_monitor_event_check (GstQaPadMonitor * pad_monitor,
 
   /* post checks */
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
-      if (ret) {
-        if (!pad_monitor->has_segment && pad_monitor->segment.format != format) {
-          gst_segment_init (&pad_monitor->segment, format);
-        }
-        gst_segment_set_newsegment_full (&pad_monitor->segment, update, rate,
-            applied_rate, format, start, stop, position);
-        pad_monitor->has_segment = TRUE;
-      }
-      break;
     case GST_EVENT_FLUSH_START:
       if (ret) {
         pad_monitor->pending_flush_stop = TRUE;
@@ -214,9 +299,6 @@ gst_qa_pad_monitor_event_check (GstQaPadMonitor * pad_monitor,
         pad_monitor->pending_flush_stop = FALSE;
       }
       break;
-    case GST_EVENT_EOS:
-    case GST_EVENT_TAG:
-    case GST_EVENT_SINK_MESSAGE:
     case GST_EVENT_QOS:
     case GST_EVENT_SEEK:
     case GST_EVENT_NAVIGATION:
@@ -242,12 +324,22 @@ gst_qa_pad_monitor_chain_func (GstPad * pad, GstBuffer * buffer)
 }
 
 static gboolean
-gst_qa_pad_monitor_event_func (GstPad * pad, GstEvent * event)
+gst_qa_pad_monitor_sink_event_func (GstPad * pad, GstEvent * event)
 {
   GstQaPadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "qa-monitor");
 
-  return gst_qa_pad_monitor_event_check (pad_monitor, event,
+  return gst_qa_pad_monitor_sink_event_check (pad_monitor, event,
+      pad_monitor->event_func);
+}
+
+static gboolean
+gst_qa_pad_monitor_src_event_func (GstPad * pad, GstEvent * event)
+{
+  GstQaPadMonitor *pad_monitor =
+      g_object_get_data ((GObject *) pad, "qa-monitor");
+
+  return gst_qa_pad_monitor_src_event_check (pad_monitor, event,
       pad_monitor->event_func);
 }
 
@@ -287,6 +379,11 @@ static gboolean
 gst_qa_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
     gpointer udata)
 {
+  GstQaPadMonitor *monitor = udata;
+
+  if (G_LIKELY (GST_QA_MONITOR_GET_PARENT (monitor))) {
+    /* a GstQaPadMonitor parent must be a GstQaElementMonitor */
+  }
   return TRUE;
 }
 
@@ -294,7 +391,9 @@ static gboolean
 gst_qa_pad_monitor_event_probe (GstPad * pad, GstEvent * event, gpointer udata)
 {
   GstQaPadMonitor *monitor = GST_QA_PAD_MONITOR_CAST (udata);
-  return gst_qa_pad_monitor_event_check (monitor, event, NULL);
+  /* This so far is just like an event that is flowing downstream,
+   * so we do the same checks as a sinkpad event handler */
+  return gst_qa_pad_monitor_sink_event_check (monitor, event, NULL);
 }
 
 static gboolean
@@ -317,6 +416,8 @@ gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor)
 
   g_object_set_data ((GObject *) pad, "qa-monitor", pad_monitor);
 
+  pad_monitor->event_func = GST_PAD_EVENTFUNC (pad);
+  pad_monitor->query_func = GST_PAD_QUERYFUNC (pad);
   if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
     pad_monitor->bufferalloc_func = GST_PAD_BUFFERALLOCFUNC (pad);
     if (pad_monitor->bufferalloc_func)
@@ -326,10 +427,13 @@ gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor)
     if (pad_monitor->chain_func)
       gst_pad_set_chain_function (pad, gst_qa_pad_monitor_chain_func);
 
+    gst_pad_set_event_function (pad, gst_qa_pad_monitor_sink_event_func);
   } else {
     pad_monitor->getrange_func = GST_PAD_GETRANGEFUNC (pad);
     if (pad_monitor->getrange_func)
       gst_pad_set_getrange_function (pad, gst_qa_pad_get_range_func);
+
+    gst_pad_set_event_function (pad, gst_qa_pad_monitor_src_event_func);
 
     /* add buffer/event probes */
     pad_monitor->buffer_probe_id = gst_pad_add_buffer_probe (pad,
@@ -337,9 +441,6 @@ gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor)
     pad_monitor->event_probe_id = gst_pad_add_event_probe (pad,
         (GCallback) gst_qa_pad_monitor_event_probe, pad_monitor);
   }
-  pad_monitor->event_func = GST_PAD_EVENTFUNC (pad);
-  pad_monitor->query_func = GST_PAD_QUERYFUNC (pad);
-  gst_pad_set_event_function (pad, gst_qa_pad_monitor_event_func);
   gst_pad_set_query_function (pad, gst_qa_pad_monitor_query_func);
 
   return TRUE;
