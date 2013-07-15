@@ -2573,7 +2573,19 @@ gst_base_src_loop (GstPad * pad)
 
   src = GST_BASE_SRC (GST_OBJECT_PARENT (pad));
 
+  /* Just leave immediately if we're flushing */
+  GST_LIVE_LOCK (src);
+  if (G_UNLIKELY (src->priv->flushing || GST_PAD_IS_FLUSHING (pad)))
+    goto flushing;
+  GST_LIVE_UNLOCK (src);
+
   gst_base_src_send_stream_start (src);
+
+  /* The stream-start event could've caused something to flush us */
+  GST_LIVE_LOCK (src);
+  if (G_UNLIKELY (src->priv->flushing || GST_PAD_IS_FLUSHING (pad)))
+    goto flushing;
+  GST_LIVE_UNLOCK (src);
 
   /* check if we need to renegotiate */
   if (gst_pad_check_reconfigure (pad)) {
@@ -2588,7 +2600,7 @@ gst_base_src_loop (GstPad * pad)
 
   GST_LIVE_LOCK (src);
 
-  if (G_UNLIKELY (src->priv->flushing))
+  if (G_UNLIKELY (src->priv->flushing || GST_PAD_IS_FLUSHING (pad)))
     goto flushing;
 
   blocksize = src->blocksize;
