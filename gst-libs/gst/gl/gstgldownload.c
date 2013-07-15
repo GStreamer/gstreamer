@@ -1146,6 +1146,7 @@ _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
   out_width = GST_VIDEO_INFO_WIDTH (&download->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
 
+  gst_gl_display_check_framebuffer_status (display);
   gl->BindFramebuffer (GL_FRAMEBUFFER, download->fbo);
 
   gl->Viewport (0, 0, out_width, out_height);
@@ -1196,6 +1197,10 @@ _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
       g_assert_not_reached ();
       break;
   }
+
+  gst_gl_display_check_framebuffer_status (display);
+
+  gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 }
 #endif
 
