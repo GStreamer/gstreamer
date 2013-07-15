@@ -280,7 +280,7 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
       }
       temp8 = cpfmt >> 19;
       params->width = (((cpfmt >> 10) & 0x1f) + 1) * 4;
-      params->height = (cpfmt & 0x1f) * 4;
+      params->height = ((cpfmt & 0x1f) + 1) * 4;
 
       if (temp8 == 0xf) {
         guint32 epar = 0;
