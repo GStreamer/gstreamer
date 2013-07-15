@@ -948,6 +948,8 @@ struct _ClientContext
 static gboolean
 free_client_context (ClientContext * ctx)
 {
+  GST_DEBUG ("free context %p", ctx);
+
   GST_RTSP_SERVER_LOCK (ctx->server);
   if (ctx->thread)
     gst_rtsp_thread_stop (ctx->thread);
