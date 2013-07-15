@@ -284,6 +284,8 @@ gst_rtsp_mount_points_add_factory (GstRTSPMountPoints * mounts,
 
   item = data_item_new (g_strdup (path), strlen (path), factory);
 
+  GST_INFO ("adding media factory %p for path %s", factory, path);
+
   g_mutex_lock (&priv->lock);
   g_sequence_append (priv->mounts, item);
   priv->dirty = TRUE;
@@ -311,6 +313,8 @@ gst_rtsp_mount_points_remove_factory (GstRTSPMountPoints * mounts,
   priv = mounts->priv;
 
   item.path = (gchar *) path;
+
+  GST_INFO ("removing media factory for path %s", path);
 
   g_mutex_lock (&priv->lock);
   iter = g_sequence_lookup (priv->mounts, &item, data_item_compare, mounts);
