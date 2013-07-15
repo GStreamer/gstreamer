@@ -446,11 +446,14 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
 
         /* setup callbacks */
         gst_gl_window_set_resize_callback (window,
-            GST_GL_WINDOW_RESIZE_CB (gst_glimage_sink_on_resize), glimage_sink);
+            GST_GL_WINDOW_RESIZE_CB (gst_glimage_sink_on_resize),
+            gst_object_ref (glimage_sink), (GDestroyNotify) gst_object_unref);
         gst_gl_window_set_draw_callback (window,
-            GST_GL_WINDOW_CB (gst_glimage_sink_on_draw), glimage_sink);
+            GST_GL_WINDOW_CB (gst_glimage_sink_on_draw),
+            gst_object_ref (glimage_sink), (GDestroyNotify) gst_object_unref);
         gst_gl_window_set_close_callback (window,
-            GST_GL_WINDOW_CB (gst_glimage_sink_on_close), glimage_sink);
+            GST_GL_WINDOW_CB (gst_glimage_sink_on_close),
+            gst_object_ref (glimage_sink), (GDestroyNotify) gst_object_unref);
 
         gst_object_unref (window);
       }
@@ -487,9 +490,9 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       if (glimage_sink->display) {
         GstGLWindow *window = gst_gl_display_get_window (glimage_sink->display);
 
-        gst_gl_window_set_resize_callback (window, NULL, NULL);
-        gst_gl_window_set_draw_callback (window, NULL, NULL);
-        gst_gl_window_set_close_callback (window, NULL, NULL);
+        gst_gl_window_set_resize_callback (window, NULL, NULL, NULL);
+        gst_gl_window_set_draw_callback (window, NULL, NULL, NULL);
+        gst_gl_window_set_close_callback (window, NULL, NULL, NULL);
 
         gst_object_unref (window);
         gst_object_unref (glimage_sink->display);

@@ -79,10 +79,13 @@ struct _GstGLWindow {
 
   GstGLWindowCB         draw;
   gpointer              draw_data;
+  GDestroyNotify        draw_notify;
   GstGLWindowCB         close;
   gpointer              close_data;
+  GDestroyNotify        close_notify;
   GstGLWindowResizeCB   resize;
   gpointer              resize_data;
+  GDestroyNotify        resize_notify;
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
@@ -105,7 +108,7 @@ struct _GstGLWindowClass {
   void     (*draw_unlocked)      (GstGLWindow *window, guint width, guint height);
   void     (*draw)               (GstGLWindow *window, guint width, guint height);
   void     (*run)                (GstGLWindow *window);
-  void     (*quit)               (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
+  void     (*quit)               (GstGLWindow *window);
   void     (*send_message)       (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 
   gboolean (*open)               (GstGLWindow *window, GError **error);
@@ -122,9 +125,9 @@ GType gst_gl_window_get_type     (void);
 
 GstGLWindow * gst_gl_window_new  (GstGLDisplay *display);
 
-void     gst_gl_window_set_draw_callback    (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
-void     gst_gl_window_set_resize_callback  (GstGLWindow *window, GstGLWindowResizeCB callback, gpointer data);
-void     gst_gl_window_set_close_callback   (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
+void     gst_gl_window_set_draw_callback    (GstGLWindow *window, GstGLWindowCB callback, gpointer data, GDestroyNotify destroy_notify);
+void     gst_gl_window_set_resize_callback  (GstGLWindow *window, GstGLWindowResizeCB callback, gpointer data, GDestroyNotify destroy_notify);
+void     gst_gl_window_set_close_callback   (GstGLWindow *window, GstGLWindowCB callback, gpointer data, GDestroyNotify destroy_notify);
 void     gst_gl_window_set_need_lock        (GstGLWindow *window, gboolean need_lock);
 
 guintptr gst_gl_window_get_gl_context       (GstGLWindow *window);
@@ -134,7 +137,7 @@ guintptr gst_gl_window_get_window_handle    (GstGLWindow *window);
 void     gst_gl_window_draw_unlocked        (GstGLWindow *window, guint width, guint height);
 void     gst_gl_window_draw                 (GstGLWindow *window, guint width, guint height);
 void     gst_gl_window_run                  (GstGLWindow *window);
-void     gst_gl_window_quit                 (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
+void     gst_gl_window_quit                 (GstGLWindow *window);
 void     gst_gl_window_send_message         (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 
 gpointer      gst_gl_window_get_proc_address (GstGLWindow *window, const gchar *name);

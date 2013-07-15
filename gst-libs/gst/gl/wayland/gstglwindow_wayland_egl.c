@@ -45,8 +45,7 @@ static void gst_gl_window_wayland_egl_set_window_handle (GstGLWindow * window,
 static void gst_gl_window_wayland_egl_draw (GstGLWindow * window, guint width,
     guint height);
 static void gst_gl_window_wayland_egl_run (GstGLWindow * window);
-static void gst_gl_window_wayland_egl_quit (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data);
+static void gst_gl_window_wayland_egl_quit (GstGLWindow * window);
 static void gst_gl_window_wayland_egl_send_message (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data);
 static void gst_gl_window_wayland_egl_destroy_context (GstGLWindowWaylandEGL *
@@ -445,15 +444,11 @@ gst_gl_window_wayland_egl_run (GstGLWindow * window)
 }
 
 static void
-gst_gl_window_wayland_egl_quit (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data)
+gst_gl_window_wayland_egl_quit (GstGLWindow * window)
 {
   GstGLWindowWaylandEGL *window_egl;
 
   window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
-
-  if (callback)
-    gst_gl_window_wayland_egl_send_message (window, callback, data);
 
   GST_LOG ("sending quit");
 

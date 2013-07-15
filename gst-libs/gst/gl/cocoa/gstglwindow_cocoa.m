@@ -120,8 +120,7 @@ void gst_gl_window_cocoa_draw_unlocked (GstGLWindow * window, guint width,
     guint height);
 void gst_gl_window_cocoa_draw (GstGLWindow * window, guint width, guint height);
 void gst_gl_window_cocoa_run (GstGLWindow * window);
-void gst_gl_window_cocoa_quit (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data);
+void gst_gl_window_cocoa_quit (GstGLWindow * window);
 void gst_gl_window_cocoa_send_message (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data);
 GstGLAPI gst_gl_window_cocoa_get_gl_api (GstGLWindow * window);
@@ -408,8 +407,7 @@ gst_gl_window_cocoa_run (GstGLWindow * window)
 
 /* Thread safe */
 void
-gst_gl_window_cocoa_quit (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data)
+gst_gl_window_cocoa_quit (GstGLWindow * window)
 {
   GstGLWindowCocoa *window_cocoa;
   GstGLWindowCocoaPrivate *priv;
@@ -421,9 +419,6 @@ gst_gl_window_cocoa_quit (GstGLWindow * window, GstGLWindowCB callback,
     if (GSRegisterCurrentThread() || 1) {
       NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
       
-      AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc]
-          initWithAll:window_cocoa callback:callback userData:data];
-        
       [app_thread_performer performSelector:@selector(stopApp) onThread:priv->thread 
         withObject:nil waitUntilDone:YES];
 

@@ -70,8 +70,7 @@ void gst_gl_window_x11_draw_unlocked (GstGLWindow * window, guint width,
     guint height);
 void gst_gl_window_x11_draw (GstGLWindow * window, guint width, guint height);
 void gst_gl_window_x11_run (GstGLWindow * window);
-void gst_gl_window_x11_quit (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data);
+void gst_gl_window_x11_quit (GstGLWindow * window);
 void gst_gl_window_x11_send_message (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data);
 gboolean gst_gl_window_x11_create_context (GstGLWindow * window,
@@ -703,15 +702,11 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
 
 /* Not called by the gl thread */
 void
-gst_gl_window_x11_quit (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data)
+gst_gl_window_x11_quit (GstGLWindow * window)
 {
   GstGLWindowX11 *window_x11;
 
   window_x11 = GST_GL_WINDOW_X11 (window);
-
-  if (callback)
-    gst_gl_window_x11_send_message (window, callback, data);
 
   GST_LOG ("sending quit");
 
