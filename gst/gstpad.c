@@ -1400,13 +1400,8 @@ gst_pad_needs_reconfigure (GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_OBJECT_LOCK (pad);
-  if (GST_PAD_IS_FLUSHING (pad)) {
-    GST_DEBUG_OBJECT (pad, "pad is flushing");
-    reconfigure = FALSE;
-  } else {
-    reconfigure = GST_PAD_NEEDS_RECONFIGURE (pad);
-    GST_DEBUG_OBJECT (pad, "peeking RECONFIGURE flag %d", reconfigure);
-  }
+  reconfigure = GST_PAD_NEEDS_RECONFIGURE (pad);
+  GST_DEBUG_OBJECT (pad, "peeking RECONFIGURE flag %d", reconfigure);
   GST_OBJECT_UNLOCK (pad);
 
   return reconfigure;
@@ -1429,15 +1424,10 @@ gst_pad_check_reconfigure (GstPad * pad)
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
 
   GST_OBJECT_LOCK (pad);
-  if (GST_PAD_IS_FLUSHING (pad)) {
-    GST_DEBUG_OBJECT (pad, "pad is flushing");
-    reconfigure = FALSE;
-  } else {
-    reconfigure = GST_PAD_NEEDS_RECONFIGURE (pad);
-    if (reconfigure) {
-      GST_DEBUG_OBJECT (pad, "remove RECONFIGURE flag");
-      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
-    }
+  reconfigure = GST_PAD_NEEDS_RECONFIGURE (pad);
+  if (reconfigure) {
+    GST_DEBUG_OBJECT (pad, "remove RECONFIGURE flag");
+    GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
   }
   GST_OBJECT_UNLOCK (pad);
 
