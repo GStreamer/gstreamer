@@ -21,9 +21,21 @@
  * @short_description: Roles and associated permissions
  * @see_also: #GstRTSPToken, #GstRTSPAuth
  *
- * Last reviewed on 2013-07-11 (1.0.0)
+ * The #GstRTSPPermission object contains an array of roles and associated
+ * permissions. The roles are represented with a string and the permissions with
+ * a generic #GstStructure.
+ *
+ * The permissions are deliberately kept generic. The possible values of the
+ * roles and #GstStructure keys and values are only determined by the #GstRTSPAuth
+ * object that performs the checks on the permissions and the current
+ * #GstRTSPToken.
+ *
+ * As a convenience function, gst_rtsp_permissions_is_allowed() can be used to
+ * check if the permissions contains a role that contains the boolean value
+ * %TRUE for the the given key.
+ *
+ * Last reviewed on 2013-07-15 (1.0.0)
  */
-
 
 #include <string.h>
 
