@@ -677,7 +677,7 @@ gst_aac_parse_parse_adts_header (GstAacParse * aacparse, const guint8 * data,
   if (version)
     *version = (data[1] & 0x08) ? 2 : 4;
   if (object)
-    *object = (data[2] & 0xc0) >> 6;
+    *object = ((data[2] & 0xc0) >> 6) + 1;
 }
 
 /**
