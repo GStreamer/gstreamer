@@ -132,8 +132,10 @@ struct _GstRTSPThreadPool {
 /**
  * GstRTSPThreadPoolClass:
  * @pool: a #GThreadPool used internally
- * @get_thread: get or reuse a thread object
- * @configure_thread: configure a thread object
+ * @get_thread: this function should make or reuse an existing thread that runs
+ *        a mainloop.
+ * @configure_thread: configure a thread object. this vmethod is called when
+ *       a new thread has been created and should be configured.
  * @thread_enter: called from the thread when it is entered
  * @thread_leave: called from the thread when it is left
  *

@@ -21,6 +21,29 @@
  * @short_description: A pool of threads
  * @see_also: #GstRTSPMedia, #GstRTSPClient
  *
+ * A #GstRTSPThreadPool manages reusable threads for various server tasks.
+ * Currently the defined thread types can be found in #GstRTSPThreadType.
+ *
+ * Threads of type #GST_RTSP_THREAD_TYPE_CLIENT are used to handle requests from
+ * a connected client. With gst_rtsp_thread_pool_get_max_threads() a maximum
+ * number of threads can be set after which the pool will start to reuse the
+ * same thread for multiple clients.
+ *
+ * Threads of type #GST_RTSP_THREAD_TYPE_MEDIA will be used to perform the state
+ * changes of the media pipelines and handle its bus messages.
+ *
+ * gst_rtsp_thread_pool_get_thread() can be used to create a #GstRTSPThread
+ * object of the right type. The thread object contains a mainloop and context
+ * that run in a seperate thread and can be used to attached sources to.
+ *
+ * gst_rtsp_thread_reuse() can be used to reuse a thread for multiple purposes.
+ * If all gst_rtsp_thread_reuse() calls are matched with a
+ * gst_rtsp_thread_stop() call, the mainloop will be quit and the thread will
+ * stop.
+ *
+ * To configure the threads, a subclass of this object should be made and the
+ * virtual methods should be overriden to implement the desired functionality.
+ *
  * Last reviewed on 2013-07-11 (1.0.0)
  */
 
