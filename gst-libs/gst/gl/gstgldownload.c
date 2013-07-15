@@ -195,6 +195,18 @@ static const gchar *text_shader_AYUV_gles2 =
     "  gl_FragColor=vec4(1.0,y,u,v);\n"
     "}\n";
 
+static const gchar *text_shader_ARGB_gles2 =
+    "precision mediump float;\n"
+    "varying vec2 v_texCoord;\n"
+    "uniform sampler2D tex;\n"
+    "void main(void) {\n"
+    "  vec4 rgba;\n"
+    "  vec2 nxy = v_texCoord.xy;\n"
+    "  rgba.rgb=texture2D(tex,nxy).rgb;\n"
+    "  rgba.a = 1.0;\n"
+    "  gl_FragColor=vec4(rgba.%c,rgba.%c,rgba.%c,rgba.%c);\n"
+    "}\n";
+
 static const gchar *text_vertex_shader_gles2 =
     "attribute vec4 a_position;   \n"
     "attribute vec2 a_texCoord;   \n"
@@ -208,10 +220,10 @@ static const gchar *text_vertex_shader_gles2 =
 static const gchar *text_shader_RGB_gles2 =
     "precision mediump float;                            \n"
     "varying vec2 v_texCoord;                            \n"
-    "uniform sampler2D s_texture;                        \n"
+    "uniform sampler2D tex;                              \n"
     "void main()                                         \n"
     "{                                                   \n"
-    "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
+    "  gl_FragColor = texture2D(tex, v_texCoord );       \n"
     "}                                                   \n";
 #endif /* GST_GL_HAVE_GLES2 */
 
@@ -222,6 +234,7 @@ struct _GstGLDownloadPrivate
   const gchar *YUY2_UYVY;
   const gchar *I420_YV12;
   const gchar *AYUV;
+  const gchar *ARGB;
   const gchar *vert_shader;
 
   void (*do_rgb) (GstGLDisplay * display, GstGLDownload * download);
@@ -292,6 +305,7 @@ gst_gl_download_new (GstGLDisplay * display)
     priv->YUY2_UYVY = text_shader_YUY2_UYVY_opengl;
     priv->I420_YV12 = text_shader_I420_YV12_opengl;
     priv->AYUV = text_shader_AYUV_opengl;
+    priv->ARGB = NULL;
     priv->vert_shader = text_vertex_shader_opengl;
     priv->do_rgb = _do_download_draw_rgb_opengl;
     priv->do_yuv = _do_download_draw_yuv_opengl;
@@ -302,6 +316,7 @@ gst_gl_download_new (GstGLDisplay * display)
     priv->YUY2_UYVY = text_shader_YUY2_UYVY_gles2;
     priv->I420_YV12 = text_shader_I420_YV12_gles2;
     priv->AYUV = text_shader_AYUV_gles2;
+    priv->ARGB = text_shader_ARGB_gles2;
     priv->vert_shader = text_vertex_shader_gles2;
     priv->do_rgb = _do_download_draw_rgb_gles2;
     priv->do_yuv = _do_download_draw_yuv_gles2;
@@ -653,7 +668,8 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
   out_width = GST_VIDEO_INFO_WIDTH (&download->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
 
-  GST_TRACE ("initializing texture download for format %d", v_format);
+  GST_TRACE ("initializing texture download for format %s",
+      gst_video_format_to_string (v_format));
 
   if (USING_OPENGL (display)) {
     switch (v_format) {
@@ -847,7 +863,102 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
   gl = display->gl_vtable;
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
 
+
+  if (GST_VIDEO_FORMAT_INFO_IS_RGB (download->info.finfo)
+      && !USING_GLES2 (display)) {
+    switch (v_format) {
+      case GST_VIDEO_FORMAT_RGBx:
+      case GST_VIDEO_FORMAT_BGRx:
+      case GST_VIDEO_FORMAT_xRGB:
+      case GST_VIDEO_FORMAT_xBGR:
+      case GST_VIDEO_FORMAT_RGBA:
+      case GST_VIDEO_FORMAT_BGRA:
+      case GST_VIDEO_FORMAT_ARGB:
+      case GST_VIDEO_FORMAT_ABGR:
+      case GST_VIDEO_FORMAT_RGB:
+      case GST_VIDEO_FORMAT_BGR:
+        return;
+        break;
+      default:
+        break;
+    }
+  }
+
+  /* color space conversion is needed */
+
+  /* check if fragment shader is available, then load them
+   * GLSL is a requirement for download
+   */
+  if (!gl->CreateProgramObject && !gl->CreateProgram) {
+    /* colorspace conversion is not possible */
+    gst_gl_display_set_error (display,
+        "Context, ARB_fragment_shader supported: no");
+    return;
+  }
+
   switch (v_format) {
+    case GST_VIDEO_FORMAT_YUY2:
+    {
+      gchar text_shader_download_YUY2[2048];
+
+      sprintf (text_shader_download_YUY2,
+          download->priv->YUY2_UYVY, "y2,u,y1,v");
+
+      if (_create_shader (display, download->priv->vert_shader,
+              text_shader_download_YUY2, &download->shader)) {
+        if (USING_GLES2 (display)) {
+          download->shader_attr_position_loc =
+              gst_gl_shader_get_attribute_location (download->shader,
+              "a_position");
+          download->shader_attr_texture_loc =
+              gst_gl_shader_get_attribute_location (download->shader,
+              "a_texCoord");
+        }
+      }
+    }
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+    {
+      gchar text_shader_download_UYVY[2048];
+
+      sprintf (text_shader_download_UYVY,
+          download->priv->YUY2_UYVY, "v,y1,u,y2");
+
+      if (_create_shader (display, download->priv->vert_shader,
+              text_shader_download_UYVY, &download->shader)) {
+        if (USING_GLES2 (display)) {
+          download->shader_attr_position_loc =
+              gst_gl_shader_get_attribute_location (download->shader,
+              "a_position");
+          download->shader_attr_texture_loc =
+              gst_gl_shader_get_attribute_location (download->shader,
+              "a_texCoord");
+        }
+      }
+    }
+      break;
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    {
+      _create_shader (display, download->priv->vert_shader,
+          download->priv->I420_YV12, &download->shader);
+      break;
+    }
+    case GST_VIDEO_FORMAT_AYUV:
+    {
+      if (_create_shader (display, download->priv->vert_shader,
+              download->priv->AYUV, &download->shader)) {
+        if (USING_GLES2 (display)) {
+          download->shader_attr_position_loc =
+              gst_gl_shader_get_attribute_location (download->shader,
+              "a_position");
+          download->shader_attr_texture_loc =
+              gst_gl_shader_get_attribute_location (download->shader,
+              "a_texCoord");
+        }
+      }
+      break;
+    }
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_xRGB:
@@ -858,115 +969,42 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
-      /* color space conversion is not needed */
-#if GST_GL_HAVE_GLES2
     {
-      if (USING_GLES2 (display)) {
-        /* glGetTexImage2D not available in OpenGL ES 2.0 */
-        if (_create_shader (display, text_vertex_shader_gles2,
-                text_shader_RGB_gles2, &download->shader)) {
-          download->shader_attr_position_loc =
-              gst_gl_shader_get_attribute_location (download->shader,
-              "a_position");
-          download->shader_attr_texture_loc =
-              gst_gl_shader_get_attribute_location (download->shader,
-              "a_texCoord");
-        }
-      }
-    }
-#endif
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_AYUV:
-      /* color space conversion is needed */
-    {
-      /* check if fragment shader is available, then load them
-       * GLSL is a requirement for download
-       */
-      if (!gl->CreateProgramObject && !gl->CreateProgram) {
-        /* colorspace conversion is not possible */
-        gst_gl_display_set_error (display,
-            "Context, ARB_fragment_shader supported: no");
-        return;
-      }
+      gchar text_shader_ARGB[2048];
 
       switch (v_format) {
-        case GST_VIDEO_FORMAT_YUY2:
-        {
-          gchar text_shader_download_YUY2[2048];
-
-          sprintf (text_shader_download_YUY2,
-              download->priv->YUY2_UYVY, "y2,u,y1,v");
-
-          if (_create_shader (display, download->priv->vert_shader,
-                  text_shader_download_YUY2, &download->shader)) {
-            if (USING_GLES2 (display)) {
-              download->shader_attr_position_loc =
-                  gst_gl_shader_get_attribute_location (download->shader,
-                  "a_position");
-              download->shader_attr_texture_loc =
-                  gst_gl_shader_get_attribute_location (download->shader,
-                  "a_texCoord");
-            }
-          }
-        }
+        case GST_VIDEO_FORMAT_BGR:
+        case GST_VIDEO_FORMAT_BGRx:
+        case GST_VIDEO_FORMAT_BGRA:
+          sprintf (text_shader_ARGB, download->priv->ARGB, 'b', 'g', 'r', 'a');
           break;
-        case GST_VIDEO_FORMAT_UYVY:
-        {
-          gchar text_shader_download_UYVY[2048];
-
-          sprintf (text_shader_download_UYVY,
-              download->priv->YUY2_UYVY, "v,y1,u,y2");
-
-          if (_create_shader (display, download->priv->vert_shader,
-                  text_shader_download_UYVY, &download->shader)) {
-            if (USING_GLES2 (display)) {
-              download->shader_attr_position_loc =
-                  gst_gl_shader_get_attribute_location (download->shader,
-                  "a_position");
-              download->shader_attr_texture_loc =
-                  gst_gl_shader_get_attribute_location (download->shader,
-                  "a_texCoord");
-            }
-          }
-        }
+        case GST_VIDEO_FORMAT_xRGB:
+        case GST_VIDEO_FORMAT_ARGB:
+          sprintf (text_shader_ARGB, download->priv->ARGB, 'a', 'r', 'g', 'b');
           break;
-        case GST_VIDEO_FORMAT_I420:
-        case GST_VIDEO_FORMAT_YV12:
-        {
-          _create_shader (display, download->priv->vert_shader,
-              download->priv->I420_YV12, &download->shader);
+        case GST_VIDEO_FORMAT_xBGR:
+        case GST_VIDEO_FORMAT_ABGR:
+          sprintf (text_shader_ARGB, download->priv->ARGB, 'a', 'b', 'g', 'r');
           break;
-        }
-        case GST_VIDEO_FORMAT_AYUV:
-        {
-          if (_create_shader (display, download->priv->vert_shader,
-                  download->priv->AYUV, &download->shader)) {
-            if (USING_GLES2 (display)) {
-              download->shader_attr_position_loc =
-                  gst_gl_shader_get_attribute_location (download->shader,
-                  "a_position");
-              download->shader_attr_texture_loc =
-                  gst_gl_shader_get_attribute_location (download->shader,
-                  "a_texCoord");
-            }
-          }
-          break;
-        }
         default:
-          gst_gl_display_set_error (display,
-              "Unsupported download video format %d", v_format);
-          g_assert_not_reached ();
+          sprintf (text_shader_ARGB, text_shader_RGB_gles2);
           break;
       }
-    }
+
+      if (_create_shader (display, download->priv->vert_shader,
+              text_shader_ARGB, &download->shader)) {
+        download->shader_attr_position_loc =
+            gst_gl_shader_get_attribute_location (download->shader,
+            "a_position");
+        download->shader_attr_texture_loc =
+            gst_gl_shader_get_attribute_location (download->shader,
+            "a_texCoord");
+      }
       break;
+    }
     default:
-      gst_gl_display_set_error (display, "Unsupported download video format %d",
-          v_format);
+      gst_gl_display_set_error (display,
+          "Unsupported download video format %d", v_format);
       g_assert_not_reached ();
       break;
   }
@@ -1126,7 +1164,7 @@ _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
   gl->EnableVertexAttribArray (download->shader_attr_texture_loc);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gst_gl_shader_set_uniform_1i (download->shader, "s_texture", 0);
+  gst_gl_shader_set_uniform_1i (download->shader, "tex", 0);
   gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
 
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
@@ -1138,28 +1176,19 @@ _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_RGBx:
-      gl->ReadPixels (0, 0, out_width, out_height, GL_RGBA, GL_UNSIGNED_BYTE,
-          download->data[0]);
-      break;
     case GST_VIDEO_FORMAT_xRGB:
     case GST_VIDEO_FORMAT_ARGB:
-#if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      gl->ReadPixels (0, 0, out_width, out_height, GL_BGRA,
-          GL_UNSIGNED_INT_8_8_8_8, download->data[0]);
-#else
-      gl->ReadPixels (0, 0, out_width, out_eight, GL_BGRA,
-          GL_UNSIGNED_INT_8_8_8_8_REV, download->data[0]);
-#endif /* G_BYTE_ORDER */
-      break;
-    case GST_VIDEO_FORMAT_RGB:
-      gl->ReadPixels (0, 0, out_width, out_height, GL_RGB, GL_UNSIGNED_BYTE,
-          download->data[0]);
-      break;
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_ABGR:
+      gl->ReadPixels (0, 0, out_width, out_height, GL_RGBA, GL_UNSIGNED_BYTE,
+          download->data[0]);
+      break;
+    case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
+      gl->ReadPixels (0, 0, out_width, out_height, GL_RGB, GL_UNSIGNED_BYTE,
+          download->data[0]);
       break;
     default:
       gst_gl_display_set_error (display,
