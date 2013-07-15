@@ -1871,16 +1871,20 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   GstRTSPVersion version;
   GstRTSPResult res;
   GstRTSPSession *session = NULL;
-  GstRTSPClientState state = { NULL };
+  GstRTSPClientState sstate = { NULL }, *state;
   GstRTSPMessage response = { 0 };
   gchar *sessid;
 
-  state.conn = priv->connection;
-  state.client = client;
-  state.request = request;
-  state.response = &response;
-  state.auth = priv->auth;
-  gst_rtsp_client_state_push_current (&state);
+  if (!(state = gst_rtsp_client_state_get_current ())) {
+    state = &sstate;
+    state->auth = priv->auth;
+    gst_rtsp_client_state_push_current (state);
+  }
+
+  state->conn = priv->connection;
+  state->client = client;
+  state->request = request;
+  state->response = &response;
 
   if (gst_debug_category_get_threshold (rtsp_client_debug) >= GST_LEVEL_LOG) {
     gst_rtsp_message_dump (request);
@@ -1894,7 +1898,7 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   if (version != GST_RTSP_VERSION_1_0)
     goto not_supported;
 
-  state.method = method;
+  state->method = method;
 
   /* we always try to parse the url first */
   if (strcmp (uristr, "*") == 0) {
@@ -1921,8 +1925,8 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   /* sanitize the uri */
   if (uri)
     sanitize_uri (uri);
-  state.uri = uri;
-  state.session = session;
+  state->uri = uri;
+  state->session = session;
 
   if (!gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_URL))
     goto not_authorized;
@@ -1930,28 +1934,28 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   /* now see what is asked and dispatch to a dedicated handler */
   switch (method) {
     case GST_RTSP_OPTIONS:
-      handle_options_request (client, &state);
+      handle_options_request (client, state);
       break;
     case GST_RTSP_DESCRIBE:
-      handle_describe_request (client, &state);
+      handle_describe_request (client, state);
       break;
     case GST_RTSP_SETUP:
-      handle_setup_request (client, &state);
+      handle_setup_request (client, state);
       break;
     case GST_RTSP_PLAY:
-      handle_play_request (client, &state);
+      handle_play_request (client, state);
       break;
     case GST_RTSP_PAUSE:
-      handle_pause_request (client, &state);
+      handle_pause_request (client, state);
       break;
     case GST_RTSP_TEARDOWN:
-      handle_teardown_request (client, &state);
+      handle_teardown_request (client, state);
       break;
     case GST_RTSP_SET_PARAMETER:
-      handle_set_param_request (client, &state);
+      handle_set_param_request (client, state);
       break;
     case GST_RTSP_GET_PARAMETER:
-      handle_get_param_request (client, &state);
+      handle_get_param_request (client, state);
       break;
     case GST_RTSP_ANNOUNCE:
     case GST_RTSP_RECORD:
@@ -1963,7 +1967,8 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   }
 
 done:
-  gst_rtsp_client_state_pop_current (&state);
+  if (state == &sstate)
+    gst_rtsp_client_state_pop_current (state);
   if (session)
     g_object_unref (session);
   if (uri)
@@ -1975,25 +1980,25 @@ not_supported:
   {
     GST_ERROR ("client %p: version %d not supported", client, version);
     send_generic_response (client, GST_RTSP_STS_RTSP_VERSION_NOT_SUPPORTED,
-        &state);
+        state);
     goto done;
   }
 bad_request:
   {
     GST_ERROR ("client %p: bad request", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, &state);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, state);
     goto done;
   }
 no_pool:
   {
     GST_ERROR ("client %p: no pool configured", client);
-    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, &state);
+    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, state);
     goto done;
   }
 session_not_found:
   {
     GST_ERROR ("client %p: session not found", client);
-    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, &state);
+    send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, state);
     goto done;
   }
 not_authorized:
@@ -2004,7 +2009,7 @@ not_authorized:
 not_implemented:
   {
     GST_ERROR ("client %p: method %d not implemented", client, method);
-    send_generic_response (client, GST_RTSP_STS_NOT_IMPLEMENTED, &state);
+    send_generic_response (client, GST_RTSP_STS_NOT_IMPLEMENTED, state);
     goto done;
   }
 }
