@@ -141,6 +141,10 @@ void          gst_h263_parse_get_framerate (const H263Params * params,
                                             gint             * num,
                                             gint             * denom);
 
+void          gst_h263_parse_get_par       (const H263Params * params,
+                                            gint             * num,
+                                            gint             * denom);
+
 gint          gst_h263_parse_get_profile   (const H263Params * params);
 
 gint          gst_h263_parse_get_level     (const H263Params * params,

@@ -180,9 +180,9 @@ static void
 gst_h263_parse_set_src_caps (GstH263Parse * h263parse,
     const H263Params * params)
 {
-  GstStructure *st;
+  GstStructure *st = NULL;
   GstCaps *caps, *sink_caps;
-  gint fr_num, fr_denom;
+  gint fr_num, fr_denom, par_num, par_denom;
 
   g_assert (h263parse->state == PASSTHROUGH || h263parse->state == GOT_HEADER);
 
@@ -210,6 +210,18 @@ gst_h263_parse_set_src_caps (GstH263Parse * h263parse,
   if (params->width && params->height)
     gst_caps_set_simple (caps, "width", G_TYPE_INT, params->width,
         "height", G_TYPE_INT, params->height, NULL);
+
+  if (st != NULL
+      && gst_structure_get_fraction (st, "pixel-aspect-ratio", &par_num,
+          &par_denom)) {
+    /* Got it in caps - nothing more to do */
+    GST_DEBUG_OBJECT (h263parse, "sink caps override PAR");
+  } else {
+    /* Caps didn't have the framerate - get it from params */
+    gst_h263_parse_get_par (params, &par_num, &par_denom);
+  }
+  gst_caps_set_simple (caps, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+      par_num, par_denom, NULL);
 
   if (h263parse->state == GOT_HEADER) {
     gst_caps_set_simple (caps,

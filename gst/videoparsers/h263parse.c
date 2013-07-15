@@ -668,3 +668,10 @@ gst_h263_parse_get_framerate (const H263Params * params, gint * num,
   *num = params->pcfnum;
   *denom = params->pcfdenom;
 }
+
+void
+gst_h263_parse_get_par (const H263Params * params, gint * num, gint * denom)
+{
+  *num = params->parnum;
+  *denom = params->pardenom;
+}
