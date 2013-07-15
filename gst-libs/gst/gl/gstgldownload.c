@@ -969,6 +969,7 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
+#if GST_GL_HAVE_GLES2
     {
       gchar text_shader_ARGB[2048];
 
@@ -1002,6 +1003,10 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
       }
       break;
     }
+#else
+      g_assert_not_reached ();
+      break;
+#endif
     default:
       gst_gl_display_set_error (display,
           "Unsupported download video format %d", v_format);
