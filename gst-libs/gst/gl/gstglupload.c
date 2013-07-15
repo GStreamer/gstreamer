@@ -196,6 +196,17 @@ static const gchar *text_shader_AYUV_gles2 =
     "  gl_FragColor=vec4(r,g,b,1.0);\n"
     "}\n";
 
+static const gchar *text_shader_ARGB_gles2 =
+    "precision mediump float;\n"
+    "varying vec2 v_texCoord;\n"
+    "uniform sampler2D tex;\n"
+    "void main(void) {\n"
+    "  vec4 rgba;\n"
+    "  vec2 nxy = v_texCoord.xy;\n"
+    "  rgba=texture2D(tex,nxy);\n"
+    "  gl_FragColor=vec4(rgba.%c,rgba.%c,rgba.%c,1.0);\n"
+    "}\n";
+
 static const gchar *text_vertex_shader_gles2 =
     "attribute vec4 a_position;   \n"
     "attribute vec2 a_texCoord;   \n"
@@ -214,6 +225,7 @@ struct _GstGLUploadPrivate
   const gchar *YUY2_UYVY;
   const gchar *I420_YV12;
   const gchar *AYUV;
+  const gchar *ARGB;
   const gchar *vert_shader;
 
   void (*draw) (GstGLDisplay * display, GstGLUpload * download);
@@ -283,6 +295,7 @@ gst_gl_upload_new (GstGLDisplay * display)
     priv->YUY2_UYVY = text_shader_YUY2_UYVY_opengl;
     priv->I420_YV12 = text_shader_I420_YV12_opengl;
     priv->AYUV = text_shader_AYUV_opengl;
+    priv->ARGB = NULL;
     priv->vert_shader = text_vertex_shader_opengl;
     priv->draw = _do_upload_draw_opengl;
   }
@@ -292,6 +305,7 @@ gst_gl_upload_new (GstGLDisplay * display)
     priv->YUY2_UYVY = text_shader_YUY2_UYVY_gles2;
     priv->I420_YV12 = text_shader_I420_YV12_gles2;
     priv->AYUV = text_shader_AYUV_gles2;
+    priv->ARGB = text_shader_ARGB_gles2;
     priv->vert_shader = text_vertex_shader_gles2;
     priv->draw = _do_upload_draw_gles2;
   }
@@ -668,194 +682,234 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
   GST_INFO ("Initializing texture upload for format:%s",
       gst_video_format_to_string (v_format));
 
-  switch (v_format) {
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-      if (in_width != out_width || in_height != out_height)
-        _init_upload_fbo (display, upload);
-      /* color space conversion is not needed */
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_AYUV:
-      /* color space conversion is needed */
-    {
-      /* check if fragment shader is available, then load them */
-      /* shouldn't we require ARB_shading_language_100? --Filippo */
-      if (gl->CreateProgramObject || gl->CreateProgram) {
-
-        GST_INFO ("We have OpenGL shaders");
-
-        _init_upload_fbo (display, upload);
-
-        switch (v_format) {
-          case GST_VIDEO_FORMAT_YUY2:
-          {
-            gchar text_shader_YUY2[2048];
-            sprintf (text_shader_YUY2, upload->priv->YUY2_UYVY, 'r', 'g', 'a');
-
-            if (_create_shader (display, upload->priv->vert_shader,
-                    text_shader_YUY2, &upload->shader)) {
-              if (USING_GLES2 (display)) {
-                upload->shader_attr_position_loc =
-                    gst_gl_shader_get_attribute_location
-                    (upload->shader, "a_position");
-                upload->shader_attr_texture_loc =
-                    gst_gl_shader_get_attribute_location
-                    (upload->shader, "a_texCoord");
-              }
-            }
-          }
-            break;
-          case GST_VIDEO_FORMAT_UYVY:
-          {
-            gchar text_shader_UYVY[2048];
-#if GST_GL_HAVE_OPENGL
-            if (USING_OPENGL (display)) {
-              sprintf (text_shader_UYVY, upload->priv->YUY2_UYVY,
-                  'a', 'b', 'r');
-            }
-#endif
-#if GST_GL_HAVE_GLES2
-            if (USING_GLES2 (display)) {
-              sprintf (text_shader_UYVY, upload->priv->YUY2_UYVY,
-                  'a', 'r', 'b');
-            }
-#endif
-
-            if (_create_shader (display, upload->priv->vert_shader,
-                    text_shader_UYVY, &upload->shader)) {
-              if (USING_GLES2 (display)) {
-                upload->shader_attr_position_loc =
-                    gst_gl_shader_get_attribute_location
-                    (upload->shader, "a_position");
-                upload->shader_attr_texture_loc =
-                    gst_gl_shader_get_attribute_location
-                    (upload->shader, "a_texCoord");
-              }
-            }
-          }
-            break;
-          case GST_VIDEO_FORMAT_I420:
-          case GST_VIDEO_FORMAT_YV12:
-          {
-            gchar text_shader_I420_YV12[2048];
-#if GST_GL_HAVE_OPENGL
-            if (USING_OPENGL (display)) {
-              if ((g_ascii_strncasecmp ("ATI",
-                          (gchar *) glGetString (GL_VENDOR), 3) == 0)
-                  && (g_ascii_strncasecmp ("ATI Mobility Radeon HD",
-                          (gchar *) glGetString (GL_RENDERER), 22) != 0)
-                  && (g_ascii_strncasecmp ("ATI Radeon HD",
-                          (gchar *) glGetString (GL_RENDERER), 13) != 0))
-                sprintf (text_shader_I420_YV12, upload->priv->I420_YV12, "*0.5",
-                    "");
-              else
-                sprintf (text_shader_I420_YV12, upload->priv->I420_YV12, "",
-                    "*0.5");
-            }
-#endif
-#if GST_GL_HAVE_GLES2
-            if (USING_GLES2 (display))
-              g_strlcpy (text_shader_I420_YV12, upload->priv->I420_YV12, 2048);
-#endif
-
-            if (_create_shader (display, upload->priv->vert_shader,
-                    text_shader_I420_YV12, &upload->shader)) {
-              if (USING_GLES2 (display)) {
-                upload->shader_attr_position_loc =
-                    gst_gl_shader_get_attribute_location
-                    (upload->shader, "a_position");
-                upload->shader_attr_texture_loc =
-                    gst_gl_shader_get_attribute_location
-                    (upload->shader, "a_texCoord");
-              }
-            }
-          }
-            break;
-          case GST_VIDEO_FORMAT_AYUV:
-          {
-            if (_create_shader (display, upload->priv->vert_shader,
-                    upload->priv->AYUV, &upload->shader)) {
-              if (USING_GLES2 (display)) {
-                upload->shader_attr_position_loc =
-                    gst_gl_shader_get_attribute_location
-                    (upload->shader, "a_position");
-                upload->shader_attr_texture_loc =
-                    gst_gl_shader_get_attribute_location
-                    (upload->shader, "a_texCoord");
-              }
-            }
-          }
-            break;
-          default:
-            gst_gl_display_set_error (display,
-                "Unsupported upload video format %s",
-                gst_video_format_to_string (v_format));
-            break;
+  if (GST_VIDEO_FORMAT_INFO_IS_RGB (upload->info.finfo)) {
+    switch (v_format) {
+      case GST_VIDEO_FORMAT_RGBx:
+      case GST_VIDEO_FORMAT_BGRx:
+      case GST_VIDEO_FORMAT_xRGB:
+      case GST_VIDEO_FORMAT_xBGR:
+      case GST_VIDEO_FORMAT_RGBA:
+      case GST_VIDEO_FORMAT_BGRA:
+      case GST_VIDEO_FORMAT_ARGB:
+      case GST_VIDEO_FORMAT_ABGR:
+      case GST_VIDEO_FORMAT_RGB:
+      case GST_VIDEO_FORMAT_BGR:
+        /* GLES has no support for anything else than RGB(XA) */
+        if (!USING_GLES2 (display) || (v_format == GST_VIDEO_FORMAT_RGBA
+                || v_format == GST_VIDEO_FORMAT_RGBx
+                || v_format == GST_VIDEO_FORMAT_RGB)) {
+          if (in_width != out_width || in_height != out_height)
+            _init_upload_fbo (display, upload);
+          /* color space conversion is not needed */
+          return;
         }
-        /* check if YCBCR MESA is available */
-#if 0
-      } else if (GLEW_MESA_ycbcr_texture) {
-        /* GLSL and Color Matrix are not available on your drivers,
-         * switch to YCBCR MESA
-         */
-        GST_INFO ("Context, ARB_fragment_shader supported: no");
-        GST_INFO ("Context, GLEW_MESA_ycbcr_texture supported: yes");
-
-        display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MESA;
-
-        switch (v_format) {
-          case GST_VIDEO_FORMAT_YUY2:
-          case GST_VIDEO_FORMAT_UYVY:
-            /* color space conversion is not needed */
-            break;
-          case GST_VIDEO_FORMAT_I420:
-          case GST_VIDEO_FORMAT_YV12:
-          case GST_VIDEO_FORMAT_AYUV:
-            /* MESA only supports YUY2 and UYVY */
-            gst_gl_display_set_error (display,
-                "Your MESA version only supports YUY2 and UYVY (GLSL is required for others yuv formats)");
-            break;
-          default:
-            gst_gl_display_set_error (display,
-                "Unsupported upload video format %d", v_format);
-            break;
-        }
-      }
-      /* check if color matrix is available (not supported) */
-      else if (GLEW_ARB_imaging) {
-        /* GLSL is not available on your drivers, switch to Color Matrix */
-        GST_INFO ("Context, ARB_fragment_shader supported: no");
-        GST_INFO ("Context, GLEW_MESA_ycbcr_texture supported: no");
-        GST_INFO ("Context, GLEW_ARB_imaging supported: yes");
-
-        display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MATRIX;
-
-        gst_gl_display_set_error (display,
-            "Colorspace conversion using Color Matrix is not yet supported");
-#endif
-      } else {
-        /* colorspace conversion is not possible */
-        gst_gl_display_set_error (display,
-            "Cannot upload YUV formats without OpenGL shaders");
-      }
+        break;
+      default:
+        break;
     }
-      break;
-    default:
-      gst_gl_display_set_error (display, "Unsupported upload video format %d",
-          v_format);
-      break;
+  }
+
+  /* color space conversion is needed */
+
+  /* check if fragment shader is available, then load them */
+  /* shouldn't we require ARB_shading_language_100? --Filippo */
+  if (gl->CreateProgramObject || gl->CreateProgram) {
+
+    GST_INFO ("We have OpenGL shaders");
+
+    _init_upload_fbo (display, upload);
+
+    switch (v_format) {
+      case GST_VIDEO_FORMAT_YUY2:
+      {
+        gchar text_shader_YUY2[2048];
+        sprintf (text_shader_YUY2, upload->priv->YUY2_UYVY, 'r', 'g', 'a');
+
+        if (_create_shader (display, upload->priv->vert_shader,
+                text_shader_YUY2, &upload->shader)) {
+          if (USING_GLES2 (display)) {
+            upload->shader_attr_position_loc =
+                gst_gl_shader_get_attribute_location
+                (upload->shader, "a_position");
+            upload->shader_attr_texture_loc =
+                gst_gl_shader_get_attribute_location
+                (upload->shader, "a_texCoord");
+          }
+        }
+      }
+        break;
+      case GST_VIDEO_FORMAT_UYVY:
+      {
+        gchar text_shader_UYVY[2048];
+#if GST_GL_HAVE_OPENGL
+        if (USING_OPENGL (display)) {
+          sprintf (text_shader_UYVY, upload->priv->YUY2_UYVY, 'a', 'b', 'r');
+        }
+#endif
+#if GST_GL_HAVE_GLES2
+        if (USING_GLES2 (display)) {
+          sprintf (text_shader_UYVY, upload->priv->YUY2_UYVY, 'a', 'r', 'b');
+        }
+#endif
+
+        if (_create_shader (display, upload->priv->vert_shader,
+                text_shader_UYVY, &upload->shader)) {
+          if (USING_GLES2 (display)) {
+            upload->shader_attr_position_loc =
+                gst_gl_shader_get_attribute_location
+                (upload->shader, "a_position");
+            upload->shader_attr_texture_loc =
+                gst_gl_shader_get_attribute_location
+                (upload->shader, "a_texCoord");
+          }
+        }
+      }
+        break;
+      case GST_VIDEO_FORMAT_I420:
+      case GST_VIDEO_FORMAT_YV12:
+      {
+        gchar text_shader_I420_YV12[2048];
+#if GST_GL_HAVE_OPENGL
+        if (USING_OPENGL (display)) {
+          if ((g_ascii_strncasecmp ("ATI",
+                      (gchar *) glGetString (GL_VENDOR), 3) == 0)
+              && (g_ascii_strncasecmp ("ATI Mobility Radeon HD",
+                      (gchar *) glGetString (GL_RENDERER), 22) != 0)
+              && (g_ascii_strncasecmp ("ATI Radeon HD",
+                      (gchar *) glGetString (GL_RENDERER), 13) != 0))
+            sprintf (text_shader_I420_YV12, upload->priv->I420_YV12, "*0.5",
+                "");
+          else
+            sprintf (text_shader_I420_YV12, upload->priv->I420_YV12, "",
+                "*0.5");
+        }
+#endif
+#if GST_GL_HAVE_GLES2
+        if (USING_GLES2 (display))
+          g_strlcpy (text_shader_I420_YV12, upload->priv->I420_YV12, 2048);
+#endif
+
+        if (_create_shader (display, upload->priv->vert_shader,
+                text_shader_I420_YV12, &upload->shader)) {
+          if (USING_GLES2 (display)) {
+            upload->shader_attr_position_loc =
+                gst_gl_shader_get_attribute_location
+                (upload->shader, "a_position");
+            upload->shader_attr_texture_loc =
+                gst_gl_shader_get_attribute_location
+                (upload->shader, "a_texCoord");
+          }
+        }
+      }
+        break;
+      case GST_VIDEO_FORMAT_AYUV:
+      {
+        if (_create_shader (display, upload->priv->vert_shader,
+                upload->priv->AYUV, &upload->shader)) {
+          if (USING_GLES2 (display)) {
+            upload->shader_attr_position_loc =
+                gst_gl_shader_get_attribute_location
+                (upload->shader, "a_position");
+            upload->shader_attr_texture_loc =
+                gst_gl_shader_get_attribute_location
+                (upload->shader, "a_texCoord");
+          }
+        }
+      }
+        break;
+      case GST_VIDEO_FORMAT_BGRx:
+      case GST_VIDEO_FORMAT_xRGB:
+      case GST_VIDEO_FORMAT_xBGR:
+      case GST_VIDEO_FORMAT_BGRA:
+      case GST_VIDEO_FORMAT_ARGB:
+      case GST_VIDEO_FORMAT_ABGR:
+      case GST_VIDEO_FORMAT_BGR:
+      {
+        gchar text_shader_ARGB[2048];
+
+        switch (v_format) {
+          case GST_VIDEO_FORMAT_BGR:
+          case GST_VIDEO_FORMAT_BGRx:
+          case GST_VIDEO_FORMAT_BGRA:
+            sprintf (text_shader_ARGB, upload->priv->ARGB, 'b', 'g', 'r');
+            break;
+          case GST_VIDEO_FORMAT_xRGB:
+          case GST_VIDEO_FORMAT_ARGB:
+            sprintf (text_shader_ARGB, upload->priv->ARGB, 'g', 'b', 'a');
+            break;
+          case GST_VIDEO_FORMAT_xBGR:
+          case GST_VIDEO_FORMAT_ABGR:
+            sprintf (text_shader_ARGB, upload->priv->ARGB, 'a', 'b', 'g');
+            break;
+          default:
+            g_assert_not_reached ();
+            break;
+        }
+
+        if (_create_shader (display, upload->priv->vert_shader,
+                text_shader_ARGB, &upload->shader)) {
+          if (USING_GLES2 (display)) {
+            upload->shader_attr_position_loc =
+                gst_gl_shader_get_attribute_location
+                (upload->shader, "a_position");
+            upload->shader_attr_texture_loc =
+                gst_gl_shader_get_attribute_location
+                (upload->shader, "a_texCoord");
+          }
+        }
+      }
+        break;
+      default:
+        gst_gl_display_set_error (display,
+            "Unsupported upload video format %s",
+            gst_video_format_to_string (v_format));
+        break;
+    }
+    /* check if YCBCR MESA is available */
+#if 0
+  } else if (GLEW_MESA_ycbcr_texture) {
+    /* GLSL and Color Matrix are not available on your drivers,
+     * switch to YCBCR MESA
+     */
+    GST_INFO ("Context, ARB_fragment_shader supported: no");
+    GST_INFO ("Context, GLEW_MESA_ycbcr_texture supported: yes");
+
+    display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MESA;
+
+    switch (v_format) {
+      case GST_VIDEO_FORMAT_YUY2:
+      case GST_VIDEO_FORMAT_UYVY:
+        /* color space conversion is not needed */
+        break;
+      case GST_VIDEO_FORMAT_I420:
+      case GST_VIDEO_FORMAT_YV12:
+      case GST_VIDEO_FORMAT_AYUV:
+        /* MESA only supports YUY2 and UYVY */
+        gst_gl_display_set_error (display,
+            "Your MESA version only supports YUY2 and UYVY (GLSL is required for others yuv formats)");
+        break;
+      default:
+        gst_gl_display_set_error (display,
+            "Unsupported upload video format %d", v_format);
+        break;
+    }
+  }
+  /* check if color matrix is available (not supported) */
+  else if (GLEW_ARB_imaging) {
+    /* GLSL is not available on your drivers, switch to Color Matrix */
+    GST_INFO ("Context, ARB_fragment_shader supported: no");
+    GST_INFO ("Context, GLEW_MESA_ycbcr_texture supported: no");
+    GST_INFO ("Context, GLEW_ARB_imaging supported: yes");
+
+    display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MATRIX;
+
+    gst_gl_display_set_error (display,
+        "Colorspace conversion using Color Matrix is not yet supported");
+#endif
+  } else {
+    /* colorspace conversion is not possible */
+    gst_gl_display_set_error (display,
+        "Cannot upload YUV formats without OpenGL shaders");
   }
 }
 
@@ -969,7 +1023,7 @@ _do_upload (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
-      if (in_width != out_width || in_height != out_height)
+      if (in_width != out_width || in_height != out_height || upload->shader)
         upload->priv->draw (display, upload);
       /* color space conversion is not needed */
       break;
@@ -1164,7 +1218,7 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
       /* color space conversion is not needed */
-      if (in_width != out_width || in_height != out_height)
+      if (in_width != out_width || in_height != out_height || upload->shader)
         gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
       else
         gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->out_texture);
@@ -1405,6 +1459,8 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
     {
+      g_assert (upload->shader == NULL);
+
       gl->MatrixMode (GL_PROJECTION);
       gl->LoadIdentity ();
 
@@ -1652,6 +1708,10 @@ _do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
     {
+      if (upload->shader) {
+        gst_gl_shader_use (upload->shader);
+      }
+
       gl->VertexAttribPointer (upload->shader_attr_position_loc, 3,
           GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
       gl->VertexAttribPointer (upload->shader_attr_texture_loc, 2,
@@ -1659,6 +1719,11 @@ _do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
 
       gl->EnableVertexAttribArray (upload->shader_attr_position_loc);
       gl->EnableVertexAttribArray (upload->shader_attr_texture_loc);
+
+      if (upload->shader) {
+        gl->ActiveTexture (GL_TEXTURE0);
+        gst_gl_shader_set_uniform_1i (upload->shader, "tex", 0);
+      }
 
       gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
       gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
