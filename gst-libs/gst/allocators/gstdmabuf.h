@@ -23,6 +23,10 @@
 
 #include <gst/gst.h>
 
+G_BEGIN_DECLS
+
+#define GST_ALLOCATOR_DMABUF "dmabuf"
+
 GstAllocator * gst_dmabuf_allocator_obtain (void);
 
 GstMemory    * gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size);
@@ -31,4 +35,5 @@ gint           gst_dmabuf_memory_get_fd (GstMemory * mem);
 
 gboolean       gst_is_dmabuf_memory (GstMemory * mem);
 
+G_END_DECLS
 #endif /* __GST_DMABUF_H__ */

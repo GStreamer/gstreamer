@@ -56,8 +56,6 @@ typedef struct
   GMutex lock;
 } GstDmaBufMemory;
 
-#define ALLOCATOR_NAME "dmabuf"
-
 GST_DEBUG_CATEGORY_STATIC (dmabuf_debug);
 #define GST_CAT_DEFAULT dmabuf_debug
 
@@ -199,7 +197,7 @@ dmabuf_mem_allocator_init (GstDmaBufAllocator * allocator)
 {
   GstAllocator *alloc = GST_ALLOCATOR_CAST (allocator);
 
-  alloc->mem_type = ALLOCATOR_NAME;
+  alloc->mem_type = GST_ALLOCATOR_DMABUF;
   alloc->mem_map = gst_dmabuf_mem_map;
   alloc->mem_unmap = gst_dmabuf_mem_unmap;
   alloc->mem_share = gst_dmabuf_mem_share;
@@ -213,7 +211,7 @@ gst_dmabuf_mem_init (void)
 {
   GstAllocator *allocator =
       g_object_new (dmabuf_mem_allocator_get_type (), NULL);
-  gst_allocator_register (ALLOCATOR_NAME, allocator);
+  gst_allocator_register (GST_ALLOCATOR_DMABUF, allocator);
 
   GST_DEBUG_CATEGORY_INIT (dmabuf_debug, "dmabuf", 0, "dmabuf memory");
 }
@@ -237,9 +235,9 @@ gst_dmabuf_allocator_obtain (void)
 
   g_once (&dmabuf_allocator_once, (GThreadFunc) gst_dmabuf_mem_init, NULL);
 
-  allocator = gst_allocator_find (ALLOCATOR_NAME);
+  allocator = gst_allocator_find (GST_ALLOCATOR_DMABUF);
   if (!allocator)
-    GST_WARNING ("No allocator named %s found", ALLOCATOR_NAME);
+    GST_WARNING ("No allocator named %s found", GST_ALLOCATOR_DMABUF);
   return allocator;
 }
 
@@ -319,9 +317,7 @@ gst_dmabuf_memory_get_fd (GstMemory * mem)
 gboolean
 gst_is_dmabuf_memory (GstMemory * mem)
 {
-  g_return_val_if_fail (mem != NULL, FALSE);
-
-  return g_strcmp0 (mem->allocator->mem_type, ALLOCATOR_NAME) == 0;
+  return gst_memory_is_type (mem, GST_ALLOCATOR_DMABUF);
 }
 
 #else /* !HAVE_MMAP */
