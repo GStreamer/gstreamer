@@ -468,6 +468,19 @@ default_check (GstRTSPAuth * auth, GstRTSPClientState * state,
   return res;
 }
 
+static gboolean
+no_auth_check (const gchar * check)
+{
+  gboolean res;
+
+  if (g_str_equal (check, GST_RTSP_AUTH_CHECK_TRANSPORT_CLIENT_SETTINGS))
+    res = FALSE;
+  else
+    res = TRUE;
+
+  return res;
+}
+
 /**
  * gst_rtsp_auth_check:
  * @check: the item to check
@@ -491,7 +504,7 @@ gst_rtsp_auth_check (const gchar * check)
 
   /* no auth, we don't need to check */
   if (!(auth = state->auth))
-    return TRUE;
+    return no_auth_check (check);
 
   klass = GST_RTSP_AUTH_GET_CLASS (auth);
 
