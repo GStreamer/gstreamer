@@ -61,6 +61,9 @@ gst_qa_runner_class_init (GstQaRunnerClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->dispose = gst_qa_runner_dispose;
+
+  /* init the report system (can be called multiple times) */
+  gst_qa_report_init ();
 }
 
 static void

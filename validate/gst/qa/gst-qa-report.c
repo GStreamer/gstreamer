@@ -23,6 +23,15 @@
 
 #include "gst-qa-report.h"
 
+static GstClockTime _gst_qa_report_start_time = 0;
+
+void
+gst_qa_report_init (void)
+{
+  if (_gst_qa_report_start_time == 0)
+    _gst_qa_report_start_time = gst_util_get_timestamp ();
+}
+
 const gchar *
 gst_qa_error_area_get_name (GstQaErrorArea area)
 {
@@ -51,7 +60,7 @@ gst_qa_error_report_new (GstObject * source, GstQaErrorArea area,
   report->area = area;
   report->message = g_strdup (message);
   report->detail = g_strdup (detail);
-  report->timestamp = g_date_time_new_now_local ();
+  report->timestamp = gst_util_get_timestamp () - _gst_qa_report_start_time;
 
   return report;
 }
@@ -62,13 +71,12 @@ gst_qa_error_report_free (GstQaErrorReport * report)
   g_free (report->message);
   g_free (report->detail);
   g_object_unref (report->source);
-  g_date_time_unref (report->timestamp);
   g_slice_free (GstQaErrorReport, report);
 }
 
 void
 gst_qa_error_report_printf (GstQaErrorReport * report)
 {
-  g_print (GST_QA_ERROR_REPORT_PRINT_FORMAT "\n",
+  g_print ("%" GST_QA_ERROR_REPORT_PRINT_FORMAT "\n",
       GST_QA_REPORT_PRINT_ARGS (report));
 }
