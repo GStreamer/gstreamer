@@ -99,13 +99,8 @@ gst_vaapi_create_display(GstVaapiDisplayType *display_type)
 
         display = m->create_display(NULL);
         if (display) {
-            /* FIXME: allocator should return NULL if an error occurred */
-            if (gst_vaapi_display_get_display(display)) {
-                *display_type = m->type;
-                break;
-            }
-            gst_vaapi_display_unref(display);
-            display = NULL;
+            *display_type = m->type;
+            break;
         }
 
         if (display_type != GST_VAAPI_DISPLAY_TYPE_ANY)
