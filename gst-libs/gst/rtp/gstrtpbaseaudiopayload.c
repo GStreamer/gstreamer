@@ -564,7 +564,6 @@ gst_rtp_base_audio_payload_flush (GstRTPBaseAudioPayload * baseaudiopayload,
   GstRTPBasePayload *basepayload;
   GstRTPBaseAudioPayloadPrivate *priv;
   GstBuffer *outbuf;
-  guint8 *payload;
   GstFlowReturn ret;
   GstAdapter *adapter;
   guint64 distance;
@@ -609,17 +608,13 @@ gst_rtp_base_audio_payload_flush (GstRTPBaseAudioPayload * baseaudiopayload,
         gst_rtp_base_audio_payload_push_buffer (baseaudiopayload, buffer,
         timestamp);
   } else {
-    GstRTPBuffer rtp = { NULL };
+    GstBuffer *paybuf;
 
     /* create buffer to hold the payload */
-    outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
+    outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
 
-    /* copy payload */
-    gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
-    payload = gst_rtp_buffer_get_payload (&rtp);
-    gst_adapter_copy (adapter, payload, 0, payload_len);
-    gst_adapter_flush (adapter, payload_len);
-    gst_rtp_buffer_unmap (&rtp);
+    paybuf = gst_adapter_take_buffer_fast (adapter, payload_len);
+    outbuf = gst_buffer_append (outbuf, paybuf);
 
     /* set metadata */
     gst_rtp_base_audio_payload_set_meta (baseaudiopayload, outbuf, payload_len,
