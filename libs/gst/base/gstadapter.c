@@ -709,15 +709,102 @@ gst_adapter_take (GstAdapter * adapter, gsize nbytes)
 }
 
 /**
+ * gst_adapter_take_buffer_fast:
+ * @adapter:  a #GstAdapter
+ * @nbytes: the number of bytes to take
+ *
+ * Returns a #GstBuffer containing the first @nbytes of the @adapter.
+ * The returned bytes will be flushed from the adapter.  This function
+ * is potentially more performant than gst_adapter_take_buffer() since
+ * it can reuse the memory in pushed buffers by subbuffering or
+ * merging. Unlike gst_adapter_take_buffer(), the returned buffer may
+ * be composed of multiple non-contiguous #GstMemory objects, no
+ * copies are made.
+ *
+ * Note that no assumptions should be made as to whether certain buffer
+ * flags such as the DISCONT flag are set on the returned buffer, or not.
+ * The caller needs to explicitly set or unset flags that should be set or
+ * unset.
+ *
+ * This function can return buffer up to the return value of
+ * gst_adapter_available() without making copies if possible.
+ *
+ * Caller owns a reference to the returned buffer. gst_buffer_unref() after
+ * usage.
+ *
+ * Free-function: gst_buffer_unref
+ *
+ * Returns: (transfer full): a #GstBuffer containing the first @nbytes of
+ *     the adapter, or #NULL if @nbytes bytes are not available.
+ *     gst_buffer_unref() when no longer needed.
+ *
+ * Since: 1.2
+ */
+
+GstBuffer *
+gst_adapter_take_buffer_fast (GstAdapter * adapter, gsize nbytes)
+{
+  GstBuffer *buffer = NULL;
+  GstBuffer *cur;
+  GSList *item;
+  gsize skip;
+  gsize left = nbytes;
+
+  g_return_val_if_fail (GST_IS_ADAPTER (adapter), NULL);
+  g_return_val_if_fail (nbytes > 0, NULL);
+
+  GST_LOG_OBJECT (adapter, "taking buffer of %" G_GSIZE_FORMAT " bytes",
+      nbytes);
+
+  /* we don't have enough data, return NULL. This is unlikely
+   * as one usually does an _available() first instead of grabbing a
+   * random size. */
+  if (G_UNLIKELY (nbytes > adapter->size))
+    return NULL;
+
+  skip = adapter->skip;
+  cur = adapter->buflist->data;
+
+  if (skip == 0 && gst_buffer_get_size (cur) == nbytes) {
+    GST_LOG_OBJECT (adapter, "providing buffer of %" G_GSIZE_FORMAT " bytes"
+        " as head buffer", nbytes);
+    buffer = gst_buffer_ref (cur);
+    goto done;
+  }
+
+  for (item = adapter->buflist; item && left > 0; item = item->next) {
+    gsize size;
+
+    cur = item->data;
+    size = MIN (gst_buffer_get_size (cur), left);
+
+    GST_LOG_OBJECT (adapter, "appending %" G_GSIZE_FORMAT " bytes"
+        " via region copy", size);
+    if (buffer)
+      gst_buffer_copy_into (buffer, cur, GST_BUFFER_COPY_MEMORY, 0, size);
+    else
+      buffer = gst_buffer_copy_region (cur, GST_BUFFER_COPY_ALL, skip, size);
+    skip = 0;
+    left -= size;
+  }
+
+done:
+  gst_adapter_flush_unchecked (adapter, nbytes);
+
+  return buffer;
+}
+
+/**
  * gst_adapter_take_buffer:
  * @adapter: a #GstAdapter
  * @nbytes: the number of bytes to take
  *
  * Returns a #GstBuffer containing the first @nbytes bytes of the
  * @adapter. The returned bytes will be flushed from the adapter.
- * This function is potentially more performant than gst_adapter_take()
- * since it can reuse the memory in pushed buffers by subbuffering
- * or merging.
+ * This function is potentially more performant than
+ * gst_adapter_take() since it can reuse the memory in pushed buffers
+ * by subbuffering or merging. This function will always return a
+ * buffer with a single memory region.
  *
  * Note that no assumptions should be made as to whether certain buffer
  * flags such as the DISCONT flag are set on the returned buffer, or not.
