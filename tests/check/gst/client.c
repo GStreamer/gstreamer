@@ -379,6 +379,9 @@ setup_multicast_client (void)
   fail_unless (gst_rtsp_address_pool_add_range (address_pool,
           "233.252.0.1", "233.252.0.1", 5000, 5010, 1));
   gst_rtsp_media_factory_set_address_pool (factory, address_pool);
+  gst_rtsp_media_factory_add_role (factory, "user",
+      "media.factory.access", G_TYPE_BOOLEAN, TRUE,
+      "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL);
   gst_rtsp_mount_points_add_factory (mount_points, "/test", factory);
   gst_rtsp_client_set_mount_points (client, mount_points);
 
@@ -465,8 +468,15 @@ GST_START_TEST (test_client_multicast_ignore_transport_specific)
   GstRTSPClient *client;
   GstRTSPMessage request = { 0, };
   gchar *str;
+  GstRTSPClientState state = { NULL };
 
   client = setup_multicast_client ();
+
+  state.client = client;
+  state.auth = gst_rtsp_auth_new ();
+  state.token =
+      gst_rtsp_token_new ("media.factory.role", G_TYPE_STRING, "user", NULL);
+  gst_rtsp_client_state_push_current (&state);
 
   /* simple SETUP with a valid URI and multicast and a specific dest,
    * but ignore it  */
@@ -487,6 +497,9 @@ GST_START_TEST (test_client_multicast_ignore_transport_specific)
   expected_transport = NULL;
 
   g_object_unref (client);
+  g_object_unref (state.auth);
+  gst_rtsp_token_unref (state.token);
+  gst_rtsp_client_state_pop_current (&state);
 }
 
 GST_END_TEST;
@@ -534,7 +547,7 @@ GST_START_TEST (test_client_multicast_invalid_transport_specific)
   state.auth = gst_rtsp_auth_new ();
   state.token =
       gst_rtsp_token_new (GST_RTSP_TRANSPORT_PERM_CLIENT_SETTINGS,
-      G_TYPE_BOOLEAN, TRUE, NULL);
+      G_TYPE_BOOLEAN, TRUE, "media.factory.role", G_TYPE_STRING, "user", NULL);
   gst_rtsp_client_state_push_current (&state);
 
 #if 0
@@ -626,7 +639,7 @@ GST_START_TEST (test_client_multicast_transport_specific)
   state.auth = gst_rtsp_auth_new ();
   state.token =
       gst_rtsp_token_new (GST_RTSP_TRANSPORT_PERM_CLIENT_SETTINGS,
-      G_TYPE_BOOLEAN, TRUE, NULL);
+      G_TYPE_BOOLEAN, TRUE, "media.factory.role", G_TYPE_STRING, "user", NULL);
   gst_rtsp_client_state_push_current (&state);
 
 #if 0
