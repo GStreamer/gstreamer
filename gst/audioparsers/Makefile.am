@@ -8,6 +8,7 @@ libgstaudioparsers_la_SOURCES = \
 libgstaudioparsers_la_CFLAGS = \
 	$(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS)
 libgstaudioparsers_la_LIBADD = \
+	-lgstpbutils-$(GST_API_VERSION) \
 	$(GST_PLUGINS_BASE_LIBS) -lgsttag-$(GST_API_VERSION) \
 	-lgstaudio-$(GST_API_VERSION) \
 	$(GST_BASE_LIBS) $(GST_LIBS)

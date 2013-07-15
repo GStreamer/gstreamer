@@ -80,6 +80,7 @@ struct _GstAacParse {
   gint           frame_samples;
 
   GstAacHeaderType header_type;
+  GstAacHeaderType output_header_type;
 };
 
 /**

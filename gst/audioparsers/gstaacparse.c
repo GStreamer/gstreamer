@@ -45,6 +45,7 @@
 #include <string.h>
 
 #include <gst/base/gstbitreader.h>
+#include <gst/pbutils/codec-utils.h>
 #include "gstaacparse.h"
 
 
@@ -91,21 +92,10 @@ static GstCaps *gst_aac_parse_sink_getcaps (GstBaseParse * parse,
 
 static GstFlowReturn gst_aac_parse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize);
+static GstFlowReturn gst_aac_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
 
 G_DEFINE_TYPE (GstAacParse, gst_aac_parse, GST_TYPE_BASE_PARSE);
-
-static inline gint
-gst_aac_parse_get_sample_rate_from_index (guint sr_idx)
-{
-  static const guint aac_sample_rates[] = { 96000, 88200, 64000, 48000, 44100,
-    32000, 24000, 22050, 16000, 12000, 11025, 8000
-  };
-
-  if (sr_idx < G_N_ELEMENTS (aac_sample_rates))
-    return aac_sample_rates[sr_idx];
-  GST_WARNING ("Invalid sample rate index %u", sr_idx);
-  return 0;
-}
 
 /**
  * gst_aac_parse_class_init:
@@ -135,6 +125,8 @@ gst_aac_parse_class_init (GstAacParseClass * klass)
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_aac_parse_sink_setcaps);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_aac_parse_sink_getcaps);
   parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_aac_parse_handle_frame);
+  parse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_aac_parse_pre_push_frame);
 }
 
 
@@ -165,9 +157,11 @@ static gboolean
 gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
 {
   GstStructure *s;
-  GstCaps *src_caps = NULL;
+  GstCaps *src_caps = NULL, *allowed;
   gboolean res = FALSE;
   const gchar *stream_format;
+  GstBuffer *codec_data;
+  guint16 codec_data_data;
 
   GST_DEBUG_OBJECT (aacparse, "sink caps: %" GST_PTR_FORMAT, sink_caps);
   if (sink_caps)
@@ -178,6 +172,7 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
   gst_caps_set_simple (src_caps, "framed", G_TYPE_BOOLEAN, TRUE,
       "mpegversion", G_TYPE_INT, aacparse->mpegversion, NULL);
 
+  aacparse->output_header_type = aacparse->header_type;
   switch (aacparse->header_type) {
     case DSPAAC_HEADER_NONE:
       stream_format = "raw";
@@ -203,11 +198,55 @@ gst_aac_parse_set_src_caps (GstAacParse * aacparse, GstCaps * sink_caps)
   if (stream_format)
     gst_structure_set (s, "stream-format", G_TYPE_STRING, stream_format, NULL);
 
+  allowed = gst_pad_get_allowed_caps (GST_BASE_PARSE (aacparse)->srcpad);
+  if (!gst_caps_can_intersect (src_caps, allowed)) {
+    GST_DEBUG_OBJECT (GST_BASE_PARSE (aacparse)->srcpad,
+        "Caps can not intersect");
+    if (aacparse->header_type == DSPAAC_HEADER_ADTS) {
+      GST_DEBUG_OBJECT (GST_BASE_PARSE (aacparse)->srcpad,
+          "Input is ADTS, trying raw");
+      gst_caps_set_simple (src_caps, "stream-format", G_TYPE_STRING, "raw",
+          NULL);
+      if (gst_caps_can_intersect (src_caps, allowed)) {
+        GstMapInfo map;
+        int idx;
+
+        idx =
+            gst_codec_utils_aac_get_index_from_sample_rate
+            (aacparse->sample_rate);
+        if (idx < 0)
+          goto not_a_known_rate;
+
+        GST_DEBUG_OBJECT (GST_BASE_PARSE (aacparse)->srcpad,
+            "Caps can intersect, we will drop the ADTS layer");
+        aacparse->output_header_type = DSPAAC_HEADER_NONE;
+
+        /* The codec_data data is according to AudioSpecificConfig,
+           ISO/IEC 14496-3, 1.6.2.1 */
+        codec_data = gst_buffer_new_and_alloc (2);
+        gst_buffer_map (codec_data, &map, GST_MAP_WRITE);
+        codec_data_data =
+            (aacparse->object_type << 11) |
+            (idx << 7) | (aacparse->channels << 3);
+        GST_WRITE_UINT16_BE (map.data, codec_data_data);
+        gst_buffer_unmap (codec_data, &map);
+        gst_caps_set_simple (src_caps, "codec_data", GST_TYPE_BUFFER,
+            codec_data, NULL);
+      }
+    }
+  }
+  gst_caps_unref (allowed);
+
   GST_DEBUG_OBJECT (aacparse, "setting src caps: %" GST_PTR_FORMAT, src_caps);
 
   res = gst_pad_set_caps (GST_BASE_PARSE (aacparse)->srcpad, src_caps);
   gst_caps_unref (src_caps);
   return res;
+
+not_a_known_rate:
+  gst_caps_unref (allowed);
+  gst_caps_unref (src_caps);
+  return FALSE;
 }
 
 
@@ -250,7 +289,8 @@ gst_aac_parse_sink_setcaps (GstBaseParse * parse, GstCaps * caps)
 
       sr_idx = ((map.data[0] & 0x07) << 1) | ((map.data[1] & 0x80) >> 7);
       aacparse->object_type = (map.data[0] & 0xf8) >> 3;
-      aacparse->sample_rate = gst_aac_parse_get_sample_rate_from_index (sr_idx);
+      aacparse->sample_rate =
+          gst_codec_utils_aac_get_sample_rate_from_index (sr_idx);
       aacparse->channels = (map.data[1] & 0x78) >> 3;
       aacparse->header_type = DSPAAC_HEADER_NONE;
       aacparse->mpegversion = 4;
@@ -669,7 +709,7 @@ gst_aac_parse_parse_adts_header (GstAacParse * aacparse, const guint8 * data,
   if (rate) {
     gint sr_idx = (data[2] & 0x3c) >> 2;
 
-    *rate = gst_aac_parse_get_sample_rate_from_index (sr_idx);
+    *rate = gst_codec_utils_aac_get_sample_rate_from_index (sr_idx);
   }
   if (channels)
     *channels = ((data[2] & 0x01) << 2) | ((data[3] & 0xc0) >> 6);
@@ -860,7 +900,8 @@ gst_aac_parse_detect_stream (GstAacParse * aacparse,
 
     /* FIXME: This gives totally wrong results. Duration calculation cannot
        be based on this */
-    aacparse->sample_rate = gst_aac_parse_get_sample_rate_from_index (sr_idx);
+    aacparse->sample_rate =
+        gst_codec_utils_aac_get_sample_rate_from_index (sr_idx);
 
     /* baseparse is not given any fps,
      * so it will give up on timestamps, seeking, etc */
@@ -1051,6 +1092,26 @@ exit:
 
   if (ret && framesize <= map.size) {
     return gst_base_parse_finish_frame (parse, frame, framesize);
+  }
+
+  return GST_FLOW_OK;
+}
+
+static GstFlowReturn
+gst_aac_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  GstAacParse *aacparse = GST_AAC_PARSE (parse);
+
+  /* As a special case, we can remove the ADTS framing and output raw AAC. */
+  if (aacparse->header_type == DSPAAC_HEADER_ADTS
+      && aacparse->output_header_type == DSPAAC_HEADER_NONE) {
+    guint header_size;
+    GstMapInfo map;
+    gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
+    header_size = (map.data[1] & 1) ? 7 : 9;    /* optional CRC */
+    gst_buffer_unmap (frame->buffer, &map);
+    gst_buffer_resize (frame->buffer, header_size,
+        gst_buffer_get_size (frame->buffer) - header_size);
   }
 
   return GST_FLOW_OK;
