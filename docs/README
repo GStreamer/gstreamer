@@ -1,7 +1,7 @@
 README 
 ------
 
-(Last updated on Fri 26 oct 2012, version 0.11.89.1)
+(Last updated on Mon 15 jul 2013, version 0.11.90.1)
 
 This HOWTO describes the basic usage of the GStreamer RTSP libraries and how you
 can build simple server applications with it.
@@ -14,7 +14,7 @@ can build simple server applications with it.
  the RTSP message parsing and construction in the server is done using the RTSP
  library that comes with gst-plugins-base. 
 
- The result is that the server is rather small (a few 6000 lines of code) and easy
+ The result is that the server is rather small (a few 11000 lines of code) and easy
  to understand and extend. In its current state of development, things change
  fast, API and ABI are unstable. We encourage people to use it for their various
  use cases and participate by suggesting changes/features.
@@ -23,11 +23,9 @@ can build simple server applications with it.
  that provide reasonable default functionality but has a fair amount of hooks
  to override the default behaviour.
 
- The server currently integrates with the glib mainloop nicely. The network part
- is currently single threaded but the GStreamer bits are a heavy user of multiple
- threads. It's currently not meant to be used in high-load scenarios and because
- no security audit has been done, you should probably not put it on a public
- IP address.
+ The server currently integrates with the glib mainloop nicely.  It's currently
+ not meant to be used in high-load scenarios and because no security audit has
+ been done, you should probably not put it on a public IP address.
 
 * Initialisation
 
@@ -110,10 +108,12 @@ can build simple server applications with it.
  topic how to configure this object.
 
  GstRTSPAuth is an object that authenticates users and authorizes actions
- performed by users.
+ performed by users. By default, a server does not have a GstRTSPAuth object and
+ thus does not try to perform any authentication or authorization.
 
  GstRTSPThreadPool manages the threads used for client connections and media
- pipelines.
+ pipelines. The server has a default implementation of a threadpool that should
+ be sufficient in most cases.
 
 
 * Making url mount points
@@ -216,19 +216,23 @@ can build simple server applications with it.
  When preparing a GstRTSPMedia, an appsink and asppsrc is also constructed
  for streaming the stream over TCP when requested.
 
+ Media is prepared by the server when DESCRIBE or SETUP requests are received
+ from the client.
+
 
 * the GstRTSPClient object
 
- When a server detects a new client connection on its port, it will call its
- accept_client vmethod. The default implementation of this function will create
- a new GstRTCPClient object, will configure the session pool and media mapper
- objects in it and will then call the accept function of the client.
+ When a server detects a new client connection on its port, it will accept the
+ connection, check if the connection is allowed and then call the vmethod
+ create_client. The default implementation of this function will create
+ a new GstRTCPClient object, will configure the session pool, mount points,
+ auth and thread pool objects in it.
 
- The default GstRTSPClient will accept the connection and will attach a watch to
- the server mainloop. In RTSP it is usual to keep the connection
- open between multiple RTSP requests. The client watch will be dispatched by the
- server mainloop when a new GstRTSPMessage is received, which will then be
- handled and a response will be sent.
+ The server will then attach the new client to a server mainloop to let it
+ handle further communication with the client. In RTSP it is usual to keep
+ the connection open between multiple RTSP requests. The client watch will
+ be dispatched by the server mainloop when a new GstRTSPMessage is received,
+ which will then be handled and a response will be sent.
 
  The GstRTSPClient object remains alive for as long as a client has a TCP
  connection open with the server. Since is possible for a client to open and close
@@ -372,6 +376,44 @@ can build simple server applications with it.
  GstRTSPStream objects.
 
 
+* Security
+
+ The security of the server and the policy is implemented in a GstRTSPAuth
+ object. The object is reponsible for:
+
+  - authenticate the user of the server.
+
+  - check if the current user is authorized to perform an operation.
+
+ For critical operations, the server will call gst_rtsp_auth_check() with
+ a string describing the operation which should be validated. The installed
+ GstRTSPAuth object is then responsible for checking if the operation is
+ allowed.
+
+ Implementations of GstRTSPAuth objects can use the following infrastructure
+ bits of the rtsp server to implement these checks:
+
+  - GstRTSPToken: a generic structure describing roles and permissions granted
+    to a user.
+
+  - GstRTSPPermissions: a generic list of roles and matching permissions. These
+    can be attached to media and facties currently.
+
+ An Auth implementation will usually authenticate a user, using method such as
+ Basic authentication or client certificates or perhaps simply use the IP address.
+ The result of the authentication of the user will be a GstRTSPToken that is made
+ current in the context of the ongoing request.
+
+ The auth module can then implement the various checks in the server by looking
+ at the current token and, if needed, compare it to the required GstRTSPPermissions
+ of the current object.
+
+ The security is deliberately kept generic with a default implementation of the
+ GstRTSPAuth object providing a usable and simple implementaion. To make more
+ complicated security modules, the auth object should be subclassed and new
+ implementations for the checks needs to be made.
+
+
 Objects
 -------
 
@@ -386,11 +428,6 @@ GstRTSPClient
 GstRTSPClientState
  - Helper structure contaning the current state of the request
    handled by the client.
-
-GstRTSPAuth
- - Hooks for checking authorizations, all client activity will call this
-   object with the GstRTSPClientState structure. By default it supports
-   basic authentication.
 
 
 GstRTSPMountPoints
@@ -432,4 +469,30 @@ GstRTSPStreamTransport
    request.
 
 
+GstRTSPSDP
+ - helper functions for creating SDP messages from gstRTSPMedia
+
+GstRTSPAddressPool
+ - a pool of multicast and unicast addresses used in streaming
+
+GstRTSPThreadPool
+ - a pool of threads used for various server tasks such as handling clients and
+   managin media pipelines.
+
+
+GstRTSPAuth
+ - Hooks for checking authorizations, all client activity will call this
+   object with the GstRTSPClientState structure. By default it supports
+   basic authentication.
+
+GstRTSPToken
+ - Credentials of a user. This contrains the roles that the user is allowed
+   to assume and other permissions or capabilities of the user.
+
+GstRTSPPermissions
+ - A list of permissions for each role. The permissions are usually attached
+   to objects to describe what roles have what permissions.
+
+GstRTSPParams
+ - object to handle get and set parameter requests.
 
