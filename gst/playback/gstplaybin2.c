@@ -2166,7 +2166,7 @@ gst_play_bin_set_sink (GstPlayBin * playbin, GstPlaySinkType type,
 
   if (*elem)
     gst_object_unref (*elem);
-  *elem = gst_object_ref (sink);
+  *elem = sink ? gst_object_ref (sink) : NULL;
 }
 
 static void
