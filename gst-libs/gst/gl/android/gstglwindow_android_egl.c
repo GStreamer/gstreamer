@@ -120,12 +120,6 @@ gst_gl_window_android_egl_create_context (GstGLWindow * window,
 {
   GstGLWindowAndroidEGL *window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
 
-  if (!window_egl->native_window) {
-    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
-        "No native window set");
-    return FALSE;
-  }
-
   window_egl->main_context = g_main_context_new ();
   window_egl->loop = g_main_loop_new (window_egl->main_context, FALSE);
 
