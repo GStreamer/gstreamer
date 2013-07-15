@@ -35,6 +35,9 @@
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideocontext.h"
 #include "gstvaapivideobuffer.h"
+#if GST_CHECK_VERSION(1,1,0)
+#include "gstvaapivideometa_texture.h"
+#endif
 #if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideobufferpool.h"
 #include "gstvaapivideomemory.h"
@@ -69,7 +72,10 @@ static const char gst_vaapidecode_sink_caps_str[] =
 static const char gst_vaapidecode_src_caps_str[] =
 #if GST_CHECK_VERSION(1,1,0)
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
-        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, GST_VIDEO_FORMATS_ALL);
+        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, GST_VIDEO_FORMATS_ALL) ";"
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
+        GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
+        GST_VIDEO_FORMATS_ALL);
 #else
     GST_VAAPI_SURFACE_CAPS;
 #endif
@@ -343,6 +349,11 @@ gst_vaapidecode_push_decoded_frame(GstVideoDecoder *vdec)
                 crop_meta->height = crop_rect->height;
             }
         }
+
+#if GST_CHECK_VERSION(1,1,0)
+        if (decode->has_texture_upload_meta)
+            gst_buffer_add_texture_upload_meta(out_frame->output_buffer);
+#endif
 #else
         out_frame->output_buffer =
             gst_vaapi_video_buffer_new_with_surface_proxy(proxy);
@@ -529,6 +540,18 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
         gst_buffer_pool_set_config(pool, config);
     }
 
+    decode->has_texture_upload_meta = FALSE;
+    if (gst_query_find_allocation_meta(query, GST_VIDEO_META_API_TYPE, NULL)) {
+        config = gst_buffer_pool_get_config(pool);
+        gst_buffer_pool_config_add_option(config,
+            GST_BUFFER_POOL_OPTION_VIDEO_META);
+        gst_buffer_pool_set_config(pool, config);
+#if GST_CHECK_VERSION(1,1,0)
+        decode->has_texture_upload_meta = gst_query_find_allocation_meta(query,
+            GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL);
+#endif
+    }
+
     if (update_pool)
         gst_query_set_nth_allocation_pool(query, 0, pool, size, min, max);
     else
@@ -635,6 +658,8 @@ static gboolean
 gst_vaapidecode_reset_full(GstVaapiDecode *decode, GstCaps *caps, gboolean hard)
 {
     GstVaapiCodec codec;
+
+    decode->has_texture_upload_meta = FALSE;
 
     /* Reset timers if hard reset was requested (e.g. seek) */
     if (hard) {

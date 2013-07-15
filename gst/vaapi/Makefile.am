@@ -75,6 +75,19 @@ libgstvaapi_source_h += $(libgstvaapi_glx_source_h)
 endif
 endif
 
+libgstvaapi_1_2p_source_c = \
+	gstvaapivideometa_texture.c \
+	$(NULL)
+
+libgstvaapi_1_2p_source_h = \
+	gstvaapivideometa_texture.h \
+	$(NULL)
+
+if USE_GST_API_1_2p
+libgstvaapi_source_c += $(libgstvaapi_1_2p_source_c)
+libgstvaapi_source_h += $(libgstvaapi_1_2p_source_h)
+endif
+
 libgstvaapi_1_0p_source_c = \
 	gstvaapivideobufferpool.c \
 	gstvaapivideomemory.c	\
@@ -135,6 +148,8 @@ libgstvaapi_la_LIBTOOLFLAGS = --tag=disable-static
 EXTRA_DIST = \
 	$(libgstvaapi_glx_source_c)	\
 	$(libgstvaapi_glx_source_h)	\
+	$(libgstvaapi_1_2p_source_c)	\
+	$(libgstvaapi_1_2p_source_h)	\
 	$(libgstvaapi_1_0p_source_c)	\
 	$(libgstvaapi_1_0p_source_h)	\
 	$(libgstvaapi_0_10_source_c)	\

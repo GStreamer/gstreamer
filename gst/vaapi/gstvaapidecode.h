@@ -79,6 +79,7 @@ struct _GstVaapiDecode {
     gint64              render_time_base;
     GstClockTime        last_buffer_time;
     guint               current_frame_size;
+    guint               has_texture_upload_meta : 1;
 };
 
 struct _GstVaapiDecodeClass {
