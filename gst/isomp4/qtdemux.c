@@ -1803,7 +1803,6 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->element_index = NULL;
 #endif
     qtdemux->major_brand = 0;
-    gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
     if (qtdemux->pending_newsegment)
       gst_object_unref (qtdemux->pending_newsegment);
     qtdemux->pending_newsegment = NULL;
@@ -1821,6 +1820,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
   }
   qtdemux->offset = 0;
   gst_adapter_clear (qtdemux->adapter);
+  gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
 
   if (hard) {
     for (n = 0; n < qtdemux->n_streams; n++) {
@@ -1970,7 +1970,11 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
     }
     case GST_EVENT_FLUSH_STOP:
     {
+      guint64 dur;
+
+      dur = demux->segment.duration;
       gst_qtdemux_reset (demux, FALSE);
+      demux->segment.duration = dur;
       break;
     }
     case GST_EVENT_EOS:
