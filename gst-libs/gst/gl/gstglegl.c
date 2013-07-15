@@ -196,8 +196,29 @@ gst_gl_egl_create_context (EGLDisplay display, EGLNativeWindowType window,
     goto failure;
   }
 
-  egl->egl_surface =
-      eglCreateWindowSurface (egl->egl_display, egl->egl_config, window, NULL);
+
+  if (window) {
+    egl->egl_surface =
+        eglCreateWindowSurface (egl->egl_display, egl->egl_config, window,
+        NULL);
+  } else {
+    EGLint surface_attrib[7];
+    gint j = 0;
+
+    /* FIXME: Width/height doesn't seem to matter but we can't leave them
+     * at 0, otherwise X11 complains about BadValue */
+    surface_attrib[j++] = EGL_WIDTH;
+    surface_attrib[j++] = 1;
+    surface_attrib[j++] = EGL_HEIGHT;
+    surface_attrib[j++] = 1;
+    surface_attrib[j++] = EGL_LARGEST_PBUFFER;
+    surface_attrib[j++] = EGL_TRUE;
+    surface_attrib[j++] = EGL_NONE;
+
+    egl->egl_surface =
+        eglCreatePbufferSurface (egl->egl_display, egl->egl_config,
+        surface_attrib);
+  }
 
   if (egl->egl_surface != EGL_NO_SURFACE) {
     GST_INFO ("surface created");
