@@ -79,8 +79,7 @@ void gst_gl_window_win32_draw_unlocked (GstGLWindow * window, guint width,
     guint height);
 void gst_gl_window_win32_draw (GstGLWindow * window, guint width, guint height);
 void gst_gl_window_win32_run (GstGLWindow * window);
-void gst_gl_window_win32_quit (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data);
+void gst_gl_window_win32_quit (GstGLWindow * window);
 void gst_gl_window_win32_send_message (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data);
 
@@ -384,8 +383,7 @@ gst_gl_window_win32_run (GstGLWindow * window)
 
 /* Thread safe */
 void
-gst_gl_window_win32_quit (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data)
+gst_gl_window_win32_quit (GstGLWindow * window)
 {
   GstGLWindowWin32 *window_win32;
 
@@ -394,7 +392,7 @@ gst_gl_window_win32_quit (GstGLWindow * window, GstGLWindowCB callback,
   if (window_win32 && window_win32->internal_win_id) {
     LRESULT res =
         PostMessage (window_win32->internal_win_id, WM_GST_GL_WINDOW_QUIT,
-        (WPARAM) data, (LPARAM) callback);
+        (WPARAM) 0, (LPARAM) 0);
     GST_DEBUG ("end loop requested");
     g_return_if_fail (SUCCEEDED (res));
   }
@@ -526,12 +524,8 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       case WM_GST_GL_WINDOW_QUIT:
       {
         HWND parent_id = 0;
-        GstGLWindowCB destroy_cb = (GstGLWindowCB) lParam;
 
         GST_DEBUG ("WM_GST_GL_WINDOW_QUIT\n");
-
-        if (destroy_cb)
-          destroy_cb ((gpointer) wParam);
 
         parent_id = window_win32->parent_win_id;
         if (parent_id) {

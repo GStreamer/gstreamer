@@ -167,16 +167,15 @@ gst_gl_window_finalize (GObject * object)
 {
   GstGLWindow *window = GST_GL_WINDOW (object);
 
-  if (window) {
-    gst_gl_window_set_resize_callback (window, NULL, NULL);
-    gst_gl_window_set_draw_callback (window, NULL, NULL);
-    gst_gl_window_set_close_callback (window, NULL, NULL);
+  gst_gl_window_set_resize_callback (window, NULL, NULL, NULL);
+  gst_gl_window_set_draw_callback (window, NULL, NULL, NULL);
 
-    if (window->priv->alive) {
-      GST_INFO ("send quit gl window loop");
-      gst_gl_window_quit (window, NULL, NULL);
-    }
+  if (window->priv->alive) {
+    GST_INFO ("send quit gl window loop");
+    gst_gl_window_quit (window);
   }
+
+  gst_gl_window_set_close_callback (window, NULL, NULL, NULL);
 
   if (window->priv->gl_thread) {
     gpointer ret = g_thread_join (window->priv->gl_thread);
@@ -284,7 +283,7 @@ gst_gl_window_run (GstGLWindow * window)
 }
 
 void
-gst_gl_window_quit (GstGLWindow * window, GstGLWindowCB callback, gpointer data)
+gst_gl_window_quit (GstGLWindow * window)
 {
   GstGLWindowClass *window_class;
 
@@ -296,9 +295,7 @@ gst_gl_window_quit (GstGLWindow * window, GstGLWindowCB callback, gpointer data)
 
   window->priv->alive = FALSE;
 
-  window->close = callback;
-  window->close_data = data;
-  window_class->quit (window, callback, data);
+  window_class->quit (window);
 
   GST_INFO ("quit sent to gl window loop");
 
@@ -343,42 +340,54 @@ gst_gl_window_set_need_lock (GstGLWindow * window, gboolean need_lock)
 
 void
 gst_gl_window_set_draw_callback (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data)
+    gpointer data, GDestroyNotify destroy_notify)
 {
   g_return_if_fail (GST_GL_IS_WINDOW (window));
 
   GST_GL_WINDOW_LOCK (window);
 
+  if (window->draw_notify)
+    window->draw_notify (window->draw_data);
+
   window->draw = callback;
   window->draw_data = data;
+  window->draw_notify = destroy_notify;
 
   GST_GL_WINDOW_UNLOCK (window);
 }
 
 void
 gst_gl_window_set_resize_callback (GstGLWindow * window,
-    GstGLWindowResizeCB callback, gpointer data)
+    GstGLWindowResizeCB callback, gpointer data, GDestroyNotify destroy_notify)
 {
   g_return_if_fail (GST_GL_IS_WINDOW (window));
 
   GST_GL_WINDOW_LOCK (window);
 
+  if (window->resize_notify)
+    window->resize_notify (window->resize_data);
+
   window->resize = callback;
   window->resize_data = data;
+  window->resize_notify = destroy_notify;
 
   GST_GL_WINDOW_UNLOCK (window);
 }
 
 void
 gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data)
+    gpointer data, GDestroyNotify destroy_notify)
 {
   g_return_if_fail (GST_GL_IS_WINDOW (window));
 
   GST_GL_WINDOW_LOCK (window);
 
+  if (window->close_notify)
+    window->close_notify (window->close_data);
+
   window->close = callback;
   window->close_data = data;
+  window->close_notify = destroy_notify;
 
   GST_GL_WINDOW_UNLOCK (window);
 }
@@ -732,6 +741,8 @@ _gst_gl_window_thread_create_context (GstGLWindow * window)
 
   if (window_class->close) {
     window_class->close (window);
+    if (window->close)
+      window->close (window->close_data);
   }
 
   g_cond_signal (&window->priv->cond_destroy_context);
