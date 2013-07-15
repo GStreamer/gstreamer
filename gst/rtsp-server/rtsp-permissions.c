@@ -156,7 +156,7 @@ gst_rtsp_permissions_add_role_valist (GstRTSPPermissions * permissions,
 {
   GstRTSPPermissionsImpl *impl = (GstRTSPPermissionsImpl *) permissions;
   GstStructure *structure;
-  gint i, len;
+  guint i, len;
   gboolean found;
 
   g_return_if_fail (GST_IS_RTSP_PERMISSIONS (permissions));
@@ -198,9 +198,23 @@ void
 gst_rtsp_permissions_remove_role (GstRTSPPermissions * permissions,
     const gchar * role)
 {
+  GstRTSPPermissionsImpl *impl = (GstRTSPPermissionsImpl *) permissions;
+  guint i, len;
+
   g_return_if_fail (GST_IS_RTSP_PERMISSIONS (permissions));
   g_return_if_fail (gst_mini_object_is_writable (&permissions->mini_object));
   g_return_if_fail (role != NULL);
+
+  len = impl->roles->len;
+  for (i = 0; i < len; i++) {
+    GstStructure *entry = g_ptr_array_index (impl->roles, i);
+
+    if (gst_structure_has_name (entry, role)) {
+      g_ptr_array_remove_index_fast (impl->roles, i);
+      gst_structure_free (entry);
+      break;
+    }
+  }
 }
 
 /**
@@ -217,7 +231,7 @@ gst_rtsp_permissions_get_role (GstRTSPPermissions * permissions,
     const gchar * role)
 {
   GstRTSPPermissionsImpl *impl = (GstRTSPPermissionsImpl *) permissions;
-  gint i, len;
+  guint i, len;
 
   g_return_val_if_fail (GST_IS_RTSP_PERMISSIONS (permissions), NULL);
   g_return_val_if_fail (role != NULL, NULL);
