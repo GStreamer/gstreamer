@@ -993,6 +993,7 @@ init_picture(GstVaapiDecoderMpeg2 *decoder, GstVaapiPicture *picture)
         GST_VAAPI_PICTURE_FLAG_SET(
             dummy_picture,
             (GST_VAAPI_PICTURE_FLAG_SKIPPED |
+             GST_VAAPI_PICTURE_FLAG_OUTPUT  |
              GST_VAAPI_PICTURE_FLAG_REFERENCE)
         );
 
