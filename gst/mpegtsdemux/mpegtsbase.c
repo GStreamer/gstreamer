@@ -199,6 +199,7 @@ mpegts_base_reset (MpegTSBase * base)
   /* pmt pids will be added and removed dynamically */
 
   gst_segment_init (&base->segment, GST_FORMAT_UNDEFINED);
+  base->last_seek_seqnum = (guint32) - 1;
 
   base->mode = BASE_MODE_STREAMING;
   base->seen_pat = FALSE;
@@ -1335,6 +1336,11 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   if (format != GST_FORMAT_TIME)
     return FALSE;
 
+  if (GST_EVENT_SEQNUM (event) == base->last_seek_seqnum) {
+    GST_DEBUG_OBJECT (base, "Skipping already handled seek");
+    return TRUE;
+  }
+
   if (base->mode == BASE_MODE_PUSHING) {
     /* First try if upstream supports seeking in TIME format */
     if (gst_pad_push_event (base->sinkpad, gst_event_ref (event))) {
@@ -1354,6 +1360,8 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
                     GST_SEEK_TYPE_SET, base->seek_offset,
                     GST_SEEK_TYPE_NONE, -1)))
           ret = GST_FLOW_ERROR;
+        else
+          base->last_seek_seqnum = GST_EVENT_SEQNUM (event);
         base->mode = BASE_MODE_PUSHING;
       }
     }
@@ -1396,16 +1404,16 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   }
 
 
-  if (format == GST_FORMAT_TIME) {
-    /* If the subclass can seek, do that */
-    if (klass->seek) {
-      ret = klass->seek (base, event);
-      if (G_UNLIKELY (ret != GST_FLOW_OK)) {
-        GST_WARNING ("seeking failed %s", gst_flow_get_name (ret));
-      }
-    } else {
-      GST_WARNING ("subclass has no seek implementation");
-    }
+  /* If the subclass can seek, do that */
+  if (klass->seek) {
+    ret = klass->seek (base, event);
+    if (G_UNLIKELY (ret != GST_FLOW_OK))
+      GST_WARNING ("seeking failed %s", gst_flow_get_name (ret));
+    else
+      base->last_seek_seqnum = GST_EVENT_SEQNUM (event);
+  } else {
+    /* FIXME : Check this before so we don't do seeks we can't handle ? */
+    GST_WARNING ("subclass has no seek implementation");
   }
 
   if (flush) {
