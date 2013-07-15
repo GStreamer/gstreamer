@@ -60,7 +60,7 @@ surface_pool_init(GstVaapiSurfacePool *pool, const GstVideoInfo *vip)
     if (pool->format == GST_VIDEO_FORMAT_ENCODED)
         pool->chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
     else
-        pool->chroma_type = gst_video_format_get_chroma_type(pool->format);
+        pool->chroma_type = gst_vaapi_video_format_get_chroma_type(pool->format);
     if (!pool->chroma_type)
         return FALSE;
     return TRUE;

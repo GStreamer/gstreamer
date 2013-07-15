@@ -133,15 +133,15 @@ print_format_caps(GstCaps *caps, const gchar *name)
 
         g_print("  %s:", gst_structure_get_name(structure));
 
-        format = gst_video_format_from_structure(structure);
+        format = gst_vaapi_video_format_from_structure(structure);
         if (format == GST_VIDEO_FORMAT_UNKNOWN)
             g_error("could not determine format");
 
-        va_format = gst_video_format_to_va_format(format);
+        va_format = gst_vaapi_video_format_to_va_format(format);
         if (!va_format)
             g_error("could not determine VA format");
 
-        if (gst_video_format_is_yuv(format))
+        if (gst_vaapi_video_format_is_yuv(format))
             print_format_caps_yuv(va_format);
         else
             print_format_caps_rgb(va_format);

@@ -227,7 +227,7 @@ libgstvaapi_@GST_API_VERSION@_la_LIBADD =	\
 libgstvaapi_@GST_API_VERSION@_la_LDFLAGS =	\
 	$(GST_ALL_LDFLAGS)			\
 	$(GST_VAAPI_LT_LDFLAGS)			\
-	-export-symbols-regex "^gst_(.*vaapi|video_format).*" \
+	-export-symbols-regex "^gst_.*vaapi.*"	\
 	$(NULL)
 
 libgstvaapi_drm_@GST_API_VERSION@_la_SOURCES =	\

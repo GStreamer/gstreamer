@@ -199,7 +199,7 @@ append_formats(GArray *formats, const VAImageFormat *va_formats,
         const VAImageFormat * const va_format = &va_formats[i];
         const GstVaapiFormatInfo **fipp;
 
-        format = gst_video_format_from_va_format(va_format);
+        format = gst_vaapi_video_format_from_va_format(va_format);
         if (format == GST_VIDEO_FORMAT_UNKNOWN) {
             GST_DEBUG("unsupported format %" GST_FOURCC_FORMAT,
                       GST_FOURCC_ARGS(va_format->fourcc));
@@ -238,14 +238,14 @@ compare_yuv_formats(gconstpointer a, gconstpointer b)
     const GstVideoFormat fmt1 = ((GstVaapiFormatInfo *)a)->format;
     const GstVideoFormat fmt2 = ((GstVaapiFormatInfo *)b)->format;
 
-    const gboolean is_fmt1_yuv = gst_video_format_is_yuv(fmt1);
-    const gboolean is_fmt2_yuv = gst_video_format_is_yuv(fmt2);
+    const gboolean is_fmt1_yuv = gst_vaapi_video_format_is_yuv(fmt1);
+    const gboolean is_fmt2_yuv = gst_vaapi_video_format_is_yuv(fmt2);
 
     if (is_fmt1_yuv != is_fmt2_yuv)
         return is_fmt1_yuv ? -1 : 1;
 
-    return ((gint)gst_video_format_get_score(fmt1) -
-            (gint)gst_video_format_get_score(fmt2));
+    return ((gint)gst_vaapi_video_format_get_score(fmt1) -
+            (gint)gst_vaapi_video_format_get_score(fmt2));
 }
 
 /* Sort subpicture formats. Prefer RGB formats first */
@@ -255,14 +255,14 @@ compare_rgb_formats(gconstpointer a, gconstpointer b)
     const GstVideoFormat fmt1 = ((GstVaapiFormatInfo *)a)->format;
     const GstVideoFormat fmt2 = ((GstVaapiFormatInfo *)b)->format;
 
-    const gboolean is_fmt1_rgb = gst_video_format_is_rgb(fmt1);
-    const gboolean is_fmt2_rgb = gst_video_format_is_rgb(fmt2);
+    const gboolean is_fmt1_rgb = gst_vaapi_video_format_is_rgb(fmt1);
+    const gboolean is_fmt2_rgb = gst_vaapi_video_format_is_rgb(fmt2);
 
     if (is_fmt1_rgb != is_fmt2_rgb)
         return is_fmt1_rgb ? -1 : 1;
 
-    return ((gint)gst_video_format_get_score(fmt1) -
-            (gint)gst_video_format_get_score(fmt2));
+    return ((gint)gst_vaapi_video_format_get_score(fmt1) -
+            (gint)gst_vaapi_video_format_get_score(fmt2));
 }
 
 /* Check if configs array contains profile at entrypoint */
@@ -377,7 +377,7 @@ get_format_caps(GArray *formats)
 
     for (i = 0; i < formats->len; i++) {
         fip = &g_array_index(formats, GstVaapiFormatInfo, i);
-        caps = gst_video_format_to_caps(fip->format);
+        caps = gst_vaapi_video_format_to_caps(fip->format);
         if (caps)
             gst_caps_append(out_caps, caps);
     }

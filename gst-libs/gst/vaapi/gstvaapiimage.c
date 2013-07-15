@@ -164,7 +164,7 @@ _gst_vaapi_image_create(GstVaapiImage *image, GstVideoFormat format)
     if (!gst_vaapi_display_has_image_format(display, format))
         return FALSE;
 
-    va_format = gst_video_format_to_va_format(format);
+    va_format = gst_vaapi_video_format_to_va_format(format);
     if (!va_format)
         return FALSE;
 
@@ -218,7 +218,7 @@ gst_vaapi_image_create(GstVaapiImage *image, GstVideoFormat format,
         switch (image->format) {
         case GST_VIDEO_FORMAT_YV12:
         case GST_VIDEO_FORMAT_I420:
-            va_format = gst_video_format_to_va_format(image->format);
+            va_format = gst_vaapi_video_format_to_va_format(image->format);
             if (!va_format)
                 return FALSE;
             image->image.format = *va_format;
@@ -397,7 +397,7 @@ _gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image)
     VAImage alt_va_image;
     const VAImageFormat *alt_va_format;
 
-    format = gst_video_format_from_va_format(&va_image->format);
+    format = gst_vaapi_video_format_from_va_format(&va_image->format);
     if (format == GST_VIDEO_FORMAT_UNKNOWN)
         return FALSE;
 
@@ -425,7 +425,7 @@ _gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image)
             break;
         }
         if (format &&
-            (alt_va_format = gst_video_format_to_va_format(format))) {
+            (alt_va_format = gst_vaapi_video_format_to_va_format(format))) {
             alt_va_image = *va_image;
             alt_va_image.format = *alt_va_format;
             SWAP_UINT(alt_va_image.offsets[1], alt_va_image.offsets[2]);

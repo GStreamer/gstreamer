@@ -1,5 +1,5 @@
 /*
- *  video-format.h - Video format abstraction
+ *  video-format.h - Video format helpers for VA-API
  *
  *  Copyright (C) 2010-2011 Splitted-Desktop Systems
  *  Copyright (C) 2011-2013 Intel Corporation
@@ -29,31 +29,31 @@
 G_BEGIN_DECLS
 
 gboolean
-gst_video_format_is_rgb(GstVideoFormat format);
+gst_vaapi_video_format_is_rgb(GstVideoFormat format);
 
 gboolean
-gst_video_format_is_yuv(GstVideoFormat format);
+gst_vaapi_video_format_is_yuv(GstVideoFormat format);
 
 GstVideoFormat
-gst_video_format_from_structure(GstStructure *structure);
+gst_vaapi_video_format_from_structure(GstStructure *structure);
 
 GstVideoFormat
-gst_video_format_from_caps(GstCaps *caps);
+gst_vaapi_video_format_from_caps(GstCaps *caps);
 
 GstCaps *
-gst_video_format_to_caps(GstVideoFormat format);
+gst_vaapi_video_format_to_caps(GstVideoFormat format);
 
 GstVideoFormat
-gst_video_format_from_va_format(const VAImageFormat *va_format);
+gst_vaapi_video_format_from_va_format(const VAImageFormat *va_format);
 
 const VAImageFormat *
-gst_video_format_to_va_format(GstVideoFormat format);
+gst_vaapi_video_format_to_va_format(GstVideoFormat format);
 
 guint
-gst_video_format_get_chroma_type(GstVideoFormat format);
+gst_vaapi_video_format_get_chroma_type(GstVideoFormat format);
 
 guint
-gst_video_format_get_score(GstVideoFormat format);
+gst_vaapi_video_format_get_score(GstVideoFormat format);
 
 G_END_DECLS
 

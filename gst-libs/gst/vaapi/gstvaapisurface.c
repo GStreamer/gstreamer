@@ -145,11 +145,11 @@ gst_vaapi_surface_create_with_format(GstVaapiSurface *surface,
     const VAImageFormat *va_format;
     VASurfaceAttrib attrib;
 
-    va_format = gst_video_format_to_va_format(format);
+    va_format = gst_vaapi_video_format_to_va_format(format);
     if (!va_format)
         goto error_unsupported_format;
 
-    chroma_type = gst_video_format_get_chroma_type(format);
+    chroma_type = gst_vaapi_video_format_get_chroma_type(format);
     if (!chroma_type)
         goto error_unsupported_format;
 

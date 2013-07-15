@@ -1,5 +1,5 @@
 /*
- *  video-format.c - Video format abstraction
+ *  video-format.h - Video format helpers for VA-API
  *
  *  Copyright (C) 2010-2011 Splitted-Desktop Systems
  *  Copyright (C) 2011-2013 Intel Corporation
@@ -22,7 +22,7 @@
 
 /**
  * SECTION:videoformat
- * @short_description: Video format abstraction
+ * @short_description: Video format helpers for VA-API
  */
 
 #include "sysdeps.h"
@@ -64,7 +64,7 @@ struct _GstVideoFormatMap {
       { VA_FOURCC FOURCC, VA_##ENDIAN##_FIRST, BPP, DEPTH, R,G,B,A }, }
 
 /* Image formats, listed in HW order preference */
-static const GstVideoFormatMap gst_video_formats[] = {
+static const GstVideoFormatMap gst_vaapi_video_formats[] = {
     DEF_YUV(NV12, ('N','V','1','2'), LSB, 12, 420),
     DEF_YUV(YV12, ('Y','V','1','2'), LSB, 12, 420),
     DEF_YUV(I420, ('I','4','2','0'), LSB, 12, 420),
@@ -132,7 +132,7 @@ get_map(GstVideoFormat format)
 {
     const GstVideoFormatMap *m;
 
-    for (m = gst_video_formats; m->format; m++) {
+    for (m = gst_vaapi_video_formats; m->format; m++) {
         if (m->format == format)
             return m;
     }
@@ -140,43 +140,39 @@ get_map(GstVideoFormat format)
 }
 
 /**
- * gst_video_format_is_rgb:
+ * gst_vaapi_video_format_is_rgb:
  * @format: a #GstVideoFormat
  *
  * Checks whether the format is an RGB format.
  *
  * Return value: %TRUE if @format is RGB format
  */
-#if GST_CHECK_VERSION(1,0,0)
 gboolean
-gst_video_format_is_rgb(GstVideoFormat format)
+gst_vaapi_video_format_is_rgb(GstVideoFormat format)
 {
     const GstVideoFormatMap * const m = get_map(format);
 
     return m && va_format_is_rgb(&m->va_format);
 }
-#endif
 
 /**
- * gst_video_format_is_yuv:
+ * gst_vaapi_video_format_is_yuv:
  * @format: a #GstVideoFormat
  *
  * Checks whether the format is an YUV format.
  *
  * Return value: %TRUE if @format is YUV format
  */
-#if GST_CHECK_VERSION(1,0,0)
 gboolean
-gst_video_format_is_yuv(GstVideoFormat format)
+gst_vaapi_video_format_is_yuv(GstVideoFormat format)
 {
     const GstVideoFormatMap * const m = get_map(format);
 
     return m && va_format_is_yuv(&m->va_format);
 }
-#endif
 
 /**
- * gst_video_format_from_caps:
+ * gst_vaapi_video_format_from_caps:
  * @caps: a #GstCaps
  *
  * Converts @caps into the corresponding #GstVideoFormat. If the
@@ -186,7 +182,7 @@ gst_video_format_is_yuv(GstVideoFormat format)
  * Return value: the #GstVideoFormat describing the @caps
  */
 GstVideoFormat
-gst_video_format_from_caps(GstCaps *caps)
+gst_vaapi_video_format_from_caps(GstCaps *caps)
 {
     GstStructure *structure;
 
@@ -196,11 +192,11 @@ gst_video_format_from_caps(GstCaps *caps)
     structure = gst_caps_get_structure(caps, 0);
     if (!structure)
         return 0;
-    return gst_video_format_from_structure(structure);
+    return gst_vaapi_video_format_from_structure(structure);
 }
 
 /**
- * gst_video_format_from_structure:
+ * gst_vaapi_video_format_from_structure:
  * @structure: a #GstStructure
  *
  * Converts @structure into the corresponding #GstVideoFormat. If
@@ -210,7 +206,7 @@ gst_video_format_from_caps(GstCaps *caps)
  * Return value: the #GstVideoFormat describing the @structure
  */
 GstVideoFormat
-gst_video_format_from_structure(GstStructure *structure)
+gst_vaapi_video_format_from_structure(GstStructure *structure)
 {
 #if GST_CHECK_VERSION(1,0,0)
     const gchar * format = gst_structure_get_string(structure, "format");
@@ -248,7 +244,7 @@ gst_video_format_from_structure(GstStructure *structure)
     va_format->blue_mask  = GUINT32_SWAP_LE_BE(bmask);
     va_format->alpha_mask = GUINT32_SWAP_LE_BE(amask);
 
-    for (m = gst_video_formats; m->format; m++) {
+    for (m = gst_vaapi_video_formats; m->format; m++) {
         if (va_format_is_rgb(&m->va_format) &&
             (va_format_is_same_rgb(&m->va_format, &va_formats[0]) ||
              va_format_is_same_rgb(&m->va_format, &va_formats[1])))
@@ -259,7 +255,7 @@ gst_video_format_from_structure(GstStructure *structure)
 }
 
 /**
- * gst_video_format_to_caps:
+ * gst_vaapi_video_format_to_caps:
  * @format: a #GstVideoFormat
  *
  * Converts a #GstVideoFormat into the corresponding #GstCaps. If
@@ -268,7 +264,7 @@ gst_video_format_from_structure(GstStructure *structure)
  * Return value: the newly allocated #GstCaps, or %NULL if none was found
  */
 GstCaps *
-gst_video_format_to_caps(GstVideoFormat format)
+gst_vaapi_video_format_to_caps(GstVideoFormat format)
 {
     const GstVideoFormatMap * const m = get_map(format);
 
@@ -276,7 +272,7 @@ gst_video_format_to_caps(GstVideoFormat format)
 }
 
 /**
- * gst_video_format_from_va_format:
+ * gst_vaapi_video_format_from_va_format:
  * @va_format: a #VAImageFormat
  *
  * Converts a VA image format into the corresponding #GstVideoFormat.
@@ -286,11 +282,11 @@ gst_video_format_to_caps(GstVideoFormat format)
  * Return value: the #GstVideoFormat describing the @va_format
  */
 GstVideoFormat
-gst_video_format_from_va_format(const VAImageFormat *va_format)
+gst_vaapi_video_format_from_va_format(const VAImageFormat *va_format)
 {
     const GstVideoFormatMap *m;
 
-    for (m = gst_video_formats; m->format; m++) {
+    for (m = gst_vaapi_video_formats; m->format; m++) {
         if (va_format_is_same(&m->va_format, va_format))
             return m->format;
     }
@@ -298,7 +294,7 @@ gst_video_format_from_va_format(const VAImageFormat *va_format)
 }
 
 /**
- * gst_video_format_to_va_format:
+ * gst_vaapi_video_format_to_va_format:
  * @format: a #GstVideoFormat
  *
  * Converts a #GstVideoFormat into the corresponding VA image
@@ -308,7 +304,7 @@ gst_video_format_from_va_format(const VAImageFormat *va_format)
  * Return value: the VA image format, or %NULL if none was found
  */
 const VAImageFormat *
-gst_video_format_to_va_format(GstVideoFormat format)
+gst_vaapi_video_format_to_va_format(GstVideoFormat format)
 {
     const GstVideoFormatMap * const m = get_map(format);
 
@@ -316,7 +312,7 @@ gst_video_format_to_va_format(GstVideoFormat format)
 }
 
 /**
- * gst_video_format_get_chroma_type:
+ * gst_vaapi_video_format_get_chroma_type:
  * @format: a #GstVideoFormat
  *
  * Converts a #GstVideoFormat into the corresponding #GstVaapiChromaType
@@ -326,7 +322,7 @@ gst_video_format_to_va_format(GstVideoFormat format)
  *   was found.
  */
 guint
-gst_video_format_get_chroma_type(GstVideoFormat format)
+gst_vaapi_video_format_get_chroma_type(GstVideoFormat format)
 {
     const GstVideoFormatMap * const m = get_map(format);
 
@@ -334,7 +330,7 @@ gst_video_format_get_chroma_type(GstVideoFormat format)
 }
 
 /**
- * gst_video_format_get_score:
+ * gst_vaapi_video_format_get_score:
  * @format: a #GstVideoFormat
  *
  * Determines how "native" is this @format. The lower is the returned
@@ -343,9 +339,9 @@ gst_video_format_get_chroma_type(GstVideoFormat format)
  * Return value: the @format score, or %G_MAXUINT if none was found
  */
 guint
-gst_video_format_get_score(GstVideoFormat format)
+gst_vaapi_video_format_get_score(GstVideoFormat format)
 {
     const GstVideoFormatMap * const m = get_map(format);
 
-    return m ? (m - &gst_video_formats[0]) : G_MAXUINT;
+    return m ? (m - &gst_vaapi_video_formats[0]) : G_MAXUINT;
 }

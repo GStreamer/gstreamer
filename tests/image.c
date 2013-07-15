@@ -302,7 +302,7 @@ image_draw_rectangle(
         stride[i] = gst_vaapi_image_get_pitch(image, i);
     }
 
-    if (gst_video_format_is_yuv(image_format))
+    if (gst_vaapi_video_format_is_yuv(image_format))
         color = argb2yuv(color);
 
     if (x < 0)

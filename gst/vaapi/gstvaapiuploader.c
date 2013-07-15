@@ -138,7 +138,7 @@ ensure_allowed_caps(GstVaapiUploader *uploader)
         GstVaapiImage *image;
         GstVideoFormat format;
 
-        format = gst_video_format_from_structure(structure);
+        format = gst_vaapi_video_format_from_structure(structure);
         if (format == GST_VIDEO_FORMAT_UNKNOWN)
             continue;
         image = gst_vaapi_image_new(priv->display, format, WIDTH, HEIGHT);
@@ -224,7 +224,7 @@ ensure_surface_pool(GstVaapiUploader *uploader, GstCaps *caps,
     /* XXX: this also means that visual quality is not preserved */
     if (format != GST_VIDEO_FORMAT_ENCODED) {
         const GstVaapiChromaType chroma_type =
-            gst_video_format_get_chroma_type(format);
+            gst_vaapi_video_format_get_chroma_type(format);
         if (chroma_type != GST_VAAPI_CHROMA_TYPE_YUV420) {
             const GstVideoFormat image_format =
                 GST_VIDEO_INFO_FORMAT(&priv->image_info);
