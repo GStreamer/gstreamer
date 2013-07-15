@@ -102,8 +102,6 @@ _gst_gl_display_thread_run_generic (RunGenericData * data)
   GST_TRACE ("running function:%p data:%p", data->func, data->data);
 
   data->func (data->display, data->data);
-  g_object_unref (data->display);
-  g_slice_free (RunGenericData, data);
 }
 
 GstGLDisplay *
@@ -116,19 +114,18 @@ void
 gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data)
 {
-  RunGenericData *rdata;
+  RunGenericData rdata;
 
   g_return_if_fail (GST_IS_GL_DISPLAY (display));
   g_return_if_fail (GST_GL_IS_WINDOW (display->window));
   g_return_if_fail (func != NULL);
 
-  rdata = g_slice_new (RunGenericData);
-  rdata->display = g_object_ref (display);
-  rdata->data = data;
-  rdata->func = func;
+  rdata.display = display;
+  rdata.data = data;
+  rdata.func = func;
 
   gst_gl_window_send_message (display->window,
-      GST_GL_WINDOW_CB (_gst_gl_display_thread_run_generic), rdata);
+      GST_GL_WINDOW_CB (_gst_gl_display_thread_run_generic), &rdata);
 }
 
 GstGLAPI
