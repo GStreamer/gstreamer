@@ -37,6 +37,15 @@
 #define GET_VA_DISPLAY(obj) GET_DECODER(obj)->va_display
 #define GET_VA_CONTEXT(obj) GET_DECODER(obj)->va_context
 
+static inline void
+gst_video_codec_frame_clear(GstVideoCodecFrame **frame_ptr)
+{
+    if (!*frame_ptr)
+        return;
+    gst_video_codec_frame_unref(*frame_ptr);
+    *frame_ptr = NULL;
+}
+
 /* ------------------------------------------------------------------------- */
 /* --- Pictures                                                          --- */
 /* ------------------------------------------------------------------------- */
@@ -82,10 +91,7 @@ gst_vaapi_picture_destroy(GstVaapiPicture *picture)
     vaapi_destroy_buffer(GET_VA_DISPLAY(picture), &picture->param_id);
     picture->param = NULL;
 
-    if (picture->frame) {
-        gst_video_codec_frame_unref(picture->frame);
-        picture->frame = NULL;
-    }
+    gst_video_codec_frame_clear(&picture->frame);
     gst_vaapi_picture_replace(&picture->parent_picture, NULL);
 }
 
@@ -338,6 +344,7 @@ do_output(GstVaapiPicture *picture)
     GST_VAAPI_SURFACE_PROXY_FLAG_SET(proxy, flags);
 
     gst_vaapi_decoder_push_frame(GET_DECODER(picture), out_frame);
+    gst_video_codec_frame_clear(&picture->frame);
 
     GST_VAAPI_PICTURE_FLAG_SET(picture, GST_VAAPI_PICTURE_FLAG_OUTPUT);
     return TRUE;
