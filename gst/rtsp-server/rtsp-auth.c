@@ -95,12 +95,7 @@ gst_rtsp_auth_init (GstRTSPAuth * auth)
       (GDestroyNotify) gst_rtsp_token_unref);
 
   /* bitwise or of all methods that need authentication */
-  priv->methods = GST_RTSP_DESCRIBE |
-      GST_RTSP_ANNOUNCE |
-      GST_RTSP_GET_PARAMETER |
-      GST_RTSP_SET_PARAMETER |
-      GST_RTSP_PAUSE |
-      GST_RTSP_PLAY | GST_RTSP_RECORD | GST_RTSP_SETUP | GST_RTSP_TEARDOWN;
+  priv->methods = 0;
 }
 
 static void
@@ -303,6 +298,21 @@ no_auth:
   }
 }
 
+static void
+send_response (GstRTSPAuth * auth, GstRTSPStatusCode code,
+    GstRTSPClientState * state)
+{
+  gst_rtsp_message_init_response (state->response, code,
+      gst_rtsp_status_as_text (code), state->request);
+
+  if (code == GST_RTSP_STS_UNAUTHORIZED) {
+    /* we only have Basic for now */
+    gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_WWW_AUTHENTICATE,
+        "Basic realm=\"GStreamer RTSP Server\"");
+  }
+  gst_rtsp_client_send_message (state->client, state->session, state->response);
+}
+
 static gboolean
 ensure_authenticated (GstRTSPAuth * auth, GstRTSPClientState * state)
 {
@@ -326,28 +336,15 @@ ensure_authenticated (GstRTSPAuth * auth, GstRTSPClientState * state)
 authenticate_failed:
   {
     GST_DEBUG_OBJECT (auth, "authenticate failed");
+    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, state);
     return FALSE;
   }
 no_auth:
   {
     GST_DEBUG_OBJECT (auth, "no authorization token found");
+    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, state);
     return FALSE;
   }
-}
-
-static void
-send_response (GstRTSPAuth * auth, GstRTSPStatusCode code,
-    GstRTSPClientState * state)
-{
-  gst_rtsp_message_init_response (state->response, code,
-      gst_rtsp_status_as_text (code), state->request);
-
-  if (code == GST_RTSP_STS_UNAUTHORIZED) {
-    /* we only have Basic for now */
-    gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_WWW_AUTHENTICATE,
-        "Basic realm=\"GStreamer RTSP Server\"");
-  }
-  gst_rtsp_client_send_message (state->client, state->session, state->response);
 }
 
 /* new connection */
@@ -382,7 +379,6 @@ check_url (GstRTSPAuth * auth, GstRTSPClientState * state, const gchar * check)
   /* ERRORS */
 not_authenticated:
   {
-    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, state);
     return FALSE;
   }
 }
@@ -394,6 +390,9 @@ check_factory (GstRTSPAuth * auth, GstRTSPClientState * state,
 {
   const gchar *role;
   GstRTSPPermissions *perms;
+
+  if (!ensure_authenticated (auth, state))
+    return FALSE;
 
   if (!(role = gst_rtsp_token_get_string (state->token,
               GST_RTSP_MEDIA_FACTORY_ROLE)))
@@ -443,6 +442,9 @@ static gboolean
 check_client_settings (GstRTSPAuth * auth, GstRTSPClientState * state,
     const gchar * check)
 {
+  if (!ensure_authenticated (auth, state))
+    return FALSE;
+
   return gst_rtsp_token_is_allowed (state->token,
       GST_RTSP_TRANSPORT_PERM_CLIENT_SETTINGS);
 }
