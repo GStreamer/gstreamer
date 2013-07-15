@@ -760,6 +760,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
     case GST_MAKE_FOURCC ('M', 'P', 'N', 'G'):
     case GST_MAKE_FOURCC ('m', 'p', 'n', 'g'):
     case GST_MAKE_FOURCC ('P', 'N', 'G', ' '):
+    case GST_MAKE_FOURCC ('p', 'n', 'g', ' '):
       caps = gst_caps_new_empty_simple ("image/png");
       if (codec_name)
         *codec_name = g_strdup ("PNG image");
