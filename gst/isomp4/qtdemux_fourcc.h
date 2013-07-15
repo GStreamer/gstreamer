@@ -144,6 +144,7 @@ G_BEGIN_DECLS
 #define FOURCC_btrt     GST_MAKE_FOURCC('b','t','r','t')
 #define FOURCC_VP31     GST_MAKE_FOURCC('V','P','3','1')
 #define FOURCC_rle_     GST_MAKE_FOURCC('r','l','e',' ')
+#define FOURCC_WRLE     GST_MAKE_FOURCC('W','R','L','E')
 #define FOURCC_MAC6     GST_MAKE_FOURCC('M','A','C','6')
 #define FOURCC_MAC3     GST_MAKE_FOURCC('M','A','C','3')
 #define FOURCC_ima4     GST_MAKE_FOURCC('i','m','a','4')

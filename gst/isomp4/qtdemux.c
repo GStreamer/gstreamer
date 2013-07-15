@@ -7590,6 +7590,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           break;
         }
         case FOURCC_rle_:
+        case FOURCC_WRLE:
         {
           gst_caps_set_simple (stream->caps,
               "depth", G_TYPE_INT, QT_UINT16 (stsd_data + offset + 82), NULL);
@@ -10235,6 +10236,11 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("Run-length encoding");
       caps = gst_caps_new_simple ("video/x-rle",
           "layout", G_TYPE_STRING, "quicktime", NULL);
+      break;
+    case GST_MAKE_FOURCC ('W', 'R', 'L', 'E'):
+      _codec ("Run-length encoding");
+      caps = gst_caps_new_simple ("video/x-rle",
+          "layout", G_TYPE_STRING, "microsoft", NULL);
       break;
     case GST_MAKE_FOURCC ('I', 'V', '3', '2'):
     case GST_MAKE_FOURCC ('i', 'v', '3', '2'):
