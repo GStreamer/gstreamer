@@ -79,7 +79,7 @@ struct _GstRTSPThread {
 
 GstRTSPThread *   gst_rtsp_thread_new      (GstRTSPThreadType type);
 
-void              gst_rtsp_thread_reuse    (GstRTSPThread * thread);
+gboolean          gst_rtsp_thread_reuse    (GstRTSPThread * thread);
 void              gst_rtsp_thread_stop     (GstRTSPThread * thread);
 
 /**

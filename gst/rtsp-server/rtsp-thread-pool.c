@@ -103,16 +103,19 @@ gst_rtsp_thread_new (GstRTSPThreadType type)
  * @thread: a #GstRTSPThread
  *
  * Reuse the mainloop of @thread
+ *
+ * Returns: %TRUE if the mainloop could be reused
  */
-void
+gboolean
 gst_rtsp_thread_reuse (GstRTSPThread * thread)
 {
   GstRTSPThreadImpl *impl = (GstRTSPThreadImpl *) thread;
 
-  g_return_if_fail (GST_IS_RTSP_THREAD (thread));
+  g_return_val_if_fail (GST_IS_RTSP_THREAD (thread), FALSE);
 
   GST_DEBUG ("reuse thread %p", thread);
-  g_atomic_int_inc (&impl->reused);
+
+  return g_atomic_int_add (&impl->reused, 1) > 0;
 }
 
 /**
@@ -404,11 +407,22 @@ default_get_thread (GstRTSPThreadPool * pool,
         GST_DEBUG_OBJECT (pool, "no client threads allowed");
         thread = NULL;
       } else {
+        g_mutex_lock (&priv->lock);
+      retry:
         if (priv->max_threads > 0 &&
             g_queue_get_length (&priv->threads) >= priv->max_threads) {
           /* max threads reached, recycle from queue */
-          GST_DEBUG_OBJECT (pool, "recycle client thread");
           thread = g_queue_pop_head (&priv->threads);
+          GST_DEBUG_OBJECT (pool, "recycle client thread %p", thread);
+          if (!gst_rtsp_thread_reuse (thread)) {
+            GST_DEBUG_OBJECT (pool, "thread %p stopping, retry", thread);
+            /* this can happen if we just decremented the reuse counter of the
+             * thread and signaled the mainloop that it should stop. We leave
+             * the thread out of the queue now, there is no point to add it
+             * again, it will be removed from the mainloop otherwise after it
+             * stops. */
+            goto retry;
+          }
           gst_rtsp_thread_ref (thread);
         } else {
           /* make more threads */
@@ -419,6 +433,7 @@ default_get_thread (GstRTSPThreadPool * pool,
             goto thread_error;
         }
         g_queue_push_tail (&priv->threads, thread);
+        g_mutex_unlock (&priv->lock);
       }
       break;
     case GST_RTSP_THREAD_TYPE_MEDIA:
