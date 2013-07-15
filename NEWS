@@ -1,9 +1,9 @@
-gst-vaapi NEWS -- summary of changes.  2013-07-DD
+gst-vaapi NEWS -- summary of changes.  2013-07-15
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
 
-Version 0.5.5 - DD.Jul.2013
+Version 0.5.5 - 15.Jul.2013
 * Allow creation of video surfaces with an explicit pixel format
 * Allocate VA/GLX capable buffers by default on X11 servers (Victor Jaquez)
 * Add support for video cropping in MPEG-2, VC-1 and H.264 codecs (+Sreerenj)
