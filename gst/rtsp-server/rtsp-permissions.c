@@ -123,7 +123,7 @@ gst_rtsp_permissions_new (void)
  * gst_rtsp_permissions_add_role:
  * @permissions: a #GstRTSPPermissions
  * @role: a role
- * @fielname: the first field name
+ * @fieldname: the first field name
  * @...: additional arguments
  *
  * Add a new @role to @permissions with the given variables. The fields
@@ -144,7 +144,7 @@ gst_rtsp_permissions_add_role (GstRTSPPermissions * permissions,
  * gst_rtsp_permissions_add_role_valist:
  * @permissions: a #GstRTSPPermissions
  * @role: a role
- * @fielname: the first field name
+ * @fieldname: the first field name
  * @var_args: additional fields to add
  *
  * Add a new @role to @permissions with the given variables. Structure fields

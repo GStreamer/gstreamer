@@ -83,10 +83,10 @@ GstRTSPPermissions *  gst_rtsp_permissions_new             (void);
 
 void                  gst_rtsp_permissions_add_role        (GstRTSPPermissions *permissions,
                                                             const gchar *role,
-                                                            const gchar *field_name, ...);
+                                                            const gchar *fieldname, ...);
 void                  gst_rtsp_permissions_add_role_valist (GstRTSPPermissions *permissions,
                                                             const gchar *role,
-                                                            const gchar *field_name,
+                                                            const gchar *fieldname,
                                                             va_list var_args);
 void                  gst_rtsp_permissions_remove_role     (GstRTSPPermissions *permissions,
                                                             const gchar *role);

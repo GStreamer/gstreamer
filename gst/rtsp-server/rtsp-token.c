@@ -21,7 +21,19 @@
  * @short_description: Roles and permissions for a client
  * @see_also: #GstRTSPClient, #GstRTSPPermission, #GstRTSPAuth
  *
- * Last reviewed on 2013-07-11 (1.0.0)
+ * A #GstRTSPToken contains the permissions and roles of the user
+ * performing the current request. A token is usually created when a user is
+ * authenticated by the #GstRTSPAuth object and is then placed as the current
+ * token for the current request.
+ *
+ * #GstRTSPAuth can use the token and its contents to check authorization for
+ * various operations by comparing the token to the #GstRTSPPermissions of the
+ * object.
+ *
+ * The accepted values of the token are entirely defined by the #GstRTSPAuth
+ * object that implements the security policy.
+ *
+ * Last reviewed on 2013-07-15 (1.0.0)
  */
 
 #include <string.h>
@@ -120,9 +132,9 @@ gst_rtsp_token_new (const gchar * firstfield, ...)
 }
 
 /**
- * gst_rtsp_token_new:
+ * gst_rtsp_token_new_valist:
  * @firstfield: the first fieldname
- * @var_args additional arguments
+ * @var_args: additional arguments
  *
  * Create a new Authorization token with the given fieldnames and values.
  * Arguments are given similar to gst_structure_new_valist().

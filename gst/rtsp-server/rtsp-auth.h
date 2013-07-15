@@ -150,7 +150,7 @@ gchar *             gst_rtsp_auth_make_basic        (const gchar * user, const g
  */
 #define GST_RTSP_MEDIA_FACTORY_PERM_CONSTRUCT   "media.factory.construct"
 /**
- * GST_RTSP_MEDIA_FACTORY_PERM_CLIENT_SETTINGS:
+ * GST_RTSP_TRANSPORT_PERM_CLIENT_SETTINGS:
  *
  * G_TYPE_BOOLEAN, %TRUE if the client can specify TTL, destination and
  *     port pair in multicast.
