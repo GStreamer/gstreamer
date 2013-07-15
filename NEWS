@@ -4,11 +4,15 @@ Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
 
 Version 0.5.5 - DD.Jul.2013
+* Allow creation of video surfaces with an explicit pixel format
 * Allocate VA/GLX capable buffers by default on X11 servers (Victor Jaquez)
 * Add support for video cropping in MPEG-2, VC-1 and H.264 codecs (+Sreerenj)
+* Fix memory leak when processing interlaced pictures
 * Fix creation of VA/GLX textures when video cropping is used
 * Fix raw image copies in vaapidownload / vaapiupload (Feng Yuan)
 * Fix MPEG-2 quantization matrices reset on new sequence headers (Cong Zhong)
+* Fix direct linking of vaapidownload element to xvimagesink (Feng Yuan)
+* Fix memory corruption in video pool implementation, e.g. for clutter-gst
 
 Version 0.5.4 - 14.Jun.2013
 * Streamline core libgstvaapi decoding library (API/ABI changes)
