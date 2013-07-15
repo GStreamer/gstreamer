@@ -402,6 +402,8 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
     info_buffer[len] = '\0';
 
     if (status != GL_TRUE) {
+      GST_ERROR ("Vertex Shader compilation failed:\n%s", info_buffer);
+
       g_set_error (error, GST_GL_SHADER_ERROR,
           GST_GL_SHADER_ERROR_COMPILE,
           "Vertex Shader compilation failed:\n%s", info_buffer);
@@ -432,6 +434,8 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
         sizeof (info_buffer) - 1, &len, info_buffer);
     info_buffer[len] = '\0';
     if (status != GL_TRUE) {
+      GST_ERROR ("Fragment Shader compilation failed:\n%s", info_buffer);
+
       g_set_error (error, GST_GL_SHADER_ERROR,
           GST_GL_SHADER_ERROR_COMPILE,
           "Fragment Shader compilation failed:\n%s", info_buffer);
@@ -456,6 +460,8 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
   info_buffer[len] = '\0';
 
   if (status != GL_TRUE) {
+    GST_ERROR ("Shader linking failed:\n%s", info_buffer);
+
     g_set_error (error, GST_GL_SHADER_ERROR,
         GST_GL_SHADER_ERROR_LINK, "Shader Linking failed:\n%s", info_buffer);
     priv->compiled = FALSE;
