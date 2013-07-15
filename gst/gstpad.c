@@ -1072,6 +1072,9 @@ gst_pad_activate_mode (GstPad * pad, GstPadMode mode, gboolean active)
       break;
   }
 
+  /* Mark pad as needing reconfiguration */
+  if (active)
+    GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_NEED_RECONFIGURE);
   pre_activate (pad, new);
 
   if (GST_PAD_ACTIVATEMODEFUNC (pad)) {
