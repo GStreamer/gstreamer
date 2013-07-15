@@ -1129,6 +1129,8 @@ _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
   GstVideoFormat v_format;
   guint out_width, out_height;
 
+  GLint viewport_dim[4];
+
   const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
     1.0f, 0.0f,
     -1.0f, -1.0f, 0.0f,
@@ -1148,6 +1150,8 @@ _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
 
   gst_gl_display_check_framebuffer_status (display);
   gl->BindFramebuffer (GL_FRAMEBUFFER, download->fbo);
+
+  gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
 
   gl->Viewport (0, 0, out_width, out_height);
 
@@ -1171,6 +1175,9 @@ _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
   gst_gl_display_clear_shader (display);
+
+  gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
+      viewport_dim[3]);
 
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
 
@@ -1199,7 +1206,6 @@ _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
   }
 
   gst_gl_display_check_framebuffer_status (display);
-
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 }
 #endif
@@ -1434,6 +1440,7 @@ _do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
   GST_TRACE ("doing YUV download of texture:%u (%ux%u) using fbo:%u",
       download->in_texture, out_width, out_height, download->fbo);
 
+  gst_gl_display_check_framebuffer_status (display);
   gl->BindFramebuffer (GL_FRAMEBUFFER, download->fbo);
 
   gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
@@ -1498,10 +1505,6 @@ _do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
   gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
       viewport_dim[3]);
 
-  gst_gl_display_check_framebuffer_status (display);
-
-  gl->BindFramebuffer (GL_FRAMEBUFFER, download->fbo);
-
   switch (v_format) {
     case GST_VIDEO_FORMAT_AYUV:
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
@@ -1558,7 +1561,6 @@ _do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
   }
 
   gst_gl_display_check_framebuffer_status (display);
-
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 }
 #endif
