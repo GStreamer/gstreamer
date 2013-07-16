@@ -2495,13 +2495,17 @@ void
 gst_query_parse_context (GstQuery * query, GstContext ** context)
 {
   GstStructure *structure;
+  const GValue *v;
 
   g_return_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT);
   g_return_if_fail (context != NULL);
 
   structure = GST_QUERY_STRUCTURE (query);
-  *context = g_value_get_boxed (gst_structure_id_get_value (structure,
-          GST_QUARK (CONTEXT)));
+  v = gst_structure_id_get_value (structure, GST_QUARK (CONTEXT));
+  if (v)
+    *context = g_value_get_boxed (v);
+  else
+    *context = NULL;
 }
 
 static void
