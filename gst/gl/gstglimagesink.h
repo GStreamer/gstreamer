@@ -81,8 +81,6 @@ struct _GstGLImageSink
   GLuint redisplay_texture_height;
 #if GST_GL_HAVE_GLES2
   GstGLShader *redisplay_shader;
-  gchar *redisplay_vertex_shader_str_gles2;
-  gchar *redisplay_fragment_shader_str_gles2;
   GLint redisplay_attr_position_loc;
   GLint redisplay_attr_texture_loc;
 #endif

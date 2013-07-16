@@ -415,9 +415,7 @@ gst_gl_window_x11_close (GstGLWindow * window)
     //XCloseDisplay (window_x11->device);
 
     GST_DEBUG ("display receiver closed");
-    g_mutex_lock (&window_x11->disp_send_lock);
     XCloseDisplay (window_x11->disp_send);
-    g_mutex_unlock (&window_x11->disp_send_lock);
     GST_DEBUG ("display sender closed");
   }
 

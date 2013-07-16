@@ -330,6 +330,11 @@ gst_glimage_sink_finalize (GObject * object)
     glimage_sink->par = NULL;
   }
 
+  if (glimage_sink->pool) {
+    gst_object_unref (glimage_sink->pool);
+    glimage_sink->pool = NULL;
+  }
+
   g_free (glimage_sink->display_name);
 
   GST_DEBUG ("finalized");
@@ -393,6 +398,16 @@ gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
   return res;
 }
 
+static void
+gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink)
+{
+#if GST_GL_HAVE_GLES2
+  if (gl_sink->redisplay_shader) {
+    gst_object_unref (gl_sink->redisplay_shader);
+    gl_sink->redisplay_shader = NULL;
+  }
+#endif
+}
 
 /*
  * GstElement methods
@@ -485,10 +500,19 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       glimage_sink->window_id = 0;
       //but do not reset glimage_sink->new_window_id
 
+      if (glimage_sink->pool) {
+        gst_buffer_pool_set_active (glimage_sink->pool, FALSE);
+        gst_object_unref (glimage_sink->pool);
+        glimage_sink->pool = NULL;
+      }
+
       GST_VIDEO_SINK_WIDTH (glimage_sink) = 1;
       GST_VIDEO_SINK_HEIGHT (glimage_sink) = 1;
       if (glimage_sink->display) {
         GstGLWindow *window = gst_gl_display_get_window (glimage_sink->display);
+
+        gst_gl_window_send_message (window,
+            GST_GL_WINDOW_CB (gst_glimage_sink_cleanup_glthread), glimage_sink);
 
         gst_gl_window_set_resize_callback (window, NULL, NULL, NULL);
         gst_gl_window_set_draw_callback (window, NULL, NULL, NULL);
@@ -543,6 +567,8 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   gint display_par_n, display_par_d;
   guint display_ratio_num, display_ratio_den;
   GstVideoInfo vinfo;
+  GstStructure *structure;
+  GstBufferPool *newpool, *oldpool;
 
   GST_DEBUG ("set caps with %" GST_PTR_FORMAT, caps);
 
@@ -607,6 +633,24 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
       GST_VIDEO_SINK_HEIGHT (glimage_sink));
 
   glimage_sink->info = vinfo;
+
+  newpool = gst_gl_buffer_pool_new (glimage_sink->display);
+  structure = gst_buffer_pool_get_config (newpool);
+  gst_buffer_pool_config_set_params (structure, caps, vinfo.size, 2, 0);
+  gst_buffer_pool_set_config (newpool, structure);
+
+  oldpool = glimage_sink->pool;
+  /* we don't activate the pool yet, this will be done by downstream after it
+   * has configured the pool. If downstream does not want our pool we will
+   * activate it when we render into it */
+  glimage_sink->pool = newpool;
+
+  /* unref the old sink */
+  if (oldpool) {
+    /* we don't deactivate, some elements might still be using it, it will
+     * be deactivated when the last ref is gone */
+    gst_object_unref (oldpool);
+  }
 
   return TRUE;
 }
@@ -1053,15 +1097,4 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink, GLuint texture,
   gst_object_unref (window);
 
   return alive;
-}
-
-void
-temp (GstGLImageSink * gl_sink)
-{
-#if GST_GL_HAVE_GLES2
-  if (gl_sink->redisplay_shader) {
-    gst_object_unref (gl_sink->redisplay_shader);
-    gl_sink->redisplay_shader = NULL;
-  }
-#endif
 }
