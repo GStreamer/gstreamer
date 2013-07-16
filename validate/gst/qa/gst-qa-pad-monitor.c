@@ -21,6 +21,7 @@
 
 #include "gst-qa-pad-monitor.h"
 #include "gst-qa-element-monitor.h"
+#include <gst/gst_private.h>
 
 /**
  * SECTION:gst-qa-pad-monitor
@@ -39,6 +40,39 @@ G_DEFINE_TYPE_WITH_CODE (GstQaPadMonitor, gst_qa_pad_monitor,
     GST_TYPE_QA_MONITOR, _do_init);
 
 static gboolean gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor);
+
+/* This was copied from gstpad.c and might need
+ * updating whenever it changes in core */
+static GstCaps *
+_gst_pad_get_caps_default (GstPad * pad)
+{
+  GstCaps *result = NULL;
+  GstPadTemplate *templ;
+
+  if ((templ = GST_PAD_PAD_TEMPLATE (pad))) {
+    result = GST_PAD_TEMPLATE_CAPS (templ);
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "using pad template %p with caps %p %" GST_PTR_FORMAT, templ, result,
+        result);
+
+    result = gst_caps_ref (result);
+    goto done;
+  }
+  if ((result = GST_PAD_CAPS (pad))) {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
+        "using pad caps %p %" GST_PTR_FORMAT, result, result);
+
+    result = gst_caps_ref (result);
+    goto done;
+  }
+
+  /* this almost never happens */
+  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "pad has no caps");
+  result = gst_caps_new_empty ();
+
+done:
+  return result;
+}
 
 static void
 gst_qa_pad_monitor_dispose (GObject * object)
@@ -410,6 +444,36 @@ gst_qa_pad_monitor_event_probe (GstPad * pad, GstEvent * event, gpointer udata)
   return gst_qa_pad_monitor_sink_event_check (monitor, event, NULL);
 }
 
+static GstCaps *
+gst_qa_pad_monitor_getcaps_func (GstPad * pad)
+{
+  GstQaPadMonitor *pad_monitor =
+      g_object_get_data ((GObject *) pad, "qa-monitor");
+  GstCaps *ret = NULL;
+
+  if (pad_monitor->getcaps_func) {
+    ret = pad_monitor->getcaps_func (pad);
+  } else {
+    ret = _gst_pad_get_caps_default (pad);
+  }
+
+  return ret;
+}
+
+static gboolean
+gst_qa_pad_monitor_setcaps_func (GstPad * pad, GstCaps * caps)
+{
+  GstQaPadMonitor *pad_monitor =
+      g_object_get_data ((GObject *) pad, "qa-monitor");
+  gboolean ret = TRUE;
+
+  if (pad_monitor->setcaps_func) {
+    ret = pad_monitor->setcaps_func (pad, caps);
+  }
+
+  return ret;
+}
+
 static gboolean
 gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor)
 {
@@ -432,6 +496,8 @@ gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor)
 
   pad_monitor->event_func = GST_PAD_EVENTFUNC (pad);
   pad_monitor->query_func = GST_PAD_QUERYFUNC (pad);
+  pad_monitor->setcaps_func = GST_PAD_SETCAPSFUNC (pad);
+  pad_monitor->getcaps_func = GST_PAD_GETCAPSFUNC (pad);
   if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
     pad_monitor->bufferalloc_func = GST_PAD_BUFFERALLOCFUNC (pad);
     if (pad_monitor->bufferalloc_func)
@@ -456,6 +522,8 @@ gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor)
         (GCallback) gst_qa_pad_monitor_event_probe, pad_monitor);
   }
   gst_pad_set_query_function (pad, gst_qa_pad_monitor_query_func);
+  gst_pad_set_getcaps_function (pad, gst_qa_pad_monitor_getcaps_func);
+  gst_pad_set_setcaps_function (pad, gst_qa_pad_monitor_setcaps_func);
 
   return TRUE;
 }

@@ -63,6 +63,8 @@ struct _GstQaPadMonitor {
   GstPadEventFunction event_func;
   GstPadGetRangeFunction getrange_func;
   GstPadQueryFunction query_func;
+  GstPadSetCapsFunction setcaps_func;
+  GstPadGetCapsFunction getcaps_func;
 
   gulong buffer_probe_id;
   gulong event_probe_id;
