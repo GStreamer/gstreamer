@@ -7,5 +7,6 @@ controller
 gstbufferstress
 gstclockstress
 gstpollstress
+gstpoolstress
 mass-elements
 *.gcno
