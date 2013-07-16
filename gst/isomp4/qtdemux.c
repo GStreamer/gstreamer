@@ -1629,17 +1629,25 @@ gst_qtdemux_find_sample (GstQTDemux * qtdemux, gint64 byte_pos, gboolean fw,
       i = str->n_samples - 1;
       inc = -1;
     }
+
     for (; (i >= 0) && (i < str->n_samples); i += inc) {
-      if (str->samples[i].size &&
-          ((fw && (str->samples[i].offset >= byte_pos)) ||
-              (!fw &&
-                  (str->samples[i].offset + str->samples[i].size <=
-                      byte_pos)))) {
-        /* move stream to first available sample */
-        if (set) {
-          gst_qtdemux_move_stream (qtdemux, str, i);
-          set_sample = TRUE;
-        }
+      if (str->samples[i].size == 0)
+        continue;
+
+      if (fw && (str->samples[i].offset < byte_pos))
+        continue;
+
+      if (!fw && (str->samples[i].offset + str->samples[i].size > byte_pos))
+        continue;
+
+      /* move stream to first available sample */
+      if (set) {
+        gst_qtdemux_move_stream (qtdemux, str, i);
+        set_sample = TRUE;
+      }
+
+      /* avoid index from sparse streams since they might be far away */
+      if (!str->sparse) {
         /* determine min/max time */
         time = str->samples[i].timestamp + str->samples[i].pts_offset;
         time = gst_util_uint64_scale (time, GST_SECOND, str->timescale);
@@ -1647,17 +1655,18 @@ gst_qtdemux_find_sample (GstQTDemux * qtdemux, gint64 byte_pos, gboolean fw,
             (fw && time < min_time)) {
           min_time = time;
         }
+
         /* determine stream with leading sample, to get its position */
-        if (!stream || (fw
-                && (str->samples[i].offset < stream->samples[index].offset))
-            || (!fw
-                && (str->samples[i].offset > stream->samples[index].offset))) {
+        if (!stream ||
+            (fw && (str->samples[i].offset < stream->samples[index].offset)) ||
+            (!fw && (str->samples[i].offset > stream->samples[index].offset))) {
           stream = str;
           index = i;
         }
-        break;
       }
+      break;
     }
+
     /* no sample for this stream, mark eos */
     if (!set_sample)
       gst_qtdemux_move_stream (qtdemux, str, str->n_samples);
