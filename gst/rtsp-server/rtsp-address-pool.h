@@ -139,12 +139,6 @@ gboolean               gst_rtsp_address_pool_add_range       (GstRTSPAddressPool
                                                               guint16 max_port,
                                                               guint8 ttl);
 
-gboolean               gst_rtsp_address_pool_add_range_unicast (GstRTSPAddressPool * pool,
-                                                              const gchar *min_address,
-                                                              const gchar *max_address,
-                                                              guint16 min_port,
-                                                              guint16 max_port);
-
 GstRTSPAddress *       gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool * pool,
                                                               GstRTSPAddressFlags flags,
                                                               gint n_ports);

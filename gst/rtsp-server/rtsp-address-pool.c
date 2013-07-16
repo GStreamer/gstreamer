@@ -247,11 +247,18 @@ get_address_string (Addr * addr)
  * @max_address: a maximum address to add
  * @min_port: the minimum port
  * @max_port: the maximum port
- * @ttl: a TTL
+ * @ttl: a TTL or 0 for unicast addresses
  *
- * Adds the multicast addresses from @min_addess to @max_address (inclusive)
+ * Adds the addresses from @min_addess to @max_address (inclusive)
  * to @pool. The valid port range for the addresses will be from @min_port to
  * @max_port inclusive.
+ *
+ * When @ttl is 0, @min_address and @max_address should be unicast addresses.
+ * @min_address and @max_address can be set to
+ * #GST_RTSP_ADDRESS_POOL_ANY_IPV4 or #GST_RTSP_ADDRESS_POOL_ANY_IPV6 to bind
+ * to all available IPv4 or IPv6 addresses.
+ *
+ * When @ttl > 0, @min_address and @max_address should be multicast addresses.
  *
  * Returns: %TRUE if the addresses could be added.
  */
@@ -262,17 +269,20 @@ gst_rtsp_address_pool_add_range (GstRTSPAddressPool * pool,
 {
   AddrRange *range;
   GstRTSPAddressPoolPrivate *priv;
+  gboolean is_multicast;
 
   g_return_val_if_fail (GST_IS_RTSP_ADDRESS_POOL (pool), FALSE);
   g_return_val_if_fail (min_port <= max_port, FALSE);
 
   priv = pool->priv;
 
+  is_multicast = ttl != 0;
+
   range = g_slice_new0 (AddrRange);
 
-  if (!fill_address (min_address, min_port, &range->min, (ttl != 0)))
+  if (!fill_address (min_address, min_port, &range->min, is_multicast))
     goto invalid;
-  if (!fill_address (max_address, max_port, &range->max, (ttl != 0)))
+  if (!fill_address (max_address, max_port, &range->max, is_multicast))
     goto invalid;
 
   if (range->min.size != range->max.size)
@@ -288,7 +298,7 @@ gst_rtsp_address_pool_add_range (GstRTSPAddressPool * pool,
   g_mutex_lock (&priv->lock);
   priv->addresses = g_list_prepend (priv->addresses, range);
 
-  if (ttl == 0)
+  if (!is_multicast)
     priv->has_unicast_addresses = TRUE;
   g_mutex_unlock (&priv->lock);
 
@@ -303,35 +313,6 @@ invalid:
     return FALSE;
   }
 }
-
-/**
- * gst_rtsp_address_pool_add_range_unicast:
- * @pool: a #GstRTSPAddressPool
- * @min_address: a minimum address to add
- * @max_address: a maximum address to add
- * @min_port: the minimum port
- * @max_port: the maximum port
- *
- * Adds the unicast addresses from @min_addess to @max_address (inclusive)
- * to @pool. The valid port range for the addresses will be from @min_port to
- * @max_port inclusive.
- *
- * @min_address and @max_address can be set to
- * #GST_RTSP_ADDRESS_POOL_ANY_IPV4 or #GST_RTSP_ADDRESS_POOL_ANY_IPV6 to bind
- * to all available IPv4 or IPv6 addresses.
- *
- * Returns: %TRUE if the addresses could be added.
- */
-gboolean
-gst_rtsp_address_pool_add_range_unicast (GstRTSPAddressPool * pool,
-    const gchar * min_address, const gchar * max_address,
-    guint16 min_port, guint16 max_port)
-{
-  return gst_rtsp_address_pool_add_range (pool, min_address, max_address,
-      min_port, max_port, 0);
-}
-
-/* increments the address by count */
 
 static void
 inc_address (Addr * addr, guint8 count)
@@ -605,12 +586,14 @@ gst_rtsp_address_pool_dump (GstRTSPAddressPool * pool)
  * ports will be allocated of which the first one can be found in
  * @port.
  *
+ * If @ttl is 0, @address should be a unicast address. If @ttl > 0, @address
+ * should be a valid multicast address.
+ *
  * This function should only be used internally.
  *
  * Returns: a #GstRTSPAddress that should be freed with gst_rtsp_address_free
  *   after use or %NULL when no address could be acquired.
  */
-
 GstRTSPAddress *
 gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
     const gchar * address, guint port, guint n_ports, guint ttl)
@@ -620,6 +603,7 @@ gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
   GList *walk, *next;
   AddrRange *result;
   GstRTSPAddress *addr;
+  gboolean is_multicast;
 
   g_return_val_if_fail (GST_IS_RTSP_ADDRESS_POOL (pool), NULL);
   g_return_val_if_fail (address != NULL, NULL);
@@ -629,11 +613,10 @@ gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
   priv = pool->priv;
   result = NULL;
   addr = NULL;
+  is_multicast = ttl != 0;
 
-  if (!fill_address (address, port, &input_addr, (ttl != 0))) {
-    GST_ERROR_OBJECT (pool, "invalid address %s", address);
-    return NULL;
-  }
+  if (!fill_address (address, port, &input_addr, is_multicast))
+    goto invalid;
 
   g_mutex_lock (&priv->lock);
   /* go over available ranges */
@@ -684,8 +667,15 @@ gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
     GST_DEBUG_OBJECT (pool, "reserved address %s:%u ttl %u", addr->address,
         addr->port, addr->ttl);
   }
-
   return addr;
+
+  /* ERRORS */
+invalid:
+  {
+    GST_ERROR_OBJECT (pool, "invalid address %s:%u/%u/%u", address,
+        port, n_ports, ttl);
+    return NULL;
+  }
 }
 
 /**

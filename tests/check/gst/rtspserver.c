@@ -1268,8 +1268,8 @@ GST_START_TEST (test_play_specific_server_port)
 
   factory = gst_rtsp_media_factory_new ();
   pool = gst_rtsp_address_pool_new ();
-  gst_rtsp_address_pool_add_range_unicast (pool, GST_RTSP_ADDRESS_POOL_ANY_IPV4,
-      GST_RTSP_ADDRESS_POOL_ANY_IPV4, 7770, 7780);
+  gst_rtsp_address_pool_add_range (pool, GST_RTSP_ADDRESS_POOL_ANY_IPV4,
+      GST_RTSP_ADDRESS_POOL_ANY_IPV4, 7770, 7780, 0);
   gst_rtsp_media_factory_set_address_pool (factory, pool);
   g_object_unref (pool);
   gst_rtsp_media_factory_set_launch (factory, "( " VIDEO_PIPELINE " )");

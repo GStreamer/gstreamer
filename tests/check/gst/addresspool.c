@@ -188,8 +188,8 @@ GST_START_TEST (test_pool)
 
   fail_unless (gst_rtsp_address_pool_add_range (pool,
           "233.252.1.1", "233.252.1.1", 5000, 5001, 1));
-  fail_unless (gst_rtsp_address_pool_add_range_unicast (pool,
-          "192.168.1.1", "192.168.1.1", 6000, 6001));
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          "192.168.1.1", "192.168.1.1", 6000, 6001, 0));
 
   addr = gst_rtsp_address_pool_acquire_address (pool,
       GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_MULTICAST, 2);
