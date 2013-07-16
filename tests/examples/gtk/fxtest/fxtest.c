@@ -114,7 +114,7 @@ main (gint argc, gchar * argv[])
 {
   GstStateChangeReturn ret;
   GstElement *pipeline;
-  GstElement *uload, *filter, *sink;
+  GstElement *filter, *sink;
   GstElement *sourcebin;
   GError *error = NULL;
 
@@ -171,13 +171,12 @@ main (gint argc, gchar * argv[])
 
   pipeline = gst_pipeline_new ("pipeline");
 
-  uload = gst_element_factory_make ("glupload", "glu");
   filter = gst_element_factory_make ("gleffects", "flt");
   sink = gst_element_factory_make ("glimagesink", "glsink");
 
-  gst_bin_add_many (GST_BIN (pipeline), sourcebin, uload, filter, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), sourcebin, filter, sink, NULL);
 
-  if (!gst_element_link_many (sourcebin, uload, filter, sink, NULL)) {
+  if (!gst_element_link_many (sourcebin, filter, sink, NULL)) {
     g_print ("Failed to link one or more elements!\n");
     return -1;
   }

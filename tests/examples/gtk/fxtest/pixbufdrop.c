@@ -71,17 +71,6 @@ message_cb (GstBus * bus, GstMessage * message, GstElement * pipeline)
   gtk_main_quit ();
 }
 
-static void
-realize_cb (GtkWidget * widget, GstElement * pipeline)
-{
-#if GTK_CHECK_VERSION(2,18,0)
-  if (!gdk_window_ensure_native (widget->window))
-    g_error ("Failed to create native window!");
-#endif
-
-  gst_element_set_state (pipeline, GST_STATE_PLAYING);
-}
-
 static gboolean
 expose_cb (GtkWidget * widget, GdkEventExpose * event, GstElement * videosink)
 {
@@ -187,7 +176,7 @@ gint
 main (gint argc, gchar * argv[])
 {
   GstElement *pipeline;
-  GstElement *uload, *filter, *sink;
+  GstElement *filter, *sink;
   GstElement *sourcebin;
   GstBus *bus;
   GError *error = NULL;
@@ -252,7 +241,6 @@ main (gint argc, gchar * argv[])
 
   pipeline = gst_pipeline_new ("pipeline");
 
-  uload = gst_element_factory_make ("glupload", "glu");
   if (method == 2) {
     filter = gst_element_factory_make ("gloverlay", "flt");
   } else {
@@ -260,9 +248,9 @@ main (gint argc, gchar * argv[])
   }
   sink = gst_element_factory_make ("glimagesink", "glsink");
 
-  gst_bin_add_many (GST_BIN (pipeline), sourcebin, uload, filter, sink, NULL);
+  gst_bin_add_many (GST_BIN (pipeline), sourcebin, filter, sink, NULL);
 
-  if (!gst_element_link_many (sourcebin, uload, filter, sink, NULL)) {
+  if (!gst_element_link_many (sourcebin, filter, sink, NULL)) {
     g_print ("Failed to link one or more elements!\n");
     return -1;
   }
@@ -309,6 +297,8 @@ main (gint argc, gchar * argv[])
 
   gtk_container_add (GTK_CONTAINER (window), vbox);
 
+  gtk_widget_realize (screen);
+
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   gst_bus_set_sync_handler (bus, (GstBusSyncHandler) create_window, screen,
       NULL);
@@ -318,7 +308,6 @@ main (gint argc, gchar * argv[])
   g_signal_connect (bus, "message::eos", G_CALLBACK (message_cb), pipeline);
   gst_object_unref (bus);
   g_signal_connect (screen, "expose-event", G_CALLBACK (expose_cb), sink);
-  g_signal_connect (screen, "realize", G_CALLBACK (realize_cb), pipeline);
 
   gtk_drag_dest_set (screen, GTK_DEST_DEFAULT_ALL, NULL, 0, GDK_ACTION_COPY);
   gtk_drag_dest_add_uri_targets (screen);
@@ -327,6 +316,8 @@ main (gint argc, gchar * argv[])
       G_CALLBACK (on_drag_data_received), filter);
 
   gtk_widget_show_all (GTK_WIDGET (window));
+
+  gst_element_set_state (pipeline, GST_STATE_PLAYING);
 
   gtk_main ();
 
