@@ -175,23 +175,6 @@ dnl check for GCC specific SSE headers
 dnl these are used by the speex resampler code
 AC_CHECK_HEADERS([xmmintrin.h emmintrin.h])
 
-ac_cppflags_save="$CPPFLAGS"
-CPPFLAGS="`$PKG_CONFIG --cflags libxml-2.0`"
-AC_COMPILE_IFELSE([
-  AC_LANG_PROGRAM([[
-#include <libxml/HTMLparser.h>
-]],[[
-#ifndef LIBXML_HTML_ENABLED
-#error libxml2 has no HTML support
-#endif /* LIBXML_HTML_ENABLED */
-]])], [
-  HAVE_LIBXML_HTML="yes"
-], [
-  HAVE_LIBXML_HTML="no"
-])
-CPPFLAGS="$ac_cppflags_save"
-AM_CONDITIONAL(HAVE_LIBXML_HTML, test "x$HAVE_LIBXML_HTML" = "xyes")
-
 dnl used in gst/tcp
 AC_CHECK_HEADERS([sys/socket.h],
   [HAVE_SYS_SOCKET_H="yes"], [HAVE_SYS_SOCKET_H="no"], [AC_INCLUDES_DEFAULT])
@@ -450,15 +433,6 @@ AG_GST_CHECK_PLUGIN(videotestsrc)
 AG_GST_CHECK_PLUGIN(videorate)
 AG_GST_CHECK_PLUGIN(videoscale)
 AG_GST_CHECK_PLUGIN(volume)
-
-dnl FIXME 0.11: check for libxml, split subparse and move libxml parts to ext/
-AM_CONDITIONAL(USE_XML, false)
-AC_DEFINE([GST_DISABLE_XML], [1], [set to disable libxml2-dependent code in subparse])
-
-dnl disable plug-ins that require libxml2's HTML support if it is not available
-if test "x$HAVE_LIBXML_HTML" != "xyes"; then
-  AG_GST_DISABLE_PLUGIN(subparse)
-fi
 
 dnl iso-codes is optional, used by libgsttag
 AC_ARG_ENABLE(iso-codes,
@@ -973,7 +947,6 @@ sed \
     -e 's/.* HAVE_FGETPOS$/#define HAVE_FGETPOS 1/' \
     -e 's/.* HAVE_FSETPOS$/#define HAVE_FSETPOS 1/' \
     -e 's/.* HAVE_ISO_CODES$/#undef HAVE_ISO_CODES/' \
-    -e 's/.* HAVE_LIBXML2$/#define HAVE_LIBXML2 1/' \
     -e 's/.* HAVE_PROCESS_H$/#define HAVE_PROCESS_H 1/' \
     -e 's/.* HAVE_STDLIB_H$/#define HAVE_STDLIB_H 1/' \
     -e 's/.* HAVE_STRING_H$/#define HAVE_STRING_H 1/' \
