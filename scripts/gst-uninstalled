@@ -145,7 +145,7 @@ $GST/gstreamer/plugins\
 :$GST/gnonlin/gnl/.libs\
 :$GST/gst-openmax/omx/.libs\
 :$GST/gst-omx/omx/.libs\
-:$GST/gst-plugins-gl/gst/.libs\
+:$GST/gst-plugins-gl/gst/gl/.libs\
 :$GST/clutter-gst/clutter-gst/.libs\
 :$GST/plugins\
 :$GST/farsight2/gst\
