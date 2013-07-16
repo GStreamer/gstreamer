@@ -89,7 +89,7 @@ typedef enum {
 /**
  * GST_RTSP_ADDRESS_POOL_ANY_IPV4:
  *
- * Used with gst_rtsp_address_pool_add_range_unicast() to bind to all
+ * Used with gst_rtsp_address_pool_add_range() to bind to all
  * IPv4 addresses
  */
 #define GST_RTSP_ADDRESS_POOL_ANY_IPV4  "0.0.0.0"
@@ -97,7 +97,7 @@ typedef enum {
 /**
  * GST_RTSP_ADDRESS_POOL_ANY_IPV6:
  *
- * Used with gst_rtsp_address_pool_add_range_unicast() to bind to all
+ * Used with gst_rtsp_address_pool_add_range() to bind to all
  * IPv6 addresses
  */
 #define GST_RTSP_ADDRESS_POOL_ANY_IPV6  "::"
