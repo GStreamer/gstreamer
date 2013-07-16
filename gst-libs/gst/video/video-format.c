@@ -939,6 +939,26 @@ pack_NV16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
       GET_PLANE_LINE (1, y), src, width / 2);
 }
 
+#define PACK_NV24 GST_VIDEO_FORMAT_AYUV, unpack_NV24, 1, pack_NV24
+static void
+unpack_NV24 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  video_orc_unpack_NV12 (dest,
+      GET_PLANE_LINE (0, y), GET_PLANE_LINE (1, y), width);
+}
+
+static void
+pack_NV24 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  video_orc_pack_NV12 (GET_PLANE_LINE (0, y),
+      GET_PLANE_LINE (1, y), src, width);
+}
+
 #define PACK_UYVP GST_VIDEO_FORMAT_AYUV64, unpack_UYVP, 1, pack_UYVP
 static void
 unpack_UYVP (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
@@ -2034,9 +2054,10 @@ static VideoFormat formats[] = {
   MAKE_RGB_LE_FORMAT (GBR_10LE, "raw video", DPTH10_10_10, PSTR222, PLANE201,
       OFFS0, SUB444,
       PACK_GBR_10LE),
-
   MAKE_YUV_FORMAT (NV16, "raw video", GST_MAKE_FOURCC ('N', 'V', '1', '6'),
       DPTH888, PSTR111, PLANE011, OFFS001, SUB422, PACK_NV16),
+  MAKE_YUV_FORMAT (NV24, "raw video", GST_MAKE_FOURCC ('N', 'V', '2', '4'),
+      DPTH888, PSTR111, PLANE011, OFFS001, SUB444, PACK_NV24),
 };
 
 static GstVideoFormat
@@ -2241,6 +2262,8 @@ gst_video_format_from_fourcc (guint32 fourcc)
       return GST_VIDEO_FORMAT_NV21;
     case GST_MAKE_FOURCC ('N', 'V', '1', '6'):
       return GST_VIDEO_FORMAT_NV16;
+    case GST_MAKE_FOURCC ('N', 'V', '2', '4'):
+      return GST_VIDEO_FORMAT_NV24;
     case GST_MAKE_FOURCC ('v', '3', '0', '8'):
       return GST_VIDEO_FORMAT_v308;
     case GST_MAKE_FOURCC ('Y', '8', '0', '0'):
