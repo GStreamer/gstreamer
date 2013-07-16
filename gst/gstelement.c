@@ -3082,5 +3082,5 @@ gst_element_get_context (GstElement * element)
     context = gst_context_ref (element->context);
   GST_OBJECT_UNLOCK (element);
 
-  return context;
+  return context ? context : gst_context_new ();
 }
