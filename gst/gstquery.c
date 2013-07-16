@@ -1630,6 +1630,8 @@ gst_query_set_nth_allocation_pool (GstQuery * query, guint index,
  * @index: position in the allocation pool array to remove
  *
  * Remove the allocation pool at @index of the allocation pool array.
+ *
+ * Since: 1.2
  */
 void
 gst_query_remove_nth_allocation_pool (GstQuery * query, guint index)
@@ -1972,6 +1974,8 @@ gst_query_set_nth_allocation_param (GstQuery * query, guint index,
  * @index: position in the allocation param array to remove
  *
  * Remove the allocation param at @index of the allocation param array.
+ *
+ * Since: 1.2
  */
 void
 gst_query_remove_nth_allocation_param (GstQuery * query, guint index)
@@ -2440,6 +2444,8 @@ gst_query_new_drain (void)
  * Free-function: gst_query_unref
  *
  * Returns: (transfer full): a new #GstQuery
+ *
+ * Since: 1.2
  */
 GstQuery *
 gst_query_new_context (void)
@@ -2459,6 +2465,8 @@ gst_query_new_context (void)
  * @context: the requested #GstContext
  *
  * Answer a context query by setting the requested context.
+ *
+ * Since: 1.2
  */
 void
 gst_query_set_context (GstQuery * query, GstContext * context)
@@ -2480,6 +2488,8 @@ gst_query_set_context (GstQuery * query, GstContext * context)
  *
  * Get the context from the context @query. The context remains valid as long as
  * @query remains valid.
+ *
+ * Since: 1.2
  */
 void
 gst_query_parse_context (GstQuery * query, GstContext ** context)
@@ -2507,6 +2517,8 @@ free_array_string (gpointer ptr)
  * @context_type: a context type
  *
  * Add a new context type to @query.
+ *
+ * Since: 1.2
  */
 void
 gst_query_add_context_type (GstQuery * query, const gchar * context_type)
@@ -2534,6 +2546,8 @@ gst_query_add_context_type (GstQuery * query, const gchar * context_type)
  * context-types array of the query's structure.
  *
  * Returns: the context-types array size as a #guint.
+ *
+ * Since: 1.2
  */
 guint
 gst_query_get_n_context_types (GstQuery * query)
@@ -2559,6 +2573,8 @@ gst_query_get_n_context_types (GstQuery * query)
  * from @index.
  *
  * Returns: a #gboolean indicating if the parsing succeeded.
+ *
+ * Since: 1.2
  */
 gboolean
 gst_query_parse_nth_context_type (GstQuery * query, guint index,
@@ -2589,6 +2605,8 @@ gst_query_parse_nth_context_type (GstQuery * query, guint index,
  * Check if @query is asking for @context_type.
  *
  * Returns: %TRUE if @context_type is requested.
+ *
+ * Since: 1.2
  */
 gboolean
 gst_query_has_context_type (GstQuery * query, const gchar * context_type)

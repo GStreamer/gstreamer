@@ -102,7 +102,8 @@ typedef enum {
  * @GST_QUERY_ACCEPT_CAPS: the accept caps query
  * @GST_QUERY_CAPS: the caps query
  * @GST_QUERY_DRAIN: wait till all serialized data is consumed downstream
- * @GST_QUERY_CONTEXT: query the pipeline-local context from downstream
+ * @GST_QUERY_CONTEXT: query the pipeline-local context from
+ *     downstream (since 1.2)
  *
  * Standard predefined Query types
  */
@@ -442,7 +443,7 @@ gboolean        gst_query_find_allocation_meta       (GstQuery *query, GType api
  * GstSchedulingFlags:
  * @GST_SCHEDULING_FLAG_SEEKABLE: if seeking is possible
  * @GST_SCHEDULING_FLAG_SEQUENTIAL: if sequential access is recommended
- * @GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED: if bandwidth is limited and buffering possible
+ * @GST_SCHEDULING_FLAG_BANDWIDTH_LIMITED: if bandwidth is limited and buffering possible (since 1.2)
  *
  * The different scheduling flags.
  */
