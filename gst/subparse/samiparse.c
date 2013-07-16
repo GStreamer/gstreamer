@@ -825,14 +825,16 @@ sami_context_init (ParserState * state)
   GstSamiContext *context;
 
   g_assert (state->user_data == NULL);
-  state->user_data = (gpointer) g_new0 (GstSamiContext, 1);
-  context = (GstSamiContext *) state->user_data;
+
+  context = g_new0 (GstSamiContext, 1);
 
   context->htmlctxt = html_context_new (&samiParser, context);
   context->buf = g_string_new ("");
   context->rubybuf = g_string_new ("");
   context->resultbuf = g_string_new ("");
   context->state = g_string_new ("");
+
+  state->user_data = context;
 }
 
 void
