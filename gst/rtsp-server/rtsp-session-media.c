@@ -21,7 +21,16 @@
  * @short_description: Media managed in a session
  * @see_also: #GstRTSPMedia, #GstRTSPSession
  *
- * Last reviewed on 2013-07-11 (1.0.0)
+ * The #GstRTSPSessionMedia object manages a #GstRTSPMedia with a given path.
+ *
+ * With gst_rtsp_session_media_get_transport() and
+ * gst_rtsp_session_media_set_transport() the transports of a #GstRTSPStream of
+ * the managed #GstRTSPMedia can be retrieved and configured.
+ *
+ * Use gst_rtsp_session_media_set_state() to control the media state and
+ * transports.
+ *
+ * Last reviewed on 2013-07-16 (1.0.0)
  */
 
 #include <string.h>

@@ -21,7 +21,27 @@
  * @short_description: A media stream
  * @see_also: #GstRTSPMedia
  *
- * Last reviewed on 2013-07-11 (1.0.0)
+ * The #GstRTSPStream object manages the data transport for one stream. It
+ * is created from a payloader element and a source pad that produce the RTP
+ * packets for the stream.
+ *
+ * With gst_rtsp_stream_join_bin() the streaming elements are added to the bin
+ * and rtpbin. gst_rtsp_stream_leave_bin() removes the elements again.
+ *
+ * The #GstRTSPStream will use the configured addresspool, as set with
+ * gst_rtsp_stream_set_address_pool(), to allocate multicast addresses for the
+ * stream. With gst_rtsp_stream_get_multicast_address() you can get the
+ * configured address.
+ *
+ * With gst_rtsp_stream_get_server_port () you can get the port that the server
+ * will use to receive RTCP. This is the part that the clients will use to send
+ * RTCP to.
+ *
+ * With gst_rtsp_stream_add_transport() destinations can be added where the
+ * stream should be sent to. Use gst_rtsp_stream_remove_transport() to remove
+ * the destination again.
+ *
+ * Last reviewed on 2013-07-16 (1.0.0)
  */
 
 #include <stdlib.h>

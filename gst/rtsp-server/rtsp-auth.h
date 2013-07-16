@@ -113,7 +113,7 @@ gchar *             gst_rtsp_auth_make_basic        (const gchar * user, const g
  * GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_CONSTRUCT:
  *
  * Check if media can be constructed from a media factory
- * The response is sent on error.
+ * A response should be sent on error.
  */
 #define GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_CONSTRUCT  "auth.check.media.factory.construct"
 /**
@@ -128,35 +128,38 @@ gchar *             gst_rtsp_auth_make_basic        (const gchar * user, const g
 
 /* tokens */
 /**
- * GST_RTSP_MEDIA_FACTORY_ROLE:
+ * GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE:
  *
  * G_TYPE_STRING, the role to use when dealing with media factories
- */
-#define GST_RTSP_MEDIA_FACTORY_ROLE      "media.factory.role"
-
-/* permissions */
-/**
- * GST_RTSP_MEDIA_FACTORY_PERM_ACCESS:
  *
- * G_TYPE_BOOLEAN, %TRUE if the media can be accessed, %FALSE will
- * return a 404 Not Found error when trying to access the media.
+ * The default #GstRTSPAuth object uses this string in the token to find the
+ * role of the media factory. It will then retrieve the #GstRTSPPermissions of
+ * the media factory and retrieve the role with the same name.
  */
-#define GST_RTSP_MEDIA_FACTORY_PERM_ACCESS      "media.factory.access"
+#define GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE      "media.factory.role"
 /**
- * GST_RTSP_MEDIA_FACTORY_PERM_CONSTRUCT:
- *
- * G_TYPE_BOOLEAN, %TRUE if the media can be constructed, %FALSE will
- * return a 404 Not Found error when trying to access the media.
- */
-#define GST_RTSP_MEDIA_FACTORY_PERM_CONSTRUCT   "media.factory.construct"
-/**
- * GST_RTSP_TRANSPORT_PERM_CLIENT_SETTINGS:
+ * GST_RTSP_TOKEN_TRANSPORT_CLIENT_SETTINGS:
  *
  * G_TYPE_BOOLEAN, %TRUE if the client can specify TTL, destination and
  *     port pair in multicast.
  */
-#define GST_RTSP_TRANSPORT_PERM_CLIENT_SETTINGS   "transport.client-settings"
+#define GST_RTSP_TOKEN_TRANSPORT_CLIENT_SETTINGS   "transport.client-settings"
 
+/* permissions */
+/**
+ * GST_RTSP_PERM_MEDIA_FACTORY_ACCESS:
+ *
+ * G_TYPE_BOOLEAN, %TRUE if the media can be accessed, %FALSE will
+ * return a 404 Not Found error when trying to access the media.
+ */
+#define GST_RTSP_PERM_MEDIA_FACTORY_ACCESS      "media.factory.access"
+/**
+ * GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT:
+ *
+ * G_TYPE_BOOLEAN, %TRUE if the media can be constructed, %FALSE will
+ * return a 404 Not Found error when trying to access the media.
+ */
+#define GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT   "media.factory.construct"
 
 G_END_DECLS
 

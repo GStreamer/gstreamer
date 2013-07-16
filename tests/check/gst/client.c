@@ -536,8 +536,9 @@ GST_START_TEST (test_client_multicast_invalid_transport_specific)
   state.client = client;
   state.auth = gst_rtsp_auth_new ();
   state.token =
-      gst_rtsp_token_new (GST_RTSP_TRANSPORT_PERM_CLIENT_SETTINGS,
-      G_TYPE_BOOLEAN, TRUE, "media.factory.role", G_TYPE_STRING, "user", NULL);
+      gst_rtsp_token_new (GST_RTSP_TOKEN_TRANSPORT_CLIENT_SETTINGS,
+      G_TYPE_BOOLEAN, TRUE, GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
+      "user", NULL);
   gst_rtsp_client_state_push_current (&state);
 
   /* simple SETUP with a valid URI and multicast, but an invalid ip */
@@ -623,8 +624,9 @@ GST_START_TEST (test_client_multicast_transport_specific)
   state.client = client;
   state.auth = gst_rtsp_auth_new ();
   state.token =
-      gst_rtsp_token_new (GST_RTSP_TRANSPORT_PERM_CLIENT_SETTINGS,
-      G_TYPE_BOOLEAN, TRUE, "media.factory.role", G_TYPE_STRING, "user", NULL);
+      gst_rtsp_token_new (GST_RTSP_TOKEN_TRANSPORT_CLIENT_SETTINGS,
+      G_TYPE_BOOLEAN, TRUE, GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
+      "user", NULL);
   gst_rtsp_client_state_push_current (&state);
 
   expected_transport = "RTP/AVP;multicast;destination=233.252.0.1;"

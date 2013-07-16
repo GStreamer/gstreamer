@@ -100,6 +100,7 @@ void                     gst_rtsp_stream_transport_set_keepalive (GstRTSPStreamT
                                                                   GstRTSPKeepAliveFunc keep_alive,
                                                                   gpointer user_data,
                                                                   GDestroyNotify  notify);
+void                     gst_rtsp_stream_transport_keep_alive    (GstRTSPStreamTransport *trans);
 
 gboolean                 gst_rtsp_stream_transport_set_active    (GstRTSPStreamTransport *trans,
                                                                   gboolean active);
@@ -114,8 +115,6 @@ gboolean                 gst_rtsp_stream_transport_send_rtp      (GstRTSPStreamT
                                                                   GstBuffer *buffer);
 gboolean                 gst_rtsp_stream_transport_send_rtcp     (GstRTSPStreamTransport *trans,
                                                                   GstBuffer *buffer);
-
-void                     gst_rtsp_stream_transport_keep_alive    (GstRTSPStreamTransport *trans);
 
 G_END_DECLS
 

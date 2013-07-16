@@ -55,13 +55,13 @@ GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_ACCESS
 GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_CONSTRUCT
 GST_RTSP_AUTH_CHECK_TRANSPORT_CLIENT_SETTINGS
 
-<SUBSECTION AuthRoles>
-GST_RTSP_MEDIA_FACTORY_ROLE
+<SUBSECTION AuthTokens>
+GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE
+GST_RTSP_TOKEN_TRANSPORT_CLIENT_SETTINGS
 
 <SUBSECTION AuthPermissions>
-GST_RTSP_MEDIA_FACTORY_PERM_ACCESS
-GST_RTSP_MEDIA_FACTORY_PERM_CONSTRUCT
-GST_RTSP_TRANSPORT_PERM_CLIENT_SETTINGS
+GST_RTSP_PERM_MEDIA_FACTORY_ACCESS
+GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT
 <SUBSECTION Standard>
 GST_RTSP_AUTH_CAST
 GST_RTSP_AUTH_CLASS_CAST
@@ -131,14 +131,11 @@ gst_rtsp_client_get_type
 <SECTION>
 <FILE>rtsp-media</FILE>
 <TITLE>GstRTSPMedia</TITLE>
-GstRTSPMediaStatus
-
 GstRTSPMedia
 GstRTSPMediaClass
 gst_rtsp_media_new
 gst_rtsp_media_get_element
 gst_rtsp_media_take_pipeline
-gst_rtsp_media_get_status
 
 gst_rtsp_media_set_permissions
 gst_rtsp_media_get_permissions
@@ -161,26 +158,31 @@ gst_rtsp_media_get_address_pool
 gst_rtsp_media_set_buffer_size
 gst_rtsp_media_get_buffer_size
 
-gst_rtsp_media_use_time_provider
-gst_rtsp_media_is_time_provider
-gst_rtsp_media_get_time_provider
-
+<SUBSECTION MediaPrepare>
 gst_rtsp_media_prepare
 gst_rtsp_media_unprepare
+GstRTSPMediaStatus
+gst_rtsp_media_get_status
 
+<SUBSECTION MediaStreams>
 gst_rtsp_media_collect_streams
 gst_rtsp_media_create_stream
-
-gst_rtsp_media_get_clock
-gst_rtsp_media_get_base_time
 gst_rtsp_media_n_streams
 gst_rtsp_media_get_stream
 gst_rtsp_media_find_stream
 
+<SUBSECTION MediaState>
 gst_rtsp_media_seek
 gst_rtsp_media_get_range_string
 
 gst_rtsp_media_set_state
+
+<SUBSECTION MediaClocks>
+gst_rtsp_media_get_clock
+gst_rtsp_media_get_base_time
+gst_rtsp_media_use_time_provider
+gst_rtsp_media_is_time_provider
+gst_rtsp_media_get_time_provider
 <SUBSECTION Standard>
 GST_RTSP_MEDIA_CAST
 GST_RTSP_MEDIA_CLASS_CAST
@@ -545,6 +547,7 @@ gst_rtsp_stream_transport_set_callbacks
 
 GstRTSPKeepAliveFunc
 gst_rtsp_stream_transport_set_keepalive
+gst_rtsp_stream_transport_keep_alive
 
 gst_rtsp_stream_transport_set_active
 
@@ -554,7 +557,6 @@ gst_rtsp_stream_transport_is_timed_out
 gst_rtsp_stream_transport_send_rtcp
 gst_rtsp_stream_transport_send_rtp
 
-gst_rtsp_stream_transport_keep_alive
 <SUBSECTION Standard>
 GST_RTSP_STREAM_TRANSPORT_CAST
 GST_RTSP_STREAM_TRANSPORT_CLASS_CAST

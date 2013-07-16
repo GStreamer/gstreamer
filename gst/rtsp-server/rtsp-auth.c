@@ -21,7 +21,29 @@
  * @short_description: Authentication and authorization
  * @see_also: #GstRTSPPermission, #GstRTSPtoken
  *
- * Last reviewed on 2013-07-11 (1.0.0)
+ * The #GstRTSPAuth object is responsible for checking if the current user is
+ * allowed to perform requested actions. The default implementation has some
+ * reasonable checks but subclasses can implement custom security policies.
+ *
+ * A new auth object is made with gst_rtsp_auth_new(). It is usually configured
+ * on the #GstRTSPServer object.
+ *
+ * The RTSP server will call gst_rtsp_auth_check() with a string describing the
+ * check to perform. The possible checks are prefixed with
+ * #GST_RTSP_AUTH_CHECK_*. Depending on the check, the default implementation
+ * will use the current #GstRTSPToken, #GstRTSPClientState and
+ * #GstRTSPPermissions on the object to check if an operation is allowed.
+ *
+ * The default #GstRTSPAuth object has support for basic authentication. With
+ * gst_rtsp_auth_add_basic() you can add a basic authentication string together
+ * with the #GstRTSPToken that will become active when successfully
+ * authenticated.
+ *
+ * When a TLS certificate has been set with gst_rtsp_auth_set_tls_certificate(),
+ * the default auth object will require the client to connect with a TLS
+ * connection.
+ *
+ * Last reviewed on 2013-07-16 (1.0.0)
  */
 
 #include <string.h>
@@ -395,18 +417,18 @@ check_factory (GstRTSPAuth * auth, GstRTSPClientState * state,
     return FALSE;
 
   if (!(role = gst_rtsp_token_get_string (state->token,
-              GST_RTSP_MEDIA_FACTORY_ROLE)))
+              GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE)))
     goto no_media_role;
   if (!(perms = gst_rtsp_media_factory_get_permissions (state->factory)))
     goto no_permissions;
 
   if (g_str_equal (check, "auth.check.media.factory.access")) {
     if (!gst_rtsp_permissions_is_allowed (perms, role,
-            GST_RTSP_MEDIA_FACTORY_PERM_ACCESS))
+            GST_RTSP_PERM_MEDIA_FACTORY_ACCESS))
       goto no_access;
   } else if (g_str_equal (check, "auth.check.media.factory.construct")) {
     if (!gst_rtsp_permissions_is_allowed (perms, role,
-            GST_RTSP_MEDIA_FACTORY_PERM_CONSTRUCT))
+            GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT))
       goto no_construct;
   }
   return TRUE;
@@ -446,7 +468,7 @@ check_client_settings (GstRTSPAuth * auth, GstRTSPClientState * state,
     return FALSE;
 
   return gst_rtsp_token_is_allowed (state->token,
-      GST_RTSP_TRANSPORT_PERM_CLIENT_SETTINGS);
+      GST_RTSP_TOKEN_TRANSPORT_CLIENT_SETTINGS);
 }
 
 static gboolean

@@ -19,7 +19,44 @@
 /**
  * SECTION:rtsp-media
  * @short_description: The media pipeline
- * @see_also: #GstRTSPMediaFactory, #GstRTSPStream
+ * @see_also: #GstRTSPMediaFactory, #GstRTSPStream, #GstRTSPSession,
+ *     #GstRTSPSessionMedia
+ *
+ * a #GstRTSPMedia contains the complete GStreamer pipeline to manage the
+ * streaming to the clients. The actual data transfer is done by the
+ * #GstRTSPStream objects that are created and exposed by the #GstRTSPMedia.
+ *
+ * The #GstRTSPMedia is usually created from a #GstRTSPMediaFactory when the
+ * client does a DESCRIBE or SETUP of a resource.
+ *
+ * A media is created with gst_rtsp_media_new() that takes the element that will
+ * provide the streaming elements. For each of the streams, a new #GstRTSPStream
+ * object needs to be made with the gst_rtsp_media_create_stream() which takes
+ * the payloader element and the source pad that produces the RTP stream.
+ *
+ * The pipeline of the media is set to PAUSED with gst_rtsp_media_prepare(). The
+ * prepare method will add rtpbin and sinks and sources to send and receive RTP
+ * and RTCP packets from the clients. Each stream srcpad is connected to an
+ * input into the internal rtpbin.
+ *
+ * It is also possible to dynamically create #GstRTSPStream objects during the
+ * prepare phase. With gst_rtsp_media_get_status() you can check the status of
+ * the prepare phase.
+ *
+ * After the media is prepared, it is ready for streaming. It will usually be
+ * managed in a session with gst_rtsp_session_manage_media(). See
+ * #GstRTSPSession and #GstRTSPSessionMedia.
+ *
+ * The state of the media can be controlled with gst_rtsp_media_set_state ().
+ * Seeking can be done with gst_rtsp_media_seek().
+ *
+ * With gst_rtsp_media_unprepare() the pipeline is stopped and shut down. When
+ * gst_rtsp_media_set_eos_shutdown() an EOS will be sent to the pipeline to
+ * cleanly shut down.
+ *
+ * With gst_rtsp_media_set_shared(), the media can be shared between multiple
+ * clients. With gst_rtsp_media_set_reusable() you can control if the pipeline
+ * can be prepared again after an unprepare.
  *
  * Last reviewed on 2013-07-11 (1.0.0)
  */

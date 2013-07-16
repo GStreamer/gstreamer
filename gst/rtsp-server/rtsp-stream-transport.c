@@ -19,9 +19,23 @@
 /**
  * SECTION:rtsp-stream-transport
  * @short_description: A media stream transport configuration
- * @see_also: #GstRTSPStream
+ * @see_also: #GstRTSPStream, #GstRTSPSessionMedia
  *
- * Last reviewed on 2013-07-11 (1.0.0)
+ * The #GstRTSPStreamTransport configures the transport used by a
+ * #GstRTSPStream. It is usually manages by a #GstRTSPSessionMedia object.
+ *
+ * With gst_rtsp_stream_transport_set_callbacks(), callbacks can be configured
+ * to handle the RTP and RTCP packets from the stream, for example when they
+ * need to be sent over TCP.
+ *
+ * With  gst_rtsp_stream_transport_set_active() the transports are added and
+ * removed from the stream.
+ *
+ * A #GstRTSPStream will call gst_rtsp_stream_transport_keep_alive() when RTCP
+ * is received from the client. It will also call
+ * gst_rtsp_stream_transport_set_timed_out() when a receiver has timed out.
+ *
+ * Last reviewed on 2013-07-16 (1.0.0)
  */
 
 #include <string.h>
