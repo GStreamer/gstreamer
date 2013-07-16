@@ -127,10 +127,9 @@ gst_rtp_mp2t_pay_flush (GstRTPMP2TPay * rtpmp2tpay)
 
   while (avail > 0 && (ret == GST_FLOW_OK)) {
     guint towrite;
-    guint8 *payload;
     guint payload_len;
     guint packet_len;
-    GstRTPBuffer rtp = { NULL };
+    GstBuffer *paybuf;
 
     /* this will be the total length of the packet */
     packet_len = gst_rtp_buffer_calc_packet_len (avail, 0, 0);
@@ -147,16 +146,11 @@ gst_rtp_mp2t_pay_flush (GstRTPMP2TPay * rtpmp2tpay)
       break;
 
     /* create buffer to hold the payload */
-    outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
+    outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
 
     /* get payload */
-    gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
-    payload = gst_rtp_buffer_get_payload (&rtp);
-
-    /* copy stuff from adapter to payload */
-    gst_adapter_copy (rtpmp2tpay->adapter, payload, 0, payload_len);
-    gst_rtp_buffer_unmap (&rtp);
-    gst_adapter_flush (rtpmp2tpay->adapter, payload_len);
+    paybuf = gst_adapter_take_buffer_fast (rtpmp2tpay->adapter, payload_len);
+    outbuf = gst_buffer_append (outbuf, paybuf);
     avail -= payload_len;
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmp2tpay->first_ts;

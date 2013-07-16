@@ -189,6 +189,7 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
     guint payload_len;
     guint packet_len;
     GstRTPBuffer rtp = { NULL };
+    GstBuffer *paybuf;
 
     /* this will be the total length of the packet */
     packet_len = gst_rtp_buffer_calc_packet_len (4 + avail, 0, 0);
@@ -200,7 +201,7 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
     payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
 
     /* create buffer to hold the payload */
-    outbuf = gst_rtp_buffer_new_allocate (payload_len, 0, 0);
+    outbuf = gst_rtp_buffer_new_allocate (4, 0, 0);
 
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
@@ -221,9 +222,6 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
     payload[2] = frag_offset >> 8;
     payload[3] = frag_offset & 0xff;
 
-    gst_adapter_copy (rtpmpapay->adapter, &payload[4], 0, payload_len);
-    gst_adapter_flush (rtpmpapay->adapter, payload_len);
-
     avail -= payload_len;
     frag_offset += payload_len;
 
@@ -231,6 +229,9 @@ gst_rtp_mpa_pay_flush (GstRtpMPAPay * rtpmpapay)
       gst_rtp_buffer_set_marker (&rtp, TRUE);
 
     gst_rtp_buffer_unmap (&rtp);
+
+    paybuf = gst_adapter_take_buffer_fast (rtpmpapay->adapter, payload_len);
+    outbuf = gst_buffer_append (outbuf, paybuf);
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmpapay->first_ts;
     GST_BUFFER_DURATION (outbuf) = rtpmpapay->duration;

@@ -275,7 +275,8 @@ gst_rtp_mp4v_pay_flush (GstRtpMP4VPay * rtpmp4vpay)
     outbuf = gst_rtp_buffer_new_allocate (0, 0, 0);
 
     /* Take buffer with the payload from the adapter */
-    outbuf_data = gst_adapter_take_buffer (rtpmp4vpay->adapter, payload_len);
+    outbuf_data = gst_adapter_take_buffer_fast (rtpmp4vpay->adapter,
+        payload_len);
 
     avail -= payload_len;
 

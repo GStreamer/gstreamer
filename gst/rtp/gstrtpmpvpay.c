@@ -178,6 +178,7 @@ gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay)
     guint packet_len;
     guint payload_len;
     GstRTPBuffer rtp = { NULL };
+    GstBuffer *paybuf;
 
     packet_len = gst_rtp_buffer_calc_packet_len (avail, 4, 0);
 
@@ -185,7 +186,7 @@ gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay)
 
     payload_len = gst_rtp_buffer_calc_payload_len (towrite, 4, 0);
 
-    outbuf = gst_rtp_buffer_new_allocate (payload_len, 4, 0);
+    outbuf = gst_rtp_buffer_new_allocate (4, 0, 0);
 
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
@@ -205,13 +206,13 @@ gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay)
      */
     memset (payload, 0x0, 4);
 
-    gst_adapter_copy (rtpmpvpay->adapter, payload + 4, 0, payload_len);
-    gst_adapter_flush (rtpmpvpay->adapter, payload_len);
-
     avail -= payload_len;
 
     gst_rtp_buffer_set_marker (&rtp, avail == 0);
     gst_rtp_buffer_unmap (&rtp);
+
+    paybuf = gst_adapter_take_buffer_fast (rtpmpvpay->adapter, payload_len);
+    outbuf = gst_buffer_append (outbuf, paybuf);
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmpvpay->first_ts;
 

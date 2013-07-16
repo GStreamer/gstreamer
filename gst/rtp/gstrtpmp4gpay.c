@@ -469,6 +469,7 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
     guint payload_len;
     guint packet_len;
     GstRTPBuffer rtp = { NULL };
+    GstBuffer *paybuf;
 
     /* this will be the total lenght of the packet */
     packet_len = gst_rtp_buffer_calc_packet_len (avail, 0, 0);
@@ -485,7 +486,7 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
         packet_len, payload_len);
 
     /* create buffer to hold the payload, also make room for the 4 header bytes. */
-    outbuf = gst_rtp_buffer_new_allocate (payload_len + 4, 0, 0);
+    outbuf = gst_rtp_buffer_new_allocate (4, 0, 0);
 
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
@@ -526,14 +527,13 @@ gst_rtp_mp4g_pay_flush (GstRtpMP4GPay * rtpmp4gpay)
     payload[2] = (total & 0x1fe0) >> 5;
     payload[3] = (total & 0x1f) << 3;   /* we use 13 bits for the size, 3 bits index */
 
-    /* copy stuff from adapter to payload */
-    gst_adapter_copy (rtpmp4gpay->adapter, &payload[4], 0, payload_len);
-    gst_adapter_flush (rtpmp4gpay->adapter, payload_len);
-
     /* marker only if the packet is complete */
     gst_rtp_buffer_set_marker (&rtp, avail <= payload_len);
 
     gst_rtp_buffer_unmap (&rtp);
+
+    paybuf = gst_adapter_take_buffer_fast (rtpmp4gpay->adapter, payload_len);
+    outbuf = gst_buffer_append (outbuf, paybuf);
 
     GST_BUFFER_TIMESTAMP (outbuf) = rtpmp4gpay->first_timestamp;
     GST_BUFFER_DURATION (outbuf) = rtpmp4gpay->first_duration;

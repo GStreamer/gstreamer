@@ -208,7 +208,7 @@ gst_rtp_gst_pay_flush (GstRtpGSTPay * rtpgstpay, GstClockTime timestamp)
 
     /* create a new buf to hold the payload */
     GST_DEBUG_OBJECT (rtpgstpay, "take %u bytes from adapter", payload_len);
-    paybuf = gst_adapter_take_buffer (rtpgstpay->adapter, payload_len);
+    paybuf = gst_adapter_take_buffer_fast (rtpgstpay->adapter, payload_len);
 
     /* create a new group to hold the rtp header and the payload */
     gst_buffer_append (outbuf, paybuf);
