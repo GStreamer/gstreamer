@@ -202,6 +202,7 @@ struct _QtDemuxStream
   guint32 subtype;
   GstCaps *caps;
   guint32 fourcc;
+  gboolean sparse;
 
   gboolean new_caps;
   gboolean new_stream;          /* signals that a stream_start is required */
@@ -2104,6 +2105,7 @@ gst_qtdemux_stream_clear (QtDemuxStream * stream)
   stream->sample_index = -1;
   stream->stbl_index = -1;
   stream->n_samples = 0;
+  stream->sparse = FALSE;
 }
 
 static void
@@ -5636,16 +5638,20 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
     if (stream->new_stream) {
       gchar *stream_id;
       GstEvent *event;
+      GstStreamFlags stream_flags;
 
       stream->new_stream = FALSE;
       stream_id =
           gst_pad_create_stream_id_printf (stream->pad,
           GST_ELEMENT_CAST (qtdemux), "%03u", stream->track_id);
       event = gst_event_new_stream_start (stream_id);
-      if (stream->disabled) {
-        gst_event_set_stream_flags (event, GST_STREAM_FLAG_UNSELECT);
-      }
-      gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
+      stream_flags = GST_STREAM_FLAG_NONE;
+      if (stream->disabled)
+        stream_flags |= GST_STREAM_FLAG_UNSELECT;
+      if (stream->sparse)
+        stream_flags |= GST_STREAM_FLAG_SPARSE;
+      gst_event_set_stream_flags (event, stream_flags);
+      gst_pad_push_event (stream->pad, event);
       g_free (stream_id);
     }
     gst_pad_set_caps (stream->pad, stream->caps);
@@ -8059,6 +8065,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       || stream->subtype == FOURCC_sbtl) {
 
     stream->sampled = TRUE;
+    stream->sparse = TRUE;
 
     offset = 16;
 
@@ -8121,6 +8128,10 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       default:
         break;
     }
+    GST_INFO_OBJECT (qtdemux,
+        "type %" GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
+        GST_FOURCC_ARGS (fourcc), stream->caps);
+
   } else {
     /* everything in 1 sample */
     stream->sampled = TRUE;
