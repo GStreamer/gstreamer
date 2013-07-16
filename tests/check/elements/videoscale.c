@@ -93,6 +93,7 @@ check_pad_template (GstPadTemplate * tmpl)
         case GST_VIDEO_FORMAT_NV12:
         case GST_VIDEO_FORMAT_NV16:
         case GST_VIDEO_FORMAT_NV21:
+        case GST_VIDEO_FORMAT_NV24:
         case GST_VIDEO_FORMAT_UYVP:
         case GST_VIDEO_FORMAT_A420:
         case GST_VIDEO_FORMAT_YUV9:
