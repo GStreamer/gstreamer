@@ -458,6 +458,7 @@ static GstFlowReturn qtdemux_expose_streams (GstQTDemux * qtdemux);
 static void gst_qtdemux_stream_free (GstQTDemux * qtdemux,
     QtDemuxStream * stream);
 static void gst_qtdemux_stream_clear (QtDemuxStream * stream);
+static void gst_qtdemux_remove_stream (GstQTDemux * qtdemux, int index);
 static GstFlowReturn qtdemux_prepare_streams (GstQTDemux * qtdemux);
 static void qtdemux_do_allocation (GstQTDemux * qtdemux,
     QtDemuxStream * stream);
@@ -2127,6 +2128,17 @@ gst_qtdemux_stream_free (GstQTDemux * qtdemux, QtDemuxStream * stream)
   if (stream->pad)
     gst_element_remove_pad (GST_ELEMENT_CAST (qtdemux), stream->pad);
   g_free (stream);
+}
+
+static void
+gst_qtdemux_remove_stream (GstQTDemux * qtdemux, int i)
+{
+  g_assert (i >= 0 && i < qtdemux->n_streams && qtdemux->streams[i] != NULL);
+
+  gst_qtdemux_stream_free (qtdemux, qtdemux->streams[i]);
+  qtdemux->streams[i] = qtdemux->streams[qtdemux->n_streams - 1];
+  qtdemux->streams[qtdemux->n_streams - 1] = NULL;
+  qtdemux->n_streams--;
 }
 
 static GstStateChangeReturn
@@ -8426,11 +8438,7 @@ qtdemux_prepare_streams (GstQTDemux * qtdemux)
      * in push mode, we'll just have to deal with it */
     if (G_UNLIKELY (qtdemux->pullbased && !stream->n_samples)) {
       GST_DEBUG_OBJECT (qtdemux, "no samples for stream; discarding");
-      gst_qtdemux_stream_free (qtdemux, stream);
-      memmove (&(qtdemux->streams[i]), &(qtdemux->streams[i + 1]),
-          sizeof (QtDemuxStream *) * (GST_QTDEMUX_MAX_STREAMS - i - 1));
-      qtdemux->streams[GST_QTDEMUX_MAX_STREAMS - 1] = NULL;
-      qtdemux->n_streams--;
+      gst_qtdemux_remove_stream (qtdemux, i);
       i--;
       continue;
     }
@@ -8482,6 +8490,8 @@ qtdemux_expose_streams (GstQTDemux * qtdemux)
         stream->track_id == qtdemux->chapters_track_id) {
       /* TODO - parse chapters track and expose it as GstToc; For now just ignore it
          so that it doesn't look like a subtitle track */
+      gst_qtdemux_remove_stream (qtdemux, i);
+      i--;
       continue;
     }
 
