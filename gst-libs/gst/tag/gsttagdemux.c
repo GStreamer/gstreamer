@@ -1589,7 +1589,7 @@ static gboolean
 gst_tag_demux_send_new_segment (GstTagDemux * tagdemux)
 {
   GstEvent *event;
-  gint64 start, stop, position;
+  gint64 start, stop, time;
   GstSegment *seg = &tagdemux->priv->segment;
   GstSegment newseg;
 
@@ -1609,10 +1609,10 @@ gst_tag_demux_send_new_segment (GstTagDemux * tagdemux)
 
   start = seg->start;
   stop = seg->stop;
-  position = seg->time;
+  time = seg->time;
 
   g_return_val_if_fail (start != -1, FALSE);
-  g_return_val_if_fail (position != -1, FALSE);
+  g_return_val_if_fail (time != -1, FALSE);
 
   if (tagdemux->priv->strip_end > 0) {
     if (gst_tag_demux_get_upstream_size (tagdemux)) {
@@ -1640,10 +1640,10 @@ gst_tag_demux_send_new_segment (GstTagDemux * tagdemux)
     else
       start = 0;
 
-    if (position > tagdemux->priv->strip_start)
-      position -= tagdemux->priv->strip_start;
+    if (time > tagdemux->priv->strip_start)
+      time -= tagdemux->priv->strip_start;
     else
-      position = 0;
+      time = 0;
 
     if (stop != -1) {
       if (stop > tagdemux->priv->strip_start)
@@ -1658,7 +1658,7 @@ gst_tag_demux_send_new_segment (GstTagDemux * tagdemux)
   gst_segment_copy_into (seg, &newseg);
   newseg.start = start;
   newseg.stop = stop;
-  newseg.position = position;
+  newseg.time = time;
   event = gst_event_new_segment (&newseg);
 
   return gst_pad_push_event (tagdemux->priv->srcpad, event);
