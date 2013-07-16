@@ -71,7 +71,7 @@ struct _GstGLImageSink
 
     volatile gint to_quit;
     gboolean keep_aspect_ratio;
-    GValue *par;
+    gint par_n, par_d;
 
     GstBufferPool *pool;
 

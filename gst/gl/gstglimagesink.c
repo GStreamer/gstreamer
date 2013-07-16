@@ -224,8 +224,8 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PIXEL_ASPECT_RATIO,
-      g_param_spec_string ("pixel-aspect-ratio", "Pixel Aspect Ratio",
-          "The pixel aspect ratio of the device", "1/1",
+      gst_param_spec_fraction ("pixel-aspect-ratio", "Pixel Aspect Ratio",
+          "The pixel aspect ratio of the device", 0, 1, G_MAXINT, 1, 0, 1,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (element_class, "OpenGL video sink",
@@ -259,7 +259,8 @@ gst_glimage_sink_init (GstGLImageSink * glimage_sink)
   glimage_sink->clientDrawCallback = NULL;
   glimage_sink->client_data = NULL;
   glimage_sink->keep_aspect_ratio = FALSE;
-  glimage_sink->par = NULL;
+  glimage_sink->par_n = 0;
+  glimage_sink->par_d = 1;
 }
 
 static void
@@ -301,13 +302,8 @@ gst_glimage_sink_set_property (GObject * object, guint prop_id,
     }
     case PROP_PIXEL_ASPECT_RATIO:
     {
-      g_free (glimage_sink->par);
-      glimage_sink->par = g_new0 (GValue, 1);
-      g_value_init (glimage_sink->par, GST_TYPE_FRACTION);
-      if (!g_value_transform (value, glimage_sink->par)) {
-        g_warning ("Could not transform string to aspect ratio");
-        gst_value_set_fraction (glimage_sink->par, 1, 1);
-      }
+      glimage_sink->par_n = gst_value_get_fraction_numerator (value);
+      glimage_sink->par_d = gst_value_get_fraction_denominator (value);
       break;
     }
     default:
@@ -324,11 +320,6 @@ gst_glimage_sink_finalize (GObject * object)
   g_return_if_fail (GST_IS_GLIMAGE_SINK (object));
 
   glimage_sink = GST_GLIMAGE_SINK (object);
-
-  if (glimage_sink->par) {
-    g_free (glimage_sink->par);
-    glimage_sink->par = NULL;
-  }
 
   if (glimage_sink->pool) {
     gst_object_unref (glimage_sink->pool);
@@ -358,13 +349,7 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, glimage_sink->keep_aspect_ratio);
       break;
     case PROP_PIXEL_ASPECT_RATIO:
-      if (!glimage_sink->par) {
-        glimage_sink->par = g_new0 (GValue, 1);
-        g_value_init (glimage_sink->par, GST_TYPE_FRACTION);
-        gst_value_set_fraction (glimage_sink->par, 1, 1);
-      }
-      if (!g_value_transform (glimage_sink->par, value))
-        g_warning ("Could not transform string to aspect ratio");
+      gst_value_set_fraction (value, glimage_sink->par_n, glimage_sink->par_d);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -593,9 +578,9 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
     par_n = 1;
 
   /* get display's PAR */
-  if (glimage_sink->par) {
-    display_par_n = gst_value_get_fraction_numerator (glimage_sink->par);
-    display_par_d = gst_value_get_fraction_denominator (glimage_sink->par);
+  if (glimage_sink->par_n != 0 && glimage_sink->par_d != 0) {
+    display_par_n = glimage_sink->par_n;
+    display_par_d = glimage_sink->par_d;
   } else {
     display_par_n = 1;
     display_par_d = 1;
