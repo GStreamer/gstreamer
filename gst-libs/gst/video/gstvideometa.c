@@ -629,7 +629,7 @@ gst_buffer_get_video_region_of_interest_meta_id (GstBuffer * buffer, gint id)
 {
   gpointer state = NULL;
   GstMeta *meta;
-  const GstMetaInfo *info = GST_VIDEO_META_INFO;
+  const GstMetaInfo *info = GST_VIDEO_REGION_OF_INTEREST_META_INFO;
 
   while ((meta = gst_buffer_iterate_meta (buffer, &state))) {
     if (meta->info->api == info->api) {
