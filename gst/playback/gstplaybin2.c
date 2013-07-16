@@ -585,6 +585,9 @@ enum
   LAST_SIGNAL
 };
 
+static GstStaticCaps raw_audio_caps = GST_STATIC_CAPS ("audio/x-raw");
+static GstStaticCaps raw_video_caps = GST_STATIC_CAPS ("video/x-raw");
+
 static void gst_play_bin_class_init (GstPlayBinClass * klass);
 static void gst_play_bin_init (GstPlayBin * playbin);
 static void gst_play_bin_finalize (GObject * object);
@@ -3622,7 +3625,8 @@ is_included (GList * list, GstCapsFeatures * cf)
 
 /* compute the number of common caps features */
 static guint
-get_n_common_capsfeatures (GstElementFactory * dec, GstElementFactory * sink)
+get_n_common_capsfeatures (GstPlayBin * playbin, GstElementFactory * dec,
+    GstElementFactory * sink, gboolean isaudioelement)
 {
   GstCaps *d_tmpl_caps, *s_tmpl_caps;
   GstCapsFeatures *d_features, *s_features;
@@ -3630,6 +3634,14 @@ get_n_common_capsfeatures (GstElementFactory * dec, GstElementFactory * sink)
   GList *cf_list = NULL;
   guint d_caps_size, s_caps_size;
   guint i, j, n_common_cf = 0;
+  GstCaps *raw_caps =
+      (isaudioelement) ? gst_static_caps_get (&raw_audio_caps) :
+      gst_static_caps_get (&raw_video_caps);
+  GstStructure *raw_struct = gst_caps_get_structure (raw_caps, 0);
+  GstPlayFlags flags = gst_play_bin_get_flags (playbin);
+  gboolean native_raw =
+      (isaudioelement ? ! !(flags & GST_PLAY_FLAG_NATIVE_AUDIO) : ! !(flags &
+          GST_PLAY_FLAG_NATIVE_VIDEO));
 
   d_tmpl_caps = get_template_caps (dec, GST_PAD_SRC);
   s_tmpl_caps = get_template_caps (sink, GST_PAD_SINK);
@@ -3646,11 +3658,24 @@ get_n_common_capsfeatures (GstElementFactory * dec, GstElementFactory * sink)
     d_features = gst_caps_get_features ((const GstCaps *) d_tmpl_caps, i);
     d_struct = gst_caps_get_structure ((const GstCaps *) d_tmpl_caps, i);
     for (j = 0; j < s_caps_size; j++) {
+
       s_features = gst_caps_get_features ((const GstCaps *) s_tmpl_caps, j);
       s_struct = gst_caps_get_structure ((const GstCaps *) s_tmpl_caps, j);
-      if (gst_structure_can_intersect (d_struct, s_struct) &&
-          gst_caps_features_is_equal (d_features, s_features) &&
-          !is_included (cf_list, s_features)) {
+
+      /* A common caps feature is given if the caps features are equal
+       * and the structures can intersect. If the NATIVE_AUDIO/NATIVE_VIDEO
+       * flags are not set we also allow if both structures are raw caps with
+       * system memory caps features, because in that case we have converters in
+       * place.
+       */
+      if (gst_caps_features_is_equal (d_features, s_features) &&
+          (gst_structure_can_intersect (d_struct, s_struct) ||
+              (!native_raw
+                  && gst_caps_features_is_equal (d_features,
+                      GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY)
+                  && gst_structure_can_intersect (raw_struct, d_struct)
+                  && gst_structure_can_intersect (raw_struct, s_struct)))
+          && !is_included (cf_list, s_features)) {
         cf_list = g_list_prepend (cf_list, s_features);
         n_common_cf++;
       }
@@ -3707,7 +3732,9 @@ avelements_create (GstPlayBin * playbin, gboolean isaudioelement)
     for (; sl; sl = sl->next) {
       s_factory = (GstElementFactory *) sl->data;
 
-      n_common_cf = get_n_common_capsfeatures (d_factory, s_factory);
+      n_common_cf =
+          get_n_common_capsfeatures (playbin, d_factory, s_factory,
+          isaudioelement);
       if (n_common_cf < 1)
         continue;
 
@@ -4150,9 +4177,6 @@ sink_accepts_caps (GstPlayBin * playbin, GstElement * sink, GstCaps * caps)
 
   return TRUE;
 }
-
-static GstStaticCaps raw_audio_caps = GST_STATIC_CAPS ("audio/x-raw");
-static GstStaticCaps raw_video_caps = GST_STATIC_CAPS ("video/x-raw");
 
 /* We are asked to select an element. See if the next element to check
  * is a sink. If this is the case, we see if the sink works by setting it to
