@@ -88,8 +88,7 @@ static gboolean gst_gl_test_src_stop (GstBaseSrc * basesrc);
 static gboolean gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc,
     GstQuery * query);
 
-static void gst_gl_test_src_callback (gint width, gint height, guint texture,
-    gpointer stuff);
+static void gst_gl_test_src_callback (gpointer stuff);
 
 #define GST_TYPE_GL_TEST_SRC_PATTERN (gst_gl_test_src_pattern_get_type ())
 static GType
@@ -489,9 +488,8 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   gst_buffer_replace (&src->buffer, buffer);
 
   //blocking call, generate a FBO
-  if (!gst_gl_display_use_fbo (src->display, width, height, src->fbo,
+  if (!gst_gl_display_use_fbo_v2 (src->display, width, height, src->fbo,
           src->depthbuffer, out_tex, gst_gl_test_src_callback,
-          0, 0, 0, 0, width, 0, height, GST_GL_DISPLAY_PROJECTION_ORTHO2D,
           (gpointer) src)) {
     goto not_negotiated;
   }
@@ -646,8 +644,7 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
 
 //opengl scene
 static void
-gst_gl_test_src_callback (gint width, gint height, guint texture,
-    gpointer stuff)
+gst_gl_test_src_callback (gpointer stuff)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (stuff);
 
