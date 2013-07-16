@@ -65,6 +65,7 @@ struct _GstGLWindowX11 {
 
   /* We use a specific connection to send events */
   Display      *disp_send;
+  GMutex        disp_send_lock;
 
   /* X window */
   Window        internal_win_id;
