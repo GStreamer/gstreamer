@@ -232,6 +232,50 @@ GstVideoGLTextureUploadMeta *
 gboolean  gst_video_gl_texture_upload_meta_upload     (GstVideoGLTextureUploadMeta *meta,
                                                        guint texture_id[4]);
 
+
+/**
+ * GstVideoRegionOfInterestMeta: a Bounding Box describing the inner part of a rectangle inside a video frame.
+ * @meta: parent #GstMeta
+ * @roi_type: GQuark describing the semantic of the Roi (f.i. a face, a pedestrian)
+ * @id: identifier of this particular ROI
+ * @parent_id: identifier of its parent ROI, used f.i. for ROI hierarchisation.
+ * @x: x component of upper-left corner
+ * @y: y component of upper-left corner
+ * @width: bounding box width
+ * @height: bounding box height
+ *
+ * Extra buffer metadata describing an image region of interest
+ */
+typedef struct
+{
+  GstMeta meta;
+  GQuark roi_type;
+  gint id;
+  gint parent_id;
+
+  guint x;
+  guint y;
+  guint w;
+  guint h;
+}GstVideoRegionOfInterestMeta;;
+
+GType              gst_video_region_of_interest_meta_api_get_type (void);
+#define GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE (gst_video_region_of_interest_meta_api_get_type())
+const GstMetaInfo *gst_video_region_of_interest_meta_get_info (void);
+#define GST_VIDEO_REGION_OF_INTEREST_META_INFO (gst_video_region_of_interest_meta_get_info())
+
+#define gst_buffer_get_video_region_of_interest_meta(b) \
+        ((GstVideoRegionOfInterestMeta*)gst_buffer_get_meta((b),GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE))
+GstVideoRegionOfInterestMeta *gst_buffer_get_video_region_of_interest_meta_id (GstBuffer *buffer, gint id);
+GstVideoRegionOfInterestMeta *gst_buffer_add_video_region_of_interest_meta_by_name (GstBuffer * buffer,
+									    const gchar * roi_type,
+									    guint x, guint y, 
+									    guint w, guint h);
+GstVideoRegionOfInterestMeta *gst_buffer_add_video_region_of_interest_meta_from_quark (GstBuffer * buffer, 
+									    GQuark roi_type,
+									    guint x, guint y, 
+									    guint w, guint h);
+
 G_END_DECLS
 
 #endif /* __GST_VIDEO_META_H__ */

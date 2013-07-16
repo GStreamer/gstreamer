@@ -528,3 +528,143 @@ gst_video_gl_texture_upload_meta_upload (GstVideoGLTextureUploadMeta * meta,
 
   return meta->upload (meta, texture_id);
 }
+
+/* Region of Interest Meta implementation *******************************************/
+
+GType
+gst_video_region_of_interest_meta_api_get_type (void)
+{
+  static volatile GType type;
+  static const gchar *tags[] = { "orientation", " size", NULL };
+
+  if (g_once_init_enter (&type)) {
+    GType _type =
+        gst_meta_api_type_register ("GstVideoRegionOfInterestMetaAPI", tags);
+    GST_INFO ("registering");
+    g_once_init_leave (&type, _type);
+  }
+  return type;
+}
+
+
+static gboolean
+gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
+    GstBuffer * buffer, GQuark type, gpointer data)
+{
+  GstVideoRegionOfInterestMeta *dmeta, *smeta;
+
+  if (GST_META_TRANSFORM_IS_COPY (type)) {
+    smeta = (GstVideoRegionOfInterestMeta *) meta;
+
+    GST_DEBUG ("copy region of interest metadata");
+    dmeta =
+        gst_buffer_add_video_region_of_interest_meta_from_quark (dest,
+        smeta->roi_type, smeta->x, smeta->y, smeta->w, smeta->h);
+    dmeta->id = smeta->id;
+    dmeta->parent_id = smeta->parent_id;
+  } else if (GST_VIDEO_META_TRANSFORM_IS_SCALE (type)) {
+    GstVideoMetaTransform *trans = data;
+    gint ow, oh, nw, nh;
+    ow = GST_VIDEO_INFO_WIDTH (trans->in_info);
+    nw = GST_VIDEO_INFO_WIDTH (trans->out_info);
+    oh = GST_VIDEO_INFO_HEIGHT (trans->in_info);
+    nh = GST_VIDEO_INFO_HEIGHT (trans->out_info);
+    GST_DEBUG ("scaling region of interest metadata %dx%d -> %dx%d", ow, oh, nw,
+        nh);
+
+    smeta = (GstVideoRegionOfInterestMeta *) meta;
+    dmeta =
+        gst_buffer_add_video_region_of_interest_meta_from_quark (dest,
+        smeta->roi_type, (smeta->x * nw) / ow, (smeta->y * nh) / oh,
+        (smeta->w * nw) / ow, (smeta->h * nh) / oh);
+    dmeta->id = smeta->id;
+    dmeta->parent_id = smeta->parent_id;
+
+    GST_DEBUG ("region of interest (id:%d, parent id:%d) offset %dx%d -> %dx%d",
+        smeta->id, smeta->parent_id, smeta->x, smeta->y, dmeta->x, dmeta->y);
+    GST_DEBUG ("region of interest size   %dx%d -> %dx%d", smeta->w, smeta->h,
+        dmeta->w, dmeta->h);
+  }
+  return TRUE;
+}
+
+static gboolean
+gst_video_region_of_interest_meta_init (GstMeta * meta, gpointer params,
+    GstBuffer * buffer)
+{
+  GstVideoRegionOfInterestMeta *emeta = (GstVideoRegionOfInterestMeta *) meta;
+  emeta->id = 0;
+  emeta->parent_id = 0;
+  emeta->x = emeta->y = emeta->w = emeta->h = 0;
+
+  return TRUE;
+}
+
+static void
+gst_video_region_of_interest_meta_free (GstMeta * meta, GstBuffer * buffer)
+{
+  // nothing to do
+}
+
+const GstMetaInfo *
+gst_video_region_of_interest_meta_get_info (void)
+{
+  static const GstMetaInfo *meta_info = NULL;
+
+  if (g_once_init_enter (&meta_info)) {
+    const GstMetaInfo *mi =
+        gst_meta_register (GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE,
+        "GstVideoRegionOfInterestMeta",
+        sizeof (GstVideoRegionOfInterestMeta),
+        gst_video_region_of_interest_meta_init,
+        gst_video_region_of_interest_meta_free,
+        gst_video_region_of_interest_meta_transform);
+    g_once_init_leave (&meta_info, mi);
+  }
+  return meta_info;
+}
+
+GstVideoRegionOfInterestMeta *
+gst_buffer_get_video_region_of_interest_meta_id (GstBuffer * buffer, gint id)
+{
+  gpointer state = NULL;
+  GstMeta *meta;
+  const GstMetaInfo *info = GST_VIDEO_META_INFO;
+
+  while ((meta = gst_buffer_iterate_meta (buffer, &state))) {
+    if (meta->info->api == info->api) {
+      GstVideoRegionOfInterestMeta *vmeta =
+          (GstVideoRegionOfInterestMeta *) meta;
+      if (vmeta->id == id)
+        return vmeta;
+    }
+  }
+  return NULL;
+}
+
+GstVideoRegionOfInterestMeta *
+gst_buffer_add_video_region_of_interest_meta_by_name (GstBuffer * buffer,
+    const gchar * roi_type, guint x, guint y, guint w, guint h)
+{
+  return gst_buffer_add_video_region_of_interest_meta_from_quark (buffer,
+      g_quark_from_string (roi_type), x, y, w, h);
+}
+
+GstVideoRegionOfInterestMeta *
+gst_buffer_add_video_region_of_interest_meta_from_quark (GstBuffer * buffer,
+    GQuark roi_type, guint x, guint y, guint w, guint h)
+{
+  GstVideoRegionOfInterestMeta *meta;
+
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), NULL);
+
+  meta = (GstVideoRegionOfInterestMeta *) gst_buffer_add_meta (buffer,
+      GST_VIDEO_REGION_OF_INTEREST_META_INFO, NULL);
+  meta->roi_type = roi_type;
+  meta->x = x;
+  meta->y = y;
+  meta->w = w;
+  meta->h = h;
+
+  return meta;
+}
