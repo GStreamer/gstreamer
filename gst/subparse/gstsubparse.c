@@ -93,17 +93,6 @@ gst_sub_parse_dispose (GObject * object)
 
   GST_DEBUG_OBJECT (subparse, "cleaning up subtitle parser");
 
-  switch (subparse->parser_type) {
-    case GST_SUB_PARSE_FORMAT_QTTEXT:
-      qttext_context_deinit (&subparse->state);
-      break;
-    case GST_SUB_PARSE_FORMAT_SAMI:
-      sami_context_deinit (&subparse->state);
-      break;
-    default:
-      break;
-  }
-
   if (subparse->encoding) {
     g_free (subparse->encoding);
     subparse->encoding = NULL;
@@ -1161,8 +1150,11 @@ parser_state_dispose (GstSubParse * self, ParserState * state)
   }
   if (state->user_data) {
     switch (self->parser_type) {
+      case GST_SUB_PARSE_FORMAT_QTTEXT:
+        qttext_context_deinit (state);
+        break;
       case GST_SUB_PARSE_FORMAT_SAMI:
-        sami_context_reset (state);
+        sami_context_deinit (state);
         break;
       default:
         break;
