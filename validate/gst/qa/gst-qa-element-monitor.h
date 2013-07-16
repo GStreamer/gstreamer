@@ -39,6 +39,7 @@ G_BEGIN_DECLS
 #define GST_QA_ELEMENT_MONITOR_CLASS_CAST(klass)        ((GstQaElementMonitorClass*)(klass))
 
 #define GST_QA_ELEMENT_MONITOR_GET_ELEMENT(m) (GST_ELEMENT_CAST (GST_QA_MONITOR_GET_OBJECT (m)))
+#define GST_QA_ELEMENT_MONITOR_ELEMENT_IS_DECODER(m) (GST_QA_ELEMENT_MONITOR_CAST (m)->is_decoder)
 
 typedef struct _GstQaElementMonitor GstQaElementMonitor;
 typedef struct _GstQaElementMonitorClass GstQaElementMonitorClass;

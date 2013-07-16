@@ -20,6 +20,7 @@
  */
 
 #include "gst-qa-pad-monitor.h"
+#include "gst-qa-element-monitor.h"
 
 /**
  * SECTION:gst-qa-pad-monitor
@@ -381,8 +382,21 @@ gst_qa_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
 {
   GstQaPadMonitor *monitor = udata;
 
+  /* TODO should we assume that a pad-monitor should always have an
+   * element-monitor as a parent? */
   if (G_LIKELY (GST_QA_MONITOR_GET_PARENT (monitor))) {
     /* a GstQaPadMonitor parent must be a GstQaElementMonitor */
+    if (GST_QA_ELEMENT_MONITOR_ELEMENT_IS_DECODER (monitor)) {
+      /* should not push out of segment data */
+      if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)) &&
+          GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer)) &&
+          !gst_segment_clip (&monitor->segment, monitor->segment.format,
+              GST_BUFFER_TIMESTAMP (buffer), GST_BUFFER_TIMESTAMP (buffer) +
+              GST_BUFFER_DURATION (buffer), NULL, NULL)) {
+        /* TODO error */
+        g_assert_not_reached ();
+      }
+    }
   }
   return TRUE;
 }
