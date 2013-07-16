@@ -2503,7 +2503,7 @@ free_array_string (gpointer ptr)
 
 /**
  * gst_query_add_context_type:
- * @query: a GST_QUERY_NEED_CONTEXT type query
+ * @query: a GST_QUERY_CONTEXT type query
  * @context_type: a context type
  *
  * Add a new context type to @query.
@@ -2528,7 +2528,7 @@ gst_query_add_context_type (GstQuery * query, const gchar * context_type)
 
 /**
  * gst_query_get_n_context_types:
- * @query: a GST_QUERY_NEED_CONTEXT type query
+ * @query: a GST_QUERY_CONTEXT type query
  *
  * Retrieve the number of values currently stored in the
  * context-types array of the query's structure.
@@ -2552,10 +2552,10 @@ gst_query_get_n_context_types (GstQuery * query)
 
 /**
  * gst_query_parse_nth_context_type:
- * @query: a GST_QUERY_NEED_CONTEXT type query
+ * @query: a GST_QUERY_CONTEXT type query
  * @context_type: (out) (allow-none): the context type, or NULL
  *
- * Parse a context type from an existing GST_QUERY_NEED_CONTEXT query
+ * Parse a context type from an existing GST_QUERY_CONTEXT query
  * from @index.
  *
  * Returns: a #gboolean indicating if the parsing succeeded.
@@ -2579,4 +2579,34 @@ gst_query_parse_nth_context_type (GstQuery * query, guint index,
     *context_type = g_array_index (array, gchar *, index);
 
   return TRUE;
+}
+
+/**
+ * gst_query_has_context_type:
+ * @query: a GST_QUERY_CONTEXT type query
+ * @context_type: the context type
+ *
+ * Check if @query is asking for @context_type.
+ *
+ * Returns: %TRUE if @context_type is requested.
+ */
+gboolean
+gst_query_has_context_type (GstQuery * query, const gchar * context_type)
+{
+  guint i, n;
+
+  g_return_val_if_fail (GST_QUERY_TYPE (query) == GST_QUERY_CONTEXT, FALSE);
+  g_return_val_if_fail (context_type != NULL, FALSE);
+
+  n = gst_query_get_n_context_types (query);
+  for (i = 0; i < n; i++) {
+    const gchar *tmp;
+
+    if (gst_query_parse_nth_context_type (query, i, &tmp) &&
+        strcmp (tmp, context_type) == 0)
+      return TRUE;
+  }
+
+
+  return FALSE;
 }

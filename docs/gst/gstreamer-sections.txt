@@ -2376,6 +2376,7 @@ gst_query_parse_context
 gst_query_add_context_type
 gst_query_get_n_context_types
 gst_query_parse_nth_context_type
+gst_query_has_context_type
 <SUBSECTION Standard>
 GstQueryClass
 GST_QUERY
