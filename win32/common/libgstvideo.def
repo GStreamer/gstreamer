@@ -4,7 +4,10 @@ EXPORTS
 	gst_buffer_add_video_meta
 	gst_buffer_add_video_meta_full
 	gst_buffer_add_video_overlay_composition_meta
+	gst_buffer_add_video_region_of_interest_meta
+	gst_buffer_add_video_region_of_interest_meta_id
 	gst_buffer_get_video_meta_id
+	gst_buffer_get_video_region_of_interest_meta_id
 	gst_buffer_pool_config_get_video_alignment
 	gst_buffer_pool_config_set_video_alignment
 	gst_color_balance_channel_get_type
@@ -203,6 +206,8 @@ EXPORTS
 	gst_video_overlay_set_render_rectangle
 	gst_video_overlay_set_window_handle
 	gst_video_pack_flags_get_type
+	gst_video_region_of_interest_meta_api_get_type
+	gst_video_region_of_interest_meta_get_info
 	gst_video_sink_center_rect
 	gst_video_sink_get_type
 	gst_video_transfer_function_get_type

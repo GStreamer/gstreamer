@@ -246,9 +246,9 @@ gboolean  gst_video_gl_texture_upload_meta_upload     (GstVideoGLTextureUploadMe
  *
  * Extra buffer metadata describing an image region of interest
  */
-typedef struct
-{
+typedef struct {
   GstMeta meta;
+
   GQuark roi_type;
   gint id;
   gint parent_id;
@@ -266,15 +266,20 @@ const GstMetaInfo *gst_video_region_of_interest_meta_get_info (void);
 
 #define gst_buffer_get_video_region_of_interest_meta(b) \
         ((GstVideoRegionOfInterestMeta*)gst_buffer_get_meta((b),GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE))
-GstVideoRegionOfInterestMeta *gst_buffer_get_video_region_of_interest_meta_id (GstBuffer *buffer, gint id);
-GstVideoRegionOfInterestMeta *gst_buffer_add_video_region_of_interest_meta_by_name (GstBuffer * buffer,
-									    const gchar * roi_type,
-									    guint x, guint y, 
-									    guint w, guint h);
-GstVideoRegionOfInterestMeta *gst_buffer_add_video_region_of_interest_meta_from_quark (GstBuffer * buffer, 
-									    GQuark roi_type,
-									    guint x, guint y, 
-									    guint w, guint h);
+GstVideoRegionOfInterestMeta *gst_buffer_get_video_region_of_interest_meta_id (GstBuffer   * buffer,
+                                                                               gint          id);
+GstVideoRegionOfInterestMeta *gst_buffer_add_video_region_of_interest_meta    (GstBuffer   * buffer,
+									       const gchar * roi_type,
+									       guint         x,
+                                                                               guint         y,
+                                                                               guint         w,
+                                                                               guint         h);
+GstVideoRegionOfInterestMeta *gst_buffer_add_video_region_of_interest_meta_id (GstBuffer   * buffer, 
+									       GQuark        roi_type,
+                                                                               guint         x,
+                                                                               guint         y,
+                                                                               guint         w,
+                                                                               guint         h);
 
 G_END_DECLS
 

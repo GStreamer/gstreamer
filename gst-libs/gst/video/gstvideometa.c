@@ -558,7 +558,7 @@ gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
 
     GST_DEBUG ("copy region of interest metadata");
     dmeta =
-        gst_buffer_add_video_region_of_interest_meta_from_quark (dest,
+        gst_buffer_add_video_region_of_interest_meta_id (dest,
         smeta->roi_type, smeta->x, smeta->y, smeta->w, smeta->h);
     dmeta->id = smeta->id;
     dmeta->parent_id = smeta->parent_id;
@@ -574,7 +574,7 @@ gst_video_region_of_interest_meta_transform (GstBuffer * dest, GstMeta * meta,
 
     smeta = (GstVideoRegionOfInterestMeta *) meta;
     dmeta =
-        gst_buffer_add_video_region_of_interest_meta_from_quark (dest,
+        gst_buffer_add_video_region_of_interest_meta_id (dest,
         smeta->roi_type, (smeta->x * nw) / ow, (smeta->y * nh) / oh,
         (smeta->w * nw) / ow, (smeta->h * nh) / oh);
     dmeta->id = smeta->id;
@@ -643,15 +643,15 @@ gst_buffer_get_video_region_of_interest_meta_id (GstBuffer * buffer, gint id)
 }
 
 GstVideoRegionOfInterestMeta *
-gst_buffer_add_video_region_of_interest_meta_by_name (GstBuffer * buffer,
+gst_buffer_add_video_region_of_interest_meta (GstBuffer * buffer,
     const gchar * roi_type, guint x, guint y, guint w, guint h)
 {
-  return gst_buffer_add_video_region_of_interest_meta_from_quark (buffer,
+  return gst_buffer_add_video_region_of_interest_meta_id (buffer,
       g_quark_from_string (roi_type), x, y, w, h);
 }
 
 GstVideoRegionOfInterestMeta *
-gst_buffer_add_video_region_of_interest_meta_from_quark (GstBuffer * buffer,
+gst_buffer_add_video_region_of_interest_meta_id (GstBuffer * buffer,
     GQuark roi_type, guint x, guint y, guint w, guint h)
 {
   GstVideoRegionOfInterestMeta *meta;
