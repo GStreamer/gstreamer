@@ -776,12 +776,12 @@ gst_adapter_take_buffer_fast (GstAdapter * adapter, gsize nbytes)
     gsize size;
 
     cur = item->data;
-    size = MIN (gst_buffer_get_size (cur), left);
+    size = MIN (gst_buffer_get_size (cur) - skip, left);
 
     GST_LOG_OBJECT (adapter, "appending %" G_GSIZE_FORMAT " bytes"
         " via region copy", size);
     if (buffer)
-      gst_buffer_copy_into (buffer, cur, GST_BUFFER_COPY_MEMORY, 0, size);
+      gst_buffer_copy_into (buffer, cur, GST_BUFFER_COPY_MEMORY, skip, size);
     else
       buffer = gst_buffer_copy_region (cur, GST_BUFFER_COPY_ALL, skip, size);
     skip = 0;
