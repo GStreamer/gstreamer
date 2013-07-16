@@ -4836,7 +4836,14 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
           gst_qtdemux_push_pending_newsegment (demux);
           /* clear to send tags on all streams */
           for (i = 0; i < demux->n_streams; i++) {
-            gst_qtdemux_push_tags (demux, demux->streams[i]);
+            stream = demux->streams[i];
+            gst_qtdemux_push_tags (demux, stream);
+            if (stream->sparse) {
+              GST_INFO_OBJECT (demux, "Sending gap event on stream %d", i);
+              gst_pad_push_event (stream->pad,
+                  gst_event_new_gap (stream->segment.position,
+                      GST_CLOCK_TIME_NONE));
+            }
           }
         }
 
