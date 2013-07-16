@@ -508,7 +508,7 @@ gst_gl_window_x11_draw_unlocked (GstGLWindow * window, guint width,
 
     XSendEvent (window_x11->device, window_x11->internal_win_id, FALSE,
         ExposureMask, &event);
-    XSync (window_x11->disp_send, FALSE);
+    XSync (window_x11->device, FALSE);
   }
 }
 
