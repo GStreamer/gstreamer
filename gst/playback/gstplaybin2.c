@@ -3559,12 +3559,6 @@ avelement_compare (gconstpointer p1, gconstpointer p2)
     v2_rank =
         gst_plugin_feature_get_rank (fd2) * gst_plugin_feature_get_rank (fs2);
   } else {
-    /* If one has a sink, prefer that one */
-    if (v1->sink)
-      return -1;
-    else if (v2->sink)
-      return 1;
-
     v1_rank = gst_plugin_feature_get_rank (fd1);
     v2_rank = gst_plugin_feature_get_rank (fd2);
     fs1 = fs2 = NULL;
