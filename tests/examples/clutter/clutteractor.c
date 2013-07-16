@@ -158,7 +158,7 @@ main (int argc, char *argv[])
   pipeline =
       GST_PIPELINE (gst_parse_launch
       ("videotestsrc ! video/x-raw, width=320, height=240, framerate=(fraction)30/1 ! "
-          "glupload ! gleffects effect=twirl ! glimagesink", NULL));
+          "gleffects effect=twirl ! glimagesink", NULL));
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
 
