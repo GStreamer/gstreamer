@@ -3544,15 +3544,28 @@ avelement_compare (gconstpointer p1, gconstpointer p2)
   v1 = (GstAVElement *) p1;
   v2 = (GstAVElement *) p2;
 
-  fs1 = (GstPluginFeature *) v1->sink;
-  fs2 = (GstPluginFeature *) v2->sink;
   fd1 = (GstPluginFeature *) v1->dec;
   fd2 = (GstPluginFeature *) v2->dec;
 
-  v1_rank =
-      gst_plugin_feature_get_rank (fd1) * gst_plugin_feature_get_rank (fs1);
-  v2_rank =
-      gst_plugin_feature_get_rank (fd2) * gst_plugin_feature_get_rank (fs2);
+  /* If both have a sink, we also compare their ranks */
+  if (v1->sink && v2->sink) {
+    fs1 = (GstPluginFeature *) v1->sink;
+    fs2 = (GstPluginFeature *) v2->sink;
+    v1_rank =
+        gst_plugin_feature_get_rank (fd1) * gst_plugin_feature_get_rank (fs1);
+    v2_rank =
+        gst_plugin_feature_get_rank (fd2) * gst_plugin_feature_get_rank (fs2);
+  } else {
+    /* If one has a sink, prefer that one */
+    if (v1->sink)
+      return -1;
+    else if (v2->sink)
+      return 1;
+
+    v1_rank = gst_plugin_feature_get_rank (fd1);
+    v2_rank = gst_plugin_feature_get_rank (fd2);
+    fs1 = fs2 = NULL;
+  }
 
   /* comparison based on the rank */
   diff = v2_rank - v1_rank;
@@ -3566,10 +3579,12 @@ avelement_compare (gconstpointer p1, gconstpointer p2)
   if (diff != 0)
     return diff;
 
-  /* comparison based on the name of sink elements */
-  diff = strcmp (GST_OBJECT_NAME (fs1), GST_OBJECT_NAME (fs2));
-  if (diff != 0)
-    return diff;
+  if (fs1 && fs2) {
+    /* comparison based on the name of sink elements */
+    diff = strcmp (GST_OBJECT_NAME (fs1), GST_OBJECT_NAME (fs2));
+    if (diff != 0)
+      return diff;
+  }
 
   /* comparison based on the name of decoder elements */
   return strcmp (GST_OBJECT_NAME (fd1), GST_OBJECT_NAME (fd2));
@@ -3751,6 +3766,13 @@ create_decoders_list (GList * factory_list, GSequence * avelements)
           g_sequence_lookup (avelements, factory,
           (GCompareDataFunc) avelement_lookup_decoder, NULL);
       if (!seq_iter) {
+        GstAVElement *ave = g_slice_new0 (GstAVElement);
+
+        ave->dec = factory;
+        ave->sink = NULL;
+        /* There's at least raw */
+        ave->n_comm_cf = 1;
+
         dec_list = g_list_prepend (dec_list, factory);
         continue;
       }
