@@ -149,7 +149,7 @@ gst_gl_filter_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_EXTERNAL_OPENGL_CONTEXT:
     {
-      filter->external_gl_context = g_value_get_ulong (value);
+      filter->external_gl_context = g_value_get_uint64 (value);
       break;
     }
     default:

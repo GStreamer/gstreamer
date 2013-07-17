@@ -54,8 +54,8 @@ struct _GstGLImageSink
     //properties
     gchar *display_name;
 
-    gulong window_id;
-    gulong new_window_id;
+    guintptr window_id;
+    guintptr new_window_id;
 
     //caps
     GstVideoInfo info;

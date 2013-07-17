@@ -41,10 +41,10 @@ gst_video_overlay_set_gtk_window (GstVideoOverlay * videooverlay,
 
 #if defined(GDK_WINDOWING_WIN32)
   gst_video_overlay_set_window_handle (videooverlay,
-      (gulong) GDK_WINDOW_HWND (window->window));
+      (guintptr) GDK_WINDOW_HWND (window->window));
 #elif defined(GDK_WINDOWING_QUARTZ)
   gst_video_overlay_set_window_handle (videooverlay,
-      (gulong) gdk_quartz_window_get_nswindow (window->window));
+      (guintptr) gdk_quartz_window_get_nswindow (window->window));
 #elif defined(GDK_WINDOWING_X11)
   gst_video_overlay_set_window_handle (videooverlay,
       GDK_WINDOW_XWINDOW (window->window));

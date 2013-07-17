@@ -744,7 +744,7 @@ static void
 gst_glimage_sink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
 {
   GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (overlay);
-  gulong window_id = (gulong) id;
+  guintptr window_id = (guintptr) id;
 
   g_return_if_fail (GST_IS_GLIMAGE_SINK (overlay));
 
