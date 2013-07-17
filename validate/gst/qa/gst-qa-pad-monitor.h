@@ -73,12 +73,16 @@ struct _GstQaPadMonitor {
   gboolean first_buffer;
 
   gboolean has_segment;
-  GstSegment segment;
 
   gboolean pending_flush_stop;
   guint32 pending_flush_stop_seqnum;
   guint32 pending_flush_start_seqnum;
   guint32 pending_newsegment_seqnum;
+
+  /* tracked data */
+  GstSegment segment;
+  GstClockTime current_timestamp;
+  GstClockTime current_duration;
 };
 
 /**

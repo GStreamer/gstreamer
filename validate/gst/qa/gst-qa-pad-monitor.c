@@ -233,6 +233,15 @@ gst_qa_pad_monitor_check_first_buffer (GstQaPadMonitor * pad_monitor,
   }
 }
 
+static void
+gst_qa_pad_monitor_update_buffer_data (GstQaPadMonitor * pad_monitor,
+    GstBuffer * buffer)
+{
+  pad_monitor->current_timestamp = GST_BUFFER_TIMESTAMP (buffer);
+  pad_monitor->current_duration = GST_BUFFER_DURATION (buffer);
+}
+
+
 static gboolean
 gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
     GstEvent * event, GstPadEventFunction handler)
@@ -461,7 +470,10 @@ gst_qa_pad_monitor_chain_func (GstPad * pad, GstBuffer * buffer)
 
   gst_qa_pad_monitor_check_first_buffer (pad_monitor, buffer);
 
+  gst_qa_pad_monitor_update_buffer_data (pad_monitor, buffer);
+
   ret = pad_monitor->chain_func (pad, buffer);
+
   return ret;
 }
 
@@ -524,6 +536,7 @@ gst_qa_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
   GstQaPadMonitor *monitor = udata;
 
   gst_qa_pad_monitor_check_first_buffer (monitor, buffer);
+  gst_qa_pad_monitor_update_buffer_data (monitor, buffer);
 
   /* TODO should we assume that a pad-monitor should always have an
    * element-monitor as a parent? */
