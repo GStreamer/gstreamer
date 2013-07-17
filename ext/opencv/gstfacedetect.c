@@ -75,6 +75,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/video/gstvideometa.h>
 
 #include "gstopencvutils.h"
 #include "gstfacedetect.h"
@@ -669,6 +670,8 @@ gst_face_detect_transform_ip (GstOpencvVideoFilter * base, GstBuffer * buf,
               1, 8, 0);
         }
       }
+      gst_buffer_add_video_region_of_interest_meta (buf, "face",
+          (guint) r->x, (guint) r->y, (guint) r->width, (guint) r->height);
     }
 
     gst_structure_set_value ((GstStructure *) gst_message_get_structure (msg),
