@@ -5572,10 +5572,6 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
     }
 
     if (stream->caps) {
-      gboolean gray;
-      gint depth, palette_count;
-      const guint32 *palette_data = NULL;
-
       stream->caps = gst_caps_make_writable (stream->caps);
 
       gst_caps_set_simple (stream->caps,
@@ -5607,59 +5603,6 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
         GST_DEBUG_OBJECT (qtdemux, "par %d:%d", stream->par_w, stream->par_h);
         gst_caps_set_simple (stream->caps, "pixel-aspect-ratio",
             GST_TYPE_FRACTION, stream->par_w, stream->par_h, NULL);
-      }
-
-      depth = stream->bits_per_sample;
-
-      /* more than 32 bits means grayscale */
-      gray = (depth > 32);
-      /* low 32 bits specify the depth  */
-      depth &= 0x1F;
-
-      /* different number of palette entries is determined by depth. */
-      palette_count = 0;
-      if ((depth == 1) || (depth == 2) || (depth == 4) || (depth == 8))
-        palette_count = (1 << depth);
-
-      switch (palette_count) {
-        case 0:
-          break;
-        case 2:
-          palette_data = ff_qt_default_palette_2;
-          break;
-        case 4:
-          palette_data = ff_qt_default_palette_4;
-          break;
-        case 16:
-          if (gray)
-            palette_data = ff_qt_grayscale_palette_16;
-          else
-            palette_data = ff_qt_default_palette_16;
-          break;
-        case 256:
-          if (gray)
-            palette_data = ff_qt_grayscale_palette_256;
-          else
-            palette_data = ff_qt_default_palette_256;
-          break;
-        default:
-          GST_ELEMENT_WARNING (qtdemux, STREAM, DEMUX,
-              (_("The video in this file might not play correctly.")),
-              ("unsupported palette depth %d", depth));
-          break;
-      }
-      if (palette_data) {
-        if (stream->rgb8_palette)
-          gst_memory_unref (stream->rgb8_palette);
-        stream->rgb8_palette = gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
-            (gchar *) palette_data, palette_count * 4, 0, palette_count * 4,
-            NULL, NULL);
-      } else if (palette_count != 0) {
-        GST_ELEMENT_WARNING (qtdemux, STREAM, NOT_IMPLEMENTED,
-            (NULL), ("Unsupported palette depth %d. Ignoring stream.", depth));
-
-        gst_object_unref (stream->pad);
-        stream->pad = NULL;
       }
     }
   } else if (stream->subtype == FOURCC_soun) {
@@ -6950,7 +6893,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   guint32 tkhd_flags = 0;
   guint8 tkhd_version = 0;
   guint32 fourcc;
-  guint value_size, len;
+  guint value_size, stsd_len, len;
   guint32 track_id;
 
   GST_DEBUG_OBJECT (qtdemux, "parse_trak");
@@ -7095,19 +7038,21 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   stsd_data = (const guint8 *) stsd->data;
 
   /* stsd should at least have one entry */
-  len = QT_UINT32 (stsd_data);
-  if (len < 24)
+  stsd_len = QT_UINT32 (stsd_data);
+  if (stsd_len < 24)
     goto corrupt_file;
+
+  GST_LOG_OBJECT (qtdemux, "stsd len:           %d", stsd_len);
 
   /* and that entry should fit within stsd */
   len = QT_UINT32 (stsd_data + 16);
-  if (len > QT_UINT32 (stsd_data) + 16)
+  if (len > stsd_len + 16)
     goto corrupt_file;
-  GST_LOG_OBJECT (qtdemux, "stsd len:           %d", len);
 
   stream->fourcc = fourcc = QT_FOURCC (stsd_data + 16 + 4);
   GST_LOG_OBJECT (qtdemux, "stsd type:          %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (stream->fourcc));
+  GST_LOG_OBJECT (qtdemux, "stsd type len:      %d", len);
 
   if ((fourcc == FOURCC_drms) || (fourcc == FOURCC_drmi) ||
       ((fourcc & 0xFFFFFF00) == GST_MAKE_FOURCC ('e', 'n', 'c', 0)))
@@ -7115,6 +7060,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   if (stream->subtype == FOURCC_vide) {
     guint32 w = 0, h = 0;
+    gboolean gray;
+    gint depth, palette_size, palette_count;
+    guint32 *palette_data = NULL;
 
     stream->sampled = TRUE;
 
@@ -7137,6 +7085,100 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     stream->fps_d = 0;          /* this is filled in later */
     stream->bits_per_sample = QT_UINT16 (stsd_data + offset + 82);
     stream->color_table_id = QT_UINT16 (stsd_data + offset + 84);
+
+    GST_LOG_OBJECT (qtdemux, "width %d, height %d, bps %d, color table id %d",
+        stream->width, stream->height, stream->bits_per_sample,
+        stream->color_table_id);
+
+    depth = stream->bits_per_sample;
+
+    /* more than 32 bits means grayscale */
+    gray = (depth > 32);
+    /* low 32 bits specify the depth  */
+    depth &= 0x1F;
+
+    /* different number of palette entries is determined by depth. */
+    palette_count = 0;
+    if ((depth == 1) || (depth == 2) || (depth == 4) || (depth == 8))
+      palette_count = (1 << depth);
+    palette_size = palette_count * 4;
+
+    if (stream->color_table_id) {
+      switch (palette_count) {
+        case 0:
+          break;
+        case 2:
+          palette_data = g_memdup (ff_qt_default_palette_2, palette_size);
+          break;
+        case 4:
+          palette_data = g_memdup (ff_qt_default_palette_4, palette_size);
+          break;
+        case 16:
+          if (gray)
+            palette_data = g_memdup (ff_qt_grayscale_palette_16, palette_size);
+          else
+            palette_data = g_memdup (ff_qt_default_palette_16, palette_size);
+          break;
+        case 256:
+          if (gray)
+            palette_data = g_memdup (ff_qt_grayscale_palette_256, palette_size);
+          else
+            palette_data = g_memdup (ff_qt_default_palette_256, palette_size);
+          break;
+        default:
+          GST_ELEMENT_WARNING (qtdemux, STREAM, DEMUX,
+              (_("The video in this file might not play correctly.")),
+              ("unsupported palette depth %d", depth));
+          break;
+      }
+    } else {
+      gint i, j, start, end;
+
+      if (len < 94)
+        goto corrupt_file;
+
+      /* read table */
+      start = QT_UINT32 (stsd_data + offset + 86);
+      palette_count = QT_UINT16 (stsd_data + offset + 90);
+      end = QT_UINT16 (stsd_data + offset + 92);
+
+      GST_LOG_OBJECT (qtdemux, "start %d, end %d, palette_count %d",
+          start, end, palette_count);
+
+      if (end > 255)
+        end = 255;
+      if (start > end)
+        start = end;
+
+      if (len < 94 + (end - start) * 8)
+        goto corrupt_file;
+
+      /* palette is always the same size */
+      palette_data = g_malloc0 (256 * 4);
+      palette_size = 256 * 4;
+
+      for (j = 0, i = start; i <= end; j++, i++) {
+        guint32 a, r, g, b;
+
+        a = QT_UINT16 (stsd_data + offset + 94 + (j * 8));
+        r = QT_UINT16 (stsd_data + offset + 96 + (j * 8));
+        g = QT_UINT16 (stsd_data + offset + 98 + (j * 8));
+        b = QT_UINT16 (stsd_data + offset + 100 + (j * 8));
+
+        palette_data[i] = ((a & 0xff00) << 16) | ((r & 0xff00) << 8) |
+            (g & 0xff00) | (b >> 8);
+      }
+    }
+
+    if (palette_data) {
+      if (stream->rgb8_palette)
+        gst_memory_unref (stream->rgb8_palette);
+      stream->rgb8_palette = gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          palette_data, palette_size, 0, palette_size, palette_data, g_free);
+    } else if (palette_count != 0) {
+      GST_ELEMENT_WARNING (qtdemux, STREAM, NOT_IMPLEMENTED,
+          (NULL), ("Unsupported palette depth %d", depth));
+    }
 
     GST_LOG_OBJECT (qtdemux, "frame count:   %u",
         QT_UINT16 (stsd_data + offset + 48));
@@ -9997,6 +10039,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('W', 'R', 'A', 'W'):
       caps = gst_caps_new_empty_simple ("video/x-raw");
       gst_caps_set_simple (caps, "format", G_TYPE_STRING, "RGB8P", NULL);
+      _codec ("Windows Raw RGB");
       break;
     case GST_MAKE_FOURCC ('r', 'a', 'w', ' '):
     {
