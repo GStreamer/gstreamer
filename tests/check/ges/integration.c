@@ -323,8 +323,6 @@ test_seeking (gboolean render)
   GESLayer *layer;
   GError *error = NULL;
   GESUriClipAsset *asset1;
-  GESEffect *effect;
-  GESClip *clip;
   GList *tmp;
   gchar *uri = ges_test_file_name (testfilename1);
 
@@ -337,14 +335,10 @@ test_seeking (gboolean render)
   timeline = ges_timeline_new_audio_video ();
   fail_unless (ges_timeline_add_layer (timeline, layer));
 
-  clip =
-      ges_layer_add_asset (layer, GES_ASSET (asset1), 0 * GST_SECOND,
+  ges_layer_add_asset (layer, GES_ASSET (asset1), 0 * GST_SECOND,
       0 * GST_SECOND, 1 * GST_SECOND, GES_TRACK_TYPE_UNKNOWN);
 
   gst_object_unref (asset1);
-
-  effect = ges_effect_new ("agingtv");
-  ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (effect));
 
   ges_layer_add_asset (layer, GES_ASSET (asset1), 1 * GST_SECOND,
       0 * GST_SECOND, 1 * GST_SECOND, GES_TRACK_TYPE_UNKNOWN);
