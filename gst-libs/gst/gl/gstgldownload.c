@@ -988,7 +988,8 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
           sprintf (text_shader_ARGB, download->priv->ARGB, 'a', 'b', 'g', 'r');
           break;
         default:
-          sprintf (text_shader_ARGB, text_shader_RGB_gles2);
+          memcpy (text_shader_ARGB, text_shader_RGB_gles2,
+              sizeof (text_shader_RGB_gles2));
           break;
       }
 
