@@ -77,9 +77,18 @@ static GstRTSPPermissions *
 _gst_rtsp_permissions_copy (GstRTSPPermissionsImpl * permissions)
 {
   GstRTSPPermissionsImpl *copy;
+  guint i;
 
-  copy = g_slice_new0 (GstRTSPPermissionsImpl);
-  gst_rtsp_permissions_init (copy);
+  copy = (GstRTSPPermissionsImpl *) gst_rtsp_permissions_new ();
+
+  for (i = 0; i < permissions->roles->len; i++) {
+    GstStructure *entry = g_ptr_array_index (permissions->roles, i);
+    GstStructure *entry_copy = gst_structure_copy (entry);
+
+    gst_structure_set_parent_refcount (entry_copy,
+        &copy->permissions.mini_object.refcount);
+    g_ptr_array_add (permissions->roles, entry_copy);
+  }
 
   return GST_RTSP_PERMISSIONS (copy);
 }
