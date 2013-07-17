@@ -116,7 +116,7 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
       g_param_spec_uint64 ("external-opengl-context",
           "External OpenGL context",
           "Give an external OpenGL context with which to share textures",
-          0, G_MAXUINT64, 0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          0, G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_filter_src_pad_template));
@@ -162,9 +162,12 @@ static void
 gst_gl_filter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  //GstGLFilter *filter = GST_GL_FILTER (object);
+  GstGLFilter *filter = GST_GL_FILTER (object);
 
   switch (prop_id) {
+    case PROP_EXTERNAL_OPENGL_CONTEXT:
+      g_value_set_uint64 (value, filter->external_gl_context);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;

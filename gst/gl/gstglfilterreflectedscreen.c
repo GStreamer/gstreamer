@@ -117,22 +117,23 @@ gst_gl_filter_reflected_screen_class_init (GstGLFilterReflectedScreenClass *
 
   g_object_class_install_property (gobject_class, PROP_FOVY,
       g_param_spec_double ("fovy", "Fovy", "Field of view angle in degrees",
-          0.0, 180.0, 60, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          0.0, 180.0, 60, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ASPECT,
       g_param_spec_double ("aspect", "Aspect",
           "Field of view in the x direction", 1.0, 100, 1.0,
-          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ZNEAR,
       g_param_spec_double ("znear", "Znear",
           "Specifies the distance from the viewer to the near clipping plane",
-          0.0000000001, 100.0, 0.1, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          0.0000000001, 100.0, 0.1,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_ZFAR,
       g_param_spec_double ("zfar", "Zfar",
           "Specifies the distance from the viewer to the far clipping plane",
-          0.0, 1000.0, 100.0, G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
+          0.0, 1000.0, 100.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (element_class,
       "OpenGL Reflected Screen filter", "Filter/Effect/Video",
@@ -200,6 +201,18 @@ gst_gl_filter_reflected_screen_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SHOW_FLOOR:
       g_value_set_boolean (value, filter->show_floor);
+      break;
+    case PROP_FOVY:
+      g_value_set_double (value, filter->fovy);
+      break;
+    case PROP_ASPECT:
+      g_value_set_double (value, filter->aspect);
+      break;
+    case PROP_ZNEAR:
+      g_value_set_double (value, filter->znear);
+      break;
+    case PROP_ZFAR:
+      g_value_set_double (value, filter->zfar);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
