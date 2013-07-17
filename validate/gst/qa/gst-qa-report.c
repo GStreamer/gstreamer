@@ -32,17 +32,36 @@ gst_qa_report_init (void)
     _gst_qa_report_start_time = gst_util_get_timestamp ();
 }
 
+
+/* TODO how are these functions going to work with extensions */
 const gchar *
-gst_qa_error_area_get_name (GstQaErrorArea area)
+gst_qa_report_level_get_name (GstQaReportLevel level)
+{
+  switch (level) {
+    case GST_QA_REPORT_LEVEL_CRITICAL:
+      return "critical";
+    case GST_QA_REPORT_LEVEL_WARNING:
+      return "warning";
+    case GST_QA_REPORT_LEVEL_ISSUE:
+      return "issue";
+    default:
+      return "unknown";
+  }
+}
+
+const gchar *
+gst_qa_report_area_get_name (GstQaReportArea area)
 {
   switch (area) {
-    case GST_QA_ERROR_AREA_EVENT:
+    case GST_QA_AREA_EVENT:
       return "event";
-    case GST_QA_ERROR_AREA_BUFFER:
+    case GST_QA_AREA_BUFFER:
       return "buffer";
-    case GST_QA_ERROR_AREA_QUERY:
+    case GST_QA_AREA_QUERY:
       return "query";
-    case GST_QA_ERROR_AREA_OTHER:
+    case GST_QA_AREA_CAPS_NEGOTIATION:
+      return "caps";
+    case GST_QA_AREA_OTHER:
       return "other";
     default:
       g_assert_not_reached ();
@@ -50,32 +69,105 @@ gst_qa_error_area_get_name (GstQaErrorArea area)
   }
 }
 
-GstQaErrorReport *
-gst_qa_error_report_new (GstObject * source, GstQaErrorArea area,
-    const gchar * message, const gchar * detail)
+const gchar *
+gst_qa_area_event_get_subarea_name (GstQaReportAreaEvent subarea)
 {
-  GstQaErrorReport *report = g_slice_new0 (GstQaErrorReport);
+  switch (subarea) {
+    case GST_QA_AREA_EVENT_SEQNUM:
+      return "seqnum";
+    case GST_QA_AREA_EVENT_UNEXPECTED:
+      return "unexpected";
+    case GST_QA_AREA_EVENT_EXPECTED:
+      return "expected";
+    default:
+      return "unknown";
+  }
+}
 
-  report->source = g_object_ref (source);
+const gchar *
+gst_qa_area_buffer_get_subarea_name (GstQaReportAreaEvent subarea)
+{
+  switch (subarea) {
+    case GST_QA_AREA_BUFFER_TIMESTAMP:
+      return "timestamp";
+    case GST_QA_AREA_BUFFER_DURATION:
+      return "duration";
+    case GST_QA_AREA_BUFFER_FLAGS:
+      return "flags";
+    case GST_QA_AREA_BUFFER_UNEXPECTED:
+      return "unexpected";
+    default:
+      return "unknown";
+  }
+}
+
+const gchar *
+gst_qa_area_query_get_subarea_name (GstQaReportAreaEvent subarea)
+{
+  switch (subarea) {
+    case GST_QA_AREA_QUERY_UNEXPECTED:
+      return "unexpected";
+    default:
+      return "unknown";
+  }
+}
+
+const gchar *
+gst_qa_area_caps_get_subarea_name (GstQaReportAreaEvent subarea)
+{
+  switch (subarea) {
+    case GST_QA_AREA_CAPS_NEGOTIATION:
+      return "negotiation";
+    default:
+      return "unknown";
+  }
+}
+
+const gchar *
+gst_qa_report_subarea_get_name (GstQaReportArea area, gint subarea)
+{
+  switch (area) {
+    case GST_QA_AREA_EVENT:
+      return gst_qa_area_event_get_subarea_name (subarea);
+    case GST_QA_AREA_BUFFER:
+      return gst_qa_area_buffer_get_subarea_name (subarea);
+    case GST_QA_AREA_QUERY:
+      return gst_qa_area_query_get_subarea_name (subarea);
+    case GST_QA_AREA_CAPS_NEGOTIATION:
+      return gst_qa_area_caps_get_subarea_name (subarea);
+    default:
+      g_assert_not_reached ();
+    case GST_QA_AREA_OTHER:
+      return "unknown";
+  }
+}
+
+GstQaReport *
+gst_qa_report_new (GstObject * source, GstQaReportLevel level,
+    GstQaReportArea area, gint subarea, const gchar * message)
+{
+  GstQaReport *report = g_slice_new0 (GstQaReport);
+
+  report->level = level;
   report->area = area;
+  report->subarea = subarea;
+  report->source = g_object_ref (source);
   report->message = g_strdup (message);
-  report->detail = g_strdup (detail);
   report->timestamp = gst_util_get_timestamp () - _gst_qa_report_start_time;
 
   return report;
 }
 
 void
-gst_qa_error_report_free (GstQaErrorReport * report)
+gst_qa_report_free (GstQaReport * report)
 {
   g_free (report->message);
-  g_free (report->detail);
   g_object_unref (report->source);
-  g_slice_free (GstQaErrorReport, report);
+  g_slice_free (GstQaReport, report);
 }
 
 void
-gst_qa_error_report_printf (GstQaErrorReport * report)
+gst_qa_report_printf (GstQaReport * report)
 {
   g_print ("%" GST_QA_ERROR_REPORT_PRINT_FORMAT "\n",
       GST_QA_REPORT_PRINT_ARGS (report));

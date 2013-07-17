@@ -44,6 +44,34 @@ G_BEGIN_DECLS
 #define GST_QA_MONITOR_LOCK(m) (g_mutex_lock (&GST_QA_MONITOR_CAST(m)->mutex))
 #define GST_QA_MONITOR_UNLOCK(m) (g_mutex_unlock (&GST_QA_MONITOR_CAST(m)->mutex))
 
+#define GST_QA_MONITOR_REPORT(m, status, area, subarea, detail)         \
+G_STMT_START {                                                          \
+  gst_qa_monitor_do_report (GST_QA_MONITOR (m),                         \
+    GST_QA_REPORT_LEVEL_ ## status, GST_QA_AREA_ ## area,                \
+    GST_QA_AREA_ ## area ## _ ## subarea, detail);                      \
+} G_STMT_END
+
+#define GST_QA_MONITOR_REPORT_CRITICAL(m, area, subarea, detail)        \
+G_STMT_START {                                                          \
+  GST_ERROR_OBJECT (m, "Critical report: %s: %s: %s",                   \
+      "## area", "subarea ##", detail);                                 \
+  GST_QA_MONITOR_REPORT(m, CRITICAL, area, subarea, detail);            \
+} G_STMT_END
+
+#define GST_QA_MONITOR_REPORT_WARNING(m, area, subarea, detail)         \
+G_STMT_START {                                                          \
+  GST_WARNING_OBJECT (m, "Warning report: %s: %s: %s",                  \
+      "## area ##", "## subarea ##", detail);                           \
+  GST_QA_MONITOR_REPORT(m, WARNING, area, subarea, detail);             \
+} G_STMT_END
+
+#define GST_QA_MONITOR_REPORT_ISSUE(m, area, subarea, detail)           \
+G_STMT_START {                                                          \
+  GST_WARNING_OBJECT (m, "Issue report: %s: %s: %s",                    \
+      "## area ##", "## subarea ##", detail);                           \
+  GST_QA_MONITOR_REPORT(m, ISSUE, area, subarea, detail);               \
+} G_STMT_END
+
 typedef struct _GstQaMonitor GstQaMonitor;
 typedef struct _GstQaMonitorClass GstQaMonitorClass;
 
@@ -82,7 +110,8 @@ struct _GstQaMonitorClass {
 /* normal GObject stuff */
 GType		gst_qa_monitor_get_type		(void);
 
-void            gst_qa_monitor_post_error       (GstQaMonitor * monitor, GstQaErrorArea area, const gchar * message, const gchar * detail);
+void            gst_qa_monitor_do_report        (GstQaMonitor * monitor, GstQaReportLevel level, GstQaReportArea area,
+                                                 gint subarea, const gchar * detail);
 
 G_END_DECLS
 

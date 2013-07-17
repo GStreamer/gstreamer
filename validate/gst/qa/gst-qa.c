@@ -114,7 +114,7 @@ main (int argc, gchar ** argv)
   g_main_loop_run (mainloop);
 
   g_print ("Pipeline finished, printing issues found: \n");
-  gst_qa_runner_print_error_reports (runner);
+  gst_qa_runner_print_reports (runner);
 
 exit:
   gst_element_set_state (pipeline, GST_STATE_NULL);

@@ -203,22 +203,22 @@ gst_qa_monitor_get_property (GObject * object, guint prop_id,
 }
 
 void
-gst_qa_monitor_post_error (GstQaMonitor * monitor, GstQaErrorArea area,
-    const gchar * message, const gchar * detail)
+gst_qa_monitor_do_report (GstQaMonitor * monitor,
+    GstQaReportLevel level, GstQaReportArea area,
+    gint subarea, const gchar * message)
 {
-  GstQaErrorReport *report;
+  GstQaReport *report;
 
   report =
-      gst_qa_error_report_new (GST_OBJECT_CAST (GST_QA_MONITOR_GET_OBJECT
-          (monitor)), area, message, detail);
+      gst_qa_report_new (GST_OBJECT_CAST (GST_QA_MONITOR_GET_OBJECT
+          (monitor)), level, area, subarea, message);
 
-  GST_WARNING_OBJECT (monitor, "Received error report %d : %s : %s",
-      area, message, detail);
-  gst_qa_error_report_printf (report);
+  GST_INFO_OBJECT (monitor, "Received error report %d : %d : %d : %s",
+      level, area, subarea, message);
+  gst_qa_report_printf (report);
   if (GST_QA_MONITOR_GET_RUNNER (monitor)) {
-    gst_qa_runner_add_error_report (GST_QA_MONITOR_GET_RUNNER (monitor),
-        report);
+    gst_qa_runner_add_report (GST_QA_MONITOR_GET_RUNNER (monitor), report);
   } else {
-    gst_qa_error_report_free (report);
+    gst_qa_report_free (report);
   }
 }

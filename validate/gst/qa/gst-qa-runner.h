@@ -61,7 +61,7 @@ struct _GstQaRunner {
   GstElement    *pipeline;
   GstQaElementMonitor *monitor;
 
-  GSList *error_reports;
+  GSList *reports;
 };
 
 /**
@@ -80,8 +80,8 @@ GType		gst_qa_runner_get_type		(void);
 GstQaRunner *   gst_qa_runner_new               (GstElement * pipeline);
 gboolean        gst_qa_runner_setup             (GstQaRunner * runner);
 
-void            gst_qa_runner_add_error_report  (GstQaRunner * runner, GstQaErrorReport * report);
-void            gst_qa_runner_print_error_reports (GstQaRunner * runner);
+void            gst_qa_runner_add_report  (GstQaRunner * runner, GstQaReport * report);
+void            gst_qa_runner_print_reports (GstQaRunner * runner);
 
 G_END_DECLS
 

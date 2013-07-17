@@ -28,32 +28,67 @@
 G_BEGIN_DECLS
 
 typedef enum {
-  GST_QA_ERROR_AREA_EVENT=0,
-  GST_QA_ERROR_AREA_BUFFER,
-  GST_QA_ERROR_AREA_QUERY,
-  GST_QA_ERROR_AREA_OTHER=100,
-} GstQaErrorArea;
+  GST_QA_REPORT_LEVEL_CRITICAL,
+  GST_QA_REPORT_LEVEL_WARNING,
+  GST_QA_REPORT_LEVEL_ISSUE,
+  GST_QA_REPORT_LEVEL_NUM_ENTRIES,
+} GstQaReportLevel;
+
+typedef enum {
+  GST_QA_AREA_EVENT=0,
+  GST_QA_AREA_BUFFER,
+  GST_QA_AREA_QUERY,
+  GST_QA_AREA_CAPS_NEGOTIATION,
+  GST_QA_AREA_OTHER=100,
+} GstQaReportArea;
+
+typedef enum {
+  GST_QA_AREA_EVENT_SEQNUM,
+  GST_QA_AREA_EVENT_UNEXPECTED,
+  GST_QA_AREA_EVENT_EXPECTED,
+
+  GST_QA_AREA_EVENT_NUM_ENTRIES
+} GstQaReportAreaEvent;
+
+typedef enum {
+  GST_QA_AREA_BUFFER_TIMESTAMP,
+  GST_QA_AREA_BUFFER_DURATION,
+  GST_QA_AREA_BUFFER_FLAGS,
+  GST_QA_AREA_BUFFER_UNEXPECTED,
+
+  GST_QA_AREA_BUFFER_NUM_ENTRIES
+} GstQaReportAreaBuffer;
+
+typedef enum {
+  GST_QA_AREA_QUERY_UNEXPECTED,
+
+  GST_QA_AREA_QUERY_NUM_ENTRIES
+} GstQaReportAreaQuery;
 
 typedef struct {
-  GstQaErrorArea area;
+  GstQaReportLevel level;
+  GstQaReportArea area;
+  gint subarea;
   gchar *message;
-  gchar *detail;
 
   GstObject *source;
   guint64 timestamp;
-} GstQaErrorReport;
+} GstQaReport;
 
-#define GST_QA_ERROR_REPORT_PRINT_FORMAT GST_TIME_FORMAT ": %s, %s(%d)) %s (%s)"
+#define GST_QA_ERROR_REPORT_PRINT_FORMAT GST_TIME_FORMAT " (%s): %s, %s(%d)) %s(%d): %s"
 #define GST_QA_REPORT_PRINT_ARGS(r) GST_TIME_ARGS (r->timestamp), \
+                                    gst_qa_report_level_get_name (r->level), \
                                     r->source ? GST_OBJECT_NAME(r->source) : "null", \
-                                    gst_qa_error_area_get_name(r->area), r->area, \
-                                    r->message, r->detail
+                                    gst_qa_report_area_get_name(r->area), r->area, \
+                                    gst_qa_report_subarea_get_name(r->area, r->subarea), r->subarea, \
+                                    r->message
 
 void               gst_qa_report_init (void);
-GstQaErrorReport * gst_qa_error_report_new (GstObject * source, GstQaErrorArea area, const gchar * message, const gchar * detail);
-void               gst_qa_error_report_free (GstQaErrorReport * report);
+GstQaReport *      gst_qa_report_new (GstObject * source, GstQaReportLevel level, GstQaReportArea area,
+                                      gint subarea, const gchar * message);
+void               gst_qa_report_free (GstQaReport * report);
 
-void               gst_qa_error_report_printf (GstQaErrorReport * report);
+void               gst_qa_report_printf (GstQaReport * report);
 
 G_END_DECLS
 
