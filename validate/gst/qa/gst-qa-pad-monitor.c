@@ -193,6 +193,9 @@ gst_qa_pad_monitor_init (GstQaPadMonitor * pad_monitor)
 {
   gst_segment_init (&pad_monitor->segment, GST_FORMAT_BYTES);
   pad_monitor->first_buffer = TRUE;
+
+  pad_monitor->timestamp_range_start = GST_CLOCK_TIME_NONE;
+  pad_monitor->timestamp_range_end = GST_CLOCK_TIME_NONE;
 }
 
 /**
