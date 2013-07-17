@@ -105,6 +105,7 @@ static void
 gst_qa_pad_monitor_init (GstQaPadMonitor * pad_monitor)
 {
   gst_segment_init (&pad_monitor->segment, GST_FORMAT_BYTES);
+  pad_monitor->first_buffer = TRUE;
 }
 
 /**
@@ -124,6 +125,28 @@ gst_qa_pad_monitor_new (GstPad * pad, GstQaRunner * runner,
     return NULL;
   }
   return monitor;
+}
+
+static void
+gst_qa_pad_monitor_check_first_buffer (GstQaPadMonitor * pad_monitor,
+    GstBuffer * buffer)
+{
+  if (G_UNLIKELY (pad_monitor->first_buffer)) {
+    pad_monitor->first_buffer = FALSE;
+
+    if (!pad_monitor->has_segment) {
+      GST_QA_MONITOR_REPORT_WARNING (pad_monitor, EVENT, EXPECTED,
+          "Received buffer before Segment event");
+    }
+    if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))) {
+      gint64 running_time = gst_segment_to_running_time (&pad_monitor->segment,
+          pad_monitor->segment.format, GST_BUFFER_TIMESTAMP (buffer));
+      if (running_time != 0) {
+        GST_QA_MONITOR_REPORT_WARNING (pad_monitor, BUFFER, TIMESTAMP,
+            "First buffer running time is not 0");
+      }
+    }
+  }
 }
 
 static gboolean
@@ -348,6 +371,9 @@ gst_qa_pad_monitor_chain_func (GstPad * pad, GstBuffer * buffer)
   GstQaPadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "qa-monitor");
   GstFlowReturn ret;
+
+  gst_qa_pad_monitor_check_first_buffer (pad_monitor, buffer);
+
   ret = pad_monitor->chain_func (pad, buffer);
   return ret;
 }
@@ -409,6 +435,8 @@ gst_qa_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
     gpointer udata)
 {
   GstQaPadMonitor *monitor = udata;
+
+  gst_qa_pad_monitor_check_first_buffer (monitor, buffer);
 
   /* TODO should we assume that a pad-monitor should always have an
    * element-monitor as a parent? */

@@ -70,6 +70,8 @@ struct _GstQaPadMonitor {
   gulong event_probe_id;
 
   /*< private >*/
+  gboolean first_buffer;
+
   gboolean has_segment;
   GstSegment segment;
 
