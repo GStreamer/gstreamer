@@ -9994,6 +9994,10 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       caps = gst_caps_new_simple ("video/x-svq",
           "svqversion", G_TYPE_INT, 1, NULL);
       break;
+    case GST_MAKE_FOURCC ('W', 'R', 'A', 'W'):
+      caps = gst_caps_new_empty_simple ("video/x-raw");
+      gst_caps_set_simple (caps, "format", G_TYPE_STRING, "RGB8P", NULL);
+      break;
     case GST_MAKE_FOURCC ('r', 'a', 'w', ' '):
     {
       guint16 bps;
