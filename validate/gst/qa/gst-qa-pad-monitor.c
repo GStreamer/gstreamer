@@ -767,7 +767,7 @@ gst_qa_pad_monitor_query_func (GstPad * pad, GstQuery * query)
 {
   GstQaPadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "qa-monitor");
-  GstFlowReturn ret;
+  gboolean ret;
   ret = pad_monitor->query_func (pad, query);
   return ret;
 }
@@ -778,7 +778,7 @@ gst_qa_pad_buffer_alloc_func (GstPad * pad, guint64 offset, guint size,
 {
   GstQaPadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "qa-monitor");
-  GstFlowReturn ret;
+  gboolean ret;
   ret = pad_monitor->bufferalloc_func (pad, offset, size, caps, buffer);
   return ret;
 }
@@ -789,7 +789,7 @@ gst_qa_pad_get_range_func (GstPad * pad, guint64 offset, guint size,
 {
   GstQaPadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "qa-monitor");
-  GstFlowReturn ret;
+  gboolean ret;
   ret = pad_monitor->getrange_func (pad, offset, size, buffer);
   return ret;
 }
