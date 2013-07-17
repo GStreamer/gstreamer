@@ -366,6 +366,75 @@ gst_qa_pad_monitor_update_buffer_data (GstQaPadMonitor * pad_monitor,
   pad_monitor->buffer_pushed = FALSE;
 }
 
+static GstFlowReturn
+_combine_flows (GstFlowReturn ret1, GstFlowReturn ret2)
+{
+  /* TODO review the combination
+   * what about not-negotiated and unexpected ? */
+  if (ret1 == ret2)
+    return ret1;
+  if (ret1 <= GST_FLOW_NOT_NEGOTIATED)
+    return ret1;
+  if (ret2 <= GST_FLOW_NOT_NEGOTIATED)
+    return ret2;
+  if (ret1 == GST_FLOW_OK || ret2 == GST_FLOW_OK)
+    return GST_FLOW_OK;
+  return ret2;
+}
+
+static void
+gst_qa_pad_monitor_check_aggregated_return (GstQaPadMonitor * monitor,
+    GstFlowReturn ret)
+{
+  GstIterator *iter;
+  gboolean done;
+  GstPad *otherpad;
+  GstPad *peerpad;
+  GstQaPadMonitor *othermonitor;
+  GstFlowReturn aggregated = GST_FLOW_NOT_LINKED;
+  gboolean found_a_pad = FALSE;
+
+  iter = gst_pad_iterate_internal_links (GST_QA_PAD_MONITOR_GET_PAD (monitor));
+  done = FALSE;
+  while (!done) {
+    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+      case GST_ITERATOR_OK:
+        found_a_pad = TRUE;
+        peerpad = gst_pad_get_peer (otherpad);
+        if (peerpad) {
+          othermonitor = g_object_get_data ((GObject *) peerpad, "qa-monitor");
+          if (othermonitor) {
+            aggregated =
+                _combine_flows (aggregated, othermonitor->last_flow_return);
+          }
+          gst_object_unref (peerpad);
+        }
+        gst_object_unref (otherpad);
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_ERROR:
+        GST_WARNING_OBJECT (monitor, "Internal links pad iteration error");
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iter);
+  if (!found_a_pad) {
+    /* no peer pad found, nothing to do */
+    return;
+  }
+  if (aggregated != ret) {
+    /* TODO review this error code */
+    GST_QA_MONITOR_REPORT_CRITICAL (monitor, BUFFER, UNEXPECTED,
+        "Wrong combined flow return");
+  }
+}
+
 static void
 gst_qa_pad_monitor_add_expected_newsegment (GstQaPadMonitor * monitor,
     GstEvent * event)
@@ -663,6 +732,9 @@ gst_qa_pad_monitor_chain_func (GstPad * pad, GstBuffer * buffer)
   gst_qa_pad_monitor_update_buffer_data (pad_monitor, buffer);
 
   ret = pad_monitor->chain_func (pad, buffer);
+
+  pad_monitor->last_flow_return = ret;
+  gst_qa_pad_monitor_check_aggregated_return (pad_monitor, ret);
 
   return ret;
 }

@@ -86,6 +86,8 @@ struct _GstQaPadMonitor {
   GstClockTime current_timestamp;
   GstClockTime current_duration;
 
+  GstFlowReturn last_flow_return;
+
   /* Stores the current timestamp range of data
    * in this pad by using TIMESTAMP and TIMESTAMP+DURATION from
    * incomming buffers.
