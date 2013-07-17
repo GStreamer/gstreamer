@@ -133,7 +133,7 @@ gst_gl_filtersobel_class_init (GstGLFilterSobelClass * klass)
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (element_class,
-      "Gstreamer OpenGL Sobel", "Filter/Effect", "Sobel edge detection",
+      "Gstreamer OpenGL Sobel", "Filter/Effect/Video", "Sobel edge detection",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
 }
 

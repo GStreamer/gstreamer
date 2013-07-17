@@ -125,7 +125,7 @@ gst_gl_mosaic_class_init (GstGLMosaicClass * klass)
   gobject_class->get_property = gst_gl_mosaic_get_property;
 
   gst_element_class_set_metadata (element_class, "OpenGL mosaic",
-      "Filter/Effect", "OpenGL mosaic",
+      "Filter/Effect/Video", "OpenGL mosaic",
       "Julien Isorce <julien.isorce@gmail.com>");
 
   GST_GL_MIXER_CLASS (klass)->set_caps = gst_gl_mosaic_init_shader;

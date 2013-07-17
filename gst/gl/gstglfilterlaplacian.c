@@ -109,7 +109,7 @@ gst_gl_filter_laplacian_class_init (GstGLFilterLaplacianClass * klass)
   gobject_class->get_property = gst_gl_filter_laplacian_get_property;
 
   gst_element_class_set_metadata (element_class,
-      "OpenGL laplacian filter", "Filter/Effect",
+      "OpenGL laplacian filter", "Filter/Effect/Video",
       "Laplacian Convolution Demo Filter",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
 

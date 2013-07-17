@@ -292,7 +292,7 @@ gst_gl_bumper_class_init (GstGLBumperClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (element_class, "OpenGL bumper filter",
-      "Filter/Effect", "Bump mapping filter",
+      "Filter/Effect/Video", "Bump mapping filter",
       "Cyril Comparon <cyril.comparon@gmail.com>, "
       "Julien Isorce <julien.isorce@gmail.com>");
 }

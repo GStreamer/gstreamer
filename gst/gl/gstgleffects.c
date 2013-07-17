@@ -266,7 +266,7 @@ gst_gl_effects_class_init (GstGLEffectsClass * klass)
           FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_metadata (element_class,
-      "Gstreamer OpenGL Effects", "Filter/Effect",
+      "Gstreamer OpenGL Effects", "Filter/Effect/Video",
       "GL Shading Language effects",
       "Filippo Argiolas <filippo.argiolas@gmail.com>");
 }

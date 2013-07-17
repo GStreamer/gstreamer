@@ -90,7 +90,7 @@ gst_gl_colorscale_class_init (GstGLColorscaleClass * klass)
   gobject_class->get_property = gst_gl_colorscale_get_property;
 
   gst_element_class_set_metadata (element_class, "OpenGL color scale",
-      "Filter/Effect", "Colorspace converter and video scaler",
+      "Filter/Effect/Video", "Colorspace converter and video scaler",
       "Julien Isorce <julien.isorce@gmail.com>");
 
   filter_class->filter_texture = gst_gl_colorscale_filter_texture;
