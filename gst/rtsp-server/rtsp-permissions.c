@@ -61,8 +61,7 @@ free_structure (GstStructure * structure)
 
 GST_DEFINE_MINI_OBJECT_TYPE (GstRTSPPermissions, gst_rtsp_permissions);
 
-static void gst_rtsp_permissions_init (GstRTSPPermissionsImpl * permissions,
-    GstStructure * structure);
+static void gst_rtsp_permissions_init (GstRTSPPermissionsImpl * permissions);
 
 static void
 _gst_rtsp_permissions_free (GstRTSPPermissions * permissions)
@@ -78,17 +77,15 @@ static GstRTSPPermissions *
 _gst_rtsp_permissions_copy (GstRTSPPermissionsImpl * permissions)
 {
   GstRTSPPermissionsImpl *copy;
-  GstStructure *structure;
 
   copy = g_slice_new0 (GstRTSPPermissionsImpl);
-  gst_rtsp_permissions_init (copy, structure);
+  gst_rtsp_permissions_init (copy);
 
   return GST_RTSP_PERMISSIONS (copy);
 }
 
 static void
-gst_rtsp_permissions_init (GstRTSPPermissionsImpl * permissions,
-    GstStructure * structure)
+gst_rtsp_permissions_init (GstRTSPPermissionsImpl * permissions)
 {
   gst_mini_object_init (GST_MINI_OBJECT_CAST (permissions), 0,
       GST_TYPE_RTSP_PERMISSIONS,
@@ -112,9 +109,7 @@ gst_rtsp_permissions_new (void)
   GstRTSPPermissionsImpl *permissions;
 
   permissions = g_slice_new0 (GstRTSPPermissionsImpl);
-
-  gst_rtsp_permissions_init (permissions,
-      gst_structure_new_empty ("GstRTSPPermissions"));
+  gst_rtsp_permissions_init (permissions);
 
   return GST_RTSP_PERMISSIONS (permissions);
 }
