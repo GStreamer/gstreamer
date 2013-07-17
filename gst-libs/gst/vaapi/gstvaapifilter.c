@@ -183,6 +183,7 @@ enum {
     PROP_FORMAT         = GST_VAAPI_FILTER_OP_FORMAT,
     PROP_CROP           = GST_VAAPI_FILTER_OP_CROP,
     PROP_DENOISE        = GST_VAAPI_FILTER_OP_DENOISE,
+    PROP_SHARPEN        = GST_VAAPI_FILTER_OP_SHARPEN,
 
     N_PROPERTIES
 };
@@ -229,6 +230,19 @@ init_properties(void)
                            "The level of denoising to apply",
                            0.0, 1.0, 0.0,
                            G_PARAM_READWRITE);
+
+    /**
+     * GstVaapiFilter:sharpen:
+     *
+     * The level of sharpening to apply for positive values, or the
+     * level of blurring for negative values.
+     */
+    g_properties[PROP_SHARPEN] =
+        g_param_spec_float("sharpen",
+                           "Sharpening Level",
+                           "The level of sharpening/blurring to apply",
+                           -1.0, 1.0, 0.0,
+                           G_PARAM_READWRITE);
 }
 
 static void
@@ -268,6 +282,11 @@ op_data_new(GstVaapiFilterOp op, GParamSpec *pspec)
         break;
     case GST_VAAPI_FILTER_OP_DENOISE:
         op_data->va_type = VAProcFilterNoiseReduction;
+        op_data->va_cap_size = sizeof(VAProcFilterCap);
+        op_data->va_buffer_size = sizeof(VAProcFilterParameterBuffer);
+        break;
+    case GST_VAAPI_FILTER_OP_SHARPEN:
+        op_data->va_type = VAProcFilterSharpening;
         op_data->va_cap_size = sizeof(VAProcFilterCap);
         op_data->va_buffer_size = sizeof(VAProcFilterParameterBuffer);
         break;
@@ -862,6 +881,7 @@ gst_vaapi_filter_set_operation(GstVaapiFilter *filter, GstVaapiFilterOp op,
         return gst_vaapi_filter_set_cropping_rectangle(filter, value ?
             g_value_get_boxed(value) : NULL);
     case GST_VAAPI_FILTER_OP_DENOISE:
+    case GST_VAAPI_FILTER_OP_SHARPEN:
         return op_set_generic(filter, op_data,
             (value ? g_value_get_float(value) :
              G_PARAM_SPEC_FLOAT(op_data->pspec)->default_value));
@@ -1092,4 +1112,22 @@ gst_vaapi_filter_set_denoising_level(GstVaapiFilter *filter, gfloat level)
 
     return op_set_generic(filter,
         find_operation(filter, GST_VAAPI_FILTER_OP_DENOISE), level);
+}
+
+/**
+ * gst_vaapi_filter_set_sharpening_level:
+ * @filter: a #GstVaapiFilter
+ * @level: the sharpening factor
+ *
+ * Enables noise reduction with the specified factor.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_filter_set_sharpening_level(GstVaapiFilter *filter, gfloat level)
+{
+    g_return_val_if_fail(filter != NULL, FALSE);
+
+    return op_set_generic(filter,
+        find_operation(filter, GST_VAAPI_FILTER_OP_SHARPEN), level);
 }

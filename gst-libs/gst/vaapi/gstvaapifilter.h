@@ -34,6 +34,7 @@ typedef struct _GstVaapiFilterOpInfo            GstVaapiFilterOpInfo;
  * @GST_VAAPI_FILTER_OP_FORMAT: Force output pixel format (#GstVideoFormat).
  * @GST_VAAPI_FILTER_OP_CROP: Crop source surface (#GstVaapiRectangle).
  * @GST_VAAPI_FILTER_OP_DENOISE: Noise reduction (float).
+ * @GST_VAAPI_FILTER_OP_SHARPEN: Sharpening (float).
  *
  * The set of operations that could be applied to the filter.
  */
@@ -41,6 +42,7 @@ typedef enum {
     GST_VAAPI_FILTER_OP_FORMAT = 1,
     GST_VAAPI_FILTER_OP_CROP,
     GST_VAAPI_FILTER_OP_DENOISE,
+    GST_VAAPI_FILTER_OP_SHARPEN,
 } GstVaapiFilterOp;
 
 /**
@@ -111,5 +113,8 @@ gst_vaapi_filter_set_cropping_rectangle(GstVaapiFilter *filter,
 
 gboolean
 gst_vaapi_filter_set_denoising_level(GstVaapiFilter *filter, gfloat level);
+
+gboolean
+gst_vaapi_filter_set_sharpening_level(GstVaapiFilter *filter, gfloat level);
 
 #endif /* GST_VAAPI_FILTER_H */
