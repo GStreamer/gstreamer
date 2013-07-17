@@ -984,6 +984,8 @@ gst_mpeg2dec_handle_frame (GstVideoDecoder * decoder,
 #if MPEG2_RELEASE >= MPEG2_VERSION (0, 5, 0)
       case STATE_SEQUENCE_MODIFIED:
         GST_DEBUG_OBJECT (mpeg2dec, "sequence modified");
+        mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
+        gst_mpeg2dec_clear_buffers (mpeg2dec);
         /* fall through */
 #endif
       case STATE_SEQUENCE:
