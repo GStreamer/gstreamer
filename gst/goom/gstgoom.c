@@ -111,6 +111,8 @@ static gboolean gst_goom_sink_event (GstPad * pad, GstObject * parent,
 static gboolean gst_goom_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 
+static gboolean gst_goom_src_negotiate (GstGoom * goom);
+
 #define gst_goom_parent_class parent_class
 G_DEFINE_TYPE (GstGoom, gst_goom, GST_TYPE_ELEMENT);
 
@@ -207,7 +209,7 @@ gst_goom_sink_setcaps (GstGoom * goom, GstCaps * caps)
 
   goom->bps = goom->channels * sizeof (gint16);
 
-  return TRUE;
+  return gst_goom_src_negotiate (goom);
 }
 
 static gboolean
@@ -360,11 +362,11 @@ gst_goom_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         goom->earliest_time = timestamp + diff;
       GST_OBJECT_UNLOCK (goom);
 
-      res = gst_pad_push_event (goom->sinkpad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
     }
     default:
-      res = gst_pad_push_event (goom->sinkpad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
@@ -389,12 +391,9 @@ gst_goom_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_event_unref (event);
       break;
     }
-    case GST_EVENT_FLUSH_START:
-      res = gst_pad_push_event (goom->srcpad, event);
-      break;
     case GST_EVENT_FLUSH_STOP:
       gst_goom_reset (goom);
-      res = gst_pad_push_event (goom->srcpad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
     case GST_EVENT_SEGMENT:
     {
@@ -403,11 +402,11 @@ gst_goom_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
        * we can do QoS */
       gst_event_copy_segment (event, &goom->segment);
 
-      res = gst_pad_push_event (goom->srcpad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
     }
     default:
-      res = gst_pad_push_event (goom->srcpad, event);
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
 
@@ -476,12 +475,7 @@ gst_goom_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 static GstFlowReturn
 ensure_negotiated (GstGoom * goom)
 {
-  gboolean reconfigure;
-
-  reconfigure = gst_pad_check_reconfigure (goom->srcpad);
-
-  /* we don't know an output format yet, pick one */
-  if (reconfigure || !gst_pad_has_current_caps (goom->srcpad)) {
+  if (gst_pad_check_reconfigure (goom->srcpad)) {
     if (!gst_goom_src_negotiate (goom))
       return GST_FLOW_NOT_NEGOTIATED;
   }
