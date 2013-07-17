@@ -23,8 +23,8 @@
 
 /* *INDENT-OFF* */
 static const char * const profile_specs[][4] = {
-  { "application/ogg", "audio/x-vorbis", "video/x-theora", "ogv" },
-  { "video/webm", "audio/x-vorbis", "video/x-vp8", "webm"},
+  { "application/ogg", "audio/x-vorbis", "video/x-theora", "vorbis_theora.rendered.ogv" },
+  { "video/webm", "audio/x-vorbis", "video/x-vp8", "vorbis_vp8.rendered.webm"},
 };
 /* *INDENT-ON* */
 
@@ -282,11 +282,7 @@ check_timeline (GESTimeline * timeline)
   ges_timeline_commit (timeline);
   pipeline = ges_timeline_pipeline_new ();
   if (current_profile != PROFILE_NONE) {
-    gchar *filename = g_strdup_printf ("render.%s",
-        profile_specs[current_profile][3]);
-
-    render_uri = ges_test_file_name (filename);
-    g_free (filename);
+    render_uri = ges_test_file_name (profile_specs[current_profile][3]);
 
     profile = create_audio_video_profile (current_profile);
     ges_timeline_pipeline_set_render_settings (pipeline, render_uri, profile);
@@ -580,26 +576,34 @@ test_image (void)
 }
 
 #define CREATE_TEST(name, func, profile)                                       \
-GST_START_TEST (test_##name##_mov )                                            \
+GST_START_TEST (test_##name##_raw_h264_mov)                                    \
 {                                                                              \
-  testfilename1 = "test1.MOV";                                                 \
-  testfilename2 = "test2.MOV";                                                 \
+  testfilename1 = "raw_h264.0.mov";                                            \
+  testfilename2 = "raw_h264.1.mov";                                            \
   current_profile = profile;                                                   \
   func ();                                                                     \
 }                                                                              \
 GST_END_TEST;                                                                  \
-GST_START_TEST (test_##name##_ogv )                                            \
+GST_START_TEST (test_##name##_vorbis_theora_ogv)                               \
 {                                                                              \
-  testfilename1 = "test1.ogv";                                                 \
-  testfilename2 = "test2.ogv";                                                 \
+  testfilename1 = "vorbis_theora.0.ogg";                                       \
+  testfilename2 = "vorbis_theora.1.ogg";                                       \
   current_profile = profile;                                                   \
   func ();                                                                     \
 }                                                                              \
 GST_END_TEST;                                                                  \
-GST_START_TEST (test_##name##_webm )                                           \
+GST_START_TEST (test_##name##_vorbis_vp8_webm)                                 \
 {                                                                              \
-  testfilename1 = "test1.webm";                                                \
-  testfilename2 = "test2.webm";                                                \
+  testfilename1 = "vorbis_vp8.0.webm";                                         \
+  testfilename2 = "vorbis_vp8.1.webm";                                         \
+  current_profile = profile;                                                   \
+  func ();                                                                     \
+}                                                                              \
+GST_END_TEST;                                                                  \
+GST_START_TEST (test_##name##_mp3_h264_mov)                                    \
+{                                                                              \
+  testfilename1 = "mp3_h264.0.mov";                                            \
+  testfilename2 = "mp3_h264.1.mov";                                            \
   current_profile = profile;                                                   \
   func ();                                                                     \
 }                                                                              \
@@ -609,8 +613,8 @@ GST_END_TEST;
   CREATE_TEST( name##to, test_##name, profile)
 
 #define CREATE_RENDERING_TEST(name, func)                                      \
-  CREATE_TEST_FROM_NAMES(name, _render_to_ogg, PROFILE_OGG)                    \
-  CREATE_TEST_FROM_NAMES(name, _render_to_webm, PROFILE_WEBM)
+  CREATE_TEST_FROM_NAMES(name, _render_to_vorbis_theora_ogg, PROFILE_OGG)      \
+  CREATE_TEST_FROM_NAMES(name, _render_to_vorbis_vp8_webm, PROFILE_WEBM)
 
 #define CREATE_PLAYBACK_TEST(name)                                             \
   CREATE_TEST_FROM_NAMES(name, _playback, PROFILE_NONE)
@@ -620,17 +624,20 @@ GST_END_TEST;
   CREATE_RENDERING_TEST(name, func)
 
 #define ADD_PLAYBACK_TESTS(name)                                               \
-  tcase_add_test (tc_chain, test_##name##_playback_webm);                      \
-  tcase_add_test (tc_chain, test_##name##_playback_ogv);                       \
-  tcase_add_test (tc_chain, test_##name##_playback_mov);                       \
+  tcase_add_test (tc_chain, test_##name##_playback_vorbis_vp8_webm);           \
+  tcase_add_test (tc_chain, test_##name##_playback_vorbis_theora_ogv);         \
+  tcase_add_test (tc_chain, test_##name##_playback_raw_h264_mov);              \
+  tcase_add_test (tc_chain, test_##name##_playback_mp3_h264_mov);
 
 #define ADD_RENDERING_TESTS(name)                                              \
-  tcase_add_test (tc_chain, test_##name##_render_to_ogg_mov);                  \
-  tcase_add_test (tc_chain, test_##name##_render_to_ogg_webm);                 \
-  tcase_add_test (tc_chain, test_##name##_render_to_ogg_ogv);                  \
-  tcase_add_test (tc_chain, test_##name##_render_to_webm_webm);                \
-  tcase_add_test (tc_chain, test_##name##_render_to_webm_mov);                 \
-  tcase_add_test (tc_chain, test_##name##_render_to_webm_ogv);
+  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_theora_ogg_raw_h264_mov);      \
+  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_theora_ogg_mp3_h264_mov);      \
+  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_theora_ogg_vorbis_vp8_webm);   \
+  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_theora_ogg_vorbis_theora_ogv); \
+  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_vp8_webm_vorbis_vp8_webm);     \
+  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_vp8_webm_raw_h264_mov);        \
+  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_vp8_webm_mp3_h264_mov);        \
+  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_vp8_webm_vorbis_theora_ogv);
 
 #define ADD_TESTS(name)                                                        \
   ADD_PLAYBACK_TESTS(name)                                                     \
@@ -676,22 +683,28 @@ ges_suite (void)
 static gboolean
 generate_all_files (void)
 {
-  if (!ges_generate_test_file_audio_video ("test1.webm", "vorbisenc", "vp8enc",
-          "webmmux", "18", "11"))
+  if (!ges_generate_test_file_audio_video ("vorbis_vp8.0.webm", "vorbisenc",
+          "vp8enc", "webmmux", "18", "11"))
     return FALSE;
-  if (!ges_generate_test_file_audio_video ("test2.webm", "vorbisenc", "vp8enc",
-          "webmmux", "0", "0"))
+  if (!ges_generate_test_file_audio_video ("vorbis_vp8.1.webm", "vorbisenc",
+          "vp8enc", "webmmux", "0", "0"))
     return FALSE;
-  if (!ges_generate_test_file_audio_video ("test1.ogv", "vorbisenc",
+  if (!ges_generate_test_file_audio_video ("vorbis_theora.0.ogg", "vorbisenc",
           "theoraenc", "oggmux", "18", "11"))
     return FALSE;
-  if (!ges_generate_test_file_audio_video ("test2.ogv", "vorbisenc",
+  if (!ges_generate_test_file_audio_video ("vorbis_theora.1.ogg", "vorbisenc",
           "theoraenc", "oggmux", "0", "0"))
     return FALSE;
-  if (!ges_generate_test_file_audio_video ("test1.MOV", NULL,
+  if (!ges_generate_test_file_audio_video ("raw_h264.0.mov", NULL,
           "x264enc", "qtmux", "18", "11"))
     return FALSE;
-  if (!ges_generate_test_file_audio_video ("test2.MOV", NULL,
+  if (!ges_generate_test_file_audio_video ("raw_h264.1.mov", NULL,
+          "x264enc", "qtmux", "0", "0"))
+    return FALSE;
+  if (!ges_generate_test_file_audio_video ("mp3_h264.0.mov", "lamemp3enc",
+          "x264enc", "qtmux", "18", "11"))
+    return FALSE;
+  if (!ges_generate_test_file_audio_video ("mp3_h264.1.mov", "lamemp3enc",
           "x264enc", "qtmux", "0", "0"))
     return FALSE;
 
