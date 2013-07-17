@@ -455,9 +455,9 @@ string_token (const gchar * string, const gchar * delimiter, gchar ** first)
 {
   gchar *next = strstr (string, delimiter);
   if (next) {
-    *first = strndup (string, next - string);
+    *first = g_strndup (string, next - string);
   } else {
-    *first = strdup (string);
+    *first = g_strdup (string);
   }
   return next;
 }
@@ -498,7 +498,7 @@ html_context_handle_element (HtmlContext * ctxt,
 
     /* strip " or ' from attribute value */
     if (attr_value[0] == '"' || attr_value[0] == '\'') {
-      gchar *tmp = strdup (attr_value + 1);
+      gchar *tmp = g_strdup (attr_value + 1);
       g_free (attr_value);
       attr_value = tmp;
     }
