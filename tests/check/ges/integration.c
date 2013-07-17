@@ -175,14 +175,14 @@ my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       gchar *debug;
 
       gst_message_parse_error (message, &err, &debug);
-      g_print ("Error: %s\n", err->message);
+      GST_ERROR ("Error: %s\n", err->message);
       g_error_free (err);
       g_free (debug);
       g_main_loop_quit (loop);
       break;
     }
     case GST_MESSAGE_EOS:
-      g_print ("EOS\n");
+      GST_INFO ("EOS\n");
       *ret = TRUE;
       g_main_loop_quit (loop);
       break;
@@ -215,7 +215,7 @@ get_position (void)
       fail_if (GST_CLOCK_TIME_IS_VALID (seeked_position));
       got_async_done = FALSE;
 
-      g_print ("<SEEK TO Position: %" GST_TIME_FORMAT "/>\n",
+      GST_INFO ("seeking to: %" GST_TIME_FORMAT,
           GST_TIME_ARGS (seek->position));
 
       seeked_position = seek->position;
@@ -371,7 +371,7 @@ test_seeking (gboolean render)
 
       tmp = seeks;
       GST_ERROR ("Seeking at %" GST_TIME_FORMAT " to %" GST_TIME_FORMAT
-          " did not happen \n", GST_TIME_ARGS (info->seeking_position),
+          " did not happen", GST_TIME_ARGS (info->seeking_position),
           GST_TIME_ARGS (info->position));
       seeks = g_list_remove_link (seeks, tmp);
       g_slice_free (SeekInfo, info);
