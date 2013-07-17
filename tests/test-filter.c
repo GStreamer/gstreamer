@@ -21,6 +21,7 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
+#include <errno.h>
 #include <gst/vaapi/gstvaapifilter.h>
 #include <gst/vaapi/gstvaapiwindow.h>
 #include "image.h"
@@ -28,6 +29,8 @@
 
 static gchar *g_src_format_str;
 static gchar *g_crop_rect_str;
+static gchar *g_denoise_str;
+static gchar *g_sharpen_str;
 
 static GOptionEntry g_options[] = {
     { "src-format", 's',
@@ -38,6 +41,14 @@ static GOptionEntry g_options[] = {
       0,
       G_OPTION_ARG_STRING, &g_crop_rect_str,
       "cropping rectangle", NULL },
+    { "denoise", 0,
+      0,
+      G_OPTION_ARG_STRING, &g_denoise_str,
+      "set noise reduction level", NULL },
+    { "sharpen", 0,
+      0,
+      G_OPTION_ARG_STRING, &g_sharpen_str,
+      "set sharpening level", NULL },
     { NULL, }
 };
 
@@ -176,6 +187,23 @@ dump_formats(GstVaapiFilter *filter)
 }
 
 static gboolean
+parse_double(const gchar *str, gdouble *out_value_ptr)
+{
+    gchar *endptr = NULL;
+    gdouble out_value;
+
+    g_return_val_if_fail(out_value_ptr != NULL, FALSE);
+
+    errno = 0;
+    out_value = g_ascii_strtod(str, &endptr);
+    if (!endptr || *endptr != '\0' || errno == ERANGE)
+        return FALSE;
+
+    *out_value_ptr = out_value;
+    return TRUE;
+}
+
+static gboolean
 parse_crop_rect(const gchar *str, GstVaapiRectangle *crop_rect)
 {
     if (str) {
@@ -205,6 +233,7 @@ main(int argc, char *argv[])
     GstVaapiFilter *filter = NULL;
     GstVaapiFilterStatus status;
     guint filter_flags = 0;
+    gdouble denoise_level, sharpen_level;
     GError *error = NULL;
 
     static const guint src_width        = 320;
@@ -216,6 +245,12 @@ main(int argc, char *argv[])
 
     if (!video_output_init(&argc, argv, g_options))
         g_error("failed to initialize video output subsystem");
+
+    if (g_denoise_str && !parse_double(g_denoise_str, &denoise_level))
+        g_error("failed to parse noise reduction level");
+
+    if (g_sharpen_str && !parse_double(g_sharpen_str, &sharpen_level))
+        g_error("failed to parse sharpening level");
 
     display = video_output_create_display(NULL);
     if (!display)
@@ -254,6 +289,20 @@ main(int argc, char *argv[])
             g_error("failed to set cropping rectangle");
     }
 
+    if (g_denoise_str) {
+        printf("Noise reduction level: %f\n", denoise_level);
+
+        if (!gst_vaapi_filter_set_denoising_level(filter, denoise_level))
+            g_error("failed to set denoising level");
+    }
+
+    if (g_sharpen_str) {
+        printf("Sharpening level: %f\n", sharpen_level);
+
+        if (!gst_vaapi_filter_set_sharpening_level(filter, sharpen_level))
+            g_error("failed to set sharpening level");
+    }
+
     status = gst_vaapi_filter_process(filter, src_surface, dst_surface,
         filter_flags);
     if (status != GST_VAAPI_FILTER_STATUS_SUCCESS)
@@ -275,5 +324,7 @@ main(int argc, char *argv[])
     video_output_exit();
     g_free(g_src_format_str);
     g_free(g_crop_rect_str);
+    g_free(g_denoise_str);
+    g_free(g_sharpen_str);
     return 0;
 }
