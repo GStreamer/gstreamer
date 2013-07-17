@@ -54,21 +54,21 @@ G_STMT_START {                                                          \
 #define GST_QA_MONITOR_REPORT_CRITICAL(m, area, subarea, detail)        \
 G_STMT_START {                                                          \
   GST_ERROR_OBJECT (m, "Critical report: %s: %s: %s",                   \
-      "## area", "subarea ##", detail);                                 \
+      #area, #subarea, detail);                                         \
   GST_QA_MONITOR_REPORT(m, CRITICAL, area, subarea, detail);            \
 } G_STMT_END
 
 #define GST_QA_MONITOR_REPORT_WARNING(m, area, subarea, detail)         \
 G_STMT_START {                                                          \
   GST_WARNING_OBJECT (m, "Warning report: %s: %s: %s",                  \
-      "## area ##", "## subarea ##", detail);                           \
+      #area, #subarea, detail);                                         \
   GST_QA_MONITOR_REPORT(m, WARNING, area, subarea, detail);             \
 } G_STMT_END
 
 #define GST_QA_MONITOR_REPORT_ISSUE(m, area, subarea, detail)           \
 G_STMT_START {                                                          \
   GST_WARNING_OBJECT (m, "Issue report: %s: %s: %s",                    \
-      "## area ##", "## subarea ##", detail);                           \
+      #area, #subarea, detail);                                         \
   GST_QA_MONITOR_REPORT(m, ISSUE, area, subarea, detail);               \
 } G_STMT_END
 
