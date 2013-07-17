@@ -2614,6 +2614,8 @@ gst_matroska_demux_push_stream_headers (GstMatroskaDemux * demux,
     if (stream->set_discont) {
       GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
       stream->set_discont = FALSE;
+    } else {
+      GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
     }
 
     /* push out all headers in one go and use last flow return */
@@ -3617,6 +3619,8 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
         GST_DEBUG_OBJECT (demux, "marking DISCONT");
         GST_BUFFER_FLAG_SET (sub, GST_BUFFER_FLAG_DISCONT);
         stream->set_discont = FALSE;
+      } else {
+        GST_BUFFER_FLAG_UNSET (sub, GST_BUFFER_FLAG_DISCONT);
       }
 
       /* reverse playback book-keeping */
