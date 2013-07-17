@@ -184,6 +184,10 @@ enum {
     PROP_CROP           = GST_VAAPI_FILTER_OP_CROP,
     PROP_DENOISE        = GST_VAAPI_FILTER_OP_DENOISE,
     PROP_SHARPEN        = GST_VAAPI_FILTER_OP_SHARPEN,
+    PROP_HUE            = GST_VAAPI_FILTER_OP_HUE,
+    PROP_SATURATION     = GST_VAAPI_FILTER_OP_SATURATION,
+    PROP_BRIGHTNESS     = GST_VAAPI_FILTER_OP_BRIGHTNESS,
+    PROP_CONTRAST       = GST_VAAPI_FILTER_OP_CONTRAST,
 
     N_PROPERTIES
 };
@@ -243,6 +247,58 @@ init_properties(void)
                            "The level of sharpening/blurring to apply",
                            -1.0, 1.0, 0.0,
                            G_PARAM_READWRITE);
+
+    /**
+     * GstVaapiFilter:hue:
+     *
+     * The color hue, expressed as a float value. Range is -180.0 to
+     * 180.0. Default value is 0.0 and represents no modification.
+     */
+    g_properties[PROP_HUE] =
+        g_param_spec_float("hue",
+                           "Hue",
+                           "The color hue value",
+                           -180.0, 180.0, 0.0,
+                           G_PARAM_READWRITE);
+
+    /**
+     * GstVaapiFilter:saturation:
+     *
+     * The color saturation, expressed as a float value. Range is 0.0
+     * to 2.0. Default value is 1.0 and represents no modification.
+     */
+    g_properties[PROP_SATURATION] =
+        g_param_spec_float("saturation",
+                           "Saturation",
+                           "The color saturation value",
+                           0.0, 2.0, 1.0,
+                           G_PARAM_READWRITE);
+
+    /**
+     * GstVaapiFilter:brightness:
+     *
+     * The color brightness, expressed as a float value. Range is -1.0
+     * to 1.0. Default value is 0.0 and represents no modification.
+     */
+    g_properties[PROP_BRIGHTNESS] =
+        g_param_spec_float("brightness",
+                           "Brightness",
+                           "The color brightness value",
+                           -1.0, 1.0, 0.0,
+                           G_PARAM_READWRITE);
+
+    /**
+     * GstVaapiFilter:contrast:
+     *
+     * The color contrast, expressed as a float value. Range is 0.0 to
+     * 2.0. Default value is 1.0 and represents no modification.
+     */
+    g_properties[PROP_CONTRAST] =
+        g_param_spec_float("contrast",
+                           "Contrast",
+                           "The color contrast value",
+                           0.0, 2.0, 1.0,
+                           G_PARAM_READWRITE);
 }
 
 static void
@@ -289,6 +345,14 @@ op_data_new(GstVaapiFilterOp op, GParamSpec *pspec)
         op_data->va_type = VAProcFilterSharpening;
         op_data->va_cap_size = sizeof(VAProcFilterCap);
         op_data->va_buffer_size = sizeof(VAProcFilterParameterBuffer);
+        break;
+    case GST_VAAPI_FILTER_OP_HUE:
+    case GST_VAAPI_FILTER_OP_SATURATION:
+    case GST_VAAPI_FILTER_OP_BRIGHTNESS:
+    case GST_VAAPI_FILTER_OP_CONTRAST:
+        op_data->va_type = VAProcFilterColorBalance;
+        op_data->va_cap_size = sizeof(VAProcFilterCapColorBalance);
+        op_data->va_buffer_size = sizeof(VAProcFilterParameterBufferColorBalance);
         break;
     default:
         g_assert(0 && "unsupported operation");
@@ -564,6 +628,54 @@ op_set_generic(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data,
 #if USE_VA_VPP
     GST_VAAPI_DISPLAY_LOCK(filter->display);
     success = op_set_generic_unlocked(filter, op_data, value);
+    GST_VAAPI_DISPLAY_UNLOCK(filter->display);
+#endif
+    return success;
+}
+
+/* Update the color balance filter */
+#if USE_VA_VPP
+static gboolean
+op_set_color_balance_unlocked(GstVaapiFilter *filter,
+    GstVaapiFilterOpData *op_data, gfloat value)
+{
+    VAProcFilterParameterBufferColorBalance *buf;
+    VAProcFilterCapColorBalance *filter_cap;
+    gfloat va_value;
+
+    if (!op_data || !op_ensure_buffer(filter, op_data))
+        return FALSE;
+
+    op_data->is_enabled =
+        (value != G_PARAM_SPEC_FLOAT(op_data->pspec)->default_value);
+    if (!op_data->is_enabled)
+        return TRUE;
+
+    filter_cap = op_data->va_caps;
+    if (!op_data_get_value_float(op_data, &filter_cap->range, value, &va_value))
+        return FALSE;
+
+    buf = vaapi_map_buffer(filter->va_display, op_data->va_buffer);
+    if (!buf)
+        return FALSE;
+
+    buf->type = op_data->va_type;
+    buf->attrib = op_data->va_subtype;
+    buf->value = va_value;
+    vaapi_unmap_buffer(filter->va_display, op_data->va_buffer, NULL);
+    return TRUE;
+}
+#endif
+
+static inline gboolean
+op_set_color_balance(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data,
+    gfloat value)
+{
+    gboolean success = FALSE;
+
+#if USE_VA_VPP
+    GST_VAAPI_DISPLAY_LOCK(filter->display);
+    success = op_set_color_balance_unlocked(filter, op_data, value);
     GST_VAAPI_DISPLAY_UNLOCK(filter->display);
 #endif
     return success;
@@ -885,6 +997,13 @@ gst_vaapi_filter_set_operation(GstVaapiFilter *filter, GstVaapiFilterOp op,
         return op_set_generic(filter, op_data,
             (value ? g_value_get_float(value) :
              G_PARAM_SPEC_FLOAT(op_data->pspec)->default_value));
+    case GST_VAAPI_FILTER_OP_HUE:
+    case GST_VAAPI_FILTER_OP_SATURATION:
+    case GST_VAAPI_FILTER_OP_BRIGHTNESS:
+    case GST_VAAPI_FILTER_OP_CONTRAST:
+        return op_set_color_balance(filter, op_data,
+            (value ? g_value_get_float(value) :
+             G_PARAM_SPEC_FLOAT(op_data->pspec)->default_value));
     default:
         break;
     }
@@ -1130,4 +1249,76 @@ gst_vaapi_filter_set_sharpening_level(GstVaapiFilter *filter, gfloat level)
 
     return op_set_generic(filter,
         find_operation(filter, GST_VAAPI_FILTER_OP_SHARPEN), level);
+}
+
+/**
+ * gst_vaapi_filter_set_hue:
+ * @filter: a #GstVaapiFilter
+ * @value: the color hue value
+ *
+ * Enables color hue adjustment to the specified value.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_filter_set_hue(GstVaapiFilter *filter, gfloat value)
+{
+    g_return_val_if_fail(filter != NULL, FALSE);
+
+    return op_set_color_balance(filter,
+        find_operation(filter, GST_VAAPI_FILTER_OP_HUE), value);
+}
+
+/**
+ * gst_vaapi_filter_set_saturation:
+ * @filter: a #GstVaapiFilter
+ * @value: the color saturation value
+ *
+ * Enables color saturation adjustment to the specified value.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_filter_set_saturation(GstVaapiFilter *filter, gfloat value)
+{
+    g_return_val_if_fail(filter != NULL, FALSE);
+
+    return op_set_color_balance(filter,
+        find_operation(filter, GST_VAAPI_FILTER_OP_SATURATION), value);
+}
+
+/**
+ * gst_vaapi_filter_set_brightness:
+ * @filter: a #GstVaapiFilter
+ * @value: the color brightness value
+ *
+ * Enables color brightness adjustment to the specified value.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_filter_set_brightness(GstVaapiFilter *filter, gfloat value)
+{
+    g_return_val_if_fail(filter != NULL, FALSE);
+
+    return op_set_color_balance(filter,
+        find_operation(filter, GST_VAAPI_FILTER_OP_BRIGHTNESS), value);
+}
+
+/**
+ * gst_vaapi_filter_set_contrast:
+ * @filter: a #GstVaapiFilter
+ * @value: the color contrast value
+ *
+ * Enables color contrast adjustment to the specified value.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_filter_set_contrast(GstVaapiFilter *filter, gfloat value)
+{
+    g_return_val_if_fail(filter != NULL, FALSE);
+
+    return op_set_color_balance(filter,
+        find_operation(filter, GST_VAAPI_FILTER_OP_CONTRAST), value);
 }

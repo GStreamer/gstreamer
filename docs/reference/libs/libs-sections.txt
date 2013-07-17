@@ -389,6 +389,10 @@ gst_vaapi_filter_set_format
 gst_vaapi_filter_set_cropping_rectangle
 gst_vaapi_filter_set_denoising_level
 gst_vaapi_filter_set_sharpening_level
+gst_vaapi_filter_set_hue
+gst_vaapi_filter_set_saturation
+gst_vaapi_filter_set_brightness
+gst_vaapi_filter_set_saturation
 <SUBSECTION Standard>
 GST_VAAPI_FILTER
 </SECTION>

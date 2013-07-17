@@ -35,6 +35,10 @@ typedef struct _GstVaapiFilterOpInfo            GstVaapiFilterOpInfo;
  * @GST_VAAPI_FILTER_OP_CROP: Crop source surface (#GstVaapiRectangle).
  * @GST_VAAPI_FILTER_OP_DENOISE: Noise reduction (float).
  * @GST_VAAPI_FILTER_OP_SHARPEN: Sharpening (float).
+ * @GST_VAAPI_FILTER_OP_HUE: Change color hue (float).
+ * @GST_VAAPI_FILTER_OP_SATURATION: Change saturation (float).
+ * @GST_VAAPI_FILTER_OP_BRIGHTNESS: Change brightness (float).
+ * @GST_VAAPI_FILTER_OP_CONTRAST: Change contrast (float).
  *
  * The set of operations that could be applied to the filter.
  */
@@ -43,6 +47,10 @@ typedef enum {
     GST_VAAPI_FILTER_OP_CROP,
     GST_VAAPI_FILTER_OP_DENOISE,
     GST_VAAPI_FILTER_OP_SHARPEN,
+    GST_VAAPI_FILTER_OP_HUE,
+    GST_VAAPI_FILTER_OP_SATURATION,
+    GST_VAAPI_FILTER_OP_BRIGHTNESS,
+    GST_VAAPI_FILTER_OP_CONTRAST,
 } GstVaapiFilterOp;
 
 /**
@@ -116,5 +124,17 @@ gst_vaapi_filter_set_denoising_level(GstVaapiFilter *filter, gfloat level);
 
 gboolean
 gst_vaapi_filter_set_sharpening_level(GstVaapiFilter *filter, gfloat level);
+
+gboolean
+gst_vaapi_filter_set_hue(GstVaapiFilter *filter, gfloat value);
+
+gboolean
+gst_vaapi_filter_set_saturation(GstVaapiFilter *filter, gfloat value);
+
+gboolean
+gst_vaapi_filter_set_brightness(GstVaapiFilter *filter, gfloat value);
+
+gboolean
+gst_vaapi_filter_set_contrast(GstVaapiFilter *filter, gfloat value);
 
 #endif /* GST_VAAPI_FILTER_H */
