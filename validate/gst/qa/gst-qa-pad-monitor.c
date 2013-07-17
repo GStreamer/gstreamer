@@ -74,6 +74,90 @@ done:
   return result;
 }
 
+static gboolean
+_structure_is_raw_video (GstStructure * structure)
+{
+  return gst_structure_has_name (structure, "video/x-raw-yuv")
+      || gst_structure_has_name (structure, "video/x-raw-rgb")
+      || gst_structure_has_name (structure, "video/x-raw-gray");
+}
+
+static gboolean
+_structure_is_raw_audio (GstStructure * structure)
+{
+  return gst_structure_has_name (structure, "audio/x-raw-int")
+      || gst_structure_has_name (structure, "audio/x-raw-float");
+}
+
+#define CHECK_FIELD_TYPE(m,structure,field,type,multtype) \
+G_STMT_START { \
+  if (!gst_structure_has_field (structure, field)) { \
+    GST_QA_MONITOR_REPORT_WARNING (monitor, CAPS_NEGOTIATION, MISSING_FIELD, \
+        #field " is missing"); \
+  } else if (!gst_structure_has_field_typed (structure, field, type) && \
+      !gst_structure_has_field_typed (structure, field, multtype)) { \
+    GST_QA_MONITOR_REPORT_CRITICAL (monitor, CAPS_NEGOTIATION, BAD_FIELD_TYPE, \
+        #field " has wrong type"); \
+  } \
+} G_STMT_END
+
+static void
+gst_qa_pad_monitor_check_raw_video_caps_complete (GstQaPadMonitor * monitor,
+    GstStructure * structure)
+{
+  CHECK_FIELD_TYPE (monitor, structure, "width", G_TYPE_INT,
+      GST_TYPE_INT_RANGE);
+  CHECK_FIELD_TYPE (monitor, structure, "height", G_TYPE_INT,
+      GST_TYPE_INT_RANGE);
+  CHECK_FIELD_TYPE (monitor, structure, "framerate", GST_TYPE_FRACTION,
+      GST_TYPE_FRACTION_RANGE);
+  CHECK_FIELD_TYPE (monitor, structure, "pixel-aspect-ratio", GST_TYPE_FRACTION,
+      GST_TYPE_FRACTION_RANGE);
+
+  if (gst_structure_has_name (structure, "video/x-raw-yuv")) {
+    CHECK_FIELD_TYPE (monitor, structure, "format", GST_TYPE_FOURCC,
+        G_TYPE_ARRAY);
+
+  } else if (gst_structure_has_name (structure, "video/x-raw-rgb")) {
+    CHECK_FIELD_TYPE (monitor, structure, "bpp", G_TYPE_INT, G_TYPE_ARRAY);
+    CHECK_FIELD_TYPE (monitor, structure, "depth", G_TYPE_INT, G_TYPE_ARRAY);
+    CHECK_FIELD_TYPE (monitor, structure, "endianness", G_TYPE_INT,
+        G_TYPE_ARRAY);
+  }
+
+}
+
+static void
+gst_qa_pad_monitor_check_raw_audio_caps_complete (GstQaPadMonitor * monitor,
+    GstStructure * structure)
+{
+  CHECK_FIELD_TYPE (monitor, structure, "rate", G_TYPE_INT, GST_TYPE_INT_RANGE);
+  CHECK_FIELD_TYPE (monitor, structure, "channels", G_TYPE_INT,
+      GST_TYPE_INT_RANGE);
+  CHECK_FIELD_TYPE (monitor, structure, "endianness", G_TYPE_INT, G_TYPE_ARRAY);
+  CHECK_FIELD_TYPE (monitor, structure, "channel-layout", G_TYPE_STRING,
+      G_TYPE_ARRAY);
+}
+
+static void
+gst_qa_pad_monitor_check_caps_complete (GstQaPadMonitor * monitor,
+    GstCaps * caps)
+{
+  GstStructure *structure;
+  gint i;
+
+  for (i = 0; i < gst_caps_get_size (caps); i++) {
+    structure = gst_caps_get_structure (caps, i);
+
+    if (_structure_is_raw_video (structure)) {
+      gst_qa_pad_monitor_check_raw_video_caps_complete (monitor, structure);
+
+    } else if (_structure_is_raw_audio (structure)) {
+      gst_qa_pad_monitor_check_raw_audio_caps_complete (monitor, structure);
+    }
+  }
+}
+
 static void
 gst_qa_pad_monitor_dispose (GObject * object)
 {
@@ -477,6 +561,10 @@ gst_qa_pad_monitor_getcaps_func (GstPad * pad)
     ret = pad_monitor->getcaps_func (pad);
   } else {
     ret = _gst_pad_get_caps_default (pad);
+  }
+
+  if (ret) {
+    gst_qa_pad_monitor_check_caps_complete (pad_monitor, ret);
   }
 
   return ret;

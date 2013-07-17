@@ -65,6 +65,13 @@ typedef enum {
   GST_QA_AREA_QUERY_NUM_ENTRIES
 } GstQaReportAreaQuery;
 
+typedef enum {
+  GST_QA_AREA_CAPS_NEGOTIATION_MISSING_FIELD,
+  GST_QA_AREA_CAPS_NEGOTIATION_BAD_FIELD_TYPE,
+
+  GST_QA_AREA_CAPS_NEGOTIATION_NUM_ENTRIES
+} GstQaReportAreaCapsNegotiation;
+
 typedef struct {
   GstQaReportLevel level;
   GstQaReportArea area;
