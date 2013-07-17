@@ -83,6 +83,18 @@ struct _GstQaPadMonitor {
   GstSegment segment;
   GstClockTime current_timestamp;
   GstClockTime current_duration;
+
+  /* Stores the current timestamp range of data
+   * in this pad by using TIMESTAMP and TIMESTAMP+DURATION from
+   * incomming buffers.
+   *
+   * If the internally linked pads haven't pushed a buffer, it will
+   * update the end to the new TIMESTAMP+DURATION, in case a buffer
+   * was pushed, the start is also updated to be TIMESTMAP.
+   */
+  GstClockTime timestamp_range_start;
+  GstClockTime timestamp_range_end;
+  gboolean buffer_pushed;
 };
 
 /**

@@ -211,6 +211,116 @@ gst_qa_pad_monitor_new (GstPad * pad, GstQaRunner * runner,
   return monitor;
 }
 
+static gboolean
+gst_qa_pad_monitor_timestamp_is_in_received_range (GstQaPadMonitor * monitor,
+    GstClockTime ts)
+{
+  return !GST_CLOCK_TIME_IS_VALID (monitor->timestamp_range_start) ||
+      !GST_CLOCK_TIME_IS_VALID (monitor->timestamp_range_end) ||
+      (monitor->timestamp_range_start <= ts
+      && ts <= monitor->timestamp_range_end);
+}
+
+/* Iterates over internal links (sinkpads) to check that this buffer has
+ * a timestamp that is in the range of the lastly received buffers */
+static void
+gst_qa_pad_monitor_check_buffer_timestamp_in_received_range (GstQaPadMonitor *
+    monitor, GstBuffer * buffer)
+{
+  GstClockTime ts;
+  GstClockTime ts_end;
+  GstIterator *iter;
+  gboolean has_one = FALSE;
+  gboolean found = FALSE;
+  gboolean done;
+  GstPad *otherpad;
+  GstQaPadMonitor *othermonitor;
+
+  if (!GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))
+      || !GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer))) {
+    GST_DEBUG_OBJECT (monitor,
+        "Can't check buffer timestamps range as "
+        "buffer has no valid timestamp/duration");
+    return;
+  }
+  ts = GST_BUFFER_TIMESTAMP (buffer);
+  ts_end = ts + GST_BUFFER_DURATION (buffer);
+
+  iter = gst_pad_iterate_internal_links (GST_QA_PAD_MONITOR_GET_PAD (monitor));
+  done = FALSE;
+  while (!done) {
+    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+      case GST_ITERATOR_OK:
+        GST_DEBUG_OBJECT (monitor, "Checking pad %s:%s input timestamps",
+            GST_DEBUG_PAD_NAME (otherpad));
+        othermonitor = g_object_get_data ((GObject *) otherpad, "qa-monitor");
+        if (gst_qa_pad_monitor_timestamp_is_in_received_range (othermonitor, ts)
+            && gst_qa_pad_monitor_timestamp_is_in_received_range (othermonitor,
+                ts_end)) {
+          done = TRUE;
+          found = TRUE;
+        }
+        gst_object_unref (otherpad);
+        has_one = TRUE;
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        has_one = FALSE;
+        found = FALSE;
+        break;
+      case GST_ITERATOR_ERROR:
+        GST_WARNING_OBJECT (monitor, "Internal links pad iteration error");
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iter);
+
+  if (!has_one) {
+    GST_DEBUG_OBJECT (monitor, "Skipping timestamp in range check as no "
+        "internal linked pad was found");
+  }
+  if (!found) {
+    GST_QA_MONITOR_REPORT_WARNING (monitor, BUFFER, TIMESTAMP,
+        "Timestamp is out of range of received input");
+  }
+}
+
+static void
+gst_qa_pad_monitor_notify_buffer_pushed (GstQaPadMonitor * monitor)
+{
+  GstIterator *iter;
+  gboolean done;
+  GstPad *otherpad;
+  GstQaPadMonitor *othermonitor;
+
+  iter = gst_pad_iterate_internal_links (GST_QA_PAD_MONITOR_GET_PAD (monitor));
+  done = FALSE;
+  while (!done) {
+    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+      case GST_ITERATOR_OK:
+        othermonitor = g_object_get_data ((GObject *) otherpad, "qa-monitor");
+        othermonitor->buffer_pushed = TRUE;
+        gst_object_unref (otherpad);
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_ERROR:
+        GST_WARNING_OBJECT (monitor, "Internal links pad iteration error");
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iter);
+}
+
 static void
 gst_qa_pad_monitor_check_first_buffer (GstQaPadMonitor * pad_monitor,
     GstBuffer * buffer)
@@ -239,6 +349,18 @@ gst_qa_pad_monitor_update_buffer_data (GstQaPadMonitor * pad_monitor,
 {
   pad_monitor->current_timestamp = GST_BUFFER_TIMESTAMP (buffer);
   pad_monitor->current_duration = GST_BUFFER_DURATION (buffer);
+  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)) &&
+      GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer))) {
+    if (pad_monitor->buffer_pushed) {
+      pad_monitor->timestamp_range_start = GST_BUFFER_TIMESTAMP (buffer);
+    }
+    pad_monitor->timestamp_range_end = GST_BUFFER_TIMESTAMP (buffer) +
+        GST_BUFFER_DURATION (buffer);
+  } else {
+    pad_monitor->timestamp_range_start = GST_CLOCK_TIME_NONE;
+    pad_monitor->timestamp_range_end = GST_CLOCK_TIME_NONE;
+  }
+  pad_monitor->buffer_pushed = FALSE;
 }
 
 
@@ -537,6 +659,9 @@ gst_qa_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
 
   gst_qa_pad_monitor_check_first_buffer (monitor, buffer);
   gst_qa_pad_monitor_update_buffer_data (monitor, buffer);
+
+  gst_qa_pad_monitor_check_buffer_timestamp_in_received_range (monitor, buffer);
+  gst_qa_pad_monitor_notify_buffer_pushed (monitor);
 
   /* TODO should we assume that a pad-monitor should always have an
    * element-monitor as a parent? */
