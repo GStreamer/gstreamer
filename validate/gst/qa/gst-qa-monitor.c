@@ -221,7 +221,7 @@ gst_qa_monitor_do_report_valist (GstQaMonitor * monitor,
   if (GST_QA_MONITOR_GET_RUNNER (monitor)) {
     gst_qa_runner_add_report (GST_QA_MONITOR_GET_RUNNER (monitor), report);
   } else {
-    gst_qa_report_free (report);
+    gst_qa_report_unref (report);
   }
 
   g_free (message);

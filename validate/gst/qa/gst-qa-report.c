@@ -25,6 +25,9 @@
 
 static GstClockTime _gst_qa_report_start_time = 0;
 
+G_DEFINE_BOXED_TYPE (GstQaReport, gst_qa_report,
+    (GBoxedCopyFunc) gst_qa_report_ref, (GBoxedFreeFunc) gst_qa_report_unref);
+
 void
 gst_qa_report_init (void)
 {
@@ -159,11 +162,21 @@ gst_qa_report_new (GstObject * source, GstQaReportLevel level,
 }
 
 void
-gst_qa_report_free (GstQaReport * report)
+gst_qa_report_unref (GstQaReport * report)
 {
-  g_free (report->message);
-  g_object_unref (report->source);
-  g_slice_free (GstQaReport, report);
+  if (G_UNLIKELY (g_atomic_int_dec_and_test (&report->refcount))) {
+    g_free (report->message);
+    g_object_unref (report->source);
+    g_slice_free (GstQaReport, report);
+  }
+}
+
+GstQaReport *
+gst_qa_report_ref (GstQaReport * report)
+{
+  g_atomic_int_inc (&report->refcount);
+
+  return report;
 }
 
 void

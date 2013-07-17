@@ -44,7 +44,7 @@ gst_qa_runner_dispose (GObject * object)
   if (runner->pipeline)
     gst_object_unref (runner->pipeline);
 
-  g_slist_free_full (runner->reports, (GDestroyNotify) gst_qa_report_free);
+  g_slist_free_full (runner->reports, (GDestroyNotify) gst_qa_report_unref);
 
   if (runner->monitor)
     g_object_unref (runner->monitor);
