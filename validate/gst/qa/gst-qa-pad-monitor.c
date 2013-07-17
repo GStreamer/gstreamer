@@ -384,6 +384,9 @@ gst_qa_pad_monitor_src_event_check (GstQaPadMonitor * pad_monitor,
               "The expected flush-start seqnum should be the same as the "
               "one from the event that caused it (probably a seek)");
         }
+      } else {
+        GST_QA_MONITOR_REPORT_CRITICAL (pad_monitor, EVENT, UNEXPECTED,
+            "Received unexpected flush-start");
       }
 
       if (pad_monitor->pending_flush_stop) {
