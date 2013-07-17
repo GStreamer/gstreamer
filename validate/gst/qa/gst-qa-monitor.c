@@ -203,12 +203,14 @@ gst_qa_monitor_get_property (GObject * object, guint prop_id,
 }
 
 void
-gst_qa_monitor_do_report (GstQaMonitor * monitor,
+gst_qa_monitor_do_report_valist (GstQaMonitor * monitor,
     GstQaReportLevel level, GstQaReportArea area,
-    gint subarea, const gchar * message)
+    gint subarea, const gchar * format, va_list var_args)
 {
+  gchar *message;
   GstQaReport *report;
 
+  message = g_strdup_vprintf (format, var_args);
   report =
       gst_qa_report_new (GST_OBJECT_CAST (GST_QA_MONITOR_GET_OBJECT
           (monitor)), level, area, subarea, message);
@@ -221,4 +223,19 @@ gst_qa_monitor_do_report (GstQaMonitor * monitor,
   } else {
     gst_qa_report_free (report);
   }
+
+  g_free (message);
+}
+
+void
+gst_qa_monitor_do_report (GstQaMonitor * monitor,
+    GstQaReportLevel level, GstQaReportArea area,
+    gint subarea, const gchar * format, ...)
+{
+  va_list var_args;
+
+  va_start (var_args, format);
+  gst_qa_monitor_do_report_valist (monitor, level, area, subarea, format,
+      var_args);
+  va_end (var_args);
 }

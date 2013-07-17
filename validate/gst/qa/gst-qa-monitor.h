@@ -44,33 +44,71 @@ G_BEGIN_DECLS
 #define GST_QA_MONITOR_LOCK(m) (g_mutex_lock (&GST_QA_MONITOR_CAST(m)->mutex))
 #define GST_QA_MONITOR_UNLOCK(m) (g_mutex_unlock (&GST_QA_MONITOR_CAST(m)->mutex))
 
-#define GST_QA_MONITOR_REPORT(m, status, area, subarea, detail)         \
-G_STMT_START {                                                          \
-  gst_qa_monitor_do_report (GST_QA_MONITOR (m),                         \
-    GST_QA_REPORT_LEVEL_ ## status, GST_QA_AREA_ ## area,                \
-    GST_QA_AREA_ ## area ## _ ## subarea, detail);                      \
+#ifdef G_HAVE_ISO_VARARGS
+#define GST_QA_MONITOR_REPORT(m, status, area, subarea, ...)                   \
+G_STMT_START {                                                                 \
+  gst_qa_monitor_do_report (GST_QA_MONITOR (m),                                \
+    GST_QA_REPORT_LEVEL_ ## status, GST_QA_AREA_ ## area,                      \
+    GST_QA_AREA_ ## area ## _ ## subarea, __VA_ARGS__ );                       \
 } G_STMT_END
 
-#define GST_QA_MONITOR_REPORT_CRITICAL(m, area, subarea, detail)        \
-G_STMT_START {                                                          \
-  GST_ERROR_OBJECT (m, "Critical report: %s: %s: %s",                   \
-      #area, #subarea, detail);                                         \
-  GST_QA_MONITOR_REPORT(m, CRITICAL, area, subarea, detail);            \
+#define GST_QA_MONITOR_REPORT_CRITICAL(m, area, subarea, ...)                  \
+G_STMT_START {                                                                 \
+  GST_ERROR_OBJECT (m, "Critical report: %s: %s: %s",                          \
+      #area, #subarea, __VA_ARGS__);                                           \
+  GST_QA_MONITOR_REPORT(m, CRITICAL, area, subarea, __VA_ARGS__);              \
 } G_STMT_END
 
-#define GST_QA_MONITOR_REPORT_WARNING(m, area, subarea, detail)         \
-G_STMT_START {                                                          \
-  GST_WARNING_OBJECT (m, "Warning report: %s: %s: %s",                  \
-      #area, #subarea, detail);                                         \
-  GST_QA_MONITOR_REPORT(m, WARNING, area, subarea, detail);             \
+#define GST_QA_MONITOR_REPORT_WARNING(m, area, subarea, ...)                   \
+G_STMT_START {                                                                 \
+  GST_WARNING_OBJECT (m, "Warning report: %s: %s: %s",                         \
+      #area, #subarea, __VA_ARGS__);                                           \
+  GST_QA_MONITOR_REPORT(m, WARNING, area, subarea, __VA_ARGS__);               \
 } G_STMT_END
 
-#define GST_QA_MONITOR_REPORT_ISSUE(m, area, subarea, detail)           \
-G_STMT_START {                                                          \
-  GST_WARNING_OBJECT (m, "Issue report: %s: %s: %s",                    \
-      #area, #subarea, detail);                                         \
-  GST_QA_MONITOR_REPORT(m, ISSUE, area, subarea, detail);               \
+#define GST_QA_MONITOR_REPORT_ISSUE(m, area, subarea, ...)                     \
+G_STMT_START {                                                                 \
+  GST_WARNING_OBJECT (m, "Issue report: %s: %s: %s",                           \
+      #area, #subarea, __VA_ARGS__);                                           \
+  GST_QA_MONITOR_REPORT(m, ISSUE, area, subarea, __VA_ARGS__);                 \
 } G_STMT_END
+#else /* G_HAVE_GNUC_VARARGS */
+#ifdef G_HAVE_GNUC_VARARGS
+#define GST_QA_MONITOR_REPORT(m, status, area, subarea, args...)                   \
+G_STMT_START {                                                                 \
+  gst_qa_monitor_do_report (GST_QA_MONITOR (m),                                \
+    GST_QA_REPORT_LEVEL_ ## status, GST_QA_AREA_ ## area,                      \
+    GST_QA_AREA_ ## area ## _ ## subarea, ##args );                       \
+} G_STMT_END
+
+#define GST_QA_MONITOR_REPORT_CRITICAL(m, area, subarea, args...)                  \
+G_STMT_START {                                                                 \
+  GST_ERROR_OBJECT (m, "Critical report: %s: %s: %s",                          \
+      #area, #subarea, ##args);                                           \
+  GST_QA_MONITOR_REPORT(m, CRITICAL, area, subarea, ##args);              \
+} G_STMT_END
+
+#define GST_QA_MONITOR_REPORT_WARNING(m, area, subarea, args...)                   \
+G_STMT_START {                                                                 \
+  GST_WARNING_OBJECT (m, "Warning report: %s: %s: %s",                         \
+      #area, #subarea, ##args);                                           \
+  GST_QA_MONITOR_REPORT(m, WARNING, area, subarea, ##args);               \
+} G_STMT_END
+
+#define GST_QA_MONITOR_REPORT_ISSUE(m, area, subarea, args...)                     \
+G_STMT_START {                                                                 \
+  GST_WARNING_OBJECT (m, "Issue report: %s: %s: %s",                           \
+      #area, #subarea, ##args);                                           \
+  GST_QA_MONITOR_REPORT(m, ISSUE, area, subarea, ##args);                 \
+} G_STMT_END
+#endif /* G_HAVE_ISO_VARARGS */
+#endif /* G_HAVE_GNUC_VARARGS */
+
+/* #else TODO Implemen no variadic macros, use inline,
+ * Problem being:
+ *     GST_QA_REPORT_LEVEL_ ## status
+ *     GST_QA_AREA_ ## area ## _ ## subarea
+ */
 
 typedef struct _GstQaMonitor GstQaMonitor;
 typedef struct _GstQaMonitorClass GstQaMonitorClass;
@@ -110,8 +148,14 @@ struct _GstQaMonitorClass {
 /* normal GObject stuff */
 GType		gst_qa_monitor_get_type		(void);
 
-void            gst_qa_monitor_do_report        (GstQaMonitor * monitor, GstQaReportLevel level, GstQaReportArea area,
-                                                 gint subarea, const gchar * detail);
+void    gst_qa_monitor_do_report     (GstQaMonitor * monitor,
+                                      GstQaReportLevel level, GstQaReportArea area,
+                                      gint subarea, const gchar * format, ...);
+
+void gst_qa_monitor_do_report_valist (GstQaMonitor * monitor,
+                                      GstQaReportLevel level, GstQaReportArea area,
+                                      gint subarea, const gchar *format,
+                                      va_list var_args);
 
 G_END_DECLS
 
