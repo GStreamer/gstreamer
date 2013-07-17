@@ -236,7 +236,7 @@ get_position (void)
   return TRUE;
 }
 
-static gboolean
+static void
 check_rendered_file_properties (gchar * render_file, GstClockTime duration)
 {
   GESUriClipAsset *asset;
@@ -252,27 +252,27 @@ check_rendered_file_properties (gchar * render_file, GstClockTime duration)
   info = ges_uri_clip_asset_get_info (GES_URI_CLIP_ASSET (asset));
   gst_object_unref (asset);
 
-  if (!(GST_IS_DISCOVERER_INFO (info)))
-    return FALSE;
+  fail_unless (GST_IS_DISCOVERER_INFO (info), "Could not discover file");
 
   /* Let's not be too nazi */
 
   real_duration = gst_discoverer_info_get_duration (info);
 
-  if ((duration < real_duration - DURATION_TOLERANCE)
-      || (duration > real_duration + DURATION_TOLERANCE))
-    return FALSE;
+  fail_if ((real_duration < duration - DURATION_TOLERANCE)
+      || (real_duration > duration + DURATION_TOLERANCE), "Duration %"
+      GST_TIME_FORMAT " not in range [%" GST_TIME_FORMAT " -- %"
+      GST_TIME_FORMAT "]", GST_TIME_ARGS (real_duration),
+      GST_TIME_ARGS (duration - DURATION_TOLERANCE),
+      GST_TIME_ARGS (duration + DURATION_TOLERANCE));
+
 
   gst_object_unref (info);
-
-  return TRUE;
 }
 
 static gboolean
 check_timeline (GESTimeline * timeline)
 {
   GstBus *bus;
-  gint64 duration;
   static gboolean ret;
   GstEncodingProfile *profile;
   gchar *render_uri = NULL;
@@ -299,8 +299,6 @@ check_timeline (GESTimeline * timeline)
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
-  fail_unless (gst_element_query_duration (GST_ELEMENT (pipeline),
-          GST_FORMAT_TIME, &duration));
 
   if (seeks != NULL)
     g_timeout_add (50, (GSourceFunc) get_position, NULL);
@@ -311,7 +309,8 @@ check_timeline (GESTimeline * timeline)
   gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
 
   if (current_profile != PROFILE_NONE) {
-    fail_unless (check_rendered_file_properties (render_uri, duration));
+    check_rendered_file_properties (render_uri,
+        ges_timeline_get_duration (timeline));
     g_free (render_uri);
   }
 
