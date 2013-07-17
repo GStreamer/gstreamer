@@ -80,7 +80,7 @@ struct _GstGLFilter
 
   GstGLShader       *default_shader;
 
-  gulong             external_gl_context;
+  guint64            external_gl_context;
 };
 
 /**

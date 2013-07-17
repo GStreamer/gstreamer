@@ -190,11 +190,11 @@ gst_gl_window_win32_egl_create_context (GstGLWindowWin32 * window_win32,
       contextAttribs);
   if (window_egl->egl_context != EGL_NO_CONTEXT)
     GST_DEBUG ("gl context created: %lud, external: %lud",
-        (gulong) window_egl->egl_context, (gulong) external_gl_context);
+        (guintptr) window_egl->egl_context, (guintptr) external_gl_context);
   else {
     g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
         "failed to create glcontext with external: %lud, %s",
-        (gulong) external_gl_context, WinEGLErrorString ());
+        (guintptr) external_gl_context, WinEGLErrorString ());
     goto failure;
   }
 

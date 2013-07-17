@@ -246,7 +246,7 @@ gst_gl_window_cocoa_create_context (GstGLWindow *window, GstGLAPI gl_api,
     NSResizableWindowMask | NSMiniaturizableWindowMask)
     backing: NSBackingStoreBuffered defer: NO screen: nil gstWin: window_cocoa];
 
-  GST_DEBUG ("NSWindow id: %lud\n", (gulong) priv->internal_win_id);
+  GST_DEBUG ("NSWindow id: %lud\n", (guintptr) priv->internal_win_id);
   
   priv->thread = [NSThread currentThread];
 
@@ -518,7 +518,7 @@ gst_gl_window_cocoa_get_gl_api (GstGLWindow * window)
   glContext = [[NSOpenGLContext alloc] initWithFormat:fmt 
     shareContext:m_cocoa->priv->external_gl_context];
 
-  GST_DEBUG ("NSOpenGL context created: %lud\n", (gulong) glContext);
+  GST_DEBUG ("NSOpenGL context created: %lud\n", (guintptr) glContext);
 
   m_cocoa->priv->gl_context = glContext;
   
