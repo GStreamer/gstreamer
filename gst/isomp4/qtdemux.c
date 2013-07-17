@@ -245,6 +245,7 @@ struct _QtDemuxStream
   gint fps_d;
   guint16 bits_per_sample;
   guint16 color_table_id;
+  GstMemory *rgb8_palette;
 
   /* audio info */
   gdouble rate;
@@ -2079,6 +2080,10 @@ gst_qtdemux_stream_clear (QtDemuxStream * stream)
   while (stream->buffers) {
     gst_buffer_unref (GST_BUFFER_CAST (stream->buffers->data));
     stream->buffers = g_slist_delete_link (stream->buffers, stream->buffers);
+  }
+  if (stream->rgb8_palette) {
+    gst_memory_unref (stream->rgb8_palette);
+    stream->rgb8_palette = NULL;
   }
   g_free (stream->samples);
   stream->samples = NULL;
@@ -4002,6 +4007,9 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
   GST_BUFFER_OFFSET (buf) = -1;
   GST_BUFFER_OFFSET_END (buf) = -1;
 
+  if (G_UNLIKELY (stream->rgb8_palette))
+    gst_buffer_append_memory (buf, gst_memory_ref (stream->rgb8_palette));
+
   if (G_UNLIKELY (stream->padding)) {
     gst_buffer_resize (buf, stream->padding, -1);
   }
@@ -5641,16 +5649,11 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
           break;
       }
       if (palette_data) {
-        GstBuffer *palette;
-
-        /* make sure it's not writable. We leave MALLOCDATA to NULL so that we
-         * don't free any of the buffer data. */
-        palette = _gst_buffer_new_wrapped ((gpointer) palette_data,
-            palette_count * 4, NULL);
-
-        gst_caps_set_simple (stream->caps, "palette_data",
-            GST_TYPE_BUFFER, palette, NULL);
-        gst_buffer_unref (palette);
+        if (stream->rgb8_palette)
+          gst_memory_unref (stream->rgb8_palette);
+        stream->rgb8_palette = gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+            (gchar *) palette_data, palette_count * 4, 0, palette_count * 4,
+            NULL, NULL);
       } else if (palette_count != 0) {
         GST_ELEMENT_WARNING (qtdemux, STREAM, NOT_IMPLEMENTED,
             (NULL), ("Unsupported palette depth %d. Ignoring stream.", depth));
