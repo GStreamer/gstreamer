@@ -624,6 +624,19 @@ gst_video_region_of_interest_meta_get_info (void)
   return meta_info;
 }
 
+/**
+ * gst_buffer_get_video_region_of_interest_meta_id:
+ * @buffer: a #GstBuffer
+ * @id: a metadata id
+ *
+ * Find the #GstVideoRegionOfInterestMeta on @buffer with the given @id.
+ *
+ * Buffers can contain multiple #GstVideoRegionOfInterestMeta metadata items if
+ * multiple regions of interests are marked on a frame.
+ *
+ * Returns: the #GstVideoeRegionOfInterestMeta with @id or %NULL when there is
+ * no such metadata on @buffer.
+ */
 GstVideoRegionOfInterestMeta *
 gst_buffer_get_video_region_of_interest_meta_id (GstBuffer * buffer, gint id)
 {
@@ -642,6 +655,20 @@ gst_buffer_get_video_region_of_interest_meta_id (GstBuffer * buffer, gint id)
   return NULL;
 }
 
+/**
+ * gst_buffer_add_video_region_of_interest_meta:
+ * @buffer: a #GstBuffer
+ * @roi_type: Type of the region of interest (e.g. "face")
+ * @x: X position
+ * @y: Y position
+ * @w: width
+ * @h: height
+ *
+ * Attaches #GstVideoRegionOfInterestMeta metadata to @buffer with the given
+ * parameters.
+ *
+ * Returns: the #GstVideoRegionOfInterestMeta on @buffer.
+ */
 GstVideoRegionOfInterestMeta *
 gst_buffer_add_video_region_of_interest_meta (GstBuffer * buffer,
     const gchar * roi_type, guint x, guint y, guint w, guint h)
@@ -650,6 +677,20 @@ gst_buffer_add_video_region_of_interest_meta (GstBuffer * buffer,
       g_quark_from_string (roi_type), x, y, w, h);
 }
 
+/**
+ * gst_buffer_add_video_region_of_interest_meta_id:
+ * @buffer: a #GstBuffer
+ * @roi_type: Type of the region of interest (e.g. "face")
+ * @x: X position
+ * @y: Y position
+ * @w: width
+ * @h: height
+ *
+ * Attaches #GstVideoRegionOfInterestMeta metadata to @buffer with the given
+ * parameters.
+ *
+ * Returns: the #GstVideoRegionOfInterestMeta on @buffer.
+ */
 GstVideoRegionOfInterestMeta *
 gst_buffer_add_video_region_of_interest_meta_id (GstBuffer * buffer,
     GQuark roi_type, guint x, guint y, guint w, guint h)
