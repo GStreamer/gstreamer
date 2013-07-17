@@ -265,7 +265,8 @@ check_1x1_buffer (GstBuffer * buf, GstCaps * caps)
   /* the exact values we check for come from videotestsrc */
   static const guint yuv_values[] = { 81, 90, 240, 255 };
   static const guint rgb_values[] = { 0xff, 0, 0, 255 };
-  static const guint gray_values[] = { 0x51 };
+  static const guint gray8_values[] = { 0x51 };
+  static const guint gray16_values[] = { 0x5151 };
   const guint *values;
   guint i;
   const GstVideoFormatInfo *finfo;
@@ -281,7 +282,10 @@ check_1x1_buffer (GstBuffer * buf, GstCaps * caps)
   if (GST_VIDEO_INFO_IS_YUV (&info))
     values = yuv_values;
   else if (GST_VIDEO_INFO_IS_GRAY (&info))
-    values = gray_values;
+    if (GST_VIDEO_FORMAT_INFO_BITS (finfo) == 8)
+      values = gray8_values;
+    else
+      values = gray16_values;
   else
     values = rgb_values;
 
@@ -316,7 +320,11 @@ check_1x1_buffer (GstBuffer * buf, GstCaps * caps)
       val = val & ((1 << depth) - 1);
 
       GST_DEBUG ("val %08x %d : %d", pixels, i, val);
-      fail_unless_equals_int (val, values[i] >> (8 - depth));
+      if (depth <= 8) {
+        fail_unless_equals_int (val, values[i] >> (8 - depth));
+      } else {
+        fail_unless_equals_int (val, values[i] >> (16 - depth));
+      }
     } else {
     }
   }
