@@ -25,14 +25,18 @@
 static const char * const profile_specs[][4] = {
   { "application/ogg", "audio/x-vorbis", "video/x-theora", "vorbis_theora.rendered.ogv" },
   { "video/webm", "audio/x-vorbis", "video/x-vp8", "vorbis_vp8.rendered.webm"},
+  { "video/quicktime,variant=iso", "audio/mpeg,mpegversion=1,layer=3", "video/x-h264",  "aac_h264.rendered.mov"},
+  { "video/x-matroska", "audio/x-vorbis", "video/x-h264", "vorbis_h264.rendered.mkv"},
 };
 /* *INDENT-ON* */
 
 typedef enum
 {
   PROFILE_NONE = -1,
-  PROFILE_OGG,
-  PROFILE_WEBM,
+  PROFILE_VORBIS_THEORA_OGG,
+  PROFILE_VORBIS_VP8_WEBM,
+  PROFILE_AAC_H264_QUICKTIME,
+  PROFILE_VORBIS_H264_MATROSKA,
 } EncodingProfileName;
 
 typedef struct _PresetInfos
@@ -177,7 +181,7 @@ my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       gchar *debug;
 
       gst_message_parse_error (message, &err, &debug);
-      GST_ERROR ("Error: %s\n", err->message);
+      GST_ERROR ("Error: %s\n", err ? err->message : "Uknown");
       g_error_free (err);
       g_free (debug);
       g_main_loop_quit (loop);
@@ -612,8 +616,10 @@ GST_END_TEST;
   CREATE_TEST( name##to, test_##name, profile)
 
 #define CREATE_RENDERING_TEST(name, func)                                      \
-  CREATE_TEST_FROM_NAMES(name, _render_to_vorbis_theora_ogg, PROFILE_OGG)      \
-  CREATE_TEST_FROM_NAMES(name, _render_to_vorbis_vp8_webm, PROFILE_WEBM)
+  CREATE_TEST_FROM_NAMES(name, _render_to_vorbis_theora_ogg, PROFILE_VORBIS_THEORA_OGG)   \
+  CREATE_TEST_FROM_NAMES(name, _render_to_vorbis_vp8_webm, PROFILE_VORBIS_VP8_WEBM)       \
+  CREATE_TEST_FROM_NAMES(name, _render_to_aac_h264_quicktime, PROFILE_AAC_H264_QUICKTIME) \
+  CREATE_TEST_FROM_NAMES(name, _render_to_vorbis_h264_matroska, PROFILE_VORBIS_H264_MATROSKA)
 
 #define CREATE_PLAYBACK_TEST(name)                                             \
   CREATE_TEST_FROM_NAMES(name, _playback, PROFILE_NONE)
@@ -636,7 +642,15 @@ GST_END_TEST;
   tcase_add_test (tc_chain, test_##name##_render_to_vorbis_vp8_webm_vorbis_vp8_webm);     \
   tcase_add_test (tc_chain, test_##name##_render_to_vorbis_vp8_webm_raw_h264_mov);        \
   tcase_add_test (tc_chain, test_##name##_render_to_vorbis_vp8_webm_mp3_h264_mov);        \
-  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_vp8_webm_vorbis_theora_ogv);
+  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_vp8_webm_vorbis_theora_ogv);   \
+  tcase_add_test (tc_chain, test_##name##_render_to_aac_h264_quicktime_raw_h264_mov);      \
+  tcase_add_test (tc_chain, test_##name##_render_to_aac_h264_quicktime_vorbis_theora_ogv);   \
+  tcase_add_test (tc_chain, test_##name##_render_to_aac_h264_quicktime_vorbis_vp8_webm);   \
+  tcase_add_test (tc_chain, test_##name##_render_to_aac_h264_quicktime_mp3_h264_mov); \
+  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_h264_matroska_raw_h264_mov);      \
+  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_h264_matroska_vorbis_theora_ogv);   \
+  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_h264_matroska_vorbis_vp8_webm);   \
+  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_h264_matroska_mp3_h264_mov);
 
 #define ADD_TESTS(name)                                                        \
   ADD_PLAYBACK_TESTS(name)                                                     \
