@@ -387,6 +387,7 @@ gst_vaapi_filter_get_formats
 gst_vaapi_filter_set_operation
 gst_vaapi_filter_set_format
 gst_vaapi_filter_set_cropping_rectangle
+gst_vaapi_filter_set_denoising_level
 <SUBSECTION Standard>
 GST_VAAPI_FILTER
 </SECTION>

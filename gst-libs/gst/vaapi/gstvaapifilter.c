@@ -182,6 +182,7 @@ enum {
 
     PROP_FORMAT         = GST_VAAPI_FILTER_OP_FORMAT,
     PROP_CROP           = GST_VAAPI_FILTER_OP_CROP,
+    PROP_DENOISE        = GST_VAAPI_FILTER_OP_DENOISE,
 
     N_PROPERTIES
 };
@@ -215,6 +216,18 @@ init_properties(void)
                            "Cropping Rectangle",
                            "The cropping rectangle",
                            GST_VAAPI_TYPE_RECTANGLE,
+                           G_PARAM_READWRITE);
+
+    /**
+     * GstVaapiFilter:denoise:
+     *
+     * The level of noise reduction to apply.
+     */
+    g_properties[PROP_DENOISE] =
+        g_param_spec_float("denoise",
+                           "Denoising Level",
+                           "The level of denoising to apply",
+                           0.0, 1.0, 0.0,
                            G_PARAM_READWRITE);
 }
 
@@ -252,6 +265,11 @@ op_data_new(GstVaapiFilterOp op, GParamSpec *pspec)
     case GST_VAAPI_FILTER_OP_FORMAT:
     case GST_VAAPI_FILTER_OP_CROP:
         op_data->va_type = VAProcFilterNone;
+        break;
+    case GST_VAAPI_FILTER_OP_DENOISE:
+        op_data->va_type = VAProcFilterNoiseReduction;
+        op_data->va_cap_size = sizeof(VAProcFilterCap);
+        op_data->va_buffer_size = sizeof(VAProcFilterParameterBuffer);
         break;
     default:
         g_assert(0 && "unsupported operation");
@@ -483,6 +501,53 @@ op_ensure_buffer(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data)
     return vaapi_create_buffer(filter->va_display, filter->va_context,
         VAProcFilterParameterBufferType, op_data->va_buffer_size, NULL,
         &op_data->va_buffer, NULL);
+}
+
+/* Update a generic filter (float value) */
+#if USE_VA_VPP
+static gboolean
+op_set_generic_unlocked(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data,
+    gfloat value)
+{
+    VAProcFilterParameterBuffer *buf;
+    VAProcFilterCap *filter_cap;
+    gfloat va_value;
+
+    if (!op_data || !op_ensure_buffer(filter, op_data))
+        return FALSE;
+
+    op_data->is_enabled =
+        (value != G_PARAM_SPEC_FLOAT(op_data->pspec)->default_value);
+    if (!op_data->is_enabled)
+        return TRUE;
+
+    filter_cap = op_data->va_caps;
+    if (!op_data_get_value_float(op_data, &filter_cap->range, value, &va_value))
+        return FALSE;
+
+    buf = vaapi_map_buffer(filter->va_display, op_data->va_buffer);
+    if (!buf)
+        return FALSE;
+
+    buf->type = op_data->va_type;
+    buf->value = va_value;
+    vaapi_unmap_buffer(filter->va_display, op_data->va_buffer, NULL);
+    return TRUE;
+}
+#endif
+
+static inline gboolean
+op_set_generic(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data,
+    gfloat value)
+{
+    gboolean success = FALSE;
+
+#if USE_VA_VPP
+    GST_VAAPI_DISPLAY_LOCK(filter->display);
+    success = op_set_generic_unlocked(filter, op_data, value);
+    GST_VAAPI_DISPLAY_UNLOCK(filter->display);
+#endif
+    return success;
 }
 
 /* ------------------------------------------------------------------------- */
@@ -796,6 +861,10 @@ gst_vaapi_filter_set_operation(GstVaapiFilter *filter, GstVaapiFilterOp op,
     case GST_VAAPI_FILTER_OP_CROP:
         return gst_vaapi_filter_set_cropping_rectangle(filter, value ?
             g_value_get_boxed(value) : NULL);
+    case GST_VAAPI_FILTER_OP_DENOISE:
+        return op_set_generic(filter, op_data,
+            (value ? g_value_get_float(value) :
+             G_PARAM_SPEC_FLOAT(op_data->pspec)->default_value));
     default:
         break;
     }
@@ -1004,4 +1073,23 @@ gst_vaapi_filter_set_cropping_rectangle(GstVaapiFilter *filter,
     if (filter->use_crop_rect)
         filter->crop_rect = *rect;
     return TRUE;
+}
+
+/**
+ * gst_vaapi_filter_set_denoising_level:
+ * @filter: a #GstVaapiFilter
+ * @level: the level of noise reduction to apply
+ *
+ * Sets the noise reduction level to apply. If @level is 0.0f, this
+ * corresponds to disabling the noise reduction algorithm.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_filter_set_denoising_level(GstVaapiFilter *filter, gfloat level)
+{
+    g_return_val_if_fail(filter != NULL, FALSE);
+
+    return op_set_generic(filter,
+        find_operation(filter, GST_VAAPI_FILTER_OP_DENOISE), level);
 }
