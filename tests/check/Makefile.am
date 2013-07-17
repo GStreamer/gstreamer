@@ -121,3 +121,9 @@ check-integration-forever:
 	make check-integration					\
 	CK_DEFAULT_TIMEOUT=20					\
 	$* || break; done
+
+check-integration-gdb:
+	@$(TESTS_ENVIRONMENT)					\
+	CK_FORK=no						\
+	$(LIBTOOL) --mode=execute				\
+	gdb ./integration

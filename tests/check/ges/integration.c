@@ -317,13 +317,12 @@ check_rendered_file_properties (GstClockTime duration)
 
 /* Test seeking in various situations */
 static void
-test_seeking (gboolean render)
+run_simple_seeks_test (GESTimeline * timeline, gboolean render)
 {
-  GESTimeline *timeline;
+  GList *tmp;
   GESLayer *layer;
   GError *error = NULL;
   GESUriClipAsset *asset1;
-  GList *tmp;
   gchar *uri = ges_test_file_name (testfilename1);
 
   asset1 = ges_uri_clip_asset_request_sync (uri, &error);
@@ -332,9 +331,7 @@ test_seeking (gboolean render)
   fail_unless (asset1 != NULL);
 
   layer = ges_layer_new ();
-  timeline = ges_timeline_new_audio_video ();
   fail_unless (ges_timeline_add_layer (timeline, layer));
-
   ges_layer_add_asset (layer, GES_ASSET (asset1), 0 * GST_SECOND,
       0 * GST_SECOND, 1 * GST_SECOND, GES_TRACK_TYPE_UNKNOWN);
 
@@ -373,6 +370,36 @@ test_seeking (gboolean render)
     }
     fail_if (TRUE, "Got EOS before being able to execute all seeks");
   }
+}
+
+static void
+test_seeking_audio (gboolean render)
+{
+  GESTimeline *timeline = ges_timeline_new ();
+
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_audio_track_new ())));
+
+  run_simple_seeks_test (timeline, render);
+}
+
+static void
+test_seeking_video (gboolean render)
+{
+  GESTimeline *timeline = ges_timeline_new ();
+
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_video_track_new ())));
+
+  run_simple_seeks_test (timeline, render);
+}
+
+static void
+test_seeking (gboolean render)
+{
+  GESTimeline *timeline = ges_timeline_new_audio_video ();
+
+  run_simple_seeks_test (timeline, render);
 }
 
 /* Test adding an effect [E] marks the effect */
@@ -596,6 +623,9 @@ CREATE_TEST(effect_render, test_effect, TRUE)
 
 CREATE_TEST(seeking_playback, test_seeking, FALSE)
 
+CREATE_TEST(seeking_playback_audio, test_seeking_audio, FALSE)
+CREATE_TEST(seeking_playback_video, test_seeking_video, FALSE)
+
 CREATE_TEST(image_playback, test_image, FALSE)
 /* *INDENT-ON* */
 
@@ -619,6 +649,8 @@ ges_suite (void)
   ADD_TESTS (image_playback);
 
   ADD_TESTS (seeking_playback);
+  ADD_TESTS (seeking_playback_audio);
+  ADD_TESTS (seeking_playback_video);
 
   /* TODO : next test case : complex timeline created from project. */
   /* TODO : deep checking of rendered clips */
