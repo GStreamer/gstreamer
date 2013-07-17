@@ -549,8 +549,9 @@ gst_qa_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
           !gst_segment_clip (&monitor->segment, monitor->segment.format,
               GST_BUFFER_TIMESTAMP (buffer), GST_BUFFER_TIMESTAMP (buffer) +
               GST_BUFFER_DURATION (buffer), NULL, NULL)) {
-        /* TODO error */
-        g_assert_not_reached ();
+        /* TODO is this a timestamp issue? */
+        GST_QA_MONITOR_REPORT_ISSUE (monitor, BUFFER, TIMESTAMP,
+            "buffer is out of segment and shouldn't be pushed");
       }
     }
   }
