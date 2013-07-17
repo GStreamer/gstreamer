@@ -79,6 +79,8 @@ struct _GstQaPadMonitor {
   guint32 pending_flush_start_seqnum;
   guint32 pending_newsegment_seqnum;
 
+  GstEvent *expected_segment;
+
   /* tracked data */
   GstSegment segment;
   GstClockTime current_timestamp;

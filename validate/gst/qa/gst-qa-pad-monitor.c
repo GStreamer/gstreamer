@@ -168,6 +168,9 @@ gst_qa_pad_monitor_dispose (GObject * object)
     gst_pad_remove_data_probe (pad, monitor->buffer_probe_id);
   if (monitor->event_probe_id)
     gst_pad_remove_data_probe (pad, monitor->event_probe_id);
+
+  if (monitor->expected_segment)
+    gst_event_unref (monitor->expected_segment);
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -363,6 +366,43 @@ gst_qa_pad_monitor_update_buffer_data (GstQaPadMonitor * pad_monitor,
   pad_monitor->buffer_pushed = FALSE;
 }
 
+static void
+gst_qa_pad_monitor_add_expected_newsegment (GstQaPadMonitor * monitor,
+    GstEvent * event)
+{
+  GstIterator *iter;
+  gboolean done;
+  GstPad *otherpad;
+  GstQaPadMonitor *othermonitor;
+
+  iter = gst_pad_iterate_internal_links (GST_QA_PAD_MONITOR_GET_PAD (monitor));
+  done = FALSE;
+  while (!done) {
+    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+      case GST_ITERATOR_OK:
+        othermonitor = g_object_get_data ((GObject *) otherpad, "qa-monitor");
+        if (othermonitor->expected_segment) {
+          GST_QA_MONITOR_REPORT_WARNING (othermonitor, EVENT, EXPECTED,
+              "expected newsegment event never pushed");
+          gst_event_unref (othermonitor->expected_segment);
+        }
+        othermonitor->expected_segment = gst_event_ref (event);
+        gst_object_unref (otherpad);
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_ERROR:
+        GST_WARNING_OBJECT (monitor, "Internal links pad iteration error");
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iter);
+}
 
 static gboolean
 gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
@@ -389,6 +429,34 @@ gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
         } else {
           /* TODO is this an error? could be a segment from the start
            * received just before the seek segment */
+        }
+      }
+
+      if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
+        gst_qa_pad_monitor_add_expected_newsegment (pad_monitor, event);
+      } else {
+        /* check if this segment is the expected one */
+        if (pad_monitor->expected_segment) {
+          gint64 exp_start, exp_stop, exp_position;
+          gdouble exp_rate, exp_applied_rate;
+          gboolean exp_update;
+          GstFormat exp_format;
+
+          if (pad_monitor->expected_segment != event) {
+            gst_event_parse_new_segment_full (event, &exp_update, &exp_rate,
+                &exp_applied_rate, &exp_format, &exp_start, &exp_stop,
+                &exp_position);
+            if (format == exp_format) {
+              if (update != exp_update
+                  || (exp_rate * exp_applied_rate != rate * applied_rate)
+                  || exp_start != start || exp_stop != stop
+                  || exp_position != position) {
+                GST_QA_MONITOR_REPORT_WARNING (pad_monitor, EVENT, EXPECTED,
+                    "Expected segment didn't match received segment event");
+              }
+            }
+          }
+          gst_event_replace (&pad_monitor->expected_segment, NULL);
         }
       }
       break;
