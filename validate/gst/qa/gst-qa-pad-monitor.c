@@ -177,17 +177,20 @@ gst_qa_pad_monitor_dispose (GObject * object)
   GstQaPadMonitor *monitor = GST_QA_PAD_MONITOR_CAST (object);
   GstPad *pad = GST_QA_PAD_MONITOR_GET_PAD (monitor);
 
-  if (monitor->buffer_probe_id)
-    gst_pad_remove_data_probe (pad, monitor->buffer_probe_id);
-  if (monitor->event_probe_id)
-    gst_pad_remove_data_probe (pad, monitor->event_probe_id);
+  if (pad) {
+    if (monitor->buffer_probe_id)
+      gst_pad_remove_data_probe (pad, monitor->buffer_probe_id);
+    if (monitor->event_probe_id)
+      gst_pad_remove_data_probe (pad, monitor->event_probe_id);
+
+    g_signal_handlers_disconnect_by_func (pad, (GCallback) _parent_set_cb,
+        monitor);
+  }
 
   if (monitor->expected_segment)
     gst_event_unref (monitor->expected_segment);
 
 
-  g_signal_handlers_disconnect_by_func (pad, (GCallback) _parent_set_cb,
-      monitor);
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 

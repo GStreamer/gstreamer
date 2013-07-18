@@ -52,7 +52,7 @@ gst_qa_element_monitor_dispose (GObject * object)
 {
   GstQaElementMonitor *monitor = GST_QA_ELEMENT_MONITOR_CAST (object);
 
-  if (monitor->pad_added_id)
+  if (GST_QA_MONITOR_GET_OBJECT (monitor) && monitor->pad_added_id)
     g_signal_handler_disconnect (GST_QA_MONITOR_GET_OBJECT (monitor),
         monitor->pad_added_id);
 

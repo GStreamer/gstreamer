@@ -53,7 +53,7 @@ gst_qa_bin_monitor_dispose (GObject * object)
   GstQaBinMonitor *monitor = GST_QA_BIN_MONITOR_CAST (object);
   GstElement *bin = GST_QA_ELEMENT_MONITOR_GET_ELEMENT (monitor);
 
-  if (monitor->element_added_id)
+  if (bin && monitor->element_added_id)
     g_signal_handler_disconnect (bin, monitor->element_added_id);
 
   g_list_free_full (monitor->element_monitors, g_object_unref);
