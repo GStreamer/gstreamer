@@ -42,6 +42,8 @@ gst_qa_preload_wrap (GstElement * element)
    * to the element */
   g_object_set_data_full ((GObject *) element, "qa-runner", runner,
       g_object_unref);
+
+  gst_qa_runner_setup (runner);
 }
 
 GstElement *
@@ -63,41 +65,86 @@ gst_element_factory_make (const gchar * element_name, const gchar * name)
   return element;
 }
 
-gpointer
-g_object_new (GType object_type, const gchar * first_property_name, ...)
+GstElement *
+gst_pipeline_new (const gchar * name)
 {
-  static gpointer (*g_object_new_real) (GType, const gchar *, ...) = NULL;
-  gpointer obj;
-  va_list var_args;
+  static GstElement *(*gst_pipeline_new_real) (const gchar *) = NULL;
+  GstElement *element;
 
-  if (!g_object_new_real)
-    g_object_new_real = dlsym (RTLD_NEXT, "g_object_new");
+  if (!gst_pipeline_new_real)
+    gst_pipeline_new_real = dlsym (RTLD_NEXT, "gst_pipeline_new");
 
-  va_start (var_args, first_property_name);
-  obj = g_object_new_valist (object_type, first_property_name, var_args);
-  va_end (var_args);
-
-  if (GST_IS_PIPELINE (obj)) {
-    gst_qa_preload_wrap (obj);
-  }
-
-  return obj;
+  element = gst_pipeline_new_real (name);
+  gst_qa_preload_wrap (element);
+  return element;
 }
 
-gpointer
-g_object_newv (GType object_type, guint n_parameters, GParameter * parameters)
+GstElement *
+gst_parse_launchv (const gchar ** argv, GError ** error)
 {
-  static gpointer (*g_object_newv_real) (GType, guint, GParameter *) = NULL;
-  gpointer obj;
+  static GstElement *(*gst_parse_launchv_real) (const gchar **, GError **) =
+      NULL;
+  GstElement *element;
 
-  if (!g_object_newv_real)
-    g_object_newv_real = dlsym (RTLD_NEXT, "g_object_newv");
+  if (!gst_parse_launchv_real)
+    gst_parse_launchv_real = dlsym (RTLD_NEXT, "gst_parse_launchv");
 
-  obj = g_object_newv_real (object_type, n_parameters, parameters);
-
-  if (GST_IS_PIPELINE (obj)) {
-    gst_qa_preload_wrap (obj);
+  element = gst_parse_launchv_real (argv, error);
+  if (GST_IS_PIPELINE (element)) {
+    gst_qa_preload_wrap (element);
   }
+  return element;
+}
 
-  return obj;
+GstElement *
+gst_parse_launchv_full (const gchar ** argv, GstParseContext * context,
+    GstParseFlags flags, GError ** error)
+{
+  static GstElement *(*gst_parse_launchv_full_real) (const gchar **,
+      GstParseContext *, GstParseFlags, GError **) = NULL;
+  GstElement *element;
+
+  if (!gst_parse_launchv_full_real)
+    gst_parse_launchv_full_real = dlsym (RTLD_NEXT, "gst_parse_launchv_full");
+
+  element = gst_parse_launchv_full_real (argv, context, flags, error);
+  if (GST_IS_PIPELINE (element)) {
+    gst_qa_preload_wrap (element);
+  }
+  return element;
+}
+
+GstElement *
+gst_parse_launch (const gchar * pipeline_description, GError ** error)
+{
+  static GstElement *(*gst_parse_launch_real) (const gchar *, GError **) = NULL;
+  GstElement *element;
+
+  if (!gst_parse_launch_real)
+    gst_parse_launch_real = dlsym (RTLD_NEXT, "gst_parse_launch");
+
+  element = gst_parse_launch_real (pipeline_description, error);
+  if (GST_IS_PIPELINE (element)) {
+    gst_qa_preload_wrap (element);
+  }
+  return element;
+}
+
+GstElement *
+gst_parse_launch_full (const gchar * pipeline_description,
+    GstParseContext * context, GstParseFlags flags, GError ** error)
+{
+  static GstElement *(*gst_parse_launch_full_real) (const gchar *,
+      GstParseContext *, GstParseFlags, GError **) = NULL;
+  GstElement *element;
+
+  if (!gst_parse_launch_full_real)
+    gst_parse_launch_full_real = dlsym (RTLD_NEXT, "gst_parse_launch_full");
+
+  element =
+      gst_parse_launch_full_real (pipeline_description, context, flags, error);
+  if (GST_IS_PIPELINE (element)) {
+    gst_qa_preload_wrap (element);
+  }
+  return element;
 }
