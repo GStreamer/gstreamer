@@ -34,13 +34,7 @@
  *
  * #GstGLDownload is an object that downloads GL textures into system memory.
  *
- * A #GstGLDownload can be created with gst_gl_download_new() or found with
- * gst_gl_display_find_download().
- *
- * All of the _thread() variants should only be called within the GL thread
- * they don't try to take a lock on the associated #GstGLDisplay and
- * don't dispatch to the GL thread. Rather they run the required code in the
- * calling thread.
+ * A #GstGLDownload can be created with gst_gl_download_new()
  */
 
 #define USING_OPENGL(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL)
@@ -53,10 +47,8 @@ static void _do_download (GstGLDisplay * display, GstGLDownload * download);
 static void _init_download (GstGLDisplay * display, GstGLDownload * download);
 static void _init_download_shader (GstGLDisplay * display,
     GstGLDownload * download);
-static gboolean gst_gl_download_perform_with_data_unlocked (GstGLDownload *
+static gboolean _gst_gl_download_perform_with_data_unlocked (GstGLDownload *
     download, GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
-static gboolean gst_gl_download_perform_with_data_unlocked_thread (GstGLDownload
-    * download, GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
 
 #if GST_GL_HAVE_OPENGL
 static void _do_download_draw_rgb_opengl (GstGLDisplay * display,
@@ -365,18 +357,6 @@ gst_gl_download_finalize (GObject * object)
   G_OBJECT_CLASS (gst_gl_download_parent_class)->finalize (object);
 }
 
-static inline gboolean
-_init_format_pre (GstGLDownload * download, GstVideoFormat v_format,
-    guint out_width, guint out_height)
-{
-  g_return_val_if_fail (download != NULL, FALSE);
-  g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
-  g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_ENCODED, FALSE);
-  g_return_val_if_fail (out_width > 0 && out_height > 0, FALSE);
-
-  return TRUE;
-}
-
 /**
  * gst_gl_download_init_format:
  * @download: a #GstGLDownload
@@ -394,8 +374,10 @@ gst_gl_download_init_format (GstGLDownload * download, GstVideoFormat v_format,
 {
   GstVideoInfo info;
 
-  if (!_init_format_pre (download, v_format, out_width, out_height))
-    return FALSE;
+  g_return_val_if_fail (download != NULL, FALSE);
+  g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
+  g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_ENCODED, FALSE);
+  g_return_val_if_fail (out_width > 0 && out_height > 0, FALSE);
 
   g_mutex_lock (&download->lock);
 
@@ -419,61 +401,6 @@ gst_gl_download_init_format (GstGLDownload * download, GstVideoFormat v_format,
 }
 
 /**
- * gst_gl_download_init_format_thread:
- * @download: a #GstGLDownload
- * @v_format: a #GstVideoFormat
- * @out_width: the width to download to
- * @out_height: the height to download to
- *
- * Initializes @download with the information required for download.
- *
- * Returns: whether the initialization was successful
- */
-gboolean
-gst_gl_download_init_format_thread (GstGLDownload * download,
-    GstVideoFormat v_format, guint out_width, guint out_height)
-{
-  GstVideoInfo info;
-
-  if (!_init_format_pre (download, v_format, out_width, out_height))
-    return FALSE;
-
-  g_mutex_lock (&download->lock);
-
-  if (download->initted) {
-    g_mutex_unlock (&download->lock);
-    return FALSE;
-  } else {
-    download->initted = TRUE;
-  }
-
-  gst_video_info_set_format (&info, v_format, out_width, out_height);
-
-  download->info = info;
-
-  _init_download (download->display, download);
-
-  g_mutex_unlock (&download->lock);
-
-  return TRUE;
-}
-
-static inline gboolean
-_perform_with_memory_pre (GstGLDownload * download, GstGLMemory * gl_mem)
-{
-  g_return_val_if_fail (download != NULL, FALSE);
-
-  if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_DOWNLOAD_INITTED))
-    return FALSE;
-
-  if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD)) {
-    return FALSE;
-  }
-
-  return TRUE;
-}
-
-/**
  * gst_gl_download_perform_with_memory:
  * @download: a #GstGLDownload
  * @gl_mem: a #GstGLMemory
@@ -490,8 +417,12 @@ gst_gl_download_perform_with_memory (GstGLDownload * download,
   guint i;
   gboolean ret;
 
-  if (!_perform_with_memory_pre (download, gl_mem))
+  if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_DOWNLOAD_INITTED))
     return FALSE;
+
+  if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD)) {
+    return FALSE;
+  }
 
   g_mutex_lock (&download->lock);
 
@@ -501,10 +432,11 @@ gst_gl_download_perform_with_memory (GstGLDownload * download,
   }
 
   ret =
-      gst_gl_download_perform_with_data_unlocked (download, gl_mem->tex_id,
+      _gst_gl_download_perform_with_data_unlocked (download, gl_mem->tex_id,
       data);
 
-  GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
+  if (ret)
+    GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
 
   g_mutex_unlock (&download->lock);
 
@@ -532,16 +464,17 @@ gst_gl_download_perform_with_data (GstGLDownload * download, GLuint texture_id,
 
   g_mutex_lock (&download->lock);
 
-  ret = gst_gl_download_perform_with_data_unlocked (download, texture_id, data);
+  ret =
+      _gst_gl_download_perform_with_data_unlocked (download, texture_id, data);
 
   g_mutex_unlock (&download->lock);
 
   return ret;
 }
 
-static inline gboolean
-_perform_with_data_unlocked_pre (GstGLDownload * download, GLuint texture_id,
-    gpointer data[GST_VIDEO_MAX_PLANES])
+static gboolean
+_gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
+    GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
 {
   guint i;
 
@@ -561,97 +494,8 @@ _perform_with_data_unlocked_pre (GstGLDownload * download, GLuint texture_id,
     download->data[i] = data[i];
   }
 
-  return TRUE;
-}
-
-static gboolean
-gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
-    GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
-{
-  if (!_perform_with_data_unlocked_pre (download, texture_id, data))
-    return FALSE;
-
   gst_gl_display_thread_add (download->display,
       (GstGLDisplayThreadFunc) _do_download, download);
-
-  return TRUE;
-}
-
-/**
- * gst_gl_download_perform_with_memory_thread:
- * @download: a #GstGLDownload
- * @gl_mem: a #GstGLMemory
- *
- * Downloads the texture in @gl_mem
- *
- * Returns: whether the download was successful
- */
-gboolean
-gst_gl_download_perform_with_memory_thread (GstGLDownload * download,
-    GstGLMemory * gl_mem)
-{
-  gpointer data[GST_VIDEO_MAX_PLANES];
-  guint i;
-  gboolean ret;
-
-  if (!_perform_with_memory_pre (download, gl_mem))
-    return FALSE;
-
-  g_mutex_lock (&download->lock);
-
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&download->info); i++) {
-    data[i] = (guint8 *) gl_mem->data +
-        GST_VIDEO_INFO_PLANE_OFFSET (&download->info, i);
-  }
-
-  ret =
-      gst_gl_download_perform_with_data_unlocked_thread (download,
-      gl_mem->tex_id, data);
-
-  GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
-
-  g_mutex_unlock (&download->lock);
-
-  return ret;
-}
-
-/**
- * gst_gl_download_perform_with_data_thread:
- * @download: a #GstGLDownload
- * @texture_id: the texture id to download
- * @data: (out): where the downloaded data should go
- *
- * Downloads @texture_id into @data. @data size and format is specified by
- * the #GstVideoFormat passed to gst_gl_download_init_format() 
- *
- * Returns: whether the download was successful
- */
-gboolean
-gst_gl_download_perform_with_data_thread (GstGLDownload * download,
-    GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
-{
-  gboolean ret;
-
-  g_return_val_if_fail (download != NULL, FALSE);
-
-  g_mutex_lock (&download->lock);
-
-  ret = gst_gl_download_perform_with_data_unlocked_thread (download,
-      texture_id, data);
-
-  g_mutex_unlock (&download->lock);
-
-  return ret;
-}
-
-static gboolean
-gst_gl_download_perform_with_data_unlocked_thread (GstGLDownload * download,
-    GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
-{
-  if (!_perform_with_data_unlocked_pre (download, texture_id, data))
-    return FALSE;
-
-  _do_download (download->display, download);
 
   return TRUE;
 }

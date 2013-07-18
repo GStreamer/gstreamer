@@ -103,12 +103,6 @@ GstGLDownload * gst_gl_download_new          (GstGLDisplay * display);
 
 gboolean gst_gl_download_init_format                (GstGLDownload * download, GstVideoFormat v_format,
                                                      guint out_width, guint out_height);
-gboolean gst_gl_download_init_format_thread         (GstGLDownload * download, GstVideoFormat v_format,
-                                                     guint out_width, guint out_height);
-
-gboolean gst_gl_download_perform_with_memory_thread (GstGLDownload * download, GstGLMemory * gl_mem);
-gboolean gst_gl_download_perform_with_data_thread   (GstGLDownload * download, GLuint texture_id,
-                                                     gpointer data[GST_VIDEO_MAX_PLANES]);
 
 gboolean gst_gl_download_perform_with_memory        (GstGLDownload * download, GstGLMemory * gl_mem);
 gboolean gst_gl_download_perform_with_data          (GstGLDownload * download, GLuint texture_id,
