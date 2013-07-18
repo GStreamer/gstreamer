@@ -45,61 +45,61 @@ G_BEGIN_DECLS
 #define GST_QA_MONITOR_UNLOCK(m) (g_mutex_unlock (&GST_QA_MONITOR_CAST(m)->mutex))
 
 #ifdef G_HAVE_ISO_VARARGS
-#define GST_QA_MONITOR_REPORT(m, status, area, subarea, ...)                   \
+#define GST_QA_MONITOR_REPORT(m, repeat, status, area, subarea, ...)           \
 G_STMT_START {                                                                 \
-  gst_qa_monitor_do_report (GST_QA_MONITOR (m),                                \
+  gst_qa_monitor_do_report (GST_QA_MONITOR (m), repeat,                        \
     GST_QA_REPORT_LEVEL_ ## status, GST_QA_AREA_ ## area,                      \
     GST_QA_AREA_ ## area ## _ ## subarea, __VA_ARGS__ );                       \
 } G_STMT_END
 
-#define GST_QA_MONITOR_REPORT_CRITICAL(m, area, subarea, ...)                  \
+#define GST_QA_MONITOR_REPORT_CRITICAL(m, repeat, area, subarea, ...)          \
 G_STMT_START {                                                                 \
   GST_ERROR_OBJECT (m, "Critical report: %s: %s: %s",                          \
       #area, #subarea, __VA_ARGS__);                                           \
-  GST_QA_MONITOR_REPORT(m, CRITICAL, area, subarea, __VA_ARGS__);              \
+  GST_QA_MONITOR_REPORT(m, repeat, CRITICAL, area, subarea, __VA_ARGS__);      \
 } G_STMT_END
 
-#define GST_QA_MONITOR_REPORT_WARNING(m, area, subarea, ...)                   \
+#define GST_QA_MONITOR_REPORT_WARNING(m, repeat, area, subarea, ...)           \
 G_STMT_START {                                                                 \
   GST_WARNING_OBJECT (m, "Warning report: %s: %s: %s",                         \
       #area, #subarea, __VA_ARGS__);                                           \
-  GST_QA_MONITOR_REPORT(m, WARNING, area, subarea, __VA_ARGS__);               \
+  GST_QA_MONITOR_REPORT(m, repeat, WARNING, area, subarea, __VA_ARGS__);       \
 } G_STMT_END
 
-#define GST_QA_MONITOR_REPORT_ISSUE(m, area, subarea, ...)                     \
+#define GST_QA_MONITOR_REPORT_ISSUE(m, repeat, area, subarea, ...)             \
 G_STMT_START {                                                                 \
   GST_WARNING_OBJECT (m, "Issue report: %s: %s: %s",                           \
       #area, #subarea, __VA_ARGS__);                                           \
-  GST_QA_MONITOR_REPORT(m, ISSUE, area, subarea, __VA_ARGS__);                 \
+  GST_QA_MONITOR_REPORT(m, repeat, ISSUE, area, subarea, __VA_ARGS__);         \
 } G_STMT_END
 #else /* G_HAVE_GNUC_VARARGS */
 #ifdef G_HAVE_GNUC_VARARGS
-#define GST_QA_MONITOR_REPORT(m, status, area, subarea, args...)                   \
+#define GST_QA_MONITOR_REPORT(m, repeat, status, area, subarea, args...)       \
 G_STMT_START {                                                                 \
   gst_qa_monitor_do_report (GST_QA_MONITOR (m),                                \
     GST_QA_REPORT_LEVEL_ ## status, GST_QA_AREA_ ## area,                      \
-    GST_QA_AREA_ ## area ## _ ## subarea, ##args );                       \
+    GST_QA_AREA_ ## area ## _ ## subarea, ##args );                            \
 } G_STMT_END
 
-#define GST_QA_MONITOR_REPORT_CRITICAL(m, area, subarea, args...)                  \
+#define GST_QA_MONITOR_REPORT_CRITICAL(m, repeat, area, subarea, args...)      \
 G_STMT_START {                                                                 \
   GST_ERROR_OBJECT (m, "Critical report: %s: %s: %s",                          \
-      #area, #subarea, ##args);                                           \
-  GST_QA_MONITOR_REPORT(m, CRITICAL, area, subarea, ##args);              \
+      #area, #subarea, ##args);                                                \
+  GST_QA_MONITOR_REPORT(m, repeat, CRITICAL, area, subarea, ##args);           \
 } G_STMT_END
 
-#define GST_QA_MONITOR_REPORT_WARNING(m, area, subarea, args...)                   \
+#define GST_QA_MONITOR_REPORT_WARNING(m, repeat, area, subarea, args...)       \
 G_STMT_START {                                                                 \
   GST_WARNING_OBJECT (m, "Warning report: %s: %s: %s",                         \
-      #area, #subarea, ##args);                                           \
-  GST_QA_MONITOR_REPORT(m, WARNING, area, subarea, ##args);               \
+      #area, #subarea, ##args);                                                \
+  GST_QA_MONITOR_REPORT(m, repeat, WARNING, area, subarea, ##args);            \
 } G_STMT_END
 
-#define GST_QA_MONITOR_REPORT_ISSUE(m, area, subarea, args...)                     \
+#define GST_QA_MONITOR_REPORT_ISSUE(m, repeat, area, subarea, args...)         \
 G_STMT_START {                                                                 \
   GST_WARNING_OBJECT (m, "Issue report: %s: %s: %s",                           \
-      #area, #subarea, ##args);                                           \
-  GST_QA_MONITOR_REPORT(m, ISSUE, area, subarea, ##args);                 \
+      #area, #subarea, ##args);                                                \
+  GST_QA_MONITOR_REPORT(m, repeat, ISSUE, area, subarea, ##args);              \
 } G_STMT_END
 #endif /* G_HAVE_ISO_VARARGS */
 #endif /* G_HAVE_GNUC_VARARGS */
@@ -132,6 +132,7 @@ struct _GstQaMonitor {
   GstQaRunner   *runner;
 
   /*< private >*/
+  GHashTable *reports;
 };
 
 /**
@@ -149,11 +150,11 @@ struct _GstQaMonitorClass {
 /* normal GObject stuff */
 GType		gst_qa_monitor_get_type		(void);
 
-void    gst_qa_monitor_do_report     (GstQaMonitor * monitor,
+void    gst_qa_monitor_do_report     (GstQaMonitor * monitor, gboolean repeat,
                                       GstQaReportLevel level, GstQaReportArea area,
                                       gint subarea, const gchar * format, ...);
 
-void gst_qa_monitor_do_report_valist (GstQaMonitor * monitor,
+void gst_qa_monitor_do_report_valist (GstQaMonitor * monitor, gboolean repeat,
                                       GstQaReportLevel level, GstQaReportArea area,
                                       gint subarea, const gchar *format,
                                       va_list var_args);

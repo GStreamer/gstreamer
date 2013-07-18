@@ -76,6 +76,8 @@ gst_qa_monitor_dispose (GObject * object)
     g_object_weak_unref (G_OBJECT (monitor->target),
         (GWeakNotify) _target_freed_cb, monitor);
 
+  g_hash_table_unref (monitor->reports);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -131,10 +133,20 @@ gst_qa_monitor_constructor (GType type, guint n_construct_params,
   return (GObject *) monitor;
 }
 
+static inline gchar *
+_qa_report_id (GstQaReport * report)
+{
+  return g_strdup_printf ("%i-%i-%i-%s",
+      report->level, report->area, report->subarea, report->id);
+}
+
 static void
 gst_qa_monitor_init (GstQaMonitor * monitor)
 {
   g_mutex_init (&monitor->mutex);
+
+  monitor->reports = g_hash_table_new_full (g_str_hash, g_str_equal,
+      g_free, (GDestroyNotify) gst_qa_report_unref);
 }
 
 /**
@@ -228,15 +240,27 @@ gst_qa_monitor_get_property (GObject * object, guint prop_id,
 }
 
 void
-gst_qa_monitor_do_report_valist (GstQaMonitor * monitor,
+gst_qa_monitor_do_report_valist (GstQaMonitor * monitor, gboolean repeat,
     GstQaReportLevel level, GstQaReportArea area,
     gint subarea, const gchar * format, va_list var_args)
 {
-  gchar *message;
   GstQaReport *report;
+  gchar *message, *report_id = NULL;
 
   message = g_strdup_vprintf (format, var_args);
-  report = gst_qa_report_new (monitor, level, area, subarea, message);
+  report = gst_qa_report_new (monitor, level, area, subarea, format, message);
+
+  if (repeat == FALSE) {
+    report_id = _qa_report_id (report);
+
+    if (g_hash_table_lookup (monitor->reports, report_id)) {
+      GST_DEBUG ("Report %s already present", report_id);
+      g_free (report_id);
+      return;
+    }
+
+    g_hash_table_insert (monitor->reports, report_id, report);
+  }
 
   GST_INFO_OBJECT (monitor, "Received error report %d : %d : %d : %s",
       level, area, subarea, message);
@@ -251,15 +275,15 @@ gst_qa_monitor_do_report_valist (GstQaMonitor * monitor,
 }
 
 void
-gst_qa_monitor_do_report (GstQaMonitor * monitor,
+gst_qa_monitor_do_report (GstQaMonitor * monitor, gboolean repeat,
     GstQaReportLevel level, GstQaReportArea area,
     gint subarea, const gchar * format, ...)
 {
   va_list var_args;
 
   va_start (var_args, format);
-  gst_qa_monitor_do_report_valist (monitor, level, area, subarea, format,
-      var_args);
+  gst_qa_monitor_do_report_valist (monitor, repeat, level, area, subarea,
+      format, var_args);
   va_end (var_args);
 }
 

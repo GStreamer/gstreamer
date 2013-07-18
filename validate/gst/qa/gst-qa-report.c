@@ -177,7 +177,7 @@ gst_qa_report_check_abort (GstQaReport * report)
 
 GstQaReport *
 gst_qa_report_new (GstQaMonitor * monitor, GstQaReportLevel level,
-    GstQaReportArea area, gint subarea, const gchar * message)
+    GstQaReportArea area, gint subarea, const gchar * id, const gchar * message)
 {
   GstQaReport *report = g_slice_new0 (GstQaReport);
 
@@ -186,6 +186,7 @@ gst_qa_report_new (GstQaMonitor * monitor, GstQaReportLevel level,
   report->subarea = subarea;
   report->source_name = g_strdup (monitor->target_name);
   report->message = g_strdup (message);
+  report->id = g_strdup (id);
   report->timestamp = gst_util_get_timestamp () - _gst_qa_report_start_time;
 
   /* we might abort here if asked */
@@ -199,6 +200,7 @@ gst_qa_report_unref (GstQaReport * report)
 {
   if (G_UNLIKELY (g_atomic_int_dec_and_test (&report->refcount))) {
     g_free (report->message);
+    g_free (report->id);
     g_free (report->source_name);
     g_slice_free (GstQaReport, report);
   }

@@ -92,6 +92,7 @@ typedef struct {
   GstQaReportArea area;
   gint subarea;
   gchar *message;
+  gchar *id;
 
   gchar *source_name;
   guint64 timestamp;
@@ -108,7 +109,9 @@ typedef struct {
 void               gst_qa_report_init (void);
 GstQaReport *      gst_qa_report_new (GstQaMonitor * monitor, GstQaReportLevel level,
                                       GstQaReportArea area,
-                                      gint subarea, const gchar * message);
+                                      gint subarea,
+                                      const gchar *format,
+                                      const gchar * message);
 void               gst_qa_report_unref (GstQaReport * report);
 GstQaReport *      gst_qa_report_ref   (GstQaReport * report);
 
