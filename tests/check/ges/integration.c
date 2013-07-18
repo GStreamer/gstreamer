@@ -499,15 +499,13 @@ test_transition (void)
 }
 
 static void
-test_basic (void)
+run_basic (GESTimeline * timeline)
 {
-  GESTimeline *timeline;
   GESLayer *layer;
   GESUriClipAsset *asset1;
 
   get_asset (testfilename1, asset1);
   layer = ges_layer_new ();
-  timeline = ges_timeline_new_audio_video ();
   fail_unless (ges_timeline_add_layer (timeline, layer));
 
   ges_layer_add_asset (layer, GES_ASSET (asset1), 0 * GST_SECOND,
@@ -524,6 +522,34 @@ test_basic (void)
    */
 
   fail_unless (check_timeline (timeline));
+}
+
+static void
+test_basic (void)
+{
+  run_basic (ges_timeline_new_audio_video ());
+}
+
+static void
+test_basic_audio (void)
+{
+  GESTimeline *timeline = ges_timeline_new ();
+
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_audio_track_new ())));
+
+  run_basic (timeline);
+}
+
+static void
+test_basic_video (void)
+{
+  GESTimeline *timeline = ges_timeline_new ();
+
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_video_track_new ())));
+
+  run_basic (timeline);
 }
 
 static void
@@ -645,6 +671,8 @@ GST_END_TEST;
 
 /* *INDENT-OFF* */
 CREATE_TEST_FULL(basic)
+CREATE_TEST_FULL(basic_audio)
+CREATE_TEST_FULL(basic_video)
 CREATE_TEST_FULL(transition)
 CREATE_TEST_FULL(effect)
 
@@ -663,6 +691,9 @@ ges_suite (void)
   suite_add_tcase (s, tc_chain);
 
   ADD_TESTS (basic);
+  ADD_TESTS (basic_audio);
+  ADD_TESTS (basic_video);
+
   ADD_TESTS (effect);
   ADD_TESTS (transition);
 
