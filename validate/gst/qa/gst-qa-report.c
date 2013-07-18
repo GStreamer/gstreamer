@@ -154,7 +154,11 @@ gst_qa_report_new (GstObject * source, GstQaReportLevel level,
   report->level = level;
   report->area = area;
   report->subarea = subarea;
-  report->source = g_object_ref (source);
+  if (GST_IS_PAD (source))
+    report->source_name =
+        g_strdup_printf ("%s:%s", GST_DEBUG_PAD_NAME (source));
+  else
+    report->source_name = g_strdup (GST_OBJECT_NAME (source));
   report->message = g_strdup (message);
   report->timestamp = gst_util_get_timestamp () - _gst_qa_report_start_time;
 
@@ -166,7 +170,7 @@ gst_qa_report_unref (GstQaReport * report)
 {
   if (G_UNLIKELY (g_atomic_int_dec_and_test (&report->refcount))) {
     g_free (report->message);
-    g_object_unref (report->source);
+    g_free (report->source_name);
     g_slice_free (GstQaReport, report);
   }
 }

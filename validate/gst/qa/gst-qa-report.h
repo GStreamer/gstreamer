@@ -83,14 +83,14 @@ typedef struct {
   gint subarea;
   gchar *message;
 
-  GstObject *source;
+  gchar *source_name;
   guint64 timestamp;
 } GstQaReport;
 
 #define GST_QA_ERROR_REPORT_PRINT_FORMAT GST_TIME_FORMAT " (%s): %s, %s(%d)) %s(%d): %s"
 #define GST_QA_REPORT_PRINT_ARGS(r) GST_TIME_ARGS (r->timestamp), \
                                     gst_qa_report_level_get_name (r->level), \
-                                    r->source ? GST_OBJECT_NAME(r->source) : "null", \
+                                    r->source_name, \
                                     gst_qa_report_area_get_name(r->area), r->area, \
                                     gst_qa_report_subarea_get_name(r->area, r->subarea), r->subarea, \
                                     r->message
