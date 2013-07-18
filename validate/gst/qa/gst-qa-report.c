@@ -22,6 +22,7 @@
 #include <string.h>
 
 #include "gst-qa-report.h"
+#include "gst-qa-monitor.h"
 
 static GstClockTime _gst_qa_report_start_time = 0;
 static GstQaDebugFlags _gst_qa_flags = 0;
@@ -175,7 +176,7 @@ gst_qa_report_check_abort (GstQaReport * report)
 }
 
 GstQaReport *
-gst_qa_report_new (GstObject * source, GstQaReportLevel level,
+gst_qa_report_new (GstQaMonitor * monitor, GstQaReportLevel level,
     GstQaReportArea area, gint subarea, const gchar * message)
 {
   GstQaReport *report = g_slice_new0 (GstQaReport);
@@ -183,11 +184,7 @@ gst_qa_report_new (GstObject * source, GstQaReportLevel level,
   report->level = level;
   report->area = area;
   report->subarea = subarea;
-  if (GST_IS_PAD (source))
-    report->source_name =
-        g_strdup_printf ("%s:%s", GST_DEBUG_PAD_NAME (source));
-  else
-    report->source_name = g_strdup (GST_OBJECT_NAME (source));
+  report->source_name = g_strdup (monitor->target_name);
   report->message = g_strdup (message);
   report->timestamp = gst_util_get_timestamp () - _gst_qa_report_start_time;
 

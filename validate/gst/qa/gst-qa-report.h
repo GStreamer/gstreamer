@@ -27,6 +27,9 @@
 
 G_BEGIN_DECLS
 
+/* forward declaration */
+typedef struct _GstQaMonitor GstQaMonitor;
+
 GType           gst_qa_report_get_type (void);
 #define GST_TYPE_QA_REPORT (gst_qa_report_get_type ())
 
@@ -103,7 +106,8 @@ typedef struct {
                                     r->message
 
 void               gst_qa_report_init (void);
-GstQaReport *      gst_qa_report_new (GstObject * source, GstQaReportLevel level, GstQaReportArea area,
+GstQaReport *      gst_qa_report_new (GstQaMonitor * monitor, GstQaReportLevel level,
+                                      GstQaReportArea area,
                                       gint subarea, const gchar * message);
 void               gst_qa_report_unref (GstQaReport * report);
 GstQaReport *      gst_qa_report_ref   (GstQaReport * report);

@@ -236,9 +236,7 @@ gst_qa_monitor_do_report_valist (GstQaMonitor * monitor,
   GstQaReport *report;
 
   message = g_strdup_vprintf (format, var_args);
-  report =
-      gst_qa_report_new (GST_OBJECT_CAST (GST_QA_MONITOR_GET_OBJECT
-          (monitor)), level, area, subarea, message);
+  report = gst_qa_report_new (monitor, level, area, subarea, message);
 
   GST_INFO_OBJECT (monitor, "Received error report %d : %d : %d : %s",
       level, area, subarea, message);
