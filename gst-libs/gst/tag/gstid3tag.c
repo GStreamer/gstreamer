@@ -41,6 +41,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "id3v2.h"
+
+#ifndef GST_DISABLE_GST_DEBUG
+#define GST_CAT_DEFAULT id3v2_ensure_debug_category()
+#endif
+
 static const gchar genres[] =
     "Blues\000Classic Rock\000Country\000Dance\000Disco\000Funk\000Grunge\000"
     "Hip-Hop\000Jazz\000Metal\000New Age\000Oldies\000Other\000Pop\000R&B\000"
@@ -129,7 +135,7 @@ gst_tag_from_id3_tag (const gchar * id3_tag)
     i++;
   }
 
-  GST_INFO ("Cannot map ID3v2 tag '%c%c%c%c' to GStreamer tag",
+  GST_FIXME ("Cannot map ID3v2 tag '%c%c%c%c' to GStreamer tag",
       id3_tag[0], id3_tag[1], id3_tag[2], id3_tag[3]);
 
   return NULL;
@@ -193,7 +199,7 @@ gst_tag_from_id3_user_tag (const gchar * type, const gchar * id3_user_tag)
     }
   }
 
-  GST_INFO ("Cannot map ID3v2 user tag '%s' of type '%s' to GStreamer tag",
+  GST_FIXME ("Cannot map ID3v2 user tag '%s' of type '%s' to GStreamer tag",
       id3_user_tag, type);
 
   return NULL;
