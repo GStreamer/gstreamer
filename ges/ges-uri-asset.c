@@ -344,6 +344,8 @@ discoverer_discovered_cb (GstDiscoverer * discoverer,
 GstDiscovererInfo *
 ges_uri_clip_asset_get_info (const GESUriClipAsset * self)
 {
+  g_return_val_if_fail (GES_IS_URI_CLIP_ASSET (self), NULL);
+
   return self->priv->info;
 }
 

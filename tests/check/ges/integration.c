@@ -68,8 +68,17 @@ static const gchar *testfilename2 = NULL;
 static const gchar *test_image_filename = NULL;
 static EncodingProfileName current_profile = PROFILE_NONE;
 
-#define DEFAULT_PROFILE_TYPE PROFILE_MP4
 #define DURATION_TOLERANCE 0.1 * GST_SECOND
+
+#define get_asset(filename, asset)                                            \
+{                                                                              \
+  GError *error = NULL;                                                        \
+  gchar *uri = ges_test_file_name (filename);                                  \
+  asset = ges_uri_clip_asset_request_sync (uri, &error);                       \
+  fail_unless (GES_IS_ASSET (asset), "Testing file %s could not be used as an "\
+      "asset -- Reason: %s", uri, error ? error->message : "Uknown");          \
+  g_free (uri);                                                                \
+}
 
 static SeekInfo *
 new_seek_info (GstClockTime seeking_position, GstClockTime position)
@@ -181,7 +190,8 @@ my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       gchar *debug;
 
       gst_message_parse_error (message, &err, &debug);
-      GST_ERROR ("Error: %s\n", err ? err->message : "Uknown");
+      fail_unless (FALSE, "Got an error on the bus: Source: %s, message: %s\n",
+          GST_MESSAGE_SRC_NAME (message), err ? err->message : "Uknown");
       g_error_free (err);
       g_free (debug);
       g_main_loop_quit (loop);
@@ -241,22 +251,21 @@ get_position (void)
 }
 
 static void
-check_rendered_file_properties (gchar * render_file, GstClockTime duration)
+check_rendered_file_properties (const gchar * render_file,
+    GstClockTime duration)
 {
   GESUriClipAsset *asset;
   GstDiscovererInfo *info;
-  GError *error = NULL;
   GstClockTime real_duration;
 
   /* TODO: extend these tests */
 
-  GST_INFO ("Checking rendered file: %s", render_file);
-  asset = ges_uri_clip_asset_request_sync (render_file, &error);
-
+  get_asset (render_file, asset);
   info = ges_uri_clip_asset_get_info (GES_URI_CLIP_ASSET (asset));
   gst_object_unref (asset);
 
-  fail_unless (GST_IS_DISCOVERER_INFO (info), "Could not discover file");
+  fail_unless (GST_IS_DISCOVERER_INFO (info), "Could not discover file %s",
+      render_file);
 
   /* Let's not be too nazi */
 
@@ -313,7 +322,7 @@ check_timeline (GESTimeline * timeline)
   gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
 
   if (current_profile != PROFILE_NONE) {
-    check_rendered_file_properties (render_uri,
+    check_rendered_file_properties (profile_specs[current_profile][3],
         ges_timeline_get_duration (timeline));
     g_free (render_uri);
   }
@@ -329,14 +338,9 @@ run_simple_seeks_test (GESTimeline * timeline)
 {
   GList *tmp;
   GESLayer *layer;
-  GError *error = NULL;
   GESUriClipAsset *asset1;
-  gchar *uri = ges_test_file_name (testfilename1);
 
-  asset1 = ges_uri_clip_asset_request_sync (uri, &error);
-  g_free (uri);
-
-  fail_unless (asset1 != NULL);
+  get_asset (testfilename1, asset1);
 
   layer = ges_layer_new ();
   fail_unless (ges_timeline_add_layer (timeline, layer));
@@ -424,6 +428,8 @@ test_effect (void)
 
   asset1 = ges_uri_clip_asset_request_sync (uri, &error);
   g_free (uri);
+  fail_unless (GES_IS_ASSET (asset1), "Testing file %s could not be used as an "
+      "asset -- Reason: %s", uri, error ? error->message : "Uknown");
 
   fail_unless (asset1 != NULL);
 
@@ -455,11 +461,8 @@ test_transition (void)
 {
   GESTimeline *timeline;
   GESLayer *layer;
-  GError *error = NULL;
   GESUriClipAsset *asset1, *asset2;
   GESClip *clip;
-  gchar *uri1 = ges_test_file_name (testfilename1);
-  gchar *uri2 = ges_test_file_name (testfilename2);
 
   timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
@@ -467,11 +470,8 @@ test_transition (void)
 
   g_object_set (layer, "auto-transition", TRUE, NULL);
 
-  asset1 = ges_uri_clip_asset_request_sync (uri1, &error);
-  asset2 = ges_uri_clip_asset_request_sync (uri2, &error);
-
-  g_free (uri1);
-  g_free (uri2);
+  get_asset (testfilename1, asset1);
+  get_asset (testfilename2, asset2);
 
   fail_unless (asset1 != NULL && asset2 != NULL);
 
@@ -504,14 +504,8 @@ test_basic (void)
   GESTimeline *timeline;
   GESLayer *layer;
   GESUriClipAsset *asset1;
-  GError *error = NULL;
-  gchar *uri = ges_test_file_name (testfilename1);
 
-  asset1 = ges_uri_clip_asset_request_sync (uri, &error);
-  g_free (uri);
-
-  fail_unless (asset1 != NULL);
-
+  get_asset (testfilename1, asset1);
   layer = ges_layer_new ();
   timeline = ges_timeline_new_audio_video ();
   fail_unless (ges_timeline_add_layer (timeline, layer));
@@ -538,17 +532,9 @@ test_image (void)
   GESTimeline *timeline;
   GESLayer *layer;
   GESUriClipAsset *asset1, *asset2;
-  GError *error = NULL;
-  gchar *uri = ges_test_file_name (test_image_filename);
-  gchar *uri2 = ges_test_file_name (testfilename1);
 
-  asset1 = ges_uri_clip_asset_request_sync (uri, &error);
-  g_free (uri);
-
-  asset2 = ges_uri_clip_asset_request_sync (uri2, &error);
-  g_free (uri2);
-
-  fail_unless (asset1 != NULL);
+  get_asset (test_image_filename, asset1);
+  get_asset (testfilename1, asset2);
 
   layer = ges_layer_new ();
   timeline = ges_timeline_new_audio_video ();
