@@ -9948,12 +9948,11 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
           "mpegversion", G_TYPE_INT, 2,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
-    case 0x69:                 /* MP3 has two different values, accept either */
-    case 0x6B:
-      /* change to mpeg1 layer 3 audio */
-      gst_caps_set_simple (stream->caps, "layer", G_TYPE_INT, 3,
-          "mpegversion", G_TYPE_INT, 1, NULL);
-      codec_name = "MPEG-1 layer 3";
+    case 0x69:                 /* MPEG-2 BC audio */
+    case 0x6B:                 /* MPEG-1 audio */
+      caps = gst_caps_new_simple ("audio/mpeg",
+          "mpegversion", G_TYPE_INT, 1, "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+      codec_name = "MPEG-1 audio";
       break;
     case 0x6A:                 /* MPEG-1 */
       codec_name = "MPEG-1 video";
