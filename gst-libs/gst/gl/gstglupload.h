@@ -93,7 +93,8 @@ struct _GstGLUploadClass
  * The currently supported formats that can be uploaded
  */
 #define GST_GL_UPLOAD_FORMATS "{ RGB, RGBx, RGBA, BGR, BGRx, BGRA, xRGB, " \
-                               "xBGR, ARGB, ABGR, I420, YV12, YUY2, UYVY, AYUV }"
+                               "xBGR, ARGB, ABGR, Y444, I420, YV12, Y42B, " \
+                               "Y41B, NV12, NV21, YUY2, UYVY, AYUV }"
 
 /**
  * GST_GL_UPLOAD_VIDEO_CAPS:

@@ -50,21 +50,21 @@
 #define USING_GLES3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES3)
 
 static void _do_upload (GstGLDisplay * display, GstGLUpload * upload);
-static void _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload);
-static void _do_upload_make (GstGLDisplay * display, GstGLUpload * upload);
+static gboolean _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload);
+static gboolean _do_upload_make (GstGLDisplay * display, GstGLUpload * upload);
 static void _init_upload (GstGLDisplay * display, GstGLUpload * upload);
-static void _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload);
+static gboolean _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload);
 static gboolean gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
 static gboolean gst_gl_upload_perform_with_data_unlocked_thread (GstGLUpload *
     upload, GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
 
 #if GST_GL_HAVE_OPENGL
-static void _do_upload_draw_opengl (GstGLDisplay * display,
+static gboolean _do_upload_draw_opengl (GstGLDisplay * display,
     GstGLUpload * upload);
 #endif
 #if GST_GL_HAVE_GLES2
-static void _do_upload_draw_gles2 (GstGLDisplay * display,
+static gboolean _do_upload_draw_gles2 (GstGLDisplay * display,
     GstGLUpload * upload);
 #endif
 
@@ -77,79 +77,230 @@ static void _do_upload_draw_gles2 (GstGLDisplay * display,
       "const vec3 bcoeff = vec3(1.164, 2.018, 0.000);\n"
 
 #if GST_GL_HAVE_OPENGL
+
+static const char *frag_AYUV_opengl = {
+      "#extension GL_ARB_texture_rectangle : enable\n"
+      "uniform sampler2DRect tex;\n"
+      "uniform vec2 tex_scale0;\n"
+      "uniform vec2 tex_scale1;\n"
+      "uniform vec2 tex_scale2;\n"
+      YUV_TO_RGB_COEFFICIENTS
+      "void main(void) {\n"
+      "  float r,g,b;\n"
+      "  vec3 yuv;\n"
+      "  yuv  = texture2DRect(tex, gl_TexCoord[0].xy * tex_scale0).gba;\n"
+      "  yuv += offset;\n"
+      "  r = dot(yuv, rcoeff);\n"
+      "  g = dot(yuv, gcoeff);\n"
+      "  b = dot(yuv, bcoeff);\n"
+      "  gl_FragColor=vec4(r,g,b,1.0);\n"
+      "}"
+};
+
+/** YUV to RGB conversion */
+static const char *frag_PLANAR_YUV_opengl = {
+      "#extension GL_ARB_texture_rectangle : enable\n"
+      "uniform sampler2DRect Ytex,Utex,Vtex;\n"
+      "uniform vec2 tex_scale0;\n"
+      "uniform vec2 tex_scale1;\n"
+      "uniform vec2 tex_scale2;\n"
+      YUV_TO_RGB_COEFFICIENTS
+      "void main(void) {\n"
+      "  float r,g,b;\n"
+      "  vec3 yuv;\n"
+      "  yuv.x=texture2DRect(Ytex, gl_TexCoord[0].xy * tex_scale0).r;\n"
+      "  yuv.y=texture2DRect(Utex, gl_TexCoord[0].xy * tex_scale1).r;\n"
+      "  yuv.z=texture2DRect(Vtex, gl_TexCoord[0].xy * tex_scale2).r;\n"
+      "  yuv += offset;\n"
+      "  r = dot(yuv, rcoeff);\n"
+      "  g = dot(yuv, gcoeff);\n"
+      "  b = dot(yuv, bcoeff);\n"
+      "  gl_FragColor=vec4(r,g,b,1.0);\n"
+      "}"
+};
+
+/** NV12/NV21 to RGB conversion */
+static const char *frag_NV12_NV21_opengl = {
+      "#extension GL_ARB_texture_rectangle : enable\n"
+      "uniform sampler2DRect Ytex,UVtex;\n"
+      "uniform vec2 tex_scale0;\n"
+      "uniform vec2 tex_scale1;\n"
+      "uniform vec2 tex_scale2;\n"
+      YUV_TO_RGB_COEFFICIENTS
+      "void main(void) {\n\n"
+      "  float r,g,b;\n"
+      "  vec3 yuv;\n"
+      "  yuv.x = texture2DRect(Ytex, gl_TexCoord[0].xy * tex_scale0).r;\n"
+      "  yuv.yz = texture2DRect(UVtex, gl_TexCoord[0].xy * tex_scale1).%c%c;\n"
+      "  yuv += offset;\n"
+      "  r = dot(yuv, rcoeff);\n"
+      "  g = dot(yuv, gcoeff);\n"
+      "  b = dot(yuv, bcoeff);\n"
+      "  gl_FragColor=vec4(r,g,b,1.0);\n"
+      "}"
+};
+
+/* Channel reordering for XYZ <-> ZYX conversion */
+static const char *frag_REORDER_opengl = {
+      "#extension GL_ARB_texture_rectangle : enable\n"
+      "uniform sampler2DRect tex;\n"
+      "uniform vec2 tex_scale0;\n"
+      "uniform vec2 tex_scale1;\n"
+      "uniform vec2 tex_scale2;\n"
+      "void main(void)\n"
+      "{\n"
+      " vec4 t = texture2DRect(tex, gl_TexCoord[0].xy);\n"
+      " gl_FragColor = vec4(t.%c, t.%c, t.%c, 1.0);\n"
+      "}"
+};
+
+/* Direct fragments copy with stride-scaling */
+static const char *frag_COPY_opengl = {
+      "#extension GL_ARB_texture_rectangle : enable\n"
+      "uniform sampler2DRect tex;\n"
+      "uniform vec2 tex_scale0;\n"
+      "uniform vec2 tex_scale1;\n"
+      "uniform vec2 tex_scale2;\n"
+      "void main(void)\n"
+      "{\n"
+      " vec4 t = texture2DRect(tex, gl_TexCoord[0].xy);\n"
+      " gl_FragColor = vec4(t.rgb, 1.0);\n"
+      "}\n"
+};
+
 /* YUY2:r,g,a
    UYVY:a,b,r */
-static const gchar *text_shader_YUY2_UYVY_opengl =
+static const gchar *frag_YUY2_UYVY_opengl =
     "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform sampler2DRect Ytex, UVtex;\n"
+    "uniform vec2 tex_scale0;\n"
+    "uniform vec2 tex_scale1;\n"
+    "uniform vec2 tex_scale2;\n"
     YUV_TO_RGB_COEFFICIENTS
     "void main(void) {\n"
+    "  float fx, fy, y, u, v, r, g, b;\n"
     "  vec3 yuv;\n"
-    "  float fx, fy, r, g, b;\n"
-    "  fx = gl_TexCoord[0].x;\n"
-    "  fy = gl_TexCoord[0].y;\n"
-    "  yuv.x = texture2DRect(Ytex,vec2(fx,fy)).%c;\n"
-    "  yuv.y = texture2DRect(UVtex,vec2(fx*0.5,fy)).%c;\n"
-    "  yuv.z = texture2DRect(UVtex,vec2(fx*0.5,fy)).%c;\n"
-    "  yuv+=offset;\n"
+    "  yuv.x = texture2DRect(Ytex, gl_TexCoord[0].xy * tex_scale0).%c;\n"
+    "  yuv.y = texture2DRect(UVtex, gl_TexCoord[0].xy * tex_scale1).%c;\n"
+    "  yuv.z = texture2DRect(UVtex, gl_TexCoord[0].xy * tex_scale2).%c;\n"
+    "  yuv += offset;\n"
     "  r = dot(yuv, rcoeff);\n"
     "  g = dot(yuv, gcoeff);\n"
     "  b = dot(yuv, bcoeff);\n"
     "  gl_FragColor = vec4(r, g, b, 1.0);\n"
     "}\n";
 
-/* ATI: "*0.5", ""
-   normal: "", "*0.5" */
-static const gchar *text_shader_I420_YV12_opengl =
-    "#extension GL_ARB_texture_rectangle : enable\n"
-    "uniform sampler2DRect Ytex,Utex,Vtex;\n"
-    YUV_TO_RGB_COEFFICIENTS
-    "void main(void) {\n"
-    "  vec3 yuv;\n"
-    "  float r,g,b;\n"
-    "  vec2 nxy = gl_TexCoord[0].xy;\n"
-    "  yuv.x=texture2DRect(Ytex,nxy%s).r;\n"
-    "  yuv.y=texture2DRect(Utex,nxy%s).r;\n"
-    "  yuv.z=texture2DRect(Vtex,nxy*0.5).r;\n"
-    "  yuv+=offset;\n"
-    "  r = dot(yuv, rcoeff);\n"
-    "  g = dot(yuv, gcoeff);\n"
-    "  b = dot(yuv, bcoeff);\n"
-    "  gl_FragColor=vec4(r,g,b,1.0);\n"
-    "}\n";
-
-static const gchar *text_shader_AYUV_opengl =
-    "#extension GL_ARB_texture_rectangle : enable\n"
-    "uniform sampler2DRect tex;\n"
-    YUV_TO_RGB_COEFFICIENTS
-    "void main(void) {\n"
-    "  vec3 yuv;\n"
-    "  float r,g,b;\n"
-    "  vec2 nxy=gl_TexCoord[0].xy;\n"
-    "  yuv=texture2DRect(tex,nxy).rgb;\n"
-    "  yuv+=offset;\n"
-    "  r = dot(yuv, rcoeff);\n"
-    "  g = dot(yuv, gcoeff);\n"
-    "  b = dot(yuv, bcoeff);\n"
-    "  gl_FragColor=vec4(r,g,b,1.0);\n"
-    "}\n";
-
 #define text_vertex_shader_opengl NULL
 #endif
 
 #if GST_GL_HAVE_GLES2
+/* Channel reordering for XYZ <-> ZYX conversion */
+static const char *frag_REORDER_gles2 = {
+      "precision mediump float;\n"
+      "varying vec2 v_texcoord;\n"
+      "uniform sampler2D tex;\n"
+      "uniform vec2 tex_scale0;\n"
+      "uniform vec2 tex_scale1;\n"
+      "uniform vec2 tex_scale2;\n"
+      "void main(void)\n"
+      "{\n"
+      " vec4 t = texture2D(tex, v_texcoord);\n"
+      " gl_FragColor = vec4(t.%c, t.%c, t.%c, 1.0);\n"
+      "}"
+};
+
+static const char *frag_AYUV_gles2 = {
+      "precision mediump float;\n"
+      "varying vec2 v_texcoord;\n"
+      "uniform sampler2D tex;\n"
+      "uniform vec2 tex_scale0;\n"
+      "uniform vec2 tex_scale1;\n"
+      "uniform vec2 tex_scale2;\n"
+      YUV_TO_RGB_COEFFICIENTS
+      "void main(void) {\n"
+      "  float r,g,b;\n"
+      "  vec3 yuv;\n"
+      "  yuv  = texture2D(tex,v_texcoord).gba;\n"
+      "  yuv += offset;\n"
+      "  r = dot(yuv, rcoeff);\n"
+      "  g = dot(yuv, gcoeff);\n"
+      "  b = dot(yuv, bcoeff);\n"
+      "  gl_FragColor=vec4(r,g,b,1.0);\n"
+      "}"
+};
+
+/** YUV to RGB conversion */
+static const char *frag_PLANAR_YUV_gles2 = {
+      "precision mediump float;\n"
+      "varying vec2 v_texcoord;\n"
+      "uniform sampler2D Ytex,Utex,Vtex;\n"
+      "uniform vec2 tex_scale0;\n"
+      "uniform vec2 tex_scale1;\n"
+      "uniform vec2 tex_scale2;\n"
+      YUV_TO_RGB_COEFFICIENTS
+      "void main(void) {\n"
+      "  float r,g,b;\n"
+      "  vec3 yuv;\n"
+      "  yuv.x=texture2D(Ytex,v_texcoord).r;\n"
+      "  yuv.y=texture2D(Utex,v_texcoord).r;\n"
+      "  yuv.z=texture2D(Vtex,v_texcoord).r;\n"
+      "  yuv += offset;\n"
+      "  r = dot(yuv, rcoeff);\n"
+      "  g = dot(yuv, gcoeff);\n"
+      "  b = dot(yuv, bcoeff);\n"
+      "  gl_FragColor=vec4(r,g,b,1.0);\n"
+      "}"
+};
+
+/** NV12/NV21 to RGB conversion */
+static const char *frag_NV12_NV21_gles2 = {
+      "precision mediump float;\n"
+      "varying vec2 v_texcoord;\n"
+      "uniform sampler2D Ytex,UVtex;\n"
+      "uniform vec2 tex_scale0;\n"
+      "uniform vec2 tex_scale1;\n"
+      "uniform vec2 tex_scale2;\n"
+      YUV_TO_RGB_COEFFICIENTS
+      "void main(void) {\n"
+      "  float r,g,b;\n"
+      "  vec3 yuv;\n"
+      "  yuv.x=texture2D(Ytex, v_texcoord).r;\n"
+      "  yuv.yz=texture2D(UVtex, v_texcoord).%c%c;\n"
+      "  yuv += offset;\n"
+      "  r = dot(yuv, rcoeff);\n"
+      "  g = dot(yuv, gcoeff);\n"
+      "  b = dot(yuv, bcoeff);\n"
+      "  gl_FragColor=vec4(r,g,b,1.0);\n"
+      "}"
+};
+
+/* Direct fragments copy with stride-scaling */
+static const char *frag_COPY_gles2 = {
+      "precision mediump float;\n"
+      "varying vec2 v_texcoord;\n"
+      "uniform sampler2D tex;\n"
+      "uniform vec2 tex_scale0;\n"
+      "uniform vec2 tex_scale1;\n"
+      "uniform vec2 tex_scale2;\n"
+      "void main(void)\n"
+      "{\n"
+      " vec4 t = texture2D(tex, v_texcoord);\n"
+      " gl_FragColor = vec4(t.rgb, 1.0);\n"
+      "}"
+};
+
 /* YUY2:r,g,a
    UYVY:a,b,r */
-static const gchar *text_shader_YUY2_UYVY_gles2 =
+static const gchar *frag_YUY2_UYVY_gles2 =
     "precision mediump float;\n"
-    "varying vec2 v_texCoord;\n"
+    "varying vec2 v_texcoord;\n"
     "uniform sampler2D Ytex, UVtex;\n"
     YUV_TO_RGB_COEFFICIENTS
     "void main(void) {\n"
     "  vec3 yuv;\n"
     "  float fx, fy, y, u, v, r, g, b;\n"
-    "  fx = v_texCoord.x;\n"
-    "  fy = v_texCoord.y;\n"
+    "  fx = v_texcoord.x;\n"
+    "  fy = v_texcoord.y;\n"
     "  yuv.x = texture2D(Ytex,vec2(fx,fy)).%c;\n"
     "  yuv.y = texture2D(UVtex,vec2(fx*0.5,fy)).%c;\n"
     "  yuv.z = texture2D(UVtex,vec2(fx*0.5,fy)).%c;\n"
@@ -160,61 +311,14 @@ static const gchar *text_shader_YUY2_UYVY_gles2 =
     "  gl_FragColor = vec4(r, g, b, 1.0);\n"
     "}\n";
 
-static const gchar *text_shader_I420_YV12_gles2 =
-    "precision mediump float;\n"
-    "varying vec2 v_texCoord;\n"
-    "uniform sampler2D Ytex,Utex,Vtex;\n"
-    YUV_TO_RGB_COEFFICIENTS
-    "void main(void) {\n"
-    "  vec3 yuv;\n"
-    "  float r, g, b;\n"
-    "  vec2 nxy = v_texCoord.xy;\n"
-    "  yuv.x=texture2D(Ytex,nxy).r;\n"
-    "  yuv.y=texture2D(Utex,nxy).r;\n"
-    "  yuv.z=texture2D(Vtex,nxy).r;\n"
-    "  yuv+=offset;\n"
-    "  r = dot(yuv, rcoeff);\n"
-    "  g = dot(yuv, gcoeff);\n"
-    "  b = dot(yuv, bcoeff);\n"
-    "  gl_FragColor=vec4(r,g,b,1.0);\n"
-    "}\n";
-
-static const gchar *text_shader_AYUV_gles2 =
-    "precision mediump float;\n"
-    "varying vec2 v_texCoord;\n"
-    "uniform sampler2D tex;\n"
-    YUV_TO_RGB_COEFFICIENTS
-    "void main(void) {\n"
-    "  vec3 yuv;\n"
-    "  float r,g,b;\n"
-    "  vec2 nxy = v_texCoord.xy;\n"
-    "  yuv=texture2D(tex,nxy).gba;\n"
-    "  yuv+=offset;\n"
-    "  r = dot(yuv, rcoeff);\n"
-    "  g = dot(yuv, gcoeff);\n"
-    "  b = dot(yuv, bcoeff);\n"
-    "  gl_FragColor=vec4(r,g,b,1.0);\n"
-    "}\n";
-
-static const gchar *text_shader_ARGB_gles2 =
-    "precision mediump float;\n"
-    "varying vec2 v_texCoord;\n"
-    "uniform sampler2D tex;\n"
-    "void main(void) {\n"
-    "  vec4 rgba;\n"
-    "  vec2 nxy = v_texCoord.xy;\n"
-    "  rgba=texture2D(tex,nxy);\n"
-    "  gl_FragColor=vec4(rgba.%c,rgba.%c,rgba.%c,1.0);\n"
-    "}\n";
-
 static const gchar *text_vertex_shader_gles2 =
     "attribute vec4 a_position;   \n"
-    "attribute vec2 a_texCoord;   \n"
-    "varying vec2 v_texCoord;     \n"
+    "attribute vec2 a_texcoord;   \n"
+    "varying vec2 v_texcoord;     \n"
     "void main()                  \n"
     "{                            \n"
     "   gl_Position = a_position; \n"
-    "   v_texCoord = a_texCoord;  \n"
+    "   v_texcoord = a_texcoord;  \n"
     "}                            \n";
 #endif
 
@@ -222,13 +326,18 @@ static const gchar *text_vertex_shader_gles2 =
 
 struct _GstGLUploadPrivate
 {
+  int n_textures;
+  gboolean result;
+
   const gchar *YUY2_UYVY;
-  const gchar *I420_YV12;
+  const gchar *PLANAR_YUV;
   const gchar *AYUV;
-  const gchar *ARGB;
+  const gchar *NV12_NV21;
+  const gchar *REORDER;
+  const gchar *COPY;
   const gchar *vert_shader;
 
-  void (*draw) (GstGLDisplay * display, GstGLUpload * download);
+    gboolean (*draw) (GstGLDisplay * display, GstGLUpload * download);
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_debug);
@@ -292,20 +401,24 @@ gst_gl_upload_new (GstGLDisplay * display)
 
 #if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (display)) {
-    priv->YUY2_UYVY = text_shader_YUY2_UYVY_opengl;
-    priv->I420_YV12 = text_shader_I420_YV12_opengl;
-    priv->AYUV = text_shader_AYUV_opengl;
-    priv->ARGB = NULL;
+    priv->YUY2_UYVY = frag_YUY2_UYVY_opengl;
+    priv->PLANAR_YUV = frag_PLANAR_YUV_opengl;
+    priv->AYUV = frag_AYUV_opengl;
+    priv->REORDER = frag_REORDER_opengl;
+    priv->COPY = frag_COPY_opengl;
+    priv->NV12_NV21 = frag_NV12_NV21_opengl;
     priv->vert_shader = text_vertex_shader_opengl;
     priv->draw = _do_upload_draw_opengl;
   }
 #endif
 #if GST_GL_HAVE_GLES2
   if (USING_GLES2 (display)) {
-    priv->YUY2_UYVY = text_shader_YUY2_UYVY_gles2;
-    priv->I420_YV12 = text_shader_I420_YV12_gles2;
-    priv->AYUV = text_shader_AYUV_gles2;
-    priv->ARGB = text_shader_ARGB_gles2;
+    priv->YUY2_UYVY = frag_YUY2_UYVY_gles2;
+    priv->PLANAR_YUV = frag_PLANAR_YUV_gles2;
+    priv->AYUV = frag_AYUV_gles2;
+    priv->REORDER = frag_REORDER_gles2;
+    priv->COPY = frag_COPY_gles2;
+    priv->NV12_NV21 = frag_NV12_NV21_gles2;
     priv->vert_shader = text_vertex_shader_gles2;
     priv->draw = _do_upload_draw_gles2;
   }
@@ -395,7 +508,7 @@ gst_gl_upload_init_format (GstGLUpload * upload, GstVideoFormat v_format,
 
   g_mutex_unlock (&upload->lock);
 
-  return TRUE;
+  return upload->priv->result;
 }
 
 /**
@@ -442,7 +555,7 @@ gst_gl_upload_init_format_thread (GstGLUpload * upload, GstVideoFormat v_format,
 
   g_mutex_unlock (&upload->lock);
 
-  return TRUE;
+  return upload->priv->result;
 }
 
 /**
@@ -669,253 +782,124 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
-  guint in_width, in_height, out_width, out_height;
+  gchar *frag_prog = NULL;
+  gboolean free_frag_prog, res;
 
   gl = display->gl_vtable;
 
   v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
-  in_width = upload->in_width;
-  in_height = upload->in_height;
-  out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
 
   GST_INFO ("Initializing texture upload for format:%s",
       gst_video_format_to_string (v_format));
 
-  if (GST_VIDEO_FORMAT_INFO_IS_RGB (upload->info.finfo)) {
-    switch (v_format) {
-      case GST_VIDEO_FORMAT_RGBx:
-      case GST_VIDEO_FORMAT_BGRx:
-      case GST_VIDEO_FORMAT_xRGB:
-      case GST_VIDEO_FORMAT_xBGR:
-      case GST_VIDEO_FORMAT_RGBA:
-      case GST_VIDEO_FORMAT_BGRA:
-      case GST_VIDEO_FORMAT_ARGB:
-      case GST_VIDEO_FORMAT_ABGR:
-      case GST_VIDEO_FORMAT_RGB:
-      case GST_VIDEO_FORMAT_BGR:
-        /* GLES has no support for anything else than RGB(XA) */
-        if (!USING_GLES2 (display) || (v_format == GST_VIDEO_FORMAT_RGBA
-                || v_format == GST_VIDEO_FORMAT_RGBx
-                || v_format == GST_VIDEO_FORMAT_RGB)) {
-          if (in_width != out_width || in_height != out_height)
-            _init_upload_fbo (display, upload);
-          /* color space conversion is not needed */
-          return;
-        }
-        break;
-      default:
-        break;
-    }
-  }
-
-  /* color space conversion is needed */
-
-  /* check if fragment shader is available, then load them */
-  /* shouldn't we require ARB_shading_language_100? --Filippo */
-  if (gl->CreateProgramObject || gl->CreateProgram) {
-
-    GST_INFO ("We have OpenGL shaders");
-
-    _init_upload_fbo (display, upload);
-
-    switch (v_format) {
-      case GST_VIDEO_FORMAT_YUY2:
-      {
-        gchar text_shader_YUY2[2048];
-        sprintf (text_shader_YUY2, upload->priv->YUY2_UYVY, 'r', 'g', 'a');
-
-        if (_create_shader (display, upload->priv->vert_shader,
-                text_shader_YUY2, &upload->shader)) {
-          if (USING_GLES2 (display)) {
-            upload->shader_attr_position_loc =
-                gst_gl_shader_get_attribute_location
-                (upload->shader, "a_position");
-            upload->shader_attr_texture_loc =
-                gst_gl_shader_get_attribute_location
-                (upload->shader, "a_texCoord");
-          }
-        }
-      }
-        break;
-      case GST_VIDEO_FORMAT_UYVY:
-      {
-        gchar text_shader_UYVY[2048];
-#if GST_GL_HAVE_OPENGL
-        if (USING_OPENGL (display)) {
-          sprintf (text_shader_UYVY, upload->priv->YUY2_UYVY, 'a', 'b', 'r');
-        }
-#endif
-#if GST_GL_HAVE_GLES2
-        if (USING_GLES2 (display)) {
-          sprintf (text_shader_UYVY, upload->priv->YUY2_UYVY, 'a', 'r', 'b');
-        }
-#endif
-
-        if (_create_shader (display, upload->priv->vert_shader,
-                text_shader_UYVY, &upload->shader)) {
-          if (USING_GLES2 (display)) {
-            upload->shader_attr_position_loc =
-                gst_gl_shader_get_attribute_location
-                (upload->shader, "a_position");
-            upload->shader_attr_texture_loc =
-                gst_gl_shader_get_attribute_location
-                (upload->shader, "a_texCoord");
-          }
-        }
-      }
-        break;
-      case GST_VIDEO_FORMAT_I420:
-      case GST_VIDEO_FORMAT_YV12:
-      {
-        gchar text_shader_I420_YV12[2048];
-#if GST_GL_HAVE_OPENGL
-        if (USING_OPENGL (display)) {
-          if ((g_ascii_strncasecmp ("ATI",
-                      (gchar *) glGetString (GL_VENDOR), 3) == 0)
-              && (g_ascii_strncasecmp ("ATI Mobility Radeon HD",
-                      (gchar *) glGetString (GL_RENDERER), 22) != 0)
-              && (g_ascii_strncasecmp ("ATI Radeon HD",
-                      (gchar *) glGetString (GL_RENDERER), 13) != 0))
-            sprintf (text_shader_I420_YV12, upload->priv->I420_YV12, "*0.5",
-                "");
-          else
-            sprintf (text_shader_I420_YV12, upload->priv->I420_YV12, "",
-                "*0.5");
-        }
-#endif
-#if GST_GL_HAVE_GLES2
-        if (USING_GLES2 (display))
-          g_strlcpy (text_shader_I420_YV12, upload->priv->I420_YV12, 2048);
-#endif
-
-        if (_create_shader (display, upload->priv->vert_shader,
-                text_shader_I420_YV12, &upload->shader)) {
-          if (USING_GLES2 (display)) {
-            upload->shader_attr_position_loc =
-                gst_gl_shader_get_attribute_location
-                (upload->shader, "a_position");
-            upload->shader_attr_texture_loc =
-                gst_gl_shader_get_attribute_location
-                (upload->shader, "a_texCoord");
-          }
-        }
-      }
-        break;
-      case GST_VIDEO_FORMAT_AYUV:
-      {
-        if (_create_shader (display, upload->priv->vert_shader,
-                upload->priv->AYUV, &upload->shader)) {
-          if (USING_GLES2 (display)) {
-            upload->shader_attr_position_loc =
-                gst_gl_shader_get_attribute_location
-                (upload->shader, "a_position");
-            upload->shader_attr_texture_loc =
-                gst_gl_shader_get_attribute_location
-                (upload->shader, "a_texCoord");
-          }
-        }
-      }
-        break;
-      case GST_VIDEO_FORMAT_BGRx:
-      case GST_VIDEO_FORMAT_xRGB:
-      case GST_VIDEO_FORMAT_xBGR:
-      case GST_VIDEO_FORMAT_BGRA:
-      case GST_VIDEO_FORMAT_ARGB:
-      case GST_VIDEO_FORMAT_ABGR:
-      case GST_VIDEO_FORMAT_BGR:
-      {
-        gchar text_shader_ARGB[2048];
-
-        switch (v_format) {
-          case GST_VIDEO_FORMAT_BGR:
-          case GST_VIDEO_FORMAT_BGRx:
-          case GST_VIDEO_FORMAT_BGRA:
-            sprintf (text_shader_ARGB, upload->priv->ARGB, 'b', 'g', 'r');
-            break;
-          case GST_VIDEO_FORMAT_xRGB:
-          case GST_VIDEO_FORMAT_ARGB:
-            sprintf (text_shader_ARGB, upload->priv->ARGB, 'g', 'b', 'a');
-            break;
-          case GST_VIDEO_FORMAT_xBGR:
-          case GST_VIDEO_FORMAT_ABGR:
-            sprintf (text_shader_ARGB, upload->priv->ARGB, 'a', 'b', 'g');
-            break;
-          default:
-            g_assert_not_reached ();
-            break;
-        }
-
-        if (_create_shader (display, upload->priv->vert_shader,
-                text_shader_ARGB, &upload->shader)) {
-          if (USING_GLES2 (display)) {
-            upload->shader_attr_position_loc =
-                gst_gl_shader_get_attribute_location
-                (upload->shader, "a_position");
-            upload->shader_attr_texture_loc =
-                gst_gl_shader_get_attribute_location
-                (upload->shader, "a_texCoord");
-          }
-        }
-      }
-        break;
-      default:
-        gst_gl_display_set_error (display,
-            "Unsupported upload video format %s",
-            gst_video_format_to_string (v_format));
-        break;
-    }
-    /* check if YCBCR MESA is available */
-#if 0
-  } else if (GLEW_MESA_ycbcr_texture) {
-    /* GLSL and Color Matrix are not available on your drivers,
-     * switch to YCBCR MESA
-     */
-    GST_INFO ("Context, ARB_fragment_shader supported: no");
-    GST_INFO ("Context, GLEW_MESA_ycbcr_texture supported: yes");
-
-    display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MESA;
-
-    switch (v_format) {
-      case GST_VIDEO_FORMAT_YUY2:
-      case GST_VIDEO_FORMAT_UYVY:
-        /* color space conversion is not needed */
-        break;
-      case GST_VIDEO_FORMAT_I420:
-      case GST_VIDEO_FORMAT_YV12:
-      case GST_VIDEO_FORMAT_AYUV:
-        /* MESA only supports YUY2 and UYVY */
-        gst_gl_display_set_error (display,
-            "Your MESA version only supports YUY2 and UYVY (GLSL is required for others yuv formats)");
-        break;
-      default:
-        gst_gl_display_set_error (display,
-            "Unsupported upload video format %d", v_format);
-        break;
-    }
-  }
-  /* check if color matrix is available (not supported) */
-  else if (GLEW_ARB_imaging) {
-    /* GLSL is not available on your drivers, switch to Color Matrix */
-    GST_INFO ("Context, ARB_fragment_shader supported: no");
-    GST_INFO ("Context, GLEW_MESA_ycbcr_texture supported: no");
-    GST_INFO ("Context, GLEW_ARB_imaging supported: yes");
-
-    display->colorspace_conversion = GST_GL_DISPLAY_CONVERSION_MATRIX;
-
-    gst_gl_display_set_error (display,
-        "Colorspace conversion using Color Matrix is not yet supported");
-#endif
-  } else {
-    /* colorspace conversion is not possible */
+  if (!gl->CreateProgramObject && !gl->CreateProgram) {
     gst_gl_display_set_error (display,
         "Cannot upload YUV formats without OpenGL shaders");
+    goto error;
   }
+
+  _init_upload_fbo (display, upload);
+
+  switch (v_format) {
+    case GST_VIDEO_FORMAT_AYUV:
+      frag_prog = (gchar *) upload->priv->AYUV;
+      free_frag_prog = FALSE;
+      upload->priv->n_textures = 1;
+      break;
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y41B:
+      frag_prog = (gchar *) upload->priv->PLANAR_YUV;
+      free_frag_prog = FALSE;
+      upload->priv->n_textures = 3;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+      frag_prog = g_strdup_printf (upload->priv->NV12_NV21, 'r', 'a');
+      free_frag_prog = TRUE;
+      upload->priv->n_textures = 2;
+      break;
+    case GST_VIDEO_FORMAT_NV21:
+      frag_prog = g_strdup_printf (upload->priv->NV12_NV21, 'a', 'r');
+      free_frag_prog = TRUE;
+      upload->priv->n_textures = 2;
+      break;
+    case GST_VIDEO_FORMAT_BGR:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_BGRA:
+      frag_prog = g_strdup_printf (upload->priv->REORDER, 'b', 'g', 'r');
+      free_frag_prog = TRUE;
+      upload->priv->n_textures = 1;
+      break;
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_ARGB:
+      frag_prog = g_strdup_printf (upload->priv->REORDER, 'g', 'b', 'a');
+      free_frag_prog = TRUE;
+      upload->priv->n_textures = 1;
+      break;
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_ABGR:
+      frag_prog = g_strdup_printf (upload->priv->REORDER, 'a', 'b', 'g');
+      free_frag_prog = TRUE;
+      upload->priv->n_textures = 1;
+      break;
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_RGB16:
+      frag_prog = (gchar *) upload->priv->COPY;
+      free_frag_prog = FALSE;
+      upload->priv->n_textures = 1;
+      break;
+    case GST_VIDEO_FORMAT_YUY2:
+      frag_prog = g_strdup_printf (upload->priv->YUY2_UYVY, 'r', 'g', 'a');
+      free_frag_prog = TRUE;
+      upload->priv->n_textures = 2;
+      break;
+    case GST_VIDEO_FORMAT_UYVY:
+      if (USING_GLES2 (display)) {
+        frag_prog = g_strdup_printf (upload->priv->YUY2_UYVY, 'a', 'r', 'b');
+      } else {
+        frag_prog = g_strdup_printf (upload->priv->YUY2_UYVY, 'a', 'b', 'r');
+      }
+      free_frag_prog = TRUE;
+      upload->priv->n_textures = 2;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  res =
+      _create_shader (display, upload->priv->vert_shader, frag_prog,
+      &upload->shader);
+  if (free_frag_prog)
+    g_free (frag_prog);
+  frag_prog = NULL;
+  if (!res)
+    goto error;
+
+  if (USING_GLES2 (display)) {
+    upload->shader_attr_position_loc =
+        gst_gl_shader_get_attribute_location (upload->shader, "a_position");
+    upload->shader_attr_texture_loc =
+        gst_gl_shader_get_attribute_location (upload->shader, "a_texcoord");
+  }
+
+  if (!_do_upload_make (display, upload))
+    goto error;
+
+  upload->priv->result = TRUE;
+  return;
+
+error:
+  upload->priv->result = FALSE;
 }
 
 
 /* called by _init_upload (in the gl thread) */
-void
+gboolean
 _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
@@ -931,7 +915,7 @@ _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload)
     /* turn off the pipeline because Frame buffer object is a not present */
     gst_gl_display_set_error (display,
         "Context, EXT_framebuffer_object supported: no");
-    return;
+    return FALSE;
   }
 
   GST_INFO ("Context, EXT_framebuffer_object supported: yes");
@@ -981,27 +965,27 @@ _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload)
         GL_RENDERBUFFER, upload->depth_buffer);
   }
 
-  if (!gst_gl_display_check_framebuffer_status (display))
+  if (!gst_gl_display_check_framebuffer_status (display)) {
     gst_gl_display_set_error (display, "GL framebuffer status incomplete");
+    return FALSE;
+  }
 
   /* unbind the FBO */
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 
   gl->DeleteTextures (1, &fake_texture);
 
-  _do_upload_make (display, upload);
+  return TRUE;
 }
 
 /* Called by the idle function in the gl thread */
 void
 _do_upload (GstGLDisplay * display, GstGLUpload * upload)
 {
-  GstVideoFormat v_format;
   guint in_width, in_height, out_width, out_height;
 
   out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
-  v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
   in_width = upload->in_width;
   in_height = upload->in_height;
 
@@ -1010,7 +994,42 @@ _do_upload (GstGLDisplay * display, GstGLUpload * upload)
       out_width, out_height, upload->in_texture[0], upload->in_texture[1],
       upload->in_texture[2], in_width, in_height);
 
-  _do_upload_fill (display, upload);
+  if (!_do_upload_fill (display, upload))
+    goto error;
+
+  if (!upload->priv->draw (display, upload))
+    goto error;
+
+  upload->priv->result = TRUE;
+  return;
+
+error:
+  {
+    upload->priv->result = FALSE;
+    return;
+  }
+}
+
+struct TexData
+{
+  gint internal_format, format, type, width, height;
+};
+
+/* called by gst_gl_display_thread_do_upload (in the gl thread) */
+gboolean
+_do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
+{
+  GstGLFuncs *gl;
+  GstVideoFormat v_format;
+  guint in_width, in_height;
+  struct TexData tex[GST_VIDEO_MAX_PLANES];
+  guint i;
+
+  gl = display->gl_vtable;
+
+  in_width = upload->in_width;
+  in_height = upload->in_height;
+  v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGBx:
@@ -1021,43 +1040,132 @@ _do_upload (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_BGRA:
     case GST_VIDEO_FORMAT_ARGB:
     case GST_VIDEO_FORMAT_ABGR:
+      tex[0].internal_format = GL_RGBA;
+      tex[0].format = GL_RGBA;
+      tex[0].type = GL_UNSIGNED_BYTE;
+      tex[0].width = in_width;
+      tex[0].height = in_height;
+      break;
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
-      if (in_width != out_width || in_height != out_height || upload->shader)
-        upload->priv->draw (display, upload);
-      /* color space conversion is not needed */
+      tex[0].internal_format = GL_RGB;
+      tex[0].format = GL_RGB;
+      tex[0].type = GL_UNSIGNED_BYTE;
+      tex[0].width = in_width;
+      tex[0].height = in_height;
+      break;
+    case GST_VIDEO_FORMAT_AYUV:
+      tex[0].internal_format = GL_RGBA;
+      tex[0].format = GL_BGRA;
+      tex[0].type = GL_UNSIGNED_INT_8_8_8_8;
+      tex[0].width = in_width;
+      tex[0].height = in_height;
       break;
     case GST_VIDEO_FORMAT_YUY2:
+      tex[0].internal_format = GL_LUMINANCE_ALPHA;
+      tex[0].format = GL_LUMINANCE_ALPHA;
+      tex[0].type = GL_UNSIGNED_BYTE;
+      tex[0].width = in_width;
+      tex[0].height = in_height;
+      tex[1].internal_format = GL_RGBA8;
+      tex[1].format = GL_BGRA;
+      tex[1].type = GL_UNSIGNED_INT_8_8_8_8;
+      tex[1].width = in_width;
+      tex[1].height = in_height;
+      break;
     case GST_VIDEO_FORMAT_UYVY:
+      tex[0].internal_format = GL_LUMINANCE_ALPHA;
+      tex[0].format = GL_LUMINANCE_ALPHA;
+      tex[0].type = GL_UNSIGNED_BYTE;
+      tex[0].width = in_width;
+      tex[0].height = in_height;
+      tex[1].internal_format = GL_RGBA8;
+      tex[1].format = GL_BGRA;
+      tex[1].type = GL_UNSIGNED_INT_8_8_8_8_REV;
+      tex[1].width = in_width;
+      tex[1].height = in_height;
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+      tex[0].internal_format = GL_LUMINANCE;
+      tex[0].format = GL_LUMINANCE;
+      tex[0].type = GL_UNSIGNED_BYTE;
+      tex[0].width = in_width;
+      tex[0].height = in_height;
+      tex[1].internal_format = GL_LUMINANCE_ALPHA;
+      tex[1].format = GL_LUMINANCE_ALPHA;
+      tex[1].type = GL_UNSIGNED_BYTE;
+      tex[1].width = in_width / 2;
+      tex[1].height = in_height / 2;
+      break;
+    case GST_VIDEO_FORMAT_Y444:
+      tex[0].internal_format = GL_LUMINANCE;
+      tex[0].format = GL_LUMINANCE;
+      tex[0].type = GL_UNSIGNED_BYTE;
+      tex[0].width = in_width;
+      tex[0].height = in_height;
+      tex[1].internal_format = GL_LUMINANCE;
+      tex[1].format = GL_LUMINANCE;
+      tex[1].type = GL_UNSIGNED_BYTE;
+      tex[1].width = in_width;
+      tex[1].height = in_height;
+      tex[2].internal_format = GL_LUMINANCE;
+      tex[2].format = GL_LUMINANCE;
+      tex[2].type = GL_UNSIGNED_BYTE;
+      tex[2].width = in_width;
+      tex[2].height = in_height;
+      break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_AYUV:
-    {
-#if 0
-      switch (display->colorspace_conversion) {
-        case GST_GL_DISPLAY_CONVERSION_GLSL:
-          /* color space conversion is needed */
-#endif
-          upload->priv->draw (display, upload);
-#if 0
-          break;
-        case GST_GL_DISPLAY_CONVERSION_MATRIX:
-          /* color space conversion is needed */
-          /* not yet supported */
-          break;
-        case GST_GL_DISPLAY_CONVERSION_MESA:
-          if (in_width != out_width || in_height != out_height)
-            upload->priv->draw (display, upload);
-          /* color space conversion is not needed */
-          break;
-        default:
-          gst_gl_display_set_error (display, "Unknown colorspace conversion %d",
-              display->colorspace_conversion);
-          g_assert_not_reached ();
-          break;
-      }
-#endif
-    }
+      tex[0].internal_format = GL_LUMINANCE;
+      tex[0].format = GL_LUMINANCE;
+      tex[0].type = GL_UNSIGNED_BYTE;
+      tex[0].width = in_width;
+      tex[0].height = in_height;
+      tex[1].internal_format = GL_LUMINANCE;
+      tex[1].format = GL_LUMINANCE;
+      tex[1].type = GL_UNSIGNED_BYTE;
+      tex[1].width = GST_ROUND_UP_2 (in_width) / 2;
+      tex[1].height = GST_ROUND_UP_2 (in_height) / 2;
+      tex[2].internal_format = GL_LUMINANCE;
+      tex[2].format = GL_LUMINANCE;
+      tex[2].type = GL_UNSIGNED_BYTE;
+      tex[2].width = GST_ROUND_UP_2 (in_width) / 2;
+      tex[2].height = GST_ROUND_UP_2 (in_height) / 2;
+      break;
+    case GST_VIDEO_FORMAT_Y42B:
+      tex[0].internal_format = GL_LUMINANCE;
+      tex[0].format = GL_LUMINANCE;
+      tex[0].type = GL_UNSIGNED_BYTE;
+      tex[0].width = in_width;
+      tex[0].height = in_height;
+      tex[1].internal_format = GL_LUMINANCE;
+      tex[1].format = GL_LUMINANCE;
+      tex[1].type = GL_UNSIGNED_BYTE;
+      tex[1].width = GST_ROUND_UP_2 (in_width) / 2;
+      tex[1].height = in_height;
+      tex[2].internal_format = GL_LUMINANCE;
+      tex[2].format = GL_LUMINANCE;
+      tex[2].type = GL_UNSIGNED_BYTE;
+      tex[2].width = GST_ROUND_UP_2 (in_width) / 2;
+      tex[2].height = in_height;
+      break;
+    case GST_VIDEO_FORMAT_Y41B:
+      tex[0].internal_format = GL_LUMINANCE;
+      tex[0].format = GL_LUMINANCE;
+      tex[0].type = GL_UNSIGNED_BYTE;
+      tex[0].width = in_width;
+      tex[0].height = in_height;
+      tex[1].internal_format = GL_LUMINANCE;
+      tex[1].format = GL_LUMINANCE;
+      tex[1].type = GL_UNSIGNED_BYTE;
+      tex[1].width = GST_ROUND_UP_4 (in_width) / 4;
+      tex[1].height = in_height;
+      tex[2].internal_format = GL_LUMINANCE;
+      tex[2].format = GL_LUMINANCE;
+      tex[2].type = GL_UNSIGNED_BYTE;
+      tex[2].width = GST_ROUND_UP_4 (in_width) / 4;
+      tex[2].height = in_height;
       break;
     default:
       gst_gl_display_set_error (display, "Unsupported upload video format %d",
@@ -1065,11 +1173,22 @@ _do_upload (GstGLDisplay * display, GstGLUpload * upload)
       g_assert_not_reached ();
       break;
   }
+
+  for (i = 0; i < upload->priv->n_textures; i++) {
+    gl->GenTextures (1, &upload->in_texture[i]);
+    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[i]);
+
+    gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, tex[i].internal_format,
+        tex[i].width, tex[i].height, 0, tex[i].format, tex[i].type, NULL);
+  }
+
+  return TRUE;
 }
 
+
 /* called by gst_gl_display_thread_do_upload (in the gl thread) */
-void
-_do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
+gboolean
+_do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
@@ -1081,267 +1200,53 @@ _do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
   in_height = upload->in_height;
   v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
 
-  gl->GenTextures (1, &upload->in_texture[0]);
-
   gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
-  switch (v_format) {
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-      gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-          in_width, in_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-      break;
-    case GST_VIDEO_FORMAT_RGB:
-    case GST_VIDEO_FORMAT_BGR:
-      gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
-          in_width, in_height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-      break;
-    case GST_VIDEO_FORMAT_AYUV:
-      gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
-          in_width, in_height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, NULL);
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-#if 0
-      switch (display->colorspace_conversion) {
-        case GST_GL_DISPLAY_CONVERSION_GLSL:
-        case GST_GL_DISPLAY_CONVERSION_MATRIX:
-#endif
-          gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
-              in_width, in_height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
-              NULL);
-          gl->GenTextures (1, &upload->in_texture[1]);
-          gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-          gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-              in_width, in_height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-              NULL);
-#if 0
-          break;
-        case GST_GL_DISPLAY_CONVERSION_MESA:
-          gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, in_width,
-              in_height, 0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
-          break;
-        default:
-          gst_gl_display_set_error (display, "Unknown colorspace conversion %d",
-              display->colorspace_conversion);
-          g_assert_not_reached ();
-          break;
-      }
-#endif
-      break;
-    case GST_VIDEO_FORMAT_UYVY:
-#if 0
-      switch (display->colorspace_conversion) {
-        case GST_GL_DISPLAY_CONVERSION_GLSL:
-        case GST_GL_DISPLAY_CONVERSION_MATRIX:
-#endif
-          glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE_ALPHA,
-              in_width, in_height, 0, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE,
-              NULL);
-          glGenTextures (1, &upload->in_texture[1]);
-          glBindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-          glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
-              in_width, in_height, 0, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV,
-              NULL);
-#if 0
-          break;
-        case GST_GL_DISPLAY_CONVERSION_MESA:
-          glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_YCBCR_MESA, in_width,
-              in_height, 0, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA, NULL);
-          break;
-        default:
-          gst_gl_display_set_error (display, "Unknown colorspace conversion %d",
-              display->colorspace_conversion);
-          g_assert_not_reached ();
-          break;
-      }
-#endif
-      break;
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-      gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-          in_width, in_height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-
-      gl->GenTextures (1, &upload->in_texture[1]);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-      gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-          GST_ROUND_UP_2 (in_width) / 2,
-          GST_ROUND_UP_2 (in_height) / 2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          NULL);
-
-      gl->GenTextures (1, &upload->in_texture[2]);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
-      gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_LUMINANCE,
-          GST_ROUND_UP_2 (in_width) / 2,
-          GST_ROUND_UP_2 (in_height) / 2, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE,
-          NULL);
-      break;
-
-    default:
-      gst_gl_display_set_error (display, "Unsupported upload video format %d",
-          v_format);
-      g_assert_not_reached ();
-      break;
-  }
-}
-
-
-/* called by gst_gl_display_thread_do_upload (in the gl thread) */
-void
-_do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
-{
-  GstGLFuncs *gl;
-  GstVideoFormat v_format;
-  guint in_width, in_height, out_width, out_height;
-
-  gl = display->gl_vtable;
-
-  in_width = upload->in_width;
-  in_height = upload->in_height;
-  out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
-  v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
-    case GST_VIDEO_FORMAT_RGBx:
-    case GST_VIDEO_FORMAT_BGRx:
-    case GST_VIDEO_FORMAT_xRGB:
-    case GST_VIDEO_FORMAT_xBGR:
-    case GST_VIDEO_FORMAT_RGBA:
-    case GST_VIDEO_FORMAT_BGRA:
-    case GST_VIDEO_FORMAT_ARGB:
-    case GST_VIDEO_FORMAT_ABGR:
-      /* color space conversion is not needed */
-      if (in_width != out_width || in_height != out_height || upload->shader)
-        gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
-      else
-        gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->out_texture);
-      break;
-    case GST_VIDEO_FORMAT_YUY2:
-    case GST_VIDEO_FORMAT_UYVY:
-    case GST_VIDEO_FORMAT_I420:
-    case GST_VIDEO_FORMAT_YV12:
-    case GST_VIDEO_FORMAT_AYUV:
-#if 0
-      switch (display->colorspace_conversion) {
-        case GST_GL_DISPLAY_CONVERSION_GLSL:
-        case GST_GL_DISPLAY_CONVERSION_MATRIX:
-#endif
-          gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
-#if 0
-          break;
-        case GST_GL_DISPLAY_CONVERSION_MESA:
-          if (in_width != out_width || in_height != out_height)
-            gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
-          else
-            gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->out_texture);
-          break;
-        default:
-          gst_gl_display_set_error (display, "Unknown colorspace conversion %d",
-              display->colorspace_conversion);
-          g_assert_not_reached ();
-          break;
-      }
-#endif
-      break;
-    default:
-      gst_gl_display_set_error (display, "Unsupported upload video format %d",
-          v_format);
-      g_assert_not_reached ();
-      break;
-  }
-
-  switch (v_format) {
-    case GST_VIDEO_FORMAT_RGB:
       gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
           GL_RGB, GL_UNSIGNED_BYTE, upload->data[0]);
       break;
-    case GST_VIDEO_FORMAT_BGR:
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
-          GL_BGR, GL_UNSIGNED_BYTE, upload->data[0]);
-      break;
     case GST_VIDEO_FORMAT_RGBx:
     case GST_VIDEO_FORMAT_RGBA:
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
-          GL_RGBA, GL_UNSIGNED_BYTE, upload->data[0]);
-      break;
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_BGRA:
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
-          GL_BGRA, GL_UNSIGNED_BYTE, upload->data[0]);
-      break;
-    case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_xRGB:
     case GST_VIDEO_FORMAT_ARGB:
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
-          GL_BGRA, GL_UNSIGNED_INT_8_8_8_8, upload->data[0]);
-      break;
+    case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_ABGR:
       gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
-          GL_RGBA, GL_UNSIGNED_INT_8_8_8_8, upload->data[0]);
+          GL_RGBA, GL_UNSIGNED_BYTE, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_YUY2:
-#if 0
-      switch (display->colorspace_conversion) {
-        case GST_GL_DISPLAY_CONVERSION_GLSL:
-        case GST_GL_DISPLAY_CONVERSION_MATRIX:
-#endif
-          gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
-              in_height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
+          in_height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
 
-          gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-          gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
-              GST_ROUND_UP_2 (in_width) / 2, in_height,
-              GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, upload->data[0]);
-#if 0
-          break;
-        case GST_GL_DISPLAY_CONVERSION_MESA:
-          gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
-              in_height, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_REV_MESA,
-              upload->data[0]);
-          break;
-        default:
-          gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
-              display->colorspace_conversion);
-          g_assert_not_reached ();
-          break;
-      }
-#endif
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+          GST_ROUND_UP_2 (in_width) / 2, in_height,
+          GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_UYVY:
-#if 0
-      switch (display->colorspace_conversion) {
-        case GST_GL_DISPLAY_CONVERSION_GLSL:
-        case GST_GL_DISPLAY_CONVERSION_MATRIX:
-#endif
-          gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
-              in_height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
+          in_height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
 
-          gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-          gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
-              GST_ROUND_UP_2 (in_width) / 2, in_height,
-              GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, upload->data[0]);
-#if 0
-          break;
-        case GST_GL_DISPLAY_CONVERSION_MESA:
-          gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
-              in_height, GL_YCBCR_MESA, GL_UNSIGNED_SHORT_8_8_MESA,
-              upload->data[0]);
-          break;
-        default:
-          gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
-              display->colorspace_conversion);
-          g_assert_not_reached ();
-          break;
-      }
-#endif
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+          GST_ROUND_UP_2 (in_width) / 2, in_height,
+          GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, upload->data[0]);
+      break;
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
+
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+          in_width / 2, in_height / 2,
+          GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[1]);
       break;
     case GST_VIDEO_FORMAT_I420:
     {
@@ -1375,6 +1280,52 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
     }
       break;
+    case GST_VIDEO_FORMAT_Y444:
+    {
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
+
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+          in_width, in_height, GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
+
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+          in_width, in_height, GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
+    }
+      break;
+    case GST_VIDEO_FORMAT_Y42B:
+    {
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
+
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+          GST_ROUND_UP_2 (in_width) / 2, in_height,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
+
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+          GST_ROUND_UP_2 (in_width) / 2, in_height,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
+    }
+      break;
+    case GST_VIDEO_FORMAT_Y41B:
+    {
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
+
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+          GST_ROUND_UP_4 (in_width) / 4, in_height,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
+
+      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
+      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+          GST_ROUND_UP_4 (in_width) / 4, in_height,
+          GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
+    }
+      break;
     default:
       gst_gl_display_set_error (display, "Unsupported upload video format %d",
           v_format);
@@ -1386,11 +1337,13 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
    * in case we want to use the upload texture in an other opengl context
    */
   glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+
+  return TRUE;
 }
 
 #if GST_GL_HAVE_OPENGL
 /* called by _do_upload (in the gl thread) */
-static void
+static gboolean
 _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
@@ -1398,6 +1351,9 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
   guint out_width, out_height;
   guint in_width = upload->in_width;
   guint in_height = upload->in_height;
+  char *texnames[GST_VIDEO_MAX_PLANES];
+  gint i;
+  gfloat tex_scaling[6] = { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
 
   gfloat verts[8] = { 1.0f, -1.0f,
     -1.0f, -1.0f,
@@ -1419,7 +1375,6 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
   gl->BindFramebuffer (GL_FRAMEBUFFER, upload->fbo);
 
   /* setup a texture to render to */
-
   gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
   gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->out_texture);
 
@@ -1458,159 +1413,37 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
-    {
-      g_assert (upload->shader == NULL);
-
-      gl->MatrixMode (GL_PROJECTION);
-      gl->LoadIdentity ();
-
-      gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-          GL_CLAMP_TO_EDGE);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-          GL_CLAMP_TO_EDGE);
-      gl->TexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-    }
+      texnames[0] = "tex";
       break;
-
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+      texnames[0] = "Ytex";
+      texnames[1] = "UVtex";
+      tex_scaling[2] = tex_scaling[3] = 0.5;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
-    {
-#if 0
-      switch (display->colorspace_conversion) {
-        case GST_GL_DISPLAY_CONVERSION_GLSL:
-        case GST_GL_DISPLAY_CONVERSION_MATRIX:
-        {
-#endif
-          gst_gl_shader_use (upload->shader);
-
-          gl->MatrixMode (GL_PROJECTION);
-          gl->LoadIdentity ();
-
-          gl->ActiveTexture (GL_TEXTURE1);
-          gst_gl_shader_set_uniform_1i (upload->shader, "UVtex", 1);
-          gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-              GL_LINEAR);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-              GL_LINEAR);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-              GL_CLAMP_TO_EDGE);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-              GL_CLAMP_TO_EDGE);
-
-          gl->ActiveTexture (GL_TEXTURE0);
-          gst_gl_shader_set_uniform_1i (upload->shader, "Ytex", 0);
-          gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-              GL_LINEAR);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-              GL_LINEAR);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-              GL_CLAMP_TO_EDGE);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-              GL_CLAMP_TO_EDGE);
-#if 0
-        }
-          break;
-        case GST_GL_DISPLAY_CONVERSION_MESA:
-        {
-
-          gl->MatrixMode (GL_PROJECTION);
-          gl->LoadIdentity ();
-          gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-          gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-              GL_LINEAR);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-              GL_LINEAR);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-              GL_CLAMP_TO_EDGE);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-              GL_CLAMP_TO_EDGE);
-          gl->TexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
-        }
-          break;
-        default:
-          gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
-              display->colorspace_conversion);
-          g_assert_not_reached ();
-          break;
-      }
-#endif
-    }
+      texnames[0] = "Ytex";
+      texnames[1] = "UVtex";
+      tex_scaling[2] = tex_scaling[4] = 0.5;
       break;
-
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
-    {
-      gst_gl_shader_use (upload->shader);
-
-      gl->MatrixMode (GL_PROJECTION);
-      gl->LoadIdentity ();
-
-      gl->ActiveTexture (GL_TEXTURE1);
-      gst_gl_shader_set_uniform_1i (upload->shader, "Utex", 1);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-          GL_CLAMP_TO_EDGE);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-          GL_CLAMP_TO_EDGE);
-
-      gl->ActiveTexture (GL_TEXTURE2);
-      gst_gl_shader_set_uniform_1i (upload->shader, "Vtex", 2);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-          GL_CLAMP_TO_EDGE);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-          GL_CLAMP_TO_EDGE);
-
-      gl->ActiveTexture (GL_TEXTURE0);
-      gst_gl_shader_set_uniform_1i (upload->shader, "Ytex", 0);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-          GL_CLAMP_TO_EDGE);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-          GL_CLAMP_TO_EDGE);
-    }
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y41B:
+      texnames[0] = "Ytex";
+      texnames[1] = "Utex";
+      texnames[2] = "Vtex";
+      if (v_format == GST_VIDEO_FORMAT_I420
+          || v_format == GST_VIDEO_FORMAT_YV12)
+        tex_scaling[2] = tex_scaling[3] = tex_scaling[4] = tex_scaling[5] = 0.5;
+      else if (v_format == GST_VIDEO_FORMAT_Y42B)
+        tex_scaling[2] = tex_scaling[4] = 0.5;
+      else if (v_format == GST_VIDEO_FORMAT_Y41B)
+        tex_scaling[2] = tex_scaling[4] = 0.25;
       break;
-
     case GST_VIDEO_FORMAT_AYUV:
-    {
-      gst_gl_shader_use (upload->shader);
-
-      gl->MatrixMode (GL_PROJECTION);
-      gl->LoadIdentity ();
-
-      gl->ActiveTexture (GL_TEXTURE0);
-      gst_gl_shader_set_uniform_1i (upload->shader, "tex", 0);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-          GL_CLAMP_TO_EDGE);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-          GL_CLAMP_TO_EDGE);
-    }
+      texnames[0] = "tex";
       break;
 
     default:
@@ -1618,7 +1451,35 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
           v_format);
       g_assert_not_reached ();
       break;
-  }                             /* end switch display->currentVideo_format */
+  }
+
+  gst_gl_shader_use (upload->shader);
+  gst_gl_shader_set_uniform_2fv (upload->shader, "tex_scale0", 1,
+      &tex_scaling[0]);
+  gst_gl_shader_set_uniform_2fv (upload->shader, "tex_scale1", 1,
+      &tex_scaling[2]);
+  gst_gl_shader_set_uniform_2fv (upload->shader, "tex_scale2", 1,
+      &tex_scaling[4]);
+
+  gl->MatrixMode (GL_PROJECTION);
+  gl->LoadIdentity ();
+
+  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+
+  for (i = upload->priv->n_textures - 1; i >= 0; i--) {
+    gl->ActiveTexture (GL_TEXTURE0 + i);
+    gst_gl_shader_set_uniform_1i (upload->shader, texnames[i], i);
+
+    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[i]);
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+        GL_LINEAR);
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+        GL_LINEAR);
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+        GL_CLAMP_TO_EDGE);
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+        GL_CLAMP_TO_EDGE);
+  }
 
   gl->EnableClientState (GL_VERTEX_ARRAY);
   gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
@@ -1647,23 +1508,28 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
   gst_gl_display_check_framebuffer_status (display);
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
+
+  return TRUE;
 }
 #endif
 
 #if GST_GL_HAVE_GLES2
-static void
+static gboolean
 _do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
   guint out_width, out_height;
+  char *texnames[GST_VIDEO_MAX_PLANES];
+  gint i;
+  gfloat tex_scaling[6] = { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
 
   GLint viewport_dim[4];
 
   const GLfloat vVertices[] = { 1.0f, -1.0f, 0.0f,
     1.0f, 0.0f,
     -1.0f, -1.0f, 0.0f,
-    0.0f, .0f,
+    0.0f, 0.0f,
     -1.0f, 1.0f, 0.0f,
     0.0f, 1.0f,
     1.0f, 1.0f, 0.0f,
@@ -1707,189 +1573,75 @@ _do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_ABGR:
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
-    {
-      if (upload->shader) {
-        gst_gl_shader_use (upload->shader);
-      }
-
-      gl->VertexAttribPointer (upload->shader_attr_position_loc, 3,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-      gl->VertexAttribPointer (upload->shader_attr_texture_loc, 2,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-      gl->EnableVertexAttribArray (upload->shader_attr_position_loc);
-      gl->EnableVertexAttribArray (upload->shader_attr_texture_loc);
-
-      if (upload->shader) {
-        gl->ActiveTexture (GL_TEXTURE0);
-        gst_gl_shader_set_uniform_1i (upload->shader, "tex", 0);
-      }
-
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-          GL_CLAMP_TO_EDGE);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-          GL_CLAMP_TO_EDGE);
-    }
+      texnames[0] = "tex";
       break;
-
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+      texnames[0] = "Ytex";
+      texnames[1] = "UVtex";
+      tex_scaling[2] = tex_scaling[3] = 0.5;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
-    {
-#if 0
-      switch (display->colorspace_conversion) {
-        case GST_GL_DISPLAY_CONVERSION_GLSL:
-        case GST_GL_DISPLAY_CONVERSION_MATRIX:
-        {
-#endif
-          gst_gl_shader_use (upload->shader);
-
-          gl->VertexAttribPointer (upload->shader_attr_position_loc, 3,
-              GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-          gl->VertexAttribPointer (upload->shader_attr_texture_loc, 2,
-              GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-          gl->EnableVertexAttribArray (upload->shader_attr_position_loc);
-          gl->EnableVertexAttribArray (upload->shader_attr_texture_loc);
-
-          gl->ActiveTexture (GL_TEXTURE1);
-          gst_gl_shader_set_uniform_1i (upload->shader, "UVtex", 1);
-          gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-              GL_LINEAR);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-              GL_LINEAR);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-              GL_CLAMP_TO_EDGE);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-              GL_CLAMP_TO_EDGE);
-
-          gl->ActiveTexture (GL_TEXTURE0);
-          gst_gl_shader_set_uniform_1i (upload->shader, "Ytex", 0);
-          gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-              GL_LINEAR);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-              GL_LINEAR);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-              GL_CLAMP_TO_EDGE);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-              GL_CLAMP_TO_EDGE);
-#if 0
-        }
-          break;
-        case GST_GL_DISPLAY_CONVERSION_MESA:
-        {
-
-          gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-              GL_LINEAR);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-              GL_LINEAR);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-              GL_CLAMP_TO_EDGE);
-          gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-              GL_CLAMP_TO_EDGE);
-        }
-          break;
-        default:
-          gst_gl_display_set_error (display, "Unknow colorspace conversion %d",
-              display->colorspace_conversion);
-          g_assert_not_reached ();
-          break;
-      }
-#endif
-    }
+      texnames[0] = "Ytex";
+      texnames[1] = "UVtex";
+      tex_scaling[2] = tex_scaling[4] = 0.5;
       break;
-
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
-    {
-      gst_gl_shader_use (upload->shader);
-
-      gl->VertexAttribPointer (upload->shader_attr_position_loc, 3,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-      gl->VertexAttribPointer (upload->shader_attr_texture_loc, 2,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-      gl->EnableVertexAttribArray (upload->shader_attr_position_loc);
-      gl->EnableVertexAttribArray (upload->shader_attr_texture_loc);
-
-      gl->ActiveTexture (GL_TEXTURE1);
-      gst_gl_shader_set_uniform_1i (upload->shader, "Utex", 1);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-          GL_CLAMP_TO_EDGE);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-          GL_CLAMP_TO_EDGE);
-
-      gl->ActiveTexture (GL_TEXTURE2);
-      gst_gl_shader_set_uniform_1i (upload->shader, "Vtex", 2);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-          GL_CLAMP_TO_EDGE);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-          GL_CLAMP_TO_EDGE);
-
-      gl->ActiveTexture (GL_TEXTURE0);
-      gst_gl_shader_set_uniform_1i (upload->shader, "Ytex", 0);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-          GL_CLAMP_TO_EDGE);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-          GL_CLAMP_TO_EDGE);
-    }
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y41B:
+      texnames[0] = "Ytex";
+      texnames[1] = "Utex";
+      texnames[2] = "Vtex";
+      if (v_format == GST_VIDEO_FORMAT_I420
+          || v_format == GST_VIDEO_FORMAT_YV12)
+        tex_scaling[2] = tex_scaling[3] = tex_scaling[4] = tex_scaling[5] = 0.5;
+      else if (v_format == GST_VIDEO_FORMAT_Y42B)
+        tex_scaling[2] = tex_scaling[4] = 0.5;
+      else if (v_format == GST_VIDEO_FORMAT_Y41B)
+        tex_scaling[2] = tex_scaling[4] = 0.25;
       break;
-
     case GST_VIDEO_FORMAT_AYUV:
-    {
-      gst_gl_shader_use (upload->shader);
-
-      gl->VertexAttribPointer (upload->shader_attr_position_loc, 3,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
-      gl->VertexAttribPointer (upload->shader_attr_texture_loc, 2,
-          GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
-
-      gl->EnableVertexAttribArray (upload->shader_attr_position_loc);
-      gl->EnableVertexAttribArray (upload->shader_attr_texture_loc);
-
-      gl->ActiveTexture (GL_TEXTURE0);
-      gst_gl_shader_set_uniform_1i (upload->shader, "tex", 0);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-          GL_CLAMP_TO_EDGE);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-          GL_CLAMP_TO_EDGE);
-    }
+      texnames[0] = "tex";
       break;
-
     default:
       gst_gl_display_set_error (display, "Unsupported upload video format %d",
           v_format);
       g_assert_not_reached ();
       break;
+  }
 
-  }                             /* end switch display->currentVideo_format */
+  gst_gl_shader_use (upload->shader);
+  gst_gl_shader_set_uniform_2fv (upload->shader, "tex_scale0", 1,
+      &tex_scaling[0]);
+  gst_gl_shader_set_uniform_2fv (upload->shader, "tex_scale1", 1,
+      &tex_scaling[2]);
+  gst_gl_shader_set_uniform_2fv (upload->shader, "tex_scale2", 1,
+      &tex_scaling[4]);
+
+  gl->VertexAttribPointer (upload->shader_attr_position_loc, 3,
+      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
+  gl->VertexAttribPointer (upload->shader_attr_texture_loc, 2,
+      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
+
+  gl->EnableVertexAttribArray (upload->shader_attr_position_loc);
+  gl->EnableVertexAttribArray (upload->shader_attr_texture_loc);
+
+  for (i = upload->priv->n_textures - 1; i >= 0; i--) {
+    gl->ActiveTexture (GL_TEXTURE0 + i);
+    gst_gl_shader_set_uniform_1i (upload->shader, texnames[i], i);
+
+    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[i]);
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+        GL_LINEAR);
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+        GL_LINEAR);
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+        GL_CLAMP_TO_EDGE);
+    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+        GL_CLAMP_TO_EDGE);
+  }
 
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
@@ -1902,5 +1654,7 @@ _do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
   gst_gl_display_check_framebuffer_status (display);
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
+
+  return TRUE;
 }
 #endif
