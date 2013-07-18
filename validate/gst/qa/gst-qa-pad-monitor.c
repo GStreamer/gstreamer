@@ -93,11 +93,14 @@ _structure_is_raw_audio (GstStructure * structure)
 G_STMT_START { \
   if (!gst_structure_has_field (structure, field)) { \
     GST_QA_MONITOR_REPORT_WARNING (monitor, CAPS_NEGOTIATION, MISSING_FIELD, \
-        #field " is missing"); \
+        #field " is missing from structure: %" GST_PTR_FORMAT, structure); \
   } else if (!gst_structure_has_field_typed (structure, field, type) && \
       !gst_structure_has_field_typed (structure, field, multtype)) { \
     GST_QA_MONITOR_REPORT_CRITICAL (monitor, CAPS_NEGOTIATION, BAD_FIELD_TYPE, \
-        #field " has wrong type"); \
+        #field " has wrong type %s in structure '%" GST_PTR_FORMAT \
+        "'. Expected: %s or %s", \
+        g_type_name (gst_structure_get_field_type (structure, field)), \
+        structure, g_type_name (type), g_type_name (multtype)); \
   } \
 } G_STMT_END
 
@@ -355,7 +358,8 @@ gst_qa_pad_monitor_check_first_buffer (GstQaPadMonitor * pad_monitor,
           pad_monitor->segment.format, GST_BUFFER_TIMESTAMP (buffer));
       if (running_time != 0) {
         GST_QA_MONITOR_REPORT_WARNING (pad_monitor, BUFFER, TIMESTAMP,
-            "First buffer running time is not 0");
+            "First buffer running time is not 0, it is: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (running_time));
       }
     }
   }
@@ -446,7 +450,9 @@ gst_qa_pad_monitor_check_aggregated_return (GstQaPadMonitor * monitor,
   if (aggregated != ret) {
     /* TODO review this error code */
     GST_QA_MONITOR_REPORT_CRITICAL (monitor, BUFFER, UNEXPECTED,
-        "Wrong combined flow return");
+        "Wrong combined flow return %s(%d). Expected: %s(%d)",
+        gst_flow_get_name (ret), ret,
+        gst_flow_get_name (aggregated), aggregated);
   }
 }
 
@@ -552,7 +558,8 @@ gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
         } else {
           GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, EVENT, SEQNUM,
               "The expected flush-start seqnum should be the same as the "
-              "one from the event that caused it (probably a seek)");
+              "one from the event that caused it (probably a seek). Got: %u."
+              " Expected: %u", seqnum, pad_monitor->pending_flush_start_seqnum);
         }
       }
 
@@ -570,7 +577,8 @@ gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
         } else {
           GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, EVENT, SEQNUM,
               "The expected flush-stop seqnum should be the same as the "
-              "one from the event that caused it (probably a seek)");
+              "one from the event that caused it (probably a seek). Got: %u."
+              " Expected: %u", seqnum, pad_monitor->pending_flush_stop_seqnum);
         }
       }
 
@@ -665,7 +673,8 @@ gst_qa_pad_monitor_src_event_check (GstQaPadMonitor * pad_monitor,
         } else {
           GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, EVENT, SEQNUM,
               "The expected flush-start seqnum should be the same as the "
-              "one from the event that caused it (probably a seek)");
+              "one from the event that caused it (probably a seek). Got: %u."
+              " Expected: %u", seqnum, pad_monitor->pending_flush_start_seqnum);
         }
       } else {
         GST_QA_MONITOR_REPORT_CRITICAL (pad_monitor, EVENT, UNEXPECTED,
@@ -686,7 +695,8 @@ gst_qa_pad_monitor_src_event_check (GstQaPadMonitor * pad_monitor,
         } else {
           GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, EVENT, SEQNUM,
               "The expected flush-stop seqnum should be the same as the "
-              "one from the event that caused it (probably a seek)");
+              "one from the event that caused it (probably a seek). Got: %u."
+              " Expected: %u", seqnum, pad_monitor->pending_flush_stop_seqnum);
         }
       }
 
@@ -831,7 +841,13 @@ gst_qa_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
               GST_BUFFER_DURATION (buffer), NULL, NULL)) {
         /* TODO is this a timestamp issue? */
         GST_QA_MONITOR_REPORT_ISSUE (monitor, BUFFER, TIMESTAMP,
-            "buffer is out of segment and shouldn't be pushed");
+            "buffer is out of segment and shouldn't be pushed. Timestamp: %"
+            GST_TIME_FORMAT " - duration: %" GST_TIME_FORMAT
+            ". Range: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+            GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
+            GST_TIME_ARGS (monitor->segment.start),
+            GST_TIME_ARGS (monitor->segment.stop));
       }
     }
   }
