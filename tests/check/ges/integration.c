@@ -61,6 +61,7 @@ static gint64 seeked_position = GST_CLOCK_TIME_NONE;    /* last seeked position 
 static gint64 seek_tol = 0.05 * GST_SECOND;     /* tolerance seek interval */
 static GList *seeks;            /* list of seeks */
 static gboolean got_async_done = FALSE;
+static gboolean seek_paused = FALSE;
 
 /* This allow us to run the tests multiple times with different input files */
 static const gchar *testfilename1 = NULL;
@@ -238,10 +239,18 @@ get_position (void)
           GST_TIME_ARGS (seek->position));
 
       seeked_position = seek->position;
+      if (seek_paused) {
+        gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
+        gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
+      }
       fail_unless (gst_element_seek_simple (GST_ELEMENT (pipeline),
               GST_FORMAT_TIME,
               GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, seek->position));
 
+      if (seek_paused) {
+        gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+        gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
+      }
       seeks = g_list_remove_link (seeks, tmp);
       g_slice_free (SeekInfo, seek);
       g_list_free (tmp);
@@ -406,6 +415,7 @@ test_seeking_audio (void)
   fail_unless (ges_timeline_add_track (timeline,
           GES_TRACK (ges_audio_track_new ())));
 
+  seek_paused = FALSE;
   run_simple_seeks_test (timeline);
 }
 
@@ -417,6 +427,7 @@ test_seeking_video (void)
   fail_unless (ges_timeline_add_track (timeline,
           GES_TRACK (ges_video_track_new ())));
 
+  seek_paused = FALSE;
   run_simple_seeks_test (timeline);
 }
 
@@ -425,6 +436,40 @@ test_seeking (void)
 {
   GESTimeline *timeline = ges_timeline_new_audio_video ();
 
+  seek_paused = FALSE;
+  run_simple_seeks_test (timeline);
+}
+
+static void
+test_seeking_paused_audio (void)
+{
+  GESTimeline *timeline = ges_timeline_new ();
+
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_audio_track_new ())));
+
+  seek_paused = TRUE;
+  run_simple_seeks_test (timeline);
+}
+
+static void
+test_seeking_paused_video (void)
+{
+  GESTimeline *timeline = ges_timeline_new ();
+
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_video_track_new ())));
+
+  seek_paused = TRUE;
+  run_simple_seeks_test (timeline);
+}
+
+static void
+test_seeking_paused (void)
+{
+  GESTimeline *timeline = ges_timeline_new_audio_video ();
+
+  seek_paused = TRUE;
   run_simple_seeks_test (timeline);
 }
 
@@ -695,6 +740,9 @@ CREATE_TEST_FULL(effect)
 CREATE_PLAYBACK_TEST(seeking)
 CREATE_PLAYBACK_TEST(seeking_audio)
 CREATE_PLAYBACK_TEST(seeking_video)
+CREATE_PLAYBACK_TEST(seeking_paused)
+CREATE_PLAYBACK_TEST(seeking_paused_audio)
+CREATE_PLAYBACK_TEST(seeking_paused_video)
 CREATE_PLAYBACK_TEST(image)
 /* *INDENT-ON* */
 
@@ -719,6 +767,9 @@ ges_suite (void)
   ADD_PLAYBACK_TESTS (seeking_audio);
   ADD_PLAYBACK_TESTS (seeking_video);
 
+  ADD_PLAYBACK_TESTS (seeking_paused);
+  ADD_PLAYBACK_TESTS (seeking_paused_audio);
+  ADD_PLAYBACK_TESTS (seeking_paused_video);
   /* TODO : next test case : complex timeline created from project. */
   /* TODO : deep checking of rendered clips */
   /* TODO : might be interesting to try all profiles, and maintain a list of currently working profiles ? */
