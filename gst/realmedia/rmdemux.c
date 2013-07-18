@@ -782,6 +782,7 @@ gst_rmdemux_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
   switch (mode) {
     case GST_PAD_MODE_PUSH:
       demux->seekable = FALSE;
+      demux->running = active;
       res = TRUE;
       break;
     case GST_PAD_MODE_PULL:
