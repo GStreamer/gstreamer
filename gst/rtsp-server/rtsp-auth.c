@@ -422,11 +422,11 @@ check_factory (GstRTSPAuth * auth, GstRTSPClientState * state,
   if (!(perms = gst_rtsp_media_factory_get_permissions (state->factory)))
     goto no_permissions;
 
-  if (g_str_equal (check, "auth.check.media.factory.access")) {
+  if (g_str_equal (check, GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_ACCESS)) {
     if (!gst_rtsp_permissions_is_allowed (perms, role,
             GST_RTSP_PERM_MEDIA_FACTORY_ACCESS))
       goto no_access;
-  } else if (g_str_equal (check, "auth.check.media.factory.construct")) {
+  } else if (g_str_equal (check, GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_CONSTRUCT)) {
     if (!gst_rtsp_permissions_is_allowed (perms, role,
             GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT))
       goto no_construct;

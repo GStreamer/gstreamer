@@ -92,16 +92,16 @@ main (int argc, char *argv[])
 
   /* allow user and admin to access this resource */
   gst_rtsp_media_factory_add_role (factory, "user",
-      "media.factory.access", G_TYPE_BOOLEAN, TRUE,
-      "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL);
+      GST_RTSP_PERM_MEDIA_FACTORY_ACCESS, G_TYPE_BOOLEAN, TRUE,
+      GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT, G_TYPE_BOOLEAN, TRUE, NULL);
   gst_rtsp_media_factory_add_role (factory, "admin",
-      "media.factory.access", G_TYPE_BOOLEAN, TRUE,
-      "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL);
+      GST_RTSP_PERM_MEDIA_FACTORY_ACCESS, G_TYPE_BOOLEAN, TRUE,
+      GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT, G_TYPE_BOOLEAN, TRUE, NULL);
   /* admin2 can look at the media but not construct so he gets a
    * 401 Unauthorized */
   gst_rtsp_media_factory_add_role (factory, "admin2",
-      "media.factory.access", G_TYPE_BOOLEAN, TRUE,
-      "media.factory.construct", G_TYPE_BOOLEAN, FALSE, NULL);
+      GST_RTSP_PERM_MEDIA_FACTORY_ACCESS, G_TYPE_BOOLEAN, TRUE,
+      GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT, G_TYPE_BOOLEAN, FALSE, NULL);
 
   /* make another factory */
   factory = gst_rtsp_media_factory_new ();
@@ -115,8 +115,8 @@ main (int argc, char *argv[])
   /* user and admin have no permissions so they can't even see the
    * media and get a 404 Not Found */
   gst_rtsp_media_factory_add_role (factory, "admin2",
-      "media.factory.access", G_TYPE_BOOLEAN, TRUE,
-      "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL);
+      GST_RTSP_PERM_MEDIA_FACTORY_ACCESS, G_TYPE_BOOLEAN, TRUE,
+      GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT, G_TYPE_BOOLEAN, TRUE, NULL);
 
   /* don't need the ref to the mapper anymore */
   g_object_unref (mounts);
@@ -125,24 +125,27 @@ main (int argc, char *argv[])
   auth = gst_rtsp_auth_new ();
 
   /* make user token */
-  token = gst_rtsp_token_new ("resources.class", G_TYPE_STRING, "user",
-      "media.factory.role", G_TYPE_STRING, "user", NULL);
+  token =
+      gst_rtsp_token_new (GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
+      "user", NULL);
   basic = gst_rtsp_auth_make_basic ("user", "password");
   gst_rtsp_auth_add_basic (auth, basic, token);
   g_free (basic);
   gst_rtsp_token_unref (token);
 
   /* make admin token */
-  token = gst_rtsp_token_new ("resources.class", G_TYPE_STRING, "admin",
-      "media.factory.role", G_TYPE_STRING, "admin", NULL);
+  token =
+      gst_rtsp_token_new (GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
+      "admin", NULL);
   basic = gst_rtsp_auth_make_basic ("admin", "power");
   gst_rtsp_auth_add_basic (auth, basic, token);
   g_free (basic);
   gst_rtsp_token_unref (token);
 
   /* make admin2 token */
-  token = gst_rtsp_token_new ("resources.class", G_TYPE_STRING, "admin",
-      "media.factory.role", G_TYPE_STRING, "admin2", NULL);
+  token =
+      gst_rtsp_token_new (GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
+      "admin2", NULL);
   basic = gst_rtsp_auth_make_basic ("admin2", "power2");
   gst_rtsp_auth_add_basic (auth, basic, token);
   g_free (basic);
