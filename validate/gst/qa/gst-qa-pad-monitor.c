@@ -21,7 +21,7 @@
 
 #include "gst-qa-pad-monitor.h"
 #include "gst-qa-element-monitor.h"
-#include <gst/gst_private.h>
+#include <gst/gst.h>
 
 /**
  * SECTION:gst-qa-pad-monitor
@@ -51,23 +51,22 @@ _gst_pad_get_caps_default (GstPad * pad)
 
   if ((templ = GST_PAD_PAD_TEMPLATE (pad))) {
     result = GST_PAD_TEMPLATE_CAPS (templ);
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-        "using pad template %p with caps %p %" GST_PTR_FORMAT, templ, result,
-        result);
+    GST_DEBUG_OBJECT (pad, "using pad template %p with caps %p %"
+        GST_PTR_FORMAT, templ, result, result);
 
     result = gst_caps_ref (result);
     goto done;
   }
   if ((result = GST_PAD_CAPS (pad))) {
-    GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad,
-        "using pad caps %p %" GST_PTR_FORMAT, result, result);
+    GST_DEBUG_OBJECT (pad, "using pad caps %p %" GST_PTR_FORMAT, result,
+        result);
 
     result = gst_caps_ref (result);
     goto done;
   }
 
   /* this almost never happens */
-  GST_CAT_DEBUG_OBJECT (GST_CAT_CAPS, pad, "pad has no caps");
+  GST_DEBUG_OBJECT (pad, "pad has no caps");
   result = gst_caps_new_empty ();
 
 done:
