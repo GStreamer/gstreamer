@@ -269,7 +269,7 @@ gst_gl_window_win32_set_window_handle (GstGLWindow * window, guintptr id)
   window_win32 = GST_GL_WINDOW_WIN32 (window);
 
   if (!window_win32->internal_win_id) {
-    window_win32->parent_win_id = id;
+    window_win32->parent_win_id = (HWND) id;
     return;
   }
 
@@ -322,7 +322,7 @@ gst_gl_window_win32_set_window_handle (GstGLWindow * window, guintptr id)
     SetWindowLongPtr (window_win32->internal_win_id, GWL_STYLE,
         WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_OVERLAPPEDWINDOW);
   }
-  window_win32->parent_win_id = id;
+  window_win32->parent_win_id = (HWND) id;
 }
 
 /* Thread safe */
@@ -332,8 +332,7 @@ gst_gl_window_win32_draw (GstGLWindow * window, guint width, guint height)
   GstGLWindowWin32 *window_win32 = GST_GL_WINDOW_WIN32 (window);
 
   if (!window_win32->visible) {
-    HWND parent_id =;
-    window_win32->parent_win_id;
+    HWND parent_id = window_win32->parent_win_id;
 
     /* if no parent the real size has to be set now because this has not been done
      * when at window creation */
