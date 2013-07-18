@@ -119,13 +119,13 @@ gst_qa_pad_monitor_check_raw_video_caps_complete (GstQaPadMonitor * monitor,
 
   if (gst_structure_has_name (structure, "video/x-raw-yuv")) {
     CHECK_FIELD_TYPE (monitor, structure, "format", GST_TYPE_FOURCC,
-        G_TYPE_ARRAY);
+        GST_TYPE_LIST);
 
   } else if (gst_structure_has_name (structure, "video/x-raw-rgb")) {
-    CHECK_FIELD_TYPE (monitor, structure, "bpp", G_TYPE_INT, G_TYPE_ARRAY);
-    CHECK_FIELD_TYPE (monitor, structure, "depth", G_TYPE_INT, G_TYPE_ARRAY);
+    CHECK_FIELD_TYPE (monitor, structure, "bpp", G_TYPE_INT, GST_TYPE_LIST);
+    CHECK_FIELD_TYPE (monitor, structure, "depth", G_TYPE_INT, GST_TYPE_LIST);
     CHECK_FIELD_TYPE (monitor, structure, "endianness", G_TYPE_INT,
-        G_TYPE_ARRAY);
+        GST_TYPE_LIST);
   }
 
 }
@@ -134,12 +134,13 @@ static void
 gst_qa_pad_monitor_check_raw_audio_caps_complete (GstQaPadMonitor * monitor,
     GstStructure * structure)
 {
-  CHECK_FIELD_TYPE (monitor, structure, "rate", G_TYPE_INT, GST_TYPE_INT_RANGE);
+  CHECK_FIELD_TYPE (monitor, structure, "rate", G_TYPE_INT, GST_TYPE_LIST);
   CHECK_FIELD_TYPE (monitor, structure, "channels", G_TYPE_INT,
       GST_TYPE_INT_RANGE);
-  CHECK_FIELD_TYPE (monitor, structure, "endianness", G_TYPE_INT, G_TYPE_ARRAY);
+  CHECK_FIELD_TYPE (monitor, structure, "endianness", G_TYPE_INT,
+      GST_TYPE_LIST);
   CHECK_FIELD_TYPE (monitor, structure, "channel-layout", G_TYPE_STRING,
-      G_TYPE_ARRAY);
+      GST_TYPE_LIST);
 }
 
 static void
