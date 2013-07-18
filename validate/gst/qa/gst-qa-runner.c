@@ -20,6 +20,7 @@
  */
 
 #include "gst-qa-runner.h"
+#include "gst-qa-report.h"
 #include "gst-qa-monitor-factory.h"
 
 /**
@@ -36,6 +37,16 @@ GST_DEBUG_CATEGORY_STATIC (gst_qa_runner_debug);
   GST_DEBUG_CATEGORY_INIT (gst_qa_runner_debug, "qa_runner", 0, "QA Runner");
 #define gst_qa_runner_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstQaRunner, gst_qa_runner, G_TYPE_OBJECT, _do_init);
+
+/* signals */
+enum
+{
+  REPORT_ADDED_SIGNAL,
+  /* add more above */
+  LAST_SIGNAL
+};
+
+static guint _signals[LAST_SIGNAL] = { 0 };
 
 static void
 gst_qa_runner_dispose (GObject * object)
@@ -63,6 +74,11 @@ gst_qa_runner_class_init (GstQaRunnerClass * klass)
 
   /* init the report system (can be called multiple times) */
   gst_qa_report_init ();
+
+  _signals[REPORT_ADDED_SIGNAL] =
+      g_signal_new ("report-added", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1,
+      GST_TYPE_QA_REPORT);
 }
 
 static void
@@ -109,6 +125,8 @@ void
 gst_qa_runner_add_report (GstQaRunner * runner, GstQaReport * report)
 {
   runner->reports = g_slist_prepend (runner->reports, report);
+
+  g_signal_emit (runner, _signals[REPORT_ADDED_SIGNAL], 0, report);
 }
 
 void
