@@ -157,13 +157,13 @@ create_audio_video_profile (EncodingProfileName type)
 }
 
 /* This is used to specify a dot dumping after the target element started outputting buffers */
-static const gchar *target_element = NULL;
+static const gchar *target_element = "smart-mixer-mixer";
 
 static GstPadProbeReturn
 dump_to_dot (GstPad * pad, GstPadProbeInfo * info)
 {
-  GST_DEBUG_BIN_TO_DOT_FILE (GST_BIN (pipeline), GST_DEBUG_GRAPH_SHOW_ALL,
-      "pipelinestate");
+  GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+      GST_DEBUG_GRAPH_SHOW_ALL, "ges-integration-smart-mixer-push-buffer");
   return (GST_PAD_PROBE_REMOVE);
 }
 
@@ -190,6 +190,8 @@ my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       gchar *debug;
 
       gst_message_parse_error (message, &err, &debug);
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+          GST_DEBUG_GRAPH_SHOW_ALL, "ges-integration-error");
       fail_unless (FALSE, "Got an error on the bus: Source: %s, message: %s\n",
           GST_MESSAGE_SRC_NAME (message), err ? err->message : "Uknown");
       g_error_free (err);
@@ -312,6 +314,8 @@ check_timeline (GESTimeline * timeline)
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
+  GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+      GST_DEBUG_GRAPH_SHOW_ALL, "ges-integration-playing");
 
   if (seeks != NULL)
     g_timeout_add (50, (GSourceFunc) get_position, NULL);
