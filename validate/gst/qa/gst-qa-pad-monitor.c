@@ -419,11 +419,11 @@ gst_qa_pad_monitor_check_aggregated_return (GstQaPadMonitor * monitor,
   while (!done) {
     switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
       case GST_ITERATOR_OK:
-        found_a_pad = TRUE;
         peerpad = gst_pad_get_peer (otherpad);
         if (peerpad) {
           othermonitor = g_object_get_data ((GObject *) peerpad, "qa-monitor");
           if (othermonitor) {
+            found_a_pad = TRUE;
             aggregated =
                 _combine_flows (aggregated, othermonitor->last_flow_return);
           }
