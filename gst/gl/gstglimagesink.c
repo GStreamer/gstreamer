@@ -671,14 +671,22 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     if (!glimage_sink->upload) {
       glimage_sink->upload = gst_gl_upload_new (glimage_sink->display);
 
-      gst_gl_upload_init_format (glimage_sink->upload,
-          GST_VIDEO_FRAME_FORMAT (&frame), GST_VIDEO_FRAME_WIDTH (&frame),
-          GST_VIDEO_FRAME_HEIGHT (&frame), GST_VIDEO_FRAME_WIDTH (&frame),
-          GST_VIDEO_FRAME_HEIGHT (&frame));
+      if (!gst_gl_upload_init_format (glimage_sink->upload,
+              GST_VIDEO_FRAME_FORMAT (&frame), GST_VIDEO_FRAME_WIDTH (&frame),
+              GST_VIDEO_FRAME_HEIGHT (&frame), GST_VIDEO_FRAME_WIDTH (&frame),
+              GST_VIDEO_FRAME_HEIGHT (&frame))) {
+        GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
+            ("%s", "Failed to init upload format"), (NULL));
+        return GST_FLOW_ERROR;
+      }
     }
 
-    gst_gl_upload_perform_with_data (glimage_sink->upload,
-        glimage_sink->tex_id, frame.data);
+    if (!gst_gl_upload_perform_with_data (glimage_sink->upload,
+            glimage_sink->tex_id, frame.data)) {
+      GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
+          ("%s", "Failed to init upload format"), (NULL));
+      return FALSE;
+    }
 
     tex_id = glimage_sink->tex_id;
   }

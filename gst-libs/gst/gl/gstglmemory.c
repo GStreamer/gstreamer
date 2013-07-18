@@ -129,12 +129,17 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
       if (GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
         if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem,
                 GST_GL_MEMORY_FLAG_UPLOAD_INITTED)) {
-          gst_gl_upload_init_format (gl_mem->upload, gl_mem->v_format,
-              gl_mem->width, gl_mem->height, gl_mem->width, gl_mem->height);
+          if (!gst_gl_upload_init_format (gl_mem->upload, gl_mem->v_format,
+                  gl_mem->width, gl_mem->height, gl_mem->width,
+                  gl_mem->height)) {
+            goto error;
+          }
           GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_UPLOAD_INITTED);
         }
 
-        gst_gl_upload_perform_with_memory (gl_mem->upload, gl_mem);
+        if (!gst_gl_upload_perform_with_memory (gl_mem->upload, gl_mem)) {
+          goto error;
+        }
       }
     } else {
       GST_CAT_TRACE (GST_CAT_GL_MEMORY, "mapping GL texture:%u for writing",
@@ -150,12 +155,16 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
       if (GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD)) {
         if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem,
                 GST_GL_MEMORY_FLAG_DOWNLOAD_INITTED)) {
-          gst_gl_download_init_format (gl_mem->download, gl_mem->v_format,
-              gl_mem->width, gl_mem->height);
+          if (!gst_gl_download_init_format (gl_mem->download, gl_mem->v_format,
+                  gl_mem->width, gl_mem->height)) {
+            goto error;
+          }
           GST_GL_MEMORY_FLAG_SET (gl_mem, GST_GL_MEMORY_FLAG_DOWNLOAD_INITTED);
         }
 
-        gst_gl_download_perform_with_memory (gl_mem->download, gl_mem);
+        if (!gst_gl_download_perform_with_memory (gl_mem->download, gl_mem)) {
+          goto error;
+        }
       }
     } else {
       GST_CAT_TRACE (GST_CAT_GL_MEMORY,
@@ -168,6 +177,11 @@ _gl_mem_map (GstGLMemory * gl_mem, gsize maxsize, GstMapFlags flags)
   gl_mem->map_flags = flags;
 
   return data;
+
+error:
+  {
+    return NULL;
+  }
 }
 
 void

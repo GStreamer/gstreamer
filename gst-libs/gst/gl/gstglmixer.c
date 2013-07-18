@@ -1451,10 +1451,14 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
 
     if (!mix->download) {
       mix->download = gst_gl_download_new (mix->display);
-      gst_gl_download_init_format (mix->download,
-          GST_VIDEO_FRAME_FORMAT (&out_frame),
-          GST_VIDEO_FRAME_WIDTH (&out_frame),
-          GST_VIDEO_FRAME_HEIGHT (&out_frame));
+      if (!gst_gl_download_init_format (mix->download,
+              GST_VIDEO_FRAME_FORMAT (&out_frame),
+              GST_VIDEO_FRAME_WIDTH (&out_frame),
+              GST_VIDEO_FRAME_HEIGHT (&out_frame))) {
+        GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
+            ("%s", "Failed to init upload format"), (NULL));
+        return FALSE;
+      }
     }
 
     out_gl_wrapped = TRUE;
@@ -1510,16 +1514,24 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
         if (!pad->upload) {
           pad->upload = gst_gl_upload_new (mix->display);
 
-          gst_gl_upload_init_format (pad->upload, in_format,
-              in_width, in_height, in_width, in_height);
+          if (!gst_gl_upload_init_format (pad->upload, in_format,
+                  in_width, in_height, in_width, in_height)) {
+            GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
+                ("%s", "Failed to init upload format"), (NULL));
+            return FALSE;
+          }
 
           if (!pad->in_tex_id)
             gst_gl_display_gen_texture (mix->display, &pad->in_tex_id,
                 GST_VIDEO_FORMAT_RGBA, out_width, out_height);
         }
 
-        gst_gl_upload_perform_with_data (pad->upload, pad->in_tex_id,
-            in_frame->data);
+        if (!gst_gl_upload_perform_with_data (pad->upload, pad->in_tex_id,
+                in_frame->data)) {
+          GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
+              ("%s", "Failed to upload video frame"), (NULL));
+          return FALSE;
+        }
 
         in_tex = pad->in_tex_id;
         pad->mapped = TRUE;
@@ -1534,7 +1546,12 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
       out_tex);
 
   if (out_gl_wrapped) {
-    gst_gl_download_perform_with_data (mix->download, out_tex, out_frame.data);
+    if (gst_gl_download_perform_with_data (mix->download, out_tex,
+            out_frame.data)) {
+      GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("%s",
+              "Failed to download video frame"), (NULL));
+      return FALSE;
+    }
   }
 
   i = 0;

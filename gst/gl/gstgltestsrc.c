@@ -476,10 +476,14 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
     if (!src->download) {
       src->download = gst_gl_download_new (src->display);
 
-      gst_gl_download_init_format (src->download,
-          GST_VIDEO_FRAME_FORMAT (&out_frame),
-          GST_VIDEO_FRAME_WIDTH (&out_frame),
-          GST_VIDEO_FRAME_HEIGHT (&out_frame));
+      if (!gst_gl_download_init_format (src->download,
+              GST_VIDEO_FRAME_FORMAT (&out_frame),
+              GST_VIDEO_FRAME_WIDTH (&out_frame),
+              GST_VIDEO_FRAME_HEIGHT (&out_frame))) {
+        GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
+            ("%s", "Failed to init download format"), (NULL));
+        return FALSE;
+      }
     }
 
     out_gl_wrapped = TRUE;
@@ -495,7 +499,12 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   }
 
   if (out_gl_wrapped) {
-    gst_gl_download_perform_with_data (src->download, out_tex, out_frame.data);
+    if (!gst_gl_download_perform_with_data (src->download, out_tex,
+            out_frame.data)) {
+      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, ("%s",
+              "Failed to init upload format"), (NULL));
+      return FALSE;
+    }
   }
   gst_video_frame_unmap (&out_frame);
 
