@@ -9942,9 +9942,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case 0x64:
     case 0x65:
       codec_name = "MPEG-2 video";
-
-      gst_caps_unref (stream->caps);
-      stream->caps = gst_caps_new_simple ("video/mpeg",
+      caps = gst_caps_new_simple ("video/mpeg",
           "mpegversion", G_TYPE_INT, 2,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
@@ -9956,9 +9954,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     case 0x6A:                 /* MPEG-1 */
       codec_name = "MPEG-1 video";
-
-      gst_caps_unref (stream->caps);
-      stream->caps = gst_caps_new_simple ("video/mpeg",
+      caps = gst_caps_new_simple ("video/mpeg",
           "mpegversion", G_TYPE_INT, 1,
           "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
       break;
