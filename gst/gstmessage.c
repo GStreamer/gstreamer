@@ -2161,6 +2161,8 @@ gst_message_new_stream_start (GstObject * src)
  * Returns: (transfer full): The new need-context message.
  *
  * MT safe.
+ *
+ * Since: 1.2
  */
 GstMessage *
 gst_message_new_need_context (GstObject * src)
@@ -2212,6 +2214,8 @@ free_array_string (gpointer ptr)
  * @context_type: a context type
  *
  * Add a new context type to @message.
+ *
+ * Since: 1.2
  */
 void
 gst_message_add_context_type (GstMessage * message, const gchar * context_type)
@@ -2239,6 +2243,8 @@ gst_message_add_context_type (GstMessage * message, const gchar * context_type)
  * context-types array of the message's structure.
  *
  * Returns: the context-types array size as a #guint.
+ *
+ * Since: 1.2
  */
 guint
 gst_message_get_n_context_types (GstMessage * message)
@@ -2265,6 +2271,8 @@ gst_message_get_n_context_types (GstMessage * message)
  * from @index.
  *
  * Returns: a #gboolean indicating if the parsing succeeded.
+ *
+ * Since: 1.2
  */
 gboolean
 gst_message_parse_nth_context_type (GstMessage * message, guint index,
@@ -2298,6 +2306,8 @@ gst_message_parse_nth_context_type (GstMessage * message, guint index,
  * Returns: (transfer full): The new have-context message.
  *
  * MT safe.
+ *
+ * Since: 1.2
  */
 GstMessage *
 gst_message_new_have_context (GstObject * src, GstContext * context)
@@ -2322,6 +2332,8 @@ gst_message_new_have_context (GstObject * src, GstContext * context)
  * Extract the context from the HAVE_CONTEXT message.
  *
  * MT safe.
+ *
+ * Since: 1.2
  */
 void
 gst_message_parse_have_context (GstMessage * message, GstContext ** context)

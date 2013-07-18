@@ -624,6 +624,8 @@ gst_caps_append_structure (GstCaps * caps, GstStructure * structure)
  *
  * Appends @structure with @features to @caps.  The structure is not copied; @caps
  * becomes the owner of @structure.
+ *
+ * Since: 1.2
  */
 void
 gst_caps_append_structure_full (GstCaps * caps, GstStructure * structure,
@@ -714,6 +716,8 @@ gst_caps_merge_structure (GstCaps * caps, GstStructure * structure)
  * Appends @structure with @features to @caps if its not already expressed by @caps.
  *
  * Returns: (transfer full): the merged caps.
+ *
+ * Since: 1.2
  */
 GstCaps *
 gst_caps_merge_structure_full (GstCaps * caps, GstStructure * structure,
@@ -834,6 +838,8 @@ gst_caps_get_structure (const GstCaps * caps, guint index)
  *
  * Returns: (transfer none): a pointer to the #GstCapsFeatures corresponding
  *     to @index
+ *
+ * Since: 1.2
  */
 GstCapsFeatures *
 gst_caps_get_features (const GstCaps * caps, guint index)
@@ -857,6 +863,8 @@ gst_caps_get_features (const GstCaps * caps, guint index)
  * @features: (allow-none) (transfer full): the #GstFeatures to set
  *
  * Sets the #GstCapsFeatures @features for the structure at @index.
+ *
+ * Since: 1.2
  */
 void
 gst_caps_set_features (GstCaps * caps, guint index, GstCapsFeatures * features)
@@ -1250,6 +1258,8 @@ gst_caps_is_subset_structure (const GstCaps * caps,
  * for more information.
  *
  * Returns: %TRUE if @structure is a subset of @caps
+ *
+ * Since: 1.2
  */
 gboolean
 gst_caps_is_subset_structure_full (const GstCaps * caps,
