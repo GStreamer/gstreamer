@@ -58,6 +58,13 @@ static GObject *gst_qa_monitor_constructor (GType type,
 
 gboolean gst_qa_monitor_setup (GstQaMonitor * monitor);
 
+void
+_target_freed_cb (GstQaMonitor * monitor, GObject * where_the_object_was)
+{
+  GST_DEBUG_OBJECT (monitor, "Target was freed");
+  monitor->target = NULL;
+}
+
 static void
 gst_qa_monitor_dispose (GObject * object)
 {
@@ -66,7 +73,8 @@ gst_qa_monitor_dispose (GObject * object)
   g_mutex_clear (&monitor->mutex);
 
   if (monitor->target)
-    g_object_unref (monitor->target);
+    g_object_weak_unref (G_OBJECT (monitor->target),
+        (GWeakNotify) _target_freed_cb, monitor);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -162,7 +170,9 @@ gst_qa_monitor_set_property (GObject * object, guint prop_id,
   switch (prop_id) {
     case PROP_OBJECT:
       g_assert (monitor->target == NULL);
-      monitor->target = g_value_dup_object (value);
+      monitor->target = g_value_get_object (value);
+      g_object_weak_ref (G_OBJECT (monitor->target),
+          (GWeakNotify) _target_freed_cb, monitor);
       break;
     case PROP_RUNNER:
       /* we assume the runner is valid as long as this monitor is,
