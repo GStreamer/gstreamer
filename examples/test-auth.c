@@ -124,6 +124,13 @@ main (int argc, char *argv[])
   /* make a new authentication manager */
   auth = gst_rtsp_auth_new ();
 
+  /* make default token, it has the same permissions as admin2 */
+  token =
+      gst_rtsp_token_new (GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
+      "admin2", NULL);
+  gst_rtsp_auth_set_default_token (auth, token);
+  gst_rtsp_token_unref (token);
+
   /* make user token */
   token =
       gst_rtsp_token_new (GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,

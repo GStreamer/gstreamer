@@ -79,6 +79,9 @@ GstRTSPAuth *       gst_rtsp_auth_new               (void);
 void                gst_rtsp_auth_set_tls_certificate (GstRTSPAuth *auth, GTlsCertificate *cert);
 GTlsCertificate *   gst_rtsp_auth_get_tls_certificate (GstRTSPAuth *auth);
 
+void                gst_rtsp_auth_set_default_token (GstRTSPAuth *auth, GstRTSPToken *token);
+GstRTSPToken *      gst_rtsp_auth_get_default_token (GstRTSPAuth *auth);
+
 void                gst_rtsp_auth_add_basic         (GstRTSPAuth *auth, const gchar * basic,
                                                      GstRTSPToken *token);
 void                gst_rtsp_auth_remove_basic      (GstRTSPAuth *auth, const gchar * basic);

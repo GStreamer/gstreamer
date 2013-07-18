@@ -60,6 +60,7 @@ struct _GstRTSPAuthPrivate
   /* the TLS certificate */
   GTlsCertificate *certificate;
   GHashTable *basic;            /* protected by lock */
+  GstRTSPToken *default_token;
   GstRTSPMethod methods;
 };
 
@@ -230,6 +231,63 @@ gst_rtsp_auth_get_tls_certificate (GstRTSPAuth * auth)
   return result;
 }
 
+/**
+ * gst_rtsp_auth_set_default_token:
+ * @auth: a #GstRTSPAuth
+ * @token: (allow none): a #GstRTSPToken
+ *
+ * Set the default #GstRTSPToken to @token in @auth. The default token will
+ * be used for unauthenticated users.
+ */
+void
+gst_rtsp_auth_set_default_token (GstRTSPAuth * auth, GstRTSPToken * token)
+{
+  GstRTSPAuthPrivate *priv;
+  GstRTSPToken *old;
+
+  g_return_if_fail (GST_IS_RTSP_AUTH (auth));
+
+  priv = auth->priv;
+
+  if (token)
+    gst_rtsp_token_ref (token);
+
+  g_mutex_lock (&priv->lock);
+  old = priv->default_token;
+  priv->default_token = token;
+  g_mutex_unlock (&priv->lock);
+
+  if (old)
+    gst_rtsp_token_unref (old);
+}
+
+/**
+ * gst_rtsp_auth_get_default_token:
+ * @auth: a #GstRTSPAuth
+ *
+ * Get the default token for @auth. This token will be used for unauthorized
+ * users.
+ *
+ * Returns: (transfer full): the #GstRTSPToken of @auth. gst_rtsp_token_unref() after
+ * usage.
+ */
+GstRTSPToken *
+gst_rtsp_auth_get_default_token (GstRTSPAuth * auth)
+{
+  GstRTSPAuthPrivate *priv;
+  GstRTSPToken *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_AUTH (auth), NULL);
+
+  priv = auth->priv;
+
+  g_mutex_lock (&priv->lock);
+  if ((result = priv->default_token))
+    gst_rtsp_token_ref (result);
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
 
 /**
  * gst_rtsp_auth_add_basic:
@@ -289,6 +347,12 @@ default_authenticate (GstRTSPAuth * auth, GstRTSPClientState * state)
   gchar *authorization;
 
   GST_DEBUG_OBJECT (auth, "authenticate");
+
+  g_mutex_lock (&priv->lock);
+  /* FIXME, need to ref but we have no way to unref when the state is
+   * popped */
+  state->token = priv->default_token;
+  g_mutex_unlock (&priv->lock);
 
   res =
       gst_rtsp_message_get_header (state->request, GST_RTSP_HDR_AUTHORIZATION,
