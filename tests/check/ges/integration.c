@@ -712,6 +712,100 @@ test_image (void)
   fail_unless (check_timeline (timeline));
 }
 
+static gboolean
+test_mix_layers (GESTimeline * timeline, GESUriClipAsset ** assets,
+    guint32 num_assets, guint32 num_layers)
+{
+  GESLayer *layer;
+  GESClip *clip;
+  GList *children, *tmp;
+  GESTrackElement *track_element;
+  GESTrackType track_type;
+  GESUriClipAsset *asset;
+  guint32 i, j;
+  gfloat step = 1.0 / num_layers;
+
+  for (i = 0; i < num_layers; i++) {
+    layer = ges_timeline_append_layer (timeline);
+    fail_unless (layer != NULL);
+
+    for (j = 0; j < num_assets; j++) {
+      asset = assets[j];
+
+      clip =
+          ges_layer_add_asset (layer, GES_ASSET (asset),
+          (i * step + j) * GST_SECOND, 0 * GST_SECOND, 1 * GST_SECOND,
+          GES_TRACK_TYPE_UNKNOWN);
+      fail_unless (clip != NULL);
+
+      children = ges_container_get_children (GES_CONTAINER (clip), FALSE);
+
+      for (tmp = children; tmp; tmp = tmp->next) {
+        track_element = GES_TRACK_ELEMENT (tmp->data);
+        track_type = ges_track_element_get_track_type (track_element);
+
+        switch (track_type) {
+          case GES_TRACK_TYPE_VIDEO:
+            ges_track_element_set_child_properties (track_element, "alpha",
+                (gdouble) (num_layers - 1 - i) * step, NULL);
+            break;
+          case GES_TRACK_TYPE_AUDIO:
+            ges_track_element_set_child_properties (track_element, "volume",
+                (gdouble) (num_layers - 1 - i) * step, NULL);
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+  return TRUE;
+}
+
+
+static void
+test_mixing (void)
+{
+  GESTimeline *timeline;
+  GESUriClipAsset *asset[2];
+  GError *error = NULL;
+
+  gchar *uri1 = ges_test_file_name (testfilename1);
+  gchar *uri2 = ges_test_file_name (testfilename1);
+
+  timeline = ges_timeline_new_audio_video ();
+
+  asset[0] = ges_uri_clip_asset_request_sync (uri1, &error);
+  asset[1] = ges_uri_clip_asset_request_sync (uri2, &error);
+
+  g_free (uri1);
+  g_free (uri2);
+
+  /* we are only using the first asset / clip for now */
+  fail_unless (test_mix_layers (timeline, asset, 1, 4));
+
+    /**
+   * Our timeline has 4 layers
+   *
+   * inpoints 0--------0
+   *          |  clip  |
+   * time     0--------1
+   * inpoints    0--------0
+   *             |  clip  |
+   * time        0.25--1.25
+   * inpoints       0--------0
+   *                |  clip  |
+   * time           0.5----1.5
+   * inpoints          0--------0
+   *                   |  clip  |
+   * time              0.75--1.75
+   */
+
+  fail_unless (check_timeline (timeline));
+
+}
+
+
 #define CREATE_TEST(name, func, profile)                                       \
 GST_START_TEST (test_##name##_raw_h264_mov)                                    \
 {                                                                              \
@@ -803,6 +897,7 @@ CREATE_TEST_FULL(basic_audio)
 CREATE_TEST_FULL(basic_video)
 CREATE_TEST_FULL(transition)
 CREATE_TEST_FULL(effect)
+CREATE_TEST_FULL(mixing)
 
 CREATE_PLAYBACK_TEST(seeking)
 CREATE_PLAYBACK_TEST(seeking_audio)
@@ -831,6 +926,8 @@ ges_suite (void)
   ADD_TESTS (effect);
   ADD_TESTS (transition);
 
+  ADD_TESTS (mixing);
+
   ADD_PLAYBACK_TESTS (image);
 
   ADD_PLAYBACK_TESTS (seeking);
@@ -844,6 +941,7 @@ ges_suite (void)
   ADD_PLAYBACK_TESTS (seeking_paused_noplay);
   ADD_PLAYBACK_TESTS (seeking_paused_audio_noplay);
   ADD_PLAYBACK_TESTS (seeking_paused_video_noplay);
+
   /* TODO : next test case : complex timeline created from project. */
   /* TODO : deep checking of rendered clips */
   /* TODO : might be interesting to try all profiles, and maintain a list of currently working profiles ? */
