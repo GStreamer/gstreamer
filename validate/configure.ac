@@ -130,6 +130,14 @@ GSTPB_PLUGINS_DIR=`$PKG_CONFIG gstreamer-plugins-base-$GST_API_VERSION --variabl
 AC_SUBST(GSTPB_PLUGINS_DIR)
 AC_MSG_NOTICE(Using GStreamer Base Plugins in $GSTPB_PLUGINS_DIR)
 
+dnl check for gstreamer-pbutils
+PKG_CHECK_MODULES(GST_PBUTILS, gstreamer-pbutils-$GST_API_VERSION, HAVE_GST_PBUTILS="yes", HAVE_GST_PBUTILS="no")
+if test "x$HAVE_GST_PBUTILS" != "xyes"; then
+  AC_ERROR([gst-pbutils is required])
+fi
+AC_SUBST(GST_PBUTILS_LIBS)
+AC_SUBST(GST_PBUTILS_CFLAGS)
+
 AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
 
 dnl *** set variables based on configure arguments ***
