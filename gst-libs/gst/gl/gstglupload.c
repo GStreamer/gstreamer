@@ -34,13 +34,7 @@
  *
  * #GstGLUpload is an object that uploads data from system memory into GL textures.
  *
- * A #GstGLUpload can be created with gst_gl_upload_new() or found with
- * gst_gl_display_find_upload().
- *
- * All of the _thread() variants should only be called within the GL thread
- * they don't try to take a lock on the associated #GstGLDisplay and
- * don't dispatch to the GL thread. Rather they run the required code in the
- * calling thread.
+ * A #GstGLUpload can be created with gst_gl_upload_new()
  */
 
 #define USING_OPENGL(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL)
@@ -54,10 +48,8 @@ static gboolean _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload);
 static gboolean _do_upload_make (GstGLDisplay * display, GstGLUpload * upload);
 static void _init_upload (GstGLDisplay * display, GstGLUpload * upload);
 static gboolean _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload);
-static gboolean gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
+static gboolean _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
-static gboolean gst_gl_upload_perform_with_data_unlocked_thread (GstGLUpload *
-    upload, GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
 
 #if GST_GL_HAVE_OPENGL
 static gboolean _do_upload_draw_opengl (GstGLDisplay * display,
@@ -512,53 +504,6 @@ gst_gl_upload_init_format (GstGLUpload * upload, GstVideoFormat v_format,
 }
 
 /**
- * gst_gl_upload_init_format:
- * @upload: a #GstGLUpload
- * @v_format: a #GstVideoFormat
- * @in_width: the width of the data to upload
- * @in_height: the height of the data to upload
- * @out_width: the width to upload to
- * @out_height: the height to upload to
- *
- * Initializes @upload with the information required for upload.
- *
- * Returns: whether the initialization was successful
- */
-gboolean
-gst_gl_upload_init_format_thread (GstGLUpload * upload, GstVideoFormat v_format,
-    guint in_width, guint in_height, guint out_width, guint out_height)
-{
-  GstVideoInfo info;
-
-  g_return_val_if_fail (upload != NULL, FALSE);
-  g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
-  g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_ENCODED, FALSE);
-  g_return_val_if_fail (in_width > 0 && in_height > 0, FALSE);
-  g_return_val_if_fail (out_width > 0 && out_height > 0, FALSE);
-
-  g_mutex_lock (&upload->lock);
-
-  if (upload->initted) {
-    g_mutex_unlock (&upload->lock);
-    return FALSE;
-  } else {
-    upload->initted = TRUE;
-  }
-
-  gst_video_info_set_format (&info, v_format, out_width, out_height);
-
-  upload->info = info;
-  upload->in_width = in_width;
-  upload->in_height = in_height;
-
-  _init_upload (upload->display, upload);
-
-  g_mutex_unlock (&upload->lock);
-
-  return upload->priv->result;
-}
-
-/**
  * gst_gl_upload_perform_with_memory:
  * @upload: a #GstGLUpload
  * @gl_mem: a #GstGLMemory
@@ -592,9 +537,11 @@ gst_gl_upload_perform_with_memory (GstGLUpload * upload, GstGLMemory * gl_mem)
         GST_VIDEO_INFO_PLANE_OFFSET (&upload->info, i);
   }
 
-  ret = gst_gl_upload_perform_with_data_unlocked (upload, gl_mem->tex_id, data);
+  ret =
+      _gst_gl_upload_perform_with_data_unlocked (upload, gl_mem->tex_id, data);
 
-  GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
+  if (ret)
+    GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
 
   g_mutex_unlock (&upload->lock);
 
@@ -622,15 +569,15 @@ gst_gl_upload_perform_with_data (GstGLUpload * upload, GLuint texture_id,
 
   g_mutex_lock (&upload->lock);
 
-  ret = gst_gl_upload_perform_with_data_unlocked (upload, texture_id, data);
+  ret = _gst_gl_upload_perform_with_data_unlocked (upload, texture_id, data);
 
   g_mutex_unlock (&upload->lock);
 
   return ret;
 }
 
-static inline gboolean
-_perform_with_data_unlocked_pre (GstGLUpload * upload,
+static gboolean
+_gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
 {
   guint i;
@@ -647,103 +594,8 @@ _perform_with_data_unlocked_pre (GstGLUpload * upload,
     upload->data[i] = data[i];
   }
 
-  return TRUE;
-}
-
-static gboolean
-gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
-    GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
-{
-  if (!_perform_with_data_unlocked_pre (upload, texture_id, data))
-    return FALSE;
-
   gst_gl_display_thread_add (upload->display,
       (GstGLDisplayThreadFunc) _do_upload, upload);
-
-  return TRUE;
-}
-
-/**
- * gst_gl_upload_perform_with_memory_thread:
- * @upload: a #GstGLUpload
- * @gl_mem: a #GstGLMemory
- *
- * Uploads the texture in @gl_mem
- *
- * Returns: whether the upload was successful
- */
-gboolean
-gst_gl_upload_perform_with_memory_thread (GstGLUpload * upload,
-    GstGLMemory * gl_mem)
-{
-  gpointer data[GST_VIDEO_MAX_PLANES];
-  guint i;
-  gboolean ret;
-
-  g_return_val_if_fail (upload != NULL, FALSE);
-
-  if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_UPLOAD_INITTED))
-    return FALSE;
-
-  if (!GST_GL_MEMORY_FLAG_IS_SET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD))
-    return FALSE;
-
-  g_mutex_lock (&upload->lock);
-
-  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&upload->info); i++) {
-    data[i] = (guint8 *) gl_mem->data +
-        GST_VIDEO_INFO_PLANE_OFFSET (&upload->info, i);
-  }
-
-  ret =
-      gst_gl_upload_perform_with_data_unlocked_thread (upload, gl_mem->tex_id,
-      data);
-
-  GST_GL_MEMORY_FLAG_UNSET (gl_mem, GST_GL_MEMORY_FLAG_NEED_UPLOAD);
-
-  g_mutex_unlock (&upload->lock);
-
-  return ret;
-}
-
-/**
- * gst_gl_upload_perform_with_data_thread:
- * @upload: a #GstGLUpload
- * @texture_id: the texture id to download
- * @data: where the downloaded data should go
- *
- * Uploads @data into @texture_id. @data size and format is specified by
- * the #GstVideoFormat passed to gst_gl_upload_init_format() 
- *
- * Returns: whether the upload was successful
- */
-gboolean
-gst_gl_upload_perform_with_data_thread (GstGLUpload * upload, GLuint texture_id,
-    gpointer data[GST_VIDEO_MAX_PLANES])
-{
-  gboolean ret;
-
-  g_return_val_if_fail (upload != NULL, FALSE);
-
-  g_mutex_lock (&upload->lock);
-
-  ret =
-      gst_gl_upload_perform_with_data_unlocked_thread (upload, texture_id,
-      data);
-
-  g_mutex_unlock (&upload->lock);
-
-  return ret;
-}
-
-static gboolean
-gst_gl_upload_perform_with_data_unlocked_thread (GstGLUpload * upload,
-    GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES])
-{
-  if (!_perform_with_data_unlocked_pre (upload, texture_id, data))
-    return FALSE;
-
-  _do_upload (upload->display, upload);
 
   return TRUE;
 }
