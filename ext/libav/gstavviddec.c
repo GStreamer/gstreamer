@@ -1516,6 +1516,10 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     align.padding_left = edge;
     align.padding_right = width - GST_VIDEO_INFO_WIDTH (&state->info) - edge;
     align.padding_bottom = height - GST_VIDEO_INFO_HEIGHT (&state->info) - edge;
+
+    /* add extra padding to match libav buffer allocation sizes */
+    align.padding_bottom++;
+
     for (i = 0; i < GST_VIDEO_MAX_PLANES; i++)
       align.stride_align[i] =
           (linesize_align[i] > 0 ? linesize_align[i] - 1 : 0);
