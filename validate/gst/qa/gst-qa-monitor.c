@@ -80,6 +80,16 @@ gst_qa_monitor_dispose (GObject * object)
 }
 
 static void
+gst_qa_monitor_finalize (GObject * object)
+{
+  GstQaMonitor *monitor = GST_QA_MONITOR_CAST (object);
+
+  gst_qa_monitor_set_target_name (monitor, NULL);
+
+  G_OBJECT_CLASS (parent_class)->dispose (object);
+}
+
+static void
 gst_qa_monitor_class_init (GstQaMonitorClass * klass)
 {
   GObjectClass *gobject_class;
@@ -89,6 +99,7 @@ gst_qa_monitor_class_init (GstQaMonitorClass * klass)
   gobject_class->get_property = gst_qa_monitor_get_property;
   gobject_class->set_property = gst_qa_monitor_set_property;
   gobject_class->dispose = gst_qa_monitor_dispose;
+  gobject_class->finalize = gst_qa_monitor_finalize;
   gobject_class->constructor = gst_qa_monitor_constructor;
 
   klass->setup = gst_qa_monitor_do_setup;
@@ -173,6 +184,10 @@ gst_qa_monitor_set_property (GObject * object, guint prop_id,
       monitor->target = g_value_get_object (value);
       g_object_weak_ref (G_OBJECT (monitor->target),
           (GWeakNotify) _target_freed_cb, monitor);
+
+      if (monitor->target)
+        gst_qa_monitor_set_target_name (monitor, g_strdup
+            (GST_OBJECT_NAME (monitor->target)));
       break;
     case PROP_RUNNER:
       /* we assume the runner is valid as long as this monitor is,
@@ -248,4 +263,13 @@ gst_qa_monitor_do_report (GstQaMonitor * monitor,
   gst_qa_monitor_do_report_valist (monitor, level, area, subarea, format,
       var_args);
   va_end (var_args);
+}
+
+void
+gst_qa_monitor_set_target_name (GstQaMonitor * monitor, gchar * target_name)
+{
+  if (monitor->target_name)
+    g_free (monitor->target_name);
+
+  monitor->target_name = target_name;
 }

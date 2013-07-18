@@ -125,6 +125,7 @@ struct _GstQaMonitor {
 
   GstObject     *target;
   GMutex         mutex;
+  gchar         *target_name;
 
   GstQaMonitor  *parent;
 
@@ -156,6 +157,9 @@ void gst_qa_monitor_do_report_valist (GstQaMonitor * monitor,
                                       GstQaReportLevel level, GstQaReportArea area,
                                       gint subarea, const gchar *format,
                                       va_list var_args);
+
+void gst_qa_monitor_set_target_name   (GstQaMonitor *monitor,
+                                       gchar *target_name);
 
 G_END_DECLS
 
