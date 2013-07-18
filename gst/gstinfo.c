@@ -1272,6 +1272,8 @@ gst_debug_set_colored (gboolean colored)
  * Changes the coloring mode for debug output.
  *
  * This function may be called before gst_init().
+ *
+ * Since: 1.2
  */
 void
 gst_debug_set_color_mode (GstDebugColorMode mode)
@@ -1287,6 +1289,8 @@ gst_debug_set_color_mode (GstDebugColorMode mode)
  * Changes the coloring mode for debug output.
  *
  * This function may be called before gst_init().
+ *
+ * Since: 1.2
  */
 void
 gst_debug_set_color_mode_from_string (const gchar * str)
@@ -1319,6 +1323,8 @@ gst_debug_is_colored (void)
  * Changes the coloring mode for debug output.
  *
  * Returns: see @GstDebugColorMode for possible values.
+ *
+ * Since: 1.2
  */
 GstDebugColorMode
 gst_debug_get_color_mode (void)
