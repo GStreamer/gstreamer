@@ -376,6 +376,9 @@ EXPORTS
 	gst_debug_remove_log_function_by_data
 	gst_debug_set_active
 	gst_debug_set_colored
+	gst_debug_set_color_mode
+	gst_debug_get_color_mode
+	gst_debug_set_color_mode_from_string
 	gst_debug_set_default_threshold
 	gst_debug_set_threshold_for_name
 	gst_debug_set_threshold_from_string

@@ -237,11 +237,92 @@ e.g. GST_DEBUG=*:WARNING,*audio*:LOG
   <para>
 Set this environment variable to any value ("1" typically) to switch off
 colouring in GST_DEBUG output. This has the same effect as specifying the
-<option>--gst-debug-no-color</option> command line option to well-behaved
-GStreamer applications (ie. those that pass command-line options correctly to
-GStreamer).
+<option>--gst-debug-no-color</option> or
+<option>--gst-debug-color-mode</option>=off command line option to
+well-behaved GStreamer applications (ie. those that pass command-line
+options correctly to GStreamer).
 This is particularly useful to reduce the size of debug output and also allows
 for the output to be compressed much better than with colours turned on.
+  </para>
+  <para>
+Has the same effect as setting GST_DEBUG_COLOR_MODE environment variable to
+"off".
+  </para>
+
+</formalpara>
+
+<formalpara id="GST_DEBUG_COLOR_MODE">
+  <title><envar>GST_DEBUG_COLOR_MODE</envar></title>
+
+  <para>
+Set this environment variable to change log colouring in GST_DEBUG output.
+Possible values:
+    <variablelist>
+
+      <varlistentry>
+        <term><option>on</option></term>
+        <listitem>
+          <para>
+Enables debug log output coloring. Uses default coloring method for current
+platform. This is the default.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>off</option></term>
+        <listitem>
+          <para>
+Disables debug log output coloring. This has the same effect as specifying the
+<option>--gst-debug-color-mode</option>=off command line option to
+well-behaved GStreamer applications (ie. those that pass command-line
+options correctly to GStreamer).
+This is particularly useful to reduce the size of debug output and also allows
+for the output to be compressed much better than with colours turned on.
+          </para>
+          <para>
+Has the same effect as setting GST_DEBUG_NO_COLOR environment variable to
+any value.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>auto</option></term>
+        <listitem>
+          <para>
+Same as <option>on</option>.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>disable</option></term>
+        <listitem>
+          <para>
+Same as <option>off</option>.
+          </para>
+        </listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term><option>unix</option></term>
+        <listitem>
+          <para>
+Enables debug log output coloring and forces the use of UNIX termial codes
+for coloring, even if this method is not normally used on current platform.
+This has the same effect as specifying the
+<option>--gst-debug-color-mode</option>=unix command line option to
+well-behaved GStreamer applications (ie. those that pass command-line options
+correctly to GStreamer).
+This is particularly useful to dump debug output into a file on non-UNIX
+platforms to be sent to developers who have viewers that support UNIX terminal
+codes.
+          </para>
+        </listitem>
+      </varlistentry>
+
+    </variablelist>
   </para>
 
 </formalpara>

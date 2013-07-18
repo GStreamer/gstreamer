@@ -159,6 +159,20 @@ typedef enum {
   GST_DEBUG_UNDERLINE		= 0x0200
 } GstDebugColorFlags;
 
+/**
+ * GstDebugColorMode:
+ * @GST_DEBUG_COLOR_MODE_OFF: Do not use colors in logs.
+ * @GST_DEBUG_COLOR_MODE_ON: Paint logs in a platform-specific way.
+ * @GST_DEBUG_COLOR_MODE_UNIX: Paint logs with UNIX terminal color codes
+ *                             no matter what platform GStreamer is running on.
+ */
+typedef enum {
+  GST_DEBUG_COLOR_MODE_OFF  = 0,
+  GST_DEBUG_COLOR_MODE_ON   = 1,
+  GST_DEBUG_COLOR_MODE_UNIX = 2
+} GstDebugColorMode;
+
+
 #define GST_DEBUG_FG_MASK	(0x000F)
 #define GST_DEBUG_BG_MASK	(0x00F0)
 #define GST_DEBUG_FORMAT_MASK	(0xFF00)
@@ -339,7 +353,10 @@ void            gst_debug_set_active  (gboolean active);
 gboolean        gst_debug_is_active   (void);
 
 void            gst_debug_set_colored (gboolean colored);
+void            gst_debug_set_color_mode   (GstDebugColorMode mode);
+void            gst_debug_set_color_mode_from_string (const gchar * str);
 gboolean        gst_debug_is_colored  (void);
+GstDebugColorMode gst_debug_get_color_mode (void);
 
 void            gst_debug_set_default_threshold      (GstDebugLevel level);
 GstDebugLevel   gst_debug_get_default_threshold      (void);
@@ -1239,7 +1256,10 @@ GST_TRACE (const char *format, ...)
 #define gst_debug_set_active(active)			G_STMT_START{ }G_STMT_END
 #define gst_debug_is_active()				(FALSE)
 #define gst_debug_set_colored(colored)			G_STMT_START{ }G_STMT_END
+#define gst_debug_set_color_mode(mode)			G_STMT_START{ }G_STMT_END
+#define gst_debug_set_color_mode_from_string(mode)	G_STMT_START{ }G_STMT_END
 #define gst_debug_is_colored()				(FALSE)
+#define gst_debug_get_color_mode()			(GST_DEBUG_COLOR_MODE_OFF)
 #define gst_debug_set_default_threshold(level)		G_STMT_START{ }G_STMT_END
 #define gst_debug_get_default_threshold()		(GST_LEVEL_NONE)
 #define gst_debug_set_threshold_for_name(name,level)	G_STMT_START{ }G_STMT_END

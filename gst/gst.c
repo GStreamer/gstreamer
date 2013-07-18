@@ -176,6 +176,7 @@ enum
   ARG_DEBUG,
   ARG_DEBUG_DISABLE,
   ARG_DEBUG_NO_COLOR,
+  ARG_DEBUG_COLOR_MODE,
   ARG_DEBUG_HELP,
 #endif
   ARG_PLUGIN_SPEW,
@@ -249,6 +250,11 @@ gst_init_get_option_group (void)
         N_("LIST")},
     {"gst-debug-no-color", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
           (gpointer) parse_goption_arg, N_("Disable colored debugging output"),
+        NULL},
+    {"gst-debug-color-mode", 0, 0, G_OPTION_ARG_CALLBACK,
+          (gpointer) parse_goption_arg,
+          N_("Changes coloring mode of the debug log. "
+              "Possible modes: off, on, disable, auto, unix"),
         NULL},
     {"gst-debug-disable", 0, G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
         (gpointer) parse_goption_arg, N_("Disable debugging"), NULL},
@@ -475,9 +481,13 @@ init_pre (GOptionContext * context, GOptionGroup * group, gpointer data,
 #ifndef GST_DISABLE_GST_DEBUG
   {
     const gchar *debug_list;
+    const gchar *color_mode;
 
     if (g_getenv ("GST_DEBUG_NO_COLOR") != NULL)
-      gst_debug_set_colored (FALSE);
+      gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_OFF);
+    color_mode = g_getenv ("GST_DEBUG_COLOR_MODE");
+    if (color_mode)
+      gst_debug_set_color_mode_from_string (color_mode);
 
     debug_list = g_getenv ("GST_DEBUG");
     if (debug_list) {
@@ -743,9 +753,27 @@ gst_debug_help (void)
   g_print ("---------------------+--------+--------------------------------\n");
 
   while (walk) {
+    gboolean on_unix;
     GstDebugCategory *cat = (GstDebugCategory *) walk->data;
+    GstDebugColorMode coloring = gst_debug_get_color_mode ();
+#ifdef G_OS_UNIX
+    on_unix = TRUE;
+#else
+    on_unix = FALSE;
+#endif
 
-    if (gst_debug_is_colored ()) {
+    if (GST_DEBUG_COLOR_MODE_UNIX == coloring
+        || (on_unix && GST_DEBUG_COLOR_MODE_ON == coloring)) {
+      gchar *color = gst_debug_construct_term_color (cat->color);
+
+      g_print ("%s%-20s\033[00m  %1d %s  %s%s\033[00m\n",
+          color,
+          gst_debug_category_get_name (cat),
+          gst_debug_category_get_threshold (cat),
+          gst_debug_level_get_name (gst_debug_category_get_threshold (cat)),
+          color, gst_debug_category_get_description (cat));
+      g_free (color);
+    } else if (GST_DEBUG_COLOR_MODE_ON == coloring && !on_unix) {
 #ifdef G_OS_WIN32
       gint color = gst_debug_construct_win_color (cat->color);
       const gint clear = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
@@ -759,16 +787,6 @@ gst_debug_help (void)
       g_print ("%s", gst_debug_category_get_description (cat));
       SetConsoleTextAttribute (GetStdHandle (STD_OUTPUT_HANDLE), clear);
       g_print ("\n");
-#else /* G_OS_WIN32 */
-      gchar *color = gst_debug_construct_term_color (cat->color);
-
-      g_print ("%s%-20s\033[00m  %1d %s  %s%s\033[00m\n",
-          color,
-          gst_debug_category_get_name (cat),
-          gst_debug_category_get_threshold (cat),
-          gst_debug_level_get_name (gst_debug_category_get_threshold (cat)),
-          color, gst_debug_category_get_description (cat));
-      g_free (color);
 #endif /* G_OS_WIN32 */
     } else {
       g_print ("%-20s  %1d %s  %s\n", gst_debug_category_get_name (cat),
@@ -814,6 +832,9 @@ parse_one_option (gint opt, const gchar * arg, GError ** err)
       break;
     case ARG_DEBUG_NO_COLOR:
       gst_debug_set_colored (FALSE);
+      break;
+    case ARG_DEBUG_COLOR_MODE:
+      gst_debug_set_color_mode_from_string (arg);
       break;
     case ARG_DEBUG_DISABLE:
       gst_debug_set_active (FALSE);
@@ -870,6 +891,7 @@ parse_goption_arg (const gchar * opt,
     "--gst-debug", ARG_DEBUG}, {
     "--gst-debug-disable", ARG_DEBUG_DISABLE}, {
     "--gst-debug-no-color", ARG_DEBUG_NO_COLOR}, {
+    "--gst-debug-color-mode", ARG_DEBUG_COLOR_MODE}, {
     "--gst-debug-help", ARG_DEBUG_HELP},
 #endif
     {

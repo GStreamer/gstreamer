@@ -2,7 +2,7 @@
 #
 # based on plot-timeline.py by Federico Mena-Quintero <federico at ximian dotcom>
 # example:
-#   GST_DEBUG_NO_COLOR=1 GST_DEBUG="*:3" gst-launch-1.0 2>debug.log audiotestsrc num-buffers=10 ! audioconvert ! alsasink
+#   GST_DEBUG_COLOR_MODE=off GST_DEBUG="*:3" gst-launch-1.0 2>debug.log audiotestsrc num-buffers=10 ! audioconvert ! alsasink
 #   gst-plot-timeline.py debug.log --output=debug.png
 
 import math
@@ -271,7 +271,7 @@ def main(args):
         return 1
 
     if len(args) != 1:
-        print 'Please specify only one input filename, which is an debug log taken with "GST_DEBUG_NO_COLOR=1 GST_DEBUG=XXX <application>"'
+        print 'Please specify only one input filename, which is an debug log taken with "GST_DEBUG_COLOR_MODE=off GST_DEBUG=XXX <application>"'
         return 1
 
     in_filename = args[0]

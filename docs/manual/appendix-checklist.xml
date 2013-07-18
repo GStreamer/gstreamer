@@ -114,6 +114,19 @@
        </listitem>
        <listitem>
          <para>
+          <option>--gst-debug-color-mode=<replaceable>MODE</replaceable></option>
+          will change debug log coloring mode. <replaceable>MODE</replaceable>
+          can be one of the following: <option>on</option>,
+          <option>off</option>, <option>auto</option>,
+          <option>disable</option>, <option>unix</option>.
+          You can also set the GST_DEBUG_COLOR_MODE environment variable
+          if you want to change colored debug output permanently. Note that
+          if you are disabling color purely to avoid messing up your pager
+          output, try using <command>less -R</command>.
+         </para>
+       </listitem>
+       <listitem>
+         <para>
           <option>--gst-debug-disable</option> disables debugging altogether.
          </para>
        </listitem>

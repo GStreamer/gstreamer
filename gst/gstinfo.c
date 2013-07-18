@@ -263,7 +263,7 @@ static GSList *__log_functions = NULL;
 static gboolean pretty_tags = PRETTY_TAGS_DEFAULT;
 
 static volatile gint G_GNUC_MAY_ALIAS __default_level = GST_LEVEL_DEFAULT;
-static volatile gint G_GNUC_MAY_ALIAS __use_color = 1;
+static volatile gint G_GNUC_MAY_ALIAS __use_color = GST_DEBUG_COLOR_MODE_ON;
 
 static FILE *log_file;
 
@@ -900,7 +900,7 @@ gst_debug_construct_win_color (guint colorinfo)
 #define CAT_FMT "%20s %s:%d:%s:%s"
 
 #ifdef G_OS_WIN32
-static const guchar levelcolormap[GST_LEVEL_COUNT] = {
+static const guchar levelcolormap_w32[GST_LEVEL_COUNT] = {
   /* GST_LEVEL_NONE */
   FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE,
   /* GST_LEVEL_ERROR */
@@ -928,7 +928,7 @@ static const guchar available_colors[] = {
   FOREGROUND_BLUE, FOREGROUND_RED | FOREGROUND_BLUE,
   FOREGROUND_GREEN | FOREGROUND_BLUE,
 };
-#else
+#endif /* G_OS_WIN32 */
 static const gchar *levelcolormap[GST_LEVEL_COUNT] = {
   "\033[37m",                   /* GST_LEVEL_NONE */
   "\033[31;01m",                /* GST_LEVEL_ERROR */
@@ -941,7 +941,6 @@ static const gchar *levelcolormap[GST_LEVEL_COUNT] = {
   "\033[37m",                   /* placeholder for log level 8 */
   "\033[37m"                    /* GST_LEVEL_MEMDUMP */
 };
-#endif
 
 /**
  * gst_debug_log_default:
@@ -972,13 +971,13 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   gint pid;
   GstClockTime elapsed;
   gchar *obj = NULL;
-  gboolean is_colored;
+  GstDebugColorMode color_mode;
 
   if (level > gst_debug_category_get_threshold (category))
     return;
 
   pid = getpid ();
-  is_colored = gst_debug_is_colored ();
+  color_mode = gst_debug_get_color_mode ();
 
   if (object) {
     obj = gst_debug_print_object (object);
@@ -989,65 +988,70 @@ gst_debug_log_default (GstDebugCategory * category, GstDebugLevel level,
   elapsed = GST_CLOCK_DIFF (_priv_gst_info_start_time,
       gst_util_get_timestamp ());
 
-  if (is_colored) {
-#ifndef G_OS_WIN32
-    /* colors, non-windows */
-    gchar *color = NULL;
-    const gchar *clear;
-    gchar pidcolor[10];
-    const gchar *levelcolor;
-
-    color = gst_debug_construct_term_color (gst_debug_category_get_color
-        (category));
-    clear = "\033[00m";
-    g_sprintf (pidcolor, "\033[3%1dm", pid % 6 + 31);
-    levelcolor = levelcolormap[level];
-
-#define PRINT_FMT " %s"PID_FMT"%s "PTR_FMT" %s%s%s %s"CAT_FMT"%s %s\n"
-    fprintf (log_file, "%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
-        pidcolor, pid, clear, g_thread_self (), levelcolor,
-        gst_debug_level_get_name (level), clear, color,
-        gst_debug_category_get_name (category), file, line, function, obj,
-        clear, gst_debug_message_get (message));
-    fflush (log_file);
-#undef PRINT_FMT
-    g_free (color);
-#else
-    /* colors, windows. We take a lock to keep colors and content together.
+  if (color_mode != GST_DEBUG_COLOR_MODE_OFF) {
+#ifdef G_OS_WIN32
+    /* We take a lock to keep colors and content together.
      * Maybe there is a better way but for now this will do the right
      * thing. */
     static GMutex win_print_mutex;
-    const gint clear = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
+    g_mutex_lock (&win_print_mutex);
+    if (color_mode == GST_DEBUG_COLOR_MODE_UNIX) {
+#endif
+      /* colors, non-windows */
+      gchar *color = NULL;
+      const gchar *clear;
+      gchar pidcolor[10];
+      const gchar *levelcolor;
+
+      color = gst_debug_construct_term_color (gst_debug_category_get_color
+          (category));
+      clear = "\033[00m";
+      g_sprintf (pidcolor, "\033[3%1dm", pid % 6 + 31);
+      levelcolor = levelcolormap[level];
+
+#define PRINT_FMT " %s"PID_FMT"%s "PTR_FMT" %s%s%s %s"CAT_FMT"%s %s\n"
+      fprintf (log_file, "%" GST_TIME_FORMAT PRINT_FMT, GST_TIME_ARGS (elapsed),
+          pidcolor, pid, clear, g_thread_self (), levelcolor,
+          gst_debug_level_get_name (level), clear, color,
+          gst_debug_category_get_name (category), file, line, function, obj,
+          clear, gst_debug_message_get (message));
+      fflush (log_file);
+#undef PRINT_FMT
+      g_free (color);
+#ifdef G_OS_WIN32
+    } else {
+      /* colors, windows. */
+      const gint clear = FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE;
 #define SET_COLOR(c) G_STMT_START { \
   if (log_file == stderr) \
     SetConsoleTextAttribute (GetStdHandle (STD_ERROR_HANDLE), (c)); \
   } G_STMT_END
-    g_mutex_lock (&win_print_mutex);
-    /* timestamp */
-    fprintf (log_file, "%" GST_TIME_FORMAT " ", GST_TIME_ARGS (elapsed));
-    fflush (log_file);
-    /* pid */
-    SET_COLOR (available_colors[pid % G_N_ELEMENTS (available_colors)]);
-    fprintf (log_file, PID_FMT, pid);
-    fflush (log_file);
-    /* thread */
-    SET_COLOR (clear);
-    fprintf (log_file, " " PTR_FMT " ", g_thread_self ());
-    fflush (log_file);
-    /* level */
-    SET_COLOR (levelcolormap[level]);
-    fprintf (log_file, "%s ", gst_debug_level_get_name (level));
-    fflush (log_file);
-    /* category */
-    SET_COLOR (gst_debug_construct_win_color (gst_debug_category_get_color
-            (category)));
-    fprintf (log_file, CAT_FMT, gst_debug_category_get_name (category),
-        file, line, function, obj);
-    fflush (log_file);
-    /* message */
-    SET_COLOR (clear);
-    fprintf (log_file, " %s\n", gst_debug_message_get (message));
-    fflush (log_file);
+      /* timestamp */
+      fprintf (log_file, "%" GST_TIME_FORMAT " ", GST_TIME_ARGS (elapsed));
+      fflush (log_file);
+      /* pid */
+      SET_COLOR (available_colors[pid % G_N_ELEMENTS (available_colors)]);
+      fprintf (log_file, PID_FMT, pid);
+      fflush (log_file);
+      /* thread */
+      SET_COLOR (clear);
+      fprintf (log_file, " " PTR_FMT " ", g_thread_self ());
+      fflush (log_file);
+      /* level */
+      SET_COLOR (levelcolormap_w32[level]);
+      fprintf (log_file, "%s ", gst_debug_level_get_name (level));
+      fflush (log_file);
+      /* category */
+      SET_COLOR (gst_debug_construct_win_color (gst_debug_category_get_color
+              (category)));
+      fprintf (log_file, CAT_FMT, gst_debug_category_get_name (category),
+          file, line, function, obj);
+      fflush (log_file);
+      /* message */
+      SET_COLOR (clear);
+      fprintf (log_file, " %s\n", gst_debug_message_get (message));
+      fflush (log_file);
+    }
     g_mutex_unlock (&win_print_mutex);
 #endif
   } else {
@@ -1248,13 +1252,51 @@ gst_debug_remove_log_function_by_data (gpointer data)
  * @colored: Whether to use colored output or not
  *
  * Sets or unsets the use of coloured debugging output.
+ * Same as gst_debug_set_color_mode () with the argument being
+ * being GST_DEBUG_COLOR_MODE_ON or GST_DEBUG_COLOR_MODE_OFF.
  *
  * This function may be called before gst_init().
  */
 void
 gst_debug_set_colored (gboolean colored)
 {
-  g_atomic_int_set (&__use_color, (gint) colored);
+  GstDebugColorMode new_mode;
+  new_mode = colored ? GST_DEBUG_COLOR_MODE_ON : GST_DEBUG_COLOR_MODE_OFF;
+  g_atomic_int_set (&__use_color, (gint) new_mode);
+}
+
+/**
+ * gst_debug_set_color_mode:
+ * @mode: The coloring mode for debug output. See @GstDebugColorMode.
+ *
+ * Changes the coloring mode for debug output.
+ *
+ * This function may be called before gst_init().
+ */
+void
+gst_debug_set_color_mode (GstDebugColorMode mode)
+{
+  g_atomic_int_set (&__use_color, mode);
+}
+
+/**
+ * gst_debug_set_color_mode_from_string:
+ * @mode: The coloring mode for debug output. One of the following:
+ * "on", "auto", "off", "disable", "unix".
+ *
+ * Changes the coloring mode for debug output.
+ *
+ * This function may be called before gst_init().
+ */
+void
+gst_debug_set_color_mode_from_string (const gchar * str)
+{
+  if ((strcmp (str, "on") == 0) || (strcmp (str, "auto") == 0))
+    gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_ON);
+  else if ((strcmp (str, "off") == 0) || (strcmp (str, "disable") == 0))
+    gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_OFF);
+  else if (strcmp (str, "unix") == 0)
+    gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_UNIX);
 }
 
 /**
@@ -1267,7 +1309,21 @@ gst_debug_set_colored (gboolean colored)
 gboolean
 gst_debug_is_colored (void)
 {
-  return (gboolean) g_atomic_int_get (&__use_color);
+  GstDebugColorMode mode = g_atomic_int_get (&__use_color);
+  return (mode == GST_DEBUG_COLOR_MODE_UNIX || mode == GST_DEBUG_COLOR_MODE_ON);
+}
+
+/**
+ * gst_debug_get_color_mode:
+ *
+ * Changes the coloring mode for debug output.
+ *
+ * Returns: see @GstDebugColorMode for possible values.
+ */
+GstDebugColorMode
+gst_debug_get_color_mode (void)
+{
+  return g_atomic_int_get (&__use_color);
 }
 
 /**
@@ -1938,10 +1994,26 @@ gst_debug_set_colored (gboolean colored)
 {
 }
 
+void
+gst_debug_set_color_mode (GstDebugColorMode mode)
+{
+}
+
+void
+gst_debug_set_color_mode_from_string (const gchar * str)
+{
+}
+
 gboolean
 gst_debug_is_colored (void)
 {
   return FALSE;
+}
+
+GstDebugColorMode
+gst_debug_get_color_mode (void)
+{
+  return GST_DEBUG_COLOR_MODE_OFF;
 }
 
 void

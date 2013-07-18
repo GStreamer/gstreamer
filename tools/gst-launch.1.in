@@ -101,6 +101,16 @@ ANSI escape sequences.  Using this option causes \fIGStreamer\fP
 to print messages without color. Setting the \fBGST_DEBUG_NO_COLOR\fR
 environment variable will achieve the same thing.
 .TP 8
+.B  \-\-gst\-debug\-color\-mode
+\fIGStreamer\fP normally prints debugging messages so that the
+messages are color-coded when printed to a terminal that handles
+ANSI escape sequences (on *nix), or uses W32 console API to color the
+messages printed into a console (on W32). Using this option causes
+\fIGStreamer\fP to print messages without color ('off' or 'disable'),
+print messages with default colors ('on' or 'auto'), or print messages
+using ANSI escape sequences for coloring ('unix'). Setting the
+\fBGST_DEBUG_COLOR_MODE\fR environment variable will achieve the same thing.
+.TP 8
 .B  \-\-gst\-debug\-disable
 Disables debugging.
 .TP 8
