@@ -87,7 +87,7 @@ _gst_rtsp_permissions_copy (GstRTSPPermissionsImpl * permissions)
 
     gst_structure_set_parent_refcount (entry_copy,
         &copy->permissions.mini_object.refcount);
-    g_ptr_array_add (permissions->roles, entry_copy);
+    g_ptr_array_add (copy->roles, entry_copy);
   }
 
   return GST_RTSP_PERMISSIONS (copy);
