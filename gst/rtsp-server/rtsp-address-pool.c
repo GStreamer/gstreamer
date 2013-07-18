@@ -21,7 +21,20 @@
  * @short_description: A pool of network addresses
  * @see_also: #GstRTSPStream, #GstRTSPStreamTransport
  *
- * Last reviewed on 2013-07-11 (1.0.0)
+ * The #GstRTSPAddressPool is an object that maintains a collection of network
+ * addresses. It is used to allocate server ports and server multicast addresses
+ * but also to reserve client provided destination addresses.
+ *
+ * A range of addresses can be added with gst_rtsp_address_pool_add_range().
+ * Both multicast and unicast addresses can be added.
+ *
+ * With gst_rtsp_address_pool_acquire_address() an unused address and port range
+ * can be acquired from the pool. With gst_rtsp_address_pool_reserve_address() a
+ * specific address can be retrieved. Both methods return a boxed
+ * #GstRTSPAddress that should be freed with gst_rtsp_address_free() after
+ * usage, which brings the address back into the pool.
+ *
+ * Last reviewed on 2013-07-16 (1.0.0)
  */
 
 #include <string.h>
@@ -412,8 +425,6 @@ split_range (GstRTSPAddressPool * pool, AddrRange * range, guint skip_addr,
  * allocation. @n_ports consecutive ports will be allocated of which the first
  * one can be found in @port.
  *
- * This function should only be used internally.
- *
  * Returns: a #GstRTSPAddress that should be freed with gst_rtsp_address_free
  *   after use or %NULL when no address could be acquired.
  */
@@ -588,8 +599,6 @@ gst_rtsp_address_pool_dump (GstRTSPAddressPool * pool)
  *
  * If @ttl is 0, @address should be a unicast address. If @ttl > 0, @address
  * should be a valid multicast address.
- *
- * This function should only be used internally.
  *
  * Returns: a #GstRTSPAddress that should be freed with gst_rtsp_address_free
  *   after use or %NULL when no address could be acquired.
