@@ -158,6 +158,14 @@ gst_qa_pad_monitor_check_caps_complete (GstQaPadMonitor * monitor,
   }
 }
 
+void
+_parent_set_cb (GstObject * object, GstObject * parent, GstQaMonitor * monitor)
+{
+  gst_qa_monitor_set_target_name (monitor, g_strdup_printf ("%s:%s",
+          GST_DEBUG_PAD_NAME (object)));
+}
+
+
 static void
 gst_qa_pad_monitor_dispose (GObject * object)
 {
@@ -171,6 +179,10 @@ gst_qa_pad_monitor_dispose (GObject * object)
 
   if (monitor->expected_segment)
     gst_event_unref (monitor->expected_segment);
+
+
+  g_signal_handlers_disconnect_by_func (pad, (GCallback) _parent_set_cb,
+      monitor);
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -919,6 +931,11 @@ gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor)
   gst_pad_set_query_function (pad, gst_qa_pad_monitor_query_func);
   gst_pad_set_getcaps_function (pad, gst_qa_pad_monitor_getcaps_func);
   gst_pad_set_setcaps_function (pad, gst_qa_pad_monitor_setcaps_func);
+
+  gst_qa_monitor_set_target_name (monitor, g_strdup_printf ("%s:%s",
+          GST_DEBUG_PAD_NAME (pad)));
+
+  g_signal_connect (pad, "parent-set", (GCallback) _parent_set_cb, monitor);
 
   return TRUE;
 }
