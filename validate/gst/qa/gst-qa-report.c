@@ -24,6 +24,7 @@
 #include "gst-qa-report.h"
 
 static GstClockTime _gst_qa_report_start_time = 0;
+static GstQaDebugFlags _gst_qa_flags = 0;
 
 G_DEFINE_BOXED_TYPE (GstQaReport, gst_qa_report,
     (GBoxedCopyFunc) gst_qa_report_ref, (GBoxedFreeFunc) gst_qa_report_unref);
@@ -31,8 +32,22 @@ G_DEFINE_BOXED_TYPE (GstQaReport, gst_qa_report,
 void
 gst_qa_report_init (void)
 {
-  if (_gst_qa_report_start_time == 0)
+  const gchar *var;
+  const GDebugKey keys[] = {
+    {"fatal_criticals", GST_QA_FATAL_CRITICALS},
+    {"fatal_warnings", GST_QA_FATAL_WARNINGS},
+    {"fatal_issues", GST_QA_FATAL_ISSUES}
+  };
+
+  if (_gst_qa_report_start_time == 0) {
     _gst_qa_report_start_time = gst_util_get_timestamp ();
+
+    /* init the debug flags */
+    var = g_getenv ("GST_QA");
+    if (var && strlen (var) > 0) {
+      _gst_qa_flags = g_parse_debug_string (var, keys, 3);
+    }
+  }
 }
 
 
@@ -145,6 +160,20 @@ gst_qa_report_subarea_get_name (GstQaReportArea area, gint subarea)
   }
 }
 
+static void
+gst_qa_report_check_abort (GstQaReport * report)
+{
+  if ((report->level == GST_QA_REPORT_LEVEL_ISSUE &&
+          _gst_qa_flags & GST_QA_FATAL_ISSUES) ||
+      (report->level == GST_QA_REPORT_LEVEL_WARNING &&
+          _gst_qa_flags & GST_QA_FATAL_WARNINGS) ||
+      (report->level == GST_QA_REPORT_LEVEL_CRITICAL &&
+          _gst_qa_flags & GST_QA_FATAL_CRITICALS)) {
+    g_error ("Fatal report received: %" GST_QA_ERROR_REPORT_PRINT_FORMAT,
+        GST_QA_REPORT_PRINT_ARGS (report));
+  }
+}
+
 GstQaReport *
 gst_qa_report_new (GstObject * source, GstQaReportLevel level,
     GstQaReportArea area, gint subarea, const gchar * message)
@@ -161,6 +190,9 @@ gst_qa_report_new (GstObject * source, GstQaReportLevel level,
     report->source_name = g_strdup (GST_OBJECT_NAME (source));
   report->message = g_strdup (message);
   report->timestamp = gst_util_get_timestamp () - _gst_qa_report_start_time;
+
+  /* we might abort here if asked */
+  gst_qa_report_check_abort (report);
 
   return report;
 }

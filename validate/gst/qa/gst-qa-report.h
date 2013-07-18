@@ -31,6 +31,13 @@ GType           gst_qa_report_get_type (void);
 #define GST_TYPE_QA_REPORT (gst_qa_report_get_type ())
 
 typedef enum {
+  GST_QA_FATAL_DEFAULT = 0,
+  GST_QA_FATAL_ISSUES = 1 << 0,
+  GST_QA_FATAL_WARNINGS = 1 << 1,
+  GST_QA_FATAL_CRITICALS = 1 << 2
+} GstQaDebugFlags;
+
+typedef enum {
   GST_QA_REPORT_LEVEL_CRITICAL,
   GST_QA_REPORT_LEVEL_WARNING,
   GST_QA_REPORT_LEVEL_ISSUE,
