@@ -103,7 +103,7 @@ gst_vaapi_create_display(GstVaapiDisplayType *display_type)
             break;
         }
 
-        if (display_type != GST_VAAPI_DISPLAY_TYPE_ANY)
+        if (*display_type != GST_VAAPI_DISPLAY_TYPE_ANY)
             break;
     }
     return display;
