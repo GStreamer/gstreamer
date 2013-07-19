@@ -7204,19 +7204,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       }
     }
 
-    if (palette_data) {
-      if (stream->rgb8_palette)
-        gst_memory_unref (stream->rgb8_palette);
-      stream->rgb8_palette = gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
-          palette_data, palette_size, 0, palette_size, palette_data, g_free);
-    } else if (palette_count != 0) {
-      GST_ELEMENT_WARNING (qtdemux, STREAM, NOT_IMPLEMENTED,
-          (NULL), ("Unsupported palette depth %d", depth));
-    }
-
-    GST_LOG_OBJECT (qtdemux, "frame count:   %u",
-        QT_UINT16 (stsd_data + offset + 48));
-
     stream->caps =
         qtdemux_video_caps (qtdemux, stream, fourcc, stsd_data, &codec);
     if (codec) {
@@ -7226,6 +7213,39 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       g_free (codec);
       codec = NULL;
     }
+
+
+    if (palette_data) {
+      GstStructure *s;
+
+      if (stream->rgb8_palette)
+        gst_memory_unref (stream->rgb8_palette);
+      stream->rgb8_palette = gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+          palette_data, palette_size, 0, palette_size, palette_data, g_free);
+
+      s = gst_caps_get_structure (stream->caps, 0);
+
+      /* non-raw video has a palette_data property. raw video has the palette as
+       * an extra plane that we append to the output buffers before we push
+       * them*/
+      if (!gst_structure_has_name (s, "video/x-raw")) {
+        GstBuffer *palette;
+
+        palette = gst_buffer_new ();
+        gst_buffer_append_memory (palette, stream->rgb8_palette);
+        stream->rgb8_palette = NULL;
+
+        gst_caps_set_simple (stream->caps, "palette_data",
+            GST_TYPE_BUFFER, palette, NULL);
+        gst_buffer_unref (palette);
+      }
+    } else if (palette_count != 0) {
+      GST_ELEMENT_WARNING (qtdemux, STREAM, NOT_IMPLEMENTED,
+          (NULL), ("Unsupported palette depth %d", depth));
+    }
+
+    GST_LOG_OBJECT (qtdemux, "frame count:   %u",
+        QT_UINT16 (stsd_data + offset + 48));
 
     esds = NULL;
     pasp = NULL;
