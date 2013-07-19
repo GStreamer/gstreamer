@@ -316,6 +316,7 @@ gst_dynudpsink_start (GstBaseSink * bsink)
     if ((udpsink->used_socket =
             g_socket_new (G_SOCKET_FAMILY_IPV6,
                 G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL) {
+      g_clear_error (&err);
       udpsink->family = G_SOCKET_FAMILY_IPV4;
       if ((udpsink->used_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
                   G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL)

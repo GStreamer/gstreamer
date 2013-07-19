@@ -868,6 +868,7 @@ gst_multiudpsink_start (GstBaseSink * bsink)
     if (sink->force_ipv4 || (sink->used_socket =
             g_socket_new (G_SOCKET_FAMILY_IPV6,
                 G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL) {
+      g_clear_error (&err);
       if ((sink->used_socket = g_socket_new (G_SOCKET_FAMILY_IPV4,
                   G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, &err)) == NULL)
         goto no_socket;
