@@ -590,7 +590,7 @@ gst_videomixer2_update_qos (GstVideoMixer2 * mix, gdouble proportion,
   if (G_LIKELY (timestamp != GST_CLOCK_TIME_NONE)) {
     if (G_UNLIKELY (diff > 0))
       mix->earliest_time =
-          timestamp + 2 * diff + gst_util_uint64_scale_int (GST_SECOND,
+          timestamp + 2 * diff + gst_util_uint64_scale_int_round (GST_SECOND,
           GST_VIDEO_INFO_FPS_D (&mix->info), GST_VIDEO_INFO_FPS_N (&mix->info));
     else
       mix->earliest_time = timestamp + diff;
@@ -1013,7 +1013,7 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
   }
 
   output_end_time =
-      mix->ts_offset + gst_util_uint64_scale (mix->nframes + 1,
+      mix->ts_offset + gst_util_uint64_scale_round (mix->nframes + 1,
       GST_SECOND * GST_VIDEO_INFO_FPS_D (&mix->info),
       GST_VIDEO_INFO_FPS_N (&mix->info)) + mix->segment.start;
   if (mix->segment.stop != -1)
@@ -1664,7 +1664,7 @@ gst_videomixer2_sink_clip (GstCollectPads * pads,
   end_time = GST_BUFFER_DURATION (buf);
   if (end_time == -1 && GST_VIDEO_INFO_FPS_N (&pad->info) != 0)
     end_time =
-        gst_util_uint64_scale_int (GST_SECOND,
+        gst_util_uint64_scale_int_round (GST_SECOND,
         GST_VIDEO_INFO_FPS_D (&pad->info), GST_VIDEO_INFO_FPS_N (&pad->info));
   if (end_time == -1) {
     *outbuf = buf;
