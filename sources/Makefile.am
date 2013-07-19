@@ -32,7 +32,7 @@ $(API): $(srcdir)/$(RAW_API) $(srcdir)/$(METADATA)
 generated-stamp: $(API)
 	 $(GAPI_CODEGEN) --generate $(srcdir)/$(API) $(GTK_SHARP_CFLAGS) \
 		--outdir=generated \
-		--glue-filename=$(GLUEDIR)/generated.c --gluelib-name=libgstsharpglue-1.0.6.so \
+		--glue-filename=$(GLUEDIR)/generated.c --gluelib-name=libgstreamersharpglue-1.0.6.so \
 		--glue-includes=gst/gst.h \
 	 	--assembly-name=$(ASSEMBLY_NAME) && touch generated-stamp
 

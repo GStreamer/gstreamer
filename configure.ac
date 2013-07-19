@@ -1,4 +1,4 @@
-AC_INIT([gst-sharp], [1.0.6])
+AC_INIT([gstreamer-sharp], [1.0.6])
 AC_CONFIG_SRCDIR([README])
 AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE
@@ -10,10 +10,10 @@ dnl Package settings
 ASSEMBLY_COMPANY=""
 ASSEMBLY_COPYRIGHT="2012 Andreia Gaita"
 ASSEMBLY_DESCRIPTION="Gst-1.0 bindings for Mono"
-ASSEMBLY_NAME="gst-sharp"
+ASSEMBLY_NAME="gstreamer-sharp"
 ASSEMBLY_NAMESPACE="Gst"
-ASSEMBLY_PC="gst-sharp-1.0"
-ASSEMBLY_SHORTNAME="gst"
+ASSEMBLY_PC="gstreamer-sharp-1.0"
+ASSEMBLY_SHORTNAME="gstreamer"
 ASSEMBLY_TITLE="Gst#"
 ASSEMBLY_VERSION="1.0.6"
 AC_SUBST([ACLOCAL_AMFLAGS], ["-I m4 \${ACLOCAL_FLAGS}"])
@@ -132,8 +132,8 @@ AC_SUBST(MONODOCER)
 AM_CONDITIONAL(ENABLE_MONODOC, test "x$enable_monodoc" = "xyes")
 dnl Check for Gst
 PKG_CHECK_MODULES(GST, gstreamer-1.0)
-gst_prefix=/usr
-AC_SUBST(gst_prefix)
+gstreamer_prefix=/usr
+AC_SUBST(gstreamer_prefix)
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 
@@ -144,7 +144,7 @@ AC_CONFIG_FILES([
 	sources/Makefile
 	sources/glue/Makefile
 	sources/AssemblyInfo.cs
-	gst-sharp-1.0.pc
+	gstreamer-sharp-1.0.pc
 	doc/Makefile
 ])
 AC_CONFIG_COMMANDS([default],[[ echo timestamp > stamp-h ]],[[]])
