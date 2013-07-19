@@ -180,6 +180,7 @@ G_BEGIN_DECLS
 #define FOURCC_apco     GST_MAKE_FOURCC('a','p','c','o')
 #define FOURCC_ap4h     GST_MAKE_FOURCC('a','p','4','h')
 #define FOURCC_m1v      GST_MAKE_FOURCC('m','1','v',' ')
+#define FOURCC_vivo     GST_MAKE_FOURCC('v','i','v','o')
 
 /* SVQ3 fourcc */
 #define FOURCC_SEQH     GST_MAKE_FOURCC('S','E','Q','H')

@@ -7053,8 +7053,15 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
   /* stsd should at least have one entry */
   stsd_len = QT_UINT32 (stsd_data);
-  if (stsd_len < 24)
-    goto corrupt_file;
+  if (stsd_len < 24) {
+    /* .. but skip stream with empty stsd produced by some Vivotek cameras */
+    if (stream->subtype == FOURCC_vivo) {
+      g_free (stream);
+      return TRUE;
+    } else {
+      goto corrupt_file;
+    }
+  }
 
   GST_LOG_OBJECT (qtdemux, "stsd len:           %d", stsd_len);
 
