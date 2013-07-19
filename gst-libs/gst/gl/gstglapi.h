@@ -23,6 +23,8 @@
 
 #include <gst/gl/gstglconfig.h>
 
+#include <gst/gl/glprototypes/gstgl_compat.h>
+
 /* OpenGL 2.0 for Embedded Systems */
 #if GST_GL_HAVE_GLES2
 # include <GLES2/gl2.h>
