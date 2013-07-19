@@ -66,6 +66,19 @@ GST_VAAPI_WINDOW_X11
 </SECTION>
 
 <SECTION>
+<FILE>gstvaapipixmap_x11</FILE>
+<TITLE>GstVaapiPixmapX11</TITLE>
+GstVaapiPixmapX11
+GST_VAAPI_PIXMAP_XPIXMAP
+gst_vaapi_pixmap_x11_new
+gst_vaapi_pixmap_x11_new_with_xid
+gst_vaapi_pixmap_x11_get_xid
+gst_vaapi_pixmap_x11_is_foreign_xid
+<SUBSECTION Standard>
+GST_VAAPI_WINDOW_X11
+</SECTION>
+
+<SECTION>
 <FILE>gstvaapidisplay_glx</FILE>
 <TITLE>GstVaapiDisplayGLX</TITLE>
 GstVaapiDisplayGLX

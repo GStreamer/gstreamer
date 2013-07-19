@@ -67,6 +67,7 @@ struct _GstVaapiDisplayX11Private {
     gchar              *display_name;
     Display            *x11_display;
     int                 x11_screen;
+    GArray             *pixmap_formats;
     guint               use_foreign_display     : 1; // Foreign native_display?
     guint               use_xrandr              : 1;
     guint               synchronous             : 1;
@@ -96,6 +97,16 @@ struct _GstVaapiDisplayX11Class {
 
 void
 gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass);
+
+G_GNUC_INTERNAL
+GstVideoFormat
+gst_vaapi_display_x11_get_pixmap_format(GstVaapiDisplayX11 *display,
+    guint depth);
+
+G_GNUC_INTERNAL
+guint
+gst_vaapi_display_x11_get_pixmap_depth(GstVaapiDisplayX11 *display,
+    GstVideoFormat format);
 
 G_END_DECLS
 

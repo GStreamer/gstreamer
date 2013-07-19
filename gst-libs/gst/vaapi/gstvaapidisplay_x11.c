@@ -203,6 +203,11 @@ gst_vaapi_display_x11_close_display(GstVaapiDisplay *display)
     GstVaapiDisplayX11Private * const priv =
         GST_VAAPI_DISPLAY_X11_PRIVATE(display);
 
+    if (priv->pixmap_formats) {
+        g_array_free(priv->pixmap_formats, TRUE);
+        priv->pixmap_formats = NULL;
+    }
+
     if (priv->x11_display) {
         if (!priv->use_foreign_display)
             XCloseDisplay(priv->x11_display);
@@ -477,4 +482,114 @@ gst_vaapi_display_x11_set_synchronous(GstVaapiDisplayX11 *display,
     g_return_if_fail(GST_VAAPI_IS_DISPLAY_X11(display));
 
     set_synchronous(display, synchronous);
+}
+
+typedef struct _GstVaapiPixmapFormatX11 GstVaapiPixmapFormatX11;
+struct _GstVaapiPixmapFormatX11 {
+    GstVideoFormat      format;
+    gint                depth;
+    gint                bpp;
+};
+
+static GstVideoFormat
+pix_fmt_to_video_format(gint depth, gint bpp)
+{
+    GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+
+    switch (bpp) {
+    case 16:
+        if (depth == 15)
+            format = GST_VIDEO_FORMAT_RGB15;
+        else if (depth == 16)
+            format = GST_VIDEO_FORMAT_RGB16;
+        break;
+    case 24:
+        if (depth == 24)
+            format = GST_VIDEO_FORMAT_RGB;
+        break;
+    case 32:
+        if (depth == 24 || depth == 32)
+            format = GST_VIDEO_FORMAT_xRGB;
+        break;
+    }
+    return format;
+}
+
+static gboolean
+ensure_pix_fmts(GstVaapiDisplayX11 *display)
+{
+    GstVaapiDisplayX11Private * const priv =
+        GST_VAAPI_DISPLAY_X11_PRIVATE(display);
+    XPixmapFormatValues *pix_fmts;
+    int i, n, num_pix_fmts;
+
+    if (priv->pixmap_formats)
+        return TRUE;
+
+    GST_VAAPI_DISPLAY_LOCK(display);
+    pix_fmts = XListPixmapFormats(GST_VAAPI_DISPLAY_XDISPLAY(display),
+        &num_pix_fmts);
+    GST_VAAPI_DISPLAY_UNLOCK(display);
+    if (!pix_fmts)
+        return FALSE;
+
+    priv->pixmap_formats = g_array_sized_new(FALSE, FALSE,
+        sizeof(GstVaapiPixmapFormatX11), num_pix_fmts);
+    if (!priv->pixmap_formats) {
+        XFree(pix_fmts);
+        return FALSE;
+    }
+
+    for (i = 0, n = 0; i < num_pix_fmts; i++) {
+        GstVaapiPixmapFormatX11 * const pix_fmt =
+            &g_array_index(priv->pixmap_formats, GstVaapiPixmapFormatX11, n);
+
+        pix_fmt->depth  = pix_fmts[i].depth;
+        pix_fmt->bpp    = pix_fmts[i].bits_per_pixel;
+        pix_fmt->format = pix_fmt_to_video_format(pix_fmt->depth, pix_fmt->bpp);
+        if (pix_fmt->format != GST_VIDEO_FORMAT_UNKNOWN)
+            n++;
+    }
+    priv->pixmap_formats->len = n;
+    return TRUE;
+}
+
+/* Determine the GstVideoFormat based on a supported Pixmap depth */
+GstVideoFormat
+gst_vaapi_display_x11_get_pixmap_format(GstVaapiDisplayX11 *display,
+    guint depth)
+{
+    if (ensure_pix_fmts(display)) {
+        GstVaapiDisplayX11Private * const priv =
+            GST_VAAPI_DISPLAY_X11_PRIVATE(display);
+        guint i;
+
+        for (i = 0; i < priv->pixmap_formats->len; i++) {
+            GstVaapiPixmapFormatX11 * const pix_fmt = &g_array_index(
+                priv->pixmap_formats, GstVaapiPixmapFormatX11, i);
+            if (pix_fmt->depth == depth)
+                return pix_fmt->format;
+        }
+    }
+    return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+/* Determine the Pixmap depth based on a GstVideoFormat */
+guint
+gst_vaapi_display_x11_get_pixmap_depth(GstVaapiDisplayX11 *display,
+    GstVideoFormat format)
+{
+    if (ensure_pix_fmts(display)) {
+        GstVaapiDisplayX11Private * const priv =
+            GST_VAAPI_DISPLAY_X11_PRIVATE(display);
+        guint i;
+
+        for (i = 0; i < priv->pixmap_formats->len; i++) {
+            GstVaapiPixmapFormatX11 * const pix_fmt = &g_array_index(
+                priv->pixmap_formats, GstVaapiPixmapFormatX11, i);
+            if (pix_fmt->format == format)
+                return pix_fmt->depth;
+        }
+    }
+    return 0;
 }

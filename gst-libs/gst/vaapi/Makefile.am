@@ -149,6 +149,7 @@ libgstvaapi_drm_source_priv_h =			\
 
 libgstvaapi_x11_source_c =			\
 	gstvaapidisplay_x11.c			\
+	gstvaapipixmap_x11.c			\
 	gstvaapiutils.c				\
 	gstvaapiutils_x11.c			\
 	gstvaapiwindow_x11.c			\
@@ -156,6 +157,7 @@ libgstvaapi_x11_source_c =			\
 
 libgstvaapi_x11_source_h =			\
 	gstvaapidisplay_x11.h			\
+	gstvaapipixmap_x11.h			\
 	gstvaapiwindow_x11.h			\
 	$(NULL)
 
