@@ -843,7 +843,7 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
           break;
         default:
           memcpy (text_shader_ARGB, text_shader_RGB_gles2,
-              sizeof (text_shader_RGB_gles2));
+              strlen (text_shader_RGB_gles2) + 1);
           break;
       }
 
