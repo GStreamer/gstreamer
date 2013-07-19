@@ -88,17 +88,16 @@ struct _GstQaPadMonitor {
 
   GstFlowReturn last_flow_return;
 
-  /* Stores the current timestamp range of data
-   * in this pad by using TIMESTAMP and TIMESTAMP+DURATION from
-   * incomming buffers.
+  /* Stores the timestamp range of data that has flown through
+   * this pad by using TIMESTAMP and TIMESTAMP+DURATION from
+   * incomming buffers. Every time a buffer is pushed, this range
+   * is extended.
    *
-   * If the internally linked pads haven't pushed a buffer, it will
-   * update the end to the new TIMESTAMP+DURATION, in case a buffer
-   * was pushed, the start is also updated to be TIMESTMAP.
+   * When a buffer is pushed, the timestamp range is checked against
+   * the outgoing timestamp to check it is in the received boundaries.
    */
   GstClockTime timestamp_range_start;
   GstClockTime timestamp_range_end;
-  gboolean buffer_pushed;
 };
 
 /**
