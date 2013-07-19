@@ -82,7 +82,7 @@ enum
 {
   PROP_0,
   PROP_MODE,
-  PROP_DEVICE
+  PROP_DEVICE_NUMBER
 };
 
 /* pad templates */
@@ -120,14 +120,11 @@ gst_decklink_sink_class_init (GstDecklinkSinkClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
-  /* FIXME: should be device-number or so, or turned into a string */
-#if 0
-  g_object_class_install_property (gobject_class, PROP_DEVICE,
-      g_param_spec_int ("device", "Device", "Capture device instance to use",
-          0, G_MAXINT, 0,
+  g_object_class_install_property (gobject_class, PROP_DEVICE_NUMBER,
+      g_param_spec_int ("device-number", "Device number",
+          "Output device instance to use", 0, G_MAXINT, 0,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
-#endif
 
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("videosink", GST_PAD_SINK, GST_PAD_ALWAYS,
@@ -182,7 +179,7 @@ gst_decklink_sink_init (GstDecklinkSink * decklinksink)
   g_cond_init (&decklinksink->audio_cond);
 
   decklinksink->mode = GST_DECKLINK_MODE_NTSC;
-  decklinksink->device = 0;
+  decklinksink->device_number = 0;
 
   decklinksink->callback = new Output;
   decklinksink->callback->decklinksink = decklinksink;
@@ -219,8 +216,8 @@ gst_decklink_sink_set_property (GObject * object, guint property_id,
     case PROP_MODE:
       decklinksink->mode = (GstDecklinkModeEnum) g_value_get_enum (value);
       break;
-    case PROP_DEVICE:
-      decklinksink->device = g_value_get_int (value);
+    case PROP_DEVICE_NUMBER:
+      decklinksink->device_number = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -241,8 +238,8 @@ gst_decklink_sink_get_property (GObject * object, guint property_id,
     case PROP_MODE:
       g_value_set_enum (value, decklinksink->mode);
       break;
-    case PROP_DEVICE:
-      g_value_set_int (value, decklinksink->device);
+    case PROP_DEVICE_NUMBER:
+      g_value_set_int (value, decklinksink->device_number);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -331,13 +328,13 @@ gst_decklink_sink_start (GstDecklinkSink * decklinksink)
   const GstDecklinkMode *mode;
   BMDAudioSampleType sample_depth;
 
-  decklinksink->decklink = gst_decklink_get_nth_device (decklinksink->device);
+  decklinksink->decklink = gst_decklink_get_nth_device (decklinksink->device_number);
   if (!decklinksink->decklink) {
-    GST_WARNING ("failed to get device %d", decklinksink->device);
+    GST_WARNING ("failed to get device %d", decklinksink->device_number);
     return FALSE;
   }
 
-  decklinksink->output = gst_decklink_get_nth_output (decklinksink->device);
+  decklinksink->output = gst_decklink_get_nth_output (decklinksink->device_number);
 
   decklinksink->output->SetAudioCallback (decklinksink->callback);
 
