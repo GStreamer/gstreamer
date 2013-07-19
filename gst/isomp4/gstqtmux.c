@@ -1963,7 +1963,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
     ret = gst_qt_mux_send_buffered_data (qtmux, NULL);
     if (ret != GST_FLOW_OK)
       return ret;
-  } else {
+  } else if (!qtmux->streamable) {
     /* mdat needs update iff not using faststart */
     GST_DEBUG_OBJECT (qtmux, "updating mdat size");
     ret = gst_qt_mux_update_mdat_size (qtmux, qtmux->mdat_pos,
