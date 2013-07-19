@@ -22,6 +22,7 @@
 #include "gst-qa-pad-monitor.h"
 #include "gst-qa-element-monitor.h"
 #include <gst/gst.h>
+#include <string.h>
 
 /**
  * SECTION:gst-qa-pad-monitor
@@ -159,6 +160,147 @@ gst_qa_pad_monitor_check_caps_complete (GstQaPadMonitor * monitor,
 
     } else if (_structure_is_raw_audio (structure)) {
       gst_qa_pad_monitor_check_raw_audio_caps_complete (monitor, structure);
+    }
+  }
+}
+
+static GstCaps *
+gst_qa_pad_monitor_get_othercaps (GstQaPadMonitor * monitor)
+{
+  GstCaps *caps = gst_caps_new_empty ();
+  GstIterator *iter;
+  gboolean done;
+  GstPad *otherpad;
+
+  iter = gst_pad_iterate_internal_links (GST_QA_PAD_MONITOR_GET_PAD (monitor));
+  done = FALSE;
+  while (!done) {
+    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+      case GST_ITERATOR_OK:
+
+        /* TODO What would be the correct caps operation to merge the caps in
+         * case one sink is internally linked to multiple srcs? */
+        gst_caps_merge (caps, gst_pad_peer_get_caps_reffed (otherpad));
+        gst_object_unref (otherpad);
+
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        gst_caps_replace (&caps, gst_caps_new_empty ());
+        break;
+      case GST_ITERATOR_ERROR:
+        GST_WARNING_OBJECT (monitor, "Internal links pad iteration error");
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iter);
+
+  GST_DEBUG_OBJECT (monitor, "Otherpad caps: %" GST_PTR_FORMAT, caps);
+
+  return caps;
+}
+
+static gboolean
+_structure_is_video (GstStructure * structure)
+{
+  const gchar *name = gst_structure_get_name (structure);
+
+  return g_strstr_len (name, 6, "video/")
+      && strcmp (name, "video/quicktime") != 0;
+}
+
+static gboolean
+_structure_is_audio (GstStructure * structure)
+{
+  const gchar *name = gst_structure_get_name (structure);
+
+  return g_strstr_len (name, 6, "audio/") != NULL;
+}
+
+static gboolean
+gst_qa_pad_monitor_pad_should_proxy_othercaps (GstQaPadMonitor * monitor)
+{
+  GstQaMonitor *parent = GST_QA_MONITOR_GET_PARENT (monitor);
+  /* We only know how to handle othercaps checks for decoders so far */
+  return GST_QA_ELEMENT_MONITOR_ELEMENT_IS_DECODER (parent) ||
+      GST_QA_ELEMENT_MONITOR_ELEMENT_IS_ENCODER (parent);
+}
+
+static gboolean
+_structures_field_match (GstStructure * s1, GstStructure * s2, const gchar * f)
+{
+  const GValue *v1;
+  const GValue *v2;
+
+  v2 = gst_structure_get_value (s2, f);
+  if (!v2)
+    return TRUE;                /* nothing to compare to */
+
+  v1 = gst_structure_get_value (s1, f);
+  if (!v1)
+    return FALSE;
+
+  return gst_value_compare (v1, v2) == GST_VALUE_EQUAL;
+}
+
+static void
+gst_qa_pad_monitor_check_caps_fields_proxied (GstQaPadMonitor * monitor,
+    GstCaps * caps)
+{
+  GstStructure *structure;
+  GstStructure *otherstructure;
+  GstCaps *othercaps;
+  gint i, j;
+
+  if (!gst_qa_pad_monitor_pad_should_proxy_othercaps (monitor))
+    return;
+
+  othercaps = gst_qa_pad_monitor_get_othercaps (monitor);
+
+  for (i = 0; i < gst_caps_get_size (othercaps); i++) {
+    gboolean found = FALSE;
+    gboolean type_match = FALSE;
+
+    otherstructure = gst_caps_get_structure (othercaps, i);
+
+    if (_structure_is_video (otherstructure)) {
+      for (j = 0; j < gst_caps_get_size (caps); j++) {
+        structure = gst_caps_get_structure (caps, j);
+        if (_structure_is_video (structure)) {
+          type_match = TRUE;
+          if (_structures_field_match (structure, otherstructure, "width") &&
+              _structures_field_match (structure, otherstructure, "height") &&
+              _structures_field_match (structure, otherstructure, "framerate")
+              && _structures_field_match (structure, otherstructure,
+                  "pixel-aspect-ratio")) {
+            found = TRUE;
+            break;
+          }
+        }
+      }
+    } else if (_structure_is_audio (otherstructure)) {
+      for (j = 0; j < gst_caps_get_size (caps); j++) {
+        structure = gst_caps_get_structure (caps, j);
+        if (_structure_is_audio (structure)) {
+          type_match = TRUE;
+          if (_structures_field_match (structure, otherstructure, "rate") &&
+              _structures_field_match (structure, otherstructure, "channels")) {
+            found = TRUE;
+            break;
+          }
+        }
+      }
+    }
+
+    if (type_match && !found) {
+      GST_QA_MONITOR_REPORT_WARNING (monitor, FALSE, CAPS_NEGOTIATION,
+          GET_CAPS,
+          "Peer pad structure %" GST_PTR_FORMAT " has no similar version "
+          "on pad's caps %" GST_PTR_FORMAT, otherstructure, caps);
     }
   }
 }
@@ -870,6 +1012,7 @@ gst_qa_pad_monitor_getcaps_func (GstPad * pad)
 
   if (ret) {
     gst_qa_pad_monitor_check_caps_complete (pad_monitor, ret);
+    gst_qa_pad_monitor_check_caps_fields_proxied (pad_monitor, ret);
   }
 
   return ret;
