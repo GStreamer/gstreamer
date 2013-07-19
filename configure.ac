@@ -361,13 +361,6 @@ else
   fi
 
   case $host_os in
-    # Unfortunately, in Mac OS 10.5 the current rev of libav builds
-    # some non-PIC code into the .a file. See
-    # http://trac.macosforge.org/projects/macports/ticket/13725 for more
-    # info.
-    darwin*) 
-      emblibav_configure_args="$emblibav_configure_args --disable-mmx --disable-altivec"
-      ;;
     mingw32*)
       emblibav_configure_args="$emblibav_configure_args --enable-memalign-hack"
       WIN32_LIBS="-lws2_32"
