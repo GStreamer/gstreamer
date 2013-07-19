@@ -81,7 +81,7 @@ struct _GstDecklinkSink
 
   /* properties */
   GstDecklinkModeEnum mode;
-  int device;
+  int device_number;
 
 #ifdef _MSC_VER
   gboolean comInitialized;

@@ -81,7 +81,7 @@ enum
   PROP_MODE,
   PROP_CONNECTION,
   PROP_AUDIO_INPUT,
-  PROP_DEVICE
+  PROP_DEVICE_NUMBER
 };
 
 static GstStaticPadTemplate gst_decklink_src_audio_src_template =
@@ -132,14 +132,11 @@ gst_decklink_src_class_init (GstDecklinkSrcClass * klass)
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
 
-  /* FIXME: should be device-number or so, or turned into a string */
-#if 0
-  g_object_class_install_property (gobject_class, PROP_DEVICE,
-      g_param_spec_int ("device", "Device", "Capture device instance to use",
-          0, G_MAXINT, 0,
+  g_object_class_install_property (gobject_class, PROP_DEVICE_NUMBER,
+      g_param_spec_int ("device-number", "Device number",
+          "Capture device instance to use", 0, G_MAXINT, 0,
           (GParamFlags) (G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
               G_PARAM_CONSTRUCT)));
-#endif
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_decklink_src_audio_src_template));
@@ -188,7 +185,7 @@ gst_decklink_src_init (GstDecklinkSrc * decklinksrc)
   decklinksrc->mode = GST_DECKLINK_MODE_NTSC;
   decklinksrc->connection = GST_DECKLINK_CONNECTION_SDI;
   decklinksrc->audio_connection = GST_DECKLINK_AUDIO_CONNECTION_AUTO;
-  decklinksrc->device = 0;
+  decklinksrc->device_number = 0;
 
   decklinksrc->stop = FALSE;
   decklinksrc->dropped_frames = 0;
@@ -237,8 +234,8 @@ gst_decklink_src_set_property (GObject * object, guint property_id,
       decklinksrc->audio_connection =
           (GstDecklinkAudioConnectionEnum) g_value_get_enum (value);
       break;
-    case PROP_DEVICE:
-      decklinksrc->device = g_value_get_int (value);
+    case PROP_DEVICE_NUMBER:
+      decklinksrc->device_number = g_value_get_int (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -264,8 +261,8 @@ gst_decklink_src_get_property (GObject * object, guint property_id,
     case PROP_AUDIO_INPUT:
       g_value_set_enum (value, decklinksrc->audio_connection);
       break;
-    case PROP_DEVICE:
-      g_value_set_int (value, decklinksrc->device);
+    case PROP_DEVICE_NUMBER:
+      g_value_set_int (value, decklinksrc->device_number);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -419,12 +416,12 @@ gst_decklink_src_start (GstElement * element)
 
   GST_DEBUG_OBJECT (decklinksrc, "start");
 
-  decklinksrc->decklink = gst_decklink_get_nth_device (decklinksrc->device);
+  decklinksrc->decklink = gst_decklink_get_nth_device (decklinksrc->device_number);
   if (decklinksrc->decklink == NULL) {
     return FALSE;
   }
 
-  decklinksrc->input = gst_decklink_get_nth_input (decklinksrc->device);
+  decklinksrc->input = gst_decklink_get_nth_input (decklinksrc->device_number);
 
   delegate = new DeckLinkCaptureDelegate ();
   delegate->priv = decklinksrc;
@@ -434,7 +431,7 @@ gst_decklink_src_start (GstElement * element)
     return FALSE;
   }
 
-  decklinksrc->config = gst_decklink_get_nth_config (decklinksrc->device);
+  decklinksrc->config = gst_decklink_get_nth_config (decklinksrc->device_number);
   config = decklinksrc->config;
 
   switch (decklinksrc->connection) {
