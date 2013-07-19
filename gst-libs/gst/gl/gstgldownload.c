@@ -45,7 +45,7 @@
 
 static void _do_download (GstGLDisplay * display, GstGLDownload * download);
 static void _init_download (GstGLDisplay * display, GstGLDownload * download);
-static void _init_download_shader (GstGLDisplay * display,
+static gboolean _init_download_shader (GstGLDisplay * display,
     GstGLDownload * download);
 static gboolean _gst_gl_download_perform_with_data_unlocked (GstGLDownload *
     download, GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
@@ -231,6 +231,8 @@ struct _GstGLDownloadPrivate
 
   void (*do_rgb) (GstGLDisplay * display, GstGLDownload * download);
   void (*do_yuv) (GstGLDisplay * display, GstGLDownload * download);
+
+  gboolean result;
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_download_debug);
@@ -373,6 +375,7 @@ gst_gl_download_init_format (GstGLDownload * download, GstVideoFormat v_format,
     guint out_width, guint out_height)
 {
   GstVideoInfo info;
+  gboolean ret;
 
   g_return_val_if_fail (download != NULL, FALSE);
   g_return_val_if_fail (v_format != GST_VIDEO_FORMAT_UNKNOWN, FALSE);
@@ -384,8 +387,6 @@ gst_gl_download_init_format (GstGLDownload * download, GstVideoFormat v_format,
   if (download->initted) {
     g_mutex_unlock (&download->lock);
     return FALSE;
-  } else {
-    download->initted = TRUE;
   }
 
   gst_video_info_set_format (&info, v_format, out_width, out_height);
@@ -395,9 +396,11 @@ gst_gl_download_init_format (GstGLDownload * download, GstVideoFormat v_format,
   gst_gl_display_thread_add (download->display,
       (GstGLDisplayThreadFunc) _init_download, download);
 
+  ret = download->initted = download->priv->result;
+
   g_mutex_unlock (&download->lock);
 
-  return TRUE;
+  return ret;
 }
 
 /**
@@ -497,7 +500,7 @@ _gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
   gst_gl_display_thread_add (download->display,
       (GstGLDisplayThreadFunc) _do_download, download);
 
-  return TRUE;
+  return download->priv->result;
 }
 
 static void
@@ -559,7 +562,7 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
          */
         gst_gl_display_set_error (display,
             "Context, EXT_framebuffer_object supported: no");
-        return;
+        goto error;
       }
       GST_INFO ("Context, EXT_framebuffer_object supported: yes");
 
@@ -667,7 +670,14 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
   }
 
 no_convert:
-  _init_download_shader (display, download);
+  download->priv->result = _init_download_shader (display, download);
+  return;
+
+error:
+  {
+    download->priv->result = FALSE;
+    return;
+  }
 }
 
 static gboolean
@@ -698,7 +708,7 @@ _create_shader (GstGLDisplay * display, const gchar * vertex_src,
   return TRUE;
 }
 
-static void
+static gboolean
 _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
 {
   GstGLFuncs *gl;
@@ -721,7 +731,7 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
       case GST_VIDEO_FORMAT_ABGR:
       case GST_VIDEO_FORMAT_RGB:
       case GST_VIDEO_FORMAT_BGR:
-        return;
+        return TRUE;
         break;
       default:
         break;
@@ -737,7 +747,7 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
     /* colorspace conversion is not possible */
     gst_gl_display_set_error (display,
         "Context, ARB_fragment_shader supported: no");
-    return;
+    return FALSE;;
   }
 
   switch (v_format) {
@@ -850,14 +860,18 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
     }
 #else
       g_assert_not_reached ();
+      return FALSE;
       break;
 #endif
     default:
       gst_gl_display_set_error (display,
           "Unsupported download video format %d", v_format);
       g_assert_not_reached ();
+      return FALSE;
       break;
   }
+
+  return TRUE;
 }
 
 /* Called in the gl thread */
@@ -902,6 +916,8 @@ _do_download (GstGLDisplay * display, GstGLDownload * download)
       g_assert_not_reached ();
       break;
   }
+
+  download->priv->result = TRUE;
 }
 
 #if GST_GL_HAVE_OPENGL
