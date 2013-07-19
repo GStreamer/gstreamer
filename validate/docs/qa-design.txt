@@ -1,0 +1,34 @@
+
+== Main components
+
+Gst-qa is composed of 3 parts: the monitors, the runner and the reports.
+
+= Monitors
+The monitors are used to wrap around pipeline (and elements and pads) and
+attach to its data flow handling functions to be able to intercept the data
+and compare it with the expected behaviors. There are 3 types of monitors:
+
+  * GstQaElementMonitor
+  * GstQaBinMonitor
+  * GstQaPadMonitor
+
+All 3 inherit from the base GstQaMonitor class. Their name suggest what they
+monitor and they have a relationship to their children and parents. A bin
+monitor has, possibly, child element monitors and element monitors have child
+pad monitors. The monitors are responsible for listenning to new childs added
+to their monitored object and creating monitors for them. For example, element
+monitors listen to element's pad-added signal and create pad monitors whenever
+a new pad is added.
+
+Most (if not all) the checks are implemented at the GstQaPadMonitor, as it is
+where the data flow happens.
+
+= Runner
+The GstQaRunner is the point of communication for the app to gst-qa
+monitoring. It provides an API to start monitoring a pipeline and then to
+access the results.
+
+= Reports
+The GstQaReports are created when a check fails, it is posted to the runner
+with information about the element that found the problem, along with details
+about it.
