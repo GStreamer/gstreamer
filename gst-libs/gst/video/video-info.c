@@ -767,7 +767,6 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
 
   for (i = 0; i < n_planes; i++) {
     gint vedge, hedge, comp;
-    guint offset;
 
     /* Find the component for this plane, FIXME, we assume the plane number and
      * component number is the same for now, for scaling the dimensions this is
@@ -781,15 +780,10 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
     vedge =
         GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (vinfo, comp, align->padding_top);
 
-    offset = (vedge * info->stride[i]) +
+    GST_DEBUG ("plane %d: comp: %d, hedge %d vedge %d align %d stride %d", i,
+        comp, hedge, vedge, align->stride_align[i], info->stride[i]);
+
+    info->offset[i] += (vedge * info->stride[i]) +
         (hedge * GST_VIDEO_FORMAT_INFO_PSTRIDE (vinfo, comp));
-
-    offset = (offset + align->stride_align[i]) & ~align->stride_align[i];
-
-    GST_DEBUG ("plane %d: comp: %d, hedge %d vedge %d align %d stride %d "
-        "offset %u", i, comp, hedge, vedge, align->stride_align[i],
-        info->stride[i], offset);
-
-    info->offset[i] += offset;
   }
 }
