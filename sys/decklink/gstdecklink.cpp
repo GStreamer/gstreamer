@@ -288,10 +288,9 @@ plugin_init (GstPlugin * plugin)
 
   gst_element_register (plugin, "decklinksrc", GST_RANK_NONE,
       gst_decklink_src_get_type ());
-#if 0
+
   gst_element_register (plugin, "decklinksink", GST_RANK_NONE,
       gst_decklink_sink_get_type ());
-#endif
 
   return TRUE;
 }
