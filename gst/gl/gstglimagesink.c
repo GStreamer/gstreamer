@@ -756,7 +756,7 @@ gst_glimage_sink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
 
   g_return_if_fail (GST_IS_GLIMAGE_SINK (overlay));
 
-  GST_DEBUG ("set_xwindow_id %ld", window_id);
+  GST_DEBUG ("set_xwindow_id %" G_GUINT64_FORMAT, (guint64) window_id);
 
   glimage_sink->new_window_id = window_id;
 }
