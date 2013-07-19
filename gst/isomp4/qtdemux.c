@@ -562,31 +562,11 @@ gst_qtdemux_post_no_playable_stream_error (GstQTDemux * qtdemux)
   }
 }
 
-static void
-_gst_buffer_copy_into_mem (GstBuffer * dest, gsize offset, const guint8 * src,
-    gsize size)
-{
-  gsize bsize;
-
-  g_return_if_fail (gst_buffer_is_writable (dest));
-
-  bsize = gst_buffer_get_size (dest);
-  g_return_if_fail (bsize >= offset + size);
-
-  gst_buffer_fill (dest, offset, src, size);
-}
-
 static GstBuffer *
 _gst_buffer_new_wrapped (gpointer mem, gsize size, GFreeFunc free_func)
 {
-  GstBuffer *buf;
-
-  buf = gst_buffer_new ();
-  gst_buffer_append_memory (buf,
-      gst_memory_new_wrapped (free_func ? 0 : GST_MEMORY_FLAG_READONLY,
-          mem, size, 0, size, mem, free_func));
-
-  return buf;
+  return gst_buffer_new_wrapped_full (free_func ? 0 : GST_MEMORY_FLAG_READONLY,
+      mem, size, 0, size, mem, free_func);
 }
 
 static GstFlowReturn
@@ -2182,7 +2162,7 @@ qtdemux_parse_ftyp (GstQTDemux * qtdemux, const guint8 * buffer, gint length)
     GST_DEBUG_OBJECT (qtdemux, "major brand: %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (qtdemux->major_brand));
     buf = qtdemux->comp_brands = gst_buffer_new_and_alloc (length - 16);
-    _gst_buffer_copy_into_mem (buf, 0, buffer + 16, length - 16);
+    gst_buffer_fill (buf, 0, buffer + 16, length - 16);
   }
 }
 
@@ -5210,19 +5190,19 @@ qtdemux_parse_theora_extension (GstQTDemux * qtdemux, QtDemuxStream * stream,
     switch (type) {
       case FOURCC_tCtH:
         buffer = gst_buffer_new_and_alloc (size);
-        _gst_buffer_copy_into_mem (buffer, 0, buf, size);
+        gst_buffer_fill (buffer, 0, buf, size);
         stream->buffers = g_slist_append (stream->buffers, buffer);
         GST_LOG_OBJECT (qtdemux, "parsing theora header");
         break;
       case FOURCC_tCt_:
         buffer = gst_buffer_new_and_alloc (size);
-        _gst_buffer_copy_into_mem (buffer, 0, buf, size);
+        gst_buffer_fill (buffer, 0, buf, size);
         stream->buffers = g_slist_append (stream->buffers, buffer);
         GST_LOG_OBJECT (qtdemux, "parsing theora comment");
         break;
       case FOURCC_tCtC:
         buffer = gst_buffer_new_and_alloc (size);
-        _gst_buffer_copy_into_mem (buffer, 0, buf, size);
+        gst_buffer_fill (buffer, 0, buf, size);
         stream->buffers = g_slist_append (stream->buffers, buffer);
         GST_LOG_OBJECT (qtdemux, "parsing theora codebook");
         break;
@@ -6697,7 +6677,7 @@ qtdemux_parse_svq3_stsd_data (GstQTDemux * qtdemux, GNode * stsd,
                 seqh_size = QT_UINT32 (data + 4);
                 if (seqh_size > 0) {
                   _seqh = gst_buffer_new_and_alloc (seqh_size);
-                  _gst_buffer_copy_into_mem (_seqh, 0, data + 8, seqh_size);
+                  gst_buffer_fill (_seqh, 0, data + 8, seqh_size);
                 }
               }
             }
@@ -7303,7 +7283,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                     avc_data + 8 + 1, size - 1);
 
                 buf = gst_buffer_new_and_alloc (size);
-                _gst_buffer_copy_into_mem (buf, 0, avc_data + 0x8, size);
+                gst_buffer_fill (buf, 0, avc_data + 0x8, size);
                 gst_caps_set_simple (stream->caps,
                     "codec_data", GST_TYPE_BUFFER, buf, NULL);
                 gst_buffer_unref (buf);
@@ -7382,7 +7362,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             if (len > 0x8) {
               len -= 0x8;
               buf = gst_buffer_new_and_alloc (len);
-              _gst_buffer_copy_into_mem (buf, 0, data + 8, len);
+              gst_buffer_fill (buf, 0, data + 8, len);
               gst_caps_set_simple (stream->caps,
                   "codec_data", GST_TYPE_BUFFER, buf, NULL);
               gst_buffer_unref (buf);
@@ -7566,7 +7546,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             if (len > 0x8) {
               len -= 0x8;
               buf = gst_buffer_new_and_alloc (len);
-              _gst_buffer_copy_into_mem (buf, 0, data + 8, len);
+              gst_buffer_fill (buf, 0, data + 8, len);
               gst_caps_set_simple (stream->caps,
                   "codec_data", GST_TYPE_BUFFER, buf, NULL);
               gst_buffer_unref (buf);
@@ -7596,7 +7576,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
           GST_DEBUG_OBJECT (qtdemux, "found codec_data in stsd");
           buf = gst_buffer_new_and_alloc (len);
-          _gst_buffer_copy_into_mem (buf, 0, stsd_data, len);
+          gst_buffer_fill (buf, 0, stsd_data, len);
           gst_caps_set_simple (stream->caps,
               "codec_data", GST_TYPE_BUFFER, buf, NULL);
           gst_buffer_unref (buf);
@@ -7645,7 +7625,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             break;
           }
           buf = gst_buffer_new_and_alloc (ovc1_len - 198);
-          _gst_buffer_copy_into_mem (buf, 0, ovc1_data + 198, ovc1_len - 198);
+          gst_buffer_fill (buf, 0, ovc1_data + 198, ovc1_len - 198);
           gst_caps_set_simple (stream->caps,
               "codec_data", GST_TYPE_BUFFER, buf, NULL);
           gst_buffer_unref (buf);
@@ -7874,7 +7854,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         }
         wfex = (WAVEFORMATEX *) (owma_data + 36);
         buf = gst_buffer_new_and_alloc (owma_len - 54);
-        _gst_buffer_copy_into_mem (buf, 0, owma_data + 54, owma_len - 54);
+        gst_buffer_fill (buf, 0, owma_data + 54, owma_len - 54);
         if (wfex->wFormatTag == 0x0161) {
           codec_name = "Windows Media Audio";
           version = 2;
@@ -7973,7 +7953,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               headerlen -= 8;
 
               headerbuf = gst_buffer_new_and_alloc (headerlen);
-              _gst_buffer_copy_into_mem (headerbuf, 0, waveheader, headerlen);
+              gst_buffer_fill (headerbuf, 0, waveheader, headerlen);
 
               if (gst_riff_parse_strf_auds (GST_ELEMENT_CAST (qtdemux),
                       headerbuf, &header, &extra)) {
@@ -8013,7 +7993,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           if (len > 0x4C) {
             GstBuffer *buf = gst_buffer_new_and_alloc (len - 0x4C);
 
-            _gst_buffer_copy_into_mem (buf, 0, stsd_data + 0x4C, len - 0x4C);
+            gst_buffer_fill (buf, 0, stsd_data + 0x4C, len - 0x4C);
             gst_caps_set_simple (stream->caps,
                 "codec_data", GST_TYPE_BUFFER, buf, NULL);
             gst_buffer_unref (buf);
@@ -8049,7 +8029,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
               /* codec-data contains alac atom size and prefix,
                * ffmpeg likes it that way, not quite gst-ish though ...*/
               buf = gst_buffer_new_and_alloc (len);
-              _gst_buffer_copy_into_mem (buf, 0, alac->data, len);
+              gst_buffer_fill (buf, 0, alac->data, len);
               gst_caps_set_simple (stream->caps,
                   "codec_data", GST_TYPE_BUFFER, buf, NULL);
               gst_buffer_unref (buf);
@@ -8074,7 +8054,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             GstBuffer *buf = gst_buffer_new_and_alloc (len - 0x34);
             guint bitrate;
 
-            _gst_buffer_copy_into_mem (buf, 0, stsd_data + 0x34, len - 0x34);
+            gst_buffer_fill (buf, 0, stsd_data + 0x34, len - 0x34);
 
             /* If we have enough data, let's try to get the 'damr' atom. See
              * the 3GPP container spec (26.244) for more details. */
@@ -9363,7 +9343,7 @@ qtdemux_tag_add_blob (GNode * node, GstQTDemux * demux)
   data = node->data;
   len = QT_UINT32 (data);
   buf = gst_buffer_new_and_alloc (len);
-  _gst_buffer_copy_into_mem (buf, 0, data, len);
+  gst_buffer_fill (buf, 0, data, len);
 
   /* heuristic to determine style of tag */
   if (QT_FOURCC (data + 4) == FOURCC_____ ||
@@ -10024,7 +10004,7 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
     GstBuffer *buffer;
 
     buffer = gst_buffer_new_and_alloc (data_len);
-    _gst_buffer_copy_into_mem (buffer, 0, data_ptr, data_len);
+    gst_buffer_fill (buffer, 0, data_ptr, data_len);
 
     GST_DEBUG_OBJECT (qtdemux, "setting codec_data from esds");
     GST_MEMDUMP_OBJECT (qtdemux, "codec_data from esds", data_ptr, data_len);
