@@ -114,6 +114,7 @@ gst_qa_element_monitor_inspect (GstQaElementMonitor * monitor)
   klass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
 
   monitor->is_decoder = strstr (klass->details.klass, "Decoder") != NULL;
+  monitor->is_encoder = strstr (klass->details.klass, "Encoder") != NULL;
 }
 
 static gboolean

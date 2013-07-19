@@ -40,6 +40,7 @@ G_BEGIN_DECLS
 
 #define GST_QA_ELEMENT_MONITOR_GET_ELEMENT(m) (GST_ELEMENT_CAST (GST_QA_MONITOR_GET_OBJECT (m)))
 #define GST_QA_ELEMENT_MONITOR_ELEMENT_IS_DECODER(m) (GST_QA_ELEMENT_MONITOR_CAST (m)->is_decoder)
+#define GST_QA_ELEMENT_MONITOR_ELEMENT_IS_ENCODER(m) (GST_QA_ELEMENT_MONITOR_CAST (m)->is_encoder)
 
 typedef struct _GstQaElementMonitor GstQaElementMonitor;
 typedef struct _GstQaElementMonitorClass GstQaElementMonitorClass;
@@ -59,6 +60,7 @@ struct _GstQaElementMonitor {
   GList         *pad_monitors;
 
   gboolean       is_decoder;
+  gboolean       is_encoder;
 };
 
 /**
