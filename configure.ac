@@ -4,6 +4,7 @@ AC_CANONICAL_TARGET
 AM_INIT_AUTOMAKE
 AM_MAINTAINER_MODE
 AC_PROG_INSTALL
+LT_INIT
 
 dnl Package settings
 ASSEMBLY_COMPANY=""
@@ -133,12 +134,15 @@ dnl Check for Gst
 PKG_CHECK_MODULES(GST, gstreamer-1.0)
 gst_prefix=/usr
 AC_SUBST(gst_prefix)
+AC_SUBST(GST_LIBS)
+AC_SUBST(GST_CFLAGS)
 
 
 
 AC_CONFIG_FILES([
 	Makefile
 	sources/Makefile
+	sources/glue/Makefile
 	sources/AssemblyInfo.cs
 	gst-sharp-1.0.pc
 	doc/Makefile

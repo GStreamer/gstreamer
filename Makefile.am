@@ -1,4 +1,4 @@
-SUBDIRS = sources doc
+SUBDIRS = sources sources/glue doc
 
 pkgconfigdir = $(libdir)/pkgconfig
 pkgconfig_DATA = gst-sharp-1.0.pc

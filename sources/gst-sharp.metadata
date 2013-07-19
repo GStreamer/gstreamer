@@ -7,6 +7,7 @@
 	<attr path="/api/namespace/object[@cname='GstPad']/property[@name='Caps']" name="type">gpointer</attr>
 	<attr path="/api/namespace/object[@cname='GstPad']/property[@name='Caps']" name="type">gpointer</attr>
 	<attr path="/api/namespace/object[@cname='GstPadTemplate']/property[@name='Caps']" name="type">gpointer</attr>
+	<attr path="/api/namespace/object[@cname='GstObject']/field[@cname='object']" name="name">Obj</attr>
 	<!-- Error with array -->
 	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_formats_contains']" name="hidden">true</attr>
 	<!-- MiniObject issues -->
@@ -28,6 +29,12 @@
 	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_init_check']/parameters/parameter[@name='argc']" name="name">n_argc</attr>
 	<!-- calling oldobj.Handle should fix this -->
 	<remove-attr path="/api/namespace/object[@cname='GstObject']/method[@cname='gst_object_replace']/parameters/parameter[@name='oldobj']" name="pass_as" />
+	<!-- Some glue problems -->
+	<attr path="/api/namespace/object[@cname='GstObject']/field[@cname='object']" name="hidden">true</attr>
+	<attr path="/api/namespace/object[@cname='GstObject']/field[@cname='lock']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstClockEntry']/field[@cname='func']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstClockEntry']/field[@cname='destroy_data']" name="hidden">true</attr>
+	<attr path="/api/namespace/object[@cname='GstTask']/field[@cname='notify']" name="hidden">true</attr>
 	<!-- Element is not abstract but should not be instantiable from managed -->
 	<remove-attr path="/api/namespace/object[@cname='GstElement']" name="abstract" />
 	<attr path="/api/namespace/object[@cname='GstElement']" name="defaultconstructoraccess" >protected</attr>
