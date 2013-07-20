@@ -38,6 +38,8 @@ dnl GST_API_VERSION=$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR
 dnl we override it here if we need to for the release candidate of new series
 GST_API_VERSION=0.10
 AC_SUBST(GST_API_VERSION)
+AC_DEFINE_UNQUOTED(GST_API_VERSION, "$GST_API_VERSION",
+      [GStreamer API Version])
 
 AS_LIBTOOL(GST, 0, 0, 0)
 
@@ -138,6 +140,18 @@ fi
 AC_SUBST(GST_PBUTILS_LIBS)
 AC_SUBST(GST_PBUTILS_CFLAGS)
 
+dnl needed for scenarios definition files
+GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_API_VERSION`"
+AC_SUBST(GST_PREFIX)
+GST_DATADIR="$GST_PREFIX/share"
+AC_DEFINE_UNQUOTED(GST_DATADIR, "$GST_DATADIR", [system wide data directory])
+
+PKG_CHECK_MODULES(GIO, gio-2.0 >= 2.16, HAVE_GIO=yes, HAVE_GIO=no)
+AC_SUBST(GIO_CFLAGS)
+AC_SUBST(GIO_LIBS)
+
+dnl checks for gstreamer
+
 AG_GST_CHECK_GST_CHECK($GST_API_VERSION, [$GST_REQ], no)
 
 dnl *** set variables based on configure arguments ***
@@ -230,6 +244,7 @@ common/Makefile
 common/m4/Makefile
 gst/Makefile
 gst/qa/Makefile
+data/Makefile
 ])
 AC_OUTPUT
 

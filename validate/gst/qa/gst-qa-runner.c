@@ -22,6 +22,7 @@
 #include "gst-qa-runner.h"
 #include "gst-qa-report.h"
 #include "gst-qa-monitor-factory.h"
+#include "gst-qa-scenario.h"
 
 /**
  * SECTION:gst-qa-runner
@@ -60,6 +61,9 @@ gst_qa_runner_dispose (GObject * object)
   if (runner->monitor)
     g_object_unref (runner->monitor);
 
+  if (runner->scenario)
+    g_object_unref (runner->scenario);
+
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
@@ -94,11 +98,28 @@ gst_qa_runner_init (GstQaRunner * runner)
 GstQaRunner *
 gst_qa_runner_new (GstElement * pipeline)
 {
-  GstQaRunner *runner = g_object_new (GST_TYPE_QA_RUNNER, NULL);
+  const gchar *scenario_name;
+  GstQaRunner *runner;
 
   g_return_val_if_fail (pipeline != NULL, NULL);
 
+  runner = g_object_get_data ((GObject *) pipeline, "qa-runner");
+  if (runner) {
+    GST_WARNING_OBJECT (pipeline,
+        "Pipeline already has a qa-runner associated, returning it");
+
+    return gst_object_ref (runner);
+  }
+
+  runner = g_object_new (GST_TYPE_QA_RUNNER, NULL);
   runner->pipeline = gst_object_ref (pipeline);
+
+
+  if ((scenario_name = g_getenv ("GST_QA_SCENARIO")))
+    runner->scenario = gst_qa_scenario_factory_create (pipeline, scenario_name);
+
+  g_object_set_data ((GObject *) pipeline, "qa-runner", runner);
+
   return runner;
 }
 

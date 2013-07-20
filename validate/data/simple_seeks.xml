@@ -1,0 +1,13 @@
+<xml>
+  <seeks>
+      <seek name='First seek' seeking_time="1000000000" format="time"
+            rate="1.0" flags="accurate+flush" start_type="set"
+            start="2000000000" stop_type="set" stop="-1" />
+      <seek name='Second seek' seeking_time="3000000000" format="time"
+            rate="1.0" flags="accurate+flush" start_type="set"
+            start="0" stop_type="set" stop="-1" />
+      <seek name='Third seek' seeking_time="1000000000" format="time"
+            rate="1.0" flags="accurate+flush" start_type="set"
+            start="2000000000" stop_type="set" stop="3000000000" />
+  </seeks>
+<xml>
