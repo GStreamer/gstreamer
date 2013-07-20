@@ -55,6 +55,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<!-- Element is not abstract but should not be instantiable from managed -->
 	<remove-attr path="/api/namespace/object[@cname='GstElement']" name="abstract" />
 	<attr path="/api/namespace/object[@cname='GstElement']" name="defaultconstructoraccess" >protected</attr>
+	<!-- Add miniobject methods to all miniobject types -->
+	<copy-node path="/api/namespace/struct[@cname='GstMiniObject']//method">/api/namespace//boxed[field/@cname='mini_object']</copy-node>
+	<attr path="/api/namespace/struct[@cname='GstMiniObject']//method" name="hidden">true</attr>
 	<!-- API improvements -->
 	<add-node path="/api/namespace[@name='Gst']"><class name="Parse" cname="GstParse" disable_void_ctor="1"></class></add-node>
 	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_parse')]">/api/namespace/class[@name='Parse']</move-node>
