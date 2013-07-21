@@ -151,11 +151,9 @@ gst_stream_splitter_sink_event (GstPad * pad, GstObject * parent,
   gboolean res = TRUE;
   gboolean toall = FALSE;
   gboolean store = FALSE;
-  gboolean eos = FALSE;
   gboolean flushpending = FALSE;
 
   /* FLUSH_START/STOP : forward to all
-   * EOS : transform to CUSTOM_REAL_EOS and forward to all
    * INBAND events : store to send in chain function to selected chain
    * OUT_OF_BAND events : send to all
    */
@@ -182,13 +180,7 @@ gst_stream_splitter_sink_event (GstPad * pad, GstObject * parent,
       toall = TRUE;
       break;
     case GST_EVENT_EOS:
-      /* Replace with our custom eos event */
-      gst_event_unref (event);
-      event =
-          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-          gst_structure_new_empty ("stream-switching-eos"));
       toall = TRUE;
-      eos = TRUE;
       break;
     default:
       if (GST_EVENT_TYPE (event) & GST_EVENT_TYPE_SERIALIZED)
@@ -205,7 +197,7 @@ gst_stream_splitter_sink_event (GstPad * pad, GstObject * parent,
   if (store) {
     stream_splitter->pending_events =
         g_list_append (stream_splitter->pending_events, event);
-  } else if (toall || eos) {
+  } else if (toall) {
     GList *tmp;
     guint32 cookie;
 
@@ -224,12 +216,6 @@ gst_stream_splitter_sink_event (GstPad * pad, GstObject * parent,
     while (tmp) {
       GstPad *srcpad = (GstPad *) tmp->data;
       STREAMS_UNLOCK (stream_splitter);
-      /* In case of EOS, we first push out the real one to flush out
-       * each streams (but which will be discarded in the streamcombiner)
-       * before our custom one (which will be converted back to and EOS
-       * in the streamcombiner) */
-      if (eos)
-        gst_pad_push_event (srcpad, gst_event_new_eos ());
       gst_event_ref (event);
       res = gst_pad_push_event (srcpad, event);
       STREAMS_LOCK (stream_splitter);

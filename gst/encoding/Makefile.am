@@ -17,7 +17,8 @@ noinst_HEADERS = 		\
 	gstencodebin.h		\
 	gststreamcombiner.h	\
 	gststreamsplitter.h	\
-	gstsmartencoder.h
+	gstsmartencoder.h	\
+	gststreamcombinerpad.h
 
 include $(top_srcdir)/common/gst-glib-gen.mak
 

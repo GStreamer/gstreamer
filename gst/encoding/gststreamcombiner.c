@@ -23,6 +23,7 @@
 #endif
 
 #include "gststreamcombiner.h"
+#include "gststreamcombinerpad.h"
 
 static GstStaticPadTemplate src_template =
 GST_STATIC_PAD_TEMPLATE ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
@@ -38,6 +39,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_stream_combiner_debug);
 
 G_DEFINE_TYPE (GstStreamCombiner, gst_stream_combiner, GST_TYPE_ELEMENT);
 
+G_DEFINE_TYPE (GstStreamCombinerPad, gst_stream_combiner_pad, GST_TYPE_PAD);
+
 #define STREAMS_LOCK(obj) (g_mutex_lock(&obj->lock))
 #define STREAMS_UNLOCK(obj) (g_mutex_unlock(&obj->lock))
 
@@ -47,6 +50,18 @@ static GstPad *gst_stream_combiner_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps);
 static void gst_stream_combiner_release_pad (GstElement * element,
     GstPad * pad);
+
+static void
+gst_stream_combiner_pad_class_init (GstStreamCombinerPadClass * klass)
+{
+  return;
+}
+
+static void
+gst_stream_combiner_pad_init (GstStreamCombinerPad * mixerpad)
+{
+  mixerpad->is_eos = FALSE;
+}
 
 static void
 gst_stream_combiner_class_init (GstStreamCombinerClass * klass)
@@ -99,32 +114,53 @@ gst_stream_combiner_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 }
 
 static gboolean
+_all_sink_pads_eos (GstStreamCombiner * combiner)
+{
+  GList *tmp;
+
+  for (tmp = combiner->sinkpads; tmp; tmp = tmp->next) {
+    if (!(GST_STREAM_COMBINER_PAD (tmp->data))->is_eos)
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_stream_combiner_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
   GstStreamCombiner *stream_combiner = (GstStreamCombiner *) parent;
+  GstStreamCombinerPad *combiner_pad = GST_STREAM_COMBINER_PAD (pad);
   /* FIXME : IMPLEMENT */
 
   GST_DEBUG_OBJECT (pad, "Got event %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CUSTOM_DOWNSTREAM:
-      if (gst_event_has_name (event, "stream-switching-eos")) {
+    case GST_EVENT_EOS:
+      GST_PAD_STREAM_LOCK (pad);
+
+      combiner_pad->is_eos = TRUE;
+      if (!_all_sink_pads_eos (stream_combiner)) {
         gst_event_unref (event);
-        event = gst_event_new_eos ();
+        event = NULL;
+      } else {
+        GST_DEBUG_OBJECT (stream_combiner, "All sink pads eos, pushing eos");
       }
+
+      GST_PAD_STREAM_UNLOCK (pad);
       break;
     default:
       break;
   }
 
   /* SEGMENT : lock, wait for other stream to EOS, select stream, unlock, push */
-  /* EOS : lock, mark pad as unused, unlock , drop event */
-  /* CUSTOM_REAL_EOS : push EOS downstream */
   /* FLUSH_START : lock, mark as flushing, unlock. if wasn't flushing forward */
   /* FLUSH_STOP : lock, unmark as flushing, unlock, if was flushing forward */
   /* OTHER : if selected pad forward */
-  return gst_pad_push_event (stream_combiner->srcpad, event);
+  if (event)
+    return gst_pad_push_event (stream_combiner->srcpad, event);
+  return FALSE;
 }
 
 static gboolean
@@ -204,11 +240,18 @@ gst_stream_combiner_request_new_pad (GstElement * element,
     GstPadTemplate * templ, const gchar * name, const GstCaps * caps)
 {
   GstStreamCombiner *stream_combiner = (GstStreamCombiner *) element;
+  GstStreamCombinerPad *combiner_pad;
   GstPad *sinkpad;
+  GstElementClass *klass = GST_ELEMENT_GET_CLASS (element);
+  GstPadTemplate *template =
+      gst_element_class_get_pad_template (klass, "sink_%u");
 
   GST_DEBUG_OBJECT (element, "templ:%p, name:%s", templ, name);
 
-  sinkpad = gst_pad_new_from_static_template (&sink_template, name);
+  combiner_pad = g_object_new (GST_TYPE_STREAM_COMBINER_PAD, "name", name,
+      "template", template, "direction", template->direction, NULL);
+
+  sinkpad = GST_PAD_CAST (combiner_pad);
   gst_pad_set_chain_function (sinkpad, gst_stream_combiner_chain);
   gst_pad_set_event_function (sinkpad, gst_stream_combiner_sink_event);
   gst_pad_set_query_function (sinkpad, gst_stream_combiner_sink_query);
