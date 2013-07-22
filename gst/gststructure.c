@@ -326,7 +326,7 @@ gst_structure_set_parent_refcount (GstStructure * structure, gint * refcount)
  *
  * Free-function: gst_structure_free
  *
- * Returns: (transfer none): a new #GstStructure.
+ * Returns: (transfer full): a new #GstStructure.
  */
 GstStructure *
 gst_structure_copy (const GstStructure * structure)
