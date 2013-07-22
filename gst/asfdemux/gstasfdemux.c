@@ -234,6 +234,8 @@ gst_asf_demux_reset (GstASFDemux * demux, gboolean chain_reset)
     /* do not remove those for not adding pads with same name */
     demux->num_audio_streams = 0;
     demux->num_video_streams = 0;
+    demux->have_group_id = FALSE;
+    demux->group_id = G_MAXUINT;
   }
   demux->num_streams = 0;
   demux->activated_streams = FALSE;
@@ -2368,6 +2370,7 @@ static void
 gst_asf_demux_activate_stream (GstASFDemux * demux, AsfStream * stream)
 {
   if (!stream->active) {
+    GstEvent *event;
     gchar *stream_id;
 
     GST_INFO_OBJECT (demux, "Activating stream %2u, pad %s, caps %"
@@ -2377,7 +2380,25 @@ gst_asf_demux_activate_stream (GstASFDemux * demux, AsfStream * stream)
     stream_id =
         gst_pad_create_stream_id_printf (stream->pad, GST_ELEMENT_CAST (demux),
         "%03u", stream->id);
-    gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
+
+    event =
+        gst_pad_get_sticky_event (demux->sinkpad, GST_EVENT_STREAM_START, 0);
+    if (event) {
+      if (gst_event_parse_group_id (event, &demux->group_id))
+        demux->have_group_id = TRUE;
+      else
+        demux->have_group_id = FALSE;
+      gst_event_unref (event);
+    } else if (!demux->have_group_id) {
+      demux->have_group_id = TRUE;
+      demux->group_id = gst_util_group_id_next ();
+    }
+
+    event = gst_event_new_stream_start (stream_id);
+    if (demux->have_group_id)
+      gst_event_set_group_id (event, demux->group_id);
+
+    gst_pad_push_event (stream->pad, event);
     g_free (stream_id);
     gst_pad_set_caps (stream->pad, stream->caps);
 

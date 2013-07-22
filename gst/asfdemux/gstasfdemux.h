@@ -129,6 +129,9 @@ struct _GstASFDemux {
 
   GstPad            *sinkpad;
 
+  gboolean           have_group_id;
+  guint              group_id;
+
   GstAdapter        *adapter;
   GstTagList        *taglist;
   GstASFDemuxState   state;
