@@ -59,6 +59,9 @@ struct _GstFlvDemux
   GstPad *audio_pad;
   GstPad *video_pad;
 
+  gboolean have_group_id;
+  guint group_id;
+
   /* <private> */
   
   GstIndex *index;

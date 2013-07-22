@@ -636,6 +636,26 @@ cleanup:
 }
 
 static gboolean
+have_group_id (GstFlvDemux * demux)
+{
+  GstEvent *event;
+
+  event = gst_pad_get_sticky_event (demux->sinkpad, GST_EVENT_STREAM_START, 0);
+  if (event) {
+    if (gst_event_parse_group_id (event, &demux->group_id))
+      demux->have_group_id = TRUE;
+    else
+      demux->have_group_id = FALSE;
+    gst_event_unref (event);
+  } else if (!demux->have_group_id) {
+    demux->have_group_id = TRUE;
+    demux->group_id = gst_util_group_id_next ();
+  }
+
+  return demux->have_group_id;
+}
+
+static gboolean
 gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
     guint32 rate, guint32 channels, guint32 width)
 {
@@ -643,6 +663,7 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
   gchar *codec_name = NULL;
   gboolean ret = FALSE;
   guint adjusted_rate = rate;
+  GstEvent *event;
   gchar *stream_id;
 
   switch (codec_tag) {
@@ -786,7 +807,11 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
   stream_id =
       gst_pad_create_stream_id (demux->audio_pad, GST_ELEMENT_CAST (demux),
       "audio");
-  gst_pad_push_event (demux->audio_pad, gst_event_new_stream_start (stream_id));
+
+  event = gst_event_new_stream_start (stream_id);
+  if (have_group_id (demux))
+    gst_event_set_group_id (event, demux->group_id);
+  gst_pad_push_event (demux->audio_pad, event);
   g_free (stream_id);
   ret = gst_pad_set_caps (demux->audio_pad, caps);
 
@@ -1178,6 +1203,7 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
   gboolean ret = FALSE;
   GstCaps *caps = NULL;
   gchar *codec_name = NULL;
+  GstEvent *event;
   gchar *stream_id;
 
   /* Generate caps for that pad */
@@ -1240,7 +1266,10 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
   stream_id =
       gst_pad_create_stream_id (demux->video_pad, GST_ELEMENT_CAST (demux),
       "video");
-  gst_pad_push_event (demux->video_pad, gst_event_new_stream_start (stream_id));
+  event = gst_event_new_stream_start (stream_id);
+  if (have_group_id (demux))
+    gst_event_set_group_id (event, demux->group_id);
+  gst_pad_push_event (demux->video_pad, event);
   ret = gst_pad_set_caps (demux->video_pad, caps);
 
   if (G_LIKELY (ret)) {
@@ -1767,6 +1796,9 @@ gst_flv_demux_cleanup (GstFlvDemux * demux)
   GST_DEBUG_OBJECT (demux, "cleaning up FLV demuxer");
 
   demux->state = FLV_STATE_HEADER;
+
+  demux->have_group_id = FALSE;
+  demux->group_id = G_MAXUINT;
 
   demux->flushing = FALSE;
   demux->need_header = TRUE;
