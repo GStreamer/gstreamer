@@ -47,6 +47,9 @@ typedef gboolean  (*GstVaapiWindowResizeFunc)  (GstVaapiWindow *window,
 typedef gboolean  (*GstVaapiWindowRenderFunc)  (GstVaapiWindow *window,
     GstVaapiSurface *surface, const GstVaapiRectangle *src_rect,
     const GstVaapiRectangle *dst_rect, guint flags);
+typedef gboolean  (*GstVaapiWindowRenderPixmapFunc)(GstVaapiWindow *window,
+    GstVaapiPixmap *pixmap, const GstVaapiRectangle *src_rect,
+    const GstVaapiRectangle *dst_rect);
 
 /**
  * GstVaapiWindow:
@@ -91,6 +94,7 @@ struct _GstVaapiWindowClass {
     GstVaapiWindowSetFullscreenFunc     set_fullscreen;
     GstVaapiWindowResizeFunc            resize;
     GstVaapiWindowRenderFunc            render;
+    GstVaapiWindowRenderPixmapFunc      render_pixmap;
 };
 
 GstVaapiWindow *

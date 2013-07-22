@@ -434,3 +434,60 @@ gst_vaapi_window_put_surface(
 
     return klass->render(window, surface, src_rect, dst_rect, flags);
 }
+
+static inline void
+get_pixmap_rect(GstVaapiPixmap *pixmap, GstVaapiRectangle *rect)
+{
+    guint width, height;
+
+    gst_vaapi_pixmap_get_size(pixmap, &width, &height);
+    rect->x      = 0;
+    rect->y      = 0;
+    rect->width  = width;
+    rect->height = height;
+}
+
+/**
+ * gst_vaapi_window_put_pixmap:
+ * @window: a #GstVaapiWindow
+ * @pixmap: a #GstVaapiPixmap
+ * @src_rect: the sub-rectangle of the source pixmap to
+ *   extract and process. If %NULL, the entire pixmap will be used.
+ * @dst_rect: the sub-rectangle of the destination
+ *   window into which the pixmap is rendered. If %NULL, the entire
+ *   window will be used.
+ *
+ * Renders the @pixmap region specified by @src_rect into the @window
+ * region specified by @dst_rect.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_window_put_pixmap(
+    GstVaapiWindow          *window,
+    GstVaapiPixmap          *pixmap,
+    const GstVaapiRectangle *src_rect,
+    const GstVaapiRectangle *dst_rect
+)
+{
+    const GstVaapiWindowClass *klass;
+    GstVaapiRectangle src_rect_default, dst_rect_default;
+
+    g_return_val_if_fail(window != NULL, FALSE);
+    g_return_val_if_fail(pixmap != NULL, FALSE);
+
+    klass = GST_VAAPI_WINDOW_GET_CLASS(window);
+    if (!klass->render_pixmap)
+        return FALSE;
+
+    if (!src_rect) {
+        src_rect = &src_rect_default;
+        get_pixmap_rect(pixmap, &src_rect_default);
+    }
+
+    if (!dst_rect) {
+        dst_rect = &dst_rect_default;
+        get_window_rect(window, &dst_rect_default);
+    }
+    return klass->render_pixmap(window, pixmap, src_rect, dst_rect);
+}

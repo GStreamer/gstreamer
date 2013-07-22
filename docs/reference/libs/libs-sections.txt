@@ -141,6 +141,22 @@ GstVaapiRectangle
 </SECTION>
 
 <SECTION>
+<FILE>gstvaapipixmap</FILE>
+<TITLE>GstVaapiPixmap</TITLE>
+GstVaapiPixmap
+gst_vaapi_pixmap_ref
+gst_vaapi_pixmap_unref
+gst_vaapi_pixmap_replace
+gst_vaapi_pixmap_get_format
+gst_vaapi_pixmap_get_width
+gst_vaapi_pixmap_get_height
+gst_vaapi_pixmap_get_size
+gst_vaapi_pixmap_put_surface
+<SUBSECTION Standard>
+GST_VAAPI_PIXMAP
+</SECTION>
+
+<SECTION>
 <FILE>gstvaapiwindow</FILE>
 <TITLE>GstVaapiWindow</TITLE>
 GstVaapiWindow
@@ -155,6 +171,7 @@ gst_vaapi_window_get_size
 gst_vaapi_window_set_width
 gst_vaapi_window_set_height
 gst_vaapi_window_set_size
+gst_vaapi_window_put_pixmap
 gst_vaapi_window_put_surface
 <SUBSECTION Standard>
 GST_VAAPI_WINDOW

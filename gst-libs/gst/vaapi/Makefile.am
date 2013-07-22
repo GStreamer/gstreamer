@@ -60,6 +60,7 @@ libgstvaapi_source_c =				\
 	gstvaapiminiobject.c			\
 	gstvaapiobject.c			\
 	gstvaapiparser_frame.c			\
+	gstvaapipixmap.c			\
 	gstvaapiprofile.c			\
 	gstvaapisubpicture.c			\
 	gstvaapisurface.c			\
@@ -84,6 +85,7 @@ libgstvaapi_source_h =				\
 	gstvaapiimage.h				\
 	gstvaapiimagepool.h			\
 	gstvaapiobject.h			\
+	gstvaapipixmap.h			\
 	gstvaapiprofile.h			\
 	gstvaapisubpicture.h			\
 	gstvaapisurface.h			\
@@ -110,6 +112,7 @@ libgstvaapi_source_priv_h =			\
 	gstvaapiminiobject.h			\
 	gstvaapiobject_priv.h			\
 	gstvaapiparser_frame.h			\
+	gstvaapipixmap_priv.h			\
 	gstvaapisurface_priv.h			\
 	gstvaapisurfaceproxy_priv.h		\
 	gstvaapiutils.h				\
