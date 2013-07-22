@@ -989,12 +989,15 @@ gst_type_find_element_loop (GstPad * pad)
 
   if (typefind->need_stream_start) {
     gchar *stream_id;
+    GstEvent *event;
 
     stream_id = gst_pad_create_stream_id (typefind->src,
         GST_ELEMENT_CAST (typefind), NULL);
 
     GST_DEBUG_OBJECT (typefind, "Pushing STREAM_START");
-    gst_pad_push_event (typefind->src, gst_event_new_stream_start (stream_id));
+    event = gst_event_new_stream_start (stream_id);
+    gst_event_set_group_id (event, gst_util_group_id_next ());
+    gst_pad_push_event (typefind->src, event);
 
     typefind->need_stream_start = FALSE;
     g_free (stream_id);
