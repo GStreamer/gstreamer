@@ -227,7 +227,7 @@ gst_vaapi_window_x11_create(GstVaapiWindow *window, guint *width, guint *height)
         GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
         XGetWindowAttributes(dpy, xid, &wattr);
         priv->is_mapped = wattr.map_state == IsViewable;
-        ok = x11_get_geometry(dpy, xid, NULL, NULL, width, height);
+        ok = x11_get_geometry(dpy, xid, NULL, NULL, width, height, NULL);
         GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
         return ok;
     }
@@ -287,7 +287,7 @@ gst_vaapi_window_x11_get_geometry(
     Display * const     dpy = GST_VAAPI_OBJECT_XDISPLAY(window);
     const Window        xid = GST_VAAPI_OBJECT_ID(window);
 
-    return x11_get_geometry(dpy, xid, px, py, pwidth, pheight);
+    return x11_get_geometry(dpy, xid, px, py, pwidth, pheight, NULL);
 }
 
 static gboolean

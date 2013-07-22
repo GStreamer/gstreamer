@@ -127,7 +127,8 @@ x11_get_geometry(
     gint       *px,
     gint       *py,
     guint      *pwidth,
-    guint      *pheight
+    guint      *pheight,
+    guint      *pdepth
 )
 {
     Window rootwin;
@@ -150,5 +151,6 @@ x11_get_geometry(
     if (py)      *py      = y;
     if (pwidth)  *pwidth  = width;
     if (pheight) *pheight = height;
+    if (pdepth)  *pdepth  = depth;
     return TRUE;
 }

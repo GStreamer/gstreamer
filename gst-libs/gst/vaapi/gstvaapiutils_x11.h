@@ -47,7 +47,8 @@ x11_get_geometry(
     gint       *px,
     gint       *py,
     guint      *pwidth,
-    guint      *pheight
+    guint      *pheight,
+    guint      *pdepth
 );
 
 #endif /* GST_VAAPI_UTILS_X11_H */
