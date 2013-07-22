@@ -879,6 +879,7 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
     const gchar * output_uri, GstEncodingProfile * profile)
 {
   GError *err = NULL;
+  GstEncodingProfile *set_profile;
 
   g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (pipeline), FALSE);
 
@@ -905,8 +906,17 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
   g_object_set (pipeline->priv->encodebin, "avoid-reencoding",
       !(!(pipeline->priv->mode & TIMELINE_MODE_SMART_RENDER)), NULL);
   g_object_set (pipeline->priv->encodebin, "profile", profile, NULL);
-  pipeline->priv->profile =
-      (GstEncodingProfile *) gst_encoding_profile_ref (profile);
+  g_object_get (pipeline->priv->encodebin, "profile", &set_profile, NULL);
+
+  if (set_profile == NULL) {
+    GST_ERROR_OBJECT (pipeline, "Profile %" GST_PTR_FORMAT " could no be set",
+        profile);
+
+    return FALSE;
+  }
+
+  /* We got a referencer when getting back the profile */
+  pipeline->priv->profile = profile;
 
   return TRUE;
 }
