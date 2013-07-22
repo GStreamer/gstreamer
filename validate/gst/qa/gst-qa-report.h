@@ -108,7 +108,8 @@ typedef struct {
                                     r->message
 
 void               gst_qa_report_init (void);
-GstQaReport *      gst_qa_report_new (GstQaMonitor * monitor, GstQaReportLevel level,
+GstQaReport *      gst_qa_report_new (const gchar * source_name,
+                                      GstQaReportLevel level,
                                       GstQaReportArea area,
                                       gint subarea,
                                       const gchar *format,

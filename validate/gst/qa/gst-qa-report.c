@@ -176,7 +176,7 @@ gst_qa_report_check_abort (GstQaReport * report)
 }
 
 GstQaReport *
-gst_qa_report_new (GstQaMonitor * monitor, GstQaReportLevel level,
+gst_qa_report_new (const gchar * source_name, GstQaReportLevel level,
     GstQaReportArea area, gint subarea, const gchar * id, const gchar * message)
 {
   GstQaReport *report = g_slice_new0 (GstQaReport);
@@ -184,7 +184,7 @@ gst_qa_report_new (GstQaMonitor * monitor, GstQaReportLevel level,
   report->level = level;
   report->area = area;
   report->subarea = subarea;
-  report->source_name = g_strdup (monitor->target_name);
+  report->source_name = g_strdup (source_name);
   report->message = g_strdup (message);
   report->id = g_strdup (id);
   report->timestamp = gst_util_get_timestamp () - _gst_qa_report_start_time;
