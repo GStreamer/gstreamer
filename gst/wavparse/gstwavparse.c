@@ -2365,6 +2365,7 @@ gst_wavparse_loop (GstPad * pad)
 {
   GstFlowReturn ret;
   GstWavParse *wav = GST_WAVPARSE (GST_PAD_PARENT (pad));
+  GstEvent *event;
   gchar *stream_id;
 
   GST_LOG_OBJECT (wav, "process data");
@@ -2377,7 +2378,9 @@ gst_wavparse_loop (GstPad * pad)
 
       stream_id =
           gst_pad_create_stream_id (wav->srcpad, GST_ELEMENT_CAST (wav), NULL);
-      gst_pad_push_event (wav->srcpad, gst_event_new_stream_start (stream_id));
+      event = gst_event_new_stream_start (stream_id);
+      gst_event_set_group_id (event, gst_util_group_id_next ());
+      gst_pad_push_event (wav->srcpad, event);
       g_free (stream_id);
 
       wav->state = GST_WAVPARSE_HEADER;
