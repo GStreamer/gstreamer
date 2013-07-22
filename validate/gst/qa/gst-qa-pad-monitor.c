@@ -1247,15 +1247,27 @@ gst_qa_pad_monitor_setcaps_func (GstPad * pad, GstCaps * caps)
     structure = gst_caps_get_structure (caps, 0);
     if (gst_structure_n_fields (pad_monitor->pending_setcaps_fields)) {
       gint i;
-      for (i = 0; i < gst_structure_n_fields (structure); i++) {
-        const gchar *name = gst_structure_nth_field_name (structure, i);
+      for (i = 0;
+          i < gst_structure_n_fields (pad_monitor->pending_setcaps_fields);
+          i++) {
+        const gchar *name =
+            gst_structure_nth_field_name (pad_monitor->pending_setcaps_fields,
+            i);
         const GValue *v = gst_structure_get_value (structure, name);
-        const GValue *otherv = gst_structure_get_value (structure, name);
+        const GValue *otherv =
+            gst_structure_get_value (pad_monitor->pending_setcaps_fields, name);
 
-        if (!gst_value_compare (v, otherv) != GST_VALUE_EQUAL) {
+        if (v == NULL) {
           GST_QA_MONITOR_REPORT_WARNING (pad_monitor, FALSE, CAPS_NEGOTIATION,
               MISSING_FIELD,
-              "Field %s is missing from setcaps %" GST_PTR_FORMAT, name, caps);
+              "Field %s is missing from setcaps caps '%" GST_PTR_FORMAT "'",
+              name, caps);
+        } else if (gst_value_compare (v, otherv) != GST_VALUE_EQUAL) {
+          GST_QA_MONITOR_REPORT_WARNING (pad_monitor, FALSE, CAPS_NEGOTIATION,
+              MISSING_FIELD,
+              "Field %s from setcaps caps '%" GST_PTR_FORMAT "' is different "
+              "from expected value in caps '%" GST_PTR_FORMAT "'", name, caps,
+              pad_monitor->pending_setcaps_fields);
         }
       }
     }
