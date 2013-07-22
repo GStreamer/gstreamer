@@ -3893,17 +3893,26 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
     GstEvent *event;
     GChecksum *cs;
     gchar *uri;
+    GList *streams;
+    guint group_id = gst_util_group_id_next ();
 
     /* generate an SHA256 sum of the URI */
     cs = g_checksum_new (G_CHECKSUM_SHA256);
     uri = src->conninfo.location;
     g_checksum_update (cs, (const guchar *) uri, strlen (uri));
-    stream_id =
-        g_strdup_printf ("%s/%d", g_checksum_get_string (cs), stream->id);
-    g_checksum_free (cs);
-    event = gst_event_new_stream_start (stream_id);
-    g_free (stream_id);
-    gst_rtspsrc_push_event (src, event);
+
+    for (streams = src->streams; streams; streams = g_list_next (streams)) {
+      GstRTSPStream *ostream = (GstRTSPStream *) streams->data;
+
+      stream_id =
+          g_strdup_printf ("%s/%d", g_checksum_get_string (cs), ostream->id);
+      g_checksum_free (cs);
+      event = gst_event_new_stream_start (stream_id);
+      gst_event_set_group_id (event, group_id);
+
+      g_free (stream_id);
+      gst_rtspsrc_stream_push_event (src, ostream, event);
+    }
 
     gst_rtspsrc_activate_streams (src);
     src->need_activate = FALSE;
