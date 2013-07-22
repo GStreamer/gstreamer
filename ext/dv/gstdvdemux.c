@@ -273,6 +273,8 @@ gst_dvdemux_reset (GstDVDemux * dvdemux)
   dvdemux->wide = FALSE;
   gst_segment_init (&dvdemux->byte_segment, GST_FORMAT_BYTES);
   gst_segment_init (&dvdemux->time_segment, GST_FORMAT_TIME);
+  dvdemux->have_group_id = FALSE;
+  dvdemux->group_id = G_MAXUINT;
 }
 
 static GstPad *
@@ -1124,6 +1126,26 @@ gst_dvdemux_handle_src_event (GstPad * pad, GstObject * parent,
   return res;
 }
 
+static gboolean
+have_group_id (GstDVDemux * demux)
+{
+  GstEvent *event;
+
+  event = gst_pad_get_sticky_event (demux->sinkpad, GST_EVENT_STREAM_START, 0);
+  if (event) {
+    if (gst_event_parse_group_id (event, &demux->group_id))
+      demux->have_group_id = TRUE;
+    else
+      demux->have_group_id = FALSE;
+    gst_event_unref (event);
+  } else if (!demux->have_group_id) {
+    demux->have_group_id = TRUE;
+    demux->group_id = gst_util_group_id_next ();
+  }
+
+  return demux->have_group_id;
+}
+
 /* does not take ownership of buffer */
 static GstFlowReturn
 gst_dvdemux_demux_audio (GstDVDemux * dvdemux, GstBuffer * buffer,
@@ -1154,13 +1176,16 @@ gst_dvdemux_demux_audio (GstDVDemux * dvdemux, GstBuffer * buffer,
             || (channels != dvdemux->channels))) {
       GstCaps *caps;
       GstAudioInfo info;
+      GstEvent *event;
       gchar *stream_id;
 
       stream_id =
           gst_pad_create_stream_id (dvdemux->audiosrcpad,
           GST_ELEMENT_CAST (dvdemux), "audio");
-      gst_pad_push_event (dvdemux->audiosrcpad,
-          gst_event_new_stream_start (stream_id));
+      event = gst_event_new_stream_start (stream_id);
+      if (have_group_id (dvdemux))
+        gst_event_set_group_id (event, dvdemux->group_id);
+      gst_pad_push_event (dvdemux->audiosrcpad, event);
       g_free (stream_id);
 
       dvdemux->frequency = frequency;
@@ -1230,13 +1255,16 @@ gst_dvdemux_demux_video (GstDVDemux * dvdemux, GstBuffer * buffer,
   if (G_UNLIKELY ((dvdemux->height != height) || dvdemux->wide != wide)) {
     GstCaps *caps;
     gint par_x, par_y;
+    GstEvent *event;
     gchar *stream_id;
 
     stream_id =
         gst_pad_create_stream_id (dvdemux->videosrcpad,
         GST_ELEMENT_CAST (dvdemux), "video");
-    gst_pad_push_event (dvdemux->videosrcpad,
-        gst_event_new_stream_start (stream_id));
+    event = gst_event_new_stream_start (stream_id);
+    if (have_group_id (dvdemux))
+      gst_event_set_group_id (event, dvdemux->group_id);
+    gst_pad_push_event (dvdemux->videosrcpad, event);
     g_free (stream_id);
 
     dvdemux->height = height;

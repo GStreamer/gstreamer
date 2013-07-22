@@ -52,6 +52,9 @@ struct _GstDVDemux {
   GstPad        *videosrcpad;
   GstPad        *audiosrcpad;
 
+  gboolean       have_group_id;
+  guint          group_id;
+
   dv_decoder_t  *decoder;
 
   GstAdapter    *adapter;
