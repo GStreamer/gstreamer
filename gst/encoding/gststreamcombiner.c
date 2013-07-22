@@ -138,8 +138,7 @@ gst_stream_combiner_sink_event (GstPad * pad, GstObject * parent,
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_EOS:
-      GST_PAD_STREAM_LOCK (pad);
-
+      STREAMS_LOCK (stream_combiner);
       combiner_pad->is_eos = TRUE;
       if (!_all_sink_pads_eos (stream_combiner)) {
         gst_event_unref (event);
@@ -147,8 +146,7 @@ gst_stream_combiner_sink_event (GstPad * pad, GstObject * parent,
       } else {
         GST_DEBUG_OBJECT (stream_combiner, "All sink pads eos, pushing eos");
       }
-
-      GST_PAD_STREAM_UNLOCK (pad);
+      STREAMS_UNLOCK (stream_combiner);
       break;
     default:
       break;
@@ -159,7 +157,7 @@ gst_stream_combiner_sink_event (GstPad * pad, GstObject * parent,
   /* FLUSH_STOP : lock, unmark as flushing, unlock, if was flushing forward */
   /* OTHER : if selected pad forward */
   if (event)
-    return gst_pad_push_event (stream_combiner->srcpad, event);
+    return gst_pad_event_default (pad, parent, event);
   return FALSE;
 }
 
