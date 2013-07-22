@@ -435,6 +435,7 @@ renderer_process(App *app, RenderFrame *rfp)
 {
     GError *error = NULL;
     GstVaapiSurface *surface;
+    const GstVaapiRectangle *crop_rect;
 
 #define SEND_ERROR(...)                                                 \
     do {                                                                \
@@ -454,7 +455,8 @@ renderer_process(App *app, RenderFrame *rfp)
     if (G_LIKELY(!g_benchmark))
         renderer_wait_until(app, rfp->pts);
 
-    if (!gst_vaapi_window_put_surface(app->window, surface, NULL, NULL,
+    crop_rect = gst_vaapi_surface_proxy_get_crop_rect(rfp->proxy);
+    if (!gst_vaapi_window_put_surface(app->window, surface, crop_rect, NULL,
             GST_VAAPI_PICTURE_STRUCTURE_FRAME))
         SEND_ERROR("failed to render surface %" GST_VAAPI_ID_FORMAT,
                    GST_VAAPI_ID_ARGS(gst_vaapi_surface_get_id(surface)));
