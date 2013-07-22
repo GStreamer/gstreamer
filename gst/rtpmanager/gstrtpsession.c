@@ -1108,12 +1108,37 @@ do_rtcp_events (GstRtpSession * rtpsession, GstPad * srcpad)
   GstSegment seg;
   GstEvent *event;
   gchar *stream_id;
+  gboolean have_group_id;
+  guint group_id;
 
   stream_id =
       g_strdup_printf ("%08x%08x%08x%08x", g_random_int (), g_random_int (),
       g_random_int (), g_random_int ());
 
+  GST_RTP_SESSION_LOCK (rtpsession);
+  if (rtpsession->recv_rtp_sink) {
+    event =
+        gst_pad_get_sticky_event (rtpsession->recv_rtp_sink,
+        GST_EVENT_STREAM_START, 0);
+    if (event) {
+      if (gst_event_parse_group_id (event, &group_id))
+        have_group_id = TRUE;
+      else
+        have_group_id = FALSE;
+      gst_event_unref (event);
+    } else {
+      have_group_id = TRUE;
+      group_id = gst_util_group_id_next ();
+    }
+  } else {
+    have_group_id = TRUE;
+    group_id = gst_util_group_id_next ();
+  }
+  GST_RTP_SESSION_UNLOCK (rtpsession);
+
   event = gst_event_new_stream_start (stream_id);
+  if (have_group_id)
+    gst_event_set_group_id (event, group_id);
   gst_pad_push_event (srcpad, event);
   g_free (stream_id);
 
