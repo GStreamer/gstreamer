@@ -27,6 +27,9 @@
 
 #include "gst/vaapi/sysdeps.h"
 #include "gstvaapivideobuffer.h"
+#if USE_X11
+# include "gstvaapivideoconverter_x11.h"
+#endif
 #if USE_GLX
 # include "gstvaapivideoconverter_glx.h"
 #endif
@@ -50,6 +53,21 @@ gst_vaapi_surface_meta_get_info(void);
 typedef GstSurfaceConverter *(*GstSurfaceConverterCreateFunc)(
     GstSurfaceMeta *meta, const gchar *type, GValue *dest);
 
+#if USE_X11
+static GstSurfaceConverter *
+gst_vaapi_surface_create_converter_x11(GstSurfaceMeta *base_meta,
+    const gchar *type, GValue *dest)
+{
+    GstVaapiSurfaceMeta * const meta = GST_VAAPI_SURFACE_META_CAST(base_meta);
+
+    return gst_vaapi_video_converter_x11_new(meta->buffer, type, dest);
+}
+
+#undef  gst_vaapi_video_converter_x11_new
+#define gst_vaapi_video_converter_x11_new \
+    gst_vaapi_surface_create_converter_x11
+#endif
+
 #if USE_GLX
 static GstSurfaceConverter *
 gst_vaapi_surface_create_converter_glx(GstSurfaceMeta *base_meta,
@@ -60,7 +78,7 @@ gst_vaapi_surface_create_converter_glx(GstSurfaceMeta *base_meta,
     return gst_vaapi_video_converter_glx_new(meta->buffer, type, dest);
 }
 
-#undef gst_vaapi_video_converter_glx_new
+#undef  gst_vaapi_video_converter_glx_new
 #define gst_vaapi_video_converter_glx_new \
     gst_vaapi_surface_create_converter_glx
 #endif
@@ -244,6 +262,11 @@ get_surface_converter(GstVaapiDisplay *display)
     GFunc func;
 
     switch (gst_vaapi_display_get_display_type(display)) {
+#if USE_X11
+    case GST_VAAPI_DISPLAY_TYPE_X11:
+        func = (GFunc)gst_vaapi_video_converter_x11_new;
+        break;
+#endif
 #if USE_GLX
     case GST_VAAPI_DISPLAY_TYPE_GLX:
         func = (GFunc)gst_vaapi_video_converter_glx_new;

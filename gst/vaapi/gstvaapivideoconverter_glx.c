@@ -24,6 +24,7 @@
 #include "gst/vaapi/sysdeps.h"
 #include <gst/vaapi/gstvaapitexture.h>
 #include "gstvaapivideoconverter_glx.h"
+#include "gstvaapivideoconverter_x11.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideometa.h"
 
@@ -112,9 +113,9 @@ gst_vaapi_video_converter_glx_new(GstBuffer *buffer, const gchar *type,
     GstVaapiTexture *texture;
     GstVaapiVideoConverterGLX *converter;
 
-    /* We only support Open GL texture conversion */
+    /* Check for "opengl" request, or chain up to X11 converter */
     if (strcmp(type, "opengl") != 0 || !G_VALUE_HOLDS_UINT(dest))
-        return NULL;
+        return gst_vaapi_video_converter_x11_new(buffer, type, dest);
 
     /* FIXME Should we assume target and format ? */
     texture = gst_vaapi_texture_new_with_texture(
