@@ -3084,16 +3084,20 @@ gst_value_deserialize_enum (GValue * dest, const gchar * s)
     found = gst_iterator_find_custom (iter,
         (GCompareFunc) gst_value_deserialize_enum_iter_cmp, &res, (gpointer) s);
 
-    g_return_val_if_fail (found, FALSE);
-    format_def = g_value_get_pointer (&res);
-    g_return_val_if_fail (format_def != NULL, FALSE);
-    g_value_set_enum (dest, (gint) format_def->value);
-    g_value_unset (&res);
+    if (found) {
+      format_def = g_value_get_pointer (&res);
+      g_return_val_if_fail (format_def != NULL, FALSE);
+      g_value_set_enum (dest, (gint) format_def->value);
+      g_value_unset (&res);
+    }
     gst_iterator_free (iter);
-    return TRUE;
+    return found;
   }
 
-  g_return_val_if_fail (en, FALSE);
+  /* enum name/nick not found */
+  if (en == NULL)
+    return FALSE;
+
   g_value_set_enum (dest, en->value);
   return TRUE;
 }
