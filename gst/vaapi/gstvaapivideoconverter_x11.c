@@ -153,6 +153,7 @@ gst_vaapi_video_converter_x11_upload(GstSurfaceConverter *self,
         GST_VAAPI_VIDEO_CONVERTER_X11(self);
     GstVaapiVideoConverterX11Private * const priv = converter->priv;
     GstVaapiVideoMeta * const meta = gst_buffer_get_vaapi_video_meta(buffer);
+    const GstVaapiRectangle *crop_rect = NULL;
     GstVaapiSurface *surface;
     GstVaapiDisplay *old_display, *new_display;
 
@@ -173,7 +174,20 @@ gst_vaapi_video_converter_x11_upload(GstSurfaceConverter *self,
     if (!gst_vaapi_apply_composition(surface, buffer))
         GST_WARNING("could not update subtitles");
 
-    /* XXX: handle video cropping */
-    return gst_vaapi_pixmap_put_surface(priv->pixmap, surface, NULL,
+#if GST_CHECK_VERSION(1,0,0)
+    GstVideoCropMeta * const crop_meta = gst_buffer_get_video_crop_meta(buffer);
+    if (crop_meta) {
+        GstVaapiRectangle crop_rect_tmp;
+        crop_rect            = &crop_rect_tmp;
+        crop_rect_tmp.x      = crop_meta->x;
+        crop_rect_tmp.y      = crop_meta->y;
+        crop_rect_tmp.width  = crop_meta->width;
+        crop_rect_tmp.height = crop_meta->height;
+    }
+#endif
+    if (!crop_rect)
+        crop_rect = gst_vaapi_video_meta_get_render_rect(meta);
+
+    return gst_vaapi_pixmap_put_surface(priv->pixmap, surface, crop_rect,
         gst_vaapi_video_meta_get_render_flags(meta));
 }
