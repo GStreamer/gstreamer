@@ -40,6 +40,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_qa_pad_monitor_debug);
 G_DEFINE_TYPE_WITH_CODE (GstQaPadMonitor, gst_qa_pad_monitor,
     GST_TYPE_QA_MONITOR, _do_init);
 
+#define PENDING_FIELDS "pending-fields"
+
 static gboolean gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor);
 
 /* This was copied from gstpad.c and might need
@@ -332,6 +334,8 @@ gst_qa_pad_monitor_dispose (GObject * object)
   if (monitor->expected_segment)
     gst_event_unref (monitor->expected_segment);
 
+  gst_structure_free (monitor->pending_setcaps_fields);
+
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -353,6 +357,8 @@ gst_qa_pad_monitor_class_init (GstQaPadMonitorClass * klass)
 static void
 gst_qa_pad_monitor_init (GstQaPadMonitor * pad_monitor)
 {
+  pad_monitor->pending_setcaps_fields =
+      gst_structure_empty_new (PENDING_FIELDS);
   gst_segment_init (&pad_monitor->segment, GST_FORMAT_BYTES);
   pad_monitor->first_buffer = TRUE;
 
@@ -588,6 +594,86 @@ gst_qa_pad_monitor_check_aggregated_return (GstQaPadMonitor * monitor,
         gst_flow_get_name (ret), ret,
         gst_flow_get_name (aggregated), aggregated);
   }
+}
+
+static void
+gst_qa_pad_monitor_otherpad_add_pending_field (GstQaPadMonitor * monitor,
+    GstStructure * structure, const gchar * field)
+{
+  GstIterator *iter;
+  gboolean done;
+  GstPad *otherpad;
+  GstQaPadMonitor *othermonitor;
+  const GValue *v;
+
+  v = gst_structure_get_value (structure, field);
+  if (v == NULL) {
+    GST_DEBUG_OBJECT (monitor, "Not adding pending field %s as it isn't "
+        "present on structure %" GST_PTR_FORMAT, field, structure);
+    return;
+  }
+
+  iter = gst_pad_iterate_internal_links (GST_QA_PAD_MONITOR_GET_PAD (monitor));
+  done = FALSE;
+  while (!done) {
+    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+      case GST_ITERATOR_OK:
+        othermonitor = g_object_get_data ((GObject *) otherpad, "qa-monitor");
+        if (othermonitor) {
+          g_assert (othermonitor->pending_setcaps_fields != NULL);
+          gst_structure_set_value (othermonitor->pending_setcaps_fields,
+              field, v);
+        }
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_ERROR:
+        GST_WARNING_OBJECT (monitor, "Internal links pad iteration error");
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iter);
+}
+
+static void
+gst_qa_pad_monitor_otherpad_clear_pending_fields (GstQaPadMonitor * monitor)
+{
+  GstIterator *iter;
+  gboolean done;
+  GstPad *otherpad;
+  GstQaPadMonitor *othermonitor;
+
+  iter = gst_pad_iterate_internal_links (GST_QA_PAD_MONITOR_GET_PAD (monitor));
+  done = FALSE;
+  while (!done) {
+    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+      case GST_ITERATOR_OK:
+        othermonitor = g_object_get_data ((GObject *) otherpad, "qa-monitor");
+        if (othermonitor) {
+          g_assert (othermonitor->pending_setcaps_fields != NULL);
+          gst_structure_free (othermonitor->pending_setcaps_fields);
+          othermonitor->pending_setcaps_fields =
+              gst_structure_empty_new (PENDING_FIELDS);
+        }
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_ERROR:
+        GST_WARNING_OBJECT (monitor, "Internal links pad iteration error");
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iter);
 }
 
 static void
@@ -1024,10 +1110,55 @@ gst_qa_pad_monitor_setcaps_func (GstPad * pad, GstCaps * caps)
   GstQaPadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "qa-monitor");
   gboolean ret = TRUE;
+  GstStructure *structure;
+
+  if (caps) {
+    structure = gst_caps_get_structure (caps, 0);
+    if (gst_structure_n_fields (pad_monitor->pending_setcaps_fields)) {
+      gint i;
+      for (i = 0; i < gst_structure_n_fields (structure); i++) {
+        const gchar *name = gst_structure_nth_field_name (structure, i);
+        const GValue *v = gst_structure_get_value (structure, name);
+        const GValue *otherv = gst_structure_get_value (structure, name);
+
+        if (!gst_value_compare (v, otherv) != GST_VALUE_EQUAL) {
+          GST_QA_MONITOR_REPORT_WARNING (pad_monitor, FALSE, CAPS_NEGOTIATION,
+              MISSING_FIELD,
+              "Field %s is missing from setcaps %" GST_PTR_FORMAT, name, caps);
+        }
+      }
+    }
+
+    if (gst_qa_pad_monitor_pad_should_proxy_othercaps (pad_monitor)) {
+      /* TODO iterate structure and add pending expected fields */
+      if (_structure_is_video (structure)) {
+        gst_qa_pad_monitor_otherpad_add_pending_field (pad_monitor, structure,
+            "width");
+        gst_qa_pad_monitor_otherpad_add_pending_field (pad_monitor, structure,
+            "height");
+        gst_qa_pad_monitor_otherpad_add_pending_field (pad_monitor, structure,
+            "framerate");
+        gst_qa_pad_monitor_otherpad_add_pending_field (pad_monitor, structure,
+            "pixel-aspect-ratio");
+      } else if (_structure_is_audio (structure)) {
+        gst_qa_pad_monitor_otherpad_add_pending_field (pad_monitor, structure,
+            "rate");
+        gst_qa_pad_monitor_otherpad_add_pending_field (pad_monitor, structure,
+            "channels");
+      }
+    }
+  }
+
+  gst_structure_free (pad_monitor->pending_setcaps_fields);
+  pad_monitor->pending_setcaps_fields =
+      gst_structure_empty_new (PENDING_FIELDS);
 
   if (pad_monitor->setcaps_func) {
     ret = pad_monitor->setcaps_func (pad, caps);
   }
+
+  if (!ret)
+    gst_qa_pad_monitor_otherpad_clear_pending_fields (pad_monitor);
 
   return ret;
 }

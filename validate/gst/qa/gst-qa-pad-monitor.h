@@ -81,6 +81,8 @@ struct _GstQaPadMonitor {
 
   GstEvent *expected_segment;
 
+  GstStructure *pending_setcaps_fields;
+
   /* tracked data */
   GstSegment segment;
   GstClockTime current_timestamp;
