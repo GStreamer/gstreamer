@@ -263,12 +263,11 @@ gst_mpegv_parse_stop (GstBaseParse * parse)
 }
 
 static gboolean
-gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
+gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstMapInfo * info,
     guint size)
 {
   GstMpegVideoPacket packet;
   guint8 *data_with_prefix;
-  GstMapInfo map;
   gint i;
 
   if (mpvparse->seq_offset < 4) {
@@ -277,9 +276,7 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
     return FALSE;
   }
 
-  gst_buffer_map (buf, &map, GST_MAP_READ);
-  g_assert (size <= map.size);
-  packet.data = map.data;
+  packet.data = info->data;
   packet.type = GST_MPEG_VIDEO_PACKET_SEQUENCE;
   packet.offset = mpvparse->seq_offset;
   packet.size = size - mpvparse->seq_offset;
@@ -293,7 +290,6 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
   if (mpvparse->config &&
       gst_buffer_memcmp (mpvparse->config, 0, data_with_prefix, MIN (size,
               11)) == 0) {
-    gst_buffer_unmap (buf, &map);
     return TRUE;
   }
 
@@ -302,7 +298,6 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
     GST_DEBUG_OBJECT (mpvparse,
         "failed to parse config data (size %d) at offset %d",
         size, mpvparse->seq_offset);
-    gst_buffer_unmap (buf, &map);
     return FALSE;
   }
 
@@ -374,8 +369,6 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstBuffer * buf,
   /* trigger src caps update */
   mpvparse->update_caps = TRUE;
 
-  gst_buffer_unmap (buf, &map);
-
   return TRUE;
 }
 
@@ -440,17 +433,14 @@ picture_type_name (guint8 pct)
 #endif /* GST_DISABLE_GST_DEBUG */
 
 static void
-parse_packet_extension (GstMpegvParse * mpvparse, GstBuffer * buf, guint off)
+parse_packet_extension (GstMpegvParse * mpvparse, GstMapInfo * info, guint off)
 {
-  GstMapInfo map;
   GstMpegVideoPacket packet;
 
-  gst_buffer_map (buf, &map, GST_MAP_READ);
-
-  packet.data = map.data;
+  packet.data = info->data;
   packet.type = GST_MPEG_VIDEO_PACKET_EXTENSION;
   packet.offset = off;
-  packet.size = map.size - off;
+  packet.size = info->size - off;
 
   /* FIXME : WE ARE ASSUMING IT IS A *PICTURE* EXTENSION */
   if (gst_mpeg_video_packet_parse_picture_extension (&packet,
@@ -469,8 +459,6 @@ parse_packet_extension (GstMpegvParse * mpvparse, GstBuffer * buf, guint off)
     }
     mpvparse->picext_updated = TRUE;
   }
-
-  gst_buffer_unmap (buf, &map);
 }
 
 /* caller guarantees at least start code in @buf at @off */
@@ -478,16 +466,14 @@ parse_packet_extension (GstMpegvParse * mpvparse, GstBuffer * buf, guint off)
  * otherwise returns TRUE if code terminates preceding frame */
 static gboolean
 gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse,
-    GstBuffer * buf, gint off, guint8 code)
+    GstMapInfo * info, gint off, GstMpegVideoPacket * packet)
 {
-  gboolean ret = FALSE, packet = TRUE;
+  gboolean ret = FALSE, checkconfig = TRUE;
 
-  g_return_val_if_fail (buf && gst_buffer_get_size (buf) >= 4, FALSE);
+  GST_LOG_OBJECT (mpvparse, "process startcode %x (%s) offset:%d", packet->type,
+      picture_start_code_name (packet->type), off);
 
-  GST_LOG_OBJECT (mpvparse, "process startcode %x (%s) offset:%d", code,
-      picture_start_code_name (code), off);
-
-  switch (code) {
+  switch (packet->type) {
     case GST_MPEG_VIDEO_PACKET_PICTURE:
       GST_LOG_OBJECT (mpvparse, "startcode is PICTURE");
       /* picture is aggregated with preceding sequence/gop, if any.
@@ -515,49 +501,45 @@ gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse,
       break;
     case GST_MPEG_VIDEO_PACKET_EXTENSION:
       GST_LOG_OBJECT (mpvparse, "startcode is VIDEO PACKET EXTENSION");
-      parse_packet_extension (mpvparse, buf, off);
+      parse_packet_extension (mpvparse, info, off);
       if (mpvparse->ext_count < G_N_ELEMENTS (mpvparse->ext_offsets))
         mpvparse->ext_offsets[mpvparse->ext_count++] = off;
-      packet = FALSE;
+      checkconfig = FALSE;
       break;
     default:
-      if (GST_MPEG_VIDEO_PACKET_IS_SLICE (code)) {
+      if (GST_MPEG_VIDEO_PACKET_IS_SLICE (packet->type)) {
         mpvparse->slice_count++;
         if (mpvparse->slice_offset == 0)
           mpvparse->slice_offset = off - 4;
       }
-      packet = FALSE;
+      checkconfig = FALSE;
       break;
   }
 
   /* set size to avoid processing config again */
-  if (mpvparse->seq_offset >= 0 && off != mpvparse->seq_offset &&
-      !mpvparse->seq_size && packet) {
+  if (checkconfig && mpvparse->seq_offset >= 0 && off != mpvparse->seq_offset &&
+      !mpvparse->seq_size) {
     /* should always be at start */
     g_assert (mpvparse->seq_offset <= 4);
-    gst_mpegv_parse_process_config (mpvparse, buf, off - mpvparse->seq_offset);
+    gst_mpegv_parse_process_config (mpvparse, info, off - mpvparse->seq_offset);
     mpvparse->seq_size = off - mpvparse->seq_offset;
   }
 
   /* extract some picture info if there is any in the frame being terminated */
   if (ret && mpvparse->pic_offset >= 0 && mpvparse->pic_offset < off) {
-    GstMapInfo map;
-    GstMpegVideoPacket packet;
+    GstMpegVideoPacket header;
 
-    gst_buffer_map (buf, &map, GST_MAP_READ);
-    packet.data = map.data;
-    packet.type = GST_MPEG_VIDEO_PACKET_PICTURE;
-    packet.offset = mpvparse->pic_offset;
-    packet.size = map.size - mpvparse->pic_offset;
-    if (gst_mpeg_video_packet_parse_picture_header (&packet, &mpvparse->pichdr))
+    header.data = info->data;
+    header.type = GST_MPEG_VIDEO_PACKET_PICTURE;
+    header.offset = mpvparse->pic_offset;
+    header.size = info->size - mpvparse->pic_offset;
+    if (gst_mpeg_video_packet_parse_picture_header (&header, &mpvparse->pichdr))
       GST_LOG_OBJECT (mpvparse, "picture_coding_type %d (%s), ending"
           "frame of size %d", mpvparse->pichdr.pic_type,
           picture_type_name (mpvparse->pichdr.pic_type), off - 4);
     else
       GST_LOG_OBJECT (mpvparse, "Couldn't parse picture at offset %d",
           mpvparse->pic_offset);
-
-    gst_buffer_unmap (buf, &map);
   }
 
   return ret;
@@ -631,7 +613,7 @@ retry:
   /* note: initial start code is assumed at offset 0 by subsequent code */
 
   /* examine start code, see if it looks like an initial start code */
-  if (gst_mpegv_parse_process_sc (mpvparse, buf, 4, packet.type)) {
+  if (gst_mpegv_parse_process_sc (mpvparse, &map, 4, &packet)) {
     /* found sc */
     GST_LOG_OBJECT (mpvparse, "valid start code found");
     mpvparse->last_sc = 0;
@@ -676,7 +658,7 @@ next:
     }
   } else {
     /* decide whether this startcode ends a frame */
-    ret = gst_mpegv_parse_process_sc (mpvparse, buf, off + 4, packet.type);
+    ret = gst_mpegv_parse_process_sc (mpvparse, &map, off + 4, &packet);
   }
 
   if (!ret)
@@ -984,10 +966,13 @@ gst_mpegv_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
 
   if ((value = gst_structure_get_value (s, "codec_data")) != NULL
       && (buf = gst_value_get_buffer (value))) {
+    GstMapInfo map;
+    gst_buffer_map (buf, &map, GST_MAP_READ);
     /* best possible parse attempt,
      * src caps are based on sink caps so it will end up in there
      * whether sucessful or not */
-    gst_mpegv_parse_process_config (mpvparse, buf, gst_buffer_get_size (buf));
+    gst_mpegv_parse_process_config (mpvparse, &map, gst_buffer_get_size (buf));
+    gst_buffer_unmap (buf, &map);
     gst_mpegv_parse_reset_frame (mpvparse);
   }
 
