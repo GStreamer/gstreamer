@@ -262,6 +262,8 @@ gst_rmdemux_init (GstRMDemux * rmdemux)
   rmdemux->first_ts = GST_CLOCK_TIME_NONE;
   rmdemux->base_ts = GST_CLOCK_TIME_NONE;
   rmdemux->need_newsegment = TRUE;
+  rmdemux->have_group_id = FALSE;
+  rmdemux->group_id = G_MAXUINT;
 
   gst_rm_utils_run_tests ();
 }
@@ -693,6 +695,9 @@ gst_rmdemux_reset (GstRMDemux * rmdemux)
   rmdemux->first_ts = GST_CLOCK_TIME_NONE;
   rmdemux->base_ts = GST_CLOCK_TIME_NONE;
   rmdemux->need_newsegment = TRUE;
+
+  rmdemux->have_group_id = FALSE;
+  rmdemux->group_id = G_MAXUINT;
 }
 
 static GstStateChangeReturn
@@ -1467,6 +1472,7 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
       stream_caps);
 
   if (stream->pad && stream_caps) {
+    GstEvent *event;
 
     GST_LOG_OBJECT (rmdemux, "%d bytes of extra data for stream %s",
         stream->extra_data_size, GST_PAD_NAME (stream->pad));
@@ -1498,7 +1504,25 @@ gst_rmdemux_add_stream (GstRMDemux * rmdemux, GstRMDemuxStream * stream)
     stream_id =
         gst_pad_create_stream_id_printf (stream->pad,
         GST_ELEMENT_CAST (rmdemux), "%03u", stream->id);
-    gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
+
+    event =
+        gst_pad_get_sticky_event (rmdemux->sinkpad, GST_EVENT_STREAM_START, 0);
+    if (event) {
+      if (gst_event_parse_group_id (event, &rmdemux->group_id))
+        rmdemux->have_group_id = TRUE;
+      else
+        rmdemux->have_group_id = FALSE;
+      gst_event_unref (event);
+    } else if (!rmdemux->have_group_id) {
+      rmdemux->have_group_id = TRUE;
+      rmdemux->group_id = gst_util_group_id_next ();
+    }
+
+    event = gst_event_new_stream_start (stream_id);
+    if (rmdemux->have_group_id)
+      gst_event_set_group_id (event, rmdemux->group_id);
+
+    gst_pad_push_event (stream->pad, event);
     g_free (stream_id);
 
     gst_pad_set_caps (stream->pad, stream_caps);

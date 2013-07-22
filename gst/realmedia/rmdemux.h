@@ -82,6 +82,9 @@ struct _GstRMDemux {
   /* pads */
   GstPad *sinkpad;
 
+  gboolean have_group_id;
+  guint group_id;
+
   GSList *streams;
   guint n_video_streams;
   guint n_audio_streams;

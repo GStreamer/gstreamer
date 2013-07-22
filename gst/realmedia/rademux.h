@@ -51,6 +51,9 @@ struct _GstRealAudioDemux {
 
   GstPad                  *sinkpad;
   GstPad                  *srcpad;
+  
+  gboolean                 have_group_id;
+  guint                    group_id;
 
   GstAdapter              *adapter;
   GstRealAudioDemuxState   state;
