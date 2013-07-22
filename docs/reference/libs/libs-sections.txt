@@ -1,6 +1,7 @@
 <SECTION>
 <FILE>videoformat</FILE>
 <TITLE>GstVideoFormat</TITLE>
+gst_vaapi_video_format_to_string
 gst_vaapi_video_format_from_caps
 gst_vaapi_video_format_from_structure
 gst_vaapi_video_format_from_va_format

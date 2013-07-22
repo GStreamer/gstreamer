@@ -184,7 +184,7 @@ gst_vaapi_surface_create_with_format(GstVaapiSurface *surface,
 
     /* ERRORS */
 error_unsupported_format:
-    GST_ERROR("unsupported format %u", gst_video_format_to_string(format));
+    GST_ERROR("unsupported format %u", gst_vaapi_video_format_to_string(format));
     return FALSE;
 #else
     return FALSE;
@@ -256,7 +256,7 @@ gst_vaapi_surface_new_with_format(
     GstVaapiSurface *surface;
 
     GST_DEBUG("size %ux%u, format %s", width, height,
-              gst_video_format_to_string(format));
+              gst_vaapi_video_format_to_string(format));
 
     surface = gst_vaapi_object_new(gst_vaapi_surface_class(), display);
     if (!surface)

@@ -140,6 +140,21 @@ get_map(GstVideoFormat format)
 }
 
 /**
+ * gst_vaapi_video_format_to_string:
+ * @format: a #GstVideoFormat
+ *
+ * Returns the string representation of the @format argument.
+ *
+ * Return value: string representation of @format, or %NULL if unknown
+ *   or unsupported.
+ */
+const gchar *
+gst_vaapi_video_format_to_string(GstVideoFormat format)
+{
+    return gst_video_format_to_string(format);
+}
+
+/**
  * gst_vaapi_video_format_is_rgb:
  * @format: a #GstVideoFormat
  *

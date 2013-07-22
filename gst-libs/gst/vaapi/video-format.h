@@ -28,6 +28,9 @@
 
 G_BEGIN_DECLS
 
+const char *
+gst_vaapi_video_format_to_string(GstVideoFormat format);
+
 gboolean
 gst_vaapi_video_format_is_rgb(GstVideoFormat format);
 

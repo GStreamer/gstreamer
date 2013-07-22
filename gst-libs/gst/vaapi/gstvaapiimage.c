@@ -285,7 +285,7 @@ gst_vaapi_image_new(
     g_return_val_if_fail(width > 0, NULL);
     g_return_val_if_fail(height > 0, NULL);
 
-    GST_DEBUG("format %s, size %ux%u", gst_video_format_to_string(format),
+    GST_DEBUG("format %s, size %ux%u", gst_vaapi_video_format_to_string(format),
               width, height);
 
     image = gst_vaapi_object_new(gst_vaapi_image_class(), display);
@@ -435,7 +435,7 @@ _gst_vaapi_image_set_image(GstVaapiImage *image, const VAImage *va_image)
                 image->format    = format;
                 image->is_linear = TRUE;
                 GST_DEBUG("linearized image to %s format",
-                          gst_video_format_to_string(format));
+                          gst_vaapi_video_format_to_string(format));
             }
         }
     }
