@@ -477,6 +477,13 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
   forward = (pad == active_sinkpad);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:{
+      guint group_id;
+
+      if (!gst_event_parse_group_id (event, &group_id))
+        sel->have_group_id = FALSE;
+      break;
+    }
     case GST_EVENT_FLUSH_START:
       /* Unblock the pad if it's waiting */
       selpad->flushing = TRUE;
@@ -756,6 +763,17 @@ forward_sticky_events (GstPad * sinkpad, GstEvent ** event, gpointer user_data)
     gst_event_set_seqnum (e, GST_SELECTOR_PAD_CAST (sinkpad)->segment_seqnum);
 
     gst_pad_push_event (sel->srcpad, e);
+  } else if (GST_EVENT_TYPE (*event) == GST_EVENT_STREAM_START
+      && !sel->have_group_id) {
+    GstEvent *tmp =
+        gst_pad_get_sticky_event (sel->srcpad, GST_EVENT_STREAM_START, 0);
+
+    /* Only push stream-start once if not all our streams have a stream-id */
+    if (!tmp) {
+      gst_pad_push_event (sel->srcpad, gst_event_ref (*event));
+    } else {
+      gst_event_unref (tmp);
+    }
   } else {
     gst_pad_push_event (sel->srcpad, gst_event_ref (*event));
   }
@@ -1275,6 +1293,7 @@ gst_input_selector_init (GstInputSelector * sel)
   sel->active_sinkpad = NULL;
   sel->padcount = 0;
   sel->sync_streams = DEFAULT_SYNC_STREAMS;
+  sel->have_group_id = TRUE;
 
   g_mutex_init (&sel->lock);
   g_cond_init (&sel->cond);
@@ -1727,6 +1746,7 @@ gst_input_selector_reset (GstInputSelector * sel)
       selpad->tags = NULL;
     }
   }
+  sel->have_group_id = TRUE;
   GST_INPUT_SELECTOR_UNLOCK (sel);
 }
 

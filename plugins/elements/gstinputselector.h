@@ -72,6 +72,8 @@ struct _GstInputSelector {
   GstInputSelectorSyncMode sync_mode;
   gboolean cache_buffers;
 
+  gboolean have_group_id;
+
   GMutex lock;
   GCond cond;
   gboolean blocked;
