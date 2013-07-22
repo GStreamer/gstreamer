@@ -36,12 +36,17 @@ static inline void pause(void)
 }
 
 static gchar *g_codec_str;
+static gboolean g_use_pixmap;
 
 static GOptionEntry g_options[] = {
     { "codec", 'c',
       0,
       G_OPTION_ARG_STRING, &g_codec_str,
       "codec to test", NULL },
+    { "pixmap", 0,
+      0,
+      G_OPTION_ARG_NONE, &g_use_pixmap,
+      "use render-to-pixmap", NULL },
     { NULL, }
 };
 
@@ -50,6 +55,7 @@ main(int argc, char *argv[])
 {
     GstVaapiDisplay      *display, *display2;
     GstVaapiWindow       *window;
+    GstVaapiPixmap       *pixmap = NULL;
     GstVaapiDecoder      *decoder;
     GstVaapiSurfaceProxy *proxy;
     GstVaapiSurface      *surface;
@@ -96,12 +102,36 @@ main(int argc, char *argv[])
 
     gst_vaapi_window_show(window);
 
-    if (!gst_vaapi_window_put_surface(window, surface, crop_rect, NULL,
+    if (g_use_pixmap) {
+        guint width, height;
+
+        if (crop_rect) {
+            width  = crop_rect->width;
+            height = crop_rect->height;
+        }
+        else
+            gst_vaapi_surface_get_size(surface, &width, &height);
+
+        pixmap = video_output_create_pixmap(display, GST_VIDEO_FORMAT_xRGB,
+            width, height);
+        if (!pixmap)
+            g_error("could not create pixmap");
+
+        if (!gst_vaapi_pixmap_put_surface(pixmap, surface, crop_rect,
+                GST_VAAPI_PICTURE_STRUCTURE_FRAME))
+            g_error("could not render to pixmap");
+
+        if (!gst_vaapi_window_put_pixmap(window, pixmap, NULL, NULL))
+            g_error("could not render pixmap");
+    }
+    else if (!gst_vaapi_window_put_surface(window, surface, crop_rect, NULL,
             GST_VAAPI_PICTURE_STRUCTURE_FRAME))
         g_error("could not render surface");
 
     pause();
 
+    if (pixmap)
+        gst_vaapi_pixmap_unref(pixmap);
     gst_vaapi_surface_proxy_unref(proxy);
     gst_vaapi_decoder_unref(decoder);
     gst_vaapi_window_unref(window);

@@ -25,16 +25,21 @@
 #include <glib.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiwindow.h>
+#include <gst/vaapi/gstvaapipixmap.h>
 
 typedef GstVaapiDisplay *(*CreateDisplayFunc)(const gchar *display_name);
 typedef GstVaapiWindow *(*CreateWindowFunc)(GstVaapiDisplay *display,
                                             guint width, guint height);
+typedef GstVaapiPixmap *(*CreatePixmapFunc)(GstVaapiDisplay *display,
+    GstVideoFormat format, guint width, guint height);
+
 
 typedef struct _VideoOutputInfo VideoOutputInfo;
 struct _VideoOutputInfo {
     const gchar        *name;
     CreateDisplayFunc   create_display;
     CreateWindowFunc    create_window;
+    CreatePixmapFunc    create_pixmap;
 };
 
 gboolean
@@ -51,5 +56,9 @@ video_output_create_display(const gchar *display_name);
 
 GstVaapiWindow *
 video_output_create_window(GstVaapiDisplay *display, guint width, guint height);
+
+GstVaapiPixmap *
+video_output_create_pixmap(GstVaapiDisplay *display, GstVideoFormat format,
+    guint width, guint height);
 
 #endif /* OUTPUT_H */
