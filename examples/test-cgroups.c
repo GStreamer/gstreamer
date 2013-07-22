@@ -17,6 +17,29 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/* Runs a pipeline and clasifies the media pipelines based on the
+ * authenticated user.
+ *
+ * This test requires 2 cpu cgroups to exist named 'user' and 'admin'.
+ * The rtsp server should have permission to add its threads to the
+ * cgroups.
+ *
+ *   sudo cgcreate -t uid:gid -g cpu:/user
+ *   sudo cgcreate -t uid:gid -g cpu:/admin
+ *
+ * With -t you can give the user and group access to the task file to
+ * write the thread ids. The user running the server can be used.
+ *
+ * Then you would want to change the cpu shares assigned to each group:
+ *
+ *   sudo cgset -r cpu.shares=100 user
+ *   sudo cgset -r cpu.shares=1024 admin
+ *
+ * Then start clients for 'user' until the stream is degraded because of
+ * lack of CPU. Then start a client for 'admin' and check that the stream
+ * is not degraded.
+ */
+
 #include <libcgroup.h>
 
 #include <gst/gst.h>
