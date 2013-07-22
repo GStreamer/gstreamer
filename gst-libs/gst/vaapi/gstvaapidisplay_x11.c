@@ -36,6 +36,10 @@
 # include <X11/extensions/Xrandr.h>
 #endif
 
+#ifdef HAVE_XRENDER
+# include <X11/extensions/Xrender.h>
+#endif
+
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
@@ -130,16 +134,20 @@ set_synchronous(GstVaapiDisplayX11 *display, gboolean synchronous)
     }
 }
 
-/* Check whether XRANDR extension is available */
+/* Check for display server extensions */
 static void
-check_xrandr(GstVaapiDisplayX11 *display)
+check_extensions(GstVaapiDisplayX11 *display)
 {
-#ifdef HAVE_XRANDR
     GstVaapiDisplayX11Private * const priv =
         GST_VAAPI_DISPLAY_X11_PRIVATE(display);
     int evt_base, err_base;
 
+#ifdef HAVE_XRANDR
     priv->use_xrandr = XRRQueryExtension(priv->x11_display,
+        &evt_base, &err_base);
+#endif
+#ifdef HAVE_XRENDER
+    priv->has_xrender = XRenderQueryExtension(priv->x11_display,
         &evt_base, &err_base);
 #endif
 }
@@ -156,7 +164,7 @@ gst_vaapi_display_x11_bind_display(GstVaapiDisplay *base_display,
     priv->x11_screen = DefaultScreen(native_display);
     priv->use_foreign_display = TRUE;
 
-    check_xrandr(display);
+    check_extensions(display);
 
     if (!set_display_name(display, XDisplayString(priv->x11_display)))
         return FALSE;
@@ -193,7 +201,7 @@ gst_vaapi_display_x11_open_display(GstVaapiDisplay *base_display,
     }
     priv->x11_screen = DefaultScreen(priv->x11_display);
 
-    check_xrandr(display);
+    check_extensions(display);
     return TRUE;
 }
 

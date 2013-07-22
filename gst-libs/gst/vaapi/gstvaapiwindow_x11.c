@@ -31,6 +31,8 @@
 #include "gstvaapicompat.h"
 #include "gstvaapiwindow_x11.h"
 #include "gstvaapiwindow_x11_priv.h"
+#include "gstvaapipixmap_x11.h"
+#include "gstvaapipixmap_priv.h"
 #include "gstvaapidisplay_x11.h"
 #include "gstvaapidisplay_x11_priv.h"
 #include "gstvaapiutils.h"
@@ -223,6 +225,9 @@ gst_vaapi_window_x11_create(GstVaapiWindow *window, guint *width, guint *height)
         "_NET_WM_STATE_FULLSCREEN",
     };
 
+    priv->has_xrender = GST_VAAPI_DISPLAY_HAS_XRENDER(
+        GST_VAAPI_OBJECT_DISPLAY(window));
+
     if (window->use_foreign_window && xid) {
         GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
         XGetWindowAttributes(dpy, xid, &wattr);
@@ -265,6 +270,17 @@ gst_vaapi_window_x11_destroy(GstVaapiWindow *window)
 {
     Display * const                  dpy  = GST_VAAPI_OBJECT_XDISPLAY(window);
     const Window                     xid  = GST_VAAPI_OBJECT_ID(window);
+
+#ifdef HAVE_XRENDER
+    GstVaapiWindowX11Private * const priv =
+        GST_VAAPI_WINDOW_X11_GET_PRIVATE(window);
+    if (priv->picture) {
+        GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+        XRenderFreePicture(dpy, priv->picture);
+        GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+        priv->picture = None;
+    }
+#endif
 
     if (xid) {
         if (!window->use_foreign_window) {
@@ -434,6 +450,113 @@ gst_vaapi_window_x11_render(
     return TRUE;
 }
 
+static gboolean
+gst_vaapi_window_x11_render_pixmap_xrender(
+    GstVaapiWindow          *window,
+    GstVaapiPixmap          *pixmap,
+    const GstVaapiRectangle *src_rect,
+    const GstVaapiRectangle *dst_rect
+)
+{
+#ifdef HAVE_XRENDER
+    GstVaapiWindowX11Private * const priv =
+        GST_VAAPI_WINDOW_X11_GET_PRIVATE(window);
+    Display * const     dpy = GST_VAAPI_OBJECT_XDISPLAY(window);
+    const Window        win = GST_VAAPI_OBJECT_ID(window);
+    const Pixmap        pix = GST_VAAPI_OBJECT_ID(pixmap);
+    Picture picture;
+    XRenderPictFormat *pic_fmt;
+    XWindowAttributes wattr;
+    int fmt, op;
+    gboolean success = FALSE;
+
+    /* Ensure Picture for window is created */
+    if (!priv->picture) {
+        GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+        XGetWindowAttributes(dpy, win, &wattr);
+        pic_fmt = XRenderFindVisualFormat(dpy, wattr.visual);
+        if (pic_fmt)
+            priv->picture = XRenderCreatePicture(dpy, win, pic_fmt, 0, NULL);
+        GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+        if (!priv->picture)
+            return FALSE;
+    }
+
+    /* Check pixmap format */
+    switch (GST_VAAPI_PIXMAP_FORMAT(pixmap)) {
+    case GST_VIDEO_FORMAT_xRGB:
+        fmt = PictStandardRGB24;
+        op  = PictOpSrc;
+        goto get_pic_fmt;
+    case GST_VIDEO_FORMAT_ARGB:
+        fmt = PictStandardARGB32;
+        op  = PictOpOver;
+    get_pic_fmt:
+        GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+        pic_fmt = XRenderFindStandardFormat(dpy, fmt);
+        GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+        break;
+    default:
+        pic_fmt = NULL;
+        break;
+    }
+    if (!pic_fmt)
+        return FALSE;
+
+    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+    do {
+        const double sx = (double)src_rect->width / dst_rect->width;
+        const double sy = (double)src_rect->height / dst_rect->height;
+        XTransform xform;
+
+        picture = XRenderCreatePicture(dpy, pix, pic_fmt, 0, NULL);
+        if (!picture)
+            break;
+
+        xform.matrix[0][0] = XDoubleToFixed(sx);
+        xform.matrix[0][1] = XDoubleToFixed(0.0);
+        xform.matrix[0][2] = XDoubleToFixed(src_rect->x);
+        xform.matrix[1][0] = XDoubleToFixed(0.0);
+        xform.matrix[1][1] = XDoubleToFixed(sy);
+        xform.matrix[1][2] = XDoubleToFixed(src_rect->y);
+        xform.matrix[2][0] = XDoubleToFixed(0.0);
+        xform.matrix[2][1] = XDoubleToFixed(0.0);
+        xform.matrix[2][2] = XDoubleToFixed(1.0);
+        XRenderSetPictureTransform(dpy, picture, &xform);
+
+        XRenderComposite(dpy, op, picture, None, priv->picture,
+            0, 0, 0, 0, dst_rect->x, dst_rect->y,
+            dst_rect->width, dst_rect->height);
+        XSync(dpy, False);
+        success = TRUE;
+    } while (0);
+    if (picture)
+        XRenderFreePicture(dpy, picture);
+    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+    return success;
+#endif
+    return FALSE;
+}
+
+static gboolean
+gst_vaapi_window_x11_render_pixmap(
+    GstVaapiWindow          *window,
+    GstVaapiPixmap          *pixmap,
+    const GstVaapiRectangle *src_rect,
+    const GstVaapiRectangle *dst_rect
+)
+{
+    GstVaapiWindowX11Private * const priv =
+        GST_VAAPI_WINDOW_X11_GET_PRIVATE(window);
+
+    if (priv->has_xrender)
+        return gst_vaapi_window_x11_render_pixmap_xrender(window, pixmap,
+            src_rect, dst_rect);
+
+    /* XXX: only X RENDER extension is supported for now */
+    return FALSE;
+}
+
 void
 gst_vaapi_window_x11_class_init(GstVaapiWindowX11Class *klass)
 {
@@ -452,6 +575,7 @@ gst_vaapi_window_x11_class_init(GstVaapiWindowX11Class *klass)
     window_class->set_fullscreen = gst_vaapi_window_x11_set_fullscreen;
     window_class->resize         = gst_vaapi_window_x11_resize;
     window_class->render         = gst_vaapi_window_x11_render;
+    window_class->render_pixmap  = gst_vaapi_window_x11_render_pixmap;
 }
 
 #define gst_vaapi_window_x11_finalize \

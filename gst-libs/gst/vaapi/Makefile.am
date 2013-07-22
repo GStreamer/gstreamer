@@ -289,6 +289,7 @@ libgstvaapi_x11_@GST_API_VERSION@_la_CFLAGS =	\
 	$(GST_BASE_CFLAGS)			\
 	$(X11_CFLAGS)				\
 	$(XRANDR_CFLAGS)			\
+	$(XRENDER_CFLAGS)			\
 	$(LIBVA_X11_CFLAGS)			\
 	$(NULL)
 
@@ -296,6 +297,7 @@ libgstvaapi_x11_@GST_API_VERSION@_la_LIBADD =	\
 	$(GLIB_LIBS)				\
 	$(X11_LIBS)				\
 	$(XRANDR_LIBS)				\
+	$(XRENDER_LIBS)				\
 	$(LIBVA_X11_LIBS)			\
 	libgstvaapi-$(GST_API_VERSION).la	\
 	$(NULL)

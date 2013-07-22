@@ -25,6 +25,10 @@
 
 #include "gstvaapiwindow_priv.h"
 
+#ifdef HAVE_XRENDER
+# include <X11/extensions/Xrender.h>
+#endif
+
 G_BEGIN_DECLS
 
 #define GST_VAAPI_WINDOW_X11_GET_PRIVATE(obj) \
@@ -42,8 +46,12 @@ typedef struct _GstVaapiWindowX11Class          GstVaapiWindowX11Class;
 struct _GstVaapiWindowX11Private {
     Atom                atom_NET_WM_STATE;
     Atom                atom_NET_WM_STATE_FULLSCREEN;
+#ifdef HAVE_XRENDER
+    Picture             picture;
+#endif
     guint               is_mapped               : 1;
     guint               fullscreen_on_map       : 1;
+    guint               has_xrender             : 1;
 };
 
 /**

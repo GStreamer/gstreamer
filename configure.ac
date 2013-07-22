@@ -470,6 +470,23 @@ if test $HAVE_XRANDR -eq 1; then
         [Defined to 1 if the XRandR extension exists.])
 fi
 
+dnl Check for XRender
+HAVE_XRENDER=0
+if test $USE_X11 -eq 1; then
+    HAVE_XRENDER=1
+    PKG_CHECK_MODULES([XRENDER], [xrender], [:], [HAVE_XRENDER=0])
+    if test $HAVE_XRENDER -eq 1; then
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$CPPFLAGS $XRENDER_CFLAGS"
+        AC_CHECK_HEADERS([X11/extensions/Xrender.h], [:], [HAVE_XRENDER=0])
+        CPPFLAGS="$saved_CPPFLAGS"
+    fi
+fi
+if test $HAVE_XRENDER -eq 1; then
+    AC_DEFINE_UNQUOTED([HAVE_XRENDER], [1],
+        [Defined to 1 if the XRender extension exists.])
+fi
+
 dnl OpenGL
 enable_opengl="no"
 if test "$enable_glx" = "yes"; then
