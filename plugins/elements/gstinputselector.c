@@ -461,7 +461,7 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
   active_sinkpad = gst_input_selector_activate_sinkpad (sel, pad);
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
-  if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad) {
+  if (prev_active_sinkpad != active_sinkpad) {
     if (prev_active_sinkpad)
       g_object_notify (G_OBJECT (prev_active_sinkpad), "active");
     g_object_notify (G_OBJECT (active_sinkpad), "active");
@@ -1050,7 +1050,7 @@ gst_selector_pad_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   GST_INPUT_SELECTOR_UNLOCK (sel);
 
-  if (prev_active_sinkpad != active_sinkpad && pad == active_sinkpad) {
+  if (prev_active_sinkpad != active_sinkpad) {
     if (prev_active_sinkpad)
       g_object_notify (G_OBJECT (prev_active_sinkpad), "active");
     g_object_notify (G_OBJECT (active_sinkpad), "active");
