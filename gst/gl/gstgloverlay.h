@@ -23,6 +23,8 @@
 
 #include <gst/gl/gstglfilter.h>
 
+G_BEGIN_DECLS
+
 #define GST_TYPE_GL_OVERLAY            (gst_gl_overlay_get_type())
 #define GST_GL_OVERLAY(obj)            (G_TYPE_CHECK_INSTANCE_CAST((obj), GST_TYPE_GL_OVERLAY,GstGLOverlay))
 #define GST_IS_GL_OVERLAY(obj)         (G_TYPE_CHECK_INSTANCE_TYPE((obj), GST_TYPE_GL_OVERLAY))
@@ -72,5 +74,7 @@ struct _GstGLOverlayClass
 {
   GstGLFilterClass filter_class;
 };
+
+G_END_DECLS
 
 #endif /* _GST_GL_OVERLAY_H_ */
