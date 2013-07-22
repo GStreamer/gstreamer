@@ -55,6 +55,9 @@ typedef struct _GstMatroskaDemux {
   guint                    num_a_streams;
   guint                    num_t_streams;
 
+  guint                    group_id;
+  gboolean                 have_group_id;
+
   /* state */
   gboolean                 streaming;
   guint                    level_up;

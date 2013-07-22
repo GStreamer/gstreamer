@@ -397,6 +397,9 @@ gst_matroska_demux_reset (GstElement * element)
   demux->num_t_streams = 0;
   demux->num_v_streams = 0;
 
+  demux->have_group_id = FALSE;
+  demux->group_id = G_MAXUINT;
+
   /* reset media info */
   g_free (demux->common.writing_app);
   demux->common.writing_app = NULL;
@@ -1373,8 +1376,24 @@ gst_matroska_demux_add_stream (GstMatroskaDemux * demux, GstEbmlRead * ebml)
   stream_id =
       gst_pad_create_stream_id_printf (context->pad, GST_ELEMENT_CAST (demux),
       "%03u", context->uid);
+  stream_start =
+      gst_pad_get_sticky_event (demux->common.sinkpad, GST_EVENT_STREAM_START,
+      0);
+  if (stream_start) {
+    if (gst_event_parse_group_id (stream_start, &demux->group_id))
+      demux->have_group_id = TRUE;
+    else
+      demux->have_group_id = FALSE;
+    gst_event_unref (stream_start);
+  } else if (!demux->have_group_id) {
+    demux->have_group_id = TRUE;
+    demux->group_id = gst_util_group_id_next ();
+  }
+
   stream_start = gst_event_new_stream_start (stream_id);
   g_free (stream_id);
+  if (demux->have_group_id)
+    gst_event_set_group_id (stream_start, demux->group_id);
   stream_flags = GST_STREAM_FLAG_NONE;
   if (context->type == GST_MATROSKA_TRACK_TYPE_SUBTITLE)
     stream_flags |= GST_STREAM_FLAG_SPARSE;
