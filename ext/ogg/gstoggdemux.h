@@ -134,6 +134,9 @@ struct _GstOggDemux
   gboolean pullmode;
   gboolean running;
 
+  gboolean have_group_id;
+  guint group_id;
+
   gboolean need_chains;
   gboolean resync;
 

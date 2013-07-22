@@ -1942,7 +1942,8 @@ gst_ogg_mux_send_start_events (GstOggMux * ogg_mux, GstCollectPads * pads)
 {
   gchar s_id[32];
 
-  /* stream-start (FIXME: create id based on input ids) */
+  /* stream-start (FIXME: create id based on input ids) and
+   * also do something with the group id */
   g_snprintf (s_id, sizeof (s_id), "oggmux-%08x", g_random_int ());
   gst_pad_push_event (ogg_mux->srcpad, gst_event_new_stream_start (s_id));
 

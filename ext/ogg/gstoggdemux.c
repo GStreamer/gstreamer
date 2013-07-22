@@ -2596,6 +2596,7 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
   /* first add the pads */
   for (i = 0; i < chain->streams->len; i++) {
     GstOggPad *pad;
+    GstEvent *ss_event;
     gchar *stream_id;
 
     pad = g_array_index (chain->streams, GstOggPad *, i);
@@ -2621,7 +2622,23 @@ gst_ogg_demux_activate_chain (GstOggDemux * ogg, GstOggChain * chain,
     stream_id =
         gst_pad_create_stream_id_printf (GST_PAD (pad), GST_ELEMENT_CAST (ogg),
         "%08x", pad->map.serialno);
-    gst_pad_push_event (GST_PAD (pad), gst_event_new_stream_start (stream_id));
+    ss_event =
+        gst_pad_get_sticky_event (ogg->sinkpad, GST_EVENT_STREAM_START, 0);
+    if (ss_event) {
+      if (gst_event_parse_group_id (ss_event, &ogg->group_id))
+        ogg->have_group_id = TRUE;
+      else
+        ogg->have_group_id = FALSE;
+      gst_event_unref (ss_event);
+    } else if (!ogg->have_group_id) {
+      ogg->have_group_id = TRUE;
+      ogg->group_id = gst_util_group_id_next ();
+    }
+    ss_event = gst_event_new_stream_start (stream_id);
+    if (ogg->have_group_id)
+      gst_event_set_group_id (ss_event, ogg->group_id);
+
+    gst_pad_push_event (GST_PAD (pad), ss_event);
     g_free (stream_id);
 
     /* Set headers on caps */
@@ -4635,6 +4652,8 @@ gst_ogg_demux_change_state (GstElement * element, GstStateChange transition)
       ogg->push_time_length = GST_CLOCK_TIME_NONE;
       ogg->push_time_offset = GST_CLOCK_TIME_NONE;
       ogg->push_state = PUSH_PLAYING;
+      ogg->have_group_id = FALSE;
+      ogg->group_id = G_MAXUINT;
 
       ogg->push_disable_seeking = FALSE;
       if (!ogg->pullmode) {
