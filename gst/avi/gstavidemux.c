@@ -256,6 +256,9 @@ gst_avi_demux_reset (GstAviDemux * avi)
   avi->num_t_streams = 0;
   avi->main_stream = -1;
 
+  avi->have_group_id = FALSE;
+  avi->group_id = G_MAXUINT;
+
   avi->state = GST_AVI_DEMUX_START;
   avi->offset = 0;
   avi->building_index = FALSE;
@@ -1983,6 +1986,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   GstElement *element;
   gboolean got_strh = FALSE, got_strf = FALSE, got_vprp = FALSE;
   gst_riff_vprp *vprp = NULL;
+  GstEvent *event;
   gchar *stream_id;
 
   element = GST_ELEMENT_CAST (avi);
@@ -2362,6 +2366,23 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   stream_id =
       gst_pad_create_stream_id_printf (pad, GST_ELEMENT_CAST (avi), "%03u",
       avi->num_streams);
+
+  event = gst_pad_get_sticky_event (avi->sinkpad, GST_EVENT_STREAM_START, 0);
+  if (event) {
+    if (gst_event_parse_group_id (event, &avi->group_id))
+      avi->have_group_id = TRUE;
+    else
+      avi->have_group_id = FALSE;
+    gst_event_unref (event);
+  } else if (!avi->have_group_id) {
+    avi->have_group_id = TRUE;
+    avi->group_id = gst_util_group_id_next ();
+  }
+
+  event = gst_event_new_stream_start (stream_id);
+  if (avi->have_group_id)
+    gst_event_set_group_id (event, avi->group_id);
+
   gst_pad_push_event (pad, gst_event_new_stream_start (stream_id));
   g_free (stream_id);
   gst_pad_set_caps (pad, caps);

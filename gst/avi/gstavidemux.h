@@ -163,6 +163,9 @@ typedef struct _GstAviDemux {
 
   guint          main_stream; /* used for seeking */
 
+  gboolean       have_group_id;
+  guint          group_id;
+
   /* for streaming mode */
   gboolean       streaming;
   gboolean       have_eos;
