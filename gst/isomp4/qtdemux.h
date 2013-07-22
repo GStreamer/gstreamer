@@ -64,6 +64,9 @@ struct _GstQTDemux {
   gint     n_audio_streams;
   gint     n_sub_streams;
 
+  gboolean have_group_id;
+  guint group_id;
+
   guint  major_brand;
   GstBuffer *comp_brands;
   GNode *moov_node;

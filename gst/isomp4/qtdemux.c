@@ -530,6 +530,8 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->mss_mode = FALSE;
   qtdemux->pending_newsegment = NULL;
   qtdemux->upstream_newsegment = FALSE;
+  qtdemux->have_group_id = FALSE;
+  qtdemux->group_id = G_MAXUINT;
   gst_segment_init (&qtdemux->segment, GST_FORMAT_TIME);
 
   GST_OBJECT_FLAG_SET (qtdemux, GST_ELEMENT_FLAG_INDEXABLE);
@@ -1809,6 +1811,8 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->mfra_offset = 0;
     qtdemux->moof_offset = 0;
     qtdemux->chapters_track_id = 0;
+    qtdemux->have_group_id = FALSE;
+    qtdemux->group_id = G_MAXUINT;
   }
   qtdemux->offset = 0;
   gst_adapter_clear (qtdemux->adapter);
@@ -5648,11 +5652,27 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
       GstEvent *event;
       GstStreamFlags stream_flags;
 
+      event =
+          gst_pad_get_sticky_event (qtdemux->sinkpad, GST_EVENT_STREAM_START,
+          0);
+      if (event) {
+        if (gst_event_parse_group_id (event, &qtdemux->group_id))
+          qtdemux->have_group_id = TRUE;
+        else
+          qtdemux->have_group_id = FALSE;
+        gst_event_unref (event);
+      } else if (!qtdemux->have_group_id) {
+        qtdemux->have_group_id = TRUE;
+        qtdemux->group_id = gst_util_group_id_next ();
+      }
+
       stream->new_stream = FALSE;
       stream_id =
           gst_pad_create_stream_id_printf (stream->pad,
           GST_ELEMENT_CAST (qtdemux), "%03u", stream->track_id);
       event = gst_event_new_stream_start (stream_id);
+      if (qtdemux->have_group_id)
+        gst_event_set_group_id (event, qtdemux->group_id);
       stream_flags = GST_STREAM_FLAG_NONE;
       if (stream->disabled)
         stream_flags |= GST_STREAM_FLAG_UNSELECT;
