@@ -34,10 +34,12 @@
 #include <gst/vaapi/gstvaapidecoder_mpeg4.h>
 #include <gst/vaapi/gstvaapidecoder_vc1.h>
 #include <gst/vaapi/gstvaapiwindow.h>
+#include <gst/vaapi/gstvaapipixmap.h>
 #include "codec.h"
 #include "output.h"
 
 static gchar *g_codec_str;
+static gboolean g_use_pixmap;
 static gboolean g_benchmark;
 
 static GOptionEntry g_options[] = {
@@ -45,6 +47,10 @@ static GOptionEntry g_options[] = {
       0,
       G_OPTION_ARG_STRING, &g_codec_str,
       "suggested codec", NULL },
+    { "pixmap", 0,
+      0,
+      G_OPTION_ARG_NONE, &g_use_pixmap,
+      "use render-to-pixmap", NULL },
     { "benchmark", 0,
       0,
       G_OPTION_ARG_NONE, &g_benchmark,
@@ -89,6 +95,10 @@ typedef struct {
     guint32             frame_duration;
     guint               surface_width;
     guint               surface_height;
+    GstVaapiPixmap     *pixmaps[2];
+    guint               pixmap_id;
+    guint               pixmap_width;
+    guint               pixmap_height;
     GstVaapiWindow     *window;
     guint               window_width;
     guint               window_height;
@@ -421,6 +431,44 @@ ensure_window_size(App *app, GstVaapiSurface *surface)
         &app->window_width, &app->window_height);
 }
 
+static gboolean
+ensure_pixmaps(App *app, GstVaapiSurface *surface,
+    const GstVaapiRectangle *crop_rect)
+{
+    GstVaapiPixmap *pixmaps[G_N_ELEMENTS(app->pixmaps)];
+    guint num_pixmaps, i, width, height;
+    gboolean success = FALSE;
+
+    if (crop_rect) {
+        width  = crop_rect->width;
+        height = crop_rect->height;
+    }
+    else
+        gst_vaapi_surface_get_size(surface, &width, &height);
+    if (app->pixmap_width == width && app->pixmap_height == height)
+        return TRUE;
+
+    for (i = 0, num_pixmaps = 0; i < G_N_ELEMENTS(pixmaps); i++) {
+        GstVaapiPixmap * const pixmap =
+            video_output_create_pixmap(app->display, GST_VIDEO_FORMAT_xRGB,
+                width, height);
+        if (!pixmap)
+            goto end;
+        pixmaps[num_pixmaps++] = pixmap;
+    }
+
+    for (i = 0; i < num_pixmaps; i++)
+        gst_vaapi_pixmap_replace(&app->pixmaps[i], pixmaps[i]);
+    app->pixmap_width = width;
+    app->pixmap_height = height;
+    success = TRUE;
+
+end:
+    for (i = 0; i < num_pixmaps; i++)
+        gst_vaapi_pixmap_replace(&pixmaps[i], NULL);
+    return success;
+}
+
 static inline void
 renderer_wait_until(App *app, GstClockTime pts)
 {
@@ -449,15 +497,31 @@ renderer_process(App *app, RenderFrame *rfp)
 
     ensure_window_size(app, surface);
 
+    crop_rect = gst_vaapi_surface_proxy_get_crop_rect(rfp->proxy);
+    if (!ensure_pixmaps(app, surface, crop_rect))
+        SEND_ERROR("failed to create intermediate pixmaps");
+
     if (!gst_vaapi_surface_sync(surface))
         SEND_ERROR("failed to sync decoded surface");
 
     if (G_LIKELY(!g_benchmark))
         renderer_wait_until(app, rfp->pts);
 
-    crop_rect = gst_vaapi_surface_proxy_get_crop_rect(rfp->proxy);
-    if (!gst_vaapi_window_put_surface(app->window, surface, crop_rect, NULL,
-            GST_VAAPI_PICTURE_STRUCTURE_FRAME))
+    if (G_UNLIKELY(g_use_pixmap)) {
+        GstVaapiPixmap * const pixmap = app->pixmaps[app->pixmap_id];
+
+        if (!gst_vaapi_pixmap_put_surface(pixmap, surface, crop_rect,
+                GST_VAAPI_PICTURE_STRUCTURE_FRAME))
+            SEND_ERROR("failed to render to pixmap");
+
+        if (!gst_vaapi_window_put_pixmap(app->window, pixmap, NULL, NULL))
+            SEND_ERROR("failed to render surface %" GST_VAAPI_ID_FORMAT,
+                       GST_VAAPI_ID_ARGS(pixmap));
+
+        app->pixmap_id = (app->pixmap_id + 1) % G_N_ELEMENTS(app->pixmaps);
+    }
+    else if (!gst_vaapi_window_put_surface(app->window, surface,
+                 crop_rect, NULL, GST_VAAPI_PICTURE_STRUCTURE_FRAME))
         SEND_ERROR("failed to render surface %" GST_VAAPI_ID_FORMAT,
                    GST_VAAPI_ID_ARGS(gst_vaapi_surface_get_id(surface)));
 
@@ -528,6 +592,8 @@ stop_renderer(App *app)
 static void
 app_free(App *app)
 {
+    guint i;
+
     if (!app)
         return;
 
@@ -537,6 +603,8 @@ app_free(App *app)
     }
     g_free(app->file_name);
 
+    for (i = 0; i < G_N_ELEMENTS(app->pixmaps); i++)
+        gst_vaapi_pixmap_replace(&app->pixmaps[i], NULL);
     gst_vaapi_decoder_replace(&app->decoder, NULL);
     gst_vaapi_window_replace(&app->window, NULL);
     gst_vaapi_display_replace(&app->display, NULL);
