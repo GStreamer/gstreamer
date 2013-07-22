@@ -3019,13 +3019,17 @@ gst_base_parse_loop (GstPad * pad)
 
   if (G_UNLIKELY (parse->priv->push_stream_start)) {
     gchar *stream_id;
+    GstEvent *event;
 
     stream_id =
         gst_pad_create_stream_id (parse->srcpad, GST_ELEMENT_CAST (parse),
         NULL);
 
+    event = gst_event_new_stream_start (stream_id);
+    gst_event_set_group_id (event, gst_util_group_id_next ());
+
     GST_DEBUG_OBJECT (parse, "Pushing STREAM_START");
-    gst_pad_push_event (parse->srcpad, gst_event_new_stream_start (stream_id));
+    gst_pad_push_event (parse->srcpad, event);
     parse->priv->push_stream_start = FALSE;
     g_free (stream_id);
   }

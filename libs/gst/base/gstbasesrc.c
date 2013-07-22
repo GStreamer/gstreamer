@@ -840,14 +840,16 @@ gst_base_src_send_stream_start (GstBaseSrc * src)
 
   if (src->priv->stream_start_pending) {
     gchar *stream_id;
+    GstEvent *event;
 
     stream_id =
         gst_pad_create_stream_id (src->srcpad, GST_ELEMENT_CAST (src), NULL);
 
     GST_DEBUG_OBJECT (src, "Pushing STREAM_START");
-    ret =
-        gst_pad_push_event (src->srcpad,
-        gst_event_new_stream_start (stream_id));
+    event = gst_event_new_stream_start (stream_id);
+    gst_event_set_group_id (event, gst_util_group_id_next ());
+
+    ret = gst_pad_push_event (src->srcpad, event);
     src->priv->stream_start_pending = FALSE;
     g_free (stream_id);
   }
