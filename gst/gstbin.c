@@ -1011,12 +1011,16 @@ is_eos (GstBin * bin, guint32 * seqnum)
  *
  * call with bin LOCK */
 static gboolean
-is_stream_start (GstBin * bin, guint32 * seqnum)
+is_stream_start (GstBin * bin, guint32 * seqnum, gboolean * have_group_id,
+    guint * group_id)
 {
   gboolean result;
-  gint n_stream_start = 0;
   GList *walk, *msgs;
+  guint tmp_group_id;
+  gboolean first = TRUE, same_group_id = TRUE;
 
+  *have_group_id = TRUE;
+  *group_id = 0;
   result = TRUE;
   for (walk = bin->children; walk; walk = g_list_next (walk)) {
     GstElement *element;
@@ -1029,7 +1033,18 @@ is_stream_start (GstBin * bin, guint32 * seqnum)
                   GST_MESSAGE_STREAM_START))) {
         GST_DEBUG ("sink '%s' posted STREAM_START", GST_ELEMENT_NAME (element));
         *seqnum = gst_message_get_seqnum (GST_MESSAGE_CAST (msgs->data));
-        n_stream_start++;
+        if (gst_message_parse_group_id (GST_MESSAGE_CAST (msgs->data),
+                &tmp_group_id)) {
+          if (first) {
+            first = FALSE;
+            *group_id = tmp_group_id;
+          } else {
+            if (tmp_group_id != *group_id)
+              same_group_id = FALSE;
+          }
+        } else {
+          *have_group_id = FALSE;
+        }
       } else {
         GST_DEBUG ("sink '%s' did not post STREAM_START yet",
             GST_ELEMENT_NAME (element));
@@ -1039,6 +1054,14 @@ is_stream_start (GstBin * bin, guint32 * seqnum)
     }
   }
 
+  /* If all have a group_id we only consider this stream started
+   * if all group ids were the same and all sinks posted a stream-start
+   * message */
+  if (*have_group_id)
+    return same_group_id && result;
+  /* otherwise consider this stream started after all sinks
+   * have reported stream-start for backward compatibility.
+   * FIXME 2.0: This should go away! */
   return result;
 }
 
@@ -3195,12 +3218,14 @@ bin_do_stream_start (GstBin * bin)
 {
   guint32 seqnum = 0;
   gboolean stream_start;
+  gboolean have_group_id = FALSE;
+  guint group_id = 0;
 
   GST_OBJECT_LOCK (bin);
   /* If all sinks are STREAM_START we forward the STREAM_START message
    * to the parent bin or application
    */
-  stream_start = is_stream_start (bin, &seqnum);
+  stream_start = is_stream_start (bin, &seqnum, &have_group_id, &group_id);
   GST_OBJECT_UNLOCK (bin);
 
   if (stream_start) {
@@ -3212,6 +3237,9 @@ bin_do_stream_start (GstBin * bin)
 
     tmessage = gst_message_new_stream_start (GST_OBJECT_CAST (bin));
     gst_message_set_seqnum (tmessage, seqnum);
+    if (have_group_id)
+      gst_message_set_group_id (tmessage, group_id);
+
     GST_DEBUG_OBJECT (bin,
         "all sinks posted STREAM_START, posting seqnum #%" G_GUINT32_FORMAT,
         seqnum);
