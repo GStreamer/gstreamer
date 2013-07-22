@@ -1518,6 +1518,8 @@ restart:
   field1 = &self->field_history[self->history_count - 1];
 
   if (locking != GST_DEINTERLACE_LOCKING_NONE) {
+    GstCaps *sinkcaps;
+
     if (!self->state_count) {
       GST_ERROR_OBJECT (self,
           "BROKEN! Fields in history + no states should not happen!");
@@ -1564,7 +1566,9 @@ restart:
       }
 
       /* setcaps on sink and src pads */
-      gst_deinterlace_setcaps (self, self->sinkpad, gst_pad_get_current_caps (self->sinkpad));  // FIXME
+      sinkcaps = gst_pad_get_current_caps (self->sinkpad);
+      gst_deinterlace_setcaps (self, self->sinkpad, sinkcaps);  // FIXME
+      gst_caps_unref (sinkcaps);
 
       if (flush_one && self->drop_orphans) {
         GST_DEBUG_OBJECT (self, "Dropping orphan first field");
@@ -2040,7 +2044,7 @@ gst_deinterlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
     self->reconfigure = FALSE;
     GST_OBJECT_UNLOCK (self);
-    caps = gst_pad_get_current_caps (self->srcpad);
+    caps = gst_pad_get_current_caps (self->sinkpad);
     if (caps != NULL) {
       gst_deinterlace_setcaps (self, self->sinkpad, caps);      // FIXME
       gst_caps_unref (caps);
