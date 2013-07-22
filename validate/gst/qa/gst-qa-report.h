@@ -52,6 +52,7 @@ typedef enum {
   GST_QA_AREA_BUFFER,
   GST_QA_AREA_QUERY,
   GST_QA_AREA_CAPS_NEGOTIATION,
+  GST_QA_AREA_SEEK,
   GST_QA_AREA_OTHER=100,
 } GstQaReportArea;
 
@@ -71,6 +72,11 @@ typedef enum {
 
   GST_QA_AREA_BUFFER_NUM_ENTRIES
 } GstQaReportAreaBuffer;
+
+typedef enum {
+  GST_QA_AREA_SEEK_TIMING,
+  GST_QA_AREA_SEEK_UNKNOWN
+} GstQaReportAreaSeek;
 
 typedef enum {
   GST_QA_AREA_QUERY_UNEXPECTED,

@@ -24,9 +24,12 @@
 #endif
 
 #include <gst/gst.h>
-#include "gst-qa-scenario.h"
 #include <gio/gio.h>
 #include <string.h>
+
+#include "gst-qa-scenario.h"
+#include "gst-qa-reporter.h"
+#include "gst-qa-report.h"
 
 #define GST_QA_SCENARIO_GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_QA_SCENARIO, GstQaScenarioPrivate))
@@ -38,15 +41,22 @@ GST_DEBUG_CATEGORY_STATIC (gst_qa_scenario);
 #define GST_CAT_DEFAULT gst_qa_scenario
 
 
-#define DEFAULT_SEEK_TOLERANCE (0.05 * GST_SECOND)      /* tolerance seek interval
+#define DEFAULT_SEEK_TOLERANCE (0.1 * GST_SECOND)       /* tolerance seek interval
                                                            TODO make it overridable  */
+enum
+{
+  PROP_0,
+  PROP_RUNNER,
+  PROP_LAST
+};
 
 static void gst_qa_scenario_class_init (GstQaScenarioClass * klass);
 static void gst_qa_scenario_init (GstQaScenario * scenario);
 static void gst_qa_scenario_dispose (GObject * object);
 static void gst_qa_scenario_finalize (GObject * object);
 
-G_DEFINE_TYPE (GstQaScenario, gst_qa_scenario, G_TYPE_OBJECT);
+G_DEFINE_TYPE_WITH_CODE (GstQaScenario, gst_qa_scenario, G_TYPE_OBJECT,
+    G_IMPLEMENT_INTERFACE (GST_TYPE_QA_REPORTER, NULL));
 
 typedef struct _SeekInfo
 {
@@ -64,9 +74,12 @@ typedef struct _SeekInfo
 
 struct _GstQaScenarioPrivate
 {
-  GList *seeks;
-
   GstElement *pipeline;
+  GstQaRunner *runner;
+
+  GList *seeks;
+  gint64 seeked_position;       /* last seeked position */
+  GstClockTime seek_pos_tol;
 };
 
 /* Some helper method that are missing iin Json itscenario */
@@ -189,8 +202,14 @@ get_position (GstQaScenario * scenario)
   GST_DEBUG ("Current position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
   while (tmp) {
     SeekInfo *seek = tmp->data;
-    if ((position >= (seek->seeking_time - DEFAULT_SEEK_TOLERANCE))
-        && (position <= (seek->seeking_time + DEFAULT_SEEK_TOLERANCE))) {
+
+    if ((position >= (seek->seeking_time - priv->seek_pos_tol))
+        && (position <= (seek->seeking_time + priv->seek_pos_tol))) {
+
+      if (GST_CLOCK_TIME_IS_VALID (priv->seeked_position))
+        GST_QA_REPORT_ISSUE (scenario, TRUE, SEEK, TIMING,
+            "Previous seek to %" GST_TIME_FORMAT " was not handled",
+            GST_TIME_ARGS (priv->seeked_position));
 
       GST_LOG ("seeking to: %" GST_TIME_FORMAT " stop: %" GST_TIME_FORMAT,
           GST_TIME_ARGS (seek->start), GST_TIME_ARGS (seek->stop));
@@ -198,9 +217,13 @@ get_position (GstQaScenario * scenario)
       if (gst_element_seek (pipeline, seek->rate,
               seek->format, seek->flags,
               seek->start_type, seek->start,
-              seek->stop_type, seek->stop) == FALSE)
-        GST_ERROR ("FIXME, make it possible to report from the scenario");
+              seek->stop_type, seek->stop) == FALSE) {
+        GST_QA_REPORT_ISSUE (scenario, TRUE, SEEK, UNKNOWN,
+            "Could not seek to position %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (priv->seeked_position));
+      }
 
+      priv->seeked_position = seek->start;
       priv->seeks = g_list_remove_link (priv->seeks, tmp);
       g_slice_free (SeekInfo, seek);
       g_list_free (tmp);
@@ -208,6 +231,35 @@ get_position (GstQaScenario * scenario)
     }
     tmp = tmp->next;
   }
+  return TRUE;
+}
+
+static gboolean
+async_done_cb (GstBus * bus, GstMessage * message, GstQaScenario * scenario)
+{
+  GstQaScenarioPrivate *priv = scenario->priv;
+
+  if (GST_CLOCK_TIME_IS_VALID (priv->seeked_position)) {
+    gint64 position;
+    GstFormat format = GST_FORMAT_TIME;
+
+    gst_element_query_position (priv->pipeline, &format, &position);
+    if (position > (priv->seeked_position + priv->seek_pos_tol) ||
+        position < (MAX (0,
+                ((gint64) (priv->seeked_position - priv->seek_pos_tol))))) {
+
+      GST_QA_REPORT_ISSUE (scenario, TRUE, SEEK, TIMING,
+          "Seeked position %" GST_TIME_FORMAT
+          "not in the expected range [%" GST_TIME_FORMAT " -- %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (position),
+          GST_TIME_ARGS (((MAX (0,
+                          ((gint64) (priv->seeked_position -
+                                  priv->seek_pos_tol)))))),
+          GST_TIME_ARGS ((priv->seeked_position + priv->seek_pos_tol)));
+    }
+    priv->seeked_position = GST_CLOCK_TIME_NONE;
+  }
+
   return TRUE;
 }
 
@@ -311,9 +363,44 @@ done:
 
 invalid_name:
   {
-    GST_ERROR ("Invalid name for encoding target : '%s'", scenario_name);
+    GST_ERROR ("Invalid name for scenario '%s'", scenario_name);
     ret = FALSE;
     goto done;
+  }
+}
+
+
+static void
+gst_qa_scenario_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstQaScenarioPrivate *priv = GST_QA_SCENARIO (object)->priv;
+
+  switch (prop_id) {
+    case PROP_RUNNER:
+      /* we assume the runner is valid as long as this scenario is,
+       * no ref taken */
+      priv->runner = g_value_get_object (value);
+      break;
+    default:
+      break;
+  }
+}
+
+static void
+gst_qa_scenario_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstQaScenarioPrivate *priv = GST_QA_SCENARIO (object)->priv;
+
+  switch (prop_id) {
+    case PROP_RUNNER:
+      /* we assume the runner is valid as long as this scenario is,
+       * no ref taken */
+      g_value_set_object (value, priv->runner);
+      break;
+    default:
+      break;
   }
 }
 
@@ -330,13 +417,26 @@ gst_qa_scenario_class_init (GstQaScenarioClass * klass)
   object_class->dispose = gst_qa_scenario_dispose;
   object_class->finalize = gst_qa_scenario_finalize;
 
+  object_class->get_property = gst_qa_scenario_get_property;
+  object_class->set_property = gst_qa_scenario_set_property;
+
+  g_object_class_install_property (object_class, PROP_RUNNER,
+      g_param_spec_object ("qa-runner", "QA Runner", "The QA runner to "
+          "report errors to", GST_TYPE_QA_RUNNER,
+          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
+
   klass->content_parser.start_element = _parse_element_start;
 }
 
 static void
 gst_qa_scenario_init (GstQaScenario * scenario)
 {
-  scenario->priv = GST_QA_SCENARIO_GET_PRIVATE (scenario);
+  GstQaScenarioPrivate *priv = scenario->priv =
+      GST_QA_SCENARIO_GET_PRIVATE (scenario);
+
+
+  priv->seeked_position = GST_CLOCK_TIME_NONE;
+  priv->seek_pos_tol = DEFAULT_SEEK_TOLERANCE;
 }
 
 static void
@@ -357,10 +457,12 @@ gst_qa_scenario_finalize (GObject * object)
 }
 
 GstQaScenario *
-gst_qa_scenario_factory_create (GstElement * pipeline,
+gst_qa_scenario_factory_create (GstQaRunner * runner,
     const gchar * scenario_name)
 {
-  GstQaScenario *scenario = g_object_new (GST_TYPE_QA_SCENARIO, NULL);
+  GstBus *bus;
+  GstQaScenario *scenario = g_object_new (GST_TYPE_QA_SCENARIO, "qa-runner",
+      runner, NULL);
 
   GST_LOG ("Creating scenario %s", scenario_name);
   if (!gst_qa_scenario_load (scenario, scenario_name)) {
@@ -369,13 +471,22 @@ gst_qa_scenario_factory_create (GstElement * pipeline,
     return NULL;
   }
 
-  scenario->priv->pipeline = gst_object_ref (pipeline);
+  scenario->priv->pipeline = gst_object_ref (runner->pipeline);
+  gst_qa_reporter_set_name (GST_QA_REPORTER (scenario),
+      g_strdup (scenario_name));
+
+  bus = gst_element_get_bus (runner->pipeline);
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message::async-done", (GCallback) async_done_cb,
+      scenario);
+  gst_object_unref (bus);
+
   g_timeout_add (50, (GSourceFunc) get_position, scenario);
 
   g_print ("\n=========================================\n"
       "Running scenario %s on pipeline %s"
       "\n=========================================\n", scenario_name,
-      GST_OBJECT_NAME (pipeline));
+      GST_OBJECT_NAME (runner->pipeline));
 
   return scenario;
 }

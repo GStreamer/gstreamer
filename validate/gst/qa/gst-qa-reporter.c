@@ -123,14 +123,14 @@ gst_qa_report (GstQaReporter * reporter, gboolean repeat,
 }
 
 void
-gst_qa_reporter_set_name (GstQaReporter * reporter, const gchar * name)
+gst_qa_reporter_set_name (GstQaReporter * reporter, gchar * name)
 {
   GstQaReporterPrivate *priv = gst_qa_reporter_get_priv (reporter);
 
   if (priv->name)
     g_free (priv->name);
 
-  priv->name = g_strdup (name);
+  priv->name = name;
 }
 
 GstQaRunner *

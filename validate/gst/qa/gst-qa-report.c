@@ -80,6 +80,8 @@ gst_qa_report_area_get_name (GstQaReportArea area)
       return "query";
     case GST_QA_AREA_CAPS_NEGOTIATION:
       return "caps";
+    case GST_QA_AREA_SEEK:
+      return "seek";
     case GST_QA_AREA_OTHER:
       return "other";
     default:
@@ -143,6 +145,17 @@ gst_qa_area_caps_get_subarea_name (GstQaReportAreaEvent subarea)
 }
 
 const gchar *
+gst_qa_area_seek_get_subarea_name (GstQaReportAreaEvent subarea)
+{
+  switch (subarea) {
+    case GST_QA_AREA_SEEK_TIMING:
+      return "timing";
+    default:
+      return "unknown";
+  }
+}
+
+const gchar *
 gst_qa_report_subarea_get_name (GstQaReportArea area, gint subarea)
 {
   switch (area) {
@@ -154,10 +167,13 @@ gst_qa_report_subarea_get_name (GstQaReportArea area, gint subarea)
       return gst_qa_area_query_get_subarea_name (subarea);
     case GST_QA_AREA_CAPS_NEGOTIATION:
       return gst_qa_area_caps_get_subarea_name (subarea);
-    default:
-      g_assert_not_reached ();
+    case GST_QA_AREA_SEEK:
+      return gst_qa_area_seek_get_subarea_name (subarea);
     case GST_QA_AREA_OTHER:
       return "unknown";
+    default:
+      g_assert_not_reached ();
+      break;
   }
 }
 

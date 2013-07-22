@@ -24,6 +24,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include "gst-qa-runner.h"
 
 G_BEGIN_DECLS
 
@@ -55,7 +56,7 @@ struct _GstQaScenario
 
 GType gst_qa_scenario_get_type (void);
 
-GstQaScenario * gst_qa_scenario_factory_create (GstElement *pipeline,
+GstQaScenario * gst_qa_scenario_factory_create (GstQaRunner *runner,
                                                 const gchar *scenario_name);
 
 G_END_DECLS

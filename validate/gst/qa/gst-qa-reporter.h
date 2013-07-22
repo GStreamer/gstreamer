@@ -105,7 +105,7 @@ struct _GstQaReporterInterface
 };
 
 void gst_qa_reporter_set_name            (GstQaReporter * reporter,
-                                          const gchar * name);
+                                          gchar * name);
 GstQaRunner * gst_qa_reporter_get_runner (GstQaReporter *reporter);
 void gst_qa_reporter_init                (GstQaReporter * reporter, const gchar *name);
 void gst_qa_report                       (GstQaReporter * reporter, gboolean repeat,

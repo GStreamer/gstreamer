@@ -116,7 +116,7 @@ gst_qa_runner_new (GstElement * pipeline)
 
 
   if ((scenario_name = g_getenv ("GST_QA_SCENARIO")))
-    runner->scenario = gst_qa_scenario_factory_create (pipeline, scenario_name);
+    runner->scenario = gst_qa_scenario_factory_create (runner, scenario_name);
 
   g_object_set_data ((GObject *) pipeline, "qa-runner", runner);
 
