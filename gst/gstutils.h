@@ -75,6 +75,7 @@ guint64         gst_util_uint64_scale_int_ceil  (guint64 val, gint num, gint den
 guint32         gst_util_seqnum_next            (void);
 gint32          gst_util_seqnum_compare         (guint32 s1, guint32 s2);
 
+guint           gst_util_group_id_next          (void);
 
 /**
  * GST_CALL_PARENT:

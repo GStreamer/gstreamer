@@ -1054,6 +1054,8 @@ gst_event_new_stream_start
 gst_event_parse_stream_start
 gst_event_set_stream_flags
 gst_event_parse_stream_flags
+gst_event_set_group_id
+gst_event_parse_group_id
 
 gst_event_new_segment
 gst_event_parse_segment
@@ -1530,7 +1532,10 @@ gst_message_new_toc
 gst_message_parse_toc
 gst_message_new_reset_time
 gst_message_parse_reset_time
+
 gst_message_new_stream_start
+gst_message_set_group_id
+gst_message_parse_group_id
 
 GstStructureChangeType
 gst_message_new_structure_change
@@ -3061,6 +3066,7 @@ gst_util_fraction_add
 gst_util_fraction_compare
 gst_util_seqnum_next
 gst_util_seqnum_compare
+gst_util_group_id_next
 gst_util_set_object_arg
 gst_util_set_value_from_string
 gst_util_get_timestamp

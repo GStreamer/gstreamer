@@ -1474,6 +1474,57 @@ gst_event_parse_stream_flags (GstEvent * event, GstStreamFlags * flags)
 }
 
 /**
+ * gst_event_set_group_id:
+ * @event: a stream-start event
+ * @group_id: the group id to set
+ *
+ * All streams that have the same group id are supposed to be played
+ * together, i.e. all streams inside a container file should have the
+ * same group id but different stream ids. The group id should change
+ * each time the stream is started, resulting in different group ids
+ * each time a file is played for example.
+ *
+ * Use gst_util_group_id_next() to get a new group id.
+ *
+ * Since: 1.2
+ */
+void
+gst_event_set_group_id (GstEvent * event, guint group_id)
+{
+  g_return_if_fail (event != NULL);
+  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START);
+  g_return_if_fail (gst_event_is_writable (event));
+
+  gst_structure_id_set (GST_EVENT_STRUCTURE (event),
+      GST_QUARK (GROUP_ID), G_TYPE_UINT, group_id, NULL);
+}
+
+/**
+ * gst_event_parse_group_id:
+ * @event: a stream-start event
+ * @group_id: (out): address of variable where to store the group id
+ *
+ * Returns: %TRUE if a group id was set on the event and could be parsed,
+ *   %FALSE otherwise.
+ *
+ * Since: 1.2
+ */
+gboolean
+gst_event_parse_group_id (GstEvent * event, guint * group_id)
+{
+  g_return_val_if_fail (event != NULL, FALSE);
+  g_return_val_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START,
+      FALSE);
+
+  if (group_id) {
+    return gst_structure_id_get (GST_EVENT_STRUCTURE (event),
+        GST_QUARK (GROUP_ID), G_TYPE_UINT, group_id, NULL);
+  }
+
+  return TRUE;
+}
+
+/**
  * gst_event_new_toc:
  * @toc: (transfer none): #GstToc structure.
  * @updated: whether @toc was updated or not.

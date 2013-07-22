@@ -492,6 +492,9 @@ void            gst_event_parse_stream_start    (GstEvent *event, const gchar **
 void            gst_event_set_stream_flags      (GstEvent *event, GstStreamFlags flags);
 void            gst_event_parse_stream_flags    (GstEvent *event, GstStreamFlags *flags);
 
+void            gst_event_set_group_id          (GstEvent *event, guint group_id);
+gboolean        gst_event_parse_group_id        (GstEvent *event, guint *group_id);
+
 /* flush events */
 GstEvent *      gst_event_new_flush_start       (void) G_GNUC_MALLOC;
 

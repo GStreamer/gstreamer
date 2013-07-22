@@ -561,6 +561,9 @@ void            gst_message_parse_reset_time    (GstMessage *message, GstClockTi
 /* STREAM_START */
 GstMessage *    gst_message_new_stream_start    (GstObject * src) G_GNUC_MALLOC;
 
+void            gst_message_set_group_id        (GstMessage *message, guint group_id);
+gboolean        gst_message_parse_group_id      (GstMessage *message, guint *group_id);
+
 /* NEED_CONTEXT */
 GstMessage *    gst_message_new_need_context    (GstObject * src) G_GNUC_MALLOC;
 void            gst_message_add_context_type    (GstMessage * message, const gchar * context_type);

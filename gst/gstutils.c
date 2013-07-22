@@ -3752,3 +3752,20 @@ gst_pad_get_stream_id (GstPad * pad)
 
   return ret;
 }
+
+/**
+ * gst_util_group_id_next:
+ *
+ * Return a constantly incrementing group id.
+ *
+ * This function is used to generate a new group-id for the
+ * stream-start event.
+ *
+ * Returns: A constantly incrementing unsigned integer, which might
+ * overflow back to 0 at some point. */
+guint
+gst_util_group_id_next (void)
+{
+  static gint counter = 0;
+  return g_atomic_int_add (&counter, 1);
+}

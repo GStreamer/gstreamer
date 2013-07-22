@@ -358,9 +358,11 @@ EXPORTS
 	gst_debug_category_reset_threshold
 	gst_debug_category_set_threshold
 	gst_debug_color_flags_get_type
+	gst_debug_color_mode_get_type
 	gst_debug_construct_term_color
 	gst_debug_construct_win_color
 	gst_debug_get_all_categories
+	gst_debug_get_color_mode
 	gst_debug_get_default_threshold
 	gst_debug_graph_details_get_type
 	gst_debug_is_active
@@ -375,10 +377,9 @@ EXPORTS
 	gst_debug_remove_log_function
 	gst_debug_remove_log_function_by_data
 	gst_debug_set_active
-	gst_debug_set_colored
 	gst_debug_set_color_mode
-	gst_debug_get_color_mode
 	gst_debug_set_color_mode_from_string
+	gst_debug_set_colored
 	gst_debug_set_default_threshold
 	gst_debug_set_threshold_for_name
 	gst_debug_set_threshold_from_string
@@ -502,6 +503,7 @@ EXPORTS
 	gst_event_parse_context
 	gst_event_parse_flush_stop
 	gst_event_parse_gap
+	gst_event_parse_group_id
 	gst_event_parse_latency
 	gst_event_parse_qos
 	gst_event_parse_seek
@@ -514,6 +516,7 @@ EXPORTS
 	gst_event_parse_tag
 	gst_event_parse_toc
 	gst_event_parse_toc_select
+	gst_event_set_group_id
 	gst_event_set_seqnum
 	gst_event_set_stream_flags
 	gst_event_type_flags_get_type
@@ -632,6 +635,7 @@ EXPORTS
 	gst_message_parse_clock_lost
 	gst_message_parse_clock_provide
 	gst_message_parse_error
+	gst_message_parse_group_id
 	gst_message_parse_have_context
 	gst_message_parse_info
 	gst_message_parse_new_clock
@@ -653,6 +657,7 @@ EXPORTS
 	gst_message_parse_toc
 	gst_message_parse_warning
 	gst_message_set_buffering_stats
+	gst_message_set_group_id
 	gst_message_set_qos_stats
 	gst_message_set_qos_values
 	gst_message_set_seqnum
@@ -1290,6 +1295,7 @@ EXPORTS
 	gst_util_get_timestamp
 	gst_util_greatest_common_divisor
 	gst_util_greatest_common_divisor_int64
+	gst_util_group_id_next
 	gst_util_guint64_to_gdouble
 	gst_util_seqnum_compare
 	gst_util_seqnum_next
