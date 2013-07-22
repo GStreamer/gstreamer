@@ -832,15 +832,19 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
         /* otherwise need more */
         goto more;
       case GST_H264_PARSER_BROKEN_LINK:
-        g_assert_not_reached ();
-        break;
+        GST_ELEMENT_ERROR (h264parse, STREAM, FORMAT,
+            ("Error parsing H.264 stream"),
+            ("The link to structure needed for the parsing couldn't be found"));
+        goto invalid_stream;
       case GST_H264_PARSER_ERROR:
         /* should not really occur either */
-        GST_DEBUG_OBJECT (h264parse, "error parsing Nal Unit");
-        /* fall-through */
+        GST_ELEMENT_ERROR (h264parse, STREAM, FORMAT,
+            ("Error parsing H.264 stream"), ("Invalid H.264 stream"));
+        goto invalid_stream;
       case GST_H264_PARSER_NO_NAL:
-        g_assert_not_reached ();
-        break;
+        GST_ELEMENT_ERROR (h264parse, STREAM, FORMAT,
+            ("Error parsing H.264 stream"), ("No H.264 NAL unit found"));
+        goto invalid_stream;
       case GST_H264_PARSER_BROKEN_DATA:
         GST_WARNING_OBJECT (h264parse, "input stream is corrupt; "
             "it contains a NAL unit of length %u", nalu.size);
@@ -882,12 +886,14 @@ gst_h264_parse_handle_frame (GstBaseParse * parse,
       }
     }
 
-    if (nalu.type == GST_H264_NAL_SPS || 
+    if (nalu.type == GST_H264_NAL_SPS ||
         nalu.type == GST_H264_NAL_PPS ||
         (h264parse->have_sps && h264parse->have_pps)) {
       gst_h264_parse_process_nal (h264parse, &nalu);
     } else {
-      GST_WARNING_OBJECT (h264parse, "no SPS/PPS yet, nal Type: %d, Size: %u will be dropped", nalu.type, nalu.size);
+      GST_WARNING_OBJECT (h264parse,
+          "no SPS/PPS yet, nal Type: %d, Size: %u will be dropped", nalu.type,
+          nalu.size);
       *skipsize = nalu.size;
       goto skip;
     }
@@ -928,6 +934,10 @@ skip:
   GST_DEBUG_OBJECT (h264parse, "skipping %d", *skipsize);
   gst_h264_parse_reset_frame (h264parse);
   goto out;
+
+invalid_stream:
+  gst_buffer_unmap (buffer, &map);
+  return GST_FLOW_ERROR;
 }
 
 /* byte together avc codec data based on collected pps and sps so far */
