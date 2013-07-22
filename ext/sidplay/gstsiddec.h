@@ -49,6 +49,9 @@ struct _GstSidDec {
   GstPad        *sinkpad, 
                 *srcpad;
 
+  gboolean       have_group_id;
+  guint          group_id;
+
   guchar        *tune_buffer;
   gint           tune_len;
   gint           tune_number;

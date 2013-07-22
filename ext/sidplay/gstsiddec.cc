@@ -205,7 +205,8 @@ gst_siddec_class_init (GstSidDecClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&sink_templ));
 
-  GST_DEBUG_CATEGORY_INIT (gst_siddec_debug, "siddec", 0, "C64 sid song player");
+  GST_DEBUG_CATEGORY_INIT (gst_siddec_debug, "siddec", 0,
+      "C64 sid song player");
 }
 
 static void
@@ -241,6 +242,9 @@ gst_siddec_init (GstSidDec * siddec)
   siddec->tune_number = 0;
   siddec->total_bytes = 0;
   siddec->blocksize = DEFAULT_BLOCKSIZE;
+
+  siddec->have_group_id = FALSE;
+  siddec->group_id = G_MAXUINT;
 }
 
 static void
@@ -292,6 +296,7 @@ siddec_negotiate (GstSidDec * siddec)
   GstCaps *caps;
   const gchar *str;
   GstAudioFormat format;
+  GstEvent *event;
   gchar *stream_id;
 
   allowed = gst_pad_get_allowed_caps (siddec->srcpad);
@@ -335,8 +340,27 @@ siddec_negotiate (GstSidDec * siddec)
   gst_structure_get_int (structure, "channels", &channels);
   siddec->config->channels = channels;
 
-  stream_id = gst_pad_create_stream_id (siddec->srcpad, GST_ELEMENT_CAST (siddec), NULL);
-  gst_pad_push_event (siddec->srcpad, gst_event_new_stream_start (stream_id));
+  stream_id =
+      gst_pad_create_stream_id (siddec->srcpad, GST_ELEMENT_CAST (siddec),
+      NULL);
+
+  event = gst_pad_get_sticky_event (siddec->sinkpad, GST_EVENT_STREAM_START, 0);
+  if (event) {
+    if (gst_event_parse_group_id (event, &siddec->group_id))
+      siddec->have_group_id = TRUE;
+    else
+      siddec->have_group_id = FALSE;
+    gst_event_unref (event);
+  } else if (!siddec->have_group_id) {
+    siddec->have_group_id = TRUE;
+    siddec->group_id = gst_util_group_id_next ();
+  }
+
+  event = gst_event_new_stream_start (stream_id);
+  if (siddec->have_group_id)
+    gst_event_set_group_id (event, siddec->group_id);
+
+  gst_pad_push_event (siddec->srcpad, event);
   g_free (stream_id);
 
   caps = gst_caps_new_simple ("audio/x-raw",
@@ -462,6 +486,8 @@ start_play_tune (GstSidDec * siddec)
   gst_segment_init (&segment, GST_FORMAT_TIME);
   gst_pad_push_event (siddec->srcpad, gst_event_new_segment (&segment));
   siddec->total_bytes = 0;
+  siddec->have_group_id = FALSE;
+  siddec->group_id = G_MAXUINT;
 
   res = gst_pad_start_task (siddec->srcpad,
       (GstTaskFunction) play_loop, siddec->srcpad, NULL);
