@@ -529,17 +529,17 @@ GST_START_TEST (test_client_multicast_invalid_transport_specific)
   GstRTSPMessage request = { 0, };
   gchar *str;
   GstRTSPSessionPool *session_pool;
-  GstRTSPClientState state = { NULL };
+  GstRTSPContext ctx = { NULL };
 
   client = setup_multicast_client ();
 
-  state.client = client;
-  state.auth = gst_rtsp_auth_new ();
-  state.token =
+  ctx.client = client;
+  ctx.auth = gst_rtsp_auth_new ();
+  ctx.token =
       gst_rtsp_token_new (GST_RTSP_TOKEN_TRANSPORT_CLIENT_SETTINGS,
       G_TYPE_BOOLEAN, TRUE, GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
       "user", NULL);
-  gst_rtsp_client_state_push_current (&state);
+  gst_rtsp_context_push_current (&ctx);
 
   /* simple SETUP with a valid URI and multicast, but an invalid ip */
   fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_SETUP,
@@ -604,9 +604,9 @@ GST_START_TEST (test_client_multicast_invalid_transport_specific)
 
 
   g_object_unref (client);
-  g_object_unref (state.auth);
-  gst_rtsp_token_unref (state.token);
-  gst_rtsp_client_state_pop_current (&state);
+  g_object_unref (ctx.auth);
+  gst_rtsp_token_unref (ctx.token);
+  gst_rtsp_context_pop_current (&ctx);
 }
 
 GST_END_TEST;
@@ -617,17 +617,17 @@ GST_START_TEST (test_client_multicast_transport_specific)
   GstRTSPMessage request = { 0, };
   gchar *str;
   GstRTSPSessionPool *session_pool;
-  GstRTSPClientState state = { NULL };
+  GstRTSPContext ctx = { NULL };
 
   client = setup_multicast_client ();
 
-  state.client = client;
-  state.auth = gst_rtsp_auth_new ();
-  state.token =
+  ctx.client = client;
+  ctx.auth = gst_rtsp_auth_new ();
+  ctx.token =
       gst_rtsp_token_new (GST_RTSP_TOKEN_TRANSPORT_CLIENT_SETTINGS,
       G_TYPE_BOOLEAN, TRUE, GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
       "user", NULL);
-  gst_rtsp_client_state_push_current (&state);
+  gst_rtsp_context_push_current (&ctx);
 
   expected_transport = "RTP/AVP;multicast;destination=233.252.0.1;"
       "ttl=1;port=5000-5001;mode=\"PLAY\"";
@@ -655,9 +655,9 @@ GST_START_TEST (test_client_multicast_transport_specific)
   g_object_unref (session_pool);
 
   g_object_unref (client);
-  g_object_unref (state.auth);
-  gst_rtsp_token_unref (state.token);
-  gst_rtsp_client_state_pop_current (&state);
+  g_object_unref (ctx.auth);
+  gst_rtsp_token_unref (ctx.token);
+  gst_rtsp_context_pop_current (&ctx);
 }
 
 GST_END_TEST;

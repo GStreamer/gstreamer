@@ -27,18 +27,12 @@ G_BEGIN_DECLS
 
 typedef struct _GstRTSPClient GstRTSPClient;
 typedef struct _GstRTSPClientClass GstRTSPClientClass;
-typedef struct _GstRTSPClientState GstRTSPClientState;
 typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
 
-#include "rtsp-server.h"
-#include "rtsp-media.h"
+#include "rtsp-context.h"
 #include "rtsp-mount-points.h"
-#include "rtsp-session-pool.h"
-#include "rtsp-session-media.h"
-#include "rtsp-auth.h"
-#include "rtsp-thread-pool.h"
-#include "rtsp-token.h"
 #include "rtsp-sdp.h"
+#include "rtsp-auth.h"
 
 #define GST_TYPE_RTSP_CLIENT              (gst_rtsp_client_get_type ())
 #define GST_IS_RTSP_CLIENT(obj)           (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_RTSP_CLIENT))
@@ -48,47 +42,6 @@ typedef struct _GstRTSPClientPrivate GstRTSPClientPrivate;
 #define GST_RTSP_CLIENT_CLASS(klass)      (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_RTSP_CLIENT, GstRTSPClientClass))
 #define GST_RTSP_CLIENT_CAST(obj)         ((GstRTSPClient*)(obj))
 #define GST_RTSP_CLIENT_CLASS_CAST(klass) ((GstRTSPClientClass*)(klass))
-
-/**
- * GstRTSPClientState:
- * @server: the server
- * @conn: the connection
- * @client: the client
- * @request: the complete request
- * @uri: the complete url parsed from @request
- * @method: the parsed method of @uri
- * @auth: the current auth object or NULL
- * @token: authorisation token
- * @session: the session, can be NULL
- * @sessmedia: the session media for the url can be NULL
- * @factory: the media factory for the url, can be NULL.
- * @media: the media for the url can be NULL
- * @stream: the stream for the url can be NULL
- * @response: the response
- *
- * Information passed around containing the client state of a request.
- */
-struct _GstRTSPClientState {
-  GstRTSPServer       *server;
-  GstRTSPConnection   *conn;
-  GstRTSPClient       *client;
-  GstRTSPMessage      *request;
-  GstRTSPUrl          *uri;
-  GstRTSPMethod        method;
-  GstRTSPAuth         *auth;
-  GstRTSPToken        *token;
-  GstRTSPSession      *session;
-  GstRTSPSessionMedia *sessmedia;
-  GstRTSPMediaFactory *factory;
-  GstRTSPMedia        *media;
-  GstRTSPStream       *stream;
-  GstRTSPMessage      *response;
-};
-
-GstRTSPClientState * gst_rtsp_client_state_get_current   (void);
-void                 gst_rtsp_client_state_push_current  (GstRTSPClientState * state);
-void                 gst_rtsp_client_state_pop_current   (GstRTSPClientState * state);
-
 
 /**
  * GstRTSPClientSendFunc:
@@ -124,9 +77,9 @@ struct _GstRTSPClient {
  * @configure_client_transport: called when the client transport needs to be
  *    configured.
  * @params_set: set parameters. This function should also initialize the
- *    RTSP response(state->response) via a call to gst_rtsp_message_init_response()
+ *    RTSP response(ctx->response) via a call to gst_rtsp_message_init_response()
  * @params_get: get parameters. This function should also initialize the
- *    RTSP response(state->response) via a call to gst_rtsp_message_init_response()
+ *    RTSP response(ctx->response) via a call to gst_rtsp_message_init_response()
  *
  * The client class structure.
  */
@@ -135,22 +88,22 @@ struct _GstRTSPClientClass {
 
   GstSDPMessage * (*create_sdp) (GstRTSPClient *client, GstRTSPMedia *media);
   gboolean        (*configure_client_transport) (GstRTSPClient * client,
-                                                 GstRTSPClientState * state,
+                                                 GstRTSPContext * ctx,
                                                  GstRTSPTransport * ct);
-  GstRTSPResult   (*params_set) (GstRTSPClient *client, GstRTSPClientState *state);
-  GstRTSPResult   (*params_get) (GstRTSPClient *client, GstRTSPClientState *state);
+  GstRTSPResult   (*params_set) (GstRTSPClient *client, GstRTSPContext *ctx);
+  GstRTSPResult   (*params_get) (GstRTSPClient *client, GstRTSPContext *ctx);
 
   /* signals */
   void     (*closed)                  (GstRTSPClient *client);
   void     (*new_session)             (GstRTSPClient *client, GstRTSPSession *session);
-  void     (*options_request)         (GstRTSPClient *client, GstRTSPClientState *state);
-  void     (*describe_request)        (GstRTSPClient *client, GstRTSPClientState *state);
-  void     (*setup_request)           (GstRTSPClient *client, GstRTSPClientState *state);
-  void     (*play_request)            (GstRTSPClient *client, GstRTSPClientState *state);
-  void     (*pause_request)           (GstRTSPClient *client, GstRTSPClientState *state);
-  void     (*teardown_request)        (GstRTSPClient *client, GstRTSPClientState *state);
-  void     (*set_parameter_request)   (GstRTSPClient *client, GstRTSPClientState *state);
-  void     (*get_parameter_request)   (GstRTSPClient *client, GstRTSPClientState *state);
+  void     (*options_request)         (GstRTSPClient *client, GstRTSPContext *ctx);
+  void     (*describe_request)        (GstRTSPClient *client, GstRTSPContext *ctx);
+  void     (*setup_request)           (GstRTSPClient *client, GstRTSPContext *ctx);
+  void     (*play_request)            (GstRTSPClient *client, GstRTSPContext *ctx);
+  void     (*pause_request)           (GstRTSPClient *client, GstRTSPContext *ctx);
+  void     (*teardown_request)        (GstRTSPClient *client, GstRTSPContext *ctx);
+  void     (*set_parameter_request)   (GstRTSPClient *client, GstRTSPContext *ctx);
+  void     (*get_parameter_request)   (GstRTSPClient *client, GstRTSPContext *ctx);
 };
 
 GType                 gst_rtsp_client_get_type          (void);

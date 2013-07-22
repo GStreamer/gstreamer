@@ -56,7 +56,7 @@ struct _GstRTSPAuth {
  * @authenticate: check the authentication of a client. The default implementation
  *         checks if the authentication in the header matches one of the basic
  *         authentication tokens. This function should set the authgroup field
- *         in the state.
+ *         in the context.
  * @check: check if a resource can be accessed. this function should
  *         call authenticate to authenticate the client when needed. The method
  *         should also construct and send an appropriate response message on
@@ -67,8 +67,8 @@ struct _GstRTSPAuth {
 struct _GstRTSPAuthClass {
   GObjectClass  parent_class;
 
-  gboolean           (*authenticate) (GstRTSPAuth *auth, GstRTSPClientState *state);
-  gboolean           (*check)        (GstRTSPAuth *auth, GstRTSPClientState *state,
+  gboolean           (*authenticate) (GstRTSPAuth *auth, GstRTSPContext *ctx);
+  gboolean           (*check)        (GstRTSPAuth *auth, GstRTSPContext *ctx,
                                       const gchar *check);
 };
 

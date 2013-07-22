@@ -1,6 +1,7 @@
 public_headers = \
 		rtsp-auth.h \
 		rtsp-address-pool.h \
+		rtsp-context.h \
 		rtsp-params.h \
 		rtsp-sdp.h \
 		rtsp-thread-pool.h \
@@ -21,6 +22,7 @@ public_headers = \
 c_sources = \
 	rtsp-auth.c \
 	rtsp-address-pool.c \
+	rtsp-context.c \
 	rtsp-params.c \
 	rtsp-sdp.c \
 	rtsp-thread-pool.c \

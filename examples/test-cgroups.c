@@ -54,7 +54,7 @@ static void gst_rtsp_cgroup_pool_finalize (GObject * obj);
 static void default_thread_enter (GstRTSPThreadPool * pool,
     GstRTSPThread * thread);
 static void default_configure_thread (GstRTSPThreadPool * pool,
-    GstRTSPThread * thread, GstRTSPClientState * state);
+    GstRTSPThread * thread, GstRTSPContext * ctx);
 
 G_DEFINE_TYPE (GstRTSPCGroupPool, gst_rtsp_cgroup_pool,
     GST_TYPE_RTSP_THREAD_POOL);
@@ -118,14 +118,14 @@ default_thread_enter (GstRTSPThreadPool * pool, GstRTSPThread * thread)
 
 static void
 default_configure_thread (GstRTSPThreadPool * pool,
-    GstRTSPThread * thread, GstRTSPClientState * state)
+    GstRTSPThread * thread, GstRTSPContext * ctx)
 {
   GstRTSPCGroupPool *cpool = GST_RTSP_CGROUP_POOL (pool);
   const gchar *cls;
   struct cgroup *cgroup;
 
-  if (state->token)
-    cls = gst_rtsp_token_get_string (state->token, "cgroup.pool.media.class");
+  if (ctx->token)
+    cls = gst_rtsp_token_get_string (ctx->token, "cgroup.pool.media.class");
   else
     cls = NULL;
 

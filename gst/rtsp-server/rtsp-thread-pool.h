@@ -148,10 +148,10 @@ struct _GstRTSPThreadPoolClass {
 
   GstRTSPThread * (*get_thread)        (GstRTSPThreadPool *pool,
                                         GstRTSPThreadType type,
-                                        GstRTSPClientState *state);
+                                        GstRTSPContext *ctx);
   void            (*configure_thread)  (GstRTSPThreadPool *pool,
                                         GstRTSPThread * thread,
-                                        GstRTSPClientState *state);
+                                        GstRTSPContext *ctx);
 
   void            (*thread_enter)      (GstRTSPThreadPool *pool,
                                         GstRTSPThread *thread);
@@ -168,7 +168,7 @@ gint                gst_rtsp_thread_pool_get_max_threads (GstRTSPThreadPool * po
 
 GstRTSPThread *     gst_rtsp_thread_pool_get_thread      (GstRTSPThreadPool *pool,
                                                           GstRTSPThreadType type,
-                                                          GstRTSPClientState *state);
+                                                          GstRTSPContext *ctx);
 G_END_DECLS
 
 #endif /* __GST_RTSP_THREAD_POOL_H__ */

@@ -31,7 +31,7 @@
  * The RTSP server will call gst_rtsp_auth_check() with a string describing the
  * check to perform. The possible checks are prefixed with
  * #GST_RTSP_AUTH_CHECK_*. Depending on the check, the default implementation
- * will use the current #GstRTSPToken, #GstRTSPClientState and
+ * will use the current #GstRTSPToken, #GstRTSPContext and
  * #GstRTSPPermissions on the object to check if an operation is allowed.
  *
  * The default #GstRTSPAuth object has support for basic authentication. With
@@ -79,9 +79,8 @@ static void gst_rtsp_auth_set_property (GObject * object, guint propid,
     const GValue * value, GParamSpec * pspec);
 static void gst_rtsp_auth_finalize (GObject * obj);
 
-static gboolean default_authenticate (GstRTSPAuth * auth,
-    GstRTSPClientState * state);
-static gboolean default_check (GstRTSPAuth * auth, GstRTSPClientState * state,
+static gboolean default_authenticate (GstRTSPAuth * auth, GstRTSPContext * ctx);
+static gboolean default_check (GstRTSPAuth * auth, GstRTSPContext * ctx,
     const gchar * check);
 
 G_DEFINE_TYPE (GstRTSPAuth, gst_rtsp_auth, G_TYPE_OBJECT);
@@ -340,7 +339,7 @@ gst_rtsp_auth_remove_basic (GstRTSPAuth * auth, const gchar * basic)
 }
 
 static gboolean
-default_authenticate (GstRTSPAuth * auth, GstRTSPClientState * state)
+default_authenticate (GstRTSPAuth * auth, GstRTSPContext * ctx)
 {
   GstRTSPAuthPrivate *priv = auth->priv;
   GstRTSPResult res;
@@ -349,13 +348,13 @@ default_authenticate (GstRTSPAuth * auth, GstRTSPClientState * state)
   GST_DEBUG_OBJECT (auth, "authenticate");
 
   g_mutex_lock (&priv->lock);
-  /* FIXME, need to ref but we have no way to unref when the state is
+  /* FIXME, need to ref but we have no way to unref when the ctx is
    * popped */
-  state->token = priv->default_token;
+  ctx->token = priv->default_token;
   g_mutex_unlock (&priv->lock);
 
   res =
-      gst_rtsp_message_get_header (state->request, GST_RTSP_HDR_AUTHORIZATION,
+      gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_AUTHORIZATION,
       &authorization, 0);
   if (res < 0)
     goto no_auth;
@@ -368,7 +367,7 @@ default_authenticate (GstRTSPAuth * auth, GstRTSPClientState * state)
     g_mutex_lock (&priv->lock);
     if ((token = g_hash_table_lookup (priv->basic, &authorization[6]))) {
       GST_DEBUG_OBJECT (auth, "setting token %p", token);
-      state->token = token;
+      ctx->token = token;
     }
     g_mutex_unlock (&priv->lock);
   } else if (g_ascii_strncasecmp (authorization, "digest ", 7) == 0) {
@@ -385,35 +384,34 @@ no_auth:
 }
 
 static void
-send_response (GstRTSPAuth * auth, GstRTSPStatusCode code,
-    GstRTSPClientState * state)
+send_response (GstRTSPAuth * auth, GstRTSPStatusCode code, GstRTSPContext * ctx)
 {
-  gst_rtsp_message_init_response (state->response, code,
-      gst_rtsp_status_as_text (code), state->request);
+  gst_rtsp_message_init_response (ctx->response, code,
+      gst_rtsp_status_as_text (code), ctx->request);
 
   if (code == GST_RTSP_STS_UNAUTHORIZED) {
     /* we only have Basic for now */
-    gst_rtsp_message_add_header (state->response, GST_RTSP_HDR_WWW_AUTHENTICATE,
+    gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_WWW_AUTHENTICATE,
         "Basic realm=\"GStreamer RTSP Server\"");
   }
-  gst_rtsp_client_send_message (state->client, state->session, state->response);
+  gst_rtsp_client_send_message (ctx->client, ctx->session, ctx->response);
 }
 
 static gboolean
-ensure_authenticated (GstRTSPAuth * auth, GstRTSPClientState * state)
+ensure_authenticated (GstRTSPAuth * auth, GstRTSPContext * ctx)
 {
   GstRTSPAuthClass *klass;
 
   klass = GST_RTSP_AUTH_GET_CLASS (auth);
 
   /* we need a token to check */
-  if (state->token == NULL) {
+  if (ctx->token == NULL) {
     if (klass->authenticate) {
-      if (!klass->authenticate (auth, state))
+      if (!klass->authenticate (auth, ctx))
         goto authenticate_failed;
     }
   }
-  if (state->token == NULL)
+  if (ctx->token == NULL)
     goto no_auth;
 
   return TRUE;
@@ -422,21 +420,20 @@ ensure_authenticated (GstRTSPAuth * auth, GstRTSPClientState * state)
 authenticate_failed:
   {
     GST_DEBUG_OBJECT (auth, "authenticate failed");
-    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, state);
+    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, ctx);
     return FALSE;
   }
 no_auth:
   {
     GST_DEBUG_OBJECT (auth, "no authorization token found");
-    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, state);
+    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, ctx);
     return FALSE;
   }
 }
 
 /* new connection */
 static gboolean
-check_connect (GstRTSPAuth * auth, GstRTSPClientState * state,
-    const gchar * check)
+check_connect (GstRTSPAuth * auth, GstRTSPContext * ctx, const gchar * check)
 {
   GstRTSPAuthPrivate *priv = auth->priv;
 
@@ -444,7 +441,7 @@ check_connect (GstRTSPAuth * auth, GstRTSPClientState * state,
     GTlsConnection *tls;
 
     /* configure the connection */
-    tls = gst_rtsp_connection_get_tls (state->conn, NULL);
+    tls = gst_rtsp_connection_get_tls (ctx->conn, NULL);
     g_tls_connection_set_certificate (tls, priv->certificate);
   }
   return TRUE;
@@ -452,12 +449,12 @@ check_connect (GstRTSPAuth * auth, GstRTSPClientState * state,
 
 /* check url and methods */
 static gboolean
-check_url (GstRTSPAuth * auth, GstRTSPClientState * state, const gchar * check)
+check_url (GstRTSPAuth * auth, GstRTSPContext * ctx, const gchar * check)
 {
   GstRTSPAuthPrivate *priv = auth->priv;
 
-  if ((state->method & priv->methods) != 0)
-    if (!ensure_authenticated (auth, state))
+  if ((ctx->method & priv->methods) != 0)
+    if (!ensure_authenticated (auth, ctx))
       goto not_authenticated;
 
   return TRUE;
@@ -471,19 +468,18 @@ not_authenticated:
 
 /* check access to media factory */
 static gboolean
-check_factory (GstRTSPAuth * auth, GstRTSPClientState * state,
-    const gchar * check)
+check_factory (GstRTSPAuth * auth, GstRTSPContext * ctx, const gchar * check)
 {
   const gchar *role;
   GstRTSPPermissions *perms;
 
-  if (!ensure_authenticated (auth, state))
+  if (!ensure_authenticated (auth, ctx))
     return FALSE;
 
-  if (!(role = gst_rtsp_token_get_string (state->token,
+  if (!(role = gst_rtsp_token_get_string (ctx->token,
               GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE)))
     goto no_media_role;
-  if (!(perms = gst_rtsp_media_factory_get_permissions (state->factory)))
+  if (!(perms = gst_rtsp_media_factory_get_permissions (ctx->factory)))
     goto no_permissions;
 
   if (g_str_equal (check, GST_RTSP_AUTH_CHECK_MEDIA_FACTORY_ACCESS)) {
@@ -501,55 +497,54 @@ check_factory (GstRTSPAuth * auth, GstRTSPClientState * state,
 no_media_role:
   {
     GST_DEBUG_OBJECT (auth, "no media factory role found");
-    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, state);
+    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, ctx);
     return FALSE;
   }
 no_permissions:
   {
     GST_DEBUG_OBJECT (auth, "no permissions on media factory found");
-    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, state);
+    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, ctx);
     return FALSE;
   }
 no_access:
   {
     GST_DEBUG_OBJECT (auth, "no permissions to access media factory");
-    send_response (auth, GST_RTSP_STS_NOT_FOUND, state);
+    send_response (auth, GST_RTSP_STS_NOT_FOUND, ctx);
     return FALSE;
   }
 no_construct:
   {
     GST_DEBUG_OBJECT (auth, "no permissions to construct media factory");
-    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, state);
+    send_response (auth, GST_RTSP_STS_UNAUTHORIZED, ctx);
     return FALSE;
   }
 }
 
 static gboolean
-check_client_settings (GstRTSPAuth * auth, GstRTSPClientState * state,
+check_client_settings (GstRTSPAuth * auth, GstRTSPContext * ctx,
     const gchar * check)
 {
-  if (!ensure_authenticated (auth, state))
+  if (!ensure_authenticated (auth, ctx))
     return FALSE;
 
-  return gst_rtsp_token_is_allowed (state->token,
+  return gst_rtsp_token_is_allowed (ctx->token,
       GST_RTSP_TOKEN_TRANSPORT_CLIENT_SETTINGS);
 }
 
 static gboolean
-default_check (GstRTSPAuth * auth, GstRTSPClientState * state,
-    const gchar * check)
+default_check (GstRTSPAuth * auth, GstRTSPContext * ctx, const gchar * check)
 {
   gboolean res = FALSE;
 
   /* FIXME, use hastable or so */
   if (g_str_equal (check, GST_RTSP_AUTH_CHECK_CONNECT)) {
-    res = check_connect (auth, state, check);
+    res = check_connect (auth, ctx, check);
   } else if (g_str_equal (check, GST_RTSP_AUTH_CHECK_URL)) {
-    res = check_url (auth, state, check);
+    res = check_url (auth, ctx, check);
   } else if (g_str_has_prefix (check, "auth.check.media.factory.")) {
-    res = check_factory (auth, state, check);
+    res = check_factory (auth, ctx, check);
   } else if (g_str_equal (check, GST_RTSP_AUTH_CHECK_TRANSPORT_CLIENT_SETTINGS)) {
-    res = check_client_settings (auth, state, check);
+    res = check_client_settings (auth, ctx, check);
   }
   return res;
 }
@@ -580,16 +575,16 @@ gst_rtsp_auth_check (const gchar * check)
 {
   gboolean result = FALSE;
   GstRTSPAuthClass *klass;
-  GstRTSPClientState *state;
+  GstRTSPContext *ctx;
   GstRTSPAuth *auth;
 
   g_return_val_if_fail (check != NULL, FALSE);
 
-  if (!(state = gst_rtsp_client_state_get_current ()))
-    goto no_state;
+  if (!(ctx = gst_rtsp_context_get_current ()))
+    goto no_context;
 
   /* no auth, we don't need to check */
-  if (!(auth = state->auth))
+  if (!(auth = ctx->auth))
     return no_auth_check (check);
 
   klass = GST_RTSP_AUTH_GET_CLASS (auth);
@@ -597,14 +592,14 @@ gst_rtsp_auth_check (const gchar * check)
   GST_DEBUG_OBJECT (auth, "check authorization '%s'", check);
 
   if (klass->check)
-    result = klass->check (auth, state, check);
+    result = klass->check (auth, ctx, check);
 
   return result;
 
   /* ERRORS */
-no_state:
+no_context:
   {
-    GST_ERROR ("no clientstate found");
+    GST_ERROR ("no context found");
     return FALSE;
   }
 }

@@ -31,14 +31,14 @@
 /**
  * gst_rtsp_params_set:
  * @client: a #GstRTSPClient
- * @state: a #GstRTSPClientState
+ * @ctx: a #GstRTSPContext
  *
  * Set parameters (not implemented yet)
  *
  * Returns: a #GstRTSPResult
  */
 GstRTSPResult
-gst_rtsp_params_set (GstRTSPClient * client, GstRTSPClientState * state)
+gst_rtsp_params_set (GstRTSPClient * client, GstRTSPContext * ctx)
 {
   GstRTSPStatusCode code;
 
@@ -46,8 +46,8 @@ gst_rtsp_params_set (GstRTSPClient * client, GstRTSPClientState * state)
    * with a list of the parameters */
   code = GST_RTSP_STS_PARAMETER_NOT_UNDERSTOOD;
 
-  gst_rtsp_message_init_response (state->response, code,
-      gst_rtsp_status_as_text (code), state->request);
+  gst_rtsp_message_init_response (ctx->response, code,
+      gst_rtsp_status_as_text (code), ctx->request);
 
   return GST_RTSP_OK;
 }
@@ -55,14 +55,14 @@ gst_rtsp_params_set (GstRTSPClient * client, GstRTSPClientState * state)
 /**
  * gst_rtsp_params_get:
  * @client: a #GstRTSPClient
- * @state: a #GstRTSPClientState
+ * @ctx: a #GstRTSPContext
  *
  * Get parameters (not implemented yet)
  *
  * Returns: a #GstRTSPResult
  */
 GstRTSPResult
-gst_rtsp_params_get (GstRTSPClient * client, GstRTSPClientState * state)
+gst_rtsp_params_get (GstRTSPClient * client, GstRTSPContext * ctx)
 {
   GstRTSPStatusCode code;
 
@@ -70,8 +70,8 @@ gst_rtsp_params_get (GstRTSPClient * client, GstRTSPClientState * state)
    * with a list of the parameters */
   code = GST_RTSP_STS_PARAMETER_NOT_UNDERSTOOD;
 
-  gst_rtsp_message_init_response (state->response, code,
-      gst_rtsp_status_as_text (code), state->request);
+  gst_rtsp_message_init_response (ctx->response, code,
+      gst_rtsp_status_as_text (code), ctx->request);
 
   return GST_RTSP_OK;
 }

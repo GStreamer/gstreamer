@@ -991,26 +991,26 @@ unmanage_client (GstRTSPClient * client, ClientContext * ctx)
 static void
 manage_client (GstRTSPServer * server, GstRTSPClient * client)
 {
-  ClientContext *ctx;
+  ClientContext *cctx;
   GstRTSPServerPrivate *priv = server->priv;
   GMainContext *mainctx = NULL;
-  GstRTSPClientState state = { NULL };
+  GstRTSPContext ctx = { NULL };
 
   GST_DEBUG_OBJECT (server, "manage client %p", client);
 
-  ctx = g_slice_new0 (ClientContext);
-  ctx->server = g_object_ref (server);
-  ctx->client = client;
+  cctx = g_slice_new0 (ClientContext);
+  cctx->server = g_object_ref (server);
+  cctx->client = client;
 
   GST_RTSP_SERVER_LOCK (server);
 
-  state.server = server;
-  state.client = client;
+  ctx.server = server;
+  ctx.client = client;
 
-  ctx->thread = gst_rtsp_thread_pool_get_thread (priv->thread_pool,
-      GST_RTSP_THREAD_TYPE_CLIENT, &state);
-  if (ctx->thread)
-    mainctx = ctx->thread->context;
+  cctx->thread = gst_rtsp_thread_pool_get_thread (priv->thread_pool,
+      GST_RTSP_THREAD_TYPE_CLIENT, &ctx);
+  if (cctx->thread)
+    mainctx = cctx->thread->context;
   else {
     GSource *source;
     /* find the context to add the watch */
@@ -1018,8 +1018,8 @@ manage_client (GstRTSPServer * server, GstRTSPClient * client)
       mainctx = g_source_get_context (source);
   }
 
-  g_signal_connect (client, "closed", (GCallback) unmanage_client, ctx);
-  priv->clients = g_list_prepend (priv->clients, ctx);
+  g_signal_connect (client, "closed", (GCallback) unmanage_client, cctx);
+  priv->clients = g_list_prepend (priv->clients, cctx);
 
   gst_rtsp_client_attach (client, mainctx);
 
@@ -1129,17 +1129,17 @@ gst_rtsp_server_io_func (GSocket * socket, GIOCondition condition,
   GstRTSPServerClass *klass;
   GstRTSPResult res;
   GstRTSPConnection *conn = NULL;
-  GstRTSPClientState state = { NULL };
+  GstRTSPContext ctx = { NULL };
 
   if (condition & G_IO_IN) {
     /* a new client connected. */
     GST_RTSP_CHECK (gst_rtsp_connection_accept (socket, &conn, NULL),
         accept_failed);
 
-    state.server = server;
-    state.conn = conn;
-    state.auth = priv->auth;
-    gst_rtsp_client_state_push_current (&state);
+    ctx.server = server;
+    ctx.conn = conn;
+    ctx.auth = priv->auth;
+    gst_rtsp_context_push_current (&ctx);
 
     if (!gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_CONNECT))
       goto connection_refused;
@@ -1163,7 +1163,7 @@ gst_rtsp_server_io_func (GSocket * socket, GIOCondition condition,
     GST_WARNING_OBJECT (server, "received unknown event %08x", condition);
   }
 exit:
-  gst_rtsp_client_state_pop_current (&state);
+  gst_rtsp_context_pop_current (&ctx);
 
   return G_SOURCE_CONTINUE;
 

@@ -30,8 +30,8 @@
 
 G_BEGIN_DECLS
 
-GstRTSPResult    gst_rtsp_params_set      (GstRTSPClient * client, GstRTSPClientState * state);
-GstRTSPResult    gst_rtsp_params_get      (GstRTSPClient * client, GstRTSPClientState * state);
+GstRTSPResult    gst_rtsp_params_set      (GstRTSPClient * client, GstRTSPContext * ctx);
+GstRTSPResult    gst_rtsp_params_get      (GstRTSPClient * client, GstRTSPContext * ctx);
 
 G_END_DECLS
 

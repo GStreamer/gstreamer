@@ -197,7 +197,7 @@ static void gst_rtsp_thread_pool_finalize (GObject * obj);
 
 static gpointer do_loop (GstRTSPThread * thread);
 static GstRTSPThread *default_get_thread (GstRTSPThreadPool * pool,
-    GstRTSPThreadType type, GstRTSPClientState * state);
+    GstRTSPThreadType type, GstRTSPContext * ctx);
 
 G_DEFINE_TYPE (GstRTSPThreadPool, gst_rtsp_thread_pool, G_TYPE_OBJECT);
 
@@ -393,7 +393,7 @@ gst_rtsp_thread_pool_get_max_threads (GstRTSPThreadPool * pool)
 
 static GstRTSPThread *
 make_thread (GstRTSPThreadPool * pool, GstRTSPThreadType type,
-    GstRTSPClientState * state)
+    GstRTSPContext * ctx)
 {
   GstRTSPThreadPoolClass *klass;
   GstRTSPThread *thread;
@@ -407,14 +407,14 @@ make_thread (GstRTSPThreadPool * pool, GstRTSPThreadType type,
   GST_DEBUG_OBJECT (pool, "new thread %p", thread);
 
   if (klass->configure_thread)
-    klass->configure_thread (pool, thread, state);
+    klass->configure_thread (pool, thread, ctx);
 
   return thread;
 }
 
 static GstRTSPThread *
 default_get_thread (GstRTSPThreadPool * pool,
-    GstRTSPThreadType type, GstRTSPClientState * state)
+    GstRTSPThreadType type, GstRTSPContext * ctx)
 {
   GstRTSPThreadPoolPrivate *priv = pool->priv;
   GstRTSPThreadPoolClass *klass;
@@ -450,7 +450,7 @@ default_get_thread (GstRTSPThreadPool * pool,
         } else {
           /* make more threads */
           GST_DEBUG_OBJECT (pool, "make new client thread");
-          thread = make_thread (pool, type, state);
+          thread = make_thread (pool, type, ctx);
 
           if (!g_thread_pool_push (klass->pool, thread, &error))
             goto thread_error;
@@ -461,7 +461,7 @@ default_get_thread (GstRTSPThreadPool * pool,
       break;
     case GST_RTSP_THREAD_TYPE_MEDIA:
       GST_DEBUG_OBJECT (pool, "make new media thread");
-      thread = make_thread (pool, type, state);
+      thread = make_thread (pool, type, ctx);
 
       if (!g_thread_pool_push (klass->pool, thread, &error))
         goto thread_error;
@@ -486,15 +486,15 @@ thread_error:
  * gst_rtsp_thread_pool_get_thread:
  * @pool: a #GstRTSPThreadPool
  * @type: the #GstRTSPThreadType
- * @state: a #GstRTSPClientState
+ * @ctx: a #GstRTSPContext
  *
- * Get a new #GstRTSPThread for @type and @state.
+ * Get a new #GstRTSPThread for @type and @ctx.
  *
  * Returns: a new #GstRTSPThread, gst_rtsp_thread_stop() after usage
  */
 GstRTSPThread *
 gst_rtsp_thread_pool_get_thread (GstRTSPThreadPool * pool,
-    GstRTSPThreadType type, GstRTSPClientState * state)
+    GstRTSPThreadType type, GstRTSPContext * ctx)
 {
   GstRTSPThreadPoolClass *klass;
   GstRTSPThread *result = NULL;
@@ -504,7 +504,7 @@ gst_rtsp_thread_pool_get_thread (GstRTSPThreadPool * pool,
   klass = GST_RTSP_THREAD_POOL_GET_CLASS (pool);
 
   if (klass->get_thread)
-    result = klass->get_thread (pool, type, state);
+    result = klass->get_thread (pool, type, ctx);
 
   return result;
 }
