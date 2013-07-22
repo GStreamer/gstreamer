@@ -505,10 +505,13 @@ gst_qa_pad_monitor_check_buffer_timestamp_in_received_range (GstQaPadMonitor *
   if (!has_one) {
     GST_DEBUG_OBJECT (monitor, "Skipping timestamp in range check as no "
         "internal linked pad was found");
+    return;
   }
   if (!found) {
     GST_QA_MONITOR_REPORT_WARNING (monitor, FALSE, BUFFER, TIMESTAMP,
-        "Timestamp is out of range of received input");
+        "Timestamp %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT
+        " is out of range of received input", GST_TIME_ARGS (ts),
+        GST_TIME_ARGS (ts_end));
   }
 }
 
