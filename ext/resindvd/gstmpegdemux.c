@@ -273,6 +273,7 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
   GstFluPSDemuxClass *klass = GST_FLUPS_DEMUX_GET_CLASS (demux);
   GstCaps *caps;
   GstClockTime threshold = SEGMENT_THRESHOLD;
+  gchar *stream_id;
 
   name = NULL;
   template = NULL;
@@ -390,6 +391,12 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
     GST_WARNING_OBJECT (demux, "Failed to activate pad %" GST_PTR_FORMAT,
         stream->pad);
   }
+
+  stream_id =
+      gst_pad_create_stream_id_printf (stream->pad, GST_ELEMENT_CAST (demux),
+      "%02x", id);
+  gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
+  g_free (stream_id);
 
   gst_pad_set_caps (stream->pad, caps);
   GST_DEBUG_OBJECT (demux, "create pad %s, caps %" GST_PTR_FORMAT, name, caps);
@@ -833,6 +840,9 @@ gst_flups_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GstFluPSDemux *demux = GST_FLUPS_DEMUX (parent);
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:
+      gst_event_unref (event);
+      break;
     case GST_EVENT_FLUSH_START:
       gst_flups_demux_send_event (demux, event);
       break;
