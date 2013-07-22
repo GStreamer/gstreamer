@@ -42,6 +42,19 @@ G_DEFINE_TYPE_WITH_CODE (GstQaPadMonitor, gst_qa_pad_monitor,
 
 #define PENDING_FIELDS "pending-fields"
 
+typedef struct
+{
+  GstClockTime timestamp;
+  GstEvent *event;
+} SerializedEventData;
+
+static void
+_serialized_event_data_free (SerializedEventData * serialized_event)
+{
+  gst_event_unref (serialized_event->event);
+  g_slice_free (SerializedEventData, serialized_event);
+}
+
 static gboolean gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor);
 
 /* This was copied from gstpad.c and might need
@@ -307,6 +320,33 @@ gst_qa_pad_monitor_check_caps_fields_proxied (GstQaPadMonitor * monitor,
   }
 }
 
+static void
+gst_qa_pad_monitor_check_late_serialized_events (GstQaPadMonitor * monitor,
+    GstClockTime ts)
+{
+  gint i;
+  if (!GST_CLOCK_TIME_IS_VALID (ts))
+    return;
+
+  for (i = 0; i < monitor->serialized_events->len; i++) {
+    SerializedEventData *data =
+        g_ptr_array_index (monitor->serialized_events, i);
+    if (data->timestamp < ts) {
+      GST_QA_MONITOR_REPORT_WARNING (monitor, FALSE, EVENT, EXPECTED,
+          "Serialized event %" GST_PTR_FORMAT " wasn't pushed before expected "
+          "timestamp %" GST_TIME_FORMAT " on pad %s:%s", data->event,
+          GST_TIME_ARGS (data->timestamp),
+          GST_DEBUG_PAD_NAME (GST_QA_PAD_MONITOR_GET_PAD (monitor)));
+    } else {
+      /* events should be ordered by ts */
+      break;
+    }
+  }
+
+  if (i)
+    g_ptr_array_remove_range (monitor->serialized_events, 0, i);
+}
+
 void
 _parent_set_cb (GstObject * object, GstObject * parent, GstQaMonitor * monitor)
 {
@@ -335,7 +375,7 @@ gst_qa_pad_monitor_dispose (GObject * object)
     gst_event_unref (monitor->expected_segment);
 
   gst_structure_free (monitor->pending_setcaps_fields);
-
+  g_ptr_array_unref (monitor->serialized_events);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -359,6 +399,9 @@ gst_qa_pad_monitor_init (GstQaPadMonitor * pad_monitor)
 {
   pad_monitor->pending_setcaps_fields =
       gst_structure_empty_new (PENDING_FIELDS);
+  pad_monitor->serialized_events =
+      g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _serialized_event_data_free);
   gst_segment_init (&pad_monitor->segment, GST_FORMAT_BYTES);
   pad_monitor->first_buffer = TRUE;
 
@@ -594,6 +637,46 @@ gst_qa_pad_monitor_check_aggregated_return (GstQaPadMonitor * monitor,
         gst_flow_get_name (ret), ret,
         gst_flow_get_name (aggregated), aggregated);
   }
+}
+
+static void
+gst_qa_pad_monitor_otherpad_add_pending_serialized_event (GstQaPadMonitor *
+    monitor, GstEvent * event, GstClockTime last_ts)
+{
+  GstIterator *iter;
+  gboolean done;
+  GstPad *otherpad;
+  GstQaPadMonitor *othermonitor;
+
+  if (!GST_EVENT_IS_SERIALIZED (event))
+    return;
+
+  iter = gst_pad_iterate_internal_links (GST_QA_PAD_MONITOR_GET_PAD (monitor));
+  done = FALSE;
+  while (!done) {
+    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+      case GST_ITERATOR_OK:
+        othermonitor = g_object_get_data ((GObject *) otherpad, "qa-monitor");
+        if (othermonitor) {
+          SerializedEventData *data = g_slice_new0 (SerializedEventData);
+          data->timestamp = last_ts;
+          data->event = gst_event_ref (event);
+          g_ptr_array_add (othermonitor->serialized_events, data);
+        }
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iter);
+        break;
+      case GST_ITERATOR_ERROR:
+        GST_WARNING_OBJECT (monitor, "Internal links pad iteration error");
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iter);
 }
 
 static void
@@ -991,6 +1074,20 @@ gst_qa_pad_monitor_sink_event_func (GstPad * pad, GstEvent * event)
   GstQaPadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "qa-monitor");
 
+  if (GST_EVENT_IS_SERIALIZED (event)) {
+    GstClockTime last_ts;
+    if (GST_CLOCK_TIME_IS_VALID (pad_monitor->current_timestamp)) {
+      last_ts = pad_monitor->current_timestamp;
+      if (GST_CLOCK_TIME_IS_VALID (pad_monitor->current_duration)) {
+        last_ts += pad_monitor->current_duration;
+      }
+    } else {
+      last_ts = 0;
+    }
+    gst_qa_pad_monitor_otherpad_add_pending_serialized_event (pad_monitor,
+        event, last_ts);
+  }
+
   return gst_qa_pad_monitor_sink_event_check (pad_monitor, event,
       pad_monitor->event_func);
 }
@@ -1048,6 +1145,9 @@ gst_qa_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
 
   gst_qa_pad_monitor_check_buffer_timestamp_in_received_range (monitor, buffer);
 
+  gst_qa_pad_monitor_check_late_serialized_events (monitor,
+      GST_BUFFER_TIMESTAMP (buffer));
+
   /* TODO should we assume that a pad-monitor should always have an
    * element-monitor as a parent? */
   if (G_LIKELY (GST_QA_MONITOR_GET_PARENT (monitor))) {
@@ -1078,6 +1178,34 @@ static gboolean
 gst_qa_pad_monitor_event_probe (GstPad * pad, GstEvent * event, gpointer udata)
 {
   GstQaPadMonitor *monitor = GST_QA_PAD_MONITOR_CAST (udata);
+
+  if (GST_EVENT_IS_SERIALIZED (event)) {
+    gint i;
+
+    if (monitor->serialized_events->len > 0) {
+      SerializedEventData *next_event =
+          g_ptr_array_index (monitor->serialized_events, 0);
+
+      if (event == next_event->event
+          || GST_EVENT_TYPE (event) == GST_EVENT_TYPE (next_event->event)) {
+        g_ptr_array_remove_index (monitor->serialized_events, 0);
+      }
+    }
+
+    for (i = 0; i < monitor->serialized_events->len; i++) {
+      SerializedEventData *stored_event =
+          g_ptr_array_index (monitor->serialized_events, i);
+
+      if (event == stored_event->event
+          || GST_EVENT_TYPE (event) == GST_EVENT_TYPE (stored_event->event)) {
+        GST_QA_MONITOR_REPORT_WARNING (monitor, FALSE, EVENT, UNEXPECTED,
+            "Serialized event %" GST_PTR_FORMAT " was pushed out of original "
+            "serialization order in pad %s:%s", event,
+            GST_DEBUG_PAD_NAME (GST_QA_PAD_MONITOR_GET_PAD (monitor)));
+      }
+    }
+  }
+
   /* This so far is just like an event that is flowing downstream,
    * so we do the same checks as a sinkpad event handler */
   return gst_qa_pad_monitor_sink_event_check (monitor, event, NULL);

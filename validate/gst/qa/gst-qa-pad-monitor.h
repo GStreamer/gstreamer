@@ -80,6 +80,7 @@ struct _GstQaPadMonitor {
   guint32 pending_newsegment_seqnum;
 
   GstEvent *expected_segment;
+  GPtrArray *serialized_events;
 
   GstStructure *pending_setcaps_fields;
 
