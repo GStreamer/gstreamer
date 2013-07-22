@@ -61,7 +61,7 @@ static gint64 seeked_position = GST_CLOCK_TIME_NONE;    /* last seeked position 
 static gint64 seek_tol = 0.05 * GST_SECOND;     /* tolerance seek interval */
 static GList *seeks;            /* list of seeks */
 static gboolean got_async_done = FALSE;
-static gboolean seek_paused = FALSE;
+static gboolean seek_paused = FALSE, seek_paused_noplay = FALSE;
 
 /* This allow us to run the tests multiple times with different input files */
 static const gchar *testfilename1 = NULL;
@@ -258,6 +258,12 @@ get_position (void)
     }
     tmp = tmp->next;
   }
+  /* if seeking paused without playing and we reached the last seek, just play
+   * till the end */
+  if (!tmp && seek_paused_noplay) {
+    gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+    gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
+  }
   return TRUE;
 }
 
@@ -330,12 +336,12 @@ check_timeline (GESTimeline * timeline)
   gst_object_unref (bus);
 
   ges_pipeline_add_timeline (pipeline, timeline);
-
-  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
+  if (!seek_paused_noplay) {
+    gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+    gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
+  }
   GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
       GST_DEBUG_GRAPH_SHOW_ALL, "ges-integration-playing");
-
   if (seeks != NULL)
     g_timeout_add (50, (GSourceFunc) get_position, NULL);
 
@@ -382,13 +388,28 @@ run_simple_seeks_test (GESTimeline * timeline)
    *          |  clip  |   clip  |
    * time     0--------10--------1
    */
-
-  seeks =
-      g_list_append (seeks, new_seek_info (0.2 * GST_SECOND, 0.6 * GST_SECOND));
-  seeks =
-      g_list_append (seeks, new_seek_info (1.0 * GST_SECOND, 1.2 * GST_SECOND));
-  seeks =
-      g_list_append (seeks, new_seek_info (1.5 * GST_SECOND, 1.8 * GST_SECOND));
+  if (!seek_paused_noplay) {
+    seeks =
+        g_list_append (seeks, new_seek_info (0.2 * GST_SECOND,
+            0.6 * GST_SECOND));
+    seeks =
+        g_list_append (seeks, new_seek_info (1.0 * GST_SECOND,
+            1.2 * GST_SECOND));
+    seeks =
+        g_list_append (seeks, new_seek_info (1.5 * GST_SECOND,
+            1.8 * GST_SECOND));
+  } else {
+    /* if pipeline is not playing, let's make point-to-point seeks */
+    seeks =
+        g_list_append (seeks, new_seek_info (0.2 * GST_SECOND,
+            0.6 * GST_SECOND));
+    seeks =
+        g_list_append (seeks, new_seek_info (0.6 * GST_SECOND,
+            1.2 * GST_SECOND));
+    seeks =
+        g_list_append (seeks, new_seek_info (1.2 * GST_SECOND,
+            1.8 * GST_SECOND));
+  }
   fail_unless (check_timeline (timeline));
   if (seeks != NULL) {
     /* free failed seeks */
@@ -416,6 +437,7 @@ test_seeking_audio (void)
           GES_TRACK (ges_audio_track_new ())));
 
   seek_paused = FALSE;
+  seek_paused_noplay = FALSE;
   run_simple_seeks_test (timeline);
 }
 
@@ -428,6 +450,7 @@ test_seeking_video (void)
           GES_TRACK (ges_video_track_new ())));
 
   seek_paused = FALSE;
+  seek_paused_noplay = FALSE;
   run_simple_seeks_test (timeline);
 }
 
@@ -437,6 +460,7 @@ test_seeking (void)
   GESTimeline *timeline = ges_timeline_new_audio_video ();
 
   seek_paused = FALSE;
+  seek_paused_noplay = FALSE;
   run_simple_seeks_test (timeline);
 }
 
@@ -449,6 +473,7 @@ test_seeking_paused_audio (void)
           GES_TRACK (ges_audio_track_new ())));
 
   seek_paused = TRUE;
+  seek_paused_noplay = FALSE;
   run_simple_seeks_test (timeline);
 }
 
@@ -461,6 +486,7 @@ test_seeking_paused_video (void)
           GES_TRACK (ges_video_track_new ())));
 
   seek_paused = TRUE;
+  seek_paused_noplay = FALSE;
   run_simple_seeks_test (timeline);
 }
 
@@ -470,6 +496,43 @@ test_seeking_paused (void)
   GESTimeline *timeline = ges_timeline_new_audio_video ();
 
   seek_paused = TRUE;
+  seek_paused_noplay = FALSE;
+  run_simple_seeks_test (timeline);
+}
+
+static void
+test_seeking_paused_audio_noplay (void)
+{
+  GESTimeline *timeline = ges_timeline_new ();
+
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_audio_track_new ())));
+
+  seek_paused = FALSE;
+  seek_paused_noplay = TRUE;
+  run_simple_seeks_test (timeline);
+}
+
+static void
+test_seeking_paused_video_noplay (void)
+{
+  GESTimeline *timeline = ges_timeline_new ();
+
+  fail_unless (ges_timeline_add_track (timeline,
+          GES_TRACK (ges_video_track_new ())));
+
+  seek_paused = FALSE;
+  seek_paused_noplay = TRUE;
+  run_simple_seeks_test (timeline);
+}
+
+static void
+test_seeking_paused_noplay (void)
+{
+  GESTimeline *timeline = ges_timeline_new_audio_video ();
+
+  seek_paused = FALSE;
+  seek_paused_noplay = TRUE;
   run_simple_seeks_test (timeline);
 }
 
@@ -743,6 +806,9 @@ CREATE_PLAYBACK_TEST(seeking_video)
 CREATE_PLAYBACK_TEST(seeking_paused)
 CREATE_PLAYBACK_TEST(seeking_paused_audio)
 CREATE_PLAYBACK_TEST(seeking_paused_video)
+CREATE_PLAYBACK_TEST(seeking_paused_noplay)
+CREATE_PLAYBACK_TEST(seeking_paused_audio_noplay)
+CREATE_PLAYBACK_TEST(seeking_paused_video_noplay)
 CREATE_PLAYBACK_TEST(image)
 /* *INDENT-ON* */
 
@@ -770,6 +836,10 @@ ges_suite (void)
   ADD_PLAYBACK_TESTS (seeking_paused);
   ADD_PLAYBACK_TESTS (seeking_paused_audio);
   ADD_PLAYBACK_TESTS (seeking_paused_video);
+
+  ADD_PLAYBACK_TESTS (seeking_paused_noplay);
+  ADD_PLAYBACK_TESTS (seeking_paused_audio_noplay);
+  ADD_PLAYBACK_TESTS (seeking_paused_video_noplay);
   /* TODO : next test case : complex timeline created from project. */
   /* TODO : deep checking of rendered clips */
   /* TODO : might be interesting to try all profiles, and maintain a list of currently working profiles ? */
