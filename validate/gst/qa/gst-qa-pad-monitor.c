@@ -23,6 +23,7 @@
 #include "gst-qa-element-monitor.h"
 #include <gst/gst.h>
 #include <string.h>
+#include <stdarg.h>
 
 /**
  * SECTION:gst-qa-pad-monitor
@@ -107,43 +108,66 @@ _structure_is_raw_audio (GstStructure * structure)
 
 
 
-#define CHECK_FIELD_TYPE(m,structure,field,type,multtype) \
-G_STMT_START { \
-  if (!gst_structure_has_field (structure, field)) { \
-    GST_QA_MONITOR_REPORT_WARNING (monitor, FALSE, CAPS_NEGOTIATION, MISSING_FIELD, \
-        #field " is missing from structure: %" GST_PTR_FORMAT, structure); \
-  } else if (!gst_structure_has_field_typed (structure, field, type) && \
-      !gst_structure_has_field_typed (structure, field, multtype)) { \
-    GST_QA_MONITOR_REPORT_CRITICAL (monitor, FALSE, CAPS_NEGOTIATION, BAD_FIELD_TYPE, \
-        #field " has wrong type %s in structure '%" GST_PTR_FORMAT \
-        "'. Expected: %s or %s", \
-        g_type_name (gst_structure_get_field_type (structure, field)), \
-        structure, g_type_name (type), g_type_name (multtype)); \
-  } \
-} G_STMT_END
+static void
+_check_field_type (GstQaPadMonitor * monitor, GstStructure * structure,
+    const gchar * field, ...)
+{
+  va_list var_args;
+  GType type;
+  gchar *joined_types = NULL;
+  const gchar *rejected_types[5];
+  gint rejected_types_index = 0;
+
+  if (!gst_structure_has_field (structure, field)) {
+    GST_QA_MONITOR_REPORT_WARNING (monitor, FALSE, CAPS_NEGOTIATION,
+        MISSING_FIELD, "%s is missing from structure: %" GST_PTR_FORMAT, field,
+        structure);
+    return;
+  }
+
+  memset (rejected_types, 0, sizeof (rejected_types));
+  va_start (var_args, field);
+  while ((type = va_arg (var_args, GType)) != 0) {
+    if (gst_structure_has_field_typed (structure, field, type)) {
+      va_end (var_args);
+      return;
+    }
+    rejected_types[rejected_types_index++] = g_type_name (type);
+  }
+  va_end (var_args);
+
+  joined_types = g_strjoinv (" / ", (gchar **) rejected_types);
+  GST_QA_MONITOR_REPORT_CRITICAL (monitor, FALSE, CAPS_NEGOTIATION,
+      BAD_FIELD_TYPE, "%s has wrong type %s in structure '%" GST_PTR_FORMAT
+      "'. Expected: %s", field,
+      g_type_name (gst_structure_get_field_type (structure, field)),
+      structure, joined_types);
+  g_free (joined_types);
+}
 
 static void
 gst_qa_pad_monitor_check_raw_video_caps_complete (GstQaPadMonitor * monitor,
     GstStructure * structure)
 {
-  CHECK_FIELD_TYPE (monitor, structure, "width", G_TYPE_INT,
-      GST_TYPE_INT_RANGE);
-  CHECK_FIELD_TYPE (monitor, structure, "height", G_TYPE_INT,
-      GST_TYPE_INT_RANGE);
-  CHECK_FIELD_TYPE (monitor, structure, "framerate", GST_TYPE_FRACTION,
-      GST_TYPE_FRACTION_RANGE);
-  CHECK_FIELD_TYPE (monitor, structure, "pixel-aspect-ratio", GST_TYPE_FRACTION,
-      GST_TYPE_FRACTION_RANGE);
+  _check_field_type (monitor, structure, "width", G_TYPE_INT,
+      GST_TYPE_INT_RANGE, 0);
+  _check_field_type (monitor, structure, "height", G_TYPE_INT,
+      GST_TYPE_INT_RANGE, 0);
+  _check_field_type (monitor, structure, "framerate", GST_TYPE_FRACTION,
+      GST_TYPE_FRACTION_RANGE, 0);
+  _check_field_type (monitor, structure, "pixel-aspect-ratio",
+      GST_TYPE_FRACTION, GST_TYPE_FRACTION_RANGE, 0);
 
   if (gst_structure_has_name (structure, "video/x-raw-yuv")) {
-    CHECK_FIELD_TYPE (monitor, structure, "format", GST_TYPE_FOURCC,
+    _check_field_type (monitor, structure, "format", GST_TYPE_FOURCC,
         GST_TYPE_LIST);
 
   } else if (gst_structure_has_name (structure, "video/x-raw-rgb")) {
-    CHECK_FIELD_TYPE (monitor, structure, "bpp", G_TYPE_INT, GST_TYPE_LIST);
-    CHECK_FIELD_TYPE (monitor, structure, "depth", G_TYPE_INT, GST_TYPE_LIST);
-    CHECK_FIELD_TYPE (monitor, structure, "endianness", G_TYPE_INT,
-        GST_TYPE_LIST);
+    _check_field_type (monitor, structure, "bpp", G_TYPE_INT, GST_TYPE_LIST, 0);
+    _check_field_type (monitor, structure, "depth", G_TYPE_INT, GST_TYPE_LIST,
+        0);
+    _check_field_type (monitor, structure, "endianness", G_TYPE_INT,
+        GST_TYPE_LIST, 0);
   }
 
 }
@@ -152,13 +176,14 @@ static void
 gst_qa_pad_monitor_check_raw_audio_caps_complete (GstQaPadMonitor * monitor,
     GstStructure * structure)
 {
-  CHECK_FIELD_TYPE (monitor, structure, "rate", G_TYPE_INT, GST_TYPE_LIST);
-  CHECK_FIELD_TYPE (monitor, structure, "channels", G_TYPE_INT,
-      GST_TYPE_INT_RANGE);
-  CHECK_FIELD_TYPE (monitor, structure, "endianness", G_TYPE_INT,
-      GST_TYPE_LIST);
-  CHECK_FIELD_TYPE (monitor, structure, "channel-layout", G_TYPE_STRING,
-      GST_TYPE_LIST);
+  _check_field_type (monitor, structure, "rate", G_TYPE_INT, GST_TYPE_LIST,
+      GST_TYPE_INT_RANGE, 0);
+  _check_field_type (monitor, structure, "channels", G_TYPE_INT,
+      GST_TYPE_LIST, GST_TYPE_INT_RANGE, 0);
+  _check_field_type (monitor, structure, "endianness", G_TYPE_INT,
+      GST_TYPE_LIST, 0);
+  _check_field_type (monitor, structure, "channel-layout", G_TYPE_STRING,
+      GST_TYPE_LIST, 0);
 }
 
 static void
