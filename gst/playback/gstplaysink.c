@@ -267,12 +267,10 @@ struct _GstPlaySink
   /* sending audio/video flushes break stream changes when the pipeline
    * is paused and played again in 0.10 */
 #if 0
-  GstSegment video_segment;
   gboolean video_custom_flush_finished;
   gboolean video_ignore_wrong_state;
   gboolean video_pending_flush;
 
-  GstSegment audio_segment;
   gboolean audio_custom_flush_finished;
   gboolean audio_ignore_wrong_state;
   gboolean audio_pending_flush;
