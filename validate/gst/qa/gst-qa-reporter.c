@@ -155,3 +155,11 @@ gst_qa_reporter_get_runner (GstQaReporter * reporter)
 
   return priv->runner;
 }
+
+void
+gst_qa_reporter_set_runner (GstQaReporter * reporter, GstQaRunner * runner)
+{
+  GstQaReporterPrivate *priv = gst_qa_reporter_get_priv (reporter);
+
+  priv->runner = runner;
+}

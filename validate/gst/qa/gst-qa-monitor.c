@@ -196,6 +196,7 @@ gst_qa_monitor_set_property (GObject * object, guint prop_id,
       /* we assume the runner is valid as long as this monitor is,
        * no ref taken */
       monitor->runner = g_value_get_object (value);
+      gst_qa_reporter_set_runner (GST_QA_REPORTER (monitor), monitor->runner);
       break;
     case PROP_QA_PARENT:
       monitor->parent = g_value_get_object (value);

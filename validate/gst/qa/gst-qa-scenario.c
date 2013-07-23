@@ -374,13 +374,12 @@ static void
 gst_qa_scenario_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GstQaScenarioPrivate *priv = GST_QA_SCENARIO (object)->priv;
-
   switch (prop_id) {
     case PROP_RUNNER:
       /* we assume the runner is valid as long as this scenario is,
        * no ref taken */
-      priv->runner = g_value_get_object (value);
+      gst_qa_reporter_set_runner (GST_QA_REPORTER (object),
+          g_value_get_object (value));
       break;
     default:
       break;
@@ -391,13 +390,12 @@ static void
 gst_qa_scenario_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstQaScenarioPrivate *priv = GST_QA_SCENARIO (object)->priv;
-
   switch (prop_id) {
     case PROP_RUNNER:
       /* we assume the runner is valid as long as this scenario is,
        * no ref taken */
-      g_value_set_object (value, priv->runner);
+      g_value_set_object (value,
+          gst_qa_reporter_get_runner (GST_QA_REPORTER (object)));
       break;
     default:
       break;

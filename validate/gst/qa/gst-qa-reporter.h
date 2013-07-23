@@ -103,8 +103,8 @@ void gst_qa_report_valist                (GstQaReporter * reporter, gboolean rep
                                           GstQaReportLevel level, GstQaReportArea area,
                                           gint subarea, const gchar * format, va_list var_args);
 
+void gst_qa_reporter_set_runner          (GstQaReporter * reporter,
+                                          GstQaRunner *runner);
+
 G_END_DECLS
 #endif /* _GST_QA_REPORTER_ */
-
-
-
