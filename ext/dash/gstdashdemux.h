@@ -106,6 +106,9 @@ struct _GstDashDemux
   GstElement parent;
   GstPad *sinkpad;
 
+  gboolean have_group_id;
+  guint group_id;
+
   GSList *streams;
   GSList *next_periods;
   GMutex streams_lock;

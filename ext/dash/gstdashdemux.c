@@ -692,6 +692,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     GstDashDemuxStream *stream;
     GstActiveStream *active_stream;
     GstCaps *caps;
+    GstEvent *event;
     gchar *stream_id;
 
     active_stream = gst_mpdparser_get_active_stream_by_index (demux->client, i);
@@ -719,7 +720,24 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
     stream_id =
         gst_pad_create_stream_id_printf (stream->pad,
         GST_ELEMENT_CAST (demux), "%d", i);
-    gst_pad_push_event (stream->pad, gst_event_new_stream_start (stream_id));
+
+    event =
+        gst_pad_get_sticky_event (demux->sinkpad, GST_EVENT_STREAM_START, 0);
+    if (event) {
+      if (gst_event_parse_group_id (event, &demux->group_id))
+        demux->have_group_id = TRUE;
+      else
+        demux->have_group_id = FALSE;
+      gst_event_unref (event);
+    } else if (!demux->have_group_id) {
+      demux->have_group_id = TRUE;
+      demux->group_id = gst_util_group_id_next ();
+    }
+    event = gst_event_new_stream_start (stream_id);
+    if (demux->have_group_id)
+      gst_event_set_group_id (event, demux->group_id);
+
+    gst_pad_push_event (stream->pad, event);
     g_free (stream_id);
 
     gst_dash_demux_stream_push_event (stream, gst_event_new_caps (caps));
@@ -875,7 +893,7 @@ gst_dash_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       gst_dash_demux_resume_download_task (demux);
       gst_dash_demux_resume_stream_task (demux);
 
-seek_quit:
+    seek_quit:
       gst_event_unref (event);
       return ret;
     }
@@ -1526,7 +1544,7 @@ gst_dash_demux_refresh_mpd (GstDashDemux * demux)
 
             if (!new_stream) {
               GST_DEBUG_OBJECT (demux,
-                 "Stream of index %d is missing from manifest update",
+                  "Stream of index %d is missing from manifest update",
                   demux_stream->index);
               return GST_FLOW_EOS;
             }
@@ -1684,8 +1702,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
         } else if (pos > 0) {
           /* we're ahead, wait a little */
 
-          GST_DEBUG_OBJECT (demux,
-              "Waiting for next segment to be created");
+          GST_DEBUG_OBJECT (demux, "Waiting for next segment to be created");
           gst_mpd_client_set_segment_index (fragment_stream,
               fragment_stream->segment_idx - 1);
           gst_dash_demux_download_wait (demux, time_diff);
