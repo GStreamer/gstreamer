@@ -803,6 +803,61 @@ gst_qa_pad_monitor_add_expected_newsegment (GstQaPadMonitor * monitor,
   gst_iterator_free (iter);
 }
 
+/* common checks for both sink and src event functions */
+static void
+gst_qa_pad_monitor_common_event_check (GstQaPadMonitor * pad_monitor,
+    GstEvent * event)
+{
+  guint32 seqnum = gst_event_get_seqnum (event);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_START:
+    {
+      if (pad_monitor->pending_flush_start_seqnum) {
+        if (seqnum == pad_monitor->pending_flush_start_seqnum) {
+          pad_monitor->pending_flush_start_seqnum = 0;
+        } else {
+          GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, TRUE, EVENT, SEQNUM,
+              "The expected flush-start seqnum should be the same as the "
+              "one from the event that caused it (probably a seek). Got: %u."
+              " Expected: %u", seqnum, pad_monitor->pending_flush_start_seqnum);
+        }
+      }
+
+      if (pad_monitor->pending_flush_stop) {
+        GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, TRUE, EVENT, UNEXPECTED,
+            "Received flush-start from %" GST_PTR_FORMAT
+            " when flush-stop was expected", GST_EVENT_SRC (event));
+      }
+      pad_monitor->pending_flush_stop = TRUE;
+    }
+      break;
+    case GST_EVENT_FLUSH_STOP:
+    {
+      if (pad_monitor->pending_flush_stop_seqnum) {
+        if (seqnum == pad_monitor->pending_flush_stop_seqnum) {
+          pad_monitor->pending_flush_stop_seqnum = 0;
+        } else {
+          GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, TRUE, EVENT, SEQNUM,
+              "The expected flush-stop seqnum should be the same as the "
+              "one from the event that caused it (probably a seek). Got: %u."
+              " Expected: %u", seqnum, pad_monitor->pending_flush_stop_seqnum);
+        }
+      }
+
+      if (!pad_monitor->pending_flush_stop) {
+        GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, TRUE, EVENT, UNEXPECTED,
+            "Unexpected flush-stop %p from %" GST_PTR_FORMAT, event,
+            GST_EVENT_SRC (event));
+      }
+      pad_monitor->pending_flush_stop = FALSE;
+    }
+      break;
+    default:
+      break;
+  }
+}
+
 static gboolean
 gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
     GstEvent * event, GstPadEventFunction handler)
@@ -814,6 +869,8 @@ gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
   gint64 start, stop, position;
   guint32 seqnum = gst_event_get_seqnum (event);
   GstPad *pad = GST_QA_PAD_MONITOR_GET_PAD (pad_monitor);
+
+  gst_qa_pad_monitor_common_event_check (pad_monitor, event);
 
   /* pre checks */
   switch (GST_EVENT_TYPE (event)) {
@@ -860,44 +917,10 @@ gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
         }
       }
       break;
+
+      /* both flushes are handled by the common event function */
     case GST_EVENT_FLUSH_START:
-    {
-      if (pad_monitor->pending_flush_start_seqnum) {
-        if (seqnum == pad_monitor->pending_flush_start_seqnum) {
-          pad_monitor->pending_flush_start_seqnum = 0;
-        } else {
-          GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, TRUE, EVENT, SEQNUM,
-              "The expected flush-start seqnum should be the same as the "
-              "one from the event that caused it (probably a seek). Got: %u."
-              " Expected: %u", seqnum, pad_monitor->pending_flush_start_seqnum);
-        }
-      }
-
-      if (pad_monitor->pending_flush_stop) {
-        GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, TRUE, EVENT, UNEXPECTED,
-            "Received flush-start when flush-stop was expected");
-      }
-    }
-      break;
     case GST_EVENT_FLUSH_STOP:
-    {
-      if (pad_monitor->pending_flush_stop_seqnum) {
-        if (seqnum == pad_monitor->pending_flush_stop_seqnum) {
-          pad_monitor->pending_flush_stop_seqnum = 0;
-        } else {
-          GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, TRUE, EVENT, SEQNUM,
-              "The expected flush-stop seqnum should be the same as the "
-              "one from the event that caused it (probably a seek). Got: %u."
-              " Expected: %u", seqnum, pad_monitor->pending_flush_stop_seqnum);
-        }
-      }
-
-      if (!pad_monitor->pending_flush_stop) {
-        GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, TRUE, EVENT, UNEXPECTED,
-            "Unexpected flush-stop");
-      }
-    }
-      break;
     case GST_EVENT_EOS:
     case GST_EVENT_TAG:
     case GST_EVENT_SINK_MESSAGE:
@@ -923,15 +946,7 @@ gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
       }
       break;
     case GST_EVENT_FLUSH_START:
-      if (ret) {
-        pad_monitor->pending_flush_stop = TRUE;
-      }
-      break;
     case GST_EVENT_FLUSH_STOP:
-      if (ret) {
-        pad_monitor->pending_flush_stop = FALSE;
-      }
-      break;
     case GST_EVENT_EOS:
     case GST_EVENT_TAG:
     case GST_EVENT_SINK_MESSAGE:
@@ -957,6 +972,8 @@ gst_qa_pad_monitor_src_event_check (GstQaPadMonitor * pad_monitor,
   guint32 seqnum = gst_event_get_seqnum (event);
   GstPad *pad = GST_QA_PAD_MONITOR_GET_PAD (pad_monitor);
 
+  gst_qa_pad_monitor_common_event_check (pad_monitor, event);
+
   /* pre checks */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEEK:
@@ -975,47 +992,10 @@ gst_qa_pad_monitor_src_event_check (GstQaPadMonitor * pad_monitor,
       pad_monitor->pending_newsegment_seqnum = seqnum;
     }
       break;
+
+      /* both flushes are handled by the common event handling function */
     case GST_EVENT_FLUSH_START:
-    {
-      if (pad_monitor->pending_flush_start_seqnum) {
-        if (seqnum == pad_monitor->pending_flush_start_seqnum) {
-          pad_monitor->pending_flush_start_seqnum = 0;
-        } else {
-          GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, TRUE, EVENT, SEQNUM,
-              "The expected flush-start seqnum should be the same as the "
-              "one from the event that caused it (probably a seek). Got: %u."
-              " Expected: %u", seqnum, pad_monitor->pending_flush_start_seqnum);
-        }
-      } else {
-        GST_QA_MONITOR_REPORT_CRITICAL (pad_monitor, TRUE, EVENT, UNEXPECTED,
-            "Received unexpected flush-start");
-      }
-
-      if (pad_monitor->pending_flush_stop) {
-        GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, TRUE, EVENT, UNEXPECTED,
-            "Received flush-start when flush-stop was expected");
-      }
-    }
-      break;
     case GST_EVENT_FLUSH_STOP:
-    {
-      if (pad_monitor->pending_flush_stop_seqnum) {
-        if (seqnum == pad_monitor->pending_flush_stop_seqnum) {
-          pad_monitor->pending_flush_stop_seqnum = 0;
-        } else {
-          GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, TRUE, EVENT, SEQNUM,
-              "The expected flush-stop seqnum should be the same as the "
-              "one from the event that caused it (probably a seek). Got: %u."
-              " Expected: %u", seqnum, pad_monitor->pending_flush_stop_seqnum);
-        }
-      }
-
-      if (!pad_monitor->pending_flush_stop) {
-        GST_QA_MONITOR_REPORT_ISSUE (pad_monitor, TRUE, EVENT, UNEXPECTED,
-            "Unexpected flush-stop");
-      }
-    }
-      break;
     case GST_EVENT_NAVIGATION:
     case GST_EVENT_LATENCY:
     case GST_EVENT_STEP:
@@ -1032,15 +1012,7 @@ gst_qa_pad_monitor_src_event_check (GstQaPadMonitor * pad_monitor,
   /* post checks */
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-      if (ret) {
-        pad_monitor->pending_flush_stop = TRUE;
-      }
-      break;
     case GST_EVENT_FLUSH_STOP:
-      if (ret) {
-        pad_monitor->pending_flush_stop = FALSE;
-      }
-      break;
     case GST_EVENT_QOS:
     case GST_EVENT_SEEK:
     case GST_EVENT_NAVIGATION:
