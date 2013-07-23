@@ -303,7 +303,17 @@ check_timeline (GESTimeline * timeline)
     ges_pipeline_set_render_settings (pipeline, render_uri, profile);
     ges_pipeline_set_mode (pipeline, TIMELINE_MODE_RENDER);
 
+
     gst_object_unref (profile);
+  } else if (g_getenv ("GES_MUTE_TESTS")) {
+    GstElement *sink = gst_element_factory_make ("fakesink", NULL);
+
+    g_object_set (sink, "sync", TRUE, NULL);
+    ges_pipeline_preview_set_audio_sink (pipeline, sink);
+
+    sink = gst_element_factory_make ("fakesink", NULL);
+    g_object_set (sink, "sync", TRUE, NULL);
+    ges_pipeline_preview_set_video_sink (pipeline, sink);
   }
 
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
