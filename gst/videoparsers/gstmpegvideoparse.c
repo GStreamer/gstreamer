@@ -971,6 +971,7 @@ gst_mpegv_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     /* best possible parse attempt,
      * src caps are based on sink caps so it will end up in there
      * whether sucessful or not */
+    mpvparse->seq_offset = 4;
     gst_mpegv_parse_process_config (mpvparse, &map, gst_buffer_get_size (buf));
     gst_buffer_unmap (buf, &map);
     gst_mpegv_parse_reset_frame (mpvparse);
