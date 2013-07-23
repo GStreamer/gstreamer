@@ -156,6 +156,9 @@ mpegts_parse_init (MpegTSParse2 * parse)
   parse->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   parse->first = TRUE;
   gst_element_add_pad (GST_ELEMENT (parse), parse->srcpad);
+
+  parse->have_group_id = FALSE;
+  parse->group_id = G_MAXUINT;
 }
 
 static void
@@ -185,19 +188,40 @@ mpegts_parse_reset (MpegTSBase * base)
   MPEGTS_BIT_SET (base->known_psi, 0x1f);
 
   GST_MPEGTS_PARSE (base)->first = TRUE;
+  GST_MPEGTS_PARSE (base)->have_group_id = FALSE;
+  GST_MPEGTS_PARSE (base)->group_id = G_MAXUINT;
 }
 
 static void
 prepare_src_pad (MpegTSBase * base, MpegTSParse2 * parse)
 {
   if (base->packetizer->packet_size) {
+    GstEvent *event;
     gchar *stream_id;
     GstCaps *caps;
 
     stream_id =
         gst_pad_create_stream_id (parse->srcpad, GST_ELEMENT_CAST (base),
         "multi-program");
-    gst_pad_push_event (parse->srcpad, gst_event_new_stream_start (stream_id));
+
+    event =
+        gst_pad_get_sticky_event (parse->parent.sinkpad, GST_EVENT_STREAM_START,
+        0);
+    if (event) {
+      if (gst_event_parse_group_id (event, &parse->group_id))
+        parse->have_group_id = TRUE;
+      else
+        parse->have_group_id = FALSE;
+      gst_event_unref (event);
+    } else if (!parse->have_group_id) {
+      parse->have_group_id = TRUE;
+      parse->group_id = gst_util_group_id_next ();
+    }
+    event = gst_event_new_stream_start (stream_id);
+    if (parse->have_group_id)
+      gst_event_set_group_id (event, parse->group_id);
+
+    gst_pad_push_event (parse->srcpad, event);
     g_free (stream_id);
 
     caps = gst_caps_new_simple ("video/mpegts",
@@ -305,6 +329,7 @@ mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
   MpegTSParseProgram *parseprogram;
   GstPad *pad;
   gint program_num = -1;
+  GstEvent *event;
   gchar *stream_id;
 
   g_return_val_if_fail (template != NULL, NULL);
@@ -337,7 +362,25 @@ mpegts_parse_request_new_pad (GstElement * element, GstPadTemplate * template,
   gst_pad_set_active (pad, TRUE);
 
   stream_id = gst_pad_create_stream_id (pad, element, padname + 8);
-  gst_pad_push_event (pad, gst_event_new_stream_start (stream_id));
+
+  event =
+      gst_pad_get_sticky_event (parse->parent.sinkpad, GST_EVENT_STREAM_START,
+      0);
+  if (event) {
+    if (gst_event_parse_group_id (event, &parse->group_id))
+      parse->have_group_id = TRUE;
+    else
+      parse->have_group_id = FALSE;
+    gst_event_unref (event);
+  } else if (!parse->have_group_id) {
+    parse->have_group_id = TRUE;
+    parse->group_id = gst_util_group_id_next ();
+  }
+  event = gst_event_new_stream_start (stream_id);
+  if (parse->have_group_id)
+    gst_event_set_group_id (event, parse->group_id);
+
+  gst_pad_push_event (pad, event);
   g_free (stream_id);
 
   gst_element_add_pad (element, pad);
