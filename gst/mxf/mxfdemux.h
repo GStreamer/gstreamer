@@ -126,6 +126,8 @@ struct _GstMXFDemux
   GPtrArray *src;
 
   /* < private > */
+  gboolean have_group_id;
+  guint group_id;
 
   GstAdapter *adapter;
 

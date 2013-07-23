@@ -277,6 +277,9 @@ gst_mxf_demux_reset (GstMXFDemux * demux)
 
   gst_mxf_demux_reset_mxf_state (demux);
   gst_mxf_demux_reset_metadata (demux);
+
+  demux->have_group_id = FALSE;
+  demux->group_id = G_MAXUINT;
 }
 
 static GstFlowReturn
@@ -1188,6 +1191,7 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
     if (pad_caps && !gst_caps_is_equal (pad_caps, etrack->caps)) {
       gst_pad_set_caps (GST_PAD_CAST (pad), etrack->caps);
     } else if (!pad_caps) {
+      GstEvent *event;
       gchar *stream_id;
 
       gst_pad_set_event_function (GST_PAD_CAST (pad),
@@ -1202,8 +1206,24 @@ gst_mxf_demux_update_tracks (GstMXFDemux * demux)
       stream_id =
           gst_pad_create_stream_id_printf (GST_PAD_CAST (pad),
           GST_ELEMENT_CAST (demux), "%03u", pad->track_id);
-      gst_pad_push_event (GST_PAD_CAST (pad),
-          gst_event_new_stream_start (stream_id));
+
+      event =
+          gst_pad_get_sticky_event (demux->sinkpad, GST_EVENT_STREAM_START, 0);
+      if (event) {
+        if (gst_event_parse_group_id (event, &demux->group_id))
+          demux->have_group_id = TRUE;
+        else
+          demux->have_group_id = FALSE;
+        gst_event_unref (event);
+      } else if (!demux->have_group_id) {
+        demux->have_group_id = TRUE;
+        demux->group_id = gst_util_group_id_next ();
+      }
+      event = gst_event_new_stream_start (stream_id);
+      if (demux->have_group_id)
+        gst_event_set_group_id (event, demux->group_id);
+
+      gst_pad_push_event (GST_PAD_CAST (pad), event);
       g_free (stream_id);
 
       gst_pad_set_caps (GST_PAD_CAST (pad), etrack->caps);
@@ -3184,8 +3204,8 @@ gst_mxf_demux_seek_push (GstMXFDemux * demux, GstEvent * event)
   if (format != GST_FORMAT_TIME)
     goto wrong_format;
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
-  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   /* Work on a copy until we are sure the seek succeeded. */
   memcpy (&seeksegment, &demux->segment, sizeof (GstSegment));
@@ -3317,8 +3337,8 @@ gst_mxf_demux_seek_pull (GstMXFDemux * demux, GstEvent * event)
   if (rate <= 0.0)
     goto wrong_rate;
 
-  flush = !!(flags & GST_SEEK_FLAG_FLUSH);
-  keyframe = !!(flags & GST_SEEK_FLAG_KEY_UNIT);
+  flush = ! !(flags & GST_SEEK_FLAG_FLUSH);
+  keyframe = ! !(flags & GST_SEEK_FLAG_KEY_UNIT);
 
   if (flush) {
     GstEvent *e;
