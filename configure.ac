@@ -615,6 +615,31 @@ AC_CACHE_CHECK([for JPEG decoding API],
     LIBS="$saved_LIBS"
 ])
 
+dnl Check for vpp (video post-processing) support
+USE_VA_VPP=0
+AC_CACHE_CHECK([for video post-postprocessing API],
+    ac_cv_have_va_vpp_api, [
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $LIBVA_LIBS"
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM(
+            [[#include <va/va.h>
+              #include <va/va_vpp.h>]],
+            [[VADisplay va_dpy;
+              VAContextID vpp_ctx;
+              VAProcFilterType filters[VAProcFilterCount];
+              unsigned int num_filters = VAProcFilterCount;
+              vaQueryVideoProcFilters(va_dpy, vpp_ctx, filters, &num_filters);
+              ]])],
+        [ac_cv_have_va_vpp_api="yes" USE_VA_VPP=1],
+        [ac_cv_have_va_vpp_api="no"]
+    )
+    CPPFLAGS="$saved_CPPFLAGS"
+    LIBS="$saved_LIBS"
+])
+
 dnl VA/Wayland API
 if test "$enable_wayland" = "yes"; then
     PKG_CHECK_MODULES([LIBVA_WAYLAND], [libva-wayland >= va_api_wld_version],
@@ -632,6 +657,10 @@ case ":$USE_X11:$USE_GLX:$USE_WAYLAND:$USE_DRM:" in
     AC_MSG_ERROR([No renderer is enabled])
     ;;
 esac
+
+AC_DEFINE_UNQUOTED(USE_VA_VPP, $USE_VA_VPP,
+    [Defined to 1 if video post-processing is used])
+AM_CONDITIONAL(USE_VA_VPP, test $USE_VA_VPP -eq 1)
 
 AC_DEFINE_UNQUOTED(USE_JPEG_DECODER, $USE_JPEG_DECODER,
     [Defined to 1 if JPEG decoder is used])

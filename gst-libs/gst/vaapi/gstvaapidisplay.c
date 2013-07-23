@@ -684,6 +684,18 @@ gst_vaapi_display_create(GstVaapiDisplay *display,
     }
     append_h263_config(priv->decoders);
 
+    /* Video processing API */
+#if USE_VA_VPP
+    status = vaQueryConfigEntrypoints(priv->display, VAProfileNone,
+        entrypoints, &num_entrypoints);
+    if (vaapi_check_status(status, "vaQueryEntrypoints() [VAProfileNone]")) {
+        for (j = 0; j < num_entrypoints; j++) {
+            if (entrypoints[j] == VAEntrypointVideoProc)
+                priv->has_vpp = TRUE;
+        }
+    }
+#endif
+
     /* VA display attributes */
     display_attrs =
         g_new(VADisplayAttribute, vaMaxNumDisplayAttributes(priv->display));

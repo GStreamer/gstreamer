@@ -116,6 +116,16 @@ typedef void     (*GstVaapiDisplayGetSizeMFunc)(GstVaapiDisplay *display,
 #define GST_VAAPI_DISPLAY_TYPES(display) \
     gst_vaapi_display_get_display_types(GST_VAAPI_DISPLAY_CAST(display))
 
+/**
+ * GST_VAAPI_DISPLAY_HAS_VPP:
+ * @display: a @GstVaapiDisplay
+ *
+ * Returns whether the @display supports video processing (VA/VPP)
+ */
+#undef  GST_VAAPI_DISPLAY_HAS_VPP
+#define GST_VAAPI_DISPLAY_HAS_VPP(display) \
+    (GST_VAAPI_DISPLAY_GET_PRIVATE(display)->has_vpp)
+
 struct _GstVaapiDisplayPrivate {
     GstVaapiDisplay    *parent;
     GRecMutex           mutex;
@@ -133,6 +143,7 @@ struct _GstVaapiDisplayPrivate {
     GArray             *subpicture_formats;
     GArray             *properties;
     guint               use_foreign_display     : 1;
+    guint               has_vpp                 : 1;
 };
 
 /**

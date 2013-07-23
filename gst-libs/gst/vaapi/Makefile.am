@@ -55,6 +55,7 @@ libgstvaapi_source_c =				\
 	gstvaapidecoder_vc1.c			\
 	gstvaapidisplay.c			\
 	gstvaapidisplaycache.c			\
+	gstvaapifilter.c			\
 	gstvaapiimage.c				\
 	gstvaapiimagepool.c			\
 	gstvaapiminiobject.c			\

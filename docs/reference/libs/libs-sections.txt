@@ -373,3 +373,19 @@ gst_vaapi_surface_proxy_unref
 <SUBSECTION Standard>
 GST_VAAPI_SURFACE_PROXY_SURFACE
 </SECTION>
+
+<SECTION>
+<FILE>gstvaapifilter</FILE>
+<TITLE>GstVaapiFilter</TITLE>
+GstVaapiFilter
+gst_vaapi_filter_new
+gst_vaapi_filter_ref
+gst_vaapi_filter_unref
+gst_vaapi_filter_replace
+gst_vaapi_filter_get_operations
+gst_vaapi_filter_get_formats
+gst_vaapi_filter_set_operation
+gst_vaapi_filter_set_format
+<SUBSECTION Standard>
+GST_VAAPI_FILTER
+</SECTION>
