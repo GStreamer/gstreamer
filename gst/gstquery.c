@@ -1398,7 +1398,7 @@ gst_query_set_uri (GstQuery * query, const gchar * uri)
 /**
  * gst_query_parse_uri:
  * @query: a #GstQuery
- * @uri: (out callee-allocates) (allow-none): the storage for the current URI
+ * @uri: (out) (transfer full) (allow-none): the storage for the current URI
  *     (may be NULL)
  *
  * Parse an URI query, writing the URI into @uri as a newly
