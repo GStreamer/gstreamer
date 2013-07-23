@@ -1713,6 +1713,7 @@ gen_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
     g_signal_handler_disconnect (playsink->colorbalance_element,
         playsink->colorbalance_value_changed_id);
     gst_object_unref (playsink->colorbalance_element);
+    playsink->colorbalance_value_changed_id = 0;
   }
   playsink->colorbalance_element = find_color_balance_element (chain->sink);
   if (playsink->colorbalance_element) {
@@ -1907,6 +1908,7 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
   if (playsink->colorbalance_element) {
     g_signal_handler_disconnect (playsink->colorbalance_element,
         playsink->colorbalance_value_changed_id);
+    playsink->colorbalance_value_changed_id = 0;
     gst_object_unref (playsink->colorbalance_element);
   }
   playsink->colorbalance_element = find_color_balance_element (chain->sink);
@@ -1924,10 +1926,14 @@ setup_video_chain (GstPlaySink * playsink, gboolean raw, gboolean async)
     g_object_set (chain->conv, "use-balance", use_balance, NULL);
 
     GST_OBJECT_LOCK (playsink);
-    if (use_balance && GST_PLAY_SINK_VIDEO_CONVERT (chain->conv)->balance)
+    if (use_balance && GST_PLAY_SINK_VIDEO_CONVERT (chain->conv)->balance) {
       playsink->colorbalance_element =
           GST_COLOR_BALANCE (gst_object_ref (GST_PLAY_SINK_VIDEO_CONVERT
               (chain->conv)->balance));
+      playsink->colorbalance_value_changed_id =
+          g_signal_connect (playsink->colorbalance_element, "value-changed",
+          G_CALLBACK (colorbalance_value_changed_cb), playsink);
+    }
     GST_OBJECT_UNLOCK (playsink);
   }
 
@@ -3046,6 +3052,7 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
         if (playsink->colorbalance_element) {
           g_signal_handler_disconnect (playsink->colorbalance_element,
               playsink->colorbalance_value_changed_id);
+          playsink->colorbalance_value_changed_id = 0;
           gst_object_unref (playsink->colorbalance_element);
         }
         playsink->colorbalance_element = NULL;
@@ -3180,6 +3187,7 @@ gst_play_sink_do_reconfigure (GstPlaySink * playsink)
     if (playsink->colorbalance_element) {
       g_signal_handler_disconnect (playsink->colorbalance_element,
           playsink->colorbalance_value_changed_id);
+      playsink->colorbalance_value_changed_id = 0;
       gst_object_unref (playsink->colorbalance_element);
     }
     playsink->colorbalance_element = NULL;
@@ -4453,6 +4461,7 @@ gst_play_sink_change_state (GstElement * element, GstStateChange transition)
       if (playsink->colorbalance_element) {
         g_signal_handler_disconnect (playsink->colorbalance_element,
             playsink->colorbalance_value_changed_id);
+        playsink->colorbalance_value_changed_id = 0;
         gst_object_unref (playsink->colorbalance_element);
       }
       playsink->colorbalance_element = NULL;
