@@ -3014,8 +3014,13 @@ gst_base_sink_default_event (GstBaseSink * basesink, GstEvent * event)
       GST_DEBUG_OBJECT (basesink, "Now posting STREAM_START (seqnum:%d)",
           seqnum);
       message = gst_message_new_stream_start (GST_OBJECT_CAST (basesink));
-      if (gst_event_parse_group_id (event, &group_id))
+      if (gst_event_parse_group_id (event, &group_id)) {
         gst_message_set_group_id (message, group_id);
+      } else {
+        GST_FIXME_OBJECT (basesink, "stream-start event without group-id. "
+            "Consider implementing group-id handling in the upstream "
+            "elements");
+      }
       gst_message_set_seqnum (message, seqnum);
       gst_element_post_message (GST_ELEMENT_CAST (basesink), message);
       break;
