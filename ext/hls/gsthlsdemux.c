@@ -255,6 +255,9 @@ gst_hls_demux_init (GstHLSDemux * demux)
   demux->stream_task =
       gst_task_new ((GstTaskFunction) gst_hls_demux_stream_loop, demux, NULL);
   gst_task_set_lock (demux->stream_task, &demux->stream_lock);
+
+  demux->have_group_id = FALSE;
+  demux->group_id = G_MAXUINT;
 }
 
 static void
@@ -637,6 +640,7 @@ static void
 switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
 {
   GstPad *oldpad = demux->srcpad;
+  GstEvent *event;
   gchar *stream_id;
 
   GST_DEBUG ("Switching pads (oldpad:%p) with caps: %" GST_PTR_FORMAT, oldpad,
@@ -653,7 +657,23 @@ switch_pads (GstHLSDemux * demux, GstCaps * newcaps)
 
   stream_id =
       gst_pad_create_stream_id (demux->srcpad, GST_ELEMENT_CAST (demux), NULL);
-  gst_pad_push_event (demux->srcpad, gst_event_new_stream_start (stream_id));
+
+  event = gst_pad_get_sticky_event (demux->sinkpad, GST_EVENT_STREAM_START, 0);
+  if (event) {
+    if (gst_event_parse_group_id (event, &demux->group_id))
+      demux->have_group_id = TRUE;
+    else
+      demux->have_group_id = FALSE;
+    gst_event_unref (event);
+  } else if (!demux->have_group_id) {
+    demux->have_group_id = TRUE;
+    demux->group_id = gst_util_group_id_next ();
+  }
+  event = gst_event_new_stream_start (stream_id);
+  if (demux->have_group_id)
+    gst_event_set_group_id (event, demux->group_id);
+
+  gst_pad_push_event (demux->srcpad, event);
   g_free (stream_id);
 
   gst_pad_set_caps (demux->srcpad, newcaps);
@@ -820,6 +840,9 @@ gst_hls_demux_reset (GstHLSDemux * demux, gboolean dispose)
 
   demux->position_shift = 0;
   demux->need_segment = TRUE;
+
+  demux->have_group_id = FALSE;
+  demux->group_id = G_MAXUINT;
 }
 
 static gboolean

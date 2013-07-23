@@ -58,6 +58,9 @@ struct _GstHLSDemux
   GstPad *srcpad;
   GstPad *sinkpad;
 
+  gboolean have_group_id;
+  guint group_id;
+
   GstBuffer *playlist;
   GstCaps *input_caps;
   GstUriDownloader *downloader;
