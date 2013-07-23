@@ -340,6 +340,9 @@ struct _GstSourceGroup
   gint pending;
   gboolean sub_pending;
 
+  gboolean have_group_id;
+  guint group_id;
+
   gulong pad_added_id;
   gulong pad_removed_id;
   gulong no_more_pads_id;
@@ -2844,31 +2847,72 @@ notify:
 }
 
 static GstPadProbeReturn
-_suburidecodebin_event_probe (GstPad * pad, GstPadProbeInfo * info,
-    gpointer udata)
+_uridecodebin_event_probe (GstPad * pad, GstPadProbeInfo * info, gpointer udata)
 {
   GstPadProbeReturn ret = GST_PAD_PROBE_OK;
   GstSourceGroup *group = udata;
   GstEvent *event = GST_PAD_PROBE_INFO_DATA (info);
+  gboolean suburidecodebin = (GST_PAD_PARENT (pad) == group->suburidecodebin);
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_START:
-    case GST_EVENT_FLUSH_STOP:
-    {
-      guint32 seqnum = gst_event_get_seqnum (event);
-      GSList *item = g_slist_find (group->suburi_flushes_to_drop,
-          GUINT_TO_POINTER (seqnum));
-      if (item) {
-        ret = GST_PAD_PROBE_DROP;       /* this is from subtitle seek only, drop it */
-        if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
-          group->suburi_flushes_to_drop =
-              g_slist_delete_link (group->suburi_flushes_to_drop, item);
+  if (suburidecodebin) {
+    /* Drop flushes that we caused from the suburidecodebin */
+    switch (GST_EVENT_TYPE (event)) {
+      case GST_EVENT_FLUSH_START:
+      case GST_EVENT_FLUSH_STOP:
+      {
+        guint32 seqnum = gst_event_get_seqnum (event);
+        GSList *item = g_slist_find (group->suburi_flushes_to_drop,
+            GUINT_TO_POINTER (seqnum));
+        if (item) {
+          if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
+            group->suburi_flushes_to_drop =
+                g_slist_delete_link (group->suburi_flushes_to_drop, item);
+          }
         }
       }
+      default:
+        break;
+    }
+  }
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_STREAM_START:{
+      guint group_id;
+
+      GST_SOURCE_GROUP_LOCK (group);
+      if (gst_event_parse_group_id (event, &group_id)) {
+        if (group->have_group_id) {
+          if (group->group_id != group_id) {
+            event = gst_event_copy (event);
+            gst_event_set_group_id (event, group->group_id);
+            gst_event_replace ((GstEvent **) & info->data, event);
+            gst_event_unref (event);
+          }
+        } else {
+          group->group_id = group_id;
+          group->have_group_id = TRUE;
+        }
+      } else {
+        GST_FIXME_OBJECT (pad,
+            "Consider implementing group-id handling on stream-start event");
+
+        if (!group->have_group_id) {
+          group->group_id = gst_util_group_id_next ();
+          group->have_group_id = TRUE;
+        }
+
+        event = gst_event_copy (event);
+        gst_event_set_group_id (event, group->group_id);
+        gst_event_replace ((GstEvent **) & info->data, event);
+        gst_event_unref (event);
+      }
+      GST_SOURCE_GROUP_UNLOCK (group);
+      break;
     }
     default:
       break;
   }
+
   return ret;
 }
 
@@ -2942,6 +2986,7 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   gint i, pass;
   gboolean changed = FALSE;
   GstElement *custom_combiner = NULL;
+  gulong group_id_probe_handler;
 
   playbin = group->playbin;
 
@@ -3116,12 +3161,11 @@ pad_added_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   }
   GST_SOURCE_GROUP_UNLOCK (group);
 
-  if (decodebin == group->suburidecodebin) {
-    /* TODO store the probe id */
-    /* to avoid propagating flushes from suburi specific seeks */
-    gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
-        _suburidecodebin_event_probe, group, NULL);
-  }
+  group_id_probe_handler =
+      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      _uridecodebin_event_probe, group, NULL);
+  g_object_set_data (G_OBJECT (pad), "playbin.event_probe_id",
+      (gpointer) group_id_probe_handler);
 
   if (changed) {
     int signal;
@@ -3193,6 +3237,7 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
   GstElement *combiner;
   GstSourceCombine *combine;
   int signal = -1;
+  gulong group_id_probe_handler;
 
   playbin = group->playbin;
 
@@ -3200,6 +3245,13 @@ pad_removed_cb (GstElement * decodebin, GstPad * pad, GstSourceGroup * group)
       "pad %s:%s removed from group %p", GST_DEBUG_PAD_NAME (pad), group);
 
   GST_SOURCE_GROUP_LOCK (group);
+
+  if ((group_id_probe_handler =
+          (guintptr) g_object_get_data (G_OBJECT (pad),
+              "playbin.event_probe_id"))) {
+    gst_pad_remove_probe (pad, group_id_probe_handler);
+    g_object_set_data (G_OBJECT (pad), "playbin.event_probe_id", 0);
+  }
 
   if ((combine = g_object_get_data (G_OBJECT (pad), "playbin.combine"))) {
     g_assert (combine->combiner == NULL);
@@ -5139,6 +5191,8 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
     if (GST_OBJECT_PARENT (group->suburidecodebin) == GST_OBJECT_CAST (playbin))
       gst_bin_remove (GST_BIN_CAST (playbin), group->suburidecodebin);
   }
+
+  group->have_group_id = FALSE;
 
   GST_SOURCE_GROUP_UNLOCK (group);
 
