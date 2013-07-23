@@ -119,6 +119,57 @@ error_cleanup:
     return NULL;
 }
 
+static void
+dump_operation(GstVaapiFilterOpInfo *op_info)
+{
+    GParamSpec * const pspec = op_info->pspec;
+    GValue value = G_VALUE_INIT;
+    gchar *value_str;
+
+    if (!op_info)
+        return;
+
+    g_print("  %s: ", g_param_spec_get_name(pspec));
+    g_value_init(&value, G_PARAM_SPEC_VALUE_TYPE(pspec));
+    g_param_value_set_default(pspec, &value);
+    value_str = g_strdup_value_contents(&value);
+    g_print("%s (default: %s)\n", G_VALUE_TYPE_NAME(&value),
+        value_str ? value_str : "<unknown>");
+    g_free(value_str);
+}
+
+static void
+dump_operations(GstVaapiFilter *filter)
+{
+    GPtrArray * const ops = gst_vaapi_filter_get_operations(filter);
+    guint i;
+
+    if (!ops)
+        return;
+
+    g_print("%u operations\n", ops->len);
+    for (i = 0; i < ops->len; i++)
+        dump_operation(g_ptr_array_index(ops, i));
+    g_ptr_array_unref(ops);
+}
+
+static void
+dump_formats(GstVaapiFilter *filter)
+{
+    GArray * const formats = gst_vaapi_filter_get_formats(filter);
+    guint i;
+
+    if (!formats)
+        return;
+
+    g_print("%u formats\n", formats->len);
+    for (i = 0; i < formats->len; i++) {
+        GstVideoFormat format = g_array_index(formats, GstVideoFormat, i);
+        g_print("  %s\n", gst_vaapi_video_format_to_string(format));
+    }
+    g_array_unref(formats);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -160,6 +211,9 @@ main(int argc, char *argv[])
     filter = gst_vaapi_filter_new(display);
     if (!filter)
         g_error("failed to create video processing pipeline");
+
+    dump_operations(filter);
+    dump_formats(filter);
 
     status = gst_vaapi_filter_process(filter, src_surface, dst_surface,
         filter_flags);
