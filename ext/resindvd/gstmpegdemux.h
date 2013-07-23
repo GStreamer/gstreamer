@@ -99,6 +99,9 @@ struct _GstFluPSDemux {
   gboolean flushing;
   gboolean in_still;
 
+  gboolean have_group_id;
+  guint group_id;
+
   GstAdapter     * adapter;
   GstAdapter     * rev_adapter;
   guint64        adapter_offset;
