@@ -7,6 +7,7 @@ libgstapplemedia_la_SOURCES =			\
 	coremediabuffer.c			\
 	coremediactx.c				\
 	vtapi.c					\
+	atdec.c 				\
 	dynapi.c
 
 libgstapplemedia_la_CPPFLAGS =			\
@@ -38,7 +39,8 @@ endif
 libgstapplemedia_la_LIBADD =			\
 	$(GST_BASE_LIBS)			\
 	$(GST_PLUGINS_BASE_LIBS)		\
-	-lgstvideo-$(GST_API_VERSION)
+	-lgstvideo-$(GST_API_VERSION) 		\
+	-lgstaudio-$(GST_API_VERSION)
 
 libgstapplemedia_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
@@ -48,7 +50,8 @@ libgstapplemedia_la_LDFLAGS =			\
 	$(GST_PLUGINS_BASE_LDFLAGS)		\
 	-Wl,-framework -Wl,CoreFoundation	\
 	-Wl,-framework -Wl,CoreMedia		\
-	-Wl,-framework -Wl,CoreVideo
+	-Wl,-framework -Wl,CoreVideo 		\
+	-Wl,-framework -Wl,AudioToolbox
 
 noinst_HEADERS =				\
 	qtkitvideosrc.h				\
@@ -62,6 +65,7 @@ noinst_HEADERS =				\
 	coremediabuffer.h			\
 	coremediactx.h				\
 	vtapi.h					\
+	atdec.h 				\
 	dynapi.h				\
 	dynapi-internal.h
 
