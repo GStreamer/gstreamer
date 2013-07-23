@@ -87,6 +87,9 @@ struct _GstMssDemux {
   /* pads */
   GstPad *sinkpad;
 
+  gboolean have_group_id;
+  guint group_id;
+
   GstBuffer *manifest_buffer;
 
   GstMssManifest *manifest;

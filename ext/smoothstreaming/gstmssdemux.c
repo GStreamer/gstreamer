@@ -207,6 +207,9 @@ gst_mss_demux_init (GstMssDemux * mssdemux)
 
   mssdemux->data_queue_max_size = DEFAULT_MAX_QUEUE_SIZE_BUFFERS;
   mssdemux->bitrate_limit = DEFAULT_BITRATE_LIMIT;
+
+  mssdemux->have_group_id = FALSE;
+  mssdemux->group_id = G_MAXUINT;
 }
 
 static gboolean
@@ -337,6 +340,9 @@ gst_mss_demux_reset (GstMssDemux * mssdemux)
   mssdemux->base_url = NULL;
   g_free (mssdemux->manifest_uri);
   mssdemux->manifest_uri = NULL;
+
+  mssdemux->have_group_id = FALSE;
+  mssdemux->group_id = G_MAXUINT;
 }
 
 static void
@@ -819,6 +825,7 @@ gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
 
   if (media_caps) {
     gchar *name = gst_pad_get_name (pad);
+    GstEvent *event;
     gchar *stream_id;
     gst_pad_set_active (pad, TRUE);
 
@@ -827,7 +834,24 @@ gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
 
     stream_id =
         gst_pad_create_stream_id (pad, GST_ELEMENT_CAST (mssdemux), name);
-    gst_pad_push_event (pad, gst_event_new_stream_start (stream_id));
+
+    event =
+        gst_pad_get_sticky_event (mssdemux->sinkpad, GST_EVENT_STREAM_START, 0);
+    if (event) {
+      if (gst_event_parse_group_id (event, &mssdemux->group_id))
+        mssdemux->have_group_id = TRUE;
+      else
+        mssdemux->have_group_id = FALSE;
+      gst_event_unref (event);
+    } else if (!mssdemux->have_group_id) {
+      mssdemux->have_group_id = TRUE;
+      mssdemux->group_id = gst_util_group_id_next ();
+    }
+    event = gst_event_new_stream_start (stream_id);
+    if (mssdemux->have_group_id)
+      gst_event_set_group_id (event, mssdemux->group_id);
+
+    gst_pad_push_event (pad, event);
     g_free (stream_id);
     g_free (name);
 
