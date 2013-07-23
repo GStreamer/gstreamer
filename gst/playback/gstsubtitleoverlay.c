@@ -606,86 +606,6 @@ _remove_element (GstSubtitleOverlay * self, GstElement ** element)
 }
 
 static gboolean
-_pad_query_convert_to_time (GstPad * pad, GstFormat src_format, gint64 src_val,
-    gint64 * dest_val)
-{
-  GstFormat dest_format;
-
-  if (src_val == GST_CLOCK_TIME_NONE) {
-    *dest_val = GST_CLOCK_TIME_NONE;
-    return TRUE;
-  }
-
-  dest_format = GST_FORMAT_TIME;
-  return gst_pad_query_convert (pad, src_format, src_val, dest_format,
-      dest_val);
-}
-
-static void
-_generate_update_segment_event (GstPad * pad, GstSegment * segment,
-    GstEvent ** event1)
-{
-  GstEvent *event;
-  GstStructure *structure;
-  GstSegment newsegment;
-  gboolean use_newseg = FALSE;
-  gint64 start, stop, base, time, position, duration;
-
-  /* always push newsegment with format TIME */
-  if (segment->format != GST_FORMAT_TIME) {
-    gboolean res;
-    GstPad *peer;
-
-    peer = gst_pad_get_peer (pad);
-    if (peer) {
-      res = _pad_query_convert_to_time (peer, segment->format,
-          segment->start, &start);
-      res = res && _pad_query_convert_to_time (peer, segment->format,
-          segment->stop, &stop);
-      res = res && _pad_query_convert_to_time (peer, segment->format,
-          segment->time, &time);
-      res = res && _pad_query_convert_to_time (peer, segment->format,
-          segment->base, &base);
-      res = res && _pad_query_convert_to_time (peer, segment->format,
-          segment->position, &position);
-      res = res && _pad_query_convert_to_time (peer, segment->format,
-          segment->duration, &duration);
-      if (!res) {
-        start = 0;
-        stop = GST_CLOCK_TIME_NONE;
-        time = 0;
-        position = 0;
-        duration = GST_CLOCK_TIME_NONE;
-        base = 0;
-      } else {
-        use_newseg = TRUE;
-        gst_segment_init (&newsegment, GST_FORMAT_TIME);
-        newsegment.rate = segment->rate;
-        newsegment.applied_rate = segment->applied_rate;
-        newsegment.start = start;
-        newsegment.stop = stop;
-        newsegment.time = time;
-        newsegment.base = base;
-        newsegment.position = position;
-        newsegment.duration = duration;
-      }
-
-      gst_object_unref (peer);
-    }
-  }
-
-  if (use_newseg) {
-    event = gst_event_new_segment (&newsegment);
-  } else {
-    event = gst_event_new_segment (segment);
-  }
-  structure = gst_event_writable_structure (event);
-  gst_structure_id_set (structure, _subtitle_overlay_event_marker_id,
-      G_TYPE_BOOLEAN, TRUE, NULL);
-  *event1 = event;
-}
-
-static gboolean
 _setup_passthrough (GstSubtitleOverlay * self)
 {
   GstPad *src, *sink;
@@ -741,17 +661,6 @@ _setup_passthrough (GstSubtitleOverlay * self)
     GST_ELEMENT_ERROR (self, CORE, PAD, (NULL),
         ("Failed to get sinkpad from identity"));
     return FALSE;
-  }
-
-  /* Send segment to the identity. This is dropped because identity
-   * is not linked downstream yet */
-  if (self->video_segment.format != GST_FORMAT_UNDEFINED) {
-    GstEvent *event1;
-
-    _generate_update_segment_event (sink, &self->video_segment, &event1);
-    GST_DEBUG_OBJECT (self,
-        "Pushing video segment event: %" GST_PTR_FORMAT, event1);
-    gst_pad_send_event (sink, event1);
   }
 
   /* Link sink ghostpads to identity */
@@ -1404,8 +1313,6 @@ gst_subtitle_overlay_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_DEBUG_OBJECT (self, "State change READY->PAUSED");
-      gst_segment_init (&self->video_segment, GST_FORMAT_UNDEFINED);
-      gst_segment_init (&self->subtitle_segment, GST_FORMAT_UNDEFINED);
 
       self->fps_n = self->fps_d = 0;
 
@@ -1797,14 +1704,6 @@ gst_subtitle_overlay_video_sink_event (GstPad * pad, GstObject * parent,
   gboolean ret;
 
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_FLUSH_STOP:
-    {
-      GST_DEBUG_OBJECT (pad,
-          "Resetting video segment because of flush-stop event");
-      gst_segment_init (&self->video_segment, GST_FORMAT_UNDEFINED);
-      self->fps_n = self->fps_d = 0;
-      break;
-    }
     case GST_EVENT_CAPS:
     {
       GstCaps *caps;
@@ -1821,27 +1720,10 @@ gst_subtitle_overlay_video_sink_event (GstPad * pad, GstObject * parent,
 
   ret = gst_pad_event_default (pad, parent, gst_event_ref (event));
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
-    GST_DEBUG_OBJECT (pad, "segment event: %" GST_PTR_FORMAT, event);
-    gst_event_copy_segment (event, &self->video_segment);
-
-    if (self->video_segment.format != GST_FORMAT_TIME)
-      goto invalid_format;
-  }
-
 done:
   gst_event_unref (event);
 
   return ret;
-
-  /* ERRORS */
-invalid_format:
-  {
-    GST_ERROR_OBJECT (pad, "Segment event in non-time format: %s",
-        gst_format_get_name (self->video_segment.format));
-    ret = FALSE;
-    goto done;
-  }
 }
 
 static GstFlowReturn
@@ -2035,10 +1917,6 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstObject * parent,
       break;
     }
     case GST_EVENT_FLUSH_STOP:
-      GST_DEBUG_OBJECT (pad,
-          "Resetting subtitle segment because of flush-stop");
-      gst_segment_init (&self->subtitle_segment, GST_FORMAT_UNDEFINED);
-      /* fall through */
     case GST_EVENT_FLUSH_START:
     case GST_EVENT_SEGMENT:
     case GST_EVENT_EOS:
@@ -2060,72 +1938,6 @@ gst_subtitle_overlay_subtitle_sink_event (GstPad * pad, GstObject * parent,
 
   ret = gst_pad_event_default (pad, parent, gst_event_ref (event));
 
-  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
-    const GstSegment *eventsegment;
-    GST_DEBUG_OBJECT (pad, "segment event: %" GST_PTR_FORMAT, event);
-
-    gst_event_parse_segment (event, &eventsegment);
-
-    if (eventsegment->format == GST_FORMAT_TIME) {
-      gst_event_copy_segment (event, &self->subtitle_segment);
-    } else {
-      GstPad *peer;
-      gboolean res = FALSE;
-      gint64 tstart = 0;
-      gint64 tstop = GST_CLOCK_TIME_NONE;
-      gint64 tposition = 0;
-      gint64 tduration = 0;
-      gint64 ttime = 0;
-      gint64 tbase = 0;
-      GstFormat format = eventsegment->format;
-
-      GST_DEBUG_OBJECT (pad, "Subtitle newsegment event (%s) not in TIME "
-          "format, converting", gst_format_get_name (format));
-      peer = gst_pad_get_peer (pad);
-
-      if (peer) {
-        res =
-            _pad_query_convert_to_time (peer, format, eventsegment->start,
-            &tstart);
-        res = res
-            && _pad_query_convert_to_time (peer, format, eventsegment->stop,
-            &tstop);
-        res = res
-            && _pad_query_convert_to_time (peer, format, eventsegment->position,
-            &tposition);
-        res = res
-            && _pad_query_convert_to_time (peer, format, eventsegment->base,
-            &tbase);
-        res = res
-            && _pad_query_convert_to_time (peer, format, eventsegment->time,
-            &ttime);
-        res = res
-            && _pad_query_convert_to_time (peer, format, eventsegment->duration,
-            &tduration);
-
-        gst_object_unref (peer);
-      }
-
-      if (!res) {
-        tstart = 0;
-        tstop = GST_CLOCK_TIME_NONE;
-        tposition = 0;
-        tduration = GST_CLOCK_TIME_NONE;
-        ttime = 0;
-        tbase = 0;
-      }
-
-      gst_segment_init (&self->subtitle_segment, GST_FORMAT_TIME);
-      self->subtitle_segment.start = tstart;
-      self->subtitle_segment.stop = tstop;
-      self->subtitle_segment.base = tbase;
-      self->subtitle_segment.time = ttime;
-      self->subtitle_segment.position = tposition;
-      self->subtitle_segment.duration = tduration;
-    }
-    GST_DEBUG_OBJECT (pad, "New subtitle segment: %" GST_SEGMENT_FORMAT,
-        &self->subtitle_segment);
-  }
   gst_event_unref (event);
 
 out:
