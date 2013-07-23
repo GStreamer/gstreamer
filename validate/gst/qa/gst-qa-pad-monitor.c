@@ -40,6 +40,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_qa_pad_monitor_debug);
 G_DEFINE_TYPE_WITH_CODE (GstQaPadMonitor, gst_qa_pad_monitor,
     GST_TYPE_QA_MONITOR, _do_init);
 
+#define PAD_IS_IN_PUSH_MODE(p) ((p)->mode == GST_ACTIVATE_PUSH)
 #define PENDING_FIELDS "pending-fields"
 
 typedef struct
@@ -525,7 +526,8 @@ gst_qa_pad_monitor_check_first_buffer (GstQaPadMonitor * pad_monitor,
   if (G_UNLIKELY (pad_monitor->first_buffer)) {
     pad_monitor->first_buffer = FALSE;
 
-    if (!pad_monitor->has_segment) {
+    if (!pad_monitor->has_segment
+        && PAD_IS_IN_PUSH_MODE (GST_QA_PAD_MONITOR_GET_PAD (pad_monitor))) {
       GST_QA_MONITOR_REPORT_WARNING (pad_monitor, FALSE, EVENT, EXPECTED,
           "Received buffer before Segment event");
     }
