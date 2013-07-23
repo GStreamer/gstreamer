@@ -1366,43 +1366,6 @@ _pad_blocked_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
     goto out;
   }
 
-  /* Send segments to the renderer if necessary. These are not sent
-   * outside this element because of the proxy pad event handler */
-  if (self->video_segment.format != GST_FORMAT_UNDEFINED) {
-    GstEvent *event1;
-    GstPad *sink;
-
-    if (self->pre_colorspace) {
-      sink = gst_element_get_static_pad (self->pre_colorspace, "sink");
-    } else {
-      sink = _get_video_pad ((self->renderer) ? self->renderer : self->overlay);
-    }
-
-    _generate_update_segment_event (sink, &self->video_segment, &event1);
-    GST_DEBUG_OBJECT (self,
-        "Pushing video update segment event: %" GST_PTR_FORMAT,
-        gst_event_get_structure (event1));
-    gst_pad_send_event (sink, event1);
-    gst_object_unref (sink);
-  }
-
-  if (self->subtitle_segment.format != GST_FORMAT_UNDEFINED) {
-    GstEvent *event1;
-    GstPad *sink;
-
-    if (self->renderer)
-      sink = _get_sub_pad (self->renderer);
-    else
-      sink = gst_element_get_static_pad (self->parser, "sink");
-
-    _generate_update_segment_event (sink, &self->subtitle_segment, &event1);
-    GST_DEBUG_OBJECT (self,
-        "Pushing subtitle update segment event: %" GST_PTR_FORMAT,
-        gst_event_get_structure (event1));
-    gst_pad_send_event (sink, event1);
-    gst_object_unref (sink);
-  }
-
   GST_DEBUG_OBJECT (self, "Everything worked, unblocking pads");
   unblock_video (self);
   unblock_subtitle (self);
