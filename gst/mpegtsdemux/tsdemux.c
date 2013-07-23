@@ -329,6 +329,9 @@ gst_ts_demux_reset (MpegTSBase * base)
     gst_event_unref (demux->update_segment);
     demux->update_segment = NULL;
   }
+
+  demux->have_group_id = FALSE;
+  demux->group_id = G_MAXUINT;
 }
 
 static void
@@ -684,6 +687,7 @@ static GstPad *
 create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
     MpegTSBaseProgram * program)
 {
+  GstTSDemux *demux = GST_TS_DEMUX (base);
   TSDemuxStream *stream = (TSDemuxStream *) bstream;
   gchar *name = NULL;
   GstCaps *caps = NULL;
@@ -964,6 +968,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
 
 done:
   if (template && name && caps) {
+    GstEvent *event;
     gchar *stream_id;
 
     GST_LOG ("stream:%p creating pad with name %s and caps %" GST_PTR_FORMAT,
@@ -974,7 +979,23 @@ done:
     stream_id =
         gst_pad_create_stream_id_printf (pad, GST_ELEMENT_CAST (base), "%08x",
         bstream->pid);
-    gst_pad_push_event (pad, gst_event_new_stream_start (stream_id));
+
+    event = gst_pad_get_sticky_event (base->sinkpad, GST_EVENT_STREAM_START, 0);
+    if (event) {
+      if (gst_event_parse_group_id (event, &demux->group_id))
+        demux->have_group_id = TRUE;
+      else
+        demux->have_group_id = FALSE;
+      gst_event_unref (event);
+    } else if (!demux->have_group_id) {
+      demux->have_group_id = TRUE;
+      demux->group_id = gst_util_group_id_next ();
+    }
+    event = gst_event_new_stream_start (stream_id);
+    if (demux->have_group_id)
+      gst_event_set_group_id (event, demux->group_id);
+
+    gst_pad_push_event (pad, event);
     g_free (stream_id);
     gst_pad_set_caps (pad, caps);
     gst_pad_set_query_function (pad, gst_ts_demux_srcpad_query);
