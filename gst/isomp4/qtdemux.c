@@ -10165,15 +10165,46 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('h', 'd', 'v', '1'): /* HDV 720p30 */
     case GST_MAKE_FOURCC ('h', 'd', 'v', '2'): /* HDV 1080i60 */
     case GST_MAKE_FOURCC ('h', 'd', 'v', '3'): /* HDV 1080i50 */
+    case GST_MAKE_FOURCC ('h', 'd', 'v', '4'): /* HDV 720p24 */
     case GST_MAKE_FOURCC ('h', 'd', 'v', '5'): /* HDV 720p25 */
-    case GST_MAKE_FOURCC ('h', 'd', 'v', '6'): /* HDV 1080i60 */
+    case GST_MAKE_FOURCC ('h', 'd', 'v', '6'): /* HDV 1080p24 */
+    case GST_MAKE_FOURCC ('h', 'd', 'v', '7'): /* HDV 1080p25 */
+    case GST_MAKE_FOURCC ('h', 'd', 'v', '8'): /* HDV 1080p30 */
+    case GST_MAKE_FOURCC ('h', 'd', 'v', '9'): /* HDV 720p60 */
+    case GST_MAKE_FOURCC ('h', 'd', 'v', 'a'): /* HDV 720p50 */
     case GST_MAKE_FOURCC ('m', 'x', '5', 'n'): /* MPEG2 IMX NTSC 525/60 50mb/s produced by FCP */
     case GST_MAKE_FOURCC ('m', 'x', '5', 'p'): /* MPEG2 IMX PAL 625/60 50mb/s produced by FCP */
     case GST_MAKE_FOURCC ('m', 'x', '4', 'n'): /* MPEG2 IMX NTSC 525/60 40mb/s produced by FCP */
     case GST_MAKE_FOURCC ('m', 'x', '4', 'p'): /* MPEG2 IMX PAL 625/60 40mb/s produced by FCP */
     case GST_MAKE_FOURCC ('m', 'x', '3', 'n'): /* MPEG2 IMX NTSC 525/60 30mb/s produced by FCP */
     case GST_MAKE_FOURCC ('m', 'x', '3', 'p'): /* MPEG2 IMX PAL 625/50 30mb/s produced by FCP */
-    case GST_MAKE_FOURCC ('x', 'd', 'v', '2'): /* XDCAM HD 1080i60 */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', '1'): /* XDCAM HD 720p30 35Mb/s */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', '2'): /* XDCAM HD 1080i60 35Mb/s */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', '3'): /* XDCAM HD 1080i50 35Mb/s */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', '4'): /* XDCAM HD 720p24 35Mb/s */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', '5'): /* XDCAM HD 720p25 35Mb/s */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', '6'): /* XDCAM HD 1080p24 35Mb/s */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', '7'): /* XDCAM HD 1080p25 35Mb/s */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', '8'): /* XDCAM HD 1080p30 35Mb/s */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', '9'): /* XDCAM HD 720p60 35Mb/s */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', 'a'): /* XDCAM HD 720p50 35Mb/s */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', 'b'): /* XDCAM EX 1080i60 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', 'c'): /* XDCAM EX 1080i50 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', 'd'): /* XDCAM HD 1080p24 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', 'e'): /* XDCAM HD 1080p25 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', 'v', 'f'): /* XDCAM HD 1080p30 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', '5', '1'): /* XDCAM HD422 720p30 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', '5', '4'): /* XDCAM HD422 720p24 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', '5', '5'): /* XDCAM HD422 720p25 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', '5', '9'): /* XDCAM HD422 720p60 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', '5', 'a'): /* XDCAM HD422 720p50 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', '5', 'b'): /* XDCAM HD422 1080i50 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', '5', 'c'): /* XDCAM HD422 1080i50 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', '5', 'd'): /* XDCAM HD422 1080p24 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', '5', 'e'): /* XDCAM HD422 1080p25 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', '5', 'f'): /* XDCAM HD422 1080p30 50Mb/s CBR */
+    case GST_MAKE_FOURCC ('x', 'd', 'h', 'd'): /* XDCAM HD 540p */
+    case GST_MAKE_FOURCC ('x', 'd', 'h', '2'): /* XDCAM HD422 540p */
     case GST_MAKE_FOURCC ('A', 'V', 'm', 'p'): /* AVID IMX PAL */
     case GST_MAKE_FOURCC ('m', 'p', 'g', '2'): /* AVID IMX PAL */
       _codec ("MPEG-2 video");
