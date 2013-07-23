@@ -1243,6 +1243,7 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   GstMapInfo key_info, encrypted_info, decrypted_info;
   gnutls_cipher_hd_t aes_ctx;
   gnutls_datum_t key_d, iv_d;
+  gsize unpadded_size;
 
   GST_INFO_OBJECT (demux, "Fetching key %s", key);
   key_fragment = gst_uri_downloader_fetch_uri (demux->downloader, key);
@@ -1269,9 +1270,15 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
       decrypted_info.data, decrypted_info.size);
   gnutls_cipher_deinit (aes_ctx);
 
+  /* Handle pkcs7 unpadding here */
+  unpadded_size =
+      decrypted_info.size - decrypted_info.data[decrypted_info.size - 1];
+
   gst_buffer_unmap (decrypted_buffer, &decrypted_info);
   gst_buffer_unmap (encrypted_buffer, &encrypted_info);
   gst_buffer_unmap (key_buffer, &key_info);
+
+  gst_buffer_resize (decrypted_buffer, 0, unpadded_size);
 
   gst_buffer_unref (key_buffer);
   gst_buffer_unref (encrypted_buffer);
