@@ -688,6 +688,7 @@ gst_decklink_src_send_initial_events (GstDecklinkSrc * src)
 {
   GstSegment segment;
   GstEvent *event;
+  guint group_id;
   guint32 audio_id, video_id;
   gchar stream_id[9];
 
@@ -697,11 +698,16 @@ gst_decklink_src_send_initial_events (GstDecklinkSrc * src)
   while (video_id == audio_id)
     video_id = g_random_int ();
 
+  group_id = gst_util_group_id_next ();
   g_snprintf (stream_id, sizeof (stream_id), "%08x", audio_id);
-  gst_pad_push_event (src->audiosrcpad, gst_event_new_stream_start (stream_id));
+  event = gst_event_new_stream_start (stream_id);
+  gst_event_set_group_id (event, group_id);
+  gst_pad_push_event (src->audiosrcpad, event);
 
   g_snprintf (stream_id, sizeof (stream_id), "%08x", video_id);
-  gst_pad_push_event (src->videosrcpad, gst_event_new_stream_start (stream_id));
+  event = gst_event_new_stream_start (stream_id);
+  gst_event_set_group_id (event, group_id);
+  gst_pad_push_event (src->videosrcpad, event);
 
   /* segment */
   gst_segment_init (&segment, GST_FORMAT_TIME);
