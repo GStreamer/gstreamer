@@ -175,6 +175,9 @@ gst_midi_parse_init (GstMidiParse * filter)
   gst_segment_init (&filter->segment, GST_FORMAT_TIME);
 
   filter->adapter = gst_adapter_new ();
+
+  filter->have_group_id = FALSE;
+  filter->group_id = G_MAXUINT;
 }
 
 static void
@@ -973,6 +976,7 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
   GstCaps *outcaps;
   guint8 *data;
   guint size, offset, length;
+  GstEvent *event;
   gchar *stream_id;
 
   GST_DEBUG_OBJECT (midiparse, "Parsing song");
@@ -1004,8 +1008,25 @@ gst_midi_parse_parse_song (GstMidiParse * midiparse)
   GST_DEBUG_OBJECT (midiparse, "song duration %" GST_TIME_FORMAT,
       GST_TIME_ARGS (midiparse->segment.duration));
 
-  stream_id = gst_pad_create_stream_id (midiparse->srcpad, GST_ELEMENT_CAST (midiparse), NULL);
-  gst_pad_push_event (midiparse->srcpad, gst_event_new_stream_start (stream_id));
+  stream_id =
+      gst_pad_create_stream_id (midiparse->srcpad, GST_ELEMENT_CAST (midiparse),
+      NULL);
+  event =
+      gst_pad_get_sticky_event (midiparse->sinkpad, GST_EVENT_STREAM_START, 0);
+  if (event) {
+    if (gst_event_parse_group_id (event, &midiparse->group_id))
+      midiparse->have_group_id = TRUE;
+    else
+      midiparse->have_group_id = FALSE;
+    gst_event_unref (event);
+  } else if (!midiparse->have_group_id) {
+    midiparse->have_group_id = TRUE;
+    midiparse->group_id = gst_util_group_id_next ();
+  }
+  event = gst_event_new_stream_start (stream_id);
+  if (midiparse->have_group_id)
+    gst_event_set_group_id (event, midiparse->group_id);
+  gst_pad_push_event (midiparse->srcpad, event);
   g_free (stream_id);
 
   outcaps = gst_pad_get_pad_template_caps (midiparse->srcpad);
@@ -1273,6 +1294,8 @@ gst_midi_parse_reset (GstMidiParse * midiparse)
   g_list_free (midiparse->tracks);
   midiparse->tracks = NULL;
   midiparse->track_count = 0;
+  midiparse->have_group_id = FALSE;
+  midiparse->group_id = G_MAXUINT;
 }
 
 static GstStateChangeReturn

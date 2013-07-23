@@ -55,6 +55,9 @@ struct _GstMidiParse
 
   GstPad *sinkpad, *srcpad;
 
+  gboolean have_group_id;
+  guint group_id;
+
   /* input stream properties */
   GstMidiParseState state;
 
