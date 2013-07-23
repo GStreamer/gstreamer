@@ -44,22 +44,16 @@ G_STMT_START {                                                                 \
 
 #define GST_QA_REPORT_CRITICAL(m, repeat, area, subarea, ...)          \
 G_STMT_START {                                                                 \
-  GST_ERROR_OBJECT (m, "Critical report: %s: %s: %s",                          \
-      #area, #subarea, __VA_ARGS__);                                           \
   GST_QA_REPORT(m, repeat, CRITICAL, area, subarea, __VA_ARGS__);      \
 } G_STMT_END
 
 #define GST_QA_REPORT_WARNING(m, repeat, area, subarea, ...)           \
 G_STMT_START {                                                                 \
-  GST_WARNING_OBJECT (m, "Warning report: %s: %s: %s",                         \
-      #area, #subarea, __VA_ARGS__);                                           \
   GST_QA_REPORT(m, repeat, WARNING, area, subarea, __VA_ARGS__);       \
 } G_STMT_END
 
 #define GST_QA_REPORT_ISSUE(m, repeat, area, subarea, ...)             \
 G_STMT_START {                                                                 \
-  GST_WARNING_OBJECT (m, "Issue report: %s: %s: %s",                           \
-      #area, #subarea, __VA_ARGS__);                                           \
   GST_QA_REPORT(m, repeat, ISSUE, area, subarea, __VA_ARGS__);         \
 } G_STMT_END
 #else /* G_HAVE_GNUC_VARARGS */
@@ -73,22 +67,16 @@ G_STMT_START {                                                                 \
 
 #define GST_QA_REPORT_CRITICAL(m, repeat, area, subarea, args...)      \
 G_STMT_START {                                                                 \
-  GST_ERROR_OBJECT (m, "Critical report: %s: %s: %s",                          \
-      #area, #subarea, ##args);                                                \
   GST_QA_REPORT(m, repeat, CRITICAL, area, subarea, ##args);           \
 } G_STMT_END
 
 #define GST_QA_REPORT_WARNING(m, repeat, area, subarea, args...)       \
 G_STMT_START {                                                                 \
-  GST_WARNING_OBJECT (m, "Warning report: %s: %s: %s",                         \
-      #area, #subarea, ##args);                                                \
   GST_QA_REPORT(m, repeat, WARNING, area, subarea, ##args);            \
 } G_STMT_END
 
 #define GST_QA_REPORT_ISSUE(m, repeat, area, subarea, args...)         \
 G_STMT_START {                                                                 \
-  GST_WARNING_OBJECT (m, "Issue report: %s: %s: %s",                           \
-      #area, #subarea, ##args);                                                \
   GST_QA_REPORT(m, repeat, ISSUE, area, subarea, ##args);              \
 } G_STMT_END
 #endif /* G_HAVE_ISO_VARARGS */

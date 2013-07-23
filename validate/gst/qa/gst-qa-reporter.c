@@ -22,6 +22,9 @@
 
 #define REPORTER_PRIVATE "gst-qa-reporter-private"
 
+GST_DEBUG_CATEGORY_STATIC (gst_qa_reporter);
+#define GST_CAT_DEFAULT gst_qa_reporter
+
 typedef struct _GstQaReporterPrivate
 {
   GstQaRunner *runner;
@@ -32,6 +35,9 @@ typedef struct _GstQaReporterPrivate
 static void
 gst_qa_reporter_default_init (GstQaReporterInterface * iface)
 {
+  GST_DEBUG_CATEGORY_INIT (gst_qa_reporter, "gstqareporter",
+      GST_DEBUG_FG_MAGENTA, "gst qa reporter");
+
   g_object_interface_install_property (iface,
       g_param_spec_object ("qa-runner", "QA Runner", "The QA runner to "
           "report errors to", GST_TYPE_QA_RUNNER,
@@ -96,6 +102,15 @@ gst_qa_report_valist (GstQaReporter * reporter, gboolean repeat,
 
     g_hash_table_insert (priv->reports, report_id, report);
   }
+
+  if (level == GST_QA_REPORT_LEVEL_CRITICAL)
+    GST_ERROR ("<%s>: %s", priv->name, message);
+  else if (level == GST_QA_REPORT_LEVEL_WARNING)
+    GST_WARNING ("<%s>: %s", priv->name, message);
+  else if (level == GST_QA_REPORT_LEVEL_ISSUE)
+    GST_LOG ("<%s>: %s", priv->name, message);
+  else
+    GST_DEBUG ("<%s>: %s", priv->name, message);
 
   GST_INFO_OBJECT (reporter, "Received error report %d : %d : %d : %s",
       level, area, subarea, message);
