@@ -515,7 +515,10 @@ rtp_session_init (RTPSession * sess)
   rtp_source_set_sdes_string (sess->source, GST_RTCP_SDES_TOOL, "GStreamer");
 
   sess->first_rtcp = TRUE;
+  sess->next_rtcp_check_time = GST_CLOCK_TIME_NONE;
+
   sess->allow_early = TRUE;
+  sess->next_early_rtcp_time = GST_CLOCK_TIME_NONE;
   sess->rtcp_feedback_retention_window = DEFAULT_RTCP_FEEDBACK_RETENTION_WINDOW;
   sess->rtcp_immediate_feedback_threshold =
       DEFAULT_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD;
