@@ -1160,7 +1160,7 @@
       <property name="MessageForward" cname="message-forward" type="gboolean" readable="true" writeable="true" construct="false" construct-only="false"/>
       <field cname="element" access="public" writeable="false" readable="true" name="Element" type="GstElement*"/>
       <field cname="numchildren" access="public" writeable="false" readable="true" name="Numchildren" type="gint"/>
-      <field cname="children" access="public" writeable="false" readable="true" name="Children" type="GstElement*" element_type="GstElement*"/>
+      <field cname="children" access="public" writeable="false" readable="true" name="Children" type="GList*" element_type="GstElement*"/>
       <field cname="children_cookie" access="public" writeable="false" readable="true" name="ChildrenCookie" type="guint32"/>
       <field cname="child_bus" access="public" writeable="false" readable="true" name="ChildBus" type="GstBus*"/>
       <field cname="messages" access="public" writeable="false" readable="true" name="Messages" type="GList*" element_type="GList*">
@@ -1947,7 +1947,7 @@
         </field>
         <field cname="metadata" access="public" writeable="false" readable="true" name="Metadata" type="gpointer"/>
         <field cname="elementfactory" access="public" writeable="false" readable="true" name="Elementfactory" type="GstElementFactory*"/>
-        <field cname="padtemplates" access="public" writeable="false" readable="true" name="Padtemplates" type="gpointer" element_type="gpointer"/>
+        <field cname="padtemplates" access="public" writeable="false" readable="true" name="Padtemplates" type="GList*" element_type="gpointer"/>
         <field cname="numpadtemplates" access="public" writeable="false" readable="true" name="Numpadtemplates" type="gint"/>
         <field cname="pad_templ_cookie" access="public" writeable="false" readable="true" name="PadTemplCookie" type="guint32"/>
         <method signal_vm="pad_added"/>
@@ -2000,7 +2000,7 @@
         </parameters>
       </method>
       <method name="GetPadTemplateList" cname="gst_element_class_get_pad_template_list" shared="true">
-        <return-type type="GstPadTemplate*" element_type="GstPadTemplate*"/>
+        <return-type type="GList*" element_type="GstPadTemplate*"/>
         <parameters/>
       </method>
       <method name="SetMetadata" cname="gst_element_class_set_metadata" shared="true">
@@ -2466,11 +2466,11 @@
       <field cname="base_time" access="public" writeable="false" readable="true" name="BaseTime" type="gint64"/>
       <field cname="start_time" access="public" writeable="false" readable="true" name="StartTime" type="guint64"/>
       <field cname="numpads" access="public" writeable="false" readable="true" name="Numpads" type="guint16"/>
-      <field cname="pads" access="public" writeable="false" readable="true" name="Pads" type="GstPad*" element_type="GstPad*"/>
+      <field cname="pads" access="public" writeable="false" readable="true" name="Pads" type="GList*" element_type="GstPad*"/>
       <field cname="numsrcpads" access="public" writeable="false" readable="true" name="Numsrcpads" type="guint16"/>
-      <field cname="srcpads" access="public" writeable="false" readable="true" name="Srcpads" type="GstPad*" element_type="GstPad*"/>
+      <field cname="srcpads" access="public" writeable="false" readable="true" name="Srcpads" type="GList*" element_type="GstPad*"/>
       <field cname="numsinkpads" access="public" writeable="false" readable="true" name="Numsinkpads" type="guint16"/>
-      <field cname="sinkpads" access="public" writeable="false" readable="true" name="Sinkpads" type="GstPad*" element_type="GstPad*"/>
+      <field cname="sinkpads" access="public" writeable="false" readable="true" name="Sinkpads" type="GList*" element_type="GstPad*"/>
       <field cname="pads_cookie" access="public" writeable="false" readable="true" name="PadsCookie" type="guint32"/>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
       <signal name="NoMorePads" cname="no-more-pads" when="last" field_name="no_more_pads">
@@ -2502,9 +2502,9 @@
         </parameters>
       </method>
       <method name="ListFilter" cname="gst_element_factory_list_filter" shared="true">
-        <return-type type="GstElementFactory*" elements_owned="true" element_type="GstElementFactory*" owned="true"/>
+        <return-type type="GList*" element_type="GstElementFactory*" elements_owned="true" owned="true"/>
         <parameters>
-          <parameter name="list" type="GstElementFactory*" element_type="GstElementFactory*"/>
+          <parameter name="list" type="GList*" element_type="GstElementFactory*"/>
           <parameter name="caps" type="GstCaps*">
             <warning>missing glib:type-name</warning>
           </parameter>
@@ -2513,7 +2513,7 @@
         </parameters>
       </method>
       <method name="ListGetElements" cname="gst_element_factory_list_get_elements" shared="true">
-        <return-type type="GstElementFactory*" elements_owned="true" element_type="GstElementFactory*" owned="true"/>
+        <return-type type="GList*" element_type="GstElementFactory*" elements_owned="true" owned="true"/>
         <parameters>
           <parameter name="type" type="guint64"/>
           <parameter name="minrank" type="GstRank"/>
@@ -2583,7 +2583,7 @@
         <parameters/>
       </method>
       <method name="GetStaticPadTemplates" cname="gst_element_factory_get_static_pad_templates">
-        <return-type type="GList*" element_type="GList*">
+        <return-type type="const GList*" element_type="GList*">
           <warning>missing glib:type-name</warning>
         </return-type>
         <parameters/>
@@ -2696,7 +2696,7 @@
       <method name="CheckUniqueness" cname="gst_object_check_uniqueness" shared="true">
         <return-type type="gboolean"/>
         <parameters>
-          <parameter name="list" type="GstObject*" element_type="GstObject*"/>
+          <parameter name="list" type="GList*" element_type="GstObject*"/>
           <parameter name="name" type="const-gchar*"/>
         </parameters>
       </method>
@@ -2860,7 +2860,7 @@
       <field cname="name" access="public" writeable="false" readable="true" name="NameField" type="gchar*"/>
       <field cname="parent" access="public" writeable="false" readable="true" name="ParentField" type="GstObject*"/>
       <field cname="flags" access="public" writeable="false" readable="true" name="Flags" type="guint32"/>
-      <field cname="control_bindings" access="private" writeable="false" readable="false" name="ControlBindings" type="gpointer" element_type="gpointer"/>
+      <field cname="control_bindings" access="private" writeable="false" readable="false" name="ControlBindings" type="GList*" element_type="gpointer"/>
       <field cname="control_rate" access="private" writeable="false" readable="false" name="ControlRate" type="guint64"/>
       <field cname="last_sync" access="private" writeable="false" readable="false" name="LastSync" type="guint64"/>
       <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer"/>
@@ -3583,7 +3583,7 @@
       <method name="ListFree" cname="gst_plugin_list_free" shared="true">
         <return-type type="void"/>
         <parameters>
-          <parameter name="list" type="GstPlugin*" elements_owned="true" element_type="GstPlugin*" owned="true"/>
+          <parameter name="list" type="GList*" element_type="GstPlugin*" elements_owned="true" owned="true"/>
         </parameters>
       </method>
       <method name="LoadByName" cname="gst_plugin_load_by_name" shared="true">
@@ -3713,21 +3713,21 @@
         <return-type type="GType"/>
       </method>
       <method name="ListCopy" cname="gst_plugin_feature_list_copy" shared="true">
-        <return-type type="GstPluginFeature*" elements_owned="true" element_type="GstPluginFeature*" owned="true"/>
+        <return-type type="GList*" element_type="GstPluginFeature*" elements_owned="true" owned="true"/>
         <parameters>
-          <parameter name="list" type="GstPluginFeature*" element_type="GstPluginFeature*"/>
+          <parameter name="list" type="GList*" element_type="GstPluginFeature*"/>
         </parameters>
       </method>
       <method name="ListDebug" cname="gst_plugin_feature_list_debug" shared="true">
         <return-type type="void"/>
         <parameters>
-          <parameter name="list" type="GstPluginFeature*" element_type="GstPluginFeature*"/>
+          <parameter name="list" type="GList*" element_type="GstPluginFeature*"/>
         </parameters>
       </method>
       <method name="ListFree" cname="gst_plugin_feature_list_free" shared="true">
         <return-type type="void"/>
         <parameters>
-          <parameter name="list" type="GstPluginFeature*" elements_owned="true" element_type="GstPluginFeature*" owned="true"/>
+          <parameter name="list" type="GList*" element_type="GstPluginFeature*" elements_owned="true" owned="true"/>
         </parameters>
       </method>
       <method name="RankCompareFunc" cname="gst_plugin_feature_rank_compare_func" shared="true">
@@ -3867,7 +3867,7 @@
         </parameters>
       </method>
       <method name="FeatureFilter" cname="gst_registry_feature_filter">
-        <return-type type="GstPluginFeature*" elements_owned="true" element_type="GstPluginFeature*" owned="true"/>
+        <return-type type="GList*" element_type="GstPluginFeature*" elements_owned="true" owned="true"/>
         <parameters>
           <parameter closure="2" scope="call" name="filter" type="GstPluginFeatureFilter"/>
           <parameter name="first" type="gboolean"/>
@@ -3888,13 +3888,13 @@
         </parameters>
       </method>
       <method name="GetFeatureList" cname="gst_registry_get_feature_list">
-        <return-type type="GstPluginFeature*" elements_owned="true" element_type="GstPluginFeature*" owned="true"/>
+        <return-type type="GList*" element_type="GstPluginFeature*" elements_owned="true" owned="true"/>
         <parameters>
           <parameter name="type" type="GType"/>
         </parameters>
       </method>
       <method name="GetFeatureListByPlugin" cname="gst_registry_get_feature_list_by_plugin">
-        <return-type type="GstPluginFeature*" elements_owned="true" element_type="GstPluginFeature*" owned="true"/>
+        <return-type type="GList*" element_type="GstPluginFeature*" elements_owned="true" owned="true"/>
         <parameters>
           <parameter name="name" type="const-gchar*"/>
         </parameters>
@@ -3904,7 +3904,7 @@
         <parameters/>
       </method>
       <method name="GetPluginList" cname="gst_registry_get_plugin_list">
-        <return-type type="GstPlugin*" elements_owned="true" element_type="GstPlugin*" owned="true"/>
+        <return-type type="GList*" element_type="GstPlugin*" elements_owned="true" owned="true"/>
         <parameters/>
       </method>
       <method name="Lookup" cname="gst_registry_lookup">
@@ -3920,7 +3920,7 @@
         </parameters>
       </method>
       <method name="PluginFilter" cname="gst_registry_plugin_filter">
-        <return-type type="GstPlugin*" elements_owned="true" element_type="GstPlugin*" owned="true"/>
+        <return-type type="GList*" element_type="GstPlugin*" elements_owned="true" owned="true"/>
         <parameters>
           <parameter closure="2" scope="call" name="filter" type="GstPluginFilter"/>
           <parameter name="first" type="gboolean"/>
@@ -4158,7 +4158,7 @@
         <return-type type="GType"/>
       </method>
       <method name="GetList" cname="gst_type_find_factory_get_list" shared="true">
-        <return-type type="GstTypeFindFactory*" elements_owned="true" element_type="GstTypeFindFactory*" owned="true"/>
+        <return-type type="GList*" element_type="GstTypeFindFactory*" elements_owned="true" owned="true"/>
       </method>
       <method name="CallFunction" cname="gst_type_find_factory_call_function">
         <return-type type="void"/>
@@ -9065,7 +9065,7 @@
         </parameters>
       </method>
       <method name="DebugGetAllCategories" cname="gst_debug_get_all_categories" shared="true">
-        <return-type type="GSList*" elements_owned="true" element_type="GSList*">
+        <return-type type="GSList*" element_type="GSList*" elements_owned="true">
           <warning>missing glib:type-name</warning>
         </return-type>
       </method>
