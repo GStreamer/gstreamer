@@ -79,6 +79,11 @@ main (int argc, gchar ** argv)
   ctx = g_option_context_new ("- runs QA tests for a pipeline.");
   g_option_context_add_main_entries (ctx, options, NULL);
 
+  if (argc == 1) {
+    g_print ("%s", g_option_context_get_help (ctx, FALSE, NULL));
+    exit (1);
+  }
+
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_printerr ("Error initializing: %s\n", err->message);
     g_option_context_free (ctx);
