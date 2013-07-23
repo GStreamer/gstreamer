@@ -76,25 +76,6 @@ gst_play_sink_convert_bin_post_missing_element_message (GstPlaySinkConvertBin *
   gst_element_post_message (GST_ELEMENT_CAST (self), msg);
 }
 
-static void
-distribute_running_time (GstElement * element, const GstSegment * segment)
-{
-  GstEvent *event;
-  GstPad *pad;
-
-  pad = gst_element_get_static_pad (element, "sink");
-
-  gst_pad_send_event (pad, gst_event_new_flush_start ());
-  gst_pad_send_event (pad, gst_event_new_flush_stop (FALSE));
-
-  if (segment->format != GST_FORMAT_UNDEFINED) {
-    event = gst_event_new_segment (segment);
-    gst_pad_send_event (pad, event);
-  }
-
-  gst_object_unref (pad);
-}
-
 void
 gst_play_sink_convert_bin_add_conversion_element (GstPlaySinkConvertBin * self,
     GstElement * el)
@@ -197,7 +178,6 @@ gst_play_sink_convert_bin_on_element_added (GstElement * element,
     GstPlaySinkConvertBin * self)
 {
   gst_element_sync_state_with_parent (element);
-  distribute_running_time (element, &self->segment);
 }
 
 static GstPadProbeReturn
@@ -272,25 +252,6 @@ gst_play_sink_convert_bin_sink_event (GstPad * pad, GstObject * parent,
   }
 
   ret = gst_pad_event_default (pad, parent, gst_event_ref (event));
-
-  if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
-    GstSegment seg;
-
-    GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
-    gst_event_copy_segment (event, &seg);
-
-    GST_DEBUG_OBJECT (self, "Segment before %" GST_SEGMENT_FORMAT,
-        &self->segment);
-    self->segment = seg;
-    GST_DEBUG_OBJECT (self, "Segment after %" GST_SEGMENT_FORMAT,
-        &self->segment);
-    GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
-  } else if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
-    GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
-    GST_DEBUG_OBJECT (self, "Resetting segment");
-    gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
-    GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
-  }
 
   gst_event_unref (event);
 
@@ -572,7 +533,6 @@ gst_play_sink_convert_bin_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
-      gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
       gst_play_sink_convert_bin_set_targets (self, TRUE);
       self->raw = FALSE;
       GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
@@ -588,7 +548,6 @@ gst_play_sink_convert_bin_change_state (GstElement * element,
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_PLAY_SINK_CONVERT_BIN_LOCK (self);
-      gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
       gst_play_sink_convert_bin_set_targets (self, TRUE);
       self->raw = FALSE;
       GST_PLAY_SINK_CONVERT_BIN_UNLOCK (self);
@@ -639,7 +598,6 @@ gst_play_sink_convert_bin_init (GstPlaySinkConvertBin * self)
   GstPadTemplate *templ;
 
   g_mutex_init (&self->lock);
-  gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
 
   templ = gst_static_pad_template_get (&sinktemplate);
   self->sinkpad = gst_ghost_pad_new_no_target_from_template ("sink", templ);

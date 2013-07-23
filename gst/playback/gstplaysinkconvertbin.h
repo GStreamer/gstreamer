@@ -66,7 +66,6 @@ struct _GstPlaySinkConvertBin
 
   GstPad *sinkpad, *sink_proxypad;
   guint sink_proxypad_block_id;
-  GstSegment segment;
 
   GstPad *srcpad;
 
