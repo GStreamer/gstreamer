@@ -157,7 +157,7 @@ gst_stream_combiner_sink_event (GstPad * pad, GstObject * parent,
   /* FLUSH_STOP : lock, unmark as flushing, unlock, if was flushing forward */
   /* OTHER : if selected pad forward */
   if (event)
-    return gst_pad_event_default (pad, parent, event);
+    return gst_pad_push_event (stream_combiner->srcpad, event);
   return FALSE;
 }
 
