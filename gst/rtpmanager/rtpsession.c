@@ -590,20 +590,28 @@ rtp_session_set_property (GObject * object, guint prop_id,
       rtp_session_set_internal_ssrc (sess, g_value_get_uint (value));
       break;
     case PROP_BANDWIDTH:
+      RTP_SESSION_LOCK (sess);
       sess->bandwidth = g_value_get_double (value);
       sess->recalc_bandwidth = TRUE;
+      RTP_SESSION_UNLOCK (sess);
       break;
     case PROP_RTCP_FRACTION:
+      RTP_SESSION_LOCK (sess);
       sess->rtcp_bandwidth = g_value_get_double (value);
       sess->recalc_bandwidth = TRUE;
+      RTP_SESSION_UNLOCK (sess);
       break;
     case PROP_RTCP_RR_BANDWIDTH:
+      RTP_SESSION_LOCK (sess);
       sess->rtcp_rr_bandwidth = g_value_get_int (value);
       sess->recalc_bandwidth = TRUE;
+      RTP_SESSION_UNLOCK (sess);
       break;
     case PROP_RTCP_RS_BANDWIDTH:
+      RTP_SESSION_LOCK (sess);
       sess->rtcp_rs_bandwidth = g_value_get_int (value);
       sess->recalc_bandwidth = TRUE;
+      RTP_SESSION_UNLOCK (sess);
       break;
     case PROP_RTCP_MTU:
       sess->mtu = g_value_get_uint (value);
