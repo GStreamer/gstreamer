@@ -274,8 +274,14 @@ gst_qa_pad_monitor_pad_should_proxy_othercaps (GstQaPadMonitor * monitor)
       GST_QA_ELEMENT_MONITOR_ELEMENT_IS_ENCODER (parent);
 }
 
+
+/* Check if the field @f from @s2 (if present) is represented in @s1
+ * Represented here means either equal or @s1's value is in a list/range
+ * from @s2
+ */
 static gboolean
-_structures_field_match (GstStructure * s1, GstStructure * s2, const gchar * f)
+_structures_field_is_contained (GstStructure * s1, GstStructure * s2,
+    const gchar * f)
 {
   const GValue *v1;
   const GValue *v2;
@@ -288,7 +294,62 @@ _structures_field_match (GstStructure * s1, GstStructure * s2, const gchar * f)
   if (!v1)
     return FALSE;
 
-  return gst_value_compare (v1, v2) == GST_VALUE_EQUAL;
+  if (gst_value_compare (v1, v2) == GST_VALUE_EQUAL)
+    return TRUE;
+
+  if (GST_VALUE_HOLDS_LIST (v2)) {
+    gint i;
+    for (i = 0; i < gst_value_list_get_size (v2); i++) {
+      const GValue *v2_subvalue = gst_value_list_get_value (v2, i);
+      if (gst_value_compare (v1, v2_subvalue) == GST_VALUE_EQUAL)
+        return TRUE;
+    }
+  }
+
+  if (GST_VALUE_HOLDS_ARRAY (v2)) {
+    gint i;
+    for (i = 0; i < gst_value_array_get_size (v2); i++) {
+      const GValue *v2_subvalue = gst_value_array_get_value (v2, i);
+      if (gst_value_compare (v1, v2_subvalue) == GST_VALUE_EQUAL)
+        return TRUE;
+    }
+  }
+
+  if (GST_VALUE_HOLDS_INT_RANGE (v2)) {
+    gint min, max;
+
+    min = gst_value_get_int_range_min (v2);
+    max = gst_value_get_int_range_max (v2);
+
+    if (G_VALUE_HOLDS_INT (v1)) {
+      gint v = g_value_get_int (v1);
+
+      return v >= min && v <= max;
+    } else {
+      /* TODO compare int ranges with int ranges
+       * or with lists if useful */
+    }
+  }
+
+  if (GST_VALUE_HOLDS_FRACTION_RANGE (v2)) {
+    const GValue *min, *max;
+
+    min = gst_value_get_fraction_range_min (v2);
+    max = gst_value_get_fraction_range_max (v2);
+
+    if (GST_VALUE_HOLDS_FRACTION (v1)) {
+      gint v_min = gst_value_compare (v1, min);
+      gint v_max = gst_value_compare (v1, max);
+
+      return (v_min == GST_VALUE_EQUAL || v_min == GST_VALUE_GREATER_THAN) &&
+          (v_max == GST_VALUE_EQUAL || v_max == GST_VALUE_LESS_THAN);
+    } else {
+      /* TODO compare fraction ranges with fraction ranges
+       * or with lists if useful */
+    }
+  }
+
+  return FALSE;
 }
 
 static void
@@ -311,15 +372,19 @@ gst_qa_pad_monitor_check_caps_fields_proxied (GstQaPadMonitor * monitor,
 
     otherstructure = gst_caps_get_structure (othercaps, i);
 
+    /* look for a proxied version of 'otherstructure' */
     if (_structure_is_video (otherstructure)) {
       for (j = 0; j < gst_caps_get_size (caps); j++) {
         structure = gst_caps_get_structure (caps, j);
         if (_structure_is_video (structure)) {
           type_match = TRUE;
-          if (_structures_field_match (structure, otherstructure, "width") &&
-              _structures_field_match (structure, otherstructure, "height") &&
-              _structures_field_match (structure, otherstructure, "framerate")
-              && _structures_field_match (structure, otherstructure,
+          if (_structures_field_is_contained (structure, otherstructure,
+                  "width")
+              && _structures_field_is_contained (structure, otherstructure,
+                  "height")
+              && _structures_field_is_contained (structure, otherstructure,
+                  "framerate")
+              && _structures_field_is_contained (structure, otherstructure,
                   "pixel-aspect-ratio")) {
             found = TRUE;
             break;
@@ -331,8 +396,9 @@ gst_qa_pad_monitor_check_caps_fields_proxied (GstQaPadMonitor * monitor,
         structure = gst_caps_get_structure (caps, j);
         if (_structure_is_audio (structure)) {
           type_match = TRUE;
-          if (_structures_field_match (structure, otherstructure, "rate") &&
-              _structures_field_match (structure, otherstructure, "channels")) {
+          if (_structures_field_is_contained (structure, otherstructure, "rate")
+              && _structures_field_is_contained (structure, otherstructure,
+                  "channels")) {
             found = TRUE;
             break;
           }
@@ -343,8 +409,8 @@ gst_qa_pad_monitor_check_caps_fields_proxied (GstQaPadMonitor * monitor,
     if (type_match && !found) {
       GST_QA_MONITOR_REPORT_WARNING (monitor, FALSE, CAPS_NEGOTIATION,
           GET_CAPS,
-          "Peer pad structure %" GST_PTR_FORMAT " has no similar version "
-          "on pad's caps %" GST_PTR_FORMAT, otherstructure, caps);
+          "Peer pad structure '%" GST_PTR_FORMAT "' has no similar version "
+          "on pad's caps '%" GST_PTR_FORMAT "'", otherstructure, caps);
     }
   }
 }
@@ -1231,7 +1297,10 @@ gst_qa_pad_monitor_getcaps_func (GstPad * pad)
 
   if (ret) {
     gst_qa_pad_monitor_check_caps_complete (pad_monitor, ret);
-    gst_qa_pad_monitor_check_caps_fields_proxied (pad_monitor, ret);
+
+    if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
+      gst_qa_pad_monitor_check_caps_fields_proxied (pad_monitor, ret);
+    }
   }
 
   return ret;
