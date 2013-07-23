@@ -186,6 +186,7 @@ gst_qa_pad_monitor_get_othercaps (GstQaPadMonitor * monitor)
   GstIterator *iter;
   gboolean done;
   GstPad *otherpad;
+  GstCaps *peercaps;
 
   iter = gst_pad_iterate_internal_links (GST_QA_PAD_MONITOR_GET_PAD (monitor));
   done = FALSE;
@@ -195,7 +196,9 @@ gst_qa_pad_monitor_get_othercaps (GstQaPadMonitor * monitor)
 
         /* TODO What would be the correct caps operation to merge the caps in
          * case one sink is internally linked to multiple srcs? */
-        gst_caps_merge (caps, gst_pad_peer_get_caps_reffed (otherpad));
+        peercaps = gst_pad_peer_get_caps_reffed (otherpad);
+        if (peercaps)
+          gst_caps_merge (caps, peercaps);
         gst_object_unref (otherpad);
 
         break;
