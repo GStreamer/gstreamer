@@ -107,6 +107,9 @@ struct _GstFluPSDemux
   gboolean random_access;       /* If we operate in pull mode */
   gboolean flushing;
 
+  gboolean have_group_id;
+  guint group_id;
+
   GstAdapter *adapter;
   GstAdapter *rev_adapter;
   guint64 adapter_offset;
