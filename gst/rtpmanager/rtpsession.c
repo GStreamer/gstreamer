@@ -2067,7 +2067,8 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
       /* some members went away since the previous timeout estimate.
        * Perform reverse reconsideration but only when we are not scheduling a
        * BYE ourselves. */
-      if (arrival->current_time < sess->next_rtcp_check_time) {
+      if (sess->next_rtcp_check_time != GST_CLOCK_TIME_NONE &&
+          arrival->current_time < sess->next_rtcp_check_time) {
         GstClockTime time_remaining;
 
         time_remaining = sess->next_rtcp_check_time - arrival->current_time;
@@ -2489,6 +2490,7 @@ add_bitrates (gpointer key, RTPSource * source, gdouble * bandwidth)
   *bandwidth += source->bitrate;
 }
 
+/* must be called with session lock */
 static GstClockTime
 calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
     gboolean first)
@@ -2569,7 +2571,11 @@ rtp_session_schedule_bye_locked (RTPSession * sess, const gchar * reason,
   /* reschedule transmission */
   sess->last_rtcp_send_time = current_time;
   interval = calculate_rtcp_interval (sess, FALSE, TRUE);
-  sess->next_rtcp_check_time = current_time + interval;
+
+  if (interval != GST_CLOCK_TIME_NONE)
+    sess->next_rtcp_check_time = current_time + interval;
+  else
+    sess->next_rtcp_check_time = GST_CLOCK_TIME_NONE;
 
   GST_DEBUG ("Schedule BYE for %" GST_TIME_FORMAT ", %" GST_TIME_FORMAT,
       GST_TIME_ARGS (interval), GST_TIME_ARGS (sess->next_rtcp_check_time));
@@ -2639,7 +2645,7 @@ rtp_session_next_timeout (RTPSession * sess, GstClockTime current_time)
       ", next time: %" GST_TIME_FORMAT,
       GST_TIME_ARGS (current_time), GST_TIME_ARGS (result));
 
-  if (result < current_time) {
+  if (result == GST_CLOCK_TIME_NONE || result < current_time) {
     GST_DEBUG ("take current time as base");
     /* our previous check time expired, start counting from the current time
      * again. */
@@ -2794,6 +2800,10 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
 
   is_sender = RTP_SOURCE_IS_SENDER (source);
   is_active = RTP_SOURCE_IS_ACTIVE (source);
+
+  /* nothing to do when without RTCP */
+  if (data->interval == GST_CLOCK_TIME_NONE)
+    return;
 
   /* our own rtcp interval may have been forced low by secondary configuration,
    * while sender side may still operate with higher interval,
@@ -2977,7 +2987,8 @@ is_rtcp_time (RTPSession * sess, GstClockTime current_time, ReportData * data)
     goto early;
 
   /* no need to check yet */
-  if (sess->next_rtcp_check_time > current_time) {
+  if (sess->next_rtcp_check_time == GST_CLOCK_TIME_NONE ||
+      sess->next_rtcp_check_time > current_time) {
     GST_DEBUG ("no check time yet, next %" GST_TIME_FORMAT " > now %"
         GST_TIME_FORMAT, GST_TIME_ARGS (sess->next_rtcp_check_time),
         GST_TIME_ARGS (current_time));
@@ -2987,16 +2998,20 @@ is_rtcp_time (RTPSession * sess, GstClockTime current_time, ReportData * data)
   /* get elapsed time since we last reported */
   elapsed = current_time - sess->last_rtcp_send_time;
 
+  new_send_time = data->interval;
   /* perform forward reconsideration */
-  new_send_time = rtp_stats_add_rtcp_jitter (&sess->stats, data->interval);
+  if (new_send_time != GST_CLOCK_TIME_NONE) {
+    new_send_time = rtp_stats_add_rtcp_jitter (&sess->stats, new_send_time);
 
-  GST_DEBUG ("forward reconsideration %" GST_TIME_FORMAT ", elapsed %"
-      GST_TIME_FORMAT, GST_TIME_ARGS (new_send_time), GST_TIME_ARGS (elapsed));
+    GST_DEBUG ("forward reconsideration %" GST_TIME_FORMAT ", elapsed %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (new_send_time),
+        GST_TIME_ARGS (elapsed));
 
-  new_send_time += sess->last_rtcp_send_time;
+    new_send_time += sess->last_rtcp_send_time;
+  }
 
   /* check if reconsideration */
-  if (current_time < new_send_time) {
+  if (new_send_time == GST_CLOCK_TIME_NONE || current_time < new_send_time) {
     GST_DEBUG ("reconsider RTCP for %" GST_TIME_FORMAT,
         GST_TIME_ARGS (new_send_time));
     /* store new check time */
@@ -3010,25 +3025,29 @@ early:
 
   GST_DEBUG ("can send RTCP now, next interval %" GST_TIME_FORMAT,
       GST_TIME_ARGS (new_send_time));
-  sess->next_rtcp_check_time = current_time + new_send_time;
 
-  /* Apply the rules from RFC 4585 section 3.5.3 */
-  if (sess->stats.min_interval != 0 && !sess->first_rtcp) {
-    GstClockTimeDiff T_rr_current_interval = g_random_double_range (0.5, 1.5) *
-        sess->stats.min_interval;
+  sess->next_rtcp_check_time = new_send_time;
+  if (new_send_time != GST_CLOCK_TIME_NONE) {
+    sess->next_rtcp_check_time += current_time;
 
-    /* This will caused the RTCP to be suppressed if no FB packets are added */
-    if (sess->last_rtcp_send_time + T_rr_current_interval >
-        sess->next_rtcp_check_time) {
-      GST_DEBUG ("RTCP packet could be suppressed min: %" GST_TIME_FORMAT
-          " last: %" GST_TIME_FORMAT
-          " + T_rr_current_interval: %" GST_TIME_FORMAT
-          " >  sess->next_rtcp_check_time: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (sess->stats.min_interval),
-          GST_TIME_ARGS (sess->last_rtcp_send_time),
-          GST_TIME_ARGS (T_rr_current_interval),
-          GST_TIME_ARGS (sess->next_rtcp_check_time));
-      data->may_suppress = TRUE;
+    /* Apply the rules from RFC 4585 section 3.5.3 */
+    if (sess->stats.min_interval != 0 && !sess->first_rtcp) {
+      GstClockTimeDiff T_rr_current_interval =
+          g_random_double_range (0.5, 1.5) * sess->stats.min_interval;
+
+      /* This will caused the RTCP to be suppressed if no FB packets are added */
+      if (sess->last_rtcp_send_time + T_rr_current_interval >
+          sess->next_rtcp_check_time) {
+        GST_DEBUG ("RTCP packet could be suppressed min: %" GST_TIME_FORMAT
+            " last: %" GST_TIME_FORMAT
+            " + T_rr_current_interval: %" GST_TIME_FORMAT
+            " >  sess->next_rtcp_check_time: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (sess->stats.min_interval),
+            GST_TIME_ARGS (sess->last_rtcp_send_time),
+            GST_TIME_ARGS (T_rr_current_interval),
+            GST_TIME_ARGS (sess->next_rtcp_check_time));
+        data->may_suppress = TRUE;
+      }
     }
   }
 
@@ -3222,6 +3241,9 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
   /* Check if already requested */
   /*  RFC 4585 section 3.5.2 step 2 */
   if (GST_CLOCK_TIME_IS_VALID (sess->next_early_rtcp_time))
+    goto dont_send;
+
+  if (!GST_CLOCK_TIME_IS_VALID (sess->next_rtcp_check_time))
     goto dont_send;
 
   /* Ignore the request a scheduled packet will be in time anyway */
