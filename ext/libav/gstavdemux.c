@@ -61,6 +61,9 @@ struct _GstFFMpegDemux
   /* We need to keep track of our pads, so we do so here. */
   GstPad *sinkpad;
 
+  gboolean have_group_id;
+  guint group_id;
+
   AVFormatContext *context;
   gboolean opened;
 
@@ -263,6 +266,9 @@ gst_ffmpegdemux_init (GstFFMpegDemux * demux)
       gst_task_new ((GstTaskFunction) gst_ffmpegdemux_loop, demux, NULL);
   g_rec_mutex_init (&demux->task_lock);
   gst_task_set_lock (demux->task, &demux->task_lock);
+
+  demux->have_group_id = FALSE;
+  demux->group_id = G_MAXUINT;
 
   demux->opened = FALSE;
   demux->context = NULL;
@@ -925,6 +931,7 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
   const gchar *codec;
   AVCodecContext *ctx;
   GstFFStream *stream;
+  GstEvent *event;
   gchar *stream_id;
 
   ctx = avstream->codec;
@@ -1004,7 +1011,23 @@ gst_ffmpegdemux_get_stream (GstFFMpegDemux * demux, AVStream * avstream)
   stream_id =
       gst_pad_create_stream_id_printf (pad, GST_ELEMENT_CAST (demux), "%03u",
       avstream->index);
-  gst_pad_push_event (pad, gst_event_new_stream_start (stream_id));
+
+  event = gst_pad_get_sticky_event (demux->sinkpad, GST_EVENT_STREAM_START, 0);
+  if (event) {
+    if (gst_event_parse_group_id (event, &demux->group_id))
+      demux->have_group_id = TRUE;
+    else
+      demux->have_group_id = FALSE;
+    gst_event_unref (event);
+  } else if (!demux->have_group_id) {
+    demux->have_group_id = TRUE;
+    demux->group_id = gst_util_group_id_next ();
+  }
+  event = gst_event_new_stream_start (stream_id);
+  if (demux->have_group_id)
+    gst_event_set_group_id (event, demux->group_id);
+
+  gst_pad_push_event (pad, event);
   g_free (stream_id);
 
   GST_INFO_OBJECT (pad, "adding pad with caps %" GST_PTR_FORMAT, caps);
@@ -1854,6 +1877,8 @@ gst_ffmpegdemux_change_state (GstElement * element, GstStateChange transition)
           NULL);
       g_list_free (demux->cached_events);
       demux->cached_events = NULL;
+      demux->have_group_id = FALSE;
+      demux->group_id = G_MAXUINT;
       break;
     default:
       break;
