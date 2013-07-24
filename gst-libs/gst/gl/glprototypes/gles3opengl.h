@@ -40,15 +40,15 @@ GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (read_buffer, 1, 0,
                   GST_GL_API_GLES3,
-                  "\0",
-                  "\0")
+                  "NV\0",
+                  "read_buffer\0")
 GST_GL_EXT_FUNCTION (void, ReadBuffer,
                      (GLenum mode))
 GST_GL_EXT_END ()
 
 GST_GL_EXT_BEGIN (draw_buffers, 2, 1,
                   GST_GL_API_GLES3,
-                  "ARB\0ATI\0",
+                  "ARB\0ATI\0NV\0",
                   "draw_buffers\0")
 GST_GL_EXT_FUNCTION (void, DrawBuffers,
                      (GLsizei n, const GLenum *bufs))
