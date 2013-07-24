@@ -177,7 +177,7 @@ gst_rtp_vraw_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
       break;
     case GST_VIDEO_FORMAT_UYVP:
       samplingstr = "YCbCr-4:2:2";
-      pgroup = 4;
+      pgroup = 5;
       xinc = 2;
       depth = 10;
       depthstr = "10";
@@ -409,6 +409,7 @@ gst_rtp_vraw_pay_handle_buffer (GstRTPBasePayload * payload, GstBuffer * buffer)
           case GST_VIDEO_FORMAT_BGR:
           case GST_VIDEO_FORMAT_BGRA:
           case GST_VIDEO_FORMAT_UYVY:
+          case GST_VIDEO_FORMAT_UYVP:
             offs /= rtpvrawpay->xinc;
             memcpy (outdata, yp + (lin * ystride) + (offs * pgroup), length);
             outdata += length;
