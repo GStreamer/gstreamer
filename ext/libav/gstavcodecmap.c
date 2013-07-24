@@ -2453,7 +2453,7 @@ gst_ffmpeg_pixfmt_to_videoformat (enum PixelFormat pixfmt)
     if (pixtofmttable[i].pixfmt == pixfmt)
       return pixtofmttable[i].format;
 
-  GST_WARNING ("Unknown pixel format %d", pixfmt);
+  GST_DEBUG ("Unknown pixel format %d", pixfmt);
   return GST_VIDEO_FORMAT_UNKNOWN;
 }
 
