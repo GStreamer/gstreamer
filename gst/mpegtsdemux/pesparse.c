@@ -346,8 +346,9 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
         res->stream_id_extension_data = data;
         GST_MEMDUMP ("stream_id_extension_data",
             res->stream_id_extension_data, res->extension_field_length);
-      } else
-        GST_WARNING ("What are we meant to do ??");
+      } else {
+        GST_LOG ("tref_extension : %d", flags & 0x01);
+      }
       data += res->extension_field_length;
     }
     length -= res->extension_field_length + 1;
