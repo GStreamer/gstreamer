@@ -320,6 +320,7 @@ gst_ts_demux_reset (MpegTSBase * base)
 
   demux->calculate_update_segment = FALSE;
 
+  demux->rate = 1.0;
   gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
   if (demux->segment_event) {
     gst_event_unref (demux->segment_event);
@@ -536,8 +537,9 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
     goto done;
   }
 
-  /* record offset */
+  /* record offset and rate */
   base->seek_offset = start_offset;
+  demux->rate = rate;
   res = GST_FLOW_OK;
 
   /* Drop segment info, it needs to be recreated after the actual seek */
@@ -1425,6 +1427,7 @@ calculate_and_push_newsegment (GstTSDemux * demux, TSDemuxStream * stream)
       demux->segment.stop = GST_CLOCK_TIME_NONE;
       demux->segment.position = firstts;
       demux->segment.time = firstts;
+      demux->segment.rate = demux->rate;
     }
   }
 
@@ -1576,6 +1579,7 @@ gst_ts_demux_flush (MpegTSBase * base, gboolean hard)
   demux->calculate_update_segment = FALSE;
   if (hard) {
     /* For pull mode seeks the current segment needs to be preserved */
+    demux->rate = 1.0;
     gst_segment_init (&demux->segment, GST_FORMAT_UNDEFINED);
   }
 }

@@ -76,6 +76,9 @@ struct _GstTSDemux
 
   /* Full stream duration */
   GstClockTime duration;
+
+  /* Pending seek rate (default 1.0) */
+  gdouble rate;
 };
 
 struct _GstTSDemuxClass
