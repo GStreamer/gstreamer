@@ -273,10 +273,10 @@ gst_atdec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   if (atdec->queue)
     gst_atdec_destroy_queue (atdec, TRUE);
 
-  // configure input_format from caps
+  /* configure input_format from caps */
   gst_caps_to_at_format (caps, &input_format);
 
-  // negotiate output caps
+  /* negotiate output caps */
   output_caps = gst_pad_get_allowed_caps (GST_AUDIO_DECODER_SRC_PAD (atdec));
   if (!output_caps)
     output_caps =
@@ -287,10 +287,10 @@ gst_atdec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
       "rate", G_TYPE_INT, (int) input_format.mSampleRate,
       "channels", G_TYPE_INT, input_format.mChannelsPerFrame, NULL);
 
-  // configure output_format from caps
+  /* configure output_format from caps */
   gst_caps_to_at_format (output_caps, &output_format);
 
-  // set the format we want to negotiate downstream
+  /* set the format we want to negotiate downstream */
   gst_audio_info_from_caps (&output_info, output_caps);
   gst_audio_info_set_format (&output_info,
       output_format.mFormatFlags & kLinearPCMFormatFlagIsSignedInteger ?
@@ -304,7 +304,7 @@ gst_atdec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   if (status)
     goto create_queue_error;
 
-  // FIXME: figure out how to map this properly
+  /* FIXME: figure out how to map this properly */
   if (output_format.mChannelsPerFrame == 1)
     output_layout.mChannelLayoutTag = kAudioChannelLayoutTag_Mono;
   else
@@ -362,28 +362,29 @@ gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
 
   audio_info = gst_audio_decoder_get_audio_info (decoder);
 
-  // copy the input buffer into an AudioQueueBuffer
+  /* copy the input buffer into an AudioQueueBuffer */
   size = gst_buffer_get_size (buffer);
   AudioQueueAllocateBuffer (atdec->queue, size, &input_buffer);
   gst_buffer_extract (buffer, 0, input_buffer->mAudioData, size);
   input_buffer->mAudioDataByteSize = size;
 
-  // assume framed input
+  /* assume framed input */
   packet.mStartOffset = 0;
   packet.mVariableFramesInPacket = 1;
   packet.mDataByteSize = size;
 
-  // enqueue the buffer. It will get free'd once the gst_atdec_buffer_emptied
-  // callback is called
+  /* enqueue the buffer. It will get free'd once the gst_atdec_buffer_emptied
+   * callback is called
+   */
   AudioQueueEnqueueBuffer (atdec->queue, input_buffer, 1, &packet);
 
-  // figure out how many frames we need to pull out of the queue
+  /* figure out how many frames we need to pull out of the queue */
   out_frames = GST_CLOCK_TIME_TO_FRAMES (GST_BUFFER_DURATION (buffer),
       audio_info->rate);
   size = out_frames * audio_info->bpf;
   AudioQueueAllocateBuffer (atdec->queue, size, &output_buffer);
 
-  // pull the frames
+  /* pull the frames */
   AudioQueueOfflineRender (atdec->queue, &timestamp, output_buffer, out_frames);
   if (output_buffer->mAudioDataByteSize) {
     out =
