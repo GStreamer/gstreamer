@@ -5682,7 +5682,7 @@ gst_value_lcopy_bitmask (const GValue * value, guint n_collect_values,
 
 /**
  * gst_value_set_bitmask:
- * @value: a GValue initialized to #GST_TYPE_FRACTION
+ * @value: a GValue initialized to #GST_TYPE_BITMASK
  * @bitmask: the bitmask
  *
  * Sets @value to the bitmask specified by @bitmask.
@@ -5697,7 +5697,7 @@ gst_value_set_bitmask (GValue * value, guint64 bitmask)
 
 /**
  * gst_value_get_bitmask:
- * @value: a GValue initialized to #GST_TYPE_FRACTION
+ * @value: a GValue initialized to #GST_TYPE_BITMASK
  *
  * Gets the bitmask specified by @value.
  *
