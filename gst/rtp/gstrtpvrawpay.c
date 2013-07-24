@@ -35,7 +35,7 @@ static GstStaticPadTemplate gst_rtp_vraw_pay_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { RGB, RGBA, BGR, BGRA, AYUYV, UYVY, I420, Y41B, UYVP, I420, Y42B, Y444 }, "
+        "format = (string) { RGB, RGBA, BGR, BGRA, AYUV, UYVY, I420, Y41B, UYVP }, "
         "width = (int) [ 1, 32767 ], " "height = (int) [ 1, 32767 ]; ")
     );
 
