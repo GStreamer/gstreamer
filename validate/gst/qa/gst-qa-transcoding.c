@@ -245,6 +245,8 @@ main (int argc, gchar ** argv)
   GOptionContext *ctx;
 
   GError *err = NULL;
+  const gchar *scenario = NULL;
+
   GOptionEntry options[] = {
     {"output-format", 'o', 0, G_OPTION_ARG_CALLBACK, &_parse_encoding_profile,
           "Set the properties to use for the encoding profile "
@@ -254,8 +256,10 @@ main (int argc, gchar ** argv)
           "video/webm:video/x-vp8+mypreset:audio/x-vorbis\n"
           "The presence property of the profile can be specified with |<presence>, eg:\n"
           "video/webm:video/x-vp8|<presence>:audio/x-vorbis\n",
-        "properties-values"}
-    ,
+        "properties-values"},
+    {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
+        "Let you set a scanrio, it will override the GST_QA_SCENARIO "
+          "environment variable", NULL},
     {NULL}
   };
 
@@ -269,6 +273,9 @@ main (int argc, gchar ** argv)
   }
 
   g_option_context_free (ctx);
+
+  if (scenario)
+    g_setenv ("GST_QA_SCENARIO", scenario, TRUE);
 
   gst_init (&argc, &argv);
 

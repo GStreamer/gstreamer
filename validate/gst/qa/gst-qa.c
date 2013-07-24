@@ -12,9 +12,6 @@
 #include <gst/gst.h>
 #include <gst/qa/qa.h>
 
-static gboolean seek_tests = FALSE;
-static gboolean seek_done = FALSE;
-
 static GMainLoop *mainloop;
 static GstElement *pipeline;
 
@@ -37,24 +34,6 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_EOS:
       g_main_loop_quit (loop);
       break;
-    case GST_MESSAGE_STATE_CHANGED:
-    {
-      GstState new_state;
-      if (GST_MESSAGE_SRC (message) == (GstObject *) pipeline) {
-        gst_message_parse_state_changed (message, NULL, &new_state, NULL);
-        if (new_state == GST_STATE_PLAYING) {
-          /* pipeline has started, issue seeking */
-          /* TODO define where to seek to with arguments? */
-          if (seek_tests && !seek_done) {
-            g_print ("Performing seek\n");
-            seek_done = TRUE;
-            gst_element_seek_simple (pipeline, GST_FORMAT_TIME,
-                GST_SEEK_FLAG_FLUSH, 5 * GST_SECOND);
-          }
-        }
-      }
-    }
-      break;
     default:
       break;
   }
@@ -66,9 +45,12 @@ int
 main (int argc, gchar ** argv)
 {
   GError *err = NULL;
+  const gchar *scenario = NULL;
+
   GOptionEntry options[] = {
-    {"seek-test", '\0', 0, G_OPTION_ARG_NONE, &seek_tests,
-        "Perform the seeking use case", NULL},
+    {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
+        "Let you set a scanrio, it will override the GST_QA_SCENARIO "
+          "environment variable", NULL},
     {NULL}
   };
   GOptionContext *ctx;
@@ -88,6 +70,10 @@ main (int argc, gchar ** argv)
     g_printerr ("Error initializing: %s\n", err->message);
     g_option_context_free (ctx);
     exit (1);
+  }
+
+  if (scenario) {
+    g_setenv ("GST_QA_SCENARIO", scenario, TRUE);
   }
 
   g_option_context_free (ctx);
