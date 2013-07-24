@@ -27,12 +27,17 @@
 #include "output.h"
 
 static gchar *g_src_format_str;
+static gchar *g_crop_rect_str;
 
 static GOptionEntry g_options[] = {
     { "src-format", 's',
       0,
       G_OPTION_ARG_STRING, &g_src_format_str,
       "source surface format", NULL },
+    { "crop-rect", 'c',
+      0,
+      G_OPTION_ARG_STRING, &g_crop_rect_str,
+      "cropping rectangle", NULL },
     { NULL, }
 };
 
@@ -170,6 +175,27 @@ dump_formats(GstVaapiFilter *filter)
     g_array_unref(formats);
 }
 
+static gboolean
+parse_crop_rect(const gchar *str, GstVaapiRectangle *crop_rect)
+{
+    if (str) {
+        // Format: <WIDTH> 'x' <HEIGHT>
+        if (sscanf(str, "%ux%u", &crop_rect->width, &crop_rect->height) == 2) {
+            crop_rect->x = 0;
+            crop_rect->y = 0;
+            return TRUE;
+        }
+
+        // Format: '('? <X> ',' <Y> ')'? <WIDTH> 'x' <HEIGHT>
+        if (sscanf(str, "(%d,%d):%ux%u", &crop_rect->x, &crop_rect->y,
+                   &crop_rect->width, &crop_rect->height) == 4 ||
+            sscanf(str, "%d,%d:%ux%u", &crop_rect->x, &crop_rect->y,
+                   &crop_rect->width, &crop_rect->height) == 4)
+            return TRUE;
+    }
+    return FALSE;
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -215,6 +241,19 @@ main(int argc, char *argv[])
     dump_operations(filter);
     dump_formats(filter);
 
+    if (g_crop_rect_str) {
+        GstVaapiRectangle crop_rect;
+
+        if (!parse_crop_rect(g_crop_rect_str, &crop_rect))
+            g_error("failed to parse cropping rectangle");
+
+        printf("Frame cropping: (%d,%d), size %ux%u\n",
+               crop_rect.x, crop_rect.y, crop_rect.width, crop_rect.height);
+
+        if (!gst_vaapi_filter_set_cropping_rectangle(filter, &crop_rect))
+            g_error("failed to set cropping rectangle");
+    }
+
     status = gst_vaapi_filter_process(filter, src_surface, dst_surface,
         filter_flags);
     if (status != GST_VAAPI_FILTER_STATUS_SUCCESS)
@@ -235,5 +274,6 @@ main(int argc, char *argv[])
     gst_vaapi_display_unref(display);
     video_output_exit();
     g_free(g_src_format_str);
+    g_free(g_crop_rect_str);
     return 0;
 }
