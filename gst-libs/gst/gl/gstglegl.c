@@ -108,6 +108,8 @@ gst_gl_egl_create_context (EGLDisplay display, EGLNativeWindowType window,
   EGLint context_attrib[3];
   EGLint majorVersion;
   EGLint minorVersion;
+  const gchar *egl_exts;
+  gboolean need_surface = TRUE;
 
   egl = g_slice_new0 (GstGLEGL);
 
@@ -196,12 +198,13 @@ gst_gl_egl_create_context (EGLDisplay display, EGLNativeWindowType window,
     goto failure;
   }
 
+  egl_exts = eglQueryString (egl->egl_display, EGL_EXTENSIONS);
 
-  if (window) {
+  if (window && FALSE) {
     egl->egl_surface =
         eglCreateWindowSurface (egl->egl_display, egl->egl_config, window,
         NULL);
-  } else {
+  } else if (!gst_gl_check_extension ("EGL_KHR_surfaceless_context", egl_exts)) {
     EGLint surface_attrib[7];
     gint j = 0;
 
@@ -218,14 +221,20 @@ gst_gl_egl_create_context (EGLDisplay display, EGLNativeWindowType window,
     egl->egl_surface =
         eglCreatePbufferSurface (egl->egl_display, egl->egl_config,
         surface_attrib);
+  } else {
+    egl->egl_surface = EGL_NO_SURFACE;
+    need_surface = FALSE;
   }
 
-  if (egl->egl_surface != EGL_NO_SURFACE) {
-    GST_INFO ("surface created");
-  } else {
-    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_FAILED,
-        "Failed to create window surface: %s", gst_gl_egl_get_error_string ());
-    goto failure;
+  if (need_surface) {
+    if (egl->egl_surface != EGL_NO_SURFACE) {
+      GST_INFO ("surface created");
+    } else {
+      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_FAILED,
+          "Failed to create window surface: %s",
+          gst_gl_egl_get_error_string ());
+      goto failure;
+    }
   }
 
   gst_gl_egl_activate (egl, TRUE);
