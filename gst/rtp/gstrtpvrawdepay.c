@@ -171,7 +171,7 @@ gst_rtp_vraw_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   GstRtpVRawDepay *rtpvrawdepay;
   gint clock_rate;
   const gchar *str;
-  gint format, width, height, pgroup, xinc, yinc;
+  gint format, width, height, depth, pgroup, xinc, yinc;
   GstCaps *srccaps;
   gboolean res;
   GstFlowReturn ret;
@@ -193,6 +193,10 @@ gst_rtp_vraw_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
   if (!(str = gst_structure_get_string (structure, "height")))
     goto no_height;
   height = atoi (str);
+
+  if (!(str = gst_structure_get_string (structure, "depth")))
+    goto no_depth;
+  depth = atoi (str);
 
   /* optional interlace value but we don't handle interlaced
    * formats yet */
@@ -218,8 +222,14 @@ gst_rtp_vraw_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
     format = GST_VIDEO_FORMAT_AYUV;
     pgroup = 3;
   } else if (!strcmp (str, "YCbCr-4:2:2")) {
-    format = GST_VIDEO_FORMAT_UYVY;
-    pgroup = 4;
+    if (depth == 8) {
+      format = GST_VIDEO_FORMAT_UYVY;
+      pgroup = 4;
+    } else if (depth == 10) {
+      format = GST_VIDEO_FORMAT_UYVP;
+      pgroup = 5;
+    } else
+      goto unknown_format;
     xinc = 2;
   } else if (!strcmp (str, "YCbCr-4:2:0")) {
     format = GST_VIDEO_FORMAT_I420;
@@ -266,6 +276,11 @@ no_width:
 no_height:
   {
     GST_ERROR_OBJECT (depayload, "no height specified");
+    return FALSE;
+  }
+no_depth:
+  {
+    GST_ERROR_OBJECT (depayload, "no depth specified");
     return FALSE;
   }
 interlaced:
@@ -434,6 +449,7 @@ gst_rtp_vraw_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       case GST_VIDEO_FORMAT_BGR:
       case GST_VIDEO_FORMAT_BGRA:
       case GST_VIDEO_FORMAT_UYVY:
+      case GST_VIDEO_FORMAT_UYVP:
         /* samples are packed just like gstreamer packs them */
         offs /= xinc;
         datap = yp + (line * ystride) + (offs * pgroup);
