@@ -1717,9 +1717,15 @@ parse_debug_level (gchar * str, GstDebugLevel * level)
   /* works in place */
   g_strstrip (str);
 
-  if (str[0] != '\0' && str[1] == '\0'
-      && str[0] >= '0' && str[0] < '0' + GST_LEVEL_COUNT) {
-    *level = (GstDebugLevel) (str[0] - '0');
+  if (g_ascii_isdigit (str[0])) {
+    unsigned long l;
+    char *endptr;
+    l = strtoul (str, &endptr, 10);
+    if (endptr > str && endptr[0] == 0) {
+      *level = (GstDebugLevel) l;
+    } else {
+      return FALSE;
+    }
   } else if (strcmp (str, "ERROR") == 0) {
     *level = GST_LEVEL_ERROR;
   } else if (strncmp (str, "WARN", 4) == 0) {
