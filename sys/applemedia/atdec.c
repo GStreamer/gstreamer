@@ -66,17 +66,16 @@ static GstStaticPadTemplate gst_atdec_src_template =
     GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE ("S16LE") ";"
-        GST_AUDIO_CAPS_MAKE ("F32LE")
-    )
+    GST_STATIC_CAPS (GST_AUDIO_CAPS_MAKE ("S16LE") ", layout=interleaved;"
+        GST_AUDIO_CAPS_MAKE ("F32LE") ", layout=interleaved")
     );
 
 static GstStaticPadTemplate gst_atdec_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/mpeg, mpegversion=4, framed=true,"
-        "channels=[1,max]")
+    GST_STATIC_CAPS ("audio/mpeg, mpegversion=4, framed=true, channels=[1,max];"
+        "audio/mpeg, mpegversion=1, layer=3")
     );
 
 G_DEFINE_TYPE_WITH_CODE (GstATDec, gst_atdec, GST_TYPE_AUDIO_DECODER,
@@ -279,12 +278,14 @@ gst_atdec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
 
   // negotiate output caps
   output_caps = gst_pad_get_allowed_caps (GST_AUDIO_DECODER_SRC_PAD (atdec));
-  output_caps = gst_caps_fixate (output_caps);
   if (!output_caps)
-    goto negotiation_error;
+    output_caps =
+        gst_pad_get_pad_template_caps (GST_AUDIO_DECODER_SRC_PAD (atdec));
+  output_caps = gst_caps_fixate (output_caps);
 
   gst_caps_set_simple (output_caps,
-      "rate", G_TYPE_INT, (int) input_format.mSampleRate, NULL);
+      "rate", G_TYPE_INT, (int) input_format.mSampleRate,
+      "channels", G_TYPE_INT, input_format.mChannelsPerFrame, NULL);
 
   // configure output_format from caps
   gst_caps_to_at_format (output_caps, &output_format);
@@ -320,11 +321,6 @@ gst_atdec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
 
   return TRUE;
 
-negotiation_error:
-  GST_ELEMENT_ERROR (atdec, STREAM, FORMAT, (NULL),
-      ("no compatible downstream caps"));
-  return FALSE;
-
 create_queue_error:
   GST_ELEMENT_ERROR (atdec, STREAM, FORMAT, (NULL),
       ("AudioQueueNewOutput returned error: %d", status));
@@ -358,7 +354,13 @@ gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
   GstMapInfo info;
   GstAudioInfo *audio_info;
   int size, out_frames;
+  GstFlowReturn flow_ret = GST_FLOW_OK;
   GstATDec *atdec = GST_ATDEC (decoder);
+
+  if (buffer == NULL)
+    return GST_FLOW_OK;
+
+  audio_info = gst_audio_decoder_get_audio_info (decoder);
 
   // copy the input buffer into an AudioQueueBuffer
   size = gst_buffer_get_size (buffer);
@@ -376,24 +378,29 @@ gst_atdec_handle_frame (GstAudioDecoder * decoder, GstBuffer * buffer)
   AudioQueueEnqueueBuffer (atdec->queue, input_buffer, 1, &packet);
 
   // figure out how many frames we need to pull out of the queue
-  audio_info = gst_audio_decoder_get_audio_info (decoder);
-  out_frames =
-      GST_CLOCK_TIME_TO_FRAMES (GST_BUFFER_DURATION (buffer), audio_info->rate);
+  out_frames = GST_CLOCK_TIME_TO_FRAMES (GST_BUFFER_DURATION (buffer),
+      audio_info->rate);
   size = out_frames * audio_info->bpf;
   AudioQueueAllocateBuffer (atdec->queue, size, &output_buffer);
 
   // pull the frames
   AudioQueueOfflineRender (atdec->queue, &timestamp, output_buffer, out_frames);
-  out =
-      gst_audio_decoder_allocate_output_buffer (decoder,
-      output_buffer->mAudioDataByteSize);
-  gst_buffer_map (out, &info, GST_MAP_WRITE);
-  memcpy (info.data, output_buffer->mAudioData,
-      output_buffer->mAudioDataByteSize);
-  gst_buffer_unmap (out, &info);
+  if (output_buffer->mAudioDataByteSize) {
+    out =
+        gst_audio_decoder_allocate_output_buffer (decoder,
+        output_buffer->mAudioDataByteSize);
+
+    gst_buffer_map (out, &info, GST_MAP_WRITE);
+    memcpy (info.data, output_buffer->mAudioData,
+        output_buffer->mAudioDataByteSize);
+    gst_buffer_unmap (out, &info);
+
+    flow_ret = gst_audio_decoder_finish_frame (decoder, out, 1);
+  }
+
   AudioQueueFreeBuffer (atdec->queue, output_buffer);
 
-  return gst_audio_decoder_finish_frame (decoder, out, 1);
+  return flow_ret;
 }
 
 static void
