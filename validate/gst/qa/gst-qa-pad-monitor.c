@@ -729,6 +729,10 @@ gst_qa_pad_monitor_check_aggregated_return (GstQaPadMonitor * monitor,
     /* no peer pad found, nothing to do */
     return;
   }
+  if (monitor->is_eos && ret == GST_FLOW_UNEXPECTED) {
+    /* this is acceptable */
+    return;
+  }
   if (aggregated != ret) {
     /* TODO review this error code */
     GST_QA_MONITOR_REPORT_CRITICAL (monitor, TRUE, BUFFER, UNEXPECTED,
@@ -1010,11 +1014,19 @@ gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
         }
       }
       break;
+    case GST_EVENT_EOS:
+      pad_monitor->is_eos = TRUE;
+      /*
+       * TODO add end of stream checks for
+       *  - events not pushed
+       *  - buffer data not pushed
+       *  - pending events not received
+       */
+      break;
 
       /* both flushes are handled by the common event function */
     case GST_EVENT_FLUSH_START:
     case GST_EVENT_FLUSH_STOP:
-    case GST_EVENT_EOS:
     case GST_EVENT_TAG:
     case GST_EVENT_SINK_MESSAGE:
     default:

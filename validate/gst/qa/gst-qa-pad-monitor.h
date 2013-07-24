@@ -73,6 +73,7 @@ struct _GstQaPadMonitor {
   gboolean first_buffer;
 
   gboolean has_segment;
+  gboolean is_eos;
 
   gboolean pending_flush_stop;
   guint32 pending_flush_stop_seqnum;
