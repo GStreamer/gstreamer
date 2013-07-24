@@ -32,11 +32,13 @@ typedef struct _GstVaapiFilterOpInfo            GstVaapiFilterOpInfo;
 
 /**
  * @GST_VAAPI_FILTER_OP_FORMAT: Force output pixel format (#GstVideoFormat).
+ * @GST_VAAPI_FILTER_OP_CROP: Crop source surface (#GstVaapiRectangle).
  *
  * The set of operations that could be applied to the filter.
  */
 typedef enum {
     GST_VAAPI_FILTER_OP_FORMAT = 1,
+    GST_VAAPI_FILTER_OP_CROP,
 } GstVaapiFilterOp;
 
 /**
@@ -100,5 +102,9 @@ gst_vaapi_filter_get_formats(GstVaapiFilter *filter);
 
 gboolean
 gst_vaapi_filter_set_format(GstVaapiFilter *filter, GstVideoFormat format);
+
+gboolean
+gst_vaapi_filter_set_cropping_rectangle(GstVaapiFilter *filter,
+    const GstVaapiRectangle *rect);
 
 #endif /* GST_VAAPI_FILTER_H */

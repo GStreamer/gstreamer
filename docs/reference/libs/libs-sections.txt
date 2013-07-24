@@ -386,6 +386,7 @@ gst_vaapi_filter_get_operations
 gst_vaapi_filter_get_formats
 gst_vaapi_filter_set_operation
 gst_vaapi_filter_set_format
+gst_vaapi_filter_set_cropping_rectangle
 <SUBSECTION Standard>
 GST_VAAPI_FILTER
 </SECTION>

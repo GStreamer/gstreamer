@@ -22,6 +22,7 @@
 #include "sysdeps.h"
 #include "gstvaapifilter.h"
 #include "gstvaapiutils.h"
+#include "gstvaapivalue.h"
 #include "gstvaapiminiobject.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapisurface_priv.h"
@@ -62,6 +63,8 @@ struct _GstVaapiFilter {
     GPtrArray          *operations;
     GstVideoFormat      format;
     GArray             *formats;
+    GstVaapiRectangle   crop_rect;
+    guint               use_crop_rect   : 1;
 };
 
 /* ------------------------------------------------------------------------- */
@@ -178,6 +181,7 @@ enum {
     PROP_0,
 
     PROP_FORMAT         = GST_VAAPI_FILTER_OP_FORMAT,
+    PROP_CROP           = GST_VAAPI_FILTER_OP_CROP,
 
     N_PROPERTIES
 };
@@ -200,6 +204,18 @@ init_properties(void)
                           GST_TYPE_VIDEO_FORMAT,
                           DEFAULT_FORMAT,
                           G_PARAM_READWRITE);
+
+    /**
+     * GstVaapiFilter:crop-rect:
+     *
+     * The cropping rectangle, expressed as a #GstVaapiRectangle.
+     */
+    g_properties[PROP_CROP] =
+        g_param_spec_boxed("crop-rect",
+                           "Cropping Rectangle",
+                           "The cropping rectangle",
+                           GST_VAAPI_TYPE_RECTANGLE,
+                           G_PARAM_READWRITE);
 }
 
 static void
@@ -234,6 +250,7 @@ op_data_new(GstVaapiFilterOp op, GParamSpec *pspec)
 
     switch (op) {
     case GST_VAAPI_FILTER_OP_FORMAT:
+    case GST_VAAPI_FILTER_OP_CROP:
         op_data->va_type = VAProcFilterNone;
         break;
     default:
@@ -776,6 +793,9 @@ gst_vaapi_filter_set_operation(GstVaapiFilter *filter, GstVaapiFilterOp op,
     case GST_VAAPI_FILTER_OP_FORMAT:
         return gst_vaapi_filter_set_format(filter, value ?
             g_value_get_enum(value) : DEFAULT_FORMAT);
+    case GST_VAAPI_FILTER_OP_CROP:
+        return gst_vaapi_filter_set_cropping_rectangle(filter, value ?
+            g_value_get_boxed(value) : NULL);
     default:
         break;
     }
@@ -813,10 +833,26 @@ gst_vaapi_filter_process_unlocked(GstVaapiFilter *filter,
     if (!ensure_operations(filter))
         return GST_VAAPI_FILTER_STATUS_ERROR_ALLOCATION_FAILED;
 
-    src_rect.x      = 0;
-    src_rect.y      = 0;
-    src_rect.width  = GST_VAAPI_SURFACE_WIDTH(src_surface);
-    src_rect.height = GST_VAAPI_SURFACE_HEIGHT(src_surface);
+    if (filter->use_crop_rect) {
+        const GstVaapiRectangle * const crop_rect = &filter->crop_rect;
+
+        if ((crop_rect->x + crop_rect->width >
+             GST_VAAPI_SURFACE_WIDTH(src_surface)) ||
+            (crop_rect->y + crop_rect->height >
+             GST_VAAPI_SURFACE_HEIGHT(src_surface)))
+            goto error;
+
+        src_rect.x      = crop_rect->x;
+        src_rect.y      = crop_rect->y;
+        src_rect.width  = crop_rect->width;
+        src_rect.height = crop_rect->height;
+    }
+    else {
+        src_rect.x      = 0;
+        src_rect.y      = 0;
+        src_rect.width  = GST_VAAPI_SURFACE_WIDTH(src_surface);
+        src_rect.height = GST_VAAPI_SURFACE_HEIGHT(src_surface);
+    }
 
     dst_rect.x      = 0;
     dst_rect.y      = 0;
@@ -945,5 +981,27 @@ gst_vaapi_filter_set_format(GstVaapiFilter *filter, GstVideoFormat format)
         return FALSE;
 
     filter->format = format;
+    return TRUE;
+}
+
+/**
+ * gst_vaapi_filter_set_cropping_rectangle:
+ * @filter: a #GstVaapiFilter
+ * @rect: the cropping region
+ *
+ * Sets the source surface cropping rectangle to use during the video
+ * processing. If @rect is %NULL, the whole source surface will be used.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_filter_set_cropping_rectangle(GstVaapiFilter *filter,
+    const GstVaapiRectangle *rect)
+{
+    g_return_val_if_fail(filter != NULL, FALSE);
+
+    filter->use_crop_rect = rect != NULL;
+    if (filter->use_crop_rect)
+        filter->crop_rect = *rect;
     return TRUE;
 }
