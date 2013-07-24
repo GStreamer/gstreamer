@@ -11,7 +11,6 @@ static GstCheckABIStruct list[] = {
   {"GstBusClass", sizeof (GstBusClass), 232},
   {"GstBus", sizeof (GstBus), 128},
   {"GstCaps", sizeof (GstCaps), 64},
-  {"GstChildProxyInterface", sizeof (GstChildProxyInterface), 88},
   {"GstClockClass", sizeof (GstClockClass), 264},
   {"GstClockEntry", sizeof (GstClockEntry), 112},
   {"GstClock", sizeof (GstClock), 128},
@@ -45,7 +44,6 @@ static GstCheckABIStruct list[] = {
   {"GstPipelineClass", sizeof (GstPipelineClass), 608},
   {"GstPipeline", sizeof (GstPipeline), 440},
   {"GstPluginDesc", sizeof (GstPluginDesc), 112},
-  {"GstPresetInterface", sizeof (GstPresetInterface), 112},
   {"GstProxyPadClass", sizeof (GstProxyPadClass), 240},
   {"GstProxyPad", sizeof (GstProxyPad), 528},
   {"GstQuery", sizeof (GstQuery), 72},
@@ -63,9 +61,7 @@ static GstCheckABIStruct list[] = {
   {"GstTaskPoolClass", sizeof (GstTaskPoolClass), 248},
   {"GstTaskPool", sizeof (GstTaskPool), 128},
   {"GstTimedValue", sizeof (GstTimedValue), 16},
-  {"GstTocSetterInterface", sizeof (GstTocSetterInterface), 16},
   {"GstTypeFind", sizeof (GstTypeFind), 64},
-  {"GstURIHandlerInterface", sizeof (GstURIHandlerInterface), 48},
   {"GstValueTable", sizeof (GstValueTable), 64},
   {NULL, 0, 0}
 };
