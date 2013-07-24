@@ -988,7 +988,7 @@ gst_rtp_bin_send_sync_event (GstRtpBinStream * stream)
         "sending GstRTCPSRReceived event downstream");
 
     event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-        gst_structure_new ("GstRTCPSRReceived", NULL));
+        gst_structure_new_empty ("GstRTCPSRReceived"));
 
     srcpad = gst_element_get_static_pad (stream->buffer, "src");
     gst_pad_push_event (srcpad, event);
