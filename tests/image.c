@@ -338,8 +338,8 @@ image_upload(GstVaapiImage *image, GstVaapiSurface *surface)
     if (gst_vaapi_surface_put_image(surface, image))
         return TRUE;
 
-    g_print("could not upload %" GST_FOURCC_FORMAT" image to surface\n",
-            GST_FOURCC_ARGS(format));
+    g_print("could not upload %s image to surface\n",
+            gst_vaapi_video_format_to_string(format));
 
     if (!gst_vaapi_display_has_subpicture_format(display, format, NULL))
         return FALSE;
