@@ -329,11 +329,13 @@ create_queue_error:
 set_format_error:
   GST_ELEMENT_ERROR (atdec, STREAM, FORMAT, (NULL),
       ("AudioQueueSetOfflineRenderFormat returned error: %d", status));
+  gst_atdec_destroy_queue (atdec, FALSE);
   return FALSE;
 
 start_error:
   GST_ELEMENT_ERROR (atdec, STREAM, FORMAT, (NULL),
       ("AudioQueueStart returned error: %d", status));
+  gst_atdec_destroy_queue (atdec, FALSE);
   return FALSE;
 }
 
