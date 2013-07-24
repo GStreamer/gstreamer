@@ -849,7 +849,7 @@ gst_mpeg_video_packet_parse_picture_header (const GstMpegVideoPacket * packet,
 
 
   if (hdr->pic_type == 0 || hdr->pic_type > 4)
-    goto failed;                /* Corrupted picture packet */
+    goto bad_pic_type;          /* Corrupted picture packet */
 
   /* skip VBV delay */
   if (!gst_bit_reader_skip (&br, 16))
@@ -879,9 +879,15 @@ gst_mpeg_video_packet_parse_picture_header (const GstMpegVideoPacket * packet,
 
   return TRUE;
 
+bad_pic_type:
+  {
+    GST_WARNING ("Unsupported picture type : %d", hdr->pic_type);
+    return FALSE;
+  }
+
 failed:
   {
-    GST_WARNING ("Failed to parse picture header");
+    GST_WARNING ("Not enough data to parse picture header");
     return FALSE;
   }
 }
