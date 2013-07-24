@@ -47,6 +47,9 @@ GstCaps *
 gst_vaapi_video_format_to_caps(GstVideoFormat format);
 
 GstVideoFormat
+gst_vaapi_video_format_from_va_fourcc(guint32 fourcc);
+
+GstVideoFormat
 gst_vaapi_video_format_from_va_format(const VAImageFormat *va_format);
 
 const VAImageFormat *

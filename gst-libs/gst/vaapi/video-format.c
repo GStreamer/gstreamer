@@ -287,6 +287,30 @@ gst_vaapi_video_format_to_caps(GstVideoFormat format)
 }
 
 /**
+ * gst_vaapi_video_format_from_va_fourcc:
+ * @fourcc: a FOURCC value
+ *
+ * Converts a VA fourcc into the corresponding #GstVideoFormat. If no
+ * matching fourcc was found, then zero is returned.
+ *
+ * Return value: the #GstVideoFormat corresponding to the VA @fourcc
+ */
+GstVideoFormat
+gst_vaapi_video_format_from_va_fourcc(guint32 fourcc)
+{
+    const GstVideoFormatMap *m;
+
+    /* Note: VA fourcc values are now standardized and shall represent
+       a unique format. The associated VAImageFormat is just a hint to
+       determine RGBA component ordering */
+    for (m = gst_vaapi_video_formats; m->format; m++) {
+        if (m->va_format.fourcc == fourcc)
+            return m->format;
+    }
+    return GST_VIDEO_FORMAT_UNKNOWN;
+}
+
+/**
  * gst_vaapi_video_format_from_va_format:
  * @va_format: a #VAImageFormat
  *
