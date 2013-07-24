@@ -29,6 +29,25 @@
 G_BEGIN_DECLS
 
 /**
+ * GST_VAAPI_TYPE_POINT:
+ *
+ * A #GstVaapiPoint type that represents a 2D point coordinates.
+ *
+ * Return value: the GType of #GstVaapiPoint
+ */
+#define GST_VAAPI_TYPE_POINT gst_vaapi_point_get_type()
+
+/**
+ * GST_VAAPI_TYPE_RECTANGLE:
+ *
+ * A #GstVaapiRectangle type that represents a 2D rectangle position
+ * and size.
+ *
+ * Return value: the GType of #GstVaapiRectangle
+ */
+#define GST_VAAPI_TYPE_RECTANGLE gst_vaapi_rectangle_get_type()
+
+/**
  * GST_VAAPI_TYPE_RENDER_MODE:
  *
  * A #GstVaapiRenderMode type that represents the VA display backend
@@ -46,6 +65,12 @@ G_BEGIN_DECLS
  * Return value: the #GType of GstVaapiRotation
  */
 #define GST_VAAPI_TYPE_ROTATION gst_vaapi_rotation_get_type()
+
+GType
+gst_vaapi_point_get_type(void) G_GNUC_CONST;
+
+GType
+gst_vaapi_rectangle_get_type(void) G_GNUC_CONST;
 
 GType
 gst_vaapi_render_mode_get_type(void) G_GNUC_CONST;

@@ -29,6 +29,49 @@
 #include <gobject/gvaluecollector.h>
 #include "gstvaapivalue.h"
 
+static gpointer
+default_copy_func(gpointer data)
+{
+    return data;
+}
+
+static void
+default_free_func(gpointer data)
+{
+}
+
+/* --- GstVaapiPoint --- */
+
+GType
+gst_vaapi_point_get_type(void)
+{
+    static volatile gsize g_type = 0;
+
+    if (g_once_init_enter(&g_type)) {
+        GType type = g_boxed_type_register_static(
+            g_intern_static_string("GstVaapiPoint"),
+            default_copy_func, default_free_func);
+        g_once_init_leave(&g_type, type);
+    }
+    return g_type;
+}
+
+/* --- GstVaapiRectangle --- */
+
+GType
+gst_vaapi_rectangle_get_type(void)
+{
+    static volatile gsize g_type = 0;
+
+    if (g_once_init_enter(&g_type)) {
+        GType type = g_boxed_type_register_static(
+            g_intern_static_string("GstVaapiRectangle"),
+            default_copy_func, default_free_func);
+        g_once_init_leave(&g_type, type);
+    }
+    return g_type;
+}
+
 /* --- GstVaapiRenderMode --- */
 
 GType
