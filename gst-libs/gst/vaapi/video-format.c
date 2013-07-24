@@ -140,6 +140,56 @@ get_map(GstVideoFormat format)
 }
 
 /**
+ * gst_vaapi_video_format_from_string:
+ * @str: a string representation of #GstVideoFormat
+ *
+ * Returns the #GstVideoFormat represented as the string @str.
+ *
+ * Return value: #GstVideoFormat for the string representation of
+ *   video format in @str.
+ */
+GstVideoFormat
+gst_vaapi_video_format_from_string(const gchar *str)
+{
+#if GST_CHECK_VERSION(1,0,0)
+    return gst_video_format_from_string(str);
+#else
+    GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
+
+    do {
+        /* Validate input string */
+        if (!str)
+            break;
+
+        /* Fast path: assume this represents a common fourcc value */
+        const guint32 fourcc = GST_MAKE_FOURCC(str[0], str[1], str[2], str[3]);
+        format = gst_video_format_from_fourcc(fourcc);
+        if (format != GST_VIDEO_FORMAT_UNKNOWN)
+            break;
+
+        /* Slow path: check through all registered enum values */
+        GEnumClass * const enum_class =
+            g_type_class_ref(GST_TYPE_VIDEO_FORMAT);
+        if (!enum_class)
+            break;
+
+        gchar * const video_format_str =
+            g_strdup_printf("GST_VIDEO_FORMAT_%s", str);
+        if (video_format_str) {
+            const GEnumValue * const enum_value =
+                g_enum_get_value_by_name(enum_class, video_format_str);
+
+            if (enum_value)
+                format = enum_value->value;
+            g_free(video_format_str);
+        }
+        g_type_class_unref(enum_class);
+    } while (0);
+    return format;
+#endif
+}
+
+/**
  * gst_vaapi_video_format_to_string:
  * @format: a #GstVideoFormat
  *
