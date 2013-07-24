@@ -638,7 +638,6 @@ static void
 gst_qa_pad_monitor_update_buffer_data (GstQaPadMonitor * pad_monitor,
     GstBuffer * buffer)
 {
-  /* TODO handle reverse playback too */
   pad_monitor->current_timestamp = GST_BUFFER_TIMESTAMP (buffer);
   pad_monitor->current_duration = GST_BUFFER_DURATION (buffer);
   if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))) {
@@ -670,8 +669,6 @@ gst_qa_pad_monitor_update_buffer_data (GstQaPadMonitor * pad_monitor,
 static GstFlowReturn
 _combine_flows (GstFlowReturn ret1, GstFlowReturn ret2)
 {
-  /* TODO review the combination
-   * what about not-negotiated and unexpected ? */
   if (ret1 == ret2)
     return ret1;
   if (ret1 <= GST_FLOW_NOT_NEGOTIATED)
@@ -1231,8 +1228,6 @@ gst_qa_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
   gst_qa_pad_monitor_check_late_serialized_events (monitor,
       GST_BUFFER_TIMESTAMP (buffer));
 
-  /* TODO should we assume that a pad-monitor should always have an
-   * element-monitor as a parent? */
   if (G_LIKELY (GST_QA_MONITOR_GET_PARENT (monitor))) {
     /* a GstQaPadMonitor parent must be a GstQaElementMonitor */
     if (GST_QA_ELEMENT_MONITOR_ELEMENT_IS_DECODER (monitor)) {
@@ -1356,7 +1351,6 @@ gst_qa_pad_monitor_setcaps_func (GstPad * pad, GstCaps * caps)
     }
 
     if (gst_qa_pad_monitor_pad_should_proxy_othercaps (pad_monitor)) {
-      /* TODO iterate structure and add pending expected fields */
       if (_structure_is_video (structure)) {
         gst_qa_pad_monitor_otherpad_add_pending_field (pad_monitor, structure,
             "width");
