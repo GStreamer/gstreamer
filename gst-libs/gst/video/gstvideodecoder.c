@@ -2135,6 +2135,7 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
 {
   GstVideoDecoderPrivate *priv = decoder->priv;
   GList *l, *events = NULL;
+  gboolean sync;
 
 #ifndef GST_DISABLE_GST_DEBUG
   GST_LOG_OBJECT (decoder, "n %d in %" G_GSIZE_FORMAT " out %" G_GSIZE_FORMAT,
@@ -2143,12 +2144,13 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
       gst_adapter_available (priv->output_adapter));
 #endif
 
+  sync = GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame);
+
   GST_LOG_OBJECT (decoder,
       "finish frame %p (#%d) sync:%d PTS:%" GST_TIME_FORMAT " DTS:%"
       GST_TIME_FORMAT,
       frame, frame->system_frame_number,
-      GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame), GST_TIME_ARGS (frame->pts),
-      GST_TIME_ARGS (frame->dts));
+      sync, GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (frame->dts));
 
   /* Push all pending events that arrived before this frame */
   for (l = priv->frames; l; l = l->next) {
@@ -2297,6 +2299,11 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
       frame->pts = priv->last_timestamp_out + frame->duration;
       GST_LOG_OBJECT (decoder,
           "Guessing timestamp %" GST_TIME_FORMAT " for frame...",
+          GST_TIME_ARGS (frame->pts));
+    } else if (sync && frame->dts != GST_CLOCK_TIME_NONE) {
+      frame->pts = frame->dts;
+      GST_LOG_OBJECT (decoder,
+          "Setting DTS as PTS %" GST_TIME_FORMAT " for frame...",
           GST_TIME_ARGS (frame->pts));
     }
   }
