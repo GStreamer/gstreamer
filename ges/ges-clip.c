@@ -1250,7 +1250,7 @@ ges_clip_split (GESClip * clip, guint64 position)
 
     new_trackelement =
         GES_TRACK_ELEMENT (ges_timeline_element_copy (GES_TIMELINE_ELEMENT
-            (trackelement), TRUE));
+            (trackelement), FALSE));
     if (new_trackelement == NULL) {
       GST_WARNING_OBJECT (trackelement, "Could not create a copy");
       continue;
@@ -1264,6 +1264,8 @@ ges_clip_split (GESClip * clip, guint64 position)
         duration + start - position);
 
     ges_container_add (GES_CONTAINER (new_object),
+        GES_TIMELINE_ELEMENT (new_trackelement));
+    ges_track_element_copy_properties (GES_TIMELINE_ELEMENT (trackelement),
         GES_TIMELINE_ELEMENT (new_trackelement));
   }
 

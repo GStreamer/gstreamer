@@ -113,8 +113,6 @@ static gboolean _set_inpoint (GESTimelineElement * element,
 static gboolean _set_duration (GESTimelineElement * element,
     GstClockTime duration);
 static gboolean _set_priority (GESTimelineElement * element, guint32 priority);
-static void _deep_copy (GESTimelineElement * element,
-    GESTimelineElement * copy);
 
 static GParamSpec **default_list_children_properties (GESTrackElement * object,
     guint * n_properties);
@@ -258,7 +256,7 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   element_class->set_duration = _set_duration;
   element_class->set_inpoint = _set_inpoint;
   element_class->set_priority = _set_priority;
-  element_class->deep_copy = _deep_copy;
+  element_class->deep_copy = ges_track_element_copy_properties;
 
   klass->create_gnl_object = ges_track_element_create_gnl_object_func;
   /*  There is no 'get_props_hashtable' default implementation */
@@ -1251,7 +1249,8 @@ prop_hash_not_set:
 }
 
 void
-_deep_copy (GESTimelineElement * element, GESTimelineElement * elementcopy)
+ges_track_element_copy_properties (GESTimelineElement * element,
+    GESTimelineElement * elementcopy)
 {
   GParamSpec **specs;
   guint n, n_specs;
@@ -1264,7 +1263,8 @@ _deep_copy (GESTimelineElement * element, GESTimelineElement * elementcopy)
       &n_specs);
   for (n = 0; n < n_specs; ++n) {
     g_value_init (&val, specs[n]->value_type);
-    g_object_get_property (G_OBJECT (element), specs[n]->name, &val);
+    ges_track_element_get_child_property_by_pspec (GES_TRACK_ELEMENT (element),
+        specs[n], &val);
     ges_track_element_set_child_property_by_pspec (copy, specs[n], &val);
     g_value_unset (&val);
   }
