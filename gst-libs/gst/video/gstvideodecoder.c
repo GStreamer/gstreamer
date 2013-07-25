@@ -2033,6 +2033,10 @@ gst_video_decoder_change_state (GstElement * element, GstStateChange transition)
         goto open_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
+      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+      gst_video_decoder_reset (decoder, TRUE);
+      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
       /* Initialize device/library if needed */
       if (decoder_class->start && !decoder_class->start (decoder))
         goto start_failed;
