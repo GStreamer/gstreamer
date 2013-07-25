@@ -83,14 +83,6 @@ struct _GstJpegDec {
   gint     idct_method;
   gint     max_errors;  /* ATOMIC */
 
-  /* current error (the message is the debug message) */
-  gchar       *error_msg;
-  int          error_line;
-  const gchar *error_func;
-
-  /* number of errors since start or last successfully decoded image */
-  guint     error_count;
-
   struct jpeg_decompress_struct cinfo;
   struct GstJpegDecErrorMgr     jerr;
   struct GstJpegDecSourceMgr    jsrc;
