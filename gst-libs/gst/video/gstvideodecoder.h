@@ -148,8 +148,8 @@ GstFlowReturn _gst_video_decoder_error (GstVideoDecoder *dec, gint weight,
 G_STMT_START {                                                              \
   gchar *__txt = _gst_element_error_printf text;                            \
   gchar *__dbg = _gst_element_error_printf debug;                           \
-  GstVideoDecoder *dec = GST_VIDEO_DECODER (el);                   \
-  ret = _gst_video_decoder_error (dec, w, GST_ ## domain ## _ERROR,    \
+  GstVideoDecoder *__dec = GST_VIDEO_DECODER (el);                   \
+  ret = _gst_video_decoder_error (__dec, w, GST_ ## domain ## _ERROR,    \
       GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,            \
       GST_FUNCTION, __LINE__);                                              \
 } G_STMT_END
