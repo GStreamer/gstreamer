@@ -1654,21 +1654,8 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   if (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp))
     goto invalid_packet;
 
-  RTP_SESSION_LOCK (sess);
-  /* ignore more RTP packets when we left the session */
-  if (sess->source->marked_bye)
-    goto ignore;
-
-  /* update arrival stats */
-  update_arrival_stats (sess, &arrival, TRUE, buffer, current_time,
-      running_time, -1);
-
-  /* get SSRC and look up in session database */
+  /* get SSRC to look up in session database */
   ssrc = gst_rtp_buffer_get_ssrc (&rtp);
-  source = obtain_source (sess, ssrc, &created, &arrival, TRUE);
-  if (!source)
-    goto collision;
-
   /* copy available csrc for later */
   count = gst_rtp_buffer_get_csrc_count (&rtp);
   /* make sure to not overflow our array. An RTP buffer can maximally contain
@@ -1679,6 +1666,19 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
     csrcs[i] = gst_rtp_buffer_get_csrc (&rtp, i);
 
   gst_rtp_buffer_unmap (&rtp);
+
+  RTP_SESSION_LOCK (sess);
+  /* ignore more RTP packets when we left the session */
+  if (sess->source->marked_bye)
+    goto ignore;
+
+  /* update arrival stats */
+  update_arrival_stats (sess, &arrival, TRUE, buffer, current_time,
+      running_time, -1);
+
+  source = obtain_source (sess, ssrc, &created, &arrival, TRUE);
+  if (!source)
+    goto collision;
 
   prevsender = RTP_SOURCE_IS_SENDER (source);
   prevactive = RTP_SOURCE_IS_ACTIVE (source);
@@ -1748,7 +1748,6 @@ invalid_packet:
 ignore:
   {
     RTP_SESSION_UNLOCK (sess);
-    gst_rtp_buffer_unmap (&rtp);
     gst_buffer_unref (buffer);
     GST_DEBUG ("ignoring RTP packet because we are leaving");
     return GST_FLOW_OK;
@@ -1756,7 +1755,6 @@ ignore:
 collision:
   {
     RTP_SESSION_UNLOCK (sess);
-    gst_rtp_buffer_unmap (&rtp);
     gst_buffer_unref (buffer);
     clean_arrival_stats (&arrival);
     GST_DEBUG ("ignoring packet because its collisioning");
