@@ -213,6 +213,8 @@ struct _RTPSession {
 
   GstClockTime  next_early_rtcp_time;
 
+  gboolean      scheduled_bye;
+
   RTPSessionCallbacks   callbacks;
   gpointer              process_rtp_user_data;
   gpointer              send_rtp_user_data;
@@ -327,8 +329,8 @@ GstFlowReturn   rtp_session_send_rtp               (RTPSession *sess, gpointer d
                                                     GstClockTime current_time, GstClockTime running_time);
 
 /* stopping the session */
-GstFlowReturn   rtp_session_schedule_bye           (RTPSession *sess, const gchar *reason,
-                                                    GstClockTime current_time);
+void            rtp_session_mark_all_bye           (RTPSession *sess, const gchar *reason);
+GstFlowReturn   rtp_session_schedule_bye           (RTPSession *sess, GstClockTime current_time);
 
 /* get interval for next RTCP interval */
 GstClockTime    rtp_session_next_timeout           (RTPSession *sess, GstClockTime current_time);

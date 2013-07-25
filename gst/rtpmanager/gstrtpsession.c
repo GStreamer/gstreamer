@@ -1763,8 +1763,8 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstObject * parent,
       ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
       current_time = gst_clock_get_time (rtpsession->priv->sysclock);
       GST_DEBUG_OBJECT (rtpsession, "scheduling BYE message");
-      rtp_session_schedule_bye (rtpsession->priv->session, "End of stream",
-          current_time);
+      rtp_session_mark_all_bye (rtpsession->priv->session, "End Of Stream");
+      rtp_session_schedule_bye (rtpsession->priv->session, current_time);
       break;
     }
     default:{
