@@ -1123,7 +1123,7 @@ source_push_rtp (RTPSource * source, gpointer data, RTPSession * session)
 {
   GstFlowReturn result = GST_FLOW_OK;
 
-  if (source == session->source) {
+  if (source->internal) {
     GST_LOG ("source %08x pushed sender RTP packet", source->ssrc);
 
     RTP_SESSION_UNLOCK (session);
@@ -1185,7 +1185,7 @@ check_collision (RTPSession * sess, RTPSource * source,
   if (!arrival->address)
     return FALSE;
 
-  if (sess->source != source) {
+  if (!source->internal) {
     GSocketAddress *from;
 
     /* This is not our local source, but lets check if two remote
@@ -1989,13 +1989,16 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
     ssrc = gst_rtcp_packet_bye_get_nth_ssrc (packet, i);
     GST_DEBUG ("SSRC: %08x", ssrc);
 
-    if (ssrc == sess->source->ssrc)
-      return;
-
     /* find src and mark bye, no probation when dealing with RTCP */
     source = obtain_source (sess, ssrc, &created, arrival, FALSE);
     if (!source)
       return;
+
+    if (source->internal) {
+      /* our own source, something weird with this packet */
+      g_object_unref (source);
+      continue;
+    }
 
     /* store time for when we need to time out this source */
     source->bye_time = arrival->current_time;
@@ -2159,10 +2162,12 @@ rtp_session_process_fir (RTPSession * sess, guint32 sender_ssrc,
 
   for (position = 0; position < fci_length; position += 8) {
     guint8 *data = fci_data + position;
+    RTPSource *own;
 
     ssrc = GST_READ_UINT32_BE (data);
 
-    if (ssrc == rtp_source_get_ssrc (sess->source)) {
+    own = find_source (sess, ssrc);
+    if (own->internal) {
       our_request = TRUE;
       break;
     }
@@ -2183,6 +2188,7 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
   guint32 media_ssrc = gst_rtcp_packet_fb_get_media_ssrc (packet);
   guint8 *fci_data = gst_rtcp_packet_fb_get_fci (packet);
   guint fci_length = 4 * gst_rtcp_packet_fb_get_fci_length (packet);
+  RTPSource *src;
 
   GST_DEBUG ("received feedback %d:%d from %08X about %08X with FCI of "
       "length %d", type, fbtype, sender_ssrc, media_ssrc, fci_length);
@@ -2207,14 +2213,15 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
       gst_buffer_unref (fci_buffer);
   }
 
-  if (sess->rtcp_feedback_retention_window) {
-    RTPSource *src = find_source (sess, media_ssrc);
+  src = find_source (sess, media_ssrc);
+  if (!src)
+    return;
 
-    if (src)
-      rtp_source_retain_rtcp_packet (src, packet, arrival->running_time);
+  if (sess->rtcp_feedback_retention_window) {
+    rtp_source_retain_rtcp_packet (src, packet, arrival->running_time);
   }
 
-  if (rtp_source_get_ssrc (sess->source) == media_ssrc ||
+  if (src->internal ||
       /* PSFB FIR puts the media ssrc inside the FCI */
       (type == GST_RTCP_TYPE_PSFB && fbtype == GST_RTCP_PSFB_TYPE_FIR)) {
     switch (type) {
@@ -2762,7 +2769,7 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
    *   interval = CLAMP (sender_interval, data->interval, 5 * GST_SECOND)
    * where sender_interval is difference between last 2 received RTCP reports
    */
-  if (data->interval >= 5 * GST_SECOND || (source == sess->source)) {
+  if (data->interval >= 5 * GST_SECOND || source->internal) {
     binterval = data->interval;
   } else {
     GST_LOG ("prev_rtcp %" GST_TIME_FORMAT ", last_rtcp %" GST_TIME_FORMAT,
@@ -2779,7 +2786,7 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
       GST_TIME_ARGS (binterval));
 
   /* check for our own source, we don't want to delete our own source. */
-  if (!(source == sess->source)) {
+  if (!source->internal) {
     if (source->marked_bye) {
       /* if we received a BYE from the source, remove the source after some
        * time. */
@@ -2805,7 +2812,7 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
   }
 
   /* senders that did not send for a long time become a receiver, this also
-   * holds for our own source. */
+   * holds for our own sources. */
   if (is_sender) {
     /* mind old time that might pre-date last time going to PLAYING */
     btime = MAX (source->last_rtp_activity, sess->start_time);
