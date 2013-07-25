@@ -223,6 +223,7 @@ rtp_source_reset (RTPSource * src)
   if (src->bye_reason)
     g_free (src->bye_reason);
   src->bye_reason = NULL;
+  src->sent_bye = FALSE;
 
   src->stats.cycles = -1;
   src->stats.jitter = 0;

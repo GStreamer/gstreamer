@@ -2274,7 +2274,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
   update_arrival_stats (sess, &arrival, FALSE, buffer, current_time, -1,
       ntpnstime);
 
-  if (sess->sent_bye)
+  if (sess->source->sent_bye)
     goto ignore;
 
   /* start processing the compound packet */
@@ -2516,7 +2516,6 @@ rtp_session_schedule_bye_locked (RTPSession * sess, const gchar * reason,
   INIT_AVG (sess->stats.avg_rtcp_packet_size, 100);
   sess->stats.bye_members = 1;
   sess->first_rtcp = TRUE;
-  sess->sent_bye = FALSE;
   sess->allow_early = TRUE;
 
   /* reschedule transmission */
@@ -2604,7 +2603,7 @@ rtp_session_next_timeout (RTPSession * sess, GstClockTime current_time)
   }
 
   if (sess->source->marked_bye) {
-    if (sess->sent_bye) {
+    if (sess->source->sent_bye) {
       GST_DEBUG ("we sent BYE already");
       interval = GST_CLOCK_TIME_NONE;
     } else if (sess->stats.active_sources >= 50) {
@@ -3094,7 +3093,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
       /* generate BYE instead */
       GST_DEBUG ("generating BYE message");
       session_bye (sess, &data);
-      sess->sent_bye = TRUE;
+      own->sent_bye = TRUE;
     } else {
       /* loop over all known sources and do something */
       g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
@@ -3133,7 +3132,6 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     g_hash_table_insert (sess->ssrcs[sess->mask_idx],
         GINT_TO_POINTER (own->ssrc), own);
 
-    sess->sent_bye = FALSE;
     sess->change_ssrc = FALSE;
     notify = TRUE;
     GST_DEBUG ("changed our SSRC to %08x", own->ssrc);
@@ -3165,7 +3163,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
       GST_DEBUG ("%p, sending RTCP packet, avg size %u, %u", &sess->stats,
           sess->stats.avg_rtcp_packet_size, packet_size);
       result =
-          sess->callbacks.send_rtcp (sess, own, data.rtcp, sess->sent_bye,
+          sess->callbacks.send_rtcp (sess, own, data.rtcp, own->sent_bye,
           sess->send_rtcp_user_data);
     } else {
       GST_DEBUG ("freeing packet callback: %p"

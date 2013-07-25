@@ -147,6 +147,7 @@ struct _RTPSource {
 
   gboolean      marked_bye;
   gchar        *bye_reason;
+  gboolean      sent_bye;
 
   GSocketAddress *rtp_from;
   GSocketAddress *rtcp_from;

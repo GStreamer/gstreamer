@@ -213,8 +213,6 @@ struct _RTPSession {
 
   GstClockTime  next_early_rtcp_time;
 
-  gboolean      sent_bye;
-
   RTPSessionCallbacks   callbacks;
   gpointer              process_rtp_user_data;
   gpointer              send_rtp_user_data;
