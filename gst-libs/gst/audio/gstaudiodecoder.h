@@ -129,8 +129,8 @@ GstFlowReturn _gst_audio_decoder_error (GstAudioDecoder *dec, gint weight,
 G_STMT_START {                                                              \
   gchar *__txt = _gst_element_error_printf text;                            \
   gchar *__dbg = _gst_element_error_printf debug;                           \
-  GstAudioDecoder *dec = GST_AUDIO_DECODER (el);                   \
-  ret = _gst_audio_decoder_error (dec, weight, GST_ ## domain ## _ERROR,    \
+  GstAudioDecoder *__dec = GST_AUDIO_DECODER (el);                   \
+  ret = _gst_audio_decoder_error (__dec, weight, GST_ ## domain ## _ERROR,    \
       GST_ ## domain ## _ERROR_ ## code, __txt, __dbg, __FILE__,            \
       GST_FUNCTION, __LINE__);                                              \
 } G_STMT_END
