@@ -3315,12 +3315,26 @@ rtp_session_on_sending_rtcp (RTPSession * sess, GstBuffer * buffer,
   gpointer key, value;
   gboolean started_fir = FALSE;
   GstRTCPPacket fir_rtcppacket;
+  GstRTCPPacket packet;
   GstRTCPBuffer rtcp = { NULL, };
-
-  RTP_SESSION_LOCK (sess);
+  guint32 ssrc;
 
   gst_rtcp_buffer_map (buffer, GST_MAP_READWRITE, &rtcp);
 
+  gst_rtcp_buffer_get_first_packet (&rtcp, &packet);
+  switch (gst_rtcp_packet_get_type (&packet)) {
+    case GST_RTCP_TYPE_SR:
+      gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc,
+          NULL, NULL, NULL, NULL);
+      break;
+    case GST_RTCP_TYPE_RR:
+      ssrc = gst_rtcp_packet_rr_get_ssrc (&packet);
+      break;
+    default:
+      goto done;
+  }
+
+  RTP_SESSION_LOCK (sess);
   g_hash_table_iter_init (&iter, sess->ssrcs[sess->mask_idx]);
   while (g_hash_table_iter_next (&iter, &key, &value)) {
     guint media_ssrc = GPOINTER_TO_UINT (key);
@@ -3333,8 +3347,7 @@ rtp_session_on_sending_rtcp (RTPSession * sess, GstBuffer * buffer,
                 &fir_rtcppacket))
           break;
         gst_rtcp_packet_fb_set_type (&fir_rtcppacket, GST_RTCP_PSFB_TYPE_FIR);
-        gst_rtcp_packet_fb_set_sender_ssrc (&fir_rtcppacket,
-            rtp_source_get_ssrc (sess->source));
+        gst_rtcp_packet_fb_set_sender_ssrc (&fir_rtcppacket, ssrc);
         gst_rtcp_packet_fb_set_media_ssrc (&fir_rtcppacket, 0);
 
         if (!gst_rtcp_packet_fb_set_fci_length (&fir_rtcppacket, 2)) {
@@ -3374,16 +3387,16 @@ rtp_session_on_sending_rtcp (RTPSession * sess, GstBuffer * buffer,
          * further packet */
         break;
       gst_rtcp_packet_fb_set_type (&pli_rtcppacket, GST_RTCP_PSFB_TYPE_PLI);
-      gst_rtcp_packet_fb_set_sender_ssrc (&pli_rtcppacket,
-          rtp_source_get_ssrc (sess->source));
+      gst_rtcp_packet_fb_set_sender_ssrc (&pli_rtcppacket, ssrc);
       gst_rtcp_packet_fb_set_media_ssrc (&pli_rtcppacket, media_ssrc);
       ret = TRUE;
     }
     media_src->send_pli = FALSE;
   }
-  gst_rtcp_buffer_unmap (&rtcp);
-
   RTP_SESSION_UNLOCK (sess);
+
+done:
+  gst_rtcp_buffer_unmap (&rtcp);
 
   return ret;
 }
