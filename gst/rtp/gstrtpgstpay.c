@@ -54,6 +54,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_pay_debug);
  *   1 = GST_EVENT_TAG
  *   2 = GST_EVENT_CUSTOM_DOWNSTREAM
  *   3 = GST_EVENT_CUSTOM_BOTH
+ *   4 = GST_EVENT_STREAM_START
  */
 
 static GstStaticPadTemplate gst_rtp_gst_pay_sink_template =
@@ -321,6 +322,9 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
       break;
     case GST_EVENT_CUSTOM_BOTH:
       etype = 3;
+      break;
+    case GST_EVENT_STREAM_START:
+      etype = 4;
       break;
     default:
       etype = 0;

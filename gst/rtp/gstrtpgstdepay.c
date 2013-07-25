@@ -277,6 +277,9 @@ read_event (GstRtpGSTDepay * rtpgstdepay, guint type,
     case 3:
       etype = GST_EVENT_CUSTOM_BOTH;
       break;
+    case 4:
+      etype = GST_EVENT_STREAM_START;
+      break;
     default:
       goto unknown_event;
   }
