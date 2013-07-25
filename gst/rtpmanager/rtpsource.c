@@ -228,7 +228,13 @@ rtp_source_reset (RTPSource * src)
   src->stats.jitter = 0;
   src->stats.transit = -1;
   src->stats.curr_sr = 0;
+  src->stats.sr[0].is_valid = FALSE;
   src->stats.curr_rr = 0;
+  src->stats.rr[0].is_valid = FALSE;
+  src->stats.prev_rtptime = GST_CLOCK_TIME_NONE;
+  src->stats.prev_rtcptime = GST_CLOCK_TIME_NONE;
+  src->stats.last_rtptime = GST_CLOCK_TIME_NONE;
+  src->stats.last_rtcptime = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -429,7 +435,7 @@ sdes_struct_compare_func (GQuark field_id, const GValue * value,
 }
 
 /**
- * rtp_source_set_sdes:
+ * rtp_source_set_sdes_struct:
  * @src: an #RTPSource
  * @sdes: the SDES structure
  *
