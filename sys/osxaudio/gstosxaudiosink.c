@@ -315,6 +315,9 @@ gst_osx_audio_sink_getcaps (GstBaseSink * base, GstCaps * filter)
     caps_string = gst_caps_to_string (sink->cached_caps);
     GST_DEBUG_OBJECT (sink, "using cached caps: %s", caps_string);
     g_free (caps_string);
+    if (filter)
+      return gst_caps_intersect_full (sink->cached_caps, filter,
+          GST_CAPS_INTERSECT_FIRST);
     return gst_caps_ref (sink->cached_caps);
   }
 
