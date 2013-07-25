@@ -2464,7 +2464,7 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
       bandwidth = sess->bandwidth;
     else {
       /* If it is <= 0, then try to estimate the actual bandwidth */
-      bandwidth = sess->source->bitrate;
+      bandwidth = 0;
 
       g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
           (GHFunc) add_bitrates, &bandwidth);
