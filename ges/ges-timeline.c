@@ -2841,3 +2841,39 @@ ges_timeline_set_auto_transition (GESTimeline * timeline,
     ges_layer_set_auto_transition (layer, auto_transition);
   }
 }
+
+/**
+ * ges_timeline_get_snapping_distance:
+ * @timeline: a #GESTimeline
+ *
+ * Gets the configured snapping distance of the timeline. See
+ * the documentation of the property snapping_distance for more
+ * information.
+ *
+ * Returns: The @snapping_distance property of the timeline
+ */
+GstClockTime
+ges_timeline_get_snapping_distance (GESTimeline * timeline)
+{
+  g_return_val_if_fail (GES_IS_TIMELINE (timeline), GST_CLOCK_TIME_NONE);
+
+  return timeline->priv->snapping_distance;
+
+}
+
+/**
+ * ges_timeline_set_snapping_distance:
+ * @timeline: a #GESLayer
+ * @snapping_distance: whether the snapping_distance is active
+ *
+ * Sets the @snapping_distance of the timeline. See the documentation of the
+ * property snapping_distance for more information.
+ */
+void
+ges_timeline_set_snapping_distance (GESTimeline * timeline,
+    GstClockTime snapping_distance)
+{
+  g_return_if_fail (GES_IS_TIMELINE (timeline));
+
+  timeline->priv->snapping_distance = snapping_distance;
+}

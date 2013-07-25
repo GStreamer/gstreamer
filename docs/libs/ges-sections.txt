@@ -305,6 +305,8 @@ ges_timeline_get_duration
 ges_timeline_get_project
 ges_timeline_get_auto_transition
 ges_timeline_set_auto_transition
+ges_timeline_get_snapping_distance
+ges_timeline_set_snapping_distance
 <SUBSECTION Standard>
 GESTimelinePrivate
 GESTimelineClass
