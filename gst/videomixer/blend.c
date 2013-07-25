@@ -27,7 +27,7 @@
 #endif
 
 #include "blend.h"
-#include "blendorc.h"
+#include "videomixerorc.h"
 
 #include <string.h>
 

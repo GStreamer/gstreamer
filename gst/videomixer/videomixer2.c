@@ -86,6 +86,7 @@
 
 #include "videomixer2.h"
 #include "videomixer2pad.h"
+#include "videoconvert.h"
 
 #ifdef DISABLE_ORC
 #define orc_memset memset
