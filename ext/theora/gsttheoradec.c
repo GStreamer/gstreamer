@@ -99,7 +99,6 @@ static void theora_dec_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 
 static gboolean theora_dec_start (GstVideoDecoder * decoder);
-static gboolean theora_dec_stop (GstVideoDecoder * decoder);
 static gboolean theora_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
 static gboolean theora_dec_reset (GstVideoDecoder * decoder, gboolean hard);
@@ -184,7 +183,6 @@ gst_theora_dec_class_init (GstTheoraDecClass * klass)
       "Benjamin Otte <otte@gnome.org>, Wim Taymans <wim@fluendo.com>");
 
   video_decoder_class->start = GST_DEBUG_FUNCPTR (theora_dec_start);
-  video_decoder_class->stop = GST_DEBUG_FUNCPTR (theora_dec_stop);
   video_decoder_class->reset = GST_DEBUG_FUNCPTR (theora_dec_reset);
   video_decoder_class->set_format = GST_DEBUG_FUNCPTR (theora_dec_set_format);
   video_decoder_class->parse = GST_DEBUG_FUNCPTR (theora_dec_parse);
@@ -209,58 +207,48 @@ gst_theora_dec_init (GstTheoraDec * dec)
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (dec), FALSE);
 }
 
-static void
-gst_theora_dec_reset (GstTheoraDec * dec)
-{
-  dec->need_keyframe = TRUE;
-  dec->can_crop = FALSE;
-}
-
 static gboolean
 theora_dec_start (GstVideoDecoder * decoder)
 {
   GstTheoraDec *dec = GST_THEORA_DEC (decoder);
 
   GST_DEBUG_OBJECT (dec, "start");
-  th_info_clear (&dec->info);
-  th_comment_clear (&dec->comment);
   GST_DEBUG_OBJECT (dec, "Setting have_header to FALSE");
   dec->have_header = FALSE;
-  gst_theora_dec_reset (dec);
 
   return TRUE;
 }
 
 static gboolean
-theora_dec_stop (GstVideoDecoder * decoder)
+theora_dec_reset (GstVideoDecoder * decoder, gboolean hard)
 {
   GstTheoraDec *dec = GST_THEORA_DEC (decoder);
 
-  GST_DEBUG_OBJECT (dec, "stop");
-  th_info_clear (&dec->info);
-  th_comment_clear (&dec->comment);
-  th_setup_free (dec->setup);
-  dec->setup = NULL;
-  th_decode_free (dec->decoder);
-  dec->decoder = NULL;
-  gst_theora_dec_reset (dec);
-  if (dec->input_state) {
-    gst_video_codec_state_unref (dec->input_state);
-    dec->input_state = NULL;
-  }
-  if (dec->output_state) {
-    gst_video_codec_state_unref (dec->output_state);
-    dec->output_state = NULL;
+  dec->need_keyframe = TRUE;
+
+  if (hard) {
+    th_info_clear (&dec->info);
+    th_comment_clear (&dec->comment);
+    if (dec->setup) {
+      th_setup_free (dec->setup);
+      dec->setup = NULL;
+    }
+    if (dec->decoder) {
+      th_decode_free (dec->decoder);
+      dec->decoder = NULL;
+    }
+
+    if (dec->input_state) {
+      gst_video_codec_state_unref (dec->input_state);
+      dec->input_state = NULL;
+    }
+    if (dec->output_state) {
+      gst_video_codec_state_unref (dec->output_state);
+      dec->output_state = NULL;
+    }
+    dec->can_crop = FALSE;
   }
 
-  return TRUE;
-}
-
-/* FIXME : Do we want to handle hard resets differently ? */
-static gboolean
-theora_dec_reset (GstVideoDecoder * bdec, gboolean hard)
-{
-  gst_theora_dec_reset (GST_THEORA_DEC (bdec));
   return TRUE;
 }
 
