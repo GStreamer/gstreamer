@@ -636,7 +636,6 @@ rtp_session_set_property (GObject * object, guint prop_id,
       break;
     case PROP_PROBATION:
       sess->probation = g_value_get_uint (value);
-      g_object_set_property (G_OBJECT (sess->source), "probation", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -697,7 +696,6 @@ rtp_session_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PROBATION:
       g_value_set_uint (value, sess->probation);
-      g_object_get_property (G_OBJECT (sess->source), "probation", value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
