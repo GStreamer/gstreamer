@@ -213,7 +213,6 @@ struct _RTPSession {
 
   GstClockTime  next_early_rtcp_time;
 
-  gchar        *bye_reason;
   gboolean      sent_bye;
 
   RTPSessionCallbacks   callbacks;

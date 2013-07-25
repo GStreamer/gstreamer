@@ -219,7 +219,10 @@ rtp_source_class_init (RTPSourceClass * klass)
 void
 rtp_source_reset (RTPSource * src)
 {
-  src->received_bye = FALSE;
+  src->marked_bye = FALSE;
+  if (src->bye_reason)
+    g_free (src->bye_reason);
+  src->bye_reason = NULL;
 
   src->stats.cycles = -1;
   src->stats.jitter = 0;
@@ -321,7 +324,7 @@ rtp_source_create_stats (RTPSource * src)
       "ssrc", G_TYPE_UINT, (guint) src->ssrc,
       "internal", G_TYPE_BOOLEAN, internal,
       "validated", G_TYPE_BOOLEAN, src->validated,
-      "received-bye", G_TYPE_BOOLEAN, src->received_bye,
+      "received-bye", G_TYPE_BOOLEAN, src->marked_bye,
       "is-csrc", G_TYPE_BOOLEAN, src->is_csrc,
       "is-sender", G_TYPE_BOOLEAN, is_sender,
       "seqnum-base", G_TYPE_INT, src->seqnum_base,
@@ -670,21 +673,21 @@ rtp_source_is_sender (RTPSource * src)
 }
 
 /**
- * rtp_source_received_bye:
+ * rtp_source_is_marked_bye:
  * @src: an #RTPSource
  *
- * Check if @src has receoved a BYE packet.
+ * Check if @src is marked as leaving the session with a BYE packet.
  *
- * Returns: %TRUE if @src has received a BYE packet.
+ * Returns: %TRUE if @src has been marked BYE.
  */
 gboolean
-rtp_source_received_bye (RTPSource * src)
+rtp_source_is_marked_bye (RTPSource * src)
 {
   gboolean result;
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), FALSE);
 
-  result = src->received_bye;
+  result = RTP_SOURCE_IS_MARKED_BYE (src);
 
   return result;
 }
@@ -694,11 +697,11 @@ rtp_source_received_bye (RTPSource * src)
  * rtp_source_get_bye_reason:
  * @src: an #RTPSource
  *
- * Get the BYE reason for @src. Check if the source receoved a BYE message first
- * with rtp_source_received_bye().
+ * Get the BYE reason for @src. Check if the source is marked as leaving the
+ * session with a BYE message first with rtp_source_is_marked_bye().
  *
- * Returns: The BYE reason or NULL when no reason was given or the source did
- * not receive a BYE message yet. g_fee() after usage.
+ * Returns: The BYE reason or NULL when no reason was given or the source was
+ * not marked BYE yet. g_free() after usage.
  */
 gchar *
 rtp_source_get_bye_reason (RTPSource * src)
@@ -1118,25 +1121,27 @@ probation_seqnum:
 }
 
 /**
- * rtp_source_process_bye:
+ * rtp_source_mark_bye:
  * @src: an #RTPSource
  * @reason: the reason for leaving
  *
- * Notify @src that a BYE packet has been received. This will make the source
- * inactive.
+ * Mark @src in the BYE state. This can happen when the source wants to
+ * leave the sesssion or when a BYE packets has been received.
+ *
+ * This will make the source inactive.
  */
 void
-rtp_source_process_bye (RTPSource * src, const gchar * reason)
+rtp_source_mark_bye (RTPSource * src, const gchar * reason)
 {
   g_return_if_fail (RTP_IS_SOURCE (src));
 
   GST_DEBUG ("marking SSRC %08x as BYE, reason: %s", src->ssrc,
       GST_STR_NULL (reason));
 
-  /* copy the reason and mark as received_bye */
+  /* copy the reason and mark as bye */
   g_free (src->bye_reason);
   src->bye_reason = g_strdup (reason);
-  src->received_bye = TRUE;
+  src->marked_bye = TRUE;
 }
 
 static gboolean

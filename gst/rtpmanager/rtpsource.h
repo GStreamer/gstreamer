@@ -51,7 +51,7 @@ typedef struct _RTPSourceClass RTPSourceClass;
  * Check if @src is active. A source is active when it has been validated
  * and has not yet received a BYE packet.
  */
-#define RTP_SOURCE_IS_ACTIVE(src)  (src->validated && !src->received_bye)
+#define RTP_SOURCE_IS_ACTIVE(src)  (src->validated && !src->marked_bye)
 
 /**
  * RTP_SOURCE_IS_SENDER:
@@ -60,6 +60,14 @@ typedef struct _RTPSourceClass RTPSourceClass;
  * Check if @src is a sender.
  */
 #define RTP_SOURCE_IS_SENDER(src)  (src->is_sender)
+/**
+ * RTP_SOURCE_IS_MARKED_BYE:
+ * @src: an #RTPSource
+ *
+ * Check if @src is a marked as BYE.
+ */
+#define RTP_SOURCE_IS_MARKED_BYE(src)  (src->marked_bye)
+
 
 /**
  * RTPSourcePushRTP:
@@ -137,7 +145,7 @@ struct _RTPSource {
 
   GstStructure  *sdes;
 
-  gboolean      received_bye;
+  gboolean      marked_bye;
   gchar        *bye_reason;
 
   GSocketAddress *rtp_from;
@@ -199,7 +207,8 @@ gboolean        rtp_source_is_active           (RTPSource *src);
 gboolean        rtp_source_is_validated        (RTPSource *src);
 gboolean        rtp_source_is_sender           (RTPSource *src);
 
-gboolean        rtp_source_received_bye        (RTPSource *src);
+void            rtp_source_mark_bye            (RTPSource *src, const gchar *reason);
+gboolean        rtp_source_is_marked_bye       (RTPSource *src);
 gchar *         rtp_source_get_bye_reason      (RTPSource *src);
 
 void            rtp_source_update_caps         (RTPSource *src, GstCaps *caps);
@@ -219,7 +228,6 @@ GstFlowReturn   rtp_source_process_rtp         (RTPSource *src, GstBuffer *buffe
 GstFlowReturn   rtp_source_send_rtp            (RTPSource *src, gpointer data, gboolean is_list,
                                                 GstClockTime running_time);
 /* RTCP messages */
-void            rtp_source_process_bye         (RTPSource *src, const gchar *reason);
 void            rtp_source_process_sr          (RTPSource *src, GstClockTime time, guint64 ntptime,
                                                 guint32 rtptime, guint32 packet_count, guint32 octet_count);
 void            rtp_source_process_rb          (RTPSource *src, guint64 ntpnstime, guint8 fractionlost,

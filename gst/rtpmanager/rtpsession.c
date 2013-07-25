@@ -546,8 +546,6 @@ rtp_session_finalize (GObject * object)
   for (i = 0; i < 32; i++)
     g_hash_table_destroy (sess->ssrcs[i]);
 
-  g_free (sess->bye_reason);
-
   g_object_unref (sess->source);
 
   G_OBJECT_CLASS (rtp_session_parent_class)->finalize (object);
@@ -1658,7 +1656,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
 
   RTP_SESSION_LOCK (sess);
   /* ignore more RTP packets when we left the session */
-  if (sess->source->received_bye)
+  if (sess->source->marked_bye)
     goto ignore;
 
   /* update arrival stats */
@@ -1823,7 +1821,7 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
     return;
 
   /* don't try to do lip-sync for sources that sent a BYE */
-  if (rtp_source_received_bye (source))
+  if (RTP_SOURCE_IS_MARKED_BYE (source))
     *do_sync = FALSE;
   else
     *do_sync = TRUE;
@@ -2005,8 +2003,8 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
     prevactive = RTP_SOURCE_IS_ACTIVE (source);
     prevsender = RTP_SOURCE_IS_SENDER (source);
 
-    /* let the source handle the rest */
-    rtp_source_process_bye (source, reason);
+    /* mark the source BYE */
+    rtp_source_mark_bye (source, reason);
 
     pmembers = sess->stats.active_sources;
 
@@ -2022,7 +2020,7 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
     }
     members = sess->stats.active_sources;
 
-    if (!sess->source->received_bye && members < pmembers) {
+    if (!sess->source->marked_bye && members < pmembers) {
       /* some members went away since the previous timeout estimate.
        * Perform reverse reconsideration but only when we are not scheduling a
        * BYE ourselves. */
@@ -2288,7 +2286,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
     type = gst_rtcp_packet_get_type (&packet);
 
     /* when we are leaving the session, we should ignore all non-BYE messages */
-    if (sess->source->received_bye && type != GST_RTCP_TYPE_BYE) {
+    if (sess->source->marked_bye && type != GST_RTCP_TYPE_BYE) {
       GST_DEBUG ("ignoring non-BYE RTCP packet because we are leaving");
       goto next;
     }
@@ -2328,7 +2326,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
 
   /* if we are scheduling a BYE, we only want to count bye packets, else we
    * count everything */
-  if (sess->source->received_bye) {
+  if (sess->source->marked_bye) {
     if (is_bye) {
       sess->stats.bye_members++;
       UPDATE_AVG (sess->stats.avg_rtcp_packet_size, arrival.bytes);
@@ -2476,7 +2474,7 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
     sess->recalc_bandwidth = FALSE;
   }
 
-  if (sess->source->received_bye) {
+  if (sess->source->marked_bye) {
     result = rtp_stats_calculate_bye_interval (&sess->stats);
   } else {
     result = rtp_stats_calculate_rtcp_interval (&sess->stats,
@@ -2510,14 +2508,11 @@ rtp_session_schedule_bye_locked (RTPSession * sess, const gchar * reason,
   source = sess->source;
 
   /* ignore more BYEs */
-  if (source->received_bye)
+  if (source->marked_bye)
     goto done;
 
   /* we have BYE now */
-  source->received_bye = TRUE;
-  /* at least one member wants to send a BYE */
-  g_free (sess->bye_reason);
-  sess->bye_reason = g_strdup (reason);
+  rtp_source_mark_bye (source, reason);
   INIT_AVG (sess->stats.avg_rtcp_packet_size, 100);
   sess->stats.bye_members = 1;
   sess->first_rtcp = TRUE;
@@ -2608,7 +2603,7 @@ rtp_session_next_timeout (RTPSession * sess, GstClockTime current_time)
     result = current_time;
   }
 
-  if (sess->source->received_bye) {
+  if (sess->source->marked_bye) {
     if (sess->sent_bye) {
       GST_DEBUG ("we sent BYE already");
       interval = GST_CLOCK_TIME_NONE;
@@ -2786,7 +2781,7 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
 
   /* check for our own source, we don't want to delete our own source. */
   if (!(source == sess->source)) {
-    if (source->received_bye) {
+    if (source->marked_bye) {
       /* if we received a BYE from the source, remove the source after some
        * time. */
       if (data->current_time > source->bye_time &&
@@ -2917,6 +2912,7 @@ session_bye (RTPSession * sess, ReportData * data)
 {
   GstRTCPPacket *packet = &data->packet;
   GstRTCPBuffer *rtcp = &data->rtcpbuf;
+  RTPSource *source = sess->source;
 
   /* open packet */
   session_start_rtcp (sess, data);
@@ -2926,9 +2922,9 @@ session_bye (RTPSession * sess, ReportData * data)
 
   /* add a BYE packet */
   gst_rtcp_buffer_add_packet (rtcp, GST_RTCP_TYPE_BYE, packet);
-  gst_rtcp_packet_bye_add_ssrc (packet, sess->source->ssrc);
-  if (sess->bye_reason)
-    gst_rtcp_packet_bye_set_reason (packet, sess->bye_reason);
+  gst_rtcp_packet_bye_add_ssrc (packet, source->ssrc);
+  if (source->bye_reason)
+    gst_rtcp_packet_bye_set_reason (packet, source->bye_reason);
 
   /* we have a BYE packet now */
   data->is_bye = TRUE;
@@ -3094,7 +3090,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 
   /* see if we need to generate SR or RR packets */
   if (is_rtcp_time (sess, current_time, &data)) {
-    if (own->received_bye) {
+    if (own->marked_bye) {
       /* generate BYE instead */
       GST_DEBUG ("generating BYE message");
       session_bye (sess, &data);
@@ -3137,8 +3133,6 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     g_hash_table_insert (sess->ssrcs[sess->mask_idx],
         GINT_TO_POINTER (own->ssrc), own);
 
-    g_free (sess->bye_reason);
-    sess->bye_reason = NULL;
     sess->sent_bye = FALSE;
     sess->change_ssrc = FALSE;
     notify = TRUE;
