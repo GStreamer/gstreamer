@@ -429,7 +429,6 @@ static void gst_x264_enc_flush_frames (GstX264Enc * encoder, gboolean send);
 static GstFlowReturn gst_x264_enc_encode_frame (GstX264Enc * encoder,
     x264_picture_t * pic_in, GstVideoCodecFrame * input_frame, int *i_nal,
     gboolean send);
-static gboolean gst_x264_enc_stop (GstVideoEncoder * encoder);
 static gboolean gst_x264_enc_set_format (GstVideoEncoder * video_enc,
     GstVideoCodecState * state);
 static gboolean gst_x264_enc_propose_allocation (GstVideoEncoder * encoder,
@@ -594,7 +593,6 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   gobject_class->get_property = gst_x264_enc_get_property;
   gobject_class->finalize = gst_x264_enc_finalize;
 
-  gstencoder_class->stop = GST_DEBUG_FUNCPTR (gst_x264_enc_stop);
   gstencoder_class->set_format = GST_DEBUG_FUNCPTR (gst_x264_enc_set_format);
   gstencoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_x264_enc_handle_frame);
@@ -927,8 +925,6 @@ gst_x264_enc_init (GstX264Enc * encoder)
   encoder->x264param.pf_log = gst_x264_enc_log_callback;
   encoder->x264param.p_log_private = encoder;
   encoder->x264param.i_log_level = X264_LOG_DEBUG;
-
-  gst_x264_enc_reset (GST_VIDEO_ENCODER (encoder), FALSE);
 }
 
 typedef struct
@@ -997,15 +993,17 @@ gst_x264_enc_reset (GstVideoEncoder * encoder, gboolean hard)
 {
   GstX264Enc *x264enc = GST_X264_ENC (encoder);
 
-  if (hard) {
-    gst_x264_enc_flush_frames (x264enc, FALSE);
-    gst_x264_enc_close_encoder (x264enc);
-  }
+  gst_x264_enc_flush_frames (x264enc, FALSE);
+  gst_x264_enc_close_encoder (x264enc);
 
-  if (x264enc->input_state)
-    gst_video_codec_state_unref (x264enc->input_state);
-  x264enc->input_state = NULL;
-  x264enc->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_FROM_PROPERTY;
+  if (hard) {
+    if (x264enc->input_state)
+      gst_video_codec_state_unref (x264enc->input_state);
+    x264enc->input_state = NULL;
+    x264enc->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_FROM_PROPERTY;
+  } else {
+    gst_x264_enc_init_encoder (x264enc);
+  }
 
   gst_x264_enc_dequeue_all_frames (x264enc);
 
@@ -1935,12 +1933,6 @@ gst_x264_enc_flush_frames (GstX264Enc * encoder, gboolean send)
       flow_ret = gst_x264_enc_encode_frame (encoder, NULL, NULL, &i_nal, send);
     } while (flow_ret == GST_FLOW_OK
         && x264_encoder_delayed_frames (encoder->x264enc) > 0);
-}
-
-static gboolean
-gst_x264_enc_stop (GstVideoEncoder * encoder)
-{
-  return gst_x264_enc_reset (encoder, TRUE);
 }
 
 static void
