@@ -1297,8 +1297,11 @@ add_source (RTPSession * sess, RTPSource * src)
   sess->total_sources++;
   if (RTP_SOURCE_IS_ACTIVE (src))
     sess->stats.active_sources++;
-  if (src->internal)
+  if (src->internal) {
     sess->stats.internal_sources++;
+    if (sess->suggested_ssrc != src->ssrc)
+      sess->suggested_ssrc = src->ssrc;
+  }
 }
 
 /* must be called with the session lock, the returned source needs to be
@@ -1455,6 +1458,28 @@ rtp_session_get_internal_ssrc (RTPSession * sess)
   RTP_SESSION_UNLOCK (sess);
 
   return ssrc;
+}
+
+/**
+ * rtp_session_suggest_ssrc:
+ * @sess: a #RTPSession
+ *
+ * Suggest an unused SSRC in @sess.
+ *
+ * Returns: a free unused SSRC
+ */
+guint32
+rtp_session_suggest_ssrc (RTPSession * sess)
+{
+  guint32 result;
+
+  g_return_val_if_fail (RTP_IS_SESSION (sess), 0);
+
+  RTP_SESSION_LOCK (sess);
+  result = sess->suggested_ssrc;
+  RTP_SESSION_UNLOCK (sess);
+
+  return result;
 }
 
 /**

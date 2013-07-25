@@ -1762,6 +1762,7 @@ gst_rtp_session_event_send_rtp_sink (GstPad * pad, GstObject * parent,
        * because we stop sending. */
       ret = gst_pad_push_event (rtpsession->send_rtp_src, event);
       current_time = gst_clock_get_time (rtpsession->priv->sysclock);
+
       GST_DEBUG_OBJECT (rtpsession, "scheduling BYE message");
       rtp_session_mark_all_bye (rtpsession->priv->session, "End Of Stream");
       rtp_session_schedule_bye (rtpsession->priv->session, current_time);
@@ -1826,7 +1827,7 @@ gst_rtp_session_getcaps_send_rtp (GstPad * pad, GstRtpSession * rtpsession,
 
   priv = rtpsession->priv;
 
-  ssrc = rtp_session_get_internal_ssrc (priv->session);
+  ssrc = rtp_session_suggest_ssrc (priv->session);
 
   /* we can basically accept anything but we prefer to receive packets with our
    * internal SSRC so that we don't have to patch it. Create a structure with
