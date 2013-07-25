@@ -283,6 +283,7 @@ struct _QtDemuxStream
 
   /* the Gst segment we are processing out, used for clipping */
   GstSegment segment;
+  guint32 segment_seqnum;       /* segment event seqnum obtained from seek */
 
   /* last GstFlowReturn */
   GstFlowReturn last_ret;
@@ -1344,7 +1345,8 @@ no_format:
  * Called with STREAM_LOCK
  */
 static gboolean
-gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment)
+gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment,
+    guint32 seqnum)
 {
   gint64 desired_offset;
   gint n;
@@ -1376,6 +1378,7 @@ gst_qtdemux_perform_seek (GstQTDemux * qtdemux, GstSegment * segment)
     stream->segment_index = -1;
     stream->last_ret = GST_FLOW_OK;
     stream->sent_eos = FALSE;
+    stream->segment_seqnum = seqnum;
 
     if (segment->flags & GST_SEEK_FLAG_FLUSH)
       gst_segment_init (&stream->segment, GST_FORMAT_TIME);
@@ -1403,12 +1406,15 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   gboolean update;
   GstSegment seeksegment;
   int i;
+  guint32 seqnum = 0;
+  GstEvent *flush_event;
 
   if (event) {
     GST_DEBUG_OBJECT (qtdemux, "doing seek with event");
 
     gst_event_parse_seek (event, &rate, &format, &flags,
         &cur_type, &cur, &stop_type, &stop);
+    seqnum = gst_event_get_seqnum (event);
 
     /* we have to have a format as the segment format. Try to convert
      * if not. */
@@ -1426,10 +1432,13 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
 
   /* stop streaming, either by flushing or by pausing the task */
   if (flush) {
+    flush_event = gst_event_new_flush_start ();
+    if (seqnum)
+      gst_event_set_seqnum (flush_event, seqnum);
     /* unlock upstream pull_range */
-    gst_pad_push_event (qtdemux->sinkpad, gst_event_new_flush_start ());
+    gst_pad_push_event (qtdemux->sinkpad, gst_event_ref (flush_event));
     /* make sure out loop function exits */
-    gst_qtdemux_push_event (qtdemux, gst_event_new_flush_start ());
+    gst_qtdemux_push_event (qtdemux, flush_event);
   } else {
     /* non flushing seek, pause the task */
     gst_pad_pause_task (qtdemux->sinkpad);
@@ -1450,21 +1459,27 @@ gst_qtdemux_do_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   }
 
   /* now do the seek, this actually never returns FALSE */
-  gst_qtdemux_perform_seek (qtdemux, &seeksegment);
+  gst_qtdemux_perform_seek (qtdemux, &seeksegment, seqnum);
 
   /* prepare for streaming again */
   if (flush) {
-    gst_pad_push_event (qtdemux->sinkpad, gst_event_new_flush_stop (TRUE));
-    gst_qtdemux_push_event (qtdemux, gst_event_new_flush_stop (TRUE));
+    flush_event = gst_event_new_flush_stop (TRUE);
+    if (seqnum)
+      gst_event_set_seqnum (flush_event, seqnum);
+
+    gst_pad_push_event (qtdemux->sinkpad, gst_event_ref (flush_event));
+    gst_qtdemux_push_event (qtdemux, flush_event);
   }
 
   /* commit the new segment */
   memcpy (&qtdemux->segment, &seeksegment, sizeof (GstSegment));
 
   if (qtdemux->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-    gst_element_post_message (GST_ELEMENT_CAST (qtdemux),
-        gst_message_new_segment_start (GST_OBJECT_CAST (qtdemux),
-            qtdemux->segment.format, qtdemux->segment.position));
+    GstMessage *msg = gst_message_new_segment_start (GST_OBJECT_CAST (qtdemux),
+        qtdemux->segment.format, qtdemux->segment.position);
+    if (seqnum)
+      gst_message_set_seqnum (msg, seqnum);
+    gst_element_post_message (GST_ELEMENT_CAST (qtdemux), msg);
   }
 
   /* restart streaming, NEWSEGMENT will be sent from the streaming thread. */
@@ -1840,6 +1855,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     for (n = 0; n < qtdemux->n_streams; n++) {
       qtdemux->streams[n]->last_ret = GST_FLOW_OK;
       qtdemux->streams[n]->sent_eos = FALSE;
+      qtdemux->streams[n]->segment_seqnum = 0;
     }
   }
 }
@@ -1860,6 +1876,7 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       QtDemuxStream *stream;
       gint idx;
       GstSegment segment;
+      GstEvent *segment_event;
 
       /* some debug output */
       gst_event_copy_segment (event, &segment);
@@ -1939,7 +1956,9 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
 
       gst_segment_copy_into (&segment, &demux->segment);
       GST_DEBUG_OBJECT (demux, "Pushing newseg %" GST_SEGMENT_FORMAT, &segment);
-      gst_qtdemux_push_event (demux, gst_event_new_segment (&segment));
+      segment_event = gst_event_new_segment (&segment);
+      gst_event_set_seqnum (segment_event, gst_event_get_seqnum (event));
+      gst_qtdemux_push_event (demux, segment_event);
 
       /* clear leftover in current segment, if any */
       gst_adapter_clear (demux->adapter);
@@ -3438,6 +3457,10 @@ gst_qtdemux_activate_segment (GstQTDemux * qtdemux, QtDemuxStream * stream,
   /* now prepare and send the segment */
   if (stream->pad) {
     event = gst_event_new_segment (&stream->segment);
+    if (stream->segment_seqnum) {
+      gst_event_set_seqnum (event, stream->segment_seqnum);
+      stream->segment_seqnum = 0;
+    }
     gst_pad_push_event (stream->pad, event);
     /* assume we can send more data now */
     stream->last_ret = GST_FLOW_OK;
