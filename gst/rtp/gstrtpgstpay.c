@@ -320,7 +320,7 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
       etype = 2;
       break;
     case GST_EVENT_CUSTOM_BOTH:
-      etype = 2;
+      etype = 3;
       break;
     default:
       etype = 0;
