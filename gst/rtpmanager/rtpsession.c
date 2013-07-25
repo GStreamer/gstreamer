@@ -2440,10 +2440,18 @@ ignore:
 void
 rtp_session_update_send_caps (RTPSession * sess, GstCaps * caps)
 {
+  GstStructure *s;
+  guint ssrc;
+
   g_return_if_fail (RTP_IS_SESSION (sess));
   g_return_if_fail (GST_IS_CAPS (caps));
 
   GST_LOG ("received caps %" GST_PTR_FORMAT, caps);
+
+  s = gst_caps_get_structure (caps, 0);
+
+  if (gst_structure_get_uint (s, "ssrc", &ssrc))
+    rtp_session_set_internal_ssrc (sess, ssrc);
 
   RTP_SESSION_LOCK (sess);
   rtp_source_update_caps (sess->source, caps);
