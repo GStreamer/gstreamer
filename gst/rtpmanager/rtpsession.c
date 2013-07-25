@@ -122,8 +122,11 @@ static guint rtp_session_signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE (RTPSession, rtp_session, G_TYPE_OBJECT);
 
+static guint32 rtp_session_create_new_ssrc (RTPSession * sess);
 static RTPSource *obtain_source (RTPSession * sess, guint32 ssrc,
     gboolean * created, RTPArrivalStats * arrival, gboolean rtp);
+static RTPSource *obtain_internal_source (RTPSession * sess,
+    guint32 ssrc, gboolean * created);
 static GstFlowReturn rtp_session_schedule_bye_locked (RTPSession * sess,
     GstClockTime current_time);
 static GstClockTime calculate_rtcp_interval (RTPSession * sess,
@@ -461,6 +464,8 @@ rtp_session_init (RTPSession * sess)
   gint i;
   gchar *str;
   GstStructure *sdes;
+  guint32 ssrc;
+  gboolean created;
 
   g_mutex_init (&sess->lock);
   sess->key = g_random_int ();
@@ -474,23 +479,15 @@ rtp_session_init (RTPSession * sess)
   }
 
   rtp_stats_init_defaults (&sess->stats);
+  INIT_AVG (sess->stats.avg_rtcp_packet_size, 100);
+  rtp_stats_set_min_interval (&sess->stats,
+      (gdouble) DEFAULT_RTCP_MIN_INTERVAL / GST_SECOND);
 
   sess->recalc_bandwidth = TRUE;
   sess->bandwidth = DEFAULT_BANDWIDTH;
   sess->rtcp_bandwidth = DEFAULT_RTCP_FRACTION;
   sess->rtcp_rr_bandwidth = DEFAULT_RTCP_RR_BANDWIDTH;
   sess->rtcp_rs_bandwidth = DEFAULT_RTCP_RS_BANDWIDTH;
-
-  /* create an active SSRC for this session manager */
-  sess->source = rtp_session_create_source (sess);
-  sess->source->validated = TRUE;
-  sess->source->internal = TRUE;
-  sess->stats.active_sources++;
-  sess->stats.internal_sources++;
-  INIT_AVG (sess->stats.avg_rtcp_packet_size, 100);
-
-  rtp_stats_set_min_interval (&sess->stats,
-      (gdouble) DEFAULT_RTCP_MIN_INTERVAL / GST_SECOND);
 
   /* default UDP header length */
   sess->header_len = 28;
@@ -515,7 +512,10 @@ rtp_session_init (RTPSession * sess)
 
   gst_structure_set (sdes, "tool", G_TYPE_STRING, "GStreamer", NULL);
 
-  /* and configure in the source */
+  /* create an active SSRC for this session manager */
+  ssrc = rtp_session_create_new_ssrc (sess);
+  sess->source = obtain_internal_source (sess, ssrc, &created);
+  /* and configure sdes in the source */
   rtp_source_set_sdes_struct (sess->source, sdes);
 
   sess->first_rtcp = TRUE;
@@ -528,8 +528,6 @@ rtp_session_init (RTPSession * sess)
       DEFAULT_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD;
 
   sess->last_keyframe_request = GST_CLOCK_TIME_NONE;
-
-  GST_DEBUG ("%p: session using SSRC: %08x", sess, sess->source->ssrc);
 }
 
 static void
@@ -1299,6 +1297,10 @@ add_source (RTPSession * sess, RTPSource * src)
       GINT_TO_POINTER (src->ssrc), src);
   /* we have one more source now */
   sess->total_sources++;
+  if (RTP_SOURCE_IS_ACTIVE (src))
+    sess->stats.active_sources++;
+  if (src->internal)
+    sess->stats.internal_sources++;
 }
 
 /* must be called with the session lock, the returned source needs to be
@@ -1352,6 +1354,34 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
   source->last_activity = arrival->current_time;
   if (rtp)
     source->last_rtp_activity = arrival->current_time;
+  g_object_ref (source);
+
+  return source;
+}
+
+/* must be called with the session lock, the returned source needs to be
+ * unreffed after usage. */
+static RTPSource *
+obtain_internal_source (RTPSession * sess, guint32 ssrc, gboolean * created)
+{
+  RTPSource *source;
+
+  source = find_source (sess, ssrc);
+  if (source == NULL) {
+    /* make new internal Source and insert */
+    source = rtp_source_new (ssrc);
+
+    GST_DEBUG ("creating new internal source %08x %p", ssrc, source);
+
+    source->validated = TRUE;
+    source->internal = TRUE;
+    rtp_source_set_callbacks (source, &callbacks, sess);
+
+    add_source (sess, source);
+    *created = TRUE;
+  } else {
+    *created = FALSE;
+  }
   g_object_ref (source);
 
   return source;
