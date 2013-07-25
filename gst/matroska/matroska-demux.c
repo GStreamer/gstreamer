@@ -451,6 +451,7 @@ gst_matroska_demux_reset (GstElement * element)
   demux->index_offset = 0;
   demux->seekable = FALSE;
   demux->need_segment = FALSE;
+  demux->segment_seqnum = 0;
   demux->requested_seek_time = GST_CLOCK_TIME_NONE;
   demux->seek_offset = -1;
   demux->building_index = FALSE;
@@ -1999,12 +2000,14 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
   GstSegment seeksegment = { 0, };
   gboolean update = TRUE;
   gboolean pad_locked = FALSE;
+  guint32 seqnum;
 
   if (pad)
     track = gst_pad_get_element_private (pad);
 
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
+  seqnum = gst_event_get_seqnum (event);
 
   /* we can only seek on time */
   if (format != GST_FORMAT_TIME) {
@@ -2101,9 +2104,11 @@ gst_matroska_demux_handle_seek_event (GstMatroskaDemux * demux,
 
 next:
   if (flush) {
+    GstEvent *flush_event = gst_event_new_flush_start ();
+    gst_event_set_seqnum (flush_event, seqnum);
     GST_DEBUG_OBJECT (demux, "Starting flush");
-    gst_pad_push_event (demux->common.sinkpad, gst_event_new_flush_start ());
-    gst_matroska_demux_send_event (demux, gst_event_new_flush_start ());
+    gst_pad_push_event (demux->common.sinkpad, gst_event_ref (flush_event));
+    gst_matroska_demux_send_event (demux, flush_event);
   } else {
     GST_DEBUG_OBJECT (demux, "Non-flushing seek, pausing task");
     gst_pad_pause_task (demux->common.sinkpad);
@@ -2124,10 +2129,14 @@ next:
 
   /* pull mode without index can do some scanning */
   if (!demux->streaming && !entry) {
+    GstEvent *flush_event;
+
     /* need to stop flushing upstream as we need it next */
-    if (flush)
-      gst_pad_push_event (demux->common.sinkpad,
-          gst_event_new_flush_stop (TRUE));
+    if (flush) {
+      flush_event = gst_event_new_flush_stop (TRUE);
+      gst_event_set_seqnum (flush_event, seqnum);
+      gst_pad_push_event (demux->common.sinkpad, flush_event);
+    }
     entry = gst_matroska_demux_search_pos (demux, seeksegment.position);
     /* keep local copy */
     if (entry) {
@@ -2136,8 +2145,11 @@ next:
       entry = &scan_entry;
     } else {
       GST_DEBUG_OBJECT (demux, "Scan failed to find matching position");
-      if (flush)
-        gst_matroska_demux_send_event (demux, gst_event_new_flush_stop (TRUE));
+      if (flush) {
+        flush_event = gst_event_new_flush_stop (TRUE);
+        gst_event_set_seqnum (flush_event, seqnum);
+        gst_matroska_demux_send_event (demux, flush_event);
+      }
       goto seek_error;
     }
   }
@@ -2168,9 +2180,11 @@ finish:
 
 exit:
   if (flush) {
+    GstEvent *flush_event = gst_event_new_flush_stop (TRUE);
+    gst_event_set_seqnum (flush_event, seqnum);
     GST_DEBUG_OBJECT (demux, "Stopping flush");
-    gst_pad_push_event (demux->common.sinkpad, gst_event_new_flush_stop (TRUE));
-    gst_matroska_demux_send_event (demux, gst_event_new_flush_stop (TRUE));
+    gst_pad_push_event (demux->common.sinkpad, gst_event_ref (flush_event));
+    gst_matroska_demux_send_event (demux, flush_event);
   }
 
   GST_OBJECT_LOCK (demux);
@@ -2189,6 +2203,7 @@ exit:
 
     msg = gst_message_new_segment_start (GST_OBJECT (demux),
         GST_FORMAT_TIME, demux->common.segment.start);
+    gst_message_set_seqnum (msg, seqnum);
     gst_element_post_message (GST_ELEMENT (demux), msg);
   }
 
@@ -2198,6 +2213,7 @@ exit:
 
   /* On port from 0.10, discarded !update (for segment.update) here, FIXME? */
   demux->new_segment = gst_event_new_segment (&demux->common.segment);
+  gst_event_set_seqnum (demux->new_segment, seqnum);
   if (demux->common.segment.rate < 0 && demux->common.segment.stop == -1)
     demux->to_time = demux->common.segment.position;
   else
@@ -3379,6 +3395,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
     if (GST_CLOCK_TIME_IS_VALID (lace_time) && demux->need_segment) {
       GstSegment *segment = &demux->common.segment;
       guint64 clace_time;
+      GstEvent *segment_event;
 
       if (!GST_CLOCK_TIME_IS_VALID (demux->stream_start_time)) {
         demux->stream_start_time = lace_time;
@@ -3403,8 +3420,12 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
           "generated segment starting at %" GST_TIME_FORMAT ": %"
           GST_SEGMENT_FORMAT, GST_TIME_ARGS (lace_time), segment);
       /* now convey our segment notion downstream */
+      segment_event = gst_event_new_segment (segment);
+      if (demux->segment_seqnum)
+        gst_event_set_seqnum (segment_event, demux->segment_seqnum);
       gst_matroska_demux_send_event (demux, gst_event_new_segment (segment));
       demux->need_segment = FALSE;
+      demux->segment_seqnum = 0;
     }
 
     if (stream->send_stream_headers) {
@@ -4730,6 +4751,7 @@ gst_matroska_demux_handle_sink_event (GstPad * pad, GstObject * parent,
       demux->cluster_time = GST_CLOCK_TIME_NONE;
       demux->cluster_offset = 0;
       demux->need_segment = TRUE;
+      demux->segment_seqnum = gst_event_get_seqnum (event);
       /* but keep some of the upstream segment */
       demux->common.segment.rate = segment->rate;
       /* also check if need to keep some of the requested seek position */
