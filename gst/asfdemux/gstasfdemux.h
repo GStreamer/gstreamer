@@ -182,6 +182,7 @@ struct _GstASFDemux {
   gboolean             accurate;
 
   gboolean             need_newsegment;  /* do we need to send a new-segment event? */
+  guint32              segment_seqnum;   /* if the new segment must have this seqnum */
   GstClockTime         segment_ts;       /* streaming; timestamp for segment start */
   GstSegment           in_segment;       /* streaming; upstream segment info */
   GstClockTime         in_gap;           /* streaming; upstream initial segment gap for interpolation */

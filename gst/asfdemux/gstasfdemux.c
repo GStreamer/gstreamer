@@ -258,6 +258,7 @@ gst_asf_demux_reset (GstASFDemux * demux, gboolean chain_reset)
     GST_LOG_OBJECT (demux, "Restarting");
     gst_segment_init (&demux->segment, GST_FORMAT_TIME);
     demux->need_newsegment = TRUE;
+    demux->segment_seqnum = 0;
     demux->segment_running = FALSE;
     demux->accurate = FALSE;
     demux->metadata = gst_caps_new_empty ();
@@ -392,6 +393,7 @@ gst_asf_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       demux->segment_ts = GST_CLOCK_TIME_NONE;
       demux->in_gap = GST_CLOCK_TIME_NONE;
       demux->need_newsegment = TRUE;
+      demux->segment_seqnum = gst_event_get_seqnum (event);
       gst_asf_demux_reset_stream_state_after_discont (demux);
       GST_OBJECT_UNLOCK (demux);
 
@@ -554,6 +556,7 @@ gst_asf_demux_handle_seek_push (GstASFDemux * demux, GstEvent * event)
   gint64 cur, stop;
   guint packet;
   gboolean res;
+  GstEvent *byte_event;
 
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
@@ -584,9 +587,10 @@ gst_asf_demux_handle_seek_push (GstASFDemux * demux, GstEvent * event)
   GST_DEBUG_OBJECT (demux, "Pushing BYTE seek rate %g, "
       "start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT, rate, cur, stop);
   /* BYTE seek event */
-  event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, cur_type, cur,
-      stop_type, stop);
-  res = gst_pad_push_event (demux->sinkpad, event);
+  byte_event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, cur_type,
+      cur, stop_type, stop);
+  gst_event_set_seqnum (byte_event, gst_event_get_seqnum (event));
+  res = gst_pad_push_event (demux->sinkpad, byte_event);
 
   return res;
 }
@@ -607,6 +611,8 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   gint64 seek_time;
   guint packet, speed_count = 1;
   gboolean eos;
+  guint32 seqnum;
+  GstEvent *fevent;
 
   if (G_UNLIKELY (demux->seekable == FALSE || demux->packet_size == 0 ||
           demux->num_packets == 0 || demux->play_time == 0)) {
@@ -621,6 +627,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
 
   gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
       &stop_type, &stop);
+  seqnum = gst_event_get_seqnum (event);
 
   if (G_UNLIKELY (format != GST_FORMAT_TIME)) {
     GST_LOG_OBJECT (demux, "seeking is only supported in TIME format");
@@ -663,8 +670,11 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
 
   /* unlock the streaming thread */
   if (G_LIKELY (flush)) {
-    gst_pad_push_event (demux->sinkpad, gst_event_new_flush_start ());
-    gst_asf_demux_send_event_unlocked (demux, gst_event_new_flush_start ());
+    fevent = gst_event_new_flush_start ();
+
+    gst_event_set_seqnum (fevent, seqnum);
+    gst_pad_push_event (demux->sinkpad, gst_event_ref (fevent));
+    gst_asf_demux_send_event_unlocked (demux, fevent);
   } else {
     gst_pad_pause_task (demux->sinkpad);
   }
@@ -675,10 +685,14 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   GST_PAD_STREAM_LOCK (demux->sinkpad);
 
   /* we now can stop flushing, since we have the stream lock now */
-  gst_pad_push_event (demux->sinkpad, gst_event_new_flush_stop (TRUE));
+  fevent = gst_event_new_flush_stop (TRUE);
+  gst_event_set_seqnum (fevent, seqnum);
+  gst_pad_push_event (demux->sinkpad, gst_event_ref (fevent));
 
   if (G_LIKELY (flush))
-    gst_asf_demux_send_event_unlocked (demux, gst_event_new_flush_stop (TRUE));
+    gst_asf_demux_send_event_unlocked (demux, fevent);
+  else
+    gst_event_unref (fevent);
 
   /* operating on copy of segment until we know the seek worked */
   segment = demux->segment;
@@ -690,6 +704,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
     /* create the segment event to close the current segment */
     gst_segment_copy_into (&segment, &newsegment);
     newseg = gst_event_new_segment (&newsegment);
+    gst_event_set_seqnum (newseg, seqnum);
 
     gst_asf_demux_send_event_unlocked (demux, newseg);
   }
@@ -760,6 +775,7 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   demux->segment = segment;
   demux->packet = packet;
   demux->need_newsegment = TRUE;
+  demux->segment_seqnum = seqnum;
   demux->speed_packets = speed_count;
   gst_asf_demux_reset_stream_state_after_discont (demux);
   GST_OBJECT_UNLOCK (demux);
@@ -1407,6 +1423,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
 
     /* do we need to send a newsegment event */
     if ((G_UNLIKELY (demux->need_newsegment))) {
+      GstEvent *segment_event;
 
       /* safe default if insufficient upstream info */
       if (!GST_CLOCK_TIME_IS_VALID (demux->in_gap))
@@ -1431,8 +1448,10 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
           &demux->segment);
 
       /* note: we fix up all timestamps to start from 0, so this should be ok */
-      gst_asf_demux_send_event_unlocked (demux,
-          gst_event_new_segment (&demux->segment));
+      segment_event = gst_event_new_segment (&demux->segment);
+      if (demux->segment_seqnum)
+        gst_event_set_seqnum (segment_event, demux->segment_seqnum);
+      gst_asf_demux_send_event_unlocked (demux, segment_event);
 
       /* now post any global tags we may have found */
       if (demux->taglist == NULL) {
@@ -1449,6 +1468,7 @@ gst_asf_demux_push_complete_payloads (GstASFDemux * demux, gboolean force)
       demux->taglist = NULL;
 
       demux->need_newsegment = FALSE;
+      demux->segment_seqnum = 0;
       demux->segment_running = TRUE;
     }
 
