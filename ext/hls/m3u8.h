@@ -98,5 +98,7 @@ gboolean gst_m3u8_client_is_live(GstM3U8Client * client);
 GList * gst_m3u8_client_get_playlist_for_bitrate (GstM3U8Client * client,
     guint bitrate);
 
+guint64 gst_m3u8_client_get_current_fragment_duration (GstM3U8Client * client);
+
 G_END_DECLS
 #endif /* __M3U8_H__ */

@@ -555,6 +555,12 @@ out:
   return ret;
 }
 
+static gint
+_find_current (GstM3U8MediaFile * file, GstM3U8Client * client)
+{
+  return file->sequence == client->sequence;
+}
+
 static gboolean
 _find_next (GstM3U8MediaFile * file, GstM3U8Client * client)
 {
@@ -785,4 +791,26 @@ uri_join (const gchar * uri1, const gchar * uri2)
 out:
   g_free (uri_copy);
   return ret;
+}
+
+guint64
+gst_m3u8_client_get_current_fragment_duration (GstM3U8Client * client)
+{
+  guint64 dur;
+  GList *list;
+
+  g_return_val_if_fail (client != NULL, 0);
+
+  GST_M3U8_CLIENT_LOCK (client);
+
+  list = g_list_find_custom (client->current->files, client,
+      (GCompareFunc) _find_current);
+  if (list == NULL) {
+    dur = -1;
+  } else {
+    dur = GST_M3U8_MEDIA_FILE (list->data)->duration;
+  }
+
+  GST_M3U8_CLIENT_UNLOCK (client);
+  return dur;
 }
