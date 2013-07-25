@@ -2939,6 +2939,11 @@ is_rtcp_time (RTPSession * sess, GstClockTime current_time, ReportData * data)
 {
   GstClockTime new_send_time, elapsed;
 
+  if (GST_CLOCK_TIME_IS_VALID (sess->next_early_rtcp_time))
+    data->is_early = TRUE;
+  else
+    data->is_early = FALSE;
+
   if (data->is_early && sess->next_early_rtcp_time < current_time)
     goto early;
 
@@ -3086,11 +3091,6 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   /* Now remove the marked sources */
   g_hash_table_foreach_remove (sess->ssrcs[sess->mask_idx],
       (GHRFunc) remove_closing_sources, NULL);
-
-  if (GST_CLOCK_TIME_IS_VALID (sess->next_early_rtcp_time))
-    data.is_early = TRUE;
-  else
-    data.is_early = FALSE;
 
   /* see if we need to generate SR or RR packets */
   if (is_rtcp_time (sess, current_time, &data)) {
