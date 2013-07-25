@@ -1018,6 +1018,14 @@ gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
       }
       break;
     }
+    case GST_EVENT_FLUSH_STOP:{
+      GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
+      gst_segment_init (&encoder->input_segment, GST_FORMAT_TIME);
+      gst_segment_init (&encoder->output_segment, GST_FORMAT_TIME);
+      gst_video_encoder_reset (encoder, FALSE);
+      GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
+      break;
+    }
     default:
       break;
   }
