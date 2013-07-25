@@ -1462,14 +1462,14 @@ mp3_type_find (GstTypeFind * tf, gpointer unused)
     goto suggest;
   }
 
-  /* let's see if there's a valid header right at the start */
-  data = gst_type_find_peek (tf, 0, 4); /* use min. frame size? */
-  if (data && mp3_type_frame_length_from_header (GST_READ_UINT32_BE (data),
-          &layer, NULL, NULL, NULL, NULL, 0) != 0) {
-    if (prob == 0)
-      prob = GST_TYPE_FIND_POSSIBLE - 10;
-    else
-      prob = MAX (GST_TYPE_FIND_POSSIBLE - 10, prob + 10);
+  /* a valid header right at the start makes it more likely
+   * that this is actually plain mpeg-1 audio */
+  if (prob > 0) {
+    data = gst_type_find_peek (tf, 0, 4);       /* use min. frame size? */
+    if (data && mp3_type_frame_length_from_header (GST_READ_UINT32_BE (data),
+            &layer, NULL, NULL, NULL, NULL, 0) != 0) {
+      prob = MIN (prob + 10, GST_TYPE_FIND_MAXIMUM);
+    }
   }
 
   if (prob > 0)
