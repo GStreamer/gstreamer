@@ -853,17 +853,9 @@ gst_video_decoder_finalize (GObject * object)
 static GstFlowReturn
 gst_video_decoder_flush (GstVideoDecoder * dec, gboolean hard)
 {
-  GstVideoDecoderClass *klass;
-  GstVideoDecoderPrivate *priv = dec->priv;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  klass = GST_VIDEO_DECODER_GET_CLASS (dec);
-
   GST_LOG_OBJECT (dec, "flush hard %d", hard);
-
-  /* Inform subclass */
-  if (klass->reset)
-    klass->reset (dec, hard);
 
   /* FIXME make some more distinction between hard and soft,
    * but subclass may not be prepared for that */
@@ -875,13 +867,8 @@ gst_video_decoder_flush (GstVideoDecoder * dec, gboolean hard)
     gst_segment_init (&dec->input_segment, GST_FORMAT_UNDEFINED);
     gst_segment_init (&dec->output_segment, GST_FORMAT_UNDEFINED);
     gst_video_decoder_clear_queues (dec);
-    priv->error_count = 0;
-    g_list_free_full (priv->current_frame_events,
-        (GDestroyNotify) gst_event_unref);
-    priv->current_frame_events = NULL;
-    g_list_free_full (priv->pending_events, (GDestroyNotify) gst_event_unref);
-    priv->pending_events = NULL;
   }
+
   /* and get (re)set for the sequel */
   gst_video_decoder_reset (dec, FALSE);
 
@@ -1650,18 +1637,21 @@ gst_video_decoder_clear_queues (GstVideoDecoder * dec)
 static void
 gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
 {
+  GstVideoDecoderClass *klass = GST_VIDEO_DECODER_GET_CLASS (decoder);
   GstVideoDecoderPrivate *priv = decoder->priv;
 
   GST_DEBUG_OBJECT (decoder, "reset full %d", full);
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
+  /* Inform subclass */
+  if (klass->reset)
+    klass->reset (decoder, full);
+
   if (full) {
     gst_segment_init (&decoder->input_segment, GST_FORMAT_UNDEFINED);
     gst_segment_init (&decoder->output_segment, GST_FORMAT_UNDEFINED);
     gst_video_decoder_clear_queues (decoder);
-    priv->error_count = 0;
-    priv->max_errors = GST_VIDEO_DECODER_MAX_ERRORS;
     if (priv->input_state)
       gst_video_codec_state_unref (priv->input_state);
     priv->input_state = NULL;
@@ -1700,6 +1690,15 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
     gst_video_codec_frame_unref (priv->current_frame);
     priv->current_frame = NULL;
   }
+
+  g_list_free_full (priv->current_frame_events,
+      (GDestroyNotify) gst_event_unref);
+  priv->current_frame_events = NULL;
+  g_list_free_full (priv->pending_events, (GDestroyNotify) gst_event_unref);
+  priv->pending_events = NULL;
+
+  priv->error_count = 0;
+  priv->max_errors = GST_VIDEO_DECODER_MAX_ERRORS;
 
   priv->dropped = 0;
   priv->processed = 0;
@@ -2051,12 +2050,6 @@ gst_video_decoder_change_state (GstElement * element, GstStateChange transition)
 
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       gst_video_decoder_reset (decoder, TRUE);
-      g_list_free_full (decoder->priv->current_frame_events,
-          (GDestroyNotify) gst_event_unref);
-      decoder->priv->current_frame_events = NULL;
-      g_list_free_full (decoder->priv->pending_events,
-          (GDestroyNotify) gst_event_unref);
-      decoder->priv->pending_events = NULL;
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
