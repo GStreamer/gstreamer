@@ -3185,6 +3185,14 @@ done:
   return result;
 }
 
+/**
+ * rtp_session_request_early_rtcp:
+ * @sess: an #RTPSession
+ * @current_time: the current system time
+ * @max_delay: maximum delay
+ *
+ * Request transmission of early RTCP
+ */
 void
 rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
     GstClockTimeDiff max_delay)
