@@ -29,6 +29,7 @@ G_BEGIN_DECLS
 /* AAC */
 
 guint         gst_codec_utils_aac_get_sample_rate_from_index (guint sr_idx);
+gint          gst_codec_utils_aac_get_index_from_sample_rate (guint rate);
 
 const gchar * gst_codec_utils_aac_get_profile (const guint8 * audio_config, guint len);
 

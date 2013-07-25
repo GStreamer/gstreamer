@@ -1994,6 +1994,7 @@ gst_pb_utils_get_codec_description
 <INCLUDE>gst/pbutils/codec-utils.h</INCLUDE>
 <SUBSECTION>
 gst_codec_utils_aac_get_sample_rate_from_index
+gst_codec_utils_aac_get_index_from_sample_rate
 gst_codec_utils_aac_get_profile
 gst_codec_utils_aac_get_level
 gst_codec_utils_aac_caps_set_level_and_profile
