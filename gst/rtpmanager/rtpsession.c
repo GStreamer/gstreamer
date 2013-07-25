@@ -1331,6 +1331,21 @@ check_collision (RTPSession * sess, RTPSource * source,
   return TRUE;
 }
 
+static RTPSource *
+find_source (RTPSession * sess, guint32 ssrc)
+{
+  return g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
+      GINT_TO_POINTER (ssrc));
+}
+
+static void
+add_source (RTPSession * sess, RTPSource * src)
+{
+  g_hash_table_insert (sess->ssrcs[sess->mask_idx],
+      GINT_TO_POINTER (src->ssrc), src);
+  /* we have one more source now */
+  sess->total_sources++;
+}
 
 /* must be called with the session lock, the returned source needs to be
  * unreffed after usage. */
@@ -1340,11 +1355,12 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
 {
   RTPSource *source;
 
-  source =
-      g_hash_table_lookup (sess->ssrcs[sess->mask_idx], GINT_TO_POINTER (ssrc));
+  source = find_source (sess, ssrc);
   if (source == NULL) {
     /* make new Source in probation and insert */
     source = rtp_source_new (ssrc);
+
+    GST_DEBUG ("creating new source %08x %p", ssrc, source);
 
     /* for RTP packets we need to set the source in probation. Receiving RTCP
      * packets of an SSRC, on the other hand, is a strong indication that we
@@ -1365,11 +1381,7 @@ obtain_source (RTPSession * sess, guint32 ssrc, gboolean * created,
     /* configure a callback on the source */
     rtp_source_set_callbacks (source, &callbacks, sess);
 
-    g_hash_table_insert (sess->ssrcs[sess->mask_idx], GINT_TO_POINTER (ssrc),
-        source);
-
-    /* we have one more source now */
-    sess->total_sources++;
+    add_source (sess, source);
     *created = TRUE;
   } else {
     *created = FALSE;
@@ -1482,14 +1494,9 @@ rtp_session_add_source (RTPSession * sess, RTPSource * src)
   g_return_val_if_fail (src != NULL, FALSE);
 
   RTP_SESSION_LOCK (sess);
-  find =
-      g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
-      GINT_TO_POINTER (src->ssrc));
+  find = find_source (sess, src->ssrc);
   if (find == NULL) {
-    g_hash_table_insert (sess->ssrcs[sess->mask_idx],
-        GINT_TO_POINTER (src->ssrc), src);
-    /* we have one more source now */
-    sess->total_sources++;
+    add_source (sess, src);
     result = TRUE;
   }
   RTP_SESSION_UNLOCK (sess);
@@ -1560,8 +1567,7 @@ rtp_session_get_source_by_ssrc (RTPSession * sess, guint32 ssrc)
   g_return_val_if_fail (RTP_IS_SESSION (sess), NULL);
 
   RTP_SESSION_LOCK (sess);
-  result =
-      g_hash_table_lookup (sess->ssrcs[sess->mask_idx], GINT_TO_POINTER (ssrc));
+  result = find_source (sess, ssrc);
   if (result)
     g_object_ref (result);
   RTP_SESSION_UNLOCK (sess);
@@ -1579,8 +1585,7 @@ rtp_session_create_new_ssrc (RTPSession * sess)
     ssrc = g_random_int ();
 
     /* see if it exists in the session, we're done if it doesn't */
-    if (g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
-            GINT_TO_POINTER (ssrc)) == NULL)
+    if (find_source (sess, ssrc) == NULL)
       break;
   }
   return ssrc;
@@ -1608,10 +1613,7 @@ rtp_session_create_source (RTPSession * sess)
   rtp_source_set_callbacks (source, &callbacks, sess);
   /* we need an additional ref for the source in the hashtable */
   g_object_ref (source);
-  g_hash_table_insert (sess->ssrcs[sess->mask_idx], GINT_TO_POINTER (ssrc),
-      source);
-  /* we have one more source now */
-  sess->total_sources++;
+  add_source (sess, source);
   RTP_SESSION_UNLOCK (sess);
 
   return source;
@@ -2156,8 +2158,7 @@ rtp_session_process_pli (RTPSession * sess, guint32 sender_ssrc,
   if (!sess->callbacks.request_key_unit)
     return;
 
-  src = g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
-      GINT_TO_POINTER (sender_ssrc));
+  src = find_source (sess, sender_ssrc);
   if (!src)
     return;
 
@@ -2179,8 +2180,7 @@ rtp_session_process_fir (RTPSession * sess, guint32 sender_ssrc,
   if (fci_length < 8)
     return;
 
-  src = g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
-      GINT_TO_POINTER (sender_ssrc));
+  src = find_source (sess, sender_ssrc);
 
   /* Hack because Google fails to set the sender_ssrc correctly */
   if (!src && sender_ssrc == 1) {
@@ -2253,8 +2253,7 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
   }
 
   if (sess->rtcp_feedback_retention_window) {
-    RTPSource *src = g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
-        GINT_TO_POINTER (media_ssrc));
+    RTPSource *src = find_source (sess, media_ssrc);
 
     if (src)
       rtp_source_retain_rtcp_packet (src, packet, arrival->running_time);
@@ -3300,8 +3299,7 @@ gboolean
 rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc, GstClockTime now,
     gboolean fir, gint count)
 {
-  RTPSource *src = g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
-      GUINT_TO_POINTER (ssrc));
+  RTPSource *src = find_source (sess, ssrc);
 
   if (!src)
     return FALSE;
