@@ -486,9 +486,8 @@ rtp_session_init (RTPSession * sess)
   sess->source->validated = TRUE;
   sess->source->internal = TRUE;
   sess->stats.active_sources++;
+  sess->stats.internal_sources++;
   INIT_AVG (sess->stats.avg_rtcp_packet_size, 100);
-  sess->source->stats.prev_rtcptime = 0;
-  sess->source->stats.last_rtcptime = 1;
 
   rtp_stats_set_min_interval (&sess->stats,
       (gdouble) DEFAULT_RTCP_MIN_INTERVAL / GST_SECOND);
@@ -2016,6 +2015,8 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
     }
     if (prevsender && !RTP_SOURCE_IS_SENDER (source)) {
       sess->stats.sender_sources--;
+      if (source->internal)
+        sess->stats.internal_sender_sources--;
       GST_DEBUG ("source: %08x became non sender, %d sender sources", ssrc,
           sess->stats.sender_sources);
     }
@@ -2434,8 +2435,10 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
   /* we use our own source to send */
   result = rtp_source_send_rtp (source, data, is_list, running_time);
 
-  if (RTP_SOURCE_IS_SENDER (source) && !prevsender)
+  if (RTP_SOURCE_IS_SENDER (source) && !prevsender) {
     sess->stats.sender_sources++;
+    sess->stats.internal_sender_sources++;
+  }
   if (oldrate != source->bitrate)
     sess->recalc_bandwidth = TRUE;
   RTP_SESSION_UNLOCK (sess);
@@ -2483,7 +2486,7 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
     result = rtp_stats_calculate_bye_interval (&sess->stats);
   } else {
     result = rtp_stats_calculate_rtcp_interval (&sess->stats,
-        RTP_SOURCE_IS_SENDER (sess->source), first);
+        sess->stats.internal_sender_sources > 0, first);
   }
 
   GST_DEBUG ("next deterministic interval: %" GST_TIME_FORMAT ", first %d",
@@ -2844,6 +2847,8 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
             GST_TIME_FORMAT, source->ssrc, GST_TIME_ARGS (btime));
         source->is_sender = FALSE;
         sess->stats.sender_sources--;
+        if (source->internal)
+          sess->stats.internal_sender_sources--;
         sendertimeout = TRUE;
       }
     }
@@ -2851,10 +2856,16 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
 
   if (remove) {
     sess->total_sources--;
-    if (is_sender)
+    if (is_sender) {
       sess->stats.sender_sources--;
+      if (source->internal)
+        sess->stats.internal_sender_sources--;
+    }
     if (is_active)
       sess->stats.active_sources--;
+
+    if (source->internal)
+      sess->stats.internal_sources--;
 
     if (byetimeout)
       on_bye_timeout (sess, source);

@@ -179,7 +179,9 @@ typedef struct {
   gdouble       receiver_fraction;
   gdouble       min_interval;
   GstClockTime  bye_timeout;
+  guint         internal_sources;
   guint         sender_sources;
+  guint         internal_sender_sources;
   guint         active_sources;
   guint         avg_rtcp_packet_size;
   guint         bye_members;
