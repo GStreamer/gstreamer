@@ -728,6 +728,7 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstObject * parent,
     {
       gint64 boffset, offset = 0;
       GstSegment segment;
+      GstEvent *segment_event;
 
       /* some debug output */
       gst_event_copy_segment (event, &segment);
@@ -825,7 +826,9 @@ gst_avi_demux_handle_sink_event (GstPad * pad, GstObject * parent,
       gst_segment_copy_into (&segment, &avi->segment);
 
       GST_DEBUG_OBJECT (avi, "Pushing newseg %" GST_SEGMENT_FORMAT, &segment);
-      gst_avi_demux_push_event (avi, gst_event_new_segment (&segment));
+      segment_event = gst_event_new_segment (&segment);
+      gst_event_set_seqnum (segment_event, gst_event_get_seqnum (event));
+      gst_avi_demux_push_event (avi, segment_event);
 
       GST_DEBUG_OBJECT (avi, "next chunk expected at %" G_GINT64_FORMAT,
           boffset);
@@ -4175,12 +4178,14 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   gboolean update;
   GstSegment seeksegment = { 0, };
   gint i;
+  guint32 seqnum = 0;
 
   if (event) {
     GST_DEBUG_OBJECT (avi, "doing seek with event");
 
     gst_event_parse_seek (event, &rate, &format, &flags,
         &cur_type, &cur, &stop_type, &stop);
+    seqnum = gst_event_get_seqnum (event);
 
     /* we have to have a format as the segment format. Try to convert
      * if not. */
@@ -4212,6 +4217,8 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   if (flush) {
     GstEvent *fevent = gst_event_new_flush_start ();
 
+    if (seqnum)
+      gst_event_set_seqnum (fevent, seqnum);
     /* for a flushing seek, we send a flush_start on all pads. This will
      * eventually stop streaming with a WRONG_STATE. We can thus eventually
      * take the STREAM_LOCK. */
@@ -4245,6 +4252,9 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   if (flush) {
     GstEvent *fevent = gst_event_new_flush_stop (TRUE);
 
+    if (seqnum)
+      gst_event_set_seqnum (fevent, seqnum);
+
     GST_DEBUG_OBJECT (avi, "sending flush stop");
     gst_avi_demux_push_event (avi, gst_event_ref (fevent));
     gst_pad_push_event (avi->sinkpad, fevent);
@@ -4255,15 +4265,20 @@ gst_avi_demux_handle_seek (GstAviDemux * avi, GstPad * pad, GstEvent * event)
 
   /* post the SEGMENT_START message when we do segmented playback */
   if (avi->segment.flags & GST_SEEK_FLAG_SEGMENT) {
-    gst_element_post_message (GST_ELEMENT_CAST (avi),
+    GstMessage *segment_start_msg =
         gst_message_new_segment_start (GST_OBJECT_CAST (avi),
-            avi->segment.format, avi->segment.position));
+        avi->segment.format, avi->segment.position);
+    if (seqnum)
+      gst_message_set_seqnum (segment_start_msg, seqnum);
+    gst_element_post_message (GST_ELEMENT_CAST (avi), segment_start_msg);
   }
 
   /* queue the segment event for the streaming thread. */
   if (avi->seg_event)
     gst_event_unref (avi->seg_event);
   avi->seg_event = gst_event_new_segment (&avi->segment);
+  if (seqnum)
+    gst_event_set_seqnum (avi->seg_event, seqnum);
 
   if (!avi->streaming) {
     gst_pad_start_task (avi->sinkpad, (GstTaskFunction) gst_avi_demux_loop,
