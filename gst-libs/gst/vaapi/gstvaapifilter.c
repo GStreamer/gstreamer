@@ -116,6 +116,55 @@ vpp_get_filters(GstVaapiFilter *filter, guint *num_filters_ptr)
     GST_VAAPI_DISPLAY_UNLOCK(filter->display);
     return filters;
 }
+
+static gpointer
+vpp_get_filter_caps_unlocked(
+    GstVaapiFilter *filter, VAProcFilterType type,
+    guint cap_size, guint *num_caps_ptr)
+{
+    gpointer caps;
+    guint num_caps = 1;
+    VAStatus va_status;
+
+    caps = g_malloc(cap_size);
+    if (!caps)
+        goto error;
+
+    va_status = vaQueryVideoProcFilterCaps(filter->va_display,
+        filter->va_context, type, caps, &num_caps);
+
+    // Try to reallocate to the expected number of filters
+    if (va_status == VA_STATUS_ERROR_MAX_NUM_EXCEEDED) {
+        gpointer const new_caps = g_try_realloc_n(caps, num_caps, cap_size);
+        if (!new_caps)
+            goto error;
+        caps = new_caps;
+
+        va_status = vaQueryVideoProcFilterCaps(filter->va_display,
+            filter->va_context, type, caps, &num_caps);
+    }
+    if (!vaapi_check_status(va_status, "vaQueryVideoProcFilterCaps()"))
+        goto error;
+
+    *num_caps_ptr = num_caps;
+    return caps;
+
+error:
+    g_free(caps);
+    return NULL;
+}
+
+static gpointer
+vpp_get_filter_caps(GstVaapiFilter *filter, VAProcFilterType type,
+    guint cap_size, guint *num_caps_ptr)
+{
+    gpointer caps;
+
+    GST_VAAPI_DISPLAY_LOCK(filter->display);
+    caps = vpp_get_filter_caps_unlocked(filter, type, cap_size, num_caps_ptr);
+    GST_VAAPI_DISPLAY_UNLOCK(filter->display);
+    return caps;
+}
 #endif
 
 /* ------------------------------------------------------------------------- */
@@ -221,6 +270,61 @@ op_data_unref(gpointer data)
         op_data_free(op_data);
 }
 
+/* Ensure capability info is set up for the VA filter we are interested in */
+static gboolean
+op_data_ensure_caps(GstVaapiFilterOpData *op_data, gpointer filter_caps,
+    guint num_filter_caps)
+{
+    guchar *filter_cap = filter_caps;
+    guint i;
+
+    // Find the VA filter cap matching the op info sub-type
+    if (op_data->va_subtype) {
+        for (i = 0; i < num_filter_caps; i++) {
+            /* XXX: sub-type shall always be the first field */
+            if (op_data->va_subtype == *(guint *)filter_cap) {
+                num_filter_caps = 1;
+                break;
+            }
+            filter_cap += op_data->va_cap_size;
+        }
+        if (i == num_filter_caps)
+            return FALSE;
+    }
+    op_data->va_caps = g_memdup(filter_cap,
+        op_data->va_cap_size * num_filter_caps);
+    return op_data->va_caps != NULL;
+}
+
+/* Scale the filter value wrt. library spec and VA driver spec */
+static gboolean
+op_data_get_value_float(GstVaapiFilterOpData *op_data,
+    const VAProcFilterValueRange *range, gfloat value, gfloat *out_value_ptr)
+{
+    GParamSpecFloat * const pspec = G_PARAM_SPEC_FLOAT(op_data->pspec);
+    gfloat out_value;
+
+    g_return_val_if_fail(range != NULL, FALSE);
+    g_return_val_if_fail(out_value_ptr != NULL, FALSE);
+
+    if (value < pspec->minimum || value > pspec->maximum)
+        return FALSE;
+
+    // Scale wrt. the medium ("default") value
+    out_value = range->default_value;
+    if (value > pspec->default_value)
+        out_value += ((value - pspec->default_value) /
+             (pspec->maximum - pspec->default_value) *
+             (range->max_value - range->default_value));
+    else if (value < pspec->default_value)
+        out_value -= ((pspec->default_value - value) /
+             (pspec->default_value - pspec->minimum) *
+             (range->default_value - range->min_value));
+
+    *out_value_ptr = out_value;
+    return TRUE;
+}
+
 /* Get default list of operations supported by the library */
 static GPtrArray *
 get_operations_default(void)
@@ -257,7 +361,8 @@ get_operations_ordered(GstVaapiFilter *filter, GPtrArray *default_ops)
 {
     GPtrArray *ops;
     VAProcFilterType *filters;
-    guint i, j, num_filters;
+    gpointer filter_caps = NULL;
+    guint i, j, num_filters, num_filter_caps = 0;
 
     ops = g_ptr_array_new_full(default_ops->len, op_data_unref);
     if (!ops)
@@ -286,8 +391,19 @@ get_operations_ordered(GstVaapiFilter *filter, GPtrArray *default_ops)
                 g_ptr_array_index(default_ops, j);
             if (op_data->va_type != va_type)
                 continue;
+
+            if (!filter_caps) {
+                filter_caps = vpp_get_filter_caps(filter, va_type,
+                    op_data->va_cap_size, &num_filter_caps);
+                if (!filter_caps)
+                    goto error;
+            }
+            if (!op_data_ensure_caps(op_data, filter_caps, num_filter_caps))
+                goto error;
             g_ptr_array_add(ops, op_data_ref(op_data));
         }
+        free(filter_caps);
+        filter_caps = NULL;
     }
 
     if (filter->operations)
@@ -299,6 +415,7 @@ get_operations_ordered(GstVaapiFilter *filter, GPtrArray *default_ops)
     return ops;
 
 error:
+    g_free(filter_caps);
     g_free(filters);
     g_ptr_array_unref(ops);
     g_ptr_array_unref(default_ops);
@@ -338,6 +455,17 @@ find_operation(GstVaapiFilter *filter, GstVaapiFilterOp op)
             return op_data;
     }
     return NULL;
+}
+
+/* Ensure the operation's VA buffer is allocated */
+static inline gboolean
+op_ensure_buffer(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data)
+{
+    if (G_LIKELY(op_data->va_buffer != VA_INVALID_ID))
+        return TRUE;
+    return vaapi_create_buffer(filter->va_display, filter->va_context,
+        VAProcFilterParameterBufferType, op_data->va_buffer_size, NULL,
+        &op_data->va_buffer, NULL);
 }
 
 /* ------------------------------------------------------------------------- */
