@@ -17,6 +17,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <metadata>
+	<attr path="/api/namespace" name="library">libgstreamer-1.0-0.dll</attr>
 	<!-- Conflicts with structs -->
 	<attr path="/api/namespace/callback[@cname='GstMessageFunc']" name="name">MessageFunc</attr>
 	<attr path="/api/namespace/callback[@cname='GstQueryFunc']" name="name">QueryFunc</attr>
