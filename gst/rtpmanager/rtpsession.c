@@ -2392,7 +2392,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
     /* make writable, we might want to change the buffer */
     buffer = gst_buffer_make_writable (buffer);
 
-    result = sess->callbacks.sync_rtcp (sess, sess->source, buffer,
+    result = sess->callbacks.sync_rtcp (sess, buffer,
         sess->sync_rtcp_user_data);
   } else
     gst_buffer_unref (buffer);

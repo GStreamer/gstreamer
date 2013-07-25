@@ -85,7 +85,6 @@ typedef GstFlowReturn (*RTPSessionSendRTCP) (RTPSession *sess, RTPSource *src, G
 /**
  * RTPSessionSyncRTCP:
  * @sess: an #RTPSession
- * @src: the #RTPSource
  * @buffer: the RTCP buffer ready for synchronisation
  * @user_data: user data specified when registering
  *
@@ -94,7 +93,7 @@ typedef GstFlowReturn (*RTPSessionSendRTCP) (RTPSession *sess, RTPSource *src, G
  *
  * Returns: a #GstFlowReturn.
  */
-typedef GstFlowReturn (*RTPSessionSyncRTCP) (RTPSession *sess, RTPSource *src, GstBuffer *buffer, gpointer user_data);
+typedef GstFlowReturn (*RTPSessionSyncRTCP) (RTPSession *sess, GstBuffer *buffer, gpointer user_data);
 
 /**
  * RTPSessionClockRate:

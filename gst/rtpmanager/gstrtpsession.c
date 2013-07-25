@@ -260,7 +260,7 @@ static GstFlowReturn gst_rtp_session_send_rtp (RTPSession * sess,
 static GstFlowReturn gst_rtp_session_send_rtcp (RTPSession * sess,
     RTPSource * src, GstBuffer * buffer, gboolean eos, gpointer user_data);
 static GstFlowReturn gst_rtp_session_sync_rtcp (RTPSession * sess,
-    RTPSource * src, GstBuffer * buffer, gpointer user_data);
+    GstBuffer * buffer, gpointer user_data);
 static gint gst_rtp_session_clock_rate (RTPSession * sess, guint8 payload,
     gpointer user_data);
 static void gst_rtp_session_reconsider (RTPSession * sess, gpointer user_data);
@@ -1207,7 +1207,7 @@ stopping:
 /* called when the session manager has an SR RTCP packet ready for handling
  * inter stream synchronisation */
 static GstFlowReturn
-gst_rtp_session_sync_rtcp (RTPSession * sess, RTPSource * src,
+gst_rtp_session_sync_rtcp (RTPSession * sess,
     GstBuffer * buffer, gpointer user_data)
 {
   GstFlowReturn result;
