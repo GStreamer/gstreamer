@@ -188,8 +188,8 @@ static void draw_rect_YV12( // Y, V, U planes
     width  /= 2;
     height /= 2;
 
-    pU = pixels[1] + y * stride[1] + x;
-    pV = pixels[2] + y * stride[2] + x;
+    pV = pixels[1] + y * stride[1] + x;
+    pU = pixels[2] + y * stride[2] + x;
     for (j = 0; j < height; j++, pU += stride[1], pV += stride[2])
         for (i = 0; i < width; i++) {
             pU[i] = Cb;
