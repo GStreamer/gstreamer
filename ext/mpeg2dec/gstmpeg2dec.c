@@ -81,8 +81,6 @@ static void gst_mpeg2dec_finalize (GObject * object);
 /* GstVideoDecoder base class method */
 static gboolean gst_mpeg2dec_open (GstVideoDecoder * decoder);
 static gboolean gst_mpeg2dec_close (GstVideoDecoder * decoder);
-static gboolean gst_mpeg2dec_start (GstVideoDecoder * decoder);
-static gboolean gst_mpeg2dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_mpeg2dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
 static gboolean gst_mpeg2dec_reset (GstVideoDecoder * decoder, gboolean hard);
@@ -116,8 +114,6 @@ gst_mpeg2dec_class_init (GstMpeg2decClass * klass)
 
   video_decoder_class->open = GST_DEBUG_FUNCPTR (gst_mpeg2dec_open);
   video_decoder_class->close = GST_DEBUG_FUNCPTR (gst_mpeg2dec_close);
-  video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_mpeg2dec_start);
-  video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_mpeg2dec_stop);
   video_decoder_class->reset = GST_DEBUG_FUNCPTR (gst_mpeg2dec_reset);
   video_decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_mpeg2dec_set_format);
   video_decoder_class->handle_frame =
@@ -185,24 +181,6 @@ gst_mpeg2dec_close (GstVideoDecoder * decoder)
 }
 
 static gboolean
-gst_mpeg2dec_start (GstVideoDecoder * decoder)
-{
-  return gst_mpeg2dec_reset (decoder, TRUE);
-}
-
-static gboolean
-gst_mpeg2dec_stop (GstVideoDecoder * decoder)
-{
-  GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (decoder);
-
-  if (mpeg2dec->input_state) {
-    gst_video_codec_state_unref (mpeg2dec->input_state);
-    mpeg2dec->input_state = NULL;
-  }
-  return gst_mpeg2dec_reset (decoder, TRUE);
-}
-
-static gboolean
 gst_mpeg2dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 {
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (decoder);
@@ -228,6 +206,13 @@ gst_mpeg2dec_reset (GstVideoDecoder * decoder, gboolean hard)
   mpeg2_skip (mpeg2dec->decoder, 1);
 
   gst_mpeg2dec_clear_buffers (mpeg2dec);
+
+  if (hard) {
+    if (mpeg2dec->input_state) {
+      gst_video_codec_state_unref (mpeg2dec->input_state);
+      mpeg2dec->input_state = NULL;
+    }
+  }
 
   return TRUE;
 }
@@ -998,7 +983,7 @@ gst_mpeg2dec_handle_frame (GstVideoDecoder * decoder,
           GST_VIDEO_DECODER_ERROR (decoder, 1, STREAM, DECODE,
               ("decoding error"), ("Bad sequence header"), ret);
           gst_video_decoder_drop_frame (decoder, frame);
-          gst_mpeg2dec_reset (decoder, 0);
+          gst_mpeg2dec_reset (decoder, FALSE);
           goto done;
         }
         break;
