@@ -187,6 +187,8 @@ struct _RTPSession {
   guint         header_len;
   guint         mtu;
 
+  GstStructure *sdes;
+
   guint         probation;
 
   /* bandwidths */

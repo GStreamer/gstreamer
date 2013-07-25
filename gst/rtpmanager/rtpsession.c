@@ -463,7 +463,6 @@ rtp_session_init (RTPSession * sess)
 {
   gint i;
   gchar *str;
-  GstStructure *sdes;
   guint32 ssrc;
   gboolean created;
 
@@ -496,11 +495,11 @@ rtp_session_init (RTPSession * sess)
   sess->probation = DEFAULT_PROBATION;
 
   /* some default SDES entries */
-  sdes = gst_structure_new_empty ("application/x-rtp-source-sdes");
+  sess->sdes = gst_structure_new_empty ("application/x-rtp-source-sdes");
 
   /* we do not want to leak details like the username or hostname here */
   str = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
-  gst_structure_set (sdes, "cname", G_TYPE_STRING, str, NULL);
+  gst_structure_set (sess->sdes, "cname", G_TYPE_STRING, str, NULL);
   g_free (str);
 
 #if 0
@@ -510,13 +509,11 @@ rtp_session_init (RTPSession * sess)
   g_free (str);
 #endif
 
-  gst_structure_set (sdes, "tool", G_TYPE_STRING, "GStreamer", NULL);
+  gst_structure_set (sess->sdes, "tool", G_TYPE_STRING, "GStreamer", NULL);
 
   /* create an active SSRC for this session manager */
   ssrc = rtp_session_create_new_ssrc (sess);
   sess->source = obtain_internal_source (sess, ssrc, &created);
-  /* and configure sdes in the source */
-  rtp_source_set_sdes_struct (sess->source, sdes);
 
   sess->first_rtcp = TRUE;
   sess->next_rtcp_check_time = GST_CLOCK_TIME_NONE;
@@ -538,12 +535,13 @@ rtp_session_finalize (GObject * object)
 
   sess = RTP_SESSION_CAST (object);
 
-  g_mutex_clear (&sess->lock);
+  gst_structure_free (sess->sdes);
 
   for (i = 0; i < 32; i++)
     g_hash_table_destroy (sess->ssrcs[i]);
 
   g_object_unref (sess->source);
+  g_mutex_clear (&sess->lock);
 
   G_OBJECT_CLASS (rtp_session_parent_class)->finalize (object);
 }
@@ -1083,15 +1081,13 @@ rtp_session_get_rtcp_fraction (RTPSession * sess)
 GstStructure *
 rtp_session_get_sdes_struct (RTPSession * sess)
 {
-  const GstStructure *sdes;
   GstStructure *result = NULL;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), NULL);
 
   RTP_SESSION_LOCK (sess);
-  sdes = rtp_source_get_sdes_struct (sess->source);
-  if (sdes)
-    result = gst_structure_copy (sdes);
+  if (sess->sdes)
+    result = gst_structure_copy (sess->sdes);
   RTP_SESSION_UNLOCK (sess);
 
   return result;
@@ -1111,7 +1107,9 @@ rtp_session_set_sdes_struct (RTPSession * sess, const GstStructure * sdes)
   g_return_if_fail (RTP_IS_SESSION (sess));
 
   RTP_SESSION_LOCK (sess);
-  rtp_source_set_sdes_struct (sess->source, gst_structure_copy (sdes));
+  if (sess->sdes)
+    gst_structure_free (sess->sdes);
+  sess->sdes = gst_structure_copy (sdes);
   RTP_SESSION_UNLOCK (sess);
 }
 
@@ -1375,6 +1373,7 @@ obtain_internal_source (RTPSession * sess, guint32 ssrc, gboolean * created)
 
     source->validated = TRUE;
     source->internal = TRUE;
+    rtp_source_set_sdes_struct (source, gst_structure_copy (sess->sdes));
     rtp_source_set_callbacks (source, &callbacks, sess);
 
     add_source (sess, source);
