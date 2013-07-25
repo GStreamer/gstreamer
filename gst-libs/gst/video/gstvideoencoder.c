@@ -485,23 +485,6 @@ gst_video_encoder_set_headers (GstVideoEncoder * video_encoder, GList * headers)
   GST_VIDEO_ENCODER_STREAM_UNLOCK (video_encoder);
 }
 
-static gboolean
-gst_video_encoder_drain (GstVideoEncoder * enc)
-{
-  GstVideoEncoderPrivate *priv;
-
-  priv = enc->priv;
-
-  GST_DEBUG_OBJECT (enc, "draining");
-
-  if (priv->drained) {
-    GST_DEBUG_OBJECT (enc, "already drained");
-    return TRUE;
-  }
-
-  return gst_video_encoder_reset (enc, FALSE);
-}
-
 static GstVideoCodecState *
 _new_output_state (GstCaps * caps, GstVideoCodecState * reference)
 {
@@ -591,9 +574,6 @@ gst_video_encoder_setcaps (GstVideoEncoder * encoder, GstCaps * caps)
     gst_video_codec_state_unref (state);
     goto caps_not_changed;
   }
-
-  /* arrange draining pending frames */
-  gst_video_encoder_drain (encoder);
 
   /* and subclass should be ready to configure format at any time around */
   ret = encoder_class->set_format (encoder, state);
