@@ -301,10 +301,6 @@ gdouble         rtp_session_get_bandwidth          (RTPSession *sess);
 void            rtp_session_set_rtcp_fraction      (RTPSession *sess, gdouble fraction);
 gdouble         rtp_session_get_rtcp_fraction      (RTPSession *sess);
 
-gboolean        rtp_session_set_sdes_string        (RTPSession *sess, GstRTCPSDESType type,
-                                                    const gchar *cname);
-gchar*          rtp_session_get_sdes_string        (RTPSession *sess, GstRTCPSDESType type);
-
 GstStructure *  rtp_session_get_sdes_struct        (RTPSession *sess);
 void            rtp_session_set_sdes_struct        (RTPSession *sess, const GstStructure *sdes);
 

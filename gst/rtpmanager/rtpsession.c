@@ -460,6 +460,7 @@ rtp_session_init (RTPSession * sess)
 {
   gint i;
   gchar *str;
+  GstStructure *sdes;
 
   g_mutex_init (&sess->lock);
   sess->key = g_random_int ();
@@ -499,20 +500,24 @@ rtp_session_init (RTPSession * sess)
   sess->probation = DEFAULT_PROBATION;
 
   /* some default SDES entries */
+  sdes = gst_structure_new_empty ("application/x-rtp-source-sdes");
 
   /* we do not want to leak details like the username or hostname here */
   str = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
-  rtp_source_set_sdes_string (sess->source, GST_RTCP_SDES_CNAME, str);
+  gst_structure_set (sdes, "cname", G_TYPE_STRING, str, NULL);
   g_free (str);
 
 #if 0
   /* we do not want to leak the user's real name here */
   str = g_strdup_printf ("Anon%u", g_random_int ());
-  rtp_source_set_sdes_string (sess->source, GST_RTCP_SDES_NAME, str);
+  gst_structure_set (sdes, "name", G_TYPE_STRING, str, NULL);
   g_free (str);
 #endif
 
-  rtp_source_set_sdes_string (sess->source, GST_RTCP_SDES_TOOL, "GStreamer");
+  gst_structure_set (sdes, "tool", G_TYPE_STRING, "GStreamer", NULL);
+
+  /* and configure in the source */
+  rtp_source_set_sdes_struct (sess->source, sdes);
 
   sess->first_rtcp = TRUE;
   sess->next_rtcp_check_time = GST_CLOCK_TIME_NONE;
@@ -537,6 +542,7 @@ rtp_session_finalize (GObject * object)
   sess = RTP_SESSION_CAST (object);
 
   g_mutex_clear (&sess->lock);
+
   for (i = 0; i < 32; i++)
     g_hash_table_destroy (sess->ssrcs[i]);
 
@@ -1065,55 +1071,6 @@ rtp_session_get_rtcp_fraction (RTPSession * sess)
 
   RTP_SESSION_LOCK (sess);
   result = sess->stats.rtcp_bandwidth;
-  RTP_SESSION_UNLOCK (sess);
-
-  return result;
-}
-
-/**
- * rtp_session_set_sdes_string:
- * @sess: an #RTPSession
- * @type: the type of the SDES item
- * @item: a null-terminated string to set.
- *
- * Store an SDES item of @type in @sess.
- *
- * Returns: %FALSE if the data was unchanged @type is invalid.
- */
-gboolean
-rtp_session_set_sdes_string (RTPSession * sess, GstRTCPSDESType type,
-    const gchar * item)
-{
-  gboolean result;
-
-  g_return_val_if_fail (RTP_IS_SESSION (sess), FALSE);
-
-  RTP_SESSION_LOCK (sess);
-  result = rtp_source_set_sdes_string (sess->source, type, item);
-  RTP_SESSION_UNLOCK (sess);
-
-  return result;
-}
-
-/**
- * rtp_session_get_sdes_string:
- * @sess: an #RTPSession
- * @type: the type of the SDES item
- *
- * Get the SDES item of @type from @sess.
- *
- * Returns: a null-terminated copy of the SDES item or NULL when @type was not
- * valid. g_free() after usage.
- */
-gchar *
-rtp_session_get_sdes_string (RTPSession * sess, GstRTCPSDESType type)
-{
-  gchar *result;
-
-  g_return_val_if_fail (RTP_IS_SESSION (sess), NULL);
-
-  RTP_SESSION_LOCK (sess);
-  result = rtp_source_get_sdes_string (sess->source, type);
   RTP_SESSION_UNLOCK (sess);
 
   return result;

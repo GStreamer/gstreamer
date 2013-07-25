@@ -205,9 +205,6 @@ gchar *         rtp_source_get_bye_reason      (RTPSource *src);
 void            rtp_source_update_caps         (RTPSource *src, GstCaps *caps);
 
 /* SDES info */
-gboolean        rtp_source_set_sdes_string     (RTPSource *src, GstRTCPSDESType type,
-                                                const gchar *data);
-gchar*          rtp_source_get_sdes_string     (RTPSource *src, GstRTCPSDESType type);
 const GstStructure *
                 rtp_source_get_sdes_struct     (RTPSource * src);
 gboolean        rtp_source_set_sdes_struct     (RTPSource * src, GstStructure *sdes);
