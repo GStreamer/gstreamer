@@ -332,12 +332,12 @@ rtp_session_class_init (RTPSessionClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_INTERNAL_SSRC,
       g_param_spec_uint ("internal-ssrc", "Internal SSRC",
-          "The internal SSRC used for the session",
+          "The internal SSRC used for the session (deprecated)",
           0, G_MAXUINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_INTERNAL_SOURCE,
       g_param_spec_object ("internal-source", "Internal Source",
-          "The internal source element of the session",
+          "The internal source element of the session (deprecated)",
           RTP_TYPE_SOURCE, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_BANDWIDTH,
@@ -586,7 +586,6 @@ rtp_session_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_INTERNAL_SSRC:
-      rtp_session_set_internal_ssrc (sess, g_value_get_uint (value));
       break;
     case PROP_BANDWIDTH:
       RTP_SESSION_LOCK (sess);
@@ -653,10 +652,10 @@ rtp_session_get_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_INTERNAL_SSRC:
-      g_value_set_uint (value, rtp_session_get_internal_ssrc (sess));
+      g_value_set_uint (value, rtp_session_suggest_ssrc (sess));
       break;
     case PROP_INTERNAL_SOURCE:
-      g_value_take_object (value, rtp_session_get_internal_source (sess));
+      g_value_set_object (value, sess->source);
       break;
     case PROP_BANDWIDTH:
       g_value_set_double (value, sess->bandwidth);
@@ -1387,37 +1386,9 @@ obtain_internal_source (RTPSession * sess, guint32 ssrc, gboolean * created)
   return source;
 }
 
-/**
- * rtp_session_get_internal_source:
- * @sess: a #RTPSession
- *
- * Get the internal #RTPSource of @sess.
- *
- * Returns: The internal #RTPSource. g_object_unref() after usage.
- */
-RTPSource *
-rtp_session_get_internal_source (RTPSession * sess)
-{
-  RTPSource *result;
-
-  g_return_val_if_fail (RTP_IS_SESSION (sess), NULL);
-
-  result = g_object_ref (sess->source);
-
-  return result;
-}
-
-/**
- * rtp_session_set_internal_ssrc:
- * @sess: a #RTPSession
- * @ssrc: an SSRC
- *
- * Set the SSRC of @sess to @ssrc.
- */
-void
+static void
 rtp_session_set_internal_ssrc (RTPSession * sess, guint32 ssrc)
 {
-  RTP_SESSION_LOCK (sess);
   if (ssrc != sess->source->ssrc) {
     g_hash_table_steal (sess->ssrcs[sess->mask_idx],
         GINT_TO_POINTER (sess->source->ssrc));
@@ -1433,29 +1404,6 @@ rtp_session_set_internal_ssrc (RTPSession * sess, guint32 ssrc)
     g_hash_table_insert (sess->ssrcs[sess->mask_idx],
         GINT_TO_POINTER (sess->source->ssrc), sess->source);
   }
-  RTP_SESSION_UNLOCK (sess);
-
-  g_object_notify (G_OBJECT (sess), "internal-ssrc");
-}
-
-/**
- * rtp_session_get_internal_ssrc:
- * @sess: a #RTPSession
- *
- * Get the internal SSRC of @sess.
- *
- * Returns: The SSRC of the session.
- */
-guint32
-rtp_session_get_internal_ssrc (RTPSession * sess)
-{
-  guint32 ssrc;
-
-  RTP_SESSION_LOCK (sess);
-  ssrc = sess->source->ssrc;
-  RTP_SESSION_UNLOCK (sess);
-
-  return ssrc;
 }
 
 /**
