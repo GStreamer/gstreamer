@@ -735,11 +735,11 @@ gst_asf_mux_write_stream_properties (GstAsfMux * asfmux, guint8 ** buf,
         "wave formatex values: codec_id=%" G_GUINT16_FORMAT ", channels=%"
         G_GUINT16_FORMAT ", rate=%" G_GUINT32_FORMAT ", bytes_per_sec=%"
         G_GUINT32_FORMAT ", block_alignment=%" G_GUINT16_FORMAT
-        ", bits_per_sample=%" G_GUINT16_FORMAT ", codec_data_length=%"
-        G_GUINT16_FORMAT, audiopad->audioinfo.format,
-        audiopad->audioinfo.channels, audiopad->audioinfo.rate,
-        audiopad->audioinfo.av_bps, audiopad->audioinfo.blockalign,
-        audiopad->audioinfo.bits_per_sample, codec_data_length);
+        ", bits_per_sample=%" G_GUINT16_FORMAT ", codec_data_length=%u",
+        audiopad->audioinfo.format, audiopad->audioinfo.channels,
+        audiopad->audioinfo.rate, audiopad->audioinfo.av_bps,
+        audiopad->audioinfo.blockalign, audiopad->audioinfo.bits_per_sample,
+        codec_data_length);
 
 
     *buf += ASF_AUDIO_SPECIFIC_DATA_SIZE;
@@ -1491,7 +1491,7 @@ gst_asf_mux_flush_payloads (GstAsfMux * asfmux)
     GST_DEBUG_OBJECT (asfmux, "stream number: %d", pad->stream_number & 0x7F);
     GST_DEBUG_OBJECT (asfmux, "media object number: %d",
         (gint) payload->media_obj_num);
-    GST_DEBUG_OBJECT (asfmux, "offset into media object: %" G_GUINT16_FORMAT,
+    GST_DEBUG_OBJECT (asfmux, "offset into media object: %" G_GUINT32_FORMAT,
         payload->offset_in_media_obj);
     GST_DEBUG_OBJECT (asfmux, "media object size: %" G_GUINT32_FORMAT,
         payload->media_object_size);
@@ -1680,7 +1680,7 @@ gst_asf_mux_push_simple_index (GstAsfMux * asfmux, GstAsfVideoPad * pad)
   GST_DEBUG_OBJECT (asfmux,
       "Simple index object values - size:%" G_GUINT64_FORMAT ", time interval:%"
       G_GUINT64_FORMAT ", max packet count:%" G_GUINT32_FORMAT ", entries:%"
-      G_GUINT16_FORMAT, object_size, pad->time_interval,
+      G_GUINT32_FORMAT, object_size, pad->time_interval,
       pad->max_keyframe_packet_count, entries_count);
 
   for (walk = pad->simple_index; walk; walk = g_slist_next (walk)) {
@@ -1858,8 +1858,7 @@ gst_asf_mux_process_buffer (GstAsfMux * asfmux, GstAsfPad * pad,
   payload->pad = (GstCollectData *) pad;
   payload->data = buf;
 
-  GST_LOG_OBJECT (asfmux,
-      "Processing payload data for stream number %" G_GUINT16_FORMAT,
+  GST_LOG_OBJECT (asfmux, "Processing payload data for stream number %u",
       pad->stream_number);
 
   /* stream number */
@@ -1960,8 +1959,9 @@ gst_asf_mux_collected (GstCollectPads * collect, gpointer data)
     /* check the ts for getting the first time */
     if (!GST_CLOCK_TIME_IS_VALID (pad->first_ts) &&
         GST_CLOCK_TIME_IS_VALID (time)) {
-      GST_DEBUG_OBJECT (asfmux, "First ts for stream number %" G_GUINT16_FORMAT
-          ": %" GST_TIME_FORMAT, pad->stream_number, GST_TIME_ARGS (time));
+      GST_DEBUG_OBJECT (asfmux,
+          "First ts for stream number %u: %" GST_TIME_FORMAT,
+          pad->stream_number, GST_TIME_ARGS (time));
       pad->first_ts = time;
       if (!GST_CLOCK_TIME_IS_VALID (asfmux->first_ts) ||
           time < asfmux->first_ts) {
