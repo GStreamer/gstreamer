@@ -156,6 +156,9 @@ gst_vaapi_image_update_from_raw(
     GstVaapiRectangle *rect
 );
 
+gboolean
+gst_vaapi_image_copy(GstVaapiImage *dst_image, GstVaapiImage *src_image);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_IMAGE_H */

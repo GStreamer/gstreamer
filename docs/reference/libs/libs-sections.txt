@@ -228,6 +228,7 @@ gst_vaapi_image_get_data_size
 gst_vaapi_image_get_buffer
 gst_vaapi_image_get_raw
 gst_vaapi_image_update_from_buffer
+gst_vaapi_image_copy
 <SUBSECTION Standard>
 GST_VAAPI_IMAGE
 </SECTION>

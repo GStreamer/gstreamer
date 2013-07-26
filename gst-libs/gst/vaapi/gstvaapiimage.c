@@ -1116,3 +1116,35 @@ gst_vaapi_image_update_from_raw(
 
     return success;
 }
+
+/**
+ * gst_vaapi_image_copy:
+ * @dst_image: the target #GstVaapiImage
+ * @src_image: the source #GstVaapiImage
+ *
+ * Copies pixels data from @src_image to @dst_image. Both images shall
+ * have the same format and size.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_image_copy(GstVaapiImage *dst_image, GstVaapiImage *src_image)
+{
+    GstVaapiImageRaw dst_image_raw, src_image_raw;
+    gboolean success = FALSE;
+
+    g_return_val_if_fail(dst_image != NULL, FALSE);
+    g_return_val_if_fail(src_image != NULL, FALSE);
+
+    if (!_gst_vaapi_image_map(dst_image, &dst_image_raw))
+        goto end;
+    if (!_gst_vaapi_image_map(src_image, &src_image_raw))
+        goto end;
+
+    success = copy_image(&dst_image_raw, &src_image_raw, NULL);
+
+end:
+    _gst_vaapi_image_unmap(src_image);
+    _gst_vaapi_image_unmap(dst_image);
+    return success;
+}
