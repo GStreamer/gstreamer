@@ -313,8 +313,20 @@ on_new_ssrc (RTPSession * session, RTPSource * src, GstRtpSession * sess)
 static void
 on_ssrc_collision (RTPSession * session, RTPSource * src, GstRtpSession * sess)
 {
+  GstPad *recv_rtp_sink;
+
   g_signal_emit (sess, gst_rtp_session_signals[SIGNAL_ON_SSRC_COLLISION], 0,
       src->ssrc);
+
+  GST_RTP_SESSION_LOCK (sess);
+  if ((recv_rtp_sink = sess->recv_rtp_sink))
+    gst_object_ref (recv_rtp_sink);
+  GST_RTP_SESSION_UNLOCK (sess);
+
+  if (recv_rtp_sink) {
+    gst_pad_push_event (recv_rtp_sink, gst_event_new_reconfigure ());
+    gst_object_unref (recv_rtp_sink);
+  }
 }
 
 static void

@@ -1173,9 +1173,13 @@ static gboolean
 check_collision (RTPSession * sess, RTPSource * source,
     RTPArrivalStats * arrival, gboolean rtp)
 {
+  guint32 ssrc;
+
   /* If we have no arrival address, we can't do collision checking */
   if (!arrival->address)
     return FALSE;
+
+  ssrc = rtp_source_get_ssrc (source);
 
   if (!source->internal) {
     GSocketAddress *from;
@@ -1193,16 +1197,15 @@ check_collision (RTPSession * sess, RTPSource * source,
         /* Address is the same */
         return FALSE;
       } else {
-        GST_LOG ("we have a third-party collision or loop ssrc:%x",
-            rtp_source_get_ssrc (source));
+        GST_LOG ("we have a third-party collision or loop ssrc:%x", ssrc);
         if (sess->favor_new) {
           if (rtp_source_find_conflicting_address (source,
                   arrival->address, arrival->current_time)) {
             gchar *buf1;
 
             buf1 = __g_socket_address_to_string (arrival->address);
-            GST_LOG ("Known conflict on %x for %s, dropping packet",
-                rtp_source_get_ssrc (source), buf1);
+            GST_LOG ("Known conflict on %x for %s, dropping packet", ssrc,
+                buf1);
             g_free (buf1);
 
             return TRUE;
@@ -1219,8 +1222,7 @@ check_collision (RTPSession * sess, RTPSource * source,
             buf2 = __g_socket_address_to_string (arrival->address);
 
             GST_DEBUG ("New conflict for ssrc %x, replacing %s with %s,"
-                " saving old as known conflict",
-                rtp_source_get_ssrc (source), buf1, buf2);
+                " saving old as known conflict", ssrc, buf1, buf2);
 
             if (rtp)
               rtp_source_set_rtp_from (source, arrival->address);
@@ -1252,7 +1254,6 @@ check_collision (RTPSession * sess, RTPSource * source,
      */
   } else {
     /* This is sending with our ssrc, is it an address we already know */
-
     if (rtp_source_find_conflicting_address (source, arrival->address,
             arrival->current_time)) {
       /* Its a known conflict, its probably a loop, not a collision
@@ -1261,16 +1262,18 @@ check_collision (RTPSession * sess, RTPSource * source,
       GST_DEBUG ("Our packets are being looped back to us, dropping");
     } else {
       /* Its a new collision, lets change our SSRC */
-
       rtp_source_add_conflicting_address (source, arrival->address,
           arrival->current_time);
 
-      GST_DEBUG ("Collision for SSRC %x", rtp_source_get_ssrc (source));
+      GST_DEBUG ("Collision for SSRC %x", ssrc);
+      /* mark the source BYE */
+      rtp_source_mark_bye (source, "SSRC Collision");
+      /* if we were suggesting this SSRC, change to something else */
+      if (sess->suggested_ssrc == ssrc)
+        sess->suggested_ssrc = rtp_session_create_new_ssrc (sess);
+
       on_ssrc_collision (sess, source);
 
-      sess->change_ssrc = TRUE;
-
-      rtp_source_mark_bye (source, "SSRC Collision");
       rtp_session_schedule_bye_locked (sess, arrival->current_time);
     }
   }
