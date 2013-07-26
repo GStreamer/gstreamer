@@ -120,6 +120,7 @@ static void
 gst_rtp_gst_pay_init (GstRtpGSTPay * rtpgstpay)
 {
   rtpgstpay->adapter = gst_adapter_new ();
+  rtpgstpay->pending_buffers = NULL;
   gst_rtp_base_payload_set_options (GST_RTP_BASE_PAYLOAD (rtpgstpay),
       "application", TRUE, "X-GST", 90000);
 }
@@ -132,24 +133,28 @@ gst_rtp_gst_pay_finalize (GObject * obj)
   rtpgstpay = GST_RTP_GST_PAY (obj);
 
   g_object_unref (rtpgstpay->adapter);
+  if (rtpgstpay->pending_buffers)
+    g_list_free_full (rtpgstpay->pending_buffers,
+        (GDestroyNotify) gst_buffer_list_unref);
+  rtpgstpay->pending_buffers = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
 
-static GstFlowReturn
-gst_rtp_gst_pay_flush (GstRtpGSTPay * rtpgstpay, GstClockTime timestamp)
+static gboolean
+gst_rtp_gst_pay_create_from_adapter (GstRtpGSTPay * rtpgstpay,
+    GstClockTime timestamp)
 {
-  GstFlowReturn ret;
   guint avail;
   guint frag_offset;
   GstBufferList *list;
 
-  frag_offset = 0;
   avail = gst_adapter_available (rtpgstpay->adapter);
   if (avail == 0)
-    return GST_FLOW_OK;
+    return FALSE;
 
   list = gst_buffer_list_new ();
+  frag_offset = 0;
 
   while (avail) {
     guint towrite;
@@ -219,11 +224,34 @@ gst_rtp_gst_pay_flush (GstRtpGSTPay * rtpgstpay, GstClockTime timestamp)
     /* and add to list */
     gst_buffer_list_insert (list, -1, outbuf);
   }
-  /* push the whole buffer list at once */
-  ret = gst_rtp_base_payload_push_list (GST_RTP_BASE_PAYLOAD (rtpgstpay), list);
 
   rtpgstpay->flags &= 0x70;
   rtpgstpay->etype = 0;
+  rtpgstpay->pending_buffers = g_list_append (rtpgstpay->pending_buffers, list);
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_rtp_gst_pay_flush (GstRtpGSTPay * rtpgstpay, GstClockTime timestamp)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  GList *iter, *next;
+
+  gst_rtp_gst_pay_create_from_adapter (rtpgstpay, timestamp);
+  for (iter = rtpgstpay->pending_buffers; iter; iter = next) {
+    GstBufferList *list = iter->data;
+
+    next = iter->next;
+    rtpgstpay->pending_buffers = g_list_remove_link (rtpgstpay->pending_buffers,
+        iter);
+
+    /* push the whole buffer list at once */
+    ret = gst_rtp_base_payload_push_list (GST_RTP_BASE_PAYLOAD (rtpgstpay),
+        list);
+    if (ret != GST_FLOW_OK)
+      break;
+  }
 
   return ret;
 }
