@@ -2346,9 +2346,6 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
 
   /* notify caller of sr packets in the callback */
   if (do_sync && sess->callbacks.sync_rtcp) {
-    /* make writable, we might want to change the buffer */
-    buffer = gst_buffer_make_writable (buffer);
-
     result = sess->callbacks.sync_rtcp (sess, buffer,
         sess->sync_rtcp_user_data);
   } else
