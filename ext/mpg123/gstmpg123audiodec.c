@@ -597,8 +597,6 @@ gst_mpg123_audio_dec_flush (GstAudioDecoder * dec, gboolean hard)
   int error;
   GstMpg123AudioDec *mpg123_decoder;
 
-  hard = hard;
-
   GST_LOG_OBJECT (dec, "Flushing decoder");
 
   mpg123_decoder = GST_MPG123_AUDIO_DEC (dec);
