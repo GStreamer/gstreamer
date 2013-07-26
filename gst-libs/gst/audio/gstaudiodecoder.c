@@ -472,10 +472,6 @@ gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full)
     dec->priv->error_count = 0;
     gst_audio_decoder_clear_queues (dec);
 
-    gst_audio_info_init (&dec->priv->ctx.info);
-    memset (&dec->priv->ctx, 0, sizeof (dec->priv->ctx));
-    dec->priv->ctx.max_errors = GST_AUDIO_DECODER_MAX_ERRORS;
-
     if (dec->priv->taglist) {
       gst_tag_list_unref (dec->priv->taglist);
       dec->priv->taglist = NULL;
@@ -491,9 +487,13 @@ gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full)
 
     if (dec->priv->ctx.allocator)
       gst_object_unref (dec->priv->ctx.allocator);
-    dec->priv->ctx.allocator = NULL;
 
     gst_caps_replace (&dec->priv->ctx.input_caps, NULL);
+
+    memset (&dec->priv->ctx, 0, sizeof (dec->priv->ctx));
+
+    gst_audio_info_init (&dec->priv->ctx.info);
+    dec->priv->ctx.max_errors = GST_AUDIO_DECODER_MAX_ERRORS;
   }
 
   g_queue_foreach (&dec->priv->frames, (GFunc) gst_buffer_unref, NULL);
