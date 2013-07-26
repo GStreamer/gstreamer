@@ -1900,12 +1900,13 @@ gst_x264_enc_encode_frame (GstX264Enc * encoder, x264_picture_t * pic_in,
     }
   }
 
-  frame->dts = pic_out.i_dts + encoder->dts_offset;
-  /* should be ok now, surprise if not */
-  if (frame->dts < 0) {
+  if (pic_out.i_dts + encoder->dts_offset < 0) {
+    /* should be ok now, surprise if not */
     GST_WARNING_OBJECT (encoder, "negative dts after offset compensation");
     frame->dts = GST_CLOCK_TIME_NONE;
-  }
+  } else
+    frame->dts = pic_out.i_dts + encoder->dts_offset;
+
 
   if (pic_out.b_keyframe) {
     GST_DEBUG_OBJECT (encoder, "Output keyframe");
