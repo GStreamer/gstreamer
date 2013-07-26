@@ -711,6 +711,8 @@ done:
   if (jpeg_buf)
     gst_buffer_unref (jpeg_buf);
 
+  gst_buffer_unmap (buf, &info);
+
   /* We must always unref the input buffer since we never push it out */
   gst_buffer_unref (buf);
 
