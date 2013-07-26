@@ -1599,6 +1599,54 @@ clean_arrival_stats (RTPArrivalStats * arrival)
     g_object_unref (arrival->address);
 }
 
+static gboolean
+source_update_active (RTPSession * sess, RTPSource * source,
+    gboolean prevactive)
+{
+  gboolean active = RTP_SOURCE_IS_ACTIVE (source);
+  guint32 ssrc = source->ssrc;
+
+  if (prevactive == active)
+    return FALSE;
+
+  if (active) {
+    sess->stats.active_sources++;
+    GST_DEBUG ("source: %08x became active, %d active sources", ssrc,
+        sess->stats.active_sources);
+  } else {
+    sess->stats.active_sources--;
+    GST_DEBUG ("source: %08x became inactive, %d active sources", ssrc,
+        sess->stats.active_sources);
+  }
+  return TRUE;
+}
+
+static gboolean
+source_update_sender (RTPSession * sess, RTPSource * source,
+    gboolean prevsender)
+{
+  gboolean sender = RTP_SOURCE_IS_SENDER (source);
+  guint32 ssrc = source->ssrc;
+
+  if (prevsender == sender)
+    return FALSE;
+
+  if (sender) {
+    sess->stats.sender_sources++;
+    if (source->internal)
+      sess->stats.internal_sender_sources++;
+    GST_DEBUG ("source: %08x became sender, %d sender sources", ssrc,
+        sess->stats.sender_sources);
+  } else {
+    sess->stats.sender_sources--;
+    if (source->internal)
+      sess->stats.internal_sender_sources--;
+    GST_DEBUG ("source: %08x became non sender, %d sender sources", ssrc,
+        sess->stats.sender_sources);
+  }
+  return TRUE;
+}
+
 /**
  * rtp_session_process_rtp:
  * @sess: and #RTPSession
@@ -1670,17 +1718,11 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   result = rtp_source_process_rtp (source, buffer, &arrival);
 
   /* source became active */
-  if (prevactive != RTP_SOURCE_IS_ACTIVE (source)) {
-    sess->stats.active_sources++;
-    GST_DEBUG ("source: %08x became active, %d active sources", ssrc,
-        sess->stats.active_sources);
+  if (source_update_active (sess, source, prevactive))
     on_ssrc_validated (sess, source);
-  }
-  if (prevsender != RTP_SOURCE_IS_SENDER (source)) {
-    sess->stats.sender_sources++;
-    GST_DEBUG ("source: %08x became sender, %d sender sources", ssrc,
-        sess->stats.sender_sources);
-  }
+
+  source_update_sender (sess, source, prevsender);
+
   if (oldrate != source->bitrate)
     sess->recalc_bandwidth = TRUE;
 
@@ -1821,11 +1863,7 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
   rtp_source_process_sr (source, arrival->current_time, ntptime, rtptime,
       packet_count, octet_count);
 
-  if (prevsender != RTP_SOURCE_IS_SENDER (source)) {
-    sess->stats.sender_sources++;
-    GST_DEBUG ("source: %08x became sender, %d sender sources", senderssrc,
-        sess->stats.sender_sources);
-  }
+  source_update_sender (sess, source, prevsender);
 
   if (created)
     on_new_ssrc (sess, source);
@@ -1878,7 +1916,7 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
   i = 0;
   while (more_items) {
     guint32 ssrc;
-    gboolean changed, created, validated;
+    gboolean changed, created, prevactive;
     RTPSource *source;
     GstStructure *sdes;
 
@@ -1931,19 +1969,15 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
     /* takes ownership of sdes */
     changed = rtp_source_set_sdes_struct (source, sdes);
 
-    validated = !RTP_SOURCE_IS_ACTIVE (source);
+    prevactive = RTP_SOURCE_IS_ACTIVE (source);
     source->validated = TRUE;
 
     if (created)
       on_new_ssrc (sess, source);
 
     /* source became active */
-    if (validated) {
-      sess->stats.active_sources++;
-      GST_DEBUG ("source: %08x became active, %d active sources", ssrc,
-          sess->stats.active_sources);
+    if (source_update_active (sess, source, prevactive))
       on_ssrc_validated (sess, source);
-    }
 
     if (changed)
       on_ssrc_sdes (sess, source);
@@ -2000,18 +2034,9 @@ rtp_session_process_bye (RTPSession * sess, GstRTCPPacket * packet,
 
     pmembers = sess->stats.active_sources;
 
-    if (prevactive && !RTP_SOURCE_IS_ACTIVE (source)) {
-      sess->stats.active_sources--;
-      GST_DEBUG ("source: %08x became inactive, %d active sources", ssrc,
-          sess->stats.active_sources);
-    }
-    if (prevsender && !RTP_SOURCE_IS_SENDER (source)) {
-      sess->stats.sender_sources--;
-      if (source->internal)
-        sess->stats.internal_sender_sources--;
-      GST_DEBUG ("source: %08x became non sender, %d sender sources", ssrc,
-          sess->stats.sender_sources);
-    }
+    source_update_active (sess, source, prevactive);
+    source_update_sender (sess, source, prevsender);
+
     members = sess->stats.active_sources;
 
     if (!sess->scheduled_bye && members < pmembers) {
@@ -2466,10 +2491,8 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
   /* we use our own source to send */
   result = rtp_source_send_rtp (source, data, is_list, running_time);
 
-  if (RTP_SOURCE_IS_SENDER (source) && !prevsender) {
-    sess->stats.sender_sources++;
-    sess->stats.internal_sender_sources++;
-  }
+  source_update_sender (sess, source, prevsender);
+
   if (oldrate != source->bitrate)
     sess->recalc_bandwidth = TRUE;
   RTP_SESSION_UNLOCK (sess);
