@@ -90,7 +90,6 @@ struct _GstURIDecodeBin
   gchar *encoding;
 
   gboolean is_stream;
-  gboolean is_download;
   gboolean need_queue;
   guint64 buffer_duration;      /* When buffering, buffer duration (ns) */
   guint buffer_size;            /* When buffering, buffer size (bytes) */
@@ -1207,19 +1206,6 @@ no_ghost:
   }
 }
 
-/* helper function to lookup stuff in lists */
-static gboolean
-array_has_value (const gchar * values[], const gchar * value)
-{
-  gint i;
-
-  for (i = 0; values[i]; i++) {
-    if (g_str_has_prefix (value, values[i]))
-      return TRUE;
-  }
-  return FALSE;
-}
-
 static gboolean
 array_has_uri_value (const gchar * values[], const gchar * value)
 {
@@ -1246,17 +1232,9 @@ static const gchar *queue_uris[] = { "cdda://", NULL };
 /* blacklisted URIs, we know they will always fail. */
 static const gchar *blacklisted_uris[] = { NULL };
 
-/* media types we can download */
-static const gchar *download_media[] = {
-  "video/quicktime", "video/mj2", "audio/x-m4a", "application/x-3gp",
-  "video/x-flv", "video/x-msvideo", "video/webm", NULL
-};
-
 #define IS_STREAM_URI(uri)          (array_has_uri_value (stream_uris, uri))
 #define IS_QUEUE_URI(uri)           (array_has_uri_value (queue_uris, uri))
 #define IS_BLACKLISTED_URI(uri)     (array_has_uri_value (blacklisted_uris, uri))
-#define IS_DOWNLOAD_MEDIA(media)    (array_has_value (download_media, media))
-
 /*
  * Generate and configure a source element.
  */
@@ -1867,20 +1845,18 @@ type_found (GstElement * typefind, guint probability,
   GstElement *dec_elem, *queue;
   GstStructure *s;
   const gchar *media_type;
+  gboolean do_download = FALSE;
 
   GST_DEBUG_OBJECT (decoder, "typefind found caps %" GST_PTR_FORMAT, caps);
 
   s = gst_caps_get_structure (caps, 0);
   media_type = gst_structure_get_name (s);
 
-  /* remember if we need download buffering */
-  decoder->is_download = IS_DOWNLOAD_MEDIA (media_type) && decoder->download;
   /* only enable download buffering if the upstream duration is known */
-  if (decoder->is_download) {
+  if (decoder->download) {
     gint64 dur;
 
-    decoder->is_download =
-        (gst_element_query_duration (typefind, GST_FORMAT_BYTES, &dur)
+    do_download = (gst_element_query_duration (typefind, GST_FORMAT_BYTES, &dur)
         && dur != -1);
   }
 
@@ -1898,9 +1874,9 @@ type_found (GstElement * typefind, guint probability,
   decoder->queue = queue;
 
   GST_DEBUG_OBJECT (decoder, "check media-type %s, %d", media_type,
-      decoder->download);
+      do_download);
 
-  if (decoder->is_download) {
+  if (do_download) {
     gchar *temp_template, *filename;
     const gchar *tmp_dir, *prgname;
 
