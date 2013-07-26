@@ -2820,7 +2820,7 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
 
   /* check for outdated collisions */
   if (source->internal) {
-    GST_DEBUG ("Timing out collisions");
+    GST_DEBUG ("Timing out collisions for %x", source->ssrc);
     rtp_source_timeout (source, data->current_time,
         /* "a relatively long time" -- RFC 3550 section 8.2 */
         RTP_STATS_MIN_INTERVAL * GST_SECOND * 10,
@@ -2857,7 +2857,7 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
   GST_LOG ("timeout base interval %" GST_TIME_FORMAT,
       GST_TIME_ARGS (binterval));
 
-  /* check for our own source, we don't want to delete our own source. */
+  /* FIXME, we need to remove internal sources too */
   if (!source->internal) {
     if (source->marked_bye) {
       /* if we received a BYE from the source, remove the source after some
@@ -3206,6 +3206,15 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   /* see if we need to generate SR or RR packets */
   if (!is_rtcp_time (sess, current_time, &data))
     goto done;
+
+  /* we need an internal source now */
+  if (sess->stats.internal_sources == 0) {
+    RTPSource *source;
+    gboolean created;
+
+    source = obtain_internal_source (sess, sess->suggested_ssrc, &created);
+    g_object_unref (source);
+  }
 
   /* generate RTCP for all internal sources */
   g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
