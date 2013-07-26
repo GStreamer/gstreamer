@@ -1174,7 +1174,8 @@ gst_query_parse_buffering_stats (GstQuery * query,
  * @format: the format to set for the @start and @stop values
  * @start: the start to set
  * @stop: the stop to set
- * @estimated_total: estimated total amount of download time
+ * @estimated_total: estimated total amount of download time remaining in
+ *     miliseconds
  *
  * Set the available query result fields in @query.
  */
@@ -1203,7 +1204,7 @@ gst_query_set_buffering_range (GstQuery * query, GstFormat format,
  * @start: (out) (allow-none): the start to set, or NULL
  * @stop: (out) (allow-none): the stop to set, or NULL
  * @estimated_total: (out) (allow-none): estimated total amount of download
- *     time, or NULL
+ *     time remaining in miliseconds, or NULL
  *
  * Parse an available query, writing the format into @format, and
  * other results into the passed parameters, if the respective parameters
