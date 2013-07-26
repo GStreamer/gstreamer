@@ -207,6 +207,7 @@ struct _RTPSession {
   GHashTable   *ssrcs[32];
   guint         total_sources;
 
+  guint16       generation;
   GstClockTime  next_rtcp_check_time;
   GstClockTime  last_rtcp_send_time;
   GstClockTime  start_time;

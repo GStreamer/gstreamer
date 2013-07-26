@@ -1289,6 +1289,8 @@ add_source (RTPSession * sess, RTPSource * src)
 {
   g_hash_table_insert (sess->ssrcs[sess->mask_idx],
       GINT_TO_POINTER (src->ssrc), src);
+  /* report the new source ASAP */
+  src->generation = sess->generation;
   /* we have one more source now */
   sess->total_sources++;
   if (RTP_SOURCE_IS_ACTIVE (src))
@@ -2744,6 +2746,7 @@ typedef struct
   GstRTCPBuffer rtcpbuf;
   RTPSession *sess;
   RTPSource *source;
+  guint num_to_report;
   GstBuffer *rtcp;
   GstClockTime current_time;
   guint64 ntpnstime;
@@ -2799,15 +2802,23 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
 static void
 session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
 {
+  RTPSession *sess = data->sess;
   GstRTCPPacket *packet = &data->packet;
   guint8 fractionlost;
   gint32 packetslost;
   guint32 exthighestseq, jitter;
   guint32 lsr, dlsr;
 
+  /* don't report for sources in future generations */
+  if (((gint16) (source->generation - sess->generation)) > 0) {
+    GST_DEBUG ("source %08x generation %u > %u", source->ssrc,
+        source->generation, sess->generation);
+    return;
+  }
+
   /* only report about other sender */
   if (source == data->source)
-    return;
+    goto reported;
 
   if (gst_rtcp_packet_get_rb_count (packet) == GST_RTCP_MAX_RB_COUNT) {
     GST_DEBUG ("max RB count reached");
@@ -2816,7 +2827,7 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
 
   if (!RTP_SOURCE_IS_SENDER (source)) {
     GST_DEBUG ("source %08x not sender", source->ssrc);
-    return;
+    goto reported;
   }
 
   GST_DEBUG ("create RB for SSRC %08x", source->ssrc);
@@ -2837,6 +2848,16 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
   /* packet is not yet filled, add report block for this source. */
   gst_rtcp_packet_add_rb (packet, source->ssrc, fractionlost, packetslost,
       exthighestseq, jitter, lsr, dlsr);
+
+reported:
+  /* source is reported, move to next generation */
+  source->generation = sess->generation + 1;
+
+  /* if we reported all sources in this generation, move to next */
+  if (--data->num_to_report == 0) {
+    sess->generation++;
+    GST_DEBUG ("all reported, generation now %u", sess->generation);
+  }
 }
 
 /* perform cleanup of sources that timed out */
@@ -2850,6 +2871,8 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
   RTPSession *sess = data->sess;
   GstClockTime interval, binterval;
   GstClockTime btime;
+
+  GST_DEBUG ("look at %08x, generation %u", source->ssrc, source->generation);
 
   /* check for outdated collisions */
   if (source->internal) {
@@ -2963,8 +2986,10 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
 
       on_sender_timeout (sess, source);
     }
+    /* count how many source to report in this generation */
+    if (((gint16) (source->generation - sess->generation)) <= 0)
+      data->num_to_report++;
   }
-
   source->closing = remove;
 }
 
@@ -3166,7 +3191,7 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
     make_source_bye (sess, source, data);
     is_bye = TRUE;
   } else if (!data->is_early) {
-    /* loop over all known sources and add report blocks. If we are ealy, we
+    /* loop over all known sources and add report blocks. If we are early, we
      * just make a minimal RTCP packet and skip this step */
     g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
         (GHFunc) session_report_blocks, data);
@@ -3221,6 +3246,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   data.current_time = current_time;
   data.ntpnstime = ntpnstime;
   data.running_time = running_time;
+  data.num_to_report = 0;
   data.may_suppress = FALSE;
   g_queue_init (&data.output);
 
@@ -3256,6 +3282,9 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   /* see if we need to generate SR or RR packets */
   if (!is_rtcp_time (sess, current_time, &data))
     goto done;
+
+  GST_DEBUG ("doing RTCP generation %u for %u sources", sess->generation,
+      data.num_to_report);
 
   /* generate RTCP for all internal sources */
   g_hash_table_foreach (sess->ssrcs[sess->mask_idx],

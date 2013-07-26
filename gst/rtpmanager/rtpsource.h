@@ -135,6 +135,7 @@ struct _RTPSource {
   /*< private >*/
   guint32       ssrc;
 
+  guint16       generation;
   guint         probation;
   guint         curr_probation;
   gboolean      validated;
