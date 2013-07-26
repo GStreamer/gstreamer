@@ -207,7 +207,7 @@ get_position (GstQaScenario * scenario)
         && (position <= (seek->seeking_time + priv->seek_pos_tol))) {
 
       if (GST_CLOCK_TIME_IS_VALID (priv->seeked_position))
-        GST_QA_REPORT_ISSUE (scenario, TRUE, SEEK, TIMING,
+        GST_QA_REPORT (scenario, GST_QA_ISSUE_ID_EVENT_SEEK_NOT_HANDLED,
             "Previous seek to %" GST_TIME_FORMAT " was not handled",
             GST_TIME_ARGS (priv->seeked_position));
 
@@ -218,7 +218,7 @@ get_position (GstQaScenario * scenario)
               seek->format, seek->flags,
               seek->start_type, seek->start,
               seek->stop_type, seek->stop) == FALSE) {
-        GST_QA_REPORT_ISSUE (scenario, TRUE, SEEK, UNKNOWN,
+        GST_QA_REPORT (scenario, GST_QA_ISSUE_ID_EVENT_SEEK_NOT_HANDLED,
             "Could not seek to position %" GST_TIME_FORMAT,
             GST_TIME_ARGS (priv->seeked_position));
       }
@@ -248,7 +248,7 @@ async_done_cb (GstBus * bus, GstMessage * message, GstQaScenario * scenario)
         position < (MAX (0,
                 ((gint64) (priv->seeked_position - priv->seek_pos_tol))))) {
 
-      GST_QA_REPORT_ISSUE (scenario, TRUE, SEEK, TIMING,
+      GST_QA_REPORT (scenario, GST_QA_ISSUE_ID_EVENT_SEEK_RESULT_POSITION_WRONG,
           "Seeked position %" GST_TIME_FORMAT
           "not in the expected range [%" GST_TIME_FORMAT " -- %"
           GST_TIME_FORMAT, GST_TIME_ARGS (position),

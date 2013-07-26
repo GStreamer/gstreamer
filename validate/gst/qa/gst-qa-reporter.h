@@ -22,6 +22,7 @@
 
 #include <glib-object.h>
 #include "gst-qa-runner.h"
+#include "gst-qa-report.h"
 
 G_BEGIN_DECLS
 
@@ -35,50 +36,20 @@ typedef struct _GstQaReporterInterface GstQaReporterInterface;
 #define GST_QA_REPORTER_GET_INTERFACE(inst) (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_QA_REPORTER, GESExtractableInterface))
 
 #ifdef G_HAVE_ISO_VARARGS
-#define GST_QA_REPORT(m, repeat, status, area, subarea, ...)           \
-G_STMT_START {                                                                 \
-  gst_qa_report (GST_QA_REPORTER (m), repeat,                        \
-    GST_QA_REPORT_LEVEL_ ## status, GST_QA_AREA_ ## area,                      \
-    GST_QA_AREA_ ## area ## _ ## subarea, __VA_ARGS__ );                       \
+#define GST_QA_REPORT(m, issue_id, ...)                              \
+G_STMT_START {                                                       \
+  gst_qa_report (GST_QA_REPORTER (m), issue_id,                      \
+      __VA_ARGS__ );                                                 \
 } G_STMT_END
 
-#define GST_QA_REPORT_CRITICAL(m, repeat, area, subarea, ...)          \
-G_STMT_START {                                                                 \
-  GST_QA_REPORT(m, repeat, CRITICAL, area, subarea, __VA_ARGS__);      \
-} G_STMT_END
-
-#define GST_QA_REPORT_WARNING(m, repeat, area, subarea, ...)           \
-G_STMT_START {                                                                 \
-  GST_QA_REPORT(m, repeat, WARNING, area, subarea, __VA_ARGS__);       \
-} G_STMT_END
-
-#define GST_QA_REPORT_ISSUE(m, repeat, area, subarea, ...)             \
-G_STMT_START {                                                                 \
-  GST_QA_REPORT(m, repeat, ISSUE, area, subarea, __VA_ARGS__);         \
-} G_STMT_END
 #else /* G_HAVE_GNUC_VARARGS */
 #ifdef G_HAVE_GNUC_VARARGS
-#define GST_QA_REPORT(m, repeat, status, area, subarea, args...)       \
-G_STMT_START {                                                                 \
-  gst_qa_reporter_do_report (GST_QA_REPORTER (m),                                \
-    GST_QA_REPORT_LEVEL_ ## status, GST_QA_AREA_ ## area,                      \
-    GST_QA_AREA_ ## area ## _ ## subarea, ##args );                            \
+#define GST_QA_REPORT(m, issue_id, args...)                          \
+G_STMT_START {                                                       \
+  gst_qa_reporter_do_report (GST_QA_REPORTER (m),                    \
+    issue_id, ##args );                                              \
 } G_STMT_END
 
-#define GST_QA_REPORT_CRITICAL(m, repeat, area, subarea, args...)      \
-G_STMT_START {                                                                 \
-  GST_QA_REPORT(m, repeat, CRITICAL, area, subarea, ##args);           \
-} G_STMT_END
-
-#define GST_QA_REPORT_WARNING(m, repeat, area, subarea, args...)       \
-G_STMT_START {                                                                 \
-  GST_QA_REPORT(m, repeat, WARNING, area, subarea, ##args);            \
-} G_STMT_END
-
-#define GST_QA_REPORT_ISSUE(m, repeat, area, subarea, args...)         \
-G_STMT_START {                                                                 \
-  GST_QA_REPORT(m, repeat, ISSUE, area, subarea, ##args);              \
-} G_STMT_END
 #endif /* G_HAVE_ISO_VARARGS */
 #endif /* G_HAVE_GNUC_VARARGS */
 
@@ -94,14 +65,13 @@ struct _GstQaReporterInterface
 
 void gst_qa_reporter_set_name            (GstQaReporter * reporter,
                                           gchar * name);
+const gchar * gst_qa_reporter_get_name            (GstQaReporter * reporter);
 GstQaRunner * gst_qa_reporter_get_runner (GstQaReporter *reporter);
 void gst_qa_reporter_init                (GstQaReporter * reporter, const gchar *name);
-void gst_qa_report                       (GstQaReporter * reporter, gboolean repeat,
-                                          GstQaReportLevel level, GstQaReportArea area,
-                                          gint subarea, const gchar * format, ...);
-void gst_qa_report_valist                (GstQaReporter * reporter, gboolean repeat,
-                                          GstQaReportLevel level, GstQaReportArea area,
-                                          gint subarea, const gchar * format, va_list var_args);
+void gst_qa_report                       (GstQaReporter * reporter, GstQaIssueId issue_id,
+                                          const gchar * format, ...);
+void gst_qa_report_valist                (GstQaReporter * reporter, GstQaIssueId issue_id,
+                                          const gchar * format, va_list var_args);
 
 void gst_qa_reporter_set_runner          (GstQaReporter * reporter,
                                           GstQaRunner *runner);

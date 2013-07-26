@@ -157,8 +157,9 @@ _check_field_type (GstQaPadMonitor * monitor, GstStructure * structure,
   gint rejected_types_index = 0;
 
   if (!gst_structure_has_field (structure, field)) {
-    GST_QA_REPORT_WARNING (GST_QA_REPORTER (monitor), FALSE, CAPS_NEGOTIATION,
-        MISSING_FIELD, "%s is missing from structure: %" GST_PTR_FORMAT, field,
+    GST_QA_REPORT (monitor,
+        GST_QA_ISSUE_ID_CAPS_IS_MISSING_FIELD,
+        "Field '%s' is missing from structure: %" GST_PTR_FORMAT, field,
         structure);
     return;
   }
@@ -175,8 +176,9 @@ _check_field_type (GstQaPadMonitor * monitor, GstStructure * structure,
   va_end (var_args);
 
   joined_types = g_strjoinv (" / ", (gchar **) rejected_types);
-  GST_QA_REPORT_CRITICAL (GST_QA_REPORTER (monitor), FALSE, CAPS_NEGOTIATION,
-      BAD_FIELD_TYPE, "%s has wrong type %s in structure '%" GST_PTR_FORMAT
+  GST_QA_REPORT (monitor,
+      GST_QA_ISSUE_ID_CAPS_FIELD_HAS_BAD_TYPE,
+      "Field '%s' has wrong type %s in structure '%" GST_PTR_FORMAT
       "'. Expected: %s", field,
       g_type_name (gst_structure_get_field_type (structure, field)),
       structure, joined_types);
@@ -445,8 +447,7 @@ gst_qa_pad_monitor_check_caps_fields_proxied (GstQaPadMonitor * monitor,
     }
 
     if (type_match && !found) {
-      GST_QA_REPORT_WARNING (monitor, FALSE, CAPS_NEGOTIATION,
-          GET_CAPS,
+      GST_QA_REPORT (monitor, GST_QA_ISSUE_ID_GET_CAPS_NOT_PROXYING_FIELDS,
           "Peer pad structure '%" GST_PTR_FORMAT "' has no similar version "
           "on pad's caps '%" GST_PTR_FORMAT "'", otherstructure, caps);
     }
@@ -465,7 +466,8 @@ gst_qa_pad_monitor_check_late_serialized_events (GstQaPadMonitor * monitor,
     SerializedEventData *data =
         g_ptr_array_index (monitor->serialized_events, i);
     if (data->timestamp < ts) {
-      GST_QA_REPORT_WARNING (monitor, FALSE, EVENT, EXPECTED,
+      GST_QA_REPORT (monitor,
+          GST_QA_ISSUE_ID_SERIALIZED_EVENT_WASNT_PUSHED_IN_TIME,
           "Serialized event %" GST_PTR_FORMAT " wasn't pushed before expected "
           "timestamp %" GST_TIME_FORMAT " on pad %s:%s", data->event,
           GST_TIME_ARGS (data->timestamp),
@@ -642,7 +644,8 @@ gst_qa_pad_monitor_check_buffer_timestamp_in_received_range (GstQaPadMonitor *
     return;
   }
   if (!found) {
-    GST_QA_REPORT_WARNING (monitor, FALSE, BUFFER, TIMESTAMP,
+    GST_QA_REPORT (monitor,
+        GST_QA_ISSUE_ID_BUFFER_TIMESTAMP_OUT_OF_RECEIVED_RANGE,
         "Timestamp %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT
         " is out of range of received input", GST_TIME_ARGS (ts),
         GST_TIME_ARGS (ts_end));
@@ -658,14 +661,16 @@ gst_qa_pad_monitor_check_first_buffer (GstQaPadMonitor * pad_monitor,
 
     if (!pad_monitor->has_segment
         && PAD_IS_IN_PUSH_MODE (GST_QA_PAD_MONITOR_GET_PAD (pad_monitor))) {
-      GST_QA_REPORT_WARNING (GST_QA_REPORTER (pad_monitor), FALSE, EVENT,
-          EXPECTED, "Received buffer before Segment event");
+      GST_QA_REPORT (pad_monitor,
+          GST_QA_ISSUE_ID_BUFFER_BEFORE_SEGMENT,
+          "Received buffer before Segment event");
     }
     if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer))) {
       gint64 running_time = gst_segment_to_running_time (&pad_monitor->segment,
           pad_monitor->segment.format, GST_BUFFER_TIMESTAMP (buffer));
       if (running_time != 0) {
-        GST_QA_REPORT_WARNING (pad_monitor, FALSE, BUFFER, TIMESTAMP,
+        GST_QA_REPORT (pad_monitor,
+            GST_QA_ISSUE_ID_FIRST_BUFFER_RUNNING_TIME_IS_NOT_ZERO,
             "First buffer running time is not 0, it is: %" GST_TIME_FORMAT,
             GST_TIME_ARGS (running_time));
       }
@@ -773,8 +778,7 @@ gst_qa_pad_monitor_check_aggregated_return (GstQaPadMonitor * monitor,
     return;
   }
   if (aggregated != ret) {
-    /* TODO review this error code */
-    GST_QA_REPORT_CRITICAL (monitor, TRUE, BUFFER, UNEXPECTED,
+    GST_QA_REPORT (monitor, GST_QA_ISSUE_ID_WRONG_FLOW_RETURN,
         "Wrong combined flow return %s(%d). Expected: %s(%d)",
         gst_flow_get_name (ret), ret,
         gst_flow_get_name (aggregated), aggregated);
@@ -924,8 +928,8 @@ gst_qa_pad_monitor_add_expected_newsegment (GstQaPadMonitor * monitor,
         othermonitor = g_object_get_data ((GObject *) otherpad, "qa-monitor");
         GST_QA_MONITOR_LOCK (othermonitor);
         if (othermonitor->expected_segment) {
-          GST_QA_REPORT_WARNING (othermonitor, FALSE, EVENT, EXPECTED,
-              "expected newsegment event never pushed");
+          GST_QA_REPORT (othermonitor,
+              GST_QA_ISSUE_ID_EVENT_NEWSEGMENT_NOT_PUSHED, NULL);
           gst_event_unref (othermonitor->expected_segment);
         }
         othermonitor->expected_segment = gst_event_ref (event);
@@ -961,8 +965,8 @@ gst_qa_pad_monitor_common_event_check (GstQaPadMonitor * pad_monitor,
         if (seqnum == pad_monitor->pending_flush_start_seqnum) {
           pad_monitor->pending_flush_start_seqnum = 0;
         } else {
-          GST_QA_REPORT_ISSUE (GST_QA_REPORTER (pad_monitor), TRUE, EVENT,
-              SEQNUM,
+          GST_QA_REPORT (pad_monitor,
+              GST_QA_ISSUE_ID_EVENT_HAS_WRONG_SEQNUM,
               "The expected flush-start seqnum should be the same as the "
               "one from the event that caused it (probably a seek). Got: %u."
               " Expected: %u", seqnum, pad_monitor->pending_flush_start_seqnum);
@@ -970,8 +974,8 @@ gst_qa_pad_monitor_common_event_check (GstQaPadMonitor * pad_monitor,
       }
 
       if (pad_monitor->pending_flush_stop) {
-        GST_QA_REPORT_ISSUE (GST_QA_REPORTER (pad_monitor), TRUE, EVENT,
-            UNEXPECTED,
+        GST_QA_REPORT (pad_monitor,
+            GST_QA_ISSUE_ID_EVENT_FLUSH_START_UNEXPECTED,
             "Received flush-start from %" GST_PTR_FORMAT
             " when flush-stop was expected", GST_EVENT_SRC (event));
       }
@@ -984,8 +988,8 @@ gst_qa_pad_monitor_common_event_check (GstQaPadMonitor * pad_monitor,
         if (seqnum == pad_monitor->pending_flush_stop_seqnum) {
           pad_monitor->pending_flush_stop_seqnum = 0;
         } else {
-          GST_QA_REPORT_ISSUE (GST_QA_REPORTER (pad_monitor), TRUE, EVENT,
-              SEQNUM,
+          GST_QA_REPORT (pad_monitor,
+              GST_QA_ISSUE_ID_EVENT_HAS_WRONG_SEQNUM,
               "The expected flush-stop seqnum should be the same as the "
               "one from the event that caused it (probably a seek). Got: %u."
               " Expected: %u", seqnum, pad_monitor->pending_flush_stop_seqnum);
@@ -993,8 +997,9 @@ gst_qa_pad_monitor_common_event_check (GstQaPadMonitor * pad_monitor,
       }
 
       if (!pad_monitor->pending_flush_stop) {
-        GST_QA_REPORT_ISSUE (GST_QA_REPORTER (pad_monitor), TRUE, EVENT,
-            UNEXPECTED, "Unexpected flush-stop %p from %" GST_PTR_FORMAT, event,
+        GST_QA_REPORT (pad_monitor,
+            GST_QA_ISSUE_ID_EVENT_FLUSH_STOP_UNEXPECTED,
+            "Unexpected flush-stop %p from %" GST_PTR_FORMAT, event,
             GST_EVENT_SRC (event));
       }
       pad_monitor->pending_flush_stop = FALSE;
@@ -1054,8 +1059,8 @@ gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
                   || (exp_rate * exp_applied_rate != rate * applied_rate)
                   || exp_start != start || exp_stop != stop
                   || exp_position != position) {
-                GST_QA_REPORT_WARNING (pad_monitor, TRUE, EVENT,
-                    EXPECTED,
+                GST_QA_REPORT (pad_monitor,
+                    GST_QA_ISSUE_ID_EVENT_NEW_SEGMENT_MISMATCH,
                     "Expected segment didn't match received segment event");
               }
             }
@@ -1320,7 +1325,7 @@ gst_qa_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
               GST_BUFFER_TIMESTAMP (buffer), GST_BUFFER_TIMESTAMP (buffer) +
               GST_BUFFER_DURATION (buffer), NULL, NULL)) {
         /* TODO is this a timestamp issue? */
-        GST_QA_REPORT_ISSUE (monitor, FALSE, BUFFER, TIMESTAMP,
+        GST_QA_REPORT (monitor, GST_QA_ISSUE_ID_BUFFER_IS_OUT_OF_SEGMENT,
             "buffer is out of segment and shouldn't be pushed. Timestamp: %"
             GST_TIME_FORMAT " - duration: %" GST_TIME_FORMAT
             ". Range: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
@@ -1364,7 +1369,7 @@ gst_qa_pad_monitor_event_probe (GstPad * pad, GstEvent * event, gpointer udata)
 
       if (event == stored_event->event
           || GST_EVENT_TYPE (event) == GST_EVENT_TYPE (stored_event->event)) {
-        GST_QA_REPORT_WARNING (monitor, FALSE, EVENT, UNEXPECTED,
+        GST_QA_REPORT (monitor, GST_QA_ISSUE_ID_EVENT_SERIALIZED_OUT_OF_ORDER,
             "Serialized event %" GST_PTR_FORMAT " was pushed out of original "
             "serialization order in pad %s:%s", event,
             GST_DEBUG_PAD_NAME (GST_QA_PAD_MONITOR_GET_PAD (monitor)));
@@ -1435,13 +1440,13 @@ gst_qa_pad_monitor_setcaps_func (GstPad * pad, GstCaps * caps)
             gst_structure_get_value (pad_monitor->pending_setcaps_fields, name);
 
         if (v == NULL) {
-          GST_QA_REPORT_WARNING (pad_monitor, FALSE, CAPS_NEGOTIATION,
-              MISSING_FIELD,
+          GST_QA_REPORT (pad_monitor,
+              GST_QA_ISSUE_ID_CAPS_EXPECTED_FIELD_NOT_FOUND,
               "Field %s is missing from setcaps caps '%" GST_PTR_FORMAT "'",
               name, caps);
         } else if (gst_value_compare (v, otherv) != GST_VALUE_EQUAL) {
-          GST_QA_REPORT_WARNING (pad_monitor, FALSE, CAPS_NEGOTIATION,
-              MISSING_FIELD,
+          GST_QA_REPORT (pad_monitor,
+              GST_QA_ISSUE_ID_CAPS_FIELD_UNEXPECTED_VALUE,
               "Field %s from setcaps caps '%" GST_PTR_FORMAT "' is different "
               "from expected value in caps '%" GST_PTR_FORMAT "'", name, caps,
               pad_monitor->pending_setcaps_fields);

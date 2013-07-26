@@ -53,13 +53,6 @@ _free_priv (GstQaReporterPrivate * priv)
   g_free (priv->name);
 }
 
-static inline gchar *
-_qa_report_id (GstQaReport * report)
-{
-  return g_strdup_printf ("%i-%i-%i-%s",
-      report->level, report->area, report->subarea, report->id);
-}
-
 static GstQaReporterPrivate *
 gst_qa_reporter_get_priv (GstQaReporter * reporter)
 {
@@ -68,8 +61,8 @@ gst_qa_reporter_get_priv (GstQaReporter * reporter)
 
   if (priv == NULL) {
     priv = g_slice_new0 (GstQaReporterPrivate);
-    priv->reports = g_hash_table_new_full (g_str_hash, g_str_equal,
-        g_free, (GDestroyNotify) gst_qa_report_unref);
+    priv->reports = g_hash_table_new_full (g_direct_hash,
+        g_direct_equal, g_free, (GDestroyNotify) gst_qa_report_unref);
 
     g_object_set_data_full (G_OBJECT (reporter), REPORTER_PRIVATE, priv,
         (GDestroyNotify) _free_priv);
@@ -79,42 +72,45 @@ gst_qa_reporter_get_priv (GstQaReporter * reporter)
 }
 
 void
-gst_qa_report_valist (GstQaReporter * reporter, gboolean repeat,
-    GstQaReportLevel level, GstQaReportArea area,
-    gint subarea, const gchar * format, va_list var_args)
+gst_qa_report_valist (GstQaReporter * reporter,
+    GstQaIssueId issue_id, const gchar * format, va_list var_args)
 {
   GstQaReport *report;
-  gchar *message, *report_id = NULL;
+  gchar *message;
+  GstQaIssue *issue;
   GstQaReporterPrivate *priv = gst_qa_reporter_get_priv (reporter);
 
+  issue = gst_qa_issue_from_id (issue_id);
+
+  g_return_if_fail (issue != NULL);
+
   message = g_strdup_vprintf (format, var_args);
-  report = gst_qa_report_new (priv->name, level, area, subarea,
-      format, message);
+  report = gst_qa_report_new (issue, reporter, message);
 
-  if (repeat == FALSE) {
-    report_id = _qa_report_id (report);
+  if (issue->repeat == FALSE) {
+    GstQaIssueId issue_id = gst_qa_issue_get_id (issue);
 
-    if (g_hash_table_lookup (priv->reports, report_id)) {
-      GST_DEBUG ("Report %s already present", report_id);
-      g_free (report_id);
+    if (g_hash_table_lookup (priv->reports, (gconstpointer) issue_id)) {
+      GST_DEBUG ("Report %d:%s already present", issue_id, issue->summary);
       return;
     }
 
-    g_hash_table_insert (priv->reports, report_id, report);
+    g_hash_table_insert (priv->reports, (gpointer) issue_id, report);
   }
 
-  if (level == GST_QA_REPORT_LEVEL_CRITICAL)
+  if (issue->default_level == GST_QA_REPORT_LEVEL_CRITICAL)
     GST_ERROR ("<%s>: %s", priv->name, message);
-  else if (level == GST_QA_REPORT_LEVEL_WARNING)
+  else if (issue->default_level == GST_QA_REPORT_LEVEL_WARNING)
     GST_WARNING ("<%s>: %s", priv->name, message);
-  else if (level == GST_QA_REPORT_LEVEL_ISSUE)
+  else if (issue->default_level == GST_QA_REPORT_LEVEL_ISSUE)
     GST_LOG ("<%s>: %s", priv->name, message);
   else
     GST_DEBUG ("<%s>: %s", priv->name, message);
 
-  GST_INFO_OBJECT (reporter, "Received error report %d : %d : %d : %s",
-      level, area, subarea, message);
+  GST_INFO_OBJECT (reporter, "Received error report %" GST_QA_ISSUE_FORMAT
+      " : %s", GST_QA_ISSUE_ARGS (issue), message);
   gst_qa_report_printf (report);
+
   if (priv->runner) {
     gst_qa_runner_add_report (priv->runner, report);
   } else {
@@ -125,15 +121,13 @@ gst_qa_report_valist (GstQaReporter * reporter, gboolean repeat,
 }
 
 void
-gst_qa_report (GstQaReporter * reporter, gboolean repeat,
-    GstQaReportLevel level, GstQaReportArea area,
-    gint subarea, const gchar * format, ...)
+gst_qa_report (GstQaReporter * reporter, GstQaIssueId issue_id,
+    const gchar * format, ...)
 {
   va_list var_args;
 
   va_start (var_args, format);
-  gst_qa_report_valist (reporter, repeat, level, area, subarea,
-      format, var_args);
+  gst_qa_report_valist (reporter, issue_id, format, var_args);
   va_end (var_args);
 }
 
@@ -146,6 +140,14 @@ gst_qa_reporter_set_name (GstQaReporter * reporter, gchar * name)
     g_free (priv->name);
 
   priv->name = name;
+}
+
+const gchar *
+gst_qa_reporter_get_name (GstQaReporter * reporter)
+{
+  GstQaReporterPrivate *priv = gst_qa_reporter_get_priv (reporter);
+
+  return priv->name;
 }
 
 GstQaRunner *
