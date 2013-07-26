@@ -126,7 +126,7 @@ rtp_source_class_init (RTPSourceClass * klass)
    * name application/x-rtp-source-stats with the following fields:
    *
    *  "ssrc"         G_TYPE_UINT     The SSRC of this source
-   *  "internal"     G_TYPE_BOOLEAN  If this source is the source of the session
+   *  "internal"     G_TYPE_BOOLEAN  If this source is a source of the session
    *  "validated"    G_TYPE_BOOLEAN  If the source is validated
    *  "received-bye" G_TYPE_BOOLEAN  If we received a BYE from this source
    *  "is-csrc"      G_TYPE_BOOLEAN  If this source was found as CSRC
@@ -1151,19 +1151,6 @@ rtp_source_mark_bye (RTPSource * src, const gchar * reason)
   src->marked_bye = TRUE;
 }
 
-static gboolean
-set_ssrc (GstBuffer ** buffer, guint idx, RTPSource * src)
-{
-  GstRTPBuffer rtp = { NULL };
-
-  *buffer = gst_buffer_make_writable (*buffer);
-  if (gst_rtp_buffer_map (*buffer, GST_MAP_WRITE, &rtp)) {
-    gst_rtp_buffer_set_ssrc (&rtp, src->ssrc);
-    gst_rtp_buffer_unmap (&rtp);
-  }
-  return TRUE;
-}
-
 /**
  * rtp_source_send_rtp:
  * @src: an #RTPSource
@@ -1189,7 +1176,6 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
   GstBufferList *list = NULL;
   GstBuffer *buffer = NULL;
   guint packets;
-  guint32 ssrc;
   GstRTPBuffer rtp = { NULL };
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
@@ -1268,28 +1254,8 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
     gst_rtp_buffer_unmap (&rtp);
     goto no_callback;
   }
-
-  ssrc = gst_rtp_buffer_get_ssrc (&rtp);
   gst_rtp_buffer_unmap (&rtp);
 
-  if (ssrc != src->ssrc) {
-    /* the SSRC of the packet is not correct, make a writable buffer and
-     * update the SSRC. This could involve a complete copy of the packet when
-     * it is not writable. Usually the payloader will use caps negotiation to
-     * get the correct SSRC from the session manager before pushing anything. */
-
-    /* FIXME, we don't want to warn yet because we can't inform any payloader
-     * of the changes SSRC yet because we don't implement pad-alloc. */
-    GST_LOG ("updating SSRC from %08x to %08x, fix the payloader", ssrc,
-        src->ssrc);
-
-    if (is_list) {
-      list = gst_buffer_list_make_writable (list);
-      gst_buffer_list_foreach (list, (GstBufferListFunc) set_ssrc, src);
-    } else {
-      set_ssrc (&buffer, 0, src);
-    }
-  }
   GST_LOG ("pushing RTP %s %" G_GUINT64_FORMAT, is_list ? "list" : "packet",
       src->stats.packets_sent);
 
