@@ -11,6 +11,7 @@ c_sources = \
 	gst-qa-monitor-factory.c \
 	gst-qa-report.c \
 	gst-qa-scenario.c \
+	gst-qa-override.c \
 	gst-qa-monitor-preload.c
 
 noinst_HEADERS =
