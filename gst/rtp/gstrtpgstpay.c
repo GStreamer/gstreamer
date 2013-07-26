@@ -328,6 +328,32 @@ gst_rtp_gst_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   return res;
 }
 
+static void
+gst_rtp_gst_pay_send_event (GstRtpGSTPay * rtpgstpay, guint etype,
+    GstEvent * event)
+{
+  const GstStructure *s;
+  gchar *estr;
+  guint elen;
+  GstBuffer *outbuf;
+
+  /* Create the standalone caps packet if an inlined caps was pending */
+  gst_rtp_gst_pay_create_from_adapter (rtpgstpay, GST_CLOCK_TIME_NONE);
+
+  s = gst_event_get_structure (event);
+
+  estr = gst_structure_to_string (s);
+  elen = strlen (estr);
+  outbuf = make_data_buffer (rtpgstpay, estr, elen);
+  GST_DEBUG_OBJECT (rtpgstpay, "sending event=%s", estr);
+  g_free (estr);
+
+  rtpgstpay->etype = etype;
+  gst_adapter_push (rtpgstpay->adapter, outbuf);
+  /* Create the event packet now to avoid conflict with data/caps packets */
+  gst_rtp_gst_pay_create_from_adapter (rtpgstpay, GST_CLOCK_TIME_NONE);
+}
+
 static gboolean
 gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 {
@@ -361,27 +387,15 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
       break;
   }
   if (etype) {
-    const GstStructure *s;
-    gchar *estr;
-    guint elen;
-    GstBuffer *outbuf;
-
-    /* make sure the adapter is flushed */
-    gst_rtp_gst_pay_flush (rtpgstpay, GST_CLOCK_TIME_NONE);
-
     GST_DEBUG_OBJECT (rtpgstpay, "make event type %d for %s",
         etype, GST_EVENT_TYPE_NAME (event));
-    s = gst_event_get_structure (event);
-
-    estr = gst_structure_to_string (s);
-    elen = strlen (estr);
-    outbuf = make_data_buffer (rtpgstpay, estr, elen);
-    g_free (estr);
-
-    rtpgstpay->etype = etype;
-    gst_adapter_push (rtpgstpay->adapter, outbuf);
-    /* flush the adapter immediately */
-    gst_rtp_gst_pay_flush (rtpgstpay, GST_CLOCK_TIME_NONE);
+    gst_rtp_gst_pay_send_event (rtpgstpay, etype, event);
+    /* Do not send stream-start right away since caps/new-segment were not yet
+       sent, so our data would be considered invalid */
+    if (etype != 4) {
+      /* flush the adapter immediately */
+      gst_rtp_gst_pay_flush (rtpgstpay, GST_CLOCK_TIME_NONE);
+    }
   }
 
   gst_event_unref (event);
