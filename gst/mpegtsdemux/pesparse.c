@@ -113,6 +113,11 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
   res->flags = val8 & 0xf;
 
   GST_LOG ("scrambling_control 0x%0x", res->scrambling_control);
+  GST_LOG ("flags_1: %s%s%s%s%s",
+      val8 & 0x08 ? "priority " : "",
+      val8 & 0x04 ? "data_alignment " : "",
+      val8 & 0x02 ? "copyright " : "",
+      val8 & 0x01 ? "original_or_copy " : "", val8 & 0x0f ? "" : "<none>");
 
   /* PTS_DTS_flags                    2
    * ESCR_flag                        1
@@ -122,7 +127,15 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
    * PES_CRC_flag                     1
    * PES_extension_flag               1*/
   flags = *data++;
-  GST_DEBUG ("PES_flag 0x%02x", flags);
+  GST_LOG ("flags_2: %s%s%s%s%s%s%s%s%s",
+      flags & 0x80 ? "PTS " : "",
+      flags & 0x40 ? "DTS " : "",
+      flags & 0x20 ? "ESCR" : "",
+      flags & 0x10 ? "ES_rate " : "",
+      flags & 0x08 ? "DSM_trick_mode " : "",
+      flags & 0x04 ? "additional_copy_info " : "",
+      flags & 0x02 ? "CRC " : "",
+      flags & 0x01 ? "extension " : "", flags ? "" : "<none>");
 
   /* PES_header_data_length           8 */
   res->header_size = *data++;

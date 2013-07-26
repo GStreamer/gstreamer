@@ -39,8 +39,11 @@
 #define MPEGTS_MIN_PACKETSIZE MPEGTS_NORMAL_PACKETSIZE
 #define MPEGTS_MAX_PACKETSIZE MPEGTS_ATSC_PACKETSIZE
 
-#define MPEGTS_AFC_PCR_FLAG	0x10
-#define MPEGTS_AFC_OPCR_FLAG	0x08
+#define MPEGTS_AFC_PCR_FLAG	                0x10
+#define MPEGTS_AFC_OPCR_FLAG	                0x08
+#define MPEGTS_AFC_SPLICING_POINT_FLAG	        0x04
+#define MPEGTS_AFC_TRANSPORT_PRIVATE_DATA_FLAG	0x02
+#define MPEGTS_AFC_EXTENSION_FLAG	        0x01
 
 #define MAX_WINDOW 512
 
@@ -131,7 +134,6 @@ typedef struct
 
   guint8  afc_flags;
   guint64 pcr;
-  guint64 opcr;
   guint64 offset;
 } MpegTSPacketizerPacket;
 

@@ -406,6 +406,16 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
 
   afcflags = packet->afc_flags = *data++;
 
+  GST_DEBUG ("flags: %s%s%s%s%s%s%s%s%s",
+      afcflags & 0x80 ? "discontinuity " : "",
+      afcflags & 0x40 ? "random_access " : "",
+      afcflags & 0x20 ? "elementary_stream_priority " : "",
+      afcflags & 0x10 ? "PCR " : "",
+      afcflags & 0x08 ? "OPCR " : "",
+      afcflags & 0x04 ? "splicing_point " : "",
+      afcflags & 0x02 ? "transport_private_data " : "",
+      afcflags & 0x01 ? "extension " : "", afcflags == 0x00 ? "<none>" : "");
+
   /* PCR */
   if (afcflags & MPEGTS_AFC_PCR_FLAG) {
     MpegTSPCR *pcrtable = NULL;
@@ -426,14 +436,40 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
       record_pcr (packetizer, pcrtable, packet->pcr, packet->offset);
     }
   }
-
+#ifndef GST_DISABLE_GST_DEBUG
   /* OPCR */
   if (afcflags & MPEGTS_AFC_OPCR_FLAG) {
-    packet->opcr = mpegts_packetizer_compute_pcr (data);
-    /* *data += 6; */
+    /* Note: We don't use/need opcr for the time being */
+    guint64 opcr = mpegts_packetizer_compute_pcr (data);
+    data += 6;
     GST_DEBUG ("opcr %" G_GUINT64_FORMAT " (%" GST_TIME_FORMAT ")",
-        packet->pcr, GST_TIME_ARGS (PCRTIME_TO_GSTTIME (packet->pcr)));
+        opcr, GST_TIME_ARGS (PCRTIME_TO_GSTTIME (opcr)));
   }
+
+  if (afcflags & MPEGTS_AFC_SPLICING_POINT_FLAG) {
+    GST_DEBUG ("splice_countdown: %u", *data++);
+  }
+
+  if (afcflags & MPEGTS_AFC_TRANSPORT_PRIVATE_DATA_FLAG) {
+    guint8 len = *data++;
+    GST_MEMDUMP ("private data", data, len);
+    data += len;
+  }
+
+  if (afcflags & MPEGTS_AFC_EXTENSION_FLAG) {
+    guint8 extlen = *data++;
+    guint8 flags = *data++;
+    GST_DEBUG ("extension size:%d flags : %s%s%s", extlen,
+        flags & 0x80 ? "ltw " : "",
+        flags & 0x40 ? "piecewise_rate " : "",
+        flags & 0x20 ? "seamless_splice " : "");
+    if (flags & 0x80) {
+      GST_DEBUG ("legal time window: valid_flag:%d offset:%d", *data >> 7,
+          GST_READ_UINT16_BE (data) & 0x7fff);
+      data += 2;
+    }
+  }
+#endif
 
   return TRUE;
 }
