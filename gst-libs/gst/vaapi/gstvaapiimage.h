@@ -58,22 +58,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_IMAGE_HEIGHT(image)   gst_vaapi_image_get_height(image)
 
 typedef struct _GstVaapiImage                   GstVaapiImage;
-typedef struct _GstVaapiImageRaw                GstVaapiImageRaw;
-
-/**
- * GstVaapiImageRaw:
- *
- * A raw image wrapper. The caller is responsible for initializing all
- * the fields with sensible values.
- */
-struct _GstVaapiImageRaw {
-    GstVideoFormat      format;
-    guint               width;
-    guint               height;
-    guint               num_planes;
-    guchar             *pixels[3];
-    guint               stride[3];
-};
 
 GstVaapiImage *
 gst_vaapi_image_new(
@@ -136,23 +120,9 @@ gst_vaapi_image_get_buffer(
 );
 
 gboolean
-gst_vaapi_image_get_raw(
-    GstVaapiImage     *image,
-    GstVaapiImageRaw  *dst_image,
-    GstVaapiRectangle *rect
-);
-
-gboolean
 gst_vaapi_image_update_from_buffer(
     GstVaapiImage     *image,
     GstBuffer         *buffer,
-    GstVaapiRectangle *rect
-);
-
-gboolean
-gst_vaapi_image_update_from_raw(
-    GstVaapiImage     *image,
-    GstVaapiImageRaw  *src_image,
     GstVaapiRectangle *rect
 );
 

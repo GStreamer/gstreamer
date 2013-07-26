@@ -30,41 +30,11 @@
 #include "gstvaapicompat.h"
 #include "gstvaapiutils.h"
 #include "gstvaapiimage.h"
+#include "gstvaapiimage_priv.h"
 #include "gstvaapiobject_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
-
-typedef struct _GstVaapiImageClass              GstVaapiImageClass;
-
-/**
- * GstVaapiImage:
- *
- * A VA image wrapper
- */
-struct _GstVaapiImage {
-    /*< private >*/
-    GstVaapiObject      parent_instance;
-
-    VAImage             internal_image;
-    VAImage             image;
-    guchar             *image_data;
-    GstVideoFormat      internal_format;
-    GstVideoFormat      format;
-    guint               width;
-    guint               height;
-    guint               is_linear       : 1;
-};
-
-/**
- * GstVaapiImageClass:
- *
- * A VA image wrapper class
- */
-struct _GstVaapiImageClass {
-    /*< private >*/
-    GstVaapiObjectClass parent_class;
-};
 
 #define SWAP_UINT(a, b) do { \
         guint v = a;         \

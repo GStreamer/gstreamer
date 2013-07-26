@@ -109,6 +109,7 @@ libgstvaapi_source_priv_h =			\
 	gstvaapidecoder_priv.h			\
 	gstvaapidecoder_unit.h			\
 	gstvaapidisplay_priv.h			\
+	gstvaapiimage_priv.h			\
 	gstvaapiminiobject.h			\
 	gstvaapiobject_priv.h			\
 	gstvaapiparser_frame.h			\

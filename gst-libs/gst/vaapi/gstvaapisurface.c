@@ -32,6 +32,7 @@
 #include "gstvaapisurface_priv.h"
 #include "gstvaapicontext.h"
 #include "gstvaapiimage.h"
+#include "gstvaapiimage_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -322,7 +323,7 @@ gst_vaapi_surface_get_format(GstVaapiSurface *surface)
     if (surface->format == GST_VIDEO_FORMAT_UNKNOWN) {
         GstVaapiImage * const image = gst_vaapi_surface_derive_image(surface);
         if (image) {
-            surface->format = gst_vaapi_image_get_format(image);
+            surface->format = GST_VAAPI_IMAGE_FORMAT(image);
             gst_vaapi_object_unref(image);
         }
         if (surface->format == GST_VIDEO_FORMAT_UNKNOWN)
@@ -502,7 +503,8 @@ gst_vaapi_surface_get_image(GstVaapiSurface *surface, GstVaapiImage *image)
     if (!display)
         return FALSE;
 
-    gst_vaapi_image_get_size(image, &width, &height);
+    width  = GST_VAAPI_IMAGE_WIDTH(image);
+    height = GST_VAAPI_IMAGE_HEIGHT(image);
     if (width != surface->width || height != surface->height)
         return FALSE;
 
@@ -549,7 +551,8 @@ gst_vaapi_surface_put_image(GstVaapiSurface *surface, GstVaapiImage *image)
     if (!display)
         return FALSE;
 
-    gst_vaapi_image_get_size(image, &width, &height);
+    width  = GST_VAAPI_IMAGE_WIDTH(image);
+    height = GST_VAAPI_IMAGE_HEIGHT(image);
     if (width != surface->width || height != surface->height)
         return FALSE;
 
@@ -659,11 +662,8 @@ _gst_vaapi_surface_associate_subpicture(
         src_rect                = &src_rect_default;
         src_rect_default.x      = 0;
         src_rect_default.y      = 0;
-        gst_vaapi_image_get_size(
-            image,
-            &src_rect_default.width,
-            &src_rect_default.height
-        );
+        src_rect_default.width  = GST_VAAPI_IMAGE_WIDTH(image);
+        src_rect_default.height = GST_VAAPI_IMAGE_HEIGHT(image);
     }
 
     if (!dst_rect) {

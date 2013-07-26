@@ -31,6 +31,7 @@
 #include "gstvaapiutils.h"
 #include "gstvaapisubpicture.h"
 #include "gstvaapiobject_priv.h"
+#include "gstvaapiimage_priv.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -141,7 +142,7 @@ gst_vaapi_subpicture_new(GstVaapiImage *image, guint flags)
               GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(image)));
 
     display = GST_VAAPI_OBJECT_DISPLAY(image);
-    format  = gst_vaapi_image_get_format(image);
+    format  = GST_VAAPI_IMAGE_FORMAT(image);
     if (!gst_vaapi_display_has_subpicture_format(display, format, &va_flags))
         return NULL;
     if (flags & ~va_flags)
