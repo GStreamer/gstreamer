@@ -118,31 +118,33 @@ GType gst_app_src_get_type(void);
 #define GST_TYPE_APP_STREAM_TYPE (gst_app_stream_type_get_type ())
 GType gst_app_stream_type_get_type (void);
 
-void             gst_app_src_set_caps         (GstAppSrc *appsrc, const GstCaps *caps);
-GstCaps*         gst_app_src_get_caps         (GstAppSrc *appsrc);
+void             gst_app_src_set_caps                (GstAppSrc *appsrc, const GstCaps *caps);
+GstCaps*         gst_app_src_get_caps                (GstAppSrc *appsrc);
 
-void             gst_app_src_set_size         (GstAppSrc *appsrc, gint64 size);
-gint64           gst_app_src_get_size         (GstAppSrc *appsrc);
+void             gst_app_src_set_size                (GstAppSrc *appsrc, gint64 size);
+gint64           gst_app_src_get_size                (GstAppSrc *appsrc);
 
-void             gst_app_src_set_stream_type  (GstAppSrc *appsrc, GstAppStreamType type);
-GstAppStreamType gst_app_src_get_stream_type  (GstAppSrc *appsrc);
+void             gst_app_src_set_stream_type         (GstAppSrc *appsrc, GstAppStreamType type);
+GstAppStreamType gst_app_src_get_stream_type         (GstAppSrc *appsrc);
 
-void             gst_app_src_set_max_bytes    (GstAppSrc *appsrc, guint64 max);
-guint64          gst_app_src_get_max_bytes    (GstAppSrc *appsrc);
+void             gst_app_src_set_max_bytes           (GstAppSrc *appsrc, guint64 max);
+guint64          gst_app_src_get_max_bytes           (GstAppSrc *appsrc);
 
-void             gst_app_src_set_latency      (GstAppSrc *appsrc, guint64 min, guint64 max);
-void             gst_app_src_get_latency      (GstAppSrc *appsrc, guint64 *min, guint64 *max);
+guint64          gst_app_src_get_current_level_bytes (GstAppSrc *appsrc);
 
-void             gst_app_src_set_emit_signals (GstAppSrc *appsrc, gboolean emit);
-gboolean         gst_app_src_get_emit_signals (GstAppSrc *appsrc);
+void             gst_app_src_set_latency             (GstAppSrc *appsrc, guint64 min, guint64 max);
+void             gst_app_src_get_latency             (GstAppSrc *appsrc, guint64 *min, guint64 *max);
 
-GstFlowReturn    gst_app_src_push_buffer      (GstAppSrc *appsrc, GstBuffer *buffer);
-GstFlowReturn    gst_app_src_end_of_stream    (GstAppSrc *appsrc);
+void             gst_app_src_set_emit_signals        (GstAppSrc *appsrc, gboolean emit);
+gboolean         gst_app_src_get_emit_signals        (GstAppSrc *appsrc);
 
-void             gst_app_src_set_callbacks    (GstAppSrc * appsrc,
-                                               GstAppSrcCallbacks *callbacks,
-                                               gpointer user_data,
-                                               GDestroyNotify notify);
+GstFlowReturn    gst_app_src_push_buffer             (GstAppSrc *appsrc, GstBuffer *buffer);
+GstFlowReturn    gst_app_src_end_of_stream           (GstAppSrc *appsrc);
+
+void             gst_app_src_set_callbacks           (GstAppSrc * appsrc,
+                                                      GstAppSrcCallbacks *callbacks,
+                                                      gpointer user_data,
+                                                      GDestroyNotify notify);
 
 G_END_DECLS
 

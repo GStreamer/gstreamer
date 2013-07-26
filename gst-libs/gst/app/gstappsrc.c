@@ -159,7 +159,7 @@ enum
 #define DEFAULT_PROP_MAX_LATENCY   -1
 #define DEFAULT_PROP_EMIT_SIGNALS  TRUE
 #define DEFAULT_PROP_MIN_PERCENT   0
-#define DEFAULT_PROP_CURRENT_LEVEL_BYTE   0
+#define DEFAULT_PROP_CURRENT_LEVEL_BYTES   0
 
 enum
 {
@@ -175,7 +175,7 @@ enum
   PROP_MAX_LATENCY,
   PROP_EMIT_SIGNALS,
   PROP_MIN_PERCENT,
-  PROP_CURRENT_LEVEL_BYTE,
+  PROP_CURRENT_LEVEL_BYTES,
   PROP_LAST
 };
 
@@ -233,7 +233,6 @@ static gboolean gst_app_src_is_seekable (GstBaseSrc * src);
 static gboolean gst_app_src_do_get_size (GstBaseSrc * src, guint64 * size);
 static gboolean gst_app_src_query (GstBaseSrc * src, GstQuery * query);
 
-static guint64 gst_app_src_get_queued_bytes (GstAppSrc * appsrc);
 static GstFlowReturn gst_app_src_push_buffer_action (GstAppSrc * appsrc,
     GstBuffer * buffer);
 
@@ -385,14 +384,14 @@ gst_app_src_class_init (GstAppSrcClass * klass)
   /**
    * GstAppSrc::current-level-bytes:
    *
-   * The remained size of appsrc element buffer.
-   * Make appsrc emit the "push-buffer" signal when data is pushed buffer.
-   * "current-level-bytes" preperty get this accumulated data size in appsrc buffer.
+   * The number of currently queued bytes inside appsrc.
+   *
+   * Since: 1.2
    */
-  g_object_class_install_property (gobject_class, PROP_CURRENT_LEVEL_BYTE,
+  g_object_class_install_property (gobject_class, PROP_CURRENT_LEVEL_BYTES,
       g_param_spec_uint64 ("current-level-bytes", "Current Level Bytes",
-          "The remained size of appsrc element buffer",
-           0, G_MAXUINT64, DEFAULT_PROP_CURRENT_LEVEL_BYTE,
+          "The number of currently queued bytes",
+          0, G_MAXUINT64, DEFAULT_PROP_CURRENT_LEVEL_BYTES,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
 
@@ -522,7 +521,6 @@ gst_app_src_init (GstAppSrc * appsrc)
   priv->max_latency = DEFAULT_PROP_MAX_LATENCY;
   priv->emit_signals = DEFAULT_PROP_EMIT_SIGNALS;
   priv->min_percent = DEFAULT_PROP_MIN_PERCENT;
-  priv->queued_bytes = DEFAULT_PROP_CURRENT_LEVEL_BYTE;
 
   gst_base_src_set_live (GST_BASE_SRC (appsrc), DEFAULT_PROP_IS_LIVE);
 }
@@ -695,8 +693,8 @@ gst_app_src_get_property (GObject * object, guint prop_id, GValue * value,
     case PROP_MIN_PERCENT:
       g_value_set_uint (value, priv->min_percent);
       break;
-    case PROP_CURRENT_LEVEL_BYTE:
-      g_value_set_uint64 (value, gst_app_src_get_queued_bytes (appsrc));
+    case PROP_CURRENT_LEVEL_BYTES:
+      g_value_set_uint64 (value, gst_app_src_get_current_level_bytes (appsrc));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1320,6 +1318,35 @@ gst_app_src_get_max_bytes (GstAppSrc * appsrc)
   return result;
 }
 
+/**
+ * gst_app_src_get_current_level_bytes:
+ * @appsrc: a #GstAppSrc
+ *
+ * Get the number of currently queued bytes inside @appsrc.
+ *
+ * Returns: The number of currently queued bytes.
+ *
+ * Since: 1.2
+ */
+guint64
+gst_app_src_get_current_level_bytes (GstAppSrc * appsrc)
+{
+  gint64 queued;
+  GstAppSrcPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_APP_SRC (appsrc), -1);
+
+  priv = appsrc->priv;
+
+  GST_OBJECT_LOCK (appsrc);
+  queued = priv->queued_bytes;
+  GST_DEBUG_OBJECT (appsrc, "current level bytes is %" G_GUINT64_FORMAT,
+      queued);
+  GST_OBJECT_UNLOCK (appsrc);
+
+  return queued;
+}
+
 static void
 gst_app_src_set_latencies (GstAppSrc * appsrc, gboolean do_min, guint64 min,
     gboolean do_max, guint64 max)
@@ -1550,33 +1577,6 @@ static GstFlowReturn
 gst_app_src_push_buffer_action (GstAppSrc * appsrc, GstBuffer * buffer)
 {
   return gst_app_src_push_buffer_full (appsrc, buffer, FALSE);
-}
-
-/**
- * gst_app_src_get_queued_bytes:
- * @appsrc: a #GstAppSrc
- *
- * Get the queued byptes of the buffer
- *
- * Returns: the size of queued bytes
- *
- * This is used for the "current-level-byte" property. */
-static guint64
-gst_app_src_get_queued_bytes (GstAppSrc * appsrc)
-{
-  gint64 size;
-  GstAppSrcPrivate *priv;
-
-  g_return_val_if_fail (GST_IS_APP_SRC (appsrc), -1);
-
-  priv = appsrc->priv;
-
-  GST_OBJECT_LOCK (appsrc);
-  size = priv->queued_bytes;
-  GST_DEBUG_OBJECT (appsrc, "getting queued bytes is %" G_GUINT64_FORMAT, size);
-  GST_OBJECT_UNLOCK (appsrc);
-
-  return size;
 }
 
 /**

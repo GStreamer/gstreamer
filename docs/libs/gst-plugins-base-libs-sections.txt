@@ -28,6 +28,7 @@ gst_app_src_set_stream_type
 gst_app_src_get_stream_type
 gst_app_src_set_max_bytes
 gst_app_src_get_max_bytes
+gst_app_src_get_current_level_bytes
 gst_app_src_get_emit_signals
 gst_app_src_set_emit_signals
 GstAppSrcCallbacks
