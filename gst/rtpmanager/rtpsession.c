@@ -2800,33 +2800,43 @@ static void
 session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
 {
   GstRTCPPacket *packet = &data->packet;
+  guint8 fractionlost;
+  gint32 packetslost;
+  guint32 exthighestseq, jitter;
+  guint32 lsr, dlsr;
 
-  if (gst_rtcp_packet_get_rb_count (packet) < GST_RTCP_MAX_RB_COUNT) {
-    /* only report about other sender sources */
-    if (source != data->source && RTP_SOURCE_IS_SENDER (source)) {
-      guint8 fractionlost;
-      gint32 packetslost;
-      guint32 exthighestseq, jitter;
-      guint32 lsr, dlsr;
+  /* only report about other sender */
+  if (source == data->source)
+    return;
 
-      /* get new stats */
-      rtp_source_get_new_rb (source, data->current_time, &fractionlost,
-          &packetslost, &exthighestseq, &jitter, &lsr, &dlsr);
-
-      /* store last generated RR packet */
-      source->last_rr.is_valid = TRUE;
-      source->last_rr.fractionlost = fractionlost;
-      source->last_rr.packetslost = packetslost;
-      source->last_rr.exthighestseq = exthighestseq;
-      source->last_rr.jitter = jitter;
-      source->last_rr.lsr = lsr;
-      source->last_rr.dlsr = dlsr;
-
-      /* packet is not yet filled, add report block for this source. */
-      gst_rtcp_packet_add_rb (packet, source->ssrc, fractionlost, packetslost,
-          exthighestseq, jitter, lsr, dlsr);
-    }
+  if (gst_rtcp_packet_get_rb_count (packet) == GST_RTCP_MAX_RB_COUNT) {
+    GST_DEBUG ("max RB count reached");
+    return;
   }
+
+  if (!RTP_SOURCE_IS_SENDER (source)) {
+    GST_DEBUG ("source %08x not sender", source->ssrc);
+    return;
+  }
+
+  GST_DEBUG ("create RB for SSRC %08x", source->ssrc);
+
+  /* get new stats */
+  rtp_source_get_new_rb (source, data->current_time, &fractionlost,
+      &packetslost, &exthighestseq, &jitter, &lsr, &dlsr);
+
+  /* store last generated RR packet */
+  source->last_rr.is_valid = TRUE;
+  source->last_rr.fractionlost = fractionlost;
+  source->last_rr.packetslost = packetslost;
+  source->last_rr.exthighestseq = exthighestseq;
+  source->last_rr.jitter = jitter;
+  source->last_rr.lsr = lsr;
+  source->last_rr.dlsr = dlsr;
+
+  /* packet is not yet filled, add report block for this source. */
+  gst_rtcp_packet_add_rb (packet, source->ssrc, fractionlost, packetslost,
+      exthighestseq, jitter, lsr, dlsr);
 }
 
 /* perform cleanup of sources that timed out */
