@@ -4586,7 +4586,8 @@ static gboolean
 gst_ogg_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
 {
   GstQuery *query;
-  gboolean pull_mode;
+  gboolean pull_mode = FALSE;
+  GstSchedulingFlags flags;
 
   query = gst_query_new_scheduling ();
 
@@ -4595,8 +4596,13 @@ gst_ogg_demux_sink_activate (GstPad * sinkpad, GstObject * parent)
     goto activate_push;
   }
 
-  pull_mode = gst_query_has_scheduling_mode_with_flags (query,
-      GST_PAD_MODE_PULL, GST_SCHEDULING_FLAG_SEEKABLE);
+  gst_query_parse_scheduling (query, &flags, NULL, NULL, NULL);
+
+  /* Don't use pull mode if sequential access is suggested */
+  if (gst_query_has_scheduling_mode (query, GST_PAD_MODE_PULL)) {
+    pull_mode = (flags & GST_SCHEDULING_FLAG_SEEKABLE) &&
+        !(flags & GST_SCHEDULING_FLAG_SEQUENTIAL);
+  }
   gst_query_unref (query);
 
   if (!pull_mode)
