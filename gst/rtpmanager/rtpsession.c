@@ -323,7 +323,6 @@ rtp_session_class_init (RTPSessionClass * klass)
    * Requests that the #RTPSession initiate a new RTCP packet as soon as
    * possible within the requested delay.
    */
-
   rtp_session_signals[SIGNAL_SEND_RTCP] =
       g_signal_new ("send-rtcp", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
@@ -2731,7 +2730,6 @@ typedef struct
   gboolean has_sdes;
   gboolean is_early;
   gboolean may_suppress;
-  gboolean notify;
   GQueue output;
 } ReportData;
 
@@ -3137,22 +3135,6 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
 
   gst_rtcp_buffer_unmap (&data->rtcpbuf);
 
-  if (sess->change_ssrc) {
-    GST_DEBUG ("need to change our SSRC (%08x)", source->ssrc);
-    g_hash_table_steal (sess->ssrcs[sess->mask_idx],
-        GINT_TO_POINTER (source->ssrc));
-
-    source->ssrc = rtp_session_create_new_ssrc (sess);
-    rtp_source_reset (source);
-
-    g_hash_table_insert (sess->ssrcs[sess->mask_idx],
-        GINT_TO_POINTER (source->ssrc), source);
-
-    sess->change_ssrc = FALSE;
-    data->notify = TRUE;
-    GST_DEBUG ("changed our SSRC to %08x", source->ssrc);
-  }
-
   output = g_slice_new (ReportOutput);
   output->source = g_object_ref (source);
   output->is_bye = is_bye;
@@ -3199,7 +3181,6 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   data.ntpnstime = ntpnstime;
   data.running_time = running_time;
   data.may_suppress = FALSE;
-  data.notify = FALSE;
   g_queue_init (&data.output);
 
   RTP_SESSION_LOCK (sess);
@@ -3240,9 +3221,6 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 done:
   RTP_SESSION_UNLOCK (sess);
 
-  if (data.notify)
-    g_object_notify (G_OBJECT (sess), "internal-ssrc");
-
   /* push out the RTCP packets */
   while ((output = g_queue_pop_head (&data.output))) {
     gboolean do_not_suppress;
@@ -3273,7 +3251,6 @@ done:
     g_object_unref (source);
     g_slice_free (ReportOutput, output);
   }
-
   return result;
 }
 

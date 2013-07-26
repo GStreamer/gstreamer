@@ -464,7 +464,6 @@ rtp_source_set_sdes_struct (RTPSource * src, GstStructure * sdes)
   } else {
     gst_structure_free (sdes);
   }
-
   return changed;
 }
 
