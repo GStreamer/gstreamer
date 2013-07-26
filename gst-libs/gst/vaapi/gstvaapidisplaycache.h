@@ -26,21 +26,26 @@
 
 typedef struct _GstVaapiDisplayCache    GstVaapiDisplayCache;
 
+G_GNUC_INTERNAL
 GstVaapiDisplayCache *
 gst_vaapi_display_cache_new(void);
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_display_cache_free(GstVaapiDisplayCache *cache);
 
+G_GNUC_INTERNAL
 guint
 gst_vaapi_display_cache_get_size(GstVaapiDisplayCache *cache);
 
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_display_cache_add(
     GstVaapiDisplayCache       *cache,
     GstVaapiDisplayInfo        *info
 );
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_display_cache_remove(
     GstVaapiDisplayCache       *cache,

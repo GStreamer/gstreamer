@@ -52,6 +52,7 @@ struct _GstVaapiContextInfo {
     guint               ref_frames;
 };
 
+G_GNUC_INTERNAL
 GstVaapiContext *
 gst_vaapi_context_new(
     GstVaapiDisplay    *display,
@@ -61,10 +62,12 @@ gst_vaapi_context_new(
     guint               height
 );
 
+G_GNUC_INTERNAL
 GstVaapiContext *
 gst_vaapi_context_new_full(GstVaapiDisplay *display,
     const GstVaapiContextInfo *cip);
 
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_context_reset(
     GstVaapiContext    *context,
@@ -74,22 +77,28 @@ gst_vaapi_context_reset(
     guint               height
 );
 
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_context_reset_full(GstVaapiContext *context,
     const GstVaapiContextInfo *new_cip);
 
+G_GNUC_INTERNAL
 GstVaapiID
 gst_vaapi_context_get_id(GstVaapiContext *context);
 
+G_GNUC_INTERNAL
 GstVaapiProfile
 gst_vaapi_context_get_profile(GstVaapiContext *context);
 
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_context_set_profile(GstVaapiContext *context, GstVaapiProfile profile);
 
+G_GNUC_INTERNAL
 GstVaapiEntrypoint
 gst_vaapi_context_get_entrypoint(GstVaapiContext *context);
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_context_get_size(
     GstVaapiContext *context,
@@ -97,12 +106,15 @@ gst_vaapi_context_get_size(
     guint           *pheight
 );
 
+G_GNUC_INTERNAL
 GstVaapiSurfaceProxy *
 gst_vaapi_context_get_surface_proxy(GstVaapiContext *context);
 
+G_GNUC_INTERNAL
 guint
 gst_vaapi_context_get_surface_count(GstVaapiContext *context);
 
+G_GNUC_INTERNAL
 gboolean
 gst_vaapi_context_apply_composition(
     GstVaapiContext            *context,

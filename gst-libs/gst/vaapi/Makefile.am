@@ -74,14 +74,13 @@ libgstvaapi_source_c =				\
 	$(NULL)
 
 libgstvaapi_source_h =				\
-	gstvaapicontext.h			\
 	gstvaapidecoder.h			\
 	gstvaapidecoder_h264.h			\
 	gstvaapidecoder_mpeg2.h			\
 	gstvaapidecoder_mpeg4.h			\
 	gstvaapidecoder_vc1.h			\
 	gstvaapidisplay.h			\
-	gstvaapidisplaycache.h			\
+	gstvaapifilter.h			\
 	gstvaapiimage.h				\
 	gstvaapiimagepool.h			\
 	gstvaapiobject.h			\
@@ -103,12 +102,14 @@ libgstvaapi_source_priv_h =			\
 	gstcompat.h				\
 	gstvaapicodec_objects.h			\
 	gstvaapicompat.h			\
+	gstvaapicontext.h			\
 	gstvaapidebug.h				\
 	gstvaapidecoder_dpb.h			\
 	gstvaapidecoder_objects.h		\
 	gstvaapidecoder_priv.h			\
 	gstvaapidecoder_unit.h			\
 	gstvaapidisplay_priv.h			\
+	gstvaapidisplaycache.h			\
 	gstvaapiimage_priv.h			\
 	gstvaapiminiobject.h			\
 	gstvaapiobject_priv.h			\

@@ -305,24 +305,6 @@ gst_vaapi_texture_put_surface
 </SECTION>
 
 <SECTION>
-<FILE>gstvaapicontext</FILE>
-<TITLE>GstVaapiContext</TITLE>
-GstVaapiContext
-gst_vaapi_context_new
-gst_vaapi_context_reset
-gst_vaapi_context_get_id
-gst_vaapi_context_get_profile
-gst_vaapi_context_set_profile
-gst_vaapi_context_get_entrypoint
-gst_vaapi_context_get_size
-gst_vaapi_context_get_surface_proxy
-gst_vaapi_context_get_surface_count
-gst_vaapi_context_apply_composition
-<SUBSECTION Standard>
-GST_VAAPI_CONTEXT
-</SECTION>
-
-<SECTION>
 <FILE>gstvaapidecoder</FILE>
 GstVaapiDecoderStatus
 <TITLE>GstVaapiDecoder</TITLE>

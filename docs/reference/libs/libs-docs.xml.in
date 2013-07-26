@@ -27,9 +27,6 @@
     <xi:include href="xml/gstvaapivideopool.xml"/>
     <xi:include href="xml/gstvaapisurfacepool.xml"/>
     <xi:include href="xml/gstvaapiimagepool.xml"/>
-    <xi:include href="xml/gstvaapivideobuffer.xml"/>
-    <xi:include href="xml/gstvaapivideometa.xml"/>
-    <xi:include href="xml/gstvaapicontext.xml"/>
     <xi:include href="xml/gstvaapidecoder.xml"/>
     <xi:include href="xml/gstvaapidecoder_jpeg.xml"/>
     <xi:include href="xml/gstvaapidecoder_mpeg2.xml"/>
