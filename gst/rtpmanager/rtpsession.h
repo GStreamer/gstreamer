@@ -198,7 +198,6 @@ struct _RTPSession {
   guint        rtcp_rr_bandwidth;
   guint        rtcp_rs_bandwidth;
 
-  RTPSource    *source;
   guint32       suggested_ssrc;
 
   /* for sender/receiver counting */
