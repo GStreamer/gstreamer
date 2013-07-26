@@ -2033,13 +2033,12 @@ gst_video_decoder_change_state (GstElement * element, GstStateChange transition)
         goto open_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-      gst_video_decoder_reset (decoder, TRUE);
-      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
-
       /* Initialize device/library if needed */
       if (decoder_class->start && !decoder_class->start (decoder))
         goto start_failed;
+      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+      gst_video_decoder_reset (decoder, TRUE);
+      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       break;
     default:
       break;
@@ -2049,12 +2048,11 @@ gst_video_decoder_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      if (decoder_class->stop && !decoder_class->stop (decoder))
-        goto stop_failed;
-
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
       gst_video_decoder_reset (decoder, TRUE);
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+      if (decoder_class->stop && !decoder_class->stop (decoder))
+        goto stop_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       /* close device/library if needed */
