@@ -1749,8 +1749,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
       if (created) {
         GST_DEBUG ("created new CSRC: %08x", csrc);
         rtp_source_set_as_csrc (csrc_src);
-        if (RTP_SOURCE_IS_ACTIVE (csrc_src))
-          sess->stats.active_sources++;
+        source_update_active (sess, csrc_src, FALSE);
         on_new_ssrc (sess, csrc_src);
       }
       g_object_unref (csrc_src);
