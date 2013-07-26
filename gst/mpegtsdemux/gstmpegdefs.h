@@ -83,6 +83,10 @@
 #define CLOCK_BASE 9LL
 #define CLOCK_FREQ (CLOCK_BASE * 10000)
 
+/* Numerical values for second/millisecond in PCR units */
+#define PCR_SECOND 27000000
+#define PCR_MSECOND 27000
+
 /* PCR_TO_GST calculation requires at least 10 extra bits.
  * Since maximum PCR value is coded with 42 bits, we are
  * safe to use direct calculation (10+42 < 63)*/

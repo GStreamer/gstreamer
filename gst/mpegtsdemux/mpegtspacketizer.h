@@ -95,6 +95,122 @@ typedef struct
  * 256 should be sufficient for most multiplexes */
 #define MAX_PCR_OBS_CHANNELS 256
 
+/* PCR/offset structure */
+typedef struct _PCROffset
+{
+  /* PCR value (units: 1/27MHz) */
+  guint32 pcr;
+
+  /* The offset (units: bytes) */
+  guint32 offset;
+} PCROffset;
+
+/* Flags used on groups */
+enum
+{
+  /* Closed groups: There is a contiguous next group */
+  PCR_GROUP_FLAG_CLOSED = 1 << 0,
+  /* estimated: the pcr_offset has been estimated and is not
+   * guaranteed to be 100% accurate */
+  PCR_GROUP_FLAG_ESTIMATED = 1 << 1,
+  /* reset: there is a pcr reset between the end of this
+   * group and the next one.
+   * This flag is exclusive with CLOSED. */
+  PCR_GROUP_FLAG_RESET = 1 << 2,
+  /* reset: there is a pcr wrapover between the end of this
+   * group and the next one.
+   * This flag is exclusive with CLOSED. */
+  PCR_GROUP_FLAG_WRAPOVER = 1 << 3
+};
+
+
+
+/* PCROffsetGroup: A group of PCR observations.
+ * All values in a group have got the same reference pcr and
+ * byte offset (first_pcr/first_offset).
+ */
+#define DEFAULT_ALLOCATED_OFFSET 16
+typedef struct _PCROffsetGroup
+{
+  /* Flags (see PCR_GROUP_FLAG_* above) */
+  guint flags;
+
+  /* First raw PCR of this group. Units: 1/27MHz.
+   * All values[].pcr are differences against first_pcr */
+  guint64 first_pcr;
+  /* Offset of this group in bytes.
+   * All values[].offset are differences against first_offset */
+  guint64 first_offset;
+
+  /* Dynamically allocated table of PCROffset */
+  PCROffset *values;
+  /* number of PCROffset allocated in values */
+  guint nb_allocated;
+  /* number of *actual* PCROffset contained in values */
+  guint last_value;
+
+  /* Offset since the very first PCR value observed in the whole
+   * stream. Units: 1/27MHz.
+   * This will take into account gaps/wraparounds/resets/... and is
+   * used to determine running times.
+   * The value is only guaranteed to be 100% accurate if the group
+   * does not have the ESTIMATED flag.
+   * If the value is estimated, the pcr_offset shall be recalculated
+   * (based on previous groups) whenever it is accessed.
+   */
+  guint64 pcr_offset;
+
+  /* FIXME : Cache group bitrate ? */
+} PCROffsetGroup;
+
+/* Number of PCRs needed before bitrate estimation can start */
+/* Note: the reason we use 10 is because PCR should normally be
+ * received at least every 100ms so this gives us close to
+ * a 1s moving window to calculate bitrate */
+#define PCR_BITRATE_NEEDED 10
+
+/* PCROffsetCurrent: The PCR/Offset window iterator
+ * This is used to estimate/observe incoming PCR/offset values
+ * Points to a group (which it is filling) */
+typedef struct _PCROffsetCurrent
+{
+  /* The PCROffsetGroup we are filling.
+   * If NULL, a group needs to be identified */
+  PCROffsetGroup *group;
+
+  /* Table of pending values we are iterating over */
+  PCROffset pending[PCR_BITRATE_NEEDED];
+
+  /* base offset/pcr from the group */
+  guint64 first_pcr;
+  guint64 first_offset;
+
+  /* The previous reference PCROffset
+   * This corresponds to the last entry of the group we are filling
+   * and is used to calculate prev_bitrate */
+  PCROffset prev;
+
+  /* The last PCROffset in pending[] */
+  PCROffset last_value;
+
+  /* Location of first pending PCR/offset observation in pending */
+  guint first;
+  /* Location of last pending PCR/offset observation in pending */
+  guint last;
+  /* Location of next write in pending */
+  guint write;
+
+  /* bitrate is always in bytes per second */
+
+  /* cur_bitrate is the bitrate of the pending values: d(last-first) */
+  guint64 cur_bitrate;
+
+  /* prev_bitrate is the bitrate between reference PCROffset
+   * and the first pending value. Used to detect changes
+   * in bitrate */
+  guint64 prev_bitrate;
+} PCROffsetCurrent;
+
 typedef struct _MpegTSPCR
 {
   guint16 pid;
@@ -118,14 +234,11 @@ typedef struct _MpegTSPCR
   guint64 pcroffset;
 
   /* Used for bitrate calculation */
-  /* FIXME : Replace this later on with a balanced tree or sequence */
-  guint64 first_offset;
-  guint64 first_pcr;
-  GstClockTime first_pcr_ts;
-  guint64 last_offset;
-  guint64 last_pcr;
-  GstClockTime last_pcr_ts;
+  /* List of PCR/offset observations */
+  GList *groups;
 
+  /* Current PCR/offset observations (used to update pcroffsets) */
+  PCROffsetCurrent *current;
 } MpegTSPCR;
 
 struct _MpegTSPacketizer2 {
@@ -157,6 +270,7 @@ struct _MpegTSPacketizer2 {
   /* Reference offset */
   guint64 refoffset;
 
+  /* Number of seen pcr/offset observations (FIXME : kill later) */
   guint nb_seen_offsets;
 
   /* Last inputted timestamp */
@@ -249,6 +363,9 @@ mpegts_packetizer_ts_to_offset (MpegTSPacketizer2 * packetizer,
 G_GNUC_INTERNAL GstClockTime
 mpegts_packetizer_pts_to_ts (MpegTSPacketizer2 * packetizer,
 			     GstClockTime pts, guint16 pcr_pid);
+G_GNUC_INTERNAL void
+mpegts_packetizer_set_current_pcr_offset (MpegTSPacketizer2 * packetizer,
+			  GstClockTime offset, guint16 pcr_pid);
 G_GNUC_INTERNAL void
 mpegts_packetizer_set_reference_offset (MpegTSPacketizer2 * packetizer,
 					guint64 refoffset);

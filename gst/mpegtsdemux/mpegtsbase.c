@@ -1187,8 +1187,7 @@ mpegts_base_scan (MpegTSBase * base)
         pret = mpegts_packetizer_process_next_packet (base->packetizer);
         if (pret == PACKET_NEED_MORE)
           break;
-        if (pret != PACKET_BAD &&
-            mpegts_packetizer_get_seen_pcr (base->packetizer) >= 5) {
+        if (pret != PACKET_BAD && base->packetizer->nb_seen_offsets >= 5) {
           GST_DEBUG ("Got enough initial PCR");
           done = TRUE;
           break;
@@ -1197,7 +1196,7 @@ mpegts_base_scan (MpegTSBase * base)
     }
   }
 
-  initial_pcr_seen = mpegts_packetizer_get_seen_pcr (base->packetizer);
+  initial_pcr_seen = base->packetizer->nb_seen_offsets;
   if (G_UNLIKELY (initial_pcr_seen == 0))
     goto no_initial_pcr;
   GST_DEBUG ("Seen %d initial PCR", initial_pcr_seen);
@@ -1232,8 +1231,7 @@ mpegts_base_scan (MpegTSBase * base)
         if (pret == PACKET_NEED_MORE)
           break;
         if (pret != PACKET_BAD &&
-            mpegts_packetizer_get_seen_pcr (base->packetizer) >
-            initial_pcr_seen) {
+            base->packetizer->nb_seen_offsets > initial_pcr_seen) {
           GST_DEBUG ("Got last PCR");
           done = TRUE;
           break;
