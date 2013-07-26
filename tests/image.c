@@ -213,6 +213,42 @@ static void draw_rect_I420( // Y, U, V planes
     draw_rect_YV12(new_pixels, new_stride, x, y, width, height, color);
 }
 
+static void draw_rect_YUV422(guchar *pixels[3], guint stride[3],
+    gint x, gint y, guint width, guint height, guint32 color)
+{
+    guint i, j;
+
+    width /= 2;
+    for (j = 0; j < height; j++) {
+        guint32 * const p = (guint32 *)
+            (pixels[0] + (y + j) * stride[0] + x * 2);
+        for (i = 0; i < width; i++)
+            p[i] = color;
+    }
+}
+
+static void draw_rect_YUY2(guchar *pixels[3], guint stride[3],
+    gint x, gint y, guint width, guint height, guint32 color)
+{
+    const guchar Y  = color >> 16;
+    const guchar Cb = color >> 8;
+    const guchar Cr = color;
+
+    color = (Y << 24) | (Cb << 16) | (Y << 8) | Cr;
+    draw_rect_YUV422(pixels, stride, x, y, width, height, GUINT32_TO_BE(color));
+}
+
+static void draw_rect_UYVY(guchar *pixels[3], guint stride[3],
+    gint x, gint y, guint width, guint height, guint32 color)
+{
+    const guchar Y  = color >> 16;
+    const guchar Cb = color >> 8;
+    const guchar Cr = color;
+
+    color = (Cb << 24) | (Y << 16) | (Cr << 8) | Y;
+    draw_rect_YUV422(pixels, stride, x, y, width, height, GUINT32_TO_BE(color));
+}
+
 static void draw_rect_AYUV(
     guchar *pixels[3],
     guint   stride[3],
@@ -279,6 +315,8 @@ image_draw_rectangle(
         _(NV12),
         _(YV12),
         _(I420),
+        _(YUY2),
+        _(UYVY),
         _(AYUV),
 #undef  _
         { 0, }
