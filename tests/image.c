@@ -363,7 +363,9 @@ image_upload(GstVaapiImage *image, GstVaapiSurface *surface)
 {
     GstVaapiDisplay    *display;
     GstVideoFormat      format;
+    GstVaapiImage      *surface_image;
     GstVaapiSubpicture *subpicture;
+    gboolean            success;
 
     display = gst_vaapi_object_get_display(GST_VAAPI_OBJECT(surface));
     if (!display)
@@ -375,6 +377,14 @@ image_upload(GstVaapiImage *image, GstVaapiSurface *surface)
 
     if (gst_vaapi_surface_put_image(surface, image))
         return TRUE;
+
+    surface_image = gst_vaapi_surface_derive_image(surface);
+    if (surface_image) {
+        success = gst_vaapi_image_copy(surface_image, image);
+        gst_vaapi_object_unref(surface_image);
+        if (success)
+            return TRUE;
+    }
 
     g_print("could not upload %s image to surface\n",
             gst_vaapi_video_format_to_string(format));
