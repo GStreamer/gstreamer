@@ -2941,6 +2941,11 @@ gst_queue2_handle_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gboolean pull_mode;
       GstSchedulingFlags flags = 0;
 
+      if (!gst_pad_peer_query (queue->sinkpad, query))
+        goto peer_failed;
+
+      gst_query_parse_scheduling (query, &flags, NULL, NULL, NULL);
+
       /* we can operate in pull mode when we are using a tempfile */
       pull_mode = !QUEUE_IS_USING_QUEUE (queue);
 
