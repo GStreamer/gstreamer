@@ -26,9 +26,7 @@
  * output parameters. Indeed output video frames will have the geometry of the
  * biggest incoming video stream and the framerate of the fastest incoming one.
  *
- * All sink pads must be either AYUV, ARGB or BGRA, but a mixture of them is not 
- * supported. The src pad will have the same colorspace as the sinks. 
- * No colorspace conversion is done. 
+ * Videomixer will do colorspace conversion.
  * 
  * Individual parameters for each input stream can be configured on the
  * #GstVideoMixer2Pad.
@@ -290,9 +288,150 @@ gst_videomixer2_update_src_caps (GstVideoMixer2 * mix)
 
 done:
   GST_VIDEO_MIXER2_SETCAPS_UNLOCK (mix);
+
   return ret;
 }
 
+static gboolean
+gst_videomixer2_update_converters (GstVideoMixer2 * mix)
+{
+  GSList *tmp;
+  GstVideoFormat best_format;
+  GstVideoInfo best_info;
+  GstVideoMixer2Pad *pad;
+  gboolean need_alpha = FALSE;
+  GstCaps *downstream_caps;
+  GstCaps *possible_caps;
+  gchar *best_colorimetry;
+  const gchar *best_chroma;
+  GHashTable *formats_table = g_hash_table_new (g_direct_hash, g_direct_equal);
+  gint best_format_number = 0;
+
+  best_format = GST_VIDEO_FORMAT_UNKNOWN;
+  gst_video_info_init (&best_info);
+
+  downstream_caps = gst_pad_get_allowed_caps (mix->srcpad);
+
+  if (gst_caps_is_empty (downstream_caps))
+    return FALSE;
+
+  /* first find new preferred format */
+  for (tmp = mix->sinkpads; tmp; tmp = tmp->next) {
+    GstStructure *s;
+    gint format_number;
+
+    pad = tmp->data;
+
+    if (!pad->info.finfo)
+      continue;
+
+    /* If we want alpha, disregard all the other formats */
+    if (need_alpha && !(pad->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_ALPHA))
+      continue;
+
+    /* This can happen if we release a pad and another pad hasn't been negotiated yet */
+    if (GST_VIDEO_INFO_FORMAT (&pad->info) == GST_VIDEO_FORMAT_UNKNOWN)
+      continue;
+
+    possible_caps = gst_video_info_to_caps (&pad->info);
+
+    s = gst_caps_get_structure (possible_caps, 0);
+    gst_structure_remove_fields (s, "width", "height", "framerate",
+        "pixel-aspect-ratio", "interlace-mode", NULL);
+
+    /* Can downstream accept this format ? */
+    if (!gst_caps_can_intersect (downstream_caps, possible_caps)) {
+      gst_caps_unref (possible_caps);
+      continue;
+    }
+
+    gst_caps_unref (possible_caps);
+
+    format_number =
+        GPOINTER_TO_INT (g_hash_table_lookup (formats_table,
+            GINT_TO_POINTER (GST_VIDEO_INFO_FORMAT (&pad->info))));
+    format_number += 1;
+
+    g_hash_table_replace (formats_table,
+        GINT_TO_POINTER (GST_VIDEO_INFO_FORMAT (&pad->info)),
+        GINT_TO_POINTER (format_number));
+
+    /* If that pad is the first with alpha, set it as the new best format */
+    if (!need_alpha && (pad->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_ALPHA)) {
+      need_alpha = TRUE;
+      best_format = GST_VIDEO_INFO_FORMAT (&pad->info);
+      best_info = pad->info;
+      best_format_number = format_number;
+    } else if (format_number > best_format_number) {
+      best_format = GST_VIDEO_INFO_FORMAT (&pad->info);
+      best_info = pad->info;
+      best_format_number = format_number;
+    }
+  }
+
+  g_hash_table_unref (formats_table);
+
+  if (best_format == GST_VIDEO_FORMAT_UNKNOWN) {
+    downstream_caps = gst_caps_fixate (downstream_caps);
+    gst_video_info_from_caps (&best_info, downstream_caps);
+    best_format = GST_VIDEO_INFO_FORMAT (&best_info);
+  }
+
+  gst_caps_unref (downstream_caps);
+
+  best_colorimetry = gst_video_colorimetry_to_string (&(best_info.colorimetry));
+  best_chroma = gst_video_chroma_to_string (best_info.chroma_site);
+  mix->info = best_info;
+
+  GST_DEBUG_OBJECT (mix,
+      "The output format will now be : %d with colorimetry : %s and chroma : %s",
+      best_format, best_colorimetry, best_chroma);
+
+  /* Then browse the sinks once more, setting or unsetting conversion if needed */
+  for (tmp = mix->sinkpads; tmp; tmp = tmp->next) {
+    gchar *colorimetry;
+    const gchar *chroma;
+
+    pad = tmp->data;
+
+    if (!pad->info.finfo)
+      continue;
+
+    if (GST_VIDEO_INFO_FORMAT (&pad->info) == GST_VIDEO_FORMAT_UNKNOWN)
+      continue;
+
+    if (pad->convert)
+      videomixer_videoconvert_convert_free (pad->convert);
+
+    pad->convert = NULL;
+
+    colorimetry = gst_video_colorimetry_to_string (&(pad->info.colorimetry));
+    chroma = gst_video_chroma_to_string (pad->info.chroma_site);
+
+    if (best_format != GST_VIDEO_INFO_FORMAT (&pad->info) ||
+        g_strcmp0 (colorimetry, best_colorimetry) ||
+        g_strcmp0 (chroma, best_chroma)) {
+      GST_DEBUG_OBJECT (pad, "This pad will be converted from %d to %d",
+          GST_VIDEO_INFO_FORMAT (&pad->info),
+          GST_VIDEO_INFO_FORMAT (&best_info));
+      pad->convert =
+          videomixer_videoconvert_convert_new (&pad->info, &best_info);
+      pad->need_conversion_update = TRUE;
+      if (!pad->convert) {
+        g_free (colorimetry);
+        g_free (best_colorimetry);
+        GST_WARNING ("No path found for conversion");
+        return FALSE;
+      }
+    } else {
+      GST_DEBUG_OBJECT (pad, "This pad will not need conversion");
+    }
+    g_free (colorimetry);
+  }
+
+  g_free (best_colorimetry);
+  return TRUE;
+}
 
 static gboolean
 gst_videomixer2_pad_sink_setcaps (GstPad * pad, GstObject * parent,
@@ -315,22 +454,28 @@ gst_videomixer2_pad_sink_setcaps (GstPad * pad, GstObject * parent,
 
   GST_VIDEO_MIXER2_LOCK (mix);
   if (GST_VIDEO_INFO_FORMAT (&mix->info) != GST_VIDEO_FORMAT_UNKNOWN) {
-    if (GST_VIDEO_INFO_FORMAT (&mix->info) != GST_VIDEO_INFO_FORMAT (&info) ||
-        GST_VIDEO_INFO_PAR_N (&mix->info) != GST_VIDEO_INFO_PAR_N (&info) ||
-        GST_VIDEO_INFO_PAR_D (&mix->info) != GST_VIDEO_INFO_PAR_D (&info)) {
+    if (GST_VIDEO_INFO_PAR_N (&mix->info) != GST_VIDEO_INFO_PAR_N (&info)
+        || GST_VIDEO_INFO_PAR_D (&mix->info) != GST_VIDEO_INFO_PAR_D (&info) ||
+        GST_VIDEO_INFO_INTERLACE_MODE (&mix->info) !=
+        GST_VIDEO_INFO_INTERLACE_MODE (&info)) {
+      GST_DEBUG_OBJECT (pad,
+          "got input caps %" GST_PTR_FORMAT ", but " "current caps are %"
+          GST_PTR_FORMAT, caps, mix->current_caps);
       GST_VIDEO_MIXER2_UNLOCK (mix);
-      GST_DEBUG_OBJECT (pad, "got input caps %" GST_PTR_FORMAT ", but "
-          "current caps are %" GST_PTR_FORMAT, caps, mix->current_caps);
       return FALSE;
     }
   }
 
-  mix->info = info;
   mixpad->info = info;
 
-  GST_VIDEO_MIXER2_UNLOCK (mix);
+  GST_COLLECT_PADS_STREAM_LOCK (mix->collect);
 
-  ret = gst_videomixer2_update_src_caps (mix);
+  ret = gst_videomixer2_update_converters (mix);
+
+  GST_VIDEO_MIXER2_UNLOCK (mix);
+  if (ret)
+    ret = gst_videomixer2_update_src_caps (mix);
+  GST_COLLECT_PADS_STREAM_UNLOCK (mix->collect);
 
 beach:
   return ret;
@@ -341,12 +486,20 @@ gst_videomixer2_pad_sink_getcaps (GstPad * pad, GstVideoMixer2 * mix,
     GstCaps * filter)
 {
   GstCaps *srccaps;
+  GstCaps *template_caps;
+  GstCaps *filtered_caps;
+  GstCaps *returned_caps;
   GstStructure *s;
+  gboolean had_current_caps = TRUE;
   gint i, n;
 
+  template_caps = gst_pad_get_pad_template_caps (GST_PAD (mix->srcpad));
+
   srccaps = gst_pad_get_current_caps (GST_PAD (mix->srcpad));
-  if (srccaps == NULL)
-    srccaps = gst_pad_get_pad_template_caps (GST_PAD (mix->srcpad));
+  if (srccaps == NULL) {
+    had_current_caps = FALSE;
+    srccaps = template_caps;
+  }
 
   srccaps = gst_caps_make_writable (srccaps);
 
@@ -359,11 +512,23 @@ gst_videomixer2_pad_sink_getcaps (GstPad * pad, GstVideoMixer2 * mix,
     if (!gst_structure_has_field (s, "pixel-aspect-ratio"))
       gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
           NULL);
+
+    gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
+        NULL);
   }
 
-  GST_DEBUG_OBJECT (pad, "Returning %" GST_PTR_FORMAT, srccaps);
+  filtered_caps = srccaps;
+  if (filter)
+    filtered_caps = gst_caps_intersect (srccaps, filter);
+  returned_caps = gst_caps_intersect (filtered_caps, template_caps);
 
-  return srccaps;
+  gst_caps_unref (srccaps);
+  if (filter)
+    gst_caps_unref (filtered_caps);
+  if (had_current_caps)
+    gst_caps_unref (template_caps);
+
+  return returned_caps;
 }
 
 static gboolean
@@ -371,17 +536,26 @@ gst_videomixer2_pad_sink_acceptcaps (GstPad * pad, GstVideoMixer2 * mix,
     GstCaps * caps)
 {
   gboolean ret;
+  GstCaps *modified_caps;
   GstCaps *accepted_caps;
+  GstCaps *template_caps;
+  gboolean had_current_caps = TRUE;
   gint i, n;
   GstStructure *s;
 
   GST_DEBUG_OBJECT (pad, "%" GST_PTR_FORMAT, caps);
 
   accepted_caps = gst_pad_get_current_caps (GST_PAD (mix->srcpad));
-  if (accepted_caps == NULL)
-    accepted_caps = gst_pad_get_pad_template_caps (GST_PAD (mix->srcpad));
+
+  template_caps = gst_pad_get_pad_template_caps (GST_PAD (mix->srcpad));
+
+  if (accepted_caps == NULL) {
+    accepted_caps = template_caps;
+    had_current_caps = FALSE;
+  }
 
   accepted_caps = gst_caps_make_writable (accepted_caps);
+
   GST_LOG_OBJECT (pad, "src caps %" GST_PTR_FORMAT, accepted_caps);
 
   n = gst_caps_get_size (accepted_caps);
@@ -393,14 +567,21 @@ gst_videomixer2_pad_sink_acceptcaps (GstPad * pad, GstVideoMixer2 * mix,
     if (!gst_structure_has_field (s, "pixel-aspect-ratio"))
       gst_structure_set (s, "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
           NULL);
+
+    gst_structure_remove_fields (s, "colorimetry", "chroma-site", "format",
+        NULL);
   }
 
-  ret = gst_caps_can_intersect (caps, accepted_caps);
-  GST_INFO_OBJECT (pad, "%saccepted caps %" GST_PTR_FORMAT, (ret ? "" : "not "),
-      caps);
-  GST_INFO_OBJECT (pad, "acceptable caps are %" GST_PTR_FORMAT, accepted_caps);
-  gst_caps_unref (accepted_caps);
+  modified_caps = gst_caps_intersect (accepted_caps, template_caps);
 
+  ret = gst_caps_can_intersect (caps, accepted_caps);
+  GST_DEBUG_OBJECT (pad, "%saccepted caps %" GST_PTR_FORMAT,
+      (ret ? "" : "not "), caps);
+  GST_DEBUG_OBJECT (pad, "acceptable caps are %" GST_PTR_FORMAT, accepted_caps);
+  gst_caps_unref (accepted_caps);
+  gst_caps_unref (modified_caps);
+  if (had_current_caps)
+    gst_caps_unref (template_caps);
   return ret;
 }
 
@@ -538,6 +719,8 @@ gst_videomixer2_pad_init (GstVideoMixer2Pad * mixerpad)
   mixerpad->xpos = DEFAULT_PAD_XPOS;
   mixerpad->ypos = DEFAULT_PAD_YPOS;
   mixerpad->alpha = DEFAULT_PAD_ALPHA;
+  mixerpad->convert = NULL;
+  mixerpad->need_conversion_update = FALSE;
 }
 
 /* GstVideoMixer2 */
@@ -883,6 +1066,8 @@ gst_videomixer2_blend_buffers (GstVideoMixer2 * mix,
       GstClockTime timestamp;
       gint64 stream_time;
       GstSegment *seg;
+      GstVideoFrame converted_frame;
+      GstBuffer *converted_buf = NULL;
       GstVideoFrame frame;
 
       seg = &mixcol->collect.segment;
@@ -898,9 +1083,37 @@ gst_videomixer2_blend_buffers (GstVideoMixer2 * mix,
 
       gst_video_frame_map (&frame, &pad->info, mixcol->buffer, GST_MAP_READ);
 
-      composite (&frame, pad->xpos, pad->ypos, pad->alpha, &outframe);
+      if (pad->convert) {
+        gint converted_size;
 
-      gst_video_frame_unmap (&frame);
+        /* We wait until here to set the conversion infos, in case mix->info changed */
+        if (pad->need_conversion_update) {
+          pad->conversion_info = mix->info;
+          gst_video_info_set_format (&(pad->conversion_info),
+              GST_VIDEO_INFO_FORMAT (&mix->info), pad->info.width,
+              pad->info.height);
+          pad->need_conversion_update = FALSE;
+        }
+
+        converted_size = pad->conversion_info.size;
+        converted_size = converted_size > outsize ? converted_size : outsize;
+        converted_buf = gst_buffer_new_allocate (NULL, converted_size, &params);
+
+        gst_video_frame_map (&converted_frame, &(pad->conversion_info),
+            converted_buf, GST_MAP_READWRITE);
+        videomixer_videoconvert_convert_convert (pad->convert, &converted_frame,
+            &frame);
+        gst_video_frame_unmap (&frame);
+      } else {
+        converted_frame = frame;
+      }
+
+      composite (&converted_frame, pad->xpos, pad->ypos, pad->alpha, &outframe);
+
+      if (pad->convert)
+        gst_buffer_unref (converted_buf);
+
+      gst_video_frame_unmap (&converted_frame);
     }
   }
   gst_video_frame_unmap (&outframe);
@@ -1087,41 +1300,6 @@ done:
 
 done_unlocked:
   return ret;
-}
-
-static gboolean
-gst_videomixer2_query_caps (GstPad * pad, GstObject * parent, GstQuery * query)
-{
-  GstCaps *filter;
-  GstStructure *s;
-  gint n;
-  GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (parent);
-  GstCaps *caps = NULL;
-
-  gst_query_parse_caps (query, &filter);
-
-  if (GST_VIDEO_INFO_FORMAT (&mix->info) != GST_VIDEO_FORMAT_UNKNOWN)
-    caps = gst_caps_ref (mix->current_caps);
-
-  if (caps == NULL)
-    caps = gst_pad_get_pad_template_caps (mix->srcpad);
-
-  caps = gst_caps_make_writable (caps);
-
-  n = gst_caps_get_size (caps) - 1;
-  for (; n >= 0; n--) {
-    s = gst_caps_get_structure (caps, n);
-    gst_structure_set (s, "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-        "height", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
-    if (GST_VIDEO_INFO_FPS_D (&mix->info) != 0) {
-      gst_structure_set (s,
-          "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
-    }
-  }
-  gst_query_set_caps_result (query, caps);
-  gst_caps_unref (caps);
-
-  return TRUE;
 }
 
 /* FIXME, the duration query should reflect how long you will produce
@@ -1324,7 +1502,7 @@ gst_videomixer2_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       res = gst_videomixer2_query_latency (mix, query);
       break;
     case GST_QUERY_CAPS:
-      res = gst_videomixer2_query_caps (pad, parent, query);
+      res = gst_pad_query_default (pad, parent, query);
       break;
     default:
       /* FIXME, needs a custom query handler because we have multiple
@@ -1933,10 +2111,17 @@ gst_videomixer2_release_pad (GstElement * element, GstPad * pad)
 
   mixpad = GST_VIDEO_MIXER2_PAD (pad);
 
+  if (mixpad->convert)
+    videomixer_videoconvert_convert_free (mixpad->convert);
+
   mix->sinkpads = g_slist_remove (mix->sinkpads, pad);
   gst_child_proxy_child_removed (GST_CHILD_PROXY (mix), G_OBJECT (mixpad),
       GST_OBJECT_NAME (mixpad));
   mix->numpads--;
+
+  GST_COLLECT_PADS_STREAM_LOCK (mix->collect);
+  gst_videomixer2_update_converters (mix);
+  GST_COLLECT_PADS_STREAM_UNLOCK (mix->collect);
 
   update_caps = GST_VIDEO_INFO_FORMAT (&mix->info) != GST_VIDEO_FORMAT_UNKNOWN;
   GST_VIDEO_MIXER2_UNLOCK (mix);
@@ -1969,6 +2154,14 @@ static void
 gst_videomixer2_dispose (GObject * o)
 {
   GstVideoMixer2 *mix = GST_VIDEO_MIXER2 (o);
+  GSList *tmp;
+
+  for (tmp = mix->sinkpads; tmp; tmp = tmp->next) {
+    GstVideoMixer2Pad *mixpad = tmp->data;
+
+    if (mixpad->convert)
+      videomixer_videoconvert_convert_free (mixpad->convert);
+  }
 
   gst_caps_replace (&mix->current_caps, NULL);
 }
