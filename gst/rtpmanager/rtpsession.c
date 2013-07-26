@@ -3228,6 +3228,15 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   /* get a new interval, we need this for various cleanups etc */
   data.interval = calculate_rtcp_interval (sess, TRUE, sess->first_rtcp);
 
+  /* we need an internal source now */
+  if (sess->stats.internal_sources == 0) {
+    RTPSource *source;
+    gboolean created;
+
+    source = obtain_internal_source (sess, sess->suggested_ssrc, &created);
+    g_object_unref (source);
+  }
+
   /* Make a local copy of the hashtable. We need to do this because the
    * cleanup stage below releases the session lock. */
   table_copy = g_hash_table_new_full (NULL, NULL, NULL,
@@ -3247,15 +3256,6 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   /* see if we need to generate SR or RR packets */
   if (!is_rtcp_time (sess, current_time, &data))
     goto done;
-
-  /* we need an internal source now */
-  if (sess->stats.internal_sources == 0) {
-    RTPSource *source;
-    gboolean created;
-
-    source = obtain_internal_source (sess, sess->suggested_ssrc, &created);
-    g_object_unref (source);
-  }
 
   /* generate RTCP for all internal sources */
   g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
