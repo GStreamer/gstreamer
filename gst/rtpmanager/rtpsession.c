@@ -2857,7 +2857,6 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
   GST_LOG ("timeout base interval %" GST_TIME_FORMAT,
       GST_TIME_ARGS (binterval));
 
-  /* FIXME, we need to remove internal sources too */
   if (!source->internal) {
     if (source->marked_bye) {
       /* if we received a BYE from the source, remove the source after some
@@ -2891,13 +2890,16 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
     if (data->current_time > btime) {
       interval = MAX (binterval * 2, 5 * GST_SECOND);
       if (data->current_time - btime > interval) {
-        GST_DEBUG ("sender source %08x timed out and became receiver, last %"
-            GST_TIME_FORMAT, source->ssrc, GST_TIME_ARGS (btime));
-        source->is_sender = FALSE;
-        sess->stats.sender_sources--;
-        if (source->internal)
-          sess->stats.internal_sender_sources--;
-        sendertimeout = TRUE;
+        if (source->internal && source->sent_bye) {
+          /* an internal source is BYE and stopped sending RTP, remove */
+          GST_DEBUG ("internal BYE source %08x timed out, last %"
+              GST_TIME_FORMAT, source->ssrc, GST_TIME_ARGS (btime));
+          remove = TRUE;
+        } else {
+          GST_DEBUG ("sender source %08x timed out and became receiver, last %"
+              GST_TIME_FORMAT, source->ssrc, GST_TIME_ARGS (btime));
+          sendertimeout = TRUE;
+        }
       }
     }
   }
@@ -2920,8 +2922,14 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
     else
       on_timeout (sess, source);
   } else {
-    if (sendertimeout)
+    if (sendertimeout) {
+      source->is_sender = FALSE;
+      sess->stats.sender_sources--;
+      if (source->internal)
+        sess->stats.internal_sender_sources--;
+
       on_sender_timeout (sess, source);
+    }
   }
 
   source->closing = remove;
