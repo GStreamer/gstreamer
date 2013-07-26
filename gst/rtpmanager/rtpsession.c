@@ -1696,13 +1696,6 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   gst_rtp_buffer_unmap (&rtp);
 
   RTP_SESSION_LOCK (sess);
-#if 0
-  /* FIXME, we should simply not update any stats on the BYE
-   * internal sources */
-  /* ignore more RTP packets when we left the session */
-  if (sess->source->marked_bye)
-    goto ignore;
-#endif
 
   /* update arrival stats */
   update_arrival_stats (sess, &arrival, TRUE, buffer, current_time,
@@ -1770,15 +1763,6 @@ invalid_packet:
     GST_DEBUG ("invalid RTP packet received");
     return GST_FLOW_OK;
   }
-#if 0
-ignore:
-  {
-    RTP_SESSION_UNLOCK (sess);
-    gst_buffer_unref (buffer);
-    GST_DEBUG ("ignoring RTP packet because we are leaving");
-    return GST_FLOW_OK;
-  }
-#endif
 collision:
   {
     RTP_SESSION_UNLOCK (sess);
@@ -1812,7 +1796,7 @@ rtp_session_process_rb (RTPSession * sess, RTPSource * source,
     if (src == NULL)
       continue;
 
-    if (src->internal) {
+    if (src->internal && RTP_SOURCE_IS_ACTIVE (src)) {
       /* only deal with report blocks for our session, we update the stats of
        * the sender of the RTCP message. We could also compare our stats against
        * the other sender to see if we are better or worse. */
@@ -2296,12 +2280,6 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
   update_arrival_stats (sess, &arrival, FALSE, buffer, current_time, -1,
       ntpnstime);
 
-#if 0
-  /* FIXME, simply ignore RTCP for iternal sources with BYE */
-  if (sess->source->sent_bye)
-    goto ignore;
-#endif
-
   /* start processing the compound packet */
   gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
   more = gst_rtcp_buffer_get_first_packet (&rtcp, &packet);
@@ -2385,16 +2363,6 @@ invalid_packet:
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
   }
-#if 0
-ignore:
-  {
-    RTP_SESSION_UNLOCK (sess);
-    gst_buffer_unref (buffer);
-    clean_arrival_stats (&arrival);
-    GST_DEBUG ("ignoring RTCP packet because we left");
-    return GST_FLOW_OK;
-  }
-#endif
 }
 
 /**
