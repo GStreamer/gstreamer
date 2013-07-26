@@ -2676,6 +2676,13 @@ early_exit:
 
 typedef struct
 {
+  RTPSource *source;
+  gboolean is_bye;
+  GstBuffer *buffer;
+} ReportOutput;
+
+typedef struct
+{
   GstRTCPBuffer rtcpbuf;
   RTPSession *sess;
   RTPSource *source;
@@ -2685,11 +2692,11 @@ typedef struct
   GstClockTime running_time;
   GstClockTime interval;
   GstRTCPPacket packet;
-  gboolean is_bye;
   gboolean has_sdes;
   gboolean is_early;
   gboolean may_suppress;
   gboolean notify;
+  GQueue output;
 } ReportData;
 
 static void
@@ -2700,7 +2707,6 @@ session_start_rtcp (RTPSession * sess, ReportData * data)
   GstRTCPBuffer *rtcp = &data->rtcpbuf;
 
   data->rtcp = gst_rtcp_buffer_new (sess->mtu);
-  data->is_bye = FALSE;
   data->has_sdes = FALSE;
 
   gst_rtcp_buffer_map (data->rtcp, GST_MAP_READWRITE, rtcp);
@@ -2968,7 +2974,6 @@ make_source_bye (RTPSession * sess, RTPSource * source, ReportData * data)
     gst_rtcp_packet_bye_set_reason (packet, source->bye_reason);
 
   /* we have a BYE packet now */
-  data->is_bye = TRUE;
   source->sent_bye = TRUE;
 }
 
@@ -3066,9 +3071,11 @@ remove_closing_sources (const gchar * key, RTPSource * source, gpointer * data)
 }
 
 static void
-generate_rtcp (RTPSource * source, ReportData * data)
+generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
 {
   RTPSession *sess = data->sess;
+  gboolean is_bye = FALSE;
+  ReportOutput *output;
 
   /* only generate RTCP for active internal sources */
   if (!source->internal || source->sent_bye)
@@ -3082,6 +3089,7 @@ generate_rtcp (RTPSource * source, ReportData * data)
   if (source->marked_bye) {
     /* send BYE */
     make_source_bye (sess, source, data);
+    is_bye = TRUE;
   } else if (!data->is_early) {
     /* loop over all known sources and add report blocks. If we are ealy, we
      * just make a minimal RTCP packet and skip this step */
@@ -3108,6 +3116,13 @@ generate_rtcp (RTPSource * source, ReportData * data)
     data->notify = TRUE;
     GST_DEBUG ("changed our SSRC to %08x", source->ssrc);
   }
+
+  output = g_slice_new (ReportOutput);
+  output->source = g_object_ref (source);
+  output->is_bye = is_bye;
+  output->buffer = data->rtcp;
+  /* queue the RTCP packet to push later */
+  g_queue_push_tail (&data->output, output);
 }
 
 /**
@@ -3134,8 +3149,8 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 {
   GstFlowReturn result = GST_FLOW_OK;
   ReportData data = { GST_RTCP_BUFFER_INIT };
-  RTPSource *own;
   GHashTable *table_copy;
+  ReportOutput *output;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
 
@@ -3149,8 +3164,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   data.running_time = running_time;
   data.may_suppress = FALSE;
   data.notify = FALSE;
-
-  own = sess->source;
+  g_queue_init (&data.output);
 
   RTP_SESSION_LOCK (sess);
   /* get a new interval, we need this for various cleanups etc */
@@ -3176,7 +3190,9 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   if (!is_rtcp_time (sess, current_time, &data))
     goto done;
 
-  generate_rtcp (own, &data);
+  /* generate RTCP for all internal sources */
+  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+      (GHFunc) generate_rtcp, &data);
 
   /* we keep track of the last report time in order to timeout inactive
    * receivers or senders */
@@ -3191,10 +3207,11 @@ done:
   if (data.notify)
     g_object_notify (G_OBJECT (sess), "internal-ssrc");
 
-  /* push out the RTCP packet */
-  if (data.rtcp) {
+  /* push out the RTCP packets */
+  while ((output = g_queue_pop_head (&data.output))) {
     gboolean do_not_suppress;
-    GstBuffer *buffer = data.rtcp;
+    GstBuffer *buffer = output->buffer;
+    RTPSource *source = output->source;
 
     /* Give the user a change to add its own packet */
     g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_SENDING_RTCP], 0,
@@ -3209,7 +3226,7 @@ done:
       GST_DEBUG ("%p, sending RTCP packet, avg size %u, %u", &sess->stats,
           sess->stats.avg_rtcp_packet_size, packet_size);
       result =
-          sess->callbacks.send_rtcp (sess, own, buffer, data.is_bye,
+          sess->callbacks.send_rtcp (sess, source, buffer, output->is_bye,
           sess->send_rtcp_user_data);
     } else {
       GST_DEBUG ("freeing packet callback: %p"
@@ -3217,6 +3234,8 @@ done:
           sess->callbacks.send_rtcp, do_not_suppress, data.may_suppress);
       gst_buffer_unref (buffer);
     }
+    g_object_unref (source);
+    g_slice_free (ReportOutput, output);
   }
 
   return result;

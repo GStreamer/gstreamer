@@ -328,7 +328,7 @@ void            rtp_session_update_send_caps       (RTPSession *sess, GstCaps *c
 GstFlowReturn   rtp_session_send_rtp               (RTPSession *sess, gpointer data, gboolean is_list,
                                                     GstClockTime current_time, GstClockTime running_time);
 
-/* stopping the session */
+/* scheduling bye */
 void            rtp_session_mark_all_bye           (RTPSession *sess, const gchar *reason);
 GstFlowReturn   rtp_session_schedule_bye           (RTPSession *sess, GstClockTime current_time);
 
