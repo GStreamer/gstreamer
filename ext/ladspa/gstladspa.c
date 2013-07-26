@@ -399,14 +399,14 @@ plugin_init (GstPlugin * plugin)
   gboolean res = FALSE;
   gint n = 0;
 
+  GST_DEBUG_CATEGORY_INIT (ladspa_debug, "ladspa", 0, "LADSPA plugins");
+
 #ifdef ENABLE_NLS
   GST_DEBUG ("binding text domain %s to locale dir %s", GETTEXT_PACKAGE,
       LOCALEDIR);
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif
-
-  GST_DEBUG_CATEGORY_INIT (ladspa_debug, "ladspa", 0, "LADSPA plugins");
 
   gst_plugin_add_dependency_simple (plugin,
       "LADSPA_PATH",
