@@ -286,6 +286,29 @@ make_data_buffer (GstRtpGSTPay * rtpgstpay, gchar * data, guint size)
   return outbuf;
 }
 
+static void
+gst_rtp_gst_pay_send_caps (GstRtpGSTPay * rtpgstpay, guint8 cv, GstCaps * caps)
+{
+  gchar *capsstr;
+  guint capslen;
+  GstBuffer *outbuf;
+
+  capsstr = gst_caps_to_string (caps);
+  capslen = strlen (capsstr);
+  /* for 0 byte */
+  capslen++;
+
+  GST_DEBUG_OBJECT (rtpgstpay, "sending caps=%s", capsstr);
+
+  /* make a data buffer of it */
+  outbuf = make_data_buffer (rtpgstpay, capsstr, capslen);
+  g_free (capsstr);
+
+  /* store in adapter, we don't flush yet, buffer might follow */
+  rtpgstpay->flags = (1 << 7) | (cv << 4);
+  gst_adapter_push (rtpgstpay->adapter, outbuf);
+}
+
 static gboolean
 gst_rtp_gst_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
 {
@@ -293,29 +316,21 @@ gst_rtp_gst_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
   gboolean res;
   gchar *capsstr, *capsenc, *capsver;
   guint capslen;
-  GstBuffer *outbuf;
 
   rtpgstpay = GST_RTP_GST_PAY (payload);
 
   capsstr = gst_caps_to_string (caps);
   capslen = strlen (capsstr);
 
-  rtpgstpay->current_CV = rtpgstpay->next_CV;
-
   /* encode without 0 byte */
   capsenc = g_base64_encode ((guchar *) capsstr, capslen);
   GST_DEBUG_OBJECT (payload, "caps=%s, caps(base64)=%s", capsstr, capsenc);
-  /* for 0 byte */
-  capslen++;
-
-  /* make a data buffer of it */
-  outbuf = make_data_buffer (rtpgstpay, capsstr, capslen);
   g_free (capsstr);
 
-  /* store in adapter, we don't flush yet, buffer might follow */
-  rtpgstpay->flags = (1 << 7) | (rtpgstpay->current_CV << 4);
+  /* Send the new caps */
+  rtpgstpay->current_CV = rtpgstpay->next_CV;
   rtpgstpay->next_CV = (rtpgstpay->next_CV + 1) & 0x7;
-  gst_adapter_push (rtpgstpay->adapter, outbuf);
+  gst_rtp_gst_pay_send_caps (rtpgstpay, rtpgstpay->current_CV, caps);
 
   /* make caps for SDP */
   capsver = g_strdup_printf ("%d", rtpgstpay->current_CV);
