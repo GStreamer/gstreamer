@@ -75,6 +75,7 @@ gst_qa_monitor_dispose (GObject * object)
   GstQaMonitor *monitor = GST_QA_MONITOR_CAST (object);
 
   g_mutex_clear (&monitor->mutex);
+  g_queue_clear (&monitor->overrides);
 
   if (monitor->target)
     g_object_weak_unref (G_OBJECT (monitor->target),
@@ -138,6 +139,7 @@ gst_qa_monitor_init (GstQaMonitor * monitor)
 {
   g_mutex_init (&monitor->mutex);
 
+  g_queue_init (&monitor->overrides);
 }
 
 /**
@@ -171,6 +173,29 @@ gst_qa_monitor_setup (GstQaMonitor * monitor)
 {
   GST_DEBUG_OBJECT (monitor, "Starting monitor setup");
   return GST_QA_MONITOR_GET_CLASS (monitor)->setup (monitor);
+}
+
+const gchar *
+gst_qa_monitor_get_element_name (GstQaMonitor * monitor)
+{
+  GstQaMonitorClass *klass = GST_QA_MONITOR_GET_CLASS (monitor);
+  GstElement *element = NULL;
+
+  if (klass->get_element)
+    element = klass->get_element (monitor);
+
+  if (element)
+    return GST_ELEMENT_NAME (element);
+  return NULL;
+}
+
+void
+gst_qa_monitor_attach_override (GstQaMonitor * monitor,
+    GstQaOverride * override)
+{
+  GST_QA_MONITOR_LOCK (monitor);
+  g_queue_push_tail (&monitor->overrides, override);
+  GST_QA_MONITOR_UNLOCK (monitor);
 }
 
 static void

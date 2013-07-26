@@ -21,18 +21,31 @@
 
 #include "gst-qa-monitor-factory.h"
 #include "gst-qa-bin-monitor.h"
+#include "gst-qa-pad-monitor.h"
+#include "gst-qa-override-registry.h"
 
-GstQaElementMonitor *
-gst_qa_monitor_factory_create (GstElement * element, GstQaRunner * runner,
+GstQaMonitor *
+gst_qa_monitor_factory_create (GstObject * target, GstQaRunner * runner,
     GstQaMonitor * parent)
 {
-  g_return_val_if_fail (element != NULL, NULL);
+  GstQaMonitor *monitor = NULL;
+  g_return_val_if_fail (target != NULL, NULL);
 
-  if (GST_IS_BIN (element)) {
-    return
-        GST_QA_ELEMENT_MONITOR_CAST (gst_qa_bin_monitor_new (GST_BIN_CAST
-            (element), runner, parent));
+  if (GST_IS_PAD (target)) {
+    monitor =
+        GST_QA_MONITOR_CAST (gst_qa_pad_monitor_new (GST_PAD_CAST (target),
+            runner, GST_QA_ELEMENT_MONITOR_CAST (parent)));
+  } else if (GST_IS_BIN (target)) {
+    monitor =
+        GST_QA_MONITOR_CAST (gst_qa_bin_monitor_new (GST_BIN_CAST
+            (target), runner, parent));
+  } else if (GST_IS_ELEMENT (target)) {
+    monitor =
+        GST_QA_MONITOR_CAST (gst_qa_element_monitor_new (GST_ELEMENT_CAST
+            (target), runner, parent));
   }
 
-  return gst_qa_element_monitor_new (element, runner, parent);
+  g_return_val_if_fail (target != NULL, NULL);
+  gst_qa_override_registry_attach_overrides (monitor);
+  return monitor;
 }

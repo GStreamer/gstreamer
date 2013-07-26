@@ -30,7 +30,7 @@
 G_BEGIN_DECLS
 
 /* forward declaration */
-typedef struct _GstQaElementMonitor GstQaElementMonitor;
+typedef struct _GstQaMonitor GstQaMonitor;
 typedef struct _GstQaScenario GstQaScenario;
 
 #define GST_TYPE_QA_RUNNER			(gst_qa_runner_get_type ())
@@ -60,7 +60,7 @@ struct _GstQaRunner {
 
   /*< private >*/
   GstElement    *pipeline;
-  GstQaElementMonitor *monitor;
+  GstQaMonitor *monitor;
   GstQaScenario *scenario;
 
   GSList *reports;

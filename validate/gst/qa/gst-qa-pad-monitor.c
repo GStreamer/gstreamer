@@ -96,6 +96,7 @@ _serialized_event_data_free (SerializedEventData * serialized_event)
 }
 
 static gboolean gst_qa_pad_monitor_do_setup (GstQaMonitor * monitor);
+static GstElement *gst_qa_pad_monitor_get_element (GstQaMonitor * monitor);
 
 /* This was copied from gstpad.c and might need
  * updating whenever it changes in core */
@@ -526,6 +527,7 @@ gst_qa_pad_monitor_class_init (GstQaPadMonitorClass * klass)
   gobject_class->dispose = gst_qa_pad_monitor_dispose;
 
   monitor_klass->setup = gst_qa_pad_monitor_do_setup;
+  monitor_klass->get_element = gst_qa_pad_monitor_get_element;
 }
 
 static void
@@ -560,6 +562,14 @@ gst_qa_pad_monitor_new (GstPad * pad, GstQaRunner * runner,
     return NULL;
   }
   return monitor;
+}
+
+static GstElement *
+gst_qa_pad_monitor_get_element (GstQaMonitor * monitor)
+{
+  GstPad *pad = GST_QA_PAD_MONITOR_GET_PAD (monitor);
+
+  return GST_PAD_PARENT (pad);
 }
 
 static gboolean

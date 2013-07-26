@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2013 Thiago Santos <thiago.sousa.santos@collabora.com>
  *
- * gst-qa-monitor-factory.h - QA Element monitors factory utility functions
+ * gst-qa-override-registry.h - QA Override registry
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -19,19 +19,30 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_QA_MONITOR_FACTORY_H__
-#define __GST_QA_MONITOR_FACTORY_H__
+#ifndef __GST_QA_OVERRIDE_REGISTRY_H__
+#define __GST_QA_OVERRIDE_REGISTRY_H__
 
 #include <glib-object.h>
 #include <gst/gst.h>
+#include "gst-qa-report.h"
 #include "gst-qa-monitor.h"
-#include "gst-qa-runner.h"
+#include "gst-qa-override.h"
 
 G_BEGIN_DECLS
 
-GstQaMonitor *       gst_qa_monitor_factory_create (GstObject * target, GstQaRunner * runner, GstQaMonitor * parent);
+typedef struct {
+  GMutex mutex;
+
+  GQueue name_overrides;
+} GstQaOverrideRegistry;
+
+GstQaOverrideRegistry * gst_qa_override_registry_get (void);
+
+void gst_qa_override_register_by_name (const gchar * name, GstQaOverride * override);
+
+void gst_qa_override_registry_attach_overrides (GstQaMonitor * monitor);
 
 G_END_DECLS
 
-#endif /* __GST_QA_MONITOR_FACTORY_H__ */
+#endif /* __GST_QA_OVERRIDE_REGISTRY_H__ */
 

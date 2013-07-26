@@ -42,6 +42,7 @@ G_DEFINE_TYPE_WITH_CODE (GstQaElementMonitor, gst_qa_element_monitor,
 static void
 gst_qa_element_monitor_wrap_pad (GstQaElementMonitor * monitor, GstPad * pad);
 static gboolean gst_qa_element_monitor_do_setup (GstQaMonitor * monitor);
+static GstElement *gst_qa_element_monitor_get_element (GstQaMonitor * monitor);
 
 static void
 _qa_element_pad_added (GstElement * element, GstPad * pad,
@@ -74,6 +75,7 @@ gst_qa_element_monitor_class_init (GstQaElementMonitorClass * klass)
   gobject_class->dispose = gst_qa_element_monitor_dispose;
 
   monitor_klass->setup = gst_qa_element_monitor_do_setup;
+  monitor_klass->get_element = gst_qa_element_monitor_get_element;
 }
 
 static void
@@ -102,6 +104,12 @@ gst_qa_element_monitor_new (GstElement * element, GstQaRunner * runner,
   }
 
   return monitor;
+}
+
+static GstElement *
+gst_qa_element_monitor_get_element (GstQaMonitor * monitor)
+{
+  return GST_QA_ELEMENT_MONITOR_GET_ELEMENT (monitor);
 }
 
 static void

@@ -26,6 +26,7 @@
 #include <gst/gst.h>
 #include "gst-qa-report.h"
 #include "gst-qa-runner.h"
+#include "gst-qa-override.h"
 
 G_BEGIN_DECLS
 
@@ -71,6 +72,8 @@ struct _GstQaMonitor {
 
   GstQaRunner   *runner;
 
+  GQueue        overrides;
+
   /*< private >*/
   GHashTable *reports;
 };
@@ -85,10 +88,16 @@ struct _GstQaMonitorClass {
   GObjectClass	parent_class;
 
   gboolean (* setup) (GstQaMonitor * monitor);
+  GstElement *(* get_element) (GstQaMonitor * monitor);
 };
 
 /* normal GObject stuff */
 GType		gst_qa_monitor_get_type		(void);
+
+void            gst_qa_monitor_attach_override  (GstQaMonitor * monitor,
+                                                 GstQaOverride * override);
+
+const gchar *   gst_qa_monitor_get_element_name (GstQaMonitor * monitor);
 
 G_END_DECLS
 

@@ -22,6 +22,7 @@
 #include "gst-qa-runner.h"
 #include "gst-qa-report.h"
 #include "gst-qa-monitor-factory.h"
+#include "gst-qa-element-monitor.h"
 #include "gst-qa-scenario.h"
 
 /**
@@ -131,7 +132,8 @@ gst_qa_runner_setup (GstQaRunner * runner)
 
   GST_INFO_OBJECT (runner, "Starting QA Runner setup");
   runner->monitor =
-      gst_qa_monitor_factory_create (runner->pipeline, runner, NULL);
+      gst_qa_monitor_factory_create (GST_OBJECT_CAST (runner->pipeline), runner,
+      NULL);
   if (runner->monitor == NULL) {
     GST_WARNING_OBJECT (runner, "Setup failed");
     return FALSE;

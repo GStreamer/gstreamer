@@ -29,6 +29,9 @@
 
 G_BEGIN_DECLS
 
+/* forward declaratin */
+typedef struct _GstQaElementMonitor GstQaElementMonitor;
+
 #define GST_TYPE_QA_PAD_MONITOR			(gst_qa_pad_monitor_get_type ())
 #define GST_IS_QA_PAD_MONITOR(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_QA_PAD_MONITOR))
 #define GST_IS_QA_PAD_MONITOR_CLASS(klass)	(G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_QA_PAD_MONITOR))
@@ -42,6 +45,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstQaPadMonitor GstQaPadMonitor;
 typedef struct _GstQaPadMonitorClass GstQaPadMonitorClass;
+
 
 /**
  * GstQaPadMonitor:

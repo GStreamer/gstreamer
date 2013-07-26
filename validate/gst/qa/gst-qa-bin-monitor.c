@@ -154,8 +154,9 @@ gst_qa_bin_monitor_wrap_element (GstQaBinMonitor * monitor,
   GST_DEBUG_OBJECT (monitor, "Wrapping element %s", GST_ELEMENT_NAME (element));
 
   element_monitor =
-      gst_qa_monitor_factory_create (element,
-      GST_QA_MONITOR_GET_RUNNER (monitor), GST_QA_MONITOR_CAST (monitor));
+      GST_QA_ELEMENT_MONITOR_CAST (gst_qa_monitor_factory_create
+      (GST_OBJECT_CAST (element), GST_QA_MONITOR_GET_RUNNER (monitor),
+          GST_QA_MONITOR_CAST (monitor)));
   g_return_if_fail (element_monitor != NULL);
 
   GST_QA_MONITOR_LOCK (monitor);
