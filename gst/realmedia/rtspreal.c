@@ -207,9 +207,9 @@ G_STMT_START {			       \
 #define READ_BUFFER_GEN(src, func, name, dest, dest_len)    \
 G_STMT_START {			                            \
   dest = (gchar *)func (src, name);                         \
+  dest_len = 0;						    \
   if (!dest) {                                              \
     dest = (char *) "";                                     \
-    dest_len = 0;                                           \
   }                                                         \
   else if (!strncmp (dest, "buffer;\"", 8)) {               \
     dest += 8;                                              \
