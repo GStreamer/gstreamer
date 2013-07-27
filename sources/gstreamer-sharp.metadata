@@ -36,11 +36,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace/boxed[@cname='GstSample']" name="opaque">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstAtomicQueue']" name="opaque">true</attr>
 	<attr path="/api/namespace/boxed[@cname='GstParseContext']" name="opaque">true</attr>
-	<attr path="/api/namespace/interface[@cname='GstTagSetter']" name="opaque">true</attr>
-	<attr path="/api/namespace/interface[@cname='GstTocSetter']" name="opaque">true</attr>
-	<attr path="/api/namespace/interface[@cname='GstChildProxy']" name="opaque">true</attr>
-	<attr path="/api/namespace/interface[@cname='GstPreset']" name="opaque">true</attr>
-	<attr path="/api/namespace/interface[@cname='GstURIHandler']" name="opaque">true</attr>
 	<attr path="/api/namespace/object[@cname='GstElementFactory']" name="opaque">true</attr>
 	<attr path="/api/namespace/object[@cname='GstTypeFindFactory']" name="opaque">true</attr>
 	<attr path="/api/namespace/object[@cname='GstPluginFeature']" name="opaque">true</attr>
@@ -63,7 +58,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<remove-attr path="/api/namespace/object[@cname='GstObject']/method[@cname='gst_object_replace']/parameters/parameter[@name='oldobj']" name="pass_as" />
 	<!-- Some glue problems -->
 	<attr path="/api/namespace/object[@cname='GstObject']/field[@cname='object']" name="hidden">true</attr>
-	<attr path="/api/namespace/object[@cname='GstObject']/field[@cname='lock']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstClockEntry']/field[@cname='func']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstClockEntry']/field[@cname='destroy_data']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstTask']/field[@cname='notify']" name="hidden">true</attr>
