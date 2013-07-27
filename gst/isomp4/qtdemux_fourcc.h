@@ -139,6 +139,8 @@ G_BEGIN_DECLS
 #define FOURCC_qtim     GST_MAKE_FOURCC('q','t','i','m')
 #define FOURCC_drms     GST_MAKE_FOURCC('d','r','m','s')
 #define FOURCC_drmi     GST_MAKE_FOURCC('d','r','m','i')
+#define FOURCC_H264     GST_MAKE_FOURCC('H','2','6','4')
+#define FOURCC_strf     GST_MAKE_FOURCC('s','t','r','f')
 #define FOURCC_avc1     GST_MAKE_FOURCC('a','v','c','1')
 #define FOURCC_avcC     GST_MAKE_FOURCC('a','v','c','C')
 #define FOURCC_btrt     GST_MAKE_FOURCC('b','t','r','t')

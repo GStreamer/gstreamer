@@ -5388,6 +5388,12 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
         }
         break;
       }
+      case FOURCC_H264:
+      {
+        GST_MEMDUMP_OBJECT (qtdemux, "H264", buffer, end - buffer);
+        qtdemux_parse_container (qtdemux, node, buffer + 0x56, end);
+        break;
+      }
       case FOURCC_avc1:
       {
         GST_MEMDUMP_OBJECT (qtdemux, "avc1", buffer, end - buffer);
@@ -7300,6 +7306,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       gst_qtdemux_handle_esds (qtdemux, stream, esds, list);
     } else {
       switch (fourcc) {
+        case FOURCC_H264:
         case FOURCC_avc1:
         {
           gint len = QT_UINT32 (stsd_data) - 0x66;
@@ -7334,6 +7341,27 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
                 buf = gst_buffer_new_and_alloc (size);
                 gst_buffer_fill (buf, 0, avc_data + 0x8, size);
+                gst_caps_set_simple (stream->caps,
+                    "codec_data", GST_TYPE_BUFFER, buf, NULL);
+                gst_buffer_unref (buf);
+
+                break;
+              }
+              case FOURCC_strf:
+              {
+                GstBuffer *buf;
+
+                GST_DEBUG_OBJECT (qtdemux, "found strf codec_data in stsd");
+
+                /* First 4 bytes are the length of the atom, the next 4 bytes
+                 * are the fourcc, next 40 bytes are BITMAPINFOHEADER,
+                 * next 1 byte is the version, and the
+                 * subsequent bytes are sequence parameter set like data. */
+                gst_codec_utils_h264_caps_set_level_and_profile (stream->caps,
+                    avc_data + 8 + 40 + 1, size - 1);
+
+                buf = gst_buffer_new_and_alloc (size);
+                gst_buffer_fill (buf, 0, avc_data + 8 + 40, size);
                 gst_caps_set_simple (stream->caps,
                     "codec_data", GST_TYPE_BUFFER, buf, NULL);
                 gst_buffer_unref (buf);
@@ -10300,6 +10328,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("Apple video");
       caps = gst_caps_new_empty_simple ("video/x-apple-video");
       break;
+    case GST_MAKE_FOURCC ('H', '2', '6', '4'):
     case GST_MAKE_FOURCC ('a', 'v', 'c', '1'):
       _codec ("H.264 / AVC");
       caps = gst_caps_new_simple ("video/x-h264",
