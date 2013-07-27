@@ -225,5 +225,6 @@
 #define DRF_ID_DTS2       0x44545332
 #define DRF_ID_DTS3       0x44545333
 #define DRF_ID_S302M      0x42535344
+#define DRF_ID_TSHV       0x54534856
 
 #endif /* __GST_MPEG_DESC_H__ */

@@ -780,6 +780,9 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       caps =
           gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
           NULL);
+      /* HDV is always mpeg 1 audio layer 2 */
+      if (program->registration_id == DRF_ID_TSHV)
+        gst_caps_set_simple (caps, "layer", G_TYPE_INT, 2, NULL);
       break;
     case GST_MPEG_TS_STREAM_TYPE_PRIVATE_PES_PACKETS:
       GST_LOG ("private data");
