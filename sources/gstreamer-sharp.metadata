@@ -30,6 +30,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace/struct[@cname='GstMiniObject']/field[@cname='free']" name="type">gpointer</attr>
 	<attr path="/api/namespace/struct[@cname='GstMiniObject']/field[@cname='dispose']" name="type">gpointer</attr>
 	<attr path="/api/namespace/struct[@cname='GstMessage']/field[@cname='cond']" name="type">GCond*</attr>
+	<!-- structs that should be opaque -->
+	<attr path="/api/namespace/boxed[@cname='GstDateTime']" name="opaque">true</attr>
 	<!-- add native attribute to all structs which need special handling -->
 	<change-node-type path="/api/namespace//boxed[field/@cname='mini_object']">struct</change-node-type>
 	<attr path="/api/namespace//struct[field/@cname='mini_object']" name="native">true</attr>
