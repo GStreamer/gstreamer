@@ -433,36 +433,59 @@ ges_project_init (GESProject * project)
       g_free, NULL);
 }
 
+static void
+_send_error_loading_asset (GESProject * project, GESAsset * asset,
+    GError * error)
+{
+  const gchar *id = ges_asset_get_id (asset);
+
+  GST_DEBUG_OBJECT (project, "Sending error loading asset for %s", id);
+  g_hash_table_remove (project->priv->loading_assets, id);
+  g_hash_table_add (project->priv->loaded_with_error, g_strdup (id));
+  g_signal_emit (project, _signals[ERROR_LOADING_ASSET], 0, error, id,
+      ges_asset_get_extractable_type (asset));
+}
+
 gchar *
 ges_project_try_updating_id (GESProject * project, GESAsset * asset,
     GError * error)
 {
   gchar *new_id = NULL;
+  const gchar *id;
 
   g_return_val_if_fail (GES_IS_PROJECT (project), NULL);
   g_return_val_if_fail (GES_IS_ASSET (asset), NULL);
   g_return_val_if_fail (error, NULL);
 
-  GST_DEBUG_OBJECT (project, "Try to proxy %s", ges_asset_get_id (asset));
+  id = ges_asset_get_id (asset);
+  GST_DEBUG_OBJECT (project, "Try to proxy %s", id);
   if (ges_asset_request_id_update (asset, &new_id, error) == FALSE) {
     GST_DEBUG_OBJECT (project, "Type: %s can not be proxied for id: %s",
-        g_type_name (G_OBJECT_TYPE (asset)), ges_asset_get_id (asset));
+        g_type_name (G_OBJECT_TYPE (asset)), id);
+    _send_error_loading_asset (project, asset, error);
 
     return NULL;
   }
 
-  if (new_id == NULL)
+  if (new_id == NULL) {
+    GST_DEBUG_OBJECT (project, "Sending 'missing-uri' signal for %s", id);
     g_signal_emit (project, _signals[MISSING_URI_SIGNAL], 0, error, asset,
         &new_id);
+  }
 
   if (new_id) {
+    GST_DEBUG_OBJECT (project, "new id found: %s", new_id);
     if (!ges_asset_set_proxy (asset, new_id)) {
       g_free (new_id);
       new_id = NULL;
     }
   }
 
-  g_hash_table_remove (project->priv->loading_assets, ges_asset_get_id (asset));
+  g_hash_table_remove (project->priv->loading_assets, id);
+
+  if (new_id == NULL)
+    _send_error_loading_asset (project, asset, error);
+
 
   return new_id;
 }
@@ -472,19 +495,13 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, GESProject * project)
 {
   GError *error = NULL;
   gchar *possible_id = NULL;
-  const gchar *id = ges_asset_get_id (source);
   GESAsset *asset = ges_asset_request_finish (res, &error);
 
   if (error) {
     possible_id = ges_project_try_updating_id (project, source, error);
-    if (possible_id == NULL) {
-      g_hash_table_remove (project->priv->loading_assets, id);
-      g_hash_table_add (project->priv->loaded_with_error, g_strdup (id));
-      g_signal_emit (project, _signals[ERROR_LOADING_ASSET], 0, error, id,
-          ges_asset_get_extractable_type (source));
 
+    if (possible_id == NULL)
       return;
-    }
 
     ges_project_create_asset (project, possible_id,
         ges_asset_get_extractable_type (source));
