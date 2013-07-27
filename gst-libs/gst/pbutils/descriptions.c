@@ -287,6 +287,7 @@ static const FormatInfo formats[] = {
   /* non-audio/video/container formats */
   {"hdv/aux-v", "HDV AUX-V", 0, ""},
   {"hdv/aux-a", "HDV AUX-A", 0, ""},
+  {"private/teletext", "Teletext", 0, ""},
 
   /* formats with dynamic descriptions */
   {"audio/mpeg", NULL, FLAG_AUDIO, ""},
