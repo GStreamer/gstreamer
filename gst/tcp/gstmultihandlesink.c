@@ -1686,9 +1686,6 @@ gst_multi_handle_sink_queue_buffer (GstMultiHandleSink * mhsink,
   GstMultiHandleSinkClass *mhsinkclass =
       GST_MULTI_HANDLE_SINK_GET_CLASS (mhsink);
 
-  g_get_current_time (&nowtv);
-  now = GST_TIMEVAL_TO_TIME (nowtv);
-
   CLIENTS_LOCK (mhsink);
   /* add buffer to queue */
   g_array_prepend_val (mhsink->bufqueue, buffer);
@@ -1713,6 +1710,9 @@ restart:
   cookie = mhsink->clients_cookie;
   for (clients = mhsink->clients; clients; clients = next) {
     GstMultiHandleClient *mhclient = clients->data;
+
+    g_get_current_time (&nowtv);
+    now = GST_TIMEVAL_TO_TIME (nowtv);
 
     if (cookie != mhsink->clients_cookie) {
       GST_DEBUG_OBJECT (sink, "Clients cookie outdated, restarting");
