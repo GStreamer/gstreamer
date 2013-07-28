@@ -34,12 +34,6 @@ else
 CDAUDIO_DIR=
 endif
 
-if USE_CELT
-CELT_DIR=celt
-else
-CELT_DIR=
-endif
-
 if USE_CHROMAPRINT
 CHROMAPRINT_DIR=chromaprint
 else
@@ -391,7 +385,6 @@ SUBDIRS=\
 	$(AUDIOFILE_DIR) \
 	$(BZ2_DIR) \
 	$(CDAUDIO_DIR) \
-	$(CELT_DIR) \
 	$(CHROMAPRINT_DIR) \
 	$(CURL_DIR) \
 	$(DASH_DIR) \
@@ -453,7 +446,6 @@ DIST_SUBDIRS = \
 	apexsink \
 	bz2 \
 	cdaudio \
-	celt \
 	chromaprint \
 	curl \
 	dash \
