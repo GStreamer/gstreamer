@@ -470,39 +470,34 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
   GstCaps **aux_caps = NULL;
   guint last_offset;
   guint i;
-  guchar *data;
-  gsize size;
   GstMapInfo info;
 
   self = GST_UVC_H264_MJPG_DEMUX (GST_PAD_PARENT (pad));
 
-  last_offset = 0;
-  size = gst_buffer_get_size (buf);
-  if (size == 0) {
+  if (gst_buffer_get_size (buf) == 0) {
     return gst_pad_push (self->priv->jpeg_pad, buf);
   }
 
+  last_offset = 0;
   gst_buffer_map (buf, &info, GST_MAP_READ);
 
   jpeg_buf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_METADATA, 0, 0);
 
-  data = info.data;
-
-  for (i = 0; i < size - 1; i++) {
+  for (i = 0; i < info.size - 1; i++) {
     /* Check for APP4 (0xe4) marker in the jpeg */
-    if (data[i] == 0xff && data[i + 1] == 0xe4) {
+    if (info.data[i] == 0xff && info.data[i + 1] == 0xe4) {
       guint16 segment_size;
 
       /* Sanity check sizes and get segment size */
-      if (i + 4 >= size) {
+      if (i + 4 >= info.size) {
         GST_ELEMENT_ERROR (self, STREAM, DEMUX,
             ("Not enough data to read marker size"), (NULL));
         ret = GST_FLOW_ERROR;
         goto done;
       }
-      segment_size = GUINT16_FROM_BE (*((guint16 *) (data + i + 2)));
+      segment_size = GUINT16_FROM_BE (*((guint16 *) (info.data + i + 2)));
 
-      if (i + segment_size + 2 >= size) {
+      if (i + segment_size + 2 >= info.size) {
         GST_ELEMENT_ERROR (self, STREAM, DEMUX,
             ("Not enough data to read marker content"), (NULL));
         ret = GST_FLOW_ERROR;
@@ -533,7 +528,7 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
           goto done;
         }
 
-        aux_header = *((AuxiliaryStreamHeader *) (data + i));
+        aux_header = *((AuxiliaryStreamHeader *) (info.data + i));
         /* version should be little endian but it looks more like BE */
         aux_header.version = GUINT16_FROM_BE (aux_header.version);
         aux_header.header_len = GUINT16_FROM_LE (aux_header.header_len);
@@ -548,7 +543,7 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
             GST_FOURCC_ARGS (aux_header.type),
             aux_header.width, aux_header.height,
             aux_header.frame_interval, aux_header.delay, aux_header.pts);
-        aux_size = *((guint32 *) (data + i + aux_header.header_len));
+        aux_size = *((guint32 *) (info.data + i + aux_header.header_len));
         GST_DEBUG_OBJECT (self, "Auxiliary stream size : %d bytes", aux_size);
 
         if (aux_size > 0) {
@@ -668,15 +663,15 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
       }
 
       i += segment_size - 1;
-    } else if (data[i] == 0xff && data[i + 1] == 0xda) {
+    } else if (info.data[i] == 0xff && info.data[i + 1] == 0xda) {
       GstMemory *m;
 
       /* The APP4 markers must be before the SOS marker, so this is the end */
       GST_DEBUG_OBJECT (self, "Found SOS marker.");
 
-      m = gst_memory_copy (info.memory, last_offset, size - last_offset);
+      m = gst_memory_copy (info.memory, last_offset, info.size - last_offset);
       gst_buffer_append_memory (jpeg_buf, m);
-      last_offset = size;
+      last_offset = info.size;
       break;
     }
   }
@@ -688,7 +683,7 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
     goto done;
   }
 
-  if (last_offset != size) {
+  if (last_offset != info.size) {
     /* this means there was no SOS marker in the jpg, so we assume the JPG was
        just a container */
     GST_DEBUG_OBJECT (self, "SOS marker wasn't found. MJPG is container only");
