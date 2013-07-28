@@ -21,7 +21,6 @@ BuildRequires: %{gstreamer}-plugins-base-devel >= %{gstpb_minver}
 
 BuildRequires: check
 BuildRequires: gettext-devel
-BuildRequires: PyXML
 BuildRequires: libXt-devel
 BuildRequires: gtk-doc
 
@@ -112,9 +111,9 @@ very much and require additional libraries to be installed.
 Summary: Development files for the GStreamer media framework "bad" plug-ins
 Group: Development/Libraries
 Requires: %{name} = %{version}-%{release}
-Requires: gstreamer-plugins-base-devel
+Requires: gstreamer1-plugins-base-devel
 Obsoletes: gstreamer-plugins-bad-devel < %{version}-%{release}
-Provides: gstreamer-plugins-bad-devel = %{version}-%{release}
+Provides: gstreamer1-plugins-bad-devel = %{version}-%{release}
 
 %description devel
 GStreamer is a streaming media framework, based on graphs of elements which
@@ -171,108 +170,73 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 
 %files -f gst-plugins-bad-%{majorminor}.lang
 # Plugins without external dependencies
-# %{_libdir}/gstreamer-%{majorminor}/libgstasfmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvdspu.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstmpegpsmux.so
-#%{_libdir}/gstreamer-%{majorminor}/libgstmpegtsmux.so
-#%ifarch %{ix86} x86_64
-#%{_libdir}/gstreamer-%{majorminor}/libgstreal.so
-#%endif
-%{_libdir}/gstreamer-%{majorminor}/libgstsiren.so
 
 # Plugins with external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstdtsdec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfaad.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmms.so
-#%{_libdir}/gstreamer-%{majorminor}/libgstmimic.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpeg2enc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmplex.so
-#%{_libdir}/gstreamer-%{majorminor}/libgstxvid.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfaac.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmfc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegpsmux.so
-
+%{_libdir}/gstreamer-%{majorminor}/libgstdecklink.so
+%{_libdir}/gstreamer-%{majorminor}/libgsteglglessink.so
+%{_libdir}/gstreamer-%{majorminor}/libgstopenal.so
+%{_libdir}/gstreamer-%{majorminor}/libgstopenjpeg.so
+%{_libdir}/gstreamer-%{majorminor}/libgstwaylandsink.so
+%{_libdir}/gstreamer-%{majorminor}/libgstwildmidi.so
 
 %files free
 %defattr(-,root,root,-)
 %doc AUTHORS COPYING README REQUIREMENTS
 #%{_datadir}/gstreamer-%{majorminor}
-%{_libdir}/libgstbasevideo-%{majorminor}.so.*
 %{_libdir}/libgstphotography-%{majorminor}.so.*
-%{_libdir}/libgstsignalprocessor-%{majorminor}.so.*
 %{_libdir}/libgstcodecparsers-%{majorminor}.so.*
 %{_libdir}/libgstinsertbin-%{majorminor}.so.*
 # Plugins without external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstadpcmdec.so
 %{_libdir}/gstreamer-%{majorminor}/libgstadpcmenc.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstaiff.so
 %{_libdir}/gstreamer-%{majorminor}/libgstautoconvert.so
 %{_libdir}/gstreamer-%{majorminor}/libgstbayer.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstcamerabin.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstcdxaparse.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstcoloreffects.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdataurisrc.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstdccp.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstfestival.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstfrei0r.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstgaudieffects.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstgeometrictransform.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstgsettingselements.so
-# %{_libdir}/gstreamer-%{majorminor}/libgsthdvparse.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstid3tag.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstivfparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstjpegformat.so
 %{_libdir}/gstreamer-%{majorminor}/libgstliveadder.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstmpegdemux.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstmve.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstmxf.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstnsf.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstnuvdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpcapparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstpnm.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstrfbsrc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsegmentclip.so
 %{_libdir}/gstreamer-%{majorminor}/libgstrawparse.so
 %{_libdir}/gstreamer-%{majorminor}/libgstshm.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsdpelem.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsmooth.so
 %{_libdir}/gstreamer-%{majorminor}/libgstspeed.so
-# %{_libdir}/gstreamer-%{majorminor}/libgststereo.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstsubenc.so
-# %{_libdir}/gstreamer-%{majorminor}/libgsttta.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstvideosignal.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstvideomeasure.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstvmnc.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcamerabin2.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstcolorspace.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcurl.so
 %{_libdir}/gstreamer-%{majorminor}/libgstgdp.so
 %{_libdir}/gstreamer-%{majorminor}/libgstaccurip.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfieldanalysis.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmxf.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsubenc.so
-%{_libdir}/libgstbasecamerabinsrc-1.0.so.0.2.0
+%{_libdir}/gstreamer-%{majorminor}/libgstaiff.so
+%{_libdir}/gstreamer-%{majorminor}/libgstaudiofxbad.so
+%{_libdir}/gstreamer-%{majorminor}/libgstdashdemux.so
+%{_libdir}/gstreamer-%{majorminor}/libgstfbdevsink.so
+%{_libdir}/gstreamer-%{majorminor}/libgstfreeverb.so
+%{_libdir}/gstreamer-%{majorminor}/libgstivtc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmidi.so
+%{_libdir}/gstreamer-%{majorminor}/libgstmpg123.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrfbsrc.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsmoothstreaming.so
+%{_libdir}/gstreamer-%{majorminor}/libgstvideofiltersbad.so
+%{_libdir}/gstreamer-%{majorminor}/libgstyadif.so
+%{_libdir}/gstreamer-%{majorminor}/libgstsiren.so
 
-
-# %{_libdir}/gstreamer-%{majorminor}/libgstdecklink.so
 %{_libdir}/gstreamer-%{majorminor}/libgstdvbsuboverlay.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstfieldanalysis.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfragmented.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstinterlace.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstjp2kdecimator.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstlinsys.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsdemux.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstopencv.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstpatchdetect.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstsdi.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstvideofiltersbad.so
 %{_libdir}/gstreamer-%{majorminor}/libgstvideoparsersbad.so
 %{_libdir}/gstreamer-%{majorminor}/libgsty4mdec.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstopenal.so
-# %{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so.24
-# %{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so.24.0.0
 %{_libdir}/gstreamer-%{majorminor}/libgstaudiovisualizers.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstfaceoverlay.so
 %{_libdir}/gstreamer-%{majorminor}/libgstinter.so
 %{_libdir}/gstreamer-%{majorminor}/libgstremovesilence.so
 %{_libdir}/gstreamer-%{majorminor}/libgstasfmux.so
@@ -288,8 +252,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsdemux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmpegtsmux.so
 %{_libdir}/gstreamer-%{majorminor}/libgstsoundtouch.so
-%{_libdir}/libgstbasecamerabinsrc-1.0.so.0
-# %{_libdir}/libgstbasecamerabinsrc-1.0.so.0.0.0
 
 
 
@@ -298,31 +260,35 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # %{_libdir}/gstreamer-%{majorminor}/libgstvcdsrc.so
 
 # Plugins with external dependencies
-# %{_libdir}/gstreamer-%{majorminor}/libgstapexsink.so
 %{_libdir}/gstreamer-%{majorminor}/libgstassrender.so
 %{_libdir}/gstreamer-%{majorminor}/libgstbz2.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstcdaudio.so
 %{_libdir}/gstreamer-%{majorminor}/libgstcelt.so
 %{_libdir}/gstreamer-%{majorminor}/libgstopus.so
 #%ifnarch s390 s390x
 #%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so
 #%endif
 # %{_libdir}/gstreamer-%{majorminor}/libgstgsm.so
-#%{_libdir}/gstreamer-%{majorminor}/libgstjp2k.so
-#%{_libdir}/gstreamer-%{majorminor}/libgstkate.so
-#%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
-#%{_libdir}/gstreamer-%{majorminor}/libgstlv2.so
+%{_libdir}/gstreamer-%{majorminor}/libgstkate.so
+%{_libdir}/gstreamer-%{majorminor}/libgstladspa.so
 %{_libdir}/gstreamer-%{majorminor}/libgstmodplug.so
-#%{_libdir}/gstreamer-%{majorminor}/libgstmusepack.so
-#%{_libdir}/gstreamer-%{majorminor}/libgstofa.so
+%{_libdir}/gstreamer-%{majorminor}/libgstofa.so
 %{_libdir}/gstreamer-%{majorminor}/libgstresindvd.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstrsvg.so
+%{_libdir}/gstreamer-%{majorminor}/libgstrsvg.so
 %{_libdir}/gstreamer-%{majorminor}/libgstschro.so
-# %{_libdir}/gstreamer-%{majorminor}/libgstsndfile.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfrei0r.so
-%{_libdir}/gstreamer-%{majorminor}/libgstopencv.so
-%{_libdir}/gstreamer-%{majorminor}/libgstvoamrwbenc.so
-%{_datadir}/gstreamer-%{majorminor}/presets/*.prs
+
+%{_libdir}/libgstbasecamerabinsrc-1.0.so
+%{_libdir}/libgstbasecamerabinsrc-1.0.so.0
+%{_libdir}/libgstbasecamerabinsrc-1.0.so.0.102.0
+%{_libdir}/libgstegl-1.0.so
+%{_libdir}/libgstegl-1.0.so.0
+%{_libdir}/libgstegl-1.0.so.0.102.0
+%{_libdir}/libgstmpegts-1.0.so
+%{_libdir}/libgstmpegts-1.0.so.0
+%{_libdir}/libgstmpegts-1.0.so.0.102.0
+%{_libdir}/libgsturidownloader-1.0.so
+%{_libdir}/libgsturidownloader-1.0.so.0
+%{_libdir}/libgsturidownloader-1.0.so.0.102.0
 
 
 #debugging plugin
@@ -348,27 +314,40 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 
 %files devel
 %defattr(-,root,root,-)
-%{_libdir}/libgstbasevideo-%{majorminor}.so
 %{_libdir}/libgstphotography-%{majorminor}.so
-%{_libdir}/libgstsignalprocessor-%{majorminor}.so
 %{_libdir}/libgstinsertbin-%{majorminor}.so
 %{_libdir}/libgstcodecparsers-%{majorminor}.so
-%{_libdir}/libgstbasecamerabinsrc-%{majorminor}.so
 %{_includedir}/gstreamer-%{majorminor}/gst/interfaces/photography*
 %{_includedir}/gstreamer-%{majorminor}/gst/codecparsers
 %{_includedir}/gstreamer-%{majorminor}/gst/insertbin
-%{_includedir}/gstreamer-%{majorminor}/gst/signalprocessor
-%{_includedir}/gstreamer-%{majorminor}/gst/video
 %{_includedir}/gstreamer-%{majorminor}/gst/basecamerabinsrc/gstbasecamerasrc.h
 %{_includedir}/gstreamer-%{majorminor}/gst/basecamerabinsrc/gstcamerabin-enum.h
 %{_includedir}/gstreamer-%{majorminor}/gst/basecamerabinsrc/gstcamerabinpreview.h
-
+%{_includedir}/gstreamer-%{majorminor}/gst/egl/egl.h
+%{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gst-atsc-section.h
+%{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gst-dvb-descriptor.h
+%{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gst-dvb-section.h
+%{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gstmpegtsdescriptor.h
+%{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gstmpegtssection.h
+%{_includedir}/gstreamer-%{majorminor}/gst/mpegts/mpegts.h
+%{_includedir}/gstreamer-%{majorminor}/gst/uridownloader/gstfragment.h
+%{_includedir}/gstreamer-%{majorminor}/gst/uridownloader/gsturidownloader.h
+%{_includedir}/gstreamer-%{majorminor}/gst/uridownloader/gsturidownloader_debug.h
 
 # pkg-config files
 %{_libdir}/pkgconfig/gstreamer-plugins-bad-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-codecparsers-%{majorminor}.pc
 %{_libdir}/pkgconfig/gstreamer-insertbin-%{majorminor}.pc
-%{_libdir}/pkgconfig/gstreamer-basevideo-%{majorminor}.pc
+%{_libdir}/pkgconfig/gstreamer-egl-%{majorminor}.pc
+
+
+%{_libdir}/girepository-%{majorminor}/GstEGL-1.0.typelib
+%{_libdir}/girepository-%{majorminor}/GstInsertBin-1.0.typelib
+%{_libdir}/girepository-%{majorminor}/GstMpegts-1.0.typelib
+
+%{_datadir}/gir-%{majorminor}/GstEGL-1.0.gir
+%{_datadir}/gir-%{majorminor}/GstInsertBin-1.0.gir
+%{_datadir}/gir-%{majorminor}/GstMpegts-1.0.gir
 
 %files devel-docs
 %defattr(-,root,root,-)
@@ -392,9 +371,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 * Fri Aug 06 2010 Benjamin Otte <otte@redhat.com> 0.10.19-6
 - Disable NAS now that it's obsolete
 
-* Thu Jul 04 2010 Benjamin Otte <otte@redhat.com> 0.10.19-5
-- Disable celt now that an update broke it
-
 * Thu Jun 17 2010 Benjamin Otte <otte@redhat.com> 0.10.19-4
 - Move zbar to -extras. It pulls in too many deps and is not really useful.
 
@@ -406,13 +382,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 
 * Mon May 31 2010 Benjamin Otte <otte@redhat.com> 0.10.19-1
 - Update to 0.10.19
-
-* Fri May 15 2010 Benjamin Otte <otte@redhat.com> 0.10.18.3-1
-- Update pre-release
-- Add vp8 elements
-
-* Fri May 15 2010 Benjamin Otte <otte@redhat.com> 0.10.18.2-1
-- Update to pre-release
 
 * Thu Apr 15 2010 Benjamin Otte <otte@redhat.com> 0.10.18-2
 - Include cog plugin
