@@ -284,12 +284,12 @@ gst_mpegv_parse_process_config (GstMpegvParse * mpvparse, GstMapInfo * info,
      used for codec private data */
   data_with_prefix = (guint8 *) packet.data + packet.offset - 4;
 
-  /* only do stuff if something new; only compare first 11 bytes, changes in
-     quantiser matrix doesn't matter here. Also changing the matrices in
-     codec_data seems to cause problem with decoders */
+  /* only do stuff if something new; only compare first 8 bytes, changes in
+     quantiser matrix or bitrate don't matter here. Also changing the
+     matrices in codec_data seems to cause problem with decoders */
   if (mpvparse->config &&
       gst_buffer_memcmp (mpvparse->config, 0, data_with_prefix, MIN (size,
-              11)) == 0) {
+              8)) == 0) {
     return TRUE;
   }
 
