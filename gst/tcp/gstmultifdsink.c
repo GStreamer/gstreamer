@@ -685,14 +685,14 @@ gst_multi_fd_sink_handle_client_write (GstMultiFdSink * sink,
   GstMultiHandleClient *mhclient = (GstMultiHandleClient *) client;
   int fd = mhclient->handle.fd;
 
-  g_get_current_time (&nowtv);
-  now = GST_TIMEVAL_TO_TIME (nowtv);
-
   flushing = mhclient->status == GST_CLIENT_STATUS_FLUSHING;
 
   more = TRUE;
   do {
     gint maxsize;
+
+    g_get_current_time (&nowtv);
+    now = GST_TIMEVAL_TO_TIME (nowtv);
 
     if (!mhclient->sending) {
       /* client is not working on a buffer */
