@@ -521,7 +521,8 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstObject * parent,
 
       /* take stream duration, fall back to avih duration */
       if ((duration = stream->duration) == -1)
-        duration = avi->duration;
+        if ((duration = stream->hdr_duration) == -1)
+          duration = avi->duration;
 
       gst_query_parse_duration (query, &fmt, NULL);
 
