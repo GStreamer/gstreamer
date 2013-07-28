@@ -74,9 +74,13 @@ write_bytes (Client * client, const gchar * data, guint len)
     w = g_output_stream_write (client->ostream, data, len, NULL, &err);
     if (w > 0)
       len -= w;
-  } while (w >= 0 && len > 0);
+  } while (w > 0 && len > 0);
 
-  if (w < 0) {
+  if (w <= 0) {
+    if (err) {
+      g_print ("Write error %s\n", err->message);
+      g_clear_error (&err);
+    }
     remove_client (client);
   }
 }
@@ -86,6 +90,7 @@ client_message (Client * client, const gchar * data, guint len)
 {
   gchar **lines = g_strsplit_set (data, "\r\n", -1);
 
+  /* TODO: Make HTTP handling more robust, add proper HTTP 1.0 support */
   if (g_str_has_prefix (lines[0], "HEAD")) {
     gchar **parts = g_strsplit (lines[0], " ", -1);
     gchar *response;
@@ -179,10 +184,12 @@ on_read_bytes (GPollableInputStream * stream, Client * client)
       g_byte_array_append (client->current_message, (guint8 *) data, r);
   } while (r > 0);
 
-  if (r == 0 || g_error_matches (err, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) {
+  if (r == 0) {
+    remove_client (client);
+    return FALSE;
+  } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) {
     guint8 *tmp = client->current_message->data;
 
-    /* Read everything */
     g_clear_error (&err);
 
     while (client->current_message->len > 3) {
@@ -197,14 +204,14 @@ on_read_bytes (GPollableInputStream * stream, Client * client)
       }
     }
 
-    if (r == 0) {
-      remove_client (client);
-      return FALSE;
-    }
+    /* FIXME: If too large, disconnect client */
 
     return TRUE;
   } else {
-    g_assert_not_reached ();
+    g_print ("Read error %s\n", err->message);
+    g_clear_error (&err);
+    remove_client (client);
+    return FALSE;
   }
 
   return FALSE;
@@ -230,6 +237,7 @@ on_new_connection (GSocketService * service, GSocketConnection * connection,
 
   g_print ("New connection %s\n", client->name);
 
+  /* TODO: Need timeout */
   client->connection = g_object_ref (connection);
   client->socket = g_socket_connection_get_socket (connection);
   client->istream =
