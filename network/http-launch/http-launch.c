@@ -220,7 +220,11 @@ on_read_bytes (GPollableInputStream * stream, Client * client)
       }
     }
 
-    /* FIXME: If too large, disconnect client */
+    if (client->current_message->len >= 1024 * 1024) {
+      g_print ("No complete request after 1MB of data\n");
+      remove_client (client);
+      return FALSE;
+    }
 
     return TRUE;
   } else {
