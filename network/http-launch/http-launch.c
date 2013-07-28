@@ -275,6 +275,11 @@ on_message (GstBus * bus, GstMessage * message, gpointer user_data)
       g_print ("Warning %s\n", err->message);
       g_error_free (err);
       g_free (debug);
+      break;
+    }
+    case GST_MESSAGE_EOS:{
+      g_print ("EOS\n");
+      g_main_loop_quit (loop);
     }
     default:
       break;
