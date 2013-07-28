@@ -615,6 +615,7 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, GstAudioInfo * info,
   if (n_images + n_preview_images > 0) {
     GstSample *sample;
     GstBuffer *buffer;
+    GstCaps *caps;
     const GstStructure *structure;
     GstTagImageType image_type = GST_TAG_IMAGE_TYPE_NONE;
     gint i;
@@ -631,16 +632,22 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, GstAudioInfo * info,
       }
 
       structure = gst_sample_get_info (sample);
-      if (!structure) {
-        GST_ERROR_OBJECT (flacenc, "No image tag info");
+      caps = gst_sample_get_caps (sample);
+      if (!caps) {
+        GST_FIXME_OBJECT (flacenc, "Image tag without caps");
+        gst_sample_unref (sample);
         continue;
       }
 
       flacenc->meta[entries] =
           FLAC__metadata_object_new (FLAC__METADATA_TYPE_PICTURE);
 
-      gst_structure_get (structure, "image-type", GST_TYPE_TAG_IMAGE_TYPE,
-          &image_type, NULL);
+      if (structure)
+        gst_structure_get (structure, "image-type", GST_TYPE_TAG_IMAGE_TYPE,
+            &image_type, NULL);
+      else
+        image_type = GST_TAG_IMAGE_TYPE_NONE;
+
       /* Convert to ID3v2 APIC image type */
       if (image_type == GST_TAG_IMAGE_TYPE_NONE)
         image_type = (i < n_images) ? 0x00 : 0x01;
@@ -655,6 +662,9 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, GstAudioInfo * info,
 
       /* FIXME: There's no way to set the picture type in libFLAC */
       flacenc->meta[entries]->data.picture.type = image_type;
+
+      structure = gst_caps_get_structure (caps, 0);
+
       FLAC__metadata_object_picture_set_mime_type (flacenc->meta[entries],
           (char *) gst_structure_get_name (structure), TRUE);
 
