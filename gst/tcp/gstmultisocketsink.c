@@ -750,18 +750,21 @@ gst_multi_socket_sink_handle_client_write (GstMultiSocketSink * sink,
         /* hmm error.. */
         if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CLOSED)) {
           goto connection_reset;
+        } else if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_WOULD_BLOCK)) {
+          /* write would block, try again later */
+          GST_LOG_OBJECT (sink, "write would block %p",
+              mhclient->handle.socket);
+          more = FALSE;
         } else {
           goto write_error;
         }
       } else {
         if (wrote < maxsize) {
-          /* partial write means that the client cannot read more and we should
-           * stop sending more */
+          /* partial write, try again now */
           GST_LOG_OBJECT (sink,
               "partial write on %p of %" G_GSSIZE_FORMAT " bytes",
               mhclient->handle.socket, wrote);
           mhclient->bufoffset += wrote;
-          more = FALSE;
         } else {
           /* complete buffer was written, we can proceed to the next one */
           mhclient->sending = g_slist_remove (mhclient->sending, head);
