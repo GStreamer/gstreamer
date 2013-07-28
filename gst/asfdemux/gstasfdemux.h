@@ -110,7 +110,8 @@ typedef struct
 
   /* extended stream properties (optional) */
   AsfStreamExtProps  ext_props;
-
+  
+  gboolean     inspect_payload;
 } AsfStream;
 
 typedef enum {
@@ -167,7 +168,7 @@ struct _GstASFDemux {
   AsfStream            old_stream[GST_ASF_DEMUX_NUM_STREAMS];
   gboolean             old_num_streams;
 
-  GstClockTime         first_ts;        /* first timestamp found        */
+  GstClockTime         first_ts;        /* smallest timestamp found        */
 
   guint32              packet_size;
   guint32              timestamp;       /* in milliseconds              */
@@ -203,6 +204,8 @@ struct _GstASFDemux {
   GstClockTime         sidx_interval;    /* interval between entries in ns */
   guint                sidx_num_entries; /* number of index entries        */
   AsfSimpleIndexEntry *sidx_entries;     /* packet number for each entry   */
+  
+  GSList              *other_streams;    /* remember streams that are in header but have unknown type */
 };
 
 struct _GstASFDemuxClass {
@@ -212,6 +215,8 @@ struct _GstASFDemuxClass {
 GType           gst_asf_demux_get_type (void);
 
 AsfStream     * gst_asf_demux_get_stream (GstASFDemux * demux, guint16 id);
+
+gboolean        gst_asf_demux_is_unknown_stream(GstASFDemux *demux, guint stream_num);
 
 G_END_DECLS
 
