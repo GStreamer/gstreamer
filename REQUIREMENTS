@@ -31,10 +31,10 @@ as well as their minimum version.  You can find the corresponding plugins in
 ext/(library)
 
 libdvdread	(for the dvdsrc)
-			http://www.dtek.chalmers.se/groups/dvd/
+			http://dvdnav.mplayerhq.hu/
 			(optional: libcss for encrypted DVDs)
 libdvdnav	(for the dvdnavsrc)
-			http://dvd.sourceforge.net/
+			http://dvdnav.mplayerhq.hu/
 			(optional: libcss for encrypted DVDs)
 		>= 0.1.9
 libgsm		(for the gsm plugin)
