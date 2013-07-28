@@ -317,7 +317,7 @@ main (gint argc, gchar ** argv)
 
   if (argc < 2) {
     g_print ("usage: %s <launch line>\n"
-        "example: %s \"( videotestsrc ! theoraenc ! oggmux name=stream )\"\n",
+        "example: %s ( videotestsrc ! theoraenc ! oggmux name=stream )\n",
         argv[0], argv[0]);
     return -1;
   }
