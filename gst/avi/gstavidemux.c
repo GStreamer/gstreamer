@@ -3758,6 +3758,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
             sub = NULL;
             break;
           case GST_RIFF_LIST_INFO:
+            gst_buffer_unmap (sub, &map);
             gst_buffer_resize (sub, 4, -1);
             gst_riff_parse_info (element, sub, &tags);
             if (tags) {
@@ -3769,6 +3770,8 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
               }
             }
             tags = NULL;
+            gst_buffer_unref (sub);
+            sub = NULL;
             break;
           default:
             GST_WARNING_OBJECT (avi,
