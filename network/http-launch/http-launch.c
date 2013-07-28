@@ -356,7 +356,7 @@ main (gint argc, gchar ** argv)
       "units-max", (gint64) 7 * GST_SECOND,
       "units-soft-max", (gint64) 3 * GST_SECOND,
       "recover-policy", 3 /* keyframe */ ,
-      "timeout", (guint64) 7 * GST_SECOND,
+      "timeout", (guint64) 10 * GST_SECOND,
       "sync-method", 1 /* next-keyframe */ ,
       NULL);
 
