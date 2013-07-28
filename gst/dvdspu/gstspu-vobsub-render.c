@@ -248,7 +248,9 @@ gstspu_vobsub_render_line (SpuState * state, guint8 * planes[3],
     if (next_draw_x > state->vobsub.clip_rect.right)
       next_draw_x = state->vobsub.clip_rect.right;      /* ensure no overflow */
     /* Now draw the run between [x,next_x) */
-    gstspu_vobsub_draw_rle_run (state, x, next_draw_x, colour);
+    if (state->vobsub.cur_Y >= state->vobsub.clip_rect.top &&
+        state->vobsub.cur_Y <= state->vobsub.clip_rect.bottom)
+      gstspu_vobsub_draw_rle_run (state, x, next_draw_x, colour);
     x = next_x;
   }
 }
@@ -552,10 +554,10 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
     /* Render even line */
     state->vobsub.comp_last_x_ptr = state->vobsub.comp_last_x;
     gstspu_vobsub_render_line (state, planes, &state->vobsub.cur_offsets[0]);
-    if (!clip) {
-      /* Advance the luminance output pointer */
-      planes[0] += strides[0];
-    }
+
+    /* Advance the luminance output pointer */
+    planes[0] += strides[0];
+
     state->vobsub.cur_Y++;
 
     /* Render odd line */
@@ -565,13 +567,14 @@ gstspu_vobsub_render (GstDVDSpu * dvdspu, GstVideoFrame * frame)
     if (!clip) {
       /* Blend the accumulated UV compositing buffers onto the output */
       gstspu_vobsub_blend_comp_buffers (state, planes);
-
-      /* Update all the output pointers */
-      planes[0] += strides[0];
-      planes[1] += strides[1];
-      planes[2] += strides[2];
     }
+
+    /* Update all the output pointers */
+    planes[0] += strides[0];
+    planes[1] += strides[1];
+    planes[2] += strides[2];
   }
+
   if (state->vobsub.cur_Y == state->vobsub.disp_rect.bottom) {
     gboolean clip;
 
