@@ -96,19 +96,17 @@ client_message (Client * client, const gchar * data, guint len)
 {
   gchar **lines = g_strsplit_set (data, "\r\n", -1);
 
-  /* TODO: Make HTTP handling more robust, add proper HTTP 1.0 support */
   if (g_str_has_prefix (lines[0], "HEAD")) {
     gchar **parts = g_strsplit (lines[0], " ", -1);
     gchar *response;
     const gchar *http_version;
 
-    /* FIXME: Assume that 3 parts at least, probably wrong for HTTP 1.0 */
-    if (*parts[2] != '\0')
+    if (parts[1] && parts[2] && *parts[2] != '\0')
       http_version = parts[2];
     else
-      http_version = "HTTP/1.1";
+      http_version = "HTTP/1.0";
 
-    if (strcmp (parts[1], "/") == 0) {
+    if (parts[1] && strcmp (parts[1], "/") == 0) {
       response = g_strdup_printf ("%s 200 OK\r\n" "\r\n", http_version);
     } else {
       response = g_strdup_printf ("%s 404 Not Found\r\n\r\n", http_version);
@@ -122,13 +120,12 @@ client_message (Client * client, const gchar * data, guint len)
     const gchar *http_version;
     gboolean ok = FALSE;
 
-    /* FIXME: Assume that 3 parts at least, probably wrong for HTTP 1.0 */
-    if (*parts[2] != '\0')
+    if (parts[1] && parts[2] && *parts[2] != '\0')
       http_version = parts[2];
     else
-      http_version = "HTTP/1.1";
+      http_version = "HTTP/1.0";
 
-    if (strcmp (parts[1], "/") == 0) {
+    if (parts[1] && strcmp (parts[1], "/") == 0) {
       response = g_strdup_printf ("%s 200 OK\r\n" "\r\n", http_version);
       ok = TRUE;
     } else {
@@ -163,11 +160,10 @@ client_message (Client * client, const gchar * data, guint len)
     gchar *response;
     const gchar *http_version;
 
-    /* FIXME: Assume that 3 parts at least, probably wrong for HTTP 1.0 */
-    if (*parts[2] != '\0')
+    if (parts[1] && parts[2] && *parts[2] != '\0')
       http_version = parts[2];
     else
-      http_version = "HTTP/1.1";
+      http_version = "HTTP/1.0";
 
     response = g_strdup_printf ("%s 400 Bad Request\r\n\r\n", http_version);
     write_bytes (client, response, strlen (response));
@@ -268,7 +264,7 @@ on_new_connection (GSocketService * service, GSocketConnection * connection,
   client->current_message = g_byte_array_sized_new (1024);
 
   client->tosource = g_timeout_source_new_seconds (5);
-  g_source_set_callback (client->isource, (GSourceFunc) on_timeout, client,
+  g_source_set_callback (client->tosource, (GSourceFunc) on_timeout, client,
       NULL);
   g_source_attach (client->tosource, NULL);
 
