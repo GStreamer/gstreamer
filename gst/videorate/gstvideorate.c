@@ -779,6 +779,10 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
       GST_DEBUG_OBJECT (videorate, "Got FLUSH_STOP");
       gst_video_rate_reset (videorate);
       break;
+    case GST_EVENT_GAP:
+      /* no gaps after videorate, ignore the event */
+      gst_event_unref (event);
+      return TRUE;
     default:
       break;
   }
