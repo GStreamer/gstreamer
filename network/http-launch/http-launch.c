@@ -208,8 +208,10 @@ on_read_bytes (GPollableInputStream * stream, Client * client)
 
     while (client->current_message->len > 3) {
       if (tmp[0] == 0x0d && tmp[1] == 0x0a && tmp[2] == 0x0d && tmp[3] == 0x0a) {
-        guint len = tmp - client->current_message->data + 4;
+        guint len;
 
+        g_byte_array_append (client->current_message, (const guint8 *) "\0", 1);
+        len = tmp - client->current_message->data + 5;
         client_message (client, (gchar *) client->current_message->data, len);
         g_byte_array_remove_range (client->current_message, 0, len);
         tmp = client->current_message->data;
