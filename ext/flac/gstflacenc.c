@@ -630,10 +630,14 @@ gst_flac_enc_set_metadata (GstFlacEnc * flacenc, GstAudioInfo * info,
           continue;
       }
 
+      structure = gst_sample_get_info (sample);
+      if (!structure) {
+        GST_ERROR_OBJECT (flacenc, "No image tag info");
+        continue;
+      }
+
       flacenc->meta[entries] =
           FLAC__metadata_object_new (FLAC__METADATA_TYPE_PICTURE);
-
-      structure = gst_sample_get_info (sample);
 
       gst_structure_get (structure, "image-type", GST_TYPE_TAG_IMAGE_TYPE,
           &image_type, NULL);
