@@ -31,7 +31,7 @@ typedef struct
   GSocket *socket;
   GInputStream *istream;
   GOutputStream *ostream;
-  GSource *isource;
+  GSource *isource, *tosource;
   GByteArray *current_message;
 } Client;
 
@@ -52,6 +52,10 @@ remove_client (Client * client)
   if (client->isource) {
     g_source_destroy (client->isource);
     g_source_unref (client->isource);
+  }
+  if (client->tosource) {
+    g_source_destroy (client->tosource);
+    g_source_unref (client->tosource);
   }
   g_object_unref (client->connection);
   g_byte_array_unref (client->current_message);
@@ -136,6 +140,9 @@ client_message (Client * client, const gchar * data, guint len)
       g_source_destroy (client->isource);
       g_source_unref (client->isource);
       client->isource = NULL;
+      g_source_destroy (client->tosource);
+      g_source_unref (client->tosource);
+      client->tosource = NULL;
       g_print ("Starting to stream to %s\n", client->name);
       g_signal_emit_by_name (multisocketsink, "add", client->socket);
 
@@ -168,6 +175,15 @@ client_message (Client * client, const gchar * data, guint len)
   }
 
   g_strfreev (lines);
+}
+
+static gboolean
+on_timeout (Client * client)
+{
+  g_print ("Timeout\n");
+  remove_client (client);
+
+  return FALSE;
 }
 
 static gboolean
@@ -237,7 +253,6 @@ on_new_connection (GSocketService * service, GSocketConnection * connection,
 
   g_print ("New connection %s\n", client->name);
 
-  /* TODO: Need timeout */
   client->connection = g_object_ref (connection);
   client->socket = g_socket_connection_get_socket (connection);
   client->istream =
@@ -245,6 +260,11 @@ on_new_connection (GSocketService * service, GSocketConnection * connection,
   client->ostream =
       g_io_stream_get_output_stream (G_IO_STREAM (client->connection));
   client->current_message = g_byte_array_sized_new (1024);
+
+  client->tosource = g_timeout_source_new_seconds (5);
+  g_source_set_callback (client->isource, (GSourceFunc) on_timeout, client,
+      NULL);
+  g_source_attach (client->tosource, NULL);
 
   client->isource =
       g_pollable_input_stream_create_source (G_POLLABLE_INPUT_STREAM
