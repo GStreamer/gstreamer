@@ -340,6 +340,11 @@ gst_audio_rate_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_audio_rate_fill_to_time (audiorate, audiorate->src_segment.stop);
       res = gst_pad_push_event (audiorate->srcpad, event);
       break;
+    case GST_EVENT_GAP:
+      /* no gaps after audiorate, ignore the event */
+      gst_event_unref (event);
+      res = TRUE;
+      break;
     default:
       res = gst_pad_event_default (pad, parent, event);
       break;
