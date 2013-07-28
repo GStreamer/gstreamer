@@ -76,8 +76,10 @@ write_bytes (Client * client, const gchar * data, guint len)
   /* TODO: We assume this never blocks */
   do {
     w = g_output_stream_write (client->ostream, data, len, NULL, &err);
-    if (w > 0)
+    if (w > 0) {
       len -= w;
+      data += w;
+    }
   } while (w > 0 && len > 0);
 
   if (w <= 0) {
