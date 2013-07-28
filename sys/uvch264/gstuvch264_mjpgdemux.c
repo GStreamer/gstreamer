@@ -462,8 +462,7 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
 {
   GstUvcH264MjpgDemux *self;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *jpeg_buf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_METADATA,
-      0, 0);
+  GstBuffer *jpeg_buf = NULL;
   GstBuffer *aux_buf = NULL;
   AuxiliaryStreamHeader aux_header = { 0 };
   guint32 aux_size = 0;
@@ -480,11 +479,12 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
   last_offset = 0;
   size = gst_buffer_get_size (buf);
   if (size == 0) {
-    ret = gst_pad_push (self->priv->jpeg_pad, buf);
-    goto done;
+    return gst_pad_push (self->priv->jpeg_pad, buf);
   }
 
   gst_buffer_map (buf, &info, GST_MAP_READ);
+
+  jpeg_buf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_METADATA, 0, 0);
 
   data = info.data;
 
