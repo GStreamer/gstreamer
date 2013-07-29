@@ -33,7 +33,7 @@ typedef struct _GstQaReporterInterface GstQaReporterInterface;
 #define GST_TYPE_QA_REPORTER                (gst_qa_reporter_get_type ())
 #define GST_QA_REPORTER(obj)                (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_QA_REPORTER, GstQaReporter))
 #define GST_IS_QA_REPORTER(obj)             (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_QA_REPORTER))
-#define GST_QA_REPORTER_GET_INTERFACE(inst) (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_QA_REPORTER, GESExtractableInterface))
+#define GST_QA_REPORTER_GET_INTERFACE(inst) (G_TYPE_INSTANCE_GET_INTERFACE ((inst), GST_TYPE_QA_REPORTER, GstQaReporterInterface))
 
 #ifdef G_HAVE_ISO_VARARGS
 #define GST_QA_REPORT(m, issue_id, ...)                              \
