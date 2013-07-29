@@ -115,6 +115,8 @@ typedef struct {
 
   /* issue: The issue this report corresponds to (to get dsecription, summary,...) */
   GstQaIssue *issue;
+
+  GstQaReportLevel level;
  
   /* The reporter that reported the issue (to get names, info, ...) */
   GstQaReporter *reporter;
@@ -151,6 +153,7 @@ GstQaReport *      gst_qa_report_ref   (GstQaReport * report);
 
 GstQaIssueId       gst_qa_report_get_issue_id (GstQaReport * report);
 
+void               gst_qa_report_check_abort (GstQaReport * report);
 void               gst_qa_report_printf (GstQaReport * report);
 
 

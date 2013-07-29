@@ -61,6 +61,8 @@ GType gst_qa_reporter_get_type (void);
 struct _GstQaReporterInterface
 {
   GTypeInterface parent;
+
+  void (*intercept_report)(GstQaReporter * reporter, GstQaReport * report);
 };
 
 void gst_qa_reporter_set_name            (GstQaReporter * reporter,

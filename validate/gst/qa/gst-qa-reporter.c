@@ -71,6 +71,17 @@ gst_qa_reporter_get_priv (GstQaReporter * reporter)
   return priv;
 }
 
+static void
+gst_qa_reporter_intercept_report (GstQaReporter * reporter,
+    GstQaReport * report)
+{
+  GstQaReporterInterface *iface = GST_QA_REPORTER_GET_INTERFACE (reporter);
+
+  if (iface->intercept_report) {
+    iface->intercept_report (reporter, report);
+  }
+}
+
 void
 gst_qa_report_valist (GstQaReporter * reporter,
     GstQaIssueId issue_id, const gchar * format, va_list var_args)
@@ -87,6 +98,8 @@ gst_qa_report_valist (GstQaReporter * reporter,
   message = g_strdup_vprintf (format, var_args);
   report = gst_qa_report_new (issue, reporter, message);
 
+  gst_qa_reporter_intercept_report (reporter, report);
+
   if (issue->repeat == FALSE) {
     GstQaIssueId issue_id = gst_qa_issue_get_id (issue);
 
@@ -98,11 +111,11 @@ gst_qa_report_valist (GstQaReporter * reporter,
     g_hash_table_insert (priv->reports, (gpointer) issue_id, report);
   }
 
-  if (issue->default_level == GST_QA_REPORT_LEVEL_CRITICAL)
+  if (report->level == GST_QA_REPORT_LEVEL_CRITICAL)
     GST_ERROR ("<%s>: %s", priv->name, message);
-  else if (issue->default_level == GST_QA_REPORT_LEVEL_WARNING)
+  else if (report->level == GST_QA_REPORT_LEVEL_WARNING)
     GST_WARNING ("<%s>: %s", priv->name, message);
-  else if (issue->default_level == GST_QA_REPORT_LEVEL_ISSUE)
+  else if (report->level == GST_QA_REPORT_LEVEL_ISSUE)
     GST_LOG ("<%s>: %s", priv->name, message);
   else
     GST_DEBUG ("<%s>: %s", priv->name, message);
@@ -110,6 +123,7 @@ gst_qa_report_valist (GstQaReporter * reporter,
   GST_INFO_OBJECT (reporter, "Received error report %" GST_QA_ISSUE_FORMAT
       " : %s", GST_QA_ISSUE_ARGS (issue), message);
   gst_qa_report_printf (report);
+  gst_qa_report_check_abort (report);
 
   if (priv->runner) {
     gst_qa_runner_add_report (priv->runner, report);

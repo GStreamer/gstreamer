@@ -234,14 +234,14 @@ gst_qa_report_area_get_name (GstQaReportArea area)
   }
 }
 
-static void
+void
 gst_qa_report_check_abort (GstQaReport * report)
 {
-  if ((report->issue->default_level == GST_QA_REPORT_LEVEL_ISSUE &&
+  if ((report->level == GST_QA_REPORT_LEVEL_ISSUE &&
           _gst_qa_flags & GST_QA_FATAL_ISSUES) ||
-      (report->issue->default_level == GST_QA_REPORT_LEVEL_WARNING &&
+      (report->level == GST_QA_REPORT_LEVEL_WARNING &&
           _gst_qa_flags & GST_QA_FATAL_WARNINGS) ||
-      (report->issue->default_level == GST_QA_REPORT_LEVEL_CRITICAL &&
+      (report->level == GST_QA_REPORT_LEVEL_CRITICAL &&
           _gst_qa_flags & GST_QA_FATAL_CRITICALS)) {
     g_error ("Fatal report received: %" GST_QA_ERROR_REPORT_PRINT_FORMAT,
         GST_QA_REPORT_PRINT_ARGS (report));
@@ -264,9 +264,7 @@ gst_qa_report_new (GstQaIssue * issue, GstQaReporter * reporter,
   report->reporter = reporter;  /* TODO should we ref? */
   report->message = g_strdup (message);
   report->timestamp = gst_util_get_timestamp () - _gst_qa_report_start_time;
-
-  /* we might abort here if asked */
-  gst_qa_report_check_abort (report);
+  report->level = issue->default_level;
 
   return report;
 }
