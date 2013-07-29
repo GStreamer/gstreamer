@@ -44,6 +44,9 @@ G_BEGIN_DECLS
 #define GST_QA_MONITOR_GET_PARENT(m) (GST_QA_MONITOR_CAST (m)->parent)
 #define GST_QA_MONITOR_LOCK(m) (g_mutex_lock (&GST_QA_MONITOR_CAST(m)->mutex))
 #define GST_QA_MONITOR_UNLOCK(m) (g_mutex_unlock (&GST_QA_MONITOR_CAST(m)->mutex))
+#define GST_QA_MONITOR_OVERRIDES_LOCK(m) g_mutex_lock (&GST_QA_MONITOR_CAST (m)->overrides_mutex)
+#define GST_QA_MONITOR_OVERRIDES_UNLOCK(m) g_mutex_unlock (&GST_QA_MONITOR_CAST (m)->overrides_mutex)
+#define GST_QA_MONITOR_OVERRIDES(m) (GST_QA_MONITOR_CAST (m)->overrides)
 
 /* #else TODO Implemen no variadic macros, use inline,
  * Problem being:

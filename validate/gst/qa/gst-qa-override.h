@@ -52,6 +52,10 @@ void               gst_qa_override_free (GstQaOverride * override);
 void               gst_qa_override_change_severity (GstQaOverride * override, GstQaIssueId issue_id, GstQaReportLevel new_level);
 GstQaReportLevel   gst_qa_override_get_severity (GstQaOverride * override, GstQaIssueId issue_id, GstQaReportLevel default_level);
 
+void               gst_qa_override_event_handler (GstQaOverride * override, GstQaMonitor * monitor, GstEvent * event);
+void               gst_qa_override_buffer_handler (GstQaOverride * override, GstQaMonitor * monitor, GstBuffer * buffer);
+void               gst_qa_override_query_handler (GstQaOverride * override, GstQaMonitor * monitor, GstQuery * query);
+
 void               gst_qa_override_set_event_handler (GstQaOverride * override, GstQaOverrideEventHandler handler);
 void               gst_qa_override_set_buffer_handler (GstQaOverride * override, GstQaOverrideBufferHandler handler);
 void               gst_qa_override_set_query_handler (GstQaOverride * override, GstQaOverrideQueryHandler handler);

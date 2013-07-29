@@ -56,9 +56,6 @@ gboolean gst_qa_monitor_setup (GstQaMonitor * monitor);
 static void gst_qa_monitor_intercept_report (GstQaReporter * reporter,
     GstQaReport * report);
 
-#define GST_QA_MONITOR_OVERRIDES_LOCK(m) g_mutex_lock (&m->overrides_mutex)
-#define GST_QA_MONITOR_OVERRIDES_UNLOCK(m) g_mutex_unlock (&m->overrides_mutex)
-
 #define _do_init \
   GST_DEBUG_CATEGORY_INIT (gst_qa_monitor_debug, "qa_monitor", 0, "QA Monitor");\
   G_IMPLEMENT_INTERFACE (GST_TYPE_QA_REPORTER, _reporter_iface_init)

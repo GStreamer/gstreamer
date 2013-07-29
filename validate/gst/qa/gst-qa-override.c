@@ -85,3 +85,27 @@ gst_qa_override_set_query_handler (GstQaOverride * override,
 {
   override->query_handler = handler;
 }
+
+void
+gst_qa_override_event_handler (GstQaOverride * override, GstQaMonitor * monitor,
+    GstEvent * event)
+{
+  if (override->event_handler)
+    override->event_handler (override, monitor, event);
+}
+
+void
+gst_qa_override_buffer_handler (GstQaOverride * override,
+    GstQaMonitor * monitor, GstBuffer * buffer)
+{
+  if (override->buffer_handler)
+    override->buffer_handler (override, monitor, buffer);
+}
+
+void
+gst_qa_override_query_handler (GstQaOverride * override, GstQaMonitor * monitor,
+    GstQuery * query)
+{
+  if (override->query_handler)
+    override->query_handler (override, monitor, query);
+}

@@ -572,6 +572,58 @@ gst_qa_pad_monitor_get_element (GstQaMonitor * monitor)
   return GST_PAD_PARENT (pad);
 }
 
+static void
+gst_qa_pad_monitor_event_overrides (GstQaPadMonitor * pad_monitor,
+    GstEvent * event)
+{
+  GList *iter;
+
+  GST_QA_MONITOR_OVERRIDES_LOCK (pad_monitor);
+  for (iter = GST_QA_MONITOR_OVERRIDES (pad_monitor).head; iter;
+      iter = g_list_next (iter)) {
+    GstQaOverride *override = iter->data;
+
+    gst_qa_override_event_handler (override, GST_QA_MONITOR_CAST (pad_monitor),
+        event);
+  }
+  GST_QA_MONITOR_OVERRIDES_UNLOCK (pad_monitor);
+}
+
+static void
+gst_qa_pad_monitor_buffer_overrides (GstQaPadMonitor * pad_monitor,
+    GstBuffer * buffer)
+{
+  GList *iter;
+
+  GST_QA_MONITOR_OVERRIDES_LOCK (pad_monitor);
+  for (iter = GST_QA_MONITOR_OVERRIDES (pad_monitor).head; iter;
+      iter = g_list_next (iter)) {
+    GstQaOverride *override = iter->data;
+
+    gst_qa_override_buffer_handler (override, GST_QA_MONITOR_CAST (pad_monitor),
+        buffer);
+  }
+  GST_QA_MONITOR_OVERRIDES_UNLOCK (pad_monitor);
+}
+
+static void
+gst_qa_pad_monitor_query_overrides (GstQaPadMonitor * pad_monitor,
+    GstQuery * query)
+{
+  GList *iter;
+
+  GST_QA_MONITOR_OVERRIDES_LOCK (pad_monitor);
+  for (iter = GST_QA_MONITOR_OVERRIDES (pad_monitor).head; iter;
+      iter = g_list_next (iter)) {
+    GstQaOverride *override = iter->data;
+
+    gst_qa_override_query_handler (override, GST_QA_MONITOR_CAST (pad_monitor),
+        query);
+  }
+  GST_QA_MONITOR_OVERRIDES_UNLOCK (pad_monitor);
+}
+
+
 static gboolean
 gst_qa_pad_monitor_timestamp_is_in_received_range (GstQaPadMonitor * monitor,
     GstClockTime ts)
@@ -1098,6 +1150,8 @@ gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
       break;
   }
 
+  gst_qa_pad_monitor_event_overrides (pad_monitor, event);
+
   if (handler) {
     GST_QA_MONITOR_UNLOCK (pad_monitor);
     GST_QA_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);
@@ -1214,6 +1268,7 @@ gst_qa_pad_monitor_chain_func (GstPad * pad, GstBuffer * buffer)
   gst_qa_pad_monitor_check_first_buffer (pad_monitor, buffer);
   gst_qa_pad_monitor_update_buffer_data (pad_monitor, buffer);
 
+  gst_qa_pad_monitor_buffer_overrides (pad_monitor, buffer);
   GST_QA_MONITOR_UNLOCK (pad_monitor);
 
   ret = pad_monitor->chain_func (pad, buffer);
@@ -1282,6 +1337,11 @@ gst_qa_pad_monitor_query_func (GstPad * pad, GstQuery * query)
   GstQaPadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "qa-monitor");
   gboolean ret;
+
+  GST_QA_MONITOR_LOCK (pad_monitor);
+  gst_qa_pad_monitor_query_overrides (pad_monitor, query);
+  GST_QA_MONITOR_UNLOCK (pad_monitor);
+
   ret = pad_monitor->query_func (pad, query);
   return ret;
 }
