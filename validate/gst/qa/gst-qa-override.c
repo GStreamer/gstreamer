@@ -64,3 +64,24 @@ gst_qa_override_get_severity (GstQaOverride * override, GstQaIssueId issue_id,
   }
   return default_level;
 }
+
+void
+gst_qa_override_set_event_handler (GstQaOverride * override,
+    GstQaOverrideEventHandler handler)
+{
+  override->event_handler = handler;
+}
+
+void
+gst_qa_override_set_buffer_handler (GstQaOverride * override,
+    GstQaOverrideBufferHandler handler)
+{
+  override->buffer_handler = handler;
+}
+
+void
+gst_qa_override_set_query_handler (GstQaOverride * override,
+    GstQaOverrideQueryHandler handler)
+{
+  override->query_handler = handler;
+}

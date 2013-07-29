@@ -28,15 +28,33 @@
 
 G_BEGIN_DECLS
 
-typedef struct {
+typedef struct _QstQaOverride GstQaOverride;
+typedef struct _GstQaMonitor GstQaMonitor;
+
+typedef void (*GstQaOverrideBufferHandler)(GstQaOverride * override,
+    GstQaMonitor * pad_monitor, GstBuffer * buffer);
+typedef void (*GstQaOverrideEventHandler)(GstQaOverride * override,
+    GstQaMonitor * pad_monitor, GstEvent * event);
+typedef void (*GstQaOverrideQueryHandler)(GstQaOverride * override,
+    GstQaMonitor * pad_monitor, GstQuery * query);
+
+struct _QstQaOverride {
   GHashTable *level_override;
 
-} GstQaOverride;
+  /* Pad handlers */
+  GstQaOverrideBufferHandler buffer_handler;
+  GstQaOverrideEventHandler event_handler;
+  GstQaOverrideQueryHandler query_handler;
+};
 
 GstQaOverride *    gst_qa_override_new (void);
 void               gst_qa_override_free (GstQaOverride * override);
 void               gst_qa_override_change_severity (GstQaOverride * override, GstQaIssueId issue_id, GstQaReportLevel new_level);
 GstQaReportLevel   gst_qa_override_get_severity (GstQaOverride * override, GstQaIssueId issue_id, GstQaReportLevel default_level);
+
+void               gst_qa_override_set_event_handler (GstQaOverride * override, GstQaOverrideEventHandler handler);
+void               gst_qa_override_set_buffer_handler (GstQaOverride * override, GstQaOverrideBufferHandler handler);
+void               gst_qa_override_set_query_handler (GstQaOverride * override, GstQaOverrideQueryHandler handler);
 
 G_END_DECLS
 
