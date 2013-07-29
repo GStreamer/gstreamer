@@ -1,16 +1,16 @@
 # Translation of GStreamer to French
-# Copyright (C) 2003-2011 GStreamer core team
+# Copyright (C) 2003-2012 GStreamer core team
 # This file is distributed under the same license as the gstreamer package.
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
-# Claude Paroz <claude@2xlibre.net>, 2008-2011.
+# Claude Paroz <claude@2xlibre.net>, 2008-2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.32.2\n"
+"Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:29+0200\n"
-"PO-Revision-Date: 2011-04-28 09:34+0200\n"
+"POT-Creation-Date: 2013-07-29 19:38+0100\n"
+"PO-Revision-Date: 2012-12-05 19:31+0100\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
 "Language: fr\n"
@@ -124,9 +124,8 @@ msgstr "Erreur interne de GStreamer : problème de connecteur."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Erreur interne de GStreamer : problème de thread."
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "Erreur interne de GStreamer : problème de négociation."
+msgstr "Erreur GStreamer : problème de négociation."
 
 msgid "Internal GStreamer error: event problem."
 msgstr "Erreur interne de GStreamer : problème d'événement."
@@ -143,9 +142,8 @@ msgstr "Erreur interne de Gstreamer : problème de balise."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Il manque un greffon dans votre installation de GStreamer."
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Erreur interne de Gstreamer : problème d'horloge."
+msgstr "Erreur Gstreamer : problème d'horloge."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -342,8 +340,8 @@ msgstr "commentaire étendu"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
-"texte libre décrivant les données sous la forme clé=valeur ou "
-"clé[en]=commentaire"
+"texte libre décrivant les données sous la forme clé=valeur ou clé[en]"
+"=commentaire"
 
 msgid "track number"
 msgstr "numéro de piste"
@@ -565,16 +563,14 @@ msgstr "niveau de référence des valeurs de gain de piste et d'album"
 msgid "language code"
 msgstr "code linguistique"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "code linguistique du flux, selon la norme ISO-639-1"
+msgstr "code linguistique du flux, selon la norme ISO-639-1 ou ISO-639-2"
 
-#, fuzzy
 msgid "language name"
-msgstr "code linguistique"
+msgstr "nom de la langue"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "nom explicite de la langue de ce flux"
 
 msgid "image"
 msgstr "image"
@@ -665,7 +661,6 @@ msgstr "ville (nom anglais) où le média a été enregistré ou produit"
 msgid "geo location sublocation"
 msgstr "zone locale de l'emplacement"
 
-#, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
@@ -1050,12 +1045,14 @@ msgid "List the plugin contents"
 msgstr "Énumère le contenu du greffon"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Vérifie si l'élément ou le greffon indiqué existe"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Lors de la vérification de l'existence d'un élément ou d'un greffon, vérifie "
+"aussi que sa version est au minimum la version indiquée"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
@@ -1108,17 +1105,16 @@ msgstr "BALISE TROUVÉE  : découverte par l'objet « %s ».\n"
 msgid "FOUND TAG\n"
 msgstr "BALISE TROUVÉE\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "BALISE TROUVÉE  : découverte par l'élément « %s ».\n"
+msgstr "TDM TROUVÉE     : découverte par l'élément « %s ».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "BALISE TROUVÉE  : découverte par l'objet « %s ».\n"
+msgstr "TDM TROUVÉE     : découverte par l'objet « %s ».\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "BALISE TROUVÉE\n"
+msgstr "TDM TROUVÉE\n"
 
 #, c-format
 msgid ""
@@ -1162,9 +1158,9 @@ msgstr "Interruption : arrêt du pipeline...\n"
 msgid "Progress: (%s) %s\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "pas d'élément « %s »"
+msgstr "Élément manquant : %s\n"
 
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s\n"
@@ -1174,7 +1170,7 @@ msgid "Output tags (also known as metadata)"
 msgstr "Affiche les balises (aussi connues sous le nom de métadonnées)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "Affiche la table des matières (chapitres et éditions)"
 
 msgid "Output status information and property notifications"
 msgstr "Affiche des informations d'état et des notifications de propriétés"
@@ -1241,9 +1237,8 @@ msgstr "ERREUR : le pipeline refuse de passer en mode actif.\n"
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "EOS à la fermeture est activé -- EOS forcé sur le pipeline\n"
 
-#, fuzzy
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS à la fermeture est activé -- EOS forcé sur le pipeline\n"
+msgstr "EOS à la fermeture est activé -- attente d'EOS après erreur\n"
 
 msgid "Waiting for EOS...\n"
 msgstr "Attente d'EOS...\n"
@@ -1251,9 +1246,8 @@ msgstr "Attente d'EOS...\n"
 msgid "EOS received - stopping pipeline...\n"
 msgstr "EOS reçu - arrêt du pipeline...\n"
 
-#, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Interruption : arrêt du pipeline...\n"
+msgstr "Interruption lors de l'attende d'EOS - arrêt du pipeline...\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Une erreur s'est produite lors de l'attente de l'EOS\n"
@@ -1269,15 +1263,6 @@ msgstr "Définition du pipeline à NULL...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Libération du pipeline...\n"
-
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr ""
-#~ "Affiche les traces d'allocations (si activées lors de la compilation)"
-
-#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr ""
-#~ "Utilisation : gst-xmllaunch <fichier.xml> [ élément."
-#~ "propriété=valeur ... ]\n"
 
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
 #~ msgstr "ERREUR : l'analyse du fichier xml « %s » a échoué.\n"
@@ -1306,6 +1291,3 @@ msgstr "Libération du pipeline...\n"
 
 #~ msgid "FILE"
 #~ msgstr "FICHIER"
-
-#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr "N'installe pas de gestionnaire de signal pour SIGUSR1 et SIGUSR2"

@@ -1,18 +1,18 @@
-# Slovenian translation of gstreamer.
+# Slovenian translation for gstreamer.
 # This file is distributed under the same license as the gstreamer package.
-# Copyright (C) 2005 - 2012 Free Software Foundation, Inc.
+# Copyright (C) 2005 - 2013 Free Software Foundation, Inc.
 #
 # Matej Urbančič <matej.urban@gmail.com>, 2010 - 2011.
 # Martin Srebotnjak <miles@filmsi.net>, 2011.
-# Klemen Košir <klemen.kosir@gmx.com>, 2012.
+# Klemen Košir <klemen913@gmail.com>, 2011 - 2013.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.32.2\n"
+"Project-Id-Version: gstreamer-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:29+0200\n"
-"PO-Revision-Date: 2012-03-01 14:05+0100\n"
-"Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
+"POT-Creation-Date: 2013-07-29 19:38+0100\n"
+"PO-Revision-Date: 2013-01-05 10:16+0100\n"
+"Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
 "MIME-Version: 1.0\n"
@@ -20,9 +20,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
 "%100==4 ? 3 : 0);\n"
-"X-Poedit-Language: Slovenian\n"
-"X-Poedit-Country: SLOVENIA\n"
-"X-Poedit-SourceCharset: utf-8\n"
+"X-Generator: Poedit 1.5.4\n"
 
 msgid "Print the GStreamer version"
 msgstr "Izpiše različico programa GStreamer"
@@ -123,9 +121,8 @@ msgstr "Notranja napaka GStreamer: težave pladnja."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Notranja napaka GStreamer: težave z nitenjem."
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "Notranja napaka GStreamer: težave s pogajanjem."
+msgstr "Napaka GStreamer: težave s pogajanjem."
 
 msgid "Internal GStreamer error: event problem."
 msgstr "Notranja napaka GStreamer: težave z dogodkom."
@@ -142,9 +139,8 @@ msgstr "Notranja napaka GStreamer: težave z oznako."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Namestitvi GStreamer manjka vstavek."
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Notranja napaka GStreamer: težave z uro."
+msgstr "Napaka GStreamer: težave z uro."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -564,9 +560,8 @@ msgstr "sklicna raven vrednosti pridobitve sledi in albuma"
 msgid "language code"
 msgstr "jezikovna koda"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "koda jezika pretoka v skladu z ISO-639-1"
+msgstr "koda jezika pretoka v skladu z ISO-639-1 ali ISO-639-2"
 
 msgid "language name"
 msgstr "ime jezika"
@@ -663,7 +658,6 @@ msgstr "mesto (angleška različica), kjer je bil posnetek posnet ali izdelan"
 msgid "geo location sublocation"
 msgstr "področje zemljepisne lege"
 
-#, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
@@ -1052,12 +1046,14 @@ msgid "List the plugin contents"
 msgstr "Izpiši seznam vsebine vstavkov"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Preveri, če podan predmet ali vstavek že obstaja"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Med preverjanjem, če predmet ali vstavek že obstaja, preveri, če je ustrezna "
+"tudi različica"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Izpiši podprte sheme URI s predmeti, ki jih vstavljajo"
@@ -1108,17 +1104,16 @@ msgstr "NAJDENA OZNAKA      : najdeno s predmetom \"%s\".\n"
 msgid "FOUND TAG\n"
 msgstr "NAJDENA OZNAKA\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "NAJDENA OZNAKA      : najdeno s predmetom \"%s\".\n"
+msgstr "NAJDENO KAZALO      : najdeno s predmetom \"%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "NAJDENA OZNAKA      : najdeno s predmetom \"%s\".\n"
+msgstr "NAJDENO KAZALO      : najdeno s predmetom \"%s\".\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "NAJDENA OZNAKA\n"
+msgstr "NAJDENO KAZALO\n"
 
 #, c-format
 msgid ""
@@ -1175,7 +1170,7 @@ msgid "Output tags (also known as metadata)"
 msgstr "Izhodne oznake (znane tudi kot metapodatki)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "Izpiši kazalo (poglavja)"
 
 msgid "Output status information and property notifications"
 msgstr "Izhodni podatki o stanju in obvestila o lastnostih"
@@ -1242,9 +1237,8 @@ msgstr "NAPAKA: vsebine cevovoda ni mogoče predvajati.\n"
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "EOS ob izklopu je omogočen -- vsiljen EOS vsebine cevovoda\n"
 
-#, fuzzy
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS ob izklopu je omogočen -- vsiljen EOS vsebine cevovoda\n"
+msgstr "EOS ob izklopu je omogočen -- čakanje na EOS, ki sledi napaki\n"
 
 msgid "Waiting for EOS...\n"
 msgstr "Čakanje na EOS ...\n"
@@ -1252,9 +1246,8 @@ msgstr "Čakanje na EOS ...\n"
 msgid "EOS received - stopping pipeline...\n"
 msgstr "Prejet EOS - zaustavljanje cevovoda ...\n"
 
-#, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Prekinitev: zaustavljanje cevovoda ... \n"
+msgstr "Prekinitev med čakanjem na EOS. Zaustavljanje cevovoda ...\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Med čakanjem na EOS je prišlo do napake\n"
@@ -1270,36 +1263,3 @@ msgstr "Nastavljanje cevovoda na NULL ...\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Sproščanje cevovoda ...\n"
-
-#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr ""
-#~ "Uporaba: gst-xmllaunch <datoteka.xml> [ predmet.lastnost=vrednost ... ]\n"
-
-#~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "NAPAKA: razčlenjevanje datoteke XML \"%s\" je spodletelo.\n"
-
-#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr "NAPAKA: v datoteki \"%s\" ni vrhnjega predmeta cevovoda.\n"
-
-#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
-#~ msgstr "OPOZORILO: trenutno je podprt le en vrhnji predmet.\n"
-
-#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr "Napaka: argumenta %d ukazne vrstice ni mogoče razčleniti: %s.\n"
-
-#~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "OPOZORILO: predmeta z imenom \"%s\" ni mogoče najti.\n"
-
-#~ msgid "Save xml representation of pipeline to FILE and exit"
-#~ msgstr "Shrani XML-predstavitev cevovoda v DATOTEKO in končaj"
-
-#~ msgid "FILE"
-#~ msgstr "DATOTEKA"
-
-#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr "Ne namesti ročnikov signalov za SIGUSR1 in SIGUSR2"
-
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr ""
-#~ "Izpiši zaznavanje dodeljevanja (če je možnost omogočena v trenutku "
-#~ "kodnega prevajanja)"

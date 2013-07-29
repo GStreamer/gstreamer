@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gstreamer package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2011.
+# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.32.2\n"
+"Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:29+0200\n"
-"PO-Revision-Date: 2011-04-30 20:26+0300\n"
+"POT-Creation-Date: 2013-07-29 19:38+0100\n"
+"PO-Revision-Date: 2012-11-28 20:11+0200\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Lokalize 1.2\n"
+"X-Generator: Lokalize 1.5\n"
 
 msgid "Print the GStreamer version"
 msgstr "Показати дані щодо версії GStreamer"
@@ -119,9 +119,8 @@ msgstr "Внутрішня помилка GStreamer: проблема напов
 msgid "Internal GStreamer error: thread problem."
 msgstr "Внутрішня помилка GStreamer: помилка потоку виконання."
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "Внутрішня помилка GStreamer: помилка встановлення зв'язку."
+msgstr "Помилка GStreamer: помилка встановлення зв'язку."
 
 msgid "Internal GStreamer error: event problem."
 msgstr "Внутрішня помилка GStreamer: помилка події."
@@ -138,9 +137,8 @@ msgstr "Внутрішня помилка GStreamer: помилка у мітц�
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "У вашій збірці GStreamer відсутній модуль."
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Внутрішня помилка GStreamer: помилка годинника."
+msgstr "Помилка GStreamer: помилка годинника."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -561,16 +559,14 @@ msgstr "опорні рівні гучності композиції чи ал�
 msgid "language code"
 msgstr "код мови"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "код мови для потоку, код має відповідати ISO-639-1"
+msgstr "код мови для потоку, код має відповідати ISO-639-1 або ISO-639-2"
 
-#, fuzzy
 msgid "language name"
-msgstr "код мови"
+msgstr "назва мови"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "назва мови цього потоку звукових даних у довільній формі"
 
 msgid "image"
 msgstr "зображення"
@@ -662,7 +658,6 @@ msgstr "місто (англійською), у якому було записа
 msgid "geo location sublocation"
 msgstr "додаткові дані розташування"
 
-#, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
@@ -1047,12 +1042,14 @@ msgid "List the plugin contents"
 msgstr "Показати вміст модуля"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Перевірити, чи існує вказаний елемент або додаток"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Під час перевірки існування елемента або додатка також перевірити, чи є його "
+"версія новішою за вказану або рівною їй"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Показати підтримувані схеми адрес з елементами, які їх реалізують"
@@ -1103,17 +1100,16 @@ msgstr "ЗНАЙДЕНО МІТКУ : знайдено об’єктом «%s».
 msgid "FOUND TAG\n"
 msgstr "ЗНАЙДЕНО МІТКУ\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "ЗНАЙДЕНО ТЕГ  : знайдено у елементі «%s».\n"
+msgstr "ЗНАЙДЕНО ЗМІСТ : знайдено елементом «%s».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "ЗНАЙДЕНО МІТКУ : знайдено об’єктом «%s».\n"
+msgstr "ЗНАЙДЕНО ЗМІСТУ: знайдено об’єктом «%s».\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "ЗНАЙДЕНО МІТКУ\n"
+msgstr "ЗНАЙДЕНО ЗМІСТ\n"
 
 #, c-format
 msgid ""
@@ -1157,9 +1153,9 @@ msgstr "Переривання: зупинка каналу...\n"
 msgid "Progress: (%s) %s\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "немає елемента «%s»"
+msgstr "Не вистачає елемента: %s\n"
 
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s\n"
@@ -1169,7 +1165,7 @@ msgid "Output tags (also known as metadata)"
 msgstr "Вивести мітки (також відомі як метадані)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "Виведений зміст (розділи та редакції)"
 
 msgid "Output status information and property notifications"
 msgstr "Вивести інформацію про стан та сповіщення щодо властивостей"
@@ -1236,9 +1232,8 @@ msgstr "ПОМИЛКА: канал не може почати відтворен
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "Увімкнено EOS при завершенні - Примусове виведення EOS до каналу\n"
 
-#, fuzzy
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "Увімкнено EOS при завершенні - Примусове виведення EOS до каналу\n"
+msgstr "Увімкнено EOS при завершенні - очікуємо на EOS після помилки\n"
 
 msgid "Waiting for EOS...\n"
 msgstr "Очікування на EOS...\n"
@@ -1246,9 +1241,10 @@ msgstr "Очікування на EOS...\n"
 msgid "EOS received - stopping pipeline...\n"
 msgstr "Отримано EOS - завершення роботи каналу...\n"
 
-#, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Переривання: зупинка каналу...\n"
+msgstr ""
+"Переривання під час очікування на EOS - перериваємо роботу каналу "
+"передавання даних...\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Під час очікування на EOS сталася помилка\n"
@@ -1265,9 +1261,8 @@ msgstr "Канал переводиться у стан NULL ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Спорожнення каналу...\n"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr ""
-#~ "Вивести трасування розподілу пам’яті (якщо ввімкнено при компіляції)"
+#~ msgid "maximum"
+#~ msgstr "максимум"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
@@ -1299,6 +1294,10 @@ msgstr "Спорожнення каналу...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Не встановлювати обробники сигналів для SIGUSR1 і SIGUSR2"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr ""
+#~ "Вивести трасування розподілу пам’яті (якщо ввімкнено при компіляції)"
 
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "Помилка при повторному скануванні реєстру модулів %s: %s"

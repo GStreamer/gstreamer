@@ -1,17 +1,17 @@
-# German translation for gstreamer 0.10.30.3
+# German translation for gstreamer 1.0.3
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 #
 # Roland Illig <roland.illig@gmx.de>, 2004.
-# Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2010, 2011.
+# Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2010, 2011, 2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.32.2\n"
+"Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:29+0200\n"
-"PO-Revision-Date: 2011-04-27 23:44+0200\n"
-"Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
+"POT-Creation-Date: 2013-07-29 19:38+0100\n"
+"PO-Revision-Date: 2012-11-28 19:22+0100\n"
+"Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -124,9 +124,8 @@ msgstr "Interner GStreamer-Fehler: Padding-Problem."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Interner GStreamer-Fehler: Thread-Problem."
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "Interner GStreamer-Fehler: Verhandlungsproblem."
+msgstr "GStreamer-Fehler: Verhandlungsproblem."
 
 msgid "Internal GStreamer error: event problem."
 msgstr "Interner GStreamer-Fehler: Ereignisproblem."
@@ -143,9 +142,8 @@ msgstr "Interner GStreamer-Fehler: Kennzeichnungsproblem."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Ihrer Installation von GStreamer fehlt ein Plugin."
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Interner GStreamer-Fehler: Zeitproblem."
+msgstr "GStreamer-Fehler: Zeitproblem."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -580,16 +578,14 @@ msgstr "Referenzpegel für die Pegelanpassungen von Titel und Album"
 msgid "language code"
 msgstr "Sprachcode"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "Sprachcode für diesen Datenstrom nach ISO-639-1"
+msgstr "Sprachcode für diesen Strom nach ISO-639-1 oder ISO-639-2"
 
-#, fuzzy
 msgid "language name"
-msgstr "Sprachcode"
+msgstr "Sprachname"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "Name der Sprache, in welcher der Datenstrom ist"
 
 msgid "image"
 msgstr "Bild"
@@ -684,13 +680,12 @@ msgstr ""
 msgid "geo location sublocation"
 msgstr "geografischer Ortsteil"
 
-#, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
-"ein Ort innerhalb einer Stadt, in dem das Medium aufgezeichnet oder "
-"produziert wurde"
+"ein Ort innerhalb einer Stadt, an dem das Medium aufgezeichnet oder "
+"produziert wurde (z.B. der Stadtteil)"
 
 msgid "geo location horizontal error"
 msgstr "Geografischer horizontaler Fehler"
@@ -1068,12 +1063,14 @@ msgid "List the plugin contents"
 msgstr "Die Inhalte des Plugins auflisten"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Prüfen Sie, ob das angegebene Element oder Plugin vorhanden ist"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Kontrollieren Sie beim Prüfen, ob ein Element oder Plugin vorhanden ist, "
+"ebenfalls, ob die Version mindestens der angegebenen entspricht."
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr ""
@@ -1125,17 +1122,16 @@ msgstr "KENNZEICHEN GEFUNDEN: Gefunden von Objekt »%s«.\n"
 msgid "FOUND TAG\n"
 msgstr "KENNZEICHEN GEFUNDEN\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "KENNZEICHEN GEFUNDEN: Gefunden von Element »%s«.\n"
+msgstr "TOC GEFUNDEN: Gefunden durch Element »%s«.\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "KENNZEICHEN GEFUNDEN: Gefunden von Objekt »%s«.\n"
+msgstr "TOC GEFUNDEN: Gefunden durch Objekt »%s«.\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "KENNZEICHEN GEFUNDEN\n"
+msgstr "TOC GEFUNDEN\n"
 
 #, c-format
 msgid ""
@@ -1182,9 +1178,9 @@ msgstr "Interrupt: Leitung wird gestoppt ...\n"
 msgid "Progress: (%s) %s\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "Kein Element »%s«"
+msgstr "Fehlendes Element »%s«\n"
 
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s\n"
@@ -1194,7 +1190,7 @@ msgid "Output tags (also known as metadata)"
 msgstr "Kennzeichen (auch bekannt als Metadaten) ausgeben"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "TOC ausgeben (Kapitel und Editionen)"
 
 msgid "Output status information and property notifications"
 msgstr "Zustandsinformation und Eigenschaftsmitteilungen ausgeben"
@@ -1262,10 +1258,8 @@ msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr ""
 "EOS bei Beenden ist eingeschaltet -- EOS wird auf die Leitung erzwungen\n"
 
-#, fuzzy
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-"EOS bei Beenden ist eingeschaltet -- EOS wird auf die Leitung erzwungen\n"
+msgstr "EOS bei Beenden ist eingeschaltet -- warten auf EOS nach dem Fehler\n"
 
 msgid "Waiting for EOS...\n"
 msgstr "Auf EOS wird gewartet …\n"
@@ -1273,9 +1267,8 @@ msgstr "Auf EOS wird gewartet …\n"
 msgid "EOS received - stopping pipeline...\n"
 msgstr "EOS erhalten - Leitung wird angehalten …\n"
 
-#, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Interrupt: Leitung wird gestoppt ...\n"
+msgstr "Interrupt beim Warten auf EOS - Leitung wird gestoppt ...\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Ein Fehler ist beim Warten auf EOS aufgetreten\n"
@@ -1292,9 +1285,8 @@ msgstr "Leitung wird auf NULL gesetzt ...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Leitung wird geleert ...\n"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr ""
-#~ "Speicherzuordnungsverfolgung ausgeben (falls zur Kompilierzeit aktiviert)"
+#~ msgid "maximum"
+#~ msgstr "Maximum"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr "Aufruf: gst-xmllaunch <file.xml> [ element.eigenschaft=wert ...]\n"
@@ -1324,6 +1316,10 @@ msgstr "Leitung wird geleert ...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Keine Routinen für SIGUSR1 und SIGUSR2 installieren"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr ""
+#~ "Speicherzuordnungsverfolgung ausgeben (falls zur Kompilierzeit aktiviert)"
 
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "Fehler beim erneuten Einlesen der Registry %s : %s"

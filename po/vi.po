@@ -1,22 +1,25 @@
 # Vietnamese Translation for GStreamer.
-# Copyright © 2010 Free Software Foundation, Inc.
+# Copyright © 2012 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 # Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.29.2\n"
+"Project-Id-Version: gstreamer-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:29+0200\n"
-"PO-Revision-Date: 2010-10-03 19:09+1030\n"
-"Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
-"Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
+"POT-Creation-Date: 2013-07-29 19:38+0100\n"
+"PO-Revision-Date: 2012-12-02 08:10+0700\n"
+"Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
+"Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Team-Website: <http://translationproject.org/team/vi.html>\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: LocFactoryEditor 1.8\n"
+"X-Poedit-SourceCharset: UTF-8\n"
 
 msgid "Print the GStreamer version"
 msgstr "Hiển thị phiên bản GStreamer"
@@ -30,17 +33,16 @@ msgstr "Hiển thị tất cả các loại gỡ lỗi sẵn sàng rồi thoát"
 msgid ""
 "Default debug level from 1 (only error) to 5 (anything) or 0 for no output"
 msgstr ""
-"Mức gỡ lỗi mặc định từ 1 (chỉ lỗi) đến 5 (bất cứ điều nào) hay 0 (không xuất "
-"gì)"
+"Mức gỡ lỗi mặc định từ 1 (chỉ lỗi) đến 5 (mọi thứ) hay 0 (không xuất gì)"
 
 msgid "LEVEL"
-msgstr "CẤP"
+msgstr "MỨC"
 
 msgid ""
 "Comma-separated list of category_name:level pairs to set specific levels for "
 "the individual categories. Example: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 msgstr ""
-"Danh sách định giới bằng dấu phẩy của đôi « tên_loại:cấp » để đặt cấp dứt "
+"Danh sách định giới bằng dấu phẩy của đôi “tên_loại:cấp” để đặt cấp dứt "
 "khoát cho mỗi loại. Thí dụ: GST_AUTOPLUG:5,GST_ELEMENT_*:3"
 
 msgid "LIST"
@@ -116,11 +118,10 @@ msgid "Internal GStreamer error: pad problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề đệm."
 
 msgid "Internal GStreamer error: thread problem."
-msgstr "Lỗi nội bộ GStreamer: vấn đề mạch."
+msgstr "Lỗi nội bộ GStreamer: vấn đề về tuyến."
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "Lỗi nội bộ GStreamer: vấn đề thỏa thuận."
+msgstr "Lỗi GStreamer: vấn đề thỏa thuận."
 
 msgid "Internal GStreamer error: event problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề sự kiện."
@@ -129,7 +130,7 @@ msgid "Internal GStreamer error: seek problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề tìm nơi."
 
 msgid "Internal GStreamer error: caps problem."
-msgstr "Lỗi nội bộ GStreamer: vấn đề thư viên caps."
+msgstr "Lỗi nội bộ GStreamer: vấn đề thư viện caps."
 
 msgid "Internal GStreamer error: tag problem."
 msgstr "Lỗi nội bộ GStreamer: vấn đề thẻ."
@@ -137,9 +138,8 @@ msgstr "Lỗi nội bộ GStreamer: vấn đề thẻ."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Bản cài đặt GStreamer của bạn còn thiếu một bổ sung."
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Lỗi nội bộ GStreamer: vấn đề đồng hồ."
+msgstr "Lỗi GStreamer: vấn đề đồng hồ."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -159,7 +159,7 @@ msgid "Could not configure supporting library."
 msgstr "Không thể cấu hình thư viện hỗ trợ."
 
 msgid "Encoding error."
-msgstr ""
+msgstr "Gặp lỗi mã hóa."
 
 msgid "GStreamer encountered a general resource error."
 msgstr "Trình GStreamer mới gặp một lỗi tài nguyên chung."
@@ -195,7 +195,7 @@ msgid "Could not synchronize on resource."
 msgstr "Không thể đồng bộ trên tài nguyên."
 
 msgid "Could not get/set settings from/on resource."
-msgstr "Không thể lấy/đặt thiết lập từ/vào tài nguyên."
+msgstr "Không thể lấy/đặt cài đặt từ/vào tài nguyên."
 
 msgid "No space left on the resource."
 msgstr "Không có sức chứa còn rảnh trên tài nguyên đó."
@@ -280,13 +280,13 @@ msgid "person(s) responsible for the recording for sorting purposes"
 msgstr "(các) người chịu trách nhiệm về bản thu, cho mục đích sắp xếp"
 
 msgid "album"
-msgstr "tập nhạc"
+msgstr "album"
 
 msgid "album containing this data"
 msgstr "tập nhạc chứa dữ liệu này"
 
 msgid "album sortname"
-msgstr "tên sắp tập"
+msgstr "tên sắp album"
 
 msgid "album containing this data for sorting purposes"
 msgstr "tập nhạc chứa dữ liệu này, cho mục đích sắp xếp"
@@ -309,13 +309,11 @@ msgstr "ngày"
 msgid "date the data was created (as a GDate structure)"
 msgstr "ngày tạo dữ liệu này (dạng cấu trúc GDate)"
 
-#, fuzzy
 msgid "datetime"
-msgstr "ngày"
+msgstr "ngày-giờ"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "ngày tạo dữ liệu này (dạng cấu trúc GDate)"
+msgstr "ngày và giờ mà dữ liệu được tạo (dạng cấu trúc GstDateTime)"
 
 msgid "genre"
 msgstr "thể loại"
@@ -362,7 +360,7 @@ msgid "count of discs inside collection this disc belongs to"
 msgstr "số đếm đĩa ở trong tập hợp"
 
 msgid "location"
-msgstr "đía điểm"
+msgstr "địa điểm"
 
 msgid ""
 "Origin of media as a URI (location, where the original of the file or stream "
@@ -394,7 +392,7 @@ msgstr "ISRC"
 
 msgid "International Standard Recording Code - see http://www.ifpi.org/isrc/"
 msgstr ""
-"Luật thu Tiêu chuẩn Quốc tế (International Standard Recording Code) — xem "
+"Luật thu âm Tiêu chuẩn Quốc tế (International Standard Recording Code) — xem "
 "<http://www.ifpi.org/isrc/>."
 
 msgid "organization"
@@ -412,12 +410,11 @@ msgstr "URI tác quyền"
 msgid "URI to the copyright notice of the data"
 msgstr "địa chỉ URI đến thông báo tác quyền của dữ liệu này"
 
-#, fuzzy
 msgid "encoded by"
-msgstr "mã hóa"
+msgstr "má hoá bởi"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "tên của người hay tổ chức đã mã hoá tập tin"
 
 msgid "contact"
 msgstr "liên lạc"
@@ -523,10 +520,10 @@ msgid "version of the encoder used to encode this stream"
 msgstr "phiên bản của bộ mã hóa được dùng để mã hóa luồng này"
 
 msgid "serial"
-msgstr "SSX"
+msgstr "số sê-ri"
 
 msgid "serial number of track"
-msgstr "số sản xuất của rãnh này"
+msgstr "số sê-ri của rãnh"
 
 msgid "replaygain track gain"
 msgstr "nhớ âm lượng rãnh"
@@ -561,16 +558,16 @@ msgstr "lớp chỉ dẫn các giá trị khuếch đại của rãnh và tập 
 msgid "language code"
 msgstr "mã ngôn ngữ"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "mã ngôn ngữ cho luồng này, tùy theo tiêu chuẩn ISO-639-1"
+msgstr ""
+"mã ngôn ngữ cho luồng dữ liệu này, tùy theo tiêu chuẩn ISO-639-1 hoặc "
+"ISO-639-2"
 
-#, fuzzy
 msgid "language name"
-msgstr "mã ngôn ngữ"
+msgstr "Tên ngôn ngữ"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "tên freeform của ngôn ngữ luồng dữ liệu này là trong"
 
 msgid "image"
 msgstr "ảnh"
@@ -592,10 +589,10 @@ msgid "file attached to this stream"
 msgstr "tập tin đính kèm luồng này"
 
 msgid "beats per minute"
-msgstr "tiếng đập mỗi phút"
+msgstr "tiếng nhịp đập mỗi phút"
 
 msgid "number of beats per minute in audio"
-msgstr "số tiếng lập trong mỗi phút âm thanh"
+msgstr "số tiếng nhịp trong mỗi phút âm thanh"
 
 msgid "keywords"
 msgstr "từ khoá"
@@ -649,32 +646,30 @@ msgstr "vị trí địa lý của quốc gia"
 
 msgid "country (english name) where the media has been recorded or produced"
 msgstr ""
-"quốc gia (tên tiếng Anh, v.d. « Vietnam ») ở đó nhạc/phím đã được thu hay tạo"
+"quốc gia (tên tiếng Anh, v.d. “Vietnam”) ở đó nhạc/phím đã được thu hay tạo"
 
 msgid "geo location city"
 msgstr "vị trí địa lý của thành phố"
 
 msgid "city (english name) where the media has been recorded or produced"
 msgstr ""
-"thành phố (tên tiếng Anh, v.d. « Hanoi ») ở đó nhạc/phím đã được thu hay tạo"
+"thành phố (tên tiếng Anh, v.d. “Hanoi”) ở đó nhạc/phím đã được thu hay tạo"
 
 msgid "geo location sublocation"
 msgstr "vị trí phụ địa lý"
 
-#, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
 msgstr ""
-"một vùng bên trong thành phố ở đó phương tiện đã được tạo hay sản xuất (v.d. "
-"hàng xóm)"
+"một vùng bên trong thành phố ở đó dữ liệu đa phương tiện đã được tạo hay sản "
+"xuất (v.d. hàng xóm)"
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "tên định vị địa lý"
+msgstr "lỗi thanh ngang vị trí theo Trái Đất"
 
 msgid "expected error of the horizontal positioning measures (in meters)"
-msgstr ""
+msgstr "chờ đợi một lỗi của đo lường vị trí đường nằm ngang (tính bằng mét)"
 
 msgid "geo location movement speed"
 msgstr "tốc độ di chuyển theo vị trí đại lý"
@@ -782,19 +777,18 @@ msgstr "mẫu thiết bị"
 msgid "Model of the device used to create this media"
 msgstr "Mô hình của thiết bị được dùng để tạo phương tiện này"
 
-#, fuzzy
 msgid "application name"
-msgstr "tên định vị địa lý"
+msgstr "tên ứng dụng"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "Mô hình của thiết bị được dùng để tạo phương tiện này"
+msgstr "Ứng dụng sử dụng để tạo đa phương tiện"
 
 msgid "application data"
-msgstr ""
+msgstr "dữ liệu ứng dụng"
 
 msgid "Arbitrary application data to be serialized into the media"
 msgstr ""
+"Dữ liệu ứng dụng tùy ý để được xếp thứ tự vào trong đa phương tiện (media)"
 
 msgid "image orientation"
 msgstr "hướng ảnh"
@@ -815,7 +809,7 @@ msgstr ""
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
-msgstr "LỖI: từ yếu tố %s: %s\n"
+msgstr "LỖI: từ phần tử %s: %s\n"
 
 #, c-format
 msgid ""
@@ -827,19 +821,19 @@ msgstr ""
 
 #, c-format
 msgid "specified empty bin \"%s\", not allowed"
-msgstr "không cho phép nhị phân trống được ghi rõ « %s »"
+msgstr "không cho phép nhị phân trống được ghi rõ “%s”"
 
 #, c-format
 msgid "no bin \"%s\", skipping"
-msgstr "không có nhị phân « %s » nên bỏ qua"
+msgstr "không có nhị phân “%s” nên bỏ qua"
 
 #, c-format
 msgid "no property \"%s\" in element \"%s\""
-msgstr "không có tài sản « %s » trong yếu tố « %s »"
+msgstr "không có tài sản “%s” trong phần tử “%s”"
 
 #, c-format
 msgid "could not set property \"%s\" in element \"%s\" to \"%s\""
-msgstr "không thể đặt tài sản « %s » trong yếu tố « %s » thành « %s »"
+msgstr "không thể đặt tài sản “%s” trong phần tử “%s” thành “%s”"
 
 #, c-format
 msgid "could not link %s to %s"
@@ -847,11 +841,11 @@ msgstr "không thể liên kết %s đến %s"
 
 #, c-format
 msgid "no element \"%s\""
-msgstr "không có yếu tố « %s »"
+msgstr "không có yếu tố “%s”"
 
 #, c-format
 msgid "could not parse caps \"%s\""
-msgstr "không thể phân tách caps « %s »"
+msgstr "không thể phân tách caps “%s”"
 
 msgid "link without source element"
 msgstr "liên kết không có yếu tố nguồn"
@@ -862,23 +856,23 @@ msgstr ""
 
 #, c-format
 msgid "no source element for URI \"%s\""
-msgstr "không có yếu tố nguồn cho URI « %s »"
+msgstr "không có yếu tố nguồn cho URI “%s”"
 
 #, c-format
 msgid "no element to link URI \"%s\" to"
-msgstr "không có yếu tố đến đó cần liên kết URI « %s »"
+msgstr "không có yếu tố đến đó cần liên kết URI “%s”"
 
 #, c-format
 msgid "no sink element for URI \"%s\""
 msgstr ""
 "không có yếu tố quản lý việc phân phối dữ liệu vào đệm khác nhau, cho địa "
-"điểm « %s »"
+"điểm “%s”"
 
 #, c-format
 msgid "could not link sink element for URI \"%s\""
 msgstr ""
 "không thể kết hợp yếu tố quản lý việc phân phối dữ liệu vào đệm khác nhau, "
-"cho URI « %s »"
+"cho URI “%s”"
 
 msgid "empty pipeline not allowed"
 msgstr "không cho phép đường ống trống"
@@ -917,38 +911,38 @@ msgstr "Chưa ghi rõ tên tập tin để ghi vào."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Không thể mở tập tin « %s » để ghi."
+msgstr "Không thể mở tập tin “%s” để ghi."
 
 #, c-format
 msgid "Error closing file \"%s\"."
-msgstr "Gặp lỗi khi đóng tập tin « %s »."
+msgstr "Gặp lỗi khi đóng tập tin “%s”."
 
 #, c-format
 msgid "Error while seeking in file \"%s\"."
-msgstr "Gặp lỗi khi tìm trong tập tin « %s »."
+msgstr "Gặp lỗi khi tìm trong tập tin “%s”."
 
 #, c-format
 msgid "Error while writing to file \"%s\"."
-msgstr "Gặp lỗi khi ghi vào tập tin « %s »."
+msgstr "Gặp lỗi khi ghi vào tập tin “%s”."
 
 msgid "No file name specified for reading."
 msgstr "Chưa ghi rõ tên tập tin để đọc."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Không thể mở tập tin « %s » để đọc."
+msgstr "Không thể mở tập tin “%s” để đọc."
 
 #, c-format
 msgid "Could not get info on \"%s\"."
-msgstr "Không thể lấy thông tin về « %s »."
+msgstr "Không thể lấy thông tin về “%s”."
 
 #, c-format
 msgid "\"%s\" is a directory."
-msgstr "« %s » là thư mục."
+msgstr "“%s” là thư mục."
 
 #, c-format
 msgid "File \"%s\" is a socket."
-msgstr "Tập tin « %s » là ổ cắm."
+msgstr "Tập tin “%s” là ổ cắm."
 
 msgid "Failed after iterations as requested."
 msgstr "Lỗi sau số lần lặp lại được chọn."
@@ -958,7 +952,7 @@ msgstr "Chưa xác định thư mục tạm thời."
 
 #, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "Không thể tạo tập tin tạm thời « %s »."
+msgstr "Không thể tạo tập tin tạm thời “%s”."
 
 msgid "Error while writing to download file."
 msgstr "Gặp lỗi khi ghi vào tập tin tải về."
@@ -994,13 +988,13 @@ msgid "controllable"
 msgstr "điều khiển được"
 
 msgid "changeable in NULL, READY, PAUSED or PLAYING state"
-msgstr ""
+msgstr "có thể thay đổi được trong trạng thái NULL, READY, PAUSED hay PLAYING"
 
 msgid "changeable only in NULL, READY or PAUSED state"
-msgstr ""
+msgstr "chỉ có thể thay đổi trong trạng thái NULL, READY hay PAUSED"
 
 msgid "changeable only in NULL or READY state"
-msgstr ""
+msgstr "chỉ có thể thay đổi trong trạng thái NULL hay READY"
 
 msgid "Blacklisted files:"
 msgstr "Tập tin bị cấm:"
@@ -1048,12 +1042,14 @@ msgid "List the plugin contents"
 msgstr "Liệt kê nội dung phần bổ sung"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Kiểm tra xem một phần tử hay phần bổ xung đã cho có tồn tại hay không"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Kiểm tra xem một phần tử hay phần bổ xung đã cho có tồn tại hay không, đồng "
+"thời cũng kiểm tra cả phiên bản tối thiểu có thể hoạt động được"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "In ra các lược đồ URI được hỗ trợ, với những yếu tố thực hiện chúng."
@@ -1064,22 +1060,22 @@ msgstr "Không thể nạp tập tin phần bổ sung: %s\n"
 
 #, c-format
 msgid "No such element or plugin '%s'\n"
-msgstr "Không có yếu tố hay phần bổ sung như vậy « %s »\n"
+msgstr "Không có yếu tố hay phần bổ sung như vậy “%s”\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "Thống kê chỉ mục"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
-msgstr "Nhận được thông điệp số %u từ phần tử « %s » (%s): "
+msgstr "Nhận được thông điệp số %u từ phần tử “%s” (%s): "
 
 #, c-format
 msgid "Got message #%u from pad \"%s:%s\" (%s): "
-msgstr "Nhận được thông điệp số %u từ đệm « %s:%s » (%s): "
+msgstr "Nhận được thông điệp số %u từ đệm “%s:%s” (%s): "
 
 #, c-format
 msgid "Got message #%u from object \"%s\" (%s): "
-msgstr "Nhận được thông điệp số %u từ đối tượng « %s » (%s): "
+msgstr "Nhận được thông điệp số %u từ đối tượng “%s” (%s): "
 
 #, c-format
 msgid "Got message #%u (%s): "
@@ -1087,34 +1083,33 @@ msgstr "Nhận được thông điệp số %u (%s): "
 
 #, c-format
 msgid "Got EOS from element \"%s\".\n"
-msgstr "Mới nhận kết thúc luồng (EOS) từ yếu tố « %s ».\n"
+msgstr "Mới nhận kết thúc luồng (EOS) từ yếu tố “%s”.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by element \"%s\".\n"
-msgstr "THẺ ĐÃ TÌM      : được tìm bởi yếu tố « %s ».\n"
+msgstr "THẺ ĐÃ TÌM     : được tìm bởi phần tử “%s”.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by pad \"%s:%s\".\n"
-msgstr "THẺ ĐÃ TÌM      : được tìm bởi đệm « %s:%s ».\n"
+msgstr "THẺ ĐÃ TÌM     : được tìm bởi đệm “%s:%s”.\n"
 
 #, c-format
 msgid "FOUND TAG      : found by object \"%s\".\n"
-msgstr "THẺ ĐÃ TÌM      : được tìm bởi đối tượng « %s ».\n"
+msgstr "THẺ ĐÃ TÌM     : được tìm bởi đối tượng “%s”.\n"
 
 msgid "FOUND TAG\n"
 msgstr "THẺ ĐÃ TÌM\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "THẺ ĐÃ TÌM      : được tìm bởi yếu tố « %s ».\n"
+msgstr "TOC ĐÃ TÌM     : được tìm bởi phần tử \"%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "THẺ ĐÃ TÌM      : được tìm bởi đối tượng « %s ».\n"
+msgstr "TOC ĐÃ TÌM     : được tìm bởi đối tượng \"%s\".\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "THẺ ĐÃ TÌM\n"
+msgstr "TOC TÌM THẤY\n"
 
 #, c-format
 msgid ""
@@ -1126,7 +1121,7 @@ msgstr ""
 
 #, c-format
 msgid "WARNING: from element %s: %s\n"
-msgstr "CẢNH BÁO : từ yếu tố %s: %s\n"
+msgstr "CẢNH BÁO: từ yếu tố %s: %s\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Cuộn sẵn, đợi chuyển hoán đệm xong...\n"
@@ -1139,10 +1134,10 @@ msgid "buffering..."
 msgstr "đang chuyển hoán đệm..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
-msgstr "Hoàn tất chuyển hoán đệm nên lập đường ống thành ĐANG PHÁT ...\n"
+msgstr "Hoàn tất chuyển hoán đệm nên đặt đường ống thành ĐANG PHÁT ...\n"
 
 msgid "Buffering, setting pipeline to PAUSED ...\n"
-msgstr "Đang chuyển hoán đệm nên lập đường ống thành BỊ TẠM DỪNG ...\n"
+msgstr "Đang chuyển hoán đệm nên đặt đường ống thành BỊ TẠM DỪNG ...\n"
 
 msgid "Redistribute latency...\n"
 msgstr "Phân phối lại sự âm ỷ...\n"
@@ -1158,19 +1153,19 @@ msgstr "Ngắt: đang ngừng chạy đường ống ...\n"
 msgid "Progress: (%s) %s\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "không có yếu tố « %s »"
+msgstr "Thiếu phần tử: %s\n"
 
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s\n"
-msgstr "CẢNH BÁO : từ yếu tố %s: %s\n"
+msgstr "CẢNH BÁO: từ yếu tố %s: %s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Thể xuất (cũng được biết là siêu dữ liệu)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "TOC kết xuất (các chương và phiên bản)"
 
 msgid "Output status information and property notifications"
 msgstr "Xuất thông tin trạng thái và thông báo tài sản"
@@ -1194,7 +1189,7 @@ msgid "Force EOS on sources before shutting the pipeline down"
 msgstr "Ép buộc kết thúc luồng trên các nguồn trước khi đóng đường ống"
 
 msgid "Gather and print index statistics"
-msgstr ""
+msgstr "Tập hợp lại và in ra thống kê chỉ mục"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1205,13 +1200,13 @@ msgstr "LỖI: không thể cấu tạo đường ống.\n"
 
 #, c-format
 msgid "WARNING: erroneous pipeline: %s\n"
-msgstr "CẢNH BÁO : đường ống có lỗi: %s\n"
+msgstr "CẢNH BÁO: đường ống có lỗi: %s\n"
 
 msgid "ERROR: the 'pipeline' element wasn't found.\n"
-msgstr "LỖI: không tìm thấy yếu tố « đường ống » (pipeline).\n"
+msgstr "LỖI: không tìm thấy yếu tố “đường ống” (pipeline).\n"
 
 msgid "Setting pipeline to PAUSED ...\n"
-msgstr "Đang lập đường ống thành BỊ TẠM DỪNG ...\n"
+msgstr "Đang đặt đường ống thành BỊ TẠM DỪNG ...\n"
 
 msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "LỖI: đường ống không tạm dừng được.\n"
@@ -1229,7 +1224,7 @@ msgid "Pipeline is PREROLLED ...\n"
 msgstr "Đường ống ĐÃ TIỀN CUỘN ...\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
-msgstr "Đang lập đường ống thành ĐANG PHÁT ...\n"
+msgstr "Đang đặt đường ống thành ĐANG PHÁT ...\n"
 
 msgid "ERROR: pipeline doesn't want to play.\n"
 msgstr "LỖI: đường ống không phát được.\n"
@@ -1239,11 +1234,8 @@ msgstr ""
 "Kết thúc luồng khi tắt phần mềm vẫn còn hoạt động thì đang ép buộc kết thúc "
 "luồng trên đường ống\n"
 
-#, fuzzy
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr ""
-"Kết thúc luồng khi tắt phần mềm vẫn còn hoạt động thì đang ép buộc kết thúc "
-"luồng trên đường ống\n"
+msgstr "EOS khi tắt máy được bật -- chờ sau Lỗi EOS\n"
 
 msgid "Waiting for EOS...\n"
 msgstr "Đang đợi kết thúc luồng...\n"
@@ -1251,9 +1243,8 @@ msgstr "Đang đợi kết thúc luồng...\n"
 msgid "EOS received - stopping pipeline...\n"
 msgstr "Nhận được tín hiệu kết thúc luồng: đang ngừng chạy đường ống ...\n"
 
-#, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Ngắt: đang ngừng chạy đường ống ...\n"
+msgstr "Ngắt trong khi chờ EOS - đang dừng đường ống lại...\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Gặp lỗi trong khi đợi kết thúc luồng\n"
@@ -1262,35 +1253,35 @@ msgid "Execution ended after %"
 msgstr "Thực hiện xong sau %"
 
 msgid "Setting pipeline to READY ...\n"
-msgstr "Đang lập đường ống thành SẴN SÀNG ...\n"
+msgstr "Đang đặt đường ống thành SẴN SÀNG ...\n"
 
 msgid "Setting pipeline to NULL ...\n"
-msgstr "Đang lập đường ống thành VÔ GIÁ TRỊ ...\n"
+msgstr "Đang đặt đường ống thành VÔ GIÁ TRỊ ...\n"
 
 msgid "Freeing pipeline ...\n"
-msgstr "Đang giải phóng đường ống...\n"
+msgstr "Đang giải phóng đường ống ...\n"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "In ra vết cấp phát (nếu được bật khi biên dich)"
+#~ msgid "maximum"
+#~ msgstr "tối đa"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
 #~ "Cách sử dụng: gst-xmllaunch <tập_tin.xml> [ yếu_tố.tài_sản=giá_trị ...]\n"
 
 #~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "LỖI: lỗi phân tách tập tin xml « %s ».\n"
+#~ msgstr "LỖI: lỗi phân tách tập tin xml “%s”.\n"
 
 #~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr "LỖI: không có yếu tố đường ống cấp đầu trong tập tin « %s ».\n"
+#~ msgstr "LỖI: không có yếu tố đường ống cấp đầu trong tập tin “%s”.\n"
 
 #~ msgid "WARNING: only one toplevel element is supported at this time.\n"
-#~ msgstr "CẢNH BÁO : hiện thời hỗ trợ chỉ một yếu tố cấp đầu.\n"
+#~ msgstr "CẢNH BÁO: hiện thời hỗ trợ chỉ một yếu tố cấp đầu.\n"
 
 #~ msgid "ERROR: could not parse command line argument %d: %s.\n"
 #~ msgstr "LỖI: không thể phân tách đối số dòng lệnh %d: %s.\n"
 
 #~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "CẢNH BÁO : không tìm thấy yếu tố tên « %s ».\n"
+#~ msgstr "CẢNH BÁO: không tìm thấy yếu tố tên “%s”.\n"
 
 #~ msgid "Save xml representation of pipeline to FILE and exit"
 #~ msgstr "Lưu đường ống dạng XML vào TẬP_TIN rồi thoát"
@@ -1300,3 +1291,6 @@ msgstr "Đang giải phóng đường ống...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Đừng cài đặt bộ quản lý tín hiệu cho SIGUSR1 và SIGUSR2"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "In ra vết cấp phát (nếu được bật khi biên dich)"

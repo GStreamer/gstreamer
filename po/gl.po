@@ -1,20 +1,22 @@
 # Galician translations for gstreamer package.
 # This file is put in the public domain.
 # Francisco Diéguez <frandieguez@ubuntu.com>, 2011.
-#
+# Fran Dieguez <frandieguez@gnome.org>, 2012.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.32.2\n"
+"Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:29+0200\n"
-"PO-Revision-Date: 2011-09-05 12:49+0200\n"
+"POT-Creation-Date: 2013-07-29 19:38+0100\n"
+"PO-Revision-Date: 2012-12-15 03:29+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
-"Language: gl_ES\n"
+"Language: gl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Virtaal 0.7.1\n"
+"X-Project-Style: gnome\n"
 
 msgid "Print the GStreamer version"
 msgstr "Imprimir a versión de GStreamer"
@@ -119,9 +121,8 @@ msgstr "Erro interno de GStreamer: problema de desprazamento."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Erro interno de GStreamer: problema cos fíos"
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "Erro interno de GStreamer: problema de negociación."
+msgstr "Erro de GStreamer: problema de negociación."
 
 msgid "Internal GStreamer error: event problem."
 msgstr "Erro interno de GStreamer: problema cos eventos."
@@ -138,9 +139,8 @@ msgstr "Erro interno de GStreamer: problema coas etiquetas."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Á súa instalación de GStreamer fáltalle un engadido."
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Erro interno de GStreamer: problema de reloxo."
+msgstr "Erro de GStreamer: problema de reloxo."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -562,16 +562,14 @@ msgstr "valor do nivel de referencia da ganancia da pista e do álbum"
 msgid "language code"
 msgstr "código de idioma"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "código de idioma para este fluxo, axustándose a ISO-639-1"
+msgstr "código de idioma para este fluxo, axustándose a ISO-639-1 ou ISO-639-2"
 
-#, fuzzy
 msgid "language name"
-msgstr "código de idioma"
+msgstr "nome do idioma"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "nome freeform do idioma no que está este fluxo"
 
 msgid "image"
 msgstr "imaxe"
@@ -662,7 +660,6 @@ msgstr "cidade (nome en inglés) onde foi gravado ou producido o medio"
 msgid "geo location sublocation"
 msgstr "sublocalización da xeolocalización"
 
-#, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
@@ -1045,12 +1042,14 @@ msgid "List the plugin contents"
 msgstr "Listar o contido do engadido"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Comprobar se o elemento ou engadido especificado existe"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Ao comprobar se un elemento ou engadido existe, tamén comprobar se a súa "
+"versión é cando menos a versión especificada"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Imprimir os esquemas URI admitidos, cos elementos que os implementan"
@@ -1101,17 +1100,16 @@ msgstr "ETIQUETA ENCONTRADA      : encontrada polo obxecto «%s».\n"
 msgid "FOUND TAG\n"
 msgstr "ETIQUETA ENCONTRADA\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "ATOPADA ETIQUETA      : atopada polo elemento «%s».\n"
+msgstr "TOC ATOPADO    : atopado polo elemento «%s».\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "ETIQUETA ENCONTRADA      : encontrada polo obxecto «%s».\n"
+msgstr "TOC ATOPADO    : encontrado polo obxecto «%s».\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "ETIQUETA ENCONTRADA\n"
+msgstr "TOC ATOPADO\n"
 
 #, c-format
 msgid ""
@@ -1157,9 +1155,9 @@ msgstr "Interromper: parando a canalización …\n"
 msgid "Progress: (%s) %s\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "non hai un elemento «%s»"
+msgstr "Elemento que falta: «%s»\n"
 
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s\n"
@@ -1169,7 +1167,7 @@ msgid "Output tags (also known as metadata)"
 msgstr "Etiquetas de saída (tamén coñecido como metadatos)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "TOC de saída (capítulos e edicións)"
 
 msgid "Output status information and property notifications"
 msgstr "Información do estado da saída e notificacións das propiedades"
@@ -1236,9 +1234,8 @@ msgstr "ERRO: a tubería non quere reproducirse.\n"
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr "EOS ao apagar activado; Forzando EOS na tubería\n"
 
-#, fuzzy
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
-msgstr "EOS ao apagar activado; Forzando EOS na tubería\n"
+msgstr "EOS ao apagar activado; -- agardando polo EOS despois de erro\n"
 
 msgid "Waiting for EOS...\n"
 msgstr "Agardando pola EOS...\n"
@@ -1246,9 +1243,8 @@ msgstr "Agardando pola EOS...\n"
 msgid "EOS received - stopping pipeline...\n"
 msgstr "EOS recibido: detendo a tubería...\n"
 
-#, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Interromper: parando a canalización …\n"
+msgstr "Interromper ao agardar polo EOS - detendo a canalización…\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Produciuse un erro ao esperar a EOS\n"
@@ -1265,8 +1261,8 @@ msgstr "Estabelecendo a tubería a NULL...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando a tubería...\n"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Imprimir a traza de asignacións (se foi activada ao compilar)"
+#~ msgid "maximum"
+#~ msgstr "máximo"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
@@ -1298,3 +1294,6 @@ msgstr "Liberando a tubería...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Non instalar os manexadores de sinais para SIGUSR1 e SIGUSR2"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Imprimir a traza de asignacións (se foi activada ao compilar)"

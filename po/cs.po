@@ -3,14 +3,14 @@
 # This file is put in the public domain.
 #
 # Miloslav Trmac <mitr@volny.cz>, 2004, 2005, 2007, 2008.
-# Marek Černocký <marek@manet.cz>, 2011.
+# Marek Černocký <marek@manet.cz>, 2011, 2013.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.32.2\n"
+"Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:29+0200\n"
-"PO-Revision-Date: 2011-12-01 08:17+0100\n"
+"POT-Creation-Date: 2013-07-29 19:38+0100\n"
+"PO-Revision-Date: 2013-06-07 08:47+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -120,9 +120,8 @@ msgstr "Interní chyba systému GStreamer: problém přípojného bodu."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Interní chyba systému GStreamer: problém s vlákny."
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "Interní chyba systému GStreamer: problém při vyjednávání."
+msgstr "Chyba systému GStreamer: problém při vyjednávání."
 
 msgid "Internal GStreamer error: event problem."
 msgstr "Interní chyba systému GStreamer: problém s událostmi."
@@ -139,9 +138,8 @@ msgstr "Interní chyba systému GStreamer: problém se štítky."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Vaší instalaci systému GStreamer schází zásuvný modul."
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Interní chyba systému GStreamer: problém s hodinami."
+msgstr "Chyba systému GStreamer: problém s hodinami."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -560,16 +558,14 @@ msgstr "Hodnota referenční úrovně zesílení stopy a alba"
 msgid "language code"
 msgstr "kód jazyka"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "Kód jazyka pro tento proud, ve shodě s ISO-639-1"
+msgstr "Kód jazyka pro tento proud, ve shodě s ISO-639-1 nebo ISO-639-2"
 
-#, fuzzy
 msgid "language name"
-msgstr "kód jazyka"
+msgstr "název jazyka"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "název jazyka (ve volném tvaru), ve kterém je tento proud"
 
 msgid "image"
 msgstr "obrázek"
@@ -660,7 +656,6 @@ msgstr "Anglický název města, kde bylo médium nahráno nebo vytvořeno"
 msgid "geo location sublocation"
 msgstr "upřesnění místa"
 
-#, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
@@ -1046,12 +1041,14 @@ msgid "List the plugin contents"
 msgstr "Vypsat obsah zásuvných modulů"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Zkontrolovat, zda zadaný prvek nebo zásuvný modul existuje"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Při kontrole existence prvku nebo zásuvného modulu rovněž zkontrolovat, zda "
+"je jeho verze stejná nebo novější než zadaná"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Vypsat podporovaná schémata URI, včetně prvků, které implementují"
@@ -1104,19 +1101,18 @@ msgstr "NALEZEN ŠTÍTEK: nalezen objektem „%s“.\n"
 msgid "FOUND TAG\n"
 msgstr "NALEZEN ŠTÍTEK\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
 msgstr ""
-"NALEZEN ŠTÍTEK: nalezen prvkem „%s“.\n"
+"NALEZENA TABULKA S OBSAHEM: nalezena prvkem „%s“.\n"
 "\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "NALEZEN ŠTÍTEK: nalezen objektem „%s“.\n"
+msgstr "NALEZENA TABULKA S OBSAHEM: nalezena objektem „%s“.\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "NALEZEN ŠTÍTEK\n"
+msgstr "NALEZENA TABULKA S OBSAHEM\n"
 
 #, c-format
 msgid ""
@@ -1161,9 +1157,9 @@ msgstr "Přerušení: Zastavuje se roura…\n"
 msgid "Progress: (%s) %s\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "prvek „%s“ neexistuje"
+msgstr "Schází prvek: %s\n"
 
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s\n"
@@ -1173,7 +1169,7 @@ msgid "Output tags (also known as metadata)"
 msgstr "Vypsat štítky (známé také jako metadata)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "Vypsat tabulku s obsahem (kapitoly nebo vydání)"
 
 msgid "Output status information and property notifications"
 msgstr "Vypsat informace o stavu a upozornění na vlastnosti"
@@ -1245,11 +1241,10 @@ msgstr ""
 "Zakončení proudu (EOS) při vypnutí povoleno -- Vynucuje se zakončení proudu "
 "v rouře\n"
 
-#, fuzzy
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
 msgstr ""
-"Zakončení proudu (EOS) při vypnutí povoleno -- Vynucuje se zakončení proudu "
-"v rouře\n"
+"Zakončení proudu (EOS) při vypnutí povoleno -- Čeká se na značku EOS po "
+"výskytu chyby\n"
 
 msgid "Waiting for EOS...\n"
 msgstr "Čeká se na konec proudu (EOS)…\n"
@@ -1257,9 +1252,8 @@ msgstr "Čeká se na konec proudu (EOS)…\n"
 msgid "EOS received - stopping pipeline...\n"
 msgstr "Obdržen konec proudu (EOS) – zastavuje se roura…\n"
 
-#, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Přerušení: Zastavuje se roura…\n"
+msgstr "Přerušení při čekání na konec proudu – zastavuje se roura…\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Nastala chyba při čekání na konec proudu (EOS)\n"
@@ -1275,36 +1269,3 @@ msgstr "Nastavuje se roura na PRÁZDNÁ…\n"
 
 msgid "Freeing pipeline ...\n"
 msgstr "Uvolňuje se roura…\n"
-
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr ""
-#~ "Vypisovat sledování přidělování paměti (je-li povoleno při překladu)"
-
-#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr "Použití: gst-xmllaunch <soubor.xml> [prvek.vlastnost=hodnota…]\n"
-
-#~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "CHYBA: zpracovávání souboru XML „%s“ selhalo.\n"
-
-#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr ""
-#~ "CHYBA: v souboru „%s“ není žádný prvek „pipeline“ nejvyšší úrovně.\n"
-
-#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
-#~ msgstr ""
-#~ "VAROVÁNÍ: v současné době je podporován jen jeden prvek nejvyšší úrovně.\n"
-
-#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr "CHYBA: nelze zpracovat argument %d na příkazovém řádku: %s.\n"
-
-#~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "VAROVÁNÍ: prvek s názvem „%s“ nebyl nalezen.\n"
-
-#~ msgid "Save xml representation of pipeline to FILE and exit"
-#~ msgstr "Uložit reprezentaci roury v xml do SOUBORu a skončit"
-
-#~ msgid "FILE"
-#~ msgstr "SOUBOR"
-
-#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr "Neinstalovat obsluhu signálů SIGUSR1 a SIGUSR2"
