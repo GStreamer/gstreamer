@@ -39,6 +39,8 @@ level
 matroskamux
 matroskaparse
 mpegaudioparse
+mulawdec
+mulawenc
 multifile
 qtmux
 rganalysis
@@ -57,9 +59,11 @@ udpsink
 udpsrc
 videocrop
 videofilter
+videomixer
 vp8dec
 vp8enc
 wavpackdec
+wavparse
 wavpackenc
 wavpackparse
 y4menc
