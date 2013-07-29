@@ -1,21 +1,25 @@
 # Vietnamese Translation for GST Plugins Base.
+# Copyright © 2012 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
 # Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.28.2\n"
+"Project-Id-Version: gst-plugins-base-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:35+0200\n"
-"PO-Revision-Date: 2010-04-27 22:51+0930\n"
-"Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
-"Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
+"POT-Creation-Date: 2013-07-29 19:40+0100\n"
+"PO-Revision-Date: 2012-12-02 08:03+0700\n"
+"Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
+"Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Team-Website: <http://translationproject.org/team/vi.html>\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: LocFactoryEditor 1.8\n"
+"X-Poedit-SourceCharset: UTF-8\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Không thể mở thiết bị để phát lại trong chế độ đơn nguồn."
@@ -65,7 +69,7 @@ msgid "Could not open CD device for reading."
 msgstr "Không thể mở thiết bị đĩa CD để đọc."
 
 msgid "Could not seek CD."
-msgstr "Không thể tìm trên đĩa CD."
+msgstr "Không thể di chuyển vị trí đọc trên đĩa CD."
 
 msgid "Could not read CD."
 msgstr "Không thể đọc đĩa CD."
@@ -75,7 +79,7 @@ msgstr "Lỗi luồng dữ liệu nội bộ."
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Thiếu phần tử « %s » — hãy kiểm tra lại cài đặt GStreamer."
+msgstr "Thiếu phần tử “%s” — hãy kiểm tra lại cài đặt GStreamer."
 
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
@@ -89,7 +93,7 @@ msgstr "Hình như đây là tập tin văn bản"
 
 #, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Không thể tạo phần tử « decodebin »."
+msgstr "Không thể tạo phần tử “decodebin”."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -139,28 +143,28 @@ msgstr ""
 
 #, c-format
 msgid "No decoder available for type '%s'."
-msgstr "Không có bộ giải mã sẵn sàng cho kiểu « %s »."
+msgstr "Không có bộ giải mã sẵn sàng cho kiểu “%s”."
 
 msgid "No URI specified to play from."
 msgstr "Chưa ghi rõ URI từ đó cần phát."
 
 #, c-format
 msgid "Invalid URI \"%s\"."
-msgstr "URI không hợp lệ « %s »."
+msgstr "URI không hợp lệ “%s”."
 
 msgid "This stream type cannot be played yet."
 msgstr "Chưa có khả năng phát kiểu luồng này."
 
 #, c-format
 msgid "No URI handler implemented for \"%s\"."
-msgstr "Không có bộ quản lý địa chỉ URI được thực hiện cho « %s »."
+msgstr "Không có bộ quản lý địa chỉ URI được thực hiện cho “%s”."
 
 msgid "Source element is invalid."
 msgstr "Phần tử nguồn không phải hợp lệ."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr "Lỗi khi gởi dữ liệu cho « %s:%d »."
+msgstr "Lỗi khi gởi dữ liệu cho “%s:%d”."
 
 msgid "Can't record audio fast enough"
 msgstr "Không thể thu âm thanh một cách đủ nhanh"
@@ -192,7 +196,7 @@ msgid "Windows Media Speech"
 msgstr "Tiếng nói của nhạc/ảnh Windows (Windows Media Speech)"
 
 msgid "CYUV Lossless"
-msgstr "CYUV không mất gì (CYUV Lossless)"
+msgstr "CYUV không mất dữ liệu (CYUV Lossless)"
 
 msgid "FFMpeg v1"
 msgstr "FFMpeg v1"
@@ -204,19 +208,16 @@ msgid "Run-length encoding"
 msgstr "Mã hoá độ dài chạy (Run-Length Encoding: RLE)"
 
 msgid "Subtitle"
-msgstr ""
+msgstr "Phụ đề"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "Định dạng phụ đề TMPlayer"
+msgstr "Định dạng phụ MPL2"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Định dạng phụ đề Sami"
+msgstr "Định dạng phụ đề DKS"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Định dạng phụ đề Kate"
+msgstr "Định dạng phụ đề QTtext"
 
 msgid "Sami subtitle format"
 msgstr "Định dạng phụ đề Sami"
@@ -227,33 +228,30 @@ msgstr "Định dạng phụ đề TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Định dạng phụ đề Kate"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "YUV không nén"
+msgstr "Video không nén"
 
-#, fuzzy
 msgid "Uncompressed gray"
-msgstr "Ảnh màu xám không nén"
+msgstr "Màu xám không nén"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s YUV %s"
-msgstr "YUV không nén"
+msgstr "%s YUV %s không nén"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s%d-bit %s"
-msgstr "%d-bit %s có bảng chọn không nén"
+msgstr "%s %d-bit %s không nén"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Phiên bản %d"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "YUV không nén"
+msgstr "Âm thanh không nén"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Âm thanh PCM %d-bit thô"
+msgstr "Âm thanh %d-bit %s thô"
 
 msgid "Audio CD source"
 msgstr "Nguồn đĩa CD âm thanh"
@@ -334,7 +332,7 @@ msgid "Unknown encoder element"
 msgstr "Không rõ phần tử mã hoá"
 
 msgid "Plugin or element of unknown type"
-msgstr "Không rõ kiểu phần bổ sung hay phần tử"
+msgstr "Không rõ kiểu của phần bổ sung hay phần tử"
 
 msgid "Failed to read tag: not enough data"
 msgstr "Lỗi đọc thẻ: không đủ dữ liệu"
@@ -370,134 +368,136 @@ msgid "MusicBrainz TRM ID"
 msgstr "mã TRM rãnh MusicBrainz"
 
 msgid "capturing shutter speed"
-msgstr ""
+msgstr "tốc độ màn chập khi chụp"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr ""
+msgstr "Tốc độ màn chập sử dụng khi chụp ảnh, tính bằng giây"
 
 msgid "capturing focal ratio"
-msgstr ""
+msgstr "tỷ lệ tiêu điểm khi chụp"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr ""
+msgstr "Độ mở ống kính (số-f) được sử dụng khi chụp ảnh"
 
 msgid "capturing focal length"
-msgstr ""
+msgstr "độ dài tiêu cự khi chụp"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr ""
+msgstr "Chiều dài tiêu cự ống kính được sử dụng khi chụp một ảnh, tính bằng mm"
 
 msgid "capturing digital zoom ratio"
-msgstr ""
+msgstr "tỷ lệ phóng to kỹ thuật số khi chụp"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr ""
+msgstr "Tỷ lệ phóng to kỹ thuật số được sử dụng khi chụp một ảnh"
 
 msgid "capturing iso speed"
-msgstr ""
+msgstr "tốc độ ISO khi chụp"
 
 msgid "The ISO speed used when capturing an image"
-msgstr ""
+msgstr "Tốc độ ISO sử dụng để chụp ảnh"
 
 msgid "capturing exposure program"
-msgstr ""
+msgstr "chương trình phơi sáng khi chụp"
 
 msgid "The exposure program used when capturing an image"
-msgstr ""
+msgstr "Chương trình phơi sáng được sử dụng khi chụp một ảnh"
 
 msgid "capturing exposure mode"
-msgstr ""
+msgstr "chế độ độ phơi sáng khi chụp"
 
 msgid "The exposure mode used when capturing an image"
-msgstr ""
+msgstr "Chế độ phơi sáng được sử dụng khi chụp một ảnh"
 
 msgid "capturing exposure compensation"
-msgstr ""
+msgstr "bù phơi sáng khi chụp"
 
 msgid "The exposure compensation used when capturing an image"
-msgstr ""
+msgstr "Bù phơi sáng được sử dụng khi chụp một ảnh"
 
 msgid "capturing scene capture type"
-msgstr ""
+msgstr "kiểu chụp phông nền khi chụp"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr ""
+msgstr "Chế độ chụp phông nền được sử dụng khi chụp một ảnh"
 
 msgid "capturing gain adjustment"
-msgstr ""
+msgstr "điều chỉnh hệ số khuếch đại khi chụp"
 
 msgid "The overall gain adjustment applied on an image"
-msgstr ""
+msgstr "Điều chỉnh hệ số khuếch đại toàn bộ được áp dụng trên một ảnh"
 
 msgid "capturing white balance"
-msgstr ""
+msgstr "cân trắng trắng khi chụp"
 
 msgid "The white balance mode set when capturing an image"
-msgstr ""
+msgstr "Đặt chế độ cân bằng trắng khi chụp một ảnh"
 
 msgid "capturing contrast"
-msgstr ""
+msgstr "độ tương phản khi chụp"
 
 msgid "The direction of contrast processing applied when capturing an image"
-msgstr ""
+msgstr "Hướng xử lý tương phản được áp dụng khi chụp một ảnh"
 
 msgid "capturing saturation"
-msgstr ""
+msgstr "độ bão hòa khi chụp"
 
 msgid "The direction of saturation processing applied when capturing an image"
-msgstr ""
+msgstr "Hướng xử lý bão hòa được áp dụng khi chụp một ảnh"
 
 msgid "capturing sharpness"
-msgstr ""
+msgstr "độ sắc nét khi chụp"
 
 msgid "The direction of sharpness processing applied when capturing an image"
-msgstr ""
+msgstr "Hướng xử lý độ sắc nét được áp dụng khi chụp một ảnh"
 
 msgid "capturing flash fired"
-msgstr ""
+msgstr "chế độ đèn chớp khi chụp"
 
 msgid "If the flash fired while capturing an image"
-msgstr ""
+msgstr "Nều đèn chớp lóe lên trong không chụp một ảnh"
 
 msgid "capturing flash mode"
-msgstr ""
+msgstr "chế độ đèn chớp khi chụp"
 
 msgid "The selected flash mode while capturing an image"
-msgstr ""
+msgstr "Lựa chọn chế độ đèn chớp trong khi chụp một ảnh"
 
 msgid "capturing metering mode"
-msgstr ""
+msgstr "chế độ đo khi chụp"
 
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
-msgstr ""
+msgstr "Chế độ đo được sử dụng khi định đoạt độ phơi sáng khi chụp một ảnh"
 
 msgid "capturing source"
-msgstr ""
+msgstr "nguồn chụp"
 
 msgid "The source or type of device used for the capture"
-msgstr ""
+msgstr "Nguồn hay kiểu của thiết bị được sử dụng khi chụp"
 
 msgid "image horizontal ppi"
-msgstr ""
+msgstr "ppi (điểm ảnh mỗi inch) chiều ngang ảnh"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
 msgstr ""
+"Mật độ điểm ảnh (pixel) theo chiều ngang cho media (ảnh/phim) tính bằng ppi"
 
 msgid "image vertical ppi"
-msgstr ""
+msgstr "ppi chiều dọc ảnh"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr ""
+"Mật độ điểm ảnh (pixel) theo chiều dọc cho media (ảnh/phim) tính bằng ppi"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "Khung ID3v2"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "khung thẻ id3v2 chưa phân tích"
 
 #~ msgid "Master"
-#~ msgstr "Chủ"
+#~ msgstr "Chính"
 
 #~ msgid "Bass"
 #~ msgstr "Trầm"
@@ -518,7 +518,7 @@ msgstr ""
 #~ msgstr "CD"
 
 #~ msgid "Microphone"
-#~ msgstr "Máy vi âm"
+#~ msgstr "Micrô"
 
 #~ msgid "PC Speaker"
 #~ msgstr "Loa PC"
@@ -527,10 +527,61 @@ msgstr ""
 #~ msgstr "Phát lại"
 
 #~ msgid "Capture"
-#~ msgstr "Bắt"
+#~ msgstr "Chụp"
+
+#~ msgid "Could not open vfs file \"%s\" for writing: %s."
+#~ msgstr "Không thể mở tập tin VFS “%s” để ghi: %s."
+
+#~ msgid "No filename given"
+#~ msgstr "Chưa nhập tên tập tin"
+
+#~ msgid "Could not close vfs file \"%s\"."
+#~ msgstr "Không thể đóng tập tin VFS “%s”."
+
+#~ msgid "Error while writing to file \"%s\"."
+#~ msgstr "Lỗi khi ghi vào tập tin “%s”."
+
+#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
+#~ msgstr "URI phụ đề không hợp lệ “%s” nên tắt khả năng phụ đề."
+
+#~ msgid "RTSP streams cannot be played yet."
+#~ msgstr "Chưa có khả năng phát luồng RTSP."
+
+#~ msgid ""
+#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
+#~ "file or some other type of text file, or the media file was not "
+#~ "recognized."
+#~ msgstr ""
+#~ "Chỉ phát hiện luồng phụ đề. Hoặc bạn đang nạp tập tin phụ đề hay tập tin "
+#~ "văn bản kiểu khác, hoặc không nhận diện tập tin nhạc/ảnh."
+
+#~ msgid ""
+#~ "You do not have a decoder installed to handle this file. You might need "
+#~ "to install the necessary plugins."
+#~ msgstr ""
+#~ "Chưa cài đặt bộ giải mã có khả năng quản lý tập tin này. Có thể cần phải "
+#~ "cài đặt các phần bổ sung thích hợp."
+
+#~ msgid "This is not a media file"
+#~ msgstr "Đây không phải tập tin nhạc/ảnh"
+
+#~ msgid "A subtitle stream was detected, but no video stream."
+#~ msgstr "Phát hiện luồng phụ đề, không có luồng ảnh động."
+
+#~ msgid "Both autovideosink and xvimagesink elements are missing."
+#~ msgstr "Thiếu phần tử autovideosink, cũng thiếu phần tử xvimagesink."
+
+#~ msgid "Both autoaudiosink and alsasink elements are missing."
+#~ msgstr "Thiếu phần tử autoaudiosink, cũng thiếu phần tử alsasink."
+
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Lỗi khi gởi dữ liệu phần đầu GDP cho “%s:%d”."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Lỗi khi gởi dữ liệu trọng tải GDP cho “%s:%d”."
 
 #~ msgid "Connection to %s:%d refused."
-#~ msgstr "Kết nối tới « %s:%d » bị từ chối."
+#~ msgstr "Kết nối tới “%s:%d” bị từ chối."
 
 #~ msgid "Uncompressed planar YUV 4:2:0"
 #~ msgstr "YUV 4:2:0 phẳng không nén"
@@ -571,65 +622,14 @@ msgstr ""
 #~ msgid "Raw floating-point audio"
 #~ msgstr "Âm thanh dấu phẩy động thô"
 
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "Không thể mở tập tin VFS « %s » để ghi: %s."
-
-#~ msgid "No filename given"
-#~ msgstr "Chưa nhập tên tập tin"
-
-#~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "Không thể đóng tập tin VFS « %s »."
-
-#~ msgid "Error while writing to file \"%s\"."
-#~ msgstr "Lỗi khi ghi vào tập tin « %s »."
-
-#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-#~ msgstr "URI phụ đề không hợp lệ « %s » nên tắt khả năng phụ đề."
-
-#~ msgid "RTSP streams cannot be played yet."
-#~ msgstr "Chưa có khả năng phát luồng RTSP."
-
-#~ msgid ""
-#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
-#~ "file or some other type of text file, or the media file was not "
-#~ "recognized."
-#~ msgstr ""
-#~ "Chỉ phát hiện luồng phụ đề. Hoặc bạn đang nạp tập tin phụ đề hay tập tin "
-#~ "văn bản kiểu khác, hoặc không nhận diện tập tin nhạc/ảnh."
-
-#~ msgid ""
-#~ "You do not have a decoder installed to handle this file. You might need "
-#~ "to install the necessary plugins."
-#~ msgstr ""
-#~ "Chưa cài đặt bộ giải mã có khả năng quản lý tập tin này. Có thể cần phải "
-#~ "cài đặt các phần bổ sung thích hợp."
-
-#~ msgid "This is not a media file"
-#~ msgstr "Đây không phải tập tin nhạc/ảnh"
-
-#~ msgid "A subtitle stream was detected, but no video stream."
-#~ msgstr "Phát hiện luồng phụ đề, không có luồng ảnh động."
-
-#~ msgid "Both autovideosink and xvimagesink elements are missing."
-#~ msgstr "Thiếu phần tử autovideosink, cũng thiếu phần tử xvimagesink."
-
-#~ msgid "Both autoaudiosink and alsasink elements are missing."
-#~ msgstr "Thiếu phần tử autoaudiosink, cũng thiếu phần tử alsasink."
-
 #~ msgid "No device specified."
 #~ msgstr "Chưa ghi rõ thiết bị nào"
 
 #~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Không có thiết bị « %s »."
+#~ msgstr "Không có thiết bị “%s”."
 
 #~ msgid "Device \"%s\" is already being used."
-#~ msgstr "Thiết bị « %s » đang được dùng."
+#~ msgstr "Thiết bị “%s” đang được dùng."
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Không thể mở thiết bị « %s » để đọc và ghi."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Lỗi khi gởi dữ liệu phần đầu GDP cho « %s:%d »."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Lỗi khi gởi dữ liệu trọng tải GDP cho « %s:%d »."
+#~ msgstr "Không thể mở thiết bị “%s” để đọc và ghi."

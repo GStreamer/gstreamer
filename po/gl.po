@@ -3,21 +3,23 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 # Fran Diéguez <frandieguez@ubuntu.com>, 2010, 2011.
 # Fran Dieguez <frandieguez@ubuntu.com>, 2011.
-#
+# Fran Dieguez <frandieguez@gnome.org>, 2012.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
+"Project-Id-Version: gst-plugins-base 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:35+0200\n"
-"PO-Revision-Date: 2011-09-05 12:48+0200\n"
+"POT-Creation-Date: 2013-07-29 19:40+0100\n"
+"PO-Revision-Date: 2012-12-15 03:40+0200\n"
 "Last-Translator: Fran Dieguez <frandieguez@ubuntu.com>\n"
 "Language-Team: Galician <proxecto@trasno.net>\n"
 "Language: gl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Virtaal 0.7.1\n"
 "X-Poedit-Language: galego\n"
+"X-Project-Style: gnome\n"
 
 msgid "Could not open device for playback in mono mode."
 msgstr "Non foi posíbel abrir o dispositivo para a reprodución en modo mono."
@@ -208,19 +210,16 @@ msgid "Run-length encoding"
 msgstr "Codificación do tamaño durante a execución"
 
 msgid "Subtitle"
-msgstr ""
+msgstr "Subtítulo"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "Formato de subtítulos TMPlayer"
+msgstr "Formato de subtítulos MPL2"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Formato de subtítulos Sami"
+msgstr "Formato de subtítulos DKS"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Formato de subtítulos Kate"
+msgstr "Formato de subtítulos QTtext"
 
 msgid "Sami subtitle format"
 msgstr "Formato de subtítulos Sami"
@@ -231,33 +230,30 @@ msgstr "Formato de subtítulos TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Formato de subtítulos Kate"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "YUV sen comprimir"
+msgstr "Vídeo sen comprimir"
 
-#, fuzzy
 msgid "Uncompressed gray"
-msgstr "Imaxe en escala de grises sen comprimir"
+msgstr "Gris non comprimido"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s YUV %s"
-msgstr "YUV sen comprimir"
+msgstr "%s YUV %s sen comprimir"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s%d-bit %s"
-msgstr "Paletizado sen comprimir de %d-bit %s"
+msgstr "%s%d-bit %s sen comprimir"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Versión %d"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "YUV sen comprimir"
+msgstr "Son sen comprimir"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Audio PCM sen comprimir de %d-bits"
+msgstr "Son RAW de %d-bit %s"
 
 msgid "Audio CD source"
 msgstr "Fonte: CD de son"
@@ -493,10 +489,10 @@ msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Densidade vertical de píxeles, en ppi, do medio (imaxe ou vídeo)"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "Marco ID3v2"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "marco da etiqueta id3v2 non analizado"
 
 #~ msgid "Master"
 #~ msgstr "Mestre"
@@ -530,9 +526,6 @@ msgstr ""
 
 #~ msgid "Capture"
 #~ msgstr "Capturar"
-
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "Rexeitouse a conexión a %s:%d."
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Non foi posíbel abrir o ficheiro vfs «%s» para escribir: %s."
@@ -587,6 +580,9 @@ msgstr ""
 
 #~ msgid "Error while sending gdp payload data to \"%s:%d\"."
 #~ msgstr "Produciuse un erro ao enviar a carga de datos de gdp a «%s:%d»."
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Rexeitouse a conexión a %s:%d."
 
 #~ msgid "Uncompressed planar YUV 4:2:0"
 #~ msgstr "YUV 4:2:0 plano sen comprimir"

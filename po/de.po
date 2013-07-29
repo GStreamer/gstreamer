@@ -1,17 +1,17 @@
-# German messages for gst-plugins-base 0.10.32.2
+# German messages for gst-plugins-base 1.0.3
 # Copyright © 2006 Karl Eichwalder
 # This file is distributed under the same license as the gst-plugins-base package.
 # Karl Eichwalder <ke@suse.de>, 2006.
 # Mario Blättermann <mariobl@gnome.org>, 2010.
-# Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2010, 2011.
+# Christian Kirbach <christian.kirbach@gmail.com>, 2009, 2010, 2011, 2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
+"Project-Id-Version: gst-plugins-base 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:35+0200\n"
-"PO-Revision-Date: 2011-04-28 00:04+0200\n"
-"Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
+"POT-Creation-Date: 2013-07-29 19:40+0100\n"
+"PO-Revision-Date: 2012-11-28 19:39+0100\n"
+"Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -105,7 +105,6 @@ msgstr "Beide Elemente »autovideosink« und »%s« fehlen."
 msgid "The autovideosink element is missing."
 msgstr "Das Element »autovideosink« fehlt."
 
-# »Senke« hört sich echt scheußlich an.
 #, c-format
 msgid "Configured videosink %s is not working."
 msgstr "Das konfigurierte Videoziel »%s« funktioniert nicht."
@@ -210,19 +209,16 @@ msgid "Run-length encoding"
 msgstr "RLE-Codierung"
 
 msgid "Subtitle"
-msgstr ""
+msgstr "Untertitel"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "Untertitel-Format TMPlayer"
+msgstr "Untertitel-Format MPL2"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Untertitel-Format Sami"
+msgstr "Untertitel-Format DKS"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Untertitel-Format Kate"
+msgstr "Untertitel-Format QTtext"
 
 msgid "Sami subtitle format"
 msgstr "Untertitel-Format Sami"
@@ -233,33 +229,30 @@ msgstr "Untertitel-Format TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Untertitel-Format Kate"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "Unkomprimiertes YUV"
+msgstr "Unkomprimiertes Video"
 
-#, fuzzy
 msgid "Uncompressed gray"
-msgstr "Unkomprimiertes Graubild"
+msgstr "Unkomprimiertes Grau"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s YUV %s"
-msgstr "Unkomprimiertes YUV"
+msgstr "Unkomprimiertes %s YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s%d-bit %s"
-msgstr "Unkomprimiertes palettiertes %d-Bit %s"
+msgstr "Unkomprimiertes %s%d-Bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Version %d"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "Unkomprimiertes YUV"
+msgstr "Unkomprimiertes Audio"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Rohes %d-bit PCM-Audio"
+msgstr "Rohes %d-Bit %s Audio"
 
 msgid "Audio CD source"
 msgstr "Musik-CD-Quelle"
@@ -382,7 +375,6 @@ msgstr "Belichtungszeit bei Aufnahme eines Bildes in Sekunden"
 msgid "capturing focal ratio"
 msgstr "Blendenwert"
 
-# F-Nummer kennt bei uns kein Mensch. Oder doch...?
 msgid "Focal ratio (f-number) used when capturing the image"
 msgstr "Der verwendete Blendenwert bei Bildaufnahme"
 
@@ -500,10 +492,10 @@ msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Vertikale Auflösung des Bildes oder Videos in ppi (Pixel pro Zoll)"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "ID3v2-Rahmen"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "unverarbeiteter ID3v2-Kennzeichnungsrahmen"
 
 #~ msgid "Master"
 #~ msgstr "Hauptregler"
@@ -537,48 +529,6 @@ msgstr ""
 
 #~ msgid "Capture"
 #~ msgstr "Aufnahme"
-
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "Verbindung nach %s:%d wurde verweigert."
-
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "Unkomprimiertes ungepacktes YUV 4:2:0"
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "Unkomprimiertes ungepacktes YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "Unkomprimiertes gepacktes YUV 4:2:2"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "Unkomprimiertes gepacktes YUV 4:1:0"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "Unkomprimiertes gepacktes YVU 4:1:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "Unkomprimiertes gepacktes YUV 4:1:1"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "Unkomprimiertes gepacktes  YUV 4:4:4"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "Unkomprimiertes ungepacktes YUV 4:2:2"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "Unkomprimiertes ungepacktes YUV 4:1:1"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "Unkomprimiertes schwarz-weißes Y-plane"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "Rohes PCM-Audio"
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Rohes %d-Bit Gleitkomma-Audio"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Rohes Gleitkomma-Audio"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "VFS-Datei »%s« konnte nicht zum Schreiben geöffnet werden: %s."
@@ -626,6 +576,54 @@ msgstr ""
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Beide Elemente »autoaudiosink« und »alsasink« fehlen."
 
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Fehler beim Senden der GDP-Kopfdaten nach »%s:%d«."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Fehler beim Senden der GDP-Nutzdaten nach »%s:%d«."
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Verbindung nach %s:%d wurde verweigert."
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Unkomprimiertes ungepacktes YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Unkomprimiertes ungepacktes YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Unkomprimiertes gepacktes YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Unkomprimiertes gepacktes YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Unkomprimiertes gepacktes YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Unkomprimiertes gepacktes YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Unkomprimiertes gepacktes  YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Unkomprimiertes ungepacktes YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Unkomprimiertes ungepacktes YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Unkomprimiertes schwarz-weißes Y-plane"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Rohes PCM-Audio"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Rohes %d-Bit Gleitkomma-Audio"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Rohes Gleitkomma-Audio"
+
 #~ msgid "No device specified."
 #~ msgstr "Kein Gerät angegeben."
 
@@ -638,12 +636,6 @@ msgstr ""
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr ""
 #~ "Das Gerät »%s« konnte nicht zum Lesen und Schreiben geöffnet werden."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Fehler beim Senden der GDP-Kopfdaten nach »%s:%d«."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Fehler beim Senden der GDP-Nutzdaten nach »%s:%d«."
 
 #~ msgid "Can't display both text subtitles and subpictures."
 #~ msgstr ""

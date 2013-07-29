@@ -3,20 +3,20 @@
 #
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011.
+# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
+"Project-Id-Version: gst-plugins-base 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:35+0200\n"
-"PO-Revision-Date: 2011-04-26 20:30+0400\n"
+"POT-Creation-Date: 2013-07-29 19:40+0100\n"
+"PO-Revision-Date: 2012-12-01 13:27+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.0\n"
+"X-Generator: Lokalize 1.4\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
@@ -209,19 +209,16 @@ msgid "Run-length encoding"
 msgstr "RLE-сжатие"
 
 msgid "Subtitle"
-msgstr ""
+msgstr "Субтитры"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "Формат субтитров TMPlayer"
+msgstr "Формат субтитров MPL2"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Формат субтитров Sami"
+msgstr "Формат субтитров DKS"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Формат субтитров Kate"
+msgstr "Формат субтитров QTtext"
 
 msgid "Sami subtitle format"
 msgstr "Формат субтитров Sami"
@@ -232,33 +229,30 @@ msgstr "Формат субтитров TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Формат субтитров Kate"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "Несжатый YUV"
+msgstr "Несжатое видео"
 
-#, fuzzy
 msgid "Uncompressed gray"
-msgstr "Несжатое полутоновое изображение"
+msgstr "Несжатый серый"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s YUV %s"
-msgstr "Несжатый YUV"
+msgstr "Несжатый %s YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s%d-bit %s"
-msgstr "Несжатое %d-битное %s-изображение с палитрой"
+msgstr "Несжатое %s%d-битное %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Версия %d"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "Несжатый YUV"
+msgstr "Несжатое аудио"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Несжатое %d-битное PCM-аудио"
+msgstr "Необработанное %d-битное аудио %s"
 
 msgid "Audio CD source"
 msgstr "Источник аудио-CD"
@@ -483,22 +477,22 @@ msgid "The source or type of device used for the capture"
 msgstr "Источник или тип устройства, использованный для съёмки"
 
 msgid "image horizontal ppi"
-msgstr "изображение в ppi по горизонтали"
+msgstr "изображение по горизонтали в ppi"
 
 msgid "Media (image/video) intended horizontal pixel density in ppi"
 msgstr "Горизонтальная плотность носителя (изображение/видео) в ppi"
 
 msgid "image vertical ppi"
-msgstr "изображение в ppi по вертикали"
+msgstr "изображение по вертикали в ppi"
 
 msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Вертикальная плотность носителя (изображение/видео) в ppi"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "кадр ID3v2"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "неразбираемый тег кадра id3v2"
 
 #~ msgid "Master"
 #~ msgstr "Общий"
@@ -532,48 +526,6 @@ msgstr ""
 
 #~ msgid "Capture"
 #~ msgstr "Съёмка"
-
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "В соединении с %s:%d отказано."
-
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "Несжатый планарный YUV 4:2:0"
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "Несжатый планарный YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "Несжатый смешанный YUV 4:2:2"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "Несжатый смешанный YUV 4:1:0"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "Несжатый смешанный YVU 4:1:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "Несжатый смешанный YUV 4:1:1"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "Несжатый смешанный YUV 4:4:4"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "Несжатый планарный YUV 4:2:2"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "Несжатый планарный YUV 4:1:1"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "Несжатая чёрно-белая Y-плоскость"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "Несжатое PCM-аудио"
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Несжатое %d-битное аудио с плавающей точкой"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Несжатое аудио с плавающей точкой"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Не удалось открыть vfs-файл «%s» для записи: %s."
@@ -620,6 +572,54 @@ msgstr ""
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Отсутствуют элементы autoaudiosink и alsasink."
 
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Ошибка отправки данных заголовка gdp в «%s:%d»."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Ошибка отправки данных gdp в «%s:%d»."
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "В соединении с %s:%d отказано."
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Несжатый планарный YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Несжатый планарный YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Несжатый смешанный YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Несжатый смешанный YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Несжатый смешанный YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Несжатый смешанный YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Несжатый смешанный YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Несжатый планарный YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Несжатый планарный YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Несжатая чёрно-белая Y-плоскость"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Несжатое PCM-аудио"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Несжатое %d-битное аудио с плавающей точкой"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Несжатое аудио с плавающей точкой"
+
 #~ msgid "No device specified."
 #~ msgstr "Не указано устройство."
 
@@ -631,12 +631,6 @@ msgstr ""
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Не удалось открыть устройство «%s» для чтения и записи."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Ошибка отправки данных заголовка gdp в «%s:%d»."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Ошибка отправки данных gdp в «%s:%d»."
 
 #~ msgid "No file name specified."
 #~ msgstr "Не указано имя файла."

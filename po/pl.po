@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-base.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2011.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
+"Project-Id-Version: gst-plugins-base 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:35+0200\n"
-"PO-Revision-Date: 2011-04-26 18:01+0200\n"
+"POT-Creation-Date: 2013-07-29 19:40+0100\n"
+"PO-Revision-Date: 2012-11-28 19:21+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -97,9 +97,8 @@ msgstr "Nie udało się określić typu strumienia"
 msgid "This appears to be a text file"
 msgstr "To wygląda na plik tekstowy"
 
-#, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Nie udało się utworzyć elementu \"decodebin\"."
+msgstr ""
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -211,19 +210,16 @@ msgid "Run-length encoding"
 msgstr "Kodowanie RLE"
 
 msgid "Subtitle"
-msgstr ""
+msgstr "Podpisy"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "Format podpisów TMPlayer"
+msgstr "Format podpisów MPL2"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Format podpisów Sami"
+msgstr "Format podpisów DKS"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Format podpisów Kate"
+msgstr "Format podpisów QTtext"
 
 msgid "Sami subtitle format"
 msgstr "Format podpisów Sami"
@@ -234,33 +230,30 @@ msgstr "Format podpisów TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Format podpisów Kate"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "Nieskompresowany YUV"
+msgstr "Nieskompresowany obraz"
 
-#, fuzzy
 msgid "Uncompressed gray"
-msgstr "Nieskompresowany obraz w szarości"
+msgstr "Nieskompresowane szarości"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s YUV %s"
-msgstr "Nieskompresowany YUV"
+msgstr "Nieskompresowany %s YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s%d-bit %s"
-msgstr "Nieskompresowany %d-bitowy %s z paletą"
+msgstr "Nieskompresowany %s%d-bitowy %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 w wersji %d"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "Nieskompresowany YUV"
+msgstr "Nieskompresowany dźwięk"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Surowe %d-bitowy dźwięk PCM"
+msgstr "Surowy %d-bitowy dźwięk %s"
 
 msgid "Audio CD source"
 msgstr "Źródło Audio CD"
@@ -495,146 +488,7 @@ msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Rozdzielczość pionowa nośnika w pikselach na cal"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "ramka ID3v2"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
-
-#~ msgid "Master"
-#~ msgstr "Główny"
-
-#~ msgid "Bass"
-#~ msgstr "Niskie"
-
-#~ msgid "Treble"
-#~ msgstr "Wysokie"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Synth"
-#~ msgstr "Syntezator"
-
-#~ msgid "Line-in"
-#~ msgstr "Wejście"
-
-#~ msgid "CD"
-#~ msgstr "CD"
-
-#~ msgid "Microphone"
-#~ msgstr "Mikrofon"
-
-#~ msgid "PC Speaker"
-#~ msgstr "Głośnik PC"
-
-#~ msgid "Playback"
-#~ msgstr "Odtwarzanie"
-
-#~ msgid "Capture"
-#~ msgstr "Nagrywanie"
-
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "Połączenie z %s:%d odrzucone."
-
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "Nieskompresowany planarny YUV 4:2:0"
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "Nieskompresowany planarny YUV 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "Nieskompresowany spakowany YUV 4:2:2"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "Nieskompresowany spakowany YUV 4:1:0"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "Nieskompresowany spakowany YUV 4:1:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "Nieskompresowany spakowany YUV 4:1:1"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "Nieskompresowany spakowany YUV 4:4:4"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "Nieskompresowany planarny YUV 4:2:2"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "Nieskompresowany planarny YUV 4:1:1"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "Nieskompresowany czarno-biały plan Y"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "Surowy dźwięk PCM"
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Surowy %d-bitowy dźwięk zmiennoprzecinkowy"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Surowy dźwięk zmiennoprzecinkowy"
-
-#~ msgid "Could not open vfs file \"%s\" for writing: %s."
-#~ msgstr "Nie udało się otworzyć pliku vfs \"%s\" do zapisu: %s."
-
-#~ msgid "No filename given"
-#~ msgstr "Nie podano nazwy pliku"
-
-#~ msgid "Could not close vfs file \"%s\"."
-#~ msgstr "Nie udało się zamknąć pliku vfs \"%s\"."
-
-#~ msgid "Error while writing to file \"%s\"."
-#~ msgstr "Błąd podczas zapisu do pliku \"%s\"."
-
-#~ msgid "Invalid subtitle URI \"%s\", subtitles disabled."
-#~ msgstr "Niepoprawne URI podpisów \"%s\", podpisy wyłączone."
-
-#~ msgid "RTSP streams cannot be played yet."
-#~ msgstr "Strumieni RTSP jeszcze nie można odtwarzać."
-
-#~ msgid ""
-#~ "Only a subtitle stream was detected. Either you are loading a subtitle "
-#~ "file or some other type of text file, or the media file was not "
-#~ "recognized."
-#~ msgstr ""
-#~ "Wykryto tylko strumień podpisów. Albo żądano wczytania pliku podpisów lub "
-#~ "innego rodzaju pliku tekstowego, albo nie rozpoznano pliku "
-#~ "multimedialnego."
-
-#~ msgid ""
-#~ "You do not have a decoder installed to handle this file. You might need "
-#~ "to install the necessary plugins."
-#~ msgstr ""
-#~ "Nie ma zainstalowanego dekodera do obsługi tego pliku. Być może trzeba "
-#~ "zainstalować potrzebne wtyczki."
-
-#~ msgid "This is not a media file"
-#~ msgstr "To nie jest plik multimedialny"
-
-#~ msgid "A subtitle stream was detected, but no video stream."
-#~ msgstr "Wykryto strumień podpisów, ale brak strumienia obrazu."
-
-#~ msgid "Both autovideosink and xvimagesink elements are missing."
-#~ msgstr "Nie ma żadnego z elementów autovideosink i xvimagesink."
-
-#~ msgid "Both autoaudiosink and alsasink elements are missing."
-#~ msgstr "Nie ma żadnego z elementów autoaudiosink i alsasink."
-
-#~ msgid "No device specified."
-#~ msgstr "Nie określono urządzenia."
-
-#~ msgid "Device \"%s\" does not exist."
-#~ msgstr "Urządzenie \"%s\" nie istnieje."
-
-#~ msgid "Device \"%s\" is already being used."
-#~ msgstr "Urządzenie \"%s\" jest już używane."
-
-#~ msgid "Could not open device \"%s\" for reading and writing."
-#~ msgstr "Nie udało się otworzyć urządzenia \"%s\" do odczytu i zapisu."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Błąd podczas wysyłania danych nagłówka gdp do \"%s:%d\"."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Błąd podczas wysyłania danych gdp do \"%s:%d\"."
+msgstr "ramka znacznika id3v2"

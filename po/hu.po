@@ -3,13 +3,13 @@
 # Copyright (C) 2004, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 #
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
-# Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009.
+# Gabor Kelemen <kelemeng@gnome.hu>, 2006, 2007, 2008, 2009, 2012.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
+"Project-Id-Version: gst-plugins-base 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:35+0200\n"
-"PO-Revision-Date: 2010-11-03 02:48+0100\n"
+"POT-Creation-Date: 2013-07-29 19:40+0100\n"
+"PO-Revision-Date: 2012-11-29 14:05+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Rosetta-Export-Date: 2007-03-10 00:18+0000\n"
-"X-Generator: KBabel 1.11.4\n"
+"X-Generator: Lokalize 1.4\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
 msgid "Could not open device for playback in mono mode."
@@ -208,19 +208,16 @@ msgid "Run-length encoding"
 msgstr "Műsorhossz-kódolás"
 
 msgid "Subtitle"
-msgstr ""
+msgstr "Felirat"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "TMPlayer feliratformátum"
+msgstr "MPL2 feliratformátum"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Sami feliratformátum"
+msgstr "DKS feliratformátum"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Kate feliratformátum"
+msgstr "QTtext feliratformátum"
 
 msgid "Sami subtitle format"
 msgstr "Sami feliratformátum"
@@ -231,33 +228,30 @@ msgstr "TMPlayer feliratformátum"
 msgid "Kate subtitle format"
 msgstr "Kate feliratformátum"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "Tömörítetlen YUV"
+msgstr "Tömörítetlen videó"
 
-#, fuzzy
 msgid "Uncompressed gray"
-msgstr "Tömörítetlen szürke kép"
+msgstr "Tömörítetlen szürke"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s YUV %s"
-msgstr "Tömörítetlen YUV"
+msgstr "Tömörítetlen %s YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s%d-bit %s"
-msgstr "Tömörítetlen, palettás %d bites %s"
+msgstr "Tömörítetlen, %s%d bites %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 %d. verzió"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "Tömörítetlen YUV"
+msgstr "Tömörítetlen hang"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Nyers %d bites PCM hang"
+msgstr "Nyers %d bites %s hang"
 
 msgid "Audio CD source"
 msgstr "Hang CD forrás"
@@ -412,13 +406,11 @@ msgstr "felvétel expozíciós módja"
 msgid "The exposure mode used when capturing an image"
 msgstr "A kép felvételéhez használt expozíciós mód"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "felvétel expozíciós módja"
+msgstr "felvétel expozíciós kompenzációja"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr "A kép felvételéhez használt expozíciós mód"
+msgstr "A kép felvételéhez használt expozíciós kompenzáció"
 
 msgid "capturing scene capture type"
 msgstr "felvétel helyszínfelvételi módja"
@@ -494,10 +486,10 @@ msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "A média (kép/videó) tervezett függőleges képpontsűrűsége ppi-ben"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "ID3v2 keret"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "feldolgozatlan id3v2 címke keret"
 
 #~ msgid "Master"
 #~ msgstr "Fő hangerő"
@@ -531,48 +523,6 @@ msgstr ""
 
 #~ msgid "Capture"
 #~ msgstr "Felvétel"
-
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "A kapcsolat visszautasítva a következőhöz: %s:%d."
-
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "Tömörítetlen síkbeli YUV 4:2:0"
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "Tömörítetlen síkbeli YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "Tömörítetlen pakolt YUV 4:2:2"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "Tömörítetlen pakolt YUV 4:1:0"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "Tömörítetlen pakolt YVU 4:1:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "Tömörítetlen pakolt YUV 4:1:1"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "Tömörítetlen pakolt YUV 4:4:4"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "Tömörítetlen síkbeli YUV 4:2:2"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "Tömörítetlen síkbeli YUV 4:1:1"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "Tömörítetlen fekete-fehér Y-sík"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "Nyers PCM hang"
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Nyers %d bites lebegőpontos hang"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Nyers lebegőpontos hang"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Nem lehet írásra megnyitni a(z) „%s” vfs-fájlt: %s."
@@ -619,6 +569,54 @@ msgstr ""
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Az autoaudiosink és az alsasink elem is hiányzik."
 
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Hiba a gdp fejlécadatok küldésekor a következőnek: „%s:%d”."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Hiba a gdp küldeményadatok elküldésekor a következőnek: „%s:%d”."
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "A kapcsolat visszautasítva a következőhöz: %s:%d."
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Tömörítetlen síkbeli YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Tömörítetlen síkbeli YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Tömörítetlen pakolt YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Tömörítetlen pakolt YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Tömörítetlen pakolt YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Tömörítetlen pakolt YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Tömörítetlen pakolt YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Tömörítetlen síkbeli YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Tömörítetlen síkbeli YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Tömörítetlen fekete-fehér Y-sík"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Nyers PCM hang"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Nyers %d bites lebegőpontos hang"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Nyers lebegőpontos hang"
+
 #~ msgid "No device specified."
 #~ msgstr "Nincs megadva eszköz."
 
@@ -630,9 +628,3 @@ msgstr ""
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Nem lehet olvasásra és írásra megnyitni az eszközt („%s”)."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Hiba a gdp fejlécadatok küldésekor a következőnek: „%s:%d”."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Hiba a gdp küldeményadatok elküldésekor a következőnek: „%s:%d”."

@@ -2,15 +2,16 @@
 # This file is put in the public domain.
 #
 # Simos Xenitellis <simos.lists@googlemail.com>, 2010.
-# Michael Kotsarinis <mk73628@gmail.com>, 2010. 
+# Michael Kotsarinis <mk73628@gmail.com>, 2010.
+# Savvas Radevic <vicedar@gmail.com>, 2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.30.3\n"
+"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:35+0200\n"
-"PO-Revision-Date: 2010-10-27 12:05+0200\n"
-"Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
+"POT-Creation-Date: 2013-07-29 19:40+0100\n"
+"PO-Revision-Date: 2012-05-05 19:13+0100\n"
+"Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
 "Language: el\n"
 "MIME-Version: 1.0\n"
@@ -416,13 +417,11 @@ msgstr "τρόπος έκθεσης λήψης"
 msgid "The exposure mode used when capturing an image"
 msgstr "Ο τρόπος έκθεσης που χρησιμοποιήθηκε για τη λήψη μιας εικόνας"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "τρόπος έκθεσης λήψης"
+msgstr "αντιστάθμιση έκθεσης λήψης"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr "Ο τρόπος έκθεσης που χρησιμοποιήθηκε για τη λήψη μιας εικόνας"
+msgstr "Η αντιστάθμιση έκθεσης που χρησιμοποιήθηκε για τη λήψη μιας εικόνας"
 
 msgid "capturing scene capture type"
 msgstr "τύπος σύλληψης σκηνής της λήψης"
@@ -547,48 +546,6 @@ msgstr ""
 #~ msgid "Capture"
 #~ msgstr "Σύλληψη"
 
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "Άρνηση σύνδεσης σε %s:%d."
-
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "Ασυμπίεστο planar YUV 4:2:0"
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "Ασυμπίεστο planar YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "Ασυμπίεστο packed YUV 4:2:2"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "Ασυμπίεστο packed YUV 4:1:0"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "Ασυμπίεστο packed YVU 4:1:0"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "Ασυμπίεστο packed YUV 4:1:1"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "Ασυμπίεστο packed YUV 4:4:4"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "Ασυμπίεστο planar YUV 4:2:2"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "Ασυμπίεστο planar YUV 4:1:1"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "Ασυμπίεστο ασπρόμαυρο Y-plane"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "Καθαρός ήχος PCM "
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Καθαρός ήχος %d-bit floating-point"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Καθαρός floating-point ήχος"
-
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Αδυναμία ανοίγματος αρχείου vfs «%s» για εγγραφή: %s."
 
@@ -636,6 +593,54 @@ msgstr ""
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Λείπουν και τα δύο στοιχεία autoaudiosink και alsasink."
 
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Σφάλμα κατά την αποστολή δεδομένων κεφαλίδας gdp σε «%s:%d»."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Σφάλμα κατά την αποστολή δεδομένων φόρτου gdp σε «%s:%d»."
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "Άρνηση σύνδεσης σε %s:%d."
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "Ασυμπίεστο planar YUV 4:2:0"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "Ασυμπίεστο planar YVU 4:2:0"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "Ασυμπίεστο packed YUV 4:2:2"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "Ασυμπίεστο packed YUV 4:1:0"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "Ασυμπίεστο packed YVU 4:1:0"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "Ασυμπίεστο packed YUV 4:1:1"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "Ασυμπίεστο packed YUV 4:4:4"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "Ασυμπίεστο planar YUV 4:2:2"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "Ασυμπίεστο planar YUV 4:1:1"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Ασυμπίεστο ασπρόμαυρο Y-plane"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Καθαρός ήχος PCM "
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Καθαρός ήχος %d-bit floating-point"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Καθαρός floating-point ήχος"
+
 #~ msgid "No device specified."
 #~ msgstr "Δεν ορίσθηκε συσκευή."
 
@@ -647,9 +652,3 @@ msgstr ""
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Αδυναμία ανοίγματος συσκευής «%s» για ανάγνωση και εγγραφή."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Σφάλμα κατά την αποστολή δεδομένων κεφαλίδας gdp σε «%s:%d»."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Σφάλμα κατά την αποστολή δεδομένων φόρτου gdp σε «%s:%d»."

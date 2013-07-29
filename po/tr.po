@@ -1,12 +1,13 @@
-# translation of gst-plugins-base-0.10.32.2.po to Turkish
+# translation of gst-plugins-base-1.0.3.po to Turkish
 # This file is put in the public domain.
 # Server Acim <serveracim@gmail.com>, 2010.
+# Server Acim <serveracim@gmail.com>, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 0.10.32.2\n"
+"Project-Id-Version: gst-plugins-base 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:35+0200\n"
-"PO-Revision-Date: 2011-04-26 19:22+0200\n"
+"POT-Creation-Date: 2013-07-29 19:40+0100\n"
+"PO-Revision-Date: 2013-03-10 12:46+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "Language: tr\n"
@@ -200,19 +201,16 @@ msgid "Run-length encoding"
 msgstr "Çalıştırma-uzunluğu kodlaması"
 
 msgid "Subtitle"
-msgstr ""
+msgstr "Altyazı"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "TMPlayer altyazı kipi"
+msgstr "MPL2 altyazı kipi"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Sami altyazı kipi"
+msgstr "DKS altyazı kipi"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Kate altyazı kipi"
+msgstr "QTtext altyazı kipi"
 
 msgid "Sami subtitle format"
 msgstr "Sami altyazı kipi"
@@ -223,33 +221,30 @@ msgstr "TMPlayer altyazı kipi"
 msgid "Kate subtitle format"
 msgstr "Kate altyazı kipi"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "Sıkıştırılmamış YUV"
+msgstr "Sıkıştırılmamış video"
 
-#, fuzzy
 msgid "Uncompressed gray"
-msgstr "Sıkıştırılmamış Gri Resim"
+msgstr "Sıkıştırılmamış gri resim"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s YUV %s"
-msgstr "Sıkıştırılmamış YUV"
+msgstr "Sıkıştırılmamış %s YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s%d-bit %s"
-msgstr "Şıkıştırılmamış seviyesi şuna düşürülmüş %d-bit %s"
+msgstr "Şıkıştırılmamış ses seviyesi %s%d-bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Versiyonu %d"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "Sıkıştırılmamış YUV"
+msgstr "Sıkıştırılmamış ses"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Ham %d-bit PCM ses"
+msgstr "Ham %d-bit %s audio"
 
 msgid "Audio CD source"
 msgstr "Ses CD'si kaynağı"
@@ -484,10 +479,10 @@ msgid "Media (image/video) intended vertical pixel density in ppi"
 msgstr "Medya (resim/vidyo)'nun ppi değerinden dikey piksel yoğunluğu"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "ID3v2 çerçevesi"
 
 msgid "unparsed id3v2 tag frame"
-msgstr ""
+msgstr "ayrıştırılmamış id3v2 etiket çerçevesi"
 
 #~ msgid "Master"
 #~ msgstr "Ana"
