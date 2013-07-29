@@ -56,6 +56,19 @@ libgstvaapi_source_h = \
 	gstvaapivideometa.h	\
 	$(NULL)
 
+libgstvaapi_enc_source_c =	\
+	gstvaapiencode.c	\
+	$(NULL)
+
+libgstvaapi_enc_source_h =	\
+	gstvaapiencode.h	\
+	$(NULL)
+
+if USE_ENCODERS
+libgstvaapi_source_c += $(libgstvaapi_enc_source_c)
+libgstvaapi_source_h += $(libgstvaapi_enc_source_h)
+endif
+
 libgstvaapi_x11_source_c = gstvaapivideoconverter_x11.c
 libgstvaapi_x11_source_h = gstvaapivideoconverter_x11.h
 
