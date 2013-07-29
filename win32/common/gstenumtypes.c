@@ -755,6 +755,25 @@ gst_debug_color_flags_get_type (void)
   return (GType) id;
 }
 
+GType
+gst_debug_color_mode_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_DEBUG_COLOR_MODE_OFF), "GST_DEBUG_COLOR_MODE_OFF", "off"},
+    {C_ENUM (GST_DEBUG_COLOR_MODE_ON), "GST_DEBUG_COLOR_MODE_ON", "on"},
+    {C_ENUM (GST_DEBUG_COLOR_MODE_UNIX), "GST_DEBUG_COLOR_MODE_UNIX", "unix"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstDebugColorMode", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
+
 /* enumerations from "gstiterator.h" */
 GType
 gst_iterator_result_get_type (void)

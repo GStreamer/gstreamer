@@ -1,9 +1,375 @@
-=== release 1.1.2 ===
+=== release 1.1.3 ===
 
-2013-07-11  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-07-29  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.2
+	  releasing 1.1.3
+
+2013-07-29 12:10:45 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* libs/gst/base/gstbaseparse.c:
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesrc.c:
+	  base: Fix handling of SEGMENT query
+	  The values should be in stream-time, and start/stop should not
+	  be swapped for negative rates.
+
+2013-07-29 11:05:09 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Only advance offset by the number of bytes we actually read
+	  There might be a short read at EOS.
+
+2013-07-29 10:48:30 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: Implement SEGMENT query
+
+2013-07-26 18:36:04 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstbuffer.c:
+	  buffer: fix Since: marker for new gst_buffer_extract_dup()
+
+2013-07-26 12:19:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/gstclock.c:
+	  clock: debug the clock return values
+
+2013-07-25 12:20:14 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: fix seqnum handling for seeks
+	  Use the same seqnum as the seek for flushes/segments that are
+	  caused by the seek. Also do the same for segment events
+	  Fixes #676242
+
+2013-07-24 10:29:30 -0700  David Schleef <ds@schleef.org>
+
+	* gst/gstinfo.c:
+	  info: parse debug levels > 9
+
+2013-07-24 16:57:46 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstvalue.c:
+	  value: Fix copy&paste mistakes in the bitmask function docs
+
+2013-07-24 11:21:27 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: Don't shadow variables that are set inside our scope and then used outside our scope
+	  Fixes uninitialized use of these variables.
+
+2013-07-24 10:30:25 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* tests/check/gst/struct_arm.h:
+	* tests/check/gst/struct_hppa.h:
+	* tests/check/gst/struct_i386.h:
+	* tests/check/gst/struct_i386w.h:
+	* tests/check/gst/struct_ppc32.h:
+	* tests/check/gst/struct_ppc64.h:
+	* tests/check/gst/struct_sparc.h:
+	* tests/check/gst/struct_x86_64.h:
+	  tests: Remove other interface structs from the ABI tests too
+
+2010-10-15 13:16:59 -0300  Thiago Santos <thiago.sousa.santos@collabora.co.uk>
+
+	* tests/check/gst/struct_arm.h:
+	* tests/check/gst/struct_hppa.h:
+	* tests/check/gst/struct_i386.h:
+	* tests/check/gst/struct_i386w.h:
+	* tests/check/gst/struct_ppc32.h:
+	* tests/check/gst/struct_ppc64.h:
+	* tests/check/gst/struct_sparc.h:
+	* tests/check/gst/struct_x86_64.h:
+	  tests: Remove GstTagSetter from ABI checks
+	  Interfaces can have new members added without breaking ABI, so
+	  remove it from the check.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=623799
+
+2013-07-23 15:39:53 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* libs/gst/check/libcheck/check_print.c:
+	  libcheck: Escape strings in the generated xml files
+	  This is copy pasted from upstream libcheck
+
+2013-07-23 18:53:44 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: Print some debug output if a stream-start event without group-id arrives
+	  Ideally all elements would implement handling of that to get proper
+	  stream-start message handling and other things.
+
+2013-07-22 18:03:01 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* plugins/elements/gstinputselector.c:
+	  input-selector: Fix missing pad activation notification
+	  A new active pad might not be notified in some cases, which results
+	  in the current track number not being set in playbin.
+	  The active-pad notification is only sent in the chain and sink_event
+	  functions, and only when the buffer or event that triggered the active
+	  pad selection is from the newly activated pad. So in the other case
+	  the notification will never be sent.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704691
+
+2013-07-22 17:25:47 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstvalue.c:
+	  value: handle deserialisation of nonexistant enum value more gracefully
+
+2013-07-22 14:12:18 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gstinputselector.c:
+	* plugins/elements/gstinputselector.h:
+	  inputselector: Don't push new stream-start events on stream change unless they all have group ids
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704408
+
+2013-07-22 12:06:29 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Use new group-id in stream-start event
+
+2013-07-22 12:06:08 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* libs/gst/base/gstbaseparse.c:
+	* libs/gst/base/gstbasesink.c:
+	* libs/gst/base/gstbasesrc.c:
+	  base: Use new group-id field in stream-start event and message
+
+2013-07-22 11:42:18 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstbin.c:
+	  bin: Use the new group-id field of the stream-start message for stream-start message aggregation
+	  If all stream-start messages had a group id (for backwards compatibility),
+	  we only consider a stream started if all had the same group id.
+	  In 2.0 we should make the group id mandatory.
+
+2013-07-22 11:41:35 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	* gst/gstmessage.c:
+	* gst/gstmessage.h:
+	* gst/gstquark.c:
+	* gst/gstquark.h:
+	* gst/gstutils.c:
+	* gst/gstutils.h:
+	* win32/common/libgstreamer.def:
+	  gst: Add new group-id field to the stream-start event
+	  All streams that have the same group id are supposed to be played
+	  together, i.e. all streams inside a container file should have the
+	  same group id but different stream ids. The group id should change
+	  each time the stream is started, resulting in different group ids
+	  each time a file is played for example.
+
+2013-07-18 23:29:49 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  common: revert accidental change of common submodule
+
+2013-07-18 14:39:42 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstcaps.c:
+	* gst/gstmessage.c:
+	* gst/gstmessage.h:
+	  gst: Add some more Since: 1.2
+
+2013-07-18 14:34:31 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstinfo.c:
+	  info: Add some Since: 1.2
+
+2013-07-18 15:10:10 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* common:
+	* docs/gst/gstreamer-sections.txt:
+	* docs/gst/running.xml:
+	* docs/manual/appendix-checklist.xml:
+	* gst/gst.c:
+	* gst/gstinfo.c:
+	* gst/gstinfo.h:
+	* tools/gst-launch.1.in:
+	* tools/gst-plot-timeline.py:
+	* win32/common/libgstreamer.def:
+	  info: Add debug color mode option
+	  This allows to explicitely set the debug output color
+	  mode to UNIX on every platform, enable it (use platform
+	  default color mode) or enable it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=674320
+
+2012-04-18 14:35:32 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* gst/gstinfo.c:
+	  info: Fix black and underline coloring on W32
+	  Fixes #674320
+
+2012-04-18 14:12:16 +0400  Руслан Ижбулатов <lrn1986@gmail.com>
+
+	* gst/gstinfo.c:
+	  info: Cut down src file names for MinGW too
+	  Fixes #674320
+
+2013-07-16 17:47:45 +0200  Nicola Murino <nicola.murino@gmail.com>
+
+	* scripts/gst-uninstalled:
+	  gst-uninstalled: Fix gst-plugins-gl in uninstalled setup
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703499
+
+2013-07-16 15:35:08 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* libs/gst/base/gstadapter.c:
+	* tests/check/libs/adapter.c:
+	  adapter: Take account of the skip in gst_adapter_take_buffer_fast()
+	  Include regression test
+
+2013-07-15 15:41:44 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* libs/gst/base/gstadapter.c:
+	* libs/gst/base/gstadapter.h:
+	* tests/check/libs/adapter.c:
+	* win32/common/libgstbase.def:
+	  adapter: Add function to return buffer composed of multiple memories
+	  API: gst_adapter_take_fast()
+
+2013-07-16 16:24:38 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstquery.c:
+	  query: Don't assert if no context is set in the query
+
+2013-07-16 14:47:05 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/benchmarks/.gitignore:
+	  benchmarks: ignore new benchmark binary
+
+2013-07-16 14:46:15 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstquery.c:
+	* gst/gstquery.h:
+	  query: sprinkle some Since 1.2 markers in docs
+
+2013-07-16 14:44:03 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* libs/gst/net/gstnettimeprovider.c:
+	  timeprovider: g-i: allow None as address for gst_net_time_provider_new()
+
+2013-07-16 15:34:57 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstelement.c:
+	  element: Return an empty GstContext if none was set yet
+
+2013-07-16 15:16:16 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstquery.c:
+	* gst/gstquery.h:
+	* win32/common/libgstreamer.def:
+	  query: Add gst_query_has_context_type()
+
+2013-07-16 11:36:50 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: only block serialized query when it's safe
+	  We must be certain that we don't cause a deadlock when blocking the serialized
+	  queries. One such deadlock can happen when we are buffering and downstream is
+	  blocked in preroll and a serialized query arrives. Downstream will not unblock
+	  (and allow our query to execute) until we complete buffering and buffering will
+	  not complete until we can answer the query..
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702840
+
+2013-07-15 11:36:18 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstpad.c:
+	  pad: A newly activated pad should be marked as needing reconfiguration
+
+2013-07-15 11:32:54 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstpad.c:
+	  Revert "pad: Don't consider flushing pads as needing reconfiguration"
+	  This reverts commit 948a9d2f2b728f5fb60be45d47a818cebeb60c7d.
+	  This is racy and trying to reconfigure and fail is still better
+	  than not trying to reconfigure at all.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704100
+
+2013-07-15 11:32:10 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: Leave the loop function faster if we're flushing
+	  Especially don't even try to send stream-start event or try
+	  to negotiate.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704100
+
+2013-07-12 10:08:26 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: Deactivate and remove pad without the inputselector lock
+	  Otherwise we might get deadlocks caused by lock order inversion:
+	  During the chain function the stream lock is first locked and then the
+	  inputselector lock. During pad release we first locked the inputselector
+	  lock and then deactivating the pad would lock the stream lock.
+	  There's no reason why the inputselector lock should be required while
+	  deactivating and removing the pad, it's only needed before.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704002
+
+2013-07-11 16:57:06 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.2 ===
+
+2013-07-11 15:12:39 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.1.2
+
+2013-07-11 15:11:27 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2013-07-10 15:52:10 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 

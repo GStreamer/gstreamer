@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 1.1.2
+Release notes for GStreamer 1.1.3
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -45,14 +45,11 @@ Features of this release
 
 Bugs fixed in this release
      
-      * 652037 : basesrc: less persistent caching of size
-      * 701985 : gst-launch: Unreffing GstContext that is still used
-      * 702089 : gst_init: Don't intercept --help
-      * 702520 : queue: deadlock when reconfigure event
-      * 702632 : acceptcaps query can be very very slow
-      * 703267 : funnel: Needs to be usable in playbin
-      * 703377 : gst_check_setup_events() and multiple src or sink pads
-      * 703682 : POTFILES.in is out of date
+      * 674320 : Various improvements for logging on W32
+      * 676242 : [metabug] Verify that elements handle seqnum for seeks correctly
+      * 704333 : gst-uninstalled: fix gst-plugins-gl in unistalled setup
+      * 704408 : inputselector: stream start event forwarding prevents track change
+      * 704691 : input-selector: active pad not notified
 
 ==== Download ====
 
@@ -89,19 +86,14 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Brendan Long
-      * Edward Hervey
-      * Hans de Goede
-      * Jonas Holmberg
-      * Kim Lam
-      * Nicolas Dufresne
+      * Arnaud Vrac
+      * David Schleef
+      * Nicola Murino
       * Olivier Crête
-      * Paul HENRYS
-      * Piotr Drąg
       * Sebastian Dröge
-      * Sjoerd Simons
-      * Stefan Sauer
+      * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
       * Wim Taymans
+      * Руслан Ижбулатов
  

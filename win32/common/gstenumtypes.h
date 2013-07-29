@@ -93,6 +93,8 @@ GType gst_debug_level_get_type (void);
 #define GST_TYPE_DEBUG_LEVEL (gst_debug_level_get_type())
 GType gst_debug_color_flags_get_type (void);
 #define GST_TYPE_DEBUG_COLOR_FLAGS (gst_debug_color_flags_get_type())
+GType gst_debug_color_mode_get_type (void);
+#define GST_TYPE_DEBUG_COLOR_MODE (gst_debug_color_mode_get_type())
 
 /* enumerations from "gstiterator.h" */
 GType gst_iterator_result_get_type (void);
