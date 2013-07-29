@@ -1,19 +1,22 @@
 # Norwegian bokmaal translation of gst-utils.
 # This file is put in the public domain.
+#
 # Kjartan Maraas <kmaraas@gnome.org>, 2004-2010.
+# Johnny A. Solbu <johnny@solbu.net>, 2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
+"Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:41+0200\n"
-"PO-Revision-Date: 2010-10-24 21:53+0200\n"
-"Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
+"POT-Creation-Date: 2013-07-29 19:53+0100\n"
+"PO-Revision-Date: 2012-12-21 22:13+0100\n"
+"Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
-"Language: \n"
+"Language: nb_NO\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.4\n"
 
 msgid "Jack server not found"
 msgstr ""
@@ -46,7 +49,7 @@ msgstr "Oppsett av sikker tilkobling feilet."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
-msgstr ""
+msgstr "Et nettverk feil oppstod, eller tjeneren lukket uventet tilkoblingen."
 
 msgid "Server sent bad data."
 msgstr "Tjener sendte ugyldige data."
@@ -55,56 +58,65 @@ msgid "Internal data stream error."
 msgstr "Intern feil i datastrøm."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr ""
+msgstr "Ingen eller ugyldig inndatalyd, AVI-strømmen vil bli skadet."
 
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Filen inneholder ingen spillbare strømmer."
 
 msgid "This file is invalid and cannot be played."
-msgstr ""
+msgstr "Filen er ugyldig og kan ikke spilles."
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr ""
 
 msgid "This file is corrupt and cannot be played."
-msgstr ""
+msgstr "Filen er skadet og kan ikke spilles."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "Ugyldig atomstørrelse."
 
 msgid "This file is incomplete and cannot be played."
-msgstr ""
+msgstr "Filen er ufullstendig og kan ikke spilles."
 
 msgid "The video in this file might not play correctly."
-msgstr ""
+msgstr "Videoen i denne filen spilles kanskje ikke av korrekt."
 
 #, c-format
 msgid "This file contains too many streams. Only playing first %d"
-msgstr ""
+msgstr "Filen inneholder for mange strømmer. Spiller bare første %d"
 
 msgid ""
 "No supported stream was found. You might need to install a GStreamer RTSP "
 "extension plugin for Real media streams."
 msgstr ""
+"Ingen støttet strøm ble funnet. Du må kanskje installere en GStreamer RTSP "
+"utvidelsesprogramtillegg for Real mediestrømmer."
 
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
+"Ingen støttet strøm ble funnet. Du må kanskje tillate flere "
+"transportprotokoller eller den kan mangle den rette GStreamer RTSP-"
+"utvidelsestillegget."
 
 msgid "Internal data flow error."
-msgstr ""
+msgstr "Intern dataflytfeil."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
+"Kunne ikke åpne lydenheten for avspilling. Enheten brukes av et annet "
+"program."
 
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
+"Kunne ikke åpne lydenheten for avspilling. Du har ikke tillatelse til å åpne "
+"enheten."
 
 msgid "Could not open audio device for playback."
 msgstr "Kunne ikke åpne lydenhet for avspilling."
@@ -113,30 +125,33 @@ msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
+"Kunne ikke åpne lydenheten for avspilling. Denne versjonen av «Open Sound "
+"System» støttes ikke av dette elementet."
 
 msgid "Playback is not supported by this audio device."
-msgstr ""
+msgstr "Avspilling støttes ikke av denne lydenheten."
 
 msgid "Audio playback error."
-msgstr ""
+msgstr "Lydavspillingsfeil"
 
 msgid "Recording is not supported by this audio device."
-msgstr ""
+msgstr "Opptak støttes ikke av denne lydenheten."
 
 msgid "Error recording from audio device."
-msgstr ""
+msgstr "Feil ved opptak fra lydenheten."
 
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
+"Kunne ikke åpne lydenheten for opptak. Du har ikke tillatelse til å åpne "
+"enheten."
 
 msgid "Could not open audio device for recording."
 msgstr "Kunne ikke åpne lydenhet for opptak."
 
-#, fuzzy
 msgid "Record Source"
-msgstr "Opptak"
+msgstr "Opptakskilde"
 
 msgid "Microphone"
 msgstr "Mikrofon"
@@ -148,7 +163,7 @@ msgid "Internal CD"
 msgstr "Intern CD"
 
 msgid "SPDIF In"
-msgstr ""
+msgstr "SPDIF Inn"
 
 msgid "AUX 1 In"
 msgstr "AUX 1 inn"
@@ -156,17 +171,19 @@ msgstr "AUX 1 inn"
 msgid "AUX 2 In"
 msgstr "AUX 2 inn"
 
+#, fuzzy
 msgid "Codec Loopback"
-msgstr ""
+msgstr "Loopback"
 
+#, fuzzy
 msgid "SunVTS Loopback"
-msgstr ""
+msgstr "Loopback"
 
 msgid "Volume"
 msgstr "Volum"
 
 msgid "Gain"
-msgstr ""
+msgstr "Styrke"
 
 msgid "Monitor"
 msgstr "Monitor"
@@ -181,7 +198,7 @@ msgid "Line Out"
 msgstr "Linje ut"
 
 msgid "SPDIF Out"
-msgstr ""
+msgstr "SPDIF ut"
 
 msgid "AUX 1 Out"
 msgstr "AUX 1 ut"
@@ -189,75 +206,75 @@ msgstr "AUX 1 ut"
 msgid "AUX 2 Out"
 msgstr "AUX 2 ut"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Kunne ikke lukke VFS-fil «%s»."
+msgstr "Feil ved lesing av% d bytes fra enheten '% s»."
 
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr ""
+msgstr "Kunne ikke spesifisere mulige videoformater enhet «%s» kan arbeide med"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr "Kunne ikke lukke VFS-fil «%s»."
+msgstr "Kunne ikke tilordne buffere fra enheten «%s»."
 
 #, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr ""
+msgstr "Driveren av enheten «%s» støtter ikke IO metoden %d"
 
 #, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr ""
+msgstr "Driveren av enheten «%s» støtter ikke noen kjente IO-metoder."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "Enhet «%s» kan ikke fange data."
+msgstr "Enhet «%s» støtter ikke videoopptak"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "Enhet «%s» kan ikke fange data."
+msgstr "Enheten «%s» er opptatt"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Enhet «%s» kan ikke fange data."
+msgstr "Enhet «%s» kan ikke fange ved %dx%d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "Enhet «%s» kan ikke fange data."
+msgstr "Enhet «%s» kan ikke fange i det angitte formatet"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr "Kunne ikke lukke VFS-fil «%s»."
+msgstr "Kunne ikke få parametere på enheten «%s»."
 
 msgid "Video device did not accept new frame rate setting."
-msgstr ""
+msgstr "Videoenheten aksepterte ikke ny bildefrekvensinnstilling."
 
 msgid "Video device could not create buffer pool."
-msgstr ""
+msgstr "Videoenhet kan ikke opprette bufferkø"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
-msgstr "Kunne ikke lukke VFS-fil «%s»."
+msgstr "Kunne ikke hente innstillingene fra mottakeren %d på enheten «%s»."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Kunne ikke lukke VFS-fil «%s»."
+msgstr "Feil ved henting av funksjoner for enheten «%s»."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Enhet «%s» kan ikke fange data."
+msgstr "Enheten «%s» er ikke en tuner."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Kunne ikke lukke VFS-fil «%s»."
+msgstr "Mislyktes i å få radio-inndata på enheten «%s»."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr ""
+msgstr "Klarte ikke å sette inngang %d på enhet %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Kunne ikke lukke VFS-fil «%s»."
+msgstr "Klarte ikke å endre dempe-modus for enheten «%s»."
 
 #, c-format
 msgid "Cannot identify device '%s'."
@@ -268,22 +285,24 @@ msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
+"Feil ved henting av evner for enheten «%s»: Det er ikke en v4l2 driver. "
+"Sjekk om det er en v4l1 driver."
 
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
-msgstr ""
+msgstr "Feil ved attributtspørring av inndata %d på enhet %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr "Kunne ikke lukke VFS-fil «%s»."
+msgstr "Kunne ikke hente innstillingen av mottakeren %d på enheten «%s»."
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr ""
+msgstr "Feil ved norm-spørring på enhet %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr "Kunne ikke lukke VFS-fil «%s»."
+msgstr "Kunne ikke å få inn kontrollattributter på enhet «%s»."
 
 #, c-format
 msgid "This isn't a device '%s'."
@@ -297,52 +316,61 @@ msgstr "Kunne ikke åpne enhet «%s» for lesing og skriving."
 msgid "Device '%s' is not a capture device."
 msgstr "Enhet «%s» kan ikke fange data."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Enhet «%s» kan ikke fange data."
+msgstr "Enhet «%s» er ikke en utgangsenhet."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr ""
+msgstr "Kunne ikke sette normen for enhet «%s»."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr ""
+msgstr "Klarte ikke å få gjeldende mottakerfrekvens for enheten «%s»."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
+"Klarte ikke å sette gjeldende mottakerfrekvens for enheten «%s» til %lu Hz."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr ""
+msgstr "Klarte ikke å innhente signalstyrken for enheten «%s»."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr ""
+msgstr "Kunne ikke hente verdi for kontroll %d på enheten «%s»."
 
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
-msgstr ""
+msgstr "Klarte ikke å sette verdi %d for kontroll %d på enheten «%s»."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
+"Kunne ikke hente gjeldende inndata på enheten «%s». Kanskje det er en "
+"radioenhet"
 
 #, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
-msgstr ""
+msgstr "Kunne ikke hente utdata fra enheten «%s». Kanskje det er en radioenhet"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Kunne ikke lukke VFS-fil «%s»."
+msgstr "Klarte ikke å sette utgang %d på enhet %s."
 
 msgid "Changing resolution at runtime is not yet supported."
-msgstr ""
+msgstr "Endring av oppløsning under kjøring støttes ikke enda."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke operere uten en klokke"
+
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Kunne ikke etablere tilkobling til lydtjener"
+
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Klarte ikke å etterspørre lydtjenerens evner"
 
 #~ msgid "Bass"
 #~ msgstr "Bass"
@@ -370,6 +398,15 @@ msgstr "Kan ikke operere uten en klokke"
 
 #~ msgid "PCM-2"
 #~ msgstr "PCM-2"
+
+#~ msgid "Record"
+#~ msgstr "Opptak"
+
+#~ msgid "In-gain"
+#~ msgstr "Innstyrke"
+
+#~ msgid "Out-gain"
+#~ msgstr "Utstyrke"
 
 #~ msgid "Line-1"
 #~ msgstr "Linje 1"
@@ -401,9 +438,15 @@ msgstr "Kan ikke operere uten en klokke"
 #~ msgid "Radio"
 #~ msgstr "Radio"
 
-#, fuzzy
 #~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "Kunne ikke åpne filen «%s» for lesing."
+#~ msgstr "Kunne ikke åpne lydenheten for mikserkontrollhåndtering."
+
+#~ msgid ""
+#~ "Could not open audio device for mixer control handling. This version of "
+#~ "the Open Sound System is not supported by this element."
+#~ msgstr ""
+#~ "Kunne ikke åpne lydenheten for mikserkontrollhåndtering. Denne versjonen "
+#~ "av «Open Sound System» støttes ikke av dette elementet."
 
 #~ msgid "Master"
 #~ msgstr "Hovedvolum"
@@ -420,6 +463,9 @@ msgstr "Kan ikke operere uten en klokke"
 #~ msgid "Center"
 #~ msgstr "Senter"
 
+#~ msgid "LFE"
+#~ msgstr "LFE"
+
 #~ msgid "Surround"
 #~ msgstr "Surround"
 
@@ -435,6 +481,9 @@ msgstr "Kan ikke operere uten en klokke"
 #~ msgid "3D Center"
 #~ msgstr "3D senter"
 
+#~ msgid "3D Enhance"
+#~ msgstr "3D-forbedring"
+
 #~ msgid "Telephone"
 #~ msgstr "Telefon"
 
@@ -444,8 +493,65 @@ msgstr "Kan ikke operere uten en klokke"
 #~ msgid "AUX In"
 #~ msgstr "AUX inn"
 
+#~ msgid "Record Gain"
+#~ msgstr "Innspillingsstyrke"
+
+#~ msgid "Output Gain"
+#~ msgstr "Utdatastyrke"
+
+#~ msgid "Microphone Boost"
+#~ msgstr "Mikrofonforsterkning"
+
+#~ msgid "Diagnostic"
+#~ msgstr "Diagnose"
+
+#~ msgid "Bass Boost"
+#~ msgstr "BassBoost"
+
+#~ msgid "Playback Ports"
+#~ msgstr "Avspillingsporter:"
+
+#~ msgid "Input"
+#~ msgstr "Inngang"
+
+#~ msgid "Monitor Source"
+#~ msgstr "Monitorkilde"
+
+#~ msgid "Keyboard Beep"
+#~ msgstr "Tastaturpip"
+
+#~ msgid "Simulate Stereo"
+#~ msgstr "Simulert stereo"
+
 #~ msgid "Stereo"
 #~ msgstr "Stereo"
+
+#~ msgid "Surround Sound"
+#~ msgstr "Surroundlyd"
+
+#~ msgid "Microphone Gain"
+#~ msgstr "Mikrofonstyrke"
+
+#~ msgid "Speaker Source"
+#~ msgstr "Høyttalerkilde"
+
+#~ msgid "Microphone Source"
+#~ msgstr "Mikrofonkilde"
+
+#~ msgid "Jack"
+#~ msgstr "Jack"
+
+#~ msgid "Center / LFE"
+#~ msgstr "Senter / LFE"
+
+#~ msgid "Stereo Mix"
+#~ msgstr "Stereomiks"
+
+#~ msgid "Mono Mix"
+#~ msgstr "Monomiks"
+
+#~ msgid "Input Mix"
+#~ msgstr "Inndatamiks"
 
 #~ msgid "Microphone 1"
 #~ msgstr "Mikrofon 1"
@@ -504,16 +610,107 @@ msgstr "Kan ikke operere uten en klokke"
 #~ msgid "Production"
 #~ msgstr "Produksjon"
 
-#, fuzzy
+#~ msgid "Front Panel Microphone"
+#~ msgstr "Fronpanelmikrofon"
+
+#~ msgid "Front Panel Line In"
+#~ msgstr "Frontpanel innlinje"
+
+#~ msgid "Front Panel Headphones"
+#~ msgstr "Frontpanelhodetelefoner"
+
+#~ msgid "Front Panel Line Out"
+#~ msgstr "Frontpanel utlinje"
+
+#~ msgid "Green Connector"
+#~ msgstr "Grønn kontakt"
+
+#~ msgid "Pink Connector"
+#~ msgstr "Rosa kontakt"
+
+#~ msgid "Blue Connector"
+#~ msgstr "Blå kontakt"
+
+#~ msgid "White Connector"
+#~ msgstr "Hvit kontakt"
+
+#~ msgid "Black Connector"
+#~ msgstr "Sort kontakt"
+
+#~ msgid "Gray Connector"
+#~ msgstr "Grå kontakt"
+
+#~ msgid "Orange Connector"
+#~ msgstr "Oransje kontakt"
+
+#~ msgid "Red Connector"
+#~ msgstr "Rød kontakt"
+
+#~ msgid "Yellow Connector"
+#~ msgstr "Gul kontakt"
+
+#~ msgid "Green Front Panel Connector"
+#~ msgstr "Grønn frontpanelkontakt"
+
+#~ msgid "Pink Front Panel Connector"
+#~ msgstr "Rosa frontpanelkontakt"
+
+#~ msgid "Blue Front Panel Connector"
+#~ msgstr "Blå frontpanelkontakt"
+
+#~ msgid "White Front Panel Connector"
+#~ msgstr "Hvit frontpanelkontakt"
+
+#~ msgid "Black Front Panel Connector"
+#~ msgstr "Sort frontpanelkontakt"
+
+#~ msgid "Gray Front Panel Connector"
+#~ msgstr "Grå frontpanelkontakt"
+
+#~ msgid "Orange Front Panel Connector"
+#~ msgstr "Oransje frontpanelkontakt"
+
+#~ msgid "Red Front Panel Connector"
+#~ msgstr "Rød frontpanelkontakt"
+
+#~ msgid "Yellow Front Panel Connector"
+#~ msgstr "Gul frontpanelkontakt"
+
+#~ msgid "Spread Output"
+#~ msgstr "Spredningsutgang"
+
+#~ msgid "Downmix"
+#~ msgstr "Nedmiks"
+
+#~ msgid "Virtual Mixer Input"
+#~ msgstr "Virtuell mikserinngang"
+
+#~ msgid "Virtual Mixer Output"
+#~ msgstr "Virtuell mikserutgang"
+
+#~ msgid "Virtual Mixer Channels"
+#~ msgstr "Virtuelle mikserkanaler"
+
+#~ msgid "%s %d Function"
+#~ msgstr "%s %d Funksjon"
+
+#~ msgid "%s Function"
+#~ msgstr "%s Funksjon"
+
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Fikk uventet rammestørrelsen %u istedenfor %u."
+
 #~ msgid "Error reading %d bytes on device '%s'."
-#~ msgstr "Kunne ikke lukke VFS-fil «%s»."
+#~ msgstr "Feil ved lesing av %d byte på enheten «%s»."
 
-#, fuzzy
 #~ msgid "Could not enqueue buffers in device '%s'."
-#~ msgstr "Kunne ikke lukke VFS-fil «%s»."
+#~ msgstr "Kunne ikke legge i kø buffere i enheten «%s»."
 
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Kunne ikke etablere tilkobling til lydtjener"
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Mislyktes i å få videobilder fra enhet «%s»."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Mislyktes etter %d forsøk. Enhet %s. Systemfeil: %s"
 
 #~ msgid "Describes the selected input element."
 #~ msgstr "Beskriver valgt inndataelement."

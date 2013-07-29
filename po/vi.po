@@ -1,60 +1,61 @@
 # Vietnamese Translation for GST Plugins Good.
-# Copyright © 2010 Free Software Foundation, Inc.
+# Copyright © 2012 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.23.2\n"
+"Project-Id-Version: gst-plugins-good-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:41+0200\n"
-"PO-Revision-Date: 2010-10-03 18:48+1030\n"
-"Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
-"Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
+"POT-Creation-Date: 2013-07-29 19:53+0100\n"
+"PO-Revision-Date: 2012-12-02 08:06+0700\n"
+"Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
+"Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Team-Website: <http://translationproject.org/team/vi.html>\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: LocFactoryEditor 1.8\n"
+"X-Poedit-SourceCharset: UTF-8\n"
 
 msgid "Jack server not found"
 msgstr ""
 
 msgid "Failed to decode JPEG image"
-msgstr "Lỗi giải mã ảnh JPEG"
+msgstr "Gặp lỗi khi giải mã ảnh JPEG"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
-msgstr "« %s » bởi « %s »"
+msgstr "“%s” bởi “%s”"
 
 msgid "Could not connect to server"
 msgstr "Không thể kết nối tới máy phục vụ"
 
 msgid "No URL set."
-msgstr ""
+msgstr "Không có URL nào được đặt."
 
 msgid "Server does not support seeking."
-msgstr ""
+msgstr "Máy phục vụ không hỗ trợ di chuyển vị trí."
 
-#, fuzzy
 msgid "Could not resolve server name."
-msgstr "Không thể kết nối tới máy phục vụ"
+msgstr "Không thể phân giải tên miền."
 
-#, fuzzy
 msgid "Could not establish connection to server."
-msgstr "Không thể thiết lập sự kết nối tới máy phục vụ âm thanh"
+msgstr "Không thể thiết lập kết nối tới máy chủ."
 
 msgid "Secure connection setup failed."
-msgstr ""
+msgstr "Cài đặt kết nối an toàn gặp lỗi."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
-msgstr ""
+msgstr "Một lỗi mạng đã xảy ra, hoặc máy chủ đóng kết nối bất ngờ."
 
 msgid "Server sent bad data."
-msgstr ""
+msgstr "Máy chủ gửi dữ liệu sai."
 
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
@@ -77,7 +78,7 @@ msgid "This file is corrupt and cannot be played."
 msgstr "Tập tin này bị hỏng nên không thể phát."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "Kích thước nguyên tử (atom) không hợp lệ."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Tập tin này chưa hoàn thành nên không thể được phát."
@@ -210,89 +211,88 @@ msgstr "AUX 2 Ra"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
-msgstr "Gặp lỗi khi đọc %d byte từ thiết bị « %s »."
+msgstr "Gặp lỗi khi đọc %d byte từ thiết bị “%s”."
 
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
+"Gặp lỗi khi đánh số các định dạng video có thể, mà thiết bị “%s” có thể làm "
+"việc cùng"
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr "Không thể ánh xạ các bộ đệm từ thiết bị « %s »."
+msgstr "Không thể ánh xạ các bộ đệm từ thiết bị “%s”."
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr ""
-"Trình điều khiển của thiết bị « %s » không hỗ trợ phương pháp bắt đã biết "
-"nào."
+msgstr "Trình điều khiển của thiết bị “%s” không hỗ trợ phương pháp VR %d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
-"Trình điều khiển của thiết bị « %s » không hỗ trợ phương pháp bắt đã biết "
-"nào."
+"Trình điều khiển của thiết bị “%s” không hỗ trợ phương pháp VR đã biết nào."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "Thiết bị « %s » không phải là thiết bị xuất ra."
+msgstr "Thiết bị “%s” không hỗ trợ chức năng quay video"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "Thiết bị « %s » không phải là thiết bị xuất ra."
+msgstr "Thiết bị “%s” đang bận"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Thiết bị « %s » không phải là thiết bị bắt gì."
+msgstr "Thiết bị “%s” không thể chụp tại %dx%d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "Thiết bị « %s » không phải là thiết bị bắt gì."
+msgstr "Thiết bị “%s” không thể chụp ở định dạng đã cho"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr "Không thể lấy các tham số về thiết bị « %s »."
+msgstr "Không thể lấy các tham số về thiết bị “%s”."
 
-#, fuzzy
 msgid "Video device did not accept new frame rate setting."
-msgstr "Thiết bị nhập ảnh động vào không chấp nhận thiết lập tốc độ khung mới."
+msgstr "Thiết bị video không chấp nhận cài đặt về tốc độ khung hình mới."
 
 msgid "Video device could not create buffer pool."
-msgstr ""
+msgstr "Thiết bị video không thể tạo kho đệm."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
-msgstr "Lỗi lấy thiết lập của thiết bị điều hưởng %d trên thiết bị « %s »."
+msgstr ""
+"Lỗi lấy các cài đặt từ thiết bị điều chỉnh cộng hưởng %d trên thiết bị “%s”."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Gặp lỗi khi đọc %d byte từ thiết bị « %s »."
+msgstr "Gặp lỗi khi đọc dung lượng từ thiết bị “%s”."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Thiết bị « %s » không phải là thiết bị xuất ra."
+msgstr "Thiết bị %s không phải thiết bị điều chỉnh cộng hưởng."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Lỗi đặt dữ liệu nhập %d vào thiết bị « %s »."
+msgstr "Gặp lỗi khi lấy đầu vào radio trên thiết bị “%s”."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr "Lỗi đặt dữ liệu nhập %d vào thiết bị « %s »."
+msgstr "Lỗi đặt dữ liệu nhập %d vào thiết bị “%s”."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Lỗi lấy biên độ tín hiệu cho thiết bị « %s »."
+msgstr "Gặp lỗi khi thay đổi trạng thái ngắt tiếng cho thiết bị “%s”."
 
 #, c-format
 msgid "Cannot identify device '%s'."
-msgstr "Không thể nhận diện thiết bị « %s »."
+msgstr "Không thể nhận diện thiết bị “%s”."
 
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
-"Gặp lỗi khi lấy khả năng của thiết bị « %s ». Nó không phải là trình điều "
+"Gặp lỗi khi lấy khả năng của thiết bị “%s”. Nó không phải là trình điều "
 "khiển phiên bản 4l2. Kiểm tra nó là trình điều khiển phiên bản 4l1 không."
 
 #, c-format
@@ -301,87 +301,85 @@ msgstr "Lỗi truy vấn khả năng của %d nhập trong thiết bị %s"
 
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr "Lỗi lấy thiết lập của thiết bị điều hưởng %d trên thiết bị « %s »."
+msgstr "Lỗi lấy thiết lập của thiết bị điều hưởng %d trên thiết bị “%s”."
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr "Lỗi truy vấn chỉ tiêu trên thiết bị « %s »."
+msgstr "Lỗi truy vấn chỉ tiêu trên thiết bị “%s”."
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
-msgstr "Lỗi lấy các thuộc tính của bộ điều khiển trên thiết bị « %s »."
+msgstr "Lỗi lấy các thuộc tính của bộ điều khiển trên thiết bị “%s”."
 
 #, c-format
 msgid "This isn't a device '%s'."
-msgstr "Không phải là thiết bị « %s »."
+msgstr "Không phải là thiết bị “%s”."
 
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
-msgstr "Không thể mở thiết bị « %s » để đọc và ghi."
+msgstr "Không thể mở thiết bị “%s” để đọc và ghi."
 
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr "Thiết bị « %s » không phải là thiết bị bắt gì."
+msgstr "Thiết bị “%s” không phải là thiết bị bắt gì."
 
 #, c-format
 msgid "Device '%s' is not a output device."
-msgstr "Thiết bị « %s » không phải là thiết bị xuất ra."
+msgstr "Thiết bị “%s” không phải là thiết bị xuất ra."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr "Lỗi đặt chỉ tiêu cho thiết bị « %s »."
+msgstr "Lỗi đặt chỉ tiêu cho thiết bị “%s”."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr "Lỗi lấy tần số hiện thời của thiết bị điều hưởng cho thiết bị « %s »."
+msgstr "Lỗi lấy tần số hiện thời của thiết bị điều hưởng cho thiết bị “%s”."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
-"Lỗi đặt tần số hiện thời của thiết bị điều hưởng cho thiết bị « %s » là %lu "
-"Hz."
+"Lỗi đặt tần số hiện thời của thiết bị điều hưởng cho thiết bị “%s” là %lu Hz."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr "Lỗi lấy biên độ tín hiệu cho thiết bị « %s »."
+msgstr "Lỗi lấy biên độ tín hiệu cho thiết bị “%s”."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr "Lỗi lấy giá trị của bộ điều khiển %d trên thiết bị « %s »."
+msgstr "Lỗi lấy giá trị của bộ điều khiển %d trên thiết bị “%s”."
 
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
-msgstr "Lỗi đặt giá trị %d của bộ điều khiển %d trên thiết bị « %s »."
+msgstr "Gặp lỗi khi đặt giá trị %d của bộ điều khiển %d trên thiết bị “%s”."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Lỗi lấy kết nhập hiện thời vào thiết bị « %s ». Có thể là thiết bị thu thanh."
+"Gặp lỗi khi lấy kết nhập hiện thời vào thiết bị “%s”. Có thể là thiết bị thu "
+"thanh."
 
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Lỗi lấy kết nhập hiện thời vào thiết bị « %s ». Có thể là thiết bị thu thanh."
+"Gặp lỗi khi lấy kết nhập hiện hành trên thiết bị “%s”. Có thể là thiết bị vô "
+"tuyến."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Lỗi đặt dữ liệu nhập %d vào thiết bị « %s »."
+msgstr "Gặp lỗi khi đặt dữ liệu nhập %d trên thiết bị %s."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Chưa hỗ trợ khả năng thay đổi độ phân giải trong khi chạy."
 
 msgid "Cannot operate without a clock"
-msgstr "Không thể thao tác khi không có đồng hồ."
+msgstr "Không thể thao tác khi không có đồng hồ"
 
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Nhận được kích cỡ khung bất thường %u, thay cho %u."
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Không thể thiết lập sự kết nối tới máy phục vụ âm thanh"
 
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Lỗi khi thử lấy các khung ảnh động từ thiết bị « %s »."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Lỗi sau %d lần thử. Thiết bị %s. Lỗi hệ thống: %s"
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Lỗi truy vấn khả năng của máy phục vụ âm thanh"
 
 #~ msgid "Bass"
 #~ msgstr "Trầm"
@@ -708,14 +706,17 @@ msgstr "Không thể thao tác khi không có đồng hồ."
 #~ msgid "%s Function"
 #~ msgstr "Chức năng %s"
 
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Nhận được kích cỡ khung bất thường %u, thay cho %u."
+
 #~ msgid "Error reading %d bytes on device '%s'."
-#~ msgstr "Gặp lỗi khi đọc %d byte trên thiết bị « %s »."
+#~ msgstr "Gặp lỗi khi đọc %d byte trên thiết bị “%s”."
 
 #~ msgid "Could not enqueue buffers in device '%s'."
-#~ msgstr "Không thể phụ thêm các bộ đệm vào hàng đợi trên thiết bị « %s »."
+#~ msgstr "Không thể phụ thêm các bộ đệm vào hàng đợi trên thiết bị “%s”."
 
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Không thể thiết lập sự kết nối tới máy phục vụ âm thanh"
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Lỗi khi thử lấy các khung ảnh động từ thiết bị “%s”."
 
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Lỗi truy vấn khả năng của máy phục vụ âm thanh"
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Lỗi sau %d lần thử. Thiết bị %s. Lỗi hệ thống: %s"

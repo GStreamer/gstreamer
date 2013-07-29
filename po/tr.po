@@ -1,13 +1,14 @@
-# translation of gst-plugins-good-0.10.26.2.po to Turkish
+# translation of gst-plugins-good-1.0.3.po to Turkish
 # This file is put in the public domain.
 # Server Acim <serveracim@gmail.com>, 2010.
 # Server Acim <serveracim@gmail.com>, 2011.
+# Server Acim <serveracim@gmail.com>, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.26.2\n"
+"Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:41+0200\n"
-"PO-Revision-Date: 2011-01-08 00:03+0200\n"
+"POT-Creation-Date: 2013-07-29 19:53+0100\n"
+"PO-Revision-Date: 2013-03-10 13:05+0200\n"
 "Last-Translator: Server Acim <serveracim@gmail.com>\n"
 "Language-Team: Turkish <gnu-tr-u12a@lists.sourceforge.net>\n"
 "Language: tr\n"
@@ -212,25 +213,23 @@ msgstr "Aygıtın '%s' birlikte çalışabileceği vidyo kiplerini sıralamada h
 msgid "Could not map buffers from device '%s'"
 msgstr "Aygıttan '%s' bellekler eşlenemiyor"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr ""
-"Bu aygıtın sürücüsü '%s' bilinen görüntü yakalama yöntemlerinden herhangi "
-"birisi desteklemiyor."
+msgstr "Bu aygıtın sürücüsü '%s' IO yöntemini desteklemiyor %d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
-"Bu aygıtın sürücüsü '%s' bilinen görüntü yakalama yöntemlerinden herhangi "
-"birisi desteklemiyor."
+"Bu aygıtın sürücüsü '%s' bilinen IO yöntemlerinden herhangi birisini "
+"desteklemiyor."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "Aygıt '%s' bir çıkış aygıtı değil."
+msgstr "Aygıt '%s' video yakalamayı desteklemiyor"
 
 #, c-format
 msgid "Device '%s' is busy"
-msgstr ""
+msgstr "Aygıt '%s' meşgul"
 
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
@@ -244,36 +243,35 @@ msgstr "Aygıt '%s' belirtilen kipte görüntü yakalayamadı"
 msgid "Could not get parameters on device '%s'"
 msgstr "Değiştirgeler aygıttan '%s' alınamıyor"
 
-#, fuzzy
 msgid "Video device did not accept new frame rate setting."
-msgstr "Vidyo giriş aygıtı yeni çerçeve oranı ayarlarını kabul etmedi."
+msgstr "Vidyo aygıtı yeni çerçeve oranı ayarlarını kabul etmedi."
 
 msgid "Video device could not create buffer pool."
-msgstr ""
+msgstr "Video aygıtı tampon havuzu yaratamadı."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
-msgstr "Radyo istasyonu ayarlarını bulma %d şu aygıtta '%s' başarılamadı."
+msgstr "İstasyon ayarlarını bulma işlemi %d şu aygıtta '%s' başarılamadı."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "%d bayt bilgili '%s' aygıtından okumada hata."
+msgstr "Bu aygıt için kapasite bilgisi alınamadı '%s'."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Aygıt '%s' bir çıkış aygıtı değil."
+msgstr "Aygıt '%s' bir radyo değil."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Giriş değeri olarak bu %d şu aygıtta %s ayarlanamadı."
+msgstr "Radyo giriş değeri şu aygıtta '%s' ayarlanamadı."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Giriş değeri olarak bu %d şu aygıtta %s ayarlanamadı."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Aygıt için '%s' güçlü sinyal alımı gerçekleşemedi."
+msgstr "Aygıt '%s' susturulmaya ayarlanamadı."
 
 #, c-format
 msgid "Cannot identify device '%s'."
@@ -364,14 +362,11 @@ msgstr "Çalışırken çözünürlüğü değiştirmek henüz desteklenmiyor."
 msgid "Cannot operate without a clock"
 msgstr "Saat olmadan çalışamaz"
 
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Beklenmeyen bir çerçevece boyutu %u bunun yerine %u görüntülendi."
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Ses sunucusuyla bağlantı kurulumayor"
 
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Aygıttan device '%s' vidyo çerçeveleri alınamadı."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Şu denemeden sonra %d başarılamadı. aygıt %s. sistem hatası: %s"
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Ses sunucusu olanakları sorgulanamadı"
 
 #~ msgid "Bass"
 #~ msgstr "Bas"
@@ -698,17 +693,20 @@ msgstr "Saat olmadan çalışamaz"
 #~ msgid "%s Function"
 #~ msgstr "%s İşlev"
 
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Ses sunucusuyla bağlantı kurulumayor"
-
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Ses sunucusu olanakları sorgulanamadı"
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Beklenmeyen bir çerçevece boyutu %u bunun yerine %u görüntülendi."
 
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "%d baytı şu aygıtta '%s' okumada hata."
 
 #~ msgid "Could not enqueue buffers in device '%s'."
 #~ msgstr "Aygıtta '%s' arabellek kuyruğa sokulamıyor."
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Aygıttan device '%s' vidyo çerçeveleri alınamadı."
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Şu denemeden sonra %d başarılamadı. aygıt %s. sistem hatası: %s"
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "

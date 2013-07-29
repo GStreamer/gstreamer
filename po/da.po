@@ -3,17 +3,17 @@
 # This file is distributed under the same license as the gst-plugins-good package.
 #
 # Mogens Jaeger <mogens@jaeger.tf>, 2007.
-# Joe Hansen <joedalton2@yahoo.dk>, 2008, 2009, 2010, 2011.
+# Joe Hansen <joedalton2@yahoo.dk>, 2008, 2009, 2010, 2011, 2012.
 #
 # gain -> forhøjelse
 # boost -> øgning?
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-0.10.26.2\n"
+"Project-Id-Version: gst-plugins-good-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:41+0200\n"
-"PO-Revision-Date: 2011-01-07 23:54+0200\n"
+"POT-Creation-Date: 2013-07-29 19:53+0100\n"
+"PO-Revision-Date: 2012-12-13 23:54+0200\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -158,33 +158,35 @@ msgid "Could not open audio device for recording."
 msgstr "Kunne ikke åbne lydenhed til optagelse."
 
 msgid "Record Source"
-msgstr "Optag kilde"
+msgstr ""
 
 msgid "Microphone"
-msgstr "Mikrofon"
+msgstr ""
 
+#, fuzzy
 msgid "Line In"
-msgstr "Linje ind"
+msgstr "Linje ud"
 
 msgid "Internal CD"
-msgstr "Intern cd"
+msgstr ""
 
+#, fuzzy
 msgid "SPDIF In"
-msgstr "SPDIF ind"
+msgstr "SPDIF ud"
 
+#, fuzzy
 msgid "AUX 1 In"
-msgstr "AUX 1 ind"
+msgstr "AUX 1 ud"
 
+#, fuzzy
 msgid "AUX 2 In"
-msgstr "AUX 2 ind"
+msgstr "AUX 2 ud"
 
-#, fuzzy
 msgid "Codec Loopback"
-msgstr "Loopback"
+msgstr ""
 
-#, fuzzy
 msgid "SunVTS Loopback"
-msgstr "Loopback"
+msgstr ""
 
 msgid "Volume"
 msgstr "Lydstyrke"
@@ -220,70 +222,69 @@ msgstr "Fejl ved læsning af %d byte på enhed '%s'."
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
+"Kunne ikke nummerere mulig videoformater som enhed »%s« kan fungere med"
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Kunne ikke afbilde mellemlager fra enhed '%s'"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr "Driveren til enhed '%s' understøtter ingen kendt optagemetode."
+msgstr "Driveren til enhed »%s« understøtter ikke IO-metoden %d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr "Driveren til enhed '%s' understøtter ingen kendt optagemetode."
+msgstr "Driveren til enhed »%s« understøtter ingen kendt IO-metode."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "Enhed '%s' er ikke en uddataenhed."
+msgstr "Enheden »%s« understøtter ikke videooptagelse"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "Enhed '%s' er ikke en uddataenhed."
+msgstr "Enheden »%s« er optaget"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Enhed '%s' er ikke en optageenhed."
+msgstr "Enheden »%s« kan ikke optage med %dx%d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "Enhed '%s' er ikke en optageenhed."
+msgstr "Enheden »%s« kan ikke optage i det angivne format"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Kunne ikke hente parametre fra enhed '%s'"
 
-#, fuzzy
 msgid "Video device did not accept new frame rate setting."
-msgstr ""
-"Enheden til videoinddata accepterede ikke ny indstilling for billedrate."
+msgstr "Videoenheden accepterede ikke ny indstilling for billedrate."
 
 msgid "Video device could not create buffer pool."
-msgstr ""
+msgstr "Videoenhed kunne ikke oprette mellemlagerkø."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
-msgstr "Hentning af indstillinger for tuner %d på enhed '%s' fejlede."
+msgstr "Hentning af indstillinger for tuner %d på enhed »%s« fejlede."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Fejl ved læsning af %d byte på enhed '%s'."
+msgstr "Fejl under hentning af kapaciteter for enhed »%s«."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Enhed '%s' er ikke en uddataenhed."
+msgstr "Enhed »%s« er ikke en tuner."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Kunne ikke sætte inddata %d for enhed %s."
+msgstr "Kunne ikke hente radioinddata for enhed »%s«."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Kunne ikke sætte inddata %d for enhed %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Kunne ikke hente signalstyrke for enhed '%s'."
+msgstr "Kunne ikke ændre tilstand for tænk/slut for enhed »%s«."
 
 #, c-format
 msgid "Cannot identify device '%s'."
@@ -373,354 +374,3 @@ msgstr "Ændring af opløsning under kørsel er endnu ikke understøttet."
 
 msgid "Cannot operate without a clock"
 msgstr "Kan ikke fungere uden et ur"
-
-# Er rammestørrelse ikke mere passende? Jeg er dog ikke helt sikker på
-# konteksten her. 
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Fik uventet billedstørrelse på %u i steden for %u."
-
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Forsøg på at hente videorammer fra enhed '%s' mislykkedes."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Fejlede efter %d forsøg. enhed %s. systemfejl: %s"
-
-#~ msgid "Bass"
-#~ msgstr "Bas"
-
-#~ msgid "Treble"
-#~ msgstr "Diskant"
-
-#~ msgid "Synth"
-#~ msgstr "Synth"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Speaker"
-#~ msgstr "Højtaler"
-
-#~ msgid "Line-in"
-#~ msgstr "Linje-ind"
-
-#~ msgid "CD"
-#~ msgstr "Cd"
-
-#~ msgid "Mixer"
-#~ msgstr "Mikser"
-
-#~ msgid "PCM-2"
-#~ msgstr "PCM-2"
-
-#~ msgid "Record"
-#~ msgstr "Optag"
-
-#~ msgid "In-gain"
-#~ msgstr "Ind-forhøjelse"
-
-#~ msgid "Out-gain"
-#~ msgstr "Ud-forhøjelse"
-
-#~ msgid "Line-1"
-#~ msgstr "Linje-1"
-
-#~ msgid "Line-2"
-#~ msgstr "Linje-2"
-
-#~ msgid "Line-3"
-#~ msgstr "Linje-3"
-
-#~ msgid "Digital-1"
-#~ msgstr "Digital-1"
-
-#~ msgid "Digital-2"
-#~ msgstr "Digital-2"
-
-#~ msgid "Digital-3"
-#~ msgstr "Digital-3"
-
-# Eller Phono-ind 
-#~ msgid "Phone-in"
-#~ msgstr "Lyd-ind"
-
-# Eller Phono-ud
-#~ msgid "Phone-out"
-#~ msgstr "Lyd-ud"
-
-#~ msgid "Video"
-#~ msgstr "Video"
-
-#~ msgid "Radio"
-#~ msgstr "Radio"
-
-#~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "Kunne ikke åbne lydenhed til håndtering af mikserkontrol."
-
-#~ msgid ""
-#~ "Could not open audio device for mixer control handling. This version of "
-#~ "the Open Sound System is not supported by this element."
-#~ msgstr ""
-#~ "Kunne ikke åbne lydenhed til håndtering af mikserkontrol. Denne version "
-#~ "af Open Sound System er ikke understøttet af dette element."
-
-#~ msgid "Master"
-#~ msgstr "Master"
-
-#~ msgid "Front"
-#~ msgstr "Front"
-
-#~ msgid "Rear"
-#~ msgstr "Bagende"
-
-#~ msgid "Headphones"
-#~ msgstr "Hovedtelefoner"
-
-#~ msgid "Center"
-#~ msgstr "Centrum"
-
-# Low-frequency effect
-#~ msgid "LFE"
-#~ msgstr "LFE"
-
-#~ msgid "Surround"
-#~ msgstr "Surround"
-
-#~ msgid "Side"
-#~ msgstr "Side"
-
-#~ msgid "AUX Out"
-#~ msgstr "AUX ud"
-
-#~ msgid "3D Depth"
-#~ msgstr "3D-dybde"
-
-#~ msgid "3D Center"
-#~ msgstr "3D-centrum"
-
-#~ msgid "3D Enhance"
-#~ msgstr "3D-forstærkning"
-
-#~ msgid "Telephone"
-#~ msgstr "Telefon"
-
-#~ msgid "Video In"
-#~ msgstr "Video ind"
-
-#~ msgid "AUX In"
-#~ msgstr "AUX ind"
-
-#~ msgid "Record Gain"
-#~ msgstr "Optag - forhøjelse"
-
-#~ msgid "Output Gain"
-#~ msgstr "Uddata - forhøjelse"
-
-#~ msgid "Microphone Boost"
-#~ msgstr "Mikrofonøgning"
-
-#~ msgid "Diagnostic"
-#~ msgstr "Diagnostik"
-
-#~ msgid "Bass Boost"
-#~ msgstr "Bas-øgning"
-
-#~ msgid "Playback Ports"
-#~ msgstr "Afspilningsporte"
-
-#~ msgid "Input"
-#~ msgstr "Inddata"
-
-#~ msgid "Monitor Source"
-#~ msgstr "Skærmkilde"
-
-#~ msgid "Keyboard Beep"
-#~ msgstr "Tastaturbeep"
-
-#~ msgid "Simulate Stereo"
-#~ msgstr "Simuler stereo"
-
-#~ msgid "Stereo"
-#~ msgstr "Stereo"
-
-#~ msgid "Surround Sound"
-#~ msgstr "Surroundlyd"
-
-#~ msgid "Microphone Gain"
-#~ msgstr "Mikrofonforhøjelse"
-
-#~ msgid "Speaker Source"
-#~ msgstr "Højtalerkilde"
-
-#~ msgid "Microphone Source"
-#~ msgstr "Mikrofonkilde"
-
-#~ msgid "Jack"
-#~ msgstr "Jack"
-
-#~ msgid "Center / LFE"
-#~ msgstr "Center / LFE"
-
-#~ msgid "Stereo Mix"
-#~ msgstr "Stereomiks"
-
-#~ msgid "Mono Mix"
-#~ msgstr "Monomiks"
-
-#~ msgid "Input Mix"
-#~ msgstr "Inddatamiks"
-
-#~ msgid "Microphone 1"
-#~ msgstr "Mikrofon 1"
-
-#~ msgid "Microphone 2"
-#~ msgstr "Mikrofon 2"
-
-#~ msgid "Digital Out"
-#~ msgstr "Digital ud"
-
-#~ msgid "Digital In"
-#~ msgstr "Digital ind"
-
-#~ msgid "HDMI"
-#~ msgstr "HDMI"
-
-#~ msgid "Modem"
-#~ msgstr "Modem"
-
-#~ msgid "Handset"
-#~ msgstr "Håndsæt"
-
-#~ msgid "Other"
-#~ msgstr "Andet"
-
-#~ msgid "None"
-#~ msgstr "Ingen"
-
-#~ msgid "On"
-#~ msgstr "Tænd"
-
-#~ msgid "Off"
-#~ msgstr "Sluk"
-
-#~ msgid "Mute"
-#~ msgstr "Slukket"
-
-#~ msgid "Fast"
-#~ msgstr "Hurtig"
-
-#~ msgid "Very Low"
-#~ msgstr "Meget lav"
-
-#~ msgid "Low"
-#~ msgstr "Lav"
-
-#~ msgid "Medium"
-#~ msgstr "Mellem"
-
-#~ msgid "High"
-#~ msgstr "Høj"
-
-#~ msgid "Very High"
-#~ msgstr "Meget høj"
-
-#~ msgid "Production"
-#~ msgstr "Produktion"
-
-#~ msgid "Front Panel Microphone"
-#~ msgstr "Frontpanelmikrofon"
-
-#~ msgid "Front Panel Line In"
-#~ msgstr "Frontpanels linje ind"
-
-#~ msgid "Front Panel Headphones"
-#~ msgstr "Frontpanels hovedtelefoner"
-
-#~ msgid "Front Panel Line Out"
-#~ msgstr "Frontpanels linje ud"
-
-#~ msgid "Green Connector"
-#~ msgstr "Grøn forbindelse "
-
-#~ msgid "Pink Connector"
-#~ msgstr "Lyserød forbindelse"
-
-#~ msgid "Blue Connector"
-#~ msgstr "Blå forbindelse"
-
-#~ msgid "White Connector"
-#~ msgstr "Hvid forbindelse"
-
-#~ msgid "Black Connector"
-#~ msgstr "Sort forbindelse"
-
-#~ msgid "Gray Connector"
-#~ msgstr "Grå forbindelse"
-
-#~ msgid "Orange Connector"
-#~ msgstr "Orange forbindelse"
-
-#~ msgid "Red Connector"
-#~ msgstr "Rød forbindelse"
-
-#~ msgid "Yellow Connector"
-#~ msgstr "Gul forbindelse"
-
-#~ msgid "Green Front Panel Connector"
-#~ msgstr "Grøn frontpanelforbindelse"
-
-#~ msgid "Pink Front Panel Connector"
-#~ msgstr "Lyserød frontpanelforbindelse"
-
-#~ msgid "Blue Front Panel Connector"
-#~ msgstr "Blå frontpanelforbindelse"
-
-#~ msgid "White Front Panel Connector"
-#~ msgstr "Hvid frontpanelforbindelse"
-
-#~ msgid "Black Front Panel Connector"
-#~ msgstr "Sort frontpanelforbindelse"
-
-#~ msgid "Gray Front Panel Connector"
-#~ msgstr "Grå frontpanelforbindelse"
-
-#~ msgid "Orange Front Panel Connector"
-#~ msgstr "Orange frontpanelforbindelse"
-
-#~ msgid "Red Front Panel Connector"
-#~ msgstr "Rød frontpanelforbindelse"
-
-#~ msgid "Yellow Front Panel Connector"
-#~ msgstr "Gul frontpanelforbindelse"
-
-#~ msgid "Spread Output"
-#~ msgstr "Spred uddata"
-
-#~ msgid "Downmix"
-#~ msgstr "Downmix"
-
-#~ msgid "Virtual Mixer Input"
-#~ msgstr "Virtuel mikserinddata"
-
-#~ msgid "Virtual Mixer Output"
-#~ msgstr "Virtuel mikseruddata"
-
-#~ msgid "Virtual Mixer Channels"
-#~ msgstr "Virtuel mikserkanaler"
-
-#~ msgid "%s %d Function"
-#~ msgstr "%s %d funktion"
-
-#~ msgid "%s Function"
-#~ msgstr "%s funktion"
-
-#~ msgid "Error reading %d bytes on device '%s'."
-#~ msgstr "Fejl ved læsning af %d byte på enhed '%s'."
-
-#~ msgid "Could not enqueue buffers in device '%s'."
-#~ msgstr "Kunne ikke sætte mellemlager fra enhed '%s' i kø."
-
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Kunne ikke skabe kontakt til lyd-serveren"
-
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Listning af lydservers egenskaber fejlede"

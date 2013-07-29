@@ -1,17 +1,18 @@
 # Slovenian translation for gst-plugins-good.
-# Copyright (C) 2005 - 2011 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
+# Copyright (C) 2005 - 2013 Free Software Foundation, Inc.
+#
 # Robert Horvat <robi@hipnos.net>, 2010.
 # Matej Urbančič <matej.urban@gmail.com>, 2010 - 2011.
-# Klemen Košir <klemen.kosir@gmx.com>, 2011.
+# Klemen Košir <klemen913@gmail.com>, 2012 - 2013.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.26.2\n"
+"Project-Id-Version: gst-plugins-good-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:41+0200\n"
-"PO-Revision-Date: 2011-03-12 18:35+0100\n"
-"Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
+"POT-Creation-Date: 2013-07-29 19:53+0100\n"
+"PO-Revision-Date: 2013-01-05 10:03+0100\n"
+"Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
 "MIME-Version: 1.0\n"
@@ -19,23 +20,20 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
 "%100==4 ? 3 : 0);\n"
-"X-Poedit-Language: Slovenian\n"
-"X-Poedit-Country: SLOVENIA\n"
-"X-Poedit-SourceCharset: utf-8\n"
 
 msgid "Jack server not found"
 msgstr ""
 
 msgid "Failed to decode JPEG image"
-msgstr "Odkodiranje slike JPEG je spodletelo"
+msgstr "Napaka med dekodiranjem JPEG slike"
 
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
-msgstr "'%s' - '%s'"
+msgstr "'%s' izvajalca '%s'"
 
 msgid "Could not connect to server"
-msgstr "S strežnikom se ni mogoče povezati"
+msgstr "Ni se mogoče povezati s strežnikom"
 
 msgid "No URL set."
 msgstr "Ni nastavljenega naslova URL."
@@ -44,10 +42,10 @@ msgid "Server does not support seeking."
 msgstr "Strežnik ne podpira iskanja."
 
 msgid "Could not resolve server name."
-msgstr "Imena strežnika ni mogoče razrešiti."
+msgstr "Ni mogoče razrešiti imena strežnika."
 
 msgid "Could not establish connection to server."
-msgstr "Povezave s strežnikom ni mogoče vzpostaviti"
+msgstr "Ni mogoče vzpostaviti povezave s strežnikom."
 
 msgid "Secure connection setup failed."
 msgstr "Nastavitev varne povezave je spodletela."
@@ -55,7 +53,7 @@ msgstr "Nastavitev varne povezave je spodletela."
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
 msgstr ""
-"Prišlo je do omrežne napake ali pa se je povezava nepričakovano prekinila."
+"Prišlo je do omrežne napake ali pa je povezava nepričakovano prekinjena."
 
 msgid "Server sent bad data."
 msgstr "Strežnik je poslal slabe podatke."
@@ -64,13 +62,13 @@ msgid "Internal data stream error."
 msgstr "Notranja napaka pretoka podatkov."
 
 msgid "No or invalid input audio, AVI stream will be corrupt."
-msgstr "Napaka vhodnega zvoka, pretok AVI bo pokvarjen."
+msgstr "Napaka vhodnega zvoka, AVI pretok bo pokvarjen."
 
 msgid "This file contains no playable streams."
 msgstr "Datoteka ne vsebuje pretokov za predvajanje."
 
 msgid "This file is invalid and cannot be played."
-msgstr "Datoteka je neveljavna, zato je ni mogoče predvajati."
+msgstr "Datoteka je napačna, zato je ni mogoče predvajati."
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr ""
@@ -79,7 +77,7 @@ msgid "This file is corrupt and cannot be played."
 msgstr "Datoteka je pokvarjena, zato je ni mogoče predvajati."
 
 msgid "Invalid atom size."
-msgstr "Neveljavna velikost atoma."
+msgstr "Neveljavna velikost atoma"
 
 msgid "This file is incomplete and cannot be played."
 msgstr "Datoteka ni popolna, zato je ni mogoče predvajati."
@@ -96,93 +94,95 @@ msgid ""
 "extension plugin for Real media streams."
 msgstr ""
 "Ni mogoče najti podprtega pretoka. Najverjetneje je treba namestiti vstavek "
-"GStreamer RTSP za pretoke RealMedia."
+"GStreamer RTSP razširitve za RealMedia pretoke."
 
 msgid ""
 "No supported stream was found. You might need to allow more transport "
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Podprtega pretoka ni mogoče najti. Najverjetneje je treba omogočiti več "
-"protokolov prenosa ali pa manjka ustrezen vstavek GStreamer RTSP."
+"Ni mogoče najti podprtega pretoka. Najverjetneje je treba omogočiti več "
+"protokolov prenosa, oziroma manjka ustrezen vstavek GStreamer RTSP "
+"razširitve."
 
 msgid "Internal data flow error."
-msgstr "Notranja napaka pretočnosti podatkov."
+msgstr "Notranja napaka pretoka podatkov."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
-"Zvočne naprave ni mogoče odpreti za predvajanje. Napravo uporablja drug "
+"Ni mogoče odpreti zvočne naprave za predvajanje. Napravo uporablja drug "
 "program."
 
 msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
-"Zvočne naprave ni mogoče odpreti za predvajanje. Nimate dovoljenj za "
+"Ni mogoče odpreti zvočne naprave za predvajanje. Ni ustreznih dovoljenj za "
 "odpiranje naprave."
 
 msgid "Could not open audio device for playback."
-msgstr "Zvočne naprave ni mogoče odpreti za predvajanje."
+msgstr "Ni mogoče odpreti zvočne naprave za predvajanje."
 
 msgid ""
 "Could not open audio device for playback. This version of the Open Sound "
 "System is not supported by this element."
 msgstr ""
-"Zvočne naprave ni mogoče odpreti za predvajanje. Predmet ne podpira trenutne "
-"različice sistema Open Sound System."
+"Ni mogoče odpreti zvočne naprave za predvajanje. Open Sound System ni podprt."
 
 msgid "Playback is not supported by this audio device."
-msgstr "Ta zvočna naprava ne podpira predvajanja."
+msgstr "Predvajane s to zvočno napravo ni podprto."
 
 msgid "Audio playback error."
-msgstr "Napaka med predvajanjem zvoka."
+msgstr "Napaka predvajanja zvoka"
 
 msgid "Recording is not supported by this audio device."
 msgstr "Snemanje s to zvočno napravo ni podprto."
 
 msgid "Error recording from audio device."
-msgstr "Napaka med snemanjem z zvočno napravo."
+msgstr "Napaka med shranjevanjem preko zvočne naprave"
 
 msgid ""
 "Could not open audio device for recording. You don't have permission to open "
 "the device."
 msgstr ""
-"Zvočne naprave ni mogoče odpreti za snemanje. Nimate dovoljenj za odpiranje "
-"naprave."
+"Ni mogoče odpreti zvočne naprave za snemanje. Ni ustreznih dovoljenj za "
+"odpiranje naprave."
 
 msgid "Could not open audio device for recording."
-msgstr "Zvočne naprave ni mogoče odpreti za snemanje."
+msgstr "Ni mogoče odpreti zvočne naprave za snemanje."
 
 msgid "Record Source"
-msgstr "Snemaj vir"
+msgstr ""
 
 msgid "Microphone"
-msgstr "Mikrofon"
+msgstr ""
 
+#, fuzzy
 msgid "Line In"
-msgstr "Analogni vhod"
+msgstr "Analogni izhod"
 
 msgid "Internal CD"
-msgstr "Notranji CD"
+msgstr ""
 
+#, fuzzy
 msgid "SPDIF In"
-msgstr "Vhod SPDIF"
+msgstr "Izhod SPDIF"
 
+#, fuzzy
 msgid "AUX 1 In"
-msgstr "Vhod AUX 1"
+msgstr "AUX 1 izhod"
 
+#, fuzzy
 msgid "AUX 2 In"
-msgstr "Vhod AUX 2"
+msgstr "AUX 2 izhod"
 
-#, fuzzy
 msgid "Codec Loopback"
-msgstr "Povratna zanka"
+msgstr ""
 
-#, fuzzy
 msgid "SunVTS Loopback"
-msgstr "Povratna zanka"
+msgstr ""
 
 msgid "Volume"
 msgstr "Glasnost"
@@ -194,7 +194,7 @@ msgid "Monitor"
 msgstr "Zaslon"
 
 msgid "Built-in Speaker"
-msgstr "Vgrajen zvočnik"
+msgstr "Vgrajeni zvočnik"
 
 msgid "Headphone"
 msgstr "Slušalke"
@@ -206,10 +206,10 @@ msgid "SPDIF Out"
 msgstr "Izhod SPDIF"
 
 msgid "AUX 1 Out"
-msgstr "Izhod AUX 1"
+msgstr "AUX 1 izhod"
 
 msgid "AUX 2 Out"
-msgstr "Izhod AUX 2"
+msgstr "AUX 2 izhod"
 
 #, c-format
 msgid "Error reading %d bytes from device '%s'."
@@ -218,90 +218,93 @@ msgstr "Napaka med branjem %d bajtov iz naprave '%s'."
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
+"Med številčenjem oblik videa, ki jih podpira naprava \"%s\", je prišlo do "
+"napake."
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
-msgstr "Medpomnilnika naprave '%s' ni mogoče preslikati"
+msgstr "Ni mogoče preslikati medpomnilnika naprave '%s'"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr "Gonilnik naprave '%s' ne podpira nobenega znanega načina zajemanja."
+msgstr "Gonilnik naprave \"%s\" ne podpira nobenega načina I/O %d."
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support any known IO method."
-msgstr "Gonilnik naprave '%s' ne podpira nobenega znanega načina zajemanja."
+msgstr "Gonilnik naprave \"%s\" ne podpira nobenega znanega načina I/O."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "Naprava '%s' ni izhodna naprava."
+msgstr "Naprava \"%s\" ne podpira zajemanja videa."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "Naprava '%s' ni izhodna naprava."
+msgstr "Naprava \"%s\" je zaposlena."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "Naprava '%s' ni naprava za zajemanje."
+msgstr "Naprava \"%s\" ne podpira zajemanja v ločljivosti %dx%d."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "Naprava '%s' ni naprava za zajemanje."
+msgstr "Naprava \"%s\" ne podpira zajemanja v izbrani obliki."
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
-msgstr "Parametrov na napravi '%s' ni mogoče pridobiti."
+msgstr "Ni mogoče pridobiti parametrov na napravi '%s'."
 
-#, fuzzy
 msgid "Video device did not accept new frame rate setting."
-msgstr ""
-"Vhodni video napravi ni mogoče določiti novih nastavitev hitrosti sličic."
+msgstr "Napravi ni mogoče določiti novih nastavitev hitrosti sličic."
 
 msgid "Video device could not create buffer pool."
-msgstr ""
+msgstr "Naprava ne more ustvariti zaloge medpomnilnika."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
-msgstr "Napaka med pridobivanjem nastavitev uglaševalnika %d naprave '%s'."
+msgstr ""
+"Med pridobivanjem nastavitev uglaševalnika %d na napravi \"%s\" je prišlo do "
+"napake."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Napaka med branjem %d bajtov iz naprave '%s'."
+msgstr "Med pridobivanjem lastnosti naprave \"%s\" je prišlo do napake."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Naprava '%s' ni izhodna naprava."
+msgstr "Naprava \"%s\" ni uglaševalnik."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Napaka med nastavljanjem vhoda %d na napravi %s."
+msgstr "Med pridobivanjem vhoda na napravi \"%s\" je prišlo do napake."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr "Napaka med nastavljanjem vhoda %d na napravi %s."
+msgstr "Napaka med določanjem vhoda %d naprave %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Napaka med pridobivanjem moči signala za napravo '%s'."
+msgstr ""
+"Med nastavljanjem stanja glasnosti na napravi \"%s\" je prišlo do napake."
 
 #, c-format
 msgid "Cannot identify device '%s'."
-msgstr "Naprave '%s' ni mogoče določiti."
+msgstr "Ni mogoče določiti naprave '%s'."
 
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
-"Napaka med pridobivanjem zmožnosti naprave '%s': ni gonilnik v4l2. "
-"Preverite, če je gonilnik v4l1."
+"Napaka med pridobivanjem zmožnosti naprave '%s': ni pravega gonilnika v4l2. "
+"Preverite namestitev."
 
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
-msgstr "Napaka med poizvedovanjem atributov vhoda %d naprave %s"
+msgstr "Napaka med pregledovanjem atributov poizvedbe vhoda %d naprave %s"
 
 #, c-format
 msgid "Failed to get setting of tuner %d on device '%s'."
-msgstr "Napaka med pridobivanjem nastavitev uglaševalnika %d naprave '%s'."
+msgstr "Napaka med pridobivanjem nastavitev uglaševalnika %d na napravi '%s'."
 
 #, c-format
 msgid "Failed to query norm on device '%s'."
@@ -317,7 +320,7 @@ msgstr "To ni naprava '%s'."
 
 #, c-format
 msgid "Could not open device '%s' for reading and writing."
-msgstr "Naprave '%s' ni mogoče odpreti za branje in pisanje."
+msgstr "Ni mogoče odpreti naprave '%s' za branje in pisanje."
 
 #, c-format
 msgid "Device '%s' is not a capture device."
@@ -329,17 +332,16 @@ msgstr "Naprava '%s' ni izhodna naprava."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr "Napaka med nastavljanjem uravnanosti naprave '%s'."
+msgstr "Napaka med nastavljanjem naprave '%s'."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr ""
-"Napaka med pridobivanjem trenutne frekvence uglaševalnika naprave '%s'."
+msgstr "Napaka med pridobivanjem frekvence uglaševalnika naprave '%s'."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
-"Napaka med nastavljanjem frekvence uglaševalnika naprave '%s' na %lu Hz."
+"Napaka med nastavljanjem frekvence uglaševalnika naprave '%s' na %lu Hz.."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
@@ -347,472 +349,31 @@ msgstr "Napaka med pridobivanjem moči signala za napravo '%s'."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr "Napaka med pridobivanjem vrednosti za nadzor %d na napravi '%s'."
+msgstr "Napaka med pridobivanjem vrednosti %d na napravi '%s'."
 
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."
-msgstr "Napaka med nastavljanjem vrednosti %d za nadzor %d na napravi '%s'."
+msgstr "Napaka med določanjem vrednosti %d za %d na napravi '%s'."
 
 #, c-format
 msgid "Failed to get current input on device '%s'. May be it is a radio device"
 msgstr ""
-"Napaka med pridobivanjem trenutnega vhoda naprave '%s'. Morda je radijska "
+"Napaka med pridobivanjem vhodnega signala naprave '%s'. Morda je radijska "
 "naprava."
 
 #, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Napaka med pridobivanjem trenutnega izhoda naprave '%s'. Morda je radijska "
+"Napaka med pridobivanjem odvodnega signala naprave '%s'. Morda je radijska "
 "naprava."
 
 #, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "Napaka med nastavljanjem izhoda %d na napravi %s."
+msgstr "Napaka med določanjem odvoda %d naprave %s."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "Spreminjanje ločljivosti med delovanjem še ni podprto."
 
 msgid "Cannot operate without a clock"
-msgstr "Delovanje brez ure ni mogoče"
-
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr ""
-#~ "Nepričakovana vrednost velikosti okvirja (%u). Pričakovana vrednost je %u."
-
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Napaka med poskusom pridobivanja video sličic z naprave '%s'."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr ""
-#~ "Neuspešen zagon po %d poskusih na napravi %s. Sporočilo sistemske napake: "
-#~ "%s"
-
-#~ msgid "Bass"
-#~ msgstr "Bas"
-
-#~ msgid "Treble"
-#~ msgstr "Visoki toni"
-
-#~ msgid "Synth"
-#~ msgstr "Sintetizator"
-
-#~ msgid "PCM"
-#~ msgstr "PCM"
-
-#~ msgid "Speaker"
-#~ msgstr "Zvočnik"
-
-#~ msgid "Line-in"
-#~ msgstr "Analogni vhod"
-
-#~ msgid "CD"
-#~ msgstr "CD"
-
-#~ msgid "Mixer"
-#~ msgstr "Mešalnik"
-
-#~ msgid "PCM-2"
-#~ msgstr "PCM-2"
-
-#~ msgid "Record"
-#~ msgstr "Snemanje"
-
-#~ msgid "In-gain"
-#~ msgstr "Vhodna ojačitev"
-
-#~ msgid "Out-gain"
-#~ msgstr "Izhodna ojačitev"
-
-#~ msgid "Line-1"
-#~ msgstr "Analogni vhod 1"
-
-#~ msgid "Line-2"
-#~ msgstr "Analogni vhod 2"
-
-#~ msgid "Line-3"
-#~ msgstr "Analogni vhod 3"
-
-#~ msgid "Digital-1"
-#~ msgstr "Digitalni vhod 1"
-
-#~ msgid "Digital-2"
-#~ msgstr "Digitalni vhod 2"
-
-#~ msgid "Digital-3"
-#~ msgstr "Digitalni vhod 3"
-
-#~ msgid "Phone-in"
-#~ msgstr "Telefonski vhod"
-
-#~ msgid "Phone-out"
-#~ msgstr "Telefonski izhod"
-
-#~ msgid "Video"
-#~ msgstr "Video"
-
-#~ msgid "Radio"
-#~ msgstr "Radio"
-
-#~ msgid "Could not open audio device for mixer control handling."
-#~ msgstr "Zvočne naprave ni mogoče odpreti za nadzor mešalnika."
-
-#~ msgid ""
-#~ "Could not open audio device for mixer control handling. This version of "
-#~ "the Open Sound System is not supported by this element."
-#~ msgstr ""
-#~ "Zvočne naprave ni mogoče odpreti za nadzor mešalnika. Predmet ne podpira "
-#~ "trenutne različice sistema Open Sound System."
-
-#~ msgid "Master"
-#~ msgstr "Glavni"
-
-#~ msgid "Front"
-#~ msgstr "Sprednji"
-
-#~ msgid "Rear"
-#~ msgstr "Zadnji"
-
-#~ msgid "Headphones"
-#~ msgstr "Slušalke"
-
-#~ msgid "Center"
-#~ msgstr "Sredinski"
-
-#~ msgid "LFE"
-#~ msgstr "LFE"
-
-#~ msgid "Surround"
-#~ msgstr "Prostorski"
-
-#~ msgid "Side"
-#~ msgstr "Stranski"
-
-#~ msgid "AUX Out"
-#~ msgstr "Izhod AUX"
-
-#~ msgid "3D Depth"
-#~ msgstr "3D globina"
-
-#~ msgid "3D Center"
-#~ msgstr "3D sredina"
-
-#~ msgid "3D Enhance"
-#~ msgstr "3D izboljšava"
-
-#~ msgid "Telephone"
-#~ msgstr "Telefon"
-
-#~ msgid "Video In"
-#~ msgstr "Video vhod"
-
-#~ msgid "AUX In"
-#~ msgstr "Vhod AUX"
-
-#~ msgid "Record Gain"
-#~ msgstr "Ojačitev snemanja"
-
-#~ msgid "Output Gain"
-#~ msgstr "Ojačitev izhoda"
-
-#~ msgid "Microphone Boost"
-#~ msgstr "Ojačitev mikrofona"
-
-#~ msgid "Diagnostic"
-#~ msgstr "Diagnostika"
-
-#~ msgid "Bass Boost"
-#~ msgstr "Ojačitev basov"
-
-#~ msgid "Playback Ports"
-#~ msgstr "Vrata predvajanja"
-
-#~ msgid "Input"
-#~ msgstr "Vhod"
-
-#~ msgid "Monitor Source"
-#~ msgstr "Nadzoruj vir"
-
-#~ msgid "Keyboard Beep"
-#~ msgstr "Pisk tipkovnice"
-
-#~ msgid "Simulate Stereo"
-#~ msgstr "Simuliran stereo"
-
-#~ msgid "Stereo"
-#~ msgstr "Stereo"
-
-#~ msgid "Surround Sound"
-#~ msgstr "Prostorski zvok"
-
-#~ msgid "Microphone Gain"
-#~ msgstr "Ojačitev mikrofona"
-
-#~ msgid "Speaker Source"
-#~ msgstr "Vir zvočnika"
-
-#~ msgid "Microphone Source"
-#~ msgstr "Vir mikrofona"
-
-#~ msgid "Jack"
-#~ msgstr "Priključek"
-
-#~ msgid "Center / LFE"
-#~ msgstr "Srednji / LFE"
-
-#~ msgid "Stereo Mix"
-#~ msgstr "Stereo mešanje"
-
-#~ msgid "Mono Mix"
-#~ msgstr "Mono mešanje"
-
-#~ msgid "Input Mix"
-#~ msgstr "Mešanje vhoda"
-
-#~ msgid "Microphone 1"
-#~ msgstr "Mikrofon 1"
-
-#~ msgid "Microphone 2"
-#~ msgstr "Mikrofon 2"
-
-#~ msgid "Digital Out"
-#~ msgstr "Digitalni izhod"
-
-#~ msgid "Digital In"
-#~ msgstr "Digitalni vhod"
-
-#~ msgid "HDMI"
-#~ msgstr "HDMI"
-
-#~ msgid "Modem"
-#~ msgstr "Modem"
-
-#~ msgid "Handset"
-#~ msgstr "Prostoročna slušalka"
-
-#~ msgid "Other"
-#~ msgstr "Drugo"
-
-#~ msgid "None"
-#~ msgstr "Brez"
-
-#~ msgid "On"
-#~ msgstr "Vključeno"
-
-#~ msgid "Off"
-#~ msgstr "Izključeno"
-
-#~ msgid "Mute"
-#~ msgstr "Nemo"
-
-#~ msgid "Fast"
-#~ msgstr "Hitro"
-
-#~ msgid "Very Low"
-#~ msgstr "Zelo nizko"
-
-#~ msgid "Low"
-#~ msgstr "Nizko"
-
-#~ msgid "Medium"
-#~ msgstr "Srednje"
-
-#~ msgid "High"
-#~ msgstr "Visoko"
-
-#~ msgid "Very High"
-#~ msgstr "Zelo visoko"
-
-#~ msgid "Production"
-#~ msgstr "Proizvodnja"
-
-#~ msgid "Front Panel Microphone"
-#~ msgstr "Mikrofon spredaj"
-
-#~ msgid "Front Panel Line In"
-#~ msgstr "Analogni vhod spredaj"
-
-#~ msgid "Front Panel Headphones"
-#~ msgstr "Slušalke spredaj"
-
-#~ msgid "Front Panel Line Out"
-#~ msgstr "Analogni izhod spredaj"
-
-#~ msgid "Green Connector"
-#~ msgstr "Zeleni priključek"
-
-#~ msgid "Pink Connector"
-#~ msgstr "Roza priključek"
-
-#~ msgid "Blue Connector"
-#~ msgstr "Modri priključek"
-
-#~ msgid "White Connector"
-#~ msgstr "Beli priključek"
-
-#~ msgid "Black Connector"
-#~ msgstr "Črni priključek"
-
-#~ msgid "Gray Connector"
-#~ msgstr "Sivi priključek"
-
-#~ msgid "Orange Connector"
-#~ msgstr "Oranžni priključek"
-
-#~ msgid "Red Connector"
-#~ msgstr "Rdeči priključek"
-
-#~ msgid "Yellow Connector"
-#~ msgstr "Rumeni priključek"
-
-#~ msgid "Green Front Panel Connector"
-#~ msgstr "Zeleni priključek spredaj"
-
-#~ msgid "Pink Front Panel Connector"
-#~ msgstr "Roza priključek spredaj"
-
-#~ msgid "Blue Front Panel Connector"
-#~ msgstr "Modri priključek spredaj"
-
-#~ msgid "White Front Panel Connector"
-#~ msgstr "Beli priključek spredaj"
-
-#~ msgid "Black Front Panel Connector"
-#~ msgstr "Črni priključek spredaj"
-
-#~ msgid "Gray Front Panel Connector"
-#~ msgstr "Sivi priključek spredaj"
-
-#~ msgid "Orange Front Panel Connector"
-#~ msgstr "Oranžni priključek spredaj"
-
-#~ msgid "Red Front Panel Connector"
-#~ msgstr "Rdeči priključek spredaj"
-
-#~ msgid "Yellow Front Panel Connector"
-#~ msgstr "Rumeni priključek spredaj"
-
-#~ msgid "Spread Output"
-#~ msgstr "Razširi izhod"
-
-#~ msgid "Downmix"
-#~ msgstr "Zmanjševanje kanalov"
-
-#~ msgid "Virtual Mixer Input"
-#~ msgstr "Vhod navideznega mešalnika"
-
-#~ msgid "Virtual Mixer Output"
-#~ msgstr "Izhod navideznega mešalnika"
-
-#~ msgid "Virtual Mixer Channels"
-#~ msgstr "Kanali navideznega mešalnika"
-
-#~ msgid "%s %d Function"
-#~ msgstr "Funkcija %s %d"
-
-#~ msgid "%s Function"
-#~ msgstr "Funkcija %s"
-
-#~ msgid "Error reading %d bytes on device '%s'."
-#~ msgstr "Napaka med branjem %d bajtov na napravi '%s'."
-
-#~ msgid "Could not enqueue buffers in device '%s'."
-#~ msgstr "Medpomnilnika na napravi '%s' ni mogoče uvrstiti."
-
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Povezave z zvočnim strežnikom ni mogoče vzpostaviti"
-
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Poizvedba o zmogljivosti zvočnega strežnika je spodletela"
-
-#~ msgid "Describes the selected input element."
-#~ msgstr "Opisuje izbran vnosni predmet."
-
-#~ msgid "Describes the selected output element for Audio/Video Conferencing."
-#~ msgstr "Opisuje izbran izhodni predmet za zvočne/video konference."
-
-#~ msgid "Describes the selected output element for Music and Movies."
-#~ msgstr "Opisuje izbran predmet za glasbo in filme."
-
-#~ msgid "Describes the selected output element."
-#~ msgstr "Opisuje izbran izhodni predmet."
-
-#~ msgid "GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr "GStreamer odvod za zvočne/video konference"
-
-#~ msgid "GStreamer audiosink for Music and Movies"
-#~ msgstr "GStreamer odvod glasbe in filmov"
-
-#~ msgid ""
-#~ "GStreamer can play audio using any number of output elements. Some "
-#~ "possible choices are osssink, esdsink and alsasink. The audiosink can be "
-#~ "a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "S programom GStreamer je mogoče predvajati zvok z uporabo več izhodnih "
-#~ "predmetov. Med razpoložljivi so ossink, edsink in alsasink. Audiosink je "
-#~ "lahko delni cevovod namesto enega predmeta."
-
-#~ msgid ""
-#~ "GStreamer can play video using any number of output elements. Some "
-#~ "possible choices are xvimagesink, ximagesink, sdlvideosink and aasink. "
-#~ "The videosink can be a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "S programom GStreamer je mogoče predvajati video z uporabo več izhodnih "
-#~ "predmetov. Med razpoložljivimi so xvimagesink, ximagesink, sdlvideosink "
-#~ "in aasink. Videosink je lahko delni cevovod namesto enega predmeta."
-
-#~ msgid ""
-#~ "GStreamer can put visualization plugins in a pipeline to transform audio "
-#~ "stream in video frames. Default is goom but more visualization plugins "
-#~ "will be ported soon. The visualization plugin can be a partial pipeline "
-#~ "instead of just one element."
-#~ msgstr ""
-#~ "S programom GStreamer je mogoče v cevovod vključiti vstavek predočenja za "
-#~ "pretvorbo zvočnega pretoka v slikovni učinek. Privzeti vstavek je Goom, "
-#~ "kmalu pa mu bodo sledili še drugi. Vstavek predočenja je lahko delni "
-#~ "cevovod namesto samo enega predmeta."
-
-#~ msgid ""
-#~ "GStreamer can record audio using any number of input elements. Some "
-#~ "possible choices are osssrc, esdsrc and alsasrc. The audio source can be "
-#~ "a partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "S programom GStreamer je mogoče posneti zvok z uporabo več vhodnih "
-#~ "predmetov. Med razpoložljivimi so osssrc, esdsrc in alsasrc. Vir zvoka je "
-#~ "lahko delni cevovod namesto samo enega predmeta."
-
-#~ msgid ""
-#~ "GStreamer can record video from any number of input elements. Some "
-#~ "possible choices are v4lsrc and videotestsrc. The video source can be a "
-#~ "partial pipeline instead of just one element."
-#~ msgstr ""
-#~ "S programom GStreamer je mogoče posneti video z uporabo več vhodnih "
-#~ "predmetov. Med razpoložljivimi sta v4lsrc in videotestsrc. Vir videa je "
-#~ "lahko delni cevovod namesto samo enega predmeta."
-
-#~ msgid "default GStreamer audio source"
-#~ msgstr "privzeti vir zvoka"
-
-#~ msgid "default GStreamer audiosink"
-#~ msgstr "privzeti zvočni ponor"
-
-#~ msgid "default GStreamer video source"
-#~ msgstr "privzeti vir videa"
-
-#~ msgid "default GStreamer videosink"
-#~ msgstr "privzeti video ponor"
-
-#~ msgid "default GStreamer visualization plugin"
-#~ msgstr "privzeti vstavek predočenja"
-
-#~ msgid "description for GStreamer audiosink for Audio/Video Conferencing"
-#~ msgstr "opis GStreamer zvočnega ponora za zvočno/video konferenco"
-
-#~ msgid "description for GStreamer audiosink for Music and Movies"
-#~ msgstr "opis GStreamer zvočnega ponora za glasbo in filme"
-
-#~ msgid "description for default GStreamer audiosink"
-#~ msgstr "opis za privzeti GStreamer zvočni ponor"
-
-#~ msgid "description for default GStreamer audiosrc"
-#~ msgstr "opis za privzeti GStreamer zvočni vir"
+msgstr "Izvajanje opravil brez ure ni mogoče"

@@ -3,20 +3,21 @@
 #
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2011.
+# Yuri Kozlov <yuray@komyakino.ru>, 2011, 2012.
+# Pavel Maryanov <acid@jack.kiev.ua>, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.28.2\n"
+"Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:41+0200\n"
-"PO-Revision-Date: 2011-04-26 21:13+0400\n"
-"Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
+"POT-Creation-Date: 2013-07-29 19:53+0100\n"
+"PO-Revision-Date: 2013-03-09 17:09+0200\n"
+"Last-Translator: Pavel Maryanov <acid@jack.kiev.ua>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.0\n"
+"X-Generator: Poedit 1.5.5\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
@@ -29,7 +30,7 @@ msgstr "Не удалось декодировать JPEG-изображение
 #. TRANSLATORS: 'song title' by 'artist name'
 #, c-format
 msgid "'%s' by '%s'"
-msgstr "«%s» исполняет «%s»"
+msgstr "«%s», «%s»"
 
 msgid "Could not connect to server"
 msgstr "Не удалось соединиться с сервером"
@@ -224,23 +225,23 @@ msgstr ""
 msgid "Could not map buffers from device '%s'"
 msgstr "Не удалось распределить буферы устройства «%s»"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr ""
-"Драйвер устройства «%s» не поддерживает ни один из известных методов захвата."
+msgstr "Драйвер устройства «%s» не поддерживает метод ввода-вывода %d"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
-"Драйвер устройства «%s» не поддерживает ни один из известных методов захвата."
+"Драйвер устройства «%s» не поддерживает ни один из известных методов ввода-"
+"вывода."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "Устройство «%s» не является устройством вывода."
+msgstr "Устройство «%s» не поддерживает захват видео"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "Устройство «%s» не является устройством вывода."
+msgstr "Устройство «%s» занято"
 
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
@@ -254,36 +255,35 @@ msgstr "Устройство «%s» не может осуществлять з�
 msgid "Could not get parameters on device '%s'"
 msgstr "Не удалось получить параметры устройства «%s»"
 
-#, fuzzy
 msgid "Video device did not accept new frame rate setting."
-msgstr "Устройство видео-захвата не приняло новый параметр кадровой частоты."
+msgstr "Видео-устройство не приняло новое значение настройки кадровой частоты."
 
 msgid "Video device could not create buffer pool."
-msgstr ""
+msgstr "Видео-устройство не может создать буферный пул."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
-msgstr "Ошибка получения установок тюнера %d устройства «%s»."
+msgstr "Не удалось получить настройки тюнера %d устройства «%s»."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Ошибка чтения %d байт из устройства «%s»."
+msgstr "Ошибка при получении списка возможностей устройства «%s»."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "Устройство «%s» не является устройством вывода."
+msgstr "Устройство «%s» не является тюнером."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "Не удалось выбрать вход %d для устройства %s."
+msgstr "Не удалось выбрать радио-вход на устройстве «%s»."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "Не удалось выбрать вход %d для устройства %s."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "Ошибка получения мощности сигнала для устройства «%s»."
+msgstr "Не удалось изменить состояние приглушения для устройства «%s»."
 
 #, c-format
 msgid "Cannot identify device '%s'."
@@ -379,14 +379,11 @@ msgstr ""
 msgid "Cannot operate without a clock"
 msgstr "Операция невозможна без часов"
 
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Получен неожиданный размер кадра: %u вместо %u."
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Не удалось установить соединение с сервером звука"
 
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Ошибка при попытке получения кадров видео с устройства «%s»."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Ошибка после %d попыток. Устройство: %s. Системная ошибка: %s"
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "Ошибка при запросе возможностей сервера звука"
 
 #~ msgid "Bass"
 #~ msgstr "Низкие"
@@ -714,17 +711,20 @@ msgstr "Операция невозможна без часов"
 #~ msgid "%s Function"
 #~ msgstr "Функция %s"
 
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Получен неожиданный размер кадра: %u вместо %u."
+
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Ошибка чтения %d байт из устройства «%s»."
 
 #~ msgid "Could not enqueue buffers in device '%s'."
 #~ msgstr "Не удалось добавить в очередь буферы устройства «%s»"
 
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Не удалось установить соединение с сервером звука"
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Ошибка при попытке получения кадров видео с устройства «%s»."
 
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "Ошибка при запросе возможностей сервера звука"
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Ошибка после %d попыток. Устройство: %s. Системная ошибка: %s"
 
 #~ msgid ""
 #~ "The buffer type is not supported, or the index is out of bounds, or no "

@@ -3,13 +3,13 @@
 # Copyright (C) 2004, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 #
 # Laszlo Dvornik <dvornik@invitel.hu>, 2004.
-# Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009, 2010.
+# Gabor Kelemen <kelemeng@gnome.hu>, 2007, 2008, 2009, 2010, 2012.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.25.3\n"
+"Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:41+0200\n"
-"PO-Revision-Date: 2010-11-04 01:21+0100\n"
+"POT-Creation-Date: 2013-07-29 19:53+0100\n"
+"PO-Revision-Date: 2012-11-30 15:05+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
 "Language: hu\n"
@@ -17,7 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Rosetta-Export-Date: 2007-07-27 19:18:15+0000\n"
-"X-Generator: KBabel 1.11.4\n"
+"X-Generator: Lokalize 1.4\n"
 "X-Rosetta-Export-Date: 2007-07-27 19:18:15+0000\n"
 "Plural-Forms:  nplurals=2; plural=(n != 1);\n"
 
@@ -77,7 +77,7 @@ msgid "This file is corrupt and cannot be played."
 msgstr "A fájl sérült és nem játszható le."
 
 msgid "Invalid atom size."
-msgstr ""
+msgstr "Érvénytelen atom méret."
 
 msgid "This file is incomplete and cannot be played."
 msgstr "A fájl nem teljes és nem játszható le."
@@ -217,74 +217,71 @@ msgstr "Hiba %d bájt olvasásakor a következő eszközről: „%s”."
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
 msgstr ""
+"A(z) „%s” eszköz által kezelhető lehetséges videoformátumok felsorolása "
+"sikertelen"
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "Nem képezhetők le a(z) „%s” eszköz pufferei"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr ""
-"A(z) „%s” eszköz illesztőprogramja nem támogat egyetlen ismert felvételi "
-"módot sem."
+msgstr "A(z) „%s” eszköz illesztőprogramja nem támogatja a(z) %d. IO módot"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
-"A(z) „%s” eszköz illesztőprogramja nem támogat egyetlen ismert felvételi "
-"módot sem."
+"A(z) „%s” eszköz illesztőprogramja nem támogat egyetlen ismert IO módot sem."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "A(z) „%s” eszköz nem kimeneti eszköz."
+msgstr "A(z) „%s” eszköz nem támogatja a videofelvételt"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is busy"
-msgstr "A(z) „%s” eszköz nem kimeneti eszköz."
+msgstr "A(z) „%s” eszköz foglalt"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture at %dx%d"
-msgstr "A(z) „%s” eszköz nem rögzítőeszköz."
+msgstr "A(z) „%s” eszköz nem képes felvenni %dx%d felbontásban"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' cannot capture in the specified format"
-msgstr "A(z) „%s” eszköz nem rögzítőeszköz."
+msgstr "A(z) „%s” eszköz nem képes felvenni a megadott formátumban"
 
 #, c-format
 msgid "Could not get parameters on device '%s'"
 msgstr "Nem kérhetők le a(z) „%s” eszköz paraméterei"
 
-#, fuzzy
 msgid "Video device did not accept new frame rate setting."
-msgstr ""
-"A videobemeneti eszköz nem fogadta el az új képkockasebesség-beállítást."
+msgstr "A videoeszköz nem fogadta el az új képkockasebesség-beállítást."
 
 msgid "Video device could not create buffer pool."
-msgstr ""
+msgstr "A videoeszköz nem tudott létrehozni puffertárolót."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "A(z) %d. tuner beállításának lekérése a(z) „%s” eszközön meghiúsult."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "Hiba %d bájt olvasásakor a következő eszközről: „%s”."
+msgstr "Hiba a(z) „%s” eszköz képességeinek lekérésekor."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "A(z) „%s” eszköz nem kimeneti eszköz."
+msgstr "A(z) „%s” eszköz nem tuner."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr "A(z) %d. bemenet beállítása meghiúsult a(z) „%s” eszközön."
+msgstr "A rádióbemenet lekérése meghiúsult a(z) „%s” eszközön."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
 msgstr "A(z) %d. bemenet beállítása meghiúsult a(z) „%s” eszközön."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "A jelerősség lekérdezése meghiúsult a(z) „%s” eszközön."
+msgstr "A némítási állapot módosítása meghiúsult a(z) „%s” eszközön."
 
 #, c-format
 msgid "Cannot identify device '%s'."
@@ -364,16 +361,16 @@ msgstr ""
 "Az aktuális bemenet lekérése meghiúsult a(z) „%s” eszközről. Lehet, hogy ez "
 "egy rádióeszköz."
 
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "Failed to get current output on device '%s'. May be it is a radio device"
 msgstr ""
-"Az aktuális bemenet lekérése meghiúsult a(z) „%s” eszközről. Lehet, hogy ez "
+"Az aktuális kimenet lekérése meghiúsult a(z) „%s” eszközről. Lehet, hogy ez "
 "egy rádióeszköz."
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set output %d on device %s."
-msgstr "A(z) %d. bemenet beállítása meghiúsult a(z) „%s” eszközön."
+msgstr "A(z) %d. kimenet beállítása meghiúsult a(z) „%s” eszközön."
 
 msgid "Changing resolution at runtime is not yet supported."
 msgstr "A felbontás módosítása futás közben még nem támogatott."
@@ -381,14 +378,11 @@ msgstr "A felbontás módosítása futás közben még nem támogatott."
 msgid "Cannot operate without a clock"
 msgstr "Óra nélkül lehetetlen a működés"
 
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "Váratlan keretméret (%u) érkezett %u helyett."
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "Nem hozható létre kapcsolat a hangkiszolgálóhoz"
 
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "Nem sikerült videokockákat lekérni a(z) „%s” eszköztől."
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr "Hiba %d próbálkozás után. Eszköz: %s. Rendszerhiba: %s."
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "A hangkiszolgáló képességeinek lekérdezése meghiúsult"
 
 #~ msgid "Bass"
 #~ msgstr "Basszus"
@@ -715,14 +709,17 @@ msgstr "Óra nélkül lehetetlen a működés"
 #~ msgid "%s Function"
 #~ msgstr "%s funkció"
 
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "Váratlan keretméret (%u) érkezett %u helyett."
+
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr "Hiba %d bájt olvasásakor a következő eszközről: „%s”."
 
 #~ msgid "Could not enqueue buffers in device '%s'."
 #~ msgstr "Nem állíthatók sorba a pufferek a(z) „%s” eszközben."
 
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "Nem hozható létre kapcsolat a hangkiszolgálóhoz"
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "Nem sikerült videokockákat lekérni a(z) „%s” eszköztől."
 
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "A hangkiszolgáló képességeinek lekérdezése meghiúsult"
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr "Hiba %d próbálkozás után. Eszköz: %s. Rendszerhiba: %s."

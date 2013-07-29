@@ -3,20 +3,20 @@
 #
 # Takao Fujiwara <takao.fujiwara@sun.com>, 2006.
 # Makoto Kato <makoto.kt@gmail.com>, 2009-2011.
-# Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>, 2011
+# Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>, 2011-2012
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 0.10.28.2\n"
+"Project-Id-Version: gst-plugins-good 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:41+0200\n"
-"PO-Revision-Date: 2011-08-28 23:59+0900\n"
+"POT-Creation-Date: 2013-07-29 19:53+0100\n"
+"PO-Revision-Date: 2012-12-22 20:13+0900\n"
 "Last-Translator: Takeshi Hamasaki <hmatrjp@users.sourceforge.jp>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
 "Language: ja\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 0.3\n"
+"X-Generator: Poedit 1.5.4\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "Jack server not found"
@@ -26,9 +26,9 @@ msgid "Failed to decode JPEG image"
 msgstr "JPEG画像のデコードに失敗しました"
 
 #. TRANSLATORS: 'song title' by 'artist name'
-#, fuzzy, c-format
+#, c-format
 msgid "'%s' by '%s'"
-msgstr "対"
+msgstr "'%s' , '%s'"
 
 msgid "Could not connect to server"
 msgstr "サーバーへ接続できません"
@@ -52,9 +52,8 @@ msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
 msgstr "ネットワークエラーが発生したか、サーバーが予期せず接続を閉じました。"
 
-#, fuzzy
 msgid "Server sent bad data."
-msgstr "データストリーム (サーバープッシュ型)"
+msgstr "サーバが不正なデータを送信しました。"
 
 msgid "Internal data stream error."
 msgstr "内部データストリームエラー"
@@ -223,31 +222,29 @@ msgstr "デバイス %2$s から　%1$d バイト読み込み時にエラーが�
 
 #, c-format
 msgid "Failed to enumerate possible video formats device '%s' can work with"
-msgstr ""
+msgstr "デバイス'%s'が作業できるビデオ形式の数え上げに失敗しました"
 
 #, c-format
 msgid "Could not map buffers from device '%s'"
 msgstr "デバイス '%s' からバッファをマップできません。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support the IO method %d"
-msgstr ""
-"デバイス '%s' のドライバーはよく知られたキャプチャーメソッドをサポートしてい"
-"ません"
+msgstr "デバイス '%s' のドライバはIOメソッド%dをサポートしていません"
 
-#, fuzzy, c-format
+#, c-format
 msgid "The driver of device '%s' does not support any known IO method."
 msgstr ""
-"デバイス '%s' のドライバーはよく知られたキャプチャーメソッドをサポートしてい"
-"ません"
+"デバイス '%s' のドライバは知られているいかなるIOメソッドもサポートしていませ"
+"ん。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' does not support video capture"
-msgstr "デバイス '%s' は出力デバイスではありません"
+msgstr "デバイス '%s' はビデオキャプチャをサポートしていません"
 
 #, c-format
 msgid "Device '%s' is busy"
-msgstr ""
+msgstr "デバイス`%s'はビジー状態です"
 
 #, c-format
 msgid "Device '%s' cannot capture at %dx%d"
@@ -262,52 +259,47 @@ msgstr "デバイス '%s' は指定されたフォーマットでキャプチャ
 msgid "Could not get parameters on device '%s'"
 msgstr "デバイス '%s' 上のパラメータを取得できません。"
 
-#, fuzzy
 msgid "Video device did not accept new frame rate setting."
-msgstr "ビデオ入力デバイスは新しいフレームレート設定にすることができません"
+msgstr "ビデオデバイスが新しいフレームレート設定を受け付けません。"
 
 msgid "Video device could not create buffer pool."
-msgstr ""
+msgstr "ビデオデバイスはバッファプールを作成できませんでした。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get settings of tuner %d on device '%s'."
 msgstr "デバイス '%2$s' 上のチューナー %1$d の設定の取得に失敗しました。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Error getting capabilities for device '%s'."
-msgstr "デバイス %2$s から　%1$d バイト読み込み時にエラーが発生しました。"
+msgstr "デバイス'%s' の能力を取得する時にエラーが発生しました。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Device '%s' is not a tuner."
-msgstr "デバイス '%s' は出力デバイスではありません"
+msgstr "デバイス '%s' はチューナではありません。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get radio input on device '%s'. "
-msgstr ""
-"デバイス '%3$s' 上のコントロール %2$d の値を %1$d へ設定することに失敗しまし"
-"た。"
+msgstr "デバイス '%s' 上のラジオ入力の取得に失敗しました。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set input %d on device %s."
-msgstr ""
-"デバイス '%3$s' 上のコントロール %2$d の値を %1$d へ設定することに失敗しまし"
-"た。"
+msgstr "デバイス '%2$s' 上の入力%1$d の設定に失敗しました。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to change mute state for device '%s'."
-msgstr "デバイス '%s' の現在のチューナーの周波数の取得に失敗しました"
+msgstr "デバイス '%s' のミュート状態の変更に失敗しました"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Cannot identify device '%s'."
-msgstr "ミキサーデバイス'%s'を開けません"
+msgstr "デバイス'%s'を特定できません。"
 
 #, c-format
 msgid ""
 "Error getting capabilities for device '%s': It isn't a v4l2 driver. Check if "
 "it is a v4l1 driver."
 msgstr ""
-"デバイス '%s' ケイパビリティの取得時にエラーが発生しました: v4l2 ドライバでは"
-"ありません。v4l1 ドライバでないか、チェックしてください。"
+"デバイス '%s' の能力を取得する時にエラーが発生しました: v4l2 ドライバではあり"
+"ません。v4l1 ドライバでないか、チェックしてください。"
 
 #, c-format
 msgid "Failed to query attributes of input %d in device %s"
@@ -317,9 +309,9 @@ msgstr "デバイス %2$s 内の入力 %1$d の属性のクエリーに失敗し
 msgid "Failed to get setting of tuner %d on device '%s'."
 msgstr "デバイス '%2$s' 上のチューナー %1$d の設定の取得に失敗しました。"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to query norm on device '%s'."
-msgstr "デバイス '%2$s' 上のチューナー %1$d の設定の取得に失敗しました。"
+msgstr "デバイス '%s' 上のノルムの取得に失敗しました。"
 
 #, c-format
 msgid "Failed getting controls attributes on device '%s'."
@@ -342,11 +334,9 @@ msgstr "デバイス '%s' はキャプチャデバイスではありません"
 msgid "Device '%s' is not a output device."
 msgstr "デバイス '%s' は出力デバイスではありません"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr ""
-"デバイス '%3$s' 上のコントロール %2$d の値を %1$d へ設定することに失敗しまし"
-"た。"
+msgstr "デバイス '%s' 上のノルムの設定に失敗しました。"
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
@@ -356,9 +346,9 @@ msgstr "デバイス '%s' の現在のチューナーの周波数の取得に失
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr "デバイス '%s' のチューナーの周波数の %lu Hz への設定に失敗しました"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr "デバイス '%s' の現在のチューナーの周波数の取得に失敗しました"
+msgstr "デバイス '%s' の信号の強さの取得に失敗しました。"
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
@@ -393,15 +383,11 @@ msgstr "実行時の解像度変更はサポートされていません。"
 msgid "Cannot operate without a clock"
 msgstr "クロックなしでは動作できません。"
 
-#~ msgid "Got unexpected frame size of %u instead of %u."
-#~ msgstr "予期しないフレームサイズ (%2$u ではなく %1$u) を取得しました。"
+#~ msgid "Could not establish connection to sound server"
+#~ msgstr "サウンドサーバーへの接続に失敗しました"
 
-#~ msgid "Failed trying to get video frames from device '%s'."
-#~ msgstr "デバイス '%s' からビデオフレームの取得に失敗しました。"
-
-#~ msgid "Failed after %d tries. device %s. system error: %s"
-#~ msgstr ""
-#~ "%d 回リトライしましたが失敗しました。デバイス %s。システムエラー: %s"
+#~ msgid "Failed to query sound server capabilities"
+#~ msgstr "サウンドサーバーのケイパビリティのクエリーに失敗しました"
 
 # SUN REVIEWED
 #~ msgid "Bass"
@@ -737,11 +723,8 @@ msgstr "クロックなしでは動作できません。"
 #~ msgid "%s Function"
 #~ msgstr "機能"
 
-#~ msgid "Could not establish connection to sound server"
-#~ msgstr "サウンドサーバーへの接続に失敗しました"
-
-#~ msgid "Failed to query sound server capabilities"
-#~ msgstr "サウンドサーバーのケイパビリティのクエリーに失敗しました"
+#~ msgid "Got unexpected frame size of %u instead of %u."
+#~ msgstr "予期しないフレームサイズ (%2$u ではなく %1$u) を取得しました。"
 
 #~ msgid "Error reading %d bytes on device '%s'."
 #~ msgstr ""
@@ -750,6 +733,13 @@ msgstr "クロックなしでは動作できません。"
 #, fuzzy
 #~ msgid "Could not enqueue buffers in device '%s'."
 #~ msgstr "デバイス '%s' からバッファをマップできません。"
+
+#~ msgid "Failed trying to get video frames from device '%s'."
+#~ msgstr "デバイス '%s' からビデオフレームの取得に失敗しました。"
+
+#~ msgid "Failed after %d tries. device %s. system error: %s"
+#~ msgstr ""
+#~ "%d 回リトライしましたが失敗しました。デバイス %s。システムエラー: %s"
 
 #~ msgid ""
 #~ "Failed trying to get video frames from device '%s'. Not enough memory."
