@@ -946,12 +946,22 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         break;
       }
 
-      /* DVB_AC3 */
-      desc = mpegts_get_descriptor_from_stream (bstream, GST_MTS_DESC_DVB_AC3);
-      if (!desc)
-        GST_WARNING ("AC3 stream type found but no corresponding "
-            "descriptor to differentiate between AC3 and EAC3. "
-            "Assuming plain AC3.");
+      /* If stream has ac3 descriptor 
+       * OR program is ATSC (GA94)
+       * OR stream registration is AC-3
+       * then it's regular AC3 */
+      if (bstream->registration_id == DRF_ID_AC3 ||
+          program->registration_id == DRF_ID_GA94 ||
+          mpegts_get_descriptor_from_stream (bstream, GST_MTS_DESC_DVB_AC3)) {
+        template = gst_static_pad_template_get (&audio_template);
+        name = g_strdup_printf ("audio_%04x", bstream->pid);
+        caps = gst_caps_new_empty_simple ("audio/x-ac3");
+        break;
+      }
+
+      GST_WARNING ("AC3 stream type found but no guaranteed "
+          "way found to differentiate between AC3 and EAC3. "
+          "Assuming plain AC3.");
       template = gst_static_pad_template_get (&audio_template);
       name = g_strdup_printf ("audio_%04x", bstream->pid);
       caps = gst_caps_new_empty_simple ("audio/x-ac3");
