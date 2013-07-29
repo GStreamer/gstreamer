@@ -3681,6 +3681,32 @@ gst_base_parse_src_query_default (GstBaseParse * parse, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_SEGMENT:
+    {
+      GstFormat format;
+      gint64 start, stop;
+
+      format = parse->segment.format;
+
+      start =
+          gst_segment_to_stream_time (&parse->segment, format,
+          parse->segment.start);
+      if ((stop = parse->segment.stop) == -1)
+        stop = parse->segment.duration;
+      else
+        stop = gst_segment_to_stream_time (&parse->segment, format, stop);
+
+      if (parse->segment.rate < 0.0) {
+        gint64 tmp;
+        tmp = stop;
+        stop = start;
+        start = tmp;
+      }
+
+      gst_query_set_segment (query, parse->segment.rate, format, start, stop);
+      res = TRUE;
+      break;
+    }
     default:
       res = gst_pad_query_default (pad, GST_OBJECT_CAST (parse), query);
       break;
