@@ -41,15 +41,6 @@ enum
 GST_DEBUG_CATEGORY_STATIC (gst_qa_monitor_debug);
 #define GST_CAT_DEFAULT gst_qa_monitor_debug
 
-#define _do_init \
-  GST_DEBUG_CATEGORY_INIT (gst_qa_monitor_debug, "qa_monitor", 0, "QA Monitor");\
-  G_IMPLEMENT_INTERFACE (GST_TYPE_QA_REPORTER, NULL)
-
-
-#define gst_qa_monitor_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstQaMonitor, gst_qa_monitor,
-    G_TYPE_OBJECT, _do_init);
-
 static gboolean gst_qa_monitor_do_setup (GstQaMonitor * monitor);
 static void
 gst_qa_monitor_get_property (GObject * object, guint prop_id,
@@ -61,6 +52,26 @@ static GObject *gst_qa_monitor_constructor (GType type,
     guint n_construct_params, GObjectConstructParam * construct_params);
 
 gboolean gst_qa_monitor_setup (GstQaMonitor * monitor);
+
+static void gst_qa_monitor_intercept_report (GstQaReporter * reporter,
+    GstQaReport * report);
+
+#define GST_QA_MONITOR_OVERRIDES_LOCK(m) g_mutex_lock (&m->overrides_mutex)
+#define GST_QA_MONITOR_OVERRIDES_UNLOCK(m) g_mutex_unlock (&m->overrides_mutex)
+
+#define _do_init \
+  GST_DEBUG_CATEGORY_INIT (gst_qa_monitor_debug, "qa_monitor", 0, "QA Monitor");\
+  G_IMPLEMENT_INTERFACE (GST_TYPE_QA_REPORTER, _reporter_iface_init)
+
+static void
+_reporter_iface_init (GstQaReporterInterface * iface)
+{
+  iface->intercept_report = gst_qa_monitor_intercept_report;
+}
+
+#define gst_qa_monitor_parent_class parent_class
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstQaMonitor, gst_qa_monitor,
+    G_TYPE_OBJECT, _do_init);
 
 void
 _target_freed_cb (GstQaMonitor * monitor, GObject * where_the_object_was)
@@ -75,6 +86,7 @@ gst_qa_monitor_dispose (GObject * object)
   GstQaMonitor *monitor = GST_QA_MONITOR_CAST (object);
 
   g_mutex_clear (&monitor->mutex);
+  g_mutex_clear (&monitor->overrides_mutex);
   g_queue_clear (&monitor->overrides);
 
   if (monitor->target)
@@ -139,6 +151,7 @@ gst_qa_monitor_init (GstQaMonitor * monitor)
 {
   g_mutex_init (&monitor->mutex);
 
+  g_mutex_init (&monitor->overrides_mutex);
   g_queue_init (&monitor->overrides);
 }
 
@@ -189,13 +202,29 @@ gst_qa_monitor_get_element_name (GstQaMonitor * monitor)
   return NULL;
 }
 
+/* Check if any of our overrides wants to change the report severity */
+static void
+gst_qa_monitor_intercept_report (GstQaReporter * reporter, GstQaReport * report)
+{
+  GList *iter;
+  GstQaMonitor *monitor = GST_QA_MONITOR_CAST (reporter);
+
+  GST_QA_MONITOR_OVERRIDES_LOCK (monitor);
+  for (iter = monitor->overrides.head; iter; iter = g_list_next (iter)) {
+    report->level =
+        gst_qa_override_get_severity (iter->data,
+        gst_qa_issue_get_id (report->issue), report->level);
+  }
+  GST_QA_MONITOR_OVERRIDES_UNLOCK (monitor);
+}
+
 void
 gst_qa_monitor_attach_override (GstQaMonitor * monitor,
     GstQaOverride * override)
 {
-  GST_QA_MONITOR_LOCK (monitor);
+  GST_QA_MONITOR_OVERRIDES_LOCK (monitor);
   g_queue_push_tail (&monitor->overrides, override);
-  GST_QA_MONITOR_UNLOCK (monitor);
+  GST_QA_MONITOR_OVERRIDES_UNLOCK (monitor);
 }
 
 static void

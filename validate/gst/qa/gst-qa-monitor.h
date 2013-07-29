@@ -72,6 +72,7 @@ struct _GstQaMonitor {
 
   GstQaRunner   *runner;
 
+  GMutex        overrides_mutex;
   GQueue        overrides;
 
   /*< private >*/
