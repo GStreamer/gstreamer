@@ -1505,6 +1505,34 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
       GST_OBJECT_UNLOCK (demux);
       break;
     }
+    case GST_QUERY_SEGMENT:
+    {
+      GstFormat format;
+      gint64 start, stop;
+
+      format = demux->common.segment.format;
+
+      start =
+          gst_segment_to_stream_time (&demux->common.segment, format,
+          demux->common.segment.start);
+      if ((stop = demux->common.segment.stop) == -1)
+        stop = demux->common.segment.duration;
+      else
+        stop =
+            gst_segment_to_stream_time (&demux->common.segment, format, stop);
+
+      if (demux->common.segment.rate < 0.0) {
+        gint64 tmp;
+        tmp = stop;
+        stop = start;
+        start = tmp;
+      }
+
+      gst_query_set_segment (query, demux->common.segment.rate, format, start,
+          stop);
+      res = TRUE;
+      break;
+    }
     default:
       if (pad)
         res = gst_pad_query_default (pad, (GstObject *) demux, query);
