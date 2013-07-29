@@ -1,5 +1,5 @@
 
-Release notes for GStreamer libav Plugins 1.1.2
+Release notes for GStreamer libav Plugins 1.1.3
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -41,9 +41,8 @@ Features of this release
 
 Bugs fixed in this release
      
-      * 684808 : avdec_rv40: bad timestamping with rtsp clip, stop-and-go video
-      * 702003 : [libav] renegotiation might cause corrupted video
-      * 702319 : build: fixes non source directory build.
+      * 693581 : rtph264depay ! avdec_h264 crash on NULL decoder pointer in gst_video_decoder_get_frame ()
+      * 694299 : crash in put_pixels16_sse2() with SVQ1 video
 
 ==== Download ====
 
@@ -80,8 +79,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Arnaud Vrac
+      * Edward Hervey
+      * Olivier Crête
       * Sebastian Dröge
-      * Thiago Santos
-      * Tim-Philipp Müller
-      * Wim Taymans
  

@@ -1,9 +1,64 @@
-=== release 1.1.2 ===
+=== release 1.1.3 ===
 
-2013-07-11  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-07-29  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.2
+	  releasing 1.1.3
+
+2013-07-29 12:19:22 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: Implement SEGMENT query
+
+2013-07-24 12:22:04 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Demote WARNING to DEBUG
+	  We cover all the needed formats already. The warning was just getting
+	  in the way.
+
+2013-02-20 20:50:15 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Initialise opaque from the start
+	  https://bugzilla.gnome.org/show_bug.cgi?id=693581
+
+2013-07-23 09:59:43 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavdemux.c:
+	  avdemux: Add support for group-id in the stream-start event
+
+2013-07-19 09:45:24 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure: Remove workaround from last decade and make SIMD optimizations work on OSX
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704442
+
+2013-07-18 16:11:16 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: increase bottom padding for output frames
+	  libav can write slightly after the plane end in some SIMD optimized
+	  functions. The extra padding value needs to be at least 16+stride_align
+	  for each plane, so just increase the bottom padding value for the output
+	  frame.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=694299
+
+2013-07-11 16:57:28 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.2 ===
+
+2013-07-11 16:52:48 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.1.2
 
 2013-07-09 16:19:11 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
