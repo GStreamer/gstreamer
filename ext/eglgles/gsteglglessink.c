@@ -1052,7 +1052,10 @@ static gboolean
 gst_eglglessink_fill_texture (GstEglGlesSink * eglglessink, GstBuffer * buf)
 {
   GstVideoFrame vframe;
-  gint w, h;
+#ifndef GST_DISABLE_GST_DEBUG
+  gint w;
+#endif
+  gint h;
 
   memset (&vframe, 0, sizeof (vframe));
 
@@ -1061,8 +1064,9 @@ gst_eglglessink_fill_texture (GstEglGlesSink * eglglessink, GstBuffer * buf)
     GST_ERROR_OBJECT (eglglessink, "Couldn't map frame");
     goto HANDLE_ERROR;
   }
-
+#ifndef GST_DISABLE_GST_DEBUG
   w = GST_VIDEO_FRAME_WIDTH (&vframe);
+#endif
   h = GST_VIDEO_FRAME_HEIGHT (&vframe);
 
   GST_DEBUG_OBJECT (eglglessink,

@@ -192,9 +192,7 @@ static void
 gst_inter_sub_src_get_times (GstBaseSrc * src, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
-  GstInterSubSrc *intersubsrc = GST_INTER_SUB_SRC (src);
-
-  GST_DEBUG_OBJECT (intersubsrc, "get_times");
+  GST_DEBUG_OBJECT (src, "get_times");
 
   /* for live sources, sync on the timestamp of the buffer */
   if (gst_base_src_is_live (src)) {

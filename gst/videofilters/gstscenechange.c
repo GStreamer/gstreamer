@@ -89,16 +89,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_scene_change_debug_category);
 /* prototypes */
 
 
-static void gst_scene_change_set_property (GObject * object,
-    guint property_id, const GValue * value, GParamSpec * pspec);
-static void gst_scene_change_get_property (GObject * object,
-    guint property_id, GValue * value, GParamSpec * pspec);
-static void gst_scene_change_dispose (GObject * object);
-static void gst_scene_change_finalize (GObject * object);
-
-static gboolean gst_scene_change_set_info (GstVideoFilter * filter,
-    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
-    GstVideoInfo * out_info);
 static GstFlowReturn gst_scene_change_transform_frame_ip (GstVideoFilter *
     filter, GstVideoFrame * frame);
 
@@ -125,7 +115,6 @@ G_DEFINE_TYPE_WITH_CODE (GstSceneChange, gst_scene_change,
 static void
 gst_scene_change_class_init (GstSceneChangeClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstVideoFilterClass *video_filter_class = GST_VIDEO_FILTER_CLASS (klass);
 
   gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
@@ -140,11 +129,6 @@ gst_scene_change_class_init (GstSceneChangeClass * klass)
       "Video/Filter", "Detects scene changes in video",
       "David Schleef <ds@entropywave.com>");
 
-  gobject_class->set_property = gst_scene_change_set_property;
-  gobject_class->get_property = gst_scene_change_get_property;
-  gobject_class->dispose = gst_scene_change_dispose;
-  gobject_class->finalize = gst_scene_change_finalize;
-  video_filter_class->set_info = GST_DEBUG_FUNCPTR (gst_scene_change_set_info);
   video_filter_class->transform_frame_ip =
       GST_DEBUG_FUNCPTR (gst_scene_change_transform_frame_ip);
 
@@ -153,71 +137,6 @@ gst_scene_change_class_init (GstSceneChangeClass * klass)
 static void
 gst_scene_change_init (GstSceneChange * scenechange)
 {
-}
-
-void
-gst_scene_change_set_property (GObject * object, guint property_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstSceneChange *scenechange = GST_SCENE_CHANGE (object);
-
-  GST_DEBUG_OBJECT (scenechange, "set_property");
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
-}
-
-void
-gst_scene_change_get_property (GObject * object, guint property_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstSceneChange *scenechange = GST_SCENE_CHANGE (object);
-
-  GST_DEBUG_OBJECT (scenechange, "get_property");
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
-}
-
-void
-gst_scene_change_dispose (GObject * object)
-{
-  GstSceneChange *scenechange = GST_SCENE_CHANGE (object);
-
-  GST_DEBUG_OBJECT (scenechange, "dispose");
-
-  /* clean up as possible.  may be called multiple times */
-
-  G_OBJECT_CLASS (gst_scene_change_parent_class)->dispose (object);
-}
-
-void
-gst_scene_change_finalize (GObject * object)
-{
-  GstSceneChange *scenechange = GST_SCENE_CHANGE (object);
-
-  GST_DEBUG_OBJECT (scenechange, "finalize");
-
-  /* clean up object here */
-
-  G_OBJECT_CLASS (gst_scene_change_parent_class)->finalize (object);
-}
-
-static gboolean
-gst_scene_change_set_info (GstVideoFilter * filter, GstCaps * incaps,
-    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
-{
-  GstSceneChange *scenechange = GST_SCENE_CHANGE (filter);
-
-  GST_DEBUG_OBJECT (scenechange, "set_info");
-
-  return TRUE;
 }
 
 

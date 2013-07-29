@@ -227,11 +227,13 @@ static void gst_dash_demux_remove_streams (GstDashDemux * demux,
     GSList * streams);
 static void gst_dash_demux_stream_free (GstDashDemuxStream * stream);
 static void gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose);
+#ifndef GST_DISABLE_GST_DEBUG
 static GstClockTime gst_dash_demux_get_buffering_time (GstDashDemux * demux);
-static GstCaps *gst_dash_demux_get_input_caps (GstDashDemux * demux,
-    GstActiveStream * stream);
 static GstClockTime gst_dash_demux_stream_get_buffering_time (GstDashDemuxStream
     * stream);
+#endif
+static GstCaps *gst_dash_demux_get_input_caps (GstDashDemux * demux,
+    GstActiveStream * stream);
 static GstPad *gst_dash_demux_create_pad (GstDashDemux * demux);
 
 #define gst_dash_demux_parent_class parent_class
@@ -1409,6 +1411,7 @@ gst_dash_demux_reset (GstDashDemux * demux, gboolean dispose)
   demux->cancelled = FALSE;
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
 static GstClockTime
 gst_dash_demux_get_buffering_time (GstDashDemux * demux)
 {
@@ -1436,6 +1439,7 @@ gst_dash_demux_stream_get_buffering_time (GstDashDemuxStream * stream)
 
   return (GstClockTime) level.time;
 }
+#endif
 
 static gboolean
 gst_dash_demux_all_streams_have_data (GstDashDemux * demux)
@@ -2186,12 +2190,16 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux,
   /* Wake the download task up */
   GST_TASK_SIGNAL (demux->download_task);
   if (selected_stream) {
+#ifndef GST_DISABLE_GST_DEBUG
     guint64 brate;
+#endif
 
     diff = (GST_TIMEVAL_TO_TIME (now) - GST_TIMEVAL_TO_TIME (start));
     gst_download_rate_add_rate (&selected_stream->dnl_rate, size_buffer, diff);
 
+#ifndef GST_DISABLE_GST_DEBUG
     brate = (size_buffer * 8) / ((double) diff / GST_SECOND);
+#endif
     GST_INFO_OBJECT (demux,
         "Stream: %d Download rate = %" PRIu64 " Kbits/s (%" PRIu64
         " Ko in %.2f s)", selected_stream->index,

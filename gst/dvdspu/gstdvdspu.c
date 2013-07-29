@@ -788,22 +788,19 @@ gst_dvd_spu_advance_spu (GstDVDSpu * dvdspu, GstClockTime new_ts)
         GST_TIME_ARGS (state->next_ts), GST_TIME_ARGS (new_ts));
 
     if (!gstspu_execute_event (dvdspu)) {
-      GstClockTime vid_run_ts;
-
       /* No current command buffer, try and get one */
       SpuPacket *packet = (SpuPacket *) g_queue_pop_head (dvdspu->pending_spus);
 
       if (packet == NULL)
         return;                 /* No SPU packets available */
 
-      vid_run_ts =
-          gst_segment_to_running_time (&dvdspu->video_seg, GST_FORMAT_TIME,
-          dvdspu->video_seg.position);
       GST_LOG_OBJECT (dvdspu,
           "Popped new SPU packet with TS %" GST_TIME_FORMAT
           ". Video position=%" GST_TIME_FORMAT " (%" GST_TIME_FORMAT
           ") type %s",
-          GST_TIME_ARGS (packet->event_ts), GST_TIME_ARGS (vid_run_ts),
+          GST_TIME_ARGS (packet->event_ts),
+          GST_TIME_ARGS (gst_segment_to_running_time (&dvdspu->video_seg,
+                  GST_FORMAT_TIME, dvdspu->video_seg.position)),
           GST_TIME_ARGS (dvdspu->video_seg.position),
           packet->buf ? "buffer" : "event");
 

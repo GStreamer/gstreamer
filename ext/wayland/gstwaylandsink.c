@@ -84,7 +84,6 @@ static GstCaps *gst_wayland_sink_get_caps (GstBaseSink * bsink,
     GstCaps * filter);
 static gboolean gst_wayland_sink_set_caps (GstBaseSink * bsink, GstCaps * caps);
 static gboolean gst_wayland_sink_start (GstBaseSink * bsink);
-static gboolean gst_wayland_sink_stop (GstBaseSink * bsink);
 static gboolean gst_wayland_sink_preroll (GstBaseSink * bsink,
     GstBuffer * buffer);
 static gboolean
@@ -130,6 +129,7 @@ gst_wayland_format_to_wl_format (GstVideoFormat format)
   return -1;
 }
 
+#ifndef GST_DISABLE_GST_DEBUG
 static const gchar *
 gst_wayland_format_to_string (uint32_t wl_format)
 {
@@ -142,6 +142,7 @@ gst_wayland_format_to_string (uint32_t wl_format)
 
   return gst_video_format_to_string (format);
 }
+#endif
 
 static void
 gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
@@ -169,7 +170,6 @@ gst_wayland_sink_class_init (GstWaylandSinkClass * klass)
   gstbasesink_class->get_caps = GST_DEBUG_FUNCPTR (gst_wayland_sink_get_caps);
   gstbasesink_class->set_caps = GST_DEBUG_FUNCPTR (gst_wayland_sink_set_caps);
   gstbasesink_class->start = GST_DEBUG_FUNCPTR (gst_wayland_sink_start);
-  gstbasesink_class->stop = GST_DEBUG_FUNCPTR (gst_wayland_sink_stop);
   gstbasesink_class->preroll = GST_DEBUG_FUNCPTR (gst_wayland_sink_preroll);
   gstbasesink_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_wayland_sink_propose_allocation);
@@ -525,16 +525,6 @@ gst_wayland_sink_start (GstBaseSink * bsink)
   }
 
   return result;
-}
-
-static gboolean
-gst_wayland_sink_stop (GstBaseSink * bsink)
-{
-  GstWaylandSink *sink = (GstWaylandSink *) bsink;
-
-  GST_DEBUG_OBJECT (sink, "stop");
-
-  return TRUE;
 }
 
 static gboolean

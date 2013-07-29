@@ -234,9 +234,7 @@ static void
 gst_inter_audio_src_get_times (GstBaseSrc * src, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
-  GstInterAudioSrc *interaudiosrc = GST_INTER_AUDIO_SRC (src);
-
-  GST_DEBUG_OBJECT (interaudiosrc, "get_times");
+  GST_DEBUG_OBJECT (src, "get_times");
 
   /* for live sources, sync on the timestamp of the buffer */
   if (gst_base_src_is_live (src)) {
@@ -325,10 +323,9 @@ gst_inter_audio_src_create (GstBaseSrc * src, guint64 offset, guint size,
 static gboolean
 gst_inter_audio_src_query (GstBaseSrc * src, GstQuery * query)
 {
-  GstInterAudioSrc *interaudiosrc = GST_INTER_AUDIO_SRC (src);
   gboolean ret;
 
-  GST_DEBUG_OBJECT (interaudiosrc, "query");
+  GST_DEBUG_OBJECT (src, "query");
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_LATENCY:{
@@ -360,14 +357,13 @@ gst_inter_audio_src_query (GstBaseSrc * src, GstQuery * query)
 static GstCaps *
 gst_inter_audio_src_fixate (GstBaseSrc * src, GstCaps * caps)
 {
-  GstInterAudioSrc *interaudiosrc = GST_INTER_AUDIO_SRC (src);
   GstStructure *structure;
+
+  GST_DEBUG_OBJECT (src, "fixate");
 
   caps = gst_caps_make_writable (caps);
 
   structure = gst_caps_get_structure (caps, 0);
-
-  GST_DEBUG_OBJECT (interaudiosrc, "fixate");
 
   gst_structure_fixate_field_nearest_int (structure, "channels", 2);
   gst_structure_fixate_field_nearest_int (structure, "rate", 48000);

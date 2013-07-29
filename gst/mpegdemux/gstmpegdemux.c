@@ -599,7 +599,6 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
 {
   GstFlowReturn result;
   GstClockTime pts = GST_CLOCK_TIME_NONE, dts = GST_CLOCK_TIME_NONE;
-  guint size;
 
   if (stream == NULL)
     goto no_stream;
@@ -650,16 +649,14 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
     GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 
-  size = gst_buffer_get_size (buf);
-
   demux->next_pts = G_MAXUINT64;
   demux->next_dts = G_MAXUINT64;
 
   stream->last_flow = result = gst_pad_push (stream->pad, buf);
   GST_LOG_OBJECT (demux, "pushed stream id 0x%02x type 0x%02x, pts time: %"
-      GST_TIME_FORMAT ", size %d. result: %s",
+      GST_TIME_FORMAT ", size %" G_GSIZE_FORMAT ". result: %s",
       stream->id, stream->type, GST_TIME_ARGS (pts),
-      size, gst_flow_get_name (result));
+      gst_buffer_get_size (buf), gst_flow_get_name (result));
 
   return result;
 
@@ -1806,7 +1803,9 @@ gst_flups_demux_parse_sys_head (GstFluPSDemux * demux)
 {
   guint16 length;
   const guint8 *data;
+#ifndef GST_DISABLE_GST_DEBUG
   gboolean csps;
+#endif
 
   if (gst_adapter_available (demux->adapter) < 6)
     goto need_more_data;
@@ -1853,6 +1852,7 @@ gst_flups_demux_parse_sys_head (GstFluPSDemux * demux)
 
   /* audio_bound:6==1 ! fixed:1 | constrained:1 */
   {
+#ifndef GST_DISABLE_GST_DEBUG
     guint8 audio_bound;
     gboolean fixed;
 
@@ -1865,36 +1865,42 @@ gst_flups_demux_parse_sys_head (GstFluPSDemux * demux)
 
     GST_DEBUG_OBJECT (demux, "audio_bound %d, fixed %d, constrained %d",
         audio_bound, fixed, csps);
+#endif
     data += 1;
   }
 
   /* audio_lock:1 | video_lock:1 | marker:1==1 | video_bound:5 */
   {
+#ifndef GST_DISABLE_GST_DEBUG
     gboolean audio_lock;
     gboolean video_lock;
     guint8 video_bound;
 
     audio_lock = (data[0] & 0x80) == 0x80;
     video_lock = (data[0] & 0x40) == 0x40;
+#endif
 
     if ((data[0] & 0x20) != 0x20)
       goto marker_expected;
 
+#ifndef GST_DISABLE_GST_DEBUG
     /* max number of simultaneous video streams active */
     video_bound = (data[0] & 0x1f);
 
     GST_DEBUG_OBJECT (demux, "audio_lock %d, video_lock %d, video_bound %d",
         audio_lock, video_lock, video_bound);
+#endif
     data += 1;
   }
 
   /* packet_rate_restriction:1 | reserved:7==0x7F */
   {
+#ifndef GST_DISABLE_GST_DEBUG
     gboolean packet_rate_restriction;
-
+#endif
     if ((data[0] & 0x7f) != 0x7f)
       goto marker_expected;
-
+#ifndef GST_DISABLE_GST_DEBUG
     /* only valid if csps is set */
     if (csps) {
       packet_rate_restriction = (data[0] & 0x80) == 0x80;
@@ -1902,6 +1908,7 @@ gst_flups_demux_parse_sys_head (GstFluPSDemux * demux)
       GST_DEBUG_OBJECT (demux, "packet_rate_restriction %d",
           packet_rate_restriction);
     }
+#endif
   }
   data += 1;
 
@@ -1913,10 +1920,11 @@ gst_flups_demux_parse_sys_head (GstFluPSDemux * demux)
 
     for (i = 0; i < stream_count; i++) {
       guint8 stream_id;
+#ifndef GST_DISABLE_GST_DEBUG
       gboolean STD_buffer_bound_scale;
       guint16 STD_buffer_size_bound;
       guint32 buf_byte_size_bound;
-
+#endif
       stream_id = *data++;
       if (!(stream_id & 0x80))
         goto sys_len_error;
@@ -1924,7 +1932,7 @@ gst_flups_demux_parse_sys_head (GstFluPSDemux * demux)
       /* check marker bits */
       if ((*data & 0xC0) != 0xC0)
         goto no_placeholder_bits;
-
+#ifndef GST_DISABLE_GST_DEBUG
       STD_buffer_bound_scale = *data & 0x20;
       STD_buffer_size_bound = ((guint16) (*data++ & 0x1F)) << 8;
       STD_buffer_size_bound |= *data++;
@@ -1939,6 +1947,7 @@ gst_flups_demux_parse_sys_head (GstFluPSDemux * demux)
           STD_buffer_bound_scale);
       GST_DEBUG_OBJECT (demux, "STD_buffer_size_bound %d or %d bytes",
           STD_buffer_size_bound, buf_byte_size_bound);
+#endif
     }
   }
 
@@ -1981,7 +1990,9 @@ gst_flups_demux_parse_psm (GstFluPSDemux * demux)
   guint16 length = 0, info_length = 0, es_map_length = 0;
   guint8 psm_version = 0;
   const guint8 *data, *es_map_base;
+#ifndef GST_DISABLE_GST_DEBUG
   gboolean applicable;
+#endif
 
   if (gst_adapter_available (demux->adapter) < 6)
     goto need_more_data;
@@ -2012,7 +2023,9 @@ gst_flups_demux_parse_psm (GstFluPSDemux * demux)
 
   /* Read PSM applicable bit together with version */
   psm_version = GST_READ_UINT8 (data);
+#ifndef GST_DISABLE_GST_DEBUG
   applicable = (psm_version & 0x80) >> 7;
+#endif
   psm_version &= 0x1F;
   GST_DEBUG_OBJECT (demux, "PSM version %u (applicable now %u)", psm_version,
       applicable);
@@ -2116,8 +2129,6 @@ gst_flups_demux_data_cb (GstPESFilter * filter, gboolean first,
     if (stream_type == -1) {
       /* no stream type, if PS1, get the new id */
       if (start_code == ID_PRIVATE_STREAM_1 && datalen >= 2) {
-        guint8 nframes;
-
         /* VDR writes A52 streams without any header bytes
          * (see ftp://ftp.mplayerhq.hu/MPlayer/samples/MPEG-VOB/vdr-AC3) */
         if (datalen >= 4) {
@@ -2143,10 +2154,15 @@ gst_flups_demux_data_cb (GstPESFilter * filter, gboolean first,
            * streams and our backwards compat convention is to strip it off */
           if (stream_type != ST_PS_DVD_SUBPICTURE) {
             /* Number of audio frames in this packet */
-            nframes = map.data[offset++];
-            datalen--;
+#ifndef GST_DISABLE_GST_DEBUG
+            guint8 nframes;
+
+            nframes = map.data[offset];
             GST_LOG_OBJECT (demux, "private type 0x%02x, %d frames", id,
                 nframes);
+#endif
+            offset++;
+            datalen--;
           } else {
             GST_LOG_OBJECT (demux, "private type 0x%02x, stream type %d", id,
                 stream_type);

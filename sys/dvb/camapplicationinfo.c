@@ -119,6 +119,7 @@ static CamReturn
 handle_application_info_reply (CamApplicationInfo * info,
     CamSLSession * session, guint8 * buffer, guint length)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   guint8 type;
   guint8 menu_length;
   gchar menu[256];
@@ -130,7 +131,7 @@ handle_application_info_reply (CamApplicationInfo * info,
   menu[menu_length] = 0;
 
   GST_INFO ("application info reply, type: %d, menu: %s", type, menu);
-
+#endif
   return CAM_RETURN_OK;
 }
 

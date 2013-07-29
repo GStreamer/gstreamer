@@ -459,9 +459,11 @@ gst_pes_filter_parse (GstPESFilter * filter)
 push_out:
   {
     GstBuffer *out;
+#ifndef GST_DISABLE_GST_DEBUG
     guint16 consumed;
 
     consumed = avail - 6 - datalen;
+#endif
 
     if (filter->unbounded_packet == FALSE) {
       filter->length -= avail - 6;

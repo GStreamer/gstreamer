@@ -49,17 +49,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_comb_detect_debug_category);
 /* prototypes */
 
 
-static void gst_comb_detect_set_property (GObject * object,
-    guint property_id, const GValue * value, GParamSpec * pspec);
-static void gst_comb_detect_get_property (GObject * object,
-    guint property_id, GValue * value, GParamSpec * pspec);
-static void gst_comb_detect_dispose (GObject * object);
-static void gst_comb_detect_finalize (GObject * object);
-
 static GstCaps *gst_comb_detect_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
-static gboolean gst_comb_detect_start (GstBaseTransform * trans);
-static gboolean gst_comb_detect_stop (GstBaseTransform * trans);
 static gboolean gst_comb_detect_set_info (GstVideoFilter * filter,
     GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
     GstVideoInfo * out_info);
@@ -106,7 +97,6 @@ G_DEFINE_TYPE_WITH_CODE (GstCombDetect, gst_comb_detect, GST_TYPE_VIDEO_FILTER,
 static void
 gst_comb_detect_class_init (GstCombDetectClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseTransformClass *base_transform_class =
       GST_BASE_TRANSFORM_CLASS (klass);
   GstVideoFilterClass *video_filter_class = GST_VIDEO_FILTER_CLASS (klass);
@@ -122,14 +112,8 @@ gst_comb_detect_class_init (GstCombDetectClass * klass)
       "Comb Detect", "Video/Filter", "Detect combing artifacts in video stream",
       "David Schleef <ds@schleef.org>");
 
-  gobject_class->set_property = gst_comb_detect_set_property;
-  gobject_class->get_property = gst_comb_detect_get_property;
-  gobject_class->dispose = gst_comb_detect_dispose;
-  gobject_class->finalize = gst_comb_detect_finalize;
   base_transform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_comb_detect_transform_caps);
-  base_transform_class->start = GST_DEBUG_FUNCPTR (gst_comb_detect_start);
-  base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_comb_detect_stop);
   video_filter_class->set_info = GST_DEBUG_FUNCPTR (gst_comb_detect_set_info);
   video_filter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_comb_detect_transform_frame);
@@ -141,59 +125,6 @@ gst_comb_detect_init (GstCombDetect * combdetect)
 {
 }
 
-void
-gst_comb_detect_set_property (GObject * object, guint property_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstCombDetect *combdetect = GST_COMB_DETECT (object);
-
-  GST_DEBUG_OBJECT (combdetect, "set_property");
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
-}
-
-void
-gst_comb_detect_get_property (GObject * object, guint property_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstCombDetect *combdetect = GST_COMB_DETECT (object);
-
-  GST_DEBUG_OBJECT (combdetect, "get_property");
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
-}
-
-void
-gst_comb_detect_dispose (GObject * object)
-{
-  GstCombDetect *combdetect = GST_COMB_DETECT (object);
-
-  GST_DEBUG_OBJECT (combdetect, "dispose");
-
-  /* clean up as possible.  may be called multiple times */
-
-  G_OBJECT_CLASS (gst_comb_detect_parent_class)->dispose (object);
-}
-
-void
-gst_comb_detect_finalize (GObject * object)
-{
-  GstCombDetect *combdetect = GST_COMB_DETECT (object);
-
-  GST_DEBUG_OBJECT (combdetect, "finalize");
-
-  /* clean up object here */
-
-  G_OBJECT_CLASS (gst_comb_detect_parent_class)->finalize (object);
-}
 
 static GstCaps *
 gst_comb_detect_transform_caps (GstBaseTransform * trans,
@@ -243,27 +174,6 @@ gst_comb_detect_transform_caps (GstBaseTransform * trans,
   return othercaps;
 }
 
-static gboolean
-gst_comb_detect_start (GstBaseTransform * trans)
-{
-  GstCombDetect *combdetect = GST_COMB_DETECT (trans);
-
-  GST_DEBUG_OBJECT (combdetect, "start");
-
-  /* initialize processing */
-  return TRUE;
-}
-
-static gboolean
-gst_comb_detect_stop (GstBaseTransform * trans)
-{
-  GstCombDetect *combdetect = GST_COMB_DETECT (trans);
-
-  GST_DEBUG_OBJECT (combdetect, "stop");
-
-  /* finalize processing */
-  return TRUE;
-}
 
 static gboolean
 gst_comb_detect_set_info (GstVideoFilter * filter,

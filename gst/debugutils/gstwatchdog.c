@@ -59,11 +59,7 @@ static void gst_watchdog_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_watchdog_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
-static void gst_watchdog_dispose (GObject * object);
-static void gst_watchdog_finalize (GObject * object);
 
-static GstCaps *gst_watchdog_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static gboolean gst_watchdog_start (GstBaseTransform * trans);
 static gboolean gst_watchdog_stop (GstBaseTransform * trans);
 static gboolean gst_watchdog_sink_event (GstBaseTransform * trans,
@@ -105,10 +101,6 @@ gst_watchdog_class_init (GstWatchdogClass * klass)
 
   gobject_class->set_property = gst_watchdog_set_property;
   gobject_class->get_property = gst_watchdog_get_property;
-  gobject_class->dispose = gst_watchdog_dispose;
-  gobject_class->finalize = gst_watchdog_finalize;
-  base_transform_class->transform_caps =
-      GST_DEBUG_FUNCPTR (gst_watchdog_transform_caps);
   base_transform_class->start = GST_DEBUG_FUNCPTR (gst_watchdog_start);
   base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_watchdog_stop);
   base_transform_class->sink_event =
@@ -164,41 +156,6 @@ gst_watchdog_get_property (GObject * object, guint property_id,
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
   }
-}
-
-void
-gst_watchdog_dispose (GObject * object)
-{
-  GstWatchdog *watchdog = GST_WATCHDOG (object);
-
-  GST_DEBUG_OBJECT (watchdog, "dispose");
-
-  /* clean up as possible.  may be called multiple times */
-
-  G_OBJECT_CLASS (gst_watchdog_parent_class)->dispose (object);
-}
-
-void
-gst_watchdog_finalize (GObject * object)
-{
-  GstWatchdog *watchdog = GST_WATCHDOG (object);
-
-  GST_DEBUG_OBJECT (watchdog, "finalize");
-
-  /* clean up object here */
-
-  G_OBJECT_CLASS (gst_watchdog_parent_class)->finalize (object);
-}
-
-static GstCaps *
-gst_watchdog_transform_caps (GstBaseTransform * trans,
-    GstPadDirection direction, GstCaps * caps, GstCaps * filter)
-{
-  GstWatchdog *watchdog = GST_WATCHDOG (trans);
-
-  GST_DEBUG_OBJECT (watchdog, "transform_caps");
-
-  return gst_caps_ref (caps);
 }
 
 static gpointer

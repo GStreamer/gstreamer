@@ -62,14 +62,9 @@ static void gst_zebra_stripe_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_zebra_stripe_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
-static void gst_zebra_stripe_dispose (GObject * object);
-static void gst_zebra_stripe_finalize (GObject * object);
 static gboolean gst_zebra_stripe_start (GstBaseTransform * trans);
 static gboolean gst_zebra_stripe_stop (GstBaseTransform * trans);
 
-static gboolean gst_zebra_stripe_set_info (GstVideoFilter * filter,
-    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
-    GstVideoInfo * out_info);
 static GstFlowReturn gst_zebra_stripe_transform_frame_ip (GstVideoFilter *
     filter, GstVideoFrame * frame);
 
@@ -119,11 +114,8 @@ gst_zebra_stripe_class_init (GstZebraStripeClass * klass)
 
   gobject_class->set_property = gst_zebra_stripe_set_property;
   gobject_class->get_property = gst_zebra_stripe_get_property;
-  gobject_class->dispose = gst_zebra_stripe_dispose;
-  gobject_class->finalize = gst_zebra_stripe_finalize;
   base_transform_class->start = GST_DEBUG_FUNCPTR (gst_zebra_stripe_start);
   base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_zebra_stripe_stop);
-  video_filter_class->set_info = GST_DEBUG_FUNCPTR (gst_zebra_stripe_set_info);
   video_filter_class->transform_frame_ip =
       GST_DEBUG_FUNCPTR (gst_zebra_stripe_transform_frame_ip);
 
@@ -177,36 +169,14 @@ gst_zebra_stripe_get_property (GObject * object, guint property_id,
   }
 }
 
-void
-gst_zebra_stripe_dispose (GObject * object)
-{
-  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (object);
-
-  GST_DEBUG_OBJECT (zebrastripe, "dispose");
-
-  /* clean up as possible.  may be called multiple times */
-
-  G_OBJECT_CLASS (gst_zebra_stripe_parent_class)->dispose (object);
-}
-
-void
-gst_zebra_stripe_finalize (GObject * object)
-{
-  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (object);
-
-  GST_DEBUG_OBJECT (zebrastripe, "finalize");
-
-  /* clean up object here */
-
-  G_OBJECT_CLASS (gst_zebra_stripe_parent_class)->finalize (object);
-}
-
 static gboolean
 gst_zebra_stripe_start (GstBaseTransform * trans)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (trans);
 
   GST_DEBUG_OBJECT (zebrastripe, "start");
+#endif
 
   if (GST_BASE_TRANSFORM_CLASS (gst_zebra_stripe_parent_class)->start)
     return
@@ -217,24 +187,15 @@ gst_zebra_stripe_start (GstBaseTransform * trans)
 static gboolean
 gst_zebra_stripe_stop (GstBaseTransform * trans)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (trans);
 
   GST_DEBUG_OBJECT (zebrastripe, "stop");
+#endif
 
   if (GST_BASE_TRANSFORM_CLASS (gst_zebra_stripe_parent_class)->stop)
     return
         GST_BASE_TRANSFORM_CLASS (gst_zebra_stripe_parent_class)->stop (trans);
-  return TRUE;
-}
-
-static gboolean
-gst_zebra_stripe_set_info (GstVideoFilter * filter, GstCaps * incaps,
-    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
-{
-  GstZebraStripe *zebrastripe = GST_ZEBRA_STRIPE (filter);
-
-  GST_DEBUG_OBJECT (zebrastripe, "set_info");
-
   return TRUE;
 }
 

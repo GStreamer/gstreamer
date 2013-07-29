@@ -51,8 +51,6 @@ static void gst_audio_channel_mix_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_audio_channel_mix_get_property (GObject * object,
     guint property_id, GValue * value, GParamSpec * pspec);
-static void gst_audio_channel_mix_dispose (GObject * object);
-static void gst_audio_channel_mix_finalize (GObject * object);
 
 static gboolean gst_audio_channel_mix_setup (GstAudioFilter * filter,
     const GstAudioInfo * info);
@@ -115,8 +113,6 @@ gst_audio_channel_mix_class_init (GstAudioChannelMixClass * klass)
 
   gobject_class->set_property = gst_audio_channel_mix_set_property;
   gobject_class->get_property = gst_audio_channel_mix_get_property;
-  gobject_class->dispose = gst_audio_channel_mix_dispose;
-  gobject_class->finalize = gst_audio_channel_mix_finalize;
   audio_filter_class->setup = GST_DEBUG_FUNCPTR (gst_audio_channel_mix_setup);
   base_transform_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_audio_channel_mix_transform_ip);
@@ -209,36 +205,14 @@ gst_audio_channel_mix_get_property (GObject * object, guint property_id,
   }
 }
 
-void
-gst_audio_channel_mix_dispose (GObject * object)
-{
-  GstAudioChannelMix *audiochannelmix = GST_AUDIO_CHANNEL_MIX (object);
-
-  GST_DEBUG_OBJECT (audiochannelmix, "dispose");
-
-  /* clean up as possible.  may be called multiple times */
-
-  G_OBJECT_CLASS (gst_audio_channel_mix_parent_class)->dispose (object);
-}
-
-void
-gst_audio_channel_mix_finalize (GObject * object)
-{
-  GstAudioChannelMix *audiochannelmix = GST_AUDIO_CHANNEL_MIX (object);
-
-  GST_DEBUG_OBJECT (audiochannelmix, "finalize");
-
-  /* clean up object here */
-
-  G_OBJECT_CLASS (gst_audio_channel_mix_parent_class)->finalize (object);
-}
-
 static gboolean
 gst_audio_channel_mix_setup (GstAudioFilter * filter, const GstAudioInfo * info)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   GstAudioChannelMix *audiochannelmix = GST_AUDIO_CHANNEL_MIX (filter);
 
   GST_DEBUG_OBJECT (audiochannelmix, "setup");
+#endif
 
   return TRUE;
 }

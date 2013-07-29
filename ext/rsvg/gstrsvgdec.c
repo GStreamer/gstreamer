@@ -293,13 +293,12 @@ static GstFlowReturn
 gst_rsvg_dec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
     GstAdapter * adapter, gboolean at_eos)
 {
-  GstRsvgDec *rsvg = GST_RSVG_DEC (decoder);
   gboolean completed = FALSE;
   const guint8 *data;
   guint size;
   guint i;
 
-  GST_LOG_OBJECT (rsvg, "parse start");
+  GST_LOG_OBJECT (decoder, "parse start");
   size = gst_adapter_available (adapter);
 
   /* "<svg></svg>" */
@@ -308,7 +307,7 @@ gst_rsvg_dec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
 
   data = gst_adapter_map (adapter, size);
   if (data == NULL) {
-    GST_ERROR_OBJECT (rsvg, "Unable to map memory");
+    GST_ERROR_OBJECT (decoder, "Unable to map memory");
     return GST_FLOW_ERROR;
   }
   for (i = 0; i < size - 4; i++) {
@@ -320,7 +319,7 @@ gst_rsvg_dec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
         return GST_VIDEO_DECODER_FLOW_NEED_DATA;
       data = gst_adapter_map (adapter, size);
       if (data == NULL) {
-        GST_ERROR_OBJECT (rsvg, "Unable to map memory");
+        GST_ERROR_OBJECT (decoder, "Unable to map memory");
         return GST_FLOW_ERROR;
       }
       break;
@@ -342,7 +341,7 @@ gst_rsvg_dec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
 
   if (completed) {
 
-    GST_LOG_OBJECT (rsvg, "have complete svg of %u bytes", size);
+    GST_LOG_OBJECT (decoder, "have complete svg of %u bytes", size);
 
     gst_video_decoder_add_to_frame (decoder, size);
     return gst_video_decoder_have_frame (decoder);

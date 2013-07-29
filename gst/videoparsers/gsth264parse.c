@@ -427,7 +427,7 @@ gst_h264_parser_store_nal (GstH264Parse * h264parse, guint id,
   store[id] = buf;
 }
 
-
+#ifndef GST_DISABLE_GST_DEBUG
 static const gchar *nal_names[] = {
   "Unknown",
   "Slice",
@@ -451,6 +451,7 @@ _nal_name (GstH264NalUnitType nal_type)
     return nal_names[nal_type];
   return "Invalid";
 }
+#endif
 
 /* SPS/PPS/IDR considered key, all others DELTA;
  * so downstream waiting for keyframe can pick up at SPS/PPS/IDR */
@@ -1566,8 +1567,10 @@ gst_h264_parse_prepare_key_unit (GstH264Parse * parse, GstEvent * event)
 {
   GstClockTime running_time;
   guint count;
+#ifndef GST_DISABLE_GST_DEBUG
   gboolean have_sps, have_pps;
   gint i;
+#endif
 
   parse->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
   gst_event_replace (&parse->force_key_unit_event, NULL);
@@ -1580,6 +1583,7 @@ gst_h264_parse_prepare_key_unit (GstH264Parse * parse, GstEvent * event)
       GST_TIME_ARGS (running_time), count);
   gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (parse), event);
 
+#ifndef GST_DISABLE_GST_DEBUG
   have_sps = have_pps = FALSE;
   for (i = 0; i < GST_H264_MAX_SPS_COUNT; i++) {
     if (parse->sps_nals[i] != NULL) {
@@ -1596,6 +1600,7 @@ gst_h264_parse_prepare_key_unit (GstH264Parse * parse, GstEvent * event)
 
   GST_INFO_OBJECT (parse, "preparing key unit, have sps %d have pps %d",
       have_sps, have_pps);
+#endif
 
   /* set push_codec to TRUE so that pre_push_frame sends SPS/PPS again */
   parse->push_codec = TRUE;
@@ -1781,7 +1786,10 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       (value = gst_structure_get_value (str, "codec_data"))) {
     GstMapInfo map;
     guint8 *data;
-    guint num_sps, num_pps, profile;
+    guint num_sps, num_pps;
+#ifndef GST_DISABLE_GST_DEBUG
+    guint profile;
+#endif
     gint i;
 
     GST_DEBUG_OBJECT (h264parse, "have packetized h264");
@@ -1805,12 +1813,13 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       gst_buffer_unmap (codec_data, &map);
       goto wrong_version;
     }
-
+#ifndef GST_DISABLE_GST_DEBUG
     /* AVCProfileIndication */
     /* profile_compat */
     /* AVCLevelIndication */
     profile = (data[1] << 16) | (data[2] << 8) | data[3];
     GST_DEBUG_OBJECT (h264parse, "profile %06x", profile);
+#endif
 
     /* 6 bits reserved | 2 bits lengthSizeMinusOne */
     /* this is the number of bytes in front of the NAL units to mark their

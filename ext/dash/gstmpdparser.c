@@ -699,15 +699,14 @@ gst_mpdparser_get_xml_prop_dateTime (xmlNode * a_node,
 {
   xmlChar *prop_string;
   gchar *str;
-  gint ret, len, pos;
+  gint ret, pos;
   gint year, month, day, hour, minute, second;
   gboolean exists = FALSE;
 
   prop_string = xmlGetProp (a_node, (const xmlChar *) property_name);
   if (prop_string) {
-    len = xmlStrlen (prop_string);
     str = (gchar *) prop_string;
-    GST_TRACE ("dateTime: %s, len %d", str, len);
+    GST_TRACE ("dateTime: %s, len %d", str, xmlStrlen (prop_string));
     /* parse year */
     ret = sscanf (str, "%d", &year);
     if (ret != 1)
@@ -2023,10 +2022,12 @@ gst_mpdparser_get_first_adapt_set_with_mimeType_and_lang (GList *
       gchar *this_mimeType = NULL;
       rep =
           gst_mpdparser_get_lowest_representation (adapt_set->Representations);
+#ifndef GST_DISABLE_GST_DEBUG
       if (rep && rep->BaseURLs) {
         GstBaseURL *url = rep->BaseURLs->data;
         GST_DEBUG ("%s", url->baseURL);
       }
+#endif
       if (rep->RepresentationBase)
         this_mimeType = rep->RepresentationBase->mimeType;
       if (!this_mimeType && adapt_set->RepresentationBase) {

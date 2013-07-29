@@ -106,6 +106,7 @@ got_egl_error (const char *wtf)
 void
 gst_egl_adaptation_init_egl_exts (GstEglAdaptationContext * ctx)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   const char *eglexts;
   unsigned const char *glexts;
 
@@ -116,7 +117,7 @@ gst_egl_adaptation_init_egl_exts (GstEglAdaptationContext * ctx)
       GST_STR_NULL (eglexts));
   GST_DEBUG_OBJECT (ctx->element, "Available GLES extensions: %s\n",
       GST_STR_NULL ((const char *) glexts));
-
+#endif
   return;
 }
 

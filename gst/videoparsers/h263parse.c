@@ -61,6 +61,7 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
     {1408, 1152}
   };
 
+#ifndef GST_DISABLE_GST_DEBUG
   static const gchar *source_format_name[] = {
     "Forbidden",
     "sub-QCIF",
@@ -71,6 +72,7 @@ gst_h263_parse_get_params (H263Params * params, GstBuffer * buffer,
     "Reserved",
     "Extended PType"
   };
+#endif
 
   GstBitReader br;
   GstMapInfo map;

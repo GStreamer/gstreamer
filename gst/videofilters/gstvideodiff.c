@@ -44,19 +44,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_video_diff_debug_category);
 
 /* prototypes */
 
-
-static void gst_video_diff_set_property (GObject * object,
-    guint property_id, const GValue * value, GParamSpec * pspec);
-static void gst_video_diff_get_property (GObject * object,
-    guint property_id, GValue * value, GParamSpec * pspec);
-static void gst_video_diff_dispose (GObject * object);
-static void gst_video_diff_finalize (GObject * object);
-
-static gboolean gst_video_diff_start (GstBaseTransform * trans);
-static gboolean gst_video_diff_stop (GstBaseTransform * trans);
-static gboolean gst_video_diff_set_info (GstVideoFilter * filter,
-    GstCaps * incaps, GstVideoInfo * in_info, GstCaps * outcaps,
-    GstVideoInfo * out_info);
 static GstFlowReturn gst_video_diff_transform_frame (GstVideoFilter * filter,
     GstVideoFrame * inframe, GstVideoFrame * outframe);
 
@@ -85,9 +72,6 @@ G_DEFINE_TYPE_WITH_CODE (GstVideoDiff, gst_video_diff, GST_TYPE_VIDEO_FILTER,
 static void
 gst_video_diff_class_init (GstVideoDiffClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
-  GstBaseTransformClass *base_transform_class =
-      GST_BASE_TRANSFORM_CLASS (klass);
   GstVideoFilterClass *video_filter_class = GST_VIDEO_FILTER_CLASS (klass);
 
   /* Setting up pads and setting metadata should be moved to
@@ -103,13 +87,6 @@ gst_video_diff_class_init (GstVideoDiffClass * klass)
       "FIXME Long name", "Generic", "FIXME Description",
       "FIXME <fixme@example.com>");
 
-  gobject_class->set_property = gst_video_diff_set_property;
-  gobject_class->get_property = gst_video_diff_get_property;
-  gobject_class->dispose = gst_video_diff_dispose;
-  gobject_class->finalize = gst_video_diff_finalize;
-  base_transform_class->start = GST_DEBUG_FUNCPTR (gst_video_diff_start);
-  base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_video_diff_stop);
-  video_filter_class->set_info = GST_DEBUG_FUNCPTR (gst_video_diff_set_info);
   video_filter_class->transform_frame =
       GST_DEBUG_FUNCPTR (gst_video_diff_transform_frame);
 
@@ -119,91 +96,6 @@ static void
 gst_video_diff_init (GstVideoDiff * videodiff)
 {
   videodiff->threshold = 10;
-}
-
-void
-gst_video_diff_set_property (GObject * object, guint property_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstVideoDiff *videodiff = GST_VIDEO_DIFF (object);
-
-  GST_DEBUG_OBJECT (videodiff, "set_property");
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
-}
-
-void
-gst_video_diff_get_property (GObject * object, guint property_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstVideoDiff *videodiff = GST_VIDEO_DIFF (object);
-
-  GST_DEBUG_OBJECT (videodiff, "get_property");
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
-}
-
-void
-gst_video_diff_dispose (GObject * object)
-{
-  GstVideoDiff *videodiff = GST_VIDEO_DIFF (object);
-
-  GST_DEBUG_OBJECT (videodiff, "dispose");
-
-  /* clean up as possible.  may be called multiple times */
-
-  G_OBJECT_CLASS (gst_video_diff_parent_class)->dispose (object);
-}
-
-void
-gst_video_diff_finalize (GObject * object)
-{
-  GstVideoDiff *videodiff = GST_VIDEO_DIFF (object);
-
-  GST_DEBUG_OBJECT (videodiff, "finalize");
-
-  /* clean up object here */
-
-  G_OBJECT_CLASS (gst_video_diff_parent_class)->finalize (object);
-}
-
-static gboolean
-gst_video_diff_start (GstBaseTransform * trans)
-{
-  GstVideoDiff *videodiff = GST_VIDEO_DIFF (trans);
-
-  GST_DEBUG_OBJECT (videodiff, "start");
-
-  return TRUE;
-}
-
-static gboolean
-gst_video_diff_stop (GstBaseTransform * trans)
-{
-  GstVideoDiff *videodiff = GST_VIDEO_DIFF (trans);
-
-  GST_DEBUG_OBJECT (videodiff, "stop");
-
-  return TRUE;
-}
-
-static gboolean
-gst_video_diff_set_info (GstVideoFilter * filter, GstCaps * incaps,
-    GstVideoInfo * in_info, GstCaps * outcaps, GstVideoInfo * out_info)
-{
-  GstVideoDiff *videodiff = GST_VIDEO_DIFF (filter);
-
-  GST_DEBUG_OBJECT (videodiff, "set_info");
-
-  return TRUE;
 }
 
 static GstFlowReturn

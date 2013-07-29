@@ -36,14 +36,19 @@ gst_mpeg_descriptor_free (GstMPEGDescriptor * desc)
 static guint
 gst_mpeg_descriptor_parse_1 (guint8 * data, guint size)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   guint8 tag;
+#endif
   guint8 length;
 
   /* need at least 2 bytes for tag and length */
   if (size < 2)
     return 0;
 
-  tag = *data++;
+#ifndef GST_DISABLE_GST_DEBUG
+  tag = *data;
+#endif
+  data += 1;
   length = *data++;
   size -= 2;
 

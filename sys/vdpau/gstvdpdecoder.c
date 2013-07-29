@@ -65,7 +65,9 @@ gst_vdp_decoder_render (GstVdpDecoder * vdp_decoder, VdpPictureInfo * info,
   VdpStatus status;
 
   GstVdpVideoMemory *vmem;
+#ifndef GST_DISABLE_GST_DEBUG
   GstClockTime before, after;
+#endif
 
   GST_DEBUG_OBJECT (vdp_decoder, "n_bufs:%d, frame:%d", n_bufs,
       frame->system_frame_number);
@@ -83,11 +85,15 @@ gst_vdp_decoder_render (GstVdpDecoder * vdp_decoder, VdpPictureInfo * info,
     goto no_mem;
 
   GST_DEBUG_OBJECT (vdp_decoder, "Calling VdpDecoderRender()");
+#ifndef GST_DISABLE_GST_DEBUG
   before = gst_util_get_timestamp ();
+#endif
   status =
       vdp_decoder->device->vdp_decoder_render (vdp_decoder->decoder,
       vmem->surface, info, n_bufs, bufs);
+#ifndef GST_DISABLE_GST_DEBUG
   after = gst_util_get_timestamp ();
+#endif
   if (status != VDP_STATUS_OK)
     goto decode_error;
 

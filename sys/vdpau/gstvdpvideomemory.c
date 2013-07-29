@@ -99,7 +99,9 @@ ensure_data (GstVdpVideoMemory * vmem)
 {
   VdpStatus vdp_stat;
   GstVideoInfo *info = vmem->info;
+#ifndef GST_DISABLE_GST_DEBUG
   GstClockTime before, after;
+#endif
 
   if (g_atomic_int_add (&vmem->refcount, 1) > 1)
     return TRUE;
@@ -119,11 +121,15 @@ ensure_data (GstVdpVideoMemory * vmem)
       vmem->destination_pitches[0],
       vmem->destination_pitches[1], vmem->destination_pitches[2]);
 
+#ifndef GST_DISABLE_GST_DEBUG
   before = gst_util_get_timestamp ();
+#endif
   vdp_stat =
       vmem->device->vdp_video_surface_get_bits_ycbcr (vmem->surface,
       vmem->ycbcr_format, vmem->cached_data, vmem->destination_pitches);
+#ifndef GST_DISABLE_GST_DEBUG
   after = gst_util_get_timestamp ();
+#endif
 
   GST_CAT_WARNING (GST_CAT_PERFORMANCE, "Downloading took %" GST_TIME_FORMAT,
       GST_TIME_ARGS (after - before));

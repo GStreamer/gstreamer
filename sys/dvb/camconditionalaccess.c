@@ -172,6 +172,7 @@ static CamReturn
 handle_conditional_access_info_reply (CamConditionalAccess * cas,
     CamSLSession * session, guint8 * buffer, guint length)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   int i;
   guint16 cas_id;
 
@@ -186,6 +187,7 @@ handle_conditional_access_info_reply (CamConditionalAccess * cas,
   }
 
   cas->ready = TRUE;
+#endif
 
   return CAM_RETURN_OK;
 }
@@ -194,6 +196,7 @@ static CamReturn
 handle_conditional_access_pmt_reply (CamConditionalAccess * cas,
     CamSLSession * session, guint8 * buffer, guint length)
 {
+#ifndef GST_DISABLE_GST_DEBUG
   guint16 program_num;
   guint8 version_num, current_next_indicator;
 
@@ -226,6 +229,7 @@ handle_conditional_access_pmt_reply (CamConditionalAccess * cas,
 
     length -= 3;
   }
+#endif
 
   return CAM_RETURN_OK;
 }

@@ -779,9 +779,11 @@ mpegtsmux_sink_event (GstCollectPads * pads, GstCollectData * data,
   MpegTsMux *mux = GST_MPEG_TSMUX (user_data);
   gboolean res = FALSE;
   gboolean forward = TRUE;
+#ifndef GST_DISABLE_GST_DEBUG
   GstPad *pad;
 
   pad = data->pad;
+#endif
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CUSTOM_DOWNSTREAM:

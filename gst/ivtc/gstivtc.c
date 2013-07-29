@@ -59,21 +59,12 @@ GST_DEBUG_CATEGORY_STATIC (gst_ivtc_debug_category);
 /* prototypes */
 
 
-static void gst_ivtc_set_property (GObject * object,
-    guint property_id, const GValue * value, GParamSpec * pspec);
-static void gst_ivtc_get_property (GObject * object,
-    guint property_id, GValue * value, GParamSpec * pspec);
-static void gst_ivtc_dispose (GObject * object);
-static void gst_ivtc_finalize (GObject * object);
-
 static GstCaps *gst_ivtc_transform_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * filter);
 static GstCaps *gst_ivtc_fixate_caps (GstBaseTransform * trans,
     GstPadDirection direction, GstCaps * caps, GstCaps * othercaps);
 static gboolean gst_ivtc_set_caps (GstBaseTransform * trans, GstCaps * incaps,
     GstCaps * outcaps);
-static gboolean gst_ivtc_start (GstBaseTransform * trans);
-static gboolean gst_ivtc_stop (GstBaseTransform * trans);
 static gboolean gst_ivtc_sink_event (GstBaseTransform * trans,
     GstEvent * event);
 static GstFlowReturn gst_ivtc_transform (GstBaseTransform * trans,
@@ -123,7 +114,6 @@ G_DEFINE_TYPE_WITH_CODE (GstIvtc, gst_ivtc, GST_TYPE_BASE_TRANSFORM,
 static void
 gst_ivtc_class_init (GstIvtcClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstBaseTransformClass *base_transform_class =
       GST_BASE_TRANSFORM_CLASS (klass);
 
@@ -138,16 +128,10 @@ gst_ivtc_class_init (GstIvtcClass * klass)
       "Inverse Telecine", "Video/Filter", "Inverse Telecine Filter",
       "David Schleef <ds@schleef.org>");
 
-  gobject_class->set_property = gst_ivtc_set_property;
-  gobject_class->get_property = gst_ivtc_get_property;
-  gobject_class->dispose = gst_ivtc_dispose;
-  gobject_class->finalize = gst_ivtc_finalize;
   base_transform_class->transform_caps =
       GST_DEBUG_FUNCPTR (gst_ivtc_transform_caps);
   base_transform_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_ivtc_fixate_caps);
   base_transform_class->set_caps = GST_DEBUG_FUNCPTR (gst_ivtc_set_caps);
-  base_transform_class->start = GST_DEBUG_FUNCPTR (gst_ivtc_start);
-  base_transform_class->stop = GST_DEBUG_FUNCPTR (gst_ivtc_stop);
   base_transform_class->sink_event = GST_DEBUG_FUNCPTR (gst_ivtc_sink_event);
   base_transform_class->transform = GST_DEBUG_FUNCPTR (gst_ivtc_transform);
 }
@@ -155,60 +139,6 @@ gst_ivtc_class_init (GstIvtcClass * klass)
 static void
 gst_ivtc_init (GstIvtc * ivtc)
 {
-}
-
-void
-gst_ivtc_set_property (GObject * object, guint property_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstIvtc *ivtc = GST_IVTC (object);
-
-  GST_DEBUG_OBJECT (ivtc, "set_property");
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
-}
-
-void
-gst_ivtc_get_property (GObject * object, guint property_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstIvtc *ivtc = GST_IVTC (object);
-
-  GST_DEBUG_OBJECT (ivtc, "get_property");
-
-  switch (property_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
-      break;
-  }
-}
-
-void
-gst_ivtc_dispose (GObject * object)
-{
-  GstIvtc *ivtc = GST_IVTC (object);
-
-  GST_DEBUG_OBJECT (ivtc, "dispose");
-
-  /* clean up as possible.  may be called multiple times */
-
-  G_OBJECT_CLASS (gst_ivtc_parent_class)->dispose (object);
-}
-
-void
-gst_ivtc_finalize (GObject * object)
-{
-  GstIvtc *ivtc = GST_IVTC (object);
-
-  GST_DEBUG_OBJECT (ivtc, "finalize");
-
-  /* clean up object here */
-
-  G_OBJECT_CLASS (gst_ivtc_parent_class)->finalize (object);
 }
 
 static GstCaps *
@@ -292,28 +222,6 @@ gst_ivtc_set_caps (GstBaseTransform * trans, GstCaps * incaps,
       ivtc->sink_video_info.fps_d, ivtc->sink_video_info.fps_n * 2);
   GST_DEBUG_OBJECT (trans, "field duration %" GST_TIME_FORMAT,
       GST_TIME_ARGS (ivtc->field_duration));
-
-  return TRUE;
-}
-
-/* states */
-static gboolean
-gst_ivtc_start (GstBaseTransform * trans)
-{
-  GstIvtc *ivtc = GST_IVTC (trans);
-
-  GST_DEBUG_OBJECT (ivtc, "start");
-
-  return TRUE;
-}
-
-static gboolean
-gst_ivtc_stop (GstBaseTransform * trans)
-{
-  GstIvtc *ivtc = GST_IVTC (trans);
-
-  GST_DEBUG_OBJECT (ivtc, "stop");
-  gst_ivtc_flush (ivtc);
 
   return TRUE;
 }
