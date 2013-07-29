@@ -51,20 +51,8 @@
  * See TODO for explanations on improvements needed
  */
 
-/* latency in mseconds */
-#define TS_LATENCY 700
-
-#define TABLE_ID_UNSET 0xFF
-
 #define CONTINUITY_UNSET 255
 #define MAX_CONTINUITY 15
-
-#define PCR_WRAP_SIZE_128KBPS (((gint64)1490)*(1024*1024))
-/* small PCR for wrap detection */
-#define PCR_SMALL 17775000
-/* maximal PCR time */
-#define PCR_MAX_VALUE (((((guint64)1)<<33) * 300) + 298)
-#define PTS_DTS_MAX_VALUE (((guint64)1) << 33)
 
 /* Seeking/Scanning related variables */
 
