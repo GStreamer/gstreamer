@@ -16,6 +16,7 @@ c_sources = \
 	gst-qa-monitor-preload.c
 
 noinst_HEADERS =
+	gst-qa-i18n-lib.h
 
 lib_LTLIBRARIES = \
 	libgstqa-@GST_API_VERSION@.la

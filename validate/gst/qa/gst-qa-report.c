@@ -24,7 +24,7 @@
 #endif
 
 #include <string.h>
-#include <gst/gst-i18n-lib.h>
+#include "gst-qa-i18n-lib.h"
 
 #include "gst-qa-report.h"
 #include "gst-qa-reporter.h"
