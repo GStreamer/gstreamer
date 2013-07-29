@@ -1088,7 +1088,7 @@ gst_type_find_element_loop (GstPad * pad)
     if (ret != GST_FLOW_OK)
       goto pause;
 
-    typefind->offset += 4096;
+    typefind->offset += gst_buffer_get_size (outbuf);
 
     ret = gst_pad_push (typefind->src, outbuf);
     if (ret != GST_FLOW_OK)
