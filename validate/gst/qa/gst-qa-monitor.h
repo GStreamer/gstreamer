@@ -98,6 +98,7 @@ GType		gst_qa_monitor_get_type		(void);
 void            gst_qa_monitor_attach_override  (GstQaMonitor * monitor,
                                                  GstQaOverride * override);
 
+GstElement *    gst_qa_monitor_get_element (GstQaMonitor * monitor);
 const gchar *   gst_qa_monitor_get_element_name (GstQaMonitor * monitor);
 
 G_END_DECLS

@@ -34,11 +34,15 @@ typedef struct {
   GMutex mutex;
 
   GQueue name_overrides;
+  GQueue gtype_overrides;
+  GQueue klass_overrides;
 } GstQaOverrideRegistry;
 
 GstQaOverrideRegistry * gst_qa_override_registry_get (void);
 
 void gst_qa_override_register_by_name (const gchar * name, GstQaOverride * override);
+void gst_qa_override_register_by_type (GType gtype, GstQaOverride * override);
+void gst_qa_override_register_by_klass (const gchar * klass, GstQaOverride * override);
 
 void gst_qa_override_registry_attach_overrides (GstQaMonitor * monitor);
 

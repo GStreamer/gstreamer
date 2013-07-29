@@ -188,8 +188,8 @@ gst_qa_monitor_setup (GstQaMonitor * monitor)
   return GST_QA_MONITOR_GET_CLASS (monitor)->setup (monitor);
 }
 
-const gchar *
-gst_qa_monitor_get_element_name (GstQaMonitor * monitor)
+GstElement *
+gst_qa_monitor_get_element (GstQaMonitor * monitor)
 {
   GstQaMonitorClass *klass = GST_QA_MONITOR_GET_CLASS (monitor);
   GstElement *element = NULL;
@@ -197,6 +197,15 @@ gst_qa_monitor_get_element_name (GstQaMonitor * monitor)
   if (klass->get_element)
     element = klass->get_element (monitor);
 
+  return element;
+}
+
+const gchar *
+gst_qa_monitor_get_element_name (GstQaMonitor * monitor)
+{
+  GstElement *element;
+
+  element = gst_qa_monitor_get_element (monitor);
   if (element)
     return GST_ELEMENT_NAME (element);
   return NULL;

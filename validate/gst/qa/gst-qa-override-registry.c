@@ -29,6 +29,12 @@ typedef struct
   GstQaOverride *override;
 } GstQaOverrideRegistryNameEntry;
 
+typedef struct
+{
+  GType gtype;
+  GstQaOverride *override;
+} GstQaOverrideRegistryGTypeEntry;
+
 static GMutex _gst_qa_override_registry_mutex;
 static GstQaOverrideRegistry *_registry_default;
 
@@ -42,6 +48,8 @@ gst_qa_override_registry_new (void)
 
   g_mutex_init (&reg->mutex);
   g_queue_init (&reg->name_overrides);
+  g_queue_init (&reg->gtype_overrides);
+  g_queue_init (&reg->klass_overrides);
 
   return reg;
 }
@@ -72,6 +80,35 @@ gst_qa_override_register_by_name (const gchar * name, GstQaOverride * override)
   GST_QA_OVERRIDE_REGISTRY_UNLOCK (registry);
 }
 
+void
+gst_qa_override_register_by_type (GType gtype, GstQaOverride * override)
+{
+  GstQaOverrideRegistry *registry = gst_qa_override_registry_get ();
+  GstQaOverrideRegistryGTypeEntry *entry =
+      g_slice_new (GstQaOverrideRegistryGTypeEntry);
+
+  GST_QA_OVERRIDE_REGISTRY_LOCK (registry);
+  entry->gtype = gtype;
+  entry->override = override;
+  g_queue_push_tail (&registry->gtype_overrides, entry);
+  GST_QA_OVERRIDE_REGISTRY_UNLOCK (registry);
+}
+
+void
+gst_qa_override_register_by_klass (const gchar * klass,
+    GstQaOverride * override)
+{
+  GstQaOverrideRegistry *registry = gst_qa_override_registry_get ();
+  GstQaOverrideRegistryNameEntry *entry =
+      g_slice_new (GstQaOverrideRegistryNameEntry);
+
+  GST_QA_OVERRIDE_REGISTRY_LOCK (registry);
+  entry->name = g_strdup (klass);
+  entry->override = override;
+  g_queue_push_tail (&registry->klass_overrides, entry);
+  GST_QA_OVERRIDE_REGISTRY_UNLOCK (registry);
+}
+
 static void
 gst_qa_override_registry_attach_name_overrides_unlocked (GstQaOverrideRegistry *
     registry, GstQaMonitor * monitor)
@@ -89,6 +126,50 @@ gst_qa_override_registry_attach_name_overrides_unlocked (GstQaOverrideRegistry *
   }
 }
 
+static void
+gst_qa_override_registry_attach_gtype_overrides_unlocked (GstQaOverrideRegistry
+    * registry, GstQaMonitor * monitor)
+{
+  GstQaOverrideRegistryGTypeEntry *entry;
+  GstElement *element;
+  GList *iter;
+
+  element = gst_qa_monitor_get_element (monitor);
+  if (!element)
+    return;
+
+  for (iter = registry->name_overrides.head; iter; iter = g_list_next (iter)) {
+    entry = iter->data;
+    if (G_TYPE_CHECK_INSTANCE_TYPE (element, entry->gtype)) {
+      gst_qa_monitor_attach_override (monitor, entry->override);
+    }
+  }
+}
+
+static void
+gst_qa_override_registry_attach_klass_overrides_unlocked (GstQaOverrideRegistry
+    * registry, GstQaMonitor * monitor)
+{
+  GstQaOverrideRegistryNameEntry *entry;
+  GList *iter;
+  GstElement *element;
+  GstElementClass *klass;
+
+  element = gst_qa_monitor_get_element (monitor);
+  if (!element)
+    return;
+
+  klass = GST_ELEMENT_GET_CLASS (element);
+
+  for (iter = registry->name_overrides.head; iter; iter = g_list_next (iter)) {
+    entry = iter->data;
+    /* TODO It would be more correct to split it before comparing */
+    if (strstr (klass->details.klass, entry->name) != NULL) {
+      gst_qa_monitor_attach_override (monitor, entry->override);
+    }
+  }
+}
+
 void
 gst_qa_override_registry_attach_overrides (GstQaMonitor * monitor)
 {
@@ -96,5 +177,7 @@ gst_qa_override_registry_attach_overrides (GstQaMonitor * monitor)
 
   GST_QA_OVERRIDE_REGISTRY_LOCK (reg);
   gst_qa_override_registry_attach_name_overrides_unlocked (reg, monitor);
+  gst_qa_override_registry_attach_gtype_overrides_unlocked (reg, monitor);
+  gst_qa_override_registry_attach_klass_overrides_unlocked (reg, monitor);
   GST_QA_OVERRIDE_REGISTRY_UNLOCK (reg);
 }
