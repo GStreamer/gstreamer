@@ -89,7 +89,7 @@ gst_qa_monitor_finalize (GObject * object)
 {
   gst_qa_reporter_set_name (GST_QA_REPORTER (object), NULL);
 
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
 static void
