@@ -578,6 +578,32 @@ gst_avi_demux_handle_src_query (GstPad * pad, GstObject * parent,
         res = gst_pad_query_default (pad, parent, query);
       break;
     }
+    case GST_QUERY_SEGMENT:
+    {
+      GstFormat format;
+      gint64 start, stop;
+
+      format = avi->segment.format;
+
+      start =
+          gst_segment_to_stream_time (&avi->segment, format,
+          avi->segment.start);
+      if ((stop = avi->segment.stop) == -1)
+        stop = avi->segment.duration;
+      else
+        stop = gst_segment_to_stream_time (&avi->segment, format, stop);
+
+      if (avi->segment.rate < 0.0) {
+        gint64 tmp;
+        tmp = stop;
+        stop = start;
+        start = tmp;
+      }
+
+      gst_query_set_segment (query, avi->segment.rate, format, start, stop);
+      res = TRUE;
+      break;
+    }
     default:
       res = gst_pad_query_default (pad, parent, query);
       break;
