@@ -354,7 +354,31 @@ gst_ogg_pad_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       }
       break;
     }
+    case GST_QUERY_SEGMENT:{
+      GstFormat format;
+      gint64 start, stop;
 
+      format = ogg->segment.format;
+
+      start =
+          gst_segment_to_stream_time (&ogg->segment, format,
+          ogg->segment.start);
+      if ((stop = ogg->segment.stop) == -1)
+        stop = ogg->segment.duration;
+      else
+        stop = gst_segment_to_stream_time (&ogg->segment, format, stop);
+
+      if (ogg->segment.rate < 0.0) {
+        gint64 tmp;
+        tmp = stop;
+        stop = start;
+        start = tmp;
+      }
+
+      gst_query_set_segment (query, ogg->segment.rate, format, start, stop);
+      res = TRUE;
+      break;
+    }
     default:
       res = gst_pad_query_default (pad, parent, query);
       break;
