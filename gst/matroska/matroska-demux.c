@@ -1521,13 +1521,6 @@ gst_matroska_demux_query (GstMatroskaDemux * demux, GstPad * pad,
         stop =
             gst_segment_to_stream_time (&demux->common.segment, format, stop);
 
-      if (demux->common.segment.rate < 0.0) {
-        gint64 tmp;
-        tmp = stop;
-        stop = start;
-        start = tmp;
-      }
-
       gst_query_set_segment (query, demux->common.segment.rate, format, start,
           stop);
       res = TRUE;

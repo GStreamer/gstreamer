@@ -815,13 +815,6 @@ gst_qtdemux_handle_src_query (GstPad * pad, GstObject * parent,
       else
         stop = gst_segment_to_stream_time (&qtdemux->segment, format, stop);
 
-      if (qtdemux->segment.rate < 0.0) {
-        gint64 tmp;
-        tmp = stop;
-        stop = start;
-        start = tmp;
-      }
-
       gst_query_set_segment (query, qtdemux->segment.rate, format, start, stop);
       res = TRUE;
       break;
