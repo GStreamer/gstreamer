@@ -24,6 +24,7 @@
 #endif
 
 #include "gstopenjpegenc.h"
+#include <gst/video/gstvideometa.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_openjpeg_enc_debug);
 #define GST_CAT_DEFAULT gst_openjpeg_enc_debug
@@ -91,10 +92,10 @@ static gboolean gst_openjpeg_enc_propose_allocation (GstVideoEncoder * encoder,
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 #define GRAY16 "GRAY16_LE"
-#define YUV10 "Y444_10LE, I422_10LE, I420_10LE"
+#define YUV10 "I422_10LE, I420_10LE"
 #else
 #define GRAY16 "GRAY16_BE"
-#define YUV10 "Y444_10BE, I422_10BE, I420_10BE"
+#define YUV10 "I422_10BE, I420_10BE"
 #endif
 
 static GstStaticPadTemplate gst_openjpeg_enc_sink_template =
@@ -597,8 +598,6 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
       self->fill_image = fill_image_packed16_4;
       ncomps = 4;
       break;
-    case GST_VIDEO_FORMAT_Y444_10LE:
-    case GST_VIDEO_FORMAT_Y444_10BE:
     case GST_VIDEO_FORMAT_I422_10LE:
     case GST_VIDEO_FORMAT_I422_10BE:
     case GST_VIDEO_FORMAT_I420_10LE:
