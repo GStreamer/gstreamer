@@ -53,6 +53,8 @@ gst*orc.h
 /tests/examples/jack/jack_client
 /tests/examples/opencv/gstmotioncells_dynamic_test
 /tests/examples/uvch264/test-uvch264
+/tests/examples/mpegts/tsparser
+/tests/examples/opencv/gsthanddetect_test
 
 Build
 *.user
