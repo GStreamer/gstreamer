@@ -211,11 +211,25 @@ gst_midi_parse_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     case GST_QUERY_FORMATS:
       gst_query_set_formats (query, 1, GST_FORMAT_TIME);
       break;
-    case GST_QUERY_SEGMENT:
-      gst_query_set_segment (query, midiparse->segment.rate,
-          midiparse->segment.format, midiparse->segment.start,
-          midiparse->segment.stop);
+    case GST_QUERY_SEGMENT:{
+      GstFormat format;
+      gint64 start, stop;
+
+      format = midiparse->segment.format;
+
+      start =
+          gst_segment_to_stream_time (&midiparse->segment, format,
+          midiparse->segment.start);
+      if ((stop = midiparse->segment.stop) == -1)
+        stop = midiparse->segment.duration;
+      else
+        stop = gst_segment_to_stream_time (&midiparse->segment, format, stop);
+
+      gst_query_set_segment (query, midiparse->segment.rate, format, start,
+          stop);
+      res = TRUE;
       break;
+    }
     case GST_QUERY_SEEKING:
       gst_query_set_seeking (query, midiparse->segment.format,
           FALSE, 0, midiparse->segment.duration);

@@ -383,11 +383,25 @@ gst_wildmidi_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_query_set_formats (query, 3,
           GST_FORMAT_TIME, GST_FORMAT_BYTES, GST_FORMAT_DEFAULT);
       break;
-    case GST_QUERY_SEGMENT:
-      gst_query_set_segment (query, wildmidi->o_segment->rate,
-          wildmidi->o_segment->format, wildmidi->o_segment->start,
-          wildmidi->o_segment->stop);
+    case GST_QUERY_SEGMENT:{
+      GstFormat format;
+      gint64 start, stop;
+
+      format = wildmidi->o_segment->format;
+
+      start =
+          gst_segment_to_stream_time (wildmidi->o_segment, format,
+          wildmidi->o_segment->start);
+      if ((stop = wildmidi->o_segment->stop) == -1)
+        stop = wildmidi->o_segment->duration;
+      else
+        stop = gst_segment_to_stream_time (wildmidi->o_segment, format, stop);
+
+      gst_query_set_segment (query, wildmidi->o_segment->rate, format, start,
+          stop);
+      res = TRUE;
       break;
+    }
     case GST_QUERY_SEEKING:
       gst_query_set_seeking (query, wildmidi->o_segment->format,
           TRUE, 0, wildmidi->o_len);

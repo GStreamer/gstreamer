@@ -279,11 +279,25 @@ gst_timidity_src_query (GstPad * pad, GstQuery * query)
       gst_query_set_formats (query, 3,
           GST_FORMAT_TIME, GST_FORMAT_BYTES, GST_FORMAT_DEFAULT);
       break;
-    case GST_QUERY_SEGMENT:
-      gst_query_set_segment (query, timidity->o_segment->rate,
-          timidity->o_segment->format, timidity->o_segment->start,
-          timidity->o_segment->stop);
+    case GST_QUERY_SEGMENT:{
+      GstFormat format;
+      gint64 start, stop;
+
+      format = timidity->o_segment->format;
+
+      start =
+          gst_segment_to_stream_time (timidity->o_segment, format,
+          timidity->o_segment->start);
+      if ((stop = timidity->o_segment->stop) == -1)
+        stop = timidity->o_segment->duration;
+      else
+        stop = gst_segment_to_stream_time (timidity->o_segment, format, stop);
+
+      gst_query_set_segment (query, timidity->o_segment->rate, format, start,
+          stop);
+      res = TRUE;
       break;
+    }
     case GST_QUERY_SEEKING:
       gst_query_set_seeking (query, timidity->o_segment->format,
           TRUE, 0, timidity->o_len);
