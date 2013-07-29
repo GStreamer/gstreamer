@@ -815,6 +815,24 @@ gst_ffmpegdemux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       res = TRUE;
       break;
     }
+    case GST_QUERY_SEGMENT:{
+      GstFormat format;
+      gint64 start, stop;
+
+      format = demux->segment.format;
+
+      start =
+          gst_segment_to_stream_time (&demux->segment, format,
+          demux->segment.start);
+      if ((stop = demux->segment.stop) == -1)
+        stop = demux->segment.duration;
+      else
+        stop = gst_segment_to_stream_time (&demux->segment, format, stop);
+
+      gst_query_set_segment (query, demux->segment.rate, format, start, stop);
+      res = TRUE;
+      break;
+    }
     default:
       /* FIXME : ADD GST_QUERY_CONVERT */
       res = gst_pad_query_default (pad, parent, query);
