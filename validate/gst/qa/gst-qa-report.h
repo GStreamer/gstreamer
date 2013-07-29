@@ -128,7 +128,7 @@ typedef struct {
   gchar *message;
 } GstQaReport;
 
-#define GST_QA_ISSUE_FORMAT G_GUINTPTR_FORMAT " (%s) : %s(%u): %s"
+#define GST_QA_ISSUE_FORMAT G_GUINTPTR_FORMAT " (%s) : %s(%" G_GUINTPTR_FORMAT "): %s"
 #define GST_QA_ISSUE_ARGS(i) gst_qa_issue_get_id (i), gst_qa_report_level_get_name (i->default_level), \
                              gst_qa_report_area_get_name (GST_QA_ISSUE_AREA (i)), GST_QA_ISSUE_AREA (i), \
                              i->summary
