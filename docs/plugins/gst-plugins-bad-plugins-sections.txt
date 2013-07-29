@@ -128,33 +128,6 @@ GST_IS_CAMERA_BIN_CLASS
 gst_camera_bin_get_type
 </SECTION>
 
-<SECTION>
-<FILE>element-celtdec</FILE>
-<TITLE>celtdec</TITLE>
-GstCeltDec
-<SUBSECTION Standard>
-GstCeltDecClass
-GST_CELT_DEC
-GST_CELT_DEC_CLASS
-GST_IS_CELT_DEC
-GST_IS_CELT_DEC_CLASS
-GST_TYPE_CELT_DEC
-gst_celt_dec_get_type
-</SECTION>
-
-<SECTION>
-<FILE>element-celtenc</FILE>
-<TITLE>celtenc</TITLE>
-GstCeltEnc
-<SUBSECTION Standard>
-GstCeltEncClass
-GST_CELT_ENC
-GST_CELT_ENC_CLASS
-GST_IS_CELT_ENC
-GST_IS_CELT_ENC_CLASS
-GST_TYPE_CELT_ENC
-gst_celt_enc_get_type
-</SECTION>
 
 <SECTION>
 <FILE>element-chromium</FILE>

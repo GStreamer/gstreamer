@@ -63,8 +63,6 @@ EXAMPLE_CFILES = \
 
 EXTRA_HFILES = \
 	$(top_srcdir)/ext/assrender/gstassrender.h \
-	$(top_srcdir)/ext/celt/gstceltdec.h \
-	$(top_srcdir)/ext/celt/gstceltenc.h \
 	$(top_srcdir)/ext/curl/gstcurlbasesink.h \
 	$(top_srcdir)/ext/curl/gstcurlfilesink.h \
 	$(top_srcdir)/ext/curl/gstcurlftpsink.h \

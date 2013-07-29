@@ -25,7 +25,6 @@ BuildRequires: libXt-devel
 BuildRequires: gtk-doc
 
 BuildRequires: bzip2-devel
-BuildRequires: celt-devel
 BuildRequires: exempi-devel
 BuildRequires: ladspa-devel
 BuildRequires: libass-devel
@@ -262,7 +261,6 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 # Plugins with external dependencies
 %{_libdir}/gstreamer-%{majorminor}/libgstassrender.so
 %{_libdir}/gstreamer-%{majorminor}/libgstbz2.so
-%{_libdir}/gstreamer-%{majorminor}/libgstcelt.so
 %{_libdir}/gstreamer-%{majorminor}/libgstopus.so
 #%ifnarch s390 s390x
 #%{_libdir}/gstreamer-%{majorminor}/libgstdc1394.so

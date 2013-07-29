@@ -21,7 +21,6 @@ GObject
         GstAssRender
         GstAudioDecoder
           ADPCMDec
-          GstCeltDec
           GstDtsDec
           GstFaad
           GstGSMDec
@@ -31,7 +30,6 @@ GObject
           GstSirenDec
         GstAudioEncoder
           ADPCMEnc
-          GstCeltEnc
           GstFaac
           GstGSMEnc
           GstOpusEnc
