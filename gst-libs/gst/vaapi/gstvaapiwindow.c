@@ -483,3 +483,19 @@ gst_vaapi_window_put_pixmap (GstVaapiWindow * window,
   }
   return klass->render_pixmap (window, pixmap, src_rect, dst_rect);
 }
+
+/**
+ * gst_vaapi_window_reconfigure:
+ * @window: a #GstVaapiWindow
+ *
+ * Updates internal window size from geometry of the underlying window
+ * implementation if necessary.
+ */
+void
+gst_vaapi_window_reconfigure (GstVaapiWindow * window)
+{
+  g_return_if_fail (window != NULL);
+
+  window->check_geometry = TRUE;
+  gst_vaapi_window_ensure_size (window);
+}

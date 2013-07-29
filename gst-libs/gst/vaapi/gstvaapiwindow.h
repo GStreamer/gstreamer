@@ -93,6 +93,9 @@ gboolean
 gst_vaapi_window_put_pixmap (GstVaapiWindow * window, GstVaapiPixmap * pixmap,
     const GstVaapiRectangle * src_rect, const GstVaapiRectangle * dst_rect);
 
+void
+gst_vaapi_window_reconfigure (GstVaapiWindow * window);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_WINDOW_H */
