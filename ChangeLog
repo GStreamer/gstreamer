@@ -1,9 +1,752 @@
-=== release 1.1.2 ===
+=== release 1.1.3 ===
 
-2013-07-11  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-07-29  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.2
+	  releasing 1.1.3
+
+2013-07-29 12:17:57 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/timidity/gsttimidity.c:
+	* ext/timidity/gstwildmidi.c:
+	* gst/midi/midiparse.c:
+	  midi: Fix handling of the SEGMENT query
+
+2013-07-29 12:14:08 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	* gst/mpegtsdemux/tsdemux.c:
+	* gst/mxf/mxfdemux.c:
+	  gst: Don't swap start/stop for negative rates in the SEGMENT query
+
+2013-07-29 11:02:34 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: Implement SEGMENT query
+
+2013-07-29 11:01:09 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: Implement SEGMENT query
+
+2013-07-29 11:00:14 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/mxf/mxfdemux.c:
+	  mxfdemux: Implement SEGMENT query
+
+2013-07-29 09:35:08 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	* ext/dash/gstmpdparser.c:
+	* ext/eglgles/gstegladaptation_egl.c:
+	* ext/eglgles/gsteglglessink.c:
+	* ext/faac/gstfaac.c:
+	* ext/resindvd/gstmpegdemux.c:
+	* ext/resindvd/gstmpegdesc.c:
+	* ext/resindvd/gstpesfilter.c:
+	* ext/rsvg/gstrsvgdec.c:
+	* ext/smoothstreaming/gstmssdemux.c:
+	* ext/wayland/gstwaylandsink.c:
+	* gst-libs/gst/codecparsers/gsth264parser.c:
+	* gst/audiofxbad/gstaudiochannelmix.c:
+	* gst/debugutils/gstwatchdog.c:
+	* gst/dvdspu/gstdvdspu.c:
+	* gst/inter/gstinteraudiosrc.c:
+	* gst/inter/gstintersubsrc.c:
+	* gst/inter/gstintervideosrc.c:
+	* gst/ivtc/gstcombdetect.c:
+	* gst/ivtc/gstivtc.c:
+	* gst/mpegdemux/gstmpegdemux.c:
+	* gst/mpegdemux/gstpesfilter.c:
+	* gst/mpegtsmux/mpegtsmux.c:
+	* gst/siren/gstsirendec.c:
+	* gst/siren/gstsirenenc.c:
+	* gst/videofilters/gstscenechange.c:
+	* gst/videofilters/gstvideodiff.c:
+	* gst/videofilters/gstzebrastripe.c:
+	* gst/videoparsers/gsth264parse.c:
+	* gst/videoparsers/h263parse.c:
+	* sys/androidmedia/gstamc.c:
+	* sys/dvb/camapplicationinfo.c:
+	* sys/dvb/camconditionalaccess.c:
+	* sys/vdpau/gstvdpdecoder.c:
+	* sys/vdpau/gstvdpvideomemory.c:
+	  all: Fix for GST_DISABLE_GST_DEBUG
+	  Where applicable, remove methods that don't do anything different than
+	  the default implementation.
+
+2013-07-29 08:46:39 +0200  Edward Hervey <edward@collabora.com>
+
+	* docs/plugins/Makefile.am:
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* gst-plugins-bad.spec.in:
+	  docs/spec: Really remove all mentions of CELT plugin
+
+2013-07-29 08:29:34 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: Show NALU string type in debug messages
+	  If you know the NALU type by heart I tip my hat to you, for the rest of
+	  us mere mortals this is a bit more helpful
+
+2013-07-29 08:28:17 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: Remove unused macros
+
+2013-07-29 08:23:30 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/gstmpegdesc.h:
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: Add more AC3 detection cases
+	  ATSC ac3 streams are always guaranteed to be AC3 if EAC3 descriptor
+	  is not present
+	  If stream registration id is 'AC-3' then it's also guaranteed to be AC3.
+	  Finally if AC3 descriptor is present it's guaranteed to be AC3.
+	  Only silences a warning, but still.
+
+2013-07-29 08:20:10 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: Flush out pending data on EOS
+	  Ensures downstream elements (like decoders) really get all the data
+
+2013-07-29 08:18:24 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	  mpegtspacketizer: More AFC flags
+	  I should have put those in a previous commit. sorry :(
+
+2013-07-29 08:14:57 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/gstmpegdefs.h:
+	  mpegdefs: Simplify PCR/PTS/DTS => GST conversion macros
+	  We know we will not overflow 64 bits, therefore just use direct
+	  multiplication/division instead of the scale method (trims usage from
+	  50 instruction calls to 2/3).
+
+2013-07-28 20:14:55 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/dvdspu/gstspu-vobsub-render.c:
+	  dvdspu: artifacts when rendering clipped spu
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705039
+
+2013-07-28 18:28:30 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: do not update caps when bitrate changes
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705035
+
+2013-07-28 14:22:38 -0700  David Schleef <ds@schleef.org>
+
+	* REQUIREMENTS:
+	  Fix URIs in REQUIREMENTS
+
+2013-07-28 13:12:32 -0700  David Schleef <ds@schleef.org>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/celt/Makefile.am:
+	* ext/celt/gstcelt.c:
+	* ext/celt/gstceltdec.c:
+	* ext/celt/gstceltdec.h:
+	* ext/celt/gstceltenc.c:
+	* ext/celt/gstceltenc.h:
+	  celt: remove, replaced by opus.
+
+2013-07-28 17:29:32 +0200  Olivier Crête <olivier.crete@collabora.com>
+
+	* sys/uvch264/gstuvch264_mjpgdemux.c:
+	  uvch264_mjpgdemux: Remove duplicated variables
+
+2013-07-28 17:25:10 +0200  Olivier Crête <olivier.crete@collabora.com>
+
+	* sys/uvch264/gstuvch264_mjpgdemux.c:
+	  uvch264_mjpgdemux: Don't unmap/unref buffer if it's pushed out as-is
+
+2013-07-26 18:33:00 +0000  Robert Krakora <rob.krakora@messagenetsystems.com>
+
+	* sys/uvch264/gstuvch264_mjpgdemux.c:
+	  uvcv4l2_mjpegdemux: Unmap buffer
+	  https://bugzilla.gnome.org/show_bug.cgi?id=699517
+
+2013-07-28 15:46:33 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrising.org>
+
+	* gst-plugins-bad.spec.in:
+	  Update spec file to be current
+
+2013-07-27 12:17:34 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/gstmpegdesc.h:
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: HDV only has mpeg 1 audio layer 2
+	  Set that accordingly on the caps
+
+2013-07-26 17:31:22 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/asfmux/gstasfmux.c:
+	  asfmux: Various debug argument fixes
+	  mainly G_GUINT16_FORMAT to ... the right type (guint32 or guint8)
+
+2013-07-26 17:25:42 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/mpg123/gstmpg123audiodec.c:
+	  mpg123: Remove dead assignment
+	  harder ? :)
+
+2013-07-26 13:20:27 -0700  David Schleef <ds@schleef.org>
+
+	* ext/ladspa/gstladspa.c:
+	  ladspa: initialize debug category earlier
+	  You know, before it's used.
+
+2013-07-26 07:53:06 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	* gst/mpegtsdemux/mpegtspacketizer.h:
+	* gst/mpegtsdemux/pesparse.c:
+	  mpegtsdemux: Add more flag debugging for PES and TS packets
+	  Helps with debugging issues. And also remove unused variable (opcr)
+	  This will also allow us in the future to properly detect:
+	  * random-access location (to enable keyframe observation and
+	  potentially seeking
+	  * discont location (to properly handle resets)
+	  * splice location (to properly handle new stream changes)
+
+2013-07-24 17:49:59 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.c:
+	  codecparser: Make warnings more meaningful
+	  By stating whether we don't have enough data or it's a corrupted
+	  packet
+
+2013-07-24 17:49:23 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/pesparse.c:
+	  pesparse: Demote a Warning
+	  We actually now know what to do ... have a log message :)
+
+2013-07-25 15:06:12 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/mpegtsmux/mpegtsmux.c:
+	  mpegtsmux: avoid using clipped out buffers
+	  If a buffer was entirely clipped out (ie, it's out of the segment
+	  entirely), we'll end up with a NULL buffer, which we don't want
+	  to process/dereference.
+
+2013-07-24 15:50:14 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	* gst/mpegtsdemux/tsdemux.h:
+	  tsdemux: Remember requested seek rate and use it
+	  The new seek handling re-creates the segment time information once it
+	  has enough information after a seek.
+	  The problem was that we'd completely ignore the requested rate. So store
+	  that and use it in the newly created segment.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=694369
+
+2013-07-24 09:18:43 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* sys/applemedia/atdec.c:
+	  applemedia: atdec: destroy the queue if set_format fails
+
+2013-07-24 09:15:49 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* sys/applemedia/atdec.c:
+	  applemedia: atdec: remove c++ style comments
+
+2013-07-24 09:11:59 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* sys/applemedia/atdec.c:
+	* sys/applemedia/atdec.h:
+	  applemedia: atdec: 1st round of fixes
+
+2013-07-23 10:10:13 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: Fix codec_data handling
+	  Set to sequence_offset so that _process_config accepts it.
+	  (btw: seq_offset usage throughout this plugin is really dodgy)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702806
+
+2013-06-14 07:28:29 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/Makefile.am:
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: Create and send codec tag
+	  Helps with applications that rely on presence of that tag for user-facing
+	  information.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702216
+
+2013-07-23 13:29:18 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/hls/gsthlsdemux.c:
+	  hlsdemux: Implement pkcs7 unpadding
+	  Every encrypted fragment will be a multiple of 128 bits, the last byte
+	  contains the number of bytes that were added as padding in the end
+	  and should be removed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701673
+
+2013-07-23 10:30:39 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* sys/applemedia/Makefile.am:
+	* sys/applemedia/atdec.c:
+	* sys/applemedia/atdec.h:
+	* sys/applemedia/plugin.m:
+	  applemedia: add AudioToolbox based audio decoder
+
+2013-07-23 10:33:21 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* sys/decklink/gstdecklinksrc.cpp:
+	  decklink: Add support for group-id in the stream-start event
+
+2013-07-23 10:31:27 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/mxf/mxfdemux.c:
+	* gst/mxf/mxfdemux.h:
+	  mxfdemux: Add support for group-id in the stream-start event
+
+2013-07-23 10:24:22 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	* gst/mpegtsdemux/tsdemux.h:
+	  tsdemux: Add support for group-id in the stream-start event
+
+2013-07-23 10:21:26 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/mpegtsdemux/mpegtsparse.c:
+	* gst/mpegtsdemux/mpegtsparse.h:
+	  tsparse: Add support for group-id in the stream-start event
+
+2013-07-23 10:15:58 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	* gst/mpegdemux/gstmpegdemux.h:
+	  mpegdemux: Add support for group-id in the stream-start event
+
+2013-07-23 10:14:01 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/midi/midiparse.c:
+	* gst/midi/midiparse.h:
+	  midiparse: Add support for group-id in the stream-start event
+
+2013-07-23 10:11:49 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/smoothstreaming/gstmssdemux.c:
+	* ext/smoothstreaming/gstmssdemux.h:
+	  mssdemux: Add support for group-id in the stream-start event
+
+2013-07-23 10:09:38 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/resindvd/gstmpegdemux.c:
+	* ext/resindvd/gstmpegdemux.h:
+	  resindvd: Add support for group-id in the stream-start event
+
+2013-07-23 10:07:24 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/hls/gsthlsdemux.c:
+	* ext/hls/gsthlsdemux.h:
+	  hlsdemux: Add support for group-id in the stream-start event
+
+2013-07-23 10:04:42 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/dash/gstdashdemux.c:
+	* ext/dash/gstdashdemux.h:
+	  dash: Add support for group-id in the stream-start event
+
+2013-07-22 17:30:31 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/interlace/gstinterlace.c:
+	  interlace: fix negotiation if filter caps are passed to query_caps
+	  Make videotestsrc ! interlace ! $anything work again. Problem
+	  was that upstream filter caps were passed which contained
+	  interlace-mode=progressive, which doesn't intersect too well
+	  with interlace's source pad template caps, leading to
+	  not-negotiated errors.
+
+2013-07-22 14:56:32 +0200  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: Don't abort on invalid streams
+	  Just return an error
+
+2013-07-19 15:30:42 +0100  Alex Ashley <bugzilla@ashley-family.net>
+
+	* ext/hls/Makefile.am:
+	* ext/hls/gstfragment.c:
+	* ext/hls/gstfragment.h:
+	  hls: fix for assert failure when using encrypted HLS streams
+	  When using an HLS encrypted stream, an assertion failure is thrown:
+	  (gst-launch-1.0:31028): GLib-GObject-WARNING **: cannot register
+	  existing type `GstFragment'
+	  (gst-launch-1.0:31028): GLib-CRITICAL **: g_once_init_leave: assertion
+	  `result != 0' failed
+	  Eventually tracked this down to the call gst_fragment_new()
+	  in function gst_hls_demux_decrypt_fragment.
+	  The GstFragment class is defined in ext/hls/gstfragment.c and in
+	  gst-libs/gst/uridownloader/gstfragment.c. Having two class definitions
+	  with the same name causes the assert failure when trying to allocate
+	  GstFragment. Deleting the version from hls and editing the
+	  Makefile.am solves this assert failure.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704555
+
+2013-07-19 23:42:12 +0200  Youri Westerman <tetracon@gmail.com>
+
+	* sys/decklink/gstdecklink.cpp:
+	  decklink: actually enable decklinksink
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704505
+
+2013-07-19 20:09:28 +0200  Youri Westerman <tetracon@gmail.com>
+
+	* sys/decklink/gstdecklinksink.cpp:
+	* sys/decklink/gstdecklinksink.h:
+	* sys/decklink/gstdecklinksrc.cpp:
+	* sys/decklink/gstdecklinksrc.h:
+	  decklink: add "device-number" to select from multiple devices
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704505
+
+2013-07-22 10:46:23 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: Only map input buffer once
+	  Instead of constantly map/unmapping it a bit everywhere, we pass along
+	  to all functions the GstMapInfo.
+	  Makes mpeg video frame parsing 6% faster
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702330
+
+2013-03-10 12:07:40 +1300  Douglas Bagnall <douglas@paradise.net.nz>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	* gst/mpegtsdemux/tsdemux.h:
+	  tsdemux: disentangle requested program number from active program number
+	  The program_number attribute was overloaded, trying to indicate both
+	  the currently playing program, and the program requested via the
+	  "program-number" property.  The end result was that setting the
+	  property didn't work (see #690934).
+	  I added a new requested_program_number field rather than reviving the
+	  current_program_number field because it seemed this would result in
+	  fewer changes overall and be less confusing.  It breaks symmetry with
+	  the "program-number" property, but it retains parallels with the likes
+	  of program->program_number.
+	  Because gst_ts_demux_reset is called after the properties have been
+	  parsed, requested_program_number is initialised in gst_ts_demux_init.
+	  Whether this is exactly the right place, I don't know.
+
+2013-03-06 12:15:47 +0100  Jesper Larsen <jesper.larsen@ixonos.com>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: fix program-number functionality
+	  Setting the program-number property does not affect which program
+	  is actually being demuxed.
+	  Moving the initialization of the program_number from
+	  gst_ts_demux_reset to gst_ts_demux_init seems to fix this issue.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690934
+
+2013-07-22 09:18:32 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/resindvd/gstmpegdemux.c:
+	  resindvd: Send stream-start event before anything else on the mpeg demuxer srcpads
+
+2013-07-17 17:12:59 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: do not push discont buffers if they aren't discont
+	  Explicitly unset discont flag when it shouldn't be set.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=682110
+
+2013-07-17 11:28:28 +0200  Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>
+
+	* ext/opencv/Makefile.am:
+	* ext/opencv/gstfacedetect.c:
+	* ext/opencv/gstgrabcut.cpp:
+	* ext/opencv/gstgrabcut.h:
+	* ext/opencv/gstopencv.c:
+	  grabcut: Add GrabCut segmentation element
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702722
+
+2013-07-15 23:01:31 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/videoparsers/h263parse.c:
+	  h263parse: fix height extraction for H263p
+
+2013-07-15 22:57:06 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/videoparsers/gsth263parse.c:
+	* gst/videoparsers/h263parse.c:
+	* gst/videoparsers/h263parse.h:
+	  h263parse: add pixel-aspect-ratio if upstream doesn't provide one
+
+2013-07-09 12:49:55 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	  dashdemux: fix typo in check_queue_full function
+	  It should return True when the queue IS full
+	  Fixes #704226
+
+2013-07-15 11:15:11 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtsbase.h:
+	* gst/mpegtsdemux/tsdemux.c:
+	  mpegtsdemux: Remember seek sequence number
+	  * Avoids handling twice the same seek (can happen with playbin and files
+	  with subtitles)
+	  * Set the sequence number of the segment event to the sequence number of
+	  the seek event that generated it (-1 for the initial one).
+
+2013-05-24 18:18:35 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: implement seeking in push mode
+
+2013-05-28 16:14:42 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: recalculate new segment after byte seek
+	  The seeking start time is approximated from the seek offset in bytes
+	  using the accumulated PCR observations, so on a VBR stream there might
+	  be a big difference between the actual PCR and the estimated one after
+	  the seek. This might result in a long wait to skip all out of segments
+	  packets.
+	  Instead we just recalculate the new segment to start at the first PTS
+	  after the seek, so that playback starts immediatly.
+
+2013-07-13 23:49:44 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/gst-plugins-bad-plugins.signals:
+	* docs/plugins/inspect/plugin-accurip.xml:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* win32/common/config.h:
+	  Update docs and win32 config.h to development version
+
+2013-07-12 15:58:33 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* docs/plugins/gst-plugins-bad-plugins-docs.sgml:
+	* docs/plugins/gst-plugins-bad-plugins-sections.txt:
+	* docs/plugins/inspect/plugin-neon.xml:
+	* docs/plugins/inspect/plugin-ofa.xml:
+	* docs/plugins/inspect/plugin-openal.xml:
+	* docs/plugins/inspect/plugin-rfbsrc.xml:
+	  docs: add newly-ported elements to docs
+
+2013-07-11 17:46:37 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: Use sequence_display_extension values to update the src caps
+	  The caps should always represent what the user is supposed to see.
+	  So if there is a sequence_display_extension associated with the
+	  stream then use the display_horizontal_size/display_vertical_size
+	  to update the src caps (if they are less than the values provided
+	  by sequence header).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704009
+
+2013-07-12 09:45:38 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/inspect/plugin-accurip.xml:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-eglglessink.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-waylandsink.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* gst-plugins-bad.doap:
+	* gst/bayer/gstbayerorc-dist.c:
+	* gst/fieldanalysis/gstfieldanalysisorc-dist.c:
+	* win32/common/config.h:
+	  Release 1.1.2
+	  Oops... should've been part of 1.1.2 tag already :(
+
+2013-07-11 16:57:20 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.2 ===
+
+2013-07-11 16:31:22 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-07-10 12:28:38 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 

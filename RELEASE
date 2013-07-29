@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.1.2
+Release notes for GStreamer Bad Plugins 1.1.3
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -65,35 +65,19 @@ Features of this release
 
 Bugs fixed in this release
      
-      * 694068 : h264parser: Parse the cropping-rectangle separately.
-      * 560631 : [tsdemux] Handle carousel data (MHP, MHEG, ...)
-      * 614479 : [mpegtspacketizer] Use CRC to check if tables are duplicate
-      * 646327 : h264parse: Drop data before receiving the first PPS/SPS
-      * 664274 : [API] codecparsers: add gst_mpeg_video_parse_slice() and gst_mpeg_video_parse_sequence_scalable_extension()
-      * 677443 : [tsdemux/tsparse] Handle multiple SI in one packet
-      * 678148 : [tsdemux] missing timestamp on DVB subtitles
-      * 692933 : [API] codecparsers: mpeg2: add new API that takes  GstMpegVideoPacket arguments
-      * 695475 : h264parser: Fix the return value type for the SEI palyload parsing methods.
-      * 698050 : tsdemux: seeking doesn't even work in pull mode
-      * 700489 : [dashdemux] Initialization blocks without URLs generate spurious critical errors
-      * 701421 : opencv: add foreground/background segmentation element
-      * 701509 : dashdemux selects first fragment in the manifest for live streams
-      * 701953 : wrappercamerabinsrc: Add video-source-filter during construction
-      * 701961 : dashdemux: Spurious critical if there is no initialization segment
-      * 702036 : curlsmtpsink: incorrect assert in gst_curl_smtp_sink_set_payload_headers_unlocked
-      * 702112 : waylandsink: add support for RGBx and RGBA formats
-      * 702174 : mpegvideoparse: Crash while transcoding to MPEG2 with encodebin while attaching parse meta
-      * 702206 : dashdemux: media range requests not supported
-      * 702297 : opencv: build broken - c++ header indirectly included into c code (gstsegmentation.h contains a .hpp)
-      * 702422 : tsparse: Ensure initial events are sent in the right order
-      * 702677 : dashdemux: SegmentTemplates at multiple levels not aggregated
-      * 702684 : shmsink: shared memory filled when no clients connected
-      * 702724 : first-class miniobjects/API for mpeg-ts related SI (Service Information)
-      * 702837 : dashdemux: Cleanup use of xmlFree vs g_free
-      * 703264 : srtp: Key is required even if cipher and auth are null
-      * 703667 : codecparsers: mpeg2: add missing gtk-doc entries
-      * 703668 : codecparsers: mpeg2: fix video packet header size checks
-      * 703683 : POTFILES are out of date
+      * 702216 : tsdemux: Create and send codec tag
+      * 690934 : tsdemux: setting program-number has no effect
+      * 694369 : tsdemux: unable to change play speed via seek event
+      * 701141 : tsdemux: multiple patches related to seeking
+      * 701673 : hlsdemux: Does not implement pkcs7 unpadding for encrypted streams
+      * 702330 : mpegvideoparse: Only map input buffer once
+      * 702722 : opencv: add GrabCut segmentation element
+      * 702806 : mpegvideoparse/mpeg2dec: No valid frames found before end of stream
+      * 704009 : mpegvideoparse: Use sequence_display_extension values to update the src caps
+      * 704226 : dash: Stream does not preroll and shutting down deadlocks
+      * 704555 : hlsdemux: cannot register existing type GstFragment when using encrypted HLS streams
+      * 705035 : mpegvideoparse: do not update caps when bitrate changes in seq. header
+      * 705039 : dvdspu: artifacts when clipping spu
 
 ==== Download ====
 
@@ -130,28 +114,22 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alban Browaeys
-      * Aleix Conchillo Flaque
+      * Alessandro Decina
       * Alex Ashley
-      * Andoni Morales Alastruey
       * Arnaud Vrac
-      * Arthur Shipkowski
-      * Benjamin Gaignard
-      * Brendan Long
-      * Chen Jie
+      * Christian Fredrik Kalager Schaller
+      * David Schleef
+      * Douglas Bagnall
       * Edward Hervey
-      * Greg Rutz
-      * Gwenole Beauchesne
-      * Hans de Goede
-      * Ilya Smelykh
-      * Josep Torra
+      * Jesper Larsen
+      * Matej Knopp
       * Miguel Casas-Sanchez
       * Olivier Crête
-      * Patricia Muscalu
-      * Piotr Drąg
+      * Robert Krakora
       * Sebastian Dröge
       * Sreerenj Balachandran
       * Thiago Santos
       * Tim-Philipp Müller
-      * Xavi Artigas
+      * Vincent Penquerc'h
+      * Youri Westerman
  

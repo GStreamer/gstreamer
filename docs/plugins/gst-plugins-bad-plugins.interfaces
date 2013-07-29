@@ -15,6 +15,7 @@ GstCDAudio GstURIHandler
 GstCameraBin GstChildProxy GstImplementsInterface GstColorBalance GstTagSetter
 GstCameraBin GstChildProxy GstTagSetter
 GstCameraBin2 GstChildProxy GstTagSetter
+GstCeltEnc GstPreset GstTagSetter
 GstDaalaEnc GstPreset
 GstDataURISrc GstURIHandler
 GstDfbVideoSink GstImplementsInterface GstNavigation GstColorBalance
