@@ -476,13 +476,6 @@ gst_ts_demux_srcpad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       else
         stop = gst_segment_to_stream_time (&demux->segment, format, stop);
 
-      if (demux->segment.rate < 0.0) {
-        gint64 tmp;
-        tmp = stop;
-        stop = start;
-        start = tmp;
-      }
-
       gst_query_set_segment (query, demux->segment.rate, format, start, stop);
       res = TRUE;
       break;
