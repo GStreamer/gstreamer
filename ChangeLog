@@ -1,9 +1,184 @@
-=== release 1.1.2 ===
+=== release 1.1.3 ===
 
-2013-07-11  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-07-29  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.2
+	  releasing 1.1.3
+
+2013-07-29 12:13:17 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rmdemux.c:
+	  gst: Don't swap start/stop for negative rates in the SEGMENT query
+
+2013-07-29 10:57:38 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rmdemux.c:
+	  real: Implement SEGMENT query
+
+2013-07-29 10:56:06 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Implement SEGMENT query
+
+2013-07-28 16:43:28 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/asfdemux/asfheaders.c:
+	* gst/asfdemux/asfheaders.h:
+	* gst/asfdemux/asfpacket.c:
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: Add support for dvr-ms
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705026
+
+2013-07-26 16:47:48 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/realmedia/rtspreal.c:
+	  rtspreal: Ensure output value has an assigned value
+	  In the case where this macro was used, that dest was != NULL but that
+	  the strncmp failed, we would end up with dest_len being undefined.
+
+2013-07-26 16:39:12 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264: Fix dts comparision
+	  We were assigning to a guint64 value (frame->dts) the sum of a unsigned
+	  and signed value... resulting it the result never being < 0.
+	  Instead just check if it is smaller before assigning to frame->dts.
+
+2013-07-25 11:28:54 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: fix seqnum handling for seeks
+	  Use the same seqnum as the seek for flushes/segments that are
+	  caused by the seek. Also do the same for segment events
+	  Fixes #676242
+
+2013-07-25 13:35:44 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Clean up reset/start/stop handling
+
+2013-07-25 11:01:20 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: React properly to flushing/resetting the encoder
+	  https://bugzilla.gnome.org/show_bug.cgi?id=656007
+
+2013-07-22 16:01:13 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/realmedia/rademux.c:
+	* gst/realmedia/rademux.h:
+	* gst/realmedia/rmdemux.c:
+	* gst/realmedia/rmdemux.h:
+	  realmedia: Add support for group-id in the stream-start event
+
+2013-07-22 15:45:57 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: Add support for group-id in the stream-start event
+
+2013-07-22 15:43:18 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/sidplay/gstsiddec.cc:
+	* ext/sidplay/gstsiddec.h:
+	  siddec: Add support for group-id in the stream-start event
+
+2013-07-18 17:14:29 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/realmedia/rmdemux.c:
+	  rmdemux: Mark demuxer as "running" in push-mode
+	  Allows queries (and other code) to be answered when working in push-mode.
+	  Running would only be set to TRUE accordingly when working in pull-mode
+	  once it had read header/index.
+	  Fixes #680185
+
+2013-07-17 16:17:54 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Properly reset on sequence changes
+	  Otherwise we end up using stray data/buffers.
+	  Fixes #690701
+
+2013-07-11 16:57:24 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.2 ===
+
+2013-07-11 16:12:25 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.1.2
+
+2013-07-11 16:12:21 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-06-18 20:06:24 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
 
