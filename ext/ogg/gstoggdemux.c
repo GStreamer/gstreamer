@@ -368,13 +368,6 @@ gst_ogg_pad_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       else
         stop = gst_segment_to_stream_time (&ogg->segment, format, stop);
 
-      if (ogg->segment.rate < 0.0) {
-        gint64 tmp;
-        tmp = stop;
-        stop = start;
-        start = tmp;
-      }
-
       gst_query_set_segment (query, ogg->segment.rate, format, start, stop);
       res = TRUE;
       break;
