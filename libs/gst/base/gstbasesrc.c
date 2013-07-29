@@ -1078,23 +1078,23 @@ gst_base_src_default_query (GstBaseSrc * src, GstQuery * query)
     }
     case GST_QUERY_SEGMENT:
     {
+      GstFormat format;
       gint64 start, stop;
 
       GST_OBJECT_LOCK (src);
-      /* no end segment configured, current duration then */
+
+      format = src->segment.format;
+
+      start =
+          gst_segment_to_stream_time (&src->segment, format,
+          src->segment.start);
       if ((stop = src->segment.stop) == -1)
         stop = src->segment.duration;
-      start = src->segment.start;
+      else
+        stop = gst_segment_to_stream_time (&src->segment, format, stop);
 
-      /* adjust to stream time */
-      if (src->segment.time != -1) {
-        start -= src->segment.time;
-        if (stop != -1)
-          stop -= src->segment.time;
-      }
+      gst_query_set_segment (query, src->segment.rate, format, start, stop);
 
-      gst_query_set_segment (query, src->segment.rate, src->segment.format,
-          start, stop);
       GST_OBJECT_UNLOCK (src);
       res = TRUE;
       break;

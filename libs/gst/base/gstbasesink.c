@@ -4714,8 +4714,21 @@ default_element_query (GstElement * element, GstQuery * query)
     case GST_QUERY_SEGMENT:
     {
       if (basesink->pad_mode == GST_PAD_MODE_PULL) {
-        gst_query_set_segment (query, basesink->segment.rate,
-            GST_FORMAT_TIME, basesink->segment.start, basesink->segment.stop);
+        GstFormat format;
+        gint64 start, stop;
+
+        format = basesink->segment.format;
+
+        start =
+            gst_segment_to_stream_time (&basesink->segment, format,
+            basesink->segment.start);
+        if ((stop = basesink->segment.stop) == -1)
+          stop = basesink->segment.duration;
+        else
+          stop = gst_segment_to_stream_time (&basesink->segment, format, stop);
+
+        gst_query_set_segment (query, basesink->segment.rate, format, start,
+            stop);
         res = TRUE;
       } else {
         res = gst_pad_peer_query (basesink->sinkpad, query);
