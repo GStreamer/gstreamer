@@ -1,41 +1,45 @@
 # Vietnamese translation for GST Plugins Bad.
-# Copyright © 2010 Free Software Foundation, Inc.
+# Copyright © 2012 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-bad package.
 # Clytie Siddall <clytie@riverland.net.au>, 2007-2010.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.17.2\n"
+"Project-Id-Version: gst-plugins-bad-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:51+0200\n"
-"PO-Revision-Date: 2010-03-06 22:09+1030\n"
-"Last-Translator: Clytie Siddall <clytie@riverland.net.au>\n"
-"Language-Team: Vietnamese <vi-VN@googlegroups.com>\n"
+"POT-Creation-Date: 2013-07-29 21:23+0100\n"
+"PO-Revision-Date: 2012-12-02 08:03+0700\n"
+"Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
+"Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Team-Website: <http://translationproject.org/team/vi.html>\n"
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: LocFactoryEditor 1.8\n"
+"X-Poedit-SourceCharset: UTF-8\n"
 
 msgid "Could not read title information for DVD."
-msgstr "Không thể đọc thông tin tựa đề về đĩa DVD."
+msgstr "Không thể đọc thông tin tựa đề của đĩa DVD."
 
 #, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Không mở được thiết bị đĩa DVD « %s »."
+msgstr "Gặp lỗi khi mở thiết bị đĩa DVD “%s”."
 
 msgid "Failed to set PGC based seeking."
-msgstr "Không đặt được chức năng tìm nơi dựa vào PGC."
+msgstr "Không đặt được chức năng di chuyển vị trí đọc dựa vào PGC."
 
 msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Không thể đọc DVD. Nguyên nhân có thể là DVD đã bị mã hõa mà thư viện giải "
+"mã DVD lại chưa được cài đặt."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Không thể đọc thông tin tựa đề về đĩa DVD."
+msgstr "Không thể đọc DVD."
 
 msgid "This file contains no playable streams."
 msgstr ""
@@ -50,18 +54,18 @@ msgid "Couldn't download fragments"
 msgstr ""
 
 msgid "No file name specified for writing."
-msgstr "Chưa ghi rõ tên tập tin để ghi vào."
+msgstr "Chưa chỉ định tên tập tin để ghi vào."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Không thể mở tập tin « %s » để ghi."
+msgstr "Không thể mở tập tin “%s” để ghi."
 
 msgid "Internal data stream error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
 
 #, c-format
 msgid "Could not write to file \"%s\"."
-msgstr "Không thể ghi vào tập tin « %s »."
+msgstr "Không thể ghi vào tập tin “%s”."
 
 msgid "Could not establish connection to sndio"
 msgstr ""
@@ -71,14 +75,14 @@ msgstr ""
 
 #, fuzzy
 msgid "Could not configure sndio"
-msgstr "Không thể mở tập tin « %s » để đọc."
+msgstr "Không thể mở tập tin “%s” để đọc."
 
 #, fuzzy
 msgid "Could not start sndio"
-msgstr "Không thể đọc thông tin tựa đề về đĩa DVD."
+msgstr "Không thể đọc DVD."
 
 msgid "Internal data flow error."
-msgstr "Lỗi luồng dữ liệu nội bộ."
+msgstr "Lỗi tràn luồng dữ liệu nội bộ."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
@@ -99,19 +103,19 @@ msgstr ""
 
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Thiết bị « %s » không tồn tại."
+msgstr "Thiết bị “%s” không tồn tại."
 
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Không thể mở thiết bị giao diện « %s »."
+msgstr "Không thể mở thiết bị giao diện “%s”."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Không thể lấy thiết lập từ thiết bị giao diện « %s »."
+msgstr "Không thể lấy các cài đặt từ thiết bị giao diện “%s”."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Không thể mở tập tin « %s » để đọc."
+msgstr "Không thể mở tập tin “%s” để đọc."
 
 msgid "Couldn't find DVB channel configuration file"
 msgstr ""

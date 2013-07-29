@@ -3,14 +3,15 @@
 #
 # Michael Kotsarinis <mk73628@gmail.com>, 2010.
 # Simos Xenitellis <simos.lists@googlemail.com>, 2010.
+# Savvas Radevic <vicedar@gmail.com>, 2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.18.2\n"
+"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:51+0200\n"
-"PO-Revision-Date: 2010-09-02 12:32+0300\n"
-"Last-Translator: Simos Xenitellis <simos.lists@googlemail.com>\n"
+"POT-Creation-Date: 2013-07-29 21:23+0100\n"
+"PO-Revision-Date: 2012-05-05 19:17+0100\n"
+"Last-Translator: Savvas Radevic <vicedar@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
 "Language: el\n"
 "MIME-Version: 1.0\n"
@@ -32,10 +33,12 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Αδυναμία ανάγνωσης δίσκου DVD. Αυτό μπορεί να οφείλεται στο ότι το DVD είναι "
+"κρυπτογραφημένο και δεν έχει εγκατασταθεί μια βιβλιοθήκη αποκρυπτογράφησης "
+"DVD."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Αδυναμία ανάγνωσης πληροφοριών τίτλου του DVD."
+msgstr "Αδυναμία ανάγνωσης δίσκου DVD."
 
 msgid "This file contains no playable streams."
 msgstr ""
@@ -75,7 +78,7 @@ msgstr "Αδυναμία ανοίγματος αρχείου \"%s\" για αν�
 
 #, fuzzy
 msgid "Could not start sndio"
-msgstr "Αδυναμία ανάγνωσης πληροφοριών τίτλου του DVD."
+msgstr "Αδυναμία ανάγνωσης δίσκου DVD."
 
 msgid "Internal data flow error."
 msgstr "Εσωτερικό σφάλμα ροής δεδομένων."
