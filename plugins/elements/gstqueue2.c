@@ -1124,21 +1124,13 @@ gst_queue2_have_data (GstQueue2 * queue, guint64 offset, guint length)
       guint64 threshold = 1024 * 512;
 
       if (QUEUE_IS_USING_RING_BUFFER (queue)) {
-        guint64 distance;
-
-        distance = QUEUE_MAX_BYTES (queue) - queue->cur_level.bytes;
-        /* don't wait for the complete buffer to fill */
-        distance = MIN (distance, threshold);
-
-        if (offset >= queue->current->offset && offset <=
-            queue->current->writing_pos + distance) {
-          GST_INFO_OBJECT (queue,
-              "requested data is within range, wait for data");
-          return FALSE;
-        }
-      } else if (offset < queue->current->writing_pos + threshold) {
-        update_cur_pos (queue, queue->current, offset + length);
-        GST_INFO_OBJECT (queue, "wait for data");
+        threshold = MIN (threshold,
+            QUEUE_MAX_BYTES (queue) - queue->cur_level.bytes);
+      }
+      if (offset >= queue->current->offset && offset <=
+          queue->current->writing_pos + threshold) {
+        GST_INFO_OBJECT (queue,
+            "requested data is within range, wait for data");
         return FALSE;
       }
     }
