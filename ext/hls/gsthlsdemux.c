@@ -1449,6 +1449,9 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean caching,
 
   buf = gst_fragment_get_buffer (download);
 
+  GST_DEBUG_OBJECT (demux, "set fragment pts=%" GST_TIME_FORMAT " duration=%"
+      GST_TIME_FORMAT, GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
+
   GST_BUFFER_DURATION (buf) = duration;
   GST_BUFFER_PTS (buf) = timestamp;
 
