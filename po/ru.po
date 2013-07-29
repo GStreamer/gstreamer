@@ -3,20 +3,20 @@
 #
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2011.
+# Yuri Kozlov <yuray@komyakino.ru>, 2011, 2012.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
+"Project-Id-Version: gst-plugins-ugly 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:45+0200\n"
-"PO-Revision-Date: 2011-04-26 20:28+0400\n"
+"POT-Creation-Date: 2013-07-29 21:09+0100\n"
+"PO-Revision-Date: 2012-12-01 13:38+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Lokalize 1.0\n"
+"X-Generator: Lokalize 1.4\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
@@ -58,11 +58,11 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "Не удалось прочесть DVD."
 
-#, fuzzy
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
-"Не удалось настроить кодировщик TwoLAME. Проверьте параметры кодирования."
+"Не удалось настроить аудио-кодировщик mp3 LAME. Проверьте параметры "
+"кодирования."
 
 #, c-format
 msgid ""
@@ -81,12 +81,6 @@ msgstr "Поток не содержит данных."
 
 msgid "Internal data stream error."
 msgstr "Внутренняя ошибка потока данных."
-
-#, fuzzy
-#~ msgid ""
-#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Не удалось настроить кодировщик LAME. Проверьте параметры кодирования."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "Неверные сведения о разделах на DVD."

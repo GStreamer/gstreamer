@@ -1,4 +1,4 @@
-# German translations for gst-plugins-ugly
+# German translations for gst-plugins-ugly 1.0.3
 # Copyright (C) 2009 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-ugly package.
 #
@@ -7,15 +7,15 @@
 # Line-out = Ausgang
 # Pipeline = Weiterleitung
 # Stream = Strom
-# Christian Kirbach <christian.kirbach@googlemail.com>, 2009, 2011.
+# Christian Kirbach <christian.kirbach@gmail.com>, 2009, 2011, 2012.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
+"Project-Id-Version: gst-plugins-ugly 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:45+0200\n"
-"PO-Revision-Date: 2011-04-28 00:04+0200\n"
-"Last-Translator: Christian Kirbach <christian.kirbach@googlemail.com>\n"
+"POT-Creation-Date: 2013-07-29 21:09+0100\n"
+"PO-Revision-Date: 2012-11-28 20:25+0100\n"
+"Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -62,12 +62,11 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "DVD konnten nicht gelesen werden."
 
-#, fuzzy
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
-"Konfigurieren des Enkodierers »TwoLAME« schlug fehl. Überprüfen Sie die "
-"Parameter zum Enkodieren. "
+"Konfigurieren des MP3 Audio-Enkodierers »LAME« schlug fehl. Überprüfen Sie "
+"die Parameter zum Enkodieren."
 
 #, c-format
 msgid ""
@@ -87,13 +86,6 @@ msgstr "Dieser Strom enthält keine Daten."
 
 msgid "Internal data stream error."
 msgstr "Interner Datenstromfehler."
-
-#, fuzzy
-#~ msgid ""
-#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Konfigurieren des Enkodierers »LAME« schlug fehl. Überprüfen Sie die "
-#~ "Parameter zum Enkodieren."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "Ungültige Titelinformation auf der DVD."

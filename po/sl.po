@@ -1,15 +1,15 @@
 # Slovenian translation for gst-plugins-ugly.
-# Copyright (C) 2009 - 2011 Free Software Foundation, Inc.
+# Copyright (C) 2009 - 2012 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-ugly package.
 # Matej Urbančič <matej.urban@gmail.com>, 2009.
-# Klemen Košir <klemen.kosir@gmx.com>, 2011.
+# Klemen Košir <klemen.kosir@gmx.com>, 2012.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-ugly 0.10.17.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:45+0200\n"
-"PO-Revision-Date: 2011-04-26 15:35+0100\n"
+"POT-Creation-Date: 2013-07-29 21:09+0100\n"
+"PO-Revision-Date: 2012-03-26 22:48+0100\n"
 "Last-Translator: Klemen Košir <klemen.kosir@gmx.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
 "Language: sl\n"
@@ -18,9 +18,6 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=4; plural=(n%100==1 ? 1 : n%100==2 ? 2 : n%100==3 || n"
 "%100==4 ? 3 : 0);\n"
-"X-Poedit-Country: SLOVENIA\n"
-"X-Poedit-Language: Slovenian\n"
-"X-Poedit-SourceCharset: utf-8\n"
 
 msgid "Could not read from CD."
 msgstr "S CD-ja ni mogoče brati."
@@ -58,11 +55,11 @@ msgstr ""
 msgid "Could not read DVD."
 msgstr "DVD-ja ni mogoče prebrati."
 
-#, fuzzy
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
 msgstr ""
-"Napaka med nastavljanjem kodirnika TwoLAME. Preverite parametre kodiranja."
+"Napaka med nastavljanjem zvočnega kodirnika mp3 LAME. Preverite parametre "
+"kodiranja."
 
 #, c-format
 msgid ""
@@ -82,8 +79,6 @@ msgstr "Pretok ne vsebuje podatkov."
 msgid "Internal data stream error."
 msgstr "Notranja napaka pretoka podatkov."
 
-#, fuzzy
-#~ msgid ""
-#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
+#~ msgid "Failed to configure LAME encoder. Check your encoding parameters."
 #~ msgstr ""
 #~ "Napaka med nastavljanjem kodirnika LAME. Preverite parametre kodiranja."

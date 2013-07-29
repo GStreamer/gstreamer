@@ -1,30 +1,31 @@
 # Norwegian bokmaal translation of gst-plugins-ugly.
 # This file is put in the public domain.
+#
 # Kjartan Maraas <kmaraas@gnome.org>, 2004-2007.
+# Johnny A. Solbu <johnny@solbu.net>, 2012
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-ugly 0.10.6\n"
+"Project-Id-Version: gst-plugins-ugly 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:45+0200\n"
-"PO-Revision-Date: 2007-11-02 14:39+0100\n"
-"Last-Translator: Kjartan Maraas <kmaraas@gnome.org>\n"
+"POT-Creation-Date: 2013-07-29 21:09+0100\n"
+"PO-Revision-Date: 2012-12-21 21:38+0100\n"
+"Last-Translator: Johnny A. Solbu <johnny@solbu.net>\n"
 "Language-Team: Norwegian Bokmaal <i18n-nb@lister.ping.uio.no>\n"
-"Language: \n"
+"Language: nb_NO\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.5.4\n"
 
-#, fuzzy
 msgid "Could not read from CD."
-msgstr "Kunne ikke lese tittelinformasjon for DVD."
+msgstr "Kunne ikke lese fra CD."
 
-#, fuzzy
 msgid "Could not open CD device for reading."
-msgstr "Kunne ikke åpne DVD-tittel %d."
+msgstr "Kunne ikke åpne CD-enheten for lesing."
 
 msgid "Disc is not an Audio CD."
-msgstr ""
+msgstr "Disken er ikke en lyd-CD."
 
 msgid "Could not open DVD"
 msgstr "Kunne ikke åpne DVD"
@@ -49,15 +50,15 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Kunne ikke lese DVD-en. Dette kan være fordi DVD-en er kryptert DVD-"
+"dekrypteringsbiblioteket ikke er installert."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Kunne ikke åpne DVD"
+msgstr "Kunne ikke lese DVD"
 
-#, fuzzy
 msgid ""
 "Failed to configure LAME mp3 audio encoder. Check your encoding parameters."
-msgstr "Kunne ikke konfigurere LAME-koder. Sjekk parameterene for kodingen."
+msgstr "Kunne ikke konfigurere LAME-koder. Sjekk parametere for kodingen."
 
 #, c-format
 msgid ""
@@ -67,32 +68,24 @@ msgstr ""
 "Forespurt bitrate %d kbit/s for egenskap «%s» er ikke tillatt. Bitraten ble "
 "endret til %d kbit/s."
 
-#, fuzzy
 msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-msgstr "Kunne ikke konfigurere LAME-koder. Sjekk parameterene for kodingen."
+msgstr ""
+"Kunne ikke konfigurere TwoLAME-enkoder. Sjekk parameterene for kodingen."
 
 msgid "This stream contains no data."
 msgstr "Denne strømmen inneholde ikke data."
 
 msgid "Internal data stream error."
-msgstr ""
+msgstr "Intern feil i datastrøm."
 
-#, fuzzy
-#~ msgid ""
-#~ "Failed to configure LAMEMP3ENC encoder. Check your encoding parameters."
-#~ msgstr "Kunne ikke konfigurere LAME-koder. Sjekk parameterene for kodingen."
+#~ msgid "This file is encrypted and cannot be played."
+#~ msgstr "Denne filen er kryptert og kan ikke spilles av."
 
 #~ msgid "Invalid title information on DVD."
 #~ msgstr "Ugyldig tittelinformasjon på DVD."
-
-#~ msgid "Could not read title information for DVD."
-#~ msgstr "Kunne ikke lese tittelinformasjon for DVD."
 
 #~ msgid "Failed to open DVD device '%s'."
 #~ msgstr "Kunne ikke åpne DVD-enhet «%s»."
 
 #~ msgid "Failed to set PGC based seeking."
 #~ msgstr "Kunne ikke sette PGC-basert søking."
-
-#~ msgid "This file is encrypted and cannot be played."
-#~ msgstr "Denne filen er kryptert og kan ikke spilles av."
