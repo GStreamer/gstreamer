@@ -58,10 +58,12 @@ libgstvaapi_source_h = \
 
 libgstvaapi_enc_source_c =	\
 	gstvaapiencode.c	\
+	gstvaapiencode_h264.c	\
 	$(NULL)
 
 libgstvaapi_enc_source_h =	\
 	gstvaapiencode.h	\
+	gstvaapiencode_h264.h	\
 	$(NULL)
 
 if USE_ENCODERS
