@@ -149,36 +149,6 @@ gst_vaapi_deinterlace_mode_get_type(void)
     return deinterlace_mode_type;
 }
 
-#define GST_VAAPI_TYPE_DEINTERLACE_METHOD \
-    gst_vaapi_deinterlace_method_get_type()
-
-static GType
-gst_vaapi_deinterlace_method_get_type(void)
-{
-    static GType deinterlace_method_type = 0;
-
-    static const GEnumValue method_types[] = {
-        { GST_VAAPI_DEINTERLACE_METHOD_BOB,
-          "Bob deinterlacing", "bob" },
-#if 0
-        /* VA/VPP */
-        { GST_VAAPI_DEINTERLACE_METHOD_WEAVE,
-          "Weave deinterlacing", "weave" },
-        { GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE,
-          "Motion adaptive deinterlacing", "motion-adaptive" },
-        { GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED,
-          "Motion compensated deinterlacing", "motion-compensated" },
-#endif
-        { 0, NULL, NULL },
-    };
-
-    if (!deinterlace_method_type) {
-        deinterlace_method_type =
-            g_enum_register_static("GstVaapiDeinterlaceMethod", method_types);
-    }
-    return deinterlace_method_type;
-}
-
 static inline GstVaapiPostproc *
 get_vaapipostproc_from_pad(GstPad *pad)
 {

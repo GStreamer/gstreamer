@@ -393,6 +393,7 @@ gst_vaapi_filter_set_hue
 gst_vaapi_filter_set_saturation
 gst_vaapi_filter_set_brightness
 gst_vaapi_filter_set_saturation
+gst_vaapi_filter_set_deinterlacing
 <SUBSECTION Standard>
 GST_VAAPI_FILTER
 </SECTION>

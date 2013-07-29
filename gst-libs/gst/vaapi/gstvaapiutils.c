@@ -25,8 +25,13 @@
 #include "gstvaapiutils.h"
 #include "gstvaapisurface.h"
 #include "gstvaapisubpicture.h"
+#include "gstvaapifilter.h"
 #include <stdio.h>
 #include <stdarg.h>
+
+#if USE_VA_VPP
+# include <va/va_vpp.h>
+#endif
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -432,4 +437,45 @@ to_GstVaapiRotation(guint value)
     }
     GST_ERROR("unsupported VA-API rotation value %d", value);
     return GST_VAAPI_ROTATION_0;
+}
+
+/* VPP: translate GstVaapiDeinterlaceMethod to VA deinterlacing algorithm */
+guint
+from_GstVaapiDeinterlaceMethod(guint value)
+{
+    switch (value) {
+    case GST_VAAPI_DEINTERLACE_METHOD_NONE:
+        return 0;
+#if USE_VA_VPP
+    case GST_VAAPI_DEINTERLACE_METHOD_BOB:
+        return VAProcDeinterlacingBob;
+    case GST_VAAPI_DEINTERLACE_METHOD_WEAVE:
+        return VAProcDeinterlacingWeave;
+    case GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE:
+        return VAProcDeinterlacingMotionAdaptive;
+    case GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED:
+        return VAProcDeinterlacingMotionCompensated;
+#endif
+    }
+    GST_ERROR("unsupported GstVaapiDeinterlaceMethod value %d", value);
+    return 0;
+}
+
+/* VPP: translate GstVaapiDeinterlaceFlags into VA deinterlacing flags */
+guint
+from_GstVaapiDeinterlaceFlags(guint flags)
+{
+    guint va_flags = 0;
+
+#if USE_VA_VPP
+    if (!(flags & GST_VAAPI_DEINTERLACE_FLAG_TFF))
+        va_flags |= VA_DEINTERLACING_BOTTOM_FIELD_FIRST;
+
+    if (flags & GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD) {
+        va_flags |= VA_DEINTERLACING_ONE_FIELD;
+        if (!(flags & GST_VAAPI_DEINTERLACE_FLAG_TFF))
+            va_flags |= VA_DEINTERLACING_BOTTOM_FIELD;
+    }
+#endif
+    return va_flags;
 }

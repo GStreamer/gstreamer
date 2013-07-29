@@ -51,6 +51,7 @@ typedef enum {
     GST_VAAPI_FILTER_OP_SATURATION,
     GST_VAAPI_FILTER_OP_BRIGHTNESS,
     GST_VAAPI_FILTER_OP_CONTRAST,
+    GST_VAAPI_FILTER_OP_DEINTERLACING,
 } GstVaapiFilterOp;
 
 /**
@@ -84,6 +85,53 @@ typedef enum {
     GST_VAAPI_FILTER_STATUS_ERROR_UNSUPPORTED_OPERATION,
     GST_VAAPI_FILTER_STATUS_ERROR_UNSUPPORTED_FORMAT,
 } GstVaapiFilterStatus;
+
+/**
+ * GstVaapiDeinterlaceMethod:
+ * @GST_VAAPI_DEINTERLACE_METHOD_NONE: No deinterlacing.
+ * @GST_VAAPI_DEINTERLACE_METHOD_BOB: Basic bob deinterlacing algorithm.
+ * @GST_VAAPI_DEINTERLACE_METHOD_WEAVE: Weave deinterlacing algorithm.
+ * @GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE: Motion adaptive
+ *   deinterlacing algorithm.
+ * @GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED: Motion compensated
+ *   deinterlacing algorithm.
+ *
+ * Deinterlacing algorithms.
+ */
+typedef enum {
+    GST_VAAPI_DEINTERLACE_METHOD_NONE,
+    GST_VAAPI_DEINTERLACE_METHOD_BOB,
+    GST_VAAPI_DEINTERLACE_METHOD_WEAVE,
+    GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE,
+    GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED,
+} GstVaapiDeinterlaceMethod;
+
+/**
+ * GstVaapiDeinterlaceFlags:
+ * @GST_VAAPI_DEINTERLACE_FLAG_TFF: Top-field first. If this flag is
+ *   not set, then bottom-field first order is assumed.
+ * @GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD: The input frame represents a
+ *   single field. If this flag is not set, then the whole frame holds
+ *   two fields.
+ *
+ * The set of gst_vaapi_filter_set_deinterlacing() flags.
+ */
+typedef enum {
+    GST_VAAPI_DEINTERLACE_FLAG_TFF      = 1 << 31,
+    GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD = 1 << 30,
+} GstVaapiDeinterlaceFlags;
+
+#define GST_VAAPI_TYPE_DEINTERLACE_METHOD \
+    gst_vaapi_deinterlace_method_get_type()
+
+#define GST_VAAPI_TYPE_DEINTERLACE_FLAGS \
+    gst_vaapi_deinterlace_flags_get_type()
+
+GType
+gst_vaapi_deinterlace_method_get_type(void) G_GNUC_CONST;
+
+GType
+gst_vaapi_deinterlace_flags_get_type(void) G_GNUC_CONST;
 
 GstVaapiFilter *
 gst_vaapi_filter_new(GstVaapiDisplay *display);
@@ -136,5 +184,9 @@ gst_vaapi_filter_set_brightness(GstVaapiFilter *filter, gfloat value);
 
 gboolean
 gst_vaapi_filter_set_contrast(GstVaapiFilter *filter, gfloat value);
+
+gboolean
+gst_vaapi_filter_set_deinterlacing(GstVaapiFilter *filter,
+    GstVaapiDeinterlaceMethod method, guint flags);
 
 #endif /* GST_VAAPI_FILTER_H */

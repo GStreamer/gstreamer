@@ -109,4 +109,12 @@ G_GNUC_INTERNAL
 guint
 to_GstVaapiRotation(guint value);
 
+G_GNUC_INTERNAL
+guint
+from_GstVaapiDeinterlaceMethod(guint value);
+
+G_GNUC_INTERNAL
+guint
+from_GstVaapiDeinterlaceFlags(guint flags);
+
 #endif /* GST_VAAPI_UTILS_H */

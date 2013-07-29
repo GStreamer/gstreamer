@@ -68,6 +68,60 @@ struct _GstVaapiFilter {
 };
 
 /* ------------------------------------------------------------------------- */
+/* --- VPP Types                                                         --- */
+/* ------------------------------------------------------------------------- */
+
+GType
+gst_vaapi_deinterlace_method_get_type(void)
+{
+    static gsize g_type = 0;
+
+    static const GEnumValue enum_values[] = {
+        { GST_VAAPI_DEINTERLACE_METHOD_NONE,
+          "Disable deinterlacing", "none" },
+        { GST_VAAPI_DEINTERLACE_METHOD_BOB,
+          "Bob deinterlacing", "bob" },
+#if USE_VA_VPP
+        { GST_VAAPI_DEINTERLACE_METHOD_WEAVE,
+          "Weave deinterlacing", "weave" },
+        { GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE,
+          "Motion adaptive deinterlacing", "motion-adaptive" },
+        { GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED,
+          "Motion compensated deinterlacing", "motion-compensated" },
+#endif
+        { 0, NULL, NULL },
+    };
+
+    if (g_once_init_enter(&g_type)) {
+        const GType type =
+            g_enum_register_static("GstVaapiDeinterlaceMethod", enum_values);
+        g_once_init_leave(&g_type, type);
+    }
+    return g_type;
+}
+
+GType
+gst_vaapi_deinterlace_flags_get_type(void)
+{
+    static gsize g_type = 0;
+
+    static const GEnumValue enum_values[] = {
+        { GST_VAAPI_DEINTERLACE_FLAG_TFF,
+          "Top-field first", "top-field-first" },
+        { GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD,
+          "One field", "one-field" },
+        { 0, NULL, NULL }
+    };
+
+    if (g_once_init_enter(&g_type)) {
+        const GType type =
+            g_enum_register_static("GstVaapiDeinterlaceFlags", enum_values);
+        g_once_init_leave(&g_type, type);
+    }
+    return g_type;
+}
+
+/* ------------------------------------------------------------------------- */
 /* --- VPP Helpers                                                       --- */
 /* ------------------------------------------------------------------------- */
 
@@ -188,6 +242,7 @@ enum {
     PROP_SATURATION     = GST_VAAPI_FILTER_OP_SATURATION,
     PROP_BRIGHTNESS     = GST_VAAPI_FILTER_OP_BRIGHTNESS,
     PROP_CONTRAST       = GST_VAAPI_FILTER_OP_CONTRAST,
+    PROP_DEINTERLACING  = GST_VAAPI_FILTER_OP_DEINTERLACING,
 
     N_PROPERTIES
 };
@@ -299,6 +354,20 @@ init_properties(void)
                            "The color contrast value",
                            0.0, 2.0, 1.0,
                            G_PARAM_READWRITE);
+
+    /**
+     * GstVaapiFilter:deinterlace-method:
+     *
+     * The deinterlacing algorithm to apply, expressed a an enum
+     * value. See #GstVaapiDeinterlaceMethod.
+     */
+    g_properties[PROP_DEINTERLACING] =
+        g_param_spec_enum("deinterlace",
+                          "Deinterlacing Method",
+                          "Deinterlacing method to apply",
+                          GST_VAAPI_TYPE_DEINTERLACE_METHOD,
+                          GST_VAAPI_DEINTERLACE_METHOD_NONE,
+                          G_PARAM_READWRITE);
 }
 
 static void
@@ -353,6 +422,11 @@ op_data_new(GstVaapiFilterOp op, GParamSpec *pspec)
         op_data->va_type = VAProcFilterColorBalance;
         op_data->va_cap_size = sizeof(VAProcFilterCapColorBalance);
         op_data->va_buffer_size = sizeof(VAProcFilterParameterBufferColorBalance);
+        break;
+    case GST_VAAPI_FILTER_OP_DEINTERLACING:
+        op_data->va_type = VAProcFilterDeinterlacing;
+        op_data->va_cap_size = sizeof(VAProcFilterCapDeinterlacing);
+        op_data->va_buffer_size = sizeof(VAProcFilterParameterBufferDeinterlacing);
         break;
     default:
         g_assert(0 && "unsupported operation");
@@ -409,9 +483,14 @@ op_data_ensure_caps(GstVaapiFilterOpData *op_data, gpointer filter_caps,
         if (i == num_filter_caps)
             return FALSE;
     }
+
     op_data->va_caps = g_memdup(filter_cap,
         op_data->va_cap_size * num_filter_caps);
-    return op_data->va_caps != NULL;
+    if (!op_data->va_caps)
+        return FALSE;
+
+    op_data->va_num_caps = num_filter_caps;
+    return TRUE;
 }
 
 /* Scale the filter value wrt. library spec and VA driver spec */
@@ -676,6 +755,59 @@ op_set_color_balance(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data,
 #if USE_VA_VPP
     GST_VAAPI_DISPLAY_LOCK(filter->display);
     success = op_set_color_balance_unlocked(filter, op_data, value);
+    GST_VAAPI_DISPLAY_UNLOCK(filter->display);
+#endif
+    return success;
+}
+
+/* Update deinterlace filter */
+#if USE_VA_VPP
+static gboolean
+op_set_deinterlace_unlocked(GstVaapiFilter *filter,
+    GstVaapiFilterOpData *op_data, GstVaapiDeinterlaceMethod method,
+    guint flags)
+{
+    VAProcFilterParameterBufferDeinterlacing *buf;
+    const VAProcFilterCapDeinterlacing *filter_caps;
+    VAProcDeinterlacingType algorithm;
+    guint i;
+
+    if (!op_data || !op_ensure_buffer(filter, op_data))
+        return FALSE;
+
+    op_data->is_enabled = (method != GST_VAAPI_DEINTERLACE_METHOD_NONE);
+    if (!op_data->is_enabled)
+        return TRUE;
+
+    algorithm = from_GstVaapiDeinterlaceMethod(method);
+    for (i = 0, filter_caps = op_data->va_caps; i < op_data->va_num_caps; i++) {
+        if (filter_caps[i].type == algorithm)
+            break;
+    }
+    if (i == op_data->va_num_caps)
+        return FALSE;
+
+    buf = vaapi_map_buffer(filter->va_display, op_data->va_buffer);
+    if (!buf)
+        return FALSE;
+
+    buf->type = op_data->va_type;
+    buf->algorithm = algorithm;
+    buf->flags = from_GstVaapiDeinterlaceFlags(flags);
+    vaapi_unmap_buffer(filter->va_display, op_data->va_buffer, NULL);
+    return TRUE;
+}
+#endif
+
+static inline gboolean
+op_set_deinterlace(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data,
+    GstVaapiDeinterlaceMethod method, guint flags)
+{
+    gboolean success = FALSE;
+
+#if USE_VA_VPP
+    GST_VAAPI_DISPLAY_LOCK(filter->display);
+    success = op_set_deinterlace_unlocked(filter, op_data, method, flags);
     GST_VAAPI_DISPLAY_UNLOCK(filter->display);
 #endif
     return success;
@@ -1004,6 +1136,11 @@ gst_vaapi_filter_set_operation(GstVaapiFilter *filter, GstVaapiFilterOp op,
         return op_set_color_balance(filter, op_data,
             (value ? g_value_get_float(value) :
              G_PARAM_SPEC_FLOAT(op_data->pspec)->default_value));
+    case GST_VAAPI_FILTER_OP_DEINTERLACING:
+        return op_set_deinterlace(filter, op_data,
+            (value ? g_value_get_enum(value) :
+             G_PARAM_SPEC_ENUM(op_data->pspec)->default_value), 0);
+        break;
     default:
         break;
     }
@@ -1321,4 +1458,27 @@ gst_vaapi_filter_set_contrast(GstVaapiFilter *filter, gfloat value)
 
     return op_set_color_balance(filter,
         find_operation(filter, GST_VAAPI_FILTER_OP_CONTRAST), value);
+}
+
+/**
+ * gst_vaapi_filter_set_deinterlacing:
+ * @filter: a #GstVaapiFilter
+ * @method: the deinterlacing algorithm (see #GstVaapiDeinterlaceMethod)
+ * @flags: the additional flags
+ *
+ * Applies deinterlacing to the video processing pipeline. If @method
+ * is not @GST_VAAPI_DEINTERLACE_METHOD_NONE, then @flags could
+ * represent the initial picture structure of the source frame.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_filter_set_deinterlacing(GstVaapiFilter *filter,
+    GstVaapiDeinterlaceMethod method, guint flags)
+{
+    g_return_val_if_fail(filter != NULL, FALSE);
+
+    return op_set_deinterlace(filter,
+        find_operation(filter, GST_VAAPI_FILTER_OP_DEINTERLACING), method,
+        flags);
 }

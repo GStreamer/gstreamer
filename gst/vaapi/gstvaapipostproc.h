@@ -26,6 +26,7 @@
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
+#include <gst/vaapi/gstvaapifilter.h>
 
 G_BEGIN_DECLS
 
@@ -67,20 +68,6 @@ typedef enum {
     GST_VAAPI_DEINTERLACE_MODE_INTERLACED,
     GST_VAAPI_DEINTERLACE_MODE_DISABLED,
 } GstVaapiDeinterlaceMode;
-
-/**
- * GstVaapiDeinterlaceMethod:
- * @GST_VAAPI_DEINTERLACE_METHOD_BOB: Basic bob deinterlacing algorithm.
- * @GST_VAAPI_DEINTERLACE_METHOD_WEAVE: Weave deinterlacing algorithm.
- * @GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE: Motion adaptive deinterlacing algorithm.
- * @GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED: Motion compensated deinterlacing algorithm.
- */
-typedef enum {
-    GST_VAAPI_DEINTERLACE_METHOD_BOB = 1,
-    GST_VAAPI_DEINTERLACE_METHOD_WEAVE,
-    GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE,
-    GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED,
-} GstVaapiDeinterlaceMethod;
 
 struct _GstVaapiPostproc {
     /*< private >*/
