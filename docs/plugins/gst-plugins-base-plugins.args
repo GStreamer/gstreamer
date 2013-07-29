@@ -3759,6 +3759,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstAppSrc::current-level-bytes</NAME>
+<TYPE>guint64</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current Level Bytes</NICK>
+<BLURB>The number of currently queued bytes.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAudioResample::filter-length</NAME>
 <TYPE>gint</TYPE>
 <RANGE>>= 0</RANGE>

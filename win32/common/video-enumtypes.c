@@ -70,6 +70,7 @@ gst_video_format_get_type (void)
       {GST_VIDEO_FORMAT_GBR_10BE, "GST_VIDEO_FORMAT_GBR_10BE", "gbr-10be"},
       {GST_VIDEO_FORMAT_GBR_10LE, "GST_VIDEO_FORMAT_GBR_10LE", "gbr-10le"},
       {GST_VIDEO_FORMAT_NV16, "GST_VIDEO_FORMAT_NV16", "nv16"},
+      {GST_VIDEO_FORMAT_NV24, "GST_VIDEO_FORMAT_NV24", "nv24"},
       {0, NULL, NULL}
     };
     GType g_define_type_id = g_enum_register_static ("GstVideoFormat", values);
