@@ -7357,15 +7357,18 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
                  * are the fourcc, next 40 bytes are BITMAPINFOHEADER,
                  * next 1 byte is the version, and the
                  * subsequent bytes are sequence parameter set like data. */
-                gst_codec_utils_h264_caps_set_level_and_profile (stream->caps,
-                    avc_data + 8 + 40 + 1, size - 1);
 
-                buf = gst_buffer_new_and_alloc (size);
-                gst_buffer_fill (buf, 0, avc_data + 8 + 40, size);
-                gst_caps_set_simple (stream->caps,
-                    "codec_data", GST_TYPE_BUFFER, buf, NULL);
-                gst_buffer_unref (buf);
+                size -= 40;     /* we'll be skipping BITMAPINFOHEADER */
+                if (size > 1) {
+                  gst_codec_utils_h264_caps_set_level_and_profile (stream->caps,
+                      avc_data + 8 + 40 + 1, size - 1);
 
+                  buf = gst_buffer_new_and_alloc (size);
+                  gst_buffer_fill (buf, 0, avc_data + 8 + 40, size);
+                  gst_caps_set_simple (stream->caps,
+                      "codec_data", GST_TYPE_BUFFER, buf, NULL);
+                  gst_buffer_unref (buf);
+                }
                 break;
               }
               case FOURCC_btrt:
