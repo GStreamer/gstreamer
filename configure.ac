@@ -37,12 +37,14 @@ m4_define([wayland_api_version], [1.0.0])
 
 # VA-API minimum version number
 m4_define([va_api_version],     [0.30.4])
+m4_define([va_api_enc_version], [0.34.0])
 m4_define([va_api_drm_version], [0.33.0])
 m4_define([va_api_x11_version], [0.31.0])
 m4_define([va_api_glx_version], [0.32.0])
 m4_define([va_api_wld_version], [0.33.0])
 
 # libva package version number
+m4_define([libva_enc_package_version], [1.2.0])
 m4_define([libva_drm_package_version], [1.1.0])
 m4_define([libva_x11_package_version], [1.0.3])
 m4_define([libva_glx_package_version], [1.0.9])
@@ -97,6 +99,11 @@ AC_ARG_ENABLE(builtin_codecparsers,
     AS_HELP_STRING([--enable-builtin-codecparsers],
                    [enable built-in codecparsers @<:@default=yes@:>@]),
     [], [enable_builtin_codecparsers="yes"])
+
+AC_ARG_ENABLE([encoders],
+    AS_HELP_STRING([--enable-encoders],
+                   [enable video encoders @<:@default=yes@:>@]),
+    [], [enable_encoders="yes"])
 
 AC_ARG_ENABLE(drm,
     AS_HELP_STRING([--enable-drm],
@@ -700,6 +707,23 @@ AC_CACHE_CHECK([for video post-postprocessing API],
     LIBS="$saved_LIBS"
 ])
 
+dnl Check for encoding support
+USE_ENCODERS=0
+if test "$enable_encoders" = "yes"; then
+    PKG_CHECK_MODULES([LIBVA], [libva >= va_api_enc_version],
+        [HAVE_VA_ENC=1], [HAVE_VA_ENC=0])
+
+    if test $HAVE_VA_ENC -eq 1; then
+        saved_CPPFLAGS="$CPPFLAGS"
+        CPPFLAGS="$LIBVA_CFLAGS"
+        AC_CHECK_HEADERS([va/va_enc_mpeg2.h va/va_enc_h264.h],
+            [USE_ENCODERS=1], [HAVE_VA_ENC=0 USE_ENCODERS=0],
+            [#include <va/va.h>
+            ])
+        CPPFLAGS="$saved_CPPFLAGS"
+    fi
+fi
+
 dnl VA/Wayland API
 if test "$enable_wayland" = "yes"; then
     PKG_CHECK_MODULES([LIBVA_WAYLAND], [libva-wayland >= va_api_wld_version],
@@ -717,6 +741,10 @@ case ":$USE_X11:$USE_GLX:$USE_WAYLAND:$USE_DRM:" in
     AC_MSG_ERROR([No renderer is enabled])
     ;;
 esac
+
+AC_DEFINE_UNQUOTED([USE_ENCODERS], $USE_ENCODERS,
+    [Defined to 1 if video encoders are used])
+AM_CONDITIONAL([USE_ENCODERS], [test $USE_ENCODERS -eq 1])
 
 AC_DEFINE_UNQUOTED(USE_VA_VPP, $USE_VA_VPP,
     [Defined to 1 if video post-processing is used])
@@ -812,5 +840,6 @@ echo $PACKAGE configuration summary:
 echo
 echo GStreamer API version ............ : $GST_API_VERSION
 echo VA-API version ................... : $VA_VERSION_STR
+echo Video encoding ................... : $(yesno $USE_ENCODERS)
 echo Video outputs .................... : $VIDEO_OUTPUTS
 echo

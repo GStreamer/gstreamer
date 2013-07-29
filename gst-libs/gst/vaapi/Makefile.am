@@ -134,6 +134,26 @@ libgstvaapi_source_c += $(libgstvaapi_jpegdec_source_c)
 libgstvaapi_source_h += $(libgstvaapi_jpegdec_source_h)
 endif
 
+libgstvaapi_enc_source_c =			\
+	gstvaapiencoder.c			\
+	gstvaapiencoder_objects.c		\
+	$(NULL)
+
+libgstvaapi_enc_source_h =			\
+	gstvaapiencoder.h			\
+	$(NULL)
+
+libgstvaapi_enc_source_priv_h =			\
+	gstvaapiencoder_objects.h		\
+	gstvaapiencoder_priv.h			\
+	$(NULL)
+
+if USE_ENCODERS
+libgstvaapi_source_c += $(libgstvaapi_enc_source_c)
+libgstvaapi_source_h += $(libgstvaapi_enc_source_h)
+libgstvaapi_source_priv_h += $(libgstvaapi_enc_source_priv_h)
+endif
+
 libgstvaapi_drm_source_c =			\
 	gstvaapidisplay_drm.c			\
 	gstvaapiwindow_drm.c			\
