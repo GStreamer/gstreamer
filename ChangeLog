@@ -1,9 +1,914 @@
-=== release 1.1.2 ===
+=== release 1.1.3 ===
 
-2013-07-11  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-07-29  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.2
+	  releasing 1.1.3
+
+2013-07-29 12:12:41 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/avi/gstavidemux.c:
+	* gst/flv/gstflvdemux.c:
+	* gst/isomp4/qtdemux.c:
+	* gst/matroska/matroska-demux.c:
+	  gst: Don't swap start/stop for negative rates in the SEGMENT query
+
+2013-07-29 11:18:40 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Check for data size when parsing h264 codec data from strf atom
+
+2013-07-29 10:53:54 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: Implement SEGMENT query
+
+2013-07-29 10:53:47 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: Implement SEGMENT query
+
+2013-07-29 10:50:59 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Implement SEGMENT query
+
+2013-07-27 18:10:22 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux_fourcc.h:
+	  qtdemux: Support H264 fourcc
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704996
+
+2013-07-28 18:09:33 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/flac/gstflacenc.c:
+	  flacenc: Fix handling of image tags
+	  The caps should be used to get the mimetype and there is
+	  only an info structure for the GstSample if the image-type
+	  is not NONE.
+
+2013-07-28 18:04:32 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/flac/gstflacenc.c:
+	  flacenc: Don't crash if there is no image tag information
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705018
+
+2013-07-28 17:38:56 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Fix duration reporting in push mode
+	  https://bugzilla.gnome.org/show_bug.cgi?id=700933
+
+2013-07-28 17:32:27 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: Don't forget unmapping and unreffing buffer
+
+2013-07-26 21:06:17 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: unmap buffer
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704951
+
+2013-07-26 22:31:41 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: don't make buffer writable prematurely
+	  There is no reason to make the SR buffer writable at this point. This is better
+	  delayed until needed.
+
+2013-07-26 22:25:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: ignore RTCP for inactive sources
+
+2013-07-26 22:25:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: small cleanup
+
+2013-07-26 17:17:31 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	* gst/rtpmanager/rtpsource.h:
+	  session: handle partial RTCP report blocks
+	  When we have more SSRCs to report than what fit in an RTCP packet, use a
+	  generation counter to make sure all of them end up in a packet eventually.
+
+2013-07-26 17:23:10 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: create SSRC before doing session cleanup
+	  Make the internal source before we do session cleanup
+
+2013-07-26 17:21:08 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: reorganize the report block code
+
+2013-07-26 16:02:01 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/matroska/matroska-demux.c:
+	  matroskademux: fix memory leak in check_subtitle_buffer
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704921
+
+2013-07-26 14:21:40 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: refactor active and sender checks
+
+2013-07-26 12:06:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: remove internal sources on timeout
+	  When an internal source times out and becomes a receiver, remove it.
+
+2013-07-26 11:47:56 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: create an internal source for RTCP
+	  When we need to do RTCP and we don't have an internal source yet,
+	  make one.
+
+2013-07-26 10:47:28 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	* gst/rtpmanager/rtpsource.c:
+	  session: remove old code to change SSRC
+	  Remove code used to change the SSRC after a collision. We now send
+	  a RECONFIGURE event upstream to make the upstream element change the SSRC.
+
+2013-07-26 10:42:44 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsource.c:
+	  source: don't update packet SSRC
+	  Remove the code to update the SSRC in packets, it can never be called now that
+	  we always use a source with matching packet SSRC.
+
+2013-07-26 10:24:22 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	  session: delay allocation of internal source
+	  Allocate the internal source when we receive a caps with the SSRC or when we see
+	  a buffer with the SSRC.
+
+2013-07-26 10:00:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/rtpsession.c:
+	  session: generate reconfigure on collision
+	  When we detect a collision, change the SSRC that we suggest upstream
+	  and trigger RECONFIGURE. This should make upstream select a new SSRC.
+
+2013-07-26 09:37:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	  session: produce RTCP for all internal sources
+	  Loop over all the internal sources and produce RTCP. We also need
+	  to queue the RTCP packets and send them when we are finished.
+
+2013-07-26 01:40:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	  session: deprecate internal source and ssrc properties
+	  Deprecate the internal source and internal ssrc properties. There might
+	  be more than one internal source.
+
+2013-07-26 01:29:08 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: internal sources don't use probation
+
+2013-07-26 01:24:07 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/rtpsession.c:
+	  session: give caps to session
+	  Let the session parse the caps and update its SSRC when needed.
+
+2013-07-26 01:14:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	  session: make method to suggest available SSRC
+	  Make a method to suggest the best available SSRC. This is the SSRC of the last
+	  created internal source and is used to instruct upstream to produce this
+	  SSRC.
+
+2013-07-26 01:01:49 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	  session: keep SDES and set on new internal sources
+	  Keep track of the SDES ourselves and set it on all newly created
+	  internal sources.
+
+2013-07-26 00:48:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: make method to make internal sources
+	  Add a method to obtain an internal source and use it to create
+	  our internal source
+
+2013-07-26 00:29:41 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpstats.h:
+	  session: count internal sources and how many are senders
+
+2013-07-26 00:14:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	  rtpsession: separate BYE marking and scheduling
+	  First mark sources with BYE and then schedule the BYE RTCP message.
+
+2013-07-25 23:56:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: get SSRC from RTCP packet itself
+	  Get the SSRC from the RTCP packet instead.
+
+2013-07-25 23:51:34 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: fix bandwidth calculation
+	  We iterate over all sources and the internal one is also in the
+	  hashtable so avoid adding it twice.
+
+2013-07-25 23:38:08 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: add some docs
+
+2013-07-25 23:11:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: Rearrange RTCP reporting a little
+	  Make a function to generate an RTCP packet for a source, pass the source as a
+	  parameter.
+	  Move timeout of collisions to session cleanup phase.
+
+2013-07-25 22:39:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: move check for is_early around
+	  Move the check for the early RTCP to where it is needed and used.
+
+2013-07-25 17:35:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: parse packet outside of the session lock
+
+2013-07-25 17:34:06 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: do nicer checks for internal sources
+
+2013-07-25 17:15:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	* gst/rtpmanager/rtpsource.c:
+	* gst/rtpmanager/rtpsource.h:
+	  session: let source keep track if it sent BYE
+
+2013-07-25 17:06:22 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsource.c:
+	  source: reset more
+
+2013-07-25 16:49:41 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	* gst/rtpmanager/rtpsource.c:
+	* gst/rtpmanager/rtpsource.h:
+	  source: also use the source for bye_reason
+	  Store the BYE reason in our internal source object. Rename the methods on the
+	  source object a little because now the BYE can be received in RTCP or
+	  set when the session wants to send BYE.
+
+2013-07-25 16:24:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	* gst/rtpmanager/rtpsource.c:
+	* gst/rtpmanager/rtpsource.h:
+	  session: configure sdes with structure only
+	  Remove code to configure the SDES with methods and types, only
+	  allow configuration with GstStructure
+
+2013-07-25 15:56:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: refactor add and find source
+	  Make functions to find and add a source to the hashtable.
+
+2013-07-25 15:43:11 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/rtpsession.c:
+	* gst/rtpmanager/rtpsession.h:
+	  session: remove source from sync_rtcp
+	  We don't need to know the sender source of the session in the
+	  callback, the SR packet is for all participants in the session.
+
+2013-07-24 14:18:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  jitterbuffer: add some more debug
+
+2013-07-15 17:11:45 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/audioparsers/Makefile.am:
+	* gst/audioparsers/gstaacparse.c:
+	* gst/audioparsers/gstaacparse.h:
+	  aacparse: allow conversion from ADTS to raw AAC
+	  Some muxers (eg, qtmux) only support raw AAC, so this allows linking
+	  an encoder that outputs ADTS only to those muxers.
+	  The conversion is simple (omit the first 7 or 9 bytes of the frame),
+	  but has to be done in pre_push instead of handle_frame as 1.0 does
+	  not seem to allow skipping bytes there as 0.10 used to.
+	  Other conversions are not supported (yet).
+
+2013-07-15 17:15:44 +0100  Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+
+	* gst/audioparsers/gstaacparse.c:
+	  aacparse: fix object_type parsing off-by-one in ADTS frame
+	  According to http://wiki.multimedia.cx/index.php?title=ADTS,
+	  the value stored in ADTS headers is one less than the object
+	  type of the AAC stream.
+	  A look at ffmpeg shows it also adds 1 to the value read off
+	  the ADTS header.
+	  Note that this might break other things that happen to have
+	  an inverse off by one to match the existing code.
+
+2013-07-25 11:13:01 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/avi/gstavidemux.c:
+	  avidemux: fix seqnum handling for seeks
+	  Use the same seqnum as the seek for flushes/segments that are
+	  caused by the seek. Also do the same for segment events
+	  Fixes #676242
+
+2013-07-25 01:39:58 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-demux.h:
+	  matroskademux: fix seqnum handling for seeks
+	  Use the same seqnum as the seek for flushes/segments that are
+	  caused by the seek. Also do the same for segment events
+	  Fixes #676242
+
+2013-07-25 01:11:31 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: correctly handle seqnum for seeks and segments
+	  Use the same seqnum on messages and events for derived events.
+	  Fixed for flushes / stream-start / segment after a seek, and segment
+	  after a segment.
+	  Fixes #676242
+
+2013-07-12 20:01:42 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  souphttpsrc: always ignore HEAD errors
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704241
+
+2013-07-25 14:26:07 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/jpeg/gstjpegenc.c:
+	  jpegenc: Clean up reset/start/stop handling
+
+2013-07-25 14:13:10 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/jpeg/gstjpegdec.c:
+	* ext/jpeg/gstjpegdec.h:
+	  jpegdec: Use base class error handling function instead of replicating it here
+
+2013-07-25 14:12:56 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/jpeg/gstjpegdec.c:
+	  jpegdec: Clean up handling of reset/start/stop
+
+2013-07-25 10:41:22 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* tests/files/id3-407349-1.tag:
+	* tests/files/id3-407349-2.tag:
+	* tests/files/id3-447000-wcop.tag:
+	  tests: fix test ID3 tags up not to rely on dodgy typefinding code
+	  Change 0xff 0xfb 'mp3' marker to 'fLaC' marker, so we can fix
+	  the typefinder.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=681368
+
+2013-07-25 08:22:45 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* sys/osxaudio/gstosxaudiosink.c:
+	  osxaudiosink: intersect the probed caps with the filter passed to get_caps()
+
+2013-07-24 14:17:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	  bin: fix compilation
+
+2013-07-24 12:42:31 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpvrawdepay.c:
+	  vrawdepay: fix UYVP format
+
+2013-07-24 12:41:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpvrawpay.c:
+	  vrawpay: fix UYVP format
+
+2013-07-24 12:41:44 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtp/gstrtpvrawpay.c:
+	  vrawpay: fix caps
+
+2013-07-24 10:49:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: fix locking
+	  Take the lock earlier so that we do things that follow with the right
+	  locking.
+
+2013-07-23 17:40:02 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  rtpsession: don't use invalid times in RTCP timeouts
+	  An invalid timeout can be calculated when we disabled RTCP by setting the
+	  bandwidth to 0. Make sure all code can handle this case.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=674626
+
+2013-07-23 17:38:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  rtpsession: lock session when changing bandwidth
+	  Take the session lock when changing the bandwidth properties so that we don't
+	  end up with inconsistent behaviour.
+
+2013-07-23 17:37:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpsession.c:
+	  session: reset some RTCP variables
+	  The early_send time was set to 0 and always triggering an early RTCP packet.
+
+2013-07-23 15:03:31 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: Add all the mpeg XDCAM variants
+	  This should cover all known XDCAM variants (which are all mpeg2 video)
+	  Fixes #672227
+
+2013-07-03 18:41:42 +0200  Carlos Rafael Giani <dv@pseudoterminal.org>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpbin.h:
+	  rtpbin: added custom downstream sync event
+	  rtpbin can now send a custom in-band downstream event which informs
+	  downstream that the bin has received an RTCP SR packet. This is useful
+	  for applications which want to drop the initial unsynchronized received
+	  RTP packets.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=703560
+	  Signed-off-by: Carlos Rafael Giani <dv@pseudoterminal.org>
+
+2013-07-22 18:00:16 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/deinterlace/gstdeinterlace.c:
+	  deinterlace: fix on-the-fly changing of "mode" and "fields" properties
+	  We call setcaps() to reconfigure ourselves, but we need to pass
+	  the current *sink* caps, not the source caps then. Also fix a
+	  caps leak.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=641599
+
+2013-07-22 15:23:39 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/wavparse/gstwavparse.c:
+	  wavparse: Add support for group-id in the stream-start event
+
+2013-07-22 15:23:20 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/rtsp/gstrtspsrc.c:
+	  rtspsrc: Add support for group-id in the stream-start event
+
+2013-07-22 15:23:11 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpsession: Add support for group-id in the stream-start event
+
+2013-07-22 15:22:55 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/matroska/matroska-demux.c:
+	* gst/matroska/matroska-demux.h:
+	  matroskademux: Add support for group-id in the stream-start event
+
+2013-07-22 15:22:47 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux.h:
+	  qtdemux: Add support for group-id in the stream-start event
+
+2013-07-22 15:22:36 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/flv/gstflvdemux.c:
+	* gst/flv/gstflvdemux.h:
+	  flvdemux: Add support for group-id in the stream-start event
+
+2013-07-22 15:22:16 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/avi/gstavidemux.c:
+	* gst/avi/gstavidemux.h:
+	  avidemux: Add support for group-id in the stream-start event
+
+2013-07-22 15:21:49 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/dv/gstdvdemux.c:
+	* ext/dv/gstdvdemux.h:
+	  dvdemux: Add support for group-id in the stream-start event
+
+2013-07-19 22:59:15 +0200  Mathieu Duponchelle <mathieu.duponchelle@epitech.eu>
+
+	* gst/videomixer/videomixer2.c:
+	  videomixer: use gst_util_uint64_scale*_round.
+	  There could be a case where:
+	  1) you do a new set_caps after buffers have been processed.
+	  2) ts_offset gets set to a different value, eg 0.033333333
+	  3) your pads get EOS, but the check dor that doesn't work
+	  because you use ts_offset + a truncated value < segment.stop
+	  4) so in the next collected, you end up comparing for example:
+	  0.9999999999 > 1., which is false and means you don't send EOS.
+	  Also adds scale_round in two other places where it potentially could
+	  have caused problems.
+
+2013-07-15 17:55:19 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux_fourcc.h:
+	  qtdemux: Add WRLE support
+
+2013-07-19 19:35:26 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux_fourcc.h:
+	  qtdemux: make files from Vivotek camera play
+	  Skip tracks of 'vivo' subtype with empty stsd instead of
+	  erroring out saying that the file is broken.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=699791
+
+2013-07-19 17:14:06 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: when streaming don't try to seek when stopping
+	  It might cause errors in sinks that are not seekable and
+	  have reported this (like e.g. fdsink)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=696228
+
+2013-07-19 17:26:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: simplify some helpers
+	  Some helper functions are not needed anymore or can be simplified.
+
+2013-07-19 17:12:37 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: for non-raw video, move palette in caps
+	  We only need to append the palette to raw video buffers, non-raw video has the
+	  palette in the caps still.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=704292
+
+2013-07-19 01:49:20 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: nitpicking in esds parsing
+
+2013-07-19 01:49:07 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: set proper caps for mpeg-1 audio
+	  Remove AAC specific fields from mpeg-1 audio caps, remove assumption
+	  that the mpeg1 audio layer is 3, and set `parsed' field.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704548
+
+2013-06-17 21:27:37 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* ext/vpx/gstvp8dec.h:
+	* ext/vpx/gstvp8enc.h:
+	* ext/vpx/gstvp9dec.h:
+	* ext/vpx/gstvp9enc.h:
+	  vpx: fix compilation when encoder or decoder headers are not installed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704547
+
+2013-07-16 20:41:15 -0400  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* tests/check/elements/videocrop.c:
+	  videocrop: Fix unit for GRAY16 formats
+
+2013-07-16 22:17:17 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: remove chapter stream
+	  Remove all streams that are actually table of contents, since we will
+	  never need the data after parsing them.
+
+2013-07-16 21:59:37 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: send gap event for sparse streams in push mode
+	  This allows to pre-roll at least if the next subtitle buffer
+	  is far away.
+
+2013-07-16 21:56:07 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: do not use indexes from sparse stream when seeking in push mode
+	  This makes seeking more accurate in push mode, since the previous
+	  keyframe on a sparse stream might be far away.
+
+2013-07-16 21:04:07 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: advertise subtitle streams as sparse
+
+2013-07-17 17:11:44 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/matroska/matroska-demux.c:
+	  mastrokademux: do not push discont buffers if they aren't discont
+	  Unset the discont flag instead of posssibly pushing a buffer with
+	  a flag that's still set.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=682110
+
+2013-07-17 15:10:00 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: extract the palette from stsd
+	  Sometimes a palette is inside the stsd, extract it instead of always using
+	  the default one
+
+2013-07-17 14:30:16 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/goom2k1/gstgoom.c:
+	  goom2k1: Fix event handling and negotiate as soon as possible
+
+2013-07-17 14:27:57 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/goom/gstgoom.c:
+	  goom: Fix event handling and negotiate as soon as possible
+
+2013-07-11 19:45:17 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: warn about the future deprecation of the "embed" property
+
+2013-07-17 09:56:01 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: add support for WRAW
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=704292
+
+2013-07-17 09:54:58 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: palette is appended to buffers, not in caps
+	  Fix the palette handling, in 1.0 we append the palette to the buffer instead of
+	  placing it on the caps.
+	  See also https://bugzilla.gnome.org/show_bug.cgi?id=704292
+
+2013-07-16 15:37:49 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtp/gstrtpgstpay.c:
+	* gst/rtp/gstrtpmp2tpay.c:
+	* gst/rtp/gstrtpmp4gpay.c:
+	* gst/rtp/gstrtpmp4vpay.c:
+	* gst/rtp/gstrtpmpapay.c:
+	* gst/rtp/gstrtpmpvpay.c:
+	  rtp: Use gst_adapter_take_buffer_fast() where possible in RTP payloaders
+
+2013-07-15 16:24:07 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: reset segment on flush stop
+	  cca2f555d14 introduces a regression, where the demux segment is not
+	  reset on flush stop, so the next upstream segment event will calculate
+	  an invalid base time on the new segment to be sent downstream.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704255
+
+2013-07-06 17:20:49 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux.h:
+	  qtdemux: offset samples according to edit list
+	  https://bugzilla.gnome.org/show_bug.cgi?id=700264
+
+2013-07-14 12:50:13 +1200  Douglas Bagnall <douglas@halo.gen.nz>
+
+	* tests/examples/spectrum/spectrum-example.c:
+	  level: Fix the spectrum example for 1.0
+	  The "message" property has been replaced by "post-messages".
+	  Pre-patch output:
+	  (test_spectrum:23101): GLib-GObject-WARNING **: g_object_set_valist:
+	  object class `GstSpectrum' has no property named `message'
+	  New spectrum message, endtime 0:00:00.100000000
+	  (test_spectrum:23101): GStreamer-CRITICAL **:
+	  gst_value_list_get_value: assertion `GST_VALUE_HOLDS_LIST (value)' failed
+	  [...]
+	  Post-patch:
+	  New spectrum message, endtime 0:00:00.100000000
+	  band 0 (freq 400): magnitude -65.988777 dB phase 1.533397
+	  band 1 (freq 1200): magnitude -65.545563 dB phase -0.780900
+	  band 2 (freq 2000): magnitude -64.791946 dB phase -0.799611
+	  band 3 (freq 2800): magnitude -64.556175 dB phase -0.063615
+	  [...]
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704179
+
+2013-07-13 20:56:26 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/audioparsers/gstaacparse.c:
+	  aacparse: be less verbose when parsing LOAS streams
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704162
+
+2013-07-12 12:31:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/pulse/pulsesink.h:
+	  sink: alaw/mulaw caps don't have a layout property
+
+2013-07-12 12:27:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* ext/pulse/pulseutil.c:
+	  pulse: relax mulaw and alaw format checks
+	  The audio library considers them as encoded formats and does not fill in the
+	  sample width. The audio ringbuffers identifies the format as alaw/mulaw and that
+	  is always 8 bits.
+
+2013-07-11 16:13:05 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/isomp4/qtdemux.c:
+	* gst/isomp4/qtdemux.h:
+	* gst/isomp4/qtdemux_fourcc.h:
+	* gst/isomp4/qtdemux_types.c:
+	  qtdemux: unselect instead of ignoring disabled track, detect chapter track
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704007
+
+2013-07-11 20:41:23 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/soup/gstsouphttpsrc.c:
+	  souphttpsrc: ignore errors from HEAD request
+	  HEAD requests are used to check the server headers to see if it
+	  seekable. Ignore errors from those requests as they shouldn't be
+	  critical.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704053
+
+2013-07-12 03:24:08 +0800  Kyosuke Nekomura <supercatexpert@gmail.com>
+
+	* gst/audiofx/audioecho.c:
+	  audioecho: Fix handling of delay property in PLAYING/PAUSED state
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703901
+
+2013-07-09 17:56:57 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/rtpmanager/gstrtpmux.c:
+	  rtpmux: Enable proxy caps on the src pads
+
+2013-07-11 16:57:15 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.2 ===
+
+2013-07-11 15:58:51 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/gst-plugins-good-plugins.signals:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-monoscope.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 1.1.2
+
+2013-07-11 15:58:29 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2013-07-09 15:34:04 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
 

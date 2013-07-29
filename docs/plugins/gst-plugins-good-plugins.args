@@ -20305,7 +20305,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Client Name</NICK>
 <BLURB>The PulseAudio client name to use.</BLURB>
-<DEFAULT>"gst-plugins-good-plugins-scan"</DEFAULT>
+<DEFAULT>"lt-gst-plugins-good-plugins-scan"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -20395,7 +20395,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Client Name</NICK>
 <BLURB>The PulseAudio client_name_to_use.</BLURB>
-<DEFAULT>"gst-plugins-good-plugins-scan"</DEFAULT>
+<DEFAULT>"lt-gst-plugins-good-plugins-scan"</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21175,6 +21175,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>Drop buffers when maximum latency is reached</NICK>
 <BLURB>Tells the jitterbuffer to never exceed the given latency in size.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpBin::do-sync-event</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Sync Event</NICK>
+<BLURB>Send event downstream when a stream is synchronized to the sender.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
 </ARG>
 

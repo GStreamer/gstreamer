@@ -3,7 +3,7 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>1.1.2</version>
+  <version>1.1.3</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -1511,7 +1511,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>video/x-raw, format=(string){ RGB, RGBA, BGR, BGRA, AYUYV, UYVY, I420, Y41B, UYVP, I420, Y42B, Y444 }, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ]</details>
+          <details>video/x-raw, format=(string){ RGB, RGBA, BGR, BGRA, AYUV, UYVY, I420, Y41B, UYVP }, width=(int)[ 1, 32767 ], height=(int)[ 1, 32767 ]</details>
         </caps>
         <caps>
           <name>src</name>

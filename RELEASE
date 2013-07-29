@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plugins 1.1.2
+Release notes for GStreamer Good Plugins 1.1.3
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -60,31 +60,28 @@ Features of this release
 
 Bugs fixed in this release
      
-      * 612406 : [PATCH] rtspsrc: Race condition
-      * 632207 : [rtspsrc] GET_PARAMETER / SET_PARAMETER support
-      * 651434 : rtspsrc: don't discard data in interleaved mode
-      * 657079 : JPEG RTP Payloader Change to support FaceVsion Webcams
-      * 664312 : rtpvorbispay does not handle headers in caps
-      * 686459 : pulsesink: playbin uri=x.mp3 audio-sink='identity ! pulsesink' = > not-negotiated flow error
-      * 700799 : matroskademux: Got data flow before segment event
-      * 701385 : videomixer: Incorrect timestamp calculations for non trivial segments
-      * 701519 : videomixer: pushes an incorrect segment event when all its sink pads are EOS
-      * 701650 : v4l2: make sure the element is not deleted before the pool
-      * 701856 : qtdemux: Does allocation queries before setting caps on all pads
-      * 702046 : rtspsrc doesn't produce buffers
-      * 702625 : avidemux: duration query returns " zero " for the DV containter format in a AVI file
-      * 702638 : v4l2:  Optimize negotiation by removing the query filter
-      * 702819 : udpsink multicast-iface does not seem to work correctly
-      * 702826 : gdkpixbufoverlay: image overlay doesn't work for -ve offset
-      * 703114 : deinterleave: deadlock while pushing pending events on all source pads
-      * 703182 : multipartmux does not push new segment after flushing seek
-      * 703312 : matroskademux: missing profile field in caps for aac audio
-      * 703350 : qtdemux: Reports wrong framerate
-      * 703399 : v4l2: don't extract data from caps twice
-      * 703426 : Fix doc and comment references to gstrtpbin element
-      * 703685 : POTFILES.in is out of date
-      * 703743 : videomixer: Handling of variable fps streams broken
-      * 703764 : v4l2: bufferpool: don't forget to release buffer on error
+      * 672227 : qtdemux: need mapping for video/x-gst-fourcc-xdvc
+      * 674626 : [rtpsession] High CPU usage in rtcp thread when setting RR bandwidth = 0
+      * 696228 : mp4mux: streamable=true seeks on sink at EOS, causing errors with some sinks
+      * 699791 : qtdemux: certain videos from Vivotek camera do not play - " This file is corrupt and cannot be played " 
+      * 700264 : qtdemux: ignores first editlist
+      * 700933 : avidemux: Wrong duration in push mode for some clips.
+      * 703560 : [PATCH] rtpbin: new event for informing downstream about synchronization
+      * 703901 : audioecho: Output broken if delay value got changed when playing or paused
+      * 704007 : qtdemux: skips disabled tracks
+      * 704053 : souphttpsrc: Don't treat errors on HEAD request as fatal
+      * 704193 : avidemux: no PTS nor DTS on decoded frame
+      * 704241 : souphttpsrc: Ignore all HEAD errors
+      * 704255 : qtdemux: invalid base time on newsegment in push mode after a seek
+      * 704272 : qtdemux: invalid seek offset used because of chapters
+      * 704292 : qtdemux: does not know WRAW fourcc
+      * 704294 : qtdemux: videos in Windows WRLE format don't work
+      * 704357 : regression: videocrop unit test fail after adding GRAY16_BE format
+      * 704547 : vpx: fix compilation when decoder or encoder package is not build
+      * 704548 : qtdemux: set proper caps for mpeg-1 audio
+      * 704921 : matroskademux: memory leak in check_subtitle_buffer
+      * 704951 : avidemux: memory leak
+      * 704996 : qtdemux: support for H264 fourcc
 
 ==== Download ====
 
@@ -121,28 +118,20 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alban Browaeys
-      * Alex Ashley
+      * Alessandro Decina
       * Andoni Morales Alastruey
-      * Arun Raghavan
-      * Brendan Long
-      * Bruno Gonzalez
-      * David Svensson Fors
-      * J. Rick Ramstetter
-      * Jens Georg
-      * Jonas Holmberg
-      * Kishore Arepalli
+      * Arnaud Vrac
+      * Carlos Rafael Giani
+      * Douglas Bagnall
+      * Edward Hervey
+      * Kyosuke Nekomura
       * Matej Knopp
       * Mathieu Duponchelle
-      * Michael Olbrich
-      * Ognyan Tonchev
+      * Nicolas Dufresne
       * Olivier Crête
-      * Piotr Drąg
       * Sebastian Dröge
-      * Sjoerd Simons
-      * Stefan Sauer
       * Thiago Santos
       * Tim-Philipp Müller
+      * Vincent Penquerc'h
       * Wim Taymans
-      * Youness Alaoui
  
