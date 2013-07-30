@@ -3762,7 +3762,8 @@ gst_pad_get_stream_id (GstPad * pad)
  * stream-start event.
  *
  * Returns: A constantly incrementing unsigned integer, which might
- * overflow back to 0 at some point. */
+ * overflow back to 0 at some point.
+ */
 guint
 gst_util_group_id_next (void)
 {

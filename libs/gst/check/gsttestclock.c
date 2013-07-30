@@ -273,7 +273,7 @@ gst_test_clock_class_init (GstTestClockClass * klass)
   gstclock_class->unschedule = GST_DEBUG_FUNCPTR (gst_test_clock_unschedule);
 
   /**
-   * GstTestClock:start-time
+   * GstTestClock:start-time:
    *
    * When a #GstTestClock is constructed it will have a certain start time set.
    * If the clock was created using gst_test_clock_new_with_start_time() then
