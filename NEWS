@@ -1,4 +1,16 @@
-This is GStreamer 1.0.8
+This is GStreamer 1.0.9
+
+Changes since 1.0.8:
+
+      * basesink: when we asynchronously go from READY to PLAYING, also
+        call the state change function so that subclasses can update
+        their state for PLAYING, esp. audio sinks added to the pipeline
+        dynamically
+      * bindings: gobject-introspection annotation fixes
+
+Bugs fixed since 1.0.8:
+
+      * 702282 : basesink: makes element go to PLAYING without PAUSED_TO_PLAYING transition
 
 Changes since 1.0.7:
 

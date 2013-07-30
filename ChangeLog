@@ -1,9 +1,59 @@
-=== release 1.0.8 ===
+=== release 1.0.9 ===
 
-2013-07-12  Tim-Philipp Müller <tim@centricular.net>
+2013-07-30  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.8
+	  releasing 1.0.9
+
+2013-07-29 11:05:09 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Only advance offset by the number of bytes we actually read
+	  There might be a short read at EOS.
+
+2013-07-22 08:34:44 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gststructure.c:
+	  structure: gst_structure_copy() returns a new structure with (transfer full)
+
+2013-03-07 11:46:33 +0100  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+
+	* gst/gstquery.c:
+	  query: gst_query_get_n_allocation_params() returns a new ref to the allocator
+
+2013-07-16 14:44:03 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* libs/gst/net/gstnettimeprovider.c:
+	  timeprovider: g-i: allow None as address for gst_net_time_provider_new()
+	  Conflicts:
+	  libs/gst/net/gstnettimeprovider.c
+
+2013-06-17 10:25:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: call state change in all cases
+	  When we asynchronously go from READY to PLAYING, also call the
+	  state change function so that subclasses can update their state for PLAYING.
+	  Because the PREROLL lock is not recursive, we can't make this without
+	  races and we must assume for now that the subclass can handle concurrent calls
+	  to PAUSED->PLAYING and PLAYING->PAUSED. We can make this assumption because not
+	  many elements actually do something in those state changes and the ones that
+	  did would be broken even more without this change.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702282
+
+=== release 1.0.8 ===
+
+2013-07-12 00:25:09 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.0.8
 
 2013-07-08 15:26:38 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
