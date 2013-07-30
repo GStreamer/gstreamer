@@ -983,6 +983,15 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
       flow_ret = gst_video_decoder_drain_out (decoder, FALSE);
       ret = (flow_ret == GST_FLOW_OK);
 
+      GST_DEBUG_OBJECT (decoder, "received STREAM_START. Clearing taglist");
+      GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+      /* Flush our merged taglist after a STREAM_START */
+      if (priv->tags)
+        gst_tag_list_unref (priv->tags);
+      priv->tags = NULL;
+      priv->tags_changed = FALSE;
+      GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
+
       /* Forward STREAM_START immediately. Everything is drained after
        * the STREAM_START event and we can forward this event immediately
        * now without having buffers out of order.
