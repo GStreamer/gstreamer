@@ -40,10 +40,9 @@ gst_qa_preload_wrap (GstElement * element)
 
   /* TODO this will actually never unref the runner as it holds a ref
    * to the element */
-  g_object_set_data_full ((GObject *) element, "qa-runner", runner,
-      g_object_unref);
-
-  gst_qa_runner_setup (runner);
+  if (runner)
+    g_object_set_data_full ((GObject *) element, "qa-runner", runner,
+        g_object_unref);
 }
 
 GstElement *

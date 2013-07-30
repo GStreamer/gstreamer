@@ -300,7 +300,7 @@ main (int argc, gchar ** argv)
   runner = gst_qa_runner_new (pipeline);
   mainloop = g_main_loop_new (NULL, FALSE);
 
-  if (!gst_qa_runner_setup (runner)) {
+  if (!runner) {
     g_printerr ("Failed to setup QA Runner\n");
     exit (1);
   }

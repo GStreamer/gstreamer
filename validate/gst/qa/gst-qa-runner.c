@@ -51,6 +51,8 @@ enum
 
 static guint _signals[LAST_SIGNAL] = { 0 };
 
+static gboolean gst_qa_runner_setup (GstQaRunner * runner);
+
 static void
 gst_qa_runner_dispose (GObject * object)
 {
@@ -119,21 +121,22 @@ gst_qa_runner_new (GstElement * pipeline)
   runner = g_object_new (GST_TYPE_QA_RUNNER, NULL);
   runner->pipeline = gst_object_ref (pipeline);
 
-
   if ((scenario_name = g_getenv ("GST_QA_SCENARIO")))
     runner->scenario = gst_qa_scenario_factory_create (runner, scenario_name);
 
   g_object_set_data ((GObject *) pipeline, "qa-runner", runner);
 
+  if (!gst_qa_runner_setup (runner)) {
+    gst_object_unref (runner);
+    runner = NULL;
+  }
+
   return runner;
 }
 
-gboolean
+static gboolean
 gst_qa_runner_setup (GstQaRunner * runner)
 {
-  if (runner->setup)
-    return TRUE;
-
   GST_INFO_OBJECT (runner, "Starting QA Runner setup");
   runner->monitor =
       gst_qa_monitor_factory_create (GST_OBJECT_CAST (runner->pipeline), runner,
@@ -143,7 +146,6 @@ gst_qa_runner_setup (GstQaRunner * runner)
     return FALSE;
   }
 
-  runner->setup = TRUE;
   GST_DEBUG_OBJECT (runner, "Setup successful");
   return TRUE;
 }
