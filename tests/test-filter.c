@@ -31,6 +31,8 @@ static gchar *g_src_format_str;
 static gchar *g_crop_rect_str;
 static gchar *g_denoise_str;
 static gchar *g_sharpen_str;
+static gchar *g_deinterlace_str;
+static gchar *g_deinterlace_flags_str;
 
 static GOptionEntry g_options[] = {
     { "src-format", 's',
@@ -49,6 +51,14 @@ static GOptionEntry g_options[] = {
       0,
       G_OPTION_ARG_STRING, &g_sharpen_str,
       "set sharpening level", NULL },
+    { "deinterlace", 0,
+      0,
+      G_OPTION_ARG_STRING, &g_deinterlace_str,
+      "enable deinterlacing", NULL },
+    { "deinterlace-flags", 0,
+      0,
+      G_OPTION_ARG_STRING, &g_deinterlace_flags_str,
+      "deinterlacing flags", NULL },
     { NULL, }
 };
 
@@ -79,7 +89,7 @@ pause(void)
 
 static GstVaapiSurface *
 create_test_surface(GstVaapiDisplay *display, guint width, guint height,
-    GError **error_ptr)
+    guint flags, GError **error_ptr)
 {
     GstVideoFormat format = GST_VIDEO_FORMAT_I420;
     GstVaapiSurface *surface = NULL;
@@ -96,7 +106,7 @@ create_test_surface(GstVaapiDisplay *display, guint width, guint height,
     if (!surface)
         goto error_create_surface;
 
-    image = image_generate(display, format, width, height);
+    image = image_generate_full(display, format, width, height, flags);
     if (!image)
         goto error_create_image;
 
@@ -224,6 +234,74 @@ parse_crop_rect(const gchar *str, GstVaapiRectangle *crop_rect)
     return FALSE;
 }
 
+static gboolean
+parse_enum(const gchar *str, GType type, gint default_value,
+    gint *out_value_ptr)
+{
+    gint out_value = default_value;
+
+    g_return_val_if_fail(out_value_ptr != NULL, FALSE);
+
+    if (str) {
+        GEnumClass * const enum_class = g_type_class_ref(type);
+        if (!enum_class)
+            return FALSE;
+
+        const GEnumValue * const enum_value =
+            g_enum_get_value_by_nick(enum_class, str);
+        if (enum_value)
+            out_value = enum_value->value;
+        g_type_class_unref(enum_class);
+
+        if (!enum_value)
+            return FALSE;
+    }
+    *out_value_ptr = out_value;
+    return TRUE;
+}
+
+static gboolean
+parse_flags(const gchar *str, GType type, guint *out_value_ptr)
+{
+    gchar **tokens = NULL;
+    gint i, value, out_value = 0;
+    gboolean success = FALSE;
+
+    g_return_val_if_fail(out_value_ptr != NULL, FALSE);
+
+    if (str) {
+        tokens = g_strsplit(str, ",", 32);
+        if (!tokens)
+            return FALSE;
+
+        for (i = 0; tokens[i] != NULL; i++) {
+            if (!parse_enum(tokens[i], type, 0, &value))
+                goto end;
+            out_value |= value;
+        }
+    }
+    *out_value_ptr = out_value;
+    success = TRUE;
+
+end:
+    g_strfreev(tokens);
+    return success;
+}
+
+static inline gboolean
+parse_deinterlace(const gchar *str, GstVaapiDeinterlaceMethod *deinterlace_ptr)
+{
+    return parse_enum(str, GST_VAAPI_TYPE_DEINTERLACE_METHOD,
+        GST_VAAPI_DEINTERLACE_METHOD_NONE, (gint *)deinterlace_ptr);
+}
+
+static inline gboolean
+parse_deinterlace_flags(const gchar *str, guint *deinterlace_flags_ptr)
+{
+    return parse_flags(str, GST_VAAPI_TYPE_DEINTERLACE_FLAGS,
+        deinterlace_flags_ptr);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -232,7 +310,10 @@ main(int argc, char *argv[])
     GstVaapiSurface *src_surface, *dst_surface;
     GstVaapiFilter *filter = NULL;
     GstVaapiFilterStatus status;
+    GstVaapiDeinterlaceMethod deinterlace_method;
+    guint deinterlace_flags = 0;
     guint filter_flags = 0;
+    guint surface_flags = 0;
     gdouble denoise_level, sharpen_level;
     GError *error = NULL;
 
@@ -252,6 +333,13 @@ main(int argc, char *argv[])
     if (g_sharpen_str && !parse_double(g_sharpen_str, &sharpen_level))
         g_error("failed to parse sharpening level");
 
+    if (!parse_deinterlace(g_deinterlace_str, &deinterlace_method))
+        g_error("failed to parse deinterlace method `%s'", g_deinterlace_str);
+
+    if (!parse_deinterlace_flags(g_deinterlace_flags_str, &deinterlace_flags))
+        g_error("failed to parse deinterlace flags `%s'",
+            g_deinterlace_flags_str);
+
     display = video_output_create_display(NULL);
     if (!display)
         g_error("failed to create VA display");
@@ -259,15 +347,6 @@ main(int argc, char *argv[])
     window = video_output_create_window(display, win_width, win_height);
     if (!window)
         g_error("failed to create window");
-
-    src_surface = create_test_surface(display, src_width, src_height, &error);
-    if (!src_surface)
-        g_error("failed to create source VA surface: %s", error->message);
-
-    dst_surface = gst_vaapi_surface_new(display, GST_VAAPI_CHROMA_TYPE_YUV420,
-        dst_width, dst_height);
-    if (!dst_surface)
-        g_error("failed to create target VA surface");
 
     filter = gst_vaapi_filter_new(display);
     if (!filter)
@@ -303,6 +382,41 @@ main(int argc, char *argv[])
             g_error("failed to set sharpening level");
     }
 
+    if (deinterlace_method != GST_VAAPI_DEINTERLACE_METHOD_NONE) {
+        printf("Enable deinterlacing: %s\n", g_deinterlace_str);
+
+        if (!gst_vaapi_filter_set_deinterlacing(filter, deinterlace_method,
+                deinterlace_flags))
+            g_error("failed to set deinterlacing method");
+    }
+    else if (deinterlace_flags) {
+        if (deinterlace_flags & GST_VAAPI_DEINTERLACE_FLAG_TFF)
+            filter_flags = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
+        else
+            filter_flags = GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
+    }
+
+    if (deinterlace_method != GST_VAAPI_DEINTERLACE_METHOD_NONE ||
+        deinterlace_flags) {
+        if (!(deinterlace_flags & GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD))
+            surface_flags = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD |
+                GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
+        else if (deinterlace_flags & GST_VAAPI_DEINTERLACE_FLAG_TFF)
+            surface_flags = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
+        else
+            surface_flags = GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
+    }
+
+    src_surface = create_test_surface(display, src_width, src_height,
+        surface_flags, &error);
+    if (!src_surface)
+        g_error("failed to create source VA surface: %s", error->message);
+
+    dst_surface = gst_vaapi_surface_new(display, GST_VAAPI_CHROMA_TYPE_YUV420,
+        dst_width, dst_height);
+    if (!dst_surface)
+        g_error("failed to create target VA surface");
+
     status = gst_vaapi_filter_process(filter, src_surface, dst_surface,
         filter_flags);
     if (status != GST_VAAPI_FILTER_STATUS_SUCCESS)
@@ -326,5 +440,7 @@ main(int argc, char *argv[])
     g_free(g_crop_rect_str);
     g_free(g_denoise_str);
     g_free(g_sharpen_str);
+    g_free(g_deinterlace_str);
+    g_free(g_deinterlace_flags_str);
     return 0;
 }
