@@ -82,7 +82,9 @@ GType		gst_qa_runner_get_type		(void);
 GstQaRunner *   gst_qa_runner_new               (GstElement * pipeline);
 
 void            gst_qa_runner_add_report  (GstQaRunner * runner, GstQaReport * report);
-void            gst_qa_runner_print_reports (GstQaRunner * runner);
+
+guint           gst_qa_runner_get_reports_count (GstQaRunner * runner);
+GSList *        gst_qa_runner_get_reports (GstQaRunner * runner);
 
 G_END_DECLS
 

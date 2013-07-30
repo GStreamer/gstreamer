@@ -158,14 +158,16 @@ gst_qa_runner_add_report (GstQaRunner * runner, GstQaReport * report)
   g_signal_emit (runner, _signals[REPORT_ADDED_SIGNAL], 0, report);
 }
 
-void
-gst_qa_runner_print_reports (GstQaRunner * runner)
+guint
+gst_qa_runner_get_reports_count (GstQaRunner * runner)
 {
-  GSList *iter;
+  return g_slist_length (runner->reports);
+}
 
-  for (iter = runner->reports; iter; iter = g_slist_next (iter)) {
-    GstQaReport *report = iter->data;
-
-    gst_qa_report_printf (report);
-  }
+GSList *
+gst_qa_runner_get_reports (GstQaRunner * runner)
+{
+  /* TODO should we need locking or put in htte docs to always call this
+   * after pipeline ends? */
+  return runner->reports;
 }

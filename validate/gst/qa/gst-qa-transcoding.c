@@ -246,6 +246,7 @@ main (int argc, gchar ** argv)
 
   GError *err = NULL;
   const gchar *scenario = NULL;
+  guint count = -1;
 
   GOptionEntry options[] = {
     {"output-format", 'o', 0, G_OPTION_ARG_CALLBACK, &_parse_encoding_profile,
@@ -315,13 +316,15 @@ main (int argc, gchar ** argv)
     goto exit;
   g_main_loop_run (mainloop);
 
-  g_print ("Pipeline finished, printing issues found: \n");
-  gst_qa_runner_print_reports (runner);
+  count = gst_qa_runner_get_reports_count (runner);
+  g_print ("Pipeline finished, total issues found: %u\n", count);
 
 exit:
   gst_element_set_state (pipeline, GST_STATE_NULL);
   g_main_loop_unref (mainloop);
   g_object_unref (runner);
   g_object_unref (pipeline);
+  if (count)
+    return -1;
   return 0;
 }
