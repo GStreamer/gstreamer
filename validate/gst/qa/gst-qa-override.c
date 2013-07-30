@@ -87,6 +87,27 @@ gst_qa_override_set_query_handler (GstQaOverride * override,
 }
 
 void
+gst_qa_override_set_buffer_probe_handler (GstQaOverride * override,
+    GstQaOverrideBufferHandler handler)
+{
+  override->buffer_probe_handler = handler;
+}
+
+void
+gst_qa_override_set_getcaps_handler (GstQaOverride * override,
+    GstQaOverrideGetCapsHandler handler)
+{
+  override->getcaps_handler = handler;
+}
+
+void
+gst_qa_override_set_setcaps_handler (GstQaOverride * override,
+    GstQaOverrideSetCapsHandler handler)
+{
+  override->setcaps_handler = handler;
+}
+
+void
 gst_qa_override_event_handler (GstQaOverride * override, GstQaMonitor * monitor,
     GstEvent * event)
 {
@@ -108,4 +129,28 @@ gst_qa_override_query_handler (GstQaOverride * override, GstQaMonitor * monitor,
 {
   if (override->query_handler)
     override->query_handler (override, monitor, query);
+}
+
+void
+gst_qa_override_buffer_probe_handler (GstQaOverride * override,
+    GstQaMonitor * monitor, GstBuffer * buffer)
+{
+  if (override->buffer_probe_handler)
+    override->buffer_probe_handler (override, monitor, buffer);
+}
+
+void
+gst_qa_override_getcaps_handler (GstQaOverride * override,
+    GstQaMonitor * monitor, GstCaps * caps)
+{
+  if (override->getcaps_handler)
+    override->getcaps_handler (override, monitor, caps);
+}
+
+void
+gst_qa_override_setcaps_handler (GstQaOverride * override,
+    GstQaMonitor * monitor, GstCaps * caps)
+{
+  if (override->setcaps_handler)
+    override->setcaps_handler (override, monitor, caps);
 }

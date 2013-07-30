@@ -37,6 +37,10 @@ typedef void (*GstQaOverrideEventHandler)(GstQaOverride * override,
     GstQaMonitor * pad_monitor, GstEvent * event);
 typedef void (*GstQaOverrideQueryHandler)(GstQaOverride * override,
     GstQaMonitor * pad_monitor, GstQuery * query);
+typedef void (*GstQaOverrideGetCapsHandler)(GstQaOverride * override,
+    GstQaMonitor * pad_monitor, GstCaps * caps);
+typedef void (*GstQaOverrideSetCapsHandler)(GstQaOverride * override,
+    GstQaMonitor * pad_monitor, GstCaps * caps);
 
 struct _QstQaOverride {
   GHashTable *level_override;
@@ -45,6 +49,9 @@ struct _QstQaOverride {
   GstQaOverrideBufferHandler buffer_handler;
   GstQaOverrideEventHandler event_handler;
   GstQaOverrideQueryHandler query_handler;
+  GstQaOverrideBufferHandler buffer_probe_handler;
+  GstQaOverrideGetCapsHandler getcaps_handler;
+  GstQaOverrideSetCapsHandler setcaps_handler;
 };
 
 GstQaOverride *    gst_qa_override_new (void);
@@ -55,10 +62,16 @@ GstQaReportLevel   gst_qa_override_get_severity (GstQaOverride * override, GstQa
 void               gst_qa_override_event_handler (GstQaOverride * override, GstQaMonitor * monitor, GstEvent * event);
 void               gst_qa_override_buffer_handler (GstQaOverride * override, GstQaMonitor * monitor, GstBuffer * buffer);
 void               gst_qa_override_query_handler (GstQaOverride * override, GstQaMonitor * monitor, GstQuery * query);
+void               gst_qa_override_buffer_probe_handler (GstQaOverride * override, GstQaMonitor * monitor, GstBuffer * buffer);
+void               gst_qa_override_getcaps_handler (GstQaOverride * override, GstQaMonitor * monitor, GstCaps * caps);
+void               gst_qa_override_setcaps_handler (GstQaOverride * override, GstQaMonitor * monitor, GstCaps * caps);
 
 void               gst_qa_override_set_event_handler (GstQaOverride * override, GstQaOverrideEventHandler handler);
 void               gst_qa_override_set_buffer_handler (GstQaOverride * override, GstQaOverrideBufferHandler handler);
 void               gst_qa_override_set_query_handler (GstQaOverride * override, GstQaOverrideQueryHandler handler);
+void               gst_qa_override_set_buffer_probe_handler (GstQaOverride * override, GstQaOverrideBufferHandler handler);
+void               gst_qa_override_set_getcaps_handler (GstQaOverride * override, GstQaOverrideGetCapsHandler handler);
+void               gst_qa_override_set_setcaps_handler (GstQaOverride * override, GstQaOverrideSetCapsHandler handler);
 
 G_END_DECLS
 

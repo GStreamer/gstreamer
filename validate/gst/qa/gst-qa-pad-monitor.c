@@ -607,6 +607,23 @@ gst_qa_pad_monitor_buffer_overrides (GstQaPadMonitor * pad_monitor,
 }
 
 static void
+gst_qa_pad_monitor_buffer_probe_overrides (GstQaPadMonitor * pad_monitor,
+    GstBuffer * buffer)
+{
+  GList *iter;
+
+  GST_QA_MONITOR_OVERRIDES_LOCK (pad_monitor);
+  for (iter = GST_QA_MONITOR_OVERRIDES (pad_monitor).head; iter;
+      iter = g_list_next (iter)) {
+    GstQaOverride *override = iter->data;
+
+    gst_qa_override_buffer_probe_handler (override,
+        GST_QA_MONITOR_CAST (pad_monitor), buffer);
+  }
+  GST_QA_MONITOR_OVERRIDES_UNLOCK (pad_monitor);
+}
+
+static void
 gst_qa_pad_monitor_query_overrides (GstQaPadMonitor * pad_monitor,
     GstQuery * query)
 {
@@ -623,6 +640,39 @@ gst_qa_pad_monitor_query_overrides (GstQaPadMonitor * pad_monitor,
   GST_QA_MONITOR_OVERRIDES_UNLOCK (pad_monitor);
 }
 
+static void
+gst_qa_pad_monitor_getcaps_overrides (GstQaPadMonitor * pad_monitor,
+    GstCaps * caps)
+{
+  GList *iter;
+
+  GST_QA_MONITOR_OVERRIDES_LOCK (pad_monitor);
+  for (iter = GST_QA_MONITOR_OVERRIDES (pad_monitor).head; iter;
+      iter = g_list_next (iter)) {
+    GstQaOverride *override = iter->data;
+
+    gst_qa_override_getcaps_handler (override,
+        GST_QA_MONITOR_CAST (pad_monitor), caps);
+  }
+  GST_QA_MONITOR_OVERRIDES_UNLOCK (pad_monitor);
+}
+
+static void
+gst_qa_pad_monitor_setcaps_overrides (GstQaPadMonitor * pad_monitor,
+    GstCaps * caps)
+{
+  GList *iter;
+
+  GST_QA_MONITOR_OVERRIDES_LOCK (pad_monitor);
+  for (iter = GST_QA_MONITOR_OVERRIDES (pad_monitor).head; iter;
+      iter = g_list_next (iter)) {
+    GstQaOverride *override = iter->data;
+
+    gst_qa_override_setcaps_handler (override,
+        GST_QA_MONITOR_CAST (pad_monitor), caps);
+  }
+  GST_QA_MONITOR_OVERRIDES_UNLOCK (pad_monitor);
+}
 
 static gboolean
 gst_qa_pad_monitor_timestamp_is_in_received_range (GstQaPadMonitor * monitor,
@@ -1150,16 +1200,15 @@ gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
       break;
   }
 
+  GST_QA_MONITOR_UNLOCK (pad_monitor);
+  GST_QA_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);
   gst_qa_pad_monitor_event_overrides (pad_monitor, event);
-
   if (handler) {
-    GST_QA_MONITOR_UNLOCK (pad_monitor);
-    GST_QA_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);
     gst_event_ref (event);
     ret = pad_monitor->event_func (pad, event);
-    GST_QA_PAD_MONITOR_PARENT_LOCK (pad_monitor);
-    GST_QA_MONITOR_LOCK (pad_monitor);
   }
+  GST_QA_PAD_MONITOR_PARENT_LOCK (pad_monitor);
+  GST_QA_MONITOR_LOCK (pad_monitor);
 
   /* post checks */
   switch (GST_EVENT_TYPE (event)) {
@@ -1263,13 +1312,16 @@ gst_qa_pad_monitor_chain_func (GstPad * pad, GstBuffer * buffer)
       g_object_get_data ((GObject *) pad, "qa-monitor");
   GstFlowReturn ret;
 
+  GST_QA_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   GST_QA_MONITOR_LOCK (pad_monitor);
 
   gst_qa_pad_monitor_check_first_buffer (pad_monitor, buffer);
   gst_qa_pad_monitor_update_buffer_data (pad_monitor, buffer);
 
-  gst_qa_pad_monitor_buffer_overrides (pad_monitor, buffer);
   GST_QA_MONITOR_UNLOCK (pad_monitor);
+  GST_QA_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);
+
+  gst_qa_pad_monitor_buffer_overrides (pad_monitor, buffer);
 
   ret = pad_monitor->chain_func (pad, buffer);
 
@@ -1338,9 +1390,7 @@ gst_qa_pad_monitor_query_func (GstPad * pad, GstQuery * query)
       g_object_get_data ((GObject *) pad, "qa-monitor");
   gboolean ret;
 
-  GST_QA_MONITOR_LOCK (pad_monitor);
   gst_qa_pad_monitor_query_overrides (pad_monitor, query);
-  GST_QA_MONITOR_UNLOCK (pad_monitor);
 
   ret = pad_monitor->query_func (pad, query);
   return ret;
@@ -1406,8 +1456,10 @@ gst_qa_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
       }
     }
   }
+
   GST_QA_MONITOR_UNLOCK (monitor);
   GST_QA_PAD_MONITOR_PARENT_UNLOCK (monitor);
+  gst_qa_pad_monitor_buffer_probe_overrides (monitor, buffer);
   return TRUE;
 }
 
@@ -1481,6 +1533,8 @@ gst_qa_pad_monitor_getcaps_func (GstPad * pad)
     GST_QA_MONITOR_UNLOCK (pad_monitor);
   }
 
+  gst_qa_pad_monitor_getcaps_overrides (pad_monitor, ret);
+
   return ret;
 }
 
@@ -1549,6 +1603,8 @@ gst_qa_pad_monitor_setcaps_func (GstPad * pad, GstCaps * caps)
 
   GST_QA_MONITOR_UNLOCK (pad_monitor);
   GST_QA_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);
+
+  gst_qa_pad_monitor_setcaps_overrides (pad_monitor, caps);
 
   if (pad_monitor->setcaps_func) {
     ret = pad_monitor->setcaps_func (pad, caps);
