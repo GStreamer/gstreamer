@@ -23,6 +23,7 @@
 #include "gst-qa-report.h"
 #include "gst-qa-monitor-factory.h"
 #include "gst-qa-element-monitor.h"
+#include "gst-qa-override-registry.h"
 #include "gst-qa-scenario.h"
 
 /**
@@ -79,6 +80,9 @@ gst_qa_runner_class_init (GstQaRunnerClass * klass)
 
   /* init the report system (can be called multiple times) */
   gst_qa_report_init ();
+
+  /* Ensure we load overrides before any use of a monitor */
+  gst_qa_override_registry_preload ();
 
   _signals[REPORT_ADDED_SIGNAL] =
       g_signal_new ("report-added", G_TYPE_FROM_CLASS (klass),

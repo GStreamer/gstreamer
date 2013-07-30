@@ -21,6 +21,9 @@
 
 #include <string.h>
 
+#define __USE_GNU
+#include <dlfcn.h>
+
 #include "gst-qa-override-registry.h"
 
 typedef struct
@@ -40,6 +43,8 @@ static GstQaOverrideRegistry *_registry_default;
 
 #define GST_QA_OVERRIDE_REGISTRY_LOCK(r) g_mutex_lock (&r->mutex)
 #define GST_QA_OVERRIDE_REGISTRY_UNLOCK(r) g_mutex_unlock (&r->mutex)
+
+#define GST_QA_OVERRIDE_INIT_SYMBOL "gst_qa_create_overrides"
 
 static GstQaOverrideRegistry *
 gst_qa_override_registry_new (void)
@@ -180,4 +185,47 @@ gst_qa_override_registry_attach_overrides (GstQaMonitor * monitor)
   gst_qa_override_registry_attach_gtype_overrides_unlocked (reg, monitor);
   gst_qa_override_registry_attach_klass_overrides_unlocked (reg, monitor);
   GST_QA_OVERRIDE_REGISTRY_UNLOCK (reg);
+}
+
+int
+gst_qa_override_registry_preload (void)
+{
+  gchar **solist, *const *so;
+  const char *sos, *soerr;
+  void *sol;
+  int ret, (*entry) (void), nloaded = 0;
+
+  sos = g_getenv ("GST_QA_OVERRIDE");
+  if (!sos) {
+    GST_INFO ("No GST_QA_OVERRIDE found, no overrides to load");
+    return 0;
+  }
+  solist = g_strsplit (sos, ",", 0);
+  for (so = solist; *so; ++so) {
+    GST_INFO ("Loading overrides from %s", *so);
+    sol = dlopen (*so, RTLD_LAZY);
+    if (!sol) {
+      soerr = dlerror ();
+      GST_ERROR ("Failed to load %s %s", *so, soerr ? soerr : "no idea why");
+      continue;
+    }
+    entry = dlsym (sol, GST_QA_OVERRIDE_INIT_SYMBOL);
+    if (entry) {
+      ret = (*entry) ();
+      if (ret > 0) {
+        GST_INFO ("Loaded %d overrides from %s", ret, *so);
+        nloaded += ret;
+      } else if (ret < 0) {
+        GST_WARNING ("Error loading overrides from %s", *so);
+      } else {
+        GST_INFO ("Loaded no overrides from %s", *so);
+      }
+    } else {
+      GST_WARNING (GST_QA_OVERRIDE_INIT_SYMBOL " not found in %s", *so);
+    }
+    dlclose (sol);
+  }
+  g_strfreev (solist);
+  GST_INFO ("%d overrides loaded", nloaded);
+  return nloaded;
 }

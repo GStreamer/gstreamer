@@ -46,6 +46,8 @@ void gst_qa_override_register_by_klass (const gchar * klass, GstQaOverride * ove
 
 void gst_qa_override_registry_attach_overrides (GstQaMonitor * monitor);
 
+int gst_qa_override_registry_preload (void);
+
 G_END_DECLS
 
 #endif /* __GST_QA_OVERRIDE_REGISTRY_H__ */
