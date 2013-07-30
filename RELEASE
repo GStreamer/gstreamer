@@ -1,5 +1,5 @@
 
-Release notes for GStreamer libav Plugins 1.0.8
+Release notes for GStreamer libav Plugins 1.0.9
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -37,11 +37,12 @@ contains a set of less supported plugins that haven't passed the
   
 
 Features of this release
-    
-      * gst-libav: internal libav snapshot version bumped to v0.8.8
 
-There were no bugs fixed in this release
-    
+      * enable SIMD optimizations on OS/X, improving performance a lot in many cases
+
+Bugs fixed in this release
+
+      * 704442 : avdec_h264: enormous CPU load on decoding on OSX
 
 ==== Download ====
 
@@ -79,5 +80,4 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Sebastian Dröge
-      * Tim-Philipp Müller
  

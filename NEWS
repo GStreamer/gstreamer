@@ -1,4 +1,12 @@
-This is GStreamer Libav Plugins 1.0.8
+This is GStreamer Libav Plugins 1.0.9
+
+Changes since 1.0.8:
+
+      * enable SIMD optimizations on OS/X, improving performance a lot in many cases
+
+Bugs fixed since 1.0.8:
+
+      * 704442 : avdec_h264: enormous CPU load on decoding on OSX
 
 Changes since 1.0.7:
 
