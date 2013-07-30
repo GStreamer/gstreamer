@@ -61,6 +61,7 @@ typedef guintptr GstQaIssueId;
 #define GST_QA_ISSUE_ID_UNKNOWN 0
 
 #define GST_QA_ISSUE_ID_SHIFT 16
+#define GST_QA_ISSUE_ID_CUSTOM_FIRST (2 << 15)
 
 #define GST_QA_ISSUE_ID_BUFFER_BEFORE_SEGMENT                    (((GstQaIssueId) GST_QA_AREA_BUFFER) << GST_QA_ISSUE_ID_SHIFT | 1)
 #define GST_QA_ISSUE_ID_BUFFER_IS_OUT_OF_SEGMENT                 (((GstQaIssueId) GST_QA_AREA_BUFFER) << GST_QA_ISSUE_ID_SHIFT | 2)
@@ -144,6 +145,10 @@ typedef struct {
 void               gst_qa_report_init (void);
 GstQaIssue *       gst_qa_issue_from_id (GstQaIssueId issue_id);
 GstQaIssueId       gst_qa_issue_get_id (GstQaIssue * issue);
+void               gst_qa_issue_register (GstQaIssue * issue);
+GstQaIssue *       gst_qa_issue_new (GstQaIssueId issue_id, gchar * summary,
+                                     gchar * description,
+                                     GstQaReportLevel default_level);
 
 GstQaReport *      gst_qa_report_new (GstQaIssue * issue,
                                       GstQaReporter * reporter,
@@ -155,7 +160,6 @@ GstQaIssueId       gst_qa_report_get_issue_id (GstQaReport * report);
 
 void               gst_qa_report_check_abort (GstQaReport * report);
 void               gst_qa_report_printf (GstQaReport * report);
-
 
 const gchar *      gst_qa_report_level_get_name (GstQaReportLevel level);
 const gchar *      gst_qa_report_area_get_name (GstQaReportArea area);

@@ -43,7 +43,7 @@ gst_qa_issue_get_id (GstQaIssue * issue)
   return issue->issue_id;
 }
 
-static GstQaIssue *
+GstQaIssue *
 gst_qa_issue_new (GstQaIssueId issue_id, gchar * summary,
     gchar * description, GstQaReportLevel default_level)
 {
@@ -65,9 +65,12 @@ gst_qa_issue_free (GstQaIssue * issue)
   g_slice_free (GstQaIssue, issue);
 }
 
-static void
+void
 gst_qa_issue_register (GstQaIssue * issue)
 {
+  g_return_if_fail (g_hash_table_lookup (_gst_qa_issues,
+          (gpointer) gst_qa_issue_get_id (issue)) != NULL);
+
   g_hash_table_insert (_gst_qa_issues, (gpointer) gst_qa_issue_get_id (issue),
       issue);
 }
@@ -207,6 +210,8 @@ gst_qa_report_level_get_name (GstQaReportLevel level)
       return "warning";
     case GST_QA_REPORT_LEVEL_ISSUE:
       return "issue";
+    case GST_QA_REPORT_LEVEL_IGNORE:
+      return "ignore";
     default:
       return "unknown";
   }
