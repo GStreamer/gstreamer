@@ -279,6 +279,7 @@ static const FormatInfo formats[] = {
   {"application/x-subtitle-sami", N_("Sami subtitle format"), FLAG_SUB, ""},
   {"application/x-subtitle-tmplayer", N_("TMPlayer subtitle format"), FLAG_SUB,
       ""},
+  {"application/x-teletext", "Teletext", 0, ""},
   {"application/x-kate", "Kate", 0, ""},
   {"subtitle/x-kate", N_("Kate subtitle format"), FLAG_SUB, ""},
   {"subpicture/x-dvb", "DVB subtitles", FLAG_SUB, ""},
@@ -287,7 +288,6 @@ static const FormatInfo formats[] = {
   /* non-audio/video/container formats */
   {"hdv/aux-v", "HDV AUX-V", 0, ""},
   {"hdv/aux-a", "HDV AUX-A", 0, ""},
-  {"private/teletext", "Teletext", 0, ""},
 
   /* formats with dynamic descriptions */
   {"audio/mpeg", NULL, FLAG_AUDIO, ""},
