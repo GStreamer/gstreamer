@@ -434,6 +434,11 @@ gst_vaapidecode_finish(GstVideoDecoder *vdec)
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
     GstVaapiDecoderStatus status;
 
+    /* If there is something in GstVideoDecoder's output adapter, then
+       submit the frame for decoding */
+    if (decode->current_frame_size)
+        gst_video_decoder_have_frame(vdec);
+
     status = gst_vaapi_decoder_flush(decode->decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         goto error_flush;
@@ -617,6 +622,9 @@ gst_vaapidecode_reset_full(GstVaapiDecode *decode, GstCaps *caps, gboolean hard)
             return TRUE;
     }
 
+    /* Reset tracked frame size */
+    decode->current_frame_size = 0;
+
     gst_vaapidecode_destroy(decode);
     return gst_vaapidecode_create(decode, caps);
 }
@@ -705,10 +713,14 @@ gst_vaapidecode_parse(GstVideoDecoder *vdec,
 
     switch (status) {
     case GST_VAAPI_DECODER_STATUS_SUCCESS:
-        if (got_unit_size > 0)
+        if (got_unit_size > 0) {
             gst_video_decoder_add_to_frame(vdec, got_unit_size);
-        if (got_frame)
+            decode->current_frame_size += got_unit_size;
+        }
+        if (got_frame) {
             ret = gst_video_decoder_have_frame(vdec);
+            decode->current_frame_size = 0;
+        }
         else
             ret = GST_FLOW_OK;
         break;
@@ -720,10 +732,12 @@ gst_vaapidecode_parse(GstVideoDecoder *vdec,
     case GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT:
         GST_WARNING("parse error %d", status);
         ret = GST_FLOW_NOT_SUPPORTED;
+        decode->current_frame_size = 0;
         break;
     default:
         GST_ERROR("parse error %d", status);
         ret = GST_FLOW_EOS;
+        decode->current_frame_size = 0;
         break;
     }
     return ret;

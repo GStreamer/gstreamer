@@ -78,6 +78,7 @@ struct _GstVaapiDecode {
     GstCaps            *allowed_caps;
     gint64              render_time_base;
     GstClockTime        last_buffer_time;
+    guint               current_frame_size;
 };
 
 struct _GstVaapiDecodeClass {
