@@ -1565,6 +1565,48 @@ compute_elapsed (GstRtpJitterBuffer * jitterbuffer, GstBuffer * outbuf)
   return elapsed;
 }
 
+static void
+update_estimated_eos (GstRtpJitterBuffer * jitterbuffer, GstBuffer * outbuf)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+
+  if (priv->npt_stop != -1 && priv->ext_timestamp != -1
+      && priv->clock_base != -1 && priv->clock_rate > 0) {
+    guint64 elapsed, estimated;
+
+    elapsed = compute_elapsed (jitterbuffer, outbuf);
+
+    if (elapsed > priv->last_elapsed || !priv->last_elapsed) {
+      guint64 left;
+      GstClockTime out_time;
+
+      priv->last_elapsed = elapsed;
+
+      left = priv->npt_stop - priv->npt_start;
+      GST_LOG_OBJECT (jitterbuffer, "left %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (left));
+
+      out_time = GST_BUFFER_PTS (outbuf);
+
+      if (elapsed > 0)
+        estimated = gst_util_uint64_scale (out_time, left, elapsed);
+      else {
+        /* if there is almost nothing left,
+         * we may never advance enough to end up in the above case */
+        if (left < GST_SECOND)
+          estimated = GST_SECOND;
+        else
+          estimated = -1;
+      }
+
+      GST_LOG_OBJECT (jitterbuffer, "elapsed %" GST_TIME_FORMAT ", estimated %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (elapsed), GST_TIME_ARGS (estimated));
+
+      priv->estimated_eos = estimated;
+    }
+  }
+}
+
 /*
  * This funcion will push out buffers on the source pad.
  *
@@ -1903,38 +1945,7 @@ push_buffer:
   GST_BUFFER_DTS (outbuf) = out_time;
 
   /* update the elapsed time when we need to check against the npt stop time. */
-  if (priv->npt_stop != -1 && priv->ext_timestamp != -1
-      && priv->clock_base != -1 && priv->clock_rate > 0) {
-    guint64 elapsed, estimated;
-
-    elapsed = compute_elapsed (jitterbuffer, outbuf);
-
-    if (elapsed > priv->last_elapsed || !priv->last_elapsed) {
-      guint64 left;
-
-      priv->last_elapsed = elapsed;
-
-      left = priv->npt_stop - priv->npt_start;
-      GST_LOG_OBJECT (jitterbuffer, "left %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (left));
-
-      if (elapsed > 0)
-        estimated = gst_util_uint64_scale (out_time, left, elapsed);
-      else {
-        /* if there is almost nothing left,
-         * we may never advance enough to end up in the above case */
-        if (left < GST_SECOND)
-          estimated = GST_SECOND;
-        else
-          estimated = -1;
-      }
-
-      GST_LOG_OBJECT (jitterbuffer, "elapsed %" GST_TIME_FORMAT ", estimated %"
-          GST_TIME_FORMAT, GST_TIME_ARGS (elapsed), GST_TIME_ARGS (estimated));
-
-      priv->estimated_eos = estimated;
-    }
-  }
+  update_estimated_eos (jitterbuffer, outbuf);
 
   /* now we are ready to push the buffer. Save the seqnum and release the lock
    * so the other end can push stuff in the queue again. */
