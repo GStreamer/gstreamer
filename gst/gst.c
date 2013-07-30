@@ -585,6 +585,7 @@ init_post (GOptionContext * context, GOptionGroup * group, gpointer data,
   g_type_class_ref (gst_bus_get_type ());
   g_type_class_ref (gst_task_get_type ());
   g_type_class_ref (gst_clock_get_type ());
+  g_type_class_ref (gst_debug_color_mode_get_type ());
 
   gst_uri_handler_get_type ();
 
@@ -1052,7 +1053,7 @@ gst_deinit (void)
   g_type_class_unref (g_type_class_peek (gst_lock_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_allocator_flags_get_type ()));
   g_type_class_unref (g_type_class_peek (gst_stream_flags_get_type ()));
-
+  g_type_class_unref (g_type_class_peek (gst_debug_color_mode_get_type ()));
 
   gst_deinitialized = TRUE;
   GST_INFO ("deinitialized GStreamer");
