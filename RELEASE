@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.0.8
+Release notes for GStreamer Base Plugins 1.0.9
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -60,19 +60,17 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * tag: ignore malformed ID3v2 TDAT frames
+      * subparse: re-enable sami parser
+      * tagdemux: fix ACCURATE seeks in push mode
+      * multisocketsink, multifdsink: fix handling of partial writes and WOULD_BLOCK errors, and other fixes
+      * audiodecoder: fix input caps leak
 
 Bugs fixed in this release
      
-      * 636245 : [riff] For ADPCM codecs the average bitrate should be calculated instead of trusting the format header
-      * 688803 : playbin: converters don't work? not-negotiated error with non-1/1 PAR and ximagesink
-      * 690420 : decodebin: Race between GstBin and decodebin trying to change states of child elements
-      * 698896 : liveadder: What is the unit for " latency " ?
-      * 699923 : typefind: fix detection of HLS playlists with alternative renditions
-      * 701976 : flvdemux: Forwards CAPS events from upstream
-      * 703128 : videotestsrc leaks memory
-      * 703283 : id3: gst_date_time_new: assertion `(month > 0 &  & month < = 12) || month == -1' failed with malformed TDAT frames
-      * 699794 : uridecodebin: Leaking queue2 elements in playbin gapless mode
+      * 693056 : subparse: re-enable sami support
+      * 704291 : riff: PNG AVI file does not play
+      * 704301 : tagdemux: Breaks seeking forward fails if ACCURATE seek and push sources
+      * 704926 : audiodecoder: leaks input caps
 
 ==== Download ====
 
@@ -109,13 +107,11 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Andoni Morales Alastruey
       * Edward Hervey
-      * Jonas Holmberg
-      * Julien Moutte
-      * Marcin Lewandowski
       * Matej Knopp
+      * Olivier Crête
+      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
-      * Thibault Saunier
       * Tim-Philipp Müller
+      * Young-Ho Cha
  

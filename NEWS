@@ -1,4 +1,18 @@
-This is GStreamer Base Plugins 1.0.8
+This is GStreamer Base Plugins 1.0.9
+
+Changes since 1.0.8:
+
+      * subparse: re-enable sami parser
+      * tagdemux: fix ACCURATE seeks in push mode
+      * multisocketsink, multifdsink: fix handling of partial writes and WOULD_BLOCK errors, and other fixes
+      * audiodecoder: fix input caps leak
+
+Bugs fixed since 1.0.8:
+
+      * 693056 : subparse: re-enable sami support
+      * 704291 : riff: PNG AVI file does not play
+      * 704301 : tagdemux: Breaks seeking forward fails if ACCURATE seek and push sources
+      * 704926 : audiodecoder: leaks input caps
 
 Changes since 1.0.7:
 
