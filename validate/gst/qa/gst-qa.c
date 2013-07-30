@@ -50,7 +50,7 @@ main (int argc, gchar ** argv)
 
   GOptionEntry options[] = {
     {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
-        "Let you set a scanrio, it will override the GST_QA_SCENARIO "
+        "Let you set a scenario, it will override the GST_QA_SCENARIO "
           "environment variable", NULL},
     {NULL}
   };
