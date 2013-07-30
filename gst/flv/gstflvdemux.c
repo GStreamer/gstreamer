@@ -813,6 +813,7 @@ gst_flv_demux_audio_negotiate (GstFlvDemux * demux, guint32 codec_tag,
     gst_event_set_group_id (event, demux->group_id);
   gst_pad_push_event (demux->audio_pad, event);
   g_free (stream_id);
+
   ret = gst_pad_set_caps (demux->audio_pad, caps);
 
   if (G_LIKELY (ret)) {
@@ -1267,6 +1268,8 @@ gst_flv_demux_video_negotiate (GstFlvDemux * demux, guint32 codec_tag)
       gst_pad_create_stream_id (demux->video_pad, GST_ELEMENT_CAST (demux),
       "video");
   event = gst_event_new_stream_start (stream_id);
+  g_free (stream_id);
+
   if (have_group_id (demux))
     gst_event_set_group_id (event, demux->group_id);
   gst_pad_push_event (demux->video_pad, event);
