@@ -1041,7 +1041,7 @@ gst_qa_pad_monitor_add_expected_newsegment (GstQaPadMonitor * monitor,
         GST_QA_MONITOR_LOCK (othermonitor);
         if (othermonitor->expected_segment) {
           GST_QA_REPORT (othermonitor,
-              GST_QA_ISSUE_ID_EVENT_NEWSEGMENT_NOT_PUSHED, NULL);
+              GST_QA_ISSUE_ID_EVENT_NEWSEGMENT_NOT_PUSHED, "");
           gst_event_unref (othermonitor->expected_segment);
         }
         othermonitor->expected_segment = gst_event_ref (event);
