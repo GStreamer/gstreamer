@@ -196,9 +196,11 @@ GObject
         GstCompare
         GstDVBSubOverlay
         GstDVDSpu
+        GstDecklinkSink
         GstDecklinkSrc
         GstFestival
         GstFieldAnalysis
+        GstFluidDec
         GstGDPDepay
         GstGDPPay
         GstGmeDec
@@ -207,6 +209,7 @@ GObject
         GstJifMux
         GstJpegParse
         GstLiveAdder
+        GstMidiParse
         GstMimDec
         GstMimEnc
         GstModPlug
@@ -239,8 +242,10 @@ GObject
         GstTagMux
           GstId3Mux
         GstVideoDecoder
+          GstOpenJPEGDec
           GstSchroDec
         GstVideoEncoder
+          GstOpenJPEGEnc
           GstSchroEnc
         GstWebvttEnc
         GstY4mDec

@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.0.8
+Release notes for GStreamer Bad Plugins 1.0.9
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -62,22 +62,17 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * rfbsrc, neonhttpsrc, ofa, and openal plugins ported to 1.0
-      * mpegvideoparse: don't announce incomplete source caps
-      * tsdemux: many fixes
+      * midi: add midi parser and fluidsynth midi renderer
+      * winscreencap: port to 1.0
+      * openjpeg: add OpenJPEG-based JPEG2000 decoder and encoder
+      * decklink: add "device-number" to select from multiple devices
+      * decklink: actually enable decklinksink
+      * dvdspu: fix artefacts and invalid memory access when clipping subtitles
 
 Bugs fixed in this release
      
-      * 702495 : sdpdemux fails if not explicitly added to the pipeline
-      * 674536 : tsdemux: Freeze on pts-wrap with streaming sources
-      * 685103 : mpegvideoparse: wrong pixel-aspect-ratio
-      * 695412 : mpegtsmux AAC ADTS header seems incorrect
-      * 695879 : mpegvideoparse: outputs incomplete caps with different mpegversion before outputting proper caps
-      * 697283 : mpegdemux: accept  ID_PRIVATE_STREAM_1 to avoid loosing sync
-      * 699786 : mpegtsmux: memory leak when using prepare_func
-      * 700038 : rfbsrc: port to 1.0
-      * 700402 : openalsink: 'AL_FORMAT_MONO_ALAW_EXT' undeclared
-      * 702597 : shmsink: events not propagated to basesink
+      * 704505 : decklink: add back property to select device
+      * 705039 : dvdspu: artifacts when clipping spu
 
 ==== Download ====
 
@@ -114,21 +109,11 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alban Browaeys
-      * Aleix Conchillo Flaque
-      * Andoni Morales Alastruey
       * Arnaud Vrac
-      * Brendan Long
-      * David Schleef
-      * Douglas Bagnall
-      * Edward Hervey
-      * Greg Rutz
-      * Josep Torra
-      * Juan Manuel Borges Caño
-      * Kevin Thornberry
-      * Olivier Crête
+      * Matej Knopp
       * Sebastian Dröge
-      * Sreerenj Balachandran
-      * Thiago Santos
+      * Sebastian Rasmussen
       * Tim-Philipp Müller
+      * Wim Taymans
+      * Youri Westerman
  

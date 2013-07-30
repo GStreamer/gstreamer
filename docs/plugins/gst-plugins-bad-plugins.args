@@ -26900,7 +26900,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>6.79039e-313</DEFAULT>
+<DEFAULT>1.3852e-309</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26940,7 +26940,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>1.37974e-309</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26950,7 +26950,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>1.37974e-309</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27000,7 +27000,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>2.07227e-316</DEFAULT>
+<DEFAULT>2.04264e-312</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27380,7 +27380,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>7.06238e-304</DEFAULT>
+<DEFAULT>5.33591e-322</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27570,7 +27570,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>1.99084e-316</DEFAULT>
+<DEFAULT>3.39519e-313</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27760,7 +27760,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>5.86875e-317</DEFAULT>
 </ARG>
 
 <ARG>
@@ -58534,13 +58534,33 @@
 </ARG>
 
 <ARG>
+<NAME>GstDecklinkSrc::device-number</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Device number</NICK>
+<BLURB>Capture device instance to use.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstDecklinkSink::mode</NAME>
 <TYPE>GstDecklinkModes</TYPE>
 <RANGE></RANGE>
 <FLAGS>rwx</FLAGS>
-<NICK>Mode</NICK>
-<BLURB>Mode.</BLURB>
+<NICK>Playback Mode</NICK>
+<BLURB>Video Mode to use for playback.</BLURB>
 <DEFAULT>ntsc</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDecklinkSink::device-number</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rwx</FLAGS>
+<NICK>Device number</NICK>
+<BLURB>Output device instance to use.</BLURB>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59481,5 +59501,125 @@
 <NICK>Aggregate GOPs</NICK>
 <BLURB>Whether to aggregate GOPs and push them out as buffer lists.</BLURB>
 <DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenJPEGEnc::num-layers</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of layers</NICK>
+<BLURB>Number of layers.</BLURB>
+<DEFAULT>1</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenJPEGEnc::num-resolutions</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Number of resolutions</NICK>
+<BLURB>Number of resolutions.</BLURB>
+<DEFAULT>6</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenJPEGEnc::progression-order</NAME>
+<TYPE>GstOpenJPEGEncProgressionOrder</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Progression Order</NICK>
+<BLURB>Progression order.</BLURB>
+<DEFAULT>LRCP</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenJPEGEnc::tile-height</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tile Height</NICK>
+<BLURB>Tile Height.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenJPEGEnc::tile-offset-x</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tile Offset X</NICK>
+<BLURB>Tile Offset X.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenJPEGEnc::tile-offset-y</NAME>
+<TYPE>gint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tile Offset Y</NICK>
+<BLURB>Tile Offset Y.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstOpenJPEGEnc::tile-width</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= 0</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Tile Width</NICK>
+<BLURB>Tile Width.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFluidDec::soundfont</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Soundfont</NICK>
+<BLURB>the filename of a soundfont (NULL for default).</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFluidDec::synth-chorus</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Synth Chorus</NICK>
+<BLURB>Turn the chorus on or off.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFluidDec::synth-gain</NAME>
+<TYPE>gdouble</TYPE>
+<RANGE>[0,10]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Synth Gain</NICK>
+<BLURB>Set the master gain.</BLURB>
+<DEFAULT>0.2</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFluidDec::synth-polyphony</NAME>
+<TYPE>gint</TYPE>
+<RANGE>[1,65535]</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Synth Polyphony</NICK>
+<BLURB>The number of simultaneous voices.</BLURB>
+<DEFAULT>256</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstFluidDec::synth-reverb</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Synth Reverb</NICK>
+<BLURB>Turn the reverb on or off.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 

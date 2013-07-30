@@ -37,6 +37,7 @@ GstMMS GstURIHandler
 GstMpeg2enc GstPreset
 GstMythtvSrc GstURIHandler
 GstNeonhttpSrc GstURIHandler
+GstOpenJPEGEnc GstPreset
 GstOpusEnc GstPreset GstTagSetter
 GstPipeline GstChildProxy
 GstRTMPSink GstURIHandler

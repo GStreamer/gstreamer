@@ -1,4 +1,18 @@
-This is GStreamer Bad Plugins 1.0.8
+This is GStreamer Bad Plugins 1.0.9
+
+Changes since 1.0.8:
+
+      * midi: add midi parser and fluidsynth midi renderer
+      * winscreencap: port to 1.0
+      * openjpeg: add OpenJPEG-based JPEG2000 decoder and encoder
+      * decklink: add "device-number" to select from multiple devices
+      * decklink: actually enable decklinksink
+      * dvdspu: fix artefacts and invalid memory access when clipping subtitles
+
+Bugs fixed since 1.0.8:
+
+      * 704505 : decklink: add back property to select device
+      * 705039 : dvdspu: artifacts when clipping spu
 
 Changes since 1.0.7:
 
