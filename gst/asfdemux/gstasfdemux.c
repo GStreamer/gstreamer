@@ -1366,18 +1366,6 @@ gst_asf_demux_check_first_ts (GstASFDemux * demux, gboolean force)
         }
       }
     }
-
-    /* remember the first queued timestamp for the segment */
-    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (demux->segment_ts))) {
-      GST_DEBUG_OBJECT (demux, "segment ts: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (first_ts));
-      demux->segment_ts = first_ts;
-      /* always note, but only determines segment when streaming */
-      if (demux->streaming)
-        gst_segment_do_seek (&demux->segment, demux->in_segment.rate,
-            GST_FORMAT_TIME, (GstSeekFlags) demux->segment.flags,
-            GST_SEEK_TYPE_SET, demux->segment_ts, GST_SEEK_TYPE_NONE, 0, NULL);
-    }
   }
 
   return TRUE;
