@@ -826,7 +826,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
         GST_LOG ("teletext");
         template = gst_static_pad_template_get (&private_template);
         name = g_strdup_printf ("private_%04x", bstream->pid);
-        caps = gst_caps_new_empty_simple ("private/teletext");
+        caps = gst_caps_new_empty_simple ("application/x-teletext");
         break;
       }
       desc =

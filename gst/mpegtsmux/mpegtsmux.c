@@ -135,7 +135,7 @@ static GstStaticPadTemplate mpegtsmux_sink_factory =
         "dynamic_range = (int) [ 0, 255 ], "
         "emphasis = (boolean) { FALSE, TRUE }, "
         "mute = (boolean) { FALSE, TRUE }; " "audio/x-ac3;" "audio/x-dts;"
-        "subpicture/x-dvb;" "private/teletext"));
+        "subpicture/x-dvb;" "application/x-teletext"));
 
 static GstStaticPadTemplate mpegtsmux_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
@@ -639,7 +639,7 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
     }
   } else if (strcmp (mt, "subpicture/x-dvb") == 0) {
     st = TSMUX_ST_PS_DVB_SUBPICTURE;
-  } else if (strcmp (mt, "private/teletext") == 0) {
+  } else if (strcmp (mt, "application/x-teletext") == 0) {
     st = TSMUX_ST_PS_TELETEXT;
     /* needs a particularly sized layout */
     ts_data->prepare_func = mpegtsmux_prepare_teletext;
