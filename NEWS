@@ -1,4 +1,12 @@
-This is GStreamer Ugly Plugins 1.0.8
+This is GStreamer Ugly Plugins 1.0.9
+
+Changes since 1.0.8:
+
+      * mpeg2dec: fix crash on resolution changes
+
+Bugs fixed since 1.0.8:
+
+      * 690701 : mpeg2dec: Segfault on aspect change in dvb/multicast stream
 
 Changes since 1.0.7:
 

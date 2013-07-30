@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plugins 1.0.8
+Release notes for GStreamer Ugly Plugins 1.0.9
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -58,8 +58,11 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
 
-      * lamemp3enc: fix timestamping of outgoing buffers if the encoder resamples internally, which fixes transcoding pipelines deadlocking after a while
+      * mpeg2dec: fix crash on resolution changes
 
+Bugs fixed in this release
+
+      * 690701 : mpeg2dec: Segfault on aspect change in dvb/multicast stream
 
 ==== Download ====
 
@@ -96,7 +99,5 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Mark Nauwelaerts
-      * Olivier Crête
-      * Sreerenj Balachandran
+      * Edward Hervey
  

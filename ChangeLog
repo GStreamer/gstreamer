@@ -1,9 +1,45 @@
-=== release 1.0.8 ===
+=== release 1.0.9 ===
 
-2013-07-12  Tim-Philipp Müller <tim@centricular.net>
+2013-07-30  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.8
+	  releasing 1.0.9
+
+2013-07-17 16:17:54 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: fix crash on resolution changes
+	  Properly reset on sequence changes, otherwise we
+	  end up using stray data/buffers.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=690701
+
+=== release 1.0.8 ===
+
+2013-07-12 12:24:27 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.0.8
 
 2013-06-18 20:06:24 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
 
