@@ -3,7 +3,7 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>1.0.8</version>
+  <version>1.0.9</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -41,7 +41,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)L16; application/x-rtp, media=(string)audio, payload=(int){ 10, 11 }, clock-rate=(int)[ 1, 2147483647 ]</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)L16; application/x-rtp, media=(string)audio, payload=(int){ 10, 11 }, clock-rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -83,7 +83,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int){ 32000, 44100, 48000 }, encoding-name=(string)AC3</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int){ 32000, 44100, 48000 }, encoding-name=(string)AC3</details>
         </caps>
         <caps>
           <name>src</name>
@@ -125,7 +125,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)AMR, encoding-params=(string)1, octet-align=(string)1; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)AMR-WB, encoding-params=(string)1, octet-align=(string)1</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)8000, encoding-name=(string)AMR, encoding-params=(string)1, octet-align=(string)1; application/x-rtp, media=(string)audio, clock-rate=(int)16000, encoding-name=(string)AMR-WB, encoding-params=(string)1, octet-align=(string)1</details>
         </caps>
         <caps>
           <name>src</name>
@@ -167,7 +167,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)BV16; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)BV32</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)8000, encoding-name=(string)BV16; application/x-rtp, media=(string)audio, clock-rate=(int)16000, encoding-name=(string)BV32</details>
         </caps>
         <caps>
           <name>src</name>
@@ -209,7 +209,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 32000, 48000 ], encoding-name=(string)CELT</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)[ 32000, 48000 ], encoding-name=(string)CELT</details>
         </caps>
         <caps>
           <name>src</name>
@@ -251,7 +251,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string){ video, audio }, payload=(int)[ 96, 127 ], encoding-name=(string)DV, clock-rate=(int)90000, encode=(string){ SD-VCR/525-60, SD-VCR/625-50, HD-VCR/1125-60, HD-VCR/1250-50, SDL-VCR/525-60, SDL-VCR/625-50, 306M/525-60, 306M/625-50, 314M-25/525-60, 314M-25/625-50, 314M-50/525-60, 314M-50/625-50 }</details>
+          <details>application/x-rtp, media=(string){ video, audio }, encoding-name=(string)DV, clock-rate=(int)90000, encode=(string){ SD-VCR/525-60, SD-VCR/625-50, HD-VCR/1125-60, HD-VCR/1250-50, SDL-VCR/525-60, SDL-VCR/625-50, 306M/525-60, 306M/625-50, 314M-25/525-60, 314M-25/625-50, 314M-50/525-60, 314M-50/625-50 }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -293,7 +293,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)G722; application/x-rtp, media=(string)audio, payload=(int)9, clock-rate=(int)[ 1, 2147483647 ]</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)8000, encoding-name=(string)G722; application/x-rtp, media=(string)audio, payload=(int)9, clock-rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -335,7 +335,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)G723; application/x-rtp, media=(string)audio, payload=(int)4, clock-rate=(int)8000</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)8000, encoding-name=(string)G723; application/x-rtp, media=(string)audio, payload=(int)4, clock-rate=(int)8000</details>
         </caps>
         <caps>
           <name>src</name>
@@ -377,7 +377,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], encoding-name=(string){ G726, G726-16, G726-24, G726-32, G726-40, AAL2-G726-16, AAL2-G726-24, AAL2-G726-32, AAL2-G726-40 }, clock-rate=(int)8000</details>
+          <details>application/x-rtp, media=(string)audio, encoding-name=(string){ G726, G726-16, G726-24, G726-32, G726-40, AAL2-G726-16, AAL2-G726-24, AAL2-G726-32, AAL2-G726-40 }, clock-rate=(int)8000</details>
         </caps>
         <caps>
           <name>src</name>
@@ -419,7 +419,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)G729; application/x-rtp, media=(string)audio, payload=(int)18, clock-rate=(int)8000</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)8000, encoding-name=(string)G729; application/x-rtp, media=(string)audio, payload=(int)18, clock-rate=(int)8000</details>
         </caps>
         <caps>
           <name>src</name>
@@ -461,7 +461,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)GSM; application/x-rtp, media=(string)audio, payload=(int)3, clock-rate=(int)8000</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)8000, encoding-name=(string)GSM; application/x-rtp, media=(string)audio, payload=(int)3, clock-rate=(int)8000</details>
         </caps>
         <caps>
           <name>src</name>
@@ -503,7 +503,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)application, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)X-GST</details>
+          <details>application/x-rtp, media=(string)application, clock-rate=(int)90000, encoding-name=(string)X-GST</details>
         </caps>
         <caps>
           <name>src</name>
@@ -545,7 +545,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)34, clock-rate=(int)90000, encoding-name=(string)H263; application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)H263</details>
+          <details>application/x-rtp, media=(string)video, payload=(int)34, clock-rate=(int)90000; application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H263</details>
         </caps>
         <caps>
           <name>src</name>
@@ -587,7 +587,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)H263-1998; application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)H263-2000</details>
+          <details>application/x-rtp, media=(string)video, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)H263-1998; application/x-rtp, media=(string)video, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)H263-2000</details>
         </caps>
         <caps>
           <name>src</name>
@@ -629,7 +629,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)H264</details>
+          <details>application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)H264</details>
         </caps>
         <caps>
           <name>src</name>
@@ -671,7 +671,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)ILBC, mode=(string){ 20, 30 }</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)8000, encoding-name=(string)ILBC, mode=(string){ 20, 30 }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -713,7 +713,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)JPEG2000</details>
+          <details>application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)JPEG2000</details>
         </caps>
         <caps>
           <name>src</name>
@@ -755,7 +755,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)JPEG; application/x-rtp, media=(string)video, payload=(int)26, clock-rate=(int)90000</details>
+          <details>application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)JPEG; application/x-rtp, media=(string)video, payload=(int)26, clock-rate=(int)90000</details>
         </caps>
         <caps>
           <name>src</name>
@@ -797,7 +797,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)other, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)MP1S; application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)MP1S</details>
+          <details>application/x-rtp, media=(string)other, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)MP1S; application/x-rtp, media=(string)video, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)MP1S</details>
         </caps>
         <caps>
           <name>src</name>
@@ -818,7 +818,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string){ MP2T, MP2T-ES }; application/x-rtp, media=(string)video, payload=(int)33, clock-rate=(int)[ 1, 2147483647 ]</details>
+          <details>application/x-rtp, media=(string)video, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string){ MP2T, MP2T-ES }; application/x-rtp, media=(string)video, payload=(int)33, clock-rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -860,7 +860,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)MP4A-LATM</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)MP4A-LATM</details>
         </caps>
         <caps>
           <name>src</name>
@@ -902,7 +902,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string){ video, audio, application }, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)MPEG4-GENERIC, mode=(string){ generic, CELP-cbr, CELP-vbr, AAC-lbr, AAC-hbr }</details>
+          <details>application/x-rtp, media=(string){ video, audio, application }, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)MPEG4-GENERIC, mode=(string){ generic, CELP-cbr, CELP-vbr, AAC-lbr, AAC-hbr }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -944,7 +944,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)MP4V-ES</details>
+          <details>application/x-rtp, media=(string)video, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)MP4V-ES</details>
         </caps>
         <caps>
           <name>src</name>
@@ -986,7 +986,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)MPA; application/x-rtp, media=(string)audio, payload=(int)14, clock-rate=(int)90000</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)90000, encoding-name=(string)MPA; application/x-rtp, media=(string)audio, payload=(int)14, clock-rate=(int)90000</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1028,7 +1028,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)MPA-ROBUST; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string){ X-MP3-DRAFT-00, X-MP3-DRAFT-01, X-MP3-DRAFT-02, X-MP3-DRAFT-03, X-MP3-DRAFT-04, X-MP3-DRAFT-05, X-MP3-DRAFT-06 }</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)90000, encoding-name=(string)MPA-ROBUST; application/x-rtp, media=(string)audio, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string){ X-MP3-DRAFT-00, X-MP3-DRAFT-01, X-MP3-DRAFT-02, X-MP3-DRAFT-03, X-MP3-DRAFT-04, X-MP3-DRAFT-05, X-MP3-DRAFT-06 }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1049,7 +1049,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)MPV; application/x-rtp, media=(string)video, payload=(int)32, clock-rate=(int)90000</details>
+          <details>application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)MPV; application/x-rtp, media=(string)video, payload=(int)32, clock-rate=(int)90000</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1091,7 +1091,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)8, clock-rate=(int)8000, encoding-name=(string)PCMA; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)PCMA</details>
+          <details>application/x-rtp, media=(string)audio, payload=(int)8, clock-rate=(int)8000; application/x-rtp, media=(string)audio, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)PCMA</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1133,7 +1133,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)0, encoding-name=(string)PCMU, clock-rate=(int)8000; application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], encoding-name=(string)PCMU, clock-rate=(int)[ 1, 2147483647 ]</details>
+          <details>application/x-rtp, media=(string)audio, payload=(int)0, clock-rate=(int)8000; application/x-rtp, media=(string)audio, encoding-name=(string)PCMU, clock-rate=(int)[ 1, 2147483647 ]</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1175,7 +1175,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)8000, encoding-name=(string)QCELP; application/x-rtp, media=(string)audio, payload=(int)12, clock-rate=(int)8000</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)8000, encoding-name=(string)QCELP; application/x-rtp, media=(string)audio, payload=(int)12, clock-rate=(int)8000</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1196,7 +1196,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], encoding-name=(string)X-QDM</details>
+          <details>application/x-rtp, media=(string)audio, encoding-name=(string)X-QDM</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1217,7 +1217,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)16000, encoding-name=(string)SIREN, dct-length=(int)320</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)16000, encoding-name=(string)SIREN, dct-length=(int)320</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1259,7 +1259,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 6000, 48000 ], encoding-name=(string)SPEEX, encoding-params=(string)1</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)[ 6000, 48000 ], encoding-name=(string)SPEEX, encoding-params=(string)1</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1301,7 +1301,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string){ X-SV3V-ES, X-SORENSON-VIDEO, X-SORENSONVIDEO, X-SorensonVideo }</details>
+          <details>application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string){ X-SV3V-ES, X-SORENSON-VIDEO, X-SORENSONVIDEO, X-SorensonVideo }</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1322,7 +1322,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)THEORA</details>
+          <details>application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)THEORA</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1364,7 +1364,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)VORBIS</details>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)VORBIS</details>
         </caps>
         <caps>
           <name>src</name>
@@ -1406,7 +1406,7 @@
           <name>sink</name>
           <direction>sink</direction>
           <presence>always</presence>
-          <details>application/x-rtp, media=(string)video, payload=(int)[ 96, 127 ], clock-rate=(int)90000, encoding-name=(string)RAW</details>
+          <details>application/x-rtp, media=(string)video, clock-rate=(int)90000, encoding-name=(string)RAW</details>
         </caps>
         <caps>
           <name>src</name>
