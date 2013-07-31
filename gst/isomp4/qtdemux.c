@@ -2559,7 +2559,9 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     sample->offset = *running_offset;
     sample->pts_offset = ct;
     sample->size = size;
-    sample->timestamp = timestamp;
+    sample->timestamp =
+        timestamp + gst_util_uint64_scale (stream->elst_offset,
+        stream->timescale, GST_SECOND);
     sample->duration = dur;
     /* sample-is-difference-sample */
     /* ismv seems to use 0x40 for keyframe, 0xc0 for non-keyframe,
@@ -3958,11 +3960,6 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
   GstFlowReturn ret = GST_FLOW_OK;
 
   /* offset the timestamps according to the edit list */
-  if (GST_CLOCK_TIME_IS_VALID (pts))
-    pts += stream->elst_offset;
-  if (GST_CLOCK_TIME_IS_VALID (dts))
-    dts += stream->elst_offset;
-  position += stream->elst_offset;
 
   if (G_UNLIKELY (stream->fourcc == FOURCC_rtsp)) {
     gchar *url;
@@ -6301,7 +6298,10 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
             j, GST_TIME_ARGS (gst_util_uint64_scale (stream->stco_sample_index,
                     GST_SECOND, stream->timescale)), cur->size);
 
-        cur->timestamp = stream->stco_sample_index;
+        cur->timestamp =
+            stream->stco_sample_index +
+            gst_util_uint64_scale (stream->elst_offset, stream->timescale,
+            GST_SECOND);
         cur->duration = stream->samples_per_chunk;
         cur->keyframe = TRUE;
         cur++;
@@ -6318,9 +6318,13 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
 done2:
   {
     guint32 n_sample_times;
+    gint64 elst_offset;
 
     n_sample_times = stream->n_sample_times;
     cur = first;
+    elst_offset =
+        gst_util_uint64_scale (stream->elst_offset, stream->timescale,
+        GST_SECOND);
 
     for (i = stream->stts_index; i < n_sample_times; i++) {
       guint32 stts_samples;
@@ -6352,7 +6356,7 @@ done2:
             GST_TIME_ARGS (gst_util_uint64_scale (stts_time, GST_SECOND,
                     stream->timescale)));
 
-        cur->timestamp = stts_time;
+        cur->timestamp = stts_time + elst_offset;
         cur->duration = stts_duration;
 
         /* avoid 32-bit wrap-around,
@@ -6381,7 +6385,7 @@ done2:
           (guint) (cur - samples),
           GST_TIME_ARGS (gst_util_uint64_scale (stream->stts_time, GST_SECOND,
                   stream->timescale)));
-      cur->timestamp = stream->stts_time;
+      cur->timestamp = stream->stts_time + elst_offset;
       cur->duration = -1;
     }
   }
