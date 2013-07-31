@@ -204,7 +204,6 @@ typedef struct
   guint16 seqnum;
   TimerType type;
   GstClockTime pts;
-  GstClockTime timeout;
 } TimerData;
 
 #define GST_RTP_JITTER_BUFFER_GET_PRIVATE(o) \
@@ -1515,22 +1514,6 @@ apply_offset (GstRtpJitterBuffer * jitterbuffer, GstClockTime timestamp)
   return timestamp;
 }
 
-static GstClockTime
-get_sync_time (GstRtpJitterBuffer * jitterbuffer, GstClockTime timestamp)
-{
-  GstClockTime result;
-  GstRtpJitterBufferPrivate *priv;
-
-  priv = jitterbuffer->priv;
-
-  result = timestamp + GST_ELEMENT_CAST (jitterbuffer)->base_time;
-  /* add latency, this includes our own latency and the peer latency. */
-  result += priv->latency_ns;
-  result += priv->peer_latency;
-
-  return result;
-}
-
 #define GST_FLOW_WAIT GST_FLOW_CUSTOM_SUCCESS
 
 static TimerData *
@@ -1569,17 +1552,13 @@ set_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
     guint16 seqnum, GstClockTime pts)
 {
   TimerData *timer;
-  GstClockTime out_time;
-
-  out_time = apply_offset (jitterbuffer, pts);
 
   GST_DEBUG_OBJECT (jitterbuffer,
       "set timer for seqnum %d to %" GST_TIME_FORMAT, seqnum,
-      GST_TIME_ARGS (out_time));
+      GST_TIME_ARGS (pts));
 
   /* find the seqnum timer */
   timer = find_timer (jitterbuffer, type, seqnum, NULL);
-  timer->timeout = out_time;
   timer->pts = pts;
 
   return GST_FLOW_WAIT;
@@ -1877,7 +1856,7 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
     GstClockTimeDiff total_duration;
     GstClockTime out_time_diff;
 
-    out_time_diff = apply_offset (jitterbuffer, timer->pts) - timer->timeout;
+    out_time_diff = apply_offset (jitterbuffer, timer->pts) - timer->pts;
     total_duration = MIN (out_time_diff, clock_jitter);
 
     if (duration > 0)
@@ -1909,7 +1888,7 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 
   /* update our expected next packet */
   priv->last_popped_seqnum = timer->seqnum;
-  priv->last_out_time = timer->timeout;
+  priv->last_out_time = apply_offset (jitterbuffer, timer->pts);
   priv->last_out_pts = timer->pts;
   priv->next_seqnum = (timer->seqnum + lost_packets) & 0xffff;
   /* remove timer now */
@@ -1968,7 +1947,7 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
     TimerData *test = &g_array_index (priv->timers, TimerData, i);
 
     /* find the smallest timeout */
-    if (timer == NULL || test->timeout == -1 || test->timeout < timer->timeout)
+    if (timer == NULL || test->pts == -1 || test->pts < timer->pts)
       timer = test;
   }
   if (timer) {
@@ -1977,6 +1956,10 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
     GstClockID id;
     GstClockReturn ret;
     GstClockTimeDiff clock_jitter;
+
+    /* no timestamp, timeout immeditately */
+    if (timer->pts == -1)
+      goto do_timeout;
 
     GST_OBJECT_LOCK (jitterbuffer);
     clock = GST_ELEMENT_CLOCK (jitterbuffer);
@@ -1988,11 +1971,17 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
     }
 
     /* prepare for sync against clock */
-    sync_time = get_sync_time (jitterbuffer, timer->timeout);
+    sync_time = timer->pts + GST_ELEMENT_CAST (jitterbuffer)->base_time;
+    /* add latency of peer to get input time */
+    sync_time += priv->peer_latency;
+
+    /* add our latency and offset to get output times. */
+    sync_time = apply_offset (jitterbuffer, sync_time);
+    sync_time += priv->latency_ns;
 
     GST_DEBUG_OBJECT (jitterbuffer, "sync to timestamp %" GST_TIME_FORMAT
         " with sync time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (timer->timeout), GST_TIME_ARGS (sync_time));
+        GST_TIME_ARGS (timer->pts), GST_TIME_ARGS (sync_time));
 
     /* create an entry for the clock */
     id = priv->clock_id = gst_clock_new_single_shot_id (clock, sync_time);
