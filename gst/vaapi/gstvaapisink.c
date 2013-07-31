@@ -720,7 +720,17 @@ gst_vaapisink_get_caps_impl(GstBaseSink *base_sink)
 static inline GstCaps *
 gst_vaapisink_get_caps(GstBaseSink *base_sink, GstCaps *filter)
 {
-    return gst_vaapisink_get_caps_impl(base_sink);
+    GstCaps *caps, *out_caps;
+
+    caps = gst_vaapisink_get_caps_impl(base_sink);
+    if (caps && filter) {
+        out_caps = gst_caps_intersect_full(caps, filter,
+            GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref(caps);
+    }
+    else
+        out_caps = caps;
+    return out_caps;
 }
 #else
 #define gst_vaapisink_get_caps gst_vaapisink_get_caps_impl
