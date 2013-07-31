@@ -2068,7 +2068,13 @@ gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
   while (TRUE) {
     GST_DEBUG_OBJECT (jitterbuffer, "Peeking item");
 
-    result = handle_next_buffer (jitterbuffer);
+    /* only push buffers when PLAYING and active and not buffering */
+    if (!priv->blocked && priv->active &&
+        !rtp_jitter_buffer_is_buffering (priv->jbuf))
+      result = handle_next_buffer (jitterbuffer);
+    else
+      result = GST_FLOW_WAIT;
+
     if (result == GST_FLOW_WAIT) {
       /* now wait for the next event */
       result = wait_next_timeout (jitterbuffer);
