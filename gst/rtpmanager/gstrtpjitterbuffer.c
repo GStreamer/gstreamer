@@ -1777,6 +1777,11 @@ handle_next_buffer (GstRtpJitterBuffer * jitterbuffer)
   gint gap;
   GstRTPBuffer rtp = { NULL, };
 
+  /* only push buffers when PLAYING and active and not buffering */
+  if (priv->blocked || !priv->active ||
+      rtp_jitter_buffer_is_buffering (priv->jbuf))
+    return GST_FLOW_WAIT;
+
 again:
   /* peek a buffer, we're just looking at the sequence number.
    * If all is fine, we'll pop and push it. If the sequence number is wrong we
@@ -2065,23 +2070,13 @@ gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
   priv = jitterbuffer->priv;
 
   JBUF_LOCK_CHECK (priv, flushing);
-  while (TRUE) {
-    GST_DEBUG_OBJECT (jitterbuffer, "Peeking item");
-
-    /* only push buffers when PLAYING and active and not buffering */
-    if (!priv->blocked && priv->active &&
-        !rtp_jitter_buffer_is_buffering (priv->jbuf))
-      result = handle_next_buffer (jitterbuffer);
-    else
-      result = GST_FLOW_WAIT;
-
-    if (result == GST_FLOW_WAIT) {
+  do {
+    result = handle_next_buffer (jitterbuffer);
+    if (G_LIKELY (result == GST_FLOW_WAIT))
       /* now wait for the next event */
       result = wait_next_timeout (jitterbuffer);
-    }
-    if (result != GST_FLOW_OK)
-      break;
   }
+  while (result == GST_FLOW_OK);
   JBUF_UNLOCK (priv);
 
   /* if we get here we need to pause */
