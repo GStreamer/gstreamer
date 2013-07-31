@@ -35,7 +35,7 @@
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_QA_SCENARIO, GstQaScenarioPrivate))
 
 #define GST_QA_SCENARIO_SUFFIX ".xml"
-#define GST_QA_SCERNARIO_DIRECTORY "qa-scenario"
+#define GST_QA_SCENARIO_DIRECTORY "qa-scenario"
 
 GST_DEBUG_CATEGORY_STATIC (gst_qa_scenario);
 #define GST_CAT_DEFAULT gst_qa_scenario
@@ -335,13 +335,13 @@ gst_qa_scenario_load (GstQaScenario * scenario, const gchar * scenario_name)
   /* Try from local profiles */
   tldir =
       g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_API_VERSION,
-      GST_QA_SCERNARIO_DIRECTORY, lfilename, NULL);
+      GST_QA_SCENARIO_DIRECTORY, lfilename, NULL);
 
   if (!(ret = _load_scenario_file (scenario, tldir))) {
     g_free (tldir);
     /* Try from system-wide profiles */
     tldir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
-        GST_QA_SCERNARIO_DIRECTORY, lfilename, NULL);
+        GST_QA_SCENARIO_DIRECTORY, lfilename, NULL);
     ret = _load_scenario_file (scenario, tldir);
   }
 
