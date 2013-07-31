@@ -442,7 +442,8 @@ gst_qa_scenario_dispose (GObject * object)
 {
   GstQaScenarioPrivate *priv = GST_QA_SCENARIO (object)->priv;
 
-  gst_object_unref (priv->pipeline);
+  if (priv->pipeline)
+    gst_object_unref (priv->pipeline);
   g_list_free_full (priv->seeks, (GDestroyNotify) _free_seek_info);
 
   G_OBJECT_CLASS (gst_qa_scenario_parent_class)->dispose (object);
