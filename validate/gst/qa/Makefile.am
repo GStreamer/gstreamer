@@ -52,6 +52,9 @@ bin_PROGRAMS = gst-qa-@GST_API_VERSION@ gst-qa-transcoding-@GST_API_VERSION@
 AM_CFLAGS =  -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) $(GST_CFLAGS)
 LDADD = $(top_builddir)/gst/qa/libgstqa-@GST_API_VERSION@.la $(GST_PBUTILS_LIBS) $(GST_LIBS)
 
+gst-qa-transcoding-@GST_API_VERSION@$(EXEEXT): $(LTLIBRARIES)
+gst-qa-@GST_API_VERSION@$(EXEEXT): $(LTLIBRARIES)
+
 gst_qa_@GST_API_VERSION@_SOURCES = gst-qa.c
 gst_qa_transcoding_@GST_API_VERSION@_SOURCES = gst-qa-transcoding.c
 gst_qa_transcoding_@GST_API_VERSION@_CFLAG = $(GST_CFLAGS) $(GST_PBUTILS_CFLAGS)
