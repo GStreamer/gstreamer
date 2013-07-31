@@ -53,6 +53,7 @@ gst_qa_issue_new (GstQaIssueId issue_id, gchar * summary,
   issue->summary = summary;
   issue->description = description;
   issue->default_level = default_level;
+  issue->repeat = FALSE;
 
   return issue;
 }
