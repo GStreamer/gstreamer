@@ -1378,9 +1378,10 @@ gst_asf_demux_update_caps_from_payload (GstASFDemux * demux, AsfStream * stream)
      and often set wrong, inspecting the data is the only way that seem to be working */
   GstTypeFindProbability prob = GST_TYPE_FIND_NONE;
   GstCaps *caps = NULL;
+  int i;
   GstAdapter *adapter = gst_adapter_new ();
 
-  for (int i = 0; i < stream->payloads->len && prob < GST_TYPE_FIND_LIKELY; ++i) {
+  for (i = 0; i < stream->payloads->len && prob < GST_TYPE_FIND_LIKELY; ++i) {
     const guint8 *data;
     AsfPayload *payload;
     int len;
