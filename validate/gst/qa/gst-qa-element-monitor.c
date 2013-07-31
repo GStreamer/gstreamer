@@ -21,6 +21,7 @@
 
 #include "gst-qa-element-monitor.h"
 #include "gst-qa-pad-monitor.h"
+#include "gst-qa-monitor-factory.h"
 #include <string.h>
 
 /**
@@ -182,8 +183,8 @@ gst_qa_element_monitor_wrap_pad (GstQaElementMonitor * monitor, GstPad * pad)
   GST_DEBUG_OBJECT (monitor, "Wrapping pad %s:%s", GST_DEBUG_PAD_NAME (pad));
 
   pad_monitor =
-      gst_qa_pad_monitor_new (pad, GST_QA_MONITOR_GET_RUNNER (monitor),
-      monitor);
+      GST_QA_PAD_MONITOR (gst_qa_monitor_factory_create (GST_OBJECT (pad),
+          GST_QA_MONITOR_GET_RUNNER (monitor), GST_QA_MONITOR (monitor)));
   g_return_if_fail (pad_monitor != NULL);
 
   GST_QA_MONITOR_LOCK (monitor);
