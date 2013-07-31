@@ -253,7 +253,9 @@ gst_ivtc_sink_event (GstBaseTransform * trans, GstEvent * event)
 static void
 gst_ivtc_flush (GstIvtc * ivtc)
 {
-  GST_FIXME_OBJECT (ivtc, "not sending flushed fields to srcpad");
+  if (ivtc->n_fields > 0) {
+    GST_FIXME_OBJECT (ivtc, "not sending flushed fields to srcpad");
+  }
 
   gst_ivtc_retire_fields (ivtc, ivtc->n_fields);
 }
