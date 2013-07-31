@@ -163,6 +163,25 @@ debug_dump_pad (GstPad * pad, const gchar * color_name,
   if (details & GST_DEBUG_GRAPH_SHOW_STATES) {
     gchar pad_flags[4];
     const gchar *activation_mode = "-><";
+    const gchar *task_mode = "";
+    GstTask *task;
+
+    GST_OBJECT_LOCK (pad);
+    task = GST_PAD_TASK (pad);
+    if (task) {
+      switch (gst_task_get_state (task)) {
+        case GST_TASK_STARTED:
+          task_mode = "[T]";
+          break;
+        case GST_TASK_PAUSED:
+          task_mode = "[t]";
+          break;
+        default:
+          /* Invalid task state, ignoring */
+          break;
+      }
+    }
+    GST_OBJECT_UNLOCK (pad);
 
     /* check if pad flags */
     pad_flags[0] =
@@ -174,9 +193,9 @@ debug_dump_pad (GstPad * pad, const gchar * color_name,
     pad_flags[3] = '\0';
 
     fprintf (out,
-        "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\\n[%c][%s]\", height=\"0.2\", style=\"%s\"];\n",
+        "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\\n[%c][%s]%s\", height=\"0.2\", style=\"%s\"];\n",
         spc, element_name, pad_name, color_name, GST_OBJECT_NAME (pad),
-        activation_mode[pad->mode], pad_flags, style_name);
+        activation_mode[pad->mode], pad_flags, task_mode, style_name);
   } else {
     fprintf (out,
         "%s  %s_%s [color=black, fillcolor=\"%s\", label=\"%s\", height=\"0.2\", style=\"%s\"];\n",
