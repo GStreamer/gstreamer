@@ -70,7 +70,7 @@ void
 gst_qa_issue_register (GstQaIssue * issue)
 {
   g_return_if_fail (g_hash_table_lookup (_gst_qa_issues,
-          (gpointer) gst_qa_issue_get_id (issue)) != NULL);
+          (gpointer) gst_qa_issue_get_id (issue)) == NULL);
 
   g_hash_table_insert (_gst_qa_issues, (gpointer) gst_qa_issue_get_id (issue),
       issue);
