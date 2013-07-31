@@ -105,6 +105,7 @@ gst_qa_report_valist (GstQaReporter * reporter,
 
     if (g_hash_table_lookup (priv->reports, (gconstpointer) issue_id)) {
       GST_DEBUG ("Report %d:%s already present", issue_id, issue->summary);
+      gst_qa_report_unref (report);
       return;
     }
 
