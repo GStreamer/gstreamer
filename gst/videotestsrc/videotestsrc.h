@@ -80,5 +80,7 @@ void    gst_video_test_src_chromazoneplate (GstVideoTestSrc * v, GstVideoFrame *
 void    gst_video_test_src_ball         (GstVideoTestSrc * v, GstVideoFrame *frame);
 void    gst_video_test_src_smpte100     (GstVideoTestSrc * v, GstVideoFrame *frame);
 void    gst_video_test_src_bar          (GstVideoTestSrc * v, GstVideoFrame *frame);
+void    gst_video_test_src_pinwheel     (GstVideoTestSrc * v, GstVideoFrame * frame);
+void    gst_video_test_src_spokes       (GstVideoTestSrc * v, GstVideoFrame * frame);
 
 #endif

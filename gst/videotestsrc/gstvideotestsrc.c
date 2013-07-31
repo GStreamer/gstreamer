@@ -149,6 +149,8 @@ gst_video_test_src_pattern_get_type (void)
     {GST_VIDEO_TEST_SRC_BALL, "Moving ball", "ball"},
     {GST_VIDEO_TEST_SRC_SMPTE100, "SMPTE 100% color bars", "smpte100"},
     {GST_VIDEO_TEST_SRC_BAR, "Bar", "bar"},
+    {GST_VIDEO_TEST_SRC_PINWHEEL, "Pinwheel", "pinwheel"},
+    {GST_VIDEO_TEST_SRC_SPOKES, "Spokes", "spokes"},
     {0, NULL, NULL}
   };
 
@@ -341,7 +343,7 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
 {
   videotestsrc->pattern_type = pattern_type;
 
-  GST_DEBUG_OBJECT (videotestsrc, "setting pattern to %d", pattern_type);
+  GST_ERROR_OBJECT (videotestsrc, "setting pattern to %d", pattern_type);
 
   switch (pattern_type) {
     case GST_VIDEO_TEST_SRC_SMPTE:
@@ -406,6 +408,12 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
       break;
     case GST_VIDEO_TEST_SRC_BAR:
       videotestsrc->make_image = gst_video_test_src_bar;
+      break;
+    case GST_VIDEO_TEST_SRC_PINWHEEL:
+      videotestsrc->make_image = gst_video_test_src_pinwheel;
+      break;
+    case GST_VIDEO_TEST_SRC_SPOKES:
+      videotestsrc->make_image = gst_video_test_src_spokes;
       break;
     default:
       g_assert_not_reached ();

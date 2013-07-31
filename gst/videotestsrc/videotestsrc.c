@@ -1222,3 +1222,104 @@ convert_hline_bayer (paintinfo * p, GstVideoFrame * frame, int y)
     }
   }
 }
+
+void
+gst_video_test_src_pinwheel (GstVideoTestSrc * v, GstVideoFrame * frame)
+{
+  int i;
+  int j;
+  int k;
+  int t = v->n_frames;
+  paintinfo pi = PAINT_INFO_INIT;
+  paintinfo *p = &pi;
+  struct vts_color_struct color;
+  int w = frame->info.width, h = frame->info.height;
+  double c[20];
+  double s[20];
+
+  videotestsrc_setup_paintinfo (v, p, w, h);
+
+  color = p->colors[COLOR_BLACK];
+  p->color = &color;
+
+  for (k = 0; k < 19; k++) {
+    double theta = M_PI / 19 * k + 0.001 * v->kt * t;
+    c[k] = cos (theta);
+    s[k] = sin (theta);
+  }
+
+  for (j = 0; j < h; j++) {
+    for (i = 0; i < w; i++) {
+      double v;
+      v = 0;
+      for (k = 0; k < 19; k++) {
+        double x, y;
+
+        x = c[k] * (i - 0.5 * w) + s[k] * (j - 0.5 * h);
+        x *= 1.0;
+
+        y = CLAMP (x, -1, 1);
+        if (k & 1)
+          y = -y;
+
+        v += y;
+      }
+
+      p->tmpline_u8[i] = CLAMP (rint (v * 128 + 128), 0, 255);
+    }
+    videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
+        &p->foreground_color, &p->background_color, w);
+    videotestsrc_convert_tmpline (p, frame, j);
+  }
+}
+
+void
+gst_video_test_src_spokes (GstVideoTestSrc * v, GstVideoFrame * frame)
+{
+  int i;
+  int j;
+  int k;
+  int t = v->n_frames;
+  paintinfo pi = PAINT_INFO_INIT;
+  paintinfo *p = &pi;
+  struct vts_color_struct color;
+  int w = frame->info.width, h = frame->info.height;
+  double c[20];
+  double s[20];
+
+  videotestsrc_setup_paintinfo (v, p, w, h);
+
+  color = p->colors[COLOR_BLACK];
+  p->color = &color;
+
+  for (k = 0; k < 19; k++) {
+    double theta = M_PI / 19 * k + 0.001 * v->kt * t;
+    c[k] = cos (theta);
+    s[k] = sin (theta);
+  }
+
+  for (j = 0; j < h; j++) {
+    for (i = 0; i < w; i++) {
+      double v;
+      v = 0;
+      for (k = 0; k < 19; k++) {
+        double x, y;
+        double sharpness = 1.0;
+        double linewidth = 2.0;
+
+        x = c[k] * (i - 0.5 * w) + s[k] * (j - 0.5 * h);
+        x = linewidth * 0.5 - fabs (x);
+        x *= sharpness;
+
+        y = CLAMP (x + 0.5, 0.0, 1.0);
+
+        v += y;
+      }
+
+      p->tmpline_u8[i] = CLAMP (rint (v * 255), 0, 255);
+    }
+    videotestsrc_blend_line (v, p->tmpline, p->tmpline_u8,
+        &p->foreground_color, &p->background_color, w);
+    videotestsrc_convert_tmpline (p, frame, j);
+  }
+}
