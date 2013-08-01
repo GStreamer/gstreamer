@@ -1278,6 +1278,99 @@ post_buffering_percent (GstRtpJitterBuffer * jitterbuffer, gint percent)
   gst_element_post_message (GST_ELEMENT_CAST (jitterbuffer), message);
 }
 
+static TimerData *
+find_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type, guint16 seqnum)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  TimerData *timer = NULL;
+  gint i, len;
+
+  len = priv->timers->len;
+  for (i = 0; i < len; i++) {
+    TimerData *test = &g_array_index (priv->timers, TimerData, i);
+    if (test->seqnum == seqnum && test->type == type) {
+      timer = test;
+      break;
+    }
+  }
+  return timer;
+}
+
+static TimerData *
+add_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
+    guint16 seqnum, GstClockTime timeout)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  TimerData *timer;
+  gint len;
+
+  GST_DEBUG_OBJECT (jitterbuffer,
+      "add timer for seqnum %d to %" GST_TIME_FORMAT,
+      seqnum, GST_TIME_ARGS (timeout));
+
+  len = priv->timers->len;
+  g_array_set_size (priv->timers, len + 1);
+  timer = &g_array_index (priv->timers, TimerData, len);
+  timer->idx = len;
+  timer->type = type;
+  timer->seqnum = seqnum;
+  timer->timeout = timeout;
+
+  return timer;
+}
+
+static void
+reschedule_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
+    guint16 seqnum, GstClockTime timeout)
+{
+  if (timer->seqnum == seqnum && timer->timeout == timeout)
+    return;
+
+  GST_DEBUG_OBJECT (jitterbuffer,
+      "replace timer for seqnum %d->%d to %" GST_TIME_FORMAT,
+      timer->seqnum, seqnum, GST_TIME_ARGS (timeout));
+
+  timer->timeout = timeout;
+  timer->seqnum = seqnum;
+}
+
+static TimerData *
+set_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
+    guint16 seqnum, GstClockTime timeout)
+{
+  TimerData *timer;
+
+  /* find the seqnum timer */
+  timer = find_timer (jitterbuffer, type, seqnum);
+  if (timer == NULL) {
+    timer = add_timer (jitterbuffer, type, seqnum, timeout);
+  } else {
+    reschedule_timer (jitterbuffer, timer, seqnum, timeout);
+  }
+  return timer;
+}
+
+static void
+remove_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  guint idx;
+
+  idx = timer->idx;
+  GST_DEBUG_OBJECT (jitterbuffer, "removed index %d", idx);
+  g_array_remove_index_fast (priv->timers, idx);
+  timer->idx = idx;
+}
+
+static void
+remove_all_timers (GstRtpJitterBuffer * jitterbuffer)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  GST_DEBUG_OBJECT (jitterbuffer, "removed all timers");
+  g_array_set_size (priv->timers, 0);
+}
+
+
 static GstFlowReturn
 gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -1552,100 +1645,6 @@ apply_offset (GstRtpJitterBuffer * jitterbuffer, GstClockTime timestamp)
   return timestamp;
 }
 
-#define GST_FLOW_WAIT GST_FLOW_CUSTOM_SUCCESS
-
-static TimerData *
-find_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type, guint16 seqnum)
-{
-  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  TimerData *timer = NULL;
-  gint i, len;
-
-  len = priv->timers->len;
-  for (i = 0; i < len; i++) {
-    TimerData *test = &g_array_index (priv->timers, TimerData, i);
-    if (test->seqnum == seqnum && test->type == type) {
-      timer = test;
-      break;
-    }
-  }
-  return timer;
-}
-
-static TimerData *
-add_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
-    guint16 seqnum, GstClockTime timeout)
-{
-  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  TimerData *timer;
-  gint len;
-
-  GST_DEBUG_OBJECT (jitterbuffer,
-      "add timer for seqnum %d to %" GST_TIME_FORMAT,
-      seqnum, GST_TIME_ARGS (timeout));
-
-  len = priv->timers->len;
-  g_array_set_size (priv->timers, len + 1);
-  timer = &g_array_index (priv->timers, TimerData, len);
-  timer->idx = len;
-  timer->type = type;
-  timer->seqnum = seqnum;
-  timer->timeout = timeout;
-
-  return timer;
-}
-
-static void
-reschedule_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
-    guint16 seqnum, GstClockTime timeout)
-{
-  if (timer->seqnum == seqnum && timer->timeout == timeout)
-    return;
-
-  GST_DEBUG_OBJECT (jitterbuffer,
-      "replace timer for seqnum %d->%d to %" GST_TIME_FORMAT,
-      timer->seqnum, seqnum, GST_TIME_ARGS (timeout));
-
-  timer->timeout = timeout;
-  timer->seqnum = seqnum;
-}
-
-static TimerData *
-set_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
-    guint16 seqnum, GstClockTime timeout)
-{
-  TimerData *timer;
-
-  /* find the seqnum timer */
-  timer = find_timer (jitterbuffer, type, seqnum);
-  if (timer == NULL) {
-    timer = add_timer (jitterbuffer, type, seqnum, timeout);
-  } else {
-    reschedule_timer (jitterbuffer, timer, seqnum, timeout);
-  }
-  return timer;
-}
-
-static void
-remove_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
-{
-  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  guint idx;
-
-  idx = timer->idx;
-  GST_DEBUG_OBJECT (jitterbuffer, "removed index %d", idx);
-  g_array_remove_index_fast (priv->timers, idx);
-  timer->idx = idx;
-}
-
-static void
-remove_all_timers (GstRtpJitterBuffer * jitterbuffer)
-{
-  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  GST_DEBUG_OBJECT (jitterbuffer, "removed all timers");
-  g_array_set_size (priv->timers, 0);
-}
-
 static GstClockTime
 compute_elapsed (GstRtpJitterBuffer * jitterbuffer, GstBuffer * outbuf)
 {
@@ -1820,6 +1819,8 @@ estimate_dts (GstRtpJitterBuffer * jitterbuffer, GstClockTime dts, gint gap)
 
   return dts;
 }
+
+#define GST_FLOW_WAIT GST_FLOW_CUSTOM_SUCCESS
 
 /* Peek a buffer and compare the seqnum to the expected seqnum.
  * If all is fine, the buffer is pushed.
