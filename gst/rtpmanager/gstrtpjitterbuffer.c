@@ -1353,7 +1353,7 @@ reschedule_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   seqchange = timer->seqnum != seqnum;
   timechange = timer->timeout != timeout;
 
-  if (!seqchange && timechange)
+  if (!seqchange && !timechange)
     return;
 
   oldseq = timer->seqnum;
