@@ -1423,6 +1423,9 @@ remove_all_timers (GstRtpJitterBuffer * jitterbuffer)
 
 /* we just received a packet with seqnum and dts.
  *
+ * First check for old seqnum that we are still expecting. If the gap with the
+ * current timestamp is too big, unschedule the timeouts.
+ *
  * If we have a valid packet spacing estimate we can set a timer for when we
  * should receive the next packet.
  * If we don't have a valid estimate, we remove any timer we might have
@@ -1433,10 +1436,34 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     GstClockTime dts)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  TimerData *timer;
+  TimerData *timer = NULL;
+  gint i, len;
 
-  /* find the timer for the current seqnum. */
-  timer = find_timer (jitterbuffer, TIMER_TYPE_EXPECTED, seqnum);
+  /* go through all timers and unschedule the ones with a large gap, also find
+   * the timer for the seqnum */
+  len = priv->timers->len;
+  for (i = 0; i < len; i++) {
+    TimerData *test = &g_array_index (priv->timers, TimerData, i);
+    gint gap;
+
+    if (test->type != TIMER_TYPE_EXPECTED)
+      continue;
+
+    gap = gst_rtp_buffer_compare_seqnum (test->seqnum, seqnum);
+
+    GST_DEBUG_OBJECT (jitterbuffer, "%d, #%d<->#%d gap %d", i,
+        test->seqnum, seqnum, gap);
+
+    if (gap == 0) {
+      /* the timer for the current seqnum */
+      timer = test;
+    } else if (gap > 5) {
+      /* max gap, we exceeded the max reorder distance and we don't expect the
+       * missing packet to be this reordered */
+      reschedule_timer (jitterbuffer, test, test->seqnum, -1);
+    }
+  }
+
   if (priv->packet_spacing > 0) {
     GstClockTime expected;
 
