@@ -718,7 +718,7 @@ test_mix_layers (GESTimeline * timeline, GESUriClipAsset ** assets,
 {
   GESLayer *layer;
   GESClip *clip;
-  GList *children, *tmp;
+  GList *tmp;
   GESTrackElement *track_element;
   GESTrackType track_type;
   GESUriClipAsset *asset;
