@@ -62,6 +62,7 @@ typedef enum
 {
   SCENARIO_ACTION_UNKNOWN = 0,
   SCENARIO_ACTION_SEEK,
+  SCENARIO_ACTION_PAUSE,
 } ScenarioActionType;
 
 typedef struct _ScenarioAction
@@ -86,6 +87,13 @@ typedef struct _SeekInfo
   GstClockTime stop;
 
 } SeekInfo;
+
+typedef struct _PauseInfo
+{
+  ScenarioAction action;
+
+  GstClockTime duration;
+} PauseInfo;
 
 struct _GstQaScenarioPrivate
 {
@@ -161,6 +169,18 @@ _new_seek_info (void)
   return info;
 }
 
+static PauseInfo *
+_new_pause_info (void)
+{
+  PauseInfo *pause = g_slice_new (PauseInfo);
+
+  _scenario_action_init (SCENARIO_ACTION (pause));
+  pause->action.type = SCENARIO_ACTION_PAUSE;
+  pause->duration = 0;
+
+  return pause;
+}
+
 static void
 _scenario_action_clear (ScenarioAction * act)
 {
@@ -175,11 +195,21 @@ _free_seek_info (SeekInfo * info)
 }
 
 static void
+_free_pause_info (PauseInfo * info)
+{
+  _scenario_action_clear (SCENARIO_ACTION (info));
+  g_slice_free (PauseInfo, info);
+}
+
+static void
 _free_scenario_action (ScenarioAction * act)
 {
   switch (act->type) {
     case SCENARIO_ACTION_SEEK:
       _free_seek_info ((SeekInfo *) act);
+      break;
+    case SCENARIO_ACTION_PAUSE:
+      _free_pause_info ((PauseInfo *) act);
       break;
     default:
       g_assert_not_reached ();
@@ -225,6 +255,31 @@ _parse_seek (GMarkupParseContext * context, const gchar * element_name,
   priv->seeks = g_list_append (priv->seeks, info);
 }
 
+static inline void
+_parse_pause (GMarkupParseContext * context, const gchar * element_name,
+    const gchar ** attribute_names, const gchar ** attribute_values,
+    GstQaScenario * scenario, GError ** error)
+{
+  GstQaScenarioPrivate *priv = scenario->priv;
+  const char *duration = NULL;
+  const char *playback_time = NULL;
+
+  PauseInfo *info = _new_pause_info ();
+
+  if (!g_markup_collect_attributes (element_name, attribute_names,
+          attribute_values, error,
+          G_MARKUP_COLLECT_STRDUP | G_MARKUP_COLLECT_OPTIONAL, "name",
+          &info->action.name, G_MARKUP_COLLECT_STRING, "playback_time",
+          &playback_time, G_MARKUP_COLLECT_STRING, "duration", &duration,
+          G_MARKUP_COLLECT_INVALID))
+    return;
+
+  if (playback_time)
+    info->action.playback_time = g_ascii_strtoull (playback_time, NULL, 10);
+  info->duration = g_ascii_strtoull (duration, NULL, 10);
+  priv->seeks = g_list_append (priv->seeks, info);
+}
+
 static void
 _parse_element_start (GMarkupParseContext * context, const gchar * element_name,
     const gchar ** attribute_names, const gchar ** attribute_values,
@@ -248,6 +303,9 @@ _parse_element_start (GMarkupParseContext * context, const gchar * element_name,
       if (g_strcmp0 (element_name, "seek") == 0) {
         _parse_seek (context, element_name, attribute_names,
             attribute_values, scenario, error);
+      } else if (g_strcmp0 (element_name, "pause") == 0) {
+        _parse_pause (context, element_name, attribute_names,
+            attribute_values, scenario, error);
       }
     }
   }
@@ -269,6 +327,57 @@ _parse_element_end (GMarkupParseContext * context, const gchar * element_name,
 }
 
 static gboolean
+_pause_action_restore_playing (GstQaScenario * scenario)
+{
+  GstElement *pipeline = scenario->priv->pipeline;
+
+  if (gst_element_set_state (pipeline, GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE) {
+    GST_QA_REPORT (scenario, GST_QA_ISSUE_ID_STATE_CHANGE_FAILURE,
+        "Failed to set state to playing");
+  }
+
+  return FALSE;
+}
+
+static void
+_execute_action (GstQaScenario * scenario, ScenarioAction * act)
+{
+  GstQaScenarioPrivate *priv = scenario->priv;
+  GstElement *pipeline = scenario->priv->pipeline;
+
+  if (act->type == SCENARIO_ACTION_SEEK) {
+    SeekInfo *seek = (SeekInfo *) act;
+    GST_DEBUG ("seeking to: %" GST_TIME_FORMAT " stop: %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (seek->start), GST_TIME_ARGS (seek->stop));
+
+    if (gst_element_seek (pipeline, seek->rate,
+            seek->format, seek->flags,
+            seek->start_type, seek->start,
+            seek->stop_type, seek->stop) == FALSE) {
+      GST_QA_REPORT (scenario, GST_QA_ISSUE_ID_EVENT_SEEK_NOT_HANDLED,
+          "Could not seek to position %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (priv->seeked_position));
+    }
+    priv->seeked_position = seek->start;
+
+  } else if (act->type == SCENARIO_ACTION_PAUSE) {
+    PauseInfo *pause = (PauseInfo *) act;
+
+    GST_DEBUG ("Pausing for %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (pause->duration));
+
+    if (gst_element_set_state (pipeline, GST_STATE_PAUSED) ==
+        GST_STATE_CHANGE_FAILURE) {
+      GST_QA_REPORT (scenario, GST_QA_ISSUE_ID_STATE_CHANGE_FAILURE,
+          "Failed to set state to paused");
+    }
+    g_timeout_add (pause->duration / GST_MSECOND,
+        (GSourceFunc) _pause_action_restore_playing, scenario);
+  }
+}
+
+static gboolean
 get_position (GstQaScenario * scenario)
 {
   GList *tmp;
@@ -279,38 +388,27 @@ get_position (GstQaScenario * scenario)
 
   gst_element_query_position (pipeline, &format, &position);
 
-  tmp = scenario->priv->seeks;
-  GST_DEBUG ("Current position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
-  while (tmp) {
-    SeekInfo *seek = tmp->data;
+  GST_LOG ("Current position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
+  for (tmp = scenario->priv->seeks; tmp; tmp = g_list_next (tmp)) {
+    ScenarioAction *act = tmp->data;
 
-    if ((position >= (seek->action.playback_time - priv->seek_pos_tol))
-        && (position <= (seek->action.playback_time + priv->seek_pos_tol))) {
+    if ((position >= (act->playback_time - priv->seek_pos_tol))
+        && (position <= (act->playback_time + priv->seek_pos_tol))) {
 
+      /* TODO what about non flushing seeks? */
+      /* TODO why is this inside the action time if ? */
       if (GST_CLOCK_TIME_IS_VALID (priv->seeked_position))
         GST_QA_REPORT (scenario, GST_QA_ISSUE_ID_EVENT_SEEK_NOT_HANDLED,
             "Previous seek to %" GST_TIME_FORMAT " was not handled",
             GST_TIME_ARGS (priv->seeked_position));
 
-      GST_LOG ("seeking to: %" GST_TIME_FORMAT " stop: %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (seek->start), GST_TIME_ARGS (seek->stop));
+      _execute_action (scenario, act);
 
-      if (gst_element_seek (pipeline, seek->rate,
-              seek->format, seek->flags,
-              seek->start_type, seek->start,
-              seek->stop_type, seek->stop) == FALSE) {
-        GST_QA_REPORT (scenario, GST_QA_ISSUE_ID_EVENT_SEEK_NOT_HANDLED,
-            "Could not seek to position %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (priv->seeked_position));
-      }
-
-      priv->seeked_position = seek->start;
       priv->seeks = g_list_remove_link (priv->seeks, tmp);
-      g_slice_free (SeekInfo, seek);
+      _free_scenario_action (act);
       g_list_free (tmp);
       break;
     }
-    tmp = tmp->next;
   }
   return TRUE;
 }

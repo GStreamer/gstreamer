@@ -169,6 +169,9 @@ gst_qa_report_load_issues (void)
       _("seek event wasn't handled"), NULL, GST_QA_REPORT_LEVEL_CRITICAL);
   REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_EVENT_SEEK_RESULT_POSITION_WRONG,
       _("position after a seek is wrong"), NULL, GST_QA_REPORT_LEVEL_CRITICAL);
+
+  REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_STATE_CHANGE_FAILURE,
+      _("state change failed"), NULL, GST_QA_REPORT_LEVEL_CRITICAL);
 }
 
 void
