@@ -299,7 +299,7 @@ flush_observations (MpegTSPacketizer2 * packetizer)
     g_free (priv->observations[i]);
     priv->observations[i] = NULL;
   }
-  memset (priv->pcrtablelut, 0xff, 0x200);
+  memset (priv->pcrtablelut, 0xff, 0x2000);
   priv->lastobsid = 0;
 }
 
@@ -396,7 +396,7 @@ mpegts_packetizer_init (MpegTSPacketizer2 * packetizer)
   priv->mapped_size = 0;
   priv->offset = 0;
 
-  memset (priv->pcrtablelut, 0xff, 0x200);
+  memset (priv->pcrtablelut, 0xff, 0x2000);
   memset (priv->observations, 0x0, sizeof (priv->observations));
   for (i = 0; i < _ICONV_MAX; i++)
     priv->iconvs[i] = (GIConv) - 1;
