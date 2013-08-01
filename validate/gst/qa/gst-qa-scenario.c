@@ -58,10 +58,25 @@ static void gst_qa_scenario_finalize (GObject * object);
 G_DEFINE_TYPE_WITH_CODE (GstQaScenario, gst_qa_scenario, G_TYPE_OBJECT,
     G_IMPLEMENT_INTERFACE (GST_TYPE_QA_REPORTER, NULL));
 
+typedef enum
+{
+  SCENARIO_ACTION_UNKNOWN = 0,
+  SCENARIO_ACTION_SEEK,
+} ScenarioActionType;
+
+typedef struct _ScenarioAction
+{
+  ScenarioActionType type;
+  gchar *name;
+  GstClockTime playback_time;
+} ScenarioAction;
+
+#define SCENARIO_ACTION(act) ((ScenarioAction *)act)
+
 typedef struct _SeekInfo
 {
-  gchar *name;
-  GstClockTime seeking_time;
+  ScenarioAction action;
+
   gdouble rate;
   GstFormat format;
   GstSeekFlags flags;
@@ -80,6 +95,10 @@ struct _GstQaScenarioPrivate
   GList *seeks;
   gint64 seeked_position;       /* last seeked position */
   GstClockTime seek_pos_tol;
+
+  /* markup parser context */
+  gboolean in_scenario;
+  gboolean in_actions;
 };
 
 /* Some helper method that are missing iin Json itscenario */
@@ -116,17 +135,26 @@ get_enum_from_string (GType type, const gchar * str_enum, guint * enum_value)
   g_type_class_unref (class);
 }
 
+static void
+_scenario_action_init (ScenarioAction * act)
+{
+  act->name = NULL;
+  act->playback_time = GST_CLOCK_TIME_NONE;
+  act->type = SCENARIO_ACTION_UNKNOWN;
+}
+
 static SeekInfo *
 _new_seek_info (void)
 {
   SeekInfo *info = g_slice_new (SeekInfo);
 
+  _scenario_action_init (&info->action);
+  info->action.type = SCENARIO_ACTION_SEEK;
   info->rate = 1.0;
   info->format = GST_FORMAT_TIME;
   info->start_type = GST_SEEK_TYPE_SET;
   info->stop_type = GST_SEEK_TYPE_SET;
   info->flags = GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH;
-  info->seeking_time = GST_SECOND;
   info->start = 0;
   info->stop = GST_CLOCK_TIME_NONE;
 
@@ -134,9 +162,30 @@ _new_seek_info (void)
 }
 
 static void
+_scenario_action_clear (ScenarioAction * act)
+{
+  g_free (act->name);
+}
+
+static void
 _free_seek_info (SeekInfo * info)
 {
+  _scenario_action_clear (SCENARIO_ACTION (info));
   g_slice_free (SeekInfo, info);
+}
+
+static void
+_free_scenario_action (ScenarioAction * act)
+{
+  switch (act->type) {
+    case SCENARIO_ACTION_SEEK:
+      _free_seek_info ((SeekInfo *) act);
+      break;
+    default:
+      g_assert_not_reached ();
+      _scenario_action_clear (act);
+      break;
+  }
 }
 
 static inline void
@@ -145,29 +194,29 @@ _parse_seek (GMarkupParseContext * context, const gchar * element_name,
     GstQaScenario * scenario, GError ** error)
 {
   GstQaScenarioPrivate *priv = scenario->priv;
-  const char *seeking_time, *format, *rate, *flags, *start_type, *start,
-      *stop_type, *stop;
+  const char *format, *rate, *flags, *start_type, *start, *stop_type, *stop;
+  const char *playback_time = NULL;
 
   SeekInfo *info = _new_seek_info ();
 
   if (!g_markup_collect_attributes (element_name, attribute_names,
           attribute_values, error,
-          G_MARKUP_COLLECT_STRDUP, "name", &info->name,
-          G_MARKUP_COLLECT_STRING, "seeking_time", &seeking_time,
-          G_MARKUP_COLLECT_STRING, "format", &format,
-          G_MARKUP_COLLECT_STRING, "rate", &rate,
-          G_MARKUP_COLLECT_STRING, "flags", &flags,
-          G_MARKUP_COLLECT_STRING, "start_type", &start_type,
-          G_MARKUP_COLLECT_STRING, "start", &start,
-          G_MARKUP_COLLECT_STRING, "stop_type", &stop_type,
-          G_MARKUP_COLLECT_STRING, "stop", &stop, G_MARKUP_COLLECT_INVALID))
+          G_MARKUP_COLLECT_STRDUP | G_MARKUP_COLLECT_OPTIONAL, "name",
+          &info->action.name, G_MARKUP_COLLECT_STRING, "playback_time",
+          &playback_time, G_MARKUP_COLLECT_STRING, "format", &format,
+          G_MARKUP_COLLECT_STRING, "rate", &rate, G_MARKUP_COLLECT_STRING,
+          "flags", &flags, G_MARKUP_COLLECT_STRING, "start_type", &start_type,
+          G_MARKUP_COLLECT_STRING, "start", &start, G_MARKUP_COLLECT_STRING,
+          "stop_type", &stop_type, G_MARKUP_COLLECT_STRING, "stop", &stop,
+          G_MARKUP_COLLECT_INVALID))
     return;
 
   get_enum_from_string (GST_TYPE_FORMAT, format, &info->format);
 
+  if (playback_time)
+    info->action.playback_time = g_ascii_strtoull (playback_time, NULL, 10);
   info->rate = g_ascii_strtoull (rate, NULL, 10);
   info->flags = get_flags_from_string (GST_TYPE_SEEK_FLAGS, flags);
-  info->seeking_time = g_ascii_strtoull (seeking_time, NULL, 10);
   get_enum_from_string (GST_TYPE_SEEK_TYPE, start_type, &info->start_type);
   info->start = g_ascii_strtoull (start, NULL, 10);
   get_enum_from_string (GST_TYPE_SEEK_TYPE, stop_type, &info->stop_type);
@@ -179,11 +228,43 @@ _parse_seek (GMarkupParseContext * context, const gchar * element_name,
 static void
 _parse_element_start (GMarkupParseContext * context, const gchar * element_name,
     const gchar ** attribute_names, const gchar ** attribute_values,
-    gpointer scenario, GError ** error)
+    gpointer udata, GError ** error)
 {
-  if (g_strcmp0 (element_name, "seek") == 0) {
-    _parse_seek (context, element_name, attribute_names,
-        attribute_values, scenario, error);
+  GstQaScenario *scenario = udata;
+  GstQaScenarioPrivate *priv = GST_QA_SCENARIO_GET_PRIVATE (scenario);
+
+  if (strcmp (element_name, "scenario") == 0) {
+    priv->in_scenario = TRUE;
+    return;
+  }
+
+  if (priv->in_scenario) {
+    if (strcmp (element_name, "actions") == 0) {
+      priv->in_actions = TRUE;
+      return;
+    }
+
+    if (priv->in_actions) {
+      if (g_strcmp0 (element_name, "seek") == 0) {
+        _parse_seek (context, element_name, attribute_names,
+            attribute_values, scenario, error);
+      }
+    }
+  }
+
+}
+
+static void
+_parse_element_end (GMarkupParseContext * context, const gchar * element_name,
+    gpointer udata, GError ** error)
+{
+  GstQaScenario *scenario = udata;
+  GstQaScenarioPrivate *priv = GST_QA_SCENARIO_GET_PRIVATE (scenario);
+
+  if (strcmp (element_name, "actions") == 0) {
+    priv->in_actions = FALSE;
+  } else if (strcmp (element_name, "scenario") == 0) {
+    priv->in_scenario = FALSE;
   }
 }
 
@@ -203,8 +284,8 @@ get_position (GstQaScenario * scenario)
   while (tmp) {
     SeekInfo *seek = tmp->data;
 
-    if ((position >= (seek->seeking_time - priv->seek_pos_tol))
-        && (position <= (seek->seeking_time + priv->seek_pos_tol))) {
+    if ((position >= (seek->action.playback_time - priv->seek_pos_tol))
+        && (position <= (seek->action.playback_time + priv->seek_pos_tol))) {
 
       if (GST_CLOCK_TIME_IS_VALID (priv->seeked_position))
         GST_QA_REPORT (scenario, GST_QA_ISSUE_ID_EVENT_SEEK_NOT_HANDLED,
@@ -318,6 +399,10 @@ wrong_uri:
 
 failed:
   ret = FALSE;
+  if (err) {
+    GST_WARNING ("Failed to load contents: %d %s", err->code, err->message);
+    g_error_free (err);
+  }
   goto done;
 }
 
@@ -424,6 +509,7 @@ gst_qa_scenario_class_init (GstQaScenarioClass * klass)
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
   klass->content_parser.start_element = _parse_element_start;
+  klass->content_parser.end_element = _parse_element_end;
 }
 
 static void
@@ -444,7 +530,7 @@ gst_qa_scenario_dispose (GObject * object)
 
   if (priv->pipeline)
     gst_object_unref (priv->pipeline);
-  g_list_free_full (priv->seeks, (GDestroyNotify) _free_seek_info);
+  g_list_free_full (priv->seeks, (GDestroyNotify) _free_scenario_action);
 
   G_OBJECT_CLASS (gst_qa_scenario_parent_class)->dispose (object);
 }
