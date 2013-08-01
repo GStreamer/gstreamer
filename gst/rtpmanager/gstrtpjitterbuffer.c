@@ -184,6 +184,7 @@ struct _GstRtpJitterBufferPrivate
   GstSegment segment;
   GstClockID clock_id;
   GstClockTime timer_timeout;
+  guint16 timer_seqnum;
   gboolean unscheduled;
   /* the latency of the upstream peer, we have to take this into account when
    * synchronizing the buffers. */
@@ -1345,8 +1346,17 @@ static void
 reschedule_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
     guint16 seqnum, GstClockTime timeout)
 {
-  if (timer->seqnum == seqnum && timer->timeout == timeout)
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  gboolean seqchange, timechange;
+  guint16 oldseq;
+
+  seqchange = timer->seqnum != seqnum;
+  timechange = timer->timeout != timeout;
+
+  if (!seqchange && timechange)
     return;
+
+  oldseq = timer->seqnum;
 
   GST_DEBUG_OBJECT (jitterbuffer,
       "replace timer for seqnum %d->%d to %" GST_TIME_FORMAT,
@@ -1355,7 +1365,12 @@ reschedule_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   timer->timeout = timeout;
   timer->seqnum = seqnum;
 
-  recalculate_timer (jitterbuffer, timer);
+  if (priv->clock_id) {
+    if (seqchange && priv->timer_seqnum == oldseq)
+      unschedule_current_timer (jitterbuffer);
+    else if (timechange)
+      recalculate_timer (jitterbuffer, timer);
+  }
 }
 
 static TimerData *
@@ -2122,6 +2137,7 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
     id = priv->clock_id = gst_clock_new_single_shot_id (clock, sync_time);
     priv->unscheduled = FALSE;
     priv->timer_timeout = timer_timeout;
+    priv->timer_seqnum = timer->seqnum;
     timer_idx = timer->idx;
     GST_OBJECT_UNLOCK (jitterbuffer);
 
