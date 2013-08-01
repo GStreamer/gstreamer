@@ -179,6 +179,7 @@ struct _GstRtpJitterBufferPrivate
   /* for sync */
   GstSegment segment;
   GstClockID clock_id;
+  GstClockTime timer_timeout;
   gboolean unscheduled;
   /* the latency of the upstream peer, we have to take this into account when
    * synchronizing the buffers. */
@@ -1987,14 +1988,26 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
   GstFlowReturn result = GST_FLOW_OK;
   gint i, len;
   TimerData *timer = NULL;
+  GstClockTime timer_timeout = -1;
+  gint timer_idx;
 
   len = priv->timers->len;
   for (i = 0; i < len; i++) {
     TimerData *test = &g_array_index (priv->timers, TimerData, i);
+    GstClockTime test_timeout;
 
+    GST_DEBUG_OBJECT (jitterbuffer, "%d, %d, %" GST_TIME_FORMAT,
+        i, test->seqnum, GST_TIME_ARGS (test->timeout));
+
+    test_timeout = test->timeout;
     /* find the smallest timeout */
-    if (timer == NULL || test->timeout == -1 || test->timeout < timer->timeout)
+    if (timer == NULL || test_timeout == -1 || test_timeout < timer->timeout) {
       timer = test;
+      timer_timeout = test_timeout;
+      /* no timeout set, we can stop searching */
+      if (test_timeout == -1)
+        break;
+    }
   }
   if (timer) {
     GstClock *clock;
@@ -2004,7 +2017,7 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
     GstClockTimeDiff clock_jitter;
 
     /* no timestamp, timeout immeditately */
-    if (timer->timeout == -1)
+    if (timer_timeout == -1)
       goto do_timeout;
 
     GST_OBJECT_LOCK (jitterbuffer);
@@ -2017,7 +2030,7 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
     }
 
     /* prepare for sync against clock */
-    sync_time = timer->timeout + GST_ELEMENT_CAST (jitterbuffer)->base_time;
+    sync_time = timer_timeout + GST_ELEMENT_CAST (jitterbuffer)->base_time;
     /* add latency of peer to get input time */
     sync_time += priv->peer_latency;
 
@@ -2027,11 +2040,13 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
 
     GST_DEBUG_OBJECT (jitterbuffer, "sync to timestamp %" GST_TIME_FORMAT
         " with sync time %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (timer->timeout), GST_TIME_ARGS (sync_time));
+        GST_TIME_ARGS (timer_timeout), GST_TIME_ARGS (sync_time));
 
     /* create an entry for the clock */
     id = priv->clock_id = gst_clock_new_single_shot_id (clock, sync_time);
     priv->unscheduled = FALSE;
+    priv->timer_timeout = timer_timeout;
+    timer_idx = timer->idx;
     GST_OBJECT_UNLOCK (jitterbuffer);
 
     /* release the lock so that the other end can push stuff or unlock */
@@ -2060,6 +2075,9 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       GST_DEBUG_OBJECT (jitterbuffer, "Wait got unscheduled");
       goto done;
     }
+
+    /* we released the lock, the array might have changed */
+    timer = &g_array_index (priv->timers, TimerData, timer_idx);
   do_timeout:
     switch (timer->type) {
       case TIMER_TYPE_EXPECTED:
