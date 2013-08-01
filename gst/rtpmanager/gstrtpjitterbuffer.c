@@ -1352,10 +1352,11 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   /* now check against our expected seqnum */
   if (G_LIKELY (priv->next_in_seqnum != -1)) {
     gint gap;
-    gboolean reset = FALSE;
 
     gap = gst_rtp_buffer_compare_seqnum (priv->next_in_seqnum, seqnum);
     if (G_UNLIKELY (gap != 0)) {
+      gboolean reset = FALSE;
+
       GST_DEBUG_OBJECT (jitterbuffer, "expected #%d, got #%d, gap of %d",
           priv->next_in_seqnum, seqnum, gap);
       /* priv->next_in_seqnum >= seqnum, this packet is too late or the
@@ -1372,14 +1373,14 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
       } else {
         GST_DEBUG_OBJECT (jitterbuffer, "tolerable gap");
       }
-    }
-    if (G_UNLIKELY (reset)) {
-      GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
-      rtp_jitter_buffer_flush (priv->jbuf);
-      rtp_jitter_buffer_reset_skew (priv->jbuf);
-      remove_all_timers (jitterbuffer);
-      priv->last_popped_seqnum = -1;
-      priv->next_seqnum = seqnum;
+      if (G_UNLIKELY (reset)) {
+        GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
+        rtp_jitter_buffer_flush (priv->jbuf);
+        rtp_jitter_buffer_reset_skew (priv->jbuf);
+        remove_all_timers (jitterbuffer);
+        priv->last_popped_seqnum = -1;
+        priv->next_seqnum = seqnum;
+      }
     }
   }
   priv->next_in_seqnum = (seqnum + 1) & 0xffff;
