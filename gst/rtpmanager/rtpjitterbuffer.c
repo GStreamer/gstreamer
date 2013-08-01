@@ -684,7 +684,6 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
    * running time. */
   time = calculate_skew (jbuf, rtptime, time, clock_rate);
   GST_BUFFER_PTS (buf) = time;
-  GST_BUFFER_DTS (buf) = time;
 
   /* It's more likely that the packet was inserted in the front of the buffer */
   if (G_LIKELY (list))
