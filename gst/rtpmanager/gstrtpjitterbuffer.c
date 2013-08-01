@@ -1313,7 +1313,8 @@ recalculate_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
 
-  if (priv->clock_id && priv->timer_timeout > timer->timeout)
+  if (priv->clock_id && (timer->timeout == -1
+          || priv->timer_timeout > timer->timeout))
     unschedule_current_timer (jitterbuffer);
 }
 
@@ -1360,14 +1361,18 @@ reschedule_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 
   GST_DEBUG_OBJECT (jitterbuffer,
       "replace timer for seqnum %d->%d to %" GST_TIME_FORMAT,
-      timer->seqnum, seqnum, GST_TIME_ARGS (timeout));
+      oldseq, seqnum, GST_TIME_ARGS (timeout));
 
   timer->timeout = timeout;
   timer->seqnum = seqnum;
 
   if (priv->clock_id) {
+    /* we changed the seqnum and there is a timer currently waiting with this
+     * seqnum, unschedule it */
     if (seqchange && priv->timer_seqnum == oldseq)
       unschedule_current_timer (jitterbuffer);
+    /* we changed the time, check if it is earlier than what we are waiting
+     * for and unschedule if so */
     else if (timechange)
       recalculate_timer (jitterbuffer, timer);
   }
@@ -1398,6 +1403,9 @@ remove_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
   if (timer == NULL)
     return;
 
+  if (priv->clock_id && priv->timer_seqnum == timer->seqnum)
+    unschedule_current_timer (jitterbuffer);
+
   idx = timer->idx;
   GST_DEBUG_OBJECT (jitterbuffer, "removed index %d", idx);
   g_array_remove_index_fast (priv->timers, idx);
@@ -1410,6 +1418,7 @@ remove_all_timers (GstRtpJitterBuffer * jitterbuffer)
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   GST_DEBUG_OBJECT (jitterbuffer, "removed all timers");
   g_array_set_size (priv->timers, 0);
+  unschedule_current_timer (jitterbuffer);
 }
 
 
@@ -2160,6 +2169,12 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       ((priv->srcresult != GST_FLOW_OK))
           goto flushing;
 
+    /* we released the lock, the array might have changed */
+    timer = &g_array_index (priv->timers, TimerData, timer_idx);
+    /* if changed to timeout immediately, do so */
+    if (timer->timeout == -1)
+      goto do_timeout;
+
     /* if we got unscheduled and we are not flushing, it's because a new tail
      * element became available in the queue or we flushed the queue.
      * Grab it and try to push or sync. */
@@ -2168,8 +2183,6 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       goto done;
     }
 
-    /* we released the lock, the array might have changed */
-    timer = &g_array_index (priv->timers, TimerData, timer_idx);
   do_timeout:
     switch (timer->type) {
       case TIMER_TYPE_EXPECTED:
