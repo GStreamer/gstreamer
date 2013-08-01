@@ -1380,6 +1380,9 @@ remove_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   guint idx;
 
+  if (timer == NULL)
+    return;
+
   idx = timer->idx;
   GST_DEBUG_OBJECT (jitterbuffer, "removed index %d", idx);
   g_array_remove_index_fast (priv->timers, idx);
@@ -1410,6 +1413,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   gint percent = -1;
   guint8 pt;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  TimerData *timer;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
 
@@ -1528,6 +1532,23 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     }
   }
   priv->next_in_seqnum = (seqnum + 1) & 0xffff;
+
+  /* find the timer for the current seqnum. */
+  timer = find_timer (jitterbuffer, TIMER_TYPE_EXPECTED, seqnum);
+  if (priv->packet_spacing > 0) {
+    GstClockTime expected;
+
+    /* calculate expected arrival time of the next seqnum */
+    expected = dts + priv->packet_spacing + 20 * GST_MSECOND;
+    /* and update/install timer for next seqnum */
+    if (timer)
+      reschedule_timer (jitterbuffer, timer, priv->next_in_seqnum, expected);
+    else
+      timer = add_timer (jitterbuffer, TIMER_TYPE_EXPECTED,
+          priv->next_in_seqnum, expected);
+  } else {
+    remove_timer (jitterbuffer, timer);
+  }
 
   /* let's check if this buffer is too late, we can only accept packets with
    * bigger seqnum than the one we last pushed. */
@@ -2050,13 +2071,22 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
         i, test->seqnum, GST_TIME_ARGS (test->timeout));
 
     test_timeout = test->timeout;
-    /* find the smallest timeout */
-    if (timer == NULL || test_timeout == -1 || test_timeout < timer->timeout) {
+    if (test_timeout == -1) {
       timer = test;
       timer_timeout = test_timeout;
-      /* no timeout set, we can stop searching */
-      if (test_timeout == -1)
-        break;
+      break;
+    }
+
+    if (test->type != TIMER_TYPE_EXPECTED) {
+      /* add our latency and offset to get output times. */
+      test_timeout = apply_offset (jitterbuffer, test_timeout);
+      test_timeout += priv->latency_ns;
+    }
+
+    /* find the smallest timeout */
+    if (timer == NULL || test_timeout < timer_timeout) {
+      timer = test;
+      timer_timeout = test_timeout;
     }
   }
   if (timer) {
@@ -2083,10 +2113,6 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
     sync_time = timer_timeout + GST_ELEMENT_CAST (jitterbuffer)->base_time;
     /* add latency of peer to get input time */
     sync_time += priv->peer_latency;
-
-    /* add our latency and offset to get output times. */
-    sync_time = apply_offset (jitterbuffer, sync_time);
-    sync_time += priv->latency_ns;
 
     GST_DEBUG_OBJECT (jitterbuffer, "sync to timestamp %" GST_TIME_FORMAT
         " with sync time %" GST_TIME_FORMAT,
@@ -2131,6 +2157,8 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
   do_timeout:
     switch (timer->type) {
       case TIMER_TYPE_EXPECTED:
+        GST_DEBUG_OBJECT (jitterbuffer, "expected %d didn't arrive",
+            timer->seqnum);
         remove_timer (jitterbuffer, timer);
         break;
       case TIMER_TYPE_LOST:
