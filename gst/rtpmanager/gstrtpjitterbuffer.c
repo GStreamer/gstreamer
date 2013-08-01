@@ -300,6 +300,8 @@ static GstClockTime
 gst_rtp_jitter_buffer_set_active (GstRtpJitterBuffer * jitterbuffer,
     gboolean active, guint64 base_time);
 static void do_handle_sync (GstRtpJitterBuffer * jitterbuffer);
+
+static void unschedule_current_timer (GstRtpJitterBuffer * jitterbuffer);
 static void remove_all_timers (GstRtpJitterBuffer * jitterbuffer);
 
 static void
@@ -882,10 +884,7 @@ gst_rtp_jitter_buffer_flush_start (GstRtpJitterBuffer * jitterbuffer)
   JBUF_SIGNAL (priv);
   /* unlock clock, we just unschedule, the entry will be released by the
    * locking streaming thread. */
-  if (priv->clock_id) {
-    gst_clock_id_unschedule (priv->clock_id);
-    priv->unscheduled = TRUE;
-  }
+  unschedule_current_timer (jitterbuffer);
   JBUF_UNLOCK (priv);
 }
 
@@ -1296,6 +1295,27 @@ find_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type, guint16 seqnum)
   return timer;
 }
 
+static void
+unschedule_current_timer (GstRtpJitterBuffer * jitterbuffer)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+
+  if (priv->clock_id) {
+    GST_DEBUG_OBJECT (jitterbuffer, "unschedule current timer");
+    gst_clock_id_unschedule (priv->clock_id);
+    priv->unscheduled = TRUE;
+  }
+}
+
+static void
+recalculate_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+
+  if (priv->clock_id && priv->timer_timeout > timer->timeout)
+    unschedule_current_timer (jitterbuffer);
+}
+
 static TimerData *
 add_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
     guint16 seqnum, GstClockTime timeout)
@@ -1316,6 +1336,8 @@ add_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
   timer->seqnum = seqnum;
   timer->timeout = timeout;
 
+  recalculate_timer (jitterbuffer, timer);
+
   return timer;
 }
 
@@ -1332,6 +1354,8 @@ reschedule_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 
   timer->timeout = timeout;
   timer->seqnum = seqnum;
+
+  recalculate_timer (jitterbuffer, timer);
 }
 
 static TimerData *
@@ -1562,8 +1586,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
    * when the tail buffer changed */
   if (G_UNLIKELY (priv->clock_id && tail)) {
     GST_DEBUG_OBJECT (jitterbuffer, "Unscheduling waiting new buffer");
-    gst_clock_id_unschedule (priv->clock_id);
-    priv->unscheduled = TRUE;
+    unschedule_current_timer (jitterbuffer);
   }
 
   GST_DEBUG_OBJECT (jitterbuffer, "Pushed packet #%d, now %d packets, tail: %d",
