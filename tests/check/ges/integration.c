@@ -738,9 +738,7 @@ test_mix_layers (GESTimeline * timeline, GESUriClipAsset ** assets,
           GES_TRACK_TYPE_UNKNOWN);
       fail_unless (clip != NULL);
 
-      children = ges_container_get_children (GES_CONTAINER (clip), FALSE);
-
-      for (tmp = children; tmp; tmp = tmp->next) {
+      for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
         track_element = GES_TRACK_ELEMENT (tmp->data);
         track_type = ges_track_element_get_track_type (track_element);
 
