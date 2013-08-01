@@ -23,10 +23,10 @@
 
 /* *INDENT-OFF* */
 static const char * const profile_specs[][4] = {
-  { "application/ogg", "audio/x-vorbis", "video/x-theora", "vorbis_theora.rendered.ogv" },
-  { "video/webm", "audio/x-vorbis", "video/x-vp8", "vorbis_vp8.rendered.webm"},
-  { "video/quicktime,variant=iso", "audio/mpeg,mpegversion=1,layer=3", "video/x-h264",  "aac_h264.rendered.mov"},
-  { "video/x-matroska", "audio/x-vorbis", "video/x-h264", "vorbis_h264.rendered.mkv"},
+  { "application/ogg", "audio/x-vorbis", "video/x-theora", "assets/vorbis_theora.rendered.ogv" },
+  { "video/webm", "audio/x-vorbis", "video/x-vp8", "assets/vorbis_vp8.rendered.webm"},
+  { "video/quicktime,variant=iso", "audio/mpeg,mpegversion=1,layer=3", "video/x-h264",  "assets/aac_h264.rendered.mov"},
+  { "video/x-matroska", "audio/x-vorbis", "video/x-h264", "assets/vorbis_h264.rendered.mkv"},
 };
 /* *INDENT-ON* */
 
@@ -850,29 +850,29 @@ ges_suite (void)
 static gboolean
 generate_all_files (void)
 {
-  if (!ges_generate_test_file_audio_video ("vorbis_vp8.0.webm", "vorbisenc",
-          "vp8enc", "webmmux", "18", "11"))
+  if (!ges_generate_test_file_audio_video ("assets/vorbis_vp8.0.webm",
+          "vorbisenc", "vp8enc", "webmmux", "18", "11"))
     return FALSE;
-  if (!ges_generate_test_file_audio_video ("vorbis_vp8.1.webm", "vorbisenc",
-          "vp8enc", "webmmux", "0", "0"))
+  if (!ges_generate_test_file_audio_video ("assets/vorbis_vp8.1.webm",
+          "vorbisenc", "vp8enc", "webmmux", "0", "0"))
     return FALSE;
-  if (!ges_generate_test_file_audio_video ("vorbis_theora.0.ogg", "vorbisenc",
-          "theoraenc", "oggmux", "18", "11"))
+  if (!ges_generate_test_file_audio_video ("assets/vorbis_theora.0.ogg",
+          "vorbisenc", "theoraenc", "oggmux", "18", "11"))
     return FALSE;
-  if (!ges_generate_test_file_audio_video ("vorbis_theora.1.ogg", "vorbisenc",
-          "theoraenc", "oggmux", "0", "0"))
+  if (!ges_generate_test_file_audio_video ("assets/vorbis_theora.1.ogg",
+          "vorbisenc", "theoraenc", "oggmux", "0", "0"))
     return FALSE;
-  if (!ges_generate_test_file_audio_video ("raw_h264.0.mov", NULL,
+  if (!ges_generate_test_file_audio_video ("assets/raw_h264.0.mov", NULL,
           "x264enc", "qtmux", "18", "11"))
     return FALSE;
-  if (!ges_generate_test_file_audio_video ("raw_h264.1.mov", NULL,
+  if (!ges_generate_test_file_audio_video ("assets/raw_h264.1.mov", NULL,
           "x264enc", "qtmux", "0", "0"))
     return FALSE;
-  if (!ges_generate_test_file_audio_video ("mp3_h264.0.mov", "lamemp3enc",
-          "x264enc", "qtmux", "18", "11"))
+  if (!ges_generate_test_file_audio_video ("assets/mp3_h264.0.mov",
+          "lamemp3enc", "x264enc", "qtmux", "18", "11"))
     return FALSE;
-  if (!ges_generate_test_file_audio_video ("mp3_h264.1.mov", "lamemp3enc",
-          "x264enc", "qtmux", "0", "0"))
+  if (!ges_generate_test_file_audio_video ("assets/mp3_h264.1.mov",
+          "lamemp3enc", "x264enc", "qtmux", "0", "0"))
     return FALSE;
 
   return TRUE;
