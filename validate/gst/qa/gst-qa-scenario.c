@@ -63,6 +63,7 @@ typedef enum
   SCENARIO_ACTION_UNKNOWN = 0,
   SCENARIO_ACTION_SEEK,
   SCENARIO_ACTION_PAUSE,
+  SCENARIO_ACTION_EOS,
 } ScenarioActionType;
 
 typedef struct _ScenarioAction
@@ -94,6 +95,11 @@ typedef struct _PauseInfo
 
   GstClockTime duration;
 } PauseInfo;
+
+typedef struct _EosInfo
+{
+  ScenarioAction action;
+} EosInfo;
 
 struct _GstQaScenarioPrivate
 {
@@ -181,6 +187,17 @@ _new_pause_info (void)
   return pause;
 }
 
+static EosInfo *
+_new_eos_info (void)
+{
+  EosInfo *eos = g_slice_new (EosInfo);
+
+  _scenario_action_init (SCENARIO_ACTION (eos));
+  eos->action.type = SCENARIO_ACTION_EOS;
+
+  return eos;
+}
+
 static void
 _scenario_action_clear (ScenarioAction * act)
 {
@@ -202,6 +219,13 @@ _free_pause_info (PauseInfo * info)
 }
 
 static void
+_free_eos_info (EosInfo * info)
+{
+  _scenario_action_clear (SCENARIO_ACTION (info));
+  g_slice_free (EosInfo, info);
+}
+
+static void
 _free_scenario_action (ScenarioAction * act)
 {
   switch (act->type) {
@@ -210,6 +234,9 @@ _free_scenario_action (ScenarioAction * act)
       break;
     case SCENARIO_ACTION_PAUSE:
       _free_pause_info ((PauseInfo *) act);
+      break;
+    case SCENARIO_ACTION_EOS:
+      _free_eos_info ((EosInfo *) act);
       break;
     default:
       g_assert_not_reached ();
@@ -280,6 +307,28 @@ _parse_pause (GMarkupParseContext * context, const gchar * element_name,
   priv->seeks = g_list_append (priv->seeks, info);
 }
 
+static inline void
+_parse_eos (GMarkupParseContext * context, const gchar * element_name,
+    const gchar ** attribute_names, const gchar ** attribute_values,
+    GstQaScenario * scenario, GError ** error)
+{
+  GstQaScenarioPrivate *priv = scenario->priv;
+  const char *playback_time = NULL;
+
+  EosInfo *info = _new_eos_info ();
+
+  if (!g_markup_collect_attributes (element_name, attribute_names,
+          attribute_values, error,
+          G_MARKUP_COLLECT_STRDUP | G_MARKUP_COLLECT_OPTIONAL, "name",
+          &info->action.name, G_MARKUP_COLLECT_STRING, "playback_time",
+          &playback_time, G_MARKUP_COLLECT_INVALID))
+    return;
+
+  if (playback_time)
+    info->action.playback_time = g_ascii_strtoull (playback_time, NULL, 10);
+  priv->seeks = g_list_append (priv->seeks, info);
+}
+
 static void
 _parse_element_start (GMarkupParseContext * context, const gchar * element_name,
     const gchar ** attribute_names, const gchar ** attribute_values,
@@ -305,6 +354,9 @@ _parse_element_start (GMarkupParseContext * context, const gchar * element_name,
             attribute_values, scenario, error);
       } else if (g_strcmp0 (element_name, "pause") == 0) {
         _parse_pause (context, element_name, attribute_names,
+            attribute_values, scenario, error);
+      } else if (g_strcmp0 (element_name, "eos") == 0) {
+        _parse_eos (context, element_name, attribute_names,
             attribute_values, scenario, error);
       }
     }
@@ -374,6 +426,9 @@ _execute_action (GstQaScenario * scenario, ScenarioAction * act)
     }
     g_timeout_add (pause->duration / GST_MSECOND,
         (GSourceFunc) _pause_action_restore_playing, scenario);
+  } else if (act->type == SCENARIO_ACTION_EOS) {
+    GST_DEBUG ("Sending eos to pipeline");
+    gst_element_send_event (priv->pipeline, gst_event_new_eos ());
   }
 }
 
