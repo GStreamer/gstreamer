@@ -813,6 +813,7 @@ GST_START_TEST (test_##name##_raw_h264_mov)                                    \
   testfilename1 = "raw_h264.0.mov";                                            \
   testfilename2 = "raw_h264.1.mov";                                            \
   test_image_filename = "test.png";                                            \
+  current_profile = profile;                                                   \
   func ();                                                                     \
 }                                                                              \
 GST_END_TEST;                                                                  \
@@ -822,6 +823,7 @@ GST_START_TEST (test_##name##_vorbis_theora_ogv)                               \
   testfilename1 = "vorbis_theora.0.ogg";                                       \
   testfilename2 = "vorbis_theora.1.ogg";                                       \
   test_image_filename = "test.png";                                            \
+  current_profile = profile;                                                   \
   func ();                                                                     \
 }                                                                              \
 GST_END_TEST;                                                                  \
