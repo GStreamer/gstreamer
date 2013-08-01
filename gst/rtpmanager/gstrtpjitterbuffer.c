@@ -1421,6 +1421,37 @@ remove_all_timers (GstRtpJitterBuffer * jitterbuffer)
   unschedule_current_timer (jitterbuffer);
 }
 
+/* we just received a packet with seqnum and dts.
+ *
+ * If we have a valid packet spacing estimate we can set a timer for when we
+ * should receive the next packet.
+ * If we don't have a valid estimate, we remove any timer we might have
+ * had for this packet.
+ */
+static void
+update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
+    GstClockTime dts)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  TimerData *timer;
+
+  /* find the timer for the current seqnum. */
+  timer = find_timer (jitterbuffer, TIMER_TYPE_EXPECTED, seqnum);
+  if (priv->packet_spacing > 0) {
+    GstClockTime expected;
+
+    /* calculate expected arrival time of the next seqnum */
+    expected = dts + priv->packet_spacing + 20 * GST_MSECOND;
+    /* and update/install timer for next seqnum */
+    if (timer)
+      reschedule_timer (jitterbuffer, timer, priv->next_in_seqnum, expected);
+    else
+      timer = add_timer (jitterbuffer, TIMER_TYPE_EXPECTED,
+          priv->next_in_seqnum, expected);
+  } else {
+    remove_timer (jitterbuffer, timer);
+  }
+}
 
 static GstFlowReturn
 gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
@@ -1437,7 +1468,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   gint percent = -1;
   guint8 pt;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
-  TimerData *timer;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
 
@@ -1557,23 +1587,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   }
   priv->next_in_seqnum = (seqnum + 1) & 0xffff;
 
-  /* find the timer for the current seqnum. */
-  timer = find_timer (jitterbuffer, TIMER_TYPE_EXPECTED, seqnum);
-  if (priv->packet_spacing > 0) {
-    GstClockTime expected;
-
-    /* calculate expected arrival time of the next seqnum */
-    expected = dts + priv->packet_spacing + 20 * GST_MSECOND;
-    /* and update/install timer for next seqnum */
-    if (timer)
-      reschedule_timer (jitterbuffer, timer, priv->next_in_seqnum, expected);
-    else
-      timer = add_timer (jitterbuffer, TIMER_TYPE_EXPECTED,
-          priv->next_in_seqnum, expected);
-  } else {
-    remove_timer (jitterbuffer, timer);
-  }
-
   /* let's check if this buffer is too late, we can only accept packets with
    * bigger seqnum than the one we last pushed. */
   if (G_LIKELY (priv->last_popped_seqnum != -1)) {
@@ -1585,6 +1598,9 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     if (G_UNLIKELY (gap <= 0))
       goto too_late;
   }
+
+  /* update timers */
+  update_timers (jitterbuffer, seqnum, dts);
 
   /* let's drop oldest packet if the queue is already full and drop-on-latency
    * is set. We can only do this when there actually is a latency. When no
