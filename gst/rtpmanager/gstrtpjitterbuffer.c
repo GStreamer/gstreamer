@@ -93,7 +93,7 @@ enum
 #define DEFAULT_RTX_DELAY           20
 #define DEFAULT_RTX_DELAY_REORDER   3
 #define DEFAULT_RTX_RETRY_TIMEOUT   40
-#define DEFAULT_RTX_RETRY_PERIOD    200
+#define DEFAULT_RTX_RETRY_PERIOD    160
 
 enum
 {
@@ -2154,8 +2154,23 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
     GstClockTimeDiff clock_jitter)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  GstEvent *event;
 
   GST_DEBUG_OBJECT (jitterbuffer, "expected %d didn't arrive", timer->seqnum);
+
+  event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+      gst_structure_new ("GstRTPRetransmissionRequest",
+          "seqnum", G_TYPE_UINT, (guint) timer->seqnum,
+          "running-time", G_TYPE_UINT64, timer->rtx_base,
+          "delay", G_TYPE_UINT64, timer->rtx_retry,
+          "frequency", G_TYPE_INT, priv->rtx_retry_timeout,
+          "period", G_TYPE_INT, priv->rtx_retry_period,
+          "deadline", G_TYPE_UINT, priv->latency_ms,
+          "packet-spacing", G_TYPE_UINT64, priv->packet_spacing, NULL));
+
+  JBUF_UNLOCK (priv);
+  gst_pad_push_event (priv->srcpad, event);
+  JBUF_LOCK (priv);
 
   timer->rtx_retry += (priv->rtx_retry_timeout * GST_MSECOND);
   if (timer->rtx_retry > (priv->rtx_retry_period * GST_MSECOND))
@@ -2164,7 +2179,7 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
     reschedule_timer (jitterbuffer, timer, timer->seqnum,
         timer->rtx_base + timer->rtx_retry);
 
-  return GST_FLOW_OK;
+  return priv->srcresult;
 }
 
 /* a packet is lost */
