@@ -1326,14 +1326,34 @@ unschedule_current_timer (GstRtpJitterBuffer * jitterbuffer)
   }
 }
 
+static GstClockTime
+get_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  GstClockTime test_timeout;
+
+  if ((test_timeout = timer->timeout) == -1)
+    return -1;
+
+  if (timer->type != TIMER_TYPE_EXPECTED) {
+    /* add our latency and offset to get output times. */
+    test_timeout = apply_offset (jitterbuffer, test_timeout);
+    test_timeout += priv->latency_ns;
+  }
+  return test_timeout;
+}
+
 static void
 recalculate_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
 
-  if (priv->clock_id && (timer->timeout == -1
-          || priv->timer_timeout > timer->timeout))
-    unschedule_current_timer (jitterbuffer);
+  if (priv->clock_id) {
+    GstClockTime timeout = get_timeout (jitterbuffer, timer);
+
+    if (timeout == -1 || timeout < priv->timer_timeout)
+      unschedule_current_timer (jitterbuffer);
+  }
 }
 
 static TimerData *
@@ -2131,28 +2151,17 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
   len = priv->timers->len;
   for (i = 0; i < len; i++) {
     TimerData *test = &g_array_index (priv->timers, TimerData, i);
-    GstClockTime test_timeout;
+    GstClockTime test_timeout = get_timeout (jitterbuffer, test);
 
     GST_DEBUG_OBJECT (jitterbuffer, "%d, %d, %" GST_TIME_FORMAT,
-        i, test->seqnum, GST_TIME_ARGS (test->timeout));
-
-    test_timeout = test->timeout;
-    if (test_timeout == -1) {
-      timer = test;
-      timer_timeout = test_timeout;
-      break;
-    }
-
-    if (test->type != TIMER_TYPE_EXPECTED) {
-      /* add our latency and offset to get output times. */
-      test_timeout = apply_offset (jitterbuffer, test_timeout);
-      test_timeout += priv->latency_ns;
-    }
+        i, test->seqnum, GST_TIME_ARGS (test_timeout));
 
     /* find the smallest timeout */
-    if (timer == NULL || test_timeout < timer_timeout) {
+    if (timer == NULL || test_timeout == -1 || test_timeout < timer_timeout) {
       timer = test;
       timer_timeout = test_timeout;
+      if (timer_timeout == -1)
+        break;
     }
   }
   if (timer) {
@@ -2198,8 +2207,8 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
     ret = gst_clock_id_wait (id, &clock_jitter);
 
     JBUF_LOCK (priv);
-    GST_DEBUG_OBJECT (jitterbuffer, "sync done, %d, %" G_GINT64_FORMAT,
-        ret, clock_jitter);
+    GST_DEBUG_OBJECT (jitterbuffer, "sync done, %d, #%d, %" G_GINT64_FORMAT,
+        ret, priv->timer_seqnum, clock_jitter);
     /* and free the entry */
     gst_clock_id_unref (id);
     priv->clock_id = NULL;
