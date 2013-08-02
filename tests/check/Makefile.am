@@ -19,7 +19,9 @@ TESTS_ENVIRONMENT = \
 # ths core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.*
 
-clean-local: clean-local-check clean-local-orc
+clean-local: clean-local-check
+	
+distclean-local: distclean-local-orc
 
 $(CHECK_REGISTRY):
 	$(TESTS_ENVIRONMENT)
@@ -502,7 +504,7 @@ orc/videotestsrc.c: $(top_srcdir)/gst/videotestsrc/gstvideotestsrcorc.orc
 	$(ORCC) --test -o $@ $<
 
 
-clean-local-orc:
+distclean-local-orc:
 	rm -rf orc
 
 EXTRA_DIST = gst-plugins-base.supp
