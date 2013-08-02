@@ -185,6 +185,8 @@ struct _GESTimelinePrivate
    * ignore the child-added signal */
   GESClip *ignore_track_element_added;
   GList *groups;
+
+  guint group_id;
 };
 
 /* private structure to contain our track-related information */
@@ -195,6 +197,8 @@ typedef struct
   GESTrack *track;
   GstPad *pad;                  /* Pad from the track */
   GstPad *ghostpad;
+
+  gulong probe_id;
 } TrackPrivate;
 
 enum
@@ -549,6 +553,8 @@ ges_timeline_init (GESTimeline * self)
   priv->auto_transitions =
       g_hash_table_new_full (g_str_hash, g_str_equal, NULL, gst_object_unref);
   priv->needs_transitions_update = TRUE;
+
+  priv->group_id = -1;
 
   g_signal_connect_after (self, "select-tracks-for-object",
       G_CALLBACK (select_tracks_for_object_default), NULL);
@@ -2179,6 +2185,29 @@ track_element_removed_cb (GESTrack * track,
   stop_tracking_track_element (timeline, track_element);
 }
 
+static GstPadProbeReturn
+_pad_probe_cb (GstPad * mixer_pad, GstPadProbeInfo * info,
+    GESTimeline * timeline)
+{
+  GstEvent *event = GST_PAD_PROBE_INFO_EVENT (info);
+  if (GST_EVENT_TYPE (event) == GST_EVENT_STREAM_START) {
+    LOCK_DYN (timeline);
+    if (timeline->priv->group_id == -1) {
+      if (!gst_event_parse_group_id (event, &timeline->priv->group_id))
+        timeline->priv->group_id = gst_util_group_id_next ();
+    }
+
+    info->data = gst_event_make_writable (event);
+    gst_event_set_group_id (GST_PAD_PROBE_INFO_EVENT (info),
+        timeline->priv->group_id);
+    UNLOCK_DYN (timeline);
+
+    return GST_PAD_PROBE_REMOVE;
+  }
+
+  return GST_PAD_PROBE_OK;
+}
+
 static void
 pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
 {
@@ -2221,6 +2250,11 @@ pad_added_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
     GST_DEBUG ("Signaling no-more-pads");
     gst_element_no_more_pads (GST_ELEMENT (tr_priv->timeline));
   }
+
+  tr_priv->probe_id = gst_pad_add_probe (pad,
+      GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      (GstPadProbeCallback) _pad_probe_cb, tr_priv->timeline, NULL);
+
   UNLOCK_DYN (tr_priv->timeline);
 }
 
