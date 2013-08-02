@@ -176,6 +176,7 @@ gst_rtsp_media_seek
 gst_rtsp_media_get_range_string
 
 gst_rtsp_media_set_state
+gst_rtsp_media_set_pipeline_state
 
 <SUBSECTION MediaClocks>
 gst_rtsp_media_get_clock

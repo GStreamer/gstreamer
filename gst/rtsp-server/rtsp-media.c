@@ -2063,6 +2063,13 @@ gst_rtsp_media_get_time_provider (GstRTSPMedia * media, const gchar * address,
   return provider;
 }
 
+/**
+ * gst_rtsp_media_set_pipeline_state:
+ * @media: a #GstRTSPMedia
+ * @state: the target state of the pipeline
+ *
+ * Set the state of the pipeline managed by @media to @state
+ */
 void
 gst_rtsp_media_set_pipeline_state (GstRTSPMedia * media, GstState state)
 {
