@@ -1400,9 +1400,6 @@ remove_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   guint idx;
 
-  if (timer == NULL)
-    return;
-
   if (priv->clock_id && priv->timer_seqnum == timer->seqnum)
     unschedule_current_timer (jitterbuffer);
 
@@ -1475,7 +1472,9 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     else
       timer = add_timer (jitterbuffer, TIMER_TYPE_EXPECTED,
           priv->next_in_seqnum, expected);
-  } else {
+  } else if (timer) {
+    /* if we had a timer, remove it, we don't know when to expect the next
+     * packet. */
     remove_timer (jitterbuffer, timer);
   }
 }
