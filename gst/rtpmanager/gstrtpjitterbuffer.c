@@ -1278,6 +1278,24 @@ post_buffering_percent (GstRtpJitterBuffer * jitterbuffer, gint percent)
   gst_element_post_message (GST_ELEMENT_CAST (jitterbuffer), message);
 }
 
+static GstClockTime
+apply_offset (GstRtpJitterBuffer * jitterbuffer, GstClockTime timestamp)
+{
+  GstRtpJitterBufferPrivate *priv;
+
+  priv = jitterbuffer->priv;
+
+  if (timestamp == -1)
+    return -1;
+
+  /* apply the timestamp offset, this is used for inter stream sync */
+  timestamp += priv->ts_offset;
+  /* add the offset, this is used when buffering */
+  timestamp += priv->out_offset;
+
+  return timestamp;
+}
+
 static TimerData *
 find_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type, guint16 seqnum)
 {
@@ -1735,24 +1753,6 @@ duplicate:
     gst_buffer_unref (buffer);
     goto finished;
   }
-}
-
-static GstClockTime
-apply_offset (GstRtpJitterBuffer * jitterbuffer, GstClockTime timestamp)
-{
-  GstRtpJitterBufferPrivate *priv;
-
-  priv = jitterbuffer->priv;
-
-  if (timestamp == -1)
-    return -1;
-
-  /* apply the timestamp offset, this is used for inter stream sync */
-  timestamp += priv->ts_offset;
-  /* add the offset, this is used when buffering */
-  timestamp += priv->out_offset;
-
-  return timestamp;
 }
 
 static GstClockTime
