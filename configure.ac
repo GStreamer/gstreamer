@@ -830,6 +830,8 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl *** output files ***
 
+$MKDIR_P tests/check/orc
+
 AC_CONFIG_FILES(
 Makefile
 gst-plugins-base.spec
