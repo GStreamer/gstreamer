@@ -343,7 +343,7 @@ gst_video_test_src_set_pattern (GstVideoTestSrc * videotestsrc,
 {
   videotestsrc->pattern_type = pattern_type;
 
-  GST_ERROR_OBJECT (videotestsrc, "setting pattern to %d", pattern_type);
+  GST_DEBUG_OBJECT (videotestsrc, "setting pattern to %d", pattern_type);
 
   switch (pattern_type) {
     case GST_VIDEO_TEST_SRC_SMPTE:
