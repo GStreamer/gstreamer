@@ -83,12 +83,15 @@ enum
   LAST_SIGNAL
 };
 
-#define DEFAULT_LATENCY_MS      200
-#define DEFAULT_DROP_ON_LATENCY FALSE
-#define DEFAULT_TS_OFFSET       0
-#define DEFAULT_DO_LOST         FALSE
-#define DEFAULT_MODE            RTP_JITTER_BUFFER_MODE_SLAVE
-#define DEFAULT_PERCENT         0
+#define DEFAULT_LATENCY_MS          200
+#define DEFAULT_DROP_ON_LATENCY     FALSE
+#define DEFAULT_TS_OFFSET           0
+#define DEFAULT_DO_LOST             FALSE
+#define DEFAULT_MODE                RTP_JITTER_BUFFER_MODE_SLAVE
+#define DEFAULT_PERCENT             0
+#define DEFAULT_DO_RETRANSMISSION   FALSE
+#define DEFAULT_RTX_DELAY           20
+#define DEFAULT_RTX_DELAY_REORDER   3
 
 enum
 {
@@ -99,6 +102,9 @@ enum
   PROP_DO_LOST,
   PROP_MODE,
   PROP_PERCENT,
+  PROP_DO_RETRANSMISSION,
+  PROP_RTX_DELAY,
+  PROP_RTX_DELAY_REORDER,
   PROP_LAST
 };
 
@@ -141,6 +147,9 @@ struct _GstRtpJitterBufferPrivate
   gboolean drop_on_latency;
   gint64 ts_offset;
   gboolean do_lost;
+  gboolean do_retransmission;
+  gint rtx_delay;
+  gint rtx_delay_reorder;
 
   /* the last seqnum we pushed out */
   guint32 last_popped_seqnum;
@@ -385,6 +394,52 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           "The buffer filled percent", 0, 100,
           0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
+   * GstRtpJitterBuffer::do-retransmission:
+   *
+   * Send out a GstRTPRetransmission event upstream when a packet is considered
+   * late and should be retransmitted.
+   *
+   * Since: 1.2
+   */
+  g_object_class_install_property (gobject_class, PROP_DO_RETRANSMISSION,
+      g_param_spec_boolean ("do-retransmission", "Do Retransmission",
+          "Send retransmission events upstream when a packet is late",
+          DEFAULT_DO_RETRANSMISSION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstRtpJitterBuffer::rtx-delay:
+   *
+   * When a packet did not arrive at the expected time, wait this extra amount
+   * of time before sending a retransmission event.
+   *
+   * When -1 is used, the max jitter will be used as extra delay.
+   *
+   * Since: 1.2
+   */
+  g_object_class_install_property (gobject_class, PROP_RTX_DELAY,
+      g_param_spec_int ("rtx-delay", "RTX Delay",
+          "Extra time in ms to wait before sending retransmission "
+          "event (-1 automatic)", -1, G_MAXUINT, DEFAULT_RTX_DELAY,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstRtpJitterBuffer::rtx-delay-reorder:
+   *
+   * Assume that a retransmission event should be sent when we see
+   * this much packet reordering.
+   *
+   * When -1 is used, the value will be estimated based on observed packet
+   * reordering.
+   *
+   * Since: 1.2
+   */
+  g_object_class_install_property (gobject_class, PROP_RTX_DELAY_REORDER,
+      g_param_spec_int ("rtx-delay-reorder", "RTX Delay Reorder",
+          "Sending retransmission event when this much reordering (-1 automatic)",
+          -1, G_MAXUINT, DEFAULT_RTX_DELAY_REORDER,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRtpJitterBuffer::request-pt-map:
    * @buffer: the object which received the signal
    * @pt: the pt
@@ -494,8 +549,11 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->latency_ns = priv->latency_ms * GST_MSECOND;
   priv->drop_on_latency = DEFAULT_DROP_ON_LATENCY;
   priv->do_lost = DEFAULT_DO_LOST;
-  priv->timers = g_array_new (FALSE, TRUE, sizeof (TimerData));
+  priv->do_retransmission = DEFAULT_DO_RETRANSMISSION;
+  priv->rtx_delay = DEFAULT_RTX_DELAY;
+  priv->rtx_delay_reorder = DEFAULT_RTX_DELAY_REORDER;
 
+  priv->timers = g_array_new (FALSE, TRUE, sizeof (TimerData));
   priv->jbuf = rtp_jitter_buffer_new ();
   g_mutex_init (&priv->jbuf_lock);
   g_cond_init (&priv->jbuf_cond);
@@ -1474,6 +1532,9 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
   TimerData *timer = NULL;
   gint i, len;
 
+  if (!priv->do_retransmission)
+    return;
+
   /* go through all timers and unschedule the ones with a large gap, also find
    * the timer for the seqnum */
   len = priv->timers->len;
@@ -1492,7 +1553,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     if (gap == 0) {
       /* the timer for the current seqnum */
       timer = test;
-    } else if (gap > 5) {
+    } else if (gap > priv->rtx_delay_reorder) {
       /* max gap, we exceeded the max reorder distance and we don't expect the
        * missing packet to be this reordered */
       reschedule_timer (jitterbuffer, test, test->seqnum, -1);
@@ -1503,7 +1564,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     GstClockTime expected;
 
     /* calculate expected arrival time of the next seqnum */
-    expected = dts + priv->packet_spacing + 20 * GST_MSECOND;
+    expected = dts + priv->packet_spacing + (priv->rtx_delay * GST_MSECOND);
     /* and update/install timer for next seqnum */
     if (timer)
       reschedule_timer (jitterbuffer, timer, priv->next_in_seqnum, expected);
@@ -2664,6 +2725,21 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       rtp_jitter_buffer_set_mode (priv->jbuf, g_value_get_enum (value));
       JBUF_UNLOCK (priv);
       break;
+    case PROP_DO_RETRANSMISSION:
+      JBUF_LOCK (priv);
+      priv->do_retransmission = g_value_get_boolean (value);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RTX_DELAY:
+      JBUF_LOCK (priv);
+      priv->rtx_delay = g_value_get_int (value);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RTX_DELAY_REORDER:
+      JBUF_LOCK (priv);
+      priv->rtx_delay_reorder = g_value_get_int (value);
+      JBUF_UNLOCK (priv);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2720,6 +2796,21 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
       JBUF_UNLOCK (priv);
       break;
     }
+    case PROP_DO_RETRANSMISSION:
+      JBUF_LOCK (priv);
+      g_value_set_boolean (value, priv->do_retransmission);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RTX_DELAY:
+      JBUF_LOCK (priv);
+      g_value_set_int (value, priv->rtx_delay);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RTX_DELAY_REORDER:
+      JBUF_LOCK (priv);
+      g_value_set_int (value, priv->rtx_delay_reorder);
+      JBUF_UNLOCK (priv);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
