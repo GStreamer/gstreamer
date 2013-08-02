@@ -1701,13 +1701,28 @@ gst_play_bin_get_text_pad (GstPlayBin * playbin, gint stream)
 
 
 static GstTagList *
-get_tags (GstPlayBin * playbin, GstSourceGroup * group, GPtrArray * channels,
-    gint stream)
+get_tags (GstPlayBin * playbin, GstSourceGroup * group, gint type, gint stream)
 {
   GstTagList *result;
+  GPtrArray *channels;
   GstPad *sinkpad;
 
-  if (!channels || stream >= channels->len || !group->combiner[stream].has_tags)
+  switch (type) {
+    case PLAYBIN_STREAM_AUDIO:
+      channels = group->audio_channels;
+      break;
+    case PLAYBIN_STREAM_VIDEO:
+      channels = group->video_channels;
+      break;
+    case PLAYBIN_STREAM_TEXT:
+      channels = group->text_channels;
+      break;
+    default:
+      channels = NULL;
+      break;
+  }
+
+  if (!channels || stream >= channels->len || !group->combiner[type].has_tags)
     return NULL;
 
   sinkpad = g_ptr_array_index (channels, stream);
@@ -1724,7 +1739,7 @@ gst_play_bin_get_video_tags (GstPlayBin * playbin, gint stream)
 
   GST_PLAY_BIN_LOCK (playbin);
   group = get_group (playbin);
-  result = get_tags (playbin, group, group->video_channels, stream);
+  result = get_tags (playbin, group, PLAYBIN_STREAM_VIDEO, stream);
   GST_PLAY_BIN_UNLOCK (playbin);
 
   return result;
@@ -1738,7 +1753,7 @@ gst_play_bin_get_audio_tags (GstPlayBin * playbin, gint stream)
 
   GST_PLAY_BIN_LOCK (playbin);
   group = get_group (playbin);
-  result = get_tags (playbin, group, group->audio_channels, stream);
+  result = get_tags (playbin, group, PLAYBIN_STREAM_AUDIO, stream);
   GST_PLAY_BIN_UNLOCK (playbin);
 
   return result;
@@ -1752,7 +1767,7 @@ gst_play_bin_get_text_tags (GstPlayBin * playbin, gint stream)
 
   GST_PLAY_BIN_LOCK (playbin);
   group = get_group (playbin);
-  result = get_tags (playbin, group, group->text_channels, stream);
+  result = get_tags (playbin, group, PLAYBIN_STREAM_TEXT, stream);
   GST_PLAY_BIN_UNLOCK (playbin);
 
   return result;
