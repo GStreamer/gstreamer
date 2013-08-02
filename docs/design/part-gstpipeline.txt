@@ -31,7 +31,7 @@ GstBin, the pipeline performs the following actions during a state change:
     - set clock and base_time on all elements before performing the
       state change.
 
- - PAUSED -> PLAYING:
+ - PLAYING -> PAUSED:
     - calculate the running_time when the pipeline was PAUSED.
 
  - READY -> NULL:
