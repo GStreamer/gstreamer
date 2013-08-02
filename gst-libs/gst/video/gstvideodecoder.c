@@ -870,7 +870,7 @@ gst_video_decoder_flush (GstVideoDecoder * dec, gboolean hard)
   }
 
   /* and get (re)set for the sequel */
-  gst_video_decoder_reset (dec, hard);
+  gst_video_decoder_reset (dec, FALSE);
 
   return ret;
 }
