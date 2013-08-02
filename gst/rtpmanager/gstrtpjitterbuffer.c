@@ -1643,9 +1643,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
       goto too_late;
   }
 
-  /* update timers */
-  update_timers (jitterbuffer, seqnum, dts);
-
   /* let's drop oldest packet if the queue is already full and drop-on-latency
    * is set. We can only do this when there actually is a latency. When no
    * latency is set, we just pump it in the queue and let the other end push it
@@ -1678,6 +1675,9 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   if (G_UNLIKELY (!rtp_jitter_buffer_insert (priv->jbuf, buffer, dts,
               priv->clock_rate, &tail, &percent)))
     goto duplicate;
+
+  /* update timers */
+  update_timers (jitterbuffer, seqnum, dts);
 
   /* we had an unhandled SR, handle it now */
   if (priv->last_sr)
