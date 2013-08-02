@@ -92,6 +92,8 @@ enum
 #define DEFAULT_DO_RETRANSMISSION   FALSE
 #define DEFAULT_RTX_DELAY           20
 #define DEFAULT_RTX_DELAY_REORDER   3
+#define DEFAULT_RTX_RETRY_TIMEOUT   40
+#define DEFAULT_RTX_RETRY_PERIOD    200
 
 enum
 {
@@ -105,6 +107,8 @@ enum
   PROP_DO_RETRANSMISSION,
   PROP_RTX_DELAY,
   PROP_RTX_DELAY_REORDER,
+  PROP_RTX_RETRY_TIMEOUT,
+  PROP_RTX_RETRY_PERIOD,
   PROP_LAST
 };
 
@@ -150,6 +154,8 @@ struct _GstRtpJitterBufferPrivate
   gboolean do_retransmission;
   gint rtx_delay;
   gint rtx_delay_reorder;
+  gint rtx_retry_timeout;
+  gint rtx_retry_period;
 
   /* the last seqnum we pushed out */
   guint32 last_popped_seqnum;
@@ -220,6 +226,8 @@ typedef struct
   guint16 seqnum;
   TimerType type;
   GstClockTime timeout;
+  GstClockTime rtx_base;
+  GstClockTime rtx_retry;
 } TimerData;
 
 #define GST_RTP_JITTER_BUFFER_GET_PRIVATE(o) \
@@ -438,6 +446,37 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           "Sending retransmission event when this much reordering (-1 automatic)",
           -1, G_MAXUINT, DEFAULT_RTX_DELAY_REORDER,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstRtpJitterBuffer::rtx-retry-timeout:
+   *
+   * When no packet has been received after sending a retransmission event
+   * for this time, retry sending a retransmission event.
+   *
+   * When -1 is used, the value will be estimated based on observed round
+   * trip time.
+   *
+   * Since: 1.2
+   */
+  g_object_class_install_property (gobject_class, PROP_RTX_RETRY_TIMEOUT,
+      g_param_spec_int ("rtx-retry-timeout", "RTX Retry Timeout",
+          "Retry sending a transmission event after this timeout in "
+          "ms (-1 automatic)", -1, G_MAXUINT, DEFAULT_RTX_RETRY_TIMEOUT,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+  /**
+   * GstRtpJitterBuffer::rtx-retry-period:
+   *
+   * The amount of time to try to get a retransmission.
+   *
+   * When -1 is used, the value will be estimated based on the jitterbuffer
+   * latency and the observed round trip time.
+   *
+   * Since: 1.2
+   */
+  g_object_class_install_property (gobject_class, PROP_RTX_RETRY_PERIOD,
+      g_param_spec_int ("rtx-retry-period", "RTX Retry Period",
+          "Try to get a retransmission for this many ms "
+          "(-1 automatic)", -1, G_MAXUINT, DEFAULT_RTX_RETRY_PERIOD,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstRtpJitterBuffer::request-pt-map:
@@ -552,6 +591,8 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->do_retransmission = DEFAULT_DO_RETRANSMISSION;
   priv->rtx_delay = DEFAULT_RTX_DELAY;
   priv->rtx_delay_reorder = DEFAULT_RTX_DELAY_REORDER;
+  priv->rtx_retry_timeout = DEFAULT_RTX_RETRY_TIMEOUT;
+  priv->rtx_retry_period = DEFAULT_RTX_RETRY_PERIOD;
 
   priv->timers = g_array_new (FALSE, TRUE, sizeof (TimerData));
   priv->jbuf = rtp_jitter_buffer_new ();
@@ -1556,7 +1597,8 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     } else if (gap > priv->rtx_delay_reorder) {
       /* max gap, we exceeded the max reorder distance and we don't expect the
        * missing packet to be this reordered */
-      reschedule_timer (jitterbuffer, test, test->seqnum, -1);
+      if (test->rtx_retry == 0)
+        reschedule_timer (jitterbuffer, test, test->seqnum, -1);
     }
   }
 
@@ -1571,6 +1613,9 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     else
       timer = add_timer (jitterbuffer, TIMER_TYPE_EXPECTED,
           priv->next_in_seqnum, expected);
+
+    timer->rtx_base = timer->timeout;
+    timer->rtx_retry = 0;
   } else if (timer) {
     /* if we had a timer, remove it, we don't know when to expect the next
      * packet. */
@@ -2103,6 +2148,25 @@ wait:
   }
 }
 
+/* the timeout for when we expected a packet expired */
+static GstFlowReturn
+do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
+    GstClockTimeDiff clock_jitter)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+
+  GST_DEBUG_OBJECT (jitterbuffer, "expected %d didn't arrive", timer->seqnum);
+
+  timer->rtx_retry += (priv->rtx_retry_timeout * GST_MSECOND);
+  if (timer->rtx_retry > (priv->rtx_retry_period * GST_MSECOND))
+    remove_timer (jitterbuffer, timer);
+  else
+    reschedule_timer (jitterbuffer, timer, timer->seqnum,
+        timer->rtx_base + timer->rtx_retry);
+
+  return GST_FLOW_OK;
+}
+
 /* a packet is lost */
 static GstFlowReturn
 do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
@@ -2298,9 +2362,7 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
   do_timeout:
     switch (timer->type) {
       case TIMER_TYPE_EXPECTED:
-        GST_DEBUG_OBJECT (jitterbuffer, "expected %d didn't arrive",
-            timer->seqnum);
-        remove_timer (jitterbuffer, timer);
+        result = do_expected_timeout (jitterbuffer, timer, clock_jitter);
         break;
       case TIMER_TYPE_LOST:
         result = do_lost_timeout (jitterbuffer, timer, clock_jitter);
@@ -2740,6 +2802,16 @@ gst_rtp_jitter_buffer_set_property (GObject * object,
       priv->rtx_delay_reorder = g_value_get_int (value);
       JBUF_UNLOCK (priv);
       break;
+    case PROP_RTX_RETRY_TIMEOUT:
+      JBUF_LOCK (priv);
+      priv->rtx_retry_timeout = g_value_get_int (value);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RTX_RETRY_PERIOD:
+      JBUF_LOCK (priv);
+      priv->rtx_retry_period = g_value_get_int (value);
+      JBUF_UNLOCK (priv);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2809,6 +2881,16 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
     case PROP_RTX_DELAY_REORDER:
       JBUF_LOCK (priv);
       g_value_set_int (value, priv->rtx_delay_reorder);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RTX_RETRY_TIMEOUT:
+      JBUF_LOCK (priv);
+      g_value_set_int (value, priv->rtx_retry_timeout);
+      JBUF_UNLOCK (priv);
+      break;
+    case PROP_RTX_RETRY_PERIOD:
+      JBUF_LOCK (priv);
+      g_value_set_int (value, priv->rtx_retry_period);
       JBUF_UNLOCK (priv);
       break;
     default:
