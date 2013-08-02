@@ -52,6 +52,9 @@
 
 #include <string.h>
 
+#include <gst/tag/tag.h>
+#include <gst/pbutils/pbutils.h>
+
 #include "gstmpegdefs.h"
 #include "gstmpegdemux.h"
 
@@ -495,6 +498,12 @@ gst_flups_demux_create_stream (GstFluPSDemux * demux, gint id, gint stream_type)
   g_free (stream_id);
 
   gst_pad_set_caps (stream->pad, caps);
+
+  if (!stream->pending_tags)
+    stream->pending_tags = gst_tag_list_new_empty ();
+  gst_pb_utils_add_codec_description_to_tag_list (stream->pending_tags, NULL,
+      caps);
+
   gst_caps_unref (caps);
   GST_DEBUG_OBJECT (demux, "create pad %s, caps %" GST_PTR_FORMAT, name, caps);
   g_free (name);
@@ -788,8 +797,10 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
       g_snprintf (cur_stream_name, 32, "audio-%d-language", i);
       lang_code = gst_structure_get_string (structure, cur_stream_name);
       if (lang_code) {
-        GstTagList *list = gst_tag_list_new_empty ();
+        GstTagList *list = temp->pending_tags;
 
+        if (!list)
+          list = gst_tag_list_new_empty ();
         gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
             GST_TAG_LANGUAGE_CODE, lang_code, NULL);
         temp->pending_tags = list;
@@ -820,8 +831,10 @@ gst_flups_demux_handle_dvd_event (GstFluPSDemux * demux, GstEvent * event)
       g_snprintf (cur_stream_name, 32, "subpicture-%d-language", i);
       lang_code = gst_structure_get_string (structure, cur_stream_name);
       if (lang_code) {
-        GstTagList *list = gst_tag_list_new_empty ();
+        GstTagList *list = temp->pending_tags;
 
+        if (!list)
+          list = gst_tag_list_new_empty ();
         gst_tag_list_add (list, GST_TAG_MERGE_REPLACE,
             GST_TAG_LANGUAGE_CODE, lang_code, NULL);
         temp->pending_tags = list;
