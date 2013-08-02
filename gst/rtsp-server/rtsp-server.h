@@ -116,6 +116,34 @@ GSource *             gst_rtsp_server_create_source        (GstRTSPServer *serve
 guint                 gst_rtsp_server_attach               (GstRTSPServer *server,
                                                             GMainContext *context);
 
+/**
+ * GstRTSPServerClientFilterFunc:
+ * @server: a #GstRTSPServer object
+ * @sess: a #GstRTSPClient in @server
+ * @user_data: user data that has been given to gst_rtsp_server_client_filter()
+ *
+ * This function will be called by the gst_rtsp_server_client_filter(). An
+ * implementation should return a value of #GstRTSPFilterResult.
+ *
+ * When this function returns #GST_RTSP_FILTER_REMOVE, @client will be removed
+ * from @server.
+ *
+ * A return value of #GST_RTSP_FILTER_KEEP will leave @client untouched in
+ * @server.
+ *
+ * A value of #GST_RTSP_FILTER_REF will add @client to the result #GList of
+ * gst_rtsp_server_client_filter().
+ *
+ * Returns: a #GstRTSPFilterResult.
+ */
+typedef GstRTSPFilterResult (*GstRTSPServerClientFilterFunc)  (GstRTSPServer *server,
+                                                               GstRTSPClient *client,
+                                                               gpointer user_data);
+
+GList *                gst_rtsp_server_client_filter    (GstRTSPServer *server,
+                                                         GstRTSPServerClientFilterFunc func,
+                                                         gpointer user_data);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_SERVER_H__ */

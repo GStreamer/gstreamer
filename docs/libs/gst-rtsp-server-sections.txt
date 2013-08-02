@@ -356,6 +356,10 @@ gst_rtsp_server_io_func
 gst_rtsp_server_create_socket
 gst_rtsp_server_create_source
 gst_rtsp_server_attach
+
+GstRTSPServerClientFilterFunc
+gst_rtsp_server_client_filter
+
 <SUBSECTION Standard>
 GST_IS_RTSP_SERVER
 GST_RTSP_SERVER_CAST

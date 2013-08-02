@@ -2687,7 +2687,7 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
 
 /**
  * gst_rtsp_client_session_filter:
- * @client: a #GstRTSPclient
+ * @client: a #GstRTSPClient
  * @func: (scope call): a callback
  * @user_data: user data passed to @func
  *

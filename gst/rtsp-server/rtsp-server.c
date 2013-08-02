@@ -1302,3 +1302,63 @@ no_source:
     return 0;
   }
 }
+
+/**
+ * gst_rtsp_server_client_filter:
+ * @server: a #GstRTSPServer
+ * @func: (scope call): a callback
+ * @user_data: user data passed to @func
+ *
+ * Call @func for each client managed by @server. The result value of @func
+ * determines what happens to the client. @func will be called with @server
+ * locked so no further actions on @server can be performed from @func.
+ *
+ * If @func returns #GST_RTSP_FILTER_REMOVE, the client will be removed from
+ * @server.
+ *
+ * If @func returns #GST_RTSP_FILTER_KEEP, the client will remain in @server.
+ *
+ * If @func returns #GST_RTSP_FILTER_REF, the client will remain in @server but
+ * will also be added with an additional ref to the result #GList of this
+ * function..
+ *
+ * Returns: (element-type GstRTSPClient) (transfer full): a #GList with all
+ * clients for which @func returned #GST_RTSP_FILTER_REF. After usage, each
+ * element in the #GList should be unreffed before the list is freed.
+ */
+GList *
+gst_rtsp_server_client_filter (GstRTSPServer * server,
+    GstRTSPServerClientFilterFunc func, gpointer user_data)
+{
+  GstRTSPServerPrivate *priv;
+  GList *result, *walk, *next;
+
+  g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
+  g_return_val_if_fail (func != NULL, NULL);
+
+  priv = server->priv;
+
+  result = NULL;
+
+  GST_RTSP_SERVER_LOCK (server);
+  for (walk = priv->clients; walk; walk = next) {
+    GstRTSPClient *client = walk->data;
+
+    next = g_list_next (walk);
+
+    switch (func (server, client, user_data)) {
+      case GST_RTSP_FILTER_REMOVE:
+        /* remove client, FIXME */
+        break;
+      case GST_RTSP_FILTER_REF:
+        result = g_list_prepend (result, g_object_ref (client));
+        break;
+      case GST_RTSP_FILTER_KEEP:
+      default:
+        break;
+    }
+  }
+  GST_RTSP_SERVER_UNLOCK (server);
+
+  return result;
+}
