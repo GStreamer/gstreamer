@@ -202,7 +202,7 @@ gst_mpeg2dec_reset (GstVideoDecoder * decoder, gboolean hard)
 
   /* reset the initial video state */
   mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
-  mpeg2_reset (mpeg2dec->decoder, hard);
+  mpeg2_reset (mpeg2dec->decoder, hard ? 0 : 1);
   mpeg2_skip (mpeg2dec->decoder, 1);
 
   gst_mpeg2dec_clear_buffers (mpeg2dec);
