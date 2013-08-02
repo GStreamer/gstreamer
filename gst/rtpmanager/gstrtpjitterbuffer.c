@@ -428,7 +428,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   g_object_class_install_property (gobject_class, PROP_RTX_DELAY,
       g_param_spec_int ("rtx-delay", "RTX Delay",
           "Extra time in ms to wait before sending retransmission "
-          "event (-1 automatic)", -1, G_MAXUINT, DEFAULT_RTX_DELAY,
+          "event (-1 automatic)", -1, G_MAXINT, DEFAULT_RTX_DELAY,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRtpJitterBuffer::rtx-delay-reorder:
@@ -444,7 +444,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   g_object_class_install_property (gobject_class, PROP_RTX_DELAY_REORDER,
       g_param_spec_int ("rtx-delay-reorder", "RTX Delay Reorder",
           "Sending retransmission event when this much reordering (-1 automatic)",
-          -1, G_MAXUINT, DEFAULT_RTX_DELAY_REORDER,
+          -1, G_MAXINT, DEFAULT_RTX_DELAY_REORDER,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRtpJitterBuffer::rtx-retry-timeout:
@@ -460,7 +460,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   g_object_class_install_property (gobject_class, PROP_RTX_RETRY_TIMEOUT,
       g_param_spec_int ("rtx-retry-timeout", "RTX Retry Timeout",
           "Retry sending a transmission event after this timeout in "
-          "ms (-1 automatic)", -1, G_MAXUINT, DEFAULT_RTX_RETRY_TIMEOUT,
+          "ms (-1 automatic)", -1, G_MAXINT, DEFAULT_RTX_RETRY_TIMEOUT,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
    * GstRtpJitterBuffer::rtx-retry-period:
@@ -475,7 +475,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   g_object_class_install_property (gobject_class, PROP_RTX_RETRY_PERIOD,
       g_param_spec_int ("rtx-retry-period", "RTX Retry Period",
           "Try to get a retransmission for this many ms "
-          "(-1 automatic)", -1, G_MAXUINT, DEFAULT_RTX_RETRY_PERIOD,
+          "(-1 automatic)", -1, G_MAXINT, DEFAULT_RTX_RETRY_PERIOD,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
