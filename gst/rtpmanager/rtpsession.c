@@ -112,8 +112,6 @@ static void rtp_session_set_property (GObject * object, guint prop_id,
 static void rtp_session_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static gboolean rtp_session_on_sending_rtcp (RTPSession * sess,
-    GstBuffer * buffer, gboolean early);
 static void rtp_session_send_rtcp (RTPSession * sess,
     GstClockTimeDiff max_delay);
 
@@ -451,7 +449,6 @@ rtp_session_class_init (RTPSessionClass * klass)
 
   klass->get_source_by_ssrc =
       GST_DEBUG_FUNCPTR (rtp_session_get_source_by_ssrc);
-  klass->on_sending_rtcp = GST_DEBUG_FUNCPTR (rtp_session_on_sending_rtcp);
   klass->send_rtcp = GST_DEBUG_FUNCPTR (rtp_session_send_rtcp);
 
   GST_DEBUG_CATEGORY_INIT (rtp_session_debug, "rtpsession", 0, "RTP Session");
@@ -2083,8 +2080,7 @@ rtp_session_request_local_key_unit (RTPSession * sess, RTPSource * src,
     GstClockTime round_trip_in_ns = gst_util_uint64_scale (round_trip,
         GST_SECOND, 65536);
 
-    if (sess->last_keyframe_request != GST_CLOCK_TIME_NONE &&
-        current_time - sess->last_keyframe_request < 2 * round_trip_in_ns) {
+    if (current_time - sess->last_keyframe_request < 2 * round_trip_in_ns) {
       GST_DEBUG ("Ignoring %s request because one was send without one "
           "RTT (%" GST_TIME_FORMAT " < %" GST_TIME_FORMAT ")",
           fir ? "FIR" : "PLI",
@@ -2711,6 +2707,8 @@ typedef struct
   RTPSession *sess;
   RTPSource *source;
   guint num_to_report;
+  gboolean have_fir;
+  gboolean have_pli;
   GstBuffer *rtcp;
   GstClockTime current_time;
   guint64 ntpnstime;
@@ -2822,6 +2820,101 @@ reported:
     sess->generation++;
     GST_DEBUG ("all reported, generation now %u", sess->generation);
   }
+}
+
+/* construct FIR */
+static void
+session_add_fir (const gchar * key, RTPSource * source, ReportData * data)
+{
+  GstRTCPPacket *packet = &data->packet;
+  guint16 len;
+  guint8 *fci_data;
+
+  if (!source->send_fir)
+    return;
+
+  len = gst_rtcp_packet_fb_get_fci_length (packet);
+  if (!gst_rtcp_packet_fb_set_fci_length (packet, len + 2))
+    /* exit because the packet is full, will put next request in a
+     * further packet */
+    return;
+
+  fci_data = gst_rtcp_packet_fb_get_fci (packet) + (len * 4);
+
+  GST_WRITE_UINT32_BE (fci_data, source->ssrc);
+  fci_data += 4;
+  fci_data[0] = source->current_send_fir_seqnum;
+  fci_data[1] = fci_data[2] = fci_data[3] = 0;
+
+  source->send_fir = FALSE;
+}
+
+static void
+session_fir (RTPSession * sess, ReportData * data)
+{
+  GstRTCPBuffer *rtcp = &data->rtcpbuf;
+  GstRTCPPacket *packet = &data->packet;
+
+  if (!gst_rtcp_buffer_add_packet (rtcp, GST_RTCP_TYPE_PSFB, packet))
+    return;
+
+  gst_rtcp_packet_fb_set_type (packet, GST_RTCP_PSFB_TYPE_FIR);
+  gst_rtcp_packet_fb_set_sender_ssrc (packet, data->source->ssrc);
+  gst_rtcp_packet_fb_set_media_ssrc (packet, 0);
+
+  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+      (GHFunc) session_add_fir, data);
+
+  if (gst_rtcp_packet_fb_get_fci_length (packet) == 0)
+    gst_rtcp_packet_remove (packet);
+  else
+    data->may_suppress = FALSE;
+}
+
+static gboolean
+has_pli_compare_func (gconstpointer a, gconstpointer ignored)
+{
+  GstRTCPPacket packet;
+  GstRTCPBuffer rtcp = { NULL, };
+  gboolean ret = FALSE;
+
+  gst_rtcp_buffer_map ((GstBuffer *) a, GST_MAP_READ, &rtcp);
+
+  if (gst_rtcp_buffer_get_first_packet (&rtcp, &packet)) {
+    if (gst_rtcp_packet_get_type (&packet) == GST_RTCP_TYPE_PSFB &&
+        gst_rtcp_packet_fb_get_type (&packet) == GST_RTCP_PSFB_TYPE_PLI)
+      ret = TRUE;
+  }
+
+  gst_rtcp_buffer_unmap (&rtcp);
+
+  return ret;
+}
+
+/* construct PLI */
+static void
+session_pli (const gchar * key, RTPSource * source, ReportData * data)
+{
+  GstRTCPBuffer *rtcp = &data->rtcpbuf;
+  GstRTCPPacket *packet = &data->packet;
+
+  if (!source->send_pli)
+    return;
+
+  if (rtp_source_has_retained (source, has_pli_compare_func, NULL))
+    return;
+
+  if (!gst_rtcp_buffer_add_packet (rtcp, GST_RTCP_TYPE_PSFB, packet))
+    /* exit because the packet is full, will put next request in a
+     * further packet */
+    return;
+
+  gst_rtcp_packet_fb_set_type (packet, GST_RTCP_PSFB_TYPE_PLI);
+  gst_rtcp_packet_fb_set_sender_ssrc (packet, data->source->ssrc);
+  gst_rtcp_packet_fb_set_media_ssrc (packet, source->ssrc);
+
+  source->send_pli = FALSE;
+  data->may_suppress = FALSE;
 }
 
 /* perform cleanup of sources that timed out */
@@ -3129,9 +3222,18 @@ clone_ssrcs_hashtable (gchar * key, RTPSource * source, GHashTable * hash_table)
 }
 
 static gboolean
-remove_closing_sources (const gchar * key, RTPSource * source, gpointer * data)
+remove_closing_sources (const gchar * key, RTPSource * source,
+    ReportData * data)
 {
-  return source->closing;
+  if (source->closing)
+    return TRUE;
+
+  if (source->send_fir)
+    data->have_fir = TRUE;
+  if (source->send_pli)
+    data->have_pli = TRUE;
+
+  return FALSE;
 }
 
 static void
@@ -3162,6 +3264,13 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
   }
   if (!data->has_sdes)
     session_sdes (sess, data);
+
+  if (data->have_fir)
+    session_fir (sess, data);
+
+  if (data->have_pli)
+    g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+        (GHFunc) session_pli, data);
 
   gst_rtcp_buffer_unmap (&data->rtcpbuf);
 
@@ -3396,121 +3505,6 @@ rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc, GstClockTime now,
   rtp_session_request_early_rtcp (sess, now, 200 * GST_MSECOND);
 
   return TRUE;
-}
-
-static gboolean
-has_pli_compare_func (gconstpointer a, gconstpointer ignored)
-{
-  GstRTCPPacket packet;
-  GstRTCPBuffer rtcp = { NULL, };
-  gboolean ret = FALSE;
-
-  gst_rtcp_buffer_map ((GstBuffer *) a, GST_MAP_READ, &rtcp);
-
-  if (gst_rtcp_buffer_get_first_packet (&rtcp, &packet)) {
-    if (gst_rtcp_packet_get_type (&packet) == GST_RTCP_TYPE_PSFB &&
-        gst_rtcp_packet_fb_get_type (&packet) == GST_RTCP_PSFB_TYPE_PLI)
-      ret = TRUE;
-  }
-
-  gst_rtcp_buffer_unmap (&rtcp);
-
-  return ret;
-}
-
-static gboolean
-rtp_session_on_sending_rtcp (RTPSession * sess, GstBuffer * buffer,
-    gboolean early)
-{
-  gboolean ret = FALSE;
-  GHashTableIter iter;
-  gpointer key, value;
-  gboolean started_fir = FALSE;
-  GstRTCPPacket fir_rtcppacket;
-  GstRTCPPacket packet;
-  GstRTCPBuffer rtcp = { NULL, };
-  guint32 ssrc;
-
-  gst_rtcp_buffer_map (buffer, GST_MAP_READWRITE, &rtcp);
-
-  gst_rtcp_buffer_get_first_packet (&rtcp, &packet);
-  switch (gst_rtcp_packet_get_type (&packet)) {
-    case GST_RTCP_TYPE_SR:
-      gst_rtcp_packet_sr_get_sender_info (&packet, &ssrc,
-          NULL, NULL, NULL, NULL);
-      break;
-    case GST_RTCP_TYPE_RR:
-      ssrc = gst_rtcp_packet_rr_get_ssrc (&packet);
-      break;
-    default:
-      goto done;
-  }
-
-  RTP_SESSION_LOCK (sess);
-  g_hash_table_iter_init (&iter, sess->ssrcs[sess->mask_idx]);
-  while (g_hash_table_iter_next (&iter, &key, &value)) {
-    guint media_ssrc = GPOINTER_TO_UINT (key);
-    RTPSource *media_src = value;
-    guint8 *fci_data;
-
-    if (media_src->send_fir) {
-      if (!started_fir) {
-        if (!gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_PSFB,
-                &fir_rtcppacket))
-          break;
-        gst_rtcp_packet_fb_set_type (&fir_rtcppacket, GST_RTCP_PSFB_TYPE_FIR);
-        gst_rtcp_packet_fb_set_sender_ssrc (&fir_rtcppacket, ssrc);
-        gst_rtcp_packet_fb_set_media_ssrc (&fir_rtcppacket, 0);
-
-        if (!gst_rtcp_packet_fb_set_fci_length (&fir_rtcppacket, 2)) {
-          gst_rtcp_packet_remove (&fir_rtcppacket);
-          break;
-        }
-        ret = TRUE;
-        started_fir = TRUE;
-      } else {
-        if (!gst_rtcp_packet_fb_set_fci_length (&fir_rtcppacket,
-                !gst_rtcp_packet_fb_get_fci_length (&fir_rtcppacket) + 2))
-          break;
-      }
-
-      fci_data = gst_rtcp_packet_fb_get_fci (&fir_rtcppacket) -
-          ((gst_rtcp_packet_fb_get_fci_length (&fir_rtcppacket) - 2) * 4);
-
-      GST_WRITE_UINT32_BE (fci_data, media_ssrc);
-      fci_data += 4;
-      fci_data[0] = media_src->current_send_fir_seqnum;
-      fci_data[1] = fci_data[2] = fci_data[3] = 0;
-      media_src->send_fir = FALSE;
-    }
-  }
-
-  g_hash_table_iter_init (&iter, sess->ssrcs[sess->mask_idx]);
-  while (g_hash_table_iter_next (&iter, &key, &value)) {
-    guint media_ssrc = GPOINTER_TO_UINT (key);
-    RTPSource *media_src = value;
-    GstRTCPPacket pli_rtcppacket;
-
-    if (media_src->send_pli && !rtp_source_has_retained (media_src,
-            has_pli_compare_func, NULL)) {
-      if (!gst_rtcp_buffer_add_packet (&rtcp, GST_RTCP_TYPE_PSFB,
-              &pli_rtcppacket))
-        /* Break because the packet is full, will put next request in a
-         * further packet */
-        break;
-      gst_rtcp_packet_fb_set_type (&pli_rtcppacket, GST_RTCP_PSFB_TYPE_PLI);
-      gst_rtcp_packet_fb_set_sender_ssrc (&pli_rtcppacket, ssrc);
-      gst_rtcp_packet_fb_set_media_ssrc (&pli_rtcppacket, media_ssrc);
-      ret = TRUE;
-    }
-    media_src->send_pli = FALSE;
-  }
-  RTP_SESSION_UNLOCK (sess);
-
-done:
-  gst_rtcp_buffer_unmap (&rtcp);
-
-  return ret;
 }
 
 static void
