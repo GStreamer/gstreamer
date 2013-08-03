@@ -33,7 +33,8 @@ TESTS_ENVIRONMENT = \
 # the core dumps of some machines have PIDs appended
 CLEANFILES = core.* test-registry.*
 
-clean-local: clean-local-check clean-local-orc
+clean-local: clean-local-check
+distclean-local: distclean-local-orc
 
 if USE_FLAC
 check_flac = pipelines/flacdec
@@ -359,7 +360,7 @@ orc/videobox.c: $(top_srcdir)/gst/videobox/gstvideoboxorc.orc
 	$(MKDIR_P) orc/
 	$(ORCC) --test -o $@ $<
 
-clean-local-orc:
+distclean-local-orc:
 	rm -rf orc
 
 EXTRA_DIST = gst-plugins-good.supp

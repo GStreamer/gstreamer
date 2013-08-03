@@ -1110,6 +1110,8 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl *** output files ***
 
+$MKDIR_P tests/check/orc
+
 dnl keep this alphabetic per directory, please
 AC_CONFIG_FILES(
 Makefile
