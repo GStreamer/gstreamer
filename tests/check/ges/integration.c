@@ -21,6 +21,8 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
+static GList *tests_names;
+
 /* *INDENT-OFF* */
 static const char * const profile_specs[][4] = {
   { "application/ogg", "audio/x-vorbis", "video/x-theora", "assets/vorbis_theora.rendered.ogv" },
@@ -866,7 +868,15 @@ GST_END_TEST;
   tcase_add_test (tc_chain, test_##name##_playback_vorbis_vp8_webm);           \
   tcase_add_test (tc_chain, test_##name##_playback_vorbis_theora_ogv);         \
   tcase_add_test (tc_chain, test_##name##_playback_raw_h264_mov);              \
-  tcase_add_test (tc_chain, test_##name##_playback_mp3_h264_mov);
+  tcase_add_test (tc_chain, test_##name##_playback_mp3_h264_mov);              \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+        "_playback_mp3_h264_mov"));                                             \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+        "_playback_raw_h264_mov"));                                             \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+        "_playback_vorbis_theora_ogv"));                                        \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+        "_playback_vorbis_vp8_webm"));
 
 #define ADD_RENDERING_TESTS(name)                                              \
   tcase_add_test (tc_chain, test_##name##_render_to_vorbis_theora_ogg_raw_h264_mov);      \
@@ -884,7 +894,39 @@ GST_END_TEST;
   tcase_add_test (tc_chain, test_##name##_render_to_vorbis_h264_matroska_raw_h264_mov);      \
   tcase_add_test (tc_chain, test_##name##_render_to_vorbis_h264_matroska_vorbis_theora_ogv);   \
   tcase_add_test (tc_chain, test_##name##_render_to_vorbis_h264_matroska_vorbis_vp8_webm);   \
-  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_h264_matroska_mp3_h264_mov);
+  tcase_add_test (tc_chain, test_##name##_render_to_vorbis_h264_matroska_mp3_h264_mov); \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_",            \
+#name, "_render_to_vorbis_theora_ogg_raw_h264_mov"));                           \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_vorbis_theora_ogg_mp3_h264_mov"));                            \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_vorbis_theora_ogg_vorbis_vp8_webm"));                         \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_vorbis_theora_ogg_vorbis_theora_ogv"));                       \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_vorbis_vp8_webm_vorbis_vp8_webm"));                           \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_vorbis_vp8_webm_raw_h264_mov"));                              \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_vorbis_vp8_webm_mp3_h264_mov"));                              \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_vorbis_vp8_webm_vorbis_theora_ogv"));                         \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_aac_h264_quicktime_raw_h264_mov"));                           \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_aac_h264_quicktime_vorbis_theora_ogv"));                      \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_aac_h264_quicktime_vorbis_vp8_webm"));                        \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_aac_h264_quicktime_mp3_h264_mov"));                           \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_vorbis_h264_matroska_raw_h264_mov"));                         \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_vorbis_h264_matroska_vorbis_theora_ogv"));                    \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_vorbis_h264_matroska_vorbis_vp8_webm"));                      \
+  tests_names = g_list_prepend (tests_names, g_strdup_printf ("%s%s%s", "test_", #name,     \
+      "_render_to_vorbis_h264_matroska_mp3_h264_mov"));
 
 #define ADD_TESTS(name)                                                        \
   ADD_PLAYBACK_TESTS(name)                                                     \
@@ -985,8 +1027,33 @@ int
 main (int argc, char **argv)
 {
   int nf;
+  GOptionContext *ctx;
 
+  GError *err = NULL;
   Suite *s = ges_suite ();
+  gboolean list_tests = FALSE;
+
+  GOptionEntry options[] = {
+    {"list-tests", 'l', 0.0, G_OPTION_ARG_NONE, &list_tests,
+        "List all avalaible tests", "N"}
+  };
+
+  ctx = g_option_context_new ("Run integration tests");
+  g_option_context_add_main_entries (ctx, options, NULL);
+  g_option_context_add_group (ctx, gst_init_get_option_group ());
+
+  if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
+    g_printerr ("Error initializing: %s\n", err->message);
+    g_option_context_free (ctx);
+    exit (1);
+  }
+
+  if (list_tests) {
+    GList *tmp;
+
+    for (tmp = tests_names; tmp; tmp = tmp->next)
+      g_print ("%s\n", (gchar *) tmp->data);
+  }
 
   gst_check_init (&argc, &argv);
   ges_init ();
@@ -999,6 +1066,8 @@ main (int argc, char **argv)
 
   loop = g_main_loop_new (NULL, FALSE);
   nf = gst_check_run_suite (s, "ges", __FILE__);
+
+  g_list_free_full (tests_names, g_free);
 
   return nf;
 }
