@@ -509,8 +509,10 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         GST_WARNING_OBJECT (h264parse, "failed to parse PPS:");
 
       /* parameters might have changed, force caps check */
-      GST_DEBUG_OBJECT (h264parse, "triggering src caps check");
-      h264parse->update_caps = TRUE;
+      if (!h264parse->have_pps) {
+        GST_DEBUG_OBJECT (h264parse, "triggering src caps check");
+        h264parse->update_caps = TRUE;
+      }
       h264parse->have_pps = TRUE;
       if (h264parse->push_codec && h264parse->have_sps) {
         /* SPS and PPS found in stream before the first pre_push_frame, no need
