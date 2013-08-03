@@ -52,7 +52,6 @@
 #include <string.h>
 #include "_stdint.h"
 
-#define _XOPEN_SOURCE 500
 #include <unistd.h>
 
 #include <linux/dvb/version.h>
@@ -1173,7 +1172,7 @@ gst_dvbsrc_frontend_status (GstDvbSrc * object)
     GST_INFO_OBJECT (object, "fd-frontend: %d", object->fd_frontend);
 
   for (i = 0; i < 15; i++) {
-    usleep (1000000);
+    g_usleep (1000000);
     GST_INFO_OBJECT (object, ".");
     if (ioctl (object->fd_frontend, FE_READ_STATUS, &status) == -1) {
       GST_ERROR_OBJECT (object, "Failed reading frontend status.");
@@ -1213,7 +1212,7 @@ diseqc_send_msg (int fd, fe_sec_voltage_t v, struct diseqc_cmd *cmd,
     return;
   }
 
-  usleep (15 * 1000);
+  g_usleep (15 * 1000);
   GST_LOG ("diseqc: 0x%x 0x%x 0x%x 0x%x 0x%x 0x%x", cmd->cmd.msg[0],
       cmd->cmd.msg[1], cmd->cmd.msg[2], cmd->cmd.msg[3], cmd->cmd.msg[4],
       cmd->cmd.msg[5]);
@@ -1222,15 +1221,15 @@ diseqc_send_msg (int fd, fe_sec_voltage_t v, struct diseqc_cmd *cmd,
     return;
   }
 
-  usleep (cmd->wait * 1000);
-  usleep (15 * 1000);
+  g_usleep (cmd->wait * 1000);
+  g_usleep (15 * 1000);
 
   if (ioctl (fd, FE_DISEQC_SEND_BURST, b) == -1) {
     GST_ERROR ("Sending burst failed");
     return;
   }
 
-  usleep (15 * 1000);
+  g_usleep (15 * 1000);
 
   if (ioctl (fd, FE_SET_TONE, t) == -1) {
     GST_ERROR ("Setting tone failed");
@@ -1414,7 +1413,7 @@ gst_dvbsrc_tune (GstDvbSrc * object)
         g_error ("Unknown frontend type: %d", object->adapter_type);
 
     }
-    usleep (100000);
+    g_usleep (100000);
     /* now tune the frontend */
     set_prop (dvb_prop, &n, DTV_TUNE, 0);
     props.num = n;
@@ -1430,7 +1429,7 @@ gst_dvbsrc_tune (GstDvbSrc * object)
       g_warning ("Error tuning channel: %s", strerror (errno));
     }
     for (i = 0; i < 50; i++) {
-      usleep (100000);
+      g_usleep (100000);
       if (ioctl (object->fd_frontend, FE_READ_STATUS, &status) == -1) {
         perror ("FE_READ_STATUS");
         break;
