@@ -2158,7 +2158,7 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 
   GST_DEBUG_OBJECT (jitterbuffer, "expected %d didn't arrive", timer->seqnum);
 
-  event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+  event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
       gst_structure_new ("GstRTPRetransmissionRequest",
           "seqnum", G_TYPE_UINT, (guint) timer->seqnum,
           "running-time", G_TYPE_UINT64, timer->rtx_base,
@@ -2169,7 +2169,7 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
           "packet-spacing", G_TYPE_UINT64, priv->packet_spacing, NULL));
 
   JBUF_UNLOCK (priv);
-  gst_pad_push_event (priv->srcpad, event);
+  gst_pad_push_event (priv->sinkpad, event);
   JBUF_LOCK (priv);
 
   timer->rtx_retry += (priv->rtx_retry_timeout * GST_MSECOND);
