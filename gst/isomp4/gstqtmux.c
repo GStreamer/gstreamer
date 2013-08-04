@@ -2229,7 +2229,10 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     if (pad->have_dts) {
       gint64 scaled_dts;
       if (pad->last_buf) {
-        pad->last_dts = GST_BUFFER_DTS (pad->last_buf);
+        if (GST_BUFFER_DTS_IS_VALID (pad->last_buf))
+          pad->last_dts = GST_BUFFER_DTS (pad->last_buf);
+        else
+          pad->last_dts = GST_BUFFER_PTS (pad->last_buf);
       } else {
         pad->last_dts = GST_BUFFER_DTS (last_buf) +
             GST_BUFFER_DURATION (last_buf);
