@@ -623,9 +623,15 @@ run_server (guint * http_port, guint * https_port)
   soup_server_run_async (server);
 
   if (ssl_cert_file && ssl_key_file) {
-    ssl_server = soup_server_new (SOUP_SERVER_PORT, ssl_port,
-        SOUP_SERVER_SSL_CERT_FILE, ssl_cert_file,
-        SOUP_SERVER_SSL_KEY_FILE, ssl_key_file, NULL);
+    GTlsBackend *backend = g_tls_backend_get_default ();
+
+    if (backend != NULL && g_tls_backend_supports_tls (backend)) {
+      ssl_server = soup_server_new (SOUP_SERVER_PORT, ssl_port,
+          SOUP_SERVER_SSL_CERT_FILE, ssl_cert_file,
+          SOUP_SERVER_SSL_KEY_FILE, ssl_key_file, NULL);
+    } else {
+      GST_INFO ("No TLS support");
+    }
 
     if (ssl_server) {
       *https_port = soup_server_get_port (ssl_server);
