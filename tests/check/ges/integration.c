@@ -782,7 +782,7 @@ test_mixing (void)
   g_free (uri2);
 
   /* we are only using the first asset / clip for now */
-  fail_unless (test_mix_layers (timeline, asset, 1, 4));
+  fail_unless (test_mix_layers (timeline, asset, 1, 2));
 
     /**
    * Our timeline has 4 layers
@@ -842,8 +842,8 @@ GST_START_TEST (test_##name##_mp3_h264_mov)                                    \
   g_print("running test_%s_%s\n", #name, "mp3_h264_mov");                      \
   testfilename1 = "assets/mp3_h264.0.mov";                                     \
   testfilename2 = "assets/mp3_h264.1.mov";                                     \
+  test_image_filename = "assets/test.png";                                            \
   current_profile = profile;                                                   \
-  test_image_filename = "test.png";                                            \
   func ();                                                                     \
 }                                                                              \
 GST_END_TEST;
@@ -956,8 +956,8 @@ CREATE_PLAYBACK_TEST(image)
 static Suite *
 ges_suite (void)
 {
-  Suite *s = suite_create ("ges-render");
-  TCase *tc_chain = tcase_create ("render");
+  Suite *s = suite_create ("ges-integration");
+  TCase *tc_chain = tcase_create ("integration");
 
   suite_add_tcase (s, tc_chain);
 
