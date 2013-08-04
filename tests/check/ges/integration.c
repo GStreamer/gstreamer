@@ -1030,12 +1030,15 @@ main (int argc, char **argv)
   GOptionContext *ctx;
 
   GError *err = NULL;
+  gboolean list_tests = FALSE, list_tests_only = FALSE;
   Suite *s = ges_suite ();
-  gboolean list_tests = FALSE;
 
   GOptionEntry options[] = {
     {"list-tests", 'l', 0.0, G_OPTION_ARG_NONE, &list_tests,
-        "List all avalaible tests", "N"}
+        "List all avalaible tests", "N"},
+    {"list-tests-only", 'o', 0.0, G_OPTION_ARG_NONE, &list_tests_only,
+        "List all avalaible tests", "N"},
+    {NULL}
   };
 
   ctx = g_option_context_new ("Run integration tests");
@@ -1048,11 +1051,18 @@ main (int argc, char **argv)
     exit (1);
   }
 
-  if (list_tests) {
+  if (list_tests || list_tests_only) {
     GList *tmp;
 
+    g_print ("=== Listing tests %s === \n", list_tests_only ? "only" : "");
     for (tmp = tests_names; tmp; tmp = tmp->next)
       g_print ("%s\n", (gchar *) tmp->data);
+    g_print ("=== Listed tests ===\n");
+
+    if (list_tests_only == TRUE) {
+      g_list_free_full (tests_names, g_free);
+      return 0;
+    }
   }
 
   gst_check_init (&argc, &argv);
