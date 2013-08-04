@@ -1465,7 +1465,7 @@ gst_rtp_session_request_remote_key_unit (GstRtpSession * rtpsession,
 
     if (pli || fir)
       return rtp_session_request_key_unit (rtpsession->priv->session, ssrc,
-          gst_clock_get_time (rtpsession->priv->sysclock), fir, count);
+          fir, count);
   }
 
   return FALSE;

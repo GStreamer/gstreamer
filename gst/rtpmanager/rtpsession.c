@@ -3478,8 +3478,21 @@ dont_send:
   RTP_SESSION_UNLOCK (sess);
 }
 
+static void
+rtp_session_send_rtcp (RTPSession * sess, GstClockTime max_delay)
+{
+  GstClockTime now;
+
+  if (!sess->callbacks.send_rtcp)
+    return;
+
+  now = sess->callbacks.request_time (sess, sess->request_time_user_data);
+
+  rtp_session_request_early_rtcp (sess, now, max_delay);
+}
+
 gboolean
-rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc, GstClockTime now,
+rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc,
     gboolean fir, gint count)
 {
   RTPSource *src = find_source (sess, ssrc);
@@ -3498,20 +3511,7 @@ rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc, GstClockTime now,
     src->send_pli = TRUE;
   }
 
-  rtp_session_request_early_rtcp (sess, now, 200 * GST_MSECOND);
+  rtp_session_send_rtcp (sess, 200 * GST_MSECOND);
 
   return TRUE;
-}
-
-static void
-rtp_session_send_rtcp (RTPSession * sess, GstClockTime max_delay)
-{
-  GstClockTime now;
-
-  if (!sess->callbacks.send_rtcp)
-    return;
-
-  now = sess->callbacks.request_time (sess, sess->request_time_user_data);
-
-  rtp_session_request_early_rtcp (sess, now, max_delay);
 }
