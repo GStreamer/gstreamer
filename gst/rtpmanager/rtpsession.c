@@ -111,8 +111,7 @@ static void rtp_session_set_property (GObject * object, guint prop_id,
 static void rtp_session_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void rtp_session_send_rtcp (RTPSession * sess,
-    GstClockTimeDiff max_delay);
+static void rtp_session_send_rtcp (RTPSession * sess, GstClockTime max_delay);
 
 
 static guint rtp_session_signals[LAST_SIGNAL] = { 0 };
@@ -3190,7 +3189,7 @@ early:
 
     /* Apply the rules from RFC 4585 section 3.5.3 */
     if (sess->stats.min_interval != 0 && !sess->first_rtcp) {
-      GstClockTimeDiff T_rr_current_interval =
+      GstClockTime T_rr_current_interval =
           g_random_double_range (0.5, 1.5) * sess->stats.min_interval;
 
       /* This will caused the RTCP to be suppressed if no FB packets are added */
@@ -3413,7 +3412,7 @@ done:
  */
 void
 rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
-    GstClockTimeDiff max_delay)
+    GstClockTime max_delay)
 {
   GstClockTime T_dither_max;
 
@@ -3505,7 +3504,7 @@ rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc, GstClockTime now,
 }
 
 static void
-rtp_session_send_rtcp (RTPSession * sess, GstClockTimeDiff max_delay)
+rtp_session_send_rtcp (RTPSession * sess, GstClockTime max_delay)
 {
   GstClockTime now;
 

@@ -265,7 +265,7 @@ struct _RTPSessionClass {
       gboolean early);
   void (*on_feedback_rtcp)  (RTPSession *sess, guint type, guint fbtype,
       guint sender_ssrc, guint media_ssrc, GstBuffer *fci);
-  void (*send_rtcp)         (RTPSession *sess, GstClockTimeDiff max_delay);
+  void (*send_rtcp)         (RTPSession *sess, GstClockTime max_delay);
 };
 
 GType rtp_session_get_type (void);
@@ -338,7 +338,7 @@ GstFlowReturn   rtp_session_on_timeout             (RTPSession *sess, GstClockTi
 
 /* request the transmittion of an early RTCP packet */
 void            rtp_session_request_early_rtcp     (RTPSession * sess, GstClockTime current_time,
-                                                    GstClockTimeDiff max_delay);
+                                                    GstClockTime max_delay);
 
 /* Notify session of a request for a new key unit */
 gboolean        rtp_session_request_key_unit       (RTPSession * sess,
