@@ -76,7 +76,6 @@
 #include <gst/gst.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
-#include "gstrtpbin-marshal.h"
 #include "gstrtpptdemux.h"
 
 /* generic templates */
@@ -160,8 +159,7 @@ gst_rtp_pt_demux_class_init (GstRtpPtDemuxClass * klass)
   gst_rtp_pt_demux_signals[SIGNAL_REQUEST_PT_MAP] =
       g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpPtDemuxClass, request_pt_map),
-      NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT, GST_TYPE_CAPS, 1,
-      G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, GST_TYPE_CAPS, 1, G_TYPE_UINT);
 
   /**
    * GstRtpPtDemux::new-payload-type:
@@ -174,8 +172,8 @@ gst_rtp_pt_demux_class_init (GstRtpPtDemuxClass * klass)
   gst_rtp_pt_demux_signals[SIGNAL_NEW_PAYLOAD_TYPE] =
       g_signal_new ("new-payload-type", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpPtDemuxClass, new_payload_type),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_OBJECT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, GST_TYPE_PAD);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      GST_TYPE_PAD);
 
   /**
    * GstRtpPtDemux::payload-type-change:

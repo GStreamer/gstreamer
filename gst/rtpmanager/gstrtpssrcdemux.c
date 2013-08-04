@@ -48,7 +48,6 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/rtp/gstrtcpbuffer.h>
 
-#include "gstrtpbin-marshal.h"
 #include "gstrtpssrcdemux.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_ssrc_demux_debug);
@@ -388,8 +387,8 @@ gst_rtp_ssrc_demux_class_init (GstRtpSsrcDemuxClass * klass)
       g_signal_new ("new-ssrc-pad",
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRtpSsrcDemuxClass, new_ssrc_pad),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_OBJECT,
-      G_TYPE_NONE, 2, G_TYPE_UINT, GST_TYPE_PAD);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      GST_TYPE_PAD);
 
   /**
    * GstRtpSsrcDemux::removed-ssrc-pad:
@@ -403,8 +402,8 @@ gst_rtp_ssrc_demux_class_init (GstRtpSsrcDemuxClass * klass)
       g_signal_new ("removed-ssrc-pad",
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
       G_STRUCT_OFFSET (GstRtpSsrcDemuxClass, removed_ssrc_pad),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_OBJECT,
-      G_TYPE_NONE, 2, G_TYPE_UINT, GST_TYPE_PAD);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      GST_TYPE_PAD);
 
   /**
    * GstRtpSsrcDemux::clear-ssrc:
@@ -417,7 +416,7 @@ gst_rtp_ssrc_demux_class_init (GstRtpSsrcDemuxClass * klass)
       g_signal_new ("clear-ssrc",
       G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstRtpSsrcDemuxClass, clear_ssrc),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_UINT);
 
   gstelement_klass->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_ssrc_demux_change_state);

@@ -116,7 +116,6 @@
 
 #include <gst/glib-compat-private.h>
 
-#include "gstrtpbin-marshal.h"
 #include "gstrtpsession.h"
 #include "rtpsession.h"
 
@@ -417,8 +416,7 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
   gst_rtp_session_signals[SIGNAL_REQUEST_PT_MAP] =
       g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpSessionClass, request_pt_map),
-      NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT, GST_TYPE_CAPS, 1,
-      G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, GST_TYPE_CAPS, 1, G_TYPE_UINT);
   /**
    * GstRtpSession::clear-pt-map:
    * @sess: the object which received the signal

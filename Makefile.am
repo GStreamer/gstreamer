@@ -50,8 +50,6 @@ win32-update:
 		 gst/udp/gstudp-marshal.h \
 		 gst/udp/gstudp-enumtypes.c \
 		 gst/udp/gstudp-enumtypes.h \
-		 gst/rtpmanager/gstrtpbin-marshal.c \
-		 gst/rtpmanager/gstrtpbin-marshal.h \
 		 sys/v4l2/tuner-enumtypes.c \
 		 sys/v4l2/tuner-enumtypes.h \
 		 sys/v4l2/tuner-marshal.c \
@@ -61,8 +59,6 @@ win32-update:
 	$(top_srcdir)/common/gst-indent win32/common/gstudp-marshal.c
 	$(top_srcdir)/common/gst-indent win32/common/gstudp-enumtypes.c
 	$(top_srcdir)/common/gst-indent win32/common/gstudp-enumtypes.c
-	$(top_srcdir)/common/gst-indent win32/common/gstrtpbin-marshal.c
-	$(top_srcdir)/common/gst-indent win32/common/gstrtpbin-marshal.c
 	$(top_srcdir)/common/gst-indent win32/common/tuner-enumtypes.c
 	$(top_srcdir)/common/gst-indent win32/common/tuner-enumtypes.c
 	$(top_srcdir)/common/gst-indent win32/common/tuner-marshal.c

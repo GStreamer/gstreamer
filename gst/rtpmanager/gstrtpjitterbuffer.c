@@ -61,8 +61,6 @@
 #include <string.h>
 #include <gst/rtp/gstrtpbuffer.h>
 
-#include "gstrtpbin-marshal.h"
-
 #include "gstrtpjitterbuffer.h"
 #include "rtpjitterbuffer.h"
 #include "rtpstats.h"
@@ -488,7 +486,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   gst_rtp_jitter_buffer_signals[SIGNAL_REQUEST_PT_MAP] =
       g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpJitterBufferClass,
-          request_pt_map), NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT,
+          request_pt_map), NULL, NULL, g_cclosure_marshal_generic,
       GST_TYPE_CAPS, 1, G_TYPE_UINT);
   /**
    * GstRtpJitterBuffer::handle-sync:
@@ -544,7 +542,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
       g_signal_new ("set-active", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (GstRtpJitterBufferClass, set_active), NULL, NULL,
-      gst_rtp_bin_marshal_UINT64__BOOL_UINT64, G_TYPE_UINT64, 2, G_TYPE_BOOLEAN,
+      g_cclosure_marshal_generic, G_TYPE_UINT64, 2, G_TYPE_BOOLEAN,
       G_TYPE_UINT64);
 
   gstelement_class->change_state =

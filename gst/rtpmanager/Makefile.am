@@ -3,17 +3,6 @@ plugin_LTLIBRARIES = libgstrtpmanager.la
 # FIXME 0.11: ignore GValueArray warnings for now until this is sorted
 ERROR_CFLAGS=
 
-glib_enum_define = GST_RTP_BIN
-glib_gen_prefix = gst_rtp_bin
-glib_gen_basename = gstrtpbin
-
-include $(top_srcdir)/common/gst-glib-gen.mak
-
-built_sources = gstrtpbin-marshal.c
-built_headers = gstrtpbin-marshal.h
-
-BUILT_SOURCES = $(built_sources) $(built_headers)
-
 libgstrtpmanager_la_SOURCES = gstrtpmanager.c \
 			      gstrtpbin.c \
 			      gstrtpdtmfmux.c \
@@ -26,9 +15,6 @@ libgstrtpmanager_la_SOURCES = gstrtpmanager.c \
 			      rtpsource.c      \
 			      rtpstats.c      \
 			      gstrtpsession.c
-
-nodist_libgstrtpmanager_la_SOURCES = \
-      $(built_sources)
 
 noinst_HEADERS = gstrtpbin.h \
 		 gstrtpdtmfmux.h \
@@ -50,12 +36,7 @@ libgstrtpmanager_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 libgstrtpmanager_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstrtpmanager_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
-CLEANFILES = $(BUILT_SOURCES)
-
-EXTRA_DIST = gstrtpbin-marshal.list
-
-
-Android.mk: Makefile.am $(BUILT_SOURCES)
+Android.mk: Makefile.am
 	androgenizer \
 	-:PROJECT libgstrtpmanager -:SHARED libgstrtpmanager \
 	 -:TAGS eng debug \

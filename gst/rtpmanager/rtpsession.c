@@ -28,7 +28,6 @@
 
 #include <gst/glib-compat-private.h>
 
-#include "gstrtpbin-marshal.h"
 #include "rtpsession.h"
 
 GST_DEBUG_CATEGORY_STATIC (rtp_session_debug);
@@ -161,7 +160,7 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_GET_SOURCE_BY_SSRC] =
       g_signal_new ("get-source-by-ssrc", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (RTPSessionClass,
-          get_source_by_ssrc), NULL, NULL, gst_rtp_bin_marshal_OBJECT__UINT,
+          get_source_by_ssrc), NULL, NULL, g_cclosure_marshal_generic,
       RTP_TYPE_SOURCE, 1, G_TYPE_UINT);
 
   /**
@@ -288,9 +287,8 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_SENDING_RTCP] =
       g_signal_new ("on-sending-rtcp", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_sending_rtcp),
-      accumulate_trues, NULL, gst_rtp_bin_marshal_BOOLEAN__BOXED_BOOLEAN,
-      G_TYPE_BOOLEAN, 2, GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE,
-      G_TYPE_BOOLEAN);
+      accumulate_trues, NULL, g_cclosure_marshal_generic, G_TYPE_BOOLEAN, 2,
+      GST_TYPE_BUFFER | G_SIGNAL_TYPE_STATIC_SCOPE, G_TYPE_BOOLEAN);
 
   /**
    * RTPSession::on-feedback-rtcp:
@@ -308,9 +306,8 @@ rtp_session_class_init (RTPSessionClass * klass)
   rtp_session_signals[SIGNAL_ON_FEEDBACK_RTCP] =
       g_signal_new ("on-feedback-rtcp", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (RTPSessionClass, on_feedback_rtcp),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT_UINT_UINT_BOXED,
-      G_TYPE_NONE, 5, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT,
-      GST_TYPE_BUFFER);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 5, G_TYPE_UINT,
+      G_TYPE_UINT, G_TYPE_UINT, G_TYPE_UINT, GST_TYPE_BUFFER);
 
   /**
    * RTPSession::send-rtcp:
@@ -325,7 +322,7 @@ rtp_session_class_init (RTPSessionClass * klass)
       g_signal_new ("send-rtcp", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION,
       G_STRUCT_OFFSET (RTPSessionClass, send_rtcp), NULL, NULL,
-      gst_rtp_bin_marshal_VOID__UINT64, G_TYPE_NONE, 1, G_TYPE_UINT64);
+      g_cclosure_marshal_generic, G_TYPE_NONE, 1, G_TYPE_UINT64);
 
   g_object_class_install_property (gobject_class, PROP_INTERNAL_SSRC,
       g_param_spec_uint ("internal-ssrc", "Internal SSRC",

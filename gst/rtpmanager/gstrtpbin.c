@@ -123,7 +123,6 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/rtp/gstrtcpbuffer.h>
 
-#include "gstrtpbin-marshal.h"
 #include "gstrtpbin.h"
 #include "rtpsession.h"
 #include "gstrtpsession.h"
@@ -1594,8 +1593,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_REQUEST_PT_MAP] =
       g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, request_pt_map),
-      NULL, NULL, gst_rtp_bin_marshal_BOXED__UINT_UINT, GST_TYPE_CAPS, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, GST_TYPE_CAPS, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
 
     /**
    * GstRtpBin::payload-type-change:
@@ -1610,8 +1609,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_PAYLOAD_TYPE_CHANGE] =
       g_signal_new ("payload-type-change", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, payload_type_change),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
 
   /**
    * GstRtpBin::clear-pt-map:
@@ -1649,7 +1648,7 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_GET_INTERNAL_SESSION] =
       g_signal_new ("get-internal-session", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRtpBinClass,
-          get_internal_session), NULL, NULL, gst_rtp_bin_marshal_OBJECT__UINT,
+          get_internal_session), NULL, NULL, g_cclosure_marshal_generic,
       RTP_TYPE_SESSION, 1, G_TYPE_UINT);
 
   /**
@@ -1663,8 +1662,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_ON_NEW_SSRC] =
       g_signal_new ("on-new-ssrc", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_new_ssrc),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
   /**
    * GstRtpBin::on-ssrc-collision:
    * @rtpbin: the object which received the signal
@@ -1676,8 +1675,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_ON_SSRC_COLLISION] =
       g_signal_new ("on-ssrc-collision", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_ssrc_collision),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
   /**
    * GstRtpBin::on-ssrc-validated:
    * @rtpbin: the object which received the signal
@@ -1689,8 +1688,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_ON_SSRC_VALIDATED] =
       g_signal_new ("on-ssrc-validated", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_ssrc_validated),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
   /**
    * GstRtpBin::on-ssrc-active:
    * @rtpbin: the object which received the signal
@@ -1702,8 +1701,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_ON_SSRC_ACTIVE] =
       g_signal_new ("on-ssrc-active", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_ssrc_active),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
   /**
    * GstRtpBin::on-ssrc-sdes:
    * @rtpbin: the object which received the signal
@@ -1715,8 +1714,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_ON_SSRC_SDES] =
       g_signal_new ("on-ssrc-sdes", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_ssrc_sdes),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
 
   /**
    * GstRtpBin::on-bye-ssrc:
@@ -1729,8 +1728,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_ON_BYE_SSRC] =
       g_signal_new ("on-bye-ssrc", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_bye_ssrc),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
   /**
    * GstRtpBin::on-bye-timeout:
    * @rtpbin: the object which received the signal
@@ -1742,8 +1741,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_ON_BYE_TIMEOUT] =
       g_signal_new ("on-bye-timeout", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_bye_timeout),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
   /**
    * GstRtpBin::on-timeout:
    * @rtpbin: the object which received the signal
@@ -1755,8 +1754,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_ON_TIMEOUT] =
       g_signal_new ("on-timeout", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_timeout),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
   /**
    * GstRtpBin::on-sender-timeout:
    * @rtpbin: the object which received the signal
@@ -1768,8 +1767,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_ON_SENDER_TIMEOUT] =
       g_signal_new ("on-sender-timeout", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_sender_timeout),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
 
   /**
    * GstRtpBin::on-npt-stop:
@@ -1782,8 +1781,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
   gst_rtp_bin_signals[SIGNAL_ON_NPT_STOP] =
       g_signal_new ("on-npt-stop", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass, on_npt_stop),
-      NULL, NULL, gst_rtp_bin_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
 
   g_object_class_install_property (gobject_class, PROP_SDES,
       g_param_spec_boxed ("sdes", "SDES",
