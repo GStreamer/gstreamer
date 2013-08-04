@@ -2406,7 +2406,7 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
   if (avi->have_group_id)
     gst_event_set_group_id (event, avi->group_id);
 
-  gst_pad_push_event (pad, gst_event_new_stream_start (stream_id));
+  gst_pad_push_event (pad, event);
   g_free (stream_id);
   gst_pad_set_caps (pad, caps);
   gst_caps_unref (caps);
