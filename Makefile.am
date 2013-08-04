@@ -46,19 +46,11 @@ check-torture:
 endif
 
 win32-update:
-	for f in gst/udp/gstudp-marshal.c \
-		 gst/udp/gstudp-marshal.h \
-		 gst/udp/gstudp-enumtypes.c \
-		 gst/udp/gstudp-enumtypes.h \
-		 sys/v4l2/tuner-enumtypes.c \
+	for f in sys/v4l2/tuner-enumtypes.c \
 		 sys/v4l2/tuner-enumtypes.h \
 		 sys/v4l2/tuner-marshal.c \
 		 sys/v4l2/tuner-marshal.h; do \
 		cp $(top_builddir)/$$f win32/common; done
-	$(top_srcdir)/common/gst-indent win32/common/gstudp-marshal.c
-	$(top_srcdir)/common/gst-indent win32/common/gstudp-marshal.c
-	$(top_srcdir)/common/gst-indent win32/common/gstudp-enumtypes.c
-	$(top_srcdir)/common/gst-indent win32/common/gstudp-enumtypes.c
 	$(top_srcdir)/common/gst-indent win32/common/tuner-enumtypes.c
 	$(top_srcdir)/common/gst-indent win32/common/tuner-enumtypes.c
 	$(top_srcdir)/common/gst-indent win32/common/tuner-marshal.c
