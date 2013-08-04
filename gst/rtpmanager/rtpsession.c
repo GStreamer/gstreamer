@@ -113,7 +113,6 @@ static void rtp_session_get_property (GObject * object, guint prop_id,
 
 static void rtp_session_send_rtcp (RTPSession * sess, GstClockTime max_delay);
 
-
 static guint rtp_session_signals[LAST_SIGNAL] = { 0 };
 
 G_DEFINE_TYPE (RTPSession, rtp_session, G_TYPE_OBJECT);
@@ -3512,6 +3511,22 @@ rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc,
   }
 
   rtp_session_send_rtcp (sess, 200 * GST_MSECOND);
+
+  return TRUE;
+}
+
+gboolean
+rtp_session_request_nack (RTPSession * sess, guint32 ssrc, guint16 seqnum,
+    GstClockTime max_delay)
+{
+  RTPSource *source = find_source (sess, ssrc);
+
+  if (source == NULL)
+    return FALSE;
+
+  GST_DEBUG ("request NACK for %08x, #%u", ssrc, seqnum);
+
+  rtp_session_send_rtcp (sess, max_delay);
 
   return TRUE;
 }

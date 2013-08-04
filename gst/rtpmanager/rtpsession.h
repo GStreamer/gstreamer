@@ -345,5 +345,10 @@ gboolean        rtp_session_request_key_unit       (RTPSession * sess,
                                                     guint32 ssrc,
                                                     gboolean fir,
                                                     gint count);
+gboolean        rtp_session_request_nack           (RTPSession * sess,
+                                                    guint32 ssrc,
+                                                    guint16 seqnum,
+                                                    GstClockTime max_delay);
+
 
 #endif /* __RTP_SESSION_H__ */

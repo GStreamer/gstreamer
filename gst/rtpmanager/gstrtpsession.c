@@ -1499,6 +1499,24 @@ gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstObject * parent,
         if (gst_rtp_session_request_remote_key_unit (rtpsession, ssrc, pt,
                 all_headers, count))
           forward = FALSE;
+      } else if (gst_structure_has_name (s, "GstRTPRetransmissionRequest")) {
+        GstClockTime running_time;
+        guint seqnum, delay, deadline;
+
+        if (!gst_structure_get_clock_time (s, "running-time", &running_time))
+          running_time = -1;
+        if (!gst_structure_get_uint (s, "ssrc", &ssrc))
+          ssrc = -1;
+        if (!gst_structure_get_uint (s, "seqnum", &seqnum))
+          seqnum = -1;
+        if (!gst_structure_get_uint (s, "delay", &deadline))
+          delay = -1;
+        if (!gst_structure_get_uint (s, "deadline", &deadline))
+          deadline = -1;
+
+        if (rtp_session_request_nack (rtpsession->priv->session, ssrc, seqnum,
+                (deadline - delay) * GST_MSECOND))
+          forward = FALSE;
       }
       break;
     default:
