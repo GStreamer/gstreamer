@@ -198,76 +198,6 @@ static guint gst_rtp_dec_signals[LAST_SIGNAL] = { 0 };
 #define gst_rtp_dec_parent_class parent_class
 G_DEFINE_TYPE (GstRTPDec, gst_rtp_dec, GST_TYPE_ELEMENT);
 
-
-/* BOXED:UINT,UINT */
-#define g_marshal_value_peek_uint(v)     g_value_get_uint (v)
-
-static void
-gst_rtp_dec_marshal_BOXED__UINT_UINT (GClosure * closure,
-    GValue * return_value,
-    guint n_param_values,
-    const GValue * param_values,
-    gpointer invocation_hint, gpointer marshal_data)
-{
-  typedef gpointer (*GMarshalFunc_BOXED__UINT_UINT) (gpointer data1,
-      guint arg_1, guint arg_2, gpointer data2);
-  register GMarshalFunc_BOXED__UINT_UINT callback;
-  register GCClosure *cc = (GCClosure *) closure;
-  register gpointer data1, data2;
-  gpointer v_return;
-
-  g_return_if_fail (return_value != NULL);
-  g_return_if_fail (n_param_values == 3);
-
-  if (G_CCLOSURE_SWAP_DATA (closure)) {
-    data1 = closure->data;
-    data2 = g_value_peek_pointer (param_values + 0);
-  } else {
-    data1 = g_value_peek_pointer (param_values + 0);
-    data2 = closure->data;
-  }
-  callback =
-      (GMarshalFunc_BOXED__UINT_UINT) (marshal_data ? marshal_data :
-      cc->callback);
-
-  v_return = callback (data1,
-      g_marshal_value_peek_uint (param_values + 1),
-      g_marshal_value_peek_uint (param_values + 2), data2);
-
-  g_value_take_boxed (return_value, v_return);
-}
-
-static void
-gst_rtp_dec_marshal_VOID__UINT_UINT (GClosure * closure,
-    GValue * return_value,
-    guint n_param_values,
-    const GValue * param_values,
-    gpointer invocation_hint, gpointer marshal_data)
-{
-  typedef void (*GMarshalFunc_VOID__UINT_UINT) (gpointer data1,
-      guint arg_1, guint arg_2, gpointer data2);
-  register GMarshalFunc_VOID__UINT_UINT callback;
-  register GCClosure *cc = (GCClosure *) closure;
-  register gpointer data1, data2;
-
-  g_return_if_fail (n_param_values == 3);
-
-  if (G_CCLOSURE_SWAP_DATA (closure)) {
-    data1 = closure->data;
-    data2 = g_value_peek_pointer (param_values + 0);
-  } else {
-    data1 = g_value_peek_pointer (param_values + 0);
-    data2 = closure->data;
-  }
-  callback =
-      (GMarshalFunc_VOID__UINT_UINT) (marshal_data ? marshal_data :
-      cc->callback);
-
-  callback (data1,
-      g_marshal_value_peek_uint (param_values + 1),
-      g_marshal_value_peek_uint (param_values + 2), data2);
-}
-
 static void
 gst_rtp_dec_class_init (GstRTPDecClass * g_class)
 {
@@ -301,8 +231,8 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
   gst_rtp_dec_signals[SIGNAL_REQUEST_PT_MAP] =
       g_signal_new ("request-pt-map", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPDecClass, request_pt_map),
-      NULL, NULL, gst_rtp_dec_marshal_BOXED__UINT_UINT, GST_TYPE_CAPS, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, GST_TYPE_CAPS, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
 
   gst_rtp_dec_signals[SIGNAL_CLEAR_PT_MAP] =
       g_signal_new ("clear-pt-map", G_TYPE_FROM_CLASS (klass),
@@ -320,8 +250,8 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
   gst_rtp_dec_signals[SIGNAL_ON_NEW_SSRC] =
       g_signal_new ("on-new-ssrc", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPDecClass, on_new_ssrc),
-      NULL, NULL, gst_rtp_dec_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
   /**
    * GstRTPDec::on-ssrc_collision:
    * @rtpbin: the object which received the signal
@@ -333,8 +263,8 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
   gst_rtp_dec_signals[SIGNAL_ON_SSRC_COLLISION] =
       g_signal_new ("on-ssrc-collision", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPDecClass, on_ssrc_collision),
-      NULL, NULL, gst_rtp_dec_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
   /**
    * GstRTPDec::on-ssrc_validated:
    * @rtpbin: the object which received the signal
@@ -346,8 +276,8 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
   gst_rtp_dec_signals[SIGNAL_ON_SSRC_VALIDATED] =
       g_signal_new ("on-ssrc-validated", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPDecClass, on_ssrc_validated),
-      NULL, NULL, gst_rtp_dec_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
 
   /**
    * GstRTPDec::on-bye-ssrc:
@@ -360,8 +290,8 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
   gst_rtp_dec_signals[SIGNAL_ON_BYE_SSRC] =
       g_signal_new ("on-bye-ssrc", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPDecClass, on_bye_ssrc),
-      NULL, NULL, gst_rtp_dec_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
   /**
    * GstRTPDec::on-bye-timeout:
    * @rtpbin: the object which received the signal
@@ -373,8 +303,8 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
   gst_rtp_dec_signals[SIGNAL_ON_BYE_TIMEOUT] =
       g_signal_new ("on-bye-timeout", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPDecClass, on_bye_timeout),
-      NULL, NULL, gst_rtp_dec_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
   /**
    * GstRTPDec::on-timeout:
    * @rtpbin: the object which received the signal
@@ -386,8 +316,8 @@ gst_rtp_dec_class_init (GstRTPDecClass * g_class)
   gst_rtp_dec_signals[SIGNAL_ON_TIMEOUT] =
       g_signal_new ("on-timeout", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTPDecClass, on_timeout),
-      NULL, NULL, gst_rtp_dec_marshal_VOID__UINT_UINT, G_TYPE_NONE, 2,
-      G_TYPE_UINT, G_TYPE_UINT);
+      NULL, NULL, g_cclosure_marshal_generic, G_TYPE_NONE, 2, G_TYPE_UINT,
+      G_TYPE_UINT);
 
   gstelement_class->provide_clock =
       GST_DEBUG_FUNCPTR (gst_rtp_dec_provide_clock);
