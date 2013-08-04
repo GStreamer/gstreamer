@@ -24,7 +24,6 @@
 #endif
 
 #include "tuner.h"
-#include "tuner-marshal.h"
 
 #include <string.h>
 
@@ -157,8 +156,8 @@ gst_tuner_class_init (GstTunerInterface * iface)
         GST_TYPE_TUNER, G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstTunerInterface, frequency_changed),
         NULL, NULL,
-        gst_interfaces_marshal_VOID__OBJECT_ULONG, G_TYPE_NONE, 2,
-        GST_TYPE_TUNER_CHANNEL, G_TYPE_ULONG);
+        g_cclosure_marshal_generic, G_TYPE_NONE, 2, GST_TYPE_TUNER_CHANNEL,
+        G_TYPE_ULONG);
     /**
      * GstTuner::signal-changed:
      * @tuner: The element providing the GstTuner interface
@@ -174,8 +173,8 @@ gst_tuner_class_init (GstTunerInterface * iface)
         GST_TYPE_TUNER, G_SIGNAL_RUN_LAST,
         G_STRUCT_OFFSET (GstTunerInterface, signal_changed),
         NULL, NULL,
-        gst_interfaces_marshal_VOID__OBJECT_INT, G_TYPE_NONE, 2,
-        GST_TYPE_TUNER_CHANNEL, G_TYPE_INT);
+        g_cclosure_marshal_generic, G_TYPE_NONE, 2, GST_TYPE_TUNER_CHANNEL,
+        G_TYPE_INT);
 
     initialized = TRUE;
   }

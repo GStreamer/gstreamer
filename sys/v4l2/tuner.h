@@ -26,7 +26,6 @@
 
 #include "tunernorm.h"
 #include "tunerchannel.h"
-#include "tuner-enumtypes.h"
 
 G_BEGIN_DECLS
 
