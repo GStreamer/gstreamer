@@ -279,6 +279,7 @@ gst_goom_src_negotiate (GstGoom * goom)
     target = templ;
   }
 
+  target = gst_caps_make_writable (target);
   structure = gst_caps_get_structure (target, 0);
   gst_structure_fixate_field_nearest_int (structure, "width", DEFAULT_WIDTH);
   gst_structure_fixate_field_nearest_int (structure, "height", DEFAULT_HEIGHT);
