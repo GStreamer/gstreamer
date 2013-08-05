@@ -236,6 +236,7 @@ rtp_source_reset (RTPSource * src)
   src->stats.prev_rtcptime = GST_CLOCK_TIME_NONE;
   src->stats.last_rtptime = GST_CLOCK_TIME_NONE;
   src->stats.last_rtcptime = GST_CLOCK_TIME_NONE;
+  g_array_set_size (src->nacks, 0);
 }
 
 static void
@@ -258,6 +259,7 @@ rtp_source_init (RTPSource * src)
   src->last_rtptime = -1;
 
   src->retained_feedback = g_queue_new ();
+  src->nacks = g_array_new (FALSE, FALSE, sizeof (guint32));
 
   rtp_source_reset (src);
 }
@@ -294,6 +296,8 @@ rtp_source_finalize (GObject * object)
   while ((buffer = g_queue_pop_head (src->retained_feedback)))
     gst_buffer_unref (buffer);
   g_queue_free (src->retained_feedback);
+
+  g_array_free (src->nacks, TRUE);
 
   if (src->rtp_from)
     g_object_unref (src->rtp_from);
@@ -1779,4 +1783,75 @@ rtp_source_has_retained (RTPSource * src, GCompareFunc func, gconstpointer data)
     return TRUE;
   else
     return FALSE;
+}
+
+/**
+ * @src: The #RTPSource
+ * @seqnum: a seqnum
+ *
+ * Register that @seqnum has not been received from @src.
+ */
+void
+rtp_source_register_nack (RTPSource * src, guint16 seqnum)
+{
+  guint i, len;
+  guint32 dword = seqnum << 16;
+  gint diff = 16;
+
+  len = src->nacks->len;
+  for (i = 0; i < len; i++) {
+    guint32 tdword;
+    guint16 tseq;
+
+    tdword = g_array_index (src->nacks, guint32, i);
+    tseq = tdword >> 16;
+
+    diff = gst_rtp_buffer_compare_seqnum (tseq, seqnum);
+    if (diff < 16)
+      break;
+  }
+  /* we already have this seqnum */
+  if (diff == 0)
+    return;
+  /* it comes before the recorded seqnum, FIXME, we could merge it
+   * if not to far away */
+  if (diff < 0) {
+    GST_DEBUG ("insert NACK #%u at %u", seqnum, i);
+    g_array_insert_val (src->nacks, i, dword);
+  } else if (diff < 16) {
+    /* we can merge it */
+    dword = g_array_index (src->nacks, guint32, i);
+    dword |= 1 << (diff - 1);
+    GST_DEBUG ("merge NACK #%u at %u with NACK #%u -> 0x%08x", seqnum, i,
+        dword >> 16, dword);
+    g_array_index (src->nacks, guint32, i) = dword;
+  } else {
+    GST_DEBUG ("append NACK #%u", seqnum);
+    g_array_append_val (src->nacks, dword);
+  }
+  src->send_nack = TRUE;
+}
+
+/**
+ * @src: The #RTPSource
+ * @n_nacks: result number of nacks
+ *
+ * Get the registered NACKS since the last rtp_source_clear_nacks().
+ *
+ * Returns: an array of @n_nacks seqnum values.
+ */
+guint32 *
+rtp_source_get_nacks (RTPSource * src, guint * n_nacks)
+{
+  if (n_nacks)
+    *n_nacks = src->nacks->len;
+
+  return (guint32 *) src->nacks->data;
+}
+
+void
+rtp_source_clear_nacks (RTPSource * src)
+{
+  g_array_set_size (src->nacks, 0);
+  src->send_nack = FALSE;
 }

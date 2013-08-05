@@ -187,6 +187,10 @@ struct _RTPSource {
   gboolean     send_fir;
   guint8       current_send_fir_seqnum;
   gint         last_fir_count;
+
+  gboolean     send_nack;
+  GArray      *nacks;
+
 };
 
 struct _RTPSourceClass {
@@ -268,10 +272,13 @@ void            rtp_source_timeout             (RTPSource * src,
 void            rtp_source_retain_rtcp_packet  (RTPSource * src,
                                                 GstRTCPPacket *pkt,
                                                 GstClockTime running_time);
-
 gboolean        rtp_source_has_retained        (RTPSource * src,
                                                 GCompareFunc func,
                                                 gconstpointer data);
 
+void            rtp_source_register_nack       (RTPSource * src,
+                                                guint16 seqnum);
+guint32 *       rtp_source_get_nacks           (RTPSource * src, guint *n_nacks);
+void            rtp_source_clear_nacks         (RTPSource * src);
 
 #endif /* __RTP_SOURCE_H__ */
