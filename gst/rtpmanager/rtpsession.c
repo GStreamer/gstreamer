@@ -2704,6 +2704,7 @@ typedef struct
   guint num_to_report;
   gboolean have_fir;
   gboolean have_pli;
+  gboolean have_nack;
   GstBuffer *rtcp;
   GstClockTime current_time;
   guint64 ntpnstime;
@@ -2909,6 +2910,43 @@ session_pli (const gchar * key, RTPSource * source, ReportData * data)
   gst_rtcp_packet_fb_set_media_ssrc (packet, source->ssrc);
 
   source->send_pli = FALSE;
+  data->may_suppress = FALSE;
+}
+
+/* construct NACK */
+static void
+session_nack (const gchar * key, RTPSource * source, ReportData * data)
+{
+  GstRTCPBuffer *rtcp = &data->rtcpbuf;
+  GstRTCPPacket *packet = &data->packet;
+  guint32 *nacks;
+  guint n_nacks, i;
+  guint8 *fci_data;
+
+  if (!source->send_nack)
+    return;
+
+  if (!gst_rtcp_buffer_add_packet (rtcp, GST_RTCP_TYPE_RTPFB, packet))
+    /* exit because the packet is full, will put next request in a
+     * further packet */
+    return;
+
+  gst_rtcp_packet_fb_set_type (packet, GST_RTCP_RTPFB_TYPE_NACK);
+  gst_rtcp_packet_fb_set_sender_ssrc (packet, data->source->ssrc);
+  gst_rtcp_packet_fb_set_media_ssrc (packet, source->ssrc);
+
+  nacks = rtp_source_get_nacks (source, &n_nacks);
+  GST_DEBUG ("%u NACKs", n_nacks);
+  if (!gst_rtcp_packet_fb_set_fci_length (packet, n_nacks))
+    return;
+
+  fci_data = gst_rtcp_packet_fb_get_fci (packet);
+  for (i = 0; i < n_nacks; i++) {
+    GST_WRITE_UINT32_BE (fci_data, nacks[i]);
+    fci_data += 4;
+  }
+
+  rtp_source_clear_nacks (source);
   data->may_suppress = FALSE;
 }
 
@@ -3227,6 +3265,8 @@ remove_closing_sources (const gchar * key, RTPSource * source,
     data->have_fir = TRUE;
   if (source->send_pli)
     data->have_pli = TRUE;
+  if (source->send_nack)
+    data->have_nack = TRUE;
 
   return FALSE;
 }
@@ -3266,6 +3306,10 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
   if (data->have_pli)
     g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
         (GHFunc) session_pli, data);
+
+  if (data->have_nack)
+    g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+        (GHFunc) session_nack, data);
 
   gst_rtcp_buffer_unmap (&data->rtcpbuf);
 
@@ -3525,6 +3569,7 @@ rtp_session_request_nack (RTPSession * sess, guint32 ssrc, guint16 seqnum,
     return FALSE;
 
   GST_DEBUG ("request NACK for %08x, #%u", ssrc, seqnum);
+  rtp_source_register_nack (source, seqnum);
 
   rtp_session_send_rtcp (sess, max_delay);
 
