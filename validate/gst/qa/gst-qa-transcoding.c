@@ -13,6 +13,8 @@
 #include <gst/qa/qa.h>
 #include <gst/pbutils/encoding-profile.h>
 
+#include "gst-qa-file-checker.h"
+
 
 static GMainLoop *mainloop;
 static GstElement *pipeline;
@@ -247,6 +249,7 @@ main (int argc, gchar ** argv)
   GError *err = NULL;
   const gchar *scenario = NULL;
   guint count = -1;
+  gboolean run_file_checks = FALSE;
 
   GOptionEntry options[] = {
     {"output-format", 'o', 0, G_OPTION_ARG_CALLBACK, &_parse_encoding_profile,
@@ -261,6 +264,9 @@ main (int argc, gchar ** argv)
     {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
         "Let you set a scenario, it will override the GST_QA_SCENARIO "
           "environment variable", NULL},
+    {"run-file-checks", 'c', 0, G_OPTION_ARG_NONE,
+          &run_file_checks, "If post file transcoding checks should be run",
+        NULL},
     {NULL}
   };
 
@@ -324,6 +330,18 @@ exit:
   g_main_loop_unref (mainloop);
   g_object_unref (runner);
   g_object_unref (pipeline);
+
+  if (run_file_checks) {
+    GstQaFileChecker *fc = g_object_new (GST_TYPE_QA_FILE_CHECKER, "uri",
+        argv[2], "profile", encoding_profile, NULL);
+
+    if (!gst_qa_file_checker_run (fc)) {
+      g_print ("Failed file checking\n");
+    }
+
+    g_object_unref (fc);
+  }
+
   if (count)
     return -1;
   return 0;
