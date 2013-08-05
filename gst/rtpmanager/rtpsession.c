@@ -3346,7 +3346,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
 
   /* Now remove the marked sources */
   g_hash_table_foreach_remove (sess->ssrcs[sess->mask_idx],
-      (GHRFunc) remove_closing_sources, NULL);
+      (GHRFunc) remove_closing_sources, &data);
 
   /* see if we need to generate SR or RR packets */
   if (!is_rtcp_time (sess, current_time, &data))
