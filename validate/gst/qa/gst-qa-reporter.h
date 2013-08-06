@@ -46,7 +46,7 @@ G_STMT_START {                                                       \
 #ifdef G_HAVE_GNUC_VARARGS
 #define GST_QA_REPORT(m, issue_id, args...)                          \
 G_STMT_START {                                                       \
-  gst_qa_reporter_do_report (GST_QA_REPORTER (m),                    \
+  gst_qa_report (GST_QA_REPORTER (m),                                \
     issue_id, ##args );                                              \
 } G_STMT_END
 
