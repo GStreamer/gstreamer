@@ -453,6 +453,54 @@ compare_encoding_profile_with_discoverer_stream (GstQaFileChecker * fc,
   gboolean ret = TRUE;
   GstCaps *caps = NULL;
   const GstCaps *profile_caps;
+  const GstCaps *restriction_caps;
+
+  caps = gst_discoverer_stream_info_get_caps (stream);
+  profile_caps = gst_encoding_profile_get_format (prof);
+  restriction_caps = gst_encoding_profile_get_restriction (prof);
+
+  /* TODO need to consider profile caps restrictions */
+  if (!_gst_caps_can_intersect_safe (caps, profile_caps)) {
+    gchar *caps_str = gst_caps_to_string (caps);
+    gchar *profile_caps_str = gst_caps_to_string (profile_caps);
+    SET_MESSAGE (msg, g_strdup_printf ("Caps '%s' didn't match profile '%s'",
+            profile_caps_str, caps_str));
+    g_free (caps_str);
+    g_free (profile_caps_str);
+    ret = FALSE;
+    goto end;
+  }
+
+  if (restriction_caps) {
+    GstStructure *structure;
+    gint i;
+    gboolean found = FALSE;
+
+    for (i = 0; i < gst_caps_get_size (restriction_caps); i++) {
+      structure = gst_caps_get_structure (restriction_caps, i);
+      structure = gst_structure_copy (structure);
+      gst_structure_set_name (structure,
+          gst_structure_get_name (gst_caps_get_structure (caps, 0)));
+      if (gst_structure_can_intersect (structure, gst_caps_get_structure (caps,
+                  0))) {
+        gst_structure_free (structure);
+        found = TRUE;
+        break;
+      }
+      gst_structure_free (structure);
+    }
+    if (!found) {
+      gchar *caps_str = gst_caps_to_string (caps);
+      gchar *restriction_caps_str = gst_caps_to_string (restriction_caps);
+      SET_MESSAGE (msg,
+          g_strdup_printf ("Caps restriction '%s' wasn't respected on file "
+              "with caps '%s'", restriction_caps_str, caps_str));
+      g_free (caps_str);
+      g_free (restriction_caps_str);
+      ret = FALSE;
+      goto end;
+    }
+  }
 
   if (GST_IS_ENCODING_CONTAINER_PROFILE (prof)) {
     if (GST_IS_DISCOVERER_CONTAINER_INFO (stream)) {
@@ -490,20 +538,6 @@ compare_encoding_profile_with_discoverer_stream (GstQaFileChecker * fc,
     return FALSE;
   }
 
-  caps = gst_discoverer_stream_info_get_caps (stream);
-  profile_caps = gst_encoding_profile_get_format (prof);
-
-  /* TODO need to consider profile caps restrictions */
-  if (!_gst_caps_can_intersect_safe (caps, profile_caps)) {
-    gchar *caps_str = gst_caps_to_string (caps);
-    gchar *profile_caps_str = gst_caps_to_string (profile_caps);
-    SET_MESSAGE (msg, g_strdup_printf ("Caps '%s' didn't match profile '%s'",
-            profile_caps_str, caps_str));
-    g_free (caps_str);
-    g_free (profile_caps_str);
-    ret = FALSE;
-    goto end;
-  }
 
 end:
   if (caps)
