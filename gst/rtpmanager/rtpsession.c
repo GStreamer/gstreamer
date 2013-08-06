@@ -847,6 +847,10 @@ rtp_session_set_callbacks (RTPSession * sess, RTPSessionCallbacks * callbacks,
     sess->callbacks.request_time = callbacks->request_time;
     sess->request_time_user_data = user_data;
   }
+  if (callbacks->notify_nack) {
+    sess->callbacks.notify_nack = callbacks->notify_nack;
+    sess->notify_nack_user_data = user_data;
+  }
 }
 
 /**
@@ -2169,6 +2173,32 @@ rtp_session_process_fir (RTPSession * sess, guint32 sender_ssrc,
 }
 
 static void
+rtp_session_process_nack (RTPSession * sess, guint32 sender_ssrc,
+    guint32 media_ssrc, guint8 * fci_data, guint fci_length,
+    GstClockTime current_time)
+{
+  if (!sess->callbacks.notify_nack)
+    return;
+
+  while (fci_length > 0) {
+    guint16 seqnum, blp;
+
+    seqnum = GST_READ_UINT16_BE (fci_data);
+    blp = GST_READ_UINT16_BE (fci_data + 2);
+
+    GST_DEBUG ("NACK #%u, blp %04x", seqnum, blp);
+
+    RTP_SESSION_UNLOCK (sess);
+    sess->callbacks.notify_nack (sess, seqnum, blp,
+        sess->notify_nack_user_data);
+    RTP_SESSION_LOCK (sess);
+
+    fci_data += 4;
+    fci_length -= 4;
+  }
+}
+
+static void
 rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
     RTPArrivalStats * arrival, GstClockTime current_time)
 {
@@ -2230,6 +2260,14 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
         }
         break;
       case GST_RTCP_TYPE_RTPFB:
+        switch (fbtype) {
+          case GST_RTCP_RTPFB_TYPE_NACK:
+            rtp_session_process_nack (sess, sender_ssrc, media_ssrc,
+                fci_data, fci_length, current_time);
+            break;
+          default:
+            break;
+        }
       default:
         break;
     }
