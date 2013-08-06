@@ -273,12 +273,13 @@ check_file_size (GstQaFileChecker * fc)
     GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_SIZE_IS_ZERO, "File %s has size 0",
         fc->uri);
     ret = FALSE;
-  } else if (size < fc->file_size - fc->file_size_tolerance ||
-      size > fc->file_size + fc->file_size_tolerance) {
+  } else if (fc->file_size != 0
+      && (size < fc->file_size - fc->file_size_tolerance
+          || size > fc->file_size + fc->file_size_tolerance)) {
     GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_SIZE_INCORRECT,
         "File %s has size %" G_GUINT64_FORMAT ", it was expected to have %"
-        G_GUINT64_FORMAT " (+-%" G_GUINT64_FORMAT ")",
-        fc->uri, size, fc->file_size, fc->file_size_tolerance);
+        G_GUINT64_FORMAT " (+-%" G_GUINT64_FORMAT ")", fc->uri, size,
+        fc->file_size, fc->file_size_tolerance);
     ret = FALSE;
     goto end;
   }
@@ -324,26 +325,213 @@ check_seekable (GstQaFileChecker * fc, GstDiscovererInfo * info)
   return TRUE;
 }
 
+static inline gboolean
+_gst_caps_can_intersect_safe (const GstCaps * a, const GstCaps * b)
+{
+  if (a == b)
+    return TRUE;
+  if ((a == NULL) || (b == NULL))
+    return FALSE;
+  return gst_caps_can_intersect (a, b);
+}
+
+typedef struct
+{
+  GstEncodingProfile *profile;
+  gint count;
+} ExpectedStream;
+
+#define SET_MESSAGE(placeholder, msg) \
+G_STMT_START {  \
+  if (placeholder) { \
+    *placeholder = msg; \
+  } \
+} G_STMT_END
+
+static gboolean
+compare_encoding_profile_with_discoverer_stream (GstQaFileChecker * fc,
+    GstEncodingProfile * prof, GstDiscovererStreamInfo * stream, gchar ** msg);
+
+static gboolean
+compare_container_profile_with_container_discoverer_stream (GstQaFileChecker *
+    fc, GstEncodingContainerProfile * prof, GstDiscovererContainerInfo * stream,
+    gchar ** msg)
+{
+  ExpectedStream *expected_streams = NULL;
+  GList *container_streams;
+  const GList *profile_iter;
+  const GList *streams_iter;
+  gint i;
+  gint expected_count = g_list_length ((GList *)
+      gst_encoding_container_profile_get_profiles (prof));
+  gboolean ret = TRUE;
+
+  container_streams = gst_discoverer_container_info_get_streams (stream);
+
+  if (expected_count == 0) {
+    if (g_list_length (container_streams) != 0) {
+      SET_MESSAGE (msg,
+          g_strdup_printf
+          ("No streams expected on this container, but found %u",
+              g_list_length (container_streams)));
+      ret = FALSE;
+      goto end;
+    }
+  }
+
+  /* initialize expected streams data */
+  expected_streams = g_malloc0 (sizeof (ExpectedStream) * expected_count);
+  for (i = 0, profile_iter = gst_encoding_container_profile_get_profiles (prof);
+      profile_iter; profile_iter = g_list_next (profile_iter), i++) {
+    GstEncodingProfile *prof = profile_iter->data;
+    ExpectedStream *expected = &(expected_streams[i]);
+
+    expected->profile = prof;
+  }
+
+  /* look for the streams on discoverer info */
+  for (streams_iter = container_streams; streams_iter;
+      streams_iter = g_list_next (streams_iter)) {
+    GstDiscovererStreamInfo *info = streams_iter->data;
+    gboolean found = FALSE;
+    for (i = 0; i < expected_count; i++) {
+      ExpectedStream *expected = &(expected_streams[i]);
+
+      if (compare_encoding_profile_with_discoverer_stream (fc,
+              expected->profile, info, NULL)) {
+        found = TRUE;
+        break;
+      }
+    }
+
+    if (!found) {
+      GstCaps *caps = gst_discoverer_stream_info_get_caps (info);
+      gchar *caps_str = gst_caps_to_string (caps);
+      SET_MESSAGE (msg,
+          g_strdup_printf ("Stream with caps '%s' wasn't found on file",
+              caps_str));
+      g_free (caps_str);
+      gst_caps_unref (caps);
+      ret = FALSE;
+      goto end;
+    }
+  }
+
+  /* check if all expected streams are present */
+  for (i = 0; i < expected_count; i++) {
+    ExpectedStream *expected = &(expected_streams[i]);
+    guint presence = gst_encoding_profile_get_presence (expected->profile);
+
+    if (presence == 0)
+      continue;
+
+    if (presence != expected->count) {
+      gchar *caps_str =
+          gst_caps_to_string (gst_encoding_profile_get_format
+          (expected->profile));
+      SET_MESSAGE (msg,
+          g_strdup_printf ("Stream from profile %s (with caps '%s"
+              "' has presence %u but the number of streams found was %d",
+              gst_encoding_profile_get_name (expected->profile), caps_str,
+              presence, expected->count));
+      g_free (caps_str);
+      ret = FALSE;
+      goto end;
+    }
+  }
+
+end:
+  g_free (expected_streams);
+  gst_discoverer_stream_info_list_free (container_streams);
+  return ret;
+}
+
+static gboolean
+compare_encoding_profile_with_discoverer_stream (GstQaFileChecker * fc,
+    GstEncodingProfile * prof, GstDiscovererStreamInfo * stream, gchar ** msg)
+{
+  gboolean ret = TRUE;
+  GstCaps *caps = NULL;
+  const GstCaps *profile_caps;
+
+  if (GST_IS_ENCODING_CONTAINER_PROFILE (prof)) {
+    if (GST_IS_DISCOVERER_CONTAINER_INFO (stream)) {
+      ret =
+          ret & compare_container_profile_with_container_discoverer_stream (fc,
+          (GstEncodingContainerProfile *) prof,
+          (GstDiscovererContainerInfo *) stream, msg);
+    } else {
+      SET_MESSAGE (msg,
+          g_strdup_printf ("Expected container profile but found stream of %s",
+              gst_discoverer_stream_info_get_stream_type_nick (stream)));
+      ret = FALSE;
+      goto end;
+    }
+
+  } else if (GST_IS_ENCODING_VIDEO_PROFILE (prof)) {
+    if (!GST_IS_DISCOVERER_VIDEO_INFO (stream)) {
+      SET_MESSAGE (msg,
+          g_strdup_printf ("Expected video profile but found stream of %s",
+              gst_discoverer_stream_info_get_stream_type_nick (stream)));
+      ret = FALSE;
+      goto end;
+    }
+
+  } else if (GST_IS_ENCODING_AUDIO_PROFILE (prof)) {
+    if (!GST_IS_DISCOVERER_AUDIO_INFO (stream)) {
+      SET_MESSAGE (msg,
+          g_strdup_printf ("Expected audio profile but found stream of %s",
+              gst_discoverer_stream_info_get_stream_type_nick (stream)));
+      ret = FALSE;
+      goto end;
+    }
+  } else {
+    g_assert_not_reached ();
+    return FALSE;
+  }
+
+  caps = gst_discoverer_stream_info_get_caps (stream);
+  profile_caps = gst_encoding_profile_get_format (prof);
+
+  /* TODO need to consider profile caps restrictions */
+  if (!_gst_caps_can_intersect_safe (caps, profile_caps)) {
+    gchar *caps_str = gst_caps_to_string (caps);
+    gchar *profile_caps_str = gst_caps_to_string (profile_caps);
+    SET_MESSAGE (msg, g_strdup_printf ("Caps '%s' didn't match profile '%s'",
+            profile_caps_str, caps_str));
+    g_free (caps_str);
+    g_free (profile_caps_str);
+    ret = FALSE;
+    goto end;
+  }
+
+end:
+  if (caps)
+    gst_caps_unref (caps);
+
+  return ret;
+}
+
 static gboolean
 check_encoding_profile (GstQaFileChecker * fc, GstDiscovererInfo * info)
 {
   GstEncodingProfile *profile = fc->profile;
-  GstEncodingProfile *result_profile;
+  GstDiscovererStreamInfo *stream;
   gboolean ret = TRUE;
+  gchar *msg = NULL;
 
   if (profile == NULL)
     return TRUE;
 
-  result_profile = gst_encoding_profile_from_discoverer (info);
+  stream = gst_discoverer_info_get_stream_info (info);
 
-  /* TODO doesn't do subtitle checks */
-  if (!gst_encoding_profile_is_equal (result_profile, profile)) {
-    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_PROFILE_INCORRECT, "Wrong profile "
-        "found on file %s", fc->uri);
-    ret = FALSE;
+  if (!compare_encoding_profile_with_discoverer_stream (fc, fc->profile, stream,
+          &msg)) {
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_PROFILE_INCORRECT, msg);
+    g_free (msg);
   }
 
-  gst_encoding_profile_unref (result_profile);
+  gst_discoverer_stream_info_unref (stream);
   return ret;
 }
 
