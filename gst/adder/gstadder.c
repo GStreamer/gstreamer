@@ -1488,13 +1488,14 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
 
 
   /* set timestamps on the output buffer */
+  GST_BUFFER_DTS (outbuf) = GST_CLOCK_TIME_NONE;
   if (adder->segment.rate > 0.0) {
-    GST_BUFFER_PTS (outbuf) = GST_BUFFER_DTS (outbuf) = adder->segment.position;
+    GST_BUFFER_PTS (outbuf) = adder->segment.position;
     GST_BUFFER_OFFSET (outbuf) = adder->offset;
     GST_BUFFER_OFFSET_END (outbuf) = next_offset;
     GST_BUFFER_DURATION (outbuf) = next_timestamp - adder->segment.position;
   } else {
-    GST_BUFFER_DTS (outbuf) = GST_BUFFER_PTS (outbuf) = next_timestamp;
+    GST_BUFFER_PTS (outbuf) = next_timestamp;
     GST_BUFFER_OFFSET (outbuf) = next_offset;
     GST_BUFFER_OFFSET_END (outbuf) = adder->offset;
     GST_BUFFER_DURATION (outbuf) = adder->segment.position - next_timestamp;
