@@ -3829,7 +3829,6 @@ gst_qtdemux_clip_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   diff = cstart - start;
   if (diff > 0) {
     pts += diff;
-    dts += diff;
     duration -= diff;
 
     if (clip_data) {
