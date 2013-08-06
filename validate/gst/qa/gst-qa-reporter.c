@@ -62,7 +62,7 @@ gst_qa_reporter_get_priv (GstQaReporter * reporter)
   if (priv == NULL) {
     priv = g_slice_new0 (GstQaReporterPrivate);
     priv->reports = g_hash_table_new_full (g_direct_hash,
-        g_direct_equal, g_free, (GDestroyNotify) gst_qa_report_unref);
+        g_direct_equal, NULL, (GDestroyNotify) gst_qa_report_unref);
 
     g_object_set_data_full (G_OBJECT (reporter), REPORTER_PRIVATE, priv,
         (GDestroyNotify) _free_priv);
