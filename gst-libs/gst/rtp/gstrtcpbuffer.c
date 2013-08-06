@@ -2054,7 +2054,7 @@ gst_rtcp_packet_fb_set_fci_length (GstRTCPPacket * packet, guint16 wordlen)
   wordlen += 2;
   GST_WRITE_UINT16_BE (data, wordlen);
 
-  packet->rtcp->map.size += wordlen * 4;
+  packet->rtcp->map.size = packet->offset + ((wordlen + 1) * 4);
 
   return TRUE;
 }
