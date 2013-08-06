@@ -250,23 +250,35 @@ check_file_size (GstQaFileChecker * fc)
   gchar *filepath;
   guint64 size = 0;
   gboolean ret = TRUE;
+  GError *err;
 
-  filepath = g_filename_from_uri (fc->uri, NULL, NULL);
+  filepath = g_filename_from_uri (fc->uri, NULL, &err);
   if (!filepath) {
-    /* TODO is this an error */
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_NOT_FOUND,
+        "Failed to get filepath from uri %s. %s", fc->uri, err->message);
+    g_error_free (err);
     return FALSE;
   }
 
   if (g_stat (filepath, &statbuf) == 0) {
     size = statbuf.st_size;
+  } else {
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_NOT_FOUND,
+        "Failed to get file stats from uri %s", fc->uri);
+    ret = FALSE;
+    goto end;
   }
 
   if (size == 0) {
-    /* TODO error */
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_SIZE_IS_ZERO, "File %s has size 0",
+        fc->uri);
     ret = FALSE;
   } else if (size < fc->file_size - fc->file_size_tolerance ||
       size > fc->file_size + fc->file_size_tolerance) {
-    /* TODO error */
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_SIZE_INCORRECT,
+        "File %s has size %" G_GUINT64_FORMAT ", it was expected to have %"
+        G_GUINT64_FORMAT " (+-%" G_GUINT64_FORMAT ")",
+        fc->uri, size, fc->file_size, fc->file_size_tolerance);
     ret = FALSE;
     goto end;
   }
@@ -287,7 +299,11 @@ check_file_duration (GstQaFileChecker * fc, GstDiscovererInfo * info)
   real_duration = gst_discoverer_info_get_duration (info);
   if (real_duration < fc->duration - fc->duration_tolerance ||
       real_duration > fc->duration + fc->duration_tolerance) {
-    /* TODO error */
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_SIZE_INCORRECT,
+        "File %s has duration %" GST_TIME_FORMAT ", it was expected to have %"
+        GST_TIME_FORMAT " (+-%" GST_TIME_FORMAT ")",
+        fc->uri, GST_TIME_ARGS (real_duration), GST_TIME_ARGS (fc->duration),
+        GST_TIME_ARGS (fc->duration_tolerance));
     return FALSE;
   }
   return TRUE;
@@ -300,7 +316,9 @@ check_seekable (GstQaFileChecker * fc, GstDiscovererInfo * info)
 
   real_seekable = gst_discoverer_info_get_seekable (info);
   if (real_seekable != fc->seekable) {
-    /* TODO error */
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_SEEKABLE_INCORRECT,
+        "File was expected to %s be seekable, but it %s",
+        fc->seekable ? "" : "not", real_seekable ? "is" : "isn't");
     return FALSE;
   }
   return TRUE;
@@ -320,7 +338,8 @@ check_encoding_profile (GstQaFileChecker * fc, GstDiscovererInfo * info)
 
   /* TODO doesn't do subtitle checks */
   if (!gst_encoding_profile_is_equal (result_profile, profile)) {
-    /* TODO error */
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_PROFILE_INCORRECT, "Wrong profile "
+        "found on file %s", fc->uri);
     ret = FALSE;
   }
 
@@ -337,15 +356,20 @@ gst_qa_file_checker_run (GstQaFileChecker * fc)
   GstDiscoverer *discoverer = gst_discoverer_new (GST_SECOND * 60, &err);
   gboolean ret = TRUE;
 
+  g_return_val_if_fail (fc->uri != NULL, FALSE);
+
   if (!discoverer) {
-    /* TODO set error */
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_ALLOCATION_FAILURE,
+        "Failed to create GstDiscoverer");
     return FALSE;
   }
 
   info = gst_discoverer_discover_uri (discoverer, fc->uri, &err);
 
   if (gst_discoverer_info_get_result (info) != GST_DISCOVERER_OK) {
-    /* TODO error */
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_CHECK_FAILURE,
+        "Discoverer failed to discover the file, result: %d",
+        gst_discoverer_info_get_result (info));
     return FALSE;
   }
 

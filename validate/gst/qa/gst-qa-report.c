@@ -172,6 +172,31 @@ gst_qa_report_load_issues (void)
 
   REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_STATE_CHANGE_FAILURE,
       _("state change failed"), NULL, GST_QA_REPORT_LEVEL_CRITICAL);
+
+  REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_FILE_SIZE_IS_ZERO,
+      _("resulting file size is 0"), NULL, GST_QA_REPORT_LEVEL_CRITICAL);
+  REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_FILE_SIZE_INCORRECT,
+      _("resulting file size wasn't within the expected values"),
+      NULL, GST_QA_REPORT_LEVEL_WARNING);
+  REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_FILE_DURATION_INCORRECT,
+      _("resulting file duration wasn't within the expected values"),
+      NULL, GST_QA_REPORT_LEVEL_WARNING);
+  REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_FILE_SEEKABLE_INCORRECT,
+      _("resulting file wasn't seekable or not seekable as expected"),
+      NULL, GST_QA_REPORT_LEVEL_WARNING);
+  REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_FILE_PROFILE_INCORRECT,
+      _("resulting file stream profiles didn't match expected values"),
+      NULL, GST_QA_REPORT_LEVEL_CRITICAL);
+  REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_FILE_NOT_FOUND,
+      _("resulting file could not be found for testing"), NULL,
+      GST_QA_REPORT_LEVEL_CRITICAL);
+  REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_FILE_CHECK_FAILURE,
+      _("an error occured while checking the file for conformance"), NULL,
+      GST_QA_REPORT_LEVEL_CRITICAL);
+
+  REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_ALLOCATION_FAILURE,
+      _("a memory allocation failed during QA run"),
+      NULL, GST_QA_REPORT_LEVEL_CRITICAL);
 }
 
 void
@@ -235,6 +260,12 @@ gst_qa_report_area_get_name (GstQaReportArea area)
       return "caps";
     case GST_QA_AREA_SEEK:
       return "seek";
+    case GST_QA_AREA_STATE:
+      return "state";
+    case GST_QA_AREA_FILE_CHECK:
+      return "file-check";
+    case GST_QA_AREA_RUN_ERROR:
+      return "run-error";
     case GST_QA_AREA_OTHER:
       return "other";
     default:
