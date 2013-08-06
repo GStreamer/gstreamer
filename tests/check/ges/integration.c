@@ -211,6 +211,12 @@ my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       got_async_done = TRUE;
       if (GST_CLOCK_TIME_IS_VALID (seeked_position))
         seeked_position = GST_CLOCK_TIME_NONE;
+
+      if (seeks == NULL && seek_paused_noplay) {
+        /* We are now done with seeking, let it play until the end */
+        gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+        gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
+      }
       break;
     default:
       /* unhandled message */
@@ -234,7 +240,8 @@ get_position (void)
     if ((position >= (seek->seeking_position - seek_tol))
         && (position <= (seek->seeking_position + seek_tol))) {
 
-      fail_if (GST_CLOCK_TIME_IS_VALID (seeked_position));
+      if (!got_async_done)
+        fail_if (GST_CLOCK_TIME_IS_VALID (seeked_position));
       got_async_done = FALSE;
 
       GST_INFO ("seeking to: %" GST_TIME_FORMAT,
@@ -242,6 +249,13 @@ get_position (void)
 
       seeked_position = seek->position;
       if (seek_paused) {
+        gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
+        GST_LOG ("Set state playing");
+        gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
+        GST_LOG ("Done wainting");
+      }
+
+      if (seek_paused_noplay) {
         gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PAUSED);
         gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
       }
@@ -262,10 +276,6 @@ get_position (void)
   }
   /* if seeking paused without playing and we reached the last seek, just play
    * till the end */
-  if (!tmp && seek_paused_noplay) {
-    gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-    gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
-  }
   return TRUE;
 }
 
@@ -338,10 +348,8 @@ check_timeline (GESTimeline * timeline)
   gst_object_unref (bus);
 
   ges_pipeline_add_timeline (pipeline, timeline);
-  if (!seek_paused_noplay) {
-    gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
-    gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
-  }
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
   GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
       GST_DEBUG_GRAPH_SHOW_ALL, "ges-integration-playing");
   if (seeks != NULL)
