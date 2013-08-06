@@ -3774,13 +3774,15 @@ done:
 }
 
 /* the input buffer metadata must be writable. Returns NULL when the buffer is
- * completely cliped */
+ * completely cliped
+ *
+ * Should be used only with raw buffers */
 static GstBuffer *
 gst_qtdemux_clip_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
     GstBuffer * buf)
 {
   guint64 start, stop, cstart, cstop, diff;
-  GstClockTime pts, dts, duration;
+  GstClockTime pts, duration;
   gsize size, osize;
   gint num_rate, denom_rate;
   gint frame_size;
@@ -3809,7 +3811,6 @@ gst_qtdemux_clip_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (pts)))
     goto no_pts;
 
-  dts = GST_BUFFER_DTS (buf);
   duration = GST_BUFFER_DURATION (buf);
 
   if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (duration))) {
@@ -3862,7 +3863,7 @@ gst_qtdemux_clip_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
   if (offset != 0 || size != osize)
     gst_buffer_resize (buf, offset, size);
 
-  GST_BUFFER_DTS (buf) = dts;
+  GST_BUFFER_DTS (buf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_PTS (buf) = pts;
   GST_BUFFER_DURATION (buf) = duration;
 
