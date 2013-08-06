@@ -1004,7 +1004,13 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
   else
     output_start_time = mix->segment.position;
 
-  if (output_start_time >= mix->segment.stop) {
+  output_end_time =
+      mix->ts_offset + gst_util_uint64_scale_round (mix->nframes + 1,
+      GST_SECOND * GST_VIDEO_INFO_FPS_D (&mix->info),
+      GST_VIDEO_INFO_FPS_N (&mix->info)) + mix->segment.start;
+
+  if (output_start_time >= mix->segment.stop ||
+      output_end_time == mix->segment.stop) {
     GST_DEBUG_OBJECT (mix, "Segment done");
     GST_VIDEO_MIXER2_UNLOCK (mix);
     gst_pad_push_event (mix->srcpad, gst_event_new_eos ());
@@ -1012,10 +1018,6 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
     goto done_unlocked;
   }
 
-  output_end_time =
-      mix->ts_offset + gst_util_uint64_scale_round (mix->nframes + 1,
-      GST_SECOND * GST_VIDEO_INFO_FPS_D (&mix->info),
-      GST_VIDEO_INFO_FPS_N (&mix->info)) + mix->segment.start;
   if (mix->segment.stop != -1)
     output_end_time = MIN (output_end_time, mix->segment.stop);
 
