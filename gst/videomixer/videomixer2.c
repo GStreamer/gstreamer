@@ -321,7 +321,6 @@ gst_videomixer2_pad_sink_setcaps (GstPad * pad, GstObject * parent,
       GST_VIDEO_MIXER2_UNLOCK (mix);
       GST_DEBUG_OBJECT (pad, "got input caps %" GST_PTR_FORMAT ", but "
           "current caps are %" GST_PTR_FORMAT, caps, mix->current_caps);
-      gst_pad_push_event (pad, gst_event_new_reconfigure ());
       return FALSE;
     }
   }
