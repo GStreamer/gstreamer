@@ -708,7 +708,7 @@ gst_aiff_parse_read_chunk (GstAiffParse * aiff, guint64 * offset, guint32 * tag,
 {
   guint size;
   GstFlowReturn res;
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
   GstMapInfo info;
 
   if ((res =
@@ -720,6 +720,7 @@ gst_aiff_parse_read_chunk (GstAiffParse * aiff, guint64 * offset, guint32 * tag,
   size = GST_READ_UINT32_BE (info.data + 4);
   gst_buffer_unmap (buf, &info);
   gst_buffer_unref (buf);
+  buf = NULL;
 
   if ((res =
           gst_pad_pull_range (aiff->sinkpad, (*offset) + 8, size,
@@ -796,7 +797,7 @@ static GstFlowReturn
 gst_aiff_parse_stream_headers (GstAiffParse * aiff)
 {
   GstFlowReturn res;
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
   guint32 tag, size;
   gboolean gotdata = FALSE;
   gboolean done = FALSE;
@@ -823,6 +824,8 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
       tag = GST_READ_UINT32_LE (info.data);
       size = GST_READ_UINT32_BE (info.data + 4);
       gst_buffer_unmap (buf, &info);
+      gst_buffer_unref (buf);
+      buf = NULL;
     }
 
     GST_INFO_OBJECT (aiff,
@@ -896,7 +899,6 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
           GstBuffer *ssndbuf = NULL;
           GstMapInfo info;
 
-          gst_buffer_unref (buf);
           if ((res =
                   gst_pad_pull_range (aiff->sinkpad, aiff->offset, 16,
                       &ssndbuf)) != GST_FLOW_OK)
@@ -970,6 +972,8 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
       default:
         gst_aiff_parse_ignore_chunk (aiff, buf, tag, size);
     }
+
+    buf = NULL;
 
     if (upstream_size && (aiff->offset >= upstream_size)) {
       /* Now we have gone through the whole file */
