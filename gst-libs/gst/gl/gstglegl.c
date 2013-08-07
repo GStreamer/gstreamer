@@ -200,7 +200,7 @@ gst_gl_egl_create_context (EGLDisplay display, EGLNativeWindowType window,
 
   egl_exts = eglQueryString (egl->egl_display, EGL_EXTENSIONS);
 
-  if (window && FALSE) {
+  if (window) {
     egl->egl_surface =
         eglCreateWindowSurface (egl->egl_display, egl->egl_config, window,
         NULL);
