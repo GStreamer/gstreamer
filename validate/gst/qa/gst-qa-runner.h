@@ -58,8 +58,6 @@ struct _GstQaRunner {
   gboolean       setup;
 
   /*< private >*/
-  GstQaScenario *scenario;
-
   GSList *reports;
 };
 

@@ -56,6 +56,9 @@ gst_qa_bin_monitor_dispose (GObject * object)
   if (bin && monitor->element_added_id)
     g_signal_handler_disconnect (bin, monitor->element_added_id);
 
+  if (monitor->scenario)
+    g_object_unref (monitor->scenario);
+
   g_list_free_full (monitor->element_monitors, g_object_unref);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
@@ -81,6 +84,22 @@ gst_qa_bin_monitor_init (GstQaBinMonitor * bin_monitor)
 {
 }
 
+static void
+gst_qa_bin_monitor_create_scenarios (GstQaBinMonitor * monitor)
+{
+  /* scenarios currently only make sense for pipelines */
+  if (GST_IS_PIPELINE (GST_QA_MONITOR_GET_OBJECT (monitor))) {
+    const gchar *scenario_name;
+
+    if ((scenario_name = g_getenv ("GST_QA_SCENARIO"))) {
+      monitor->scenario =
+          gst_qa_scenario_factory_create (GST_QA_MONITOR_GET_RUNNER (monitor),
+          GST_ELEMENT_CAST (GST_QA_MONITOR_GET_OBJECT (monitor)),
+          scenario_name);
+    }
+  }
+}
+
 /**
  * gst_qa_bin_monitor_new:
  * @bin: (transfer-none): a #GstBin to run QA on
@@ -96,6 +115,9 @@ gst_qa_bin_monitor_new (GstBin * bin, GstQaRunner * runner,
     g_object_unref (monitor);
     return NULL;
   }
+
+  gst_qa_bin_monitor_create_scenarios (monitor);
+
   return monitor;
 }
 

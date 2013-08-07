@@ -26,6 +26,7 @@
 #include <gst/gst.h>
 #include "gst-qa-element-monitor.h"
 #include "gst-qa-runner.h"
+#include "gst-qa-scenario.h"
 
 G_BEGIN_DECLS
 
@@ -54,6 +55,8 @@ struct _GstQaBinMonitor {
   GstQaElementMonitor parent;
 
   GList *element_monitors;
+
+  GstQaScenario *scenario;
 
   /*< private >*/
   gulong element_added_id;

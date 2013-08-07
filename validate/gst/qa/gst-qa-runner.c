@@ -23,7 +23,6 @@
 #include "gst-qa-report.h"
 #include "gst-qa-monitor-factory.h"
 #include "gst-qa-override-registry.h"
-#include "gst-qa-scenario.h"
 
 /**
  * SECTION:gst-qa-runner
@@ -56,9 +55,6 @@ gst_qa_runner_dispose (GObject * object)
   GstQaRunner *runner = GST_QA_RUNNER_CAST (object);
 
   g_slist_free_full (runner->reports, (GDestroyNotify) gst_qa_report_unref);
-
-  if (runner->scenario)
-    g_object_unref (runner->scenario);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
