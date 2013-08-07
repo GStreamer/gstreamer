@@ -1428,7 +1428,7 @@ gst_vc1_parse_handle_seq_layer (GstVC1Parse * vc1parse,
     vc1parse->level = level;
   }
 
-  if (!vc1parse->fps_from_caps) {
+  if (!vc1parse->fps_from_caps && profile != GST_VC1_PROFILE_ADVANCED) {
     gint fps;
     fps = vc1parse->seq_layer.struct_c.framerate;
     if (fps == 0 || fps == -1)
