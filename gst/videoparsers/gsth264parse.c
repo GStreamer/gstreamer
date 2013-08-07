@@ -453,10 +453,6 @@ _nal_name (GstH264NalUnitType nal_type)
 }
 #endif
 
-/* SPS/PPS/IDR considered key, all others DELTA;
- * so downstream waiting for keyframe can pick up at SPS/PPS/IDR */
-#define NAL_TYPE_IS_KEY(nt) (((nt) == 5) || ((nt) == 7) || ((nt) == 8))
-
 /* caller guarantees 2 bytes of nal payload */
 static void
 gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
@@ -476,7 +472,6 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
 
   /* we have a peek as well */
   nal_type = nalu->type;
-  h264parse->keyframe |= NAL_TYPE_IS_KEY (nal_type);
 
   GST_DEBUG_OBJECT (h264parse, "processing nal of type %u %s, size %u",
       nal_type, _nal_name (nal_type), nalu->size);
@@ -572,18 +567,27 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
         h264parse->frame_start = TRUE;
       }
       GST_DEBUG_OBJECT (h264parse, "frame start: %i", h264parse->frame_start);
-#ifndef GST_DISABLE_GST_DEBUG
       {
         GstH264SliceHdr slice;
-        GstH264ParserResult pres;
 
         pres = gst_h264_parser_parse_slice_hdr (nalparser, nalu, &slice,
             FALSE, FALSE);
         GST_DEBUG_OBJECT (h264parse,
             "parse result %d, first MB: %u, slice type: %u",
             pres, slice.first_mb_in_slice, slice.type);
+        if (pres == GST_H264_PARSER_OK) {
+          switch (slice.type) {
+            case 2:
+            case 4:
+            case 7:
+            case 9:
+              h264parse->keyframe |= TRUE;
+
+            default:
+              break;
+          }
+        }
       }
-#endif
       if (G_LIKELY (nal_type != GST_H264_NAL_SLICE_IDR &&
               !h264parse->push_codec))
         break;
