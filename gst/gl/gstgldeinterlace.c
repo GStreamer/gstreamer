@@ -267,17 +267,17 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
   GstGLFuncs *gl = filter->display->gl_vtable;
   guint temp;
 
-  gfloat verts[] = { -1.0, -1.0,
+  GLfloat verts[] = { -1.0, -1.0,
     1.0, -1.0,
     1.0, 1.0,
     -1.0, 1.0
   };
-  gint texcoords0[] = { 0, 0,
+  GLfloat texcoords0[] = { 0, 0,
     width, 0,
     width, height,
     0, height
   };
-  gint texcoords1[] = { 0, 0,
+  GLfloat texcoords1[] = { 0, 0,
     width, 0,
     width, height,
     0, height
@@ -324,7 +324,7 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
   gl->EnableClientState (GL_VERTEX_ARRAY);
 
   gl->VertexPointer (2, GL_FLOAT, 0, &verts);
-  gl->TexCoordPointer (2, GL_INT, 0, &texcoords0);
+  gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords0);
 
   gl->ClientActiveTexture (GL_TEXTURE1);
   gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);

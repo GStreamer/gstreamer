@@ -977,12 +977,12 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
   else {
 #if GST_GL_HAVE_OPENGL
     if (USING_OPENGL (gl_sink->display)) {
-      gfloat verts[8] = { 1.0f, 1.0f,
+      GLfloat verts[8] = { 1.0f, 1.0f,
         -1.0f, 1.0f,
         -1.0f, -1.0f,
         1.0f, -1.0f
       };
-      gint texcoords[8] = { gl_sink->redisplay_texture_width, 0,
+      GLfloat texcoords[8] = { gl_sink->redisplay_texture_width, 0,
         0, 0,
         0, gl_sink->redisplay_texture_height,
         gl_sink->redisplay_texture_width,
@@ -999,7 +999,7 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
       gl->EnableClientState (GL_VERTEX_ARRAY);
       gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
       gl->VertexPointer (2, GL_FLOAT, 0, &verts);
-      gl->TexCoordPointer (2, GL_INT, 0, &texcoords);
+      gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
 
       gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
 

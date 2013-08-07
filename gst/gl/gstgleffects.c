@@ -280,12 +280,12 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
 
 #if GST_GL_HAVE_OPENGL
   if (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL) {
-    gfloat verts[] = { -1.0f, -1.0f,
+    GLfloat verts[] = { -1.0f, -1.0f,
       1.0f, -1.0f,
       1.0f, 1.0f,
       -1.0f, 1.0f
     };
-    gint texcoords[] = { 0, 0,
+    GLfloat texcoords[] = { 0, 0,
       width, 0,
       width, height,
       0, height
@@ -300,7 +300,7 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
     gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
 
     gl->VertexPointer (2, GL_FLOAT, 0, &verts);
-    gl->TexCoordPointer (2, GL_INT, 0, &texcoords);
+    gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
 
     gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
 

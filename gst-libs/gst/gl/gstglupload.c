@@ -1207,12 +1207,12 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
   gint i;
   gfloat tex_scaling[6] = { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
 
-  gfloat verts[8] = { 1.0f, -1.0f,
+  GLfloat verts[8] = { 1.0f, -1.0f,
     -1.0f, -1.0f,
     -1.0f, 1.0f,
     1.0f, 1.0f
   };
-  gint texcoords[8] = { in_width, 0,
+  GLfloat texcoords[8] = { in_width, 0,
     0, 0,
     0, in_height,
     in_width, in_height
@@ -1337,7 +1337,7 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
   gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
 
   gl->VertexPointer (2, GL_FLOAT, 0, &verts);
-  gl->TexCoordPointer (2, GL_INT, 0, &texcoords);
+  gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
 
   gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
 
