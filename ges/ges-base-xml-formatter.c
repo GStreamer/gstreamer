@@ -111,6 +111,8 @@ struct _GESBaseXmlFormatterPrivate
 
   GESClip *current_clip;
   PendingClip *current_pending_clip;
+
+  gboolean timeline_auto_transition;
 };
 
 static void
@@ -220,6 +222,8 @@ _load_from_uri (GESFormatter * self, GESTimeline * timeline, const gchar * uri,
     GError ** error)
 {
   GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+
+  ges_timeline_set_auto_transition (timeline, FALSE);
 
   priv->parsecontext =
       create_parser_context (GES_BASE_XML_FORMATTER (self), uri, error);
@@ -356,6 +360,7 @@ ges_base_xml_formatter_init (GESBaseXmlFormatter * self)
   priv->current_track_element = NULL;
   priv->current_clip = NULL;
   priv->current_pending_clip = NULL;
+  priv->timeline_auto_transition = FALSE;
 }
 
 static void
@@ -405,6 +410,9 @@ _loading_done (GESFormatter * self)
   if (priv->parsecontext)
     g_markup_parse_context_free (priv->parsecontext);
   priv->parsecontext = NULL;
+
+  ges_timeline_set_auto_transition (self->timeline,
+      priv->timeline_auto_transition);
 
   g_hash_table_foreach (priv->layers, (GHFunc) _set_auto_transition, NULL);
   ges_project_set_loaded (self->project, self);
@@ -805,6 +813,35 @@ ges_base_xml_formatter_add_clip (GESBaseXmlFormatter * self,
     return;
 
   priv->current_clip = nclip;
+}
+
+void
+ges_base_xml_formatter_set_timeline_properties (GESBaseXmlFormatter * self,
+    GESTimeline * timeline, const gchar * properties, const gchar * metadatas)
+{
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+  gboolean auto_transition = FALSE;
+
+  if (properties) {
+    GstStructure *props = gst_structure_from_string (properties, NULL);
+
+    if (props) {
+      if (gst_structure_get_boolean (props, "auto-transition",
+              &auto_transition))
+        gst_structure_remove_field (props, "auto-transition");
+
+      gst_structure_foreach (props,
+          (GstStructureForeachFunc) set_property_foreach, timeline);
+      gst_structure_free (props);
+    }
+  }
+
+  if (metadatas) {
+    ges_meta_container_add_metas_from_string (GES_META_CONTAINER (timeline),
+        metadatas);
+  };
+
+  priv->timeline_auto_transition = auto_transition;
 }
 
 void

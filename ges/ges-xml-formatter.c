@@ -244,19 +244,8 @@ _parse_timeline (GMarkupParseContext * context, const gchar * element_name,
   if (timeline == NULL)
     return;
 
-  if (properties) {
-    GstStructure *props = gst_structure_from_string (properties, NULL);
-
-    if (props) {
-      gst_structure_foreach (props,
-          (GstStructureForeachFunc) set_property_foreach, timeline);
-      gst_structure_free (props);
-    }
-  }
-  if (metadatas) {
-    ges_meta_container_add_metas_from_string (GES_META_CONTAINER (timeline),
-        metadatas);
-  };
+  ges_base_xml_formatter_set_timeline_properties (GES_BASE_XML_FORMATTER (self),
+      timeline, properties, metadatas);
 }
 
 static inline void
