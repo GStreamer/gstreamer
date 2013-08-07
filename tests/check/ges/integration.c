@@ -635,8 +635,10 @@ run_basic (GESTimeline * timeline)
 {
   GESLayer *layer;
   GESUriClipAsset *asset1;
+  GESUriClipAsset *asset2;
 
   get_asset (testfilename1, asset1);
+  get_asset (testfilename2, asset2);
   layer = ges_layer_new ();
   fail_unless (ges_timeline_add_layer (timeline, layer));
 
@@ -645,12 +647,16 @@ run_basic (GESTimeline * timeline)
   gst_object_unref (asset1);
   /* Test most simple case */
 
+  ges_layer_add_asset (layer, GES_ASSET (asset2), 1 * GST_SECOND,
+      0 * GST_SECOND, 1 * GST_SECOND, GES_TRACK_TYPE_UNKNOWN);
+  gst_object_unref (asset2);
+
     /**
    * Our timeline
    *
-   * inpoints 0--------0
-   *          |  clip  |
-   * time     0--------1
+   * inpoints 0--------0 0--------0
+   *          |  clip  | |  clip2 |
+   * time     0------- 1 1--------2
    */
 
   fail_unless (check_timeline (timeline));
