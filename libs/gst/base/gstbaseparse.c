@@ -246,6 +246,7 @@ struct _GstBaseParsePrivate
   gint64 estimated_drift;
 
   guint min_frame_size;
+  gboolean disable_passthrough;
   gboolean passthrough;
   gboolean pts_interpolate;
   gboolean infer_ts;
@@ -358,6 +359,15 @@ typedef struct _GstBaseParseSeek
   GstClockTime start_ts;
 } GstBaseParseSeek;
 
+#define DEFAULT_DISABLE_PASSTHROUGH        FALSE
+
+enum
+{
+  PROP_0,
+  PROP_DISABLE_PASSTHROUGH,
+  PROP_LAST
+};
+
 #define GST_BASE_PARSE_INDEX_LOCK(parse) \
   g_mutex_lock (&parse->priv->index_lock);
 #define GST_BASE_PARSE_INDEX_UNLOCK(parse) \
@@ -413,6 +423,11 @@ static gboolean gst_base_parse_sink_activate_mode (GstPad * pad,
 static gboolean gst_base_parse_handle_seek (GstBaseParse * parse,
     GstEvent * event);
 static void gst_base_parse_handle_tag (GstBaseParse * parse, GstEvent * event);
+
+static void gst_base_parse_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
+static void gst_base_parse_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
 
 static gboolean gst_base_parse_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
@@ -532,7 +547,26 @@ gst_base_parse_class_init (GstBaseParseClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
   g_type_class_add_private (klass, sizeof (GstBaseParsePrivate));
   parent_class = g_type_class_peek_parent (klass);
+
   gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_base_parse_finalize);
+  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_base_parse_set_property);
+  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_base_parse_get_property);
+
+  /**
+   * GstBaseParse:disable-passthrough:
+   *
+   * If set to #TRUE, baseparse will unconditionally force parsing of the
+   * incoming data. This can be required in the rare cases where the incoming
+   * side-data (caps, pts, dts, ...) is not trusted by the user and wants to
+   * force validation and parsing of the incoming data.
+   * If set to #FALSE, decision of whether to parse the data or not is up to
+   * the implementation (standard behaviour).
+   */
+  g_object_class_install_property (gobject_class, PROP_DISABLE_PASSTHROUGH,
+      g_param_spec_boolean ("disable-passthrough", "Disable passthrough",
+          "Force processing (disables passthrough)",
+          DEFAULT_DISABLE_PASSTHROUGH,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gstelement_class = (GstElementClass *) klass;
   gstelement_class->change_state =
@@ -607,6 +641,38 @@ gst_base_parse_init (GstBaseParse * parse, GstBaseParseClass * bclass)
   GST_DEBUG_OBJECT (parse, "init ok");
 
   GST_OBJECT_FLAG_SET (parse, GST_ELEMENT_FLAG_INDEXABLE);
+}
+
+static void
+gst_base_parse_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstBaseParse *parse = GST_BASE_PARSE (object);
+
+  switch (prop_id) {
+    case PROP_DISABLE_PASSTHROUGH:
+      parse->priv->disable_passthrough = g_value_get_boolean (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_base_parse_get_property (GObject * object, guint prop_id, GValue * value,
+    GParamSpec * pspec)
+{
+  GstBaseParse *parse = GST_BASE_PARSE (object);
+
+  switch (prop_id) {
+    case PROP_DISABLE_PASSTHROUGH:
+      g_value_set_boolean (value, parse->priv->disable_passthrough);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static GstBaseParseFrame *
@@ -735,6 +801,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->next_pts = GST_CLOCK_TIME_NONE;
   parse->priv->next_dts = 0;
   parse->priv->syncable = TRUE;
+  parse->priv->disable_passthrough = DEFAULT_DISABLE_PASSTHROUGH;
   parse->priv->passthrough = FALSE;
   parse->priv->pts_interpolate = TRUE;
   parse->priv->infer_ts = TRUE;
@@ -2224,7 +2291,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
         size, gst_flow_get_name (ret));
     gst_buffer_unref (buffer);
     /* if we are not sufficiently in control, let upstream decide on EOS */
-    if (ret == GST_FLOW_EOS &&
+    if (ret == GST_FLOW_EOS && !parse->priv->disable_passthrough &&
         (parse->priv->passthrough ||
             (parse->priv->pad_mode == GST_PAD_MODE_PUSH &&
                 !parse->priv->upstream_seekable)))
@@ -2682,7 +2749,8 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         GST_TIME_ARGS (GST_BUFFER_DTS (buffer)),
         GST_TIME_ARGS (GST_BUFFER_PTS (buffer)));
 
-    if (G_UNLIKELY (parse->priv->passthrough)) {
+    if (G_UNLIKELY (!parse->priv->disable_passthrough
+            && parse->priv->passthrough)) {
       GstBaseParseFrame frame;
 
       gst_base_parse_frame_init (&frame);
