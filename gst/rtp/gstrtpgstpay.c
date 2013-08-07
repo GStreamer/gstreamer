@@ -167,6 +167,9 @@ gst_rtp_gst_pay_finalize (GObject * obj)
   if (rtpgstpay->taglist)
     gst_tag_list_unref (rtpgstpay->taglist);
   rtpgstpay->taglist = NULL;
+  if (rtpgstpay->stream_id)
+    g_free (rtpgstpay->stream_id);
+  rtpgstpay->stream_id = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -474,12 +477,22 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
     case GST_EVENT_CUSTOM_BOTH:
       etype = 3;
       break;
-    case GST_EVENT_STREAM_START:
-      etype = 4;
+    case GST_EVENT_STREAM_START:{
+      const gchar *stream_id = NULL;
+
       if (rtpgstpay->taglist)
         gst_tag_list_unref (rtpgstpay->taglist);
       rtpgstpay->taglist = NULL;
+
+      gst_event_parse_stream_start (event, &stream_id);
+      if (stream_id) {
+        if (rtpgstpay->stream_id)
+          g_free (rtpgstpay->stream_id);
+        rtpgstpay->stream_id = g_strdup (stream_id);
+      }
+      etype = 4;
       break;
+    }
     default:
       etype = 0;
       GST_LOG_OBJECT (rtpgstpay, "no event for %s",
@@ -509,12 +522,20 @@ gst_rtp_gst_pay_send_config (GstRtpGSTPay * rtpgstpay, GstClockTime timestamp)
   GstPad *pad = GST_RTP_BASE_PAYLOAD_SINKPAD (rtpgstpay);
   GstCaps *caps = NULL;
   GstEvent *tag = NULL;
+  GstEvent *stream_start = NULL;
 
   GST_DEBUG_OBJECT (rtpgstpay, "time to send config");
   /* Send tags */
   if (rtpgstpay->taglist && !gst_tag_list_is_empty (rtpgstpay->taglist))
     tag = gst_event_new_tag (gst_tag_list_ref (rtpgstpay->taglist));
   if (tag) {
+    /* Send start-stream to clear tags */
+    if (rtpgstpay->stream_id)
+      stream_start = gst_event_new_stream_start (rtpgstpay->stream_id);
+    if (stream_start) {
+      gst_rtp_gst_pay_send_event (rtpgstpay, 4, stream_start);
+      gst_event_unref (stream_start);
+    }
     gst_rtp_gst_pay_send_event (rtpgstpay, 1, tag);
     gst_event_unref (tag);
   }

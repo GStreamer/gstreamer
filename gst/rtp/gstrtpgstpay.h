@@ -52,6 +52,7 @@ struct _GstRtpGSTPay
   guint8 current_CV; /* CV field of incoming caps*/
   guint8 next_CV;
 
+  gchar *stream_id;
   GstTagList *taglist;
   guint config_interval;
   GstClockTime last_config;
