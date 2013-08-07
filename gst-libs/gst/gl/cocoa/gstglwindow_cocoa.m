@@ -419,8 +419,8 @@ gst_gl_window_cocoa_quit (GstGLWindow * window)
     if (GSRegisterCurrentThread() || 1) {
       NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
       
-      [app_thread_performer performSelector:@selector(stopApp) onThread:priv->thread 
-        withObject:nil waitUntilDone:YES];
+ AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc] initWithAll:window_cocoa callback:NULL userData:NULL];
+      [app_thread_performer performSelector:@selector(stopApp) onThread:priv->thread withObject:nil waitUntilDone:YES];
 
       [pool release];
 
