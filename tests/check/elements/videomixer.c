@@ -930,8 +930,8 @@ GST_START_TEST (test_loop)
 
   seek_event = gst_event_new_seek (1.0, GST_FORMAT_TIME,
       GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_FLUSH,
-      GST_SEEK_TYPE_SET, (GstClockTime) 0,
-      GST_SEEK_TYPE_SET, (GstClockTime) 1 * GST_SECOND);
+      GST_SEEK_TYPE_SET, (GstClockTime) 0, GST_SEEK_TYPE_SET,
+      (GstClockTime) 2 * GST_SECOND);
 
   main_loop = g_main_loop_new (NULL, FALSE);
   g_signal_connect (bus, "message::segment-done",
@@ -947,7 +947,9 @@ GST_START_TEST (test_loop)
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
   /* wait for completion */
-  state_res = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+  state_res =
+      gst_element_get_state (GST_ELEMENT (bin), NULL, NULL,
+      GST_CLOCK_TIME_NONE);
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
   res = gst_element_send_event (bin, seek_event);
