@@ -19,6 +19,10 @@
  * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
  * Boston, MA 02110-1301, USA.
  */
+
+/* API compatibility stuff */
+#ifndef __GSTCOMPAT_H__
+#define __GSTCOMPAT_H__
 /**
  * SECTION:gstcompat
  * @short_description: Deprecated API entries
@@ -28,9 +32,6 @@
  * This can be done in CFLAGS for compiling old code.
  */
 
-/* API compatibility stuff */
-#ifndef __GSTCOMPAT_H__
-#define __GSTCOMPAT_H__
 
 G_BEGIN_DECLS
 

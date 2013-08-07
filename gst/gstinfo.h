@@ -354,7 +354,7 @@ gboolean        gst_debug_is_active   (void);
 
 void            gst_debug_set_colored (gboolean colored);
 void            gst_debug_set_color_mode   (GstDebugColorMode mode);
-void            gst_debug_set_color_mode_from_string (const gchar * str);
+void            gst_debug_set_color_mode_from_string (const gchar * mode);
 gboolean        gst_debug_is_colored  (void);
 GstDebugColorMode gst_debug_get_color_mode (void);
 

@@ -1293,13 +1293,13 @@ gst_debug_set_color_mode (GstDebugColorMode mode)
  * Since: 1.2
  */
 void
-gst_debug_set_color_mode_from_string (const gchar * str)
+gst_debug_set_color_mode_from_string (const gchar * mode)
 {
-  if ((strcmp (str, "on") == 0) || (strcmp (str, "auto") == 0))
+  if ((strcmp (mode, "on") == 0) || (strcmp (mode, "auto") == 0))
     gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_ON);
-  else if ((strcmp (str, "off") == 0) || (strcmp (str, "disable") == 0))
+  else if ((strcmp (mode, "off") == 0) || (strcmp (mode, "disable") == 0))
     gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_OFF);
-  else if (strcmp (str, "unix") == 0)
+  else if (strcmp (mode, "unix") == 0)
     gst_debug_set_color_mode (GST_DEBUG_COLOR_MODE_UNIX);
 }
 
