@@ -1168,12 +1168,12 @@ gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
 {
   GstGLFuncs *gl = filter->display->gl_vtable;
 
-  gfloat verts[] = { -1.0f, -1.0f,
+  GLfloat verts[] = { -1.0f, -1.0f,
     1.0f, -1.0f,
     1.0f, 1.0f,
     -1.0f, 1.0f
   };
-  gint texcoords[] = { 0, 0,
+  GLfloat texcoords[] = { 0, 0,
     width, 0,
     width, height,
     0, height
@@ -1191,7 +1191,7 @@ gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
   gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
 
   gl->VertexPointer (2, GL_FLOAT, 0, &verts);
-  gl->TexCoordPointer (2, GL_INT, 0, &texcoords);
+  gl->TexCoordPointer (2, GL_FLOAT, 0, &texcoords);
 
   gl->DrawArrays (GL_TRIANGLE_FAN, 0, 4);
 
