@@ -22,9 +22,12 @@
 #include <gst/gst.h>
 #include <string.h>
 #include "gst-qa-runner.h"
+#include "gst-qa-monitor-factory.h"
 
 #define __USE_GNU
 #include <dlfcn.h>
+
+static GstQaRunner *runner = NULL;
 
 /*
  * Functions that wrap object creation so gst-qa can be used
@@ -34,15 +37,11 @@
 static void
 gst_qa_preload_wrap (GstElement * element)
 {
-  GstQaRunner *runner;
+  if (runner == NULL)
+    runner = gst_qa_runner_new ();
 
-  runner = gst_qa_runner_new (element);
-
-  /* TODO this will actually never unref the runner as it holds a ref
-   * to the element */
-  if (runner)
-    g_object_set_data_full ((GObject *) element, "qa-runner", runner,
-        g_object_unref);
+  /* the reference to the monitor is lost */
+  gst_qa_monitor_factory_create (GST_OBJECT_CAST (element), runner, NULL);
 }
 
 GstElement *

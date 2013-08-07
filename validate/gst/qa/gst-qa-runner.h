@@ -30,7 +30,6 @@
 G_BEGIN_DECLS
 
 /* forward declaration */
-typedef struct _GstQaMonitor GstQaMonitor;
 typedef struct _GstQaScenario GstQaScenario;
 
 #define GST_TYPE_QA_RUNNER			(gst_qa_runner_get_type ())
@@ -59,8 +58,6 @@ struct _GstQaRunner {
   gboolean       setup;
 
   /*< private >*/
-  GstElement    *pipeline;
-  GstQaMonitor *monitor;
   GstQaScenario *scenario;
 
   GSList *reports;
@@ -79,7 +76,7 @@ struct _GstQaRunnerClass {
 /* normal GObject stuff */
 GType		gst_qa_runner_get_type		(void);
 
-GstQaRunner *   gst_qa_runner_new               (GstElement * pipeline);
+GstQaRunner *   gst_qa_runner_new               (void);
 
 void            gst_qa_runner_add_report  (GstQaRunner * runner, GstQaReport * report);
 

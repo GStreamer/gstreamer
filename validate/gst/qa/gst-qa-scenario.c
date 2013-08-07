@@ -695,7 +695,7 @@ gst_qa_scenario_finalize (GObject * object)
 }
 
 GstQaScenario *
-gst_qa_scenario_factory_create (GstQaRunner * runner,
+gst_qa_scenario_factory_create (GstQaRunner * runner, GstElement * pipeline,
     const gchar * scenario_name)
 {
   GstBus *bus;
@@ -709,11 +709,11 @@ gst_qa_scenario_factory_create (GstQaRunner * runner,
     return NULL;
   }
 
-  scenario->priv->pipeline = gst_object_ref (runner->pipeline);
+  scenario->priv->pipeline = gst_object_ref (pipeline);
   gst_qa_reporter_set_name (GST_QA_REPORTER (scenario),
       g_strdup (scenario_name));
 
-  bus = gst_element_get_bus (runner->pipeline);
+  bus = gst_element_get_bus (pipeline);
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message::async-done", (GCallback) async_done_cb,
       scenario);
@@ -724,7 +724,7 @@ gst_qa_scenario_factory_create (GstQaRunner * runner,
   g_print ("\n=========================================\n"
       "Running scenario %s on pipeline %s"
       "\n=========================================\n", scenario_name,
-      GST_OBJECT_NAME (runner->pipeline));
+      GST_OBJECT_NAME (pipeline));
 
   return scenario;
 }

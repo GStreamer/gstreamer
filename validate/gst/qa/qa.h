@@ -3,4 +3,6 @@
  */
 
 #include <gst/qa/gst-qa-runner.h>
+#include <gst/qa/gst-qa-file-checker.h>
+#include <gst/qa/gst-qa-monitor-factory.h>
 

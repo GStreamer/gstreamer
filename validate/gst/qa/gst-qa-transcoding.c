@@ -244,6 +244,7 @@ main (int argc, gchar ** argv)
 {
   GstBus *bus;
   GstQaRunner *runner;
+  GstQaMonitor *monitor;
   GOptionContext *ctx;
 
   GError *err = NULL;
@@ -304,7 +305,9 @@ main (int argc, gchar ** argv)
   /* Create the pipeline */
   create_transcoding_pipeline (argv[1], argv[2]);
 
-  runner = gst_qa_runner_new (pipeline);
+  runner = gst_qa_runner_new ();
+  monitor =
+      gst_qa_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner, NULL);
   mainloop = g_main_loop_new (NULL, FALSE);
 
   if (!runner) {
@@ -328,6 +331,7 @@ main (int argc, gchar ** argv)
 exit:
   gst_element_set_state (pipeline, GST_STATE_NULL);
   g_main_loop_unref (mainloop);
+  g_object_unref (monitor);
   g_object_unref (runner);
   g_object_unref (pipeline);
 

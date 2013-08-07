@@ -57,6 +57,7 @@ main (int argc, gchar ** argv)
   GOptionContext *ctx;
   gchar **argvn;
   GstQaRunner *runner;
+  GstQaMonitor *monitor;
   GstBus *bus;
 
   ctx = g_option_context_new ("- runs QA tests for a pipeline.");
@@ -87,7 +88,9 @@ main (int argc, gchar ** argv)
   pipeline = (GstElement *) gst_parse_launchv ((const gchar **) argvn, &err);
   g_free (argvn);
 
-  runner = gst_qa_runner_new (pipeline);
+  runner = gst_qa_runner_new ();
+  monitor =
+      gst_qa_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner, NULL);
   mainloop = g_main_loop_new (NULL, FALSE);
 
   if (!runner) {
@@ -111,6 +114,7 @@ main (int argc, gchar ** argv)
 exit:
   gst_element_set_state (pipeline, GST_STATE_NULL);
   g_main_loop_unref (mainloop);
+  g_object_unref (monitor);
   g_object_unref (runner);
   g_object_unref (pipeline);
   if (count)

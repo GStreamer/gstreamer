@@ -22,7 +22,6 @@
 #include "gst-qa-runner.h"
 #include "gst-qa-report.h"
 #include "gst-qa-monitor-factory.h"
-#include "gst-qa-element-monitor.h"
 #include "gst-qa-override-registry.h"
 #include "gst-qa-scenario.h"
 
@@ -51,19 +50,12 @@ enum
 
 static guint _signals[LAST_SIGNAL] = { 0 };
 
-static gboolean gst_qa_runner_setup (GstQaRunner * runner);
-
 static void
 gst_qa_runner_dispose (GObject * object)
 {
   GstQaRunner *runner = GST_QA_RUNNER_CAST (object);
-  if (runner->pipeline)
-    gst_object_unref (runner->pipeline);
 
   g_slist_free_full (runner->reports, (GDestroyNotify) gst_qa_report_unref);
-
-  if (runner->monitor)
-    g_object_unref (runner->monitor);
 
   if (runner->scenario)
     g_object_unref (runner->scenario);
@@ -100,54 +92,11 @@ gst_qa_runner_init (GstQaRunner * runner)
 
 /**
  * gst_qa_runner_new:
- * @pipeline: (transfer-none): a #GstElement to run QA on
  */
 GstQaRunner *
-gst_qa_runner_new (GstElement * pipeline)
+gst_qa_runner_new (void)
 {
-  const gchar *scenario_name;
-  GstQaRunner *runner;
-
-  g_return_val_if_fail (pipeline != NULL, NULL);
-
-  runner = g_object_get_data ((GObject *) pipeline, "qa-runner");
-  if (runner) {
-    GST_WARNING_OBJECT (pipeline,
-        "Pipeline already has a qa-runner associated, returning it");
-
-    return gst_object_ref (runner);
-  }
-
-  runner = g_object_new (GST_TYPE_QA_RUNNER, NULL);
-  runner->pipeline = gst_object_ref (pipeline);
-
-  if ((scenario_name = g_getenv ("GST_QA_SCENARIO")))
-    runner->scenario = gst_qa_scenario_factory_create (runner, scenario_name);
-
-  g_object_set_data ((GObject *) pipeline, "qa-runner", runner);
-
-  if (!gst_qa_runner_setup (runner)) {
-    gst_object_unref (runner);
-    runner = NULL;
-  }
-
-  return runner;
-}
-
-static gboolean
-gst_qa_runner_setup (GstQaRunner * runner)
-{
-  GST_INFO_OBJECT (runner, "Starting QA Runner setup");
-  runner->monitor =
-      gst_qa_monitor_factory_create (GST_OBJECT_CAST (runner->pipeline), runner,
-      NULL);
-  if (runner->monitor == NULL) {
-    GST_WARNING_OBJECT (runner, "Setup failed");
-    return FALSE;
-  }
-
-  GST_DEBUG_OBJECT (runner, "Setup successful");
-  return TRUE;
+  return g_object_new (GST_TYPE_QA_RUNNER, NULL);
 }
 
 void
@@ -161,6 +110,7 @@ gst_qa_runner_add_report (GstQaRunner * runner, GstQaReport * report)
 guint
 gst_qa_runner_get_reports_count (GstQaRunner * runner)
 {
+  g_return_val_if_fail (runner != NULL, 0);
   return g_slist_length (runner->reports);
 }
 
