@@ -837,6 +837,8 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
     switch (tag) {
       case GST_MAKE_FOURCC ('C', 'O', 'M', 'M'):{
         GstCaps *caps;
+        GstEvent *event;
+        gchar *stream_id;
 
         if (aiff->streaming) {
           if (!gst_aiff_parse_peek_chunk (aiff, &tag, &size))
@@ -860,6 +862,14 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
           goto no_channels;
         if (aiff->rate == 0)
           goto no_rate;
+
+        stream_id =
+            gst_pad_create_stream_id (aiff->srcpad, GST_ELEMENT_CAST (aiff),
+            NULL);
+        event = gst_event_new_stream_start (stream_id);
+        gst_event_set_group_id (event, gst_util_group_id_next ());
+        gst_pad_push_event (aiff->srcpad, event);
+        g_free (stream_id);
 
         GST_DEBUG_OBJECT (aiff, "creating the caps");
 
