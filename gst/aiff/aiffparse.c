@@ -923,7 +923,7 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
 
         /* 8 byte chunk header, 8 byte SSND header */
         aiff->offset += 16;
-        datasize = size - 16;
+        datasize = size - 8;
 
         aiff->datastart = aiff->offset + aiff->ssnd_offset;
         /* file might be truncated */
