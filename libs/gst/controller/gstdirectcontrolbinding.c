@@ -85,7 +85,7 @@ convert_g_value_to_##type (GstDirectControlBinding *self, gdouble s, GValue *d) 
   g##type v; \
   \
   s = CLAMP (s, 0.0, 1.0); \
-  v = pspec->minimum + (g##type) ROUNDING_OP ((pspec->maximum - pspec->minimum) * s); \
+  v = (g##type) ROUNDING_OP (pspec->minimum * (1-s)) + (g##type) ROUNDING_OP (pspec->maximum * s); \
   g_value_set_##type (d, v); \
 } \
 \
@@ -96,7 +96,7 @@ convert_value_to_##type (GstDirectControlBinding *self, gdouble s, gpointer d_) 
   g##type *d = (g##type *)d_; \
   \
   s = CLAMP (s, 0.0, 1.0); \
-  *d = pspec->minimum + (g##type) ROUNDING_OP ((pspec->maximum - pspec->minimum) * s); \
+  *d = (g##type) ROUNDING_OP (pspec->minimum * (1-s)) + (g##type) ROUNDING_OP (pspec->maximum * s); \
 }
 
 
