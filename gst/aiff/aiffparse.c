@@ -785,6 +785,7 @@ gst_aiff_parse_create_caps (GstAiffParse * aiff)
     caps = gst_caps_new_simple ("audio/x-raw",
         "format", G_TYPE_STRING, format,
         "channels", G_TYPE_INT, aiff->channels,
+        "layout", G_TYPE_STRING, "interleaved",
         "rate", G_TYPE_INT, aiff->rate, NULL);
   }
 
