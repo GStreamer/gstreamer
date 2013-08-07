@@ -333,7 +333,7 @@ exit:
 
   if (run_file_checks) {
     GstQaFileChecker *fc = g_object_new (GST_TYPE_QA_FILE_CHECKER, "uri",
-        argv[2], "profile", encoding_profile, NULL);
+        argv[2], "profile", encoding_profile, "test-playback", TRUE, NULL);
 
     if (!gst_qa_file_checker_run (fc)) {
       g_print ("Failed file checking\n");

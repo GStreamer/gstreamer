@@ -193,9 +193,18 @@ gst_qa_report_load_issues (void)
   REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_FILE_CHECK_FAILURE,
       _("an error occured while checking the file for conformance"), NULL,
       GST_QA_REPORT_LEVEL_CRITICAL);
+  REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_FILE_PLAYBACK_START_FAILURE,
+      _("an error occured while starting playback of the test file"), NULL,
+      GST_QA_REPORT_LEVEL_CRITICAL);
+  REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_FILE_PLAYBACK_ERROR,
+      _("an error during playback of the file"), NULL,
+      GST_QA_REPORT_LEVEL_CRITICAL);
 
   REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_ALLOCATION_FAILURE,
       _("a memory allocation failed during QA run"),
+      NULL, GST_QA_REPORT_LEVEL_CRITICAL);
+  REGISTER_QA_ISSUE (GST_QA_ISSUE_ID_MISSING_PLUGIN,
+      _("a gstreamer plugin is missing and prevented QA from running"),
       NULL, GST_QA_REPORT_LEVEL_CRITICAL);
 }
 

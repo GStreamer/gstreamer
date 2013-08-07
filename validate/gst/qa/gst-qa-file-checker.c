@@ -41,6 +41,7 @@ enum
   PROP_FILE_SIZE,
   PROP_FILE_SIZE_TOLERANCE,
   PROP_SEEKABLE,
+  PROP_TEST_PLAYBACK,
   PROP_LAST
 };
 
@@ -49,6 +50,7 @@ enum
 #define DEFAULT_FILE_SIZE 0
 #define DEFAULT_FILE_SIZE_TOLERANCE 0
 #define DEFAULT_SEEKABLE FALSE
+#define DEFAULT_PLAYBACK FALSE
 
 GST_DEBUG_CATEGORY_STATIC (gst_qa_file_checker_debug);
 #define GST_CAT_DEFAULT gst_qa_file_checker_debug
@@ -146,6 +148,11 @@ gst_qa_file_checker_class_init (GstQaFileCheckerClass * klass)
       g_param_spec_boolean ("is-seekable", "is seekable",
           "If the resulting file should be seekable", DEFAULT_SEEKABLE,
           G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
+
+  g_object_class_install_property (gobject_class, PROP_TEST_PLAYBACK,
+      g_param_spec_boolean ("test-playback", "test playback",
+          "If the file should be tested for playback", DEFAULT_PLAYBACK,
+          G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
 }
 
 static void
@@ -158,6 +165,7 @@ gst_qa_file_checker_init (GstQaFileChecker * fc)
   fc->file_size = DEFAULT_FILE_SIZE;
   fc->file_size_tolerance = DEFAULT_FILE_SIZE_TOLERANCE;
   fc->seekable = DEFAULT_SEEKABLE;
+  fc->test_playback = DEFAULT_PLAYBACK;
 }
 
 static void
@@ -196,6 +204,9 @@ gst_qa_file_checker_set_property (GObject * object, guint prop_id,
       break;
     case PROP_SEEKABLE:
       fc->seekable = g_value_get_boolean (value);
+      break;
+    case PROP_TEST_PLAYBACK:
+      fc->test_playback = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -236,6 +247,9 @@ gst_qa_file_checker_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SEEKABLE:
       g_value_set_boolean (value, fc->seekable);
+      break;
+    case PROP_TEST_PLAYBACK:
+      g_value_set_boolean (value, fc->test_playback);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -569,6 +583,72 @@ check_encoding_profile (GstQaFileChecker * fc, GstDiscovererInfo * info)
   return ret;
 }
 
+static gboolean
+check_playback (GstQaFileChecker * fc)
+{
+  GstElement *playbin;
+  GstElement *videosink, *audiosink;
+  GstBus *bus;
+  GstMessage *msg;
+  gboolean ret = TRUE;
+
+  if (!fc->test_playback)
+    return TRUE;
+
+  playbin = gst_element_factory_make ("playbin2", "fc-playbin");
+  videosink = gst_element_factory_make ("fakesink", "fc-videosink");
+  audiosink = gst_element_factory_make ("fakesink", "fc-audiosink");
+
+  if (!playbin || !videosink || !audiosink) {
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_MISSING_PLUGIN, "file check requires "
+        "playbin2 and fakesink to be available");
+  }
+
+  g_object_set (playbin, "video-sink", videosink, "audio-sink", audiosink,
+      "uri", fc->uri, NULL);
+
+  if (gst_element_set_state (playbin,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_PLAYBACK_START_FAILURE,
+        "Failed to " "change pipeline state to playing");
+    ret = FALSE;
+    goto end;
+  }
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (playbin));
+  msg =
+      gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+      GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+  if (msg) {
+    if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS) {
+      /* all good */
+    } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+      GError *error = NULL;
+      gchar *debug = NULL;
+
+      gst_message_parse_error (msg, &error, &debug);
+      GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_PLAYBACK_ERROR, "File %s failed "
+          "during playback. Error: %s : %s", fc->uri, error->message, debug);
+      g_error_free (error);
+      g_free (debug);
+
+      ret = FALSE;
+    } else {
+      g_assert_not_reached ();
+    }
+    gst_message_unref (msg);
+  } else {
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_PLAYBACK_ERROR, "File playback "
+        "finished unexpectedly");
+  }
+  gst_object_unref (bus);
+
+end:
+  gst_element_set_state (playbin, GST_STATE_NULL);
+  gst_object_unref (playbin);
+
+  return ret;
+}
 
 gboolean
 gst_qa_file_checker_run (GstQaFileChecker * fc)
@@ -599,6 +679,7 @@ gst_qa_file_checker_run (GstQaFileChecker * fc)
   ret = check_file_duration (fc, info) & ret;
   ret = check_seekable (fc, info) & ret;
   ret = check_encoding_profile (fc, info) & ret;
+  ret = check_playback (fc) & ret;
 
   return ret;
 }
