@@ -25,6 +25,7 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 #include "gst-qa-report.h"
+#include "gst-qa-reporter.h"
 #include "gst-qa-runner.h"
 #include "gst-qa-override.h"
 
@@ -40,7 +41,7 @@ G_BEGIN_DECLS
 #define GST_QA_MONITOR_CLASS_CAST(klass)        ((GstQaMonitorClass*)(klass))
 
 #define GST_QA_MONITOR_GET_OBJECT(m) (GST_QA_MONITOR_CAST (m)->target)
-#define GST_QA_MONITOR_GET_RUNNER(m) (GST_QA_MONITOR_CAST (m)->runner)
+#define GST_QA_MONITOR_GET_RUNNER(m) (gst_qa_reporter_get_runner (GST_QA_REPORTER_CAST (m)))
 #define GST_QA_MONITOR_GET_PARENT(m) (GST_QA_MONITOR_CAST (m)->parent)
 #define GST_QA_MONITOR_LOCK(m) (g_mutex_lock (&GST_QA_MONITOR_CAST(m)->mutex))
 #define GST_QA_MONITOR_UNLOCK(m) (g_mutex_unlock (&GST_QA_MONITOR_CAST(m)->mutex))
@@ -72,8 +73,6 @@ struct _GstQaMonitor {
   gchar         *target_name;
 
   GstQaMonitor  *parent;
-
-  GstQaRunner   *runner;
 
   GMutex        overrides_mutex;
   GQueue        overrides;

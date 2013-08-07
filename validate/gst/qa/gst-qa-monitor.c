@@ -20,7 +20,6 @@
  */
 
 #include "gst-qa-monitor.h"
-#include "gst-qa-reporter.h"
 
 /**
  * SECTION:gst-qa-monitor
@@ -253,10 +252,8 @@ gst_qa_monitor_set_property (GObject * object, guint prop_id,
             (GST_OBJECT_NAME (monitor->target)));
       break;
     case PROP_RUNNER:
-      /* we assume the runner is valid as long as this monitor is,
-       * no ref taken */
-      monitor->runner = g_value_get_object (value);
-      gst_qa_reporter_set_runner (GST_QA_REPORTER (monitor), monitor->runner);
+      gst_qa_reporter_set_runner (GST_QA_REPORTER (monitor),
+          g_value_get_object (value));
       break;
     case PROP_QA_PARENT:
       monitor->parent = g_value_get_object (value);
