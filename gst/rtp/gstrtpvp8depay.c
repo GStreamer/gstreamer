@@ -164,12 +164,23 @@ gst_rtp_vp8_depay_process (GstRTPBaseDepayload * depay, GstBuffer * buf)
   /* Marker indicates that it was the last rtp packet for this frame */
   if (gst_rtp_buffer_get_marker (&rtpbuffer)) {
     GstBuffer *out;
+    guint8 flag0;
+
+    gst_adapter_copy (self->adapter, &flag0, 0, 1);
 
     out = gst_adapter_take_buffer (self->adapter,
         gst_adapter_available (self->adapter));
 
     self->started = FALSE;
     gst_rtp_buffer_unmap (&rtpbuffer);
+
+    /* mark keyframes */
+    out = gst_buffer_make_writable (out);
+    if ((flag0 & 0x01))
+      GST_BUFFER_FLAG_SET (out, GST_BUFFER_FLAG_DELTA_UNIT);
+    else
+      GST_BUFFER_FLAG_UNSET (out, GST_BUFFER_FLAG_DELTA_UNIT);
+
     return out;
   }
 
