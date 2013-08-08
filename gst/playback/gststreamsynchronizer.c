@@ -142,7 +142,6 @@ gst_stream_synchronizer_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
   GstStreamSynchronizer *self = GST_STREAM_SYNCHRONIZER (parent);
-  GstPad *opad;
   gboolean ret = FALSE;
 
   GST_LOG_OBJECT (pad, "Handling event %s: %" GST_PTR_FORMAT,
@@ -198,11 +197,7 @@ gst_stream_synchronizer_src_event (GstPad * pad, GstObject * parent,
       break;
   }
 
-  opad = gst_stream_get_other_pad_from_pad (self, pad);
-  if (opad) {
-    ret = gst_pad_push_event (opad, event);
-    gst_object_unref (opad);
-  }
+  ret = gst_pad_event_default (pad, parent, event);
 
 out:
   return ret;
@@ -214,7 +209,6 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
   GstStreamSynchronizer *self = GST_STREAM_SYNCHRONIZER (parent);
-  GstPad *opad;
   gboolean ret = FALSE;
 
   GST_LOG_OBJECT (pad, "Handling event %s: %" GST_PTR_FORMAT,
@@ -518,11 +512,7 @@ gst_stream_synchronizer_sink_event (GstPad * pad, GstObject * parent,
       break;
   }
 
-  opad = gst_stream_get_other_pad_from_pad (self, pad);
-  if (opad) {
-    ret = gst_pad_push_event (opad, event);
-    gst_object_unref (opad);
-  }
+  ret = gst_pad_event_default (pad, parent, event);
 
 done:
 
@@ -684,6 +674,9 @@ gst_stream_synchronizer_request_new_pad (GstElement * element,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_sink_event));
   gst_pad_set_chain_function (stream->sinkpad,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_sink_chain));
+  GST_PAD_SET_PROXY_CAPS (stream->sinkpad);
+  GST_PAD_SET_PROXY_ALLOCATION (stream->sinkpad);
+  GST_PAD_SET_PROXY_SCHEDULING (stream->sinkpad);
 
   tmp = g_strdup_printf ("src_%u", self->current_stream_number);
   stream->srcpad = gst_pad_new_from_static_template (&srctemplate, tmp);
@@ -693,6 +686,9 @@ gst_stream_synchronizer_request_new_pad (GstElement * element,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_iterate_internal_links));
   gst_pad_set_event_function (stream->srcpad,
       GST_DEBUG_FUNCPTR (gst_stream_synchronizer_src_event));
+  GST_PAD_SET_PROXY_CAPS (stream->srcpad);
+  GST_PAD_SET_PROXY_ALLOCATION (stream->srcpad);
+  GST_PAD_SET_PROXY_SCHEDULING (stream->srcpad);
 
   gst_segment_init (&stream->segment, GST_FORMAT_UNDEFINED);
 
