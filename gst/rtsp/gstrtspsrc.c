@@ -217,6 +217,7 @@ enum
   PROP_MULTICAST_IFACE,
   PROP_NTP_SYNC,
   PROP_USE_PIPELINE_CLOCK,
+  PROP_SDES,
   PROP_LAST
 };
 
@@ -575,6 +576,11 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           DEFAULT_USE_PIPELINE_CLOCK,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_SDES,
+      g_param_spec_boxed ("sdes", "SDES",
+          "The SDES items of this session",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
@@ -686,6 +692,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->multi_iface = g_strdup (DEFAULT_MULTICAST_IFACE);
   src->ntp_sync = DEFAULT_NTP_SYNC;
   src->use_pipeline_clock = DEFAULT_USE_PIPELINE_CLOCK;
+  src->sdes = NULL;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -727,6 +734,9 @@ gst_rtspsrc_finalize (GObject * object)
   }
   if (rtspsrc->provided_clock)
     gst_object_unref (rtspsrc->provided_clock);
+
+  if (rtspsrc->sdes)
+    gst_structure_free (rtspsrc->sdes);
 
   /* free locks */
   g_rec_mutex_clear (&rtspsrc->stream_rec_lock);
@@ -934,6 +944,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_USE_PIPELINE_CLOCK:
       rtspsrc->use_pipeline_clock = g_value_get_boolean (value);
       break;
+    case PROP_SDES:
+      rtspsrc->sdes = g_value_dup_boxed (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1055,6 +1068,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_USE_PIPELINE_CLOCK:
       g_value_set_boolean (value, rtspsrc->use_pipeline_clock);
+      break;
+    case PROP_SDES:
+      g_value_set_boxed (value, rtspsrc->sdes);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2663,6 +2679,10 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
       if (g_object_class_find_property (klass, "use-pipeline-clock")) {
         g_object_set (src->manager, "use-pipeline-clock",
             src->use_pipeline_clock, NULL);
+      }
+
+      if (src->sdes && g_object_class_find_property (klass, "sdes")) {
+        g_object_set (src->manager, "sdes", src->sdes, NULL);
       }
 
       if (g_object_class_find_property (klass, "drop-on-latency")) {

@@ -225,6 +225,7 @@ struct _GstRTSPSrc {
   gchar            *multi_iface;
   gboolean          ntp_sync;
   gboolean          use_pipeline_clock;
+  GstStructure     *sdes;
 
   /* state */
   GstRTSPState       state;
