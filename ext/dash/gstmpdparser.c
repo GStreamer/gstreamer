@@ -3035,7 +3035,8 @@ gst_mpdparser_get_chunk_by_index (GstMpdClient * client, guint indexStream,
 
     /* TODO check PeriodEnd for segment beyond end of period */
 
-    segment->number = indexChunk;
+    segment->number = indexChunk
+        + stream->cur_seg_template->MultSegBaseType->startNumber;
     segment->start_time = duration * indexChunk;
     segment->duration = duration;
     segment->SegmentURL = NULL;
