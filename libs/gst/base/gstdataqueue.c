@@ -410,6 +410,68 @@ gst_data_queue_set_flushing (GstDataQueue * queue, gboolean flushing)
   GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
 }
 
+static void
+gst_data_queue_push_force_unlocked (GstDataQueue * queue,
+    GstDataQueueItem * item)
+{
+  GstDataQueuePrivate *priv = queue->priv;
+
+  gst_queue_array_push_tail (priv->queue, item);
+
+  if (item->visible)
+    priv->cur_level.visible++;
+  priv->cur_level.bytes += item->size;
+  priv->cur_level.time += item->duration;
+}
+
+/**
+ * gst_data_queue_push_force:
+ * @queue: a #GstDataQueue.
+ * @item: a #GstDataQueueItem.
+ *
+ * Pushes a #GstDataQueueItem (or a structure that begins with the same fields)
+ * on the @queue. It ignores if the @queue is full or not and forces the @item
+ * to be pushed anyway.
+ * MT safe.
+ *
+ * Note that this function has slightly different semantics than gst_pad_push()
+ * and gst_pad_push_event(): this function only takes ownership of @item and
+ * the #GstMiniObject contained in @item if the push was successful. If FALSE
+ * is returned, the caller is responsible for freeing @item and its contents.
+ *
+ * Returns: #TRUE if the @item was successfully pushed on the @queue.
+ *
+ * Since: 1.2.0
+ */
+gboolean
+gst_data_queue_push_force (GstDataQueue * queue, GstDataQueueItem * item)
+{
+  GstDataQueuePrivate *priv = queue->priv;
+
+  g_return_val_if_fail (GST_IS_DATA_QUEUE (queue), FALSE);
+  g_return_val_if_fail (item != NULL, FALSE);
+
+  GST_DATA_QUEUE_MUTEX_LOCK_CHECK (queue, flushing);
+
+  STATUS (queue, "before pushing");
+  gst_data_queue_push_force_unlocked (queue, item);
+  STATUS (queue, "after pushing");
+  if (priv->waiting_add)
+    g_cond_signal (&priv->item_add);
+
+  GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
+
+  return TRUE;
+
+  /* ERRORS */
+flushing:
+  {
+    GST_DEBUG ("queue:%p, we are flushing", queue);
+    GST_DATA_QUEUE_MUTEX_UNLOCK (queue);
+    return FALSE;
+  }
+}
+
 /**
  * gst_data_queue_push:
  * @queue: a #GstDataQueue.
@@ -460,12 +522,7 @@ gst_data_queue_push (GstDataQueue * queue, GstDataQueueItem * item)
     }
   }
 
-  gst_queue_array_push_tail (priv->queue, item);
-
-  if (item->visible)
-    priv->cur_level.visible++;
-  priv->cur_level.bytes += item->size;
-  priv->cur_level.time += item->duration;
+  gst_data_queue_push_force_unlocked (queue, item);
 
   STATUS (queue, "after pushing");
   if (priv->waiting_add)

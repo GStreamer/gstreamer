@@ -139,6 +139,7 @@ GstDataQueue * gst_data_queue_new            (GstDataQueueCheckFullFunction chec
 					      gpointer checkdata) G_GNUC_MALLOC;
 
 gboolean       gst_data_queue_push           (GstDataQueue * queue, GstDataQueueItem * item);
+gboolean       gst_data_queue_push_force     (GstDataQueue * queue, GstDataQueueItem * item);
 
 gboolean       gst_data_queue_pop            (GstDataQueue * queue, GstDataQueueItem ** item);
 gboolean       gst_data_queue_peek           (GstDataQueue * queue, GstDataQueueItem ** item);

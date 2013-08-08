@@ -256,6 +256,7 @@ EXPORTS
 	gst_data_queue_peek
 	gst_data_queue_pop
 	gst_data_queue_push
+	gst_data_queue_push_force
 	gst_data_queue_set_flushing
 	gst_push_src_get_type
 	gst_queue_array_drop_element
