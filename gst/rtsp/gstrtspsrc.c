@@ -3757,7 +3757,7 @@ gst_rtspsrc_handle_request (GstRTSPSrc * src, GstRTSPConnection * conn,
 
     /* let app parse and reply */
     g_signal_emit (src, gst_rtspsrc_signals[SIGNAL_HANDLE_REQUEST],
-        0, request, response);
+        0, request, &response);
 
     if (src->debug)
       gst_rtsp_message_dump (&response);
