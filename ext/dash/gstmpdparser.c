@@ -3026,8 +3026,6 @@ gst_mpdparser_get_chunk_by_index (GstMpdClient * client, guint indexStream,
     segment->duration = list_segment->duration;
   } else {
     GstClockTime duration;
-    guint timescale =
-        stream->cur_seg_template->MultSegBaseType->SegBaseType->timescale;
     g_return_val_if_fail (stream->cur_seg_template->MultSegBaseType->
         SegmentTimeline == NULL, FALSE);
     /* segment template generator */
@@ -3039,7 +3037,6 @@ gst_mpdparser_get_chunk_by_index (GstMpdClient * client, guint indexStream,
 
     segment->number = indexChunk;
     segment->start_time = duration * indexChunk;
-    segment->start_time = segment->start_time * timescale / GST_SECOND;
     segment->duration = duration;
     segment->SegmentURL = NULL;
   }
