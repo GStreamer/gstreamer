@@ -1,13 +1,17 @@
-Using gst-qa is quite simple, there are 2 ways to test your pipeline/element.
+=== Testing with monitors
 
-== Creating a Runner
+Using gst-qa monitors is quite simple, there are 2 ways to test your
+pipeline/element.
+
+== Creating the monitors yourself
 This method requires writing a specific application (or modifying yours) to
-add a GstQaRunner to it. Create a GstQaRunner with gst_qa_runner_new
-(GstPipeline *) and pass the pipeline you want to monitor to it.
+add GstQaMonitors and GstQaRunner to it. Create a GstQaRunner with
+gst_qa_runner_new, then use gst_qa_monitor_factory_create to create monitors
+for your pipeline.
 
-Then call gst_qa_runner_setup to start up the qa system for your pipeline.
-After that just use the GstPipeline as usual and the gst-qa system will
-collect the reports. You can access them after your pipeline has stopped.
+Now all you have to do is use your pipeline as usual, the reports will be
+created and posted to the runner. You can list them after the pipeline
+finishes to look at the issues found.
 
 == Using LD_PRELOAD and an existing application
 If you want to test an already existing application without modifying it. Just
@@ -16,6 +20,15 @@ use:
 LD_PRELOAD=path/to/libgstqa.so yourapp ...
 
 gst-qa will try to replace GstPipeline creating functions and already
-configure runners for you, reports will be printed to stdout when they
-are found.
+configure runners and monitors for you, reports will be printed to stdout when
+they are found.
 
+
+=== Using the file checker
+The GstQaFileChecker is a convenient API to compare a media file properties
+with its expected properties. The uri of the file to be tested and the
+expected values can be configured via gobject properties.
+gst_qa_file_checker_run is used to start the tests.
+
+There is also a convenience tool (gst-qa-file-check) that can be used to
+run the file checker.

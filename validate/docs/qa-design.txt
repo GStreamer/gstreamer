@@ -1,7 +1,37 @@
 
 == Main components
 
-Gst-qa is composed of 3 parts: the monitors, the runner and the reports.
+Gst-qa is composed of 4 parts: the issues, the reports, the runner and the
+reporters.
+
+= Issue
+Gst-QA main target is finding problems in GStreamer elements/pipelines. To
+make it easier to track down exactly what happens, the tests run by Gst-QA use
+an extensible list of 'Issues'. Each Issue describes a potential error
+situation and has an unique ID and a severity level.
+
+The issues list can be extended by 3rd party libraries if specific needs
+should be met.
+
+= Reporters
+A reporter is the object that implements the GstQaReporter interface and is
+responsible for perfoming tests on some target element/scenario. The reporter
+is able to create 'Reports' whenever a test it executes fails.
+
+= Reports
+The GstQaReports are created whenever a test fails, it is posted to the stderr
+and also are posted to the GstQaRunner for accumulation.
+
+Each report contains information about the object that generated the issue,
+the issue associated with the reprot and a specific debug message for the case,
+this helps tracking down the problem and fixing it.
+
+= Runner
+The GstQaRunner is the point of communication for the app to gst-qa
+monitoring. It provides an API to gather reports and to make them acessible
+to the application.
+
+== Reporter types
 
 = Monitors
 The monitors are used to wrap around pipeline (and elements and pads) and
@@ -23,12 +53,9 @@ a new pad is added.
 Most (if not all) the checks are implemented at the GstQaPadMonitor, as it is
 where the data flow happens.
 
-= Runner
-The GstQaRunner is the point of communication for the app to gst-qa
-monitoring. It provides an API to start monitoring a pipeline and then to
-access the results.
+= FileChecker
+The file checker is another reporter that is used to make sure a file has a
+few expected properties. It inspects the file and compares the results with
+expected values set by the user. Values such as file duration, file size, if
+it can be played back and also if its encoding and container types.
 
-= Reports
-The GstQaReports are created when a check fails, it is posted to the runner
-with information about the element that found the problem, along with details
-about it.
