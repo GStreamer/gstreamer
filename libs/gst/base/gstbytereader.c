@@ -771,6 +771,31 @@ gst_byte_reader_dup_data (GstByteReader * reader, guint size, guint8 ** val)
   return _gst_byte_reader_dup_data_inline (reader, size, val);
 }
 
+/* Special optimized scan for mask 0xffffff00 and pattern 0x00000100 */
+static inline gint
+_scan_for_start_code (const guint8 * data, guint offset, guint size)
+{
+  guint i = 0;
+
+  while (i <= (size - 4)) {
+    if (data[i + 2] > 1) {
+      i += 3;
+    } else if (data[i + 1]) {
+      i += 2;
+    } else if (data[i] || data[i + 2] != 1) {
+      i++;
+    } else {
+      break;
+    }
+  }
+
+  if (i <= (size - 4))
+    return i + offset;
+
+  /* nothing found */
+  return -1;
+}
+
 /**
  * gst_byte_reader_masked_scan_uint32:
  * @reader: a #GstByteReader
@@ -830,6 +855,10 @@ gst_byte_reader_masked_scan_uint32 (const GstByteReader * reader, guint32 mask,
     return -1;
 
   data = reader->data + reader->byte + offset;
+
+  /* Handle special case found in MPEG and H264 */
+  if ((pattern == 0x00000100) && (mask == 0xffffff00))
+    return _scan_for_start_code (data, offset, size);
 
   /* set the state to something that does not match */
   state = ~pattern;
