@@ -454,7 +454,7 @@ gst_dash_demux_stream_push_event (GstDashDemuxStream * stream, GstEvent * event)
   item->object = GST_MINI_OBJECT_CAST (event);
   item->destroy = (GDestroyNotify) _data_queue_item_destroy;
 
-  gst_data_queue_push (stream->queue, item);
+  gst_data_queue_push_force (stream->queue, item);
 }
 
 static void
