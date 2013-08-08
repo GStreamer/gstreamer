@@ -107,6 +107,7 @@ enum
   SIGNAL_TEARDOWN_REQUEST,
   SIGNAL_SET_PARAMETER_REQUEST,
   SIGNAL_GET_PARAMETER_REQUEST,
+  SIGNAL_HANDLE_RESPONSE,
   SIGNAL_LAST
 };
 
@@ -221,6 +222,12 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
       g_signal_new ("get-parameter-request", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
           get_parameter_request), NULL, NULL, g_cclosure_marshal_VOID__POINTER,
+      G_TYPE_NONE, 1, G_TYPE_POINTER);
+
+  gst_rtsp_client_signals[SIGNAL_HANDLE_RESPONSE] =
+      g_signal_new ("handle-response", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRTSPClientClass,
+          handle_response), NULL, NULL, g_cclosure_marshal_VOID__POINTER,
       G_TYPE_NONE, 1, G_TYPE_POINTER);
 
   tunnels =
@@ -1947,6 +1954,84 @@ not_implemented:
   }
 }
 
+
+static void
+handle_response (GstRTSPClient * client, GstRTSPMessage * response)
+{
+  GstRTSPClientPrivate *priv = client->priv;
+  GstRTSPResult res;
+  GstRTSPSession *session = NULL;
+  GstRTSPContext sctx = { NULL }, *ctx;
+  gchar *sessid;
+
+  if (!(ctx = gst_rtsp_context_get_current ())) {
+    ctx = &sctx;
+    ctx->auth = priv->auth;
+    gst_rtsp_context_push_current (ctx);
+  }
+
+  ctx->conn = priv->connection;
+  ctx->client = client;
+  ctx->request = NULL;
+  ctx->uri = NULL;
+  ctx->method = GST_RTSP_INVALID;
+  ctx->response = response;
+
+  if (gst_debug_category_get_threshold (rtsp_client_debug) >= GST_LEVEL_LOG) {
+    gst_rtsp_message_dump (response);
+  }
+
+  GST_INFO ("client %p: received a response", client);
+
+  /* get the session if there is any */
+  res =
+      gst_rtsp_message_get_header (response, GST_RTSP_HDR_SESSION, &sessid, 0);
+  if (res == GST_RTSP_OK) {
+    if (priv->session_pool == NULL)
+      goto no_pool;
+
+    /* we had a session in the request, find it again */
+    if (!(session = gst_rtsp_session_pool_find (priv->session_pool, sessid)))
+      goto session_not_found;
+
+    /* we add the session to the client list of watched sessions. When a session
+     * disappears because it times out, we will be notified. If all sessions are
+     * gone, we will close the connection */
+    client_watch_session (client, session);
+  }
+
+  ctx->session = session;
+
+  if (!gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_URL))
+    goto not_authorized;
+
+  g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_HANDLE_RESPONSE],
+      0, ctx);
+
+done:
+  if (ctx == &sctx)
+    gst_rtsp_context_pop_current (ctx);
+  if (session)
+    g_object_unref (session);
+  return;
+
+no_pool:
+  {
+    GST_ERROR ("client %p: no pool configured", client);
+    goto done;
+  }
+session_not_found:
+  {
+    GST_ERROR ("client %p: session not found", client);
+    goto done;
+  }
+not_authorized:
+  {
+    GST_ERROR ("client %p: not allowed", client);
+    goto done;
+  }
+}
+
 static void
 handle_data (GstRTSPClient * client, GstRTSPMessage * message)
 {
@@ -2368,6 +2453,7 @@ gst_rtsp_client_handle_message (GstRTSPClient * client,
       handle_request (client, message);
       break;
     case GST_RTSP_MESSAGE_RESPONSE:
+      handle_response (client, message);
       break;
     case GST_RTSP_MESSAGE_DATA:
       handle_data (client, message);

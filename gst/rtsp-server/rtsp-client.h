@@ -104,6 +104,7 @@ struct _GstRTSPClientClass {
   void     (*teardown_request)        (GstRTSPClient *client, GstRTSPContext *ctx);
   void     (*set_parameter_request)   (GstRTSPClient *client, GstRTSPContext *ctx);
   void     (*get_parameter_request)   (GstRTSPClient *client, GstRTSPContext *ctx);
+  void     (*handle_response)         (GstRTSPClient *client, GstRTSPContext *ctx);
 };
 
 GType                 gst_rtsp_client_get_type          (void);
