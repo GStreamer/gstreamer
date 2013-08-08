@@ -4525,9 +4525,11 @@ gst_matroska_demux_loop (GstPad * pad)
 
   ret = gst_matroska_read_common_peek_id_length_pull (&demux->common,
       GST_ELEMENT_CAST (demux), &id, &length, &needed);
-  if (ret == GST_FLOW_EOS)
+  if (ret == GST_FLOW_EOS) {
     goto eos;
-  if (ret != GST_FLOW_OK) {
+  } else if (ret == GST_FLOW_FLUSHING) {
+    goto pause;
+  } else if (ret != GST_FLOW_OK) {
     if (gst_matroska_demux_check_parse_error (demux))
       goto pause;
     else
