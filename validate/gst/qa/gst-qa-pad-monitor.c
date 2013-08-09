@@ -1163,7 +1163,8 @@ gst_qa_pad_monitor_sink_event_check (GstQaPadMonitor * pad_monitor,
           GstFormat exp_format;
 
           if (pad_monitor->expected_segment != event) {
-            gst_event_parse_new_segment_full (event, &exp_update, &exp_rate,
+            gst_event_parse_new_segment_full (pad_monitor->expected_segment,
+                &exp_update, &exp_rate,
                 &exp_applied_rate, &exp_format, &exp_start, &exp_stop,
                 &exp_position);
             if (format == exp_format) {
