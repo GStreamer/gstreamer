@@ -2306,6 +2306,8 @@ AC_SUBST(GST_PLUGIN_LDFLAGS)
 
 dnl *** output files ***
 
+$MKDIR_P tests/check/orc
+
 dnl po/Makefile.in
 
 AC_CONFIG_FILES(

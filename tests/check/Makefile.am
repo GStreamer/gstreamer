@@ -31,7 +31,8 @@ CLEANFILES = core.* test-registry.*
 
 SUPPRESSIONS = $(top_srcdir)/common/gst.supp $(srcdir)/gst-plugins-bad.supp
 
-clean-local: clean-local-check clean-local-orc
+clean-local: clean-local-check
+distclean-local: distclean-local-orc
 
 if USE_ASSRENDER
 check_assrender = elements/assrender
@@ -378,6 +379,6 @@ orc/bayer.c: $(top_srcdir)/gst/bayer/gstbayerorc.orc
 	$(MKDIR_P) orc
 	$(ORCC) --test -o $@ $<
 
-clean-local-orc:
+distclean-local-orc:
 	rm -rf orc
 
