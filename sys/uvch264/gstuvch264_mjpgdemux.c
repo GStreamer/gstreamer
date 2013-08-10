@@ -144,6 +144,9 @@ struct _GstUvcH264MjpgDemuxPrivate
   guint16 yuy2_height;
   guint16 nv12_width;
   guint16 nv12_height;
+
+  /* input segment */
+  GstSegment segment;
 };
 
 typedef struct
@@ -365,14 +368,21 @@ gst_uvc_h264_mjpg_demux_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
   GstUvcH264MjpgDemux *self = GST_UVC_H264_MJPG_DEMUX (parent);
+  gboolean res;
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEGMENT:
+      gst_event_copy_segment (event, &self->priv->segment);
+      res = gst_pad_push_event (self->priv->jpeg_pad, event);
+      break;
     case GST_EVENT_CAPS:
-      return gst_pad_push_event (self->priv->jpeg_pad, event);
+      res = gst_pad_push_event (self->priv->jpeg_pad, event);
+      break;
     default:
+      res = gst_pad_event_default (pad, parent, event);
       break;
   }
-  return gst_pad_event_default (pad, parent, event);
+  return res;
 }
 
 static gboolean
@@ -612,10 +622,9 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
                 "width", G_TYPE_INT, aux_header.width,
                 "height", G_TYPE_INT, aux_header.height,
                 "framerate", GST_TYPE_FRACTION, fps_num, fps_den, NULL);
-            if (!gst_pad_set_caps (aux_pad, *aux_caps)) {
-              ret = GST_FLOW_NOT_NEGOTIATED;
-              goto done;
-            }
+            gst_pad_push_event (aux_pad, gst_event_new_caps (*aux_caps));
+            gst_pad_push_event (aux_pad,
+                gst_event_new_segment (&self->priv->segment));
           }
 
           /* Create new auxiliary buffer list and adjust i/segment size */
