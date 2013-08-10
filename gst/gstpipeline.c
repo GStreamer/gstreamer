@@ -648,7 +648,7 @@ gst_pipeline_get_clock (GstPipeline * pipeline)
 /**
  * gst_pipeline_use_clock:
  * @pipeline: a #GstPipeline
- * @clock: (transfer none): the clock to use
+ * @clock: (transfer none) (allow-none): the clock to use
  *
  * Force @pipeline to use the given @clock. The pipeline will
  * always use the given clock even if new clock providers are added
