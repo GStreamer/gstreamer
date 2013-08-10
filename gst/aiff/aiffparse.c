@@ -1506,19 +1506,18 @@ done:
 static gboolean
 gst_aiff_parse_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
-  gboolean res = TRUE;
+  gboolean res = FALSE;
   GstAiffParse *aiff = GST_AIFF_PARSE (parent);
-
-  /* only if we know */
-  if (aiff->state != AIFF_PARSE_DATA) {
-    return FALSE;
-  }
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
     {
       gint64 duration = 0;
       GstFormat format;
+
+      /* only if we know */
+      if (aiff->state != AIFF_PARSE_DATA)
+        break;
 
       gst_query_parse_duration (query, &format, NULL);
 
@@ -1542,6 +1541,10 @@ gst_aiff_parse_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gint64 srcvalue, dstvalue;
       GstFormat srcformat, dstformat;
 
+      /* only if we know */
+      if (aiff->state != AIFF_PARSE_DATA)
+        break;
+
       gst_query_parse_convert (query, &srcformat, &srcvalue,
           &dstformat, &dstvalue);
       res = gst_aiff_parse_pad_convert (pad, srcformat, srcvalue,
@@ -1552,6 +1555,10 @@ gst_aiff_parse_pad_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
     case GST_QUERY_SEEKING:{
       GstFormat fmt;
+
+      /* only if we know */
+      if (aiff->state != AIFF_PARSE_DATA)
+        break;
 
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
       if (fmt == GST_FORMAT_TIME) {
