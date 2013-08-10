@@ -575,8 +575,7 @@ gst_aiff_parse_calculate_duration (GstAiffParse * aiff)
 }
 
 static void
-gst_aiff_parse_ignore_chunk (GstAiffParse * aiff, GstBuffer * buf, guint32 tag,
-    guint32 size)
+gst_aiff_parse_ignore_chunk (GstAiffParse * aiff, guint32 tag, guint32 size)
 {
   guint flush;
 
@@ -590,8 +589,6 @@ gst_aiff_parse_ignore_chunk (GstAiffParse * aiff, GstBuffer * buf, guint32 tag,
   aiff->offset += flush;
   if (aiff->streaming) {
     gst_adapter_flush (aiff->adapter, flush);
-  } else {
-    gst_buffer_unref (buf);
   }
 }
 
@@ -981,7 +978,7 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
         break;
       }
       default:
-        gst_aiff_parse_ignore_chunk (aiff, buf, tag, size);
+        gst_aiff_parse_ignore_chunk (aiff, tag, size);
     }
 
     buf = NULL;
