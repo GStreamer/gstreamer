@@ -232,12 +232,14 @@ GST_START_TEST (test_audio_pad)
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
+  caps = gst_caps_from_string (AUDIO_CAPS_STRING);
+  gst_check_setup_events_with_stream_id (mysrcpad, mplex, caps,
+      GST_FORMAT_TIME, "mplex-test");
+  gst_caps_unref (caps);
+
   /* corresponds to I420 buffer for the size mentioned in the caps */
   inbuffer = gst_buffer_new_and_alloc (sizeof (mp2_data));
   gst_buffer_fill (inbuffer, 0, mp2_data, sizeof (mp2_data));
-  caps = gst_caps_from_string (AUDIO_CAPS_STRING);
-  gst_pad_set_caps (mysrcpad, caps);
-  gst_caps_unref (caps);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
   ASSERT_BUFFER_REFCOUNT (inbuffer, "inbuffer", 1);
   fail_unless (gst_pad_push (mysrcpad, inbuffer) == GST_FLOW_OK);
