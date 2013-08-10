@@ -154,8 +154,11 @@ static void
 _setup_test (gboolean link_h264, gboolean link_yuy2, gboolean link_nv12,
     gboolean link_jpg)
 {
-  GstBus *bus = gst_bus_new ();
+  GstCaps *caps;
   GstPad *sinkpad, *h264pad, *yuy2pad, *nv12pad, *jpgpad;
+  GstBus *bus;
+
+  bus = gst_bus_new ();
 
   have_h264_eos = have_yuy2_eos = have_nv12_eos = have_jpg_eos = FALSE;
   buffer_h264 = buffer_yuy2 = buffer_nv12 = buffer_jpg = NULL;
@@ -232,6 +235,11 @@ _setup_test (gboolean link_h264, gboolean link_yuy2, gboolean link_nv12,
   }
 
   gst_element_set_state (demux, GST_STATE_PLAYING);
+
+  caps = gst_static_pad_template_get_caps (&mjpg_template);
+  gst_check_setup_events_with_stream_id (mjpg_pad, demux, caps,
+      GST_FORMAT_TIME, "uvch264demux-test");
+  gst_caps_unref (caps);
 }
 
 static GstBuffer *
@@ -269,7 +277,6 @@ GST_START_TEST (test_valid_h264_jpg)
   fail_unless (g_file_get_contents (VALID_H264_JPG_JPG_FILENAME,
           &jpg_data, &jpg_size, NULL));
 
-  fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_caps (mjpg_caps)));
   fail_unless (gst_pad_push (mjpg_pad, buffer) == GST_FLOW_OK);
   fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_eos ()));
 
@@ -302,7 +309,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_valid_h264_yuy2)
 {
-  GstCaps *mjpg_caps = gst_static_pad_template_get_caps (&mjpg_template);
   GstCaps *h264_caps;
   GstCaps *yuy2_caps;
   GstBuffer *buffer;
@@ -324,7 +330,6 @@ GST_START_TEST (test_valid_h264_yuy2)
   fail_unless (g_file_get_contents (VALID_H264_YUY2_YUY2_FILENAME,
           &yuy2_data, &yuy2_size, NULL));
 
-  fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_caps (mjpg_caps)));
   fail_unless (gst_pad_push (mjpg_pad, buffer) == GST_FLOW_OK);
   fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_eos ()));
 
@@ -344,7 +349,6 @@ GST_START_TEST (test_valid_h264_yuy2)
   fail_unless (gst_buffer_memcmp (buffer_h264, 0, h264_data, h264_size) == 0);
   fail_unless (gst_buffer_memcmp (buffer_yuy2, 0, yuy2_data, yuy2_size) == 0);
 
-  gst_caps_unref (mjpg_caps);
   gst_caps_unref (yuy2_caps);
   gst_caps_unref (h264_caps);
   g_free (h264_data);
@@ -358,12 +362,10 @@ GST_END_TEST;
 
 GST_START_TEST (test_no_data)
 {
-  GstCaps *mjpg_caps = gst_static_pad_template_get_caps (&mjpg_template);
   GstBuffer *buffer = gst_buffer_new ();
 
   _setup_test (TRUE, TRUE, TRUE, TRUE);
 
-  fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_caps (mjpg_caps)));
   fail_unless (gst_pad_push (mjpg_pad, buffer) == GST_FLOW_OK);
   fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_eos ()));
 
@@ -379,13 +381,11 @@ GST_END_TEST;
 
 GST_START_TEST (test_data_zero)
 {
-  GstCaps *mjpg_caps = gst_static_pad_template_get_caps (&mjpg_template);
   GstBuffer *buffer = gst_buffer_new_and_alloc (1024);
 
   _setup_test (TRUE, TRUE, TRUE, TRUE);
 
   gst_buffer_memset (buffer, 0, 0, 1024);
-  fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_caps (mjpg_caps)));
   fail_unless (gst_pad_push (mjpg_pad, buffer) == GST_FLOW_OK);
   fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_eos ()));
 
@@ -400,7 +400,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_no_marker_size)
 {
-  GstCaps *mjpg_caps = gst_static_pad_template_get_caps (&mjpg_template);
   GstBuffer *buffer = gst_buffer_new_and_alloc (1024);
   const guchar data[] = {
     0xff, 0xd8, 0xff, 0xe4, 0x00
@@ -410,7 +409,6 @@ GST_START_TEST (test_no_marker_size)
 
   gst_buffer_fill (buffer, 0, data, sizeof (data));
   gst_buffer_set_size (buffer, sizeof (data));
-  fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_caps (mjpg_caps)));
   fail_unless (gst_pad_push (mjpg_pad, buffer) == GST_FLOW_ERROR);
   fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_eos ()));
 
@@ -431,7 +429,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_not_enough_data)
 {
-  GstCaps *mjpg_caps = gst_static_pad_template_get_caps (&mjpg_template);
   GstBuffer *buffer = gst_buffer_new_and_alloc (1024);
   const guchar data[] = {
     0xff, 0xd8, 0xff, 0xe4, 0x00, 0xff, 0x00, 0x00
@@ -441,7 +438,6 @@ GST_START_TEST (test_not_enough_data)
 
   gst_buffer_fill (buffer, 0, data, sizeof (data));
   gst_buffer_set_size (buffer, sizeof (data));
-  fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_caps (mjpg_caps)));
   fail_unless (gst_pad_push (mjpg_pad, buffer) == GST_FLOW_ERROR);
   fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_eos ()));
 
@@ -462,7 +458,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_no_aux_header)
 {
-  GstCaps *mjpg_caps = gst_static_pad_template_get_caps (&mjpg_template);
   GstBuffer *buffer = gst_buffer_new_and_alloc (1024);
   const guchar data[] = {
     0xff, 0xd8, 0xff, 0xe4, 0x00, 0x02, 0x00, 0x00,
@@ -473,7 +468,6 @@ GST_START_TEST (test_no_aux_header)
 
   gst_buffer_fill (buffer, 0, data, sizeof (data));
   gst_buffer_set_size (buffer, sizeof (data));
-  fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_caps (mjpg_caps)));
   fail_unless (gst_pad_push (mjpg_pad, buffer) == GST_FLOW_ERROR);
   fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_eos ()));
 
@@ -493,7 +487,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_empty_aux_data)
 {
-  GstCaps *mjpg_caps = gst_static_pad_template_get_caps (&mjpg_template);
   GstBuffer *buffer = gst_buffer_new_and_alloc (1024);
   const guchar data[] = {
     0xff, 0xd8, 0xff, 0xe4, 0x00, 0x1C, 0x00, 0x01,
@@ -507,7 +500,6 @@ GST_START_TEST (test_empty_aux_data)
 
   gst_buffer_fill (buffer, 0, data, sizeof (data));
   gst_buffer_set_size (buffer, sizeof (data));
-  fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_caps (mjpg_caps)));
   fail_unless (gst_pad_push (mjpg_pad, buffer) == GST_FLOW_OK);
   fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_eos ()));
 
@@ -523,7 +515,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_unknown_fcc)
 {
-  GstCaps *mjpg_caps = gst_static_pad_template_get_caps (&mjpg_template);
   GstBuffer *buffer = gst_buffer_new_and_alloc (1024);
   const guchar data[] = {
     0xff, 0xd8, 0xff, 0xe4, 0x00, 0x2C, 0x00, 0x01,
@@ -539,7 +530,6 @@ GST_START_TEST (test_unknown_fcc)
 
   gst_buffer_fill (buffer, 0, data, sizeof (data));
   gst_buffer_set_size (buffer, sizeof (data));
-  fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_caps (mjpg_caps)));
   fail_unless (gst_pad_push (mjpg_pad, buffer) == GST_FLOW_ERROR);
   fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_eos ()));
 
@@ -560,7 +550,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_not_enough_aux_data)
 {
-  GstCaps *mjpg_caps = gst_static_pad_template_get_caps (&mjpg_template);
   GstBuffer *buffer = gst_buffer_new_and_alloc (1024);
   const guchar data[] = {
     0xff, 0xd8, 0xff, 0xe4, 0x00, 0x1C, 0x00, 0x01,
@@ -574,7 +563,6 @@ GST_START_TEST (test_not_enough_aux_data)
 
   gst_buffer_fill (buffer, 0, data, sizeof (data));
   gst_buffer_set_size (buffer, sizeof (data));
-  fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_caps (mjpg_caps)));
   fail_unless (gst_pad_push (mjpg_pad, buffer) == GST_FLOW_ERROR);
   fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_eos ()));
 
@@ -595,7 +583,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_too_much_aux_data)
 {
-  GstCaps *mjpg_caps = gst_static_pad_template_get_caps (&mjpg_template);
   GstBuffer *buffer = gst_buffer_new_and_alloc (1024);
   const guchar data[] = {
     0xff, 0xd8, 0xff, 0xe4, 0x00, 0x3C, 0x00, 0x01,
@@ -613,7 +600,6 @@ GST_START_TEST (test_too_much_aux_data)
 
   gst_buffer_fill (buffer, 0, data, sizeof (data));
   gst_buffer_set_size (buffer, sizeof (data));
-  fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_caps (mjpg_caps)));
   fail_unless (gst_pad_push (mjpg_pad, buffer) == GST_FLOW_ERROR);
   fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_eos ()));
 
@@ -635,7 +621,6 @@ GST_END_TEST;
 
 GST_START_TEST (test_no_sos_marker)
 {
-  GstCaps *mjpg_caps = gst_static_pad_template_get_caps (&mjpg_template);
   GstBuffer *buffer = gst_buffer_new_and_alloc (1024);
   const guchar data[] = {
     0xff, 0xd8, 0xff, 0xe4, 0x00, 0x2C, 0x00, 0x01,
@@ -655,7 +640,6 @@ GST_START_TEST (test_no_sos_marker)
 
   gst_buffer_fill (buffer, 0, data, sizeof (data));
   gst_buffer_set_size (buffer, sizeof (data));
-  fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_caps (mjpg_caps)));
   fail_unless (gst_pad_push (mjpg_pad, buffer) == GST_FLOW_OK);
   fail_unless (gst_pad_push_event (mjpg_pad, gst_event_new_eos ()));
 
