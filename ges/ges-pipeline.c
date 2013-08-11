@@ -113,8 +113,8 @@ _overlay_set_render_rectangle (GstVideoOverlay * overlay, gint x,
 {
   GESPipeline *pipeline = GES_TIMELINE_PIPELINE (overlay);
 
-  gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (pipeline->
-          priv->playsink), x, y, width, height);
+  gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (pipeline->priv->
+          playsink), x, y, width, height);
 }
 
 static void
@@ -122,8 +122,8 @@ _overlay_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
 {
   GESPipeline *pipeline = GES_TIMELINE_PIPELINE (overlay);
 
-  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (pipeline->priv->
-          playsink), handle);
+  gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (pipeline->
+          priv->playsink), handle);
 }
 
 static void
@@ -430,8 +430,8 @@ ges_pipeline_change_state (GstElement * element, GstStateChange transition)
         ret = GST_STATE_CHANGE_FAILURE;
         goto done;
       }
-      if (self->
-          priv->mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
+      if (self->priv->
+          mode & (TIMELINE_MODE_RENDER | TIMELINE_MODE_SMART_RENDER))
         GST_DEBUG ("rendering => Updating pipeline caps");
       if (!ges_pipeline_update_caps (self)) {
         GST_ERROR_OBJECT (element, "Error setting the caps for rendering");
@@ -890,6 +890,18 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
   pipeline->priv->profile = profile;
 
   return TRUE;
+}
+
+/**
+ * ges_pipeline_get_mode:
+ * @pipeline: a #GESPipeline
+ *
+ * Returns: the #GESPipelineFlags currently in use.
+ **/
+GESPipelineFlags
+ges_pipeline_get_mode (GESPipeline * pipeline)
+{
+  return pipeline->priv->mode;
 }
 
 /**

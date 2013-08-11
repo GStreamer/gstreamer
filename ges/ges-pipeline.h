@@ -88,6 +88,8 @@ gboolean ges_pipeline_set_render_settings (GESPipeline *pipeline,
 gboolean ges_pipeline_set_mode (GESPipeline *pipeline,
 					 GESPipelineFlags mode);
 
+GESPipelineFlags ges_pipeline_get_mode (GESPipeline *pipeline);
+
 GstSample *
 ges_pipeline_get_thumbnail(GESPipeline *self, GstCaps *caps);
 
