@@ -495,6 +495,8 @@ ges_container_add (GESContainer * container, GESTimelineElement * child)
 
   container->children = g_list_prepend (container->children, child);
 
+  _ges_container_sort_children (container);
+
   /* Listen to all property changes */
   mapping->start_notifyid =
       g_signal_connect (G_OBJECT (child), "notify::start",
