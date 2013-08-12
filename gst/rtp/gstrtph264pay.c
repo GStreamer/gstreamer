@@ -27,6 +27,9 @@
 #include <gst/rtp/gstrtpbuffer.h>
 #include <gst/pbutils/pbutils.h>
 
+/* Included to not duplicate gst_rtp_h264_add_sps_pps () */
+#include "gstrtph264depay.h"
+
 #include "gstrtph264pay.h"
 
 
@@ -157,8 +160,10 @@ gst_rtp_h264_pay_init (GstRtpH264Pay * rtph264pay)
 {
   rtph264pay->queue = g_array_new (FALSE, FALSE, sizeof (guint));
   rtph264pay->profile = 0;
-  rtph264pay->sps = NULL;
-  rtph264pay->pps = NULL;
+  rtph264pay->sps = g_ptr_array_new_with_free_func (
+      (GDestroyNotify) gst_buffer_unref);
+  rtph264pay->pps = g_ptr_array_new_with_free_func (
+      (GDestroyNotify) gst_buffer_unref);
   rtph264pay->last_spspps = -1;
   rtph264pay->spspps_interval = DEFAULT_CONFIG_INTERVAL;
 
@@ -168,12 +173,8 @@ gst_rtp_h264_pay_init (GstRtpH264Pay * rtph264pay)
 static void
 gst_rtp_h264_pay_clear_sps_pps (GstRtpH264Pay * rtph264pay)
 {
-  g_list_foreach (rtph264pay->sps, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (rtph264pay->sps);
-  rtph264pay->sps = NULL;
-  g_list_foreach (rtph264pay->pps, (GFunc) gst_mini_object_unref, NULL);
-  g_list_free (rtph264pay->pps);
-  rtph264pay->pps = NULL;
+  g_ptr_array_set_size (rtph264pay->sps, 0);
+  g_ptr_array_set_size (rtph264pay->pps, 0);
 }
 
 static void
@@ -185,7 +186,8 @@ gst_rtp_h264_pay_finalize (GObject * object)
 
   g_array_free (rtph264pay->queue, TRUE);
 
-  gst_rtp_h264_pay_clear_sps_pps (rtph264pay);
+  g_ptr_array_free (rtph264pay->sps, TRUE);
+  g_ptr_array_free (rtph264pay->pps, TRUE);
 
   g_free (rtph264pay->sprop_parameter_sets);
 
@@ -350,18 +352,19 @@ gst_rtp_h264_pay_set_sps_pps (GstRTPBasePayload * basepayload)
   GstRtpH264Pay *payloader = GST_RTP_H264_PAY (basepayload);
   gchar *profile;
   gchar *set;
-  GList *walk;
   GString *sprops;
   guint count;
   gboolean res;
   GstMapInfo map;
+  guint i;
 
   sprops = g_string_new ("");
   count = 0;
 
   /* build the sprop-parameter-sets */
-  for (walk = payloader->sps; walk; walk = g_list_next (walk)) {
-    GstBuffer *sps_buf = GST_BUFFER_CAST (walk->data);
+  for (i = 0; i < payloader->sps->len; i++) {
+    GstBuffer *sps_buf =
+        GST_BUFFER_CAST (g_ptr_array_index (payloader->sps, i));
 
     gst_buffer_map (sps_buf, &map, GST_MAP_READ);
     set = g_base64_encode (map.data, map.size);
@@ -371,8 +374,9 @@ gst_rtp_h264_pay_set_sps_pps (GstRTPBasePayload * basepayload)
     g_free (set);
     count++;
   }
-  for (walk = payloader->pps; walk; walk = g_list_next (walk)) {
-    GstBuffer *pps_buf = GST_BUFFER_CAST (walk->data);
+  for (i = 0; i < payloader->pps->len; i++) {
+    GstBuffer *pps_buf =
+        GST_BUFFER_CAST (g_ptr_array_index (payloader->pps, i));
 
     gst_buffer_map (pps_buf, &map, GST_MAP_READ);
     set = g_base64_encode (map.data, map.size);
@@ -398,29 +402,6 @@ gst_rtp_h264_pay_set_sps_pps (GstRTPBasePayload * basepayload)
   return res;
 }
 
-static GList *
-add_sps_pps_without_duplicates (GList * list, GstBuffer * buffer)
-{
-  GList *walk;
-  GstMapInfo map;
-
-  gst_buffer_map (buffer, &map, GST_MAP_READ);
-
-  for (walk = list; walk; walk = walk->next) {
-    if (gst_buffer_get_size (walk->data) == map.size &&
-        !gst_buffer_memcmp (walk->data, 0, map.data, map.size)) {
-      /* Same data */
-      gst_buffer_unmap (buffer, &map);
-      gst_buffer_unref (buffer);
-      return list;
-    }
-  }
-
-  gst_buffer_unmap (buffer, &map);
-  list = g_list_append (list, buffer);
-
-  return list;
-}
 
 static gboolean
 gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
@@ -517,9 +498,8 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
       /* make a buffer out of it and add to SPS list */
       sps_buf = gst_buffer_new_and_alloc (nal_size);
       gst_buffer_fill (sps_buf, 0, data, nal_size);
-      rtph264pay->sps = add_sps_pps_without_duplicates (rtph264pay->sps,
-          sps_buf);
-
+      gst_rtp_h264_add_sps_pps (GST_ELEMENT (rtph264pay), rtph264pay->sps,
+          rtph264pay->pps, sps_buf);
       data += nal_size;
       size -= nal_size;
     }
@@ -550,8 +530,8 @@ gst_rtp_h264_pay_setcaps (GstRTPBasePayload * basepayload, GstCaps * caps)
       /* make a buffer out of it and add to PPS list */
       pps_buf = gst_buffer_new_and_alloc (nal_size);
       gst_buffer_fill (pps_buf, 0, data, nal_size);
-      rtph264pay->pps = add_sps_pps_without_duplicates (rtph264pay->pps,
-          pps_buf);
+      gst_rtp_h264_add_sps_pps (GST_ELEMENT (rtph264pay), rtph264pay->sps,
+          rtph264pay->pps, pps_buf);
 
       data += nal_size;
       size -= nal_size;
@@ -600,7 +580,7 @@ gst_rtp_h264_pay_parse_sprop_parameter_sets (GstRtpH264Pay * rtph264pay)
 {
   const gchar *ps;
   gchar **params;
-  guint len, num_sps, num_pps;
+  guint len;
   gint i;
   GstBuffer *buf;
 
@@ -615,15 +595,12 @@ gst_rtp_h264_pay_parse_sprop_parameter_sets (GstRtpH264Pay * rtph264pay)
 
   GST_DEBUG_OBJECT (rtph264pay, "we have %d params", len);
 
-  num_sps = num_pps = 0;
-
   for (i = 0; params[i]; i++) {
     gsize nal_len;
     GstMapInfo map;
     guint8 *nalp;
     guint save = 0;
     gint state = 0;
-    guint8 nal_type;
 
     nal_len = strlen (params[i]);
     buf = gst_buffer_new_and_alloc (nal_len);
@@ -631,7 +608,6 @@ gst_rtp_h264_pay_parse_sprop_parameter_sets (GstRtpH264Pay * rtph264pay)
     gst_buffer_map (buf, &map, GST_MAP_WRITE);
     nalp = map.data;
     nal_len = g_base64_decode_step (params[i], nal_len, nalp, &state, &save);
-    nal_type = nalp[0];
     gst_buffer_unmap (buf, &map);
     gst_buffer_resize (buf, 0, nal_len);
 
@@ -640,16 +616,8 @@ gst_rtp_h264_pay_parse_sprop_parameter_sets (GstRtpH264Pay * rtph264pay)
       continue;
     }
 
-    /* append to the right list */
-    if ((nal_type & 0x1f) == 7) {
-      GST_DEBUG_OBJECT (rtph264pay, "adding param %d as SPS %d", i, num_sps);
-      rtph264pay->sps = add_sps_pps_without_duplicates (rtph264pay->sps, buf);
-      num_sps++;
-    } else {
-      GST_DEBUG_OBJECT (rtph264pay, "adding param %d as PPS %d", i, num_pps);
-      rtph264pay->pps = add_sps_pps_without_duplicates (rtph264pay->pps, buf);
-      num_pps++;
-    }
+    gst_rtp_h264_add_sps_pps (GST_ELEMENT (rtph264pay), rtph264pay->sps,
+        rtph264pay->pps, buf);
   }
   g_strfreev (params);
 }
@@ -697,10 +665,7 @@ static gboolean
 gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
     const guint8 * data, guint size, GstClockTime dts, GstClockTime pts)
 {
-  const guint8 *sps = NULL, *pps = NULL;
-  guint sps_len = 0, pps_len = 0;
   guint8 header, type;
-  guint len;
   gboolean updated;
 
   /* default is no update */
@@ -708,103 +673,32 @@ gst_rtp_h264_pay_decode_nal (GstRtpH264Pay * payloader,
 
   GST_DEBUG ("NAL payload len=%u", size);
 
-  len = size;
   header = data[0];
   type = header & 0x1f;
 
-  /* keep sps & pps separately so that we can update either one 
-   * independently. We also record the timestamp of the last SPS/PPS so 
+  /* We record the timestamp of the last SPS/PPS so
    * that we can insert them at regular intervals and when needed. */
-  if (SPS_TYPE_ID == type) {
+  if (SPS_TYPE_ID == type || PPS_TYPE_ID == type) {
+    GstBuffer *nal;
+
     /* encode the entire SPS NAL in base64 */
-    GST_DEBUG ("Found SPS %x %x %x Len=%u", (header >> 7),
-        (header >> 5) & 3, type, len);
+    GST_DEBUG ("Found %s %x %x %x Len=%u", type == SPS_TYPE_ID ? "SPS" : "PPS",
+        (header >> 7), (header >> 5) & 3, type, size);
 
-    sps = data;
-    sps_len = len;
+    nal = gst_buffer_new_allocate (NULL, size, NULL);
+    gst_buffer_fill (nal, 0, data, size);
+
+    updated = gst_rtp_h264_add_sps_pps (GST_ELEMENT (payloader),
+        payloader->sps, payloader->pps, nal);
+
     /* remember when we last saw SPS */
-    if (pts != -1)
-      payloader->last_spspps = pts;
-  } else if (PPS_TYPE_ID == type) {
-    /* encoder the entire PPS NAL in base64 */
-    GST_DEBUG ("Found PPS %x %x %x Len = %u",
-        (header >> 7), (header >> 5) & 3, type, len);
-
-    pps = data;
-    pps_len = len;
-    /* remember when we last saw PPS */
-    if (pts != -1)
+    if (updated && pts != -1)
       payloader->last_spspps = pts;
   } else {
     GST_DEBUG ("NAL: %x %x %x Len = %u", (header >> 7),
-        (header >> 5) & 3, type, len);
+        (header >> 5) & 3, type, size);
   }
 
-  /* If we encountered an SPS and/or a PPS, check if it's the
-   * same as the one we have. If not, update our version and
-   * set updated to TRUE
-   */
-  if (sps_len > 0) {
-    GstBuffer *sps_buf;
-
-    if (payloader->sps != NULL) {
-      sps_buf = GST_BUFFER_CAST (payloader->sps->data);
-
-      if (gst_buffer_memcmp (sps_buf, 0, sps, sps_len)) {
-        /* something changed, update */
-        payloader->profile = (sps[1] << 16) + (sps[2] << 8) + sps[3];
-        GST_DEBUG ("Profile level IDC = %06x", payloader->profile);
-        updated = TRUE;
-      }
-    } else {
-      /* no previous SPS, update */
-      updated = TRUE;
-    }
-
-    if (updated) {
-      sps_buf = gst_buffer_new_and_alloc (sps_len);
-      gst_buffer_fill (sps_buf, 0, sps, sps_len);
-
-      if (payloader->sps) {
-        /* replace old buffer */
-        gst_buffer_unref (payloader->sps->data);
-        payloader->sps->data = sps_buf;
-      } else {
-        /* add new buffer */
-        payloader->sps = g_list_prepend (payloader->sps, sps_buf);
-      }
-    }
-  }
-
-  if (pps_len > 0) {
-    GstBuffer *pps_buf;
-
-    if (payloader->pps != NULL) {
-      pps_buf = GST_BUFFER_CAST (payloader->pps->data);
-
-      if (gst_buffer_memcmp (pps_buf, 0, pps, pps_len)) {
-        /* something changed, update */
-        updated = TRUE;
-      }
-    } else {
-      /* no previous SPS, update */
-      updated = TRUE;
-    }
-
-    if (updated) {
-      pps_buf = gst_buffer_new_and_alloc (pps_len);
-      gst_buffer_fill (pps_buf, 0, pps, pps_len);
-
-      if (payloader->pps) {
-        /* replace old buffer */
-        gst_buffer_unref (payloader->pps->data);
-        payloader->pps->data = pps_buf;
-      } else {
-        /* add new buffer */
-        payloader->pps = g_list_prepend (payloader->pps, pps_buf);
-      }
-    }
-  }
   return updated;
 }
 
@@ -817,10 +711,11 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     GstRtpH264Pay * rtph264pay, GstClockTime dts, GstClockTime pts)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GList *walk;
+  guint i;
 
-  for (walk = rtph264pay->sps; walk; walk = g_list_next (walk)) {
-    GstBuffer *sps_buf = GST_BUFFER_CAST (walk->data);
+  for (i = 0; i < rtph264pay->sps->len; i++) {
+    GstBuffer *sps_buf =
+        GST_BUFFER_CAST (g_ptr_array_index (rtph264pay->sps, i));
 
     GST_DEBUG_OBJECT (rtph264pay, "inserting SPS in the stream");
     /* resend SPS */
@@ -830,8 +725,9 @@ gst_rtp_h264_pay_send_sps_pps (GstRTPBasePayload * basepayload,
     if (ret != GST_FLOW_OK)
       GST_WARNING ("Problem pushing SPS");
   }
-  for (walk = rtph264pay->pps; walk; walk = g_list_next (walk)) {
-    GstBuffer *pps_buf = GST_BUFFER_CAST (walk->data);
+  for (i = 0; i < rtph264pay->pps->len; i++) {
+    GstBuffer *pps_buf =
+        GST_BUFFER_CAST (g_ptr_array_index (rtph264pay->pps, i));
 
     GST_DEBUG_OBJECT (rtph264pay, "inserting PPS in the stream");
     /* resend PPS */
