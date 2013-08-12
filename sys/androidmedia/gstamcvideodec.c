@@ -7,6 +7,8 @@
  * Copyright (C) 2012, Collabora Ltd.
  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
  *
+ * Copyright (C) 2012, Rafaël Carré <funman@videolanorg>
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation
@@ -766,6 +768,30 @@ gst_amc_video_dec_set_src_caps (GstAmcVideoDec * self, GstAmcFormat * format)
   return TRUE;
 }
 
+/*
+ * The format is called QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka.
+ * Which is actually NV12 (interleaved U&V).
+ */
+#define TILE_WIDTH 64
+#define TILE_HEIGHT 32
+#define TILE_SIZE (TILE_WIDTH * TILE_HEIGHT)
+#define TILE_GROUP_SIZE (4 * TILE_SIZE)
+
+/* get frame tile coordinate. XXX: nothing to be understood here, don't try. */
+static size_t
+tile_pos (size_t x, size_t y, size_t w, size_t h)
+{
+  size_t flim = x + (y & ~1) * w;
+
+  if (y & 1) {
+    flim += (x & ~3) + 2;
+  } else if ((h & 1) == 0 || y != (h - 1)) {
+    flim += (x + 2) & ~3;
+  }
+
+  return flim;
+}
+
 /* The weird handling of cropping, alignment and everything is taken from
  * platform/frameworks/media/libstagefright/colorconversion/ColorConversion.cpp
  */
@@ -975,6 +1001,87 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
       gst_video_frame_unmap (&vframe);
       ret = TRUE;
       break;
+    }
+    case COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka:{
+      gint width = self->width;
+      gint height = self->height;
+      gint src_stride = self->stride;
+      gint dest_luma_stride = GST_VIDEO_INFO_COMP_STRIDE (info, 0);
+      gint dest_chroma_stride = GST_VIDEO_INFO_COMP_STRIDE (info, 1);
+      guint8 *src = buf->data + buffer_info->offset;
+      guint8 *dest_luma =
+          GST_BUFFER_DATA (outbuf) + GST_VIDEO_INFO_COMP_OFFSET (info, 0);
+      guint8 *dest_chroma =
+          GST_BUFFER_DATA (outbuf) + GST_VIDEO_INFO_COMP_OFFSET (info, 1);
+      gint y;
+
+      const size_t tile_w = (width - 1) / TILE_WIDTH + 1;
+      const size_t tile_w_align = (tile_w + 1) & ~1;
+
+      const size_t tile_h_luma = (height - 1) / TILE_HEIGHT + 1;
+      const size_t tile_h_chroma = (height / 2 - 1) / TILE_HEIGHT + 1;
+
+      size_t luma_size = tile_w_align * tile_h_luma * TILE_SIZE;
+
+      if ((luma_size % TILE_GROUP_SIZE) != 0)
+        luma_size = (((luma_size - 1) / TILE_GROUP_SIZE) + 1) * TILE_GROUP_SIZE;
+
+      for (y = 0; y < tile_h_luma; y++) {
+        size_t row_width = width;
+        gint x;
+
+        for (x = 0; x < tile_w; x++) {
+          size_t tile_width = row_width;
+          size_t tile_height = height;
+          gint luma_idx;
+          gint chroma_idx;
+          /* luma source pointer for this tile */
+          const uint8_t *src_luma = src
+              + tile_pos (x, y, tile_w_align, tile_h_luma) * TILE_SIZE;
+
+          /* chroma source pointer for this tile */
+          const uint8_t *src_chroma = src + luma_size
+              + tile_pos (x, y / 2, tile_w_align, tile_h_chroma) * TILE_SIZE;
+          if (y & 1)
+            src_chroma += TILE_SIZE / 2;
+
+          /* account for right columns */
+          if (tile_width > TILE_WIDTH)
+            tile_width = TILE_WIDTH;
+
+          /* account for bottom rows */
+          if (tile_height > TILE_HEIGHT)
+            tile_height = TILE_HEIGHT;
+
+          /* dest luma memory index for this tile */
+          luma_idx = y * TILE_HEIGHT * dest_luma_stride + x * TILE_WIDTH;
+
+          /* dest chroma memory index for this tile */
+          /* XXX: remove divisions */
+          chroma_idx =
+              y * TILE_HEIGHT / 2 * dest_chroma_stride + x * TILE_WIDTH;
+
+          tile_height /= 2;     // we copy 2 luma lines at once
+          while (tile_height--) {
+            memcpy (dest_luma + luma_idx, src_luma, tile_width);
+            src_luma += TILE_WIDTH;
+            luma_idx += dest_luma_stride;
+
+            memcpy (dest_luma + luma_idx, src_luma, tile_width);
+            src_luma += TILE_WIDTH;
+            luma_idx += dest_luma_stride;
+
+            memcpy (dest_chroma + chroma_idx, src_chroma, tile_width);
+            src_chroma += TILE_WIDTH;
+            chroma_idx += dest_chroma_stride;
+          }
+          row_width -= TILE_WIDTH;
+        }
+        height -= TILE_HEIGHT;
+      }
+      ret = TRUE;
+      break;
+
     }
     default:
       GST_ERROR_OBJECT (self, "Unsupported color format %d",
