@@ -3597,6 +3597,17 @@ rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc,
   return TRUE;
 }
 
+/**
+ * rtp_session_request_nack:
+ * @sess: a #RTPSession
+ * @ssrc: the SSRC
+ * @seqnum: the missing seqnum
+ * @max_delay: max delay to request NACK
+ *
+ * Request scheduling of a NACK feedback packet for @seqnum in @ssrc.
+ *
+ * Returns: %TRUE if the NACK feedback could be scheduled
+ */
 gboolean
 rtp_session_request_nack (RTPSession * sess, guint32 ssrc, guint16 seqnum,
     GstClockTime max_delay)
