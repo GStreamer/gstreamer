@@ -910,14 +910,15 @@ unprotect:
         break;
 
       case err_status_auth_fail:
+        GST_WARNING_OBJECT (filter, "Error authentication packet, dropping");
+        goto drop_buffer;
+
       case err_status_cipher_fail:
-        GST_ELEMENT_WARNING (filter, STREAM, DECRYPT,
-            ("Error while decryption stream"), (NULL));
-        ret = GST_FLOW_ERROR;
+        GST_WARNING_OBJECT (filter, "Error while decrypting packet, dropping");
         goto drop_buffer;
 
       default:
-        GST_WARNING_OBJECT (filter, "Other error");
+        GST_WARNING_OBJECT (filter, "Other error, dropping");
         goto drop_buffer;
     }
   }
