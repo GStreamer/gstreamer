@@ -5248,6 +5248,8 @@ plugin_init (GstPlugin * plugin)
       "bmp", BMP_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "image/tiff", GST_RANK_PRIMARY, tiff_type_find,
       "tif,tiff", TIFF_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER_RIFF (plugin, "image/webp", GST_RANK_PRIMARY,
+      "webp", "WEBP");
   TYPE_FIND_REGISTER (plugin, "image/x-portable-pixmap", GST_RANK_SECONDARY,
       pnm_type_find, "pnm,ppm,pgm,pbm", PNM_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-matroska", GST_RANK_PRIMARY,
