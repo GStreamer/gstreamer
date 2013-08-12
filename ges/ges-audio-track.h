@@ -55,7 +55,7 @@ struct _GESAudioTrack
 };
 
 GType          ges_audio_track_get_type (void) G_GNUC_CONST;
-GESVideoTrack* ges_audio_track_new (void);
+GESAudioTrack* ges_audio_track_new (void);
 
 G_END_DECLS
 #endif /* _GES_AUDIO_TRACK_H_ */

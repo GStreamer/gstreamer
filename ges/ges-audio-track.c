@@ -93,10 +93,10 @@ ges_audio_track_class_init (GESAudioTrackClass * klass)
  *
  * Returns: A new #GESTrack
  */
-GESVideoTrack *
+GESAudioTrack *
 ges_audio_track_new (void)
 {
-  GESVideoTrack *ret;
+  GESAudioTrack *ret;
   GstCaps *caps = gst_caps_from_string (DEFAULT_CAPS);
 
   ret = g_object_new (GES_TYPE_AUDIO_TRACK, "caps", caps,
