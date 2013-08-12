@@ -938,8 +938,6 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
 
   GST_OBJECT_LOCK (filter);
 
-  size_max = gst_buffer_get_size (buf) + SRTP_MAX_TRAILER_LEN + 10;
-
   /* Update source caps if asked */
   if (do_setcaps) {
     GstCaps *caps;
@@ -956,7 +954,15 @@ gst_srtp_enc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
     GST_OBJECT_LOCK (filter);
   }
 
+  if (!HAS_CRYPTO (filter)) {
+    GST_OBJECT_UNLOCK (filter);
+    otherpad = get_rtp_other_pad (pad);
+    return gst_pad_push (otherpad, buf);
+  }
+
+
   /* Create a bigger buffer to add protection */
+  size_max = gst_buffer_get_size (buf) + SRTP_MAX_TRAILER_LEN + 10;
   bufout = gst_buffer_new_allocate (NULL, size_max, NULL);
 
   gst_buffer_map (buf, &mapin, GST_MAP_READ);

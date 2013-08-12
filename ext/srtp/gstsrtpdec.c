@@ -858,6 +858,11 @@ gst_srtp_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
     goto drop_buffer;
   }
 
+  if (!STREAM_HAS_CRYPTO (stream)) {
+    GST_OBJECT_UNLOCK (filter);
+    goto push_out;
+  }
+
   GST_LOG_OBJECT (pad, "Received %s buffer of size %" G_GSIZE_FORMAT
       " with SSRC = %u", is_rtcp ? "RTCP" : "RTP", gst_buffer_get_size (buf),
       ssrc);
@@ -925,6 +930,7 @@ unprotect:
   if (gst_srtp_get_soft_limit_reached ())
     request_key_with_signal (filter, ssrc, SIGNAL_SOFT_LIMIT);
 
+push_out:
   /* Push buffer to source pad */
   otherpad = (GstPad *) gst_pad_get_element_private (pad);
   ret = gst_pad_push (otherpad, buf);
