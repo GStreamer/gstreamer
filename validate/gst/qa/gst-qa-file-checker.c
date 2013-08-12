@@ -42,6 +42,7 @@ enum
   PROP_FILE_SIZE_TOLERANCE,
   PROP_SEEKABLE,
   PROP_TEST_PLAYBACK,
+  PROP_TEST_REVERSE_PLAYBACK,
   PROP_LAST
 };
 
@@ -51,6 +52,7 @@ enum
 #define DEFAULT_FILE_SIZE_TOLERANCE 0
 #define DEFAULT_SEEKABLE FALSE
 #define DEFAULT_PLAYBACK FALSE
+#define DEFAULT_REVERSE_PLAYBACK FALSE
 
 GST_DEBUG_CATEGORY_STATIC (gst_qa_file_checker_debug);
 #define GST_CAT_DEFAULT gst_qa_file_checker_debug
@@ -153,6 +155,11 @@ gst_qa_file_checker_class_init (GstQaFileCheckerClass * klass)
       g_param_spec_boolean ("test-playback", "test playback",
           "If the file should be tested for playback", DEFAULT_PLAYBACK,
           G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
+
+  g_object_class_install_property (gobject_class, PROP_TEST_REVERSE_PLAYBACK,
+      g_param_spec_boolean ("test-reverse-playback", "test reverse playback",
+          "If the file should be tested for reverse playback",
+          DEFAULT_REVERSE_PLAYBACK, G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
 }
 
 static void
@@ -166,6 +173,7 @@ gst_qa_file_checker_init (GstQaFileChecker * fc)
   fc->file_size_tolerance = DEFAULT_FILE_SIZE_TOLERANCE;
   fc->seekable = DEFAULT_SEEKABLE;
   fc->test_playback = DEFAULT_PLAYBACK;
+  fc->test_reverse_playback = DEFAULT_REVERSE_PLAYBACK;
 }
 
 static void
@@ -207,6 +215,9 @@ gst_qa_file_checker_set_property (GObject * object, guint prop_id,
       break;
     case PROP_TEST_PLAYBACK:
       fc->test_playback = g_value_get_boolean (value);
+      break;
+    case PROP_TEST_REVERSE_PLAYBACK:
+      fc->test_reverse_playback = g_value_get_boolean (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -250,6 +261,9 @@ gst_qa_file_checker_get_property (GObject * object, guint prop_id,
       break;
     case PROP_TEST_PLAYBACK:
       g_value_set_boolean (value, fc->test_playback);
+      break;
+    case PROP_TEST_REVERSE_PLAYBACK:
+      g_value_set_boolean (value, fc->test_reverse_playback);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -583,17 +597,16 @@ check_encoding_profile (GstQaFileChecker * fc, GstDiscovererInfo * info)
   return ret;
 }
 
+typedef gboolean (*GstElementConfigureFunc) (GstQaFileChecker *, GstElement *);
 static gboolean
-check_playback (GstQaFileChecker * fc)
+check_playback_scenario (GstQaFileChecker * fc,
+    GstElementConfigureFunc configure_function, const gchar * messages_prefix)
 {
   GstElement *playbin;
   GstElement *videosink, *audiosink;
   GstBus *bus;
   GstMessage *msg;
   gboolean ret = TRUE;
-
-  if (!fc->test_playback)
-    return TRUE;
 
   playbin = gst_element_factory_make ("playbin2", "fc-playbin");
   videosink = gst_element_factory_make ("fakesink", "fc-videosink");
@@ -615,6 +628,11 @@ check_playback (GstQaFileChecker * fc)
     goto end;
   }
 
+  if (configure_function) {
+    if (!configure_function (fc, playbin))
+      return FALSE;
+  }
+
   bus = gst_pipeline_get_bus (GST_PIPELINE (playbin));
   msg =
       gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
@@ -627,8 +645,9 @@ check_playback (GstQaFileChecker * fc)
       gchar *debug = NULL;
 
       gst_message_parse_error (msg, &error, &debug);
-      GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_PLAYBACK_ERROR, "File %s failed "
-          "during playback. Error: %s : %s", fc->uri, error->message, debug);
+      GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_PLAYBACK_ERROR,
+          "%s - File %s failed " "during playback. Error: %s : %s",
+          messages_prefix, fc->uri, error->message, debug);
       g_error_free (error);
       g_free (debug);
 
@@ -638,8 +657,8 @@ check_playback (GstQaFileChecker * fc)
     }
     gst_message_unref (msg);
   } else {
-    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_PLAYBACK_ERROR, "File playback "
-        "finished unexpectedly");
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_PLAYBACK_ERROR, "%s - "
+        "File playback finished unexpectedly", messages_prefix);
   }
   gst_object_unref (bus);
 
@@ -648,6 +667,37 @@ end:
   gst_object_unref (playbin);
 
   return ret;
+}
+
+static gboolean
+check_playback (GstQaFileChecker * fc)
+{
+  if (!fc->test_playback)
+    return TRUE;
+  return check_playback_scenario (fc, NULL, "Playback");
+}
+
+static gboolean
+send_reverse_seek (GstQaFileChecker * fc, GstElement * pipeline)
+{
+  gboolean ret;
+
+  ret = gst_element_seek (pipeline, -1.0, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, -1);
+
+  if (!ret) {
+    GST_QA_REPORT (fc, GST_QA_ISSUE_ID_FILE_PLAYBACK_ERROR,
+        "Reverse playback seek failed");
+  }
+  return ret;
+}
+
+static gboolean
+check_reverse_playback (GstQaFileChecker * fc)
+{
+  if (!fc->test_reverse_playback)
+    return TRUE;
+  return check_playback_scenario (fc, send_reverse_seek, "Reverse playback");
 }
 
 gboolean
@@ -680,6 +730,7 @@ gst_qa_file_checker_run (GstQaFileChecker * fc)
   ret = check_seekable (fc, info) & ret;
   ret = check_encoding_profile (fc, info) & ret;
   ret = check_playback (fc) & ret;
+  ret = check_reverse_playback (fc) & ret;
 
   return ret;
 }

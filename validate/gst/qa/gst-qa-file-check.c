@@ -151,7 +151,7 @@ main (int argc, gchar ** argv)
   GError *err = NULL;
   guint count = -1;
 
-  gboolean playback = FALSE, seekable = FALSE;
+  gboolean playback = FALSE, seekable = FALSE, reverse_playback = FALSE;
   gint64 filesize = 0, filesize_tolerance = 0, duration_arg =
       0, duration_tolerance = 0;
   GstClockTime duration = GST_CLOCK_TIME_NONE;
@@ -172,6 +172,10 @@ main (int argc, gchar ** argv)
         NULL},
     {"playback", 'p', 0, G_OPTION_ARG_NONE,
           &playback, "If the file should be tested for playback",
+        NULL},
+    {"reverse-playback", '\0', 0, G_OPTION_ARG_NONE,
+          &reverse_playback,
+          "If the file should be tested for reverse playback",
         NULL},
     {"file-size", '\0', 0, G_OPTION_ARG_INT64, &filesize,
         "The expected file size in bytes", NULL},
@@ -212,6 +216,7 @@ main (int argc, gchar ** argv)
   fc = g_object_new (GST_TYPE_QA_FILE_CHECKER, "uri",
       argv[1], "profile", encoding_profile, "qa-runner", runner,
       "is-seekable", seekable, "test-playback", playback,
+      "test-reverse-playback", reverse_playback,
       "file-size", (guint64) filesize, "file-size-tolerance", (guint64)
       filesize_tolerance, "duration", (guint64) duration,
       "duration-tolerance", (guint64) duration_tolerance, NULL);

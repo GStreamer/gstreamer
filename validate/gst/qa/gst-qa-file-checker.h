@@ -64,6 +64,7 @@ struct _GstQaFileChecker {
   gboolean seekable; /* TODO should we care about disabling this check? */
 
   gboolean test_playback;
+  gboolean test_reverse_playback;
 
   gchar *uri;
 
