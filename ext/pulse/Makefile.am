@@ -4,6 +4,7 @@ libgstpulse_la_SOURCES = \
 	plugin.c \
 	pulsesink.c \
 	pulsesrc.c \
+	pulsedevicemonitor.c \
 	pulseutil.c
 
 libgstpulse_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(GST_CFLAGS) $(PULSE_CFLAGS)
@@ -16,5 +17,6 @@ libgstpulse_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 noinst_HEADERS = \
 	pulsesink.h \
 	pulsesrc.h \
+	pulsedevicemonitor.h \
 	pulseutil.h
 
