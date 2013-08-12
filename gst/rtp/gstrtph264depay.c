@@ -405,8 +405,9 @@ gst_rtp_h264_set_src_caps (GstRtpH264Depay * rtph264depay)
   return res;
 }
 
-static gboolean
-gst_rtp_h264_add_sps_pps (GstRtpH264Depay * rtph264depay, GstBuffer * nal)
+gboolean
+gst_rtp_h264_add_sps_pps (GstElement * rtph264, GPtrArray * sps_array,
+    GPtrArray * pps_array, GstBuffer * nal)
 {
   GstMapInfo map;
   guchar type;
@@ -420,13 +421,13 @@ gst_rtp_h264_add_sps_pps (GstRtpH264Depay * rtph264depay, GstBuffer * nal)
     guint32 sps_id;
 
     if (!parse_sps (&map, &sps_id)) {
-      GST_WARNING_OBJECT (rtph264depay, "Invalid SPS,"
+      GST_WARNING_OBJECT (rtph264, "Invalid SPS,"
           " can't parse seq_parameter_set_id");
       goto drop;
     }
 
-    for (i = 0; i < rtph264depay->sps->len; i++) {
-      GstBuffer *sps = g_ptr_array_index (rtph264depay->sps, i);
+    for (i = 0; i < sps_array->len; i++) {
+      GstBuffer *sps = g_ptr_array_index (sps_array, i);
       GstMapInfo spsmap;
       guint32 tmp_sps_id;
 
@@ -436,34 +437,33 @@ gst_rtp_h264_add_sps_pps (GstRtpH264Depay * rtph264depay, GstBuffer * nal)
       if (sps_id == tmp_sps_id) {
         if (map.size == spsmap.size &&
             memcmp (map.data, spsmap.data, spsmap.size) == 0) {
-          GST_LOG_OBJECT (rtph264depay, "Unchanged SPS %u, not updating",
-              sps_id);
+          GST_LOG_OBJECT (rtph264, "Unchanged SPS %u, not updating", sps_id);
           gst_buffer_unmap (sps, &spsmap);
           goto drop;
         } else {
           gst_buffer_unmap (sps, &spsmap);
-          g_ptr_array_remove_index_fast (rtph264depay->sps, i);
-          g_ptr_array_add (rtph264depay->sps, nal);
-          GST_LOG_OBJECT (rtph264depay, "Modified SPS %u, replacing", sps_id);
+          g_ptr_array_remove_index_fast (sps_array, i);
+          g_ptr_array_add (sps_array, nal);
+          GST_LOG_OBJECT (rtph264, "Modified SPS %u, replacing", sps_id);
           goto done;
         }
       }
       gst_buffer_unmap (sps, &spsmap);
     }
-    GST_LOG_OBJECT (rtph264depay, "Adding new SPS %u", sps_id);
-    g_ptr_array_add (rtph264depay->sps, nal);
+    GST_LOG_OBJECT (rtph264, "Adding new SPS %u", sps_id);
+    g_ptr_array_add (sps_array, nal);
   } else if (type == 8) {
     guint32 sps_id;
     guint32 pps_id;
 
     if (!parse_pps (&map, &sps_id, &pps_id)) {
-      GST_WARNING_OBJECT (rtph264depay, "Invalid PPS,"
+      GST_WARNING_OBJECT (rtph264, "Invalid PPS,"
           " can't parse seq_parameter_set_id or pic_parameter_set_id");
       goto drop;
     }
 
-    for (i = 0; i < rtph264depay->pps->len; i++) {
-      GstBuffer *pps = g_ptr_array_index (rtph264depay->pps, i);
+    for (i = 0; i < pps_array->len; i++) {
+      GstBuffer *pps = g_ptr_array_index (pps_array, i);
       GstMapInfo ppsmap;
       guint32 tmp_sps_id;
       guint32 tmp_pps_id;
@@ -475,30 +475,29 @@ gst_rtp_h264_add_sps_pps (GstRtpH264Depay * rtph264depay, GstBuffer * nal)
       if (sps_id == tmp_sps_id && pps_id == tmp_pps_id) {
         if (map.size == ppsmap.size &&
             memcmp (map.data, ppsmap.data, ppsmap.size) == 0) {
-          GST_LOG_OBJECT (rtph264depay, "Unchanged PPS %u:%u, not updating",
-              sps_id, pps_id);
+          GST_LOG_OBJECT (rtph264, "Unchanged PPS %u:%u, not updating", sps_id,
+              pps_id);
           gst_buffer_unmap (pps, &ppsmap);
           goto drop;
         } else {
           gst_buffer_unmap (pps, &ppsmap);
-          g_ptr_array_remove_index_fast (rtph264depay->pps, i);
-          g_ptr_array_add (rtph264depay->pps, nal);
-          GST_LOG_OBJECT (rtph264depay, "Modified PPS %u:%u, replacing",
+          g_ptr_array_remove_index_fast (pps_array, i);
+          g_ptr_array_add (pps_array, nal);
+          GST_LOG_OBJECT (rtph264, "Modified PPS %u:%u, replacing",
               sps_id, pps_id);
           goto done;
         }
       }
       gst_buffer_unmap (pps, &ppsmap);
     }
-    GST_LOG_OBJECT (rtph264depay, "Adding new PPS %u:%i", sps_id, pps_id);
-    g_ptr_array_add (rtph264depay->pps, nal);
+    GST_LOG_OBJECT (rtph264, "Adding new PPS %u:%i", sps_id, pps_id);
+    g_ptr_array_add (pps_array, nal);
   } else {
     goto drop;
   }
 
 done:
   gst_buffer_unmap (nal, &map);
-  rtph264depay->new_codec_data = TRUE;
 
   return TRUE;
 
@@ -507,6 +506,15 @@ drop:
   gst_buffer_unref (nal);
 
   return FALSE;
+}
+
+
+static void
+gst_rtp_h264_depay_add_sps_pps (GstRtpH264Depay * rtph264depay, GstBuffer * nal)
+{
+  if (gst_rtp_h264_add_sps_pps (GST_ELEMENT (rtph264depay),
+          rtph264depay->sps, rtph264depay->pps, nal))
+    rtph264depay->new_codec_data = TRUE;
 }
 
 static gboolean
@@ -610,7 +618,7 @@ gst_rtp_h264_depay_setcaps (GstRTPBaseDepayload * depayload, GstCaps * caps)
       gst_buffer_unmap (nal, &nalmap);
       gst_buffer_set_size (nal, nal_len);
 
-      gst_rtp_h264_add_sps_pps (rtph264depay, nal);
+      gst_rtp_h264_depay_add_sps_pps (rtph264depay, nal);
     }
     g_strfreev (params);
 
@@ -679,7 +687,7 @@ gst_rtp_h264_depay_handle_nal (GstRtpH264Depay * rtph264depay, GstBuffer * nal,
 
   if (!rtph264depay->byte_stream) {
     if (nal_type == 7 || nal_type == 8) {
-      gst_rtp_h264_add_sps_pps (rtph264depay,
+      gst_rtp_h264_depay_add_sps_pps (rtph264depay,
           gst_buffer_copy_region (nal, GST_BUFFER_COPY_ALL,
               4, gst_buffer_get_size (nal) - 4));
       gst_buffer_unmap (nal, &map);
