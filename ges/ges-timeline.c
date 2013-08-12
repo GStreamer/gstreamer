@@ -602,10 +602,15 @@ timeline_update_duration (GESTimeline * timeline)
   GSequenceIter *it = g_sequence_get_end_iter (timeline->priv->starts_ends);
 
   it = g_sequence_iter_prev (it);
-  if (g_sequence_iter_is_end (it))
+
+  if (g_sequence_iter_is_end (it)) {
+    timeline->priv->duration = 0;
+    g_object_notify_by_pspec (G_OBJECT (timeline), properties[PROP_DURATION]);
     return;
+  }
 
   cduration = g_sequence_get (it);
+
   if (cduration && timeline->priv->duration != *cduration) {
     GST_DEBUG ("track duration : %" GST_TIME_FORMAT " current : %"
         GST_TIME_FORMAT, GST_TIME_ARGS (*cduration),
