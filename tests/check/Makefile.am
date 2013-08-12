@@ -202,6 +202,7 @@ check_PROGRAMS = \
 	$(check_opus)  \
 	$(check_curl) \
 	$(check_shm) \
+	elements/aiffparse \
 	elements/autoconvert \
 	elements/autovideoconvert \
 	elements/asfmux \
