@@ -9,6 +9,7 @@ libgstrtpmanager_la_SOURCES = gstrtpmanager.c \
 			      gstrtpjitterbuffer.c \
 			      gstrtpmux.c \
 			      gstrtpptdemux.c \
+			      gstrtprtxqueue.c \
 			      gstrtpssrcdemux.c \
 			      rtpjitterbuffer.c      \
 			      rtpsession.c      \
@@ -22,6 +23,7 @@ noinst_HEADERS = gstrtpbin.h \
 		 gstrtpmux.h \
                  gstrtpptdemux.h \
                  gstrtpssrcdemux.h \
+                 gstrtprtxqueue.h \
                  rtpjitterbuffer.h \
 		 rtpsession.h  \
 		 rtpsource.h  \
