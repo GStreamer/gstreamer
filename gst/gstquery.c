@@ -1725,7 +1725,7 @@ gst_query_get_n_allocation_metas (GstQuery * query)
  * gst_query_parse_nth_allocation_meta:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @index: position in the metadata API array to read
- * @params: (out) (allow-none): API specific flags
+ * @params: (out) (transfer none) (allow-none): API specific flags
  *
  * Parse an available query and get the metadata API
  * at @index of the metadata API array.
@@ -1786,7 +1786,7 @@ gst_query_remove_nth_allocation_meta (GstQuery * query, guint index)
  * gst_query_find_allocation_meta:
  * @query: a GST_QUERY_ALLOCATION type query #GstQuery
  * @api: the metadata API
- * @index: (out) (allow-none): the index
+ * @index: (out) (transfer none) (allow-none): the index
  *
  * Check if @query has metadata @api set. When this function returns TRUE,
  * @index will contain the index where the requested API and the flags can be
@@ -2243,7 +2243,7 @@ gst_query_new_accept_caps (GstCaps * caps)
 /**
  * gst_query_parse_accept_caps:
  * @query: The query to parse
- * @caps: (out): A pointer to the caps
+ * @caps: (out) (transfer none): A pointer to the caps
  *
  * Get the caps from @query. The caps remains valid as long as @query remains
  * valid.
@@ -2344,7 +2344,7 @@ gst_query_new_caps (GstCaps * filter)
 /**
  * gst_query_parse_caps:
  * @query: The query to parse
- * @filter: (out): A pointer to the caps filter
+ * @filter: (out) (transfer none): A pointer to the caps filter
  *
  * Get the filter from the caps @query. The caps remains valid as long as
  * @query remains valid.
@@ -2384,7 +2384,7 @@ gst_query_set_caps_result (GstQuery * query, GstCaps * caps)
 /**
  * gst_query_parse_caps_result:
  * @query: The query to parse
- * @caps: (out): A pointer to the caps
+ * @caps: (out) (transfer none): A pointer to the caps
  *
  * Get the caps result from @query. The caps remains valid as long as
  * @query remains valid.
@@ -2485,7 +2485,7 @@ gst_query_set_context (GstQuery * query, GstContext * context)
 /**
  * gst_query_parse_context:
  * @query: The query to parse
- * @context: (out): A pointer to store the #GstContext
+ * @context: (out) (transfer none): A pointer to store the #GstContext
  *
  * Get the context from the context @query. The context remains valid as long as
  * @query remains valid.
@@ -2572,7 +2572,7 @@ gst_query_get_n_context_types (GstQuery * query)
 /**
  * gst_query_parse_nth_context_type:
  * @query: a GST_QUERY_CONTEXT type query
- * @context_type: (out) (allow-none): the context type, or NULL
+ * @context_type: (out) (transfer none) (allow-none): the context type, or NULL
  *
  * Parse a context type from an existing GST_QUERY_CONTEXT query
  * from @index.
