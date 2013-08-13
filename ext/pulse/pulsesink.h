@@ -35,7 +35,7 @@
 #include <pulse/pulseaudio.h>
 #include <pulse/thread-mainloop.h>
 
-#include "pulseprobe.h"
+#include "pulseutil.h"
 
 G_BEGIN_DECLS
 
@@ -66,8 +66,6 @@ struct _GstPulseSink
 
   gchar *server, *device, *stream_name, *client_name;
   GstPulseDeviceInfo device_info;
-
-  GstPulseProbe *probe;
 
   gdouble volume;
   gboolean volume_set:1;

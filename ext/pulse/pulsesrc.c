@@ -290,8 +290,6 @@ gst_pulsesrc_init (GstPulseSrc * pulsesrc)
   pulsesrc->properties = NULL;
   pulsesrc->proplist = NULL;
 
-  pulsesrc->probe = gst_pulseprobe_new (G_OBJECT (pulsesrc), G_OBJECT_GET_CLASS (pulsesrc), PROP_DEVICE, pulsesrc->server, FALSE, TRUE);        /* FALSE for sinks, TRUE for sources */
-
   /* this should be the default but it isn't yet */
   gst_audio_base_src_set_slave_method (GST_AUDIO_BASE_SRC (pulsesrc),
       GST_AUDIO_BASE_SRC_SLAVE_SKEW);
@@ -353,11 +351,6 @@ gst_pulsesrc_finalize (GObject * object)
     gst_structure_free (pulsesrc->properties);
   if (pulsesrc->proplist)
     pa_proplist_free (pulsesrc->proplist);
-
-  if (pulsesrc->probe) {
-    gst_pulseprobe_free (pulsesrc->probe);
-    pulsesrc->probe = NULL;
-  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -714,8 +707,6 @@ gst_pulsesrc_set_property (GObject * object,
     case PROP_SERVER:
       g_free (pulsesrc->server);
       pulsesrc->server = g_value_dup_string (value);
-      if (pulsesrc->probe)
-        gst_pulseprobe_set_server (pulsesrc->probe, pulsesrc->server);
       break;
     case PROP_DEVICE:
       g_free (pulsesrc->device);

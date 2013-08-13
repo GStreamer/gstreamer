@@ -2435,11 +2435,6 @@ gst_pulsesink_init (GstPulseSink * pulsesink)
   GST_AUDIO_BASE_SINK (pulsesink)->provided_clock =
       gst_audio_clock_new ("GstPulseSinkClock",
       (GstAudioClockGetTimeFunc) gst_pulsesink_get_time, pulsesink, NULL);
-
-  /* TRUE for sinks, FALSE for sources */
-  pulsesink->probe = gst_pulseprobe_new (G_OBJECT (pulsesink),
-      G_OBJECT_GET_CLASS (pulsesink), PROP_DEVICE, pulsesink->device,
-      TRUE, FALSE);
 }
 
 static void
@@ -2457,11 +2452,6 @@ gst_pulsesink_finalize (GObject * object)
     gst_structure_free (pulsesink->properties);
   if (pulsesink->proplist)
     pa_proplist_free (pulsesink->proplist);
-
-  if (pulsesink->probe) {
-    gst_pulseprobe_free (pulsesink->probe);
-    pulsesink->probe = NULL;
-  }
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -2835,8 +2825,6 @@ gst_pulsesink_set_property (GObject * object,
     case PROP_SERVER:
       g_free (pulsesink->server);
       pulsesink->server = g_value_dup_string (value);
-      if (pulsesink->probe)
-        gst_pulseprobe_set_server (pulsesink->probe, pulsesink->server);
       break;
     case PROP_DEVICE:
       g_free (pulsesink->device);

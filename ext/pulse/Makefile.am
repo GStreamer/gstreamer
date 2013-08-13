@@ -2,7 +2,6 @@ plugin_LTLIBRARIES = libgstpulse.la
 
 libgstpulse_la_SOURCES = \
 	plugin.c \
-	pulseprobe.c \
 	pulsesink.c \
 	pulsesrc.c \
 	pulseutil.c
@@ -15,7 +14,6 @@ libgstpulse_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstpulse_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
-	pulseprobe.h \
 	pulsesink.h \
 	pulsesrc.h \
 	pulseutil.h
