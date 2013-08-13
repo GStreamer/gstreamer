@@ -10,8 +10,7 @@ libgstqa_@GST_API_VERSION@_la_SOURCES = \
 	gst-qa-scenario.c \
 	gst-qa-override.c \
 	gst-qa-override-registry.c \
-	gst-qa-file-checker.c \
-	gst-qa-monitor-preload.c
+	gst-qa-file-checker.c
 
 noinst_HEADERS = \
 	gettext.h \
@@ -31,7 +30,8 @@ noinst_HEADERS = \
 
 lib_LTLIBRARIES = \
 	libgstqa-@GST_API_VERSION@.la \
-	libgstqa-default-overrides-@GST_API_VERSION@.la
+	libgstqa-default-overrides-@GST_API_VERSION@.la \
+	libgstqa-preload-@GST_API_VERSION@.la
 
 libgstqa_@GST_API_VERSION@_la_CFLAGS = $(GST_ALL_CFLAGS) $(GIO_CFLAGS)
 libgstqa_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \
@@ -56,6 +56,18 @@ libgstqa_default_overrides_@GST_API_VERSION@_la_LIBADD = \
 
 libgstqa_default_overrides_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/qa
 libgstqa_default_overrides_@GST_API_VERSION@include_HEADERS =
+
+libgstqa_preload_@GST_API_VERSION@_la_SOURCES = \
+	gst-qa-monitor-preload.c
+
+libgstqa_preload_@GST_API_VERSION@_la_CFLAGS = $(GST_ALL_CFLAGS)
+libgstqa_preload_@GST_API_VERSION@_la_LDFLAGS =  $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \
+	$(GST_LT_LDFLAGS) -lgstqa-@GST_API_VERSION@
+libgstqa_preload_@GST_API_VERSION@_la_LIBADD =  \
+	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
+	$(GST_ALL_LIBS) -lgstqa-@GST_API_VERSION@
+libgstqa_preload_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/qa
+libgstqa_preload_@GST_API_VERSION@include_HEADERS =
 
 bin_PROGRAMS = \
 	gst-qa-@GST_API_VERSION@ \
