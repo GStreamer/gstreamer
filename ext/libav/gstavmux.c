@@ -939,6 +939,8 @@ gst_ffmpegmux_register (GstPlugin * plugin)
     while (*p) {
       if (*p == '.')
         *p = '_';
+      if (*p == ',')
+        *p = '_';
       p++;
     }
 
