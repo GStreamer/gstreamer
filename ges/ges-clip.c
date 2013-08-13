@@ -1206,7 +1206,6 @@ ges_clip_split (GESClip * clip, guint64 position)
 {
   GList *tmp;
   GESClip *new_object;
-
   GstClockTime start, inpoint, duration;
 
   g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
@@ -1243,7 +1242,6 @@ ges_clip_split (GESClip * clip, guint64 position)
   ges_layer_add_clip (clip->priv->layer, new_object);
   ges_clip_set_moving_from_layer (new_object, FALSE);
 
-  _set_duration0 (GES_TIMELINE_ELEMENT (clip), position - _START (clip));
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = tmp->next) {
     GESTrackElement *new_trackelement, *trackelement =
         GES_TRACK_ELEMENT (tmp->data);
@@ -1267,7 +1265,11 @@ ges_clip_split (GESClip * clip, guint64 position)
         GES_TIMELINE_ELEMENT (new_trackelement));
     ges_track_element_copy_properties (GES_TIMELINE_ELEMENT (trackelement),
         GES_TIMELINE_ELEMENT (new_trackelement));
+
+    ges_track_element_split_bindings (trackelement, new_trackelement, position);
   }
+
+  _set_duration0 (GES_TIMELINE_ELEMENT (clip), position - _START (clip));
 
   return new_object;
 }

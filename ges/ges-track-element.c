@@ -1392,6 +1392,79 @@ ges_track_element_copy_properties (GESTimelineElement * element,
   g_free (specs);
 }
 
+void
+ges_track_element_split_bindings (GESTrackElement * element,
+    GESTrackElement * new_element, guint64 position)
+{
+  GParamSpec **specs;
+  guint n, n_specs;
+  GstControlBinding *binding;
+  GstTimedValueControlSource *source, *new_source;
+
+  specs =
+      ges_track_element_list_children_properties (GES_TRACK_ELEMENT (element),
+      &n_specs);
+  for (n = 0; n < n_specs; ++n) {
+    GList *values, *tmp;
+    GstTimedValue *last_value = NULL;
+    gboolean past_position = FALSE;
+    GstInterpolationMode mode;
+
+    binding = ges_track_element_get_control_binding (element, specs[n]->name);
+    if (!binding)
+      continue;
+
+    g_object_get (binding, "control_source", &source, NULL);
+
+    /* FIXME : this should work as well with other types of control sources */
+    if (!GST_IS_TIMED_VALUE_CONTROL_SOURCE (source))
+      continue;
+
+    new_source =
+        GST_TIMED_VALUE_CONTROL_SOURCE (gst_interpolation_control_source_new
+        ());
+
+    g_object_get (source, "mode", &mode, NULL);
+    g_object_set (new_source, "mode", mode, NULL);
+
+    values =
+        gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
+        (source));
+    for (tmp = values; tmp; tmp = tmp->next) {
+      GstTimedValue *value = tmp->data;
+      if (value->timestamp > position) {
+        gfloat value_at_pos;
+
+        /* FIXME We should be able to use gst_control_source_get_value so
+         * all modes are handled. Right now that method only works if the value
+         * we are looking for is between two actual keyframes which is not enough
+         * in our case. bug #706621 */
+        value_at_pos =
+            interpolate_values_for_position (last_value, value, position);
+
+        past_position = TRUE;
+
+        gst_timed_value_control_source_set (new_source, position, value_at_pos);
+        gst_timed_value_control_source_set (new_source, value->timestamp,
+            value->value);
+        gst_timed_value_control_source_unset (source, value->timestamp);
+        gst_timed_value_control_source_set (source, position, value_at_pos);
+      } else if (past_position) {
+        gst_timed_value_control_source_unset (source, value->timestamp);
+        gst_timed_value_control_source_set (new_source, value->timestamp,
+            value->value);
+      }
+      last_value = value;
+    }
+
+    /* We only manage direct bindings, see TODO in set_control_source */
+    ges_track_element_set_control_source (new_element,
+        GST_CONTROL_SOURCE (new_source), specs[n]->name, "direct");
+  }
+
+  g_free (specs);
+}
+
 /**
  * ges_track_element_edit:
  * @object: the #GESTrackElement to edit
