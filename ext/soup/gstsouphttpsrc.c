@@ -1466,7 +1466,8 @@ gst_soup_http_src_query (GstBaseSrc * bsrc, GstQuery * query)
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_URI:
       gst_query_set_uri (query, src->location);
-      gst_query_set_uri_redirection (query, src->redirection_uri);
+      if (src->redirection_uri != NULL)
+        gst_query_set_uri_redirection (query, src->redirection_uri);
       ret = TRUE;
       break;
     default:
