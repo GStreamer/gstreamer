@@ -3906,13 +3906,13 @@ gst_rtspsrc_handle_data (GstRTSPSrc * src, GstRTSPMessage * message)
 
       stream_id =
           g_strdup_printf ("%s/%d", g_checksum_get_string (cs), ostream->id);
-      g_checksum_free (cs);
       event = gst_event_new_stream_start (stream_id);
       gst_event_set_group_id (event, group_id);
 
       g_free (stream_id);
       gst_rtspsrc_stream_push_event (src, ostream, event);
     }
+    g_checksum_free (cs);
 
     gst_rtspsrc_activate_streams (src);
     src->need_activate = FALSE;
