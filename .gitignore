@@ -62,3 +62,7 @@ Build
 *.sdf
 *.opensdf
 *.DS_Store
+
+/test-driver
+*.trs
+*.log
