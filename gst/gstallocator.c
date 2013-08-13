@@ -453,13 +453,11 @@ _default_mem_copy (GstMemoryDefault * mem, gssize offset, gsize size)
   if (size == -1)
     size = mem->mem.size > offset ? mem->mem.size - offset : 0;
 
-  copy =
-      _default_mem_new_block (0, mem->mem.maxsize, mem->mem.align,
-      mem->mem.offset + offset, size);
+  copy = _default_mem_new_block (0, size, mem->mem.align, 0, size);
+
   GST_CAT_DEBUG (GST_CAT_PERFORMANCE,
-      "memcpy %" G_GSIZE_FORMAT " memory %p -> %p", mem->mem.maxsize, mem,
-      copy);
-  memcpy (copy->data, mem->data, mem->mem.maxsize);
+      "memcpy %" G_GSIZE_FORMAT " memory %p -> %p", size, mem, copy);
+  memcpy (copy->data, mem->data + mem->mem.offset + offset, size);
 
   return copy;
 }
