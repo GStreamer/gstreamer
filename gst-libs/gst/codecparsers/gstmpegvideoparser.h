@@ -466,11 +466,13 @@ struct _GstMpegVideoSliceHdr
 };
 
 /**
- * GstMpegVideoTypeOffsetSize:
- * @type: the type of the packet that start at @offset
+ * GstMpegVideoPacket:
+ * @type: the type of the packet that start at @offset, as a #GstMpegVideoPacketTypeCode
  * @data: the data containing the packet starting at @offset
- * @offset: the offset of the packet start in bytes, it is the exact, start of the packet, no sync code included
- * @size: The size in bytes of the packet or -1 if the end wasn't found. It is the exact size of the packet, no sync code included
+ * @offset: the offset of the packet start in bytes from @data. This is the
+ *     start of the packet itself without the sync code
+ * @size: The size in bytes of the packet or -1 if the end wasn't found. This
+ *     is the size of the packet itself without the sync code
  *
  * A structure that contains the type of a packet, its offset and its size
  */

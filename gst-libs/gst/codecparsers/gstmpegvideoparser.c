@@ -238,14 +238,17 @@ scan_for_start_codes (const GstByteReader * reader, guint offset, guint size)
 
 /**
  * gst_mpeg_video_parse:
+ * @packet: a #GstMpegVideoPacket to fill with the data and offset of the
+ *     next packet found
  * @data: The data to parse
  * @size: The size of @data
  * @offset: The offset from which to start parsing
  *
- * Parses the MPEG 1/2 video bitstream contained in @data , and returns the
- * detect packets as a list of #GstMpegVideoTypeOffsetSize.
+ * Parses the MPEG 1/2 video bitstream contained in @data, and returns the
+ * offset, and if known also the size, in @packet. This function will scan
+ * the data to find the next packet if needed.
  *
- * Returns: TRUE if a packet start code was found
+ * Returns: TRUE if a packet start code was found, otherwise FALSE.
  */
 gboolean
 gst_mpeg_video_parse (GstMpegVideoPacket * packet,
