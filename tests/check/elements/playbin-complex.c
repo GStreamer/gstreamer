@@ -828,7 +828,7 @@ GST_START_TEST (test_autoplug_decoder_sink_combination)
 {
   GstElement *playbin;
   GstElement *decoder = NULL;
-  GstElement *sink;
+  GstElement *sink, *asink;
   gchar *path, *uri;
 
   fail_unless (gst_element_register (NULL, "faketheoradec1",
@@ -845,6 +845,10 @@ GST_START_TEST (test_autoplug_decoder_sink_combination)
   g_free (path);
 
   playbin = create_playbin (uri, FALSE);
+
+  asink = gst_element_factory_make ("fakesink", NULL);
+  g_object_set (asink, "sync", TRUE, NULL);
+  g_object_set (playbin, "audio-sink", asink, NULL);
 
   g_signal_connect (playbin, "deep-notify::caps",
       G_CALLBACK (pipeline_deep_notify_caps_cb), &decoder);
