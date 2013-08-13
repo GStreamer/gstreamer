@@ -218,7 +218,7 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
    * GstDiscoverer::finished:
    * @discoverer: the #GstDiscoverer
    *
-   * Will be emitted when all pending URIs have been processed.
+   * Will be emitted in async mode when all pending URIs have been processed.
    */
   gst_discoverer_signals[SIGNAL_FINISHED] =
       g_signal_new ("finished", G_TYPE_FROM_CLASS (klass), G_SIGNAL_RUN_LAST,
@@ -245,8 +245,8 @@ gst_discoverer_class_init (GstDiscovererClass * klass)
    *                            free this #GError, it will be freed by
    *                            the discoverer.
    *
-   * Will be emitted when all information on a URI could be discovered, or
-   * an error ocurred.
+   * Will be emitted in async mode when all information on a URI could be
+   * discovered, or an error occurred.
    *
    * When an error occurs, @info might still contain some partial information,
    * depending on the circumstances of the error.
