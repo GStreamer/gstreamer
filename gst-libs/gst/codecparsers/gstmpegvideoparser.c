@@ -200,14 +200,13 @@ set_fps_from_code (GstMpegVideoSequenceHdr * seqhdr, guint8 fps_code)
 }
 
 /* @size and @offset are wrt current reader position */
-static inline guint
+static inline gint
 scan_for_start_codes (const GstByteReader * reader, guint offset, guint size)
 {
   const guint8 *data;
   guint i = 0;
 
-  g_return_val_if_fail ((guint64) offset + size <= reader->size - reader->byte,
-      -1);
+  g_assert ((guint64) offset + size <= reader->size - reader->byte);
 
   /* we can't find the pattern with less than 4 bytes */
   if (G_UNLIKELY (size < 4))
