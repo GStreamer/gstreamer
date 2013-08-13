@@ -118,6 +118,10 @@ static GParamSpec **default_list_children_properties (GESTrackElement * object,
     guint * n_properties);
 
 static void
+_update_control_bindings (GESTimelineElement * element, GstClockTime inpoint,
+    GstClockTime duration);
+
+static void
 ges_track_element_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
@@ -281,6 +285,117 @@ ges_track_element_init (GESTrackElement * self)
       g_free, NULL);
 }
 
+static gfloat
+interpolate_values_for_position (GstTimedValue * first_value,
+    GstTimedValue * second_value, guint64 position)
+{
+  gfloat diff;
+  GstClockTime interval;
+  gfloat value_at_pos;
+
+  diff = second_value->value - first_value->value;
+  interval = second_value->timestamp - first_value->timestamp;
+
+  if (position > first_value->timestamp)
+    value_at_pos =
+        first_value->value + ((float) (position -
+            first_value->timestamp) / (float) interval) * diff;
+  else
+    value_at_pos =
+        first_value->value - ((float) (first_value->timestamp -
+            position) / (float) interval) * diff;
+
+  return value_at_pos;
+}
+
+static void
+_update_control_bindings (GESTimelineElement * element, GstClockTime inpoint,
+    GstClockTime duration)
+{
+  GParamSpec **specs;
+  guint n, n_specs;
+  GstControlBinding *binding;
+  GstTimedValueControlSource *source;
+  GESTrackElement *self = GES_TRACK_ELEMENT (element);
+
+  specs = ges_track_element_list_children_properties (self, &n_specs);
+
+  for (n = 0; n < n_specs; ++n) {
+    GList *values, *tmp;
+    GstTimedValue *last, *first, *prev = NULL, *next = NULL;
+    gfloat value_at_pos;
+
+    binding = ges_track_element_get_control_binding (self, specs[n]->name);
+
+    if (!binding)
+      continue;
+
+    g_object_get (binding, "control_source", &source, NULL);
+
+    if (duration == 0) {
+      gst_timed_value_control_source_unset_all (GST_TIMED_VALUE_CONTROL_SOURCE
+          (source));
+      continue;
+    }
+
+    values =
+        gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
+        (source));
+
+    if (g_list_length (values) == 0)
+      continue;
+
+    first = values->data;
+
+    for (tmp = values->next; tmp; tmp = tmp->next) {
+      next = tmp->data;
+
+      if (next->timestamp > inpoint)
+        break;
+    }
+
+    value_at_pos = interpolate_values_for_position (first, next, inpoint);
+    gst_timed_value_control_source_unset (source, first->timestamp);
+    gst_timed_value_control_source_set (source, inpoint, value_at_pos);
+
+    values =
+        gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
+        (source));
+
+    if (duration != GST_CLOCK_TIME_NONE) {
+      last = g_list_last (values)->data;
+
+      for (tmp = g_list_last (values)->prev; tmp; tmp = tmp->prev) {
+        prev = tmp->data;
+
+        if (prev->timestamp < duration + inpoint)
+          break;
+      }
+
+      value_at_pos =
+          interpolate_values_for_position (prev, last, duration + inpoint);
+
+      gst_timed_value_control_source_unset (source, last->timestamp);
+      gst_timed_value_control_source_set (source, duration + inpoint,
+          value_at_pos);
+      values =
+          gst_timed_value_control_source_get_all (GST_TIMED_VALUE_CONTROL_SOURCE
+          (source));
+    }
+
+    for (tmp = values; tmp; tmp = tmp->next) {
+      GstTimedValue *value = tmp->data;
+      if (value->timestamp < inpoint)
+        gst_timed_value_control_source_unset (source, value->timestamp);
+      else if (duration != GST_CLOCK_TIME_NONE
+          && value->timestamp > duration + inpoint)
+        gst_timed_value_control_source_unset (source, value->timestamp);
+    }
+  }
+
+  g_free (specs);
+}
+
 static gboolean
 _set_start (GESTimelineElement * element, GstClockTime start)
 {
@@ -311,6 +426,8 @@ _set_inpoint (GESTimelineElement * element, GstClockTime inpoint)
   } else
     object->priv->pending_inpoint = inpoint;
 
+  _update_control_bindings (element, inpoint, GST_CLOCK_TIME_NONE);
+
   return TRUE;
 }
 
@@ -331,6 +448,9 @@ _set_duration (GESTimelineElement * element, GstClockTime duration)
     g_object_set (priv->gnlobject, "duration", duration, NULL);
   } else
     priv->pending_duration = duration;
+
+  _update_control_bindings (element, ges_timeline_element_get_inpoint (element),
+      duration);
 
   return TRUE;
 }
