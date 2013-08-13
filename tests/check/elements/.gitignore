@@ -23,5 +23,6 @@ videoscale
 vorbistag
 playbin
 playbin-compressed
+playbin-complex
 streamsynchronizer
 subparse
