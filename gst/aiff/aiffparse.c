@@ -74,6 +74,8 @@ static gboolean gst_aiff_parse_sink_activate (GstPad * sinkpad,
     GstObject * parent);
 static gboolean gst_aiff_parse_sink_activate_mode (GstPad * sinkpad,
     GstObject * parent, GstPadMode mode, gboolean active);
+static gboolean gst_aiff_parse_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * buf);
 static gboolean gst_aiff_parse_send_event (GstElement * element,
     GstEvent * event);
 static GstStateChangeReturn gst_aiff_parse_change_state (GstElement * element,
@@ -191,6 +193,8 @@ gst_aiff_parse_init (GstAiffParse * aiffparse)
       GST_DEBUG_FUNCPTR (gst_aiff_parse_sink_activate));
   gst_pad_set_activatemode_function (aiffparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_aiff_parse_sink_activate_mode));
+  gst_pad_set_event_function (aiffparse->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_aiff_parse_sink_event));
   gst_pad_set_chain_function (aiffparse->sinkpad,
       GST_DEBUG_FUNCPTR (gst_aiff_parse_chain));
   gst_element_add_pad (GST_ELEMENT_CAST (aiffparse), aiffparse->sinkpad);
@@ -1669,6 +1673,130 @@ gst_aiff_parse_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
   }
   return res;
 };
+
+static GstFlowReturn
+gst_aiff_parse_flush_data (GstAiffParse * aiff)
+{
+  GstFlowReturn ret = GST_FLOW_OK;
+  guint av;
+
+  if ((av = gst_adapter_available (aiff->adapter)) > 0) {
+    aiff->dataleft = av;
+    aiff->end_offset = aiff->offset + av;
+    ret = gst_aiff_parse_stream_data (aiff);
+  }
+
+  return ret;
+}
+
+
+static gboolean
+gst_aiff_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GstAiffParse *aiff = GST_AIFF_PARSE (parent);
+  gboolean ret = TRUE;
+
+  GST_DEBUG_OBJECT (aiff, "handling %s event", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      /* discard, we'll come up with proper src caps */
+      gst_event_unref (event);
+      break;
+    }
+    case GST_EVENT_SEGMENT:
+    {
+      gint64 start, stop, offset = 0, end_offset = -1;
+      GstSegment segment;
+
+      /* some debug output */
+      gst_event_copy_segment (event, &segment);
+      GST_DEBUG_OBJECT (aiff, "received segment %" GST_SEGMENT_FORMAT,
+          &segment);
+
+      /* now we are either committed to TIME or BYTE format,
+       * and we only expect a BYTE segment, e.g. following a seek */
+      if (segment.format == GST_FORMAT_BYTES) {
+        /* handle (un)signed issues */
+        start = segment.start;
+        stop = segment.stop;
+        if (start > 0) {
+          offset = start;
+          start -= aiff->datastart;
+          start = MAX (start, 0);
+        }
+        if (stop > 0) {
+          end_offset = stop;
+          segment.stop -= aiff->datastart;
+          segment.stop = MAX (stop, 0);
+        }
+        if (aiff->state == AIFF_PARSE_DATA &&
+            aiff->segment.format == GST_FORMAT_TIME) {
+          guint64 bps = aiff->bps;
+
+          /* operating in format TIME, so we can convert */
+          if (bps) {
+            if (start >= 0)
+              start =
+                  gst_util_uint64_scale_ceil (start, GST_SECOND,
+                  (guint64) aiff->bps);
+            if (stop >= 0)
+              stop =
+                  gst_util_uint64_scale_ceil (stop, GST_SECOND,
+                  (guint64) aiff->bps);
+          } else {
+            GST_DEBUG_OBJECT (aiff, "unable to compute segment start/stop");
+            goto exit;
+          }
+        }
+      } else {
+        GST_DEBUG_OBJECT (aiff, "unsupported segment format, ignoring");
+        goto exit;
+      }
+
+      segment.start = start;
+      segment.stop = stop;
+
+      /* accept upstream's notion of segment and distribute along */
+      if (aiff->state == AIFF_PARSE_DATA) {
+        segment.format = aiff->segment.format;
+        segment.time = segment.position = segment.start;
+        segment.duration = aiff->segment.duration;
+        segment.base = gst_segment_to_running_time (&aiff->segment,
+            GST_FORMAT_TIME, aiff->segment.position);
+      }
+
+      gst_segment_copy_into (&segment, &aiff->segment);
+
+      if (aiff->start_segment)
+        gst_event_unref (aiff->start_segment);
+
+      aiff->start_segment = gst_event_new_segment (&segment);
+
+      /* stream leftover data in current segment */
+      if (aiff->state == AIFF_PARSE_DATA)
+        gst_aiff_parse_flush_data (aiff);
+      /* and set up streaming thread for next one */
+      aiff->offset = offset;
+      aiff->end_offset = end_offset;
+      if (aiff->end_offset > 0) {
+        aiff->dataleft = aiff->end_offset - aiff->offset;
+      } else {
+        /* infinity; upstream will EOS when done */
+        aiff->dataleft = G_MAXUINT64;
+      }
+    exit:
+      gst_event_unref (event);
+      break;
+    }
+    default:
+      ret = gst_pad_event_default (aiff->sinkpad, parent, event);
+      break;
+  }
+
+  return ret;
+}
 
 static GstStateChangeReturn
 gst_aiff_parse_change_state (GstElement * element, GstStateChange transition)
