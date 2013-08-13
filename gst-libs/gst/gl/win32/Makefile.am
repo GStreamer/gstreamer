@@ -18,12 +18,12 @@ noinst_HEADERS += gstglwindow_win32_egl.h
 endif
 
 libgstgl_win32_la_CFLAGS = \
+	-I$(top_srcdir)/gst-libs \
 	$(GL_CFLAGS) \
 	$(X_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
-	$(GST_CFLAGS) \
-	-I$(top_srcdir)/gst-libs
+	$(GST_CFLAGS)
 
 libgstgl_win32_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) \

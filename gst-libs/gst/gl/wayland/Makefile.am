@@ -11,12 +11,12 @@ noinst_HEADERS = \
 	wayland_event_source.h
 
 libgstgl_wayland_la_CFLAGS = \
+	-I$(top_srcdir)/gst-libs \
 	$(GL_CFLAGS) \
 	$(X_CFLAGS) \
 	$(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) \
-	$(GST_CFLAGS) \
-	-I$(top_srcdir)/gst-libs
+	$(GST_CFLAGS)
 
 libgstgl_wayland_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) \
