@@ -88,4 +88,6 @@ void gst_pulse_cvolume_from_linear (pa_cvolume *v, unsigned channels, gdouble vo
 
 pa_proplist *gst_pulse_make_proplist (const GstStructure *properties);
 
+GstCaps * gst_pulse_format_info_to_caps (pa_format_info * format);
+
 #endif
