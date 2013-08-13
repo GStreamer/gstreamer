@@ -1424,6 +1424,8 @@ gst_query_parse_uri (GstQuery * query, gchar ** uri)
  * @uri: the URI to set
  *
  * Answer a URI query by setting the requested URI redirection.
+ *
+ * Since: 1.2
  */
 void
 gst_query_set_uri_redirection (GstQuery * query, const gchar * uri)
@@ -1448,6 +1450,8 @@ gst_query_set_uri_redirection (GstQuery * query, const gchar * uri)
  * Parse an URI query, writing the URI into @uri as a newly
  * allocated string, if the respective parameters are non-NULL.
  * Free the string with g_free() after usage.
+ *
+ * Since: 1.2
  */
 void
 gst_query_parse_uri_redirection (GstQuery * query, gchar ** uri)
