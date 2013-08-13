@@ -223,7 +223,7 @@ gst_qa_pad_monitor_check_raw_audio_caps_complete (GstQaPadMonitor * monitor,
       GST_TYPE_LIST, GST_TYPE_INT_RANGE, 0);
   _check_field_type (monitor, structure, "endianness", G_TYPE_INT,
       GST_TYPE_LIST, 0);
-  _check_field_type (monitor, structure, "channel-layout", G_TYPE_STRING,
+  _check_field_type (monitor, structure, "channel-positions", GST_TYPE_ARRAY,
       GST_TYPE_LIST, 0);
 }
 
