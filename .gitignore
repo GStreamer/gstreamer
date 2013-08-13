@@ -37,6 +37,7 @@ mkinstalldirs
 py-compile
 registry.*
 coverage-report.txt
+/test-driver
 .deps
 .libs
 *~
@@ -50,3 +51,5 @@ Build
 *.sdf
 *.opensdf
 *.DS_Store
+*.log
+*.trs
