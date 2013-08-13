@@ -1,7 +1,4 @@
-public_headers = \
-		qa.h
-
-c_sources = \
+libgstqa_@GST_API_VERSION@_la_SOURCES = \
 	gst-qa-runner.c \
 	gst-qa-reporter.c \
 	gst-qa-monitor.c \
@@ -16,51 +13,60 @@ c_sources = \
 	gst-qa-file-checker.c \
 	gst-qa-monitor-preload.c
 
-noinst_HEADERS =
-	gst-qa-i18n-lib.h
+noinst_HEADERS = \
+	gettext.h \
+	gst-qa-bin-monitor.h \
+	gst-qa-element-monitor.h \
+	gst-qa-file-checker.h \
+	gst-qa-i18n-lib.h \
+	gst-qa-monitor-factory.h \
+	gst-qa-monitor.h \
+	gst-qa-override.h \
+	gst-qa-override-registry.h \
+	gst-qa-pad-monitor.h \
+	gst-qa-reporter.h \
+	gst-qa-report.h \
+	gst-qa-runner.h \
+	gst-qa-scenario.h
 
 lib_LTLIBRARIES = \
 	libgstqa-@GST_API_VERSION@.la \
 	libgstqa-default-overrides-@GST_API_VERSION@.la
 
-libgstqa_@GST_API_VERSION@_la_SOURCES = \
-    $(c_sources)
-
-libgstqa_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS)
+libgstqa_@GST_API_VERSION@_la_CFLAGS = $(GST_ALL_CFLAGS) $(GIO_CFLAGS)
 libgstqa_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \
 	$(GST_LT_LDFLAGS) $(GIO_LDFLAGS)
 libgstqa_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
-	$(GST_LIBS) $(GIO_LIBS)
+	$(GST_ALL_LIBS) $(GIO_LIBS)
 
 libgstqa_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/qa
-libgstqa_@GST_API_VERSION@include_HEADERS = $(public_headers)
+libgstqa_@GST_API_VERSION@include_HEADERS = \
+	qa.h
 
 libgstqa_default_overrides_@GST_API_VERSION@_la_SOURCES = \
     gst-qa-default-overrides.c
 
-libgstqa_default_overrides_@GST_API_VERSION@_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) $(GIO_CFLAGS)
+libgstqa_default_overrides_@GST_API_VERSION@_la_CFLAGS = $(GST_ALL_CFLAGS) $(GIO_CFLAGS)
 libgstqa_default_overrides_@GST_API_VERSION@_la_LDFLAGS = $(GST_LIB_LDFLAGS) $(GST_ALL_LDFLAGS) \
 	$(GST_LT_LDFLAGS) $(GIO_LDFLAGS)
 libgstqa_default_overrides_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) $(GST_BASE_LIBS) \
-	$(GST_LIBS) $(GIO_LIBS)
+	$(GST_ALL_LIBS) $(GIO_LIBS)
 
 libgstqa_default_overrides_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/qa
 libgstqa_default_overrides_@GST_API_VERSION@include_HEADERS =
 
-bin_PROGRAMS = gst-qa-@GST_API_VERSION@ gst-qa-transcoding-@GST_API_VERSION@ gst-qa-file-check-@GST_API_VERSION@
-AM_CFLAGS =  -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) $(GST_CFLAGS)
-LDADD = $(top_builddir)/gst/qa/libgstqa-@GST_API_VERSION@.la $(GST_PBUTILS_LIBS) $(GST_LIBS)
+bin_PROGRAMS = \
+	gst-qa-@GST_API_VERSION@ \
+	gst-qa-transcoding-@GST_API_VERSION@ \
+	gst-qa-file-check-@GST_API_VERSION@
 
-gst_qa_transcoding-@GST_API_VERSION@$(EXEEXT): $(LTLIBRARIES)
-gst_qa_@GST_API_VERSION@$(EXEEXT): $(LTLIBRARIES)
-gst_qa_file_check-@GST_API_VERSION@$(EXEEXT): $(LTLIBRARIES)
+AM_CFLAGS = $(GST_ALL_CFLAGS) $(GST_PBUTILS_CFLAGS)
+LDADD = $(top_builddir)/gst/qa/libgstqa-@GST_API_VERSION@.la $(GST_PBUTILS_LIBS) $(GST_LIBS)
 
 gst_qa_@GST_API_VERSION@_SOURCES = gst-qa.c
 gst_qa_transcoding_@GST_API_VERSION@_SOURCES = gst-qa-transcoding.c
-gst_qa_transcoding_@GST_API_VERSION@_CFLAGS = $(GST_CFLAGS) $(GST_PBUTILS_CFLAGS)
 gst_qa_file_check_@GST_API_VERSION@_SOURCES = gst-qa-file-check.c
-gst_qa_file_check_@GST_API_VERSION@_CFLAGS = $(GST_CFLAGS) $(GST_PBUTILS_CFLAGS)
 
 CLEANFILES =

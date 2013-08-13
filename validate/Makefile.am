@@ -1,8 +1,9 @@
 DISTCHECK_CONFIGURE_FLAGS=--enable-gtk-doc
 
-SUBDIRS = 		\
-	gst \
-	common \
+SUBDIRS = 	\
+	common 	\
+	data	\
+	gst 	\
 	po
 
 DIST_SUBDIRS = $(SUBDIRS)
