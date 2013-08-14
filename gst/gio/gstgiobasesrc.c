@@ -334,7 +334,7 @@ gst_gio_base_src_create (GstBaseSrc * base_src, guint64 offset, guint size,
         offset <= GST_BUFFER_OFFSET_END (src->cache)) {
       read = GST_BUFFER_OFFSET_END (src->cache) - offset;
       GST_LOG_OBJECT (src,
-          "Copying %" G_GUINT64_FORMAT " bytes from cached buffer at %"
+          "Copying %" G_GSSIZE_FORMAT " bytes from cached buffer at %"
           G_GUINT64_FORMAT, read, offset - GST_BUFFER_OFFSET (src->cache));
       gst_buffer_copy_into (newbuffer, src->cache, GST_BUFFER_COPY_MEMORY,
           offset - GST_BUFFER_OFFSET (src->cache), read);
