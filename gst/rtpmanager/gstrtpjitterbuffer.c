@@ -1211,8 +1211,8 @@ gst_rtp_jitter_buffer_sink_event (GstPad * pad, GstObject * parent,
       break;
     }
     case GST_EVENT_FLUSH_START:
-      gst_rtp_jitter_buffer_flush_start (jitterbuffer);
       ret = gst_pad_push_event (priv->srcpad, event);
+      gst_rtp_jitter_buffer_flush_start (jitterbuffer);
       break;
     case GST_EVENT_FLUSH_STOP:
       ret = gst_pad_push_event (priv->srcpad, event);
