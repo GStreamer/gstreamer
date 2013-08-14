@@ -1526,7 +1526,6 @@ gst_qa_pad_monitor_getcaps_func (GstPad * pad)
     /* We shouldn't need to lock the parent as this doesn't modify
      * other monitors, just does some peer_pad_caps */
     GST_QA_MONITOR_LOCK (pad_monitor);
-    gst_qa_pad_monitor_check_caps_complete (pad_monitor, ret);
 
     if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
       gst_qa_pad_monitor_check_caps_fields_proxied (pad_monitor, ret);
@@ -1549,6 +1548,8 @@ gst_qa_pad_monitor_setcaps_func (GstPad * pad, GstCaps * caps)
 
   GST_QA_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   GST_QA_MONITOR_LOCK (pad_monitor);
+
+  gst_qa_pad_monitor_check_caps_complete (pad_monitor, caps);
 
   if (caps) {
     structure = gst_caps_get_structure (caps, 0);
