@@ -31,6 +31,7 @@ gst-plugins-bad-*.tar.*
 
 .deps
 .libs
+.dirstamp
 *.lo
 *.la
 *.o
@@ -63,3 +64,7 @@ Build
 *.sdf
 *.opensdf
 *.DS_Store
+
+/test-driver
+*.log
+*.trs
