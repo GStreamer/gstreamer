@@ -748,7 +748,7 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
     return;
 
   if (src->automatic_redirect && SOUP_STATUS_IS_REDIRECTION (msg->status_code)) {
-    src->redirection_uri = g_strdup (soup_message_headers_get
+    src->redirection_uri = g_strdup (soup_message_headers_get_one
         (msg->response_headers, "Location"));
     GST_DEBUG_OBJECT (src, "%u redirect to \"%s\"", msg->status_code,
         src->redirection_uri);
