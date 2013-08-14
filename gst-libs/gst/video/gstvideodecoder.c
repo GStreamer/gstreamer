@@ -853,9 +853,16 @@ gst_video_decoder_finalize (GObject * object)
 static GstFlowReturn
 gst_video_decoder_flush (GstVideoDecoder * dec, gboolean hard)
 {
+  GstVideoDecoderClass *klass = GST_VIDEO_DECODER_GET_CLASS (dec);
   GstFlowReturn ret = GST_FLOW_OK;
 
   GST_LOG_OBJECT (dec, "flush hard %d", hard);
+
+  /* Inform subclass */
+  if (klass->reset) {
+    GST_FIXME_OBJECT (dec, "GstVideoDecoder::reset() is deprecated");
+    klass->reset (dec, hard);
+  }
 
   /* FIXME make some more distinction between hard and soft,
    * but subclass may not be prepared for that */
@@ -1646,16 +1653,11 @@ gst_video_decoder_clear_queues (GstVideoDecoder * dec)
 static void
 gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
 {
-  GstVideoDecoderClass *klass = GST_VIDEO_DECODER_GET_CLASS (decoder);
   GstVideoDecoderPrivate *priv = decoder->priv;
 
   GST_DEBUG_OBJECT (decoder, "reset full %d", full);
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-
-  /* Inform subclass */
-  if (klass->reset)
-    klass->reset (decoder, full);
 
   if (full) {
     gst_segment_init (&decoder->input_segment, GST_FORMAT_UNDEFINED);

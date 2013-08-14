@@ -211,6 +211,7 @@ struct _GstVideoDecoder
  *                  for subsequent decoding.
  * @reset:          Optional.
  *                  Allows subclass (decoder) to perform post-seek semantics reset.
+ *                  Deprecated.
  * @handle_frame:   Provides input data frame to subclass.
  * @finish:         Optional.
  *                  Called to request subclass to dispatch any pending remaining

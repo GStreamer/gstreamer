@@ -304,11 +304,6 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
-  if (klass->reset) {
-    GST_DEBUG_OBJECT (encoder, "requesting subclass to reset");
-    ret = klass->reset (encoder, hard);
-  }
-
   priv->presentation_frame_number = 0;
   priv->distance_from_sync = 0;
 
@@ -573,6 +568,11 @@ gst_video_encoder_setcaps (GstVideoEncoder * encoder, GstCaps * caps)
           &encoder->priv->input_state->info)) {
     gst_video_codec_state_unref (state);
     goto caps_not_changed;
+  }
+
+  if (encoder_class->reset) {
+    GST_FIXME_OBJECT (encoder, "GstVideoEncoder::reset() is deprecated");
+    ret = encoder_class->reset (encoder, TRUE);
   }
 
   /* and subclass should be ready to configure format at any time around */

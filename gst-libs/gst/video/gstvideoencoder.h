@@ -172,6 +172,7 @@ struct _GstVideoEncoder
  * @handle_frame:   Provides input frame to subclass.
  * @reset:          Optional.
  *                  Allows subclass (encoder) to perform post-seek semantics reset.
+ *                  Deprecated.
  * @finish:         Optional.
  *                  Called to request subclass to dispatch any pending remaining
  *                  data (e.g. at EOS).
