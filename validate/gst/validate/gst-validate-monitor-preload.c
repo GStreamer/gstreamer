@@ -21,8 +21,7 @@
 
 #include <gst/gst.h>
 #include <string.h>
-#include "gst-validate-runner.h"
-#include "gst-validate-monitor-factory.h"
+#include <gst/validate/validate.h>
 
 #define __USE_GNU
 #include <dlfcn.h>
@@ -37,8 +36,10 @@ static GstValidateRunner *runner = NULL;
 static void
 gst_validate_preload_wrap (GstElement * element)
 {
-  if (runner == NULL)
+  if (runner == NULL) {
+    gst_validate_init ();
     runner = gst_validate_runner_new ();
+  }
 
   /* the reference to the monitor is lost */
   gst_validate_monitor_factory_create (GST_OBJECT_CAST (element), runner, NULL);

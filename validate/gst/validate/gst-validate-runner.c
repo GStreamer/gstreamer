@@ -70,12 +70,6 @@ gst_validate_runner_class_init (GstValidateRunnerClass * klass)
 
   gobject_class->dispose = gst_validate_runner_dispose;
 
-  /* init the report system (can be called multiple times) */
-  gst_validate_report_init ();
-
-  /* Ensure we load overrides before any use of a monitor */
-  gst_validate_override_registry_preload ();
-
   _signals[REPORT_ADDED_SIGNAL] =
       g_signal_new ("report-added", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 1,

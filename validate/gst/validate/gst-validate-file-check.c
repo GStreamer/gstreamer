@@ -204,6 +204,7 @@ main (int argc, gchar ** argv)
   g_option_context_free (ctx);
 
   gst_init (&argc, &argv);
+  gst_validate_init ();
 
   if (argc != 2) {
     g_printerr ("%i arguments recived, 1 expected.\n"

@@ -5,4 +5,6 @@
 #include <gst/validate/gst-validate-runner.h>
 #include <gst/validate/gst-validate-file-checker.h>
 #include <gst/validate/gst-validate-monitor-factory.h>
+#include <gst/validate/gst-validate-override-registry.h>
 
+void gst_validate_init (void);

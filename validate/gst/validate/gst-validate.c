@@ -84,6 +84,7 @@ main (int argc, gchar ** argv)
   g_option_context_free (ctx);
 
   gst_init (&argc, &argv);
+  gst_validate_init ();
 
   /* Create the pipeline */
   argvn = g_new0 (char *, argc);

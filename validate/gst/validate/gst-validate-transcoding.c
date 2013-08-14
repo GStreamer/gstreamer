@@ -292,6 +292,7 @@ main (int argc, gchar ** argv)
     g_setenv ("GST_VALIDATE_SCENARIO", scenario, TRUE);
 
   gst_init (&argc, &argv);
+  gst_validate_init ();
 
   if (argc != 3) {
     g_printerr ("%i arguments recived, 2 expected.\n"

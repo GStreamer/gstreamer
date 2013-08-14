@@ -10,7 +10,8 @@ libgstvalidate_@GST_API_VERSION@_la_SOURCES = \
 	gst-validate-scenario.c \
 	gst-validate-override.c \
 	gst-validate-override-registry.c \
-	gst-validate-file-checker.c
+	gst-validate-file-checker.c \
+        validate.c
 
 noinst_HEADERS = \
 	gettext.h \
