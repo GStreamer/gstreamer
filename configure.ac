@@ -875,7 +875,7 @@ AG_GST_CHECK_FEATURE(SHOUT2, [Shoutcast/Icecast client library], shout2, [
 dnl *** soup ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SOUP, true)
 AG_GST_CHECK_FEATURE(SOUP, [soup http client plugin (2.4)], souphttpsrc, [
-  PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.26.1, [HAVE_SOUP="yes"], [HAVE_SOUP="no"])
+  PKG_CHECK_MODULES(SOUP, libsoup-2.4 >= 2.38, [HAVE_SOUP="yes"], [HAVE_SOUP="no"])
   AC_SUBST(SOUP_CFLAGS)
   AC_SUBST(SOUP_LIBS)
 ])
