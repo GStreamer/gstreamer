@@ -336,7 +336,7 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res)
       goto bad_extension_marker_2;
 
     res->extension_field_length = val8 & 0x7f;
-    if (G_UNLIKELY (length < res->extension_field_length + 1))
+    if (G_UNLIKELY (length < res->extension_field_length))
       goto need_more_data;
 
     GST_LOG ("extension_field_length : %" G_GSIZE_FORMAT,
@@ -354,9 +354,7 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res)
       } else {
         GST_LOG ("tref_extension : %d", flags & 0x01);
       }
-      data += res->extension_field_length;
     }
-    length -= res->extension_field_length + 1;
   }
 
 stuffing_byte:
