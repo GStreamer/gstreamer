@@ -37,8 +37,6 @@ GST_DEBUG_CATEGORY_STATIC (pes_parser_debug);
  * @data: data to parse (starting from, and including, the sync code)
  * @length: size of @data in bytes
  * @res: PESHeader to fill (only valid with #PES_PARSING_OK.
- * @offset: Offset in @data to the data to parse. If #PES_PARSING_OK, offset to
- *	    first byte of data after the header.
  *
  * Parses the mpeg-ts PES header located in @data into the @res.
  *
@@ -47,8 +45,7 @@ GST_DEBUG_CATEGORY_STATIC (pes_parser_debug);
  * is needed to properly parse the header.
  */
 PESParsingResult
-mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
-    gint * offset)
+mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res)
 {
   PESParsingResult ret = PES_PARSING_NEED_MORE;
   gsize origlength = length;
@@ -57,11 +54,6 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res,
   guint8 val8, flags;
 
   g_return_val_if_fail (res != NULL, PES_PARSING_BAD);
-  g_return_val_if_fail (offset != NULL, PES_PARSING_BAD);
-  g_return_val_if_fail (*offset < length, PES_PARSING_BAD);
-
-  data += *offset;
-  length -= *offset;
 
   /* The smallest valid PES header is 6 bytes (prefix + stream_id + length) */
   if (G_UNLIKELY (length < 6))
@@ -377,7 +369,6 @@ done_parsing:
       origlength, length);
 
   res->header_size = origlength - length;
-  *offset += res->header_size;
   ret = PES_PARSING_OK;
 
   return ret;

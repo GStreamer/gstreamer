@@ -190,8 +190,9 @@ typedef struct {
   const guint8*	stream_id_extension_data;
 } PESHeader;
 
-G_GNUC_INTERNAL PESParsingResult mpegts_parse_pes_header (const guint8* data, gsize size,
-					  PESHeader *res, gint *offset);
+G_GNUC_INTERNAL PESParsingResult mpegts_parse_pes_header (const guint8* data,
+							  gsize size,
+							  PESHeader *res);
 G_GNUC_INTERNAL void init_pes_parser (void);
 
 G_END_DECLS

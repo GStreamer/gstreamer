@@ -1254,12 +1254,11 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream,
     guint8 * data, guint32 length, guint64 bufferoffset)
 {
   PESHeader header;
-  gint offset = 0;
   PESParsingResult parseres;
 
   GST_MEMDUMP ("Header buffer", data, MIN (length, 32));
 
-  parseres = mpegts_parse_pes_header (data, length, &header, &offset);
+  parseres = mpegts_parse_pes_header (data, length, &header);
   if (G_UNLIKELY (parseres == PES_PARSING_NEED_MORE))
     goto discont;
   if (G_UNLIKELY (parseres == PES_PARSING_BAD)) {
