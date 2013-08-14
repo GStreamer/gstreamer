@@ -11,7 +11,7 @@ SUBDIRS = \
 	app \
 	allocators
 
-noinst_HEADERS = gettext.h gst-i18n-plugin.h glib-compat-private.h
+noinst_HEADERS = gettext.h gst-i18n-app.h gst-i18n-plugin.h glib-compat-private.h
 
 # dependencies:
 audio: tag

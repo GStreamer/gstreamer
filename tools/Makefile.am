@@ -2,9 +2,12 @@ man_MANS = \
         gst-discoverer-@GST_API_VERSION@.1
 
 bin_PROGRAMS = \
-	gst-discoverer-@GST_API_VERSION@
+	gst-discoverer-@GST_API_VERSION@ \
+	gst-play-@GST_API_VERSION@
 
 gst_discoverer_@GST_API_VERSION@_SOURCES = gst-discoverer.c
+
+gst_play_@GST_API_VERSION@_SOURCES = gst-play.c
 
 CLEANFILES = $(bin_SCRIPTS) $(bin_PROGRAMS)
 
