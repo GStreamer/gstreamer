@@ -779,7 +779,8 @@ dvb_base_bin_handle_message (GstBin * bin, GstMessage * message)
 
   dvbbasebin = GST_DVB_BASE_BIN (bin);
 
-  if (GST_ELEMENT (message->src) == GST_ELEMENT (dvbbasebin->tsparse)) {
+  /* note: message->src might be a GstPad, so use element cast w/o typecheck */
+  if (GST_ELEMENT_CAST (message->src) == GST_ELEMENT (dvbbasebin->tsparse)) {
     GstMpegTsSection *section = gst_message_parse_mpegts_section (message);
 
     if (section) {
