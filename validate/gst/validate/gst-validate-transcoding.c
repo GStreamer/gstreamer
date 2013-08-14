@@ -271,7 +271,13 @@ main (int argc, gchar ** argv)
     {NULL}
   };
 
-  ctx = g_option_context_new ("- runs Validate transcoding test.");
+  g_set_prgname ("gst-validate-transcoding-" GST_API_VERSION);
+  ctx = g_option_context_new ("[input-file] [output-file]");
+  g_option_context_set_summary (ctx, "Transcodes input-file to output-file, "
+      "using the given encoding profile. The pipeline will be monitored for "
+      "possible issues detection using the gst-validate lib."
+      "\nCan also perform file conformance"
+      "tests after transcoding to make sure the result is correct");
   g_option_context_add_main_entries (ctx, options, NULL);
 
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {

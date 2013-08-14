@@ -188,7 +188,11 @@ main (int argc, gchar ** argv)
     {NULL}
   };
 
-  ctx = g_option_context_new ("- runs Validate transcoding test.");
+  g_set_prgname ("gst-validate-file-check-" GST_API_VERSION);
+  ctx = g_option_context_new ("[URI]");
+  g_option_context_set_summary (ctx, "Does conformance checks on files. "
+      "Use the options to enable the tests to be made and pass the expected"
+      " results");
   g_option_context_add_main_entries (ctx, options, NULL);
 
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {

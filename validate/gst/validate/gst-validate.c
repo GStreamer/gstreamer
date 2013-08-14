@@ -60,8 +60,11 @@ main (int argc, gchar ** argv)
   GstValidateMonitor *monitor;
   GstBus *bus;
 
-  ctx = g_option_context_new ("- runs Validate tests for a pipeline.");
+  g_set_prgname ("gst-validate-" GST_API_VERSION);
+  ctx = g_option_context_new ("PIPELINE-DESCRIPTION");
   g_option_context_add_main_entries (ctx, options, NULL);
+  g_option_context_set_summary (ctx, "Runs a gst launch pipeline, adding "
+      "monitors to it to identify issues in the used elements");
 
   if (argc == 1) {
     g_print ("%s", g_option_context_get_help (ctx, FALSE, NULL));
