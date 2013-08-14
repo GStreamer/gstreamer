@@ -256,7 +256,12 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res)
   /* PES extension */
   flags = *data++;
   length -= 1;
-  GST_DEBUG ("PES_extension_flag 0x%02x", flags);
+  GST_DEBUG ("PES_extension_flag: %s%s%s%s%s%s",
+      flags & 0x80 ? "PES_private_data " : "",
+      flags & 0x40 ? "pack_header_field " : "",
+      flags & 0x20 ? "program_packet_sequence_counter " : "",
+      flags & 0x10 ? "P-STD_buffer " : "",
+      flags & 0x01 ? "PES_extension_flag_2" : "", flags & 0xf1 ? "" : "<none>");
 
   if (flags & 0x80) {
     /* PES_private data */
@@ -292,7 +297,6 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res)
       goto need_more_data;
 
     val8 = *data++;
-    /* GRMBL, this is most often wrong */
     if (G_UNLIKELY ((val8 & 0x80) != 0x80))
       goto bad_sequence_marker1;
     res->program_packet_sequence_counter = val8 & 0x7f;
@@ -300,7 +304,6 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res)
         res->program_packet_sequence_counter);
 
     val8 = *data++;
-    /* GRMBL, this is most often wrong */
     if (G_UNLIKELY ((val8 & 0x80) != 0x80))
       goto bad_sequence_marker2;
     res->MPEG1_MPEG2_identifier = (val8 >> 6) & 0x1;
@@ -324,37 +327,52 @@ mpegts_parse_pes_header (const guint8 * data, gsize length, PESHeader * res)
     length -= 2;
   }
 
-  if (flags & 0x01) {
-    /* Extension flag 2 */
-    if (G_UNLIKELY (length < 1))
-      goto need_more_data;
+  /* jump if we don't have a PES 2nd extension */
+  if (!flags & 0x01)
+    goto stuffing_byte;
 
-    val8 = *data++;
-    length -= 1;
+  /* Extension flag 2 */
+  if (G_UNLIKELY (length < 1))
+    goto need_more_data;
 
-    if (!(val8 & 0x80))
-      goto bad_extension_marker_2;
+  val8 = *data++;
+  length -= 1;
 
-    res->extension_field_length = val8 & 0x7f;
-    if (G_UNLIKELY (length < res->extension_field_length))
-      goto need_more_data;
+  if (!(val8 & 0x80))
+    goto bad_extension_marker_2;
 
-    GST_LOG ("extension_field_length : %" G_GSIZE_FORMAT,
-        res->extension_field_length);
+  res->extension_field_length = val8 & 0x7f;
 
-    if (res->extension_field_length) {
-      flags = *data++;
-      /* Only valid if stream_id_extension_flag == 0x0 */
-      if (!(flags & 0x80)) {
-        res->stream_id_extension = flags & 0x7f;
-        GST_LOG ("stream_id_extension : 0x%02x", res->stream_id_extension);
-        res->stream_id_extension_data = data;
-        GST_MEMDUMP ("stream_id_extension_data",
-            res->stream_id_extension_data, res->extension_field_length);
-      } else {
-        GST_LOG ("tref_extension : %d", flags & 0x01);
-      }
-    }
+  /* Skip empty extensions */
+  if (G_UNLIKELY (res->extension_field_length == 0))
+    goto stuffing_byte;
+
+  if (G_UNLIKELY (length < res->extension_field_length))
+    goto need_more_data;
+
+  flags = *data++;
+  res->extension_field_length -= 1;
+
+  if (!(flags & 0x80)) {
+    /* Only valid if stream_id_extension_flag == 0x0 */
+    res->stream_id_extension = flags;
+    GST_LOG ("stream_id_extension : 0x%02x", res->stream_id_extension);
+  } else if (!(flags & 0x01)) {
+    /* Skip broken streams (that use stream_id_extension with highest bit set
+     * for example ...) */
+    if (G_UNLIKELY (res->extension_field_length < 5))
+      goto stuffing_byte;
+
+    GST_LOG ("TREF field present");
+    data += 5;
+    res->extension_field_length -= 5;
+  }
+
+  /* Extension field data */
+  if (res->extension_field_length) {
+    res->stream_id_extension_data = data;
+    GST_MEMDUMP ("stream_id_extension_data",
+        res->stream_id_extension_data, res->extension_field_length);
   }
 
 stuffing_byte:

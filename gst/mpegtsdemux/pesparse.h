@@ -185,9 +185,11 @@ typedef struct {
   guint32	P_STD_buffer_size; /* P-STD buffer size in bytes (0 if invalid
 				    * or not present */
 
-  gsize		extension_field_length;
-  guint8	stream_id_extension; /* Only valid if stream_id == ID_EXTENDED_STREAM_ID */
-  const guint8*	stream_id_extension_data;
+  guint8	stream_id_extension; /* Public range (0x00 - 0x3f) only valid if stream_id == ID_EXTENDED_STREAM_ID
+				      * Private range (0x40 - 0xff) can be present in any stream type */
+
+  gsize		extension_field_length;   /* Length of remaining extension field data */
+  const guint8*	stream_id_extension_data; /* Valid if extension_field_length != 0 */
 } PESHeader;
 
 G_GNUC_INTERNAL PESParsingResult mpegts_parse_pes_header (const guint8* data,
