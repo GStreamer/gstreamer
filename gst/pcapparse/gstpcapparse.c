@@ -494,7 +494,8 @@ gst_pcap_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
                   GST_CLOCK_TIME_IS_VALID (self->cur_ts)) {
                 GstSegment segment;
 
-                gst_pad_set_caps (self->src_pad, self->caps);
+                if (self->caps)
+                  gst_pad_set_caps (self->src_pad, self->caps);
                 gst_segment_init (&segment, GST_FORMAT_TIME);
                 segment.start = self->cur_ts;
                 gst_pad_push_event (self->src_pad,
@@ -606,8 +607,6 @@ gst_pcap_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       ret = gst_pad_push_event (self->src_pad, event);
       break;
   }
-
-  gst_object_unref (self);
 
   return ret;
 }
