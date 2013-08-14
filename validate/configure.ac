@@ -2,9 +2,9 @@ AC_PREREQ(2.62)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(Gst-QA, 0.0.1.1,
+AC_INIT(Gst-Validate, 0.0.1.1,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
-    gst-qa)
+    gst-validate)
 AG_GST_INIT
 
 dnl initialize automake
@@ -17,7 +17,7 @@ dnl check if this is a release version
 AS_NANO(GST_GIT="no", GST_GIT="yes")
 
 dnl can autoconf find the source ?
-AC_CONFIG_SRCDIR([gst/qa/gst-qa.c])
+AC_CONFIG_SRCDIR([gst/validate/gst-validate.c])
 
 dnl define the output header for config
 AC_CONFIG_HEADERS([config.h])
@@ -60,7 +60,7 @@ dnl set up gettext
 dnl the version check needs to stay here because autopoint greps for it
 AM_GNU_GETTEXT_VERSION([0.17])
 AM_GNU_GETTEXT([external])
-AG_GST_GETTEXT([gst-qa-$GST_API_VERSION])
+AG_GST_GETTEXT([gst-validate-$GST_API_VERSION])
 
 dnl *** check for arguments to configure ***
 
@@ -243,7 +243,7 @@ Makefile
 common/Makefile
 common/m4/Makefile
 gst/Makefile
-gst/qa/Makefile
+gst/validate/Makefile
 data/Makefile
 po/Makefile.in
 ])
@@ -257,5 +257,5 @@ Configuration
 	Prefix                     : ${prefix}
 	Compiler                   : ${CC}
 
-gst-qa configured. Type 'make' to build.
+gst-validate configured. Type 'make' to build.
 "

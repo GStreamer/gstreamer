@@ -2,8 +2,8 @@
 # Run this to generate all the initial makefiles, etc.
 
 DIE=0
-package=gst-qa
-srcfile=gst/qa/gst-qa.c
+package=gst-validate
+srcfile=gst/validate/gst-validate.c
 
 # Make sure we have common
 if test ! -f common/gst-autogen.sh;
@@ -31,7 +31,7 @@ fi
 
 # GNU gettext automake support doesn't get along with git.
 # https://bugzilla.gnome.org/show_bug.cgi?id=661128
-touch -t 200001010000 po/gst-qa-0.10.pot
+touch -t 200001010000 po/gst-validate-0.10.pot
 
 CONFIGURE_DEF_OPT='--enable-maintainer-mode --enable-gtk-doc'
 

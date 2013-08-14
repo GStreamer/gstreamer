@@ -1,0 +1,43 @@
+/* GStreamer
+ * Copyright (C) 2013 Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+ *
+ * gst-validate-default-overrides.c - Test overrides
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Library General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Library General Public License for more details.
+ *
+ * You should have received a copy of the GNU Library General Public
+ * License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 59 Temple Place - Suite 330,
+ * Boston, MA 02111-1307, USA.
+ */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+#include <stdio.h>
+#include "gst-validate-override.h"
+#include "gst-validate-override-registry.h"
+#include "gst-validate-report.h"
+
+int
+gst_validate_create_overrides (void)
+{
+  GstValidateOverride *o;
+
+  /* Some random test override. Will moan on:
+     gst-launch videotestsrc num-buffers=10 ! video/x-raw-yuv !  fakesink */
+  o = gst_validate_override_new ();
+  gst_validate_override_change_severity (o,
+      GST_VALIDATE_ISSUE_ID_CAPS_IS_MISSING_FIELD,
+      GST_VALIDATE_REPORT_LEVEL_CRITICAL);
+  gst_validate_override_register_by_name ("capsfilter0", o);
+  return 1;
+}

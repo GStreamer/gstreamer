@@ -1,1 +1,1 @@
-SUBDIRS = qa
+SUBDIRS = validate
