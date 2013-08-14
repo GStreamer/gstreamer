@@ -110,6 +110,9 @@ static const GstTagEntryMatch tag_matches[] = {
   {GST_TAG_ARTIST_SORTNAME, "TSOP"},
   {GST_TAG_ALBUM_SORTNAME, "TSOA"},
   {GST_TAG_TITLE_SORTNAME, "TSOT"},
+  {GST_TAG_PUBLISHER, "TPUB"},
+  {GST_TAG_INTERPRETED_BY, "TPE4"},
+  {GST_TAG_MUSICAL_KEY, "TKEY"},
   {NULL, NULL}
 };
 
