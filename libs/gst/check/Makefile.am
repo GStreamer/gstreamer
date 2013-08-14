@@ -127,8 +127,7 @@ $(SYMBOLS_FILE): $(libgstcheck_@GST_API_VERSION@include_HEADERS) libcheck/check.
 if HAVE_INTROSPECTION
 BUILT_GIRSOURCES = GstCheck-@GST_API_VERSION@.gir
 
-gir_headers=$(patsubst %,$(srcdir)/%, $(libgstcheck_@GST_API_VERSION@include_HEADERS)) \
-    $(patsubst %,$(builddir)/%, $(nodist_libgstcheck_@GST_API_VERSION@include_HEADERS))
+gir_headers=$(patsubst %,$(srcdir)/%, $(libgstcheck_@GST_API_VERSION@include_HEADERS))
 gir_sources=$(patsubst %,$(srcdir)/%, $(libgstcheck_@GST_API_VERSION@_la_SOURCES))
 
 GstCheck-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstcheck-@GST_API_VERSION@.la
