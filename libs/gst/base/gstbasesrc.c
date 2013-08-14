@@ -1711,7 +1711,26 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       GST_DEBUG_OBJECT (src, "pushing flush-start event downstream");
       result = gst_pad_push_event (src->srcpad, event);
       /* also unblock the create function */
-      gst_base_src_set_flushing (src, TRUE, FALSE, NULL);
+      gst_base_src_activate_pool (src, FALSE);
+      /* unlock any subclasses, we need to do this before grabbing the
+       * LIVE_LOCK since we hold this lock before going into ::create. We pass an
+       * unlock to the params because of backwards compat (see seek handler)*/
+      if (bclass->unlock)
+        bclass->unlock (src);
+
+      /* the live lock is released when we are blocked, waiting for playing or
+       * when we sync to the clock. */
+      GST_LIVE_LOCK (src);
+      src->priv->flushing = TRUE;
+      /* clear pending EOS if any */
+      g_atomic_int_set (&src->priv->pending_eos, FALSE);
+      if (bclass->unlock_stop)
+        bclass->unlock_stop (src);
+      if (src->clock_id)
+        gst_clock_id_unschedule (src->clock_id);
+      GST_DEBUG_OBJECT (src, "signal");
+      GST_LIVE_SIGNAL (src);
+      GST_LIVE_UNLOCK (src);
       event = NULL;
       break;
     case GST_EVENT_FLUSH_STOP:
@@ -1732,8 +1751,6 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
       if (start)
         gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
             src->srcpad, NULL);
-      GST_DEBUG_OBJECT (src, "signal");
-      GST_LIVE_SIGNAL (src);
       GST_LIVE_UNLOCK (src);
       event = NULL;
       break;
