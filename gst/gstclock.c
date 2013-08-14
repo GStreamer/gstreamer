@@ -193,35 +193,34 @@ G_STMT_START {                                    \
   GST_OBJECT_UNLOCK (clock);                      \
 } G_STMT_END;
 
-typedef struct
-{
-  const gint ret;
-  const gchar *name;
-  GQuark quark;
-} GstClockQuarks;
-
-static GstClockQuarks clock_quarks[] = {
-  {GST_CLOCK_OK, "ok", 0},
-  {GST_CLOCK_EARLY, "early", 0},
-  {GST_CLOCK_UNSCHEDULED, "unscheduled", 0},
-  {GST_CLOCK_BUSY, "busy", 0},
-  {GST_CLOCK_BADTIME, "bad-time", 0},
-  {GST_CLOCK_ERROR, "error", 0},
-  {GST_CLOCK_UNSUPPORTED, "unsupported", 0},
-  {GST_CLOCK_DONE, "done", 0}
-};
-
+#ifndef GST_DISABLE_GST_DEBUG
 static const gchar *
 gst_clock_return_get_name (GstClockReturn ret)
 {
-  gint i;
-
-  for (i = 0; i < G_N_ELEMENTS (clock_quarks); i++) {
-    if (ret == clock_quarks[i].ret)
-      return clock_quarks[i].name;
+  switch (ret) {
+    case GST_CLOCK_OK:
+      return "ok";
+    case GST_CLOCK_EARLY:
+      return "early";
+    case GST_CLOCK_UNSCHEDULED:
+      return "unscheduled";
+    case GST_CLOCK_BUSY:
+      return "busy";
+    case GST_CLOCK_BADTIME:
+      return "bad-time";
+    case GST_CLOCK_ERROR:
+      return "error";
+    case GST_CLOCK_UNSUPPORTED:
+      return "unsupported";
+    case GST_CLOCK_DONE:
+      return "done";
+    default:
+      break;
   }
+
   return "unknown";
 }
+#endif /* GST_DISABLE_GST_DEBUG */
 
 static void gst_clock_dispose (GObject * object);
 static void gst_clock_finalize (GObject * object);
