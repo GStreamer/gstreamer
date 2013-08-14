@@ -25,6 +25,9 @@
 
 #include <gst/gst.h>
 
+#include "../gstgl_fwd.h"
+#include <gst/gl/gstglcontext.h>
+
 #include "gstglwindow_win32_egl.h"
 
 static guintptr gst_gl_window_win32_wgl_get_gl_context (GstGLWindowWin32 *

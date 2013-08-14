@@ -81,14 +81,21 @@ gst_gl_display_finalize (GObject * object)
     display->gl_vtable = NULL;
   }
 
-  if (display->window) {
-    gst_object_unref (display->window);
-    display->window = NULL;
+  if (display->context) {
+    gst_object_unref (display->context);
+    display->context = NULL;
   }
 
   G_OBJECT_CLASS (gst_gl_display_parent_class)->finalize (object);
 }
 
+GstGLDisplay *
+gst_gl_display_new (void)
+{
+  return g_object_new (GST_TYPE_GL_DISPLAY, NULL);
+}
+
+#if 1
 typedef struct
 {
   GstGLDisplay *display;
@@ -104,37 +111,36 @@ _gst_gl_display_thread_run_generic (RunGenericData * data)
   data->func (data->display, data->data);
 }
 
-GstGLDisplay *
-gst_gl_display_new (void)
-{
-  return g_object_new (GST_TYPE_GL_DISPLAY, NULL);
-}
-
 void
 gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data)
 {
+  GstGLWindow *window;
   RunGenericData rdata;
 
   g_return_if_fail (GST_IS_GL_DISPLAY (display));
-  g_return_if_fail (GST_GL_IS_WINDOW (display->window));
+  g_return_if_fail (GST_GL_IS_CONTEXT (display->context));
   g_return_if_fail (func != NULL);
 
   rdata.display = display;
   rdata.data = data;
   rdata.func = func;
 
-  gst_gl_window_send_message (display->window,
+  window = gst_gl_context_get_window (display->context);
+
+  gst_gl_window_send_message (window,
       GST_GL_WINDOW_CB (_gst_gl_display_thread_run_generic), &rdata);
+
+  gst_object_unref (window);
 }
 
 GstGLAPI
 gst_gl_display_get_gl_api (GstGLDisplay * display)
 {
   g_return_val_if_fail (GST_IS_GL_DISPLAY (display), GST_GL_API_NONE);
-  g_return_val_if_fail (GST_GL_IS_WINDOW (display->window), GST_GL_API_NONE);
+  g_return_val_if_fail (GST_GL_IS_CONTEXT (display->context), GST_GL_API_NONE);
 
-  return gst_gl_window_get_gl_api (display->window);
+  return gst_gl_context_get_gl_api (display->context);
 }
 
 gpointer
@@ -144,45 +150,46 @@ gst_gl_display_get_gl_vtable (GstGLDisplay * display)
 
   return display->gl_vtable;
 }
+#endif
 
 void
-gst_gl_display_set_window (GstGLDisplay * display, GstGLWindow * window)
+gst_gl_display_set_context (GstGLDisplay * display, GstGLContext * context)
 {
   g_return_if_fail (GST_IS_GL_DISPLAY (display));
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (GST_GL_IS_CONTEXT (context));
 
   gst_gl_display_lock (display);
 
-  if (display->window)
-    gst_object_unref (display->window);
+  if (display->context)
+    gst_object_unref (display->context);
 
-  display->window = gst_object_ref (window);
+  display->context = gst_object_ref (context);
 
   gst_gl_display_unlock (display);
 }
 
-GstGLWindow *
-gst_gl_display_get_window (GstGLDisplay * display)
+GstGLContext *
+gst_gl_display_get_context (GstGLDisplay * display)
 {
-  GstGLWindow *window;
+  GstGLContext *context;
 
   g_return_val_if_fail (GST_IS_GL_DISPLAY (display), NULL);
 
   gst_gl_display_lock (display);
 
-  window = display->window ? gst_object_ref (display->window) : NULL;
+  context = display->context ? gst_object_ref (display->context) : NULL;
 
   gst_gl_display_unlock (display);
 
-  return window;
+  return context;
 }
 
-GstGLWindow *
-gst_gl_display_get_window_unlocked (GstGLDisplay * display)
+GstGLContext *
+gst_gl_display_get_context_unlocked (GstGLDisplay * display)
 {
   g_return_val_if_fail (GST_IS_GL_DISPLAY (display), NULL);
 
-  return display->window ? gst_object_ref (display->window) : NULL;
+  return display->context ? gst_object_ref (display->context) : NULL;
 }
 
 void

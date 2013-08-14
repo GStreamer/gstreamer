@@ -75,6 +75,8 @@ struct _GstGLWindow {
   GMutex        lock;
   gboolean      need_lock;
 
+  GWeakRef      context_ref;
+
   guintptr      external_gl_context;
 
   GstGLWindowCB         draw;
@@ -131,7 +133,6 @@ void     gst_gl_window_set_close_callback   (GstGLWindow *window, GstGLWindowCB 
 void     gst_gl_window_set_need_lock        (GstGLWindow *window, gboolean need_lock);
 
 guintptr gst_gl_window_get_gl_context       (GstGLWindow *window);
-gboolean gst_gl_window_activate            (GstGLWindow *window, gboolean activate);
 void     gst_gl_window_set_window_handle    (GstGLWindow *window, guintptr handle);
 guintptr gst_gl_window_get_window_handle    (GstGLWindow *window);
 void     gst_gl_window_draw_unlocked        (GstGLWindow *window, guint width, guint height);
@@ -140,13 +141,7 @@ void     gst_gl_window_run                  (GstGLWindow *window);
 void     gst_gl_window_quit                 (GstGLWindow *window);
 void     gst_gl_window_send_message         (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
 
-gpointer      gst_gl_window_get_proc_address (GstGLWindow *window, const gchar *name);
-GstGLPlatform gst_gl_window_get_platform     (GstGLWindow *window);
-GstGLAPI      gst_gl_window_get_gl_api       (GstGLWindow *window);
-
-gboolean gst_gl_window_create_context (GstGLWindow *window, guintptr external_gl_context, GError ** error);
-
-gpointer gst_gl_window_default_get_proc_address (GstGLWindow *window, const gchar *name);
+GstGLContext * gst_gl_window_get_context (GstGLWindow *window);
 
 gboolean gst_gl_window_is_running (GstGLWindow *window);
 

@@ -25,6 +25,9 @@
 #include "config.h"
 #endif
 
+#include "../gstgl_fwd.h"
+#include <gst/gl/gstglcontext.h>
+
 #include "gstglwindow_x11_egl.h"
 
 const gchar *X11EGLErrorString ();
@@ -188,11 +191,12 @@ static gpointer
 gst_gl_window_x11_egl_get_proc_address (GstGLWindow * window,
     const gchar * name)
 {
+  GstGLContext *context = NULL;
   GstGLWindowX11EGL *window_egl = GST_GL_WINDOW_X11_EGL (window);
   gpointer result;
 
   if (!(result = gst_gl_egl_get_proc_address (window_egl->egl, name))) {
-    result = gst_gl_window_default_get_proc_address (window, name);
+    result = gst_gl_context_default_get_proc_address (context, name);
   }
 
   return result;
