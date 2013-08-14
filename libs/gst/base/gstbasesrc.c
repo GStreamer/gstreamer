@@ -1698,8 +1698,10 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
 {
   GstBaseSrc *src;
   gboolean result = FALSE;
+  GstBaseSrcClass *bclass;
 
   src = GST_BASE_SRC (element);
+  bclass = GST_BASE_SRC_GET_CLASS (src);
 
   GST_DEBUG_OBJECT (src, "handling event %p %" GST_PTR_FORMAT, event, event);
 
@@ -1708,26 +1710,37 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
     case GST_EVENT_FLUSH_START:
       GST_DEBUG_OBJECT (src, "pushing flush-start event downstream");
       result = gst_pad_push_event (src->srcpad, event);
+      /* also unblock the create function */
+      gst_base_src_set_flushing (src, TRUE, FALSE, NULL);
       event = NULL;
       break;
     case GST_EVENT_FLUSH_STOP:
+    {
+      gboolean start;
+
       GST_LIVE_LOCK (src);
       src->priv->segment_pending = TRUE;
-      /* sending random flushes downstream can break stuff,
-       * especially sync since all segment info will get flushed */
       GST_DEBUG_OBJECT (src, "pushing flush-stop event downstream");
       result = gst_pad_push_event (src->srcpad, event);
+
+      gst_base_src_activate_pool (src, TRUE);
+
+      GST_OBJECT_LOCK (src->srcpad);
+      start = (GST_PAD_MODE (src->srcpad) == GST_PAD_MODE_PUSH);
+      GST_OBJECT_UNLOCK (src->srcpad);
+      if (start)
+        gst_pad_start_task (src->srcpad, (GstTaskFunction) gst_base_src_loop,
+            src->srcpad, NULL);
+      GST_DEBUG_OBJECT (src, "signal");
+      GST_LIVE_SIGNAL (src);
       GST_LIVE_UNLOCK (src);
       event = NULL;
       break;
+    }
 
       /* downstream serialized events */
     case GST_EVENT_EOS:
     {
-      GstBaseSrcClass *bclass;
-
-      bclass = GST_BASE_SRC_GET_CLASS (src);
-
       /* queue EOS and make sure the task or pull function performs the EOS
        * actions.
        *
