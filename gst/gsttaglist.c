@@ -387,6 +387,15 @@ _priv_gst_tag_initialize (void)
   gst_tag_register_static (GST_TAG_IMAGE_ORIENTATION, GST_TAG_FLAG_META,
       G_TYPE_STRING, _("image orientation"),
       _("How the image should be rotated or flipped before display"), NULL);
+  gst_tag_register_static (GST_TAG_PUBLISHER, GST_TAG_FLAG_META,
+      G_TYPE_STRING,
+      _("publisher"),
+      _("Name of the label or publisher"), gst_tag_merge_strings_with_comma);
+  gst_tag_register_static (GST_TAG_INTERPRETED_BY, GST_TAG_FLAG_META,
+      G_TYPE_STRING,
+      _("interpreted-by"),
+      _("Information about the people behind a remix and similar "
+          "interpretations"), gst_tag_merge_strings_with_comma);
 }
 
 /**

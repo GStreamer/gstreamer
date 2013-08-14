@@ -1043,6 +1043,23 @@ gst_tag_list_copy (const GstTagList * taglist)
  * 'flip' means an horizontal mirroring.
  */
 #define GST_TAG_IMAGE_ORIENTATION            "image-orientation"
+/**
+ * GST_TAG_PUBLISHER:
+ *
+ * Name of the label or publisher (string)
+ *
+ * Since: 1.2
+ */
+#define GST_TAG_PUBLISHER                         "publisher"
+/**
+ * GST_TAG_INTERPRETED_BY:
+ *
+ * Information about the people behind a remix and similar
+ * interpretations of another existing piece (string)
+ *
+ * Since: 1.2
+ */
+#define GST_TAG_INTERPRETED_BY                    "interpreted-by"
 
 G_END_DECLS
 
