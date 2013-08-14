@@ -19,6 +19,10 @@
  * Boston, MA 02111-1307, USA.
  */
 
+#ifdef HAVE_CONFIG_H
+#  include "config.h"
+#endif
+
 #include "gst-validate-pad-monitor.h"
 #include "gst-validate-element-monitor.h"
 #include "gst-validate-reporter.h"
