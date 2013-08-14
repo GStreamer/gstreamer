@@ -1720,6 +1720,7 @@ gst_base_src_send_event (GstElement * element, GstEvent * event)
 
       GST_LIVE_LOCK (src);
       src->priv->segment_pending = TRUE;
+      src->priv->flushing = FALSE;
       GST_DEBUG_OBJECT (src, "pushing flush-stop event downstream");
       result = gst_pad_push_event (src->srcpad, event);
 
