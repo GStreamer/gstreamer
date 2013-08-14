@@ -27,6 +27,9 @@
 
 #include <gst/gst.h>
 
+#include "../gstgl_fwd.h"
+#include <gst/gl/gstglcontext.h>
+
 #include "gstglwindow_win32_wgl.h"
 
 #define GST_CAT_DEFAULT gst_gl_window_debug
@@ -215,10 +218,11 @@ static gpointer
 gst_gl_window_win32_wgl_get_proc_address (GstGLWindow * window,
     const gchar * name)
 {
+  GstGLContext *context;
   gpointer result;
 
   if (!(result = wglGetProcAddress ((LPCSTR) name))) {
-    result = gst_gl_window_default_get_proc_address (window, name);
+    result = gst_gl_context_default_get_proc_address (context, name);
   }
 
   return result;

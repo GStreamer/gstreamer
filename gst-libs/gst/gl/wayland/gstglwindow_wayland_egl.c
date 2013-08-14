@@ -27,6 +27,9 @@
 
 #include "wayland_event_source.h"
 
+#include "../gstgl_fwd.h"
+#include <gst/gl/gstglcontext.h>
+
 #include "gstglwindow_wayland_egl.h"
 
 const gchar *WlEGLErrorString ();
@@ -572,13 +575,14 @@ static gpointer
 gst_gl_window_wayland_egl_get_proc_address (GstGLWindow * window,
     const gchar * name)
 {
+  GstGLContext *context = NULL;
   GstGLWindowWaylandEGL *window_egl;
   gpointer result;
 
   window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
 
   if (!(result = gst_gl_egl_get_proc_address (window_egl->egl, name))) {
-    result = gst_gl_window_default_get_proc_address (window, name);
+    result = gst_gl_context_default_get_proc_address (context, name);
   }
 
   return result;

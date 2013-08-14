@@ -57,7 +57,7 @@ struct _GstGLDisplay
   GstObject             object;
 
   /* <private> */
-  GstGLWindow          *window;
+  GstGLContext         *context;
   GstGLAPI              gl_api;
 
   GstGLFuncs           *gl_vtable;
@@ -75,11 +75,11 @@ GstGLDisplay *gst_gl_display_new (void);
 #define gst_gl_display_lock(display)        GST_OBJECT_LOCK (display)
 #define gst_gl_display_unlock(display)      GST_OBJECT_UNLOCK (display)
 
-GstGLAPI      gst_gl_display_get_gl_api             (GstGLDisplay * display);
-gpointer      gst_gl_display_get_gl_vtable          (GstGLDisplay * display);
-void          gst_gl_display_set_window             (GstGLDisplay * display, GstGLWindow * window);
-GstGLWindow * gst_gl_display_get_window             (GstGLDisplay * display);
-GstGLWindow * gst_gl_display_get_window_unlocked    (GstGLDisplay * display);
+GstGLAPI       gst_gl_display_get_gl_api             (GstGLDisplay * display);
+gpointer       gst_gl_display_get_gl_vtable          (GstGLDisplay * display);
+void           gst_gl_display_set_context             (GstGLDisplay * display, GstGLContext * context);
+GstGLContext * gst_gl_display_get_context             (GstGLDisplay * display);
+GstGLContext * gst_gl_display_get_context_unlocked    (GstGLDisplay * display);
 
 void gst_gl_display_thread_add (GstGLDisplay * display,
     GstGLDisplayThreadFunc func, gpointer data);

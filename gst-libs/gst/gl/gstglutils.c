@@ -141,32 +141,34 @@ gst_gl_display_check_framebuffer_status (GstGLDisplay * display)
 void
 gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate)
 {
-  GstGLWindow *window;
+  GstGLContext *context;
 
   g_return_if_fail (GST_IS_GL_DISPLAY (display));
 
   if (!activate)
     gst_gl_display_lock (display);
 
-  window = gst_gl_display_get_window_unlocked (display);
+  context = gst_gl_display_get_context_unlocked (display);
 
-  gst_gl_window_activate (window, activate);
+  gst_gl_context_activate (context, activate);
 
   if (activate)
     gst_gl_display_unlock (display);
 
-  gst_object_unref (window);
+  gst_object_unref (context);
 }
 
 void
 gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height)
 {
+  GstGLContext *context;
   GstGLWindow *window;
 
   gst_gl_display_lock (display);
 
-  window = gst_gl_display_get_window_unlocked (display);
+  context = gst_gl_display_get_context_unlocked (display);
+  window = gst_gl_context_get_window (context);
 
   if (gst_gl_window_is_running (window)) {
     gen_texture_width = width;
@@ -178,6 +180,7 @@ gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
   } else
     *pTexture = 0;
 
+  gst_object_unref (context);
   gst_object_unref (window);
 
   gst_gl_display_unlock (display);
@@ -186,17 +189,20 @@ gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
 void
 gst_gl_display_del_texture (GstGLDisplay * display, GLuint * pTexture)
 {
+  GstGLContext *context;
   GstGLWindow *window;
 
   gst_gl_display_lock (display);
 
-  window = gst_gl_display_get_window_unlocked (display);
+  context = gst_gl_display_get_context_unlocked (display);
+  window = gst_gl_context_get_window (context);
   if (gst_gl_window_is_running (window) && *pTexture) {
     del_texture = pTexture;
     gst_gl_window_send_message (window,
         GST_GL_WINDOW_CB (gst_gl_display_del_texture_window_cb), display);
   }
 
+  gst_object_unref (context);
   gst_object_unref (window);
 
   gst_gl_display_unlock (display);

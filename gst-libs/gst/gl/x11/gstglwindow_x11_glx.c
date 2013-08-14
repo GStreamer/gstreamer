@@ -27,6 +27,9 @@
 
 #include <gst/gst.h>
 
+#include "../gstgl_fwd.h"
+#include <gst/gl/gstglcontext.h>
+
 #include <gst/gl/gl.h>
 #include "gstglwindow_x11_glx.h"
 
@@ -352,10 +355,11 @@ static gpointer
 gst_gl_window_x11_glx_get_proc_address (GstGLWindow * window,
     const gchar * name)
 {
+  GstGLContext *context = NULL;
   gpointer result;
 
   if (!(result = glXGetProcAddressARB ((const GLubyte *) name))) {
-    result = gst_gl_window_default_get_proc_address (window, name);
+    result = gst_gl_context_default_get_proc_address (context, name);
   }
 
   return result;

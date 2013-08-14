@@ -8,6 +8,7 @@ noinst_HEADERS =
 
 libgstgl_@GST_API_VERSION@_la_SOURCES = \
 	gstgldisplay.c \
+	gstglcontext.c \
 	gstglmemory.c \
 	gstglbufferpool.c \
 	gstglfilter.c \
@@ -64,6 +65,7 @@ libgstgl_@GST_API_VERSION@include_HEADERS = \
 	gstglconfig.h \
 	gstglwindow.h \
 	gstgldisplay.h \
+	gstglcontext.h \
 	gstglmemory.h \
 	gstglbufferpool.h \
 	gstgles2.h \

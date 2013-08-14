@@ -561,16 +561,16 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
     src->display =
         gst_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
   else {
-    GstGLWindow *window;
+    GstGLContext *context;
     GError *error = NULL;
 
     GST_INFO ("Creating GstGLDisplay");
     src->display = gst_gl_display_new ();
-    window = gst_gl_window_new (src->display);
-    gst_gl_display_set_window (src->display, window);
-    gst_object_unref (window);
+    context = gst_gl_context_new (src->display);
+    gst_gl_display_set_context (src->display, context);
+    gst_object_unref (context);
 
-    if (!gst_gl_window_create_context (window, 0, &error)) {
+    if (!gst_gl_context_create (context, 0, &error)) {
       GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
           ("%s", error->message), (NULL));
       return FALSE;

@@ -31,6 +31,10 @@ typedef struct _GstGLDisplay GstGLDisplay;
 typedef struct _GstGLDisplayClass GstGLDisplayClass;
 typedef struct _GstGLDisplayPrivate GstGLDisplayPrivate;
 
+typedef struct _GstGLContext GstGLContext;
+typedef struct _GstGLContextClass GstGLContextClass;
+typedef struct _GstGLContextPrivate GstGLContextPrivate;
+
 typedef struct _GstGLWindow        GstGLWindow;
 typedef struct _GstGLWindowPrivate GstGLWindowPrivate;
 typedef struct _GstGLWindowClass   GstGLWindowClass;
