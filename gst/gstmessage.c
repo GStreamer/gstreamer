@@ -60,6 +60,8 @@ typedef struct
 {
   GstMessage message;
 
+  GstMessageExtendedType extended_type;
+
   GstStructure *structure;
 } GstMessageImpl;
 
@@ -105,6 +107,8 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_STREAM_START, "stream-start", 0},
   {GST_MESSAGE_NEED_CONTEXT, "need-context", 0},
   {GST_MESSAGE_HAVE_CONTEXT, "have-context", 0},
+  {GST_MESSAGE_EXTENDED, "extended", 0},
+  {GST_MESSAGE_DEVICE, "device", 0},
   {0, NULL, 0}
 };
 
@@ -235,6 +239,16 @@ _gst_message_copy (GstMessage * message)
   return GST_MESSAGE_CAST (copy);
 }
 
+GstMessageExtendedType
+gst_message_get_extended_type (GstMessage * msg)
+{
+  GstMessageImpl *message = (GstMessageImpl *) msg;
+
+  g_return_val_if_fail (GST_IS_MESSAGE (msg), 0);
+
+  return message->extended_type;
+}
+
 static void
 gst_message_init (GstMessageImpl * message, GstMessageType type,
     GstObject * src)
@@ -298,6 +312,20 @@ had_parent:
     g_warning ("structure is already owned by another object");
     return NULL;
   }
+}
+
+static inline GstMessage *
+gst_message_new_extended (GstMessageExtendedType extended_type, GstObject * src,
+    GstStructure * structure)
+{
+  GstMessageImpl *message;
+
+  message = (GstMessageImpl *) gst_message_new_custom (GST_MESSAGE_EXTENDED,
+      src, structure);
+
+  message->extended_type = extended_type;
+
+  return GST_MESSAGE_CAST (message);
 }
 
 /**
