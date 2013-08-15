@@ -417,7 +417,9 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static void gst_x264_enc_finalize (GObject * object);
-static gboolean gst_x264_enc_reset (GstVideoEncoder * encoder, gboolean hard);
+static gboolean gst_x264_enc_start (GstVideoEncoder * encoder);
+static gboolean gst_x264_enc_stop (GstVideoEncoder * encoder);
+static gboolean gst_x264_enc_flush (GstVideoEncoder * encoder);
 
 static gboolean gst_x264_enc_init_encoder (GstX264Enc * encoder);
 static void gst_x264_enc_close_encoder (GstX264Enc * encoder);
@@ -596,7 +598,9 @@ gst_x264_enc_class_init (GstX264EncClass * klass)
   gstencoder_class->set_format = GST_DEBUG_FUNCPTR (gst_x264_enc_set_format);
   gstencoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_x264_enc_handle_frame);
-  gstencoder_class->reset = GST_DEBUG_FUNCPTR (gst_x264_enc_reset);
+  gstencoder_class->start = GST_DEBUG_FUNCPTR (gst_x264_enc_start);
+  gstencoder_class->stop = GST_DEBUG_FUNCPTR (gst_x264_enc_stop);
+  gstencoder_class->flush = GST_DEBUG_FUNCPTR (gst_x264_enc_flush);
   gstencoder_class->finish = GST_DEBUG_FUNCPTR (gst_x264_enc_finish);
   gstencoder_class->getcaps = GST_DEBUG_FUNCPTR (gst_x264_enc_sink_getcaps);
   gstencoder_class->propose_allocation =
@@ -989,23 +993,42 @@ gst_x264_enc_dequeue_all_frames (GstX264Enc * enc)
 }
 
 static gboolean
-gst_x264_enc_reset (GstVideoEncoder * encoder, gboolean hard)
+gst_x264_enc_start (GstVideoEncoder * encoder)
+{
+  GstX264Enc *x264enc = GST_X264_ENC (encoder);
+
+  x264enc->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_FROM_PROPERTY;
+
+  return TRUE;
+}
+
+static gboolean
+gst_x264_enc_stop (GstVideoEncoder * encoder)
 {
   GstX264Enc *x264enc = GST_X264_ENC (encoder);
 
   gst_x264_enc_flush_frames (x264enc, FALSE);
   gst_x264_enc_close_encoder (x264enc);
-
-  if (hard) {
-    if (x264enc->input_state)
-      gst_video_codec_state_unref (x264enc->input_state);
-    x264enc->input_state = NULL;
-    x264enc->current_byte_stream = GST_X264_ENC_STREAM_FORMAT_FROM_PROPERTY;
-  } else {
-    gst_x264_enc_init_encoder (x264enc);
-  }
-
   gst_x264_enc_dequeue_all_frames (x264enc);
+
+  if (x264enc->input_state)
+    gst_video_codec_state_unref (x264enc->input_state);
+  x264enc->input_state = NULL;
+
+  return TRUE;
+}
+
+
+static gboolean
+gst_x264_enc_flush (GstVideoEncoder * encoder)
+{
+  GstX264Enc *x264enc = GST_X264_ENC (encoder);
+
+  gst_x264_enc_flush_frames (x264enc, FALSE);
+  gst_x264_enc_close_encoder (x264enc);
+  gst_x264_enc_dequeue_all_frames (x264enc);
+
+  gst_x264_enc_init_encoder (x264enc);
 
   return TRUE;
 }
