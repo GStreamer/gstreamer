@@ -932,6 +932,7 @@ parse_goption_arg (const gchar * opt,
 void
 gst_deinit (void)
 {
+  GstBinClass *bin_class;
   GstClock *clock;
 
   GST_INFO ("deinitializing GStreamer");
@@ -940,6 +941,13 @@ gst_deinit (void)
     GST_DEBUG ("already deinitialized");
     return;
   }
+
+  bin_class = GST_BIN_CLASS (g_type_class_peek (gst_bin_get_type ()));
+  if (bin_class->pool != NULL) {
+    g_thread_pool_free (bin_class->pool, FALSE, TRUE);
+    bin_class->pool = NULL;
+  }
+  gst_task_cleanup_all ();
 
   g_slist_foreach (_priv_gst_preload_plugins, (GFunc) g_free, NULL);
   g_slist_free (_priv_gst_preload_plugins);
