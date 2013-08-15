@@ -31,20 +31,13 @@
 #include "x11_event_source.h"
 #include "gstglwindow_x11.h"
 
-#if GST_GL_HAVE_PLATFORM_GLX
-# include "gstglwindow_x11_glx.h"
-#endif
-#if GST_GL_HAVE_PLATFORM_EGL
-# include "gstglwindow_x11_egl.h"
-#endif
-
 #define GST_GL_WINDOW_X11_GET_PRIVATE(o)  \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW_X11, GstGLWindowX11Private))
 
 #define GST_CAT_DEFAULT gst_gl_window_debug
 
 #define gst_gl_window_x11_parent_class parent_class
-G_DEFINE_ABSTRACT_TYPE (GstGLWindowX11, gst_gl_window_x11, GST_GL_TYPE_WINDOW);
+G_DEFINE_TYPE (GstGLWindowX11, gst_gl_window_x11, GST_GL_TYPE_WINDOW);
 
 /* X error trap */
 static int TrappedErrorCode = 0;
@@ -62,10 +55,12 @@ struct _GstGLWindowX11Private
   gboolean activate_result;
 };
 
+guintptr gst_gl_window_x11_get_display (GstGLWindow * window);
 guintptr gst_gl_window_x11_get_gl_context (GstGLWindow * window);
 gboolean gst_gl_window_x11_activate (GstGLWindow * window, gboolean activate);
 void gst_gl_window_x11_set_window_handle (GstGLWindow * window,
     guintptr handle);
+guintptr gst_gl_window_x11_get_window_handle (GstGLWindow * window);
 void gst_gl_window_x11_draw_unlocked (GstGLWindow * window, guint width,
     guint height);
 void gst_gl_window_x11_draw (GstGLWindow * window, guint width, guint height);
@@ -77,8 +72,6 @@ gboolean gst_gl_window_x11_create_context (GstGLWindow * window,
     GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
 gboolean gst_gl_window_x11_open (GstGLWindow * window, GError ** error);
 void gst_gl_window_x11_close (GstGLWindow * window);
-
-static gboolean gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11);
 
 static void
 gst_gl_window_x11_set_property (GObject * object, guint prop_id,
@@ -150,13 +143,11 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
       g_param_spec_string ("display", "Display", "X Display name", NULL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  window_class->create_context =
-      GST_DEBUG_FUNCPTR (gst_gl_window_x11_create_context);
-  window_class->get_gl_context =
-      GST_DEBUG_FUNCPTR (gst_gl_window_x11_get_gl_context);
-  window_class->activate = GST_DEBUG_FUNCPTR (gst_gl_window_x11_activate);
+  window_class->get_display = GST_DEBUG_FUNCPTR (gst_gl_window_x11_get_display);
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_set_window_handle);
+  window_class->get_window_handle =
+      GST_DEBUG_FUNCPTR (gst_gl_window_x11_get_window_handle);
   window_class->draw_unlocked =
       GST_DEBUG_FUNCPTR (gst_gl_window_x11_draw_unlocked);
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_x11_draw);
@@ -181,26 +172,10 @@ GstGLWindowX11 *
 gst_gl_window_x11_new (void)
 {
   GstGLWindowX11 *window = NULL;
-  const gchar *user_choice;
 
-  user_choice = g_getenv ("GST_GL_PLATFORM");
+  window = g_object_new (GST_GL_TYPE_WINDOW_X11, NULL);
 
-  GST_INFO ("Attempting to create x11 window, user platform choice:%s",
-      user_choice ? user_choice : "(null)");
-
-#if GST_GL_HAVE_PLATFORM_GLX
-  if (!window && (!user_choice || g_strstr_len (user_choice, 3, "glx") != NULL))
-    window = GST_GL_WINDOW_X11 (gst_gl_window_x11_glx_new ());
-#endif /* GST_GL_HAVE_PLATFORM_GLX */
-#ifdef GST_GL_HAVE_PLATFORM_EGL
-  if (!window && (!user_choice || g_strstr_len (user_choice, 3, "egl") != NULL))
-    window = GST_GL_WINDOW_X11 (gst_gl_window_x11_egl_new ());
-#endif /* GST_GL_HAVE_PLATFORM_EGL */
-  if (!window) {
-    GST_WARNING ("Failed to create x11 window, user_choice:%s",
-        user_choice ? user_choice : "NULL");
-    return NULL;
-  }
+  gst_gl_window_set_need_lock (GST_GL_WINDOW (window), FALSE);
 
   return window;
 }
@@ -228,27 +203,6 @@ gst_gl_window_x11_open (GstGLWindow * window, GError ** error)
 
   GST_LOG ("gl display sender: %ld", (gulong) window_x11->disp_send);
 
-  return TRUE;
-
-failure:
-  return FALSE;
-}
-
-gboolean
-gst_gl_window_x11_create_context (GstGLWindow * window,
-    GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
-{
-  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
-  GstGLWindowX11Class *window_class = GST_GL_WINDOW_X11_GET_CLASS (window_x11);
-
-  setlocale (LC_NUMERIC, "C");
-
-  gst_gl_window_set_need_lock (GST_GL_WINDOW (window_x11), FALSE);
-
-  window_x11->running = TRUE;
-  window_x11->visible = FALSE;
-  window_x11->allow_extra_expose_events = TRUE;
-
   g_assert (window_x11->device);
 
   window_x11->screen = DefaultScreenOfDisplay (window_x11->device);
@@ -273,6 +227,28 @@ gst_gl_window_x11_create_context (GstGLWindow * window,
 
   g_source_attach (window_x11->x11_source, window_x11->main_context);
 
+  window_x11->allow_extra_expose_events = TRUE;
+
+  return TRUE;
+
+failure:
+  return FALSE;
+}
+
+gboolean
+gst_gl_window_x11_create_context (GstGLWindow * window,
+    GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
+{
+  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
+  GstGLWindowX11Class *window_class = GST_GL_WINDOW_X11_GET_CLASS (window_x11);
+
+  setlocale (LC_NUMERIC, "C");
+
+  gst_gl_window_set_need_lock (GST_GL_WINDOW (window_x11), FALSE);
+
+  window_x11->running = TRUE;
+  window_x11->visible = FALSE;
+
   if (!window_class->choose_format (window_x11, error)) {
     goto failure;
   }
@@ -296,7 +272,7 @@ failure:
   return FALSE;
 }
 
-static gboolean
+gboolean
 gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
 {
   XSetWindowAttributes win_attr;
@@ -373,20 +349,13 @@ void
 gst_gl_window_x11_close (GstGLWindow * window)
 {
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
-  GstGLWindowX11Class *window_class = GST_GL_WINDOW_X11_GET_CLASS (window_x11);
   XEvent event;
-  Bool ret = TRUE;
 
   GST_GL_WINDOW_LOCK (window_x11);
 
   if (window_x11->device) {
     if (window_x11->internal_win_id)
       XUnmapWindow (window_x11->device, window_x11->internal_win_id);
-
-    ret = window_class->activate (window_x11, FALSE);
-    if (!ret)
-      GST_DEBUG ("failed to release opengl context");
-    window_class->destroy_context (window_x11);
 
     XFree (window_x11->visual_info);
 
@@ -482,7 +451,7 @@ gst_gl_window_x11_set_window_handle (GstGLWindow * window, guintptr id)
 
   window_x11->parent_win = (Window) id;
 
-  if (window_x11->running) {
+  if (g_main_loop_is_running (window_x11->loop)) {
     GST_LOG ("set parent window id: %lud", id);
 
     g_mutex_lock (&window_x11->disp_send_lock);
@@ -499,6 +468,16 @@ gst_gl_window_x11_set_window_handle (GstGLWindow * window, guintptr id)
   }
 }
 
+guintptr
+gst_gl_window_x11_get_window_handle (GstGLWindow * window)
+{
+  GstGLWindowX11 *window_x11;
+
+  window_x11 = GST_GL_WINDOW_X11 (window);
+
+  return window_x11->internal_win_id;
+}
+
 /* Called in the gl thread */
 void
 gst_gl_window_x11_draw_unlocked (GstGLWindow * window, guint width,
@@ -508,7 +487,8 @@ gst_gl_window_x11_draw_unlocked (GstGLWindow * window, guint width,
 
   window_x11 = GST_GL_WINDOW_X11 (window);
 
-  if (window_x11->running && window_x11->allow_extra_expose_events) {
+  if (g_main_loop_is_running (window_x11->loop)
+      && window_x11->allow_extra_expose_events) {
     XEvent event;
     XWindowAttributes attr;
 
@@ -539,7 +519,7 @@ gst_gl_window_x11_draw (GstGLWindow * window, guint width, guint height)
 
   window_x11 = GST_GL_WINDOW_X11 (window);
 
-  if (window_x11->running) {
+  if (g_main_loop_is_running (window_x11->loop)) {
     XEvent event;
     XWindowAttributes attr;
 
@@ -634,25 +614,62 @@ gst_gl_window_x11_run (GstGLWindow * window)
   g_main_loop_run (window_x11->loop);
 }
 
+inline gchar *
+event_type_to_string (guint type)
+{
+  switch (type) {
+    case CreateNotify:
+      return "CreateNotify";
+    case ConfigureNotify:
+      return "ConfigureNotify";
+    case DestroyNotify:
+      return "DestroyNotify";
+    case MapNotify:
+      return "MapNotify";
+    case UnmapNotify:
+      return "UnmapNotify";
+    case Expose:
+      return "Expose";
+    case VisibilityNotify:
+      return "VisibilityNotify";
+    case PropertyNotify:
+      return "PropertyNotify";
+    case SelectionClear:
+      return "SelectionClear";
+    case SelectionNotify:
+      return "SelectionNotify";
+    case SelectionRequest:
+      return "SelectionRequest";
+    case ClientMessage:
+      return "ClientMessage";
+    default:
+      return "unknown";
+  }
+}
+
 gboolean
 gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
 {
+  GstGLContext *context;
+  GstGLContextClass *context_class;
   GstGLWindow *window;
-  GstGLWindowX11Class *window_class;
 
   gboolean ret = TRUE;
 
   window = GST_GL_WINDOW (window_x11);
-  window_class = GST_GL_WINDOW_X11_GET_CLASS (window_x11);
+  context = gst_gl_window_get_context (window);
+  context_class = GST_GL_CONTEXT_GET_CLASS (context);
 
-  if (window_x11->running && XPending (window_x11->device)) {
+  if (g_main_loop_is_running (window_x11->loop)
+      && XPending (window_x11->device)) {
     XEvent event;
 
     /* XSendEvent (which are called in other threads) are done from another display structure */
     XNextEvent (window_x11->device, &event);
 
-    // use in generic/cube and other related uses
     window_x11->allow_extra_expose_events = XPending (window_x11->device) <= 2;
+
+    GST_LOG ("got event %s", event_type_to_string (event.type));
 
     switch (event.type) {
       case ClientMessage:
@@ -690,7 +707,7 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
       case Expose:
         if (window->draw) {
           window->draw (window->draw_data);
-          window_class->swap_buffers (window_x11);
+          context_class->swap_buffers (context);
         }
         break;
 
@@ -719,11 +736,13 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
       }
 
       default:
-        GST_DEBUG ("unknown XEvent type: %ud", event.type);
+        GST_DEBUG ("unknown XEvent type: %u", event.type);
         break;
 
     }                           // switch
   }                             // while running
+
+  gst_object_unref (context);
 
   return ret;
 }
@@ -752,7 +771,7 @@ gst_gl_window_x11_send_message (GstGLWindow * window, GstGLWindowCB callback,
 
   window_x11 = GST_GL_WINDOW_X11 (window);
 
-  if (window_x11->running) {
+  if (g_main_loop_is_running (window_x11->loop)) {
     GstGLMessage message;
 
     message.window = window;
@@ -806,4 +825,14 @@ gst_gl_window_x11_untrap_x_errors (void)
   XSetErrorHandler (old_error_handler);
 
   return TrappedErrorCode;
+}
+
+guintptr
+gst_gl_window_x11_get_display (GstGLWindow * window)
+{
+  GstGLWindowX11 *window_x11;
+
+  window_x11 = GST_GL_WINDOW_X11 (window);
+
+  return (guintptr) window_x11->device;
 }

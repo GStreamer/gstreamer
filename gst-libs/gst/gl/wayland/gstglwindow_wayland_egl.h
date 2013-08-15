@@ -74,8 +74,6 @@ struct window {
 struct _GstGLWindowWaylandEGL {
   /*< private >*/
   GstGLWindow parent;
-  
-  GstGLEGL *egl;
 
   struct display display;
   struct window  window;

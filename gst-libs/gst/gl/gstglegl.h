@@ -25,12 +25,23 @@
 #include <EGL/egl.h>
 
 #include <gst/gl/gstgl_fwd.h>
+#include <gst/gl/gstglcontext.h>
 
 G_BEGIN_DECLS
 
-typedef struct _GstGLEGL GstGLEGL;
+typedef struct _GstGLContextEGL GstGLContextEGL;
+typedef struct _GstGLContextEGLClass GstGLContextEGLClass;
 
-struct _GstGLEGL {
+#define GST_GL_TYPE_CONTEXT_EGL         (gst_gl_context_egl_get_type())
+#define GST_GL_CONTEXT_EGL(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_GL_TYPE_CONTEXT_EGL, GstGLContextEGL))
+#define GST_GL_CONTEXT_EGL_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_GL_TYPE_CONTEXT_EGL, GstGLContextEGLClass))
+#define GST_GL_IS_CONTEXT_EGL(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_GL_TYPE_CONTEXT_EGL))
+#define GST_GL_IS_CONTEXT_EGL_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_CONTEXT_EGL))
+#define GST_GL_CONTEXT_EGL_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_CONTEXT_EGL, GstGLContextEGLClass))
+
+struct _GstGLContextEGL {
+  GstGLContext context;
+
   EGLContext egl_context;
   EGLDisplay egl_display;
   EGLSurface egl_surface;
@@ -39,16 +50,12 @@ struct _GstGLEGL {
   GstGLAPI gl_api;
 };
 
-GstGLEGL * gst_gl_egl_create_context (EGLDisplay display, EGLNativeWindowType window, GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
-void gst_gl_egl_destroy_context (GstGLEGL *egl);
+struct _GstGLContextEGLClass {
+  GstGLContextClass parent;
+};
 
-gboolean gst_gl_egl_activate (GstGLEGL *egl, gboolean activate);
-void gst_gl_egl_swap_buffers (GstGLEGL *egl);
-
-guintptr gst_gl_egl_get_gl_context (GstGLEGL *egl);
-GstGLAPI gst_gl_egl_get_gl_api (GstGLEGL *egl);
-
-gpointer gst_gl_egl_get_proc_address (GstGLEGL *egl, const gchar * name);
+GType gst_gl_context_egl_get_type     (void);
+GstGLContextEGL * gst_gl_context_egl_new (void);
 
 G_END_DECLS
 

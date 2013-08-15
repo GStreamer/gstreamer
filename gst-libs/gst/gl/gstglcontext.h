@@ -36,7 +36,7 @@ G_BEGIN_DECLS
 GType gst_gl_context_get_type     (void);
 
 #define GST_GL_CONTEXT_ERROR (gst_gl_context_error_quark ())
-GQuark gst_gl_window_error_quark (void);
+GQuark gst_gl_context_error_quark (void);
 
 typedef enum
 {
@@ -69,8 +69,11 @@ struct _GstGLContextClass {
   GstGLAPI (*get_gl_api)         (GstGLContext *context);
   gpointer (*get_proc_address)   (GstGLContext *context, const gchar *name);
   gboolean (*activate)           (GstGLContext *context, gboolean activate);
+  gboolean (*choose_format)      (GstGLContext *context, GError **error);
   gboolean (*create_context)     (GstGLContext *context, GstGLAPI gl_api,
                                   guintptr external_gl_context, GError ** error);
+  void     (*destroy_context)    (GstGLContext *context);
+  void     (*swap_buffers)       (GstGLContext *context);
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
