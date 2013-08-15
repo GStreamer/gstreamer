@@ -37,6 +37,7 @@ static gboolean
 bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
   GMainLoop *loop = data;
+
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ERROR:
     {
@@ -140,7 +141,8 @@ main (int argc, gchar ** argv)
   }
 
   bus = gst_element_get_bus (pipeline);
-  gst_bus_add_watch (bus, bus_callback, mainloop);
+  gst_bus_add_signal_watch (bus);
+  g_signal_connect (bus, "message", (GCallback) bus_callback, mainloop);
   gst_object_unref (bus);
 
   g_print ("Starting pipeline\n");
