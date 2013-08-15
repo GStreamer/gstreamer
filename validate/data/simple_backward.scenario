@@ -1,0 +1,14 @@
+<scenario name="Simple backward">
+  <actions>
+    <seek name='Backward seek'
+          playback_time="0.0"
+          format="time"
+          rate="-1.0"
+          flags="accurate+flush"
+          start_type="set"
+          start="0.0"
+          stop_type="set"
+          stop="-1.0" />
+  </actions>
+</scenario>
+
