@@ -1006,7 +1006,7 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
   guint best_count = 0;
 
   while (c.offset < AAC_AMOUNT) {
-    guint snc, len;
+    guint snc, len, offset, i;
 
     /* detect adts header or adif header.
      * The ADIF header is 4 bytes, that should be OK. The ADTS header, on
@@ -1033,8 +1033,9 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
         goto next;
       }
 
+      offset = len;
       /* check if there's a second ADTS frame */
-      snc = GST_READ_UINT16_BE (c.data + len);
+      snc = GST_READ_UINT16_BE (c.data + offset);
       if ((snc & 0xfff6) == 0xfff0) {
         GstCaps *caps;
         guint mpegversion, sample_freq_idx, channel_config, profile_idx, rate;
@@ -1083,7 +1084,35 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
               channels_map[channel_config], "rate", G_TYPE_INT, rate, NULL);
         }
 
-        gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
+        /* length of the second ADTS frame */
+        len = ((c.data[offset + 3] & 0x03) << 11) |
+            (c.data[offset + 4] << 3) | ((c.data[offset + 5] & 0xe0) >> 5);
+
+        if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, len + 2)) {
+          GST_DEBUG ("Wrong sync or next frame not within reach, len=%u", len);
+          gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, caps);
+        } else {
+          offset += len;
+          /* find more aac sync to select correctly */
+          /* check if there's a third/fourth/fifth/sixth ADTS frame, if there is a sixth frame, set probability to maximum:100% */
+          for (i = 3; i <= 6; i++) {
+            len = ((c.data[offset + 3] & 0x03) << 11) |
+                (c.data[offset + 4] << 3) | ((c.data[offset + 5] & 0xe0) >> 5);
+            if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, len + 2)) {
+              GST_DEBUG ("Wrong sync or next frame not within reach, len=%u", len);
+              break;
+            }
+            snc = GST_READ_UINT16_BE (c.data + offset);
+            if ((snc & 0xfff6) == 0xfff0) {
+              GST_DEBUG ("Find %und Sync..probability is %u ", i, GST_TYPE_FIND_LIKELY + 5 * (i - 2));
+              offset += len;
+            } else {
+              break;
+            }
+          }
+          gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY + 5 * (i - 3), caps);
+	  
+        }
         gst_caps_unref (caps);
         break;
       }
