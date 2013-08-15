@@ -177,7 +177,7 @@ G_DEFINE_TYPE (GstTheoraEnc, gst_theora_enc, GST_TYPE_VIDEO_ENCODER);
 
 static gboolean theora_enc_start (GstVideoEncoder * enc);
 static gboolean theora_enc_stop (GstVideoEncoder * enc);
-static gboolean theora_enc_reset (GstVideoEncoder * enc, gboolean hard);
+static gboolean theora_enc_flush (GstVideoEncoder * enc);
 static gboolean theora_enc_set_format (GstVideoEncoder * enc,
     GstVideoCodecState * state);
 static GstFlowReturn theora_enc_handle_frame (GstVideoEncoder * enc,
@@ -222,7 +222,7 @@ gst_theora_enc_class_init (GstTheoraEncClass * klass)
 
   gstvideo_encoder_class->start = GST_DEBUG_FUNCPTR (theora_enc_start);
   gstvideo_encoder_class->stop = GST_DEBUG_FUNCPTR (theora_enc_stop);
-  gstvideo_encoder_class->reset = GST_DEBUG_FUNCPTR (theora_enc_reset);
+  gstvideo_encoder_class->flush = GST_DEBUG_FUNCPTR (theora_enc_flush);
   gstvideo_encoder_class->set_format =
       GST_DEBUG_FUNCPTR (theora_enc_set_format);
   gstvideo_encoder_class->handle_frame =
@@ -358,7 +358,7 @@ theora_enc_finalize (GObject * object)
 }
 
 static gboolean
-theora_enc_reset (GstVideoEncoder * encoder, gboolean hard)
+theora_enc_flush (GstVideoEncoder * encoder)
 {
   GstTheoraEnc *enc = GST_THEORA_ENC (encoder);
   ogg_uint32_t keyframe_force;
@@ -374,53 +374,40 @@ theora_enc_reset (GstVideoEncoder * encoder, gboolean hard)
   if (enc->encoder)
     th_encode_free (enc->encoder);
 
-  if (!hard) {
-    enc->encoder = th_encode_alloc (&enc->info);
-    /* We ensure this function cannot fail. */
-    g_assert (enc->encoder != NULL);
-    th_encode_ctl (enc->encoder, TH_ENCCTL_SET_SPLEVEL, &enc->speed_level,
-        sizeof (enc->speed_level));
-    th_encode_ctl (enc->encoder, TH_ENCCTL_SET_VP3_COMPATIBLE,
-        &enc->vp3_compatible, sizeof (enc->vp3_compatible));
+  enc->encoder = th_encode_alloc (&enc->info);
+  /* We ensure this function cannot fail. */
+  g_assert (enc->encoder != NULL);
+  th_encode_ctl (enc->encoder, TH_ENCCTL_SET_SPLEVEL, &enc->speed_level,
+      sizeof (enc->speed_level));
+  th_encode_ctl (enc->encoder, TH_ENCCTL_SET_VP3_COMPATIBLE,
+      &enc->vp3_compatible, sizeof (enc->vp3_compatible));
 
-    rate_flags = 0;
-    if (enc->drop_frames)
-      rate_flags |= TH_RATECTL_DROP_FRAMES;
-    if (enc->drop_frames)
-      rate_flags |= TH_RATECTL_CAP_OVERFLOW;
-    if (enc->drop_frames)
-      rate_flags |= TH_RATECTL_CAP_UNDERFLOW;
-    th_encode_ctl (enc->encoder, TH_ENCCTL_SET_RATE_FLAGS,
-        &rate_flags, sizeof (rate_flags));
+  rate_flags = 0;
+  if (enc->drop_frames)
+    rate_flags |= TH_RATECTL_DROP_FRAMES;
+  if (enc->drop_frames)
+    rate_flags |= TH_RATECTL_CAP_OVERFLOW;
+  if (enc->drop_frames)
+    rate_flags |= TH_RATECTL_CAP_UNDERFLOW;
+  th_encode_ctl (enc->encoder, TH_ENCCTL_SET_RATE_FLAGS,
+      &rate_flags, sizeof (rate_flags));
 
-    if (enc->rate_buffer) {
-      th_encode_ctl (enc->encoder, TH_ENCCTL_SET_RATE_BUFFER,
-          &enc->rate_buffer, sizeof (enc->rate_buffer));
-    } else {
-      /* FIXME */
-    }
-
-    keyframe_force = enc->keyframe_auto ?
-        enc->keyframe_force : enc->keyframe_freq;
-    th_encode_ctl (enc->encoder, TH_ENCCTL_SET_KEYFRAME_FREQUENCY_FORCE,
-        &keyframe_force, sizeof (keyframe_force));
-
-    /* Get placeholder data */
-    if (enc->multipass_cache_fd
-        && enc->multipass_mode == MULTIPASS_MODE_FIRST_PASS)
-      theora_enc_write_multipass_cache (enc, TRUE, FALSE);
+  if (enc->rate_buffer) {
+    th_encode_ctl (enc->encoder, TH_ENCCTL_SET_RATE_BUFFER,
+        &enc->rate_buffer, sizeof (enc->rate_buffer));
   } else {
-    enc->encoder = NULL;
-    th_comment_clear (&enc->comment);
-    th_info_clear (&enc->info);
-
-    if (enc->input_state)
-      gst_video_codec_state_unref (enc->input_state);
-    enc->input_state = NULL;
-
-    enc->packetno = 0;
-    enc->initialised = FALSE;
+    /* FIXME */
   }
+
+  keyframe_force = enc->keyframe_auto ?
+      enc->keyframe_force : enc->keyframe_freq;
+  th_encode_ctl (enc->encoder, TH_ENCCTL_SET_KEYFRAME_FREQUENCY_FORCE,
+      &keyframe_force, sizeof (keyframe_force));
+
+  /* Get placeholder data */
+  if (enc->multipass_cache_fd
+      && enc->multipass_mode == MULTIPASS_MODE_FIRST_PASS)
+    theora_enc_write_multipass_cache (enc, TRUE, FALSE);
 
   return TRUE;
 }
@@ -457,6 +444,9 @@ theora_enc_start (GstVideoEncoder * benc)
     g_io_channel_set_encoding (enc->multipass_cache_fd, NULL, NULL);
   }
 
+  enc->packetno = 0;
+  enc->initialised = FALSE;
+
   return TRUE;
 }
 
@@ -467,6 +457,16 @@ theora_enc_stop (GstVideoEncoder * benc)
 
   GST_DEBUG_OBJECT (benc, "stop: clearing theora state");
   enc = GST_THEORA_ENC (benc);
+
+  if (enc->encoder)
+    th_encode_free (enc->encoder);
+  enc->encoder = NULL;
+  th_comment_clear (&enc->comment);
+  th_info_clear (&enc->info);
+
+  if (enc->input_state)
+    gst_video_codec_state_unref (enc->input_state);
+  enc->input_state = NULL;
 
   /* Everything else is handled in reset() */
   theora_enc_clear_multipass_cache (enc);
@@ -596,7 +596,7 @@ theora_enc_set_format (GstVideoEncoder * benc, GstVideoCodecState * state)
       "keyframe_frequency_force is %d, granule shift is %d",
       enc->keyframe_force, enc->info.keyframe_granule_shift);
 
-  theora_enc_reset (benc, FALSE);
+  theora_enc_flush (benc);
   enc->initialised = TRUE;
 
   return TRUE;
