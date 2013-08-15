@@ -212,7 +212,7 @@ gst_mpeg2dec_stop (GstVideoDecoder * decoder)
 {
   GstMpeg2dec *mpeg2dec = GST_MPEG2DEC (decoder);
 
-  mpeg2_reset (mpeg2dec->decoder, 1);
+  mpeg2_reset (mpeg2dec->decoder, 0);
   mpeg2_skip (mpeg2dec->decoder, 1);
 
   gst_mpeg2dec_clear_buffers (mpeg2dec);
@@ -231,7 +231,7 @@ gst_mpeg2dec_flush (GstVideoDecoder * decoder)
 
   /* reset the initial video state */
   mpeg2dec->discont_state = MPEG2DEC_DISC_NEW_PICTURE;
-  mpeg2_reset (mpeg2dec->decoder, 0);
+  mpeg2_reset (mpeg2dec->decoder, 1);
   mpeg2_skip (mpeg2dec->decoder, 1);
 
   gst_mpeg2dec_clear_buffers (mpeg2dec);
