@@ -100,7 +100,7 @@ struct _GstValidateScenarioPrivate
   GstElement *pipeline;
   GstValidateRunner *runner;
 
-  GList *seeks;
+  GList *actions;
   gint64 seeked_position;       /* last seeked position */
   GstClockTime seek_pos_tol;
 
@@ -154,7 +154,7 @@ _scenario_action_init (ScenarioAction * act)
 static SeekInfo *
 _new_seek_info (void)
 {
-  SeekInfo *info = g_slice_new (SeekInfo);
+  SeekInfo *info = g_slice_new0 (SeekInfo);
 
   _scenario_action_init (&info->action);
   info->action.type = SCENARIO_ACTION_SEEK;
@@ -172,7 +172,7 @@ _new_seek_info (void)
 static PauseInfo *
 _new_pause_info (void)
 {
-  PauseInfo *pause = g_slice_new (PauseInfo);
+  PauseInfo *pause = g_slice_new0 (PauseInfo);
 
   _scenario_action_init (SCENARIO_ACTION (pause));
   pause->action.type = SCENARIO_ACTION_PAUSE;
@@ -184,7 +184,7 @@ _new_pause_info (void)
 static EosInfo *
 _new_eos_info (void)
 {
-  EosInfo *eos = g_slice_new (EosInfo);
+  EosInfo *eos = g_slice_new0 (EosInfo);
 
   _scenario_action_init (SCENARIO_ACTION (eos));
   eos->action.type = SCENARIO_ACTION_EOS;
@@ -273,7 +273,7 @@ _parse_seek (GMarkupParseContext * context, const gchar * element_name,
   get_enum_from_string (GST_TYPE_SEEK_TYPE, stop_type, &info->stop_type);
   info->stop = g_ascii_strtoull (stop, NULL, 10);
 
-  priv->seeks = g_list_append (priv->seeks, info);
+  priv->actions = g_list_append (priv->actions, info);
 }
 
 static inline void
@@ -298,7 +298,7 @@ _parse_pause (GMarkupParseContext * context, const gchar * element_name,
   if (playback_time)
     info->action.playback_time = g_ascii_strtoull (playback_time, NULL, 10);
   info->duration = g_ascii_strtoull (duration, NULL, 10);
-  priv->seeks = g_list_append (priv->seeks, info);
+  priv->actions = g_list_append (priv->actions, info);
 }
 
 static inline void
@@ -320,7 +320,8 @@ _parse_eos (GMarkupParseContext * context, const gchar * element_name,
 
   if (playback_time)
     info->action.playback_time = g_ascii_strtoull (playback_time, NULL, 10);
-  priv->seeks = g_list_append (priv->seeks, info);
+
+  priv->actions = g_list_append (priv->actions, info);
 }
 
 static void
@@ -441,7 +442,7 @@ get_position (GstValidateScenario * scenario)
   gst_element_query_position (pipeline, format, &position);
 
   GST_LOG ("Current position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
-  for (tmp = scenario->priv->seeks; tmp; tmp = g_list_next (tmp)) {
+  for (tmp = scenario->priv->actions; tmp; tmp = g_list_next (tmp)) {
     ScenarioAction *act = tmp->data;
 
     if ((position >= (act->playback_time - priv->seek_pos_tol))
@@ -457,7 +458,7 @@ get_position (GstValidateScenario * scenario)
 
       _execute_action (scenario, act);
 
-      priv->seeks = g_list_remove_link (priv->seeks, tmp);
+      priv->actions = g_list_remove_link (priv->actions, tmp);
       _free_scenario_action (act);
       g_list_free (tmp);
       break;
@@ -684,7 +685,7 @@ gst_validate_scenario_dispose (GObject * object)
 
   if (priv->pipeline)
     gst_object_unref (priv->pipeline);
-  g_list_free_full (priv->seeks, (GDestroyNotify) _free_scenario_action);
+  g_list_free_full (priv->actions, (GDestroyNotify) _free_scenario_action);
 
   G_OBJECT_CLASS (gst_validate_scenario_parent_class)->dispose (object);
 }
