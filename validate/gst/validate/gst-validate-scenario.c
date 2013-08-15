@@ -444,7 +444,7 @@ get_position (GstValidateScenario * scenario)
   GstValidateScenarioPrivate *priv = scenario->priv;
   GstElement *pipeline = scenario->priv->pipeline;
 
-  gst_element_query_position (pipeline, &format, &position);
+  gst_element_query_position (pipeline, format, &position);
 
   GST_LOG ("Current position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
   for (tmp = scenario->priv->seeks; tmp; tmp = g_list_next (tmp)) {
@@ -482,7 +482,7 @@ async_done_cb (GstBus * bus, GstMessage * message,
     gint64 position;
     GstFormat format = GST_FORMAT_TIME;
 
-    gst_element_query_position (priv->pipeline, &format, &position);
+    gst_element_query_position (priv->pipeline, format, &position);
     if (position > (priv->seeked_position + priv->seek_pos_tol) ||
         position < (MAX (0,
                 ((gint64) (priv->seeked_position - priv->seek_pos_tol))))) {

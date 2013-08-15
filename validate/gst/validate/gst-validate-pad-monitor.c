@@ -46,7 +46,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_validate_pad_monitor_debug);
 G_DEFINE_TYPE_WITH_CODE (GstValidatePadMonitor, gst_validate_pad_monitor,
     GST_TYPE_VALIDATE_MONITOR, _do_init);
 
-#define PAD_IS_IN_PUSH_MODE(p) ((p)->mode == GST_ACTIVATE_PUSH)
 #define PENDING_FIELDS "pending-fields"
 
 /*
@@ -103,55 +102,25 @@ static gboolean gst_validate_pad_monitor_do_setup (GstValidateMonitor *
     monitor);
 static GstElement *gst_validate_pad_monitor_get_element (GstValidateMonitor *
     monitor);
+static void
+gst_validate_pad_monitor_setcaps_pre (GstValidatePadMonitor * pad_monitor,
+    GstCaps * caps);
+static void gst_validate_pad_monitor_setcaps_post (GstValidatePadMonitor *
+    pad_monitor, GstCaps * caps, gboolean ret);
 
-/* This was copied from gstpad.c and might need
- * updating whenever it changes in core */
-static GstCaps *
-_gst_pad_get_caps_default (GstPad * pad)
-{
-  GstCaps *result = NULL;
-  GstPadTemplate *templ;
-
-  if ((templ = GST_PAD_PAD_TEMPLATE (pad))) {
-    result = GST_PAD_TEMPLATE_CAPS (templ);
-    GST_DEBUG_OBJECT (pad, "using pad template %p with caps %p %"
-        GST_PTR_FORMAT, templ, result, result);
-
-    result = gst_caps_ref (result);
-    goto done;
-  }
-  if ((result = GST_PAD_CAPS (pad))) {
-    GST_DEBUG_OBJECT (pad, "using pad caps %p %" GST_PTR_FORMAT, result,
-        result);
-
-    result = gst_caps_ref (result);
-    goto done;
-  }
-
-  /* this almost never happens */
-  GST_DEBUG_OBJECT (pad, "pad has no caps");
-  result = gst_caps_new_empty ();
-
-done:
-  return result;
-}
+#define PAD_IS_IN_PUSH_MODE(p) ((p)->mode == GST_PAD_MODE_PUSH)
 
 static gboolean
 _structure_is_raw_video (GstStructure * structure)
 {
-  return gst_structure_has_name (structure, "video/x-raw-yuv")
-      || gst_structure_has_name (structure, "video/x-raw-rgb")
-      || gst_structure_has_name (structure, "video/x-raw-gray");
+  return gst_structure_has_name (structure, "video/x-raw");
 }
 
 static gboolean
 _structure_is_raw_audio (GstStructure * structure)
 {
-  return gst_structure_has_name (structure, "audio/x-raw-int")
-      || gst_structure_has_name (structure, "audio/x-raw-float");
+  return gst_structure_has_name (structure, "audio/x-raw");
 }
-
-
 
 static void
 _check_field_type (GstValidatePadMonitor * monitor, GstStructure * structure,
@@ -204,19 +173,8 @@ gst_validate_pad_monitor_check_raw_video_caps_complete (GstValidatePadMonitor *
       GST_TYPE_FRACTION_RANGE, 0);
   _check_field_type (monitor, structure, "pixel-aspect-ratio",
       GST_TYPE_FRACTION, GST_TYPE_FRACTION_RANGE, 0);
-
-  if (gst_structure_has_name (structure, "video/x-raw-yuv")) {
-    _check_field_type (monitor, structure, "format", GST_TYPE_FOURCC,
-        GST_TYPE_LIST);
-
-  } else if (gst_structure_has_name (structure, "video/x-raw-rgb")) {
-    _check_field_type (monitor, structure, "bpp", G_TYPE_INT, GST_TYPE_LIST, 0);
-    _check_field_type (monitor, structure, "depth", G_TYPE_INT, GST_TYPE_LIST,
-        0);
-    _check_field_type (monitor, structure, "endianness", G_TYPE_INT,
-        GST_TYPE_LIST, 0);
-  }
-
+  _check_field_type (monitor, structure, "format", G_TYPE_STRING,
+      GST_TYPE_LIST);
 }
 
 static void
@@ -268,16 +226,18 @@ gst_validate_pad_monitor_get_othercaps (GstValidatePadMonitor * monitor)
       (monitor));
   done = FALSE;
   while (!done) {
-    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+    GValue value = { 0, };
+    switch (gst_iterator_next (iter, &value)) {
       case GST_ITERATOR_OK:
+        otherpad = g_value_get_object (&value);
 
         /* TODO What would be the correct caps operation to merge the caps in
          * case one sink is internally linked to multiple srcs? */
-        peercaps = gst_pad_peer_get_caps_reffed (otherpad);
+        peercaps = gst_pad_peer_query_caps (otherpad, NULL);
         if (peercaps)
-          gst_caps_merge (caps, peercaps);
-        gst_object_unref (otherpad);
+          caps = gst_caps_merge (caps, peercaps);
 
+        g_value_reset (&value);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
@@ -510,10 +470,8 @@ gst_validate_pad_monitor_dispose (GObject * object)
   GstPad *pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor);
 
   if (pad) {
-    if (monitor->buffer_probe_id)
-      gst_pad_remove_data_probe (pad, monitor->buffer_probe_id);
-    if (monitor->event_probe_id)
-      gst_pad_remove_data_probe (pad, monitor->event_probe_id);
+    if (monitor->pad_probe_id)
+      gst_pad_remove_probe (pad, monitor->pad_probe_id);
 
     g_signal_handlers_disconnect_by_func (pad, (GCallback) _parent_set_cb,
         monitor);
@@ -547,7 +505,7 @@ static void
 gst_validate_pad_monitor_init (GstValidatePadMonitor * pad_monitor)
 {
   pad_monitor->pending_setcaps_fields =
-      gst_structure_empty_new (PENDING_FIELDS);
+      gst_structure_new_empty (PENDING_FIELDS);
   pad_monitor->serialized_events =
       g_ptr_array_new_with_free_func ((GDestroyNotify)
       _serialized_event_data_free);
@@ -654,23 +612,6 @@ gst_validate_pad_monitor_query_overrides (GstValidatePadMonitor * pad_monitor,
 }
 
 static void
-gst_validate_pad_monitor_getcaps_overrides (GstValidatePadMonitor * pad_monitor,
-    GstCaps * caps)
-{
-  GList *iter;
-
-  GST_VALIDATE_MONITOR_OVERRIDES_LOCK (pad_monitor);
-  for (iter = GST_VALIDATE_MONITOR_OVERRIDES (pad_monitor).head; iter;
-      iter = g_list_next (iter)) {
-    GstValidateOverride *override = iter->data;
-
-    gst_validate_override_getcaps_handler (override,
-        GST_VALIDATE_MONITOR_CAST (pad_monitor), caps);
-  }
-  GST_VALIDATE_MONITOR_OVERRIDES_UNLOCK (pad_monitor);
-}
-
-static void
 gst_validate_pad_monitor_setcaps_overrides (GstValidatePadMonitor * pad_monitor,
     GstCaps * caps)
 {
@@ -733,8 +674,10 @@ static void
       (monitor));
   done = FALSE;
   while (!done) {
-    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+    GValue value = { 0, };
+    switch (gst_iterator_next (iter, &value)) {
       case GST_ITERATOR_OK:
+        otherpad = g_value_get_object (&value);
         GST_DEBUG_OBJECT (monitor, "Checking pad %s:%s input timestamps",
             GST_DEBUG_PAD_NAME (otherpad));
         othermonitor = g_object_get_data ((GObject *) otherpad, "qa-monitor");
@@ -748,7 +691,7 @@ static void
           found = TRUE;
         }
         GST_VALIDATE_MONITOR_UNLOCK (othermonitor);
-        gst_object_unref (otherpad);
+        g_value_reset (&value);
         has_one = TRUE;
         break;
       case GST_ITERATOR_RESYNC:
@@ -871,8 +814,10 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
       (monitor));
   done = FALSE;
   while (!done) {
-    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+    GValue value = { 0, };
+    switch (gst_iterator_next (iter, &value)) {
       case GST_ITERATOR_OK:
+        otherpad = g_value_get_object (&value);
         peerpad = gst_pad_get_peer (otherpad);
         if (peerpad) {
           othermonitor = g_object_get_data ((GObject *) peerpad, "qa-monitor");
@@ -886,7 +831,7 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
 
           gst_object_unref (peerpad);
         }
-        gst_object_unref (otherpad);
+        g_value_reset (&value);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
@@ -905,7 +850,7 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
     /* no peer pad found, nothing to do */
     return;
   }
-  if (monitor->is_eos && ret == GST_FLOW_UNEXPECTED) {
+  if (monitor->is_eos && ret == GST_FLOW_EOS) {
     /* this is acceptable */
     return;
   }
@@ -934,8 +879,10 @@ static void
       (monitor));
   done = FALSE;
   while (!done) {
-    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+    GValue value = { 0, };
+    switch (gst_iterator_next (iter, &value)) {
       case GST_ITERATOR_OK:
+        otherpad = g_value_get_object (&value);
         othermonitor = g_object_get_data ((GObject *) otherpad, "qa-monitor");
         if (othermonitor) {
           SerializedEventData *data = g_slice_new0 (SerializedEventData);
@@ -945,6 +892,7 @@ static void
           g_ptr_array_add (othermonitor->serialized_events, data);
           GST_VALIDATE_MONITOR_UNLOCK (othermonitor);
         }
+        g_value_reset (&value);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
@@ -983,8 +931,10 @@ gst_validate_pad_monitor_otherpad_add_pending_field (GstValidatePadMonitor *
       (monitor));
   done = FALSE;
   while (!done) {
-    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+    GValue value = { 0, };
+    switch (gst_iterator_next (iter, &value)) {
       case GST_ITERATOR_OK:
+        otherpad = g_value_get_object (&value);
         othermonitor = g_object_get_data ((GObject *) otherpad, "qa-monitor");
         if (othermonitor) {
           GST_VALIDATE_MONITOR_LOCK (othermonitor);
@@ -993,6 +943,7 @@ gst_validate_pad_monitor_otherpad_add_pending_field (GstValidatePadMonitor *
               field, v);
           GST_VALIDATE_MONITOR_UNLOCK (othermonitor);
         }
+        g_value_reset (&value);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
@@ -1023,17 +974,20 @@ gst_validate_pad_monitor_otherpad_clear_pending_fields (GstValidatePadMonitor *
       (monitor));
   done = FALSE;
   while (!done) {
-    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+    GValue value = { 0, };
+    switch (gst_iterator_next (iter, &value)) {
       case GST_ITERATOR_OK:
+        otherpad = g_value_get_object (&value);
         othermonitor = g_object_get_data ((GObject *) otherpad, "qa-monitor");
         if (othermonitor) {
           GST_VALIDATE_MONITOR_LOCK (othermonitor);
           g_assert (othermonitor->pending_setcaps_fields != NULL);
           gst_structure_free (othermonitor->pending_setcaps_fields);
           othermonitor->pending_setcaps_fields =
-              gst_structure_empty_new (PENDING_FIELDS);
+              gst_structure_new_empty (PENDING_FIELDS);
           GST_VALIDATE_MONITOR_UNLOCK (othermonitor);
         }
+        g_value_reset (&value);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
@@ -1064,8 +1018,10 @@ gst_validate_pad_monitor_add_expected_newsegment (GstValidatePadMonitor *
       (monitor));
   done = FALSE;
   while (!done) {
-    switch (gst_iterator_next (iter, (gpointer *) & otherpad)) {
+    GValue value = { 0, };
+    switch (gst_iterator_next (iter, &value)) {
       case GST_ITERATOR_OK:
+        otherpad = g_value_get_object (&value);
         othermonitor = g_object_get_data ((GObject *) otherpad, "qa-monitor");
         GST_VALIDATE_MONITOR_LOCK (othermonitor);
         if (othermonitor->expected_segment) {
@@ -1075,7 +1031,7 @@ gst_validate_pad_monitor_add_expected_newsegment (GstValidatePadMonitor *
         }
         othermonitor->expected_segment = gst_event_ref (event);
         GST_VALIDATE_MONITOR_UNLOCK (othermonitor);
-        gst_object_unref (otherpad);
+        g_value_reset (&value);
         break;
       case GST_ITERATOR_RESYNC:
         gst_iterator_resync (iter);
@@ -1117,8 +1073,7 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
       if (pad_monitor->pending_flush_stop) {
         GST_VALIDATE_REPORT (pad_monitor,
             GST_VALIDATE_ISSUE_ID_EVENT_FLUSH_START_UNEXPECTED,
-            "Received flush-start from %" GST_PTR_FORMAT
-            " when flush-stop was expected", GST_EVENT_SRC (event));
+            "Received flush-start from " " when flush-stop was expected");
       }
       pad_monitor->pending_flush_stop = TRUE;
     }
@@ -1140,8 +1095,7 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
       if (!pad_monitor->pending_flush_stop) {
         GST_VALIDATE_REPORT (pad_monitor,
             GST_VALIDATE_ISSUE_ID_EVENT_FLUSH_STOP_UNEXPECTED,
-            "Unexpected flush-stop %p from %" GST_PTR_FORMAT, event,
-            GST_EVENT_SRC (event));
+            "Unexpected flush-stop %p" GST_PTR_FORMAT, event);
       }
       pad_monitor->pending_flush_stop = FALSE;
     }
@@ -1153,13 +1107,10 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
 
 static gboolean
 gst_validate_pad_monitor_sink_event_check (GstValidatePadMonitor * pad_monitor,
-    GstEvent * event, GstPadEventFunction handler)
+    GstObject * parent, GstEvent * event, GstPadEventFunction handler)
 {
   gboolean ret = TRUE;
-  gboolean update;
-  gdouble rate, applied_rate;
-  GstFormat format;
-  gint64 start, stop, position;
+  const GstSegment *segment;
   guint32 seqnum = gst_event_get_seqnum (event);
   GstPad *pad = GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor);
 
@@ -1167,10 +1118,16 @@ gst_validate_pad_monitor_sink_event_check (GstValidatePadMonitor * pad_monitor,
 
   /* pre checks */
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
-      /* parse newsegment data to be used if event is handled */
-      gst_event_parse_new_segment_full (event, &update, &rate, &applied_rate,
-          &format, &start, &stop, &position);
+    case GST_EVENT_CAPS:{
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      gst_validate_pad_monitor_setcaps_pre (pad_monitor, caps);
+      break;
+    }
+    case GST_EVENT_SEGMENT:
+      /* parse segment data to be used if event is handled */
+      gst_event_parse_segment (event, &segment);
 
       if (pad_monitor->pending_newsegment_seqnum) {
         if (pad_monitor->pending_newsegment_seqnum == seqnum) {
@@ -1186,21 +1143,17 @@ gst_validate_pad_monitor_sink_event_check (GstValidatePadMonitor * pad_monitor,
       } else {
         /* check if this segment is the expected one */
         if (pad_monitor->expected_segment) {
-          gint64 exp_start, exp_stop, exp_position;
-          gdouble exp_rate, exp_applied_rate;
-          gboolean exp_update;
-          GstFormat exp_format;
+          const GstSegment *exp_segment;
 
           if (pad_monitor->expected_segment != event) {
-            gst_event_parse_new_segment_full (pad_monitor->expected_segment,
-                &exp_update, &exp_rate,
-                &exp_applied_rate, &exp_format, &exp_start, &exp_stop,
-                &exp_position);
-            if (format == exp_format) {
-              if (update != exp_update
-                  || (exp_rate * exp_applied_rate != rate * applied_rate)
-                  || exp_start != start || exp_stop != stop
-                  || exp_position != position) {
+            gst_event_parse_segment (pad_monitor->expected_segment,
+                &exp_segment);
+            if (segment->format == exp_segment->format) {
+              if ((exp_segment->rate * exp_segment->applied_rate !=
+                      segment->rate * segment->applied_rate)
+                  || exp_segment->start != segment->start
+                  || exp_segment->stop != segment->stop
+                  || exp_segment->position != segment->position) {
                 GST_VALIDATE_REPORT (pad_monitor,
                     GST_VALIDATE_ISSUE_ID_EVENT_NEW_SEGMENT_MISMATCH,
                     "Expected segment didn't match received segment event");
@@ -1235,20 +1188,27 @@ gst_validate_pad_monitor_sink_event_check (GstValidatePadMonitor * pad_monitor,
   gst_validate_pad_monitor_event_overrides (pad_monitor, event);
   if (handler) {
     gst_event_ref (event);
-    ret = pad_monitor->event_func (pad, event);
+    ret = pad_monitor->event_func (pad, parent, event);
   }
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
 
   /* post checks */
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_NEWSEGMENT:
+    case GST_EVENT_CAPS:{
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      gst_validate_pad_monitor_setcaps_post (pad_monitor, caps, ret);
+      break;
+    }
+    case GST_EVENT_SEGMENT:
       if (ret) {
-        if (!pad_monitor->has_segment && pad_monitor->segment.format != format) {
-          gst_segment_init (&pad_monitor->segment, format);
+        if (!pad_monitor->has_segment
+            && pad_monitor->segment.format != segment->format) {
+          gst_segment_init (&pad_monitor->segment, segment->format);
         }
-        gst_segment_set_newsegment_full (&pad_monitor->segment, update, rate,
-            applied_rate, format, start, stop, position);
+        gst_segment_copy_into (segment, &pad_monitor->segment);
         pad_monitor->has_segment = TRUE;
       }
       break;
@@ -1268,7 +1228,7 @@ gst_validate_pad_monitor_sink_event_check (GstValidatePadMonitor * pad_monitor,
 
 static gboolean
 gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
-    GstEvent * event, GstPadEventFunction handler)
+    GstObject * parent, GstEvent * event, GstPadEventFunction handler)
 {
   gboolean ret = TRUE;
   gdouble rate;
@@ -1313,7 +1273,7 @@ gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
   if (handler) {
     GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
     gst_event_ref (event);
-    ret = pad_monitor->event_func (pad, event);
+    ret = pad_monitor->event_func (pad, parent, event);
     GST_VALIDATE_MONITOR_LOCK (pad_monitor);
   }
 
@@ -1336,7 +1296,8 @@ gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
 }
 
 static GstFlowReturn
-gst_validate_pad_monitor_chain_func (GstPad * pad, GstBuffer * buffer)
+gst_validate_pad_monitor_chain_func (GstPad * pad, GstObject * parent,
+    GstBuffer * buffer)
 {
   GstValidatePadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "qa-monitor");
@@ -1353,7 +1314,7 @@ gst_validate_pad_monitor_chain_func (GstPad * pad, GstBuffer * buffer)
 
   gst_validate_pad_monitor_buffer_overrides (pad_monitor, buffer);
 
-  ret = pad_monitor->chain_func (pad, buffer);
+  ret = pad_monitor->chain_func (pad, parent, buffer);
 
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
@@ -1368,7 +1329,8 @@ gst_validate_pad_monitor_chain_func (GstPad * pad, GstBuffer * buffer)
 }
 
 static gboolean
-gst_validate_pad_monitor_sink_event_func (GstPad * pad, GstEvent * event)
+gst_validate_pad_monitor_sink_event_func (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstValidatePadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "qa-monitor");
@@ -1391,7 +1353,7 @@ gst_validate_pad_monitor_sink_event_func (GstPad * pad, GstEvent * event)
         event, last_ts);
   }
 
-  ret = gst_validate_pad_monitor_sink_event_check (pad_monitor, event,
+  ret = gst_validate_pad_monitor_sink_event_check (pad_monitor, parent, event,
       pad_monitor->event_func);
 
   GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
@@ -1400,21 +1362,23 @@ gst_validate_pad_monitor_sink_event_func (GstPad * pad, GstEvent * event)
 }
 
 static gboolean
-gst_validate_pad_monitor_src_event_func (GstPad * pad, GstEvent * event)
+gst_validate_pad_monitor_src_event_func (GstPad * pad, GstObject * parent,
+    GstEvent * event)
 {
   GstValidatePadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "qa-monitor");
   gboolean ret;
 
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
-  ret = gst_validate_pad_monitor_src_event_check (pad_monitor, event,
+  ret = gst_validate_pad_monitor_src_event_check (pad_monitor, parent, event,
       pad_monitor->event_func);
   GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
   return ret;
 }
 
 static gboolean
-gst_validate_pad_monitor_query_func (GstPad * pad, GstQuery * query)
+gst_validate_pad_monitor_query_func (GstPad * pad, GstObject * parent,
+    GstQuery * query)
 {
   GstValidatePadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "qa-monitor");
@@ -1422,29 +1386,39 @@ gst_validate_pad_monitor_query_func (GstPad * pad, GstQuery * query)
 
   gst_validate_pad_monitor_query_overrides (pad_monitor, query);
 
-  ret = pad_monitor->query_func (pad, query);
+  ret = pad_monitor->query_func (pad, parent, query);
+
+  if (ret) {
+    switch (GST_QUERY_TYPE (query)) {
+      case GST_QUERY_CAPS:{
+        GstCaps *res;
+        /* We shouldn't need to lock the parent as this doesn't modify
+         * other monitors, just does some peer_pad_caps */
+        GST_VALIDATE_MONITOR_LOCK (pad_monitor);
+
+        gst_query_parse_caps_result (query, &res);
+        if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
+          gst_validate_pad_monitor_check_caps_fields_proxied (pad_monitor, res);
+        }
+        GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
   return ret;
 }
 
 static gboolean
-gst_validate_pad_buffer_alloc_func (GstPad * pad, guint64 offset, guint size,
-    GstCaps * caps, GstBuffer ** buffer)
+gst_validate_pad_get_range_func (GstPad * pad, GstObject * parent,
+    guint64 offset, guint size, GstBuffer ** buffer)
 {
   GstValidatePadMonitor *pad_monitor =
       g_object_get_data ((GObject *) pad, "qa-monitor");
   gboolean ret;
-  ret = pad_monitor->bufferalloc_func (pad, offset, size, caps, buffer);
-  return ret;
-}
-
-static gboolean
-gst_validate_pad_get_range_func (GstPad * pad, guint64 offset, guint size,
-    GstBuffer ** buffer)
-{
-  GstValidatePadMonitor *pad_monitor =
-      g_object_get_data ((GObject *) pad, "qa-monitor");
-  gboolean ret;
-  ret = pad_monitor->getrange_func (pad, offset, size, buffer);
+  ret = pad_monitor->getrange_func (pad, parent, offset, size, buffer);
   return ret;
 }
 
@@ -1535,48 +1509,35 @@ gst_validate_pad_monitor_event_probe (GstPad * pad, GstEvent * event,
 
   /* This so far is just like an event that is flowing downstream,
    * so we do the same checks as a sinkpad event handler */
-  ret = gst_validate_pad_monitor_sink_event_check (monitor, event, NULL);
+  ret = gst_validate_pad_monitor_sink_event_check (monitor, NULL, event, NULL);
   GST_VALIDATE_MONITOR_UNLOCK (monitor);
   GST_VALIDATE_PAD_MONITOR_PARENT_UNLOCK (monitor);
 
   return ret;
 }
 
-static GstCaps *
-gst_validate_pad_monitor_getcaps_func (GstPad * pad)
+static GstPadProbeReturn
+gst_validate_pad_monitor_pad_probe (GstPad * pad, GstPadProbeInfo * info,
+    gpointer udata)
 {
-  GstValidatePadMonitor *pad_monitor =
-      g_object_get_data ((GObject *) pad, "qa-monitor");
-  GstCaps *ret = NULL;
-
-  if (pad_monitor->getcaps_func) {
-    ret = pad_monitor->getcaps_func (pad);
-  } else {
-    ret = _gst_pad_get_caps_default (pad);
+  switch (info->type) {
+    case GST_PAD_PROBE_TYPE_BUFFER:
+      gst_validate_pad_monitor_buffer_probe (pad, info->data, udata);
+      break;
+    case GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM:
+      gst_validate_pad_monitor_event_probe (pad, info->data, udata);
+      break;
+    default:
+      break;
   }
 
-  if (ret) {
-    /* We shouldn't need to lock the parent as this doesn't modify
-     * other monitors, just does some peer_pad_caps */
-    GST_VALIDATE_MONITOR_LOCK (pad_monitor);
-
-    if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
-      gst_validate_pad_monitor_check_caps_fields_proxied (pad_monitor, ret);
-    }
-    GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
-  }
-
-  gst_validate_pad_monitor_getcaps_overrides (pad_monitor, ret);
-
-  return ret;
+  return GST_PAD_PROBE_OK;
 }
 
-static gboolean
-gst_validate_pad_monitor_setcaps_func (GstPad * pad, GstCaps * caps)
+static void
+gst_validate_pad_monitor_setcaps_pre (GstValidatePadMonitor * pad_monitor,
+    GstCaps * caps)
 {
-  GstValidatePadMonitor *pad_monitor =
-      g_object_get_data ((GObject *) pad, "qa-monitor");
-  gboolean ret = TRUE;
   GstStructure *structure;
 
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
@@ -1634,23 +1595,22 @@ gst_validate_pad_monitor_setcaps_func (GstPad * pad, GstCaps * caps)
 
   gst_structure_free (pad_monitor->pending_setcaps_fields);
   pad_monitor->pending_setcaps_fields =
-      gst_structure_empty_new (PENDING_FIELDS);
+      gst_structure_new_empty (PENDING_FIELDS);
 
   GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
   GST_VALIDATE_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);
 
   gst_validate_pad_monitor_setcaps_overrides (pad_monitor, caps);
+}
 
-  if (pad_monitor->setcaps_func) {
-    ret = pad_monitor->setcaps_func (pad, caps);
-  }
-
+static void
+gst_validate_pad_monitor_setcaps_post (GstValidatePadMonitor * pad_monitor,
+    GstCaps * caps, gboolean ret)
+{
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   if (!ret)
     gst_validate_pad_monitor_otherpad_clear_pending_fields (pad_monitor);
   GST_VALIDATE_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);
-
-  return ret;
 }
 
 static gboolean
@@ -1675,13 +1635,7 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
 
   pad_monitor->event_func = GST_PAD_EVENTFUNC (pad);
   pad_monitor->query_func = GST_PAD_QUERYFUNC (pad);
-  pad_monitor->setcaps_func = GST_PAD_SETCAPSFUNC (pad);
-  pad_monitor->getcaps_func = GST_PAD_GETCAPSFUNC (pad);
   if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
-    pad_monitor->bufferalloc_func = GST_PAD_BUFFERALLOCFUNC (pad);
-    if (pad_monitor->bufferalloc_func)
-      gst_pad_set_bufferalloc_function (pad,
-          gst_validate_pad_buffer_alloc_func);
 
     pad_monitor->chain_func = GST_PAD_CHAINFUNC (pad);
     if (pad_monitor->chain_func)
@@ -1696,14 +1650,13 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
     gst_pad_set_event_function (pad, gst_validate_pad_monitor_src_event_func);
 
     /* add buffer/event probes */
-    pad_monitor->buffer_probe_id = gst_pad_add_buffer_probe (pad,
-        (GCallback) gst_validate_pad_monitor_buffer_probe, pad_monitor);
-    pad_monitor->event_probe_id = gst_pad_add_event_probe (pad,
-        (GCallback) gst_validate_pad_monitor_event_probe, pad_monitor);
+    pad_monitor->pad_probe_id =
+        gst_pad_add_probe (pad,
+        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        (GstPadProbeCallback) gst_validate_pad_monitor_pad_probe, pad_monitor,
+        NULL);
   }
   gst_pad_set_query_function (pad, gst_validate_pad_monitor_query_func);
-  gst_pad_set_getcaps_function (pad, gst_validate_pad_monitor_getcaps_func);
-  gst_pad_set_setcaps_function (pad, gst_validate_pad_monitor_setcaps_func);
 
   gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (monitor),
       g_strdup_printf ("%s:%s", GST_DEBUG_PAD_NAME (pad)));

@@ -165,17 +165,22 @@ static void
   GList *iter;
   GstElement *element;
   GstElementClass *klass;
+  const gchar *klassname;
 
   element = gst_validate_monitor_get_element (monitor);
   if (!element)
     return;
 
   klass = GST_ELEMENT_GET_CLASS (element);
+  klassname =
+      gst_element_class_get_metadata (klass, GST_ELEMENT_METADATA_KLASS);
 
   for (iter = registry->name_overrides.head; iter; iter = g_list_next (iter)) {
+
     entry = iter->data;
+
     /* TODO It would be more correct to split it before comparing */
-    if (strstr (klass->details.klass, entry->name) != NULL) {
+    if (strstr (klassname, entry->name) != NULL) {
       gst_validate_monitor_attach_override (monitor, entry->override);
     }
   }

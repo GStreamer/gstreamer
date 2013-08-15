@@ -67,12 +67,11 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstElement * encodebin)
   GstCaps *caps;
   GstPad *sinkpad = NULL;
 
-  GST_DEBUG_OBJECT (uridecodebin, "Pad added, caps: %" GST_PTR_FORMAT,
-      gst_pad_get_caps (pad));
-
+  caps = gst_pad_get_current_caps (pad);
 
   /* Ask encodebin for a compatible pad */
-  caps = gst_pad_get_caps_reffed (pad);
+  GST_DEBUG_OBJECT (uridecodebin, "Pad added, caps: %" GST_PTR_FORMAT, caps);
+
   g_signal_emit_by_name (encodebin, "request-pad", caps, &sinkpad);
   if (caps)
     gst_caps_unref (caps);
@@ -83,10 +82,16 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstElement * encodebin)
     return;
   }
 
-  if (G_UNLIKELY (gst_pad_link (pad, sinkpad) != GST_PAD_LINK_OK))
+  if (G_UNLIKELY (gst_pad_link (pad, sinkpad) != GST_PAD_LINK_OK)) {
+    GstCaps *othercaps = gst_pad_get_current_caps (sinkpad);
+    caps = gst_pad_get_current_caps (pad);
+
     GST_ERROR ("Couldn't link pads \n\n%" GST_PTR_FORMAT "\n\n  and \n\n %"
-        GST_PTR_FORMAT "\n\n", gst_pad_get_caps (pad),
-        gst_pad_get_caps (sinkpad));
+        GST_PTR_FORMAT "\n\n", caps, othercaps);
+
+    gst_caps_unref (caps);
+    gst_caps_unref (othercaps);
+  }
 
   return;
 }
@@ -102,7 +107,7 @@ create_transcoding_pipeline (gchar * uri, gchar * outuri)
   src = gst_element_factory_make ("uridecodebin", NULL);
 
   ebin = gst_element_factory_make ("encodebin", NULL);
-  sink = gst_element_make_from_uri (GST_URI_SINK, outuri, "sink");
+  sink = gst_element_make_from_uri (GST_URI_SINK, outuri, "sink", NULL);
   g_assert (sink);
 
   g_object_set (src, "uri", uri, NULL);

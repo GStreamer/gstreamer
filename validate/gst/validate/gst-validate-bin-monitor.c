@@ -152,10 +152,13 @@ gst_validate_bin_monitor_setup (GstValidateMonitor * monitor)
   iterator = gst_bin_iterate_elements (bin);
   done = FALSE;
   while (!done) {
-    switch (gst_iterator_next (iterator, (gpointer *) & element)) {
+    GValue value = { 0, };
+
+    switch (gst_iterator_next (iterator, &value)) {
       case GST_ITERATOR_OK:
+        element = g_value_get_object (&value);
         gst_validate_bin_monitor_wrap_element (bin_monitor, element);
-        gst_object_unref (element);
+        g_value_reset (&value);
         break;
       case GST_ITERATOR_RESYNC:
         /* TODO how to handle this? */

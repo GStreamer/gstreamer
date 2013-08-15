@@ -126,12 +126,16 @@ gst_validate_element_monitor_inspect (GstValidateElementMonitor * monitor)
 {
   GstElement *element;
   GstElementClass *klass;
+  const gchar *klassname;
 
   element = GST_VALIDATE_ELEMENT_MONITOR_GET_ELEMENT (monitor);
   klass = GST_ELEMENT_CLASS (G_OBJECT_GET_CLASS (element));
 
-  monitor->is_decoder = strstr (klass->details.klass, "Decoder") != NULL;
-  monitor->is_encoder = strstr (klass->details.klass, "Encoder") != NULL;
+
+  klassname =
+      gst_element_class_get_metadata (klass, GST_ELEMENT_METADATA_KLASS);
+  monitor->is_decoder = strstr (klassname, "Decoder") != NULL;
+  monitor->is_encoder = strstr (klassname, "Encoder") != NULL;
 }
 
 static gboolean
@@ -163,10 +167,13 @@ gst_validate_element_monitor_do_setup (GstValidateMonitor * monitor)
   iterator = gst_element_iterate_pads (element);
   done = FALSE;
   while (!done) {
-    switch (gst_iterator_next (iterator, (gpointer *) & pad)) {
+    GValue value = { 0, };
+
+    switch (gst_iterator_next (iterator, &value)) {
       case GST_ITERATOR_OK:
+        pad = g_value_get_object (&value);
         gst_validate_element_monitor_wrap_pad (elem_monitor, pad);
-        gst_object_unref (pad);
+        g_value_reset (&value);
         break;
       case GST_ITERATOR_RESYNC:
         /* TODO how to handle this? */
