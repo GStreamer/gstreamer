@@ -1078,6 +1078,9 @@ static const struct
   GST_TAG_COMPOSER, add_text_tag, "TCOM"}, {
   GST_TAG_GENRE, add_text_tag, "TCON"}, {
   GST_TAG_ENCODED_BY, add_text_tag, "TENC"}, {
+  GST_TAG_PUBLISHER, add_text_tag, "TPUB"}, {
+  GST_TAG_INTERPRETED_BY, add_text_tag, "TPE4"}, {
+  GST_TAG_MUSICAL_KEY, add_text_tag, "TKEY"}, {
 
     /* Private frames */
   GST_ID3_DEMUX_TAG_ID3V2_FRAME, add_id3v2frame_tag, NULL}, {
