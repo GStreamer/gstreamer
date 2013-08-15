@@ -442,11 +442,11 @@ gst_aiff_parse_perform_seek (GstAiffParse * aiff, GstEvent * event)
             aiff->segment.format, aiff->segment.position));
   }
 
-  /* now create the newsegment */
-  GST_DEBUG_OBJECT (aiff, "Creating newsegment from %" G_GINT64_FORMAT
+  /* now create the segment */
+  GST_DEBUG_OBJECT (aiff, "Creating segment from %" G_GINT64_FORMAT
       " to %" G_GINT64_FORMAT, aiff->segment.position, stop);
 
-  /* store the newsegment event so it can be sent from the streaming thread. */
+  /* store the segment event so it can be sent from the streaming thread. */
   if (aiff->start_segment)
     gst_event_unref (aiff->start_segment);
   aiff->start_segment = gst_event_new_segment (&aiff->segment);
@@ -1019,7 +1019,7 @@ gst_aiff_parse_stream_headers (GstAiffParse * aiff)
 
   /* now we have all the info to perform a pending seek if any, if no
    * event, this will still do the right thing and it will also send
-   * the right newsegment event downstream. */
+   * the right segment event downstream. */
   gst_aiff_parse_perform_seek (aiff, aiff->seek_event);
   /* remove pending event */
   event_p = &aiff->seek_event;
