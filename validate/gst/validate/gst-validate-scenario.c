@@ -65,6 +65,8 @@ typedef struct _ScenarioAction
   ScenarioActionType type;
   gchar *name;
   GstClockTime playback_time;
+  guint action_number;          /* The sequential number on which the action should
+                                   be executed */
 } ScenarioAction;
 
 #define SCENARIO_ACTION(act) ((ScenarioAction *)act)
@@ -103,6 +105,8 @@ struct _GstValidateScenarioPrivate
   GList *actions;
   gint64 seeked_position;       /* last seeked position */
   GstClockTime seek_pos_tol;
+
+  guint num_actions;
 
   /* markup parser context */
   gboolean in_scenario;
@@ -253,13 +257,16 @@ _parse_seek (GMarkupParseContext * context, const gchar * element_name,
   if (!g_markup_collect_attributes (element_name, attribute_names,
           attribute_values, error,
           G_MARKUP_COLLECT_STRDUP | G_MARKUP_COLLECT_OPTIONAL, "name",
-          &info->action.name, G_MARKUP_COLLECT_STRING, "playback_time",
-          &playback_time, G_MARKUP_COLLECT_STRING, "format", &format,
-          G_MARKUP_COLLECT_STRING, "rate", &rate, G_MARKUP_COLLECT_STRING,
-          "flags", &flags, G_MARKUP_COLLECT_STRING, "start_type", &start_type,
-          G_MARKUP_COLLECT_STRING, "start", &start, G_MARKUP_COLLECT_STRING,
-          "stop_type", &stop_type, G_MARKUP_COLLECT_STRING, "stop", &stop,
-          G_MARKUP_COLLECT_INVALID))
+          &info->action.name,
+          G_MARKUP_COLLECT_STRING, "playback_time",
+          &playback_time,
+          G_MARKUP_COLLECT_STRING, "format", &format,
+          G_MARKUP_COLLECT_STRING, "rate", &rate,
+          G_MARKUP_COLLECT_STRING, "flags", &flags,
+          G_MARKUP_COLLECT_STRING, "start_type", &start_type,
+          G_MARKUP_COLLECT_STRING, "start", &start,
+          G_MARKUP_COLLECT_STRING, "stop_type", &stop_type,
+          G_MARKUP_COLLECT_STRING, "stop", &stop, G_MARKUP_COLLECT_INVALID))
     return;
 
   get_enum_from_string (GST_TYPE_FORMAT, format, &info->format);
@@ -272,6 +279,7 @@ _parse_seek (GMarkupParseContext * context, const gchar * element_name,
   info->start = g_ascii_strtoull (start, NULL, 10);
   get_enum_from_string (GST_TYPE_SEEK_TYPE, stop_type, &info->stop_type);
   info->stop = g_ascii_strtoull (stop, NULL, 10);
+  info->action.action_number = priv->num_actions++;
 
   priv->actions = g_list_append (priv->actions, info);
 }
@@ -298,6 +306,9 @@ _parse_pause (GMarkupParseContext * context, const gchar * element_name,
   if (playback_time)
     info->action.playback_time = g_ascii_strtoull (playback_time, NULL, 10);
   info->duration = g_ascii_strtoull (duration, NULL, 10);
+
+  info->action.action_number = priv->num_actions++;
+
   priv->actions = g_list_append (priv->actions, info);
 }
 
@@ -320,6 +331,8 @@ _parse_eos (GMarkupParseContext * context, const gchar * element_name,
 
   if (playback_time)
     info->action.playback_time = g_ascii_strtoull (playback_time, NULL, 10);
+
+  info->action.action_number = priv->num_actions++;
 
   priv->actions = g_list_append (priv->actions, info);
 }
@@ -397,8 +410,10 @@ _execute_action (GstValidateScenario * scenario, ScenarioAction * act)
 
   if (act->type == SCENARIO_ACTION_SEEK) {
     SeekInfo *seek = (SeekInfo *) act;
-    GST_DEBUG ("seeking to: %" GST_TIME_FORMAT " stop: %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (seek->start), GST_TIME_ARGS (seek->stop));
+    GST_DEBUG ("%s (num %u), seeking to: %" GST_TIME_FORMAT " stop: %"
+        GST_TIME_FORMAT, SCENARIO_ACTION (seek)->name,
+        SCENARIO_ACTION (seek)->action_number, GST_TIME_ARGS (seek->start),
+        GST_TIME_ARGS (seek->stop));
 
     if (gst_element_seek (pipeline, seek->rate,
             seek->format, seek->flags,
@@ -410,7 +425,6 @@ _execute_action (GstValidateScenario * scenario, ScenarioAction * act)
           GST_TIME_ARGS (priv->seeked_position));
     }
     priv->seeked_position = seek->start;
-
   } else if (act->type == SCENARIO_ACTION_PAUSE) {
     PauseInfo *pause = (PauseInfo *) act;
 
@@ -422,10 +436,12 @@ _execute_action (GstValidateScenario * scenario, ScenarioAction * act)
       GST_VALIDATE_REPORT (scenario, GST_VALIDATE_ISSUE_ID_STATE_CHANGE_FAILURE,
           "Failed to set state to paused");
     }
+    gst_element_get_state (pipeline, NULL, NULL, -1);
     g_timeout_add (pause->duration / GST_MSECOND,
         (GSourceFunc) _pause_action_restore_playing, scenario);
   } else if (act->type == SCENARIO_ACTION_EOS) {
-    GST_DEBUG ("Sending eos to pipeline");
+    GST_DEBUG ("Sending eos to pipeline at %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (act->playback_time));
     gst_element_send_event (priv->pipeline, gst_event_new_eos ());
   }
 }
@@ -436,34 +452,40 @@ get_position (GstValidateScenario * scenario)
   GList *tmp;
   gint64 position;
   GstFormat format = GST_FORMAT_TIME;
+  ScenarioAction *act;
   GstValidateScenarioPrivate *priv = scenario->priv;
   GstElement *pipeline = scenario->priv->pipeline;
 
+  if (scenario->priv->actions == NULL) {
+    GST_DEBUG_OBJECT (scenario,
+        "No more actions to execute, stop calling  get_position");
+    return FALSE;
+  }
+
+  act = scenario->priv->actions->data;
   gst_element_query_position (pipeline, format, &position);
 
   GST_LOG ("Current position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
-  for (tmp = scenario->priv->actions; tmp; tmp = g_list_next (tmp)) {
-    ScenarioAction *act = tmp->data;
+  if (((position >= MAX (0,
+                  ((gint64) (act->playback_time - priv->seek_pos_tol))))
+          && (position <= (act->playback_time + priv->seek_pos_tol)))) {
 
-    if ((position >= (act->playback_time - priv->seek_pos_tol))
-        && (position <= (act->playback_time + priv->seek_pos_tol))) {
+    /* TODO what about non flushing seeks? */
+    /* TODO why is this inside the action time if ? */
+    if (GST_CLOCK_TIME_IS_VALID (priv->seeked_position))
+      GST_VALIDATE_REPORT (scenario,
+          GST_VALIDATE_ISSUE_ID_EVENT_SEEK_NOT_HANDLED,
+          "Previous seek to %" GST_TIME_FORMAT " was not handled",
+          GST_TIME_ARGS (priv->seeked_position));
 
-      /* TODO what about non flushing seeks? */
-      /* TODO why is this inside the action time if ? */
-      if (GST_CLOCK_TIME_IS_VALID (priv->seeked_position))
-        GST_VALIDATE_REPORT (scenario,
-            GST_VALIDATE_ISSUE_ID_EVENT_SEEK_NOT_HANDLED,
-            "Previous seek to %" GST_TIME_FORMAT " was not handled",
-            GST_TIME_ARGS (priv->seeked_position));
+    _execute_action (scenario, act);
 
-      _execute_action (scenario, act);
-
-      priv->actions = g_list_remove_link (priv->actions, tmp);
-      _free_scenario_action (act);
-      g_list_free (tmp);
-      break;
-    }
+    tmp = priv->actions;
+    priv->actions = g_list_remove_link (priv->actions, tmp);
+    _free_scenario_action (act);
+    g_list_free (tmp);
   }
+
   return TRUE;
 }
 
