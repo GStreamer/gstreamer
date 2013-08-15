@@ -298,7 +298,6 @@ gst_video_encoder_class_init (GstVideoEncoderClass * klass)
 static gboolean
 gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
 {
-  GstVideoEncoderClass *klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
   GstVideoEncoderPrivate *priv = encoder->priv;
   gboolean ret = TRUE;
 
@@ -352,6 +351,21 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
 
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
+  return ret;
+}
+
+/* Always call reset() in one way or another after this */
+static gboolean
+gst_video_encoder_flush (GstVideoEncoder * encoder)
+{
+  GstVideoEncoderClass *klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
+  gboolean ret = TRUE;
+
+  GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
+  if (klass->flush)
+    ret = klass->flush (encoder);
+
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
   return ret;
 }
 
@@ -1000,6 +1014,7 @@ gst_video_encoder_sink_event_default (GstVideoEncoder * encoder,
     }
     case GST_EVENT_FLUSH_STOP:{
       GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
+      gst_video_encoder_flush (encoder);
       gst_segment_init (&encoder->input_segment, GST_FORMAT_TIME);
       gst_segment_init (&encoder->output_segment, GST_FORMAT_TIME);
       gst_video_encoder_reset (encoder, FALSE);

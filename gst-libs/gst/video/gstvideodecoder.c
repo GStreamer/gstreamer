@@ -864,13 +864,11 @@ gst_video_decoder_flush (GstVideoDecoder * dec, gboolean hard)
     klass->reset (dec, hard);
   }
 
-  /* FIXME make some more distinction between hard and soft,
-   * but subclass may not be prepared for that */
-  /* FIXME perhaps also clear pending frames ?,
-   * but again, subclass may still come up with one of those */
-  if (!hard) {
-    /* TODO ? finish/drain some stuff */
-  } else {
+  if (klass->flush) {
+    klass->flush (dec);
+  }
+
+  if (hard) {
     gst_segment_init (&dec->input_segment, GST_FORMAT_UNDEFINED);
     gst_segment_init (&dec->output_segment, GST_FORMAT_UNDEFINED);
     gst_video_decoder_clear_queues (dec);

@@ -242,6 +242,9 @@ struct _GstVideoDecoder
  *                      Propose buffer allocation parameters for upstream elements.
  *                      Subclasses should chain up to the parent implementation to
  *                      invoke the default handler.
+ * @flush:              Optional.
+ *                      Flush all remaining data from the decoder without
+ *                      pushing it downstream. Since: 1.2
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame needs to be overridden, and @set_format
@@ -290,8 +293,10 @@ struct _GstVideoDecoderClass
 
   gboolean      (*propose_allocation) (GstVideoDecoder *decoder, GstQuery * query);
 
+  gboolean      (*flush)              (GstVideoDecoder *decoder);
+
   /*< private >*/
-  void         *padding[GST_PADDING_LARGE];
+  void         *padding[GST_PADDING_LARGE-1];
 };
 
 GType    gst_video_decoder_get_type (void);
