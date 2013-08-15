@@ -272,32 +272,6 @@ ges_video_transition_set_property (GObject * object,
   }
 }
 
-static void
-on_caps_set (GstPad * srca_pad, GParamSpec * pspec, GstElement * capsfilt)
-{
-  GstCaps *orig_caps;
-
-  orig_caps = gst_pad_get_current_caps (srca_pad);
-
-  if (orig_caps) {
-    gint width, height;
-    const GstStructure *str;
-    GstCaps *size_caps;
-
-    /* Get width and height of first video */
-    str = gst_caps_get_structure (orig_caps, 0);
-    gst_structure_get_int (str, "width", &width);
-    gst_structure_get_int (str, "height", &height);
-
-    /* Set capsfilter to the size of the first video */
-    size_caps =
-        gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, width,
-        "height", G_TYPE_INT, height, NULL);
-    g_object_set (capsfilt, "caps", size_caps, NULL);
-    /* Shouldn't we need a reconfigure event here ? */
-  }
-}
-
 static GstTimedValueControlSource *
 set_interpolation (GstObject * element, GESVideoTransitionPrivate * priv,
     const gchar * propname)
@@ -318,10 +292,9 @@ set_interpolation (GstObject * element, GESVideoTransitionPrivate * priv,
 static GstElement *
 ges_video_transition_create_element (GESTrackElement * object)
 {
-  GstElement *topbin, *iconva, *iconvb, *scalea, *scaleb, *capsfilt, *oconv;
+  GstElement *topbin, *iconva, *iconvb, *oconv;
   GstElement *mixer = NULL;
-  GstPad *sinka_target, *sinkb_target, *src_target, *sinka, *sinkb, *src,
-      *srca_pad;
+  GstPad *sinka_target, *sinkb_target, *src_target, *sinka, *sinkb, *src;
   GESVideoTransition *self;
   GESVideoTransitionPrivate *priv;
 
@@ -334,31 +307,20 @@ ges_video_transition_create_element (GESTrackElement * object)
 
   iconva = gst_element_factory_make ("videoconvert", "tr-csp-a");
   iconvb = gst_element_factory_make ("videoconvert", "tr-csp-b");
-  scalea = gst_element_factory_make ("videoscale", "vs-a");
-  scaleb = gst_element_factory_make ("videoscale", "vs-b");
-  capsfilt = gst_element_factory_make ("capsfilter", "capsfilt");
   oconv = gst_element_factory_make ("videoconvert", "tr-csp-output");
 
-  gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, scalea, scaleb, capsfilt,
-      oconv, NULL);
+  gst_bin_add_many (GST_BIN (topbin), iconva, iconvb, oconv, NULL);
 
   mixer = gst_element_factory_make ("videomixer", NULL);
   g_assert (mixer);
   g_object_set (G_OBJECT (mixer), "background", 1, NULL);
   gst_bin_add (GST_BIN (topbin), mixer);
 
-  gst_element_link_pads_full (iconva, "src", scalea, "sink",
-      GST_PAD_LINK_CHECK_NOTHING);
-  gst_element_link_pads_full (iconvb, "src", scaleb, "sink",
-      GST_PAD_LINK_CHECK_NOTHING);
-  gst_element_link_pads_full (scaleb, "src", capsfilt, "sink",
-      GST_PAD_LINK_CHECK_NOTHING);
-
   priv->mixer_sinka =
-      (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), scalea,
+      (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), iconva,
       mixer, GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR, NULL, priv);
   priv->mixer_sinkb =
-      (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), capsfilt,
+      (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), iconvb,
       mixer, GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR, &priv->smpte,
       priv);
 
@@ -376,14 +338,9 @@ ges_video_transition_create_element (GESTrackElement * object)
   gst_element_add_pad (topbin, sinka);
   gst_element_add_pad (topbin, sinkb);
 
-  srca_pad = gst_element_get_static_pad (scalea, "src");
-  g_signal_connect (srca_pad, "notify::caps", G_CALLBACK (on_caps_set),
-      (GstElement *) capsfilt);
-
   gst_object_unref (sinka_target);
   gst_object_unref (sinkb_target);
   gst_object_unref (src_target);
-  gst_object_unref (srca_pad);
 
   /* set up interpolation */
 
