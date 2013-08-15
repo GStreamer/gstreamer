@@ -417,6 +417,7 @@ _execute_action (GstValidateScenario * scenario, ScenarioAction * act)
         SCENARIO_ACTION (seek)->action_number, GST_TIME_ARGS (seek->start),
         GST_TIME_ARGS (seek->stop), seek->rate);
 
+    priv->seeked_position = (seek->rate > 0) ? seek->start : seek->stop;
     if (gst_element_seek (pipeline, seek->rate,
             seek->format, seek->flags,
             seek->start_type, seek->start,
@@ -426,7 +427,6 @@ _execute_action (GstValidateScenario * scenario, ScenarioAction * act)
           "Could not seek to position %" GST_TIME_FORMAT,
           GST_TIME_ARGS (priv->seeked_position));
     }
-    priv->seeked_position = (seek->rate > 0) ? seek->start : seek->stop;
 
   } else if (act->type == SCENARIO_ACTION_PAUSE) {
     PauseInfo *pause = (PauseInfo *) act;
