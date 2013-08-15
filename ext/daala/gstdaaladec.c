@@ -89,7 +89,7 @@ static gboolean daala_dec_start (GstVideoDecoder * decoder);
 static gboolean daala_dec_stop (GstVideoDecoder * decoder);
 static gboolean daala_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
-static gboolean daala_dec_reset (GstVideoDecoder * decoder, gboolean hard);
+static gboolean daala_dec_flush (GstVideoDecoder * decoder);
 static GstFlowReturn daala_dec_parse (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos);
 static GstFlowReturn daala_dec_handle_frame (GstVideoDecoder * decoder,
@@ -117,7 +117,7 @@ gst_daala_dec_class_init (GstDaalaDecClass * klass)
 
   video_decoder_class->start = GST_DEBUG_FUNCPTR (daala_dec_start);
   video_decoder_class->stop = GST_DEBUG_FUNCPTR (daala_dec_stop);
-  video_decoder_class->reset = GST_DEBUG_FUNCPTR (daala_dec_reset);
+  video_decoder_class->flush = GST_DEBUG_FUNCPTR (daala_dec_flush);
   video_decoder_class->set_format = GST_DEBUG_FUNCPTR (daala_dec_set_format);
   video_decoder_class->parse = GST_DEBUG_FUNCPTR (daala_dec_parse);
   video_decoder_class->handle_frame =
@@ -137,7 +137,7 @@ gst_daala_dec_init (GstDaalaDec * dec)
 }
 
 static void
-gst_daala_dec_reset (GstDaalaDec * dec)
+daala_dec_reset (GstDaalaDec * dec)
 {
   dec->need_keyframe = TRUE;
 }
@@ -152,7 +152,7 @@ daala_dec_start (GstVideoDecoder * decoder)
   daala_comment_clear (&dec->comment);
   GST_DEBUG_OBJECT (dec, "Setting have_header to FALSE");
   dec->have_header = FALSE;
-  gst_daala_dec_reset (dec);
+  daala_dec_reset (dec);
 
   return TRUE;
 }
@@ -169,7 +169,7 @@ daala_dec_stop (GstVideoDecoder * decoder)
   dec->setup = NULL;
   daala_decode_free (dec->decoder);
   dec->decoder = NULL;
-  gst_daala_dec_reset (dec);
+  daala_dec_reset (dec);
   if (dec->input_state) {
     gst_video_codec_state_unref (dec->input_state);
     dec->input_state = NULL;
@@ -179,14 +179,6 @@ daala_dec_stop (GstVideoDecoder * decoder)
     dec->output_state = NULL;
   }
 
-  return TRUE;
-}
-
-/* FIXME : Do we want to handle hard resets differently ? */
-static gboolean
-daala_dec_reset (GstVideoDecoder * bdec, gboolean hard)
-{
-  gst_daala_dec_reset (GST_DAALA_DEC (bdec));
   return TRUE;
 }
 
@@ -338,7 +330,8 @@ daala_handle_type_packet (GstDaalaDec * dec)
 
   /* If we have a default PAR, see if the decoder specified a different one */
   if (par_num == 1 && par_den == 1 &&
-      (dec->info.pixel_aspect_numerator != 0 && dec->info.pixel_aspect_denominator != 0)) {
+      (dec->info.pixel_aspect_numerator != 0
+          && dec->info.pixel_aspect_denominator != 0)) {
     par_num = dec->info.pixel_aspect_numerator;
     par_den = dec->info.pixel_aspect_denominator;
   }
@@ -355,16 +348,14 @@ daala_handle_type_packet (GstDaalaDec * dec)
       dec->info.plane_info[0].ydec == 0 &&
       dec->info.plane_info[1].xdec == 1 &&
       dec->info.plane_info[1].ydec == 1 &&
-      dec->info.plane_info[2].xdec == 1 &&
-      dec->info.plane_info[2].ydec == 1) {
+      dec->info.plane_info[2].xdec == 1 && dec->info.plane_info[2].ydec == 1) {
     fmt = GST_VIDEO_FORMAT_I420;
   } else if (dec->info.nplanes == 3 && dec->info.plane_info[0].xdec == 0 &&
       dec->info.plane_info[0].ydec == 0 &&
       dec->info.plane_info[1].xdec == 0 &&
       dec->info.plane_info[1].ydec == 0 &&
-      dec->info.plane_info[2].xdec == 0 &&
-      dec->info.plane_info[2].ydec == 0) {
-    fmt = GST_VIDEO_FORMAT_Y444; 
+      dec->info.plane_info[2].xdec == 0 && dec->info.plane_info[2].ydec == 0) {
+    fmt = GST_VIDEO_FORMAT_Y444;
   } else {
     goto unsupported_format;
   }
@@ -440,8 +431,7 @@ header_read_error:
 
 /* Allocate buffer and copy image data into Y444 format */
 static GstFlowReturn
-daala_handle_image (GstDaalaDec * dec, od_img * img,
-    GstVideoCodecFrame * frame)
+daala_handle_image (GstDaalaDec * dec, od_img * img, GstVideoCodecFrame * frame)
 {
   GstVideoDecoder *decoder = GST_VIDEO_DECODER (dec);
   gint width, height, stride;
@@ -467,10 +457,8 @@ daala_handle_image (GstDaalaDec * dec, od_img * img,
     goto invalid_frame;
 
   for (comp = 0; comp < 3; comp++) {
-    width =
-        GST_VIDEO_FRAME_COMP_WIDTH (&vframe, comp);
-    height =
-        GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, comp);
+    width = GST_VIDEO_FRAME_COMP_WIDTH (&vframe, comp);
+    height = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, comp);
     stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, comp);
     dest = GST_VIDEO_FRAME_COMP_DATA (&vframe, comp);
 
@@ -527,7 +515,7 @@ daala_handle_data_packet (GstDaalaDec * dec, ogg_packet * packet,
     goto dropping_qos;
 
   if (G_UNLIKELY ((img.width != dec->info.pic_width
-          || img.height != dec->info.pic_height)))
+              || img.height != dec->info.pic_height)))
     goto wrong_dimensions;
 
   result = daala_handle_image (dec, &img, frame);
@@ -643,7 +631,8 @@ daala_dec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
   GstBufferPool *pool;
   GstStructure *config;
 
-  if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder, query))
+  if (!GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
+          query))
     return FALSE;
 
   g_assert (gst_query_get_n_allocation_pools (query) > 0);

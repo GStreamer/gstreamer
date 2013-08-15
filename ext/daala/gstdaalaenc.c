@@ -87,6 +87,7 @@ G_DEFINE_TYPE (GstDaalaEnc, gst_daala_enc, GST_TYPE_VIDEO_ENCODER);
 
 static gboolean daala_enc_start (GstVideoEncoder * enc);
 static gboolean daala_enc_stop (GstVideoEncoder * enc);
+static gboolean daala_enc_flush (GstVideoEncoder * enc);
 static gboolean daala_enc_set_format (GstVideoEncoder * enc,
     GstVideoCodecState * state);
 static GstFlowReturn daala_enc_handle_frame (GstVideoEncoder * enc,
@@ -137,6 +138,7 @@ gst_daala_enc_class_init (GstDaalaEncClass * klass)
 
   gstvideo_encoder_class->start = GST_DEBUG_FUNCPTR (daala_enc_start);
   gstvideo_encoder_class->stop = GST_DEBUG_FUNCPTR (daala_enc_stop);
+  gstvideo_encoder_class->flush = GST_DEBUG_FUNCPTR (daala_enc_flush);
   gstvideo_encoder_class->set_format = GST_DEBUG_FUNCPTR (daala_enc_set_format);
   gstvideo_encoder_class->handle_frame =
       GST_DEBUG_FUNCPTR (daala_enc_handle_frame);
@@ -174,7 +176,7 @@ daala_enc_finalize (GObject * object)
 }
 
 static void
-daala_enc_reset (GstDaalaEnc * enc)
+daala_enc_flush (GstDaalaEnc * enc)
 {
   int quant;
 
@@ -200,9 +202,8 @@ daala_enc_start (GstVideoEncoder * benc)
   GST_DEBUG_OBJECT (benc, "start: init daala");
   enc = GST_DAALA_ENC (benc);
 
-  daala_info_init (&enc->info);
-  daala_comment_init (&enc->comment);
   enc->packetno = 0;
+  enc->initialised = FALSE;
 
   return TRUE;
 }
@@ -221,6 +222,10 @@ daala_enc_stop (GstVideoEncoder * benc)
   }
   daala_comment_clear (&enc->comment);
   daala_info_clear (&enc->info);
+
+  if (enc->input_state)
+    gst_video_codec_state_unref (enc->input_state);
+  enc->input_state = NULL;
 
   enc->initialised = FALSE;
 
@@ -356,7 +361,7 @@ daala_enc_set_format (GstVideoEncoder * benc, GstVideoCodecState * state)
     gst_video_codec_state_unref (enc->input_state);
   enc->input_state = gst_video_codec_state_ref (state);
 
-  daala_enc_reset (enc);
+  daala_enc_flush (enc);
   enc->initialised = TRUE;
 
   return TRUE;

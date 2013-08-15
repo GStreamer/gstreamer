@@ -79,8 +79,7 @@ static gboolean gst_amc_video_dec_start (GstVideoDecoder * decoder);
 static gboolean gst_amc_video_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
-static gboolean gst_amc_video_dec_reset (GstVideoDecoder * decoder,
-    gboolean hard);
+static gboolean gst_amc_video_dec_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_amc_video_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static GstFlowReturn gst_amc_video_dec_finish (GstVideoDecoder * decoder);
@@ -478,7 +477,7 @@ gst_amc_video_dec_class_init (GstAmcVideoDecClass * klass)
   videodec_class->stop = GST_DEBUG_FUNCPTR (gst_amc_video_dec_stop);
   videodec_class->open = GST_DEBUG_FUNCPTR (gst_amc_video_dec_open);
   videodec_class->close = GST_DEBUG_FUNCPTR (gst_amc_video_dec_close);
-  videodec_class->reset = GST_DEBUG_FUNCPTR (gst_amc_video_dec_reset);
+  videodec_class->flush = GST_DEBUG_FUNCPTR (gst_amc_video_dec_flush);
   videodec_class->set_format = GST_DEBUG_FUNCPTR (gst_amc_video_dec_set_format);
   videodec_class->handle_frame =
       GST_DEBUG_FUNCPTR (gst_amc_video_dec_handle_frame);
@@ -1444,13 +1443,13 @@ gst_amc_video_dec_set_format (GstVideoDecoder * decoder,
 }
 
 static gboolean
-gst_amc_video_dec_reset (GstVideoDecoder * decoder, gboolean hard)
+gst_amc_video_dec_flush (GstVideoDecoder * decoder)
 {
   GstAmcVideoDec *self;
 
   self = GST_AMC_VIDEO_DEC (decoder);
 
-  GST_DEBUG_OBJECT (self, "Resetting decoder");
+  GST_DEBUG_OBJECT (self, "Flushing decoder");
 
   if (!self->started) {
     GST_DEBUG_OBJECT (self, "Codec not started yet");
@@ -1476,7 +1475,7 @@ gst_amc_video_dec_reset (GstVideoDecoder * decoder, gboolean hard)
   gst_pad_start_task (GST_VIDEO_DECODER_SRC_PAD (self),
       (GstTaskFunction) gst_amc_video_dec_loop, decoder, NULL);
 
-  GST_DEBUG_OBJECT (self, "Reset decoder");
+  GST_DEBUG_OBJECT (self, "Flushed decoder");
 
   return TRUE;
 }

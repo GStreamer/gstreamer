@@ -56,7 +56,6 @@ struct _GstRsvgDec
 
   GList *pending_events;
 
-  gint fps_n, fps_d;
   GstClockTime first_timestamp;
   guint64 frame_count;
 

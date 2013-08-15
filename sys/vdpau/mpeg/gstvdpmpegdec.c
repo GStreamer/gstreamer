@@ -461,7 +461,7 @@ render_fail:
 }
 
 static gboolean
-gst_vdp_mpeg_dec_reset (GstVideoDecoder * video_decoder, gboolean hard)
+gst_vdp_mpeg_dec_flush (GstVideoDecoder * video_decoder)
 {
   GstVdpMpegDec *mpeg_dec = GST_VDP_MPEG_DEC (video_decoder);
 
@@ -530,7 +530,7 @@ gst_vdp_mpeg_dec_class_init (GstVdpMpegDecClass * klass)
 
   video_decoder_class->start = gst_vdp_mpeg_dec_start;
   video_decoder_class->stop = gst_vdp_mpeg_dec_stop;
-  video_decoder_class->reset = gst_vdp_mpeg_dec_reset;
+  video_decoder_class->flush = gst_vdp_mpeg_dec_flush;
 
   video_decoder_class->handle_frame = gst_vdp_mpeg_dec_handle_frame;
   video_decoder_class->set_format = gst_vdp_mpeg_dec_set_format;

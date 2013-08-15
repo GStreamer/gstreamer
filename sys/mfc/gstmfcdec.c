@@ -35,7 +35,7 @@ static gboolean gst_mfc_dec_start (GstVideoDecoder * decoder);
 static gboolean gst_mfc_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_mfc_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
-static gboolean gst_mfc_dec_reset (GstVideoDecoder * decoder, gboolean hard);
+static gboolean gst_mfc_dec_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_mfc_dec_finish (GstVideoDecoder * decoder);
 static GstFlowReturn gst_mfc_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
@@ -114,7 +114,7 @@ gst_mfc_dec_class_init (GstMFCDecClass * klass)
   video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_mfc_dec_start);
   video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_mfc_dec_stop);
   video_decoder_class->finish = GST_DEBUG_FUNCPTR (gst_mfc_dec_finish);
-  video_decoder_class->reset = GST_DEBUG_FUNCPTR (gst_mfc_dec_reset);
+  video_decoder_class->flush = GST_DEBUG_FUNCPTR (gst_mfc_dec_flush);
   video_decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_mfc_dec_set_format);
   video_decoder_class->negotiate = GST_DEBUG_FUNCPTR (gst_mfc_dec_negotiate);
   video_decoder_class->decide_allocation =
@@ -290,11 +290,11 @@ done:
 }
 
 static gboolean
-gst_mfc_dec_reset (GstVideoDecoder * decoder, gboolean hard)
+gst_mfc_dec_flush (GstVideoDecoder * decoder)
 {
   GstMFCDec *self = GST_MFC_DEC (decoder);
 
-  GST_DEBUG_OBJECT (self, "Resetting");
+  GST_DEBUG_OBJECT (self, "Flushing");
   if (self->context)
     mfc_dec_flush (self->context);
 

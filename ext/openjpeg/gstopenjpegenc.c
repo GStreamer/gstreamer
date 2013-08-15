@@ -82,8 +82,6 @@ static gboolean gst_openjpeg_enc_start (GstVideoEncoder * encoder);
 static gboolean gst_openjpeg_enc_stop (GstVideoEncoder * encoder);
 static gboolean gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state);
-static gboolean gst_openjpeg_enc_reset (GstVideoEncoder * encoder,
-    gboolean hard);
 static GstFlowReturn gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_openjpeg_enc_propose_allocation (GstVideoEncoder * encoder,
@@ -189,7 +187,6 @@ gst_openjpeg_enc_class_init (GstOpenJPEGEncClass * klass)
 
   video_encoder_class->start = GST_DEBUG_FUNCPTR (gst_openjpeg_enc_start);
   video_encoder_class->stop = GST_DEBUG_FUNCPTR (gst_openjpeg_enc_stop);
-  video_encoder_class->reset = GST_DEBUG_FUNCPTR (gst_openjpeg_enc_reset);
   video_encoder_class->set_format =
       GST_DEBUG_FUNCPTR (gst_openjpeg_enc_set_format);
   video_encoder_class->handle_frame =
@@ -651,21 +648,6 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
       gst_video_encoder_set_output_state (encoder, caps, state);
 
   gst_video_encoder_negotiate (GST_VIDEO_ENCODER (encoder));
-
-  return TRUE;
-}
-
-static gboolean
-gst_openjpeg_enc_reset (GstVideoEncoder * encoder, gboolean hard)
-{
-  GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (encoder);
-
-  GST_DEBUG_OBJECT (self, "Resetting");
-
-  if (self->output_state) {
-    gst_video_codec_state_unref (self->output_state);
-    self->output_state = NULL;
-  }
 
   return TRUE;
 }

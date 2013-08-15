@@ -32,8 +32,6 @@ static gboolean gst_openjpeg_dec_start (GstVideoDecoder * decoder);
 static gboolean gst_openjpeg_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
-static gboolean gst_openjpeg_dec_reset (GstVideoDecoder * decoder,
-    gboolean hard);
 static GstFlowReturn gst_openjpeg_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_openjpeg_dec_decide_allocation (GstVideoDecoder * decoder,
@@ -91,7 +89,6 @@ gst_openjpeg_dec_class_init (GstOpenJPEGDecClass * klass)
 
   video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_openjpeg_dec_start);
   video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_openjpeg_dec_stop);
-  video_decoder_class->reset = GST_DEBUG_FUNCPTR (gst_openjpeg_dec_reset);
   video_decoder_class->set_format =
       GST_DEBUG_FUNCPTR (gst_openjpeg_dec_set_format);
   video_decoder_class->handle_frame =
@@ -186,21 +183,6 @@ gst_openjpeg_dec_set_format (GstVideoDecoder * decoder,
   if (self->input_state)
     gst_video_codec_state_unref (self->input_state);
   self->input_state = gst_video_codec_state_ref (state);
-
-  return TRUE;
-}
-
-static gboolean
-gst_openjpeg_dec_reset (GstVideoDecoder * decoder, gboolean hard)
-{
-  GstOpenJPEGDec *self = GST_OPENJPEG_DEC (decoder);
-
-  GST_DEBUG_OBJECT (self, "Resetting");
-
-  if (self->output_state) {
-    gst_video_codec_state_unref (self->output_state);
-    self->output_state = NULL;
-  }
 
   return TRUE;
 }

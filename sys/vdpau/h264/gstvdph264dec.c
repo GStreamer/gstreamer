@@ -497,7 +497,7 @@ render_fail:
 
 
 static gboolean
-gst_vdp_h264_dec_reset (GstVideoDecoder * video_decoder, gboolean hard)
+gst_vdp_h264_dec_flush (GstVideoDecoder * video_decoder)
 {
   GstVdpH264Dec *h264_dec = GST_VDP_H264_DEC (video_decoder);
 
@@ -574,7 +574,7 @@ gst_vdp_h264_dec_class_init (GstVdpH264DecClass * klass)
 
   video_decoder_class->start = gst_vdp_h264_dec_start;
   video_decoder_class->stop = gst_vdp_h264_dec_stop;
-  video_decoder_class->reset = gst_vdp_h264_dec_reset;
+  video_decoder_class->flush = gst_vdp_h264_dec_flush;
 
   video_decoder_class->set_format = gst_vdp_h264_dec_set_format;
 
