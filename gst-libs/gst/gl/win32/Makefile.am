@@ -9,13 +9,13 @@ noinst_HEADERS = \
 	gstglwindow_win32.h
 
 if USE_WGL
-libgstgl_win32_la_SOURCES += gstglwindow_win32_wgl.c
-noinst_HEADERS += gstglwindow_win32_wgl.h
+libgstgl_win32_la_SOURCES += gstglcontext_wgl.c
+noinst_HEADERS += gstglcontext_wgl.h
 endif
-if USE_EGL
-libgstgl_win32_la_SOURCES += gstglwindow_win32_egl.c
-noinst_HEADERS += gstglwindow_win32_egl.h
-endif
+#if USE_EGL
+#libgstgl_win32_la_SOURCES += gstglwindow_win32_egl.c
+#noinst_HEADERS += gstglwindow_win32_egl.h
+#endif
 
 libgstgl_win32_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs \

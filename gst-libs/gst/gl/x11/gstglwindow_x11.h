@@ -103,6 +103,8 @@ GstGLWindowX11 * gst_gl_window_x11_new (void);
 void gst_gl_window_x11_trap_x_errors (void);
 gint gst_gl_window_x11_untrap_x_errors (void);
 
+gboolean gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11);
+
 G_END_DECLS
 
 #endif /* __GST_GL_WINDOW_X11_H__ */

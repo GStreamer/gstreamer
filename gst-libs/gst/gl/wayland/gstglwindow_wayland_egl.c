@@ -40,9 +40,8 @@ const gchar *WlEGLErrorString ();
 G_DEFINE_TYPE (GstGLWindowWaylandEGL, gst_gl_window_wayland_egl,
     GST_GL_TYPE_WINDOW);
 
-static guintptr gst_gl_window_wayland_egl_get_gl_context (GstGLWindow * window);
-static gboolean gst_gl_window_wayland_egl_activate (GstGLWindow * window,
-    gboolean activate);
+static guintptr gst_gl_window_wayland_egl_get_window_handle (GstGLWindow *
+    window);
 static void gst_gl_window_wayland_egl_set_window_handle (GstGLWindow * window,
     guintptr handle);
 static void gst_gl_window_wayland_egl_draw (GstGLWindow * window, guint width,
@@ -51,14 +50,10 @@ static void gst_gl_window_wayland_egl_run (GstGLWindow * window);
 static void gst_gl_window_wayland_egl_quit (GstGLWindow * window);
 static void gst_gl_window_wayland_egl_send_message (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data);
-static void gst_gl_window_wayland_egl_destroy_context (GstGLWindowWaylandEGL *
-    window_egl);
-static gboolean gst_gl_window_wayland_egl_create_context (GstGLWindow
-    * window, GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
-static GstGLAPI gst_gl_window_wayland_egl_get_gl_api (GstGLWindow * window);
-static gpointer gst_gl_window_wayland_egl_get_proc_address (GstGLWindow *
-    window, const gchar * name);
 static void gst_gl_window_wayland_egl_close (GstGLWindow * window);
+static gboolean gst_gl_window_wayland_egl_open (GstGLWindow * window,
+    GError ** error);
+static guintptr gst_gl_window_wayland_egl_get_display (GstGLWindow * window);
 
 static void
 pointer_handle_enter (void *data, struct wl_pointer *pointer, uint32_t serial,
@@ -254,12 +249,8 @@ gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
 {
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
 
-  window_class->create_context =
-      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_create_context);
-  window_class->get_gl_context =
-      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_gl_context);
-  window_class->activate =
-      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_activate);
+  window_class->get_window_handle =
+      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_window_handle);
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_set_window_handle);
   window_class->draw_unlocked =
@@ -269,11 +260,10 @@ gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
   window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_quit);
   window_class->send_message =
       GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_send_message);
-  window_class->get_gl_api =
-      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_gl_api);
-  window_class->get_proc_address =
-      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_proc_address);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_close);
+  window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_open);
+  window_class->get_display =
+      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_get_display);
 }
 
 static void
@@ -303,7 +293,7 @@ gst_gl_window_wayland_egl_close (GstGLWindow * window)
 
   window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
 
-  gst_gl_window_wayland_egl_destroy_context (window_egl);
+  destroy_surface (window_egl);
 
   if (window_egl->display.cursor_surface)
     wl_surface_destroy (window_egl->display.cursor_surface);
@@ -324,8 +314,10 @@ gst_gl_window_wayland_egl_close (GstGLWindow * window)
 }
 
 static gboolean
-_setup_wayland (GstGLWindowWaylandEGL * window_egl, GError ** error)
+gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
 {
+  GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
+
   window_egl->display.display = wl_display_connect (NULL);
   if (!window_egl->display.display) {
     g_set_error (error, GST_GL_WINDOW_ERROR,
@@ -357,78 +349,6 @@ _setup_wayland (GstGLWindowWaylandEGL * window_egl, GError ** error)
 
 error:
   return FALSE;
-}
-
-gboolean
-gst_gl_window_wayland_egl_create_context (GstGLWindow * window,
-    GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
-{
-  GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
-  if (!_setup_wayland (window_egl, error))
-    return FALSE;
-
-  window_egl->egl =
-      gst_gl_egl_create_context (eglGetDisplay ((EGLNativeDisplayType)
-          window_egl->display.display), window_egl->window.native, gl_api,
-      external_gl_context, error);
-  if (!window_egl->egl)
-    goto failure;
-
-  return TRUE;
-
-failure:
-  return FALSE;
-}
-
-static void
-gst_gl_window_wayland_egl_destroy_context (GstGLWindowWaylandEGL * window_egl)
-{
-  gst_gl_egl_activate (window_egl->egl, FALSE);
-
-  destroy_surface (window_egl);
-  /*
-     gst_gl_egl_destroy_surface (window_egl->egl);
-   */
-  gst_gl_egl_destroy_context (window_egl->egl);
-  window_egl->egl = NULL;
-}
-
-static gboolean
-gst_gl_window_wayland_egl_activate (GstGLWindow * window, gboolean activate)
-{
-  GstGLWindowWaylandEGL *window_egl;
-
-  window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
-
-  return gst_gl_egl_activate (window_egl->egl, activate);
-}
-
-static guintptr
-gst_gl_window_wayland_egl_get_gl_context (GstGLWindow * window)
-{
-  GstGLWindowWaylandEGL *window_egl;
-
-  window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
-
-  return gst_gl_egl_get_gl_context (window_egl->egl);
-}
-
-static GstGLAPI
-gst_gl_window_wayland_egl_get_gl_api (GstGLWindow * window)
-{
-  GstGLWindowWaylandEGL *window_egl;
-
-  window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
-
-  return gst_gl_egl_get_gl_api (window_egl->egl);
-}
-
-static void
-gst_gl_window_wayland_egl_swap_buffers (GstGLWindow * window)
-{
-  GstGLWindowWaylandEGL *window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
-
-  gst_gl_egl_swap_buffers (window_egl->egl);
 }
 
 static void
@@ -506,6 +426,12 @@ gst_gl_window_wayland_egl_send_message (GstGLWindow * window,
   g_mutex_unlock (&message.lock);
 }
 
+static guintptr
+gst_gl_window_wayland_egl_get_window_handle (GstGLWindow * window)
+{
+  return (guintptr) GST_GL_WINDOW_WAYLAND_EGL (window)->window.native;
+}
+
 static void
 gst_gl_window_wayland_egl_set_window_handle (GstGLWindow * window,
     guintptr handle)
@@ -544,6 +470,8 @@ draw_cb (gpointer data)
   struct draw *draw_data = data;
   GstGLWindowWaylandEGL *window_egl = draw_data->window;
   GstGLWindow *window = GST_GL_WINDOW (window_egl);
+  GstGLContext *context = gst_gl_window_get_context (window);
+  GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
 
   if (window_egl->window.window_width != draw_data->width
       || window_egl->window.window_height != draw_data->height) {
@@ -556,7 +484,9 @@ draw_cb (gpointer data)
   if (window->draw)
     window->draw (window->draw_data);
 
-  gst_gl_window_wayland_egl_swap_buffers (window);
+  context_class->swap_buffers (context);
+
+  gst_object_unref (context);
 }
 
 static void
@@ -571,19 +501,12 @@ gst_gl_window_wayland_egl_draw (GstGLWindow * window, guint width, guint height)
   gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, &draw_data);
 }
 
-static gpointer
-gst_gl_window_wayland_egl_get_proc_address (GstGLWindow * window,
-    const gchar * name)
+static guintptr
+gst_gl_window_wayland_egl_get_display (GstGLWindow * window)
 {
-  GstGLContext *context = NULL;
   GstGLWindowWaylandEGL *window_egl;
-  gpointer result;
 
   window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
 
-  if (!(result = gst_gl_egl_get_proc_address (window_egl->egl, name))) {
-    result = gst_gl_context_default_get_proc_address (context, name);
-  }
-
-  return result;
+  return (guintptr) window_egl->display.display;
 }

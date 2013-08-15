@@ -28,6 +28,8 @@
 #include "gl.h"
 #include "gstglwindow.h"
 
+/* FIXME make this work with windowless contexts */
+
 #if GST_GL_HAVE_WINDOW_X11
 #include "x11/gstglwindow_x11.h"
 #endif
@@ -168,40 +170,6 @@ gst_gl_window_finalize (GObject * object)
   g_weak_ref_clear (&window->context_ref);
 
   G_OBJECT_CLASS (gst_gl_window_parent_class)->finalize (object);
-}
-
-guintptr
-gst_gl_window_get_gl_context (GstGLWindow * window)
-{
-  GstGLWindowClass *window_class;
-  guintptr result;
-
-  g_return_val_if_fail (GST_GL_IS_WINDOW (window), 0);
-  window_class = GST_GL_WINDOW_GET_CLASS (window);
-  g_return_val_if_fail (window_class->get_gl_context != NULL, 0);
-
-  GST_GL_WINDOW_LOCK (window);
-  result = window_class->get_gl_context (window);
-  GST_GL_WINDOW_UNLOCK (window);
-
-  return result;
-}
-
-gboolean
-gst_gl_window_activate (GstGLWindow * window, gboolean activate)
-{
-  GstGLWindowClass *window_class;
-  gboolean result;
-
-  g_return_val_if_fail (GST_GL_IS_WINDOW (window), FALSE);
-  window_class = GST_GL_WINDOW_GET_CLASS (window);
-  g_return_val_if_fail (window_class->activate != NULL, FALSE);
-
-  GST_GL_WINDOW_LOCK (window);
-  result = window_class->activate (window, activate);
-  GST_GL_WINDOW_UNLOCK (window);
-
-  return result;
 }
 
 void
@@ -369,41 +337,48 @@ gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
   GST_GL_WINDOW_UNLOCK (window);
 }
 
-GstGLAPI
-gst_gl_window_get_gl_api (GstGLWindow * window)
+gboolean
+gst_gl_window_is_running (GstGLWindow * window)
 {
-  GstGLWindowClass *window_class;
-
-  g_return_val_if_fail (GST_GL_IS_WINDOW (window), GST_GL_API_NONE);
-  window_class = GST_GL_WINDOW_GET_CLASS (window);
-  g_return_val_if_fail (window_class->get_gl_api != NULL, GST_GL_API_NONE);
-
-  return window_class->get_gl_api (window);
+  return window->priv->alive;
 }
 
-gpointer
-gst_gl_window_get_proc_address (GstGLWindow * window, const gchar * name)
+guintptr
+gst_gl_window_get_display (GstGLWindow * window)
 {
-  gpointer ret;
+  guintptr ret;
   GstGLWindowClass *window_class;
 
-  g_return_val_if_fail (GST_GL_IS_WINDOW (window), NULL);
+  g_return_val_if_fail (GST_GL_IS_WINDOW (window), 0);
   window_class = GST_GL_WINDOW_GET_CLASS (window);
-  g_return_val_if_fail (window_class->get_proc_address != NULL, NULL);
+  g_return_val_if_fail (window_class->get_display != NULL, 0);
 
   GST_GL_WINDOW_LOCK (window);
 
-  ret = window_class->get_proc_address (window, name);
+  ret = window_class->get_display (window);
 
   GST_GL_WINDOW_UNLOCK (window);
 
   return ret;
 }
 
-gboolean
-gst_gl_window_is_running (GstGLWindow * window)
+guintptr
+gst_gl_window_get_window_handle (GstGLWindow * window)
 {
-  return window->priv->alive;
+  guintptr ret;
+  GstGLWindowClass *window_class;
+
+  g_return_val_if_fail (GST_GL_IS_WINDOW (window), 0);
+  window_class = GST_GL_WINDOW_GET_CLASS (window);
+  g_return_val_if_fail (window_class->get_window_handle != NULL, 0);
+
+  GST_GL_WINDOW_LOCK (window);
+
+  ret = window_class->get_window_handle (window);
+
+  GST_GL_WINDOW_UNLOCK (window);
+
+  return ret;
 }
 
 GstGLContext *

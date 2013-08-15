@@ -77,6 +77,8 @@ GType gst_gl_window_win32_get_type     (void);
 
 GstGLWindowWin32 * gst_gl_window_win32_new          (void);
 
+gboolean gst_gl_window_win32_create_window (GstGLWindowWin32 * window_win32, GError ** error);
+
 G_END_DECLS
 
 #endif /* __GST_GL_WINDOW_WIN32_H__ */

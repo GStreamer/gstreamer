@@ -99,14 +99,9 @@ struct _GstGLWindowClass {
   /*< private >*/
   GObjectClass parent_class;
 
-  guintptr (*get_gl_context)     (GstGLWindow *window);
-  GstGLAPI (*get_gl_api)         (GstGLWindow *window);
-  gpointer (*get_proc_address)   (GstGLWindow *window, const gchar *name);
-  gboolean (*activate)           (GstGLWindow *window, gboolean activate);
+  guintptr (*get_display)        (GstGLWindow *window);
   void     (*set_window_handle)  (GstGLWindow *window, guintptr id);
-  gboolean (*create_context)     (GstGLWindow *window, GstGLAPI gl_api,
-                                  guintptr external_gl_context, GError ** error);
-  gboolean (*share_context)      (GstGLWindow *window, guintptr external_gl_context);
+  guintptr (*get_window_handle)  (GstGLWindow *window);
   void     (*draw_unlocked)      (GstGLWindow *window, guint width, guint height);
   void     (*draw)               (GstGLWindow *window, guint width, guint height);
   void     (*run)                (GstGLWindow *window);
@@ -132,7 +127,6 @@ void     gst_gl_window_set_resize_callback  (GstGLWindow *window, GstGLWindowRes
 void     gst_gl_window_set_close_callback   (GstGLWindow *window, GstGLWindowCB callback, gpointer data, GDestroyNotify destroy_notify);
 void     gst_gl_window_set_need_lock        (GstGLWindow *window, gboolean need_lock);
 
-guintptr gst_gl_window_get_gl_context       (GstGLWindow *window);
 void     gst_gl_window_set_window_handle    (GstGLWindow *window, guintptr handle);
 guintptr gst_gl_window_get_window_handle    (GstGLWindow *window);
 void     gst_gl_window_draw_unlocked        (GstGLWindow *window, guint width, guint height);
@@ -140,6 +134,7 @@ void     gst_gl_window_draw                 (GstGLWindow *window, guint width, g
 void     gst_gl_window_run                  (GstGLWindow *window);
 void     gst_gl_window_quit                 (GstGLWindow *window);
 void     gst_gl_window_send_message         (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
+guintptr gst_gl_window_get_display          (GstGLWindow *window);
 
 GstGLContext * gst_gl_window_get_context (GstGLWindow *window);
 
