@@ -1105,8 +1105,6 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
         }
       }
 
-      gst_video_decoder_flush (decoder, FALSE);
-
       priv->base_timestamp = GST_CLOCK_TIME_NONE;
       priv->base_picture_number = 0;
 
