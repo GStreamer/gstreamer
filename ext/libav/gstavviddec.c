@@ -69,8 +69,7 @@ static gboolean gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
 static GstFlowReturn gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_ffmpegviddec_stop (GstVideoDecoder * decoder);
-static gboolean gst_ffmpegviddec_reset (GstVideoDecoder * decoder,
-    gboolean hard);
+static gboolean gst_ffmpegviddec_flush (GstVideoDecoder * decoder);
 static gboolean gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query);
 static gboolean gst_ffmpegviddec_propose_allocation (GstVideoDecoder * decoder,
@@ -236,7 +235,7 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
   viddec_class->set_format = gst_ffmpegviddec_set_format;
   viddec_class->handle_frame = gst_ffmpegviddec_handle_frame;
   viddec_class->stop = gst_ffmpegviddec_stop;
-  viddec_class->reset = gst_ffmpegviddec_reset;
+  viddec_class->flush = gst_ffmpegviddec_flush;
   viddec_class->finish = gst_ffmpegviddec_finish;
   viddec_class->decide_allocation = gst_ffmpegviddec_decide_allocation;
   viddec_class->propose_allocation = gst_ffmpegviddec_propose_allocation;
@@ -1437,13 +1436,12 @@ gst_ffmpegviddec_finish (GstVideoDecoder * decoder)
 }
 
 static gboolean
-gst_ffmpegviddec_reset (GstVideoDecoder * decoder, gboolean hard)
+gst_ffmpegviddec_flush (GstVideoDecoder * decoder)
 {
   GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
 
-  if (ffmpegdec->opened) {
+  if (ffmpegdec->opened)
     avcodec_flush_buffers (ffmpegdec->context);
-  }
 
   return TRUE;
 }
