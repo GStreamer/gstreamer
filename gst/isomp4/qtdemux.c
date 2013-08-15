@@ -5596,7 +5596,7 @@ gst_qtdemux_configure_stream (GstQTDemux * qtdemux, QtDemuxStream * stream)
 
       stream->fps_n = stream->timescale * factor;
 
-      if (stream->duration == 0)
+      if (stream->duration == 0 || stream->n_samples == 0)
         stream->fps_d = factor;
       else
         stream->fps_d =
