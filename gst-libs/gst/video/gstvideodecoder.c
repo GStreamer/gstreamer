@@ -428,7 +428,8 @@ static GstStateChangeReturn gst_video_decoder_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_video_decoder_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
-static void gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full);
+static void gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
+    gboolean flush_hard);
 
 static GstFlowReturn gst_video_decoder_decode_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
@@ -558,7 +559,7 @@ gst_video_decoder_init (GstVideoDecoder * decoder, GstVideoDecoderClass * klass)
   decoder->priv->output_adapter = gst_adapter_new ();
   decoder->priv->packetized = TRUE;
 
-  gst_video_decoder_reset (decoder, TRUE);
+  gst_video_decoder_reset (decoder, TRUE, TRUE);
 }
 
 static gboolean
@@ -864,18 +865,11 @@ gst_video_decoder_flush (GstVideoDecoder * dec, gboolean hard)
     klass->reset (dec, hard);
   }
 
-  if (klass->flush) {
+  if (klass->flush)
     klass->flush (dec);
-  }
-
-  if (hard) {
-    gst_segment_init (&dec->input_segment, GST_FORMAT_UNDEFINED);
-    gst_segment_init (&dec->output_segment, GST_FORMAT_UNDEFINED);
-    gst_video_decoder_clear_queues (dec);
-  }
 
   /* and get (re)set for the sequel */
-  gst_video_decoder_reset (dec, FALSE);
+  gst_video_decoder_reset (dec, FALSE, hard);
 
   return ret;
 }
@@ -1647,7 +1641,8 @@ gst_video_decoder_clear_queues (GstVideoDecoder * dec)
 }
 
 static void
-gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
+gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
+    gboolean flush_hard)
 {
   GstVideoDecoderPrivate *priv = decoder->priv;
 
@@ -1655,10 +1650,32 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
-  if (full) {
+  if (full || flush_hard) {
     gst_segment_init (&decoder->input_segment, GST_FORMAT_UNDEFINED);
     gst_segment_init (&decoder->output_segment, GST_FORMAT_UNDEFINED);
     gst_video_decoder_clear_queues (decoder);
+
+    if (priv->current_frame) {
+      gst_video_codec_frame_unref (priv->current_frame);
+      priv->current_frame = NULL;
+    }
+
+    g_list_free_full (priv->current_frame_events,
+        (GDestroyNotify) gst_event_unref);
+    priv->current_frame_events = NULL;
+    g_list_free_full (priv->pending_events, (GDestroyNotify) gst_event_unref);
+    priv->pending_events = NULL;
+
+    priv->error_count = 0;
+    priv->max_errors = GST_VIDEO_DECODER_MAX_ERRORS;
+
+    GST_OBJECT_LOCK (decoder);
+    priv->earliest_time = GST_CLOCK_TIME_NONE;
+    priv->proportion = 0.5;
+    GST_OBJECT_UNLOCK (decoder);
+  }
+
+  if (full) {
     if (priv->input_state)
       gst_video_codec_state_unref (priv->input_state);
     priv->input_state = NULL;
@@ -1678,6 +1695,12 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
     priv->tags = NULL;
     priv->tags_changed = FALSE;
     priv->reordered_output = FALSE;
+
+    priv->dropped = 0;
+    priv->processed = 0;
+
+    priv->decode_frame_number = 0;
+    priv->base_picture_number = 0;
   }
 
   priv->discont = TRUE;
@@ -1693,36 +1716,8 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full)
   g_list_free_full (priv->timestamps, (GDestroyNotify) timestamp_free);
   priv->timestamps = NULL;
 
-  if (priv->current_frame) {
-    gst_video_codec_frame_unref (priv->current_frame);
-    priv->current_frame = NULL;
-  }
-
-  g_list_free_full (priv->current_frame_events,
-      (GDestroyNotify) gst_event_unref);
-  priv->current_frame_events = NULL;
-  g_list_free_full (priv->pending_events, (GDestroyNotify) gst_event_unref);
-  priv->pending_events = NULL;
-
-  priv->error_count = 0;
-  priv->max_errors = GST_VIDEO_DECODER_MAX_ERRORS;
-
-  priv->dropped = 0;
-  priv->processed = 0;
-
-  priv->decode_frame_number = 0;
-  priv->base_picture_number = 0;
-
-  g_list_free_full (priv->frames, (GDestroyNotify) gst_video_codec_frame_unref);
-  priv->frames = NULL;
-
   priv->bytes_out = 0;
   priv->time = 0;
-
-  GST_OBJECT_LOCK (decoder);
-  priv->earliest_time = GST_CLOCK_TIME_NONE;
-  priv->proportion = 0.5;
-  GST_OBJECT_UNLOCK (decoder);
 
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 }
@@ -2044,7 +2039,7 @@ gst_video_decoder_change_state (GstElement * element, GstStateChange transition)
       if (decoder_class->start && !decoder_class->start (decoder))
         goto start_failed;
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-      gst_video_decoder_reset (decoder, TRUE);
+      gst_video_decoder_reset (decoder, TRUE, TRUE);
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       break;
     default:
@@ -2056,7 +2051,7 @@ gst_video_decoder_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-      gst_video_decoder_reset (decoder, TRUE);
+      gst_video_decoder_reset (decoder, TRUE, TRUE);
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
       if (decoder_class->stop && !decoder_class->stop (decoder))
         goto stop_failed;
