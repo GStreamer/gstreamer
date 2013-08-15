@@ -593,6 +593,12 @@ if test $USE_GLX -eq 1; then
 fi
 AC_SUBST(LIBVA_GLX_PKGNAME)
 
+dnl Check for va_dec_jpeg.h header
+saved_CPPFLAGS="$CPPFLAGS"
+CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+AC_CHECK_HEADERS([va/va_dec_jpeg.h], [], [], [#include <va/va.h>])
+CPPFLAGS="$saved_CPPFLAGS"
+
 dnl Check for JPEG decoding API (0.32.1+)
 USE_JPEG_DECODER=0
 AC_CACHE_CHECK([for JPEG decoding API],
@@ -603,7 +609,11 @@ AC_CACHE_CHECK([for JPEG decoding API],
     LIBS="$LIBS $LIBVA_LIBS"
     AC_COMPILE_IFELSE(
         [AC_LANG_PROGRAM(
-            [[#include <va/va.h>]],
+            [[#include <va/va.h>
+              #ifdef HAVE_VA_VA_DEC_JPEG_H
+              #include <va/va_dec_jpeg.h>
+              #endif
+            ]],
             [[VAPictureParameterBufferJPEGBaseline pic_param;
               VASliceParameterBufferJPEGBaseline slice_param;
               VAHuffmanTableBufferJPEGBaseline huffman_table;
