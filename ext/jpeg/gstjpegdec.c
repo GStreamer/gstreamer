@@ -98,8 +98,9 @@ static void gst_jpeg_dec_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_jpeg_dec_set_format (GstVideoDecoder * dec,
     GstVideoCodecState * state);
+static gboolean gst_jpeg_dec_start (GstVideoDecoder * bdec);
 static gboolean gst_jpeg_dec_stop (GstVideoDecoder * bdec);
-static gboolean gst_jpeg_dec_reset (GstVideoDecoder * bdec, gboolean hard);
+static gboolean gst_jpeg_dec_flush (GstVideoDecoder * bdec);
 static GstFlowReturn gst_jpeg_dec_parse (GstVideoDecoder * bdec,
     GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos);
 static GstFlowReturn gst_jpeg_dec_handle_frame (GstVideoDecoder * bdec,
@@ -168,8 +169,9 @@ gst_jpeg_dec_class_init (GstJpegDecClass * klass)
       "Codec/Decoder/Image",
       "Decode images from JPEG format", "Wim Taymans <wim@fluendo.com>");
 
+  vdec_class->start = gst_jpeg_dec_start;
   vdec_class->stop = gst_jpeg_dec_stop;
-  vdec_class->reset = gst_jpeg_dec_reset;
+  vdec_class->flush = gst_jpeg_dec_flush;
   vdec_class->parse = gst_jpeg_dec_parse;
   vdec_class->set_format = gst_jpeg_dec_set_format;
   vdec_class->handle_frame = gst_jpeg_dec_handle_frame;
@@ -1268,7 +1270,21 @@ gst_jpeg_dec_decide_allocation (GstVideoDecoder * bdec, GstQuery * query)
 }
 
 static gboolean
-gst_jpeg_dec_reset (GstVideoDecoder * bdec, gboolean hard)
+gst_jpeg_dec_start (GstVideoDecoder * bdec)
+{
+  GstJpegDec *dec = (GstJpegDec *) bdec;
+
+  dec->saw_header = FALSE;
+  dec->parse_entropy_len = 0;
+  dec->parse_resync = FALSE;
+
+  gst_video_decoder_set_packetized (bdec, FALSE);
+
+  return TRUE;
+}
+
+static gboolean
+gst_jpeg_dec_flush (GstVideoDecoder * bdec)
 {
   GstJpegDec *dec = (GstJpegDec *) bdec;
 
@@ -1276,13 +1292,6 @@ gst_jpeg_dec_reset (GstVideoDecoder * bdec, gboolean hard)
   dec->parse_entropy_len = 0;
   dec->parse_resync = FALSE;
   dec->saw_header = FALSE;
-
-  if (hard) {
-    dec->parse_entropy_len = 0;
-    dec->parse_resync = FALSE;
-
-    gst_video_decoder_set_packetized (bdec, FALSE);
-  }
 
   return TRUE;
 }

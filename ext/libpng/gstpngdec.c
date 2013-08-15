@@ -42,12 +42,12 @@ GST_DEBUG_CATEGORY_STATIC (pngdec_debug);
 #define GST_CAT_DEFAULT pngdec_debug
 
 static gboolean gst_pngdec_libpng_init (GstPngDec * pngdec);
-static gboolean gst_pngdec_reset (GstVideoDecoder * decoder, gboolean hard);
 
 static GstFlowReturn gst_pngdec_caps_create_and_set (GstPngDec * pngdec);
 
 static gboolean gst_pngdec_start (GstVideoDecoder * decoder);
 static gboolean gst_pngdec_stop (GstVideoDecoder * decoder);
+static gboolean gst_pngdec_flush (GstVideoDecoder * decoder);
 static gboolean gst_pngdec_set_format (GstVideoDecoder * Decoder,
     GstVideoCodecState * state);
 static GstFlowReturn gst_pngdec_parse (GstVideoDecoder * decoder,
@@ -92,7 +92,7 @@ gst_pngdec_class_init (GstPngDecClass * klass)
 
   vdec_class->start = gst_pngdec_start;
   vdec_class->stop = gst_pngdec_stop;
-  vdec_class->reset = gst_pngdec_reset;
+  vdec_class->flush = gst_pngdec_flush;
   vdec_class->set_format = gst_pngdec_set_format;
   vdec_class->parse = gst_pngdec_parse;
   vdec_class->handle_frame = gst_pngdec_handle_frame;
@@ -382,16 +382,11 @@ gst_pngdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
       pngdec->current_frame_map.data, pngdec->current_frame_map.size);
 
   if (pngdec->image_ready) {
-    if (1) {
-      /* Reset ourselves for the next frame */
-      gst_pngdec_reset (decoder, TRUE);
-      GST_LOG_OBJECT (pngdec, "setting up callbacks for next frame");
-      png_set_progressive_read_fn (pngdec->png, pngdec,
-          user_info_callback, user_endrow_callback, user_end_callback);
-    } else {
-      GST_LOG_OBJECT (pngdec, "sending EOS");
-      pngdec->ret = GST_FLOW_EOS;
-    }
+    /* Reset ourselves for the next frame */
+    gst_pngdec_flush (decoder);
+    GST_LOG_OBJECT (pngdec, "setting up callbacks for next frame");
+    png_set_progressive_read_fn (pngdec->png, pngdec,
+        user_info_callback, user_endrow_callback, user_end_callback);
     pngdec->image_ready = FALSE;
   } else {
     /* An error happened and we have to unmap */
@@ -629,7 +624,7 @@ gst_pngdec_stop (GstVideoDecoder * decoder)
 
 /* Clean up the libpng structures */
 static gboolean
-gst_pngdec_reset (GstVideoDecoder * decoder, gboolean hard)
+gst_pngdec_flush (GstVideoDecoder * decoder)
 {
   gst_pngdec_libpng_clear ((GstPngDec *) decoder);
   gst_pngdec_libpng_init ((GstPngDec *) decoder);

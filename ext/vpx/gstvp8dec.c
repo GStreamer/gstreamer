@@ -106,7 +106,7 @@ static gboolean gst_vp8_dec_start (GstVideoDecoder * decoder);
 static gboolean gst_vp8_dec_stop (GstVideoDecoder * decoder);
 static gboolean gst_vp8_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
-static gboolean gst_vp8_dec_reset (GstVideoDecoder * decoder, gboolean hard);
+static gboolean gst_vp8_dec_flush (GstVideoDecoder * decoder);
 static GstFlowReturn gst_vp8_dec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
 static gboolean gst_vp8_dec_decide_allocation (GstVideoDecoder * decoder,
@@ -184,7 +184,7 @@ gst_vp8_dec_class_init (GstVP8DecClass * klass)
 
   base_video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_vp8_dec_start);
   base_video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vp8_dec_stop);
-  base_video_decoder_class->reset = GST_DEBUG_FUNCPTR (gst_vp8_dec_reset);
+  base_video_decoder_class->flush = GST_DEBUG_FUNCPTR (gst_vp8_dec_flush);
   base_video_decoder_class->set_format =
       GST_DEBUG_FUNCPTR (gst_vp8_dec_set_format);
   base_video_decoder_class->handle_frame =
@@ -324,11 +324,11 @@ gst_vp8_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 }
 
 static gboolean
-gst_vp8_dec_reset (GstVideoDecoder * base_video_decoder, gboolean hard)
+gst_vp8_dec_flush (GstVideoDecoder * base_video_decoder)
 {
   GstVP8Dec *decoder;
 
-  GST_DEBUG_OBJECT (base_video_decoder, "reset");
+  GST_DEBUG_OBJECT (base_video_decoder, "flush");
 
   decoder = GST_VP8_DEC (base_video_decoder);
 

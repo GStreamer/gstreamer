@@ -80,7 +80,6 @@ static void gst_jpegenc_get_property (GObject * object, guint prop_id,
 
 static gboolean gst_jpegenc_start (GstVideoEncoder * benc);
 static gboolean gst_jpegenc_stop (GstVideoEncoder * benc);
-static gboolean gst_jpegenc_reset (GstVideoEncoder * benc, gboolean hard);
 static gboolean gst_jpegenc_set_format (GstVideoEncoder * encoder,
     GstVideoCodecState * state);
 static GstFlowReturn gst_jpegenc_handle_frame (GstVideoEncoder * encoder,
@@ -161,7 +160,6 @@ gst_jpegenc_class_init (GstJpegEncClass * klass)
 
   venc_class->start = gst_jpegenc_start;
   venc_class->stop = gst_jpegenc_stop;
-  venc_class->reset = gst_jpegenc_reset;
   venc_class->set_format = gst_jpegenc_set_format;
   venc_class->handle_frame = gst_jpegenc_handle_frame;
   venc_class->propose_allocation = gst_jpegenc_propose_allocation;
@@ -301,16 +299,6 @@ gst_jpegenc_init (GstJpegEnc * jpegenc)
   jpegenc->quality = JPEG_DEFAULT_QUALITY;
   jpegenc->smoothing = JPEG_DEFAULT_SMOOTHING;
   jpegenc->idct_method = JPEG_DEFAULT_IDCT_METHOD;
-}
-
-static gboolean
-gst_jpegenc_reset (GstVideoEncoder * benc, gboolean hard)
-{
-  GstJpegEnc *enc = (GstJpegEnc *) benc;
-
-  enc->sof_marker = -1;
-
-  return TRUE;
 }
 
 static void
@@ -614,6 +602,7 @@ gst_jpegenc_start (GstVideoEncoder * benc)
   enc->line[0] = NULL;
   enc->line[1] = NULL;
   enc->line[2] = NULL;
+  enc->sof_marker = -1;
 
   return TRUE;
 }
