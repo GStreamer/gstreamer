@@ -273,7 +273,7 @@ _parse_seek (GMarkupParseContext * context, const gchar * element_name,
 
   if (playback_time)
     info->action.playback_time = g_ascii_strtoull (playback_time, NULL, 10);
-  info->rate = g_ascii_strtoull (rate, NULL, 10);
+  info->rate = g_ascii_strtod (rate, NULL);
   info->flags = get_flags_from_string (GST_TYPE_SEEK_FLAGS, flags);
   get_enum_from_string (GST_TYPE_SEEK_TYPE, start_type, &info->start_type);
   info->start = g_ascii_strtoull (start, NULL, 10);
@@ -411,9 +411,9 @@ _execute_action (GstValidateScenario * scenario, ScenarioAction * act)
   if (act->type == SCENARIO_ACTION_SEEK) {
     SeekInfo *seek = (SeekInfo *) act;
     GST_DEBUG ("%s (num %u), seeking to: %" GST_TIME_FORMAT " stop: %"
-        GST_TIME_FORMAT, SCENARIO_ACTION (seek)->name,
+        GST_TIME_FORMAT " Rate %lf", SCENARIO_ACTION (seek)->name,
         SCENARIO_ACTION (seek)->action_number, GST_TIME_ARGS (seek->start),
-        GST_TIME_ARGS (seek->stop));
+        GST_TIME_ARGS (seek->stop), seek->rate);
 
     if (gst_element_seek (pipeline, seek->rate,
             seek->format, seek->flags,
@@ -424,7 +424,8 @@ _execute_action (GstValidateScenario * scenario, ScenarioAction * act)
           "Could not seek to position %" GST_TIME_FORMAT,
           GST_TIME_ARGS (priv->seeked_position));
     }
-    priv->seeked_position = seek->start;
+    priv->seeked_position = (seek->rate > 0) ? seek->start : seek->stop;
+
   } else if (act->type == SCENARIO_ACTION_PAUSE) {
     PauseInfo *pause = (PauseInfo *) act;
 
