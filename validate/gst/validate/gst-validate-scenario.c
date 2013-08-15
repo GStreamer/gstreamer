@@ -111,6 +111,8 @@ struct _GstValidateScenarioPrivate
   /* markup parser context */
   gboolean in_scenario;
   gboolean in_actions;
+
+  guint get_pos_id;
 };
 
 /* Some helper method that are missing iin Json itscenario */
@@ -517,6 +519,12 @@ async_done_cb (GstBus * bus, GstMessage * message,
     priv->seeked_position = GST_CLOCK_TIME_NONE;
   }
 
+  if (priv->get_pos_id == 0) {
+    get_position (scenario);
+    priv->get_pos_id = g_timeout_add (50, (GSourceFunc) get_position, scenario);
+  }
+
+
   return TRUE;
 }
 
@@ -744,8 +752,6 @@ gst_validate_scenario_factory_create (GstValidateRunner * runner,
   g_signal_connect (bus, "message::async-done", (GCallback) async_done_cb,
       scenario);
   gst_object_unref (bus);
-
-  g_timeout_add (50, (GSourceFunc) get_position, scenario);
 
   g_print ("\n=========================================\n"
       "Running scenario %s on pipeline %s"
