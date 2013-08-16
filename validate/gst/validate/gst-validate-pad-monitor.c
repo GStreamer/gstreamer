@@ -1540,9 +1540,6 @@ gst_validate_pad_monitor_setcaps_pre (GstValidatePadMonitor * pad_monitor,
 {
   GstStructure *structure;
 
-  GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
-  GST_VALIDATE_MONITOR_LOCK (pad_monitor);
-
   gst_validate_pad_monitor_check_caps_complete (pad_monitor, caps);
 
   if (caps) {
@@ -1597,9 +1594,6 @@ gst_validate_pad_monitor_setcaps_pre (GstValidatePadMonitor * pad_monitor,
   pad_monitor->pending_setcaps_fields =
       gst_structure_new_empty (PENDING_FIELDS);
 
-  GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
-  GST_VALIDATE_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);
-
   gst_validate_pad_monitor_setcaps_overrides (pad_monitor, caps);
 }
 
@@ -1607,10 +1601,8 @@ static void
 gst_validate_pad_monitor_setcaps_post (GstValidatePadMonitor * pad_monitor,
     GstCaps * caps, gboolean ret)
 {
-  GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   if (!ret)
     gst_validate_pad_monitor_otherpad_clear_pending_fields (pad_monitor);
-  GST_VALIDATE_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);
 }
 
 static gboolean

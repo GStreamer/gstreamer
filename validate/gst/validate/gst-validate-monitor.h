@@ -43,8 +43,21 @@ G_BEGIN_DECLS
 #define GST_VALIDATE_MONITOR_GET_OBJECT(m) (GST_VALIDATE_MONITOR_CAST (m)->target)
 #define GST_VALIDATE_MONITOR_GET_RUNNER(m) (gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER_CAST (m)))
 #define GST_VALIDATE_MONITOR_GET_PARENT(m) (GST_VALIDATE_MONITOR_CAST (m)->parent)
-#define GST_VALIDATE_MONITOR_LOCK(m) (g_mutex_lock (&GST_VALIDATE_MONITOR_CAST(m)->mutex))
-#define GST_VALIDATE_MONITOR_UNLOCK(m) (g_mutex_unlock (&GST_VALIDATE_MONITOR_CAST(m)->mutex))
+
+#define GST_VALIDATE_MONITOR_LOCK(m)			\
+  G_STMT_START {					\
+  GST_LOG_OBJECT (m, "About to lock %p", &GST_VALIDATE_MONITOR_CAST(m)->mutex); \
+  (g_mutex_lock (&GST_VALIDATE_MONITOR_CAST(m)->mutex));		\
+  GST_LOG_OBJECT (m, "Acquired lock %p", &GST_VALIDATE_MONITOR_CAST(m)->mutex); \
+  } G_STMT_END
+
+#define GST_VALIDATE_MONITOR_UNLOCK(m)				\
+  G_STMT_START {						\
+  GST_LOG_OBJECT (m, "About to unlock %p", &GST_VALIDATE_MONITOR_CAST(m)->mutex); \
+  (g_mutex_unlock (&GST_VALIDATE_MONITOR_CAST(m)->mutex));		\
+  GST_LOG_OBJECT (m, "unlocked %p", &GST_VALIDATE_MONITOR_CAST(m)->mutex); \
+  } G_STMT_END
+
 #define GST_VALIDATE_MONITOR_OVERRIDES_LOCK(m) g_mutex_lock (&GST_VALIDATE_MONITOR_CAST (m)->overrides_mutex)
 #define GST_VALIDATE_MONITOR_OVERRIDES_UNLOCK(m) g_mutex_unlock (&GST_VALIDATE_MONITOR_CAST (m)->overrides_mutex)
 #define GST_VALIDATE_MONITOR_OVERRIDES(m) (GST_VALIDATE_MONITOR_CAST (m)->overrides)
