@@ -1645,13 +1645,17 @@ gst_aiff_parse_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
   gboolean res;
   GstAiffParse *aiff = GST_AIFF_PARSE (parent);
 
-  if (aiff->adapter)
+  if (aiff->adapter) {
     g_object_unref (aiff->adapter);
+    aiff->adapter = NULL;
+  }
 
   switch (mode) {
     case GST_PAD_MODE_PUSH:
-      aiff->streaming = TRUE;
-      aiff->adapter = gst_adapter_new ();
+      if (active) {
+        aiff->streaming = TRUE;
+        aiff->adapter = gst_adapter_new ();
+      }
       res = TRUE;
       break;
     case GST_PAD_MODE_PULL:
