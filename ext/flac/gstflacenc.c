@@ -1108,23 +1108,7 @@ gst_flac_enc_process_stream_headers (GstFlacEnc * enc)
 push_headers:
   gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (enc), caps);
 
-  /* push header buffers; update caps, so when we push the first buffer the
-   * negotiated caps will change to caps that include the streamheader field */
-  for (l = enc->headers; l != NULL; l = l->next) {
-    GstBuffer *buf;
-
-    buf = GST_BUFFER (l->data);
-    GST_LOG_OBJECT (enc,
-        "Pushing header buffer, size %" G_GSIZE_FORMAT " bytes",
-        gst_buffer_get_size (buf));
-#if 0
-    GST_MEMDUMP_OBJECT (enc, "header buffer", GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf));
-#endif
-    ret = gst_pad_push (GST_AUDIO_ENCODER_SRC_PAD (enc), buf);
-    l->data = NULL;
-  }
-  g_list_free (enc->headers);
+  gst_audio_encoder_set_headers (GST_AUDIO_ENCODER (enc), enc->headers);
   enc->headers = NULL;
 
   gst_caps_unref (caps);
