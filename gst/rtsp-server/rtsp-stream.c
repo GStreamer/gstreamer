@@ -1361,7 +1361,7 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
   gint i;
   guint idx;
   gchar *name;
-  GstPad *pad, *teepad, *queuepad, *selpad;
+  GstPad *pad, *sinkpad, *selpad;
   GstPadLinkReturn ret;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
@@ -1427,6 +1427,7 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
       stream);
 
   for (i = 0; i < 2; i++) {
+    GstPad *teepad, *queuepad;
     /* For the sender we create this bit of pipeline for both
      * RTP and RTCP. Sync and preroll are enabled on udpsink so
      * we need to add a queue before appsink to make the pipeline
@@ -1441,49 +1442,57 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
      *                 |     |    |  queue  |    | appsink |
      *                 |    src->sink      src->sink       |
      *                 '-----'    '---------'    '---------'
+     *
+     * When only UDP is allowed, we skip the tee, queue and appsink and link the
+     * udpsink directly to the session.
      */
-    /* make tee for RTP/RTCP */
-    priv->tee[i] = gst_element_factory_make ("tee", NULL);
-    gst_bin_add (bin, priv->tee[i]);
-
-    /* and link to rtpbin send pad */
-    pad = gst_element_get_static_pad (priv->tee[i], "sink");
-    gst_pad_link (priv->send_src[i], pad);
-    gst_object_unref (pad);
-
     /* add udpsink */
     gst_bin_add (bin, priv->udpsink[i]);
+    sinkpad = gst_element_get_static_pad (priv->udpsink[i], "sink");
 
-    /* link tee to udpsink */
-    teepad = gst_element_get_request_pad (priv->tee[i], "src_%u");
-    pad = gst_element_get_static_pad (priv->udpsink[i], "sink");
-    gst_pad_link (teepad, pad);
-    gst_object_unref (pad);
-    gst_object_unref (teepad);
+    if (priv->protocols & GST_RTSP_LOWER_TRANS_TCP) {
+      /* make tee for RTP/RTCP */
+      priv->tee[i] = gst_element_factory_make ("tee", NULL);
+      gst_bin_add (bin, priv->tee[i]);
 
-    /* make queue */
-    priv->appqueue[i] = gst_element_factory_make ("queue", NULL);
-    gst_bin_add (bin, priv->appqueue[i]);
-    /* and link to tee */
-    teepad = gst_element_get_request_pad (priv->tee[i], "src_%u");
-    pad = gst_element_get_static_pad (priv->appqueue[i], "sink");
-    gst_pad_link (teepad, pad);
-    gst_object_unref (pad);
-    gst_object_unref (teepad);
+      /* and link to rtpbin send pad */
+      pad = gst_element_get_static_pad (priv->tee[i], "sink");
+      gst_pad_link (priv->send_src[i], pad);
+      gst_object_unref (pad);
 
-    /* make appsink */
-    priv->appsink[i] = gst_element_factory_make ("appsink", NULL);
-    g_object_set (priv->appsink[i], "async", FALSE, "sync", FALSE, NULL);
-    g_object_set (priv->appsink[i], "emit-signals", FALSE, NULL);
-    gst_bin_add (bin, priv->appsink[i]);
-    gst_app_sink_set_callbacks (GST_APP_SINK_CAST (priv->appsink[i]),
-        &sink_cb, stream, NULL);
-    /* and link to queue */
-    queuepad = gst_element_get_static_pad (priv->appqueue[i], "src");
-    pad = gst_element_get_static_pad (priv->appsink[i], "sink");
-    gst_pad_link (queuepad, pad);
-    gst_object_unref (pad);
-    gst_object_unref (queuepad);
+      /* link tee to udpsink */
+      teepad = gst_element_get_request_pad (priv->tee[i], "src_%u");
+      gst_pad_link (teepad, sinkpad);
+      gst_object_unref (teepad);
+
+      /* make queue */
+      priv->appqueue[i] = gst_element_factory_make ("queue", NULL);
+      gst_bin_add (bin, priv->appqueue[i]);
+      /* and link to tee */
+      teepad = gst_element_get_request_pad (priv->tee[i], "src_%u");
+      pad = gst_element_get_static_pad (priv->appqueue[i], "sink");
+      gst_pad_link (teepad, pad);
+      gst_object_unref (pad);
+      gst_object_unref (teepad);
+
+      /* make appsink */
+      priv->appsink[i] = gst_element_factory_make ("appsink", NULL);
+      g_object_set (priv->appsink[i], "async", FALSE, "sync", FALSE, NULL);
+      g_object_set (priv->appsink[i], "emit-signals", FALSE, NULL);
+      gst_bin_add (bin, priv->appsink[i]);
+      gst_app_sink_set_callbacks (GST_APP_SINK_CAST (priv->appsink[i]),
+          &sink_cb, stream, NULL);
+      /* and link to queue */
+      queuepad = gst_element_get_static_pad (priv->appqueue[i], "src");
+      pad = gst_element_get_static_pad (priv->appsink[i], "sink");
+      gst_pad_link (queuepad, pad);
+      gst_object_unref (pad);
+      gst_object_unref (queuepad);
+    } else {
+      /* else only udpsink needed, link it to the session */
+      gst_pad_link (priv->send_src[i], sinkpad);
+    }
+    gst_object_unref (sinkpad);
 
     /* For the receiver we create this bit of pipeline for both
      * RTP and RTCP. We receive RTP/RTCP on appsrc and udpsrc
@@ -1535,24 +1544,32 @@ gst_rtsp_stream_join_bin (GstRTSPStream * stream, GstBin * bin,
       gst_object_unref (selpad);
     }
 
-    /* make and add appsrc */
-    priv->appsrc[i] = gst_element_factory_make ("appsrc", NULL);
-    gst_bin_add (bin, priv->appsrc[i]);
-    /* and link to the funnel */
-    selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
-    pad = gst_element_get_static_pad (priv->appsrc[i], "src");
-    gst_pad_link (pad, selpad);
-    gst_object_unref (pad);
-    gst_object_unref (selpad);
+    if (priv->protocols & GST_RTSP_LOWER_TRANS_TCP) {
+      /* make and add appsrc */
+      priv->appsrc[i] = gst_element_factory_make ("appsrc", NULL);
+      gst_bin_add (bin, priv->appsrc[i]);
+      /* and link to the funnel */
+      selpad = gst_element_get_request_pad (priv->funnel[i], "sink_%u");
+      pad = gst_element_get_static_pad (priv->appsrc[i], "src");
+      gst_pad_link (pad, selpad);
+      gst_object_unref (pad);
+      gst_object_unref (selpad);
+    }
 
     /* check if we need to set to a special state */
     if (state != GST_STATE_NULL) {
-      gst_element_set_state (priv->udpsink[i], state);
-      gst_element_set_state (priv->appsink[i], state);
-      gst_element_set_state (priv->appqueue[i], state);
-      gst_element_set_state (priv->tee[i], state);
-      gst_element_set_state (priv->funnel[i], state);
-      gst_element_set_state (priv->appsrc[i], state);
+      if (priv->udpsink[i])
+        gst_element_set_state (priv->udpsink[i], state);
+      if (priv->appsink[i])
+        gst_element_set_state (priv->appsink[i], state);
+      if (priv->appqueue[i])
+        gst_element_set_state (priv->appqueue[i], state);
+      if (priv->tee[i])
+        gst_element_set_state (priv->tee[i], state);
+      if (priv->funnel[i])
+        gst_element_set_state (priv->funnel[i], state);
+      if (priv->appsrc[i])
+        gst_element_set_state (priv->appsrc[i], state);
     }
   }
 
@@ -1626,12 +1643,18 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
   priv->send_rtp_sink = NULL;
 
   for (i = 0; i < 2; i++) {
-    gst_element_set_state (priv->udpsink[i], GST_STATE_NULL);
-    gst_element_set_state (priv->appsink[i], GST_STATE_NULL);
-    gst_element_set_state (priv->appqueue[i], GST_STATE_NULL);
-    gst_element_set_state (priv->tee[i], GST_STATE_NULL);
-    gst_element_set_state (priv->funnel[i], GST_STATE_NULL);
-    gst_element_set_state (priv->appsrc[i], GST_STATE_NULL);
+    if (priv->udpsink[i])
+      gst_element_set_state (priv->udpsink[i], GST_STATE_NULL);
+    if (priv->appsink[i])
+      gst_element_set_state (priv->appsink[i], GST_STATE_NULL);
+    if (priv->appqueue[i])
+      gst_element_set_state (priv->appqueue[i], GST_STATE_NULL);
+    if (priv->tee[i])
+      gst_element_set_state (priv->tee[i], GST_STATE_NULL);
+    if (priv->funnel[i])
+      gst_element_set_state (priv->funnel[i], GST_STATE_NULL);
+    if (priv->appsrc[i])
+      gst_element_set_state (priv->appsrc[i], GST_STATE_NULL);
     if (priv->udpsrc_v4[i]) {
       /* and set udpsrc to NULL now before removing */
       gst_element_set_locked_state (priv->udpsrc_v4[i], FALSE);
@@ -1645,12 +1668,18 @@ gst_rtsp_stream_leave_bin (GstRTSPStream * stream, GstBin * bin,
       gst_element_set_state (priv->udpsrc_v6[i], GST_STATE_NULL);
       gst_bin_remove (bin, priv->udpsrc_v6[i]);
     }
-    gst_bin_remove (bin, priv->udpsink[i]);
-    gst_bin_remove (bin, priv->appsrc[i]);
-    gst_bin_remove (bin, priv->appsink[i]);
-    gst_bin_remove (bin, priv->appqueue[i]);
-    gst_bin_remove (bin, priv->tee[i]);
-    gst_bin_remove (bin, priv->funnel[i]);
+    if (priv->udpsink[i])
+      gst_bin_remove (bin, priv->udpsink[i]);
+    if (priv->appsrc[i])
+      gst_bin_remove (bin, priv->appsrc[i]);
+    if (priv->appsink[i])
+      gst_bin_remove (bin, priv->appsink[i]);
+    if (priv->appqueue[i])
+      gst_bin_remove (bin, priv->appqueue[i]);
+    if (priv->tee[i])
+      gst_bin_remove (bin, priv->tee[i]);
+    if (priv->funnel[i])
+      gst_bin_remove (bin, priv->funnel[i]);
 
     gst_element_release_request_pad (rtpbin, priv->recv_sink[i]);
     gst_object_unref (priv->recv_sink[i]);
@@ -1776,13 +1805,18 @@ gst_rtsp_stream_recv_rtp (GstRTSPStream * stream, GstBuffer * buffer)
   g_return_val_if_fail (priv->is_joined, FALSE);
 
   g_mutex_lock (&priv->lock);
-  element = gst_object_ref (priv->appsrc[0]);
+  if (priv->appsrc[0])
+    element = gst_object_ref (priv->appsrc[0]);
+  else
+    element = NULL;
   g_mutex_unlock (&priv->lock);
 
-  ret = gst_app_src_push_buffer (GST_APP_SRC_CAST (element), buffer);
-
-  gst_object_unref (element);
-
+  if (element) {
+    ret = gst_app_src_push_buffer (GST_APP_SRC_CAST (element), buffer);
+    gst_object_unref (element);
+  } else {
+    ret = GST_FLOW_OK;
+  }
   return ret;
 }
 
@@ -1811,13 +1845,18 @@ gst_rtsp_stream_recv_rtcp (GstRTSPStream * stream, GstBuffer * buffer)
   g_return_val_if_fail (priv->is_joined, FALSE);
 
   g_mutex_lock (&priv->lock);
-  element = gst_object_ref (priv->appsrc[1]);
+  if (priv->appsrc[1])
+    element = gst_object_ref (priv->appsrc[1]);
+  else
+    element = NULL;
   g_mutex_unlock (&priv->lock);
 
-  ret = gst_app_src_push_buffer (GST_APP_SRC_CAST (element), buffer);
-
-  gst_object_unref (element);
-
+  if (element) {
+    ret = gst_app_src_push_buffer (GST_APP_SRC_CAST (element), buffer);
+    gst_object_unref (element);
+  } else {
+    ret = GST_FLOW_OK;
+  }
   return ret;
 }
 
