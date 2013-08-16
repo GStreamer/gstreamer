@@ -270,6 +270,7 @@ _parse_encoding_profile (const gchar * option_name, const gchar * value,
 int
 main (int argc, gchar ** argv)
 {
+  guint i;
   GstBus *bus;
   GstValidateRunner *runner;
   GstValidateMonitor *monitor;
@@ -281,6 +282,7 @@ main (int argc, gchar ** argv)
   GError *err = NULL;
   const gchar *scenario = NULL;
   guint count = -1;
+  gboolean want_help = FALSE;
   gboolean list_scenarios = FALSE;
 
   GOptionEntry options[] = {
@@ -306,6 +308,16 @@ main (int argc, gchar ** argv)
     {NULL}
   };
 
+  /* There is a bug that make gst_init remove the help param when initializing,
+   * it is FIXED in 1.0 */
+  for (i = 1; i < argc; i++) {
+    if (!g_strcmp0 (argv[i], "--help") || !g_strcmp0 (argv[i], "-h"))
+      want_help = TRUE;
+  }
+
+  if (!want_help)
+    gst_init (&argc, &argv);
+
   g_set_prgname ("gst-validate-transcoding-" GST_API_VERSION);
   ctx = g_option_context_new ("[input-file] [output-file]");
   g_option_context_set_summary (ctx, "Transcodes input-file to output-file, "
@@ -314,6 +326,9 @@ main (int argc, gchar ** argv)
       "\nCan also perform file conformance"
       "tests after transcoding to make sure the result is correct");
   g_option_context_add_main_entries (ctx, options, NULL);
+  if (want_help) {
+    g_option_context_add_group (ctx, gst_init_get_option_group ());
+  }
 
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
     g_printerr ("Error initializing: %s\n", err->message);
@@ -329,7 +344,6 @@ main (int argc, gchar ** argv)
   if (list_scenarios)
     gst_validate_list_scenarios ();
 
-  gst_init (&argc, &argv);
   gst_validate_init ();
 
   if (argc != 3) {
