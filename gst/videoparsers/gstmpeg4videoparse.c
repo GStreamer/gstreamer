@@ -246,9 +246,11 @@ gst_mpeg4vparse_process_config (GstMpeg4VParse * mp4vparse,
     const guint8 * data, guint offset, gsize size)
 {
   GstMpeg4VisualObject *vo;
+  GstMpeg4VideoObjectLayer vol = { 0 };
 
   /* only do stuff if something new */
   if (mp4vparse->config
+      && gst_buffer_get_size (mp4vparse->config) == size
       && !gst_buffer_memcmp (mp4vparse->config, offset, data, size))
     return TRUE;
 
@@ -262,11 +264,26 @@ gst_mpeg4vparse_process_config (GstMpeg4VParse * mp4vparse,
 
   /* If the parsing fail, we accept the config only if we don't have
    * any config yet. */
-  if (gst_mpeg4_parse_video_object_layer (&mp4vparse->vol,
+  if (gst_mpeg4_parse_video_object_layer (&vol,
           vo, data + mp4vparse->vol_offset,
           size - mp4vparse->vol_offset) != GST_MPEG4_PARSER_OK &&
       mp4vparse->config)
     return FALSE;
+
+  /* ignore update if nothing meaningful changed */
+  if (vol.height == mp4vparse->vol.height &&
+      vol.width == mp4vparse->vol.width &&
+      vol.vop_time_increment_resolution ==
+      mp4vparse->vol.vop_time_increment_resolution &&
+      vol.fixed_vop_time_increment == mp4vparse->vol.fixed_vop_time_increment &&
+      vol.par_width == mp4vparse->vol.par_width &&
+      vol.par_height == mp4vparse->vol.par_height &&
+      vol.sprite_enable == mp4vparse->vol.sprite_enable &&
+      vol.no_of_sprite_warping_points ==
+      mp4vparse->vol.no_of_sprite_warping_points)
+    return TRUE;
+
+  mp4vparse->vol = vol;
 
   GST_LOG_OBJECT (mp4vparse, "Width/Height: %u/%u, "
       "time increment resolution: %u fixed time increment: %u",
@@ -514,12 +531,12 @@ gst_mpeg4vparse_update_src_caps (GstMpeg4VParse * mp4vparse)
   GstCaps *caps = NULL;
   GstStructure *s = NULL;
 
-  GST_LOG_OBJECT (mp4vparse, "Updating caps");
-
   /* only update if no src caps yet or explicitly triggered */
   if (G_LIKELY (gst_pad_has_current_caps (GST_BASE_PARSE_SRC_PAD (mp4vparse)) &&
           !mp4vparse->update_caps))
     return;
+
+  GST_LOG_OBJECT (mp4vparse, "Updating caps");
 
   /* carry over input caps as much as possible; override with our own stuff */
   caps = gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (mp4vparse));
