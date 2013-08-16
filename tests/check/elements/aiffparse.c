@@ -194,11 +194,11 @@ run_check (gboolean push_mode)
 
   GST_INFO ("Setting to PLAYING");
   gst_pad_set_active (sinkpad, TRUE);
-  fail_unless (gst_element_set_state (src,
+  fail_unless (gst_element_set_state (aiffparse,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
   fail_unless (gst_element_set_state (sep,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
-  fail_unless (gst_element_set_state (aiffparse,
+  fail_unless (gst_element_set_state (src,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS);
 
   g_main_loop_run (loop);
@@ -206,10 +206,10 @@ run_check (gboolean push_mode)
   fail_unless (data_read == SSND_DATA_SIZE);
   fail_unless (push_mode || (have_tags == TRUE));
 
-  gst_element_set_state (src, GST_STATE_NULL);
-  gst_element_set_state (sep, GST_STATE_NULL);
-  gst_element_set_state (aiffparse, GST_STATE_NULL);
   gst_pad_set_active (sinkpad, FALSE);
+  gst_element_set_state (aiffparse, GST_STATE_NULL);
+  gst_element_set_state (sep, GST_STATE_NULL);
+  gst_element_set_state (src, GST_STATE_NULL);
 
   gst_object_unref (aiffparse);
   gst_object_unref (src);
