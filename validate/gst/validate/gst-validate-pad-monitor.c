@@ -181,13 +181,15 @@ static void
 gst_validate_pad_monitor_check_raw_audio_caps_complete (GstValidatePadMonitor *
     monitor, GstStructure * structure)
 {
+  _check_field_type (monitor, structure, "format", G_TYPE_STRING, GST_TYPE_LIST,
+      0);
+  _check_field_type (monitor, structure, "layout", G_TYPE_STRING, GST_TYPE_LIST,
+      0);
   _check_field_type (monitor, structure, "rate", G_TYPE_INT, GST_TYPE_LIST,
       GST_TYPE_INT_RANGE, 0);
-  _check_field_type (monitor, structure, "channels", G_TYPE_INT,
-      GST_TYPE_LIST, GST_TYPE_INT_RANGE, 0);
-  _check_field_type (monitor, structure, "endianness", G_TYPE_INT,
-      GST_TYPE_LIST, 0);
-  _check_field_type (monitor, structure, "channel-positions", GST_TYPE_ARRAY,
+  _check_field_type (monitor, structure, "channels", G_TYPE_INT, GST_TYPE_LIST,
+      GST_TYPE_INT_RANGE, 0);
+  _check_field_type (monitor, structure, "channel-mask", GST_TYPE_BITMASK,
       GST_TYPE_LIST, 0);
 }
 
@@ -197,6 +199,8 @@ gst_validate_pad_monitor_check_caps_complete (GstValidatePadMonitor * monitor,
 {
   GstStructure *structure;
   gint i;
+
+  GST_DEBUG_OBJECT (monitor, "Checking caps %" GST_PTR_FORMAT, caps);
 
   for (i = 0; i < gst_caps_get_size (caps); i++) {
     structure = gst_caps_get_structure (caps, i);
