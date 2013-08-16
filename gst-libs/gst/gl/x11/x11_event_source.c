@@ -27,7 +27,7 @@
 
 #include "x11_event_source.h"
 
-extern void gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11);
+extern gboolean gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11);
 
 typedef struct _X11EventSource
 {
@@ -66,12 +66,12 @@ x11_event_source_dispatch (GSource * base, GSourceFunc callback, gpointer data)
 {
   X11EventSource *source = (X11EventSource *) base;
 
-  gst_gl_window_x11_handle_event (source->window);
+  gboolean ret = gst_gl_window_x11_handle_event (source->window);
 
   if (callback)
     callback (data);
 
-  return TRUE;
+  return ret;
 }
 
 static GSourceFuncs x11_event_source_funcs = {
