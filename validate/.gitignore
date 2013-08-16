@@ -33,25 +33,9 @@ ltmain.sh
 missing
 stamp-h1
 tags
-gst-rtsp.spec
 stamp-h.in
 .dirstamp
 
 /m4/*m4
-
-/gst/rtsp-server/GstRtspServer-1.0.gir
-/gst/rtsp-server/GstRtspServer-1.0.typelib
-
-/examples/test-multicast
-/examples/test-multicast2
-
-/tests/check/gst/addresspool
-/tests/check/gst/client
-/tests/check/gst/media
-/tests/check/gst/mediafactory
-/tests/check/gst/mountpoints
-/tests/check/gst/rtspserver
-/tests/check/test-registry.reg
-/tests/test-reuse
 
 /po
