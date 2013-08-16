@@ -123,7 +123,8 @@ struct _GstRTSPStreamPrivate
 };
 
 #define DEFAULT_CONTROL         NULL
-#define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_TCP
+#define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | \
+                                        GST_RTSP_LOWER_TRANS_TCP
 
 enum
 {

@@ -63,7 +63,8 @@ struct _GstRTSPMediaFactoryPrivate
 #define DEFAULT_LAUNCH          NULL
 #define DEFAULT_SHARED          FALSE
 #define DEFAULT_EOS_SHUTDOWN    FALSE
-#define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_TCP
+#define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | \
+                                        GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_BUFFER_SIZE     0x80000
 
 enum
