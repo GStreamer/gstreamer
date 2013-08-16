@@ -212,10 +212,13 @@ run_check (gboolean push_mode)
   gst_element_set_state (src, GST_STATE_NULL);
 
   gst_object_unref (aiffparse);
+  gst_object_unref (sep);
   gst_object_unref (src);
   gst_object_unref (sinkpad);
   g_main_loop_unref (loop);
   loop = NULL;
+  g_free (path);
+  g_free (data);
 }
 
 GST_START_TEST (test_pull)
@@ -239,7 +242,6 @@ aiffparse_suite (void)
   TCase *tc_chain = tcase_create ("general");
 
   suite_add_tcase (s, tc_chain);
-  tcase_set_timeout (tc_chain, 180);
   tcase_add_test (tc_chain, test_pull);
   tcase_add_test (tc_chain, test_push);
 
