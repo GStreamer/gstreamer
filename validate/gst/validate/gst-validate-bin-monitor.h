@@ -24,9 +24,9 @@
 
 #include <glib-object.h>
 #include <gst/gst.h>
-#include "gst-validate-element-monitor.h"
-#include "gst-validate-runner.h"
-#include "gst-validate-scenario.h"
+#include <gst/validate/gst-validate-element-monitor.h>
+#include <gst/validate/gst-validate-runner.h>
+#include <gst/validate/gst-validate-scenario.h>
 
 G_BEGIN_DECLS
 

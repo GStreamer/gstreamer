@@ -73,7 +73,7 @@ _reporter_iface_init (GstValidateReporterInterface * iface)
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstValidateMonitor, gst_validate_monitor,
     G_TYPE_OBJECT, _do_init);
 
-void
+static void
 _target_freed_cb (GstValidateMonitor * monitor, GObject * where_the_object_was)
 {
   GST_DEBUG_OBJECT (monitor, "Target was freed");
@@ -158,6 +158,8 @@ gst_validate_monitor_init (GstValidateMonitor * monitor)
   g_queue_init (&monitor->overrides);
 }
 
+#if 0
+/* This shouldn't be used. it's a base class */
 /**
  * gst_validate_monitor_new:
  * @element: (transfer-none): a #GObject to run Validate on
@@ -177,6 +179,7 @@ gst_validate_monitor_new (GObject * object)
 
   return monitor;
 }
+#endif
 
 static gboolean
 gst_validate_monitor_do_setup (GstValidateMonitor * monitor)

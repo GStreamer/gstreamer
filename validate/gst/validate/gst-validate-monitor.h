@@ -24,10 +24,14 @@
 
 #include <glib-object.h>
 #include <gst/gst.h>
-#include "gst-validate-report.h"
-#include "gst-validate-reporter.h"
-#include "gst-validate-runner.h"
-#include "gst-validate-override.h"
+
+typedef struct _GstValidateMonitor GstValidateMonitor;
+typedef struct _GstValidateMonitorClass GstValidateMonitorClass;
+
+#include <gst/validate/gst-validate-report.h>
+#include <gst/validate/gst-validate-reporter.h>
+#include <gst/validate/gst-validate-runner.h>
+#include <gst/validate/gst-validate-override.h>
 
 G_BEGIN_DECLS
 
@@ -67,9 +71,6 @@ G_BEGIN_DECLS
  *     GST_VALIDATE_REPORT_LEVEL_ ## status
  *     GST_VALIDATE_AREA_ ## area ## _ ## subarea
  */
-
-typedef struct _GstValidateMonitor GstValidateMonitor;
-typedef struct _GstValidateMonitorClass GstValidateMonitorClass;
 
 /**
  * GstValidateMonitor:

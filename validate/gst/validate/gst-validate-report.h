@@ -23,12 +23,14 @@
 #define __GST_VALIDATE_REPORT_H__
 
 #include <glib-object.h>
+
+typedef struct _GstValidateReport GstValidateReport;
+typedef guintptr GstValidateIssueId;
+
 #include <gst/gst.h>
+#include <gst/validate/gst-validate-reporter.h>
 
 G_BEGIN_DECLS
-
-/* forward declaration */
-typedef struct _GstValidateReporter GstValidateReporter;
 
 GType           gst_validate_report_get_type (void);
 #define GST_TYPE_VALIDATE_REPORT (gst_validate_report_get_type ())
@@ -60,7 +62,6 @@ typedef enum {
   GST_VALIDATE_AREA_OTHER=100,
 } GstValidateReportArea;
 
-typedef guintptr GstValidateIssueId;
 #define GST_VALIDATE_ISSUE_ID_UNKNOWN 0
 
 #define GST_VALIDATE_ISSUE_ID_SHIFT 16
@@ -129,7 +130,7 @@ typedef struct {
 
 #define GST_VALIDATE_ISSUE_AREA(i) (GST_VALIDATE_ISSUE_ID_AREA (gst_validate_issue_get_id (i)))
 
-typedef struct {
+struct _GstValidateReport {
   gint    refcount;
 
   /* issue: The issue this report corresponds to (to get dsecription, summary,...) */
@@ -147,7 +148,7 @@ typedef struct {
   /* message: issue-specific message. Gives more detail on the actual
    * issue. Can be NULL */
   gchar *message;
-} GstValidateReport;
+};
 
 #define GST_VALIDATE_ISSUE_FORMAT G_GUINTPTR_FORMAT " (%s) : %s(%" G_GUINTPTR_FORMAT "): %s"
 #define GST_VALIDATE_ISSUE_ARGS(i) gst_validate_issue_get_id (i), gst_validate_report_level_get_name (i->default_level), \
@@ -161,20 +162,20 @@ typedef struct {
                                     r->message
 
 void               gst_validate_report_init (void);
-GstValidateIssue *       gst_validate_issue_from_id (GstValidateIssueId issue_id);
-GstValidateIssueId       gst_validate_issue_get_id (GstValidateIssue * issue);
+GstValidateIssue  *gst_validate_issue_from_id (GstValidateIssueId issue_id);
+GstValidateIssueId gst_validate_issue_get_id (GstValidateIssue * issue);
 void               gst_validate_issue_register (GstValidateIssue * issue);
-GstValidateIssue *       gst_validate_issue_new (GstValidateIssueId issue_id, gchar * summary,
-                                     gchar * description,
-                                     GstValidateReportLevel default_level);
+GstValidateIssue  *gst_validate_issue_new (GstValidateIssueId issue_id, gchar * summary,
+					   gchar * description,
+					   GstValidateReportLevel default_level);
 
-GstValidateReport *      gst_validate_report_new (GstValidateIssue * issue,
-                                      GstValidateReporter * reporter,
-                                      const gchar * message);
+GstValidateReport *gst_validate_report_new (GstValidateIssue * issue,
+					    GstValidateReporter * reporter,
+					    const gchar * message);
 void               gst_validate_report_unref (GstValidateReport * report);
-GstValidateReport *      gst_validate_report_ref   (GstValidateReport * report);
+GstValidateReport *gst_validate_report_ref   (GstValidateReport * report);
 
-GstValidateIssueId       gst_validate_report_get_issue_id (GstValidateReport * report);
+GstValidateIssueId gst_validate_report_get_issue_id (GstValidateReport * report);
 
 void               gst_validate_report_check_abort (GstValidateReport * report);
 void               gst_validate_report_printf (GstValidateReport * report);

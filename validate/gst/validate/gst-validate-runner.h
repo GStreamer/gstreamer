@@ -25,12 +25,12 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
-#include "gst-validate-report.h"
+typedef struct _GstValidateRunner GstValidateRunner;
+typedef struct _GstValidateRunnerClass GstValidateRunnerClass;
+
+#include <gst/validate/gst-validate-report.h>
 
 G_BEGIN_DECLS
-
-/* forward declaration */
-typedef struct _GstValidateScenario GstValidateScenario;
 
 #define GST_TYPE_VALIDATE_RUNNER			(gst_validate_runner_get_type ())
 #define GST_IS_VALIDATE_RUNNER(obj)		        (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_RUNNER))
@@ -40,9 +40,6 @@ typedef struct _GstValidateScenario GstValidateScenario;
 #define GST_VALIDATE_RUNNER_CLASS(klass)		(G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VALIDATE_RUNNER, GstValidateRunnerClass))
 #define GST_VALIDATE_RUNNER_CAST(obj)                 ((GstValidateRunner*)(obj))
 #define GST_VALIDATE_RUNNER_CLASS_CAST(klass)         ((GstValidateRunnerClass*)(klass))
-
-typedef struct _GstValidateRunner GstValidateRunner;
-typedef struct _GstValidateRunnerClass GstValidateRunnerClass;
 
 /* TODO hide this to be opaque? */
 /**

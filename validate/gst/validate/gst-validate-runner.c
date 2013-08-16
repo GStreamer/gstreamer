@@ -23,10 +23,10 @@
 #  include "config.h"
 #endif
 
-#include "gst-validate-runner.h"
 #include "gst-validate-report.h"
 #include "gst-validate-monitor-factory.h"
 #include "gst-validate-override-registry.h"
+#include "gst-validate-runner.h"
 
 /**
  * SECTION:gst-validate-runner

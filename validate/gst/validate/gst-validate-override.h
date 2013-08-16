@@ -24,12 +24,13 @@
 
 #include <glib-object.h>
 #include <gst/gst.h>
-#include "gst-validate-report.h"
+
+typedef struct _GstValidateOverride GstValidateOverride;
+
+#include <gst/validate/gst-validate-report.h>
+#include <gst/validate/gst-validate-monitor.h>
 
 G_BEGIN_DECLS
-
-typedef struct _QstQaOverride GstValidateOverride;
-typedef struct _GstValidateMonitor GstValidateMonitor;
 
 typedef void (*GstValidateOverrideBufferHandler)(GstValidateOverride * override,
     GstValidateMonitor * pad_monitor, GstBuffer * buffer);
@@ -42,7 +43,7 @@ typedef void (*GstValidateOverrideGetCapsHandler)(GstValidateOverride * override
 typedef void (*GstValidateOverrideSetCapsHandler)(GstValidateOverride * override,
     GstValidateMonitor * pad_monitor, GstCaps * caps);
 
-struct _QstQaOverride {
+struct _GstValidateOverride {
   GHashTable *level_override;
 
   /* Pad handlers */

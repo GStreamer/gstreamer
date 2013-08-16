@@ -27,6 +27,9 @@
 #include "gst-validate-override-registry.h"
 #include "gst-validate-report.h"
 
+/* public symbol */
+int gst_validate_create_overrides (void);
+
 int
 gst_validate_create_overrides (void)
 {

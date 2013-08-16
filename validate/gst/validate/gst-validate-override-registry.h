@@ -24,9 +24,10 @@
 
 #include <glib-object.h>
 #include <gst/gst.h>
-#include "gst-validate-report.h"
-#include "gst-validate-monitor.h"
-#include "gst-validate-override.h"
+
+#include <gst/validate/gst-validate-report.h>
+#include <gst/validate/gst-validate-monitor.h>
+#include <gst/validate/gst-validate-override.h>
 
 G_BEGIN_DECLS
 

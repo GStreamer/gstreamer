@@ -37,6 +37,8 @@ typedef struct _GstValidateReporterPrivate
   char *name;
 } GstValidateReporterPrivate;
 
+G_DEFINE_INTERFACE (GstValidateReporter, gst_validate_reporter, G_TYPE_OBJECT);
+
 static void
 gst_validate_reporter_default_init (GstValidateReporterInterface * iface)
 {
@@ -49,8 +51,6 @@ gst_validate_reporter_default_init (GstValidateReporterInterface * iface)
           GST_TYPE_VALIDATE_RUNNER,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 }
-
-G_DEFINE_INTERFACE (GstValidateReporter, gst_validate_reporter, G_TYPE_OBJECT);
 
 static void
 _free_priv (GstValidateReporterPrivate * priv)

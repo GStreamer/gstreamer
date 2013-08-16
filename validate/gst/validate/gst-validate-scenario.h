@@ -24,7 +24,8 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include "gst-validate-runner.h"
+
+#include <gst/validate/gst-validate-runner.h>
 
 G_BEGIN_DECLS
 

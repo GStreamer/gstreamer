@@ -25,7 +25,7 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
-#include "gst-validate-monitor.h"
+#include <gst/validate/gst-validate-monitor.h>
 
 G_BEGIN_DECLS
 

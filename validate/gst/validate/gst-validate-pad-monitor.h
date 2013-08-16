@@ -25,12 +25,13 @@
 #include <glib-object.h>
 #include <gst/gst.h>
 
-#include "gst-validate-monitor.h"
+typedef struct _GstValidatePadMonitor GstValidatePadMonitor;
+typedef struct _GstValidatePadMonitorClass GstValidatePadMonitorClass;
+
+#include <gst/validate/gst-validate-monitor.h>
+#include <gst/validate/gst-validate-element-monitor.h>
 
 G_BEGIN_DECLS
-
-/* forward declaratin */
-typedef struct _GstValidateElementMonitor GstValidateElementMonitor;
 
 #define GST_TYPE_VALIDATE_PAD_MONITOR			(gst_validate_pad_monitor_get_type ())
 #define GST_IS_VALIDATE_PAD_MONITOR(obj)		(G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VALIDATE_PAD_MONITOR))
@@ -42,9 +43,6 @@ typedef struct _GstValidateElementMonitor GstValidateElementMonitor;
 #define GST_VALIDATE_PAD_MONITOR_CLASS_CAST(klass)    ((GstValidatePadMonitorClass*)(klass))
 
 #define GST_VALIDATE_PAD_MONITOR_GET_PAD(m) (GST_PAD_CAST (GST_VALIDATE_MONITOR_GET_OBJECT (m)))
-
-typedef struct _GstValidatePadMonitor GstValidatePadMonitor;
-typedef struct _GstValidatePadMonitorClass GstValidatePadMonitorClass;
 
 
 /**

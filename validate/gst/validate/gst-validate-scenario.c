@@ -50,8 +50,6 @@ enum
   PROP_LAST
 };
 
-static void gst_validate_scenario_class_init (GstValidateScenarioClass * klass);
-static void gst_validate_scenario_init (GstValidateScenario * scenario);
 static void gst_validate_scenario_dispose (GObject * object);
 static void gst_validate_scenario_finalize (GObject * object);
 
@@ -566,7 +564,7 @@ failed:
   goto done;
 }
 
-gboolean
+static gboolean
 gst_validate_scenario_load (GstValidateScenario * scenario,
     const gchar * scenario_name)
 {

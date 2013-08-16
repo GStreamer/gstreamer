@@ -20,14 +20,14 @@
 #ifndef _GST_VALIDATE_REPORTER_
 #define _GST_VALIDATE_REPORTER_
 
-#include <glib-object.h>
-#include "gst-validate-runner.h"
-#include "gst-validate-report.h"
-
-G_BEGIN_DECLS
-
 typedef struct _GstValidateReporter GstValidateReporter;
 typedef struct _GstValidateReporterInterface GstValidateReporterInterface;
+
+#include <glib-object.h>
+#include <gst/validate/gst-validate-report.h>
+#include <gst/validate/gst-validate-runner.h>
+
+G_BEGIN_DECLS
 
 /* GstValidateReporter interface declarations */
 #define GST_TYPE_VALIDATE_REPORTER                (gst_validate_reporter_get_type ())
