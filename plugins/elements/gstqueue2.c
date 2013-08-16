@@ -2072,6 +2072,10 @@ gst_queue2_locked_dequeue (GstQueue2 * queue, GstQueue2ItemType * item_type)
     item = gst_queue2_read_item_from_file (queue);
   } else {
     GstQueue2Item *qitem = g_queue_pop_head (&queue->queue);
+
+    if (qitem == NULL)
+      goto no_item;
+
     item = qitem->item;
     g_slice_free (GstQueue2Item, qitem);
   }
