@@ -118,9 +118,6 @@ gst_rtp_h264_depay_class_init (GstRtpH264DepayClass * klass)
   gstrtpbasedepayload_class->process = gst_rtp_h264_depay_process;
   gstrtpbasedepayload_class->set_caps = gst_rtp_h264_depay_setcaps;
   gstrtpbasedepayload_class->handle_event = gst_rtp_h264_depay_handle_event;
-
-  GST_DEBUG_CATEGORY_INIT (rtph264depay_debug, "rtph264depay", 0,
-      "H264 Video RTP Depayloader");
 }
 
 static void
@@ -1157,6 +1154,9 @@ gst_rtp_h264_depay_change_state (GstElement * element,
 gboolean
 gst_rtp_h264_depay_plugin_init (GstPlugin * plugin)
 {
+  GST_DEBUG_CATEGORY_INIT (rtph264depay_debug, "rtph264depay", 0,
+      "H264 Video RTP Depayloader");
+
   return gst_element_register (plugin, "rtph264depay",
       GST_RANK_SECONDARY, GST_TYPE_RTP_H264_DEPAY);
 }
