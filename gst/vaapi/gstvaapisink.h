@@ -95,6 +95,7 @@ struct _GstVaapiSink {
     guint               use_reflection  : 1;
     guint               use_overlay     : 1;
     guint               use_rotation    : 1;
+    guint               keep_aspect     : 1;
     guint               use_video_raw   : 1;
 };
 

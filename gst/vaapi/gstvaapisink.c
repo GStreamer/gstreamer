@@ -158,6 +158,7 @@ enum {
     PROP_USE_GLX,
     PROP_USE_REFLECTION,
     PROP_ROTATION,
+    PROP_FORCE_ASPECT_RATIO,
 };
 
 #define DEFAULT_DISPLAY_TYPE            GST_VAAPI_DISPLAY_TYPE_ANY
@@ -380,6 +381,19 @@ gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height)
     /* Return success if caps are not set yet */
     if (!sink->caps)
         return TRUE;
+
+    if (!sink->keep_aspect) {
+        display_rect->width = width;
+        display_rect->height = height;
+        display_rect->x = 0;
+        display_rect->y = 0;
+
+        GST_DEBUG("force-aspect-ratio is false; distorting while scaling video");
+        GST_DEBUG("render rect (%d,%d):%ux%u",
+                  display_rect->x, display_rect->y,
+                  display_rect->width, display_rect->height);
+        return TRUE;
+    }
 
     GST_DEBUG("ensure render rect within %ux%u bounds", width, height);
 
@@ -1255,6 +1269,9 @@ gst_vaapisink_set_property(
     case PROP_ROTATION:
         sink->rotation_req = g_value_get_enum(value);
         break;
+    case PROP_FORCE_ASPECT_RATIO:
+        sink->keep_aspect = g_value_get_boolean(value);
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -1289,6 +1306,9 @@ gst_vaapisink_get_property(
         break;
     case PROP_ROTATION:
         g_value_set_enum(value, sink->rotation);
+        break;
+    case PROP_FORCE_ASPECT_RATIO:
+        g_value_set_boolean(value, sink->keep_aspect);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -1401,6 +1421,21 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                            GST_VAAPI_TYPE_ROTATION,
                            DEFAULT_ROTATION,
                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+    /**
+     * GstVaapiSink:force-aspect-ratio:
+     *
+     * When enabled, scaling respects video aspect ratio; when disabled, the
+     * video is distorted to fit the window.
+     */
+    g_object_class_install_property
+        (object_class,
+         PROP_FORCE_ASPECT_RATIO,
+         g_param_spec_boolean("force-aspect-ratio",
+                              "Force aspect ratio",
+                              "When enabled, scaling will respect original aspect ratio",
+                              TRUE,
+                              G_PARAM_READWRITE));
 }
 
 static void
@@ -1426,4 +1461,5 @@ gst_vaapisink_init(GstVaapiSink *sink)
     sink->use_reflection = FALSE;
     sink->use_overlay    = FALSE;
     sink->use_rotation   = FALSE;
+    sink->keep_aspect    = TRUE;
 }
