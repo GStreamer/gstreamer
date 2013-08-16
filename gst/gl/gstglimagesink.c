@@ -959,19 +959,20 @@ gst_glimage_sink_on_draw (GstGLImageSink * gl_sink)
 
   /* check if a client draw callback is registered */
   if (gl_sink->clientDrawCallback) {
-    GstGLWindow *window = gst_gl_display_get_window (gl_sink->display);
-
     gboolean doRedisplay =
         gl_sink->clientDrawCallback (gl_sink->redisplay_texture,
         gl_sink->redisplay_texture_width,
         gl_sink->redisplay_texture_height,
         gl_sink->client_data);
 
-    if (doRedisplay && window)
+    if (doRedisplay) {
+      GstGLWindow *window = gst_gl_display_get_window (gl_sink->display);
+
       gst_gl_window_draw_unlocked (window,
           gl_sink->redisplay_texture_width, gl_sink->redisplay_texture_height);
 
-    gst_object_unref (window);
+      gst_object_unref (window);
+    }
   }
   /* default opengl scene */
   else {
