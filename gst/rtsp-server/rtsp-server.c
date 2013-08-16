@@ -1342,16 +1342,16 @@ gst_rtsp_server_client_filter (GstRTSPServer * server,
 
   GST_RTSP_SERVER_LOCK (server);
   for (walk = priv->clients; walk; walk = next) {
-    GstRTSPClient *client = walk->data;
+    ClientContext *cctx = walk->data;
 
     next = g_list_next (walk);
 
-    switch (func (server, client, user_data)) {
+    switch (func (server, cctx->client, user_data)) {
       case GST_RTSP_FILTER_REMOVE:
         /* remove client, FIXME */
         break;
       case GST_RTSP_FILTER_REF:
-        result = g_list_prepend (result, g_object_ref (client));
+        result = g_list_prepend (result, g_object_ref (cctx->client));
         break;
       case GST_RTSP_FILTER_KEEP:
       default:
