@@ -672,6 +672,12 @@ gst_rtsp_media_is_reusable (GstRTSPMedia * media)
   return res;
 }
 
+static void
+do_set_protocols (GstRTSPStream * stream, GstRTSPLowerTrans * protocols)
+{
+  gst_rtsp_stream_set_protocols (stream, *protocols);
+}
+
 /**
  * gst_rtsp_media_set_protocols:
  * @media: a #GstRTSPMedia
@@ -690,6 +696,7 @@ gst_rtsp_media_set_protocols (GstRTSPMedia * media, GstRTSPLowerTrans protocols)
 
   g_mutex_lock (&priv->lock);
   priv->protocols = protocols;
+  g_ptr_array_foreach (priv->streams, (GFunc) do_set_protocols, &protocols);
   g_mutex_unlock (&priv->lock);
 }
 
