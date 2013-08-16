@@ -870,6 +870,12 @@ static void
   iter =
       gst_pad_iterate_internal_links (GST_VALIDATE_PAD_MONITOR_GET_PAD
       (monitor));
+  if (iter == NULL) {
+    /* inputselector will return NULL if the sinkpad is not the active one .... */
+    GST_FIXME_OBJECT (GST_VALIDATE_PAD_MONITOR_GET_PAD
+        (monitor), "No iterator");
+    return;
+  }
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
