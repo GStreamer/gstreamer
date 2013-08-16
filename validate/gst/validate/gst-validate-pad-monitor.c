@@ -459,14 +459,6 @@ gst_validate_pad_monitor_check_late_serialized_events (GstValidatePadMonitor *
     g_ptr_array_remove_range (monitor->serialized_events, 0, i);
 }
 
-void
-_parent_set_cb (GstObject * object, GstObject * parent,
-    GstValidateMonitor * monitor)
-{
-  gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (monitor),
-      g_strdup_printf ("%s:%s", GST_DEBUG_PAD_NAME (object)));
-}
-
 static void
 gst_validate_pad_monitor_dispose (GObject * object)
 {
@@ -476,9 +468,6 @@ gst_validate_pad_monitor_dispose (GObject * object)
   if (pad) {
     if (monitor->pad_probe_id)
       gst_pad_remove_probe (pad, monitor->pad_probe_id);
-
-    g_signal_handlers_disconnect_by_func (pad, (GCallback) _parent_set_cb,
-        monitor);
   }
 
   if (monitor->expected_segment)
@@ -1657,7 +1646,8 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
   gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (monitor),
       g_strdup_printf ("%s:%s", GST_DEBUG_PAD_NAME (pad)));
 
-  g_signal_connect (pad, "parent-set", (GCallback) _parent_set_cb, monitor);
+  if (G_UNLIKELY (GST_PAD_PARENT (pad) == NULL))
+    GST_FIXME ("Saw a pad not belonging to any object");
 
   return TRUE;
 }
