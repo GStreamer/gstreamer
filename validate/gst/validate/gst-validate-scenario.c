@@ -34,7 +34,7 @@
 #define GST_VALIDATE_SCENARIO_GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_VALIDATE_SCENARIO, GstValidateScenarioPrivate))
 
-#define GST_VALIDATE_SCENARIO_SUFFIX ".xml"
+#define GST_VALIDATE_SCENARIO_SUFFIX ".scenario"
 #define GST_VALIDATE_SCENARIO_DIRECTORY "qa-scenario"
 
 #define DEFAULT_SEEK_TOLERANCE (0.1 * GST_SECOND)       /* tolerance seek interval
