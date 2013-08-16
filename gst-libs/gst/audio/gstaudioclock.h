@@ -20,6 +20,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifndef __GST_AUDIO_AUDIO_H__
+#include <gst/audio/audio.h>
+#endif
+
 #ifndef __GST_AUDIO_CLOCK_H__
 #define __GST_AUDIO_CLOCK_H__
 

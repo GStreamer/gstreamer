@@ -46,13 +46,14 @@
  * the methods in GstBaseSink and this class.
  */
 
+#ifndef __GST_AUDIO_AUDIO_H__
+#include <gst/audio/audio.h>
+#endif
+
 #ifndef __GST_AUDIO_BASE_SINK_H__
 #define __GST_AUDIO_BASE_SINK_H__
 
-#include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
-#include "gstaudioringbuffer.h"
-#include "gstaudioclock.h"
 
 G_BEGIN_DECLS
 

@@ -23,13 +23,15 @@
 /* a base class for audio sources.
  */
 
+#ifndef __GST_AUDIO_AUDIO_H__
+#include <gst/audio/audio.h>
+#endif
+
 #ifndef __GST_AUDIO_BASE_SRC_H__
 #define __GST_AUDIO_BASE_SRC_H__
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
-#include "gstaudioringbuffer.h"
-#include "gstaudioclock.h"
 
 G_BEGIN_DECLS
 

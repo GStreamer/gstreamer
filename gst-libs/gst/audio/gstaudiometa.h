@@ -20,8 +20,6 @@
 #ifndef __GST_AUDIO_META_H__
 #define __GST_AUDIO_META_H__
 
-#include <gst/gst.h>
-
 #include <gst/audio/audio.h>
 
 G_BEGIN_DECLS

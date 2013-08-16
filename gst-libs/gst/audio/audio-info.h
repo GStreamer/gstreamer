@@ -19,13 +19,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifndef __GST_AUDIO_AUDIO_H__
+#include <gst/audio/audio.h>
+#endif
+
 #ifndef __GST_AUDIO_INFO_H__
 #define __GST_AUDIO_INFO_H__
-
-#include <gst/gst.h>
-#include <gst/audio/audio-enumtypes.h>
-#include <gst/audio/audio-format.h>
-#include <gst/audio/audio-channels.h>
 
 G_BEGIN_DECLS
 
