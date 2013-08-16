@@ -634,11 +634,13 @@ gst_gl_window_x11_run (GstGLWindow * window)
   g_main_loop_run (window_x11->loop);
 }
 
-void
+gboolean
 gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
 {
   GstGLWindow *window;
   GstGLWindowX11Class *window_class;
+
+  gboolean ret = TRUE;
 
   window = GST_GL_WINDOW (window_x11);
   window_class = GST_GL_WINDOW_X11_GET_CLASS (window_x11);
@@ -667,6 +669,8 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
 
           if (window->close)
             window->close (window->close_data);
+
+          ret = FALSE;
         }
         break;
       }
@@ -721,6 +725,7 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
     }                           // switch
   }                             // while running
 
+  return ret;
 }
 
 /* Not called by the gl thread */
