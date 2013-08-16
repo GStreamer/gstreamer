@@ -3157,58 +3157,165 @@ static void
 mod_type_find (GstTypeFind * tf, gpointer unused)
 {
   const guint8 *data;
+  GstTypeFindProbability probability;
+  const char *mod_type = NULL;
 
   /* MOD */
   if ((data = gst_type_find_peek (tf, 1080, 4)) != NULL) {
     /* Protracker and variants */
-    if ((memcmp (data, "M.K.", 4) == 0) || (memcmp (data, "M!K!", 4) == 0) ||
+    if ((memcmp (data, "M.K.", 4) == 0) ||
+        (memcmp (data, "M!K!", 4) == 0) ||
+        (memcmp (data, "M&K!", 4) == 0) || (memcmp (data, "N.T.", 4) == 0) ||
         /* Star Tracker */
         (memcmp (data, "FLT", 3) == 0 && isdigit (data[3])) ||
         (memcmp (data, "EXO", 3) == 0 && isdigit (data[3])) ||
         /* Oktalyzer (Amiga) */
-        (memcmp (data, "OKTA", 4) == 0) ||
+        (memcmp (data, "OKTA", 4) == 0) || (memcmp (data, "OCTA", 4) == 0) ||
         /* Oktalyser (Atari) */
         (memcmp (data, "CD81", 4) == 0) ||
+        /* Taketracker */
+        (memcmp (data, "TDZ", 3) == 0 && isdigit (data[3])) ||
         /* Fasttracker */
         (memcmp (data + 1, "CHN", 3) == 0 && isdigit (data[0])) ||
         /* Fasttracker or Taketracker */
         (memcmp (data + 2, "CH", 2) == 0 && isdigit (data[0])
             && isdigit (data[1])) || (memcmp (data + 2, "CN", 2) == 0
             && isdigit (data[0]) && isdigit (data[1]))) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MOD_CAPS);
-      return;
+      mod_type = "mod";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
+    }
+  }
+  /* J2B (Jazz Jackrabbit 2) */
+  if ((data = gst_type_find_peek (tf, 0, 8)) != NULL) {
+    if ((memcmp (data, "MUSE\xDE\xAD", 4) == 0) &&
+        ((memcmp (data + 6, "\xBE\xEF", 2) == 0) ||
+            (memcmp (data + 6, "\xBA\xBE", 2) == 0))) {
+      mod_type = "j2b";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
+    }
+  }
+  /* AMS (Velvet Studio) */
+  if ((data = gst_type_find_peek (tf, 0, 7)) != NULL) {
+    if (memcmp (data, "AMShdr\x1A", 7) == 0) {
+      mod_type = "velvet-ams";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
+    }
+  }
+  /* AMS (Extreme Tracker) */
+  if ((data = gst_type_find_peek (tf, 0, 9)) != NULL) {
+    if ((memcmp (data, "Extreme", 7) == 0) && (data[8] == 1)) {
+      mod_type = "extreme-ams";
+      probability = GST_TYPE_FIND_LIKELY;
+      goto suggest_audio_mod_caps;
+    }
+  }
+  /* ULT (Ultratracker) */
+  if ((data = gst_type_find_peek (tf, 0, 14)) != NULL) {
+    if (memcmp (data, "MAS_UTrack_V00", 14) == 0) {
+      mod_type = "ult";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
+    }
+  }
+  /* DIGI (DigiBooster) */
+  if ((data = gst_type_find_peek (tf, 0, 20)) != NULL) {
+    if (memcmp (data, "DIGI Booster module\0", 20) == 0) {
+      mod_type = "digi";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
+    }
+  }
+  /* PTM (PolyTracker) */
+  if ((data = gst_type_find_peek (tf, 0x2C, 4)) != NULL) {
+    if (memcmp (data, "PTMF", 4) == 0) {
+      mod_type = "ptm";
+      probability = GST_TYPE_FIND_LIKELY;
+      goto suggest_audio_mod_caps;
     }
   }
   /* XM */
   if ((data = gst_type_find_peek (tf, 0, 38)) != NULL) {
-    if (memcmp (data, "Extended Module: ", 17) == 0 && data[37] == 0x1A) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MOD_CAPS);
-      return;
+    if ((memcmp (data, "Extended Module: ", 17) == 0) && (data[37] == 0x1A)) {
+      mod_type = "xm";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
     }
   }
   /* OKT */
   if (data || (data = gst_type_find_peek (tf, 0, 8)) != NULL) {
     if (memcmp (data, "OKTASONG", 8) == 0) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MOD_CAPS);
-      return;
+      mod_type = "okt";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
     }
   }
+  /* Various formats with a 4-byte magic ID at the beginning of the file */
   if (data || (data = gst_type_find_peek (tf, 0, 4)) != NULL) {
+    /* PSM (Protracker Studio PSM) */
+    if (memcmp (data, "PSM", 3) == 0) {
+      unsigned char fbyte = data[3];
+      if ((fbyte == ' ') || (fbyte == 254)) {
+        mod_type = "psm";
+        probability = GST_TYPE_FIND_MAXIMUM;
+        goto suggest_audio_mod_caps;
+      }
+    }
     /* 669 */
     if ((memcmp (data, "if", 2) == 0) || (memcmp (data, "JN", 2) == 0)) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, MOD_CAPS);
-      return;
+      mod_type = "669";
+      probability = GST_TYPE_FIND_LIKELY;
+      goto suggest_audio_mod_caps;
     }
     /* AMF */
-    if ((memcmp (data, "AMF", 3) == 0 && data[3] > 10 && data[3] < 14) ||
-        /* IT */
-        (memcmp (data, "IMPM", 4) == 0) ||
-        /* MED */
-        (memcmp (data, "MMD0", 4) == 0) || (memcmp (data, "MMD1", 4) == 0) ||
-        /* MTM */
-        (memcmp (data, "MTM", 3) == 0)) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MOD_CAPS);
-      return;
+    if ((memcmp (data, "AMF", 3) == 0) && (data[3] > 10) && (data[3] < 14)) {
+      mod_type = "dsmi-amf";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
+    }
+    /* IT */
+    if (memcmp (data, "IMPM", 4) == 0) {
+      mod_type = "it";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
+    }
+    /* DBM (DigiBooster Pro) */
+    if (memcmp (data, "DBM0", 4) == 0) {
+      mod_type = "dbm";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
+    }
+    /* MDL (DigiTrakker) */
+    if (memcmp (data, "DMDL", 4) == 0) {
+      mod_type = "mdl";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
+    }
+    /* MT2 (MadTracker 2.0) */
+    if (memcmp (data, "MT20", 4) == 0) {
+      mod_type = "mt2";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
+    }
+    /* DMF (X-Tracker) */
+    if (memcmp (data, "DDMF", 4) == 0) {
+      mod_type = "dmf";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
+    }
+    /* MED */
+    if ((memcmp (data, "MMD0", 4) == 0) || (memcmp (data, "MMD1", 4) == 0)) {
+      mod_type = "med";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
+    }
+    /* MTM */
+    if (memcmp (data, "MTM", 3) == 0) {
+      mod_type = "mtm";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
     }
     /* DSM */
     if (memcmp (data, "RIFF", 4) == 0) {
@@ -3216,10 +3323,17 @@ mod_type_find (GstTypeFind * tf, gpointer unused)
 
       if (data2) {
         if (memcmp (data2, "DSMF", 4) == 0) {
-          gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MOD_CAPS);
-          return;
+          mod_type = "dsm";
+          probability = GST_TYPE_FIND_MAXIMUM;
+          goto suggest_audio_mod_caps;
         }
       }
+    }
+    /* FAR (Farandole) */
+    if (memcmp (data, "FAR\xFE", 4) == 0) {
+      mod_type = "far";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
     }
     /* FAM */
     if (memcmp (data, "FAM\xFE", 4) == 0) {
@@ -3227,12 +3341,15 @@ mod_type_find (GstTypeFind * tf, gpointer unused)
 
       if (data2) {
         if (memcmp (data2, "compare", 3) == 0) {
-          gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MOD_CAPS);
-          return;
+          mod_type = "fam";
+          probability = GST_TYPE_FIND_MAXIMUM;
+          goto suggest_audio_mod_caps;
         }
+        /* otherwise do not suggest anything */
       } else {
-        gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, MOD_CAPS);
-        return;
+        mod_type = "fam";
+        probability = GST_TYPE_FIND_LIKELY;
+        goto suggest_audio_mod_caps;
       }
     }
     /* GDM */
@@ -3241,27 +3358,40 @@ mod_type_find (GstTypeFind * tf, gpointer unused)
 
       if (data2) {
         if (memcmp (data2, "GMFS", 4) == 0) {
-          gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MOD_CAPS);
-          return;
+          mod_type = "gdm";
+          probability = GST_TYPE_FIND_MAXIMUM;
+          goto suggest_audio_mod_caps;
         }
+        /* otherwise do not suggest anything */
       } else {
-        gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY, MOD_CAPS);
-        return;
+        mod_type = "gdm";
+        probability = GST_TYPE_FIND_LIKELY;
+        goto suggest_audio_mod_caps;
       }
+    }
+  }
+  /* FAR (Farandole) (secondary detection) */
+  if ((data = gst_type_find_peek (tf, 44, 3)) != NULL) {
+    if (memcmp (data, "\x0D\x0A\x1A", 3) == 0) {
+      mod_type = "far";
+      probability = GST_TYPE_FIND_POSSIBLE;
+      goto suggest_audio_mod_caps;
     }
   }
   /* IMF */
   if ((data = gst_type_find_peek (tf, 60, 4)) != NULL) {
     if (memcmp (data, "IM10", 4) == 0) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MOD_CAPS);
-      return;
+      mod_type = "imf";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
     }
   }
   /* S3M */
   if ((data = gst_type_find_peek (tf, 44, 4)) != NULL) {
     if (memcmp (data, "SCRM", 4) == 0) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MOD_CAPS);
-      return;
+      mod_type = "s3m";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
     }
   }
   /* STM */
@@ -3274,17 +3404,29 @@ mod_type_find (GstTypeFind * tf, gpointer unused)
         return;
       if ((stmtype = gst_type_find_peek (tf, 29, 1)) == NULL)
         return;
-      if (*id == 0x1A && *stmtype == 2)
-        gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MOD_CAPS);
-      return;
+      if (*id == 0x1A && *stmtype == 2) {
+        mod_type = "stm";
+        probability = GST_TYPE_FIND_MAXIMUM;
+        goto suggest_audio_mod_caps;
+      }
     }
   }
   /* AMF */
   if ((data = gst_type_find_peek (tf, 0, 19)) != NULL) {
     if (memcmp (data, "ASYLUM Music Format", 19) == 0) {
-      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, MOD_CAPS);
-      return;
+      mod_type = "asylum-amf";
+      probability = GST_TYPE_FIND_MAXIMUM;
+      goto suggest_audio_mod_caps;
     }
+  }
+
+suggest_audio_mod_caps:
+  if (mod_type != NULL) {
+    GstCaps *caps = gst_caps_new_simple ("audio/x-mod",
+        "type", G_TYPE_STRING, mod_type, NULL);
+
+    gst_type_find_suggest (tf, probability, caps);
+    gst_caps_unref (caps);
   }
 }
 
@@ -5173,8 +5315,8 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER (plugin, "audio/x-ttafile", GST_RANK_PRIMARY,
       tta_type_find, "tta", TTA_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-mod", GST_RANK_SECONDARY, mod_type_find,
-      "669,amf,dsm,gdm,far,imf,it,med,mod,mtm,okt,sam,s3m,stm,stx,ult,xm",
-      MOD_CAPS, NULL, NULL);
+      "669,amf,ams,dbm,digi,dmf,dsm,gdm,far,imf,it,j2b,mdl,med,mod,mt2,mtm,"
+      "okt,psm,ptm,sam,s3m,stm,stx,ult,xm", MOD_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/mpeg", GST_RANK_PRIMARY, mp3_type_find,
       "mp3,mp2,mp1,mpga", MP3_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "audio/x-ac3", GST_RANK_PRIMARY, ac3_type_find,
