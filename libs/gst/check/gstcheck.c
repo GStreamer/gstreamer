@@ -124,6 +124,10 @@ gst_check_init (int *argc, char **argv[])
 
   GST_DEBUG_CATEGORY_INIT (check_debug, "check", 0, "check regression tests");
 
+  if (atexit (gst_deinit) != 0) {
+    GST_ERROR ("failed to set gst_deinit as exit function");
+  }
+
   if (g_getenv ("GST_TEST_DEBUG"))
     _gst_check_debug = TRUE;
 
