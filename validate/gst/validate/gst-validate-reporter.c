@@ -94,7 +94,8 @@ gst_validate_report_valist (GstValidateReporter * reporter,
     GstValidateIssueId issue_id, const gchar * format, va_list var_args)
 {
   GstValidateReport *report;
-  gchar *message;
+  gchar *message, *combo;
+  va_list vacopy;
   GstValidateIssue *issue;
   GstValidateReporterPrivate *priv = gst_validate_reporter_get_priv (reporter);
 
@@ -102,7 +103,8 @@ gst_validate_report_valist (GstValidateReporter * reporter,
 
   g_return_if_fail (issue != NULL);
 
-  message = g_strdup_vprintf (format, var_args);
+  G_VA_COPY (vacopy, var_args);
+  message = g_strdup_vprintf (format, vacopy);
   report = gst_validate_report_new (issue, reporter, message);
 
   gst_validate_reporter_intercept_report (reporter, report);
@@ -120,17 +122,28 @@ gst_validate_report_valist (GstValidateReporter * reporter,
     g_hash_table_insert (priv->reports, (gpointer) issue_id, report);
   }
 
+  combo = g_strdup_printf ("<%s>:%s", priv->name, format);
+  G_VA_COPY (vacopy, var_args);
   if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
-    GST_ERROR ("<%s>: %s", priv->name, message);
+    gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_ERROR, __FILE__,
+        GST_FUNCTION, __LINE__, NULL, combo, vacopy);
   else if (report->level == GST_VALIDATE_REPORT_LEVEL_WARNING)
-    GST_WARNING ("<%s>: %s", priv->name, message);
+    gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_WARNING, __FILE__,
+        GST_FUNCTION, __LINE__, NULL, combo, vacopy);
   else if (report->level == GST_VALIDATE_REPORT_LEVEL_ISSUE)
-    GST_LOG ("<%s>: %s", priv->name, message);
+    gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_LOG, __FILE__,
+        GST_FUNCTION, __LINE__, (GObject *) NULL, combo, vacopy);
   else
-    GST_DEBUG ("<%s>: %s", priv->name, message);
+    gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_DEBUG, __FILE__,
+        GST_FUNCTION, __LINE__, NULL, combo, vacopy);
 
-  GST_INFO_OBJECT (reporter, "Received error report %" GST_VALIDATE_ISSUE_FORMAT
-      " : %s", GST_VALIDATE_ISSUE_ARGS (issue), message);
+  g_free (combo);
+  combo = g_strdup_printf ("Received error report %" GST_VALIDATE_ISSUE_FORMAT
+      " : %s", GST_VALIDATE_ISSUE_ARGS (issue), format);
+
+  G_VA_COPY (vacopy, var_args);
+  gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_DEBUG, __FILE__,
+      GST_FUNCTION, __LINE__, NULL, combo, vacopy);
   gst_validate_report_printf (report);
   gst_validate_report_check_abort (report);
 
