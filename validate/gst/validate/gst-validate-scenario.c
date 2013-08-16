@@ -730,3 +730,50 @@ gst_validate_scenario_factory_create (GstValidateRunner * runner,
 
   return scenario;
 }
+
+static void
+_list_scenarios_in_dir (GFile * dir)
+{
+  GFileEnumerator *fenum;
+  GFileInfo *info;
+
+  fenum = g_file_enumerate_children (dir, G_FILE_ATTRIBUTE_STANDARD_NAME,
+      G_FILE_QUERY_INFO_NONE, NULL, NULL);
+
+  if (fenum == NULL)
+    return;
+
+  for (info = g_file_enumerator_next_file (fenum, NULL, NULL);
+      info; info = g_file_enumerator_next_file (fenum, NULL, NULL)) {
+    if (g_str_has_suffix (g_file_info_get_name (info),
+            GST_VALIDATE_SCENARIO_SUFFIX)) {
+      gchar **name = g_strsplit (g_file_info_get_name (info),
+          GST_VALIDATE_SCENARIO_SUFFIX, 0);
+
+      g_print ("Scenario %s \n", name[0]);
+
+      g_strfreev (name);
+    }
+  }
+}
+
+void
+gst_validate_list_scenarios (void)
+{
+  gchar *tldir = g_build_filename (g_get_user_data_dir (),
+      "gstreamer-" GST_API_VERSION, GST_VALIDATE_SCENARIO_DIRECTORY,
+      NULL);
+  GFile *dir = g_file_new_for_path (tldir);
+
+  g_print ("====================\n"
+      "Avalaible scenarios:\n" "====================\n");
+  _list_scenarios_in_dir (dir);
+  g_object_unref (dir);
+  g_free (tldir);
+
+  /* Hack to make it work uninstalled */
+  dir = g_file_new_for_path ("data/");
+  _list_scenarios_in_dir (dir);
+  g_object_unref (dir);
+
+}

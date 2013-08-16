@@ -60,6 +60,7 @@ GType gst_validate_scenario_get_type (void);
 GstValidateScenario * gst_validate_scenario_factory_create (GstValidateRunner *runner,
                                                 GstElement *pipeline,
                                                 const gchar *scenario_name);
+void gst_validate_list_scenarios (void);
 
 G_END_DECLS
 

@@ -11,6 +11,7 @@
 
 #include <gst/gst.h>
 #include <gst/validate/validate.h>
+#include "gst-validate-scenario.h"
 
 #ifdef G_OS_UNIX
 #include <glib-unix.h>
@@ -63,6 +64,7 @@ main (int argc, gchar ** argv)
 {
   GError *err = NULL;
   const gchar *scenario = NULL;
+  gboolean list_scenarios = FALSE;
   guint count = -1;
 #ifdef G_OS_UNIX
   guint signal_watch_id;
@@ -72,6 +74,8 @@ main (int argc, gchar ** argv)
     {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
         "Let you set a scenario, it will override the GST_VALIDATE_SCENARIO "
           "environment variable", NULL},
+    {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
+        "List the avalaible scenarios that can be run", NULL},
     {NULL}
   };
   GOptionContext *ctx;
@@ -106,8 +110,12 @@ main (int argc, gchar ** argv)
 
   g_option_context_free (ctx);
 
+  if (list_scenarios)
+    gst_validate_list_scenarios ();
+
   gst_init (&argc, &argv);
   gst_validate_init ();
+
 
   /* Create the pipeline */
   argvn = g_new0 (char *, argc);

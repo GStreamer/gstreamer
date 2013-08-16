@@ -17,6 +17,8 @@
 #include <glib-unix.h>
 #endif
 
+#include "gst-validate-scenario.h"
+
 static GMainLoop *mainloop;
 static GstElement *pipeline;
 static GstEncodingProfile *encoding_profile = NULL;
@@ -279,6 +281,7 @@ main (int argc, gchar ** argv)
   GError *err = NULL;
   const gchar *scenario = NULL;
   guint count = -1;
+  gboolean list_scenarios = FALSE;
 
   GOptionEntry options[] = {
     {"output-format", 'o', 0, G_OPTION_ARG_CALLBACK, &_parse_encoding_profile,
@@ -298,6 +301,8 @@ main (int argc, gchar ** argv)
           "received, instead of forcing the pipeline to stop. Sending an EOS "
           "will allow the transcoding to finish the files properly before "
           "exiting.", NULL},
+    {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
+        "List the avalaible scenarios that can be run", NULL},
     {NULL}
   };
 
@@ -320,6 +325,9 @@ main (int argc, gchar ** argv)
 
   if (scenario)
     g_setenv ("GST_VALIDATE_SCENARIO", scenario, TRUE);
+
+  if (list_scenarios)
+    gst_validate_list_scenarios ();
 
   gst_init (&argc, &argv);
   gst_validate_init ();
