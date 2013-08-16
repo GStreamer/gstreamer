@@ -783,7 +783,6 @@ static gboolean
 get_buffering_percent (GstQueue2 * queue, gboolean * is_buffering,
     gint * percent)
 {
-  gboolean post = FALSE;
   gint perc;
 
   if (queue->high_percent <= 0) {
@@ -817,21 +816,6 @@ get_buffering_percent (GstQueue2 * queue, gboolean * is_buffering,
   }
 #undef GET_PERCENT
 
-  if (queue->is_buffering) {
-    post = TRUE;
-    /* if we were buffering see if we reached the high watermark */
-    if (perc >= queue->high_percent)
-      queue->is_buffering = FALSE;
-  } else {
-    /* we were not buffering, check if we need to start buffering if we drop
-     * below the low threshold */
-    if (perc < queue->low_percent) {
-      queue->is_buffering = TRUE;
-      queue->buffering_iteration++;
-      post = TRUE;
-    }
-  }
-
   if (is_buffering)
     *is_buffering = queue->is_buffering;
 
@@ -841,19 +825,13 @@ get_buffering_percent (GstQueue2 * queue, gboolean * is_buffering,
   if (perc > 100)
     perc = 100;
 
-  if (post) {
-    if (perc == queue->buffering_percent)
-      post = FALSE;
-    else
-      queue->buffering_percent = perc;
-  }
   if (percent)
     *percent = perc;
 
   GST_DEBUG_OBJECT (queue, "buffering %d, percent %d", queue->is_buffering,
       perc);
 
-  return post;
+  return TRUE;
 }
 
 static void
@@ -897,7 +875,30 @@ update_buffering (GstQueue2 * queue)
   gint percent;
   gboolean post = FALSE;
 
-  post = get_buffering_percent (queue, NULL, &percent);
+  if (!get_buffering_percent (queue, NULL, &percent))
+    return;
+
+  if (queue->is_buffering) {
+    post = TRUE;
+    /* if we were buffering see if we reached the high watermark */
+    if (percent >= queue->high_percent)
+      queue->is_buffering = FALSE;
+  } else {
+    /* we were not buffering, check if we need to start buffering if we drop
+     * below the low threshold */
+    if (percent < queue->low_percent) {
+      queue->is_buffering = TRUE;
+      queue->buffering_iteration++;
+      post = TRUE;
+    }
+  }
+
+  if (post) {
+    if (percent == queue->buffering_percent)
+      post = FALSE;
+    else
+      queue->buffering_percent = percent;
+  }
 
   if (post) {
     GstMessage *message;
