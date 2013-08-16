@@ -43,8 +43,7 @@
 #ifndef __GST_RTSP_MESSAGE_H__
 #define __GST_RTSP_MESSAGE_H__
 
-#include <glib.h>
-
+#include <gst/gst.h>
 #include <gst/rtsp/gstrtspdefs.h>
 
 G_BEGIN_DECLS
