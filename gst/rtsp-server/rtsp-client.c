@@ -1448,8 +1448,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gst_rtsp_transport_new (&ct);
 
   /* our supported transports */
-  supported = GST_RTSP_LOWER_TRANS_UDP |
-      GST_RTSP_LOWER_TRANS_UDP_MCAST | GST_RTSP_LOWER_TRANS_TCP;
+  supported = gst_rtsp_stream_get_protocols (stream);
 
   /* parse and find a usable supported transport */
   if (!parse_transport (transport, supported, ct))
