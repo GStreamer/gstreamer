@@ -120,7 +120,7 @@ gst_validate_file_checker_class_init (GstValidateFileCheckerClass * klass)
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
 
   g_object_class_install_property (gobject_class, PROP_PROFILE,
-      g_param_spec_boxed ("profile", "Profile",
+      g_param_spec_object ("profile", "Profile",
           "The GstEncodingProfile " "that should match what the file contains",
           GST_TYPE_ENCODING_PROFILE, G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
 
@@ -197,7 +197,7 @@ gst_validate_file_checker_set_property (GObject * object, guint prop_id,
     case PROP_PROFILE:
       if (fc->profile)
         gst_encoding_profile_unref (fc->profile);
-      fc->profile = (GstEncodingProfile *) g_value_dup_boxed (value);
+      fc->profile = (GstEncodingProfile *) g_value_get_object (value);
       break;
     case PROP_DURATION:
       fc->duration = g_value_get_uint64 (value);
@@ -243,7 +243,7 @@ gst_validate_file_checker_get_property (GObject * object, guint prop_id,
       g_value_set_string (value, fc->uri);
       break;
     case PROP_PROFILE:
-      g_value_set_boxed (value, fc->profile);
+      g_value_set_object (value, fc->profile);
       break;
     case PROP_DURATION:
       g_value_set_uint64 (value, fc->duration);
