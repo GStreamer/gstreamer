@@ -3274,8 +3274,10 @@ gst_queue2_change_state (GstElement * element, GstStateChange transition)
 /* changing the capacity of the queue must wake up
  * the _chain function, it might have more room now
  * to store the buffer/event in the queue */
-#define QUEUE_CAPACITY_CHANGE(q)\
-  GST_QUEUE2_SIGNAL_DEL (queue);
+#define QUEUE_CAPACITY_CHANGE(q) \
+  GST_QUEUE2_SIGNAL_DEL (queue); \
+  if (queue->use_buffering)      \
+    update_buffering (queue);
 
 /* Changing the minimum required fill level must
  * wake up the _loop function as it might now
