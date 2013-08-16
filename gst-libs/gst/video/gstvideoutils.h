@@ -19,11 +19,14 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifndef __GST_VIDEO_H__
+#include <gst/video/video.h>
+#endif
+
 #ifndef _GST_VIDEO_UTILS_H_
 #define _GST_VIDEO_UTILS_H_
 
 #include <gst/gst.h>
-#include <gst/video/video.h>
 
 G_BEGIN_DECLS
 #define GST_TYPE_VIDEO_CODEC_STATE \

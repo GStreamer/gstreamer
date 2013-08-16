@@ -26,7 +26,6 @@
 #define _GST_VIDEO_DECODER_H_
 
 #include <gst/base/gstadapter.h>
-#include <gst/video/video.h>
 #include <gst/video/gstvideoutils.h>
 
 G_BEGIN_DECLS

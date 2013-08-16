@@ -20,12 +20,9 @@
 #ifndef __GST_VIDEO_FRAME_H__
 #define __GST_VIDEO_FRAME_H__
 
-#include <gst/gst.h>
-#include <gst/video/video-info.h>
+#include <gst/video/video-enumtypes.h>
 
 G_BEGIN_DECLS
-
-#include <gst/video/video-enumtypes.h>
 
 typedef struct _GstVideoFrame GstVideoFrame;
 
@@ -48,6 +45,10 @@ typedef enum {
   GST_VIDEO_FRAME_FLAG_RFF          = (1 << 2),
   GST_VIDEO_FRAME_FLAG_ONEFIELD     = (1 << 3)
 } GstVideoFrameFlags;
+
+/* circular dependency, need to include this after defining the enums */
+#include <gst/video/video-format.h>
+#include <gst/video/video-info.h>
 
 /**
  * GstVideoFrame:

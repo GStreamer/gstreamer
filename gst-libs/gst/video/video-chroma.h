@@ -82,6 +82,9 @@ typedef enum {
 
 typedef struct _GstVideoChromaResample GstVideoChromaResample;
 
+/* circular dependency, need to include this after defining the enums */
+#include <gst/video/video-format.h>
+
 GstVideoChromaResample * gst_video_chroma_resample_new   (GstVideoChromaMethod method,
                                                           GstVideoChromaSite site,
                                                           GstVideoChromaFlags flags,
