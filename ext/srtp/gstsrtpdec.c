@@ -617,8 +617,7 @@ request_key_with_signal (GstSrtpDec * filter, guint32 ssrc, gint signal)
   caps = signal_get_srtp_params (filter, ssrc, signal);
 
   if (caps) {
-    GstSrtpDecSsrcStream *stream =
-        update_session_stream_from_caps (filter, ssrc, caps);
+    stream = update_session_stream_from_caps (filter, ssrc, caps);
     if (stream)
       GST_DEBUG_OBJECT (filter, "New stream set with SSRC %d", ssrc);
     else
