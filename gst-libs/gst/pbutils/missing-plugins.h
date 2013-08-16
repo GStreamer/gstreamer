@@ -20,8 +20,7 @@
 #ifndef __GST_PB_UTILS_MISSING_PLUGINS_H__
 #define __GST_PB_UTILS_MISSING_PLUGINS_H__
 
-#include <gst/gstmessage.h>
-#include <gst/gstcaps.h>
+#include <gst/gst.h>
 
 G_BEGIN_DECLS
 
