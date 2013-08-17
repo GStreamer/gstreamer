@@ -24,6 +24,7 @@
 
 #define DEFAULT_CAPS "audio/x-raw"
 
+#include "ges-internal.h"
 #include "ges-smart-adder.h"
 #include "ges-audio-track.h"
 

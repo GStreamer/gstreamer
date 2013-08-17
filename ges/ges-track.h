@@ -85,13 +85,13 @@ const GstCaps*     ges_track_get_caps                        (GESTrack *track);
 GList*             ges_track_get_elements                    (GESTrack *track);
 const GESTimeline* ges_track_get_timeline                    (GESTrack *track);
 gboolean           ges_track_commit                          (GESTrack *track);
-void               ges_track_set_caps                        (GESTrack *track, const GstCaps *caps);
 void               ges_track_set_timeline                    (GESTrack *track, GESTimeline *timeline);
 gboolean           ges_track_add_element                     (GESTrack *track, GESTrackElement *object);
 gboolean           ges_track_remove_element                  (GESTrack *track, GESTrackElement *object);
 void               ges_track_set_create_element_for_gap_func (GESTrack *track, GESCreateElementForGapFunc func);
 void               ges_track_set_mixing                      (GESTrack *track, gboolean mixing);
 gboolean           ges_track_get_mixing                      (GESTrack *track);
+void               ges_track_set_restriction_caps            (GESTrack *track, const GstCaps *caps);
 
 /* standard methods */
 GType              ges_track_get_type                        (void);

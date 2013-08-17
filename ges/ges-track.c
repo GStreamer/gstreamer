@@ -61,6 +61,7 @@ struct _GESTrackPrivate
   guint64 duration;
 
   GstCaps *caps;
+  GstCaps *restriction_caps;
 
   GstElement *composition;      /* The composition associated with this track */
   GstPad *srcpad;               /* The source GhostPad */
@@ -69,6 +70,7 @@ struct _GESTrackPrivate
 
   gboolean mixing;
   GstElement *mixing_operation;
+  GstElement *capsfilter;
 
   /* Virtual method to create GstElement that fill gaps */
   GESCreateElementForGapFunc create_element_for_gaps;
@@ -78,6 +80,7 @@ enum
 {
   ARG_0,
   ARG_CAPS,
+  ARG_RESTRICTION_CAPS,
   ARG_TYPE,
   ARG_DURATION,
   ARG_LAST,
@@ -254,14 +257,19 @@ static void
 pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track)
 {
   GESTrackPrivate *priv = track->priv;
+  GstPad *capsfilter_sink;
+  GstPad *capsfilter_src;
+
+  capsfilter_sink = gst_element_get_static_pad (priv->capsfilter, "sink");
 
   GST_DEBUG ("track:%p, pad %s:%s", track, GST_DEBUG_PAD_NAME (pad));
 
+  gst_pad_link (pad, capsfilter_sink);
+
+  capsfilter_src = gst_element_get_static_pad (priv->capsfilter, "src");
   /* ghost the pad */
-  priv->srcpad = gst_ghost_pad_new ("src", pad);
-
+  priv->srcpad = gst_ghost_pad_new ("src", capsfilter_src);
   gst_pad_set_active (priv->srcpad, TRUE);
-
   gst_element_add_pad (GST_ELEMENT (track), priv->srcpad);
 
   GST_DEBUG ("done");
@@ -373,6 +381,9 @@ ges_track_get_property (GObject * object, guint property_id,
     case ARG_DURATION:
       g_value_set_uint64 (value, track->priv->duration);
       break;
+    case ARG_RESTRICTION_CAPS:
+      gst_value_set_caps (value, track->priv->restriction_caps);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
   }
@@ -390,6 +401,9 @@ ges_track_set_property (GObject * object, guint property_id,
       break;
     case ARG_TYPE:
       track->type = g_value_get_flags (value);
+      break;
+    case ARG_RESTRICTION_CAPS:
+      ges_track_set_restriction_caps (track, gst_value_get_caps (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -435,6 +449,9 @@ ges_track_constructed (GObject * object)
 
   if (!gst_bin_add (GST_BIN (self), self->priv->composition))
     GST_ERROR ("Couldn't add composition to bin !");
+
+  if (!gst_bin_add (GST_BIN (self), self->priv->capsfilter))
+    GST_ERROR ("Couldn't add capsfilter to bin !");
 
   if (GES_TRACK_GET_CLASS (self)->get_mixing_element) {
     GstElement *gnlobject;
@@ -492,9 +509,23 @@ ges_track_class_init (GESTrackClass * klass)
    */
   properties[ARG_CAPS] = g_param_spec_boxed ("caps", "Caps",
       "Caps used to filter/choose the output stream",
-      GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT);
+      GST_TYPE_CAPS, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY);
   g_object_class_install_property (object_class, ARG_CAPS,
       properties[ARG_CAPS]);
+
+  /**
+   * GESTrack:restriction-caps:
+   *
+   * Caps used to filter/choose the output stream.
+   *
+   * Default value: #GST_CAPS_ANY.
+   */
+  properties[ARG_RESTRICTION_CAPS] =
+      g_param_spec_boxed ("restriction-caps", "Restriction caps",
+      "Caps used to filter/choose the output stream", GST_TYPE_CAPS,
+      G_PARAM_READWRITE);
+  g_object_class_install_property (object_class, ARG_RESTRICTION_CAPS,
+      properties[ARG_RESTRICTION_CAPS]);
 
   /**
    * GESTrack:duration:
@@ -564,6 +595,7 @@ ges_track_init (GESTrack * self)
       GES_TYPE_TRACK, GESTrackPrivate);
 
   self->priv->composition = gst_element_factory_make ("gnlcomposition", NULL);
+  self->priv->capsfilter = gst_element_factory_make ("capsfilter", NULL);
   self->priv->updating = TRUE;
   self->priv->trackelements_by_start = g_sequence_new (NULL);
   self->priv->trackelements_iter =
@@ -571,6 +603,7 @@ ges_track_init (GESTrack * self)
   self->priv->create_element_for_gaps = NULL;
   self->priv->gaps = NULL;
   self->priv->mixing = TRUE;
+  self->priv->restriction_caps = NULL;
 
   g_signal_connect (G_OBJECT (self->priv->composition), "notify::duration",
       G_CALLBACK (composition_duration_cb), self);
@@ -672,6 +705,34 @@ ges_track_set_caps (GESTrack * track, const GstCaps * caps)
 
   g_object_set (priv->composition, "caps", caps, NULL);
   /* FIXME : update all trackelements ? */
+}
+
+/**
+ * ges_track_set_restriction_caps:
+ * @track: a #GESTrack
+ * @caps: the #GstCaps to set
+ *
+ * Sets the given @caps as the caps the track has to output.
+ */
+void
+ges_track_set_restriction_caps (GESTrack * track, const GstCaps * caps)
+{
+  GESTrackPrivate *priv;
+
+  g_return_if_fail (GES_IS_TRACK (track));
+
+  GST_DEBUG ("track:%p, restriction caps:%" GST_PTR_FORMAT, track, caps);
+  g_return_if_fail (GST_IS_CAPS (caps));
+
+  priv = track->priv;
+
+  if (priv->restriction_caps)
+    gst_caps_unref (priv->restriction_caps);
+  priv->restriction_caps = gst_caps_copy (caps);
+
+  g_object_set (priv->capsfilter, "caps", caps, NULL);
+
+  g_object_notify (G_OBJECT (track), "restriction-caps");
 }
 
 /**

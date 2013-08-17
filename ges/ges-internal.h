@@ -291,4 +291,6 @@ G_GNUC_INTERNAL void ges_track_element_split_bindings (GESTrackElement *element,
 
 G_GNUC_INTERNAL GstElement *ges_source_create_topbin (const gchar * bin_name, GstElement * sub_element, ...);
 
+G_GNUC_INTERNAL void ges_track_set_caps (GESTrack *track, const GstCaps *caps);
+
 #endif /* __GES_INTERNAL_H__ */
