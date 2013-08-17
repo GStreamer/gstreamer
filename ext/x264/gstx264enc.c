@@ -1359,9 +1359,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
 
     if (encoder->peer_level->frame_only) {
       encoder->x264param.b_interlaced = FALSE;
-#if X264_BUILD >= 95
       encoder->x264param.b_fake_interlaced = FALSE;
-#endif
     }
   }
 
