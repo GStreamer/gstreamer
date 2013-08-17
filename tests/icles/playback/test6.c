@@ -28,8 +28,7 @@
 #include <gst/gst.h>
 
 static void
-new_decoded_pad_cb (GstElement * decodebin, GstPad * new_pad, gboolean last,
-    GstElement * pipeline)
+pad_added_cb (GstElement * decodebin, GstPad * new_pad, GstElement * pipeline)
 {
   GstElement *fakesink;
   GstPad *sinkpad;
@@ -112,8 +111,8 @@ main (gint argc, gchar * argv[])
    * it depends on whether the queues have started pushing buffers yet or not.
    * With fakesinks we make sure that the pipeline doesn't go to PAUSED state
    * before each fakesink has a buffer queued. */
-  g_signal_connect (decodebin, "new-decoded-pad",
-      G_CALLBACK (new_decoded_pad_cb), pipeline);
+  g_signal_connect (decodebin, "pad-added",
+      G_CALLBACK (pad_added_cb), pipeline);
 
   bus = gst_element_get_bus (pipeline);
 
