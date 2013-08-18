@@ -2096,7 +2096,7 @@ gst_buffer_foreach_meta (GstBuffer * buffer, GstBufferForeachMetaFunc func,
  * Extracts a copy of at most @size bytes the data at @offset into a #GBytes.
  * @dest must be freed using g_free() when done.
  *
- * Since: 1.2
+ * Since: 1.0.10
  */
 
 void
