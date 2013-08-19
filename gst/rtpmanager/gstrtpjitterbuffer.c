@@ -1638,6 +1638,27 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
   }
 }
 
+static void
+calculate_packet_spacing (GstRtpJitterBuffer * jitterbuffer, guint32 rtptime,
+    GstClockTime dts)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+
+  /* we need consecutive seqnums with a different
+   * rtptime to estimate the packet spacing. */
+  if (priv->ips_rtptime != rtptime) {
+    /* rtptime changed, check dts diff */
+    if (priv->ips_dts != -1 && dts != -1 && dts > priv->ips_dts) {
+      priv->packet_spacing = dts - priv->ips_dts;
+      GST_DEBUG_OBJECT (jitterbuffer,
+          "new packet spacing %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (priv->packet_spacing));
+    }
+    priv->ips_rtptime = rtptime;
+    priv->ips_dts = dts;
+  }
+}
+
 static GstFlowReturn
 gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -1761,19 +1782,8 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
       priv->ips_rtptime = -1;
       priv->ips_dts = GST_CLOCK_TIME_NONE;
     } else {
-      /* packet is expected, we need consecutive seqnums with a different
-       * rtptime to estimate the packet spacing. */
-      if (priv->ips_rtptime != rtptime) {
-        /* rtptime changed, check dts diff */
-        if (priv->ips_dts != -1 && dts != -1 && dts > priv->ips_dts) {
-          priv->packet_spacing = dts - priv->ips_dts;
-          GST_DEBUG_OBJECT (jitterbuffer,
-              "new packet spacing %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (priv->packet_spacing));
-        }
-        priv->ips_rtptime = rtptime;
-        priv->ips_dts = dts;
-      }
+      /* packet is expected */
+      calculate_packet_spacing (jitterbuffer, rtptime, dts);
       do_next_seqnum = TRUE;
     }
   } else {
