@@ -1,15 +1,35 @@
 <xml>
   <scenario name="Simple Seeks">
     <actions>
-      <seek name='First seek' playback_time="1000000000" format="time"
-            rate="1.0" flags="accurate+flush" start_type="set"
-            start="2000000000" stop_type="set" stop="-1" />
-      <seek name='Second seek' playback_time="3000000000" format="time"
-            rate="1.0" flags="accurate+flush" start_type="set"
-            start="0" stop_type="set" stop="-1" />
-      <seek name='Third seek' playback_time="1000000000" format="time"
-            rate="1.0" flags="accurate+flush" start_type="set"
-            start="2000000000" stop_type="set" stop="3000000000" />
+      <seek name='First seek'
+            playback_time="1.0"
+            format="time"
+            rate="1.0"
+            flags="accurate+flush"
+            start_type="set"
+            start="2.0"
+            stop_type="set"
+            stop="-1.0" />
+
+      <seek name='Second seek'
+            playback_time="3.0"
+            format="time"
+            rate="1.0"
+            flags="accurate+flush"
+            start_type="set"
+            start="0.0"
+            stop_type="set"
+            stop="-1.0" />
+
+      <seek name='Third seek'
+            playback_time="1.0"
+            format="time"
+            rate="1.0"
+            flags="accurate+flush"
+            start_type="set"
+            start="2.0"
+            stop_type="set"
+            stop="3.0" />
     </actions>
   </scenario>
 </xml>

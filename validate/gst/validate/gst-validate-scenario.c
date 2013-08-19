@@ -115,6 +115,25 @@ struct _GstValidateScenarioPrivate
   guint get_pos_id;
 };
 
+static GstClockTime
+str_to_gst_time (const gchar * str)
+{
+  gchar *end_of_valid_d;
+  gdouble double_value = 0;
+
+  double_value = g_ascii_strtod (str, &end_of_valid_d);
+
+  if (*end_of_valid_d != '\0' || end_of_valid_d == str) {
+    GST_ERROR ("%s could not be converted to GstClockTime", str);
+    return GST_CLOCK_TIME_NONE;
+  }
+
+  if (double_value < 0)
+    return GST_CLOCK_TIME_NONE;
+
+  return double_value * GST_SECOND;
+}
+
 /* Some helper method that are missing iin Json itscenario */
 static guint
 get_flags_from_string (GType type, const gchar * str_flags)
@@ -274,13 +293,13 @@ _parse_seek (GMarkupParseContext * context, const gchar * element_name,
   get_enum_from_string (GST_TYPE_FORMAT, format, &info->format);
 
   if (playback_time)
-    info->action.playback_time = g_ascii_strtoull (playback_time, NULL, 10);
+    info->action.playback_time = str_to_gst_time (playback_time);
   info->rate = g_ascii_strtod (rate, NULL);
   info->flags = get_flags_from_string (GST_TYPE_SEEK_FLAGS, flags);
   get_enum_from_string (GST_TYPE_SEEK_TYPE, start_type, &info->start_type);
-  info->start = g_ascii_strtoull (start, NULL, 10);
+  info->start = str_to_gst_time (start);
   get_enum_from_string (GST_TYPE_SEEK_TYPE, stop_type, &info->stop_type);
-  info->stop = g_ascii_strtoull (stop, NULL, 10);
+  info->stop = str_to_gst_time (stop);
   info->action.action_number = priv->num_actions++;
 
   priv->actions = g_list_append (priv->actions, info);
@@ -306,8 +325,8 @@ _parse_pause (GMarkupParseContext * context, const gchar * element_name,
     return;
 
   if (playback_time)
-    info->action.playback_time = g_ascii_strtoull (playback_time, NULL, 10);
-  info->duration = g_ascii_strtoull (duration, NULL, 10);
+    info->action.playback_time = str_to_gst_time (playback_time);
+  info->duration = str_to_gst_time (duration);
 
   info->action.action_number = priv->num_actions++;
 
@@ -332,7 +351,7 @@ _parse_eos (GMarkupParseContext * context, const gchar * element_name,
     return;
 
   if (playback_time)
-    info->action.playback_time = g_ascii_strtoull (playback_time, NULL, 10);
+    info->action.playback_time = str_to_gst_time (playback_time);
 
   info->action.action_number = priv->num_actions++;
 
