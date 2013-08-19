@@ -73,6 +73,8 @@ enum
   V4L2_STD_OBJECT_PROPS,
 };
 
+static GSList *gst_v4l2_object_get_format_list (GstV4l2Object * v4l2object);
+
 #if 0
 G_LOCK_DEFINE_STATIC (probe_lock);
 
