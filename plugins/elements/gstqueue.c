@@ -188,7 +188,6 @@ enum
 G_DEFINE_TYPE_WITH_CODE (GstQueue, gst_queue, GST_TYPE_ELEMENT, _do_init);
 
 static void gst_queue_finalize (GObject * object);
-
 static void gst_queue_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec);
 static void gst_queue_get_property (GObject * object,
@@ -1414,8 +1413,14 @@ gst_queue_sink_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
         /* step 1, unblock chain function */
         GST_QUEUE_MUTEX_LOCK (queue);
         queue->srcresult = GST_FLOW_FLUSHING;
+        GST_QUEUE_MUTEX_UNLOCK (queue);
+
+        /* step 2, wait until streaming thread stopped and flush queue */
+        GST_PAD_STREAM_LOCK (pad);
+        GST_QUEUE_MUTEX_LOCK (queue);
         gst_queue_locked_flush (queue, TRUE);
         GST_QUEUE_MUTEX_UNLOCK (queue);
+        GST_PAD_STREAM_UNLOCK (pad);
       }
       result = TRUE;
       break;
