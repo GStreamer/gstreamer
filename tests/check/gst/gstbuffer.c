@@ -294,6 +294,33 @@ GST_START_TEST (test_metadata_writable)
 
 GST_END_TEST;
 
+GST_START_TEST (test_memcmp)
+{
+  GstBuffer *buffer;
+  char buf[3] = { 0, 0, 0 };
+
+  buffer = gst_buffer_new_and_alloc (2);
+  gst_buffer_memset (buffer, 0, 0, 2);
+
+  fail_unless (gst_buffer_memcmp (buffer, 0, buf, 2) == 0);
+  fail_unless (gst_buffer_memcmp (buffer, 0, buf, 1) == 0);
+  fail_unless (gst_buffer_memcmp (buffer, 1, buf, 1) == 0);
+  fail_unless (gst_buffer_memcmp (buffer, 0, buf, 3) != 0);
+  fail_unless (gst_buffer_memcmp (buffer, 2, buf, 1) != 0);
+  fail_unless (gst_buffer_memcmp (buffer, 4, buf, 1) != 0);
+
+  gst_buffer_memset (buffer, 0, 0x20, 2);
+  fail_unless (gst_buffer_memcmp (buffer, 0, buf, 2) != 0);
+  fail_unless (gst_buffer_memcmp (buffer, 0, buf, 1) != 0);
+  fail_unless (gst_buffer_memcmp (buffer, 1, buf, 1) != 0);
+  fail_unless (gst_buffer_memcmp (buffer, 0, buf, 3) != 0);
+  fail_unless (gst_buffer_memcmp (buffer, 2, buf, 1) != 0);
+
+  gst_buffer_unref (buffer);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_copy)
 {
   GstBuffer *buffer, *copy;
@@ -842,6 +869,7 @@ gst_buffer_suite (void)
   tcase_add_test (tc_chain, test_make_writable);
   tcase_add_test (tc_chain, test_span);
   tcase_add_test (tc_chain, test_metadata_writable);
+  tcase_add_test (tc_chain, test_memcmp);
   tcase_add_test (tc_chain, test_copy);
   tcase_add_test (tc_chain, test_try_new_and_alloc);
   tcase_add_test (tc_chain, test_size);

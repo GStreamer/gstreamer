@@ -1685,6 +1685,9 @@ gst_buffer_memcmp (GstBuffer * buffer, gsize offset, gconstpointer mem,
       "buffer %p, offset %" G_GSIZE_FORMAT ", size %" G_GSIZE_FORMAT, buffer,
       offset, size);
 
+  if (G_UNLIKELY (gst_buffer_get_size (buffer) < offset + size))
+    return -1;
+
   len = GST_BUFFER_MEM_LEN (buffer);
 
   for (i = 0; i < len && size > 0 && res == 0; i++) {
