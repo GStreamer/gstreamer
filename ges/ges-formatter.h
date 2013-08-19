@@ -64,7 +64,6 @@ struct _GESFormatter {
 };
 
 typedef gboolean (*GESFormatterCanLoadURIMethod) (GESFormatter *dummy_instance, const gchar * uri, GError **error);
-typedef gboolean (*GESFormatterCanSaveURIMethod) (GESFormatter *dummy_instance, const gchar * uri, GError **error);
 
 /**
  * GESFormatterLoadFromURIMethod:
@@ -108,7 +107,6 @@ typedef gboolean (*GESFormatterSaveToURIMethod) (GESFormatter *formatter,
  * GESFormatterClass:
  * @parent_class: the parent class structure
  * @can_load_uri: Whether the URI can be loaded
- * @can_save_uri: Whether the URI can be saved
  * @load_from_uri: class method to deserialize data from a URI
  * @save_to_uri: class method to serialize data to a URI
  *
@@ -119,7 +117,6 @@ struct _GESFormatterClass {
   GInitiallyUnownedClass parent_class;
 
   GESFormatterCanLoadURIMethod can_load_uri;
-  GESFormatterCanSaveURIMethod can_save_uri;
   GESFormatterLoadFromURIMethod load_from_uri;
   GESFormatterSaveToURIMethod save_to_uri;
 

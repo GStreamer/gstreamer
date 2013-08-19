@@ -48,8 +48,6 @@ struct _GESFormatterPrivate
 static void ges_formatter_dispose (GObject * object);
 static gboolean default_can_load_uri (GESFormatter * dummy_instance,
     const gchar * uri, GError ** error);
-static gboolean default_can_save_uri (GESFormatter * dummy_instance,
-    const gchar * uri, GError ** error);
 
 /* GESExtractable implementation */
 static gchar *
@@ -117,7 +115,6 @@ ges_formatter_class_init (GESFormatterClass * klass)
   object_class->dispose = ges_formatter_dispose;
 
   klass->can_load_uri = default_can_load_uri;
-  klass->can_save_uri = default_can_save_uri;
   klass->load_from_uri = NULL;
   klass->save_to_uri = NULL;
 
@@ -152,15 +149,6 @@ default_can_load_uri (GESFormatter * dummy_instance, const gchar * uri,
   GST_DEBUG ("%s: no 'can_load_uri' vmethod implementation",
       G_OBJECT_TYPE_NAME (dummy_instance));
 
-  return FALSE;
-}
-
-static gboolean
-default_can_save_uri (GESFormatter * dummy_instance,
-    const gchar * uri, GError ** error)
-{
-  GST_DEBUG ("%s: no 'can_save_uri' vmethod implementation",
-      G_OBJECT_TYPE_NAME (dummy_instance));
   return FALSE;
 }
 
