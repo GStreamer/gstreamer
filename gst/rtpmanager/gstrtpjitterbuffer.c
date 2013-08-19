@@ -1475,7 +1475,10 @@ add_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
   timer->type = type;
   timer->seqnum = seqnum;
   timer->timeout = timeout;
-
+  if (type == TIMER_TYPE_EXPECTED) {
+    timer->rtx_base = timeout;
+    timer->rtx_retry = 0;
+  }
   recalculate_timer (jitterbuffer, timer);
 
   return timer;
@@ -1503,6 +1506,10 @@ reschedule_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 
   timer->timeout = timeout;
   timer->seqnum = seqnum;
+  if (seqchange && timer->type == TIMER_TYPE_EXPECTED) {
+    timer->rtx_base = timeout;
+    timer->rtx_retry = 0;
+  }
 
   if (priv->clock_id) {
     /* we changed the seqnum and there is a timer currently waiting with this
@@ -1619,11 +1626,8 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     if (timer)
       reschedule_timer (jitterbuffer, timer, priv->next_in_seqnum, expected);
     else
-      timer = add_timer (jitterbuffer, TIMER_TYPE_EXPECTED,
-          priv->next_in_seqnum, expected);
-
-    timer->rtx_base = timer->timeout;
-    timer->rtx_retry = 0;
+      add_timer (jitterbuffer, TIMER_TYPE_EXPECTED, priv->next_in_seqnum,
+          expected);
   } else if (timer) {
     /* if we had a timer, remove it, we don't know when to expect the next
      * packet. */
