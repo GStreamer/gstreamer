@@ -1448,6 +1448,9 @@ recalculate_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
   if (priv->clock_id) {
     GstClockTime timeout = get_timeout (jitterbuffer, timer);
 
+    GST_DEBUG ("%" GST_TIME_FORMAT " <> %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timeout), GST_TIME_ARGS (priv->timer_timeout));
+
     if (timeout == -1 || timeout < priv->timer_timeout)
       unschedule_current_timer (jitterbuffer);
   }
@@ -1665,8 +1668,8 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   dts = gst_segment_to_running_time (&priv->segment, GST_FORMAT_TIME, dts);
 
   GST_DEBUG_OBJECT (jitterbuffer,
-      "Received packet #%d at time %" GST_TIME_FORMAT, seqnum,
-      GST_TIME_ARGS (dts));
+      "Received packet #%d at time %" GST_TIME_FORMAT ", discont %d", seqnum,
+      GST_TIME_ARGS (dts), GST_BUFFER_IS_DISCONT (buffer));
 
   JBUF_LOCK_CHECK (priv, out_flushing);
 
@@ -1973,6 +1976,7 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum)
   if (G_UNLIKELY (priv->discont)) {
     /* set DISCONT flag when we missed a packet. We pushed the buffer writable
      * into the jitterbuffer so we can modify now. */
+    GST_DEBUG_OBJECT (jitterbuffer, "mark output buffer discont");
     GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
     priv->discont = FALSE;
   }
