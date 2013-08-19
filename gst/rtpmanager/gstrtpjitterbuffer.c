@@ -167,7 +167,10 @@ struct _GstRtpJitterBufferPrivate
   GstClockTime ips_dts;
   guint64 ips_rtptime;
   GstClockTime packet_spacing;
+
   /* the next expected seqnum we receive */
+  GstClockTime last_in_dts;
+  guint32 last_in_seqnum;
   guint32 next_in_seqnum;
 
   GArray *timers;
@@ -1777,8 +1780,11 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     /* unknow first seqnum */
     do_next_seqnum = TRUE;
   }
-  if (do_next_seqnum)
+  if (do_next_seqnum) {
+    priv->last_in_seqnum = seqnum;
+    priv->last_in_dts = dts;
     priv->next_in_seqnum = (seqnum + 1) & 0xffff;
+  }
 
   /* let's check if this buffer is too late, we can only accept packets with
    * bigger seqnum than the one we last pushed. */
