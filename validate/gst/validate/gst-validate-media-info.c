@@ -56,6 +56,10 @@ gst_validate_media_info_to_string (GstValidateMediaInfo * mi, gsize * length)
   g_key_file_set_string (kf, "file-info", "uri", mi->uri);
   g_key_file_set_uint64 (kf, "file-info", "file-size", mi->file_size);
 
+  /* media info */
+  g_key_file_set_uint64 (kf, "media-info", "file-duration", mi->duration);
+  g_key_file_set_boolean (kf, "media-info", "seekable", mi->seekable);
+
   data = g_key_file_to_data (kf, length, NULL);
   g_key_file_free (kf);
 
@@ -97,6 +101,9 @@ gst_validate_media_info_load (const gchar * path, GError ** err)
   mi->file_size = g_key_file_get_uint64 (kf, "file-info", "file-size", err);
   if (err)
     goto end;
+
+  mi->duration = g_key_file_get_uint64 (kf, "media-info", "duration", NULL);
+  mi->seekable = g_key_file_get_boolean (kf, "media-info", "seekable", NULL);
 
 end:
   g_key_file_free (kf);
@@ -140,48 +147,21 @@ end:
   return ret;
 }
 
-#if 0
 static gboolean
-check_file_duration (GstValidateFileChecker * fc, GstDiscovererInfo * info)
+check_file_duration (GstValidateMediaInfo * mi, GstDiscovererInfo * info)
 {
-  fc->results.duration = gst_discoverer_info_get_duration (info);
-
-#if 0
-  if (!GST_CLOCK_TIME_IS_VALID (fc->duration))
-    return TRUE;
-
-  real_duration = gst_discoverer_info_get_duration (info);
-  if (real_duration < fc->duration - fc->duration_tolerance ||
-      real_duration > fc->duration + fc->duration_tolerance) {
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_SIZE_INCORRECT,
-        "File %s has duration %" GST_TIME_FORMAT ", it was expected to have %"
-        GST_TIME_FORMAT " (+-%" GST_TIME_FORMAT ")",
-        fc->uri, GST_TIME_ARGS (real_duration), GST_TIME_ARGS (fc->duration),
-        GST_TIME_ARGS (fc->duration_tolerance));
-    return FALSE;
-  }
-#endif
-
+  mi->duration = gst_discoverer_info_get_duration (info);
   return TRUE;
 }
 
 static gboolean
-check_seekable (GstValidateFileChecker * fc, GstDiscovererInfo * info)
+check_seekable (GstValidateMediaInfo * mi, GstDiscovererInfo * info)
 {
-  fc->results.seekable = gst_discoverer_info_get_seekable (info);
-
-#if 0
-  real_seekable = gst_discoverer_info_get_seekable (info);
-  if (real_seekable != fc->seekable) {
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_SEEKABLE_INCORRECT,
-        "File was expected to %s be seekable, but it %s",
-        fc->seekable ? "" : "not", real_seekable ? "is" : "isn't");
-    return FALSE;
-  }
-#endif
+  mi->seekable = gst_discoverer_info_get_seekable (info);
   return TRUE;
 }
 
+#if 0
 static inline gboolean
 _gst_caps_can_intersect_safe (const GstCaps * a, const GstCaps * b)
 {
@@ -560,9 +540,9 @@ gst_validate_media_info_inspect_uri (GstValidateMediaInfo * mi,
   }
 
   ret = check_file_size (mi) & ret;
-#if 0
   ret = check_file_duration (mi, info) & ret;
   ret = check_seekable (mi, info) & ret;
+#if 0
   ret = check_encoding_profile (mi, info) & ret;
   ret = check_playback (mi) & ret;
   ret = check_reverse_playback (mi) & ret;
