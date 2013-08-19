@@ -481,6 +481,7 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
   guint last_offset;
   guint i;
   GstMapInfo info;
+  guint16 segment_size;
 
   self = GST_UVC_H264_MJPG_DEMUX (GST_PAD_PARENT (pad));
 
@@ -496,7 +497,6 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
   for (i = 0; i < info.size - 1; i++) {
     /* Check for APP4 (0xe4) marker in the jpeg */
     if (info.data[i] == 0xff && info.data[i + 1] == 0xe4) {
-      guint16 segment_size;
 
       /* Sanity check sizes and get segment size */
       if (i + 4 >= info.size) {
@@ -686,9 +686,10 @@ gst_uvc_h264_mjpg_demux_chain (GstPad * pad,
   }
 
   if (aux_buf != NULL) {
-    GST_ELEMENT_ERROR (self, STREAM, DEMUX,
-        ("Incomplete auxiliary stream. %d bytes missing", aux_size), (NULL));
-    ret = GST_FLOW_ERROR;
+    GST_DEBUG_OBJECT (self, "Incomplete auxiliary stream: %d bytes missing, "
+        "%d segment size remaining -- missing segment, C920 bug?",
+        aux_size, segment_size);
+    ret = GST_FLOW_OK;
     goto done;
   }
 
