@@ -17,6 +17,7 @@
 #include <glib-unix.h>
 #endif
 
+static gint ret = 0;
 static GMainLoop *mainloop;
 static GstElement *pipeline;
 
@@ -43,6 +44,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     {
       GError *err;
       gchar *debug;
+      ret = -1;
       gst_message_parse_error (message, &err, &debug);
       g_print ("Error: %s\n", err->message);
       g_error_free (err);
@@ -63,13 +65,14 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 int
 main (int argc, gchar ** argv)
 {
+  GSList *tmp;
   GError *err = NULL;
   const gchar *scenario = NULL;
   gboolean list_scenarios = FALSE;
-  guint count = -1;
 #ifdef G_OS_UNIX
   guint signal_watch_id;
 #endif
+  guint count = 0;
 
   GOptionEntry options[] = {
     {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
@@ -153,17 +156,18 @@ main (int argc, gchar ** argv)
   g_print ("Pipeline started\n");
   g_main_loop_run (mainloop);
 
-  count = gst_validate_runner_get_reports_count (runner);
-  g_print ("Pipeline finished, issues found: %u\n", count);
-  if (count) {
-    GSList *iter;
-    GSList *issues = gst_validate_runner_get_reports (runner);
+  for (tmp = gst_validate_runner_get_reports (runner); tmp; tmp = tmp->next) {
+    GstValidateReport *report = tmp->data;
 
-    for (iter = issues; iter; iter = g_slist_next (iter)) {
-      GstValidateReport *report = iter->data;
-      gst_validate_report_printf (report);
+    gst_validate_report_printf (report);
+    if (ret == 0 && report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
+      g_printerr ("Got critical error %s, setting return value to -1\n",
+          ((GstValidateReport *) (tmp->data))->message);
+      ret = -1;
     }
+    count++;
   }
+  g_print ("Pipeline finished, issues found: %u\n", count);
 
 exit:
   gst_element_set_state (pipeline, GST_STATE_NULL);
@@ -174,7 +178,6 @@ exit:
 #ifdef G_OS_UNIX
   g_source_remove (signal_watch_id);
 #endif
-  if (count)
-    return -1;
-  return 0;
+
+  return ret;
 }

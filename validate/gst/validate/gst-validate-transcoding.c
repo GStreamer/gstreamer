@@ -19,6 +19,7 @@
 
 #include "gst-validate-scenario.h"
 
+static gint ret = 0;
 static GMainLoop *mainloop;
 static GstElement *pipeline;
 static GstEncodingProfile *encoding_profile = NULL;
@@ -67,8 +68,10 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     {
       GError *err;
       gchar *debug;
+      ret = -1;
       gst_message_parse_error (message, &err, &debug);
-      g_print ("Error: %s\n", err->message);
+      g_print ("Error: %s %s\n", GST_OBJECT_NAME (GST_MESSAGE_SRC (message)),
+          err->message);
       g_error_free (err);
       g_free (debug);
       g_main_loop_quit (loop);
@@ -271,6 +274,7 @@ int
 main (int argc, gchar ** argv)
 {
   guint i;
+  GSList *tmp;
   GstBus *bus;
   GstValidateRunner *runner;
   GstValidateMonitor *monitor;
@@ -281,7 +285,7 @@ main (int argc, gchar ** argv)
 
   GError *err = NULL;
   const gchar *scenario = NULL;
-  guint count = -1;
+  guint count = 0;
   gboolean want_help = FALSE;
   gboolean list_scenarios = FALSE;
 
@@ -391,7 +395,15 @@ main (int argc, gchar ** argv)
     goto exit;
   g_main_loop_run (mainloop);
 
-  count = gst_validate_runner_get_reports_count (runner);
+  for (tmp = gst_validate_runner_get_reports (runner); tmp; tmp = tmp->next) {
+    if (ret == 0 && ((GstValidateReport *) (tmp->data))->level ==
+        GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
+      g_printerr ("Got critical error %s, setting return value to -1\n",
+          ((GstValidateReport *) (tmp->data))->message);
+      ret = -1;
+    }
+    count++;
+  }
   g_print ("Pipeline finished, total issues found: %u\n", count);
   if (count) {
     GSList *iter;
@@ -413,7 +425,6 @@ exit:
 #ifdef G_OS_UNIX
   g_source_remove (signal_watch_id);
 #endif
-  if (count)
-    return -1;
-  return 0;
+
+  return ret;
 }
