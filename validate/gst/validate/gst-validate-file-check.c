@@ -13,9 +13,8 @@
 #include <gst/validate/validate.h>
 #include <gst/pbutils/encoding-profile.h>
 
-static GstEncodingProfile *encoding_profile = NULL;
-
 /* move this into some utils file */
+#if 0
 static gboolean
 _parse_encoding_profile (const gchar * option_name, const gchar * value,
     gpointer udata, GError ** error)
@@ -140,59 +139,34 @@ _parse_encoding_profile (const gchar * option_name, const gchar * value,
 
   return TRUE;
 }
+#endif
 
 int
 main (int argc, gchar ** argv)
 {
-  GstValidateRunner *runner;
   GOptionContext *ctx;
-  GstValidateFileChecker *fc;
+  GstValidateMediaInfo mi;
 
   GError *err = NULL;
-  guint count = -1;
-
-  gboolean playback = FALSE, seekable = FALSE, reverse_playback = FALSE;
-  gint64 filesize = 0, filesize_tolerance = 0, duration_arg =
-      0, duration_tolerance = 0;
-  GstClockTime duration = GST_CLOCK_TIME_NONE;
+  gchar *output_file = NULL;
+  gchar *output = NULL;
+  gsize outputlength;
 
   GOptionEntry options[] = {
-    {"expected-profile", 'o', 0, G_OPTION_ARG_CALLBACK,
-          &_parse_encoding_profile,
-          "Set the properties to use for the encoding profile "
-          "to be used as expected for the file. For example:\n"
-          "video/mpegts:video/x-raw-yuv,width=1920,height=1080->video/x-h264:audio/x-ac3\n"
-          "A preset name can be used by adding +presetname, eg:\n"
-          "video/webm:video/x-vp8+mypreset:audio/x-vorbis\n"
-          "The presence property of the profile can be specified with |<presence>, eg:\n"
-          "video/webm:video/x-vp8|<presence>:audio/x-vorbis\n",
-        "properties-values"},
-    {"seekable", 's', 0, G_OPTION_ARG_NONE,
-          &seekable, "If the file should be seekable",
+    {"output-file", 'o', 0, G_OPTION_ARG_FILENAME,
+          &output_file, "The output file to store the results",
         NULL},
-    {"playback", 'p', 0, G_OPTION_ARG_NONE,
-          &playback, "If the file should be tested for playback",
-        NULL},
-    {"reverse-playback", '\0', 0, G_OPTION_ARG_NONE,
-          &reverse_playback,
-          "If the file should be tested for reverse playback",
-        NULL},
-    {"file-size", '\0', 0, G_OPTION_ARG_INT64, &filesize,
-        "The expected file size in bytes", NULL},
-    {"file-size-tolerance", '\0', 0, G_OPTION_ARG_INT64, &filesize_tolerance,
-        "The file size margin tolerance, in bytes", NULL},
-    {"duration", 'd', 0, G_OPTION_ARG_INT64, &duration_arg,
-        "The expected file duration in nanoseconds", NULL},
-    {"duration-tolerance", '\0', 0, G_OPTION_ARG_INT64, &duration_tolerance,
-        "The file duration tolerance margin, in nanoseconds", NULL},
     {NULL}
   };
 
   g_set_prgname ("gst-validate-file-check-" GST_API_VERSION);
   ctx = g_option_context_new ("[URI]");
-  g_option_context_set_summary (ctx, "Does conformance checks on files. "
-      "Use the options to enable the tests to be made and pass the expected"
-      " results");
+  g_option_context_set_summary (ctx, "Analizes a media file and writes "
+      "the results to stdout or a file. Can also compare the results found "
+      "with another results file for identifying regressions. The monitoring"
+      " lib from gst-validate will be enabled during the tests to identify "
+      "issues with the gstreamer elements involved with the media file's "
+      "container and codec types");
   g_option_context_add_main_entries (ctx, options, NULL);
 
   if (!g_option_context_parse (ctx, &argc, &argv, &err)) {
@@ -201,42 +175,28 @@ main (int argc, gchar ** argv)
     exit (1);
   }
 
-  g_option_context_free (ctx);
-
   gst_init (&argc, &argv);
   gst_validate_init ();
 
   if (argc != 2) {
-    g_printerr ("%i arguments recived, 1 expected.\n"
-        "You should run the test using:\n"
-        "    ./gst-validate-file-check-0.10 <uri> [options]\n", argc - 1);
+    gchar *msg = g_option_context_get_help (ctx, TRUE, NULL);
+    g_printerr ("%s\n", msg);
+    g_free (msg);
+    g_option_context_free (ctx);
     return 1;
   }
+  g_option_context_free (ctx);
 
-  if (duration_arg > 0)
-    duration = (GstClockTime) duration_arg;
+  gst_validate_media_info_init (&mi);
+  gst_validate_media_info_inspect_uri (&mi, argv[1], NULL);
+  output = gst_validate_media_info_to_string (&mi, &outputlength);
 
-  /* Create the pipeline */
-  runner = gst_validate_runner_new ();
-  fc = g_object_new (GST_TYPE_VALIDATE_FILE_CHECKER, "uri",
-      argv[1], "profile", encoding_profile, "qa-runner", runner,
-      "is-seekable", seekable, "test-playback", playback,
-      "test-reverse-playback", reverse_playback,
-      "file-size", (guint64) filesize, "file-size-tolerance", (guint64)
-      filesize_tolerance, "duration", (guint64) duration,
-      "duration-tolerance", (guint64) duration_tolerance, NULL);
+  if (output_file)
+    gst_validate_media_info_save (&mi, output_file, NULL);
 
-  g_print ("Starting tests\n");
-  if (!gst_validate_file_checker_run (fc)) {
-    g_print ("Failed file checking\n");
-  }
-  count = gst_validate_runner_get_reports_count (runner);
-  g_print ("Tests finished, total issues found: %u\n", count);
-  g_object_unref (fc);
+  gst_validate_media_info_clear (&mi);
 
-  g_object_unref (runner);
-
-  if (count)
-    return -1;
+  g_print ("Media info:\n%s\n", output);
+  g_free (output);
   return 0;
 }

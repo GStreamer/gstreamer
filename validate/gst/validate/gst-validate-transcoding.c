@@ -13,9 +13,6 @@
 #include <gst/validate/validate.h>
 #include <gst/pbutils/encoding-profile.h>
 
-#include "gst-validate-file-checker.h"
-
-
 static GMainLoop *mainloop;
 static GstElement *pipeline;
 static GstEncodingProfile *encoding_profile = NULL;
@@ -255,7 +252,6 @@ main (int argc, gchar ** argv)
   GError *err = NULL;
   const gchar *scenario = NULL;
   guint count = -1;
-  gboolean run_file_checks = FALSE;
 
   GOptionEntry options[] = {
     {"output-format", 'o', 0, G_OPTION_ARG_CALLBACK, &_parse_encoding_profile,
@@ -270,9 +266,6 @@ main (int argc, gchar ** argv)
     {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
         "Let you set a scenario, it will override the GST_VALIDATE_SCENARIO "
           "environment variable", NULL},
-    {"run-file-checks", 'c', 0, G_OPTION_ARG_NONE,
-          &run_file_checks, "If post file transcoding checks should be run",
-        NULL},
     {NULL}
   };
 
@@ -347,18 +340,6 @@ exit:
   g_object_unref (monitor);
   g_object_unref (runner);
   g_object_unref (pipeline);
-
-  if (run_file_checks) {
-    GstValidateFileChecker *fc =
-        g_object_new (GST_TYPE_VALIDATE_FILE_CHECKER, "uri",
-        argv[2], "profile", encoding_profile, "test-playback", TRUE, NULL);
-
-    if (!gst_validate_file_checker_run (fc)) {
-      g_print ("Failed file checking\n");
-    }
-
-    g_object_unref (fc);
-  }
 
   if (count)
     return -1;

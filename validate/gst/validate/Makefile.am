@@ -10,14 +10,13 @@ libgstvalidate_@GST_API_VERSION@_la_SOURCES = \
 	gst-validate-scenario.c \
 	gst-validate-override.c \
 	gst-validate-override-registry.c \
-	gst-validate-file-checker.c \
+	gst-validate-media-info.c \
         validate.c
 
 noinst_HEADERS = \
 	gettext.h \
 	gst-validate-bin-monitor.h \
 	gst-validate-element-monitor.h \
-	gst-validate-file-checker.h \
 	gst-validate-i18n-lib.h \
 	gst-validate-monitor-factory.h \
 	gst-validate-monitor.h \
@@ -27,7 +26,8 @@ noinst_HEADERS = \
 	gst-validate-reporter.h \
 	gst-validate-report.h \
 	gst-validate-runner.h \
-	gst-validate-scenario.h
+	gst-validate-scenario.h \
+	gst-validate-media-info.h
 
 lib_LTLIBRARIES = \
 	libgstvalidate-@GST_API_VERSION@.la \

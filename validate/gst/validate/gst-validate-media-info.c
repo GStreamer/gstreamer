@@ -1,7 +1,7 @@
 /* GStreamer
  * Copyright (C) 2013 Thiago Santos <thiago.sousa.santos@collabora.com>
  *
- * gst-validate-file-checker.c - Validate File conformance check utility functions / structs
+ * gst-validate-media-info.c
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,256 +24,87 @@
 #  include "config.h"
 #endif
 
-#include "gst-validate-file-checker.h"
-#include "gst-validate-reporter.h"
+#include "gst-validate-media-info.h"
 
 #include <glib/gstdio.h>
-#include <gst/pbutils/pbutils.h>
 
-enum
+void
+gst_validate_media_info_init (GstValidateMediaInfo * mi)
 {
-  PROP_0,
-  PROP_RUNNER,
-  PROP_URI,
-  PROP_PROFILE,
-  PROP_DURATION,
-  PROP_DURATION_TOLERANCE,
-  PROP_FILE_SIZE,
-  PROP_FILE_SIZE_TOLERANCE,
-  PROP_SEEKABLE,
-  PROP_TEST_PLAYBACK,
-  PROP_TEST_REVERSE_PLAYBACK,
-  PROP_LAST
-};
-
-#define DEFAULT_DURATION GST_CLOCK_TIME_NONE
-#define DEFAULT_DURATION_TOLERANCE 0
-#define DEFAULT_FILE_SIZE 0
-#define DEFAULT_FILE_SIZE_TOLERANCE 0
-#define DEFAULT_SEEKABLE FALSE
-#define DEFAULT_PLAYBACK FALSE
-#define DEFAULT_REVERSE_PLAYBACK FALSE
-
-GST_DEBUG_CATEGORY_STATIC (gst_validate_file_checker_debug);
-#define GST_CAT_DEFAULT gst_validate_file_checker_debug
-
-static void
-gst_validate_file_checker_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-static void
-gst_validate_file_checker_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-
-#define _do_init \
-  GST_DEBUG_CATEGORY_INIT (gst_validate_file_checker_debug, "qa_file_checker", 0, "VALIDATE FileChecker");\
-  G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, _reporter_iface_init)
-
-static void
-_reporter_iface_init (GstValidateReporterInterface * iface)
-{
+  mi->uri = NULL;
+  mi->file_size = 0;
+  mi->duration = GST_CLOCK_TIME_NONE;
+  mi->seekable = FALSE;
+  mi->stream_info = NULL;
 }
 
-#define gst_validate_file_checker_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstValidateFileChecker, gst_validate_file_checker,
-    G_TYPE_OBJECT, _do_init);
-
-static void
-gst_validate_file_checker_dispose (GObject * object)
+void
+gst_validate_media_info_clear (GstValidateMediaInfo * mi)
 {
-  G_OBJECT_CLASS (parent_class)->dispose (object);
+  g_free (mi->uri);
+  if (mi->stream_info)
+    gst_object_unref (mi->stream_info);
 }
 
-static void
-gst_validate_file_checker_finalize (GObject * object)
+gchar *
+gst_validate_media_info_to_string (GstValidateMediaInfo * mi, gsize * length)
 {
-  GstValidateFileChecker *fc = GST_VALIDATE_FILE_CHECKER_CAST (object);
+  GKeyFile *kf = g_key_file_new ();
+  gchar *data = NULL;
 
-  gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (object), NULL);
+  /* file info */
+  g_key_file_set_string (kf, "file-info", "uri", mi->uri);
+  g_key_file_set_uint64 (kf, "file-info", "file-size", mi->file_size);
 
-  g_free (fc->uri);
-  if (fc->profile)
-    gst_encoding_profile_unref (fc->profile);
+  data = g_key_file_to_data (kf, length, NULL);
+  g_key_file_free (kf);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  return data;
 }
 
-static void
-gst_validate_file_checker_class_init (GstValidateFileCheckerClass * klass)
+gboolean
+gst_validate_media_info_save (GstValidateMediaInfo * mi, const gchar * path,
+    GError ** err)
 {
-  GObjectClass *gobject_class;
+  gchar *data = NULL;
+  gsize datalength = 0;
 
-  gobject_class = G_OBJECT_CLASS (klass);
+  data = gst_validate_media_info_to_string (mi, &datalength);
 
-  gobject_class->get_property = gst_validate_file_checker_get_property;
-  gobject_class->set_property = gst_validate_file_checker_set_property;
-  gobject_class->dispose = gst_validate_file_checker_dispose;
-  gobject_class->finalize = gst_validate_file_checker_finalize;
-
-  g_object_class_install_property (gobject_class, PROP_RUNNER,
-      g_param_spec_object ("qa-runner", "VALIDATE Runner",
-          "The Validate runner to " "report errors to",
-          GST_TYPE_VALIDATE_RUNNER,
-          G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
-
-  g_object_class_install_property (gobject_class, PROP_URI,
-      g_param_spec_string ("uri", "URI", "The URI of the file to be checked",
-          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
-
-  g_object_class_install_property (gobject_class, PROP_PROFILE,
-      g_param_spec_object ("profile", "Profile",
-          "The GstEncodingProfile " "that should match what the file contains",
-          GST_TYPE_ENCODING_PROFILE, G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
-
-  g_object_class_install_property (gobject_class, PROP_DURATION,
-      g_param_spec_uint64 ("duration", "duration", "Stream duration "
-          "in nanosecs, use GST_CLOCK_TIME_NONE to disable this check",
-          0, G_MAXUINT64, DEFAULT_DURATION,
-          G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
-
-  g_object_class_install_property (gobject_class, PROP_DURATION_TOLERANCE,
-      g_param_spec_uint64 ("duration-tolerance", "duration tolerance",
-          "Acceptable margin of error of the duration check (in nanoseconds)",
-          0, G_MAXUINT64, DEFAULT_DURATION_TOLERANCE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
-
-  g_object_class_install_property (gobject_class, PROP_FILE_SIZE,
-      g_param_spec_uint64 ("file-size", "file size", "File size in bytes",
-          0, G_MAXUINT64, DEFAULT_FILE_SIZE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
-
-  g_object_class_install_property (gobject_class, PROP_FILE_SIZE_TOLERANCE,
-      g_param_spec_uint64 ("file-size-tolerance", "file size tolerance",
-          "Acceptable margin of error of the file size check (in bytes)",
-          0, G_MAXUINT64, DEFAULT_FILE_SIZE_TOLERANCE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
-
-  g_object_class_install_property (gobject_class, PROP_SEEKABLE,
-      g_param_spec_boolean ("is-seekable", "is seekable",
-          "If the resulting file should be seekable", DEFAULT_SEEKABLE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
-
-  g_object_class_install_property (gobject_class, PROP_TEST_PLAYBACK,
-      g_param_spec_boolean ("test-playback", "test playback",
-          "If the file should be tested for playback", DEFAULT_PLAYBACK,
-          G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
-
-  g_object_class_install_property (gobject_class, PROP_TEST_REVERSE_PLAYBACK,
-      g_param_spec_boolean ("test-reverse-playback", "test reverse playback",
-          "If the file should be tested for reverse playback",
-          DEFAULT_REVERSE_PLAYBACK, G_PARAM_READWRITE | G_PARAM_STATIC_NAME));
+  g_file_set_contents (path, data, datalength, err);
+  if (err)
+    return FALSE;
+  return TRUE;
 }
 
-static void
-gst_validate_file_checker_init (GstValidateFileChecker * fc)
+GstValidateMediaInfo *
+gst_validate_media_info_load (const gchar * path, GError ** err)
 {
-  fc->uri = NULL;
-  fc->profile = NULL;
-  fc->duration = DEFAULT_DURATION;
-  fc->duration_tolerance = DEFAULT_DURATION_TOLERANCE;
-  fc->file_size = DEFAULT_FILE_SIZE;
-  fc->file_size_tolerance = DEFAULT_FILE_SIZE_TOLERANCE;
-  fc->seekable = DEFAULT_SEEKABLE;
-  fc->test_playback = DEFAULT_PLAYBACK;
-  fc->test_reverse_playback = DEFAULT_REVERSE_PLAYBACK;
-}
+  GKeyFile *kf = g_key_file_new ();
+  GstValidateMediaInfo *mi;
 
-static void
-gst_validate_file_checker_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstValidateFileChecker *fc;
-
-  fc = GST_VALIDATE_FILE_CHECKER_CAST (object);
-
-  switch (prop_id) {
-    case PROP_RUNNER:
-      gst_validate_reporter_set_runner (GST_VALIDATE_REPORTER (fc),
-          g_value_get_object (value));
-      break;
-    case PROP_URI:
-      g_free (fc->uri);
-      fc->uri = g_value_dup_string (value);
-      break;
-    case PROP_PROFILE:
-      if (fc->profile)
-        gst_encoding_profile_unref (fc->profile);
-      fc->profile = (GstEncodingProfile *) g_value_get_object (value);
-      break;
-    case PROP_DURATION:
-      fc->duration = g_value_get_uint64 (value);
-      break;
-    case PROP_DURATION_TOLERANCE:
-      fc->duration_tolerance = g_value_get_uint64 (value);
-      break;
-    case PROP_FILE_SIZE:
-      fc->file_size = g_value_get_uint64 (value);
-      break;
-    case PROP_FILE_SIZE_TOLERANCE:
-      fc->file_size_tolerance = g_value_get_uint64 (value);
-      break;
-    case PROP_SEEKABLE:
-      fc->seekable = g_value_get_boolean (value);
-      break;
-    case PROP_TEST_PLAYBACK:
-      fc->test_playback = g_value_get_boolean (value);
-      break;
-    case PROP_TEST_REVERSE_PLAYBACK:
-      fc->test_reverse_playback = g_value_get_boolean (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+  if (!g_key_file_load_from_file (kf, path, G_KEY_FILE_NONE, err)) {
+    g_key_file_free (kf);
+    return NULL;
   }
-}
 
-static void
-gst_validate_file_checker_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstValidateFileChecker *fc;
+  mi = g_new (GstValidateMediaInfo, 1);
+  gst_validate_media_info_init (mi);
 
-  fc = GST_VALIDATE_FILE_CHECKER_CAST (object);
+  mi->uri = g_key_file_get_string (kf, "file-info", "uri", err);
+  if (err)
+    goto end;
+  mi->file_size = g_key_file_get_uint64 (kf, "file-info", "file-size", err);
+  if (err)
+    goto end;
 
-  switch (prop_id) {
-    case PROP_RUNNER:
-      g_value_set_object (value,
-          gst_validate_reporter_get_runner (GST_VALIDATE_REPORTER (fc)));
-      break;
-    case PROP_URI:
-      g_value_set_string (value, fc->uri);
-      break;
-    case PROP_PROFILE:
-      g_value_set_object (value, fc->profile);
-      break;
-    case PROP_DURATION:
-      g_value_set_uint64 (value, fc->duration);
-      break;
-    case PROP_DURATION_TOLERANCE:
-      g_value_set_uint64 (value, fc->duration_tolerance);
-      break;
-    case PROP_FILE_SIZE:
-      g_value_set_uint64 (value, fc->file_size);
-      break;
-    case PROP_FILE_SIZE_TOLERANCE:
-      g_value_set_uint64 (value, fc->file_size_tolerance);
-      break;
-    case PROP_SEEKABLE:
-      g_value_set_boolean (value, fc->seekable);
-      break;
-    case PROP_TEST_PLAYBACK:
-      g_value_set_boolean (value, fc->test_playback);
-      break;
-    case PROP_TEST_REVERSE_PLAYBACK:
-      g_value_set_boolean (value, fc->test_reverse_playback);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
+end:
+  g_key_file_free (kf);
+  return mi;
 }
 
 static gboolean
-check_file_size (GstValidateFileChecker * fc)
+check_file_size (GstValidateMediaInfo * mi)
 {
   GStatBuf statbuf;
   gchar *filepath;
@@ -281,10 +112,12 @@ check_file_size (GstValidateFileChecker * fc)
   gboolean ret = TRUE;
   GError *err;
 
-  filepath = g_filename_from_uri (fc->uri, NULL, &err);
+  filepath = g_filename_from_uri (mi->uri, NULL, &err);
   if (!filepath) {
+#if 0
     GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_NOT_FOUND,
         "Failed to get filepath from uri %s. %s", fc->uri, err->message);
+#endif
     g_error_free (err);
     return FALSE;
   }
@@ -292,37 +125,28 @@ check_file_size (GstValidateFileChecker * fc)
   if (g_stat (filepath, &statbuf) == 0) {
     size = statbuf.st_size;
   } else {
+#if 0
     GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_NOT_FOUND,
         "Failed to get file stats from uri %s", fc->uri);
+#endif
     ret = FALSE;
     goto end;
   }
 
-  if (size == 0) {
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_SIZE_IS_ZERO,
-        "File %s has size 0", fc->uri);
-    ret = FALSE;
-  } else if (fc->file_size != 0
-      && (size < fc->file_size - fc->file_size_tolerance
-          || size > fc->file_size + fc->file_size_tolerance)) {
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_SIZE_INCORRECT,
-        "File %s has size %" G_GUINT64_FORMAT ", it was expected to have %"
-        G_GUINT64_FORMAT " (+-%" G_GUINT64_FORMAT ")", fc->uri, size,
-        fc->file_size, fc->file_size_tolerance);
-    ret = FALSE;
-    goto end;
-  }
+  mi->file_size = size;
 
 end:
   g_free (filepath);
   return ret;
 }
 
+#if 0
 static gboolean
 check_file_duration (GstValidateFileChecker * fc, GstDiscovererInfo * info)
 {
-  GstClockTime real_duration;
+  fc->results.duration = gst_discoverer_info_get_duration (info);
 
+#if 0
   if (!GST_CLOCK_TIME_IS_VALID (fc->duration))
     return TRUE;
 
@@ -336,14 +160,17 @@ check_file_duration (GstValidateFileChecker * fc, GstDiscovererInfo * info)
         GST_TIME_ARGS (fc->duration_tolerance));
     return FALSE;
   }
+#endif
+
   return TRUE;
 }
 
 static gboolean
 check_seekable (GstValidateFileChecker * fc, GstDiscovererInfo * info)
 {
-  gboolean real_seekable;
+  fc->results.seekable = gst_discoverer_info_get_seekable (info);
 
+#if 0
   real_seekable = gst_discoverer_info_get_seekable (info);
   if (real_seekable != fc->seekable) {
     GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_SEEKABLE_INCORRECT,
@@ -351,6 +178,7 @@ check_seekable (GstValidateFileChecker * fc, GstDiscovererInfo * info)
         fc->seekable ? "" : "not", real_seekable ? "is" : "isn't");
     return FALSE;
   }
+#endif
   return TRUE;
 }
 
@@ -364,6 +192,7 @@ _gst_caps_can_intersect_safe (const GstCaps * a, const GstCaps * b)
   return gst_caps_can_intersect (a, b);
 }
 
+#if 0
 typedef struct
 {
   GstEncodingProfile *profile;
@@ -574,18 +403,16 @@ end:
 
   return ret;
 }
+#endif
 
 static gboolean
 check_encoding_profile (GstValidateFileChecker * fc, GstDiscovererInfo * info)
 {
-  GstEncodingProfile *profile = fc->profile;
-  GstDiscovererStreamInfo *stream;
   gboolean ret = TRUE;
-  gchar *msg = NULL;
 
-  if (profile == NULL)
-    return TRUE;
+  fc->results.stream_info = gst_discoverer_info_get_stream_info (info);
 
+#if 0
   stream = gst_discoverer_info_get_stream_info (info);
 
   if (!compare_encoding_profile_with_discoverer_stream (fc, fc->profile, stream,
@@ -595,6 +422,7 @@ check_encoding_profile (GstValidateFileChecker * fc, GstDiscovererInfo * info)
   }
 
   gst_discoverer_stream_info_unref (stream);
+#endif
   return ret;
 }
 
@@ -674,8 +502,10 @@ end:
 static gboolean
 check_playback (GstValidateFileChecker * fc)
 {
+#if 0
   if (!fc->test_playback)
     return TRUE;
+#endif
   return check_playback_scenario (fc, NULL, "Playback");
 }
 
@@ -697,42 +527,48 @@ send_reverse_seek (GstValidateFileChecker * fc, GstElement * pipeline)
 static gboolean
 check_reverse_playback (GstValidateFileChecker * fc)
 {
+#if 0
   if (!fc->test_reverse_playback)
     return TRUE;
+#endif
   return check_playback_scenario (fc, send_reverse_seek, "Reverse playback");
 }
+#endif
 
 gboolean
-gst_validate_file_checker_run (GstValidateFileChecker * fc)
+gst_validate_media_info_inspect_uri (GstValidateMediaInfo * mi,
+    const gchar * uri, GError ** err)
 {
-  GError *err = NULL;
   GstDiscovererInfo *info;
-  GstDiscoverer *discoverer = gst_discoverer_new (GST_SECOND * 60, &err);
+  GstDiscoverer *discoverer = gst_discoverer_new (GST_SECOND * 60, err);
   gboolean ret = TRUE;
 
-  g_return_val_if_fail (fc->uri != NULL, FALSE);
+  g_return_val_if_fail (uri != NULL, FALSE);
+
+  g_free (mi->uri);
+  mi->uri = g_strdup (uri);
 
   if (!discoverer) {
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_ALLOCATION_FAILURE,
-        "Failed to create GstDiscoverer");
     return FALSE;
   }
 
-  info = gst_discoverer_discover_uri (discoverer, fc->uri, &err);
+  info = gst_discoverer_discover_uri (discoverer, uri, err);
 
   if (gst_discoverer_info_get_result (info) != GST_DISCOVERER_OK) {
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_CHECK_FAILURE,
-        "Discoverer failed to discover the file, result: %d",
-        gst_discoverer_info_get_result (info));
+    gst_object_unref (discoverer);
     return FALSE;
   }
 
-  ret = check_file_size (fc) & ret;
-  ret = check_file_duration (fc, info) & ret;
-  ret = check_seekable (fc, info) & ret;
-  ret = check_encoding_profile (fc, info) & ret;
-  ret = check_playback (fc) & ret;
-  ret = check_reverse_playback (fc) & ret;
+  ret = check_file_size (mi) & ret;
+#if 0
+  ret = check_file_duration (mi, info) & ret;
+  ret = check_seekable (mi, info) & ret;
+  ret = check_encoding_profile (mi, info) & ret;
+  ret = check_playback (mi) & ret;
+  ret = check_reverse_playback (mi) & ret;
+#endif
+
+  gst_object_unref (discoverer);
 
   return ret;
 }
