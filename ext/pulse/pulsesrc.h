@@ -71,6 +71,8 @@ struct _GstPulseSrc
   gboolean volume_set:1;
   gboolean mute:1;
   gboolean mute_set:1;
+  guint32 current_source_idx;
+  gchar *current_source_name;
 
   gint notify; /* atomic */
 
