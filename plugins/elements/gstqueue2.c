@@ -3078,8 +3078,14 @@ gst_queue2_sink_activate_mode (GstPad * pad, GstObject * parent,
         GST_DEBUG_OBJECT (queue, "deactivating push mode");
         queue->srcresult = GST_FLOW_FLUSHING;
         queue->sinkresult = GST_FLOW_FLUSHING;
+        GST_QUEUE2_MUTEX_UNLOCK (queue);
+
+        /* wait until it is unblocked and clean up */
+        GST_PAD_STREAM_LOCK (pad);
+        GST_QUEUE2_MUTEX_LOCK (queue);
         gst_queue2_locked_flush (queue, TRUE);
         GST_QUEUE2_MUTEX_UNLOCK (queue);
+        GST_PAD_STREAM_UNLOCK (pad);
       }
       result = TRUE;
       break;
