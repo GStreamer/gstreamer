@@ -2818,6 +2818,67 @@ info_failed:
 }
 
 static void
+gst_pulsesink_set_stream_device (GstPulseSink * psink, const gchar * device)
+{
+  pa_operation *o = NULL;
+  GstPulseRingBuffer *pbuf;
+  uint32_t idx;
+
+  if (!mainloop)
+    goto no_mainloop;
+
+  pa_threaded_mainloop_lock (mainloop);
+
+  pbuf = GST_PULSERING_BUFFER_CAST (GST_AUDIO_BASE_SINK (psink)->ringbuffer);
+  if (pbuf == NULL || pbuf->stream == NULL)
+    goto no_buffer;
+
+  if ((idx = pa_stream_get_index (pbuf->stream)) == PA_INVALID_INDEX)
+    goto no_index;
+
+
+  GST_DEBUG_OBJECT (psink, "setting stream device to %s", device);
+
+  if (!(o = pa_context_move_sink_input_by_name (pbuf->context, idx, device,
+              NULL, NULL)))
+    goto move_failed;
+
+unlock:
+
+  if (o)
+    pa_operation_unref (o);
+
+  pa_threaded_mainloop_unlock (mainloop);
+
+  return;
+
+  /* ERRORS */
+no_mainloop:
+  {
+    GST_DEBUG_OBJECT (psink, "we have no mainloop");
+    return;
+  }
+no_buffer:
+  {
+    GST_DEBUG_OBJECT (psink, "we have no ringbuffer");
+    goto unlock;
+  }
+no_index:
+  {
+    GST_DEBUG_OBJECT (psink, "we don't have a stream index");
+    return;
+  }
+move_failed:
+  {
+    GST_ELEMENT_ERROR (psink, RESOURCE, FAILED,
+        ("pa_context_move_sink_input_by_name(%s) failed: %s", device,
+            pa_strerror (pa_context_errno (pbuf->context))), (NULL));
+    goto unlock;
+  }
+}
+
+
+static void
 gst_pulsesink_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
@@ -2831,6 +2892,7 @@ gst_pulsesink_set_property (GObject * object,
     case PROP_DEVICE:
       g_free (pulsesink->device);
       pulsesink->device = g_value_dup_string (value);
+      gst_pulsesink_set_stream_device (pulsesink, pulsesink->device);
       break;
     case PROP_VOLUME:
       gst_pulsesink_set_volume (pulsesink, g_value_get_double (value));
