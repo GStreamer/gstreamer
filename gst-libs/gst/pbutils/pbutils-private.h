@@ -107,4 +107,3 @@ struct _GstDiscovererInfo {
 /* missing-plugins.c */
 
 GstCaps *copy_and_clean_caps (const GstCaps * caps);
-gboolean has_single_media_type (const GstCaps * caps);

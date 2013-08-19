@@ -156,25 +156,6 @@ copy_and_clean_caps (const GstCaps * caps)
   return ret;
 }
 
-gboolean
-has_single_media_type (const GstCaps * caps)
-{
-  guint n, ns;
-  const char *name0, *namen;
-
-  g_return_val_if_fail (GST_IS_CAPS (caps), FALSE);
-
-  name0 = gst_structure_get_name (gst_caps_get_structure (caps, 0));
-  ns = gst_caps_get_size (caps);
-  for (n = 1; n < ns; ++n) {
-    namen = gst_structure_get_name (gst_caps_get_structure (caps, n));
-    if (strcmp (name0, namen)) {
-      return FALSE;
-    }
-  }
-  return TRUE;
-}
-
 /**
  * gst_missing_uri_source_message_new:
  * @element: the #GstElement posting the message
@@ -338,7 +319,7 @@ gst_missing_encoder_message_new (GstElement * element,
   g_return_val_if_fail (GST_IS_CAPS (encode_caps), NULL);
   g_return_val_if_fail (!gst_caps_is_any (encode_caps), NULL);
   g_return_val_if_fail (!gst_caps_is_empty (encode_caps), NULL);
-  g_return_val_if_fail (has_single_media_type (encode_caps), NULL);
+  g_return_val_if_fail (gst_caps_is_fixed (encode_caps), NULL);
 
   description = gst_pb_utils_get_encoder_description (encode_caps);
   caps = copy_and_clean_caps (encode_caps);

@@ -840,7 +840,7 @@ gst_pb_utils_get_decoder_description (const GstCaps * caps)
 
   tmp = copy_and_clean_caps (caps);
 
-  g_return_val_if_fail (has_single_media_type (tmp), NULL);
+  g_return_val_if_fail (gst_caps_is_fixed (tmp), NULL);
 
   /* special-case RTP caps */
   if (caps_are_rtp_caps (tmp, "video", &str)) {
@@ -891,7 +891,7 @@ gst_pb_utils_get_encoder_description (const GstCaps * caps)
   g_return_val_if_fail (caps != NULL, NULL);
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
   tmp = copy_and_clean_caps (caps);
-  g_return_val_if_fail (has_single_media_type (tmp), NULL);
+  g_return_val_if_fail (gst_caps_is_fixed (tmp), NULL);
 
   /* special-case RTP caps */
   if (caps_are_rtp_caps (tmp, "video", &str)) {
@@ -1022,7 +1022,7 @@ gst_pb_utils_get_codec_description (const GstCaps * caps)
   g_return_val_if_fail (caps != NULL, NULL);
   g_return_val_if_fail (GST_IS_CAPS (caps), NULL);
   tmp = copy_and_clean_caps (caps);
-  g_return_val_if_fail (has_single_media_type (tmp), NULL);
+  g_return_val_if_fail (gst_caps_is_fixed (tmp), NULL);
 
   info = find_format_info (tmp);
 
