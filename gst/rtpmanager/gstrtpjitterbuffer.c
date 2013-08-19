@@ -164,8 +164,8 @@ struct _GstRtpJitterBufferPrivate
   GstClockTime last_out_dts;
   GstClockTime last_out_pts;
   /* last valid input timestamp and rtptime pair */
-  GstClockTime last_in_dts;
-  GstClockTime last_in_rtptime;
+  GstClockTime ips_dts;
+  GstClockTime ips_rtptime;
   GstClockTime packet_spacing;
   /* the next expected seqnum we receive */
   guint32 next_in_seqnum;
@@ -1003,8 +1003,8 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->last_out_dts = -1;
   priv->last_out_pts = -1;
   priv->next_seqnum = -1;
-  priv->last_in_rtptime = -1;
-  priv->last_in_dts = GST_CLOCK_TIME_NONE;
+  priv->ips_rtptime = -1;
+  priv->ips_dts = GST_CLOCK_TIME_NONE;
   priv->packet_spacing = 0;
   priv->next_in_seqnum = -1;
   priv->clock_rate = -1;
@@ -1749,21 +1749,21 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         do_next_seqnum = TRUE;
       }
       /* reset spacing estimation when gap */
-      priv->last_in_rtptime = -1;
-      priv->last_in_dts = -1;
+      priv->ips_rtptime = -1;
+      priv->ips_dts = -1;
     } else {
       /* packet is expected, we need consecutive seqnums with a different
        * rtptime to estimate the packet spacing. */
-      if (priv->last_in_rtptime != rtptime) {
+      if (priv->ips_rtptime != rtptime) {
         /* rtptime changed, check dts diff */
-        if (priv->last_in_dts != -1 && dts != -1 && dts > priv->last_in_dts) {
-          priv->packet_spacing = dts - priv->last_in_dts;
+        if (priv->ips_dts != -1 && dts != -1 && dts > priv->ips_dts) {
+          priv->packet_spacing = dts - priv->ips_dts;
           GST_DEBUG_OBJECT (jitterbuffer,
               "new packet spacing %" GST_TIME_FORMAT,
               GST_TIME_ARGS (priv->packet_spacing));
         }
-        priv->last_in_rtptime = rtptime;
-        priv->last_in_dts = dts;
+        priv->ips_rtptime = rtptime;
+        priv->ips_dts = dts;
       }
       do_next_seqnum = TRUE;
     }
