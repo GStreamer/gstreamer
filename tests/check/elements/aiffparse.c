@@ -35,7 +35,7 @@ static GMainLoop *loop = NULL;
 static gboolean have_eos = FALSE;
 static gboolean have_tags = FALSE;
 static gchar *data = NULL;
-static guint64 data_size = 0;
+static gsize data_size = 0;
 static guint64 data_read = 0;
 static guint64 data_offset = 0;
 
