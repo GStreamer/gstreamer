@@ -1474,7 +1474,19 @@ gst_multi_queue_sink_activate_mode (GstPad * pad, GstObject * parent,
         sq->last_query = FALSE;
         g_cond_signal (&sq->query_handled);
         gst_data_queue_set_flushing (sq->queue, TRUE);
+
+        /* Wait until streaming thread has finished */
+        if (mq)
+          GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+        GST_PAD_STREAM_LOCK (pad);
+        if (mq)
+          GST_MULTI_QUEUE_MUTEX_LOCK (mq);
         gst_data_queue_flush (sq->queue);
+        if (mq)
+          GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+        GST_PAD_STREAM_UNLOCK (pad);
+        if (mq)
+          GST_MULTI_QUEUE_MUTEX_LOCK (mq);
       }
       res = TRUE;
       break;
