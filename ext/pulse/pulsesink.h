@@ -71,6 +71,8 @@ struct _GstPulseSink
   gboolean volume_set:1;
   gboolean mute:1;
   gboolean mute_set:1;
+  guint32 current_sink_idx;
+  gchar *current_sink_name;
 
   guint defer_pending;
 
