@@ -1,0 +1,33 @@
+<scenario name="Forward Seeks">
+  <actions>
+    <seek name='First forward seek'
+          playback_time="5.0"
+          format="time"
+          rate="1.0"
+          flags="accurate+flush"
+          start_type="set"
+          start="10.0"
+          stop_type="set"
+          stop="-1.0" />
+
+    <seek name='Second forward seek'
+          playback_time="15.0"
+          format="time"
+          rate="1.0"
+          flags="accurate+flush"
+          start_type="set"
+          start="20.0"
+          stop_type="set"
+          stop="-1.0" />
+
+    <seek name='Third forward seek with stop value (1 sec)'
+          playback_time="25.0"
+          format="time"
+          rate="1.0"
+          flags="accurate+flush"
+          start_type="set"
+          start="30.0"
+          stop_type="set"
+          stop="35.0" />
+  </actions>
+</scenario>
