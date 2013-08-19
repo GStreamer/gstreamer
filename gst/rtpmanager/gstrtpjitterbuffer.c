@@ -165,7 +165,7 @@ struct _GstRtpJitterBufferPrivate
   GstClockTime last_out_pts;
   /* last valid input timestamp and rtptime pair */
   GstClockTime ips_dts;
-  GstClockTime ips_rtptime;
+  guint64 ips_rtptime;
   GstClockTime packet_spacing;
   /* the next expected seqnum we receive */
   guint32 next_in_seqnum;
@@ -1642,7 +1642,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   GstRtpJitterBuffer *jitterbuffer;
   GstRtpJitterBufferPrivate *priv;
   guint16 seqnum;
-  guint32 rtptime;
+  guint32 expected, rtptime;
   GstFlowReturn ret = GST_FLOW_OK;
   GstClockTime dts, pts;
   guint64 latency_ts;
@@ -1674,7 +1674,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
 
   /* take the DTS of the buffer. This is the time when the packet was
    * received and is used to calculate jitter and clock skew. We will adjust
-   * this PTS with the smoothed value after processing it in the
+   * this DTS with the smoothed value after processing it in the
    * jitterbuffer and assign it as the PTS. */
   /* bring to running time */
   dts = gst_segment_to_running_time (&priv->segment, GST_FORMAT_TIME, dts);
@@ -1717,23 +1717,25 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   if (G_UNLIKELY (priv->eos))
     goto have_eos;
 
+  expected = priv->next_in_seqnum;
+
   /* now check against our expected seqnum */
-  if (G_LIKELY (priv->next_in_seqnum != -1)) {
+  if (G_LIKELY (expected != -1)) {
     gint gap;
 
-    gap = gst_rtp_buffer_compare_seqnum (priv->next_in_seqnum, seqnum);
+    gap = gst_rtp_buffer_compare_seqnum (expected, seqnum);
     if (G_UNLIKELY (gap != 0)) {
       gboolean reset = FALSE;
 
       GST_DEBUG_OBJECT (jitterbuffer, "expected #%d, got #%d, gap of %d",
-          priv->next_in_seqnum, seqnum, gap);
-      /* priv->next_in_seqnum >= seqnum, this packet is too late or the
+          expected, seqnum, gap);
+      /* expected >= seqnum, this packet is too late or the
        * sender might have been restarted with different seqnum. */
       if (gap < -RTP_MAX_MISORDER) {
         GST_DEBUG_OBJECT (jitterbuffer, "reset: buffer too old %d", gap);
         reset = TRUE;
       }
-      /* priv->next_in_seqnum < seqnum, this is a new packet */
+      /* expected < seqnum, this is a new packet */
       else if (G_UNLIKELY (gap > RTP_MAX_DROPOUT)) {
         GST_DEBUG_OBJECT (jitterbuffer, "reset: too many dropped packets %d",
             gap);
@@ -1754,7 +1756,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
       }
       /* reset spacing estimation when gap */
       priv->ips_rtptime = -1;
-      priv->ips_dts = -1;
+      priv->ips_dts = GST_CLOCK_TIME_NONE;
     } else {
       /* packet is expected, we need consecutive seqnums with a different
        * rtptime to estimate the packet spacing. */
@@ -2379,9 +2381,11 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
     /* at this point, the clock could have been unlocked by a timeout, a new
      * tail element was added to the queue or because we are shutting down. Check
      * for shutdown first. */
-    if G_UNLIKELY
-      ((priv->srcresult != GST_FLOW_OK))
-          goto flushing;
+    if (G_UNLIKELY (priv->srcresult != GST_FLOW_OK))
+      goto flushing;
+
+    if (priv->timers->len <= timer_idx)
+      goto done;
 
     /* we released the lock, the array might have changed */
     timer = &g_array_index (priv->timers, TimerData, timer_idx);
