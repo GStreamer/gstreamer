@@ -44,47 +44,18 @@ enum
   LAST_SIGNAL
 };
 
-static void gst_tuner_norm_class_init (GstTunerNormClass * klass);
-static void gst_tuner_norm_init (GstTunerNorm * norm);
+G_DEFINE_TYPE (GstTunerNorm, gst_tuner_norm, G_TYPE_OBJECT);
+
 static void gst_tuner_norm_dispose (GObject * object);
 
-static GObjectClass *parent_class = NULL;
 
 /*static guint signals[LAST_SIGNAL] = { 0 };*/
-
-GType
-gst_tuner_norm_get_type (void)
-{
-  static GType gst_tuner_norm_type = 0;
-
-  if (!gst_tuner_norm_type) {
-    static const GTypeInfo tuner_norm_info = {
-      sizeof (GstTunerNormClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_tuner_norm_class_init,
-      NULL,
-      NULL,
-      sizeof (GstTunerNorm),
-      0,
-      (GInstanceInitFunc) gst_tuner_norm_init,
-      NULL
-    };
-
-    gst_tuner_norm_type =
-        g_type_register_static (G_TYPE_OBJECT,
-        "GstTunerNorm", &tuner_norm_info, 0);
-  }
-
-  return gst_tuner_norm_type;
-}
 
 static void
 gst_tuner_norm_class_init (GstTunerNormClass * klass)
 {
   GObjectClass *object_klass = (GObjectClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
 
   object_klass->dispose = gst_tuner_norm_dispose;
 }
@@ -106,6 +77,5 @@ gst_tuner_norm_dispose (GObject * object)
     norm->label = NULL;
   }
 
-  if (parent_class->dispose)
-    parent_class->dispose (object);
+  G_OBJECT_CLASS (gst_tuner_norm_parent_class)->dispose (object);
 }

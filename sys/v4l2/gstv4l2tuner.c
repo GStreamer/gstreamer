@@ -31,47 +31,15 @@
 #include "gstv4l2object.h"
 #include "v4l2_calls.h"
 
-static void gst_v4l2_tuner_channel_class_init (GstV4l2TunerChannelClass *
-    klass);
-static void gst_v4l2_tuner_channel_init (GstV4l2TunerChannel * channel);
+G_DEFINE_TYPE (GstV4l2TunerChannel, gst_v4l2_tuner_channel,
+    GST_TYPE_TUNER_CHANNEL);
 
-static void gst_v4l2_tuner_norm_class_init (GstV4l2TunerNormClass * klass);
-static void gst_v4l2_tuner_norm_init (GstV4l2TunerNorm * norm);
+G_DEFINE_TYPE (GstV4l2TunerNorm, gst_v4l2_tuner_norm, GST_TYPE_TUNER_NORM);
 
-static GstTunerNormClass *norm_parent_class = NULL;
-static GstTunerChannelClass *channel_parent_class = NULL;
-
-GType
-gst_v4l2_tuner_channel_get_type (void)
-{
-  static GType gst_v4l2_tuner_channel_type = 0;
-
-  if (!gst_v4l2_tuner_channel_type) {
-    static const GTypeInfo v4l2_tuner_channel_info = {
-      sizeof (GstV4l2TunerChannelClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_v4l2_tuner_channel_class_init,
-      NULL,
-      NULL,
-      sizeof (GstV4l2TunerChannel),
-      0,
-      (GInstanceInitFunc) gst_v4l2_tuner_channel_init,
-      NULL
-    };
-
-    gst_v4l2_tuner_channel_type =
-        g_type_register_static (GST_TYPE_TUNER_CHANNEL,
-        "GstV4l2TunerChannel", &v4l2_tuner_channel_info, 0);
-  }
-
-  return gst_v4l2_tuner_channel_type;
-}
 
 static void
 gst_v4l2_tuner_channel_class_init (GstV4l2TunerChannelClass * klass)
 {
-  channel_parent_class = g_type_class_peek_parent (klass);
 }
 
 static void
@@ -82,37 +50,9 @@ gst_v4l2_tuner_channel_init (GstV4l2TunerChannel * channel)
   channel->audio = (guint32) - 1;
 }
 
-GType
-gst_v4l2_tuner_norm_get_type (void)
-{
-  static GType gst_v4l2_tuner_norm_type = 0;
-
-  if (!gst_v4l2_tuner_norm_type) {
-    static const GTypeInfo v4l2_tuner_norm_info = {
-      sizeof (GstV4l2TunerNormClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_v4l2_tuner_norm_class_init,
-      NULL,
-      NULL,
-      sizeof (GstV4l2TunerNorm),
-      0,
-      (GInstanceInitFunc) gst_v4l2_tuner_norm_init,
-      NULL
-    };
-
-    gst_v4l2_tuner_norm_type =
-        g_type_register_static (GST_TYPE_TUNER_NORM,
-        "GstV4l2TunerNorm", &v4l2_tuner_norm_info, 0);
-  }
-
-  return gst_v4l2_tuner_norm_type;
-}
-
 static void
 gst_v4l2_tuner_norm_class_init (GstV4l2TunerNormClass * klass)
 {
-  norm_parent_class = g_type_class_peek_parent (klass);
 }
 
 static void

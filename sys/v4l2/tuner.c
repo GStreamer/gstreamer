@@ -82,37 +82,12 @@ enum
   LAST_SIGNAL
 };
 
-static void gst_tuner_class_init (GstTunerInterface * iface);
-
 static guint gst_tuner_signals[LAST_SIGNAL] = { 0 };
 
-GType
-gst_tuner_get_type (void)
-{
-  static GType gst_tuner_type = 0;
-
-  if (!gst_tuner_type) {
-    static const GTypeInfo gst_tuner_info = {
-      sizeof (GstTunerInterface),
-      (GBaseInitFunc) gst_tuner_class_init,
-      NULL,
-      NULL,
-      NULL,
-      NULL,
-      0,
-      0,
-      NULL,
-    };
-
-    gst_tuner_type = g_type_register_static (G_TYPE_INTERFACE,
-        "GstTuner", &gst_tuner_info, 0);
-  }
-
-  return gst_tuner_type;
-}
+G_DEFINE_INTERFACE (GstTuner, gst_tuner, G_TYPE_INVALID);
 
 static void
-gst_tuner_class_init (GstTunerInterface * iface)
+gst_tuner_default_init (GstTunerInterface * iface)
 {
   static gboolean initialized = FALSE;
 

@@ -51,46 +51,16 @@ enum
   LAST_SIGNAL
 };
 
-static void gst_tuner_channel_class_init (GstTunerChannelClass * klass);
-static void gst_tuner_channel_init (GstTunerChannel * channel);
+G_DEFINE_TYPE (GstTunerChannel, gst_tuner_channel, G_TYPE_OBJECT);
+
 static void gst_tuner_channel_dispose (GObject * object);
 
-static GObjectClass *parent_class = NULL;
 static guint signals[LAST_SIGNAL] = { 0 };
-
-GType
-gst_tuner_channel_get_type (void)
-{
-  static GType gst_tuner_channel_type = 0;
-
-  if (!gst_tuner_channel_type) {
-    static const GTypeInfo tuner_channel_info = {
-      sizeof (GstTunerChannelClass),
-      NULL,
-      NULL,
-      (GClassInitFunc) gst_tuner_channel_class_init,
-      NULL,
-      NULL,
-      sizeof (GstTunerChannel),
-      0,
-      (GInstanceInitFunc) gst_tuner_channel_init,
-      NULL
-    };
-
-    gst_tuner_channel_type =
-        g_type_register_static (G_TYPE_OBJECT,
-        "GstTunerChannel", &tuner_channel_info, 0);
-  }
-
-  return gst_tuner_channel_type;
-}
 
 static void
 gst_tuner_channel_class_init (GstTunerChannelClass * klass)
 {
   GObjectClass *object_klass = (GObjectClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
 
   /**
    * GstTunerChannel::frequency-changed:
@@ -143,6 +113,5 @@ gst_tuner_channel_dispose (GObject * object)
     channel->label = NULL;
   }
 
-  if (parent_class->dispose)
-    parent_class->dispose (object);
+  G_OBJECT_CLASS (gst_tuner_channel_parent_class)->dispose (object);
 }
