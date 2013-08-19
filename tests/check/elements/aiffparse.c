@@ -1,8 +1,8 @@
 /* GStreamer
  *
  * unit test for aiffparse
- *
- * Copyright (C) <2013> Matthieu Bouron <matthieu.bouron@collabora.com>
+ * Copyright (C) 2013 Collabora Ltd.
+ *   Author: Matthieu Bouron <matthieu.bouron@collabora.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
