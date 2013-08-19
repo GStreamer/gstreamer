@@ -1568,7 +1568,7 @@ remove_all_timers (GstRtpJitterBuffer * jitterbuffer)
  */
 static void
 update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
-    GstClockTime dts)
+    GstClockTime dts, gboolean do_next_seqnum)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   TimerData *timer = NULL;
@@ -1603,7 +1603,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     }
   }
 
-  if (priv->packet_spacing > 0) {
+  if (priv->packet_spacing > 0 && do_next_seqnum) {
     GstClockTime expected;
 
     /* calculate expected arrival time of the next seqnum */
@@ -1639,6 +1639,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   gint percent = -1;
   guint8 pt;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  gboolean do_next_seqnum = FALSE;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (parent);
 
@@ -1728,6 +1729,8 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         reset = TRUE;
       } else {
         GST_DEBUG_OBJECT (jitterbuffer, "tolerable gap");
+        if (gap > 0)
+          do_next_seqnum = TRUE;
       }
       if (G_UNLIKELY (reset)) {
         GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
@@ -1736,6 +1739,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         remove_all_timers (jitterbuffer);
         priv->last_popped_seqnum = -1;
         priv->next_seqnum = seqnum;
+        do_next_seqnum = TRUE;
       }
       /* reset spacing estimation when gap */
       priv->last_in_rtptime = -1;
@@ -1754,9 +1758,14 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         priv->last_in_rtptime = rtptime;
         priv->last_in_dts = dts;
       }
+      do_next_seqnum = TRUE;
     }
+  } else {
+    /* unknow first seqnum */
+    do_next_seqnum = TRUE;
   }
-  priv->next_in_seqnum = (seqnum + 1) & 0xffff;
+  if (do_next_seqnum)
+    priv->next_in_seqnum = (seqnum + 1) & 0xffff;
 
   /* let's check if this buffer is too late, we can only accept packets with
    * bigger seqnum than the one we last pushed. */
@@ -1804,7 +1813,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     goto duplicate;
 
   /* update timers */
-  update_timers (jitterbuffer, seqnum, dts);
+  update_timers (jitterbuffer, seqnum, dts, do_next_seqnum);
 
   /* we had an unhandled SR, handle it now */
   if (priv->last_sr)
@@ -2236,7 +2245,8 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   priv->last_out_time = apply_offset (jitterbuffer, timer->timeout);
   priv->last_out_dts = timer->timeout;
   priv->last_out_pts = timer->timeout;
-  priv->next_seqnum = (timer->seqnum + lost_packets) & 0xffff;
+  if (timer->seqnum + lost_packets > priv->next_seqnum)
+    priv->next_seqnum = (timer->seqnum + lost_packets) & 0xffff;
   /* remove timer now */
   remove_timer (jitterbuffer, timer);
 
