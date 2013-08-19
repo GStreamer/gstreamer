@@ -1584,13 +1584,20 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     TimerData *test = &g_array_index (priv->timers, TimerData, i);
     gint gap;
 
-    if (test->type != TIMER_TYPE_EXPECTED)
-      continue;
-
     gap = gst_rtp_buffer_compare_seqnum (test->seqnum, seqnum);
 
     GST_DEBUG_OBJECT (jitterbuffer, "%d, #%d<->#%d gap %d", i,
         test->seqnum, seqnum, gap);
+
+    if (test->type == TIMER_TYPE_LOST) {
+      if (gap == 0) {
+        remove_timer (jitterbuffer, test);
+        len--;
+        i--;
+      }
+      continue;
+    } else if (test->type != TIMER_TYPE_EXPECTED)
+      continue;
 
     if (gap == 0) {
       /* the timer for the current seqnum */
