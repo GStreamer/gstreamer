@@ -680,6 +680,56 @@ mute_failed:
   }
 }
 
+
+static void
+gst_pulsesrc_set_stream_device (GstPulseSrc * pulsesrc, const gchar * device)
+{
+  pa_operation *o = NULL;
+
+  if (!pulsesrc->mainloop)
+    goto no_mainloop;
+
+  if (!pulsesrc->source_output_idx)
+    goto no_index;
+
+  pa_threaded_mainloop_lock (pulsesrc->mainloop);
+
+  GST_DEBUG_OBJECT (pulsesrc, "setting stream device to %s", device);
+
+  if (!(o = pa_context_move_source_output_by_name (pulsesrc->context,
+              pulsesrc->source_output_idx, device, NULL, NULL)))
+    goto move_failed;
+
+unlock:
+
+  if (o)
+    pa_operation_unref (o);
+
+  pa_threaded_mainloop_unlock (pulsesrc->mainloop);
+
+  return;
+
+  /* ERRORS */
+no_mainloop:
+  {
+    GST_DEBUG_OBJECT (pulsesrc, "we have no mainloop");
+    return;
+  }
+no_index:
+  {
+    GST_DEBUG_OBJECT (pulsesrc, "we don't have a stream index");
+    return;
+  }
+move_failed:
+  {
+    GST_ELEMENT_ERROR (pulsesrc, RESOURCE, FAILED,
+        ("pa_context_move_source_output_by_name(%s) failed: %s",
+            device, pa_strerror (pa_context_errno (pulsesrc->context))),
+        (NULL));
+    goto unlock;
+  }
+}
+
 static void
 gst_pulsesrc_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
@@ -695,6 +745,7 @@ gst_pulsesrc_set_property (GObject * object,
     case PROP_DEVICE:
       g_free (pulsesrc->device);
       pulsesrc->device = g_value_dup_string (value);
+      gst_pulsesrc_set_stream_device (pulsesrc, pulsesrc->device);
       break;
     case PROP_CLIENT_NAME:
       g_free (pulsesrc->client_name);
