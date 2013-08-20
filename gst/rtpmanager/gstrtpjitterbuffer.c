@@ -161,8 +161,6 @@ struct _GstRtpJitterBufferPrivate
   guint32 next_seqnum;
   /* last output time */
   GstClockTime last_out_time;
-  GstClockTime last_out_dts;
-  GstClockTime last_out_pts;
   /* last valid input timestamp and rtptime pair */
   GstClockTime ips_dts;
   guint64 ips_rtptime;
@@ -1003,8 +1001,6 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   gst_segment_init (&priv->segment, GST_FORMAT_TIME);
   priv->last_popped_seqnum = -1;
   priv->last_out_time = -1;
-  priv->last_out_dts = -1;
-  priv->last_out_pts = -1;
   priv->next_seqnum = -1;
   priv->ips_rtptime = -1;
   priv->ips_dts = GST_CLOCK_TIME_NONE;
@@ -2088,8 +2084,6 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum)
    * so the other end can push stuff in the queue again. */
   priv->last_popped_seqnum = seqnum;
   priv->last_out_time = GST_BUFFER_PTS (outbuf);
-  priv->last_out_dts = dts;
-  priv->last_out_pts = pts;
   priv->next_seqnum = (seqnum + 1) & 0xffff;
   JBUF_UNLOCK (priv);
 
@@ -2287,8 +2281,6 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   /* update our expected next packet */
   priv->last_popped_seqnum = timer->seqnum;
   priv->last_out_time = apply_offset (jitterbuffer, timer->timeout);
-  priv->last_out_dts = timer->timeout;
-  priv->last_out_pts = timer->timeout;
   if (timer->seqnum + lost_packets > priv->next_seqnum)
     priv->next_seqnum = (timer->seqnum + lost_packets) & 0xffff;
   /* remove timer now */
