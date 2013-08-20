@@ -49,6 +49,9 @@ struct _GstValidateMediaInfo {
 
   gboolean seekable;
 
+  gchar *playback_error;
+  gchar *reverse_playback_error;
+
   gchar *uri;
 
   GstValidateStreamInfo *stream_info;

@@ -27,6 +27,7 @@
 #include "gst-validate-media-info.h"
 
 #include <glib/gstdio.h>
+#include <string.h>
 
 struct _GstValidateStreamInfo
 {
@@ -85,12 +86,16 @@ gst_validate_media_info_init (GstValidateMediaInfo * mi)
   mi->duration = GST_CLOCK_TIME_NONE;
   mi->seekable = FALSE;
   mi->stream_info = NULL;
+  mi->playback_error = NULL;
+  mi->reverse_playback_error = NULL;
 }
 
 void
 gst_validate_media_info_clear (GstValidateMediaInfo * mi)
 {
   g_free (mi->uri);
+  g_free (mi->playback_error);
+  g_free (mi->reverse_playback_error);
   if (mi->stream_info)
     gst_validate_stream_info_free (mi->stream_info);
 }
@@ -115,6 +120,12 @@ gst_validate_media_info_to_string (GstValidateMediaInfo * mi, gsize * length)
     g_key_file_set_string (kf, "media-info", "caps", str);
     g_free (str);
   }
+
+  /* playback tests */
+  g_key_file_set_string (kf, "playback-tests", "playback-error",
+      mi->playback_error ? mi->playback_error : "");
+  g_key_file_set_string (kf, "playback-tests", "reverse-playback-error",
+      mi->reverse_playback_error ? mi->reverse_playback_error : "");
 
   data = g_key_file_to_data (kf, length, NULL);
   g_key_file_free (kf);
@@ -166,6 +177,20 @@ gst_validate_media_info_load (const gchar * path, GError ** err)
   if (str) {
     mi->stream_info = gst_validate_stream_info_from_caps_string (str);
     g_free (str);
+  }
+
+  mi->playback_error =
+      g_key_file_get_string (kf, "playback-tests", "playback-error", NULL);
+  mi->reverse_playback_error =
+      g_key_file_get_string (kf, "playback-tests", "reverse-playback-error",
+      NULL);
+  if (mi->playback_error && strlen (mi->playback_error) == 0) {
+    g_free (mi->playback_error);
+    mi->playback_error = NULL;
+  }
+  if (mi->reverse_playback_error && strlen (mi->reverse_playback_error) == 0) {
+    g_free (mi->reverse_playback_error);
+    mi->reverse_playback_error = NULL;
   }
 
 end:
@@ -463,12 +488,11 @@ check_encoding_profile (GstValidateMediaInfo * mi, GstDiscovererInfo * info)
   return ret;
 }
 
-#if 0
-typedef gboolean (*GstElementConfigureFunc) (GstValidateFileChecker *,
-    GstElement *);
+typedef gboolean (*GstElementConfigureFunc) (GstValidateMediaInfo *,
+    GstElement *, gchar ** msg);
 static gboolean
-check_playback_scenario (GstValidateFileChecker * fc,
-    GstElementConfigureFunc configure_function, const gchar * messages_prefix)
+check_playback_scenario (GstValidateMediaInfo * mi,
+    GstElementConfigureFunc configure_function, gchar ** error_message)
 {
   GstElement *playbin;
   GstElement *videosink, *audiosink;
@@ -476,28 +500,34 @@ check_playback_scenario (GstValidateFileChecker * fc,
   GstMessage *msg;
   gboolean ret = TRUE;
 
-  playbin = gst_element_factory_make ("playbin2", "fc-playbin");
+  playbin = gst_element_factory_make ("playbin", "fc-playbin");
   videosink = gst_element_factory_make ("fakesink", "fc-videosink");
   audiosink = gst_element_factory_make ("fakesink", "fc-audiosink");
 
   if (!playbin || !videosink || !audiosink) {
+    *error_message = g_strdup ("Playbin and/or fakesink not available");
+#if 0
     GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_MISSING_PLUGIN,
-        "file check requires " "playbin2 and fakesink to be available");
+        "file check requires " "playbin and fakesink to be available");
+#endif
   }
 
   g_object_set (playbin, "video-sink", videosink, "audio-sink", audiosink,
-      "uri", fc->uri, NULL);
+      "uri", mi->uri, NULL);
 
   if (gst_element_set_state (playbin,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+#if 0
     GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_START_FAILURE,
         "Failed to " "change pipeline state to playing");
+#endif
+    *error_message = g_strdup ("Failed to change pipeline to playing");
     ret = FALSE;
     goto end;
   }
 
   if (configure_function) {
-    if (!configure_function (fc, playbin))
+    if (!configure_function (mi, playbin, error_message))
       return FALSE;
   }
 
@@ -508,14 +538,19 @@ check_playback_scenario (GstValidateFileChecker * fc,
   if (msg) {
     if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS) {
       /* all good */
+      ret = TRUE;
     } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
       GError *error = NULL;
       gchar *debug = NULL;
 
       gst_message_parse_error (msg, &error, &debug);
+      *error_message = g_strdup_printf ("Playback error: %s : %s",
+          error->message, debug);
+#if 0
       GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_ERROR,
           "%s - File %s failed " "during playback. Error: %s : %s",
           messages_prefix, fc->uri, error->message, debug);
+#endif
       g_error_free (error);
       g_free (debug);
 
@@ -525,8 +560,12 @@ check_playback_scenario (GstValidateFileChecker * fc,
     }
     gst_message_unref (msg);
   } else {
+    ret = FALSE;
+    *error_message = g_strdup ("Playback finihshed unexpectedly");
+#if 0
     GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_ERROR, "%s - "
         "File playback finished unexpectedly", messages_prefix);
+#endif
   }
   gst_object_unref (bus);
 
@@ -538,17 +577,14 @@ end:
 }
 
 static gboolean
-check_playback (GstValidateFileChecker * fc)
+check_playback (GstValidateMediaInfo * mi, gchar ** msg)
 {
-#if 0
-  if (!fc->test_playback)
-    return TRUE;
-#endif
-  return check_playback_scenario (fc, NULL, "Playback");
+  return check_playback_scenario (mi, NULL, msg);
 }
 
 static gboolean
-send_reverse_seek (GstValidateFileChecker * fc, GstElement * pipeline)
+send_reverse_seek (GstValidateMediaInfo * mi, GstElement * pipeline,
+    gchar ** msg)
 {
   gboolean ret;
 
@@ -556,22 +592,20 @@ send_reverse_seek (GstValidateFileChecker * fc, GstElement * pipeline)
       GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET, 0, GST_SEEK_TYPE_SET, -1);
 
   if (!ret) {
+    *msg = g_strdup ("Reverse playback seek failed");
+#if 0
     GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_ERROR,
         "Reverse playback seek failed");
+#endif
   }
   return ret;
 }
 
 static gboolean
-check_reverse_playback (GstValidateFileChecker * fc)
+check_reverse_playback (GstValidateMediaInfo * mi, gchar ** msg)
 {
-#if 0
-  if (!fc->test_reverse_playback)
-    return TRUE;
-#endif
-  return check_playback_scenario (fc, send_reverse_seek, "Reverse playback");
+  return check_playback_scenario (mi, send_reverse_seek, msg);
 }
-#endif
 
 gboolean
 gst_validate_media_info_inspect_uri (GstValidateMediaInfo * mi,
@@ -601,10 +635,8 @@ gst_validate_media_info_inspect_uri (GstValidateMediaInfo * mi,
   ret = check_file_duration (mi, info) & ret;
   ret = check_seekable (mi, info) & ret;
   ret = check_encoding_profile (mi, info) & ret;
-#if 0
-  ret = check_playback (mi) & ret;
-  ret = check_reverse_playback (mi) & ret;
-#endif
+  ret = check_playback (mi, &mi->playback_error) & ret;
+  ret = check_reverse_playback (mi, &mi->reverse_playback_error) & ret;
 
   gst_object_unref (discoverer);
 
