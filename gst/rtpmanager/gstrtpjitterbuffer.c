@@ -2182,7 +2182,11 @@ again:
 wait:
   {
     GST_DEBUG_OBJECT (jitterbuffer, "no buffer, going to wait");
-    return GST_FLOW_WAIT;
+    if (priv->eos)
+      result = GST_FLOW_EOS;
+    else
+      result = GST_FLOW_WAIT;
+    return result;
   }
 }
 
