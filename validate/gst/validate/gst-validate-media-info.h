@@ -28,6 +28,7 @@
 G_BEGIN_DECLS
 
 typedef struct _GstValidateMediaInfo GstValidateMediaInfo;
+typedef struct _GstValidateStreamInfo GstValidateStreamInfo;
 
 /**
  * GstValidateMediaInfo:
@@ -50,7 +51,7 @@ struct _GstValidateMediaInfo {
 
   gchar *uri;
 
-  GstDiscovererStreamInfo *stream_info;
+  GstValidateStreamInfo *stream_info;
 };
 
 void gst_validate_media_info_init (GstValidateMediaInfo * mi);

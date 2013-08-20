@@ -28,6 +28,55 @@
 
 #include <glib/gstdio.h>
 
+struct _GstValidateStreamInfo
+{
+  GstCaps *caps;
+
+  GList *children;
+};
+
+static GstValidateStreamInfo *
+gst_validate_stream_info_from_discoverer_info (GstDiscovererStreamInfo * info)
+{
+  GstValidateStreamInfo *ret = g_new0 (GstValidateStreamInfo, 1);
+
+  ret->caps = gst_discoverer_stream_info_get_caps (info);
+  if (GST_IS_DISCOVERER_CONTAINER_INFO (info)) {
+    GList *streams =
+        gst_discoverer_container_info_get_streams (GST_DISCOVERER_CONTAINER_INFO
+        (info));
+    GList *iter;
+
+    for (iter = streams; iter; iter = g_list_next (iter)) {
+      ret->children = g_list_append (ret->children,
+          gst_validate_stream_info_from_discoverer_info (iter->data));
+    }
+    gst_discoverer_stream_info_list_free (streams);
+  }
+
+  return ret;
+}
+
+static GstValidateStreamInfo *
+gst_validate_stream_info_from_caps_string (gchar * capsstr)
+{
+  GstValidateStreamInfo *ret = g_new0 (GstValidateStreamInfo, 1);
+
+  ret->caps = gst_caps_from_string (capsstr);
+
+  return ret;
+}
+
+static void
+gst_validate_stream_info_free (GstValidateStreamInfo * si)
+{
+  if (si->caps)
+    gst_caps_unref (si->caps);
+  g_list_free_full (si->children,
+      (GDestroyNotify) gst_validate_stream_info_free);
+  g_free (si);
+}
+
 void
 gst_validate_media_info_init (GstValidateMediaInfo * mi)
 {
@@ -43,7 +92,7 @@ gst_validate_media_info_clear (GstValidateMediaInfo * mi)
 {
   g_free (mi->uri);
   if (mi->stream_info)
-    gst_object_unref (mi->stream_info);
+    gst_validate_stream_info_free (mi->stream_info);
 }
 
 gchar *
@@ -51,6 +100,7 @@ gst_validate_media_info_to_string (GstValidateMediaInfo * mi, gsize * length)
 {
   GKeyFile *kf = g_key_file_new ();
   gchar *data = NULL;
+  gchar *str;
 
   /* file info */
   g_key_file_set_string (kf, "file-info", "uri", mi->uri);
@@ -59,6 +109,12 @@ gst_validate_media_info_to_string (GstValidateMediaInfo * mi, gsize * length)
   /* media info */
   g_key_file_set_uint64 (kf, "media-info", "file-duration", mi->duration);
   g_key_file_set_boolean (kf, "media-info", "seekable", mi->seekable);
+
+  if (mi->stream_info && mi->stream_info->caps) {
+    str = gst_caps_to_string (mi->stream_info->caps);
+    g_key_file_set_string (kf, "media-info", "caps", str);
+    g_free (str);
+  }
 
   data = g_key_file_to_data (kf, length, NULL);
   g_key_file_free (kf);
@@ -86,6 +142,7 @@ gst_validate_media_info_load (const gchar * path, GError ** err)
 {
   GKeyFile *kf = g_key_file_new ();
   GstValidateMediaInfo *mi;
+  gchar *str;
 
   if (!g_key_file_load_from_file (kf, path, G_KEY_FILE_NONE, err)) {
     g_key_file_free (kf);
@@ -104,6 +161,12 @@ gst_validate_media_info_load (const gchar * path, GError ** err)
 
   mi->duration = g_key_file_get_uint64 (kf, "media-info", "duration", NULL);
   mi->seekable = g_key_file_get_boolean (kf, "media-info", "seekable", NULL);
+
+  str = g_key_file_get_string (kf, "media-info", "caps", NULL);
+  if (str) {
+    mi->stream_info = gst_validate_stream_info_from_caps_string (str);
+    g_free (str);
+  }
 
 end:
   g_key_file_free (kf);
@@ -384,28 +447,23 @@ end:
   return ret;
 }
 #endif
+#endif
 
 static gboolean
-check_encoding_profile (GstValidateFileChecker * fc, GstDiscovererInfo * info)
+check_encoding_profile (GstValidateMediaInfo * mi, GstDiscovererInfo * info)
 {
   gboolean ret = TRUE;
+  GstDiscovererStreamInfo *streaminfo;
 
-  fc->results.stream_info = gst_discoverer_info_get_stream_info (info);
+  streaminfo = gst_discoverer_info_get_stream_info (info);
+  mi->stream_info = gst_validate_stream_info_from_discoverer_info (streaminfo);
 
-#if 0
-  stream = gst_discoverer_info_get_stream_info (info);
+  gst_discoverer_info_unref (streaminfo);
 
-  if (!compare_encoding_profile_with_discoverer_stream (fc, fc->profile, stream,
-          &msg)) {
-    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_PROFILE_INCORRECT, msg);
-    g_free (msg);
-  }
-
-  gst_discoverer_stream_info_unref (stream);
-#endif
   return ret;
 }
 
+#if 0
 typedef gboolean (*GstElementConfigureFunc) (GstValidateFileChecker *,
     GstElement *);
 static gboolean
@@ -542,8 +600,8 @@ gst_validate_media_info_inspect_uri (GstValidateMediaInfo * mi,
   ret = check_file_size (mi) & ret;
   ret = check_file_duration (mi, info) & ret;
   ret = check_seekable (mi, info) & ret;
-#if 0
   ret = check_encoding_profile (mi, info) & ret;
+#if 0
   ret = check_playback (mi) & ret;
   ret = check_reverse_playback (mi) & ret;
 #endif
