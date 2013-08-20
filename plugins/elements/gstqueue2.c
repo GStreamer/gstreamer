@@ -3078,6 +3078,10 @@ gst_queue2_sink_activate_mode (GstPad * pad, GstObject * parent,
         GST_DEBUG_OBJECT (queue, "deactivating push mode");
         queue->srcresult = GST_FLOW_FLUSHING;
         queue->sinkresult = GST_FLOW_FLUSHING;
+        GST_QUEUE2_SIGNAL_DEL (queue);
+        /* Unblock query handler */
+        queue->last_query = FALSE;
+        g_cond_signal (&queue->query_handled);
         GST_QUEUE2_MUTEX_UNLOCK (queue);
 
         /* wait until it is unblocked and clean up */
