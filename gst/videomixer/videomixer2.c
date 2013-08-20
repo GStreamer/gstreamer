@@ -1435,6 +1435,7 @@ gst_videomixer2_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
          * whichever happens first.
          */
         g_atomic_int_set (&mix->flush_stop_pending, TRUE);
+        g_atomic_int_set (&mix->waiting_flush_stop, FALSE);
       }
 
       GST_COLLECT_PADS_STREAM_UNLOCK (mix->collect);
@@ -1736,6 +1737,7 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
     }
     case GST_EVENT_FLUSH_START:
       g_atomic_int_set (&mix->waiting_flush_stop, TRUE);
+      g_atomic_int_set (&mix->flush_stop_pending, FALSE);
       ret = gst_collect_pads_event_default (pads, cdata, event, discard);
       event = NULL;
       break;
