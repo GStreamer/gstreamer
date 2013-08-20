@@ -817,17 +817,21 @@ gst_mpegv_parse_update_src_caps (GstMpegvParse * mpvparse)
         case 2:
           level = levels[0];
         case 5:
-          level = levels[2];
+          if (!level)
+            level = levels[2];
           profile = "4:2:2";
           break;
         case 10:
           level = levels[0];
         case 11:
-          level = levels[1];
+          if (!level)
+            level = levels[1];
         case 13:
-          level = levels[2];
+          if (!level)
+            level = levels[2];
         case 14:
-          level = levels[3];
+          if (!level)
+            level = levels[3];
           profile = "multiview";
           break;
         default:
