@@ -1413,6 +1413,11 @@ gst_queue_sink_activate_mode (GstPad * pad, GstObject * parent, GstPadMode mode,
         /* step 1, unblock chain function */
         GST_QUEUE_MUTEX_LOCK (queue);
         queue->srcresult = GST_FLOW_FLUSHING;
+        /* the item del signal will unblock */
+        g_cond_signal (&queue->item_del);
+        /* unblock query handler */
+        queue->last_query = FALSE;
+        g_cond_signal (&queue->query_handled);
         GST_QUEUE_MUTEX_UNLOCK (queue);
 
         /* step 2, wait until streaming thread stopped and flush queue */
