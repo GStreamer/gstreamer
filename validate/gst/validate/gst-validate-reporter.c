@@ -144,7 +144,6 @@ gst_validate_report_valist (GstValidateReporter * reporter,
   G_VA_COPY (vacopy, var_args);
   gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_DEBUG, __FILE__,
       GST_FUNCTION, __LINE__, NULL, combo, vacopy);
-  gst_validate_report_printf (report);
   gst_validate_report_check_abort (report);
 
   if (priv->runner) {
