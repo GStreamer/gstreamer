@@ -73,13 +73,13 @@ libgstvalidate_preload_@GST_API_VERSION@include_HEADERS =
 bin_PROGRAMS = \
 	gst-validate-@GST_API_VERSION@ \
 	gst-validate-transcoding-@GST_API_VERSION@ \
-	gst-validate-file-check-@GST_API_VERSION@
+	gst-validate-media-check-@GST_API_VERSION@
 
 AM_CFLAGS = $(GST_ALL_CFLAGS) $(GST_PBUTILS_CFLAGS)
 LDADD = $(top_builddir)/gst/validate/libgstvalidate-@GST_API_VERSION@.la $(GST_PBUTILS_LIBS) $(GST_LIBS)
 
 gst_validate_@GST_API_VERSION@_SOURCES = gst-validate.c
 gst_validate_transcoding_@GST_API_VERSION@_SOURCES = gst-validate-transcoding.c
-gst_validate_file_check_@GST_API_VERSION@_SOURCES = gst-validate-file-check.c
+gst_validate_media_check_@GST_API_VERSION@_SOURCES = gst-validate-media-check.c
 
 CLEANFILES =

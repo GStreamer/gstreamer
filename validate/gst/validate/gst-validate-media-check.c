@@ -159,7 +159,7 @@ main (int argc, gchar ** argv)
     {NULL}
   };
 
-  g_set_prgname ("gst-validate-file-check-" GST_API_VERSION);
+  g_set_prgname ("gst-validate-media-check-" GST_API_VERSION);
   ctx = g_option_context_new ("[URI]");
   g_option_context_set_summary (ctx, "Analizes a media file and writes "
       "the results to stdout or a file. Can also compare the results found "
