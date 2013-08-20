@@ -6,6 +6,7 @@ scenarios_DATA = simple_seeks.scenario \
                  simple_backward.scenario \
                  fast_forward.scenario \
                  fast_backward.scenario \
+                 alternate_fast_backward_forward.scenario \
                  pause_resume.scenario
 
 EXTRA_DIST = simple_seeks.scenario \
@@ -15,4 +16,5 @@ EXTRA_DIST = simple_seeks.scenario \
              simple_backward.scenario \
              fast_forward.scenario \
              fast_backward.scenario \
+             alternate_fast_backward_forward.scenario \
              pause_resume.scenario
