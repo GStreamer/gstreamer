@@ -2136,8 +2136,15 @@ gst_element_unlink (GstElement * src, GstElement * dest)
  * @cur: (out) (allow-none): a location in which to store the current
  *     position, or NULL.
  *
- * Queries an element for the stream position. If one repeatedly calls this
- * function one can also create and reuse it in gst_element_query().
+ * Queries an element (usually top-level pipeline or playbin element) for the
+ * stream position in nanoseconds. This will be a value between 0 and the
+ * stream duration (if the stream duration is known). This query will usually
+ * only work once the pipeline is prerolled (i.e. reached PAUSED or PLAYING
+ * state). The application will receive an ASYNC_DONE message on the pipeline
+ * bus when that is the case.
+ *
+ * If one repeatedly calls this function one can also create a query and reuse
+ * it in gst_element_query().
  *
  * Returns: TRUE if the query could be performed.
  */
@@ -2168,7 +2175,14 @@ gst_element_query_position (GstElement * element, GstFormat format,
  * @format: the #GstFormat requested
  * @duration: (out) (allow-none): A location in which to store the total duration, or NULL.
  *
- * Queries an element for the total stream duration.
+ * Queries an element (usually top-level pipeline or playbin element) for the
+ * total stream duration in nanoseconds. This query will only work once the
+ * pipeline is prerolled (i.e. reached PAUSED or PLAYING state). The application
+ * will receive an ASYNC_DONE message on the pipeline bus when that is the case.
+ *
+ * If the duration changes for some reason, you will get a DURATION_CHANGED
+ * message on the pipeline bus, in which case you should re-query the duration
+ * using this function.
  *
  * Returns: TRUE if the query could be performed.
  */
