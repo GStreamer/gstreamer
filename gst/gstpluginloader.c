@@ -586,7 +586,8 @@ put_packet (GstPluginLoader * l, guint type, guint32 tag,
   /* 4 bytes packet length */
   GST_WRITE_UINT32_BE (out + 4, payload_len);
   /* payload */
-  memcpy (out + HEADER_SIZE, payload, payload_len);
+  if (payload && payload_len)
+    memcpy (out + HEADER_SIZE, payload, payload_len);
   /* Write magic into the header */
   GST_WRITE_UINT32_BE (out + 8, HEADER_MAGIC);
 
