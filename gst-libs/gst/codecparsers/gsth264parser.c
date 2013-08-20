@@ -696,18 +696,15 @@ gst_h264_parser_parse_scaling_list (NalReader * nr,
       READ_UINT8 (nr, scaling_list_present_flag, 1);
       if (scaling_list_present_flag) {
         guint8 *scaling_list;
-        const guint8 *scan;
         guint size;
         guint j;
         guint8 last_scale, next_scale;
 
         if (i < 6) {
           scaling_list = scaling_lists_4x4[i];
-          scan = zigzag_4x4;
           size = 16;
         } else {
           scaling_list = scaling_lists_8x8[i - 6];
-          scan = zigzag_8x8;
           size = 64;
         }
 
@@ -724,7 +721,7 @@ gst_h264_parser_parse_scaling_list (NalReader * nr,
             use_default = TRUE;
             break;
           }
-          last_scale = scaling_list[scan[j]] =
+          last_scale = scaling_list[j] =
               (next_scale == 0) ? last_scale : next_scale;
         }
       } else
