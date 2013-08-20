@@ -499,6 +499,7 @@ check_playback_scenario (GstValidateMediaInfo * mi,
   GstBus *bus;
   GstMessage *msg;
   gboolean ret = TRUE;
+  GstStateChangeReturn state_ret;
 
   playbin = gst_element_factory_make ("playbin", "fc-playbin");
   videosink = gst_element_factory_make ("fakesink", "fc-videosink");
@@ -515,15 +516,28 @@ check_playback_scenario (GstValidateMediaInfo * mi,
   g_object_set (playbin, "video-sink", videosink, "audio-sink", audiosink,
       "uri", mi->uri, NULL);
 
-  if (gst_element_set_state (playbin,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+  bus = gst_pipeline_get_bus (GST_PIPELINE (playbin));
+
+  state_ret = gst_element_set_state (playbin, GST_STATE_PAUSED);
+  if (state_ret == GST_STATE_CHANGE_FAILURE) {
 #if 0
     GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_START_FAILURE,
         "Failed to " "change pipeline state to playing");
 #endif
-    *error_message = g_strdup ("Failed to change pipeline to playing");
+    *error_message = g_strdup ("Failed to change pipeline to paused");
     ret = FALSE;
     goto end;
+  } else if (state_ret == GST_STATE_CHANGE_ASYNC) {
+    msg =
+        gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+        GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+    if (msg && GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ASYNC_DONE) {
+      gst_message_unref (msg);
+    } else {
+      ret = FALSE;
+      *error_message = g_strdup ("Playback finihshed unexpectedly");
+      goto end;
+    }
   }
 
   if (configure_function) {
@@ -531,7 +545,13 @@ check_playback_scenario (GstValidateMediaInfo * mi,
       return FALSE;
   }
 
-  bus = gst_pipeline_get_bus (GST_PIPELINE (playbin));
+  if (gst_element_set_state (playbin,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+    *error_message = g_strdup ("Failed to set pipeline to playing");
+    ret = FALSE;
+    goto end;
+  }
+
   msg =
       gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
       GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
@@ -567,9 +587,9 @@ check_playback_scenario (GstValidateMediaInfo * mi,
         "File playback finished unexpectedly", messages_prefix);
 #endif
   }
-  gst_object_unref (bus);
 
 end:
+  gst_object_unref (bus);
   gst_element_set_state (playbin, GST_STATE_NULL);
   gst_object_unref (playbin);
 
