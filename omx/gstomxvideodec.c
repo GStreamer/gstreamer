@@ -3015,8 +3015,8 @@ too_large_codec_data:
   {
     gst_video_codec_frame_unref (frame);
     GST_ELEMENT_ERROR (self, STREAM, FORMAT, (NULL),
-        ("codec_data larger than supported by OpenMAX port (%zu > %u)",
-            gst_buffer_get_size (codec_data),
+        ("codec_data larger than supported by OpenMAX port "
+            "(%" G_GSIZE_FORMAT " > %u)", gst_buffer_get_size (codec_data),
             (guint) self->dec_in_port->port_def.nBufferSize));
     return GST_FLOW_ERROR;
   }

@@ -1629,7 +1629,7 @@ gst_omx_port_allocate_buffers_unlocked (GstOMXPort * port,
       OMX_ErrorBadParameter);
 
   GST_INFO_OBJECT (comp->parent,
-      "Allocating %d buffers of size %zu for %s port %u", n,
+      "Allocating %d buffers of size %" G_GSIZE_FORMAT " for %s port %u", n,
       (size_t) port->port_def.nBufferSize, comp->name, (guint) port->index);
 
   if (!port->buffers)
