@@ -201,7 +201,20 @@ gst_ivtc_fixate_caps (GstBaseTransform * trans, GstPadDirection direction,
 
   result = gst_caps_make_writable (othercaps);
   if (direction == GST_PAD_SINK) {
-    gst_caps_set_simple (result, "framerate", GST_TYPE_FRACTION, 24, 1, NULL);
+    GstVideoInfo info;
+    if (gst_video_info_from_caps (&info, caps)) {
+      /* Smarter decision */
+      GST_DEBUG_OBJECT (trans, "Input framerate is %d/%d", info.fps_n,
+          info.fps_d);
+      if (info.fps_n == 30000 && info.fps_d == 1001)
+        gst_caps_set_simple (result, "framerate", GST_TYPE_FRACTION, 24000,
+            1001, NULL);
+      else
+        gst_caps_set_simple (result, "framerate", GST_TYPE_FRACTION, 24, 1,
+            NULL);
+    } else {
+      gst_caps_set_simple (result, "framerate", GST_TYPE_FRACTION, 24, 1, NULL);
+    }
   }
 
   result = gst_caps_fixate (result);
