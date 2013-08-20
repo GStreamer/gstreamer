@@ -1873,7 +1873,6 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     }
   }
 
-
   /* we need to make the metadata writable before pushing it in the jitterbuffer
    * because the jitterbuffer will update the PTS */
   buffer = gst_buffer_make_writable (buffer);
@@ -2112,13 +2111,7 @@ out_flushing:
 
 /* Peek a buffer and compare the seqnum to the expected seqnum.
  * If all is fine, the buffer is pushed.
- * If something is wrong, a timeout is set. We set 2 kinds of timeouts:
- *   * deadline: to the ultimate time we can still push the packet. We
- *     do this for the first packet to make sure we have the previous
- *     packets.
- *   * lost: the ultimate time we can receive a packet before we have
- *     to consider it lost. We estimate this based on the packet
- *     spacing.
+ * If something is wrong, we wait for some event
  */
 static GstFlowReturn
 handle_next_buffer (GstRtpJitterBuffer * jitterbuffer)
@@ -2139,9 +2132,8 @@ handle_next_buffer (GstRtpJitterBuffer * jitterbuffer)
 again:
   /* peek a buffer, we're just looking at the sequence number.
    * If all is fine, we'll pop and push it. If the sequence number is wrong we
-   * wait on the DTS. In the chain function we will unlock the wait when a
-   * new buffer is available. The peeked buffer is valid for as long as we hold
-   * the jitterbuffer lock. */
+   * wait for a timeout or something to change.
+   * The peeked buffer is valid for as long as we hold the jitterbuffer lock. */
   outbuf = rtp_jitter_buffer_peek (priv->jbuf);
   if (outbuf == NULL)
     goto wait;
@@ -2177,6 +2169,8 @@ again:
       gst_buffer_unref (outbuf);
       goto again;
     } else {
+      /* the chain function has scheduled timers to request retransmission or
+       * when to consider the packet lost, wait for that */
       GST_DEBUG_OBJECT (jitterbuffer,
           "Sequence number GAP detected: expected %d instead of %d (%d missing)",
           next_seqnum, seqnum, gap);
@@ -2216,6 +2210,7 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   gst_pad_push_event (priv->sinkpad, event);
   JBUF_LOCK (priv);
 
+  /* calculate the timeout for the next retransmission attempt */
   timer->rtx_retry += (priv->rtx_retry_timeout * GST_MSECOND);
   if (timer->rtx_retry > (priv->rtx_retry_period * GST_MSECOND)) {
     GST_DEBUG_OBJECT (jitterbuffer, "reschedule as LOST timer");
@@ -2462,8 +2457,7 @@ flushing:
  * This funcion implements the main pushing loop on the source pad.
  *
  * It first tries to push as many buffers as possible. If there is a seqnum
- * mismatch, a timeout is created and this function goes waiting for the
- * next timeout.
+ * mismatch, we wait for the next timeouts.
  */
 static void
 gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
