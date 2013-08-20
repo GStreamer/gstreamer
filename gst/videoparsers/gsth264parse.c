@@ -1902,10 +1902,13 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
   }
 
   if (format == h264parse->format && align == h264parse->align) {
-    gst_base_parse_set_passthrough (parse, TRUE);
+    /* do not set CAPS and passthrough mode if SPS/PPS have not been parsed */
+    if (h264parse->have_sps && h264parse->have_pps) {
+      gst_base_parse_set_passthrough (parse, TRUE);
 
-    /* we did parse codec-data and might supplement src caps */
-    gst_h264_parse_update_src_caps (h264parse, caps);
+      /* we did parse codec-data and might supplement src caps */
+      gst_h264_parse_update_src_caps (h264parse, caps);
+    }
   } else if (format == GST_H264_PARSE_FORMAT_AVC) {
     /* if input != output, and input is avc, must split before anything else */
     /* arrange to insert codec-data in-stream if needed.
