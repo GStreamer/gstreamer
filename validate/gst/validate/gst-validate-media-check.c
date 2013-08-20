@@ -151,6 +151,7 @@ main (int argc, gchar ** argv)
   gchar *output_file = NULL;
   gchar *output = NULL;
   gsize outputlength;
+  gboolean ret;
 
   GOptionEntry options[] = {
     {"output-file", 'o', 0, G_OPTION_ARG_FILENAME,
@@ -188,7 +189,7 @@ main (int argc, gchar ** argv)
   g_option_context_free (ctx);
 
   gst_validate_media_info_init (&mi);
-  gst_validate_media_info_inspect_uri (&mi, argv[1], NULL);
+  ret = gst_validate_media_info_inspect_uri (&mi, argv[1], NULL);
   output = gst_validate_media_info_to_string (&mi, &outputlength);
 
   if (output_file)
@@ -198,5 +199,7 @@ main (int argc, gchar ** argv)
 
   g_print ("Media info:\n%s\n", output);
   g_free (output);
+  if (!ret)
+    return 1;
   return 0;
 }
