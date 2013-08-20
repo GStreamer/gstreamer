@@ -28,6 +28,7 @@
 #define __USE_GNU
 #include <dlfcn.h>
 
+#include "gst-validate-internal.h"
 #include "gst-validate-override-registry.h"
 
 typedef struct

@@ -37,10 +37,6 @@
 #define GST_VALIDATE_SCENARIO_SUFFIX ".xml"
 #define GST_VALIDATE_SCENARIO_DIRECTORY "qa-scenario"
 
-GST_DEBUG_CATEGORY_STATIC (gst_validate_scenario);
-#define GST_CAT_DEFAULT gst_validate_scenario
-
-
 #define DEFAULT_SEEK_TOLERANCE (0.1 * GST_SECOND)       /* tolerance seek interval
                                                            TODO make it overridable  */
 enum
@@ -651,9 +647,6 @@ static void
 gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-  GST_DEBUG_CATEGORY_INIT (gst_validate_scenario, "gstvalidatescenario",
-      GST_DEBUG_FG_MAGENTA, "gst qa scenario");
 
   g_type_class_add_private (klass, sizeof (GstValidateScenarioPrivate));
 

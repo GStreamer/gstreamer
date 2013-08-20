@@ -23,10 +23,10 @@
 #  include "config.h"
 #endif
 
+#include "gst-validate-internal.h"
 #include "gst-validate-pad-monitor.h"
 #include "gst-validate-element-monitor.h"
 #include "gst-validate-reporter.h"
-#include <gst/gst.h>
 #include <string.h>
 #include <stdarg.h>
 
@@ -37,14 +37,9 @@
  * TODO
  */
 
-GST_DEBUG_CATEGORY_STATIC (gst_validate_pad_monitor_debug);
-#define GST_CAT_DEFAULT gst_validate_pad_monitor_debug
-
-#define _do_init \
-  GST_DEBUG_CATEGORY_INIT (gst_validate_pad_monitor_debug, "qa_pad_monitor", 0, "VALIDATE PadMonitor");
 #define gst_validate_pad_monitor_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstValidatePadMonitor, gst_validate_pad_monitor,
-    GST_TYPE_VALIDATE_MONITOR, _do_init);
+G_DEFINE_TYPE (GstValidatePadMonitor, gst_validate_pad_monitor,
+    GST_TYPE_VALIDATE_MONITOR);
 
 #define PENDING_FIELDS "pending-fields"
 

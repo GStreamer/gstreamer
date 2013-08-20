@@ -25,6 +25,7 @@
 
 #include <string.h>
 
+#include "gst-validate-internal.h"
 #include "gst-validate-override.h"
 
 GstValidateOverride *

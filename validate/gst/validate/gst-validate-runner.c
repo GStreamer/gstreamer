@@ -23,6 +23,7 @@
 #  include "config.h"
 #endif
 
+#include "gst-validate-internal.h"
 #include "gst-validate-report.h"
 #include "gst-validate-monitor-factory.h"
 #include "gst-validate-override-registry.h"
@@ -35,14 +36,8 @@
  * TODO
  */
 
-GST_DEBUG_CATEGORY_STATIC (gst_validate_runner_debug);
-#define GST_CAT_DEFAULT gst_validate_runner_debug
-
-#define _do_init \
-  GST_DEBUG_CATEGORY_INIT (gst_validate_runner_debug, "qa_runner", 0, "VALIDATE Runner");
 #define gst_validate_runner_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstValidateRunner, gst_validate_runner, G_TYPE_OBJECT,
-    _do_init);
+G_DEFINE_TYPE (GstValidateRunner, gst_validate_runner, G_TYPE_OBJECT);
 
 /* signals */
 enum

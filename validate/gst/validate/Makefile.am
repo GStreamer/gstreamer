@@ -18,6 +18,7 @@ noinst_HEADERS = \
 	gst-validate-bin-monitor.h \
 	gst-validate-element-monitor.h \
 	gst-validate-i18n-lib.h \
+	gst-validate-internal.h \
 	gst-validate-monitor-factory.h \
 	gst-validate-monitor.h \
 	gst-validate-override.h \

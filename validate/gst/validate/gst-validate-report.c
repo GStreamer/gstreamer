@@ -25,6 +25,7 @@
 
 #include <string.h>
 #include "gst-validate-i18n-lib.h"
+#include "gst-validate-internal.h"
 
 #include "gst-validate-report.h"
 #include "gst-validate-reporter.h"

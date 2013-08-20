@@ -23,6 +23,7 @@
 #  include "config.h"
 #endif
 
+#include "gst-validate-internal.h"
 #include "gst-validate-element-monitor.h"
 #include "gst-validate-pad-monitor.h"
 #include "gst-validate-monitor-factory.h"
@@ -35,14 +36,9 @@
  * TODO
  */
 
-GST_DEBUG_CATEGORY_STATIC (gst_validate_element_monitor_debug);
-#define GST_CAT_DEFAULT gst_validate_element_monitor_debug
-
-#define _do_init \
-  GST_DEBUG_CATEGORY_INIT (gst_validate_element_monitor_debug, "qa_element_monitor", 0, "VALIDATE ElementMonitor");
 #define gst_validate_element_monitor_parent_class parent_class
-G_DEFINE_TYPE_WITH_CODE (GstValidateElementMonitor,
-    gst_validate_element_monitor, GST_TYPE_VALIDATE_MONITOR, _do_init);
+G_DEFINE_TYPE (GstValidateElementMonitor, gst_validate_element_monitor,
+    GST_TYPE_VALIDATE_MONITOR);
 
 static void
 gst_validate_element_monitor_wrap_pad (GstValidateElementMonitor * monitor,

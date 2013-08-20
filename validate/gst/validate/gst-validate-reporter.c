@@ -22,13 +22,11 @@
 #  include "config.h"
 #endif
 
+#include "gst-validate-internal.h"
 #include "gst-validate-reporter.h"
 #include "gst-validate-report.h"
 
 #define REPORTER_PRIVATE "gst-validate-reporter-private"
-
-GST_DEBUG_CATEGORY_STATIC (gst_validate_reporter);
-#define GST_CAT_DEFAULT gst_validate_reporter
 
 typedef struct _GstValidateReporterPrivate
 {
@@ -42,9 +40,6 @@ G_DEFINE_INTERFACE (GstValidateReporter, gst_validate_reporter, G_TYPE_OBJECT);
 static void
 gst_validate_reporter_default_init (GstValidateReporterInterface * iface)
 {
-  GST_DEBUG_CATEGORY_INIT (gst_validate_reporter, "gstvalidatereporter",
-      GST_DEBUG_FG_MAGENTA, "gst qa reporter");
-
   g_object_interface_install_property (iface,
       g_param_spec_object ("qa-runner", "VALIDATE Runner",
           "The Validate runner to " "report errors to",

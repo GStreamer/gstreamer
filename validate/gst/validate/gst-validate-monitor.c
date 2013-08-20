@@ -23,6 +23,7 @@
 #  include "config.h"
 #endif
 
+#include "gst-validate-internal.h"
 #include "gst-validate-monitor.h"
 
 /**
@@ -41,9 +42,6 @@ enum
   PROP_LAST
 };
 
-GST_DEBUG_CATEGORY_STATIC (gst_validate_monitor_debug);
-#define GST_CAT_DEFAULT gst_validate_monitor_debug
-
 static gboolean gst_validate_monitor_do_setup (GstValidateMonitor * monitor);
 static void
 gst_validate_monitor_get_property (GObject * object, guint prop_id,
@@ -60,7 +58,6 @@ static void gst_validate_monitor_intercept_report (GstValidateReporter *
     reporter, GstValidateReport * report);
 
 #define _do_init \
-  GST_DEBUG_CATEGORY_INIT (gst_validate_monitor_debug, "qa_monitor", 0, "VALIDATE Monitor");\
   G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, _reporter_iface_init)
 
 static void

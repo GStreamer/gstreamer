@@ -19,24 +19,12 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
+#ifndef __GST_VALIDATE_INTERNAL_H__
+#define __GST_VALIDATE_INTERNAL_H__
+
+#include <gst/gst.h>
+
+GST_DEBUG_CATEGORY_EXTERN (gstvalidate_debug);
+#define GST_CAT_DEFAULT gstvalidate_debug
+
 #endif
-
-#include "validate.h"
-#include "gst-validate-internal.h"
-
-GST_DEBUG_CATEGORY (gstvalidate_debug);
-
-void
-gst_validate_init (void)
-{
-  GST_DEBUG_CATEGORY_INIT (gstvalidate_debug, "validate", 0,
-      "Validation library");
-
-  /* init the report system (can be called multiple times) */
-  gst_validate_report_init ();
-
-  /* Ensure we load overrides before any use of a monitor */
-  gst_validate_override_registry_preload ();
-}
