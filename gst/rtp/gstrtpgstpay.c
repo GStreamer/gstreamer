@@ -511,14 +511,12 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
       if (gst_tag_list_get_scope (tags) == GST_TAG_SCOPE_STREAM) {
         GstTagList *old;
 
-        GST_DEBUG_OBJECT (rtpgstpay, "merging tags %" GST_PTR_FORMAT, tags);
-        old = rtpgstpay->taglist;
-        rtpgstpay->taglist = gst_tag_list_merge (rtpgstpay->taglist, tags,
-            GST_TAG_MERGE_REPLACE);
-        if (old)
+        GST_DEBUG_OBJECT (rtpgstpay, "storing stream tags %" GST_PTR_FORMAT,
+            tags);
+        if ((old = rtpgstpay->taglist))
           gst_tag_list_unref (old);
+        rtpgstpay->taglist = gst_tag_list_ref (tags);
       }
-
       etype = 1;
       break;
     }
