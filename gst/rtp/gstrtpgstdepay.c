@@ -131,6 +131,11 @@ gst_rtp_gst_depay_reset (GstRtpGSTDepay * rtpgstdepay, gboolean full)
     rtpgstdepay->current_CV = 0;
     for (i = 0; i < 8; i++)
       store_cache (rtpgstdepay, i, NULL);
+    g_free (rtpgstdepay->stream_id);
+    rtpgstdepay->stream_id = NULL;
+    if (rtpgstdepay->tags)
+      gst_tag_list_unref (rtpgstdepay->tags);
+    rtpgstdepay->tags = NULL;
   }
 }
 
@@ -315,6 +320,57 @@ unknown_event:
   }
 }
 
+static void
+store_event (GstRtpGSTDepay * rtpgstdepay, GstEvent * event)
+{
+  gboolean do_push = FALSE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:
+    {
+      GstTagList *old, *tags;
+
+      gst_event_parse_tag (event, &tags);
+
+      old = rtpgstdepay->tags;
+      if (!old || !gst_tag_list_is_equal (old, tags)) {
+        do_push = TRUE;
+        if (old)
+          gst_tag_list_unref (old);
+        rtpgstdepay->tags = gst_tag_list_ref (tags);
+      }
+      break;
+    }
+    case GST_EVENT_CUSTOM_DOWNSTREAM:
+    case GST_EVENT_CUSTOM_BOTH:
+      /* always push custom events */
+      do_push = TRUE;
+      break;
+    case GST_EVENT_STREAM_START:
+    {
+      gchar *old;
+      const gchar *stream_id = NULL;
+
+      gst_event_parse_stream_start (event, &stream_id);
+
+      old = rtpgstdepay->stream_id;
+      if (!old || g_strcmp0 (old, stream_id)) {
+        do_push = TRUE;
+        g_free (old);
+        rtpgstdepay->stream_id = g_strdup (stream_id);
+      }
+      break;
+    }
+    default:
+      /* unknown event, don't push */
+      break;
+  }
+  if (do_push)
+    gst_pad_push_event (GST_RTP_BASE_DEPAYLOAD (rtpgstdepay)->srcpad, event);
+  else
+    gst_event_unref (event);
+}
+
 static GstBuffer *
 gst_rtp_gst_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 {
@@ -402,7 +458,7 @@ gst_rtp_gst_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
       GST_DEBUG_OBJECT (rtpgstdepay,
           "inline event, length %u, %" GST_PTR_FORMAT, size, event);
 
-      gst_pad_push_event (depayload->srcpad, event);
+      store_event (rtpgstdepay, event);
 
       /* no buffer after event */
       avail = 0;

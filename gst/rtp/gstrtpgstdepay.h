@@ -47,6 +47,9 @@ struct _GstRtpGSTDepay
   GstAdapter *adapter;
   guint current_CV;
   GstCaps *CV_cache[8];
+
+  GstTagList *tags;
+  gchar *stream_id;
 };
 
 struct _GstRtpGSTDepayClass
