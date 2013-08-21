@@ -644,10 +644,11 @@ alloc_fail:
   }
 }
 
-static void
+static GstFlowReturn
 gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
 {
   GstVideoCodecFrame *frame;
+  GstFlowReturn flow_ret = GST_FLOW_OK;
   GstBuffer *outbuf;
   gint ret_size;
 
@@ -655,7 +656,7 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
 
   /* no need to empty codec if there is none */
   if (!ffmpegenc->opened)
-    return;
+    goto done;
 
   while ((frame =
           gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (ffmpegenc)))) {
@@ -701,11 +702,16 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
       if (ffmpegenc->context->coded_frame->key_frame)
         GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
 
-      gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (ffmpegenc), frame);
+      flow_ret =
+          gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (ffmpegenc), frame);
     } else {
       gst_video_codec_frame_unref (frame);
     }
   }
+
+done:
+
+  return flow_ret;
 }
 
 
@@ -817,9 +823,7 @@ gst_ffmpegvidenc_finish (GstVideoEncoder * encoder)
 {
   GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) encoder;
 
-  gst_ffmpegvidenc_flush_buffers (ffmpegenc, TRUE);
-
-  return GST_FLOW_OK;
+  return gst_ffmpegvidenc_flush_buffers (ffmpegenc, TRUE);
 }
 
 gboolean
