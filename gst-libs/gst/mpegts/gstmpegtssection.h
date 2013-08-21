@@ -157,6 +157,8 @@ struct _GstMpegTsSection
 
 
 /* PAT */
+#define GST_TYPE_MPEGTS_PAT_PROGRAM (gst_mpegts_pat_program_get_type())
+
 typedef struct _GstMpegTsPatProgram GstMpegTsPatProgram;
 /**
  * GstMpegTsPatProgram:
@@ -171,11 +173,12 @@ struct _GstMpegTsPatProgram
   guint16 network_or_program_map_PID;
 };
 
-GArray *gst_mpegts_section_get_pat (GstMpegTsSection *section);
+GPtrArray *gst_mpegts_section_get_pat (GstMpegTsSection *section);
+GType gst_mpegts_pat_program_get_type (void);
 
 /* CAT */
 
-GArray *gst_mpegts_section_get_cat (GstMpegTsSection *section);
+GPtrArray *gst_mpegts_section_get_cat (GstMpegTsSection *section);
 
 /* PMT */
 typedef struct _GstMpegTsPMTStream GstMpegTsPMTStream;
@@ -312,7 +315,7 @@ struct _GstMpegTsPMTStream
   guint8      stream_type;
   guint16     pid;
 
-  GArray     *descriptors;
+  GPtrArray     *descriptors;
 };
 
 /**
@@ -330,7 +333,7 @@ struct _GstMpegTsPMT
 {
   guint16    pcr_pid;
 
-  GArray    *descriptors;
+  GPtrArray    *descriptors;
   GPtrArray *streams;
 };
 
@@ -341,7 +344,7 @@ const GstMpegTsPMT *gst_mpegts_section_get_pmt (GstMpegTsSection *section);
 
 /* TSDT */
 
-GArray *gst_mpegts_section_get_tsdt (GstMpegTsSection *section);
+GPtrArray *gst_mpegts_section_get_tsdt (GstMpegTsSection *section);
 
 
 /* generic */

@@ -137,7 +137,7 @@ struct _GstMpegTsNITStream
   guint16  transport_stream_id;
   guint16  original_network_id;
 
-  GArray  *descriptors;
+  GPtrArray  *descriptors;
 };
 
 /**
@@ -155,7 +155,7 @@ struct _GstMpegTsNIT
 {
   gboolean   actual_network;
 
-  GArray    *descriptors;
+  GPtrArray    *descriptors;
 
   GPtrArray *streams;
 };
@@ -178,7 +178,7 @@ struct _GstMpegTsBATStream
   guint16   transport_stream_id;
   guint16   original_network_id;
 
-  GArray   *descriptors;
+  GPtrArray   *descriptors;
 };
 
 /**
@@ -190,7 +190,7 @@ struct _GstMpegTsBATStream
  */
 struct _GstMpegTsBAT
 {
-  GArray     *descriptors;
+  GPtrArray     *descriptors;
 
   GPtrArray  *streams;
 };
@@ -216,7 +216,7 @@ struct _GstMpegTsSDTService
   GstMpegTsRunningStatus running_status;
   gboolean   free_CA_mode;
 
-  GArray    *descriptors;
+  GPtrArray    *descriptors;
 };
 
 /**
@@ -260,7 +260,7 @@ struct _GstMpegTsEITEvent
   GstMpegTsRunningStatus running_status;
   gboolean     free_CA_mode;
 
-  GArray      *descriptors;
+  GPtrArray      *descriptors;
 };
 
 /**
@@ -302,7 +302,7 @@ struct _GstMpegTsTOT
 {
   GstDateTime   *utc_time;
 
-  GArray        *descriptors;
+  GPtrArray        *descriptors;
 };
 
 GType gst_mpegts_tot_get_type (void);

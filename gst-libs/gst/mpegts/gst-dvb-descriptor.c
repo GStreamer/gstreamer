@@ -67,12 +67,11 @@ gboolean
 gst_mpegts_descriptor_parse_dvb_network_name (const GstMpegTsDescriptor *
     descriptor, gchar ** name)
 {
-  g_return_val_if_fail (descriptor != NULL
-      && descriptor->descriptor_data != NULL, FALSE);
-  g_return_val_if_fail (descriptor->descriptor_tag == 0x40, FALSE);
+  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
+  g_return_val_if_fail (descriptor->tag == 0x40, FALSE);
 
-  *name = get_encoding_and_convert ((gchar *) descriptor->descriptor_data + 2,
-      descriptor->descriptor_data[1]);
+  *name = get_encoding_and_convert ((gchar *) descriptor->data + 2,
+      descriptor->data[1]);
   return TRUE;
 }
 
@@ -93,12 +92,11 @@ gst_mpegts_descriptor_parse_satellite_delivery_system (const GstMpegTsDescriptor
   guint8 *data;
   guint8 tmp;
 
-  g_return_val_if_fail (descriptor != NULL
-      && descriptor->descriptor_data != NULL, FALSE);
+  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
   g_return_val_if_fail (res != NULL, FALSE);
-  g_return_val_if_fail (descriptor->descriptor_tag == 0x43, FALSE);
+  g_return_val_if_fail (descriptor->tag == 0x43, FALSE);
 
-  data = (guint8 *) descriptor->descriptor_data + 2;
+  data = (guint8 *) descriptor->data + 2;
 
 #define BCD_UN(a) ((a) & 0x0f)
 #define BCD_DEC(a) (((a) >> 4) & 0x0f)
@@ -169,12 +167,11 @@ gst_mpegts_descriptor_parse_cable_delivery_system (const GstMpegTsDescriptor *
 {
   guint8 *data;
 
-  g_return_val_if_fail (descriptor != NULL
-      && descriptor->descriptor_data != NULL, FALSE);
+  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
   g_return_val_if_fail (res != NULL, FALSE);
-  g_return_val_if_fail (descriptor->descriptor_tag == 0x44, FALSE);
+  g_return_val_if_fail (descriptor->tag == 0x44, FALSE);
 
-  data = (guint8 *) descriptor->descriptor_data + 2;
+  data = (guint8 *) descriptor->data + 2;
   /* BCD in MHz, decimal place after the fourth character */
   res->frequency = BCD_32 (data) * 100;
   data += 5;
@@ -235,11 +232,10 @@ gst_mpegts_descriptor_parse_dvb_service (const GstMpegTsDescriptor *
 {
   guint8 *data;
 
-  g_return_val_if_fail (descriptor != NULL
-      && descriptor->descriptor_data != NULL, FALSE);
-  g_return_val_if_fail (descriptor->descriptor_tag == 0x48, FALSE);
+  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
+  g_return_val_if_fail (descriptor->tag == 0x48, FALSE);
 
-  data = (guint8 *) descriptor->descriptor_data + 2;
+  data = (guint8 *) descriptor->data + 2;
 
   if (service_type)
     *service_type = *data;
@@ -271,11 +267,10 @@ gst_mpegts_descriptor_parse_dvb_short_event (const GstMpegTsDescriptor *
 {
   guint8 *data;
 
-  g_return_val_if_fail (descriptor != NULL
-      && descriptor->descriptor_data != NULL, FALSE);
-  g_return_val_if_fail (descriptor->descriptor_tag == 0x4D, FALSE);
+  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
+  g_return_val_if_fail (descriptor->tag == 0x4D, FALSE);
 
-  data = (guint8 *) descriptor->descriptor_data + 2;
+  data = (guint8 *) descriptor->data + 2;
 
   if (language_code) {
     *language_code = g_malloc0 (4);

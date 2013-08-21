@@ -120,20 +120,18 @@ dump_iso_639_language (GstMpegTsDescriptor * desc, guint spacing)
 
 
 static void
-dump_descriptors (GArray * descriptors, guint spacing)
+dump_descriptors (GPtrArray * descriptors, guint spacing)
 {
   guint i;
 
   for (i = 0; i < descriptors->len; i++) {
-    GstMpegTsDescriptor *desc =
-        &g_array_index (descriptors, GstMpegTsDescriptor, i);
+    GstMpegTsDescriptor *desc = g_ptr_array_index (descriptors, i);
     g_printf ("%*s [descriptor 0x%02x (%s) length:%d]\n", spacing, "",
-        desc->descriptor_tag, descriptor_name (desc->descriptor_tag),
-        desc->descriptor_length);
-    switch (desc->descriptor_tag) {
+        desc->tag, descriptor_name (desc->tag), desc->length);
+    switch (desc->tag) {
       case GST_MTS_DESC_REGISTRATION:
       {
-        const guint8 *data = desc->descriptor_data + 2;
+        const guint8 *data = desc->data + 2;
 #define SAFE_CHAR(a) (g_ascii_isalnum(a) ? a : '.')
         g_printf ("%*s   Registration : %c%c%c%c\n", spacing, "",
             SAFE_CHAR (data[0]), SAFE_CHAR (data[1]),
@@ -201,14 +199,14 @@ dump_descriptors (GArray * descriptors, guint spacing)
 static void
 dump_pat (GstMpegTsSection * section)
 {
-  GArray *pat = gst_mpegts_section_get_pat (section);
+  GPtrArray *pat = gst_mpegts_section_get_pat (section);
   guint i, len;
 
   len = pat->len;
   g_printf ("   %d program(s):\n", len);
 
   for (i = 0; i < len; i++) {
-    GstMpegTsPatProgram *patp = &g_array_index (pat, GstMpegTsPatProgram, i);
+    GstMpegTsPatProgram *patp = g_ptr_array_index (pat, i);
 
     g_print
         ("     program_number:%6d (0x%04x), network_or_program_map_PID:0x%04x\n",
@@ -216,7 +214,7 @@ dump_pat (GstMpegTsSection * section)
         patp->network_or_program_map_PID);
   }
 
-  g_array_unref (pat);
+  g_ptr_array_unref (pat);
 }
 
 static void

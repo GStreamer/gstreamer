@@ -316,12 +316,27 @@ gst_message_new_mpegts_section (GstObject * parent, GstMpegTsSection * section)
   return msg;
 }
 
+static GstMpegTsPatProgram *
+_mpegts_pat_program_copy (GstMpegTsPatProgram * orig)
+{
+  return g_slice_dup (GstMpegTsPatProgram, orig);
+}
+
+static void
+_mpegts_pat_program_free (GstMpegTsPatProgram * orig)
+{
+  g_slice_free (GstMpegTsPatProgram, orig);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegTsPatProgram, gst_mpegts_pat_program,
+    (GBoxedCopyFunc) _mpegts_pat_program_copy,
+    (GFreeFunc) _mpegts_pat_program_free);
 
 /* Program Association Table */
 static gpointer
 _parse_pat (GstMpegTsSection * section)
 {
-  GArray *pat;
+  GPtrArray *pat;
   guint16 i = 0, nb_programs;
   GstMpegTsPatProgram *program;
   guint8 *data, *end;
@@ -335,16 +350,18 @@ _parse_pat (GstMpegTsSection * section)
   /* Initialize program list */
   nb_programs = (end - 4 - data) / 4;
   pat =
-      g_array_sized_new (FALSE, FALSE, sizeof (GstMpegTsPatProgram),
-      nb_programs);
+      g_ptr_array_new_full (nb_programs,
+      (GDestroyNotify) _mpegts_pat_program_free);
 
   while (data < end - 4) {
-    program = &g_array_index (pat, GstMpegTsPatProgram, i);
+    program = g_slice_new0 (GstMpegTsPatProgram);
     program->program_number = GST_READ_UINT16_BE (data);
     data += 2;
 
     program->network_or_program_map_PID = GST_READ_UINT16_BE (data) & 0x1FFF;
     data += 2;
+
+    g_ptr_array_index (pat, i) = program;
 
     i++;
   }
@@ -352,7 +369,7 @@ _parse_pat (GstMpegTsSection * section)
 
   if (data != end - 4) {
     GST_ERROR ("at the end of PAT data != end - 4");
-    g_array_unref (pat);
+    g_ptr_array_unref (pat);
 
     return NULL;
   }
@@ -375,7 +392,7 @@ _parse_pat (GstMpegTsSection * section)
  * #GstMpegTsPatProgram contained in the section, or %NULL if an error
  * happened. Release with #g_ptr_array_unref when done.
  */
-GArray *
+GPtrArray *
 gst_mpegts_section_get_pat (GstMpegTsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_PAT, NULL);
@@ -384,10 +401,10 @@ gst_mpegts_section_get_pat (GstMpegTsSection * section)
   if (!section->cached_parsed)
     section->cached_parsed =
         __common_desc_checks (section, 12, _parse_pat,
-        (GDestroyNotify) g_array_unref);
+        (GDestroyNotify) g_ptr_array_unref);
 
   if (section->cached_parsed)
-    return g_array_ref ((GArray *) section->cached_parsed);
+    return g_ptr_array_ref ((GPtrArray *) section->cached_parsed);
   return NULL;
 }
 
@@ -397,14 +414,18 @@ gst_mpegts_section_get_pat (GstMpegTsSection * section)
 static GstMpegTsPMTStream *
 _gst_mpegts_pmt_stream_copy (GstMpegTsPMTStream * pmt)
 {
-  /* FIXME : IMPLEMENT */
-  return NULL;
+  GstMpegTsPMTStream *copy;
+
+  copy = g_slice_dup (GstMpegTsPMTStream, pmt);
+  copy->descriptors = g_ptr_array_ref (pmt->descriptors);
+
+  return copy;
 }
 
 static void
 _gst_mpegts_pmt_stream_free (GstMpegTsPMTStream * pmt)
 {
-  g_array_unref (pmt->descriptors);
+  g_ptr_array_unref (pmt->descriptors);
   g_slice_free (GstMpegTsPMTStream, pmt);
 }
 
@@ -415,14 +436,19 @@ G_DEFINE_BOXED_TYPE (GstMpegTsPMTStream, gst_mpegts_pmt_stream,
 static GstMpegTsPMT *
 _gst_mpegts_pmt_copy (GstMpegTsPMT * pmt)
 {
-  /* FIXME : IMPLEMENT */
-  return NULL;
+  GstMpegTsPMT *copy;
+
+  copy = g_slice_dup (GstMpegTsPMT, pmt);
+  copy->descriptors = g_ptr_array_ref (pmt->descriptors);
+  copy->streams = g_ptr_array_ref (pmt->streams);
+
+  return copy;
 }
 
 static void
 _gst_mpegts_pmt_free (GstMpegTsPMT * pmt)
 {
-  g_array_unref (pmt->descriptors);
+  g_ptr_array_unref (pmt->descriptors);
   g_ptr_array_unref (pmt->streams);
   g_slice_free (GstMpegTsPMT, pmt);
 }
@@ -564,7 +590,7 @@ _parse_cat (GstMpegTsSection * section)
  * #GstMpegTsDescriptor contained in the section, or %NULL if an error
  * happened. Release with #g_array_unref when done.
  */
-GArray *
+GPtrArray *
 gst_mpegts_section_get_cat (GstMpegTsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_CAT, NULL);
@@ -573,10 +599,10 @@ gst_mpegts_section_get_cat (GstMpegTsSection * section)
   if (!section->cached_parsed)
     section->cached_parsed =
         __common_desc_checks (section, 12, _parse_cat,
-        (GDestroyNotify) g_array_unref);
+        (GDestroyNotify) g_ptr_array_unref);
 
   if (section->cached_parsed)
-    return g_array_ref ((GArray *) section->cached_parsed);
+    return g_ptr_array_ref ((GPtrArray *) section->cached_parsed);
   return NULL;
 }
 
@@ -591,14 +617,14 @@ gst_mpegts_section_get_cat (GstMpegTsSection * section)
  * #GstMpegTsDescriptor contained in the section, or %NULL if an error
  * happened. Release with #g_array_unref when done.
  */
-GArray *
+GPtrArray *
 gst_mpegts_section_get_tsdt (GstMpegTsSection * section)
 {
   g_return_val_if_fail (section->section_type == GST_MPEGTS_SECTION_TSDT, NULL);
   g_return_val_if_fail (section->cached_parsed || section->data, NULL);
 
   if (section->cached_parsed)
-    return g_array_ref ((GArray *) section->cached_parsed);
+    return g_ptr_array_ref ((GPtrArray *) section->cached_parsed);
 
   /* FIXME : parse TSDT */
   return NULL;

@@ -465,6 +465,27 @@ failed:
   }
 }
 
+static GstMpegTsDescriptor *
+_copy_descriptor (GstMpegTsDescriptor * desc)
+{
+  GstMpegTsDescriptor *copy;
+
+  copy = g_slice_dup (GstMpegTsDescriptor, desc);
+  copy->data = g_memdup (desc->data, desc->length + 2);
+
+  return copy;
+}
+
+static void
+_free_descriptor (GstMpegTsDescriptor * desc)
+{
+  g_free ((gpointer) desc->data);
+  g_slice_free (GstMpegTsDescriptor, desc);
+}
+
+G_DEFINE_BOXED_TYPE (GstMpegTsDescriptor, gst_mpegts_descriptor,
+    (GBoxedCopyFunc) _copy_descriptor, (GBoxedFreeFunc) _free_descriptor);
+
 /**
  * gst_mpegts_parse_descriptors:
  * @buffer: (transfer none): descriptors to parse
@@ -479,19 +500,21 @@ failed:
  * array of the parsed descriptors or %NULL if there was an error.
  * Release with #g_array_unref when done with it.
  */
-GArray *
+GPtrArray *
 gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
 {
-  GArray *res;
+  GPtrArray *res;
   guint8 length;
   guint8 *data;
   guint i, nb_desc = 0;
 
   /* fast-path */
   if (buf_len == 0)
-    return g_array_new (FALSE, FALSE, sizeof (GstMpegTsDescriptor));
+    return g_ptr_array_new ();
 
   data = buffer;
+
+  GST_MEMDUMP ("Full descriptor array", buffer, buf_len);
 
   while (data - buffer < buf_len) {
     data++;                     /* skip tag */
@@ -516,26 +539,28 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
     return NULL;
   }
 
-  res = g_array_sized_new (FALSE, FALSE, sizeof (GstMpegTsDescriptor), nb_desc);
+  res = g_ptr_array_new_full (nb_desc + 1, (GDestroyNotify) _free_descriptor);
 
   data = buffer;
 
   for (i = 0; i < nb_desc; i++) {
-    GstMpegTsDescriptor *desc = &g_array_index (res, GstMpegTsDescriptor, i);
+    GstMpegTsDescriptor *desc = g_slice_new0 (GstMpegTsDescriptor);
 
-    desc->descriptor_data = data;
-    desc->descriptor_tag = *data++;
-    desc->descriptor_length = *data++;
-    GST_LOG ("descriptor 0x%02x length:%d", desc->descriptor_tag,
-        desc->descriptor_length);
-    GST_MEMDUMP ("descriptor", desc->descriptor_data + 2,
-        desc->descriptor_length);
-    /* Adjust for extended descriptors */
-    if (G_UNLIKELY (desc->descriptor_tag == 0x7f)) {
-      desc->descriptor_tag_extension = *data++;
-      desc->descriptor_length -= 1;
-    }
-    data += desc->descriptor_length;
+    desc->data = data;
+    desc->tag = *data++;
+    desc->length = *data++;
+    /* Copy the data now that we known the size */
+    desc->data = g_memdup (desc->data, desc->length + 2);
+    GST_LOG ("descriptor 0x%02x length:%d", desc->tag, desc->length);
+    GST_MEMDUMP ("descriptor", desc->data + 2, desc->length);
+    /* extended descriptors */
+    if (G_UNLIKELY (desc->tag == 0x7f))
+      desc->tag_extension = *data;
+
+    data += desc->length;
+
+    /* Set the descriptor in the array */
+    g_ptr_array_index (res, i) = desc;
   }
 
   res->len = nb_desc;
@@ -557,7 +582,7 @@ gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len)
  * Returns: (transfer none): the first descriptor matchin @tag, else %NULL.
  */
 const GstMpegTsDescriptor *
-gst_mpegts_find_descriptor (GArray * descriptors, guint8 tag)
+gst_mpegts_find_descriptor (GPtrArray * descriptors, guint8 tag)
 {
   guint i, nb_desc;
 
@@ -565,41 +590,13 @@ gst_mpegts_find_descriptor (GArray * descriptors, guint8 tag)
 
   nb_desc = descriptors->len;
   for (i = 0; i < nb_desc; i++) {
-    GstMpegTsDescriptor *desc =
-        &g_array_index (descriptors, GstMpegTsDescriptor, i);
-    if (desc->descriptor_tag == tag)
+    GstMpegTsDescriptor *desc = g_ptr_array_index (descriptors, i);
+    if (desc->tag == tag)
       return (const GstMpegTsDescriptor *) desc;
   }
   return NULL;
 }
 
-static GstMpegTsDescriptor *
-_copy_descriptor (GstMpegTsDescriptor * desc)
-{
-  GstMpegTsDescriptor *copy;
-
-  copy = g_new0 (GstMpegTsDescriptor, 1);
-  copy->descriptor_tag = desc->descriptor_tag;
-  copy->descriptor_tag_extension = desc->descriptor_tag_extension;
-  copy->descriptor_length = desc->descriptor_length;
-  copy->descriptor_data =
-      g_memdup (desc->descriptor_data, desc->descriptor_length);
-
-  return copy;
-}
-
-/* This freefunc will only ever be used with descriptors returned by the 
- * above function. That is why we free the descriptor data (unlike the
- * descriptors created in _parse_descriptors()) */
-static void
-_free_descriptor (GstMpegTsDescriptor * desc)
-{
-  g_free ((gpointer) desc->descriptor_data);
-  g_free (desc);
-}
-
-G_DEFINE_BOXED_TYPE (GstMpegTsDescriptor, gst_mpegts_descriptor,
-    (GBoxedCopyFunc) _copy_descriptor, (GBoxedFreeFunc) _free_descriptor);
 
 /* GST_MTS_DESC_ISO_639_LANGUAGE (0x0A) */
 /**
@@ -621,14 +618,13 @@ gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *
   guint i;
   guint8 *data;
 
-  g_return_val_if_fail (descriptor != NULL
-      && descriptor->descriptor_data != NULL, FALSE);
+  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
   g_return_val_if_fail (res != NULL, FALSE);
-  g_return_val_if_fail (descriptor->descriptor_tag == 0x0A, FALSE);
+  g_return_val_if_fail (descriptor->tag == 0x0A, FALSE);
 
-  data = (guint8 *) descriptor->descriptor_data + 2;
+  data = (guint8 *) descriptor->data + 2;
   /* Each language is 3 + 1 bytes */
-  res->nb_language = descriptor->descriptor_length / 4;
+  res->nb_language = descriptor->length / 4;
   for (i = 0; i < res->nb_language; i++) {
     memcpy (res->language[i], data, 3);
     res->audio_type[i] = data[3];
@@ -654,12 +650,11 @@ gst_mpegts_descriptor_parse_logical_channel (const GstMpegTsDescriptor *
   guint i;
   guint8 *data;
 
-  g_return_val_if_fail (descriptor != NULL
-      && descriptor->descriptor_data != NULL, FALSE);
-  g_return_val_if_fail (descriptor->descriptor_tag == 0x83, FALSE);
+  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
+  g_return_val_if_fail (descriptor->tag == 0x83, FALSE);
 
-  data = (guint8 *) descriptor->descriptor_data;
-  res->nb_channels = descriptor->descriptor_length / 4;
+  data = (guint8 *) descriptor->data;
+  res->nb_channels = descriptor->length / 4;
 
   for (i = 0; i < res->nb_channels; i++) {
     res->channels[i].service_id = GST_READ_UINT16_BE (data);

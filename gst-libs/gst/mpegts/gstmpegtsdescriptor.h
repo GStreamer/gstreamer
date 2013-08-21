@@ -239,24 +239,25 @@ GType gst_mpegts_descriptor_get_type (void);
 
 /**
  * GstMpegTsDescriptor:
- * @descriptor_tag: the type of descriptor
- * @descriptor_tag_extension: the extended type (if @descriptor_tag is 0x7f)
- * @descriptor_length: the length of the descriptor content (excluding tag/length field)
- * @descriptor_data: the full descriptor data (including tag, extension, length)
+ * @tag: the type of descriptor
+ * @tag_extension: the extended type (if @descriptor_tag is 0x7f)
+ * @length: the length of the descriptor content (excluding tag/length field)
+ * @data: the full descriptor data (including tag, extension, length). The first
+ * two bytes are the @tag and @tag_extension.
  *
  * Mpeg-TS descriptor (ISO/IEC 13818-1).
  */
 struct _GstMpegTsDescriptor
 {
-  guint8 descriptor_tag;
-  guint8 descriptor_tag_extension;
-  guint8 descriptor_length;
-  const guint8 *descriptor_data;
+  guint8 tag;
+  guint8 tag_extension;
+  guint8 length;
+  const guint8 *data;
 };
 
-GArray *gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len);
+GPtrArray *gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len);
 
-const GstMpegTsDescriptor * gst_mpegts_find_descriptor (GArray *descriptors,
+const GstMpegTsDescriptor * gst_mpegts_find_descriptor (GPtrArray *descriptors,
 							guint8 tag);
 
 /* GST_MTS_DESC_ISO_639_LANGUAGE (0x0A) */

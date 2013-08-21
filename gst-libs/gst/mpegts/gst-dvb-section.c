@@ -98,8 +98,13 @@ _parse_utc_time (guint8 * data)
 static GstMpegTsEITEvent *
 _gst_mpegts_eit_event_copy (GstMpegTsEITEvent * eit)
 {
-  /* FIXME : IMPLEMENT */
-  return NULL;
+  GstMpegTsEITEvent *copy;
+
+  copy = g_slice_dup (GstMpegTsEITEvent, eit);
+  copy->start_time = gst_date_time_ref (eit->start_time);
+  copy->descriptors = g_ptr_array_ref (eit->descriptors);
+
+  return copy;
 }
 
 static void
@@ -107,7 +112,7 @@ _gst_mpegts_eit_event_free (GstMpegTsEITEvent * eit)
 {
   if (eit->start_time)
     gst_date_time_unref (eit->start_time);
-  g_array_unref (eit->descriptors);
+  g_ptr_array_unref (eit->descriptors);
   g_slice_free (GstMpegTsEITEvent, eit);
 }
 
@@ -118,8 +123,12 @@ G_DEFINE_BOXED_TYPE (GstMpegTsEITEvent, gst_mpegts_eit_event,
 static GstMpegTsEIT *
 _gst_mpegts_eit_copy (GstMpegTsEIT * eit)
 {
-  /* FIXME : IMPLEMENT */
-  return NULL;
+  GstMpegTsEIT *copy;
+
+  copy = g_slice_dup (GstMpegTsEIT, eit);
+  copy->events = g_ptr_array_ref (eit->events);
+
+  return copy;
 }
 
 static void
@@ -247,14 +256,18 @@ gst_mpegts_section_get_eit (GstMpegTsSection * section)
 static GstMpegTsBATStream *
 _gst_mpegts_bat_stream_copy (GstMpegTsBATStream * bat)
 {
-  /* FIXME : IMPLEMENT */
-  return NULL;
+  GstMpegTsBATStream *copy;
+
+  copy = g_slice_dup (GstMpegTsBATStream, bat);
+  copy->descriptors = g_ptr_array_ref (bat->descriptors);
+
+  return copy;
 }
 
 static void
 _gst_mpegts_bat_stream_free (GstMpegTsBATStream * bat)
 {
-  g_array_unref (bat->descriptors);
+  g_ptr_array_unref (bat->descriptors);
   g_slice_free (GstMpegTsBATStream, bat);
 }
 
@@ -265,14 +278,19 @@ G_DEFINE_BOXED_TYPE (GstMpegTsBATStream, gst_mpegts_bat_stream,
 static GstMpegTsBAT *
 _gst_mpegts_bat_copy (GstMpegTsBAT * bat)
 {
-  /* FIXME : IMPLEMENT */
-  return NULL;
+  GstMpegTsBAT *copy;
+
+  copy = g_slice_dup (GstMpegTsBAT, bat);
+  copy->descriptors = g_ptr_array_ref (bat->descriptors);
+  copy->streams = g_ptr_array_ref (bat->streams);
+
+  return copy;
 }
 
 static void
 _gst_mpegts_bat_free (GstMpegTsBAT * bat)
 {
-  g_array_unref (bat->descriptors);
+  g_ptr_array_unref (bat->descriptors);
   g_ptr_array_unref (bat->streams);
   g_slice_free (GstMpegTsBAT, bat);
 }
@@ -414,14 +432,18 @@ gst_mpegts_section_get_bat (GstMpegTsSection * section)
 static GstMpegTsNITStream *
 _gst_mpegts_nit_stream_copy (GstMpegTsNITStream * nit)
 {
-  /* FIXME : IMPLEMENT */
-  return NULL;
+  GstMpegTsNITStream *copy;
+
+  copy = g_slice_dup (GstMpegTsNITStream, nit);
+  copy->descriptors = g_ptr_array_ref (nit->descriptors);
+
+  return copy;
 }
 
 static void
 _gst_mpegts_nit_stream_free (GstMpegTsNITStream * nit)
 {
-  g_array_unref (nit->descriptors);
+  g_ptr_array_unref (nit->descriptors);
   g_slice_free (GstMpegTsNITStream, nit);
 }
 
@@ -432,14 +454,18 @@ G_DEFINE_BOXED_TYPE (GstMpegTsNITStream, gst_mpegts_nit_stream,
 static GstMpegTsNIT *
 _gst_mpegts_nit_copy (GstMpegTsNIT * nit)
 {
-  /* FIXME : IMPLEMENT */
-  return NULL;
+  GstMpegTsNIT *copy = g_slice_dup (GstMpegTsNIT, nit);
+
+  copy->descriptors = g_ptr_array_ref (nit->descriptors);
+  copy->streams = g_ptr_array_ref (nit->streams);
+
+  return copy;
 }
 
 static void
 _gst_mpegts_nit_free (GstMpegTsNIT * nit)
 {
-  g_array_unref (nit->descriptors);
+  g_ptr_array_unref (nit->descriptors);
   g_ptr_array_unref (nit->streams);
   g_slice_free (GstMpegTsNIT, nit);
 }
@@ -584,14 +610,17 @@ gst_mpegts_section_get_nit (GstMpegTsSection * section)
 static GstMpegTsSDTService *
 _gst_mpegts_sdt_service_copy (GstMpegTsSDTService * sdt)
 {
-  /* FIXME : IMPLEMENT */
-  return NULL;
+  GstMpegTsSDTService *copy = g_slice_dup (GstMpegTsSDTService, sdt);
+
+  copy->descriptors = g_ptr_array_ref (sdt->descriptors);
+
+  return copy;
 }
 
 static void
 _gst_mpegts_sdt_service_free (GstMpegTsSDTService * sdt)
 {
-  g_array_unref (sdt->descriptors);
+  g_ptr_array_unref (sdt->descriptors);
   g_slice_free (GstMpegTsSDTService, sdt);
 }
 
@@ -602,8 +631,11 @@ G_DEFINE_BOXED_TYPE (GstMpegTsSDTService, gst_mpegts_sdt_service,
 static GstMpegTsSDT *
 _gst_mpegts_sdt_copy (GstMpegTsSDT * sdt)
 {
-  /* FIXME : IMPLEMENT */
-  return NULL;
+  GstMpegTsSDT *copy = g_slice_dup (GstMpegTsSDT, sdt);
+
+  copy->services = g_ptr_array_ref (sdt->services);
+
+  return copy;
 }
 
 static void
@@ -769,8 +801,13 @@ gst_mpegts_section_get_tdt (GstMpegTsSection * section)
 static GstMpegTsTOT *
 _gst_mpegts_tot_copy (GstMpegTsTOT * tot)
 {
-  /* FIXME : IMPLEMENT */
-  return NULL;
+  GstMpegTsTOT *copy = g_slice_dup (GstMpegTsTOT, tot);
+
+  if (tot->utc_time)
+    copy->utc_time = gst_date_time_ref (tot->utc_time);
+  copy->descriptors = g_ptr_array_ref (tot->descriptors);
+
+  return copy;
 }
 
 static void
@@ -778,7 +815,7 @@ _gst_mpegts_tot_free (GstMpegTsTOT * tot)
 {
   if (tot->utc_time)
     gst_date_time_unref (tot->utc_time);
-  g_array_unref (tot->descriptors);
+  g_ptr_array_unref (tot->descriptors);
   g_slice_free (GstMpegTsTOT, tot);
 }
 
