@@ -12,5 +12,6 @@ prototype_HEADERS = \
 	gles2opengl.h \
 	gles3opengl.h \
 	opengl_functions.h \
-	opengl.h
+	opengl.h \
+	gstgl_compat.h
 
