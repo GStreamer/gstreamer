@@ -115,7 +115,7 @@ static GstStaticPadTemplate directsoundsink_sink_factory =
         "layout = (string) interleaved, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ]; "
         "audio/x-raw, "
-        "format = (string) S8, "
+        "format = (string) U8, "
         "layout = (string) interleaved, "
         "rate = (int) [ 1, MAX ], " "channels = (int) [ 1, 2 ];"
         "audio/x-ac3, framed = (boolean) true;"
