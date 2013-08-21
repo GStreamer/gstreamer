@@ -117,7 +117,9 @@ gst_validate_report_valist (GstValidateReporter * reporter,
     g_hash_table_insert (priv->reports, (gpointer) issue_id, report);
   }
 
-  combo = g_strdup_printf ("<%s>:%s", priv->name, format);
+  combo =
+      g_strdup_printf ("<%s> %" GST_VALIDATE_ISSUE_FORMAT " : %s", priv->name,
+      GST_VALIDATE_ISSUE_ARGS (issue), format);
   G_VA_COPY (vacopy, var_args);
   if (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
     gst_debug_log_valist (GST_CAT_DEFAULT, GST_LEVEL_ERROR, __FILE__,
