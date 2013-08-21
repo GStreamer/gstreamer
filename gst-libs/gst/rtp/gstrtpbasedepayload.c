@@ -267,7 +267,7 @@ gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
   GstClockTime pts, dts;
   guint16 seqnum;
   guint32 rtptime;
-  gboolean discont;
+  gboolean discont, buf_discont;
   gint gap;
   GstRTPBuffer rtp = { NULL };
 
@@ -281,8 +281,7 @@ gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
   if (G_UNLIKELY (!gst_rtp_buffer_map (in, GST_MAP_READ, &rtp)))
     goto invalid_buffer;
 
-  if (!priv->discont)
-    priv->discont = GST_BUFFER_IS_DISCONT (in);
+  buf_discont = GST_BUFFER_IS_DISCONT (in);
 
   pts = GST_BUFFER_PTS (in);
   dts = GST_BUFFER_DTS (in);
@@ -298,10 +297,10 @@ gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
   rtptime = gst_rtp_buffer_get_timestamp (&rtp);
   gst_rtp_buffer_unmap (&rtp);
 
-  discont = FALSE;
+  discont = buf_discont;
 
   GST_LOG_OBJECT (filter, "discont %d, seqnum %u, rtptime %u, pts %"
-      GST_TIME_FORMAT ", dts %" GST_TIME_FORMAT, priv->discont, seqnum, rtptime,
+      GST_TIME_FORMAT ", dts %" GST_TIME_FORMAT, buf_discont, seqnum, rtptime,
       GST_TIME_ARGS (pts), GST_TIME_ARGS (dts));
 
   /* Check seqnum. This is a very simple check that makes sure that the seqnums
@@ -335,13 +334,15 @@ gst_rtp_base_depayload_chain (GstPad * pad, GstObject * parent, GstBuffer * in)
   }
   priv->next_seqnum = (seqnum + 1) & 0xffff;
 
-  if (G_UNLIKELY (discont && !priv->discont)) {
-    GST_LOG_OBJECT (filter, "mark DISCONT on input buffer");
-    /* we detected a seqnum discont but the buffer was not flagged with a discont,
-     * set the discont flag so that the subclass can throw away old data. */
+  if (G_UNLIKELY (discont)) {
     priv->discont = TRUE;
-    in = gst_buffer_make_writable (in);
-    GST_BUFFER_FLAG_SET (in, GST_BUFFER_FLAG_DISCONT);
+    if (!buf_discont) {
+      /* we detected a seqnum discont but the buffer was not flagged with a discont,
+       * set the discont flag so that the subclass can throw away old data. */
+      GST_LOG_OBJECT (filter, "mark DISCONT on input buffer");
+      in = gst_buffer_make_writable (in);
+      GST_BUFFER_FLAG_SET (in, GST_BUFFER_FLAG_DISCONT);
+    }
   }
 
   bclass = GST_RTP_BASE_DEPAYLOAD_GET_CLASS (filter);
