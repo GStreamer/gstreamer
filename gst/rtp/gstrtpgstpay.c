@@ -153,17 +153,28 @@ gst_rtp_gst_pay_init (GstRtpGSTPay * rtpgstpay)
 }
 
 static void
+gst_rtp_gst_pay_reset (GstRtpGSTPay * rtpgstpay)
+{
+  rtpgstpay->last_config = GST_CLOCK_TIME_NONE;
+  gst_adapter_clear (rtpgstpay->adapter);
+  rtpgstpay->flags &= 0x70;
+  rtpgstpay->etype = 0;
+  if (rtpgstpay->pending_buffers)
+    g_list_free_full (rtpgstpay->pending_buffers,
+        (GDestroyNotify) gst_buffer_list_unref);
+  rtpgstpay->pending_buffers = NULL;
+}
+
+static void
 gst_rtp_gst_pay_finalize (GObject * obj)
 {
   GstRtpGSTPay *rtpgstpay;
 
   rtpgstpay = GST_RTP_GST_PAY (obj);
 
+  gst_rtp_gst_pay_reset (rtpgstpay);
+
   g_object_unref (rtpgstpay->adapter);
-  if (rtpgstpay->pending_buffers)
-    g_list_free_full (rtpgstpay->pending_buffers,
-        (GDestroyNotify) gst_buffer_list_unref);
-  rtpgstpay->pending_buffers = NULL;
   if (rtpgstpay->taglist)
     gst_tag_list_unref (rtpgstpay->taglist);
   rtpgstpay->taglist = NULL;
@@ -443,7 +454,7 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 {
   gboolean ret;
   GstRtpGSTPay *rtpgstpay;
-  guint etype;
+  guint etype = 0;
 
   rtpgstpay = GST_RTP_GST_PAY (payload);
 
@@ -452,6 +463,9 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
       gst_event_ref (event));
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_FLUSH_STOP:
+      gst_rtp_gst_pay_reset (rtpgstpay);
+      break;
     case GST_EVENT_TAG:{
       GstTagList *tags;
 
@@ -494,7 +508,6 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
       break;
     }
     default:
-      etype = 0;
       GST_LOG_OBJECT (rtpgstpay, "no event for %s",
           GST_EVENT_TYPE_NAME (event));
       break;
