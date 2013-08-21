@@ -52,7 +52,9 @@ struct _GstRTPRtxQueue
   GstPad *sinkpad;
   GstPad *srcpad;
 
+  GMutex lock;
   GQueue *queue;
+  GList *pending;
 };
 
 struct _GstRTPRtxQueueClass
