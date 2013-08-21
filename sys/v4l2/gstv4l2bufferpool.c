@@ -63,7 +63,8 @@ GType
 gst_v4l2_meta_api_get_type (void)
 {
   static volatile GType type;
-  static const gchar *tags[] = { "memory", NULL };
+  static const gchar *tags[] =
+      { GST_META_TAG_VIDEO_STR, GST_META_TAG_MEMORY_STR, NULL };
 
   if (g_once_init_enter (&type)) {
     GType _type = gst_meta_api_type_register ("GstV4l2MetaAPI", tags);
