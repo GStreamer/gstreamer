@@ -524,8 +524,7 @@ gst_jpegenc_handle_frame (GstVideoEncoder * encoder, GstVideoCodecFrame * frame)
 invalid_frame:
   {
     GST_WARNING_OBJECT (jpegenc, "invalid frame received");
-    gst_video_encoder_finish_frame (encoder, frame);
-    return GST_FLOW_OK;
+    return gst_video_encoder_finish_frame (encoder, frame);
   }
 }
 
