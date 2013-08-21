@@ -139,6 +139,9 @@ gst_meta_api_type_get_tags (GType api)
 
   tags = g_type_get_qdata (api, g_quark_from_string ("tags"));
 
+  if (!tags[0])
+    return NULL;
+
   return (const gchar * const *) tags;
 }
 

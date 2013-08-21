@@ -356,6 +356,9 @@ static GstFlowReturn default_prepare_output_buffer (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer ** outbuf);
 static gboolean default_copy_metadata (GstBaseTransform * trans,
     GstBuffer * inbuf, GstBuffer * outbuf);
+static gboolean
+gst_base_transform_default_transform_meta (GstBaseTransform * trans,
+    GstBuffer * inbuf, GstMeta * meta, GstBuffer * outbuf);
 
 /* static guint gst_base_transform_signals[LAST_SIGNAL] = { 0 }; */
 
@@ -407,6 +410,8 @@ gst_base_transform_class_init (GstBaseTransformClass * klass)
       GST_DEBUG_FUNCPTR (gst_base_transform_default_propose_allocation);
   klass->transform_size =
       GST_DEBUG_FUNCPTR (gst_base_transform_default_transform_size);
+  klass->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_base_transform_default_transform_meta);
 
   klass->sink_event = GST_DEBUG_FUNCPTR (gst_base_transform_sink_eventfunc);
   klass->src_event = GST_DEBUG_FUNCPTR (gst_base_transform_src_eventfunc);
@@ -542,6 +547,21 @@ gst_base_transform_transform_caps (GstBaseTransform * trans,
   GST_DEBUG_OBJECT (trans, "to: %" GST_PTR_FORMAT, ret);
 
   return ret;
+}
+
+static gboolean
+gst_base_transform_default_transform_meta (GstBaseTransform * trans,
+    GstBuffer * inbuf, GstMeta * meta, GstBuffer * outbuf)
+{
+  const GstMetaInfo *info = meta->info;
+  const gchar *const *tags;
+
+  tags = gst_meta_api_type_get_tags (info->api);
+
+  if (!tags)
+    return TRUE;
+
+  return FALSE;
 }
 
 static gboolean
@@ -1653,7 +1673,7 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
   GstBaseTransformClass *klass;
   const GstMetaInfo *info = (*meta)->info;
   GstBuffer *outbuf = data->outbuf;
-  gboolean do_copy;
+  gboolean do_copy = FALSE;
 
   klass = GST_BASE_TRANSFORM_GET_CLASS (trans);
 
@@ -1671,10 +1691,6 @@ foreach_metadata (GstBuffer * inbuf, GstMeta ** meta, gpointer user_data)
     do_copy = klass->transform_meta (trans, outbuf, *meta, inbuf);
     GST_DEBUG_OBJECT (trans, "transformed metadata %s: copy: %d",
         g_type_name (info->api), do_copy);
-  } else {
-    do_copy = FALSE;
-    GST_DEBUG_OBJECT (trans, "not copying metadata %s",
-        g_type_name (info->api));
   }
 
   /* we only copy metadata when the subclass implemented a transform_meta
