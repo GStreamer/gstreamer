@@ -171,34 +171,32 @@ cam_read_length_field (guint8 * buff, guint * length)
  */
 
 static guint
-get_ca_descriptors_length (GArray * descriptors)
+get_ca_descriptors_length (GPtrArray * descriptors)
 {
   guint i;
   guint nb_desc = descriptors->len;
   guint len = 0;
 
   for (i = 0; i < nb_desc; i++) {
-    GstMpegTsDescriptor *desc =
-        &g_array_index (descriptors, GstMpegTsDescriptor, i);
-    if (desc->descriptor_tag == 0x09)
-      len += desc->descriptor_length;
+    GstMpegTsDescriptor *desc = g_ptr_array_index (descriptors, i);
+    if (desc->tag == 0x09)
+      len += desc->length;
   }
 
   return len;
 }
 
 static guint8 *
-write_ca_descriptors (guint8 * body, GArray * descriptors)
+write_ca_descriptors (guint8 * body, GPtrArray * descriptors)
 {
   guint i, nb_desc;
 
   nb_desc = descriptors->len;
   for (i = 0; i < nb_desc; i++) {
-    GstMpegTsDescriptor *desc =
-        &g_array_index (descriptors, GstMpegTsDescriptor, i);
-    if (desc->descriptor_tag == 0x09) {
-      memcpy (body, desc->descriptor_data, desc->descriptor_length);
-      body += desc->descriptor_length;
+    GstMpegTsDescriptor *desc = g_ptr_array_index (descriptors, i);
+    if (desc->tag == 0x09) {
+      memcpy (body, desc->data, desc->length);
+      body += desc->length;
     }
   }
 
