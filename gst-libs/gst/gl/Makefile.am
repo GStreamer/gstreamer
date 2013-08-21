@@ -56,8 +56,8 @@ libgstgl_@GST_API_VERSION@_la_LIBADD += android/libgstgl-android.la
 endif
 
 if USE_EGL
-libgstgl_@GST_API_VERSION@_la_SOURCES += gstglegl.c
-noinst_HEADERS += gstglegl.h
+libgstgl_@GST_API_VERSION@_la_SOURCES += egl/gstglcontext_egl.c
+noinst_HEADERS += egl/gstglcontext_egl.h
 endif
 
 libgstgl_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl

@@ -31,7 +31,7 @@
 #include "x11/gstglcontext_glx.h"
 #endif
 #if GST_GL_HAVE_PLATFORM_EGL
-#include "gstglegl.h"
+#include "egl/gstglcontext_egl.h"
 #endif
 #if GST_GL_HAVE_PLATFORM_COCOA
 #include "cocoa/gstglcontext_cocoa.h"
