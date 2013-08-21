@@ -39,9 +39,8 @@
 G_DEFINE_TYPE (GstGLWindowAndroidEGL, gst_gl_window_android_egl,
     GST_GL_TYPE_WINDOW);
 
-static guintptr gst_gl_window_android_egl_get_gl_context (GstGLWindow * window);
-static gboolean gst_gl_window_android_egl_activate (GstGLWindow * window,
-    gboolean activate);
+static guintptr gst_gl_window_android_egl_get_window_handle (GstGLWindow *
+    window);
 static void gst_gl_window_android_egl_set_window_handle (GstGLWindow * window,
     guintptr handle);
 static void gst_gl_window_android_egl_draw (GstGLWindow * window, guint width,
@@ -51,13 +50,8 @@ static void gst_gl_window_android_egl_quit (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data);
 static void gst_gl_window_android_egl_send_message (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data);
-static void gst_gl_window_android_egl_destroy_context (GstGLWindowAndroidEGL *
-    window_egl);
-static gboolean gst_gl_window_android_egl_create_context (GstGLWindow
-    * window, GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
-static GstGLAPI gst_gl_window_android_egl_get_gl_api (GstGLWindow * window);
-static gpointer gst_gl_window_android_egl_get_proc_address (GstGLWindow *
-    window, const gchar * name);
+static gboolean gst_gl_window_android_egl_open (GstGLWindow * window,
+    GError ** error);
 static void gst_gl_window_android_egl_close (GstGLWindow * window);
 
 static void
@@ -65,12 +59,8 @@ gst_gl_window_android_egl_class_init (GstGLWindowAndroidEGLClass * klass)
 {
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
 
-  window_class->create_context =
-      GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_create_context);
-  window_class->get_gl_context =
-      GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_get_gl_context);
-  window_class->activate =
-      GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_activate);
+  window_class->get_window_handle =
+      GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_get_window_handle);
   window_class->set_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_set_window_handle);
   window_class->draw_unlocked =
@@ -80,10 +70,7 @@ gst_gl_window_android_egl_class_init (GstGLWindowAndroidEGLClass * klass)
   window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_quit);
   window_class->send_message =
       GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_send_message);
-  window_class->get_gl_api =
-      GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_get_gl_api);
-  window_class->get_proc_address =
-      GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_get_proc_address);
+  window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_open);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_close);
 }
 
@@ -107,6 +94,19 @@ gst_gl_window_android_egl_new (void)
   return window;
 }
 
+static gboolean
+gst_gl_window_android_egl_open (GstGLWindow * window, GError ** error)
+{
+  GstGLWindowAndroidEGL *window_egl;
+
+  window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
+
+  window_egl->main_context = g_main_context_new ();
+  window_egl->loop = g_main_loop_new (window_egl->main_context, FALSE);
+
+  return TRUE;
+}
+
 static void
 gst_gl_window_android_egl_close (GstGLWindow * window)
 {
@@ -114,77 +114,8 @@ gst_gl_window_android_egl_close (GstGLWindow * window)
 
   window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
 
-  gst_gl_window_android_egl_destroy_context (window_egl);
-}
-
-gboolean
-gst_gl_window_android_egl_create_context (GstGLWindow * window,
-    GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
-{
-  GstGLWindowAndroidEGL *window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
-
-  window_egl->main_context = g_main_context_new ();
-  window_egl->loop = g_main_loop_new (window_egl->main_context, FALSE);
-
-  window_egl->egl =
-      gst_gl_egl_create_context (eglGetDisplay (EGL_DEFAULT_DISPLAY),
-      window_egl->native_window, gl_api, external_gl_context, error);
-  if (!window_egl->egl)
-    goto failure;
-
-  return TRUE;
-
-failure:
-  return FALSE;
-}
-
-static void
-gst_gl_window_android_egl_destroy_context (GstGLWindowAndroidEGL * window_egl)
-{
-  gst_gl_egl_activate (window_egl->egl, FALSE);
-  gst_gl_egl_destroy_context (window_egl->egl);
-  window_egl->egl = NULL;
-
   g_main_loop_unref (window_egl->loop);
   g_main_context_unref (window_egl->main_context);
-}
-
-static gboolean
-gst_gl_window_android_egl_activate (GstGLWindow * window, gboolean activate)
-{
-  GstGLWindowAndroidEGL *window_egl;
-
-  window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
-
-  return gst_gl_egl_activate (window_egl->egl, activate);
-}
-
-static guintptr
-gst_gl_window_android_egl_get_gl_context (GstGLWindow * window)
-{
-  GstGLWindowAndroidEGL *window_egl;
-
-  window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
-
-  return gst_gl_egl_get_gl_context (window_egl->egl);
-}
-
-static GstGLAPI
-gst_gl_window_android_egl_get_gl_api (GstGLWindow * window)
-{
-  GstGLWindowAndroidEGL *window_egl;
-
-  window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
-
-  return gst_gl_egl_get_gl_api (window_egl->egl);
-}
-
-static void
-gst_gl_window_android_egl_swap_buffers (GstGLWindow * window)
-{
-  GstGLWindowAndroidEGL *window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
-
-  gst_gl_egl_swap_buffers (window_egl->egl);
 }
 
 static void
@@ -275,6 +206,14 @@ gst_gl_window_android_egl_set_window_handle (GstGLWindow * window,
   window_egl->native_window = (EGLNativeWindowType) handle;
 }
 
+static guintptr
+gst_gl_window_android_egl_get_window_handle (GstGLWindow * window)
+{
+  GstGLWindowAndroidEGL *window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
+
+  return (guintptr) window_egl->native_window;
+}
+
 struct draw
 {
   GstGLWindowAndroidEGL *window;
@@ -287,11 +226,13 @@ draw_cb (gpointer data)
   struct draw *draw_data = data;
   GstGLWindowAndroidEGL *window_egl = draw_data->window;
   GstGLWindow *window = GST_GL_WINDOW (window_egl);
+  GstGLContext *context = window->context;
+  GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (window->context);
 
   if (window->draw)
     window->draw (window->draw_data);
 
-  gst_gl_window_android_egl_swap_buffers (window);
+  context_class->swap_buffers (context);
 }
 
 static void
@@ -304,21 +245,4 @@ gst_gl_window_android_egl_draw (GstGLWindow * window, guint width, guint height)
   draw_data.height = height;
 
   gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, &draw_data);
-}
-
-static gpointer
-gst_gl_window_android_egl_get_proc_address (GstGLWindow * window,
-    const gchar * name)
-{
-  GstGLContext *context = NULL;
-  GstGLWindowAndroidEGL *window_egl;
-  gpointer result;
-
-  window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
-
-  if (!(result = gst_gl_egl_get_proc_address (window_egl->egl, name))) {
-    result = gst_gl_context_default_get_proc_address (context, name);
-  }
-
-  return result;
 }
