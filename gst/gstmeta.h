@@ -82,6 +82,14 @@ typedef enum {
 #define GST_META_FLAG_UNSET(meta,flag)         (GST_META_FLAGS (meta) &= ~(flag))
 
 /**
+ * GST_META_TAG_MEMORY_STR:
+ * This metadata stays relevant as long as memory layout is unchanged.
+ *
+ * Since: 1.2
+ */
+#define GST_META_TAG_MEMORY_STR "memory"
+
+/**
  * GstMeta:
  * @flags: extra flags for the metadata
  * @info: pointer to the #GstMetaInfo
@@ -199,7 +207,7 @@ const GstMetaInfo *  gst_meta_register          (GType api, const gchar *impl,
                                                  GstMetaFreeFunction      free_func,
                                                  GstMetaTransformFunction transform_func);
 const GstMetaInfo *  gst_meta_get_info          (const gchar * impl);
-const gchar* const* gst_meta_api_type_get_tags  (GType api);
+const gchar* const*  gst_meta_api_type_get_tags (GType api);
 
 /* some default tags */
 GST_EXPORT GQuark _gst_meta_tag_memory;

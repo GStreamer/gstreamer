@@ -282,6 +282,7 @@ GST_META_TRANSFORM_IS_COPY
 gst_meta_api_type_register
 gst_meta_api_type_has_tag
 GST_META_TAG_MEMORY
+GST_META_TAG_MEMORY_STR
 gst_meta_register
 gst_meta_get_info
 <SUBSECTION Standard>
