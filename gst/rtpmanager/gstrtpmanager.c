@@ -48,8 +48,7 @@ plugin_init (GstPlugin * plugin)
           GST_TYPE_RTP_SESSION))
     return FALSE;
 
-  if (!gst_element_register (plugin, "rtprtxqueue", GST_RANK_NONE,
-          GST_TYPE_RTP_RTX_QUEUE))
+  if (!gst_rtp_rtx_queue_plugin_init (plugin))
     return FALSE;
 
   if (!gst_element_register (plugin, "rtpssrcdemux", GST_RANK_NONE,
