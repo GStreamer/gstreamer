@@ -2364,6 +2364,7 @@ gst_rtp_session_notify_nack (RTPSession * sess, guint16 seqnum,
         seqnum++;
         blp >>= 1;
       }
+      blp >>= 1;
     }
     gst_object_unref (send_rtp_sink);
   }
