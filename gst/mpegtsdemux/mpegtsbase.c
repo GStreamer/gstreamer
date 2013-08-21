@@ -265,7 +265,7 @@ mpegts_base_finalize (GObject * object)
   MpegTSBase *base = GST_MPEGTS_BASE (object);
 
   if (base->pat) {
-    g_array_unref (base->pat);
+    g_ptr_array_unref (base->pat);
     base->pat = NULL;
   }
   g_hash_table_destroy (base->programs);
@@ -290,7 +290,7 @@ mpegts_get_descriptor_from_stream (MpegTSBaseStream * stream, guint8 tag)
 
   desc = gst_mpegts_find_descriptor (pmt->descriptors, tag);
   if (desc)
-    return desc->descriptor_data;
+    return desc->data;
   return NULL;
 }
 
@@ -335,7 +335,7 @@ mpegts_get_descriptor_from_program (MpegTSBaseProgram * program, guint8 tag)
 
   descriptor = gst_mpegts_find_descriptor (pmt->descriptors, tag);
   if (descriptor)
-    return descriptor->descriptor_data;
+    return descriptor->data;
 
   return NULL;
 }
@@ -441,17 +441,17 @@ mpegts_base_remove_program (MpegTSBase * base, gint program_number)
 }
 
 static guint32
-get_registration_from_descriptors (GArray * descriptors)
+get_registration_from_descriptors (GPtrArray * descriptors)
 {
   const GstMpegTsDescriptor *desc;
 
   if ((desc =
           gst_mpegts_find_descriptor (descriptors,
               GST_MTS_DESC_REGISTRATION))) {
-    if (G_UNLIKELY (desc->descriptor_length < 4)) {
+    if (G_UNLIKELY (desc->length < 4)) {
       GST_WARNING ("Registration descriptor with length < 4. (Corrupted ?)");
     } else
-      return GST_READ_UINT32_BE (desc->descriptor_data + 2);
+      return GST_READ_UINT32_BE (desc->data + 2);
   }
 
   return 0;
@@ -715,8 +715,8 @@ mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
 static gboolean
 mpegts_base_apply_pat (MpegTSBase * base, GstMpegTsSection * section)
 {
-  GArray *pat = gst_mpegts_section_get_pat (section);
-  GArray *old_pat;
+  GPtrArray *pat = gst_mpegts_section_get_pat (section);
+  GPtrArray *old_pat;
   MpegTSBaseProgram *program;
   gint i;
 
@@ -739,7 +739,7 @@ mpegts_base_apply_pat (MpegTSBase * base, GstMpegTsSection * section)
   GST_LOG ("Activating new Program Association Table");
   /* activate the new table */
   for (i = 0; i < pat->len; ++i) {
-    GstMpegTsPatProgram *patp = &g_array_index (pat, GstMpegTsPatProgram, i);
+    GstMpegTsPatProgram *patp = g_ptr_array_index (pat, i);
 
     program = mpegts_base_get_program (base, patp->program_number);
     if (program) {
@@ -775,8 +775,7 @@ mpegts_base_apply_pat (MpegTSBase * base, GstMpegTsSection * section)
     GST_LOG ("Deactivating old Program Association Table");
 
     for (i = 0; i < old_pat->len; ++i) {
-      GstMpegTsPatProgram *patp =
-          &g_array_index (old_pat, GstMpegTsPatProgram, i);
+      GstMpegTsPatProgram *patp = g_ptr_array_index (old_pat, i);
 
       program = mpegts_base_get_program (base, patp->program_number);
       if (G_UNLIKELY (program == NULL)) {
@@ -808,7 +807,7 @@ mpegts_base_apply_pat (MpegTSBase * base, GstMpegTsSection * section)
           patp->network_or_program_map_PID);
     }
 
-    g_array_unref (old_pat);
+    g_ptr_array_unref (old_pat);
   }
 
   return TRUE;

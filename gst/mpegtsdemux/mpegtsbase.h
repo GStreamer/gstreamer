@@ -120,7 +120,7 @@ struct _MpegTSBase {
    * accessed from the application thread and the streaming thread */
   GHashTable *programs;
 
-  GArray  *pat;
+  GPtrArray  *pat;
   MpegTSPacketizer2 *packetizer;
 
   /* arrays that say whether a pid is a known psi pid or a pes pid */
