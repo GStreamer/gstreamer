@@ -35,6 +35,7 @@ G_DEFINE_TYPE (GESVideoSource, ges_video_source, GES_TYPE_SOURCE);
 struct _GESVideoSourcePrivate
 {
   GstFramePositionner *positionner;
+  GstElement *capsfilter;
 };
 
 static void
@@ -61,8 +62,8 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   GstElement *sub_element;
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_GET_CLASS (trksrc);
   GESVideoSource *self;
-  GstElement *positionner;
-  const gchar *props[] = { "alpha", "posx", "posy", NULL };
+  GstElement *positionner, *videoscale, *capsfilter;
+  const gchar *props[] = { "alpha", "posx", "posy", "width", "height", NULL };
   GESTimelineElement *parent;
 
   if (!source_class->create_source)
@@ -76,9 +77,18 @@ ges_video_source_create_element (GESTrackElement * trksrc)
      properties, acting like a proxy for our smart-mixer dynamic pads. */
   positionner = gst_element_factory_make ("framepositionner", "frame_tagger");
 
+  videoscale =
+      gst_element_factory_make ("videoscale", "track-element-videoscale");
+  capsfilter =
+      gst_element_factory_make ("capsfilter", "track-element-capsfilter");
+
+  ges_frame_positionner_set_source_and_filter (GST_FRAME_POSITIONNER
+      (positionner), trksrc, capsfilter);
+
   ges_track_element_add_children_props (trksrc, positionner, NULL, NULL, props);
   topbin =
-      ges_source_create_topbin ("videosrcbin", sub_element, positionner, NULL);
+      ges_source_create_topbin ("videosrcbin", sub_element, positionner,
+      videoscale, capsfilter, NULL);
   parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
   if (parent) {
     self->priv->positionner = GST_FRAME_POSITIONNER (positionner);
@@ -89,6 +99,8 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   } else {
     GST_ERROR ("No parent timeline element, SHOULD NOT HAPPEN");
   }
+
+  self->priv->capsfilter = capsfilter;
 
   return topbin;
 }
@@ -112,4 +124,5 @@ ges_video_source_init (GESVideoSource * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_VIDEO_SOURCE, GESVideoSourcePrivate);
   self->priv->positionner = NULL;
+  self->priv->capsfilter = NULL;
 }

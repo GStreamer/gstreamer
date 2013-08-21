@@ -21,6 +21,8 @@
 #define _GST_FRAME_POSITIONNER_H_
 
 #include <gst/base/gstbasetransform.h>
+#include <ges/ges-track-element.h>
+#include <ges/ges-track.h>
 
 G_BEGIN_DECLS
 
@@ -38,10 +40,19 @@ struct _GstFramePositionner
 {
   GstBaseTransform base_framepositionner;
 
+  GstElement *capsfilter;
+
+  GESTrackElement *track_source;
+  GESTrack *current_track;
+
   gdouble alpha;
   gint posx;
   gint posy;
   guint zorder;
+  gint width;
+  gint height;
+  gint track_width;
+  gint track_height;
 };
 
 struct _GstFramePositionnerClass
@@ -58,6 +69,9 @@ struct _GstFramePositionnerMeta {
   guint zorder;
 };
 
+void ges_frame_positionner_set_source_and_filter (GstFramePositionner *pos,
+						  GESTrackElement *trksrc,
+						  GstElement *capsfilter);
 GType gst_frame_positionner_get_type (void);
 GType
 gst_frame_positionner_meta_api_get_type (void);

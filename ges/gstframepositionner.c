@@ -42,7 +42,9 @@ enum
   PROP_ALPHA,
   PROP_POSX,
   PROP_POSY,
-  PROP_ZORDER
+  PROP_ZORDER,
+  PROP_WIDTH,
+  PROP_HEIGHT
 };
 
 static GstStaticPadTemplate gst_frame_positionner_src_template =
@@ -63,6 +65,154 @@ G_DEFINE_TYPE (GstFramePositionner, gst_frame_positionner,
     GST_TYPE_BASE_TRANSFORM);
 
 static void
+_weak_notify_cb (GstFramePositionner * pos, GObject * old)
+{
+  pos->current_track = NULL;
+}
+
+static void
+gst_frame_positionner_update_size (GstFramePositionner * pos)
+{
+  GstCaps *size_caps;
+  gint final_width;
+  gint final_height;
+
+  if (pos->capsfilter == NULL)
+    return;
+
+  final_width = (pos->width > 0) ? pos->width : pos->track_width;
+  final_height = (pos->height > 0) ? pos->height : pos->track_height;
+
+  if (final_width == 0 && final_height == 0)
+    size_caps = gst_caps_new_empty_simple ("video/x-raw");
+  else if (final_width == 0)
+    size_caps =
+        gst_caps_new_simple ("video/x-raw", "height", G_TYPE_INT, final_height,
+        NULL);
+  else if (final_height == 0)
+    size_caps =
+        gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, final_width,
+        NULL);
+  else
+    size_caps =
+        gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
+        final_width, "height", G_TYPE_INT, final_height, NULL);
+
+  GST_DEBUG_OBJECT (pos, "updated size to : %d %d", final_width, final_height);
+
+  g_object_set (pos->capsfilter, "caps", size_caps, NULL);
+
+  g_object_notify (G_OBJECT (pos), "width");
+  g_object_notify (G_OBJECT (pos), "height");
+}
+
+static void
+sync_size_from_caps (GstFramePositionner * pos, GstCaps * caps)
+{
+  gint width, height;
+
+  width = height = 0;
+
+  if (caps && gst_caps_get_size (caps) > 0) {
+    GstStructure *structure;
+
+    structure = gst_caps_get_structure (caps, 0);
+    if (!gst_structure_get_int (structure, "width", &width))
+      width = 0;
+    if (!gst_structure_get_int (structure, "height", &height))
+      width = 0;
+  }
+
+  pos->track_width = width;
+  pos->track_height = height;
+
+  GST_DEBUG_OBJECT (pos, "syncing size from caps : %d %d", width, height);
+
+  gst_frame_positionner_update_size (pos);
+}
+
+static void
+sync_size_with_track (GstFramePositionner * pos, GESTrack * track)
+{
+  GstCaps *caps;
+
+  g_object_get (track, "restriction-caps", &caps, NULL);
+  sync_size_from_caps (pos, caps);
+}
+
+static void
+_track_restriction_changed_cb (GESTrack * track, GParamSpec * arg G_GNUC_UNUSED,
+    GstFramePositionner * pos)
+{
+  sync_size_with_track (pos, track);
+}
+
+static void
+_track_changed_cb (GESTrackElement * trksrc, GParamSpec * arg G_GNUC_UNUSED,
+    GstFramePositionner * pos)
+{
+  GESTrack *new_track;
+
+  if (pos->current_track) {
+    g_signal_handlers_disconnect_by_func (pos->current_track,
+        (GCallback) _track_restriction_changed_cb, pos);
+    g_object_weak_unref (G_OBJECT (pos->current_track),
+        (GWeakNotify) _weak_notify_cb, pos);
+  }
+
+  new_track = ges_track_element_get_track (trksrc);
+  if (new_track) {
+    pos->current_track = new_track;
+    g_object_weak_ref (G_OBJECT (new_track), (GWeakNotify) _weak_notify_cb,
+        pos);
+    GST_DEBUG_OBJECT (pos, "connecting to track : %p", pos->current_track);
+    g_signal_connect (pos->current_track, "notify::restriction-caps",
+        (GCallback) _track_restriction_changed_cb, pos);
+    sync_size_with_track (pos, pos->current_track);
+  } else
+    pos->current_track = NULL;
+}
+
+void
+ges_frame_positionner_set_source_and_filter (GstFramePositionner * pos,
+    GESTrackElement * trksrc, GstElement * capsfilter)
+{
+  pos->track_source = trksrc;
+  pos->capsfilter = capsfilter;
+  pos->current_track = ges_track_element_get_track (trksrc);
+  g_object_weak_ref (G_OBJECT (pos->current_track),
+      (GWeakNotify) _weak_notify_cb, pos);
+
+  GST_DEBUG_OBJECT (pos, "connecting to track : %p", pos->current_track);
+
+  g_signal_connect (pos->current_track, "notify::restriction-caps",
+      (GCallback) _track_restriction_changed_cb, pos);
+  g_signal_connect (trksrc, "notify::track", (GCallback) _track_changed_cb,
+      pos);
+  sync_size_with_track (pos, pos->current_track);
+}
+
+static void
+gst_frame_positionner_dispose (GObject * object)
+{
+  GstFramePositionner *pos = GST_FRAME_POSITIONNER (object);
+
+  if (pos->track_source) {
+    g_signal_handlers_disconnect_by_func (pos->track_source, _track_changed_cb,
+        pos);
+    pos->track_source = NULL;
+  }
+
+  if (pos->current_track) {
+    g_signal_handlers_disconnect_by_func (pos->current_track,
+        _track_restriction_changed_cb, pos);
+    g_object_weak_unref (G_OBJECT (pos->current_track),
+        (GWeakNotify) _weak_notify_cb, pos);
+    pos->current_track = NULL;
+  }
+}
+
+static void
 gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
 {
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
@@ -76,6 +226,7 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
 
   gobject_class->set_property = gst_frame_positionner_set_property;
   gobject_class->get_property = gst_frame_positionner_get_property;
+  gobject_class->dispose = gst_frame_positionner_dispose;
   base_transform_class->transform_ip =
       GST_DEBUG_FUNCPTR (gst_frame_positionner_transform_ip);
 
@@ -115,6 +266,26 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
       g_param_spec_uint ("zorder", "zorder", "z order of the stream",
           0, 10000, 0, G_PARAM_READWRITE));
 
+  /**
+   * gesframepositionner:width:
+   *
+   * The desired width for that source.
+   * Set to 0 if size is not mandatory, will be set to width of the current track.
+   */
+  g_object_class_install_property (gobject_class, PROP_WIDTH,
+      g_param_spec_int ("width", "width", "width of the source",
+          0, G_MAXSHORT, 0, G_PARAM_READWRITE));
+
+  /**
+   * gesframepositionner:height:
+   *
+   * The desired height for that source.
+   * Set to 0 if size is not mandatory, will be set to height of the current track.
+   */
+  g_object_class_install_property (gobject_class, PROP_HEIGHT,
+      g_param_spec_int ("height", "height", "height of the source",
+          0, G_MAXSHORT, 0, G_PARAM_READWRITE));
+
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "frame positionner", "Metadata",
       "This element provides with tagging facilities",
@@ -128,6 +299,13 @@ gst_frame_positionner_init (GstFramePositionner * framepositionner)
   framepositionner->posx = 0.0;
   framepositionner->posy = 0.0;
   framepositionner->zorder = 0;
+  framepositionner->width = 0;
+  framepositionner->height = 0;
+  framepositionner->track_width = 0;
+  framepositionner->track_height = 0;
+  framepositionner->capsfilter = NULL;
+  framepositionner->track_source = NULL;
+  framepositionner->current_track = NULL;
 }
 
 void
@@ -151,6 +329,14 @@ gst_frame_positionner_set_property (GObject * object, guint property_id,
     case PROP_ZORDER:
       framepositionner->zorder = g_value_get_uint (value);
       break;
+    case PROP_WIDTH:
+      framepositionner->width = g_value_get_int (value);
+      gst_frame_positionner_update_size (framepositionner);
+      break;
+    case PROP_HEIGHT:
+      framepositionner->height = g_value_get_int (value);
+      gst_frame_positionner_update_size (framepositionner);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -162,22 +348,31 @@ void
 gst_frame_positionner_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GstFramePositionner *framepositionner = GST_FRAME_POSITIONNER (object);
+  GstFramePositionner *pos = GST_FRAME_POSITIONNER (object);
+  gint real_width, real_height;
 
-  GST_DEBUG_OBJECT (framepositionner, "get_property");
+  GST_DEBUG_OBJECT (pos, "get_property");
 
   switch (property_id) {
     case PROP_ALPHA:
-      g_value_set_double (value, framepositionner->alpha);
+      g_value_set_double (value, pos->alpha);
       break;
     case PROP_POSX:
-      g_value_set_int (value, framepositionner->posx);
+      g_value_set_int (value, pos->posx);
       break;
     case PROP_POSY:
-      g_value_set_int (value, framepositionner->posy);
+      g_value_set_int (value, pos->posy);
       break;
     case PROP_ZORDER:
-      g_value_set_uint (value, framepositionner->zorder);
+      g_value_set_uint (value, pos->zorder);
+      break;
+    case PROP_WIDTH:
+      real_width = (pos->width > 0) ? pos->width : pos->track_width;
+      g_value_set_int (value, real_width);
+      break;
+    case PROP_HEIGHT:
+      real_height = (pos->height > 0) ? pos->height : pos->track_height;
+      g_value_set_int (value, real_height);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
