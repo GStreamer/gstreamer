@@ -257,7 +257,7 @@ typedef struct {
   guint y;
   guint w;
   guint h;
-}GstVideoRegionOfInterestMeta;;
+} GstVideoRegionOfInterestMeta;
 
 GType              gst_video_region_of_interest_meta_api_get_type (void);
 #define GST_VIDEO_REGION_OF_INTEREST_META_API_TYPE (gst_video_region_of_interest_meta_api_get_type())
