@@ -64,7 +64,10 @@ main (int argc, gchar ** argv)
   ctx = g_option_context_new ("PIPELINE-DESCRIPTION");
   g_option_context_add_main_entries (ctx, options, NULL);
   g_option_context_set_summary (ctx, "Runs a gst launch pipeline, adding "
-      "monitors to it to identify issues in the used elements");
+      "monitors to it to identify issues in the used elements. At the end"
+      " a report will be printed. To view issues as they are created, set"
+      "the env var GST_DEBUG=gstvalidatereport:2 and it will be printed "
+      "as gstreamer debugging");
 
   if (argc == 1) {
     g_print ("%s", g_option_context_get_help (ctx, FALSE, NULL));
@@ -111,10 +114,21 @@ main (int argc, gchar ** argv)
   if (gst_element_set_state (pipeline,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
     goto exit;
+
+  g_print ("Pipeline started\n");
   g_main_loop_run (mainloop);
 
   count = gst_validate_runner_get_reports_count (runner);
   g_print ("Pipeline finished, issues found: %u\n", count);
+  if (count) {
+    GSList *iter;
+    GSList *issues = gst_validate_runner_get_reports (runner);
+
+    for (iter = issues; iter; iter = g_slist_next (iter)) {
+      GstValidateReport *report = iter->data;
+      gst_validate_report_printf (report);
+    }
+  }
 
 exit:
   gst_element_set_state (pipeline, GST_STATE_NULL);

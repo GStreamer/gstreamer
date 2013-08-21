@@ -159,8 +159,8 @@ main (int argc, gchar ** argv)
           &output_file, "The output file to store the results",
         NULL},
     {"expected-results", 'e', 0, G_OPTION_ARG_FILENAME,
-          &expected_file, "The file contained the expected results (or the "
-          "last results found, for comparison)",
+          &expected_file, "Path to file containing the expected results "
+          "(or the last results found) for comparison with new results",
         NULL},
     {NULL}
   };
