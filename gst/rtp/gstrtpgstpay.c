@@ -562,24 +562,17 @@ gst_rtp_gst_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
   /* check if we need to send the caps and taglist now */
   if (rtpgstpay->config_interval > 0) {
-    GstClock *clock = gst_element_get_clock (GST_ELEMENT (basepayload));
-    GstClockTime now = GST_CLOCK_TIME_NONE;
-
-    if (clock) {
-      now = gst_clock_get_time (clock);
-      gst_object_unref (clock);
-    }
-
     GST_DEBUG_OBJECT (rtpgstpay,
-        "now %" GST_TIME_FORMAT ", last config %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (now), GST_TIME_ARGS (rtpgstpay->last_config));
-    if (now != GST_CLOCK_TIME_NONE &&
+        "timestamp %" GST_TIME_FORMAT ", last config %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (timestamp), GST_TIME_ARGS (rtpgstpay->last_config));
+
+    if (timestamp != GST_CLOCK_TIME_NONE &&
         rtpgstpay->last_config != GST_CLOCK_TIME_NONE) {
       guint64 diff;
 
       /* calculate diff between last SPS/PPS in milliseconds */
-      if (now > rtpgstpay->last_config)
-        diff = now - rtpgstpay->last_config;
+      if (timestamp > rtpgstpay->last_config)
+        diff = timestamp - rtpgstpay->last_config;
       else
         diff = 0;
 
@@ -588,9 +581,9 @@ gst_rtp_gst_pay_handle_buffer (GstRTPBasePayload * basepayload,
 
       /* bigger than interval, queue SPS/PPS */
       if (GST_TIME_AS_SECONDS (diff) >= rtpgstpay->config_interval)
-        gst_rtp_gst_pay_send_config (rtpgstpay, now);
+        gst_rtp_gst_pay_send_config (rtpgstpay, timestamp);
     } else {
-      gst_rtp_gst_pay_send_config (rtpgstpay, now);
+      gst_rtp_gst_pay_send_config (rtpgstpay, timestamp);
     }
   }
 
