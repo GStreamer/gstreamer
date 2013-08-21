@@ -505,13 +505,14 @@ gst_ts_demux_do_seek (MpegTSBase * base, GstEvent * event)
   gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
 
-  if (format != GST_FORMAT_TIME) {
-    goto done;
-  }
-
   GST_DEBUG ("seek event, rate: %f start: %" GST_TIME_FORMAT
       " stop: %" GST_TIME_FORMAT, rate, GST_TIME_ARGS (start),
       GST_TIME_ARGS (stop));
+
+  if (rate <= 0.0) {
+    GST_WARNING ("Negative rate not supported");
+    goto done;
+  }
 
   if (flags & (GST_SEEK_FLAG_SEGMENT | GST_SEEK_FLAG_SKIP)) {
     GST_WARNING ("seek flags 0x%x are not supported", (int) flags);
