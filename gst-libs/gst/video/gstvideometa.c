@@ -67,7 +67,11 @@ GType
 gst_video_meta_api_get_type (void)
 {
   static volatile GType type = 0;
-  static const gchar *tags[] = { "memory", "colorspace", "size", NULL };
+  static const gchar *tags[] =
+      { GST_META_TAG_VIDEO_STR, GST_META_TAG_MEMORY_STR,
+    GST_META_TAG_VIDEO_COLORSPACE_STR,
+    GST_META_TAG_VIDEO_SIZE_STR, NULL
+  };
 
   if (g_once_init_enter (&type)) {
     GType _type = gst_meta_api_type_register ("GstVideoMetaAPI", tags);
@@ -346,7 +350,10 @@ GType
 gst_video_crop_meta_api_get_type (void)
 {
   static volatile GType type = 0;
-  static const gchar *tags[] = { "size", "orientation", NULL };
+  static const gchar *tags[] =
+      { GST_META_TAG_VIDEO_STR, GST_META_TAG_VIDEO_SIZE_STR,
+    GST_META_TAG_VIDEO_ORIENTATION_STR, NULL
+  };
 
   if (g_once_init_enter (&type)) {
     GType _type = gst_meta_api_type_register ("GstVideoCropMetaAPI", tags);
@@ -393,7 +400,8 @@ GType
 gst_video_gl_texture_upload_meta_api_get_type (void)
 {
   static volatile GType type = 0;
-  static const gchar *tags[] = { "memory", NULL };
+  static const gchar *tags[] =
+      { GST_META_TAG_VIDEO_STR, GST_META_TAG_MEMORY_STR, NULL };
 
   if (g_once_init_enter (&type)) {
     GType _type =
@@ -535,7 +543,10 @@ GType
 gst_video_region_of_interest_meta_api_get_type (void)
 {
   static volatile GType type;
-  static const gchar *tags[] = { "orientation", " size", NULL };
+  static const gchar *tags[] =
+      { GST_META_TAG_VIDEO_STR, GST_META_TAG_VIDEO_ORIENTATION_STR,
+    GST_META_TAG_VIDEO_SIZE_STR, NULL
+  };
 
   if (g_once_init_enter (&type)) {
     GType _type =
