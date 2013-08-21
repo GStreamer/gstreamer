@@ -25,7 +25,6 @@
 #include <EGL/egl.h>
 
 #include <gst/gl/gl.h>
-#include "../gstglegl.h"
 
 G_BEGIN_DECLS
 

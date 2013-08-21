@@ -22,14 +22,14 @@
 #include "config.h"
 #endif
 
-#include "gstglegl.h"
+#include "gstglcontext_egl.h"
 #include <gst/gl/gl.h>
 
 #if GST_GL_HAVE_WINDOW_X11
-#include "x11/gstglwindow_x11.h"
+#include "../x11/gstglwindow_x11.h"
 #endif
 #if GST_GL_HAVE_WINDOW_WIN32
-#include "win32/gstglwindow_win32.h"
+#include "../win32/gstglwindow_win32.h"
 #endif
 
 static gboolean gst_gl_context_egl_create_context (GstGLContext * context,
