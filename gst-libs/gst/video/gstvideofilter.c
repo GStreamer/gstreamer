@@ -341,6 +341,24 @@ invalid_buffer:
   }
 }
 
+static gboolean
+gst_video_filter_transform_meta (GstBaseTransform * trans, GstBuffer * inbuf,
+    GstMeta * meta, GstBuffer * outbuf)
+{
+  const GstMetaInfo *info = meta->info;
+  const gchar *const *tags;
+
+  tags = gst_meta_api_type_get_tags (info->api);
+
+  if (tags && g_strv_length ((gchar **) tags) == 1
+      && gst_meta_api_type_has_tag (info->api,
+          g_quark_from_string (GST_META_TAG_VIDEO_STR)))
+    return TRUE;
+
+  return GST_BASE_TRANSFORM_CLASS (parent_class)->transform_meta (trans, inbuf,
+      meta, outbuf);
+}
+
 static void
 gst_video_filter_class_init (GstVideoFilterClass * g_class)
 {
@@ -361,6 +379,8 @@ gst_video_filter_class_init (GstVideoFilterClass * g_class)
       GST_DEBUG_FUNCPTR (gst_video_filter_get_unit_size);
   trans_class->transform = GST_DEBUG_FUNCPTR (gst_video_filter_transform);
   trans_class->transform_ip = GST_DEBUG_FUNCPTR (gst_video_filter_transform_ip);
+  trans_class->transform_meta =
+      GST_DEBUG_FUNCPTR (gst_video_filter_transform_meta);
 
   GST_DEBUG_CATEGORY_INIT (gst_video_filter_debug, "videofilter", 0,
       "videofilter");
