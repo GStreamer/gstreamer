@@ -31,6 +31,43 @@
 #include <gst/audio/gstaudioringbuffer.h>
 #include <gst/audio/gstaudiosink.h>
 
+
+#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
+# define _PULSE_FORMATS   "{ S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, " \
+                     "S24LE, S24BE, S24_32LE, S24_32BE, U8 }"
+#else
+# define _PULSE_FORMATS   "{ S16BE, S16LE, F32BE, F32LE, S32BE, S32LE, " \
+                     "S24BE, S24LE, S24_32BE, S24_32LE, U8 }"
+#endif
+
+#define _PULSE_CAPS_LINEAR \
+    "audio/x-raw, " \
+      "format = (string) " _PULSE_FORMATS ", " \
+      "layout = (string) interleaved, " \
+      "rate = (int) [ 1, MAX ], " \
+      "channels = (int) [ 1, 32 ]; "
+#define _PULSE_CAPS_ALAW \
+    "audio/x-alaw, " \
+      "rate = (int) [ 1, MAX], " \
+      "channels = (int) [ 1, 32 ]; "
+#define _PULSE_CAPS_MULAW \
+    "audio/x-mulaw, " \
+      "rate = (int) [ 1, MAX], " \
+      "channels = (int) [ 1, 32 ]; "
+
+#define _PULSE_CAPS_AC3 "audio/x-ac3, framed = (boolean) true; "
+#define _PULSE_CAPS_EAC3 "audio/x-eac3, framed = (boolean) true; "
+#define _PULSE_CAPS_DTS "audio/x-dts, framed = (boolean) true, " \
+    "block-size = (int) { 512, 1024, 2048 }; "
+#define _PULSE_CAPS_MP3 "audio/mpeg, mpegversion = (int) 1, " \
+    "mpegaudioversion = (int) [ 1, 2 ], parsed = (boolean) true;"
+
+#define _PULSE_CAPS_PCM \
+  _PULSE_CAPS_LINEAR \
+  _PULSE_CAPS_ALAW \
+  _PULSE_CAPS_MULAW
+
+
 gboolean gst_pulse_fill_sample_spec (GstAudioRingBufferSpec * spec,
     pa_sample_spec * ss);
 gboolean gst_pulse_fill_format_info (GstAudioRingBufferSpec * spec,

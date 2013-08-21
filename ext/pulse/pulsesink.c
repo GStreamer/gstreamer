@@ -2068,21 +2068,21 @@ gst_pulse_format_info_to_caps (pa_format_info * format)
       if (pa_format_info_get_prop_string (format,
               PA_PROP_FORMAT_SAMPLE_FORMAT, &tmp)) {
         /* No specific sample format means any sample format */
-        ret = gst_caps_from_string (_PULSE_SINK_CAPS_PCM);
+        ret = gst_caps_from_string (_PULSE_CAPS_PCM);
         goto out;
 
       } else if (ss.format == PA_SAMPLE_ALAW) {
-        ret = gst_caps_from_string (_PULSE_SINK_CAPS_ALAW);
+        ret = gst_caps_from_string (_PULSE_CAPS_ALAW);
 
       } else if (ss.format == PA_SAMPLE_ULAW) {
-        ret = gst_caps_from_string (_PULSE_SINK_CAPS_MP3);
+        ret = gst_caps_from_string (_PULSE_CAPS_MP3);
 
       } else {
         /* Linear PCM format */
         const char *sformat =
             gst_pulse_sample_format_to_caps_format (ss.format);
 
-        ret = gst_caps_from_string (_PULSE_SINK_CAPS_LINEAR);
+        ret = gst_caps_from_string (_PULSE_CAPS_LINEAR);
 
         if (sformat)
           gst_caps_set_simple (ret, "format", G_TYPE_STRING, NULL);
@@ -2093,19 +2093,19 @@ gst_pulse_format_info_to_caps (pa_format_info * format)
     }
 
     case PA_ENCODING_AC3_IEC61937:
-      ret = gst_caps_from_string (_PULSE_SINK_CAPS_AC3);
+      ret = gst_caps_from_string (_PULSE_CAPS_AC3);
       break;
 
     case PA_ENCODING_EAC3_IEC61937:
-      ret = gst_caps_from_string (_PULSE_SINK_CAPS_EAC3);
+      ret = gst_caps_from_string (_PULSE_CAPS_EAC3);
       break;
 
     case PA_ENCODING_DTS_IEC61937:
-      ret = gst_caps_from_string (_PULSE_SINK_CAPS_DTS);
+      ret = gst_caps_from_string (_PULSE_CAPS_DTS);
       break;
 
     case PA_ENCODING_MPEG_IEC61937:
-      ret = gst_caps_from_string (_PULSE_SINK_CAPS_MP3);
+      ret = gst_caps_from_string (_PULSE_CAPS_MP3);
       break;
 
     default:

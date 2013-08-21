@@ -107,27 +107,11 @@ static GstStateChangeReturn gst_pulsesrc_change_state (GstElement *
 
 static GstClockTime gst_pulsesrc_get_time (GstClock * clock, GstPulseSrc * src);
 
-#if (G_BYTE_ORDER == G_LITTLE_ENDIAN)
-# define FORMATS "{ S16LE, S16BE, F32LE, F32BE, S32LE, S32BE, U8 }"
-#else
-# define FORMATS "{ S16BE, S16LE, F32BE, F32LE, S32BE, S32LE, U8 }"
-#endif
-
 static GstStaticPadTemplate pad_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-raw, "
-        "format = (string) " FORMATS ", "
-        "layout = (string) interleaved, "
-        "rate = (int) [ 1, MAX ], "
-        "channels = (int) [ 1, 32 ];"
-        "audio/x-alaw, "
-        "rate = (int) [ 1, MAX], "
-        "channels = (int) [ 1, 32 ];"
-        "audio/x-mulaw, "
-        "rate = (int) [ 1, MAX], " "channels = (int) [ 1, 32 ]")
+    GST_STATIC_CAPS (_PULSE_CAPS_PCM)
     );
-
 
 #define gst_pulsesrc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstPulseSrc, gst_pulsesrc, GST_TYPE_AUDIO_SRC,
