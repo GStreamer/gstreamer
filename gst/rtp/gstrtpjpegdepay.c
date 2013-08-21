@@ -514,6 +514,7 @@ gst_rtp_jpeg_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   rtpjpegdepay = GST_RTP_JPEG_DEPAY (depayload);
 
   if (GST_BUFFER_IS_DISCONT (buf)) {
+    GST_DEBUG_OBJECT (depayload, "DISCONT, reset adapter");
     gst_adapter_clear (rtpjpegdepay->adapter);
     rtpjpegdepay->discont = TRUE;
   }
