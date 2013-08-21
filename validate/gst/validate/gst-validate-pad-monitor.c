@@ -1514,16 +1514,10 @@ static GstPadProbeReturn
 gst_validate_pad_monitor_pad_probe (GstPad * pad, GstPadProbeInfo * info,
     gpointer udata)
 {
-  switch (info->type) {
-    case GST_PAD_PROBE_TYPE_BUFFER:
-      gst_validate_pad_monitor_buffer_probe (pad, info->data, udata);
-      break;
-    case GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM:
-      gst_validate_pad_monitor_event_probe (pad, info->data, udata);
-      break;
-    default:
-      break;
-  }
+  if (info->type & GST_PAD_PROBE_TYPE_BUFFER)
+    gst_validate_pad_monitor_buffer_probe (pad, info->data, udata);
+  else if (info->type & GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM)
+    gst_validate_pad_monitor_event_probe (pad, info->data, udata);
 
   return GST_PAD_PROBE_OK;
 }
