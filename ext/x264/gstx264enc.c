@@ -1405,7 +1405,11 @@ gst_x264_enc_set_profile_and_level (GstX264Enc * encoder, GstCaps * caps)
   int header_return;
   gint sps_ni = 0;
   guint8 *sps;
-
+  GstStructure *s;
+  const gchar *profile;
+  GstCaps *allowed_caps;
+  GstStructure *s2;
+  const gchar *allowed_profile;
 
   header_return = x264_encoder_headers (encoder->x264enc, &nal, &i_nal);
   if (header_return < 0) {
@@ -1423,6 +1427,37 @@ gst_x264_enc_set_profile_and_level (GstX264Enc * encoder, GstCaps * caps)
   sps++;
 
   gst_codec_utils_h264_caps_set_level_and_profile (caps, sps, 3);
+
+  /* Constrained baseline is a strict subset of baseline. If downstream
+   * wanted baseline and we produced constrained baseline, we can just
+   * set the profile to baseline in the caps to make negotiation happy.
+   * Same goes for baseline as subset of main profile and main as a subset
+   * of high profile.
+   */
+  s = gst_caps_get_structure (caps, 0);
+  profile = gst_structure_get_string (s, "profile");
+
+  allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
+  if (!gst_caps_can_intersect (allowed_caps, caps)) {
+    allowed_caps = gst_caps_make_writable (allowed_caps);
+    allowed_caps = gst_caps_truncate (allowed_caps);
+    s2 = gst_caps_get_structure (allowed_caps, 0);
+    gst_structure_fixate_field_string (s2, "profile", profile);
+    allowed_profile = gst_structure_get_string (s2, "profile");
+    if (!strcmp (allowed_profile, "high")) {
+      if (!strcmp (profile, "constrained-baseline")
+          || !strcmp (profile, "baseline") || !strcmp (profile, "main"))
+        gst_structure_set (s, "profile", G_TYPE_STRING, "high", NULL);
+    } else if (!strcmp (allowed_profile, "main")) {
+      if (!strcmp (profile, "constrained-baseline")
+          || !strcmp (profile, "baseline"))
+        gst_structure_set (s, "profile", G_TYPE_STRING, "main", NULL);
+    } else if (!strcmp (allowed_profile, "baseline")) {
+      if (!strcmp (profile, "constrained-baseline"))
+        gst_structure_set (s, "profile", G_TYPE_STRING, "baseline", NULL);
+    }
+  }
+  gst_caps_unref (allowed_caps);
 
   return TRUE;
 }
