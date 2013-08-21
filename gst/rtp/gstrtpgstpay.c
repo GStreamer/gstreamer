@@ -87,6 +87,8 @@ static void gst_rtp_gst_pay_set_property (GObject * object, guint prop_id,
 static void gst_rtp_gst_pay_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_rtp_gst_pay_finalize (GObject * obj);
+static GstStateChangeReturn gst_rtp_gst_pay_change_state (GstElement * element,
+    GstStateChange transition);
 
 static gboolean gst_rtp_gst_pay_setcaps (GstRTPBasePayload * payload,
     GstCaps * caps);
@@ -122,6 +124,8 @@ gst_rtp_gst_pay_class_init (GstRtpGSTPayClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS)
       );
 
+  gstelement_class->change_state = gst_rtp_gst_pay_change_state;
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_rtp_gst_pay_src_template));
   gst_element_class_add_pad_template (gstelement_class,
@@ -153,7 +157,7 @@ gst_rtp_gst_pay_init (GstRtpGSTPay * rtpgstpay)
 }
 
 static void
-gst_rtp_gst_pay_reset (GstRtpGSTPay * rtpgstpay)
+gst_rtp_gst_pay_reset (GstRtpGSTPay * rtpgstpay, gboolean full)
 {
   rtpgstpay->last_config = GST_CLOCK_TIME_NONE;
   gst_adapter_clear (rtpgstpay->adapter);
@@ -163,6 +167,16 @@ gst_rtp_gst_pay_reset (GstRtpGSTPay * rtpgstpay)
     g_list_free_full (rtpgstpay->pending_buffers,
         (GDestroyNotify) gst_buffer_list_unref);
   rtpgstpay->pending_buffers = NULL;
+  if (full) {
+    if (rtpgstpay->taglist)
+      gst_tag_list_unref (rtpgstpay->taglist);
+    rtpgstpay->taglist = NULL;
+    if (rtpgstpay->stream_id)
+      g_free (rtpgstpay->stream_id);
+    rtpgstpay->stream_id = NULL;
+    rtpgstpay->current_CV = 0;
+    rtpgstpay->next_CV = 0;
+  }
 }
 
 static void
@@ -172,15 +186,9 @@ gst_rtp_gst_pay_finalize (GObject * obj)
 
   rtpgstpay = GST_RTP_GST_PAY (obj);
 
-  gst_rtp_gst_pay_reset (rtpgstpay);
+  gst_rtp_gst_pay_reset (rtpgstpay, TRUE);
 
   g_object_unref (rtpgstpay->adapter);
-  if (rtpgstpay->taglist)
-    gst_tag_list_unref (rtpgstpay->taglist);
-  rtpgstpay->taglist = NULL;
-  if (rtpgstpay->stream_id)
-    g_free (rtpgstpay->stream_id);
-  rtpgstpay->stream_id = NULL;
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }
@@ -220,6 +228,35 @@ gst_rtp_gst_pay_get_property (GObject * object, guint prop_id,
       break;
   }
 }
+
+static GstStateChangeReturn
+gst_rtp_gst_pay_change_state (GstElement * element, GstStateChange transition)
+{
+  GstRtpGSTPay *rtpgstpay;
+  GstStateChangeReturn ret;
+
+  rtpgstpay = GST_RTP_GST_PAY (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_READY_TO_PAUSED:
+      gst_rtp_gst_pay_reset (rtpgstpay, TRUE);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_rtp_gst_pay_reset (rtpgstpay, TRUE);
+      break;
+    default:
+      break;
+  }
+  return ret;
+}
+
 
 static gboolean
 gst_rtp_gst_pay_create_from_adapter (GstRtpGSTPay * rtpgstpay,
@@ -464,7 +501,7 @@ gst_rtp_gst_pay_sink_event (GstRTPBasePayload * payload, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
-      gst_rtp_gst_pay_reset (rtpgstpay);
+      gst_rtp_gst_pay_reset (rtpgstpay, FALSE);
       break;
     case GST_EVENT_TAG:{
       GstTagList *tags;
