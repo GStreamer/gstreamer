@@ -48,15 +48,20 @@ typedef struct
 
   gboolean buffering;
   gboolean is_live;
+
+  /* configuration */
+  gboolean gapless;
 } GstPlay;
 
 static gboolean play_bus_msg (GstBus * bus, GstMessage * msg, gpointer data);
 static gboolean play_next (GstPlay * play);
 static gboolean play_timeout (gpointer user_data);
+static void play_about_to_finish (GstElement * playbin, gpointer user_data);
 static void play_reset (GstPlay * play);
 
 static GstPlay *
-play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink)
+play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
+    gboolean gapless)
 {
   GstElement *sink;
   GstPlay *play;
@@ -95,6 +100,12 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink)
   play->missing = NULL;
   play->buffering = FALSE;
   play->is_live = FALSE;
+
+  play->gapless = gapless;
+  if (gapless) {
+    g_signal_connect (play->playbin, "about-to-finish",
+        G_CALLBACK (play_about_to_finish), play);
+  }
 
   return play;
 }
@@ -283,6 +294,23 @@ play_timeout (gpointer user_data)
   return TRUE;
 }
 
+static gchar *
+play_uri_get_display_name (GstPlay * play, const gchar * uri)
+{
+  gchar *loc;
+
+  if (gst_uri_has_protocol (uri, "file")) {
+    loc = g_filename_from_uri (uri, NULL, NULL);
+  } else if (gst_uri_has_protocol (uri, "pushfile")) {
+    loc = g_filename_from_uri (uri + 4, NULL, NULL);
+  } else {
+    loc = g_strdup (uri);
+  }
+
+  /* Maybe additionally use glib's filename to display name function */
+  return loc;
+}
+
 /* returns FALSE if we have reached the end of the playlist */
 static gboolean
 play_next (GstPlay * play)
@@ -298,13 +326,7 @@ play_next (GstPlay * play)
   play_reset (play);
 
   next_uri = play->uris[play->cur_idx];
-  if (gst_uri_has_protocol (next_uri, "file")) {
-    loc = g_filename_from_uri (next_uri, NULL, NULL);
-  } else if (gst_uri_has_protocol (next_uri, "pushfile")) {
-    loc = g_filename_from_uri (next_uri + 4, NULL, NULL);
-  } else {
-    loc = g_strdup (next_uri);
-  }
+  loc = play_uri_get_display_name (play, next_uri);
   g_print ("Now playing %s\n", loc);
   g_free (loc);
 
@@ -327,6 +349,29 @@ play_next (GstPlay * play)
   }
 
   return TRUE;
+}
+
+static void
+play_about_to_finish (GstElement * playbin, gpointer user_data)
+{
+  GstPlay *play = user_data;
+  const gchar *next_uri;
+  gchar *loc;
+  guint next_idx;
+
+  if (!play->gapless)
+    return;
+
+  next_idx = play->cur_idx + 1;
+  if (next_idx >= play->num_uris)
+    return;
+
+  next_uri = play->uris[next_idx];
+  loc = play_uri_get_display_name (play, next_uri);
+  g_print ("About to finish, preparing next title: %s\n", loc);
+  g_free (loc);
+
+  g_object_set (play->playbin, "uri", next_uri, NULL);
 }
 
 static void
@@ -384,6 +429,7 @@ main (int argc, char **argv)
   GstPlay *play;
   GPtrArray *playlist;
   gboolean print_version = FALSE;
+  gboolean gapless = FALSE;
   gchar **filenames = NULL;
   gchar *audio_sink = NULL;
   gchar *video_sink = NULL;
@@ -398,6 +444,8 @@ main (int argc, char **argv)
         N_("Video sink to use (default is autovideosink)"), NULL},
     {"audiosink", 0, 0, G_OPTION_ARG_STRING, &audio_sink,
         N_("Audio sink to use (default is autoaudiosink)"), NULL},
+    {"gapless", 0, 0, G_OPTION_ARG_NONE, &gapless,
+        N_("Enable gapless playback"), NULL},
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL},
     {NULL}
   };
@@ -455,7 +503,7 @@ main (int argc, char **argv)
 
   /* play */
   uris = (gchar **) g_ptr_array_free (playlist, FALSE);
-  play = play_new (uris, audio_sink, video_sink);
+  play = play_new (uris, audio_sink, video_sink, gapless);
 
   do_play (play);
 
