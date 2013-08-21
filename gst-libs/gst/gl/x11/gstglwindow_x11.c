@@ -614,7 +614,7 @@ gst_gl_window_x11_run (GstGLWindow * window)
   g_main_loop_run (window_x11->loop);
 }
 
-inline gchar *
+static inline gchar *
 event_type_to_string (guint type)
 {
   switch (type) {
