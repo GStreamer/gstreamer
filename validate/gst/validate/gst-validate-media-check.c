@@ -149,6 +149,7 @@ main (int argc, gchar ** argv)
 
   GError *err = NULL;
   gchar *output_file = NULL;
+  gchar *expected_file = NULL;
   gchar *output = NULL;
   gsize outputlength;
   gboolean ret;
@@ -156,6 +157,10 @@ main (int argc, gchar ** argv)
   GOptionEntry options[] = {
     {"output-file", 'o', 0, G_OPTION_ARG_FILENAME,
           &output_file, "The output file to store the results",
+        NULL},
+    {"expected-results", 'e', 0, G_OPTION_ARG_FILENAME,
+          &expected_file, "The file contained the expected results (or the "
+          "last results found, for comparison)",
         NULL},
     {NULL}
   };
@@ -194,6 +199,34 @@ main (int argc, gchar ** argv)
 
   if (output_file)
     gst_validate_media_info_save (&mi, output_file, NULL);
+
+  if (expected_file) {
+    GstValidateMediaInfo *expected_mi;
+    GError *err = NULL;
+
+    if (!g_path_is_absolute (expected_file)) {
+      gchar *cdir = g_get_current_dir ();
+      gchar *absolute = g_build_filename (cdir, expected_file, NULL);
+
+      g_free (expected_file);
+      g_free (cdir);
+
+      expected_file = absolute;
+    }
+
+    expected_mi = gst_validate_media_info_load (expected_file, &err);
+    if (expected_mi) {
+      if (!gst_validate_media_info_compare (expected_mi, &mi)) {
+        g_print ("Expected results didn't match\n");
+        ret = FALSE;
+      }
+      gst_validate_media_info_free (expected_mi);
+    } else {
+      g_print ("Failed to load expected results file: %s\n", err->message);
+      g_error_free (err);
+      ret = FALSE;
+    }
+  }
 
   gst_validate_media_info_clear (&mi);
 

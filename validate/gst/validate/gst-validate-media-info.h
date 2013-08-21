@@ -59,12 +59,15 @@ struct _GstValidateMediaInfo {
 
 void gst_validate_media_info_init (GstValidateMediaInfo * mi);
 void gst_validate_media_info_clear (GstValidateMediaInfo * mi);
+void gst_validate_media_info_free (GstValidateMediaInfo * mi);
 
 gchar * gst_validate_media_info_to_string (GstValidateMediaInfo * mi, gsize * length);
 gboolean gst_validate_media_info_save (GstValidateMediaInfo * mi, const gchar * path, GError ** err);
 GstValidateMediaInfo * gst_validate_media_info_load (const gchar * path, GError ** err);
 
 gboolean gst_validate_media_info_inspect_uri (GstValidateMediaInfo * mi, const gchar * uri, GError ** err);
+
+gboolean gst_validate_media_info_compare (GstValidateMediaInfo * expected, GstValidateMediaInfo * extracted);
 
 G_END_DECLS
 
