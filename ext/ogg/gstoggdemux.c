@@ -1042,6 +1042,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
             segment.start = ogg->push_seek_time_original_target;
             segment.stop = -1;
             segment.time = ogg->push_seek_time_original_target;
+            segment.base = ogg->push_seek_time_original_target;
             event = gst_event_new_segment (&segment);
             ogg->push_state = PUSH_PLAYING;
           } else {
@@ -1050,6 +1051,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
             segment.start = start_time;
             segment.stop = chain->segment_stop;
             segment.time = segment_time;
+            segment.base = segment_time;
             event = gst_event_new_segment (&segment);
           }
           GST_PUSH_UNLOCK (ogg);
@@ -1076,6 +1078,7 @@ gst_ogg_pad_submit_packet (GstOggPad * pad, ogg_packet * packet)
           segment.start = chain->segment_start;
           segment.stop = chain->segment_stop;
           segment.time = chain->begin_time;
+          segment.base = chain->begin_time;
           event = gst_event_new_segment (&segment);
         }
       }
@@ -4091,6 +4094,7 @@ gst_ogg_demux_handle_page (GstOggDemux * ogg, ogg_page * page)
       segment.start = start;
       segment.stop = chain->segment_stop;
       segment.time = chain->begin_time;
+      segment.base = chain->begin_time;
       event = gst_event_new_segment (&segment);
       gst_event_set_seqnum (event, ogg->seqnum);
 
