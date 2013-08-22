@@ -50,7 +50,6 @@
 #include <gst/gst.h>
 #include <gst/audio/audio.h>
 #include <gst/audio/gstaudiosrc.h>
-
 #include <windows.h>
 #include <dsound.h>
 
@@ -93,9 +92,8 @@ struct _GstDirectSoundSrc
   guint latency_time;
 
 
-#if 0
-  guint device;
-#endif
+  GUID *device_guid;
+  char *device_name;
 
   GMutex dsound_lock;
 

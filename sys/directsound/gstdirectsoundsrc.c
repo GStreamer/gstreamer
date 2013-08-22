@@ -84,7 +84,7 @@ GST_DEBUG_CATEGORY_STATIC (directsoundsrc_debug);
 enum
 {
   PROP_0,
-  PROP_DEVICE
+  PROP_DEVICE_NAME
 };
 
 static HRESULT (WINAPI * pDSoundCaptureCreate) (LPGUID,
@@ -139,6 +139,9 @@ gst_directsound_src_finalize (GObject * object)
 
   g_mutex_clear (&dsoundsrc->dsound_lock);
 
+  g_free(dsoundsrc->device_name);
+  g_free(dsoundsrc->device_guid);
+
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -185,6 +188,12 @@ gst_directsound_src_class_init (GstDirectSoundSrcClass * klass)
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&directsound_src_src_factory));
+
+  g_object_class_install_property
+      (gobject_class, PROP_DEVICE_NAME,
+      g_param_spec_string ("device-name", "Device name",
+          "Human-readable name of the sound device", NULL,
+          G_PARAM_READWRITE));
 }
 
 static GstCaps *
@@ -202,16 +211,20 @@ static void
 gst_directsound_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
 {
-  //  GstDirectSoundSrc *src = GST_DIRECTSOUND_SRC (object);
+  GstDirectSoundSrc *src = GST_DIRECTSOUND_SRC (object);
   GST_DEBUG ("set property");
 
   switch (prop_id) {
-#if 0
-      /* FIXME */
-    case PROP_DEVICE:
-      src->device = g_value_get_uint (value);
+    case PROP_DEVICE_NAME:
+      if (src->device_name) {
+        g_free (src->device_name);
+        src->device_name = NULL;
+      }
+      if (g_value_get_string (value)) {
+        src->device_name = g_strdup (g_value_get_string (value));
+      }
+
       break;
-#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -222,19 +235,14 @@ static void
 gst_directsound_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec)
 {
-#if 0
   GstDirectSoundSrc *src = GST_DIRECTSOUND_SRC (object);
-#endif
 
   GST_DEBUG ("get property");
 
   switch (prop_id) {
-#if 0
-      /* FIXME */
-    case PROP_DEVICE:
-      g_value_set_uint (value, src->device);
+    case PROP_DEVICE_NAME:
+      g_value_set_string (value, src->device_name);
       break;
-#endif
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -252,6 +260,34 @@ gst_directsound_src_init (GstDirectSoundSrc * src)
 {
   GST_DEBUG_OBJECT (src, "initializing directsoundsrc");
   g_mutex_init (&src->dsound_lock);
+  src->device_guid = NULL;
+  src->device_name = NULL;
+}
+
+
+/* Enumeration callback called by DirectSoundCaptureEnumerate.
+ * Gets the GUID of request audio device
+ */
+static BOOL CALLBACK
+gst_directsound_enum_callback( GUID* pGUID, TCHAR* strDesc, TCHAR* strDrvName,
+                                          VOID* pContext )
+{
+  GstDirectSoundSrc *dsoundsrc = GST_DIRECTSOUND_SRC (pContext);
+
+  if ( pGUID && dsoundsrc && dsoundsrc->device_name &&
+    !g_strcmp0(dsoundsrc->device_name, strDesc)) {
+    g_free(dsoundsrc->device_guid);
+    dsoundsrc->device_guid = (GUID *) g_malloc0(sizeof(GUID));
+    memcpy( dsoundsrc->device_guid, pGUID, sizeof(GUID));
+    GST_INFO_OBJECT(dsoundsrc, "found the requested audio device :%s", 
+      dsoundsrc->device_name);
+    return FALSE;
+  }
+
+  GST_INFO_OBJECT(dsoundsrc, "sound device names: %s, %s, requested device:%s",
+    strDesc, strDrvName, dsoundsrc->device_name);
+
+  return TRUE;
 }
 
 static gboolean
@@ -259,6 +295,7 @@ gst_directsound_src_open (GstAudioSrc * asrc)
 {
   GstDirectSoundSrc *dsoundsrc;
   HRESULT hRes;                 /* Result for windows functions */
+  LPGUID guid;
 
   GST_DEBUG_OBJECT (asrc, "opening directsoundsrc");
 
@@ -280,9 +317,15 @@ gst_directsound_src_open (GstAudioSrc * asrc)
     goto capture_function;
   }
 
-  /* FIXME: add here device selection */
+  hRes =
+    DirectSoundCaptureEnumerate((LPDSENUMCALLBACK)gst_directsound_enum_callback,
+    (VOID*)dsoundsrc);
+  if (FAILED (hRes)) {
+    goto capture_enumerate;
+  }
+
   /* Create capture object */
-  hRes = pDSoundCaptureCreate (NULL, &dsoundsrc->pDSC, NULL);
+  hRes = pDSoundCaptureCreate (dsoundsrc->device_guid, &dsoundsrc->pDSC, NULL);
   if (FAILED (hRes)) {
     goto capture_object;
   }
@@ -294,6 +337,13 @@ capture_function:
     FreeLibrary (dsoundsrc->DSoundDLL);
     GST_ELEMENT_ERROR (dsoundsrc, RESOURCE, OPEN_READ,
         ("Unable to get capturecreate function"), (NULL));
+    return FALSE;
+  }
+capture_enumerate:
+  {
+    FreeLibrary (dsoundsrc->DSoundDLL);
+    GST_ELEMENT_ERROR (dsoundsrc, RESOURCE, OPEN_READ,
+        ("Unable to enumerate audio capture devices"), (NULL));
     return FALSE;
   }
 capture_object:
