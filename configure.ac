@@ -1007,7 +1007,13 @@ AG_GST_CHECK_FEATURE(ZLIB, [zlib support for qtdemux/matroska],, [
 dnl *** matroska prefers to have bz2 ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_BZ2, true)
 AG_GST_CHECK_FEATURE(BZ2, [bz2 library for matroska ],, [
-  AG_GST_CHECK_LIBHEADER(BZ2, bz2, BZ2_bzCompress, ,bzlib.h, BZ2_LIBS="-lbz2")
+  save_LIBS=$LIBS
+  LIBS="$LIBS -lbz2"
+  AC_MSG_CHECKING([for BZ2_bzlibVersion in -lbz2])
+  AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <bzlib.h>]], [[const char *version = BZ2_bzlibVersion ();]])],[HAVE_BZ2=yes],[HAVE_BZ2=no])
+  AC_MSG_RESULT($HAVE_BZ2)
+  LIBS=$save_LIBS
+  BZ2_LIBS="-lbz2"
   AC_SUBST(BZ2_LIBS)
 ])
 
