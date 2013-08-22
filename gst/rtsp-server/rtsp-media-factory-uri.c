@@ -352,8 +352,15 @@ find_payloader (GstRTSPMediaFactoryURI * urifact, GstCaps * caps)
   if (list) {
     GstStructure *structure = gst_caps_get_structure (caps, 0);
     gboolean parsed = FALSE;
+    gint mpegversion = 0;
 
-    gst_structure_get_boolean (structure, "parsed", &parsed);
+    if (!gst_structure_get_boolean (structure, "parsed", &parsed) &&
+        gst_structure_has_name (structure, "audio/mpeg") &&
+        gst_structure_get_int (structure, "mpegversion", &mpegversion) &&
+        (mpegversion == 2 || mpegversion == 4)) {
+      /* for AAC it's framed=true instead of parsed=true */
+      gst_structure_get_boolean (structure, "framed", &parsed);
+    }
 
     /* Avoid plugging parsers in a loop. This is not 100% correct, as some
      * parsers don't set parsed=true in caps. We should do something like
