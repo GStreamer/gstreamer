@@ -12,8 +12,25 @@
 #include <gst/gst.h>
 #include <gst/validate/validate.h>
 
+#ifdef G_OS_UNIX
+#include <glib-unix.h>
+#endif
+
 static GMainLoop *mainloop;
 static GstElement *pipeline;
+
+#ifdef G_OS_UNIX
+static gboolean
+intr_handler (gpointer user_data)
+{
+  g_print ("interrupt received.\n");
+
+  g_main_loop_quit (mainloop);
+
+  /* remove signal handler */
+  return FALSE;
+}
+#endif /* G_OS_UNIX */
 
 static gboolean
 bus_callback (GstBus * bus, GstMessage * message, gpointer data)
@@ -47,6 +64,9 @@ main (int argc, gchar ** argv)
   GError *err = NULL;
   const gchar *scenario = NULL;
   guint count = -1;
+#ifdef G_OS_UNIX
+  guint signal_watch_id;
+#endif
 
   GOptionEntry options[] = {
     {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
@@ -95,6 +115,11 @@ main (int argc, gchar ** argv)
   pipeline = (GstElement *) gst_parse_launchv ((const gchar **) argvn, &err);
   g_free (argvn);
 
+#ifdef G_OS_UNIX
+  signal_watch_id =
+      g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
+#endif
+
   runner = gst_validate_runner_new ();
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner,
@@ -136,6 +161,9 @@ exit:
   g_object_unref (monitor);
   g_object_unref (runner);
   g_object_unref (pipeline);
+#ifdef G_OS_UNIX
+  g_source_remove (signal_watch_id);
+#endif
   if (count)
     return -1;
   return 0;
