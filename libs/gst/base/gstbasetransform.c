@@ -1298,7 +1298,7 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
     GstCaps * incaps)
 {
   GstBaseTransformPrivate *priv = trans->priv;
-  GstCaps *outcaps;
+  GstCaps *outcaps, *prevcaps;
   gboolean ret = TRUE;
 
   GST_DEBUG_OBJECT (pad, "have new caps %p %" GST_PTR_FORMAT, incaps, incaps);
@@ -1321,8 +1321,14 @@ gst_base_transform_setcaps (GstBaseTransform * trans, GstPad * pad,
   if (!(ret = gst_base_transform_configure_caps (trans, incaps, outcaps)))
     goto failed_configure;
 
-  /* let downstream know about our caps */
-  ret = gst_pad_set_caps (trans->srcpad, outcaps);
+  prevcaps = gst_pad_get_current_caps (trans->srcpad);
+
+  if (!prevcaps || !gst_caps_is_equal (outcaps, prevcaps))
+    /* let downstream know about our caps */
+    ret = gst_pad_set_caps (trans->srcpad, outcaps);
+
+  if (prevcaps)
+    gst_caps_unref (prevcaps);
 
   if (ret) {
     /* try to get a pool when needed */
