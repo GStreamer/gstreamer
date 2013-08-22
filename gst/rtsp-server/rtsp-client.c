@@ -1632,7 +1632,7 @@ handle_describe_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPResult res;
   GstSDPMessage *sdp;
   guint i, str_len;
-  gchar *str, *content_base;
+  gchar *str, *str_query, *content_base;
   GstRTSPMedia *media;
   GstRTSPClientClass *klass;
 
@@ -1675,6 +1675,13 @@ handle_describe_request (GstRTSPClient * client, GstRTSPContext * ctx)
   /* content base for some clients that might screw up creating the setup uri */
   str = gst_rtsp_url_get_request_uri (ctx->uri);
   str_len = strlen (str);
+
+  /* check for query part */
+  if (ctx->uri->query != NULL) {
+    str_query = g_strrstr (str, "?");
+    *str_query = '\0';
+    str_len = strlen (str);
+  }
 
   /* check for trailing '/' and append one */
   if (str[str_len - 1] != '/') {
