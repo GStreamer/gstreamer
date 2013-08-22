@@ -64,6 +64,32 @@ intr_handler (gpointer user_data)
 #endif /* G_OS_UNIX */
 
 static gboolean
+print_position (void)
+{
+  GstQuery *query;
+  gint64 position, duration;
+
+  gdouble rate = 1.0;
+  GstFormat format = GST_FORMAT_TIME;
+
+  gst_element_query_position (pipeline, format, &position);
+
+  format = GST_FORMAT_TIME;
+  gst_element_query_duration (pipeline, format, &duration);
+
+  query = gst_query_new_segment (GST_FORMAT_DEFAULT);
+  if (gst_element_query (pipeline, query))
+    gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
+  gst_query_unref (query);
+
+  g_print ("<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
+      " speed: %f />\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
+      rate);
+
+  return TRUE;
+}
+
+static gboolean
 bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 {
   GMainLoop *loop = data;
@@ -412,6 +438,7 @@ main (int argc, gchar ** argv)
   if (gst_element_set_state (pipeline,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
     goto exit;
+  g_timeout_add (50, (GSourceFunc) print_position, NULL);
   g_main_loop_run (mainloop);
 
   for (tmp = gst_validate_runner_get_reports (runner); tmp; tmp = tmp->next) {
