@@ -199,6 +199,7 @@ const GstMetaInfo *  gst_meta_register          (GType api, const gchar *impl,
                                                  GstMetaFreeFunction      free_func,
                                                  GstMetaTransformFunction transform_func);
 const GstMetaInfo *  gst_meta_get_info          (const gchar * impl);
+const gchar* const* gst_meta_api_type_get_tags  (GType api);
 
 /* some default tags */
 GST_EXPORT GQuark _gst_meta_tag_memory;

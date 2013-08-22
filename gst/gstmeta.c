@@ -98,6 +98,10 @@ gst_meta_api_type_register (const gchar * api, const gchar ** tags)
           GINT_TO_POINTER (TRUE));
     }
   }
+
+  g_type_set_qdata (type, g_quark_from_string ("tags"),
+      g_strdupv ((gchar **) tags));
+
   return type;
 }
 
@@ -117,6 +121,25 @@ gst_meta_api_type_has_tag (GType api, GQuark tag)
   g_return_val_if_fail (tag != 0, FALSE);
 
   return g_type_get_qdata (api, tag) != NULL;
+}
+
+/**
+ * gst_meta_api_type_get_tags:
+ * @api: an API
+ *
+ * Returns: (transfer none) (array zero-terminated=1) (element-type utf8): an array of tags as strings.
+ *
+ * Since: 1.2
+ */
+const gchar *const *
+gst_meta_api_type_get_tags (GType api)
+{
+  const gchar **tags;
+  g_return_val_if_fail (api != 0, FALSE);
+
+  tags = g_type_get_qdata (api, g_quark_from_string ("tags"));
+
+  return (const gchar * const *) tags;
 }
 
 /**
