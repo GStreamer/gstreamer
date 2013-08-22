@@ -22,6 +22,7 @@
 #endif
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 
 #include "gstframepositionner.h"
 
@@ -384,7 +385,7 @@ GType
 gst_frame_positionner_meta_api_get_type (void)
 {
   static volatile GType type;
-  static const gchar *tags[] = { "alpha", "posx", "posy", "zorder", NULL };
+  static const gchar *tags[] = { "video", NULL };
 
   if (g_once_init_enter (&type)) {
     GType _type = gst_meta_api_type_register ("GstFramePositionnerApi", tags);
