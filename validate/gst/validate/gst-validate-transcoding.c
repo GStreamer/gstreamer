@@ -13,9 +13,33 @@
 #include <gst/validate/validate.h>
 #include <gst/pbutils/encoding-profile.h>
 
+#ifdef G_OS_UNIX
+#include <glib-unix.h>
+#endif
+
 static GMainLoop *mainloop;
 static GstElement *pipeline;
 static GstEncodingProfile *encoding_profile = NULL;
+static gboolean eos_on_shutdown = FALSE;
+
+#ifdef G_OS_UNIX
+static gboolean
+intr_handler (gpointer user_data)
+{
+  g_print ("interrupt received.\n");
+
+  if (eos_on_shutdown) {
+    g_print ("Sending EOS to the pipeline\n");
+    eos_on_shutdown = FALSE;
+    gst_element_send_event (GST_ELEMENT_CAST (user_data), gst_event_new_eos ());
+    return TRUE;
+  }
+  g_main_loop_quit (mainloop);
+
+  /* remove signal handler */
+  return FALSE;
+}
+#endif /* G_OS_UNIX */
 
 static gboolean
 bus_callback (GstBus * bus, GstMessage * message, gpointer data)
@@ -248,6 +272,9 @@ main (int argc, gchar ** argv)
   GstValidateRunner *runner;
   GstValidateMonitor *monitor;
   GOptionContext *ctx;
+#ifdef G_OS_UNIX
+  guint signal_watch_id;
+#endif
 
   GError *err = NULL;
   const gchar *scenario = NULL;
@@ -266,6 +293,11 @@ main (int argc, gchar ** argv)
     {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
         "Let you set a scenario, it will override the GST_VALIDATE_SCENARIO "
           "environment variable", NULL},
+    {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
+        "If an EOS event should be sent to the pipeline if an interrupt is "
+          "received, instead of forcing the pipeline to stop. Sending an EOS "
+          "will allow the transcoding to finish the files properly before "
+          "exiting.", NULL},
     {NULL}
   };
 
@@ -310,6 +342,11 @@ main (int argc, gchar ** argv)
   /* Create the pipeline */
   create_transcoding_pipeline (argv[1], argv[2]);
 
+#ifdef G_OS_UNIX
+  signal_watch_id =
+      g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
+#endif
+
   runner = gst_validate_runner_new ();
   monitor =
       gst_validate_monitor_factory_create (GST_OBJECT_CAST (pipeline), runner,
@@ -333,6 +370,15 @@ main (int argc, gchar ** argv)
 
   count = gst_validate_runner_get_reports_count (runner);
   g_print ("Pipeline finished, total issues found: %u\n", count);
+  if (count) {
+    GSList *iter;
+    GSList *issues = gst_validate_runner_get_reports (runner);
+
+    for (iter = issues; iter; iter = g_slist_next (iter)) {
+      GstValidateReport *report = iter->data;
+      gst_validate_report_printf (report);
+    }
+  }
 
 exit:
   gst_element_set_state (pipeline, GST_STATE_NULL);
@@ -341,6 +387,9 @@ exit:
   g_object_unref (runner);
   g_object_unref (pipeline);
 
+#ifdef G_OS_UNIX
+  g_source_remove (signal_watch_id);
+#endif
   if (count)
     return -1;
   return 0;
