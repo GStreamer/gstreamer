@@ -31,12 +31,15 @@
 #include <stdio.h>
 
 static GstGLDisplay *display;
+static GstGLContext *context;
 
 void
 setup (void)
 {
   display = gst_gl_display_new ();
-  gst_gl_display_create_context (display, 0);
+  context = gst_gl_context_new (display);
+  gst_gl_display_set_context (display, context);
+  gst_gl_context_create (context, 0, NULL);
   gst_gl_memory_init ();
 }
 
@@ -44,6 +47,7 @@ void
 teardown (void)
 {
   gst_object_unref (display);
+  gst_object_unref (context);
 }
 
 GST_START_TEST (test_basic)
@@ -95,9 +99,9 @@ GST_START_TEST (test_basic)
     fail_if (gl_mem->display != gl_mem->display);
     fail_if (gl_mem->tex_id == 0);
 
-    if (display->error_message)
-      printf ("%s\n", display->error_message);
-    fail_if (display->error_message != NULL);
+    if (gst_gl_display_get_error ())
+      printf ("%s\n", gst_gl_display_get_error ());
+    fail_if (gst_gl_display_get_error () != NULL);
 
     gst_memory_unref (mem);
     gst_memory_unref (mem2);
