@@ -74,6 +74,20 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_EOS:
       g_main_loop_quit (loop);
       break;
+    case GST_MESSAGE_STATE_CHANGED:
+      if (GST_MESSAGE_SRC (message) == GST_OBJECT (pipeline)) {
+        GstState oldstate, newstate, pending;
+
+        gst_message_parse_state_changed (message, &oldstate, &newstate,
+            &pending);
+
+        GST_DEBUG ("State changed (old: %s, new: %s, pending: %s)",
+            gst_element_state_get_name (oldstate),
+            gst_element_state_get_name (newstate),
+            gst_element_state_get_name (pending));
+      }
+
+      break;
     default:
       break;
   }
