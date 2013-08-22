@@ -86,6 +86,9 @@ print_position (void)
       " speed: %f />\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration),
       rate);
 
+  GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+      GST_DEBUG_GRAPH_SHOW_ALL, "position");
+
   return TRUE;
 }
 
@@ -97,6 +100,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
     case GST_MESSAGE_STATE_CHANGED:
     {
       if (GST_MESSAGE_SRC (message) == GST_OBJECT_CAST (pipeline)) {
+        gchar *dotname;
         GstState old, new, pending;
 
         gst_message_parse_state_changed (message, &old, &new, &pending);
@@ -106,6 +110,12 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
               GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate-transcode.playing");
         }
 
+        dotname = g_strdup_printf ("gst-validate-transcoding.%s_%s",
+            gst_element_state_get_name (old), gst_element_state_get_name (new));
+
+        GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+            GST_DEBUG_GRAPH_SHOW_ALL, dotname);
+        g_free (dotname);
       }
       break;
     }
