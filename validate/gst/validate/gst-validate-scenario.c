@@ -474,8 +474,10 @@ get_position (GstValidateScenario * scenario)
 {
   GList *tmp;
   gint64 position;
-  GstFormat format = GST_FORMAT_TIME;
+  GstQuery *query;
+  gdouble rate = 1.0;
   ScenarioAction *act;
+  GstFormat format = GST_FORMAT_TIME;
   GstValidateScenarioPrivate *priv = scenario->priv;
   GstElement *pipeline = scenario->priv->pipeline;
 
@@ -485,14 +487,17 @@ get_position (GstValidateScenario * scenario)
     return FALSE;
   }
 
+  query = gst_query_new_segment (GST_FORMAT_DEFAULT);
+  if (gst_element_query (GST_ELEMENT (priv->pipeline), query))
+    gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
+
+  gst_query_unref (query);
   act = scenario->priv->actions->data;
   gst_element_query_position (pipeline, format, &position);
 
   GST_LOG ("Current position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
-  if (((position >= MAX (0,
-                  ((gint64) (act->playback_time - priv->seek_pos_tol))))
-          && (position <= (act->playback_time + priv->seek_pos_tol)))) {
-
+  if ((rate > 0 && (GstClockTime) position >= act->playback_time) ||
+      (rate < 0 && (GstClockTime) position <= act->playback_time)) {
     /* TODO what about non flushing seeks? */
     /* TODO why is this inside the action time if ? */
     if (GST_CLOCK_TIME_IS_VALID (priv->seeked_position))
