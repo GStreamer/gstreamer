@@ -139,8 +139,8 @@ gst_directsound_src_finalize (GObject * object)
 
   g_mutex_clear (&dsoundsrc->dsound_lock);
 
-  g_free(dsoundsrc->device_name);
-  g_free(dsoundsrc->device_guid);
+  g_free (dsoundsrc->device_name);
+  g_free (dsoundsrc->device_guid);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -192,8 +192,7 @@ gst_directsound_src_class_init (GstDirectSoundSrcClass * klass)
   g_object_class_install_property
       (gobject_class, PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "Device name",
-          "Human-readable name of the sound device", NULL,
-          G_PARAM_READWRITE));
+          "Human-readable name of the sound device", NULL, G_PARAM_READWRITE));
 }
 
 static GstCaps *
@@ -269,23 +268,23 @@ gst_directsound_src_init (GstDirectSoundSrc * src)
  * Gets the GUID of request audio device
  */
 static BOOL CALLBACK
-gst_directsound_enum_callback( GUID* pGUID, TCHAR* strDesc, TCHAR* strDrvName,
-                                          VOID* pContext )
+gst_directsound_enum_callback (GUID * pGUID, TCHAR * strDesc,
+    TCHAR * strDrvName, VOID * pContext)
 {
   GstDirectSoundSrc *dsoundsrc = GST_DIRECTSOUND_SRC (pContext);
 
-  if ( pGUID && dsoundsrc && dsoundsrc->device_name &&
-    !g_strcmp0(dsoundsrc->device_name, strDesc)) {
-    g_free(dsoundsrc->device_guid);
-    dsoundsrc->device_guid = (GUID *) g_malloc0(sizeof(GUID));
-    memcpy( dsoundsrc->device_guid, pGUID, sizeof(GUID));
-    GST_INFO_OBJECT(dsoundsrc, "found the requested audio device :%s", 
-      dsoundsrc->device_name);
+  if (pGUID && dsoundsrc && dsoundsrc->device_name &&
+      !g_strcmp0 (dsoundsrc->device_name, strDesc)) {
+    g_free (dsoundsrc->device_guid);
+    dsoundsrc->device_guid = (GUID *) g_malloc0 (sizeof (GUID));
+    memcpy (dsoundsrc->device_guid, pGUID, sizeof (GUID));
+    GST_INFO_OBJECT (dsoundsrc, "found the requested audio device :%s",
+        dsoundsrc->device_name);
     return FALSE;
   }
 
-  GST_INFO_OBJECT(dsoundsrc, "sound device names: %s, %s, requested device:%s",
-    strDesc, strDrvName, dsoundsrc->device_name);
+  GST_INFO_OBJECT (dsoundsrc, "sound device names: %s, %s, requested device:%s",
+      strDesc, strDrvName, dsoundsrc->device_name);
 
   return TRUE;
 }
@@ -295,7 +294,6 @@ gst_directsound_src_open (GstAudioSrc * asrc)
 {
   GstDirectSoundSrc *dsoundsrc;
   HRESULT hRes;                 /* Result for windows functions */
-  LPGUID guid;
 
   GST_DEBUG_OBJECT (asrc, "opening directsoundsrc");
 
@@ -317,9 +315,8 @@ gst_directsound_src_open (GstAudioSrc * asrc)
     goto capture_function;
   }
 
-  hRes =
-    DirectSoundCaptureEnumerate((LPDSENUMCALLBACK)gst_directsound_enum_callback,
-    (VOID*)dsoundsrc);
+  hRes = DirectSoundCaptureEnumerate ((LPDSENUMCALLBACK)
+      gst_directsound_enum_callback, (VOID *) dsoundsrc);
   if (FAILED (hRes)) {
     goto capture_enumerate;
   }
