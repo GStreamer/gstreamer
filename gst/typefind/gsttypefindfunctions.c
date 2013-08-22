@@ -1099,19 +1099,21 @@ aac_type_find (GstTypeFind * tf, gpointer unused)
             len = ((c.data[offset + 3] & 0x03) << 11) |
                 (c.data[offset + 4] << 3) | ((c.data[offset + 5] & 0xe0) >> 5);
             if (len == 0 || !data_scan_ctx_ensure_data (tf, &c, len + 2)) {
-              GST_DEBUG ("Wrong sync or next frame not within reach, len=%u", len);
+              GST_DEBUG ("Wrong sync or next frame not within reach, len=%u",
+                  len);
               break;
             }
             snc = GST_READ_UINT16_BE (c.data + offset);
             if ((snc & 0xfff6) == 0xfff0) {
-              GST_DEBUG ("Find %und Sync..probability is %u ", i, GST_TYPE_FIND_LIKELY + 5 * (i - 2));
+              GST_DEBUG ("Find %und Sync..probability is %u ", i,
+                  GST_TYPE_FIND_LIKELY + 5 * (i - 2));
               offset += len;
             } else {
               break;
             }
           }
           gst_type_find_suggest (tf, GST_TYPE_FIND_LIKELY + 5 * (i - 3), caps);
-	  
+
         }
         gst_caps_unref (caps);
         break;
@@ -5177,6 +5179,26 @@ ssa_type_find (GstTypeFind * tf, gpointer private)
   g_free (str);
 }
 
+/*** video/x-pva ***/
+
+static GstStaticCaps pva_caps = GST_STATIC_CAPS ("video/x-pva");
+
+#define PVA_CAPS gst_static_caps_get(&pva_caps)
+
+static void
+pva_type_find (GstTypeFind * tf, gpointer private)
+{
+  const guint8 *data;
+
+  data = gst_type_find_peek (tf, 0, 5);
+
+  if (data == NULL)
+    return;
+
+  if (data[0] == 'A' && data[1] == 'V' && data[2] < 3 && data[4] == 0x55)
+    gst_type_find_suggest (tf, GST_TYPE_FIND_NEARLY_CERTAIN, PVA_CAPS);
+}
+
 /*** generic typefind for streams that have some data at a specific position***/
 typedef struct
 {
@@ -5560,6 +5582,9 @@ plugin_init (GstPlugin * plugin)
 
   TYPE_FIND_REGISTER (plugin, "application/x-ssa", GST_RANK_SECONDARY,
       ssa_type_find, "ssa,ass", NULL, NULL, NULL);
+
+  TYPE_FIND_REGISTER (plugin, "video/x-pva", GST_RANK_SECONDARY,
+      pva_type_find, "pva", PVA_CAPS, NULL, NULL);
 
   return TRUE;
 }
