@@ -2003,6 +2003,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "nuv") ||
         !strcmp (in_plugin->name, "swf") ||
         !strcmp (in_plugin->name, "voc") ||
+        !strcmp (in_plugin->name, "pva") ||
         !strcmp (in_plugin->name, "gif") || !strcmp (in_plugin->name, "vc1test")
         )
       register_typefind_func = FALSE;
@@ -2039,6 +2040,7 @@ gst_ffmpegdemux_register (GstPlugin * plugin)
         !strcmp (in_plugin->name, "aiff") ||
         !strcmp (in_plugin->name, "4xm") ||
         !strcmp (in_plugin->name, "yuv4mpegpipe") ||
+        !strcmp (in_plugin->name, "pva") ||
         !strcmp (in_plugin->name, "mpc") || !strcmp (in_plugin->name, "gif"))
       rank = GST_RANK_MARGINAL;
     else {

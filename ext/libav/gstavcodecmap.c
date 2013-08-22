@@ -3080,6 +3080,8 @@ gst_ffmpeg_formatid_to_caps (const gchar * format_name)
     caps = gst_caps_from_string ("video/webm");
   } else if (!strcmp (format_name, "voc")) {
     caps = gst_caps_from_string ("audio/x-voc");
+  } else if (!strcmp (format_name, "pva")) {
+    caps = gst_caps_from_string ("video/x-pva");
   } else {
     gchar *name;
 
@@ -3258,6 +3260,18 @@ gst_ffmpeg_formatid_get_codecids (const gchar * format_name,
 
     *video_codec_list = tmp_vlist;
     *audio_codec_list = tmp_alist;
+  } else if ((!strcmp (format_name, "pva"))) {
+    static enum CodecID tgp_video_list[] = {
+      AV_CODEC_ID_MPEG2VIDEO,
+      AV_CODEC_ID_NONE
+    };
+    static enum CodecID tgp_audio_list[] = {
+      AV_CODEC_ID_MP2,
+      AV_CODEC_ID_NONE
+    };
+
+    *video_codec_list = tgp_video_list;
+    *audio_codec_list = tgp_audio_list;
   } else {
     GST_LOG ("Format %s not found", format_name);
     return FALSE;
