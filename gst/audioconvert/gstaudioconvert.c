@@ -499,15 +499,23 @@ gst_audio_convert_fixate_format (GstBaseTransform * base, GstStructure * ins,
 
     t_depth = GST_AUDIO_FORMAT_INFO_DEPTH (t_info);
 
-    if (t_depth == in_depth && (!out_info || out_depth != in_depth
-            || (t_flags == in_flags && out_flags != in_flags))) {
+    /* Any output format is better than no output format at all */
+    if (!out_info) {
+      out_info = t_info;
+      out_depth = t_depth;
+      out_flags = t_flags;
+      continue;
+    }
+
+    if (t_depth == in_depth && (out_depth != in_depth || (t_flags == in_flags
+                && out_flags != in_flags))) {
       /* Prefer to use the first format that has the same depth with the same
        * flags, and if none with the same flags exist use the first other one
        * that has the same depth */
       out_info = t_info;
       out_depth = t_depth;
       out_flags = t_flags;
-    } else if (t_depth >= in_depth && (!out_info || in_depth > out_depth
+    } else if (t_depth >= in_depth && (in_depth > out_depth
             || (out_depth >= in_depth && t_flags == in_flags
                 && out_flags != in_flags))) {
       /* Otherwise use the first format that has a higher depth with the same flags,
@@ -516,7 +524,7 @@ gst_audio_convert_fixate_format (GstBaseTransform * base, GstStructure * ins,
       out_info = t_info;
       out_depth = t_depth;
       out_flags = t_flags;
-    } else if (!out_info || (t_depth > out_depth && out_depth < in_depth)
+    } else if ((t_depth > out_depth && out_depth < in_depth)
         || (t_flags == in_flags && out_flags != in_flags
             && out_depth == t_depth)) {
       /* Else get at least the one with the highest depth, ideally with the same flags */
