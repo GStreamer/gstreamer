@@ -2002,9 +2002,6 @@ handle_response (GstRTSPClient * client, GstRTSPMessage * response)
 
   ctx->session = session;
 
-  if (!gst_rtsp_auth_check (GST_RTSP_AUTH_CHECK_URL))
-    goto not_authorized;
-
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_HANDLE_RESPONSE],
       0, ctx);
 
@@ -2023,11 +2020,6 @@ no_pool:
 session_not_found:
   {
     GST_ERROR ("client %p: session not found", client);
-    goto done;
-  }
-not_authorized:
-  {
-    GST_ERROR ("client %p: not allowed", client);
     goto done;
   }
 }
