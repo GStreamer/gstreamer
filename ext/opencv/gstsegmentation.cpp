@@ -158,12 +158,12 @@ static void gst_segmentation_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_segmentation_transform_ip (GstVideoFilter * btrans,
-						    GstVideoFrame *frame);
+    GstVideoFrame * frame);
 
 static gboolean gst_segmentation_stop (GstBaseTransform * basesrc);
-static gboolean gst_segmentation_set_info(GstVideoFilter *filter,
-					  GstCaps *incaps, GstVideoInfo *in_info,
-					  GstCaps *outcaps, GstVideoInfo *out_info);
+static gboolean gst_segmentation_set_info (GstVideoFilter * filter,
+    GstCaps * incaps, GstVideoInfo * in_info,
+    GstCaps * outcaps, GstVideoInfo * out_info);
 static void gst_segmentation_release_all_pointers (GstSegmentation * filter);
 
 /* Codebook algorithm + connected components functions*/
@@ -188,7 +188,7 @@ gst_segmentation_class_init (GstSegmentationClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
   GstBaseTransformClass *basesrc_class = GST_BASE_TRANSFORM_CLASS (klass);
-  GstVideoFilterClass *video_class = (GstVideoFilterClass*) klass;
+  GstVideoFilterClass *video_class = (GstVideoFilterClass *) klass;
 
   gobject_class = (GObjectClass *) klass;
 
@@ -294,9 +294,9 @@ gst_segmentation_get_property (GObject * object, guint prop_id,
 /* GstElement vmethod implementations */
 /* this function handles the link with other elements */
 static gboolean
-gst_segmentation_set_info(GstVideoFilter *filter,
-			  GstCaps *incaps, GstVideoInfo *in_info,
-			  GstCaps *outcaps, GstVideoInfo *out_info)
+gst_segmentation_set_info (GstVideoFilter * filter,
+    GstCaps * incaps, GstVideoInfo * in_info,
+    GstCaps * outcaps, GstVideoInfo * out_info)
 {
   GstSegmentation *segmentation = GST_SEGMENTATION (filter);
   CvSize size;
