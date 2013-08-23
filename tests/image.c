@@ -276,9 +276,9 @@ static inline guint32 argb2yuv(guint32 color)
     const gint32 g = (color >>  8) & 0xff;
     const gint32 b = (color      ) & 0xff;
 
-    const guint32 y = (( 263 * r + 516 * g + 100 * b) >> 10) +  16;
-    const guint32 u = ((-152 * r - 298 * g + 450 * b) >> 10) + 128;
-    const guint32 v = (( 450 * r - 376 * g -  73 * b) >> 10) + 128;
+    const guint32 y = (( 306 * r + 601 * g + 116 * b) >> 10);
+    const guint32 u = ((-172 * r - 339 * g + 512 * b) >> 10) + 128;
+    const guint32 v = (( 512 * r - 428 * g -  83 * b) >> 10) + 128;
 
     return (y << 16) | (u << 8) | v;
 }
