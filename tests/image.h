@@ -33,14 +33,13 @@ image_generate(
     guint               height
 );
 
-gboolean
-image_draw_rectangle(
-    GstVaapiImage *image,
-    gint           x,
-    gint           y,
-    guint          width,
-    guint          height,
-    guint32        color
+GstVaapiImage *
+image_generate_full(
+    GstVaapiDisplay    *display,
+    GstVideoFormat      format,
+    guint               width,
+    guint               height,
+    guint32             flags
 );
 
 gboolean

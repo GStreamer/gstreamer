@@ -21,6 +21,40 @@
 
 #include "image.h"
 
+static gboolean
+image_draw_rectangle(
+    GstVaapiImage *image,
+    gint           x,
+    gint           y,
+    guint          width,
+    guint          height,
+    guint32        color,
+    guint32        flags
+);
+
+static gboolean
+image_draw_color_rectangles(
+    GstVaapiImage      *image,
+    guint               width,
+    guint               height,
+    const guint32       colors[4],
+    guint32             flags
+    )
+{
+    const guint w = width / 2;
+    const guint h = height / 2;
+
+    if (!image_draw_rectangle(image, 0, 0, w, h, colors[0], flags))
+        return FALSE;
+    if (!image_draw_rectangle(image, w, 0, w, h, colors[1], flags))
+        return FALSE;
+    if (!image_draw_rectangle(image, 0, h, w, h, colors[2], flags))
+        return FALSE;
+    if (!image_draw_rectangle(image, w, h, w, h, colors[3], flags))
+        return FALSE;
+    return TRUE;
+}
+
 GstVaapiImage *
 image_generate(
     GstVaapiDisplay    *display,
@@ -29,20 +63,49 @@ image_generate(
     guint               height
 )
 {
-    const guint w = width;
-    const guint h = height;
+    return image_generate_full(display, format, width, height, 0);
+}
+
+GstVaapiImage *
+image_generate_full(
+    GstVaapiDisplay    *display,
+    GstVideoFormat      format,
+    guint               width,
+    guint               height,
+    guint32             flags
+)
+{
     GstVaapiImage *image;
 
-    image = gst_vaapi_image_new(display, format, w, h);
+    static const guint32 rgb_colors[4] =
+        { 0xffff0000, 0xff00ff00, 0xff0000ff, 0xff000000 };
+    static const guint32 bgr_colors[4] =
+        { 0xff000000, 0xff0000ff, 0xff00ff00, 0xffff0000 };
+    static const guint32 inv_colors[4] =
+        { 0xffdeadc0, 0xffdeadc0, 0xffdeadc0, 0xffdeadc0 };
+
+    image = gst_vaapi_image_new(display, format, width, height);
     if (!image)
         return NULL;
 
-    if (image_draw_rectangle(image, 0,   0,   w/2, h/2, 0xffff0000) &&
-        image_draw_rectangle(image, w/2, 0,   w/2, h/2, 0xff00ff00) &&
-        image_draw_rectangle(image, 0,   h/2, w/2, h/2, 0xff0000ff) &&
-        image_draw_rectangle(image, w/2, h/2, w/2, h/2, 0xff000000))
-        return image;
+    if (flags) {
+        if (!image_draw_color_rectangles(image, width, height,
+                ((flags & GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD) ?
+                 rgb_colors : inv_colors),
+                GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD))
+            goto error;
 
+        if (!image_draw_color_rectangles(image, width, height,
+                ((flags & GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD) ?
+                 bgr_colors : inv_colors),
+                GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD))
+            goto error;
+    }
+    else if (!image_draw_color_rectangles(image, width, height, rgb_colors, 0))
+        goto error;
+    return image;
+
+error:
     gst_vaapi_object_unref(image);
     return NULL;
 }
@@ -290,7 +353,8 @@ image_draw_rectangle(
     gint           y,
     guint          width,
     guint          height,
-    guint32        color
+    guint32        color,
+    guint32        flags
 )
 {
     const GstVideoFormat      image_format = gst_vaapi_image_get_format(image);
@@ -328,6 +392,15 @@ image_draw_rectangle(
     if (!draw_rect)
         return FALSE;
 
+    if (x < 0)
+        x = 0;
+    if (y < 0)
+        y = 0;
+    if (width > image_width - x)
+        width = image_width - x;
+    if (height > image_height - y)
+        height = image_height - y;
+
     display = gst_vaapi_object_get_display(GST_VAAPI_OBJECT(image));
     if (!display)
         return FALSE;
@@ -338,23 +411,23 @@ image_draw_rectangle(
     for (i = 0; i < gst_vaapi_image_get_plane_count(image); i++) {
         pixels[i] = gst_vaapi_image_get_plane(image, i);
         stride[i] = gst_vaapi_image_get_pitch(image, i);
+        switch (flags) {
+        case GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD:
+            pixels[i] += stride[i];
+            // fall-through
+        case GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD:
+            stride[i] *= 2;
+            break;
+        }
     }
+
+    if (flags)
+        y /= 2, height /= 2;
 
     if (gst_vaapi_video_format_is_yuv(image_format))
         color = argb2yuv(color);
 
-    if (x < 0)
-        x = 0;
-    if (y < 0)
-        y = 0;
-    if (width > image_width - x)
-        width = image_width - x;
-    if (height > image_height - y)
-        height = image_height - y;
-
-    gst_vaapi_display_lock(display);
     draw_rect(pixels, stride, x, y, width, height, color);
-    gst_vaapi_display_unlock(display);
     return gst_vaapi_image_unmap(image);
 }
 
