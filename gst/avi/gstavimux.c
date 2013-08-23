@@ -1311,7 +1311,7 @@ gst_avi_mux_riff_get_avi_header (GstAviMux * avimux)
       if (audpad->auds_codec_data) {
         gst_buffer_map (audpad->auds_codec_data, &map, GST_MAP_READ);
         hdl &= gst_byte_writer_put_data (&bw, map.data, map.size);
-        gst_buffer_unmap (vidpad->vids_codec_data, &map);
+        gst_buffer_unmap (audpad->auds_codec_data, &map);
       }
       gst_avi_mux_end_chunk (&bw, strf);
     }
