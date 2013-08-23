@@ -301,6 +301,7 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
     mppad->pad = pad;
     mppad->mime = g_strdup (mime);
     mppad->last_ret = GST_FLOW_OK;
+    mppad->last_ts = GST_CLOCK_TIME_NONE;
 
     demux->srcpads = g_slist_prepend (demux->srcpads, mppad);
     demux->numpads++;
@@ -536,7 +537,6 @@ gst_multipart_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstMultipartDemux *multipart;
   GstAdapter *adapter;
-  GstClockTime timestamp;
   gint size = 1;
   GstFlowReturn res;
 
@@ -544,8 +544,6 @@ gst_multipart_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   adapter = multipart->adapter;
 
   res = GST_FLOW_OK;
-
-  timestamp = GST_BUFFER_TIMESTAMP (buf);
 
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
     gst_adapter_clear (adapter);
@@ -578,9 +576,13 @@ gst_multipart_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       GST_DEBUG_OBJECT (multipart, "skipping empty content.");
       gst_adapter_flush (adapter, size - datalen);
     } else {
+      GstClockTime ts;
+
       srcpad =
           gst_multipart_find_pad_by_mime (multipart,
           multipart->mime_type, &created);
+
+      ts = gst_adapter_prev_pts (adapter, NULL);
       outbuf = gst_adapter_take_buffer (adapter, datalen);
       gst_adapter_flush (adapter, size - datalen);
 
@@ -596,11 +598,21 @@ gst_multipart_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         tags = gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "Multipart", NULL);
         gst_tag_list_set_scope (tags, GST_TAG_SCOPE_GLOBAL);
         gst_pad_push_event (srcpad->pad, gst_event_new_tag (tags));
-
-        GST_BUFFER_TIMESTAMP (outbuf) = 0;
-      } else {
-        GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
       }
+
+      outbuf = gst_buffer_make_writable (outbuf);
+      if (srcpad->last_ts == GST_CLOCK_TIME_NONE || srcpad->last_ts != ts) {
+        GST_BUFFER_TIMESTAMP (outbuf) = ts;
+        srcpad->last_ts = ts;
+      } else {
+        GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
+      }
+
+      if (created)
+        GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
+      else
+        GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DISCONT);
+
       GST_DEBUG_OBJECT (multipart,
           "pushing buffer with timestamp %" GST_TIME_FORMAT,
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (outbuf)));
