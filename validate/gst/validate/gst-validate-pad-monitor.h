@@ -68,6 +68,9 @@ struct _GstValidatePadMonitor {
   gulong pad_probe_id;
 
   /*< private >*/
+  /* Last caps pushed/received */
+  GstCaps *last_caps;
+  /* FIXME : Let's migrate all those booleans into a 32 (or 64) bit flag */
   gboolean first_buffer;
 
   gboolean has_segment;

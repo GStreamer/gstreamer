@@ -164,6 +164,8 @@ gst_validate_report_load_issues (void)
       _("received an unexpected flush start event"), NULL);
   REGISTER_VALIDATE_ISSUE (WARNING, EVENT_FLUSH_STOP_UNEXPECTED,
       _("received an unexpected flush stop event"), NULL);
+  REGISTER_VALIDATE_ISSUE (WARNING, EVENT_CAPS_DUPLICATE,
+      _("received the same caps twice"), NULL);
 
   REGISTER_VALIDATE_ISSUE (CRITICAL, EVENT_SEEK_NOT_HANDLED,
       _("seek event wasn't handled"), NULL);
