@@ -313,6 +313,7 @@ gst_multipart_find_pad_by_mime (GstMultipartDemux * demux, gchar * mime,
     mppad->mime = g_strdup (mime);
     mppad->last_ret = GST_FLOW_OK;
     mppad->last_ts = GST_CLOCK_TIME_NONE;
+    mppad->discont = TRUE;
 
     demux->srcpads = g_slist_prepend (demux->srcpads, mppad);
     demux->numpads++;
@@ -557,6 +558,13 @@ gst_multipart_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   res = GST_FLOW_OK;
 
   if (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT)) {
+    GSList *l;
+
+    for (l = multipart->srcpads; l != NULL; l = l->next) {
+      GstMultipartPad *srcpad = l->data;
+
+      srcpad->discont = TRUE;
+    }
     gst_adapter_clear (adapter);
   }
   gst_adapter_push (adapter, buf);
@@ -619,10 +627,12 @@ gst_multipart_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
       }
 
-      if (created)
+      if (srcpad->discont) {
         GST_BUFFER_FLAG_SET (outbuf, GST_BUFFER_FLAG_DISCONT);
-      else
+        srcpad->discont = FALSE;
+      } else {
         GST_BUFFER_FLAG_UNSET (outbuf, GST_BUFFER_FLAG_DISCONT);
+      }
 
       GST_DEBUG_OBJECT (multipart,
           "pushing buffer with timestamp %" GST_TIME_FORMAT,
