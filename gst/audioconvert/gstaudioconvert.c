@@ -442,7 +442,7 @@ gst_audio_convert_fixate_format (GstBaseTransform * base, GstStructure * ins,
   const gchar *in_format;
   const GValue *format;
   const GstAudioFormatInfo *in_info, *out_info = NULL;
-  GstAudioFormatFlags in_flags, out_flags;
+  GstAudioFormatFlags in_flags, out_flags = 0;
 
   in_format = gst_structure_get_string (ins, "format");
   if (!in_format)
@@ -473,6 +473,8 @@ gst_audio_convert_fixate_format (GstBaseTransform * base, GstStructure * ins,
       val = gst_value_list_get_value (format, i);
       if (G_VALUE_HOLDS_STRING (val)) {
         const GstAudioFormatInfo *t_info;
+        GstAudioFormatFlags t_flags;
+
         fname = g_value_get_string (val);
         t_info =
             gst_audio_format_get_info (gst_audio_format_from_string (fname));
@@ -484,33 +486,43 @@ gst_audio_convert_fixate_format (GstBaseTransform * base, GstStructure * ins,
           break;
         }
 
-        out_flags = GST_AUDIO_FORMAT_INFO_FLAGS (t_info);
-        out_flags &= ~(GST_AUDIO_FORMAT_FLAG_UNPACK);
-        out_flags &= ~(GST_AUDIO_FORMAT_FLAG_SIGNED);
-        /* or another format without losing precision */
-        if (in_flags == out_flags) {
-          if (GST_AUDIO_FORMAT_INFO_DEPTH (t_info) ==
-              GST_AUDIO_FORMAT_INFO_DEPTH (in_info) &&
-              (!out_info
-                  || GST_AUDIO_FORMAT_INFO_DEPTH (out_info) >=
-                  GST_AUDIO_FORMAT_INFO_DEPTH (in_info))) {
-            /* exact match of depth, we still continue
-             * to iterate to see if we can get exactly
-             * the same format.
-             * Only go here if we don't have another
-             * format with the same depth already. We
-             * always take the first to prefer caps
-             * order. */
-            out_info = t_info;
-          } else if ((GST_AUDIO_FORMAT_INFO_DEPTH (t_info) >=
-                  GST_AUDIO_FORMAT_INFO_DEPTH (in_info)) && !out_info) {
-            /* match where we do not lose precision. This could
-             * be ok, but keep searching for an exact match.
-             * Only go here if we don't have another format with
-             * a bigger/equal depth already. We always take the
-             * first to prefer caps order. */
-            out_info = t_info;
-          }
+        t_flags = GST_AUDIO_FORMAT_INFO_FLAGS (t_info);
+        t_flags &= ~(GST_AUDIO_FORMAT_FLAG_UNPACK);
+        t_flags &= ~(GST_AUDIO_FORMAT_FLAG_SIGNED);
+
+        if (GST_AUDIO_FORMAT_INFO_DEPTH (t_info) ==
+            GST_AUDIO_FORMAT_INFO_DEPTH (in_info) && (!out_info
+                || GST_AUDIO_FORMAT_INFO_DEPTH (out_info) !=
+                GST_AUDIO_FORMAT_INFO_DEPTH (in_info)
+                || (t_flags == in_flags && out_flags != in_flags))) {
+          /* Prefer to use the first format that has the same depth with the same
+           * flags, and if none with the same flags exist use the first other one
+           * that has the same depth */
+          out_info = t_info;
+          out_flags = t_flags;
+        } else if (GST_AUDIO_FORMAT_INFO_DEPTH (t_info) >=
+            GST_AUDIO_FORMAT_INFO_DEPTH (in_info) && (!out_info
+                || GST_AUDIO_FORMAT_INFO_DEPTH (in_info) >
+                GST_AUDIO_FORMAT_INFO_DEPTH (out_info)
+                || (GST_AUDIO_FORMAT_INFO_DEPTH (out_info) >=
+                    GST_AUDIO_FORMAT_INFO_DEPTH (in_info) && t_flags == in_flags
+                    && out_flags != in_flags))) {
+          /* Otherwise use the first format that has a higher depth with the same flags,
+           * if none with the same flags exist use the first other one that has a higher
+           * depth */
+          out_info = t_info;
+          out_flags = t_flags;
+        } else if (!out_info
+            || (GST_AUDIO_FORMAT_INFO_DEPTH (t_info) >
+                GST_AUDIO_FORMAT_INFO_DEPTH (out_info)
+                && GST_AUDIO_FORMAT_INFO_DEPTH (out_info) <
+                GST_AUDIO_FORMAT_INFO_DEPTH (in_info)) || (t_flags == in_flags
+                && out_flags != in_flags
+                && GST_AUDIO_FORMAT_INFO_DEPTH (out_info) ==
+                GST_AUDIO_FORMAT_INFO_DEPTH (t_info))) {
+          /* Else get at least the one with the highest depth, ideally with the same flags */
+          out_info = t_info;
+          out_flags = t_flags;
         }
       }
     }
