@@ -253,6 +253,7 @@ enum
 #define DEFAULT_RTCP_SYNC            GST_RTP_BIN_RTCP_SYNC_ALWAYS
 #define DEFAULT_RTCP_SYNC_INTERVAL   0
 #define DEFAULT_DO_SYNC_EVENT        FALSE
+#define DEFAULT_DO_RETRANSMISSION    FALSE
 
 enum
 {
@@ -269,6 +270,7 @@ enum
   PROP_BUFFER_MODE,
   PROP_USE_PIPELINE_CLOCK,
   PROP_DO_SYNC_EVENT,
+  PROP_DO_RETRANSMISSION,
   PROP_LAST
 };
 
@@ -1429,6 +1431,7 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   g_object_set (buffer, "drop-on-latency", rtpbin->drop_on_latency, NULL);
   g_object_set (buffer, "do-lost", rtpbin->do_lost, NULL);
   g_object_set (buffer, "mode", rtpbin->buffer_mode, NULL);
+  g_object_set (buffer, "do-retransmission", rtpbin->do_retransmission, NULL);
 
   if (!rtpbin->ignore_pt)
     gst_bin_add (GST_BIN_CAST (rtpbin), demux);
@@ -1867,6 +1870,12 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           "Send event downstream when a stream is synchronized to the sender",
           DEFAULT_DO_SYNC_EVENT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_DO_RETRANSMISSION,
+      g_param_spec_boolean ("do-retransmission", "Do retransmission",
+          "Send an event downstream to request packet retransmission",
+          DEFAULT_DO_RETRANSMISSION,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state = GST_DEBUG_FUNCPTR (gst_rtp_bin_change_state);
   gstelement_class->request_new_pad =
       GST_DEBUG_FUNCPTR (gst_rtp_bin_request_new_pad);
@@ -1924,6 +1933,7 @@ gst_rtp_bin_init (GstRtpBin * rtpbin)
   rtpbin->buffer_mode = DEFAULT_BUFFER_MODE;
   rtpbin->use_pipeline_clock = DEFAULT_USE_PIPELINE_CLOCK;
   rtpbin->send_sync_event = DEFAULT_DO_SYNC_EVENT;
+  rtpbin->do_retransmission = DEFAULT_DO_RETRANSMISSION;
 
   /* some default SDES entries */
   cname = g_strdup_printf ("user%u@host-%x", g_random_int (), g_random_int ());
@@ -2077,6 +2087,13 @@ gst_rtp_bin_set_property (GObject * object, guint prop_id,
       /* propagate the property down to the jitterbuffer */
       gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin, "mode", value);
       break;
+    case PROP_DO_RETRANSMISSION:
+      GST_RTP_BIN_LOCK (rtpbin);
+      rtpbin->do_retransmission = g_value_get_boolean (value);
+      GST_RTP_BIN_UNLOCK (rtpbin);
+      gst_rtp_bin_propagate_property_to_jitterbuffer (rtpbin,
+          "do-retransmission", value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -2133,6 +2150,11 @@ gst_rtp_bin_get_property (GObject * object, guint prop_id,
       break;
     case PROP_DO_SYNC_EVENT:
       g_value_set_boolean (value, rtpbin->send_sync_event);
+      break;
+    case PROP_DO_RETRANSMISSION:
+      GST_RTP_BIN_LOCK (rtpbin);
+      g_value_set_boolean (value, rtpbin->do_retransmission);
+      GST_RTP_BIN_UNLOCK (rtpbin);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

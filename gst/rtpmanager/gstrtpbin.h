@@ -58,6 +58,7 @@ struct _GstRtpBin {
   gboolean        use_pipeline_clock;
   gboolean        send_sync_event;
   GstClockTime    buffer_start;
+  gboolean        do_retransmission;
   /* a list of session */
   GSList         *sessions;
 
