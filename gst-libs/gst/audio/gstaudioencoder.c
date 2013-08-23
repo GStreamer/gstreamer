@@ -2529,11 +2529,11 @@ static gboolean
 gst_audio_encoder_negotiate_default (GstAudioEncoder * enc)
 {
   GstAudioEncoderClass *klass;
-  gboolean res = FALSE;
+  gboolean res = TRUE;
   GstQuery *query = NULL;
   GstAllocator *allocator;
   GstAllocationParams params;
-  GstCaps *caps;
+  GstCaps *caps, *prevcaps;
 
   g_return_val_if_fail (GST_IS_AUDIO_ENCODER (enc), FALSE);
   g_return_val_if_fail (GST_IS_CAPS (enc->priv->ctx.caps), FALSE);
@@ -2545,29 +2545,31 @@ gst_audio_encoder_negotiate_default (GstAudioEncoder * enc)
   GST_DEBUG_OBJECT (enc, "Setting srcpad caps %" GST_PTR_FORMAT, caps);
 
   if (enc->priv->pending_events) {
-    GList *pending_events, *l;
-    gboolean set_caps = FALSE;
+    GList **pending_events, *l;
 
-    pending_events = enc->priv->pending_events;
-    enc->priv->pending_events = NULL;
+    pending_events = &enc->priv->pending_events;
 
     GST_DEBUG_OBJECT (enc, "Pushing pending events");
-    for (l = pending_events; l; l = l->next) {
+    for (l = *pending_events; l;) {
       GstEvent *event = GST_EVENT (l->data);
+      GList *tmp;
 
-      if (GST_EVENT_TYPE (event) > GST_EVENT_CAPS && !set_caps) {
-        res = gst_pad_set_caps (enc->srcpad, caps);
-        set_caps = TRUE;
+      if (GST_EVENT_TYPE (event) < GST_EVENT_CAPS) {
+        gst_audio_encoder_push_event (enc, l->data);
+        tmp = l;
+        l = l->next;
+        *pending_events = g_list_delete_link (*pending_events, tmp);
+      } else {
+        l = l->next;
       }
-      gst_audio_encoder_push_event (enc, l->data);
     }
-    g_list_free (pending_events);
-    if (!set_caps) {
-      res = gst_pad_set_caps (enc->srcpad, caps);
-    }
-  } else {
-    res = gst_pad_set_caps (enc->srcpad, caps);
   }
+
+  prevcaps = gst_pad_get_current_caps (enc->srcpad);
+  if (!prevcaps || !gst_caps_is_equal (prevcaps, caps))
+    res = gst_pad_set_caps (enc->srcpad, caps);
+  if (prevcaps)
+    gst_caps_unref (prevcaps);
 
   if (!res)
     goto done;
