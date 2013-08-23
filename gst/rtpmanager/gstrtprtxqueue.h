@@ -55,6 +55,9 @@ struct _GstRTPRtxQueue
   GMutex lock;
   GQueue *queue;
   GList *pending;
+
+  guint max_size_time;
+  guint max_size_packets;
 };
 
 struct _GstRTPRtxQueueClass

@@ -37,9 +37,14 @@
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_rtx_queue_debug);
 #define GST_CAT_DEFAULT gst_rtp_rtx_queue_debug
 
+#define DEFAULT_MAX_SIZE_TIME    0
+#define DEFAULT_MAX_SIZE_PACKETS 100
+
 enum
 {
   PROP_0,
+  PROP_MAX_SIZE_TIME,
+  PROP_MAX_SIZE_PACKETS,
   PROP_LAST
 };
 
@@ -80,6 +85,21 @@ gst_rtp_rtx_queue_class_init (GstRTPRtxQueueClass * klass)
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
 
+  gobject_class->get_property = gst_rtp_rtx_queue_get_property;
+  gobject_class->set_property = gst_rtp_rtx_queue_set_property;
+  gobject_class->finalize = gst_rtp_rtx_queue_finalize;
+
+  g_object_class_install_property (gobject_class, PROP_MAX_SIZE_TIME,
+      g_param_spec_uint ("max-size-time", "Max Size Times",
+          "Amount of ms to queue (0 = unlimited)", 0, G_MAXUINT,
+          DEFAULT_MAX_SIZE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_MAX_SIZE_PACKETS,
+      g_param_spec_uint ("max-size-packets", "Max Size Packets",
+          "Amount of packets to queue (0 = unlimited)", 0, G_MAXUINT,
+          DEFAULT_MAX_SIZE_PACKETS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&src_factory));
   gst_element_class_add_pad_template (gstelement_class,
@@ -89,10 +109,6 @@ gst_rtp_rtx_queue_class_init (GstRTPRtxQueueClass * klass)
       "RTP Retransmission Queue", "Codec",
       "Keep RTP packets in a queue for retransmission",
       "Wim Taymans <wim.taymans@gmail.com>");
-
-  gobject_class->get_property = gst_rtp_rtx_queue_get_property;
-  gobject_class->set_property = gst_rtp_rtx_queue_set_property;
-  gobject_class->finalize = gst_rtp_rtx_queue_finalize;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_rtx_queue_change_state);
@@ -147,6 +163,9 @@ gst_rtp_rtx_queue_init (GstRTPRtxQueue * rtx)
 
   rtx->queue = g_queue_new ();
   g_mutex_init (&rtx->lock);
+
+  rtx->max_size_time = DEFAULT_MAX_SIZE_TIME;
+  rtx->max_size_packets = DEFAULT_MAX_SIZE_PACKETS;
 }
 
 typedef struct
@@ -238,9 +257,12 @@ gst_rtp_rtx_queue_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   g_mutex_lock (&rtx->lock);
   g_queue_push_head (rtx->queue, gst_buffer_ref (buffer));
-  while (g_queue_get_length (rtx->queue) > 100) {
-    gst_buffer_unref (g_queue_pop_tail (rtx->queue));
+
+  if (rtx->max_size_packets) {
+    while (g_queue_get_length (rtx->queue) > rtx->max_size_packets)
+      gst_buffer_unref (g_queue_pop_tail (rtx->queue));
   }
+
   pending = rtx->pending;
   rtx->pending = NULL;
   g_mutex_unlock (&rtx->lock);
@@ -257,7 +279,15 @@ static void
 gst_rtp_rtx_queue_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
+  GstRTPRtxQueue *rtx = GST_RTP_RTX_QUEUE (object);
+
   switch (prop_id) {
+    case PROP_MAX_SIZE_TIME:
+      g_value_set_uint (value, rtx->max_size_time);
+      break;
+    case PROP_MAX_SIZE_PACKETS:
+      g_value_set_uint (value, rtx->max_size_packets);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -268,7 +298,15 @@ static void
 gst_rtp_rtx_queue_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
+  GstRTPRtxQueue *rtx = GST_RTP_RTX_QUEUE (object);
+
   switch (prop_id) {
+    case PROP_MAX_SIZE_TIME:
+      rtx->max_size_time = g_value_get_uint (value);
+      break;
+    case PROP_MAX_SIZE_PACKETS:
+      rtx->max_size_packets = g_value_get_uint (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
