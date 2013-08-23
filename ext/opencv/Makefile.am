@@ -23,6 +23,7 @@ libgstopencv_la_SOURCES = gstopencv.c \
 			gstretinex.c \
 			gstsegmentation.cpp \
 			gstgrabcut.cpp \
+			gstdisparity.cpp \
 			motioncells_wrapper.cpp \
 			MotionCells.cpp
 
@@ -65,6 +66,7 @@ noinst_HEADERS = gstopencvvideofilter.h gstopencvutils.h \
 		gstretinex.h \
 		gstsegmentation.h \
 		gstgrabcut.h \
+		gstdisparity.h \
 		gstmotioncells.h \
 		motioncells_wrapper.h \
 		MotionCells.h
