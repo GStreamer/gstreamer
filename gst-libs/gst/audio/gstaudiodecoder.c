@@ -579,7 +579,7 @@ gst_audio_decoder_negotiate_default (GstAudioDecoder * dec)
 
   prevcaps = gst_pad_get_current_caps (dec->srcpad);
   if (!prevcaps || !gst_caps_is_equal (prevcaps, caps))
-    set_caps = TRUE;
+    set_caps = FALSE;
   if (prevcaps)
     gst_caps_unref (prevcaps);
 
