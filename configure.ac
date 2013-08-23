@@ -1223,6 +1223,16 @@ AG_GST_CHECK_FEATURE(WAYLAND, [wayland sink], wayland , [
   ])
 ])
 
+dnl **** WebP ****
+translit(dnm, m, l) AM_CONDITIONAL(USE_WEBP, true)
+AG_GST_CHECK_FEATURE(WEBP, [WebP], webp , [
+  PKG_CHECK_MODULES(WEBP, libwebp >= 0.2.1, [
+    HAVE_WEBP="yes" ], [ HAVE_WEBP="no"
+  ])
+  AC_SUBST(WEBP_CFLAGS)
+  AC_SUBST(WEBP_LIBS)
+])
+
 dnl *** Daala ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DAALA, true)
 AG_GST_CHECK_FEATURE(DAALA, [daala], daala, [
@@ -2239,6 +2249,7 @@ AM_CONDITIONAL(USE_RTMP, false)
 AM_CONDITIONAL(USE_TELETEXTDEC, false)
 AM_CONDITIONAL(USE_SNDIO, false)
 AM_CONDITIONAL(USE_UVCH264, false)
+AM_CONDITIONAL(USE_WEBP, false)
 
 fi dnl of EXT plugins
 
@@ -2498,6 +2509,7 @@ ext/gsettings/Makefile
 ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml
 ext/spc/Makefile
 ext/timidity/Makefile
+ext/webp/Makefile
 ext/xvid/Makefile
 ext/zbar/Makefile
 po/Makefile.in

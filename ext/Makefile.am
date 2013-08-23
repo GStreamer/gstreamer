@@ -376,6 +376,11 @@ else
 HLS_DIR =
 endif
 
+if USE_WEBP
+WEBP_DIR=webp
+else
+WEBP_DIR=
+endif
 
 SUBDIRS=\
 	$(VOAACENC_DIR) \
@@ -439,7 +444,8 @@ SUBDIRS=\
 	$(XVID_DIR) \
 	$(ZBAR_DIR) \
 	$(RTMP_DIR) \
-	$(HLS_DIR)
+	$(HLS_DIR) \
+	$(WEBP_DIR)
 
 DIST_SUBDIRS = \
 	assrender \
@@ -499,6 +505,7 @@ DIST_SUBDIRS = \
 	voamrwbenc \
 	xvid \
 	zbar \
-	rtmp
+	rtmp \
+	webp
 
 include $(top_srcdir)/common/parallel-subdirs.mak
