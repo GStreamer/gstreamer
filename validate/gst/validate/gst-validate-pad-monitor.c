@@ -101,6 +101,20 @@ typedef struct
 } SerializedEventData;
 
 static void
+debug_pending_event (GstPad * pad, GPtrArray * array)
+{
+  guint i, len;
+
+  len = array->len;
+  for (i = 0; i < len; i++) {
+    SerializedEventData *data = g_ptr_array_index (array, i);
+    GST_DEBUG_OBJECT (pad, "event #%d %" GST_TIME_FORMAT " %s %p",
+        i, GST_TIME_ARGS (data->timestamp),
+        GST_EVENT_TYPE_NAME (data->event), data->event);
+  }
+}
+
+static void
 _serialized_event_data_free (SerializedEventData * serialized_event)
 {
   gst_event_unref (serialized_event->event);
@@ -464,8 +478,10 @@ gst_validate_pad_monitor_check_late_serialized_events (GstValidatePadMonitor *
     }
   }
 
-  if (i)
+  if (i) {
+    debug_pending_event (monitor->pad, monitor->serialized_events);
     g_ptr_array_remove_range (monitor->serialized_events, 0, i);
+  }
 }
 
 static void
@@ -484,6 +500,7 @@ gst_validate_pad_monitor_dispose (GObject * object)
 
   gst_structure_free (monitor->pending_setcaps_fields);
   g_ptr_array_unref (monitor->serialized_events);
+  g_list_free (monitor->expired_events);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -511,6 +528,7 @@ gst_validate_pad_monitor_init (GstValidatePadMonitor * pad_monitor)
   pad_monitor->serialized_events =
       g_ptr_array_new_with_free_func ((GDestroyNotify)
       _serialized_event_data_free);
+  pad_monitor->expired_events = NULL;
   gst_segment_init (&pad_monitor->segment, GST_FORMAT_BYTES);
   pad_monitor->first_buffer = TRUE;
 
@@ -906,7 +924,11 @@ static void
           data->timestamp = last_ts;
           data->event = gst_event_ref (event);
           GST_VALIDATE_MONITOR_LOCK (othermonitor);
+          GST_DEBUG_OBJECT (monitor->pad, "Storing for pad %s:%s event %p %s",
+              GST_DEBUG_PAD_NAME (otherpad), event,
+              GST_EVENT_TYPE_NAME (event));
           g_ptr_array_add (othermonitor->serialized_events, data);
+          debug_pending_event (otherpad, othermonitor->serialized_events);
           GST_VALIDATE_MONITOR_UNLOCK (othermonitor);
         }
         g_value_reset (&value);
@@ -1548,29 +1570,79 @@ gst_validate_pad_monitor_event_probe (GstPad * pad, GstEvent * event,
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (monitor);
   GST_VALIDATE_MONITOR_LOCK (monitor);
 
+  GST_DEBUG_OBJECT (pad, "event %p %s", event, GST_EVENT_TYPE_NAME (event));
+
   if (GST_EVENT_IS_SERIALIZED (event)) {
     gint i;
 
-    if (monitor->serialized_events->len > 0) {
-      SerializedEventData *next_event =
-          g_ptr_array_index (monitor->serialized_events, 0);
+    /* Detect if events the element received are being forwarded in the same order
+     *
+     * Several scenarios:
+     * 1) The element pushes the event as-is
+     * 2) The element consumes the event and does not forward it
+     * 3) The element consumes the event and creates another one instead
+     * 4) The element pushes other serialized event before pushing out the
+     *    one it received
+     *
+     * For each pad we have two lists to track serialized events:
+     *  1) We received on input and expect to see (serialized_events)
+     *  2) We received on input but don't expect to see (expired_events)
+     *
+     * To detect events that are pushed in a different order from the one they were
+     * received in we check that:
+     *
+     * For each event being outputted:
+     *   If it is in the expired_events list:
+     *     RAISE WARNING
+     *   If it is in the serialized_events list:
+     *     If there are other events that were received before:
+     *        Put those events on the expired_events list
+     *     Remove that event and any previous ones from the serialized_events list
+     *
+     * FIXME : When do we clear the expired_events list ?
+     *
+     */
 
-      if (event == next_event->event
-          || GST_EVENT_TYPE (event) == GST_EVENT_TYPE (next_event->event)) {
-        g_ptr_array_remove_index (monitor->serialized_events, 0);
-      }
-    } else {
-      /* if the event is not the first, it might be out of order */
+    if (g_list_find (monitor->expired_events, event)) {
+      /* If it's the expired events, we've failed */
+      GST_WARNING_OBJECT (pad, "Did not expect event %p %s", event,
+          GST_EVENT_TYPE_NAME (event));
+      GST_VALIDATE_REPORT (monitor, EVENT_SERIALIZED_OUT_OF_ORDER,
+          "Serialized event was pushed out of order: %" GST_PTR_FORMAT, event);
+      monitor->expired_events =
+          g_list_remove (monitor->expired_events, monitor);
+    } else if (monitor->serialized_events->len) {
       for (i = 0; i < monitor->serialized_events->len; i++) {
-        SerializedEventData *stored_event =
+        SerializedEventData *next_event =
             g_ptr_array_index (monitor->serialized_events, i);
+        GST_DEBUG_OBJECT (pad, "Checking against stored event #%d: %p %s", i,
+            next_event->event, GST_EVENT_TYPE_NAME (next_event->event));
 
-        if (event == stored_event->event
-            || GST_EVENT_TYPE (event) == GST_EVENT_TYPE (stored_event->event)) {
-          GST_VALIDATE_REPORT (monitor, EVENT_SERIALIZED_OUT_OF_ORDER,
-              "Serialized event %" GST_PTR_FORMAT " was pushed out of original "
-              "serialization order in pad %s:%s", event,
-              GST_DEBUG_PAD_NAME (GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor)));
+        if (event == next_event->event
+            || GST_EVENT_TYPE (event) == GST_EVENT_TYPE (next_event->event)) {
+          /* We have found our event */
+          GST_DEBUG_OBJECT (pad, "Found matching event");
+
+          while (monitor->serialized_events->len > i
+              && GST_EVENT_TYPE (event) == GST_EVENT_TYPE (next_event->event)) {
+            /* Swallow all expected events of the same type */
+            g_ptr_array_remove_index (monitor->serialized_events, i);
+            next_event = g_ptr_array_index (monitor->serialized_events, i);
+          }
+
+          /* Move all previous events to expired events */
+          if (G_UNLIKELY (i > 0)) {
+            GST_DEBUG_OBJECT (pad,
+                "Moving previous expected events to expired list");
+            while (i--) {
+              next_event = g_ptr_array_index (monitor->serialized_events, 0);
+              monitor->expired_events =
+                  g_list_append (monitor->expired_events, next_event->event);
+              g_ptr_array_remove_index (monitor->serialized_events, 0);
+            }
+          }
+          debug_pending_event (pad, monitor->serialized_events);
+          break;
         }
       }
     }

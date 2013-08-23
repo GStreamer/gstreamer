@@ -84,6 +84,7 @@ struct _GstValidatePadMonitor {
 
   GstEvent *expected_segment;
   GPtrArray *serialized_events;
+  GList *expired_events;
 
   GstStructure *pending_setcaps_fields;
 
