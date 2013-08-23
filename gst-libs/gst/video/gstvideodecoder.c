@@ -3010,6 +3010,7 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
   GstAllocationParams params;
   gboolean ret = TRUE;
   GstVideoCodecFrame *frame;
+  GstCaps *prevcaps;
 
   g_return_val_if_fail (GST_VIDEO_INFO_WIDTH (&state->info) != 0, FALSE);
   g_return_val_if_fail (GST_VIDEO_INFO_HEIGHT (&state->info) != 0, FALSE);
@@ -3052,7 +3053,14 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
       }
     }
   }
-  ret = gst_pad_set_caps (decoder->srcpad, state->caps);
+
+  prevcaps = gst_pad_get_current_caps (decoder->srcpad);
+  if (!prevcaps || !gst_caps_is_equal (prevcaps, state->caps))
+    ret = gst_pad_set_caps (decoder->srcpad, state->caps);
+  else
+    ret = TRUE;
+  if (prevcaps)
+    gst_caps_unref (prevcaps);
 
   if (!ret)
     goto done;
