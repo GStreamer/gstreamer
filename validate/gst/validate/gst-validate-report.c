@@ -293,11 +293,11 @@ gst_validate_report_area_get_name (GstValidateReportArea area)
 void
 gst_validate_report_check_abort (GstValidateReport * report)
 {
-  if ((report->level == GST_VALIDATE_REPORT_LEVEL_ISSUE &&
+  if ((report->level <= GST_VALIDATE_REPORT_LEVEL_ISSUE &&
           _gst_validate_flags & GST_VALIDATE_FATAL_ISSUES) ||
-      (report->level == GST_VALIDATE_REPORT_LEVEL_WARNING &&
+      (report->level <= GST_VALIDATE_REPORT_LEVEL_WARNING &&
           _gst_validate_flags & GST_VALIDATE_FATAL_WARNINGS) ||
-      (report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL &&
+      (report->level <= GST_VALIDATE_REPORT_LEVEL_CRITICAL &&
           _gst_validate_flags & GST_VALIDATE_FATAL_CRITICALS)) {
     g_error ("Fatal report received: %" GST_VALIDATE_ERROR_REPORT_PRINT_FORMAT,
         GST_VALIDATE_REPORT_PRINT_ARGS (report));
