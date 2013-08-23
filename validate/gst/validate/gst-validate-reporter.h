@@ -37,19 +37,20 @@ G_BEGIN_DECLS
 #define GST_VALIDATE_REPORTER_CAST(obj)           ((GstValidateReporter *) obj)
 
 #ifdef G_HAVE_ISO_VARARGS
-#define GST_VALIDATE_REPORT(m, issue_id, ...)                              \
-G_STMT_START {                                                       \
-  gst_validate_report (GST_VALIDATE_REPORTER (m), issue_id,                      \
-      __VA_ARGS__ );                                                 \
-} G_STMT_END
+#define GST_VALIDATE_REPORT(m, issue_id, ...)				\
+  G_STMT_START {							\
+    gst_validate_report (GST_VALIDATE_REPORTER (m),			\
+			 GST_VALIDATE_ISSUE_ID_##issue_id,		\
+			 __VA_ARGS__ );					\
+  } G_STMT_END
 
 #else /* G_HAVE_GNUC_VARARGS */
 #ifdef G_HAVE_GNUC_VARARGS
-#define GST_VALIDATE_REPORT(m, issue_id, args...)                          \
-G_STMT_START {                                                       \
-  gst_validate_report (GST_VALIDATE_REPORTER (m),                                \
-    issue_id, ##args );                                              \
-} G_STMT_END
+#define GST_VALIDATE_REPORT(m, issue_id, args...)			\
+  G_STMT_START {							\
+    gst_validate_report (GST_VALIDATE_REPORTER (m),			\
+			 GST_VALIDATE_ISSUE_ID_##issue_id, ##args );	\
+  } G_STMT_END
 
 #endif /* G_HAVE_ISO_VARARGS */
 #endif /* G_HAVE_GNUC_VARARGS */

@@ -416,7 +416,7 @@ _pause_action_restore_playing (GstValidateScenario * scenario)
 
   if (gst_element_set_state (pipeline, GST_STATE_PLAYING) ==
       GST_STATE_CHANGE_FAILURE) {
-    GST_VALIDATE_REPORT (scenario, GST_VALIDATE_ISSUE_ID_STATE_CHANGE_FAILURE,
+    GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
         "Failed to set state to playing");
   }
 
@@ -441,8 +441,7 @@ _execute_action (GstValidateScenario * scenario, ScenarioAction * act)
             seek->format, seek->flags,
             seek->start_type, seek->start,
             seek->stop_type, seek->stop) == FALSE) {
-      GST_VALIDATE_REPORT (scenario,
-          GST_VALIDATE_ISSUE_ID_EVENT_SEEK_NOT_HANDLED,
+      GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
           "Could not seek to position %" GST_TIME_FORMAT,
           GST_TIME_ARGS (priv->seeked_position));
     }
@@ -455,7 +454,7 @@ _execute_action (GstValidateScenario * scenario, ScenarioAction * act)
 
     if (gst_element_set_state (pipeline, GST_STATE_PAUSED) ==
         GST_STATE_CHANGE_FAILURE) {
-      GST_VALIDATE_REPORT (scenario, GST_VALIDATE_ISSUE_ID_STATE_CHANGE_FAILURE,
+      GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
           "Failed to set state to paused");
     }
     gst_element_get_state (pipeline, NULL, NULL, -1);
@@ -495,8 +494,7 @@ get_position (GstValidateScenario * scenario)
     /* TODO what about non flushing seeks? */
     /* TODO why is this inside the action time if ? */
     if (GST_CLOCK_TIME_IS_VALID (priv->seeked_position))
-      GST_VALIDATE_REPORT (scenario,
-          GST_VALIDATE_ISSUE_ID_EVENT_SEEK_NOT_HANDLED,
+      GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
           "Previous seek to %" GST_TIME_FORMAT " was not handled",
           GST_TIME_ARGS (priv->seeked_position));
 
@@ -526,8 +524,7 @@ async_done_cb (GstBus * bus, GstMessage * message,
         position < (MAX (0,
                 ((gint64) (priv->seeked_position - priv->seek_pos_tol))))) {
 
-      GST_VALIDATE_REPORT (scenario,
-          GST_VALIDATE_ISSUE_ID_EVENT_SEEK_RESULT_POSITION_WRONG,
+      GST_VALIDATE_REPORT (scenario, EVENT_SEEK_RESULT_POSITION_WRONG,
           "Seeked position %" GST_TIME_FORMAT "not in the expected range [%"
           GST_TIME_FORMAT " -- %" GST_TIME_FORMAT, GST_TIME_ARGS (position),
           GST_TIME_ARGS (((MAX (0,
