@@ -473,10 +473,10 @@ static gboolean
 get_position (GstValidateScenario * scenario)
 {
   GList *tmp;
-  gint64 position;
   GstQuery *query;
   gdouble rate = 1.0;
   ScenarioAction *act;
+  gint64 position, duration;
   GstFormat format = GST_FORMAT_TIME;
   GstValidateScenarioPrivate *priv = scenario->priv;
   GstElement *pipeline = scenario->priv->pipeline;
@@ -494,6 +494,19 @@ get_position (GstValidateScenario * scenario)
   gst_query_unref (query);
   act = scenario->priv->actions->data;
   gst_element_query_position (pipeline, format, &position);
+
+  format = GST_FORMAT_TIME;
+  gst_element_query_duration (pipeline, format, &duration);
+
+  if (position > duration) {
+    GST_VALIDATE_REPORT (scenario,
+        QUERY_POSITION_SUPERIOR_DURATION,
+        "Reported position %" GST_TIME_FORMAT " > reported duration %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
+
+    return TRUE;
+  }
+
 
   GST_LOG ("Current position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
   if ((rate > 0 && (GstClockTime) position >= act->playback_time) ||
