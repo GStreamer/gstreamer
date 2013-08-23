@@ -116,7 +116,7 @@ static void gst_multipart_set_property (GObject * object, guint prop_id,
 static void gst_multipart_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static void gst_multipart_demux_finalize (GObject * object);
+static void gst_multipart_demux_dispose (GObject * object);
 
 #define gst_multipart_demux_parent_class parent_class
 G_DEFINE_TYPE (GstMultipartDemux, gst_multipart_demux, GST_TYPE_ELEMENT);
@@ -129,7 +129,7 @@ gst_multipart_demux_class_init (GstMultipartDemuxClass * klass)
   GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
 
-  gobject_class->finalize = gst_multipart_demux_finalize;
+  gobject_class->dispose = gst_multipart_demux_dispose;
   gobject_class->set_property = gst_multipart_set_property;
   gobject_class->get_property = gst_multipart_get_property;
 
@@ -193,24 +193,35 @@ gst_multipart_demux_init (GstMultipartDemux * multipart)
 }
 
 static void
-gst_multipart_pad_free (GstMultipartPad * mppad)
+gst_multipart_demux_remove_src_pads (GstMultipartDemux * demux)
 {
-  g_free (mppad->mime);
-  g_free (mppad);
+  while (demux->srcpads != NULL) {
+    GstMultipartPad *mppad = demux->srcpads->data;
+
+    gst_element_remove_pad (GST_ELEMENT (demux), mppad->pad);
+    g_free (mppad->mime);
+    g_free (mppad);
+    demux->srcpads = g_slist_delete_link (demux->srcpads, demux->srcpads);
+  }
+  demux->srcpads = NULL;
+  demux->numpads = 0;
 }
 
 static void
-gst_multipart_demux_finalize (GObject * object)
+gst_multipart_demux_dispose (GObject * object)
 {
   GstMultipartDemux *demux = GST_MULTIPART_DEMUX (object);
 
-  g_object_unref (demux->adapter);
+  if (demux->adapter != NULL)
+    g_object_unref (demux->adapter);
+  demux->adapter = NULL;
   g_free (demux->boundary);
+  demux->boundary = NULL;
   g_free (demux->mime_type);
-  g_slist_foreach (demux->srcpads, (GFunc) gst_multipart_pad_free, NULL);
-  g_slist_free (demux->srcpads);
+  demux->mime_type = NULL;
+  gst_multipart_demux_remove_src_pads (demux);
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (parent_class)->dispose (object);
 }
 
 static const gchar *
@@ -655,6 +666,9 @@ gst_multipart_demux_change_state (GstElement * element,
       g_free (multipart->mime_type);
       multipart->mime_type = NULL;
       gst_adapter_clear (multipart->adapter);
+      multipart->content_length = -1;
+      multipart->scanpos = 0;
+      gst_multipart_demux_remove_src_pads (multipart);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       break;
