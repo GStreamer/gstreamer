@@ -212,7 +212,7 @@ check_file_size (GstValidateMediaInfo * mi)
   gchar *filepath;
   guint64 size = 0;
   gboolean ret = TRUE;
-  GError *err;
+  GError *err = NULL;
 
   filepath = g_filename_from_uri (mi->uri, NULL, &err);
   if (!filepath) {
