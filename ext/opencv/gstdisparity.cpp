@@ -280,8 +280,8 @@ gst_disparity_init (GstDisparity * filter)
   gst_pad_use_fixed_caps (filter->srcpad);
   gst_element_add_pad (GST_ELEMENT (filter), filter->srcpad);
 
-  filter->lock = g_mutex_new ();
-  filter->cond = g_cond_new ();
+  g_mutex_init (&filter->lock);
+  g_cond_init (&filter->cond);
 
   filter->method = DEFAULT_METHOD;
 }
@@ -325,15 +325,15 @@ gst_disparity_change_state (GstElement * element, GstStateChange transition)
   GstDisparity *fs = GST_DISPARITY (element);
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      g_mutex_lock (fs->lock);
+      g_mutex_lock (&fs->lock);
       fs->flushing = true;
-      g_cond_signal (fs->cond);
-      g_mutex_unlock (fs->lock);
+      g_cond_signal (&fs->cond);
+      g_mutex_unlock (&fs->lock);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      g_mutex_lock (fs->lock);
+      g_mutex_lock (&fs->lock);
       fs->flushing = false;
-      g_mutex_unlock (fs->lock);
+      g_mutex_unlock (&fs->lock);
       break;
     default:
       break;
@@ -345,15 +345,15 @@ gst_disparity_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_PAUSED_TO_READY:
-      g_mutex_lock (fs->lock);
+      g_mutex_lock (&fs->lock);
       fs->flushing = true;
-      g_cond_signal (fs->cond);
-      g_mutex_unlock (fs->lock);
+      g_cond_signal (&fs->cond);
+      g_mutex_unlock (&fs->lock);
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      g_mutex_lock (fs->lock);
+      g_mutex_lock (&fs->lock);
       fs->flushing = false;
-      g_mutex_unlock (fs->lock);
+      g_mutex_unlock (&fs->lock);
       break;
     default:
       break;
@@ -376,7 +376,7 @@ gst_disparity_handle_sink_event (GstPad * pad,
       gst_event_parse_caps (event, &caps);
 
       /* Critical section since both pads handle event sinking simultaneously */
-      g_mutex_lock (fs->lock);
+      g_mutex_lock (&fs->lock);
       gst_video_info_from_caps (&info, caps);
 
       GST_INFO_OBJECT (pad, " Negotiating caps via event %" GST_PTR_FORMAT,
@@ -393,7 +393,7 @@ gst_disparity_handle_sink_event (GstPad * pad,
       } else if (!gst_caps_is_equal (fs->caps, caps)) {
         ret = FALSE;
       }
-      g_mutex_unlock (fs->lock);
+      g_mutex_unlock (&fs->lock);
 
       GST_INFO_OBJECT (pad,
           " Negotiated caps (result %d) via event: %" GST_PTR_FORMAT, ret,
@@ -417,7 +417,7 @@ gst_disparity_handle_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
-      g_mutex_lock (fs->lock);
+      g_mutex_lock (&fs->lock);
       if (!gst_pad_has_current_caps (fs->srcpad)) {
         template_caps = gst_pad_get_pad_template_caps (pad);
         gst_query_set_caps_result (query, template_caps);
@@ -427,7 +427,7 @@ gst_disparity_handle_query (GstPad * pad, GstObject * parent, GstQuery * query)
         gst_query_set_caps_result (query, current_caps);
         gst_caps_unref (current_caps);
       }
-      g_mutex_unlock (fs->lock);
+      g_mutex_unlock (&fs->lock);
       ret = TRUE;
       break;
     case GST_QUERY_ALLOCATION:
@@ -467,8 +467,8 @@ gst_disparity_finalize (GObject * object)
   gst_caps_unref (filter->caps);
   filter->caps = NULL;
 
-  g_cond_free (filter->cond);
-  g_mutex_free (filter->lock);
+  g_cond_clear (&filter->cond);
+  g_mutex_clear (&filter->lock);
   G_OBJECT_CLASS (gst_disparity_parent_class)->finalize (object);
 }
 
@@ -482,17 +482,17 @@ gst_disparity_chain_left (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   fs = GST_DISPARITY (parent);
   GST_DEBUG_OBJECT (pad, "processing frame from left");
-  g_mutex_lock (fs->lock);
+  g_mutex_lock (&fs->lock);
   if (fs->flushing) {
-    g_mutex_unlock (fs->lock);
+    g_mutex_unlock (&fs->lock);
     return GST_FLOW_FLUSHING;
   }
   if (fs->buffer_left) {
     GST_DEBUG_OBJECT (pad, " right is busy, wait and hold");
-    g_cond_wait (fs->cond, fs->lock);
+    g_cond_wait (&fs->cond, &fs->lock);
     GST_DEBUG_OBJECT (pad, " right is free, continuing");
     if (fs->flushing) {
-      g_mutex_unlock (fs->lock);
+      g_mutex_unlock (&fs->lock);
       return GST_FLOW_FLUSHING;
     }
   }
@@ -505,8 +505,8 @@ gst_disparity_chain_left (GstPad * pad, GstObject * parent, GstBuffer * buffer)
     fs->cvRGB_left->imageData = (char *) info.data;
 
   GST_DEBUG_OBJECT (pad, "signalled right");
-  g_cond_signal (fs->cond);
-  g_mutex_unlock (fs->lock);
+  g_cond_signal (&fs->cond);
+  g_mutex_unlock (&fs->lock);
 
   return GST_FLOW_OK;
 }
@@ -520,22 +520,22 @@ gst_disparity_chain_right (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   fs = GST_DISPARITY (parent);
   GST_DEBUG_OBJECT (pad, "processing frame from right");
-  g_mutex_lock (fs->lock);
+  g_mutex_lock (&fs->lock);
   if (fs->flushing) {
-    g_mutex_unlock (fs->lock);
+    g_mutex_unlock (&fs->lock);
     return GST_FLOW_FLUSHING;
   }
   if (fs->buffer_left == NULL) {
     GST_DEBUG_OBJECT (pad, " left has not provided another frame yet, waiting");
-    g_cond_wait (fs->cond, fs->lock);
+    g_cond_wait (&fs->cond, &fs->lock);
     GST_DEBUG_OBJECT (pad, " left has just provided a frame, continuing");
     if (fs->flushing) {
-      g_mutex_unlock (fs->lock);
+      g_mutex_unlock (&fs->lock);
       return GST_FLOW_FLUSHING;
     }
   }
   if (!gst_buffer_map (buffer, &info, (GstMapFlags) GST_MAP_READWRITE)) {
-    g_mutex_unlock (fs->lock);
+    g_mutex_unlock (&fs->lock);
     return GST_FLOW_ERROR;
   }
   if (fs->cvRGB_right)
@@ -611,8 +611,8 @@ gst_disparity_chain_right (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   gst_buffer_unmap (fs->buffer_left, &info);
   gst_buffer_unref (fs->buffer_left);
   fs->buffer_left = NULL;
-  g_cond_signal (fs->cond);
-  g_mutex_unlock (fs->lock);
+  g_cond_signal (&fs->cond);
+  g_mutex_unlock (&fs->lock);
 
   ret = gst_pad_push (fs->srcpad, buffer);
   return ret;

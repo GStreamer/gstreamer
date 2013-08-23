@@ -78,8 +78,8 @@ struct _GstDisparity
   int actualChannels;
 
   GstBuffer *buffer_left;
-  GMutex *lock;
-  GCond *cond;
+  GMutex lock;
+  GCond cond;
   gboolean flushing;
 
   CvSize imgSize;
