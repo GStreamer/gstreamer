@@ -31,6 +31,20 @@ project_loaded_cb (GESProject * project, GESTimeline * timeline,
   g_main_loop_quit (mainloop);
 }
 
+static gchar *
+get_tmp_uri (const gchar * filename)
+{
+  gchar *location, *uri;
+
+  location = g_build_filename (g_get_tmp_dir (),
+      "test-keyframes-save.xges", NULL);
+
+  uri = g_strconcat ("file://", location, NULL);
+  g_free (location);
+
+  return uri;
+}
+
 GST_START_TEST (test_project_simple)
 {
   gchar *id;
@@ -416,8 +430,7 @@ GST_START_TEST (test_project_add_keyframes)
 
   _add_keyframes (timeline);
 
-  uri = ges_test_file_uri ("test-keyframes-save.xges");
-
+  uri = get_tmp_uri ("test-keyframes-save.xges");
   formatter_asset = ges_asset_request (GES_TYPE_FORMATTER, "ges", NULL);
   saved =
       ges_project_save (project, timeline, uri, formatter_asset, TRUE, NULL);
@@ -460,7 +473,7 @@ GST_START_TEST (test_project_load_xges)
   GESProject *project;
   GESTimeline *timeline;
   GESAsset *formatter_asset;
-  gchar *tmpuri, *uri = ges_test_file_uri ("test-project.xges");
+  gchar *uri = ges_test_file_uri ("test-project.xges");
 
   project = ges_project_new (uri);
   mainloop = g_main_loop_new (NULL, FALSE);
@@ -485,10 +498,7 @@ GST_START_TEST (test_project_load_xges)
   _test_project (project, timeline);
   g_free (uri);
 
-  tmpuri = g_build_filename (g_get_tmp_dir (), "test-project_TMP.xges", NULL);
-  uri = gst_filename_to_uri (tmpuri, NULL);
-  g_free (tmpuri);
-
+  uri = get_tmp_uri ("test-project_TMP.xges");
   formatter_asset = ges_asset_request (GES_TYPE_FORMATTER, "ges", NULL);
   saved =
       ges_project_save (project, timeline, uri, formatter_asset, TRUE, NULL);
@@ -560,8 +570,7 @@ GST_START_TEST (test_project_auto_transition)
   /* Set timeline and layers auto-transition to TRUE */
   ges_timeline_set_auto_transition (timeline, TRUE);
 
-  tmpuri = ges_test_file_uri ("test-auto-transition-save.xges");
-
+  tmpuri = get_tmp_uri ("test-auto-transition-save.xges");
   formatter_asset = ges_asset_request (GES_TYPE_FORMATTER, "ges", NULL);
   saved =
       ges_project_save (project, timeline, tmpuri, formatter_asset, TRUE, NULL);

@@ -61,6 +61,7 @@ integration_CFLAGS = $(AM_CFLAGS)
 EXTRA_DIST = \
 	ges/test-project.xges \
 	ges/test-auto-transition.xges \
+	ges/test-keyframes.xges \
 	ges/audio_only.ogg \
 	ges/image.png \
 	ges/audio_video.ogg
