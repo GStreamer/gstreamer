@@ -1,4 +1,7 @@
-SUBDIRS = common examples testsuite gi
+SUBDIRS = common gi
+
+# Examples and testsuite need to be ported to 1.0
+#examples testsuite
 
 # include before EXTRA_DIST for win32 assignment
 include $(top_srcdir)/common/win32.mak
@@ -7,8 +10,9 @@ ACLOCAL_AMFLAGS = -I m4 -I common/m4
 
 include $(top_srcdir)/common/release.mak
 
-check-valgrind:
-	cd testsuite/ && make check-valgrind
+# Examples and testsuite need to be ported to 1.0
+# check-valgrind:
+# 	cd testsuite/ && make check-valgrind
 
 check-torture:
 	@true

@@ -19,7 +19,8 @@ dnl check if this is a release version
 AS_NANO(GST_CVS="no", GST_CVS="yes")
 
 dnl can autoconf find the source ?
-AC_CONFIG_SRCDIR([testsuite/common.py])
+# FIXME Port testsuite to 1.0
+# AC_CONFIG_SRCDIR([testsuite/common.py])
 
 dnl define the output header for config
 AC_CONFIG_HEADERS([config.h])
@@ -120,12 +121,14 @@ dnl set release date/time
   #["${srcdir}/gst-python.doap"],
   #[$PACKAGE_VERSION_MAJOR.$PACKAGE_VERSION_MINOR.$PACKAGE_VERSION_MICRO])
 
+# Examples and testsuite need to be ported to 1.0
+# examples/Makefile
+# testsuite/Makefile
+
 AC_OUTPUT([
   Makefile
   common/Makefile
   common/m4/Makefile
-  examples/Makefile
-  testsuite/Makefile
   gi/Makefile
   gi/overrides/Makefile
 ])
