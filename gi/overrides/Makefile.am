@@ -24,7 +24,7 @@ _gi_gst_la_LDFLAGS = $(common_ldflags)
 # paths
 build_pylinks:
 	for f in $(pygioverrides_PYTHON) __init__.py; do \
-	    [ -e $(builddir)/$$f ] || $(LN_S) $(srcdir)/$$f $(builddir)/$$f; \
+	    [ -e $(builddir)/$$f ] || $(LN_S) -f $(srcdir)/$$f $(builddir)/$$f; \
 	done
 
 all: $(pygioverridesexec_LTLIBRARIES:.la=.so) build_pylinks
@@ -32,4 +32,4 @@ check-local: $(pygioverridesexec_LTLIBRARIES:.la=.so) build_pylinks
 clean-local:
 	rm -f $(pygioverridesexec_LTLIBRARIES:.la=.so)
 .la.so:
-	$(LN_S) .libs/$@ $@ || true
+	$(LN_S) -f .libs/$@ $@ || true
