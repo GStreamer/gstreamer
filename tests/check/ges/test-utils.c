@@ -157,9 +157,17 @@ ges_generate_test_file_audio_video (const gchar * filedest,
       done = TRUE;
       ret = TRUE;
     } else if (GST_MESSAGE_TYPE (message) & GST_MESSAGE_ERROR) {
+      gchar *debug = NULL;
+      GError *err = NULL;
+
+      gst_message_parse_error (message, NULL, &debug);
       done = TRUE;
       ret = FALSE;
-      g_print ("Error");
+      GST_ERROR ("Got error %s from %s fron the bus while generation: %s"
+          "debug infos: %s", GST_OBJECT_NAME (message->src), err->message,
+          debug ? debug : NULL, filedest);
+      g_clear_error (&err);
+      g_free (debug);
     }
   }
 
