@@ -53,9 +53,24 @@ gi_gst_fraction_from_value (const GValue * value)
   denominator = gst_value_get_fraction_denominator (value);
 
   module = PyImport_ImportModule ("gi.repository.Gst");
+
+  if (module == NULL) {
+    PyErr_SetString (PyExc_KeyError,
+        "Could not get module for gi.repository.Gst");
+    return NULL;
+  }
+
   dict = PyModule_GetDict (module);
+  Py_DECREF (module);
+
   /* For some reson we need this intermediary step */
   module = PyMapping_GetItemString (dict, "_overrides_module");
+  if (module == NULL) {
+    PyErr_SetString (PyExc_KeyError,
+        "Could not get module for _overrides_module");
+    return NULL;
+  }
+
   dict = PyModule_GetDict (module);
   fraction_type = PyMapping_GetItemString (dict, "Fraction");
 
