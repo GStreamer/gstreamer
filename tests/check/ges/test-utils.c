@@ -153,19 +153,19 @@ ges_generate_test_file_audio_video (const gchar * filedest,
 
   while (!done) {
     message = gst_bus_poll (bus, GST_MESSAGE_ANY, GST_CLOCK_TIME_NONE);
-    if (GST_MESSAGE_TYPE (message) & GST_MESSAGE_EOS) {
+    if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_EOS) {
       done = TRUE;
       ret = TRUE;
-    } else if (GST_MESSAGE_TYPE (message) & GST_MESSAGE_ERROR) {
+    } else if (GST_MESSAGE_TYPE (message) == GST_MESSAGE_ERROR) {
       gchar *debug = NULL;
       GError *err = NULL;
 
-      gst_message_parse_error (message, NULL, &debug);
+      gst_message_parse_error (message, &err, &debug);
       done = TRUE;
       ret = FALSE;
       GST_ERROR ("Got error %s from %s fron the bus while generation: %s"
           "debug infos: %s", GST_OBJECT_NAME (message->src), err->message,
-          debug ? debug : NULL, filedest);
+          debug ? debug : "none", filedest);
       g_clear_error (&err);
       g_free (debug);
     }
