@@ -1,1 +1,1 @@
-Add a pygst-private.h and put some common stuff in there.
+Port tests and example to GStreamer 1.0
