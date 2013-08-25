@@ -3038,7 +3038,6 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
       events = &decoder->priv->current_frame_events;
     }
 
-    ret = FALSE;
     for (l = g_list_last (*events); l;) {
       GstEvent *event = GST_EVENT (l->data);
       GList *tmp;

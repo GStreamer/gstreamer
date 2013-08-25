@@ -1492,7 +1492,6 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
       events = &encoder->priv->current_frame_events;
     }
 
-    ret = FALSE;
     for (l = g_list_last (*events); l;) {
       GstEvent *event = GST_EVENT (l->data);
       GList *tmp;
@@ -1511,6 +1510,8 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
   prevcaps = gst_pad_get_current_caps (encoder->srcpad);
   if (!prevcaps || !gst_caps_is_equal (prevcaps, state->caps))
     ret = gst_pad_set_caps (encoder->srcpad, state->caps);
+  else
+    ret = TRUE;
   if (prevcaps)
     gst_caps_unref (prevcaps);
 
