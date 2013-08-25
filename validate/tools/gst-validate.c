@@ -191,18 +191,22 @@ main (int argc, gchar ** argv)
   g_print ("Pipeline started\n");
   g_main_loop_run (mainloop);
 
-  for (tmp = gst_validate_runner_get_reports (runner); tmp; tmp = tmp->next) {
-    GstValidateReport *report = tmp->data;
+  tmp = gst_validate_runner_get_reports (runner);
+  tmp = g_slist_reverse (tmp);
 
-    gst_validate_report_printf (report);
-    if (ret == 0 && report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
-      g_printerr ("Got critical error %s, setting return value to -1\n",
-          ((GstValidateReport *) (tmp->data))->message);
-      ret = -1;
+  g_print ("Pipeline finished\n");
+  count = g_slist_length (tmp);
+  if (count) {
+    g_print ("\nFound %u issues\n", count);
+
+    for (; tmp; tmp = tmp->next) {
+      GstValidateReport *report = tmp->data;
+
+      gst_validate_report_printf (report);
+      if (ret == 0 && report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
+        ret = -1;
     }
-    count++;
   }
-  g_print ("Pipeline finished, issues found: %u\n", count);
 
 exit:
   gst_element_set_state (pipeline, GST_STATE_NULL);

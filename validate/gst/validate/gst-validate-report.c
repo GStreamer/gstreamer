@@ -337,6 +337,14 @@ gst_validate_report_ref (GstValidateReport * report)
 void
 gst_validate_report_printf (GstValidateReport * report)
 {
-  g_print ("%" GST_VALIDATE_ERROR_REPORT_PRINT_FORMAT "\n",
-      GST_VALIDATE_REPORT_PRINT_ARGS (report));
+  g_print ("%10s : %s\n", gst_validate_report_level_get_name (report->level),
+      report->issue->summary);
+  g_print ("%*s Detected on <%s> at %" GST_TIME_FORMAT "\n", 12, "",
+      gst_validate_reporter_get_name (report->reporter),
+      GST_TIME_ARGS (report->timestamp));
+  if (report->message)
+    g_print ("%*s Details : %s\n", 12, "", report->message);
+  if (report->issue->description)
+    g_print ("%*s Description : %s\n", 12, "", report->issue->description);
+  g_print ("\n");
 }
