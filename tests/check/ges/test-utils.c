@@ -222,3 +222,58 @@ check_destroyed (GObject * object_to_unref, GObject * first_object, ...)
   g_list_free (objs);
 
 }
+
+static gboolean
+my_bus_callback (GstBus * bus, GstMessage * message, GMainLoop * loop)
+{
+  switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_ERROR:{
+      GError *err;
+      gchar *debug;
+
+      gst_message_parse_error (message, &err, &debug);
+
+      g_assert_no_error (err);
+      g_error_free (err);
+      g_free (debug);
+      g_main_loop_quit (loop);
+      break;
+    }
+    case GST_MESSAGE_EOS:
+      GST_INFO ("EOS\n");
+      g_main_loop_quit (loop);
+      break;
+    default:
+      /* unhandled message */
+      break;
+  }
+  return TRUE;
+}
+
+gboolean
+play_timeline (GESTimeline * timeline)
+{
+  GstBus *bus;
+  GESPipeline *pipeline;
+  GMainLoop *loop = g_main_loop_new (NULL, FALSE);
+
+  ges_timeline_commit (timeline);
+  pipeline = ges_pipeline_new ();
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
+  gst_bus_add_watch (bus, (GstBusFunc) my_bus_callback, loop);
+  gst_object_unref (bus);
+
+  ges_pipeline_add_timeline (pipeline, timeline);
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
+  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
+
+  g_main_loop_run (loop);
+
+  gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
+  gst_element_get_state (GST_ELEMENT (pipeline), NULL, NULL, -1);
+
+  gst_object_unref (pipeline);
+
+  return TRUE;
+}
