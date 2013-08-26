@@ -287,7 +287,8 @@ gst_webp_dec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
   GstWebPDec *webpdec = (GstWebPDec *) decoder;
 
   size = gst_adapter_available (adapter);
-  GST_DEBUG_OBJECT (decoder, "parsing webp image data (%u bytes)", size);
+  GST_DEBUG_OBJECT (decoder,
+      "parsing webp image data (%" G_GSIZE_FORMAT " bytes)", size);
 
   if (at_eos) {
     GST_DEBUG ("Flushing all data out");
@@ -346,7 +347,6 @@ drop_frame:
   return GST_FLOW_OK;
 
 error:
-  g_assert_not_reached ();
   return GST_FLOW_ERROR;
 }
 
@@ -367,7 +367,8 @@ gst_webp_dec_update_src_caps (GstWebPDec * dec, GstMapInfo * map_info)
     GST_ERROR_OBJECT (dec, "Dimensions of the frame is unspported by libwebp");
     return GST_FLOW_ERROR;
   }
-  /*Fixme: Add support for other formats */
+
+  /* TODO: Add support for other formats */
   if (features.has_alpha) {
     format = GST_VIDEO_FORMAT_ARGB;
     dec->colorspace = MODE_ARGB;
@@ -392,7 +393,9 @@ gst_webp_dec_update_src_caps (GstWebPDec * dec, GstMapInfo * map_info)
       gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec), format,
       features.width, features.height, dec->input_state);
 
-  gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec));
+  if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (dec)))
+    return GST_FLOW_NOT_NEGOTIATED;
+
 beach:
   return GST_FLOW_OK;
 }
@@ -409,13 +412,19 @@ gst_webp_dec_handle_frame (GstVideoDecoder * decoder,
   gst_buffer_map (frame->input_buffer, &map_info, GST_MAP_READ);
 
   ret = gst_webp_dec_update_src_caps (webpdec, &map_info);
-  if (ret != GST_FLOW_OK)
+  if (ret != GST_FLOW_OK) {
+    gst_buffer_unmap (frame->input_buffer, &map_info);
+    gst_video_codec_frame_unref (frame);
     goto done;
+  }
 
   ret = gst_video_decoder_allocate_output_frame (decoder, frame);
   if (G_UNLIKELY (ret != GST_FLOW_OK)) {
     GST_ERROR_OBJECT (decoder, "failed to allocate output frame");
     ret = GST_FLOW_ERROR;
+    gst_buffer_unmap (frame->input_buffer, &map_info);
+    gst_video_codec_frame_unref (frame);
+
     goto done;
   }
 
@@ -423,6 +432,9 @@ gst_webp_dec_handle_frame (GstVideoDecoder * decoder,
           frame->output_buffer, GST_MAP_READWRITE)) {
     GST_ERROR_OBJECT (decoder, "Failed to map output videoframe");
     ret = GST_FLOW_ERROR;
+    gst_buffer_unmap (frame->input_buffer, &map_info);
+    gst_video_codec_frame_unref (frame);
+
     goto done;
   }
 
@@ -441,6 +453,10 @@ gst_webp_dec_handle_frame (GstVideoDecoder * decoder,
           &webpdec->config) != VP8_STATUS_OK) {
     GST_ERROR_OBJECT (decoder, "Failed to decode the webp frame");
     ret = GST_FLOW_ERROR;
+    gst_video_frame_unmap (&vframe);
+    gst_buffer_unmap (frame->input_buffer, &map_info);
+    gst_video_codec_frame_unref (frame);
+
     goto done;
   }
 
