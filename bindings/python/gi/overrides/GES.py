@@ -55,10 +55,3 @@ try:
     Gst
 except:
     raise RuntimeError("GSt couldn't be imported, make sure you have gst-python installed")
-
-initialized = GES.init()
-
-if not initialized:
-    raise RuntimeError("GES couldn't be initialized, make sure you have gst-python installed")
-
-
