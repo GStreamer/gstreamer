@@ -190,8 +190,6 @@ ges_uri_clip_class_init (GESUriClipClass * klass)
 
   timobj_class->create_track_elements = ges_uri_clip_create_track_elements;
   timobj_class->create_track_element = ges_uri_clip_create_track_element;
-  timobj_class->need_fill_track = FALSE;
-
 }
 
 static gchar *

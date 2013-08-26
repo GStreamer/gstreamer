@@ -163,7 +163,6 @@ ges_test_clip_class_init (GESTestClipClass * klass)
           FALSE, G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
 
   timobj_class->create_track_element = ges_test_clip_create_track_element;
-  timobj_class->need_fill_track = FALSE;
 }
 
 static void

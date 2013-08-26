@@ -117,10 +117,8 @@ struct _GESClip
  * @create_track_element: method to create a single #GESTrackElement for a given #GESTrack.
  * @create_track_elements: method to create multiple #GESTrackElements for a
  * #GESTrack.
- * @fill_track_element: method to fill an associated #GESTrackElement.
- * @need_fill_track: Set to TRUE if @fill_track_element needs to be called.
  *
- * Subclasses can override the @create_track_element and @fill_track_element methods.
+ * Subclasses can override the @create_track_element.
  */
 struct _GESClipClass
 {
@@ -130,8 +128,6 @@ struct _GESClipClass
   /*< public > */
   GESCreateTrackElementFunc  create_track_element;
   GESCreateTrackElementsFunc create_track_elements;
-  GESFillTrackElementFunc    fill_track_element;
-  gboolean                   need_fill_track;
 
   /*< private >*/
   /* Padding for API extension */
@@ -149,8 +145,6 @@ GType ges_clip_get_type (void);
 GESTrackType      ges_clip_get_supported_formats  (GESClip *clip);
 void              ges_clip_set_supported_formats  (GESClip *clip, GESTrackType       supportedformats);
 gboolean          ges_clip_add_asset              (GESClip *clip, GESAsset *asset);
-gboolean          ges_clip_fill_track_element     (GESClip *clip, GESTrackElement *trackelement,
-                                                   GstElement *gnlobj);
 GESTrackElement*  ges_clip_find_track_element     (GESClip *clip, GESTrack *track,
                                                    GType type);
 

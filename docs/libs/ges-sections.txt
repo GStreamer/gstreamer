@@ -439,7 +439,6 @@ ges_clip_get_supported_formats
 ges_clip_split
 ges_clip_edit
 GES_CLIP_HEIGHT
-ges_clip_fill_track_element
 <SUBSECTION Standard>
 GESClipPrivate
 GES_IS_CLIP

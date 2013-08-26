@@ -215,7 +215,6 @@ ges_title_clip_class_init (GESTitleClipClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   timobj_class->create_track_element = ges_title_clip_create_track_element;
-  timobj_class->need_fill_track = FALSE;
 
   container_class->child_added = _child_added;
   container_class->child_removed = _child_removed;

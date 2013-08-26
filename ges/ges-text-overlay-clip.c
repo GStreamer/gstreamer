@@ -204,7 +204,6 @@ ges_text_overlay_clip_class_init (GESTextOverlayClipClass * klass)
 
   timobj_class->create_track_element =
       ges_text_overlay_clip_create_track_element;
-  timobj_class->need_fill_track = FALSE;
 
   /**
    * GESTextOverlayClip:color:

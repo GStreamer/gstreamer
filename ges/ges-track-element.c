@@ -59,7 +59,6 @@ struct _GESTrackElementPrivate
    * {GParamaSpec ---> element,}*/
   GHashTable *properties_hashtable;
 
-  GESClip *timelineobj;
   GESTrack *track;
 
   gboolean valid;
@@ -686,44 +685,36 @@ ensure_gnl_object (GESTrackElement * object)
     g_object_set_qdata (G_OBJECT (gnlobject), GNL_OBJECT_TRACK_ELEMENT_QUARK,
         object);
 
-    if (object->priv->timelineobj)
-      res = ges_clip_fill_track_element (object->priv->timelineobj,
-          object, object->priv->gnlobject);
-    else
-      res = TRUE;
+    /* Set some properties on the GnlObject */
+    g_object_set (object->priv->gnlobject,
+        "duration", object->priv->pending_duration,
+        "start", object->priv->pending_start,
+        "inpoint", object->priv->pending_inpoint,
+        "priority", object->priv->pending_priority,
+        "active", object->priv->pending_active, NULL);
 
-    if (res) {
-      /* Set some properties on the GnlObject */
+    /* Pendings values are not pending anymore */
+    GES_TIMELINE_ELEMENT_START (object) = object->priv->pending_start;
+    GES_TIMELINE_ELEMENT_INPOINT (object) = object->priv->pending_inpoint;
+    GES_TIMELINE_ELEMENT_DURATION (object) = object->priv->pending_duration;
+    GES_TIMELINE_ELEMENT_PRIORITY (object) = object->priv->pending_priority;
+    object->active = object->priv->pending_active;
+
+
+    if (object->priv->track != NULL)
       g_object_set (object->priv->gnlobject,
-          "duration", object->priv->pending_duration,
-          "start", object->priv->pending_start,
-          "inpoint", object->priv->pending_inpoint,
-          "priority", object->priv->pending_priority,
-          "active", object->priv->pending_active, NULL);
+          "caps", ges_track_get_caps (object->priv->track), NULL);
 
-      /* Pendings values are not pending anymore */
-      GES_TIMELINE_ELEMENT_START (object) = object->priv->pending_start;
-      GES_TIMELINE_ELEMENT_INPOINT (object) = object->priv->pending_inpoint;
-      GES_TIMELINE_ELEMENT_DURATION (object) = object->priv->pending_duration;
-      GES_TIMELINE_ELEMENT_PRIORITY (object) = object->priv->pending_priority;
-      object->active = object->priv->pending_active;
+    /*  We feed up the props_hashtable if possible */
+    if (class->get_props_hastable) {
+      props_hash = class->get_props_hastable (object);
 
-
-      if (object->priv->track != NULL)
-        g_object_set (object->priv->gnlobject,
-            "caps", ges_track_get_caps (object->priv->track), NULL);
-
-      /*  We feed up the props_hashtable if possible */
-      if (class->get_props_hastable) {
-        props_hash = class->get_props_hastable (object);
-
-        if (props_hash == NULL) {
-          GST_DEBUG ("'get_props_hastable' implementation returned TRUE but no"
-              "properties_hashtable is available");
-        } else {
-          object->priv->properties_hashtable = props_hash;
-          connect_properties_signals (object);
-        }
+      if (props_hash == NULL) {
+        GST_DEBUG ("'get_props_hastable' implementation returned TRUE but no"
+            "properties_hashtable is available");
+      } else {
+        object->priv->properties_hashtable = props_hash;
+        connect_properties_signals (object);
       }
     }
   }

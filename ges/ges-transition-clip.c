@@ -252,7 +252,6 @@ ges_transition_clip_class_init (GESTransitionClipClass * klass)
   container_class->child_removed = _child_removed;
 
   timobj_class->create_track_element = _create_track_element;
-  timobj_class->need_fill_track = FALSE;
 }
 
 static void

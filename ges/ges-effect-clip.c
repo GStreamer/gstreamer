@@ -141,7 +141,6 @@ ges_effect_clip_class_init (GESEffectClipClass * klass)
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   timobj_class->create_track_element = _create_track_element;
-  timobj_class->need_fill_track = FALSE;
 }
 
 static void

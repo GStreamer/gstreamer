@@ -37,10 +37,6 @@
 
 #include <string.h>
 
-gboolean
-ges_clip_fill_track_element_func (GESClip * clip,
-    GESTrackElement * trackelement, GstElement * gnlobj);
-
 GList *ges_clip_create_track_elements_func (GESClip * clip, GESTrackType type);
 static gboolean _ripple (GESTimelineElement * element, GstClockTime start);
 static gboolean _ripple_end (GESTimelineElement * element, GstClockTime end);
@@ -719,8 +715,6 @@ ges_clip_class_init (GESClipClass * klass)
   container_class->group = _group;
   container_class->grouping_priority = G_MAXUINT;
   container_class->edit = _edit;
-
-  klass->need_fill_track = TRUE;
 }
 
 static void
@@ -870,41 +864,6 @@ ges_clip_get_layer_priority (GESClip * clip)
     return -1;
 
   return ges_layer_get_priority (clip->priv->layer);
-}
-
-gboolean
-ges_clip_fill_track_element (GESClip * clip,
-    GESTrackElement * trackelement, GstElement * gnlobj)
-{
-  GESClipClass *class;
-  gboolean res = TRUE;
-
-  GST_DEBUG ("clip:%p, trackelement:%p, gnlobject:%p",
-      clip, trackelement, gnlobj);
-
-  class = GES_CLIP_GET_CLASS (clip);
-
-  if (class->need_fill_track) {
-    if (G_UNLIKELY (class->fill_track_element == NULL)) {
-      GST_WARNING ("No 'fill_track_element' implementation available");
-      return FALSE;
-    }
-
-    res = class->fill_track_element (clip, trackelement, gnlobj);
-  }
-
-  GST_DEBUG ("Returning res:%d", res);
-
-  return res;
-}
-
-gboolean
-ges_clip_fill_track_element_func (GESClip * clip,
-    GESTrackElement * trackelement, GstElement * gnlobj)
-{
-  GST_WARNING ("No 'fill_track_element' implementation !");
-
-  return FALSE;
 }
 
 /**
