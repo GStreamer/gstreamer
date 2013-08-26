@@ -198,8 +198,6 @@ typedef struct _GstVaapiVideoBufferClass        GstVaapiVideoBufferClass;
 struct _GstVaapiVideoBuffer {
     /*< private >*/
     GstSurfaceBuffer parent_instance;
-
-    GstVaapiVideoMeta *meta;
 };
 
 /**
@@ -226,11 +224,14 @@ static GstSurfaceConverter *
 gst_vaapi_video_buffer_create_converter(GstSurfaceBuffer *surface,
     const gchar *type, GValue *dest)
 {
-    GstVaapiVideoBuffer * const vbuffer = GST_VAAPI_VIDEO_BUFFER(surface);
+    GstVaapiVideoMeta * const meta =
+        gst_buffer_get_vaapi_video_meta(GST_BUFFER(surface));
     GstSurfaceConverterCreateFunc func;
 
+    g_return_val_if_fail(meta != NULL, NULL);
+
     func = (GstSurfaceConverterCreateFunc)
-        gst_vaapi_video_meta_get_surface_converter(vbuffer->meta);
+        gst_vaapi_video_meta_get_surface_converter(meta);
 
     return func ? func(surface, type, dest) : NULL;
 }
@@ -252,7 +253,7 @@ gst_vaapi_video_buffer_init(GstVaapiVideoBuffer *buffer)
 static inline GstBuffer *
 gst_surface_buffer_new(void)
 {
-    return GST_BUFFER_CAST(gst_mini_object_new(GST_TYPE_SURFACE_BUFFER));
+    return GST_BUFFER_CAST(gst_mini_object_new(GST_VAAPI_TYPE_VIDEO_BUFFER));
 }
 #endif
 
