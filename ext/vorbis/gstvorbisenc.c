@@ -115,6 +115,7 @@ static void gst_vorbis_enc_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static void gst_vorbis_enc_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
+static void gst_vorbis_enc_flush (GstAudioEncoder * vorbisenc);
 
 #define gst_vorbis_enc_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstVorbisEnc, gst_vorbis_enc,
@@ -182,6 +183,7 @@ gst_vorbis_enc_class_init (GstVorbisEncClass * klass)
   base_class->handle_frame = GST_DEBUG_FUNCPTR (gst_vorbis_enc_handle_frame);
   base_class->getcaps = GST_DEBUG_FUNCPTR (gst_vorbis_enc_getcaps);
   base_class->sink_event = GST_DEBUG_FUNCPTR (gst_vorbis_enc_sink_event);
+  base_class->flush = GST_DEBUG_FUNCPTR (gst_vorbis_enc_flush);
 }
 
 static void
@@ -553,6 +555,16 @@ gst_vorbis_enc_clear (GstVorbisEnc * vorbisenc)
   vorbis_info_clear (&vorbisenc->vi);
 
   return ret;
+}
+
+static void
+gst_vorbis_enc_flush (GstAudioEncoder * enc)
+{
+  GstVorbisEnc *vorbisenc = GST_VORBISENC (enc);
+
+  gst_vorbis_enc_clear (vorbisenc);
+  vorbisenc->samples_in = 0;
+  vorbisenc->header_sent = FALSE;
 }
 
 static GstBuffer *
