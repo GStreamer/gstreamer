@@ -563,7 +563,6 @@ gst_vorbis_enc_flush (GstAudioEncoder * enc)
   GstVorbisEnc *vorbisenc = GST_VORBISENC (enc);
 
   gst_vorbis_enc_clear (vorbisenc);
-  vorbisenc->samples_in = 0;
   vorbisenc->header_sent = FALSE;
 }
 
@@ -577,7 +576,7 @@ gst_vorbis_enc_buffer_from_header_packet (GstVorbisEnc * vorbisenc,
       gst_audio_encoder_allocate_output_buffer (GST_AUDIO_ENCODER (vorbisenc),
       packet->bytes);
   gst_buffer_fill (outbuf, 0, packet->packet, packet->bytes);
-  GST_BUFFER_OFFSET (outbuf) = vorbisenc->bytes_out;
+  GST_BUFFER_OFFSET (outbuf) = 0;
   GST_BUFFER_OFFSET_END (outbuf) = 0;
   GST_BUFFER_TIMESTAMP (outbuf) = GST_CLOCK_TIME_NONE;
   GST_BUFFER_DURATION (outbuf) = GST_CLOCK_TIME_NONE;
@@ -775,8 +774,6 @@ gst_vorbis_enc_handle_frame (GstAudioEncoder * enc, GstBuffer * buffer)
   gst_buffer_unmap (buffer, &map);
 
   GST_LOG_OBJECT (vorbisenc, "wrote %lu samples to vorbis", size);
-
-  vorbisenc->samples_in += size;
 
   ret = gst_vorbis_enc_output_buffers (vorbisenc);
 

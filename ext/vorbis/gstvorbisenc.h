@@ -72,9 +72,7 @@ struct _GstVorbisEnc {
   gint             channels;
   gint             frequency;
 
-  guint64          samples_in;
   guint64          samples_out;
-  guint64          bytes_out;
 
   GstTagList *     tags;
 
