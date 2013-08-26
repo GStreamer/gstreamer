@@ -2675,6 +2675,7 @@ rtp_session_next_timeout (RTPSession * sess, GstClockTime current_time)
   RTP_SESSION_LOCK (sess);
 
   if (GST_CLOCK_TIME_IS_VALID (sess->next_early_rtcp_time)) {
+    GST_DEBUG ("have early rtcp time");
     result = sess->next_early_rtcp_time;
     goto early_exit;
   }
@@ -3433,8 +3434,8 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   if (!is_rtcp_time (sess, current_time, &data))
     goto done;
 
-  GST_DEBUG ("doing RTCP generation %u for %u sources", sess->generation,
-      data.num_to_report);
+  GST_DEBUG ("doing RTCP generation %u for %u sources, early %d",
+      sess->generation, data.num_to_report, data.is_early);
 
   /* generate RTCP for all internal sources */
   g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
@@ -3503,15 +3504,21 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
 
   /* Check if already requested */
   /*  RFC 4585 section 3.5.2 step 2 */
-  if (GST_CLOCK_TIME_IS_VALID (sess->next_early_rtcp_time))
+  if (GST_CLOCK_TIME_IS_VALID (sess->next_early_rtcp_time)) {
+    GST_LOG_OBJECT (sess, "already have next early rtcp time");
     goto dont_send;
+  }
 
-  if (!GST_CLOCK_TIME_IS_VALID (sess->next_rtcp_check_time))
+  if (!GST_CLOCK_TIME_IS_VALID (sess->next_rtcp_check_time)) {
+    GST_LOG_OBJECT (sess, "no next RTCP check time");
     goto dont_send;
+  }
 
   /* Ignore the request a scheduled packet will be in time anyway */
-  if (current_time + max_delay > sess->next_rtcp_check_time)
+  if (current_time + max_delay > sess->next_rtcp_check_time) {
+    GST_LOG_OBJECT (sess, "next scheduled time is soon");
     goto dont_send;
+  }
 
   /*  RFC 4585 section 3.5.2 step 2b */
   /* If the total sources is <=2, then there is only us and one peer */
@@ -3524,8 +3531,10 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
   }
 
   /*  RFC 4585 section 3.5.2 step 3 */
-  if (current_time + T_dither_max > sess->next_rtcp_check_time)
+  if (current_time + T_dither_max > sess->next_rtcp_check_time) {
+    GST_LOG_OBJECT (sess, "don't send because of dither");
     goto dont_send;
+  }
 
   /*  RFC 4585 section 3.5.2 step 4
    * Don't send if allow_early is FALSE, but not if we are in
@@ -3533,8 +3542,10 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
    * application-specific threshold.
    */
   if (sess->total_sources > sess->rtcp_immediate_feedback_threshold &&
-      sess->allow_early == FALSE)
+      sess->allow_early == FALSE) {
+    GST_LOG_OBJECT (sess, "can't allow early feedback");
     goto dont_send;
+  }
 
   if (T_dither_max) {
     /* Schedule an early transmission later */
@@ -3545,6 +3556,8 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
     sess->next_early_rtcp_time = current_time;
   }
 
+  GST_LOG_OBJECT (sess, "next early RTCP time %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (sess->next_early_rtcp_time));
   RTP_SESSION_UNLOCK (sess);
 
   /* notify app of need to send packet early
