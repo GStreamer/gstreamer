@@ -3589,10 +3589,12 @@ gboolean
 rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc,
     gboolean fir, gint count)
 {
-  RTPSource *src = find_source (sess, ssrc);
+  RTPSource *src;
 
+  RTP_SESSION_LOCK (sess);
+  src = find_source (sess, ssrc);
   if (!src)
-    return FALSE;
+    goto no_source;
 
   if (fir) {
     src->send_pli = FALSE;
@@ -3604,10 +3606,18 @@ rtp_session_request_key_unit (RTPSession * sess, guint32 ssrc,
   } else if (!src->send_fir) {
     src->send_pli = TRUE;
   }
+  RTP_SESSION_UNLOCK (sess);
 
   rtp_session_send_rtcp (sess, 200 * GST_MSECOND);
 
   return TRUE;
+
+  /* ERRORS */
+no_source:
+  {
+    RTP_SESSION_UNLOCK (sess);
+    return FALSE;
+  }
 }
 
 /**
@@ -3625,15 +3635,25 @@ gboolean
 rtp_session_request_nack (RTPSession * sess, guint32 ssrc, guint16 seqnum,
     GstClockTime max_delay)
 {
-  RTPSource *source = find_source (sess, ssrc);
+  RTPSource *source;
 
+  RTP_SESSION_LOCK (sess);
+  source = find_source (sess, ssrc);
   if (source == NULL)
-    return FALSE;
+    goto no_source;
 
   GST_DEBUG ("request NACK for %08x, #%u", ssrc, seqnum);
   rtp_source_register_nack (source, seqnum);
+  RTP_SESSION_UNLOCK (sess);
 
   rtp_session_send_rtcp (sess, max_delay);
 
   return TRUE;
+
+  /* ERRORS */
+no_source:
+  {
+    RTP_SESSION_UNLOCK (sess);
+    return FALSE;
+  }
 }
