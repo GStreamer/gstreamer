@@ -833,10 +833,21 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
     /* no peer pad found, nothing to do */
     return;
   }
-  if (monitor->is_eos && ret == GST_FLOW_EOS) {
-    /* this is acceptable */
-    return;
+  if (aggregated == GST_FLOW_OK || aggregated == GST_FLOW_EOS) {
+    /* those are acceptable situations */
+
+    if (monitor->is_eos && ret == GST_FLOW_EOS) {
+      /* this element received eos and returned eos */
+      return;
+    }
+
+    if (GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_DEMUXER (monitor)
+        && ret == GST_FLOW_EOS) {
+      /* a demuxer can return EOS when the samples end */
+      return;
+    }
   }
+
   if (aggregated != ret) {
     GST_VALIDATE_REPORT (monitor, WRONG_FLOW_RETURN,
         "Wrong combined flow return %s(%d). Expected: %s(%d)",

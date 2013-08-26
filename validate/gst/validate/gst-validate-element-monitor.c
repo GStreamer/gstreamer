@@ -132,6 +132,7 @@ gst_validate_element_monitor_inspect (GstValidateElementMonitor * monitor)
       gst_element_class_get_metadata (klass, GST_ELEMENT_METADATA_KLASS);
   monitor->is_decoder = strstr (klassname, "Decoder") != NULL;
   monitor->is_encoder = strstr (klassname, "Encoder") != NULL;
+  monitor->is_demuxer = strstr (klassname, "Demuxer") != NULL;
 }
 
 static gboolean

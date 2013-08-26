@@ -41,6 +41,7 @@ G_BEGIN_DECLS
 #define GST_VALIDATE_ELEMENT_MONITOR_GET_ELEMENT(m) (GST_ELEMENT_CAST (GST_VALIDATE_MONITOR_GET_OBJECT (m)))
 #define GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_DECODER(m) (GST_VALIDATE_ELEMENT_MONITOR_CAST (m)->is_decoder)
 #define GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_ENCODER(m) (GST_VALIDATE_ELEMENT_MONITOR_CAST (m)->is_encoder)
+#define GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_DEMUXER(m) (GST_VALIDATE_ELEMENT_MONITOR_CAST (m)->is_demuxer)
 
 typedef struct _GstValidateElementMonitor GstValidateElementMonitor;
 typedef struct _GstValidateElementMonitorClass GstValidateElementMonitorClass;
@@ -61,6 +62,7 @@ struct _GstValidateElementMonitor {
 
   gboolean       is_decoder;
   gboolean       is_encoder;
+  gboolean       is_demuxer;
 };
 
 /**
