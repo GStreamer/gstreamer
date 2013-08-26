@@ -986,7 +986,9 @@ AG_GST_CHECK_FEATURE(BZ2, [bz2 library for matroska ],, [
   AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <bzlib.h>]], [[const char *version = BZ2_bzlibVersion ();]])],[HAVE_BZ2=yes],[HAVE_BZ2=no])
   AC_MSG_RESULT($HAVE_BZ2)
   LIBS=$save_LIBS
-  BZ2_LIBS="-lbz2"
+  if test "x$HAVE_BZ2" = "xyes"; then
+    BZ2_LIBS="-lbz2"
+  fi
   AC_SUBST(BZ2_LIBS)
 ])
 
