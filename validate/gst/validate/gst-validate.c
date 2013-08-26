@@ -150,8 +150,10 @@ main (int argc, gchar ** argv)
 
   g_print ("Starting pipeline\n");
   if (gst_element_set_state (pipeline,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+    g_print ("Pipeline failed to go to PLAYING state\n");
     goto exit;
+  }
 
   g_print ("Pipeline started\n");
   g_main_loop_run (mainloop);
