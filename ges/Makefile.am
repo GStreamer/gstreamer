@@ -11,7 +11,6 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	$(built_source_make)			\
 	ges.c					\
 	ges-enums.c				\
-	ges-custom-source-clip.c		\
 	ges-meta-container.c        \
 	ges-simple-layer.c		\
 	ges-timeline.c				\
@@ -74,7 +73,6 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges.h					\
 	ges-enums.h				\
 	ges-gerror.h				\
-	ges-custom-source-clip.h		\
 	ges-meta-container.h        \
 	ges-simple-layer.h		\
 	ges-timeline.h				\

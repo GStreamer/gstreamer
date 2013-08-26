@@ -29,9 +29,6 @@
 
 /* Type definitions */
 
-typedef struct _GESCustomSourceClip GESCustomSourceClip;
-typedef struct _GESCustomSourceClipClass GESCustomSourceClipClass;
-
 typedef struct _GESSimpleLayer GESSimpleLayer;
 typedef struct _GESSimpleLayerClass GESSimpleLayerClass;
 

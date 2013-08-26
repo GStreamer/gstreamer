@@ -1,7 +1,6 @@
 #include <gst/gst.h>
 #include <ges/ges.h>
 
-ges_custom_source_clip_get_type
 ges_formatter_get_type
 ges_simple_layer_get_type
 %ges_text_halign_get_type

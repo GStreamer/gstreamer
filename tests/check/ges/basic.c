@@ -32,31 +32,12 @@ GST_START_TEST (test_ges_init)
 
 GST_END_TEST;
 
-static gboolean
-my_fill_track_func (GESClip * clip,
-    GESTrackElement * track_element, GstElement * gnlobj, gpointer user_data)
-{
-  GstElement *src;
-
-  GST_DEBUG ("timelineobj:%p, trackelement:%p, gnlobj:%p",
-      clip, track_element, gnlobj);
-
-  /* Let's just put a fakesource in for the time being */
-  src = gst_element_factory_make ("fakesrc", NULL);
-
-  /* If this fails... that means that there already was something
-   * in it */
-  fail_unless (gst_bin_add (GST_BIN (gnlobj), src));
-
-  return TRUE;
-}
-
 GST_START_TEST (test_ges_scenario)
 {
   GESTimeline *timeline;
   GESLayer *layer, *tmp_layer;
   GESTrack *track;
-  GESCustomSourceClip *source;
+  GESTestClip *source;
   GESTrackElement *trackelement;
   GList *trackelements, *layers, *tracks;
 
@@ -85,7 +66,7 @@ GST_START_TEST (test_ges_scenario)
 
   /* Give the Timeline a Track */
   GST_DEBUG ("Create a Track");
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
+  track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
 
   GST_DEBUG ("Add the track to the timeline");
@@ -98,7 +79,7 @@ GST_START_TEST (test_ges_scenario)
 
   /* Create a source and add it to the Layer */
   GST_DEBUG ("Creating a source");
-  source = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  source = ges_test_clip_new ();
   fail_unless (source != NULL);
 
   /* The source will be floating before added to the layer... */
@@ -180,7 +161,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
   GESTimeline *timeline;
   GESLayer *layer, *tmp_layer;
   GESTrack *track;
-  GESCustomSourceClip *s1, *s2, *s3;
+  GESTestClip *s1, *s2, *s3;
   GList *trackelements, *layers;
   GESTrackElement *trackelement;
 
@@ -196,7 +177,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
   fail_unless (layer != NULL);
   /* Give the Timeline a Track */
   GST_DEBUG ("Create a Track");
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
+  track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
 
   GST_DEBUG ("Add the track to the timeline");
@@ -208,7 +189,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
 
   /* Create a source and add it to the Layer */
   GST_DEBUG ("Creating a source");
-  s1 = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  s1 = ges_test_clip_new ();
   fail_unless (s1 != NULL);
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (s1)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s1));
@@ -217,7 +198,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
   gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
-  s2 = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  s2 = ges_test_clip_new ();
   fail_unless (s2 != NULL);
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (s2)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s2));
@@ -226,7 +207,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
   gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
-  s3 = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  s3 = ges_test_clip_new ();
   fail_unless (s3 != NULL);
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (s3)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s3));
@@ -292,7 +273,7 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   GESTimeline *timeline;
   GESLayer *layer, *tmp_layer;
   GESTrack *track;
-  GESCustomSourceClip *s1, *s2, *s3;
+  GESTestClip *s1, *s2, *s3;
   GList *trackelements, *tmp, *layers;
 
   ges_init ();
@@ -307,12 +288,12 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   fail_unless (layer != NULL);
   /* Give the Timeline a Track */
   GST_DEBUG ("Create a Track");
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
+  track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
 
   /* Create a source and add it to the Layer */
   GST_DEBUG ("Creating a source");
-  s1 = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  s1 = ges_test_clip_new ();
   fail_unless (s1 != NULL);
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (s1)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s1));
@@ -320,7 +301,7 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
-  s2 = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  s2 = ges_test_clip_new ();
   fail_unless (s2 != NULL);
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (s2)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s2));
@@ -328,7 +309,7 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
   gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
-  s3 = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  s3 = ges_test_clip_new ();
   fail_unless (s3 != NULL);
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (s3)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s3));
@@ -393,7 +374,7 @@ GST_START_TEST (test_ges_timeline_remove_track)
   GESTimeline *timeline;
   GESLayer *layer, *tmp_layer;
   GESTrack *track;
-  GESCustomSourceClip *s1, *s2, *s3;
+  GESTestClip *s1, *s2, *s3;
   GESTrackElement *t1, *t2, *t3;
   GList *trackelements, *tmp, *layers;
 
@@ -409,12 +390,12 @@ GST_START_TEST (test_ges_timeline_remove_track)
   fail_unless (layer != NULL);
   /* Give the Timeline a Track */
   GST_DEBUG ("Create a Track");
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
+  track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
 
   /* Create a source and add it to the Layer */
   GST_DEBUG ("Creating a source");
-  s1 = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  s1 = ges_test_clip_new ();
   fail_unless (s1 != NULL);
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (s1)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s1));
@@ -423,7 +404,7 @@ GST_START_TEST (test_ges_timeline_remove_track)
   ASSERT_OBJECT_REFCOUNT (layer, "1 for the timeline", 1);
 
   GST_DEBUG ("Creating a source");
-  s2 = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  s2 = ges_test_clip_new ();
   fail_unless (s2 != NULL);
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (s2)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s2));
@@ -432,7 +413,7 @@ GST_START_TEST (test_ges_timeline_remove_track)
   ASSERT_OBJECT_REFCOUNT (layer, "1 for the timeline", 1);
 
   GST_DEBUG ("Creating a source");
-  s3 = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  s3 = ges_test_clip_new ();
   fail_unless (s3 != NULL);
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (s3)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s3));
@@ -525,7 +506,7 @@ GST_END_TEST;
 
 typedef struct
 {
-  GESCustomSourceClip **o1, **o2, **o3;
+  GESTestClip **o1, **o2, **o3;
   GESTrack **tr1, **tr2;
 } SelectTracksData;
 
@@ -550,7 +531,7 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   GESTimeline *timeline;
   GESLayer *layer, *tmp_layer;
   GESTrack *track1, *track2;
-  GESCustomSourceClip *s1, *s2, *s3;
+  GESTestClip *s1, *s2, *s3;
   GESTrackElement *t1, *t2, *t3;
   GList *trackelements, *tmp, *layers;
   SelectTracksData st_data = { &s1, &s2, &s3, &track1, &track2 };
@@ -570,10 +551,10 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   fail_unless (layer != NULL);
   /* Give the Timeline a Track */
   GST_DEBUG ("Create Track 1");
-  track1 = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
+  track1 = GES_TRACK (ges_video_track_new ());
   fail_unless (track1 != NULL);
   GST_DEBUG ("Create Track 2");
-  track2 = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
+  track2 = GES_TRACK (ges_video_track_new ());
   fail_unless (track2 != NULL);
 
   GST_DEBUG ("Add the track 1 to the timeline");
@@ -590,7 +571,7 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
 
   /* Create a source and add it to the Layer */
   GST_DEBUG ("Creating a source");
-  s1 = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  s1 = ges_test_clip_new ();
   fail_unless (s1 != NULL);
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (s1)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s1));
@@ -598,7 +579,7 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
-  s2 = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  s2 = ges_test_clip_new ();
   fail_unless (s2 != NULL);
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (s2)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s2));
@@ -606,7 +587,7 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
   gst_object_unref (tmp_layer);
 
   GST_DEBUG ("Creating a source");
-  s3 = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  s3 = ges_test_clip_new ();
   fail_unless (s3 != NULL);
   fail_unless (ges_layer_add_clip (layer, GES_CLIP (s3)));
   tmp_layer = ges_clip_get_layer (GES_CLIP (s3));

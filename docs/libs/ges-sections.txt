@@ -622,24 +622,6 @@ ges_transition_clip_get_type
 
 
 <SECTION>
-<FILE>ges-custom-source-clip</FILE>
-<TITLE>GESCustomSourceClip</TITLE>
-GESCustomSourceClip
-GESFillTrackElementUserFunc
-ges_custom_source_clip_new
-<SUBSECTION Standard>
-GESCustomSourceClipClass
-ges_custom_source_clip_get_type
-GESCustomSourceClipPrivate
-GES_CUSTOM_SOURCE_CLIP
-GES_CUSTOM_SOURCE_CLIP_CLASS
-GES_CUSTOM_SOURCE_CLIP_GET_CLASS
-GES_IS_CUSTOM_SOURCE_CLIP
-GES_IS_CUSTOM_SOURCE_CLIP_CLASS
-GES_TYPE_CUSTOM_SOURCE_CLIP
-</SECTION>
-
-<SECTION>
 <FILE>ges-simple-layer</FILE>
 <TITLE>GESSimpleLayer</TITLE>
 GESSimpleLayer
@@ -1026,7 +1008,6 @@ ges_asset_request_async
 ges_asset_request_finish
 ges_asset_extract
 ges_list_assets
-ges_asset_custom_source_clip_new
 <SUBSECTION Standard>
 GESAssetPrivate
 GES_ASSET

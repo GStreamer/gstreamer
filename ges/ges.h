@@ -42,7 +42,6 @@
 #include <ges/ges-base-transition-clip.h>
 #include <ges/ges-transition-clip.h>
 #include <ges/ges-effect-clip.h>
-#include <ges/ges-custom-source-clip.h>
 #include <ges/ges-base-effect-clip.h>
 #include <ges/ges-uri-clip.h>
 #include <ges/ges-group.h>

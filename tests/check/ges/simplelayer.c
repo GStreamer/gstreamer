@@ -21,31 +21,12 @@
 #include <ges/ges.h>
 #include <gst/check/gstcheck.h>
 
-static gboolean
-my_fill_track_func (GESClip * clip,
-    GESTrackElement * track_element, GstElement * gnlobj, gpointer user_data)
-{
-  GstElement *src;
-
-  GST_DEBUG ("timelineobj:%p, trackelementec:%p, gnlobj:%p",
-      clip, track_element, gnlobj);
-
-  /* Let's just put a fakesource in for the time being */
-  src = gst_element_factory_make ("fakesrc", NULL);
-
-  /* If this fails... that means that there already was something
-   * in it */
-  fail_unless (gst_bin_add (GST_BIN (gnlobj), src));
-
-  return TRUE;
-}
-
 GST_START_TEST (test_gsl_add)
 {
   GESTimeline *timeline;
   GESLayer *layer;
   GESTrack *track;
-  GESCustomSourceClip *source;
+  GESTestClip *source;
   GESClip *source2;
   gint result;
 
@@ -56,10 +37,10 @@ GST_START_TEST (test_gsl_add)
   timeline = ges_timeline_new ();
   layer = (GESLayer *) ges_simple_layer_new ();
   fail_unless (ges_timeline_add_layer (timeline, layer));
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
+  track = GES_TRACK (ges_video_track_new ());
   fail_unless (ges_timeline_add_track (timeline, track));
 
-  source = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  source = ges_test_clip_new ();
   fail_unless (source != NULL);
   g_object_set (source, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (source), GST_SECOND);
@@ -115,7 +96,7 @@ GST_START_TEST (test_gsl_move_simple)
   GESTimeline *timeline;
   GESLayer *layer;
   GESTrack *track;
-  GESCustomSourceClip *source1, *source2;
+  GESTestClip *source1, *source2;
   siginfo info = { 0, 0 };
 
   ges_init ();
@@ -130,10 +111,10 @@ GST_START_TEST (test_gsl_move_simple)
       (object_moved_cb), &info);
 
   /* Create two 1s sources */
-  source1 = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  source1 = ges_test_clip_new ();
   g_object_set (source1, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (source1), GST_SECOND);
-  source2 = ges_custom_source_clip_new (my_fill_track_func, NULL);
+  source2 = ges_test_clip_new ();
   g_object_set (source2, "duration", GST_SECOND, "start", (guint64) 42, NULL);
   fail_unless_equals_uint64 (_DURATION (source2), GST_SECOND);
 

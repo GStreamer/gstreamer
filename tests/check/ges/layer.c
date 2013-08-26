@@ -23,25 +23,6 @@
 
 #define LAYER_HEIGHT 1000
 
-static gboolean
-my_fill_track_func (GESClip * clip,
-    GESTrackElement * track_element, GstElement * gnlobj, gpointer user_data)
-{
-  GstElement *src;
-
-  GST_DEBUG ("timelineobj:%p, trackelementec:%p, gnlobj:%p",
-      clip, track_element, gnlobj);
-
-  /* Let's just put a fakesource in for the time being */
-  src = gst_element_factory_make ("fakesrc", NULL);
-
-  /* If this fails... that means that there already was something
-   * in it */
-  fail_unless (gst_bin_add (GST_BIN (gnlobj), src));
-
-  return TRUE;
-}
-
 GST_START_TEST (test_layer_properties)
 {
   GESTimeline *timeline;
@@ -65,11 +46,11 @@ GST_START_TEST (test_layer_properties)
   fail_unless (ges_timeline_add_layer (timeline, layer));
   fail_if (g_object_is_floating (layer));
 
-  track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_ref (GST_CAPS_ANY));
+  track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
   fail_unless (ges_timeline_add_track (timeline, track));
 
-  clip = (GESClip *) ges_custom_source_clip_new (my_fill_track_func, NULL);
+  clip = (GESClip *) ges_test_clip_new ();
   fail_unless (clip != NULL);
 
   /* Set some properties */
@@ -162,13 +143,13 @@ GST_START_TEST (test_layer_priorities)
   fail_unless (track != NULL);
   fail_unless (ges_timeline_add_track (timeline, track));
 
-  clip1 = GES_CLIP (ges_custom_source_clip_new (my_fill_track_func, NULL));
+  clip1 = GES_CLIP (ges_test_clip_new ());
   ges_clip_set_supported_formats (clip1,
       GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO);
-  clip2 = GES_CLIP (ges_custom_source_clip_new (my_fill_track_func, NULL));
+  clip2 = GES_CLIP (ges_test_clip_new ());
   ges_clip_set_supported_formats (clip2,
       GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO);
-  clip3 = GES_CLIP (ges_custom_source_clip_new (my_fill_track_func, NULL));
+  clip3 = GES_CLIP (ges_test_clip_new ());
   ges_clip_set_supported_formats (clip3,
       GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO);
   fail_unless (clip1 != NULL);
