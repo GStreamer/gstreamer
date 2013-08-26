@@ -242,6 +242,7 @@ struct _GstVaapiDecoderMpeg2Private {
     guint                       fps_n;
     guint                       fps_d;
     guint                       state;
+    GstVaapiRectangle           crop_rect;
     GstVaapiParserInfoMpeg2    *seq_hdr;
     GstVaapiParserInfoMpeg2    *seq_ext;
     GstVaapiParserInfoMpeg2    *seq_display_ext;
@@ -249,6 +250,7 @@ struct _GstVaapiDecoderMpeg2Private {
     GstVaapiParserInfoMpeg2    *gop;
     GstVaapiParserInfoMpeg2    *pic_hdr;
     GstVaapiParserInfoMpeg2    *pic_ext;
+    GstVaapiParserInfoMpeg2    *pic_display_ext;
     GstVaapiParserInfoMpeg2    *quant_matrix;
     GstVaapiParserInfoMpeg2    *slice_hdr;
     GstVaapiPicture            *current_picture;
@@ -298,6 +300,7 @@ gst_vaapi_decoder_mpeg2_close(GstVaapiDecoderMpeg2 *decoder)
     gst_vaapi_parser_info_mpeg2_replace(&priv->gop, NULL);
     gst_vaapi_parser_info_mpeg2_replace(&priv->pic_hdr, NULL);
     gst_vaapi_parser_info_mpeg2_replace(&priv->pic_ext, NULL);
+    gst_vaapi_parser_info_mpeg2_replace(&priv->pic_display_ext, NULL);
     gst_vaapi_parser_info_mpeg2_replace(&priv->quant_matrix, NULL);
     gst_vaapi_parser_info_mpeg2_replace(&priv->slice_hdr, NULL);
 
@@ -581,6 +584,7 @@ decode_sequence(GstVaapiDecoderMpeg2 *decoder, GstVaapiDecoderUnit *unit)
     gst_vaapi_parser_info_mpeg2_replace(&priv->seq_display_ext, NULL);
     gst_vaapi_parser_info_mpeg2_replace(&priv->seq_scalable_ext, NULL);
     gst_vaapi_parser_info_mpeg2_replace(&priv->quant_matrix, NULL);
+    gst_vaapi_parser_info_mpeg2_replace(&priv->pic_display_ext, NULL);
 
     priv->fps_n = seq_hdr->fps_n;
     priv->fps_d = seq_hdr->fps_d;
@@ -709,7 +713,22 @@ static GstVaapiDecoderStatus
 decode_sequence_display_ext(GstVaapiDecoderMpeg2 *decoder,
     GstVaapiDecoderUnit *unit)
 {
-    /* XXX: handle color primaries and cropping */
+    GstVaapiDecoderMpeg2Private * const priv = &decoder->priv;
+    GstMpegVideoSequenceDisplayExt *seq_display_ext;
+
+    seq_display_ext = priv->seq_display_ext ?
+        &priv->seq_display_ext->data.seq_display_ext : NULL;
+
+    /* Update cropping rectangle */
+    if (seq_display_ext) {
+        GstVaapiRectangle * const crop_rect = &priv->crop_rect;
+        crop_rect->x = 0;
+        crop_rect->y = 0;
+        crop_rect->width = seq_display_ext->display_horizontal_size;
+        crop_rect->height = seq_display_ext->display_vertical_size;
+    }
+
+    /* XXX: handle color primaries */
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -1473,14 +1492,12 @@ gst_vaapi_decoder_mpeg2_start_frame(GstVaapiDecoder *base_decoder,
     gst_vaapi_picture_unref(picture);
 
     /* Update cropping rectangle */
-    if (seq_display_ext) {
-        GstVaapiRectangle crop_rect;
-        crop_rect.x = 0;
-        crop_rect.y = 0;
-        crop_rect.width = seq_display_ext->display_horizontal_size;
-        crop_rect.height = seq_display_ext->display_vertical_size;
-        if (crop_rect.width <= priv->width && crop_rect.height <= priv->height)
-            gst_vaapi_picture_set_crop_rect(picture, &crop_rect);
+    /* XXX: handle picture_display_extension() */
+    if (seq_display_ext && priv->pic_display_ext) {
+        GstVaapiRectangle * const crop_rect = &priv->crop_rect;
+        if (crop_rect->x + crop_rect->width <= priv->width &&
+            crop_rect->y + crop_rect->height <= priv->height)
+            gst_vaapi_picture_set_crop_rect(picture, crop_rect);
     }
 
     status = ensure_quant_matrix(decoder, picture);
