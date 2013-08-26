@@ -799,6 +799,7 @@ gst_rtcp_packet_get_rb (GstRTCPPacket * packet, guint nth, guint32 * ssrc,
     guint8 * fractionlost, gint32 * packetslost, guint32 * exthighestseq,
     guint32 * jitter, guint32 * lsr, guint32 * dlsr)
 {
+  guint offset;
   guint8 *data;
   guint32 tmp;
 
@@ -807,18 +808,31 @@ gst_rtcp_packet_get_rb (GstRTCPPacket * packet, guint nth, guint32 * ssrc,
       packet->type == GST_RTCP_TYPE_SR);
   g_return_if_fail (packet->rtcp != NULL);
   g_return_if_fail (packet->rtcp->map.flags & GST_MAP_READ);
+  g_return_if_fail (nth < packet->count);
 
-  data = packet->rtcp->map.data;
-
-  /* skip header */
-  data += packet->offset + 4;
+  /* get offset in 32-bits words into packet, skip the header */
   if (packet->type == GST_RTCP_TYPE_RR)
-    data += 4;
+    offset = 2;
   else
-    data += 24;
+    offset = 7;
 
   /* move to requested index */
-  data += (nth * 24);
+  offset += (nth * 6);
+
+  /* check that we don't go past the packet length */
+  if (offset > packet->length)
+    return;
+
+  /* scale to bytes */
+  offset <<= 2;
+  offset += packet->offset;
+
+  /* check if the packet is valid */
+  if (offset + 24 > packet->rtcp->map.size)
+    return;
+
+  data = packet->rtcp->map.data;
+  data += offset;
 
   if (ssrc)
     *ssrc = GST_READ_UINT32_BE (data);
