@@ -982,6 +982,7 @@ main (int argc, char *argv[])
 #endif
   gchar **argvn;
   GError *error = NULL;
+  gulong deep_notify_id = 0;
   gint res = 0;
 
   free (malloc (8));            /* -lefence */
@@ -1045,7 +1046,7 @@ main (int argc, char *argv[])
   if (verbose) {
     gchar **exclude_list =
         exclude_args ? g_strsplit (exclude_args, ",", 0) : NULL;
-    g_signal_connect (pipeline, "deep-notify",
+    deep_notify_id = g_signal_connect (pipeline, "deep-notify",
         G_CALLBACK (gst_object_default_deep_notify), exclude_list);
   }
 
@@ -1189,6 +1190,10 @@ main (int argc, char *argv[])
 
     /* iterate mainloop to process pending stuff */
     while (g_main_context_iteration (NULL, FALSE));
+
+    /* No need to see all those pad caps going to NULL etc., it's just noise */
+    if (deep_notify_id != 0)
+      g_signal_handler_disconnect (pipeline, deep_notify_id);
 
     PRINT (_("Setting pipeline to READY ...\n"));
     gst_element_set_state (pipeline, GST_STATE_READY);
