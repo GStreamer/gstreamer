@@ -1472,18 +1472,19 @@ gst_validate_pad_monitor_event_probe (GstPad * pad, GstEvent * event,
           || GST_EVENT_TYPE (event) == GST_EVENT_TYPE (next_event->event)) {
         g_ptr_array_remove_index (monitor->serialized_events, 0);
       }
-    }
+    } else {
+      /* if the event is not the first, it might be out of order */
+      for (i = 0; i < monitor->serialized_events->len; i++) {
+        SerializedEventData *stored_event =
+            g_ptr_array_index (monitor->serialized_events, i);
 
-    for (i = 0; i < monitor->serialized_events->len; i++) {
-      SerializedEventData *stored_event =
-          g_ptr_array_index (monitor->serialized_events, i);
-
-      if (event == stored_event->event
-          || GST_EVENT_TYPE (event) == GST_EVENT_TYPE (stored_event->event)) {
-        GST_VALIDATE_REPORT (monitor, EVENT_SERIALIZED_OUT_OF_ORDER,
-            "Serialized event %" GST_PTR_FORMAT " was pushed out of original "
-            "serialization order in pad %s:%s", event,
-            GST_DEBUG_PAD_NAME (GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor)));
+        if (event == stored_event->event
+            || GST_EVENT_TYPE (event) == GST_EVENT_TYPE (stored_event->event)) {
+          GST_VALIDATE_REPORT (monitor, EVENT_SERIALIZED_OUT_OF_ORDER,
+              "Serialized event %" GST_PTR_FORMAT " was pushed out of original "
+              "serialization order in pad %s:%s", event,
+              GST_DEBUG_PAD_NAME (GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor)));
+        }
       }
     }
   }
