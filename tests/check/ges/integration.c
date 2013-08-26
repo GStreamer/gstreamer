@@ -819,6 +819,44 @@ test_mixing (void)
 
 }
 
+static void
+test_title (void)
+{
+  GESTitleClip *title;
+  GESAsset *asset[2];
+  GESTimeline *timeline;
+  GESLayer *layer, *layer1;
+
+  GError *error = NULL;
+  gchar *uri1 = ges_test_file_name (testfilename1);
+
+  timeline = ges_timeline_new_audio_video ();
+  layer = ges_timeline_append_layer (timeline);
+  layer1 = ges_timeline_append_layer (timeline);
+  asset[0] = ges_asset_request (GES_TYPE_TITLE_CLIP, NULL, &error);
+  asset[1] = GES_ASSET (ges_uri_clip_asset_request_sync (uri1, &error));
+  g_free (uri1);
+
+  /**
+   * Our timeline
+   *
+   * inpoints 0--------0
+   *          |  Title |
+   * time     0------- 1
+   * inpoints          0--------0
+   *                   |  clip  |
+   * time              0------- 1
+   */
+  title =
+      GES_TITLE_CLIP (ges_layer_add_asset (layer, asset[0], 0, 0,
+          1 * GST_SECOND, GES_TRACK_TYPE_UNKNOWN));
+  ges_title_clip_set_text (title, "This is a title test");
+  ges_layer_add_asset (layer1, asset[1], 1 * GST_SECOND, 0, 1 * GST_SECOND,
+      GES_TRACK_TYPE_UNKNOWN);
+
+  fail_unless (check_timeline (timeline));
+}
+
 
 #define CREATE_TEST(name, func, profile)                                       \
 GST_START_TEST (test_##name##_raw_h264_mov)                                    \
@@ -954,6 +992,7 @@ CREATE_TEST_FULL(basic_video)
 CREATE_TEST_FULL(transition)
 CREATE_TEST_FULL(effect)
 CREATE_TEST_FULL(mixing)
+CREATE_TEST_FULL(title)
 
 CREATE_PLAYBACK_TEST(seeking)
 CREATE_PLAYBACK_TEST(seeking_audio)
@@ -983,6 +1022,8 @@ ges_suite (void)
   ADD_TESTS (transition);
 
   ADD_TESTS (mixing);
+
+  ADD_TESTS (title);
 
   ADD_PLAYBACK_TESTS (image);
 
