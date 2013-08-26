@@ -103,11 +103,7 @@ AC_SUBST(GST_CFLAGS)
 AC_SUBST(GST_LIBS)
 
 dnl check for pygobject
-PKG_CHECK_MODULES(PYGOBJECT, pygobject-3.0 >= $PYGOBJECT_REQ,
-  [
-    HAVE_PYGOBJECT="yes"
-  ], HAVE_PYGOBJECT="no")
-
+PKG_CHECK_MODULES(PYGOBJECT, pygobject-3.0 >= $PYGOBJECT_REQ)
 AC_SUBST(PYGOBJECT_CFLAGS)
 
 dnl and set the override directory
