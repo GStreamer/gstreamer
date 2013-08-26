@@ -110,7 +110,6 @@ struct _GstVaapiDecoderMpeg4 {
  *
  * A decoder class based on Mpeg4.
  */
-typedef struct _GstVaapiDecoderMpeg4Class GstVaapiDecoderMpeg4Class;
 struct _GstVaapiDecoderMpeg4Class {
     /*< private >*/
     GstVaapiDecoderClass parent_class;
