@@ -1099,7 +1099,7 @@ static void
 gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
 {
   GstH264SPS *sps;
-  GstCaps *sink_caps;
+  GstCaps *sink_caps, *src_caps;
   gboolean modified = FALSE;
   GstBuffer *buf = NULL;
   GstStructure *s = NULL;
@@ -1238,7 +1238,13 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
       s = gst_caps_get_structure (caps, 0);
       gst_structure_remove_field (s, "codec_data");
     }
-    gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (h264parse), caps);
+
+    src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h264parse));
+    if (!(src_caps && gst_caps_is_strictly_equal (src_caps, caps)))
+      gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (h264parse), caps);
+
+    if (src_caps)
+      gst_caps_unref (src_caps);
     gst_caps_unref (caps);
   }
 
