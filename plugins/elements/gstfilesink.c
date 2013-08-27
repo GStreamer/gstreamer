@@ -590,7 +590,8 @@ gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
     case GST_EVENT_FLUSH_STOP:
       if (filesink->current_pos != 0 && filesink->seekable) {
         gst_file_sink_do_seek (filesink, 0);
-        ftruncate (fileno (filesink->file), 0);
+        if (ftruncate (fileno (filesink->file), 0))
+          goto flush_failed;
       }
       break;
     case GST_EVENT_EOS:
