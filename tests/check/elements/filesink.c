@@ -226,6 +226,56 @@ GST_START_TEST (test_seeking)
 
 GST_END_TEST;
 
+GST_START_TEST (test_flush)
+{
+  GstElement *filesink;
+  gchar *tmp_fn;
+  GstSegment segment;
+
+  tmp_fn = create_temporary_file ();
+  if (tmp_fn == NULL)
+    return;
+  filesink = setup_filesink ();
+
+  GST_LOG ("using temp file '%s'", tmp_fn);
+  g_object_set (filesink, "location", tmp_fn, NULL);
+
+  fail_unless_equals_int (gst_element_set_state (filesink, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+
+  fail_unless (gst_pad_push_event (mysrcpad,
+          gst_event_new_stream_start ("test")));
+
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  CHECK_QUERY_POSITION (filesink, GST_FORMAT_BYTES, 0);
+
+  PUSH_BYTES (8);
+  CHECK_QUERY_POSITION (filesink, GST_FORMAT_BYTES, 8);
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_flush_start ()));
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_flush_stop (TRUE)));
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  fail_unless_equals_int (gst_element_set_state (filesink, GST_STATE_PLAYING),
+      GST_STATE_CHANGE_ASYNC);
+
+  CHECK_QUERY_POSITION (filesink, GST_FORMAT_BYTES, 0);
+
+  PUSH_BYTES (4);
+  CHECK_QUERY_POSITION (filesink, GST_FORMAT_BYTES, 4);
+
+  cleanup_filesink (filesink);
+
+  CHECK_WRITTEN_BYTES (0, 4, 4);
+
+  g_remove (tmp_fn);
+  g_free (tmp_fn);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_coverage)
 {
   GstElement *filesink;
@@ -335,6 +385,7 @@ filesink_suite (void)
   tcase_add_test (tc_chain, test_coverage);
   tcase_add_test (tc_chain, test_uri_interface);
   tcase_add_test (tc_chain, test_seeking);
+  tcase_add_test (tc_chain, test_flush);
 
   return s;
 }

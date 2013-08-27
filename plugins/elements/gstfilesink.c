@@ -56,6 +56,8 @@
 #define lseek _lseeki64
 #undef off_t
 #define off_t guint64
+#undef ftruncate
+#define ftruncate _chsize
 #ifdef _MSC_VER                 /* Check if we are using MSVC, fileno is deprecated in favour */
 #define fileno _fileno          /* of _fileno */
 #endif
@@ -242,6 +244,7 @@ gst_file_sink_init (GstFileSink * filesink)
 {
   filesink->filename = NULL;
   filesink->file = NULL;
+  filesink->current_pos = 0;
   filesink->buffer_mode = DEFAULT_BUFFER_MODE;
   filesink->buffer_size = DEFAULT_BUFFER_SIZE;
   filesink->buffer = NULL;
@@ -584,6 +587,12 @@ gst_file_sink_event (GstBaseSink * sink, GstEvent * event)
       }
       break;
     }
+    case GST_EVENT_FLUSH_STOP:
+      if (filesink->current_pos != 0 && filesink->seekable) {
+        gst_file_sink_do_seek (filesink, 0);
+        ftruncate (fileno (filesink->file), 0);
+      }
+      break;
     case GST_EVENT_EOS:
       if (fflush (filesink->file))
         goto flush_failed;
