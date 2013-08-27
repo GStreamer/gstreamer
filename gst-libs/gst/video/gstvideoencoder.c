@@ -174,6 +174,7 @@ struct _ForcedKeyUnitEvent
   gboolean pending;             /* TRUE if this was requested already */
   gboolean all_headers;
   guint count;
+  guint32 frame_id;
 };
 
 static void
@@ -1325,6 +1326,7 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     }
 
     if (fevt) {
+      fevt->frame_id = frame->system_frame_number;
       GST_DEBUG_OBJECT (encoder,
           "Forcing a key unit at running time %" GST_TIME_FORMAT,
           GST_TIME_ARGS (running_time));
@@ -1791,6 +1793,12 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
       /* Skip non-pending keyunits */
       if (!tmp->pending)
         continue;
+
+      /* Exact match using the frame id */
+      if (frame->system_frame_number == tmp->frame_id) {
+        fevt = tmp;
+        break;
+      }
 
       /* Simple case, keyunit ASAP */
       if (tmp->running_time == GST_CLOCK_TIME_NONE) {
