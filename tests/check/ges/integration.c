@@ -195,8 +195,8 @@ my_bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       gst_message_parse_error (message, &err, &debug);
       GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
           GST_DEBUG_GRAPH_SHOW_ALL, "ges-integration-error");
-      fail_unless (FALSE, "Got an error on the bus: Source: %s, message: %s\n",
-          GST_MESSAGE_SRC_NAME (message), err ? err->message : "Uknown");
+
+      g_assert_no_error (err);
       g_error_free (err);
       g_free (debug);
       g_main_loop_quit (loop);
