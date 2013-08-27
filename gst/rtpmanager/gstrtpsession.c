@@ -1504,7 +1504,7 @@ gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstObject * parent,
           forward = FALSE;
       } else if (gst_structure_has_name (s, "GstRTPRetransmissionRequest")) {
         GstClockTime running_time;
-        guint seqnum, delay, deadline;
+        guint seqnum, delay, deadline, max_delay;
 
         if (!gst_structure_get_clock_time (s, "running-time", &running_time))
           running_time = -1;
@@ -1512,13 +1512,23 @@ gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstObject * parent,
           ssrc = -1;
         if (!gst_structure_get_uint (s, "seqnum", &seqnum))
           seqnum = -1;
-        if (!gst_structure_get_uint (s, "delay", &deadline))
-          delay = -1;
+        if (!gst_structure_get_uint (s, "delay", &delay))
+          delay = 0;
         if (!gst_structure_get_uint (s, "deadline", &deadline))
-          deadline = -1;
+          deadline = 100;
+
+        /* remaining time to receive the packet */
+        max_delay = deadline;
+        if (max_delay > delay)
+          max_delay -= delay;
+        /* estimated RTT */
+        if (max_delay > 40)
+          max_delay -= 40;
+        else
+          max_delay = 0;
 
         if (rtp_session_request_nack (rtpsession->priv->session, ssrc, seqnum,
-                (deadline - delay) * GST_MSECOND))
+                max_delay * GST_MSECOND))
           forward = FALSE;
       }
       break;

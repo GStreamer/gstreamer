@@ -2204,9 +2204,9 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
       gst_structure_new ("GstRTPRetransmissionRequest",
           "seqnum", G_TYPE_UINT, (guint) timer->seqnum,
           "running-time", G_TYPE_UINT64, timer->rtx_base,
-          "delay", G_TYPE_UINT64, timer->rtx_retry,
-          "frequency", G_TYPE_INT, priv->rtx_retry_timeout,
-          "period", G_TYPE_INT, priv->rtx_retry_period,
+          "delay", G_TYPE_UINT, GST_TIME_AS_MSECONDS (timer->rtx_retry),
+          "frequency", G_TYPE_UINT, priv->rtx_retry_timeout,
+          "period", G_TYPE_UINT, priv->rtx_retry_period,
           "deadline", G_TYPE_UINT, priv->latency_ms,
           "packet-spacing", G_TYPE_UINT64, priv->packet_spacing, NULL));
 
