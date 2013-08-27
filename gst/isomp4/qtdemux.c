@@ -206,6 +206,10 @@ struct _QtDemuxStream
 
   gboolean new_caps;
   gboolean new_stream;          /* signals that a stream_start is required */
+  gboolean on_keyframe;         /* if this stream last pushed buffer was a
+                                 * keyframe. This is important to identify
+                                 * where to stop pushing buffers after a
+                                 * segment stop time */
 
   /* if the stream has a redirect URI in its headers, we store it here */
   gchar *redirect_uri;
@@ -4067,8 +4071,13 @@ gst_qtdemux_decorate_and_push_buffer (GstQTDemux * qtdemux,
     GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 
-  if (!keyframe)
+  if (!keyframe) {
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
+    stream->on_keyframe = FALSE;
+  } else {
+    stream->on_keyframe = TRUE;
+  }
+
 
   GST_LOG_OBJECT (qtdemux,
       "Pushing buffer with dts %" GST_TIME_FORMAT ", pts %" GST_TIME_FORMAT
@@ -4130,7 +4139,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
 
   /* check for segment end */
   if (G_UNLIKELY (qtdemux->segment.stop != -1
-          && qtdemux->segment.stop < min_time)) {
+          && qtdemux->segment.stop <= min_time
+          && qtdemux->streams[index]->on_keyframe)) {
     GST_DEBUG_OBJECT (qtdemux, "we reached the end of our segment.");
     goto eos;
   }
