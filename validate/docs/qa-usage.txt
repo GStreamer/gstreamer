@@ -20,7 +20,7 @@ use:
 LD_PRELOAD=path/to/libgstqa.so yourapp ...
 
 gst-qa will try to replace GstPipeline creating functions and already
-configure runners and monitors for you, reports will be printed to stdout when
+configure runners and monitors for you, reports will be printed to stderr when
 they are found.
 
 

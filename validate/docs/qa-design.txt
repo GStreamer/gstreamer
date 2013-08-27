@@ -5,7 +5,7 @@ Gst-qa is composed of 4 parts: the issues, the reports, the runner and the
 reporters.
 
 = Issue
-Gst-QA main target is finding problems in GStreamer elements/pipelines. To
+Gst-QA's main target is finding problems in GStreamer elements/pipelines. To
 make it easier to track down exactly what happens, the tests run by Gst-QA use
 an extensible list of 'Issues'. Each Issue describes a potential error
 situation and has an unique ID and a severity level.
@@ -15,15 +15,15 @@ should be met.
 
 = Reporters
 A reporter is the object that implements the GstQaReporter interface and is
-responsible for perfoming tests on some target element/scenario. The reporter
+responsible for performing tests on some target element/scenario. The reporter
 is able to create 'Reports' whenever a test it executes fails.
 
 = Reports
-The GstQaReports are created whenever a test fails, it is posted to the stderr
-and also are posted to the GstQaRunner for accumulation.
+The GstQaReports are created whenever a test fails, they are posted to the
+stderr and also are posted to the GstQaRunner for accumulation.
 
 Each report contains information about the object that generated the issue,
-the issue associated with the reprot and a specific debug message for the case,
+the issue associated with the report and a specific debug message for the case,
 this helps tracking down the problem and fixing it.
 
 = Runner
@@ -34,8 +34,8 @@ to the application.
 == Reporter types
 
 = Monitors
-The monitors are used to wrap around pipeline (and elements and pads) and
-attach to its data flow handling functions to be able to intercept the data
+The monitors are used to wrap around pipelines (and elements and pads) and
+attach to their data flow handling functions to be able to intercept the data
 and compare it with the expected behaviors. There are 3 types of monitors:
 
   * GstQaElementMonitor
@@ -45,7 +45,7 @@ and compare it with the expected behaviors. There are 3 types of monitors:
 All 3 inherit from the base GstQaMonitor class. Their name suggest what they
 monitor and they have a relationship to their children and parents. A bin
 monitor has, possibly, child element monitors and element monitors have child
-pad monitors. The monitors are responsible for listenning to new childs added
+pad monitors. The monitors are responsible for listening to new children added
 to their monitored object and creating monitors for them. For example, element
 monitors listen to element's pad-added signal and create pad monitors whenever
 a new pad is added.
