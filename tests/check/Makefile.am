@@ -115,7 +115,7 @@ coverage-report:
 	done
 
 check-integration: integration
-	./integration
+	CK_DEFAULT_TIMEOUT=20 ./integration
 
 check-integration-forever:
 	@while true; do						\
