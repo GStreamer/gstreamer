@@ -168,6 +168,10 @@ gst_vaapi_filter_set_cropping_rectangle(GstVaapiFilter *filter,
     const GstVaapiRectangle *rect);
 
 gboolean
+gst_vaapi_filter_set_target_rectangle(GstVaapiFilter *filter,
+    const GstVaapiRectangle *rect);
+
+gboolean
 gst_vaapi_filter_set_denoising_level(GstVaapiFilter *filter, gfloat level);
 
 gboolean

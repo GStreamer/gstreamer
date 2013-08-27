@@ -64,7 +64,9 @@ struct _GstVaapiFilter {
     GstVideoFormat      format;
     GArray             *formats;
     GstVaapiRectangle   crop_rect;
+    GstVaapiRectangle   target_rect;
     guint               use_crop_rect   : 1;
+    guint               use_target_rect : 1;
 };
 
 /* ------------------------------------------------------------------------- */
@@ -1178,6 +1180,7 @@ gst_vaapi_filter_process_unlocked(GstVaapiFilter *filter,
     if (!ensure_operations(filter))
         return GST_VAAPI_FILTER_STATUS_ERROR_ALLOCATION_FAILED;
 
+    /* Build surface region (source) */
     if (filter->use_crop_rect) {
         const GstVaapiRectangle * const crop_rect = &filter->crop_rect;
 
@@ -1199,10 +1202,27 @@ gst_vaapi_filter_process_unlocked(GstVaapiFilter *filter,
         src_rect.height = GST_VAAPI_SURFACE_HEIGHT(src_surface);
     }
 
-    dst_rect.x      = 0;
-    dst_rect.y      = 0;
-    dst_rect.width  = GST_VAAPI_SURFACE_WIDTH(dst_surface);
-    dst_rect.height = GST_VAAPI_SURFACE_HEIGHT(dst_surface);
+    /* Build output region (target) */
+    if (filter->use_target_rect) {
+        const GstVaapiRectangle * const target_rect = &filter->target_rect;
+
+        if ((target_rect->x + target_rect->width >
+             GST_VAAPI_SURFACE_WIDTH(dst_surface)) ||
+            (target_rect->y + target_rect->height >
+             GST_VAAPI_SURFACE_HEIGHT(dst_surface)))
+            goto error;
+
+        dst_rect.x      = target_rect->x;
+        dst_rect.y      = target_rect->y;
+        dst_rect.width  = target_rect->width;
+        dst_rect.height = target_rect->height;
+    }
+    else {
+        dst_rect.x      = 0;
+        dst_rect.y      = 0;
+        dst_rect.width  = GST_VAAPI_SURFACE_WIDTH(dst_surface);
+        dst_rect.height = GST_VAAPI_SURFACE_HEIGHT(dst_surface);
+    }
 
     for (i = 0, num_filters = 0; i < filter->operations->len; i++) {
         GstVaapiFilterOpData * const op_data =
@@ -1348,6 +1368,30 @@ gst_vaapi_filter_set_cropping_rectangle(GstVaapiFilter *filter,
     filter->use_crop_rect = rect != NULL;
     if (filter->use_crop_rect)
         filter->crop_rect = *rect;
+    return TRUE;
+}
+
+/**
+ * gst_vaapi_filter_set_target_rectangle:
+ * @filter: a #GstVaapiFilter
+ * @rect: the target render region
+ *
+ * Sets the region within the target surface where the source surface
+ * would be rendered. i.e. where the hardware accelerator would emit
+ * the outcome of video processing. If @rect is %NULL, the whole
+ * source surface will be used.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_filter_set_target_rectangle(GstVaapiFilter *filter,
+    const GstVaapiRectangle *rect)
+{
+    g_return_val_if_fail(filter != NULL, FALSE);
+
+    filter->use_target_rect = rect != NULL;
+    if (filter->use_target_rect)
+        filter->target_rect = *rect;
     return TRUE;
 }
 
