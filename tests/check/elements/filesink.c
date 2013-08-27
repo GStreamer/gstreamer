@@ -95,19 +95,37 @@ cleanup_filesink (GstElement * filesink)
       g_rand_free (rand);                                                 \
     } G_STMT_END
 
-/* TODO: we don't check that the data is actually written to the right
- * position after a seek */
-GST_START_TEST (test_seeking)
+#define CHECK_WRITTEN_BYTES(offset,written,file_size)                      \
+    G_STMT_START {                                                        \
+      gchar *data = NULL;                                                 \
+      gsize len;                                                          \
+      fail_unless (g_file_get_contents (tmp_fn, &data, &len, NULL),       \
+          "Failed to read in newly-created file '%s'", tmp_fn);           \
+      fail_unless_equals_int (len, file_size);                            \
+      {                                                                   \
+        /* we wrote <written> bytes at position 0 */                      \
+        GRand *rand = g_rand_new_with_seed (written);                     \
+        guint i;                                                          \
+        for (i = 0; i < written; ++i) {                                   \
+          guint8 byte_written = *(((guint8 *) data) + offset + i);        \
+                                                                          \
+          fail_unless_equals_int (byte_written, g_rand_int (rand) >> 24); \
+        }                                                                 \
+        g_rand_free (rand);                                               \
+      }                                                                   \
+      g_free (data);                                                      \
+    } G_STMT_END
+
+static gchar *
+create_temporary_file (void)
 {
   const gchar *tmpdir;
-  GstElement *filesink;
   gchar *tmp_fn;
   gint fd;
-  GstSegment segment;
 
   tmpdir = g_get_tmp_dir ();
   if (tmpdir == NULL)
-    return;
+    return NULL;
 
   /* this is just silly, but gcc warns if we try to use tpmnam() */
   tmp_fn = g_build_filename (tmpdir, "gstreamer-filesink-test-XXXXXX", NULL);
@@ -115,12 +133,26 @@ GST_START_TEST (test_seeking)
   if (fd < 0) {
     GST_ERROR ("can't create temp file %s: %s", tmp_fn, g_strerror (errno));
     g_free (tmp_fn);
-    return;
+    return NULL;
   }
   /* don't want the file, just a filename (hence silly, see above) */
   close (fd);
   g_remove (tmp_fn);
 
+  return tmp_fn;
+}
+
+/* TODO: we don't check that the data is actually written to the right
+ * position after a seek */
+GST_START_TEST (test_seeking)
+{
+  GstElement *filesink;
+  gchar *tmp_fn;
+  GstSegment segment;
+
+  tmp_fn = create_temporary_file ();
+  if (tmp_fn == NULL)
+    return;
   filesink = setup_filesink ();
 
   GST_LOG ("using temp file '%s'", tmp_fn);
@@ -185,28 +217,7 @@ GST_START_TEST (test_seeking)
   /* cleanup */
   cleanup_filesink (filesink);
 
-  /* check that we wrote data to the right position after the seek */
-  {
-    gchar *data = NULL;
-    gsize len;
-
-    fail_unless (g_file_get_contents (tmp_fn, &data, &len, NULL),
-        "Failed to read in newly-created file '%s'", tmp_fn);
-    fail_unless_equals_int (len, 18057);
-    {
-      /* we wrote 9256 bytes at position 8801 */
-      GRand *rand = g_rand_new_with_seed (9256);
-      guint i;
-
-      for (i = 0; i < 9256; ++i) {
-        guint8 byte_written = *(((guint8 *) data) + 8801 + i);
-
-        fail_unless_equals_int (byte_written, g_rand_int (rand) >> 24);
-      }
-      g_rand_free (rand);
-    }
-    g_free (data);
-  }
+  CHECK_WRITTEN_BYTES (8801, 9256, 18057);
 
   /* remove file */
   g_remove (tmp_fn);
