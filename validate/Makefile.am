@@ -4,6 +4,7 @@ SUBDIRS = 	\
 	common 	\
 	data	\
 	gst 	\
+	tools 	\
 	po
 
 DIST_SUBDIRS = $(SUBDIRS)

@@ -17,7 +17,7 @@
 #include <glib-unix.h>
 #endif
 
-#include "gst-validate-scenario.h"
+#include <gst/validate/gst-validate-scenario.h>
 
 static gint ret = 0;
 static GMainLoop *mainloop;

@@ -11,7 +11,7 @@
 
 #include <gst/gst.h>
 #include <gst/validate/validate.h>
-#include "gst-validate-scenario.h"
+#include <gst/validate/gst-validate-scenario.h>
 
 #ifdef G_OS_UNIX
 #include <glib-unix.h>

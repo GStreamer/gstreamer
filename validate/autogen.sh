@@ -3,7 +3,7 @@
 
 DIE=0
 package=gst-validate
-srcfile=gst/validate/gst-validate.c
+srcfile=tools/gst-validate.c
 
 # Make sure we have common
 if test ! -f common/gst-autogen.sh;
