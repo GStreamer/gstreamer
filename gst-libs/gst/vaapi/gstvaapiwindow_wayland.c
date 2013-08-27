@@ -44,14 +44,53 @@
 
 typedef struct _GstVaapiWindowWaylandPrivate    GstVaapiWindowWaylandPrivate;
 typedef struct _GstVaapiWindowWaylandClass      GstVaapiWindowWaylandClass;
+typedef struct _FrameState                      FrameState;
+
+struct _FrameState {
+    GstVaapiWindow             *window;
+    struct wl_buffer           *buffer;
+    struct wl_callback         *callback;
+};
+
+static FrameState *
+frame_state_new(GstVaapiWindow *window)
+{
+    FrameState *frame;
+
+    frame = g_slice_new(FrameState);
+    if (!frame)
+        return NULL;
+
+    frame->window = window;
+    frame->buffer = NULL;
+    frame->callback = NULL;
+    return frame;
+}
+
+static void
+frame_state_free(FrameState *frame)
+{
+    if (!frame)
+        return;
+
+    if (frame->buffer) {
+        wl_buffer_destroy(frame->buffer);
+        frame->buffer = NULL;
+    }
+
+    if (frame->callback) {
+        wl_callback_destroy(frame->callback);
+        frame->callback = NULL;
+    }
+    g_slice_free(FrameState, frame);
+}
 
 struct _GstVaapiWindowWaylandPrivate {
     struct wl_shell_surface    *shell_surface;
     struct wl_surface          *surface;
-    struct wl_buffer           *buffer;
     struct wl_region           *opaque_region;
     struct wl_event_queue      *event_queue;
-    guint                       redraw_pending          : 1;
+    FrameState                 *frame;
     guint                       is_shown                : 1;
     guint                       fullscreen_on_show      : 1;
 };
@@ -100,14 +139,14 @@ gst_vaapi_window_wayland_sync(GstVaapiWindow *window)
     GstVaapiWindowWaylandPrivate * const priv =
         GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE(window);
 
-    if (priv->redraw_pending) {
+    if (priv->frame) {
         struct wl_display * const wl_display =
             GST_VAAPI_OBJECT_WL_DISPLAY(window);
 
         do {
             if (wl_display_dispatch_queue(wl_display, priv->event_queue) < 0)
                 return FALSE;
-        } while (priv->redraw_pending);
+        } while (priv->frame);
     }
     return TRUE;
 }
@@ -207,7 +246,6 @@ gst_vaapi_window_wayland_create(
     if (priv->fullscreen_on_show)
         gst_vaapi_window_wayland_set_fullscreen(window, TRUE);
 
-    priv->redraw_pending = FALSE;
     priv->is_shown = TRUE;
 
     return TRUE;
@@ -219,6 +257,11 @@ gst_vaapi_window_wayland_destroy(GstVaapiWindow * window)
     GstVaapiWindowWaylandPrivate * const priv =
         GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE(window);
 
+    if (priv->frame) {
+        frame_state_free(priv->frame);
+        priv->frame = NULL;
+    }
+
     if (priv->shell_surface) {
         wl_shell_surface_destroy(priv->shell_surface);
         priv->shell_surface = NULL;
@@ -227,11 +270,6 @@ gst_vaapi_window_wayland_destroy(GstVaapiWindow * window)
     if (priv->surface) {
         wl_surface_destroy(priv->surface);
         priv->surface = NULL;
-    }
-
-    if (priv->buffer) {
-        wl_buffer_destroy(priv->buffer);
-        priv->buffer = NULL;
     }
 
     if (priv->event_queue) {
@@ -267,12 +305,13 @@ gst_vaapi_window_wayland_resize(
 static void
 frame_redraw_callback(void *data, struct wl_callback *callback, uint32_t time)
 {
-    GstVaapiWindowWaylandPrivate * const priv = data;
+    FrameState * const frame = data;
+    GstVaapiWindowWaylandPrivate * const priv =
+        GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE(frame->window);
 
-    wl_buffer_destroy(priv->buffer);
-    priv->buffer = NULL;
-    wl_callback_destroy(callback);
-    priv->redraw_pending = FALSE;
+    frame_state_free(frame);
+    if (priv->frame == frame)
+        priv->frame = NULL;
 }
 
 static const struct wl_callback_listener frame_callback_listener = {
@@ -293,7 +332,7 @@ gst_vaapi_window_wayland_render(
     GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(window);
     struct wl_display * const wl_display = GST_VAAPI_OBJECT_WL_DISPLAY(window);
     struct wl_buffer *buffer;
-    struct wl_callback *callback;
+    FrameState *frame;
     guint width, height, va_flags;
     VASurfaceID surface_id;
     VAStatus status;
@@ -315,10 +354,6 @@ gst_vaapi_window_wayland_render(
 
     surface_id = GST_VAAPI_OBJECT_ID(surface);
     if (surface_id == VA_INVALID_ID)
-        return FALSE;
-
-    /* Wait for the previous frame to complete redraw */
-    if (!gst_vaapi_window_wayland_sync(window))
         return FALSE;
 
     /* XXX: use VA/VPP for other filters */
@@ -343,6 +378,15 @@ gst_vaapi_window_wayland_render(
     if (!vaapi_check_status(status, "vaGetSurfaceBufferWl()"))
         return FALSE;
 
+    /* Wait for the previous frame to complete redraw */
+    if (!gst_vaapi_window_wayland_sync(window))
+        return FALSE;
+
+    frame = frame_state_new(window);
+    if (!frame)
+        return FALSE;
+    priv->frame = frame;
+
     /* XXX: attach to the specified target rectangle */
     GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
     wl_surface_attach(priv->surface, buffer, 0, 0);
@@ -354,10 +398,9 @@ gst_vaapi_window_wayland_render(
         priv->opaque_region = NULL;
     }
 
-    priv->redraw_pending = TRUE;
-    priv->buffer = buffer;
-    callback = wl_surface_frame(priv->surface);
-    wl_callback_add_listener(callback, &frame_callback_listener, priv);
+    frame->buffer = buffer;
+    frame->callback = wl_surface_frame(priv->surface);
+    wl_callback_add_listener(frame->callback, &frame_callback_listener, frame);
 
     wl_surface_commit(priv->surface);
     wl_display_flush(wl_display);
