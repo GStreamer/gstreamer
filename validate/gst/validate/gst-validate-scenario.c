@@ -817,6 +817,13 @@ gst_validate_list_scenarios (void)
   g_object_unref (dir);
   g_free (tldir);
 
+  tldir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
+      GST_VALIDATE_SCENARIO_DIRECTORY, NULL);
+  dir = g_file_new_for_path (tldir);
+  _list_scenarios_in_dir (dir);
+  g_object_unref (dir);
+  g_free (tldir);
+
   /* Hack to make it work uninstalled */
   dir = g_file_new_for_path ("data/");
   _list_scenarios_in_dir (dir);
