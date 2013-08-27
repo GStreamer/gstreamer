@@ -1101,8 +1101,9 @@ gst_validate_pad_monitor_common_event_check (GstValidatePadMonitor *
 }
 
 static gboolean
-gst_validate_pad_monitor_sink_event_check (GstValidatePadMonitor * pad_monitor,
-    GstObject * parent, GstEvent * event, GstPadEventFunction handler)
+gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
+    pad_monitor, GstObject * parent, GstEvent * event,
+    GstPadEventFunction handler)
 {
   gboolean ret = TRUE;
   const GstSegment *segment;
@@ -1113,13 +1114,6 @@ gst_validate_pad_monitor_sink_event_check (GstValidatePadMonitor * pad_monitor,
 
   /* pre checks */
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:{
-      GstCaps *caps;
-
-      gst_event_parse_caps (event, &caps);
-      gst_validate_pad_monitor_setcaps_pre (pad_monitor, caps);
-      break;
-    }
     case GST_EVENT_SEGMENT:
       /* parse segment data to be used if event is handled */
       gst_event_parse_segment (event, &segment);
@@ -1189,13 +1183,6 @@ gst_validate_pad_monitor_sink_event_check (GstValidatePadMonitor * pad_monitor,
 
   /* post checks */
   switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:{
-      GstCaps *caps;
-
-      gst_event_parse_caps (event, &caps);
-      gst_validate_pad_monitor_setcaps_post (pad_monitor, caps, ret);
-      break;
-    }
     case GST_EVENT_SEGMENT:
       if (ret) {
         if (!pad_monitor->has_segment
@@ -1347,8 +1334,33 @@ gst_validate_pad_monitor_sink_event_func (GstPad * pad, GstObject * parent,
         event, last_ts);
   }
 
-  ret = gst_validate_pad_monitor_sink_event_check (pad_monitor, parent, event,
-      pad_monitor->event_func);
+  /* pre checks */
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:{
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      gst_validate_pad_monitor_setcaps_pre (pad_monitor, caps);
+      break;
+    }
+    default:
+      break;
+  }
+  ret =
+      gst_validate_pad_monitor_downstream_event_check (pad_monitor, parent,
+      event, pad_monitor->event_func);
+  /* post checks */
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:{
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      gst_validate_pad_monitor_setcaps_post (pad_monitor, caps, ret);
+      break;
+    }
+    default:
+      break;
+  }
 
   GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
   GST_VALIDATE_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);
@@ -1502,7 +1514,9 @@ gst_validate_pad_monitor_event_probe (GstPad * pad, GstEvent * event,
 
   /* This so far is just like an event that is flowing downstream,
    * so we do the same checks as a sinkpad event handler */
-  ret = gst_validate_pad_monitor_sink_event_check (monitor, NULL, event, NULL);
+  ret =
+      gst_validate_pad_monitor_downstream_event_check (monitor, NULL, event,
+      NULL);
   GST_VALIDATE_MONITOR_UNLOCK (monitor);
   GST_VALIDATE_PAD_MONITOR_PARENT_UNLOCK (monitor);
 
