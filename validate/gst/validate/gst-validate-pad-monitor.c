@@ -1658,7 +1658,8 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
     /* add buffer/event probes */
     pad_monitor->pad_probe_id =
         gst_pad_add_probe (pad,
-        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM |
+        GST_PAD_PROBE_TYPE_EVENT_FLUSH,
         (GstPadProbeCallback) gst_validate_pad_monitor_pad_probe, pad_monitor,
         NULL);
   }
