@@ -189,6 +189,7 @@ ges_effect_create_element (GESTrackElement * object)
   GError *error = NULL;
   GESEffect *self = GES_EFFECT (object);
   GESTrack *track = ges_track_element_get_track (object);
+  const gchar *wanted_categories[] = { "Effect", NULL };
 
   if (!track) {
     GST_WARNING
@@ -222,6 +223,9 @@ ges_effect_create_element (GESTrackElement * object)
   }
 
   GST_DEBUG ("Created effect %p", effect);
+
+  ges_track_element_add_children_props (object, effect, wanted_categories,
+      NULL, NULL);
 
   return effect;
 }

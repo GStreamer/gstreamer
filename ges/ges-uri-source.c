@@ -37,7 +37,6 @@
 
 struct _GESUriSourcePrivate
 {
-  GHashTable *props_hashtable;
   GstFramePositionner *positionner;
 };
 
@@ -120,46 +119,6 @@ _create_bin (const gchar * bin_name, GstElement * decodebin, ...)
 }
 
 static void
-_add_element_properties_to_hashtable (GESUriSource * self, GstElement * element,
-    ...)
-{
-  GObjectClass *class;
-  GParamSpec *pspec;
-  va_list argp;
-  const gchar *propname;
-
-  class = G_OBJECT_GET_CLASS (element);
-  va_start (argp, element);
-
-  while ((propname = va_arg (argp, const gchar *)) != NULL)
-  {
-    pspec = g_object_class_find_property (class, propname);
-    if (!pspec) {
-      GST_WARNING ("no such property : %s in element : %s", propname,
-          gst_element_get_name (element));
-      continue;
-    }
-
-    if (self->priv->props_hashtable == NULL)
-      self->priv->props_hashtable =
-          g_hash_table_new_full ((GHashFunc) pspec_hash, pspec_equal,
-          (GDestroyNotify) g_param_spec_unref, gst_object_unref);
-
-    if (pspec->flags & G_PARAM_WRITABLE) {
-      g_hash_table_insert (self->priv->props_hashtable,
-          g_param_spec_ref (pspec), gst_object_ref (element));
-      GST_LOG_OBJECT (self,
-          "added property %s to controllable properties successfully !",
-          propname);
-    } else
-      GST_WARNING ("the property %s for element %s exists but is not writable",
-          propname, gst_element_get_name (element));
-  }
-
-  va_end (argp);
-}
-
-static void
 _sync_element_to_layer_property_float (GESTrackElement * trksrc,
     GstElement * element, const gchar * meta, const gchar * propname)
 {
@@ -220,6 +179,9 @@ ges_uri_source_create_element (GESTrackElement * trksrc)
 
   switch (track->type) {
     case GES_TRACK_TYPE_AUDIO:
+    {
+      const gchar *props[] = { "volume", "mute", NULL };
+
       GST_DEBUG_OBJECT (trksrc, "Creating a bin uridecodebin ! volume");
 
       decodebin = gst_element_factory_make ("uridecodebin", NULL);
@@ -229,18 +191,22 @@ ges_uri_source_create_element (GESTrackElement * trksrc)
 
       _sync_element_to_layer_property_float (trksrc, volume, GES_META_VOLUME,
           "volume");
-      _add_element_properties_to_hashtable (self, volume, "volume", "mute",
-          NULL);
+      ges_track_element_add_children_props (trksrc, volume, NULL, NULL, props);
       break;
+    }
     case GES_TRACK_TYPE_VIDEO:
+    {
+      const gchar *props[] = { "alpha", "posx", "posy", NULL };
+
       decodebin = gst_element_factory_make ("uridecodebin", NULL);
 
       /* That positionner will add metadata to buffers according to its
          properties, acting like a proxy for our smart-mixer dynamic pads. */
       positionner =
           gst_element_factory_make ("framepositionner", "frame_tagger");
-      _add_element_properties_to_hashtable (self, positionner, "alpha", "posx",
-          "posy", NULL);
+
+      ges_track_element_add_children_props (trksrc, positionner, NULL, NULL,
+          props);
       topbin = _create_bin ("video-src-bin", decodebin, positionner, NULL);
       parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
       if (parent) {
@@ -253,6 +219,7 @@ ges_uri_source_create_element (GESTrackElement * trksrc)
         GST_WARNING ("No parent timeline element, SHOULD NOT HAPPEN");
       }
       break;
+    }
     default:
       decodebin = gst_element_factory_make ("uridecodebin", NULL);
       topbin = _create_bin ("video-src-bin", decodebin, NULL);
@@ -263,19 +230,6 @@ ges_uri_source_create_element (GESTrackElement * trksrc)
       "expose-all-streams", FALSE, "uri", self->uri, NULL);
 
   return topbin;
-}
-
-static GHashTable *
-ges_uri_source_get_props_hashtable (GESTrackElement * element)
-{
-  GESUriSource *self = (GESUriSource *) element;
-
-  if (self->priv->props_hashtable == NULL)
-    self->priv->props_hashtable =
-        g_hash_table_new_full ((GHashFunc) pspec_hash, pspec_equal,
-        (GDestroyNotify) g_param_spec_unref, gst_object_unref);
-
-  return self->priv->props_hashtable;
 }
 
 /* Extractable interface implementation */
@@ -383,7 +337,6 @@ ges_track_filesource_class_init (GESUriSourceClass * klass)
           NULL, G_PARAM_READWRITE | G_PARAM_CONSTRUCT_ONLY));
 
   track_class->create_element = ges_uri_source_create_element;
-  track_class->get_props_hastable = ges_uri_source_get_props_hashtable;
 }
 
 static void
@@ -391,7 +344,6 @@ ges_track_filesource_init (GESUriSource * self)
 {
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_URI_SOURCE, GESUriSourcePrivate);
-  self->priv->props_hashtable = NULL;
   self->priv->positionner = NULL;
 }
 

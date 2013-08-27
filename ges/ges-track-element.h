@@ -75,8 +75,6 @@ struct _GESTrackElement {
  * @create_gnl_object: method to create the GNonLin container object.
  * @create_element: method to return the GstElement to put in the gnlobject.
  * @active_changed: active property of gnlobject has changed
- * @get_props_hastable: method to list children properties that user could like
- *                      to configure. Since: 0.10.2
  * @list_children_properties: method to get children properties that user could
  *                            like to configure.
  *                            The default implementation will create an object
@@ -104,7 +102,6 @@ struct _GESTrackElementClass {
 
   /*< public >*/
   /* virtual methods for subclasses */
-  GHashTable*  (*get_props_hastable)       (GESTrackElement * object);
   GParamSpec** (*list_children_properties) (GESTrackElement * object,
               guint *n_properties);
   /*< private >*/
@@ -188,6 +185,11 @@ ges_track_element_set_control_source          (GESTrackElement *object,
 GstControlBinding *
 ges_track_element_get_control_binding         (GESTrackElement *object,
                                                const gchar *property_name);
-
+void
+ges_track_element_add_children_props          (GESTrackElement *self,
+                                               GstElement *element,
+                                               const gchar ** wanted_categories,
+                                               const gchar **blacklist,
+                                               const gchar **whitelist);
 G_END_DECLS
 #endif /* _GES_TRACK_ELEMENT */

@@ -29,7 +29,7 @@
  * its container, like the start position, the inpoint, the duration and the
  * priority.
  */
-
+#include "ges-utils.h"
 #include "ges-internal.h"
 #include "ges-extractable.h"
 #include "ges-track-element.h"
@@ -57,7 +57,7 @@ struct _GESTrackElementPrivate
   /* We keep a link between properties name and elements internally
    * The hashtable should look like
    * {GParamaSpec ---> element,}*/
-  GHashTable *properties_hashtable;
+  GHashTable *children_props;
 
   GESTrack *track;
 
@@ -162,11 +162,10 @@ ges_track_element_set_property (GObject * object, guint property_id,
 static void
 ges_track_element_dispose (GObject * object)
 {
-  GESTrackElementPrivate *priv = GES_TRACK_ELEMENT (object)->priv;
+  GESTrackElement *element = GES_TRACK_ELEMENT (object);
+  GESTrackElementPrivate *priv = element->priv;
 
-  if (priv->properties_hashtable)
-    g_hash_table_destroy (priv->properties_hashtable);
-
+  g_hash_table_destroy (priv->children_props);
   if (priv->bindings_hashtable)
     g_hash_table_destroy (priv->bindings_hashtable);
 
@@ -262,8 +261,6 @@ ges_track_element_class_init (GESTrackElementClass * klass)
   element_class->deep_copy = ges_track_element_copy_properties;
 
   klass->create_gnl_object = ges_track_element_create_gnl_object_func;
-  /*  There is no 'get_props_hashtable' default implementation */
-  klass->get_props_hastable = NULL;
   klass->list_children_properties = default_list_children_properties;
 }
 
@@ -279,9 +276,12 @@ ges_track_element_init (GESTrackElement * self)
   priv->pending_duration = GST_SECOND;
   priv->pending_priority = MIN_GNL_PRIO;
   priv->pending_active = TRUE;
-  priv->properties_hashtable = NULL;
   priv->bindings_hashtable = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, NULL);
+  priv->children_props =
+      g_hash_table_new_full ((GHashFunc) pspec_hash, pspec_equal,
+      (GDestroyNotify) g_param_spec_unref, gst_object_unref);
+
 }
 
 static gfloat
@@ -554,14 +554,8 @@ connect_signal (gpointer key, gpointer value, gpointer user_data)
 static void
 connect_properties_signals (GESTrackElement * object)
 {
-  if (G_UNLIKELY (!object->priv->properties_hashtable)) {
-    GST_WARNING ("The properties_hashtable hasn't been set");
-    return;
-  }
-
-  g_hash_table_foreach (object->priv->properties_hashtable,
+  g_hash_table_foreach (object->priv->children_props,
       (GHFunc) connect_signal, object);
-
 }
 
 /* default 'create_gnl_object' virtual method implementation */
@@ -649,7 +643,6 @@ ensure_gnl_object (GESTrackElement * object)
 {
   GESTrackElementClass *class;
   GstElement *gnlobject;
-  GHashTable *props_hash;
   gboolean res = TRUE;
 
   if (object->priv->gnlobject && object->priv->valid)
@@ -705,18 +698,6 @@ ensure_gnl_object (GESTrackElement * object)
       g_object_set (object->priv->gnlobject,
           "caps", ges_track_get_caps (object->priv->track), NULL);
 
-    /*  We feed up the props_hashtable if possible */
-    if (class->get_props_hastable) {
-      props_hash = class->get_props_hastable (object);
-
-      if (props_hash == NULL) {
-        GST_DEBUG ("'get_props_hastable' implementation returned TRUE but no"
-            "properties_hashtable is available");
-      } else {
-        object->priv->properties_hashtable = props_hash;
-        connect_properties_signals (object);
-      }
-    }
   }
 
 done:
@@ -725,6 +706,157 @@ done:
   GST_DEBUG ("Returning res:%d", res);
 
   return res;
+}
+
+static gboolean
+strv_find_str (const gchar ** strv, const char *str)
+{
+  guint i;
+
+  if (strv == NULL)
+    return FALSE;
+
+  for (i = 0; strv[i]; i++) {
+    if (g_strcmp0 (strv[i], str) == 0)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+ * ges_track_element_add_children_props:
+ * @self: The #GESTrackElement to set chidlren props on
+ * @element: The GstElement to retrieve properties from
+ * @wanted_categories: (array zero-terminated=1) (transfer none) (allow-none):
+ * An array of categories of GstElement to
+ * take into account (as defined in the factory meta "klass" field)
+ * @blacklist: (array zero-terminated=1) (transfer none) (allow-none): A
+ * blacklist of elements factory names to not take into account
+ * @witelist: (array zero-terminated=1) (transfer none) (allow-none): A list
+ * of propery names to add as children properties
+ *
+ * Looks for the properties defines with the various parametters and add
+ * them to the hashtable of children properties.
+ *
+ * To be used by subclasses only
+ */
+void
+ges_track_element_add_children_props (GESTrackElement * self,
+    GstElement * element, const gchar ** wanted_categories,
+    const gchar ** blacklist, const gchar ** whitelist)
+{
+  GValue item = { 0, };
+  GstIterator *it;
+  GParamSpec **parray;
+  GObjectClass *class;
+  const gchar *klass;
+  GstElementFactory *factory;
+  gboolean done = FALSE;
+
+  if (!GST_IS_BIN (element)) {
+    guint i;
+    GParamSpec *pspec;
+
+    GObjectClass *class = G_OBJECT_GET_CLASS (element);
+
+    for (i = 0; whitelist[i]; i++) {
+
+      pspec = g_object_class_find_property (class, whitelist[i]);
+      if (!pspec) {
+        GST_WARNING ("no such property : %s in element : %s", whitelist[i],
+            gst_element_get_name (element));
+        continue;
+      }
+
+      if (pspec->flags & G_PARAM_WRITABLE) {
+        g_hash_table_insert (self->priv->children_props,
+            g_param_spec_ref (pspec), gst_object_ref (element));
+        GST_LOG_OBJECT (self,
+            "added property %s to controllable properties successfully !",
+            whitelist[i]);
+      } else
+        GST_WARNING
+            ("the property %s for element %s exists but is not writable",
+            whitelist[i], gst_element_get_name (element));
+
+    }
+
+    connect_properties_signals (self);
+    return;
+  }
+
+  /*  We go over child elements recursivly, and add writable properties to the
+   *  hashtable */
+  it = gst_bin_iterate_recurse (GST_BIN (element));
+  while (!done) {
+    switch (gst_iterator_next (it, &item)) {
+      case GST_ITERATOR_OK:
+      {
+        gchar **categories;
+        guint i;
+        GstElement *child = g_value_get_object (&item);
+
+        factory = gst_element_get_factory (child);
+        klass = gst_element_factory_get_metadata (factory,
+            GST_ELEMENT_METADATA_KLASS);
+
+        if (strv_find_str (blacklist, GST_OBJECT_NAME (factory))) {
+          GST_DEBUG_OBJECT (self, "%s blacklisted", GST_OBJECT_NAME (factory));
+          continue;
+        }
+
+        GST_DEBUG ("Looking at element '%s' of klass '%s'",
+            GST_ELEMENT_NAME (child), klass);
+
+        categories = g_strsplit (klass, "/", 0);
+
+        for (i = 0; categories[i]; i++) {
+          if ((!wanted_categories ||
+                  strv_find_str (wanted_categories, categories[i]))) {
+            guint i, nb_specs;
+
+            class = G_OBJECT_GET_CLASS (child);
+            parray = g_object_class_list_properties (class, &nb_specs);
+            for (i = 0; i < nb_specs; i++) {
+              if ((parray[i]->flags & G_PARAM_WRITABLE) &&
+                  (!whitelist || strv_find_str (whitelist, parray[i]->name))) {
+                g_hash_table_insert (self->priv->children_props,
+                    g_param_spec_ref (parray[i]), gst_object_ref (child));
+              }
+            }
+            g_free (parray);
+
+            GST_DEBUG
+                ("%d configurable properties of '%s' added to property hashtable",
+                nb_specs, GST_ELEMENT_NAME (child));
+            break;
+          }
+        }
+
+        g_strfreev (categories);
+        g_value_reset (&item);
+        break;
+      }
+      case GST_ITERATOR_RESYNC:
+        /* FIXME, properly restart the process */
+        GST_DEBUG ("iterator resync");
+        gst_iterator_resync (it);
+        break;
+
+      case GST_ITERATOR_DONE:
+        GST_DEBUG ("iterator done");
+        done = TRUE;
+        break;
+
+      default:
+        break;
+    }
+    g_value_unset (&item);
+  }
+  gst_iterator_free (it);
+
+  connect_properties_signals (self);
 }
 
 /* INTERNAL USAGE */
@@ -894,14 +1026,8 @@ ges_track_element_lookup_child (GESTrackElement * object,
   gpointer key, value;
   gchar **names, *name, *classename;
   gboolean res;
-  GESTrackElementPrivate *priv;
 
   g_return_val_if_fail (GES_IS_TRACK_ELEMENT (object), FALSE);
-
-  priv = object->priv;
-
-  if (!priv->properties_hashtable)
-    goto prop_hash_not_set;
 
   classename = NULL;
   res = FALSE;
@@ -913,7 +1039,7 @@ ges_track_element_lookup_child (GESTrackElement * object,
   } else
     name = names[0];
 
-  g_hash_table_iter_init (&iter, priv->properties_hashtable);
+  g_hash_table_iter_init (&iter, object->priv->children_props);
   while (g_hash_table_iter_next (&iter, &key, &value)) {
     if (g_strcmp0 (G_PARAM_SPEC (key)->name, name) == 0) {
       if (classename == NULL ||
@@ -931,12 +1057,6 @@ ges_track_element_lookup_child (GESTrackElement * object,
   g_strfreev (names);
 
   return res;
-
-prop_hash_not_set:
-  {
-    GST_WARNING_OBJECT (object, "The child properties haven't been set yet");
-    return FALSE;
-  }
 }
 
 /**
@@ -954,16 +1074,10 @@ ges_track_element_set_child_property_by_pspec (GESTrackElement * object,
     GParamSpec * pspec, GValue * value)
 {
   GstElement *element;
-  GESTrackElementPrivate *priv;
-
   g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
 
-  priv = object->priv;
 
-  if (!priv->properties_hashtable)
-    goto prop_hash_not_set;
-
-  element = g_hash_table_lookup (priv->properties_hashtable, pspec);
+  element = g_hash_table_lookup (object->priv->children_props, pspec);
   if (!element)
     goto not_found;
 
@@ -974,11 +1088,6 @@ ges_track_element_set_child_property_by_pspec (GESTrackElement * object,
 not_found:
   {
     GST_ERROR ("The %s property doesn't exist", pspec->name);
-    return;
-  }
-prop_hash_not_set:
-  {
-    GST_DEBUG ("The child properties haven't been set on %p", object);
     return;
   }
 }
@@ -1207,16 +1316,10 @@ ges_track_element_get_child_property_by_pspec (GESTrackElement * object,
     GParamSpec * pspec, GValue * value)
 {
   GstElement *element;
-  GESTrackElementPrivate *priv;
 
   g_return_if_fail (GES_IS_TRACK_ELEMENT (object));
 
-  priv = object->priv;
-
-  if (!priv->properties_hashtable)
-    goto prop_hash_not_set;
-
-  element = g_hash_table_lookup (priv->properties_hashtable, pspec);
+  element = g_hash_table_lookup (object->priv->children_props, pspec);
   if (!element)
     goto not_found;
 
@@ -1227,11 +1330,6 @@ ges_track_element_get_child_property_by_pspec (GESTrackElement * object,
 not_found:
   {
     GST_ERROR ("The %s property doesn't exist", pspec->name);
-    return;
-  }
-prop_hash_not_set:
-  {
-    GST_ERROR ("The child properties haven't been set on %p", object);
     return;
   }
 }
@@ -1336,13 +1434,10 @@ default_list_children_properties (GESTrackElement * object,
 
   guint i = 0;
 
-  if (!object->priv->properties_hashtable)
-    goto prop_hash_not_set;
-
-  *n_properties = g_hash_table_size (object->priv->properties_hashtable);
+  *n_properties = g_hash_table_size (object->priv->children_props);
   pspec = g_new (GParamSpec *, *n_properties);
 
-  g_hash_table_iter_init (&iter, object->priv->properties_hashtable);
+  g_hash_table_iter_init (&iter, object->priv->children_props);
   while (g_hash_table_iter_next (&iter, &key, &value)) {
     spec = G_PARAM_SPEC (key);
     pspec[i] = g_param_spec_ref (spec);
@@ -1350,13 +1445,6 @@ default_list_children_properties (GESTrackElement * object,
   }
 
   return pspec;
-
-prop_hash_not_set:
-  {
-    *n_properties = 0;
-    GST_DEBUG_OBJECT (object, "No child properties have been set yet");
-    return NULL;
-  }
 }
 
 void
