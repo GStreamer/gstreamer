@@ -3216,8 +3216,12 @@ is_rtcp_time (RTPSession * sess, GstClockTime current_time, ReportData * data)
   else
     data->is_early = FALSE;
 
-  if (data->is_early && sess->next_early_rtcp_time < current_time)
+  if (data->is_early && sess->next_early_rtcp_time < current_time) {
+    GST_DEBUG ("early feedback %" GST_TIME_FORMAT " < now %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (sess->next_early_rtcp_time),
+        GST_TIME_ARGS (current_time));
     goto early;
+  }
 
   /* no need to check yet */
   if (sess->next_rtcp_check_time == GST_CLOCK_TIME_NONE ||
@@ -3283,6 +3287,9 @@ early:
       }
     }
   }
+
+  GST_DEBUG ("can send RTCP now, next interval %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (new_send_time));
 
   return TRUE;
 }
@@ -3405,6 +3412,8 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   /* get a new interval, we need this for various cleanups etc */
   data.interval = calculate_rtcp_interval (sess, TRUE, sess->first_rtcp);
 
+  GST_DEBUG ("interval %" GST_TIME_FORMAT, GST_TIME_ARGS (data.interval));
+
   /* we need an internal source now */
   if (sess->stats.internal_sources == 0) {
     RTPSource *source;
@@ -3516,7 +3525,10 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
 
   /* Ignore the request a scheduled packet will be in time anyway */
   if (current_time + max_delay > sess->next_rtcp_check_time) {
-    GST_LOG_OBJECT (sess, "next scheduled time is soon");
+    GST_LOG_OBJECT (sess, "next scheduled time is soon %" GST_TIME_FORMAT " + %"
+        GST_TIME_FORMAT " > %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (current_time),
+        GST_TIME_ARGS (max_delay), GST_TIME_ARGS (sess->next_rtcp_check_time));
     goto dont_send;
   }
 
