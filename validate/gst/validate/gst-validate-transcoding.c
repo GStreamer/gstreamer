@@ -323,8 +323,8 @@ main (int argc, gchar ** argv)
     gst_init (&argc, &argv);
 
   g_set_prgname ("gst-validate-transcoding-" GST_API_VERSION);
-  ctx = g_option_context_new ("[input-file] [output-file]");
-  g_option_context_set_summary (ctx, "Transcodes input-file to output-file, "
+  ctx = g_option_context_new ("[input-uri] [output-uri]");
+  g_option_context_set_summary (ctx, "Transcodes input-uri to output-uri, "
       "using the given encoding profile. The pipeline will be monitored for "
       "possible issues detection using the gst-validate lib."
       "\nCan also perform file conformance"
@@ -353,7 +353,7 @@ main (int argc, gchar ** argv)
   if (argc != 3) {
     g_printerr ("%i arguments recived, 2 expected.\n"
         "You should run the test using:\n"
-        "    ./gst-validate-transcoding-0.10 <input-file> <output-file> [options]\n",
+        "    ./gst-validate-transcoding-0.10 <input-uri> <output-uri> [options]\n",
         argc - 1);
     return 1;
   }
