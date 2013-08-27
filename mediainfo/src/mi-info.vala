@@ -19,6 +19,7 @@
 
 using Gtk;
 using Gst;
+using Gst.PbUtils;
 using Gee;
 
 /*
@@ -35,6 +36,11 @@ git diff packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.metadata >vapi.g
 sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala/mediainfo/vapi/
 # ubuntu
 sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala-0.10/vapi/
+
+# jhbuild
+jhbuild build vala
+jhbuild shell
+
 */
 
 public class MediaInfo.Info : VPaned
@@ -155,7 +161,7 @@ public class MediaInfo.Info : VPaned
     // FIXME: handle aspect ratio (AspectFrame.ratio)
     drawing_area = new DrawingArea ();
     drawing_area.set_size_request (160, 120);
-    drawing_area.expose_event.connect (on_drawing_area_expose);
+    drawing_area.draw.connect (on_drawing_area_draw);
     drawing_area.realize.connect (on_drawing_area_realize);
     drawing_area.unrealize.connect (on_drawing_area_unrealize);
     pack1 (drawing_area, true, true);
@@ -259,12 +265,11 @@ public class MediaInfo.Info : VPaned
       debug ("Failed to create the discoverer: %s: %s", e.domain.to_string (), e.message);
     }
 
-    pb = ElementFactory.make ("playbin2", "player") as Pipeline;
+    pb = ElementFactory.make ("playbin", "player") as Pipeline;
     Gst.Bus bus = pb.get_bus ();
-    bus.set_sync_handler (bus.sync_signal_handler);
+    //bus.set_sync_handler ((Gst.BusSyncHandler)bus.sync_signal_handler);
+    bus.enable_sync_message_emission();
     bus.sync_message["element"].connect (on_element_sync_message);
-
-    state = State.NULL;
   }
 
   ~Info ()
@@ -337,7 +342,8 @@ public class MediaInfo.Info : VPaned
     AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
     string str, wikilink;
     Caps caps;
-    Structure s;
+    unowned Structure s;
+    unowned TagList t;
 
     if (info == null) {
       container_name.set_text ("");
@@ -376,7 +382,7 @@ public class MediaInfo.Info : VPaned
     if (sinfo != null) {
       caps = sinfo.get_caps ();
       wikilink = wikilinks[caps.get_structure(0).get_name()];
-      str = pb_utils_get_codec_description (caps);
+      str = get_codec_description (caps);
       if (wikilink != null) {
         // FIXME: make prefix and link translatable
         container_name.set_markup ("<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str));
@@ -422,7 +428,7 @@ public class MediaInfo.Info : VPaned
       label.set_alignment (1.0f, 0.5f);
       table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
       wikilink = wikilinks[caps.get_structure(0).get_name()];
-      str = pb_utils_get_codec_description (caps);
+      str = get_codec_description (caps);
       if (wikilink != null) {
         // FIXME: make prefix and link translatable
         str="<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str);
@@ -505,12 +511,12 @@ public class MediaInfo.Info : VPaned
         row++;
       }
 
-      if ((s = (Structure)sinfo.get_tags ()) != null) {
+      if ((t = sinfo.get_tags ()) != null) {
         // FIXME: use treeview inside scrolled window
         label = new Label ("Tags:");
         label.set_alignment (1.0f, 0.0f);
         table.attach (label, 0, 1, row, row+1, fill, fill, 0, 0);
-        str = build_taglist_info (s);
+        str = build_taglist_info (t);
         label = new Label(str);
         label.set_ellipsize (Pango.EllipsizeMode.END);
         label.set_alignment (0.0f, 0.5f);
@@ -545,7 +551,7 @@ public class MediaInfo.Info : VPaned
       label.set_alignment (1.0f, 0.5f);
       table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
       wikilink = wikilinks[caps.get_structure(0).get_name()];
-      str = pb_utils_get_codec_description (caps);
+      str = get_codec_description (caps);
       if (wikilink != null) {
         // FIXME: make prefix and link translatable
         str="<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str);
@@ -610,12 +616,12 @@ public class MediaInfo.Info : VPaned
         row++;
       }
 
-      if ((s = (Structure)sinfo.get_tags ()) != null) {
+      if ((t = sinfo.get_tags ()) != null) {
         // FIXME: use treeview inside scrolled window
         label = new Label ("Tags:");
         label.set_alignment (1.0f, 0.0f);
         table.attach (label, 0, 1, row, row+1, fill, fill, 0, 0);
-        str = build_taglist_info (s);
+        str = build_taglist_info (t);
         label = new Label(str);
         label.set_ellipsize (Pango.EllipsizeMode.END);
         label.set_alignment (0.0f, 0.5f);
@@ -641,15 +647,14 @@ public class MediaInfo.Info : VPaned
 
   // signal handlers
 
-  private bool on_drawing_area_expose (Widget widget, Gdk.EventExpose event)
+  private bool on_drawing_area_draw (Widget widget, Cairo.Context cr)
   {
     // redraw if not playing and if there is no video
     if (pb.current_state < State.PAUSED || !have_video) {
       Gtk.Allocation a;
       widget.get_allocation(out a);
-      Cairo.Context cr = Gdk.cairo_create (widget.get_window());
 
-      widget.set_flags(Gtk.WidgetFlags.DOUBLE_BUFFERED);
+      widget.set_double_buffered(true);
 
       cr.set_source_rgb (0, 0, 0);
       cr.rectangle (0, 0, a.width, a.height);
@@ -686,7 +691,7 @@ public class MediaInfo.Info : VPaned
         cr.fill ();
       }
     } else {
-      widget.unset_flags(Gtk.WidgetFlags.DOUBLE_BUFFERED);
+      widget.set_double_buffered(false);
     }
     return false;
   }
@@ -694,7 +699,7 @@ public class MediaInfo.Info : VPaned
   private void on_drawing_area_realize (Widget widget)
   {
     widget.get_window ().ensure_native ();
-    widget.unset_flags(Gtk.WidgetFlags.DOUBLE_BUFFERED);
+    widget.set_double_buffered(false);
   }
 
   private void on_drawing_area_unrealize (Widget widget)
@@ -704,11 +709,9 @@ public class MediaInfo.Info : VPaned
 
   private void on_element_sync_message (Gst.Bus bus, Message message)
   {
-    Structure structure = message.get_structure ();
-    if (structure.has_name ("prepare-xwindow-id"))
-    {
-      XOverlay xoverlay = message.src as XOverlay;
-      xoverlay.set_xwindow_id (Gdk.x11_drawable_get_xid (drawing_area.get_window()));
+    if (Gst.Video.is_video_overlay_prepare_window_handle_message (message)) {
+      Gst.Video.Overlay overlay = message.src as Gst.Video.Overlay;
+      overlay.set_window_handle ((uint *)Gdk.X11Window.get_xid (drawing_area.get_window()));
 
       if (message.src.get_class ().find_property ("force-aspect-ratio") != null) {
         ((GLib.Object)message.src).set_property ("force-aspect-ratio", true);
@@ -719,7 +722,7 @@ public class MediaInfo.Info : VPaned
   /* FIXME: discoverer not neccesarily return the stream in the same order as
    * playbin2 sees them: https://bugzilla.gnome.org/show_bug.cgi?id=634407
    */
-  private void on_video_stream_switched (Notebook nb, NotebookPage page, uint page_num)
+  private void on_video_stream_switched (Notebook nb, Widget page, uint page_num)
   {
     if (pb.current_state > State.PAUSED) {
       stdout.printf ("Switching video to: %u\n", page_num);
@@ -727,7 +730,7 @@ public class MediaInfo.Info : VPaned
     }
   }
 
-  private void on_audio_stream_switched (Notebook nb, NotebookPage page, uint page_num)
+  private void on_audio_stream_switched (Notebook nb, Widget page, uint page_num)
   {
     if (pb.current_state > State.PAUSED) {
       stdout.printf ("Switching audio to: %u\n", page_num);
@@ -735,7 +738,7 @@ public class MediaInfo.Info : VPaned
     }
   }
 
-  private void on_stream_switched (Notebook nb, NotebookPage page, uint page_num)
+  private void on_stream_switched (Notebook nb, Widget page, uint page_num)
   {
     if (pb.current_state > State.PAUSED) {
       if (page_num < num_video_streams) {
@@ -749,15 +752,15 @@ public class MediaInfo.Info : VPaned
     }
   }
 
-  private string build_taglist_info (Structure s)
+  private string build_taglist_info (TagList t)
   {
     uint i;
     string str, fn, vstr;
-    Gst.Value v;
+    GLib.Value v;
 
     str = "";
-    for (i = 0; i < s.n_fields(); i++) {
-      fn = s.nth_field_name (i);
+    for (i = 0; i < t.n_tags(); i++) {
+      fn = t.nth_tag_name (i);
       // skip a few tags
       if (tag_black_list.contains (fn))
         continue;
@@ -768,24 +771,28 @@ public class MediaInfo.Info : VPaned
         str += "\n";
 
       // decode images, we show them in the drawing area
-      v = s.get_value (fn);
-      if (v.holds(typeof(Gst.Buffer))) {
-        Gst.Buffer buf = v.get_buffer();
-        Caps c = buf.get_caps();
+      v = t.get_value_index (fn, 0);
+      if (v.holds(typeof(Gst.Sample))) {
+        Gst.Sample sample = (Gst.Sample)v.get_boxed();
+        Gst.Buffer buf = sample.get_buffer();
+        Caps c = sample.get_caps();
+        Gst.MapInfo info;
+        buf.map(out info, Gst.MapFlags.READ);
 
         try {
-          InputStream is = new MemoryInputStream.from_data (buf.data,null);
+          InputStream is = new MemoryInputStream.from_data (info.data,null);
           album_art = new Gdk.Pixbuf.from_stream (is, null);
           debug("found album art");
           is.close(null);
         } catch (Error e) {
           debug ("Decoding album art failed: %s: %s", e.domain.to_string (), e.message);
         }
+        buf.unmap(info);
 
         // FIXME: having the actual resolution here would be nice
         vstr = c.to_string();
       } else  {
-        vstr = v.serialize ().compress ();
+        vstr = Gst.Value.serialize (v).compress ();
         if (vstr.has_prefix("http://") || vstr.has_prefix("https://")) {
           vstr = "<a href=\"" + vstr + "\">" + vstr + "</a>";
         }
