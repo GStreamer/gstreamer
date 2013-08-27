@@ -32,6 +32,8 @@
 #include "gstvaapidisplay_wayland.h"
 #include "gstvaapidisplay_wayland_priv.h"
 #include "gstvaapiutils.h"
+#include "gstvaapifilter.h"
+#include "gstvaapisurfacepool.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -48,6 +50,8 @@ typedef struct _FrameState                      FrameState;
 
 struct _FrameState {
     GstVaapiWindow             *window;
+    GstVaapiSurface            *surface;
+    GstVaapiVideoPool          *surface_pool;
     struct wl_buffer           *buffer;
     struct wl_callback         *callback;
 };
@@ -62,6 +66,8 @@ frame_state_new(GstVaapiWindow *window)
         return NULL;
 
     frame->window = window;
+    frame->surface = NULL;
+    frame->surface_pool = NULL;
     frame->buffer = NULL;
     frame->callback = NULL;
     return frame;
@@ -72,6 +78,14 @@ frame_state_free(FrameState *frame)
 {
     if (!frame)
         return;
+
+    if (frame->surface) {
+        if (frame->surface_pool)
+            gst_vaapi_video_pool_put_object(frame->surface_pool,
+                frame->surface);
+        frame->surface = NULL;
+    }
+    gst_vaapi_video_pool_replace(&frame->surface_pool, NULL);
 
     if (frame->buffer) {
         wl_buffer_destroy(frame->buffer);
@@ -91,8 +105,12 @@ struct _GstVaapiWindowWaylandPrivate {
     struct wl_region           *opaque_region;
     struct wl_event_queue      *event_queue;
     FrameState                 *frame;
+    GstVideoFormat              surface_format;
+    GstVaapiVideoPool          *surface_pool;
+    GstVaapiFilter             *filter;
     guint                       is_shown                : 1;
     guint                       fullscreen_on_show      : 1;
+    guint                       use_vpp                 : 1;
 };
 
 /**
@@ -246,6 +264,8 @@ gst_vaapi_window_wayland_create(
     if (priv->fullscreen_on_show)
         gst_vaapi_window_wayland_set_fullscreen(window, TRUE);
 
+    priv->surface_format = GST_VIDEO_FORMAT_ENCODED;
+    priv->use_vpp = GST_VAAPI_DISPLAY_HAS_VPP(GST_VAAPI_OBJECT_DISPLAY(window));
     priv->is_shown = TRUE;
 
     return TRUE;
@@ -276,6 +296,9 @@ gst_vaapi_window_wayland_destroy(GstVaapiWindow * window)
         wl_event_queue_destroy(priv->event_queue);
         priv->event_queue = NULL;
     }
+
+    gst_vaapi_filter_replace(&priv->filter, NULL);
+    gst_vaapi_video_pool_replace(&priv->surface_pool, NULL);
 }
 
 static gboolean
@@ -318,6 +341,74 @@ static const struct wl_callback_listener frame_callback_listener = {
     frame_redraw_callback
 };
 
+static GstVaapiSurface *
+vpp_convert(
+    GstVaapiWindow          *window,
+    GstVaapiSurface         *surface,
+    const GstVaapiRectangle *src_rect,
+    const GstVaapiRectangle *dst_rect,
+    guint                    flags
+)
+{
+    GstVaapiWindowWaylandPrivate * const priv =
+        GST_VAAPI_WINDOW_WAYLAND_GET_PRIVATE(window);
+    GstVaapiDisplay * const display = GST_VAAPI_OBJECT_DISPLAY(window);
+    GstVaapiSurface *vpp_surface = NULL;
+    GstVaapiFilterStatus status;
+    GstVideoInfo vi;
+
+    /* Ensure VA surface pool is created */
+    /* XXX: optimize the surface format to use. e.g. YUY2 */
+    if (!priv->surface_pool) {
+        gst_video_info_set_format(&vi, priv->surface_format,
+            window->width, window->height);
+        priv->surface_pool = gst_vaapi_surface_pool_new(display, &vi);
+        if (!priv->surface_pool)
+            return NULL;
+        gst_vaapi_filter_replace(&priv->filter, NULL);
+    }
+
+    /* Ensure VPP pipeline is built */
+    if (!priv->filter) {
+        priv->filter = gst_vaapi_filter_new(display);
+        if (!priv->filter)
+            goto error_create_filter;
+        if (!gst_vaapi_filter_set_format(priv->filter, priv->surface_format))
+            goto error_unsupported_format;
+    }
+    if (!gst_vaapi_filter_set_cropping_rectangle(priv->filter, src_rect))
+        return NULL;
+    if (!gst_vaapi_filter_set_target_rectangle(priv->filter, dst_rect))
+        return NULL;
+
+    /* Post-process the decoded source surface */
+    vpp_surface = gst_vaapi_video_pool_get_object(priv->surface_pool);
+    if (!vpp_surface)
+        return NULL;
+
+    status = gst_vaapi_filter_process(priv->filter, surface, vpp_surface,
+        flags);
+    if (status != GST_VAAPI_FILTER_STATUS_SUCCESS)
+        goto error_process_filter;
+    return vpp_surface;
+
+    /* ERRORS */
+error_create_filter:
+    GST_WARNING("failed to create VPP filter. Disabling");
+    priv->use_vpp = FALSE;
+    return NULL;
+error_unsupported_format:
+    GST_ERROR("unsupported render target format %s",
+              gst_vaapi_video_format_to_string(priv->surface_format));
+    priv->use_vpp = FALSE;
+    return NULL;
+error_process_filter:
+    GST_ERROR("failed to process surface %" GST_VAAPI_ID_FORMAT " (error %d)",
+              GST_VAAPI_ID_ARGS(GST_VAAPI_OBJECT_ID(surface)), status);
+    gst_vaapi_video_pool_put_object(priv->surface_pool, vpp_surface);
+    return NULL;
+}
+
 static gboolean
 gst_vaapi_window_wayland_render(
     GstVaapiWindow          *window,
@@ -334,49 +425,62 @@ gst_vaapi_window_wayland_render(
     struct wl_buffer *buffer;
     FrameState *frame;
     guint width, height, va_flags;
-    VASurfaceID surface_id;
     VAStatus status;
+    gboolean need_vpp = FALSE;
 
-    /* XXX: use VPP to support unusual source and destination rectangles */
+    /* Check that we don't need to crop source VA surface */
     gst_vaapi_surface_get_size(surface, &width, &height);
-    if (src_rect->x      != 0     ||
-        src_rect->y      != 0     ||
-        src_rect->width  != width ||
-        src_rect->height != height) {
-        GST_ERROR("unsupported source rectangle for rendering");
-        return FALSE;
-    }
+    if (src_rect->x != 0 || src_rect->y != 0)
+        need_vpp = TRUE;
+    if (src_rect->width != width || src_rect->height != height)
+        need_vpp = TRUE;
 
-    if (0 && (dst_rect->width != width || dst_rect->height != height)) {
-        GST_ERROR("unsupported target rectangle for rendering");
-        return FALSE;
-    }
+    /* Check that we don't render to a subregion of this window */
+    if (dst_rect->x != 0 || dst_rect->y != 0)
+        need_vpp = TRUE;
+    if (dst_rect->width != window->width || dst_rect->height != window->height)
+        need_vpp = TRUE;
 
-    surface_id = GST_VAAPI_OBJECT_ID(surface);
-    if (surface_id == VA_INVALID_ID)
-        return FALSE;
-
-    /* XXX: use VA/VPP for other filters */
-    GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
-    va_flags = from_GstVaapiSurfaceRenderFlags(flags);
-    status = vaGetSurfaceBufferWl(
-        GST_VAAPI_DISPLAY_VADISPLAY(display),
-        surface_id,
-        va_flags & (VA_TOP_FIELD|VA_BOTTOM_FIELD),
-        &buffer
-    );
-    if (status == VA_STATUS_ERROR_FLAG_NOT_SUPPORTED) {
-        /* XXX: de-interlacing flags not supported, try with VPP? */
+    /* Try to construct a Wayland buffer from VA surface as is (without VPP) */
+    if (!need_vpp) {
+        GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+        va_flags = from_GstVaapiSurfaceRenderFlags(flags);
         status = vaGetSurfaceBufferWl(
             GST_VAAPI_DISPLAY_VADISPLAY(display),
-            surface_id,
+            GST_VAAPI_OBJECT_ID(surface),
+            va_flags & (VA_TOP_FIELD|VA_BOTTOM_FIELD),
+            &buffer
+        );
+        GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+        if (status == VA_STATUS_ERROR_FLAG_NOT_SUPPORTED)
+            need_vpp = TRUE;
+        else if (!vaapi_check_status(status, "vaGetSurfaceBufferWl()"))
+            return FALSE;
+    }
+
+    /* Try to construct a Wayland buffer with VPP */
+    if (need_vpp) {
+        if (priv->use_vpp) {
+            GstVaapiSurface * const vpp_surface =
+                vpp_convert(window, surface, src_rect, dst_rect, flags);
+            if (!vpp_surface)
+                return FALSE;
+            surface = vpp_surface;
+            width = window->width;
+            height = window->height;
+        }
+
+        GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
+        status = vaGetSurfaceBufferWl(
+            GST_VAAPI_DISPLAY_VADISPLAY(display),
+            GST_VAAPI_OBJECT_ID(surface),
             VA_FRAME_PICTURE,
             &buffer
         );
+        GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
+        if (!vaapi_check_status(status, "vaGetSurfaceBufferWl()"))
+            return FALSE;
     }
-    GST_VAAPI_OBJECT_UNLOCK_DISPLAY(window);
-    if (!vaapi_check_status(status, "vaGetSurfaceBufferWl()"))
-        return FALSE;
 
     /* Wait for the previous frame to complete redraw */
     if (!gst_vaapi_window_wayland_sync(window))
@@ -386,6 +490,11 @@ gst_vaapi_window_wayland_render(
     if (!frame)
         return FALSE;
     priv->frame = frame;
+
+    if (need_vpp && priv->use_vpp) {
+        frame->surface = surface;
+        frame->surface_pool = gst_vaapi_video_pool_ref(priv->surface_pool);
+    }
 
     /* XXX: attach to the specified target rectangle */
     GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
