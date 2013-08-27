@@ -1446,12 +1446,20 @@ gst_x264_enc_set_profile_and_level (GstX264Enc * encoder, GstCaps * caps)
     allowed_profile = gst_structure_get_string (s2, "profile");
     if (!strcmp (allowed_profile, "high")) {
       if (!strcmp (profile, "constrained-baseline")
-          || !strcmp (profile, "baseline") || !strcmp (profile, "main"))
+          || !strcmp (profile, "baseline") || !strcmp (profile, "main")) {
         gst_structure_set (s, "profile", G_TYPE_STRING, "high", NULL);
+        GST_INFO_OBJECT (encoder, "downstream requested high profile, but "
+            "encoder will now output %s profile (which is a subset), due "
+            "to how it's been configured", profile);
+      }
     } else if (!strcmp (allowed_profile, "main")) {
       if (!strcmp (profile, "constrained-baseline")
-          || !strcmp (profile, "baseline"))
+          || !strcmp (profile, "baseline")) {
         gst_structure_set (s, "profile", G_TYPE_STRING, "main", NULL);
+        GST_INFO_OBJECT (encoder, "downstream requested main profile, but "
+            "encoder will now output %s profile (which is a subset), due "
+            "to how it's been configured", profile);
+      }
     } else if (!strcmp (allowed_profile, "baseline")) {
       if (!strcmp (profile, "constrained-baseline"))
         gst_structure_set (s, "profile", G_TYPE_STRING, "baseline", NULL);
