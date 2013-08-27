@@ -1604,7 +1604,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     } else if (gap > priv->rtx_delay_reorder) {
       /* max gap, we exceeded the max reorder distance and we don't expect the
        * missing packet to be this reordered */
-      if (test->rtx_retry == 0)
+      if (test->rtx_retry == 0 && test->type == TIMER_TYPE_EXPECTED)
         reschedule_timer (jitterbuffer, test, test->seqnum, -1);
     }
   }
