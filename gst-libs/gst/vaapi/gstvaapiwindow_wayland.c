@@ -463,11 +463,13 @@ gst_vaapi_window_wayland_render(
         if (priv->use_vpp) {
             GstVaapiSurface * const vpp_surface =
                 vpp_convert(window, surface, src_rect, dst_rect, flags);
-            if (!vpp_surface)
-                return FALSE;
-            surface = vpp_surface;
-            width = window->width;
-            height = window->height;
+            if (G_UNLIKELY(!vpp_surface))
+                need_vpp = FALSE;
+            else {
+                surface = vpp_surface;
+                width = window->width;
+                height = window->height;
+            }
         }
 
         GST_VAAPI_OBJECT_LOCK_DISPLAY(window);
