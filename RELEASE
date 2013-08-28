@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plugins 1.0.9
+Release notes for GStreamer Ugly Plugins 1.0.10
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -57,12 +57,13 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
   
 
 Features of this release
-
-      * mpeg2dec: fix crash on resolution changes
+    
+      * build: fix x264 version check in corner case
+      * x264enc: consider subset relations of profiles when negotiating output caps
 
 Bugs fixed in this release
-
-      * 690701 : mpeg2dec: Segfault on aspect change in dvb/multicast stream
+     
+      * 705425 : x264enc: doesn't consider subset relations of profiles during negotiation
 
 ==== Download ====
 
@@ -99,5 +100,6 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
+      * Sebastian Dröge
+      * Tim-Philipp Müller
  

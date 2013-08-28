@@ -1,4 +1,13 @@
-This is GStreamer Ugly Plugins 1.0.9
+This is GStreamer Ugly Plugins 1.0.10
+
+Changes since 1.0.9:
+
+      * build: fix x264 version check in corner case
+      * x264enc: consider subset relations of profiles when negotiating output caps
+
+Bugs fixed since 1.0.9:
+
+      * 705425 : x264enc: doesn't consider subset relations of profiles during negotiation
 
 Changes since 1.0.8:
 
