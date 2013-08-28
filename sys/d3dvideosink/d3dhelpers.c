@@ -1866,9 +1866,13 @@ d3d_render_buffer (GstD3DVideoSink * sink, GstBuffer * buf)
 
     surface = ((GstD3DSurfaceMemory *) mem)->surface;
 
+#ifndef DISABLE_BUFFER_POOL
     /* Need to keep an additional ref until the next buffer
      * to make sure it isn't reused until then */
     sink->fallback_buffer = buf;
+#else
+    sink->fallback_buffer = NULL;
+#endif
   } else {
     mem = gst_buffer_peek_memory (buf, 0);
     surface = ((GstD3DSurfaceMemory *) mem)->surface;
@@ -1881,7 +1885,9 @@ d3d_render_buffer (GstD3DVideoSink * sink, GstBuffer * buf)
 
   if (sink->d3d.surface)
     IDirect3DSurface9_Release (sink->d3d.surface);
+#ifndef DISABLE_BUFFER_POOL
   IDirect3DSurface9_AddRef (surface);
+#endif
   sink->d3d.surface = surface;
 
   if (!d3d_present_swap_chain (sink)) {
