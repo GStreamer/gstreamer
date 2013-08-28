@@ -51,7 +51,6 @@ namespace Gst {
 
 		public GLib.Value StreamStatusObject { 
 			get {
-				Update ();
 				if(Type != MessageType.StreamStatus)
 					throw new ArgumentException ();
 				IntPtr raw_ret = gst_message_get_stream_status_object(Handle);
@@ -59,7 +58,6 @@ namespace Gst {
 				return ret;
 			}
 			set {
-				Update ();
 				if(Type != MessageType.StreamStatus)
 					throw new ArgumentException ();
 				IntPtr native_value = GLib.Marshaller.StructureToPtrAlloc (value);

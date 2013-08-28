@@ -41,7 +41,7 @@ namespace Gst {
       get {
         if (version_string == null) {
           IntPtr version_string_ptr = gst_version_string();
-          version_string = Gst.GLib.Marshaller.Utf8PtrToString (version_string_ptr);
+          version_string = GLib.Marshaller.Utf8PtrToString (version_string_ptr);
         }
 
         return version_string;
