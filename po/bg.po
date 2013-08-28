@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 19:38+0100\n"
+"POT-Creation-Date: 2013-08-28 12:29+0200\n"
 "PO-Revision-Date: 2011-04-26 22:40+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -341,8 +341,8 @@ msgstr "допълнителен коментар"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
-"свободен текст относно данните във формат ключ=стойност или ключ[език]"
-"=коментар"
+"свободен текст относно данните във формат ключ=стойност или "
+"ключ[език]=коментар"
 
 msgid "track number"
 msgstr "номер на песента"
@@ -795,6 +795,18 @@ msgstr "ориентация"
 
 msgid "How the image should be rotated or flipped before display"
 msgstr "Как да се завърти изображението при показване"
+
+msgid "publisher"
+msgstr ""
+
+msgid "Name of the label or publisher"
+msgstr ""
+
+msgid "interpreted-by"
+msgstr ""
+
+msgid "Information about the people behind a remix and similar interpretations"
+msgstr ""
 
 msgid ", "
 msgstr ", "

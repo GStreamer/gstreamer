@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:29+0200\n"
+"POT-Creation-Date: 2013-08-28 12:29+0200\n"
 "PO-Revision-Date: 2010-11-04 19:41+0100\n"
 "Last-Translator: Jordi Mallach <jordi@sindominio.net>\n"
 "Language-Team: Catalan <ca@dodds.net>\n"
@@ -804,6 +804,18 @@ msgstr "orientació de la imatge"
 
 msgid "How the image should be rotated or flipped before display"
 msgstr "Com s'hauria de rotar o girar la imatge abans de mostrar-la"
+
+msgid "publisher"
+msgstr ""
+
+msgid "Name of the label or publisher"
+msgstr ""
+
+msgid "interpreted-by"
+msgstr ""
+
+msgid "Information about the people behind a remix and similar interpretations"
+msgstr ""
 
 msgid ", "
 msgstr ", "

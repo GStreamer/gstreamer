@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 19:38+0100\n"
+"POT-Creation-Date: 2013-08-28 12:29+0200\n"
 "PO-Revision-Date: 2010-07-16 00:50+0300\n"
 "Last-Translator: Žygimantas Beručka <uid0@akl.lt>\n"
 "Language-Team: Lithuanian <komp_lt@konferencijos.lt>\n"
@@ -336,8 +336,8 @@ msgstr "išplėstinis komentaras"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
-"laisvas tekstas, apibūdinantis duomenis raktas=reikšmė arba raktas[en]"
-"=komentaras forma"
+"laisvas tekstas, apibūdinantis duomenis raktas=reikšmė arba "
+"raktas[en]=komentaras forma"
 
 msgid "track number"
 msgstr "takelio numeris"
@@ -800,6 +800,18 @@ msgstr "paveikslėlio orientacija"
 
 msgid "How the image should be rotated or flipped before display"
 msgstr "Kaip paveikslėlis turėtų būti pasuktas arba apverstas prieš parodymą"
+
+msgid "publisher"
+msgstr ""
+
+msgid "Name of the label or publisher"
+msgstr ""
+
+msgid "interpreted-by"
+msgstr ""
+
+msgid "Information about the people behind a remix and similar interpretations"
+msgstr ""
 
 msgid ", "
 msgstr ", "

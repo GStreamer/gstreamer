@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 19:38+0100\n"
+"POT-Creation-Date: 2013-08-28 12:29+0200\n"
 "PO-Revision-Date: 2012-01-28 11:44+0700\n"
 "Last-Translator: Andhika Padmawan <andhika.padmawan@gmail.com>\n"
 "Language-Team: Indonesian <translation-team-id@lists.sourceforge.net>\n"
@@ -337,8 +337,8 @@ msgstr "komentar diperpanjang"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
-"teks bebas untuk mengomentari data dalam bentuk kunci=nilai atau kunci[en]"
-"=komentar"
+"teks bebas untuk mengomentari data dalam bentuk kunci=nilai atau "
+"kunci[en]=komentar"
 
 msgid "track number"
 msgstr "nomor jalur"
@@ -798,6 +798,18 @@ msgstr "orientasi gambar"
 
 msgid "How the image should be rotated or flipped before display"
 msgstr "Bagaimana gambar harus diputar atau dibalik sebelum ditampilkan"
+
+msgid "publisher"
+msgstr ""
+
+msgid "Name of the label or publisher"
+msgstr ""
+
+msgid "interpreted-by"
+msgstr ""
+
+msgid "Information about the people behind a remix and similar interpretations"
+msgstr ""
 
 msgid ", "
 msgstr ", "

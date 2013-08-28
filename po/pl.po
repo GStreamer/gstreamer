@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 19:38+0100\n"
+"POT-Creation-Date: 2013-08-28 12:29+0200\n"
 "PO-Revision-Date: 2012-11-28 19:15+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -334,8 +334,8 @@ msgstr "rozszerzony komentarz"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
-"dowolny tekst komentujący dane w postaci klucz=wartość lub klucz[język]"
-"=komentarz"
+"dowolny tekst komentujący dane w postaci klucz=wartość lub "
+"klucz[język]=komentarz"
 
 msgid "track number"
 msgstr "numer ścieżki"
@@ -795,6 +795,18 @@ msgstr "orientacja obrazu"
 msgid "How the image should be rotated or flipped before display"
 msgstr ""
 "W jaki sposób obraz powinien być obrócony lub odbity przed wyświetleniem"
+
+msgid "publisher"
+msgstr ""
+
+msgid "Name of the label or publisher"
+msgstr ""
+
+msgid "interpreted-by"
+msgstr ""
+
+msgid "Information about the people behind a remix and similar interpretations"
+msgstr ""
 
 msgid ", "
 msgstr ", "

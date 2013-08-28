@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 19:38+0100\n"
+"POT-Creation-Date: 2013-08-28 12:29+0200\n"
 "PO-Revision-Date: 2012-05-25 16:47+0200\n"
 "Last-Translator: Tomislav Krznar <tomislav.krznar@gmail.com>\n"
 "Language-Team: Croatian <lokalizacija@linux.hr>\n"
@@ -332,8 +332,8 @@ msgstr "prošireni komentar"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
-"slobodan tekst koji opisuje podatke u obliku ključ=vrijednost ili ključ[en]"
-"=komentar"
+"slobodan tekst koji opisuje podatke u obliku ključ=vrijednost ili "
+"ključ[en]=komentar"
 
 msgid "track number"
 msgstr "broj pjesme"
@@ -789,6 +789,18 @@ msgstr "orijentacija slike"
 
 msgid "How the image should be rotated or flipped before display"
 msgstr "Kako se slika treba okrenuti ili zrcaliti prije prikaza"
+
+msgid "publisher"
+msgstr ""
+
+msgid "Name of the label or publisher"
+msgstr ""
+
+msgid "interpreted-by"
+msgstr ""
+
+msgid "Information about the people behind a remix and similar interpretations"
+msgstr ""
 
 msgid ", "
 msgstr ", "

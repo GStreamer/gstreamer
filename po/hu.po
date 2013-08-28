@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 19:38+0100\n"
+"POT-Creation-Date: 2013-08-28 12:29+0200\n"
 "PO-Revision-Date: 2012-11-29 14:03+0100\n"
 "Last-Translator: Gabor Kelemen <kelemeng@gnome.hu>\n"
 "Language-Team: Hungarian <translation-team-hu@lists.sourceforge.net>\n"
@@ -333,8 +333,8 @@ msgstr "kiterjesztett megjegyzés"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
-"az adatokhoz fűzött szabad szöveges megjegyzés kulcs=érték vagy kulcs[hu]"
-"=megjegyzés formában"
+"az adatokhoz fűzött szabad szöveges megjegyzés kulcs=érték vagy "
+"kulcs[hu]=megjegyzés formában"
 
 msgid "track number"
 msgstr "dalsorszám"
@@ -790,6 +790,18 @@ msgstr "kép tájolása"
 
 msgid "How the image should be rotated or flipped before display"
 msgstr "A kép hogyan forgatandó vagy tükrözendő megjelenítés előtt"
+
+msgid "publisher"
+msgstr ""
+
+msgid "Name of the label or publisher"
+msgstr ""
+
+msgid "interpreted-by"
+msgstr ""
+
+msgid "Information about the people behind a remix and similar interpretations"
+msgstr ""
 
 msgid ", "
 msgstr ", "

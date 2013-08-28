@@ -1,13 +1,13 @@
 # Japanese translation file for gstreamer
 # This file is put in the public domain.
 #
-# Makoto Kato <makoto.kt@gmail.com>, 2008.
+# Makoto Kato <makoto.kt@gmail.com>, 2008, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 0.10.20.3\n"
+"Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:29+0200\n"
-"PO-Revision-Date: 2008-10-16 19:57+0900\n"
+"POT-Creation-Date: 2013-08-28 12:29+0200\n"
+"PO-Revision-Date: 2013-08-20 14:56+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
 "Language: ja\n"
@@ -105,14 +105,13 @@ msgid ""
 msgstr ""
 
 msgid "Internal GStreamer error: pad problem."
-msgstr ""
+msgstr "GStreamer 内部エラー: パッドの問題"
 
 msgid "Internal GStreamer error: thread problem."
 msgstr "GStreamer 内部エラー: スレッドの問題"
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "GStreamer 内部エラー: ネゴシエーションの問題"
+msgstr "GStreamer エラー: ネゴシエーションの問題"
 
 msgid "Internal GStreamer error: event problem."
 msgstr "GStreamer 内部エラー: イベントの問題"
@@ -127,11 +126,10 @@ msgid "Internal GStreamer error: tag problem."
 msgstr "GStreamer 内部エラー: タグの問題"
 
 msgid "Your GStreamer installation is missing a plug-in."
-msgstr "GStreamerはプラグインを見つけることができません"
+msgstr "GStreamer はプラグインを見つけることができません"
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "GStreamer 内部エラー: シークの問題"
+msgstr "GStreamer エラー: クロックの問題"
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -152,7 +150,7 @@ msgid "Could not configure supporting library."
 msgstr "サポートライブラリを構成できません"
 
 msgid "Encoding error."
-msgstr ""
+msgstr "エンコーディングエラー"
 
 msgid "GStreamer encountered a general resource error."
 msgstr "GStreamer 上で一般的なリソースエラーが起きました"
@@ -308,9 +306,8 @@ msgstr "データが作成された日付 (GData 構造体として)"
 msgid "datetime"
 msgstr "日付"
 
-#, fuzzy
 msgid "date and time the data was created (as a GstDateTime structure)"
-msgstr "データが作成された日付 (GData 構造体として)"
+msgstr "データが作成された日付 (GstDateTime 構造体として)"
 
 msgid "genre"
 msgstr "ジャンル"
@@ -334,7 +331,7 @@ msgid "track number"
 msgstr "トラック番号"
 
 msgid "track number inside a collection"
-msgstr ""
+msgstr "コレクション内のトラック番号"
 
 msgid "track count"
 msgstr "トラック数"
@@ -362,9 +359,8 @@ msgid ""
 "is hosted)"
 msgstr ""
 
-#, fuzzy
 msgid "homepage"
-msgstr "画像"
+msgstr ""
 
 msgid "Homepage for this media (i.e. artist or movie homepage)"
 msgstr ""
@@ -465,16 +461,14 @@ msgstr "音声コーデック"
 msgid "codec the audio data is stored in"
 msgstr ""
 
-#, fuzzy
 msgid "subtitle codec"
-msgstr "動画コーデック"
+msgstr "字幕コーデック"
 
 msgid "codec the subtitle data is stored in"
-msgstr ""
+msgstr "字幕データが保存されているコーデック"
 
-#, fuzzy
 msgid "container format"
-msgstr "コンタクト情報"
+msgstr "コンテナ形式"
 
 msgid "container format the data is stored in"
 msgstr ""
@@ -486,22 +480,22 @@ msgid "exact or average bitrate in bits/s"
 msgstr ""
 
 msgid "nominal bitrate"
-msgstr "通常ビットレート"
+msgstr "公称ビットレート"
 
 msgid "nominal bitrate in bits/s"
-msgstr ""
+msgstr "公称ビットレート (bits/秒)"
 
 msgid "minimum bitrate"
 msgstr "最小ビットレート"
 
 msgid "minimum bitrate in bits/s"
-msgstr ""
+msgstr "最小ビットレート (bits/秒)"
 
 msgid "maximum bitrate"
 msgstr "最大ビットレート"
 
 msgid "maximum bitrate in bits/s"
-msgstr ""
+msgstr "最大ビットレート (bits/秒)"
 
 msgid "encoder"
 msgstr "エンコーダー"
@@ -555,11 +549,10 @@ msgid "language code"
 msgstr "言語コード"
 
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr ""
+msgstr "このストリームの ISO-639-1 または ISO-639-2 で書かれた言語コード"
 
-#, fuzzy
 msgid "language name"
-msgstr "言語コード"
+msgstr "言語名"
 
 msgid "freeform name of the language this stream is in"
 msgstr ""
@@ -578,7 +571,7 @@ msgid "preview image related to this stream"
 msgstr "このストリームに関連したプレビュー画像"
 
 msgid "attachment"
-msgstr "アタッチメント"
+msgstr "添付"
 
 msgid "file attached to this stream"
 msgstr "このストリームに添付されたファイル"
@@ -650,24 +643,21 @@ msgid ""
 "the neighborhood)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location horizontal error"
-msgstr "場所"
+msgstr ""
 
 msgid "expected error of the horizontal positioning measures (in meters)"
 msgstr ""
 
-#, fuzzy
 msgid "geo location movement speed"
-msgstr "場所"
+msgstr ""
 
 msgid ""
 "movement speed of the capturing device while performing the capture in m/s"
 msgstr ""
 
-#, fuzzy
 msgid "geo location movement direction"
-msgstr "場所"
+msgstr ""
 
 msgid ""
 "indicates the movement direction of the device performing the capture of a "
@@ -675,9 +665,8 @@ msgid ""
 "means the geographic north, and increases clockwise"
 msgstr ""
 
-#, fuzzy
 msgid "geo location capture direction"
-msgstr "場所"
+msgstr ""
 
 msgid ""
 "indicates the direction the device is pointing to when capturing  a media. "
@@ -701,30 +690,26 @@ msgid ""
 "Name of the tv/podcast/series show the media is from, for sorting purposes"
 msgstr ""
 
-#, fuzzy
 msgid "episode number"
-msgstr "ディスク番号"
+msgstr "エピソード番号"
 
 msgid "The episode number in the season the media is part of"
 msgstr ""
 
-#, fuzzy
 msgid "season number"
-msgstr "ディスク番号"
+msgstr "シーズン番号"
 
 msgid "The season number of the show the media is part of"
 msgstr ""
 
-#, fuzzy
 msgid "lyrics"
-msgstr "ライセンス"
+msgstr "歌詞"
 
 msgid "The lyrics of the media, commonly used for songs"
 msgstr ""
 
-#, fuzzy
 msgid "composer sortname"
-msgstr "タイトルのソート名"
+msgstr "作曲者のソート名"
 
 msgid "person(s) who composed the recording, for sorting purposes"
 msgstr ""
@@ -737,9 +722,8 @@ msgid ""
 "of a concerto. It is a higher level than a track, but lower than an album"
 msgstr ""
 
-#, fuzzy
 msgid "user rating"
-msgstr "演奏時間"
+msgstr ""
 
 msgid ""
 "Rating attributed by a user. The higher the rank, the more the user likes "
@@ -747,28 +731,27 @@ msgid ""
 msgstr ""
 
 msgid "device manufacturer"
-msgstr ""
+msgstr "デバイス製造元"
 
 #, fuzzy
 msgid "Manufacturer of the device used to create this media"
 msgstr "このストリームをエンコードするのに使ったエンコーダーのバージョン"
 
 msgid "device model"
-msgstr ""
+msgstr "デバイスモデル"
 
 #, fuzzy
 msgid "Model of the device used to create this media"
 msgstr "このストリームをエンコードするのに使ったエンコーダーのバージョン"
 
 msgid "application name"
-msgstr ""
+msgstr "アプリケーション名"
 
-#, fuzzy
 msgid "Application used to create the media"
-msgstr "このストリームをエンコードするのに使ったエンコーダーのバージョン"
+msgstr ""
 
 msgid "application data"
-msgstr ""
+msgstr "アプリケーションデータ"
 
 msgid "Arbitrary application data to be serialized into the media"
 msgstr ""
@@ -777,6 +760,18 @@ msgid "image orientation"
 msgstr ""
 
 msgid "How the image should be rotated or flipped before display"
+msgstr ""
+
+msgid "publisher"
+msgstr ""
+
+msgid "Name of the label or publisher"
+msgstr ""
+
+msgid "interpreted-by"
+msgstr ""
+
+msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
 
 msgid ", "
@@ -925,19 +920,18 @@ msgstr ""
 msgid "No Temp directory specified."
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Could not create temp file \"%s\"."
-msgstr "\"%s\" 上の情報を取得できません"
+msgstr "一時ファイル \"%s\" を作成できません"
 
-#, fuzzy
 msgid "Error while writing to download file."
-msgstr "ファイル \"%s\" の書き込み中にエラーが発生しました"
+msgstr "ファイルの書き込み中にエラーが発生しました"
 
 msgid "caps"
 msgstr ""
 
 msgid "detected capabilities in stream"
-msgstr "ストリーム内のケイパビリティを認識しました"
+msgstr "ストリーム内のケイパビリティを検出しました"
 
 msgid "minimum"
 msgstr "最小値"
@@ -1084,7 +1078,7 @@ msgid "FOUND TOC      : found by object \"%s\".\n"
 msgstr ""
 
 msgid "FOUND TOC\n"
-msgstr ""
+msgstr "FOUND TOC\n"
 
 #, c-format
 msgid ""
@@ -1104,9 +1098,8 @@ msgstr ""
 msgid "Prerolled, waiting for progress to finish...\n"
 msgstr ""
 
-#, fuzzy
 msgid "buffering..."
-msgstr "バッファリング中... %d  \n"
+msgstr "バッファリング中..."
 
 msgid "Done buffering, setting pipeline to PLAYING ...\n"
 msgstr ""
@@ -1130,9 +1123,9 @@ msgstr "割り込み: パイプラインを停止しています...\n"
 msgid "Progress: (%s) %s\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "エレメント \"%s\" がありません"
+msgstr "エレメントが見つかりません: %s\n"
 
 #, c-format
 msgid "Got context from element '%s': %s\n"
@@ -1240,36 +1233,6 @@ msgstr ""
 msgid "Freeing pipeline ...\n"
 msgstr "パイプラインを解放 (FREEING) しています...\n"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "alloc トレースを表示する (コンパイル時に有効にする必要があります)"
-
-#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
-#~ msgstr "使い方: gst-xmllaunch <file.xml> [ element.property=value ...]\n"
-
-#~ msgid "ERROR: parse of xml file '%s' failed.\n"
-#~ msgstr "エラー: xml ファイル '%s' の解析に失敗しました\n"
-
-#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
-#~ msgstr ""
-#~ "エラー: ファイル '%s' にトップレベルのパイプラインエレメントがありません\n"
-
-#, fuzzy
-#~ msgid "WARNING: only one toplevel element is supported at this time.\n"
-#~ msgstr "警告: トップレベルのエレメントは一つのみサポートしています"
-
-#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
-#~ msgstr "エラー: コマンドライン引数 %d を解析できません: %s\n"
-
-#~ msgid "WARNING: element named '%s' not found.\n"
-#~ msgstr "警告: エレメント名 '%s' が見つかりません\n"
-
-#~ msgid "FILE"
-#~ msgstr "FILE"
-
-#, fuzzy
-#~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
-#~ msgstr "フォールトハンドラをインストールしない"
-
 #~ msgid "Error re-scanning registry %s: %s"
 #~ msgstr "レジストリ %s の再スキャン中にエラーが発生しました: %s"
 
@@ -1284,3 +1247,31 @@ msgstr "パイプラインを解放 (FREEING) しています...\n"
 
 #~ msgid "File descriptor \"%d\" is not valid."
 #~ msgstr "ファイルディスクリプタ \"%d\" が正しくありません"
+
+#~ msgid "maximum"
+#~ msgstr "最大値"
+
+#~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
+#~ msgstr "使い方: gst-xmllaunch <file.xml> [ element.property=value ...]\n"
+
+#~ msgid "ERROR: parse of xml file '%s' failed.\n"
+#~ msgstr "エラー: xml ファイル '%s' の解析に失敗しました\n"
+
+#~ msgid "ERROR: no toplevel pipeline element in file '%s'.\n"
+#~ msgstr ""
+#~ "エラー: ファイル '%s' にトップレベルのパイプラインエレメントがありません\n"
+
+#~ msgid "WARNING: only one toplevel element is supported at this time."
+#~ msgstr "警告: トップレベルのエレメントは一つのみサポートしています"
+
+#~ msgid "ERROR: could not parse command line argument %d: %s.\n"
+#~ msgstr "エラー: コマンドライン引数 %d を解析できません: %s\n"
+
+#~ msgid "WARNING: element named '%s' not found.\n"
+#~ msgstr "警告: エレメント名 '%s' が見つかりません\n"
+
+#~ msgid "FILE"
+#~ msgstr "FILE"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "alloc トレースを表示する (コンパイル時に有効にする必要があります)"

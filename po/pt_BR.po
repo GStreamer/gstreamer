@@ -1,7 +1,7 @@
 # Brazilian Portuguese translation of GStreamer.
-# Copyright (C) 2008-2011 Free Software Foundation, Inc.
+# Copyright (C) 2008-2013 Free Software Foundation, Inc.
 # This file is distributed under the same license as the GStreamer package.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2011.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2013.
 #
 # pipeline -> fila de processamento
 # sink -> consumidor
@@ -15,12 +15,13 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-0.10.31.2\n"
+"Project-Id-Version: gstreamer-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 19:38+0100\n"
-"PO-Revision-Date: 2011-01-08 01:36-0300\n"
+"POT-Creation-Date: 2013-08-28 12:29+0200\n"
+"PO-Revision-Date: 2013-08-20 23:59-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
-"Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
+"Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
+"net>\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -132,9 +133,8 @@ msgstr "Erro interno no GStreamer: problema no Pad."
 msgid "Internal GStreamer error: thread problem."
 msgstr "Erro interno no GStreamer: problema no segmento (thread)."
 
-#, fuzzy
 msgid "GStreamer error: negotiation problem."
-msgstr "Erro interno no GStreamer: problema de negociação."
+msgstr "Erro no GStreamer: problema de negociação."
 
 msgid "Internal GStreamer error: event problem."
 msgstr "Erro interno no GStreamer: problema no evento."
@@ -151,9 +151,8 @@ msgstr "Erro interno no GStreamer: problema na etiqueta."
 msgid "Your GStreamer installation is missing a plug-in."
 msgstr "Sua instalação do GStreamer está com um plug-in faltando."
 
-#, fuzzy
 msgid "GStreamer error: clock problem."
-msgstr "Erro interno no GStreamer: problema no temporizador."
+msgstr "Erro no GStreamer: problema no temporizador."
 
 msgid ""
 "This application is trying to use GStreamer functionality that has been "
@@ -351,8 +350,8 @@ msgstr "comentário prolongado"
 
 msgid "free text commenting the data in key=value or key[en]=comment form"
 msgstr ""
-"texto livre comentando os dados, usando o formato chave=valor ou chave[pt_BR]"
-"=comentário"
+"texto livre comentando os dados, usando o formato chave=valor ou "
+"chave[pt_BR]=comentário"
 
 msgid "track number"
 msgstr "número da faixa"
@@ -429,12 +428,11 @@ msgstr "URI do copyright"
 msgid "URI to the copyright notice of the data"
 msgstr "URI para a informação de copyright dos dados"
 
-#, fuzzy
 msgid "encoded by"
-msgstr "codificador"
+msgstr "codificado por"
 
 msgid "name of the encoding person or organization"
-msgstr ""
+msgstr "nome da pessoa ou organização que codificou o arquivo"
 
 msgid "contact"
 msgstr "contato"
@@ -577,16 +575,14 @@ msgstr "nível de referência dos valores de ganho da faixa e do álbum"
 msgid "language code"
 msgstr "código da língua"
 
-#, fuzzy
 msgid "language code for this stream, conforming to ISO-639-1 or ISO-639-2"
-msgstr "código da língua deste fluxo, conforme o ISO-639-1"
+msgstr "código da língua deste fluxo, conforme o ISO-639-1 ou ISO-639-2"
 
-#, fuzzy
 msgid "language name"
-msgstr "código da língua"
+msgstr "nome do idioma"
 
 msgid "freeform name of the language this stream is in"
-msgstr ""
+msgstr "nome, em formato livre, do idioma do fluxo"
 
 msgid "image"
 msgstr "imagem"
@@ -677,7 +673,6 @@ msgstr "cidade, em inglês, onde a mídia foi gravada ou produzida"
 msgid "geo location sublocation"
 msgstr "sublocalização geográfica"
 
-#, fuzzy
 msgid ""
 "a location within a city where the media has been produced or created (e.g. "
 "the neighborhood)"
@@ -814,6 +809,18 @@ msgstr "orientação de imagem"
 
 msgid "How the image should be rotated or flipped before display"
 msgstr "Como a imagem deveria ser rotacionada ou invertida antes da exibição"
+
+msgid "publisher"
+msgstr ""
+
+msgid "Name of the label or publisher"
+msgstr ""
+
+msgid "interpreted-by"
+msgstr ""
+
+msgid "Information about the people behind a remix and similar interpretations"
+msgstr ""
 
 msgid ", "
 msgstr ", "
@@ -1062,12 +1069,14 @@ msgid "List the plugin contents"
 msgstr "Listar o conteúdo do plugin"
 
 msgid "Check if the specified element or plugin exists"
-msgstr ""
+msgstr "Verificar se o elemento ou plug-in especificado existe"
 
 msgid ""
 "When checking if an element or plugin exists, also check that its version is "
 "at least the version specified"
 msgstr ""
+"Ao verificar se um elemento ou plug-in existe, também verificar se a versão "
+"é no mínimo a especificada"
 
 msgid "Print supported URI schemes, with the elements that implement them"
 msgstr "Exibir esquemas URI com suporte, com os elementos que os implementam"
@@ -1081,7 +1090,7 @@ msgid "No such element or plugin '%s'\n"
 msgstr "Nenhum elemento ou plug-in \"%s\"\n"
 
 msgid "Index statistics"
-msgstr ""
+msgstr "Tabela de estatísticas"
 
 #, c-format
 msgid "Got message #%u from element \"%s\" (%s): "
@@ -1118,17 +1127,16 @@ msgstr "ETIQ. ENCONTR. : encontrada pelo objeto \"%s\".\n"
 msgid "FOUND TAG\n"
 msgstr "ETIQUETA ENCONTRADA\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by element \"%s\".\n"
-msgstr "ETIQ. ENCONTR. : encontrada pelo elemento \"%s\".\n"
+msgstr "TOC ENCONTR.   : encontrada pelo elemento \"%s\".\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "FOUND TOC      : found by object \"%s\".\n"
-msgstr "ETIQ. ENCONTR. : encontrada pelo objeto \"%s\".\n"
+msgstr "TOC ENCONTR.   : encontrada pelo objeto \"%s\".\n"
 
-#, fuzzy
 msgid "FOUND TOC\n"
-msgstr "ETIQUETA ENCONTRADA\n"
+msgstr "TOC ENCONTRADA\n"
 
 #, c-format
 msgid ""
@@ -1175,9 +1183,9 @@ msgstr "Interrupção: Parando a fila de processamento...\n"
 msgid "Progress: (%s) %s\n"
 msgstr ""
 
-#, fuzzy, c-format
+#, c-format
 msgid "Missing element: %s\n"
-msgstr "nenhum elemento \"%s\""
+msgstr "Elemento faltando: %s\n"
 
 #, fuzzy, c-format
 msgid "Got context from element '%s': %s\n"
@@ -1187,10 +1195,10 @@ msgid "Output tags (also known as metadata)"
 msgstr "Exibir etiquetas (metadados)"
 
 msgid "Output TOC (chapters and editions)"
-msgstr ""
+msgstr "Exibir TOC (capítulos e edições)"
 
 msgid "Output status information and property notifications"
-msgstr "Exibir informações do estado e notificações de propriedade"
+msgstr "Exibir informações de estado e notificações de propriedade"
 
 msgid "Do not print any progress information"
 msgstr "Não imprimir nenhuma informação de progresso"
@@ -1213,7 +1221,7 @@ msgstr ""
 "processamento"
 
 msgid "Gather and print index statistics"
-msgstr ""
+msgstr "Reunir e imprimir a tabela de estatísticas"
 
 #, c-format
 msgid "ERROR: pipeline could not be constructed: %s.\n"
@@ -1256,24 +1264,23 @@ msgstr "ERRO: a fila de processamento não quer reproduzir.\n"
 
 msgid "EOS on shutdown enabled -- Forcing EOS on the pipeline\n"
 msgstr ""
-"Finalizar fluxo ao desligar habilitado -- Forçando finalização do fluxo na "
-"fila de processamento\n"
+"Finalizar fluxo ao sair habilitado -- Forçando finalização do fluxo na fila "
+"de processamento\n"
 
-#, fuzzy
 msgid "EOS on shutdown enabled -- waiting for EOS after Error\n"
 msgstr ""
-"Finalizar fluxo ao desligar habilitado -- Forçando finalização do fluxo na "
-"fila de processamento\n"
+"Finalizar fluxo ao sair habilitado -- esperando o fim do fluxo após erro\n"
 
 msgid "Waiting for EOS...\n"
 msgstr "Esperando pelo final do fluxo...\n"
 
 msgid "EOS received - stopping pipeline...\n"
-msgstr "Final do fluxo recebido - parando a fila de processamento...\n"
+msgstr "Final do fluxo encontrado - parando a fila de processamento...\n"
 
-#, fuzzy
 msgid "Interrupt while waiting for EOS - stopping pipeline...\n"
-msgstr "Interrupção: Parando a fila de processamento...\n"
+msgstr ""
+"Interrupção recebida enquanto a finalização do fluxo estava sendo aguardada "
+"- parando a fila de processamento...\n"
 
 msgid "An error happened while waiting for EOS\n"
 msgstr "Um erro ocorreu ao esperar pelo final do fluxo\n"
@@ -1290,8 +1297,8 @@ msgstr "Definindo a fila de processamento para NULO...\n"
 msgid "Freeing pipeline ...\n"
 msgstr "Liberando a fila de processamento...\n"
 
-#~ msgid "Print alloc trace (if enabled at compile time)"
-#~ msgstr "Exibir trilha de alocação (se habilitado na compilação)"
+#~ msgid "maximum"
+#~ msgstr "máximo"
 
 #~ msgid "Usage: gst-xmllaunch <file.xml> [ element.property=value ... ]\n"
 #~ msgstr ""
@@ -1326,3 +1333,6 @@ msgstr "Liberando a fila de processamento...\n"
 
 #~ msgid "Do not install signal handlers for SIGUSR1 and SIGUSR2"
 #~ msgstr "Não fixar manipuladores de sinal para SIGUSR1 e SIGUSR2"
+
+#~ msgid "Print alloc trace (if enabled at compile time)"
+#~ msgstr "Exibir trilha de alocação (se habilitado na compilação)"
