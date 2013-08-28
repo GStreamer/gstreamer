@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.1.3
+Release notes for GStreamer Base Plugins 1.1.4
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -58,27 +58,27 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Features of this release
-    
-
 Bugs fixed in this release
      
-      * 643202 : encodebin: streamcombiner not completely implemented
-      * 585969 : playbin: Position/Duration information mismatch on track change
-      * 681368 : typefinding: CSV file is detected as MP3
-      * 700537 : oggdemux: Drops frames because it needs a keyframe after a seek
-      * 702380 : basertppayload: provide a GstBufferPool for output rtp buffers
-      * 703259 : video: Add support for NV24 video format
-      * 703659 : allocators: dmabuf: allow testing allocator type
-      * 704070 : video: Add Region Of Interest (roi) meta
-      * 704194 : playbin: glib warning when setting sink properties to NULL
-      * 704198 : rtspconnection: Removes child sources and adds them again later
-      * 704285 : playbin: incorrect sorting of decoders when autoplugging
-      * 704427 : streamsynchronizer: Assumes that a different stream-id on one stream means a new stream-group (problem when switching streams)
-      * 704706 : streamcombiner: Must proxy all sink events
-      * 704774 : appsrc: add " current-level-bytes " property
-      * 705048 : audiorate, videorate: drop GAP event
-      * 705062 : tagdemux: push mode code doesn't handle seeks
+      * 703378 : pbutils: Allow getting descriptions for unfixed caps
+      * 660195 : GstDiscoverer: signals " discovered " and " finished " are only emitted in async mode
+      * 553520 : tools: add gst-play utility that wraps playbin for testing purposes
+      * 691462 : typefind: ADTS/AAC wrongly detected as MP2
+      * 695889 : libs: many headers don't compile by themselves
+      * 703405 : parse: Allow creating plain elements instead of single-element bins
+      * 703669 : gst_rtcp_packet_fb_set_fci_length sets an incorrect buffer size.
+      * 704929 : Prevent oggdemux from seeking a lot when the SEQUENTIAL scheduler flag is set
+      * 705109 : audiodecoder/videodecoder: Needs to flush taglist on reception of stream-start
+      * 705144 : mpegvideoparse: support field encoding for interlaced video
+      * 705157 : tests: playbin_complex check fails during make check
+      * 705369 : playbin: fix get-tags actions
+      * 705555 : streamsynchronizer: should forward queries
+      * 705826 : typefinding: add typefinder for webp imageformat
+      * 705828 : videodecoder/videoencoder: Behaviour changes in ::reset() vfunc
+      * 706061 : typefind: improved and extended typefinder for module music
+      * 706569 : regression: playbin: chained oggs don't work any more
+      * 706680 : dmabuf: fix mmap counting
+      * 706885 : videoencoder: Fix forwarding of GstForceKeyUnit events
 
 ==== Download ====
 
@@ -115,19 +115,24 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alban Browaeys
+      * Alessandro Decina
+      * Andoni Morales Alastruey
       * Arnaud Vrac
-      * Benjamin Gaignard
-      * Changbok Chea
+      * Carlos Rafael Giani
+      * David Schleef
       * Edward Hervey
-      * Matej Knopp
-      * Mathieu Duponchelle
-      * Miguel Casas-Sanchez
+      * Jie Yang
+      * Jonathan Matthew
+      * Lubosz Sarnecki
+      * Matthieu Bouron
+      * Michael Olbrich
       * Olivier Crête
-      * Reynaldo H. Verdejo Pinochet
+      * Rico Tzschichholz
       * Sebastian Dröge
+      * Sjoerd Simons
+      * Sreerenj Balachandran
+      * Thibault Saunier
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Wim Taymans
-      * Young-Ho Cha
+      * Youness Alaoui
  
