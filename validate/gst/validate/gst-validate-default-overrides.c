@@ -1,5 +1,7 @@
 /* GStreamer
- * Copyright (C) 2013 Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
+ *
+ * Copyright (C) 2013 Collabora Ltd.
+ *  Author: Vincent Penquerc'h <vincent.penquerch@collabora.co.uk>
  *
  * gst-validate-default-overrides.c - Test overrides
  *

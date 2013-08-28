@@ -1,5 +1,7 @@
 /* GStreamer
- * Copyright (C) 2013 Thiago Santos <thiago.sousa.santos@collabora.com>
+ *
+ * Copyright (C) 2013 Collabora Ltd.
+ *  Author: Thiago Sousa Santos <thiago.sousa.santos@collabora.com>
  *
  * gst-validate-override-registry.c - Validate Override Registry
  *

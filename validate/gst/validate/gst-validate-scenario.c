@@ -1,5 +1,7 @@
 /* GStreamer
- * Copyright (C) 2013 Thibault Saunier <thibault.saunier@collabora.com>
+ *
+ * Copyright (C) 2013 Collabora Ltd.
+ *  Author: Thibault Saunier <thibault.saunier@collabora.com>
  *
  * gst-validate-scenario.c - Validate Scenario class
  *

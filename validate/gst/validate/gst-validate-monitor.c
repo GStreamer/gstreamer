@@ -1,7 +1,9 @@
 /* GStreamer
- * Copyright (C) 2013 Thiago Santos <thiago.sousa.santos@collabora.com>
  *
- * gst-validate-element-monitor.c - Validate Monitor class
+ * Copyright (C) 2013 Collabora Ltd.
+ *  Author: Thiago Sousa Santos <thiago.sousa.santos@collabora.com>
+ *
+ * gst-validate-monitor.c - Validate Monitor class
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
