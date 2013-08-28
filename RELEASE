@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.0.9
+Release notes for GStreamer Bad Plugins 1.0.10
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -62,17 +62,18 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * midi: add midi parser and fluidsynth midi renderer
-      * winscreencap: port to 1.0
-      * openjpeg: add OpenJPEG-based JPEG2000 decoder and encoder
-      * decklink: add "device-number" to select from multiple devices
-      * decklink: actually enable decklinksink
-      * dvdspu: fix artefacts and invalid memory access when clipping subtitles
+      * build: fix bz2 configure check on Windows
+      * interaudiosrc: make silence memory actually contain silence
+      * neonhttpsrc: allow building with neon-0.30
+      * rtpvp8depay: mark key frames and delta frames properly
+      * pcapparse: fix double unref causing criticals and/or crashes
+      * mpegvideoparse: fix level detection
 
 Bugs fixed in this release
      
-      * 704505 : decklink: add back property to select device
-      * 705039 : dvdspu: artifacts when clipping spu
+      * 465924 : bzip2 not built while it is present and usuable
+      * 705957 : pcapparse: crash due to bad unref
+      * 706369 : videoparser/mpegvideoparse: bad switch statements
 
 ==== Download ====
 
@@ -109,11 +110,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arnaud Vrac
-      * Matej Knopp
+      * Alexandre Rostovtsev
+      * Edward Hervey
+      * Matthieu Bouron
       * Sebastian Dröge
-      * Sebastian Rasmussen
       * Tim-Philipp Müller
-      * Wim Taymans
-      * Youri Westerman
+      * Zaheer Abbas Merali
  

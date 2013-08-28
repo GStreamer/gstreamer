@@ -1,9 +1,169 @@
-=== release 1.0.9 ===
+=== release 1.0.10 ===
 
-2013-07-30  Tim-Philipp Müller <tim@centricular.net>
+2013-08-28  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.9
+	  releasing 1.0.10
+
+2013-08-27 11:27:04 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: only update src CAPS when it's necessary
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705452
+
+2013-08-21 14:44:38 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: Refuse negative rates which we don't support yet
+	  And remove a check which was done before
+
+2013-08-20 13:29:14 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: Fix switch statement in level detection code
+	  Properly fall through the cases without re-assigning the level to
+	  the wrong value.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706369
+
+2013-08-14 18:17:51 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/inter/gstinteraudiosrc.c:
+	* gst/inter/gstinteraudiosrc.h:
+	  interaudiosrc: make silence memory actually contain silence
+	  instead of random data. Reported by Marco Micheletti on
+	  gstreamer-devel.
+
+2013-08-14 10:47:31 +0200  Zaheer Abbas Merali <zaheermerali@gmail.com>
+
+	* gst/pcapparse/gstpcapparse.c:
+	  pcapparse: Remove unneeded unref and only set pad caps if we have caps
+	  Fixes crashes due to invalid unrefs.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705957
+
+2013-08-01 10:58:23 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtspacketizer: Fix PCR LUT table
+	  We were only resetting the first 512 values of the lookup table instead
+	  of the whole 8192.
+	  This resulted in any PCR PID over 0x0200 ... ending up taking the first PCR
+	  table around :(
+
+2013-08-26 13:48:02 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure.ac: Don't set BZ2_LIBS if bz2 is not found
+
+2013-08-12 01:02:51 -0400  Alexandre Rostovtsev <tetromino@gentoo.org>
+
+	* configure.ac:
+	  neonhttpsrc: allow building with neon-0.30
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705812
+
+2013-08-22 14:56:05 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure: Fix bz2 configure check for Windows
+	  Due to function decorations on Windows AC_CHECK_LIB can't be used to check for bz2.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=465924
+
+2013-08-07 11:14:38 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/rtpvp8/gstrtpvp8depay.c:
+	  rtpvp8depay: mark key frames and delta frames properly
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705550
+
+=== release 1.0.9 ===
+
+2013-07-30 13:01:51 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-celt.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-decklink.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpeg2enc.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegpsmux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-mplex.xml:
+	* docs/plugins/inspect/plugin-neon.xml:
+	* docs/plugins/inspect/plugin-ofa.xml:
+	* docs/plugins/inspect/plugin-openal.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rfbsrc.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-rtpmux.xml:
+	* docs/plugins/inspect/plugin-rtpvp8.xml:
+	* docs/plugins/inspect/plugin-scaletempo.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* gst-plugins-bad.doap:
+	* win32/common/config.h:
+	  Release 1.0.9
 
 2013-07-28 20:14:55 +0200  Matej Knopp <matej.knopp@gmail.com>
 

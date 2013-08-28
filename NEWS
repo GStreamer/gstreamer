@@ -1,4 +1,19 @@
-This is GStreamer Bad Plugins 1.0.9
+This is GStreamer Bad Plugins 1.0.10
+
+Changes since 1.0.9:
+
+      * build: fix bz2 configure check on Windows 
+      * interaudiosrc: make silence memory actually contain silence
+      * neonhttpsrc: allow building with neon-0.30
+      * rtpvp8depay: mark key frames and delta frames properly
+      * pcapparse: fix double unref causing criticals and/or crashes
+      * mpegvideoparse: fix level detection
+
+Bugs fixed since 1.0.9:
+
+      * 465924 : bzip2 not built while it is present and usuable
+      * 705957 : pcapparse: crash due to bad unref
+      * 706369 : videoparser/mpegvideoparse: bad switch statements
 
 Changes since 1.0.8:
 
