@@ -1448,6 +1448,7 @@ gst_validate_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
     gpointer udata)
 {
   GstValidatePadMonitor *monitor = udata;
+  GstValidateMonitor *parent = GST_VALIDATE_MONITOR_GET_PARENT (monitor);
 
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (monitor);
   GST_VALIDATE_MONITOR_LOCK (monitor);
@@ -1461,9 +1462,9 @@ gst_validate_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
   gst_validate_pad_monitor_check_late_serialized_events (monitor,
       GST_BUFFER_TIMESTAMP (buffer));
 
-  if (G_LIKELY (GST_VALIDATE_MONITOR_GET_PARENT (monitor))) {
+  if (G_LIKELY (parent)) {
     /* a GstValidatePadMonitor parent must be a GstValidateElementMonitor */
-    if (GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_DECODER (monitor)) {
+    if (GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_DECODER (parent)) {
       /* should not push out of segment data */
       if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)) &&
           GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer)) &&
