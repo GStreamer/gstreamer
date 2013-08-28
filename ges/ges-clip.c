@@ -349,6 +349,9 @@ _child_added (GESContainer * container, GESTimelineElement * element)
 static void
 _child_removed (GESContainer * container, GESTimelineElement * element)
 {
+  g_signal_handlers_disconnect_by_func (element, _child_priority_changed_cb,
+      container);
+
   _compute_height (container);
 }
 
