@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.1.3
+Release notes for GStreamer Bad Plugins 1.1.4
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -60,24 +60,33 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Features of this release
-    
-
 Bugs fixed in this release
      
-      * 702216 : tsdemux: Create and send codec tag
-      * 690934 : tsdemux: setting program-number has no effect
-      * 694369 : tsdemux: unable to change play speed via seek event
-      * 701141 : tsdemux: multiple patches related to seeking
-      * 701673 : hlsdemux: Does not implement pkcs7 unpadding for encrypted streams
-      * 702330 : mpegvideoparse: Only map input buffer once
-      * 702722 : opencv: add GrabCut segmentation element
-      * 702806 : mpegvideoparse/mpeg2dec: No valid frames found before end of stream
-      * 704009 : mpegvideoparse: Use sequence_display_extension values to update the src caps
-      * 704226 : dash: Stream does not preroll and shutting down deadlocks
-      * 704555 : hlsdemux: cannot register existing type GstFragment when using encrypted HLS streams
-      * 705035 : mpegvideoparse: do not update caps when bitrate changes in seq. header
-      * 705039 : dvdspu: artifacts when clipping spu
+      * 706566 : d3dvideosink: bufferpool implementation does not work well with device-lost/resets
+      * 599298 : [tsdemux] Emit codec tags
+      * 697239 : [mpegtsmux] Let prog-map define the program number
+      * 701681 : [regression] NASA HLS stream
+      * 702357 : codecparser: optimize scanning for start code
+      * 703264 : srtp: Key is required even if cipher and auth are null
+      * 704308 : dash: Stream does not play " assertion `client- > active_streams != NULL' failed " 
+      * 704760 : opencv: disparity-map calculation element
+      * 705208 : [dvbsrc] should check if _XOPEN_SOURCE is already defined
+      * 705349 : bluez: avdtpsrc produces error at EOF
+      * 705452 : h264parse: Does not extract width/height/etc from h264-in-mpeg-ps
+      * 705598 : regression h264parse: incorrect keyframe/delta-unit detection
+      * 705661 : dashdemux: segmentNumber attribute of SegmentTemplate element is not being observed
+      * 705667 : vc1parse: some sequence layer handling fixes for advanced profile
+      * 705674 : aiffparse broken
+      * 705675 : aiffparse: invalid SSND data size
+      * 705679 : dashdemux: faulty buffer timestamps when using SegmentTemplate element
+      * 705683 : [srtp] invalid packets results in GST_FLOW_ERROR
+      * 705812 : neonhttpsrc: fails to configure with neon-0.30.0
+      * 705957 : pcapparse: crash due to bad unref
+      * 705993 : aiffparse: fix sticky event warnings in push mode / add tests
+      * 706091 : srtpdec: Shadowed variable causes buffers to be dropped
+      * 706276 : uvch264src: don't error out on incomplete aux data segment with Logitech C920
+      * 706369 : videoparser/mpegvideoparse: bad switch statements
+      * 706574 : directsoundsrc: 'device-name' property for selecting a audio device
 
 ==== Download ====
 
@@ -114,22 +123,25 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alessandro Decina
-      * Alex Ashley
+      * Alexandre Rostovtsev
+      * Andoni Morales Alastruey
       * Arnaud Vrac
-      * Christian Fredrik Kalager Schaller
+      * Bernhard Miller
+      * Chris Bass
       * David Schleef
-      * Douglas Bagnall
       * Edward Hervey
       * Jesper Larsen
+      * Kishore Arepalli
+      * Lubosz Sarnecki
       * Matej Knopp
+      * Matthieu Bouron
       * Miguel Casas-Sanchez
+      * Nicola Murino
       * Olivier Crête
       * Robert Krakora
       * Sebastian Dröge
       * Sreerenj Balachandran
       * Thiago Santos
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
-      * Youri Westerman
+      * Zaheer Abbas Merali
  

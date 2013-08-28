@@ -205,7 +205,6 @@ GObject
             frei0r-filter-mask0mate
             frei0r-filter-nervous
             frei0r-filter-nosync0r
-            frei0r-filter-opencvfacedetect
             frei0r-filter-perspective
             frei0r-filter-pixeliz0r
             frei0r-filter-primaries
@@ -252,6 +251,7 @@ GObject
         GstDashDemux
         GstDecklinkSink
         GstDecklinkSrc
+        GstDisparity
         GstEdgeDetect
         GstFaceBlur
         GstFestival
@@ -310,6 +310,7 @@ GObject
           GstSchroDec
           GstVdpDecoder
             GstVdpMpegDec
+          GstWebPDec
         GstVideoEncoder
           GstOpenJPEGEnc
           GstSchroEnc

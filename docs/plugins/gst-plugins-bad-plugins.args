@@ -26830,7 +26830,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratiox</NICK>
 <BLURB>x-ratio.</BLURB>
-<DEFAULT>1.84511e-316</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26840,7 +26840,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>ratioy</NICK>
 <BLURB>y-ratio.</BLURB>
-<DEFAULT>2.06074e-316</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26850,7 +26850,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>3.95253e-323</DEFAULT>
+<DEFAULT>2.5642e-321</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26880,7 +26880,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color (B)</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>1.85464e-37</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26900,7 +26900,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>Color (R)</NICK>
 <BLURB>the color of the image.</BLURB>
-<DEFAULT>1.36538e-37</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27230,7 +27230,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>2.12731e-316</DEFAULT>
+<DEFAULT>2.22824e-321</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27240,7 +27240,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lthresh</NICK>
 <BLURB>threshold for edge lightening.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>9.53547e-322</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27250,7 +27250,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>6.55625e-321</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27420,7 +27420,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>blend</NICK>
 <BLURB>blend factor.</BLURB>
-<DEFAULT>8.20251e-304</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27430,7 +27430,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>2.37152e-322</DEFAULT>
+<DEFAULT>7.75038e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27610,7 +27610,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>1.16956e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -59264,6 +59264,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstFaceDetect::updates</NAME>
+<TYPE>GstFaceDetectUpdates</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Updates</NICK>
+<BLURB>When send update bus messages, if at all.</BLURB>
+<DEFAULT>Send update messages on every frame</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstFaceBlur::profile</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -67015,5 +67025,45 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Start Band</NICK>
 <BLURB>Controls the start band that should be used.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebPDec::bypass-filtering</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Bypass Filtering</NICK>
+<BLURB>When enabled, skip the in-loop filtering.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebPDec::no-fancy-upsampling</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>No Fancy Upsampling</NICK>
+<BLURB>When enabled, use faster pointwise upsampler.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstWebPDec::use-threads</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Use Threads</NICK>
+<BLURB>When enabled, use multi-threaded decoding.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstDisparity::method</NAME>
+<TYPE>GstDisparityMethod</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Stereo matching method to use</NICK>
+<BLURB>Stereo matching method to use.</BLURB>
+<DEFAULT>Semi-global block matching algorithm</DEFAULT>
 </ARG>
 

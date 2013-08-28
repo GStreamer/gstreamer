@@ -1,9 +1,793 @@
-=== release 1.1.3 ===
+=== release 1.1.4 ===
 
-2013-07-29  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-08-28  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.3
+	  releasing 1.1.4
+
+2013-08-28 12:33:17 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/pt_BR.po:
+	  po: update translations
+
+2013-08-28 11:13:14 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/gst/mpegts/mpegts.h:
+	  mpegts: mark as unstable API
+
+2013-08-27 17:05:44 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtsdemux: fix possible read beyond end of buffer when resyncing
+
+2013-08-27 11:27:04 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: only update src CAPS when it's necessary
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705452
+
+2013-08-20 11:59:34 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: do not set CAPS and passthrough mode if SPS/PPS have not been parsed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705452
+
+2013-08-26 13:48:02 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure.ac: Don't set BZ2_LIBS if bz2 is not found
+
+2013-08-26 10:22:06 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/webp/gstwebpdec.c:
+	  webpdec: Some cleanup and minor fixes
+
+2013-08-24 00:46:38 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* configure.ac:
+	* ext/Makefile.am:
+	* ext/webp/Makefile.am:
+	* ext/webp/gstwebp.c:
+	* ext/webp/gstwebpdec.c:
+	* ext/webp/gstwebpdec.h:
+	  webp: Add WebP image decoder plugin
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706285
+
+2012-09-01 20:46:43 +0200  Nicola Murino <nicola.murino@gmail.com>
+
+	* ext/opencv/gstfacedetect.c:
+	* ext/opencv/gstfacedetect.h:
+	  facedetect: new property to control bus messages updates
+	  https://bugzilla.gnome.org/show_bug.cgi?id=655622
+
+2013-08-23 12:01:32 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/opencv/gstopencvutils.c:
+	* ext/opencv/gstsegmentation.cpp:
+	  opencv: Fix indention
+
+2013-08-23 12:01:07 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/opencv/gstdisparity.cpp:
+	* ext/opencv/gstdisparity.h:
+	  opencv: Port to non-deprecated GMutex/GCond API
+
+2013-08-23 11:38:04 +0200  Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>
+
+	* ext/opencv/Makefile.am:
+	* ext/opencv/gstdisparity.cpp:
+	* ext/opencv/gstdisparity.h:
+	* ext/opencv/gstopencv.c:
+	  opencv: Add disparity-map calculation element
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704760
+
+2013-08-22 17:32:17 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* sys/directsound/gstdirectsoundsrc.c:
+	  directsoundsrc: Remove unused variable
+
+2013-08-22 16:07:58 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure: Update opencv dependency, 2.4.5 works too.
+
+2013-08-22 13:45:59 +0200  Kishore Arepalli <kishore.arepalli@gmail.com>
+
+	* sys/directsound/gstdirectsoundsrc.c:
+	* sys/directsound/gstdirectsoundsrc.h:
+	  directsoundsrc: Add 'device-name' property for selecting a audio device
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706574
+
+2013-08-22 14:56:05 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure: Fix bz2 configure check for Windows
+	  Due to function decorations on Windows AC_CHECK_LIB can't be used to check for bz2.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=465924
+
+2013-08-21 14:44:38 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: Refuse negative rates which we don't support yet
+	  And remove a check which was done before
+
+2013-03-10 17:02:18 +0100  Jesper Larsen <jesper.larsen@ixonos.com>
+
+	* gst/mpegtsmux/mpegtsmux.c:
+	* gst/mpegtsmux/tsmux/tsmux.c:
+	* gst/mpegtsmux/tsmux/tsmux.h:
+	  mpegtsmux: Set the program number from prog-map
+	  The prog-map property of mpegtsmux only allows you to group pids together in a program.
+	  The program number set in the PAT/PMT tables cannot be set explicitly.
+	  This patch will set the program number according to the prog-map.
+	  If a program id of 0 is given, the first vacant program number starting from 1 will be used.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697239
+
+2013-08-21 08:58:52 +0200  Edward Hervey <edward@collabora.com>
+
+	* sys/dvb/camutils.c:
+	* sys/dvb/dvbbasebin.c:
+	  dvb: Adapt for latest mpegts lib changes
+
+2013-08-21 08:58:23 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	* gst/mpegtsdemux/mpegtsbase.h:
+	  mpegtsbase: Adapt for latest mpegts lib changes
+
+2013-08-21 08:40:16 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst-libs/gst/mpegts/gst-dvb-descriptor.c:
+	* gst-libs/gst/mpegts/gst-dvb-section.c:
+	* gst-libs/gst/mpegts/gst-dvb-section.h:
+	* gst-libs/gst/mpegts/gstmpegtsdescriptor.c:
+	* gst-libs/gst/mpegts/gstmpegtsdescriptor.h:
+	* gst-libs/gst/mpegts/gstmpegtssection.c:
+	* gst-libs/gst/mpegts/gstmpegtssection.h:
+	* tests/examples/mpegts/ts-parser.c:
+	  mpegts: ABI/API break: Use GPtrArray instead of GArray
+	  While it was a great idea, various g-i based bindings don't support
+	  GArray with entries greater than sizeof(gpointer) :(
+	  So let's just make everybody happy by just using GPtrArray.
+	  And since we're breaking the API, also rename the various descriptor fields
+	  to no longer have the descriptor_ prefix.
+	  It does cost a bit more in terms of memory/cpu usage, but makes it usable
+	  from bindings.
+
+2013-08-19 15:31:51 -0400  Robert Krakora <rob.krakora@messagenetsystems.com>
+
+	* sys/uvch264/gstuvch264_mjpgdemux.c:
+	  uvch264src: don't error out on incomplete aux data segment
+	  It appears that the Logitech C920 sometimes drops the next
+	  to last segment of RAW aux data contained within the MJPEG
+	  container.  H264 data that is multiplexed with in the same
+	  container does not appear to be affected.  This appears to
+	  be a bug in the Logitech C920 firmware and uvch264src should
+	  not error out in this case.
+	  Sometimes it can take 24 hours of continuous streaming for
+	  the problem to occur, but sometimes it takes only a couple
+	  of hours.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706276
+
+2013-08-20 16:01:47 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/ivtc/gstivtc.c:
+	  ivtc: Use input framerate when possible
+	  if input is 30000/1001 ... use 24000/1001 as the output fixated framerate
+
+2013-08-15 11:45:34 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* gst/id3tag/id3tag.c:
+	  id3mux: handle publisher, interpreted-by and musical-key tags
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705999
+
+2013-08-20 13:29:14 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: Fix switch statement in level detection code
+	  Properly fall through the cases without re-assigning the level to
+	  the wrong value.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706369
+
+2013-08-19 17:23:28 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/jpegformat/gstjpegparse.c:
+	  jpegparse: Forward segment event after caps
+	  Store it until we know what our caps are.
+
+2013-08-20 00:26:06 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/aiffparse.c:
+	  test: fix compiler warning in aiffparse test on 32-bit x86
+
+2013-08-19 09:25:20 +0000  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* tests/check/elements/aiffparse.c:
+	  aiffparse: fix copyright
+
+2013-08-17 00:22:44 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/aiffparse.c:
+	  tests: fix some leaks in aiffparse unit test
+
+2013-08-17 00:09:18 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/aiffparse.c:
+	  tests: fix state change order in aiffparse test
+	  Do state changes from sink to src. Fixes race condition in
+	  pull mode test where the source will start up and push buffers
+	  to queue/identity or aiffparse before the main thread has
+	  managed to set them to playing yet.
+
+2013-08-12 18:33:39 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/aiffparse.c:
+	* tests/files/Makefile.am:
+	* tests/files/s16be-id3v2.aiff:
+	  aiffparse: add tests
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705993
+
+2013-08-17 00:23:08 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/aiff/aiffparse.c:
+	  aiffparse: don't leak adapter
+
+2013-08-15 13:58:48 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* gst/aiff/aiffparse.c:
+	  aiffparse: s/newsegment/segment/
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705993
+
+2013-08-13 18:42:55 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* gst/aiff/aiffparse.c:
+	  aiffparse: fix push mode
+	  Fix push mode by handling sink events (CAPS, SEGMENT) properly.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705993
+
+2013-08-16 15:41:48 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/videoparsers/gstmpeg4videoparse.c:
+	  mpeg4videoparse: Reparse the config if the size changed
+	  Also only re-issue the caps update if the part of the config that
+	  changed is one we care about.
+
+2013-08-16 19:48:03 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/srtp/gstsrtpdec.c:
+	  srtpdec: fix buffers being dropped due to shadowed variable
+	  Spotted by gstblub@gmail.com.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706091
+
+2013-08-08 11:19:00 +0100  Chris Bass <floobleflam@gmail.com>
+
+	* ext/dash/gstmpdparser.c:
+	  dashdemux: offset segment numbers by startNumber
+	  For SegmentTemplate elements containing a startNumber attribute, the
+	  `number' member of GstMediaSegments should be offset by the value of
+	  startNumber; however, this is not currently the case. As a result, the
+	  first URI(s) requested by the download loop will be wrong.
+	  This commit ensures that segment numbers will be offset by startNumber
+	  when one is present in a SegmentTemplate element.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705661
+
+2013-08-08 15:19:15 +0100  Chris Bass <floobleflam@gmail.com>
+
+	* ext/dash/gstmpdparser.c:
+	  dashdemux: remove incorrect timestamp scaling.
+	  When using a SegmentTemplate element, the timestamps of the buffers
+	  output by dashdemux are incorrect, causing problems downstream.
+	  The reason is that GstMediaSegment start times are calculated (in
+	  gst_mpdparser_get_chunk_by_index) by multiplying segment index by
+	  segment duration and then scaling the result according the `timebase'
+	  attribute from the MPD. However, the segment duration is already a
+	  GstClockTime (i.e., it has already been scaled according to the timebase
+	  from the MPD and converted to a nanosecond value), so multiplying it by
+	  the segment index will give the correct timestamp without the need for
+	  any further scaling.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705679
+
+2013-08-15 20:12:42 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/examples/stats/Makefile.am:
+	* tests/examples/stats/mp2ogg.c:
+	  examples: remove another obsolete example
+
+2013-08-15 15:46:58 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/daala/gstdaaladec.c:
+	* ext/daala/gstdaalaenc.c:
+	* ext/openjpeg/gstopenjpegdec.c:
+	* ext/openjpeg/gstopenjpegenc.c:
+	* ext/rsvg/gstrsvgdec.c:
+	* ext/rsvg/gstrsvgdec.h:
+	* ext/schroedinger/gstschrodec.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	* sys/mfc/gstmfcdec.c:
+	* sys/vdpau/h264/gstvdph264dec.c:
+	* sys/vdpau/mpeg/gstvdpmpegdec.c:
+	  ext: Use new flush vfunc of video codec base classes and remove reset implementations
+
+2013-08-14 19:12:16 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/examples/capsfilter/Makefile.am:
+	* tests/examples/capsfilter/capsfilter1.c:
+	* tests/examples/gstplay/.gitignore:
+	* tests/examples/gstplay/Makefile.am:
+	* tests/examples/gstplay/player.c:
+	* tests/examples/indexing/.gitignore:
+	* tests/examples/indexing/Makefile.am:
+	* tests/examples/indexing/indexmpeg.c:
+	* tests/examples/level/Makefile.am:
+	* tests/examples/level/README:
+	* tests/examples/level/demo.c:
+	* tests/examples/level/plot.c:
+	  examples: remove prehistoric examples
+
+2013-08-14 18:17:51 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/inter/gstinteraudiosrc.c:
+	* gst/inter/gstinteraudiosrc.h:
+	  interaudiosrc: make silence memory actually contain silence
+	  instead of random data. Reported by Marco Micheletti on
+	  gstreamer-devel.
+
+2013-08-14 13:27:03 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* sys/dvb/dvbbasebin.c:
+	  dvbbasebin: fix criticals when trying to cast a GstPad to a GstElement
+	  message->src might be a GstPad. Observed during gst-inspect-1.0 -a
+
+2013-08-14 13:59:27 +0200  Edward Hervey <edward@collabora.com>
+
+	* .gitignore:
+	* gst-libs/gst/mpegts/.gitignore:
+	  .gitignore: Update for new files to ignore
+
+2013-08-14 13:41:37 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/pesparse.c:
+	* gst/mpegtsdemux/pesparse.h:
+	  pesparse: Refactory secondary PES extension handling
+	  Some streams had wrong values for the stream_id_extension, make sure
+	  we only remember the valid ones.
+	  For streams with PES_extension_field_length == 0, assume there's nothing
+	  else.
+	  For streams that state they have a TREF extension but don't have enough
+	  data to store it, just assume it was produced by a non-compliant muxer
+	  and skip the remaining data.
+	  Only store remaining data in stream_id_extension_data instead of storing
+	  data we already parse.
+
+2013-08-14 10:47:31 +0200  Zaheer Abbas Merali <zaheermerali@gmail.com>
+
+	* gst/pcapparse/gstpcapparse.c:
+	  pcapparse: Remove unneeded unref and only set pad caps if we have caps
+	  Fixes crashes due to invalid unrefs.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705957
+
+2013-08-14 10:39:46 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/pesparse.c:
+	  pesparse: Fix pes extension data length check
+	  And remove length/data updates (we use the header size just below to
+	  properly set them).
+	  Based on feedback from Stas Sergeev <stsp@list.ru>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=657343
+
+2013-08-14 10:33:14 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/pesparse.c:
+	* gst/mpegtsdemux/pesparse.h:
+	* gst/mpegtsdemux/tsdemux.c:
+	  pesparse: Remove unused argument
+	  We always provided 0 as the offset and never used the returned value.
+	  Based on feedback from Stas Sergeev <stsp@list.ru>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=657343
+
+2013-08-13 17:47:14 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.c:
+	  codecparsers: mpegvideoparse: turn internal consistency check into a g_assert()
+	  We only check input from the API user with g_return_*_if_fail().
+	  Internal sanity checks should use g_assert() instead, which is
+	  disabled by default for releases.
+
+2013-08-13 17:45:51 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.c:
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.h:
+	  codecparsers: mpegvideoparser: minor doc fixes
+
+2013-08-13 12:41:28 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/smoothstreaming/gstmssdemux.c:
+	  mssdemux: use gst_data_queue_push_force for adding events to queue
+	  This prevents locking on startup when a stream only has a single buffer
+	  for one of the streams and mssdemux decides to push an EOS event right
+	  after it.
+
+2013-08-08 13:32:02 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	  dashdemux: use push_force when adding events to the dataqueue
+	  This prevents deadlocks on startup on files that have only a very
+	  large buffer for a stream and the queue is filled and will lock on
+	  the eos event that is pushed after the buffer. As no buffers have yet
+	  been pushed to other streams, the pipeline locks on preroll
+
+2013-07-30 15:17:23 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: support field encoding for interlaced video
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705144
+
+2013-08-12 01:02:51 -0400  Alexandre Rostovtsev <tetromino@gentoo.org>
+
+	* configure.ac:
+	  neonhttpsrc: allow building with neon-0.30
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705812
+
+2013-08-12 12:27:33 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/srtp/gstsrtpdec.c:
+	* ext/srtp/gstsrtpenc.c:
+	  srtp: Let packets through without touching them if no crypto or auth is set
+
+2013-08-12 12:27:16 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/srtp/gstsrtpdec.c:
+	  srtpdec: Refactor code a bit
+	  Simplify the error handling case and get the packet push out of the if()
+
+2013-08-12 11:56:27 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/srtp/gstsrtpdec.c:
+	  srtpdec: Don't error on invalid packet, just drop it
+
+2013-08-07 15:01:33 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst/videoparsers/gstvc1parse.c:
+	  vc1parse: Fix the SequenceLayer handling for advanced profile.
+	  The Sequence Header Data Structure STRUCT_C for Advanced Profile
+	  has only a one valid field which is the profile indicator. Don't
+	  use the reserved fields for fps update like Simple/Main profile.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705667
+
+2013-08-07 14:52:43 +0300  Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+
+	* gst/videoparsers/gstvc1parse.c:
+	  vc1parse: Fix seq hdr STRUCT_A handling for advanced profile.
+	  The Sequence Header Data Structure STRUCT_A for advanced profile
+	  may be eight consecutive zero bytes.Don't try to override the
+	  width and height values in this case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705667
+
+2013-08-07 10:14:20 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* gst/aiff/aiffparse.c:
+	  aiffparse: fix SSND data size
+	  AIFF chunk size does not include the chunk header size (8 bytes), so the
+	  SSND data size is equal to the chunk size minus the SSND header size (8
+	  bytes).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705675
+
+2013-07-13 02:50:52 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* ext/hls/gsthlsdemux.c:
+	  hlsdemux: add support for redirections
+
+2013-08-02 20:37:30 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/mpegdemux/Makefile.am:
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: send codec tag for each stream
+
+2013-08-10 21:34:10 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/uvch264demux.c:
+	  tests: uvch264demux: send stream-start events and fix event order
+
+2013-08-10 21:33:36 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* sys/uvch264/gstuvch264_mjpgdemux.c:
+	  uvch264mjpgdemux: fix event ordering
+
+2013-08-10 20:02:01 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/mplex.c:
+	  tests: mplex: fix 'Got data flow before stream-start event' failure
+
+2013-08-10 19:54:57 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/mpeg2enc.c:
+	  tests: mpeg2enc: fix 'Got data flow before stream-start event' failure
+
+2013-08-10 19:44:15 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/aiff/aiffparse.c:
+	  aiffparse: fix CAPS query
+	  Was causing criticals in decodebin/playbin because the caps
+	  query done when exposing pads would return ANY caps.
+
+2013-08-10 19:43:41 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/aiff/aiffparse.c:
+	  aiffparse: don't unref NULL buffer
+
+2013-08-07 19:08:33 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* gst/aiff/aiffparse.c:
+	  aiffparse: set missing layout field in srcpad caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705674
+
+2013-08-07 17:28:29 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* gst/aiff/aiffparse.c:
+	  aiffparse: send start stream event
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705674
+
+2013-08-06 16:53:37 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* gst/aiff/aiffparse.c:
+	  aiffparse: fix buffers initialisation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705674
+
+2013-08-02 14:11:01 +0200  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* configure.ac:
+	  build: add subdir-objects to AM_INIT_AUTOMAKE
+	  Fixes warnings with automake 1.14.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705350
+
+2013-08-09 20:12:09 +0100  David Schleef <ds@schleef.org>
+
+	* configure.ac:
+	* tests/check/Makefile.am:
+	  tests: create/remove orc directory at proper time
+	  Before automake creates .deps directories, and during distclean.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705350
+
+2013-08-09 20:10:35 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/Makefile.am:
+	* tests/check/elements/baseaudiovisualizer.c:
+	  tests: fix build of baseaudiovisualizer test with subdir-objects option
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705350
+
+2013-08-07 09:04:39 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: Use slice type to determine if frame is keyframe
+	  This is the same behaviour as pre-baseparse-refactoring
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705598
+
+2013-08-03 14:20:47 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: Do not trigger caps update if we only have PPS updates
+	  Updating caps results in downstream elements potentially reconfiguring themselves
+	  (such as decoders). If we do this in the middle of keyframes, we would result
+	  in those elements being reconfigured and handling garbage until the next keyframe.
+	  Instead of this only send (potentially) new codec_data when we have *both* SPS and
+	  PPS.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705333
+
+2013-07-31 11:56:39 -0700  David Schleef <ds@schleef.org>
+
+	* gst/ivtc/gstivtc.c:
+	  ivtc: quiet FIXME when it's not relevant
+
+2013-07-31 11:54:06 -0700  David Schleef <ds@schleef.org>
+
+	* gst/ivtc/gstivtc.c:
+	  ivtc: implement new edge-directed upsampling
+
+2013-08-03 18:07:30 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* sys/dvb/gstdvbsrc.c:
+	  dvbsrc: remove use of _XOPEN_SOURCE
+	  Which causes problems when used with _GNU_SOURCE apparently, and it
+	  seems it was only set because of usleep(), which we can just replace
+	  with g_usleep() until we get rid of those entirely.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705208
+
+2013-08-02 15:12:17 +0200  Bernhard Miller <bernhard.miller@streamunlimited.com>
+
+	* sys/bluez/gstavdtpsrc.c:
+	  bluez: return GST_FLOW_EOS in avdtpsrc create when stream is EOF
+	  Signed-off-by: Bernhard Miller <bernhard.miller@streamunlimited.com>
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705349
+
+2013-08-01 11:01:03 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtspacketizer: Look harder for next sync position
+	  If ever we lose sync, we were just checking for the next 0x47 marker ...
+	  which might actually happen within a mpeg-ts packet.
+	  Instead check for 3 repeating 0x47 at the expected packet size interval,
+	  which the same logic we use when we initially look for the packet size.
+
+2013-08-01 10:58:23 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtspacketizer: Fix PCR LUT table
+	  We were only resetting the first 512 values of the lookup table instead
+	  of the whole 8192.
+	  This resulted in any PCR PID over 0x0200 ... ending up taking the first PCR
+	  table around :(
+
+2013-07-30 22:06:38 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/dash/gstdashdemux.c:
+	  dashdemux: properly error out when manifest has no streams
+	  Post an error message when the manifest is parsed and no valid streams
+	  are found be activated and used.
+	  Fixes #704308
+
+2013-07-30 16:08:17 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	* gst/mpegtsmux/mpegtsmux.c:
+	  mpegts: private/teletext -> application/x-teletext
+
+2013-07-29 21:25:14 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* win32/common/config.h:
+	  win32: update
+
+2013-07-29 21:24:51 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* .gitignore:
+	  tests: ignore new example binaries
+
+2013-07-29 21:23:48 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* po/LINGUAS:
+	* po/el.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/sv.po:
+	* po/vi.po:
+	  po: update translations
+
+2013-07-29 14:48:02 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.3 ===
+
+2013-07-29 13:52:29 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/gst-plugins-bad-plugins.interfaces:
+	* docs/plugins/inspect/plugin-accurip.xml:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-eglglessink.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-neon.xml:
+	* docs/plugins/inspect/plugin-ofa.xml:
+	* docs/plugins/inspect/plugin-openal.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rfbsrc.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-waylandsink.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* gst-plugins-bad.doap:
+	* win32/common/config.h:
+	  Release 1.1.3
+
+2013-07-29 13:52:24 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-07-29 12:17:57 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 
