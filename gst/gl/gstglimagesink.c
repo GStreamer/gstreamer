@@ -487,10 +487,17 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
     {
+      /* mark the redisplay_texture as unavailable (=0)
+       * to avoid drawing
+       */
+      GST_GLIMAGE_SINK_LOCK (glimage_sink);
+      glimage_sink->redisplay_texture = 0;
       if (glimage_sink->stored_buffer) {
         gst_buffer_unref (glimage_sink->stored_buffer);
         glimage_sink->stored_buffer = NULL;
       }
+      GST_GLIMAGE_SINK_UNLOCK (glimage_sink);
+
       if (glimage_sink->upload) {
         gst_object_unref (glimage_sink->upload);
         glimage_sink->upload = NULL;
@@ -1008,7 +1015,8 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
         gl_sink->client_data);
 
     if (doRedisplay) {
-      GstGLContext *context = gst_gl_display_get_context (gl_sink->display);
+      GstGLContext *context =
+          gst_gl_display_get_context_unlocked (gl_sink->display);
       GstGLWindow *window = gst_gl_context_get_window (context);
 
       gst_gl_window_draw_unlocked (window,
