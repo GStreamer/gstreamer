@@ -1,9 +1,83 @@
-=== release 1.1.3 ===
+=== release 1.1.4 ===
 
-2013-07-29  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-08-28  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.3
+	  releasing 1.1.4
+
+2013-08-28 12:09:33 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure.ac: Fix typo
+
+2013-08-23 09:58:30 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure: Disable build of dxva2 and vdpau support explicitely
+	  It is enabled although we pass --disable-hwaccels apparently and
+	  makes the build fail on Windows because libav looks for the d3d headers
+	  in the wrong places. We can't make use of these features via libav.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706601
+
+2013-08-22 14:56:11 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure: Fix bz2 configure check for Windows
+	  Due to function decorations on Windows AC_CHECK_LIB can't be used to check for bz2.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=465924
+
+2013-08-22 14:23:12 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavcodecmap.c:
+	* ext/libav/gstavdemux.c:
+	  avdemux: Add support for video/x-pva
+	  https://bugzilla.gnome.org/show_bug.cgi?id=158719
+
+2013-08-21 13:40:03 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/libav/gstavvidenc.c:
+	  avvidenc: propagate flow return values upstream in finish()
+
+2013-08-20 15:58:35 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* tests/check/elements/avdemux_ape.c:
+	  tests: Enable avdemux_ape test again, it works now
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684684
+
+2013-08-15 15:51:52 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  libav: Use new flush vfunc of video codec base classes and remove reset implementations
+
+2013-08-13 12:49:26 +0200  Hans de Goede <hdegoede@redhat.com>
+
+	* ext/libav/gstavmux.c:
+	  avmux: Don't fail on commas in the libav muxer type names
+	  https://bugzilla.gnome.org/show_bug.cgi?id=697512
+
+2013-08-02 14:18:25 +0200  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* configure.ac:
+	  build: add subdir-objects to AM_INIT_AUTOMAKE
+	  Fixes warnings with automake 1.14
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705350
+
+2013-07-29 14:48:40 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.3 ===
+
+2013-07-29 13:59:50 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.1.3
 
 2013-07-29 12:19:22 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 

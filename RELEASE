@@ -1,5 +1,5 @@
 
-Release notes for GStreamer libav Plugins 1.1.3
+Release notes for GStreamer libav Plugins 1.1.4
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -36,13 +36,12 @@ contains a set of less supported plugins that haven't passed the
 
   
 
-Features of this release
-    
-
 Bugs fixed in this release
      
-      * 693581 : rtph264depay ! avdec_h264 crash on NULL decoder pointer in gst_video_decoder_get_frame ()
-      * 694299 : crash in put_pixels16_sse2() with SVQ1 video
+      * 158719 : [PVA] Support for PVA container format demuxing
+      * 697512 : avmux: Fails to register muxers with commas in the libav muxer name
+      * 705333 : h264parse : broken bytestream/nal = > avc/au conversion
+      * 706601 : Windows compilation fails since libav v9.5
 
 ==== Download ====
 
@@ -79,8 +78,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arnaud Vrac
-      * Edward Hervey
-      * Olivier Crête
+      * Hans de Goede
+      * Lubosz Sarnecki
       * Sebastian Dröge
+      * Tim-Philipp Müller
  
