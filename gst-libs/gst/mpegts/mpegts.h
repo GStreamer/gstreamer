@@ -24,6 +24,11 @@
 #ifndef _GST_MPEGTS_H_
 #define _GST_MPEGTS_H_
 
+#ifndef GST_USE_UNSTABLE_API
+#warning "The GStreamer mpegts library is unstable API and may change in future."
+#warning "You can define GST_USE_UNSTABLE_API to avoid this warning."
+#endif
+
 #include <gst/mpegts/gstmpegtsdescriptor.h>
 #include <gst/mpegts/gst-dvb-descriptor.h>
 #include <gst/mpegts/gstmpegtssection.h>
