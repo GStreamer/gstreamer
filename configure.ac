@@ -4,7 +4,7 @@ dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, git and prerelease does Werror too
 dnl
-AC_INIT(GStreamer, 1.0.9,
+AC_INIT(GStreamer, 1.0.10,
     http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
     gstreamer)
 AG_GST_INIT
@@ -58,7 +58,7 @@ dnl - interfaces added/removed/changed -> increment CURRENT, REVISION = 0
 dnl - interfaces added -> increment AGE
 dnl - interfaces removed -> AGE = 0
 dnl sets GST_LT_LDFLAGS
-AS_LIBTOOL(GST, 8, 0, 8)
+AS_LIBTOOL(GST, 9, 0, 9)
 
 dnl *** autotools stuff ****
 

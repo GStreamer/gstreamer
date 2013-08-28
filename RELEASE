@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 1.0.9
+Release notes for GStreamer 1.0.10
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -42,15 +42,24 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * basesink: when we asynchronously go from READY to PLAYING, also
-              call the state change function so that subclasses can update
-              their state for PLAYING, esp. audio sinks added to the pipeline
-              dynamically
-      * bindings: gobject-introspection annotation fixes
+      * parse: make gst-launch syntax parser work with Bison 3
+      * memory: only copy the requested part instead of the complete source memory for default system memory
+      * queue2: update buffering when changing capacity
+      * g-i: add bindings-friendly buffer.extract() function
+      * g-i: miscellaneous gobject-introspection annotation fixes (queries, pipeline)
 
 Bugs fixed in this release
      
-      * 702282 : basesink: makes element go to PLAYING without PAUSED_TO_PLAYING transition
+      * 705630 : directcontrolbinding: Wrong behaviour of control bindings with properties that span +-INT_MAX
+      * 705678 : sysmem allocator copies too much
+      * 705751 : gst_pipeline_use_clock: clock should allow-none
+      * 706462 : parse: fix build with Bison 3
+
+API changes in this release
+     
+ - API additions:
+    
+      * gst_buffer_extract_dup()
 
 ==== Download ====
 
@@ -87,7 +96,12 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Adrian Pardini
+      * Andoni Morales Alastruey
+      * Kerrick Staley
+      * Olivier Crête
       * Sebastian Dröge
+      * Thiago Santos
       * Tim-Philipp Müller
       * Wim Taymans
  

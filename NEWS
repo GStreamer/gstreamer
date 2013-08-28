@@ -1,4 +1,19 @@
-This is GStreamer 1.0.9
+This is GStreamer 1.0.10
+
+Changes since 1.0.9:
+
+      * parse: make gst-launch syntax parser work with Bison 3
+      * memory: only copy the requested part instead of the complete source memory for default system memory
+      * queue2: update buffering when changing capacity 
+      * g-i: add bindings-friendly buffer.extract() function
+      * g-i: miscellaneous gobject-introspection annotation fixes (queries, pipeline)
+
+Bugs fixed since 1.0.9:
+
+      * 705630 : directcontrolbinding: Wrong behaviour of control bindings with properties that span +-INT_MAX
+      * 705678 : sysmem allocator copies too much
+      * 705751 : gst_pipeline_use_clock: clock should allow-none
+      * 706462 : parse: fix build with Bison 3
 
 Changes since 1.0.8:
 

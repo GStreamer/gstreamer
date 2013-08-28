@@ -1,9 +1,119 @@
-=== release 1.0.9 ===
+=== release 1.0.10 ===
 
-2013-07-30  Tim-Philipp Müller <tim@centricular.net>
+2013-08-28  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.9
+	  releasing 1.0.10
+
+2013-08-21 12:21:43 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstsample.c:
+	  docs: flesh out gst_sample_get_buffer() a little
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706478
+
+2013-08-20 23:59:29 -0700  Kerrick Staley <kerrick@kerrickstaley.com>
+
+	* gst/parse/grammar.y:
+	  parse: make grammar.y work with Bison 3
+	  YYLEX_PARAM is no longer supported in Bison 3.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706462
+
+2013-08-20 17:06:49 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstutils.c:
+	  docs: flesh out gst_element_query_{duration,position} docs a bit
+
+2013-08-20 13:58:24 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstpluginloader.c:
+	  pluginloader: Don't call memcpy() with NULL src and 0 length
+
+2013-08-16 12:54:38 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: update buffering when changing capacity
+	  When the capacity of the queue changes, make sure we post an updated buffering
+	  message because we might suddenly have completed the buffering stage.
+
+2013-08-13 13:06:50 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstallocator.c:
+	  sysmem: Only copy the requested part of memory instead of the complete source memory
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705678
+	  Conflicts:
+	  gst/gstallocator.c
+
+2013-08-07 14:17:28 -0300  Adrian Pardini <publico@tangopardo.com.ar>
+
+	* libs/gst/controller/gstdirectcontrolbinding.c:
+	  controller: fixes int overflow with properties that span +-INT_MAX
+	  When the range for a property is defined as -INT_MAX-1 .. INT_MAX, like
+	  the xpos in a videomixer the following expression in the macro
+	  definitions of convert_g_value_to_##type (and the equivalent in
+	  convert_value_to_##type)
+	  v = pspec->minimum + (g##type) ROUNDING_OP ((pspec->maximum - pspec->minimum) * s);
+	  are converted to:
+	  v = -2147483648 + (g##type) ROUNDING_OP ((2147483647 - -2147483648) * s);
+	  (2147483647 - -2147483648) overflows to -1 and the net result is:
+	  v = -2147483648 + (g##type) ROUNDING_OP (-1 * s);
+	  so v only takes the values -2147483648 for s == 0 and 2147483647
+	  for s == 1.
+	  Rewriting the expression as minimum*(1-s) + maximum*s gives the correct
+	  result in this case.
+	  https://bugzilla.gnome.org//show_bug.cgi?id=705630
+
+2013-07-23 16:25:27 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* gst/gstquery.c:
+	  query: fix annotation for gst_query_parse_uri
+
+2013-08-12 09:25:34 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/gstquery.c:
+	  query: add some missing 'transfer none' gi annotations
+	  The current documentation is controverse, while it states that the
+	  returned value is valid only while the query is is valid, which presumes
+	  a 'transfer none' policy. But the tooltip for the 'out' annotation
+	  states the default is 'transfer-full'.
+	  Add the missing 'transfer none' annotations to fix this.
+	  Conflicts:
+	  gst/gstquery.c
+
+2013-07-26 18:36:04 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstbuffer.c:
+	  buffer: fix Since: marker for new gst_buffer_extract_dup()
+
+2013-03-26 19:22:18 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstbuffer.c:
+	* gst/gstbuffer.h:
+	* win32/common/libgstreamer.def:
+	  buffer: Add annotations and pygi friendly extraction function
+	  API: gst_buffer_extract_dup
+	  Conflicts:
+	  gst/gstbuffer.h
+
+2013-08-10 11:31:23 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstpipeline.c:
+	  pipeline: g-i: allow clock to be NULL in gst_pipeline_use_clock()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705751
+
+=== release 1.0.9 ===
+
+2013-07-30 11:03:58 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.0.9
 
 2013-07-29 11:05:09 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 
