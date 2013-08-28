@@ -1,4 +1,16 @@
-This is GStreamer Base Plugins 1.0.9
+This is GStreamer Base Plugins 1.0.10
+
+Changes since 1.0.9:
+
+      * rtpbasedepayload: mark discontinuities after packet loss properly
+      * audioconvert: if we have to lose precision, try to lose as little precision as possible
+      * gio: fix very inefficient data cache handling
+
+Bugs fixed since 1.0.9:
+
+      * 655727 : rtp: segfault in gst_rtcp_packet_get_rb()
+      * 705415 : gio: incredibly inefficient when playing mp3s from smb servers
+      * 706624 : audioconvert: Converts S32LE to S8 although S16LE would be possible too
 
 Changes since 1.0.8:
 

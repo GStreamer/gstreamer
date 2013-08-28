@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.0.9
+Release notes for GStreamer Base Plugins 1.0.10
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -60,17 +60,15 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * subparse: re-enable sami parser
-      * tagdemux: fix ACCURATE seeks in push mode
-      * multisocketsink, multifdsink: fix handling of partial writes and WOULD_BLOCK errors, and other fixes
-      * audiodecoder: fix input caps leak
+      * rtpbasedepayload: mark discontinuities after packet loss properly
+      * audioconvert: if we have to lose precision, try to lose as little precision as possible
+      * gio: fix very inefficient data cache handling
 
 Bugs fixed in this release
      
-      * 693056 : subparse: re-enable sami support
-      * 704291 : riff: PNG AVI file does not play
-      * 704301 : tagdemux: Breaks seeking forward fails if ACCURATE seek and push sources
-      * 704926 : audiodecoder: leaks input caps
+      * 655727 : [rtp] Segfault gst_rtcp_packet_get_rb
+      * 705415 : gio: incredibly inefficient when playing mp3s from smb servers
+      * 706624 : audioconvert: Converts S32LE to S8 although S16LE would be possible too
 
 ==== Download ====
 
@@ -107,11 +105,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
-      * Matej Knopp
-      * Olivier Crête
-      * Reynaldo H. Verdejo Pinochet
+      * Jonathan Matthew
       * Sebastian Dröge
       * Tim-Philipp Müller
-      * Young-Ho Cha
+      * Wim Taymans
  

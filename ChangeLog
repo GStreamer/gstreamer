@@ -1,9 +1,90 @@
-=== release 1.0.9 ===
+=== release 1.0.10 ===
 
-2013-07-30  Tim-Philipp Müller <tim@centricular.net>
+2013-08-28  Tim-Philipp Müller <tim@centricular.net>
 
 	* configure.ac:
-	  releasing 1.0.9
+	  releasing 1.0.10
+
+2013-08-26 11:47:40 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstrtcpbuffer.c:
+	  rtcpbuffer: do additional packet checks
+	  Check the packet size and avoid crashing on malformed packets.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=655727
+
+2013-08-14 11:43:50 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gio/gstgiobasesrc.c:
+	  gio: fix printf format compiler warning
+
+2013-08-04 01:01:25 +1000  Jonathan Matthew <jonathan@d14n.org>
+
+	* gst/gio/gstgiobasesrc.c:
+	  gio: make better use of the cached buffer
+	  When playing mp3 files from a smb server, we get 64k read requests
+	  that mostly overlap.  Without using the cache to partially satisfy
+	  these, we send these requests straight to the server, resulting in
+	  a lot more network traffic than necessary.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705415
+
+2013-08-06 15:42:55 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstrtcpbuffer.c:
+	  rtcpbuffer: calculate FB packet length correctly
+
+2013-08-23 18:51:59 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/audioconvert/gstaudioconvert.c:
+	  audioconvert: If we have to lose precision, try to lose as less precision as possible
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706624
+
+2013-08-21 12:34:24 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstrtpbasedepayload.c:
+	  rtpbasedepayload: mark DISCONT on buffer in all cases
+	  Always mark discont on the input buffer when we detect a seqnum
+	  discont and not only when we previously marked ourselves DISCONT.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=706422
+
+=== release 1.0.9 ===
+
+2013-07-30 11:18:38 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.0.9
 
 2013-07-28 13:52:28 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 

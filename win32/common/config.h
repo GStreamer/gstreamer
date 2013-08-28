@@ -84,7 +84,7 @@
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2013-07-30"
+#define GST_PACKAGE_RELEASE_DATETIME "2013-08-28"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -319,7 +319,7 @@
 #define PACKAGE_NAME "GStreamer Base Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Base Plug-ins 1.0.9"
+#define PACKAGE_STRING "GStreamer Base Plug-ins 1.0.10"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-base"
@@ -328,7 +328,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.0.9"
+#define PACKAGE_VERSION "1.0.10"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -362,7 +362,7 @@
 #undef USE_TREMOLO
 
 /* Version number of package */
-#define VERSION "1.0.9"
+#define VERSION "1.0.10"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */
