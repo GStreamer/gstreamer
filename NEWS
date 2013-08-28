@@ -1,4 +1,8 @@
-This is GStreamer Libav Plugins 1.0.9
+This is GStreamer Libav Plugins 1.0.10
+
+Changes since 1.0.9:
+
+      * Fix bz2 configure check for Windows
 
 Changes since 1.0.8:
 
