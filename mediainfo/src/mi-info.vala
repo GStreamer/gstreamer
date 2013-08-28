@@ -48,6 +48,7 @@ public class MediaInfo.Info : VPaned
   // layout
   private bool compact_mode = false;
   // ui components
+  private Label container_caps;
   private Label container_name;
   private Label mime_type;
   private Label duration;
@@ -126,12 +127,13 @@ public class MediaInfo.Info : VPaned
     wikilinks = new HashMap<string, string> ();
     // container/tag formats
     wikilinks["application/mxf"] = "Material_Exchange_Format";
-    wikilinks["application/ogg"] = "Ogg";
+    wikilinks["audio/ogg"] = "Ogg";
     wikilinks["application/vnd.rn-realmedia"] = "RealMedia";
     wikilinks["application/x-3gp"] = "3GP_and_3G2";
     wikilinks["application/x-annodex"] = "Ogg";
     wikilinks["application/x-id3"] = "ID3";
     wikilinks["application/x-pn-realaudio"] = "RealAudio";
+    wikilinks["video/ogg"] = "Ogg";
     wikilinks["video/x-flv"] = "Flash_Video";
     wikilinks["video/x-matroska"] = "Matroska";
     wikilinks["video/webm"] = "WebM";
@@ -140,8 +142,9 @@ public class MediaInfo.Info : VPaned
     wikilinks["video/x-quicktime"] = "QuickTime_File_Format";
     wikilinks["video/quicktime"] = "QuickTime_File_Format";
     // audio codecs
-    wikilinks["audio/mpeg"] = "MP3";
-    wikilinks["audio/x-m4a"] = "Advanced_Audio_Coding";
+    wikilinks["MPEG-1 Layer 3 (MP3)"] = "MP3";
+    wikilinks["MPEG-4 AAC"] = "Advanced_Audio_Coding";
+    wikilinks["audio/x-flac"] = "Flac";
     wikilinks["audio/x-vorbis"] = "Vorbis";
     wikilinks["audio/x-wav"] = "WAV";
     // video codecs
@@ -186,13 +189,20 @@ public class MediaInfo.Info : VPaned
     icon_image = new Image ();
     table.attach (icon_image, 2, 3, row, row+3, fill, 0, 0, 0);
 
+    container_caps = new Label (null);
+    container_caps.set_alignment (0.0f, 0.5f);
+    container_caps.set_selectable (true);
+    container_caps.set_use_markup (true);
+    table.attach (container_caps, 0, 2, row, row+1, fill_exp, 0, 3, 1);
+    row++;
+
     label = new Label ("Format:");
     label.set_alignment (1.0f, 0.5f);
     table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
     container_name = new Label (null);
     container_name.set_alignment (0.0f, 0.5f);
-    container_name.set_selectable(true);
-    container_name.set_use_markup(true);
+    container_name.set_selectable (true);
+    container_name.set_use_markup (true);
     table.attach (container_name, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
 
@@ -201,7 +211,7 @@ public class MediaInfo.Info : VPaned
     table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
     mime_type = new Label (null);
     mime_type.set_alignment (0.0f, 0.5f);
-    mime_type.set_selectable(true);
+    mime_type.set_selectable (true);
     table.attach (mime_type, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
 
@@ -210,7 +220,7 @@ public class MediaInfo.Info : VPaned
     table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
     duration = new Label (null);
     duration.set_alignment (0.0f, 0.5f);
-    duration.set_selectable(true);
+    duration.set_selectable (true);
     table.attach (duration, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
 
@@ -321,10 +331,27 @@ public class MediaInfo.Info : VPaned
   {
     if (e != null) {
       debug ("Failed to extract metadata from %s: %s: %s", info.get_uri(), e.domain.to_string (), e.message);
+      container_caps.set_text ("");
       container_name.set_text ("");
       duration.set_text ("");
     }
     process_new_uri (info);
+  }
+  
+  private void set_wikilink(Label label, Caps caps)
+  {
+    string str = get_codec_description (caps);
+    string wikilink = wikilinks[str];
+
+    if (wikilink == null) {
+      wikilink = wikilinks[caps.get_structure(0).get_name()];
+    }
+    if (wikilink != null) {
+      // FIXME: make prefix and link translatable
+      label.set_markup ("<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str));
+    } else {
+      label.set_text (str);
+    }
   }
 
   private void process_new_uri (DiscovererInfo info)
@@ -340,12 +367,13 @@ public class MediaInfo.Info : VPaned
     uint row;
     AttachOptions fill = AttachOptions.FILL;
     AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
-    string str, wikilink;
+    string str;
     Caps caps;
     unowned Structure s;
     unowned TagList t;
 
     if (info == null) {
+      container_caps.set_text ("");
       container_name.set_text ("");
       duration.set_text ("");
       return;
@@ -381,17 +409,11 @@ public class MediaInfo.Info : VPaned
     sinfo = info.get_stream_info ();
     if (sinfo != null) {
       caps = sinfo.get_caps ();
-      wikilink = wikilinks[caps.get_structure(0).get_name()];
-      str = get_codec_description (caps);
-      if (wikilink != null) {
-        // FIXME: make prefix and link translatable
-        container_name.set_markup ("<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str));
-      } else {
-        container_name.set_text (str);
-      }
+      container_caps.set_text (caps.to_string ());
+      set_wikilink (container_name, caps); 
     }
 
-		  // reset notebooks
+	  // reset notebooks
     if (compact_mode) {
       while (all_streams.get_n_pages() > 0) {
         all_streams.remove_page (-1);
@@ -417,26 +439,21 @@ public class MediaInfo.Info : VPaned
       row = 0;
       table = new Table (2, 8, false);
 
-      label = new Label(caps.to_string ());
+      label = new Label (caps.to_string ());
       label.set_ellipsize (Pango.EllipsizeMode.END);
       label.set_alignment (0.0f, 0.5f);
-      label.set_selectable(true);
+      label.set_selectable (true);
       table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
       row++;
 
       label = new Label ("Codec:");
       label.set_alignment (1.0f, 0.5f);
       table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-      wikilink = wikilinks[caps.get_structure(0).get_name()];
-      str = get_codec_description (caps);
-      if (wikilink != null) {
-        // FIXME: make prefix and link translatable
-        str="<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str);
-      }
-      label = new Label (str);
+      label = new Label (null);
       label.set_alignment (0.0f, 0.5f);
-      label.set_selectable(true);
-      label.set_use_markup(true);
+      label.set_selectable (true);
+      label.set_use_markup (true);
+      set_wikilink (label, caps); 
       table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
       row++;
 
@@ -446,7 +463,7 @@ public class MediaInfo.Info : VPaned
       str = "%u / %u bits/second".printf (((DiscovererVideoInfo)sinfo).get_bitrate(),((DiscovererVideoInfo)sinfo).get_max_bitrate());
       label = new Label (str);
       label.set_alignment (0.0f, 0.5f);
-      label.set_selectable(true);
+      label.set_selectable (true);
       table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
       row++;
 
@@ -463,7 +480,7 @@ public class MediaInfo.Info : VPaned
       }
       label = new Label (str);
       label.set_alignment (0.0f, 0.5f);
-      label.set_selectable(true);
+      label.set_selectable (true);
       table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
       row++;
 
@@ -475,7 +492,7 @@ public class MediaInfo.Info : VPaned
       str = "%.3lf frames/second".printf (fps_num/fps_denom);
       label = new Label (str);
       label.set_alignment (0.0f, 0.5f);
-      label.set_selectable(true);
+      label.set_selectable (true);
       table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
       row++;
 
@@ -485,7 +502,7 @@ public class MediaInfo.Info : VPaned
       str = "%u : %u".printf (((DiscovererVideoInfo)sinfo).get_par_num(),((DiscovererVideoInfo)sinfo).get_par_denom());
       label = new Label (str);
       label.set_alignment (0.0f, 0.5f);
-      label.set_selectable(true);
+      label.set_selectable (true);
       table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
       row++;
 
@@ -495,7 +512,7 @@ public class MediaInfo.Info : VPaned
       str = "%u bits/pixel".printf (((DiscovererVideoInfo)sinfo).get_depth());
       label = new Label (str);
       label.set_alignment (0.0f, 0.5f);
-      label.set_selectable(true);
+      label.set_selectable (true);
       table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
       row++;
 
@@ -503,10 +520,10 @@ public class MediaInfo.Info : VPaned
         label = new Label ("Details:");
         label.set_alignment (1.0f, 0.5f);
         table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-        label = new Label(s.to_string ());
+        label = new Label (s.to_string ());
         label.set_ellipsize (Pango.EllipsizeMode.END);
         label.set_alignment (0.0f, 0.5f);
-        label.set_selectable(true);
+        label.set_selectable (true);
         table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
         row++;
       }
@@ -517,11 +534,11 @@ public class MediaInfo.Info : VPaned
         label.set_alignment (1.0f, 0.0f);
         table.attach (label, 0, 1, row, row+1, fill, fill, 0, 0);
         str = build_taglist_info (t);
-        label = new Label(str);
+        label = new Label (str);
         label.set_ellipsize (Pango.EllipsizeMode.END);
         label.set_alignment (0.0f, 0.5f);
-        label.set_selectable(true);
-        label.set_use_markup(true);
+        label.set_selectable (true);
+        label.set_use_markup (true);
         table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
         row++;
       }
@@ -540,26 +557,21 @@ public class MediaInfo.Info : VPaned
       row = 0;
       table = new Table (2, 7, false);
 
-      label = new Label(caps.to_string ());
+      label = new Label (caps.to_string ());
       label.set_ellipsize (Pango.EllipsizeMode.END);
       label.set_alignment (0.0f, 0.5f);
-      label.set_selectable(true);
+      label.set_selectable (true);
       table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
       row++;
 
       label = new Label ("Codec:");
       label.set_alignment (1.0f, 0.5f);
       table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-      wikilink = wikilinks[caps.get_structure(0).get_name()];
-      str = get_codec_description (caps);
-      if (wikilink != null) {
-        // FIXME: make prefix and link translatable
-        str="<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str);
-      }
-      label = new Label (str);
+      label = new Label (null);
       label.set_alignment (0.0f, 0.5f);
-      label.set_selectable(true);
-      label.set_use_markup(true);
+      label.set_selectable (true);
+      label.set_use_markup (true);
+      set_wikilink (label, caps); 
       table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
       row++;
 
@@ -569,7 +581,7 @@ public class MediaInfo.Info : VPaned
       str = "%u / %u bits/second".printf (((DiscovererAudioInfo)sinfo).get_bitrate(),((DiscovererAudioInfo)sinfo).get_max_bitrate());
       label = new Label (str);
       label.set_alignment (0.0f, 0.5f);
-      label.set_selectable(true);
+      label.set_selectable (true);
       table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
       row++;
 
@@ -579,7 +591,7 @@ public class MediaInfo.Info : VPaned
       str = "%u samples/second".printf (((DiscovererAudioInfo)sinfo).get_sample_rate());
       label = new Label (str);
       label.set_alignment (0.0f, 0.5f);
-      label.set_selectable(true);
+      label.set_selectable (true);
       table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
       row++;
 
@@ -590,7 +602,7 @@ public class MediaInfo.Info : VPaned
       str = "%u".printf (((DiscovererAudioInfo)sinfo).get_channels());
       label = new Label (str);
       label.set_alignment (0.0f, 0.5f);
-      label.set_selectable(true);
+      label.set_selectable (true);
       table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
       row++;
 
@@ -600,7 +612,7 @@ public class MediaInfo.Info : VPaned
       str = "%u bits/sample".printf (((DiscovererAudioInfo)sinfo).get_depth());
       label = new Label (str);
       label.set_alignment (0.0f, 0.5f);
-      label.set_selectable(true);
+      label.set_selectable (true);
       table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
       row++;
 
@@ -608,10 +620,10 @@ public class MediaInfo.Info : VPaned
         label = new Label ("Details:");
         label.set_alignment (1.0f, 0.5f);
         table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-        label = new Label(s.to_string ());
+        label = new Label (s.to_string ());
         label.set_ellipsize (Pango.EllipsizeMode.END);
         label.set_alignment (0.0f, 0.5f);
-        label.set_selectable(true);
+        label.set_selectable (true);
         table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
         row++;
       }
@@ -622,11 +634,11 @@ public class MediaInfo.Info : VPaned
         label.set_alignment (1.0f, 0.0f);
         table.attach (label, 0, 1, row, row+1, fill, fill, 0, 0);
         str = build_taglist_info (t);
-        label = new Label(str);
+        label = new Label (str);
         label.set_ellipsize (Pango.EllipsizeMode.END);
         label.set_alignment (0.0f, 0.5f);
-        label.set_selectable(true);
-        label.set_use_markup(true);
+        label.set_selectable (true);
+        label.set_use_markup (true);
         table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
         row++;
       }
