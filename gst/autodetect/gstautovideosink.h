@@ -45,6 +45,7 @@ typedef struct _GstAutoVideoSink {
   GstElement *kid;
   GstCaps *filter_caps;
   GstClockTimeDiff ts_offset;
+  gboolean sync;
 } GstAutoVideoSink;
 
 typedef struct _GstAutoVideoSinkClass {
