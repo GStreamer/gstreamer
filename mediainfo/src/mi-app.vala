@@ -27,7 +27,7 @@ public class MediaInfo.App : Window
 
   public string directory { get; set; }
 
-  public App(string? directory)
+  public App (string? directory)
   {
     GLib.Object (type :  WindowType.TOPLEVEL);
     this.directory = directory;
@@ -42,13 +42,13 @@ public class MediaInfo.App : Window
     }
     destroy.connect (Gtk.main_quit);
 
-    VBox vbox = new VBox( false, 0);
+    Box vbox = new Box (Gtk.Orientation.VERTICAL, 0);
     add (vbox);
 
     // add a menubar
-    vbox.pack_start (create_menu(), false, false, 0);
+    vbox.pack_start (create_menu (), false, false, 0);
 
-    HPaned paned = new HPaned ();
+    Paned paned = new Paned (Gtk.Orientation.HORIZONTAL);
     paned.set_border_width (0);
     vbox.pack_start (paned, true, true, 3);
 
