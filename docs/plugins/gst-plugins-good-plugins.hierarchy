@@ -253,6 +253,7 @@ GObject
         GstRTPDec
         GstRTPMux
           GstRTPDTMFMux
+        GstRTPRtxQueue
         GstRndBufferSize
         GstRtpJitterBuffer
         GstRtpPtDemux

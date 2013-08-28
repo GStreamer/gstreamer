@@ -969,6 +969,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTSPSrc::sdes</NAME>
+<TYPE>GstStructure*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>SDES</NICK>
+<BLURB>The SDES items of this session.</BLURB>
+<DEFAULT></DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDec::skip</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
@@ -20309,6 +20319,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstPulseSink::current-device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current Device</NICK>
+<BLURB>The current PulseAudio sink device.</BLURB>
+<DEFAULT>NULL</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstPulseSrc::device</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -20396,6 +20416,16 @@
 <NICK>Client Name</NICK>
 <BLURB>The PulseAudio client_name_to_use.</BLURB>
 <DEFAULT>"lt-gst-plugins-good-plugins-scan"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstPulseSrc::current-device</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Current Device</NICK>
+<BLURB>The current PulseAudio source device.</BLURB>
+<DEFAULT>NULL</DEFAULT>
 </ARG>
 
 <ARG>
@@ -21189,6 +21219,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpBin::do-retransmission</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do retransmission</NICK>
+<BLURB>Send an event downstream to request packet retransmission.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRtpJitterBuffer::do-lost</NAME>
 <TYPE>gboolean</TYPE>
 <RANGE></RANGE>
@@ -21246,6 +21286,56 @@
 <NICK>percent</NICK>
 <BLURB>The buffer filled percent.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::do-retransmission</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Do Retransmission</NICK>
+<BLURB>Send retransmission events upstream when a packet is late.</BLURB>
+<DEFAULT>FALSE</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::rtx-delay</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>RTX Delay</NICK>
+<BLURB>Extra time in ms to wait before sending retransmission event (-1 automatic).</BLURB>
+<DEFAULT>20</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::rtx-delay-reorder</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>RTX Delay Reorder</NICK>
+<BLURB>Sending retransmission event when this much reordering (-1 automatic).</BLURB>
+<DEFAULT>3</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::rtx-retry-period</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>RTX Retry Period</NICK>
+<BLURB>Try to get a retransmission for this many ms (-1 automatic).</BLURB>
+<DEFAULT>160</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpJitterBuffer::rtx-retry-timeout</NAME>
+<TYPE>gint</TYPE>
+<RANGE>>= G_MAXULONG</RANGE>
+<FLAGS>r</FLAGS>
+<NICK>RTX Retry Timeout</NICK>
+<BLURB>Retry sending a transmission event after this timeout in ms (-1 automatic).</BLURB>
+<DEFAULT>40</DEFAULT>
 </ARG>
 
 <ARG>
@@ -23835,6 +23925,36 @@
 <FLAGS>rw</FLAGS>
 <NICK>Config Send Interval</NICK>
 <BLURB>Send Config Insertion Interval in seconds (configuration headers will be multiplexed in the data stream when detected.) (0 = disabled).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPRtxQueue::max-size-packets</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Size Packets</NICK>
+<BLURB>Amount of packets to queue (0 = unlimited).</BLURB>
+<DEFAULT>100</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRTPRtxQueue::max-size-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Size Times</NICK>
+<BLURB>Amount of ms to queue (0 = unlimited).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpGSTPay::config-interval</NAME>
+<TYPE>guint</TYPE>
+<RANGE><= 3600</RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Caps/Tags Send Interval</NICK>
+<BLURB>Interval for sending caps and TAG events in seconds (0 = disabled).</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 

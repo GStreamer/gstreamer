@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plugins 1.1.3
+Release notes for GStreamer Good Plugins 1.1.4
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -55,33 +55,22 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Features of this release
-    
-
 Bugs fixed in this release
      
-      * 672227 : qtdemux: need mapping for video/x-gst-fourcc-xdvc
-      * 674626 : [rtpsession] High CPU usage in rtcp thread when setting RR bandwidth = 0
-      * 696228 : mp4mux: streamable=true seeks on sink at EOS, causing errors with some sinks
-      * 699791 : qtdemux: certain videos from Vivotek camera do not play - " This file is corrupt and cannot be played " 
+      * 705371 : souphttpsrc: Does network operations from the state change thread
+      * 590768 : GstPulseSrc should allow swapping the device used by the stream
+      * 637754 : multipartdemux: time stamp output buffer based on first input buffer not last
+      * 694445 : pulsesink: add support for AAC pass-through
       * 700264 : qtdemux: ignores first editlist
-      * 700933 : avidemux: Wrong duration in push mode for some clips.
-      * 703560 : [PATCH] rtpbin: new event for informing downstream about synchronization
-      * 703901 : audioecho: Output broken if delay value got changed when playing or paused
-      * 704007 : qtdemux: skips disabled tracks
-      * 704053 : souphttpsrc: Don't treat errors on HEAD request as fatal
-      * 704193 : avidemux: no PTS nor DTS on decoded frame
-      * 704241 : souphttpsrc: Ignore all HEAD errors
-      * 704255 : qtdemux: invalid base time on newsegment in push mode after a seek
-      * 704272 : qtdemux: invalid seek offset used because of chapters
-      * 704292 : qtdemux: does not know WRAW fourcc
-      * 704294 : qtdemux: videos in Windows WRLE format don't work
-      * 704357 : regression: videocrop unit test fail after adding GRAY16_BE format
-      * 704547 : vpx: fix compilation when decoder or encoder package is not build
-      * 704548 : qtdemux: set proper caps for mpeg-1 audio
-      * 704921 : matroskademux: memory leak in check_subtitle_buffer
-      * 704951 : avidemux: memory leak
-      * 704996 : qtdemux: support for H264 fourcc
+      * 702988 : gdkpixbufoverlay: crashes if any property changes during  playback when location property is not set
+      * 705108 : rtpgstpay: Add a config-interval property
+      * 705442 : matroskademux: prints warnings on seek
+      * 705449 : avidemux: sends stream_start event without group_id
+      * 705553 : rtph264pay: Entries of SPS and PPS duplicated
+      * 705760 : rtspsrc produces GLib error
+      * 705959 : souphttpsrc deprecated symbols
+      * 706076 : qtdemux: failed assertion for fragmented mp4 (DASH) streams
+      * 706642 : avimux: unmap the correct buffer
 
 ==== Download ====
 
@@ -118,20 +107,21 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alessandro Decina
+      * Akihiro Tsukada
       * Andoni Morales Alastruey
-      * Arnaud Vrac
-      * Carlos Rafael Giani
-      * Douglas Bagnall
+      * Chris Bass
+      * David Schleef
       * Edward Hervey
-      * Kyosuke Nekomura
+      * Kishore Arepalli
+      * Lubosz Sarnecki
       * Matej Knopp
       * Mathieu Duponchelle
-      * Nicolas Dufresne
+      * Michael Olbrich
       * Olivier Crête
       * Sebastian Dröge
-      * Thiago Santos
+      * Sjoerd Simons
+      * Thibault Saunier
       * Tim-Philipp Müller
-      * Vincent Penquerc'h
       * Wim Taymans
+      * Youness Alaoui
  
