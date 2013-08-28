@@ -52,7 +52,14 @@ static GstStaticPadTemplate gst_avdtp_src_template =
         "payload = (int) "
         GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
         "clock-rate = (int) { 16000, 32000, "
-        "44100, 48000 }, " "encoding-name = (string) \"SBC\"; "));
+        "44100, 48000 }, " "encoding-name = (string) \"SBC\"; "
+        "application/x-rtp, "
+        "media = (string) \"audio\","
+        "payload = (int) "
+        GST_RTP_PAYLOAD_DYNAMIC_STRING ", "
+        "clock-rate = (int) { 8000, 11025, 12000, 16000, "
+        "22050, 2400, 32000, 44100, 48000, 64000, 88200, 96000 }, "
+        "encoding-name = (string) \"MP4A-LATM\"; "));
 
 static void gst_avdtp_src_finalize (GObject * object);
 static void gst_avdtp_src_get_property (GObject * object, guint prop_id,
@@ -184,7 +191,38 @@ gst_avdtp_src_getcaps (GstBaseSrc * bsrc, GstCaps * filter)
           "payload", GST_TYPE_INT_RANGE, 96, 127,
           "encoding-name", G_TYPE_STRING, "SBC", NULL);
     } else if (g_str_equal (format, "audio/mpeg")) {
-      GST_ERROR_OBJECT (avdtpsrc, "Only SBC is supported at " "the moment");
+      caps = gst_caps_new_simple ("application/x-rtp",
+          "media", G_TYPE_STRING, "audio",
+          "payload", GST_TYPE_INT_RANGE, 96, 127,
+          "encoding-name", G_TYPE_STRING, "MP4A-LATM", NULL);
+
+      value = gst_structure_get_value (structure, "mpegversion");
+      if (!value || !G_VALUE_HOLDS_INT (value)) {
+        GST_ERROR_OBJECT (avdtpsrc, "Failed to get mpegversion");
+        goto fail;
+      }
+      gst_caps_set_simple (caps, "mpegversion", G_TYPE_INT,
+          g_value_get_int (value), NULL);
+
+      value = gst_structure_get_value (structure, "channels");
+      if (!value || !G_VALUE_HOLDS_INT (value)) {
+        GST_ERROR_OBJECT (avdtpsrc, "Failed to get channels");
+        goto fail;
+      }
+      gst_caps_set_simple (caps, "channels", G_TYPE_INT,
+          g_value_get_int (value), NULL);
+
+      value = gst_structure_get_value (structure, "base-profile");
+      if (!value || !G_VALUE_HOLDS_STRING (value)) {
+        GST_ERROR_OBJECT (avdtpsrc, "Failed to get base-profile");
+        goto fail;
+      }
+      gst_caps_set_simple (caps, "base-profile", G_TYPE_STRING,
+          g_value_get_string (value), NULL);
+
+    } else {
+      GST_ERROR_OBJECT (avdtpsrc,
+          "Only SBC and MPEG-2/4 are supported at the moment");
     }
 
     value = gst_structure_get_value (structure, "rate");

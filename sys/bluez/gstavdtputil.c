@@ -604,6 +604,156 @@ gst_avdtp_util_parse_mpeg_raw (void *config)
   return structure;
 }
 
+static GstStructure *
+gst_avdtp_util_parse_aac_raw (void *config)
+{
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+  uint8_t *raw = (uint8_t *) config;
+  a2dp_aac_t aac_local = { 0 };
+  a2dp_aac_t *aac = &aac_local;
+  aac->object_type = raw[0];
+  aac->frequency = (raw[1] << 4) | ((raw[2] & 0xFF) >> 4);
+  aac->channels = (raw[2] >> 2) & 0x3;
+  aac->rfa = raw[2] & 0x3;
+  aac->vbr = (raw[3] >> 7) & 0x1;
+  aac->bitrate = (raw[4] << 16) | (raw[3] << 8) | raw[4];
+  aac->bitrate &= ~0x800000;
+#elif G_BYTE_ORDER == G_BIG_ENDIAN
+  *aac = (a2dp_aac_t *) config;
+#else
+#error "Unknown byte order"
+#endif
+
+  GST_LOG ("aac objtype=%x freq=%x rfa=%x channels=%x vbr=%x bitrate=%x",
+      aac->object_type, aac->frequency, aac->rfa, aac->channels, aac->vbr,
+      aac->bitrate);
+
+  GstStructure *structure;
+  GValue value = G_VALUE_INIT;
+  GValue value_str = G_VALUE_INIT;
+  GValue listVersion = G_VALUE_INIT;
+  GValue listProfile = G_VALUE_INIT;
+  GValue listRate = G_VALUE_INIT;
+  GValue listChannels = G_VALUE_INIT;
+
+  structure = gst_structure_new_empty ("audio/mpeg");
+  g_value_init (&value, G_TYPE_INT);
+  g_value_init (&value_str, G_TYPE_STRING);
+
+  /* mpegversion */
+  g_value_init (&listVersion, GST_TYPE_LIST);
+  if (aac->object_type & AAC_OBJECT_TYPE_MPEG2_AAC_LC) {
+    g_value_set_int (&value, 2);
+    gst_value_list_prepend_value (&listVersion, &value);
+  }
+  if ((aac->object_type & AAC_OBJECT_TYPE_MPEG4_AAC_LC)
+      || (aac->object_type & AAC_OBJECT_TYPE_MPEG4_AAC_LTP)
+      || (aac->object_type & AAC_OBJECT_TYPE_MPEG4_AAC_SCALABLE)) {
+    g_value_set_int (&value, 4);
+    gst_value_list_prepend_value (&listVersion, &value);
+  }
+  if (gst_value_list_get_size (&listVersion) == 1)
+    gst_structure_set_value (structure, "mpegversion", &value);
+  else
+    gst_structure_set_value (structure, "mpegversion", &listVersion);
+
+
+  /* base-profile */
+  g_value_init (&listProfile, GST_TYPE_LIST);
+  if (aac->object_type & AAC_OBJECT_TYPE_MPEG2_AAC_LC
+      || aac->object_type & AAC_OBJECT_TYPE_MPEG4_AAC_LC) {
+    g_value_set_string (&value_str, "lc");
+    gst_value_list_prepend_value (&listProfile, &value_str);
+  }
+  if (aac->object_type & AAC_OBJECT_TYPE_MPEG4_AAC_LTP) {
+    g_value_set_string (&value_str, "ltp");
+    gst_value_list_prepend_value (&listProfile, &value_str);
+  }
+  if (aac->object_type & AAC_OBJECT_TYPE_MPEG4_AAC_SCALABLE) {
+    g_value_set_string (&value_str, "ssr");
+    gst_value_list_prepend_value (&listProfile, &value_str);
+  }
+  if (gst_value_list_get_size (&listProfile) == 1)
+    gst_structure_set_value (structure, "base-profile", &value_str);
+  else
+    gst_structure_set_value (structure, "base-profile", &listProfile);
+
+
+  /* rate */
+  g_value_init (&listRate, GST_TYPE_LIST);
+  if (aac->frequency & AAC_SAMPLING_FREQ_8000) {
+    g_value_set_int (&value, 8000);
+    gst_value_list_prepend_value (&listRate, &value);
+  }
+  if (aac->frequency & AAC_SAMPLING_FREQ_11025) {
+    g_value_set_int (&value, 11025);
+    gst_value_list_prepend_value (&listRate, &value);
+  }
+  if (aac->frequency & AAC_SAMPLING_FREQ_12000) {
+    g_value_set_int (&value, 12000);
+    gst_value_list_prepend_value (&listRate, &value);
+  }
+  if (aac->frequency & AAC_SAMPLING_FREQ_16000) {
+    g_value_set_int (&value, 16000);
+    gst_value_list_prepend_value (&listRate, &value);
+  }
+  if (aac->frequency & AAC_SAMPLING_FREQ_22050) {
+    g_value_set_int (&value, 22050);
+    gst_value_list_prepend_value (&listRate, &value);
+  }
+  if (aac->frequency & AAC_SAMPLING_FREQ_24000) {
+    g_value_set_int (&value, 24000);
+    gst_value_list_prepend_value (&listRate, &value);
+  }
+  if (aac->frequency & AAC_SAMPLING_FREQ_32000) {
+    g_value_set_int (&value, 32000);
+    gst_value_list_prepend_value (&listRate, &value);
+  }
+  if (aac->frequency & AAC_SAMPLING_FREQ_44100) {
+    g_value_set_int (&value, 44100);
+    gst_value_list_prepend_value (&listRate, &value);
+  }
+  if (aac->frequency & AAC_SAMPLING_FREQ_48000) {
+    g_value_set_int (&value, 48000);
+    gst_value_list_prepend_value (&listRate, &value);
+  }
+  if (aac->frequency & AAC_SAMPLING_FREQ_64000) {
+    g_value_set_int (&value, 64000);
+    gst_value_list_prepend_value (&listRate, &value);
+  }
+  if (aac->frequency & AAC_SAMPLING_FREQ_88200) {
+    g_value_set_int (&value, 88200);
+    gst_value_list_prepend_value (&listRate, &value);
+  }
+  if (aac->frequency & AAC_SAMPLING_FREQ_96000) {
+    g_value_set_int (&value, 96000);
+    gst_value_list_prepend_value (&listRate, &value);
+  }
+  if (gst_value_list_get_size (&listRate) == 1)
+    gst_structure_set_value (structure, "rate", &value);
+  else
+    gst_structure_set_value (structure, "rate", &listRate);
+
+  /* channels */
+  g_value_init (&listChannels, GST_TYPE_LIST);
+  if (aac->channels & AAC_CHANNELS_1) {
+    g_value_set_int (&value, 1);
+    gst_value_list_prepend_value (&listChannels, &value);
+  }
+  if (aac->channels & AAC_CHANNELS_2) {
+    g_value_set_int (&value, 2);
+    gst_value_list_prepend_value (&listChannels, &value);
+  }
+  if (gst_value_list_get_size (&listChannels) == 1)
+    gst_structure_set_value (structure, "channels", &value);
+  else
+    gst_structure_set_value (structure, "channels", &listChannels);
+
+  GST_LOG ("AAC caps: %" GST_PTR_FORMAT, structure);
+
+  return structure;
+}
+
 GstCaps *
 gst_avdtp_connection_get_caps (GstAvdtpConnection * conn)
 {
@@ -619,6 +769,9 @@ gst_avdtp_connection_get_caps (GstAvdtpConnection * conn)
       break;
     case A2DP_CODEC_MPEG12:
       structure = gst_avdtp_util_parse_mpeg_raw (conn->data.config);
+      break;
+    case A2DP_CODEC_MPEG24:
+      structure = gst_avdtp_util_parse_aac_raw (conn->data.config);
       break;
     default:
       GST_ERROR ("Unsupported configuration");
