@@ -61,7 +61,6 @@ struct _GstGLImageSink
     GstVideoInfo info;
 
     GstGLDisplay *display;
-    GstBuffer *stored_buffer;
     GstGLUpload *upload;
     GLuint     tex_id;
 
@@ -75,10 +74,11 @@ struct _GstGLImageSink
 
     GstBufferPool *pool;
 
-  /* action redisplay */
-  GLuint redisplay_texture;
-  GLuint redisplay_texture_width;
-  GLuint redisplay_texture_height;
+    /* avoid replacing the stored_buffer while drawing */
+    GMutex drawing_lock;
+    GstBuffer *stored_buffer;
+    GLuint redisplay_texture;
+
 #if GST_GL_HAVE_GLES2
   GstGLShader *redisplay_shader;
   GLint redisplay_attr_position_loc;
