@@ -1,9 +1,178 @@
-=== release 1.1.3 ===
+=== release 1.1.4 ===
 
-2013-07-29  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-08-28  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.3
+	  releasing 1.1.4
+
+2013-08-28 12:32:37 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/pt_BR.po:
+	  po: update translations
+
+2013-08-27 14:13:06 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: log when we output a lower profile than requested
+
+2013-08-21 18:32:17 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: Consider subset relations of profiles when setting srcpad caps
+	  constrained-baseline is a subset of baseline, is a subset of main,
+	  is a subset of high profile.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705425
+
+2013-08-21 12:31:23 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: propagate flow return back to base class and upstream
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705425
+
+2013-08-17 23:13:17 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  configure: fix x264 version checking
+	  x264 releases carry pkg-config versions such as 0.120.x
+	  (literallly with an 'x'). Checking for x264 >= 0.120.0 will
+	  then fail, so we need to either check for > 0.119.0 or
+	  for >= 0.120 to make this work right.
+
+2013-08-17 23:09:15 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: minor clean-up
+	  We requires x264 build >= 120 now.
+
+2013-08-15 15:30:31 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Fix mpeg2_reset() calls
+
+2013-08-15 15:27:48 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	* ext/x264/gstx264enc.c:
+	  ext: Use new flush vfunc of video codec base classes and remove reset implementations
+
+2013-08-01 01:34:05 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: fix build on C89 compilers
+
+2013-07-30 17:28:17 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/asfdemux/asfpacket.c:
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: fix seeking in push mode
+
+2013-08-02 14:14:48 +0200  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* configure.ac:
+	  build: add subdir-objects to AM_INIT_AUTOMAKE
+	  Fixes warnings in automake 1.14
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705350
+
+2013-08-02 08:25:49 +0200  Edward Hervey <edward@collabora.com>
+
+	* ext/mpeg2dec/gstmpeg2dec.c:
+	  mpeg2dec: Do a hard reset of flush_stop
+	  Which is notified by hard == 0 with latest refactoring.
+
+2013-07-29 21:09:37 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* po/LINGUAS:
+	* po/da.po:
+	* po/de.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/ja.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/ru.po:
+	* po/sl.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	  po: update translations
+
+2013-07-29 14:48:21 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.3 ===
+
+2013-07-29 13:46:08 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.1.3
+
+2013-07-29 13:46:05 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-07-29 12:13:17 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 

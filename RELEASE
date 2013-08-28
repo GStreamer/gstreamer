@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Ugly Plugins 1.1.3
+Release notes for GStreamer Ugly Plugins 1.1.4
 
 The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
@@ -56,14 +56,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Features of this release
-    
-
 Bugs fixed in this release
      
-      * 656007 : x264enc: stops temporarily on flushing seek to a time before current time
-      * 680185 : rmdemux: duration in push mode
       * 705026 : asfdemux: add support dvr-ms files
+      * 705153 : regression: asfdemux: cannot seek in push mode any longer
 
 ==== Download ====
 
@@ -101,7 +97,8 @@ subscribe to the gstreamer-devel list.
 Contributors to this release
     
       * Edward Hervey
+      * Lubosz Sarnecki
       * Matej Knopp
       * Sebastian Dröge
-      * Thiago Santos
+      * Tim-Philipp Müller
  
