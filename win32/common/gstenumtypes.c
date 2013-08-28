@@ -1888,6 +1888,8 @@ gst_parse_flags_get_type (void)
     {C_FLAGS (GST_PARSE_FLAG_NONE), "GST_PARSE_FLAG_NONE", "none"},
     {C_FLAGS (GST_PARSE_FLAG_FATAL_ERRORS), "GST_PARSE_FLAG_FATAL_ERRORS",
         "fatal-errors"},
+    {C_FLAGS (GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS),
+        "GST_PARSE_FLAG_NO_SINGLE_ELEMENT_BINS", "no-single-element-bins"},
     {0, NULL, NULL}
   };
 

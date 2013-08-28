@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 1.1.3
+Release notes for GStreamer 1.1.4
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -40,16 +40,23 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Features of this release
-    
-
 Bugs fixed in this release
      
-      * 674320 : Various improvements for logging on W32
-      * 676242 : [metabug] Verify that elements handle seqnum for seeks correctly
-      * 704333 : gst-uninstalled: fix gst-plugins-gl in unistalled setup
-      * 704408 : inputselector: stream start event forwarding prevents track change
-      * 704691 : input-selector: active pad not notified
+      * 701996 : context: Still inconvenient to use and racy
+      * 705835 : queue: Keeps sticky events around after pad deactivation
+      * 704927 : queue2: forward the upstream scheduling flags
+      * 704934 : Clarify the gst buffer query api documentation slightly
+      * 705156 : Small fixes to get make check to finish
+      * 705332 : queue2: global state is affected by buffery query handling
+      * 705350 : automake 1.14 warns very verbosely about subdir-objects
+      * 705621 : baseparse: Add a property to force processing
+      * 705694 : dataqueue: add gst_data_queue_push_force
+      * 705999 : taglist: handle publisher, interpreted-by and key tags
+      * 706160 : query: crash when parsing uri redirection
+      * 706162 : gst_buffer_memcmp() ignores the buffer size if it goes past the gstbuffer
+      * 706360 : queue2: test_simple_shutdown_while_running fails/racy
+      * 706454 : Sample: add gst_sample_copy function
+      * 706600 : basetransform: Don't push out identical caps
 
 ==== Download ====
 
@@ -86,14 +93,23 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Adrian Pardini
+      * Alessandro Decina
+      * Andoni Morales Alastruey
       * Arnaud Vrac
-      * David Schleef
-      * Nicola Murino
+      * Brendan Long
+      * Edward Hervey
+      * Jonas Holmberg
+      * Kerrick Staley
+      * Kjartan Maraas
+      * Lubosz Sarnecki
+      * Matthieu Bouron
+      * Nicolas Dufresne
       * Olivier Crête
       * Sebastian Dröge
+      * Sjoerd Simons
       * Thiago Santos
-      * Thibault Saunier
       * Tim-Philipp Müller
       * Wim Taymans
-      * Руслан Ижбулатов
+      * Wonchul Lee
  

@@ -1,9 +1,538 @@
-=== release 1.1.3 ===
+=== release 1.1.4 ===
 
-2013-07-29  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-08-28  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.3
+	  releasing 1.1.4
+
+2013-08-28 12:30:00 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  po: update translations
+
+2013-08-27 09:31:22 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* plugins/elements/gstfilesink.c:
+	  filesink: please gcc (avoid a warn_unused_result warning)
+
+2013-08-27 07:51:35 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* plugins/elements/gstfilesink.c:
+	* tests/check/elements/filesink.c:
+	  filesink: flush (discard data) on FLUSH_STOP
+	  Reset the write position to 0 and truncate the file on FLUSH_STOP.
+
+2013-08-27 07:05:11 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* tests/check/elements/filesink.c:
+	  tests: filesink: small refactoring
+
+2013-08-26 13:19:10 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tools/gst-launch.c:
+	  tools: gst-launch: don't print properties being reset when shutting down
+	  It's just noise.
+
+2013-08-22 19:01:32 +0200  Edward Hervey <edward@collabora.com>
+
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: Don't push out identical caps
+	  This avoids triggering plenty of extra code/methods/overhead downstream when
+	  we can just quickly check whenever we want to set caps whether they are
+	  identical or not
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706600
+
+2013-08-21 12:21:43 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstsample.c:
+	  docs: flesh out gst_sample_get_buffer() a little
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706478
+
+2013-08-20 23:59:29 -0700  Kerrick Staley <kerrick@kerrickstaley.com>
+
+	* gst/parse/grammar.y:
+	  parse: make grammar.y work with Bison 3
+	  YYLEX_PARAM is no longer supported in Bison 3.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706462
+
+2013-08-20 17:15:41 +0900  Wonchul Lee <chul0812@gmail.com>
+
+	* gst/gstsample.h:
+	  sample: Add gst_sample_copy()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706454
+
+2013-08-19 14:55:22 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/gstbuffer.c:
+	* tests/check/gst/gstbuffer.c:
+	  buffer: Fix gst_buffer_memcmp() where the buffer is smaller than size
+	  Also add unit tests for gst_buffer_memcmp
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706162
+
+2013-08-20 17:06:49 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstutils.c:
+	  docs: flesh out gst_element_query_{duration,position} docs a bit
+
+2013-08-14 16:18:59 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* gst/gsttaglist.c:
+	* gst/gsttaglist.h:
+	  taglist: handle publisher and interpreted-by tags
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705999
+
+2013-08-20 13:58:24 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstpluginloader.c:
+	  pluginloader: Don't call memcpy() with NULL src and 0 length
+
+2013-08-20 10:16:41 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Properly unlock the sinkpad streaming thread when deactivating the pad
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705835
+
+2013-08-20 10:16:05 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Properly unlock the sinkpad streaming thread when deactivating the pad
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706360
+
+2013-08-19 16:38:50 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Clean up after the streaming thread has stopped
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705835
+
+2013-08-19 16:38:40 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Clean up after the streaming thread has stopped
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705835
+
+2013-08-19 16:38:16 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gstqueue.c:
+	  queue: Clean up after the streaming thread has stopped
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705835
+
+2013-07-01 14:04:46 -0600  Brendan Long <b.long@cablelabs.com>
+
+	* gst/gstparse.h:
+	* gst/gstutils.c:
+	* gst/parse/grammar.y:
+	  parse: Add GST_FLAG_NO_SINGLE_ELEMENT_BINS
+	  This makes gst_parse_bin_from_description() return an element instead of
+	  a bin if there's only one element. Also changed gstparse.c to use this,
+	  so gst-launch won't create superfluous bins.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703405
+
+2013-08-16 20:36:53 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/gstquery.c:
+	  query: return NULL when parsing uri redirection that was not set
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706160
+
+2013-08-18 11:48:40 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstbuffer.c:
+	  buffer: Update since marker for gst_buffer_extract_dup() to 1.0.10
+
+2013-08-16 16:45:41 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: don't crash on EOS if queue is empty
+	  Fixes spurious crash in test_simple_shutdown_while_running
+	  unit test.
+
+2013-08-16 16:28:12 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: don't change global buffering state from within query handler
+	  When a buffering query is handled it uses the get_buffering_percent()
+	  function to get some statitics. Unfortunately this function also
+	  calculates whether the queue should be buffering and adapts the
+	  global queue2 state in case of state transitions from/to buffering
+	  (including whether a buffering message was posted on the bus!).
+	  This means that there is a race which can cause buffering messages
+	  to never posted if the global state changes happen as a result of aa
+	  query instead of resulting from bytes flowing in/out.
+	  Spotted by Sjoerd Simons.
+	  Change to only query state in get_buffering_percent() and update
+	  state only in update_buffering().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705332
+
+2013-08-16 12:54:38 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: update buffering when changing capacity
+	  When the capacity of the queue changes, make sure we post an updated buffering
+	  message because we might suddenly have completed the buffering stage.
+
+2013-08-15 15:35:08 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* gst/gst.c:
+	  Free thread pools in gst_deinit()
+
+2013-08-16 11:03:30 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* libs/gst/check/gstcheck.c:
+	  check: Call gst_deinit() at exit of all processes
+
+2013-08-14 21:41:23 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstclock.c:
+	  clock: simplify internal gst_clock_return_get_name() helper
+
+2013-08-14 17:44:48 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: improve flush-start handling
+	  Use custom code to implement flush-stop, we can't reuse the set_flushing code
+	  because we can't touch the live_playing flag and we need to signal the
+	  streaming thread.
+
+2013-08-14 17:14:15 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: stop flushing in flush-stop
+
+2013-08-14 16:58:41 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: handle flush better
+	  Unlock the streaming thread when flushing so that we can
+	  insert the flush-stop correctly.
+
+2013-08-14 15:46:57 +0200  Edward Hervey <edward@collabora.com>
+
+	* .gitignore:
+	  .gitignore: ignore .dirstamp
+
+2013-08-14 07:21:06 +0200  Edward Hervey <edward@collabora.com>
+
+	* libs/gst/check/Makefile.am:
+	  check: Don't use nodist headers on gir scanner
+	  Just creates noise and bogus symbols
+
+2013-08-07 18:20:03 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/gstcompat.h:
+	* gst/gstinfo.c:
+	* gst/gstinfo.h:
+	  gst: minor docstring fixups to make g-i happy
+	  note: the #ifndef move is actually a move of the "SECTION" docstring
+
+2013-08-13 17:14:53 +0200  Edward Hervey <edward@collabora.com>
+
+	* .gitignore:
+	  .gitignore: Ignore files from automake test-driver
+
+2013-08-07 18:24:40 +0200  Edward Hervey <edward@collabora.com>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: Add a property to disable passthrough
+	  In some specific cases (like transmuxing) we want to force the element
+	  to actually parse all incoming data even if the element deems it is not
+	  necessary.
+	  This property simply ignores requests from the element to enable passthrough
+	  mode which results in processing always being enabled.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705621
+
+2013-08-07 21:26:01 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* docs/libs/gstreamer-libs-sections.txt:
+	* libs/gst/base/gstdataqueue.c:
+	* libs/gst/base/gstdataqueue.h:
+	* win32/common/libgstbase.def:
+	  dataqueue: add gst_data_queue_push_force
+	  Adds a variant of the _push function that doesn't check the queue limits
+	  before adding the new item. It is useful when pushing an element to the
+	  queue shouldn't lock the thread.
+	  One particular scenario is when the queue is used to serialize buffers
+	  and events that are going to be pushed from another thread. The
+	  dataqueue should have a limit on the amount of buffers to be stored to
+	  avoid large memory consumption, but events can be considered to have
+	  negligible impact on memory compared to buffers. So it is useful to be
+	  used to push items into the queue that contain events, even though the
+	  queue is already full, it shouldn't matter inserting an item that has
+	  no significative size.
+	  This scenario happens on adaptive elements (dashdemux / mssdemux) as
+	  there is a single download thread fetching buffers and putting into the
+	  dataqueues for the streams. This same download thread can als generate
+	  events in some situations as caps changes, eos or a internal control
+	  events. There can be a deadlock at preroll if the first buffer fetched
+	  is large enough to fill the dataqueue and the download thread and the
+	  next iteration of the download thread decides to push an event to this
+	  same dataqueue before fetching buffers to other streams, if this push
+	  locks, the pipeline will be stuck in preroll as no more buffers will be
+	  downloaded.
+	  There is a somewhat common practice in dash streams to have a single
+	  very large buffer for audio and one for video, so this will always
+	  happen as the download thread will have to push an EOS right after
+	  fetching the first buffer for any stream.
+	  API: gst_data_queue_push_force
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705694
+
+2013-08-13 13:06:50 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstallocator.c:
+	  sysmem: Only copy the requested part of memory instead of the complete source memory
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705678
+
+2013-08-13 12:11:19 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstquery.c:
+	* win32/common/libgstreamer.def:
+	  query: add Since markers for new API and add to exports file
+
+2013-07-23 16:25:27 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* gst/gstquery.c:
+	  query: fix annotation for gst_query_parse_uri
+
+2013-04-19 12:14:54 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* gst/gstquark.c:
+	* gst/gstquark.h:
+	* gst/gstquery.c:
+	* gst/gstquery.h:
+	  query: add new redirection uri the URI query
+
+2013-08-12 09:25:34 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/gstquery.c:
+	  query: add some missing 'transfer none' gi annotations
+	  The current documentation is controverse, while it states that the
+	  returned value is valid only while the query is is valid, which presumes
+	  a 'transfer none' policy. But the tooltip for the 'out' annotation
+	  states the default is 'transfer-full'.
+	  Add the missing 'transfer none' annotations to fix this.
+
+2013-08-08 12:08:31 +0200  Nicolas Dufresne <nicolas.dufresne@collabora.com>
+
+	* libs/gst/base/gstbytereader.c:
+	  bytereader: Accelerate MPEG/H264 start code scanning
+	  Accelerate MPEG/H264 start code scanning using Boyer-Moor bad character
+	  heuristic.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702357
+
+2013-08-10 11:31:23 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/gstpipeline.c:
+	  pipeline: g-i: allow clock to be NULL in gst_pipeline_use_clock()
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705751
+
+2013-08-07 14:17:28 -0300  Adrian Pardini <publico@tangopardo.com.ar>
+
+	* libs/gst/controller/gstdirectcontrolbinding.c:
+	  controller: fixes int overflow with properties that span +-INT_MAX
+	  When the range for a property is defined as -INT_MAX-1 .. INT_MAX, like
+	  the xpos in a videomixer the following expression in the macro
+	  definitions of convert_g_value_to_##type (and the equivalent in
+	  convert_value_to_##type)
+	  v = pspec->minimum + (g##type) ROUNDING_OP ((pspec->maximum - pspec->minimum) * s);
+	  are converted to:
+	  v = -2147483648 + (g##type) ROUNDING_OP ((2147483647 - -2147483648) * s);
+	  (2147483647 - -2147483648) overflows to -1 and the net result is:
+	  v = -2147483648 + (g##type) ROUNDING_OP (-1 * s);
+	  so v only takes the values -2147483648 for s == 0 and 2147483647
+	  for s == 1.
+	  Rewriting the expression as minimum*(1-s) + maximum*s gives the correct
+	  result in this case.
+	  https://bugzilla.gnome.org//show_bug.cgi?id=705630
+
+2013-08-02 13:31:59 +0200  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* configure.ac:
+	  build: add subdir-objects to AM_INIT_AUTOMAKE
+	  Fixes warnings with automake 1.14
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705350
+
+2013-08-02 16:21:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* docs/design/part-gstpipeline.txt:
+	  design: fix typo
+
+2013-07-29 15:48:32 +0200  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Fix backwards seeks into undowloaded ranges
+	  When in download buffering mode queue2 didn't check if a range offset is
+	  in a undownloaded range before the currently in-progress range. Causing
+	  seeks to an earlier offset to, well, take a while.
+
+2013-07-30 19:27:23 +0200  Kjartan Maraas <kmaraas@gnome.org>
+
+	* gst/gstutils.c:
+	* libs/gst/check/gsttestclock.c:
+	  docs: some small gtk-doc markup fixes
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705156
+
+2013-07-30 19:27:23 +0200  Kjartan Maraas <kmaraas@gnome.org>
+
+	* gst/gst.c:
+	  gst: register new color mode enum, fixing 'make check'
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705156
+
+2013-04-16 19:04:48 +0200  Edward Hervey <edward@collabora.com>
+
+	* libs/gst/base/gsttypefindhelper.c:
+	  typefindhelper: Avoid using buffer_get_size in tight loops
+	  Calling gst_buffer_get_size represented 2/3 of the cost of helper_find_peek
+	  which was called whenever a typefindfunction wanted to peek at data.
+	  We already know the size (from the GstMapInfo), so just use that.
+
+2013-07-29 19:38:51 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* po/LINGUAS:
+	* po/bg.po:
+	* po/cs.po:
+	* po/de.po:
+	* po/el.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/lt.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ru.po:
+	* po/sl.po:
+	* po/sv.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: update translations
+
+2013-07-29 19:13:03 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  common: revert accidental re-winding of common submodule
+
+2013-07-26 16:15:24 +0200  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* gst/gstquery.c:
+	  query: Clarify the estimated-total documentation
+	  Tweak the documentation slightly to clarify that the estimated-total in
+	  a a Buffering query the total remaining time of a download, not the
+	  total time for the complete download. Also indicate the unit used.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704934
+
+2013-07-26 15:08:13 +0200  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Forward the schedule query upstream
+	  When asked about the scheduling flags first check with upstream and
+	  simply add the _SEEKABLE flag when using a temporary file as storage.
+	  This enables the forwarding of _SEQUENTIAL and _BANDWIDTH_LIMITED from
+	  sources if needed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704927
+
+2013-07-29 14:47:15 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.3 ===
+
+2013-07-29 13:34:53 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* common:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstenumtypes.h:
+	* win32/common/gstversion.h:
+	  Release 1.1.3
+
+2013-07-29 13:30:25 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2013-07-29 12:10:45 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 
