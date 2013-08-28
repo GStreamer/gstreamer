@@ -90,6 +90,7 @@ gst_validate_media_info_init (GstValidateMediaInfo * mi)
   mi->stream_info = NULL;
   mi->playback_error = NULL;
   mi->reverse_playback_error = NULL;
+  mi->track_switch_error = NULL;
 }
 
 void
@@ -98,6 +99,7 @@ gst_validate_media_info_clear (GstValidateMediaInfo * mi)
   g_free (mi->uri);
   g_free (mi->playback_error);
   g_free (mi->reverse_playback_error);
+  g_free (mi->track_switch_error);
   if (mi->stream_info)
     gst_validate_stream_info_free (mi->stream_info);
 }
@@ -135,6 +137,8 @@ gst_validate_media_info_to_string (GstValidateMediaInfo * mi, gsize * length)
       mi->playback_error ? mi->playback_error : "");
   g_key_file_set_string (kf, "playback-tests", "reverse-playback-error",
       mi->reverse_playback_error ? mi->reverse_playback_error : "");
+  g_key_file_set_string (kf, "playback-tests", "track-switch-error",
+      mi->track_switch_error ? mi->track_switch_error : "");
 
   data = g_key_file_to_data (kf, length, NULL);
   g_key_file_free (kf);
@@ -193,6 +197,8 @@ gst_validate_media_info_load (const gchar * path, GError ** err)
   mi->reverse_playback_error =
       g_key_file_get_string (kf, "playback-tests", "reverse-playback-error",
       NULL);
+  mi->track_switch_error =
+      g_key_file_get_string (kf, "playback-tests", "track-switch-error", NULL);
   if (mi->playback_error && strlen (mi->playback_error) == 0) {
     g_free (mi->playback_error);
     mi->playback_error = NULL;
@@ -200,6 +206,10 @@ gst_validate_media_info_load (const gchar * path, GError ** err)
   if (mi->reverse_playback_error && strlen (mi->reverse_playback_error) == 0) {
     g_free (mi->reverse_playback_error);
     mi->reverse_playback_error = NULL;
+  }
+  if (mi->track_switch_error && strlen (mi->track_switch_error) == 0) {
+    g_free (mi->track_switch_error);
+    mi->track_switch_error = NULL;
   }
 
 end:
@@ -636,6 +646,397 @@ check_reverse_playback (GstValidateMediaInfo * mi, gchar ** msg)
   return check_playback_scenario (mi, send_reverse_seek, msg);
 }
 
+typedef struct
+{
+  guint counter;
+  guint back_counter;
+  gulong probe_id;
+  GstPad *pad;
+} BufferCountData;
+
+static GstPadProbeReturn
+input_selector_pad_probe (GstPad * pad, GstPadProbeInfo * info,
+    gpointer userdata)
+{
+  GstPad *sink_pad = NULL;
+
+  if (info->type == GST_PAD_PROBE_TYPE_BUFFER) {
+    BufferCountData *bcd =
+        g_object_get_data (G_OBJECT (pad), "buffer-count-data");
+    if (!bcd) {
+      GST_ERROR_OBJECT (pad, "No buffer-count-data found");
+      return GST_PAD_PROBE_OK;
+    }
+
+    ++bcd->counter;
+    if (GST_PAD_IS_SRC (pad)) {
+      g_object_get (GST_PAD_PARENT (pad), "active-pad", &sink_pad, NULL);
+      if (sink_pad) {
+        bcd = g_object_get_data (G_OBJECT (sink_pad), "buffer-count-data");
+        if (!bcd) {
+          gst_object_unref (sink_pad);
+          GST_ERROR_OBJECT (pad, "No buffer-count-data found");
+          return GST_PAD_PROBE_OK;
+        }
+        ++bcd->back_counter;
+        gst_object_unref (sink_pad);
+      }
+    }
+  }
+  return GST_PAD_PROBE_OK;
+}
+
+static void
+setup_input_selector_counters (GstElement * element)
+{
+  GstIterator *iterator;
+  gboolean done = FALSE;
+  GValue value = { 0, };
+  GstPad *pad;
+  BufferCountData *bcd;
+
+  iterator = gst_element_iterate_pads (element);
+  while (!done) {
+    switch (gst_iterator_next (iterator, &value)) {
+      case GST_ITERATOR_OK:
+        pad = g_value_dup_object (&value);
+        bcd = g_slice_new0 (BufferCountData);
+        g_object_set_data (G_OBJECT (pad), "buffer-count-data", bcd);
+        bcd->probe_id = gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_BUFFER,
+            (GstPadProbeCallback) input_selector_pad_probe, NULL, NULL);
+        bcd->pad = pad;
+        g_value_reset (&value);
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iterator);
+        break;
+      case GST_ITERATOR_ERROR:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iterator);
+}
+
+static gboolean
+check_and_remove_input_selector_counters (GstElement * element,
+    gchar ** error_message)
+{
+  GstIterator *iterator;
+  gboolean done = FALSE;
+  GstPad *pad;
+  GValue value = { 0, };
+  guint id, ncounters = 0, total_sink_count = 0;
+  BufferCountData *bcd, **bcds =
+      g_malloc0 (sizeof (BufferCountData *) * element->numpads);
+  gboolean ret = TRUE;
+
+  /* First gather all counts, and free memory, etc */
+  iterator = gst_element_iterate_pads (element);
+  while (!done) {
+    switch (gst_iterator_next (iterator, &value)) {
+      case GST_ITERATOR_OK:
+        pad = g_value_get_object (&value);
+        bcd = g_object_get_data (G_OBJECT (pad), "buffer-count-data");
+        if (GST_PAD_IS_SINK (pad)) {
+          bcds[++ncounters] = bcd;
+          total_sink_count += bcd->counter;
+        } else {
+          bcds[0] = bcd;
+        }
+        gst_pad_remove_probe (pad, bcd->probe_id);
+        g_value_reset (&value);
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iterator);
+        break;
+      case GST_ITERATOR_ERROR:
+        done = TRUE;
+        *error_message = g_strdup ("Failed to iterate through pads");
+        ret = FALSE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iterator);
+
+  if (!ret) {
+    g_free (bcds);
+    return FALSE;
+  }
+
+  /* Now bcd[0] contains the total number of buffers received,
+     and subsequent bcd slots contain the total number of buffers sent
+     by each source pad. Check that the totals match, and that every
+     source pad got at least one buffer.
+     Or that's the theory. It doesn't work in practice, the number of
+     raw buffers flowing is non deterministic. */
+#if 0
+  if (bcds[0]->counter != total_sink_count) {
+    *error_message = g_strdup_printf ("%u buffers received, %u buffers sent",
+        total_sink_count, bcds[0]->counter);
+    ret = FALSE;
+  }
+  for (id = 1; id < element->numpads; ++id) {
+    if (bcds[id]->counter == 0) {
+      *error_message =
+          g_strdup_printf ("Sink pad %s got no buffers",
+          GST_PAD_NAME (bcds[id]->pad));
+      ret = FALSE;
+    }
+  }
+#endif
+  /* We at least check that at least one buffer was sent while the
+     selected sink was a given sink, for all sinks */
+  for (id = 1; id < element->numpads; ++id) {
+    if (bcds[id]->back_counter == 0) {
+      *error_message =
+          g_strdup_printf ("No buffer was sent while sink pad %s was active",
+          GST_PAD_NAME (bcds[id]->pad));
+      ret = FALSE;
+    }
+  }
+
+  for (id = 0; id < element->numpads; ++id) {
+    gst_object_unref (bcds[id]->pad);
+    g_slice_free (BufferCountData, bcds[id]);
+  }
+  g_free (bcds);
+  return ret;
+}
+
+static GstPad *
+find_next_pad (GstElement * element, GstPad * pad)
+{
+  GstIterator *iterator;
+  gboolean done = FALSE, pick = FALSE;
+  GstPad *tmp, *next = NULL, *first = NULL;
+  GValue value = { 0, };
+
+  iterator = gst_element_iterate_sink_pads (element);
+  done = FALSE;
+  while (!done) {
+    switch (gst_iterator_next (iterator, &value)) {
+      case GST_ITERATOR_OK:
+        tmp = g_value_dup_object (&value);
+        if (first == NULL)
+          first = gst_object_ref (tmp);
+        if (pick) {
+          next = tmp;
+          done = TRUE;
+        } else {
+          pick = (tmp == pad);
+          gst_object_unref (tmp);
+        }
+        g_value_reset (&value);
+        break;
+      case GST_ITERATOR_RESYNC:
+        if (next) {
+          gst_object_unref (next);
+          next = NULL;
+          if (first) {
+            gst_object_unref (first);
+            first = NULL;
+          }
+          pick = FALSE;
+        }
+        gst_iterator_resync (iterator);
+        break;
+      case GST_ITERATOR_ERROR:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        /* When we reach the end, we may be in the case where the pad
+           to search from was the last one in the list, in which case
+           we want to return the first pad. */
+        if (pick) {
+          next = first;
+          first = NULL;
+        }
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iterator);
+  if (first)
+    gst_object_unref (first);
+  return next;
+}
+
+static int
+find_input_selector (GValue * value, void *userdata)
+{
+  GstElement *element = g_value_get_object (value);
+  g_assert (GST_IS_ELEMENT (element));
+  if (g_str_has_prefix (GST_ELEMENT_NAME (element), "inputselector")) {
+    guint npads;
+    g_object_get (element, "n-pads", &npads, NULL);
+    if (npads > 1)
+      return 0;
+  }
+  return !0;
+}
+
+/* This function looks for an input-selector, and, if one is found,
+   cycle through its sink pads */
+static gboolean
+check_track_selection (GstValidateMediaInfo * mi, gchar ** error_message)
+{
+  GstElement *playbin;
+  GstElement *videosink, *audiosink;
+  GstElement *input_selector = NULL;
+  GstBus *bus;
+  GstMessage *msg;
+  gboolean ret = TRUE;
+  GstStateChangeReturn state_ret;
+  GstIterator *iterator;
+  GstPad *original_pad;
+  static const GstClockTime switch_delay = GST_SECOND * 5;
+  GValue value = { 0, };
+
+  playbin = gst_element_factory_make ("playbin", "fc-playbin");
+  videosink = gst_element_factory_make ("fakesink", "fc-videosink");
+  audiosink = gst_element_factory_make ("fakesink", "fc-audiosink");
+
+  if (!playbin || !videosink || !audiosink) {
+    *error_message = g_strdup ("Playbin and/or fakesink not available");
+#if 0
+    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_MISSING_PLUGIN,
+        "file check requires " "playbin and fakesink to be available");
+#endif
+  }
+
+  g_object_set (playbin, "video-sink", videosink, "audio-sink", audiosink,
+      "uri", mi->uri, NULL);
+  g_object_set (videosink, "sync", TRUE, NULL);
+  g_object_set (audiosink, "sync", TRUE, NULL);
+
+  bus = gst_pipeline_get_bus (GST_PIPELINE (playbin));
+
+  state_ret = gst_element_set_state (playbin, GST_STATE_PAUSED);
+  if (state_ret == GST_STATE_CHANGE_FAILURE) {
+#if 0
+    GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_START_FAILURE,
+        "Failed to " "change pipeline state to playing");
+#endif
+    *error_message = g_strdup ("Failed to change pipeline to paused");
+    ret = FALSE;
+    goto end;
+  } else if (state_ret == GST_STATE_CHANGE_ASYNC) {
+    msg =
+        gst_bus_timed_pop_filtered (bus, GST_CLOCK_TIME_NONE,
+        GST_MESSAGE_ASYNC_DONE | GST_MESSAGE_EOS | GST_MESSAGE_ERROR);
+    if (msg && GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ASYNC_DONE) {
+      gst_message_unref (msg);
+    } else {
+      ret = FALSE;
+      *error_message = g_strdup ("Playback finihshed unexpectedly");
+      goto end;
+    }
+  }
+
+  if (gst_element_set_state (playbin,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+    *error_message = g_strdup ("Failed to set pipeline to playing");
+    ret = FALSE;
+    goto end;
+  }
+
+  iterator = gst_bin_iterate_recurse (GST_BIN (playbin));
+  if (!gst_iterator_find_custom (iterator,
+          (GCompareFunc) find_input_selector, &value, NULL)) {
+    /* It's fine, there's only one if several tracks of the same type */
+    gst_iterator_free (iterator);
+    input_selector = NULL;
+    goto end;
+  }
+  input_selector = g_value_dup_object (&value);
+  g_value_reset (&value);
+  gst_iterator_free (iterator);
+  g_object_get (input_selector, "active-pad", &original_pad, NULL);
+  if (!original_pad) {
+    /* Unexpected, log an error somehow ? */
+    ret = FALSE;
+    gst_object_unref (input_selector);
+    input_selector = NULL;
+    goto end;
+  }
+
+  /* Attach a buffer counter to each pad */
+  setup_input_selector_counters (input_selector);
+
+  while (1) {
+    msg =
+        gst_bus_timed_pop_filtered (bus, switch_delay,
+        GST_MESSAGE_ERROR | GST_MESSAGE_EOS);
+    if (msg) {
+      if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_EOS) {
+        /* all good */
+        ret = TRUE;
+      } else if (GST_MESSAGE_TYPE (msg) == GST_MESSAGE_ERROR) {
+        GError *error = NULL;
+        gchar *debug = NULL;
+
+        gst_message_parse_error (msg, &error, &debug);
+        *error_message = g_strdup_printf ("Playback error: %s : %s",
+            error->message, debug);
+#if 0
+        GST_VALIDATE_REPORT (fc, GST_VALIDATE_ISSUE_ID_FILE_PLAYBACK_ERROR,
+            "%s - File %s failed " "during playback. Error: %s : %s",
+            messages_prefix, fc->uri, error->message, debug);
+#endif
+        g_error_free (error);
+        g_free (debug);
+
+        ret = FALSE;
+      } else {
+        g_assert_not_reached ();
+      }
+      gst_message_unref (msg);
+    } else {
+      /* Timeout, switch track if we have more, or stop */
+      GstPad *active_pad, *next_pad;
+
+      g_object_get (input_selector, "active-pad", &active_pad, NULL);
+      if (!active_pad) {
+        *error_message =
+            g_strdup ("Failed to get active-pad from input-selector");
+        ret = FALSE;
+        goto end;
+      }
+      next_pad = find_next_pad (input_selector, active_pad);
+      gst_object_unref (active_pad);
+      if (!next_pad) {
+        ret = FALSE;
+        goto end;
+      }
+      if (next_pad == original_pad) {
+        goto end;
+      }
+      g_object_set (input_selector, "active-pad", next_pad, NULL);
+      gst_object_unref (next_pad);
+    }
+  }
+
+end:
+  if (input_selector) {
+    if (!check_and_remove_input_selector_counters (input_selector,
+            error_message))
+      ret = FALSE;
+    gst_object_unref (input_selector);
+  }
+  gst_object_unref (bus);
+  gst_element_set_state (playbin, GST_STATE_NULL);
+  gst_object_unref (playbin);
+
+  return ret;
+}
+
 gboolean
 gst_validate_media_info_inspect_uri (GstValidateMediaInfo * mi,
     const gchar * uri, GError ** err)
@@ -666,6 +1067,7 @@ gst_validate_media_info_inspect_uri (GstValidateMediaInfo * mi,
   ret = check_encoding_profile (mi, info) & ret;
   ret = check_playback (mi, &mi->playback_error) & ret;
   ret = check_reverse_playback (mi, &mi->reverse_playback_error) & ret;
+  ret = check_track_selection (mi, &mi->track_switch_error) & ret;
 
   gst_object_unref (discoverer);
 
@@ -700,6 +1102,11 @@ gst_validate_media_info_compare (GstValidateMediaInfo * expected,
       && extracted->reverse_playback_error) {
     g_print ("Reverse playback is now failing with: %s\n",
         extracted->reverse_playback_error);
+    ret = FALSE;
+  }
+  if (expected->track_switch_error == NULL && extracted->track_switch_error) {
+    g_print ("Track switching is now failing with: %s\n",
+        extracted->track_switch_error);
     ret = FALSE;
   }
   if (expected->stream_info

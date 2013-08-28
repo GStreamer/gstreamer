@@ -51,6 +51,7 @@ struct _GstValidateMediaInfo {
 
   gchar *playback_error;
   gchar *reverse_playback_error;
+  gchar *track_switch_error;
 
   gchar *uri;
 
