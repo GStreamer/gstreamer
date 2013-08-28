@@ -343,7 +343,7 @@ else
   emblibav_configure_args="$emblibav_configure_args --disable-avserver --disable-avplay\
         --disable-avconv --disable-avprobe --enable-static --enable-pic \
 	--disable-encoder=flac --disable-decoder=cavs --disable-protocols --disable-devices\
-	--disable-network --disable-hwaccels --disable--dxva2 --disable-vdpau\
+	--disable-network --disable-hwaccels --disable-dxva2 --disable-vdpau\
 	--disable-filters --disable-doc --enable-optimizations"
 
   if test "x$enable_lgpl" != "xyes"; then
