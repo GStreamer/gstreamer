@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plugins 1.0.9
+Release notes for GStreamer Good Plugins 1.0.10
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -57,24 +57,17 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Features of this release
     
-      * udpsink, multiudpsink: unbreak IPv4 fallback on systems without
-        IPv6 support
-      * deinterlace: fix changing 'mode' property on-the-fly to
-        enable/disable deinterlacing
-      * rtp: fix autoplugging of depayloaders if there's only one of
-        the payload number and the encoding-name
-      * pulse: fixes for alaw/mulaw
-      * matroskademux, avidemux: fix some buffer leaks
-      * flacenc: fix image tag handling
+      * qtdemux: add variant field to H.263 caps, fixing H.263 playback
+      * flvdemux: memory leak fix
+      * goom: fix issue with caps writability
 
 Bugs fixed in this release
      
-      * 641599 : deinterlace: changing " mode " property on-the-fly doesn't work
-      * 695981 : Segmentation fault on gst_v4l2_buffer_pool_process after sending " start-capture " signal to camerabin2 just after setting the pipeline state to PLAYING
-      * 704162 : aacparse: Too verbose when parsing LOAS stream
-      * 704533 : regression: rtppcmudpay no longer autoplugged for rtsp stream with mulaw audio
-      * 704553 : (dyn|multi)udpsink: broken on !IPv6 systems
-      * 705018 : flacenc: segfault when trying to encode from alac decoded file
+      * 705142 : flvdemux: leaks stream_id string
+      * 705475 : goom: negotiation fails when sink has ANY caps
+      * 705477 : directsoundsink: Glitches when playing S8
+      * 705550 : rtpvp8depay: mark key frames and delta frames properly
+      * 706422 : jpegenc is sending wrong buffer on specific input/resolution
 
 ==== Download ====
 
@@ -111,13 +104,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Arnaud Vrac
-      * Douglas Bagnall
-      * Marc Leeman
-      * Matej Knopp
-      * Olivier Crête
-      * Peter Korsgaard
       * Sebastian Dröge
+      * Sjoerd Simons
       * Tim-Philipp Müller
-      * Wim Taymans
  

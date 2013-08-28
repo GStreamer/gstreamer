@@ -1,4 +1,59 @@
+=== release 1.0.10 ===
+
+2013-08-28  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  releasing 1.0.10
+
+2013-03-02 13:59:52 +0000  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/isomp4/qtdemux.c:
+	  qtdemux: add variant field to H.263 caps
+	  avdec_h263 won't get plugged otherwise.
+
+2013-08-26 13:47:53 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure.ac: Don't set BZ2_LIBS if bz2 is not found
+
+2013-08-22 14:55:14 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure: Fix bz2 configure check for Windows
+	  Due to function decorations on Windows AC_CHECK_LIB can't be used to check for bz2.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=465924
+
+2013-08-21 16:32:50 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* sys/directsound/gstdirectsoundsink.c:
+	  directsoundsink: WAVEFORMATEX is unsigned for 8 bit integers, and signed for others
+	  Probably fixes
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705477
+
+2013-08-05 08:49:50 +0200  Sjoerd Simons <sjoerd.simons@collabora.co.uk>
+
+	* gst/goom/gstgoom.c:
+	  goom: Ensure src caps are writable
+	  In some cases the src caps determined by goom weren't writable, causing
+	  a bunch of assertion failures and failed caps. Fixed by always
+	  explicitely making the caps writable
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705475
+
+2013-07-30 14:28:19 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/flv/gstflvdemux.c:
+	  flvdemux: don't leak stream_id string
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705142
+	  Conflicts:
+	  gst/flv/gstflvdemux.c
+
 === release 1.0.9 ===
+
+2013-07-30 12:30:12 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ChangeLog:
+	  Release 1.0.9
+	  This time with ChangeLog file
 
 2013-07-30 11:35:33 +0100  Tim-Philipp Müller <tim@centricular.net>
 

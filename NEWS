@@ -1,4 +1,18 @@
-This is GStreamer Good Plugins 1.0.9
+This is GStreamer Good Plugins 1.0.10
+
+Changes since 1.0.9:
+
+      * qtdemux: add variant field to H.263 caps, fixing H.263 playback
+      * flvdemux: memory leak fix
+      * goom: fix issue with caps writability
+
+Bugs fixed since 1.0.9:
+
+      * 705142 : flvdemux: leaks stream_id string
+      * 705475 : goom: negotiation fails when sink has ANY caps
+      * 705477 : directsoundsink: Glitches when playing S8
+      * 705550 : rtpvp8depay: mark key frames and delta frames properly
+      * 706422 : jpegenc is sending wrong buffer on specific input/resolution
 
 Changes since 1.0.8:
 
