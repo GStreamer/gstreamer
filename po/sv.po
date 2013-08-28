@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:35+0200\n"
+"POT-Creation-Date: 2013-08-28 12:31+0200\n"
 "PO-Revision-Date: 2010-06-07 18:17+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -493,6 +493,13 @@ msgid "ID3v2 frame"
 msgstr ""
 
 msgid "unparsed id3v2 tag frame"
+msgstr ""
+
+#, fuzzy
+msgid "musical-key"
+msgstr "Musikal"
+
+msgid "Initial key in which the sound starts"
 msgstr ""
 
 #~ msgid "Master"
@@ -1140,9 +1147,6 @@ msgstr ""
 
 #~ msgid "Retro"
 #~ msgstr "Retro"
-
-#~ msgid "Musical"
-#~ msgstr "Musikal"
 
 #~ msgid "Rock & Roll"
 #~ msgstr "Rock & roll"

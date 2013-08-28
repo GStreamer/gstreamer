@@ -1,18 +1,19 @@
 # Brazilian Portuguese translation of gst-plugins-base.
-# Copyright (C) 2008-2011 Free Software Foundation, Inc.
+# Copyright (C) 2008-2013 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Fabrício Godoy <skarllot@gmail.com>, 2008-2011.
+# Fabrício Godoy <skarllot@gmail.com>, 2008-2013.
 #
 # PCM -> PCM
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-0.10.31.2\n"
+"Project-Id-Version: gst-plugins-base-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 13:35+0200\n"
-"PO-Revision-Date: 2011-01-08 01:02-0300\n"
+"POT-Creation-Date: 2013-08-28 12:31+0200\n"
+"PO-Revision-Date: 2013-08-20 00:39-0300\n"
 "Last-Translator: Fabrício Godoy <skarllot@gmail.com>\n"
-"Language-Team: Brazilian Portuguese <ldp-br@bazar.conectiva.com.br>\n"
+"Language-Team: Brazilian Portuguese <ldpbr-translation@lists.sourceforge."
+"net>\n"
 "Language: pt_BR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
@@ -27,7 +28,7 @@ msgstr "Não foi possível abrir o dispositivo para reprodução em estéreo."
 
 #, c-format
 msgid "Could not open device for playback in %d-channel mode."
-msgstr "Não foi possível abrir o dispositivo para reprodução com %d canal(is)."
+msgstr "Não foi possível abrir o dispositivo para reprodução com %d canais."
 
 msgid ""
 "Could not open audio device for playback. Device is being used by another "
@@ -50,7 +51,7 @@ msgstr "Não foi possível abrir o dispositivo para gravação em estéreo."
 
 #, c-format
 msgid "Could not open device for recording in %d-channel mode"
-msgstr "Não foi possível abrir o dispositivo para gravação com %d canal(is)."
+msgstr "Não foi possível abrir o dispositivo para gravação com %d canais."
 
 msgid ""
 "Could not open audio device for recording. Device is being used by another "
@@ -208,19 +209,16 @@ msgid "Run-length encoding"
 msgstr "Codificação Run-length"
 
 msgid "Subtitle"
-msgstr ""
+msgstr "Legenda"
 
-#, fuzzy
 msgid "MPL2 subtitle format"
-msgstr "Formato de legendas TMPlayer"
+msgstr "Formato de legendas MPL2"
 
-#, fuzzy
 msgid "DKS subtitle format"
-msgstr "Formato de legendas Sami"
+msgstr "Formato de legendas DKS"
 
-#, fuzzy
 msgid "QTtext subtitle format"
-msgstr "Formato de legendas Kate"
+msgstr "Formato de legendas QTtext"
 
 msgid "Sami subtitle format"
 msgstr "Formato de legendas Sami"
@@ -231,33 +229,30 @@ msgstr "Formato de legendas TMPlayer"
 msgid "Kate subtitle format"
 msgstr "Formato de legendas Kate"
 
-#, fuzzy
 msgid "Uncompressed video"
-msgstr "YUV sem compressão"
+msgstr "Vídeo sem compressão"
 
-#, fuzzy
 msgid "Uncompressed gray"
-msgstr "Imagem Monocromática Sem Compressão"
+msgstr "Arquivo monocromático sem compressão"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s YUV %s"
-msgstr "YUV sem compressão"
+msgstr "%2$s YUV %1$s sem compressão"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %s%d-bit %s"
-msgstr "%2$s de %1$d bits com paletas sem compressão"
+msgstr "%1$s de %2$d bits %3$s sem compressão"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
 msgstr "DivX MPEG-4 Versão %d"
 
-#, fuzzy
 msgid "Uncompressed audio"
-msgstr "YUV sem compressão"
+msgstr "Áudio sem compressão"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Raw %d-bit %s audio"
-msgstr "Áudio PCM Raw de %d bits"
+msgstr "Áudio Raw de %d bits %s"
 
 msgid "Audio CD source"
 msgstr "Origem: CD de áudio"
@@ -374,57 +369,55 @@ msgid "capturing shutter speed"
 msgstr "velocidade do obturador ao capturar"
 
 msgid "Shutter speed used when capturing an image, in seconds"
-msgstr "Velocidade do obturador usada ao capturar uma imagem, em segundos"
+msgstr "Velocidade do obturador utilizada ao capturar uma imagem, em segundos"
 
 msgid "capturing focal ratio"
 msgstr "taxa focal ao capturar"
 
 msgid "Focal ratio (f-number) used when capturing the image"
-msgstr "Taxa focal usada ao capturar a imagem, f-number"
+msgstr "Taxa focal utilizada ao capturar a imagem, f-number"
 
 msgid "capturing focal length"
 msgstr "distância focal ao capturar"
 
 msgid "Focal length of the lens used capturing the image, in mm"
-msgstr "Distância focal das lentes usada ao capturar a imagem, em mm"
+msgstr "Distância focal das lentes utilizada ao capturar a imagem, em mm"
 
 msgid "capturing digital zoom ratio"
 msgstr "taxa de zoom digital ao capturar"
 
 msgid "Digital zoom ratio used when capturing an image"
-msgstr "Taxa de zoom digital usada ao capturar uma imagem"
+msgstr "Taxa de zoom digital utilizada ao capturar uma imagem"
 
 msgid "capturing iso speed"
 msgstr "velocidade ISO ao capturar"
 
 msgid "The ISO speed used when capturing an image"
-msgstr "A velocidade ISO usada ao capturar uma imagem"
+msgstr "A velocidade ISO utilizada ao capturar uma imagem"
 
 msgid "capturing exposure program"
 msgstr "programa de exposição ao capturar"
 
 msgid "The exposure program used when capturing an image"
-msgstr "O programa de exposição usado ao capturar uma imagem"
+msgstr "O programa de exposição utilizado ao capturar uma imagem"
 
 msgid "capturing exposure mode"
 msgstr "modo de exposição ao capturar"
 
 msgid "The exposure mode used when capturing an image"
-msgstr "O modo de exposição usado ao capturar uma imagem"
+msgstr "O modo de exposição utilizado ao capturar uma imagem"
 
-#, fuzzy
 msgid "capturing exposure compensation"
-msgstr "modo de exposição ao capturar"
+msgstr "equilíbrio de exposição ao capturar"
 
-#, fuzzy
 msgid "The exposure compensation used when capturing an image"
-msgstr "O modo de exposição usado ao capturar uma imagem"
+msgstr "O equilíbrio de exposição utilizado ao capturar uma imagem"
 
 msgid "capturing scene capture type"
 msgstr "tipo de captura de cena ao capturar"
 
 msgid "The scene capture mode used when capturing an image"
-msgstr "O modo de captura de cena usado ao capturar uma imagem"
+msgstr "O modo de captura de cena utilizado ao capturar uma imagem"
 
 msgid "capturing gain adjustment"
 msgstr "ajuste de ganho ao capturar"
@@ -477,14 +470,14 @@ msgstr "modo de medição de luz ao capturar"
 msgid ""
 "The metering mode used while determining exposure for capturing an image"
 msgstr ""
-"O modo de medição de luz usado ao determinar a exposição para captura de uma "
-"imagem"
+"O modo de medição de luz utilizado ao determinar a exposição para captura de "
+"uma imagem"
 
 msgid "capturing source"
 msgstr "fonte ao capturar"
 
 msgid "The source or type of device used for the capture"
-msgstr "A fonte ou tipo de dispositivo usado para a captura"
+msgstr "A fonte ou tipo de dispositivo utilizado para a captura"
 
 msgid "image horizontal ppi"
 msgstr "PPI horizontal da imagem"
@@ -501,9 +494,15 @@ msgstr ""
 "Densidade de pixels verticais desejado para a mídia (imagem/vídeo), em PPI"
 
 msgid "ID3v2 frame"
-msgstr ""
+msgstr "quadro ID3v2"
 
 msgid "unparsed id3v2 tag frame"
+msgstr "quadro com etiqueta ID3v2 sem análise"
+
+msgid "musical-key"
+msgstr ""
+
+msgid "Initial key in which the sound starts"
 msgstr ""
 
 #~ msgid "Master"
@@ -538,48 +537,6 @@ msgstr ""
 
 #~ msgid "Capture"
 #~ msgstr "Captura"
-
-#~ msgid "Connection to %s:%d refused."
-#~ msgstr "A conexão para %s:%d foi recusada."
-
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "YUV 4:2:0 plano sem compressão"
-
-#~ msgid "Uncompressed planar YVU 4:2:0"
-#~ msgstr "YVU 4:2:0 plano sem compressão"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "YUV 4:2:2 empacotado sem compressão"
-
-#~ msgid "Uncompressed packed YUV 4:1:0"
-#~ msgstr "YUV 4:1:0 empacotado sem compressão"
-
-#~ msgid "Uncompressed packed YVU 4:1:0"
-#~ msgstr "YVU 4:1:0 empacotado sem compressão"
-
-#~ msgid "Uncompressed packed YUV 4:1:1"
-#~ msgstr "YUV 4:1:1 empacotado sem compressão"
-
-#~ msgid "Uncompressed packed YUV 4:4:4"
-#~ msgstr "YUV 4:4:4 empacotado sem compressão"
-
-#~ msgid "Uncompressed planar YUV 4:2:2"
-#~ msgstr "YUV 4:2:2 plano sem compressão"
-
-#~ msgid "Uncompressed planar YUV 4:1:1"
-#~ msgstr "YUV 4:1:1 plano sem compressão"
-
-#~ msgid "Uncompressed black and white Y-plane"
-#~ msgstr "Plano Y em preto e branco sem compressão"
-
-#~ msgid "Raw PCM audio"
-#~ msgstr "Áudio PCM Raw"
-
-#~ msgid "Raw %d-bit floating-point audio"
-#~ msgstr "Áudio Raw de ponto-flutuante de %d bits"
-
-#~ msgid "Raw floating-point audio"
-#~ msgstr "Áudio Raw de ponto-flutuante"
 
 #~ msgid "Could not open vfs file \"%s\" for writing: %s."
 #~ msgstr "Não foi possível abrir o arquivo VFS \"%s\" para escrita: %s."
@@ -627,6 +584,54 @@ msgstr ""
 #~ msgid "Both autoaudiosink and alsasink elements are missing."
 #~ msgstr "Os elementos autoaudiosink e alsasink estão faltando."
 
+#~ msgid "Error while sending gdp header data to \"%s:%d\"."
+#~ msgstr "Erro ao enviar o cabeçalho de dados GDP para \"%s:%d\"."
+
+#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
+#~ msgstr "Erro ao enviar codificação de dados GDP para \"%s:%d\"."
+
+#~ msgid "Connection to %s:%d refused."
+#~ msgstr "A conexão para %s:%d foi recusada."
+
+#~ msgid "Uncompressed planar YUV 4:2:0"
+#~ msgstr "YUV 4:2:0 plano sem compressão"
+
+#~ msgid "Uncompressed planar YVU 4:2:0"
+#~ msgstr "YVU 4:2:0 plano sem compressão"
+
+#~ msgid "Uncompressed packed YUV 4:2:2"
+#~ msgstr "YUV 4:2:2 empacotado sem compressão"
+
+#~ msgid "Uncompressed packed YUV 4:1:0"
+#~ msgstr "YUV 4:1:0 empacotado sem compressão"
+
+#~ msgid "Uncompressed packed YVU 4:1:0"
+#~ msgstr "YVU 4:1:0 empacotado sem compressão"
+
+#~ msgid "Uncompressed packed YUV 4:1:1"
+#~ msgstr "YUV 4:1:1 empacotado sem compressão"
+
+#~ msgid "Uncompressed packed YUV 4:4:4"
+#~ msgstr "YUV 4:4:4 empacotado sem compressão"
+
+#~ msgid "Uncompressed planar YUV 4:2:2"
+#~ msgstr "YUV 4:2:2 plano sem compressão"
+
+#~ msgid "Uncompressed planar YUV 4:1:1"
+#~ msgstr "YUV 4:1:1 plano sem compressão"
+
+#~ msgid "Uncompressed black and white Y-plane"
+#~ msgstr "Plano Y em preto e branco sem compressão"
+
+#~ msgid "Raw PCM audio"
+#~ msgstr "Áudio PCM Raw"
+
+#~ msgid "Raw %d-bit floating-point audio"
+#~ msgstr "Áudio Raw de ponto-flutuante de %d bits"
+
+#~ msgid "Raw floating-point audio"
+#~ msgstr "Áudio Raw de ponto-flutuante"
+
 #~ msgid "No device specified."
 #~ msgstr "Nenhum dispositivo especificado."
 
@@ -638,12 +643,6 @@ msgstr ""
 
 #~ msgid "Could not open device \"%s\" for reading and writing."
 #~ msgstr "Não foi possível abrir o dispositivo \"%s\" para leitura e escrita."
-
-#~ msgid "Error while sending gdp header data to \"%s:%d\"."
-#~ msgstr "Erro ao enviar o cabeçalho de dados GDP para \"%s:%d\"."
-
-#~ msgid "Error while sending gdp payload data to \"%s:%d\"."
-#~ msgstr "Erro ao enviar codificação de dados GDP para \"%s:%d\"."
 
 #~ msgid "Could not create \"decodebin2\" element."
 #~ msgstr "Não foi possível criar o elemento \"decodebin2\"."

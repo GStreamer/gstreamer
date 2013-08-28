@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 19:40+0100\n"
+"POT-Creation-Date: 2013-08-28 12:31+0200\n"
 "PO-Revision-Date: 2012-11-28 19:21+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
@@ -492,3 +492,9 @@ msgstr "ramka ID3v2"
 
 msgid "unparsed id3v2 tag frame"
 msgstr "ramka znacznika id3v2"
+
+msgid "musical-key"
+msgstr ""
+
+msgid "Initial key in which the sound starts"
+msgstr ""

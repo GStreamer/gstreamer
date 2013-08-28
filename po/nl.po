@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-07-29 19:40+0100\n"
+"POT-Creation-Date: 2013-08-28 12:31+0200\n"
 "PO-Revision-Date: 2012-11-29 22:19+0100\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
@@ -496,6 +496,12 @@ msgstr "ID3v2-frame"
 
 msgid "unparsed id3v2 tag frame"
 msgstr "niet-ontleed id3v2-tagframe"
+
+msgid "musical-key"
+msgstr ""
+
+msgid "Initial key in which the sound starts"
+msgstr ""
 
 #~ msgid "Master"
 #~ msgstr "Master"
