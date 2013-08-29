@@ -50,6 +50,7 @@ struct _GstVaapiVideoPool {
     GList              *used_objects;
     guint               used_count;
     guint               capacity;
+    GMutex              mutex;
 };
 
 /**
