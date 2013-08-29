@@ -1343,6 +1343,27 @@ gst_validate_pad_monitor_chain_func (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
+gst_validate_pad_monitor_event_is_tracked (GstValidatePadMonitor * monitor,
+    GstEvent * event)
+{
+  if (!GST_EVENT_IS_SERIALIZED (event)) {
+    return FALSE;
+  }
+
+  /* we don't track Tag events because they mutate too much and it is hard
+   * to match a tag event pushed on a source pad with the one that was received
+   * on a sink pad.
+   * One idea would be to use seqnum, but it seems that it is undefined whether
+   * seqnums should be maintained in tag events that are created from others
+   * up to today. (2013-08-29)
+   */
+  if (GST_EVENT_TYPE (event) == GST_EVENT_TAG)
+    return FALSE;
+
+  return TRUE;
+}
+
+static gboolean
 gst_validate_pad_monitor_sink_event_func (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
@@ -1353,7 +1374,7 @@ gst_validate_pad_monitor_sink_event_func (GstPad * pad, GstObject * parent,
   GST_VALIDATE_PAD_MONITOR_PARENT_LOCK (pad_monitor);
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
 
-  if (GST_EVENT_IS_SERIALIZED (event)) {
+  if (gst_validate_pad_monitor_event_is_tracked (pad_monitor, event)) {
     GstClockTime last_ts;
     if (GST_CLOCK_TIME_IS_VALID (pad_monitor->current_timestamp)) {
       last_ts = pad_monitor->current_timestamp;
