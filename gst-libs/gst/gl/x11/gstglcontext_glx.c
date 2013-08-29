@@ -25,6 +25,10 @@
 #include "config.h"
 #endif
 
+/* FIXME: Sharing contexts requires the Display to be the same.
+ * May need to box it
+ */
+
 #include <gst/gst.h>
 
 #include "../gstgl_fwd.h"
@@ -46,7 +50,7 @@ static void gst_gl_context_glx_swap_buffers (GstGLContext * context);
 static gboolean gst_gl_context_glx_activate (GstGLContext * context,
     gboolean activate);
 static gboolean gst_gl_context_glx_create_context (GstGLContext *
-    context, GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
+    context, GstGLAPI gl_api, GstGLContext * other_context, GError ** error);
 static void gst_gl_context_glx_destroy_context (GstGLContext * context);
 static gboolean gst_gl_context_glx_choose_format (GstGLContext *
     context, GError ** error);
@@ -129,7 +133,7 @@ _describe_fbconfig (Display * display, GLXFBConfig config)
 
 static gboolean
 gst_gl_context_glx_create_context (GstGLContext * context,
-    GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
+    GstGLAPI gl_api, GstGLContext * other_context, GError ** error)
 {
   GstGLContextGLX *context_glx;
   GstGLWindow *window;
@@ -138,11 +142,28 @@ gst_gl_context_glx_create_context (GstGLContext * context,
   const char *glx_exts;
   int x_error;
   Display *device;
+  guintptr external_gl_context = 0;
 
   context_glx = GST_GL_CONTEXT_GLX (context);
   window = gst_gl_context_get_window (context);
   window_x11 = GST_GL_WINDOW_X11 (window);
-  device = (Display *) gst_gl_window_get_display (window);
+
+  if (other_context) {
+    GstGLWindow *other_window;
+
+    if (!GST_GL_IS_CONTEXT_GLX (other_context)) {
+      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+          "Cannot share context with non-GLX context");
+      goto failure;
+    }
+
+    other_window = gst_gl_context_get_window (other_context);
+    external_gl_context = gst_gl_context_get_gl_context (other_context);
+    device = (Display *) gst_gl_window_get_display (other_window);
+    gst_object_unref (other_window);
+  } else {
+    device = (Display *) gst_gl_window_get_display (window);
+  }
 
   glx_exts = glXQueryExtensionsString (device, DefaultScreen (device));
 

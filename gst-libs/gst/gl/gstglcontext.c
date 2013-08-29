@@ -72,7 +72,7 @@ struct _GstGLContextPrivate
   gboolean created;
   gboolean alive;
 
-  guintptr external_gl_context;
+  GstGLContext *other_context;
   GstGLAPI gl_api;
   GError **error;
 };
@@ -299,7 +299,7 @@ gst_gl_context_get_window (GstGLContext * context)
 /* Create an opengl context (one context for one GstGLDisplay) */
 gboolean
 gst_gl_context_create (GstGLContext * context,
-    guintptr external_gl_context, GError ** error)
+    GstGLContext * other_context, GError ** error)
 {
   gboolean alive = FALSE;
 
@@ -310,7 +310,7 @@ gst_gl_context_create (GstGLContext * context,
   g_mutex_lock (&context->priv->render_lock);
 
   if (!context->priv->created) {
-    context->priv->external_gl_context = external_gl_context;
+    context->priv->other_context = other_context;
     context->priv->error = error;
 
     context->priv->gl_thread = g_thread_new ("gstglcontext",
@@ -476,7 +476,7 @@ _parse_gl_api (const gchar * apis_s)
 }
 
 //gboolean
-//gst_gl_context_create (GstGLContext * context, guintptr external_gl_context, GError ** error)
+//gst_gl_context_create (GstGLContext * context, GstGLContext * other_context, GError ** error)
 static gpointer
 gst_gl_context_create_thread (GstGLContext * context)
 {
@@ -492,12 +492,12 @@ gst_gl_context_create_thread (GstGLContext * context)
   gchar *user_api_string;
   const gchar *user_choice;
   GError **error;
-  guintptr external_gl_context;
+  GstGLContext *other_context;
 
   g_mutex_lock (&context->priv->render_lock);
 
   error = context->priv->error;
-  external_gl_context = context->priv->external_gl_context;
+  other_context = context->priv->other_context;
 
   context_class = GST_GL_CONTEXT_GET_CLASS (context);
   window_class = GST_GL_WINDOW_GET_CLASS (context->window);
@@ -539,7 +539,7 @@ gst_gl_context_create_thread (GstGLContext * context)
       "compiled api support (%s)", user_api_string, compiled_api_s);
 
   if (!context_class->create_context (context, compiled_api & user_api,
-          external_gl_context, error)) {
+          other_context, error)) {
     g_assert (error == NULL || *error != NULL);
     g_free (compiled_api_s);
     g_free (user_api_string);

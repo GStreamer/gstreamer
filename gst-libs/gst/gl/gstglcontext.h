@@ -23,7 +23,7 @@
 
 #include <gst/gst.h>
 
-#include <gst/gl/gstgl_fwd.h>
+#include <gst/gl/gl.h>
 
 G_BEGIN_DECLS
 
@@ -71,7 +71,7 @@ struct _GstGLContextClass {
   gboolean (*activate)           (GstGLContext *context, gboolean activate);
   gboolean (*choose_format)      (GstGLContext *context, GError **error);
   gboolean (*create_context)     (GstGLContext *context, GstGLAPI gl_api,
-                                  guintptr external_gl_context, GError ** error);
+                                  GstGLContext *other_context, GError ** error);
   void     (*destroy_context)    (GstGLContext *context);
   void     (*swap_buffers)       (GstGLContext *context);
 
@@ -88,8 +88,9 @@ gboolean      gst_gl_context_activate         (GstGLContext *context, gboolean a
 gpointer      gst_gl_context_get_proc_address (GstGLContext *context, const gchar *name);
 GstGLPlatform gst_gl_context_get_platform     (GstGLContext *context);
 GstGLAPI      gst_gl_context_get_gl_api       (GstGLContext *context);
+guintptr      gst_gl_context_get_gl_context   (GstGLContext *context);
 
-gboolean      gst_gl_context_create           (GstGLContext *context, guintptr external_gl_context, GError ** error);
+gboolean      gst_gl_context_create           (GstGLContext *context, GstGLContext *other_context, GError ** error);
 
 gpointer      gst_gl_context_default_get_proc_address (GstGLContext *context, const gchar *name);
 

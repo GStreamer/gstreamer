@@ -22,6 +22,10 @@
 #include "config.h"
 #endif
 
+/* FIXME: Sharing contexts requires the EGLDisplay & EGLConfig to be the same
+ * may need to box it.
+ */
+
 #include "gstglcontext_egl.h"
 #include <gst/gl/gl.h>
 
@@ -33,7 +37,7 @@
 #endif
 
 static gboolean gst_gl_context_egl_create_context (GstGLContext * context,
-    GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
+    GstGLAPI gl_api, GstGLContext * other_context, GError ** error);
 static void gst_gl_context_egl_destroy_context (GstGLContext * context);
 static gboolean gst_gl_context_egl_choose_format (GstGLContext * context,
     GError ** error);
@@ -150,27 +154,40 @@ gst_gl_context_egl_choose_format (GstGLContext * context, GError ** error)
 }
 
 static gboolean
-gst_gl_context_egl_choose_config (GstGLContextEGL * egl, GError ** error)
+gst_gl_context_egl_choose_config (GstGLContextEGL * egl,
+    GstGLContext * other_context, GError ** error)
 {
   EGLint numConfigs;
   gint i = 0;
   EGLint config_attrib[20];
 
-  config_attrib[i++] = EGL_SURFACE_TYPE;
-  config_attrib[i++] = EGL_WINDOW_BIT;
-  config_attrib[i++] = EGL_RENDERABLE_TYPE;
-  if (egl->gl_api & GST_GL_API_GLES2)
-    config_attrib[i++] = EGL_OPENGL_ES2_BIT;
-  else
-    config_attrib[i++] = EGL_OPENGL_BIT;
-  config_attrib[i++] = EGL_DEPTH_SIZE;
-  config_attrib[i++] = 16;
-  config_attrib[i++] = EGL_NONE;
+  if (other_context) {
+    GstGLContextEGL *other_context_egl = GST_GL_CONTEXT_EGL (other_context);
+    EGLint config_id;
+
+    eglGetConfigAttrib (egl->egl_display, other_context_egl->egl_config,
+        EGL_CONFIG_ID, &config_id);
+
+    config_attrib[i++] = EGL_CONFIG_ID;
+    config_attrib[i++] = config_id;
+    config_attrib[i++] = EGL_NONE;
+  } else {
+    config_attrib[i++] = EGL_SURFACE_TYPE;
+    config_attrib[i++] = EGL_WINDOW_BIT;
+    config_attrib[i++] = EGL_RENDERABLE_TYPE;
+    if (egl->gl_api & GST_GL_API_GLES2)
+      config_attrib[i++] = EGL_OPENGL_ES2_BIT;
+    else
+      config_attrib[i++] = EGL_OPENGL_BIT;
+    config_attrib[i++] = EGL_DEPTH_SIZE;
+    config_attrib[i++] = 16;
+    config_attrib[i++] = EGL_NONE;
+  }
 
   if (eglChooseConfig (egl->egl_display, config_attrib,
           &egl->egl_config, 1, &numConfigs)) {
-    GST_INFO ("config set: %ld, %ld", (gulong) egl->egl_config,
-        (gulong) numConfigs);
+    GST_INFO ("config set: %" G_GUINTPTR_FORMAT ", %u",
+        (guintptr) egl->egl_config, (unsigned int) numConfigs);
   } else {
     g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
         "Failed to set window configuration: %s",
@@ -186,7 +203,7 @@ failure:
 
 static gboolean
 gst_gl_context_egl_create_context (GstGLContext * context,
-    GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
+    GstGLAPI gl_api, GstGLContext * other_context, GError ** error)
 {
   GstGLContextEGL *egl;
   GstGLWindow *window = NULL;
@@ -197,19 +214,33 @@ gst_gl_context_egl_create_context (GstGLContext * context,
   EGLint minorVersion;
   const gchar *egl_exts;
   gboolean need_surface = TRUE;
+  guintptr external_gl_context = 0;
 
   egl = GST_GL_CONTEXT_EGL (context);
   window = gst_gl_context_get_window (context);
 
-  if ((gl_api & GST_GL_API_OPENGL) == GST_GL_API_NONE &&
-      (gl_api & GST_GL_API_GLES2) == GST_GL_API_NONE) {
+  if (other_context) {
+    if (!GST_GL_IS_CONTEXT_EGL (other_context)) {
+      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+          "Cannot share context with non-EGL context");
+      goto failure;
+    }
+    external_gl_context = gst_gl_context_get_gl_context (other_context);
+  }
+
+  if ((gl_api & (GST_GL_API_OPENGL | GST_GL_API_GLES2)) == GST_GL_API_NONE) {
     g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_WRONG_API,
-        "xEGL supports opengl or gles2");
+        "EGL supports opengl or gles2");
     goto failure;
   }
 
-  egl->egl_display =
-      eglGetDisplay ((EGLNativeDisplayType) gst_gl_window_get_display (window));
+  if (other_context) {
+    GstGLContextEGL *other_egl = (GstGLContextEGL *) other_context;
+    egl->egl_display = other_egl->egl_display;
+  } else {
+    egl->egl_display = eglGetDisplay ((EGLNativeDisplayType)
+        gst_gl_window_get_display (window));
+  }
 
   if (eglInitialize (egl->egl_display, &majorVersion, &minorVersion)) {
     GST_INFO ("egl initialized, version: %d.%d", majorVersion, minorVersion);
@@ -245,11 +276,12 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 
     if (!eglBindAPI (EGL_OPENGL_API)) {
       g_set_error (error, GST_GL_CONTEXT_ERROR, GST_GL_CONTEXT_ERROR_FAILED,
-          "Failed to bind OpenGL|ES API: %s",
+          "Failed to bind OpenGL API: %s",
           gst_gl_context_egl_get_error_string ());
       goto failure;
     }
 
+    GST_INFO ("Using OpenGL");
     egl->gl_api = GST_GL_API_OPENGL;
   } else if (gl_api & GST_GL_API_GLES2) {
   try_gles2:
@@ -260,10 +292,11 @@ gst_gl_context_egl_create_context (GstGLContext * context,
       goto failure;
     }
 
+    GST_INFO ("Using OpenGL|ES 2.0");
     egl->gl_api = GST_GL_API_GLES2;
   }
 
-  if (!gst_gl_context_egl_choose_config (egl, error)) {
+  if (!gst_gl_context_egl_choose_config (egl, other_context, error)) {
     g_assert (error == NULL || *error != NULL);
     goto failure;
   }
@@ -281,7 +314,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
       (EGLContext) external_gl_context, context_attrib);
 
   if (egl->egl_context != EGL_NO_CONTEXT) {
-    GST_INFO ("gl context created: %ld", (gulong) egl->egl_context);
+    GST_INFO ("gl context created: %" G_GUINTPTR_FORMAT,
+        (guintptr) egl->egl_context);
   } else {
     g_set_error (error, GST_GL_CONTEXT_ERROR,
         GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
@@ -292,17 +326,19 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 
   egl_exts = eglQueryString (egl->egl_display, EGL_EXTENSIONS);
 
-  /* FIXME do we want a window vfunc ? */
+  if (other_context == NULL) {
+    /* FIXME do we want a window vfunc ? */
 #if GST_GL_HAVE_WINDOW_X11
-  if (GST_GL_IS_WINDOW_X11 (context->window)) {
-    gst_gl_window_x11_create_window ((GstGLWindowX11 *) context->window);
-  }
+    if (GST_GL_IS_WINDOW_X11 (context->window)) {
+      gst_gl_window_x11_create_window ((GstGLWindowX11 *) context->window);
+    }
 #endif
 #if GST_GL_HAVE_WINDOW_WIN32
-  if (GST_GL_IS_WINDOW_WIN32 (context->window)) {
-    gst_gl_window_win32_create_window ((GstGLWindowWin32 *) context->window);
-  }
+    if (GST_GL_IS_WINDOW_WIN32 (context->window)) {
+      gst_gl_window_win32_create_window ((GstGLWindowWin32 *) context->window);
+    }
 #endif
+  }
 
   window_handle = gst_gl_window_get_window_handle (window);
 
