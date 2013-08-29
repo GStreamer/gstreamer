@@ -1254,6 +1254,216 @@ GST_START_TEST (test_snapping_groups)
 
 GST_END_TEST;
 
+static void
+_set_track_element_width_height (GESTrackElement * trksrc, gint wvalue,
+    gint hvalue)
+{
+  GValue width = { 0 };
+  GValue height = { 0 };
+
+  g_value_init (&width, G_TYPE_INT);
+  g_value_init (&height, G_TYPE_INT);
+  g_value_set_int (&width, wvalue);
+  g_value_set_int (&height, hvalue);
+  if (wvalue >= 0)
+    ges_track_element_set_child_property (trksrc, "width", &width);
+  if (hvalue >= 0)
+    ges_track_element_set_child_property (trksrc, "height", &height);
+}
+
+static gboolean
+check_frame_positionner_size (GESClip * clip, gint width, gint height)
+{
+  GESTrackElement *trksrc;
+  GValue val_width = { 0 };
+  GValue val_height = { 0 };
+  gint real_width, real_height;
+
+  trksrc = GES_CONTAINER_CHILDREN (clip)->data;
+  if (!GES_IS_VIDEO_SOURCE (trksrc))
+    return FALSE;
+
+  g_value_init (&val_width, G_TYPE_INT);
+  g_value_init (&val_height, G_TYPE_INT);
+
+  ges_track_element_get_child_property (trksrc, "width", &val_width);
+  ges_track_element_get_child_property (trksrc, "height", &val_height);
+
+  real_width = g_value_get_int (&val_width);
+  real_height = g_value_get_int (&val_height);
+
+  return (width == real_width && height == real_height);
+}
+
+GST_START_TEST (test_scaling)
+{
+  GESTimeline *timeline;
+  GESLayer *layer;
+  GESAsset *asset1, *asset2;
+  GESClip *clip;
+  GESTrack *trackv = GES_TRACK (ges_video_track_new ());
+  GstCaps *caps =
+      gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, 1200, "height",
+      G_TYPE_INT, 1000, NULL);
+
+  ges_init ();
+  timeline = ges_timeline_new ();
+  ges_timeline_add_track (timeline, trackv);
+  layer = ges_layer_new ();
+  fail_unless (ges_timeline_add_layer (timeline, layer));
+
+  g_object_set (layer, "auto-transition", TRUE, NULL);
+
+  asset1 = GES_ASSET (ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL));
+  asset2 = GES_ASSET (ges_asset_request (GES_TYPE_TEST_CLIP, NULL, NULL));
+
+  fail_unless (asset1 != NULL && asset2 != NULL);
+
+  GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (timeline),
+      GST_DEBUG_GRAPH_SHOW_ALL, "ges-integration-timeline");
+
+  ges_track_set_restriction_caps (trackv, caps);
+  gst_caps_unref (caps);
+
+  GST_DEBUG ("adding clip, should be 1200 x 1000");
+  clip =
+      ges_layer_add_asset (layer, GES_ASSET (asset1), 0 * GST_SECOND,
+      0 * GST_SECOND, 4 * GST_SECOND, GES_TRACK_TYPE_UNKNOWN);
+  gst_object_unref (asset1);
+  g_object_set (clip, "vpattern", (gint) GES_VIDEO_TEST_PATTERN_SMPTE75, NULL);
+
+  /**
+   * Our track: 1200 x 1000
+   *
+   * 0--------------0
+   * | width : 1200 |
+   * | height: 1000 |
+   * 0--------------2
+   */
+
+  /* clip takes the size set on the track as a default */
+  fail_unless (check_frame_positionner_size (clip, 1200, 1000));
+
+  if (GES_IS_VIDEO_SOURCE (GES_CONTAINER_CHILDREN (clip)->data))
+    _set_track_element_width_height (GES_CONTAINER_CHILDREN (clip)->data, 1024,
+        768);
+
+  GST_DEBUG ("Setting clip size, should be 1024 x 768");
+
+  /**
+   * Our timeline : 1200 x 1000
+   *
+   * 0--------------0
+   * | width : 1024 |
+   * | height: 768  |
+   * 0--------------2
+   */
+
+  /* Clip has to comply to direct orders */
+  fail_unless (check_frame_positionner_size (clip, 1024, 768));
+
+  GST_DEBUG ("Changing caps, should still be 1024 x 768");
+
+  caps =
+      gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, 1400, "height",
+      G_TYPE_INT, 1200, NULL);
+  ges_track_set_restriction_caps (trackv, caps);
+  gst_caps_unref (caps);
+
+  /**
+   * Our timeline : 1400 x 1200
+   *
+   * 0--------------0
+   * | width : 1024 |
+   * | height: 768  |
+   * 0--------------2
+   */
+
+  /* Clip still has to be the same size */
+  fail_unless (check_frame_positionner_size (clip, 1024, 768));
+
+  GST_DEBUG ("Setting width to 0, should be 1400 x 768");
+
+  /* -1 means don't set it, only valid here */
+  if (GES_IS_VIDEO_SOURCE (GES_CONTAINER_CHILDREN (clip)->data))
+    _set_track_element_width_height (GES_CONTAINER_CHILDREN (clip)->data, 0,
+        -1);
+
+  /**
+   * Our timeline : 1400 x 1200
+   *
+   * 0--------------0
+   * | width : 1400 |
+   * | height: 768  |
+   * 0--------------2
+   */
+
+  /* Clip width was set to 0 so it has to use track width */
+  /* Clip height is still directly set by the user */
+  fail_unless (check_frame_positionner_size (clip, 1400, 768));
+
+  GST_DEBUG ("Setting height to 0, should be 1400 x 1200");
+
+  if (GES_IS_VIDEO_SOURCE (GES_CONTAINER_CHILDREN (clip)->data))
+    _set_track_element_width_height (GES_CONTAINER_CHILDREN (clip)->data, -1,
+        0);
+
+  /**
+   * Our timeline : 1400 x 1200
+   *
+   * 0--------------0
+   * | width : 1400 |
+   * | height: 1200 |
+   * 0--------------2
+   */
+
+  /* Clip width still has to use track width */
+  /* Clip height was set to 0 so it has to use track height */
+  fail_unless (check_frame_positionner_size (clip, 1400, 1200));
+
+  GST_DEBUG ("Removing restriction on track height, should be 1400 x 240");
+
+  caps =
+      gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, 1400, "height",
+      G_TYPE_INT, 0, NULL);
+  ges_track_set_restriction_caps (trackv, caps);
+  gst_caps_unref (caps);
+
+  /**
+   * Our timeline : 1400 x no restriction
+   *
+   * 0--------------0
+   * | width : 1400 |
+   * | height: 240  |
+   * 0--------------2
+   */
+
+  /* Clip width still has to use track width */
+  /* Clip height was set to 0 so it has to use natural clip height */
+  fail_unless (check_frame_positionner_size (clip, 1400, 0));
+
+  GST_DEBUG ("Removing restriction on track width, should be 320 x 240");
+
+  caps = gst_caps_new_empty_simple ("video/x-raw");
+  ges_track_set_restriction_caps (trackv, caps);
+  gst_caps_unref (caps);
+
+  /**
+   * Our timeline : no restriction x no restriction
+   *
+   * 0--------------0
+   * | width : 320  |
+   * | height: 240  |
+   * 0--------------2
+   */
+
+  /* Clip width was set to 0 so it has to use natural clip width */
+  /* Clip height was set to 0 so it has to use natural clip height */
+  fail_unless (check_frame_positionner_size (clip, 0, 0));
+}
+
+GST_END_TEST;
+
 static Suite *
 ges_suite (void)
 {
@@ -1268,6 +1478,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_simple_triming);
   tcase_add_test (tc_chain, test_groups);
   tcase_add_test (tc_chain, test_snapping_groups);
+  tcase_add_test (tc_chain, test_scaling);
 
   return s;
 }
