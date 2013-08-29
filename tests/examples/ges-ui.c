@@ -111,7 +111,7 @@ gboolean window_delete_event_cb (GtkObject * window, GdkEvent * event,
 void new_activate_cb (GtkMenuItem * item, App * app);
 void open_activate_cb (GtkMenuItem * item, App * app);
 void save_as_activate_cb (GtkMenuItem * item, App * app);
-void launch_pitivi_project_activate_cb (GtkMenuItem * item, App * app);
+void launch_project_activate_cb (GtkMenuItem * item, App * app);
 void quit_item_activate_cb (GtkMenuItem * item, App * app);
 void delete_activate_cb (GtkAction * item, App * app);
 void play_activate_cb (GtkAction * item, App * app);
@@ -1156,24 +1156,24 @@ app_launch_project (App * app, gchar * uri)
   GMainLoop *mainloop;
   GESPipeline *pipeline;
   GstBus *bus;
-  GESFormatter *formatter;
+  GESProject *project;
 
   uri = g_strsplit (uri, "//", 2)[1];
   printf ("we will launch this uri : %s\n", uri);
-  formatter = GES_FORMATTER (ges_pitivi_formatter_new ());
-  timeline = ges_timeline_new ();
+  project = ges_project_new (uri);
+  timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
   pipeline = ges_pipeline_new ();
   bus = gst_pipeline_get_bus (GST_PIPELINE (pipeline));
   mainloop = g_main_loop_new (NULL, FALSE);
 
   ges_pipeline_add_timeline (pipeline, timeline);
-  ges_formatter_load_from_uri (formatter, timeline, uri, NULL);
   ges_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW_VIDEO);
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_PLAYING);
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", G_CALLBACK (project_bus_message_cb),
       mainloop);
   g_main_loop_run (mainloop);
+  g_object_unref (project);
 }
 
 static void
@@ -1393,7 +1393,7 @@ new_activate_cb (GtkMenuItem * item, App * app)
 }
 
 void
-launch_pitivi_project_activate_cb (GtkMenuItem * item, App * app)
+launch_project_activate_cb (GtkMenuItem * item, App * app)
 {
   GtkFileChooserDialog *dlg;
   GtkFileFilter *filter;
