@@ -70,13 +70,13 @@ gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool)
     if (!proxy)
         return NULL;
 
+    proxy->destroy_func = NULL;
     proxy->pool = gst_vaapi_video_pool_ref(pool);
     proxy->surface = gst_vaapi_video_pool_get_object(proxy->pool);
     if (!proxy->surface)
         goto error;
     proxy->timestamp = GST_CLOCK_TIME_NONE;
     proxy->duration = GST_CLOCK_TIME_NONE;
-    proxy->destroy_func = NULL;
     proxy->has_crop_rect = FALSE;
     gst_vaapi_object_ref(proxy->surface);
     return proxy;

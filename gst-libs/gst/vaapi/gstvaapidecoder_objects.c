@@ -103,6 +103,8 @@ gst_vaapi_picture_create(
 {
     gboolean success;
 
+    picture->param_id = VA_INVALID_ID;
+
     if (args->flags & GST_VAAPI_CREATE_PICTURE_FLAG_CLONE) {
         GstVaapiPicture * const parent_picture = GST_VAAPI_PICTURE(args->data);
 
@@ -158,7 +160,6 @@ gst_vaapi_picture_create(
     picture->surface    = GST_VAAPI_SURFACE_PROXY_SURFACE(picture->proxy);
     picture->surface_id = GST_VAAPI_SURFACE_PROXY_SURFACE_ID(picture->proxy);
 
-    picture->param_id = VA_INVALID_ID;
     success = vaapi_create_buffer(
         GET_VA_DISPLAY(picture),
         GET_VA_CONTEXT(picture),
@@ -418,7 +419,9 @@ gst_vaapi_slice_create(
     VASliceParameterBufferBase *slice_param;
     gboolean success;
 
+    slice->param_id = VA_INVALID_ID;
     slice->data_id = VA_INVALID_ID;
+
     success = vaapi_create_buffer(
         GET_VA_DISPLAY(slice),
         GET_VA_CONTEXT(slice),
@@ -431,7 +434,6 @@ gst_vaapi_slice_create(
     if (!success)
         return FALSE;
 
-    slice->param_id = VA_INVALID_ID;
     success = vaapi_create_buffer(
         GET_VA_DISPLAY(slice),
         GET_VA_CONTEXT(slice),
