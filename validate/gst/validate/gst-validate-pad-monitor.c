@@ -1333,7 +1333,8 @@ gst_validate_pad_monitor_chain_func (GstPad * pad, GstObject * parent,
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
 
   pad_monitor->last_flow_return = ret;
-  gst_validate_pad_monitor_check_aggregated_return (pad_monitor, ret);
+  if (PAD_PARENT_IS_DEMUXER (pad_monitor))
+    gst_validate_pad_monitor_check_aggregated_return (pad_monitor, ret);
 
   GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
   GST_VALIDATE_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);
