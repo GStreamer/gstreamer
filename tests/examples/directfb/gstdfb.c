@@ -83,7 +83,7 @@ size_changed (GObject * obj, GParamSpec * pspec, IDirectFBWindow * window)
   GstStructure *s;
   GstCaps *caps;
 
-  if (!(caps = gst_pad_get_negotiated_caps (pad)))
+  if (!(caps = gst_pad_get_current_caps (pad)))
     return;
 
   s = gst_caps_get_structure (caps, 0);
