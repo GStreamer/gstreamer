@@ -85,6 +85,7 @@ struct _GstVaapiSink {
     guint               video_height;
     gint                video_par_n;
     gint                video_par_d;
+    GstVideoInfo        video_info;
     GstVaapiRectangle   display_rect;
     GstVaapiRotation    rotation;
     GstVaapiRotation    rotation_req;

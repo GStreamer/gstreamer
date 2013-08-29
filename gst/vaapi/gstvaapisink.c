@@ -660,6 +660,8 @@ gst_vaapisink_ensure_video_buffer_pool(GstVaapiSink *sink, GstCaps *caps)
         0, 0);
     gst_buffer_pool_config_add_option(config,
         GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META);
+    gst_buffer_pool_config_add_option(config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
     if (!gst_buffer_pool_set_config(pool, config))
         goto error_pool_config;
     sink->video_buffer_pool = pool;
@@ -748,7 +750,7 @@ static gboolean
 gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
-    GstVideoInfo vi;
+    GstVideoInfo * const vip = &sink->video_info;
     guint win_width, win_height;
 
 #if USE_DRM
@@ -759,13 +761,13 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     if (!gst_vaapisink_ensure_video_buffer_pool(sink, caps))
         return FALSE;
 
-    if (!gst_video_info_from_caps(&vi, caps))
+    if (!gst_video_info_from_caps(vip, caps))
         return FALSE;
-    sink->use_video_raw = GST_VIDEO_INFO_IS_YUV(&vi);
-    sink->video_width   = GST_VIDEO_INFO_WIDTH(&vi);
-    sink->video_height  = GST_VIDEO_INFO_HEIGHT(&vi);
-    sink->video_par_n   = GST_VIDEO_INFO_PAR_N(&vi);
-    sink->video_par_d   = GST_VIDEO_INFO_PAR_D(&vi);
+    sink->use_video_raw = GST_VIDEO_INFO_IS_YUV(vip);
+    sink->video_width   = GST_VIDEO_INFO_WIDTH(vip);
+    sink->video_height  = GST_VIDEO_INFO_HEIGHT(vip);
+    sink->video_par_n   = GST_VIDEO_INFO_PAR_N(vip);
+    sink->video_par_d   = GST_VIDEO_INFO_PAR_D(vip);
     GST_DEBUG("video pixel-aspect-ratio %d/%d",
               sink->video_par_n, sink->video_par_d);
 
@@ -1016,6 +1018,78 @@ gst_vaapisink_put_surface(
     return TRUE;
 }
 
+#if GST_CHECK_VERSION(1,0,0)
+static GstFlowReturn
+gst_vaapisink_get_render_buffer(GstVaapiSink *sink, GstBuffer *src_buffer,
+    GstBuffer **out_buffer_ptr)
+{
+    GstVaapiVideoMeta *meta;
+    GstBuffer *out_buffer;
+    GstBufferPoolAcquireParams params = { 0, };
+    GstVideoFrame src_frame, out_frame;
+    GstFlowReturn ret;
+
+    meta = gst_buffer_get_vaapi_video_meta(src_buffer);
+    if (meta) {
+        *out_buffer_ptr = gst_buffer_ref(src_buffer);
+        return GST_FLOW_OK;
+    }
+
+    if (!sink->use_video_raw) {
+        GST_ERROR("unsupported video buffer");
+        return GST_FLOW_EOS;
+    }
+
+    GST_DEBUG("buffer %p not from our pool, copying", src_buffer);
+
+    *out_buffer_ptr = NULL;
+    if (!sink->video_buffer_pool)
+        goto error_no_pool;
+
+    if (!gst_buffer_pool_set_active(sink->video_buffer_pool, TRUE))
+        goto error_activate_pool;
+
+    params.flags = GST_BUFFER_POOL_ACQUIRE_FLAG_DONTWAIT;
+    ret = gst_buffer_pool_acquire_buffer(sink->video_buffer_pool, &out_buffer,
+        &params);
+    if (ret != GST_FLOW_OK)
+        goto error_create_buffer;
+
+    if (!gst_video_frame_map(&src_frame, &sink->video_info, src_buffer,
+            GST_MAP_READ))
+        goto error_map_src_buffer;
+
+    if (!gst_video_frame_map(&out_frame, &sink->video_info, out_buffer,
+            GST_MAP_WRITE))
+        goto error_map_dst_buffer;
+
+    gst_video_frame_copy(&out_frame, &src_frame);
+    gst_video_frame_unmap(&out_frame);
+    gst_video_frame_unmap(&src_frame);
+
+    *out_buffer_ptr = out_buffer;
+    return GST_FLOW_OK;
+
+    /* ERRORS */
+error_no_pool:
+    GST_ERROR("no buffer pool was negotiated");
+    return GST_FLOW_ERROR;
+error_activate_pool:
+    GST_ERROR("failed to activate buffer pool");
+    return GST_FLOW_ERROR;
+error_create_buffer:
+    GST_WARNING("failed to create image. Skipping this frame");
+    return GST_FLOW_OK;
+error_map_dst_buffer:
+    gst_video_frame_unmap(&src_frame);
+    // fall-through
+error_map_src_buffer:
+    GST_WARNING("failed to map buffer. Skipping this frame");
+    gst_buffer_unref(out_buffer);
+    return GST_FLOW_OK;
+}
+#endif
+
 static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
 {
@@ -1029,15 +1103,11 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
 #if GST_CHECK_VERSION(1,0,0)
     GstVaapiRectangle tmp_rect;
 #endif
+    GstFlowReturn ret;
 
-    meta = gst_buffer_get_vaapi_video_meta(src_buffer);
 #if GST_CHECK_VERSION(1,0,0)
-    if (!meta)
-        return GST_FLOW_EOS;
-    buffer = gst_buffer_ref(src_buffer);
-
     GstVideoCropMeta * const crop_meta =
-        gst_buffer_get_video_crop_meta(buffer);
+        gst_buffer_get_video_crop_meta(src_buffer);
     if (crop_meta) {
         surface_rect = &tmp_rect;
         surface_rect->x = crop_meta->x;
@@ -1045,7 +1115,14 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
         surface_rect->width = crop_meta->width;
         surface_rect->height = crop_meta->height;
     }
+
+    ret = gst_vaapisink_get_render_buffer(sink, src_buffer, &buffer);
+    if (ret != GST_FLOW_OK || !buffer)
+        return ret;
+
+    meta = gst_buffer_get_vaapi_video_meta(buffer);
 #else
+    meta = gst_buffer_get_vaapi_video_meta(src_buffer);
     if (meta)
         buffer = gst_buffer_ref(src_buffer);
     else if (sink->use_video_raw) {
@@ -1462,4 +1539,5 @@ gst_vaapisink_init(GstVaapiSink *sink)
     sink->use_overlay    = FALSE;
     sink->use_rotation   = FALSE;
     sink->keep_aspect    = TRUE;
+    gst_video_info_init(&sink->video_info);
 }
