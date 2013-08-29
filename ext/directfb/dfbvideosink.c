@@ -848,9 +848,8 @@ gst_dfbvideosink_setup (GstDfbVideoSink * dfbvideosink)
       dfbvideosink->dfb->EnumInputDevices (dfbvideosink->dfb,
           gst_dfbvideosink_enum_devices, dfbvideosink);
       /* Create a thread to handle those events */
-      dfbvideosink->event_thread = g_thread_create (
-          (GThreadFunc) gst_dfbvideosink_event_thread,
-          dfbvideosink, TRUE, NULL);
+      dfbvideosink->event_thread = g_thread_new ("dfbvsink-events",
+          (GThreadFunc) gst_dfbvideosink_event_thread, dfbvideosink);
     }
     if (!dfbvideosink->layer) {
       GList *channels_list = NULL;
