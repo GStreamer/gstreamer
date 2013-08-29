@@ -237,46 +237,32 @@ gst_vaapidecode_decode_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
     GstVaapiDecoderStatus status;
     GstFlowReturn ret;
-    gint64 end_time;
 
-    if (decode->render_time_base)
-        end_time = decode->render_time_base;
-    else
-        end_time = g_get_monotonic_time();
-    end_time += GST_TIME_AS_USECONDS(decode->last_buffer_time);
-    end_time += G_TIME_SPAN_SECOND;
+    ret =  g_atomic_int_get(&decode->decoder_loop_status);
+    if (ret != GST_FLOW_OK)
+        return ret;
 
     /* Decode current frame */
     for (;;) {
         status = gst_vaapi_decoder_decode(decode->decoder, frame);
         if (status == GST_VAAPI_DECODER_STATUS_ERROR_NO_SURFACE) {
-            gboolean was_signalled;
             GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
             g_mutex_lock(&decode->decoder_mutex);
-            was_signalled = g_cond_wait_until(
-                &decode->decoder_ready,
-                &decode->decoder_mutex,
-                end_time
-            );
+            g_cond_wait(&decode->decoder_ready, &decode->decoder_mutex);
             g_mutex_unlock(&decode->decoder_mutex);
             GST_VIDEO_DECODER_STREAM_LOCK(vdec);
-            if (was_signalled)
-                continue;
-            goto error_decode_timeout;
+            continue;
         }
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
             goto error_decode;
         break;
     }
-    return GST_FLOW_OK;
+
+    /* Try to report back early any error that occured in the decode task */
+    ret = g_atomic_int_get(&decode->decoder_loop_status);
+    return ret;
 
     /* ERRORS */
-error_decode_timeout:
-    {
-        GST_WARNING("decode timeout. Decoder required a VA surface but none "
-                    "got available within one second");
-        return GST_FLOW_EOS;
-    }
 error_decode:
     {
         GST_ERROR("decode error %d", status);
@@ -287,7 +273,7 @@ error_decode:
             ret = GST_FLOW_NOT_SUPPORTED;
             break;
         default:
-            ret = GST_FLOW_EOS;
+            ret = GST_FLOW_ERROR;
             break;
         }
         gst_video_decoder_drop_frame(vdec, frame);
@@ -370,22 +356,6 @@ gst_vaapidecode_push_decoded_frame(GstVideoDecoder *vdec)
     if (ret != GST_FLOW_OK)
         goto error_commit_buffer;
 
-    /* Estimate when this frame would no longer be needed for rendering */
-    if (GST_CLOCK_TIME_IS_VALID(out_frame->pts)) {
-        if (!decode->render_time_base)
-            decode->render_time_base = g_get_monotonic_time() -
-                GST_TIME_AS_USECONDS(out_frame->pts);
-        decode->last_buffer_time = out_frame->pts;
-        if (GST_CLOCK_TIME_IS_VALID(out_frame->duration))
-            decode->last_buffer_time += out_frame->duration;
-        else
-            decode->last_buffer_time += GST_SECOND;
-    }
-    else {
-        decode->render_time_base = 0;
-        decode->last_buffer_time = 0;
-    }
-
     gst_video_codec_frame_unref(out_frame);
     return GST_FLOW_OK;
 
@@ -400,7 +370,7 @@ error_create_buffer:
                   GST_VAAPI_ID_ARGS(surface_id));
         gst_video_decoder_drop_frame(vdec, out_frame);
         gst_video_codec_frame_unref(out_frame);
-        return GST_FLOW_EOS;
+        return GST_FLOW_ERROR;
     }
 #if GST_CHECK_VERSION(1,0,0)
 error_get_meta:
@@ -408,7 +378,7 @@ error_get_meta:
         GST_ERROR("failed to get vaapi video meta attached to video buffer");
         gst_video_decoder_drop_frame(vdec, out_frame);
         gst_video_codec_frame_unref(out_frame);
-        return GST_FLOW_EOS;
+        return GST_FLOW_ERROR;
     }
 #endif
 error_commit_buffer:
@@ -416,7 +386,7 @@ error_commit_buffer:
         if (ret != GST_FLOW_FLUSHING)
             GST_ERROR("video sink rejected the video buffer (error %d)", ret);
         gst_video_codec_frame_unref(out_frame);
-        return GST_FLOW_EOS;
+        return ret;
     }
 }
 
@@ -442,6 +412,8 @@ gst_vaapidecode_decode_loop(GstVaapiDecode *decode)
     ret = gst_vaapidecode_push_decoded_frame(vdec);
     if (ret == GST_FLOW_OK)
         return;
+    g_atomic_int_compare_and_exchange(&decode->decoder_loop_status,
+        GST_FLOW_OK, ret);
 
     /* If invoked from gst_vaapidecode_finish(), then return right
        away no matter the errors, or the GstVaapiDecoder needs further
@@ -667,8 +639,6 @@ gst_vaapidecode_reset_full(GstVaapiDecode *decode, GstCaps *caps, gboolean hard)
 
     /* Reset timers if hard reset was requested (e.g. seek) */
     if (hard) {
-        decode->render_time_base = 0;
-        decode->last_buffer_time = 0;
     }
 
     /* Only reset decoder if codec type changed */
@@ -960,8 +930,7 @@ gst_vaapidecode_init(GstVaapiDecode *decode)
     decode->decoder             = NULL;
     decode->decoder_caps        = NULL;
     decode->allowed_caps        = NULL;
-    decode->render_time_base    = 0;
-    decode->last_buffer_time    = 0;
+    decode->decoder_loop_status = GST_FLOW_OK;
 
     g_mutex_init(&decode->decoder_mutex);
     g_cond_init(&decode->decoder_ready);

@@ -72,12 +72,11 @@ struct _GstVaapiDecode {
     GstVaapiDecoder    *decoder;
     GMutex              decoder_mutex;
     GCond               decoder_ready;
+    volatile gint       decoder_loop_status;
     volatile gboolean   decoder_finish;
     GCond               decoder_finish_done;
     GstCaps            *decoder_caps;
     GstCaps            *allowed_caps;
-    gint64              render_time_base;
-    GstClockTime        last_buffer_time;
     guint               current_frame_size;
     guint               has_texture_upload_meta : 1;
 };
