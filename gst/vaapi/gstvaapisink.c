@@ -1088,6 +1088,44 @@ error_map_src_buffer:
     gst_buffer_unref(out_buffer);
     return GST_FLOW_OK;
 }
+#else
+static GstFlowReturn
+gst_vaapisink_get_render_buffer(GstVaapiSink *sink, GstBuffer *src_buffer,
+    GstBuffer **out_buffer_ptr)
+{
+    GstVaapiVideoMeta *meta;
+    GstBuffer *out_buffer;
+
+    *out_buffer_ptr = NULL;
+    meta = gst_buffer_get_vaapi_video_meta(src_buffer);
+    if (meta)
+        out_buffer = gst_buffer_ref(src_buffer);
+    else if (sink->use_video_raw) {
+        out_buffer = gst_vaapi_uploader_get_buffer(sink->uploader);
+        if (!out_buffer)
+            goto error_create_buffer;
+    }
+    else {
+        GST_ERROR("unsupported video buffer");
+        return GST_FLOW_EOS;
+    }
+
+    if (sink->use_video_raw &&
+        !gst_vaapi_uploader_process(sink->uploader, src_buffer, out_buffer))
+        goto error_copy_buffer;
+
+    *out_buffer_ptr = out_buffer;
+    return GST_FLOW_OK;
+
+    /* ERRORS */
+error_create_buffer:
+    GST_WARNING("failed to create buffer. Skipping this frame");
+    return GST_FLOW_OK;
+error_copy_buffer:
+    GST_WARNING("failed to copy buffers. Skipping this frame");
+    gst_buffer_unref(out_buffer);
+    return GST_FLOW_OK;
+}
 #endif
 
 static GstFlowReturn
@@ -1115,34 +1153,13 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
         surface_rect->width = crop_meta->width;
         surface_rect->height = crop_meta->height;
     }
+#endif
 
     ret = gst_vaapisink_get_render_buffer(sink, src_buffer, &buffer);
     if (ret != GST_FLOW_OK || !buffer)
         return ret;
 
     meta = gst_buffer_get_vaapi_video_meta(buffer);
-#else
-    meta = gst_buffer_get_vaapi_video_meta(src_buffer);
-    if (meta)
-        buffer = gst_buffer_ref(src_buffer);
-    else if (sink->use_video_raw) {
-        buffer = gst_vaapi_uploader_get_buffer(sink->uploader);
-        if (!buffer)
-            return GST_FLOW_EOS;
-        meta = gst_buffer_get_vaapi_video_meta(buffer);
-        if (!meta)
-            goto error;
-    }
-    else
-        return GST_FLOW_EOS;
-
-    if (sink->use_video_raw &&
-        !gst_vaapi_uploader_process(sink->uploader, src_buffer, buffer)) {
-        GST_WARNING("failed to process raw YUV buffer");
-        goto error;
-    }
-#endif
-
     if (sink->display != gst_vaapi_video_meta_get_display(meta))
         gst_vaapi_display_replace(&sink->display,
             gst_vaapi_video_meta_get_display(meta));
