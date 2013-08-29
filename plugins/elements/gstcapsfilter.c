@@ -366,17 +366,17 @@ gst_capsfilter_sink_event (GstBaseTransform * trans, GstEvent * event)
   if (GST_EVENT_TYPE (event) == GST_EVENT_FLUSH_STOP) {
     GList *l;
 
-    for (l = filter->pending_events; l;) {
+    for (l = filter->pending_events; l; l = l->next) {
       if (GST_EVENT_TYPE (l->data) == GST_EVENT_SEGMENT) {
         gst_event_unref (l->data);
-        l = g_list_delete_link (l, l);
-      } else {
-        l = l->next;
+        filter->pending_events = g_list_delete_link (filter->pending_events, l);
+        break;
       }
     }
   }
 
-  if (!GST_EVENT_IS_STICKY (event) || GST_EVENT_TYPE (event) <= GST_EVENT_CAPS)
+  if (!GST_EVENT_IS_STICKY (event)
+      || GST_EVENT_TYPE (event) <= GST_EVENT_CAPS)
     goto done;
 
   /* If we get EOS before any buffers, just push all pending events */
