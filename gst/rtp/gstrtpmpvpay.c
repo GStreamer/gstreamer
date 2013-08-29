@@ -180,13 +180,15 @@ gst_rtp_mpv_pay_flush (GstRTPMPVPay * rtpmpvpay)
     GstRTPBuffer rtp = { NULL };
     GstBuffer *paybuf;
 
-    packet_len = gst_rtp_buffer_calc_packet_len (avail, 4, 0);
+    packet_len = gst_rtp_buffer_calc_packet_len (avail + 4, 0, 0);
 
     towrite = MIN (packet_len, GST_RTP_BASE_PAYLOAD_MTU (rtpmpvpay));
 
-    payload_len = gst_rtp_buffer_calc_payload_len (towrite, 4, 0);
+    payload_len = gst_rtp_buffer_calc_payload_len (towrite, 0, 0);
 
     outbuf = gst_rtp_buffer_new_allocate (4, 0, 0);
+
+    payload_len -= 4;
 
     gst_rtp_buffer_map (outbuf, GST_MAP_WRITE, &rtp);
 
