@@ -122,6 +122,8 @@ enum
   ARG_LAYER_MODE
 };
 
+#define DEFAULT_LAYER_MODE LAYER_MODE_EXCLUSIVE
+
 static DFBSurfacePixelFormat gst_dfbvideosink_get_format_from_caps (GstCaps *
     caps);
 static void gst_dfbvideosink_update_colorbalance (GstDfbVideoSink *
@@ -133,6 +135,25 @@ static const char *gst_dfbvideosink_get_format_name (DFBSurfacePixelFormat
     format);
 
 #define gst_dfbvideosink_parent_class parent_class
+
+static GType
+gst_dfbvideosink_layer_mode_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {0, "NONE", "none"},
+    {DLSCL_EXCLUSIVE, "DLSCL_EXCLUSIVE", "exclusive"},
+    {DLSCL_ADMINISTRATIVE, "DLSCL_ADMINISTRATIVE", "administrative"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstDfbVideoSinkLayerMode", values);
+    g_once_init_leave (&id, tmp);
+  }
+
+  return (GType) id;
+}
 
 GType
 gst_meta_dfbsurface_api_get_type (void)
@@ -547,8 +568,8 @@ gst_dfbvideosink_event_thread (GstDfbVideoSink * dfbvideosink)
 
   while (dfbvideosink->running) {
     /* Wait for an event with a 50 ms timeout */
-    dfbvideosink->event_buffer->
-        WaitForEventWithTimeout (dfbvideosink->event_buffer, 0, 50);
+    dfbvideosink->event_buffer->WaitForEventWithTimeout (dfbvideosink->
+        event_buffer, 0, 50);
 
     /* Do we have an event ? */
     ret = dfbvideosink->event_buffer->HasEvent (dfbvideosink->event_buffer);
@@ -2178,16 +2199,7 @@ gst_dfbvideosink_set_property (GObject * object, guint prop_id,
       dfbvideosink->vsync = g_value_get_boolean (value);
       break;
     case ARG_LAYER_MODE:
-    {
-      const char *str = g_value_get_string (value);
-
-      if (strncmp (str, "administrative", strlen ("administrative")) == 0)
-        dfbvideosink->layer_mode = LAYER_MODE_ADMINISTRATIVE;
-      else if (strncmp (str, "exclusive", strlen ("exclusive")) == 0)
-        dfbvideosink->layer_mode = LAYER_MODE_EXCLUSIVE;
-      else
-        dfbvideosink->layer_mode = LAYER_MODE_INVALID;
-    }
+      dfbvideosink->layer_mode = g_value_get_enum (value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2225,12 +2237,7 @@ gst_dfbvideosink_get_property (GObject * object, guint prop_id,
       g_value_set_boolean (value, dfbvideosink->vsync);
       break;
     case ARG_LAYER_MODE:
-      if (dfbvideosink->layer_mode == LAYER_MODE_EXCLUSIVE)
-        g_value_set_string (value, "exclusive");
-      else if (dfbvideosink->layer_mode == LAYER_MODE_ADMINISTRATIVE)
-        g_value_set_string (value, "administrative");
-      else
-        g_value_set_string (value, "invalid");
+      g_value_set_enum (value, dfbvideosink->layer_mode);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2343,7 +2350,7 @@ gst_dfbvideosink_init (GstDfbVideoSink * dfbvideosink)
 
   dfbvideosink->par = NULL;
 
-  dfbvideosink->layer_mode = LAYER_MODE_EXCLUSIVE;
+  dfbvideosink->layer_mode = DEFAULT_LAYER_MODE;
 }
 
 static void
@@ -2390,10 +2397,12 @@ gst_dfbvideosink_class_init (GstDfbVideoSinkClass * klass)
           "Wait for next vertical sync to draw frames", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, ARG_LAYER_MODE,
-      g_param_spec_string ("layer-mode",
+      g_param_spec_enum ("layer-mode",
           "The layer cooperative level (administrative or exclusive)",
-          "The cooperative level handling the access permission (When the cursor is required, you have to set to 'administrative')",
-          "exclusive", G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "The cooperative level handling the access permission (set this to "
+          "'administrative' when the cursor is required)",
+          gst_dfbvideosink_layer_mode_get_type (), DEFAULT_LAYER_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "DirectFB video sink", "Sink/Video", "A DirectFB based videosink",
