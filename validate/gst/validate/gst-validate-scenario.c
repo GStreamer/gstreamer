@@ -434,7 +434,7 @@ _execute_action (GstValidateScenario * scenario, ScenarioAction * act)
   if (act->type == SCENARIO_ACTION_SEEK) {
     SeekInfo *seek = (SeekInfo *) act;
     g_print ("%s (num %u), seeking to: %" GST_TIME_FORMAT " stop: %"
-        GST_TIME_FORMAT " Rate %lf", SCENARIO_ACTION (seek)->name,
+        GST_TIME_FORMAT " Rate %lf\n", SCENARIO_ACTION (seek)->name,
         SCENARIO_ACTION (seek)->action_number, GST_TIME_ARGS (seek->start),
         GST_TIME_ARGS (seek->stop), seek->rate);
 
