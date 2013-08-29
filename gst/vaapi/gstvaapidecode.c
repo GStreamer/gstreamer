@@ -814,12 +814,6 @@ gst_vaapidecode_ensure_allowed_caps(GstVaapiDecode *decode)
         if (!structure)
             continue;
         gst_structure_remove_field(structure, "profile");
-        gst_structure_set(
-            structure,
-            "width",  GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
-            NULL
-        );
         decode->allowed_caps =
             gst_caps_merge_structure(decode->allowed_caps, structure);
     }
