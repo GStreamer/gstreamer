@@ -607,6 +607,11 @@ gst_avdtp_util_parse_mpeg_raw (void *config)
 static GstStructure *
 gst_avdtp_util_parse_aac_raw (void *config)
 {
+  GstStructure *structure;
+  GValue value = G_VALUE_INIT;
+  GValue value_str = G_VALUE_INIT;
+  GValue list = G_VALUE_INIT;
+
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   uint8_t *raw = (uint8_t *) config;
   a2dp_aac_t aac_local = { 0 };
@@ -628,128 +633,127 @@ gst_avdtp_util_parse_aac_raw (void *config)
       aac->object_type, aac->frequency, aac->rfa, aac->channels, aac->vbr,
       aac->bitrate);
 
-  GstStructure *structure;
-  GValue value = G_VALUE_INIT;
-  GValue value_str = G_VALUE_INIT;
-  GValue listVersion = G_VALUE_INIT;
-  GValue listProfile = G_VALUE_INIT;
-  GValue listRate = G_VALUE_INIT;
-  GValue listChannels = G_VALUE_INIT;
-
   structure = gst_structure_new_empty ("audio/mpeg");
   g_value_init (&value, G_TYPE_INT);
   g_value_init (&value_str, G_TYPE_STRING);
 
   /* mpegversion */
-  g_value_init (&listVersion, GST_TYPE_LIST);
+  g_value_init (&list, GST_TYPE_LIST);
   if (aac->object_type & AAC_OBJECT_TYPE_MPEG2_AAC_LC) {
     g_value_set_int (&value, 2);
-    gst_value_list_prepend_value (&listVersion, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
   if ((aac->object_type & AAC_OBJECT_TYPE_MPEG4_AAC_LC)
       || (aac->object_type & AAC_OBJECT_TYPE_MPEG4_AAC_LTP)
       || (aac->object_type & AAC_OBJECT_TYPE_MPEG4_AAC_SCALABLE)) {
     g_value_set_int (&value, 4);
-    gst_value_list_prepend_value (&listVersion, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
-  if (gst_value_list_get_size (&listVersion) == 1)
+  if (gst_value_list_get_size (&list) == 1)
     gst_structure_set_value (structure, "mpegversion", &value);
   else
-    gst_structure_set_value (structure, "mpegversion", &listVersion);
+    gst_structure_set_value (structure, "mpegversion", &list);
 
+  g_value_reset (&list);
 
   /* base-profile */
-  g_value_init (&listProfile, GST_TYPE_LIST);
   if (aac->object_type & AAC_OBJECT_TYPE_MPEG2_AAC_LC
       || aac->object_type & AAC_OBJECT_TYPE_MPEG4_AAC_LC) {
     g_value_set_string (&value_str, "lc");
-    gst_value_list_prepend_value (&listProfile, &value_str);
+    gst_value_list_prepend_value (&list, &value_str);
   }
   if (aac->object_type & AAC_OBJECT_TYPE_MPEG4_AAC_LTP) {
     g_value_set_string (&value_str, "ltp");
-    gst_value_list_prepend_value (&listProfile, &value_str);
+    gst_value_list_prepend_value (&list, &value_str);
   }
   if (aac->object_type & AAC_OBJECT_TYPE_MPEG4_AAC_SCALABLE) {
     g_value_set_string (&value_str, "ssr");
-    gst_value_list_prepend_value (&listProfile, &value_str);
+    gst_value_list_prepend_value (&list, &value_str);
   }
-  if (gst_value_list_get_size (&listProfile) == 1)
+  if (gst_value_list_get_size (&list) == 1)
     gst_structure_set_value (structure, "base-profile", &value_str);
   else
-    gst_structure_set_value (structure, "base-profile", &listProfile);
+    gst_structure_set_value (structure, "base-profile", &list);
 
+  g_value_reset (&list);
 
   /* rate */
-  g_value_init (&listRate, GST_TYPE_LIST);
+  g_value_init (&list, GST_TYPE_LIST);
   if (aac->frequency & AAC_SAMPLING_FREQ_8000) {
     g_value_set_int (&value, 8000);
-    gst_value_list_prepend_value (&listRate, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (aac->frequency & AAC_SAMPLING_FREQ_11025) {
     g_value_set_int (&value, 11025);
-    gst_value_list_prepend_value (&listRate, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (aac->frequency & AAC_SAMPLING_FREQ_12000) {
     g_value_set_int (&value, 12000);
-    gst_value_list_prepend_value (&listRate, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (aac->frequency & AAC_SAMPLING_FREQ_16000) {
     g_value_set_int (&value, 16000);
-    gst_value_list_prepend_value (&listRate, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (aac->frequency & AAC_SAMPLING_FREQ_22050) {
     g_value_set_int (&value, 22050);
-    gst_value_list_prepend_value (&listRate, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (aac->frequency & AAC_SAMPLING_FREQ_24000) {
     g_value_set_int (&value, 24000);
-    gst_value_list_prepend_value (&listRate, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (aac->frequency & AAC_SAMPLING_FREQ_32000) {
     g_value_set_int (&value, 32000);
-    gst_value_list_prepend_value (&listRate, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (aac->frequency & AAC_SAMPLING_FREQ_44100) {
     g_value_set_int (&value, 44100);
-    gst_value_list_prepend_value (&listRate, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (aac->frequency & AAC_SAMPLING_FREQ_48000) {
     g_value_set_int (&value, 48000);
-    gst_value_list_prepend_value (&listRate, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (aac->frequency & AAC_SAMPLING_FREQ_64000) {
     g_value_set_int (&value, 64000);
-    gst_value_list_prepend_value (&listRate, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (aac->frequency & AAC_SAMPLING_FREQ_88200) {
     g_value_set_int (&value, 88200);
-    gst_value_list_prepend_value (&listRate, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (aac->frequency & AAC_SAMPLING_FREQ_96000) {
     g_value_set_int (&value, 96000);
-    gst_value_list_prepend_value (&listRate, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
-  if (gst_value_list_get_size (&listRate) == 1)
+  if (gst_value_list_get_size (&list) == 1)
     gst_structure_set_value (structure, "rate", &value);
   else
-    gst_structure_set_value (structure, "rate", &listRate);
+    gst_structure_set_value (structure, "rate", &list);
+
+  g_value_reset (&list);
 
   /* channels */
-  g_value_init (&listChannels, GST_TYPE_LIST);
+  g_value_init (&list, GST_TYPE_LIST);
   if (aac->channels & AAC_CHANNELS_1) {
     g_value_set_int (&value, 1);
-    gst_value_list_prepend_value (&listChannels, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
   if (aac->channels & AAC_CHANNELS_2) {
     g_value_set_int (&value, 2);
-    gst_value_list_prepend_value (&listChannels, &value);
+    gst_value_list_prepend_value (&list, &value);
   }
-  if (gst_value_list_get_size (&listChannels) == 1)
+  if (gst_value_list_get_size (&list) == 1)
     gst_structure_set_value (structure, "channels", &value);
   else
-    gst_structure_set_value (structure, "channels", &listChannels);
+    gst_structure_set_value (structure, "channels", &list);
 
   GST_LOG ("AAC caps: %" GST_PTR_FORMAT, structure);
+
+  g_value_unset (&list);
+  g_value_unset (&value);
+  g_value_unset (&value_str);
 
   return structure;
 }
