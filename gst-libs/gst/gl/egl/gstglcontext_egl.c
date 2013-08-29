@@ -22,7 +22,7 @@
 #include "config.h"
 #endif
 
-/* FIXME: Sharing contexts requires the EGLDisplay & EGLConfig to be the same
+/* FIXME: Sharing contexts requires the EGLDisplay to be the same
  * may need to box it.
  */
 
@@ -161,28 +161,16 @@ gst_gl_context_egl_choose_config (GstGLContextEGL * egl,
   gint i = 0;
   EGLint config_attrib[20];
 
-  if (other_context) {
-    GstGLContextEGL *other_context_egl = GST_GL_CONTEXT_EGL (other_context);
-    EGLint config_id;
-
-    eglGetConfigAttrib (egl->egl_display, other_context_egl->egl_config,
-        EGL_CONFIG_ID, &config_id);
-
-    config_attrib[i++] = EGL_CONFIG_ID;
-    config_attrib[i++] = config_id;
-    config_attrib[i++] = EGL_NONE;
-  } else {
-    config_attrib[i++] = EGL_SURFACE_TYPE;
-    config_attrib[i++] = EGL_WINDOW_BIT;
-    config_attrib[i++] = EGL_RENDERABLE_TYPE;
-    if (egl->gl_api & GST_GL_API_GLES2)
-      config_attrib[i++] = EGL_OPENGL_ES2_BIT;
-    else
-      config_attrib[i++] = EGL_OPENGL_BIT;
-    config_attrib[i++] = EGL_DEPTH_SIZE;
-    config_attrib[i++] = 16;
-    config_attrib[i++] = EGL_NONE;
-  }
+  config_attrib[i++] = EGL_SURFACE_TYPE;
+  config_attrib[i++] = EGL_WINDOW_BIT;
+  config_attrib[i++] = EGL_RENDERABLE_TYPE;
+  if (egl->gl_api & GST_GL_API_GLES2)
+    config_attrib[i++] = EGL_OPENGL_ES2_BIT;
+  else
+    config_attrib[i++] = EGL_OPENGL_BIT;
+  config_attrib[i++] = EGL_DEPTH_SIZE;
+  config_attrib[i++] = 16;
+  config_attrib[i++] = EGL_NONE;
 
   if (eglChooseConfig (egl->egl_display, config_attrib,
           &egl->egl_config, 1, &numConfigs)) {
