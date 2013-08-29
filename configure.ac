@@ -241,7 +241,7 @@ dnl GLib
 GLIB_REQ=2.32
 AG_GST_GLIB_CHECK([$GLIB_REQ])
 
-ORC_CHECK([0.4.17])
+ORC_CHECK([0.4.18])
 
 dnl checks for gstreamer
 dnl uninstalled is selected preferentially -- see pkg-config(1)
