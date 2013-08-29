@@ -92,6 +92,7 @@ static void gst_ffmpegvidenc_base_init (GstFFMpegVidEncClass * klass);
 static void gst_ffmpegvidenc_init (GstFFMpegVidEnc * ffmpegenc);
 static void gst_ffmpegvidenc_finalize (GObject * object);
 
+static gboolean gst_ffmpegvidenc_start (GstVideoEncoder * encoder);
 static gboolean gst_ffmpegvidenc_stop (GstVideoEncoder * encoder);
 static GstFlowReturn gst_ffmpegvidenc_finish (GstVideoEncoder * encoder);
 static gboolean gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
@@ -208,6 +209,7 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
   /* register additional properties, possibly dependent on the exact CODEC */
   gst_ffmpeg_cfg_install_property (klass, PROP_CFG_BASE);
 
+  venc_class->start = gst_ffmpegvidenc_start;
   venc_class->stop = gst_ffmpegvidenc_stop;
   venc_class->finish = gst_ffmpegvidenc_finish;
   venc_class->handle_frame = gst_ffmpegvidenc_handle_frame;
@@ -291,6 +293,11 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   if (ffmpegenc->opened) {
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
     ffmpegenc->opened = FALSE;
+    if (avcodec_get_context_defaults3 (ffmpegenc->context,
+            oclass->in_plugin) < 0) {
+      GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
+      return FALSE;
+    }
   }
 
   /* if we set it in _getcaps we should set it also in _link */
@@ -475,8 +482,10 @@ file_read_err:
 
 open_codec_fail:
   {
-    if (ffmpegenc->context->priv_data)
-      gst_ffmpeg_avcodec_close (ffmpegenc->context);
+    gst_ffmpeg_avcodec_close (ffmpegenc->context);
+    if (avcodec_get_context_defaults3 (ffmpegenc->context,
+            oclass->in_plugin) < 0)
+      GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
     if (ffmpegenc->context->stats_in)
       g_free (ffmpegenc->context->stats_in);
     GST_DEBUG_OBJECT (ffmpegenc, "avenc_%s: Failed to open libav codec",
@@ -487,6 +496,9 @@ open_codec_fail:
 pix_fmt_err:
   {
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
+    if (avcodec_get_context_defaults3 (ffmpegenc->context,
+            oclass->in_plugin) < 0)
+      GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
     GST_DEBUG_OBJECT (ffmpegenc,
         "avenc_%s: AV wants different colourspace (%d given, %d wanted)",
         oclass->in_plugin->name, pix_fmt, ffmpegenc->context->pix_fmt);
@@ -503,6 +515,9 @@ bad_input_fmt:
 unsupported_codec:
   {
     gst_ffmpeg_avcodec_close (ffmpegenc->context);
+    if (avcodec_get_context_defaults3 (ffmpegenc->context,
+            oclass->in_plugin) < 0)
+      GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
     GST_DEBUG ("Unsupported codec - no caps found");
     return FALSE;
   }
@@ -793,6 +808,22 @@ gst_ffmpegvidenc_flush (GstVideoEncoder * encoder)
 
   if (ffmpegenc->opened)
     avcodec_flush_buffers (ffmpegenc->context);
+
+  return TRUE;
+}
+
+static gboolean
+gst_ffmpegvidenc_start (GstVideoEncoder * encoder)
+{
+  GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) encoder;
+  GstFFMpegVidEncClass *oclass =
+      (GstFFMpegVidEncClass *) G_OBJECT_GET_CLASS (ffmpegenc);
+
+  /* close old session */
+  if (avcodec_get_context_defaults3 (ffmpegenc->context, oclass->in_plugin) < 0) {
+    GST_DEBUG_OBJECT (ffmpegenc, "Failed to set context defaults");
+    return FALSE;
+  }
 
   return TRUE;
 }

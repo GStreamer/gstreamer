@@ -68,6 +68,7 @@ static gboolean gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
 static GstFlowReturn gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame);
+static gboolean gst_ffmpegviddec_start (GstVideoDecoder * decoder);
 static gboolean gst_ffmpegviddec_stop (GstVideoDecoder * decoder);
 static gboolean gst_ffmpegviddec_flush (GstVideoDecoder * decoder);
 static gboolean gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder,
@@ -234,6 +235,7 @@ gst_ffmpegviddec_class_init (GstFFMpegVidDecClass * klass)
 
   viddec_class->set_format = gst_ffmpegviddec_set_format;
   viddec_class->handle_frame = gst_ffmpegviddec_handle_frame;
+  viddec_class->start = gst_ffmpegviddec_start;
   viddec_class->stop = gst_ffmpegviddec_stop;
   viddec_class->flush = gst_ffmpegviddec_flush;
   viddec_class->finish = gst_ffmpegviddec_finish;
@@ -275,15 +277,18 @@ gst_ffmpegviddec_finalize (GObject * object)
 
 
 /* with LOCK */
-static void
-gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec)
+static gboolean
+gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec, gboolean reset)
 {
+  GstFFMpegVidDecClass *oclass;
+
+  oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
   GST_LOG_OBJECT (ffmpegdec, "closing ffmpeg codec");
 
   gst_caps_replace (&ffmpegdec->last_caps, NULL);
 
-  if (ffmpegdec->context->priv_data)
-    gst_ffmpeg_avcodec_close (ffmpegdec->context);
+  gst_ffmpeg_avcodec_close (ffmpegdec->context);
   ffmpegdec->opened = FALSE;
 
   gst_buffer_replace (&ffmpegdec->palette, NULL);
@@ -292,6 +297,16 @@ gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec)
     av_free (ffmpegdec->context->extradata);
     ffmpegdec->context->extradata = NULL;
   }
+
+  if (reset) {
+    if (avcodec_get_context_defaults3 (ffmpegdec->context,
+            oclass->in_plugin) < 0) {
+      GST_DEBUG_OBJECT (ffmpegdec, "Failed to set context defaults");
+      return FALSE;
+    }
+    ffmpegdec->context->opaque = ffmpegdec;
+  }
+  return TRUE;
 }
 
 /* with LOCK */
@@ -328,7 +343,7 @@ gst_ffmpegviddec_open (GstFFMpegVidDec * ffmpegdec)
   /* ERRORS */
 could_not_open:
   {
-    gst_ffmpegviddec_close (ffmpegdec);
+    gst_ffmpegviddec_close (ffmpegdec, TRUE);
     GST_DEBUG_OBJECT (ffmpegdec, "avdec_%s: Failed to open libav codec",
         oclass->in_plugin->name);
     return FALSE;
@@ -384,7 +399,10 @@ gst_ffmpegviddec_set_format (GstVideoDecoder * decoder,
     GST_OBJECT_UNLOCK (ffmpegdec);
     gst_ffmpegviddec_drain (ffmpegdec);
     GST_OBJECT_LOCK (ffmpegdec);
-    gst_ffmpegviddec_close (ffmpegdec);
+    if (!gst_ffmpegviddec_close (ffmpegdec, TRUE)) {
+      GST_OBJECT_UNLOCK (ffmpegdec);
+      return FALSE;
+    }
   }
 
   gst_caps_replace (&ffmpegdec->last_caps, state->caps);
@@ -1404,13 +1422,34 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
   return ret;
 }
 
+
+static gboolean
+gst_ffmpegviddec_start (GstVideoDecoder * decoder)
+{
+  GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
+  GstFFMpegVidDecClass *oclass;
+
+  oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
+  GST_OBJECT_LOCK (ffmpegdec);
+  if (avcodec_get_context_defaults3 (ffmpegdec->context, oclass->in_plugin) < 0) {
+    GST_DEBUG_OBJECT (ffmpegdec, "Failed to set context defaults");
+    GST_OBJECT_UNLOCK (ffmpegdec);
+    return FALSE;
+  }
+  ffmpegdec->context->opaque = ffmpegdec;
+  GST_OBJECT_UNLOCK (ffmpegdec);
+
+  return TRUE;
+}
+
 static gboolean
 gst_ffmpegviddec_stop (GstVideoDecoder * decoder)
 {
   GstFFMpegVidDec *ffmpegdec = (GstFFMpegVidDec *) decoder;
 
   GST_OBJECT_LOCK (ffmpegdec);
-  gst_ffmpegviddec_close (ffmpegdec);
+  gst_ffmpegviddec_close (ffmpegdec, FALSE);
   GST_OBJECT_UNLOCK (ffmpegdec);
   g_free (ffmpegdec->padded);
   ffmpegdec->padded = NULL;

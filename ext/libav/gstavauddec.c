@@ -43,6 +43,7 @@ static void gst_ffmpegauddec_class_init (GstFFMpegAudDecClass * klass);
 static void gst_ffmpegauddec_init (GstFFMpegAudDec * ffmpegdec);
 static void gst_ffmpegauddec_finalize (GObject * object);
 
+static gboolean gst_ffmpegauddec_start (GstAudioDecoder * decoder);
 static gboolean gst_ffmpegauddec_stop (GstAudioDecoder * decoder);
 static void gst_ffmpegauddec_flush (GstAudioDecoder * decoder, gboolean hard);
 static gboolean gst_ffmpegauddec_set_format (GstAudioDecoder * decoder,
@@ -120,6 +121,7 @@ gst_ffmpegauddec_class_init (GstFFMpegAudDecClass * klass)
 
   gobject_class->finalize = gst_ffmpegauddec_finalize;
 
+  gstaudiodecoder_class->start = GST_DEBUG_FUNCPTR (gst_ffmpegauddec_start);
   gstaudiodecoder_class->stop = GST_DEBUG_FUNCPTR (gst_ffmpegauddec_stop);
   gstaudiodecoder_class->set_format =
       GST_DEBUG_FUNCPTR (gst_ffmpegauddec_set_format);
@@ -136,6 +138,7 @@ gst_ffmpegauddec_init (GstFFMpegAudDec * ffmpegdec)
 
   /* some ffmpeg data */
   ffmpegdec->context = avcodec_alloc_context3 (klass->in_plugin);
+  ffmpegdec->context->opaque = ffmpegdec;
   ffmpegdec->opened = FALSE;
 
   gst_audio_decoder_set_drainable (GST_AUDIO_DECODER (ffmpegdec), TRUE);
@@ -155,9 +158,13 @@ gst_ffmpegauddec_finalize (GObject * object)
 }
 
 /* With LOCK */
-static void
-gst_ffmpegauddec_close (GstFFMpegAudDec * ffmpegdec)
+static gboolean
+gst_ffmpegauddec_close (GstFFMpegAudDec * ffmpegdec, gboolean reset)
 {
+  GstFFMpegAudDecClass *oclass;
+
+  oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
   GST_LOG_OBJECT (ffmpegdec, "closing libav codec");
 
   gst_caps_replace (&ffmpegdec->last_caps, NULL);
@@ -170,6 +177,37 @@ gst_ffmpegauddec_close (GstFFMpegAudDec * ffmpegdec)
     av_free (ffmpegdec->context->extradata);
     ffmpegdec->context->extradata = NULL;
   }
+
+  if (reset) {
+    if (avcodec_get_context_defaults3 (ffmpegdec->context,
+            oclass->in_plugin) < 0) {
+      GST_DEBUG_OBJECT (ffmpegdec, "Failed to set context defaults");
+      return FALSE;
+    }
+    ffmpegdec->context->opaque = ffmpegdec;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_ffmpegauddec_start (GstAudioDecoder * decoder)
+{
+  GstFFMpegAudDec *ffmpegdec = (GstFFMpegAudDec *) decoder;
+  GstFFMpegAudDecClass *oclass;
+
+  oclass = (GstFFMpegAudDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
+
+  GST_OBJECT_LOCK (ffmpegdec);
+  if (avcodec_get_context_defaults3 (ffmpegdec->context, oclass->in_plugin) < 0) {
+    GST_DEBUG_OBJECT (ffmpegdec, "Failed to set context defaults");
+    GST_OBJECT_UNLOCK (ffmpegdec);
+    return FALSE;
+  }
+  ffmpegdec->context->opaque = ffmpegdec;
+  GST_OBJECT_UNLOCK (ffmpegdec);
+
+  return TRUE;
 }
 
 static gboolean
@@ -178,7 +216,7 @@ gst_ffmpegauddec_stop (GstAudioDecoder * decoder)
   GstFFMpegAudDec *ffmpegdec = (GstFFMpegAudDec *) decoder;
 
   GST_OBJECT_LOCK (ffmpegdec);
-  gst_ffmpegauddec_close (ffmpegdec);
+  gst_ffmpegauddec_close (ffmpegdec, FALSE);
   GST_OBJECT_UNLOCK (ffmpegdec);
   gst_audio_info_init (&ffmpegdec->info);
   gst_caps_replace (&ffmpegdec->last_caps, NULL);
@@ -209,7 +247,7 @@ gst_ffmpegauddec_open (GstFFMpegAudDec * ffmpegdec)
   /* ERRORS */
 could_not_open:
   {
-    gst_ffmpegauddec_close (ffmpegdec);
+    gst_ffmpegauddec_close (ffmpegdec, TRUE);
     GST_DEBUG_OBJECT (ffmpegdec, "avdec_%s: Failed to open libav codec",
         oclass->in_plugin->name);
     return FALSE;
@@ -292,7 +330,10 @@ gst_ffmpegauddec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
     GST_OBJECT_UNLOCK (ffmpegdec);
     gst_ffmpegauddec_drain (ffmpegdec);
     GST_OBJECT_LOCK (ffmpegdec);
-    gst_ffmpegauddec_close (ffmpegdec);
+    if (!gst_ffmpegauddec_close (ffmpegdec, TRUE)) {
+      GST_OBJECT_UNLOCK (ffmpegdec);
+      return FALSE;
+    }
   }
 
   /* get size and so */
@@ -303,7 +344,6 @@ gst_ffmpegauddec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
   ffmpegdec->context->workaround_bugs |= FF_BUG_AUTODETECT;
   ffmpegdec->context->err_recognition = 1;
 
-  ffmpegdec->context->opaque = ffmpegdec;
   ffmpegdec->context->get_buffer = gst_ffmpegauddec_get_buffer;
   ffmpegdec->context->reget_buffer = NULL;
   ffmpegdec->context->release_buffer = NULL;
