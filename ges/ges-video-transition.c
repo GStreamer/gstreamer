@@ -43,24 +43,21 @@ struct _GESVideoTransitionPrivate
 {
   GESVideoStandardTransitionType type;
 
-  /* prevents cases where the transition has not been changed yet */
+  /* prevents cases where the transitions have not been created yet */
   GESVideoStandardTransitionType pending_type;
 
   /* these enable video interpolation */
-  GstControlSource *control_source;
+  GstTimedValueControlSource *crossfade_control_source;
+  GstTimedValueControlSource *smpte_control_source;
 
   /* so we can support changing between wipes */
-  GstElement *topbin;
   GstElement *smpte;
-  GstElement *mixer;
-  GstPad *sinka;
-  GstPad *sinkb;
 
-  /* these will be different depending on whether smptealpha or alpha element
-   * is used */
-  gdouble start_value;
-  gdouble end_value;
-  guint64 dur;
+  GstPad *mixer_sink;
+
+  GstElement *mixer;
+  GstPad *mixer_sinka;
+  GstPad *mixer_sinkb;
 
   /* This is in case the smpte doesn't exist yet */
   gint pending_border_value;
@@ -80,12 +77,9 @@ static GParamSpec *properties[PROP_LAST];
 
 #define fast_element_link(a,b) gst_element_link_pads_full((a),"src",(b),"sink",GST_PAD_LINK_CHECK_NOTHING)
 
-static GObject *link_element_to_mixer (GstElement * element,
-    GstElement * mixer);
-
 static GObject *link_element_to_mixer_with_smpte (GstBin * bin,
     GstElement * element, GstElement * mixer, gint type,
-    GstElement ** smpteref);
+    GstElement ** smpteref, GESVideoTransitionPrivate * priv);
 
 static void
 ges_video_transition_duration_changed (GESTrackElement * self,
@@ -146,7 +140,7 @@ ges_video_transition_class_init (GESVideoTransitionClass * klass)
   properties[PROP_TRANSITION_TYPE] =
       g_param_spec_enum ("transition-type", "Transition type",
       "The type of the transition", GES_VIDEO_STANDARD_TRANSITION_TYPE_TYPE,
-      GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE, G_PARAM_READWRITE);
+      GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE, G_PARAM_READWRITE);
   g_object_class_install_property (object_class, PROP_TRANSITION_TYPE,
       properties[PROP_TRANSITION_TYPE]);
 
@@ -172,19 +166,34 @@ ges_video_transition_init (GESVideoTransition * self)
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
       GES_TYPE_VIDEO_TRANSITION, GESVideoTransitionPrivate);
 
-  self->priv->control_source = NULL;
+  self->priv->crossfade_control_source = NULL;
+  self->priv->smpte_control_source = NULL;
   self->priv->smpte = NULL;
+  self->priv->mixer_sink = NULL;
   self->priv->mixer = NULL;
-  self->priv->sinka = NULL;
-  self->priv->sinkb = NULL;
-  self->priv->topbin = NULL;
-  self->priv->type = GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE;
+  self->priv->mixer_sinka = NULL;
+  self->priv->mixer_sinkb = NULL;
   self->priv->pending_type = GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE;
-  self->priv->start_value = 0.0;
-  self->priv->end_value = 0.0;
-  self->priv->dur = 42;
-  self->priv->pending_border_value = -1;
-  self->priv->pending_inverted = FALSE;
+  self->priv->pending_border_value = 0;
+  self->priv->pending_inverted = TRUE;
+}
+
+static void
+release_mixer (GstElement ** mixer, GstPad ** sinka, GstPad ** sinkb)
+{
+  if (*sinka && *sinkb) {
+    gst_element_release_request_pad (*mixer, *sinka);
+    gst_element_release_request_pad (*mixer, *sinkb);
+    gst_object_unref (*sinka);
+    gst_object_unref (*sinkb);
+    *sinka = NULL;
+    *sinkb = NULL;
+  }
+
+  if (*mixer) {
+    gst_object_unref (*mixer);
+    *mixer = NULL;
+  }
 }
 
 static void
@@ -194,30 +203,18 @@ ges_video_transition_dispose (GObject * object)
   GESVideoTransitionPrivate *priv = self->priv;
 
   GST_DEBUG ("disposing");
-  GST_LOG ("mixer: %p smpte: %p sinka: %p sinkb: %p",
-      priv->mixer, priv->smpte, priv->sinka, priv->sinkb);
 
-  if (priv->control_source) {
-    if (priv->control_source)
-      gst_object_unref (priv->control_source);
-    priv->control_source = NULL;
+  if (priv->crossfade_control_source) {
+    gst_object_unref (priv->crossfade_control_source);
+    priv->crossfade_control_source = NULL;
   }
 
-  if (priv->sinka && priv->sinkb) {
-    GST_DEBUG ("releasing request pads for mixer");
-    gst_element_release_request_pad (priv->mixer, priv->sinka);
-    gst_element_release_request_pad (priv->mixer, priv->sinkb);
-    gst_object_unref (priv->sinka);
-    gst_object_unref (priv->sinkb);
-    priv->sinka = NULL;
-    priv->sinkb = NULL;
+  if (priv->smpte_control_source) {
+    gst_object_unref (priv->smpte_control_source);
+    priv->smpte_control_source = NULL;
   }
 
-  if (priv->mixer) {
-    GST_LOG ("unrefing mixer");
-    gst_object_unref (priv->mixer);
-    priv->mixer = NULL;
-  }
+  release_mixer (&priv->mixer, &priv->mixer_sinka, &priv->mixer_sinkb);
 
   g_signal_handlers_disconnect_by_func (GES_TRACK_ELEMENT (self),
       duration_changed_cb, NULL);
@@ -301,49 +298,27 @@ on_caps_set (GstPad * srca_pad, GParamSpec * pspec, GstElement * capsfilt)
   }
 }
 
-static GstElement *
-create_mixer (GstElement * topbin)
-{
-  GstElement *mixer = NULL;
-
-  mixer = gst_element_factory_make ("videomixer", NULL);
-  g_object_set (G_OBJECT (mixer), "background", 1, NULL);
-  gst_bin_add (GST_BIN (topbin), mixer);
-
-  return (mixer);
-}
-
-static void
+static GstTimedValueControlSource *
 set_interpolation (GstObject * element, GESVideoTransitionPrivate * priv,
     const gchar * propname)
 {
-  GstTimedValueControlSource *ts;
-
-  if (priv->control_source) {
-    ts = GST_TIMED_VALUE_CONTROL_SOURCE (priv->control_source);
-
-    gst_timed_value_control_source_unset_all (ts);
-    gst_object_unref (priv->control_source);
-  }
+  GstControlSource *control_source;
 
   g_object_set (element, propname, (gfloat) 0.0, NULL);
 
-  priv->control_source = gst_interpolation_control_source_new ();
+  control_source = gst_interpolation_control_source_new ();
   gst_object_add_control_binding (GST_OBJECT (element),
       gst_direct_control_binding_new (GST_OBJECT (element), propname,
-          priv->control_source));
-  g_object_set (priv->control_source, "mode", GST_INTERPOLATION_MODE_LINEAR,
-      NULL);
+          control_source));
+  g_object_set (control_source, "mode", GST_INTERPOLATION_MODE_LINEAR, NULL);
 
-
+  return GST_TIMED_VALUE_CONTROL_SOURCE (control_source);
 }
 
 static GstElement *
 ges_video_transition_create_element (GESTrackElement * object)
 {
   GstElement *topbin, *iconva, *iconvb, *scalea, *scaleb, *capsfilt, *oconv;
-  GstObject *target = NULL;
-  const gchar *propname = NULL;
   GstElement *mixer = NULL;
   GstPad *sinka_target, *sinkb_target, *src_target, *sinka, *sinkb, *src,
       *srca_pad;
@@ -356,6 +331,7 @@ ges_video_transition_create_element (GESTrackElement * object)
   GST_LOG ("creating a video bin");
 
   topbin = gst_bin_new ("transition-bin");
+
   iconva = gst_element_factory_make ("videoconvert", "tr-csp-a");
   iconvb = gst_element_factory_make ("videoconvert", "tr-csp-b");
   scalea = gst_element_factory_make ("videoscale", "vs-a");
@@ -371,34 +347,20 @@ ges_video_transition_create_element (GESTrackElement * object)
   g_object_set (G_OBJECT (mixer), "background", 1, NULL);
   gst_bin_add (GST_BIN (topbin), mixer);
 
-  if (priv->pending_type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) {
-    priv->sinka =
-        (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), iconva,
-        mixer, priv->pending_type, NULL);
-    priv->sinkb =
-        (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), iconvb,
-        mixer, priv->pending_type, &priv->smpte);
-    target = GST_OBJECT (priv->smpte);
-    propname = "position";
-    priv->start_value = 1.0;
-    priv->end_value = 0.0;
-  } else {
-    gst_element_link_pads_full (iconva, "src", scalea, "sink",
-        GST_PAD_LINK_CHECK_NOTHING);
-    gst_element_link_pads_full (iconvb, "src", scaleb, "sink",
-        GST_PAD_LINK_CHECK_NOTHING);
-    gst_element_link_pads_full (scaleb, "src", capsfilt, "sink",
-        GST_PAD_LINK_CHECK_NOTHING);
+  gst_element_link_pads_full (iconva, "src", scalea, "sink",
+      GST_PAD_LINK_CHECK_NOTHING);
+  gst_element_link_pads_full (iconvb, "src", scaleb, "sink",
+      GST_PAD_LINK_CHECK_NOTHING);
+  gst_element_link_pads_full (scaleb, "src", capsfilt, "sink",
+      GST_PAD_LINK_CHECK_NOTHING);
 
-    priv->sinka = (GstPad *) link_element_to_mixer (scalea, mixer);
-    priv->sinkb = (GstPad *) link_element_to_mixer (capsfilt, mixer);
-    target = GST_OBJECT (priv->sinkb);
-    propname = "alpha";
-    priv->start_value = 0.0;
-    priv->end_value = 1.0;
-  }
-
-  priv->mixer = gst_object_ref (mixer);
+  priv->mixer_sinka =
+      (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), scalea,
+      mixer, GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR, NULL, priv);
+  priv->mixer_sinkb =
+      (GstPad *) link_element_to_mixer_with_smpte (GST_BIN (topbin), capsfilt,
+      mixer, GES_VIDEO_STANDARD_TRANSITION_TYPE_BAR_WIPE_LR, &priv->smpte,
+      priv);
 
   fast_element_link (mixer, oconv);
 
@@ -425,216 +387,40 @@ ges_video_transition_create_element (GESTrackElement * object)
 
   /* set up interpolation */
 
-  set_interpolation (target, priv, propname);
+  priv->crossfade_control_source =
+      set_interpolation (GST_OBJECT (priv->mixer_sinkb), priv, "alpha");
+  priv->smpte_control_source =
+      set_interpolation (GST_OBJECT (priv->smpte), priv, "position");
+  priv->mixer = gst_object_ref (mixer);
+
+  if (priv->pending_type)
+    ges_video_transition_set_transition_type_internal (self,
+        priv->pending_type);
+  else
+    ges_video_transition_set_transition_type_internal (self, priv->type);
+
   ges_video_transition_duration_changed (object,
       ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (object)));
-
-  priv->topbin = topbin;
-  priv->type = priv->pending_type;
 
   g_signal_connect (object, "notify::duration",
       G_CALLBACK (duration_changed_cb), NULL);
 
+  priv->pending_type = GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE;
+
   return topbin;
-}
-
-static void
-add_smpte_to_bin (GstPad * sink, GstElement * smptealpha,
-    GESVideoTransitionPrivate * priv)
-{
-  GstPad *peer, *sinkpad;
-
-  g_object_set (smptealpha,
-      "type", (gint) priv->pending_type, "invert", (gboolean) TRUE, NULL);
-  gst_bin_add (GST_BIN (priv->topbin), smptealpha);
-  gst_element_sync_state_with_parent (smptealpha);
-
-  sinkpad = gst_element_get_static_pad (smptealpha, "sink");
-  peer = gst_pad_get_peer (sink);
-  gst_pad_unlink (peer, sink);
-
-  gst_pad_link_full (peer, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
-
-  gst_object_unref (sinkpad);
-  gst_object_unref (peer);
-}
-
-static void
-replace_mixer (GESVideoTransitionPrivate * priv)
-{
-  GstPad *mixer_src_pad, *color_sink_pad;
-
-  mixer_src_pad = gst_element_get_static_pad (priv->mixer, "src");
-  color_sink_pad = gst_pad_get_peer (mixer_src_pad);
-
-  gst_element_set_state (priv->mixer, GST_STATE_NULL);
-  gst_bin_remove (GST_BIN (priv->topbin), priv->mixer);
-
-  gst_object_unref (priv->mixer);
-
-  priv->mixer = gst_object_ref (create_mixer (priv->topbin));
-
-  gst_element_sync_state_with_parent (priv->mixer);
-
-  gst_object_unref (mixer_src_pad);
-
-  mixer_src_pad = gst_element_get_static_pad (priv->mixer, "src");
-  gst_pad_link (mixer_src_pad, color_sink_pad);
-
-  gst_object_unref (mixer_src_pad);
-  gst_object_unref (color_sink_pad);
-
-}
-
-static GstPadProbeReturn
-switch_to_smpte_cb (GstPad * sink, gboolean blocked,
-    GESVideoTransition * transition)
-{
-  GstElement *smptealpha = gst_element_factory_make ("smptealpha", NULL);
-  GstElement *smptealphab = gst_element_factory_make ("smptealpha", NULL);
-  GESVideoTransitionPrivate *priv = transition->priv;
-
-  if (priv->pending_type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE)
-    goto beach;
-
-  GST_INFO ("Bin %p switching from crossfade to smpte", priv->topbin);
-
-  add_smpte_to_bin (priv->sinka, smptealpha, priv);
-  add_smpte_to_bin (priv->sinkb, smptealphab, priv);
-
-  if (priv->pending_border_value != -1) {
-    g_object_set (smptealphab, "border", priv->pending_border_value, NULL);
-    priv->pending_border_value = -1;
-  }
-
-  if (priv->pending_inverted) {
-    g_object_set (smptealphab, "invert", priv->pending_inverted, NULL);
-    priv->pending_inverted = FALSE;
-  }
-
-  replace_mixer (priv);
-
-  priv->start_value = 1.0;
-  priv->end_value = 0.0;
-
-  set_interpolation (GST_OBJECT (smptealphab), priv, (gchar *) "position");
-  ges_video_transition_duration_changed (GES_TRACK_ELEMENT (transition),
-      priv->dur);
-
-
-  priv->sinka = (GstPad *) link_element_to_mixer (smptealpha, priv->mixer);
-  priv->sinkb = (GstPad *) link_element_to_mixer (smptealphab, priv->mixer);
-
-  priv->smpte = smptealphab;
-
-  priv->type = priv->pending_type;
-
-  GST_INFO ("Bin %p switched from crossfade to smpte", priv->topbin);
-
-beach:
-  priv->pending_type = GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE;
-
-  return GST_PAD_PROBE_REMOVE;
-}
-
-static GstElement *
-remove_smpte_from_bin (GESVideoTransitionPrivate * priv, GstPad * sink)
-{
-  GstPad *smpte_src, *peer_src, *smpte_sink;
-  GstElement *smpte, *peer;
-
-  smpte_src = gst_pad_get_peer (sink);
-  smpte = gst_pad_get_parent_element (smpte_src);
-
-  if (smpte == NULL) {
-    gst_object_unref (smpte_src);
-    GST_ERROR ("The pad %" GST_PTR_FORMAT " has no parent element. "
-        "This should not happen", smpte_src);
-    return (NULL);
-  }
-
-  smpte_sink = gst_element_get_static_pad (smpte, "sink");
-  peer_src = gst_pad_get_peer (smpte_sink);
-  peer = gst_pad_get_parent_element (peer_src);
-
-  gst_pad_unlink (peer_src, smpte_sink);
-  gst_pad_unlink (smpte_src, sink);
-
-  gst_element_set_state (smpte, GST_STATE_NULL);
-  gst_bin_remove (GST_BIN (priv->topbin), smpte);
-
-  gst_object_unref (smpte);
-  gst_object_unref (smpte_sink);
-  gst_object_unref (smpte_src);
-  gst_object_unref (peer_src);
-  return (peer);
-}
-
-static GstPadProbeReturn
-switch_to_crossfade_cb (GstPad * sink, gboolean blocked,
-    GESVideoTransition * transition)
-{
-  GstElement *peera;
-  GstElement *peerb;
-  GESVideoTransitionPrivate *priv = transition->priv;
-
-  GST_INFO ("Bin %p switching from smpte to crossfade", priv->topbin);
-
-  if (priv->pending_type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE)
-    goto beach;
-
-  peera = remove_smpte_from_bin (priv, priv->sinka);
-  peerb = remove_smpte_from_bin (priv, priv->sinkb);
-  if (!peera || !peerb)
-    goto beach;
-
-  replace_mixer (priv);
-
-  priv->sinka = (GstPad *) link_element_to_mixer (peera, priv->mixer);
-  priv->sinkb = (GstPad *) link_element_to_mixer (peerb, priv->mixer);
-
-  priv->start_value = 0.0;
-  priv->end_value = 1.0;
-  set_interpolation (GST_OBJECT (priv->sinkb), priv, (gchar *) "alpha");
-  ges_video_transition_duration_changed (GES_TRACK_ELEMENT (transition),
-      priv->dur);
-
-  priv->smpte = NULL;
-
-  gst_object_unref (peera);
-  gst_object_unref (peerb);
-
-  priv->type = priv->pending_type;
-
-  GST_INFO ("Bin %p switched from smpte to crossfade", priv->topbin);
-
-beach:
-  priv->pending_type = GES_VIDEO_STANDARD_TRANSITION_TYPE_NONE;
-
-  return GST_PAD_PROBE_REMOVE;
-}
-
-static GObject *
-link_element_to_mixer (GstElement * element, GstElement * mixer)
-{
-  GstPad *sinkpad = gst_element_get_request_pad (mixer, "sink_%u");
-  GstPad *srcpad = gst_element_get_static_pad (element, "src");
-
-  gst_pad_link_full (srcpad, sinkpad, GST_PAD_LINK_CHECK_NOTHING);
-  gst_object_unref (srcpad);
-
-  return G_OBJECT (sinkpad);
 }
 
 static GObject *
 link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
-    GstElement * mixer, gint type, GstElement ** smpteref)
+    GstElement * mixer, gint type, GstElement ** smpteref,
+    GESVideoTransitionPrivate * priv)
 {
   GstPad *srcpad, *sinkpad;
   GstElement *smptealpha = gst_element_factory_make ("smptealpha", NULL);
 
   g_object_set (G_OBJECT (smptealpha),
-      "type", (gint) type, "invert", (gboolean) TRUE, NULL);
+      "type", (gint) type, "invert", (gboolean) priv->pending_inverted,
+      "border", priv->pending_border_value, NULL);
   gst_bin_add (bin, smptealpha);
 
   fast_element_link (element, smptealpha);
@@ -653,28 +439,35 @@ link_element_to_mixer_with_smpte (GstBin * bin, GstElement * element,
 }
 
 static void
+ges_video_transition_update_control_source (GstTimedValueControlSource * ts,
+    guint64 duration, gdouble start_value, gdouble end_value)
+{
+  gst_timed_value_control_source_unset_all (ts);
+  gst_timed_value_control_source_set (ts, 0, start_value);
+  gst_timed_value_control_source_set (ts, duration, end_value);
+}
+
+static void
 ges_video_transition_duration_changed (GESTrackElement * object,
     guint64 duration)
 {
   GESVideoTransition *self = GES_VIDEO_TRANSITION (object);
   GESVideoTransitionPrivate *priv = self->priv;
-  GstTimedValueControlSource *ts;
 
   GST_LOG ("updating controller");
 
-  if (G_UNLIKELY (!priv->control_source))
-    return;
+  if (priv->type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) {
+    ges_video_transition_update_control_source (priv->crossfade_control_source,
+        duration, 0.0, 1.0);
+    ges_video_transition_update_control_source (priv->smpte_control_source,
+        duration, 0.0, 0.0);
+  } else {
+    ges_video_transition_update_control_source (priv->crossfade_control_source,
+        duration, 1.0, 1.0);
+    ges_video_transition_update_control_source (priv->smpte_control_source,
+        duration, 1.0, 0.0);
+  }
 
-  ts = GST_TIMED_VALUE_CONTROL_SOURCE (priv->control_source);
-
-  GST_INFO ("duration: %" G_GUINT64_FORMAT, duration);
-  GST_LOG ("setting values on controller");
-
-  gst_timed_value_control_source_unset_all (ts);
-  gst_timed_value_control_source_set (ts, 0, priv->start_value);
-  gst_timed_value_control_source_set (ts, duration, priv->end_value);
-
-  priv->dur = duration;
   GST_LOG ("done updating controller");
 }
 
@@ -704,52 +497,44 @@ ges_video_transition_set_inverted_internal (GESVideoTransition *
   g_object_set (priv->smpte, "invert", !inverted, NULL);
 }
 
-
 static inline gboolean
 ges_video_transition_set_transition_type_internal (GESVideoTransition
     * self, GESVideoStandardTransitionType type)
 {
   GESVideoTransitionPrivate *priv = self->priv;
+  guint64 duration =
+      ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (self));
 
   GST_DEBUG ("%p %d => %d", self, priv->type, type);
 
-  if (type == priv->type && !priv->pending_type) {
-    GST_INFO ("This type is already set on this transition\n");
-    return TRUE;
-  }
-
-  if (type == priv->pending_type) {
-    GST_INFO ("This type is already pending for this transition\n");
-    return TRUE;
-  }
-
-  if (priv->type &&
-      ((priv->type != type) || (priv->type != priv->pending_type)) &&
-      ((type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) ||
-          (priv->type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE))) {
-    GstPad *pad = gst_element_get_static_pad (priv->topbin, "sinka");
-
+  if (!priv->mixer) {
     priv->pending_type = type;
-    if (type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) {
-      if (!priv->topbin)
-        return FALSE;
-      priv->smpte = NULL;
-      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_IDLE,
-          (GstPadProbeCallback) switch_to_smpte_cb, self, NULL);
-    } else {
-      if (!priv->topbin)
-        return FALSE;
-      priv->start_value = 1.0;
-      priv->end_value = 0.0;
-      gst_pad_add_probe (pad, GST_PAD_PROBE_TYPE_IDLE,
-          (GstPadProbeCallback) switch_to_crossfade_cb, self, NULL);
-    }
     return TRUE;
   }
-  priv->pending_type = type;
-  if (priv->smpte && (type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE)) {
+
+  if (type == priv->type) {
+    GST_ERROR ("This type is already set on this transition\n");
+    return TRUE;
+  }
+
+  if (type == GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) {
+    ges_video_transition_update_control_source (priv->crossfade_control_source,
+        duration, 0.0, 1.0);
+    ges_video_transition_update_control_source (priv->smpte_control_source,
+        duration, 0.0, 0.0);
+  } else {
+    ges_video_transition_update_control_source (priv->crossfade_control_source,
+        duration, 1.0, 1.0);
+    ges_video_transition_update_control_source (priv->smpte_control_source,
+        duration, 1.0, 0.0);
+  }
+
+  priv->type = type;
+
+  if (type != GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE) {
     g_object_set (priv->smpte, "type", (gint) type, NULL);
   }
+
   return TRUE;
 }
 
