@@ -410,11 +410,22 @@ gst_vaapidecode_decode_loop(GstVaapiDecode *decode)
     GstFlowReturn ret;
 
     ret = gst_vaapidecode_push_decoded_frame(vdec);
-    if (ret == GST_FLOW_OK || ret == GST_VIDEO_DECODER_FLOW_NEED_DATA)
+    if (ret == GST_FLOW_OK)
         return;
 
-    /* ERRORS */
-    gst_pad_pause_task(decode->srcpad);
+    /* If invoked from gst_vaapidecode_finish(), then return right
+       away no matter the errors, or the GstVaapiDecoder needs further
+       data to complete decoding (there no more data to feed in) */
+    if (decode->decoder_finish) {
+        g_mutex_lock(&decode->decoder_mutex);
+        g_cond_signal(&decode->decoder_finish_done);
+        g_mutex_unlock(&decode->decoder_mutex);
+        return;
+    }
+
+    /* Suspend the task if an error occurred */
+    if (ret != GST_VIDEO_DECODER_FLOW_NEED_DATA)
+        gst_pad_pause_task(decode->srcpad);
 }
 
 static GstFlowReturn
@@ -430,12 +441,12 @@ gst_vaapidecode_finish(GstVideoDecoder *vdec)
     /* Make sure the decode loop function has a chance to return, thus
        possibly unlocking gst_video_decoder_finish_frame() */
     GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
+    g_mutex_lock(&decode->decoder_mutex);
+    decode->decoder_finish = TRUE;
+    g_cond_wait(&decode->decoder_finish_done, &decode->decoder_mutex);
+    g_mutex_unlock(&decode->decoder_mutex);
     gst_pad_stop_task(decode->srcpad);
     GST_VIDEO_DECODER_STREAM_LOCK(vdec);
-
-    /* Submit all frames that got decoded so far */
-    while (gst_vaapidecode_push_decoded_frame(vdec) == GST_FLOW_OK)
-        ;
     return GST_FLOW_OK;
 
     /* ERRORS */
@@ -621,6 +632,7 @@ gst_vaapidecode_finalize(GObject *object)
 
     gst_vaapi_display_replace(&decode->display, NULL);
 
+    g_cond_clear(&decode->decoder_finish_done);
     g_cond_clear(&decode->decoder_ready);
     g_mutex_clear(&decode->decoder_mutex);
 
@@ -881,6 +893,7 @@ gst_vaapidecode_init(GstVaapiDecode *decode)
 
     g_mutex_init(&decode->decoder_mutex);
     g_cond_init(&decode->decoder_ready);
+    g_cond_init(&decode->decoder_finish_done);
 
     gst_video_decoder_set_packetized(vdec, FALSE);
 

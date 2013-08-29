@@ -72,6 +72,8 @@ struct _GstVaapiDecode {
     GstVaapiDecoder    *decoder;
     GMutex              decoder_mutex;
     GCond               decoder_ready;
+    volatile gboolean   decoder_finish;
+    GCond               decoder_finish_done;
     GstCaps            *decoder_caps;
     GstCaps            *allowed_caps;
     gint64              render_time_base;
