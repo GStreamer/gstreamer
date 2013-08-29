@@ -45,6 +45,18 @@ G_DEFINE_TYPE (GstValidatePadMonitor, gst_validate_pad_monitor,
 
 #define PENDING_FIELDS "pending-fields"
 
+#define PAD_PARENT_IS_DEMUXER(m) \
+    (GST_VALIDATE_MONITOR_GET_PARENT(m) ? \
+        GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_DEMUXER ( \
+            GST_VALIDATE_MONITOR_GET_PARENT(m)) : \
+        FALSE)
+
+#define PAD_PARENT_IS_DECODER(m) \
+    (GST_VALIDATE_MONITOR_GET_PARENT(m) ? \
+        GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_DECODER ( \
+            GST_VALIDATE_MONITOR_GET_PARENT(m)) : \
+        FALSE)
+
 /*
  * Locking the parent should always be done before locking the
  * pad-monitor to prevent deadlocks in case another monitor from
@@ -280,6 +292,10 @@ gst_validate_pad_monitor_pad_should_proxy_othercaps (GstValidatePadMonitor *
     monitor)
 {
   GstValidateMonitor *parent = GST_VALIDATE_MONITOR_GET_PARENT (monitor);
+
+  if (!parent)
+    return FALSE;
+
   /* We only know how to handle othercaps checks for codecs so far */
   return GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_DECODER (parent) ||
       GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_ENCODER (parent);
@@ -843,8 +859,7 @@ gst_validate_pad_monitor_check_aggregated_return (GstValidatePadMonitor *
       return;
     }
 
-    if (GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_DEMUXER (monitor)
-        && ret == GST_FLOW_EOS) {
+    if (PAD_PARENT_IS_DEMUXER (monitor) && ret == GST_FLOW_EOS) {
       /* a demuxer can return EOS when the samples end */
       return;
     }
@@ -1464,25 +1479,23 @@ gst_validate_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
   gst_validate_pad_monitor_check_late_serialized_events (monitor,
       GST_BUFFER_TIMESTAMP (buffer));
 
-  if (G_LIKELY (parent)) {
-    /* a GstValidatePadMonitor parent must be a GstValidateElementMonitor */
-    if (GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_DECODER (parent)) {
-      /* should not push out of segment data */
-      if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)) &&
-          GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer)) &&
-          !gst_segment_clip (&monitor->segment, monitor->segment.format,
-              GST_BUFFER_TIMESTAMP (buffer), GST_BUFFER_TIMESTAMP (buffer) +
-              GST_BUFFER_DURATION (buffer), NULL, NULL)) {
-        /* TODO is this a timestamp issue? */
-        GST_VALIDATE_REPORT (monitor, BUFFER_IS_OUT_OF_SEGMENT,
-            "buffer is out of segment and shouldn't be pushed. Timestamp: %"
-            GST_TIME_FORMAT " - duration: %" GST_TIME_FORMAT ". Range: %"
-            GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
-            GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
-            GST_TIME_ARGS (monitor->segment.start),
-            GST_TIME_ARGS (monitor->segment.stop));
-      }
+  /* a GstValidatePadMonitor parent must be a GstValidateElementMonitor */
+  if (PAD_PARENT_IS_DECODER (parent)) {
+    /* should not push out of segment data */
+    if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_TIMESTAMP (buffer)) &&
+        GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DURATION (buffer)) &&
+        !gst_segment_clip (&monitor->segment, monitor->segment.format,
+            GST_BUFFER_TIMESTAMP (buffer), GST_BUFFER_TIMESTAMP (buffer) +
+            GST_BUFFER_DURATION (buffer), NULL, NULL)) {
+      /* TODO is this a timestamp issue? */
+      GST_VALIDATE_REPORT (monitor, BUFFER_IS_OUT_OF_SEGMENT,
+          "buffer is out of segment and shouldn't be pushed. Timestamp: %"
+          GST_TIME_FORMAT " - duration: %" GST_TIME_FORMAT ". Range: %"
+          GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
+          GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)),
+          GST_TIME_ARGS (monitor->segment.start),
+          GST_TIME_ARGS (monitor->segment.stop));
     }
   }
 
