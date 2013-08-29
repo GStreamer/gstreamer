@@ -1,5 +1,193 @@
+= Inspiration =
 Simillar apps to take inspiration from:
 http://www.fourcc.org/identifier/gspot_example.png
 http://img.brothersoft.com/screenshots/softimage/g/gspot-190045-1.jpeg
 http://www.headbands.com/gspot/v26x/index.htm
+
+= browsing =
+- if one has grillo installed we could use grillo sources in addition to local files
+- there should be a "open url" menu entry in addition
+- the tool should also accept a stream url when starting
+- when a stream play we hide the file-browser pane
+- we could also take playlists and use totem-pl-parser
+  - needs a list-view to show the playlist instead of the file-browser
+
+= compare =
+- dup detail pane and allow to pick a new file
+- show differing entries in red
+- add a narrow vertical bar between the two details panes and mark blocks with a
+  delta red
+- diffing one (broken) file against several known working files would be nice
+  - it would build ranges for the group of files (e.g. for the video width)
+  - it would highlight fields that the are different to any of the working files
+
+= analyse =
+- play the file by using fakesinks and gather statistics:
+  - bitrate profiles for each a/mediainfo/v track
+  - media specific:
+    - audio: volume profile
+    - video: contrast profile
+  - show disconts as vertical bars
+
+= structural view/hex view =
+- make parsing elements post structural messages (if enabled via property)
+  - message would contain:
+    - stream offset in bytes
+    - block identifier (e.g. fourcc)
+    - human readable description (if available)
+    - flags (e.g. if the block is used or skipped)
+    - indentation depth
+  - we would need a way to indicate that e.g. h264parse would be indented below
+    the containing container block
+- a structured hex view would be nice
+  (somehow align the parse tree with the hexdump)
+
+= playback =
+- have a menu command to turn auto-play off
+- show level meters for audio next or below video drawable
+- show a seek bar under the drawable / or seek by scrubbing on the drawable
+
+= unsorted =
+- handle subtitles
+- show named audio channel configurations instead only numbers
+  e.g. "mono", "stereo", "5.1"
+- handle chapters (toc)
+  - also use toc for seeking
+- tag lists
+  - if there is a "language-code" in the tags (or subtitles?) use flag icons
+    - deluge installs some under: /usr/share/pyshared/deluge/data/mediainfo/pixmaps/flags/
+    - famfamfam-flag-png: locale/usr/share/flags/countries/
+  - geo-tags: map-widget?, link to google-maps?
+  - artist: links to {last.fm,wikipedia}
+  - format dates nicely
+
+== deep scan mode ==
+- update fields when playing
+  - listen for duration messages on the bus
+- get bit-rate over time
+  - specify window size, get min,max,avg bitrate for each window
+  - gst-mi can draw them as a graph
+- get key-frame statistics (using gst-index)
+  - number of keyframes
+  - min,max,avg keyframe interval
+- disconts
+- raw data statistics
+  - audio: level, ...
+  - video: histogram, ...
+
+= TODO for gstreamer =
+- file/stream layout
+  - from every element we'd like to know what data is processes, what is pushed
+    further and some metadata about it:
+    layout {
+      gsize offset;         // in bytes
+      gsize length;         // in bytes
+      gboolean known;       // or an enum: handled, skipped, unknown
+      gchar *name;          // e.g. atom/chunk name
+      gchar *description;   // long description or NULL
+      enum block_type type; // meta, audio, video, text, ...
+    };
+    - offset is not neccesarily easy to determine for later elements, not sure
+      if we can make it relative
+  - elements could emit messages with this info
+    - need a common way to enable it ("post-stream-layout" property)
+  - we would need a cairo custom widget to draw a table
+    - one row per element
+    - each row contains colored segments
+
+= TODO for discoverer =
+- add deep-scan mode (see above)
+  - add a mode property: quick-scan, deep-scan
+   (or just a boolean for deep-scan that is false by default)
+  - gst-discoverer will use "-d" for deep-scan/details
+    (-a for anayze or -s for scan are used otherwise already)
+  - in deep-scan, don't stop on handle_message::GST_MESSAGE_ASYNC_DONE
+    - in deep-scan we need pad-probes for encoded data pads (to get bitrates)
+      - uridecodebin_pad_added_cb() has raw pads :/
+      - look at uridecodebin_element_added_cb()
+    - the pads on uri-decodebin are sufficient to get keyframes and disconts
+    - qtdemux could return stsz table to get bitrate profile
+      http://wiki.multimedia.cx/index.php?title=QuickTime_container#stsz
+- get duration per stream
+  - this would need individual queries on the demuxer src pads
+  - or duration as part of per stream tags
+- errors/warnings about files/stream processing
+  - we'd like to know about fixable, unfixable issues in the file/stream
+  - many elements do this already (178 uses in 89 files)
+  - the pipeline and thus the bus is internal to discoverer, so it would be nice
+    if it could gather the messages and offer them
+  - having them globaly should be enough
+- CBR/VBR type for each stream
+  - can we derive that from the bitrate tags (no min/max bitrate set)?
+  find . -name "*.c" -exec egrep -Hn "GST_TAG[A-Z_]*_BITRATE" {} \;
+  - formats
+    - all raw files are cbr
+    - some codecs are cbr only (some speech codecs)
+    - audio
+      - in an MP3 file, if there is no VBRI or Xing,
+        it probably is not a vbr stream
+      -
+- lossy/lossless compression
+  - all raw formats are lossless (well rgb->yuv is lossy, but ...)
+  - some audio formats are lossless (flac, wavpack, ...)
+  - some video formats can be lossless (dirac,
+
+= discoverer workflow =
+== sync quick-scan ==
+app                   disco
+---                   -----
+ |    discover_uri()    |
+ |--------------------->|
+ |         done         |
+ |<---------------------|
+ |
+
+== async quick-scan ==
+app                   disco
+---                   -----
+ | discover_uri_async() |
+ |--------------------->|
+ |         ...          |
+ | discover_uri_async() |
+ |--------------------->|
+ |       start()        |
+ |--------------------->|
+ |     ::discovered     |
+ |<---------------------|
+ |         ...          |
+ |     ::discovered     |
+ |<---------------------|
+ |     ::finisheded     |
+ |<---------------------|
+ |
+
+== sync deep-scan ==
+- same as "sync quick-scan", no intermediate result
+
+== async deep-scan ==
+- same as "async quick-scan", but each discovered signal is followed by an
+  "analyzed" signal with detailed information
+  - we could also just emit discovered twice.
+
+app                   disco
+---                   -----
+ | discover_uri_async() |
+ |--------------------->|
+ |         ...          |
+ | discover_uri_async() |
+ |--------------------->|
+ |       start()        |
+ |--------------------->|
+ |     ::discovered     |
+ |<---------------------|
+ |     ::analyzed       |
+ |<---------------------|
+ |         ...          |
+ |     ::discovered     |
+ |<---------------------|
+ |     ::analyzed       |
+ |<---------------------|
+ |     ::finisheded     |
+ |<---------------------|
+ |
 
