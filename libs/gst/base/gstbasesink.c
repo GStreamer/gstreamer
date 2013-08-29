@@ -3532,7 +3532,7 @@ gst_base_sink_chain_list (GstPad * pad, GstObject * parent,
     guint i, len;
     GstBuffer *buffer;
 
-    GST_INFO_OBJECT (pad, "chaining each buffer in list");
+    GST_LOG_OBJECT (pad, "chaining each buffer in list");
 
     len = gst_buffer_list_length (list);
 
