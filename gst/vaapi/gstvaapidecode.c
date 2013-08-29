@@ -639,6 +639,21 @@ gst_vaapidecode_reset_full(GstVaapiDecode *decode, GstCaps *caps, gboolean hard)
 
     /* Reset timers if hard reset was requested (e.g. seek) */
     if (hard) {
+        GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
+        GstVideoCodecFrame *out_frame = NULL;
+
+        gst_vaapi_decoder_flush(decode->decoder);
+        GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
+        gst_pad_stop_task(decode->srcpad);
+        GST_VIDEO_DECODER_STREAM_LOCK(vdec);
+        decode->decoder_loop_status = GST_FLOW_OK;
+
+        /* Purge all decoded frames as we don't need them (e.g. seek) */
+        while (gst_vaapi_decoder_get_frame_with_timeout(decode->decoder,
+                   &out_frame, 0) == GST_VAAPI_DECODER_STATUS_SUCCESS) {
+            gst_video_codec_frame_unref(out_frame);
+            out_frame = NULL;
+        }
     }
 
     /* Only reset decoder if codec type changed */
