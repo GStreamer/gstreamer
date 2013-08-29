@@ -28,7 +28,7 @@
 #include "gstgl_cocoa_private.h"
 
 static gboolean gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
-    guintptr external_opengl_context, GError **error);
+    GstGLContext * other_context, GError **error);
 static guintptr gst_gl_context_cocoa_get_gl_context (GstGLContext * window);
 static gboolean gst_gl_context_cocoa_activate (GstGLContext * context, gboolean activate);
 static GstGLAPI gst_gl_context_cocoa_get_gl_api (GstGLContext * context);
@@ -84,7 +84,7 @@ gst_gl_context_cocoa_new (void)
 
 static gboolean
 gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
-    guintptr external_gl_context, GError **error)
+    GstGLContext *other_context, GError **error)
 {
   GstGLContextCocoa *context_cocoa = GST_GL_CONTEXT_COCOA (context);
   GstGLContextCocoaPrivate *priv = context_cocoa->priv;
@@ -103,7 +103,10 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   };
 
   priv->gl_context = nil;
-  priv->external_gl_context = (NSOpenGLContext *) external_gl_context;
+  if (other_context)
+    priv->external_gl_context = (NSOpenGLContext *) gst_gl_context_get_gl_context (other_context);
+  else
+    priv->external_gl_context = NULL;
 
   GSRegisterCurrentThread();
 
@@ -146,7 +149,9 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   context_cocoa->priv->gl_context = glContext;
 
   [glView setOpenGLContext:glContext];
+
 #else
+  /* FIXME try to make context sharing work in GNUstep */
   context_cocoa->priv->gl_context = [glView openGLContext];
 #endif
 
