@@ -48,7 +48,7 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 enum
 {
   PROP_0,
-  PROP_EXTERNAL_OPENGL_CONTEXT
+  PROP_OTHER_CONTEXT
 };
 
 #define DEBUG_INIT \
@@ -112,11 +112,11 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
       gst_gl_filter_decide_allocation;
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size = gst_gl_filter_get_unit_size;
 
-  g_object_class_install_property (gobject_class, PROP_EXTERNAL_OPENGL_CONTEXT,
-      g_param_spec_uint64 ("external-opengl-context",
+  g_object_class_install_property (gobject_class, PROP_OTHER_CONTEXT,
+      g_param_spec_object ("other-context",
           "External OpenGL context",
           "Give an external OpenGL context with which to share textures",
-          0, G_MAXUINT64, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_GL_TYPE_CONTEXT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_gl_filter_src_pad_template));
@@ -147,9 +147,11 @@ gst_gl_filter_set_property (GObject * object, guint prop_id,
   GstGLFilter *filter = GST_GL_FILTER (object);
 
   switch (prop_id) {
-    case PROP_EXTERNAL_OPENGL_CONTEXT:
+    case PROP_OTHER_CONTEXT:
     {
-      filter->external_gl_context = g_value_get_uint64 (value);
+      if (filter->other_context)
+        gst_object_unref (filter->other_context);
+      filter->other_context = g_value_dup_object (value);
       break;
     }
     default:
@@ -165,8 +167,8 @@ gst_gl_filter_get_property (GObject * object, guint prop_id,
   GstGLFilter *filter = GST_GL_FILTER (object);
 
   switch (prop_id) {
-    case PROP_EXTERNAL_OPENGL_CONTEXT:
-      g_value_set_uint64 (value, filter->external_gl_context);
+    case PROP_OTHER_CONTEXT:
+      g_value_set_object (value, filter->other_context);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -230,7 +232,9 @@ gst_gl_filter_reset (GstGLFilter * filter)
   filter->fbo = 0;
   filter->depthbuffer = 0;
   filter->default_shader = NULL;
-  filter->external_gl_context = 0;
+  if (filter->other_context)
+    gst_object_unref (filter->other_context);
+  filter->other_context = NULL;
 }
 
 static gboolean
@@ -265,7 +269,7 @@ gst_gl_filter_start (GstBaseTransform * bt)
     gst_gl_display_set_context (filter->display, context);
     gst_object_unref (context);
 
-    if (!gst_gl_context_create (context, 0, &error)) {
+    if (!gst_gl_context_create (context, filter->other_context, &error)) {
       GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
           ("%s", error->message), (NULL));
       return FALSE;
