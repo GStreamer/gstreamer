@@ -43,6 +43,13 @@ GstStaticPadTemplate sinktemplate_avc_au = GST_STATIC_PAD_TEMPLATE ("sink",
         ", stream-format = (string) avc, alignment = (string) au")
     );
 
+GstStaticPadTemplate sinktemplate_avc3_au = GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS (SINK_CAPS_TMPL
+        ", stream-format = (string) avc3, alignment = (string) au")
+    );
+
 GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -65,13 +72,27 @@ static guint8 h264_pps[] = {
 };
 
 /* combines to this codec-data */
-static guint8 h264_codec_data[] = {
+static guint8 h264_avc_codec_data[] = {
   0x01, 0x4d, 0x40, 0x15, 0xff, 0xe1, 0x00, 0x17,
   0x67, 0x4d, 0x40, 0x15, 0xec, 0xa4, 0xbf, 0x2e,
   0x02, 0x20, 0x00, 0x00, 0x03, 0x00, 0x2e, 0xe6,
   0xb2, 0x80, 0x01, 0xe2, 0xc5, 0xb2, 0xc0, 0x01,
   0x00, 0x04, 0x68, 0xeb, 0xec, 0xb2
 };
+
+/* codec-data for avc3 where there are no SPS/PPS in the codec_data */
+static guint8 h264_avc3_codec_data[] = {
+  0x01,                         /* config version, always == 1 */
+  0x4d,                         /* profile */
+  0x40,                         /* profile compatibility */
+  0x15, 0xff,                   /* 6 reserved bits, lengthSizeMinusOne */
+  0xe0,                         /* 3 reserved bits, numSPS */
+  0x00                          /* numPPS */
+};
+
+static guint8 *h264_codec_data = NULL;
+static guint8 h264_codec_data_size = 0;
+
 
 /* keyframes all around */
 static guint8 h264_idrframe[] = {
@@ -214,7 +235,7 @@ GST_START_TEST (test_parse_detect_stream)
     fail_unless (val != NULL);
     buf = gst_value_get_buffer (val);
     fail_unless (buf != NULL);
-    fail_unless (gst_buffer_get_size (buf) == sizeof (h264_codec_data));
+    fail_unless (gst_buffer_get_size (buf) == h264_codec_data_size);
     fail_unless (gst_buffer_memcmp (buf, 0, h264_codec_data,
             gst_buffer_get_size (buf)) == 0);
   }
@@ -293,7 +314,7 @@ GST_START_TEST (test_parse_packetized)
   caps = gst_caps_from_string (SRC_CAPS_TMPL);
   cdata =
       gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY, h264_codec_data,
-      sizeof (h264_codec_data), 0, sizeof (h264_codec_data), NULL, NULL);
+      h264_codec_data_size, 0, h264_codec_data_size, NULL, NULL);
   gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, cdata, NULL);
   gst_buffer_unref (cdata);
   desc = gst_caps_to_string (caps);
@@ -359,6 +380,9 @@ main (int argc, char **argv)
   ctx_no_metadata = TRUE;
   ctx_codec_data = FALSE;
 
+  h264_codec_data = h264_avc_codec_data;
+  h264_codec_data_size = sizeof (h264_avc_codec_data);
+
   ctx_suite = "h264parse_to_bs_nal";
   s = h264parse_suite ();
   sr = srunner_create (s);
@@ -378,7 +402,23 @@ main (int argc, char **argv)
   nf += srunner_ntests_failed (sr);
   srunner_free (sr);
 
+  /* setup and tweak to handle avc3 au output */
+  h264_codec_data = h264_avc3_codec_data;
+  h264_codec_data_size = sizeof (h264_avc3_codec_data);
+  ctx_suite = "h264parse_to_avc3_au";
+  ctx_sink_template = &sinktemplate_avc3_au;
+  ctx_discard = 0;
+  ctx_codec_data = TRUE;
+
+  s = h264parse_suite ();
+  sr = srunner_create (s);
+  srunner_run_all (sr, CK_NORMAL);
+  nf += srunner_ntests_failed (sr);
+  srunner_free (sr);
+
   /* setup and tweak to handle avc packetized input */
+  h264_codec_data = h264_avc_codec_data;
+  h264_codec_data_size = sizeof (h264_avc_codec_data);
   ctx_suite = "h264parse_packetized";
   /* turn into separate byte stream NALs */
   ctx_sink_template = &sinktemplate_bs_nal;

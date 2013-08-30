@@ -50,7 +50,8 @@ enum
 {
   GST_H264_PARSE_FORMAT_NONE,
   GST_H264_PARSE_FORMAT_AVC,
-  GST_H264_PARSE_FORMAT_BYTE
+  GST_H264_PARSE_FORMAT_BYTE,
+  GST_H264_PARSE_FORMAT_AVC3
 };
 
 enum
@@ -69,7 +70,7 @@ static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, parsed = (boolean) true, "
-        "stream-format=(string) { avc, byte-stream }, "
+        "stream-format=(string) { avc, avc3, byte-stream }, "
         "alignment=(string) { au, nal }"));
 
 #define parent_class gst_h264_parse_parent_class
@@ -261,6 +262,8 @@ gst_h264_parse_get_string (GstH264Parse * parse, gboolean format, gint code)
         return "avc";
       case GST_H264_PARSE_FORMAT_BYTE:
         return "byte-stream";
+      case GST_H264_PARSE_FORMAT_AVC3:
+        return "avc3";
       default:
         return "none";
     }
@@ -299,6 +302,8 @@ gst_h264_parse_format_from_caps (GstCaps * caps, guint * format, guint * align)
           *format = GST_H264_PARSE_FORMAT_AVC;
         else if (strcmp (str, "byte-stream") == 0)
           *format = GST_H264_PARSE_FORMAT_BYTE;
+        else if (strcmp (str, "avc3") == 0)
+          *format = GST_H264_PARSE_FORMAT_AVC3;
       }
     }
 
@@ -378,7 +383,8 @@ gst_h264_parse_wrap_nal (GstH264Parse * h264parse, guint format, guint8 * data,
   GST_DEBUG_OBJECT (h264parse, "nal length %d", size);
 
   buf = gst_buffer_new_allocate (NULL, 4 + size, NULL);
-  if (format == GST_H264_PARSE_FORMAT_AVC) {
+  if (format == GST_H264_PARSE_FORMAT_AVC
+      || format == GST_H264_PARSE_FORMAT_AVC3) {
     tmp = GUINT32_TO_BE (size << (32 - 8 * nl));
   } else {
     /* HACK: nl should always be 4 here, otherwise this won't work. 
@@ -994,7 +1000,9 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
       }
     }
   }
-  for (i = 0; i < GST_H264_MAX_PPS_COUNT; i++) {
+  for (i = 0;
+      i < GST_H264_MAX_PPS_COUNT
+      && h264parse->format != GST_H264_PARSE_FORMAT_AVC3; i++) {
     if ((nal = h264parse->pps_nals[i])) {
       num_pps++;
       /* size bytes also count */
@@ -1002,10 +1010,15 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
     }
   }
 
+  if (h264parse->format == GST_H264_PARSE_FORMAT_AVC3) {
+    num_sps = sps_size = 0;
+  }
+
   GST_DEBUG_OBJECT (h264parse,
       "constructing codec_data: num_sps=%d, num_pps=%d", num_sps, num_pps);
 
-  if (!found || !num_pps)
+  if (!found || (0 == num_pps
+          && GST_H264_PARSE_FORMAT_AVC3 != h264parse->format))
     return NULL;
 
   buf = gst_buffer_new_allocate (NULL, 5 + 1 + sps_size + 1 + pps_size, NULL);
@@ -1021,7 +1034,7 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
   data[5] = 0xe0 | num_sps;     /* number of SPSs */
 
   data += 6;
-  for (i = 0; i < GST_H264_MAX_SPS_COUNT; i++) {
+  for (i = 0; i < num_sps; i++) {
     if ((nal = h264parse->sps_nals[i])) {
       gsize nal_size = gst_buffer_get_size (nal);
       GST_WRITE_UINT16_BE (data, nal_size);
@@ -1032,7 +1045,7 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
 
   data[0] = num_pps;
   data++;
-  for (i = 0; i < GST_H264_MAX_PPS_COUNT; i++) {
+  for (i = 0; i < num_pps; i++) {
     if ((nal = h264parse->pps_nals[i])) {
       gsize nal_size = gst_buffer_get_size (nal);
       GST_WRITE_UINT16_BE (data, nal_size);
@@ -1170,8 +1183,9 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
   GST_DEBUG_OBJECT (h264parse, "sps: %p", sps);
 
   /* only codec-data for nice-and-clean au aligned packetized avc format */
-  if (h264parse->format == GST_H264_PARSE_FORMAT_AVC &&
-      h264parse->align == GST_H264_PARSE_ALIGN_AU) {
+  if ((h264parse->format == GST_H264_PARSE_FORMAT_AVC
+          || h264parse->format == GST_H264_PARSE_FORMAT_AVC3)
+      && h264parse->align == GST_H264_PARSE_ALIGN_AU) {
     buf = gst_h264_parse_make_codec_data (h264parse);
     if (buf && h264parse->codec_data) {
       GstMapInfo map;
@@ -1808,7 +1822,7 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
     size = map.size;
 
     /* parse the avcC data */
-    if (size < 8) {
+    if (size < 7) {             /* when numSPS==0 and numPPS==0, length is 7 bytes */
       gst_buffer_unmap (codec_data, &map);
       goto avcc_too_small;
     }
@@ -1907,7 +1921,8 @@ gst_h264_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       /* we did parse codec-data and might supplement src caps */
       gst_h264_parse_update_src_caps (h264parse, caps);
     }
-  } else if (format == GST_H264_PARSE_FORMAT_AVC) {
+  } else if (format == GST_H264_PARSE_FORMAT_AVC
+      || format == GST_H264_PARSE_FORMAT_AVC3) {
     /* if input != output, and input is avc, must split before anything else */
     /* arrange to insert codec-data in-stream if needed.
      * src caps are only arranged for later on */
