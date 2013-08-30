@@ -43,6 +43,10 @@
 #include "config.h"
 #endif
 
+#ifdef USE_EGL_RPI
+#include <bcm_host.h>
+#endif
+
 #include <gst/gl/gstglconfig.h>
 
 #include "gstglimagesink.h"
@@ -98,6 +102,11 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   GST_DEBUG_CATEGORY_INIT (gst_gl_gstgl_debug, "gstopengl", 0, "gstopengl");
+
+#ifdef USE_EGL_RPI
+  GST_DEBUG ("Initialize BCM host");
+  bcm_host_init ();
+#endif
 
   if (!gst_element_register (plugin, "glimagesink",
           GST_RANK_MARGINAL, GST_TYPE_GLIMAGE_SINK)) {

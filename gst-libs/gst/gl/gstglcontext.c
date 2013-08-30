@@ -253,6 +253,10 @@ gst_gl_context_default_get_proc_address (GstGLContext * context,
   gpointer ret = NULL;
 
 #ifdef USE_EGL_RPI
+
+  //FIXME: Can't understand why default does not work
+  // so for now retrieve proc addressed manually
+
   static GModule *module_egl = NULL;
   static GModule *module_glesv2 = NULL;
 
@@ -281,8 +285,7 @@ gst_gl_context_default_get_proc_address (GstGLContext * context,
   static GModule *module = NULL;
 
   if (!module)
-    module = g_module_open (NULL /*"/opt/vc/lib/libGLESv2.so" */ ,
-        G_MODULE_BIND_LAZY);
+    module = g_module_open (NULL, G_MODULE_BIND_LAZY);
 
   if (module) {
     if (!g_module_symbol (module, name, &ret)) {
