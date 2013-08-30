@@ -34,7 +34,7 @@ public class MediaInfo.App : Window
 
     // configure the window
     set_title (_("GStreamer Media Info"));
-    set_default_size (500, 350);
+    set_default_size (700, 500);
     try {
       set_default_icon_from_file (Config.PKGDATADIR + "/ui/icons/gst-mi.png");
     } catch (Error e) {
@@ -54,7 +54,7 @@ public class MediaInfo.App : Window
 
     // add a file-chooser with info pane as preview widget
     chooser = new FileChooserWidget (FileChooserAction.OPEN);
-    paned.pack1 (chooser, true, true);
+    paned.pack1 (chooser, false, false);
 
     if (directory != null) {
       //chooser.set_current_folder (GLib.Environment.get_home_dir ());

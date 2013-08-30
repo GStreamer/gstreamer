@@ -43,7 +43,7 @@ jhbuild shell
 
 */
 
-public class MediaInfo.Info : VPaned
+public class MediaInfo.Info : Box
 {
   // layout
   private bool compact_mode = false;
@@ -56,6 +56,7 @@ public class MediaInfo.Info : VPaned
   private Notebook all_streams;    // there is either all or separate a/mediainfo/v
   private Notebook video_streams;  // depending on  sreen resolution
   private Notebook audio_streams;
+  private AspectFrame drawing_frame;
   private DrawingArea drawing_area;
   // gstreamer objects
   private Discoverer dc;
@@ -65,6 +66,8 @@ public class MediaInfo.Info : VPaned
   private uint cur_video_stream;
   private uint num_audio_streams;
   private uint cur_audio_stream;
+  private float video_ratio = 1.0f;
+  private ArrayList<Gdk.Point?> video_resolutions = null;
   // stream data
   private Gdk.Pixbuf album_art = null;
 
@@ -82,6 +85,7 @@ public class MediaInfo.Info : VPaned
 
     // configure the view
     set_border_width (0);
+    set_orientation (Gtk.Orientation.VERTICAL);
 
     // setup lookup tables
     // video resolutions: http://upload.wikimedia.org/wikipedia/mediainfo/commons/e/e5/Vector_Video_Standards2.svg
@@ -154,6 +158,8 @@ public class MediaInfo.Info : VPaned
     wikilinks["video/x-svq"] = "Sorenson_codec";
     wikilinks["video/x-theora"] = "Theora";
     wikilinks["video/x-xvid"] = "Xvid";
+    
+    video_resolutions = new ArrayList<Gdk.Point?> ();
 
     int screen_height = Gdk.Screen.get_default().get_height();
     if (screen_height <= 600) {
@@ -161,17 +167,21 @@ public class MediaInfo.Info : VPaned
     }
 
     // add widgets
-    // FIXME: handle aspect ratio (AspectFrame.ratio)
+    drawing_frame = new AspectFrame (null, 0.5f, 0.5f, 1.25f, false);
+    drawing_frame.set_size_request (160, 128);
+    drawing_frame.set_shadow_type (Gtk.ShadowType.NONE);
+    pack_start (drawing_frame, true, true, 0);
+    
     drawing_area = new DrawingArea ();
-    drawing_area.set_size_request (160, 120);
+    drawing_area.set_size_request (160, 128);
     drawing_area.draw.connect (on_drawing_area_draw);
     drawing_area.realize.connect (on_drawing_area_realize);
     drawing_area.unrealize.connect (on_drawing_area_unrealize);
-    pack1 (drawing_area, true, true);
+    drawing_frame.add (drawing_area);
 
     ScrolledWindow sw = new ScrolledWindow (null, null);
     sw.set_policy (PolicyType.NEVER, PolicyType.ALWAYS);
-    pack2 (sw, true, true);
+    pack_start (sw, true, true, 0);
 
     table = new Table (8, 3, false);
     sw.add_with_viewport (table);
@@ -432,9 +442,16 @@ public class MediaInfo.Info : VPaned
     l = info.get_video_streams ();
     num_video_streams = l.length ();
     have_video = (num_video_streams > 0);
+    video_resolutions.clear();
     for (int i = 0; i < num_video_streams; i++) {
       sinfo = l.nth_data (i);
       caps = sinfo.get_caps ();
+      
+      Gdk.Point res = {
+        (int)((DiscovererVideoInfo)sinfo).get_width(),
+        (int)((DiscovererVideoInfo)sinfo).get_height()
+      };
+      video_resolutions.add(res);
 
       row = 0;
       table = new Table (2, 8, false);
@@ -471,7 +488,7 @@ public class MediaInfo.Info : VPaned
       label = new Label ("Resolution:");
       label.set_alignment (1.0f, 0.5f);
       table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-      string resolution = "%u x %u".printf (((DiscovererVideoInfo)sinfo).get_width(),((DiscovererVideoInfo)sinfo).get_height());
+      string resolution = "%u x %u".printf (res.x, res.y);
       string named_res = resolutions[resolution];
       if (named_res != null) {
         str = "%s (%s)".printf (named_res, resolution);
@@ -647,6 +664,20 @@ public class MediaInfo.Info : VPaned
     }
     nb.show_all();
     
+    if (have_video) {
+      Gdk.Point res = video_resolutions[0];
+      video_ratio = (float)(res.x) / (float)(res.y);
+      stdout.printf("video_ratio from video: %f\n", video_ratio);
+    } else if (album_art != null) {
+      int sw=album_art.get_width ();
+      int sh=album_art.get_height ();
+      video_ratio = (float)sw / (float)sh;
+      stdout.printf("video_ratio from album art: %f\n", video_ratio);
+    } else {
+      video_ratio = 1.0f;
+      stdout.printf("video_ratio --- : %f\n", video_ratio);
+    }
+    drawing_frame.set (0.5f, 0.5f, video_ratio, false);
     drawing_area.queue_draw();
 
     //l = info.get_container_streams ();
@@ -663,55 +694,32 @@ public class MediaInfo.Info : VPaned
   {
     // redraw if not playing and if there is no video
     if (pb.current_state < State.PAUSED || !have_video) {
-      Gtk.Allocation a;
-      widget.get_allocation(out a);
+      widget.set_double_buffered (true);
 
-      widget.set_double_buffered(true);
+      Gtk.Allocation frame;      
+      widget.get_allocation (out frame);
+      int w = frame.width;
+      int h = frame.height;
+      //stdout.printf("on_drawing_area_draw:video_ratio: %d x %d : %f\n", w, h, video_ratio);
 
-      cr.set_source_rgb (0, 0, 0);
-      cr.rectangle (0, 0, a.width, a.height);
-      cr.fill ();
       if (album_art != null) {
-        int sw=album_art.get_width();
-        int sh=album_art.get_height();
-        double sr = (double)sw / (double)sh;
-        double dr = (double)a.width / (double)a.height;
-        int x,y,w,h;
-
-        // stdout.printf("s: %d x %d : %f -> d: %d x %d : %f\n",sw,sh,sr,a.width,a.height,dr);
-        if (sr > dr) {
-          w = a.width;
-          h = (int)(w / sr);
-          x = 0;
-          y = (a.height - h) / 2;
-        } else if (sr < dr) {
-          h = a.height;
-          w = (int)(h * sr);
-          x = (a.width - w) / 2;
-          y = 0;
-        } else {
-          w = a.width;
-          h = a.height;
-          x = 0;
-          y = 0;
-        }
-        // stdout.printf("r: %d x %d\n",w,h);
-
-        Gdk.Pixbuf pb = album_art.scale_simple(w,h,Gdk.InterpType.BILINEAR);
-        Gdk.cairo_set_source_pixbuf(cr,pb,x,y);
-        cr.rectangle (x, y, w, h);
-        cr.fill ();
+        Gdk.Pixbuf pb = album_art.scale_simple (w, h, Gdk.InterpType.BILINEAR);
+        Gdk.cairo_set_source_pixbuf (cr, pb, 0, 0);
+      } else {
+        cr.set_source_rgb (0, 0, 0);
       }
-    } else {
-      widget.set_double_buffered(false);
+      cr.rectangle (0, 0, w, h);
+      cr.fill ();
+    } else {      
+      widget.set_double_buffered (false);
     }
     return false;
   }
-
+  
   private void on_drawing_area_realize (Widget widget)
   {
     widget.get_window ().ensure_native ();
-    widget.set_double_buffered(false);
+    widget.set_double_buffered (false);
   }
 
   private void on_drawing_area_unrealize (Widget widget)
@@ -724,6 +732,8 @@ public class MediaInfo.Info : VPaned
     if (Gst.Video.is_video_overlay_prepare_window_handle_message (message)) {
       Gst.Video.Overlay overlay = message.src as Gst.Video.Overlay;
       overlay.set_window_handle ((uint *)Gdk.X11Window.get_xid (drawing_area.get_window()));
+      drawing_frame.set (0.5f, 0.5f, video_ratio, false);
+      stdout.printf("on_element_sync_message:video_ratio: %f\n", video_ratio);
 
       if (message.src.get_class ().find_property ("force-aspect-ratio") != null) {
         ((GLib.Object)message.src).set_property ("force-aspect-ratio", true);
@@ -739,6 +749,10 @@ public class MediaInfo.Info : VPaned
     if (pb.current_state > State.PAUSED) {
       stdout.printf ("Switching video to: %u\n", page_num);
       ((GLib.Object)pb).set_property ("current-video", (int)page_num);
+      Gdk.Point res = video_resolutions[(int)page_num];
+      video_ratio = (float)(res.x) / (float)(res.y);
+      drawing_frame.set (0.5f, 0.5f, video_ratio, false);
+      stdout.printf("on_video_stream_switched:video_ratio: %f\n", video_ratio);
     }
   }
 
