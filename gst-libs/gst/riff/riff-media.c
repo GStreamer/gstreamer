@@ -528,6 +528,20 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("DVCPro50 Video");
       break;
 
+    case GST_MAKE_FOURCC ('M', 'S', 'S', '1'):
+      caps = gst_caps_new_simple ("video/x-wmv",
+          "wmvversion", G_TYPE_INT, 1, "format", G_TYPE_STRING, "MSS1", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Microsoft Windows Media 7 Screen");
+      break;
+
+    case GST_MAKE_FOURCC ('M', 'S', 'S', '2'):
+      caps = gst_caps_new_simple ("video/x-wmv",
+          "wmvversion", G_TYPE_INT, 3, "format", G_TYPE_STRING, "MSS2", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("Microsoft Windows Media 9 Screen");
+      break;
+
     case GST_MAKE_FOURCC ('W', 'M', 'V', '1'):
       caps = gst_caps_new_simple ("video/x-wmv",
           "wmvversion", G_TYPE_INT, 1, NULL);
