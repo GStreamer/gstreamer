@@ -1142,6 +1142,19 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       caps =
           gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/x-h264",
           "alignment", G_TYPE_STRING, "au", NULL);
+      if (!encode) {
+        GValue arr = { 0, };
+        GValue item = { 0, };
+        g_value_init (&arr, GST_TYPE_LIST);
+        g_value_init (&item, G_TYPE_STRING);
+        g_value_set_string (&item, "avc");
+        gst_value_list_append_value (&arr, &item);
+        g_value_set_string (&item, "byte-stream");
+        gst_value_list_append_value (&arr, &item);
+        g_value_unset (&item);
+        gst_caps_set_value (caps, "stream-format", &arr);
+        g_value_unset (&arr);
+      }
       break;
 
     case AV_CODEC_ID_INDEO5:
