@@ -576,16 +576,8 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
             "parse result %d, first MB: %u, slice type: %u",
             pres, slice.first_mb_in_slice, slice.type);
         if (pres == GST_H264_PARSER_OK) {
-          switch (slice.type) {
-            case 2:
-            case 4:
-            case 7:
-            case 9:
-              h264parse->keyframe |= TRUE;
-
-            default:
-              break;
-          }
+          if (GST_H264_IS_I_SLICE (&slice) || GST_H264_IS_SI_SLICE (&slice))
+            h264parse->keyframe |= TRUE;
         }
       }
       if (G_LIKELY (nal_type != GST_H264_NAL_SLICE_IDR &&
