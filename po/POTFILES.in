@@ -17,3 +17,4 @@ gst-libs/gst/pbutils/descriptions.c
 gst-libs/gst/pbutils/missing-plugins.c
 gst-libs/gst/tag/gsttagdemux.c
 gst-libs/gst/tag/tags.c
+tools/gst-play.c
