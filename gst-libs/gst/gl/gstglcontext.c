@@ -250,16 +250,46 @@ gpointer
 gst_gl_context_default_get_proc_address (GstGLContext * context,
     const gchar * name)
 {
-  static GModule *module = NULL;
   gpointer ret = NULL;
 
+#ifdef USE_EGL_RPI
+  static GModule *module_egl = NULL;
+  static GModule *module_glesv2 = NULL;
+
+  if (!module_egl)
+    module_egl = g_module_open ("/opt/vc/lib/libEGL.so", G_MODULE_BIND_LAZY);
+
+  if (module_egl) {
+    if (!g_module_symbol (module_egl, name, &ret)) {
+      ret = NULL;
+    }
+  }
+
+  if (ret)
+    return ret;
+
+  if (!module_glesv2)
+    module_glesv2 =
+        g_module_open ("/opt/vc/lib/libGLESv2.so", G_MODULE_BIND_LAZY);
+
+  if (module_glesv2) {
+    if (!g_module_symbol (module_glesv2, name, &ret)) {
+      return NULL;
+    }
+  }
+#else
+  static GModule *module = NULL;
+
   if (!module)
-    module = g_module_open (NULL, G_MODULE_BIND_LAZY);
+    module = g_module_open (NULL /*"/opt/vc/lib/libGLESv2.so" */ ,
+        G_MODULE_BIND_LAZY);
 
   if (module) {
-    if (!g_module_symbol (module, name, &ret))
+    if (!g_module_symbol (module, name, &ret)) {
       return NULL;
+    }
   }
+#endif
 
   return ret;
 }

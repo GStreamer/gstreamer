@@ -45,6 +45,9 @@
 #if GST_GL_HAVE_WINDOW_ANDROID
 #include "android/gstglwindow_android_egl.h"
 #endif
+#if GST_GL_HAVE_WINDOW_DISPMANX
+#include "dispmanx/gstglwindow_dispmanx_egl.h"
+#endif
 
 #define USING_OPENGL(display) (display->gl_api & GST_GL_API_OPENGL)
 #define USING_OPENGL3(display) (display->gl_api & GST_GL_API_OPENGL3)
@@ -140,6 +143,10 @@ gst_gl_window_new (GstGLDisplay * display)
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "cocoa"))) {
     window = GST_GL_WINDOW (gst_gl_window_cocoa_new ());
   }
+#endif
+#if GST_GL_HAVE_WINDOW_DISPMANX
+  if (!window && (!user_choice || g_strstr_len (user_choice, 8, "dispmanx")))
+    window = GST_GL_WINDOW (gst_gl_window_dispmanx_egl_new ());
 #endif
 #if GST_GL_HAVE_WINDOW_WAYLAND
   if (!window && (!user_choice || g_strstr_len (user_choice, 7, "wayland")))
