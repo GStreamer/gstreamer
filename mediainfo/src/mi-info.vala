@@ -53,9 +53,10 @@ public class MediaInfo.Info : Box
   private Label mime_type;
   private Label duration;
   private Image icon_image;
-  private Notebook all_streams;    // there is either all or separate a/mediainfo/v
-  private Notebook video_streams;  // depending on  sreen resolution
+  private Notebook all_streams;    // there is either all or separate a/mediainfo/v/st
+  private Notebook video_streams;  // depending on screen resolution
   private Notebook audio_streams;
+  private Notebook subtitle_streams;
   private AspectFrame drawing_frame;
   private DrawingArea drawing_area;
   // gstreamer objects
@@ -63,9 +64,8 @@ public class MediaInfo.Info : Box
   private Pipeline pb;
   private bool have_video = false;
   private uint num_video_streams;
-  private uint cur_video_stream;
   private uint num_audio_streams;
-  private uint cur_audio_stream;
+  private uint num_subtitle_streams;
   private float video_ratio = 1.0f;
   private ArrayList<Gdk.Point?> video_resolutions = null;
   // stream data
@@ -266,6 +266,17 @@ public class MediaInfo.Info : Box
       audio_streams = new Notebook ();
       audio_streams.switch_page.connect (on_audio_stream_switched);
       table.attach (audio_streams, 0, 3, row, row+1, fill_exp, 0, 0, 1);
+      row++;
+
+      label = new Label (null);
+      label.set_markup("<b>Subtitle Streams</b>");
+      label.set_alignment (0.0f, 0.5f);
+      table.attach (label, 0, 3, row, row+1, fill_exp, 0, 0, 1);
+      row++;
+
+      subtitle_streams = new Notebook ();
+      subtitle_streams.switch_page.connect (on_subtitle_stream_switched);
+      table.attach (subtitle_streams, 0, 3, row, row+1, fill_exp, 0, 0, 1);
       row++;
     }
 
@@ -664,6 +675,65 @@ public class MediaInfo.Info : Box
     }
     nb.show_all();
     
+    nb = compact_mode ? all_streams : subtitle_streams;
+    l = info.get_subtitle_streams ();
+    num_subtitle_streams = l.length ();
+    for (int i = 0; i < num_subtitle_streams; i++) {
+      sinfo = l.nth_data (i);
+      caps = sinfo.get_caps ();
+
+      row = 0;
+      table = new Table (2, 7, false);
+
+      label = new Label (caps.to_string ());
+      label.set_ellipsize (Pango.EllipsizeMode.END);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable (true);
+      table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+      row++;
+
+      label = new Label ("Codec:");
+      label.set_alignment (1.0f, 0.5f);
+      table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+      label = new Label (null);
+      label.set_alignment (0.0f, 0.5f);
+      label.set_selectable (true);
+      label.set_use_markup (true);
+      set_wikilink (label, caps); 
+      table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+      row++;
+
+      if ((s = sinfo.get_misc ()) != null) {
+        label = new Label ("Details:");
+        label.set_alignment (1.0f, 0.5f);
+        table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+        label = new Label (s.to_string ());
+        label.set_ellipsize (Pango.EllipsizeMode.END);
+        label.set_alignment (0.0f, 0.5f);
+        label.set_selectable (true);
+        table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
+        row++;
+      }
+
+      if ((t = sinfo.get_tags ()) != null) {
+        // FIXME: use treeview inside scrolled window
+        label = new Label ("Tags:");
+        label.set_alignment (1.0f, 0.0f);
+        table.attach (label, 0, 1, row, row+1, fill, fill, 0, 0);
+        str = build_taglist_info (t);
+        label = new Label (str);
+        label.set_ellipsize (Pango.EllipsizeMode.END);
+        label.set_alignment (0.0f, 0.5f);
+        label.set_selectable (true);
+        label.set_use_markup (true);
+        table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
+        row++;
+      }
+
+      nb.append_page (table, new Label (@"subtitle $i"));
+    }
+    nb.show_all();
+    
     if (have_video) {
       Gdk.Point res = video_resolutions[0];
       video_ratio = (float)(res.x) / (float)(res.y);
@@ -683,7 +753,6 @@ public class MediaInfo.Info : Box
     //l = info.get_container_streams ();
 
     // play file
-    cur_video_stream = cur_audio_stream = 0;
     ((GLib.Object)pb).set_property ("uri", uri);
     pb.set_state (State.PLAYING);
   }
@@ -764,16 +833,33 @@ public class MediaInfo.Info : Box
     }
   }
 
+  private void on_subtitle_stream_switched (Notebook nb, Widget page, uint page_num)
+  {
+    if (pb.current_state > State.PAUSED) {
+      stdout.printf ("Switching subtitle to: %u\n", page_num);
+      ((GLib.Object)pb).set_property ("current-text", (int)page_num);
+    }
+  }
+
   private void on_stream_switched (Notebook nb, Widget page, uint page_num)
   {
     if (pb.current_state > State.PAUSED) {
       if (page_num < num_video_streams) {
         stdout.printf ("Switching video to: %u\n", page_num);
         ((GLib.Object)pb).set_property ("current-video", (int)page_num);
-      } else {
-        page_num -= num_video_streams;
+        return;
+      }
+      page_num -= num_video_streams;
+      if (page_num < num_audio_streams) {
         stdout.printf ("Switching audio to: %u\n", page_num);
         ((GLib.Object)pb).set_property ("current-audio", (int)page_num);
+        return;
+      }
+      page_num -= num_audio_streams;
+      if (page_num < num_subtitle_streams) {
+        stdout.printf ("Switching subtitle to: %u\n", page_num);
+        ((GLib.Object)pb).set_property ("current-text", (int)page_num);
+        return;
       }
     }
   }
