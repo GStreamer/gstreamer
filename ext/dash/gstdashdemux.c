@@ -1750,7 +1750,7 @@ gst_dash_demux_download_loop (GstDashDemux * demux)
     }
   }
 
-  GST_INFO_OBJECT (demux, "Internal buffering : %" PRIu64 " s",
+  GST_INFO_OBJECT (demux, "Internal buffering : %" G_GUINT64_FORMAT " s",
       gst_dash_demux_get_buffering_time (demux) / GST_SECOND);
   demux->client->update_failed_count = 0;
 
@@ -2222,7 +2222,7 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux,
     brate = (size_buffer * 8) / ((double) diff / GST_SECOND);
 #endif
     GST_INFO_OBJECT (demux,
-        "Stream: %d Download rate = %" PRIu64 " Kbits/s (%" PRIu64
+        "Stream: %d Download rate = %" G_GUINT64_FORMAT " Kbits/s (%" G_GUINT64_FORMAT
         " Ko in %.2f s)", selected_stream->index,
         brate / 1000, size_buffer / 1024, ((double) diff / GST_SECOND));
   }
