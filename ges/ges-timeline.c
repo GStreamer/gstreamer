@@ -834,6 +834,8 @@ _create_transitions_on_layer (GESTimeline * timeline, GESLayer * layer,
     guint *start_or_end = g_sequence_get (iter);
     GESTrackElement *next = g_hash_table_lookup (timeline->priv->by_object,
         start_or_end);
+    GESTimelineElement *toplevel =
+        ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT (next));
 
     /* Only object that are in that layer and track */
     if (_ges_track_element_get_layer_priority (next) != layer_prio ||
@@ -860,7 +862,9 @@ _create_transitions_on_layer (GESTimeline * timeline, GESLayer * layer,
 
       GESTrackElement *prev = tmp->data;
 
-      if (ctrack != ges_track_element_get_track (prev))
+      if (ctrack != ges_track_element_get_track (prev) ||
+          ges_timeline_element_get_toplevel_parent (GES_TIMELINE_ELEMENT (prev))
+          == toplevel)
         continue;
 
       transition_duration = (_START (prev) + _DURATION (prev)) - _START (next);
