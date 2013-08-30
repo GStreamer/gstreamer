@@ -59,6 +59,7 @@ public class MediaInfo.Info : Box
   private Notebook subtitle_streams;
   private AspectFrame drawing_frame;
   private DrawingArea drawing_area;
+  private ScrolledWindow info_area;
   // gstreamer objects
   private Discoverer dc;
   private Pipeline pb;
@@ -170,21 +171,23 @@ public class MediaInfo.Info : Box
     drawing_frame = new AspectFrame (null, 0.5f, 0.5f, 1.25f, false);
     drawing_frame.set_size_request (160, 128);
     drawing_frame.set_shadow_type (Gtk.ShadowType.NONE);
+
     pack_start (drawing_frame, true, true, 0);
     
     drawing_area = new DrawingArea ();
     drawing_area.set_size_request (160, 128);
     drawing_area.draw.connect (on_drawing_area_draw);
+    drawing_area.size_allocate.connect (on_drawing_area_size_allocate);
     drawing_area.realize.connect (on_drawing_area_realize);
     drawing_area.unrealize.connect (on_drawing_area_unrealize);
     drawing_frame.add (drawing_area);
 
-    ScrolledWindow sw = new ScrolledWindow (null, null);
-    sw.set_policy (PolicyType.NEVER, PolicyType.ALWAYS);
-    pack_start (sw, true, true, 0);
+    info_area = new ScrolledWindow (null, null);
+    info_area.set_policy (PolicyType.NEVER, PolicyType.ALWAYS);
+    pack_start (info_area, true, true, 0);
 
     table = new Table (8, 3, false);
-    sw.add_with_viewport (table);
+    info_area.add_with_viewport (table);
 
     /* TODO: also use tabs for containers
      * - this is needed for e.g. mpeg-ts or mp3 inside ape
@@ -758,6 +761,21 @@ public class MediaInfo.Info : Box
   }
 
   // signal handlers
+  
+  private void on_drawing_area_size_allocate (Widget widget, Gtk.Allocation frame)
+  {
+    Gtk.Allocation alloc;
+    get_allocation (out alloc);
+    stdout.printf("size_allocate: %d x %d\n", alloc.width, alloc.height);
+
+    Gtk.Requisition requisition;
+    info_area.get_child ().get_preferred_size (null, out requisition);
+    stdout.printf("info_area: %d x %d\n", requisition.width, requisition.height);
+    stdout.printf("video_area: %d x %d\n", frame.width, frame.height);
+    
+    int max_h = alloc.height - frame.height;
+    info_area.set_min_content_height (int.min (requisition.height, max_h));
+  }
 
   private bool on_drawing_area_draw (Widget widget, Cairo.Context cr)
   {
