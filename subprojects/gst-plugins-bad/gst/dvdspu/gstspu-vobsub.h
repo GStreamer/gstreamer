@@ -56,6 +56,7 @@ struct SpuVobsubState {
   
   SpuRect disp_rect;
   SpuRect hl_rect;
+  gint frame_w, frame_h;
 
   guint32 current_clut[16]; /* Colour lookup table from incoming events */
 
