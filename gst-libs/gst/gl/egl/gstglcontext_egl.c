@@ -340,7 +340,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 #endif
   }
 
-  window_handle = gst_gl_window_get_window_handle (window);
+  window_handle =
+      (EGLNativeWindowType) gst_gl_window_get_window_handle (window);
 
   if (window_handle) {
     egl->egl_surface =
