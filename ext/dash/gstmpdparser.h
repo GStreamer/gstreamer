@@ -527,7 +527,7 @@ void gst_mpd_client_set_segment_index (GstActiveStream * stream, guint segment_i
 
 /* Get audio/video stream parameters (mimeType, width, height, rate, number of channels) */
 const gchar *gst_mpd_client_get_stream_mimeType (GstActiveStream * stream);
-const gboolean gst_mpd_client_get_bitstream_switching_flag (GstActiveStream * stream);
+gboolean gst_mpd_client_get_bitstream_switching_flag (GstActiveStream * stream);
 guint gst_mpd_client_get_video_stream_width (GstActiveStream * stream);
 guint gst_mpd_client_get_video_stream_height (GstActiveStream * stream);
 guint gst_mpd_client_get_audio_stream_rate (GstActiveStream * stream);
