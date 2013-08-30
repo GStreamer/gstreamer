@@ -496,13 +496,20 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
     return g_strdup ("Windows Media Audio");
   } else if (strcmp (info->type, "video/x-wmv") == 0) {
     gint ver = 0;
+    const gchar *str;
 
     gst_structure_get_int (s, "wmvversion", &ver);
+    str = gst_structure_get_string (s, "format");
+
     switch (ver) {
       case 1:
       case 2:
       case 3:
-        return g_strdup_printf ("Windows Media Video %d", ver + 6);
+        if (str && strncmp (str, "MSS", 3)) {
+          return g_strdup_printf ("Windows Media Video %d Screen", ver + 6);
+        } else {
+          return g_strdup_printf ("Windows Media Video %d", ver + 6);
+        }
       default:
         break;
     }
