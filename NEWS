@@ -1,9 +1,9 @@
-gst-vaapi NEWS -- summary of changes.  2013-08-DD
+gst-vaapi NEWS -- summary of changes.  2013-08-29
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
 
-Version 0.5.6 - DD.Aug.2013
+Version 0.5.6 - 29.Aug.2013
 * Add render-to-pixmap API to bypass VA/GLX in clutter-gst
 * Add initial support for video-processing APIs (+Halley Zhao)
 * Add support for video cropping and deinterlacing to the Wayland backend
