@@ -21,9 +21,11 @@
 
 /* TODO Determine error codes numbers */
 
-#include "ges.h"
 #include <string.h>
 #include <errno.h>
+#include <locale.h>
+
+#include "ges.h"
 #include "ges-internal.h"
 
 #define parent_class ges_xml_formatter_parent_class
@@ -823,7 +825,9 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
       if (GST_IS_INTERPOLATION_CONTROL_SOURCE (source)) {
         GList *timed_values, *tmp;
         GstInterpolationMode mode;
+        gchar *oldlocale = setlocale (LC_NUMERIC, NULL);
 
+        oldlocale = g_strdup (oldlocale);
         append_escaped (str,
             g_markup_printf_escaped
             ("            <binding type='direct' source_type='interpolation' property='%s'",
@@ -835,6 +839,7 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
         timed_values =
             gst_timed_value_control_source_get_all
             (GST_TIMED_VALUE_CONTROL_SOURCE (source));
+        setlocale (LC_NUMERIC, "C");
         for (tmp = timed_values; tmp; tmp = tmp->next) {
           GstTimedValue *value;
 
@@ -842,6 +847,8 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
           append_escaped (str, g_markup_printf_escaped (" %" G_GUINT64_FORMAT
                   ":%f ", value->timestamp, value->value));
         }
+        setlocale (LC_NUMERIC, oldlocale);
+        g_free (oldlocale);
         append_escaped (str, g_markup_printf_escaped ("'/>\n"));
       } else
         GST_DEBUG ("control source not in [interpolation]");
