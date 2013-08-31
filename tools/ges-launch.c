@@ -150,7 +150,7 @@ create_timeline (int nbargs, gchar ** argv, gchar * audio, gchar * video)
       !(!video || ges_timeline_add_track (timeline, trackv)))
     goto build_failure;
 
-  /* Here we've finished initializing our timeline, we're 
+  /* Here we've finished initializing our timeline, we're
    * ready to start using it... by solely working with the layer !*/
 
   for (i = 0; i < nbargs / 3; i++) {
@@ -255,8 +255,8 @@ build_failure:
 }
 
 static GESPipeline *
-create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv,
-    gchar * audio, gchar * video)
+create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
+    gchar * save_path, int argc, char **argv, gchar * audio, gchar * video)
 {
   GESPipeline *pipeline = NULL;
   GESTimeline *timeline = NULL;
@@ -305,6 +305,7 @@ create_pipeline (gchar * load_path, gchar * save_path, int argc, char **argv,
   if (!ges_pipeline_add_timeline (pipeline, timeline))
     goto failure;
 
+  *ret_timeline = timeline;
   return pipeline;
 
 failure:
@@ -326,8 +327,10 @@ bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
       gchar *dbg_info = NULL;
 
       gst_message_parse_error (message, &err, &dbg_info);
-      g_printerr ("ERROR from element %s: %s\n",
-          GST_OBJECT_NAME (message->src), err->message);
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+          GST_DEBUG_GRAPH_SHOW_ALL, "ges-launch-error");
+      g_printerr ("ERROR from element %s: %s\n", GST_OBJECT_NAME (message->src),
+          err->message);
       g_printerr ("Debugging info: %s\n", (dbg_info) ? dbg_info : "none");
       g_error_free (err);
       g_free (dbg_info);
@@ -412,7 +415,6 @@ main (int argc, gchar ** argv)
   gchar *audio_preset = NULL;
   gchar *video_preset = NULL;
   gchar *exclude_args = NULL;
-  static gboolean render = FALSE;
   static gboolean smartrender = FALSE;
   static gboolean list_transitions = FALSE;
   static gboolean list_patterns = FALSE;
@@ -423,8 +425,6 @@ main (int argc, gchar ** argv)
   GOptionEntry options[] = {
     {"thumbnail", 'm', 0.0, G_OPTION_ARG_DOUBLE, &thumbinterval,
         "Take thumbnails every n seconds (saved in current directory)", "N"},
-    {"render", 'r', 0, G_OPTION_ARG_NONE, &render,
-        "Render to outputuri", NULL},
     {"smartrender", 's', 0, G_OPTION_ARG_NONE, &smartrender,
         "Render to outputuri, and avoid decoding/reencoding", NULL},
     {"outputuri", 'o', 0, G_OPTION_ARG_STRING, &outputuri,
@@ -441,7 +441,7 @@ main (int argc, gchar ** argv)
         "Encoding audio profile preset", "<GstPresetName>"},
     {"vpreset", 0, 0, G_OPTION_ARG_STRING, &video_preset,
         "Encoding video profile preset", "<GstPresetName>"},
-    {"repeat", 'l', 0, G_OPTION_ARG_INT, &repeat,
+    {"repeat", 'r', 0, G_OPTION_ARG_INT, &repeat,
         "Number of time to repeat timeline", NULL},
     {"list-transitions", 't', 0, G_OPTION_ARG_NONE, &list_transitions,
         "List valid transition types and exit", NULL},
@@ -449,7 +449,7 @@ main (int argc, gchar ** argv)
         "List patterns and exit", NULL},
     {"save", 'z', 0, G_OPTION_ARG_STRING, &save_path,
         "Save project to file before rendering", "<path>"},
-    {"load", 'q', 0, G_OPTION_ARG_STRING, &load_path,
+    {"load", 'l', 0, G_OPTION_ARG_STRING, &load_path,
         "Load project from file before rendering", "<path>"},
     {"verbose", 0, 0, G_OPTION_ARG_NONE, &verbose,
         "Output status information and property notifications", NULL},
@@ -460,6 +460,7 @@ main (int argc, gchar ** argv)
   GOptionContext *ctx;
   GMainLoop *mainloop;
   GstBus *bus;
+  GESTimeline *timeline;
 
   setlocale (LC_ALL, "");
 
@@ -505,7 +506,7 @@ main (int argc, gchar ** argv)
     exit (0);
   }
 
-  if (((!load_path && (argc < 4))) || (outputuri && (!render && !smartrender))) {
+  if (((!load_path && (argc < 4)))) {
     g_printf ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     g_option_context_free (ctx);
     exit (1);
@@ -520,24 +521,34 @@ main (int argc, gchar ** argv)
     video = NULL;
 
   /* Create the pipeline */
-  pipeline = create_pipeline (load_path, save_path, argc - 1, argv + 1,
+  pipeline =
+      create_pipeline (&timeline, load_path, save_path, argc - 1, argv + 1,
       audio, video);
   if (!pipeline)
     exit (1);
 
   /* Setup profile/encoding if needed */
-  if (render || smartrender) {
-    GstEncodingProfile *prof;
+  if (smartrender || outputuri) {
+    GstEncodingProfile *prof = NULL;
+    GESProject *proj =
+        GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (timeline)));
 
-    prof = make_encoding_profile (audio, video, video_restriction, audio_preset,
-        video_preset, container);
+    if (proj) {
+      const GList *profiles = ges_project_list_encoding_profiles (proj);
+
+      prof = profiles ? profiles->data : NULL;
+    }
+
+    if (!prof) {
+      make_encoding_profile (audio, video, video_restriction, audio_preset,
+          video_preset, container);
+    }
 
     if (!prof || !ges_pipeline_set_render_settings (pipeline, outputuri, prof)
         || !ges_pipeline_set_mode (pipeline,
             smartrender ? TIMELINE_MODE_SMART_RENDER : TIMELINE_MODE_RENDER))
       exit (1);
 
-    g_free (outputuri);
     gst_encoding_profile_unref (prof);
   } else {
     ges_pipeline_set_mode (pipeline, TIMELINE_MODE_PREVIEW);
