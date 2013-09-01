@@ -225,6 +225,7 @@ ges_timeline_element_class_init (GESTimelineElementClass * klass)
 
   object_class->finalize = ges_timeline_element_finalize;
 
+  klass->set_parent = NULL;
   klass->set_start = NULL;
   klass->set_inpoint = NULL;
   klass->set_duration = NULL;
@@ -266,6 +267,11 @@ ges_timeline_element_set_parent (GESTimelineElement * self,
 
   if (self->parent != NULL && parent != NULL)
     goto had_parent;
+
+  if (GES_TIMELINE_ELEMENT_GET_CLASS (self)->set_parent) {
+    if (!GES_TIMELINE_ELEMENT_GET_CLASS (self)->set_parent (self, parent))
+      return FALSE;
+  }
 
   self->parent = parent;
 

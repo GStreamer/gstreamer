@@ -138,6 +138,7 @@ struct _GESTimelineElement
 
 /**
  * GESTimelineElementClass:
+ * @set_parent: method to set the parent of a #GESTimelineElement.
  * @set_start: method to set the start of a #GESTimelineElement
  * @set_duration: method to set the duration of a #GESTimelineElement
  * @set_inpoint: method to set the inpoint of a #GESTimelineElement
@@ -152,13 +153,18 @@ struct _GESTimelineElement
  *
  * The GESTimelineElement base class. Subclasses should override at least
  * @set_start @set_inpoint @set_duration @ripple @ripple_end @roll_start
- * @roll_end and @trim
+ * @roll_end and @trim.
+ *
+ * Vmethods in subclasses should apply all the operation they need to but
+ * the real method implementation is in charge of setting the proper field,
+ * and emit the notify signal.
  */
 struct _GESTimelineElementClass
 {
   GInitiallyUnownedClass parent_class;
 
   /*< public > */
+  gboolean (*set_parent)       (GESTimelineElement * self, GESTimelineElement *parent);
   gboolean (*set_start)        (GESTimelineElement * self, GstClockTime start);
   gboolean (*set_inpoint)      (GESTimelineElement * self, GstClockTime inpoint);
   gboolean (*set_duration)     (GESTimelineElement * self, GstClockTime duration);
