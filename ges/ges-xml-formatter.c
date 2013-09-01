@@ -825,9 +825,7 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
       if (GST_IS_INTERPOLATION_CONTROL_SOURCE (source)) {
         GList *timed_values, *tmp;
         GstInterpolationMode mode;
-        gchar *oldlocale = setlocale (LC_NUMERIC, NULL);
 
-        oldlocale = g_strdup (oldlocale);
         append_escaped (str,
             g_markup_printf_escaped
             ("            <binding type='direct' source_type='interpolation' property='%s'",
@@ -839,16 +837,15 @@ _save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
         timed_values =
             gst_timed_value_control_source_get_all
             (GST_TIMED_VALUE_CONTROL_SOURCE (source));
-        setlocale (LC_NUMERIC, "C");
         for (tmp = timed_values; tmp; tmp = tmp->next) {
+          gchar strbuf[G_ASCII_DTOSTR_BUF_SIZE];
           GstTimedValue *value;
 
           value = (GstTimedValue *) tmp->data;
           append_escaped (str, g_markup_printf_escaped (" %" G_GUINT64_FORMAT
-                  ":%f ", value->timestamp, value->value));
+                  ":%s ", value->timestamp, g_ascii_dtostr (strbuf,
+                      G_ASCII_DTOSTR_BUF_SIZE, value->value)));
         }
-        setlocale (LC_NUMERIC, oldlocale);
-        g_free (oldlocale);
         append_escaped (str, g_markup_printf_escaped ("'/>\n"));
       } else
         GST_DEBUG ("control source not in [interpolation]");
