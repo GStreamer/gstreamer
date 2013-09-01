@@ -48,7 +48,6 @@ plugin_init (GstPlugin * plugin)
   GST_DEBUG_CATEGORY_INIT (sunaudio_debug, "sunaudio", 0, "sunaudio elements");
 
 #ifdef ENABLE_NLS
-  setlocale (LC_ALL, "");
   bindtextdomain (GETTEXT_PACKAGE, LOCALEDIR);
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
 #endif /* ENABLE_NLS */
