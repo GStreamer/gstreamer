@@ -90,7 +90,8 @@ static gboolean gst_dvd_spu_src_query (GstPad * pad, GstObject * parent,
 
 static GstCaps *gst_dvd_spu_video_proxy_getcaps (GstPad * pad,
     GstCaps * filter);
-static gboolean gst_dvd_spu_video_set_caps (GstPad * pad, GstCaps * caps);
+static gboolean gst_dvd_spu_video_set_caps (GstDVDSpu * dvdspu, GstPad * pad,
+    GstCaps * caps);
 static GstFlowReturn gst_dvd_spu_video_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
 static gboolean gst_dvd_spu_video_event (GstPad * pad, GstObject * parent,
@@ -104,7 +105,8 @@ static GstFlowReturn gst_dvd_spu_subpic_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buf);
 static gboolean gst_dvd_spu_subpic_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
-static gboolean gst_dvd_spu_subpic_set_caps (GstPad * pad, GstCaps * caps);
+static gboolean gst_dvd_spu_subpic_set_caps (GstDVDSpu * dvdspu, GstPad * pad,
+    GstCaps * caps);
 
 static void gst_dvd_spu_clear (GstDVDSpu * dvdspu);
 static void gst_dvd_spu_flush_spu_info (GstDVDSpu * dvdspu,
@@ -315,9 +317,8 @@ gst_dvd_spu_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 }
 
 static gboolean
-gst_dvd_spu_video_set_caps (GstPad * pad, GstCaps * caps)
+gst_dvd_spu_video_set_caps (GstDVDSpu * dvdspu, GstPad * pad, GstCaps * caps)
 {
-  GstDVDSpu *dvdspu = GST_DVD_SPU (gst_pad_get_parent (pad));
   gboolean res = FALSE;
   GstVideoInfo info;
   gint i;
@@ -339,7 +340,6 @@ gst_dvd_spu_video_set_caps (GstPad * pad, GstCaps * caps)
 
   res = TRUE;
 done:
-  gst_object_unref (dvdspu);
   return res;
 }
 
@@ -405,7 +405,7 @@ gst_dvd_spu_video_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      res = gst_dvd_spu_video_set_caps (pad, caps);
+      res = gst_dvd_spu_video_set_caps (dvdspu, pad, caps);
       if (res)
         res = gst_pad_push_event (dvdspu->srcpad, event);
       else
@@ -1057,7 +1057,7 @@ gst_dvd_spu_subpic_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GstCaps *caps;
 
       gst_event_parse_caps (event, &caps);
-      res = gst_dvd_spu_subpic_set_caps (pad, caps);
+      res = gst_dvd_spu_subpic_set_caps (dvdspu, pad, caps);
       gst_event_unref (event);
       break;
     }
@@ -1184,9 +1184,8 @@ done:
 }
 
 static gboolean
-gst_dvd_spu_subpic_set_caps (GstPad * pad, GstCaps * caps)
+gst_dvd_spu_subpic_set_caps (GstDVDSpu * dvdspu, GstPad * pad, GstCaps * caps)
 {
-  GstDVDSpu *dvdspu = GST_DVD_SPU (gst_pad_get_parent (pad));
   gboolean res = FALSE;
   GstStructure *s;
   SpuInputType input_type;
@@ -1212,7 +1211,6 @@ gst_dvd_spu_subpic_set_caps (GstPad * pad, GstCaps * caps)
   DVD_SPU_UNLOCK (dvdspu);
   res = TRUE;
 done:
-  gst_object_unref (dvdspu);
   return res;
 }
 
