@@ -701,6 +701,13 @@ static void
   iter =
       gst_pad_iterate_internal_links (GST_VALIDATE_PAD_MONITOR_GET_PAD
       (monitor));
+
+  if (iter == NULL) {
+    GST_WARNING_OBJECT (GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor),
+        "No iterator available");
+    return;
+  }
+
   done = FALSE;
   while (!done) {
     GValue value = { 0, };
