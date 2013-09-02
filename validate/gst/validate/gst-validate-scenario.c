@@ -545,7 +545,7 @@ async_done_cb (GstBus * bus, GstMessage * message,
                 ((gint64) (priv->seeked_position - priv->seek_pos_tol))))) {
 
       GST_VALIDATE_REPORT (scenario, EVENT_SEEK_RESULT_POSITION_WRONG,
-          "Seeked position %" GST_TIME_FORMAT "not in the expected range [%"
+          "Seeked position %" GST_TIME_FORMAT " not in the expected range [%"
           GST_TIME_FORMAT " -- %" GST_TIME_FORMAT, GST_TIME_ARGS (position),
           GST_TIME_ARGS (((MAX (0,
                           ((gint64) (priv->seeked_position -
