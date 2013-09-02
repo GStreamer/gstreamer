@@ -1290,10 +1290,15 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     goto done;
   }
 
+  if (GST_CLOCK_TIME_IS_VALID (cstop))
+    duration = cstop - cstart;
+  else
+    duration = GST_CLOCK_TIME_NONE;
+
   /* incoming DTS is not really relevant and does not make sense anyway,
    * so pass along _NONE and maybe come up with something better later on */
   frame = gst_video_encoder_new_frame (encoder, buf, cstart,
-      GST_CLOCK_TIME_NONE, cstop - cstart);
+      GST_CLOCK_TIME_NONE, duration);
 
   GST_OBJECT_LOCK (encoder);
   if (priv->force_key_unit) {
