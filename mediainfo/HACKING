@@ -1,4 +1,3 @@
-
 = Releases =
 
 - bump version in configure.ac
@@ -29,3 +28,6 @@
 
 - update web-page
 
+= Hacking =
+
+use G_MESSAGES_DEBUG="gst-mi" to see the logging

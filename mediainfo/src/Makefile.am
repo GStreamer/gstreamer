@@ -3,6 +3,7 @@ bin_PROGRAMS = gst-mi
 INCLUDES = \
 	-include config.h \
 	$(MI_CFLAGS) \
+	-DG_LOG_DOMAIN=\"gst-mi\" \
 	-DLOCALEDIR=\""$(localedir)"\" \
 	-DPKGDATADIR=\""$(pkgdatadir)"\" \
 	-DPKGLIBDIR=\""$(pkglibdir)"\"
