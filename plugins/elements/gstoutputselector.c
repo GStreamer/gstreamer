@@ -368,7 +368,6 @@ gst_output_selector_switch (GstOutputSelector * osel)
   gboolean res = FALSE;
   GstEvent *ev = NULL;
   GstSegment *seg = NULL;
-  gint64 start = 0, position = 0;
 
   /* Switch */
   GST_OBJECT_LOCK (GST_OBJECT (osel));
@@ -391,13 +390,9 @@ gst_output_selector_switch (GstOutputSelector * osel)
       /* If resending then mark segment start and position accordingly */
       if (osel->resend_latest && osel->latest_buffer &&
           GST_BUFFER_TIMESTAMP_IS_VALID (osel->latest_buffer)) {
-        start = position = GST_BUFFER_TIMESTAMP (osel->latest_buffer);
-      } else {
-        start = position = seg->position;
+        seg->position = GST_BUFFER_TIMESTAMP (osel->latest_buffer);
       }
 
-      seg->start = start;
-      seg->position = position;
       ev = gst_event_new_segment (seg);
 
       if (!gst_pad_push_event (osel->active_srcpad, ev)) {
