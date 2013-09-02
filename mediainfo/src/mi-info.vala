@@ -832,6 +832,10 @@ public class MediaInfo.Info : Box
 
   /* FIXME: discoverer not neccesarily return the stream in the same order as
    * playbin2 sees them: https://bugzilla.gnome.org/show_bug.cgi?id=634407
+   * - we can use:
+   *   - pad.get_stream_id() on playbin
+   *   - sinfo.get_stream_id() on discoverer
+   *
    */
   private void on_video_stream_switched (Notebook nb, Widget page, uint page_num)
   {
