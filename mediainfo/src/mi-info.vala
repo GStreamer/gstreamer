@@ -371,7 +371,7 @@ public class MediaInfo.Info : Box
       wikilink = wikilinks[caps.get_structure(0).get_name()];
     }
     if (wikilink != null) {
-      // FIXME: make prefix and link translatable
+      // FIXME: make prefix (en) and link translatable
       label.set_markup ("<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str));
     } else {
       label.set_text (str);
@@ -383,8 +383,6 @@ public class MediaInfo.Info : Box
     string uri = info.get_uri();
     GLib.List<DiscovererStreamInfo> l;
     DiscovererStreamInfo sinfo;
-    //DiscovererVideoInfo vinfo;
-    //DiscovererAudioInfo ainfo;
     Table table;
     Label label;
     Notebook nb;
@@ -926,7 +924,6 @@ public class MediaInfo.Info : Box
         }
         buf.unmap(info);
 
-        // FIXME: having the actual resolution here would be nice
         vstr = c.to_string();
       } else  {
         vstr = Gst.Value.serialize (v).compress ();
