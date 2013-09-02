@@ -410,7 +410,6 @@ public class MediaInfo.Info : Box
       (uint) ((dur / SECOND) % 60),
       (uint) ((dur) % SECOND));
     duration.set_text (str);
-    //stdout.printf ("Duration: %s\n", dur_str);
 
     /*
     < ensonic> bilboed-pi: is gst_discoverer_info_get_container_streams() containing the info for the conatiner or can those be multiple ones as well?
@@ -422,12 +421,12 @@ public class MediaInfo.Info : Box
     l = info.get_container_streams ();
     for (int i = 0; i < l.length (); i++) {
       sinfo = l.nth_data (i);
-      stdout.printf ("container[%d]: %s\n", i, sinfo.get_caps ().to_string ());
+      debug ("container[%d]: %s", i, sinfo.get_caps ().to_string ());
     }
     l = info.get_stream_list ();
     for (int i = 0; i < l.length (); i++) {
       sinfo = l.nth_data (i);
-      stdout.printf ("stream[%d:%s]: %s\n", i, sinfo.get_stream_type_nick(), sinfo.get_caps ().to_string ());
+      debug ("stream[%d:%s]: %s", i, sinfo.get_stream_type_nick(), sinfo.get_caps ().to_string ());
     }
     */
     sinfo = info.get_stream_info ();
@@ -740,18 +739,18 @@ public class MediaInfo.Info : Box
     if (have_video) {
       Gdk.Point res = video_resolutions[0];
       video_ratio = (float)(res.x) / (float)(res.y);
-      stdout.printf("video_ratio from video: %f\n", video_ratio);
+      debug ("video_ratio from video: %f", video_ratio);
     } else if (album_art != null) {
       int sw=album_art.get_width ();
       int sh=album_art.get_height ();
       video_ratio = (float)sw / (float)sh;
-      stdout.printf("video_ratio from album art: %f\n", video_ratio);
+      debug ("video_ratio from album art: %f", video_ratio);
     } else {
       video_ratio = 1.0f;
-      stdout.printf("video_ratio --- : %f\n", video_ratio);
+      debug ("video_ratio --- : %f", video_ratio);
     }
     drawing_frame.set (0.5f, 0.5f, video_ratio, false);
-    drawing_area.queue_draw();
+    drawing_area.queue_resize();
 
     //l = info.get_container_streams ();
 
@@ -766,12 +765,12 @@ public class MediaInfo.Info : Box
   {
     Gtk.Allocation alloc;
     get_allocation (out alloc);
-    stdout.printf("size_allocate: %d x %d\n", alloc.width, alloc.height);
+    debug ("size_allocate: %d x %d", alloc.width, alloc.height);
 
     Gtk.Requisition requisition;
     info_area.get_child ().get_preferred_size (null, out requisition);
-    stdout.printf("info_area: %d x %d\n", requisition.width, requisition.height);
-    stdout.printf("video_area: %d x %d\n", frame.width, frame.height);
+    debug ("info_area: %d x %d", requisition.width, requisition.height);
+    debug ("video_area: %d x %d", frame.width, frame.height);
     
     int max_h = alloc.height - frame.height;
     info_area.set_min_content_height (int.min (requisition.height, max_h));
@@ -787,7 +786,7 @@ public class MediaInfo.Info : Box
       widget.get_allocation (out frame);
       int w = frame.width;
       int h = frame.height;
-      //stdout.printf("on_drawing_area_draw:video_ratio: %d x %d : %f\n", w, h, video_ratio);
+      //debug ("on_drawing_area_draw:video_ratio: %d x %d : %f", w, h, video_ratio);
 
       if (album_art != null) {
         Gdk.Pixbuf pb = album_art.scale_simple (w, h, Gdk.InterpType.BILINEAR);
@@ -820,7 +819,8 @@ public class MediaInfo.Info : Box
       Gst.Video.Overlay overlay = message.src as Gst.Video.Overlay;
       overlay.set_window_handle ((uint *)Gdk.X11Window.get_xid (drawing_area.get_window()));
       drawing_frame.set (0.5f, 0.5f, video_ratio, false);
-      stdout.printf("on_element_sync_message:video_ratio: %f\n", video_ratio);
+      debug ("on_element_sync_message:video_ratio: %f", video_ratio);
+      drawing_area.queue_resize();
 
       /* playbin does this in 1.0
       if (message.src.get_class ().find_property ("force-aspect-ratio") != null) {
@@ -840,19 +840,20 @@ public class MediaInfo.Info : Box
   private void on_video_stream_switched (Notebook nb, Widget page, uint page_num)
   {
     if (pb.current_state > State.PAUSED) {
-      stdout.printf ("Switching video to: %u\n", page_num);
+      debug ("Switching video to: %u", page_num);
       ((GLib.Object)pb).set_property ("current-video", (int)page_num);
       Gdk.Point res = video_resolutions[(int)page_num];
       video_ratio = (float)(res.x) / (float)(res.y);
       drawing_frame.set (0.5f, 0.5f, video_ratio, false);
-      stdout.printf("on_video_stream_switched:video_ratio: %f\n", video_ratio);
+      drawing_area.queue_resize();
+      debug ("on_video_stream_switched:video_ratio: %f", video_ratio);
     }
   }
 
   private void on_audio_stream_switched (Notebook nb, Widget page, uint page_num)
   {
     if (pb.current_state > State.PAUSED) {
-      stdout.printf ("Switching audio to: %u\n", page_num);
+      debug ("Switching audio to: %u", page_num);
       ((GLib.Object)pb).set_property ("current-audio", (int)page_num);
     }
   }
@@ -860,7 +861,7 @@ public class MediaInfo.Info : Box
   private void on_subtitle_stream_switched (Notebook nb, Widget page, uint page_num)
   {
     if (pb.current_state > State.PAUSED) {
-      stdout.printf ("Switching subtitle to: %u\n", page_num);
+      debug ("Switching subtitle to: %u", page_num);
       ((GLib.Object)pb).set_property ("current-text", (int)page_num);
     }
   }
@@ -869,19 +870,19 @@ public class MediaInfo.Info : Box
   {
     if (pb.current_state > State.PAUSED) {
       if (page_num < num_video_streams) {
-        stdout.printf ("Switching video to: %u\n", page_num);
+        debug ("Switching video to: %u", page_num);
         ((GLib.Object)pb).set_property ("current-video", (int)page_num);
         return;
       }
       page_num -= num_video_streams;
       if (page_num < num_audio_streams) {
-        stdout.printf ("Switching audio to: %u\n", page_num);
+        debug ("Switching audio to: %u", page_num);
         ((GLib.Object)pb).set_property ("current-audio", (int)page_num);
         return;
       }
       page_num -= num_audio_streams;
       if (page_num < num_subtitle_streams) {
-        stdout.printf ("Switching subtitle to: %u\n", page_num);
+        debug ("Switching subtitle to: %u", page_num);
         ((GLib.Object)pb).set_property ("current-text", (int)page_num);
         return;
       }
@@ -918,7 +919,7 @@ public class MediaInfo.Info : Box
         try {
           InputStream is = new MemoryInputStream.from_data (info.data,null);
           album_art = new Gdk.Pixbuf.from_stream (is, null);
-          debug("found album art");
+          debug ("found album art");
           is.close(null);
         } catch (Error e) {
           debug ("Decoding album art failed: %s: %s", e.domain.to_string (), e.message);
