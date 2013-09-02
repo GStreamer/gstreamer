@@ -80,6 +80,7 @@ struct _GstValidatePadMonitor {
   guint32 pending_flush_stop_seqnum;
   guint32 pending_flush_start_seqnum;
   guint32 pending_newsegment_seqnum;
+  guint32 pending_eos_seqnum;
 
   GstEvent *expected_segment;
   GPtrArray *serialized_events;
