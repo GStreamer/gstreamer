@@ -707,7 +707,7 @@ gst_flups_demux_send_event (GstFluPSDemux * demux, GstEvent * event)
   for (i = 0; i < count; i++) {
     GstFluPSStream *stream = demux->streams_found[i];
 
-    if (stream && !stream->notlinked) {
+    if (stream) {
       (void) gst_event_ref (event);
 
       if (!gst_pad_push_event (stream->pad, event)) {
