@@ -769,6 +769,48 @@ gst_udpsrc_get_property (GObject * object, guint prop_id, GValue * value,
   }
 }
 
+static GInetAddress *
+gst_udpsrc_resolve (GstUDPSrc * src, const gchar * address)
+{
+  GInetAddress *addr;
+  GError *err = NULL;
+  GResolver *resolver;
+
+  addr = g_inet_address_new_from_string (address);
+  if (!addr) {
+    GList *results;
+
+    GST_DEBUG_OBJECT (src, "resolving IP address for host %s", address);
+    resolver = g_resolver_get_default ();
+    results =
+        g_resolver_lookup_by_name (resolver, address, src->cancellable, &err);
+    if (!results)
+      goto name_resolve;
+    addr = G_INET_ADDRESS (g_object_ref (results->data));
+
+    g_resolver_free_addresses (results);
+    g_object_unref (resolver);
+  }
+#ifndef GST_DISABLE_GST_DEBUG
+  {
+    gchar *ip = g_inet_address_to_string (addr);
+
+    GST_DEBUG_OBJECT (src, "IP address for host %s is %s", address, ip);
+    g_free (ip);
+  }
+#endif
+
+  return addr;
+
+name_resolve:
+  {
+    GST_WARNING_OBJECT (src, "Failed to resolve %s: %s", address, err->message);
+    g_clear_error (&err);
+    g_object_unref (resolver);
+    return NULL;
+  }
+}
+
 /* create a socket for sending to remote machine */
 static gboolean
 gst_udpsrc_start (GstBaseSrc * bsrc)
@@ -776,7 +818,6 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   GstUDPSrc *src;
   GInetAddress *addr, *bind_addr;
   GSocketAddress *bind_saddr;
-  GResolver *resolver;
   GError *err = NULL;
 
   src = GST_UDPSRC (bsrc);
@@ -786,32 +827,9 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
     GST_DEBUG_OBJECT (src, "allocating socket for %s:%d", src->multi_group,
         src->port);
 
-    addr = g_inet_address_new_from_string (src->multi_group);
-    if (!addr) {
-      GList *results;
-
-      GST_DEBUG_OBJECT (src, "resolving IP address for host %s",
-          src->multi_group);
-      resolver = g_resolver_get_default ();
-      results =
-          g_resolver_lookup_by_name (resolver, src->multi_group,
-          src->cancellable, &err);
-      if (!results)
-        goto name_resolve;
-      addr = G_INET_ADDRESS (g_object_ref (results->data));
-
-      g_resolver_free_addresses (results);
-      g_object_unref (resolver);
-    }
-#ifndef GST_DISABLE_GST_DEBUG
-    {
-      gchar *ip = g_inet_address_to_string (addr);
-
-      GST_DEBUG_OBJECT (src, "IP address for host %s is %s", src->multi_group,
-          ip);
-      g_free (ip);
-    }
-#endif
+    addr = gst_udpsrc_resolve (src, src->multi_group);
+    if (!addr)
+      goto name_resolve;
 
     if ((src->used_socket =
             g_socket_new (g_inet_address_get_family (addr),
@@ -971,10 +989,6 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
   /* ERRORS */
 name_resolve:
   {
-    GST_ELEMENT_ERROR (src, RESOURCE, SETTINGS, (NULL),
-        ("Name resolval failed: %s", err->message));
-    g_clear_error (&err);
-    g_object_unref (resolver);
     return FALSE;
   }
 no_socket:
