@@ -51,7 +51,7 @@ static GstElement *gst_validate_element_monitor_get_element (GstValidateMonitor
     * monitor);
 
 static void
-_qa_element_pad_added (GstElement * element, GstPad * pad,
+_validate_element_pad_added (GstElement * element, GstPad * pad,
     GstValidateElementMonitor * monitor);
 
 static void
@@ -103,7 +103,7 @@ gst_validate_element_monitor_new (GstElement * element,
   g_return_val_if_fail (element != NULL, NULL);
 
   monitor = g_object_new (GST_TYPE_VALIDATE_ELEMENT_MONITOR, "object", element,
-      "qa-runner", runner, "qa-parent", parent, NULL);
+      "validate-runner", runner, "validate-parent", parent, NULL);
 
   if (GST_VALIDATE_ELEMENT_MONITOR_GET_ELEMENT (monitor) == NULL) {
     g_object_unref (monitor);
@@ -164,7 +164,7 @@ gst_validate_element_monitor_do_setup (GstValidateMonitor * monitor)
   gst_validate_element_monitor_inspect (elem_monitor);
 
   elem_monitor->pad_added_id = g_signal_connect (element, "pad-added",
-      G_CALLBACK (_qa_element_pad_added), monitor);
+      G_CALLBACK (_validate_element_pad_added), monitor);
 
   iterator = gst_element_iterate_pads (element);
   done = FALSE;
@@ -212,7 +212,7 @@ gst_validate_element_monitor_wrap_pad (GstValidateElementMonitor * monitor,
 }
 
 static void
-_qa_element_pad_added (GstElement * element, GstPad * pad,
+_validate_element_pad_added (GstElement * element, GstPad * pad,
     GstValidateElementMonitor * monitor)
 {
   g_return_if_fail (GST_VALIDATE_ELEMENT_MONITOR_GET_ELEMENT (monitor) ==

@@ -43,7 +43,7 @@ static void
 gst_validate_reporter_default_init (GstValidateReporterInterface * iface)
 {
   g_object_interface_install_property (iface,
-      g_param_spec_object ("qa-runner", "VALIDATE Runner",
+      g_param_spec_object ("validate-runner", "Validate Runner",
           "The Validate runner to " "report errors to",
           GST_TYPE_VALIDATE_RUNNER,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));

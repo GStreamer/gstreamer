@@ -46,7 +46,7 @@ gst_validate_bin_monitor_wrap_element (GstValidateBinMonitor * monitor,
 static gboolean gst_validate_bin_monitor_setup (GstValidateMonitor * monitor);
 
 static void
-_qa_bin_element_added (GstBin * bin, GstElement * pad,
+_validate_bin_element_added (GstBin * bin, GstElement * pad,
     GstValidateBinMonitor * monitor);
 
 static void
@@ -113,7 +113,7 @@ gst_validate_bin_monitor_new (GstBin * bin, GstValidateRunner * runner,
 {
   GstValidateBinMonitor *monitor =
       g_object_new (GST_TYPE_VALIDATE_BIN_MONITOR, "object",
-      bin, "qa-runner", runner, "qa-parent", parent, NULL);
+      bin, "validate-runner", runner, "validate-parent", parent, NULL);
 
   if (GST_VALIDATE_MONITOR_GET_OBJECT (monitor) == NULL) {
     g_object_unref (monitor);
@@ -145,7 +145,7 @@ gst_validate_bin_monitor_setup (GstValidateMonitor * monitor)
 
   bin_monitor->element_added_id =
       g_signal_connect (bin, "element-added",
-      G_CALLBACK (_qa_bin_element_added), monitor);
+      G_CALLBACK (_validate_bin_element_added), monitor);
 
   iterator = gst_bin_iterate_elements (bin);
   done = FALSE;
@@ -195,7 +195,7 @@ gst_validate_bin_monitor_wrap_element (GstValidateBinMonitor * monitor,
 }
 
 static void
-_qa_bin_element_added (GstBin * bin, GstElement * element,
+_validate_bin_element_added (GstBin * bin, GstElement * element,
     GstValidateBinMonitor * monitor)
 {
   g_return_if_fail (GST_VALIDATE_ELEMENT_MONITOR_GET_ELEMENT (monitor) ==

@@ -37,7 +37,7 @@
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_VALIDATE_SCENARIO, GstValidateScenarioPrivate))
 
 #define GST_VALIDATE_SCENARIO_SUFFIX ".scenario"
-#define GST_VALIDATE_SCENARIO_DIRECTORY "qa-scenario"
+#define GST_VALIDATE_SCENARIO_DIRECTORY "validate-scenario"
 
 #define DEFAULT_SEEK_TOLERANCE (0.1 * GST_SECOND)       /* tolerance seek interval
                                                            TODO make it overridable  */
@@ -725,7 +725,7 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
   object_class->set_property = gst_validate_scenario_set_property;
 
   g_object_class_install_property (object_class, PROP_RUNNER,
-      g_param_spec_object ("qa-runner", "VALIDATE Runner",
+      g_param_spec_object ("validate-runner", "VALIDATE Runner",
           "The Validate runner to " "report errors to",
           GST_TYPE_VALIDATE_RUNNER,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
@@ -769,7 +769,7 @@ gst_validate_scenario_factory_create (GstValidateRunner * runner,
 {
   GstBus *bus;
   GstValidateScenario *scenario =
-      g_object_new (GST_TYPE_VALIDATE_SCENARIO, "qa-runner",
+      g_object_new (GST_TYPE_VALIDATE_SCENARIO, "validate-runner",
       runner, NULL);
 
   GST_LOG ("Creating scenario %s", scenario_name);

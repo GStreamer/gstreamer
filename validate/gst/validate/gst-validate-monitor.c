@@ -123,13 +123,13 @@ gst_validate_monitor_class_init (GstValidateMonitorClass * klass)
           GST_TYPE_OBJECT, G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_RUNNER,
-      g_param_spec_object ("qa-runner", "VALIDATE Runner",
+      g_param_spec_object ("validate-runner", "VALIDATE Runner",
           "The Validate runner to " "report errors to",
           GST_TYPE_VALIDATE_RUNNER,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
 
   g_object_class_install_property (gobject_class, PROP_VALIDATE_PARENT,
-      g_param_spec_object ("qa-parent", "VALIDATE parent monitor",
+      g_param_spec_object ("validate-parent", "VALIDATE parent monitor",
           "The Validate monitor " "that is the parent of this one",
           GST_TYPE_VALIDATE_MONITOR,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
