@@ -56,7 +56,7 @@ plugin_init (GstPlugin * plugin)
       "MPEG-PS PES filter");
 
   if (!gst_element_register (plugin, "mpegpsdemux", GST_RANK_PRIMARY,
-          GST_TYPE_FLUPS_DEMUX))
+          GST_TYPE_PS_DEMUX))
     return FALSE;
 
   return TRUE;
