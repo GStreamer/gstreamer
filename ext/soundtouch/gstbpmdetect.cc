@@ -31,7 +31,6 @@
 #undef PACKAGE_BUGREPORT
 #undef PACKAGE
 
-#define FLOAT_SAMPLES 1
 #include <soundtouch/BPMDetect.h>
 
 #include <gst/audio/audio.h>
@@ -55,11 +54,21 @@ struct _GstBPMDetectPrivate
 #endif
 };
 
-#define ALLOWED_CAPS \
-    "audio/x-raw, "                                           \
-    " format = (string) " GST_AUDIO_NE (F32) ", "             \
-    " rate = (int) [ 8000, MAX ], "                           \
-    " channels = (int) [ 1, 2 ]"
+#if defined(SOUNDTOUCH_FLOAT_SAMPLES)
+  #define ALLOWED_CAPS \
+    "audio/x-raw, " \
+      "format = (string) " GST_AUDIO_NE (F32) ", " \
+      "rate = (int) [ 8000, MAX ], " \
+      "channels = (int) [ 1, 2 ]"
+#elif defined(SOUNDTOUCH_INTEGER_SAMPLES)
+  #define ALLOWED_CAPS \
+    "audio/x-raw, " \
+      "format = (string) " GST_AUDIO_NE (S16) ", " \
+      "rate = (int) [ 8000, MAX ], " \
+      "channels = (int) [ 1, 2 ]"
+#else
+#error "Only integer or float samples are supported"
+#endif
 
 #define gst_bpm_detect_parent_class parent_class
 G_DEFINE_TYPE (GstBPMDetect, gst_bpm_detect, GST_TYPE_AUDIO_FILTER);
@@ -209,13 +218,13 @@ gst_bpm_detect_transform_ip (GstBaseTransform * trans, GstBuffer * in)
 
   gst_buffer_map (in, &info, GST_MAP_READ);
 
-  nsamples = info.size / (4 * GST_AUDIO_INFO_CHANNELS (&filter->info));
+  nsamples = info.size / (GST_AUDIO_INFO_BPF (&filter->info) * GST_AUDIO_INFO_CHANNELS (&filter->info));
 
   /* For stereo BPMDetect->inputSamples() does downmixing into the input
    * data but our buffer data shouldn't be modified.
    */
   if (GST_AUDIO_INFO_CHANNELS (&filter->info) == 1) {
-    gfloat *inbuf = (gfloat *) info.data;
+    soundtouch::SAMPLETYPE *inbuf = (soundtouch::SAMPLETYPE *) info.data;
 
     while (nsamples > 0) {
       bpm_detect->priv->detect->inputSamples (inbuf, MIN (nsamples, 2048));
@@ -223,13 +232,13 @@ gst_bpm_detect_transform_ip (GstBaseTransform * trans, GstBuffer * in)
       inbuf += 2048;
     }
   } else {
-    gfloat *inbuf, *intmp, data[2 * 2048];
+    soundtouch::SAMPLETYPE *inbuf, *intmp, data[2 * 2048];
 
-    inbuf = (gfloat *) info.data;
+    inbuf = (soundtouch::SAMPLETYPE *) info.data;
     intmp = data;
 
     while (nsamples > 0) {
-      memcpy (intmp, inbuf, sizeof (gfloat) * 2 * MIN (nsamples, 2048));
+      memcpy (intmp, inbuf, sizeof (soundtouch::SAMPLETYPE) * 2 * MIN (nsamples, 2048));
       bpm_detect->priv->detect->inputSamples (intmp, MIN (nsamples, 2048));
       nsamples -= 2048;
       inbuf += 2048 * 2;

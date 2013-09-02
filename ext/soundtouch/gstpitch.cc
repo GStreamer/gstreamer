@@ -31,7 +31,6 @@
 #undef PACKAGE_BUGREPORT
 #undef PACKAGE
 
-#define FLOAT_SAMPLES 1
 #include <soundtouch/SoundTouch.h>
 
 #include <gst/gst.h>
@@ -62,11 +61,21 @@ enum
   ARG_PITCH
 };
 
-#define SUPPORTED_CAPS \
-  "audio/x-raw, " \
-    "format = (string) " GST_AUDIO_NE (F32) ", " \
-    "rate = (int) [ 8000, MAX ], " \
-    "channels = (int) [ 1, 2 ]"
+#if defined(SOUNDTOUCH_FLOAT_SAMPLES)
+  #define SUPPORTED_CAPS \
+    "audio/x-raw, " \
+      "format = (string) " GST_AUDIO_NE (F32) ", " \
+      "rate = (int) [ 8000, MAX ], " \
+      "channels = (int) [ 1, 2 ]"
+#elif defined(SOUNDTOUCH_INTEGER_SAMPLES)
+  #define SUPPORTED_CAPS \
+    "audio/x-raw, " \
+      "format = (string) " GST_AUDIO_NE (S16) ", " \
+      "rate = (int) [ 8000, MAX ], " \
+      "channels = (int) [ 1, 2 ]"
+#else
+#error "Only integer or float samples are supported"
+#endif
 
 static GstStaticPadTemplate gst_pitch_sink_template =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -294,29 +303,17 @@ static gboolean
 gst_pitch_setcaps (GstPitch * pitch, GstCaps * caps)
 {
   GstPitchPrivate *priv;
-  GstStructure *structure;
-  gint rate, channels;
 
   priv = GST_PITCH_GET_PRIVATE (pitch);
 
-  structure = gst_caps_get_structure (caps, 0);
-
-  if (!gst_structure_get_int (structure, "rate", &rate) ||
-      !gst_structure_get_int (structure, "channels", &channels)) {
+  if (gst_audio_info_from_caps (&pitch->info, caps))
     return FALSE;
-  }
 
   GST_OBJECT_LOCK (pitch);
 
-  pitch->samplerate = rate;
-  pitch->channels = channels;
-
   /* notify the soundtouch instance of this change */
-  priv->st->setSampleRate (rate);
-  priv->st->setChannels (channels);
-
-  /* calculate sample size */
-  pitch->sample_size = (sizeof (gfloat) * channels);
+  priv->st->setSampleRate (pitch->info.rate);
+  priv->st->setChannels (pitch->info.channels);
 
   GST_OBJECT_UNLOCK (pitch);
 
@@ -361,10 +358,10 @@ gst_pitch_prepare_buffer (GstPitch * pitch)
   if (samples == 0)
     return NULL;
 
-  buffer = gst_buffer_new_and_alloc (samples * pitch->sample_size);
+  buffer = gst_buffer_new_and_alloc (samples * pitch->info.bpf);
 
   gst_buffer_map (buffer, &info, (GstMapFlags) GST_MAP_READWRITE);
-  samples = priv->st->receiveSamples ((gfloat *) info.data, samples);
+  samples = priv->st->receiveSamples ((soundtouch::SAMPLETYPE *) info.data, samples);
   gst_buffer_unmap (buffer, &info);
 
   if (samples <= 0) {
@@ -373,7 +370,7 @@ gst_pitch_prepare_buffer (GstPitch * pitch)
   }
 
   GST_BUFFER_DURATION (buffer) =
-      gst_util_uint64_scale (samples, GST_SECOND, pitch->samplerate);
+      gst_util_uint64_scale (samples, GST_SECOND, pitch->info.rate);
   /* temporary store samples here, to avoid having to recalculate this */
   GST_BUFFER_OFFSET (buffer) = (gint64) samples;
 
@@ -471,8 +468,8 @@ gst_pitch_convert (GstPitch * pitch,
   g_return_val_if_fail (dst_format && dst_value, FALSE);
 
   GST_OBJECT_LOCK (pitch);
-  sample_size = pitch->sample_size;
-  samplerate = pitch->samplerate;
+  sample_size = pitch->info.bpf;
+  samplerate = pitch->info.rate;
   GST_OBJECT_UNLOCK (pitch);
 
   if (sample_size == 0 || samplerate == 0) {
@@ -847,7 +844,7 @@ gst_pitch_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   /* push the received samples on the soundtouch buffer */
   GST_LOG_OBJECT (pitch, "incoming buffer (%d samples) %" GST_TIME_FORMAT,
-      (gint) (gst_buffer_get_size (buffer) / pitch->sample_size),
+      (gint) (gst_buffer_get_size (buffer) / pitch->info.bpf),
       GST_TIME_ARGS (timestamp));
 
   if (GST_PITCH_GET_PRIVATE (pitch)->pending_segment) {
@@ -872,7 +869,7 @@ gst_pitch_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
   gst_buffer_map (buffer, &info, GST_MAP_READ);
-  priv->st->putSamples ((gfloat *) info.data, info.size / pitch->sample_size);
+  priv->st->putSamples ((soundtouch::SAMPLETYPE *) info.data, info.size / pitch->info.bpf);
   gst_buffer_unmap (buffer, &info);
   gst_buffer_unref (buffer);
 

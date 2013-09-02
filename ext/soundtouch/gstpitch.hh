@@ -21,6 +21,7 @@
 #define __GST_PITCH_H__
 
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 
 G_BEGIN_DECLS
 
@@ -71,9 +72,7 @@ struct _GstPitch
   gfloat  seg_arate;            /* Rate to apply from input segment */
 
   /* values extracted from caps */
-  gint          samplerate;      /* samplerate                           */
-  gint          channels;        /* number of audio channels             */
-  gsize         sample_size;     /* number of bytes for a single sample  */
+  GstAudioInfo  info;
 
   /* stream tracking */
   GstClockTime  next_buffer_time;
