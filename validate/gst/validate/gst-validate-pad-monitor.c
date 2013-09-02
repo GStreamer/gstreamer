@@ -508,7 +508,7 @@ gst_validate_pad_monitor_dispose (GObject * object)
 
   gst_structure_free (monitor->pending_setcaps_fields);
   g_ptr_array_unref (monitor->serialized_events);
-  g_list_free (monitor->expired_events);
+  g_list_free_full (monitor->expired_events, (GDestroyNotify) gst_event_unref);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1660,8 +1660,8 @@ gst_validate_pad_monitor_event_probe (GstPad * pad, GstEvent * event,
           GST_EVENT_TYPE_NAME (event));
       GST_VALIDATE_REPORT (monitor, EVENT_SERIALIZED_OUT_OF_ORDER,
           "Serialized event was pushed out of order: %" GST_PTR_FORMAT, event);
-      monitor->expired_events =
-          g_list_remove (monitor->expired_events, monitor);
+      monitor->expired_events = g_list_remove (monitor->expired_events, event);
+      gst_event_unref (event);  /* remove the ref that was on the list */
     } else if (monitor->serialized_events->len) {
       for (i = 0; i < monitor->serialized_events->len; i++) {
         SerializedEventData *next_event =
@@ -1688,7 +1688,8 @@ gst_validate_pad_monitor_event_probe (GstPad * pad, GstEvent * event,
             while (i--) {
               next_event = g_ptr_array_index (monitor->serialized_events, 0);
               monitor->expired_events =
-                  g_list_append (monitor->expired_events, next_event->event);
+                  g_list_append (monitor->expired_events,
+                  gst_event_ref (next_event->event));
               g_ptr_array_remove_index (monitor->serialized_events, 0);
             }
           }
