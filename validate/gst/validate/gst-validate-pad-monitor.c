@@ -1096,6 +1096,14 @@ gst_validate_pad_monitor_flush (GstValidatePadMonitor * pad_monitor)
   pad_monitor->has_segment = FALSE;
   pad_monitor->is_eos = FALSE;
   gst_caps_replace (&pad_monitor->last_caps, NULL);
+
+  g_list_free_full (pad_monitor->expired_events,
+      (GDestroyNotify) gst_event_unref);
+  pad_monitor->expired_events = NULL;
+
+  if (pad_monitor->serialized_events->len)
+    g_ptr_array_remove_range (pad_monitor->serialized_events, 0,
+        pad_monitor->serialized_events->len);
 }
 
 /* common checks for both sink and src event functions */
@@ -1505,6 +1513,27 @@ gst_validate_pad_monitor_query_func (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
+gst_validate_pad_monitor_activatemode_func (GstPad * pad, GstObject * parent,
+    GstPadMode mode, gboolean active)
+{
+  GstValidatePadMonitor *pad_monitor =
+      g_object_get_data ((GObject *) pad, "qa-monitor");
+  gboolean ret = TRUE;
+
+  /* TODO add overrides for activate func */
+
+  if (pad_monitor->activatemode_func)
+    ret = pad_monitor->activatemode_func (pad, parent, mode, active);
+  if (ret && active == FALSE) {
+    GST_VALIDATE_MONITOR_LOCK (pad_monitor);
+    gst_validate_pad_monitor_flush (pad_monitor);
+    GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
+  }
+
+  return ret;
+}
+
+static gboolean
 gst_validate_pad_get_range_func (GstPad * pad, GstObject * parent,
     guint64 offset, guint size, GstBuffer ** buffer)
 {
@@ -1599,7 +1628,7 @@ gst_validate_pad_monitor_event_probe (GstPad * pad, GstEvent * event,
      *        Put those events on the expired_events list
      *     Remove that event and any previous ones from the serialized_events list
      *
-     * FIXME : When do we clear the expired_events list ?
+     * Clear expired events list when flushing or on pad deactivation
      *
      */
 
@@ -1777,6 +1806,7 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
 
   pad_monitor->event_func = GST_PAD_EVENTFUNC (pad);
   pad_monitor->query_func = GST_PAD_QUERYFUNC (pad);
+  pad_monitor->activatemode_func = GST_PAD_ACTIVATEMODEFUNC (pad);
   if (GST_PAD_DIRECTION (pad) == GST_PAD_SINK) {
 
     pad_monitor->chain_func = GST_PAD_CHAINFUNC (pad);
@@ -1800,6 +1830,8 @@ gst_validate_pad_monitor_do_setup (GstValidateMonitor * monitor)
         NULL);
   }
   gst_pad_set_query_function (pad, gst_validate_pad_monitor_query_func);
+  gst_pad_set_activatemode_function (pad,
+      gst_validate_pad_monitor_activatemode_func);
 
   gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (monitor),
       g_strdup_printf ("%s:%s", GST_DEBUG_PAD_NAME (pad)));

@@ -64,6 +64,7 @@ struct _GstValidatePadMonitor {
   GstPadEventFunction event_func;
   GstPadGetRangeFunction getrange_func;
   GstPadQueryFunction query_func;
+  GstPadActivateModeFunction activatemode_func;
 
   gulong pad_probe_id;
 
