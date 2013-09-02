@@ -7,7 +7,8 @@ scenarios_DATA = simple_seeks.scenario \
                  fast_forward.scenario \
                  fast_backward.scenario \
                  alternate_fast_backward_forward.scenario \
-                 pause_resume.scenario
+                 pause_resume.scenario \
+                 switch_audio_track.scenario
 
 EXTRA_DIST = simple_seeks.scenario \
              seek_forward.scenario \
@@ -17,4 +18,5 @@ EXTRA_DIST = simple_seeks.scenario \
              fast_forward.scenario \
              fast_backward.scenario \
              alternate_fast_backward_forward.scenario \
-             pause_resume.scenario
+             pause_resume.scenario \
+             switch_audio_track.scenario

@@ -252,6 +252,179 @@ _execute_eos (GstValidateScenario * scenario, GstValidateAction * action)
       gst_event_new_eos ());
 }
 
+static int
+find_input_selector (GValue * velement, const gchar *type)
+{
+  GstElement *element = g_value_get_object (velement);
+
+  if (G_OBJECT_TYPE (element) == g_type_from_name ("GstInputSelector")) {
+    GstPad *srcpad = gst_element_get_static_pad (element, "src");
+
+    if (srcpad) {
+      GstCaps *caps = gst_pad_query_caps (srcpad, NULL);
+
+      if (caps) {
+        const char *mime =
+            gst_structure_get_name (gst_caps_get_structure (caps, 0));
+        gboolean found = FALSE;
+
+        if (g_strcmp0 (type, "audio") == 0)
+            found = g_str_has_prefix (mime, "audio/");
+        else if (g_strcmp0 (type, "video") == 0)
+            found = g_str_has_prefix (mime, "video/")
+                && !g_str_has_prefix (mime, "video/x-dvd-subpicture");
+        else if (g_strcmp0 (type, "text") == 0)
+            found = g_str_has_prefix (mime, "text/")
+                || g_str_has_prefix (mime, "subtitle/")
+                || g_str_has_prefix (mime, "video/x-dvd-subpicture");
+
+        gst_object_unref (srcpad);
+        if (found)
+          return 0;
+      }
+    }
+  }
+  return !0;
+}
+
+static GstElement *
+find_input_selector_with_type (GstBin * bin, const gchar *type)
+{
+  GValue result = {0, };
+  GstElement *input_selector = NULL;
+  GstIterator *iterator = gst_bin_iterate_recurse (bin);
+
+  if (gst_iterator_find_custom (iterator,
+      (GCompareFunc) find_input_selector, &result, (gpointer) type)) {
+    input_selector = g_value_get_object (&result);
+  }
+  gst_iterator_free (iterator);
+
+  return input_selector;
+}
+
+static GstPad *
+find_nth_sink_pad (GstElement * element, int index)
+{
+  GstIterator *iterator;
+  gboolean done = FALSE;
+  GstPad *pad = NULL;
+  int dec_index = index;
+  GValue data = { 0, };
+
+  iterator = gst_element_iterate_sink_pads (element);
+  while (!done) {
+    switch (gst_iterator_next (iterator, &data)) {
+      case GST_ITERATOR_OK:
+        if (!dec_index--) {
+          done = TRUE;
+          pad = g_value_get_object (&data);
+          break;
+        }
+        g_value_reset (&data);
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iterator);
+        dec_index = index;
+        break;
+      case GST_ITERATOR_ERROR:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iterator);
+  return pad;
+}
+
+static int
+find_sink_pad_index (GstElement * element, GstPad * pad)
+{
+  GstIterator *iterator;
+  gboolean done = FALSE;
+  int index = 0;
+  GValue data = { 0, };
+
+  iterator = gst_element_iterate_sink_pads (element);
+  while (!done) {
+    switch (gst_iterator_next (iterator, &data)) {
+      case GST_ITERATOR_OK:
+        if (pad == g_value_get_object (&data)) {
+          done = TRUE;
+        } else {
+          index++;
+        }
+        g_value_reset (&data);
+        break;
+      case GST_ITERATOR_RESYNC:
+        gst_iterator_resync (iterator);
+        index = 0;
+        break;
+      case GST_ITERATOR_ERROR:
+        done = TRUE;
+        break;
+      case GST_ITERATOR_DONE:
+        done = TRUE;
+        break;
+    }
+  }
+  gst_iterator_free (iterator);
+  return index;
+}
+
+static gboolean
+_execute_switch_track (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  guint index;
+  gboolean relative = FALSE;
+  const gchar *type, *str_index;
+  GstElement *input_selector;
+
+  if (!(type = gst_structure_get_string (action->structure, "type")))
+    type = "audio";
+
+  /* First find an input selector that has the right type */
+  input_selector = find_input_selector_with_type (GST_BIN (scenario->priv->pipeline), type);
+  if (input_selector) {
+    GstPad *pad;
+
+    if ((str_index = gst_structure_get_string (action->structure, "index"))) {
+      if (!gst_structure_get_uint (action->structure, "index", &index)) {
+        GST_WARNING ("No index given, defaulting to +1");
+        index = 1;
+        relative = TRUE;
+      }
+    } else {
+      relative = strchr ("+-", str_index[0]) != NULL;
+      index = g_ascii_strtoll (str_index, NULL, 10);
+    }
+
+    if (relative) { /* We are changing track relatively to current track */
+      int npads;
+
+      g_object_get (input_selector, "active-pad", &pad, "n-pads", &npads, NULL);
+      if (pad) {
+        int current_index = find_sink_pad_index (input_selector, pad);
+
+        index = (current_index + index) % npads;
+        gst_object_unref (pad);
+      }
+    }
+
+    g_print ("Switching to track number: %i\n", index);
+    pad = find_nth_sink_pad (input_selector, index);
+    g_object_set (input_selector, "active-pad", pad, NULL);
+    gst_object_unref (pad);
+    gst_object_unref (input_selector);
+
+    return TRUE;
+  }
+
+  /* No selector found -> Failed */
+  return FALSE;
+}
 
 static gboolean
 get_position (GstValidateScenario * scenario)
@@ -303,7 +476,9 @@ get_position (GstValidateScenario * scenario)
       return TRUE;
 
     func = g_hash_table_lookup (action_types_table, act->type);
-    func (scenario, act);
+    if (!func (scenario, act))
+      GST_WARNING_OBJECT (scenario, "Could not execute %" GST_PTR_FORMAT,
+          act->structure);
 
     tmp = priv->actions;
     priv->actions = g_list_remove_link (priv->actions, tmp);
@@ -671,4 +846,5 @@ init_scenarios (void)
   gst_validate_add_action_type ("pause",_execute_pause);
   gst_validate_add_action_type ("play",_execute_play);
   gst_validate_add_action_type ("eos",_execute_eos);
+  gst_validate_add_action_type ("switch-track", _execute_switch_track);
 }
