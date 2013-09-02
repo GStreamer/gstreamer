@@ -341,7 +341,7 @@ poll_tags_only (GstElement * element)
  * streams. */
 
 static GstTagList *
-poll_tags (GstElement * element)
+poll_tags_followed_by_eos (GstElement * element)
 {
   GstTagList *tag_list = poll_tags_only (element);
 
@@ -746,7 +746,7 @@ GST_START_TEST (test_no_buffer_album_2)
     push_buffer (test_buffer_square_float_mono (&accumulator, 44100, 512,
             0.25));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, -6.20);
   /* Album is not finished yet: */
@@ -760,7 +760,7 @@ GST_START_TEST (test_no_buffer_album_2)
   send_segment_event (element);
   send_eos_event (element);
 
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_album_peak (tag_list, 0.25);
   fail_unless_album_gain (tag_list, -6.20);
   /* No track tags should be posted, as there was no data for it: */
@@ -847,7 +847,7 @@ GST_START_TEST (test_peak_float)
   send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 512, -1.369, 0.0));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 1.369);
   gst_tag_list_unref (tag_list);
 
@@ -856,7 +856,7 @@ GST_START_TEST (test_peak_float)
   send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 512, 0.0, -1.369));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 1.369);
   gst_tag_list_unref (tag_list);
 
@@ -866,7 +866,7 @@ GST_START_TEST (test_peak_float)
   send_segment_event (element);
   push_buffer (test_buffer_const_float_mono (8000, 512, -1.369));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 1.369);
   gst_tag_list_unref (tag_list);
 
@@ -888,7 +888,7 @@ GST_START_TEST (test_peak_int16_16)
   send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, 1 << 14, 0));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.5);
   gst_tag_list_unref (tag_list);
 
@@ -898,7 +898,7 @@ GST_START_TEST (test_peak_int16_16)
   send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, 0, 1 << 14));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.5);
   gst_tag_list_unref (tag_list);
 
@@ -908,7 +908,7 @@ GST_START_TEST (test_peak_int16_16)
   send_segment_event (element);
   push_buffer (test_buffer_const_int16_mono (8000, 16, 512, 1 << 14));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.5);
   gst_tag_list_unref (tag_list);
 
@@ -918,7 +918,7 @@ GST_START_TEST (test_peak_int16_16)
   send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, -1 << 14, 0));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.5);
   gst_tag_list_unref (tag_list);
 
@@ -928,7 +928,7 @@ GST_START_TEST (test_peak_int16_16)
   send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, 0, -1 << 14));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.5);
   gst_tag_list_unref (tag_list);
 
@@ -938,7 +938,7 @@ GST_START_TEST (test_peak_int16_16)
   send_segment_event (element);
   push_buffer (test_buffer_const_int16_mono (8000, 16, 512, -1 << 14));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.5);
   gst_tag_list_unref (tag_list);
 
@@ -953,7 +953,7 @@ GST_START_TEST (test_peak_int16_16)
   send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, 32767, 0));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 32767. / 32768.);
   gst_tag_list_unref (tag_list);
 
@@ -963,7 +963,7 @@ GST_START_TEST (test_peak_int16_16)
   send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, 0, 32767));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 32767. / 32768.);
   gst_tag_list_unref (tag_list);
 
@@ -973,7 +973,7 @@ GST_START_TEST (test_peak_int16_16)
   send_segment_event (element);
   push_buffer (test_buffer_const_int16_mono (8000, 16, 512, 32767));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 32767. / 32768.);
   gst_tag_list_unref (tag_list);
 
@@ -984,7 +984,7 @@ GST_START_TEST (test_peak_int16_16)
   send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, -32768, 0));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 1.0);
   gst_tag_list_unref (tag_list);
 
@@ -994,7 +994,7 @@ GST_START_TEST (test_peak_int16_16)
   send_segment_event (element);
   push_buffer (test_buffer_const_int16_stereo (8000, 16, 512, 0, -32768));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 1.0);
   gst_tag_list_unref (tag_list);
 
@@ -1004,7 +1004,7 @@ GST_START_TEST (test_peak_int16_16)
   send_segment_event (element);
   push_buffer (test_buffer_const_int16_mono (8000, 16, 512, -32768));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 1.0);
   gst_tag_list_unref (tag_list);
 
@@ -1026,7 +1026,7 @@ GST_START_TEST (test_peak_album)
   send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 1.0, 0.0));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 1.0);
   fail_if_album_tags (tag_list);
   gst_tag_list_unref (tag_list);
@@ -1036,7 +1036,7 @@ GST_START_TEST (test_peak_album)
   send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 0.0, 0.5));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.5);
   fail_unless_album_peak (tag_list, 1.0);
   gst_tag_list_unref (tag_list);
@@ -1049,7 +1049,7 @@ GST_START_TEST (test_peak_album)
   send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 0.4, 0.4));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.4);
   fail_if_album_tags (tag_list);
   gst_tag_list_unref (tag_list);
@@ -1059,7 +1059,7 @@ GST_START_TEST (test_peak_album)
   send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 0.45, 0.45));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.45);
   fail_if_album_tags (tag_list);
   gst_tag_list_unref (tag_list);
@@ -1069,7 +1069,7 @@ GST_START_TEST (test_peak_album)
   send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 0.2, 0.2));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.2);
   fail_unless_album_peak (tag_list, 0.45);
   gst_tag_list_unref (tag_list);
@@ -1081,7 +1081,7 @@ GST_START_TEST (test_peak_album)
   send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 0.1, 0.1));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.1);
   fail_if_album_tags (tag_list);
   gst_tag_list_unref (tag_list);
@@ -1105,7 +1105,7 @@ GST_START_TEST (test_peak_track_album)
   send_segment_event (element);
   push_buffer (test_buffer_const_float_mono (8000, 1024, 1.0));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 1.0);
   fail_if_album_tags (tag_list);
   gst_tag_list_unref (tag_list);
@@ -1115,7 +1115,7 @@ GST_START_TEST (test_peak_track_album)
   send_segment_event (element);
   push_buffer (test_buffer_const_float_mono (8000, 1024, 0.5));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.5);
   fail_unless_album_peak (tag_list, 0.5);
   gst_tag_list_unref (tag_list);
@@ -1144,7 +1144,7 @@ GST_START_TEST (test_peak_album_abort_to_track)
   send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 1.0, 0.0));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 1.0);
   fail_if_album_tags (tag_list);
   gst_tag_list_unref (tag_list);
@@ -1156,7 +1156,7 @@ GST_START_TEST (test_peak_album_abort_to_track)
   send_segment_event (element);
   push_buffer (test_buffer_const_float_stereo (8000, 1024, 0.0, 0.5));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.5);
   fail_if_album_tags (tag_list);
   gst_tag_list_unref (tag_list);
@@ -1186,7 +1186,7 @@ GST_START_TEST (test_gain_album)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
             0.75, 0.75));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.75);
   fail_unless_track_gain (tag_list, -15.70);
   fail_if_album_tags (tag_list);
@@ -1199,7 +1199,7 @@ GST_START_TEST (test_gain_album)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
             0.5, 0.5));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.5);
   fail_unless_track_gain (tag_list, -12.22);
   fail_if_album_tags (tag_list);
@@ -1213,7 +1213,7 @@ GST_START_TEST (test_gain_album)
             0.25, 0.25));
   send_eos_event (element);
 
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, -6.20);
   fail_unless_album_peak (tag_list, 0.75);
@@ -1254,7 +1254,7 @@ GST_START_TEST (test_forced)
 
   /* This fails if a tag message is generated: */
   /* Same values as above */
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_gain (tag_list, 2.21);
   fail_unless_track_peak (tag_list, 1.0);
   gst_tag_list_unref (tag_list);
@@ -1266,7 +1266,7 @@ GST_START_TEST (test_forced)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
             0.25, 0.25));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (44100));
   gst_tag_list_unref (tag_list);
@@ -1311,7 +1311,7 @@ GST_START_TEST (test_forced_separate)
   fail_unless_track_gain (tag_list, 2.21);
   gst_tag_list_unref (tag_list);
 
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 1.0);
   gst_tag_list_unref (tag_list);
 
@@ -1323,7 +1323,7 @@ GST_START_TEST (test_forced_separate)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
             0.25, 0.25));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (44100));
   fail_if_album_tags (tag_list);
@@ -1364,7 +1364,7 @@ GST_START_TEST (test_forced_after_data)
   send_eos_event (element);
 
   /* Same values as above */
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_gain (tag_list, 2.21);
   fail_unless_track_peak (tag_list, 1.0);
   gst_tag_list_unref (tag_list);
@@ -1376,7 +1376,7 @@ GST_START_TEST (test_forced_after_data)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 8000, 512, 0.25,
             0.25));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (8000));
   gst_tag_list_unref (tag_list);
@@ -1415,7 +1415,7 @@ GST_START_TEST (test_forced_album)
   send_eos_event (element);
 
   /* Same values as above */
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_gain (tag_list, 2.21);
   fail_unless_track_peak (tag_list, 1.0);
   gst_tag_list_unref (tag_list);
@@ -1430,7 +1430,7 @@ GST_START_TEST (test_forced_album)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
             0.25, 0.25));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (44100));
   fail_if_album_tags (tag_list);
@@ -1444,7 +1444,7 @@ GST_START_TEST (test_forced_album)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
             0.25, 0.25));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (44100));
   fail_unless_album_peak (tag_list, 0.25);
@@ -1483,7 +1483,7 @@ GST_START_TEST (test_forced_album_skip)
   send_eos_event (element);
 
   /* Same values as above */
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_gain (tag_list, 2.21);
   fail_unless_track_peak (tag_list, 0.75);
   gst_tag_list_unref (tag_list);
@@ -1508,7 +1508,7 @@ GST_START_TEST (test_forced_album_skip)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 8000, 512, 0.25,
             0.25));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (8000));
   fail_if_album_tags (tag_list);
@@ -1536,7 +1536,7 @@ GST_START_TEST (test_forced_album_no_skip)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 8000, 512, 0.25,
             0.25));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (8000));
   fail_if_album_tags (tag_list);
@@ -1564,7 +1564,7 @@ GST_START_TEST (test_forced_album_no_skip)
   gst_tag_list_unref (tag_list);
 
   /* the second from the processing */
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.0);
   fail_unless_track_gain (tag_list, SILENCE_GAIN);
   /* Second track was just silence so the album peak equals the first
@@ -1598,7 +1598,7 @@ GST_START_TEST (test_forced_abort_album_no_skip)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 8000, 512, 0.25,
             0.25));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (8000));
   fail_if_album_tags (tag_list);
@@ -1622,7 +1622,7 @@ GST_START_TEST (test_forced_abort_album_no_skip)
     push_buffer (test_buffer_const_float_stereo (8000, 512, 0.0, 0.0));
   send_eos_event (element);
 
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.75);
   fail_unless_track_gain (tag_list, 2.21);
   gst_tag_list_unref (tag_list);
@@ -1649,7 +1649,7 @@ GST_START_TEST (test_reference_level)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
             0.25, 0.25));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (44100));
   fail_if_album_tags (tag_list);
@@ -1666,7 +1666,7 @@ GST_START_TEST (test_reference_level)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
             0.25, 0.25));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (44100) - 6.);
   fail_if_album_tags (tag_list);
@@ -1682,7 +1682,7 @@ GST_START_TEST (test_reference_level)
     push_buffer (test_buffer_square_float_stereo (&accumulator, 44100, 512,
             0.25, 0.25));
   send_eos_event (element);
-  tag_list = poll_tags (element);
+  tag_list = poll_tags_followed_by_eos (element);
   fail_unless_track_peak (tag_list, 0.25);
   fail_unless_track_gain (tag_list, get_expected_gain (44100) - 6.);
   fail_unless_album_peak (tag_list, 0.25);
@@ -1729,7 +1729,7 @@ GST_START_TEST (test_all_formats)
       push_buffer (test_buffer_square_int16_mono (&accumulator,
               supported_rates[i].sample_rate, 16, 512, 1 << 13));
     send_eos_event (element);
-    tag_list = poll_tags (element);
+    tag_list = poll_tags_followed_by_eos (element);
     fail_unless_track_peak (tag_list, 0.25);
     fail_unless_track_gain (tag_list, supported_rates[i].gain);
     gst_tag_list_unref (tag_list);
@@ -1762,7 +1762,7 @@ GST_END_TEST;
     push_buffer (test_buffer_square_float_mono (&accumulator,         \
             sample_rate, 512, 0.25));                                 \
   send_eos_event (element);                                           \
-  tag_list = poll_tags (element);                                     \
+  tag_list = poll_tags_followed_by_eos (element);                                     \
   fail_unless_track_peak (tag_list, 0.25);                            \
   fail_unless_track_gain (tag_list,                                   \
       get_expected_gain (sample_rate));                               \
@@ -1790,7 +1790,7 @@ GST_END_TEST;
     push_buffer (test_buffer_square_float_stereo (&accumulator,       \
             sample_rate, 512, 0.25, 0.25));                           \
   send_eos_event (element);                                           \
-  tag_list = poll_tags (element);                                     \
+  tag_list = poll_tags_followed_by_eos (element);                                     \
   fail_unless_track_peak (tag_list, 0.25);                            \
   fail_unless_track_gain (tag_list,                                   \
       get_expected_gain (sample_rate));                               \
@@ -1819,7 +1819,7 @@ GST_END_TEST;
             sample_rate, depth, 512, 1 << (13 + depth - 16)));        \
                                                                       \
   send_eos_event (element);                                           \
-  tag_list = poll_tags (element);                                     \
+  tag_list = poll_tags_followed_by_eos (element);                                     \
   fail_unless_track_peak (tag_list, 0.25);                            \
   fail_unless_track_gain (tag_list,                                   \
       get_expected_gain (sample_rate));                               \
@@ -1848,7 +1848,7 @@ GST_END_TEST;
             sample_rate, depth, 512, 1 << (13 + depth - 16),          \
             1 << (13 + depth - 16)));                                 \
   send_eos_event (element);                                           \
-  tag_list = poll_tags (element);                                     \
+  tag_list = poll_tags_followed_by_eos (element);                                     \
   fail_unless_track_peak (tag_list, 0.25);                            \
   fail_unless_track_gain (tag_list,                                   \
       get_expected_gain (sample_rate));                               \
