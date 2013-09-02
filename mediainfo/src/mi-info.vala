@@ -822,9 +822,11 @@ public class MediaInfo.Info : Box
       drawing_frame.set (0.5f, 0.5f, video_ratio, false);
       stdout.printf("on_element_sync_message:video_ratio: %f\n", video_ratio);
 
+      /* playbin does this in 1.0
       if (message.src.get_class ().find_property ("force-aspect-ratio") != null) {
         ((GLib.Object)message.src).set_property ("force-aspect-ratio", true);
       }
+      */
     }
   }
 
