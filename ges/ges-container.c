@@ -663,13 +663,13 @@ ges_container_group (GList * containers)
 {
   GList *tmp;
   guint n_children;
-  GESTimeline *timeline;
   GType *children_types;
   GESTimelineElement *element;
   GObjectClass *clip_class;
 
   guint i = 0;
   GESContainer *ret = NULL;
+  GESTimeline *timeline = NULL;
 
   if (containers) {
     element = GES_TIMELINE_ELEMENT (containers->data);
