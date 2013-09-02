@@ -115,6 +115,7 @@ struct _GstDVDSpu {
 
   /* Overlay composition */
   gboolean attach_compo_to_buffer;
+  GstVideoOverlayComposition *composition;
 };
 
 struct _GstDVDSpuClass {
