@@ -35,6 +35,10 @@ check-torture:
 	true
 endif
 
+win32-update:
+	cp $(top_builddir)/win32/common/config.h-new \
+	    $(top_srcdir)/win32/common/config.h
+
 include $(top_srcdir)/common/coverage/lcov.mak
 
 check: check-exports
