@@ -44,6 +44,7 @@ G_DEFINE_TYPE (GstValidatePadMonitor, gst_validate_pad_monitor,
     GST_TYPE_VALIDATE_MONITOR);
 
 #define PENDING_FIELDS "pending-fields"
+#define AUDIO_TIMESTAMP_TOLERANCE (GST_MSECOND * 100)
 
 #define PAD_PARENT_IS_DEMUXER(m) \
     (GST_VALIDATE_MONITOR_GET_PARENT(m) ? \
@@ -56,6 +57,13 @@ G_DEFINE_TYPE (GstValidatePadMonitor, gst_validate_pad_monitor,
         GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_DECODER ( \
             GST_VALIDATE_MONITOR_GET_PARENT(m)) : \
         FALSE)
+
+#define PAD_PARENT_IS_ENCODER(m) \
+    (GST_VALIDATE_MONITOR_GET_PARENT(m) ? \
+        GST_VALIDATE_ELEMENT_MONITOR_ELEMENT_IS_ENCODER ( \
+            GST_VALIDATE_MONITOR_GET_PARENT(m)) : \
+        FALSE)
+
 
 /*
  * Locking the parent should always be done before locking the
@@ -659,25 +667,29 @@ gst_validate_pad_monitor_setcaps_overrides (GstValidatePadMonitor * pad_monitor,
 /* FIXME : This is a bit dubious, what's the point of this check ? */
 static gboolean
 gst_validate_pad_monitor_timestamp_is_in_received_range (GstValidatePadMonitor *
-    monitor, GstClockTime ts)
+    monitor, GstClockTime ts, GstClockTime tolerance)
 {
   GST_DEBUG_OBJECT (monitor->pad, "Checking if timestamp %" GST_TIME_FORMAT
       " is in range: %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT " for pad "
-      "%s:%s", GST_TIME_ARGS (ts),
+      "%s:%s with tolerance: %" GST_TIME_FORMAT, GST_TIME_ARGS (ts),
       GST_TIME_ARGS (monitor->timestamp_range_start),
       GST_TIME_ARGS (monitor->timestamp_range_end),
-      GST_DEBUG_PAD_NAME (GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor)));
+      GST_DEBUG_PAD_NAME (GST_VALIDATE_PAD_MONITOR_GET_PAD (monitor)),
+      GST_TIME_ARGS (tolerance));
   return !GST_CLOCK_TIME_IS_VALID (monitor->timestamp_range_start) ||
       !GST_CLOCK_TIME_IS_VALID (monitor->timestamp_range_end) ||
-      (monitor->timestamp_range_start <= ts
-      && ts <= monitor->timestamp_range_end);
+      ((monitor->timestamp_range_start >= tolerance ?
+          monitor->timestamp_range_start - tolerance : 0) <= ts
+      && (ts >= tolerance ? ts - tolerance : 0) <=
+      monitor->timestamp_range_end);
 }
 
 /* Iterates over internal links (sinkpads) to check that this buffer has
  * a timestamp that is in the range of the lastly received buffers */
 static void
     gst_validate_pad_monitor_check_buffer_timestamp_in_received_range
-    (GstValidatePadMonitor * monitor, GstBuffer * buffer)
+    (GstValidatePadMonitor * monitor, GstBuffer * buffer,
+    GstClockTime tolerance)
 {
   GstClockTime ts;
   GstClockTime ts_end;
@@ -720,10 +732,10 @@ static void
             g_object_get_data ((GObject *) otherpad, "validate-monitor");
         GST_VALIDATE_MONITOR_LOCK (othermonitor);
         if (gst_validate_pad_monitor_timestamp_is_in_received_range
-            (othermonitor, ts)
+            (othermonitor, ts, tolerance)
             &&
             gst_validate_pad_monitor_timestamp_is_in_received_range
-            (othermonitor, ts_end)) {
+            (othermonitor, ts_end, tolerance)) {
           done = TRUE;
           found = TRUE;
         }
@@ -1118,6 +1130,7 @@ gst_validate_pad_monitor_flush (GstValidatePadMonitor * pad_monitor)
   pad_monitor->has_segment = FALSE;
   pad_monitor->is_eos = FALSE;
   gst_caps_replace (&pad_monitor->last_caps, NULL);
+  pad_monitor->caps_is_audio = pad_monitor->caps_is_video = FALSE;
 
   g_list_free_full (pad_monitor->expired_events,
       (GDestroyNotify) gst_event_unref);
@@ -1569,8 +1582,15 @@ gst_validate_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
   gst_validate_pad_monitor_check_first_buffer (monitor, buffer);
   gst_validate_pad_monitor_update_buffer_data (monitor, buffer);
 
-  gst_validate_pad_monitor_check_buffer_timestamp_in_received_range (monitor,
-      buffer);
+  if (PAD_PARENT_IS_DECODER (monitor) || PAD_PARENT_IS_ENCODER (monitor)) {
+    GstClockTime tolerance = 0;
+
+    if (monitor->caps_is_audio)
+      tolerance = AUDIO_TIMESTAMP_TOLERANCE;
+
+    gst_validate_pad_monitor_check_buffer_timestamp_in_received_range (monitor,
+        buffer, tolerance);
+  }
 
   gst_validate_pad_monitor_check_late_serialized_events (monitor,
       GST_BUFFER_TIMESTAMP (buffer));
@@ -1814,6 +1834,7 @@ gst_validate_pad_monitor_setcaps_post (GstValidatePadMonitor * pad_monitor,
       gst_caps_unref (pad_monitor->last_caps);
     }
     pad_monitor->last_caps = gst_caps_ref (caps);
+    gst_validate_pad_monitor_update_caps_info (pad_monitor, caps);
   }
 }
 
