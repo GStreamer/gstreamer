@@ -48,7 +48,7 @@ struct _GstUDPSrc {
   GstPushSrc parent;
 
   /* properties */
-  gchar     *multi_group;
+  gchar     *address;
   gint       port;
   gchar     *multi_iface;
   gint       ttl;
