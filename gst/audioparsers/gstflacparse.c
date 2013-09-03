@@ -1347,9 +1347,9 @@ push_headers:
     frame.buffer = buf;
     frame.overhead = -1;
     res = gst_base_parse_push_frame (GST_BASE_PARSE (flacparse), &frame);
+    gst_base_parse_frame_free (&frame);
     if (res != GST_FLOW_OK)
       break;
-    gst_base_parse_frame_free (&frame);
   }
   g_list_foreach (flacparse->headers, (GFunc) gst_mini_object_unref, NULL);
   g_list_free (flacparse->headers);
