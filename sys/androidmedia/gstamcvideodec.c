@@ -1002,6 +1002,7 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
       ret = TRUE;
       break;
     }
+      /* FIXME: This should be in libgstvideo as MT12 or similar, see v4l2 */
     case COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka:{
       gint width = self->width;
       gint height = self->height;
