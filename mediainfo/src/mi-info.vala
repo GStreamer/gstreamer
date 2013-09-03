@@ -57,8 +57,7 @@ public class MediaInfo.Info : Box
   private Notebook video_streams;  // depending on screen resolution
   private Notebook audio_streams;
   private Notebook subtitle_streams;
-  private AspectFrame drawing_frame;
-  private DrawingArea drawing_area;
+  private Preview preview;
   private ScrolledWindow info_area;
   // gstreamer objects
   private Discoverer dc;
@@ -67,7 +66,6 @@ public class MediaInfo.Info : Box
   private uint num_video_streams;
   private uint num_audio_streams;
   private uint num_subtitle_streams;
-  private float video_ratio = 1.0f;
   private ArrayList<Gdk.Point?> video_resolutions = null;
   // stream data
   private Gdk.Pixbuf album_art = null;
@@ -168,19 +166,9 @@ public class MediaInfo.Info : Box
     }
 
     // add widgets
-    drawing_frame = new AspectFrame (null, 0.5f, 0.5f, 1.25f, false);
-    drawing_frame.set_size_request (160, 128);
-    drawing_frame.set_shadow_type (Gtk.ShadowType.NONE);
-
-    pack_start (drawing_frame, true, true, 0);
-    
-    drawing_area = new DrawingArea ();
-    drawing_area.set_size_request (160, 128);
-    drawing_area.draw.connect (on_drawing_area_draw);
-    drawing_area.size_allocate.connect (on_drawing_area_size_allocate);
-    drawing_area.realize.connect (on_drawing_area_realize);
-    drawing_area.unrealize.connect (on_drawing_area_unrealize);
-    drawing_frame.add (drawing_area);
+    preview = new Preview ();
+    preview.draw.connect (on_preview_draw);
+    pack_start (preview, false, false, 0);
 
     info_area = new ScrolledWindow (null, null);
     info_area.set_policy (PolicyType.NEVER, PolicyType.ALWAYS);
@@ -324,7 +312,6 @@ public class MediaInfo.Info : Box
       // stop previous playback
       pb.set_state (State.READY);
       album_art = null;
-      drawing_area.queue_draw();
 
       try {
         FileInfo finfo = file.query_info ("standard::*", FileQueryInfoFlags.NONE, null);
@@ -736,19 +723,12 @@ public class MediaInfo.Info : Box
     
     if (have_video) {
       Gdk.Point res = video_resolutions[0];
-      video_ratio = (float)(res.x) / (float)(res.y);
-      debug ("video_ratio from video: %f", video_ratio);
+      preview.set_content_size(res.x, res.y);
     } else if (album_art != null) {
-      int sw=album_art.get_width ();
-      int sh=album_art.get_height ();
-      video_ratio = (float)sw / (float)sh;
-      debug ("video_ratio from album art: %f", video_ratio);
+      preview.set_static_content(album_art);
     } else {
-      video_ratio = 1.0f;
-      debug ("video_ratio --- : %f", video_ratio);
+      preview.reset();
     }
-    drawing_frame.set (0.5f, 0.5f, video_ratio, false);
-    drawing_area.queue_resize();
 
     //l = info.get_container_streams ();
 
@@ -759,7 +739,8 @@ public class MediaInfo.Info : Box
 
   // signal handlers
   
-  private void on_drawing_area_size_allocate (Widget widget, Gtk.Allocation frame)
+  /*
+  private void on_size_allocate (Widget widget, Gtk.Allocation box)
   {
     Gtk.Allocation alloc;
     get_allocation (out alloc);
@@ -768,57 +749,29 @@ public class MediaInfo.Info : Box
     Gtk.Requisition requisition;
     info_area.get_child ().get_preferred_size (null, out requisition);
     debug ("info_area: %d x %d", requisition.width, requisition.height);
-    debug ("video_area: %d x %d", frame.width, frame.height);
+    int frame_height = (int)(box.width / video_ratio);
+    debug ("video_area: %d x %d", box.width, frame_height);
     
-    int max_h = alloc.height - frame.height;
+    int max_h = alloc.height - frame_height;
     info_area.set_min_content_height (int.min (requisition.height, max_h));
   }
+  */
 
-  private bool on_drawing_area_draw (Widget widget, Cairo.Context cr)
+  private bool on_preview_draw (Widget widget, Cairo.Context cr)
   {
-    // redraw if not playing and if there is no video
     if (pb.current_state < State.PAUSED || !have_video) {
       widget.set_double_buffered (true);
-
-      Gtk.Allocation frame;      
-      widget.get_allocation (out frame);
-      int w = frame.width;
-      int h = frame.height;
-      //debug ("on_drawing_area_draw:video_ratio: %d x %d : %f", w, h, video_ratio);
-
-      if (album_art != null) {
-        Gdk.Pixbuf pb = album_art.scale_simple (w, h, Gdk.InterpType.BILINEAR);
-        Gdk.cairo_set_source_pixbuf (cr, pb, 0, 0);
-      } else {
-        cr.set_source_rgb (0, 0, 0);
-      }
-      cr.rectangle (0, 0, w, h);
-      cr.fill ();
     } else {      
       widget.set_double_buffered (false);
     }
     return false;
-  }
-  
-  private void on_drawing_area_realize (Widget widget)
-  {
-    widget.get_window ().ensure_native ();
-    widget.set_double_buffered (false);
-  }
-
-  private void on_drawing_area_unrealize (Widget widget)
-  {
-    pb.set_state (State.NULL);
   }
 
   private void on_element_sync_message (Gst.Bus bus, Message message)
   {
     if (Gst.Video.is_video_overlay_prepare_window_handle_message (message)) {
       Gst.Video.Overlay overlay = message.src as Gst.Video.Overlay;
-      overlay.set_window_handle ((uint *)Gdk.X11Window.get_xid (drawing_area.get_window()));
-      drawing_frame.set (0.5f, 0.5f, video_ratio, false);
-      debug ("on_element_sync_message:video_ratio: %f", video_ratio);
-      drawing_area.queue_resize();
+      overlay.set_window_handle ((uint *)Gdk.X11Window.get_xid (preview.get_window ()));
 
       /* playbin does this in 1.0
       if (message.src.get_class ().find_property ("force-aspect-ratio") != null) {
@@ -833,7 +786,12 @@ public class MediaInfo.Info : Box
    * - we can use:
    *   - pad.get_stream_id() on playbin
    *   - sinfo.get_stream_id() on discoverer
-   *
+   *   - gather all stream-ids and build {audio,video,subtitle}_stream_map with
+   *     stream-id as a key and value initially set to -1
+   *   - have cur_{audio,video,subtile} = 0
+   *   - listen for playbin.pad_added and set the stream_id to cur_*
+   *   - ideally playbin will have api to switch to a stream-by-id
+   * - or we sort the discoverer streams by stream-info too
    */
   private void on_video_stream_switched (Notebook nb, Widget page, uint page_num)
   {
@@ -841,10 +799,7 @@ public class MediaInfo.Info : Box
       debug ("Switching video to: %u", page_num);
       ((GLib.Object)pb).set_property ("current-video", (int)page_num);
       Gdk.Point res = video_resolutions[(int)page_num];
-      video_ratio = (float)(res.x) / (float)(res.y);
-      drawing_frame.set (0.5f, 0.5f, video_ratio, false);
-      drawing_area.queue_resize();
-      debug ("on_video_stream_switched:video_ratio: %f", video_ratio);
+      preview.set_content_size(res.x, res.y);
     }
   }
 

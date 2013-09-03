@@ -15,7 +15,8 @@ VALAFLAGS = \
 gst_mi_SOURCES = \
 	mi.vala \
 	mi-app.vala \
-	mi-info.vala
+	mi-info.vala \
+	mi-preview.vala
 
 gst_mi_LDADD = \
 	$(MI_LIBS) -lgstinterfaces-0.10 -lgstpbutils-0.10
