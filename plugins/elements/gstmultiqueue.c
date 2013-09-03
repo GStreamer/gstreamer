@@ -495,11 +495,30 @@ gst_multi_queue_set_property (GObject * object, guint prop_id,
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
       break;
     case PROP_MAX_SIZE_BUFFERS:
+    {
+      GList *tmp;
+      gint new_size = g_value_get_uint (value);
+
       GST_MULTI_QUEUE_MUTEX_LOCK (mq);
-      mq->max_size.visible = g_value_get_uint (value);
-      SET_CHILD_PROPERTY (mq, visible);
+
+      tmp = mq->queues;
+      while (tmp) {
+        GstDataQueueSize size;
+        GstSingleQueue *q = (GstSingleQueue *) tmp->data;
+        gst_data_queue_get_level (q->queue, &size);
+
+        /* do not reduce max size below current level if the single queue has grown because of empty queue */
+        if (new_size >= size.visible && size.visible <= mq->max_size.visible)
+          q->max_size.visible = new_size;
+        tmp = g_list_next (tmp);
+      };
+
+      mq->max_size.visible = new_size;
+
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
+
       break;
+    }
     case PROP_MAX_SIZE_TIME:
       GST_MULTI_QUEUE_MUTEX_LOCK (mq);
       mq->max_size.time = g_value_get_uint64 (value);
@@ -704,7 +723,12 @@ gst_multi_queue_change_state (GstElement * element, GstStateChange transition)
         sq = (GstSingleQueue *) tmp->data;
         sq->flushing = FALSE;
       }
+
+      /* the visible limit might not have been set on single queues that have grown because of other queueus were empty */
+      SET_CHILD_PROPERTY (mqueue, visible);
+
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
+
       break;
     }
     case GST_STATE_CHANGE_PAUSED_TO_READY:{
