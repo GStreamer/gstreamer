@@ -68,3 +68,5 @@ Build
 /test-driver
 *.log
 *.trs
+
+/win32/common/config.h-new
