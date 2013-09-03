@@ -422,7 +422,7 @@ videoconvert_convert_compute_resample (VideoConvert * convert)
       convert->downsample, out_info->chroma_site, convert->down_offset,
       convert->down_n_lines);
 
-  lines = MAX (convert->down_n_lines, convert->up_n_lines);
+  lines = convert->down_n_lines + convert->up_n_lines;
 
   convert->n_tmplines = lines;
   convert->tmplines = g_malloc (lines * sizeof (gpointer));
@@ -499,7 +499,7 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
   up_offset = convert->up_offset;
   down_n_lines = convert->down_n_lines;
   down_offset = convert->down_offset;
-  max_lines = MAX (down_n_lines, up_n_lines);
+  max_lines = convert->n_tmplines;
 
   in_lines = 0;
   out_lines = 0;
@@ -592,6 +592,12 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
       start += down_n_lines;
       out_lines -= down_n_lines;
     }
+    /* we didn't process these lines, move them up for the next round */
+    for (j = 0; j < out_lines; j++) {
+      GST_DEBUG ("move line %d->%d", j + start, j);
+      out_tmplines[j] = out_tmplines[j + start];
+    }
+
     up_offset += up_n_lines;
   }
   if ((pal =
