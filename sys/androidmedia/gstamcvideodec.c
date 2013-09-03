@@ -1004,25 +1004,24 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
     }
       /* FIXME: This should be in libgstvideo as MT12 or similar, see v4l2 */
     case COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka:{
+      GstVideoFrame vframe;
       gint width = self->width;
       gint height = self->height;
-      gint src_stride = self->stride;
-      gint dest_luma_stride = GST_VIDEO_INFO_COMP_STRIDE (info, 0);
-      gint dest_chroma_stride = GST_VIDEO_INFO_COMP_STRIDE (info, 1);
+      gint dest_luma_stride, dest_chroma_stride;
       guint8 *src = buf->data + buffer_info->offset;
-      guint8 *dest_luma =
-          GST_BUFFER_DATA (outbuf) + GST_VIDEO_INFO_COMP_OFFSET (info, 0);
-      guint8 *dest_chroma =
-          GST_BUFFER_DATA (outbuf) + GST_VIDEO_INFO_COMP_OFFSET (info, 1);
+      guint8 *dest_luma, *dest_chroma;
       gint y;
-
       const size_t tile_w = (width - 1) / TILE_WIDTH + 1;
       const size_t tile_w_align = (tile_w + 1) & ~1;
-
       const size_t tile_h_luma = (height - 1) / TILE_HEIGHT + 1;
       const size_t tile_h_chroma = (height / 2 - 1) / TILE_HEIGHT + 1;
-
       size_t luma_size = tile_w_align * tile_h_luma * TILE_SIZE;
+
+      gst_video_frame_map (&vframe, info, outbuf, GST_MAP_WRITE);
+      dest_luma = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
+      dest_chroma = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1);
+      dest_luma_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, 0);
+      dest_chroma_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, 1);
 
       if ((luma_size % TILE_GROUP_SIZE) != 0)
         luma_size = (((luma_size - 1) / TILE_GROUP_SIZE) + 1) * TILE_GROUP_SIZE;
@@ -1080,6 +1079,7 @@ gst_amc_video_dec_fill_buffer (GstAmcVideoDec * self, gint idx,
         }
         height -= TILE_HEIGHT;
       }
+      gst_video_frame_unmap (&vframe);
       ret = TRUE;
       break;
 
