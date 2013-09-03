@@ -236,43 +236,6 @@ failure:
 }
 
 gboolean
-gst_gl_window_x11_create_context (GstGLWindow * window,
-    GstGLAPI gl_api, guintptr external_gl_context, GError ** error)
-{
-  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
-  GstGLWindowX11Class *window_class = GST_GL_WINDOW_X11_GET_CLASS (window_x11);
-
-  setlocale (LC_NUMERIC, "C");
-
-  gst_gl_window_set_need_lock (GST_GL_WINDOW (window_x11), FALSE);
-
-  window_x11->running = TRUE;
-  window_x11->visible = FALSE;
-
-  if (!window_class->choose_format (window_x11, error)) {
-    goto failure;
-  }
-
-  gst_gl_window_x11_create_window (window_x11);
-
-  if (!window_class->create_context (window_x11, gl_api, external_gl_context,
-          error)) {
-    goto failure;
-  }
-
-  if (!window_class->activate (window_x11, TRUE)) {
-    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
-        "Failed to make context current");
-    goto failure;
-  }
-
-  return TRUE;
-
-failure:
-  return FALSE;
-}
-
-gboolean
 gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
 {
   XSetWindowAttributes win_attr;
