@@ -1239,6 +1239,13 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
         }
       }
       break;
+    case GST_EVENT_CAPS:{
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      gst_validate_pad_monitor_setcaps_pre (pad_monitor, caps);
+      break;
+    }
     case GST_EVENT_EOS:
       pad_monitor->is_eos = TRUE;
       if (pad_monitor->pending_eos_seqnum &&
@@ -1287,6 +1294,13 @@ gst_validate_pad_monitor_downstream_event_check (GstValidatePadMonitor *
         pad_monitor->has_segment = TRUE;
       }
       break;
+    case GST_EVENT_CAPS:{
+      GstCaps *caps;
+
+      gst_event_parse_caps (event, &caps);
+      gst_validate_pad_monitor_setcaps_post (pad_monitor, caps, ret);
+      break;
+    }
     case GST_EVENT_FLUSH_START:
     case GST_EVENT_FLUSH_STOP:
     case GST_EVENT_EOS:
@@ -1451,33 +1465,9 @@ gst_validate_pad_monitor_sink_event_func (GstPad * pad, GstObject * parent,
         event, last_ts);
   }
 
-  /* pre checks */
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:{
-      GstCaps *caps;
-
-      gst_event_parse_caps (event, &caps);
-      gst_validate_pad_monitor_setcaps_pre (pad_monitor, caps);
-      break;
-    }
-    default:
-      break;
-  }
   ret =
       gst_validate_pad_monitor_downstream_event_check (pad_monitor, parent,
       event, pad_monitor->event_func);
-  /* post checks */
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:{
-      GstCaps *caps;
-
-      gst_event_parse_caps (event, &caps);
-      gst_validate_pad_monitor_setcaps_post (pad_monitor, caps, ret);
-      break;
-    }
-    default:
-      break;
-  }
 
   GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
   GST_VALIDATE_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);
@@ -1724,13 +1714,35 @@ gst_validate_pad_monitor_pad_probe (GstPad * pad, GstPadProbeInfo * info,
 }
 
 static void
+gst_validate_pad_monitor_update_caps_info (GstValidatePadMonitor * pad_monitor,
+    GstCaps * caps)
+{
+  GstStructure *structure;
+
+  g_return_if_fail (gst_caps_is_fixed (caps));
+
+  pad_monitor->caps_is_audio = FALSE;
+  pad_monitor->caps_is_video = FALSE;
+
+  structure = gst_caps_get_structure (caps, 0);
+  if (g_str_has_prefix (gst_structure_get_name (structure), "audio/")) {
+    pad_monitor->caps_is_audio = TRUE;
+  } else if (g_str_has_prefix (gst_structure_get_name (structure), "video/")) {
+    pad_monitor->caps_is_video = TRUE;
+  }
+}
+
+static void
 gst_validate_pad_monitor_setcaps_pre (GstValidatePadMonitor * pad_monitor,
     GstCaps * caps)
 {
   GstStructure *structure;
 
-  /* Check if caps are identical to last caps and complain if so */
-  if (pad_monitor->last_caps
+  /* Check if caps are identical to last caps and complain if so
+   * Only checked for sink pads as src pads might push the same caps
+   * multiple times during unlinked/autoplugging scenarios */
+  if (GST_PAD_IS_SINK (GST_VALIDATE_PAD_MONITOR_GET_PAD (pad_monitor)) &&
+      pad_monitor->last_caps
       && gst_caps_is_equal (caps, pad_monitor->last_caps)) {
     GST_VALIDATE_REPORT (pad_monitor, EVENT_CAPS_DUPLICATE, "%" GST_PTR_FORMAT,
         caps);
