@@ -404,8 +404,8 @@ videoconvert_convert_compute_resample (VideoConvert * convert)
     convert->up_n_lines = 1;
     convert->up_offset = 0;
   }
-  GST_DEBUG ("upsample: %p, offset %d, n_lines %d", convert->upsample,
-      convert->up_offset, convert->up_n_lines);
+  GST_DEBUG ("upsample: %p, site: %d, offset %d, n_lines %d", convert->upsample,
+      in_info->chroma_site, convert->up_offset, convert->up_n_lines);
 
   convert->downsample = gst_video_chroma_resample_new (0,
       out_info->chroma_site, 0, dfinfo->unpack_format, -dfinfo->w_sub[2],
@@ -418,8 +418,9 @@ videoconvert_convert_compute_resample (VideoConvert * convert)
     convert->down_offset = 0;
   }
 
-  GST_DEBUG ("downsample: %p, offset %d, n_lines %d", convert->downsample,
-      convert->down_offset, convert->down_n_lines);
+  GST_DEBUG ("downsample: %p, site: %d, offset %d, n_lines %d",
+      convert->downsample, out_info->chroma_site, convert->down_offset,
+      convert->down_n_lines);
 
   lines = MAX (convert->down_n_lines, convert->up_n_lines);
 
@@ -514,14 +515,14 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
     idx = CLAMP (start_offset, 0, height);
     in_tmplines[in_lines] = convert->tmplines[idx % max_lines];
     out_tmplines[out_lines] = in_tmplines[in_lines];
-    GST_DEBUG ("start_offset %d, %d, idx %u, in %d, out %d", start_offset,
-        up_offset, idx, in_lines, out_lines);
+    GST_DEBUG ("start_offset %d/%d, %d, idx %u, in %d, out %d", start_offset,
+        stop_offset, up_offset, idx, in_lines, out_lines);
 
     up_line = up_offset + in_lines;
 
     /* extract the next line */
     if (up_line >= 0 && up_line < height) {
-      GST_DEBUG ("unpack line %d", up_line);
+      GST_DEBUG ("unpack line %d into %d", up_line, in_lines);
       UNPACK_FRAME (src, in_tmplines[in_lines], up_line, width);
     }
 
