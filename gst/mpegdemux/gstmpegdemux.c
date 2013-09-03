@@ -547,6 +547,23 @@ unknown_stream:
   }
 }
 
+static GstPsStream *
+gst_ps_demux_get_stream_from_pad (GstPsDemux * demux, GstPad * srcpad)
+{
+  gint i, count;
+
+  count = demux->found_count;
+  for (i = 0; i < count; i++) {
+    GstPsStream *stream = demux->streams_found[i];
+
+    if (stream && stream->pad == srcpad)
+      return stream;
+  }
+
+  GST_DEBUG_OBJECT (srcpad, "no stream found for pad!");
+  return NULL;
+}
+
 static inline void
 gst_ps_demux_send_segment (GstPsDemux * demux, GstPsStream * stream,
     GstClockTime pts)
@@ -1324,6 +1341,17 @@ gst_ps_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         res = gst_ps_demux_handle_seek_push (demux, event);
       }
       break;
+    case GST_EVENT_RECONFIGURE:{
+      GstPsStream *stream;
+
+      stream = gst_ps_demux_get_stream_from_pad (demux, pad);
+      if (stream != NULL)
+        stream->notlinked = FALSE;
+
+      gst_event_unref (event);
+      res = TRUE;
+      break;
+    }
     default:
       res = gst_pad_push_event (demux->sinkpad, event);
       break;
