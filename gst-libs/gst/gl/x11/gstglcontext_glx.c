@@ -152,7 +152,8 @@ gst_gl_context_glx_create_context (GstGLContext * context,
     GstGLWindow *other_window;
 
     if (!GST_GL_IS_CONTEXT_GLX (other_context)) {
-      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+      g_set_error (error, GST_GL_CONTEXT_ERROR,
+          GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
           "Cannot share context with non-GLX context");
       goto failure;
     }
@@ -222,8 +223,8 @@ gst_gl_context_glx_create_context (GstGLContext * context,
     XFree (context_glx->priv->fbconfigs);
 
   if (!context_glx->glx_context) {
-    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
-        "Failed to create opengl context");
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_CREATE_CONTEXT, "Failed to create opengl context");
     goto failure;
   }
 
@@ -274,14 +275,15 @@ gst_gl_context_glx_choose_format (GstGLContext * context, GError ** error)
   device = (Display *) gst_gl_window_get_display (window);
 
   if (!glXQueryExtension (device, &error_base, &event_base)) {
-    g_set_error (error, GST_GL_WINDOW_ERROR,
-        GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE, "No GLX extension");
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_RESOURCE_UNAVAILABLE, "No GLX extension");
     goto failure;
   }
 
   if (!glXQueryVersion (device, &context_glx->priv->glx_major,
           &context_glx->priv->glx_minor)) {
-    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_CREATE_CONTEXT,
         "Failed to query GLX version (glXQueryVersion failed)");
     goto failure;
   }
@@ -306,7 +308,8 @@ gst_gl_context_glx_choose_format (GstGLContext * context, GError ** error)
         window_x11->screen_num, attribs);
 
     if (!window_x11->visual_info) {
-      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+      g_set_error (error, GST_GL_CONTEXT_ERROR,
+          GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
           "Bad attributes in glXChooseVisual");
       goto failure;
     }
@@ -326,7 +329,8 @@ gst_gl_context_glx_choose_format (GstGLContext * context, GError ** error)
         DefaultScreen (device), attribs, &fbcount);
 
     if (!context_glx->priv->fbconfigs) {
-      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+      g_set_error (error, GST_GL_CONTEXT_ERROR,
+          GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
           "Could not find any FBConfig's to use (check attributes?)");
       goto failure;
     }
@@ -337,8 +341,8 @@ gst_gl_context_glx_choose_format (GstGLContext * context, GError ** error)
         context_glx->priv->fbconfigs[0]);
 
     if (!window_x11->visual_info) {
-      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
-          "Bad attributes in FBConfig");
+      g_set_error (error, GST_GL_CONTEXT_ERROR,
+          GST_GL_CONTEXT_ERROR_WRONG_CONFIG, "Bad attributes in FBConfig");
       goto failure;
     }
   }
