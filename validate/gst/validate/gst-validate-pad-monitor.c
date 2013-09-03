@@ -1097,11 +1097,7 @@ gst_validate_pad_monitor_add_expected_newsegment (GstValidatePadMonitor *
         othermonitor =
             g_object_get_data ((GObject *) otherpad, "validate-monitor");
         GST_VALIDATE_MONITOR_LOCK (othermonitor);
-        if (othermonitor->expected_segment) {
-          GST_VALIDATE_REPORT (othermonitor, EVENT_NEWSEGMENT_NOT_PUSHED, "");
-          gst_event_unref (othermonitor->expected_segment);
-        }
-        othermonitor->expected_segment = gst_event_ref (event);
+        gst_event_replace (&othermonitor->expected_segment, event);
         GST_VALIDATE_MONITOR_UNLOCK (othermonitor);
         g_value_reset (&value);
         break;
