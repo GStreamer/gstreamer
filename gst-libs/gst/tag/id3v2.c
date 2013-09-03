@@ -393,6 +393,7 @@ static void
 id3v2_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
 {
   GstBuffer *blob;
+  GstSample *sample;
   guint8 *frame_data;
 #if 0
   GstCaps *caps;
@@ -420,6 +421,9 @@ id3v2_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
   blob = gst_buffer_new_and_alloc (frame_size);
   gst_buffer_fill (blob, 0, frame_data, frame_size);
 
+  sample = gst_sample_new (blob, NULL, NULL, NULL);
+  gst_buffer_unref (blob);
+
   /* Sanitize frame id */
   for (i = 0; i < 4; i++) {
     if (!g_ascii_isalnum (frame_data[i]))
@@ -440,8 +444,8 @@ id3v2_add_id3v2_frame_blob_to_taglist (ID3TagsWorking * work, guint size)
   /* gst_util_dump_mem (GST_BUFFER_DATA (blob), GST_BUFFER_SIZE (blob)); */
 
   gst_tag_list_add (work->tags, GST_TAG_MERGE_APPEND,
-      GST_TAG_ID3V2_FRAME, blob, NULL);
-  gst_buffer_unref (blob);
+      GST_TAG_ID3V2_FRAME, sample, NULL);
+  gst_sample_unref (sample);
 }
 
 static gboolean

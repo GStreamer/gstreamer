@@ -191,7 +191,7 @@ gst_tag_register_tags_internal (gpointer unused)
       _("Media (image/video) intended vertical pixel density in ppi"), NULL);
 
   gst_tag_register_static (GST_TAG_ID3V2_FRAME, GST_TAG_FLAG_META,
-      GST_TYPE_BUFFER, _("ID3v2 frame"), _("unparsed id3v2 tag frame"),
+      GST_TYPE_SAMPLE, _("ID3v2 frame"), _("unparsed id3v2 tag frame"),
       gst_tag_merge_use_first);
 
   gst_tag_register_static (GST_TAG_MUSICAL_KEY, GST_TAG_FLAG_META,
