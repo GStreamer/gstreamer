@@ -54,6 +54,13 @@ struct _GstBPMDetectPrivate
 #endif
 };
 
+/* For soundtouch 1.4 */
+#if defined(INTEGER_SAMPLES)
+#define SOUNDTOUCH_INTEGER_SAMPLES 1
+#elif defined(FLOAT_SAMPLES)
+#define SOUNDTOUCH_FLOAT_SAMPLES 1
+#endif
+ 
 #if defined(SOUNDTOUCH_FLOAT_SAMPLES)
   #define ALLOWED_CAPS \
     "audio/x-raw, " \
