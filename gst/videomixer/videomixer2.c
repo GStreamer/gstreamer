@@ -802,7 +802,8 @@ gst_videomixer2_fill_queues (GstVideoMixer2 * mix,
           if (!GST_COLLECT_PADS_STATE_IS_SET (mixcol,
                   GST_COLLECT_PADS_STATE_EOS))
             need_more_data = TRUE;
-        } else {
+        } else if (!GST_COLLECT_PADS_STATE_IS_SET (mixcol,
+                GST_COLLECT_PADS_STATE_EOS)) {
           eos = FALSE;
         }
       }
