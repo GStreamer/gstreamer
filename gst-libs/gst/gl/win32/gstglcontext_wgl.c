@@ -97,7 +97,8 @@ gst_gl_context_wgl_create_context (GstGLContext * context,
 
   if (other_context) {
     if (!GST_GL_IS_CONTEXT_WGL (other_context)) {
-      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+      g_set_error (error, GST_GL_CONTEXT_ERROR,
+          GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
           "Cannot share context with a non-WGL context");
       goto failure;
     }
@@ -109,8 +110,9 @@ gst_gl_context_wgl_create_context (GstGLContext * context,
     GST_DEBUG ("gl context created: %" G_GUINTPTR_FORMAT,
         (guintptr) context_wgl->wgl_context);
   else {
-    g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_CREATE_CONTEXT,
-        "failed to create glcontext:0x%x", (unsigned int) GetLastError ());
+    g_set_error (error, GST_GL_CONTEXT_ERROR,
+        GST_GL_CONTEXT_ERROR_CREATE_CONTEXT, "failed to create glcontext:0x%x",
+        (unsigned int) GetLastError ());
     goto failure;
   }
   g_assert (context_wgl->wgl_context);
@@ -120,8 +122,8 @@ gst_gl_context_wgl_create_context (GstGLContext * context,
 
   if (other_wgl) {
     if (!wglShareLists (other_wgl->wgl_context, context_wgl->wgl_context)) {
-      g_set_error (error, GST_GL_WINDOW_ERROR,
-          GST_GL_WINDOW_ERROR_CREATE_CONTEXT, "failed to share contexts 0x%x",
+      g_set_error (error, GST_GL_CONTEXT_ERROR,
+          GST_GL_CONTEXT_ERROR_CREATE_CONTEXT, "failed to share contexts 0x%x",
           (unsigned int) GetLastError ());
       goto failure;
     }

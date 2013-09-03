@@ -143,8 +143,8 @@ gst_gl_context_egl_choose_format (GstGLContext * context, GError ** error)
     gst_object_unref (window);
 
     if (ret == 0) {
-      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
-          "Failed to match XVisualInfo");
+      g_set_error (error, GST_GL_CONTEXT_ERROR,
+          GST_GL_CONTEXT_ERROR_WRONG_CONFIG, "Failed to match XVisualInfo");
       return FALSE;
     }
   }
@@ -209,7 +209,8 @@ gst_gl_context_egl_create_context (GstGLContext * context,
 
   if (other_context) {
     if (!GST_GL_IS_CONTEXT_EGL (other_context)) {
-      g_set_error (error, GST_GL_WINDOW_ERROR, GST_GL_WINDOW_ERROR_WRONG_CONFIG,
+      g_set_error (error, GST_GL_CONTEXT_ERROR,
+          GST_GL_CONTEXT_ERROR_WRONG_CONFIG,
           "Cannot share context with non-EGL context");
       goto failure;
     }
