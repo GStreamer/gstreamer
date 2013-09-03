@@ -1576,13 +1576,15 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
     }
 
     if (is_last) {
-      if ((res = gst_flac_parse_handle_headers (flacparse)) != GST_FLOW_OK)
-        goto cleanup;
+      res = gst_flac_parse_handle_headers (flacparse);
 
       /* Minimal size of a frame header */
       gst_base_parse_set_min_frame_size (GST_BASE_PARSE (flacparse), MAX (9,
               flacparse->min_framesize));
       flacparse->state = GST_FLAC_PARSE_STATE_DATA;
+
+      if (res != GST_FLOW_OK)
+        goto cleanup;
     }
 
     /* DROPPED because we pushed already or will push all headers manually */
@@ -1615,18 +1617,18 @@ gst_flac_parse_parse_frame (GstBaseParse * parse, GstBaseParseFrame * frame,
         GST_WARNING_OBJECT (flacparse,
             "Generating headers for variable blocksize streams not supported");
 
-        if ((res = gst_flac_parse_handle_headers (flacparse)) != GST_FLOW_OK)
-          goto cleanup;
+        res = gst_flac_parse_handle_headers (flacparse);
       } else {
         GST_DEBUG_OBJECT (flacparse, "Generating headers");
 
         if (!gst_flac_parse_generate_headers (flacparse))
           goto cleanup;
 
-        if ((res = gst_flac_parse_handle_headers (flacparse)) != GST_FLOW_OK)
-          goto cleanup;
+        res = gst_flac_parse_handle_headers (flacparse);
       }
       flacparse->state = GST_FLAC_PARSE_STATE_DATA;
+      if (res != GST_FLOW_OK)
+        goto cleanup;
     }
 
     /* also cater for oggmux metadata */
