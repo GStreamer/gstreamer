@@ -54,8 +54,7 @@ EXTRA_DIST = \
 	$(noinst_SCRIPTS) \
 	gst-inspect.1.in \
 	gst-launch.1.in \
-	gst-typefind.1.in \
-	gst-plot-timeline.py
+	gst-typefind.1.in
 
 %-@GST_API_VERSION@.1: %.1.in
 	$(AM_V_GEN)sed \

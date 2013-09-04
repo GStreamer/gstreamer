@@ -145,7 +145,7 @@ def normalize_timestamps(syscalls):
 def compute_syscall_metrics(syscalls):
     global PIXELS_PER_SECOND
     global PIXELS_PER_LINE
-    
+
     num_syscalls = len(syscalls)
 
     metrics = Metrics()
