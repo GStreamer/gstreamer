@@ -378,12 +378,22 @@ videoconvert_dither_halftone (VideoConvert * convert, guint16 * pixels, int j)
   }
 }
 
+static void
+alloc_tmplines (VideoConvert * convert, guint lines, gint width)
+{
+  gint i;
+
+  convert->n_tmplines = lines;
+  convert->tmplines = g_malloc (lines * sizeof (gpointer));
+  for (i = 0; i < lines; i++)
+    convert->tmplines[i] = g_malloc (sizeof (guint16) * (width + 8) * 4);
+}
+
 static gboolean
 videoconvert_convert_compute_resample (VideoConvert * convert)
 {
   GstVideoInfo *in_info, *out_info;
   const GstVideoFormatInfo *sfinfo, *dfinfo;
-  gint lines, i;
   gint width;
 
   in_info = &convert->in_info;
@@ -431,12 +441,7 @@ videoconvert_convert_compute_resample (VideoConvert * convert)
       convert->downsample, out_info->chroma_site, convert->down_offset,
       convert->down_n_lines);
 
-  lines = convert->down_n_lines + convert->up_n_lines;
-
-  convert->n_tmplines = lines;
-  convert->tmplines = g_malloc (lines * sizeof (gpointer));
-  for (i = 0; i < lines; i++)
-    convert->tmplines[i] = g_malloc (sizeof (guint16) * (width + 8) * 4);
+  alloc_tmplines (convert, convert->down_n_lines + convert->up_n_lines, width);
 
   return TRUE;
 }
@@ -1447,6 +1452,7 @@ videoconvert_convert_lookup_fastpath (VideoConvert * convert)
         (transforms[i].keeps_interlaced || !interlaced)) {
       GST_DEBUG ("using fastpath");
       convert->convert = transforms[i].convert;
+      alloc_tmplines (convert, 1, GST_VIDEO_INFO_WIDTH (&convert->in_info));
       return TRUE;
     }
   }
