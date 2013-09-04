@@ -1169,7 +1169,14 @@ static gboolean
 gst_x264_enc_init_encoder (GstX264Enc * encoder)
 {
   guint pass = 0;
-  GstVideoInfo *info = &encoder->input_state->info;
+  GstVideoInfo *info;
+
+  if (!encoder->input_state) {
+    GST_DEBUG_OBJECT (encoder, "Have no input state yet");
+    return FALSE;
+  }
+
+  info = &encoder->input_state->info;
 
   /* make sure that the encoder is closed */
   gst_x264_enc_close_encoder (encoder);
