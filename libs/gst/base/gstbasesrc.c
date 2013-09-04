@@ -224,8 +224,10 @@ struct _GstBaseSrcPrivate
   /* if a stream-start event should be sent */
   gboolean stream_start_pending;
 
-  /* if segment should be sent */
+  /* if segment should be sent and a
+   * seqnum if it was originated by a seek */
   gboolean segment_pending;
+  guint32 segment_seqnum;
 
   /* if EOS is pending (atomic) */
   gint pending_eos;
@@ -818,6 +820,7 @@ gst_base_src_new_seamless_segment (GstBaseSrc * src, gint64 start, gint64 stop,
 
   /* Mark pending segment. Will be sent before next data */
   src->priv->segment_pending = TRUE;
+  src->priv->segment_seqnum = gst_util_seqnum_next ();
 
   GST_DEBUG_OBJECT (src,
       "Starting new seamless segment. Start %" GST_TIME_FORMAT " stop %"
@@ -1667,6 +1670,7 @@ gst_base_src_perform_seek (GstBaseSrc * src, GstEvent * event, gboolean unlock)
       stop = seeksegment.duration;
 
     src->priv->segment_pending = TRUE;
+    src->priv->segment_seqnum = seqnum;
   }
 
   src->priv->discont = TRUE;
@@ -2671,7 +2675,11 @@ gst_base_src_loop (GstPad * pad)
 
   /* push events to close/start our segment before we push the buffer. */
   if (G_UNLIKELY (src->priv->segment_pending)) {
-    gst_pad_push_event (pad, gst_event_new_segment (&src->segment));
+    GstEvent *seg_event = gst_event_new_segment (&src->segment);
+
+    gst_event_set_seqnum (seg_event, src->priv->segment_seqnum);
+    src->priv->segment_seqnum = gst_util_seqnum_next ();
+    gst_pad_push_event (pad, seg_event);
     src->priv->segment_pending = FALSE;
   }
 
@@ -3182,6 +3190,7 @@ gst_base_src_start (GstBaseSrc * basesrc)
   basesrc->num_buffers_left = basesrc->num_buffers;
   basesrc->running = FALSE;
   basesrc->priv->segment_pending = FALSE;
+  basesrc->priv->segment_seqnum = gst_util_seqnum_next ();
   GST_LIVE_UNLOCK (basesrc);
 
   bclass = GST_BASE_SRC_GET_CLASS (basesrc);
