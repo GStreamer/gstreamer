@@ -2596,10 +2596,11 @@ gst_avi_demux_index_for_time (GstAviDemux * avi,
     } else {
       index = avi_stream_convert_time_to_frames_unchecked (stream, time);
     }
-  } else {
+  } else if (stream->strh->type == GST_RIFF_FCC_auds) {
     /* constant rate stream */
     total = avi_stream_convert_time_to_bytes_unchecked (stream, time);
-  }
+  } else
+    return -1;
 
   if (index == -1) {
     GstAviIndexEntry *entry;
@@ -4125,6 +4126,8 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
   /* get the entry index for the requested position */
   index = gst_avi_demux_index_for_time (avi, stream, seek_time);
   GST_DEBUG_OBJECT (avi, "Got entry %u", index);
+  if (index == -1)
+    return FALSE;
 
   /* check if we are already on a keyframe */
   if (!ENTRY_IS_KEYFRAME (&stream->index[index])) {
@@ -4176,6 +4179,8 @@ gst_avi_demux_do_seek (GstAviDemux * avi, GstSegment * segment)
 
     /* get the entry index for the requested position */
     index = gst_avi_demux_index_for_time (avi, ostream, seek_time);
+    if (index == -1)
+      continue;
 
     /* move to previous keyframe */
     if (!ENTRY_IS_KEYFRAME (&ostream->index[index]))
@@ -4403,6 +4408,8 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
   index = gst_avi_demux_index_for_time (avi, stream, cur);
   GST_DEBUG_OBJECT (avi, "str %u: Found entry %u for %" GST_TIME_FORMAT,
       str_num, index, GST_TIME_ARGS (cur));
+  if (index == -1)
+    return -1;
 
   /* check if we are already on a keyframe */
   if (!ENTRY_IS_KEYFRAME (&stream->index[index])) {
@@ -4453,6 +4460,8 @@ avi_demux_handle_seek_push (GstAviDemux * avi, GstPad * pad, GstEvent * event)
     idx = gst_avi_demux_index_for_time (avi, str, cur);
     GST_DEBUG_OBJECT (avi, "str %u: Found entry %u for %" GST_TIME_FORMAT, n,
         idx, GST_TIME_ARGS (cur));
+    if (idx == -1)
+      continue;
 
     /* check if we are already on a keyframe */
     if (!ENTRY_IS_KEYFRAME (&str->index[idx])) {
