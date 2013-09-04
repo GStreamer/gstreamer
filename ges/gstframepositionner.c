@@ -72,9 +72,9 @@ _weak_notify_cb (GstFramePositionner * pos, GObject * old)
 }
 
 static void
-gst_frame_positionner_update_size (GstFramePositionner * pos)
+gst_frame_positionner_update_properties (GstFramePositionner * pos)
 {
-  GstCaps *size_caps;
+  GstCaps *caps;
   gint final_width;
   gint final_height;
 
@@ -85,30 +85,36 @@ gst_frame_positionner_update_size (GstFramePositionner * pos)
   final_height = (pos->height > 0) ? pos->height : pos->track_height;
 
   if (final_width == 0 && final_height == 0)
-    size_caps = gst_caps_new_empty_simple ("video/x-raw");
+    caps = gst_caps_new_empty_simple ("video/x-raw");
   else if (final_width == 0)
-    size_caps =
+    caps =
         gst_caps_new_simple ("video/x-raw", "height", G_TYPE_INT, final_height,
         NULL);
   else if (final_height == 0)
-    size_caps =
+    caps =
         gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT, final_width,
         NULL);
   else
-    size_caps =
+    caps =
         gst_caps_new_simple ("video/x-raw", "width", G_TYPE_INT,
         final_width, "height", G_TYPE_INT, final_height, NULL);
 
   GST_DEBUG_OBJECT (pos, "updated size to : %d %d", final_width, final_height);
 
-  g_object_set (pos->capsfilter, "caps", size_caps, NULL);
+  if (pos->fps_n != -1)
+    gst_caps_set_simple (caps, "framerate", GST_TYPE_FRACTION, pos->fps_n,
+        pos->fps_d, NULL);
+
+  GST_DEBUG_OBJECT (pos, "setting caps : %s", gst_caps_to_string (caps));
+
+  g_object_set (pos->capsfilter, "caps", caps, NULL);
 
   g_object_notify (G_OBJECT (pos), "width");
   g_object_notify (G_OBJECT (pos), "height");
 }
 
 static void
-sync_size_from_caps (GstFramePositionner * pos, GstCaps * caps)
+sync_properties_from_caps (GstFramePositionner * pos, GstCaps * caps)
 {
   gint width, height;
 
@@ -122,30 +128,35 @@ sync_size_from_caps (GstFramePositionner * pos, GstCaps * caps)
       width = 0;
     if (!gst_structure_get_int (structure, "height", &height))
       width = 0;
+    if (!gst_structure_get_fraction (structure, "framerate", &(pos->fps_n),
+            &(pos->fps_d)))
+      pos->fps_n = -1;
   }
 
   pos->track_width = width;
   pos->track_height = height;
 
   GST_DEBUG_OBJECT (pos, "syncing size from caps : %d %d", width, height);
+  GST_DEBUG_OBJECT (pos, "syncing framerate from caps : %d/%d", pos->fps_n,
+      pos->fps_d);
 
-  gst_frame_positionner_update_size (pos);
+  gst_frame_positionner_update_properties (pos);
 }
 
 static void
-sync_size_with_track (GstFramePositionner * pos, GESTrack * track)
+sync_properties_with_track (GstFramePositionner * pos, GESTrack * track)
 {
   GstCaps *caps;
 
   g_object_get (track, "restriction-caps", &caps, NULL);
-  sync_size_from_caps (pos, caps);
+  sync_properties_from_caps (pos, caps);
 }
 
 static void
 _track_restriction_changed_cb (GESTrack * track, GParamSpec * arg G_GNUC_UNUSED,
     GstFramePositionner * pos)
 {
-  sync_size_with_track (pos, track);
+  sync_properties_with_track (pos, track);
 }
 
 static void
@@ -169,7 +180,7 @@ _track_changed_cb (GESTrackElement * trksrc, GParamSpec * arg G_GNUC_UNUSED,
     GST_DEBUG_OBJECT (pos, "connecting to track : %p", pos->current_track);
     g_signal_connect (pos->current_track, "notify::restriction-caps",
         (GCallback) _track_restriction_changed_cb, pos);
-    sync_size_with_track (pos, pos->current_track);
+    sync_properties_with_track (pos, pos->current_track);
   } else
     pos->current_track = NULL;
 }
@@ -190,7 +201,7 @@ ges_frame_positionner_set_source_and_filter (GstFramePositionner * pos,
       (GCallback) _track_restriction_changed_cb, pos);
   g_signal_connect (trksrc, "notify::track", (GCallback) _track_changed_cb,
       pos);
-  sync_size_with_track (pos, pos->current_track);
+  sync_properties_with_track (pos, pos->current_track);
 }
 
 static void
@@ -302,6 +313,8 @@ gst_frame_positionner_init (GstFramePositionner * framepositionner)
   framepositionner->zorder = 0;
   framepositionner->width = 0;
   framepositionner->height = 0;
+  framepositionner->fps_n = -1;
+  framepositionner->fps_d = -1;
   framepositionner->track_width = 0;
   framepositionner->track_height = 0;
   framepositionner->capsfilter = NULL;
@@ -332,11 +345,11 @@ gst_frame_positionner_set_property (GObject * object, guint property_id,
       break;
     case PROP_WIDTH:
       framepositionner->width = g_value_get_int (value);
-      gst_frame_positionner_update_size (framepositionner);
+      gst_frame_positionner_update_properties (framepositionner);
       break;
     case PROP_HEIGHT:
       framepositionner->height = g_value_get_int (value);
-      gst_frame_positionner_update_size (framepositionner);
+      gst_frame_positionner_update_properties (framepositionner);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

@@ -81,7 +81,7 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   GstElement *sub_element;
   GESVideoSourceClass *source_class = GES_VIDEO_SOURCE_GET_CLASS (trksrc);
   GESVideoSource *self;
-  GstElement *positionner, *videoscale, *capsfilter;
+  GstElement *positionner, *videoscale, *videorate, *capsfilter;
   const gchar *props[] = { "alpha", "posx", "posy", "width", "height", NULL };
   GESTimelineElement *parent;
 
@@ -98,6 +98,7 @@ ges_video_source_create_element (GESTrackElement * trksrc)
 
   videoscale =
       gst_element_factory_make ("videoscale", "track-element-videoscale");
+  videorate = gst_element_factory_make ("videorate", "track-element-videorate");
   capsfilter =
       gst_element_factory_make ("capsfilter", "track-element-capsfilter");
 
@@ -107,7 +108,7 @@ ges_video_source_create_element (GESTrackElement * trksrc)
   ges_track_element_add_children_props (trksrc, positionner, NULL, NULL, props);
   topbin =
       ges_source_create_topbin ("videosrcbin", sub_element, positionner,
-      videoscale, capsfilter, NULL);
+      videoscale, videorate, capsfilter, NULL);
   parent = ges_timeline_element_get_parent (GES_TIMELINE_ELEMENT (trksrc));
   if (parent) {
     self->priv->positionner = GST_FRAME_POSITIONNER (positionner);

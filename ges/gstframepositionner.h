@@ -53,6 +53,8 @@ struct _GstFramePositionner
   gint height;
   gint track_width;
   gint track_height;
+  gint fps_n;
+  gint fps_d;
 };
 
 struct _GstFramePositionnerClass
