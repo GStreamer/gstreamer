@@ -36,7 +36,6 @@ BuildRequires:  docbook-utils
 BuildRequires:  netpbm-progs
 BuildRequires:  tetex-dvips
 BuildRequires:  ghostscript
-BuildRequires:  PyXML
 
 %description
 GStreamer is a streaming media framework, based on graphs of filters which
