@@ -1256,17 +1256,17 @@ gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   GstFormat format;
   GstSeekFlags flags;
   GstSeekType cur_type, stop_type;
-  gint64 cur, stop;
+  gint64 cur, stop, key_cur;
   gboolean res;
   gint64 byte_cur;
+  gint64 original_stop;
+  guint32 seqnum;
 
   GST_DEBUG_OBJECT (qtdemux, "doing push-based seek");
 
   gst_event_parse_seek (event, &rate, &format, &flags,
       &cur_type, &cur, &stop_type, &stop);
-
-  /* FIXME, always play to the end */
-  stop = -1;
+  seqnum = gst_event_get_seqnum (event);
 
   /* only forward streaming and seeking is possible */
   if (rate <= 0)
@@ -1277,10 +1277,16 @@ gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
           stop_type, &stop))
     goto no_format;
 
+  /* Upstrea seek in bytes will have undefined stop, but qtdemux stores
+   * the original stop position to use when upstream pushes the new segment
+   * for this seek */
+  original_stop = stop;
+  stop = -1;
+
   /* find reasonable corresponding BYTE position,
    * also try to mind about keyframes, since we can not go back a bit for them
    * later on */
-  gst_qtdemux_adjust_seek (qtdemux, cur, NULL, &byte_cur);
+  gst_qtdemux_adjust_seek (qtdemux, cur, &key_cur, &byte_cur);
 
   if (byte_cur == -1)
     goto abort_seek;
@@ -1289,19 +1295,20 @@ gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
       "start %" G_GINT64_FORMAT ", stop %" G_GINT64_FORMAT, rate, byte_cur,
       stop);
 
+  GST_OBJECT_LOCK (qtdemux);
+  qtdemux->seek_offset = byte_cur;
   if (!(flags & GST_SEEK_FLAG_KEY_UNIT)) {
-    GST_DEBUG_OBJECT (qtdemux,
-        "Requested seek time: %" GST_TIME_FORMAT ", calculated seek offset: %"
-        G_GUINT64_FORMAT, GST_TIME_ARGS (cur), byte_cur);
-    GST_OBJECT_LOCK (qtdemux);
-    qtdemux->requested_seek_time = cur;
-    qtdemux->seek_offset = byte_cur;
-    GST_OBJECT_UNLOCK (qtdemux);
+    qtdemux->push_seek_start = cur;
+  } else {
+    qtdemux->push_seek_start = key_cur;
   }
+  qtdemux->push_seek_stop = original_stop;
+  GST_OBJECT_UNLOCK (qtdemux);
 
   /* BYTE seek event */
   event = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags, cur_type, byte_cur,
       stop_type, stop);
+  gst_event_set_seqnum (event, seqnum);
   res = gst_pad_push_event (qtdemux->sinkpad, event);
 
   return res;
@@ -1813,8 +1820,6 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
       gst_object_unref (qtdemux->pending_newsegment);
     qtdemux->pending_newsegment = NULL;
     qtdemux->upstream_newsegment = TRUE;
-    qtdemux->requested_seek_time = GST_CLOCK_TIME_NONE;
-    qtdemux->seek_offset = 0;
     qtdemux->upstream_seekable = FALSE;
     qtdemux->upstream_size = 0;
 
@@ -1897,29 +1902,37 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
         }
       }
 
+      /* check if this matches a time seek we received previously
+       * FIXME for backwards compatibility reasons we use the
+       * seek_offset here to compare. In the future we might want to
+       * change this to use the seqnum as it uniquely should identify
+       * the segment that corresponds to the seek. */
+      GST_DEBUG_OBJECT (demux, "Stored seek offset: %" G_GINT64_FORMAT
+          ", received segment offset %" G_GINT64_FORMAT,
+          demux->seek_offset, segment.start);
+      if (segment.format == GST_FORMAT_BYTES
+          && demux->seek_offset == segment.start) {
+        GST_OBJECT_LOCK (demux);
+        offset = segment.start;
+
+        segment.format = GST_FORMAT_TIME;
+        segment.start = demux->push_seek_start;
+        segment.stop = demux->push_seek_stop;
+        GST_DEBUG_OBJECT (demux, "Replaced segment with stored seek "
+            "segment %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (segment.start), GST_TIME_ARGS (segment.stop));
+        GST_OBJECT_UNLOCK (demux);
+      }
+
       /* we only expect a BYTE segment, e.g. following a seek */
       if (segment.format == GST_FORMAT_BYTES) {
         if (GST_CLOCK_TIME_IS_VALID (segment.start)) {
-          gint64 requested_seek_time;
-          guint64 seek_offset;
-
           offset = segment.start;
 
-          GST_OBJECT_LOCK (demux);
-          requested_seek_time = demux->requested_seek_time;
-          seek_offset = demux->seek_offset;
-          demux->requested_seek_time = -1;
-          demux->seek_offset = -1;
-          GST_OBJECT_UNLOCK (demux);
-
-          if (offset == seek_offset) {
-            segment.start = requested_seek_time;
-          } else {
-            gst_qtdemux_find_sample (demux, segment.start, TRUE, FALSE, NULL,
-                NULL, (gint64 *) & segment.start);
-            if ((gint64) segment.start < 0)
-              segment.start = 0;
-          }
+          gst_qtdemux_find_sample (demux, segment.start, TRUE, FALSE, NULL,
+              NULL, (gint64 *) & segment.start);
+          if ((gint64) segment.start < 0)
+            segment.start = 0;
         }
         if (GST_CLOCK_TIME_IS_VALID (segment.stop)) {
           gst_qtdemux_find_sample (demux, segment.stop, FALSE, FALSE, NULL,

@@ -105,15 +105,15 @@ struct _GstQTDemux {
   GstSegment segment;
   GstEvent *pending_newsegment;
   gboolean upstream_newsegment;
+  gint64 seek_offset;
+  gint64 push_seek_start;
+  gint64 push_seek_stop;
 
 #if 0
   /* gst index support */
   GstIndex *element_index;
   gint index_id;
 #endif
-
-  gint64 requested_seek_time;
-  guint64 seek_offset;
 
   gboolean upstream_seekable;
   gint64 upstream_size;
