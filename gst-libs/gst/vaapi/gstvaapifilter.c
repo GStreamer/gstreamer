@@ -628,12 +628,14 @@ error:
     g_ptr_array_unref(default_ops);
     return NULL;
 }
+#endif
 
 /* Determine the set of supported VPP operations by the specific
    filter, or known to this library if filter is NULL */
 static GPtrArray *
 ensure_operations(GstVaapiFilter *filter)
 {
+#if USE_VA_VPP
     GPtrArray *ops;
 
     if (filter && filter->operations)
@@ -643,8 +645,9 @@ ensure_operations(GstVaapiFilter *filter)
     if (!ops)
         return NULL;
     return filter ? get_operations_ordered(filter, ops) : ops;
-}
 #endif
+    return NULL;
+}
 
 /* Find whether the VPP operation is supported or not */
 GstVaapiFilterOpData *
@@ -652,7 +655,7 @@ find_operation(GstVaapiFilter *filter, GstVaapiFilterOp op)
 {
     guint i;
 
-    if (!filter->operations)
+    if (!ensure_operations(filter))
         return NULL;
 
     for (i = 0; i < filter->operations->len; i++) {
