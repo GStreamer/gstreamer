@@ -632,6 +632,7 @@ gst_type_find_element_sink_event (GstPad * pad, GstObject * parent,
            */
           gst_event_unref (event);
           res = TRUE;
+          break;
         }
         case GST_EVENT_EOS:
         {
