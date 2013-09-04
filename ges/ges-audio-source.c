@@ -29,7 +29,7 @@
 #include "ges-audio-source.h"
 #include "ges-layer.h"
 
-G_DEFINE_TYPE (GESAudioSource, ges_audio_source, GES_TYPE_SOURCE);
+G_DEFINE_ABSTRACT_TYPE (GESAudioSource, ges_audio_source, GES_TYPE_SOURCE);
 
 struct _GESAudioSourcePrivate
 {

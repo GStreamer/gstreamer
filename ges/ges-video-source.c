@@ -30,7 +30,7 @@
 #include "ges-layer.h"
 #include "gstframepositionner.h"
 
-G_DEFINE_TYPE (GESVideoSource, ges_video_source, GES_TYPE_SOURCE);
+G_DEFINE_ABSTRACT_TYPE (GESVideoSource, ges_video_source, GES_TYPE_SOURCE);
 
 struct _GESVideoSourcePrivate
 {
