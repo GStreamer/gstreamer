@@ -168,6 +168,11 @@ main (int argc, gchar ** argv)
         err ? err->message : "unknown reason");
     exit (1);
   }
+  if (!GST_IS_PIPELINE (pipeline)) {
+    GstElement *new_pipeline = gst_pipeline_new ("");
+    gst_bin_add (GST_BIN (new_pipeline), pipeline);
+    pipeline = new_pipeline;
+  }
 #ifdef G_OS_UNIX
   signal_watch_id =
       g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
