@@ -418,9 +418,17 @@ op_data_new(GstVaapiFilterOp op, GParamSpec *pspec)
         op_data->va_buffer_size = sizeof(VAProcFilterParameterBuffer);
         break;
     case GST_VAAPI_FILTER_OP_HUE:
+        op_data->va_subtype = VAProcColorBalanceHue;
+        goto op_colorbalance;
     case GST_VAAPI_FILTER_OP_SATURATION:
+        op_data->va_subtype = VAProcColorBalanceSaturation;
+        goto op_colorbalance;
     case GST_VAAPI_FILTER_OP_BRIGHTNESS:
+        op_data->va_subtype = VAProcColorBalanceBrightness;
+        goto op_colorbalance;
     case GST_VAAPI_FILTER_OP_CONTRAST:
+        op_data->va_subtype = VAProcColorBalanceContrast;
+    op_colorbalance:
         op_data->va_type = VAProcFilterColorBalance;
         op_data->va_cap_size = sizeof(VAProcFilterCapColorBalance);
         op_data->va_buffer_size = sizeof(VAProcFilterParameterBufferColorBalance);
