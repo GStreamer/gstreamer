@@ -26,15 +26,13 @@ const OptionEntry[] options = {
   { null }
 };
 
-int
-main(string[] args)
-{
-    
+int main(string[] args)
+{  
   Intl.bindtextdomain (Config.GETTEXT_PACKAGE, Config.LOCALEDIR);
   Intl.bind_textdomain_codeset (Config.GETTEXT_PACKAGE, "UTF-8");
   Intl.textdomain (Config.GETTEXT_PACKAGE);
 
-  OptionContext opt_context = new OptionContext (_("<directory>"));
+  OptionContext opt_context = new OptionContext (_("<directory|uri>"));
   opt_context.set_help_enabled (true);
   opt_context.add_main_entries (options, null);
   opt_context.add_group (Gst.init_get_option_group ());
@@ -52,12 +50,12 @@ main(string[] args)
   }
 
   // take remaining arg and use as default dir
-  string directory = null;  
+  string directory_or_uri = null;
   if (args.length > 1) {
-    directory=args[1];
+    directory_or_uri = args[1];
   }
 
-  App app = new App (directory);
+  App app = new App (directory_or_uri);
   app.show_all ();
 
   Gtk.main ();
