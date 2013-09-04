@@ -395,6 +395,14 @@ gst_egl_adaptation_create_egl_context (GstEglAdaptationContext * ctx)
   return TRUE;
 }
 
+EGLContext
+gst_egl_adaptation_context_get_egl_context (GstEglAdaptationContext * ctx)
+{
+  g_return_val_if_fail (ctx != NULL, EGL_NO_CONTEXT);
+
+  return ctx->eglglesctx->eglcontext;
+}
+
 static void
 gst_egl_gles_image_data_free (GstEGLGLESImageData * data)
 {
@@ -404,8 +412,9 @@ gst_egl_gles_image_data_free (GstEGLGLESImageData * data)
 
 
 GstBuffer *
-gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
-    GstAllocator * allocator, GstVideoFormat format, gint width, gint height)
+gst_egl_image_allocator_alloc_eglimage (GstAllocator * allocator,
+    GstEGLDisplay * display, EGLContext eglcontext, GstVideoFormat format,
+    gint width, gint height)
 {
   GstEGLGLESImageData *data = NULL;
   GstBuffer *buffer;
@@ -434,7 +443,7 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
       EGLImageKHR image;
 
       mem[0] =
-          gst_egl_image_allocator_alloc (allocator, ctx->display,
+          gst_egl_image_allocator_alloc (allocator, display,
           GST_VIDEO_GL_TEXTURE_TYPE_RGB, GST_VIDEO_INFO_WIDTH (&info),
           GST_VIDEO_INFO_HEIGHT (&info), &size);
       if (mem[0]) {
@@ -475,14 +484,14 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
           goto mem_error;
 
         image =
-            eglCreateImageKHR (gst_egl_display_get (ctx->display),
-            ctx->eglglesctx->eglcontext, EGL_GL_TEXTURE_2D_KHR,
+            eglCreateImageKHR (gst_egl_display_get (display),
+            eglcontext, EGL_GL_TEXTURE_2D_KHR,
             (EGLClientBuffer) (guintptr) data->texture, NULL);
         if (got_egl_error ("eglCreateImageKHR"))
           goto mem_error;
 
         mem[0] =
-            gst_egl_image_allocator_wrap (allocator, ctx->display,
+            gst_egl_image_allocator_wrap (allocator, display,
             image, GST_VIDEO_GL_TEXTURE_TYPE_RGB,
             flags, size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
         n_mem = 1;
@@ -494,7 +503,7 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
       gsize size;
 
       mem[0] =
-          gst_egl_image_allocator_alloc (allocator, ctx->display,
+          gst_egl_image_allocator_alloc (allocator, display,
           GST_VIDEO_GL_TEXTURE_TYPE_RGB, GST_VIDEO_INFO_WIDTH (&info),
           GST_VIDEO_INFO_HEIGHT (&info), &size);
       if (mem[0]) {
@@ -536,14 +545,14 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
           goto mem_error;
 
         image =
-            eglCreateImageKHR (gst_egl_display_get (ctx->display),
-            ctx->eglglesctx->eglcontext, EGL_GL_TEXTURE_2D_KHR,
+            eglCreateImageKHR (gst_egl_display_get (display),
+            eglcontext, EGL_GL_TEXTURE_2D_KHR,
             (EGLClientBuffer) (guintptr) data->texture, NULL);
         if (got_egl_error ("eglCreateImageKHR"))
           goto mem_error;
 
         mem[0] =
-            gst_egl_image_allocator_wrap (allocator, ctx->display,
+            gst_egl_image_allocator_wrap (allocator, display,
             image, GST_VIDEO_GL_TEXTURE_TYPE_RGB,
             flags, size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
         n_mem = 1;
@@ -556,11 +565,11 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
       gsize size[2];
 
       mem[0] =
-          gst_egl_image_allocator_alloc (allocator, ctx->display,
+          gst_egl_image_allocator_alloc (allocator, display,
           GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
               0), GST_VIDEO_INFO_COMP_HEIGHT (&info, 0), &size[0]);
       mem[1] =
-          gst_egl_image_allocator_alloc (allocator, ctx->display,
+          gst_egl_image_allocator_alloc (allocator, display,
           GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE_ALPHA,
           GST_VIDEO_INFO_COMP_WIDTH (&info, 1),
           GST_VIDEO_INFO_COMP_HEIGHT (&info, 1), &size[1]);
@@ -624,14 +633,14 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
             goto mem_error;
 
           image =
-              eglCreateImageKHR (gst_egl_display_get (ctx->display),
-              ctx->eglglesctx->eglcontext, EGL_GL_TEXTURE_2D_KHR,
+              eglCreateImageKHR (gst_egl_display_get (display),
+              eglcontext, EGL_GL_TEXTURE_2D_KHR,
               (EGLClientBuffer) (guintptr) data->texture, NULL);
           if (got_egl_error ("eglCreateImageKHR"))
             goto mem_error;
 
           mem[i] =
-              gst_egl_image_allocator_wrap (allocator, ctx->display,
+              gst_egl_image_allocator_wrap (allocator, display,
               image,
               (i ==
                   0 ? GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE :
@@ -653,15 +662,15 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
       gsize size[3];
 
       mem[0] =
-          gst_egl_image_allocator_alloc (allocator, ctx->display,
+          gst_egl_image_allocator_alloc (allocator, display,
           GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
               0), GST_VIDEO_INFO_COMP_HEIGHT (&info, 0), &size[0]);
       mem[1] =
-          gst_egl_image_allocator_alloc (allocator, ctx->display,
+          gst_egl_image_allocator_alloc (allocator, display,
           GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
               1), GST_VIDEO_INFO_COMP_HEIGHT (&info, 1), &size[1]);
       mem[2] =
-          gst_egl_image_allocator_alloc (allocator, ctx->display,
+          gst_egl_image_allocator_alloc (allocator, display,
           GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE, GST_VIDEO_INFO_COMP_WIDTH (&info,
               2), GST_VIDEO_INFO_COMP_HEIGHT (&info, 2), &size[2]);
 
@@ -727,14 +736,14 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
             goto mem_error;
 
           image =
-              eglCreateImageKHR (gst_egl_display_get (ctx->display),
-              ctx->eglglesctx->eglcontext, EGL_GL_TEXTURE_2D_KHR,
+              eglCreateImageKHR (gst_egl_display_get (display),
+              eglcontext, EGL_GL_TEXTURE_2D_KHR,
               (EGLClientBuffer) (guintptr) data->texture, NULL);
           if (got_egl_error ("eglCreateImageKHR"))
             goto mem_error;
 
           mem[i] =
-              gst_egl_image_allocator_wrap (allocator, ctx->display,
+              gst_egl_image_allocator_wrap (allocator, display,
               image, GST_VIDEO_GL_TEXTURE_TYPE_LUMINANCE,
               flags, size[i], data,
               (GDestroyNotify) gst_egl_gles_image_data_free);
@@ -757,7 +766,7 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
       EGLImageKHR image;
 
       mem[0] =
-          gst_egl_image_allocator_alloc (allocator, ctx->display,
+          gst_egl_image_allocator_alloc (allocator, display,
           GST_VIDEO_GL_TEXTURE_TYPE_RGBA, GST_VIDEO_INFO_WIDTH (&info),
           GST_VIDEO_INFO_HEIGHT (&info), &size);
       if (mem[0]) {
@@ -798,14 +807,14 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
           goto mem_error;
 
         image =
-            eglCreateImageKHR (gst_egl_display_get (ctx->display),
-            ctx->eglglesctx->eglcontext, EGL_GL_TEXTURE_2D_KHR,
+            eglCreateImageKHR (gst_egl_display_get (display),
+            eglcontext, EGL_GL_TEXTURE_2D_KHR,
             (EGLClientBuffer) (guintptr) data->texture, NULL);
         if (got_egl_error ("eglCreateImageKHR"))
           goto mem_error;
 
         mem[0] =
-            gst_egl_image_allocator_wrap (allocator, ctx->display,
+            gst_egl_image_allocator_wrap (allocator, display,
             image, GST_VIDEO_GL_TEXTURE_TYPE_RGBA,
             flags, size, data, (GDestroyNotify) gst_egl_gles_image_data_free);
 
@@ -829,7 +838,7 @@ gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx,
 
 mem_error:
   {
-    GST_ERROR_OBJECT (ctx->element, "Failed to create EGLImage");
+    GST_ERROR_OBJECT (GST_CAT_DEFAULT, "Failed to create EGLImage");
 
     if (data)
       gst_egl_gles_image_data_free (data);

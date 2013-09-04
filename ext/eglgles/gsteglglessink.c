@@ -535,9 +535,10 @@ render_thread_func (GstEglGlesSink * eglglessink)
         }
 
         buffer =
-            gst_egl_adaptation_allocate_eglimage (eglglessink->egl_context,
-            GST_EGL_IMAGE_BUFFER_POOL (eglglessink->pool)->allocator, format,
-            width, height);
+            gst_egl_image_allocator_alloc_eglimage (GST_EGL_IMAGE_BUFFER_POOL
+            (eglglessink->pool)->allocator, eglglessink->egl_context->display,
+            gst_egl_adaptation_context_get_egl_context
+            (eglglessink->egl_context), format, width, height);
         g_value_init (&v, G_TYPE_POINTER);
         g_value_set_pointer (&v, buffer);
         gst_structure_set_value (s, "buffer", &v);

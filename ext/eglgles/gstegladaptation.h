@@ -184,6 +184,10 @@ void gst_egl_adaptation_destroy_context (GstEglAdaptationContext * ctx);
 gboolean
 gst_egl_adaptation_create_egl_context (GstEglAdaptationContext * ctx);
 
+#ifndef HAVE_IOS
+EGLContext gst_egl_adaptation_context_get_egl_context (GstEglAdaptationContext * ctx);
+#endif
+
 /* platform window */
 gboolean gst_egl_adaptation_create_native_window (GstEglAdaptationContext
 * ctx, gint width, gint height, gpointer * own_window_data);
@@ -205,11 +209,19 @@ void gst_egl_adaptation_set_window (GstEglAdaptationContext * ctx, guintptr wind
 gboolean gst_egl_adaptation_context_make_current (GstEglAdaptationContext * ctx, gboolean bind);
 void gst_egl_adaptation_cleanup (GstEglAdaptationContext * ctx);
 
-GstBuffer *
-gst_egl_adaptation_allocate_eglimage (GstEglAdaptationContext * ctx, GstAllocator * allocator,
-    GstVideoFormat format, gint width, gint height);
 gboolean
 gst_egl_adaptation_context_swap_buffers (GstEglAdaptationContext * ctx);
+
+#ifndef HAVE_IOS
+/* TODO: The goal is to move this function to gstegl lib (or
+ * splitted between gstegl lib and gstgl lib) in order to be used in
+ * webkitVideoSink
+ * So it has to be independent of GstEglAdaptationContext */
+GstBuffer *
+gst_egl_image_allocator_alloc_eglimage (GstAllocator * allocator,
+    GstEGLDisplay * display, EGLContext eglcontext, GstVideoFormat format,
+    gint width, gint height);
+#endif
 
 G_END_DECLS
 
