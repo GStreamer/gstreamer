@@ -48,7 +48,6 @@ http://www.headbands.com/gspot/v26x/index.htm
 - show a seek bar under the drawable / or seek by scrubbing on the drawable
 
 = unsorted =
-- handle subtitles
 - show named audio channel configurations instead only numbers
   e.g. "mono", "stereo", "5.1"
 - handle chapters (toc)
@@ -57,7 +56,7 @@ http://www.headbands.com/gspot/v26x/index.htm
   - if there is a "language-code" in the tags (or subtitles?) use flag icons
     - deluge installs some under: /usr/share/pyshared/deluge/data/mediainfo/pixmaps/flags/
     - famfamfam-flag-png: locale/usr/share/flags/countries/
-  - geo-tags: map-widget?, link to google-maps?
+  - geo-tags: map-widget?, link to google-maps?, rev-geocoding
   - artist: links to {last.fm,wikipedia}
   - format dates nicely
 
