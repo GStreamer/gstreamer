@@ -163,7 +163,11 @@ main (int argc, gchar ** argv)
   memcpy (argvn, argv + 1, sizeof (char *) * (argc - 1));
   pipeline = (GstElement *) gst_parse_launchv ((const gchar **) argvn, &err);
   g_free (argvn);
-
+  if (!pipeline) {
+    g_print ("Failed to create pipeline: %s\n",
+        err ? err->message : "unknown reason");
+    exit (1);
+  }
 #ifdef G_OS_UNIX
   signal_watch_id =
       g_unix_signal_add (SIGINT, (GSourceFunc) intr_handler, pipeline);
