@@ -67,7 +67,8 @@ public class MediaInfo.Preview : DrawingArea {
   
   public override void get_preferred_width (out int minimal_width, out int natural_width) {
     if (ratio != 0.0) {
-      minimal_width = natural_width = (int)(alloc_height * ratio);
+      minimal_width = 16;
+      natural_width = (int)(alloc_height * ratio);
     } else {
       minimal_width = natural_width = 0;
     }
@@ -76,7 +77,8 @@ public class MediaInfo.Preview : DrawingArea {
   
   public override void get_preferred_height (out int minimal_height, out int natural_height) {
     if (ratio != 0.0) {
-      minimal_height = natural_height = (int)(alloc_width / ratio);
+      minimal_height = 12;
+      natural_height = (int)(alloc_width / ratio);
     } else {
       minimal_height = natural_height = 0;
     }
@@ -85,7 +87,8 @@ public class MediaInfo.Preview : DrawingArea {
   
   public override void get_preferred_width_for_height (int height, out int minimal_width, out int natural_width) {
     if (ratio != 0.0) {
-      minimal_width = natural_width = (int)(height * ratio);
+      minimal_width = 16;
+      natural_width = (int)(height * ratio);
     } else {
       minimal_width = natural_width = 0;
     }
@@ -94,7 +97,8 @@ public class MediaInfo.Preview : DrawingArea {
 
   public override void get_preferred_height_for_width (int width, out int minimal_height, out int natural_height) {
     if (ratio != 0.0) {
-      minimal_height = natural_height = (int)(width / ratio);
+      minimal_height = 12;
+      natural_height = (int)(width / ratio);
     } else {
       minimal_height = natural_height = 0;
     }
@@ -106,7 +110,7 @@ public class MediaInfo.Preview : DrawingArea {
 
     alloc_width = alloc.width;
     alloc_height = alloc.height;
-    debug ("alloc w,h: %d,%d", alloc_width, alloc_height);    
+    debug ("alloc w,h: %d,%d", alloc_width, alloc_height);
   }
   
   public override bool draw (Cairo.Context cr) {

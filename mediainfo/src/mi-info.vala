@@ -147,6 +147,7 @@ public class MediaInfo.Info : Box
     // add widgets
     preview = new Preview ();
     preview.draw.connect (on_preview_draw);
+    preview.size_allocate.connect (on_preview_size_allocate);
     pack_start (preview, false, false, 0);
 
     info_area = new ScrolledWindow (null, null);
@@ -718,9 +719,9 @@ public class MediaInfo.Info : Box
 
   // signal handlers
   
-  /*
-  private void on_size_allocate (Widget widget, Gtk.Allocation box)
+  private void on_preview_size_allocate (Widget widget, Gtk.Allocation box)
   {
+    /*
     Gtk.Allocation alloc;
     get_allocation (out alloc);
     debug ("size_allocate: %d x %d", alloc.width, alloc.height);
@@ -728,13 +729,12 @@ public class MediaInfo.Info : Box
     Gtk.Requisition requisition;
     info_area.get_child ().get_preferred_size (null, out requisition);
     debug ("info_area: %d x %d", requisition.width, requisition.height);
-    int frame_height = (int)(box.width / video_ratio);
-    debug ("video_area: %d x %d", box.width, frame_height);
+    debug ("video_area: %d x %d", box.width, box.height);
     
-    int max_h = alloc.height - frame_height;
+    int max_h = alloc.height - box.height;
     info_area.set_min_content_height (int.min (requisition.height, max_h));
+    */
   }
-  */
 
   private bool on_preview_draw (Widget widget, Cairo.Context cr)
   {
