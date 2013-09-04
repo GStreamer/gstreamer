@@ -228,7 +228,6 @@ typedef struct
   GstVideoInfo info;
   gboolean add_metavideo;
   gboolean want_eglimage;
-  GstEGLDisplay *display;
 
   GstEGLImageBufferPoolSendBlockingAllocate send_blocking_allocate_func;
   gpointer send_blocking_allocate_data;
@@ -245,7 +244,7 @@ G_DEFINE_TYPE (GstEGLImageBufferPool, gst_egl_image_buffer_pool,
     GST_TYPE_VIDEO_BUFFER_POOL);
 
 static GstBufferPool *gst_egl_image_buffer_pool_new (GstEglGlesSink *
-    eglglessink, GstEGLDisplay * display,
+    eglglessink,
     GstEGLImageBufferPoolSendBlockingAllocate blocking_allocate_func,
     gpointer blocking_allocate_data, GDestroyNotify destroy_func);
 
@@ -467,10 +466,6 @@ gst_egl_image_buffer_pool_finalize (GObject * object)
   if (pool->sink)
     gst_object_unref (pool->sink);
   pool->sink = NULL;
-
-  if (pool->display)
-    gst_egl_display_unref (pool->display);
-  pool->display = NULL;
 
   if (pool->send_blocking_allocate_destroy)
     pool->send_blocking_allocate_destroy (pool->send_blocking_allocate_data);
@@ -2047,7 +2042,6 @@ gst_eglglessink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     GST_DEBUG_OBJECT (eglglessink, "create new pool");
     pool =
         gst_egl_image_buffer_pool_new (eglglessink,
-        eglglessink->egl_context->display,
         gst_eglglessink_egl_image_buffer_pool_send_blocking,
         gst_object_ref (eglglessink),
         gst_eglglessink_egl_image_buffer_pool_on_destroy);
@@ -2202,7 +2196,6 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   newpool =
       gst_egl_image_buffer_pool_new (eglglessink,
-      eglglessink->egl_context->display,
       gst_eglglessink_egl_image_buffer_pool_send_blocking,
       gst_object_ref (eglglessink),
       gst_eglglessink_egl_image_buffer_pool_on_destroy);
@@ -2476,15 +2469,13 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink)
 }
 
 static GstBufferPool *
-gst_egl_image_buffer_pool_new (GstEglGlesSink *
-    eglglessink, GstEGLDisplay * display,
+gst_egl_image_buffer_pool_new (GstEglGlesSink * eglglessink,
     GstEGLImageBufferPoolSendBlockingAllocate blocking_allocate_func,
     gpointer blocking_allocate_data, GDestroyNotify destroy_func)
 {
   GstEGLImageBufferPool *pool;
 
   pool = g_object_new (gst_egl_image_buffer_pool_get_type (), NULL);
-  pool->display = gst_egl_display_ref (display);
   pool->sink = gst_object_ref (eglglessink);
   pool->send_blocking_allocate_func = blocking_allocate_func;
   pool->send_blocking_allocate_data = blocking_allocate_data;
