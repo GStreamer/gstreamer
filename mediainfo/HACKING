@@ -28,6 +28,33 @@
 
 - update web-page
 
+= Building =
+
+in the case we need to update the vapi for yet unreleased gstreamer api, these
+are the steps. Right now its enough to install the vapi file from git
+
+== update system vapi ==
+1) checkout vala from gnome git
+cd vala/mediainfo/vapi
+vala-gen-introspect gstreamer-pbutils-0.10 packages/gstreamer-pbutils-0.10
+vapigen --vapidir . --library gstreamer-pbutils-0.10 packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.gi
+git diff packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.metadata >vapi.gstreamer-pbutils-0.10.patch
+
+2) install
+# suse, meego
+sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala/mediainfo/vapi/
+# ubuntu
+sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala-0.xxx/vapi/
+
+== use jhbuild ==
+jhbuild build vala
+jhbuild shell
+
+You might want to build these at least once:
+jhbuild build gnome-themes-standard gnome-icon-theme
+
+${jhbuild_prefix}/share/vala-0.22/vapi/
+
 = Hacking =
 
 use G_MESSAGES_DEBUG="gst-mi" to see the logging

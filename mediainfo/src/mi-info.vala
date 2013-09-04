@@ -22,27 +22,6 @@ using Gst;
 using Gst.PbUtils;
 using Gee;
 
-/*
-in the case we need to update the vapi for yet unreleased gstreamer api, these
-are the steps. Right now its enough to install the vapi file from git
-
-# checkout vala from gnome git
-cd vala/mediainfo/vapi
-vala-gen-introspect gstreamer-pbutils-0.10 packages/gstreamer-pbutils-0.10
-vapigen --vapidir . --library gstreamer-pbutils-0.10 packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.gi
-git diff packages/gstreamer-pbutils-0.10/gstreamer-pbutils-0.10.metadata >vapi.gstreamer-pbutils-0.10.patch
-
-# suse, meego
-sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala/mediainfo/vapi/
-# ubuntu
-sudo cp gstreamer-pbutils-0.10.vapi /usr/share/vala-0.10/vapi/
-
-# jhbuild
-jhbuild build vala
-jhbuild shell
-
-*/
-
 public class MediaInfo.Info : Box
 {
   // layout
