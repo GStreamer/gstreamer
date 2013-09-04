@@ -80,7 +80,9 @@ rm -rf $RPM_BUILD_ROOT
 
 # helper programs
 %{_bindir}/gst-discoverer-%{majorminor}
+%{_bindir}/gst-play-%{majorminor}
 %{_mandir}/man1/gst-discoverer-%{majorminor}*
+%{_mandir}/man1/gst-play-%{majorminor}*
 
 # libraries
 %{_libdir}/libgstaudio-%{majorminor}.so.*
@@ -230,6 +232,7 @@ GStreamer Plugins Base library development and header files.
 %{_includedir}/gstreamer-%{majorminor}/gst/sdp/sdp.h
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/allocators.h
 %{_includedir}/gstreamer-%{majorminor}/gst/allocators/gstdmabuf.h
+%{_includedir}/gstreamer-%{majorminor}/gst/video/video-chroma.h
 %{_libdir}/girepository-1.0/GstAllocators-1.0.typelib
 %{_libdir}/libgstallocators-1.0.so
 %{_libdir}/pkgconfig/gstreamer-allocators-1.0.pc
