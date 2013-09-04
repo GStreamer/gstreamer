@@ -222,13 +222,12 @@ typedef struct
 {
   GstVideoBufferPool parent;
 
-  GstEglGlesSink *sink;
   GstAllocator *allocator;
   GstAllocationParams params;
   GstVideoInfo info;
   gboolean add_metavideo;
   gboolean want_eglimage;
-
+  GstBuffer *last_buffer;
   GstEGLImageBufferPoolSendBlockingAllocate send_blocking_allocate_func;
   gpointer send_blocking_allocate_data;
   GDestroyNotify send_blocking_allocate_destroy;
@@ -243,10 +242,10 @@ GType gst_egl_image_buffer_pool_get_type (void);
 G_DEFINE_TYPE (GstEGLImageBufferPool, gst_egl_image_buffer_pool,
     GST_TYPE_VIDEO_BUFFER_POOL);
 
-static GstBufferPool *gst_egl_image_buffer_pool_new (GstEglGlesSink *
-    eglglessink,
-    GstEGLImageBufferPoolSendBlockingAllocate blocking_allocate_func,
-    gpointer blocking_allocate_data, GDestroyNotify destroy_func);
+static GstBufferPool
+    * gst_egl_image_buffer_pool_new (GstEGLImageBufferPoolSendBlockingAllocate
+    blocking_allocate_func, gpointer blocking_allocate_data,
+    GDestroyNotify destroy_func);
 
 static void
 gst_egl_image_buffer_pool_get_video_infos (GstEGLImageBufferPool * pool,
@@ -262,6 +261,15 @@ gst_egl_image_buffer_pool_get_video_infos (GstEGLImageBufferPool * pool,
 
   if (height)
     *height = pool->info.height;
+}
+
+static void
+gst_egl_image_buffer_pool_replace_last_buffer (GstEGLImageBufferPool * pool,
+    GstBuffer * buffer)
+{
+  g_return_if_fail (pool != NULL);
+
+  gst_buffer_replace (&pool->last_buffer, buffer);
 }
 
 static GstBuffer *
@@ -440,7 +448,7 @@ gst_egl_image_buffer_pool_acquire_buffer (GstBufferPool * bpool,
   /* XXX: Don't return the memory we just rendered, glEGLImageTargetTexture2DOES()
    * keeps the EGLImage unmappable until the next one is uploaded
    */
-  if (*buffer && *buffer == pool->sink->last_buffer) {
+  if (*buffer && *buffer == pool->last_buffer) {
     GstBuffer *oldbuf = *buffer;
 
     ret =
@@ -463,9 +471,7 @@ gst_egl_image_buffer_pool_finalize (GObject * object)
     gst_object_unref (pool->allocator);
   pool->allocator = NULL;
 
-  if (pool->sink)
-    gst_object_unref (pool->sink);
-  pool->sink = NULL;
+  gst_egl_image_buffer_pool_replace_last_buffer (pool, NULL);
 
   if (pool->send_blocking_allocate_destroy)
     pool->send_blocking_allocate_destroy (pool->send_blocking_allocate_data);
@@ -723,7 +729,9 @@ gst_eglglessink_stop (GstEglGlesSink * eglglessink)
   }
   eglglessink->last_flow = GST_FLOW_FLUSHING;
 
-  gst_buffer_replace (&eglglessink->last_buffer, NULL);
+  if (eglglessink->pool)
+    gst_egl_image_buffer_pool_replace_last_buffer (GST_EGL_IMAGE_BUFFER_POOL
+        (eglglessink->pool), NULL);
 
   if (eglglessink->using_own_window) {
     gst_egl_adaptation_destroy_native_window (eglglessink->egl_context,
@@ -1615,7 +1623,9 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
           return GST_FLOW_ERROR;
         }
       }
-      gst_buffer_replace (&eglglessink->last_buffer, buf);
+      if (eglglessink->pool)
+        gst_egl_image_buffer_pool_replace_last_buffer (GST_EGL_IMAGE_BUFFER_POOL
+            (eglglessink->pool), buf);
       eglglessink->stride[0] = 1;
       eglglessink->stride[1] = 1;
       eglglessink->stride[2] = 1;
@@ -2041,8 +2051,8 @@ gst_eglglessink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
     GST_DEBUG_OBJECT (eglglessink, "create new pool");
     pool =
-        gst_egl_image_buffer_pool_new (eglglessink,
-        gst_eglglessink_egl_image_buffer_pool_send_blocking,
+        gst_egl_image_buffer_pool_new
+        (gst_eglglessink_egl_image_buffer_pool_send_blocking,
         gst_object_ref (eglglessink),
         gst_eglglessink_egl_image_buffer_pool_on_destroy);
 
@@ -2195,8 +2205,8 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
   }
 
   newpool =
-      gst_egl_image_buffer_pool_new (eglglessink,
-      gst_eglglessink_egl_image_buffer_pool_send_blocking,
+      gst_egl_image_buffer_pool_new
+      (gst_eglglessink_egl_image_buffer_pool_send_blocking,
       gst_object_ref (eglglessink),
       gst_eglglessink_egl_image_buffer_pool_on_destroy);
   config = gst_buffer_pool_get_config (newpool);
@@ -2469,14 +2479,14 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink)
 }
 
 static GstBufferPool *
-gst_egl_image_buffer_pool_new (GstEglGlesSink * eglglessink,
-    GstEGLImageBufferPoolSendBlockingAllocate blocking_allocate_func,
-    gpointer blocking_allocate_data, GDestroyNotify destroy_func)
+gst_egl_image_buffer_pool_new (GstEGLImageBufferPoolSendBlockingAllocate
+    blocking_allocate_func, gpointer blocking_allocate_data,
+    GDestroyNotify destroy_func)
 {
   GstEGLImageBufferPool *pool;
 
   pool = g_object_new (gst_egl_image_buffer_pool_get_type (), NULL);
-  pool->sink = gst_object_ref (eglglessink);
+  pool->last_buffer = NULL;
   pool->send_blocking_allocate_func = blocking_allocate_func;
   pool->send_blocking_allocate_data = blocking_allocate_data;
   pool->send_blocking_allocate_destroy = destroy_func;
