@@ -709,12 +709,6 @@ gst_decklink_src_send_initial_events (GstDecklinkSrc * src)
   gst_event_set_group_id (event, group_id);
   gst_pad_push_event (src->videosrcpad, event);
 
-  /* segment */
-  gst_segment_init (&segment, GST_FORMAT_TIME);
-  event = gst_event_new_segment (&segment);
-  gst_pad_push_event (src->videosrcpad, gst_event_ref (event));
-  gst_pad_push_event (src->audiosrcpad, event);
-
   /* caps */
   gst_pad_push_event (src->audiosrcpad,
       gst_event_new_caps (gst_caps_new_simple ("audio/x-raw",
@@ -724,6 +718,12 @@ gst_decklink_src_send_initial_events (GstDecklinkSrc * src)
 
   gst_pad_push_event (src->videosrcpad,
       gst_event_new_caps (gst_decklink_mode_get_caps (src->mode)));
+
+  /* segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  event = gst_event_new_segment (&segment);
+  gst_pad_push_event (src->videosrcpad, gst_event_ref (event));
+  gst_pad_push_event (src->audiosrcpad, event);
 }
 
 static void
