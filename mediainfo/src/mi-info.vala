@@ -360,6 +360,9 @@ public class MediaInfo.Info : Box
     Caps caps;
     unowned Structure s;
     unowned TagList t;
+    // sort streams
+    ArrayList<string> sids = new ArrayList<string> ();
+    int six;
 
     if (info == null) {
       container_caps.set_text ("");
@@ -414,13 +417,14 @@ public class MediaInfo.Info : Box
         audio_streams.remove_page (-1);
       }
     }
-
+    
     // get stream info
     nb = compact_mode ? all_streams : video_streams;
     l = info.get_video_streams ();
     num_video_streams = l.length ();
     have_video = (num_video_streams > 0);
     video_resolutions.clear();
+    sids.clear();
     for (int i = 0; i < num_video_streams; i++) {
       sinfo = l.nth_data (i);
       caps = sinfo.get_caps ();
@@ -537,14 +541,18 @@ public class MediaInfo.Info : Box
         table.attach (label, 1, 2, row, row+1, fill_exp, 0, 0, 1);
         row++;
       }
+      
+      // sinfo.get_toc()
 
-      nb.append_page (table, new Label (@"video $i"));
+      six = get_stream_index (sinfo, sids);
+      nb.insert_page (table, new Label (@"video $i"), six);
     }
     nb.show_all();
 
     nb = compact_mode ? all_streams : audio_streams;
     l = info.get_audio_streams ();
     num_audio_streams = l.length ();
+    sids.clear();
     for (int i = 0; i < num_audio_streams; i++) {
       sinfo = l.nth_data (i);
       caps = sinfo.get_caps ();
@@ -638,13 +646,15 @@ public class MediaInfo.Info : Box
         row++;
       }
 
-      nb.append_page (table, new Label (@"audio $i"));
+      six = get_stream_index (sinfo, sids);
+      nb.insert_page (table, new Label (@"audio $i"), six);
     }
     nb.show_all();
     
     nb = compact_mode ? all_streams : subtitle_streams;
     l = info.get_subtitle_streams ();
     num_subtitle_streams = l.length ();
+    sids.clear();
     for (int i = 0; i < num_subtitle_streams; i++) {
       sinfo = l.nth_data (i);
       caps = sinfo.get_caps ();
@@ -697,7 +707,8 @@ public class MediaInfo.Info : Box
         row++;
       }
 
-      nb.append_page (table, new Label (@"subtitle $i"));
+      six = get_stream_index (sinfo, sids);
+      nb.insert_page (table, new Label (@"subtitle $i"), six);
     }
     nb.show_all();
     
@@ -751,27 +762,9 @@ public class MediaInfo.Info : Box
     if (Gst.Video.is_video_overlay_prepare_window_handle_message (message)) {
       Gst.Video.Overlay overlay = message.src as Gst.Video.Overlay;
       overlay.set_window_handle ((uint *)Gdk.X11Window.get_xid (preview.get_window ()));
-
-      /* playbin does this in 1.0
-      if (message.src.get_class ().find_property ("force-aspect-ratio") != null) {
-        ((GLib.Object)message.src).set_property ("force-aspect-ratio", true);
-      }
-      */
     }
   }
 
-  /* FIXME: discoverer not neccesarily return the stream in the same order as
-   * playbin2 sees them: https://bugzilla.gnome.org/show_bug.cgi?id=634407
-   * - we can use:
-   *   - pad.get_stream_id() on playbin
-   *   - sinfo.get_stream_id() on discoverer
-   *   - gather all stream-ids and build {audio,video,subtitle}_stream_map with
-   *     stream-id as a key and value initially set to -1
-   *   - have cur_{audio,video,subtile} = 0
-   *   - listen for playbin.pad_added and set the stream_id to cur_*
-   *   - ideally playbin will have api to switch to a stream-by-id
-   * - or we sort the discoverer streams by stream-info too
-   */
   private void on_video_stream_switched (Notebook nb, Widget page, uint page_num)
   {
     if (pb.current_state > State.PAUSED) {
@@ -819,6 +812,23 @@ public class MediaInfo.Info : Box
         return;
       }
     }
+  }
+  
+  // helpers
+  
+  // get stream index where streams are orderd by stream_id
+  private int get_stream_index (DiscovererStreamInfo sinfo, ArrayList<string> sids)
+  {
+    string sid = sinfo.get_stream_id ();
+    int six = 0;
+    
+    for (six = 0; six <  sids.size; six++) {
+      if (strcmp (sid, sids[six]) <= 0)
+        break;
+    }
+    sids.insert (six, sid);
+
+    return six;
   }
 
   private string build_taglist_info (TagList t)
