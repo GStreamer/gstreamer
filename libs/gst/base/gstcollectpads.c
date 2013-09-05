@@ -2068,7 +2068,9 @@ gst_collect_pads_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
 unlock_done:
   GST_COLLECT_PADS_STREAM_UNLOCK (pads);
-  unref_data (data);
+  /* data is definitely NULL if pad_removed goto was run. */
+  if (data)
+    unref_data (data);
   if (buffer)
     gst_buffer_unref (buffer);
   return ret;
