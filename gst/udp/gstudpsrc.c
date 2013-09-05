@@ -852,7 +852,7 @@ gst_udpsrc_start (GstBaseSrc * bsrc)
      * on the same port but for different addresses than the multicast
      * address
      */
-#if G_OS_WIN32
+#ifdef G_OS_WIN32
     if (g_inet_address_get_is_multicast (addr))
       bind_addr = g_inet_address_new_any (g_inet_address_get_family (addr));
     else
