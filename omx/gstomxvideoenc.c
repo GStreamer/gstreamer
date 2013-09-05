@@ -55,18 +55,6 @@ gst_omx_video_enc_control_rate_get_type (void)
   return qtype;
 }
 
-typedef struct _BufferIdentification BufferIdentification;
-struct _BufferIdentification
-{
-  guint64 timestamp;
-};
-
-static void
-buffer_identification_free (BufferIdentification * id)
-{
-  g_slice_free (BufferIdentification, id);
-}
-
 /* prototypes */
 static void gst_omx_video_enc_finalize (GObject * object);
 static void gst_omx_video_enc_set_property (GObject * object, guint prop_id,
@@ -551,88 +539,31 @@ gst_omx_video_enc_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-#define MAX_FRAME_DIST_TICKS  (5 * OMX_TICKS_PER_SECOND)
-#define MAX_FRAME_DIST_FRAMES (100)
-
 static GstVideoCodecFrame *
-_find_nearest_frame (GstOMXVideoEnc * self, GstOMXBuffer * buf)
+gst_omx_video_enc_find_nearest_frame (GstOMXVideoEnc * self, GstOMXBuffer * buf)
 {
-  GList *l, *best_l = NULL;
-  GList *finish_frames = NULL;
   GstVideoCodecFrame *best = NULL;
-  guint64 best_timestamp = 0;
-  guint64 best_diff = G_MAXUINT64;
-  BufferIdentification *best_id = NULL;
+  GstClockTimeDiff best_diff = G_MAXINT64;
+  GstClockTime timestamp;
   GList *frames;
+  GList *l;
+
+  timestamp =
+      gst_util_uint64_scale (buf->omx_buf->nTimeStamp, GST_SECOND,
+      OMX_TICKS_PER_SECOND);
 
   frames = gst_video_encoder_get_frames (GST_VIDEO_ENCODER (self));
 
   for (l = frames; l; l = l->next) {
     GstVideoCodecFrame *tmp = l->data;
-    BufferIdentification *id = gst_video_codec_frame_get_user_data (tmp);
-    guint64 timestamp, diff;
+    GstClockTimeDiff diff = ABS (GST_CLOCK_DIFF (timestamp, tmp->pts));
 
-    /* This happens for frames that were just added but
-     * which were not passed to the component yet. Ignore
-     * them here!
-     */
-    if (!id)
-      continue;
-
-    timestamp = id->timestamp;
-
-    if (timestamp > buf->omx_buf->nTimeStamp)
-      diff = timestamp - buf->omx_buf->nTimeStamp;
-    else
-      diff = buf->omx_buf->nTimeStamp - timestamp;
-
-    if (best == NULL || diff < best_diff) {
+    if (diff < best_diff) {
       best = tmp;
-      best_timestamp = timestamp;
       best_diff = diff;
-      best_l = l;
-      best_id = id;
 
-      /* For frames without timestamp we simply take the first frame */
-      if ((buf->omx_buf->nTimeStamp == 0 && timestamp == 0) || diff == 0)
+      if (diff == 0)
         break;
-    }
-  }
-
-  if (best_id) {
-    for (l = frames; l && l != best_l; l = l->next) {
-      GstVideoCodecFrame *tmp = l->data;
-      BufferIdentification *id = gst_video_codec_frame_get_user_data (tmp);
-      guint64 diff_ticks, diff_frames;
-
-      /* This happens for frames that were just added but
-       * which were not passed to the component yet. Ignore
-       * them here!
-       */
-      if (!id)
-        continue;
-
-      if (id->timestamp > best_timestamp)
-        break;
-
-      if (id->timestamp == 0 || best_timestamp == 0)
-        diff_ticks = 0;
-      else
-        diff_ticks = best_timestamp - id->timestamp;
-      diff_frames = best->system_frame_number - tmp->system_frame_number;
-
-      if (diff_ticks > MAX_FRAME_DIST_TICKS
-          || diff_frames > MAX_FRAME_DIST_FRAMES) {
-        finish_frames =
-            g_list_prepend (finish_frames, gst_video_codec_frame_ref (tmp));
-      }
-    }
-  }
-
-  if (finish_frames) {
-    g_warning ("Too old frames, bug in encoder -- please file a bug");
-    for (l = finish_frames; l; l = l->next) {
-      gst_video_encoder_finish_frame (GST_VIDEO_ENCODER (self), l->data);
     }
   }
 
@@ -851,7 +782,7 @@ gst_omx_video_enc_loop (GstOMXVideoEnc * self)
       (guint) buf->omx_buf->nFlags, (guint64) buf->omx_buf->nTimeStamp);
 
   GST_VIDEO_ENCODER_STREAM_LOCK (self);
-  frame = _find_nearest_frame (self, buf);
+  frame = gst_omx_video_enc_find_nearest_frame (self, buf);
 
   g_assert (klass->handle_output_frame);
   flow_ret = klass->handle_output_frame (self, self->enc_out_port, buf, frame);
@@ -1562,7 +1493,6 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
   port = self->enc_in_port;
 
   while (acq_ret != GST_OMX_ACQUIRE_BUFFER_OK) {
-    BufferIdentification *id;
     GstClockTime timestamp, duration;
 
     /* Make sure to release the base class stream lock, otherwise
@@ -1685,11 +1615,6 @@ gst_omx_video_enc_handle_frame (GstVideoEncoder * encoder,
           gst_buffer_get_size (frame->input_buffer));
       self->last_upstream_ts += duration;
     }
-
-    id = g_slice_new0 (BufferIdentification);
-    id->timestamp = buf->omx_buf->nTimeStamp;
-    gst_video_codec_frame_set_user_data (frame, id,
-        (GDestroyNotify) buffer_identification_free);
 
     self->started = TRUE;
     err = gst_omx_port_release_buffer (port, buf);
