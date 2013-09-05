@@ -89,6 +89,8 @@
 #define QTDEMUX_SECONDS_FROM_1904_TO_1970 (((1970 - 1904) * (guint64) 365 + \
     QTDEMUX_LEAP_YEARS_FROM_1904_TO_1970) * QTDEMUX_SECONDS_PER_DAY)
 
+#define STREAM_IS_EOS(s) (s->time_position == -1)
+
 GST_DEBUG_CATEGORY (qtdemux_debug);
 
 /*typedef struct _QtNode QtNode; */
@@ -1858,6 +1860,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
       qtdemux->streams[n]->last_ret = GST_FLOW_OK;
       qtdemux->streams[n]->sent_eos = FALSE;
       qtdemux->streams[n]->segment_seqnum = 0;
+      qtdemux->streams[n]->time_position = 0;
     }
   }
 }
@@ -3720,7 +3723,7 @@ gst_qtdemux_sync_streams (GstQTDemux * demux)
 
     if (demux->pullbased) {
       /* loop mode is sample time based */
-      if (stream->time_position != -1)
+      if (!STREAM_IS_EOS (stream))
         continue;
     } else {
       /* push mode is byte position based */
@@ -4155,7 +4158,8 @@ gst_qtdemux_loop_state_movie (GstQTDemux * qtdemux)
           && qtdemux->segment.stop <= min_time
           && qtdemux->streams[index]->on_keyframe)) {
     GST_DEBUG_OBJECT (qtdemux, "we reached the end of our segment.");
-    goto eos;
+    qtdemux->streams[index]->time_position = -1;
+    goto eos_stream;
   }
 
   /* gap events for subtitle streams */
@@ -4879,7 +4883,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
           }
         }
 
-        /* Figure out which stream this is packet belongs to */
+        /* Figure out which stream this packet belongs to */
         for (i = 0; i < demux->n_streams; i++) {
           stream = demux->streams[i];
           if (stream->sample_index >= stream->n_samples)
@@ -4902,24 +4906,50 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
         }
 
         /* Put data in a buffer, set timestamps, caps, ... */
-        outbuf = gst_adapter_take_buffer (demux->adapter, demux->neededbytes);
-        GST_DEBUG_OBJECT (demux, "stream : %" GST_FOURCC_FORMAT,
-            GST_FOURCC_ARGS (stream->fourcc));
-
-        g_return_val_if_fail (outbuf != NULL, GST_FLOW_ERROR);
-
         sample = &stream->samples[stream->sample_index];
 
-        dts = QTSAMPLE_DTS (stream, sample);
-        pts = QTSAMPLE_PTS (stream, sample);
-        duration = QTSAMPLE_DUR_DTS (stream, sample, dts);
-        keyframe = QTSAMPLE_KEYFRAME (stream, sample);
+        if (G_LIKELY (!(STREAM_IS_EOS (stream)))) {
+          outbuf = gst_adapter_take_buffer (demux->adapter, demux->neededbytes);
+          GST_DEBUG_OBJECT (demux, "stream : %" GST_FOURCC_FORMAT,
+              GST_FOURCC_ARGS (stream->fourcc));
 
-        ret = gst_qtdemux_decorate_and_push_buffer (demux, stream, outbuf,
-            dts, pts, duration, keyframe, dts, demux->offset);
+          g_return_val_if_fail (outbuf != NULL, GST_FLOW_ERROR);
 
-        /* combine flows */
-        ret = gst_qtdemux_combine_flows (demux, stream, ret);
+          dts = QTSAMPLE_DTS (stream, sample);
+          pts = QTSAMPLE_PTS (stream, sample);
+          duration = QTSAMPLE_DUR_DTS (stream, sample, dts);
+          keyframe = QTSAMPLE_KEYFRAME (stream, sample);
+
+          /* check for segment end */
+          if (G_UNLIKELY (demux->segment.stop != -1
+                  && demux->segment.stop <= pts && stream->on_keyframe)) {
+            GST_DEBUG_OBJECT (demux, "we reached the end of our segment.");
+            stream->time_position = -1; /* this means EOS */
+
+            /* check if all streams are eos */
+            ret = GST_FLOW_EOS;
+            for (i = 0; i < demux->n_streams; i++) {
+              if (!STREAM_IS_EOS (demux->streams[i])) {
+                ret = GST_FLOW_OK;
+                break;
+              }
+            }
+
+            if (ret == GST_FLOW_EOS) {
+              GST_DEBUG_OBJECT (demux, "All streams are EOS, signal upstream");
+              goto eos;
+            }
+          } else {
+            ret = gst_qtdemux_decorate_and_push_buffer (demux, stream, outbuf,
+                dts, pts, duration, keyframe, dts, demux->offset);
+          }
+
+          /* combine flows */
+          ret = gst_qtdemux_combine_flows (demux, stream, ret);
+        } else {
+          /* skip this data, stream is EOS */
+          gst_adapter_flush (demux->adapter, demux->neededbytes);
+        }
 
         stream->sample_index++;
         stream->offset_in_sample = 0;
