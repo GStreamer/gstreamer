@@ -95,8 +95,8 @@ unpack_planar_420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   if (width & 1) {
     gint i = width - 1;
 
-    ayuv[i * 4 + 2] = u_line[i / 2 + 1];
-    ayuv[i * 4 + 3] = v_line[i / 2 + 1];
+    ayuv[i * 4 + 2] = u_line[i >> 1];
+    ayuv[i * 4 + 3] = v_line[i >> 1];
   }
 }
 
@@ -118,8 +118,8 @@ pack_planar_420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint i = width - 1;
 
     y_line[i] = ayuv[i * 4 + 1];
-    u_line[i / 2 + 1] = ayuv[i * 4 + 2];
-    v_line[i / 2 + 1] = ayuv[i * 4 + 3];
+    u_line[i >> 1] = ayuv[i * 4 + 2];
+    v_line[i >> 1] = ayuv[i * 4 + 3];
   }
 }
 
@@ -543,8 +543,8 @@ unpack_Y42B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 
     d[i * 4 + 0] = 0xff;
     d[i * 4 + 1] = y_line[i];
-    d[i * 4 + 2] = u_line[i / 2 + 1];
-    d[i * 4 + 3] = v_line[i / 2 + 1];
+    d[i * 4 + 2] = u_line[i >> 1];
+    d[i * 4 + 3] = v_line[i >> 1];
   }
 }
 
@@ -565,8 +565,8 @@ pack_Y42B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint i = width - 1;
 
     y_line[i] = ayuv[i * 4 + 1];
-    u_line[i / 2 + 1] = ayuv[i * 4 + 2];
-    v_line[i / 2 + 1] = ayuv[i * 4 + 3];
+    u_line[i >> 1] = ayuv[i * 4 + 2];
+    v_line[i >> 1] = ayuv[i * 4 + 3];
   }
 }
 
@@ -1247,8 +1247,8 @@ pack_A420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 
     a_line[i] = ayuv[i * 4 + 0];
     y_line[i] = ayuv[i * 4 + 1];
-    u_line[i / 2 + 1] = ayuv[i * 4 + 2];
-    v_line[i / 2 + 1] = ayuv[i * 4 + 3];
+    u_line[i >> 1] = ayuv[i * 4 + 2];
+    v_line[i >> 1] = ayuv[i * 4 + 3];
   }
 }
 
