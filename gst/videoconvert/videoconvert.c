@@ -796,17 +796,13 @@ static void
 convert_YUY2_I420 (VideoConvert * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
-  int i, h;
+  int i;
   gint width = convert->width;
   gint height = convert->height;
   gboolean interlaced = GST_VIDEO_FRAME_IS_INTERLACED (src);
   gint l1, l2;
 
-  h = height;
-  if (width & 1)
-    h--;
-
-  for (i = 0; i < h; i += 2) {
+  for (i = 0; i < GST_ROUND_DOWN_2 (height); i += 2) {
     GET_LINE_OFFSETS (interlaced, i, l1, l2);
 
     video_convert_orc_convert_YUY2_I420 (FRAME_GET_Y_LINE (dest, l1),
