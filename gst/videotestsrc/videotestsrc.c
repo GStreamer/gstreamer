@@ -255,6 +255,9 @@ videotestsrc_convert_tmpline (paintinfo * p, GstVideoFrame * frame, int j)
   int x = p->x_offset;
   int i;
   int width = frame->info.width;
+  int height = frame->info.height;
+  int n_lines = p->n_lines;
+  int offset = p->offset;
 
   if (x != 0) {
     memcpy (p->tmpline2, p->tmpline, width * 4);
@@ -270,6 +273,13 @@ videotestsrc_convert_tmpline (paintinfo * p, GstVideoFrame * frame, int j)
   }
 
   p->convert_tmpline (p, frame, j);
+
+  if (j == height - 1) {
+    while (j % n_lines - offset != n_lines - 1) {
+      j++;
+      p->convert_tmpline (p, frame, j);
+    }
+  }
 }
 
 #define BLEND1(a,b,x) ((a)*(x) + (b)*(255-(x)))
@@ -1175,7 +1185,7 @@ convert_hline_generic (paintinfo * p, GstVideoFrame * frame, int y)
     y -= n_lines - 1;
 
     for (i = 0; i < n_lines; i++) {
-      idx = CLAMP (y + i + offset, 0, height);
+      idx = CLAMP (y + i + offset, 0, height - 1);
 
       GST_DEBUG ("line %d, %d, idx %d", i, y + i + offset, idx);
       lines[i] = p->lines[idx % n_lines];
@@ -1185,10 +1195,13 @@ convert_hline_generic (paintinfo * p, GstVideoFrame * frame, int y)
       gst_video_chroma_resample (p->subsample, lines, width);
 
     for (i = 0; i < n_lines; i++) {
-      GST_DEBUG ("pack line %d", y + i + offset);
+      idx = y + i + offset;
+      if (idx > height - 1)
+        break;
+      GST_DEBUG ("pack line %d", idx);
       finfo->pack_func (finfo, GST_VIDEO_PACK_FLAG_NONE,
           lines[i], 0, frame->data, frame->info.stride,
-          frame->info.chroma_site, y + i + offset, width);
+          frame->info.chroma_site, idx, width);
     }
   }
 }
