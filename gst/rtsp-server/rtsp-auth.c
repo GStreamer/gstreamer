@@ -491,6 +491,9 @@ check_factory (GstRTSPAuth * auth, GstRTSPContext * ctx, const gchar * check)
             GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT))
       goto no_construct;
   }
+
+  gst_rtsp_permissions_unref (perms);
+
   return TRUE;
 
   /* ERRORS */
@@ -509,12 +512,14 @@ no_permissions:
 no_access:
   {
     GST_DEBUG_OBJECT (auth, "no permissions to access media factory");
+    gst_rtsp_permissions_unref (perms);
     send_response (auth, GST_RTSP_STS_NOT_FOUND, ctx);
     return FALSE;
   }
 no_construct:
   {
     GST_DEBUG_OBJECT (auth, "no permissions to construct media factory");
+    gst_rtsp_permissions_unref (perms);
     send_response (auth, GST_RTSP_STS_UNAUTHORIZED, ctx);
     return FALSE;
   }

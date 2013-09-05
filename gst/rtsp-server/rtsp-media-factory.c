@@ -210,6 +210,8 @@ gst_rtsp_media_factory_finalize (GObject * obj)
   GstRTSPMediaFactory *factory = GST_RTSP_MEDIA_FACTORY (obj);
   GstRTSPMediaFactoryPrivate *priv = factory->priv;
 
+  if (priv->permissions)
+    gst_rtsp_permissions_unref (priv->permissions);
   g_hash_table_unref (priv->medias);
   g_mutex_clear (&priv->medias_lock);
   g_free (priv->launch);

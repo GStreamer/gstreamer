@@ -292,6 +292,9 @@ gst_rtsp_media_finalize (GObject * obj)
 
   GST_INFO ("finalize media %p", media);
 
+  if (priv->permissions)
+    gst_rtsp_permissions_unref (priv->permissions);
+
   g_ptr_array_unref (priv->streams);
 
   g_list_free_full (priv->dynamic, gst_object_unref);
