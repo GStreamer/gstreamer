@@ -969,7 +969,7 @@ unpack_UYVP (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   const guint8 *s = GET_LINE (y);
   guint16 *d = dest;
 
-  for (i = 0; i < width; i += 2) {
+  for (i = 0; i < width - 1; i += 2) {
     guint16 y0, y1;
     guint16 u0;
     guint16 v0;
@@ -1014,7 +1014,8 @@ pack_UYVP (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     guint16 v0;
 
     y0 = s[4 * (i + 0) + 1];
-    y1 = s[4 * (i + 1) + 1];
+    y1 = (i < width - 1 ? s[4 * (i + 1) + 1] : y0);
+
     u0 = s[4 * (i + 0) + 2];
     v0 = s[4 * (i + 0) + 3];
 
