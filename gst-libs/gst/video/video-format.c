@@ -85,9 +85,19 @@ unpack_planar_420 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   gint uv = GET_UV_420 (y, flags);
+  guint8 *y_line = GET_Y_LINE (y);
+  guint8 *u_line = GET_U_LINE (uv);
+  guint8 *v_line = GET_V_LINE (uv);
+  guint8 *ayuv = dest;
 
-  video_orc_unpack_I420 (dest, GET_Y_LINE (y), GET_U_LINE (uv),
-      GET_V_LINE (uv), width);
+  video_orc_unpack_I420 (dest, y_line, u_line, v_line, width);
+
+  if (width & 1) {
+    gint i = width - 1;
+
+    ayuv[i * 4 + 2] = u_line[i / 2 + 1];
+    ayuv[i * 4 + 3] = v_line[i / 2 + 1];
+  }
 }
 
 static void
@@ -119,7 +129,19 @@ unpack_YUY2 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  video_orc_unpack_YUY2 (dest, GET_LINE (y), width / 2);
+  guint8 *line = GET_LINE (y);
+  guint8 *d = dest;
+
+  video_orc_unpack_YUY2 (dest, line, width / 2);
+
+  if (width & 1) {
+    gint i = width - 1;
+
+    d[i * 4 + 0] = 0xff;
+    d[i * 4 + 1] = line[i * 2 + 0];
+    d[i * 4 + 2] = line[i * 2 + 1];
+    d[i * 4 + 3] = line[i * 2 + 3];
+  }
 }
 
 static void
@@ -138,7 +160,6 @@ pack_YUY2 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 
     line[i * 2 + 0] = ayuv[i * 4 + 1];
     line[i * 2 + 1] = ayuv[i * 4 + 2];
-    line[i * 2 + 2] = ayuv[i * 4 + 1];
     line[i * 2 + 3] = ayuv[i * 4 + 3];
   }
 }
@@ -149,7 +170,19 @@ unpack_UYVY (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  video_orc_unpack_UYVY (dest, GET_LINE (y), width / 2);
+  guint8 *line = GET_LINE (y);
+  guint8 *d = dest;
+
+  video_orc_unpack_UYVY (dest, line, width / 2);
+
+  if (width & 1) {
+    gint i = width - 1;
+
+    d[i * 4 + 0] = 0xff;
+    d[i * 4 + 1] = line[i * 2 + 1];
+    d[i * 4 + 2] = line[i * 2 + 0];
+    d[i * 4 + 3] = line[i * 2 + 2];
+  }
 }
 
 static void
@@ -169,7 +202,6 @@ pack_UYVY (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     line[i * 2 + 0] = ayuv[i * 4 + 2];
     line[i * 2 + 1] = ayuv[i * 4 + 1];
     line[i * 2 + 2] = ayuv[i * 4 + 3];
-    line[i * 2 + 3] = ayuv[i * 4 + 1];
   }
 }
 
@@ -179,7 +211,19 @@ unpack_YVYU (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  video_orc_unpack_YVYU (dest, GET_LINE (y), width / 2);
+  guint8 *line = GET_LINE (y);
+  guint8 *d = dest;
+
+  video_orc_unpack_YVYU (dest, line, width / 2);
+
+  if (width & 1) {
+    gint i = width - 1;
+
+    d[i * 4 + 0] = 0xff;
+    d[i * 4 + 1] = line[i * 2 + 0];
+    d[i * 4 + 2] = line[i * 2 + 3];
+    d[i * 4 + 3] = line[i * 2 + 1];
+  }
 }
 
 static void
@@ -198,7 +242,6 @@ pack_YVYU (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 
     line[i * 2 + 0] = ayuv[i * 4 + 1];
     line[i * 2 + 1] = ayuv[i * 4 + 3];
-    line[i * 2 + 2] = ayuv[i * 4 + 1];
     line[i * 2 + 3] = ayuv[i * 4 + 2];
   }
 }
@@ -433,8 +476,21 @@ unpack_Y41B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  video_orc_unpack_YUV9 (dest,
-      GET_Y_LINE (y), GET_U_LINE (y), GET_V_LINE (y), width / 2);
+  guint8 *y_line = GET_Y_LINE (y);
+  guint8 *u_line = GET_U_LINE (y);
+  guint8 *v_line = GET_V_LINE (y);
+  guint8 *d = dest;
+
+  video_orc_unpack_YUV9 (dest, y_line, u_line, v_line, width / 2);
+
+  if (width & 1) {
+    gint i = width - 1;
+
+    d[i * 4 + 0] = 0xff;
+    d[i * 4 + 1] = y_line[i];
+    d[i * 4 + 2] = u_line[i >> 2];
+    d[i * 4 + 3] = v_line[i >> 2];
+  }
 }
 
 static void
@@ -475,8 +531,21 @@ unpack_Y42B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  video_orc_unpack_Y42B (dest,
-      GET_Y_LINE (y), GET_U_LINE (y), GET_V_LINE (y), width / 2);
+  guint8 *y_line = GET_Y_LINE (y);
+  guint8 *u_line = GET_U_LINE (y);
+  guint8 *v_line = GET_V_LINE (y);
+  guint8 *d = dest;
+
+  video_orc_unpack_Y42B (dest, y_line, u_line, v_line, width / 2);
+
+  if (width & 1) {
+    gint i = width - 1;
+
+    d[i * 4 + 0] = 0xff;
+    d[i * 4 + 1] = y_line[i];
+    d[i * 4 + 2] = u_line[i / 2 + 1];
+    d[i * 4 + 3] = v_line[i / 2 + 1];
+  }
 }
 
 static void
@@ -932,9 +1001,20 @@ unpack_NV12 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   gint uv = GET_UV_420 (y, flags);
+  guint8 *y_line = GET_PLANE_LINE (0, y);
+  guint8 *uv_line = GET_PLANE_LINE (1, uv);
+  guint8 *d = dest;
 
-  video_orc_unpack_NV12 (dest,
-      GET_PLANE_LINE (0, y), GET_PLANE_LINE (1, uv), width / 2);
+  video_orc_unpack_NV12 (dest, y_line, uv_line, width / 2);
+
+  if (width & 1) {
+    gint i = width - 1;
+
+    d[i * 4 + 0] = 0xff;
+    d[i * 4 + 1] = y_line[i];
+    d[i * 4 + 2] = uv_line[i + 0];
+    d[i * 4 + 3] = uv_line[i + 1];
+  }
 }
 
 static void
@@ -966,9 +1046,20 @@ unpack_NV21 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   gint uv = GET_UV_420 (y, flags);
+  guint8 *y_line = GET_PLANE_LINE (0, y);
+  guint8 *uv_line = GET_PLANE_LINE (1, uv);
+  guint8 *d = dest;
 
-  video_orc_unpack_NV21 (dest,
-      GET_PLANE_LINE (0, y), GET_PLANE_LINE (1, uv), width / 2);
+  video_orc_unpack_NV21 (dest, y_line, uv_line, width / 2);
+
+  if (width & 1) {
+    gint i = width - 1;
+
+    d[i * 4 + 0] = 0xff;
+    d[i * 4 + 1] = y_line[i];
+    d[i * 4 + 2] = uv_line[i + 1];
+    d[i * 4 + 3] = uv_line[i + 0];
+  }
 }
 
 static void
@@ -999,8 +1090,20 @@ unpack_NV16 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  video_orc_unpack_NV12 (dest,
-      GET_PLANE_LINE (0, y), GET_PLANE_LINE (1, y), width / 2);
+  guint8 *y_line = GET_PLANE_LINE (0, y);
+  guint8 *uv_line = GET_PLANE_LINE (1, y);
+  guint8 *d = dest;
+
+  video_orc_unpack_NV12 (dest, y_line, uv_line, width / 2);
+
+  if (width & 1) {
+    gint i = width - 1;
+
+    d[i * 4 + 0] = 0xff;
+    d[i * 4 + 1] = y_line[i];
+    d[i * 4 + 2] = uv_line[i + 0];
+    d[i * 4 + 3] = uv_line[i + 1];
+  }
 }
 
 static void
@@ -1244,9 +1347,21 @@ unpack_410 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
   gint uv = GET_UV_410 (y, flags);
+  guint8 *y_line = GET_Y_LINE (y);
+  guint8 *u_line = GET_U_LINE (uv);
+  guint8 *v_line = GET_V_LINE (uv);
+  guint8 *d = dest;
 
-  video_orc_unpack_YUV9 (dest,
-      GET_Y_LINE (y), GET_U_LINE (uv), GET_V_LINE (uv), width / 2);
+  video_orc_unpack_YUV9 (dest, y_line, u_line, v_line, width / 2);
+
+  if (width & 1) {
+    gint i = width - 1;
+
+    d[i * 4 + 0] = 0xff;
+    d[i * 4 + 1] = y_line[i];
+    d[i * 4 + 2] = u_line[i >> 2];
+    d[i * 4 + 3] = v_line[i >> 2];
+  }
 }
 
 static void
