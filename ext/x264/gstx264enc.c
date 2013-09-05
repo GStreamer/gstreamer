@@ -1676,7 +1676,7 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
   }
 
   if (encoder->input_state)
-    gst_video_codec_state_unref (state);
+    gst_video_codec_state_unref (encoder->input_state);
   encoder->input_state = gst_video_codec_state_ref (state);
 
   encoder->peer_profile = NULL;
