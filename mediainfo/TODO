@@ -7,13 +7,13 @@ http://www.headbands.com/gspot/v26x/index.htm
 = browsing =
 - if one has grillo installed we could use grillo sources in addition to local files
 - there should be a "open url" menu entry in addition
-- the tool should also accept a stream url when starting
 - when a stream play we hide the file-browser pane
 - we could also take playlists and use totem-pl-parser
   - needs a list-view to show the playlist instead of the file-browser
 
 = compare =
 - dup detail pane and allow to pick a new file
+  - create new Info() pane and reuse the DiscovererInfo
 - show differing entries in red
 - add a narrow vertical bar between the two details panes and mark blocks with a
   delta red
@@ -76,7 +76,7 @@ http://www.headbands.com/gspot/v26x/index.htm
 
 = TODO for gstreamer =
 - file/stream layout
-  - from every element we'd like to know what data is processes, what is pushed
+  - from every element we'd like to know what data is processed, what is pushed
     further and some metadata about it:
     layout {
       gsize offset;         // in bytes
@@ -99,7 +99,7 @@ http://www.headbands.com/gspot/v26x/index.htm
   - add a mode property: quick-scan, deep-scan
    (or just a boolean for deep-scan that is false by default)
   - gst-discoverer will use "-d" for deep-scan/details
-    (-a for anayze or -s for scan are used otherwise already)
+    (-a for analyze or -s for scan are used otherwise already)
   - in deep-scan, don't stop on handle_message::GST_MESSAGE_ASYNC_DONE
     - in deep-scan we need pad-probes for encoded data pads (to get bitrates)
       - uridecodebin_pad_added_cb() has raw pads :/
