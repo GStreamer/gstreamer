@@ -1387,6 +1387,16 @@ gst_validate_pad_monitor_src_event_check (GstValidatePadMonitor * pad_monitor,
     case GST_EVENT_FLUSH_STOP:
     case GST_EVENT_QOS:
     case GST_EVENT_SEEK:
+    {
+      if (ret == FALSE) {
+        /* do not expect any of these events anymore */
+        pad_monitor->pending_flush_start_seqnum = 0;
+        pad_monitor->pending_flush_stop_seqnum = 0;
+        pad_monitor->pending_newsegment_seqnum = 0;
+        pad_monitor->pending_eos_seqnum = 0;
+      }
+    }
+      break;
     case GST_EVENT_NAVIGATION:
     case GST_EVENT_LATENCY:
     case GST_EVENT_STEP:
