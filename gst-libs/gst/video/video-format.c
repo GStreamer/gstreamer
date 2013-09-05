@@ -235,7 +235,7 @@ pack_YVYU (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *line = GET_LINE (y);
   const guint8 *ayuv = src;
 
-  video_orc_pack_YVYU (GET_LINE (y), src, width / 2);
+  video_orc_pack_YVYU (line, src, width / 2);
 
   if (width & 1) {
     gint i = width - 1;
