@@ -27,12 +27,20 @@
 
 #include <gst/gst.h>
 #include <string.h>
+#include <stdlib.h>
 #include <gst/validate/validate.h>
 
 #define __USE_GNU
 #include <dlfcn.h>
 
 static GstValidateRunner *runner = NULL;
+
+static void
+exit_report_printer (void)
+{
+  if (runner)
+    gst_validate_runner_printf (runner);
+}
 
 /*
  * Functions that wrap object creation so gst-validate can be used
@@ -45,6 +53,7 @@ gst_validate_preload_wrap (GstElement * element)
   if (runner == NULL) {
     gst_validate_init ();
     runner = gst_validate_runner_new ();
+    atexit (exit_report_printer);
   }
 
   /* the reference to the monitor is lost */

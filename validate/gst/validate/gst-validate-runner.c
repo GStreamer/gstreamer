@@ -115,3 +115,25 @@ gst_validate_runner_get_reports (GstValidateRunner * runner)
    * after pipeline ends? */
   return runner->reports;
 }
+
+int
+gst_validate_runner_printf (GstValidateRunner * runner)
+{
+  GSList *tmp;
+  guint count = 0;
+  int ret = 0;
+
+  for (tmp = gst_validate_runner_get_reports (runner); tmp; tmp = tmp->next) {
+    GstValidateReport *report = tmp->data;
+
+    gst_validate_report_printf (report);
+    if (ret == 0 && report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
+      g_printerr ("Got critical error %s, setting return value to -1\n",
+          ((GstValidateReport *) (tmp->data))->message);
+      ret = -1;
+    }
+    count++;
+  }
+  g_print ("Pipeline finished, issues found: %u\n", count);
+  return ret;
+}

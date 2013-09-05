@@ -98,14 +98,13 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
 int
 main (int argc, gchar ** argv)
 {
-  GSList *tmp;
   GError *err = NULL;
   const gchar *scenario = NULL;
   gboolean list_scenarios = FALSE;
 #ifdef G_OS_UNIX
   guint signal_watch_id;
 #endif
-  guint count = 0;
+  int rep_err;
 
   GOptionEntry options[] = {
     {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
@@ -204,22 +203,9 @@ main (int argc, gchar ** argv)
   g_print ("Pipeline started\n");
   g_main_loop_run (mainloop);
 
-  tmp = gst_validate_runner_get_reports (runner);
-  tmp = g_slist_reverse (tmp);
-
-  g_print ("Pipeline finished\n");
-  count = g_slist_length (tmp);
-  if (count) {
-    g_print ("\nFound %u issues\n", count);
-
-    for (; tmp; tmp = tmp->next) {
-      GstValidateReport *report = tmp->data;
-
-      gst_validate_report_printf (report);
-      if (ret == 0 && report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL)
-        ret = -1;
-    }
-  }
+  rep_err = gst_validate_runner_printf (runner);
+  if (ret == 0)
+    ret = rep_err;
 
 exit:
   gst_element_set_state (pipeline, GST_STATE_NULL);

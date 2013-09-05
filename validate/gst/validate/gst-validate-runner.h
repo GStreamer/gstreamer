@@ -78,6 +78,8 @@ void            gst_validate_runner_add_report  (GstValidateRunner * runner, Gst
 guint           gst_validate_runner_get_reports_count (GstValidateRunner * runner);
 GSList *        gst_validate_runner_get_reports (GstValidateRunner * runner);
 
+int             gst_validate_runner_printf (GstValidateRunner * runner);
+
 G_END_DECLS
 
 #endif /* __GST_VALIDATE_RUNNER_H__ */
