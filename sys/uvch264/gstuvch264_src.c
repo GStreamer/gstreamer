@@ -2542,8 +2542,10 @@ gst_uvc_h264_src_construct_pipeline (GstBaseCameraSrc * bcamsrc)
   gst_ghost_pad_set_target (GST_GHOST_PAD (self->vidsrc), NULL);
   gst_ghost_pad_set_target (GST_GHOST_PAD (self->vfsrc), NULL);
 
-  vf_caps = gst_pad_peer_query_caps (self->vfsrc, NULL);
-  vid_caps = gst_pad_peer_query_caps (self->vidsrc, NULL);
+  if (gst_pad_is_linked (self->vfsrc))
+    vf_caps = gst_pad_peer_query_caps (self->vfsrc, NULL);
+  if (gst_pad_is_linked (self->vidsrc))
+    vid_caps = gst_pad_peer_query_caps (self->vidsrc, NULL);
 
   GST_DEBUG_OBJECT (self, "vfsrc caps : %" GST_PTR_FORMAT, vf_caps);
   GST_DEBUG_OBJECT (self, "vidsrc caps : %" GST_PTR_FORMAT, vid_caps);
