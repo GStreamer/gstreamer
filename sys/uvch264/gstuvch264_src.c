@@ -533,8 +533,6 @@ gst_uvc_h264_src_init (GstUvcH264Src * self)
   g_signal_connect (self->vfsrc, "unlinked",
       (GCallback) gst_uvc_h264_src_pad_linking_cb, self);
 
-  self->vid_newseg = FALSE;
-  self->vf_newseg = FALSE;
   self->v4l2_fd = -1;
   gst_base_camera_src_set_mode (GST_BASE_CAMERA_SRC (self), MODE_VIDEO);
 
@@ -1516,15 +1514,6 @@ gst_uvc_h264_src_event_probe (GstPad * pad, GstPadProbeInfo * info,
     case GST_EVENT_EOS:
       ret = self->reconfiguring ? GST_PAD_PROBE_DROP : GST_PAD_PROBE_OK;
       break;
-    case GST_EVENT_SEGMENT:
-      if (pad == self->vidsrc) {
-        ret = self->vid_newseg ? GST_PAD_PROBE_DROP : GST_PAD_PROBE_OK;
-        self->vid_newseg = TRUE;
-      } else if (pad == self->vfsrc) {
-        ret = self->vf_newseg ? GST_PAD_PROBE_DROP : GST_PAD_PROBE_OK;
-        self->vf_newseg = TRUE;
-      }
-      break;
     default:
       break;
   }
@@ -1725,7 +1714,7 @@ gst_uvc_h264_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
-      if (!self->vid_newseg && pad == self->vidsrc) {
+      if (pad == self->vidsrc) {
         const GstSegment *s;
 
         gst_event_parse_segment (event, &s);
@@ -1733,12 +1722,8 @@ gst_uvc_h264_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       break;
     case GST_EVENT_FLUSH_STOP:
-      if (pad == self->vidsrc) {
+      if (pad == self->vidsrc)
         gst_segment_init (&self->segment, GST_FORMAT_UNDEFINED);
-        self->vid_newseg = FALSE;
-      }
-      if (pad == self->vfsrc)
-        self->vf_newseg = FALSE;
       break;
     default:
       if (gst_uvc_h264_src_parse_event (self, pad, event))
@@ -3134,10 +3119,6 @@ gst_uvc_h264_src_change_state (GstElement * element, GstStateChange trans)
     goto end;
 
   switch (trans) {
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      self->vid_newseg = FALSE;
-      self->vf_newseg = FALSE;
-      break;
     case GST_STATE_CHANGE_READY_TO_NULL:
       gst_uvc_h264_src_destroy_pipeline (self, TRUE);
       break;
