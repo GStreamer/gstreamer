@@ -91,6 +91,8 @@ GST_START_TEST (test_launch)
 
   gst_rtsp_url_free (url);
   g_object_unref (factory);
+
+  g_object_unref (pool);
 }
 
 GST_END_TEST;
@@ -200,6 +202,7 @@ on_notify_caps (GstPad * pad, GParamSpec * pspec, GstElement * pay)
   if (caps) {
     g_signal_emit_by_name (pay, "pad-added", pad);
     g_signal_emit_by_name (pay, "no-more-pads", NULL);
+    gst_caps_unref (caps);
   } else {
     g_signal_emit_by_name (pay, "pad-removed", pad);
   }
@@ -263,6 +266,7 @@ GST_START_TEST (test_media_dyn_prepare)
 
   gst_object_unref (srcpad);
   g_object_unref (media);
+  g_object_unref (pool);
 }
 
 GST_END_TEST;
