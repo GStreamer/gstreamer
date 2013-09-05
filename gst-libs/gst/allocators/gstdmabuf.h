@@ -27,7 +27,7 @@ G_BEGIN_DECLS
 
 #define GST_ALLOCATOR_DMABUF "dmabuf"
 
-GstAllocator * gst_dmabuf_allocator_obtain (void);
+GstAllocator * gst_dmabuf_allocator_new (void);
 
 GstMemory    * gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size);
 

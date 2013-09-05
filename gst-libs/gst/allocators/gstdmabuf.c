@@ -32,7 +32,6 @@
  * Since: 1.2
  */
 
-#ifdef HAVE_MMAP
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -77,6 +76,7 @@ gst_dmabuf_allocator_free (GstAllocator * allocator, GstMemory * gmem)
 static gpointer
 gst_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
 {
+#ifdef HAVE_MMAP
   GstDmaBufMemory *mem = (GstDmaBufMemory *) gmem;
   gint prot;
   gpointer ret = NULL;
@@ -120,11 +120,15 @@ gst_dmabuf_mem_map (GstMemory * gmem, gsize maxsize, GstMapFlags flags)
 out:
   g_mutex_unlock (&mem->lock);
   return ret;
+#else /* !HAVE_MMAP */
+  return FALSE;
+#endif
 }
 
 static void
 gst_dmabuf_mem_unmap (GstMemory * gmem)
 {
+#if HAVE_MMAP
   GstDmaBufMemory *mem = (GstDmaBufMemory *) gmem;
   g_mutex_lock (&mem->lock);
 
@@ -136,6 +140,7 @@ gst_dmabuf_mem_unmap (GstMemory * gmem)
     GST_DEBUG ("%p: fd %d unmapped", mem, mem->fd);
   }
   g_mutex_unlock (&mem->lock);
+#endif
 }
 
 static GstMemory *
@@ -208,39 +213,23 @@ dmabuf_mem_allocator_init (GstDmaBufAllocator * allocator)
   GST_OBJECT_FLAG_SET (allocator, GST_ALLOCATOR_FLAG_CUSTOM_ALLOC);
 }
 
-static void
-gst_dmabuf_mem_init (void)
-{
-  GstAllocator *allocator =
-      g_object_new (dmabuf_mem_allocator_get_type (), NULL);
-  gst_allocator_register (GST_ALLOCATOR_DMABUF, allocator);
-
-  GST_DEBUG_CATEGORY_INIT (dmabuf_debug, "dmabuf", 0, "dmabuf memory");
-}
-
 /**
- * gst_dmabuf_allocator_obtain:
+ * gst_dmabuf_allocator_new:
  *
- * Return a dmabuf allocator.
+ * Return a new dmabuf allocator.
  *
- * Returns: (transfer full): a dmabuf allocator, or NULL if the allocator
+ * Returns: (transfer full): a new dmabuf allocator, or NULL if the allocator
  *    isn't available. Use gst_object_unref() to release the allocator after
  *    usage
  *
  * Since: 1.2
  */
 GstAllocator *
-gst_dmabuf_allocator_obtain (void)
+gst_dmabuf_allocator_new (void)
 {
-  static GOnce dmabuf_allocator_once = G_ONCE_INIT;
-  GstAllocator *allocator;
+  GST_DEBUG_CATEGORY_INIT (dmabuf_debug, "dmabuf", 0, "dmabuf memory");
 
-  g_once (&dmabuf_allocator_once, (GThreadFunc) gst_dmabuf_mem_init, NULL);
-
-  allocator = gst_allocator_find (GST_ALLOCATOR_DMABUF);
-  if (!allocator)
-    GST_WARNING ("No allocator named %s found", GST_ALLOCATOR_DMABUF);
-  return allocator;
+  return g_object_new (GST_TYPE_DMABUF_ALLOCATOR, NULL);
 }
 
 /**
@@ -261,10 +250,6 @@ GstMemory *
 gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
 {
   GstDmaBufMemory *mem;
-
-  if (!allocator) {
-    allocator = gst_dmabuf_allocator_obtain ();
-  }
 
   if (!GST_IS_DMABUF_ALLOCATOR (allocator)) {
     GST_WARNING ("it isn't the correct allocator for dmabuf");
@@ -321,31 +306,3 @@ gst_is_dmabuf_memory (GstMemory * mem)
 {
   return gst_memory_is_type (mem, GST_ALLOCATOR_DMABUF);
 }
-
-#else /* !HAVE_MMAP */
-
-GstAllocator *
-gst_dmabuf_allocator_obtain (void)
-{
-  return NULL;
-}
-
-GstMemory *
-gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
-{
-  return NULL;
-}
-
-gint
-gst_dmabuf_memory_get_fd (GstMemory * mem)
-{
-  return -1;
-}
-
-gboolean
-gst_is_dmabuf_memory (GstMemory * mem)
-{
-  return FALSE;
-}
-
-#endif /* HAVE_MMAP */
