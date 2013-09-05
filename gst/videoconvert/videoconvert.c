@@ -987,11 +987,12 @@ convert_AYUV_Y42B (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
+  /* FIXME, only works for even width */
   video_convert_orc_convert_AYUV_Y42B (FRAME_GET_Y_LINE (dest, 0),
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
       FRAME_GET_V_STRIDE (dest), FRAME_GET_LINE (src, 0),
-      FRAME_GET_STRIDE (src), (width + 1) / 2, height);
+      FRAME_GET_STRIDE (src), width / 2, height);
 }
 
 static void
@@ -1091,11 +1092,12 @@ convert_Y42B_AYUV (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
+  /* FIXME, only for even width */
   video_convert_orc_convert_Y42B_AYUV (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
       FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
       FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
-      FRAME_GET_V_STRIDE (src), (width) / 2, height);
+      FRAME_GET_V_STRIDE (src), width / 2, height);
 }
 
 static void
