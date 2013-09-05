@@ -646,18 +646,6 @@ gst_omx_buffer_pool_new (GstElement * element, GstOMXComponent * component,
   return GST_BUFFER_POOL (pool);
 }
 
-typedef struct _BufferIdentification BufferIdentification;
-struct _BufferIdentification
-{
-  guint64 timestamp;
-};
-
-static void
-buffer_identification_free (BufferIdentification * id)
-{
-  g_slice_free (BufferIdentification, id);
-}
-
 /* prototypes */
 static void gst_omx_video_dec_finalize (GObject * object);
 
@@ -1009,40 +997,29 @@ gst_omx_video_dec_change_state (GstElement * element, GstStateChange transition)
 }
 
 static GstVideoCodecFrame *
-_find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
+gst_omx_video_dec_find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
 {
   GstVideoCodecFrame *best = NULL;
-  guint64 best_diff = G_MAXUINT64;
+  GstClockTimeDiff best_diff = G_MAXINT64;
+  GstClockTime timestamp;
   GList *frames;
   GList *l;
+
+  timestamp =
+      gst_util_uint64_scale (buf->omx_buf->nTimeStamp, GST_SECOND,
+      OMX_TICKS_PER_SECOND);
 
   frames = gst_video_decoder_get_frames (GST_VIDEO_DECODER (self));
 
   for (l = frames; l; l = l->next) {
     GstVideoCodecFrame *tmp = l->data;
-    BufferIdentification *id = gst_video_codec_frame_get_user_data (tmp);
-    guint64 timestamp, diff;
+    GstClockTimeDiff diff = ABS (GST_CLOCK_DIFF (timestamp, tmp->pts));
 
-    /* This happens for frames that were just added but
-     * which were not passed to the component yet. Ignore
-     * them here!
-     */
-    if (!id)
-      continue;
-
-    timestamp = id->timestamp;
-
-    if (timestamp > buf->omx_buf->nTimeStamp)
-      diff = timestamp - buf->omx_buf->nTimeStamp;
-    else
-      diff = buf->omx_buf->nTimeStamp - timestamp;
-
-    if (best == NULL || diff < best_diff) {
+    if (diff < best_diff) {
       best = tmp;
       best_diff = diff;
 
-      /* For frames without timestamp we simply take the first frame */
-      if ((buf->omx_buf->nTimeStamp == 0 && timestamp == 0) || diff == 0)
+      if (diff == 0)
         break;
     }
   }
@@ -1947,7 +1924,7 @@ gst_omx_video_dec_loop (GstOMXVideoDec * self)
       (guint) buf->omx_buf->nFlags, (guint64) buf->omx_buf->nTimeStamp);
 
   GST_VIDEO_DECODER_STREAM_LOCK (self);
-  frame = _find_nearest_frame (self, buf);
+  frame = gst_omx_video_dec_find_nearest_frame (self, buf);
 
   if (frame
       && (deadline = gst_video_decoder_get_max_decode_time
@@ -2924,16 +2901,8 @@ gst_omx_video_dec_handle_frame (GstVideoDecoder * decoder,
       buf->omx_buf->nTickCount = 0;
     }
 
-    if (offset == 0) {
-      BufferIdentification *id = g_slice_new0 (BufferIdentification);
-
-      if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame))
-        buf->omx_buf->nFlags |= OMX_BUFFERFLAG_SYNCFRAME;
-
-      id->timestamp = buf->omx_buf->nTimeStamp;
-      gst_video_codec_frame_set_user_data (frame, id,
-          (GDestroyNotify) buffer_identification_free);
-    }
+    if (offset == 0 && GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame))
+      buf->omx_buf->nFlags |= OMX_BUFFERFLAG_SYNCFRAME;
 
     /* TODO: Set flags
      *   - OMX_BUFFERFLAG_DECODEONLY for buffers that are outside
