@@ -143,6 +143,13 @@ setup_client (const gchar * launch_line)
   return client;
 }
 
+static void
+teardown_client (GstRTSPClient *client)
+{
+  gst_rtsp_client_set_thread_pool (client, NULL);
+  g_object_unref (client);
+}
+
 GST_START_TEST (test_request)
 {
   GstRTSPClient *client;
@@ -282,7 +289,7 @@ GST_START_TEST (test_describe)
           &request) == GST_RTSP_OK);
   gst_rtsp_message_unset (&request);
 
-  g_object_unref (client);
+  teardown_client (client);
 }
 
 GST_END_TEST;
@@ -417,7 +424,7 @@ GST_START_TEST (test_client_multicast_transport_404)
           &request) == GST_RTSP_OK);
   gst_rtsp_message_unset (&request);
 
-  g_object_unref (client);
+  teardown_client (client);
 }
 
 GST_END_TEST;
@@ -458,7 +465,7 @@ GST_START_TEST (test_client_multicast_transport)
   gst_rtsp_message_unset (&request);
   expected_transport = NULL;
   expected_session_timeout = 60;
-  g_object_unref (client);
+  teardown_client (client);
 }
 
 GST_END_TEST;
@@ -489,7 +496,7 @@ GST_START_TEST (test_client_multicast_ignore_transport_specific)
   gst_rtsp_message_unset (&request);
   expected_transport = NULL;
 
-  g_object_unref (client);
+  teardown_client (client);
 }
 
 GST_END_TEST;
@@ -603,7 +610,7 @@ GST_START_TEST (test_client_multicast_invalid_transport_specific)
   g_object_unref (session_pool);
 
 
-  g_object_unref (client);
+  teardown_client (client);
   g_object_unref (ctx.auth);
   gst_rtsp_token_unref (ctx.token);
   gst_rtsp_context_pop_current (&ctx);
@@ -654,7 +661,7 @@ GST_START_TEST (test_client_multicast_transport_specific)
   fail_unless (gst_rtsp_session_pool_get_n_sessions (session_pool) == 1);
   g_object_unref (session_pool);
 
-  g_object_unref (client);
+  teardown_client (client);
   g_object_unref (ctx.auth);
   gst_rtsp_token_unref (ctx.token);
   gst_rtsp_context_pop_current (&ctx);
@@ -736,8 +743,7 @@ test_client_sdp (const gchar * launch_line, guint * bandwidth_val)
           &request) == GST_RTSP_OK);
   gst_rtsp_message_unset (&request);
 
-  g_object_unref (client);
-
+  teardown_client (client);
 }
 
 GST_START_TEST (test_client_sdp_with_max_bitrate_tag)

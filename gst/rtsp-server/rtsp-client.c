@@ -348,6 +348,8 @@ gst_rtsp_client_finalize (GObject * obj)
     g_object_unref (priv->mount_points);
   if (priv->auth)
     g_object_unref (priv->auth);
+  if (priv->thread_pool)
+    g_object_unref (priv->thread_pool);
 
   if (priv->path)
     g_free (priv->path);
