@@ -267,7 +267,7 @@ unpack_v210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   const guint8 *s = GET_LINE (y);
   guint16 *d = dest;
 
-  for (i = 0; i < width; i += 6) {
+  for (i = 0; i < width - 5; i += 6) {
     guint32 a0, a1, a2, a3;
     guint16 y0, y1, y2, y3, y4, y5;
     guint16 u0, u2, u4;
@@ -352,7 +352,7 @@ pack_v210 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   guint8 *d = GET_LINE (y);
   const guint16 *s = src;
 
-  for (i = 0; i < width; i += 6) {
+  for (i = 0; i < width - 5; i += 6) {
     guint32 a0, a1, a2, a3;
     guint16 y0, y1, y2, y3, y4, y5;
     guint16 u0, u1, u2;
@@ -458,25 +458,14 @@ pack_Y41B (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     destU[i >> 2] = s[i * 4 + 2];
     destV[i >> 2] = s[i * 4 + 3];
   }
-
-  if (i == width - 3) {
+  if (i < width) {
     destY[i] = s[i * 4 + 1];
-    destY[i + 1] = s[i * 4 + 5];
-    destY[i + 2] = s[i * 4 + 9];
-
     destU[i >> 2] = s[i * 4 + 2];
     destV[i >> 2] = s[i * 4 + 3];
-  } else if (i == width - 2) {
-    destY[i] = s[i * 4 + 1];
-    destY[i + 1] = s[i * 4 + 5];
-
-    destU[i >> 2] = s[i * 4 + 2];
-    destV[i >> 2] = s[i * 4 + 3];
-  } else if (i == width - 1) {
-    destY[i + 1] = s[i * 4 + 5];
-
-    destU[i >> 2] = s[i * 4 + 2];
-    destV[i >> 2] = s[i * 4 + 3];
+    if (i < width - 1)
+      destY[i + 1] = s[i * 4 + 5];
+    if (i < width - 2)
+      destY[i + 2] = s[i * 4 + 9];
   }
 }
 
@@ -1283,26 +1272,16 @@ pack_410 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
       destV[i >> 2] = s[i * 4 + 3];
     }
   }
-
-  if (i == width - 3) {
+  if (i < width) {
     destY[i] = s[i * 4 + 1];
-    destY[i + 1] = s[i * 4 + 5];
-    destY[i + 2] = s[i * 4 + 9];
     if (y % 4 == 0) {
       destU[i >> 2] = s[i * 4 + 2];
       destV[i >> 2] = s[i * 4 + 3];
     }
-  } else if (i == width - 2) {
-    destY[i] = s[i * 4 + 1];
-    destY[i + 1] = s[i * 4 + 5];
-    if (y % 4 == 0) {
-      destU[i >> 2] = s[i * 4 + 2];
-      destV[i >> 2] = s[i * 4 + 3];
-    }
-  } else if (i == width - 1) {
-    destY[i] = s[i * 4 + 1];
-    destU[i >> 2] = s[i * 4 + 2];
-    destV[i >> 2] = s[i * 4 + 3];
+    if (i < width - 1)
+      destY[i + 1] = s[i * 4 + 5];
+    if (i < width - 2)
+      destY[i + 2] = s[i * 4 + 9];
   }
 }
 
@@ -1315,43 +1294,60 @@ unpack_IYU1 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   int i;
   const guint8 *s = GET_LINE (y);
   guint8 *d = dest;
+  guint8 y0, y1, y2, y3;
+  guint8 u0;
+  guint8 v0;
 
   for (i = 0; i < width - 3; i += 4) {
-    d[i * 4 + 0] = 0xff;
-    d[i * 4 + 4] = 0xff;
-    d[i * 4 + 8] = 0xff;
-    d[i * 4 + 12] = 0xff;
-    d[i * 4 + 1] = s[(i >> 2) * 6 + 1];
-    d[i * 4 + 5] = s[(i >> 2) * 6 + 2];
-    d[i * 4 + 9] = s[(i >> 2) * 6 + 4];
-    d[i * 4 + 13] = s[(i >> 2) * 6 + 5];
-    d[i * 4 + 2] = d[i * 4 + 6] = d[i * 4 + 10] = d[i * 4 + 14] =
-        s[(i >> 2) * 6 + 0];
-    d[i * 4 + 3] = d[i * 4 + 7] = d[i * 4 + 11] = d[i * 4 + 15] =
-        s[(i >> 2) * 6 + 3];
-  }
+    y0 = s[(i >> 2) * 6 + 1];
+    y1 = s[(i >> 2) * 6 + 2];
+    y2 = s[(i >> 2) * 6 + 4];
+    y3 = s[(i >> 2) * 6 + 5];
 
-  if (i == width - 3) {
+    u0 = s[(i >> 2) * 6 + 0];
+    v0 = s[(i >> 2) * 6 + 3];
+
     d[i * 4 + 0] = 0xff;
+    d[i * 4 + 1] = y0;
+    d[i * 4 + 2] = u0;
+    d[i * 4 + 3] = v0;
+
     d[i * 4 + 4] = 0xff;
+    d[i * 4 + 5] = y1;
+    d[i * 4 + 6] = u0;
+    d[i * 4 + 7] = v0;
+
     d[i * 4 + 8] = 0xff;
-    d[i * 4 + 1] = s[(i >> 2) * 6 + 1];
-    d[i * 4 + 5] = s[(i >> 2) * 6 + 2];
-    d[i * 4 + 9] = s[(i >> 2) * 6 + 4];
-    d[i * 4 + 2] = d[i * 4 + 6] = d[i * 4 + 10] = s[(i >> 2) * 6 + 0];
-    d[i * 4 + 3] = d[i * 4 + 7] = d[i * 4 + 11] = s[(i >> 2) * 6 + 3];
-  } else if (i == width - 2) {
+    d[i * 4 + 9] = y2;
+    d[i * 4 + 10] = u0;
+    d[i * 4 + 11] = v0;
+
+    d[i * 4 + 12] = 0xff;
+    d[i * 4 + 13] = y3;
+    d[i * 4 + 14] = u0;
+    d[i * 4 + 15] = v0;
+  }
+  if (i < width) {
+    u0 = s[(i >> 2) * 6 + 0];
+    v0 = s[(i >> 2) * 6 + 3];
+
     d[i * 4 + 0] = 0xff;
-    d[i * 4 + 4] = 0xff;
     d[i * 4 + 1] = s[(i >> 2) * 6 + 1];
-    d[i * 4 + 5] = s[(i >> 2) * 6 + 2];
-    d[i * 4 + 2] = d[i * 4 + 6] = s[(i >> 2) * 6 + 0];
-    d[i * 4 + 3] = d[i * 4 + 7] = s[(i >> 2) * 6 + 3];
-  } else if (i == width - 1) {
-    d[i * 4 + 0] = 0xff;
-    d[i * 4 + 1] = s[(i >> 2) * 6 + 1];
-    d[i * 4 + 2] = s[(i >> 2) * 6 + 0];
-    d[i * 4 + 3] = s[(i >> 2) * 6 + 3];
+    d[i * 4 + 2] = u0;
+    d[i * 4 + 3] = v0;
+
+    if (i < width - 1) {
+      d[i * 4 + 4] = 0xff;
+      d[i * 4 + 5] = s[(i >> 2) * 6 + 2];
+      d[i * 4 + 6] = u0;
+      d[i * 4 + 7] = v0;
+    }
+    if (i < width - 2) {
+      d[i * 4 + 8] = 0xff;
+      d[i * 4 + 9] = s[(i >> 2) * 6 + 4];
+      d[i * 4 + 10] = u0;
+      d[i * 4 + 11] = v0;
+    }
   }
 }
 
@@ -1366,29 +1362,21 @@ pack_IYU1 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   const guint8 *s = src;
 
   for (i = 0; i < width - 3; i += 4) {
+    d[(i >> 2) * 6 + 0] = s[i * 4 + 2];
     d[(i >> 2) * 6 + 1] = s[i * 4 + 1];
     d[(i >> 2) * 6 + 2] = s[i * 4 + 5];
+    d[(i >> 2) * 6 + 3] = s[i * 4 + 3];
     d[(i >> 2) * 6 + 4] = s[i * 4 + 9];
     d[(i >> 2) * 6 + 5] = s[i * 4 + 13];
-    d[(i >> 2) * 6 + 0] = s[i * 4 + 2];
-    d[(i >> 2) * 6 + 3] = s[i * 4 + 3];
   }
-
-  if (i == width - 3) {
-    d[(i >> 2) * 6 + 1] = s[i * 4 + 1];
-    d[(i >> 2) * 6 + 2] = s[i * 4 + 5];
-    d[(i >> 2) * 6 + 4] = s[i * 4 + 9];
-    d[(i >> 2) * 6 + 0] = s[i * 4 + 2];
-    d[(i >> 2) * 6 + 3] = s[i * 4 + 3];
-  } else if (i == width - 2) {
-    d[(i >> 2) * 6 + 1] = s[i * 4 + 1];
-    d[(i >> 2) * 6 + 2] = s[i * 4 + 5];
-    d[(i >> 2) * 6 + 0] = s[i * 4 + 2];
-    d[(i >> 2) * 6 + 3] = s[i * 4 + 3];
-  } else if (i == width - 1) {
+  if (i < width) {
     d[(i >> 2) * 6 + 1] = s[i * 4 + 1];
     d[(i >> 2) * 6 + 0] = s[i * 4 + 2];
     d[(i >> 2) * 6 + 3] = s[i * 4 + 3];
+    if (i < width - 1)
+      d[(i >> 2) * 6 + 2] = s[i * 4 + 5];
+    if (i < width - 2)
+      d[(i >> 2) * 6 + 4] = s[i * 4 + 9];
   }
 }
 
