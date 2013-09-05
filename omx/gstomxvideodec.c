@@ -1008,19 +1008,13 @@ gst_omx_video_dec_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-#define MAX_FRAME_DIST_TICKS  (5 * OMX_TICKS_PER_SECOND)
-#define MAX_FRAME_DIST_FRAMES (100)
-
 static GstVideoCodecFrame *
 _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
 {
-  GList *l, *best_l = NULL;
-  GList *finish_frames = NULL;
   GstVideoCodecFrame *best = NULL;
-  guint64 best_timestamp = 0;
   guint64 best_diff = G_MAXUINT64;
-  BufferIdentification *best_id = NULL;
   GList *frames;
+  GList *l;
 
   frames = gst_video_decoder_get_frames (GST_VIDEO_DECODER (self));
 
@@ -1045,51 +1039,11 @@ _find_nearest_frame (GstOMXVideoDec * self, GstOMXBuffer * buf)
 
     if (best == NULL || diff < best_diff) {
       best = tmp;
-      best_timestamp = timestamp;
       best_diff = diff;
-      best_l = l;
-      best_id = id;
 
       /* For frames without timestamp we simply take the first frame */
       if ((buf->omx_buf->nTimeStamp == 0 && timestamp == 0) || diff == 0)
         break;
-    }
-  }
-
-  if (FALSE && best_id) {
-    for (l = frames; l && l != best_l; l = l->next) {
-      GstVideoCodecFrame *tmp = l->data;
-      BufferIdentification *id = gst_video_codec_frame_get_user_data (tmp);
-      guint64 diff_ticks, diff_frames;
-
-      /* This happens for frames that were just added but
-       * which were not passed to the component yet. Ignore
-       * them here!
-       */
-      if (!id)
-        continue;
-
-      if (id->timestamp > best_timestamp)
-        break;
-
-      if (id->timestamp == 0 || best_timestamp == 0)
-        diff_ticks = 0;
-      else
-        diff_ticks = best_timestamp - id->timestamp;
-      diff_frames = best->system_frame_number - tmp->system_frame_number;
-
-      if (diff_ticks > MAX_FRAME_DIST_TICKS
-          || diff_frames > MAX_FRAME_DIST_FRAMES) {
-        finish_frames =
-            g_list_prepend (finish_frames, gst_video_codec_frame_ref (tmp));
-      }
-    }
-  }
-
-  if (FALSE && finish_frames) {
-    g_warning ("Too old frames, bug in decoder -- please file a bug");
-    for (l = finish_frames; l; l = l->next) {
-      gst_video_decoder_drop_frame (GST_VIDEO_DECODER (self), l->data);
     }
   }
 
