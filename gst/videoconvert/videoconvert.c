@@ -828,14 +828,7 @@ convert_YUY2_AYUV (VideoConvert * convert, GstVideoFrame * dest,
 
   video_convert_orc_convert_YUY2_AYUV (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
-      FRAME_GET_STRIDE (src), (width + 1) / 2,
-      height & 1 ? height - 1 : height);
-
-  /* now handle last line */
-  if (height & 1) {
-    UNPACK_FRAME (src, convert->tmplines[0], height - 1, width);
-    PACK_FRAME (dest, convert->tmplines[0], height - 1, width);
-  }
+      FRAME_GET_STRIDE (src), (width + 1) / 2, height);
 }
 
 static void
@@ -903,14 +896,7 @@ convert_UYVY_AYUV (VideoConvert * convert, GstVideoFrame * dest,
 
   video_convert_orc_convert_UYVY_AYUV (FRAME_GET_LINE (dest, 0),
       FRAME_GET_STRIDE (dest), FRAME_GET_LINE (src, 0),
-      FRAME_GET_STRIDE (src), (width + 1) / 2,
-      height & 1 ? height - 1 : height);
-
-  /* now handle last line */
-  if (height & 1) {
-    UNPACK_FRAME (src, convert->tmplines[0], height - 1, width);
-    PACK_FRAME (dest, convert->tmplines[0], height - 1, width);
-  }
+      FRAME_GET_STRIDE (src), (width + 1) / 2, height);
 }
 
 static void
@@ -960,6 +946,7 @@ convert_AYUV_I420 (VideoConvert * convert, GstVideoFrame * dest,
   gint width = convert->width;
   gint height = convert->height;
 
+  /* FIXME, what about odd width/height */
   video_convert_orc_convert_AYUV_I420 (FRAME_GET_Y_LINE (dest, 0),
       2 * FRAME_GET_Y_STRIDE (dest), FRAME_GET_Y_LINE (dest, 1),
       2 * FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
@@ -1004,14 +991,7 @@ convert_AYUV_Y42B (VideoConvert * convert, GstVideoFrame * dest,
       FRAME_GET_Y_STRIDE (dest), FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_V_LINE (dest, 0),
       FRAME_GET_V_STRIDE (dest), FRAME_GET_LINE (src, 0),
-      FRAME_GET_STRIDE (src), (width + 1) / 2,
-      height & 1 ? height - 1 : height);
-
-  /* now handle last line */
-  if (height & 1) {
-    UNPACK_FRAME (src, convert->tmplines[0], height - 1, width);
-    PACK_FRAME (dest, convert->tmplines[0], height - 1, width);
-  }
+      FRAME_GET_STRIDE (src), (width + 1) / 2, height);
 }
 
 static void
