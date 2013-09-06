@@ -1185,8 +1185,8 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * If @caps is %NULL, no conversion will be performed and this function is
    * equivalent to the #GstPlayBin::frame property.
    *
-   * Returns: a #GstBuffer of the current video frame converted to #caps.
-   * The caps on the buffer will describe the final layout of the buffer data.
+   * Returns: a #GstSample of the current video frame converted to #caps.
+   * The caps on the sample will describe the final layout of the buffer data.
    * %NULL is returned when no current buffer can be retrieved or when the
    * conversion failed.
    */

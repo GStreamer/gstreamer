@@ -3703,8 +3703,10 @@ gst_play_sink_get_last_sample (GstPlaySink * playsink)
  * describe the format of the frame. If @caps is not %NULL, the video
  * frame will be converted to the format of the caps.
  *
- * Returns: a #GstBuffer with the frame data or %NULL when no video frame is
- * available or when the conversion failed.
+ * Returns: a #GstSample of the current video sample converted to #caps.
+ * The caps in the sample will describe the final layout of the buffer data.
+ * %NULL is returned when no current sample can be retrieved or when the
+ * conversion failed.
  */
 GstSample *
 gst_play_sink_convert_sample (GstPlaySink * playsink, GstCaps * caps)
