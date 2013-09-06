@@ -255,6 +255,7 @@ static gboolean gst_queue2_is_empty (GstQueue2 * queue);
 static gboolean gst_queue2_is_filled (GstQueue2 * queue);
 
 static void update_cur_level (GstQueue2 * queue, GstQueue2Range * range);
+static void update_in_rates (GstQueue2 * queue);
 
 typedef enum
 {
@@ -875,6 +876,10 @@ update_buffering (GstQueue2 * queue)
   gint percent;
   gboolean post = FALSE;
 
+  /* Ensure the variables used to calculate buffering state are up-to-date. */
+  update_cur_level (queue, queue->current);
+  update_in_rates (queue);
+
   if (!get_buffering_percent (queue, NULL, &percent))
     return;
 
@@ -1285,6 +1290,10 @@ gst_queue2_create_read (GstQueue2 * queue, guint64 offset, guint length,
           update_cur_pos (queue, queue->current, rpos);
           GST_QUEUE2_SIGNAL_DEL (queue);
         }
+
+        if (queue->use_buffering)
+          update_buffering (queue);
+
         GST_DEBUG_OBJECT (queue, "waiting for add");
         GST_QUEUE2_WAIT_ADD_CHECK (queue, queue->srcresult, out_flushing);
         continue;
