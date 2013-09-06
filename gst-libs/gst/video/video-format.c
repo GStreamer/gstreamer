@@ -1179,7 +1179,7 @@ unpack_NV24 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
 {
-  video_orc_unpack_NV12 (dest,
+  video_orc_unpack_NV24 (dest,
       GET_PLANE_LINE (0, y), GET_PLANE_LINE (1, y), width);
 }
 
@@ -1189,7 +1189,7 @@ pack_NV24 (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
     gint y, gint width)
 {
-  video_orc_pack_NV12 (GET_PLANE_LINE (0, y),
+  video_orc_pack_NV24 (GET_PLANE_LINE (0, y),
       GET_PLANE_LINE (1, y), src, width);
 }
 

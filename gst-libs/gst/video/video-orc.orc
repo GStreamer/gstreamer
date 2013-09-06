@@ -423,6 +423,25 @@ x2 select1wb y, ay
 select0lw uv, uvuv
 swapw vu, uv
 
+.function video_orc_unpack_NV24
+.dest 4 d guint8
+.source 1 y guint8
+.source 2 uv guint8
+.const 1 c255 255
+.temp 2 ay
+
+mergebw ay, c255, y
+mergewl d, ay, uv
+
+.function video_orc_pack_NV24
+.dest 1 y guint8
+.dest 2 uv guint8
+.source 4 ayuv guint8
+.temp 2 ay
+
+splitlw uv, ay, ayuv
+select1wb y, ay
+
 .function video_orc_unpack_A420
 .dest 4 d guint8
 .source 1 y guint8
