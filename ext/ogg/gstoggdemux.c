@@ -146,6 +146,7 @@ static GstOggPad *gst_ogg_chain_get_stream (GstOggChain * chain,
 static GstFlowReturn gst_ogg_demux_combine_flows (GstOggDemux * ogg,
     GstOggPad * pad, GstFlowReturn ret);
 static void gst_ogg_demux_sync_streams (GstOggDemux * ogg);
+static gboolean gst_ogg_demux_check_eos (GstOggDemux * ogg);
 
 static GstCaps *gst_ogg_demux_set_header_on_caps (GstOggDemux * ogg,
     GstCaps * caps, GList * headers);
@@ -733,11 +734,17 @@ gst_ogg_demux_chain_peer (GstOggPad * pad, ogg_packet * packet,
       GST_TIME_ARGS (current_time));
 
   /* check stream eos */
-  if ((ogg->segment.rate > 0.0 && ogg->segment.stop != GST_CLOCK_TIME_NONE &&
-          current_time >= ogg->segment.stop) ||
-      (ogg->segment.rate < 0.0 && current_time <= ogg->segment.start)) {
+  if (!delta_unit &&
+      ((ogg->segment.rate > 0.0 &&
+              ogg->segment.stop != GST_CLOCK_TIME_NONE &&
+              current_time >= ogg->segment.stop) ||
+          (ogg->segment.rate < 0.0 && current_time <= ogg->segment.start))) {
     GST_DEBUG_OBJECT (ogg, "marking pad %p EOS", pad);
     pad->is_eos = TRUE;
+
+    if (cret == GST_FLOW_OK && gst_ogg_demux_check_eos (ogg)) {
+      cret = GST_FLOW_EOS;
+    }
   }
 
 done:
