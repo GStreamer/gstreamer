@@ -363,6 +363,7 @@ public class MediaInfo.Info : Box
     // sort streams
     ArrayList<string> sids = new ArrayList<string> ();
     int six;
+    int page_offset;
 
     if (info == null) {
       container_caps.set_text ("");
@@ -397,6 +398,7 @@ public class MediaInfo.Info : Box
       debug ("stream[%d:%s]: %s", i, sinfo.get_stream_type_nick(), sinfo.get_caps ().to_string ());
     }
     */
+    // get stream info
     sinfo = info.get_stream_info ();
     if (sinfo != null) {
       caps = sinfo.get_caps ();
@@ -409,16 +411,20 @@ public class MediaInfo.Info : Box
       while (all_streams.get_n_pages() > 0) {
         all_streams.remove_page (-1);
       }
-			} else {
+    } else {
       while (video_streams.get_n_pages() > 0) {
         video_streams.remove_page (-1);
       }
       while (audio_streams.get_n_pages() > 0) {
         audio_streams.remove_page (-1);
       }
+      while (subtitle_streams.get_n_pages() > 0) {
+        subtitle_streams.remove_page (-1);
+      }
     }
-    
-    // get stream info
+    page_offset = 0;
+
+    // do video streams
     nb = compact_mode ? all_streams : video_streams;
     l = info.get_video_streams ();
     num_video_streams = l.length ();
@@ -545,10 +551,15 @@ public class MediaInfo.Info : Box
       // sinfo.get_toc()
 
       six = get_stream_index (sinfo, sids);
-      nb.insert_page (table, new Label (@"video $i"), six);
+      nb.insert_page (table, new Label (@"video $i"), page_offset + six);
     }
-    nb.show_all();
+    if (compact_mode) {
+      page_offset += (int)num_video_streams;
+    } else {
+      nb.show_all();
+    }
 
+    // do audio streams
     nb = compact_mode ? all_streams : audio_streams;
     l = info.get_audio_streams ();
     num_audio_streams = l.length ();
@@ -647,10 +658,15 @@ public class MediaInfo.Info : Box
       }
 
       six = get_stream_index (sinfo, sids);
-      nb.insert_page (table, new Label (@"audio $i"), six);
+      nb.insert_page (table, new Label (@"audio $i"), page_offset + six);
     }
-    nb.show_all();
-    
+    if (compact_mode) {
+      page_offset += (int)num_audio_streams;
+    } else {
+      nb.show_all();
+    }
+
+    // do subtitle streams
     nb = compact_mode ? all_streams : subtitle_streams;
     l = info.get_subtitle_streams ();
     num_subtitle_streams = l.length ();
@@ -708,7 +724,10 @@ public class MediaInfo.Info : Box
       }
 
       six = get_stream_index (sinfo, sids);
-      nb.insert_page (table, new Label (@"subtitle $i"), six);
+      nb.insert_page (table, new Label (@"subtitle $i"), page_offset + six);
+    }
+    if (compact_mode) {
+      page_offset += (int)num_subtitle_streams;
     }
     nb.show_all();
     
