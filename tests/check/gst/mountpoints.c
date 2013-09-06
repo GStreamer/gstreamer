@@ -87,9 +87,11 @@ GST_START_TEST (test_match)
   tmp = gst_rtsp_mount_points_match (mounts, "/test", &matched);
   fail_unless (tmp == f[0]);
   fail_unless (matched == 5);
+  g_object_unref (tmp);
   tmp = gst_rtsp_mount_points_match (mounts, "/test/stream=1", &matched);
   fail_unless (tmp == f[0]);
   fail_unless (matched == 5);
+  g_object_unref (tmp);
   tmp = gst_rtsp_mount_points_match (mounts, "/booz", &matched);
   fail_unless (tmp == NULL);
   tmp = gst_rtsp_mount_points_match (mounts, "/booz/foo", &matched);
@@ -97,24 +99,31 @@ GST_START_TEST (test_match)
   tmp = gst_rtsp_mount_points_match (mounts, "/booz/fooz", &matched);
   fail_unless (tmp == f[1]);
   fail_unless (matched == 10);
+  g_object_unref (tmp);
   tmp = gst_rtsp_mount_points_match (mounts, "/booz/fooz/zoo", &matched);
   fail_unless (tmp == f[1]);
   fail_unless (matched == 10);
+  g_object_unref (tmp);
   tmp = gst_rtsp_mount_points_match (mounts, "/booz/foo/zoop", &matched);
   fail_unless (tmp == f[2]);
   fail_unless (matched == 14);
+  g_object_unref (tmp);
   tmp = gst_rtsp_mount_points_match (mounts, "/tark/bar", &matched);
   fail_unless (tmp == f[3]);
   fail_unless (matched == 9);
+  g_object_unref (tmp);
   tmp = gst_rtsp_mount_points_match (mounts, "/tark/bar/boo", &matched);
   fail_unless (tmp == f[3]);
   fail_unless (matched == 9);
+  g_object_unref (tmp);
   tmp = gst_rtsp_mount_points_match (mounts, "/tark/bar/ba", &matched);
   fail_unless (tmp == f[3]);
   fail_unless (matched == 9);
+  g_object_unref (tmp);
   tmp = gst_rtsp_mount_points_match (mounts, "/tark/bar/baz", &matched);
   fail_unless (tmp == f[4]);
   fail_unless (matched == 13);
+  g_object_unref (tmp);
 
   g_object_unref (mounts);
 }
