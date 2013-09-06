@@ -1116,12 +1116,12 @@ convert_Y444_I420 (VideoConvert * convert, GstVideoFrame * dest,
   video_convert_orc_planar_chroma_444_420 (FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (src, 0),
       2 * FRAME_GET_U_STRIDE (src), FRAME_GET_U_LINE (src, 1),
-      2 * FRAME_GET_U_STRIDE (src), (width + 1) / 2, height / 2);
+      2 * FRAME_GET_U_STRIDE (src), width / 2, height / 2);
 
   video_convert_orc_planar_chroma_444_420 (FRAME_GET_V_LINE (dest, 0),
       FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (src, 0),
       2 * FRAME_GET_V_STRIDE (src), FRAME_GET_V_LINE (src, 1),
-      2 * FRAME_GET_V_STRIDE (src), (width + 1) / 2, height / 2);
+      2 * FRAME_GET_V_STRIDE (src), width / 2, height / 2);
 
   /* now handle last line */
   if (height & 1) {
@@ -1143,11 +1143,11 @@ convert_Y444_Y42B (VideoConvert * convert, GstVideoFrame * dest,
 
   video_convert_orc_planar_chroma_444_422 (FRAME_GET_U_LINE (dest, 0),
       FRAME_GET_U_STRIDE (dest), FRAME_GET_U_LINE (src, 0),
-      FRAME_GET_U_STRIDE (src), (width + 1) / 2, height);
+      FRAME_GET_U_STRIDE (src), width / 2, height);
 
   video_convert_orc_planar_chroma_444_422 (FRAME_GET_V_LINE (dest, 0),
       FRAME_GET_V_STRIDE (dest), FRAME_GET_V_LINE (src, 0),
-      FRAME_GET_V_STRIDE (src), (width + 1) / 2, height);
+      FRAME_GET_V_STRIDE (src), width / 2, height);
 }
 
 static void
@@ -1161,7 +1161,7 @@ convert_Y444_YUY2 (VideoConvert * convert, GstVideoFrame * dest,
       FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
       FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
       FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
-      FRAME_GET_V_STRIDE (src), (width + 1) / 2, height);
+      FRAME_GET_V_STRIDE (src), width / 2, height);
 }
 
 static void
@@ -1175,7 +1175,7 @@ convert_Y444_UYVY (VideoConvert * convert, GstVideoFrame * dest,
       FRAME_GET_STRIDE (dest), FRAME_GET_Y_LINE (src, 0),
       FRAME_GET_Y_STRIDE (src), FRAME_GET_U_LINE (src, 0),
       FRAME_GET_U_STRIDE (src), FRAME_GET_V_LINE (src, 0),
-      FRAME_GET_V_STRIDE (src), (width + 1) / 2, height);
+      FRAME_GET_V_STRIDE (src), width / 2, height);
 }
 
 static void
@@ -1370,17 +1370,17 @@ static const VideoTransform transforms[] = {
       GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, 0, 0, convert_Y42B_Y444},
 
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_I420,
-      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, FALSE, 0, 0, convert_Y444_I420},
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, FALSE, 1, 0, convert_Y444_I420},
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_YV12,
-      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, FALSE, 0, 0, convert_Y444_I420},
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, FALSE, 1, 0, convert_Y444_I420},
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_YUY2,
-      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, 0, 0, convert_Y444_YUY2},
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, 1, 0, convert_Y444_YUY2},
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_UYVY,
-      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, 0, 0, convert_Y444_UYVY},
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, 1, 0, convert_Y444_UYVY},
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_AYUV,
       GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, 0, 0, convert_Y444_AYUV},
   {GST_VIDEO_FORMAT_Y444, GST_VIDEO_COLOR_MATRIX_UNKNOWN, GST_VIDEO_FORMAT_Y42B,
-      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, 0, 0, convert_Y444_Y42B},
+      GST_VIDEO_COLOR_MATRIX_UNKNOWN, TRUE, TRUE, 1, 0, convert_Y444_Y42B},
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   {GST_VIDEO_FORMAT_AYUV, GST_VIDEO_COLOR_MATRIX_BT601, GST_VIDEO_FORMAT_ARGB,
