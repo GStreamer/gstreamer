@@ -25,8 +25,7 @@ public class MediaInfo.App : Window
   private FileChooserWidget chooser;
   private Info info;
 
-  public App (string? directory_or_uri)
-  {
+  public App (string? directory_or_uri) {
     GLib.Object (type :  WindowType.TOPLEVEL);
     
     string directory = null;
@@ -85,8 +84,7 @@ public class MediaInfo.App : Window
 
   // helper
 
-  private MenuBar create_menu ()
-  {
+  private MenuBar create_menu () {
     MenuBar menu_bar = new MenuBar ();
     Gtk.MenuItem item;
     Gtk.Menu sub_menu;
@@ -142,8 +140,7 @@ public class MediaInfo.App : Window
 
   // signal handler
 
-  private void on_update_preview ()
-  {
+  private void on_update_preview () {
     File file = chooser.get_file();
     bool res = false;
 
@@ -153,8 +150,7 @@ public class MediaInfo.App : Window
     chooser.set_preview_widget_active (res);
   }
 
-  private void on_fullscreen_toggled (CheckMenuItem item)
-  {
+  private void on_fullscreen_toggled (CheckMenuItem item) {
     if (item.active) {
       fullscreen();
     } else {
@@ -162,8 +158,7 @@ public class MediaInfo.App : Window
     }
   }
 
-  private void on_about_clicked (Gtk.MenuItem item)
-  {
+  private void on_about_clicked (Gtk.MenuItem item) {
     AboutDialog dlg = new AboutDialog ();
 
     dlg.set_version(Config.PACKAGE_VERSION);

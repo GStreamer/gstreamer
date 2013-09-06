@@ -36,6 +36,7 @@ public class MediaInfo.Info : Box
   private Notebook video_streams;  // depending on screen resolution
   private Notebook audio_streams;
   private Notebook subtitle_streams;
+  private Label toc_entries;       // TODO(ensonic): use treeview
   private Preview preview;
   private ScrolledWindow info_area;
   // gstreamer objects
@@ -53,8 +54,7 @@ public class MediaInfo.Info : Box
   private HashSet<string> tag_black_list;
   private HashMap<string, string> wikilinks;
 
-  public Info ()
-  {
+  public Info () {
     Label label;
     Table table;
     AttachOptions fill = AttachOptions.FILL;
@@ -251,6 +251,17 @@ public class MediaInfo.Info : Box
       row++;
     }
 
+    label = new Label (null);
+    label.set_markup("<b>Toc</b>");
+    label.set_alignment (0.0f, 0.5f);
+    table.attach (label, 0, 3, row, row+1, fill_exp, 0, 0, 1);
+    row++;
+
+    toc_entries = new Label (null); // TODO(ensonic): use TreeView
+    //toc.row_activated.connect (on_toc_entry_activated);
+    table.attach (toc_entries, 0, 3, row, row+1, fill_exp, 0, 0, 1);
+    row++;
+    
     // TODO: add container stream info widgets
 
     // TODO: add tag list widget
@@ -274,16 +285,14 @@ public class MediaInfo.Info : Box
     bus.sync_message["element"].connect (on_element_sync_message);
   }
 
-  ~Info ()
-  {
+  ~Info () {
     // stop previous playback
     pb.set_state (State.NULL);
   }
 
   // public methods
 
-  public bool discover (string uri)
-  {
+  public bool discover (string uri) {
     bool res = true;
 
     if (uri != null) {
@@ -318,8 +327,7 @@ public class MediaInfo.Info : Box
     return (res);
   }
   
-  private void on_uri_discovered (DiscovererInfo info, Error e)
-  {
+  private void on_uri_discovered (DiscovererInfo info, Error e) {
     if (e != null) {
       debug ("Failed to extract metadata from %s: %s: %s", info.get_uri(), e.domain.to_string (), e.message);
       container_caps.set_text ("");
@@ -329,24 +337,7 @@ public class MediaInfo.Info : Box
     process_new_uri (info);
   }
   
-  private void set_wikilink(Label label, Caps caps)
-  {
-    string str = get_codec_description (caps);
-    string wikilink = wikilinks[str];
-
-    if (wikilink == null) {
-      wikilink = wikilinks[caps.get_structure(0).get_name()];
-    }
-    if (wikilink != null) {
-      // FIXME: make prefix (en) and link translatable
-      label.set_markup ("<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str));
-    } else {
-      label.set_text (str);
-    }
-  }
-
-  private void process_new_uri (DiscovererInfo info)
-  {
+  private void process_new_uri (DiscovererInfo info) {
     string uri = info.get_uri();
     GLib.List<DiscovererStreamInfo> l;
     DiscovererStreamInfo sinfo;
@@ -360,6 +351,7 @@ public class MediaInfo.Info : Box
     Caps caps;
     unowned Structure s;
     unowned TagList t;
+    unowned Toc toc = null;
     // sort streams
     ArrayList<string> sids = new ArrayList<string> ();
     int six;
@@ -404,23 +396,18 @@ public class MediaInfo.Info : Box
       caps = sinfo.get_caps ();
       container_caps.set_text (caps.to_string ());
       set_wikilink (container_name, caps); 
+
+      toc = sinfo.get_toc();
+      // irks: we can also have the toc on a *_stream
     }
 
 	  // reset notebooks
     if (compact_mode) {
-      while (all_streams.get_n_pages() > 0) {
-        all_streams.remove_page (-1);
-      }
+      clear_notebook (all_streams);
     } else {
-      while (video_streams.get_n_pages() > 0) {
-        video_streams.remove_page (-1);
-      }
-      while (audio_streams.get_n_pages() > 0) {
-        audio_streams.remove_page (-1);
-      }
-      while (subtitle_streams.get_n_pages() > 0) {
-        subtitle_streams.remove_page (-1);
-      }
+      clear_notebook (video_streams);
+      clear_notebook (audio_streams);
+      clear_notebook (subtitle_streams);
     }
     page_offset = 0;
 
@@ -548,7 +535,9 @@ public class MediaInfo.Info : Box
         row++;
       }
       
-      // sinfo.get_toc()
+      if (toc == null) {
+        toc = sinfo.get_toc();
+      }
 
       six = get_stream_index (sinfo, sids);
       nb.insert_page (table, new Label (@"video $i"), page_offset + six);
@@ -657,6 +646,10 @@ public class MediaInfo.Info : Box
         row++;
       }
 
+      if (toc == null) {
+        toc = sinfo.get_toc();
+      }
+
       six = get_stream_index (sinfo, sids);
       nb.insert_page (table, new Label (@"audio $i"), page_offset + six);
     }
@@ -723,6 +716,10 @@ public class MediaInfo.Info : Box
         row++;
       }
 
+      if (toc == null) {
+        toc = sinfo.get_toc();
+      }
+
       six = get_stream_index (sinfo, sids);
       nb.insert_page (table, new Label (@"subtitle $i"), page_offset + six);
     }
@@ -730,6 +727,12 @@ public class MediaInfo.Info : Box
       page_offset += (int)num_subtitle_streams;
     }
     nb.show_all();
+
+    if (toc != null) {
+      toc_entries.set_text ("has toc");
+    } else {
+      toc_entries.set_text (null);
+    }
     
     if (have_video) {
       Gdk.Point res = video_resolutions[0];
@@ -749,8 +752,7 @@ public class MediaInfo.Info : Box
 
   // signal handlers
   
-  private void on_preview_size_allocate (Widget widget, Gtk.Allocation box)
-  {
+  private void on_preview_size_allocate (Widget widget, Gtk.Allocation box) {
     /*
     Gtk.Allocation alloc;
     get_allocation (out alloc);
@@ -766,8 +768,7 @@ public class MediaInfo.Info : Box
     */
   }
 
-  private bool on_preview_draw (Widget widget, Cairo.Context cr)
-  {
+  private bool on_preview_draw (Widget widget, Cairo.Context cr) {
     if (pb.current_state < State.PAUSED || !have_video) {
       widget.set_double_buffered (true);
     } else {      
@@ -776,16 +777,14 @@ public class MediaInfo.Info : Box
     return false;
   }
 
-  private void on_element_sync_message (Gst.Bus bus, Message message)
-  {
+  private void on_element_sync_message (Gst.Bus bus, Message message) {
     if (Gst.Video.is_video_overlay_prepare_window_handle_message (message)) {
       Gst.Video.Overlay overlay = message.src as Gst.Video.Overlay;
       overlay.set_window_handle ((uint *)Gdk.X11Window.get_xid (preview.get_window ()));
     }
   }
 
-  private void on_video_stream_switched (Notebook nb, Widget page, uint page_num)
-  {
+  private void on_video_stream_switched (Notebook nb, Widget page, uint page_num) {
     if (pb.current_state > State.PAUSED) {
       debug ("Switching video to: %u", page_num);
       ((GLib.Object)pb).set_property ("current-video", (int)page_num);
@@ -794,24 +793,21 @@ public class MediaInfo.Info : Box
     }
   }
 
-  private void on_audio_stream_switched (Notebook nb, Widget page, uint page_num)
-  {
+  private void on_audio_stream_switched (Notebook nb, Widget page, uint page_num) {
     if (pb.current_state > State.PAUSED) {
       debug ("Switching audio to: %u", page_num);
       ((GLib.Object)pb).set_property ("current-audio", (int)page_num);
     }
   }
 
-  private void on_subtitle_stream_switched (Notebook nb, Widget page, uint page_num)
-  {
+  private void on_subtitle_stream_switched (Notebook nb, Widget page, uint page_num) {
     if (pb.current_state > State.PAUSED) {
       debug ("Switching subtitle to: %u", page_num);
       ((GLib.Object)pb).set_property ("current-text", (int)page_num);
     }
   }
 
-  private void on_stream_switched (Notebook nb, Widget page, uint page_num)
-  {
+  private void on_stream_switched (Notebook nb, Widget page, uint page_num) {
     if (pb.current_state > State.PAUSED) {
       if (page_num < num_video_streams) {
         debug ("Switching video to: %u", page_num);
@@ -835,9 +831,29 @@ public class MediaInfo.Info : Box
   
   // helpers
   
+  private void clear_notebook (NoteBook nb) {
+    while (nb.get_n_pages() > 0) {
+      nb.remove_page (-1);
+    }
+  }
+  
+  private void set_wikilink (Label label, Caps caps) {
+    string str = get_codec_description (caps);
+    string wikilink = wikilinks[str];
+
+    if (wikilink == null) {
+      wikilink = wikilinks[caps.get_structure(0).get_name()];
+    }
+    if (wikilink != null) {
+      // FIXME: make prefix (en) and link translatable
+      label.set_markup ("<a href=\"http://en.wikipedia.org/wiki/%s\">%s</a>".printf (wikilink, str));
+    } else {
+      label.set_text (str);
+    }
+  }
+  
   // get stream index where streams are orderd by stream_id
-  private int get_stream_index (DiscovererStreamInfo sinfo, ArrayList<string> sids)
-  {
+  private int get_stream_index (DiscovererStreamInfo sinfo, ArrayList<string> sids) {
     string sid = sinfo.get_stream_id ();
     int six = 0;
     
@@ -850,8 +866,7 @@ public class MediaInfo.Info : Box
     return six;
   }
 
-  private string build_taglist_info (TagList t)
-  {
+  private string build_taglist_info (TagList t) {
     uint i;
     string str, fn, vstr;
     GLib.Value v;
