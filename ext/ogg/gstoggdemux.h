@@ -174,6 +174,7 @@ struct _GstOggDemux
   enum { PUSH_PLAYING, PUSH_DURATION, PUSH_BISECT1, PUSH_LINEAR1, PUSH_BISECT2, PUSH_LINEAR2 } push_state;
 
   GstClockTime push_seek_time_original_target;
+  GstClockTime push_seek_time_original_stop;
   GstClockTime push_seek_time_target;
   gint64 push_last_seek_offset;
   GstClockTime push_last_seek_time;
@@ -187,6 +188,7 @@ struct _GstOggDemux
   gboolean seek_secant;
   gboolean seek_undershot;
   GstClockTime push_prev_seek_time;
+  guint32 push_seek_seqnum;
 
   gint push_bisection_steps[2];
   gint stats_bisection_steps[2];
