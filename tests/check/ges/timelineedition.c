@@ -1150,6 +1150,22 @@ GST_START_TEST (test_groups)
   check_layer (c4, 1);
   check_layer (c5, 2);
 
+  fail_unless (ges_container_edit (GES_CONTAINER (c), NULL, 0,
+          GES_EDIT_MODE_TRIM, GES_EDGE_START, 5) == TRUE);
+  CHECK_OBJECT_PROPS (c, 5, 5, 5);
+  CHECK_OBJECT_PROPS (c1, 10, 0, 10);
+  CHECK_OBJECT_PROPS (c2, 20, 0, 20);
+  CHECK_OBJECT_PROPS (c3, 40, 10, 10);
+  CHECK_OBJECT_PROPS (c4, 40, 0, 20);
+  CHECK_OBJECT_PROPS (c5, 50, 0, 20);
+  CHECK_OBJECT_PROPS (group, 5, 0, 35);
+  check_layer (c, 0);
+  check_layer (c1, 1);
+  check_layer (c2, 1);
+  check_layer (c3, 0);
+  check_layer (c4, 1);
+  check_layer (c5, 2);
+
   gst_object_unref (timeline);
   gst_object_unref (asset);
 }

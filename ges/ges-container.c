@@ -315,26 +315,46 @@ _child_start_changed_cb (GESTimelineElement * child,
     GParamSpec * arg G_GNUC_UNUSED, GESContainer * container)
 {
   ChildMapping *map;
+  GstClockTime start;
 
   GESContainerPrivate *priv = container->priv;
   GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
 
-  if (container->children_control_mode == GES_CHILDREN_IGNORE_NOTIFIES)
-    return;
-
   map = g_hash_table_lookup (priv->mappings, child);
   g_assert (map);
 
-  if (container->children_control_mode == GES_CHILDREN_UPDATE_OFFSETS) {
-    map->start_offset = _START (container) - _START (child);
+  switch (container->children_control_mode) {
+    case GES_CHILDREN_IGNORE_NOTIFIES:
+      return;
+    case GES_CHILDREN_UPDATE_ALL_VALUES:
+      _ges_container_sort_children (container);
+      start = container->children ?
+          _START (container->children->data) : _START (container);
 
-    return;
+      if (start != _START (container)) {
+        _DURATION (container) = _END (container) - start;
+        _START (container) = start;
+
+        GST_DEBUG_OBJECT (container, "Child move made us "
+            "move to %" GST_TIME_FORMAT, GST_TIME_ARGS (_START (container)));
+
+        g_object_notify (G_OBJECT (container), "start");
+      }
+
+      /* Falltrough! */
+    case GES_CHILDREN_UPDATE_OFFSETS:
+      map->start_offset = _START (container) - _START (child);
+      break;
+
+    case GES_CHILDREN_UPDATE:
+      /* We update all the children calling our set_start method */
+      container->initiated_move = child;
+      _set_start0 (element, _START (child) + map->start_offset);
+      container->initiated_move = NULL;
+      break;
+    default:
+      break;
   }
-
-  /* We update all the children calling our set_start method */
-  container->initiated_move = child;
-  _set_start0 (element, _START (child) + map->start_offset);
-  container->initiated_move = NULL;
 }
 
 static void
@@ -370,6 +390,8 @@ _child_duration_changed_cb (GESTimelineElement * child,
 {
   ChildMapping *map;
 
+  GList *tmp;
+  GstClockTime end = 0;
   GESContainerPrivate *priv = container->priv;
   GESTimelineElement *element = GES_TIMELINE_ELEMENT (container);
 
@@ -379,16 +401,32 @@ _child_duration_changed_cb (GESTimelineElement * child,
   map = g_hash_table_lookup (priv->mappings, child);
   g_assert (map);
 
-  if (container->children_control_mode == GES_CHILDREN_UPDATE_OFFSETS) {
-    map->inpoint_offset = _START (container) - _START (child);
+  switch (container->children_control_mode) {
+    case GES_CHILDREN_IGNORE_NOTIFIES:
+      break;
+    case GES_CHILDREN_UPDATE_ALL_VALUES:
+      _ges_container_sort_children_by_end (container);
 
-    return;
+      for (tmp = container->children; tmp; tmp = tmp->next)
+        end = MAX (end, _END (tmp->data));
+
+      if (end != _END (container)) {
+        _DURATION (container) = end - _START (container);
+        g_object_notify (G_OBJECT (container), "duration");
+      }
+      /* Falltrough */
+    case GES_CHILDREN_UPDATE_OFFSETS:
+      map->inpoint_offset = _START (container) - _START (child);
+      break;
+    case GES_CHILDREN_UPDATE:
+      /* We update all the children calling our set_duration method */
+      container->initiated_move = child;
+      _set_duration0 (element, _DURATION (child) + map->duration_offset);
+      container->initiated_move = NULL;
+      break;
+    default:
+      break;
   }
-
-  /* We update all the children calling our set_duration method */
-  container->initiated_move = child;
-  _set_duration0 (element, _DURATION (child) + map->duration_offset);
-  container->initiated_move = NULL;
 }
 
 /****************************************************

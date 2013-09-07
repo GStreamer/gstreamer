@@ -185,7 +185,7 @@ static gboolean
 _trim (GESTimelineElement * group, GstClockTime start)
 {
   GList *tmp;
-  GstClockTime last_child_end = 0;
+  GstClockTime last_child_end = 0, oldstart = _START (group);
   GESContainer *container = GES_CONTAINER (group);
   GESTimeline *timeline = GES_TIMELINE_ELEMENT_TIMELINE (group);
   gboolean ret = TRUE, expending = (start < _START (group));
@@ -201,10 +201,12 @@ _trim (GESTimelineElement * group, GstClockTime start)
     GESTimelineElement *child = tmp->data;
 
     if (expending) {
-      /* If the start if bigger, we do not touch it (in case we are expending)
-       */
-      if (_START (child) > _START (group))
+      /* If the start is bigger, we do not touch it (in case we are expending) */
+      if (_START (child) > oldstart) {
+        GST_DEBUG_OBJECT (child, "Skipping as not at begining of the group");
         continue;
+      }
+
       ret &= ges_timeline_element_trim (child, start);
     } else {
       if (start > _END (child))

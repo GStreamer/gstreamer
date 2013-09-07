@@ -1363,6 +1363,28 @@ ges_timeline_trim_object_simple (GESTimeline * timeline,
 
   switch (edge) {
     case GES_EDGE_START:
+    {
+      GESTimelineElement *toplevel;
+      GESChildrenControlMode old_mode;
+      toplevel = ges_timeline_element_get_toplevel_parent (element);
+
+      if (position < _START (toplevel) && _START (toplevel) < _START (element)) {
+        GST_DEBUG_OBJECT (toplevel, "Not trimming %p as not at begining "
+            "of the container", element);
+
+        return FALSE;
+      }
+
+      old_mode = GES_CONTAINER (toplevel)->children_control_mode;
+      if (GES_IS_GROUP (toplevel) && old_mode == GES_CHILDREN_UPDATE) {
+        GST_DEBUG_OBJECT (toplevel, "Setting children udpate mode to"
+            " UPDDATE_ALL_VALUES so we can trim without moving the contained");
+        /* The container will update its values itself according to new
+         * values of the children */
+        GES_CONTAINER (toplevel)->children_control_mode =
+            GES_CHILDREN_UPDATE_ALL_VALUES;
+      }
+
       inpoint = _INPOINT (track_element);
       duration = _DURATION (track_element);
 
@@ -1393,7 +1415,12 @@ ges_timeline_trim_object_simple (GESTimeline * timeline,
       timeline->priv->needs_transitions_update = TRUE;
 
       _set_duration0 (GES_TIMELINE_ELEMENT (track_element), duration);
+      if (GES_IS_GROUP (toplevel))
+        GES_CONTAINER (toplevel)->children_control_mode = old_mode;
+
+      gst_object_unref (toplevel);
       break;
+    }
     case GES_EDGE_END:
     {
       cur = g_hash_table_lookup (timeline->priv->by_end, track_element);

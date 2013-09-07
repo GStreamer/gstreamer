@@ -1395,6 +1395,8 @@ _trim (GESTimelineElement * element, GstClockTime start)
     GESTrackElement *track_element =
         GES_TRACK_ELEMENT (GES_CONTAINER_CHILDREN (element)->data);
 
+    GST_DEBUG_OBJECT (element, "Trimming child: %" GST_PTR_FORMAT,
+        track_element);
     ret = timeline_trim_object (timeline, track_element, NULL, GES_EDGE_START,
         start);
   }
