@@ -658,6 +658,9 @@ gst_matroska_read_common_parse_attached_file (GstMatroskaReadCommon * common,
 
     tagsample = gst_sample_new (tagbuffer, caps, NULL, info);
 
+    gst_buffer_unref (tagbuffer);
+    gst_caps_unref (caps);
+
     GST_DEBUG_OBJECT (common,
         "Created attachment sample: %" GST_PTR_FORMAT, tagsample);
 
