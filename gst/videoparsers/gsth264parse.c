@@ -1317,22 +1317,35 @@ gst_h264_parse_update_src_caps (GstH264Parse * h264parse, GstCaps * caps)
           par_n, par_d, NULL);
     }
 
-    if (buf) {
-      gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buf, NULL);
-      gst_buffer_replace (&h264parse->codec_data, buf);
-      gst_buffer_unref (buf);
-      buf = NULL;
-    } else {
-      GstStructure *s;
-      /* remove any left-over codec-data hanging around */
-      s = gst_caps_get_structure (caps, 0);
-      gst_structure_remove_field (s, "codec_data");
-      gst_buffer_replace (&h264parse->codec_data, NULL);
+    src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h264parse));
+
+    if (src_caps
+        && gst_structure_has_field (gst_caps_get_structure (src_caps, 0),
+            "codec_data")) {
+      /* use codec data from old caps for comparison; we don't want to resend caps
+         if everything is same except codec data; */
+      gst_caps_set_value (caps, "codec_data",
+          gst_structure_get_value (gst_caps_get_structure (src_caps, 0),
+              "codec_data"));
     }
 
-    src_caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (h264parse));
-    if (!(src_caps && gst_caps_is_strictly_equal (src_caps, caps)))
+    if (!(src_caps && gst_caps_is_strictly_equal (src_caps, caps))) {
+      /* update codec data to new value */
+      if (buf) {
+        gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, buf, NULL);
+        gst_buffer_replace (&h264parse->codec_data, buf);
+        gst_buffer_unref (buf);
+        buf = NULL;
+      } else {
+        GstStructure *s;
+        /* remove any left-over codec-data hanging around */
+        s = gst_caps_get_structure (caps, 0);
+        gst_structure_remove_field (s, "codec_data");
+        gst_buffer_replace (&h264parse->codec_data, NULL);
+      }
+
       gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (h264parse), caps);
+    }
 
     if (src_caps)
       gst_caps_unref (src_caps);
