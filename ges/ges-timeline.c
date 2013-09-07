@@ -1500,8 +1500,9 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackElement * obj,
       GST_DEBUG ("Done Rippling end");
       break;
     case GES_EDGE_START:
-      GST_WARNING ("Ripple start doesn't exist!");
-
+      GST_INFO ("Ripple start doesn't make sense, trimming instead");
+      timeline->priv->movecontext.needs_move_ctx = TRUE;
+      timeline_trim_object (timeline, obj, layers, edge, position);
       break;
     default:
       GST_DEBUG ("Can not ripple edge: %i", edge);
