@@ -1434,6 +1434,12 @@ ges_timeline_trim_object_simple (GESTimeline * timeline,
       duration = MAX (0, real_dur);
       duration = MIN (duration, max_duration - _INPOINT (track_element));
 
+      /* Not moving, avoid overhead */
+      if (duration == _DURATION (track_element)) {
+        GST_DEBUG_OBJECT (track_element, "No change in duration");
+        return FALSE;
+      }
+
       _set_duration0 (GES_TIMELINE_ELEMENT (track_element), duration);
       break;
     }
@@ -1502,7 +1508,11 @@ timeline_ripple_object (GESTimeline * timeline, GESTrackElement * obj,
 
       duration = _DURATION (obj);
 
-      _set_duration0 (GES_TIMELINE_ELEMENT (obj), position - _START (obj));
+      if (!ges_timeline_trim_object_simple (timeline,
+              GES_TIMELINE_ELEMENT (obj), NULL, GES_EDGE_END, position,
+              FALSE)) {
+        return FALSE;
+      }
 
       offset = _DURATION (obj) - duration;
       for (tmp = mv_ctx->moving_trackelements; tmp; tmp = tmp->next) {
@@ -1654,6 +1664,11 @@ timeline_roll_object (GESTimeline * timeline, GESTrackElement * obj,
 
       ret &= ges_timeline_trim_object_simple (timeline,
           GES_TIMELINE_ELEMENT (obj), NULL, GES_EDGE_END, position, FALSE);
+
+      if (ret == FALSE) {
+        GST_DEBUG_OBJECT (timeline, "No triming, bailing out");
+        goto done;
+      }
 
       /* In the case we reached max_duration we just make sure to roll
        * everything to the real new position */
