@@ -240,6 +240,9 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
       g_error_free (err);
       g_free (dbg);
 
+      /* flush any other error messages from the bus and clean up */
+      gst_element_set_state (play->playbin, GST_STATE_NULL);
+
       if (play->missing != NULL && play_install_missing_plugins (play)) {
         g_print ("New plugins installed, trying again...\n");
         --play->cur_idx;
