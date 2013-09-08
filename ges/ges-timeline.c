@@ -1344,7 +1344,7 @@ ges_timeline_trim_object_simple (GESTimeline * timeline,
     GESTimelineElement * element, GList * layers, GESEdge edge,
     guint64 position, gboolean snapping)
 {
-  guint64 nstart, start, inpoint, duration, max_duration, *snapped, *cur;
+  guint64 start, inpoint, duration, max_duration, *snapped, *cur;
   gboolean ret = TRUE;
   gint64 real_dur;
   GESTrackElement *track_element;
@@ -1372,6 +1372,7 @@ ges_timeline_trim_object_simple (GESTimeline * timeline,
         GST_DEBUG_OBJECT (toplevel, "Not trimming %p as not at begining "
             "of the container", element);
 
+        gst_object_unref (toplevel);
         return FALSE;
       }
 
@@ -1397,20 +1398,30 @@ ges_timeline_trim_object_simple (GESTimeline * timeline,
           position = *snapped;
       }
 
-      nstart = position;
-
       /* Calculate new values */
-      position = MAX (start > inpoint ? start - inpoint : 0, position);
       position = MIN (position, start + duration);
-      inpoint = MAX (0, inpoint + position - start);
+      inpoint =
+          MAX (0, inpoint + position > start ? inpoint + position - start : 0);
 
-      real_dur = start + duration - nstart;
+      real_dur = _END (element) - position;
       /* FIXME: Why CLAMP (0, real_dur, max_duration) doesn't work? */
       duration = MAX (0, real_dur);
-      duration = MIN (duration, max_duration - _INPOINT (track_element));
+      duration =
+          MIN (real_dur,
+          max_duration > inpoint ? max_duration - inpoint : G_MAXUINT64);
+
+      /* If we already are at max duration or duration == 0 do no useless work */
+      if ((duration == _DURATION (track_element) &&
+              _DURATION (track_element) == _MAXDURATION (track_element)) ||
+          (duration == 0 && _DURATION (element) == 0)) {
+        GST_DEBUG_OBJECT (track_element,
+            "Duration already == max_duration, no triming");
+        gst_object_unref (toplevel);
+        return FALSE;
+      }
 
       timeline->priv->needs_transitions_update = FALSE;
-      _set_start0 (GES_TIMELINE_ELEMENT (track_element), nstart);
+      _set_start0 (GES_TIMELINE_ELEMENT (track_element), position);
       _set_inpoint0 (GES_TIMELINE_ELEMENT (track_element), inpoint);
       timeline->priv->needs_transitions_update = TRUE;
 
