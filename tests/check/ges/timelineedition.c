@@ -25,27 +25,16 @@
 #define DEEP_CHECK(element, start, inpoint, duration)                          \
 {                                                                              \
   GList *track_elements, *tmp;                                                 \
-  GstClockTime rstart, rinpoint, rduration;                                    \
                                                                                \
-  rstart = ges_timeline_element_get_start (GES_TIMELINE_ELEMENT (element));    \
-  rinpoint = ges_timeline_element_get_inpoint (GES_TIMELINE_ELEMENT (element));\
-  rduration =                                                                  \
-      ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (element));      \
-                                                                               \
-  assert_equals_uint64 (rstart, start);                                        \
-  assert_equals_uint64 (rinpoint, inpoint);                                    \
-  assert_equals_uint64 (rduration, duration);                                  \
+  assert_equals_uint64 (_START (element), start);                              \
+  assert_equals_uint64 (_INPOINT (element), inpoint);                          \
+  assert_equals_uint64 (_DURATION (element), duration);                        \
                                                                                \
   track_elements = GES_CONTAINER_CHILDREN (element);                           \
   for (tmp = track_elements; tmp; tmp = tmp->next) {                           \
-    rstart = ges_timeline_element_get_start (GES_TIMELINE_ELEMENT (tmp->data));\
-    rinpoint =                                                                 \
-        ges_timeline_element_get_inpoint (GES_TIMELINE_ELEMENT (tmp->data));   \
-    rduration =                                                                \
-        ges_timeline_element_get_duration (GES_TIMELINE_ELEMENT (tmp->data));  \
-    assert_equals_uint64 (rstart, start);                                      \
-    assert_equals_uint64 (rinpoint, inpoint);                                  \
-    assert_equals_uint64 (rduration, duration);                                \
+    assert_equals_uint64 (_START (tmp->data), start);                          \
+    assert_equals_uint64 (_INPOINT (tmp->data), inpoint);                      \
+    assert_equals_uint64 (_DURATION (tmp->data), duration);                    \
   }                                                                            \
 }
 
@@ -210,6 +199,18 @@ GST_START_TEST (test_basic_timeline_edition)
   CHECK_OBJECT_PROPS (trackelement1, 20, 0, 20);
   CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
 
+  /**
+   * New timeline:
+   * ------------
+   * inpoints 0-------  3-------- 0------------
+   *          |  clip1 ||  clip   ||    clip2    |
+   * time    20-------40 --------62 ---------122
+   */
+  fail_unless (ges_container_edit (clip, NULL, -1, GES_EDIT_MODE_TRIM,
+          GES_EDGE_START, 40) == TRUE);
+  CHECK_OBJECT_PROPS (trackelement, 40, 3, 22);
+  CHECK_OBJECT_PROPS (trackelement1, 20, 0, 20);
+  CHECK_OBJECT_PROPS (trackelement2, 62, 0, 60);
   /**
    * New timeline:
    * ------------
