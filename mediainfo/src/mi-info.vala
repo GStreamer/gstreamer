@@ -831,7 +831,7 @@ public class MediaInfo.Info : Box
   
   // helpers
   
-  private void clear_notebook (NoteBook nb) {
+  private void clear_notebook (Notebook nb) {
     while (nb.get_n_pages() > 0) {
       nb.remove_page (-1);
     }
