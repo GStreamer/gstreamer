@@ -254,8 +254,8 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
             case GST_VIDEO_FORMAT_NV16:
             case GST_VIDEO_FORMAT_NV24:
               stride[i] =
-                  2 * GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i,
-                  obj->bytesperline);
+                  (i == 0 ? 1 : 2) * GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo,
+                  i, obj->bytesperline);
               break;
             default:
               stride[i] =
