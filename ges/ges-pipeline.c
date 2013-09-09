@@ -337,7 +337,7 @@ no_encodebin:
 GESPipeline *
 ges_pipeline_new (void)
 {
-  return g_object_new (GES_TYPE_TIMELINE_PIPELINE, NULL);
+  return GES_PIPELINE (gst_element_factory_make ("gespipeline", NULL));
 }
 
 #define TRACK_COMPATIBLE_PROFILE(tracktype, profile)			\

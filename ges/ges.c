@@ -100,6 +100,7 @@ ges_init (void)
 
   gst_element_register (NULL, "framepositionner", 0,
       GST_TYPE_FRAME_POSITIONNER);
+  gst_element_register (NULL, "gespipeline", 0, GES_TYPE_PIPELINE);
 
   /* TODO: user-defined types? */
   ges_initialized = TRUE;
