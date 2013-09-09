@@ -81,9 +81,8 @@ GST_END_TEST;
 GST_START_TEST (test_caps_property)
 {
   GstElement *filter;
-  GstCaps *filter_caps;
+  GstCaps *filter_caps, *caps;
   const gchar *caps_str;
-  gchar *str;
 
   filter = gst_check_setup_element ("capsfilter");
 
@@ -93,11 +92,10 @@ GST_START_TEST (test_caps_property)
   filter_caps = gst_caps_from_string (caps_str);
   fail_unless (GST_IS_CAPS (filter_caps));
   g_object_set (filter, "caps", filter_caps, NULL);
-  gst_caps_unref (filter_caps);
 
-  g_object_get (filter, "caps", &filter_caps, NULL);
-  str = gst_caps_to_string (filter_caps);
-  fail_unless (g_strcmp0 (str, caps_str) == 0);
+  g_object_get (filter, "caps", &caps, NULL);
+  fail_unless (gst_caps_is_equal (caps, filter_caps));
+  gst_caps_unref (caps);
   gst_caps_unref (filter_caps);
 
   /* verify that new caps set replace the old ones */
@@ -106,11 +104,10 @@ GST_START_TEST (test_caps_property)
   filter_caps = gst_caps_from_string (caps_str);
   fail_unless (GST_IS_CAPS (filter_caps));
   g_object_set (filter, "caps", filter_caps, NULL);
-  gst_caps_unref (filter_caps);
 
-  g_object_get (filter, "caps", &filter_caps, NULL);
-  str = gst_caps_to_string (filter_caps);
-  fail_unless (g_strcmp0 (str, caps_str) == 0);
+  g_object_get (filter, "caps", &caps, NULL);
+  fail_unless (gst_caps_is_equal (caps, filter_caps));
+  gst_caps_unref (caps);
   gst_caps_unref (filter_caps);
 
   /* make sure that NULL caps is interpreted as ANY */
