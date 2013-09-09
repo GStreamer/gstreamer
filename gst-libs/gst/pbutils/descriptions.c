@@ -354,18 +354,11 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
     if (GST_VIDEO_FORMAT_INFO_IS_GRAY (finfo)) {
       ret = g_strdup (_("Uncompressed gray"));
     } else if (GST_VIDEO_FORMAT_INFO_IS_YUV (finfo)) {
-      const gchar *layout;
       const gchar *subs;
-      gint w_sub, h_sub;
+      gint w_sub, h_sub, n_semi;
 
       w_sub = GST_VIDEO_FORMAT_INFO_W_SUB (finfo, 1);
       h_sub = GST_VIDEO_FORMAT_INFO_H_SUB (finfo, 1);
-
-      if (GST_VIDEO_FORMAT_INFO_N_PLANES (finfo) == 1) {
-        layout = "planar";
-      } else {
-        layout = "packed";
-      }
 
       if (w_sub == 1 && h_sub == 1) {
         subs = "4:4:4";
@@ -378,7 +371,16 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
       } else {
         subs = "";
       }
-      ret = g_strdup_printf (_("Uncompressed %s YUV %s"), layout, subs);
+
+      n_semi = GST_VIDEO_FORMAT_INFO_HAS_ALPHA (finfo) ? 3 : 2;
+
+      if (GST_VIDEO_FORMAT_INFO_N_PLANES (finfo) == 1) {
+        ret = g_strdup_printf (_("Uncompressed packed YUV %s"), subs);
+      } else if (GST_VIDEO_FORMAT_INFO_N_PLANES (finfo) == n_semi) {
+        ret = g_strdup_printf (_("Uncompressed semi-planar YUV %s"), subs);
+      } else {
+        ret = g_strdup_printf (_("Uncompressed planar YUV %s"), subs);
+      }
     } else if (GST_VIDEO_FORMAT_INFO_IS_RGB (finfo)) {
       gboolean alpha, palette;
       gint bits;
@@ -387,8 +389,13 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
       palette = GST_VIDEO_FORMAT_INFO_HAS_PALETTE (finfo);
       bits = GST_VIDEO_FORMAT_INFO_BITS (finfo);
 
-      ret = g_strdup_printf (_("Uncompressed %s%d-bit %s"),
-          palette ? "palettized " : "", bits, alpha ? "RGBA" : "RGB");
+      if (palette) {
+        ret = g_strdup_printf (_("Uncompressed palettized %d-bit %s"),
+            bits, alpha ? "RGBA" : "RGB");
+      } else {
+        ret = g_strdup_printf (_("Uncompressed %d-bit %s"),
+            bits, alpha ? "RGBA" : "RGB");
+      }
     } else {
       ret = g_strdup (_("Uncompressed video"));
     }
