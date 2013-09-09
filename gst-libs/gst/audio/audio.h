@@ -55,6 +55,7 @@ G_BEGIN_DECLS
 
 /**
  * GST_META_TAG_AUDIO_STR:
+ *
  * This metadata is relevant for audio streams.
  *
  * Since: 1.2
@@ -62,6 +63,7 @@ G_BEGIN_DECLS
 #define GST_META_TAG_AUDIO_STR "audio"
 /**
  * GST_META_TAG_AUDIO_CHANNELS_STR:
+ *
  * This metadata stays relevant as long as channels are unchanged.
  *
  * Since: 1.2

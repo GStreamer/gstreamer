@@ -56,6 +56,7 @@ struct _GstVideoAlignment
 /* metadata macros */
 /**
  * GST_META_TAG_VIDEO_STR:
+ *
  * This metadata is relevant for video streams.
  *
  * Since: 1.2
@@ -63,6 +64,7 @@ struct _GstVideoAlignment
 #define GST_META_TAG_VIDEO_STR "video"
 /**
  * GST_META_TAG_VIDEO_ORIENTATION_STR:
+ *
  * This metadata stays relevant as long as video orientation is unchanged.
  *
  * Since: 1.2
@@ -70,6 +72,7 @@ struct _GstVideoAlignment
 #define GST_META_TAG_VIDEO_ORIENTATION_STR "orientation"
 /**
  * GST_META_TAG_VIDEO_SIZE_STR:
+ *
  * This metadata stays relevant as long as video size is unchanged.
  *
  * Since: 1.2
@@ -77,6 +80,7 @@ struct _GstVideoAlignment
 #define GST_META_TAG_VIDEO_SIZE_STR "size"
 /**
  * GST_META_TAG_VIDEO_COLORSPACE_STR:
+ *
  * This metadata stays relevant as long as video colorspace is unchanged.
  *
  * Since: 1.2

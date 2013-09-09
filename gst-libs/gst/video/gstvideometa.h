@@ -163,7 +163,8 @@ typedef enum
   GST_VIDEO_GL_TEXTURE_TYPE_RG
 } GstVideoGLTextureType;
 
-/** GstVideoGLTextureOrientation:
+/**
+ * GstVideoGLTextureOrientation:
  * @GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL: Top line first in memory, left row first
  * @GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_FLIP: Bottom line first in memory, left row first
  * @GST_VIDEO_GL_TEXTURE_ORIENTATION_X_FLIP_Y_NORMAL: Top line first in memory, right row first
@@ -234,7 +235,7 @@ gboolean  gst_video_gl_texture_upload_meta_upload     (GstVideoGLTextureUploadMe
 
 
 /**
- * GstVideoRegionOfInterestMeta: a Bounding Box describing the inner part of a rectangle inside a video frame.
+ * GstVideoRegionOfInterestMeta:
  * @meta: parent #GstMeta
  * @roi_type: GQuark describing the semantic of the Roi (f.i. a face, a pedestrian)
  * @id: identifier of this particular ROI
