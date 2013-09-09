@@ -247,8 +247,15 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
         offs = 0;
         for (i = 0; i < n_planes; i++) {
           offset[i] = offs;
-          stride[i] =
-              GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, obj->bytesperline);
+          if (info->finfo->format == GST_VIDEO_FORMAT_NV12
+              || info->finfo->format == GST_VIDEO_FORMAT_NV21) {
+            stride[i] =
+                (i == 0) ? GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i,
+                obj->bytesperline) : stride[0];
+          } else {
+            stride[i] =
+                GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, obj->bytesperline);
+          }
 
           offs +=
               stride[i] * GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i, height);
