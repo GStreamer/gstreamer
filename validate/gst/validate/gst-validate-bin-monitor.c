@@ -94,11 +94,25 @@ gst_validate_bin_monitor_create_scenarios (GstValidateBinMonitor * monitor)
     const gchar *scenario_name;
 
     if ((scenario_name = g_getenv ("GST_VALIDATE_SCENARIO"))) {
+      gchar **scenario_v = g_strsplit (scenario_name, ":", 2);
+
+      if (scenario_v[1] && GST_VALIDATE_MONITOR_GET_OBJECT (monitor)) {
+        if (!g_pattern_match_simple (scenario_v[1],
+                GST_OBJECT_NAME (GST_VALIDATE_MONITOR_GET_OBJECT (monitor)))) {
+          GST_INFO_OBJECT (monitor, "Not attaching to bin %" GST_PTR_FORMAT
+              " as not matching pattern %s",
+              GST_VALIDATE_MONITOR_GET_OBJECT (monitor), scenario_v[1]);
+
+          g_strfreev (scenario_v);
+          return;
+        }
+      }
       monitor->scenario =
           gst_validate_scenario_factory_create (GST_VALIDATE_MONITOR_GET_RUNNER
           (monitor),
           GST_ELEMENT_CAST (GST_VALIDATE_MONITOR_GET_OBJECT (monitor)),
-          scenario_name);
+          scenario_v[0]);
+      g_strfreev (scenario_v);
     }
   }
 }
