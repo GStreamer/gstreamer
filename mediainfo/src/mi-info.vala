@@ -355,7 +355,16 @@ public class MediaInfo.Info : Box
     // sort streams
     ArrayList<string> sids = new ArrayList<string> ();
     int six;
-    int page_offset;
+    int page_offset = 0;
+
+	  // reset notebooks
+    if (compact_mode) {
+      clear_notebook (all_streams);
+    } else {
+      clear_notebook (video_streams);
+      clear_notebook (audio_streams);
+      clear_notebook (subtitle_streams);
+    }
 
     if (info == null) {
       container_caps.set_text ("");
@@ -390,7 +399,7 @@ public class MediaInfo.Info : Box
       debug ("stream[%d:%s]: %s", i, sinfo.get_stream_type_nick(), sinfo.get_caps ().to_string ());
     }
     */
-    // get stream info
+    // do container streams
     sinfo = info.get_stream_info ();
     if (sinfo != null) {
       caps = sinfo.get_caps ();
@@ -400,16 +409,6 @@ public class MediaInfo.Info : Box
       toc = sinfo.get_toc();
       // irks: we can also have the toc on a *_stream
     }
-
-	  // reset notebooks
-    if (compact_mode) {
-      clear_notebook (all_streams);
-    } else {
-      clear_notebook (video_streams);
-      clear_notebook (audio_streams);
-      clear_notebook (subtitle_streams);
-    }
-    page_offset = 0;
 
     // do video streams
     nb = compact_mode ? all_streams : video_streams;
