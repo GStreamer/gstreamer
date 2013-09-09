@@ -50,6 +50,8 @@ libgstrtp_la_SOURCES = \
 	gstrtpjpegpay.c \
 	gstrtpL16depay.c \
 	gstrtpL16pay.c \
+	gstrtpL24depay.c \
+	gstrtpL24pay.c \
 	gstasteriskh263.c \
 	gstrtpmp1sdepay.c \
 	gstrtpmp2tdepay.c \

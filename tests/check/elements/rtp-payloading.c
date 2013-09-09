@@ -651,6 +651,25 @@ GST_START_TEST (rtp_L16)
 }
 
 GST_END_TEST;
+
+static const guint8 rtp_L24_frame_data[] =
+    { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+static int rtp_L24_frame_data_size = 24;
+
+static int rtp_L24_frame_count = 1;
+
+GST_START_TEST (rtp_L24)
+{
+  rtp_pipeline_test (rtp_L24_frame_data, rtp_L24_frame_data_size,
+      rtp_L24_frame_count,
+      "audio/x-raw,format=S24BE,rate=1,channels=1,layout=(string)interleaved",
+      "rtpL24pay", "rtpL24depay", 0, 0, FALSE);
+}
+
+GST_END_TEST;
 static const guint8 rtp_mp2t_frame_data[] =
     { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -917,6 +936,7 @@ rtp_payloading_suite (void)
   tcase_add_test (tc_chain, rtp_h264_list_gt_mtu);
   tcase_add_test (tc_chain, rtp_h264_list_gt_mtu_avc);
   tcase_add_test (tc_chain, rtp_L16);
+  tcase_add_test (tc_chain, rtp_L24);
   tcase_add_test (tc_chain, rtp_mp2t);
   tcase_add_test (tc_chain, rtp_mp4v);
   tcase_add_test (tc_chain, rtp_mp4v_list);
