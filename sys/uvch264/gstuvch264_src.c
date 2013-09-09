@@ -1809,6 +1809,7 @@ xu_get_id (GstUvcH264Src * self)
 
                   GST_DEBUG_OBJECT (self, "Found H264 XU unit : %d", unit_id);
 
+                  libusb_free_config_descriptor (config);
                   libusb_unref_device (device);
                   return unit_id;
                 }
@@ -1816,6 +1817,7 @@ xu_get_id (GstUvcH264Src * self)
               }
             }
           }
+          libusb_free_config_descriptor (config);
         }
       }
     }
