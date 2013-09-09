@@ -93,7 +93,7 @@ static OutputChain *new_output_chain_for_track (GESPipeline * self,
 static void
 _overlay_expose (GstVideoOverlay * overlay)
 {
-  GESPipeline *pipeline = GES_TIMELINE_PIPELINE (overlay);
+  GESPipeline *pipeline = GES_PIPELINE (overlay);
 
   gst_video_overlay_expose (GST_VIDEO_OVERLAY (pipeline->priv->playsink));
 }
@@ -101,7 +101,7 @@ _overlay_expose (GstVideoOverlay * overlay)
 static void
 _overlay_handle_events (GstVideoOverlay * overlay, gboolean handle_events)
 {
-  GESPipeline *pipeline = GES_TIMELINE_PIPELINE (overlay);
+  GESPipeline *pipeline = GES_PIPELINE (overlay);
 
   gst_video_overlay_handle_events (GST_VIDEO_OVERLAY (pipeline->priv->playsink),
       handle_events);
@@ -111,7 +111,7 @@ static void
 _overlay_set_render_rectangle (GstVideoOverlay * overlay, gint x,
     gint y, gint width, gint height)
 {
-  GESPipeline *pipeline = GES_TIMELINE_PIPELINE (overlay);
+  GESPipeline *pipeline = GES_PIPELINE (overlay);
 
   gst_video_overlay_set_render_rectangle (GST_VIDEO_OVERLAY (pipeline->priv->
           playsink), x, y, width, height);
@@ -120,7 +120,7 @@ _overlay_set_render_rectangle (GstVideoOverlay * overlay, gint x,
 static void
 _overlay_set_window_handle (GstVideoOverlay * overlay, guintptr handle)
 {
-  GESPipeline *pipeline = GES_TIMELINE_PIPELINE (overlay);
+  GESPipeline *pipeline = GES_PIPELINE (overlay);
 
   gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (pipeline->
           priv->playsink), handle);
@@ -145,7 +145,7 @@ static void
 ges_pipeline_get_property (GObject * object, guint property_id,
     GValue * value, GParamSpec * pspec)
 {
-  GESPipeline *self = GES_TIMELINE_PIPELINE (object);
+  GESPipeline *self = GES_PIPELINE (object);
 
   switch (property_id) {
     case PROP_AUDIO_SINK:
@@ -171,7 +171,7 @@ static void
 ges_pipeline_set_property (GObject * object, guint property_id,
     const GValue * value, GParamSpec * pspec)
 {
-  GESPipeline *self = GES_TIMELINE_PIPELINE (object);
+  GESPipeline *self = GES_PIPELINE (object);
 
   switch (property_id) {
     case PROP_AUDIO_SINK:
@@ -183,12 +183,11 @@ ges_pipeline_set_property (GObject * object, guint property_id,
           value);
       break;
     case PROP_TIMELINE:
-      ges_pipeline_add_timeline (GES_TIMELINE_PIPELINE (object),
+      ges_pipeline_add_timeline (GES_PIPELINE (object),
           g_value_get_object (value));
       break;
     case PROP_MODE:
-      ges_pipeline_set_mode (GES_TIMELINE_PIPELINE (object),
-          g_value_get_flags (value));
+      ges_pipeline_set_mode (GES_PIPELINE (object), g_value_get_flags (value));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -198,7 +197,7 @@ ges_pipeline_set_property (GObject * object, guint property_id,
 static void
 ges_pipeline_dispose (GObject * object)
 {
-  GESPipeline *self = GES_TIMELINE_PIPELINE (object);
+  GESPipeline *self = GES_PIPELINE (object);
 
   if (self->priv->playsink) {
     if (self->priv->mode & (TIMELINE_MODE_PREVIEW))
@@ -295,7 +294,7 @@ ges_pipeline_init (GESPipeline * self)
 {
   GST_INFO_OBJECT (self, "Creating new 'playsink'");
   self->priv = G_TYPE_INSTANCE_GET_PRIVATE (self,
-      GES_TYPE_TIMELINE_PIPELINE, GESPipelinePrivate);
+      GES_TYPE_PIPELINE, GESPipelinePrivate);
 
   self->priv->playsink =
       gst_element_factory_make ("playsink", "internal-sinks");
@@ -420,7 +419,7 @@ ges_pipeline_change_state (GstElement * element, GstStateChange transition)
   GESPipeline *self;
   GstStateChangeReturn ret;
 
-  self = GES_TIMELINE_PIPELINE (element);
+  self = GES_PIPELINE (element);
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -804,7 +803,7 @@ no_more_pads_cb (GstElement * timeline, GESPipeline * self)
 gboolean
 ges_pipeline_add_timeline (GESPipeline * pipeline, GESTimeline * timeline)
 {
-  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (pipeline), FALSE);
+  g_return_val_if_fail (GES_IS_PIPELINE (pipeline), FALSE);
   g_return_val_if_fail (GES_IS_TIMELINE (timeline), FALSE);
   g_return_val_if_fail (pipeline->priv->timeline == NULL, FALSE);
 
@@ -852,7 +851,7 @@ ges_pipeline_set_render_settings (GESPipeline * pipeline,
   GError *err = NULL;
   GstEncodingProfile *set_profile;
 
-  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (pipeline), FALSE);
+  g_return_val_if_fail (GES_IS_PIPELINE (pipeline), FALSE);
 
   /* Clear previous URI sink if it existed */
   /* FIXME : We should figure out if it was added to the pipeline,
@@ -921,7 +920,7 @@ ges_pipeline_get_mode (GESPipeline * pipeline)
 gboolean
 ges_pipeline_set_mode (GESPipeline * pipeline, GESPipelineFlags mode)
 {
-  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (pipeline), FALSE);
+  g_return_val_if_fail (GES_IS_PIPELINE (pipeline), FALSE);
 
   GST_DEBUG_OBJECT (pipeline, "current mode : %d, mode : %d",
       pipeline->priv->mode, mode);
@@ -1039,7 +1038,7 @@ ges_pipeline_get_thumbnail (GESPipeline * self, GstCaps * caps)
 {
   GstElement *sink;
 
-  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (self), FALSE);
+  g_return_val_if_fail (GES_IS_PIPELINE (self), FALSE);
 
   sink = self->priv->playsink;
 
@@ -1076,7 +1075,7 @@ ges_pipeline_save_thumbnail (GESPipeline * self, int width, int
   GstCaps *caps;
   gboolean res = TRUE;
 
-  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (self), FALSE);
+  g_return_val_if_fail (GES_IS_PIPELINE (self), FALSE);
 
   caps = gst_caps_from_string (format);
 
@@ -1133,7 +1132,7 @@ ges_pipeline_get_thumbnail_rgb24 (GESPipeline * self, gint width, gint height)
   GstSample *ret;
   GstCaps *caps;
 
-  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (self), FALSE);
+  g_return_val_if_fail (GES_IS_PIPELINE (self), FALSE);
 
   caps = gst_caps_new_simple ("video/x-raw", "format", G_TYPE_STRING,
       "RGB", NULL);
@@ -1166,7 +1165,7 @@ ges_pipeline_preview_get_video_sink (GESPipeline * self)
 {
   GstElement *sink = NULL;
 
-  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (self), FALSE);
+  g_return_val_if_fail (GES_IS_PIPELINE (self), FALSE);
 
   g_object_get (self->priv->playsink, "video-sink", &sink, NULL);
 
@@ -1184,7 +1183,7 @@ ges_pipeline_preview_get_video_sink (GESPipeline * self)
 void
 ges_pipeline_preview_set_video_sink (GESPipeline * self, GstElement * sink)
 {
-  g_return_if_fail (GES_IS_TIMELINE_PIPELINE (self));
+  g_return_if_fail (GES_IS_PIPELINE (self));
 
   g_object_set (self->priv->playsink, "video-sink", sink, NULL);
 };
@@ -1206,7 +1205,7 @@ ges_pipeline_preview_get_audio_sink (GESPipeline * self)
 {
   GstElement *sink = NULL;
 
-  g_return_val_if_fail (GES_IS_TIMELINE_PIPELINE (self), FALSE);
+  g_return_val_if_fail (GES_IS_PIPELINE (self), FALSE);
 
   g_object_get (self->priv->playsink, "audio-sink", &sink, NULL);
 
@@ -1224,7 +1223,7 @@ ges_pipeline_preview_get_audio_sink (GESPipeline * self)
 void
 ges_pipeline_preview_set_audio_sink (GESPipeline * self, GstElement * sink)
 {
-  g_return_if_fail (GES_IS_TIMELINE_PIPELINE (self));
+  g_return_if_fail (GES_IS_PIPELINE (self));
 
   g_object_set (self->priv->playsink, "audio-sink", sink, NULL);
 };

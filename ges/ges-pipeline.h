@@ -18,8 +18,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef _GES_TIMELINE_PIPELINE
-#define _GES_TIMELINE_PIPELINE
+#ifndef _GES_PIPELINE
+#define _GES_PIPELINE
 
 #include <glib-object.h>
 #include <ges/ges.h>
@@ -27,22 +27,22 @@
 
 G_BEGIN_DECLS
 
-#define GES_TYPE_TIMELINE_PIPELINE ges_pipeline_get_type()
+#define GES_TYPE_PIPELINE ges_pipeline_get_type()
 
-#define GES_TIMELINE_PIPELINE(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_TIMELINE_PIPELINE, GESPipeline))
+#define GES_PIPELINE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GES_TYPE_PIPELINE, GESPipeline))
 
-#define GES_TIMELINE_PIPELINE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_TIMELINE_PIPELINE, GESPipelineClass))
+#define GES_PIPELINE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GES_TYPE_PIPELINE, GESPipelineClass))
 
-#define GES_IS_TIMELINE_PIPELINE(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_TIMELINE_PIPELINE))
+#define GES_IS_PIPELINE(obj) \
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GES_TYPE_PIPELINE))
 
-#define GES_IS_TIMELINE_PIPELINE_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_TIMELINE_PIPELINE))
+#define GES_IS_PIPELINE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GES_TYPE_PIPELINE))
 
-#define GES_TIMELINE_PIPELINE_GET_CLASS(obj) \
-  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_TIMELINE_PIPELINE, GESPipelineClass))
+#define GES_PIPELINE_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GES_TYPE_PIPELINE, GESPipelineClass))
 
 typedef struct _GESPipelinePrivate GESPipelinePrivate;
 
@@ -118,5 +118,5 @@ ges_pipeline_preview_set_audio_sink (GESPipeline * self,
 
 G_END_DECLS
 
-#endif /* _GES_TIMELINE_PIPELINE */
+#endif /* _GES_PIPELINE */
 

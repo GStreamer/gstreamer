@@ -44,7 +44,7 @@ thumbnail_cb (gpointer user)
   GstCaps *caps;
   GESPipeline *p;
 
-  p = GES_TIMELINE_PIPELINE (user);
+  p = GES_PIPELINE (user);
 
   caps = gst_caps_from_string ("image/jpeg");
   GST_INFO ("getting thumbnails");
