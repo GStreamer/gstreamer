@@ -267,7 +267,8 @@ static void gst_rtspsrc_handle_message (GstBin * bin, GstMessage * message);
 static gboolean gst_rtspsrc_setup_auth (GstRTSPSrc * src,
     GstRTSPMessage * response);
 
-static void gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask);
+static gboolean gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd,
+    gint mask);
 static GstRTSPResult gst_rtspsrc_send_cb (GstRTSPExtension * ext,
     GstRTSPMessage * request, GstRTSPMessage * response, GstRTSPSrc * src);
 
@@ -4455,10 +4456,11 @@ gst_rtspsrc_loop_end_cmd (GstRTSPSrc * src, gint cmd, GstRTSPResult ret)
     gst_rtspsrc_loop_error_cmd (src, cmd);
 }
 
-static void
+static gboolean
 gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
 {
   gint old;
+  gboolean flushed = FALSE;
 
   /* start new request */
   gst_rtspsrc_loop_start_cmd (src, cmd);
@@ -4484,12 +4486,15 @@ gst_rtspsrc_loop_send_cmd (GstRTSPSrc * src, gint cmd, gint mask)
   if (src->busy_cmd & mask) {
     GST_DEBUG_OBJECT (src, "connection flush busy %d", src->busy_cmd);
     gst_rtspsrc_connection_flush (src, TRUE);
+    flushed = TRUE;
   } else {
     GST_DEBUG_OBJECT (src, "not interrupting busy cmd %d", src->busy_cmd);
   }
   if (src->task)
     gst_task_start (src->task);
   GST_OBJECT_UNLOCK (src);
+
+  return flushed;
 }
 
 static gboolean
