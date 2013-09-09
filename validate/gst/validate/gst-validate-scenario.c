@@ -29,6 +29,7 @@
 #include <gio/gio.h>
 #include <string.h>
 
+#include "gst-validate-internal.h"
 #include "gst-validate-scenario.h"
 #include "gst-validate-reporter.h"
 #include "gst-validate-report.h"
@@ -48,56 +49,12 @@ enum
   PROP_LAST
 };
 
+static GHashTable *action_types_table;
 static void gst_validate_scenario_dispose (GObject * object);
 static void gst_validate_scenario_finalize (GObject * object);
 
 G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
     G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, NULL));
-
-typedef enum
-{
-  SCENARIO_ACTION_UNKNOWN = 0,
-  SCENARIO_ACTION_SEEK,
-  SCENARIO_ACTION_PAUSE,
-  SCENARIO_ACTION_EOS,
-} ScenarioActionType;
-
-typedef struct _ScenarioAction
-{
-  ScenarioActionType type;
-  gchar *name;
-  GstClockTime playback_time;
-  guint action_number;          /* The sequential number on which the action should
-                                   be executed */
-} ScenarioAction;
-
-#define SCENARIO_ACTION(act) ((ScenarioAction *)act)
-
-typedef struct _SeekInfo
-{
-  ScenarioAction action;
-
-  gdouble rate;
-  GstFormat format;
-  GstSeekFlags flags;
-  GstSeekType start_type;
-  GstClockTime start;
-  GstSeekType stop_type;
-  GstClockTime stop;
-
-} SeekInfo;
-
-typedef struct _PauseInfo
-{
-  ScenarioAction action;
-
-  GstClockTime duration;
-} PauseInfo;
-
-typedef struct _EosInfo
-{
-  ScenarioAction action;
-} EosInfo;
 
 struct _GstValidateScenarioPrivate
 {
@@ -110,31 +67,9 @@ struct _GstValidateScenarioPrivate
 
   guint num_actions;
 
-  /* markup parser context */
-  gboolean in_scenario;
-  gboolean in_actions;
-
   guint get_pos_id;
 };
 
-static GstClockTime
-str_to_gst_time (const gchar * str)
-{
-  gchar *end_of_valid_d;
-  gdouble double_value = 0;
-
-  double_value = g_ascii_strtod (str, &end_of_valid_d);
-
-  if (*end_of_valid_d != '\0' || end_of_valid_d == str) {
-    GST_ERROR ("%s could not be converted to GstClockTime", str);
-    return GST_CLOCK_TIME_NONE;
-  }
-
-  if (double_value < 0)
-    return GST_CLOCK_TIME_NONE;
-
-  return double_value * GST_SECOND;
-}
 
 /* Some helper method that are missing iin Json itscenario */
 static guint
@@ -171,244 +106,66 @@ get_enum_from_string (GType type, const gchar * str_enum, guint * enum_value)
 }
 
 static void
-_scenario_action_init (ScenarioAction * act)
+_free_scenario_action (GstValidateAction * act)
 {
-  act->name = NULL;
-  act->playback_time = GST_CLOCK_TIME_NONE;
-  act->type = SCENARIO_ACTION_UNKNOWN;
+  if (act->structure)
+    gst_structure_free (act->structure);
+
+  g_slice_free (GstValidateAction, act);
 }
 
-static SeekInfo *
-_new_seek_info (void)
-{
-  SeekInfo *info = g_slice_new0 (SeekInfo);
-
-  _scenario_action_init (&info->action);
-  info->action.type = SCENARIO_ACTION_SEEK;
-  info->rate = 1.0;
-  info->format = GST_FORMAT_TIME;
-  info->start_type = GST_SEEK_TYPE_SET;
-  info->stop_type = GST_SEEK_TYPE_SET;
-  info->flags = GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH;
-  info->start = 0;
-  info->stop = GST_CLOCK_TIME_NONE;
-
-  return info;
-}
-
-static PauseInfo *
-_new_pause_info (void)
-{
-  PauseInfo *pause = g_slice_new0 (PauseInfo);
-
-  _scenario_action_init (SCENARIO_ACTION (pause));
-  pause->action.type = SCENARIO_ACTION_PAUSE;
-  pause->duration = 0;
-
-  return pause;
-}
-
-static EosInfo *
-_new_eos_info (void)
-{
-  EosInfo *eos = g_slice_new0 (EosInfo);
-
-  _scenario_action_init (SCENARIO_ACTION (eos));
-  eos->action.type = SCENARIO_ACTION_EOS;
-
-  return eos;
-}
-
-static void
-_scenario_action_clear (ScenarioAction * act)
-{
-  g_free (act->name);
-}
-
-static void
-_free_seek_info (SeekInfo * info)
-{
-  _scenario_action_clear (SCENARIO_ACTION (info));
-  g_slice_free (SeekInfo, info);
-}
-
-static void
-_free_pause_info (PauseInfo * info)
-{
-  _scenario_action_clear (SCENARIO_ACTION (info));
-  g_slice_free (PauseInfo, info);
-}
-
-static void
-_free_eos_info (EosInfo * info)
-{
-  _scenario_action_clear (SCENARIO_ACTION (info));
-  g_slice_free (EosInfo, info);
-}
-
-static void
-_free_scenario_action (ScenarioAction * act)
-{
-  switch (act->type) {
-    case SCENARIO_ACTION_SEEK:
-      _free_seek_info ((SeekInfo *) act);
-      break;
-    case SCENARIO_ACTION_PAUSE:
-      _free_pause_info ((PauseInfo *) act);
-      break;
-    case SCENARIO_ACTION_EOS:
-      _free_eos_info ((EosInfo *) act);
-      break;
-    default:
-      g_assert_not_reached ();
-      _scenario_action_clear (act);
-      break;
-  }
-}
-
-static inline void
-_parse_seek (GMarkupParseContext * context, const gchar * element_name,
-    const gchar ** attribute_names, const gchar ** attribute_values,
-    GstValidateScenario * scenario, GError ** error)
+static gboolean
+_execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
-  const char *format, *rate, *flags, *start_type, *start, *stop_type, *stop;
-  const char *playback_time = NULL;
+  const char *str_format, *str_flags, *str_start_type, *str_stop_type;
 
-  SeekInfo *info = _new_seek_info ();
+  gdouble rate = 1.0, dstart, dstop;
+  GstFormat format = GST_FORMAT_TIME;
+  GstSeekFlags flags = GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH;
+  GstSeekType start_type = GST_SEEK_TYPE_SET;
+  GstClockTime start;
+  GstSeekType stop_type = GST_SEEK_TYPE_SET;
+  GstClockTime stop = GST_CLOCK_TIME_NONE;
 
-  if (!g_markup_collect_attributes (element_name, attribute_names,
-          attribute_values, error,
-          G_MARKUP_COLLECT_STRDUP | G_MARKUP_COLLECT_OPTIONAL, "name",
-          &info->action.name,
-          G_MARKUP_COLLECT_STRING, "playback_time",
-          &playback_time,
-          G_MARKUP_COLLECT_STRING, "format", &format,
-          G_MARKUP_COLLECT_STRING, "rate", &rate,
-          G_MARKUP_COLLECT_STRING, "flags", &flags,
-          G_MARKUP_COLLECT_STRING, "start_type", &start_type,
-          G_MARKUP_COLLECT_STRING, "start", &start,
-          G_MARKUP_COLLECT_STRING, "stop_type", &stop_type,
-          G_MARKUP_COLLECT_STRING, "stop", &stop, G_MARKUP_COLLECT_INVALID))
-    return;
+  if (!gst_structure_get_double (action->structure, "start", &dstart)) {
+    GST_WARNING_OBJECT (scenario, "Could not find start for a seek, FAILED");
+    return FALSE;
+  }
+  start = dstart * GST_SECOND;
 
-  get_enum_from_string (GST_TYPE_FORMAT, format, &info->format);
+  gst_structure_get_double (action->structure, "rate", &rate);
+  if ((str_format = gst_structure_get_string (action->structure, "format")))
+    get_enum_from_string (GST_TYPE_FORMAT, str_format, &format);
 
-  if (playback_time)
-    info->action.playback_time = str_to_gst_time (playback_time);
-  info->rate = g_ascii_strtod (rate, NULL);
-  info->flags = get_flags_from_string (GST_TYPE_SEEK_FLAGS, flags);
-  get_enum_from_string (GST_TYPE_SEEK_TYPE, start_type, &info->start_type);
-  info->start = str_to_gst_time (start);
-  get_enum_from_string (GST_TYPE_SEEK_TYPE, stop_type, &info->stop_type);
-  info->stop = str_to_gst_time (stop);
-  info->action.action_number = priv->num_actions++;
+  if ((str_start_type =
+          gst_structure_get_string (action->structure, "start_type")))
+    get_enum_from_string (GST_TYPE_SEEK_TYPE, str_start_type, &start_type);
 
-  priv->actions = g_list_append (priv->actions, info);
-}
+  if ((str_stop_type =
+          gst_structure_get_string (action->structure, "stop_type")))
+    get_enum_from_string (GST_TYPE_SEEK_TYPE, str_stop_type, &stop_type);
 
-static inline void
-_parse_pause (GMarkupParseContext * context, const gchar * element_name,
-    const gchar ** attribute_names, const gchar ** attribute_values,
-    GstValidateScenario * scenario, GError ** error)
-{
-  GstValidateScenarioPrivate *priv = scenario->priv;
-  const char *duration = NULL;
-  const char *playback_time = NULL;
+  if ((str_flags = gst_structure_get_string (action->structure, "flags")))
+    flags = get_flags_from_string (GST_TYPE_SEEK_FLAGS, str_flags);
 
-  PauseInfo *info = _new_pause_info ();
+  if (gst_structure_get_double (action->structure, "stop", &dstop))
+    stop = dstop * GST_SECOND;
 
-  if (!g_markup_collect_attributes (element_name, attribute_names,
-          attribute_values, error,
-          G_MARKUP_COLLECT_STRDUP | G_MARKUP_COLLECT_OPTIONAL, "name",
-          &info->action.name, G_MARKUP_COLLECT_STRING, "playback_time",
-          &playback_time, G_MARKUP_COLLECT_STRING, "duration", &duration,
-          G_MARKUP_COLLECT_INVALID))
-    return;
+  g_print ("%s (num %u), seeking to: %" GST_TIME_FORMAT " stop: %"
+      GST_TIME_FORMAT " Rate %lf\n", action->name,
+      action->action_number, GST_TIME_ARGS (start), GST_TIME_ARGS (stop), rate);
 
-  if (playback_time)
-    info->action.playback_time = str_to_gst_time (playback_time);
-  info->duration = str_to_gst_time (duration);
-
-  info->action.action_number = priv->num_actions++;
-
-  priv->actions = g_list_append (priv->actions, info);
-}
-
-static inline void
-_parse_eos (GMarkupParseContext * context, const gchar * element_name,
-    const gchar ** attribute_names, const gchar ** attribute_values,
-    GstValidateScenario * scenario, GError ** error)
-{
-  GstValidateScenarioPrivate *priv = scenario->priv;
-  const char *playback_time = NULL;
-
-  EosInfo *info = _new_eos_info ();
-
-  if (!g_markup_collect_attributes (element_name, attribute_names,
-          attribute_values, error,
-          G_MARKUP_COLLECT_STRDUP | G_MARKUP_COLLECT_OPTIONAL, "name",
-          &info->action.name, G_MARKUP_COLLECT_STRING, "playback_time",
-          &playback_time, G_MARKUP_COLLECT_INVALID))
-    return;
-
-  if (playback_time)
-    info->action.playback_time = str_to_gst_time (playback_time);
-
-  info->action.action_number = priv->num_actions++;
-
-  priv->actions = g_list_append (priv->actions, info);
-}
-
-static void
-_parse_element_start (GMarkupParseContext * context, const gchar * element_name,
-    const gchar ** attribute_names, const gchar ** attribute_values,
-    gpointer udata, GError ** error)
-{
-  GstValidateScenario *scenario = udata;
-  GstValidateScenarioPrivate *priv =
-      GST_VALIDATE_SCENARIO_GET_PRIVATE (scenario);
-
-  if (strcmp (element_name, "scenario") == 0) {
-    priv->in_scenario = TRUE;
-    return;
+  priv->seeked_position = (rate > 0) ? start : stop;
+  if (gst_element_seek (priv->pipeline, rate, format, flags, start_type, start,
+          stop_type, stop) == FALSE) {
+    GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
+        "Could not seek to position %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (priv->seeked_position));
+    return FALSE;
   }
 
-  if (priv->in_scenario) {
-    if (strcmp (element_name, "actions") == 0) {
-      priv->in_actions = TRUE;
-      return;
-    }
-
-    if (priv->in_actions) {
-      if (g_strcmp0 (element_name, "seek") == 0) {
-        _parse_seek (context, element_name, attribute_names,
-            attribute_values, scenario, error);
-      } else if (g_strcmp0 (element_name, "pause") == 0) {
-        _parse_pause (context, element_name, attribute_names,
-            attribute_values, scenario, error);
-      } else if (g_strcmp0 (element_name, "eos") == 0) {
-        _parse_eos (context, element_name, attribute_names,
-            attribute_values, scenario, error);
-      }
-    }
-  }
-
-}
-
-static void
-_parse_element_end (GMarkupParseContext * context, const gchar * element_name,
-    gpointer udata, GError ** error)
-{
-  GstValidateScenario *scenario = udata;
-  GstValidateScenarioPrivate *priv =
-      GST_VALIDATE_SCENARIO_GET_PRIVATE (scenario);
-
-  if (strcmp (element_name, "actions") == 0) {
-    priv->in_actions = FALSE;
-  } else if (strcmp (element_name, "scenario") == 0) {
-    priv->in_scenario = FALSE;
-  }
+  return TRUE;
 }
 
 static gboolean
@@ -425,49 +182,69 @@ _pause_action_restore_playing (GstValidateScenario * scenario)
   return FALSE;
 }
 
-static void
-_execute_action (GstValidateScenario * scenario, ScenarioAction * act)
+
+static gboolean
+_execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
 {
+  gdouble duration = 0;
+
   GstValidateScenarioPrivate *priv = scenario->priv;
-  GstElement *pipeline = scenario->priv->pipeline;
 
-  if (act->type == SCENARIO_ACTION_SEEK) {
-    SeekInfo *seek = (SeekInfo *) act;
-    g_print ("%s (num %u), seeking to: %" GST_TIME_FORMAT " stop: %"
-        GST_TIME_FORMAT " Rate %lf\n", SCENARIO_ACTION (seek)->name,
-        SCENARIO_ACTION (seek)->action_number, GST_TIME_ARGS (seek->start),
-        GST_TIME_ARGS (seek->stop), seek->rate);
+  gst_structure_get_double (action->structure, "duration", &duration);
+  g_print ("\n%s (num %u), pausing for %" GST_TIME_FORMAT "\n",
+      action->name, action->action_number,
+      GST_TIME_ARGS (duration * GST_SECOND));
 
-    priv->seeked_position = (seek->rate > 0) ? seek->start : seek->stop;
-    if (gst_element_seek (pipeline, seek->rate,
-            seek->format, seek->flags,
-            seek->start_type, seek->start,
-            seek->stop_type, seek->stop) == FALSE) {
-      GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
-          "Could not seek to position %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (priv->seeked_position));
-    }
+  GST_DEBUG ("Pausing for %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (duration * GST_SECOND));
 
-  } else if (act->type == SCENARIO_ACTION_PAUSE) {
-    PauseInfo *pause = (PauseInfo *) act;
+  if (gst_element_set_state (priv->pipeline, GST_STATE_PAUSED) ==
+      GST_STATE_CHANGE_FAILURE) {
+    GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
+        "Failed to set state to paused");
 
-    GST_DEBUG ("Pausing for %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (pause->duration));
-
-    if (gst_element_set_state (pipeline, GST_STATE_PAUSED) ==
-        GST_STATE_CHANGE_FAILURE) {
-      GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
-          "Failed to set state to paused");
-    }
-    gst_element_get_state (pipeline, NULL, NULL, -1);
-    g_timeout_add (pause->duration / GST_MSECOND,
-        (GSourceFunc) _pause_action_restore_playing, scenario);
-  } else if (act->type == SCENARIO_ACTION_EOS) {
-    GST_DEBUG ("Sending eos to pipeline at %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (act->playback_time));
-    gst_element_send_event (priv->pipeline, gst_event_new_eos ());
+    return FALSE;
   }
+  gst_element_get_state (priv->pipeline, NULL, NULL, -1);
+  if (duration)
+    g_timeout_add (duration * 1000,
+        (GSourceFunc) _pause_action_restore_playing, scenario);
+
+  return TRUE;
 }
+
+static gboolean
+_execute_play (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  g_print ("\n%s (num %u), Playing back", action->name, action->action_number);
+
+  GST_DEBUG ("Playing back");
+
+  if (gst_element_set_state (scenario->priv->pipeline, GST_STATE_PLAYING) ==
+      GST_STATE_CHANGE_FAILURE) {
+    GST_VALIDATE_REPORT (scenario, STATE_CHANGE_FAILURE,
+        "Failed to set state to playing");
+
+    return FALSE;
+  }
+  gst_element_get_state (scenario->priv->pipeline, NULL, NULL, -1);
+  return TRUE;
+}
+
+static gboolean
+_execute_eos (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  g_print ("\n%s (num %u), sending EOS at %" GST_TIME_FORMAT "\n",
+      action->name, action->action_number,
+      GST_TIME_ARGS (action->playback_time));
+
+  GST_DEBUG ("Sending eos to pipeline at %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (action->playback_time));
+
+  return gst_element_send_event (scenario->priv->pipeline,
+      gst_event_new_eos ());
+}
+
 
 static gboolean
 get_position (GstValidateScenario * scenario)
@@ -475,7 +252,7 @@ get_position (GstValidateScenario * scenario)
   GList *tmp;
   GstQuery *query;
   gdouble rate = 1.0;
-  ScenarioAction *act;
+  GstValidateAction *act;
   gint64 position, duration;
   GstFormat format = GST_FORMAT_TIME;
   GstValidateScenarioPrivate *priv = scenario->priv;
@@ -511,14 +288,15 @@ get_position (GstValidateScenario * scenario)
   GST_LOG ("Current position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
   if ((rate > 0 && (GstClockTime) position >= act->playback_time) ||
       (rate < 0 && (GstClockTime) position <= act->playback_time)) {
+    GstValidateExecuteAction func;
+
     /* TODO what about non flushing seeks? */
     /* TODO why is this inside the action time if ? */
     if (GST_CLOCK_TIME_IS_VALID (priv->seeked_position))
-      GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
-          "Previous seek to %" GST_TIME_FORMAT " was not handled",
-          GST_TIME_ARGS (priv->seeked_position));
+      return TRUE;
 
-    _execute_action (scenario, act);
+    func = g_hash_table_lookup (action_types_table, act->type);
+    func (scenario, act);
 
     tmp = priv->actions;
     priv->actions = g_list_remove_link (priv->actions, tmp);
@@ -568,14 +346,13 @@ static gboolean
 _load_scenario_file (GstValidateScenario * scenario,
     const gchar * scenario_file)
 {
+  guint i;
   gsize xmlsize;
   GFile *file = NULL;
   GError *err = NULL;
   gboolean ret = TRUE;
-  gchar *xmlcontent = NULL;
-  GMarkupParseContext *parsecontext = NULL;
-  GstValidateScenarioClass *self_class =
-      GST_VALIDATE_SCENARIO_GET_CLASS (scenario);
+  gchar *content = NULL, **lines = NULL;
+  GstValidateScenarioPrivate *priv = scenario->priv;
   gchar *uri = gst_filename_to_uri (scenario_file, &err);
 
   if (uri == NULL)
@@ -586,30 +363,54 @@ _load_scenario_file (GstValidateScenario * scenario,
     goto wrong_uri;
 
   /* TODO Handle GCancellable */
-  if (!g_file_load_contents (file, NULL, &xmlcontent, &xmlsize, NULL, &err))
+  if (!g_file_load_contents (file, NULL, &content, &xmlsize, NULL, &err))
     goto failed;
 
-  if (g_strcmp0 (xmlcontent, "") == 0)
+  if (g_strcmp0 (content, "") == 0)
     goto failed;
 
-  parsecontext = g_markup_parse_context_new (&self_class->content_parser,
-      G_MARKUP_TREAT_CDATA_AS_TEXT, scenario, NULL);
+  lines = g_strsplit (content, "\n", 0);
+  for (i = 0; lines[i]; i++) {
+    const gchar *type;
+    gdouble playback_time;
+    GstValidateAction *action;
+    GstStructure *structure;
 
-  if (g_markup_parse_context_parse (parsecontext, xmlcontent, xmlsize,
-          &err) == FALSE)
-    goto failed;
+    if (g_strcmp0 (lines[i], "") == 0)
+      continue;
+
+    structure = gst_structure_from_string (lines[i], NULL);
+    if (structure == NULL) {
+      GST_WARNING_OBJECT (scenario, "Could not parse action %s", lines[i]);
+      continue;
+    }
+
+    type = gst_structure_get_name (structure);
+    if (!g_hash_table_lookup (action_types_table, type)) {
+      GST_WARNING_OBJECT (scenario, "We do not handle action types %s", type);
+    }
+
+    action = g_slice_new0 (GstValidateAction);
+    action->type = type;
+    if (gst_structure_get_double (structure, "playback_time", &playback_time))
+      action->playback_time = playback_time * GST_SECOND;
+    else
+      GST_WARNING_OBJECT (scenario, "No playback time for action %s", lines[i]);
+
+    if (!(action->name = gst_structure_get_string (structure, "name")))
+      action->name = "";
+
+    action->action_number = priv->num_actions++;
+    action->structure = structure;
+    priv->actions = g_list_append (priv->actions, action);
+  }
 
 done:
-  if (xmlcontent)
-    g_free (xmlcontent);
+  if (content)
+    g_free (content);
 
   if (file)
     gst_object_unref (file);
-
-  if (parsecontext) {
-    g_markup_parse_context_free (parsecontext);
-    parsecontext = NULL;
-  }
 
   return ret;
 
@@ -651,6 +452,7 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
   tldir =
       g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_API_VERSION,
       GST_VALIDATE_SCENARIO_DIRECTORY, lfilename, NULL);
+
 
   if (!(ret = _load_scenario_file (scenario, tldir))) {
     g_free (tldir);
@@ -733,9 +535,6 @@ gst_validate_scenario_class_init (GstValidateScenarioClass * klass)
           "The Validate runner to " "report errors to",
           GST_TYPE_VALIDATE_RUNNER,
           G_PARAM_CONSTRUCT_ONLY | G_PARAM_READWRITE));
-
-  klass->content_parser.start_element = _parse_element_start;
-  klass->content_parser.end_element = _parse_element_end;
 }
 
 static void
@@ -853,4 +652,22 @@ gst_validate_list_scenarios (void)
   _list_scenarios_in_dir (dir);
   g_object_unref (dir);
 
+}
+
+void
+gst_validate_add_action_type (const gchar *type_name, GstValidateExecuteAction function)
+{
+  g_hash_table_insert (action_types_table, g_strdup (type_name), function);
+}
+
+void
+init_scenarios (void)
+{
+  action_types_table = g_hash_table_new_full (g_str_hash, g_str_equal,
+      (GDestroyNotify) g_free, NULL);
+
+  gst_validate_add_action_type ("seek", _execute_seek);
+  gst_validate_add_action_type ("pause",_execute_pause);
+  gst_validate_add_action_type ("play",_execute_play);
+  gst_validate_add_action_type ("eos",_execute_eos);
 }

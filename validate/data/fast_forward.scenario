@@ -1,49 +1,5 @@
-<scenario name="Fast forward">
-  <actions>
-    <seek name='Fast forward seek'
-          playback_time="0.0"
-          format="time"
-          rate="2.0"
-          flags="accurate+flush"
-          start_type="set"
-          start="0.0"
-          stop_type="set"
-          stop="-1.0" />
-    <seek name='Fast forward seek'
-          playback_time="10.0"
-          format="time"
-          rate="4.0"
-          flags="accurate+flush"
-          start_type="set"
-          start="10.0"
-          stop_type="set"
-          stop="-1.0" />
-    <seek name='Fast forward seek'
-          playback_time="30.0"
-          format="time"
-          rate="8.0"
-          flags="accurate+flush"
-          start_type="set"
-          start="30.0"
-          stop_type="set"
-          stop="-1.0" />
-    <seek name='Fast forward seek'
-          playback_time="70.0"
-          format="time"
-          rate="16.0"
-          flags="accurate+flush"
-          start_type="set"
-          start="70.0"
-          stop_type="set"
-          stop="-1.0" />
-    <seek name='Fast forward seek'
-          playback_time="150.0"
-          format="time"
-          rate="32.0"
-          flags="accurate+flush"
-          start_type="set"
-          start="150.0"
-          stop_type="set"
-          stop="310.0" />
-  </actions>
-</scenario>
+seek, name=Fast-forward-seek, playback_time=0.0,   rate=2.0,  start=0.0
+seek, name=Fast-forward-seek, playback_time=10.0,  rate=4.0,  start=10.0
+seek, name=Fast-forward-seek, playback_time=30.0,  rate=8.0,  start=30.0
+seek, name=Fast-forward-seek, playback_time=70.0,  rate=16.0, start=70.0
+seek, name=Fast-forward-seek, playback_time=150.0, rate=32.0, start=150.0, stop=310.0

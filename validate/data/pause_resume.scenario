@@ -1,15 +1,4 @@
-<scenario name="Simple pause resume">
-  <actions>
-    <pause name='First pause'
-           playback_time="1.0"
-           duration="1.0" />
-    <pause name='Second pause'
-           playback_time="3.0"
-           duration="5.0" />
-    <pause name='Third pause'
-           playback_time="5.0"
-           duration="1.0" />
-    <eos name='Done testing'
-          playback_time="7.0" />
-  </actions>
-</scenario>
+pause, name=First-pause,  playback_time=1.0, duration=1.0
+pause, name=Second-pause, playback_time=3.0, duration=5.0
+pause, name=Third-pause,  playback_time=5.0, duration=1.0
+eos,   name=Done-testing, playback_time=7.0

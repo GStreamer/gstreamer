@@ -39,13 +39,22 @@ G_BEGIN_DECLS
 typedef struct _GstValidateScenario      GstValidateScenario;
 typedef struct _GstValidateScenarioClass GstValidateScenarioClass;
 typedef struct _GstValidateScenarioPrivate GstValidateScenarioPrivate;
+typedef struct _GstValidateAction        GstValidateAction;
 
+typedef gboolean (*GstValidateExecuteAction) (GstValidateScenario * scenario, GstValidateAction * action);
+
+typedef struct _GstValidateAction
+{
+  const gchar *type;
+  const gchar *name;
+  guint action_number;
+  GstClockTime playback_time;
+  GstStructure *structure;
+} GstValidateAction;
 
 struct _GstValidateScenarioClass
 {
   GObjectClass parent_class;
-
-  GMarkupParser content_parser;
 };
 
 struct _GstValidateScenario
@@ -60,7 +69,9 @@ GType gst_validate_scenario_get_type (void);
 GstValidateScenario * gst_validate_scenario_factory_create (GstValidateRunner *runner,
                                                 GstElement *pipeline,
                                                 const gchar *scenario_name);
-void gst_validate_list_scenarios (void);
+void gst_validate_list_scenarios  (void);
+void gst_validate_add_action_type (const gchar *type_name,
+                                   GstValidateExecuteAction function);
 
 G_END_DECLS
 

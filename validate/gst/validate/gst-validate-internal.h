@@ -26,5 +26,6 @@
 
 GST_DEBUG_CATEGORY_EXTERN (gstvalidate_debug);
 #define GST_CAT_DEFAULT gstvalidate_debug
+void init_scenarios (void);
 
 #endif

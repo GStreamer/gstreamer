@@ -1,50 +1,5 @@
-<scenario name="Fast backward">
-  <actions>
-    <seek name='Fast backward seek'
-          playback_time="0.0"
-          format="time"
-          rate="-2.0"
-          flags="accurate+flush"
-          start_type="set"
-          start="0.0"
-          stop_type="set"
-          stop="310.0" />
-    <seek name='Fast backward seek'
-          playback_time="300.0"
-          format="time"
-          rate="-4.0"
-          flags="accurate+flush"
-          start_type="set"
-          start="0.0"
-          stop_type="set"
-          stop="300.0" />
-    <seek name='Fast backward seek'
-          playback_time="280.0"
-          format="time"
-          rate="-8.0"
-          flags="accurate+flush"
-          start_type="set"
-          start="0.0"
-          stop_type="set"
-          stop="280.0" />
-    <seek name='Fast backward seek'
-          playback_time="240.0"
-          format="time"
-          rate="-16.0"
-          flags="accurate+flush"
-          start_type="set"
-          start="0.0"
-          stop_type="set"
-          stop="240.0" />
-    <seek name='Fast backward seek'
-          playback_time="160.0"
-          format="time"
-          rate="-32.0"
-          flags="accurate+flush"
-          start_type="set"
-          start="0.0"
-          stop_type="set"
-          stop="160.0" />
-  </actions>
-</scenario>
-
+seek, name=Fast-backward-seek, playback_time=0.0,   rate=-2.0,  start=0.0, stop=310.0
+seek, name=Fast-backward-seek, playback_time=300.0, rate=-4.0,  start=0.0, stop=300.0
+seek, name=Fast-backward-seek, playback_time=280.0, rate=-8.0,  start=0.0, stop=280.0
+seek, name=Fast-backward-seek, playback_time=240.0, rate=-16.0, start=0.0, stop=240.0
+seek, name=Fast-backward-seek, playback_time=160.0, rate=-32.0, start=0.0, stop=160.0

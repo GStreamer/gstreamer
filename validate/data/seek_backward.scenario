@@ -1,34 +1,3 @@
-<scenario name="Backward Seeks">
-  <actions>
-    <seek name='First backward seek'
-          playback_time="5.0"
-          format="time"
-          rate="1.0"
-          flags="accurate+flush"
-          start_type="set"
-          start="0.0"
-          stop_type="set"
-          stop="-1.0" />
-
-    <seek name='Second backward seek'
-          playback_time="10.0"
-          format="time"
-          rate="1.0"
-          flags="accurate+flush"
-          start_type="set"
-          start="5.0"
-          stop_type="set"
-          stop="-1.0" />
-
-    <seek name='Third backward seek with stop value (1 sec)'
-          playback_time="15.0"
-          format="time"
-          rate="1.0"
-          flags="accurate+flush"
-          start_type="set"
-          start="10.0"
-          stop_type="set"
-          stop="15.0" />
-  </actions>
-</scenario>
-
+seek name=Backward-seek, playback_time=5.0,  rate=1.0, start=0.0
+seek name=Backward-seek, playback_time=10.0, rate=1.0, start=5.0
+seek name=Backward-seek, playback_time=15.0, rate=1.0, start=10.0, stop=15.0

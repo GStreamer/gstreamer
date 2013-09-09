@@ -39,6 +39,9 @@ gst_validate_init (void)
   /* init the report system (can be called multiple times) */
   gst_validate_report_init ();
 
+  /* Init the scenario system */
+  init_scenarios ();
+
   /* Ensure we load overrides before any use of a monitor */
   gst_validate_override_registry_preload ();
 }
