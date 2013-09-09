@@ -217,6 +217,9 @@ GST_EXPORT GQuark _gst_meta_tag_memory;
  *
  * Metadata tagged with this tag depends on the particular memory
  * or buffer that it is on.
+ *
+ * Deprecated: The GQuarks are not exported by any public API, use
+ *   GST_META_TAG_MEMORY_STR instead.
  */
 #define GST_META_TAG_MEMORY (_gst_meta_tag_memory)
 
