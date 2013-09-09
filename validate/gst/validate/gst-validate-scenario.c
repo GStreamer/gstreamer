@@ -641,6 +641,12 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
   lfilename =
       g_strdup_printf ("%s" GST_VALIDATE_SCENARIO_SUFFIX, scenario_name);
 
+  tldir = g_build_filename ("data/", lfilename, NULL);
+
+  if ((ret = _load_scenario_file (scenario, tldir)))
+    goto done;
+  g_free (tldir);
+
   /* Try from local profiles */
   tldir =
       g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_API_VERSION,
@@ -658,8 +664,6 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
   if (ret == FALSE) {
     g_free (tldir);
 
-    tldir = g_build_filename ("data/", lfilename, NULL);
-    ret = _load_scenario_file (scenario, tldir);
   }
 
 done:
