@@ -229,8 +229,6 @@ gst_rtsp_thread_pool_class_init (GstRTSPThreadPoolClass * klass)
 
   klass->get_thread = default_get_thread;
 
-  klass->pool = g_thread_pool_new ((GFunc) do_loop, klass, -1, FALSE, NULL);
-
   GST_DEBUG_CATEGORY_INIT (rtsp_thread_pool_debug, "rtspthreadpool", 0,
       "GstRTSPThreadPool");
 
@@ -503,8 +501,38 @@ gst_rtsp_thread_pool_get_thread (GstRTSPThreadPool * pool,
 
   klass = GST_RTSP_THREAD_POOL_GET_CLASS (pool);
 
+  /* We want to be thread safe as there might be 2 threads wanting to get new
+   * #GstRTSPThread at the same time
+   */
+  if (G_UNLIKELY (!g_atomic_pointer_get (&klass->pool))) {
+    GThreadPool *t_pool;
+    t_pool = g_thread_pool_new ((GFunc) do_loop, klass, -1, FALSE, NULL);
+    if (!g_atomic_pointer_compare_and_exchange (&klass->pool, NULL, t_pool))
+      g_thread_pool_free (t_pool, FALSE, TRUE);
+  }
+
   if (klass->get_thread)
     result = klass->get_thread (pool, type, ctx);
 
   return result;
+}
+
+/**
+ * gst_rtsp_thread_pool_cleanup:
+ *
+ * Wait for all tasks to be stopped and free all allocated resources. This is
+ * mainly used in test suites to ensure proper cleanup of internal data
+ * structures.
+ */
+void
+gst_rtsp_thread_pool_cleanup (void)
+{
+  GstRTSPThreadPoolClass *klass;
+
+  klass = GST_RTSP_THREAD_POOL_CLASS (
+      g_type_class_peek (gst_rtsp_thread_pool_get_type ()));
+  if (klass->pool != NULL) {
+    g_thread_pool_free (klass->pool, FALSE, TRUE);
+    klass->pool = NULL;
+  }
 }

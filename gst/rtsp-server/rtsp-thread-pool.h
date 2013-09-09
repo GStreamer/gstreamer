@@ -169,6 +169,7 @@ gint                gst_rtsp_thread_pool_get_max_threads (GstRTSPThreadPool * po
 GstRTSPThread *     gst_rtsp_thread_pool_get_thread      (GstRTSPThreadPool *pool,
                                                           GstRTSPThreadType type,
                                                           GstRTSPContext *ctx);
+void                gst_rtsp_thread_pool_cleanup         (void);
 G_END_DECLS
 
 #endif /* __GST_RTSP_THREAD_POOL_H__ */
