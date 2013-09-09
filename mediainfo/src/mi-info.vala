@@ -157,34 +157,13 @@ public class MediaInfo.Info : Box
     table = new Table (8, 3, false);
     info_area.add_with_viewport (table);
 
-    /* TODO: also use tabs for containers
-     * - this is needed for e.g. mpeg-ts or mp3 inside ape
-     * - we should move duration and mime-type out of the tabs
-     */
     label = new Label (null);
     label.set_markup("<b>Container</b>");
     label.set_alignment (0.0f, 0.5f);
-    table.attach (label, 0, 3, row, row+1, fill_exp, 0, 0, 1);
-    row++;
+    table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
 
     icon_image = new Image ();
     table.attach (icon_image, 2, 3, row, row+3, fill, 0, 0, 0);
-
-    container_caps = new Label (null);
-    container_caps.set_alignment (0.0f, 0.5f);
-    container_caps.set_selectable (true);
-    container_caps.set_use_markup (true);
-    table.attach (container_caps, 0, 2, row, row+1, fill_exp, 0, 3, 1);
-    row++;
-
-    label = new Label ("Format:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-    container_name = new Label (null);
-    container_name.set_alignment (0.0f, 0.5f);
-    container_name.set_selectable (true);
-    container_name.set_use_markup (true);
-    table.attach (container_name, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
 
     label = new Label ("Mime-Type:");
@@ -204,6 +183,27 @@ public class MediaInfo.Info : Box
     duration.set_selectable (true);
     table.attach (duration, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
+
+    /* TODO: also use tabs for containers
+     * - this is needed for e.g. mpeg-ts or mp3 inside ape
+     */
+    container_caps = new Label (null);
+    container_caps.set_alignment (0.0f, 0.5f);
+    container_caps.set_selectable (true);
+    container_caps.set_use_markup (true);
+    table.attach (container_caps, 0, 2, row, row+1, fill_exp, 0, 3, 1);
+    row++;
+
+    label = new Label ("Format:");
+    label.set_alignment (1.0f, 0.5f);
+    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+    container_name = new Label (null);
+    container_name.set_alignment (0.0f, 0.5f);
+    container_name.set_selectable (true);
+    container_name.set_use_markup (true);
+    table.attach (container_name, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+    row++;
+
 
     if (compact_mode) {
       label = new Label (null);
