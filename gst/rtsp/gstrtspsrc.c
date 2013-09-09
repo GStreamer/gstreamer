@@ -7102,10 +7102,11 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* unblock the tcp tasks and make the loop waiting */
-      gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_WAIT, CMD_LOOP);
-      /* make sure it is waiting before we send PAUSE or PLAY below */
-      GST_RTSP_STREAM_LOCK (rtspsrc);
-      GST_RTSP_STREAM_UNLOCK (rtspsrc);
+      if (gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_WAIT, CMD_LOOP)) {
+        /* make sure it is waiting before we send PAUSE or PLAY below */
+        GST_RTSP_STREAM_LOCK (rtspsrc);
+        GST_RTSP_STREAM_UNLOCK (rtspsrc);
+      }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_READY:
       break;
