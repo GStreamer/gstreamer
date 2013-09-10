@@ -1328,6 +1328,7 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   GstSeekFlags flags;
   GstSeekType start_type, stop_type;
   gint64 start, stop;
+  GstEvent *flush_event = NULL;
 
   gst_event_parse_seek (event, &rate, &format, &flags, &start_type, &start,
       &stop_type, &stop);
@@ -1353,11 +1354,13 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
       if (G_UNLIKELY (ret != GST_FLOW_OK))
         GST_WARNING ("seeking failed %s", gst_flow_get_name (ret));
       else {
+        GstEvent *new_seek;
         base->mode = BASE_MODE_SEEKING;
-        if (!gst_pad_push_event (base->sinkpad, gst_event_new_seek (rate,
-                    GST_FORMAT_BYTES, flags,
-                    GST_SEEK_TYPE_SET, base->seek_offset,
-                    GST_SEEK_TYPE_NONE, -1)))
+
+        new_seek = gst_event_new_seek (rate, GST_FORMAT_BYTES, flags,
+            GST_SEEK_TYPE_SET, base->seek_offset, GST_SEEK_TYPE_NONE, -1);
+        gst_event_set_seqnum (new_seek, GST_EVENT_SEQNUM (event));
+        if (!gst_pad_push_event (base->sinkpad, new_seek))
           ret = GST_FLOW_ERROR;
         else
           base->last_seek_seqnum = GST_EVENT_SEQNUM (event);
@@ -1378,9 +1381,10 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   base->mode = BASE_MODE_SEEKING;
   if (flush) {
     GST_DEBUG_OBJECT (base, "sending flush start");
-    gst_pad_push_event (base->sinkpad, gst_event_new_flush_start ());
-    GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base,
-        gst_event_new_flush_start ());
+    flush_event = gst_event_new_flush_start ();
+    gst_event_set_seqnum (flush_event, GST_EVENT_SEQNUM (event));
+    gst_pad_push_event (base->sinkpad, gst_event_ref (flush_event));
+    GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, flush_event);
   } else
     gst_pad_pause_task (base->sinkpad);
 
@@ -1390,7 +1394,11 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
   if (flush) {
     /* send a FLUSH_STOP for the sinkpad, since we need data for seeking */
     GST_DEBUG_OBJECT (base, "sending flush stop");
-    gst_pad_push_event (base->sinkpad, gst_event_new_flush_stop (TRUE));
+    flush_event = gst_event_new_flush_stop (TRUE);
+    gst_event_set_seqnum (flush_event, GST_EVENT_SEQNUM (event));
+
+    /* ref for it to be reused later */
+    gst_pad_push_event (base->sinkpad, gst_event_ref (flush_event));
     /* And actually flush our pending data but allow to preserve some info
      * to perform the seek */
     mpegts_base_flush (base, FALSE);
@@ -1415,15 +1423,15 @@ mpegts_base_handle_seek_event (MpegTSBase * base, GstPad * pad,
     GST_WARNING ("subclass has no seek implementation");
   }
 
-  if (flush) {
+  if (flush_event) {
     /* if we sent a FLUSH_START, we now send a FLUSH_STOP */
     GST_DEBUG_OBJECT (base, "sending flush stop");
-    //gst_pad_push_event (base->sinkpad, gst_event_new_flush_stop ());
-    GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base,
-        gst_event_new_flush_stop (TRUE));
+    GST_MPEGTS_BASE_GET_CLASS (base)->push_event (base, flush_event);
+    flush_event = NULL;
   }
-  //else
 done:
+  if (flush_event)
+    gst_event_unref (flush_event);
   gst_pad_start_task (base->sinkpad, (GstTaskFunction) mpegts_base_loop, base,
       NULL);
 
