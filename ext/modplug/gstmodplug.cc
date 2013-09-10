@@ -54,7 +54,7 @@
 #define WORDS_BIGENDIAN 0
 #endif
 
-#include <stdafx.h>
+#include <libmodplug/stdafx.h>
 #include <libmodplug/sndfile.h>
 
 #include "gstmodplug.h"
