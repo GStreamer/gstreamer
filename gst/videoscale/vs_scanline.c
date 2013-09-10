@@ -614,10 +614,14 @@ vs_scanline_merge_linear_RGB565 (uint8_t * dest_u8, uint8_t * src1_u8,
   uint16_t *src2 = (uint16_t *) src2_u8;
   int i;
 
-  for (i = 0; i < n; i++) {
-    dest[i] = RGB565 (BLEND (RGB565_R (src1[i]), RGB565_R (src2[i]), x),
-        BLEND (RGB565_G (src1[i]), RGB565_G (src2[i]), x),
-        BLEND (RGB565_B (src1[i]), RGB565_B (src2[i]), x));
+  if (x == 0) {
+    memcpy (dest, src1, n * 2);
+  } else {
+    for (i = 0; i < n; i++) {
+      dest[i] = RGB565 (BLEND (RGB565_R (src1[i]), RGB565_R (src2[i]), x),
+          BLEND (RGB565_G (src1[i]), RGB565_G (src2[i]), x),
+          BLEND (RGB565_B (src1[i]), RGB565_B (src2[i]), x));
+    }
   }
 }
 
@@ -707,10 +711,14 @@ vs_scanline_merge_linear_RGB555 (uint8_t * dest_u8, uint8_t * src1_u8,
   uint16_t *src2 = (uint16_t *) src2_u8;
   int i;
 
-  for (i = 0; i < n; i++) {
-    dest[i] = RGB555 (BLEND (RGB555_R (src1[i]), RGB555_R (src2[i]), x),
-        BLEND (RGB555_G (src1[i]), RGB555_G (src2[i]), x),
-        BLEND (RGB555_B (src1[i]), RGB555_B (src2[i]), x));
+  if (x == 0) {
+    memcpy (dest, src1, n * 2);
+  } else {
+    for (i = 0; i < n; i++) {
+      dest[i] = RGB555 (BLEND (RGB555_R (src1[i]), RGB555_R (src2[i]), x),
+          BLEND (RGB555_G (src1[i]), RGB555_G (src2[i]), x),
+          BLEND (RGB555_B (src1[i]), RGB555_B (src2[i]), x));
+    }
   }
 }
 
