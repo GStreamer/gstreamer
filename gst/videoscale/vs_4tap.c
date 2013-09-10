@@ -1191,8 +1191,8 @@ vs_image_scale_4tap_RGB565 (const VSImage * dest, const VSImage * src,
 
 /* note that src and dest are uint16_t, and thus endian dependent */
 
-#define RGB555_R(x) (((x)&0x7c00)>>8 | ((x)&0x7c00)>>13)
-#define RGB555_G(x) (((x)&0x03e0)>>3 | ((x)&0x03e0)>>9)
+#define RGB555_R(x) (((x)&0x7c00)>>7 | ((x)&0x7c00)>>12)
+#define RGB555_G(x) (((x)&0x03e0)>>2 | ((x)&0x03e0)>>7)
 #define RGB555_B(x) (((x)&0x001f)<<3 | ((x)&0x001f)>>2)
 
 #define RGB555(r,g,b) \
