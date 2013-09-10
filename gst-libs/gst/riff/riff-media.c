@@ -721,6 +721,7 @@ gst_riff_create_video_caps (guint32 codec_fcc,
         *codec_name = g_strdup ("IBM UltiMotion");
       break;
 
+      /* FIXME 2.0: Rename video/x-camtasia to video/x-tscc,version=1 */
     case GST_MAKE_FOURCC ('T', 'S', 'C', 'C'):
     case GST_MAKE_FOURCC ('t', 's', 'c', 'c'):{
       if (strf) {
@@ -734,6 +735,16 @@ gst_riff_create_video_caps (guint32 codec_fcc,
       }
       if (codec_name)
         *codec_name = g_strdup ("TechSmith Camtasia");
+      break;
+    }
+
+    case GST_MAKE_FOURCC ('T', 'S', 'C', '2'):
+    case GST_MAKE_FOURCC ('t', 's', 'c', '2'):{
+      caps =
+          gst_caps_new_simple ("video/x-tscc", "tsccversion", G_TYPE_INT, 2,
+          NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("TechSmith Screen Capture 2");
       break;
     }
 
