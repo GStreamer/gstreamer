@@ -86,15 +86,12 @@ vs_scanline_resample_nearest_Y16 (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
   int acc = *accumulator;
-  int i;
-  int j;
-  int x;
+  int i, j;
   uint16_t *d = (uint16_t *) dest, *s = (uint16_t *) src;
 
   for (i = 0; i < n; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
-    d[i] = (x < 32768 || j + 1 >= src_width) ? s[j] : s[j + 1];
+    j = (acc + 0x8000) >> 16;
+    d[i] = s[j];
 
     acc += increment;
   }
@@ -203,17 +200,13 @@ vs_scanline_resample_nearest_RGB (uint8_t * dest, uint8_t * src, int src_width,
   int acc = *accumulator;
   int i;
   int j;
-  int x;
 
   for (i = 0; i < n; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
-    dest[i * 3 + 0] = (x < 32768
-        || j + 1 >= src_width) ? src[j * 3 + 0] : src[j * 3 + 3];
-    dest[i * 3 + 1] = (x < 32768
-        || j + 1 >= src_width) ? src[j * 3 + 1] : src[j * 3 + 4];
-    dest[i * 3 + 2] = (x < 32768
-        || j + 1 >= src_width) ? src[j * 3 + 2] : src[j * 3 + 5];
+    j = (acc + 0x8000) >> 16;
+
+    dest[i * 3 + 0] = src[j * 3 + 0];
+    dest[i * 3 + 1] = src[j * 3 + 1];
+    dest[i * 3 + 2] = src[j * 3 + 2];
 
     acc += increment;
   }
@@ -283,34 +276,22 @@ vs_scanline_resample_nearest_YUYV (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
   int acc = *accumulator;
-  int i;
-  int j;
-  int x;
-  int quads = (n + 1) / 2;
+  int i, j;
 
-  for (i = 0; i < quads; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
-    dest[i * 4 + 0] = (x < 32768
-        || j + 1 >= src_width) ? src[j * 2 + 0] : src[j * 2 + 2];
+  for (i = 0; i < n; i += 2) {
+    j = (acc + 0x8000) >> 16;
+    dest[i * 2 + 0] = src[j * 2 + 0];
 
-    j = acc >> 17;
-    x = acc & 0x1ffff;
-    dest[i * 4 + 1] = (x < 65536
-        || 2 * j + 2 >= src_width) ? src[j * 4 + 1] : src[j * 4 + 5];
-
-    if (2 * i + 1 < n && 2 * j + 1 < src_width)
-      dest[i * 4 + 3] = (x < 65536
-          || 2 * j + 3 >= src_width) ? src[j * 4 + 3] : src[j * 4 + 7];
+    j >>= 1;
+    dest[i * 2 + 1] = src[j * 4 + 1];
+    dest[i * 2 + 3] = src[j * 4 + 3];
 
     acc += increment;
 
-    j = acc >> 16;
-    x = acc & 0xffff;
+    if (i < n - 1) {
+      j = (acc + 0x8000) >> 16;
+      dest[i * 2 + 2] = src[j * 2 + 0];
 
-    if (2 * i + 1 < n && j < src_width) {
-      dest[i * 4 + 2] = (x < 32768
-          || j + 1 >= src_width) ? src[j * 2 + 0] : src[j * 2 + 2];
       acc += increment;
     }
   }
@@ -412,36 +393,22 @@ vs_scanline_resample_nearest_UYVY (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
   int acc = *accumulator;
-  int i;
-  int j;
-  int x;
-  int quads = (n + 1) / 2;
+  int i, j;
 
-  for (i = 0; i < quads; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
+  for (i = 0; i < n; i += 2) {
+    j = (acc + 0x8000) >> 16;
+    dest[i * 2 + 1] = src[j * 2 + 1];
 
-    dest[i * 4 + 1] = (x < 32768
-        || j + 1 >= src_width) ? src[j * 2 + 1] : src[j * 2 + 3];
-
-    j = acc >> 17;
-    x = acc & 0x1ffff;
-
-    dest[i * 4 + 0] = (x < 65536
-        || 2 * j + 2 >= src_width) ? src[j * 4 + 0] : src[j * 4 + 4];
-
-    if (2 * i + 1 < n && 2 * j + 1 < src_width)
-      dest[i * 4 + 2] = (x < 65536
-          || 2 * j + 3 >= src_width) ? src[j * 4 + 2] : src[j * 4 + 6];
+    j >>= 1;
+    dest[i * 2 + 0] = src[j * 4 + 0];
+    dest[i * 2 + 2] = src[j * 4 + 2];
 
     acc += increment;
 
-    j = acc >> 16;
-    x = acc & 0xffff;
+    if (i < n - 1) {
+      j = (acc + 0x8000) >> 16;
+      dest[i * 2 + 3] = src[j * 2 + 1];
 
-    if (2 * i + 1 < n && j < src_width) {
-      dest[i * 4 + 3] = (x < 32768
-          || j + 1 >= src_width) ? src[j * 2 + 1] : src[j * 2 + 3];
       acc += increment;
     }
   }
@@ -538,18 +505,13 @@ vs_scanline_resample_nearest_NV12 (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
   int acc = *accumulator;
-  int i;
-  int j;
-  int x;
+  int i, j;
 
   for (i = 0; i < n; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
+    j = (acc + 0x8000) >> 16;
 
-    dest[i * 2 + 0] = (x < 32768
-        || j + 1 >= src_width) ? src[j * 2 + 0] : src[j * 2 + 2];
-    dest[i * 2 + 1] = (x < 32768
-        || j + 1 >= src_width) ? src[j * 2 + 1] : src[j * 2 + 3];
+    dest[i * 2 + 0] = src[j * 2 + 0];
+    dest[i * 2 + 1] = src[j * 2 + 1];
 
     acc += increment;
   }
@@ -634,14 +596,11 @@ vs_scanline_resample_nearest_RGB565 (uint8_t * dest_u8, uint8_t * src_u8,
   uint16_t *dest = (uint16_t *) dest_u8;
   uint16_t *src = (uint16_t *) src_u8;
   int acc = *accumulator;
-  int i;
-  int j;
-  int x;
+  int i, j;
 
   for (i = 0; i < n; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
-    dest[i] = (x < 32768 || j + 1 >= src_width) ? src[j] : src[j + 1];
+    j = (acc + 0x8000) >> 16;
+    dest[i] = src[j];
 
     acc += increment;
   }
@@ -732,14 +691,12 @@ vs_scanline_resample_nearest_RGB555 (uint8_t * dest_u8, uint8_t * src_u8,
   uint16_t *dest = (uint16_t *) dest_u8;
   uint16_t *src = (uint16_t *) src_u8;
   int acc = *accumulator;
-  int i;
-  int j;
-  int x;
+  int i, j;
 
   for (i = 0; i < n; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
-    dest[i] = (x < 32768 || j + 1 >= src_width) ? src[j] : src[j + 1];
+    j = (acc + 0x8000) >> 16;
+
+    dest[i] = src[j];
 
     acc += increment;
   }
@@ -802,21 +759,15 @@ vs_scanline_resample_nearest_AYUV64 (uint8_t * dest8, uint8_t * src8,
   guint16 *dest = (guint16 *) dest8;
   guint16 *src = (guint16 *) src8;
   int acc = *accumulator;
-  int i;
-  int j;
-  int x;
+  int i, j;
 
   for (i = 0; i < n; i++) {
-    j = acc >> 16;
-    x = acc & 0xffff;
-    dest[i * 4 + 0] = (x < 32768
-        || j + 1 >= src_width) ? src[j * 4 + 0] : src[j * 4 + 4];
-    dest[i * 4 + 1] = (x < 32768
-        || j + 1 >= src_width) ? src[j * 4 + 1] : src[j * 4 + 5];
-    dest[i * 4 + 2] = (x < 32768
-        || j + 1 >= src_width) ? src[j * 4 + 2] : src[j * 4 + 6];
-    dest[i * 4 + 3] = (x < 32768
-        || j + 1 >= src_width) ? src[j * 4 + 3] : src[j * 4 + 7];
+    j = (acc + 0x8000) >> 16;
+
+    dest[i * 4 + 0] = src[j * 4 + 0];
+    dest[i * 4 + 1] = src[j * 4 + 1];
+    dest[i * 4 + 2] = src[j * 4 + 2];
+    dest[i * 4 + 3] = src[j * 4 + 3];
 
     acc += increment;
   }
