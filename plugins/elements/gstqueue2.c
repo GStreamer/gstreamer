@@ -877,7 +877,8 @@ update_buffering (GstQueue2 * queue)
   gboolean post = FALSE;
 
   /* Ensure the variables used to calculate buffering state are up-to-date. */
-  update_cur_level (queue, queue->current);
+  if (queue->current)
+    update_cur_level (queue, queue->current);
   update_in_rates (queue);
 
   if (!get_buffering_percent (queue, NULL, &percent))
