@@ -93,4 +93,3 @@ void video_mixer_orc_overlay_bgra (guint8 * ORC_RESTRICT d1, int d1_stride, cons
 #endif
 
 #endif
-
