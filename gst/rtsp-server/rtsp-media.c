@@ -1325,7 +1325,7 @@ not_seekable:
   {
     g_rec_mutex_unlock (&priv->state_lock);
     GST_INFO ("pipeline is not seekable");
-    return TRUE;
+    return FALSE;
   }
 not_supported:
   {
