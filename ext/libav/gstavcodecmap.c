@@ -1447,6 +1447,12 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
       }
       break;
 
+    case AV_CODEC_ID_TSCC2:
+      caps =
+          gst_ff_vid_caps_new (context, NULL, codec_id, encode,
+          "video/x-tscc", "tsccversion", G_TYPE_INT, 2, NULL);
+      break;
+
     case AV_CODEC_ID_KMVC:
       caps =
           gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/x-kmvc",
