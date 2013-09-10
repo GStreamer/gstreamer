@@ -171,7 +171,7 @@ static GstCaps
 /* stream methods */
 static void gst_matroska_demux_reset (GstElement * element);
 static gboolean perform_seek_to_offset (GstMatroskaDemux * demux,
-    gdouble rate, guint64 offset);
+    gdouble rate, guint64 offset, guint32 seqnum);
 
 /* gobject functions */
 static void gst_matroska_demux_set_property (GObject * object,
@@ -2196,7 +2196,7 @@ finish:
     /* upstream takes care of flushing and all that
      * ... and newsegment event handling takes care of the rest */
     return perform_seek_to_offset (demux, rate,
-        entry->pos + demux->common.ebml_segment_start);
+        entry->pos + demux->common.ebml_segment_start, seqnum);
   }
 
 exit:
@@ -2336,7 +2336,8 @@ gst_matroska_demux_handle_seek_push (GstMatroskaDemux * demux, GstPad * pad,
     if (!building_index) {
       /* seek to the first subindex or legacy index */
       GST_INFO_OBJECT (demux, "Seeking to Cues at %" G_GUINT64_FORMAT, offset);
-      return perform_seek_to_offset (demux, rate, offset);
+      return perform_seek_to_offset (demux, rate, offset,
+          gst_event_get_seqnum (event));
     }
 
     /* well, we are handling it already */
@@ -4664,7 +4665,8 @@ pause:
  * Create and push a flushing seek event upstream
  */
 static gboolean
-perform_seek_to_offset (GstMatroskaDemux * demux, gdouble rate, guint64 offset)
+perform_seek_to_offset (GstMatroskaDemux * demux, gdouble rate, guint64 offset,
+    guint32 seqnum)
 {
   GstEvent *event;
   gboolean res = 0;
@@ -4675,6 +4677,7 @@ perform_seek_to_offset (GstMatroskaDemux * demux, gdouble rate, guint64 offset)
       gst_event_new_seek (rate, GST_FORMAT_BYTES,
       GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_ACCURATE, GST_SEEK_TYPE_SET, offset,
       GST_SEEK_TYPE_NONE, -1);
+  gst_event_set_seqnum (event, seqnum);
 
   res = gst_pad_push_event (demux->common.sinkpad, event);
 
