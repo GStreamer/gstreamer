@@ -65,7 +65,7 @@ vs_image_scale_nearest_RGBA (const VSImage * dest, const VSImage * src,
   acc = 0;
   prev_j = -1;
   for (i = 0; i < dest->height; i++) {
-    j = acc >> 16;
+    j = (acc + 0x8000) >> 16;
 
     if (j == prev_j) {
       memcpy (dest->pixels + i * dest->stride,
@@ -160,7 +160,7 @@ vs_image_scale_nearest_RGB (const VSImage * dest, const VSImage * src,
 
   acc = 0;
   for (i = 0; i < dest->height; i++) {
-    j = acc >> 16;
+    j = (acc + 0x8000) >> 16;
 
     xacc = 0;
     vs_scanline_resample_nearest_RGB (dest->pixels + i * dest->stride,
@@ -290,7 +290,7 @@ vs_image_scale_nearest_YUYV (const VSImage * dest, const VSImage * src,
 
   acc = 0;
   for (i = 0; i < dest->height; i++) {
-    j = acc >> 16;
+    j = (acc + 0x8000) >> 16;
 
     xacc = 0;
     vs_scanline_resample_nearest_YUYV (dest->pixels + i * dest->stride,
@@ -420,7 +420,7 @@ vs_image_scale_nearest_UYVY (const VSImage * dest, const VSImage * src,
 
   acc = 0;
   for (i = 0; i < dest->height; i++) {
-    j = acc >> 16;
+    j = (acc + 0x8000) >> 16;
 
     xacc = 0;
     vs_scanline_resample_nearest_UYVY (dest->pixels + i * dest->stride,
@@ -550,7 +550,7 @@ vs_image_scale_nearest_NV12 (const VSImage * dest, const VSImage * src,
 
   acc = 0;
   for (i = 0; i < dest->height; i++) {
-    j = acc >> 16;
+    j = (acc + 0x8000) >> 16;
 
     xacc = 0;
     vs_scanline_resample_nearest_NV12 (dest->pixels + i * dest->stride,
@@ -679,7 +679,7 @@ vs_image_scale_nearest_Y (const VSImage * dest, const VSImage * src,
 
   acc = 0;
   for (i = 0; i < dest->height; i++) {
-    j = acc >> 16;
+    j = (acc + 0x8000) >> 16;
 
     video_scale_orc_resample_nearest_u8 (dest->pixels + i * dest->stride,
         src->pixels + j * src->stride, 0, x_increment, dest->width);
@@ -806,7 +806,7 @@ vs_image_scale_nearest_Y16 (const VSImage * dest, const VSImage * src,
 
   acc = 0;
   for (i = 0; i < dest->height; i++) {
-    j = acc >> 16;
+    j = (acc + 0x8000) >> 16;
 
     xacc = 0;
     vs_scanline_resample_nearest_Y16 (dest->pixels + i * dest->stride,
@@ -936,7 +936,7 @@ vs_image_scale_nearest_RGB565 (const VSImage * dest, const VSImage * src,
 
   acc = 0;
   for (i = 0; i < dest->height; i++) {
-    j = acc >> 16;
+    j = (acc + 0x8000) >> 16;
 
     xacc = 0;
     vs_scanline_resample_nearest_RGB565 (dest->pixels + i * dest->stride,
@@ -1066,7 +1066,7 @@ vs_image_scale_nearest_RGB555 (const VSImage * dest, const VSImage * src,
 
   acc = 0;
   for (i = 0; i < dest->height; i++) {
-    j = acc >> 16;
+    j = (acc + 0x8000) >> 16;
 
     xacc = 0;
     vs_scanline_resample_nearest_RGB555 (dest->pixels + i * dest->stride,
@@ -1196,7 +1196,7 @@ vs_image_scale_nearest_AYUV64 (const VSImage * dest, const VSImage * src,
   acc = 0;
   prev_j = -1;
   for (i = 0; i < dest->height; i++) {
-    j = acc >> 16;
+    j = (acc + 0x8000) >> 16;
 
     if (j == prev_j) {
       memcpy (dest->pixels + i * dest->stride,
