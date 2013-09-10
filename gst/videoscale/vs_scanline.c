@@ -37,6 +37,9 @@
 
 /* greyscale, i.e., single componenet */
 
+#define BLEND(a,b,x) (((a) * (65536 - (x)) + (b) * (x)) >> 16)
+#define BLEND15(a,b,x) (((a) * (32768 - (x)) + (b) * (x)) >> 15)
+
 void
 vs_scanline_downsample_Y (uint8_t * dest, uint8_t * src, int n)
 {
@@ -111,16 +114,15 @@ vs_scanline_resample_linear_Y16 (uint8_t * dest, uint8_t * src, int src_width,
 
   for (i = 0; i < n; i++) {
     j = acc >> 16;
-    x = acc & 0xffff;
 
-    if (j + 1 < src_width)
-      d[i] = (s[j] * (65536 - x) + s[j + 1] * x) >> 16;
-    else
+    if (j + 1 < src_width) {
+      x = acc & 0xffff;
+      d[i] = BLEND (s[j], s[j + 1], x);
+    } else
       d[i] = s[j];
 
     acc += increment;
   }
-
   *accumulator = acc;
 }
 
@@ -225,21 +227,17 @@ vs_scanline_resample_linear_RGB (uint8_t * dest, uint8_t * src, int src_width,
 
   for (i = 0; i < n; i++) {
     j = acc >> 16;
-    x = acc & 0xffff;
 
     if (j + 1 < src_width) {
-      dest[i * 3 + 0] =
-          (src[j * 3 + 0] * (65536 - x) + src[j * 3 + 3] * x) >> 16;
-      dest[i * 3 + 1] =
-          (src[j * 3 + 1] * (65536 - x) + src[j * 3 + 4] * x) >> 16;
-      dest[i * 3 + 2] =
-          (src[j * 3 + 2] * (65536 - x) + src[j * 3 + 5] * x) >> 16;
+      x = acc & 0xffff;
+      dest[i * 3 + 0] = BLEND (src[j * 3 + 0], src[j * 3 + 3], x);
+      dest[i * 3 + 1] = BLEND (src[j * 3 + 1], src[j * 3 + 4], x);
+      dest[i * 3 + 2] = BLEND (src[j * 3 + 2], src[j * 3 + 5], x);
     } else {
       dest[i * 3 + 0] = src[j * 3 + 0];
       dest[i * 3 + 1] = src[j * 3 + 1];
       dest[i * 3 + 2] = src[j * 3 + 2];
     }
-
     acc += increment;
   }
 
@@ -530,21 +528,17 @@ vs_scanline_resample_linear_NV12 (uint8_t * dest, uint8_t * src, int src_width,
 
   for (i = 0; i < n; i++) {
     j = acc >> 16;
-    x = acc & 0xffff;
 
     if (j + 1 < src_width) {
-      dest[i * 2 + 0] =
-          (src[j * 2 + 0] * (65536 - x) + src[j * 2 + 2] * x) >> 16;
-      dest[i * 2 + 1] =
-          (src[j * 2 + 1] * (65536 - x) + src[j * 2 + 3] * x) >> 16;
+      x = acc & 0xffff;
+      dest[i * 2 + 0] = BLEND (src[j * 2 + 0], src[j * 2 + 2], x);
+      dest[i * 2 + 1] = BLEND (src[j * 2 + 1], src[j * 2 + 3], x);
     } else {
-      dest[i * 4 + 0] = src[j * 2 + 0];
-      dest[i * 4 + 1] = src[j * 2 + 1];
+      dest[i * 2 + 0] = src[j * 2 + 0];
+      dest[i * 2 + 1] = src[j * 2 + 1];
     }
-
     acc += increment;
   }
-
   *accumulator = acc;
 }
 
@@ -621,13 +615,12 @@ vs_scanline_resample_linear_RGB565 (uint8_t * dest_u8, uint8_t * src_u8,
 
   for (i = 0; i < n; i++) {
     j = acc >> 16;
-    x = acc & 0xffff;
 
     if (j + 1 < src_width) {
-      dest[i] = RGB565 (
-          (RGB565_R (src[j]) * (65536 - x) + RGB565_R (src[j + 1]) * x) >> 16,
-          (RGB565_G (src[j]) * (65536 - x) + RGB565_G (src[j + 1]) * x) >> 16,
-          (RGB565_B (src[j]) * (65536 - x) + RGB565_B (src[j + 1]) * x) >> 16);
+      x = acc & 0xffff;
+      dest[i] = RGB565 (BLEND (RGB565_R (src[j]), RGB565_R (src[j + 1]), x),
+          BLEND (RGB565_G (src[j]), RGB565_G (src[j + 1]), x),
+          BLEND (RGB565_B (src[j]), RGB565_B (src[j + 1]), x));
     } else {
       dest[i] = RGB565 (RGB565_R (src[j]),
           RGB565_G (src[j]), RGB565_B (src[j]));
@@ -649,10 +642,9 @@ vs_scanline_merge_linear_RGB565 (uint8_t * dest_u8, uint8_t * src1_u8,
   int i;
 
   for (i = 0; i < n; i++) {
-    dest[i] = RGB565 (
-        (RGB565_R (src1[i]) * (65536 - x) + RGB565_R (src2[i]) * x) >> 16,
-        (RGB565_G (src1[i]) * (65536 - x) + RGB565_G (src2[i]) * x) >> 16,
-        (RGB565_B (src1[i]) * (65536 - x) + RGB565_B (src2[i]) * x) >> 16);
+    dest[i] = RGB565 (BLEND (RGB565_R (src1[i]), RGB565_R (src2[i]), x),
+        BLEND (RGB565_G (src1[i]), RGB565_G (src2[i]), x),
+        BLEND (RGB565_B (src1[i]), RGB565_B (src2[i]), x));
   }
 }
 
@@ -716,13 +708,12 @@ vs_scanline_resample_linear_RGB555 (uint8_t * dest_u8, uint8_t * src_u8,
 
   for (i = 0; i < n; i++) {
     j = acc >> 16;
-    x = acc & 0xffff;
 
     if (j + 1 < src_width) {
-      dest[i] = RGB555 (
-          (RGB555_R (src[j]) * (65536 - x) + RGB555_R (src[j + 1]) * x) >> 16,
-          (RGB555_G (src[j]) * (65536 - x) + RGB555_G (src[j + 1]) * x) >> 16,
-          (RGB555_B (src[j]) * (65536 - x) + RGB555_B (src[j + 1]) * x) >> 16);
+      x = acc & 0xffff;
+      dest[i] = RGB555 (BLEND (RGB555_R (src[j]), RGB555_R (src[j + 1]), x),
+          BLEND (RGB555_G (src[j]), RGB555_G (src[j + 1]), x),
+          BLEND (RGB555_B (src[j]), RGB555_B (src[j + 1]), x));
     } else {
       dest[i] = RGB555 (RGB555_R (src[j]),
           RGB555_G (src[j]), RGB555_B (src[j]));
@@ -744,10 +735,9 @@ vs_scanline_merge_linear_RGB555 (uint8_t * dest_u8, uint8_t * src1_u8,
   int i;
 
   for (i = 0; i < n; i++) {
-    dest[i] = RGB555 (
-        (RGB555_R (src1[i]) * (65536 - x) + RGB555_R (src2[i]) * x) >> 16,
-        (RGB555_G (src1[i]) * (65536 - x) + RGB555_G (src2[i]) * x) >> 16,
-        (RGB555_B (src1[i]) * (65536 - x) + RGB555_B (src2[i]) * x) >> 16);
+    dest[i] = RGB555 (BLEND (RGB555_R (src1[i]), RGB555_R (src2[i]), x),
+        BLEND (RGB555_G (src1[i]), RGB555_G (src2[i]), x),
+        BLEND (RGB555_B (src1[i]), RGB555_B (src2[i]), x));
   }
 }
 
@@ -790,21 +780,16 @@ vs_scanline_resample_linear_AYUV64 (uint8_t * dest8, uint8_t * src8,
     x = (acc & 0xffff) >> 1;
 
     if (j + 1 < src_width) {
-      dest[i * 4 + 0] =
-          (src[j * 3 + 0] * (32768 - x) + src[j * 4 + 4] * x) >> 15;
-      dest[i * 4 + 1] =
-          (src[j * 4 + 1] * (32768 - x) + src[j * 4 + 5] * x) >> 15;
-      dest[i * 4 + 2] =
-          (src[j * 4 + 2] * (32768 - x) + src[j * 4 + 6] * x) >> 15;
-      dest[i * 4 + 3] =
-          (src[j * 4 + 3] * (32768 - x) + src[j * 4 + 7] * x) >> 15;
+      dest[i * 4 + 0] = BLEND15 (src[j * 4 + 0], src[j * 4 + 4], x);
+      dest[i * 4 + 1] = BLEND15 (src[j * 4 + 1], src[j * 4 + 5], x);
+      dest[i * 4 + 2] = BLEND15 (src[j * 4 + 2], src[j * 4 + 6], x);
+      dest[i * 4 + 3] = BLEND15 (src[j * 4 + 3], src[j * 4 + 7], x);
     } else {
       dest[i * 4 + 0] = src[j * 4 + 0];
       dest[i * 4 + 1] = src[j * 4 + 1];
       dest[i * 4 + 2] = src[j * 4 + 2];
       dest[i * 4 + 3] = src[j * 4 + 3];
     }
-
     acc += increment;
   }
 
