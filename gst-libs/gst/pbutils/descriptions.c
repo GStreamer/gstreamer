@@ -319,7 +319,8 @@ static const FormatInfo formats[] = {
   {"video/x-raw", NULL, FLAG_VIDEO, ""},
   {"video/x-svq", NULL, FLAG_VIDEO, ""},
   {"video/x-wmv", NULL, FLAG_VIDEO, ""},
-  {"video/x-xan", NULL, FLAG_VIDEO, ""}
+  {"video/x-xan", NULL, FLAG_VIDEO, ""},
+  {"video/x-tscc", NULL, FLAG_VIDEO, ""}
 };
 
 /* returns static descriptions and dynamic ones (such as video/x-raw),
@@ -683,6 +684,19 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
 
     return g_strdup_printf (_("Raw %d-bit %s audio"), depth,
         is_float ? "floating-point" : "PCM");
+  } else if (strcmp (info->type, "video/x-tscc") == 0) {
+    gint version;
+    gst_structure_get_int (s, "tsccversion", &version);
+    switch (version) {
+      case 1:
+        return g_strdup ("TechSmith Screen Capture 1");
+      case 2:
+        return g_strdup ("TechSmith Screen Capture 2");
+      default:
+        break;
+    }
+    GST_WARNING ("Unexpected version in %" GST_PTR_FORMAT, caps);
+    return g_strdup ("TechSmith Screen Capture");
   }
   return NULL;
 }
