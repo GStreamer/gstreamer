@@ -302,54 +302,40 @@ vs_scanline_resample_linear_YUYV (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
   int acc = *accumulator;
-  int i;
-  int j;
-  int x;
-  int quads = (n + 1) / 2;
+  int i, j, x;
 
-  for (i = 0; i < quads; i++) {
+  for (i = 0; i < n; i += 2) {
     j = acc >> 16;
     x = acc & 0xffff;
 
     if (j + 1 < src_width)
-      dest[i * 4 + 0] =
-          (src[j * 2 + 0] * (65536 - x) + src[j * 2 + 2] * x) >> 16;
+      dest[i * 2 + 0] = BLEND (src[j * 2 + 0], src[j * 2 + 2], x);
     else
-      dest[i * 4 + 0] = src[j * 2 + 0];
+      dest[i * 2 + 0] = src[j * 2 + 0];
 
-    j = acc >> 17;
-    x = acc & 0x1ffff;
-
-    if (2 * j + 2 < src_width)
-      dest[i * 4 + 1] =
-          (src[j * 4 + 1] * (131072 - x) + src[j * 4 + 5] * x) >> 17;
-    else
-      dest[i * 4 + 1] = src[j * 4 + 1];
-
-    if (2 * i + 1 < n && 2 * j + 1 < src_width) {
-      if (2 * j + 3 < src_width)
-        dest[i * 4 + 3] =
-            (src[j * 4 + 3] * (131072 - x) + src[j * 4 + 7] * x) >> 17;
-      else
-        dest[i * 4 + 3] = src[j * 4 + 3];
+    j >>= 1;
+    if (2 * (j + 1) < src_width) {
+      dest[i * 2 + 1] = BLEND (src[j * 4 + 1], src[j * 4 + 5], x);
+      dest[i * 2 + 3] = BLEND (src[j * 4 + 3], src[j * 4 + 7], x);
+    } else {
+      dest[i * 2 + 1] = src[j * 4 + 1];
+      dest[i * 2 + 3] = src[j * 4 + 3];
     }
 
     acc += increment;
 
-    j = acc >> 16;
-    x = acc & 0xffff;
+    if (i < n - 1) {
+      j = acc >> 16;
 
-    if (2 * i + 1 < n && j < src_width) {
-      if (j + 1 < src_width)
-        dest[i * 4 + 2] =
-            (src[j * 2 + 0] * (65536 - x) + src[j * 2 + 2] * x) >> 16;
-      else
-        dest[i * 4 + 2] = src[j * 2 + 0];
+      if (j + 1 < src_width) {
+        x = acc & 0xffff;
+        dest[i * 2 + 2] = BLEND (src[j * 2 + 0], src[j * 2 + 2], x);
+      } else
+        dest[i * 2 + 2] = src[j * 2 + 0];
+
       acc += increment;
     }
   }
-
-
   *accumulator = acc;
 }
 
@@ -419,53 +405,40 @@ vs_scanline_resample_linear_UYVY (uint8_t * dest, uint8_t * src, int src_width,
     int n, int *accumulator, int increment)
 {
   int acc = *accumulator;
-  int i;
-  int j;
-  int x;
-  int quads = (n + 1) / 2;
+  int i, j, x;
 
-  for (i = 0; i < quads; i++) {
+  for (i = 0; i < n; i += 2) {
     j = acc >> 16;
     x = acc & 0xffff;
 
     if (j + 1 < src_width)
-      dest[i * 4 + 1] =
-          (src[j * 2 + 1] * (65536 - x) + src[j * 2 + 3] * x) >> 16;
+      dest[i * 2 + 1] = BLEND (src[j * 2 + 1], src[j * 2 + 3], x);
     else
-      dest[i * 4 + 1] = src[j * 2 + 1];
+      dest[i * 2 + 1] = src[j * 2 + 1];
 
-    j = acc >> 17;
-    x = acc & 0x1ffff;
-    if (2 * j + 2 < src_width)
-      dest[i * 4 + 0] =
-          (src[j * 4 + 0] * (131072 - x) + src[j * 4 + 4] * x) >> 17;
-    else
-      dest[i * 4 + 0] = src[j * 4 + 0];
-
-    if (i * 2 + 1 < n && 2 * j + 1 < src_width) {
-      if (2 * j + 3 < src_width)
-        dest[i * 4 + 2] =
-            (src[j * 4 + 2] * (131072 - x) + src[j * 4 + 6] * x) >> 17;
-      else
-        dest[i * 4 + 2] = src[j * 4 + 2];
+    j >>= 1;
+    if (2 * (j + 1) < src_width) {
+      dest[i * 2 + 0] = BLEND (src[j * 4 + 0], src[j * 4 + 4], x);
+      dest[i * 2 + 2] = BLEND (src[j * 4 + 2], src[j * 4 + 6], x);
+    } else {
+      dest[i * 2 + 0] = src[j * 4 + 0];
+      dest[i * 2 + 2] = src[j * 4 + 2];
     }
 
     acc += increment;
 
-    j = acc >> 16;
-    x = acc & 0xffff;
+    if (i < n - 1) {
+      j = acc >> 16;
 
-    if (2 * i + 1 < n && j < src_width) {
-      if (j + 1 < src_width)
-        dest[i * 4 + 3] =
-            (src[j * 2 + 1] * (65536 - x) + src[j * 2 + 3] * x) >> 16;
-      else
-        dest[i * 4 + 3] = src[j * 2 + 1];
+      if (j + 1 < src_width) {
+        x = acc & 0xffff;
+        dest[i * 2 + 3] = BLEND (src[j * 2 + 1], src[j * 2 + 3], x);
+      } else
+        dest[i * 2 + 3] = src[j * 2 + 1];
+
       acc += increment;
     }
   }
-
-  *accumulator = acc;
 }
 
 void
