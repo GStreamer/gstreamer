@@ -171,7 +171,6 @@ struct _GstASFDemux {
   GstClockTime         first_ts;        /* smallest timestamp found        */
 
   guint32              packet_size;
-  guint32              timestamp;       /* in milliseconds              */
   guint64              play_time;
 
   guint64              preroll;
