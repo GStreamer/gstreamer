@@ -99,7 +99,7 @@ create_profile (const char *container, const char *container_preset,
 {
   GstEncodingContainerProfile *cprof = NULL;
   GstEncodingProfile *prof = NULL;
-  GstCaps *caps;
+  GstCaps *caps, *restriction_caps;
 
   /* If we have both audio and video, we must have container */
   if (audio && video && !container)
@@ -130,9 +130,12 @@ create_profile (const char *container, const char *container_preset,
     gst_caps_unref (caps);
   }
   if (video) {
+    restriction_caps =
+        gst_caps_new_simple ("video/x-raw", "framerate", GST_TYPE_FRACTION, 30,
+        1, "format", G_TYPE_STRING, "I420", NULL);
     caps = gst_caps_from_string (video);
     prof = (GstEncodingProfile *) gst_encoding_video_profile_new (caps, NULL,
-        NULL, 0);
+        restriction_caps, 0);
     if (!prof)
       goto beach;
     if (video_preset)
