@@ -536,7 +536,7 @@ decode_buffer(GstVaapiDecoderJpeg *decoder, const guchar *buf, guint buf_size)
             GST_DEBUG("buffer to short for parsing");
             return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
         }
-        ofs += seg.size;
+        ofs = seg.offset + seg.size;
 
         /* Decode scan, if complete */
         if (seg.marker == GST_JPEG_MARKER_EOI && scan_seg.header_size > 0) {
