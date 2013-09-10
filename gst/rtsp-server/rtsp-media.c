@@ -1251,6 +1251,7 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
   gboolean res;
   GstClockTime start, stop;
   GstSeekType start_type, stop_type;
+  GstQuery *query;
 
   klass = GST_RTSP_MEDIA_GET_CLASS (media);
 
@@ -1263,6 +1264,18 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
   g_rec_mutex_lock (&priv->state_lock);
   if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED)
     goto not_prepared;
+
+  /* Update the seekable state of the pipeline in case it changed */
+  query = gst_query_new_seeking (GST_FORMAT_TIME);
+  if (gst_element_query (priv->pipeline, query)) {
+    GstFormat format;
+    gboolean seekable;
+    gint64 start, end;
+
+    gst_query_parse_seeking (query, &format, &seekable, &start, &end);
+    priv->seekable = seekable;
+  }
+  gst_query_unref (query);
 
   if (!priv->seekable)
     goto not_seekable;
