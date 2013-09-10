@@ -177,7 +177,8 @@ gst_direct_control_binding_class_init (GstDirectControlBindingClass * klass)
   properties[PROP_CS] =
       g_param_spec_object ("control-source", "ControlSource",
       "The control source",
-      GST_TYPE_CONTROL_SOURCE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      GST_TYPE_CONTROL_SOURCE,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 }

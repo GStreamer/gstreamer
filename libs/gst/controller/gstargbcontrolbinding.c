@@ -104,22 +104,26 @@ gst_argb_control_binding_class_init (GstARGBControlBindingClass * klass)
   properties[PROP_CS_A] =
       g_param_spec_object ("control-source-a", "ControlSource A",
       "The control source for the alpha color component",
-      GST_TYPE_CONTROL_SOURCE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      GST_TYPE_CONTROL_SOURCE,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
 
   properties[PROP_CS_R] =
       g_param_spec_object ("control-source-r", "ControlSource R",
       "The control source for the red color component",
-      GST_TYPE_CONTROL_SOURCE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      GST_TYPE_CONTROL_SOURCE,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
 
   properties[PROP_CS_G] =
       g_param_spec_object ("control-source-g", "ControlSource G",
       "The control source for the green color component",
-      GST_TYPE_CONTROL_SOURCE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      GST_TYPE_CONTROL_SOURCE,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
 
   properties[PROP_CS_B] =
       g_param_spec_object ("control-source-b", "ControlSource B",
       "The control source for the blue color component",
-      GST_TYPE_CONTROL_SOURCE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+      GST_TYPE_CONTROL_SOURCE,
+      G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
 
   g_object_class_install_properties (gobject_class, PROP_LAST, properties);
 }
