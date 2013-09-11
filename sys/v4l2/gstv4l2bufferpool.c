@@ -447,7 +447,7 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   pool->copy_threshold = copy_threshold;
 
   if (obj->mode == GST_V4L2_IO_DMABUF)
-    allocator = gst_dmabuf_allocator_obtain ();
+    allocator = gst_dmabuf_allocator_new ();
 
   if (pool->allocator)
     gst_object_unref (pool->allocator);
