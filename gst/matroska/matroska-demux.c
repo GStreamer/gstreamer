@@ -3007,7 +3007,7 @@ gst_matroska_demux_check_subtitle_buffer (GstElement * element,
     return GST_FLOW_OK;
 
   if (!sub_stream->invalid_utf8) {
-    if (g_utf8_validate ((gchar *) map.data, map.size, NULL)) {
+    if (g_utf8_validate ((gchar *) map.data, map.size - 1, NULL)) {
       goto next;
     }
     GST_WARNING_OBJECT (element, "subtitle stream %" G_GUINT64_FORMAT
