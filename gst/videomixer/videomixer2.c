@@ -312,7 +312,7 @@ gst_videomixer2_update_converters (GstVideoMixer2 * mix)
 
   downstream_caps = gst_pad_get_allowed_caps (mix->srcpad);
 
-  if (gst_caps_is_empty (downstream_caps))
+  if (!downstream_caps || gst_caps_is_empty (downstream_caps))
     return FALSE;
 
   /* first find new preferred format */
