@@ -162,13 +162,7 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
 
       if (type->n_profile_levels) {
         for (j = type->n_profile_levels - 1; j >= 0; j--) {
-          const gchar *profile, *level;
-          gint k;
-          GValue va = { 0, };
-          GValue v = { 0, };
-
-          g_value_init (&va, GST_TYPE_LIST);
-          g_value_init (&v, G_TYPE_STRING);
+          const gchar *profile;
 
           profile =
               gst_amc_mpeg4_profile_to_string (type->profile_levels[j].profile);
@@ -178,21 +172,8 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
             continue;
           }
 
-          for (k = 1; k <= type->profile_levels[j].level && k != 0; k <<= 1) {
-            level = gst_amc_mpeg4_level_to_string (k);
-            if (!level)
-              continue;
-
-            g_value_set_string (&v, level);
-            gst_value_list_append_value (&va, &v);
-            g_value_reset (&v);
-          }
-
           tmp2 = gst_structure_copy (tmp);
           gst_structure_set (tmp2, "profile", G_TYPE_STRING, profile, NULL);
-          gst_structure_set_value (tmp2, "level", &va);
-          g_value_unset (&va);
-          g_value_unset (&v);
           ret = gst_caps_merge_structure (ret, tmp2);
           have_profile_level = TRUE;
         }
@@ -218,13 +199,7 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
 
       if (type->n_profile_levels) {
         for (j = type->n_profile_levels - 1; j >= 0; j--) {
-          gint profile, level;
-          gint k;
-          GValue va = { 0, };
-          GValue v = { 0, };
-
-          g_value_init (&va, GST_TYPE_LIST);
-          g_value_init (&v, G_TYPE_UINT);
+          gint profile;
 
           profile =
               gst_amc_h263_profile_to_gst_id (type->profile_levels[j].profile);
@@ -235,20 +210,8 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
             continue;
           }
 
-          for (k = 1; k <= type->profile_levels[j].level && k != 0; k <<= 1) {
-            level = gst_amc_h263_level_to_gst_id (k);
-            if (level == -1)
-              continue;
-
-            g_value_set_uint (&v, level);
-            gst_value_list_append_value (&va, &v);
-            g_value_reset (&v);
-          }
           tmp2 = gst_structure_copy (tmp);
           gst_structure_set (tmp2, "profile", G_TYPE_UINT, profile, NULL);
-          gst_structure_set_value (tmp2, "level", &va);
-          g_value_unset (&va);
-          g_value_unset (&v);
           ret = gst_caps_merge_structure (ret, tmp2);
           have_profile_level = TRUE;
         }
@@ -275,13 +238,7 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
 
       if (type->n_profile_levels) {
         for (j = type->n_profile_levels - 1; j >= 0; j--) {
-          const gchar *profile, *alternative = NULL, *level;
-          gint k;
-          GValue va = { 0, };
-          GValue v = { 0, };
-
-          g_value_init (&va, GST_TYPE_LIST);
-          g_value_init (&v, G_TYPE_STRING);
+          const gchar *profile, *alternative = NULL;
 
           profile =
               gst_amc_avc_profile_to_string (type->profile_levels[j].profile,
@@ -293,29 +250,14 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
             continue;
           }
 
-          for (k = 1; k <= type->profile_levels[j].level && k != 0; k <<= 1) {
-            level = gst_amc_avc_level_to_string (k);
-            if (!level)
-              continue;
-
-            g_value_set_string (&v, level);
-            gst_value_list_append_value (&va, &v);
-            g_value_reset (&v);
-          }
           tmp2 = gst_structure_copy (tmp);
           gst_structure_set (tmp2, "profile", G_TYPE_STRING, profile, NULL);
-          gst_structure_set_value (tmp2, "level", &va);
-          if (!alternative)
-            g_value_unset (&va);
-          g_value_unset (&v);
           ret = gst_caps_merge_structure (ret, tmp2);
 
           if (alternative) {
             tmp2 = gst_structure_copy (tmp);
             gst_structure_set (tmp2, "profile", G_TYPE_STRING, alternative,
                 NULL);
-            gst_structure_set_value (tmp2, "level", &va);
-            g_value_unset (&va);
             ret = gst_caps_merge_structure (ret, tmp2);
           }
           have_profile_level = TRUE;
