@@ -35,6 +35,8 @@
 static guint repeat = 0;
 static GESPipeline *pipeline = NULL;
 static gboolean seenerrors = FALSE;
+static gchar **new_paths = NULL;
+static GMainLoop *mainloop;
 
 static gchar *
 ensure_uri (gchar * location)
@@ -61,6 +63,36 @@ thumbnail_cb (gpointer pipeline)
   g_free (filename);
 
   return res;
+}
+
+static gchar *
+source_moved_cb (GESProject * project, GError * error, GESAsset * asset)
+{
+  gint i;
+  const gchar *old_uri = ges_asset_get_id (asset);
+
+  for (i = 0; new_paths[i] != NULL; i++) {
+    gchar *basename, *res;
+    if (g_str_has_prefix (old_uri, new_paths[i]))
+      continue;
+
+    basename = g_path_get_basename (old_uri);
+    res = g_build_filename (new_paths[i], basename, NULL);
+    g_free (basename);
+
+    return res;
+  }
+
+  return NULL;
+}
+
+static void
+error_loading_asset_cb (GESProject * project, GError * error,
+    const gchar * failed_id, GType extractable_type)
+{
+  g_printerr ("Error loading asset %s: %s", failed_id, error->message);
+
+  g_main_loop_quit (mainloop);
 }
 
 static gboolean
@@ -90,15 +122,25 @@ str_to_time (char *time)
 }
 
 static GESTimeline *
-create_timeline (int nbargs, gchar ** argv)
+create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
 {
   GESLayer *layer;
   GESTrack *tracka = NULL, *trackv = NULL;
   GESTimeline *timeline;
   guint i;
-  GESProject *project = ges_project_new (NULL);
+  GESProject *project = ges_project_new (proj_uri);
+
+  if (new_paths)
+    g_signal_connect (project, "missing-uri",
+        G_CALLBACK (source_moved_cb), NULL);
+
+  g_signal_connect (project, "error-loading-asset",
+      G_CALLBACK (error_loading_asset_cb), NULL);
 
   timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
+
+  if (proj_uri)
+    return timeline;
 
   tracka = GES_TRACK (ges_audio_track_new ());
   trackv = GES_TRACK (ges_video_track_new ());
@@ -220,32 +262,26 @@ static GESPipeline *
 create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
     gchar * save_path, int argc, char **argv)
 {
+  gchar *uri = NULL;
   GESPipeline *pipeline = NULL;
   GESTimeline *timeline = NULL;
 
   /* Timeline creation */
   if (load_path) {
-    gchar *uri;
-
     g_printf ("Loading project from : %s\n", load_path);
 
     if (!(uri = ensure_uri (load_path))) {
       g_error ("couldn't create uri for '%s'", load_path);
       goto failure;
     }
-    g_printf ("reading from '%s' (arguments ignored)\n", load_path);
-    if (!(timeline = ges_timeline_new_from_uri (uri, NULL))) {
-      g_error ("failed to create timeline from file '%s'", load_path);
-      goto failure;
-    }
-    g_printf ("loaded project successfully\n");
-    g_free (uri);
-  } else {
-    /* Normal timeline creation */
-    if (!(timeline = create_timeline (argc, argv)))
-      goto failure;
   }
+  if (!(timeline = create_timeline (argc, argv, uri)))
+    goto failure;
+
   ges_timeline_commit (timeline);
+
+  if (uri)
+    g_free (uri);
 
   /* save project if path is given. we do this now in case GES crashes or
    * hangs during playback. */
@@ -272,6 +308,8 @@ create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
 
 failure:
   {
+    if (uri)
+      g_free (uri);
     if (timeline)
       gst_object_unref (timeline);
     if (pipeline)
@@ -534,10 +572,11 @@ main (int argc, gchar ** argv)
         "Output status information and property notifications", NULL},
     {"exclude", 'X', 0, G_OPTION_ARG_NONE, &exclude_args,
         "Do not output status information of TYPE", "TYPE1,TYPE2,..."},
+    {"sample-paths", 'P', 0, G_OPTION_ARG_STRING_ARRAY, &new_paths,
+        "List of pathes to look assets in if they were moved"},
     {NULL}
   };
   GOptionContext *ctx;
-  GMainLoop *mainloop;
   GstBus *bus;
   GESTimeline *timeline;
 

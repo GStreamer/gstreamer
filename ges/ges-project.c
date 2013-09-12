@@ -366,7 +366,7 @@ ges_project_class_init (GESProjectClass * klass)
    *
    * |[
    * static gchar
-   * source_moved_cb (GESProject *project, GError *error, const gchar *old_uri)
+   * source_moved_cb (GESProject *project, GError *error, GESAsset *asset_with_error)
    * {
    *   return g_strdup ("file:///the/new/uri.ogg");
    * }
