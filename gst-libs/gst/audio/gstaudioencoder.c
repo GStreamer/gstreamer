@@ -627,6 +627,7 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
   if (G_UNLIKELY (ctx->output_caps_changed
           || gst_pad_check_reconfigure (enc->srcpad))) {
     if (!gst_audio_encoder_negotiate (enc)) {
+      gst_pad_mark_reconfigure (enc->srcpad);
       if (GST_PAD_IS_FLUSHING (enc->srcpad))
         ret = GST_FLOW_FLUSHING;
       else
@@ -2714,6 +2715,7 @@ gst_audio_encoder_allocate_output_buffer (GstAudioEncoder * enc, gsize size)
               && gst_pad_check_reconfigure (enc->srcpad)))) {
     if (!gst_audio_encoder_negotiate (enc)) {
       GST_INFO_OBJECT (enc, "Failed to negotiate, fallback allocation");
+      gst_pad_mark_reconfigure (enc->srcpad);
       goto fallback;
     }
   }
