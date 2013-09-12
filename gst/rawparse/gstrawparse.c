@@ -301,6 +301,12 @@ gst_raw_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   if (!gst_raw_parse_set_src_caps (rp))
     goto no_caps;
 
+  if (rp->start_segment) {
+    GST_DEBUG_OBJECT (rp, "sending start segment");
+    gst_pad_push_event (rp->srcpad, rp->start_segment);
+    rp->start_segment = NULL;
+  }
+
   gst_adapter_push (rp->adapter, buffer);
 
   if (rp_class->multiple_frames_per_buffer) {
@@ -338,6 +344,22 @@ gst_raw_parse_loop (GstElement * element)
   GstFlowReturn ret;
   GstBuffer *buffer;
   gint size;
+
+  if (G_UNLIKELY (rp->push_stream_start)) {
+    gchar *stream_id;
+    GstEvent *event;
+
+    stream_id =
+        gst_pad_create_stream_id (rp->srcpad, GST_ELEMENT_CAST (rp), NULL);
+
+    event = gst_event_new_stream_start (stream_id);
+    gst_event_set_group_id (event, gst_util_group_id_next ());
+
+    GST_DEBUG_OBJECT (rp, "Pushing STREAM_START");
+    gst_pad_push_event (rp->srcpad, event);
+    rp->push_stream_start = FALSE;
+    g_free (stream_id);
+  }
 
   if (!gst_raw_parse_set_src_caps (rp))
     goto no_caps;
@@ -504,6 +526,8 @@ gst_raw_parse_sink_activatemode (GstPad * sinkpad, GstObject * parent,
           duration = -1;
         }
         rp->segment.duration = duration;
+
+        rp->push_stream_start = TRUE;
 
         result = gst_raw_parse_handle_seek_pull (rp, NULL);
         rp->mode = mode;
@@ -693,7 +717,10 @@ gst_raw_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       gst_segment_copy_into (&segment, &rp->segment);
 
-      ret = gst_pad_push_event (rp->srcpad, event);
+      if (rp->start_segment)
+        gst_event_unref (rp->start_segment);
+      rp->start_segment = event;
+      ret = TRUE;
       break;
     }
     default:

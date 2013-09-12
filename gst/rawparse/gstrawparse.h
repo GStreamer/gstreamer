@@ -69,6 +69,7 @@ struct _GstRawParse
   GstEvent *start_segment;
 
   gboolean negotiated;
+  gboolean push_stream_start;
 };
 
 struct _GstRawParseClass
