@@ -82,7 +82,7 @@ static void gst_ffmpegviddec_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec);
 
 static gboolean gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
-    gboolean force);
+    AVCodecContext * context, gboolean force);
 
 /* some sort of bufferpool handling, but different */
 static int gst_ffmpegviddec_get_buffer (AVCodecContext * context,
@@ -585,7 +585,7 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
   ffmpegdec->context->pix_fmt = context->pix_fmt;
 
   /* see if we need renegotiation */
-  if (G_UNLIKELY (!gst_ffmpegviddec_negotiate (ffmpegdec, FALSE)))
+  if (G_UNLIKELY (!gst_ffmpegviddec_negotiate (ffmpegdec, context, FALSE)))
     goto negotiate_failed;
 
   if (!ffmpegdec->current_dr)
@@ -768,10 +768,9 @@ gst_ffmpegviddec_release_buffer (AVCodecContext * context, AVFrame * picture)
 }
 
 static gboolean
-update_video_context (GstFFMpegVidDec * ffmpegdec, gboolean force)
+update_video_context (GstFFMpegVidDec * ffmpegdec, AVCodecContext * context,
+    gboolean force)
 {
-  AVCodecContext *context = ffmpegdec->context;
-
   if (!force && ffmpegdec->ctx_width == context->width
       && ffmpegdec->ctx_height == context->height
       && ffmpegdec->ctx_ticks == context->ticks_per_frame
@@ -879,14 +878,15 @@ no_par:
 }
 
 static gboolean
-gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec, gboolean force)
+gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
+    AVCodecContext * context, gboolean force)
 {
   GstVideoFormat fmt;
   GstVideoInfo *in_info, *out_info;
   GstVideoCodecState *output_state;
   gint fps_n, fps_d;
 
-  if (!update_video_context (ffmpegdec, force))
+  if (!update_video_context (ffmpegdec, context, force))
     return TRUE;
 
   fmt = gst_ffmpeg_pixfmt_to_videoformat (ffmpegdec->ctx_pix_fmt);
@@ -1204,7 +1204,7 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
     GST_WARNING ("Change in interlacing ! picture:%d, recorded:%d",
         ffmpegdec->picture->interlaced_frame, ffmpegdec->ctx_interlaced);
     ffmpegdec->ctx_interlaced = ffmpegdec->picture->interlaced_frame;
-    if (!gst_ffmpegviddec_negotiate (ffmpegdec, TRUE))
+    if (!gst_ffmpegviddec_negotiate (ffmpegdec, ffmpegdec->context, TRUE))
       goto negotiation_error;
   }
 
