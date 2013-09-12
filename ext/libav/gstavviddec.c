@@ -617,6 +617,10 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
       if (ffmpegdec->stride[c] == -1) {
         ffmpegdec->stride[c] = picture->linesize[c];
       } else if (picture->linesize[c] != ffmpegdec->stride[c]) {
+        GST_LOG_OBJECT (ffmpegdec,
+            "No direct rendering, stride changed c=%d %d->%d", c,
+            ffmpegdec->stride[c], picture->linesize[c]);
+
         for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
           picture->data[c] = NULL;
           picture->linesize[c] = 0;
@@ -671,7 +675,13 @@ invalid_frame:
   }
 fallback:
   {
-    return avcodec_default_get_buffer (context, picture);
+    int c;
+    int ret = avcodec_default_get_buffer (context, picture);
+
+    for (c = 0; c < AV_NUM_DATA_POINTERS; c++)
+      ffmpegdec->stride[c] = picture->linesize[c];
+
+    return ret;
   }
 duplicate_frame:
   {
@@ -1570,8 +1580,8 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
         linesize_align);
     edge =
-        ffmpegdec->
-        context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+        ffmpegdec->context->
+        flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
     /* increase the size for the padding */
     width += edge << 1;
     height += edge << 1;
