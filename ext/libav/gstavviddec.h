@@ -37,6 +37,7 @@ struct _GstFFMpegVidDec
   /* decoding */
   AVCodecContext *context;
   AVFrame *picture;
+  gint stride[4];
   gboolean opened;
 
   /* current context */

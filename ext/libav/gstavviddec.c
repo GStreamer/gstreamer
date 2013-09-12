@@ -281,6 +281,7 @@ static gboolean
 gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec, gboolean reset)
 {
   GstFFMpegVidDecClass *oclass;
+  gint i;
 
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
@@ -290,6 +291,9 @@ gst_ffmpegviddec_close (GstFFMpegVidDec * ffmpegdec, gboolean reset)
 
   gst_ffmpeg_avcodec_close (ffmpegdec->context);
   ffmpegdec->opened = FALSE;
+
+  for (i = 0; i < G_N_ELEMENTS (ffmpegdec->stride); i++)
+    ffmpegdec->stride[i] = -1;
 
   gst_buffer_replace (&ffmpegdec->palette, NULL);
 
@@ -314,11 +318,15 @@ static gboolean
 gst_ffmpegviddec_open (GstFFMpegVidDec * ffmpegdec)
 {
   GstFFMpegVidDecClass *oclass;
+  gint i;
 
   oclass = (GstFFMpegVidDecClass *) (G_OBJECT_GET_CLASS (ffmpegdec));
 
   if (gst_ffmpeg_avcodec_open (ffmpegdec->context, oclass->in_plugin) < 0)
     goto could_not_open;
+
+  for (i = 0; i < G_N_ELEMENTS (ffmpegdec->stride); i++)
+    ffmpegdec->stride[i] = -1;
 
   ffmpegdec->opened = TRUE;
   ffmpegdec->is_realvideo = FALSE;
@@ -600,6 +608,26 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
     if (c < GST_VIDEO_INFO_N_PLANES (info)) {
       picture->data[c] = GST_VIDEO_FRAME_PLANE_DATA (&dframe->vframe, c);
       picture->linesize[c] = GST_VIDEO_FRAME_PLANE_STRIDE (&dframe->vframe, c);
+
+      /* libav does not allow stride changes currently, fall back to
+       * non-direct rendering here:
+       * https://bugzilla.gnome.org/show_bug.cgi?id=704769
+       * https://bugzilla.libav.org/show_bug.cgi?id=556
+       */
+      if (ffmpegdec->stride[c] == -1) {
+        ffmpegdec->stride[c] = picture->linesize[c];
+      } else if (picture->linesize[c] != ffmpegdec->stride[c]) {
+        for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
+          picture->data[c] = NULL;
+          picture->linesize[c] = 0;
+        }
+        gst_video_frame_unmap (&dframe->vframe);
+        dframe->mapped = FALSE;
+        gst_buffer_replace (&frame->output_buffer, NULL);
+        ffmpegdec->current_dr = FALSE;
+
+        goto no_dr;
+      }
     } else {
       picture->data[c] = NULL;
       picture->linesize[c] = 0;
