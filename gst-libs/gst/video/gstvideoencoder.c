@@ -1619,6 +1619,7 @@ gst_video_encoder_allocate_output_buffer (GstVideoEncoder * encoder, gsize size)
               && gst_pad_check_reconfigure (encoder->srcpad)))) {
     if (!gst_video_encoder_negotiate (encoder)) {
       GST_DEBUG_OBJECT (encoder, "Failed to negotiate, fallback allocation");
+      gst_pad_mark_reconfigure (encoder->srcpad);
       goto fallback;
     }
   }
@@ -1667,8 +1668,12 @@ gst_video_encoder_allocate_output_frame (GstVideoEncoder *
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
   if (G_UNLIKELY (encoder->priv->output_state_changed
           || (encoder->priv->output_state
-              && gst_pad_check_reconfigure (encoder->srcpad))))
-    gst_video_encoder_negotiate (encoder);
+              && gst_pad_check_reconfigure (encoder->srcpad)))) {
+    if (!gst_video_encoder_negotiate (encoder)) {
+      GST_DEBUG_OBJECT (encoder, "Failed to negotiate, fallback allocation");
+      gst_pad_mark_reconfigure (encoder->srcpad);
+    }
+  }
 
   GST_LOG_OBJECT (encoder, "alloc buffer size %" G_GSIZE_FORMAT, size);
 
@@ -1740,6 +1745,7 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   if (G_UNLIKELY (priv->output_state_changed || (priv->output_state
               && gst_pad_check_reconfigure (encoder->srcpad)))) {
     if (!gst_video_encoder_negotiate (encoder)) {
+      gst_pad_mark_reconfigure (encoder->srcpad);
       if (GST_PAD_IS_FLUSHING (encoder->srcpad))
         ret = GST_FLOW_FLUSHING;
       else
