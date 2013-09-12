@@ -1102,7 +1102,6 @@ ges_pipeline_save_thumbnail (GESPipeline * self, int width, int
 
   gst_caps_unref (caps);
   gst_buffer_unmap (b, &map_info);
-  gst_buffer_unref (b);
   gst_sample_unref (sample);
 
   return res;
