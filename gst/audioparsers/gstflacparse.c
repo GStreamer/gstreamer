@@ -1129,6 +1129,9 @@ gst_flac_parse_handle_picture (GstFlacParse * flacparse, GstBuffer * buffer)
   if (!gst_byte_reader_get_uint32_be (&reader, &img_len))
     goto error;
 
+  if (gst_byte_reader_get_pos (&reader) + img_len > map.size)
+    goto error;
+
   if (!flacparse->tags)
     flacparse->tags = gst_tag_list_new_empty ();
 
