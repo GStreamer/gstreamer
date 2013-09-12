@@ -1304,7 +1304,12 @@ gst_qtdemux_do_push_seek (GstQTDemux * qtdemux, GstPad * pad, GstEvent * event)
   } else {
     qtdemux->push_seek_start = key_cur;
   }
-  qtdemux->push_seek_stop = original_stop;
+
+  if (stop_type == GST_SEEK_TYPE_NONE) {
+    qtdemux->push_seek_stop = qtdemux->segment.stop;
+  } else {
+    qtdemux->push_seek_stop = original_stop;
+  }
   GST_OBJECT_UNLOCK (qtdemux);
 
   /* BYTE seek event */
