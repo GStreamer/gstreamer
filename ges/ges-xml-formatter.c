@@ -1006,6 +1006,8 @@ _save_timeline (GString * str, GESTimeline * timeline)
   properties = _serialize_properties (G_OBJECT (timeline), "update", "name",
       "async-handling", "message-forward", NULL);
 
+  ges_meta_container_set_uint64 (GES_META_CONTAINER (timeline), "duration",
+      ges_timeline_get_duration (timeline));
   metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (timeline));
   append_escaped (str,
       g_markup_printf_escaped
