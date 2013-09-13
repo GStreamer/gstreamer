@@ -248,6 +248,10 @@ G_GNUC_INTERNAL void ges_base_xml_formatter_add_track_element   (GESBaseXmlForma
                                                                  const gchar *metadatas,
                                                                  GError **error);
 
+G_GNUC_INTERNAL void ges_base_xml_formatter_add_source          (GESBaseXmlFormatter *self,
+                                                                 const gchar * track_id,
+                                                                 GstStructure *children_properties);
+
 G_GNUC_INTERNAL void ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
                                                                   const gchar * binding_type,
                                                                   const gchar * source_type,

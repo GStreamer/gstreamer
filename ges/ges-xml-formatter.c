@@ -560,6 +560,43 @@ _parse_binding (GMarkupParseContext * context, const gchar * element_name,
 }
 
 static inline void
+_parse_source (GMarkupParseContext * context, const gchar * element_name,
+    const gchar ** attribute_names, const gchar ** attribute_values,
+    GESXmlFormatter * self, GError ** error)
+{
+  GstStructure *children_props = NULL;
+  const gchar *track_id = NULL, *children_properties = NULL;
+
+  if (!g_markup_collect_attributes (element_name, attribute_names,
+          attribute_values, error,
+          G_MARKUP_COLLECT_STRING, "track-id", &track_id,
+          COLLECT_STR_OPT, "children-properties", &children_properties,
+          G_MARKUP_COLLECT_INVALID)) {
+    return;
+  }
+
+  if (children_properties) {
+    children_props = gst_structure_from_string (children_properties, NULL);
+    if (children_props == NULL)
+      goto wrong_children_properties;
+  }
+
+  ges_base_xml_formatter_add_source (GES_BASE_XML_FORMATTER (self), track_id,
+      children_props);
+
+  if (children_props)
+    gst_structure_free (children_props);
+
+  return;
+
+wrong_children_properties:
+  g_set_error (error, G_MARKUP_ERROR,
+      G_MARKUP_ERROR_INVALID_CONTENT,
+      "element '%s', children properties '%s', could no be deserialized",
+      element_name, children_properties);
+}
+
+static inline void
 _parse_effect (GMarkupParseContext * context, const gchar * element_name,
     const gchar ** attribute_names, const gchar ** attribute_values,
     GESXmlFormatter * self, GError ** error)
@@ -667,6 +704,9 @@ _parse_element_start (GMarkupParseContext * context, const gchar * element_name,
         attribute_values, self, error);
   else if (g_strcmp0 (element_name, "clip") == 0)
     _parse_clip (context, element_name, attribute_names,
+        attribute_values, self, error);
+  else if (g_strcmp0 (element_name, "source") == 0)
+    _parse_source (context, element_name, attribute_names,
         attribute_values, self, error);
   else if (g_strcmp0 (element_name, "effect") == 0)
     _parse_effect (context, element_name, attribute_names,
@@ -823,6 +863,37 @@ _save_tracks (GString * str, GESTimeline * timeline)
   g_list_free_full (tracks, gst_object_unref);
 }
 
+static inline void
+_save_children_properties (GString * str, GESTrackElement * trackelement)
+{
+  GstStructure *structure;
+  GParamSpec **pspecs, *spec;
+  guint i, n_props;
+
+  pspecs = ges_track_element_list_children_properties (trackelement, &n_props);
+
+  structure = gst_structure_new_empty ("properties");
+  for (i = 0; i < n_props; i++) {
+    GValue val = { 0 };
+    spec = pspecs[i];
+
+    if (_can_serialize_spec (spec)) {
+      _init_value_from_spec_for_serialization (&val, spec);
+      ges_track_element_get_child_property_by_pspec (trackelement, spec, &val);
+      gst_structure_set_value (structure, spec->name, &val);
+      g_value_unset (&val);
+    }
+    g_param_spec_unref (spec);
+  }
+  g_free (pspecs);
+
+  append_escaped (str,
+      g_markup_printf_escaped (" children-properties='%s'",
+          gst_structure_to_string (structure)));
+
+  gst_structure_free (structure);
+}
+
 /* TODO : Use this function for every track element with controllable properties */
 static inline void
 _save_keyframes (GString * str, GESTrackElement * trackelement, gint index)
@@ -883,10 +954,8 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
 {
   GESTrack *tck;
   GList *tmp, *tracks;
-  GstStructure *structure;
   gchar *properties, *metas;
-  GParamSpec **pspecs, *spec;
-  guint j, n_props = 0, track_id = 0;
+  guint track_id = 0;
 
   tck = ges_track_element_get_track (trackelement);
   if (tck == NULL) {
@@ -916,30 +985,12 @@ _save_effect (GString * str, guint clip_id, GESTrackElement * trackelement,
   g_free (properties);
   g_free (metas);
 
-  pspecs = ges_track_element_list_children_properties (trackelement, &n_props);
-  structure = gst_structure_new_empty ("properties");
-  for (j = 0; j < n_props; j++) {
-    GValue val = { 0 };
-
-    spec = pspecs[j];
-    if (_can_serialize_spec (spec)) {
-      _init_value_from_spec_for_serialization (&val, spec);
-      ges_track_element_get_child_property_by_pspec (trackelement, spec, &val);
-      gst_structure_set_value (structure, spec->name, &val);
-      g_value_unset (&val);
-    }
-    g_param_spec_unref (spec);
-  }
-  g_free (pspecs);
-
-  append_escaped (str,
-      g_markup_printf_escaped (" children-properties='%s'>\n",
-          gst_structure_to_string (structure)));
+  _save_children_properties (str, trackelement);
+  append_escaped (str, g_markup_printf_escaped (">\n"));
 
   _save_keyframes (str, trackelement, -1);
 
   append_escaped (str, g_markup_printf_escaped ("          </effect>\n"));
-  gst_structure_free (structure);
 }
 
 static inline void
@@ -1007,7 +1058,12 @@ _save_layers (GString * str, GESTimeline * timeline)
         index =
             g_list_index (tracks,
             ges_track_element_get_track (tmptrackelement->data));
+        append_escaped (str,
+            g_markup_printf_escaped ("          <source track-id='%i'", index));
+        _save_children_properties (str, tmptrackelement->data);
+        append_escaped (str, g_markup_printf_escaped (">\n"));
         _save_keyframes (str, tmptrackelement->data, index);
+        append_escaped (str, g_markup_printf_escaped ("          </source>\n"));
       }
 
       g_list_free_full (tracks, gst_object_unref);

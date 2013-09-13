@@ -51,6 +51,12 @@ typedef struct PendingBinding
   gchar *binding_type;
 } PendingBinding;
 
+typedef struct PendingChildProperties
+{
+  gchar *track_id;
+  GstStructure *structure;
+} PendingChildProperties;
+
 typedef struct PendingClip
 {
   gchar *id;
@@ -68,6 +74,8 @@ typedef struct PendingClip
   GList *effects;
 
   GList *pending_bindings;
+
+  GList *children_props;
 
   /* TODO Implement asset effect management
    * PendingTrackElements *track_elements; */
@@ -514,6 +522,14 @@ _add_track_element (GESFormatter * self, GESClip * clip,
 }
 
 static void
+_free_pending_children_props (PendingChildProperties * pend)
+{
+  g_free (pend->track_id);
+  if (pend->structure)
+    gst_structure_free (pend->structure);
+}
+
+static void
 _free_pending_binding (PendingBinding * pend)
 {
   g_free (pend->propname);
@@ -543,6 +559,8 @@ _free_pending_clip (GESBaseXmlFormatterPrivate * priv, PendingClip * pend)
   g_list_free_full (pend->effects, (GDestroyNotify) _free_pending_effect);
   g_list_free_full (pend->pending_bindings,
       (GDestroyNotify) _free_pending_binding);
+  g_list_free_full (pend->children_props,
+      (GDestroyNotify) _free_pending_children_props);
   g_hash_table_remove (priv->clipid_pendings, pend->id);
   g_free (pend->id);
   g_slice_free (PendingClip, pend);
@@ -558,6 +576,23 @@ _free_pending_asset (GESBaseXmlFormatterPrivate * priv, PendingAsset * passet)
 
   priv->pending_assets = g_list_remove (priv->pending_assets, passet);
   g_slice_free (PendingAsset, passet);
+}
+
+static void
+_add_children_properties (GESBaseXmlFormatterPrivate * priv, GList * childprops,
+    GESClip * clip)
+{
+  GList *tmpchildprops;
+
+  for (tmpchildprops = childprops; tmpchildprops;
+      tmpchildprops = tmpchildprops->next) {
+    PendingChildProperties *pchildprops = tmpchildprops->data;
+    GESTrackElement *element =
+        _get_element_by_track_id (priv, pchildprops->track_id, clip);
+    if (element && pchildprops->structure)
+      gst_structure_foreach (pchildprops->structure,
+          (GstStructureForeachFunc) _set_child_property, element);
+  }
 }
 
 static void
@@ -650,6 +685,7 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, PendingAsset * passet)
     if (clip == NULL)
       continue;
 
+    _add_children_properties (priv, pend->children_props, clip);
     _add_pending_bindings (priv, pend->pending_bindings, clip);
 
     GST_DEBUG_OBJECT (self, "Adding %i effect to new object",
@@ -1007,6 +1043,41 @@ ges_base_xml_formatter_add_control_binding (GESBaseXmlFormatter * self,
         (source), timed_values);
   } else
     GST_WARNING ("This interpolation type is not supported\n");
+}
+
+void
+ges_base_xml_formatter_add_source (GESBaseXmlFormatter * self,
+    const gchar * track_id, GstStructure * children_properties)
+{
+  GESBaseXmlFormatterPrivate *priv = _GET_PRIV (self);
+  GESTrackElement *element = NULL;
+
+  if (track_id[0] != '-' && priv->current_clip)
+    element = _get_element_by_track_id (priv, track_id, priv->current_clip);
+
+  else if (track_id[0] != '-' && priv->current_pending_clip) {
+    PendingChildProperties *pchildprops;
+
+    pchildprops = g_slice_new0 (PendingChildProperties);
+    pchildprops->track_id = g_strdup (track_id);
+    pchildprops->structure = children_properties ?
+        gst_structure_copy (children_properties) : NULL;
+    priv->current_pending_clip->children_props =
+        g_list_append (priv->current_pending_clip->children_props, pchildprops);
+    return;
+  }
+
+  else
+    element = priv->current_track_element;
+
+  if (element == NULL) {
+    GST_WARNING
+        ("No current track element to which we can append children properties");
+    return;
+  }
+
+  gst_structure_foreach (children_properties,
+      (GstStructureForeachFunc) _set_child_property, element);
 }
 
 void
