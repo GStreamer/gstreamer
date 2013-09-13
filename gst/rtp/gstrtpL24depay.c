@@ -59,23 +59,12 @@ GST_STATIC_PAD_TEMPLATE ("src",
     );
 
 static GstStaticPadTemplate gst_rtp_L24_depay_sink_template =
-    GST_STATIC_PAD_TEMPLATE ("sink",
+GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-rtp, "
         "media = (string) \"audio\", " "clock-rate = (int) [ 1, MAX ], "
-        /* "channels = (int) [1, MAX]"  */
-        /* "emphasis = (string) ANY" */
-        /* "channel-order = (string) ANY" */
-        "encoding-name = (string) \"L24\";"
-        "application/x-rtp, "
-        "media = (string) \"audio\", "
-        "payload = (int) { " GST_RTP_PAYLOAD_DYNAMIC_STRING " },"
-        "clock-rate = (int) [ 1, MAX ]"
-        /* "channels = (int) [1, MAX]" */
-        /* "emphasis = (string) ANY" */
-        /* "channel-order = (string) ANY" */
-    )
+        "encoding-name = (string) \"L24\"")
     );
 
 #define gst_rtp_L24_depay_parent_class parent_class
