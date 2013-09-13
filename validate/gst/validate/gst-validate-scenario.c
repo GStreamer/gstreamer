@@ -132,7 +132,10 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
     GST_WARNING_OBJECT (scenario, "Could not find start for a seek, FAILED");
     return FALSE;
   }
-  start = dstart * GST_SECOND;
+  if (dstart == -1.0)
+    start = GST_CLOCK_TIME_NONE;
+  else
+    start = dstart * GST_SECOND;
 
   gst_structure_get_double (action->structure, "rate", &rate);
   if ((str_format = gst_structure_get_string (action->structure, "format")))
@@ -149,8 +152,12 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
   if ((str_flags = gst_structure_get_string (action->structure, "flags")))
     flags = get_flags_from_string (GST_TYPE_SEEK_FLAGS, str_flags);
 
-  if (gst_structure_get_double (action->structure, "stop", &dstop))
-    stop = dstop * GST_SECOND;
+  if (gst_structure_get_double (action->structure, "stop", &dstop)) {
+    if (dstop == -1.0)
+      stop = GST_CLOCK_TIME_NONE;
+    else
+      stop = dstop * GST_SECOND;
+  }
 
   g_print ("%s (num %u), seeking to: %" GST_TIME_FORMAT " stop: %"
       GST_TIME_FORMAT " Rate %lf\n", action->name,
