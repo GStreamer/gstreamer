@@ -30,6 +30,7 @@
 #include <gst/pbutils/encoding-profile.h>
 
 #include <locale.h>             /* for LC_ALL */
+#include "ges-validate.h"
 
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
@@ -41,6 +42,7 @@ static gchar **new_paths = NULL;
 static GMainLoop *mainloop;
 static GHashTable *tried_uris;
 static GESTrackType track_types = GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO;
+static GESTimeline *timeline;
 
 static gchar *
 ensure_uri (gchar * location)
@@ -450,7 +452,7 @@ bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
         g_printerr ("Looping set\n");
         repeat -= 1;
       } else {
-        g_printerr ("Done\n");
+        g_printerr ("\nDone\n");
         g_main_loop_quit (mainloop);
       }
       break;
@@ -661,6 +663,7 @@ main (int argc, gchar ** argv)
   static gdouble thumbinterval = 0;
   static gboolean verbose = FALSE;
   gchar *load_path = NULL;
+  const gchar *scenario = NULL;
   GOptionEntry options[] = {
     {"thumbnail", 'm', 0.0, G_OPTION_ARG_DOUBLE, &thumbinterval,
         "Take thumbnails every n seconds (saved in current directory)", "N"},
@@ -697,11 +700,14 @@ main (int argc, gchar ** argv)
         "Defines the track types to be created"},
     {"mute", 0, 0, G_OPTION_ARG_NONE, &mute,
         "Mute playback output, which means that we use faksinks"},
+    {"set-scenario", 0, 0, G_OPTION_ARG_STRING, &scenario,
+        "Specify a GstValidate scenario to run, 'none' means load gst-validate"
+          " but run no scenario on it", "<scenario_name>"},
     {NULL}
   };
+
   GOptionContext *ctx;
   GstBus *bus;
-  GESTimeline *timeline;
 
   setlocale (LC_ALL, "");
 
@@ -761,6 +767,11 @@ main (int argc, gchar ** argv)
   pipeline = create_pipeline (&timeline, load_path, argc - 1, argv + 1);
   if (!pipeline)
     exit (1);
+
+  if (ges_validate_activate (GST_PIPELINE (pipeline), scenario) == FALSE) {
+    g_error ("Could not activate scenario %s", scenario);
+    return 1;
+  }
 
   /* Setup profile/encoding if needed */
   if (smartrender || outputuri) {
@@ -827,8 +838,11 @@ main (int argc, gchar ** argv)
 
   gst_element_set_state (GST_ELEMENT (pipeline), GST_STATE_NULL);
 
-  gst_object_unref (pipeline);
+  validate_res = ges_validate_clean (GST_PIPELINE (pipeline));
+  if (seenerrors == FALSE)
+    seenerrors = validate_res;
 
   g_hash_table_unref (tried_uris);
+
   return (int) seenerrors;
 }
