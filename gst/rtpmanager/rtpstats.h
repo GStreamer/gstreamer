@@ -56,15 +56,15 @@ typedef struct {
 } RTPReceiverReport;
 
 /**
- * RTPArrivalStats:
+ * RTPPacketInfo:
  * @address: address of the sender of the packet
  * @current_time: current time according to the system clock
- * @running_time: arrival time of a packet as buffer running_time
- * @ntpnstime: arrival time of a packet NTP time in nanoseconds
+ * @running_time: time of a packet as buffer running_time
+ * @ntpnstime: time of a packet NTP time in nanoseconds
  * @bytes: bytes of the packet including lowlevel overhead
  * @payload_len: bytes of the RTP payload
  *
- * Structure holding information about the arrival stats of a packet.
+ * Structure holding information about the packet.
  */
 typedef struct {
   GSocketAddress *address;
@@ -73,7 +73,7 @@ typedef struct {
   guint64       ntpnstime;
   guint         bytes;
   guint         payload_len;
-} RTPArrivalStats;
+} RTPPacketInfo;
 
 /**
  * RTPSourceStats:

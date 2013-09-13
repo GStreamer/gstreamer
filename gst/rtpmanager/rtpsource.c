@@ -863,8 +863,7 @@ get_clock_rate (RTPSource * src, guint8 payload)
  * 50 milliseconds apart and arrive 60 milliseconds apart, then the jitter is 10
  * milliseconds. */
 static void
-calculate_jitter (RTPSource * src, GstBuffer * buffer,
-    RTPArrivalStats * arrival)
+calculate_jitter (RTPSource * src, GstBuffer * buffer, RTPPacketInfo * pinfo)
 {
   GstClockTime running_time;
   guint32 rtparrival, transit, rtptime;
@@ -874,7 +873,7 @@ calculate_jitter (RTPSource * src, GstBuffer * buffer,
   GstRTPBuffer rtp = { NULL };
 
   /* get arrival time */
-  if ((running_time = arrival->running_time) == GST_CLOCK_TIME_NONE)
+  if ((running_time = pinfo->running_time) == GST_CLOCK_TIME_NONE)
     goto no_time;
 
   if (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp))
@@ -1001,7 +1000,7 @@ do_bitrate_estimation (RTPSource * src, GstClockTime running_time,
  */
 GstFlowReturn
 rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
-    RTPArrivalStats * arrival)
+    RTPPacketInfo * pinfo)
 {
   GstFlowReturn result = GST_FLOW_OK;
   guint16 seqnr, udelta;
@@ -1084,22 +1083,22 @@ rtp_source_process_rtp (RTPSource * src, GstBuffer * buffer,
     GST_WARNING ("duplicate or reordered packet (seqnr %d)", seqnr);
   }
 
-  src->stats.octets_received += arrival->payload_len;
-  src->stats.bytes_received += arrival->bytes;
+  src->stats.octets_received += pinfo->payload_len;
+  src->stats.bytes_received += pinfo->bytes;
   src->stats.packets_received++;
   /* for the bitrate estimation */
-  src->bytes_received += arrival->payload_len;
+  src->bytes_received += pinfo->payload_len;
   /* the source that sent the packet must be a sender */
   src->is_sender = TRUE;
   src->validated = TRUE;
 
-  do_bitrate_estimation (src, arrival->running_time, &src->bytes_received);
+  do_bitrate_estimation (src, pinfo->running_time, &src->bytes_received);
 
   GST_LOG ("seq %d, PC: %" G_GUINT64_FORMAT ", OC: %" G_GUINT64_FORMAT,
       seqnr, src->stats.packets_received, src->stats.octets_received);
 
   /* calculate jitter for the stats */
-  calculate_jitter (src, buffer, arrival);
+  calculate_jitter (src, buffer, pinfo);
 
   /* we're ready to push the RTP packet now */
   result = push_packet (src, buffer);
