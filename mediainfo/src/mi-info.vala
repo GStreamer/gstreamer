@@ -625,21 +625,12 @@ public class MediaInfo.Info : Box
     set_wikilink (label, caps); 
     table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
-
-    label = new Label ("Bitrate:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+    
     str = "%u / %u bits/second".printf (vinfo.get_bitrate(), vinfo.get_max_bitrate());
-    label = new Label (str);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+    add_table_row_for_string (table, row, "Bitrate:", str);
     row++;
 
     // add named resolutions: (640x480=VGA)
-    label = new Label ("Resolution:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
     string resolution = "%u x %u".printf (res.x, res.y);
     string named_res = resolutions[resolution];
     if (named_res != null) {
@@ -647,52 +638,25 @@ public class MediaInfo.Info : Box
     } else {
       str = resolution;
     }
-    label = new Label (str);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+    add_table_row_for_string (table, row, "Resolution:", str);
     row++;
 
-    label = new Label ("Framerate:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
     double fps_num = (double)vinfo.get_framerate_num();
     double fps_denom = (double)vinfo.get_framerate_denom();
     str = "%.3lf frames/second".printf (fps_num/fps_denom);
-    label = new Label (str);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+    add_table_row_for_string (table, row, "Framerate:", str);
     row++;
 
-    label = new Label ("PixelAspect:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
     str = "%u : %u".printf (vinfo.get_par_num(),vinfo.get_par_denom());
-    label = new Label (str);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+    add_table_row_for_string (table, row, "PixelAspect:", str);
     row++;
 
-    label = new Label ("Bitdepth:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
     str = "%u bits/pixel".printf (vinfo.get_depth());
-    label = new Label (str);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+    add_table_row_for_string (table, row, "Bitdepth:", str);
     row++;
 
-    label = new Label ("Interlaced:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
     str = "%s".printf (vinfo.is_interlaced() ? "true" : "false");
-    label = new Label (str);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+    add_table_row_for_string (table, row, "Interlaced:", str);
     row++;
 
     if (add_table_row_for_structure (table, row, sinfo.get_misc ())) {
@@ -735,54 +699,25 @@ public class MediaInfo.Info : Box
     table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
 
-    label = new Label ("Bitrate:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
     str = "%u / %u bits/second".printf (ainfo.get_bitrate(),ainfo.get_max_bitrate());
-    label = new Label (str);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+    add_table_row_for_string (table, row, "Bitrate:", str);
     row++;
 
-    label = new Label ("Samplerate:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
     str = "%u samples/second".printf (ainfo.get_sample_rate());
-    label = new Label (str);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+    add_table_row_for_string (table, row, "Samplerate:", str);
     row++;
 
     // TODO: check channel layouts, can we have some nice names here ?
-    label = new Label ("Channels:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+    // GstDiscoverer should expose channel positions
     str = "%u".printf (ainfo.get_channels());
-    label = new Label (str);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+    add_table_row_for_string (table, row, "Channels:", str);
     row++;
 
-    label = new Label ("Bitdepth:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
     str = "%u bits/sample".printf (ainfo.get_depth());
-    label = new Label (str);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+    add_table_row_for_string (table, row, "Bitdepth:", str);
     row++;
 
-    label = new Label ("Language:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-    label = new Label (ainfo.get_language());
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+    add_table_row_for_string (table, row, "Language:", ainfo.get_language());
     row++;
 
     if (add_table_row_for_structure (table, row, sinfo.get_misc ())) {
@@ -824,13 +759,7 @@ public class MediaInfo.Info : Box
     table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
     row++;
 
-    label = new Label ("Language:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-    label = new Label (tinfo.get_language());
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+    add_table_row_for_string (table, row, "Language:", tinfo.get_language());
     row++;
 
     if (add_table_row_for_structure (table, row, sinfo.get_misc ())) {
@@ -862,6 +791,19 @@ public class MediaInfo.Info : Box
     } else {
       label.set_text (str);
     }
+  }
+
+  private void add_table_row_for_string (Table table, uint row, string title, string str) {
+    AttachOptions fill = AttachOptions.FILL;
+    AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
+
+    Label label = new Label (title);
+    label.set_alignment (1.0f, 0.5f);
+    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+    label = new Label (str);
+    label.set_alignment (0.0f, 0.5f);
+    label.set_selectable (true);
+    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
   }
 
   private bool add_table_row_for_structure (Table table, uint row, Structure s) {
