@@ -126,10 +126,13 @@ http://www.headbands.com/gspot/v26x/index.htm
       - in an MP3 file, if there is no VBRI or Xing,
         it probably is not a vbr stream
       -
-- lossy/lossless compression
-  - all raw formats are lossless (well rgb->yuv is lossy, but ...)
-  - some audio formats are lossless (flac, wavpack, ...)
-  - some video formats can be lossless (dirac,
+- lossy/lossless compression/encoding
+  - show compression type:
+    - all raw formats are lossless
+    - some audio formats are lossless (flac, wavpack, ...)
+    - some video formats can be lossless (dirac, ...)
+  - show compression raitio (in/out)
+    - depends on the target raw format
 
 = discoverer workflow =
 == sync quick-scan ==
