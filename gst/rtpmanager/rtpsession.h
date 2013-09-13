@@ -333,7 +333,8 @@ RTPSource*      rtp_session_create_source          (RTPSession *sess);
 /* processing packets from receivers */
 GstFlowReturn   rtp_session_process_rtp            (RTPSession *sess, GstBuffer *buffer,
                                                     GstClockTime current_time,
-						    GstClockTime running_time);
+						    GstClockTime running_time,
+                                                    guint64 ntpnstime);
 GstFlowReturn   rtp_session_process_rtcp           (RTPSession *sess, GstBuffer *buffer,
                                                     GstClockTime current_time,
                                                     guint64 ntpnstime);

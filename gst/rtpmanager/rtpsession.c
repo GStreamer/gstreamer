@@ -1712,7 +1712,7 @@ source_update_sender (RTPSession * sess, RTPSource * source,
  */
 GstFlowReturn
 rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
-    GstClockTime current_time, GstClockTime running_time)
+    GstClockTime current_time, GstClockTime running_time, guint64 ntpnstime)
 {
   GstFlowReturn result;
   guint32 ssrc;
@@ -1729,8 +1729,11 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
 
   /* update pinfo stats */
   if (!update_packet_info (sess, &pinfo, FALSE, TRUE, FALSE, buffer,
-          current_time, running_time, -1))
-    goto invalid_packet;
+          current_time, running_time, ntpnstime)) {
+    GST_DEBUG ("invalid RTP packet received");
+    RTP_SESSION_UNLOCK (sess);
+    return rtp_session_process_rtcp (sess, buffer, current_time, ntpnstime);
+  }
 
   ssrc = pinfo.ssrc;
 
@@ -1791,13 +1794,6 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   return result;
 
   /* ERRORS */
-invalid_packet:
-  {
-    gst_buffer_unref (buffer);
-    RTP_SESSION_UNLOCK (sess);
-    GST_DEBUG ("invalid RTP packet received");
-    return GST_FLOW_OK;
-  }
 collision:
   {
     RTP_SESSION_UNLOCK (sess);

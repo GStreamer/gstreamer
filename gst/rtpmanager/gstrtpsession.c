@@ -1614,6 +1614,7 @@ gst_rtp_session_chain_recv_rtp (GstPad * pad, GstObject * parent,
   GstFlowReturn ret;
   GstClockTime current_time, running_time;
   GstClockTime timestamp;
+  guint64 ntpnstime;
 
   rtpsession = GST_RTP_SESSION (parent);
   priv = rtpsession->priv;
@@ -1627,13 +1628,14 @@ gst_rtp_session_chain_recv_rtp (GstPad * pad, GstObject * parent,
     running_time =
         gst_segment_to_running_time (&rtpsession->recv_rtp_seg, GST_FORMAT_TIME,
         timestamp);
+    ntpnstime = GST_CLOCK_TIME_NONE;
   } else {
-    get_current_times (rtpsession, &running_time, NULL);
+    get_current_times (rtpsession, &running_time, &ntpnstime);
   }
   current_time = gst_clock_get_time (priv->sysclock);
 
   ret = rtp_session_process_rtp (priv->session, buffer, current_time,
-      running_time);
+      running_time, ntpnstime);
   if (ret != GST_FLOW_OK)
     goto push_error;
 
