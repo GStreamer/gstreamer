@@ -683,11 +683,6 @@ dnl *** ogg ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OGG, true)
 AG_GST_CHECK_FEATURE(OGG, [Xiph Ogg library], ogg, [
   AG_GST_PKG_CHECK_MODULES(OGG, ogg >= 1.0)
-  if test $HAVE_OGG = no
-  then
-    XIPH_PATH_OGG(HAVE_OGG="yes", HAVE_OGG="no")
-    AS_SCRUB_INCLUDE(OGG_CFLAGS)
-  fi
 ])
 
 dnl *** pango ***
@@ -703,15 +698,9 @@ AG_GST_CHECK_FEATURE(THEORA, [Xiph Theora video codec], theora, [
 ])
 
 dnl *** vorbis ***
-dnl AM_PATH_VORBIS only takes two options
 translit(dnm, m, l) AM_CONDITIONAL(USE_VORBIS, true)
 AG_GST_CHECK_FEATURE(VORBIS, [Xiph Vorbis audio codec], vorbis, [
   AG_GST_PKG_CHECK_MODULES(VORBIS, vorbis >= 1.0 vorbisenc >= 1.0)
-  if test $HAVE_VORBIS = no
-  then
-    XIPH_PATH_VORBIS(HAVE_VORBIS="yes", HAVE_VORBIS="no")
-    AS_SCRUB_INCLUDE(VORBIS_CFLAGS)
-  fi
 ])
 
 if test "x$HAVE_VORBIS" = "xyes"; then
