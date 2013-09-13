@@ -229,7 +229,7 @@ void            rtp_source_set_rtp_from        (RTPSource *src, GSocketAddress *
 void            rtp_source_set_rtcp_from       (RTPSource *src, GSocketAddress *address);
 
 /* handling RTP */
-GstFlowReturn   rtp_source_process_rtp         (RTPSource *src, GstBuffer *buffer, RTPPacketInfo *pinfo);
+GstFlowReturn   rtp_source_process_rtp         (RTPSource *src, RTPPacketInfo *pinfo);
 
 GstFlowReturn   rtp_source_send_rtp            (RTPSource *src, gpointer data, gboolean is_list,
                                                 GstClockTime running_time);

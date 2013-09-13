@@ -1559,11 +1559,26 @@ update_packet (GstBuffer ** buffer, guint idx, RTPPacketInfo * pinfo)
   pinfo->bytes += gst_buffer_get_size (*buffer) + pinfo->header_len;
 
   if (pinfo->rtp) {
-    GstRTPBuffer rtpb = { NULL };
+    GstRTPBuffer rtp = { NULL };
 
-    gst_rtp_buffer_map (*buffer, GST_MAP_READ, &rtpb);
-    pinfo->payload_len += gst_rtp_buffer_get_payload_len (&rtpb);
-    gst_rtp_buffer_unmap (&rtpb);
+    if (!gst_rtp_buffer_map (*buffer, GST_MAP_READ, &rtp))
+      goto invalid_packet;
+
+    pinfo->payload_len += gst_rtp_buffer_get_payload_len (&rtp);
+    if (idx == 0) {
+      gint i;
+
+      /* only keep info for first buffer */
+      pinfo->ssrc = gst_rtp_buffer_get_ssrc (&rtp);
+      pinfo->seqnum = gst_rtp_buffer_get_seq (&rtp);
+      pinfo->pt = gst_rtp_buffer_get_payload_type (&rtp);
+      pinfo->rtptime = gst_rtp_buffer_get_timestamp (&rtp);
+      /* copy available csrc */
+      pinfo->csrc_count = gst_rtp_buffer_get_csrc_count (&rtp);
+      for (i = 0; i < pinfo->csrc_count; i++)
+        pinfo->csrcs[i] = gst_rtp_buffer_get_csrc (&rtp, i);
+    }
+    gst_rtp_buffer_unmap (&rtp);
   }
 
   if (idx == 0) {
@@ -1578,6 +1593,13 @@ update_packet (GstBuffer ** buffer, guint idx, RTPPacketInfo * pinfo)
     }
   }
   return TRUE;
+
+  /* ERRORS */
+invalid_packet:
+  {
+    GST_DEBUG ("invalid RTP packet received");
+    return FALSE;
+  }
 }
 
 /* update the RTPPacketInfo structure with the current time and other bits
@@ -1585,11 +1607,13 @@ update_packet (GstBuffer ** buffer, guint idx, RTPPacketInfo * pinfo)
  * This function is typically called when a validated packet is received.
  * This function should be called with the SESSION_LOCK
  */
-static void
+static gboolean
 update_packet_info (RTPSession * sess, RTPPacketInfo * pinfo,
     gboolean send, gboolean rtp, gboolean is_list, gpointer data,
     GstClockTime current_time, GstClockTime running_time, guint64 ntpnstime)
 {
+  gboolean res;
+
   pinfo->send = send;
   pinfo->rtp = rtp;
   pinfo->is_list = is_list;
@@ -1603,11 +1627,14 @@ update_packet_info (RTPSession * sess, RTPPacketInfo * pinfo,
 
   if (is_list) {
     GstBufferList *list = GST_BUFFER_LIST_CAST (data);
-    gst_buffer_list_foreach (list, (GstBufferListFunc) update_packet, pinfo);
+    res =
+        gst_buffer_list_foreach (list, (GstBufferListFunc) update_packet,
+        pinfo);
   } else {
     GstBuffer *buffer = GST_BUFFER_CAST (data);
-    update_packet (&buffer, 0, pinfo);
+    res = update_packet (&buffer, 0, pinfo);
   }
+  return res;
 }
 
 static void
@@ -1615,6 +1642,10 @@ clean_packet_info (RTPPacketInfo * pinfo)
 {
   if (pinfo->address)
     g_object_unref (pinfo->address);
+  if (pinfo->data) {
+    gst_mini_object_unref (pinfo->data);
+    pinfo->data = NULL;
+  }
 }
 
 static gboolean
@@ -1687,35 +1718,19 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   gboolean created;
   gboolean prevsender, prevactive;
   RTPPacketInfo pinfo = { 0, };
-  guint32 csrcs[16];
-  guint8 i, count;
   guint64 oldrate;
-  GstRTPBuffer rtp = { NULL };
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  if (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp))
-    goto invalid_packet;
-
-  /* get SSRC to look up in session database */
-  ssrc = gst_rtp_buffer_get_ssrc (&rtp);
-  /* copy available csrc for later */
-  count = gst_rtp_buffer_get_csrc_count (&rtp);
-  /* make sure to not overflow our array. An RTP buffer can maximally contain
-   * 16 CSRCs */
-  count = MIN (count, 16);
-
-  for (i = 0; i < count; i++)
-    csrcs[i] = gst_rtp_buffer_get_csrc (&rtp, i);
-
-  gst_rtp_buffer_unmap (&rtp);
-
   RTP_SESSION_LOCK (sess);
 
   /* update pinfo stats */
-  update_packet_info (sess, &pinfo, FALSE, TRUE, FALSE, buffer, current_time,
-      running_time, -1);
+  if (!update_packet_info (sess, &pinfo, FALSE, TRUE, FALSE, buffer,
+          current_time, running_time, -1))
+    goto invalid_packet;
+
+  ssrc = pinfo.ssrc;
 
   source = obtain_source (sess, ssrc, &created, &pinfo, TRUE);
   if (!source)
@@ -1726,7 +1741,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   oldrate = source->bitrate;
 
   /* let source process the packet */
-  result = rtp_source_process_rtp (source, buffer, &pinfo);
+  result = rtp_source_process_rtp (source, &pinfo);
 
   /* source became active */
   if (source_update_active (sess, source, prevactive))
@@ -1742,13 +1757,14 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
 
   if (source->validated) {
     gboolean created;
+    gint i;
 
     /* for validated sources, we add the CSRCs as well */
-    for (i = 0; i < count; i++) {
+    for (i = 0; i < pinfo.csrc_count; i++) {
       guint32 csrc;
       RTPSource *csrc_src;
 
-      csrc = csrcs[i];
+      csrc = pinfo.csrcs[i];
 
       /* get source */
       csrc_src = obtain_source (sess, csrc, &created, &pinfo, TRUE);
@@ -1776,6 +1792,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
 invalid_packet:
   {
     gst_buffer_unref (buffer);
+    RTP_SESSION_UNLOCK (sess);
     GST_DEBUG ("invalid RTP packet received");
     return GST_FLOW_OK;
   }
@@ -2391,6 +2408,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
       sess->stats.avg_rtcp_packet_size, pinfo.bytes);
   RTP_SESSION_UNLOCK (sess);
 
+  pinfo.data = NULL;
   clean_packet_info (&pinfo);
 
   /* notify caller of sr packets in the callback */

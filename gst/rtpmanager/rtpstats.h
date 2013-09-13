@@ -68,6 +68,9 @@ typedef struct {
  * @header_len: number of overhead bytes per packet
  * @bytes: bytes of the packet including lowlevel overhead
  * @payload_len: bytes of the RTP payload
+ * @seqnum: the seqnum of the packet
+ * @pt: the payload type of the packet
+ * @rtptime: the RTP time of the packet
  *
  * Structure holding information about the packet.
  */
@@ -83,6 +86,12 @@ typedef struct {
   guint         header_len;
   guint         bytes;
   guint         payload_len;
+  guint32       ssrc;
+  guint16       seqnum;
+  guint8        pt;
+  guint32       rtptime;
+  guint32       csrc_count;
+  guint32       csrcs[16];
 } RTPPacketInfo;
 
 /**
