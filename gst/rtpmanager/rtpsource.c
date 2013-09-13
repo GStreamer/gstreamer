@@ -1143,60 +1143,29 @@ rtp_source_mark_bye (RTPSource * src, const gchar * reason)
  * Returns: a #GstFlowReturn.
  */
 GstFlowReturn
-rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
-    GstClockTime running_time)
+rtp_source_send_rtp (RTPSource * src, RTPPacketInfo * pinfo)
 {
   GstFlowReturn result;
-  guint len;
+  GstClockTime running_time;
   guint32 rtptime;
   guint64 ext_rtptime;
   guint64 rt_diff, rtp_diff;
-  guint packets;
-  GstRTPBuffer rtp = { NULL };
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
-  g_return_val_if_fail (is_list || GST_IS_BUFFER (data), GST_FLOW_ERROR);
 
   /* we are a sender now */
   src->is_sender = TRUE;
 
-  if (is_list) {
-    GstBufferList *list = GST_BUFFER_LIST_CAST (data);
-    gint i;
-
-    /* Each group makes up a network packet. */
-    packets = gst_buffer_list_length (list);
-    if (packets == 0)
-      goto no_buffer;
-
-    for (i = 0, len = 0; i < packets; i++) {
-      if (!gst_rtp_buffer_map (gst_buffer_list_get (list, i), GST_MAP_READ,
-              &rtp))
-        goto invalid_packet;
-
-      len += gst_rtp_buffer_get_payload_len (&rtp);
-      gst_rtp_buffer_unmap (&rtp);
-    }
-    /* subsequent info taken from first list member */
-    gst_rtp_buffer_map (gst_buffer_list_get (list, 0), GST_MAP_READ, &rtp);
-  } else {
-    GstBuffer *buffer = GST_BUFFER_CAST (data);
-    packets = 1;
-    if (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp))
-      goto invalid_packet;
-
-    len = gst_rtp_buffer_get_payload_len (&rtp);
-  }
-
   /* update stats for the SR */
-  src->stats.packets_sent += packets;
-  src->stats.octets_sent += len;
-  src->bytes_sent += len;
+  src->stats.packets_sent += pinfo->packets;
+  src->stats.octets_sent += pinfo->payload_len;
+  src->bytes_sent += pinfo->payload_len;
+
+  running_time = pinfo->running_time;
 
   do_bitrate_estimation (src, running_time, &src->bytes_sent);
 
-  rtptime = gst_rtp_buffer_get_timestamp (&rtp);
-  gst_rtp_buffer_unmap (&rtp);
+  rtptime = pinfo->rtptime;
 
   ext_rtptime = src->last_rtptime;
   ext_rtptime = gst_rtp_buffer_ext_timestamp (&ext_rtptime, rtptime);
@@ -1224,30 +1193,18 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
   if (!src->callbacks.push_rtp)
     goto no_callback;
 
-  GST_LOG ("pushing RTP %s %" G_GUINT64_FORMAT, is_list ? "list" : "packet",
-      src->stats.packets_sent);
+  GST_LOG ("pushing RTP %s %" G_GUINT64_FORMAT,
+      pinfo->is_list ? "list" : "packet", src->stats.packets_sent);
 
-  result = src->callbacks.push_rtp (src, data, src->user_data);
+  result = src->callbacks.push_rtp (src, pinfo->data, src->user_data);
+  pinfo->data = NULL;
 
   return result;
 
   /* ERRORS */
-invalid_packet:
-  {
-    GST_WARNING ("invalid packet received");
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
-    return GST_FLOW_OK;
-  }
-no_buffer:
-  {
-    GST_WARNING ("no buffers in buffer list");
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
-    return GST_FLOW_OK;
-  }
 no_callback:
   {
     GST_WARNING ("no callback installed, dropping packet");
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
     return GST_FLOW_OK;
   }
 }

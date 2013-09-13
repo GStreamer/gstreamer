@@ -231,8 +231,8 @@ void            rtp_source_set_rtcp_from       (RTPSource *src, GSocketAddress *
 /* handling RTP */
 GstFlowReturn   rtp_source_process_rtp         (RTPSource *src, RTPPacketInfo *pinfo);
 
-GstFlowReturn   rtp_source_send_rtp            (RTPSource *src, gpointer data, gboolean is_list,
-                                                GstClockTime running_time);
+GstFlowReturn   rtp_source_send_rtp            (RTPSource *src, RTPPacketInfo *pinfo);
+
 /* RTCP messages */
 void            rtp_source_process_sr          (RTPSource *src, GstClockTime time, guint64 ntptime,
                                                 guint32 rtptime, guint32 packet_count, guint32 octet_count);

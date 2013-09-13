@@ -1557,6 +1557,7 @@ update_packet (GstBuffer ** buffer, guint idx, RTPPacketInfo * pinfo)
 
   /* get packet size including header overhead */
   pinfo->bytes += gst_buffer_get_size (*buffer) + pinfo->header_len;
+  pinfo->packets++;
 
   if (pinfo->rtp) {
     GstRTPBuffer rtp = { NULL };
@@ -1624,6 +1625,7 @@ update_packet_info (RTPSession * sess, RTPPacketInfo * pinfo,
   pinfo->header_len = sess->header_len;
   pinfo->bytes = 0;
   pinfo->payload_len = 0;
+  pinfo->packets = 0;
 
   if (is_list) {
     GstBufferList *list = GST_BUFFER_LIST_CAST (data);
@@ -2484,9 +2486,7 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
   RTPSource *source;
   gboolean prevsender;
   guint64 oldrate;
-  GstBuffer *buffer;
-  GstRTPBuffer rtp = { NULL };
-  guint32 ssrc;
+  RTPPacketInfo pinfo = { 0, };
   gboolean created;
 
   g_return_val_if_fail (RTP_IS_SESSION (sess), GST_FLOW_ERROR);
@@ -2494,26 +2494,12 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
 
   GST_LOG ("received RTP %s for sending", is_list ? "list" : "packet");
 
-  if (is_list) {
-    GstBufferList *list = GST_BUFFER_LIST_CAST (data);
-
-    buffer = gst_buffer_list_get (list, 0);
-    if (!buffer)
-      goto no_buffer;
-  } else {
-    buffer = GST_BUFFER_CAST (data);
-  }
-
-  if (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp))
+  RTP_SESSION_LOCK (sess);
+  if (!update_packet_info (sess, &pinfo, TRUE, TRUE, is_list, data,
+          current_time, running_time, -1))
     goto invalid_packet;
 
-  /* get SSRC and look up in session database */
-  ssrc = gst_rtp_buffer_get_ssrc (&rtp);
-
-  gst_rtp_buffer_unmap (&rtp);
-
-  RTP_SESSION_LOCK (sess);
-  source = obtain_internal_source (sess, ssrc, &created);
+  source = obtain_internal_source (sess, pinfo.ssrc, &created);
 
   /* update last activity */
   source->last_rtp_activity = current_time;
@@ -2522,7 +2508,7 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
   oldrate = source->bitrate;
 
   /* we use our own source to send */
-  result = rtp_source_send_rtp (source, data, is_list, running_time);
+  result = rtp_source_send_rtp (source, &pinfo);
 
   source_update_sender (sess, source, prevsender);
 
@@ -2531,19 +2517,15 @@ rtp_session_send_rtp (RTPSession * sess, gpointer data, gboolean is_list,
   RTP_SESSION_UNLOCK (sess);
 
   g_object_unref (source);
+  clean_packet_info (&pinfo);
 
   return result;
 
 invalid_packet:
   {
     gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
+    RTP_SESSION_UNLOCK (sess);
     GST_DEBUG ("invalid RTP packet received");
-    return GST_FLOW_OK;
-  }
-no_buffer:
-  {
-    gst_mini_object_unref (GST_MINI_OBJECT_CAST (data));
-    GST_DEBUG ("no buffer in list");
     return GST_FLOW_OK;
   }
 }

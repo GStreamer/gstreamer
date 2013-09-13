@@ -85,6 +85,7 @@ typedef struct {
   guint64       ntpnstime;
   guint         header_len;
   guint         bytes;
+  guint         packets;
   guint         payload_len;
   guint32       ssrc;
   guint16       seqnum;
