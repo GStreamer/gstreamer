@@ -316,7 +316,7 @@ gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
   guint8 padding;
   guint8 csrc_count;
   guint header_len;
-  guint8 version;
+  guint8 version, pt;
   guint8 *data;
   guint size;
   gsize bufsize, skip;
@@ -345,6 +345,13 @@ gst_rtp_buffer_map (GstBuffer * buffer, GstMapFlags flags, GstRTPBuffer * rtp)
   version = (data[0] & 0xc0);
   if (G_UNLIKELY (version != (GST_RTP_VERSION << 6)))
     goto wrong_version;
+
+  /* check reserved PT and marker bit, this is to check for RTCP
+   * packets. We do a relaxed check, you can still use 72-76 as long
+   * as the marker bit is cleared. */
+  pt = data[1];
+  if (G_UNLIKELY (pt >= 200 && pt <= 204))
+    goto reserved_pt;
 
   /* calc header length with csrc */
   csrc_count = (data[0] & 0x0f);
@@ -440,6 +447,11 @@ wrong_length:
 wrong_version:
   {
     GST_DEBUG ("version check failed (%d != %d)", version, GST_RTP_VERSION);
+    goto dump_packet;
+  }
+reserved_pt:
+  {
+    GST_DEBUG ("reserved PT %d found", pt);
     goto dump_packet;
   }
 wrong_padding:
