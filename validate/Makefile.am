@@ -5,6 +5,7 @@ SUBDIRS = 	\
 	data	\
 	gst 	\
 	tools 	\
+	pkgconfig 	\
 	po
 
 DIST_SUBDIRS = $(SUBDIRS)

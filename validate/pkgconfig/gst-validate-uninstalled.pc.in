@@ -1,0 +1,12 @@
+# the standard variables don't make sense for an uninstalled copy
+prefix=
+exec_prefix=
+libdir=@abs_top_builddir@/ges
+includedir=@abs_top_builddir@
+
+Name: gst-validate
+Description: GStreamer Validate
+Version: @VERSION@
+Requires: gstreamer-@GST_API_VERSION@
+Libs: @abs_top_builddir@/gst/validate/libgstvalidate-@GST_API_VERSION@.la
+Cflags: -I@abs_top_srcdir@ -I@abs_top_builddir@

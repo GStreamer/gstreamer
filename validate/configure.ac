@@ -246,6 +246,9 @@ gst/Makefile
 gst/validate/Makefile
 tools/Makefile
 data/Makefile
+pkgconfig/Makefile
+pkgconfig/gst-validate-uninstalled.pc
+pkgconfig/gst-validate.pc
 po/Makefile.in
 ])
 AC_OUTPUT
