@@ -553,32 +553,11 @@ public class MediaInfo.Info : Box
   // helpers
   
   private Widget describe_container_stream (DiscovererStreamInfo sinfo) {
-    Table table;
-    Label label;
-    AttachOptions fill = AttachOptions.FILL;
-    AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
-    Caps caps = sinfo.get_caps ();
+    Table table = new Table (2, 4, false);
+
     uint row = 0;
-
-    table = new Table (2, 7, false);
-
-    label = new Label (caps.to_string ());
-    label.set_ellipsize (Pango.EllipsizeMode.END);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
-    row++;
-
-    label = new Label ("Format:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-    label = new Label (null);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    label.set_use_markup (true);
-    set_wikilink (label, caps); 
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-    row++;
+    add_table_rows_for_caps (table, row, "Format:", sinfo.get_caps ());
+    row+=2;
     
     if (add_table_row_for_structure (table, row, sinfo.get_misc ())) {
       row++;
@@ -591,14 +570,8 @@ public class MediaInfo.Info : Box
   }
 
   private Widget describe_video_stream (DiscovererStreamInfo sinfo) {
-    Table table;
-    Label label;
-    AttachOptions fill = AttachOptions.FILL;
-    AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
-    Caps caps = sinfo.get_caps ();
     DiscovererVideoInfo vinfo = (DiscovererVideoInfo)sinfo;
-    string str;
-    uint row = 0;
+    Table table = new Table (2, 8, false);
     
     Gdk.Point res = {
       (int)((DiscovererVideoInfo)sinfo).get_width(),
@@ -606,25 +579,10 @@ public class MediaInfo.Info : Box
     };
     video_resolutions.add(res);
 
-    table = new Table (2, 8, false);
-
-    label = new Label (caps.to_string ());
-    label.set_ellipsize (Pango.EllipsizeMode.END);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
-    row++;
-
-    label = new Label ("Codec:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-    label = new Label (null);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    label.set_use_markup (true);
-    set_wikilink (label, caps); 
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-    row++;
+    string str;
+    uint row = 0;
+    add_table_rows_for_caps (table, row, "Codec:", sinfo.get_caps ());
+    row+=2;
     
     str = "%u / %u bits/second".printf (vinfo.get_bitrate(), vinfo.get_max_bitrate());
     add_table_row_for_string (table, row, "Bitrate:", str);
@@ -670,34 +628,13 @@ public class MediaInfo.Info : Box
   }
 
   private Widget describe_audio_stream (DiscovererStreamInfo sinfo) {
-    Table table;
-    Label label;
-    AttachOptions fill = AttachOptions.FILL;
-    AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
-    Caps caps = sinfo.get_caps ();
     DiscovererAudioInfo ainfo = (DiscovererAudioInfo)sinfo;
+    Table table = new Table (2, 7, false);
+
     string str;
     uint row = 0;
-
-    table = new Table (2, 7, false);
-
-    label = new Label (caps.to_string ());
-    label.set_ellipsize (Pango.EllipsizeMode.END);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
-    row++;
-
-    label = new Label ("Codec:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-    label = new Label (null);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    label.set_use_markup (true);
-    set_wikilink (label, caps); 
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-    row++;
+    add_table_rows_for_caps (table, row, "Codec:", sinfo.get_caps ());
+    row+=2;
 
     str = "%u / %u bits/second".printf (ainfo.get_bitrate(),ainfo.get_max_bitrate());
     add_table_row_for_string (table, row, "Bitrate:", str);
@@ -731,33 +668,12 @@ public class MediaInfo.Info : Box
   }
 
   private Widget describe_subtitle_stream (DiscovererStreamInfo sinfo) {
-    Table table;
-    Label label;
-    AttachOptions fill = AttachOptions.FILL;
-    AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
-    Caps caps = sinfo.get_caps ();
     DiscovererSubtitleInfo tinfo = (DiscovererSubtitleInfo) sinfo;
+    Table table = new Table (2, 5, false);
+    
     uint row = 0;
-
-    table = new Table (2, 7, false);
-
-    label = new Label (caps.to_string ());
-    label.set_ellipsize (Pango.EllipsizeMode.END);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
-    row++;
-
-    label = new Label ("Codec:");
-    label.set_alignment (1.0f, 0.5f);
-    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
-    label = new Label (null);
-    label.set_alignment (0.0f, 0.5f);
-    label.set_selectable (true);
-    label.set_use_markup (true);
-    set_wikilink (label, caps); 
-    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
-    row++;
+    add_table_rows_for_caps (table, row, "Codec:", sinfo.get_caps ());
+    row+=2;
 
     add_table_row_for_string (table, row, "Language:", tinfo.get_language());
     row++;
@@ -793,6 +709,28 @@ public class MediaInfo.Info : Box
     }
   }
 
+  private void add_table_rows_for_caps (Table table, uint row, string title, Caps caps) {
+    AttachOptions fill = AttachOptions.FILL;
+    AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
+
+    Label label = new Label (caps.to_string ());
+    label.set_ellipsize (Pango.EllipsizeMode.END);
+    label.set_alignment (0.0f, 0.5f);
+    label.set_selectable (true);
+    table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
+    row++;
+
+    label = new Label (title);
+    label.set_alignment (1.0f, 0.5f);
+    table.attach (label, 0, 1, row, row+1, fill, 0, 0, 0);
+    label = new Label (null);
+    label.set_alignment (0.0f, 0.5f);
+    label.set_selectable (true);
+    label.set_use_markup (true);
+    set_wikilink (label, caps); 
+    table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+  }
+  
   private void add_table_row_for_string (Table table, uint row, string title, string str) {
     AttachOptions fill = AttachOptions.FILL;
     AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
