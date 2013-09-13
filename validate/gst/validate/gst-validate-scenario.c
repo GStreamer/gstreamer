@@ -69,7 +69,10 @@ struct _GstValidateScenarioPrivate
   GstValidateRunner *runner;
 
   GList *actions;
-  gint64 seeked_position;       /* last seeked position */
+
+  GstEvent *last_seek;
+  GstClockTime segment_start;
+  GstClockTime segment_stop;
   GstClockTime seek_pos_tol;
 
   guint num_actions;
@@ -126,6 +129,7 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
   const char *str_format, *str_flags, *str_start_type, *str_stop_type;
+  gboolean ret = TRUE;
 
   gdouble rate = 1.0, dstart, dstop;
   GstFormat format = GST_FORMAT_TIME;
@@ -134,6 +138,7 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
   GstClockTime start;
   GstSeekType stop_type = GST_SEEK_TYPE_SET;
   GstClockTime stop = GST_CLOCK_TIME_NONE;
+  GstEvent *seek;
 
   if (!gst_structure_get_double (action->structure, "start", &dstart)) {
     GST_WARNING_OBJECT (scenario, "Could not find start for a seek, FAILED");
@@ -170,16 +175,19 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
       GST_TIME_FORMAT " Rate %lf\n", action->name,
       action->action_number, GST_TIME_ARGS (start), GST_TIME_ARGS (stop), rate);
 
-  priv->seeked_position = (rate > 0) ? start : stop;
-  if (gst_element_seek (priv->pipeline, rate, format, flags, start_type, start,
-          stop_type, stop) == FALSE) {
+  seek = gst_event_new_seek (rate, format, flags, start_type, start,
+      stop_type, stop);
+  gst_event_ref (seek);
+  if (gst_element_send_event (priv->pipeline, seek)) {
+    gst_event_replace (&priv->last_seek, seek);
+  } else {
     GST_VALIDATE_REPORT (scenario, EVENT_SEEK_NOT_HANDLED,
-        "Could not seek to position %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (priv->seeked_position));
-    return FALSE;
+        "Could not seek to position %" GST_TIME_FORMAT, GST_TIME_ARGS (start));
+    ret = FALSE;
   }
+  gst_event_unref (seek);
 
-  return TRUE;
+  return ret;
 }
 
 static gboolean
@@ -439,24 +447,20 @@ get_position (GstValidateScenario * scenario)
   GList *tmp;
   GstQuery *query;
   gdouble rate = 1.0;
-  GstValidateAction *act;
+  GstValidateAction *act = NULL;
+  gint64 start_with_tolerance, stop_with_tolerance;
   gint64 position, duration;
   GstFormat format = GST_FORMAT_TIME;
   GstValidateScenarioPrivate *priv = scenario->priv;
   GstElement *pipeline = scenario->priv->pipeline;
-
-  if (scenario->priv->actions == NULL) {
-    GST_DEBUG_OBJECT (scenario,
-        "No more actions to execute, stop calling  get_position");
-    return FALSE;
-  }
 
   query = gst_query_new_segment (GST_FORMAT_DEFAULT);
   if (gst_element_query (GST_ELEMENT (priv->pipeline), query))
     gst_query_parse_segment (query, &rate, NULL, NULL, NULL);
 
   gst_query_unref (query);
-  act = scenario->priv->actions->data;
+  if (scenario->priv->actions)
+    act = scenario->priv->actions->data;
   gst_element_query_position (pipeline, format, &position);
 
   format = GST_FORMAT_TIME;
@@ -471,15 +475,30 @@ get_position (GstValidateScenario * scenario)
     return TRUE;
   }
 
-
   GST_LOG ("Current position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
-  if ((rate > 0 && (GstClockTime) position >= act->playback_time) ||
-      (rate < 0 && (GstClockTime) position <= act->playback_time)) {
+
+  /* Check if playback is within seek segment */
+  start_with_tolerance =
+      MAX (0, (gint64) (priv->segment_start - priv->seek_pos_tol));
+  stop_with_tolerance =
+      priv->segment_stop != -1 ? priv->segment_stop + priv->seek_pos_tol : -1;
+  if ((stop_with_tolerance != -1 && position > stop_with_tolerance)
+      || position < start_with_tolerance) {
+
+    GST_VALIDATE_REPORT (scenario, QUERY_POSITION_OUT_OF_SEGMENT,
+        "Current position %" GST_TIME_FORMAT " not in the expected range [%"
+        GST_TIME_FORMAT " -- %" GST_TIME_FORMAT, GST_TIME_ARGS (position),
+        GST_TIME_ARGS (start_with_tolerance),
+        GST_TIME_ARGS (stop_with_tolerance));
+  }
+
+  if (act && ((rate > 0 && (GstClockTime) position >= act->playback_time) ||
+          (rate < 0 && (GstClockTime) position <= act->playback_time))) {
     GstValidateActionType *type;
 
     /* TODO what about non flushing seeks? */
     /* TODO why is this inside the action time if ? */
-    if (GST_CLOCK_TIME_IS_VALID (priv->seeked_position))
+    if (priv->last_seek)
       return TRUE;
 
     type = g_hash_table_lookup (action_types_table, act->type);
@@ -496,37 +515,45 @@ get_position (GstValidateScenario * scenario)
   return TRUE;
 }
 
+static void
+gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
+    GstEvent * seek)
+{
+  GstValidateScenarioPrivate *priv = scenario->priv;
+  gint64 start, stop;
+  GstSeekType start_type, stop_type;
+
+  gst_event_parse_seek (seek, NULL, NULL, NULL, &start_type, &start,
+      &stop_type, &stop);
+
+  if (start_type == GST_SEEK_TYPE_SET) {
+    priv->segment_start = start;
+  } else if (start_type == GST_SEEK_TYPE_END) {
+    /* TODO fill me */
+  }
+
+  if (stop_type == GST_SEEK_TYPE_SET) {
+    priv->segment_stop = stop;
+  } else if (start_type == GST_SEEK_TYPE_END) {
+    /* TODO fill me */
+  }
+}
+
 static gboolean
 async_done_cb (GstBus * bus, GstMessage * message,
     GstValidateScenario * scenario)
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
 
-  if (GST_CLOCK_TIME_IS_VALID (priv->seeked_position)) {
-    gint64 position;
-    GstFormat format = GST_FORMAT_TIME;
-
-    gst_element_query_position (priv->pipeline, format, &position);
-    if (position > (priv->seeked_position + priv->seek_pos_tol) ||
-        position < (MAX (0,
-                ((gint64) (priv->seeked_position - priv->seek_pos_tol))))) {
-
-      GST_VALIDATE_REPORT (scenario, EVENT_SEEK_RESULT_POSITION_WRONG,
-          "Seeked position %" GST_TIME_FORMAT " not in the expected range [%"
-          GST_TIME_FORMAT " -- %" GST_TIME_FORMAT, GST_TIME_ARGS (position),
-          GST_TIME_ARGS (((MAX (0,
-                          ((gint64) (priv->seeked_position -
-                                  priv->seek_pos_tol)))))),
-          GST_TIME_ARGS ((priv->seeked_position + priv->seek_pos_tol)));
-    }
-    priv->seeked_position = GST_CLOCK_TIME_NONE;
+  if (priv->last_seek) {
+    gst_validate_scenario_update_segment_from_seek (scenario, priv->last_seek);
+    gst_event_replace (&priv->last_seek, NULL);
   }
 
   if (priv->get_pos_id == 0) {
     get_position (scenario);
     priv->get_pos_id = g_timeout_add (50, (GSourceFunc) get_position, scenario);
   }
-
 
   return TRUE;
 }
@@ -727,9 +754,9 @@ gst_validate_scenario_init (GstValidateScenario * scenario)
   GstValidateScenarioPrivate *priv = scenario->priv =
       GST_VALIDATE_SCENARIO_GET_PRIVATE (scenario);
 
-
-  priv->seeked_position = GST_CLOCK_TIME_NONE;
   priv->seek_pos_tol = DEFAULT_SEEK_TOLERANCE;
+  priv->segment_start = 0;
+  priv->segment_stop = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -737,6 +764,8 @@ gst_validate_scenario_dispose (GObject * object)
 {
   GstValidateScenarioPrivate *priv = GST_VALIDATE_SCENARIO (object)->priv;
 
+  if (priv->last_seek)
+    gst_event_unref (priv->last_seek);
   if (priv->pipeline)
     gst_object_unref (priv->pipeline);
   g_list_free_full (priv->actions, (GDestroyNotify) _free_scenario_action);

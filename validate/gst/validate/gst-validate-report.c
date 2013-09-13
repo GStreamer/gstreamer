@@ -204,6 +204,9 @@ gst_validate_report_load_issues (void)
   REGISTER_VALIDATE_ISSUE (WARNING, QUERY_POSITION_SUPERIOR_DURATION,
       _("Query position reported a value superior than what query duration "
           "returned"), NULL);
+  REGISTER_VALIDATE_ISSUE (WARNING, QUERY_POSITION_OUT_OF_SEGMENT,
+      _("Query position reported a value outside of the current expected "
+          "segment"), NULL);
 }
 
 void
