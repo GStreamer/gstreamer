@@ -1176,34 +1176,24 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
   guint32 rtptime;
   guint64 ext_rtptime;
   guint64 rt_diff, rtp_diff;
-  GstBufferList *list = NULL;
-  GstBuffer *buffer = NULL;
   guint packets;
   GstRTPBuffer rtp = { NULL };
 
   g_return_val_if_fail (RTP_IS_SOURCE (src), GST_FLOW_ERROR);
   g_return_val_if_fail (is_list || GST_IS_BUFFER (data), GST_FLOW_ERROR);
 
-  if (is_list) {
-    list = GST_BUFFER_LIST_CAST (data);
-
-    /* We can grab the caps from the first group, since all
-     * groups of a buffer list have same caps. */
-    buffer = gst_buffer_list_get (list, 0);
-    if (!buffer)
-      goto no_buffer;
-  } else {
-    buffer = GST_BUFFER_CAST (data);
-  }
-
   /* we are a sender now */
   src->is_sender = TRUE;
 
   if (is_list) {
+    GstBufferList *list = GST_BUFFER_LIST_CAST (data);
     gint i;
 
     /* Each group makes up a network packet. */
     packets = gst_buffer_list_length (list);
+    if (packets == 0)
+      goto no_buffer;
+
     for (i = 0, len = 0; i < packets; i++) {
       if (!gst_rtp_buffer_map (gst_buffer_list_get (list, i), GST_MAP_READ,
               &rtp))
@@ -1215,6 +1205,7 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
     /* subsequent info taken from first list member */
     gst_rtp_buffer_map (gst_buffer_list_get (list, 0), GST_MAP_READ, &rtp);
   } else {
+    GstBuffer *buffer = GST_BUFFER_CAST (data);
     packets = 1;
     if (!gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp))
       goto invalid_packet;
@@ -1230,6 +1221,8 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
   do_bitrate_estimation (src, running_time, &src->bytes_sent);
 
   rtptime = gst_rtp_buffer_get_timestamp (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
+
   ext_rtptime = src->last_rtptime;
   ext_rtptime = gst_rtp_buffer_ext_timestamp (&ext_rtptime, rtptime);
 
@@ -1253,11 +1246,8 @@ rtp_source_send_rtp (RTPSource * src, gpointer data, gboolean is_list,
   src->last_rtptime = ext_rtptime;
 
   /* push packet */
-  if (!src->callbacks.push_rtp) {
-    gst_rtp_buffer_unmap (&rtp);
+  if (!src->callbacks.push_rtp)
     goto no_callback;
-  }
-  gst_rtp_buffer_unmap (&rtp);
 
   GST_LOG ("pushing RTP %s %" G_GUINT64_FORMAT, is_list ? "list" : "packet",
       src->stats.packets_sent);

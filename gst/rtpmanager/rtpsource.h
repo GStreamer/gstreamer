@@ -72,7 +72,7 @@ typedef struct _RTPSourceClass RTPSourceClass;
 /**
  * RTPSourcePushRTP:
  * @src: an #RTPSource
- * @buffer: the RTP buffer ready for processing
+ * @data: the RTP buffer or buffer list ready for processing
  * @user_data: user data specified when registering
  *
  * This callback will be called when @src has @buffer ready for further
@@ -80,7 +80,7 @@ typedef struct _RTPSourceClass RTPSourceClass;
  *
  * Returns: a #GstFlowReturn.
  */
-typedef GstFlowReturn (*RTPSourcePushRTP) (RTPSource *src, GstBuffer *buffer,
+typedef GstFlowReturn (*RTPSourcePushRTP) (RTPSource *src, gpointer data,
 	gpointer user_data);
 
 /**
