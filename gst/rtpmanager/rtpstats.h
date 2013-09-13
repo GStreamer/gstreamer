@@ -57,20 +57,30 @@ typedef struct {
 
 /**
  * RTPPacketInfo:
+ * @send: if this is a packet for sending
+ * @rtp: if this info is about an RTP packet
+ * @is_list: if this is a bufferlist
+ * @data: a #GstBuffer or #GstBufferList
  * @address: address of the sender of the packet
  * @current_time: current time according to the system clock
  * @running_time: time of a packet as buffer running_time
  * @ntpnstime: time of a packet NTP time in nanoseconds
+ * @header_len: number of overhead bytes per packet
  * @bytes: bytes of the packet including lowlevel overhead
  * @payload_len: bytes of the RTP payload
  *
  * Structure holding information about the packet.
  */
 typedef struct {
+  gboolean      send;
+  gboolean      rtp;
+  gboolean      is_list;
+  gpointer      data;
   GSocketAddress *address;
   GstClockTime  current_time;
   GstClockTime  running_time;
   guint64       ntpnstime;
+  guint         header_len;
   guint         bytes;
   guint         payload_len;
 } RTPPacketInfo;

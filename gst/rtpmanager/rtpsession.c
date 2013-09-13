@@ -1550,6 +1550,36 @@ rtp_session_create_source (RTPSession * sess)
   return source;
 }
 
+static gboolean
+update_packet (GstBuffer ** buffer, guint idx, RTPPacketInfo * pinfo)
+{
+  GstNetAddressMeta *meta;
+
+  /* get packet size including header overhead */
+  pinfo->bytes += gst_buffer_get_size (*buffer) + pinfo->header_len;
+
+  if (pinfo->rtp) {
+    GstRTPBuffer rtpb = { NULL };
+
+    gst_rtp_buffer_map (*buffer, GST_MAP_READ, &rtpb);
+    pinfo->payload_len += gst_rtp_buffer_get_payload_len (&rtpb);
+    gst_rtp_buffer_unmap (&rtpb);
+  }
+
+  if (idx == 0) {
+    /* for netbuffer we can store the IP address to check for collisions */
+    meta = gst_buffer_get_net_address_meta (*buffer);
+    if (pinfo->address)
+      g_object_unref (pinfo->address);
+    if (meta) {
+      pinfo->address = G_SOCKET_ADDRESS (g_object_ref (meta->addr));
+    } else {
+      pinfo->address = NULL;
+    }
+  }
+  return TRUE;
+}
+
 /* update the RTPPacketInfo structure with the current time and other bits
  * about the current buffer we are handling.
  * This function is typically called when a validated packet is received.
@@ -1557,36 +1587,26 @@ rtp_session_create_source (RTPSession * sess)
  */
 static void
 update_packet_info (RTPSession * sess, RTPPacketInfo * pinfo,
-    gboolean rtp, GstBuffer * buffer, GstClockTime current_time,
-    GstClockTime running_time, guint64 ntpnstime)
+    gboolean send, gboolean rtp, gboolean is_list, gpointer data,
+    GstClockTime current_time, GstClockTime running_time, guint64 ntpnstime)
 {
-  GstNetAddressMeta *meta;
-  GstRTPBuffer rtpb = { NULL };
-
-  /* get time of pinfo */
+  pinfo->send = send;
+  pinfo->rtp = rtp;
+  pinfo->is_list = is_list;
+  pinfo->data = data;
   pinfo->current_time = current_time;
   pinfo->running_time = running_time;
   pinfo->ntpnstime = ntpnstime;
+  pinfo->header_len = sess->header_len;
+  pinfo->bytes = 0;
+  pinfo->payload_len = 0;
 
-  /* get packet size including header overhead */
-  pinfo->bytes = gst_buffer_get_size (buffer) + sess->header_len;
-
-  if (rtp) {
-    gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtpb);
-    pinfo->payload_len = gst_rtp_buffer_get_payload_len (&rtpb);
-    gst_rtp_buffer_unmap (&rtpb);
+  if (is_list) {
+    GstBufferList *list = GST_BUFFER_LIST_CAST (data);
+    gst_buffer_list_foreach (list, (GstBufferListFunc) update_packet, pinfo);
   } else {
-    pinfo->payload_len = 0;
-  }
-
-  /* for netbuffer we can store the IP address to check for collisions */
-  meta = gst_buffer_get_net_address_meta (buffer);
-  if (pinfo->address)
-    g_object_unref (pinfo->address);
-  if (meta) {
-    pinfo->address = G_SOCKET_ADDRESS (g_object_ref (meta->addr));
-  } else {
-    pinfo->address = NULL;
+    GstBuffer *buffer = GST_BUFFER_CAST (data);
+    update_packet (&buffer, 0, pinfo);
   }
 }
 
@@ -1666,7 +1686,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   RTPSource *source;
   gboolean created;
   gboolean prevsender, prevactive;
-  RTPPacketInfo pinfo = { NULL, };
+  RTPPacketInfo pinfo = { 0, };
   guint32 csrcs[16];
   guint8 i, count;
   guint64 oldrate;
@@ -1694,7 +1714,7 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
   RTP_SESSION_LOCK (sess);
 
   /* update pinfo stats */
-  update_packet_info (sess, &pinfo, TRUE, buffer, current_time,
+  update_packet_info (sess, &pinfo, FALSE, TRUE, FALSE, buffer, current_time,
       running_time, -1);
 
   source = obtain_source (sess, ssrc, &created, &pinfo, TRUE);
@@ -2292,7 +2312,7 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
 {
   GstRTCPPacket packet;
   gboolean more, is_bye = FALSE, do_sync = FALSE;
-  RTPPacketInfo pinfo = { NULL, };
+  RTPPacketInfo pinfo = { 0, };
   GstFlowReturn result = GST_FLOW_OK;
   GstRTCPBuffer rtcp = { NULL, };
 
@@ -2306,7 +2326,8 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
 
   RTP_SESSION_LOCK (sess);
   /* update pinfo stats */
-  update_packet_info (sess, &pinfo, FALSE, buffer, current_time, -1, ntpnstime);
+  update_packet_info (sess, &pinfo, FALSE, FALSE, FALSE, buffer, current_time,
+      -1, ntpnstime);
 
   /* start processing the compound packet */
   gst_rtcp_buffer_map (buffer, GST_MAP_READ, &rtcp);
