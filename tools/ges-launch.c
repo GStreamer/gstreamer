@@ -657,10 +657,16 @@ main (int argc, gchar ** argv)
       prof = _parse_encoding_profile (format);
     }
 
+    if (outputuri)
+      outputuri = ensure_uri (outputuri);
+
     if (!prof || !ges_pipeline_set_render_settings (pipeline, outputuri, prof)
         || !ges_pipeline_set_mode (pipeline,
-            smartrender ? TIMELINE_MODE_SMART_RENDER : TIMELINE_MODE_RENDER))
+            smartrender ? TIMELINE_MODE_SMART_RENDER : TIMELINE_MODE_RENDER)) {
+      g_free (outputuri);
       exit (1);
+    }
+    g_free (outputuri);
 
     gst_encoding_profile_unref (prof);
   } else {
