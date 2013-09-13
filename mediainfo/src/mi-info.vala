@@ -102,9 +102,9 @@ public class MediaInfo.Info : Box
     tag_black_list.add ("nominal-bitrate");
     tag_black_list.add ("maximum-bitrate");
 
-    // map from media-type to wikipedia-articles, prefix with http://en.wikipedia.org/wiki/
+    // map from media-type/codec-desc to wikipedia-articles, see set_wikilink()
+    // where they are prefixed with 'http://en.wikipedia.org/wiki/'
     // alternative source could be http://codecdictionary.com/
-    // TODO: add more
     wikilinks = new HashMap<string, string> ();
     // container/tag formats
     wikilinks["application/mxf"] = "Material_Exchange_Format";
