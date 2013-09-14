@@ -1238,6 +1238,11 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
     }
   }
 
+  if (G_UNLIKELY (mix->pending_tags)) {
+    gst_pad_push_event (mix->srcpad, gst_event_new_tag (mix->pending_tags));
+    mix->pending_tags = NULL;
+  }
+
   if (mix->segment.stop != -1)
     output_end_time = MIN (output_end_time, mix->segment.stop);
 
@@ -1922,6 +1927,10 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
       g_atomic_int_set (&mix->flush_stop_pending, FALSE);
       ret = gst_collect_pads_event_default (pads, cdata, event, discard);
       event = NULL;
+      if (mix->pending_tags) {
+        gst_tag_list_unref (mix->pending_tags);
+        mix->pending_tags = NULL;
+      }
       break;
     case GST_EVENT_FLUSH_STOP:
       mix->newseg_pending = TRUE;
@@ -1945,6 +1954,19 @@ gst_videomixer2_sink_event (GstCollectPads * pads, GstCollectData * cdata,
       mix->ts_offset = 0;
       mix->nframes = 0;
       break;
+    case GST_EVENT_TAG:
+    {
+      /* collect tags here so we can push them out when we collect data */
+      GstTagList *tags;
+
+      gst_event_parse_tag (event, &tags);
+      tags = gst_tag_list_merge (mix->pending_tags, tags, GST_TAG_MERGE_APPEND);
+      if (mix->pending_tags)
+        gst_tag_list_unref (mix->pending_tags);
+      mix->pending_tags = tags;
+      event = NULL;
+      break;
+    }
     default:
       break;
   }
@@ -2166,6 +2188,11 @@ gst_videomixer2_dispose (GObject * o)
       videomixer_videoconvert_convert_free (mixpad->convert);
   }
 
+  if (mix->pending_tags) {
+    gst_tag_list_unref (mix->pending_tags);
+    mix->pending_tags = NULL;
+  }
+
   gst_caps_replace (&mix->current_caps, NULL);
 }
 
@@ -2295,6 +2322,7 @@ gst_videomixer2_init (GstVideoMixer2 * mix)
   mix->collect = gst_collect_pads_new ();
   mix->background = DEFAULT_BACKGROUND;
   mix->current_caps = NULL;
+  mix->pending_tags = NULL;
 
   gst_collect_pads_set_function (mix->collect,
       (GstCollectPadsFunction) GST_DEBUG_FUNCPTR (gst_videomixer2_collected),
