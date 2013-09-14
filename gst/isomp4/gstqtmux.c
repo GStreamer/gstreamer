@@ -2176,12 +2176,20 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
   /* if this is the first buffer, store the timestamp */
   if (G_UNLIKELY (pad->first_ts == GST_CLOCK_TIME_NONE) && last_buf) {
-    if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (last_buf))) {
+    if (pad->have_dts) {
+      /* first pad always has DTS. If it was not provided by upstream it was set to segment start */
+      pad->first_ts = GST_BUFFER_DTS (last_buf);
+    } else if (GST_BUFFER_PTS_IS_VALID (last_buf)) {
       pad->first_ts = GST_BUFFER_PTS (last_buf);
+    }
+
+    if (GST_CLOCK_TIME_IS_VALID (pad->first_ts)) {
       GST_DEBUG ("setting first_ts to %" G_GUINT64_FORMAT, pad->first_ts);
+      last_buf = gst_buffer_make_writable (last_buf);
       check_and_subtract_ts (qtmux, &GST_BUFFER_DTS (last_buf), pad->first_ts);
       check_and_subtract_ts (qtmux, &GST_BUFFER_PTS (last_buf), pad->first_ts);
       if (buf) {
+        buf = gst_buffer_make_writable (buf);
         check_and_subtract_ts (qtmux, &GST_BUFFER_DTS (buf), pad->first_ts);
         check_and_subtract_ts (qtmux, &GST_BUFFER_PTS (buf), pad->first_ts);
       }
