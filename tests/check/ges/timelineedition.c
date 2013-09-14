@@ -445,7 +445,7 @@ GST_START_TEST (test_snapping)
    *              |   clip    ||  clip1   ||  clip2    |
    * time         25---------62--------110--------170
    */
-  g_object_set (clip1, "duration", 46, NULL);
+  g_object_set (clip1, "duration", (guint64) 46, NULL);
   CHECK_OBJECT_PROPS (trackelement, 25, 0, 37);
   CHECK_OBJECT_PROPS (trackelement1, 62, 5, 48);
   CHECK_OBJECT_PROPS (trackelement2, 110, 0, 60);
@@ -455,7 +455,7 @@ GST_START_TEST (test_snapping)
    *              |   clip1    ||  clip2   ||  clip     |
    * time         62---------110--------170--------207
    */
-  g_object_set (clip, "start", 168, NULL);
+  g_object_set (clip, "start", (guint64) 168, NULL);
   CHECK_OBJECT_PROPS (trackelement, 170, 0, 37);
   CHECK_OBJECT_PROPS (trackelement1, 62, 5, 48);
   CHECK_OBJECT_PROPS (trackelement2, 110, 0, 60);
