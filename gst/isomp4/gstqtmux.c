@@ -188,7 +188,6 @@ enum
 
 /* some spare for header size as well */
 #define MDAT_LARGE_FILE_LIMIT           ((guint64) 1024 * 1024 * 1024 * 2)
-#define MAX_TOLERATED_LATENESS          (GST_SECOND / 10)
 
 #define DEFAULT_MOVIE_TIMESCALE         1000
 #define DEFAULT_TRAK_TIMESCALE          0
@@ -1892,8 +1891,7 @@ gst_qt_mux_stop_file (GstQTMux * qtmux)
     guint32 lateness;
     guint32 duration;
 
-    if (GST_CLOCK_TIME_IS_VALID (qtpad->first_ts) &&
-        qtpad->first_ts > first_ts + MAX_TOLERATED_LATENESS) {
+    if (GST_CLOCK_TIME_IS_VALID (qtpad->first_ts) && qtpad->first_ts > first_ts) {
       GST_DEBUG_OBJECT (qtmux, "Pad %s is a late stream by %" GST_TIME_FORMAT,
           GST_PAD_NAME (qtpad->collect.pad),
           GST_TIME_ARGS (qtpad->first_ts - first_ts));
