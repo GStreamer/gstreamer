@@ -2151,6 +2151,12 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
     }
   }
 
+  if (last_buf && !buf && !GST_BUFFER_DURATION_IS_VALID (last_buf)) {
+    /* this is last buffer; there is no next buffer so we need valid number as duration */
+    last_buf = gst_buffer_make_writable (last_buf);
+    GST_BUFFER_DURATION (last_buf) = 0;
+  }
+
   if (last_buf == NULL) {
 #ifndef GST_DISABLE_GST_DEBUG
     if (buf == NULL) {
