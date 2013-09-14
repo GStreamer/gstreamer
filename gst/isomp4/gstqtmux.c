@@ -2130,6 +2130,27 @@ gst_qt_mux_add_buffer (GstQTMux * qtmux, GstQTPad * pad, GstBuffer * buf)
 
   last_buf = pad->last_buf;
 
+  /* if buffer has missing DTS, we take either segment start or previous buffer end time, 
+     which ever is later */
+  if (buf && pad->have_dts && !GST_BUFFER_DTS_IS_VALID (buf)) {
+    GstClockTime last_buf_duration = last_buf
+        && GST_BUFFER_DURATION_IS_VALID (last_buf) ?
+        GST_BUFFER_DURATION (last_buf) : 0;
+
+    buf = gst_buffer_make_writable (buf);
+    GST_BUFFER_DTS (buf) =
+        gst_segment_to_running_time (&pad->collect.segment, GST_FORMAT_TIME,
+        pad->collect.segment.start);
+    if (GST_CLOCK_TIME_IS_VALID (pad->first_ts))
+      check_and_subtract_ts (qtmux, &GST_BUFFER_DTS (buf), pad->first_ts);
+
+    if (last_buf
+        && (GST_BUFFER_DTS (last_buf) + last_buf_duration) >
+        GST_BUFFER_DTS (buf)) {
+      GST_BUFFER_DTS (buf) = GST_BUFFER_DTS (last_buf) + last_buf_duration;
+    }
+  }
+
   if (last_buf == NULL) {
 #ifndef GST_DISABLE_GST_DEBUG
     if (buf == NULL) {
