@@ -1084,7 +1084,7 @@ section_start:
      * version_number                : 5  bit
      * current_next_indicator        : 1  bit */
     /* Bail out now if current_next_indicator == 0 */
-    if (G_UNLIKELY (!data & 0x01)) {
+    if (G_UNLIKELY (!(*data & 0x01))) {
       GST_DEBUG
           ("PID 0x%04x table_id 0x%02x section does not apply (current_next_indicator == 0)",
           packet->pid, table_id);
