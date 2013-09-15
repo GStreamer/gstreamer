@@ -51,7 +51,7 @@ struct _GstGLDownload
 
   GMutex           lock;
 
-  GstGLDisplay     *display;
+  GstGLContext     *context;
 
   /* output data */
   GstVideoInfo     info;
@@ -99,7 +99,7 @@ struct _GstGLDownloadClass
  */
 #define GST_GL_DOWNLOAD_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_GL_DOWNLOAD_FORMATS)
 
-GstGLDownload * gst_gl_download_new          (GstGLDisplay * display);
+GstGLDownload * gst_gl_download_new          (GstGLContext * context);
 
 gboolean gst_gl_download_init_format                (GstGLDownload * download, GstVideoFormat v_format,
                                                      guint out_width, guint out_height);

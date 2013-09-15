@@ -43,7 +43,7 @@ struct _GstGLFramebuffer
   GObject             object;
 
   /* <private> */
-  GstGLDisplay *display;
+  GstGLContext *context;
 
   GstGLFramebufferPrivate  *priv;
 };
@@ -53,7 +53,7 @@ struct _GstGLFramebufferClass
   GObjectClass object_class;
 };
 
-GstGLFramebuffer *gst_gl_framebuffer_new (GstGLDisplay *display);
+GstGLFramebuffer *gst_gl_framebuffer_new (GstGLContext *context);
 
 gboolean gst_gl_framebuffer_generate (GstGLFramebuffer *frame, gint width, gint height,
     guint * fbo, guint * depthbuffer);

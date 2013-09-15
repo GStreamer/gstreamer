@@ -74,7 +74,7 @@ GST_START_TEST (test_basic)
 
     /* test allocator creation */
     ASSERT_WARNING (mem = gst_allocator_alloc (gl_allocator, 0, NULL););
-    mem = gst_gl_memory_alloc (display, formats[i], width, height);
+    mem = gst_gl_memory_alloc (context, formats[i], width, height);
     fail_if (mem == NULL);
     gl_mem = (GstGLMemory *) mem;
 
@@ -82,7 +82,7 @@ GST_START_TEST (test_basic)
     fail_if (gl_mem->width != width);
     fail_if (gl_mem->height != height);
     fail_if (gl_mem->v_format != formats[i]);
-    fail_if (gl_mem->display != display);
+    fail_if (gl_mem->context != context);
     fail_if (gl_mem->tex_id == 0);
 
     /* copy the memory */
@@ -96,12 +96,12 @@ GST_START_TEST (test_basic)
     fail_if (gl_mem->height != gl_mem->height);
     fail_if (gl_mem->v_format != gl_mem->v_format);
     fail_if (gl_mem->gl_format != gl_mem->gl_format);
-    fail_if (gl_mem->display != gl_mem->display);
+    fail_if (gl_mem->context != gl_mem->context);
     fail_if (gl_mem->tex_id == 0);
 
-    if (gst_gl_display_get_error ())
-      printf ("%s\n", gst_gl_display_get_error ());
-    fail_if (gst_gl_display_get_error () != NULL);
+    if (gst_gl_context_get_error ())
+      printf ("%s\n", gst_gl_context_get_error ());
+    fail_if (gst_gl_context_get_error () != NULL);
 
     gst_memory_unref (mem);
     gst_memory_unref (mem2);

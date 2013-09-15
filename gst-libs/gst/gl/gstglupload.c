@@ -37,26 +37,26 @@
  * A #GstGLUpload can be created with gst_gl_upload_new()
  */
 
-#define USING_OPENGL(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL)
-#define USING_OPENGL3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL3)
-#define USING_GLES(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES)
-#define USING_GLES2(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES2)
-#define USING_GLES3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES3)
+#define USING_OPENGL(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL)
+#define USING_OPENGL3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL3)
+#define USING_GLES(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES)
+#define USING_GLES2(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2)
+#define USING_GLES3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES3)
 
-static void _do_upload (GstGLDisplay * display, GstGLUpload * upload);
-static gboolean _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload);
-static gboolean _do_upload_make (GstGLDisplay * display, GstGLUpload * upload);
-static void _init_upload (GstGLDisplay * display, GstGLUpload * upload);
-static gboolean _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload);
+static void _do_upload (GstGLContext * context, GstGLUpload * upload);
+static gboolean _do_upload_fill (GstGLContext * context, GstGLUpload * upload);
+static gboolean _do_upload_make (GstGLContext * context, GstGLUpload * upload);
+static void _init_upload (GstGLContext * context, GstGLUpload * upload);
+static gboolean _init_upload_fbo (GstGLContext * context, GstGLUpload * upload);
 static gboolean _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
     GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
 
 #if GST_GL_HAVE_OPENGL
-static gboolean _do_upload_draw_opengl (GstGLDisplay * display,
+static gboolean _do_upload_draw_opengl (GstGLContext * context,
     GstGLUpload * upload);
 #endif
 #if GST_GL_HAVE_GLES2
-static gboolean _do_upload_draw_gles2 (GstGLDisplay * display,
+static gboolean _do_upload_draw_gles2 (GstGLContext * context,
     GstGLUpload * upload);
 #endif
 
@@ -329,7 +329,7 @@ struct _GstGLUploadPrivate
   const gchar *COPY;
   const gchar *vert_shader;
 
-    gboolean (*draw) (GstGLDisplay * display, GstGLUpload * download);
+    gboolean (*draw) (GstGLContext * context, GstGLUpload * download);
 };
 
 GST_DEBUG_CATEGORY_STATIC (gst_gl_upload_debug);
@@ -357,7 +357,7 @@ gst_gl_upload_init (GstGLUpload * upload)
 {
   upload->priv = GST_GL_UPLOAD_GET_PRIVATE (upload);
 
-  upload->display = NULL;
+  upload->context = NULL;
 
   g_mutex_init (&upload->lock);
 
@@ -374,25 +374,25 @@ gst_gl_upload_init (GstGLUpload * upload)
 
 /**
  * gst_gl_upload_new:
- * @display: a #GstGLDisplay
+ * @context: a #GstGLContext
  *
  * Returns: a new #GstGLUpload object
  */
 GstGLUpload *
-gst_gl_upload_new (GstGLDisplay * display)
+gst_gl_upload_new (GstGLContext * context)
 {
   GstGLUpload *upload;
   GstGLUploadPrivate *priv;
 
   upload = g_object_new (GST_TYPE_GL_UPLOAD, NULL);
 
-  upload->display = gst_object_ref (display);
+  upload->context = gst_object_ref (context);
   priv = upload->priv;
 
   g_mutex_init (&upload->lock);
 
 #if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (display)) {
+  if (USING_OPENGL (context)) {
     priv->YUY2_UYVY = frag_YUY2_UYVY_opengl;
     priv->PLANAR_YUV = frag_PLANAR_YUV_opengl;
     priv->AYUV = frag_AYUV_opengl;
@@ -404,7 +404,7 @@ gst_gl_upload_new (GstGLDisplay * display)
   }
 #endif
 #if GST_GL_HAVE_GLES2
-  if (USING_GLES2 (display)) {
+  if (USING_GLES2 (context)) {
     priv->YUY2_UYVY = frag_YUY2_UYVY_gles2;
     priv->PLANAR_YUV = frag_PLANAR_YUV_gles2;
     priv->AYUV = frag_AYUV_gles2;
@@ -429,16 +429,16 @@ gst_gl_upload_finalize (GObject * object)
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     if (upload->in_texture[i]) {
-      gst_gl_display_del_texture (upload->display, &upload->in_texture[i]);
+      gst_gl_context_del_texture (upload->context, &upload->in_texture[i]);
       upload->in_texture[i] = 0;
     }
   }
   if (upload->out_texture) {
-    gst_gl_display_del_texture (upload->display, &upload->out_texture);
+    gst_gl_context_del_texture (upload->context, &upload->out_texture);
     upload->out_texture = 0;
   }
   if (upload->fbo || upload->depth_buffer) {
-    gst_gl_display_del_fbo (upload->display, upload->fbo, upload->depth_buffer);
+    gst_gl_context_del_fbo (upload->context, upload->fbo, upload->depth_buffer);
     upload->fbo = 0;
     upload->depth_buffer = 0;
   }
@@ -447,9 +447,9 @@ gst_gl_upload_finalize (GObject * object)
     upload->shader = NULL;
   }
 
-  if (upload->display) {
-    gst_object_unref (upload->display);
-    upload->display = NULL;
+  if (upload->context) {
+    gst_object_unref (upload->context);
+    upload->context = NULL;
   }
 
   G_OBJECT_CLASS (gst_gl_upload_parent_class)->finalize (object);
@@ -495,8 +495,8 @@ gst_gl_upload_init_format (GstGLUpload * upload, GstVideoFormat v_format,
   upload->in_width = in_width;
   upload->in_height = in_height;
 
-  gst_gl_display_thread_add (upload->display,
-      (GstGLDisplayThreadFunc) _init_upload, upload);
+  gst_gl_context_thread_add (upload->context,
+      (GstGLContextThreadFunc) _init_upload, upload);
 
   g_mutex_unlock (&upload->lock);
 
@@ -594,14 +594,14 @@ _gst_gl_upload_perform_with_data_unlocked (GstGLUpload * upload,
     upload->data[i] = data[i];
   }
 
-  gst_gl_display_thread_add (upload->display,
-      (GstGLDisplayThreadFunc) _do_upload, upload);
+  gst_gl_context_thread_add (upload->context,
+      (GstGLContextThreadFunc) _do_upload, upload);
 
   return TRUE;
 }
 
 static gboolean
-_create_shader (GstGLDisplay * display, const gchar * vertex_src,
+_create_shader (GstGLContext * context, const gchar * vertex_src,
     const gchar * fragment_src, GstGLShader ** out_shader)
 {
   GstGLShader *shader;
@@ -609,7 +609,7 @@ _create_shader (GstGLDisplay * display, const gchar * vertex_src,
 
   g_return_val_if_fail (vertex_src != NULL || fragment_src != NULL, FALSE);
 
-  shader = gst_gl_shader_new (display);
+  shader = gst_gl_shader_new (context);
 
   if (vertex_src)
     gst_gl_shader_set_vertex_source (shader, vertex_src);
@@ -617,9 +617,9 @@ _create_shader (GstGLDisplay * display, const gchar * vertex_src,
     gst_gl_shader_set_fragment_source (shader, fragment_src);
 
   if (!gst_gl_shader_compile (shader, &error)) {
-    gst_gl_display_set_error (display, "%s", error->message);
+    gst_gl_context_set_error (context, "%s", error->message);
     g_error_free (error);
-    gst_gl_display_clear_shader (display);
+    gst_gl_context_clear_shader (context);
     gst_object_unref (shader);
     return FALSE;
   }
@@ -630,14 +630,14 @@ _create_shader (GstGLDisplay * display, const gchar * vertex_src,
 
 /* Called in the gl thread */
 void
-_init_upload (GstGLDisplay * display, GstGLUpload * upload)
+_init_upload (GstGLContext * context, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
   gchar *frag_prog = NULL;
   gboolean free_frag_prog, res;
 
-  gl = display->gl_vtable;
+  gl = context->gl_vtable;
 
   v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
 
@@ -645,12 +645,12 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
       gst_video_format_to_string (v_format));
 
   if (!gl->CreateProgramObject && !gl->CreateProgram) {
-    gst_gl_display_set_error (display,
+    gst_gl_context_set_error (context,
         "Cannot upload YUV formats without OpenGL shaders");
     goto error;
   }
 
-  _init_upload_fbo (display, upload);
+  _init_upload_fbo (context, upload);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_AYUV:
@@ -710,7 +710,7 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
       upload->priv->n_textures = 2;
       break;
     case GST_VIDEO_FORMAT_UYVY:
-      if (USING_GLES2 (display)) {
+      if (USING_GLES2 (context)) {
         frag_prog = g_strdup_printf (upload->priv->YUY2_UYVY, 'a', 'r', 'b');
       } else {
         frag_prog = g_strdup_printf (upload->priv->YUY2_UYVY, 'a', 'b', 'r');
@@ -724,7 +724,7 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
   }
 
   res =
-      _create_shader (display, upload->priv->vert_shader, frag_prog,
+      _create_shader (context, upload->priv->vert_shader, frag_prog,
       &upload->shader);
   if (free_frag_prog)
     g_free (frag_prog);
@@ -732,14 +732,14 @@ _init_upload (GstGLDisplay * display, GstGLUpload * upload)
   if (!res)
     goto error;
 
-  if (USING_GLES2 (display)) {
+  if (USING_GLES2 (context)) {
     upload->shader_attr_position_loc =
         gst_gl_shader_get_attribute_location (upload->shader, "a_position");
     upload->shader_attr_texture_loc =
         gst_gl_shader_get_attribute_location (upload->shader, "a_texcoord");
   }
 
-  if (!_do_upload_make (display, upload))
+  if (!_do_upload_make (context, upload))
     goto error;
 
   upload->priv->result = TRUE;
@@ -752,20 +752,20 @@ error:
 
 /* called by _init_upload (in the gl thread) */
 gboolean
-_init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload)
+_init_upload_fbo (GstGLContext * context, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
   guint out_width, out_height;
   GLuint fake_texture = 0;      /* a FBO must hava texture to init */
 
-  gl = display->gl_vtable;
+  gl = context->gl_vtable;
 
   out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
 
   if (!gl->GenFramebuffers) {
     /* turn off the pipeline because Frame buffer object is a not present */
-    gst_gl_display_set_error (display,
+    gst_gl_context_set_error (context,
         "Context, EXT_framebuffer_object supported: no");
     return FALSE;
   }
@@ -779,13 +779,13 @@ _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload)
   /* setup the render buffer for depth */
   gl->GenRenderbuffers (1, &upload->depth_buffer);
   gl->BindRenderbuffer (GL_RENDERBUFFER, upload->depth_buffer);
-  if (USING_OPENGL (display)) {
+  if (USING_OPENGL (context)) {
     gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
         out_width, out_height);
     gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
         out_width, out_height);
   }
-  if (USING_GLES2 (display)) {
+  if (USING_GLES2 (context)) {
     gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
         out_width, out_height);
   }
@@ -812,13 +812,13 @@ _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload)
   gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
       GL_RENDERBUFFER, upload->depth_buffer);
 
-  if (USING_OPENGL (display)) {
+  if (USING_OPENGL (context)) {
     gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
         GL_RENDERBUFFER, upload->depth_buffer);
   }
 
-  if (!gst_gl_display_check_framebuffer_status (display)) {
-    gst_gl_display_set_error (display, "GL framebuffer status incomplete");
+  if (!gst_gl_context_check_framebuffer_status (context)) {
+    gst_gl_context_set_error (context, "GL framebuffer status incomplete");
     return FALSE;
   }
 
@@ -832,7 +832,7 @@ _init_upload_fbo (GstGLDisplay * display, GstGLUpload * upload)
 
 /* Called by the idle function in the gl thread */
 void
-_do_upload (GstGLDisplay * display, GstGLUpload * upload)
+_do_upload (GstGLContext * context, GstGLUpload * upload)
 {
   guint in_width, in_height, out_width, out_height;
 
@@ -846,10 +846,10 @@ _do_upload (GstGLDisplay * display, GstGLUpload * upload)
       out_width, out_height, upload->in_texture[0], upload->in_texture[1],
       upload->in_texture[2], in_width, in_height);
 
-  if (!_do_upload_fill (display, upload))
+  if (!_do_upload_fill (context, upload))
     goto error;
 
-  if (!upload->priv->draw (display, upload))
+  if (!upload->priv->draw (context, upload))
     goto error;
 
   upload->priv->result = TRUE;
@@ -867,9 +867,9 @@ struct TexData
   gint internal_format, format, type, width, height;
 };
 
-/* called by gst_gl_display_thread_do_upload (in the gl thread) */
+/* called by gst_gl_context_thread_do_upload (in the gl thread) */
 gboolean
-_do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
+_do_upload_make (GstGLContext * context, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
@@ -877,7 +877,7 @@ _do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
   struct TexData tex[GST_VIDEO_MAX_PLANES];
   guint i;
 
-  gl = display->gl_vtable;
+  gl = context->gl_vtable;
 
   in_width = upload->in_width;
   in_height = upload->in_height;
@@ -1020,7 +1020,7 @@ _do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
       tex[2].height = in_height;
       break;
     default:
-      gst_gl_display_set_error (display, "Unsupported upload video format %d",
+      gst_gl_context_set_error (context, "Unsupported upload video format %d",
           v_format);
       g_assert_not_reached ();
       break;
@@ -1038,15 +1038,15 @@ _do_upload_make (GstGLDisplay * display, GstGLUpload * upload)
 }
 
 
-/* called by gst_gl_display_thread_do_upload (in the gl thread) */
+/* called by gst_gl_context_thread_do_upload (in the gl thread) */
 gboolean
-_do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
+_do_upload_fill (GstGLContext * context, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
   guint in_width, in_height;
 
-  gl = display->gl_vtable;
+  gl = context->gl_vtable;
 
   in_width = upload->in_width;
   in_height = upload->in_height;
@@ -1179,7 +1179,7 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
     }
       break;
     default:
-      gst_gl_display_set_error (display, "Unsupported upload video format %d",
+      gst_gl_context_set_error (context, "Unsupported upload video format %d",
           v_format);
       g_assert_not_reached ();
       break;
@@ -1196,7 +1196,7 @@ _do_upload_fill (GstGLDisplay * display, GstGLUpload * upload)
 #if GST_GL_HAVE_OPENGL
 /* called by _do_upload (in the gl thread) */
 static gboolean
-_do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
+_do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
@@ -1218,7 +1218,7 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
     in_width, in_height
   };
 
-  gl = display->gl_vtable;
+  gl = context->gl_vtable;
 
   out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
@@ -1234,7 +1234,7 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
   gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
       GL_TEXTURE_RECTANGLE_ARB, upload->out_texture, 0);
 
-  gst_gl_display_clear_shader (display);
+  gst_gl_context_clear_shader (context);
 
   gl->PushAttrib (GL_VIEWPORT_BIT);
 
@@ -1299,7 +1299,7 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
       break;
 
     default:
-      gst_gl_display_set_error (display, "Unsupported upload video format %d",
+      gst_gl_context_set_error (context, "Unsupported upload video format %d",
           v_format);
       g_assert_not_reached ();
       break;
@@ -1347,7 +1347,7 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
   gl->DrawBuffer (GL_NONE);
 
   /* we are done with the shader */
-  gst_gl_display_clear_shader (display);
+  gst_gl_context_clear_shader (context);
 
   gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
@@ -1357,7 +1357,7 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
   gl->PopMatrix ();
   gl->PopAttrib ();
 
-  gst_gl_display_check_framebuffer_status (display);
+  gst_gl_context_check_framebuffer_status (context);
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 
@@ -1367,7 +1367,7 @@ _do_upload_draw_opengl (GstGLDisplay * display, GstGLUpload * upload)
 
 #if GST_GL_HAVE_GLES2
 static gboolean
-_do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
+_do_upload_draw_gles2 (GstGLContext * context, GstGLUpload * upload)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
@@ -1390,7 +1390,7 @@ _do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
 
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-  gl = display->gl_vtable;
+  gl = context->gl_vtable;
 
   out_width = GST_VIDEO_INFO_WIDTH (&upload->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&upload->info);
@@ -1405,7 +1405,7 @@ _do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
   gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
       GL_TEXTURE_RECTANGLE_ARB, upload->out_texture, 0);
 
-  gst_gl_display_clear_shader (display);
+  gst_gl_context_clear_shader (context);
 
   gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
 
@@ -1458,7 +1458,7 @@ _do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
       texnames[0] = "tex";
       break;
     default:
-      gst_gl_display_set_error (display, "Unsupported upload video format %d",
+      gst_gl_context_set_error (context, "Unsupported upload video format %d",
           v_format);
       g_assert_not_reached ();
       break;
@@ -1498,12 +1498,12 @@ _do_upload_draw_gles2 (GstGLDisplay * display, GstGLUpload * upload)
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
   /* we are done with the shader */
-  gst_gl_display_clear_shader (display);
+  gst_gl_context_clear_shader (context);
 
   gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
       viewport_dim[3]);
 
-  gst_gl_display_check_framebuffer_status (display);
+  gst_gl_context_check_framebuffer_status (context);
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 

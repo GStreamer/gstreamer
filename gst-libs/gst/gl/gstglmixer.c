@@ -931,20 +931,19 @@ gst_gl_mixer_activate (GstGLMixer * mix, gboolean activate)
     }
 
     id_value = gst_structure_get_value (structure, "gstgldisplay");
-    if (G_VALUE_HOLDS_POINTER (id_value))
+    if (G_VALUE_HOLDS_POINTER (id_value)) {
       mix->display =
           gst_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
-    else {
-      GstGLContext *context;
+      mix->context = gst_gl_display_get_context (mix->display);
+    } else {
       GError *error = NULL;
 
       GST_INFO ("Creating GstGLDisplay");
       mix->display = gst_gl_display_new ();
-      context = gst_gl_context_new (mix->display);
-      gst_gl_display_set_context (mix->display, context);
-      gst_object_unref (context);
+      mix->context = gst_gl_context_new (mix->display);
+      gst_gl_display_set_context (mix->display, mix->context);
 
-      if (!gst_gl_context_create (context, 0, &error)) {
+      if (!gst_gl_context_create (mix->context, 0, &error)) {
         GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
             ("%s", error->message), (NULL));
         return FALSE;
@@ -981,7 +980,7 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
   }
 
   if (!pool)
-    pool = gst_gl_buffer_pool_new (mix->display);
+    pool = gst_gl_buffer_pool_new (mix->context);
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
@@ -1127,13 +1126,13 @@ gst_gl_mixer_src_setcaps (GstPad * pad, GstGLMixer * mix, GstCaps * caps)
   out_width = GST_VIDEO_INFO_WIDTH (&mix->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&mix->out_info);
 
-  if (!gst_gl_display_gen_fbo (mix->display, out_width, out_height,
+  if (!gst_gl_context_gen_fbo (mix->context, out_width, out_height,
           &mix->fbo, &mix->depthbuffer))
-    goto display_error;
+    goto context_error;
 
   if (mix->out_tex_id)
-    gst_gl_display_del_texture (mix->display, &mix->out_tex_id);
-  gst_gl_display_gen_texture (mix->display, &mix->out_tex_id,
+    gst_gl_context_del_texture (mix->context, &mix->out_tex_id);
+  gst_gl_context_gen_texture (mix->context, &mix->out_tex_id,
       GST_VIDEO_FORMAT_RGBA, out_width, out_height);
 
   GST_GL_MIXER_UNLOCK (mix);
@@ -1151,10 +1150,10 @@ done:
   return ret;
 
 /* ERRORS */
-display_error:
+context_error:
   {
     GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_display_get_error ()), (NULL));
+        ("%s", gst_gl_context_get_error ()), (NULL));
     return FALSE;
   }
 }
@@ -1450,7 +1449,7 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
     out_tex = mix->out_tex_id;;
 
     if (!mix->download) {
-      mix->download = gst_gl_download_new (mix->display);
+      mix->download = gst_gl_download_new (mix->context);
       if (!gst_gl_download_init_format (mix->download,
               GST_VIDEO_FRAME_FORMAT (&out_frame),
               GST_VIDEO_FRAME_WIDTH (&out_frame),
@@ -1512,7 +1511,7 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
         out_height = GST_VIDEO_INFO_HEIGHT (&mix->out_info);
 
         if (!pad->upload) {
-          pad->upload = gst_gl_upload_new (mix->display);
+          pad->upload = gst_gl_upload_new (mix->context);
 
           if (!gst_gl_upload_init_format (pad->upload, in_format,
                   in_width, in_height, in_width, in_height)) {
@@ -1522,7 +1521,7 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
           }
 
           if (!pad->in_tex_id)
-            gst_gl_display_gen_texture (mix->display, &pad->in_tex_id,
+            gst_gl_context_gen_texture (mix->context, &pad->in_tex_id,
                 GST_VIDEO_FORMAT_RGBA, out_width, out_height);
         }
 
@@ -2152,7 +2151,7 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
       if (mixer_class->reset)
         mixer_class->reset (mix);
       if (mix->fbo) {
-        gst_gl_display_del_fbo (mix->display, mix->fbo, mix->depthbuffer);
+        gst_gl_context_del_fbo (mix->context, mix->fbo, mix->depthbuffer);
         mix->fbo = 0;
         mix->depthbuffer = 0;
       }
@@ -2175,6 +2174,11 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
       if (mix->display) {
         gst_object_unref (mix->display);
         mix->display = NULL;
+      }
+
+      if (mix->context) {
+        gst_object_unref (mix->context);
+        mix->context = NULL;
       }
       break;
     }

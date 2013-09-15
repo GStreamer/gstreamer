@@ -49,7 +49,7 @@ struct _GstGLBufferPool
 {
   GstBufferPool bufferpool;
 
-  GstGLDisplay *display;
+  GstGLContext *context;
 
   GstGLBufferPoolPrivate *priv;
 };
@@ -64,7 +64,7 @@ struct _GstGLBufferPoolClass
   GstBufferPoolClass parent_class;
 };
 
-GstBufferPool *gst_gl_buffer_pool_new (GstGLDisplay * display);
+GstBufferPool *gst_gl_buffer_pool_new (GstGLContext * context);
 
 G_END_DECLS
 

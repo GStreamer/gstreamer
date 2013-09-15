@@ -42,11 +42,11 @@
  * Data is uploaded or downloaded from the GPU as is necessary.
  */
 
-#define USING_OPENGL(display) (display->gl_api & GST_GL_API_OPENGL)
-#define USING_OPENGL3(display) (display->gl_api & GST_GL_API_OPENGL3)
-#define USING_GLES(display) (display->gl_api & GST_GL_API_GLES)
-#define USING_GLES2(display) (display->gl_api & GST_GL_API_GLES2)
-#define USING_GLES3(display) (display->gl_api & GST_GL_API_GLES3)
+#define USING_OPENGL(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL)
+#define USING_OPENGL3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL3)
+#define USING_GLES(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES)
+#define USING_GLES2(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2)
+#define USING_GLES3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES3)
 
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_GL_MEMORY);
 #define GST_CAT_DEFUALT GST_CAT_GL_MEMORY
@@ -61,7 +61,7 @@ typedef struct
 
 static void
 _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
-    GstGLDisplay * display, GstVideoFormat v_format, gsize width, gsize height,
+    GstGLContext * context, GstVideoFormat v_format, gsize width, gsize height,
     gpointer user_data, GDestroyNotify notify)
 {
   gsize maxsize;
@@ -74,7 +74,7 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   gst_memory_init (GST_MEMORY_CAST (mem), GST_MEMORY_FLAG_NO_SHARE,
       allocator, parent, maxsize, 0, 0, maxsize);
 
-  mem->display = gst_object_ref (display);
+  mem->context = gst_object_ref (context);
   mem->gl_format = GL_RGBA;
   mem->v_format = v_format;
   mem->width = width;
@@ -82,8 +82,8 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
   mem->notify = notify;
   mem->user_data = user_data;
   mem->wrapped = FALSE;
-  mem->upload = gst_gl_upload_new (display);
-  mem->download = gst_gl_download_new (display);
+  mem->upload = gst_gl_upload_new (context);
+  mem->download = gst_gl_download_new (context);
 
   GST_CAT_DEBUG (GST_CAT_GL_MEMORY,
       "new GL texture memory:%p format:%u dimensions:%" G_GSIZE_FORMAT
@@ -92,22 +92,22 @@ _gl_mem_init (GstGLMemory * mem, GstAllocator * allocator, GstMemory * parent,
 
 static GstGLMemory *
 _gl_mem_new (GstAllocator * allocator, GstMemory * parent,
-    GstGLDisplay * display, GstVideoFormat v_format, gsize width, gsize height,
+    GstGLContext * context, GstVideoFormat v_format, gsize width, gsize height,
     gpointer user_data, GDestroyNotify notify)
 {
   GstGLMemory *mem;
   GLuint tex_id;
 
-  gst_gl_display_gen_texture (display, &tex_id, v_format, width, height);
+  gst_gl_context_gen_texture (context, &tex_id, v_format, width, height);
   if (!tex_id) {
     GST_CAT_WARNING (GST_CAT_GL_MEMORY,
-        "Could not create GL texture with display:%p", display);
+        "Could not create GL texture with context:%p", context);
   }
 
   GST_CAT_TRACE (GST_CAT_GL_MEMORY, "created texture %u", tex_id);
 
   mem = g_slice_alloc (sizeof (GstGLMemory));
-  _gl_mem_init (mem, allocator, parent, display, v_format, width, height,
+  _gl_mem_init (mem, allocator, parent, context, v_format, width, height,
       user_data, notify);
 
   mem->tex_id = tex_id;
@@ -199,7 +199,7 @@ _gl_mem_unmap (GstGLMemory * gl_mem)
 }
 
 void
-_gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
+_gl_mem_copy_thread (GstGLContext * context, gpointer data)
 {
   GstGLMemoryCopyParams *copy_params;
   GstGLMemory *src;
@@ -208,7 +208,7 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
   gsize width, height;
   GLuint gl_format;
   GstVideoFormat v_format;
-  GstGLFuncs *gl = display->gl_vtable;
+  GstGLFuncs *gl;
 
   copy_params = (GstGLMemoryCopyParams *) data;
   src = copy_params->src;
@@ -217,17 +217,19 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
   v_format = src->v_format;
   gl_format = src->gl_format;
 
+  gl = src->context->gl_vtable;
+
   if (!gl->GenFramebuffers) {
-    gst_gl_display_set_error (display,
+    gst_gl_context_set_error (src->context,
         "Context, EXT_framebuffer_object not supported");
-    return;
+    goto error;
   }
 
-  gst_gl_display_gen_texture_thread (src->display, &tex_id, v_format, width,
+  gst_gl_context_gen_texture_thread (src->context, &tex_id, v_format, width,
       height);
   if (!tex_id) {
     GST_CAT_WARNING (GST_CAT_GL_MEMORY,
-        "Could not create GL texture with display:%p", src->display);
+        "Could not create GL texture with context:%p", src->context);
   }
 
   GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "created texture %i", tex_id);
@@ -240,13 +242,13 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
   gl->GenRenderbuffers (1, &rboId);
   gl->BindRenderbuffer (GL_RENDERBUFFER, rboId);
 
-  if (USING_OPENGL (display)) {
+  if (USING_OPENGL (src->context)) {
     gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width,
         height);
     gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
         width, height);
   }
-  if (USING_GLES2 (display)) {
+  if (USING_GLES2 (src->context)) {
     gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
         width, height);
   }
@@ -254,7 +256,7 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
   gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
       GL_RENDERBUFFER, rboId);
 
-  if (USING_OPENGL (display)) {
+  if (USING_OPENGL (src->context)) {
     gl->FramebufferRenderbuffer (GL_FRAMEBUFFER,
         GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rboId);
   }
@@ -263,7 +265,7 @@ _gl_mem_copy_thread (GstGLDisplay * display, gpointer data)
       GL_TEXTURE_RECTANGLE_ARB, src->tex_id, 0);
 
   /* check FBO status */
-  if (!gst_gl_display_check_framebuffer_status (display))
+  if (!gst_gl_context_check_framebuffer_status (src->context))
     goto fbo_error;
 
   /* copy tex */
@@ -288,6 +290,13 @@ fbo_error:
     gl->DeleteFramebuffers (1, &fboId);
 
     copy_params->tex_id = 0;
+
+    return;
+  }
+
+error:
+  {
+    return;
   }
 }
 
@@ -298,7 +307,7 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
   GstGLMemoryCopyParams copy_params;
 
   if (GST_GL_MEMORY_FLAG_IS_SET (src, GST_GL_MEMORY_FLAG_NEED_UPLOAD)) {
-    dest = _gl_mem_new (src->mem.allocator, NULL, src->display, src->v_format,
+    dest = _gl_mem_new (src->mem.allocator, NULL, src->context, src->v_format,
         src->width, src->height, NULL, NULL);
     dest->data = g_malloc (src->mem.maxsize);
     memcpy (dest->data, src->data, src->mem.maxsize);
@@ -307,10 +316,10 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
     copy_params = (GstGLMemoryCopyParams) {
     src, 0,};
 
-    gst_gl_display_thread_add (src->display, _gl_mem_copy_thread, &copy_params);
+    gst_gl_context_thread_add (src->context, _gl_mem_copy_thread, &copy_params);
 
     dest = g_slice_alloc (sizeof (GstGLMemory));
-    _gl_mem_init (dest, src->mem.allocator, NULL, src->display, src->v_format,
+    _gl_mem_init (dest, src->mem.allocator, NULL, src->context, src->v_format,
         src->width, src->height, NULL, NULL);
 
     if (!copy_params.tex_id)
@@ -360,11 +369,11 @@ _gl_mem_free (GstAllocator * allocator, GstMemory * mem)
   GstGLMemory *gl_mem = (GstGLMemory *) mem;
 
   if (gl_mem->tex_id)
-    gst_gl_display_del_texture (gl_mem->display, &gl_mem->tex_id);
+    gst_gl_context_del_texture (gl_mem->context, &gl_mem->tex_id);
 
   gst_object_unref (gl_mem->upload);
   gst_object_unref (gl_mem->download);
-  gst_object_unref (gl_mem->display);
+  gst_object_unref (gl_mem->context);
 
   if (gl_mem->notify)
     gl_mem->notify (gl_mem->user_data);
@@ -379,21 +388,21 @@ _gl_mem_free (GstAllocator * allocator, GstMemory * mem)
 
 /**
  * gst_gl_memory_alloc:
- * @display:a #GstGLDisplay
+ * @context:a #GstGLContext
  * @format: the format for the texture
  * @width: width of the texture
  * @height: height of the texture
  *
  * Returns: a #GstMemory object with a GL texture specified by @format, @width and @height
- *          from @display
+ *          from @context
  */
 GstMemory *
-gst_gl_memory_alloc (GstGLDisplay * display, GstVideoFormat format,
+gst_gl_memory_alloc (GstGLContext * context, GstVideoFormat format,
     gsize width, gsize height)
 {
   GstGLMemory *mem;
 
-  mem = _gl_mem_new (_gl_allocator, NULL, display, format, width, height,
+  mem = _gl_mem_new (_gl_allocator, NULL, context, format, width, height,
       NULL, NULL);
 
   mem->data = g_malloc (mem->mem.maxsize);
@@ -407,7 +416,7 @@ gst_gl_memory_alloc (GstGLDisplay * display, GstVideoFormat format,
 
 /**
  * gst_gl_memory_wrapped
- * @display:a #GstGLDisplay
+ * @context:a #GstGLContext
  * @format: the format for the texture
  * @width: width of the texture
  * @height: height of the texture
@@ -416,16 +425,16 @@ gst_gl_memory_alloc (GstGLDisplay * display, GstVideoFormat format,
  * @notify: function called with @user_data when @data needs to be freed
  * 
  * Returns: a #GstGLMemory object with a GL texture specified by @format, @width and @height
- *          from @display and contents specified by @data
+ *          from @context and contents specified by @data
  */
 GstGLMemory *
-gst_gl_memory_wrapped (GstGLDisplay * display, GstVideoFormat format,
+gst_gl_memory_wrapped (GstGLContext * context, GstVideoFormat format,
     guint width, guint height, gpointer data,
     gpointer user_data, GDestroyNotify notify)
 {
   GstGLMemory *mem;
 
-  mem = _gl_mem_new (_gl_allocator, NULL, display, format, width, height,
+  mem = _gl_mem_new (_gl_allocator, NULL, context, format, width, height,
       user_data, notify);
 
   mem->data = data;

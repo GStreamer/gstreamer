@@ -38,6 +38,15 @@ GType gst_gl_context_get_type     (void);
 #define GST_GL_CONTEXT_ERROR (gst_gl_context_error_quark ())
 GQuark gst_gl_context_error_quark (void);
 
+/**
+ * GstGLContextThreadFunc:
+ * @display: a #GstGLDisplay
+ * @data: user data
+ *
+ * Represents a function to run in the GL thread
+ */
+typedef void (*GstGLContextThreadFunc) (GstGLContext * context, gpointer data);
+
 typedef enum
 {
   GST_GL_CONTEXT_ERROR_FAILED,
@@ -54,6 +63,8 @@ struct _GstGLContext {
 
   /*< public >*/
   GstGLWindow  *window;
+
+  GstGLFuncs *gl_vtable;
 
   /*< private >*/
   gpointer _reserved[GST_PADDING];
@@ -85,6 +96,7 @@ GstGLContext * gst_gl_context_new  (GstGLDisplay *display);
 
 gboolean      gst_gl_context_activate         (GstGLContext *context, gboolean activate);
 
+GstGLDisplay * gst_gl_context_get_display (GstGLContext *context);
 gpointer      gst_gl_context_get_proc_address (GstGLContext *context, const gchar *name);
 GstGLPlatform gst_gl_context_get_platform     (GstGLContext *context);
 GstGLAPI      gst_gl_context_get_gl_api       (GstGLContext *context);
@@ -96,6 +108,10 @@ gpointer      gst_gl_context_default_get_proc_address (GstGLContext *context, co
 
 gboolean      gst_gl_context_set_window (GstGLContext *context, GstGLWindow *window);
 GstGLWindow * gst_gl_context_get_window (GstGLContext *context);
+
+/* FIXME: remove */
+void gst_gl_context_thread_add (GstGLContext * display,
+    GstGLContextThreadFunc func, gpointer data);
 
 G_END_DECLS
 

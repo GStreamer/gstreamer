@@ -38,15 +38,6 @@ GType gst_gl_display_get_type (void);
 #define GST_GL_DISPLAY_CAST(obj)        ((GstGLDisplay*)(obj))
 
 /**
- * GstGLDisplayThreadFunc:
- * @display: a #GstGLDisplay
- * @data: user data
- *
- * Represents a function to run in the GL thread
- */
-typedef void (*GstGLDisplayThreadFunc) (GstGLDisplay * display, gpointer data);
-
-/**
  * GstGLDisplay:
  *
  * the contents of a #GstGLDisplay are private and should only be accessed
@@ -59,8 +50,6 @@ struct _GstGLDisplay
   /* <private> */
   GstGLContext         *context;
   GstGLAPI              gl_api;
-
-  GstGLFuncs           *gl_vtable;
 
   GstGLDisplayPrivate  *priv;
 };
@@ -80,9 +69,6 @@ gpointer       gst_gl_display_get_gl_vtable          (GstGLDisplay * display);
 void           gst_gl_display_set_context             (GstGLDisplay * display, GstGLContext * context);
 GstGLContext * gst_gl_display_get_context             (GstGLDisplay * display);
 GstGLContext * gst_gl_display_get_context_unlocked    (GstGLDisplay * display);
-
-void gst_gl_display_thread_add (GstGLDisplay * display,
-    GstGLDisplayThreadFunc func, gpointer data);
 
 #define GST_GL_DISPLAY_CONTEXT_TYPE "gst.gl.GLDisplay"
 void     gst_context_set_gl_display (GstContext * context, GstGLDisplay * display);

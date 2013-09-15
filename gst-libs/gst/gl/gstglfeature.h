@@ -90,7 +90,7 @@ gboolean
 gst_gl_check_extension (const char *name, const gchar * ext);
 
 gboolean
-_gst_gl_feature_check (GstGLDisplay *display,
+_gst_gl_feature_check (GstGLContext *context,
                      const char *driver_prefix,
                      const GstGLFeatureData *data,
                      int gl_major,
@@ -98,7 +98,7 @@ _gst_gl_feature_check (GstGLDisplay *display,
                      const char *extensions_string);
 
 void
-_gst_gl_feature_check_ext_functions (GstGLDisplay *display,
+_gst_gl_feature_check_ext_functions (GstGLContext *context,
                                    int gl_major,
                                    int gl_minor,
                                    const char *gl_extensions);

@@ -49,7 +49,7 @@ struct _GstGLShader {
   /*< private >*/
   GObject parent;
 
-  GstGLDisplay *display;
+  GstGLContext *context;
 
   GstGLShaderPrivate *priv;
 };
@@ -64,7 +64,7 @@ struct _GstGLShaderClass {
 GQuark gst_gl_shader_error_quark (void);
 GType gst_gl_shader_get_type (void);
 
-GstGLShader * gst_gl_shader_new (GstGLDisplay *display);
+GstGLShader * gst_gl_shader_new (GstGLContext *context);
 
 void          gst_gl_shader_set_vertex_source   (GstGLShader *shader, const gchar *src);
 void          gst_gl_shader_set_fragment_source (GstGLShader *shader, const gchar *src);
@@ -78,7 +78,7 @@ gboolean gst_gl_shader_compile_and_check (GstGLShader *shader, const gchar *sour
 
 void gst_gl_shader_release       (GstGLShader *shader);
 void gst_gl_shader_use           (GstGLShader *shader);
-void gst_gl_display_clear_shader (GstGLDisplay *display);
+void gst_gl_context_clear_shader (GstGLContext *context);
 
 void gst_gl_shader_set_uniform_1i           (GstGLShader *shader, const gchar *name, gint value);
 void gst_gl_shader_set_uniform_1iv          (GstGLShader *shader, const gchar *name, guint count, gint *value);
