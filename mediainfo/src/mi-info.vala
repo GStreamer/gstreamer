@@ -315,11 +315,9 @@ public class MediaInfo.Info : Box
   }
   
   private void process_new_uri (DiscovererInfo? info) {
-    string uri = info.get_uri();
     GLib.List<DiscovererStreamInfo> l;
     DiscovererStreamInfo sinfo;
     Notebook nb;
-    string str;
     unowned Toc toc = null;
     // sort streams
     ArrayList<string> sids = new ArrayList<string> ();
@@ -341,13 +339,7 @@ public class MediaInfo.Info : Box
       return;
     }
 
-    ClockTime dur = info.get_duration ();
-    str = "%u:%02u:%02u.%09u".printf (
-      (uint) (dur / (SECOND * 60 * 60)),
-      (uint) ((dur / (SECOND * 60)) % 60),
-      (uint) ((dur / SECOND) % 60),
-      (uint) ((dur) % SECOND));
-    duration.set_text (str);
+    duration.set_text (format_time(info.get_duration ()));
 
     /*
     < ensonic> bilboed-pi: is gst_discoverer_info_get_container_streams() containing the info for the conatiner or can those be multiple ones as well?
@@ -449,11 +441,7 @@ public class MediaInfo.Info : Box
     }
     nb.show_all();
 
-    if (toc != null) {
-      toc_entries.set_text ("has toc");
-    } else {
-      toc_entries.set_text (null);
-    }
+    toc_entries.set_text (build_toc_info (toc));
     
     if (have_video) {
       Gdk.Point res = video_resolutions[0];
@@ -467,7 +455,7 @@ public class MediaInfo.Info : Box
     //l = info.get_container_streams ();
 
     // play file
-    ((GLib.Object)pb).set_property ("uri", uri);
+    ((GLib.Object)pb).set_property ("uri", info.get_uri());
     pb.set_state (State.PLAYING);
   }
 
@@ -842,5 +830,43 @@ public class MediaInfo.Info : Box
     }
 
     return str;
+  }
+  
+  private string format_time(ClockTime t) {
+    return "%u:%02u:%02u.%09u".printf (
+      (uint) (t / (SECOND * 60 * 60)),
+      (uint) ((t / (SECOND * 60)) % 60),
+      (uint) ((t / SECOND) % 60),
+      (uint) ((t) % SECOND));
+  }
+  
+  private string build_toc_info_for_entry (TocEntry e, int indent) {
+    int64 start, stop;
+    e.get_start_stop_times(out start, out stop);
+    // TODO(ensonic): indent
+    // TODO(ensonic): add start/stop, if !Gst.ClockTime.CLOCK_TIME_NONE
+    string s = "%s\n".printf(TocEntryType.get_nick(e.get_entry_type()));
+    
+    unowned GLib.List<TocEntry> entries = e.get_sub_entries ();
+    if (entries != null) {
+      indent +=2;
+      foreach (TocEntry se in entries) {
+        s += build_toc_info_for_entry (se, indent);
+      }
+    }
+    return s;
+  }
+  
+  private string? build_toc_info (Toc t) {
+    if (t == null)
+      return null;
+    
+    string s = "";
+    unowned GLib.List<TocEntry> entries = t.get_entries ();
+    foreach (TocEntry e in entries) {
+      s += build_toc_info_for_entry (e, 0);
+    }
+    
+    return s;
   }
 }
