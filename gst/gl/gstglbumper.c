@@ -139,7 +139,7 @@ static const gchar *bumper_f_src =
     "  gl_FragColor = vec4(irradiance * textureColor.rgb, textureColor.w);\n"
     "}\n";
 
-#define LOAD_ERROR(display, msg) { gst_gl_display_set_error (display, "unable to load %s: %s", bumper->location, msg); return; }
+#define LOAD_ERROR(context, msg) { gst_gl_context_set_error (context, "unable to load %s: %s", bumper->location, msg); return; }
 
 //png reading error handler
 static void
@@ -153,7 +153,7 @@ static void
 gst_gl_bumper_init_resources (GstGLFilter * filter)
 {
   GstGLBumper *bumper = GST_GL_BUMPER (filter);
-  GstGLDisplay *display = filter->display;
+  GstGLContext *context = filter->context;
 
   png_structp png_ptr;
   png_infop info_ptr;
@@ -169,37 +169,37 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
   png_byte magic[8];
   gint n_read;
 
-  if (!display)
+  if (!context)
     return;
 
   if (!bumper->location) {
-    gst_gl_display_set_error (display, "A filename is required");
+    gst_gl_context_set_error (context, "A filename is required");
     return;
   }
 
   /* BEGIN load png image file */
 
   if ((fp = fopen (bumper->location, "rb")) == NULL)
-    LOAD_ERROR (display, "file not found");
+    LOAD_ERROR (context, "file not found");
 
   /* Read magic number */
   n_read = fread (magic, 1, sizeof (magic), fp);
   if (n_read != sizeof (magic)) {
     fclose (fp);
-    LOAD_ERROR (display, "can't read PNG magic number");
+    LOAD_ERROR (context, "can't read PNG magic number");
   }
 
   /* Check for valid magic number */
   if (png_sig_cmp (magic, 0, sizeof (magic))) {
     fclose (fp);
-    LOAD_ERROR (display, "not a valid PNG image");
+    LOAD_ERROR (context, "not a valid PNG image");
   }
 
   png_ptr = png_create_read_struct (PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
 
   if (png_ptr == NULL) {
     fclose (fp);
-    LOAD_ERROR (display, "failed to initialize the png_struct");
+    LOAD_ERROR (context, "failed to initialize the png_struct");
   }
 
   png_set_error_fn (png_ptr, NULL, NULL, user_warning_fn);
@@ -208,7 +208,7 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
   if (info_ptr == NULL) {
     fclose (fp);
     png_destroy_read_struct (&png_ptr, png_infopp_NULL, png_infopp_NULL);
-    LOAD_ERROR (display,
+    LOAD_ERROR (context,
         "failed to initialize the memory for image information");
   }
 
@@ -224,7 +224,7 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
   if (color_type != PNG_COLOR_TYPE_RGB) {
     fclose (fp);
     png_destroy_read_struct (&png_ptr, png_infopp_NULL, png_infopp_NULL);
-    LOAD_ERROR (display, "color type is not rgb");
+    LOAD_ERROR (context, "color type is not rgb");
   }
 
   raw_data = (guchar *) malloc (sizeof (guchar) * width * height * 3);
@@ -313,7 +313,7 @@ gst_gl_bumper_reset (GstGLFilter * filter)
   GstGLBumper *bumper_filter = GST_GL_BUMPER (filter);
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_display_del_shader (filter->display, bumper_filter->shader);
+  gst_gl_context_del_shader (filter->context, bumper_filter->shader);
 }
 
 static void
@@ -356,7 +356,7 @@ gst_gl_bumper_init_shader (GstGLFilter * filter)
   GstGLBumper *bumper = GST_GL_BUMPER (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  return gst_gl_display_gen_shader (filter->display, bumper_v_src, bumper_f_src,
+  return gst_gl_context_gen_shader (filter->context, bumper_v_src, bumper_f_src,
       &bumper->shader);
 }
 
@@ -366,7 +366,7 @@ gst_gl_bumper_filter_texture (GstGLFilter * filter, guint in_tex, guint out_tex)
   gpointer bumper_filter = GST_GL_BUMPER (filter);
 
   //blocking call, use a FBO
-  gst_gl_display_use_fbo (filter->display,
+  gst_gl_context_use_fbo (filter->context,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info),
       filter->fbo, filter->depthbuffer, out_tex, gst_gl_bumper_callback,
@@ -399,7 +399,7 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
 
   GstGLFuncs *gl;
   GstGLBumper *bumper = GST_GL_BUMPER (stuff);
-  GstGLDisplay *display = GST_GL_FILTER (bumper)->display;
+  GstGLContext *context = GST_GL_FILTER (bumper)->context;
   GLint locTangent = 0;
 
   //choose the lights
@@ -462,7 +462,7 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
 
 /* *INDENT-ON* */
 
-  gl = GST_GL_FILTER (bumper)->display->gl_vtable;
+  gl = GST_GL_FILTER (bumper)->context->gl_vtable;
 
   //eye point
   gl->MatrixMode (GL_PROJECTION);
@@ -534,7 +534,7 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
 
   gl->DisableVertexAttribArray (locTangent);
 
-  gst_gl_display_clear_shader (display);
+  gst_gl_context_clear_shader (context);
 
   gl->Disable (GL_LIGHT0);
   gl->Disable (GL_LIGHT1);

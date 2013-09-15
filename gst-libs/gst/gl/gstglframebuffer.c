@@ -66,20 +66,20 @@ gst_gl_framebuffer_finalize (GObject * object)
 {
   GstGLFramebuffer *fbo = GST_GL_FRAMEBUFFER (object);
 
-  if (fbo->display) {
-    gst_object_unref (fbo->display);
-    fbo->display = NULL;
+  if (fbo->context) {
+    gst_object_unref (fbo->context);
+    fbo->context = NULL;
   }
 
   G_OBJECT_CLASS (gst_gl_framebuffer_parent_class)->finalize (object);
 }
 
 GstGLFramebuffer *
-gst_gl_framebuffer_new (GstGLDisplay * display)
+gst_gl_framebuffer_new (GstGLContext * context)
 {
   GstGLFramebuffer *fbo = g_object_new (GST_TYPE_GL_FRAMEBUFFER, NULL);
 
-  fbo->display = gst_object_ref (display);
+  fbo->context = gst_object_ref (context);
 
   return fbo;
 }
@@ -95,12 +95,12 @@ gst_gl_framebuffer_generate (GstGLFramebuffer * frame, gint width, gint height,
   g_return_val_if_fail (fbo != NULL && depth != NULL, FALSE);
   g_return_val_if_fail (width > 0 && height > 0, FALSE);
 
-  gl = gst_gl_display_get_gl_vtable (frame->display);
+  gl = frame->context->gl_vtable;
 
   GST_TRACE ("creating FBO dimensions:%ux%u", width, height);
 
   if (!gl->GenFramebuffers) {
-    gst_gl_display_set_error (frame->display,
+    gst_gl_context_set_error (frame->context,
         "Context, EXT_framebuffer_object not supported");
     return FALSE;
   }
@@ -112,13 +112,13 @@ gst_gl_framebuffer_generate (GstGLFramebuffer * frame, gint width, gint height,
   gl->GenRenderbuffers (1, depth);
   gl->BindRenderbuffer (GL_RENDERBUFFER, *depth);
 
-  if (gst_gl_display_get_gl_api (frame->display) & GST_GL_API_OPENGL) {
+  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_OPENGL) {
     gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
         width, height);
     gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
         width, height);
   }
-  if (gst_gl_display_get_gl_api (frame->display) & GST_GL_API_GLES2) {
+  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_GLES2) {
     gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
         width, height);
   }
@@ -145,13 +145,13 @@ gst_gl_framebuffer_generate (GstGLFramebuffer * frame, gint width, gint height,
   gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
       GL_RENDERBUFFER, *depth);
 
-  if (gst_gl_display_get_gl_api (frame->display) & GST_GL_API_OPENGL) {
+  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_OPENGL) {
     gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
         GL_RENDERBUFFER, *depth);
   }
 
   if (gl->CheckFramebufferStatus (GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-    gst_gl_display_set_error (frame->display,
+    gst_gl_context_set_error (frame->context,
         "GL framebuffer status incomplete");
     return FALSE;
   }
@@ -185,7 +185,7 @@ gst_gl_framebuffer_use (GstGLFramebuffer * frame, gint texture_fbo_width,
   g_return_val_if_fail (texture_fbo != 0, FALSE);
   g_return_val_if_fail (cb != NULL, FALSE);
 
-  gl = frame->display->gl_vtable;
+  gl = frame->context->gl_vtable;
 
   GST_TRACE ("Binding v1 FBO %u dimensions:%ux%u with texture:%u "
       "dimensions:%ux%u", fbo, texture_fbo_width,
@@ -200,10 +200,10 @@ gst_gl_framebuffer_use (GstGLFramebuffer * frame, gint texture_fbo_width,
   gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
       GL_TEXTURE_RECTANGLE_ARB, texture_fbo, 0);
 
-  gst_gl_display_clear_shader (frame->display);
+  gst_gl_context_clear_shader (frame->context);
 
 #if GST_GL_HAVE_OPENGL
-  if (gst_gl_display_get_gl_api (frame->display) & GST_GL_API_OPENGL) {
+  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_OPENGL) {
     gl->PushAttrib (GL_VIEWPORT_BIT);
     gl->MatrixMode (GL_PROJECTION);
     gl->PushMatrix ();
@@ -217,7 +217,7 @@ gst_gl_framebuffer_use (GstGLFramebuffer * frame, gint texture_fbo_width,
         gluPerspective (proj_param1, proj_param2, proj_param3, proj_param4);
         break;
       default:
-        gst_gl_display_set_error (frame->display, "Unknow fbo projection %d",
+        gst_gl_context_set_error (frame->context, "Unknow fbo projection %d",
             projection);
     }
 
@@ -227,14 +227,14 @@ gst_gl_framebuffer_use (GstGLFramebuffer * frame, gint texture_fbo_width,
   }
 #endif
 #if GST_GL_HAVE_GLES2
-  if (gst_gl_display_get_gl_api (frame->display) & GST_GL_API_GLES2)
+  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_GLES2)
     gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
 #endif
 
   gl->Viewport (0, 0, texture_fbo_width, texture_fbo_height);
 
 #if GST_GL_HAVE_OPENGL
-  if (gst_gl_display_get_gl_api (frame->display) & GST_GL_API_OPENGL) {
+  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_OPENGL) {
     const GLenum rt[] = { GL_COLOR_ATTACHMENT0 };
     gl->DrawBuffers (1, rt);
   }
@@ -246,7 +246,7 @@ gst_gl_framebuffer_use (GstGLFramebuffer * frame, gint texture_fbo_width,
   cb (input_tex_width, input_tex_height, input_tex, stuff);
 
 #if GST_GL_HAVE_OPENGL
-  if (gst_gl_display_get_gl_api (frame->display) & GST_GL_API_OPENGL) {
+  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_OPENGL) {
     const GLenum rt[] = { GL_NONE };
     gl->DrawBuffers (1, rt);
     gl->MatrixMode (GL_PROJECTION);
@@ -257,7 +257,7 @@ gst_gl_framebuffer_use (GstGLFramebuffer * frame, gint texture_fbo_width,
   }
 #endif
 #if GST_GL_HAVE_GLES2
-  if (gst_gl_display_get_gl_api (frame->display) & GST_GL_API_GLES2) {
+  if (gst_gl_context_get_gl_api (frame->context) & GST_GL_API_GLES2) {
     gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
         viewport_dim[3]);
   }
@@ -282,7 +282,7 @@ gst_gl_framebuffer_use_v2 (GstGLFramebuffer * frame, gint texture_fbo_width,
   g_return_val_if_fail (texture_fbo != 0, FALSE);
   g_return_val_if_fail (cb != NULL, FALSE);
 
-  gl = frame->display->gl_vtable;
+  gl = frame->context->gl_vtable;
 
   GST_TRACE ("Binding v2 FBO %u dimensions:%ux%u with texture:%u ",
       fbo, texture_fbo_width, texture_fbo_height, texture_fbo);
@@ -325,7 +325,7 @@ gst_gl_framebuffer_delete (GstGLFramebuffer * frame, guint fbo, guint depth)
 
   g_return_if_fail (GST_IS_GL_FRAMEBUFFER (frame));
 
-  gl = frame->display->gl_vtable;
+  gl = frame->context->gl_vtable;
 
   GST_TRACE ("Deleting FBO %u", fbo);
 

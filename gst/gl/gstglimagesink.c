@@ -97,11 +97,11 @@ GST_DEBUG_CATEGORY (gst_debug_glimage_sink);
 #define GST_GLIMAGE_SINK_UNLOCK(glsink) \
   (g_mutex_unlock(&GST_GLIMAGE_SINK_GET_LOCK (glsink)))
 
-#define USING_OPENGL(display) (display->gl_api & GST_GL_API_OPENGL)
-#define USING_OPENGL3(display) (display->gl_api & GST_GL_API_OPENGL3)
-#define USING_GLES(display) (display->gl_api & GST_GL_API_GLES)
-#define USING_GLES2(display) (display->gl_api & GST_GL_API_GLES2)
-#define USING_GLES3(display) (display->gl_api & GST_GL_API_GLES3)
+#define USING_OPENGL(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL)
+#define USING_OPENGL3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL3)
+#define USING_GLES(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES)
+#define USING_GLES2(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2)
+#define USING_GLES3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES3)
 
 #if GST_GL_HAVE_GLES2
 static void gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink);
@@ -426,14 +426,14 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
       g_atomic_int_set (&glimage_sink->to_quit, 0);
       if (!glimage_sink->display) {
         GstGLWindow *window;
-        GstGLContext *context;
         GError *error = NULL;
 
         GST_INFO ("Creating GstGLDisplay");
         glimage_sink->display = gst_gl_display_new ();
-        context = gst_gl_context_new (glimage_sink->display);
-        gst_gl_display_set_context (glimage_sink->display, context);
-        window = gst_gl_context_get_window (context);
+        glimage_sink->context = gst_gl_context_new (glimage_sink->display);
+        gst_gl_display_set_context (glimage_sink->display,
+            glimage_sink->context);
+        window = gst_gl_context_get_window (glimage_sink->context);
 
         if (!glimage_sink->window_id && !glimage_sink->new_window_id)
           gst_video_overlay_prepare_window_handle (GST_VIDEO_OVERLAY
@@ -444,7 +444,7 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
           gst_gl_window_set_window_handle (window, glimage_sink->window_id);
         }
 
-        if (!gst_gl_context_create (context, 0, &error)) {
+        if (!gst_gl_context_create (glimage_sink->context, 0, &error)) {
           GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
               ("%s", error->message), (NULL));
 
@@ -452,7 +452,7 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
             gst_object_unref (glimage_sink->display);
             glimage_sink->display = NULL;
           }
-          gst_object_unref (context);
+          gst_object_unref (glimage_sink->context);
 
           return GST_STATE_CHANGE_FAILURE;
         }
@@ -469,7 +469,6 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
             gst_object_ref (glimage_sink), (GDestroyNotify) gst_object_unref);
 
         gst_object_unref (window);
-        gst_object_unref (context);
       }
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
@@ -514,10 +513,8 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
 
       GST_VIDEO_SINK_WIDTH (glimage_sink) = 1;
       GST_VIDEO_SINK_HEIGHT (glimage_sink) = 1;
-      if (glimage_sink->display) {
-        GstGLContext *context =
-            gst_gl_display_get_context (glimage_sink->display);
-        GstGLWindow *window = gst_gl_context_get_window (context);
+      if (glimage_sink->context) {
+        GstGLWindow *window = gst_gl_context_get_window (glimage_sink->context);
 
         gst_gl_window_send_message (window,
             GST_GL_WINDOW_CB (gst_glimage_sink_cleanup_glthread), glimage_sink);
@@ -527,7 +524,8 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         gst_gl_window_set_close_callback (window, NULL, NULL, NULL);
 
         gst_object_unref (window);
-        gst_object_unref (context);
+        gst_object_unref (glimage_sink->context);
+        glimage_sink->context = NULL;
         gst_object_unref (glimage_sink->display);
         glimage_sink->display = NULL;
       }
@@ -591,9 +589,9 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
   height = GST_VIDEO_INFO_HEIGHT (&vinfo);
 
   if (glimage_sink->tex_id)
-    gst_gl_display_del_texture (glimage_sink->display, &glimage_sink->tex_id);
+    gst_gl_context_del_texture (glimage_sink->context, &glimage_sink->tex_id);
   //FIXME: this texture seems to be never deleted when going to STATE_NULL
-  gst_gl_display_gen_texture (glimage_sink->display, &glimage_sink->tex_id,
+  gst_gl_context_gen_texture (glimage_sink->context, &glimage_sink->tex_id,
       GST_VIDEO_INFO_FORMAT (&vinfo), width, height);
 
   par_n = GST_VIDEO_INFO_PAR_N (&vinfo);
@@ -644,7 +642,7 @@ gst_glimage_sink_set_caps (GstBaseSink * bsink, GstCaps * caps)
 
   glimage_sink->info = vinfo;
 
-  newpool = gst_gl_buffer_pool_new (glimage_sink->display);
+  newpool = gst_gl_buffer_pool_new (glimage_sink->context);
   structure = gst_buffer_pool_get_config (newpool);
   gst_buffer_pool_config_set_params (structure, caps, vinfo.size, 2, 0);
   gst_buffer_pool_set_config (newpool, structure);
@@ -694,7 +692,7 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
         "attempting to wrap for upload");
 
     if (!glimage_sink->upload) {
-      glimage_sink->upload = gst_gl_upload_new (glimage_sink->display);
+      glimage_sink->upload = gst_gl_upload_new (glimage_sink->context);
 
       if (!gst_gl_upload_init_format (glimage_sink->upload,
               GST_VIDEO_FRAME_FORMAT (&frame), GST_VIDEO_FRAME_WIDTH (&frame),
@@ -718,14 +716,12 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   }
 
   if (glimage_sink->window_id != glimage_sink->new_window_id) {
-    GstGLContext *context = gst_gl_display_get_context (glimage_sink->display);
-    GstGLWindow *window = gst_gl_context_get_window (context);
+    GstGLWindow *window = gst_gl_context_get_window (glimage_sink->context);
 
     glimage_sink->window_id = glimage_sink->new_window_id;
     gst_gl_window_set_window_handle (window, glimage_sink->window_id);
 
     gst_object_unref (window);
-    gst_object_unref (context);
   }
 
   GST_TRACE ("redisplay texture:%u of size:%ux%u, window size:%ux%u", tex_id,
@@ -750,7 +746,7 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   if (g_atomic_int_get (&glimage_sink->to_quit) != 0) {
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_display_get_error ()), (NULL));
+        ("%s", gst_gl_context_get_error ()), (NULL));
     return GST_FLOW_ERROR;
   }
 
@@ -761,7 +757,7 @@ redisplay_failed:
   {
     gst_video_frame_unmap (&frame);
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_display_get_error ()), (NULL));
+        ("%s", gst_gl_context_get_error ()), (NULL));
     return GST_FLOW_ERROR;
   }
 }
@@ -798,15 +794,12 @@ gst_glimage_sink_expose (GstVideoOverlay * overlay)
   if (glimage_sink->display && glimage_sink->window_id) {
 
     if (glimage_sink->window_id != glimage_sink->new_window_id) {
-      GstGLContext *context =
-          gst_gl_display_get_context (glimage_sink->display);
-      GstGLWindow *window = gst_gl_context_get_window (context);
+      GstGLWindow *window = gst_gl_context_get_window (glimage_sink->context);
 
       glimage_sink->window_id = glimage_sink->new_window_id;
       gst_gl_window_set_window_handle (window, glimage_sink->window_id);
 
       gst_object_unref (window);
-      gst_object_unref (context);
     }
 
     gst_glimage_sink_redisplay (glimage_sink);
@@ -854,7 +847,7 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
       goto invalid_caps;
 
     GST_DEBUG_OBJECT (glimage_sink, "create new pool");
-    pool = gst_gl_buffer_pool_new (glimage_sink->display);
+    pool = gst_gl_buffer_pool_new (glimage_sink->context);
 
     /* the normal size of a frame */
     size = info.size;
@@ -898,7 +891,7 @@ static void
 gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
 {
   GError *error = NULL;
-  gl_sink->redisplay_shader = gst_gl_shader_new (gl_sink->display);
+  gl_sink->redisplay_shader = gst_gl_shader_new (gl_sink->context);
 
   gst_gl_shader_set_vertex_source (gl_sink->redisplay_shader,
       redisplay_vertex_shader_str_gles2);
@@ -907,10 +900,10 @@ gst_glimage_sink_thread_init_redisplay (GstGLImageSink * gl_sink)
 
   gst_gl_shader_compile (gl_sink->redisplay_shader, &error);
   if (error) {
-    gst_gl_display_set_error (gl_sink->display, "%s", error->message);
+    gst_gl_context_set_error (gl_sink->context, "%s", error->message);
     g_error_free (error);
     error = NULL;
-    gst_gl_display_clear_shader (gl_sink->display);
+    gst_gl_context_clear_shader (gl_sink->context);
   } else {
     gl_sink->redisplay_attr_position_loc =
         gst_gl_shader_get_attribute_location (gl_sink->redisplay_shader,
@@ -929,7 +922,7 @@ gst_glimage_sink_on_resize (const GstGLImageSink * gl_sink, gint width,
   /* Here gl_sink members (ex:gl_sink->info) have a life time of set_caps.
    * It means that they cannot not change between two set_caps
    */
-  const GstGLFuncs *gl = gl_sink->display->gl_vtable;
+  const GstGLFuncs *gl = gl_sink->context->gl_vtable;
 
   GST_TRACE ("GL Window resized to %ux%u", width, height);
 
@@ -958,7 +951,7 @@ gst_glimage_sink_on_resize (const GstGLImageSink * gl_sink, gint width,
       gl->Viewport (0, 0, width, height);
     }
 #if GST_GL_HAVE_OPENGL
-    if (USING_OPENGL (gl_sink->display)) {
+    if (USING_OPENGL (gl_sink->context)) {
       gl->MatrixMode (GL_PROJECTION);
       gl->LoadIdentity ();
       gluOrtho2D (0, width, 0, height);
@@ -982,7 +975,7 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
 
   g_return_if_fail (GST_IS_GLIMAGE_SINK (gl_sink));
 
-  gl = gl_sink->display->gl_vtable;
+  gl = gl_sink->context->gl_vtable;
 
   GST_GLIMAGE_SINK_LOCK (gl_sink);
 
@@ -996,10 +989,10 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
   GST_TRACE ("redrawing texture:%u", gl_sink->redisplay_texture);
 
   /* make sure that the environnement is clean */
-  gst_gl_display_clear_shader (gl_sink->display);
+  gst_gl_context_clear_shader (gl_sink->context);
 
 #if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (gl_sink->display))
+  if (USING_OPENGL (gl_sink->context))
     gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 #endif
 
@@ -1015,22 +1008,19 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
         gl_sink->client_data);
 
     if (doRedisplay) {
-      GstGLContext *context =
-          gst_gl_display_get_context_unlocked (gl_sink->display);
-      GstGLWindow *window = gst_gl_context_get_window (context);
+      GstGLWindow *window = gst_gl_context_get_window (gl_sink->context);
 
       gst_gl_window_draw_unlocked (window,
           GST_VIDEO_INFO_WIDTH (&gl_sink->info),
           GST_VIDEO_INFO_HEIGHT (&gl_sink->info));
 
       gst_object_unref (window);
-      gst_object_unref (context);
     }
   }
   /* default opengl scene */
   else {
 #if GST_GL_HAVE_OPENGL
-    if (USING_OPENGL (gl_sink->display)) {
+    if (USING_OPENGL (gl_sink->context)) {
       GLfloat verts[8] = { 1.0f, 1.0f,
         -1.0f, 1.0f,
         -1.0f, -1.0f,
@@ -1064,7 +1054,7 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
     }
 #endif
 #if GST_GL_HAVE_GLES2
-    if (USING_GLES2 (gl_sink->display)) {
+    if (USING_GLES2 (gl_sink->context)) {
       const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,
         1.0f, 0.0f,
         -1.0f, 1.0f, 0.0f,
@@ -1107,7 +1097,7 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
 static void
 gst_glimage_sink_on_close (GstGLImageSink * gl_sink)
 {
-  gst_gl_display_set_error (gl_sink->display, "Output window was closed");
+  gst_gl_context_set_error (gl_sink->context, "Output window was closed");
 
   g_atomic_int_set (&gl_sink->to_quit, 1);
 }
@@ -1115,17 +1105,15 @@ gst_glimage_sink_on_close (GstGLImageSink * gl_sink)
 static gboolean
 gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
 {
-  GstGLContext *context;
   GstGLWindow *window;
   gboolean alive;
 
-  context = gst_gl_display_get_context (gl_sink->display);
-  window = gst_gl_context_get_window (context);
+  window = gst_gl_context_get_window (gl_sink->context);
 
   if (window && gst_gl_window_is_running (window)) {
 
 #if GST_GL_HAVE_GLES2
-    if (USING_GLES2 (gl_sink->display)) {
+    if (USING_GLES2 (gl_sink->context)) {
       if (!gl_sink->redisplay_shader) {
         gst_gl_window_send_message (window,
             GST_GL_WINDOW_CB (gst_glimage_sink_thread_init_redisplay), gl_sink);
@@ -1141,7 +1129,6 @@ gst_glimage_sink_redisplay (GstGLImageSink * gl_sink)
   }
   alive = gst_gl_window_is_running (window);
   gst_object_unref (window);
-  gst_object_unref (context);
 
   return alive;
 }

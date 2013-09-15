@@ -228,7 +228,7 @@ gst_gl_filter_reflected_screen_filter_texture (GstGLFilter * filter,
       GST_GL_FILTER_REFLECTED_SCREEN (filter);
 
   //blocking call, use a FBO
-  gst_gl_display_use_fbo (filter->display,
+  gst_gl_context_use_fbo (filter->context,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info),
       filter->fbo, filter->depthbuffer, out_tex,

@@ -176,7 +176,7 @@ gst_gl_filter_app_filter_texture (GstGLFilter * filter, guint in_tex,
 
   if (app_filter->clientDrawCallback) {
     //blocking call, use a FBO
-    gst_gl_display_use_fbo (filter->display,
+    gst_gl_context_use_fbo (filter->context,
         GST_VIDEO_INFO_WIDTH (&filter->out_info),
         GST_VIDEO_INFO_HEIGHT (&filter->out_info),
         filter->fbo, filter->depthbuffer, out_tex,
@@ -205,7 +205,7 @@ gst_gl_filter_app_callback (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
 
   gl->MatrixMode (GL_PROJECTION);
   gl->LoadIdentity ();

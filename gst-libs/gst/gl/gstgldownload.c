@@ -37,29 +37,29 @@
  * A #GstGLDownload can be created with gst_gl_download_new()
  */
 
-#define USING_OPENGL(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL)
-#define USING_OPENGL3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL3)
-#define USING_GLES(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES)
-#define USING_GLES2(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES2)
-#define USING_GLES3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES3)
+#define USING_OPENGL(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL)
+#define USING_OPENGL3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL3)
+#define USING_GLES(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES)
+#define USING_GLES2(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2)
+#define USING_GLES3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES3)
 
-static void _do_download (GstGLDisplay * display, GstGLDownload * download);
-static void _init_download (GstGLDisplay * display, GstGLDownload * download);
-static gboolean _init_download_shader (GstGLDisplay * display,
+static void _do_download (GstGLContext * context, GstGLDownload * download);
+static void _init_download (GstGLContext * context, GstGLDownload * download);
+static gboolean _init_download_shader (GstGLContext * context,
     GstGLDownload * download);
 static gboolean _gst_gl_download_perform_with_data_unlocked (GstGLDownload *
     download, GLuint texture_id, gpointer data[GST_VIDEO_MAX_PLANES]);
 
 #if GST_GL_HAVE_OPENGL
-static void _do_download_draw_rgb_opengl (GstGLDisplay * display,
+static void _do_download_draw_rgb_opengl (GstGLContext * context,
     GstGLDownload * download);
-static void _do_download_draw_yuv_opengl (GstGLDisplay * display,
+static void _do_download_draw_yuv_opengl (GstGLContext * context,
     GstGLDownload * download);
 #endif
 #if GST_GL_HAVE_GLES2
-static void _do_download_draw_rgb_gles2 (GstGLDisplay * display,
+static void _do_download_draw_rgb_gles2 (GstGLContext * context,
     GstGLDownload * download);
-static void _do_download_draw_yuv_gles2 (GstGLDisplay * display,
+static void _do_download_draw_yuv_gles2 (GstGLContext * context,
     GstGLDownload * download);
 #endif
 
@@ -229,8 +229,8 @@ struct _GstGLDownloadPrivate
   const gchar *ARGB;
   const gchar *vert_shader;
 
-  void (*do_rgb) (GstGLDisplay * display, GstGLDownload * download);
-  void (*do_yuv) (GstGLDisplay * display, GstGLDownload * download);
+  void (*do_rgb) (GstGLContext * context, GstGLDownload * download);
+  void (*do_yuv) (GstGLContext * context, GstGLDownload * download);
 
   gboolean result;
 };
@@ -262,7 +262,7 @@ gst_gl_download_init (GstGLDownload * download)
 
   download->priv = GST_GL_DOWNLOAD_GET_PRIVATE (download);
 
-  download->display = NULL;
+  download->context = NULL;
 
   g_mutex_init (&download->lock);
 
@@ -279,23 +279,23 @@ gst_gl_download_init (GstGLDownload * download)
 
 /**
  * gst_gl_download_new:
- * @display: a #GstGLDisplay
+ * @context: a #GstGLContext
  *
  * Returns: a new #GstGLDownload object
  */
 GstGLDownload *
-gst_gl_download_new (GstGLDisplay * display)
+gst_gl_download_new (GstGLContext * context)
 {
   GstGLDownload *download;
   GstGLDownloadPrivate *priv;
 
   download = g_object_new (GST_TYPE_GL_DOWNLOAD, NULL);
 
-  download->display = gst_object_ref (display);
+  download->context = gst_object_ref (context);
   priv = download->priv;
 
 #if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (display)) {
+  if (USING_OPENGL (context)) {
     priv->YUY2_UYVY = text_shader_YUY2_UYVY_opengl;
     priv->I420_YV12 = text_shader_I420_YV12_opengl;
     priv->AYUV = text_shader_AYUV_opengl;
@@ -306,7 +306,7 @@ gst_gl_download_new (GstGLDisplay * display)
   }
 #endif
 #if GST_GL_HAVE_GLES2
-  if (USING_GLES2 (display)) {
+  if (USING_GLES2 (context)) {
     priv->YUY2_UYVY = text_shader_YUY2_UYVY_gles2;
     priv->I420_YV12 = text_shader_I420_YV12_gles2;
     priv->AYUV = text_shader_AYUV_gles2;
@@ -330,16 +330,17 @@ gst_gl_download_finalize (GObject * object)
 
   for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
     if (download->out_texture[i]) {
-      gst_gl_display_del_texture (download->display, &download->out_texture[i]);
+      gst_gl_context_del_texture (download->context, &download->out_texture[i]);
       download->out_texture[i] = 0;
     }
   }
+
   if (download->in_texture) {
-    gst_gl_display_del_texture (download->display, &download->in_texture);
+    gst_gl_context_del_texture (download->context, &download->in_texture);
     download->in_texture = 0;
   }
   if (download->fbo || download->depth_buffer) {
-    gst_gl_display_del_fbo (download->display, download->fbo,
+    gst_gl_context_del_fbo (download->context, download->fbo,
         download->depth_buffer);
     download->fbo = 0;
     download->depth_buffer = 0;
@@ -349,9 +350,9 @@ gst_gl_download_finalize (GObject * object)
     download->shader = NULL;
   }
 
-  if (download->display) {
-    gst_object_unref (download->display);
-    download->display = NULL;
+  if (download->context) {
+    gst_object_unref (download->context);
+    download->context = NULL;
   }
 
   g_mutex_clear (&download->lock);
@@ -393,8 +394,8 @@ gst_gl_download_init_format (GstGLDownload * download, GstVideoFormat v_format,
 
   download->info = info;
 
-  gst_gl_display_thread_add (download->display,
-      (GstGLDisplayThreadFunc) _init_download, download);
+  gst_gl_context_thread_add (download->context,
+      (GstGLContextThreadFunc) _init_download, download);
 
   ret = download->initted = download->priv->result;
 
@@ -497,20 +498,20 @@ _gst_gl_download_perform_with_data_unlocked (GstGLDownload * download,
     download->data[i] = data[i];
   }
 
-  gst_gl_display_thread_add (download->display,
-      (GstGLDisplayThreadFunc) _do_download, download);
+  gst_gl_context_thread_add (download->context,
+      (GstGLContextThreadFunc) _do_download, download);
 
   return download->priv->result;
 }
 
 static void
-_init_download (GstGLDisplay * display, GstGLDownload * download)
+_init_download (GstGLContext * context, GstGLDownload * download)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
   guint out_width, out_height;
 
-  gl = display->gl_vtable;
+  gl = context->gl_vtable;
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
   out_width = GST_VIDEO_INFO_WIDTH (&download->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
@@ -518,7 +519,7 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
   GST_TRACE ("initializing texture download for format %s",
       gst_video_format_to_string (v_format));
 
-  if (USING_OPENGL (display)) {
+  if (USING_OPENGL (context)) {
     switch (v_format) {
       case GST_VIDEO_FORMAT_RGBx:
       case GST_VIDEO_FORMAT_BGRx:
@@ -560,7 +561,7 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
         /* Frame buffer object is a requirement 
          * when using GLSL colorspace conversion
          */
-        gst_gl_display_set_error (display,
+        gst_gl_context_set_error (context,
             "Context, EXT_framebuffer_object supported: no");
         goto error;
       }
@@ -574,7 +575,7 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
       gl->GenRenderbuffers (1, &download->depth_buffer);
       gl->BindRenderbuffer (GL_RENDERBUFFER, download->depth_buffer);
 #if GST_GL_HAVE_OPENGL
-      if (USING_OPENGL (display)) {
+      if (USING_OPENGL (context)) {
         gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT,
             out_width, out_height);
         gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH24_STENCIL8,
@@ -582,7 +583,7 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
       }
 #endif
 #if GST_GL_HAVE_GLES2
-      if (USING_GLES2 (display)) {
+      if (USING_GLES2 (context)) {
         gl->RenderbufferStorage (GL_RENDERBUFFER, GL_DEPTH_COMPONENT16,
             out_width, out_height);
       }
@@ -650,13 +651,13 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
       /* attach the depth render buffer to the FBO */
       gl->FramebufferRenderbuffer (GL_FRAMEBUFFER,
           GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, download->depth_buffer);
-      if (USING_OPENGL (display)) {
+      if (USING_OPENGL (context)) {
         gl->FramebufferRenderbuffer (GL_FRAMEBUFFER,
             GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, download->depth_buffer);
       }
 
-      if (!gst_gl_display_check_framebuffer_status (display))
-        gst_gl_display_set_error (display, "GL framebuffer status incomplete");
+      if (!gst_gl_context_check_framebuffer_status (context))
+        gst_gl_context_set_error (context, "GL framebuffer status incomplete");
 
       /* unbind the FBO */
       gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
@@ -664,13 +665,13 @@ _init_download (GstGLDisplay * display, GstGLDownload * download)
       break;
     default:
       break;
-      gst_gl_display_set_error (display, "Unsupported download video format %d",
+      gst_gl_context_set_error (context, "Unsupported download video format %d",
           v_format);
       g_assert_not_reached ();
   }
 
 no_convert:
-  download->priv->result = _init_download_shader (display, download);
+  download->priv->result = _init_download_shader (context, download);
   return;
 
 error:
@@ -681,7 +682,7 @@ error:
 }
 
 static gboolean
-_create_shader (GstGLDisplay * display, const gchar * vertex_src,
+_create_shader (GstGLContext * context, const gchar * vertex_src,
     const gchar * fragment_src, GstGLShader ** out_shader)
 {
   GstGLShader *shader;
@@ -689,7 +690,7 @@ _create_shader (GstGLDisplay * display, const gchar * vertex_src,
 
   g_return_val_if_fail (vertex_src != NULL || fragment_src != NULL, FALSE);
 
-  shader = gst_gl_shader_new (display);
+  shader = gst_gl_shader_new (context);
 
   if (vertex_src)
     gst_gl_shader_set_vertex_source (shader, vertex_src);
@@ -697,9 +698,9 @@ _create_shader (GstGLDisplay * display, const gchar * vertex_src,
     gst_gl_shader_set_fragment_source (shader, fragment_src);
 
   if (!gst_gl_shader_compile (shader, &error)) {
-    gst_gl_display_set_error (display, "%s", error->message);
+    gst_gl_context_set_error (context, "%s", error->message);
     g_error_free (error);
-    gst_gl_display_clear_shader (display);
+    gst_gl_context_clear_shader (context);
     gst_object_unref (shader);
     return FALSE;
   }
@@ -709,17 +710,16 @@ _create_shader (GstGLDisplay * display, const gchar * vertex_src,
 }
 
 static gboolean
-_init_download_shader (GstGLDisplay * display, GstGLDownload * download)
+_init_download_shader (GstGLContext * context, GstGLDownload * download)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
 
-  gl = display->gl_vtable;
+  gl = download->context->gl_vtable;
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
 
-
   if (GST_VIDEO_FORMAT_INFO_IS_RGB (download->info.finfo)
-      && !USING_GLES2 (display)) {
+      && !USING_GLES2 (context)) {
     switch (v_format) {
       case GST_VIDEO_FORMAT_RGBx:
       case GST_VIDEO_FORMAT_BGRx:
@@ -745,7 +745,7 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
    */
   if (!gl->CreateProgramObject && !gl->CreateProgram) {
     /* colorspace conversion is not possible */
-    gst_gl_display_set_error (display,
+    gst_gl_context_set_error (context,
         "Context, ARB_fragment_shader supported: no");
     return FALSE;;
   }
@@ -758,9 +758,9 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
       sprintf (text_shader_download_YUY2,
           download->priv->YUY2_UYVY, "y2,u,y1,v");
 
-      if (_create_shader (display, download->priv->vert_shader,
+      if (_create_shader (context, download->priv->vert_shader,
               text_shader_download_YUY2, &download->shader)) {
-        if (USING_GLES2 (display)) {
+        if (USING_GLES2 (context)) {
           download->shader_attr_position_loc =
               gst_gl_shader_get_attribute_location (download->shader,
               "a_position");
@@ -778,9 +778,9 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
       sprintf (text_shader_download_UYVY,
           download->priv->YUY2_UYVY, "v,y1,u,y2");
 
-      if (_create_shader (display, download->priv->vert_shader,
+      if (_create_shader (context, download->priv->vert_shader,
               text_shader_download_UYVY, &download->shader)) {
-        if (USING_GLES2 (display)) {
+        if (USING_GLES2 (context)) {
           download->shader_attr_position_loc =
               gst_gl_shader_get_attribute_location (download->shader,
               "a_position");
@@ -794,15 +794,15 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
     {
-      _create_shader (display, download->priv->vert_shader,
+      _create_shader (context, download->priv->vert_shader,
           download->priv->I420_YV12, &download->shader);
       break;
     }
     case GST_VIDEO_FORMAT_AYUV:
     {
-      if (_create_shader (display, download->priv->vert_shader,
+      if (_create_shader (context, download->priv->vert_shader,
               download->priv->AYUV, &download->shader)) {
-        if (USING_GLES2 (display)) {
+        if (USING_GLES2 (context)) {
           download->shader_attr_position_loc =
               gst_gl_shader_get_attribute_location (download->shader,
               "a_position");
@@ -847,7 +847,7 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
           break;
       }
 
-      if (_create_shader (display, download->priv->vert_shader,
+      if (_create_shader (context, download->priv->vert_shader,
               text_shader_ARGB, &download->shader)) {
         download->shader_attr_position_loc =
             gst_gl_shader_get_attribute_location (download->shader,
@@ -864,7 +864,7 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
       break;
 #endif
     default:
-      gst_gl_display_set_error (display,
+      gst_gl_context_set_error (context,
           "Unsupported download video format %d", v_format);
       g_assert_not_reached ();
       return FALSE;
@@ -876,7 +876,7 @@ _init_download_shader (GstGLDisplay * display, GstGLDownload * download)
 
 /* Called in the gl thread */
 static void
-_do_download (GstGLDisplay * display, GstGLDownload * download)
+_do_download (GstGLContext * context, GstGLDownload * download)
 {
   GstVideoFormat v_format;
   guint out_width, out_height;
@@ -900,7 +900,7 @@ _do_download (GstGLDisplay * display, GstGLDownload * download)
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
       /* color space conversion is not needed */
-      download->priv->do_rgb (display, download);
+      download->priv->do_rgb (context, download);
       break;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
@@ -908,10 +908,10 @@ _do_download (GstGLDisplay * display, GstGLDownload * download)
     case GST_VIDEO_FORMAT_YV12:
     case GST_VIDEO_FORMAT_AYUV:
       /* color space conversion is needed */
-      download->priv->do_yuv (display, download);
+      download->priv->do_yuv (context, download);
       break;
     default:
-      gst_gl_display_set_error (display, "Unsupported download video format %d",
+      gst_gl_context_set_error (context, "Unsupported download video format %d",
           v_format);
       g_assert_not_reached ();
       break;
@@ -922,14 +922,14 @@ _do_download (GstGLDisplay * display, GstGLDownload * download)
 
 #if GST_GL_HAVE_OPENGL
 static void
-_do_download_draw_rgb_opengl (GstGLDisplay * display, GstGLDownload * download)
+_do_download_draw_rgb_opengl (GstGLContext * context, GstGLDownload * download)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
 
-  gl = display->gl_vtable;
+  gl = download->context->gl_vtable;
 
-  gst_gl_display_clear_shader (display);
+  gst_gl_context_clear_shader (context);
 
   gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
   gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
@@ -976,7 +976,7 @@ _do_download_draw_rgb_opengl (GstGLDisplay * display, GstGLDownload * download)
           GL_UNSIGNED_BYTE, download->data[0]);
       break;
     default:
-      gst_gl_display_set_error (display,
+      gst_gl_context_set_error (context,
           "Download video format inconsistency %d", v_format);
       g_assert_not_reached ();
       break;
@@ -989,7 +989,7 @@ _do_download_draw_rgb_opengl (GstGLDisplay * display, GstGLDownload * download)
 
 #if GST_GL_HAVE_GLES2
 static void
-_do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
+_do_download_draw_rgb_gles2 (GstGLContext * context, GstGLDownload * download)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
@@ -1009,12 +1009,12 @@ _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
 
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-  gl = display->gl_vtable;
+  gl = download->context->gl_vtable;
 
   out_width = GST_VIDEO_INFO_WIDTH (&download->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
 
-  gst_gl_display_check_framebuffer_status (display);
+  gst_gl_context_check_framebuffer_status (context);
   gl->BindFramebuffer (GL_FRAMEBUFFER, download->fbo);
 
   gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
@@ -1040,7 +1040,7 @@ _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
 
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
-  gst_gl_display_clear_shader (display);
+  gst_gl_context_clear_shader (context);
 
   gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
       viewport_dim[3]);
@@ -1065,20 +1065,20 @@ _do_download_draw_rgb_gles2 (GstGLDisplay * display, GstGLDownload * download)
           download->data[0]);
       break;
     default:
-      gst_gl_display_set_error (display,
+      gst_gl_context_set_error (context,
           "Download video format inconsistency %d", v_format);
       g_assert_not_reached ();
       break;
   }
 
-  gst_gl_display_check_framebuffer_status (display);
+  gst_gl_context_check_framebuffer_status (context);
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 }
 #endif
 
 #if GST_GL_HAVE_OPENGL
 static void
-_do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
+_do_download_draw_yuv_opengl (GstGLContext * context, GstGLDownload * download)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
@@ -1102,7 +1102,7 @@ _do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
     out_width, out_height
   };
 
-  gl = display->gl_vtable;
+  gl = context->gl_vtable;
 
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
 
@@ -1168,7 +1168,7 @@ _do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
 
     default:
       break;
-      gst_gl_display_set_error (display,
+      gst_gl_context_set_error (context,
           "Download video format inconsistensy %d", v_format);
   }
 
@@ -1200,7 +1200,7 @@ _do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
   gl->PopMatrix ();
   gl->PopAttrib ();
 
-  gst_gl_display_check_framebuffer_status (display);
+  gst_gl_context_check_framebuffer_status (context);
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, download->fbo);
   gl->ReadBuffer (GL_COLOR_ATTACHMENT0);
@@ -1263,13 +1263,13 @@ _do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
       break;
     default:
       break;
-      gst_gl_display_set_error (display,
+      gst_gl_context_set_error (context,
           "Download video format inconsistensy %d", v_format);
       g_assert_not_reached ();
   }
   gl->ReadBuffer (GL_NONE);
 
-  gst_gl_display_check_framebuffer_status (display);
+  gst_gl_context_check_framebuffer_status (context);
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 }
@@ -1277,7 +1277,7 @@ _do_download_draw_yuv_opengl (GstGLDisplay * display, GstGLDownload * download)
 
 #if GST_GL_HAVE_GLES2
 static void
-_do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
+_do_download_draw_yuv_gles2 (GstGLContext * context, GstGLDownload * download)
 {
   GstGLFuncs *gl;
   GstVideoFormat v_format;
@@ -1297,7 +1297,7 @@ _do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
 
   GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
 
-  gl = display->gl_vtable;
+  gl = context->gl_vtable;
 
   out_width = GST_VIDEO_INFO_WIDTH (&download->info);
   out_height = GST_VIDEO_INFO_HEIGHT (&download->info);
@@ -1306,7 +1306,7 @@ _do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
   GST_TRACE ("doing YUV download of texture:%u (%ux%u) using fbo:%u",
       download->in_texture, out_width, out_height, download->fbo);
 
-  gst_gl_display_check_framebuffer_status (display);
+  gst_gl_context_check_framebuffer_status (context);
   gl->BindFramebuffer (GL_FRAMEBUFFER, download->fbo);
 
   gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
@@ -1355,7 +1355,7 @@ _do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
 
     default:
       break;
-      gst_gl_display_set_error (display,
+      gst_gl_context_set_error (context,
           "Download video format inconsistensy %d", v_format);
 
   }
@@ -1366,7 +1366,7 @@ _do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
    * because download yuv is not available
    * without GLSL (whereas rgb is)
    */
-  gst_gl_display_clear_shader (display);
+  gst_gl_context_clear_shader (context);
 
   gl->Viewport (viewport_dim[0], viewport_dim[1], viewport_dim[2],
       viewport_dim[3]);
@@ -1421,12 +1421,12 @@ _do_download_draw_yuv_gles2 (GstGLDisplay * display, GstGLDownload * download)
       break;
     default:
       break;
-      gst_gl_display_set_error (display,
+      gst_gl_context_set_error (context,
           "Download video format inconsistensy %d", v_format);
       g_assert_not_reached ();
   }
 
-  gst_gl_display_check_framebuffer_status (display);
+  gst_gl_context_check_framebuffer_status (context);
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 }
 #endif

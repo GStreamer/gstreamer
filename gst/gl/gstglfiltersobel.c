@@ -71,7 +71,7 @@ static void
 gst_gl_filtersobel_init_resources (GstGLFilter * filter)
 {
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
   int i;
 
   for (i = 0; i < 2; i++) {
@@ -96,7 +96,7 @@ static void
 gst_gl_filtersobel_reset_resources (GstGLFilter * filter)
 {
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
   int i;
 
   for (i = 0; i < 2; i++) {
@@ -155,10 +155,10 @@ gst_gl_filter_filtersobel_reset (GstGLFilter * filter)
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_display_del_shader (filter->display, filtersobel->desat);
-  gst_gl_display_del_shader (filter->display, filtersobel->hconv);
-  gst_gl_display_del_shader (filter->display, filtersobel->vconv);
-  gst_gl_display_del_shader (filter->display, filtersobel->len);
+  gst_gl_context_del_shader (filter->context, filtersobel->desat);
+  gst_gl_context_del_shader (filter->context, filtersobel->hconv);
+  gst_gl_context_del_shader (filter->context, filtersobel->vconv);
+  gst_gl_context_del_shader (filter->context, filtersobel->len);
 }
 
 static void
@@ -201,16 +201,16 @@ gst_gl_filtersobel_init_shader (GstGLFilter * filter)
 
   //blocking call, wait the opengl thread has compiled the shader
   ret =
-      gst_gl_display_gen_shader (filter->display, 0, desaturate_fragment_source,
+      gst_gl_context_gen_shader (filter->context, 0, desaturate_fragment_source,
       &filtersobel->desat);
   ret &=
-      gst_gl_display_gen_shader (filter->display, 0,
+      gst_gl_context_gen_shader (filter->context, 0,
       sep_sobel_hconv3_fragment_source, &filtersobel->hconv);
   ret &=
-      gst_gl_display_gen_shader (filter->display, 0,
+      gst_gl_context_gen_shader (filter->context, 0,
       sep_sobel_vconv3_fragment_source, &filtersobel->vconv);
   ret &=
-      gst_gl_display_gen_shader (filter->display, 0,
+      gst_gl_context_gen_shader (filter->context, 0,
       sep_sobel_length_fragment_source, &filtersobel->len);
 
   return ret;
@@ -241,7 +241,7 @@ gst_gl_filtersobel_length (gint width, gint height, guint texture,
     gpointer stuff)
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
 
   glMatrixMode (GL_PROJECTION);

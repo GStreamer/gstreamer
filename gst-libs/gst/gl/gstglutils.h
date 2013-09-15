@@ -26,7 +26,7 @@
 #include <gst/gl/gstgl_fwd.h>
 
 /**
- * GstGLDisplayProjection:
+ * GstGLContextProjection:
  *
  * %GST_GL_DISPLAY_PROJECTION_ORTHO2D: Orthogonal projection
  * %GST_GL_DISPLAY_CONVERSION_MATRIX: Perspective projection 
@@ -74,35 +74,34 @@ typedef void (*GLCB) (gint, gint, guint, gpointer stuff);
  */
 typedef void (*GLCB_V2) (gpointer stuff);
 
-void gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
+void gst_gl_context_gen_texture (GstGLContext * context, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height);
-void gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
+void gst_gl_context_gen_texture_thread (GstGLContext * context, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height);
-void gst_gl_display_del_texture (GstGLDisplay * display, GLuint * pTexture);
+void gst_gl_context_del_texture (GstGLContext * context, GLuint * pTexture);
 
-gboolean gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
+gboolean gst_gl_context_gen_fbo (GstGLContext * context, gint width, gint height,
     GLuint * fbo, GLuint * depthbuffer);
-gboolean gst_gl_display_use_fbo (GstGLDisplay * display, gint texture_fbo_width,
+gboolean gst_gl_context_use_fbo (GstGLContext * context, gint texture_fbo_width,
     gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
     GLuint texture_fbo, GLCB cb, gint input_texture_width,
     gint input_texture_height, GLuint input_texture, gdouble proj_param1,
     gdouble proj_param2, gdouble proj_param3, gdouble proj_param4,
     GstGLDisplayProjection projection, gpointer stuff);
-gboolean gst_gl_display_use_fbo_v2 (GstGLDisplay * display, gint texture_fbo_width,
+gboolean gst_gl_context_use_fbo_v2 (GstGLContext * context, gint texture_fbo_width,
     gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
     GLuint texture_fbo, GLCB_V2 cb, gpointer stuff);
-void gst_gl_display_del_fbo (GstGLDisplay * display, GLuint fbo,
+void gst_gl_context_del_fbo (GstGLContext * context, GLuint fbo,
     GLuint depth_buffer);
 
-gboolean gst_gl_display_gen_shader (GstGLDisplay * display,
+gboolean gst_gl_context_gen_shader (GstGLContext * context,
     const gchar * shader_vertex_source,
     const gchar * shader_fragment_source, GstGLShader ** shader);
-void gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader);
+void gst_gl_context_del_shader (GstGLContext * context, GstGLShader * shader);
 
-gboolean gst_gl_display_check_framebuffer_status (GstGLDisplay * display);
-void gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate);
+gboolean gst_gl_context_check_framebuffer_status (GstGLContext * context);
 
-void gst_gl_display_set_error (GstGLDisplay * display, const char * format, ...);
-gchar *gst_gl_display_get_error (void);
+void gst_gl_context_set_error (GstGLContext * context, const char * format, ...);
+gchar *gst_gl_context_get_error (void);
 
 #endif /* __GST_GL_UTILS_H__ */

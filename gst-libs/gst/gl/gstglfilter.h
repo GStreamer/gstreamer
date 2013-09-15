@@ -65,6 +65,7 @@ struct _GstGLFilter
   GstBufferPool     *pool;
 
   GstGLDisplay      *display;
+  GstGLContext      *context;
 
   GstVideoInfo       in_info;
   GstVideoInfo       out_info;

@@ -35,11 +35,11 @@
 #define GST_GL_SHADER_GET_PRIVATE(o)					\
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_SHADER, GstGLShaderPrivate))
 
-#define USING_OPENGL(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL)
-#define USING_OPENGL3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL3)
-#define USING_GLES(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES)
-#define USING_GLES2(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES2)
-#define USING_GLES3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES3)
+#define USING_OPENGL(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL)
+#define USING_OPENGL3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL3)
+#define USING_GLES(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES)
+#define USING_GLES2(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2)
+#define USING_GLES3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES3)
 
 typedef struct _GstGLShaderVTable
 {
@@ -94,7 +94,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_gl_shader_debug);
 G_DEFINE_TYPE_WITH_CODE (GstGLShader, gst_gl_shader, G_TYPE_OBJECT, DEBUG_INIT);
 
 static void
-_cleanup_shader (GstGLDisplay * display, GstGLShader * shader)
+_cleanup_shader (GstGLContext * context, GstGLShader * shader)
 {
   GstGLShaderPrivate *priv = shader->priv;
 
@@ -129,16 +129,16 @@ gst_gl_shader_finalize (GObject * object)
   g_free (priv->vertex_src);
   g_free (priv->fragment_src);
 
-  gst_gl_display_thread_add (shader->display,
-      (GstGLDisplayThreadFunc) _cleanup_shader, shader);
+  gst_gl_context_thread_add (shader->context,
+      (GstGLContextThreadFunc) _cleanup_shader, shader);
 
   priv->fragment_handle = 0;
   priv->vertex_handle = 0;
   priv->program_handle = 0;
 
-  if (shader->display) {
-    gst_object_unref (shader->display);
-    shader->display = NULL;
+  if (shader->context) {
+    gst_object_unref (shader->context);
+    shader->context = NULL;
   }
 
   G_OBJECT_CLASS (gst_gl_shader_parent_class)->finalize (object);
@@ -295,9 +295,9 @@ gst_gl_shader_init (GstGLShader * self)
 }
 
 gboolean
-_fill_vtable (GstGLShader * shader, GstGLDisplay * display)
+_fill_vtable (GstGLShader * shader, GstGLContext * context)
 {
-  GstGLFuncs *gl = display->gl_vtable;
+  GstGLFuncs *gl = context->gl_vtable;
   GstGLShaderVTable *vtable = &shader->priv->vtable;
 
   if (gl->CreateProgram) {
@@ -340,14 +340,14 @@ _fill_vtable (GstGLShader * shader, GstGLDisplay * display)
 }
 
 GstGLShader *
-gst_gl_shader_new (GstGLDisplay * display)
+gst_gl_shader_new (GstGLContext * context)
 {
   GstGLShader *shader;
 
-  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), NULL);
+  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), NULL);
 
   shader = g_object_new (GST_GL_TYPE_SHADER, NULL);
-  shader->display = gst_object_ref (display);
+  shader->context = gst_object_ref (context);
 
   return shader;
 }
@@ -373,12 +373,12 @@ gst_gl_shader_compile (GstGLShader * shader, GError ** error)
   g_return_val_if_fail (GST_GL_IS_SHADER (shader), FALSE);
 
   priv = shader->priv;
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   if (priv->compiled)
     return priv->compiled;
 
-  if (!_fill_vtable (shader, shader->display))
+  if (!_fill_vtable (shader, shader->context))
     return FALSE;
 
   shader->priv->program_handle = shader->priv->vtable.CreateProgram ();
@@ -526,13 +526,13 @@ gst_gl_shader_use (GstGLShader * shader)
 }
 
 void
-gst_gl_display_clear_shader (GstGLDisplay * display)
+gst_gl_context_clear_shader (GstGLContext * context)
 {
   GstGLFuncs *gl;
 
-  g_return_if_fail (GST_IS_GL_DISPLAY (display));
+  g_return_if_fail (GST_GL_IS_CONTEXT (context));
 
-  gl = display->gl_vtable;
+  gl = context->gl_vtable;
 
   if (gl->CreateProgram)
     gl->UseProgram (0);
@@ -565,10 +565,10 @@ gst_gl_shader_compile_and_check (GstGLShader * shader,
 
     gst_gl_shader_compile (shader, &error);
     if (error) {
-      gst_gl_display_set_error (shader->display, "%s", error->message);
+      gst_gl_context_set_error (shader->context, "%s", error->message);
       g_error_free (error);
-      error = NULL;
-      gst_gl_display_clear_shader (shader->display);
+      gst_gl_context_clear_shader (shader->context);
+
       return FALSE;
     }
   }
@@ -587,7 +587,7 @@ gst_gl_shader_set_uniform_1f (GstGLShader * shader, const gchar * name,
 
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -605,7 +605,7 @@ gst_gl_shader_set_uniform_1fv (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -623,7 +623,7 @@ gst_gl_shader_set_uniform_1i (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -641,7 +641,7 @@ gst_gl_shader_set_uniform_1iv (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -659,7 +659,7 @@ gst_gl_shader_set_uniform_2f (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -677,7 +677,7 @@ gst_gl_shader_set_uniform_2fv (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -695,7 +695,7 @@ gst_gl_shader_set_uniform_2i (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -713,7 +713,7 @@ gst_gl_shader_set_uniform_2iv (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -731,7 +731,7 @@ gst_gl_shader_set_uniform_3f (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -749,7 +749,7 @@ gst_gl_shader_set_uniform_3fv (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -767,7 +767,7 @@ gst_gl_shader_set_uniform_3i (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -785,7 +785,7 @@ gst_gl_shader_set_uniform_3iv (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -803,7 +803,7 @@ gst_gl_shader_set_uniform_4f (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -821,7 +821,7 @@ gst_gl_shader_set_uniform_4fv (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -839,7 +839,7 @@ gst_gl_shader_set_uniform_4i (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -857,7 +857,7 @@ gst_gl_shader_set_uniform_4iv (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -875,7 +875,7 @@ gst_gl_shader_set_uniform_matrix_2fv (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -893,7 +893,7 @@ gst_gl_shader_set_uniform_matrix_3fv (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -911,7 +911,7 @@ gst_gl_shader_set_uniform_matrix_4fv (GstGLShader * shader, const gchar * name,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -930,7 +930,7 @@ gst_gl_shader_set_uniform_matrix_2x3fv (GstGLShader * shader,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -948,7 +948,7 @@ gst_gl_shader_set_uniform_matrix_2x4fv (GstGLShader * shader,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -966,7 +966,7 @@ gst_gl_shader_set_uniform_matrix_3x2fv (GstGLShader * shader,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -984,7 +984,7 @@ gst_gl_shader_set_uniform_matrix_3x4fv (GstGLShader * shader,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -1002,7 +1002,7 @@ gst_gl_shader_set_uniform_matrix_4x2fv (GstGLShader * shader,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -1020,7 +1020,7 @@ gst_gl_shader_set_uniform_matrix_4x3fv (GstGLShader * shader,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   location = gl->GetUniformLocation (priv->program_handle, name);
 
@@ -1037,7 +1037,7 @@ gst_gl_shader_get_attribute_location (GstGLShader * shader, const gchar * name)
   g_return_val_if_fail (shader != NULL, 0);
   priv = shader->priv;
   g_return_val_if_fail (priv->program_handle != 0, 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   return gl->GetAttribLocation (priv->program_handle, name);
 }
@@ -1052,7 +1052,7 @@ gst_gl_shader_bind_attribute_location (GstGLShader * shader, GLuint index,
   g_return_if_fail (shader != NULL);
   priv = shader->priv;
   g_return_if_fail (priv->program_handle != 0);
-  gl = shader->display->gl_vtable;
+  gl = shader->context->gl_vtable;
 
   gl->BindAttribLocation (priv->program_handle, index, name);
 }

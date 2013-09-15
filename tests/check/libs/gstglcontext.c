@@ -77,14 +77,15 @@ static GLint shader_attr_texture_loc;
 void
 init (gpointer data)
 {
+  GstGLContext *context = data;
+
   /* has to be called in the thread that is going to use the framebuffer */
-  fbo = gst_gl_framebuffer_new (display);
+  fbo = gst_gl_framebuffer_new (context);
 
   gst_gl_framebuffer_generate (fbo, 320, 240, &fbo_id, &rbo);
   fail_if (fbo == NULL || fbo_id == 0, "failed to create framebuffer object");
 
-  gst_gl_display_gen_texture_thread (display, &tex, GST_VIDEO_FORMAT_RGBA, 320,
-      240);
+  gst_gl_context_gen_texture (context, &tex, GST_VIDEO_FORMAT_RGBA, 320, 240);
   fail_if (tex == 0, "failed to create texture");
 
 #if GST_GL_HAVE_GLES2
@@ -109,7 +110,8 @@ init (gpointer data)
 void
 deinit (gpointer data)
 {
-  GstGLFuncs *gl = display->gl_vtable;
+  GstGLContext *context = data;
+  GstGLFuncs *gl = context->gl_vtable;
   gl->DeleteTextures (1, &tex);;
   gst_object_unref (fbo);
 #if GST_GL_HAVE_GLES2
@@ -120,8 +122,9 @@ deinit (gpointer data)
 void
 clear_tex (gpointer data)
 {
+  GstGLContext *context = data;
+  GstGLFuncs *gl = context->gl_vtable;
   static gfloat r = 0.0, g = 0.0, b = 0.0;
-  GstGLFuncs *gl = display->gl_vtable;
 
   gl->ClearColor (r, g, b, 1.0);
   gl->Clear (GL_COLOR_BUFFER_BIT);
@@ -141,9 +144,9 @@ draw_tex (gpointer data)
 void
 draw_render (gpointer data)
 {
-  GstGLFuncs *gl = display->gl_vtable;
   GstGLContext *context = data;
   GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
+  const GstGLFuncs *gl = context->gl_vtable;
 
   /* redraw the texture into the system provided framebuffer */
 

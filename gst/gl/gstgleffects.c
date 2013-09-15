@@ -275,11 +275,11 @@ void
 gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
     guint height)
 {
-  GstGLDisplay *display = GST_GL_FILTER (effects)->display;
-  GstGLFuncs *gl = display->gl_vtable;
+  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFuncs *gl = context->gl_vtable;
 
 #if GST_GL_HAVE_OPENGL
-  if (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL) {
+  if (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL) {
     GLfloat verts[] = { -1.0f, -1.0f,
       1.0f, -1.0f,
       1.0f, 1.0f,
@@ -309,7 +309,7 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
   }
 #endif
 #if GST_GL_HAVE_GLES2
-  if (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES2) {
+  if (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2) {
     const GLfloat vVertices[] = {
       -1.0f, -1.0f, 0.0f,
       0.0f, 0.0f,
@@ -337,16 +337,16 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
   }
 #endif
 
-  gst_gl_display_clear_shader (display);
+  gst_gl_context_clear_shader (context);
 }
 
 static void
-set_horizontal_swap (GstGLDisplay * display, gpointer data)
+set_horizontal_swap (GstGLContext * context, gpointer data)
 {
 #if GST_GL_HAVE_OPENGL
-  GstGLFuncs *gl = display->gl_vtable;
+  GstGLFuncs *gl = context->gl_vtable;
 
-  if (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL) {
+  if (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL) {
     const gfloat mirrormatrix[16] = {
       -1.0, 0.0, 0.0, 0.0,
       0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0
@@ -372,7 +372,7 @@ gst_gl_effects_ghash_func_clean (gpointer key, gpointer value, gpointer data)
   GstGLFilter *filter = (GstGLFilter *) data;
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_display_del_shader (filter->display, shader);
+  gst_gl_context_del_shader (filter->context, shader);
 
   value = NULL;
 }
@@ -463,7 +463,7 @@ gst_gl_effects_filter_texture (GstGLFilter * filter, guint in_tex,
   effects->outtexture = out_tex;
 
   if (effects->horizontal_swap == TRUE)
-    gst_gl_display_thread_add (filter->display, set_horizontal_swap, effects);
+    gst_gl_context_thread_add (filter->context, set_horizontal_swap, effects);
 
   effects->effect (effects);
 

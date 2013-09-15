@@ -51,7 +51,7 @@ struct _GstGLUpload
 
   GMutex           lock;
 
-  GstGLDisplay    *display;
+  GstGLContext    *context;
 
   /* input data */
   GstVideoInfo    info;
@@ -103,7 +103,7 @@ struct _GstGLUploadClass
  */
 #define GST_GL_UPLOAD_VIDEO_CAPS GST_VIDEO_CAPS_MAKE (GST_GL_UPLOAD_FORMATS)
 
-GstGLUpload * gst_gl_upload_new            (GstGLDisplay * display);
+GstGLUpload * gst_gl_upload_new            (GstGLContext * context);
 
 gboolean gst_gl_upload_init_format         (GstGLUpload * upload, GstVideoFormat v_format,
                                             guint in_width, guint in_height,

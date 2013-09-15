@@ -29,21 +29,21 @@ gst_gl_effects_sin_callback (gint width, gint height, guint texture,
 {
   GstGLShader *shader;
   GstGLEffects *effects = GST_GL_EFFECTS (data);
-  GstGLDisplay *display = GST_GL_FILTER (effects)->display;
-  GstGLFuncs *gl = display->gl_vtable;
+  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "sin0");
 
   if (!shader) {
-    shader = gst_gl_shader_new (display);
+    shader = gst_gl_shader_new (context);
     g_hash_table_insert (effects->shaderstable, "sin0", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
           sin_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_display_set_error (display, "Failed to initialize sin shader");
+    gst_gl_context_set_error (context, "Failed to initialize sin shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_display_get_error ()), (NULL));
+        ("%s", gst_gl_context_get_error ()), (NULL));
     return;
   }
 

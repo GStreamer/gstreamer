@@ -180,8 +180,8 @@ gst_gl_filter_glass_reset (GstGLFilter * filter)
   GstGLFilterGlass *glass_filter = GST_GL_FILTER_GLASS (filter);
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_display_del_shader (filter->display, glass_filter->shader);
-  gst_gl_display_del_shader (filter->display, glass_filter->passthrough_shader);
+  gst_gl_context_del_shader (filter->context, glass_filter->shader);
+  gst_gl_context_del_shader (filter->context, glass_filter->passthrough_shader);
 }
 
 static void
@@ -218,11 +218,11 @@ gst_gl_filter_glass_init_shader (GstGLFilter * filter)
 
   //blocking call, wait the opengl thread has compiled the shader
   ret =
-      gst_gl_display_gen_shader (filter->display, glass_vertex_source,
+      gst_gl_context_gen_shader (filter->context, glass_vertex_source,
       glass_fragment_source, &glass_filter->shader);
   if (ret)
     ret =
-        gst_gl_display_gen_shader (filter->display, passthrough_vertex,
+        gst_gl_context_gen_shader (filter->context, passthrough_vertex,
         passthrough_fragment, &glass_filter->passthrough_shader);
 
   return ret;
@@ -236,7 +236,7 @@ gst_gl_filter_glass_filter_texture (GstGLFilter * filter, guint in_tex,
   glass_filter->in_tex = in_tex;
 
   //blocking call, use a FBO
-  gst_gl_display_use_fbo_v2 (filter->display,
+  gst_gl_context_use_fbo_v2 (filter->context,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info),
       filter->fbo, filter->depthbuffer, out_tex,
@@ -258,7 +258,7 @@ static void
 gst_gl_filter_glass_draw_background_gradient (GstGLFilterGlass * glass)
 {
   GstGLFilter *filter = GST_GL_FILTER (glass);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
 
 /* *INDENT-OFF* */
   gfloat mesh[] = {
@@ -299,7 +299,7 @@ gst_gl_filter_glass_draw_video_plane (GstGLFilter * filter,
     gfloat start_alpha, gfloat stop_alpha, gboolean reversed, gfloat rotation)
 {
   GstGLFilterGlass *glass_filter = GST_GL_FILTER_GLASS (filter);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
 
   gfloat w = (gfloat) width;
   gfloat h = (gfloat) height;
@@ -357,7 +357,7 @@ gst_gl_filter_glass_callback (gpointer stuff)
 
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterGlass *glass_filter = GST_GL_FILTER_GLASS (stuff);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
 
   gint width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
   gint height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
@@ -400,7 +400,7 @@ gst_gl_filter_glass_callback (gpointer stuff)
   gst_gl_filter_glass_draw_video_plane (filter, width, height, texture,
       0.0f, 0.0f, 1.0f, 1.0f, FALSE, rotation);
 
-  gst_gl_display_clear_shader (filter->display);
+  gst_gl_context_clear_shader (filter->context);
 
   gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
   gl->Disable (GL_BLEND);

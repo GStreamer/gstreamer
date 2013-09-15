@@ -139,7 +139,7 @@ _gst_gl_feature_check_for_extension (const GstGLFeatureData * data,
 }
 
 gboolean
-_gst_gl_feature_check (GstGLDisplay * display,
+_gst_gl_feature_check (GstGLContext * context,
     const char *driver_prefix,
     const GstGLFeatureData * data,
     int gl_major, int gl_minor, const char *extensions_string)
@@ -148,15 +148,15 @@ _gst_gl_feature_check (GstGLDisplay * display,
   gboolean in_core = FALSE;
   const char *suffix = NULL;
   int func_num;
-  GstGLFuncs *gst_gl = display->gl_vtable;
-  GstGLContext *context = NULL;
+  GstGLFuncs *gst_gl = context->gl_vtable;
+  GstGLAPI gl_api = gst_gl_context_get_gl_api (context);
 
   /* First check whether the functions should be directly provided by
      GL */
-  if (((display->gl_api & GST_GL_API_OPENGL) &&
+  if (((gl_api & GST_GL_API_OPENGL) &&
           GST_GL_CHECK_GL_VERSION (gl_major, gl_minor,
               data->min_gl_major, data->min_gl_minor)) ||
-      ((display->gl_api & GST_GL_API_GLES2) &&
+      ((gl_api & GST_GL_API_GLES2) &&
           (data->gl_availability & GST_GL_API_GLES2))) {
     in_core = TRUE;
     suffix = "";
@@ -171,9 +171,6 @@ _gst_gl_feature_check (GstGLDisplay * display,
      give up */
   if (suffix == NULL)
     goto error;
-
-  context = gst_gl_display_get_context (display);
-  g_assert (context);
 
   /* Try to get all of the entry points */
   for (func_num = 0; data->functions[func_num].name; func_num++) {
@@ -213,7 +210,6 @@ _gst_gl_feature_check (GstGLDisplay * display,
   }
 
   g_free (full_function_name);
-  gst_object_unref (context);
 
   return TRUE;
 
@@ -232,20 +228,17 @@ error:
     g_free (full_function_name);
   }
 
-  if (context)
-    gst_object_unref (context);
-
   return FALSE;
 }
 
 void
-_gst_gl_feature_check_ext_functions (GstGLDisplay * display,
+_gst_gl_feature_check_ext_functions (GstGLContext * context,
     int gl_major, int gl_minor, const char *gl_extensions)
 {
   int i;
 
   for (i = 0; i < G_N_ELEMENTS (gst_gl_feature_ext_functions_data); i++) {
-    _gst_gl_feature_check (display, "GL",
+    _gst_gl_feature_check (context, "GL",
         gst_gl_feature_ext_functions_data + i, gl_major, gl_minor,
         gl_extensions);
   }

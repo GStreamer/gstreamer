@@ -189,7 +189,7 @@ gst_gl_deinterlace_reset (GstGLFilter * filter)
     deinterlace_filter->prev_buffer = NULL;
   }
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_display_del_shader (filter->display, deinterlace_filter->shader);
+  gst_gl_context_del_shader (filter->context, deinterlace_filter->shader);
 }
 
 static void
@@ -224,7 +224,7 @@ gst_gl_deinterlace_init_shader (GstGLFilter * filter)
   GstGLDeinterlace *deinterlace_filter = GST_GL_DEINTERLACE (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  return gst_gl_display_gen_shader (filter->display, 0, greedyh_fragment_source,
+  return gst_gl_context_gen_shader (filter->context, 0, greedyh_fragment_source,
       &deinterlace_filter->shader);
 }
 
@@ -264,7 +264,7 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
 {
   GstGLDeinterlace *deinterlace_filter = GST_GL_DEINTERLACE (stuff);
   GstGLFilter *filter = GST_GL_FILTER (stuff);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
   guint temp;
 
   GLfloat verts[] = { -1.0, -1.0,
@@ -291,7 +291,7 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
   gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
 
   if (G_UNLIKELY (deinterlace_filter->prev_tex == 0)) {
-    gst_gl_display_gen_texture_thread (filter->display,
+    gst_gl_context_gen_texture_thread (filter->context,
         &deinterlace_filter->prev_tex,
         GST_VIDEO_INFO_FORMAT (&filter->out_info),
         GST_VIDEO_INFO_WIDTH (&filter->out_info),

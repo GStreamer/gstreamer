@@ -23,11 +23,11 @@
 
 #include "../gstgleffects.h"
 
-#define USING_OPENGL(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL)
-#define USING_OPENGL3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL3)
-#define USING_GLES(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES)
-#define USING_GLES2(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES2)
-#define USING_GLES3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES3)
+#define USING_OPENGL(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL)
+#define USING_OPENGL3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL3)
+#define USING_GLES(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES)
+#define USING_GLES2(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2)
+#define USING_GLES3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES3)
 
 static void
 gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
@@ -36,17 +36,17 @@ gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
   GstGLShader *shader;
   GstGLFilter *filter = GST_GL_FILTER (data);
   GstGLEffects *effects = GST_GL_EFFECTS (filter);
-  GstGLDisplay *display = filter->display;
-  GstGLFuncs *gl = display->gl_vtable;
+  GstGLContext *context = filter->context;
+  GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "mirror0");
 
   if (!shader) {
-    shader = gst_gl_shader_new (display);
+    shader = gst_gl_shader_new (context);
     g_hash_table_insert (effects->shaderstable, "mirror0", shader);
 
 #if GST_GL_HAVE_GLES2
-    if (USING_GLES2 (display)) {
+    if (USING_GLES2 (context)) {
       if (shader) {
         GError *error = NULL;
         gst_gl_shader_set_vertex_source (shader, vertex_shader_source);
@@ -55,13 +55,13 @@ gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
 
         gst_gl_shader_compile (shader, &error);
         if (error) {
-          gst_gl_display_set_error (display,
+          gst_gl_context_set_error (context,
               "Failed to initialize mirror shader, %s", error->message);
           g_error_free (error);
           error = NULL;
           gst_gl_shader_use (NULL);
           GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-              ("%s", gst_gl_display_get_error ()), (NULL));
+              ("%s", gst_gl_context_get_error ()), (NULL));
         } else {
           effects->draw_attr_position_loc =
               gst_gl_shader_get_attribute_location (shader, "a_position");
@@ -72,13 +72,13 @@ gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
     }
 #endif
 #if GST_GL_HAVE_OPENGL
-    if (USING_OPENGL (display)) {
+    if (USING_OPENGL (context)) {
       if (!gst_gl_shader_compile_and_check (shader,
               mirror_fragment_source_opengl, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-        gst_gl_display_set_error (display,
+        gst_gl_context_set_error (context,
             "Failed to initialize mirror shader");
         GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-            ("%s", gst_gl_display_get_error ()), (NULL));
+            ("%s", gst_gl_context_get_error ()), (NULL));
         return;
       }
 
@@ -86,7 +86,7 @@ gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
 #endif
   }
 #if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (display)) {
+  if (USING_OPENGL (context)) {
     gl->MatrixMode (GL_PROJECTION);
     gl->LoadIdentity ();
   }
@@ -101,7 +101,7 @@ gst_gl_effects_mirror_callback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
 #if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (filter->display)) {
+  if (USING_OPENGL (filter->context)) {
     gst_gl_shader_set_uniform_1f (shader, "width", (gfloat) width / 2.0f);
     gst_gl_shader_set_uniform_1f (shader, "height", (gfloat) height / 2.0f);
   }

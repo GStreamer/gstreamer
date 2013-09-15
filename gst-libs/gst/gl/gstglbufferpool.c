@@ -168,7 +168,7 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
   }
 
   if (!(gl_mem =
-          gst_gl_memory_alloc (glpool->display, GST_VIDEO_INFO_FORMAT (info),
+          gst_gl_memory_alloc (glpool->context, GST_VIDEO_INFO_FORMAT (info),
               GST_VIDEO_INFO_WIDTH (info), GST_VIDEO_INFO_HEIGHT (info))))
     goto mem_create_failed;
   gst_buffer_append_memory (buf, gl_mem);
@@ -206,12 +206,12 @@ mem_create_failed:
  * Returns: a #GstBufferPool that allocates buffers with #GstGLMemory
  */
 GstBufferPool *
-gst_gl_buffer_pool_new (GstGLDisplay * display)
+gst_gl_buffer_pool_new (GstGLContext * context)
 {
   GstGLBufferPool *pool;
 
   pool = g_object_new (GST_TYPE_GL_BUFFER_POOL, NULL);
-  pool->display = gst_object_ref (display);
+  pool->context = gst_object_ref (context);
 
   GST_LOG_OBJECT (pool, "new GL buffer pool %p", pool);
 
@@ -245,9 +245,9 @@ gst_gl_buffer_pool_dispose (GObject * object)
 {
   GstGLBufferPool *pool = GST_GL_BUFFER_POOL_CAST (object);
 
-  if (pool->display) {
-    gst_object_unref (pool->display);
-    pool->display = NULL;
+  if (pool->context) {
+    gst_object_unref (pool->context);
+    pool->context = NULL;
   }
 
   G_OBJECT_CLASS (gst_gl_buffer_pool_parent_class)->dispose (object);

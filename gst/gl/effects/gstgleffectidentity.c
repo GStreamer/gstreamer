@@ -23,11 +23,11 @@
 
 #include "../gstgleffects.h"
 
-#define USING_OPENGL(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL)
-#define USING_OPENGL3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_OPENGL3)
-#define USING_GLES(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES)
-#define USING_GLES2(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES2)
-#define USING_GLES3(display) (gst_gl_display_get_gl_api (display) & GST_GL_API_GLES3)
+#define USING_OPENGL(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL)
+#define USING_OPENGL3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_OPENGL3)
+#define USING_GLES(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES)
+#define USING_GLES2(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES2)
+#define USING_GLES3(context) (gst_gl_context_get_gl_api (context) & GST_GL_API_GLES3)
 
 static void
 gst_gl_effects_identity_callback (gint width, gint height, guint texture,
@@ -35,22 +35,22 @@ gst_gl_effects_identity_callback (gint width, gint height, guint texture,
 {
   GstGLEffects *effects = GST_GL_EFFECTS (data);
   GstGLFilter *filter = GST_GL_FILTER (effects);
-  GstGLDisplay *display = filter->display;
-  GstGLFuncs *gl = display->gl_vtable;
+  GstGLContext *context = filter->context;
+  GstGLFuncs *gl = context->gl_vtable;
 
 #if GST_GL_HAVE_OPENGL
-  if (USING_OPENGL (display)) {
+  if (USING_OPENGL (context)) {
     gl->MatrixMode (GL_PROJECTION);
     gl->LoadIdentity ();
   }
 #endif
 #if GST_GL_HAVE_GLES2
-  if (USING_GLES2 (display)) {
+  if (USING_GLES2 (context)) {
     GstGLShader *shader =
         g_hash_table_lookup (effects->shaderstable, "identity0");
 
     if (!shader) {
-      shader = gst_gl_shader_new (display);
+      shader = gst_gl_shader_new (context);
       g_hash_table_insert (effects->shaderstable, "identity0", shader);
 
       if (shader) {

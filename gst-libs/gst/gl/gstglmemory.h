@@ -82,7 +82,7 @@ struct _GstGLMemory
 {
   GstMemory          mem;
 
-  GstGLDisplay      *display;
+  GstGLContext      *context;
   GLuint             tex_id;
   GstVideoFormat     v_format;
   GLenum             gl_format;
@@ -145,10 +145,10 @@ struct _GstGLMemory
 
 void gst_gl_memory_init (void);
 
-GstMemory * gst_gl_memory_alloc (GstGLDisplay * display, GstVideoFormat format,
+GstMemory * gst_gl_memory_alloc (GstGLContext * context, GstVideoFormat format,
                                  gsize width, gsize height);
 
-GstGLMemory * gst_gl_memory_wrapped (GstGLDisplay * display, GstVideoFormat format,
+GstGLMemory * gst_gl_memory_wrapped (GstGLContext * context, GstVideoFormat format,
                                      guint width, guint height, gpointer data,
                                      gpointer user_data, GDestroyNotify notify);
 

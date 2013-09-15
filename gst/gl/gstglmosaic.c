@@ -176,7 +176,7 @@ gst_gl_mosaic_reset (GstGLMixer * mixer)
   mosaic->input_frames = NULL;
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_display_del_shader (mixer->display, mosaic->shader);
+  gst_gl_context_del_shader (mixer->context, mosaic->shader);
 }
 
 static gboolean
@@ -185,7 +185,7 @@ gst_gl_mosaic_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mixer);
 
   //blocking call, wait the opengl thread has compiled the shader
-  return gst_gl_display_gen_shader (mixer->display, mosaic_v_src, mosaic_f_src,
+  return gst_gl_context_gen_shader (mixer->context, mosaic_v_src, mosaic_f_src,
       &mosaic->shader);
 }
 
@@ -199,7 +199,7 @@ gst_gl_mosaic_process_textures (GstGLMixer * mix, GArray * in_textures,
   mosaic->input_frames = in_frames;
 
   //blocking call, use a FBO
-  gst_gl_display_use_fbo_v2 (mix->display,
+  gst_gl_context_use_fbo_v2 (mix->context,
       GST_VIDEO_INFO_WIDTH (&mix->out_info),
       GST_VIDEO_INFO_HEIGHT (&mix->out_info), mix->fbo, mix->depthbuffer,
       out_tex, gst_gl_mosaic_callback, (gpointer) mosaic);
@@ -213,7 +213,7 @@ gst_gl_mosaic_callback (gpointer stuff)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (stuff);
   GstGLMixer *mixer = GST_GL_MIXER (mosaic);
-  GstGLFuncs *gl = mixer->display->gl_vtable;
+  GstGLFuncs *gl = mixer->context->gl_vtable;
 
   static GLfloat xrot = 0;
   static GLfloat yrot = 0;
@@ -235,7 +235,7 @@ gst_gl_mosaic_callback (gpointer stuff)
 
   guint count = 0;
 
-  gst_gl_display_clear_shader (mixer->display);
+  gst_gl_context_clear_shader (mixer->context);
   gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
   gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
 
@@ -360,7 +360,7 @@ gst_gl_mosaic_callback (gpointer stuff)
 
   gl->Disable (GL_DEPTH_TEST);
 
-  gst_gl_display_clear_shader (mixer->display);
+  gst_gl_context_clear_shader (mixer->context);
 
   xrot += 0.6f;
   yrot += 0.4f;

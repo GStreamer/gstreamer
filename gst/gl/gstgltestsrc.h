@@ -105,6 +105,7 @@ struct _GstGLTestSrc {
     GstGLDownload *download;
 
     GstGLDisplay *display;
+    GstGLContext *context;
     gint64 timestamp_offset;              /* base offset */
     GstClockTime running_time;            /* total running time */
     gint64 n_frames;                      /* total frames sent */

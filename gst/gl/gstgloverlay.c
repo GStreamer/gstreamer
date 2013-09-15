@@ -108,7 +108,7 @@ static void
 gst_gl_overlay_reset_gl_resources (GstGLFilter * filter)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (filter);
-  const GstGLFuncs *gl = filter->display->gl_vtable;
+  const GstGLFuncs *gl = filter->context->gl_vtable;
 
   gl->DeleteTextures (1, &overlay->pbuftexture);
 }
@@ -266,7 +266,7 @@ static void
 gst_gl_overlay_init_texture (GstGLOverlay * o, GLuint tex, int flag)
 {
   GstGLFilter *filter = GST_GL_FILTER (o);
-  const GstGLFuncs *gl = filter->display->gl_vtable;
+  const GstGLFuncs *gl = filter->context->gl_vtable;
 
   if (flag == 0 && o->type_file == 2) {
     gl->Enable (GL_TEXTURE_2D);
@@ -281,7 +281,7 @@ static void
 gst_gl_overlay_draw (GstGLOverlay * o, int flag)
 {
   GstGLFilter *filter = GST_GL_FILTER (o);
-  const GstGLFuncs *gl = filter->display->gl_vtable;
+  const GstGLFuncs *gl = filter->context->gl_vtable;
 
   float y = 0.0f;
   float width = 0.0f;
@@ -325,7 +325,7 @@ gst_gl_overlay_draw (GstGLOverlay * o, int flag)
   v_vertices[11] = y;
   v_vertices[16] = y;
 
-  gst_gl_display_clear_shader (filter->display);
+  gst_gl_context_clear_shader (filter->context);
 
   gl->ClientActiveTexture (GL_TEXTURE0);
   gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
@@ -368,7 +368,7 @@ static void
 gst_gl_overlay_load_texture (GstGLOverlay * o, GLuint tex, int flag)
 {
   GstGLFilter *filter = GST_GL_FILTER (o);
-  const GstGLFuncs *gl = filter->display->gl_vtable;
+  const GstGLFuncs *gl = filter->context->gl_vtable;
 
   gfloat video_ratio_w;
   gfloat video_ratio_h;
@@ -578,7 +578,7 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (stuff);
   GstGLFilter *filter = GST_GL_FILTER (overlay);
-  const GstGLFuncs *gl = filter->display->gl_vtable;
+  const GstGLFuncs *gl = filter->context->gl_vtable;
 
   gl->MatrixMode (GL_PROJECTION);
   gl->LoadIdentity ();
@@ -610,11 +610,11 @@ gst_gl_overlay_callback (gint width, gint height, guint texture, gpointer stuff)
 }
 
 static void
-init_pixbuf_texture (GstGLDisplay * display, gpointer data)
+init_pixbuf_texture (GstGLContext * context, gpointer data)
 {
   GstGLOverlay *overlay = GST_GL_OVERLAY (data);
   GstGLFilter *filter = GST_GL_FILTER (overlay);
-  const GstGLFuncs *gl = filter->display->gl_vtable;
+  const GstGLFuncs *gl = filter->context->gl_vtable;
 
   if (overlay->pixbuf) {
     gl->DeleteTextures (1, &overlay->pbuftexture);
@@ -633,8 +633,6 @@ init_pixbuf_texture (GstGLDisplay * display, gpointer data)
       gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     }
   }
-  //else
-  //  display->isAlive = FALSE;
 }
 
 static gboolean
@@ -647,8 +645,8 @@ gst_gl_overlay_filter_texture (GstGLFilter * filter, guint in_tex,
     if ((overlay->type_file = gst_gl_overlay_load_png (filter)) == 0)
       if ((overlay->type_file = gst_gl_overlay_load_jpeg (filter)) == 0)
         overlay->pixbuf = NULL;
-    /* if loader failed then display is turned off */
-    gst_gl_display_thread_add (filter->display, init_pixbuf_texture, overlay);
+    /* if loader failed then context is turned off */
+    gst_gl_context_thread_add (filter->context, init_pixbuf_texture, overlay);
     if (overlay->pixbuf) {
       free (overlay->pixbuf);
       overlay->pixbuf = NULL;
@@ -731,7 +729,7 @@ gst_gl_overlay_load_png (GstGLFilter * filter)
   png_byte magic[8];
   gint n_read;
 
-  if (!filter->display)
+  if (!filter->context)
     return 1;
 
   if ((fp = fopen (overlay->location, "rb")) == NULL)

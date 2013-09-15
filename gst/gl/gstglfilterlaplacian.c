@@ -131,7 +131,7 @@ gst_gl_filter_laplacian_reset (GstGLFilter * filter)
   GstGLFilterLaplacian *laplacian_filter = GST_GL_FILTER_LAPLACIAN (filter);
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_display_del_shader (filter->display, laplacian_filter->shader);
+  gst_gl_context_del_shader (filter->context, laplacian_filter->shader);
 }
 
 static void
@@ -166,7 +166,7 @@ gst_gl_filter_laplacian_init_shader (GstGLFilter * filter)
   GstGLFilterLaplacian *laplacian_filter = GST_GL_FILTER_LAPLACIAN (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  return gst_gl_display_gen_shader (filter->display, 0,
+  return gst_gl_context_gen_shader (filter->context, 0,
       convolution_fragment_source, &laplacian_filter->shader);
 }
 
@@ -191,7 +191,7 @@ gst_gl_filter_laplacian_callback (gint width, gint height, guint texture,
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterLaplacian *laplacian_filter = GST_GL_FILTER_LAPLACIAN (filter);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
 
   gfloat kernel[9] = { 0.0, -1.0, 0.0,
     -1.0, 4.0, -1.0,

@@ -64,8 +64,6 @@ gst_gl_display_init (GstGLDisplay * display)
 {
   display->priv = GST_GL_DISPLAY_GET_PRIVATE (display);
 
-  display->gl_vtable = g_slice_alloc0 (sizeof (GstGLFuncs));
-
   display->gl_api = GST_GL_API_NONE;
 
   gst_gl_memory_init ();
@@ -75,11 +73,6 @@ static void
 gst_gl_display_finalize (GObject * object)
 {
   GstGLDisplay *display = GST_GL_DISPLAY (object);
-
-  if (display->gl_vtable) {
-    g_slice_free (GstGLFuncs, display->gl_vtable);
-    display->gl_vtable = NULL;
-  }
 
   if (display->context) {
     gst_object_unref (display->context);
@@ -95,45 +88,6 @@ gst_gl_display_new (void)
   return g_object_new (GST_TYPE_GL_DISPLAY, NULL);
 }
 
-#if 1
-typedef struct
-{
-  GstGLDisplay *display;
-  GstGLDisplayThreadFunc func;
-  gpointer data;
-} RunGenericData;
-
-static void
-_gst_gl_display_thread_run_generic (RunGenericData * data)
-{
-  GST_TRACE ("running function:%p data:%p", data->func, data->data);
-
-  data->func (data->display, data->data);
-}
-
-void
-gst_gl_display_thread_add (GstGLDisplay * display,
-    GstGLDisplayThreadFunc func, gpointer data)
-{
-  GstGLWindow *window;
-  RunGenericData rdata;
-
-  g_return_if_fail (GST_IS_GL_DISPLAY (display));
-  g_return_if_fail (GST_GL_IS_CONTEXT (display->context));
-  g_return_if_fail (func != NULL);
-
-  rdata.display = display;
-  rdata.data = data;
-  rdata.func = func;
-
-  window = gst_gl_context_get_window (display->context);
-
-  gst_gl_window_send_message (window,
-      GST_GL_WINDOW_CB (_gst_gl_display_thread_run_generic), &rdata);
-
-  gst_object_unref (window);
-}
-
 GstGLAPI
 gst_gl_display_get_gl_api (GstGLDisplay * display)
 {
@@ -142,15 +96,6 @@ gst_gl_display_get_gl_api (GstGLDisplay * display)
 
   return gst_gl_context_get_gl_api (display->context);
 }
-
-gpointer
-gst_gl_display_get_gl_vtable (GstGLDisplay * display)
-{
-  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), NULL);
-
-  return display->gl_vtable;
-}
-#endif
 
 void
 gst_gl_display_set_context (GstGLDisplay * display, GstGLContext * context)

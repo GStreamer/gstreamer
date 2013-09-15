@@ -93,6 +93,7 @@ struct _GstGLMixer
   guint64 qos_processed, qos_dropped;
 
   GstGLDisplay *display;
+  GstGLContext *context;
   GLuint fbo;
   GLuint depthbuffer;
 };

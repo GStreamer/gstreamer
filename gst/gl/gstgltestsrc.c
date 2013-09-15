@@ -315,9 +315,9 @@ gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   out_width = GST_VIDEO_INFO_WIDTH (&gltestsrc->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&gltestsrc->out_info);
 
-  if (!gst_gl_display_gen_fbo (gltestsrc->display, out_width, out_height,
+  if (!gst_gl_context_gen_fbo (gltestsrc->context, out_width, out_height,
           &gltestsrc->fbo, &gltestsrc->depthbuffer))
-    goto display_error;
+    goto context_error;
 
   return TRUE;
 
@@ -328,10 +328,10 @@ wrong_caps:
     return FALSE;
   }
 
-display_error:
+context_error:
   {
     GST_ELEMENT_ERROR (gltestsrc, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_display_get_error ()), (NULL));
+        ("%s", gst_gl_context_get_error ()), (NULL));
     return FALSE;
   }
 }
@@ -467,14 +467,14 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
         "attempting to wrap for download");
 
     if (!src->out_tex_id) {
-      gst_gl_display_gen_texture (src->display, &src->out_tex_id,
+      gst_gl_context_gen_texture (src->context, &src->out_tex_id,
           GST_VIDEO_FORMAT_RGBA, GST_VIDEO_FRAME_WIDTH (&out_frame),
           GST_VIDEO_FRAME_HEIGHT (&out_frame));
     }
     out_tex = src->out_tex_id;
 
     if (!src->download) {
-      src->download = gst_gl_download_new (src->display);
+      src->download = gst_gl_download_new (src->context);
 
       if (!gst_gl_download_init_format (src->download,
               GST_VIDEO_FRAME_FORMAT (&out_frame),
@@ -492,7 +492,7 @@ gst_gl_test_src_fill (GstPushSrc * psrc, GstBuffer * buffer)
   gst_buffer_replace (&src->buffer, buffer);
 
   //blocking call, generate a FBO
-  if (!gst_gl_display_use_fbo_v2 (src->display, width, height, src->fbo,
+  if (!gst_gl_context_use_fbo_v2 (src->context, width, height, src->fbo,
           src->depthbuffer, out_tex, gst_gl_test_src_callback,
           (gpointer) src)) {
     goto not_negotiated;
@@ -556,21 +556,20 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
   }
 
   id_value = gst_structure_get_value (structure, "gstgldisplay");
-  if (G_VALUE_HOLDS_POINTER (id_value))
+  if (G_VALUE_HOLDS_POINTER (id_value)) {
     /* at least one gl element is after in our gl chain */
     src->display =
         gst_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
-  else {
-    GstGLContext *context;
+    src->context = gst_gl_display_get_context (src->display);
+  } else {
     GError *error = NULL;
 
     GST_INFO ("Creating GstGLDisplay");
     src->display = gst_gl_display_new ();
-    context = gst_gl_context_new (src->display);
-    gst_gl_display_set_context (src->display, context);
-    gst_object_unref (context);
+    src->context = gst_gl_context_new (src->display);
+    gst_gl_display_set_context (src->display, src->context);
 
-    if (!gst_gl_context_create (context, 0, &error)) {
+    if (!gst_gl_context_create (src->context, 0, &error)) {
       GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
           ("%s", error->message), (NULL));
       return FALSE;
@@ -589,9 +588,9 @@ gst_gl_test_src_stop (GstBaseSrc * basesrc)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (basesrc);
 
-  if (src->display) {
+  if (src->context) {
     if (src->out_tex_id) {
-      gst_gl_display_del_texture (src->display, &src->out_tex_id);
+      gst_gl_context_del_texture (src->context, &src->out_tex_id);
     }
 
     if (src->download) {
@@ -599,7 +598,12 @@ gst_gl_test_src_stop (GstBaseSrc * basesrc)
       src->download = NULL;
     }
     //blocking call, delete the FBO
-    gst_gl_display_del_fbo (src->display, src->fbo, src->depthbuffer);
+    gst_gl_context_del_fbo (src->context, src->fbo, src->depthbuffer);
+    gst_object_unref (src->context);
+    src->context = NULL;
+  }
+
+  if (src->display) {
     gst_object_unref (src->display);
     src->display = NULL;
   }
@@ -634,7 +638,7 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
   }
 
   if (!pool)
-    pool = gst_gl_buffer_pool_new (src->display);
+    pool = gst_gl_buffer_pool_new (src->context);
 
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps, size, min, max);

@@ -160,7 +160,7 @@ gst_gl_filter_filtershader_reset (GstGLFilter * filter)
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_display_del_shader (filter->display, filtershader->shader0);
+  gst_gl_context_del_shader (filter->context, filtershader->shader0);
 
 }
 
@@ -178,7 +178,7 @@ gst_gl_filtershader_set_property (GObject * object, guint prop_id,
         g_free (filtershader->filename);
       }
       if (filtershader->compiled) {
-        //gst_gl_display_del_shader (filtershader->filter.display, filtershader->shader0);
+        //gst_gl_context_del_shader (filtershader->filter.context, filtershader->shader0);
         gst_gl_filter_filtershader_reset (&filtershader->filter);
         filtershader->shader0 = 0;
       }
@@ -319,7 +319,7 @@ gst_gl_filtershader_init_shader (GstGLFilter * filter)
     return FALSE;
 
   //blocking call, wait the opengl thread has compiled the shader
-  if (!gst_gl_display_gen_shader (filter->display, 0, hfilter_fragment_source,
+  if (!gst_gl_context_gen_shader (filter->context, 0, hfilter_fragment_source,
           &filtershader->shader0))
     return FALSE;
 
@@ -351,7 +351,7 @@ gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
 
   gl->MatrixMode (GL_PROJECTION);
   gl->LoadIdentity ();

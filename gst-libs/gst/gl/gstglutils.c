@@ -44,11 +44,11 @@
 #define GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS 0x8CD9
 #endif
 
-#define USING_OPENGL(display) (display->gl_api & GST_GL_API_OPENGL)
-#define USING_OPENGL3(display) (display->gl_api & GST_GL_API_OPENGL3)
-#define USING_GLES(display) (display->gl_api & GST_GL_API_GLES)
-#define USING_GLES2(display) (display->gl_api & GST_GL_API_GLES2)
-#define USING_GLES3(display) (display->gl_api & GST_GL_API_GLES3)
+#define USING_OPENGL(context) (gst_gl_context_get_gl_apie (context) & GST_GL_API_OPENGL)
+#define USING_OPENGL3(context) (gst_gl_context_get_gl_apie (context) & GST_GL_API_OPENGL3)
+#define USING_GLES(context) (gst_gl_context_get_gl_apie (context) & GST_GL_API_GLES)
+#define USING_GLES2(context) (gst_gl_context_get_gl_apie (context)->gl_api & GST_GL_API_GLES2)
+#define USING_GLES3(context) (gst_gl_context_get_gl_apie (context) & GST_GL_API_GLES3)
 
 static GLuint gen_texture;
 static GLuint gen_texture_width;
@@ -60,19 +60,19 @@ static GLuint *del_texture;
 static gchar *error_message;
 
 static void
-gst_gl_display_gen_texture_window_cb (GstGLDisplay * display)
+gst_gl_context_gen_texture_window_cb (GstGLContext * context)
 {
-  gst_gl_display_gen_texture_thread (display, &gen_texture,
+  gst_gl_context_gen_texture_thread (context, &gen_texture,
       gen_texture_video_format, gen_texture_width, gen_texture_height);
 }
 
 /* Generate a texture if no one is available in the pool
  * Called in the gl thread */
 void
-gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
+gst_gl_context_gen_texture_thread (GstGLContext * context, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height)
 {
-  const GstGLFuncs *gl = display->gl_vtable;
+  const GstGLFuncs *gl = context->gl_vtable;
 
   GST_TRACE ("Generating texture format:%u dimensions:%ux%u", v_format,
       width, height);
@@ -95,18 +95,18 @@ gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
 }
 
 void
-gst_gl_display_del_texture_window_cb (GstGLDisplay * display)
+gst_gl_context_del_texture_window_cb (GstGLContext * context)
 {
-  const GstGLFuncs *gl = display->gl_vtable;
+  const GstGLFuncs *gl = context->gl_vtable;
   gl->DeleteTextures (1, del_texture);
 }
 
 /* called in the gl thread */
 gboolean
-gst_gl_display_check_framebuffer_status (GstGLDisplay * display)
+gst_gl_context_check_framebuffer_status (GstGLContext * context)
 {
   GLenum status = 0;
-  status = display->gl_vtable->CheckFramebufferStatus (GL_FRAMEBUFFER);
+  status = context->gl_vtable->CheckFramebufferStatus (GL_FRAMEBUFFER);
 
   switch (status) {
     case GL_FRAMEBUFFER_COMPLETE:
@@ -140,35 +140,11 @@ gst_gl_display_check_framebuffer_status (GstGLDisplay * display)
 }
 
 void
-gst_gl_display_activate_gl_context (GstGLDisplay * display, gboolean activate)
-{
-  GstGLContext *context;
-
-  g_return_if_fail (GST_IS_GL_DISPLAY (display));
-
-  if (!activate)
-    gst_gl_display_lock (display);
-
-  context = gst_gl_display_get_context_unlocked (display);
-
-  gst_gl_context_activate (context, activate);
-
-  if (activate)
-    gst_gl_display_unlock (display);
-
-  gst_object_unref (context);
-}
-
-void
-gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
+gst_gl_context_gen_texture (GstGLContext * context, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height)
 {
-  GstGLContext *context;
   GstGLWindow *window;
 
-  gst_gl_display_lock (display);
-
-  context = gst_gl_display_get_context_unlocked (display);
   window = gst_gl_context_get_window (context);
 
   if (gst_gl_window_is_running (window)) {
@@ -176,37 +152,27 @@ gst_gl_display_gen_texture (GstGLDisplay * display, GLuint * pTexture,
     gen_texture_height = height;
     gen_texture_video_format = v_format;
     gst_gl_window_send_message (window,
-        GST_GL_WINDOW_CB (gst_gl_display_gen_texture_window_cb), display);
+        GST_GL_WINDOW_CB (gst_gl_context_gen_texture_window_cb), context);
     *pTexture = gen_texture;
   } else
     *pTexture = 0;
 
-  gst_object_unref (context);
   gst_object_unref (window);
-
-  gst_gl_display_unlock (display);
 }
 
 void
-gst_gl_display_del_texture (GstGLDisplay * display, GLuint * pTexture)
+gst_gl_context_del_texture (GstGLContext * context, GLuint * pTexture)
 {
-  GstGLContext *context;
   GstGLWindow *window;
 
-  gst_gl_display_lock (display);
-
-  context = gst_gl_display_get_context_unlocked (display);
   window = gst_gl_context_get_window (context);
   if (gst_gl_window_is_running (window) && *pTexture) {
     del_texture = pTexture;
     gst_gl_window_send_message (window,
-        GST_GL_WINDOW_CB (gst_gl_display_del_texture_window_cb), display);
+        GST_GL_WINDOW_CB (gst_gl_context_del_texture_window_cb), context);
   }
 
-  gst_object_unref (context);
   gst_object_unref (window);
-
-  gst_gl_display_unlock (display);
 }
 
 typedef struct _GenFBO
@@ -217,21 +183,21 @@ typedef struct _GenFBO
 } GenFBO;
 
 static void
-_gen_fbo (GstGLDisplay * display, GenFBO * data)
+_gen_fbo (GstGLContext * context, GenFBO * data)
 {
   gst_gl_framebuffer_generate (data->frame, data->width, data->height,
       data->fbo, data->depth);
 }
 
 gboolean
-gst_gl_display_gen_fbo (GstGLDisplay * display, gint width, gint height,
+gst_gl_context_gen_fbo (GstGLContext * context, gint width, gint height,
     GLuint * fbo, GLuint * depthbuffer)
 {
-  GstGLFramebuffer *frame = gst_gl_framebuffer_new (display);
+  GstGLFramebuffer *frame = gst_gl_framebuffer_new (context);
 
   GenFBO data = { frame, width, height, fbo, depthbuffer };
 
-  gst_gl_display_thread_add (display, (GstGLDisplayThreadFunc) _gen_fbo, &data);
+  gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _gen_fbo, &data);
 
   gst_object_unref (frame);
 
@@ -259,7 +225,7 @@ typedef struct _UseFBO
 } UseFBO;
 
 static void
-_use_fbo (GstGLDisplay * display, UseFBO * data)
+_use_fbo (GstGLContext * context, UseFBO * data)
 {
   gst_gl_framebuffer_use (data->frame, data->texture_fbo_width,
       data->texture_fbo_height, data->fbo, data->depth_buffer,
@@ -278,14 +244,14 @@ _use_fbo (GstGLDisplay * display, UseFBO * data)
  * GstGLDisplay *display and gpointer data, or just gpointer data */
 /* ..everything here has to be simplified! */
 gboolean
-gst_gl_display_use_fbo (GstGLDisplay * display, gint texture_fbo_width,
+gst_gl_context_use_fbo (GstGLContext * context, gint texture_fbo_width,
     gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
     GLuint texture_fbo, GLCB cb, gint input_tex_width,
     gint input_tex_height, GLuint input_tex, gdouble proj_param1,
     gdouble proj_param2, gdouble proj_param3, gdouble proj_param4,
     GstGLDisplayProjection projection, gpointer stuff)
 {
-  GstGLFramebuffer *frame = gst_gl_framebuffer_new (display);
+  GstGLFramebuffer *frame = gst_gl_framebuffer_new (context);
 
   UseFBO data =
       { frame, texture_fbo_width, texture_fbo_height, fbo, depth_buffer,
@@ -293,7 +259,7 @@ gst_gl_display_use_fbo (GstGLDisplay * display, gint texture_fbo_width,
     proj_param1, proj_param2, proj_param3, proj_param4, projection, stuff
   };
 
-  gst_gl_display_thread_add (display, (GstGLDisplayThreadFunc) _use_fbo, &data);
+  gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _use_fbo, &data);
 
   gst_object_unref (frame);
 
@@ -313,7 +279,7 @@ typedef struct _UseFBO2
 } UseFBO2;
 
 static void
-_use_fbo_v2 (GstGLDisplay * display, UseFBO2 * data)
+_use_fbo_v2 (GstGLContext * context, UseFBO2 * data)
 {
   gst_gl_framebuffer_use_v2 (data->frame, data->texture_fbo_width,
       data->texture_fbo_height, data->fbo, data->depth_buffer,
@@ -321,18 +287,18 @@ _use_fbo_v2 (GstGLDisplay * display, UseFBO2 * data)
 }
 
 gboolean
-gst_gl_display_use_fbo_v2 (GstGLDisplay * display, gint texture_fbo_width,
+gst_gl_context_use_fbo_v2 (GstGLContext * context, gint texture_fbo_width,
     gint texture_fbo_height, GLuint fbo, GLuint depth_buffer,
     GLuint texture_fbo, GLCB_V2 cb, gpointer stuff)
 {
-  GstGLFramebuffer *frame = gst_gl_framebuffer_new (display);
+  GstGLFramebuffer *frame = gst_gl_framebuffer_new (context);
 
   UseFBO2 data =
       { frame, texture_fbo_width, texture_fbo_height, fbo, depth_buffer,
     texture_fbo, cb, stuff
   };
 
-  gst_gl_display_thread_add (display, (GstGLDisplayThreadFunc) _use_fbo_v2,
+  gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _use_fbo_v2,
       &data);
 
   gst_object_unref (frame);
@@ -349,35 +315,35 @@ typedef struct _DelFBO
 
 /* Called in the gl thread */
 static void
-_del_fbo (GstGLDisplay * display, DelFBO * data)
+_del_fbo (GstGLContext * context, DelFBO * data)
 {
   gst_gl_framebuffer_delete (data->frame, data->fbo, data->depth);
 }
 
 /* Called by gltestsrc and glfilter */
 void
-gst_gl_display_del_fbo (GstGLDisplay * display, GLuint fbo, GLuint depth_buffer)
+gst_gl_context_del_fbo (GstGLContext * context, GLuint fbo, GLuint depth_buffer)
 {
-  GstGLFramebuffer *frame = gst_gl_framebuffer_new (display);
+  GstGLFramebuffer *frame = gst_gl_framebuffer_new (context);
 
   DelFBO data = { frame, fbo, depth_buffer };
 
-  gst_gl_display_thread_add (display, (GstGLDisplayThreadFunc) _del_fbo, &data);
+  gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _del_fbo, &data);
 
   gst_object_unref (frame);
 }
 
 static void
-_compile_shader (GstGLDisplay * display, GstGLShader ** shader)
+_compile_shader (GstGLContext * context, GstGLShader ** shader)
 {
   GError *error = NULL;
 
   gst_gl_shader_compile (*shader, &error);
   if (error) {
-    gst_gl_display_set_error (display, "%s", error->message);
+    gst_gl_context_set_error (context, "%s", error->message);
     g_error_free (error);
     error = NULL;
-    gst_gl_display_clear_shader (display);
+    gst_gl_context_clear_shader (context);
     gst_object_unref (*shader);
     *shader = NULL;
   }
@@ -385,27 +351,27 @@ _compile_shader (GstGLDisplay * display, GstGLShader ** shader)
 
 /* Called by glfilter */
 gboolean
-gst_gl_display_gen_shader (GstGLDisplay * display, const gchar * vert_src,
+gst_gl_context_gen_shader (GstGLContext * context, const gchar * vert_src,
     const gchar * frag_src, GstGLShader ** shader)
 {
   g_return_val_if_fail (frag_src != NULL || vert_src != NULL, FALSE);
   g_return_val_if_fail (shader != NULL, FALSE);
 
-  *shader = gst_gl_shader_new (display);
+  *shader = gst_gl_shader_new (context);
 
   if (frag_src)
     gst_gl_shader_set_fragment_source (*shader, frag_src);
   if (vert_src)
     gst_gl_shader_set_vertex_source (*shader, vert_src);
 
-  gst_gl_display_thread_add (display, (GstGLDisplayThreadFunc) _compile_shader,
+  gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _compile_shader,
       shader);
 
   return *shader != NULL;
 }
 
 void
-gst_gl_display_set_error (GstGLDisplay * display, const char *format, ...)
+gst_gl_context_set_error (GstGLContext * context, const char *format, ...)
 {
   va_list args;
 
@@ -420,14 +386,14 @@ gst_gl_display_set_error (GstGLDisplay * display, const char *format, ...)
 }
 
 gchar *
-gst_gl_display_get_error (void)
+gst_gl_context_get_error (void)
 {
   return error_message;
 }
 
 /* Called by glfilter */
 void
-gst_gl_display_del_shader (GstGLDisplay * display, GstGLShader * shader)
+gst_gl_context_del_shader (GstGLContext * context, GstGLShader * shader)
 {
   gst_object_unref (shader);
 }

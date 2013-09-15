@@ -287,7 +287,7 @@ gst_gl_filter_cube_reset (GstGLFilter * filter)
 
   /* blocking call, wait the opengl thread has destroyed the shader */
   if (cube_filter->shader)
-    gst_gl_display_del_shader (filter->display, cube_filter->shader);
+    gst_gl_context_del_shader (filter->context, cube_filter->shader);
 }
 
 static gboolean
@@ -295,9 +295,9 @@ gst_gl_filter_cube_init_shader (GstGLFilter * filter)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
 
-  if (gst_gl_display_get_gl_api (filter->display) & GST_GL_API_GLES2) {
+  if (gst_gl_context_get_gl_api (filter->context) & GST_GL_API_GLES2) {
     /* blocking call, wait the opengl thread has compiled the shader */
-    return gst_gl_display_gen_shader (filter->display, cube_v_src, cube_f_src,
+    return gst_gl_context_gen_shader (filter->context, cube_v_src, cube_f_src,
         &cube_filter->shader);
   }
   return TRUE;
@@ -312,7 +312,7 @@ gst_gl_filter_cube_filter_texture (GstGLFilter * filter, guint in_tex,
   GLCB cb = NULL;
   GstGLAPI api;
 
-  api = gst_gl_display_get_gl_api (GST_GL_FILTER (cube_filter)->display);
+  api = gst_gl_context_get_gl_api (GST_GL_FILTER (cube_filter)->context);
 
 #if GST_GL_HAVE_OPENGL
   if (api & GST_GL_API_OPENGL)
@@ -324,7 +324,7 @@ gst_gl_filter_cube_filter_texture (GstGLFilter * filter, guint in_tex,
 #endif
 
   /* blocking call, use a FBO */
-  gst_gl_display_use_fbo (filter->display,
+  gst_gl_context_use_fbo (filter->context,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info),
       filter->fbo, filter->depthbuffer, out_tex,
@@ -345,7 +345,7 @@ _callback_opengl (gint width, gint height, guint texture, gpointer stuff)
 {
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (stuff);
   GstGLFilter *filter = GST_GL_FILTER (stuff);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
 
   static GLfloat xrot = 0;
   static GLfloat yrot = 0;
@@ -450,7 +450,7 @@ _callback_gles2 (gint width, gint height, guint texture, gpointer stuff)
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterCube *cube_filter = GST_GL_FILTER_CUBE (filter);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
 
   static GLfloat xrot = 0;
   static GLfloat yrot = 0;

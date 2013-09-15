@@ -101,6 +101,8 @@ gst_gl_context_init (GstGLContext * context)
 {
   context->priv = GST_GL_CONTEXT_GET_PRIVATE (context);
 
+  context->gl_vtable = g_slice_alloc0 (sizeof (GstGLFuncs));
+
   g_mutex_init (&context->priv->render_lock);
 
   g_cond_init (&context->priv->create_cond);
@@ -195,6 +197,11 @@ gst_gl_context_finalize (GObject * object)
   }
 
   gst_object_unref (context->window);
+
+  if (context->gl_vtable) {
+    g_slice_free (GstGLFuncs, context->gl_vtable);
+    context->gl_vtable = NULL;
+  }
 
   g_mutex_clear (&context->priv->render_lock);
 
@@ -367,12 +374,10 @@ static gboolean
 _create_context_gles2 (GstGLContext * context, gint * gl_major, gint * gl_minor,
     GError ** error)
 {
-  GstGLDisplay *display;
   const GstGLFuncs *gl;
   GLenum gl_err = GL_NO_ERROR;
 
-  display = context->priv->display;
-  gl = display->gl_vtable;
+  gl = context->gl_vtable;
 
   GST_INFO ("GL_VERSION: %s", gl->GetString (GL_VERSION));
   GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
@@ -394,7 +399,7 @@ _create_context_gles2 (GstGLContext * context, gint * gl_major, gint * gl_minor,
   }
 #endif
 
-  _gst_gl_feature_check_ext_functions (display, 0, 0,
+  _gst_gl_feature_check_ext_functions (context, 0, 0,
       (const gchar *) gl->GetString (GL_EXTENSIONS));
 
   if (gl_major)
@@ -409,14 +414,12 @@ gboolean
 _create_context_opengl (GstGLContext * context, gint * gl_major,
     gint * gl_minor, GError ** error)
 {
-  GstGLDisplay *display;
   const GstGLFuncs *gl;
   guint maj, min;
   GLenum gl_err = GL_NO_ERROR;
   GString *opengl_version = NULL;
 
-  display = context->priv->display;
-  gl = display->gl_vtable;
+  gl = context->gl_vtable;
 
   GST_INFO ("GL_VERSION: %s", gl->GetString (GL_VERSION));
   GST_INFO ("GL_SHADING_LANGUAGE_VERSION: %s",
@@ -445,7 +448,7 @@ _create_context_opengl (GstGLContext * context, gint * gl_major,
     return FALSE;
   }
 
-  _gst_gl_feature_check_ext_functions (display, maj, min,
+  _gst_gl_feature_check_ext_functions (context, maj, min,
       (const gchar *) gl->GetString (GL_EXTENSIONS));
 
   if (gl_major)
@@ -541,7 +544,7 @@ gst_gl_context_create_thread (GstGLContext * context)
   }
 
   display = context->priv->display;
-  gl = display->gl_vtable;
+  gl = context->gl_vtable;
   compiled_api = _compiled_api ();
 
   user_choice = g_getenv ("GST_GL_API");
@@ -680,4 +683,49 @@ gst_gl_context_get_gl_context (GstGLContext * context)
   result = context_class->get_gl_context (context);
 
   return result;
+}
+
+GstGLDisplay *
+gst_gl_context_get_display (GstGLContext * context)
+{
+  g_return_val_if_fail (GST_GL_IS_CONTEXT (context), NULL);
+
+  return gst_object_ref (context->priv->display);
+}
+
+typedef struct
+{
+  GstGLContext *context;
+  GstGLContextThreadFunc func;
+  gpointer data;
+} RunGenericData;
+
+static void
+_gst_gl_context_thread_run_generic (RunGenericData * data)
+{
+  GST_TRACE ("running function:%p data:%p", data->func, data->data);
+
+  data->func (data->context, data->data);
+}
+
+void
+gst_gl_context_thread_add (GstGLContext * context,
+    GstGLContextThreadFunc func, gpointer data)
+{
+  GstGLWindow *window;
+  RunGenericData rdata;
+
+  g_return_if_fail (GST_GL_IS_CONTEXT (context));
+  g_return_if_fail (func != NULL);
+
+  rdata.context = context;
+  rdata.data = data;
+  rdata.func = func;
+
+  window = gst_gl_context_get_window (context);
+
+  gst_gl_window_send_message (window,
+      GST_GL_WINDOW_CB (_gst_gl_context_thread_run_generic), &rdata);
+
+  gst_object_unref (window);
 }

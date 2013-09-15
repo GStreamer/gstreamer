@@ -30,22 +30,22 @@ gst_gl_effects_luma_to_curve (GstGLEffects * effects,
     gint curve_index, gint width, gint height, GLuint texture)
 {
   GstGLShader *shader;
-  GstGLDisplay *display = GST_GL_FILTER (effects)->display;
-  GstGLFuncs *gl = display->gl_vtable;
+  GstGLContext *context = GST_GL_FILTER (effects)->context;
+  GstGLFuncs *gl = context->gl_vtable;
 
   shader = g_hash_table_lookup (effects->shaderstable, "lumamap0");
 
   if (!shader) {
-    shader = gst_gl_shader_new (display);
+    shader = gst_gl_shader_new (context);
     g_hash_table_insert (effects->shaderstable, "lumamap0", shader);
   }
 
   if (!gst_gl_shader_compile_and_check (shader,
           luma_to_curve_fragment_source, GST_GL_SHADER_FRAGMENT_SOURCE)) {
-    gst_gl_display_set_error (display,
+    gst_gl_context_set_error (context,
         "Failed to initialize luma to curve shader");
     GST_ELEMENT_ERROR (effects, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_display_get_error ()), (NULL));
+        ("%s", gst_gl_context_get_error ()), (NULL));
     return;
   }
 

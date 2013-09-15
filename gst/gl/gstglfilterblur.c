@@ -67,7 +67,7 @@ static void
 gst_gl_filterblur_init_resources (GstGLFilter * filter)
 {
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
 
   gl->GenTextures (1, &filterblur->midtexture);
   gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, filterblur->midtexture);
@@ -89,7 +89,7 @@ static void
 gst_gl_filterblur_reset_resources (GstGLFilter * filter)
 {
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
 
   gl->DeleteTextures (1, &filterblur->midtexture);
 }
@@ -138,10 +138,10 @@ gst_gl_filter_filterblur_reset (GstGLFilter * filter)
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_display_del_shader (filter->display, filterblur->shader0);
+  gst_gl_context_del_shader (filter->context, filterblur->shader0);
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_display_del_shader (filter->display, filterblur->shader1);
+  gst_gl_context_del_shader (filter->context, filterblur->shader1);
 }
 
 static void
@@ -176,12 +176,12 @@ gst_gl_filterblur_init_shader (GstGLFilter * filter)
   GstGLFilterBlur *blur_filter = GST_GL_FILTERBLUR (filter);
 
   //blocking call, wait the opengl thread has compiled the shader
-  if (!gst_gl_display_gen_shader (filter->display, 0, hconv7_fragment_source,
+  if (!gst_gl_context_gen_shader (filter->context, 0, hconv7_fragment_source,
           &blur_filter->shader0))
     return FALSE;
 
   //blocking call, wait the opengl thread has compiled the shader
-  if (!gst_gl_display_gen_shader (filter->display, 0, vconv7_fragment_source,
+  if (!gst_gl_context_gen_shader (filter->context, 0, vconv7_fragment_source,
           &blur_filter->shader1))
     return FALSE;
 
@@ -209,7 +209,7 @@ gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
 
   gl->MatrixMode (GL_PROJECTION);
   gl->LoadIdentity ();
@@ -235,7 +235,7 @@ gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
 {
   GstGLFilter *filter = GST_GL_FILTER (stuff);
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
-  GstGLFuncs *gl = filter->display->gl_vtable;
+  GstGLFuncs *gl = filter->context->gl_vtable;
 
   gl->MatrixMode (GL_PROJECTION);
   gl->LoadIdentity ();
