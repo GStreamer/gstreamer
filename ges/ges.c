@@ -81,9 +81,7 @@ ges_init (void)
   GES_TYPE_GROUP;
 
   /* register formatter types with the system */
-
-  /* FIXME PITIVI Formatter disabled
-   * GES_TYPE_PITIVI_FORMATTER; */
+  GES_TYPE_PITIVI_FORMATTER;
   GES_TYPE_XML_FORMATTER;
 
   /* Register track elements */

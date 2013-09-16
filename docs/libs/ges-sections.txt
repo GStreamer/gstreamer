@@ -917,6 +917,24 @@ GESFormatterPrivate
 </SECTION>
 
 <SECTION>
+<FILE>ges-pitivi-formatter</FILE>
+<TITLE>GESPitiviFormatter</TITLE>
+GESPitiviFormatter
+ges_pitivi_formatter_new
+<SUBSECTION Standard>
+GESPitiviFormatterClass
+GESPitiviFormatterPrivate
+GES_TYPE_PITIVI_FORMATTER
+GES_IS_PITIVI_FORMATTER
+GES_IS_PITIVI_FORMATTER_CLASS
+GES_PITIVI_FORMATTER
+GES_PITIVI_FORMATTER_CLASS
+GES_PITIVI_FORMATTER_GET_CLASS
+GES_TYPE_PITIVIFORMATTER
+ges_pitivi_formatter_get_type
+</SECTION>
+
+<SECTION>
 <FILE>ges-base-effect</FILE>
 <TITLE>GESBaseEffect</TITLE>
 GESBaseEffect

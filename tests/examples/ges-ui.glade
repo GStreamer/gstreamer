@@ -97,7 +97,7 @@
                         <property name="tooltip_text" translatable="yes">Launches a .xptv project</property>
                         <property name="image">image1</property>
                         <property name="use_stock">False</property>
-                        <signal name="activate" handler="launch_project_activate_cb"/>
+                        <signal name="activate" handler="launch_pitivi_project_activate_cb"/>
                       </object>
                     </child>
                   </object>

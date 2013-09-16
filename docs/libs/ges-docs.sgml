@@ -94,7 +94,7 @@ platform as well as Windows. It is released under the GNU Library General Public
   <chapter>
     <title>Serialization Classes</title>
     <xi:include href="xml/ges-formatter.xml"/>
-    <!-- DISABLED <xi:include href="xml/ges-pitivi-formatter.xml"/>-->
+    <xi:include href="xml/ges-pitivi-formatter.xml"/>
     <xi:include href="xml/ges-base-xml-formatter.xml"/>
     <xi:include href="xml/ges-xml-formatter.xml"/>
   </chapter>

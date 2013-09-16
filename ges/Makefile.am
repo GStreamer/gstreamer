@@ -50,6 +50,7 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-effect.c		\
 	ges-screenshot.c			\
 	ges-formatter.c				\
+	ges-pitivi-formatter.c			\
 	ges-asset.c \
 	ges-uri-asset.c \
 	ges-clip-asset.c \
@@ -67,9 +68,6 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges-utils.c \
 	ges-group.c \
 	gstframepositionner.c
-
-# XPTV formatter disabled
-# ges-pitivi-formatter.c
 
 libges_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/ges/
 libges_@GST_API_VERSION@include_HEADERS = 	\
@@ -117,6 +115,7 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-text-overlay.h		\
 	ges-screenshot.h			\
 	ges-formatter.h				\
+	ges-pitivi-formatter.h			\
 	ges-asset.h \
 	ges-uri-asset.h \
 	ges-clip-asset.h \
@@ -133,9 +132,6 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-utils.h \
 	ges-group.h \
 	gstframepositionner.h
-
-# XPTV formatter disabled
-# ges-pitivi-formatter.h
 
 noinst_HEADERS = \
 	ges-internal.h \
