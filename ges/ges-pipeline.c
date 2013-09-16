@@ -300,11 +300,7 @@ ges_pipeline_init (GESPipeline * self)
       gst_element_factory_make ("playsink", "internal-sinks");
   self->priv->encodebin =
       gst_element_factory_make ("encodebin", "internal-encodebin");
-  /* Limit encodebin buffering to 1 buffer since we know the various
-   * stream fed to it are decoupled already */
-  g_object_set (self->priv->encodebin, "queue-buffers-max", (guint) 1,
-      "queue-bytes-max", (guint) 0, "queue-time-max", (guint64) 0,
-      "avoid-reencoding", TRUE, NULL);
+  g_object_set (self->priv->encodebin, "avoid-reencoding", TRUE, NULL);
 
   if (G_UNLIKELY (self->priv->playsink == NULL))
     goto no_playsink;
