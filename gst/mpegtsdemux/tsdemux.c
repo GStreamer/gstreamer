@@ -1293,9 +1293,10 @@ gst_ts_demux_parse_pes_header (GstTSDemux * demux, TSDemuxStream * stream,
 
   /* Create the output buffer */
   if (stream->expected_size)
-    stream->allocated_size = stream->expected_size;
+    stream->allocated_size = MAX (stream->expected_size, length);
   else
-    stream->allocated_size = 8192;
+    stream->allocated_size = MAX (8192, length);
+
   g_assert (stream->data == NULL);
   stream->data = g_malloc (stream->allocated_size);
   memcpy (stream->data, data, length);
@@ -1363,7 +1364,9 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
       GST_LOG ("BUFFER: appending data");
       if (G_UNLIKELY (stream->current_size + size > stream->allocated_size)) {
         GST_LOG ("resizing buffer");
-        stream->allocated_size = stream->allocated_size * 2;
+        do {
+          stream->allocated_size *= 2;
+        } while (stream->current_size + size > stream->allocated_size);
         stream->data = g_realloc (stream->data, stream->allocated_size);
       }
       memcpy (stream->data + stream->current_size, data, size);
