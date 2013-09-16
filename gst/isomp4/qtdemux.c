@@ -9842,7 +9842,8 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
 
   /* Moving qt creation time (secs since 1904) to unix time */
   if (creation_time != 0) {
-    if (creation_time > QTDEMUX_SECONDS_FROM_1904_TO_1970) {
+    /* Try to use epoch first as it should be faster and more commonly found */
+    if (creation_time >= QTDEMUX_SECONDS_FROM_1904_TO_1970) {
       GTimeVal now;
 
       creation_time -= QTDEMUX_SECONDS_FROM_1904_TO_1970;
@@ -9851,11 +9852,18 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
       if (now.tv_sec + 24 * 3600 < creation_time) {
         GST_DEBUG_OBJECT (qtdemux, "discarding bogus future creation time");
       } else {
-        datetime = gst_date_time_new_from_unix_epoch_local_time (creation_time);
+        datetime = gst_date_time_new_from_unix_epoch_utc (creation_time);
       }
     } else {
-      GST_WARNING_OBJECT (qtdemux, "Can't handle datetimes before 1970 yet, "
-          "please file a bug at http://bugzilla.gnome.org");
+      GDateTime *base_dt = g_date_time_new_utc (1904, 1, 1, 0, 0, 0);
+      GDateTime *dt, *dt_local;
+
+      dt = g_date_time_add_seconds (base_dt, creation_time);
+      dt_local = g_date_time_to_local (dt);
+      datetime = gst_date_time_new_from_g_date_time (dt_local);
+
+      g_date_time_unref (base_dt);
+      g_date_time_unref (dt);
     }
   }
   if (datetime) {
