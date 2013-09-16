@@ -491,7 +491,8 @@ find_media (GstRTSPClient * client, GstRTSPContext * ctx, gint * matched)
   if (!priv->mount_points)
     goto no_mount_points;
 
-  path = ctx->uri->abspath;
+  if (!(path = gst_rtsp_mount_points_make_path (priv->mount_points, ctx->uri)))
+    goto no_path;
 
   /* find the longest matching factory for the uri first */
   if (!(factory = gst_rtsp_mount_points_match (priv->mount_points,
@@ -552,6 +553,7 @@ find_media (GstRTSPClient * client, GstRTSPContext * ctx, gint * matched)
 
   g_object_unref (factory);
   ctx->factory = NULL;
+  g_free (path);
 
   if (media)
     g_object_ref (media);
@@ -565,20 +567,29 @@ no_mount_points:
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     return NULL;
   }
+no_path:
+  {
+    GST_ERROR ("client %p: can't find path for url", client);
+    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    return NULL;
+  }
 no_factory:
   {
     GST_ERROR ("client %p: no factory for uri %s", client, path);
+    g_free (path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     return NULL;
   }
 no_factory_access:
   {
     GST_ERROR ("client %p: not authorized to see factory uri %s", client, path);
+    g_free (path);
     return NULL;
   }
 not_authorized:
   {
     GST_ERROR ("client %p: not authorized for factory uri %s", client, path);
+    g_free (path);
     return NULL;
   }
 no_media:
@@ -587,6 +598,7 @@ no_media:
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     g_object_unref (factory);
     ctx->factory = NULL;
+    g_free (path);
     return NULL;
   }
 no_thread:
@@ -597,6 +609,7 @@ no_thread:
     ctx->media = NULL;
     g_object_unref (factory);
     ctx->factory = NULL;
+    g_free (path);
     return NULL;
   }
 no_prepare:
@@ -607,6 +620,7 @@ no_prepare:
     ctx->media = NULL;
     g_object_unref (factory);
     ctx->factory = NULL;
+    g_free (path);
     return NULL;
   }
 }

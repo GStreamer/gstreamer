@@ -102,6 +102,8 @@ G_DEFINE_TYPE (GstRTSPMountPoints, gst_rtsp_mount_points, G_TYPE_OBJECT);
 GST_DEBUG_CATEGORY_STATIC (rtsp_media_debug);
 #define GST_CAT_DEFAULT rtsp_media_debug
 
+static gchar *default_make_path (GstRTSPMountPoints * mounts,
+    const GstRTSPUrl * url);
 static void gst_rtsp_mount_points_finalize (GObject * obj);
 
 static void
@@ -114,6 +116,8 @@ gst_rtsp_mount_points_class_init (GstRTSPMountPointsClass * klass)
   gobject_class = G_OBJECT_CLASS (klass);
 
   gobject_class->finalize = gst_rtsp_mount_points_finalize;
+
+  klass->make_path = default_make_path;
 
   GST_DEBUG_CATEGORY_INIT (rtsp_media_debug, "rtspmountpoints", 0,
       "GstRTSPMountPoints");
@@ -160,6 +164,41 @@ gst_rtsp_mount_points_new (void)
   GstRTSPMountPoints *result;
 
   result = g_object_new (GST_TYPE_RTSP_MOUNT_POINTS, NULL);
+
+  return result;
+}
+
+static gchar *
+default_make_path (GstRTSPMountPoints * mounts, const GstRTSPUrl * url)
+{
+  return g_strdup (url->abspath);
+}
+
+/**
+ * gst_rtsp_mount_points_make_path:
+ * @mounts: a #GstRTSPMountPoints
+ * @url: a #GstRTSPUrl
+ *
+ * Make a path string from @url.
+ *
+ * Returns: a path string for @url, g_free() after usage.
+ */
+gchar *
+gst_rtsp_mount_points_make_path (GstRTSPMountPoints * mounts,
+    const GstRTSPUrl * url)
+{
+  GstRTSPMountPointsClass *klass;
+  gchar *result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MOUNT_POINTS (mounts), NULL);
+  g_return_val_if_fail (url != NULL, NULL);
+
+  klass = GST_RTSP_MOUNT_POINTS_GET_CLASS (mounts);
+
+  if (klass->make_path)
+    result = klass->make_path (mounts, url);
+  else
+    result = NULL;
 
   return result;
 }

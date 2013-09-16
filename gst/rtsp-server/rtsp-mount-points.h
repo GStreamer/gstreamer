@@ -53,11 +53,15 @@ struct _GstRTSPMountPoints {
 
 /**
  * GstRTSPMountPointsClass:
+ * @make_path: make a path from the given url.
  *
  * The class for the media mounts object.
  */
 struct _GstRTSPMountPointsClass {
   GObjectClass  parent_class;
+
+  gchar * (*make_path) (GstRTSPMountPoints *mounts,
+                        const GstRTSPUrl *url);
 };
 
 GType                 gst_rtsp_mount_points_get_type       (void);
@@ -65,6 +69,8 @@ GType                 gst_rtsp_mount_points_get_type       (void);
 /* creating a mount points */
 GstRTSPMountPoints *  gst_rtsp_mount_points_new            (void);
 
+gchar *               gst_rtsp_mount_points_make_path      (GstRTSPMountPoints *mounts,
+                                                            const GstRTSPUrl * url);
 /* finding a media factory */
 GstRTSPMediaFactory * gst_rtsp_mount_points_match          (GstRTSPMountPoints *mounts,
                                                             const gchar *path,
