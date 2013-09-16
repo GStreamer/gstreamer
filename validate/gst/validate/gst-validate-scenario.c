@@ -469,12 +469,6 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
     ret = _load_scenario_file (scenario, tldir);
   }
 
-  /* Hack to make it work uninstalled */
-  if (ret == FALSE) {
-    g_free (tldir);
-
-  }
-
 done:
   if (tldir)
     g_free (tldir);
@@ -664,15 +658,15 @@ gst_validate_list_scenarios (void)
 void
 gst_validate_add_action_type (const gchar *type_name, GstValidateExecuteAction function)
 {
+  if (action_types_table == NULL)
+    action_types_table = g_hash_table_new_full (g_str_hash, g_str_equal,
+        (GDestroyNotify) g_free, NULL);
   g_hash_table_insert (action_types_table, g_strdup (type_name), function);
 }
 
 void
 init_scenarios (void)
 {
-  action_types_table = g_hash_table_new_full (g_str_hash, g_str_equal,
-      (GDestroyNotify) g_free, NULL);
-
   gst_validate_add_action_type ("seek", _execute_seek);
   gst_validate_add_action_type ("pause",_execute_pause);
   gst_validate_add_action_type ("play",_execute_play);
