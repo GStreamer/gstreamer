@@ -1010,6 +1010,8 @@ gst_gl_mixer_set_allocation (GstGLMixer * mix,
   GstQuery *oldquery;
   GstGLMixerPrivate *priv = mix->priv;
 
+  GST_DEBUG ("storing allocation query");
+
   GST_OBJECT_LOCK (mix);
   oldpool = priv->pool;
   priv->pool = pool;
@@ -2169,6 +2171,16 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
         }
 
         walk = walk->next;
+      }
+
+      if (mix->priv->query) {
+        gst_query_unref (mix->priv->query);
+        mix->priv->query = NULL;
+      }
+
+      if (mix->priv->pool) {
+        gst_object_unref (mix->priv->pool);
+        mix->priv->pool = NULL;
       }
 
       if (mix->display) {

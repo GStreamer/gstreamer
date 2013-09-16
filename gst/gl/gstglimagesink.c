@@ -118,6 +118,8 @@ static void gst_glimage_sink_set_property (GObject * object, guint prop_id,
 static void gst_glimage_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * param_spec);
 
+static gboolean gst_glimage_sink_stop (GstBaseSink * bsink);
+
 static gboolean gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query);
 
 static GstStateChangeReturn
@@ -250,6 +252,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gstbasesink_class->preroll = gst_glimage_sink_render;
   gstbasesink_class->render = gst_glimage_sink_render;
   gstbasesink_class->propose_allocation = gst_glimage_sink_propose_allocation;
+  gstbasesink_class->stop = gst_glimage_sink_stop;
 }
 
 static void
@@ -330,11 +333,6 @@ gst_glimage_sink_finalize (GObject * object)
 
   glimage_sink = GST_GLIMAGE_SINK (object);
 
-  if (glimage_sink->pool) {
-    gst_object_unref (glimage_sink->pool);
-    glimage_sink->pool = NULL;
-  }
-
   g_mutex_clear (&glimage_sink->drawing_lock);
 
   g_free (glimage_sink->display_name);
@@ -408,6 +406,19 @@ gst_glimage_sink_cleanup_glthread (GstGLImageSink * gl_sink)
 /*
  * GstElement methods
  */
+
+static gboolean
+gst_glimage_sink_stop (GstBaseSink * bsink)
+{
+  GstGLImageSink *glimage_sink = GST_GLIMAGE_SINK (bsink);
+
+  if (glimage_sink->pool) {
+    gst_object_unref (glimage_sink->pool);
+    glimage_sink->pool = NULL;
+  }
+
+  return TRUE;
+}
 
 static GstStateChangeReturn
 gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
