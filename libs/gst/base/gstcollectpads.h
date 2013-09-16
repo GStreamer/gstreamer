@@ -236,6 +236,23 @@ typedef GstFlowReturn (*GstCollectPadsClipFunction) (GstCollectPads *pads, GstCo
                                                      GstBuffer *inbuffer, GstBuffer **outbuffer,
                                                      gpointer user_data);
 
+
+/**
+ * GstCollectPadsFlushFunction:
+ * @pads: a #GstCollectPads
+ * @user_data: user data
+ *
+ * A function that will be called while processing a flushing seek event.
+ *
+ * The function should flush any internal state of the element and the state of
+ * all the pads. It should clear only the state not directly managed by the
+ * @pads object. It is therefore not necessary to call
+ * gst_collect_pads_set_flushing nor gst_collect_pads_clear from this function.
+ *
+ * Since: FIXME
+ */
+typedef void (*GstCollectPadsFlushFunction) (GstCollectPads *pads, gpointer user_data);
+
 /**
  * GST_COLLECT_PADS_GET_STREAM_LOCK:
  * @pads: a #GstCollectPads
@@ -311,6 +328,9 @@ void            gst_collect_pads_set_compare_function (GstCollectPads *pads,
 void            gst_collect_pads_set_clip_function    (GstCollectPads *pads,
                                                        GstCollectPadsClipFunction clipfunc,
                                                        gpointer user_data);
+void            gst_collect_pads_set_flush_function    (GstCollectPads *pads,
+                                                       GstCollectPadsFlushFunction func,
+                                                       gpointer user_data);
 
 /* pad management */
 GstCollectData* gst_collect_pads_add_pad       (GstCollectPads *pads, GstPad *pad, guint size,
@@ -349,6 +369,8 @@ GstFlowReturn	gst_collect_pads_clip_running_time (GstCollectPads * pads,
 /* default handlers */
 gboolean        gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
                                                 GstEvent * event, gboolean discard);
+gboolean        gst_collect_pads_src_event_default (GstCollectPads * pads, GstPad * pad,
+                                                    GstEvent * event);
 gboolean        gst_collect_pads_query_default (GstCollectPads * pads, GstCollectData * data,
                                                 GstQuery * query, gboolean discard);
 
