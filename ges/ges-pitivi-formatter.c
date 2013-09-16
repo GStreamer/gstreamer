@@ -20,6 +20,11 @@
 /**
  * SECTION: ges-pitivi-formatter
  * @short_description: A formatter for the PiTiVi project file format
+ *
+ * This is a legacy format and you should avoid to use it. The formatter
+ * is really not in good shape and is deprecated.
+ *
+ * Deprecated: 1.0
  */
 
 #include <libxml/xmlreader.h>
