@@ -24,7 +24,7 @@
 # have a mechanism to get this from the sender with a -launch line.
 VIDEO_CAPS="application/x-rtp,media=(string)video,clock-rate=(int)90000,encoding-name=(string)H264"
 
-VIDEO_DEC="queue ! rtph264depay ! avdec_h264"
+VIDEO_DEC="rtph264depay ! avdec_h264"
 
 VIDEO_SINK="videoconvert ! autovideosink"
 
