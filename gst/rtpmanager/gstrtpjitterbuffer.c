@@ -1611,9 +1611,6 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
   TimerData *timer = NULL;
   gint i, len;
 
-  if (!priv->do_retransmission)
-    return;
-
   /* go through all timers and unschedule the ones with a large gap, also find
    * the timer for the seqnum */
   len = priv->timers->len;
@@ -1625,9 +1622,6 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
 
     GST_DEBUG_OBJECT (jitterbuffer, "%d, #%d<->#%d gap %d", i,
         test->seqnum, seqnum, gap);
-
-    if (test->type == TIMER_TYPE_DEADLINE)
-      continue;
 
     if (gap == 0) {
       GST_DEBUG ("found timer for current seqnum");
@@ -1641,7 +1635,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     }
   }
 
-  if (priv->packet_spacing > 0 && do_next_seqnum) {
+  if (priv->packet_spacing > 0 && do_next_seqnum && priv->do_retransmission) {
     GstClockTime expected;
 
     /* calculate expected arrival time of the next seqnum */
@@ -1652,7 +1646,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     else
       add_timer (jitterbuffer, TIMER_TYPE_EXPECTED, priv->next_in_seqnum,
           expected);
-  } else if (timer) {
+  } else if (timer && timer->type != TIMER_TYPE_DEADLINE) {
     /* if we had a timer, remove it, we don't know when to expect the next
      * packet. */
     remove_timer (jitterbuffer, timer);
