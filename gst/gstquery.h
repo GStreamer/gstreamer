@@ -103,7 +103,7 @@ typedef enum {
  * @GST_QUERY_CAPS: the caps query
  * @GST_QUERY_DRAIN: wait till all serialized data is consumed downstream
  * @GST_QUERY_CONTEXT: query the pipeline-local context from
- *     downstream (since 1.2)
+ *     downstream or upstream (since 1.2)
  *
  * Standard predefined Query types
  */
@@ -128,7 +128,7 @@ typedef enum {
   GST_QUERY_ACCEPT_CAPS  = GST_QUERY_MAKE_TYPE (160, FLAG(BOTH)),
   GST_QUERY_CAPS         = GST_QUERY_MAKE_TYPE (170, FLAG(BOTH)),
   GST_QUERY_DRAIN        = GST_QUERY_MAKE_TYPE (180, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
-  GST_QUERY_CONTEXT      = GST_QUERY_MAKE_TYPE (190, FLAG(DOWNSTREAM))
+  GST_QUERY_CONTEXT      = GST_QUERY_MAKE_TYPE (190, FLAG(BOTH))
 } GstQueryType;
 #undef FLAG
 
