@@ -2485,6 +2485,8 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       GST_DEBUG_OBJECT (jitterbuffer, "waiting done");
     }
   }
+  JBUF_UNLOCK (priv);
+
   GST_DEBUG_OBJECT (jitterbuffer, "we are stopping");
   return;
 }
