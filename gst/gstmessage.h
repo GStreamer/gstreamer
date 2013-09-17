@@ -565,10 +565,8 @@ void            gst_message_set_group_id        (GstMessage *message, guint grou
 gboolean        gst_message_parse_group_id      (GstMessage *message, guint *group_id);
 
 /* NEED_CONTEXT */
-GstMessage *    gst_message_new_need_context    (GstObject * src) G_GNUC_MALLOC;
-void            gst_message_add_context_type    (GstMessage * message, const gchar * context_type);
-guint           gst_message_get_n_context_types (GstMessage * message);
-gboolean        gst_message_parse_nth_context_type (GstMessage * message, guint i, const gchar ** context_type);
+GstMessage *    gst_message_new_need_context    (GstObject * src, const gchar * context_type) G_GNUC_MALLOC;
+gboolean        gst_message_parse_context_type  (GstMessage * message, const gchar ** context_type);
 
 /* HAVE_CONTEXT */
 GstMessage *    gst_message_new_have_context    (GstObject * src, GstContext *context) G_GNUC_MALLOC;
