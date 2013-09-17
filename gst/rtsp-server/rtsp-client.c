@@ -740,20 +740,18 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPSession *session;
   GstRTSPSessionMedia *sessmedia;
   GstRTSPStatusCode code;
-  gchar *path;
+  const gchar *path;
   gint matched;
 
-  if (!(session = ctx->session))
+  if (!ctx->session)
     goto no_session;
+
+  session = ctx->session;
 
   if (!ctx->uri)
     goto no_uri;
 
-  if (!priv->mount_points)
-    goto no_mount_points;
-
-  if (!(path = gst_rtsp_mount_points_make_path (priv->mount_points, ctx->uri)))
-    goto no_path;
+  path = ctx->uri->abspath;
 
   /* get a handle to the configuration of the media in the session */
   sessmedia = gst_rtsp_session_get_media (session, path, &matched);
@@ -763,8 +761,6 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
   /* only aggregate control for now.. */
   if (path[matched] != '\0')
     goto no_aggregate;
-
-  g_free (path);
 
   ctx->sessmedia = sessmedia;
 
@@ -808,29 +804,15 @@ no_uri:
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
-no_mount_points:
-  {
-    GST_ERROR ("client %p: no mount points configured", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
-    return FALSE;
-  }
-no_path:
-  {
-    GST_ERROR ("client %p: can't find path for url", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
-    return FALSE;
-  }
 not_found:
   {
     GST_ERROR ("client %p: no media for uri", client);
-    g_free (path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     return FALSE;
   }
 no_aggregate:
   {
     GST_ERROR ("client %p: no aggregate path %s", client, path);
-    g_free (path);
     send_generic_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
     return FALSE;
@@ -934,12 +916,11 @@ bad_request:
 static gboolean
 handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
-  GstRTSPClientPrivate *priv = client->priv;
   GstRTSPSession *session;
   GstRTSPSessionMedia *sessmedia;
   GstRTSPStatusCode code;
   GstRTSPState rtspstate;
-  gchar *path;
+  const gchar *path;
   gint matched;
 
   if (!(session = ctx->session))
@@ -948,11 +929,7 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!ctx->uri)
     goto no_uri;
 
-  if (!priv->mount_points)
-    goto no_mount_points;
-
-  if (!(path = gst_rtsp_mount_points_make_path (priv->mount_points, ctx->uri)))
-    goto no_path;
+  path = ctx->uri->abspath;
 
   /* get a handle to the configuration of the media in the session */
   sessmedia = gst_rtsp_session_get_media (session, path, &matched);
@@ -961,8 +938,6 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   if (path[matched] != '\0')
     goto no_aggregate;
-
-  g_free (path);
 
   ctx->sessmedia = sessmedia;
 
@@ -1005,29 +980,15 @@ no_uri:
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
-no_mount_points:
-  {
-    GST_ERROR ("client %p: no mount points configured", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
-    return FALSE;
-  }
-no_path:
-  {
-    GST_ERROR ("client %p: can't find path for url", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
-    return FALSE;
-  }
 not_found:
   {
     GST_ERROR ("client %p: no media for uri", client);
-    g_free (path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     return FALSE;
   }
 no_aggregate:
   {
     GST_ERROR ("client %p: no aggregate path %s", client, path);
-    g_free (path);
     send_generic_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
     return FALSE;
@@ -1044,7 +1005,6 @@ invalid_state:
 static gboolean
 handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
-  GstRTSPClientPrivate *priv = client->priv;
   GstRTSPSession *session;
   GstRTSPSessionMedia *sessmedia;
   GstRTSPMedia *media;
@@ -1056,7 +1016,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPResult res;
   GstRTSPState rtspstate;
   GstRTSPRangeUnit unit = GST_RTSP_RANGE_NPT;
-  gchar *path;
+  const gchar *path;
   gint matched;
 
   if (!(session = ctx->session))
@@ -1065,11 +1025,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!ctx->uri)
     goto no_uri;
 
-  if (!priv->mount_points)
-    goto no_mount_points;
-
-  if (!(path = gst_rtsp_mount_points_make_path (priv->mount_points, ctx->uri)))
-    goto no_path;
+  path = ctx->uri->abspath;
 
   /* get a handle to the configuration of the media in the session */
   sessmedia = gst_rtsp_session_get_media (session, path, &matched);
@@ -1078,8 +1034,6 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   if (path[matched] != '\0')
     goto no_aggregate;
-
-  g_free (path);
 
   ctx->sessmedia = sessmedia;
   ctx->media = media = gst_rtsp_session_media_get_media (sessmedia);
@@ -1182,29 +1136,15 @@ no_uri:
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
-no_mount_points:
-  {
-    GST_ERROR ("client %p: no mount points configured", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
-    return FALSE;
-  }
-no_path:
-  {
-    GST_ERROR ("client %p: can't find path for url", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
-    return FALSE;
-  }
 not_found:
   {
     GST_ERROR ("client %p: media not found", client);
-    g_free (path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     return FALSE;
   }
 no_aggregate:
   {
     GST_ERROR ("client %p: no aggregate path %s", client, path);
-    g_free (path);
     send_generic_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
     return FALSE;
@@ -1440,14 +1380,11 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   gchar *path, *control;
   gint matched;
 
-  if (!(uri = ctx->uri))
+  if (!ctx->uri)
     goto no_uri;
 
-  if (!priv->mount_points)
-    goto no_mount_points;
-
-  if (!(path = gst_rtsp_mount_points_make_path (priv->mount_points, uri)))
-    goto no_path;
+  uri = ctx->uri;
+  path = uri->abspath;
 
   /* parse the transport */
   res =
@@ -1485,7 +1422,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (media == NULL)
     goto media_not_found;
 
-  /* path is what matched */
+  /* path is what matched. We can modify the parsed uri in place */
   path[matched] = '\0';
   /* control is remainder */
   control = &path[matched + 1];
@@ -1524,7 +1461,6 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   } else {
     g_object_unref (media);
   }
-  g_free (path);
 
   ctx->sessmedia = sessmedia;
 
@@ -1594,43 +1530,27 @@ no_uri:
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
-no_mount_points:
-  {
-    GST_ERROR ("client %p: no mount points configured", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
-    return FALSE;
-  }
-no_path:
-  {
-    GST_ERROR ("client %p: can't find path for url", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
-    return FALSE;
-  }
 no_transport:
   {
     GST_ERROR ("client %p: no transport", client);
-    g_free (path);
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
     return FALSE;
   }
 no_pool:
   {
     GST_ERROR ("client %p: no session pool configured", client);
-    g_free (path);
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
     return FALSE;
   }
 media_not_found:
   {
     GST_ERROR ("client %p: media '%s' not found", client, path);
-    g_free (path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     return FALSE;
   }
 stream_not_found:
   {
     GST_ERROR ("client %p: stream '%s' not found", client, control);
-    g_free (path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     g_object_unref (media);
     return FALSE;
@@ -1638,7 +1558,6 @@ stream_not_found:
 service_unavailable:
   {
     GST_ERROR ("client %p: can't create session", client);
-    g_free (path);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     g_object_unref (media);
     return FALSE;
@@ -1647,7 +1566,6 @@ sessmedia_unavailable:
   {
     GST_ERROR ("client %p: can't create session media", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
-    g_free (path);
     g_object_unref (media);
     g_object_unref (session);
     return FALSE;
