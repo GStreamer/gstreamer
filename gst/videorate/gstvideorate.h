@@ -24,7 +24,6 @@
 #include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
-
 #define GST_TYPE_VIDEO_RATE \
   (gst_video_rate_get_type())
 #define GST_VIDEO_RATE(obj) \
@@ -35,7 +34,6 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VIDEO_RATE))
 #define GST_IS_VIDEO_RATE_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VIDEO_RATE))
-
 typedef struct _GstVideoRate GstVideoRate;
 typedef struct _GstVideoRateClass GstVideoRateClass;
 
@@ -80,6 +78,7 @@ struct _GstVideoRate
   guint64 average_period_set;
 
   volatile int max_rate;
+  gdouble rate;
 };
 
 struct _GstVideoRateClass
@@ -90,5 +89,4 @@ struct _GstVideoRateClass
 GType gst_video_rate_get_type (void);
 
 G_END_DECLS
-
 #endif /* __GST_VIDEO_RATE_H__ */

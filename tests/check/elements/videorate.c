@@ -536,9 +536,9 @@ GST_START_TEST (test_no_framerate)
 
 GST_END_TEST;
 
-/* This test outputs 2 buffers of same dimensions (320x240), then 1 buffer of 
- * differing dimensions (240x120), and then another buffer of previous 
- * dimensions (320x240) and checks that the 3 buffers output as a result have 
+/* This test outputs 2 buffers of same dimensions (320x240), then 1 buffer of
+ * differing dimensions (240x120), and then another buffer of previous
+ * dimensions (320x240) and checks that the 3 buffers output as a result have
  * correct caps (first 2 with 320x240 and 3rd with 240x120).
  */
 GST_START_TEST (test_changing_size)
@@ -999,8 +999,7 @@ check_caps_identical (GstCaps * a, GstCaps * b, const char *name)
 fail:
   caps_str_a = gst_caps_to_string (a);
   caps_str_b = gst_caps_to_string (b);
-  fail ("%s caps (%s) is not equal to caps (%s)",
-      name, caps_str_a, caps_str_b);
+  fail ("%s caps (%s) is not equal to caps (%s)", name, caps_str_a, caps_str_b);
   g_free (caps_str_a);
   g_free (caps_str_b);
 }
@@ -1168,6 +1167,231 @@ GST_START_TEST (test_variable_framerate_renegotiation)
 
 GST_END_TEST;
 
+/* Rate tests info */
+typedef struct
+{
+  gdouble rate;
+  guint64 expected_in, expected_out, expected_drop, expected_dup;
+  gint current_buf;
+  GstClockTime expected_ts;
+} RateInfo;
+
+static RateInfo rate_tests[] = {
+  {
+        .rate = 1.0,
+        .expected_in = 34,
+        .expected_out = 25,
+        .expected_drop = 8,
+        .expected_dup = 0,
+        .current_buf = 0,
+      .expected_ts = 0},
+  {
+        .rate = 0.5,
+        .expected_in = 34,
+        .expected_out = 50,
+        .expected_drop = 0,
+        .expected_dup = 17,
+        .current_buf = 0,
+      .expected_ts = 0},
+  {
+        .rate = 2.0,
+        .expected_in = 34,
+        .expected_out = 13,
+        .expected_drop = 20,
+        .expected_dup = 0,
+        .current_buf = 0,
+      .expected_ts = 0},
+};
+
+static GstPadProbeReturn
+listen_outbuffer_ts (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstBuffer *buffer;
+  guint64 buf_ts;
+  RateInfo *test = (RateInfo *) user_data;
+
+  buffer = GST_PAD_PROBE_INFO_BUFFER (info);
+  buf_ts = GST_BUFFER_TIMESTAMP (buffer);
+
+  GST_DEBUG ("Probed %d outbuf. ts : %" GST_TIME_FORMAT
+      ", expected : %" GST_TIME_FORMAT, test->current_buf,
+      GST_TIME_ARGS (buf_ts), GST_TIME_ARGS (test->expected_ts));
+  fail_unless_equals_uint64 (buf_ts, test->expected_ts);
+
+  /* Next expected timestamp with fps 25/1 */
+  test->expected_ts += 40000000;
+  test->current_buf += 1;
+
+  fail_if (test->current_buf > test->expected_out);
+
+  return GST_PAD_PROBE_OK;
+}
+
+GST_START_TEST (test_rate)
+{
+  GstElement *videorate;
+  RateInfo *test = &rate_tests[__i__];
+  GstClockTime ts;
+  GstBuffer *buf;
+  GstCaps *caps;
+  gulong probe;
+
+  videorate = setup_videorate ();
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+  probe = gst_pad_add_probe (mysinkpad, GST_PAD_PROBE_TYPE_BUFFER,
+      (GstPadProbeCallback) listen_outbuffer_ts, test, NULL);
+
+  buf = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (buf, 0, 0, 4);
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (buf, "inbuffer", 1);
+
+  /* Setting rate */
+  g_object_set (videorate, "rate", test->rate, NULL);
+
+  /* Push 1 second of buffers */
+  for (ts = 0; ts < 1 * GST_SECOND; ts += GST_SECOND / 33) {
+    GstBuffer *inbuf;
+
+    inbuf = gst_buffer_copy (buf);
+    GST_BUFFER_TIMESTAMP (inbuf) = ts;
+
+    fail_unless_equals_int (gst_pad_push (mysrcpad, inbuf), GST_FLOW_OK);
+  }
+
+  fail_unless_equals_int (g_list_length (buffers), test->expected_out);
+  assert_videorate_stats (videorate, "last buffer", test->expected_in,
+      test->expected_out, test->expected_drop, test->expected_dup);
+
+  /* cleanup */
+  gst_pad_remove_probe (mysinkpad, probe);
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
+/* Probing the pad to force a fake upstream duration */
+static GstPadProbeReturn
+listen_sink_query_duration (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  GstQuery *query;
+  gint64 *duration = (gint64 *) user_data;
+
+  query = gst_pad_probe_info_get_query (info);
+
+  if (GST_QUERY_TYPE (query) == GST_QUERY_DURATION) {
+    gst_query_set_duration (query, GST_FORMAT_TIME, *duration);
+  }
+  return GST_PAD_PROBE_OK;
+}
+
+GST_START_TEST (test_query_duration)
+{
+  GstElement *videorate;
+  gulong probe_sink;
+  gint64 duration;
+  GstQuery *query;
+
+  videorate = setup_videorate ();
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+  probe_sink =
+      gst_pad_add_probe (mysrcpad,
+      GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM | GST_PAD_PROBE_TYPE_PUSH,
+      (GstPadProbeCallback) listen_sink_query_duration, &duration, NULL);
+
+  query = gst_query_new_duration (GST_FORMAT_TIME);
+  duration = GST_CLOCK_TIME_NONE;
+  gst_pad_peer_query (mysrcpad, query);
+  gst_query_parse_duration (query, NULL, &duration);
+  fail_unless_equals_uint64 (duration, GST_CLOCK_TIME_NONE);
+
+  /* Setting fake upstream duration to 1 second */
+  duration = GST_SECOND;
+
+  /* Setting rate to 2.0 */
+  g_object_set (videorate, "rate", 2.0, NULL);
+
+  gst_pad_peer_query (mysrcpad, query);
+  gst_query_parse_duration (query, NULL, &duration);
+  fail_unless_equals_uint64 (duration, 0.5 * GST_SECOND);
+
+  /* cleanup */
+  gst_query_unref (query);
+  gst_pad_remove_probe (mysrcpad, probe_sink);
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
+
+/* Position tests info */
+typedef struct
+{
+  gdouble rate;
+} PositionInfo;
+
+static PositionInfo position_tests[] = {
+  {
+      .rate = 1.0},
+  {
+      .rate = 0.5},
+  {
+      .rate = 2.0},
+  {
+      .rate = 1.7},
+};
+
+GST_START_TEST (test_query_position)
+{
+  GstElement *videorate;
+  PositionInfo *test = &position_tests[__i__];
+  GstClockTime ts;
+  GstBuffer *buf;
+  GstCaps *caps;
+  gint64 position, expected_position = 0;
+
+  videorate = setup_videorate ();
+  fail_unless (gst_element_set_state (videorate,
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
+      "could not set to playing");
+
+  buf = gst_buffer_new_and_alloc (4);
+  gst_buffer_memset (buf, 0, 0, 4);
+  caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_check_setup_events (mysrcpad, videorate, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+  ASSERT_BUFFER_REFCOUNT (buf, "inbuffer", 1);
+
+  /* Push a few buffers */
+  g_object_set (videorate, "rate", test->rate, NULL);
+  for (ts = 0; ts < GST_SECOND; ts += GST_SECOND / 20) {
+    GstBuffer *inbuf;
+
+    inbuf = gst_buffer_copy (buf);
+    GST_BUFFER_TIMESTAMP (inbuf) = ts;
+
+    fail_unless_equals_int (gst_pad_push (mysrcpad, inbuf), GST_FLOW_OK);
+
+    expected_position = ts / test->rate;
+    gst_element_query_position (videorate, GST_FORMAT_TIME, &position);
+    GST_DEBUG_OBJECT (NULL,
+        "pushed buffer %" GST_TIME_FORMAT ", queried pos: %" GST_TIME_FORMAT
+        ", expected pos: %" GST_TIME_FORMAT, GST_TIME_ARGS (ts),
+        GST_TIME_ARGS (position), GST_TIME_ARGS (expected_position));
+    fail_unless_equals_uint64 (position, expected_position);
+  }
+
+  /* cleanup */
+  cleanup_videorate (videorate);
+}
+
+GST_END_TEST;
 
 static Suite *
 videorate_suite (void)
@@ -1189,6 +1413,10 @@ videorate_suite (void)
       0, G_N_ELEMENTS (caps_negotiation_tests));
   tcase_add_test (tc_chain, test_fixed_framerate);
   tcase_add_test (tc_chain, test_variable_framerate_renegotiation);
+  tcase_add_loop_test (tc_chain, test_rate, 0, G_N_ELEMENTS (rate_tests));
+  tcase_add_test (tc_chain, test_query_duration);
+  tcase_add_loop_test (tc_chain, test_query_position, 0,
+      G_N_ELEMENTS (position_tests));
 
   return s;
 }

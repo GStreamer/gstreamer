@@ -52,6 +52,10 @@
  * Note that property notification will happen from the streaming thread, so
  * applications should be prepared for this.
  *
+ * The property #GstVideoRate:rate allows the modification of video speed by a
+ * certain factor. It must not be confused with framerate. Think of rate as
+ * speed and framerate as flow.
+ *
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
@@ -91,6 +95,7 @@ enum
 #define DEFAULT_DROP_ONLY       FALSE
 #define DEFAULT_AVERAGE_PERIOD  0
 #define DEFAULT_MAX_RATE        G_MAXINT
+#define DEFAULT_RATE            1.0
 
 enum
 {
@@ -104,7 +109,8 @@ enum
   PROP_SKIP_TO_FIRST,
   PROP_DROP_ONLY,
   PROP_AVERAGE_PERIOD,
-  PROP_MAX_RATE
+  PROP_MAX_RATE,
+  PROP_RATE
 };
 
 static GstStaticPadTemplate gst_video_rate_src_template =
@@ -126,6 +132,8 @@ static GstStaticPadTemplate gst_video_rate_sink_template =
 static void gst_video_rate_swap_prev (GstVideoRate * videorate,
     GstBuffer * buffer, gint64 time);
 static gboolean gst_video_rate_sink_event (GstBaseTransform * trans,
+    GstEvent * event);
+static gboolean gst_video_rate_src_event (GstBaseTransform * trans,
     GstEvent * event);
 static gboolean gst_video_rate_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query);
@@ -175,6 +183,7 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
       GST_DEBUG_FUNCPTR (gst_video_rate_transform_caps);
   base_class->transform_ip = GST_DEBUG_FUNCPTR (gst_video_rate_transform_ip);
   base_class->sink_event = GST_DEBUG_FUNCPTR (gst_video_rate_sink_event);
+  base_class->src_event = GST_DEBUG_FUNCPTR (gst_video_rate_src_event);
   base_class->start = GST_DEBUG_FUNCPTR (gst_video_rate_start);
   base_class->stop = GST_DEBUG_FUNCPTR (gst_video_rate_stop);
   base_class->fixate_caps = GST_DEBUG_FUNCPTR (gst_video_rate_fixate_caps);
@@ -207,7 +216,7 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
 
   /**
    * GstVideoRate:skip-to-first:
-   * 
+   *
    * Don't produce buffers before the first one we receive.
    */
   g_object_class_install_property (object_class, PROP_SKIP_TO_FIRST,
@@ -249,6 +258,19 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
           "(in frames per second, implies drop-only)",
           1, G_MAXINT, DEFAULT_MAX_RATE,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVideoRate:rate:
+   *
+   * Factor of speed for frame displaying
+   *
+   * Since: 1.12
+   */
+  g_object_class_install_property (object_class, PROP_RATE,
+      g_param_spec_double ("rate", "Rate",
+          "Factor of speed for frame displaying", 0.0, G_MAXDOUBLE,
+          DEFAULT_RATE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
 
   gst_element_class_set_static_metadata (element_class,
       "Video rate adjuster", "Filter/Effect/Video",
@@ -588,6 +610,7 @@ gst_video_rate_init (GstVideoRate * videorate)
   videorate->average_period = DEFAULT_AVERAGE_PERIOD;
   videorate->average_period_set = DEFAULT_AVERAGE_PERIOD;
   videorate->max_rate = DEFAULT_MAX_RATE;
+  videorate->rate = DEFAULT_RATE;
 
   videorate->from_rate_numerator = 0;
   videorate->from_rate_denominator = 0;
@@ -727,11 +750,11 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_SEGMENT:
     {
-      const GstSegment *segment;
+      GstSegment segment;
+      gint seqnum;
 
-      gst_event_parse_segment (event, &segment);
-
-      if (segment->format != GST_FORMAT_TIME)
+      gst_event_copy_segment (event, &segment);
+      if (segment.format != GST_FORMAT_TIME)
         goto format_error;
 
       GST_DEBUG_OBJECT (videorate, "handle NEWSEGMENT");
@@ -776,10 +799,23 @@ gst_video_rate_sink_event (GstBaseTransform * trans, GstEvent * event)
       videorate->next_ts = GST_CLOCK_TIME_NONE;
 
       /* We just want to update the accumulated stream_time  */
-      gst_segment_copy_into (segment, &videorate->segment);
 
+      segment.start = (gint64) (segment.start / videorate->rate);
+      segment.position = (gint64) (segment.position / videorate->rate);
+      if (GST_CLOCK_TIME_IS_VALID (segment.stop))
+        segment.stop = (gint64) (segment.stop / videorate->rate);
+      segment.time = (gint64) (segment.time / videorate->rate);
+
+      gst_segment_copy_into (&segment, &videorate->segment);
       GST_DEBUG_OBJECT (videorate, "updated segment: %" GST_SEGMENT_FORMAT,
           &videorate->segment);
+
+
+      seqnum = gst_event_get_seqnum (event);
+      gst_event_unref (event);
+      event = gst_event_new_segment (&segment);
+      gst_event_set_seqnum (event, seqnum);
+
       break;
     }
     case GST_EVENT_EOS:{
@@ -872,6 +908,47 @@ format_error:
 }
 
 static gboolean
+gst_video_rate_src_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstVideoRate *videorate;
+  GstPad *sinkpad;
+  gboolean res = FALSE;
+
+  videorate = GST_VIDEO_RATE (trans);
+  sinkpad = GST_BASE_TRANSFORM_SINK_PAD (trans);
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+    {
+      gdouble srate;
+      GstSeekFlags flags;
+      GstSeekType start_type, stop_type;
+      gint64 start, stop;
+      gint seqnum = gst_event_get_seqnum (event);
+
+      gst_event_parse_seek (event, &srate, NULL, &flags, &start_type, &start,
+          &stop_type, &stop);
+
+      start = (gint64) (start * videorate->rate);
+      if (GST_CLOCK_TIME_IS_VALID (stop)) {
+        stop = (gint64) (stop * videorate->rate);
+      }
+
+      gst_event_unref (event);
+      event = gst_event_new_seek (srate, GST_FORMAT_TIME,
+          flags, start_type, start, stop_type, stop);
+      gst_event_set_seqnum (event, seqnum);
+
+      res = gst_pad_push_event (sinkpad, event);
+      break;
+    }
+    default:
+      res = gst_pad_push_event (sinkpad, event);
+      break;
+  }
+  return res;
+}
+
+static gboolean
 gst_video_rate_query (GstBaseTransform * trans, GstPadDirection direction,
     GstQuery * query)
 {
@@ -936,6 +1013,49 @@ gst_video_rate_query (GstBaseTransform * trans, GstPadDirection direction,
       }
       /* Simple fallthrough if we don't have a latency or not a peer that we
        * can't ask about its latency yet.. */
+    }
+    case GST_QUERY_DURATION:
+    {
+      GstFormat format;
+      gint64 duration;
+
+
+
+      gst_query_parse_duration (query, &format, &duration);
+
+      if (format != GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (videorate, "not TIME format");
+        break;
+      }
+      GST_LOG_OBJECT (videorate, "upstream duration: %" G_GINT64_FORMAT,
+          duration);
+      if (GST_CLOCK_TIME_IS_VALID (duration)) {
+        duration = (gint64) (duration / videorate->rate);
+      }
+      GST_LOG_OBJECT (videorate, "our duration: %" G_GINT64_FORMAT, duration);
+      gst_query_set_duration (query, format, duration);
+      res = TRUE;
+      break;
+    }
+    case GST_QUERY_POSITION:
+    {
+      GstFormat dst_format;
+      gint64 dst_value;
+
+      gst_query_parse_position (query, &dst_format, &dst_value);
+
+      if (dst_format != GST_FORMAT_TIME) {
+        GST_DEBUG_OBJECT (videorate, "not TIME format");
+        break;
+      }
+      dst_value =
+          (gint64) (gst_segment_to_stream_time (&videorate->segment,
+              GST_FORMAT_TIME, videorate->last_ts / videorate->rate));
+      GST_LOG_OBJECT (videorate, "our position: %" GST_TIME_FORMAT,
+          GST_TIME_ARGS (dst_value));
+      gst_query_set_position (query, dst_format, dst_value);
+      res = TRUE;
+      break;
     }
     default:
       res =
@@ -1272,23 +1392,24 @@ gst_video_rate_transform_ip (GstBaseTransform * trans, GstBuffer * buffer)
 
     /* got 2 buffers, see which one is the best */
     do {
+      GstClockTime next_ts = videorate->next_ts * videorate->rate;
 
       /* take absolute values, beware: abs and ABS don't work for gint64 */
-      if (prevtime > videorate->next_ts)
-        diff1 = prevtime - videorate->next_ts;
+      if (prevtime > next_ts)
+        diff1 = prevtime - next_ts;
       else
-        diff1 = videorate->next_ts - prevtime;
+        diff1 = next_ts - prevtime;
 
-      if (intime > videorate->next_ts)
-        diff2 = intime - videorate->next_ts;
+      if (intime > next_ts)
+        diff2 = intime - next_ts;
       else
-        diff2 = videorate->next_ts - intime;
+        diff2 = next_ts - intime;
 
       GST_LOG_OBJECT (videorate,
           "diff with prev %" GST_TIME_FORMAT " diff with new %"
           GST_TIME_FORMAT " outgoing ts %" GST_TIME_FORMAT,
           GST_TIME_ARGS (diff1), GST_TIME_ARGS (diff2),
-          GST_TIME_ARGS (videorate->next_ts));
+          GST_TIME_ARGS (next_ts));
 
       if (videorate->segment.rate < 0.0) {
         /* Make sure that we have a duration for this buffer. The previous
@@ -1385,6 +1506,15 @@ gst_video_rate_stop (GstBaseTransform * trans)
 }
 
 static void
+gst_videorate_update_duration (GstVideoRate * videorate)
+{
+  GstMessage *m;
+
+  m = gst_message_new_duration_changed (GST_OBJECT (videorate));
+  gst_element_post_message (GST_ELEMENT (videorate), m);
+}
+
+static void
 gst_video_rate_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
@@ -1416,11 +1546,18 @@ gst_video_rate_set_property (GObject * object,
     case PROP_MAX_RATE:
       g_atomic_int_set (&videorate->max_rate, g_value_get_int (value));
       goto reconfigure;
+    case PROP_RATE:
+      videorate->rate = g_value_get_double (value);
+      GST_OBJECT_UNLOCK (videorate);
+
+      gst_videorate_update_duration (videorate);
+      return;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
   GST_OBJECT_UNLOCK (videorate);
+
   return;
 
 reconfigure:
@@ -1470,6 +1607,9 @@ gst_video_rate_get_property (GObject * object,
       break;
     case PROP_MAX_RATE:
       g_value_set_int (value, g_atomic_int_get (&videorate->max_rate));
+      break;
+    case PROP_RATE:
+      g_value_set_double (value, videorate->rate);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
