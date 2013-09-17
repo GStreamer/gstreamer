@@ -1615,6 +1615,7 @@ serialize_error:
 static GstFlowReturn
 gst_qt_mux_start_file (GstQTMux * qtmux)
 {
+  GstQTMuxClass *qtmux_klass = (GstQTMuxClass *) (G_OBJECT_GET_CLASS (qtmux));
   GstFlowReturn ret = GST_FLOW_OK;
   GstCaps *caps;
   GstSegment segment;
@@ -1648,14 +1649,20 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
       GST_WARNING_OBJECT (qtmux, "downstream did not handle seeking query");
       seekable = FALSE;
     }
-    if (!seekable) {
-      qtmux->streamable = TRUE;
-      g_object_notify (G_OBJECT (qtmux), "streamable");
-      GST_WARNING_OBJECT (qtmux, "downstream is not seekable, but "
-          "streamable=false. Will ignore that and create streamable output "
-          "instead");
-    }
     gst_query_unref (query);
+    if (!seekable) {
+      if (qtmux_klass->format != GST_QT_MUX_FORMAT_ISML) {
+        if (!qtmux->fast_start) {
+          goto not_seekable_error;
+        }
+      } else {
+        GST_WARNING_OBJECT (qtmux, "downstream is not seekable, but "
+            "streamable=false. Will ignore that and create streamable output "
+            "instead");
+        qtmux->streamable = TRUE;
+        g_object_notify (G_OBJECT (qtmux), "streamable");
+      }
+    }
   }
 
   /* let downstream know we think in BYTES and expect to do seeking later on */
@@ -1766,6 +1773,15 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
 
 exit:
   return ret;
+
+not_seekable_error:
+  {
+    GST_ELEMENT_ERROR (qtmux, STREAM, FAILED,
+        ("Downstream is not seekable and headers can't be rewritten"),
+        GST_ERROR_SYSTEM);
+    GST_OBJECT_UNLOCK (qtmux);
+    return GST_FLOW_ERROR;
+  }
 
   /* ERRORS */
 open_failed:
