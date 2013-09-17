@@ -1165,9 +1165,6 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
    * a new clock will be selected */
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
 
-  if (GST_ELEMENT_CAST (bin)->context)
-    gst_element_set_context (element, GST_ELEMENT_CAST (bin)->context);
-
 #if 0
   /* set the cached index on the children */
   if (bin->priv->index)

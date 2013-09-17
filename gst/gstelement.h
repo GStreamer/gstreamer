@@ -568,10 +568,8 @@ struct _GstElement
   GList                *sinkpads;
   guint32               pads_cookie;
 
-  GstContext           *context;
-
   /*< private >*/
-  gpointer _gst_reserved[GST_PADDING-1];
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -744,7 +742,6 @@ GstBus *                gst_element_get_bus             (GstElement * element);
 
 /* context */
 void                    gst_element_set_context         (GstElement * element, GstContext * context);
-GstContext *            gst_element_get_context         (GstElement * element);
 
 /* pad management */
 gboolean                gst_element_add_pad             (GstElement *element, GstPad *pad);
