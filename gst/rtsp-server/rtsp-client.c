@@ -480,19 +480,13 @@ paths_are_equal (const gchar * path1, const gchar * path2, gint len2)
  * but is cached for when the same client (without breaking the connection) is
  * doing a setup for the exact same url. */
 static GstRTSPMedia *
-find_media (GstRTSPClient * client, GstRTSPContext * ctx, gint * matched)
+find_media (GstRTSPClient * client, GstRTSPContext * ctx, gchar * path,
+    gint * matched)
 {
   GstRTSPClientPrivate *priv = client->priv;
   GstRTSPMediaFactory *factory;
   GstRTSPMedia *media;
-  gchar *path;
   gint path_len;
-
-  if (!priv->mount_points)
-    goto no_mount_points;
-
-  if (!(path = gst_rtsp_mount_points_make_path (priv->mount_points, ctx->uri)))
-    goto no_path;
 
   /* find the longest matching factory for the uri first */
   if (!(factory = gst_rtsp_mount_points_match (priv->mount_points,
@@ -553,7 +547,6 @@ find_media (GstRTSPClient * client, GstRTSPContext * ctx, gint * matched)
 
   g_object_unref (factory);
   ctx->factory = NULL;
-  g_free (path);
 
   if (media)
     g_object_ref (media);
@@ -561,35 +554,21 @@ find_media (GstRTSPClient * client, GstRTSPContext * ctx, gint * matched)
   return media;
 
   /* ERRORS */
-no_mount_points:
-  {
-    GST_ERROR ("client %p: no mount points configured", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
-    return NULL;
-  }
-no_path:
-  {
-    GST_ERROR ("client %p: can't find path for url", client);
-    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
-    return NULL;
-  }
 no_factory:
   {
-    GST_ERROR ("client %p: no factory for uri %s", client, path);
-    g_free (path);
+    GST_ERROR ("client %p: no factory for path %s", client, path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     return NULL;
   }
 no_factory_access:
   {
-    GST_ERROR ("client %p: not authorized to see factory uri %s", client, path);
-    g_free (path);
+    GST_ERROR ("client %p: not authorized to see factory path %s", client,
+        path);
     return NULL;
   }
 not_authorized:
   {
-    GST_ERROR ("client %p: not authorized for factory uri %s", client, path);
-    g_free (path);
+    GST_ERROR ("client %p: not authorized for factory path %s", client, path);
     return NULL;
   }
 no_media:
@@ -598,7 +577,6 @@ no_media:
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     g_object_unref (factory);
     ctx->factory = NULL;
-    g_free (path);
     return NULL;
   }
 no_thread:
@@ -609,7 +587,6 @@ no_thread:
     ctx->media = NULL;
     g_object_unref (factory);
     ctx->factory = NULL;
-    g_free (path);
     return NULL;
   }
 no_prepare:
@@ -620,7 +597,6 @@ no_prepare:
     ctx->media = NULL;
     g_object_unref (factory);
     ctx->factory = NULL;
-    g_free (path);
     return NULL;
   }
 }
@@ -1413,7 +1389,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   /* we have no session media, find one and manage it */
   if (sessmedia == NULL) {
     /* get a handle to the configuration of the media in the session */
-    media = find_media (client, ctx, &matched);
+    media = find_media (client, ctx, path, &matched);
   } else {
     if ((media = gst_rtsp_session_media_get_media (sessmedia)))
       g_object_ref (media);
@@ -1645,10 +1621,11 @@ no_sdp:
 static gboolean
 handle_describe_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
+  GstRTSPClientPrivate *priv = client->priv;
   GstRTSPResult res;
   GstSDPMessage *sdp;
   guint i, str_len;
-  gchar *str, *str_query, *content_base;
+  gchar *path, *str, *str_query, *content_base;
   GstRTSPMedia *media;
   GstRTSPClientClass *klass;
 
@@ -1672,9 +1649,17 @@ handle_describe_request (GstRTSPClient * client, GstRTSPContext * ctx)
       break;
   }
 
+  if (!priv->mount_points)
+    goto no_mount_points;
+
+  if (!(path = gst_rtsp_mount_points_make_path (priv->mount_points, ctx->uri)))
+    goto no_path;
+
   /* find the media object for the uri */
-  if (!(media = find_media (client, ctx, NULL)))
+  if (!(media = find_media (client, ctx, path, NULL)))
     goto no_media;
+
+  g_free (path);
 
   /* create an SDP for the media object on this client */
   if (!(sdp = klass->create_sdp (client, media)))
@@ -1735,9 +1720,22 @@ no_uri:
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     return FALSE;
   }
+no_mount_points:
+  {
+    GST_ERROR ("client %p: no mount points configured", client);
+    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    return FALSE;
+  }
+no_path:
+  {
+    GST_ERROR ("client %p: can't find path for url", client);
+    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    return FALSE;
+  }
 no_media:
   {
     GST_ERROR ("client %p: no media", client);
+    g_free (path);
     /* error reply is already sent */
     return FALSE;
   }
