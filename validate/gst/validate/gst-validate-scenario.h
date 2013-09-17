@@ -70,8 +70,8 @@ GstValidateScenario * gst_validate_scenario_factory_create (GstValidateRunner *r
                                                 GstElement *pipeline,
                                                 const gchar *scenario_name);
 void gst_validate_list_scenarios  (void);
-void gst_validate_add_action_type (const gchar *type_name,
-                                   GstValidateExecuteAction function);
+void gst_validate_add_action_type (const gchar *type_name, GstValidateExecuteAction function,
+                                   const gchar * const * mandatory_fields, const gchar *description);
 
 G_END_DECLS
 

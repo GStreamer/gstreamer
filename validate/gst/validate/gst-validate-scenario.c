@@ -56,6 +56,13 @@ static void gst_validate_scenario_finalize (GObject * object);
 G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
     G_TYPE_OBJECT, G_IMPLEMENT_INTERFACE (GST_TYPE_VALIDATE_REPORTER, NULL));
 
+typedef struct _GstValidateActionType
+{
+  GstValidateExecuteAction execute;
+  gchar ** mandatory_fields;
+  gchar *description;
+} GstValidateActionType;
+
 struct _GstValidateScenarioPrivate
 {
   GstElement *pipeline;
@@ -468,15 +475,15 @@ get_position (GstValidateScenario * scenario)
   GST_LOG ("Current position: %" GST_TIME_FORMAT, GST_TIME_ARGS (position));
   if ((rate > 0 && (GstClockTime) position >= act->playback_time) ||
       (rate < 0 && (GstClockTime) position <= act->playback_time)) {
-    GstValidateExecuteAction func;
+    GstValidateActionType *type;
 
     /* TODO what about non flushing seeks? */
     /* TODO why is this inside the action time if ? */
     if (GST_CLOCK_TIME_IS_VALID (priv->seeked_position))
       return TRUE;
 
-    func = g_hash_table_lookup (action_types_table, act->type);
-    if (!func (scenario, act))
+    type = g_hash_table_lookup (action_types_table, act->type);
+    if (!type->execute (scenario, act))
       GST_WARNING_OBJECT (scenario, "Could not execute %" GST_PTR_FORMAT,
           act->structure);
 
@@ -570,6 +577,7 @@ _load_scenario_file (GstValidateScenario * scenario,
     type = gst_structure_get_name (structure);
     if (!g_hash_table_lookup (action_types_table, type)) {
       GST_WARNING_OBJECT (scenario, "We do not handle action types %s", type);
+      continue;
     }
 
     action = g_slice_new0 (GstValidateAction);
@@ -830,21 +838,57 @@ gst_validate_list_scenarios (void)
 
 }
 
-void
-gst_validate_add_action_type (const gchar *type_name, GstValidateExecuteAction function)
+static void
+_free_action_type (GstValidateActionType *type)
 {
+  g_free (type->description);
+
+  if (type->mandatory_fields)
+    g_strfreev (type->mandatory_fields);
+  g_free (type->description);
+
+  g_slice_free (GstValidateActionType, type);
+}
+
+void
+gst_validate_add_action_type (const gchar *type_name, GstValidateExecuteAction function,
+    const gchar * const * mandatory_fields, const gchar *description)
+{
+  GstValidateActionType *type  = g_slice_new0 (GstValidateActionType);
+
   if (action_types_table == NULL)
     action_types_table = g_hash_table_new_full (g_str_hash, g_str_equal,
-        (GDestroyNotify) g_free, NULL);
-  g_hash_table_insert (action_types_table, g_strdup (type_name), function);
+        (GDestroyNotify) _free_action_type, NULL);
+
+  type->execute = function;
+  type->mandatory_fields = g_strdupv ( (gchar **) mandatory_fields);
+  type->description = g_strdup (description);
+
+  g_hash_table_insert (action_types_table, g_strdup (type_name), type);
 }
 
 void
 init_scenarios (void)
 {
-  gst_validate_add_action_type ("seek", _execute_seek);
-  gst_validate_add_action_type ("pause",_execute_pause);
-  gst_validate_add_action_type ("play",_execute_play);
-  gst_validate_add_action_type ("eos",_execute_eos);
-  gst_validate_add_action_type ("switch-track", _execute_switch_track);
+  const gchar * seek_mandatory_fields[] = { "start", NULL };
+
+  gst_validate_add_action_type ("seek", _execute_seek, seek_mandatory_fields,
+      "Allows to seek into the files");
+  gst_validate_add_action_type ("pause",_execute_pause, NULL,
+      "Make it possible to set pipeline to PAUSED, you can add a duration"
+      " parametter so the pipeline goaes back to playing after that duration"
+      " (in second)");
+  gst_validate_add_action_type ("play",_execute_play, NULL,
+      "Make it possible to set the pipeline state to PLAYING");
+  gst_validate_add_action_type ("eos",_execute_eos, NULL,
+      "Make it possible to send an EOS to the pipeline");
+  gst_validate_add_action_type ("switch-track", _execute_switch_track, NULL,
+      "The 'switch-track' command can be used to switch tracks.\n"
+      "The 'type' argument selects which track type to change (can be 'audio', 'video',"
+      " or 'text'). The 'index' argument selects which track of this type"
+      " to use: it can be either a number, which will be the Nth track of"
+      " the given type, or a number with a '+' or '-' prefix, which means"
+      " a relative change (eg, '+1' means 'next track', '-1' means 'previous"
+      " track'), note that you need to state that it is a string in the scenario file"
+      " prefixing it with (string).");
 }
