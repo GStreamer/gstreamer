@@ -39,17 +39,15 @@
  * order until one step succeeds:
  * 1) Check if the element already has a context
  * 2) Query downstream with GST_QUERY_CONTEXT for the context
+ * 2) Query upstream with GST_QUERY_CONTEXT for the context
  * 3) Post a GST_MESSAGE_NEED_CONTEXT message on the bus with the required
  *    context types and afterwards check if a usable context was set now
  * 4) Create a context by itself and post a GST_MESSAGE_HAVE_CONTEXT message
- *    and send a GST_EVENT_CONTEXT event downstream, containing the complete
- *    context information at this time.
+ *    on the bus.
  *
- * Applications should catch the GST_MESSAGE_HAVE_CONTEXT messages and remember
- * any content from it unless it has a custom version of a specific context. If
- * later an element is posting a GST_MESSAGE_NEED_CONTEXT message for a specific
- * context that was created by an element before, the application should pass it
- * to the element or the complete pipeline.
+ * Bins will catch GST_MESSAGE_NEED_CONTEXT messages and will set any previously
+ * known context on the element that asks for it if possible. Otherwise the
+ * application should provide one if it can.
  *
  * Since: 1.2
  */
