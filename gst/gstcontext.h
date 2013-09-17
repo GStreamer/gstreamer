@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 2013 Collabora Ltd.
  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2013 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * gstcontext.h: Header for GstContext subsystem
  *
@@ -143,10 +144,12 @@ gst_context_replace (GstContext **old_context, GstContext *new_context)
   return gst_mini_object_replace ((GstMiniObject **) old_context, (GstMiniObject *) new_context);
 }
 
-GstContext *    gst_context_new (void) G_GNUC_MALLOC;
+GstContext *          gst_context_new                      (gboolean persistent) G_GNUC_MALLOC;
 
-const GstStructure *  gst_context_get_structure            (GstContext *context);
+const GstStructure *  gst_context_get_structure            (const GstContext *context);
 GstStructure *        gst_context_writable_structure       (GstContext *context);
+
+gboolean              gst_context_is_persistent            (const GstContext * context);
 
 G_END_DECLS
 

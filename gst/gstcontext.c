@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 2013 Collabora Ltd.
  *   Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2013 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * gstcontext.h: Header for GstContext subsystem
  *
@@ -63,6 +64,7 @@ struct _GstContext
   GstMiniObject mini_object;
 
   GstStructure *structure;
+  gboolean persistent;
 };
 
 #define GST_CONTEXT_STRUCTURE(c)  (((GstContext *)(c))->structure)
@@ -122,6 +124,8 @@ _gst_context_copy (GstContext * context)
   gst_structure_set_parent_refcount (GST_CONTEXT_STRUCTURE (copy),
       &copy->mini_object.refcount);
 
+  copy->persistent = context->persistent;
+
   return GST_CONTEXT_CAST (copy);
 }
 
@@ -135,6 +139,7 @@ gst_context_init (GstContext * context)
 
 /**
  * gst_context_new:
+ * @persistent: Persistent context
  *
  * Create a new context.
  *
@@ -143,7 +148,7 @@ gst_context_init (GstContext * context)
  * Since: 1.2
  */
 GstContext *
-gst_context_new (void)
+gst_context_new (gboolean persistent)
 {
   GstContext *context;
   GstStructure *structure;
@@ -157,6 +162,7 @@ gst_context_new (void)
   gst_context_init (context);
 
   GST_CONTEXT_STRUCTURE (context) = structure;
+  context->persistent = persistent;
 
   return context;
 }
@@ -174,7 +180,7 @@ gst_context_new (void)
  * Since: 1.2
  */
 const GstStructure *
-gst_context_get_structure (GstContext * context)
+gst_context_get_structure (const GstContext * context)
 {
   g_return_val_if_fail (GST_IS_CONTEXT (context), NULL);
 
@@ -201,4 +207,22 @@ gst_context_writable_structure (GstContext * context)
   g_return_val_if_fail (gst_context_is_writable (context), NULL);
 
   return GST_CONTEXT_STRUCTURE (context);
+}
+
+/**
+ * gst_context_is_persistent:
+ * @context: The #GstContext.
+ *
+ * Check if @context is persistent.
+ *
+ * Returns: %TRUE if the context is persistent.
+ *
+ * Since: 1.2
+ */
+gboolean
+gst_context_is_persistent (const GstContext * context)
+{
+  g_return_val_if_fail (GST_IS_CONTEXT (context), NULL);
+
+  return context->persistent;
 }
