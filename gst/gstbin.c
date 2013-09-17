@@ -198,6 +198,8 @@ struct _GstBinPrivate
   gboolean message_forward;
 
   gboolean posted_eos;
+
+  GList *contexts;
 };
 
 typedef struct
@@ -529,6 +531,8 @@ gst_bin_dispose (GObject * object)
     g_critical ("could not remove elements from bin '%s'",
         GST_STR_NULL (GST_OBJECT_NAME (object)));
   }
+
+  g_list_free_full (bin->priv->contexts, (GDestroyNotify) gst_context_unref);
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -1094,6 +1098,7 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
   gboolean is_sink, is_source, provides_clock, requires_clock;
   GstMessage *clock_message = NULL, *async_message = NULL;
   GstStateChangeReturn ret;
+  GList *l;
 
   GST_DEBUG_OBJECT (bin, "element :%s", GST_ELEMENT_NAME (element));
 
@@ -1164,6 +1169,9 @@ gst_bin_add_func (GstBin * bin, GstElement * element)
    * that is not important right now. When the pipeline goes to PLAYING,
    * a new clock will be selected */
   gst_element_set_clock (element, GST_ELEMENT_CLOCK (bin));
+
+  for (l = bin->priv->contexts; l; l = l->next)
+    gst_element_set_context (element, l->data);
 
 #if 0
   /* set the cached index on the children */
@@ -2576,9 +2584,30 @@ gst_bin_change_state_func (GstElement * element, GstStateChange transition)
           goto activate_failure;
       break;
     case GST_STATE_NULL:
-      if (current == GST_STATE_READY)
+      if (current == GST_STATE_READY) {
+        GList *l;
+
         if (!(gst_bin_src_pads_activate (bin, FALSE)))
           goto activate_failure;
+
+        /* Remove all non-persistent contexts */
+        GST_OBJECT_LOCK (bin);
+        for (l = bin->priv->contexts; l;) {
+          GstContext *context = l->data;
+
+          if (!gst_context_is_persistent (context)) {
+            GList *next;
+
+            gst_context_unref (context);
+            next = l->next;
+            bin->priv->contexts = g_list_delete_link (bin->priv->contexts, l);
+            l = next;
+          } else {
+            l = l->next;
+          }
+        }
+        GST_OBJECT_UNLOCK (bin);
+      }
       break;
     default:
       break;
@@ -3269,6 +3298,34 @@ bin_do_message_forward (GstBin * bin, GstMessage * message)
   }
 }
 
+static void
+gst_bin_update_context (GstBin * bin, GstContext * context)
+{
+  GList *l;
+  const gchar *context_type;
+
+  GST_OBJECT_LOCK (bin);
+  context_type = gst_context_get_context_type (context);
+  for (l = bin->priv->contexts; l; l = l->next) {
+    GstContext *tmp = l->data;
+    const gchar *tmp_type = gst_context_get_context_type (tmp);
+
+    /* Always store newest context but never replace
+     * a persistent one by a non-persistent one */
+    if (strcmp (context_type, tmp_type) == 0 &&
+        (gst_context_is_persistent (context) ||
+            !gst_context_is_persistent (tmp))) {
+      gst_context_replace ((GstContext **) & l->data, context);
+      break;
+    }
+  }
+  /* Not found? Add */
+  if (l != NULL)
+    bin->priv->contexts =
+        g_list_prepend (bin->priv->contexts, gst_context_ref (context));
+  GST_OBJECT_UNLOCK (bin);
+}
+
 /* handle child messages:
  *
  * This method is called synchronously when a child posts a message on
@@ -3623,6 +3680,42 @@ gst_bin_handle_message_func (GstBin * bin, GstMessage * message)
       if (message)
         gst_message_unref (message);
 
+      break;
+    }
+    case GST_MESSAGE_NEED_CONTEXT:{
+      const gchar *context_type;
+      GList *l;
+
+      gst_message_parse_context_type (message, &context_type);
+      GST_OBJECT_LOCK (bin);
+      for (l = bin->priv->contexts; l; l = l->next) {
+        GstContext *tmp = l->data;
+        const gchar *tmp_type = gst_context_get_context_type (tmp);
+
+        if (strcmp (context_type, tmp_type) == 0) {
+          gst_element_set_context (GST_ELEMENT (src), l->data);
+          break;
+        }
+      }
+      GST_OBJECT_UNLOCK (bin);
+
+      /* Forward if we couldn't answer the message */
+      if (l == NULL) {
+        goto forward;
+      } else {
+        gst_message_unref (message);
+      }
+
+      break;
+    }
+    case GST_MESSAGE_HAVE_CONTEXT:{
+      GstContext *context;
+
+      gst_message_parse_have_context (message, &context);
+      gst_bin_update_context (bin, context);
+      gst_context_unref (context);
+
+      goto forward;
       break;
     }
     default:
@@ -3988,6 +4081,8 @@ gst_bin_set_context (GstElement * element, GstContext * context)
   g_return_if_fail (GST_IS_BIN (element));
 
   bin = GST_BIN (element);
+
+  gst_bin_update_context (bin, context);
 
   children = gst_bin_iterate_elements (bin);
   while (gst_iterator_foreach (children, set_context,
