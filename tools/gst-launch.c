@@ -63,9 +63,6 @@ static gboolean messages = FALSE;
 static gboolean is_live = FALSE;
 static gboolean waiting_eos = FALSE;
 
-G_LOCK_DEFINE_STATIC (context);
-static GstContext *context = NULL;
-
 /* convenience macro so we don't have to litter the code with if(!quiet) */
 #define PRINT if(!quiet)g_print
 
@@ -483,18 +480,6 @@ intr_handler (gpointer user_data)
 
 #endif /* G_OS_UNIX */
 
-static gboolean
-merge_structures (GQuark field_id, const GValue * value, gpointer user_data)
-{
-  GstStructure *s2 = user_data;
-
-  /* Copy all fields that are not set yet */
-  if (!gst_structure_id_has_field (s2, field_id))
-    gst_structure_id_set_value (s2, field_id, value);
-
-  return TRUE;
-}
-
 /* returns ELR_ERROR if there was an error
  * or ELR_INTERRUPT if we caught a keyboard interrupt
  * or ELR_NO_ERROR otherwise. */
@@ -808,26 +793,20 @@ event_loop (GstElement * pipeline, gboolean blocking, gboolean do_progress,
         break;
       }
       case GST_MESSAGE_HAVE_CONTEXT:{
-        GstContext *context_new;
+        GstContext *context;
+        const gchar *context_type;
         gchar *context_str;
 
-        gst_message_parse_have_context (message, &context_new);
+        gst_message_parse_have_context (message, &context);
 
+        context_type = gst_context_get_context_type (context);
         context_str =
-            gst_structure_to_string (gst_context_get_structure (context_new));
-        PRINT (_("Got context from element '%s': %s\n"),
-            GST_ELEMENT_NAME (GST_MESSAGE_SRC (message)), context_str);
+            gst_structure_to_string (gst_context_get_structure (context));
+        PRINT (_("Got context from element '%s': %s=%s\n"),
+            GST_ELEMENT_NAME (GST_MESSAGE_SRC (message)), context_type,
+            context_str);
         g_free (context_str);
-        gst_context_unref (context_new);
-
-        /* The contexts were merged in the sync handler already, here
-         * now just print them and propagate the merged context to the
-         * complete pipeline */
-        G_LOCK (context);
-        context_new = gst_context_ref (context_new);
-        G_UNLOCK (context);
-        gst_element_set_context (pipeline, context_new);
-        gst_context_unref (context_new);
+        gst_context_unref (context);
         break;
       }
       default:
@@ -887,49 +866,7 @@ bus_sync_handler (GstBus * bus, GstMessage * message, gpointer data)
 
         g_free (state_transition_name);
       }
-    case GST_MESSAGE_NEED_CONTEXT:{
-      G_LOCK (context);
-      /* We could filter something here, but instead we can also just pass the complete
-       * context knowledge we have to the element. If we have what it needs, it will be
-       * happy, otherwise we can't do anything else anyway */
-      if (context)
-        gst_element_set_context (GST_ELEMENT_CAST (GST_MESSAGE_SRC (message)),
-            context);
-      G_UNLOCK (context);
-
       break;
-    }
-    case GST_MESSAGE_HAVE_CONTEXT:{
-      GstContext *context_new;
-
-      gst_message_parse_have_context (message, &context_new);
-
-      /* Merge the contexts here as soon as possible and not
-       * in the async bus handler, in case something asks for
-       * a specific context before the async bus handler is run.
-       *
-       * Don't set the context on the complete pipeline here as it
-       * might deadlock, but do that from the async bus handler
-       * instead.
-       */
-      G_LOCK (context);
-      if (context) {
-        const GstStructure *s1;
-        GstStructure *s2;
-
-        /* Merge structures */
-        context = gst_context_make_writable (context);
-        s1 = gst_context_get_structure (context_new);
-        s2 = gst_context_writable_structure (context);
-        gst_structure_foreach (s1, merge_structures, s2);
-      } else {
-        /* Copy over the context */
-        gst_context_replace (&context, context_new);
-      }
-      gst_context_unref (context_new);
-      G_UNLOCK (context);
-      break;
-    }
     default:
       break;
   }
@@ -1213,7 +1150,6 @@ main (int argc, char *argv[])
 
   PRINT (_("Freeing pipeline ...\n"));
   gst_object_unref (pipeline);
-  gst_context_replace (&context, NULL);
 
   gst_deinit ();
 
