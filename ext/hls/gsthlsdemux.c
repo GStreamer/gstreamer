@@ -313,6 +313,7 @@ gst_hls_demux_change_state (GstElement * element, GstStateChange transition)
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_hls_demux_reset (demux, FALSE);
+      gst_uri_downloader_reset (demux->downloader);
       break;
     default:
       break;
@@ -433,6 +434,7 @@ gst_hls_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
 
       demux->cancelled = FALSE;
+      gst_uri_downloader_reset (demux->downloader);
       gst_task_start (demux->stream_task);
       g_rec_mutex_unlock (&demux->stream_lock);
 
