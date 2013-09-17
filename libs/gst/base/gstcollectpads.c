@@ -735,7 +735,7 @@ gst_collect_pads_set_flushing_unlocked (GstCollectPads * pads,
   GSList *walk = NULL;
 
   /* Update the pads flushing flag */
-  for (walk = pads->data; walk; walk = g_slist_next (walk)) {
+  for (walk = pads->priv->pad_list; walk; walk = g_slist_next (walk)) {
     GstCollectData *cdata = walk->data;
 
     if (GST_IS_PAD (cdata->pad)) {
