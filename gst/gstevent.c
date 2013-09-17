@@ -116,7 +116,6 @@ static GstEventQuarks event_quarks[] = {
   {GST_EVENT_BUFFERSIZE, "buffersize", 0},
   {GST_EVENT_SINK_MESSAGE, "sink-message", 0},
   {GST_EVENT_EOS, "eos", 0},
-  {GST_EVENT_CONTEXT, "context", 0},
   {GST_EVENT_SEGMENT_DONE, "segment-done", 0},
   {GST_EVENT_GAP, "gap", 0},
   {GST_EVENT_QOS, "qos", 0},
@@ -1686,57 +1685,4 @@ gst_event_parse_segment_done (GstEvent * event, GstFormat * format,
   val = gst_structure_id_get_value (structure, GST_QUARK (POSITION));
   if (position != NULL)
     *position = g_value_get_int64 (val);
-}
-
-/**
- * gst_event_new_context:
- * @context: (transfer full): the #GstContext
- *
- * Create a new context event. The purpose of the context event is
- * to pass a pipeline-local context to downstream elements.
- *
- * Returns: (transfer full): a new #GstEvent
- *
- * Since: 1.2
- */
-GstEvent *
-gst_event_new_context (GstContext * context)
-{
-  GstEvent *event;
-  GstStructure *structure;
-
-  g_return_val_if_fail (context != NULL, NULL);
-
-  GST_CAT_INFO (GST_CAT_EVENT, "creating context event");
-
-  structure = gst_structure_new_id (GST_QUARK (EVENT_SEEK),
-      GST_QUARK (CONTEXT), GST_TYPE_CONTEXT, context, NULL);
-  event = gst_event_new_custom (GST_EVENT_CONTEXT, structure);
-  gst_context_unref (context);
-
-  return event;
-}
-
-/**
- * gst_event_parse_context:
- * @event: The event to query
- * @context: (out) (transfer full): a pointer to store the #GstContext in.
- *
- * Parse the context event. Unref @context after usage.
- *
- * Since: 1.2
- */
-void
-gst_event_parse_context (GstEvent * event, GstContext ** context)
-{
-  const GstStructure *structure;
-
-  g_return_if_fail (GST_IS_EVENT (event));
-  g_return_if_fail (GST_EVENT_TYPE (event) == GST_EVENT_CONTEXT);
-
-  structure = GST_EVENT_STRUCTURE (event);
-  if (context)
-    *context =
-        GST_CONTEXT (g_value_dup_boxed (gst_structure_id_get_value
-            (structure, GST_QUARK (CONTEXT))));
 }

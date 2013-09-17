@@ -99,8 +99,6 @@ typedef enum {
  * @GST_EVENT_GAP: Marks a gap in the datastream.
  * @GST_EVENT_TOC: An event which indicates that a new table of contents (TOC)
  *                 was found or updated.
- * @GST_EVENT_CONTEXT: An event to communicate a #GstContext to other
- *                 elements (Since 1.2)
  * @GST_EVENT_QOS: A quality message. Used to indicate to upstream elements
  *                 that the downstream elements should adjust their processing
  *                 rate.
@@ -149,7 +147,6 @@ typedef enum {
   GST_EVENT_SINK_MESSAGE          = GST_EVENT_MAKE_TYPE (100, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
   GST_EVENT_EOS                   = GST_EVENT_MAKE_TYPE (110, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY)),
   GST_EVENT_TOC                   = GST_EVENT_MAKE_TYPE (120, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
-  GST_EVENT_CONTEXT               = GST_EVENT_MAKE_TYPE (130, FLAG(DOWNSTREAM) | FLAG(SERIALIZED) | FLAG(STICKY) | FLAG(STICKY_MULTI)),
 
   /* non-sticky downstream serialized */
   GST_EVENT_SEGMENT_DONE          = GST_EVENT_MAKE_TYPE (150, FLAG(DOWNSTREAM) | FLAG(SERIALIZED)),
@@ -578,10 +575,6 @@ void            gst_event_parse_toc_select      (GstEvent *event, gchar **uid);
 /* segment-done event */
 GstEvent*       gst_event_new_segment_done      (GstFormat format, gint64 position) G_GNUC_MALLOC;
 void            gst_event_parse_segment_done    (GstEvent *event, GstFormat *format, gint64 *position);
-
-/* context */
-GstEvent*       gst_event_new_context           (GstContext * context) G_GNUC_MALLOC;
-void            gst_event_parse_context         (GstEvent *event, GstContext **context);
 
 G_END_DECLS
 
