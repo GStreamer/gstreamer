@@ -581,6 +581,9 @@ decode_buffer(GstVaapiDecoderJpeg *decoder, const guchar *buf, guint buf_size)
         case GST_JPEG_MARKER_DRI:
             status = decode_restart_interval(decoder, buf + seg.offset, seg.size);
             break;
+        case GST_JPEG_MARKER_COM:
+            status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+            break;
         case GST_JPEG_MARKER_DAC:
             GST_ERROR("unsupported arithmetic coding mode");
             status = GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
