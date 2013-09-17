@@ -196,7 +196,7 @@ enum
 #define DEFAULT_FAST_START_TEMP_FILE    NULL
 #define DEFAULT_MOOV_RECOV_FILE         NULL
 #define DEFAULT_FRAGMENT_DURATION       0
-#define DEFAULT_STREAMABLE              FALSE
+#define DEFAULT_STREAMABLE              TRUE
 #ifndef GST_REMOVE_DEPRECATED
 #define DEFAULT_DTS_METHOD              DTS_METHOD_REORDER
 #endif
@@ -279,6 +279,7 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   const gchar *streamable_desc;
+  gboolean streamable;
 #define STREAMABLE_DESC "If set to true, the output should be as if it is to "\
   "be streamed and hence no indexes written or duration written."
 
@@ -293,9 +294,11 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
 
   if (klass->format == GST_QT_MUX_FORMAT_ISML) {
     streamable_desc = STREAMABLE_DESC;
+    streamable = DEFAULT_STREAMABLE;
   } else {
     streamable_desc =
         STREAMABLE_DESC " (DEPRECATED, only valid for fragmented MP4)";
+    streamable = FALSE;
   }
 
   g_object_class_install_property (gobject_class, PROP_MOVIE_TIMESCALE,
@@ -348,7 +351,7 @@ gst_qt_mux_class_init (GstQTMuxClass * klass)
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (gobject_class, PROP_STREAMABLE,
       g_param_spec_boolean ("streamable", "Streamable", streamable_desc,
-          DEFAULT_STREAMABLE,
+          streamable,
           G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS));
 
   gstelement_class->request_new_pad =
