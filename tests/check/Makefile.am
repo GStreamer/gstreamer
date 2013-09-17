@@ -352,7 +352,7 @@ orc/deinterlace.c: $(top_srcdir)/gst/deinterlace/tvtime.orc
 	$(MKDIR_P) orc/
 	$(ORCC) --test -o $@ $<
 
-orc/videomixer.c: $(top_srcdir)/gst/videomixer/blendorc.orc
+orc/videomixer.c: $(top_srcdir)/gst/videomixer/videomixerorc.orc
 	$(MKDIR_P) orc/
 	$(ORCC) --test -o $@ $<
 
