@@ -15,7 +15,7 @@ libgstvideomixer_la_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) \
 	$(GST_BASE_CFLAGS) $(GST_CFLAGS) $(ORC_CFLAGS)
 libgstvideomixer_la_LIBADD = $(GST_PLUGINS_BASE_LIBS) \
 	-lgstvideo-@GST_API_VERSION@ \
-	$(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS)
+	$(GST_BASE_LIBS) $(GST_LIBS) $(ORC_LIBS) $(LIBM)
 libgstvideomixer_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstvideomixer_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
