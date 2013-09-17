@@ -2220,7 +2220,7 @@ wait:
 }
 
 /* the timeout for when we expected a packet expired */
-static void
+static gboolean
 do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
     GstClockTime now)
 {
@@ -2254,10 +2254,12 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   }
   reschedule_timer (jitterbuffer, timer, timer->seqnum,
       timer->rtx_base + timer->rtx_retry);
+
+  return FALSE;
 }
 
 /* a packet is lost */
-static void
+static gboolean
 do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
     GstClockTime now)
 {
@@ -2326,9 +2328,10 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
     gst_pad_push_event (priv->srcpad, event);
     JBUF_LOCK (priv);
   }
+  return TRUE;
 }
 
-static void
+static gboolean
 do_eos_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
     GstClockTime now)
 {
@@ -2337,9 +2340,11 @@ do_eos_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   GST_INFO_OBJECT (jitterbuffer, "got the NPT timeout");
   remove_timer (jitterbuffer, timer);
   JBUF_SIGNAL_EVENT (priv);
+
+  return TRUE;
 }
 
-static void
+static gboolean
 do_deadline_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
     GstClockTime now)
 {
@@ -2350,6 +2355,31 @@ do_deadline_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   priv->next_seqnum = timer->seqnum;
   remove_timer (jitterbuffer, timer);
   JBUF_SIGNAL_EVENT (priv);
+
+  return TRUE;
+}
+
+static gboolean
+do_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
+    GstClockTime now)
+{
+  gboolean removed = FALSE;
+
+  switch (timer->type) {
+    case TIMER_TYPE_EXPECTED:
+      removed = do_expected_timeout (jitterbuffer, timer, now);
+      break;
+    case TIMER_TYPE_LOST:
+      removed = do_lost_timeout (jitterbuffer, timer, now);
+      break;
+    case TIMER_TYPE_DEADLINE:
+      removed = do_deadline_timeout (jitterbuffer, timer, now);
+      break;
+    case TIMER_TYPE_EOS:
+      removed = do_eos_timeout (jitterbuffer, timer, now);
+      break;
+  }
+  return removed;
 }
 
 /* called when we need to wait for the next timeout.
@@ -2384,25 +2414,9 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
 
       /* no timestamp, timeout immeditately */
       if (test_timeout == -1 || test_timeout <= now) {
-        switch (test->type) {
-          case TIMER_TYPE_EXPECTED:
-            do_expected_timeout (jitterbuffer, test, now);
-            break;
-          case TIMER_TYPE_LOST:
-            do_lost_timeout (jitterbuffer, test, now);
-            i--;
-            len--;
-            break;
-          case TIMER_TYPE_DEADLINE:
-            do_deadline_timeout (jitterbuffer, test, now);
-            i--;
-            len--;
-            break;
-          case TIMER_TYPE_EOS:
-            do_eos_timeout (jitterbuffer, test, now);
-            i--;
-            len--;
-            break;
+        if (do_timeout (jitterbuffer, test, now)) {
+          i--;
+          len--;
         }
       } else {
         /* find the smallest timeout */
