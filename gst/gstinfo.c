@@ -709,17 +709,15 @@ gst_debug_print_object (gpointer ptr)
   if (GST_IS_CONTEXT (object)) {
     GstContext *context = GST_CONTEXT_CAST (object);
     gchar *s, *ret;
+    const gchar *type;
     const GstStructure *structure;
 
+    type = gst_context_get_context_type (context);
     structure = gst_context_get_structure (context);
 
-    if (structure) {
-      s = gst_info_structure_to_string (structure);
-    } else {
-      s = g_strdup ("(NULL)");
-    }
+    s = gst_info_structure_to_string (structure);
 
-    ret = g_strdup_printf ("context '%s'", s);
+    ret = g_strdup_printf ("context '%s'='%s'", type, s);
     g_free (s);
     return ret;
   }

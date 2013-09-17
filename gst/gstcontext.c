@@ -63,6 +63,7 @@ struct _GstContext
 {
   GstMiniObject mini_object;
 
+  gchar *context_type;
   GstStructure *structure;
   gboolean persistent;
 };
@@ -119,6 +120,8 @@ _gst_context_copy (GstContext * context)
 
   gst_context_init (copy);
 
+  copy->context_type = g_strdup (context->context_type);
+
   structure = GST_CONTEXT_STRUCTURE (context);
   GST_CONTEXT_STRUCTURE (copy) = gst_structure_copy (structure);
   gst_structure_set_parent_refcount (GST_CONTEXT_STRUCTURE (copy),
@@ -148,10 +151,12 @@ gst_context_init (GstContext * context)
  * Since: 1.2
  */
 GstContext *
-gst_context_new (gboolean persistent)
+gst_context_new (const gchar * context_type, gboolean persistent)
 {
   GstContext *context;
   GstStructure *structure;
+
+  g_return_val_if_fail (context_type != NULL, NULL);
 
   context = g_slice_new0 (GstContext);
 
@@ -161,10 +166,29 @@ gst_context_new (gboolean persistent)
   gst_structure_set_parent_refcount (structure, &context->mini_object.refcount);
   gst_context_init (context);
 
+  context->context_type = g_strdup (context_type);
   GST_CONTEXT_STRUCTURE (context) = structure;
   context->persistent = persistent;
 
   return context;
+}
+
+/**
+ * gst_context_get_context_type:
+ * @context: The #GstContext.
+ *
+ * Get the type of @context.
+ *
+ * Returns: The type of the context.
+ *
+ * Since: 1.2
+ */
+const gchar *
+gst_context_get_context_type (const GstContext * context)
+{
+  g_return_val_if_fail (GST_IS_CONTEXT (context), NULL);
+
+  return context->context_type;
 }
 
 /**
