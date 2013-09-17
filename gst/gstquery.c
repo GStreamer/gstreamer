@@ -2508,7 +2508,7 @@ gst_query_new_context (const gchar * context_type)
   g_return_val_if_fail (context_type != NULL, NULL);
 
   structure = gst_structure_new_id (GST_QUARK (QUERY_CONTEXT),
-      GST_QUARK (CONTEXT_TYPE), context_type, NULL);
+      GST_QUARK (CONTEXT_TYPE), G_TYPE_STRING, context_type, NULL);
   query = gst_query_new_custom (GST_QUERY_CONTEXT, structure);
 
   return query;

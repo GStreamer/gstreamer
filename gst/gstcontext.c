@@ -99,6 +99,7 @@ _gst_context_free (GstContext * context)
     gst_structure_set_parent_refcount (structure, NULL);
     gst_structure_free (structure);
   }
+  g_free (context->context_type);
 
   g_slice_free1 (sizeof (GstContext), context);
 }
