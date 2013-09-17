@@ -978,6 +978,28 @@ invalid_state:
   }
 }
 
+/* convert @url and @path to a URL used as a content base for the factory
+ * located at @path */
+static gchar *
+make_base_url (GstRTSPClient * client, GstRTSPUrl * url, gchar * path)
+{
+  GstRTSPUrl tmp;
+  gchar *result, *trail;
+
+  /* check for trailing '/' and append one */
+  trail = (path[strlen (path) - 1] != '/' ? "/" : "");
+
+  tmp = *url;
+  tmp.user = NULL;
+  tmp.passwd = NULL;
+  tmp.abspath = g_strdup_printf ("%s%s", path, trail);
+  tmp.query = NULL;
+  result = gst_rtsp_url_get_request_uri (&tmp);
+  g_free (tmp.abspath);
+
+  return result;
+}
+
 static gboolean
 handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
@@ -985,23 +1007,24 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPSessionMedia *sessmedia;
   GstRTSPMedia *media;
   GstRTSPStatusCode code;
+  GstRTSPUrl *uri;
   GString *rtpinfo;
   guint n_streams, i, infocount;
-  gchar *str;
+  gchar *str, *base_url;
   GstRTSPTimeRange *range;
   GstRTSPResult res;
   GstRTSPState rtspstate;
   GstRTSPRangeUnit unit = GST_RTSP_RANGE_NPT;
-  const gchar *path;
+  gchar *path;
   gint matched;
 
   if (!(session = ctx->session))
     goto no_session;
 
-  if (!ctx->uri)
+  if (!(uri = ctx->uri))
     goto no_uri;
 
-  path = ctx->uri->abspath;
+  path = uri->abspath;
 
   /* get a handle to the configuration of the media in the session */
   sessmedia = gst_rtsp_session_get_media (session, path, &matched);
@@ -1033,12 +1056,13 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   /* grab RTPInfo from the payloaders now */
   rtpinfo = g_string_new ("");
 
+  base_url = make_base_url (client, uri, path);
+
   n_streams = gst_rtsp_media_n_streams (media);
   for (i = 0, infocount = 0; i < n_streams; i++) {
     GstRTSPStreamTransport *trans;
     GstRTSPStream *stream;
     const GstRTSPTransport *tr;
-    gchar *uristr;
     guint rtptime, seq;
 
     /* get the transport, if there is no transport configured, skip this stream */
@@ -1056,19 +1080,22 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
     stream = gst_rtsp_stream_transport_get_stream (trans);
     if (gst_rtsp_stream_get_rtpinfo (stream, &rtptime, &seq)) {
+      gchar *control;
+
       if (infocount > 0)
         g_string_append (rtpinfo, ", ");
 
-      uristr = gst_rtsp_url_get_request_uri (ctx->uri);
-      g_string_append_printf (rtpinfo, "url=%s/stream=%d;seq=%u;rtptime=%u",
-          uristr, i, seq, rtptime);
-      g_free (uristr);
+      control = gst_rtsp_stream_get_control (stream);
+      g_string_append_printf (rtpinfo, "url=%s%s;seq=%u;rtptime=%u",
+          base_url, control, seq, rtptime);
+      g_free (control);
 
       infocount++;
     } else {
       GST_WARNING ("RTP-Info cannot be determined for stream %d", i);
     }
   }
+  g_free (base_url);
 
   /* construct the response now */
   code = GST_RTSP_STS_OK;
@@ -1624,8 +1651,8 @@ handle_describe_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPClientPrivate *priv = client->priv;
   GstRTSPResult res;
   GstSDPMessage *sdp;
-  guint i, str_len;
-  gchar *path, *str, *str_query, *content_base;
+  guint i;
+  gchar *path, *str;
   GstRTSPMedia *media;
   GstRTSPClientClass *klass;
 
@@ -1659,8 +1686,6 @@ handle_describe_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!(media = find_media (client, ctx, path, NULL)))
     goto no_media;
 
-  g_free (path);
-
   /* create an SDP for the media object on this client */
   if (!(sdp = klass->create_sdp (client, media)))
     goto no_sdp;
@@ -1674,32 +1699,11 @@ handle_describe_request (GstRTSPClient * client, GstRTSPContext * ctx)
       "application/sdp");
 
   /* content base for some clients that might screw up creating the setup uri */
-  str = gst_rtsp_url_get_request_uri (ctx->uri);
-  str_len = strlen (str);
+  str = make_base_url (client, ctx->uri, path);
+  g_free (path);
 
-  /* check for query part */
-  if (ctx->uri->query != NULL) {
-    str_query = g_strrstr (str, "?");
-    *str_query = '\0';
-    str_len = strlen (str);
-  }
-
-  /* check for trailing '/' and append one */
-  if (str[str_len - 1] != '/') {
-    content_base = g_malloc (str_len + 2);
-    memcpy (content_base, str, str_len);
-    content_base[str_len] = '/';
-    content_base[str_len + 1] = '\0';
-    g_free (str);
-  } else {
-    content_base = str;
-  }
-
-  GST_INFO ("adding content-base: %s", content_base);
-
-  gst_rtsp_message_add_header (ctx->response, GST_RTSP_HDR_CONTENT_BASE,
-      content_base);
-  g_free (content_base);
+  GST_INFO ("adding content-base: %s", str);
+  gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_CONTENT_BASE, str);
 
   /* add SDP to the response body */
   str = gst_sdp_message_as_text (sdp);
@@ -1743,6 +1747,7 @@ no_sdp:
   {
     GST_ERROR ("client %p: can't create SDP", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    g_free (path);
     g_object_unref (media);
     return FALSE;
   }
