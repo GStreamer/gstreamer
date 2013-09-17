@@ -216,7 +216,6 @@ struct _GstRtpJitterBufferPrivate
   GstClockID clock_id;
   GstClockTime timer_timeout;
   guint16 timer_seqnum;
-  gboolean unscheduled;
   /* the latency of the upstream peer, we have to take this into account when
    * synchronizing the buffers. */
   GstClockTime peer_latency;
@@ -1448,7 +1447,6 @@ unschedule_current_timer (GstRtpJitterBuffer * jitterbuffer)
   if (priv->clock_id) {
     GST_DEBUG_OBJECT (jitterbuffer, "unschedule current timer");
     gst_clock_id_unschedule (priv->clock_id);
-    priv->unscheduled = TRUE;
   }
 }
 
@@ -2224,7 +2222,7 @@ wait:
 /* the timeout for when we expected a packet expired */
 static void
 do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
-    GstClockTimeDiff clock_jitter)
+    GstClockTime now)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   GstEvent *event;
@@ -2261,7 +2259,7 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 /* a packet is lost */
 static void
 do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
-    GstClockTimeDiff clock_jitter)
+    GstClockTime now)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   GstClockTime duration = GST_CLOCK_TIME_NONE;
@@ -2331,7 +2329,8 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 }
 
 static void
-do_eos_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
+do_eos_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
+    GstClockTime now)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
 
@@ -2342,7 +2341,7 @@ do_eos_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
 
 static void
 do_deadline_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
-    GstClockTimeDiff clock_jitter)
+    GstClockTime now)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
 
@@ -2364,13 +2363,16 @@ static void
 wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+  GstClockTime now = 0;
 
   JBUF_LOCK (priv);
   while (priv->timer_running) {
     TimerData *timer = NULL;
     GstClockTime timer_timeout = -1;
     gint i, len;
-    gint timer_idx;
+
+    GST_DEBUG_OBJECT (jitterbuffer, "now %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (now));
 
     len = priv->timers->len;
     for (i = 0; i < len; i++) {
@@ -2380,12 +2382,34 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       GST_DEBUG_OBJECT (jitterbuffer, "%d, %d, %d, %" GST_TIME_FORMAT,
           i, test->type, test->seqnum, GST_TIME_ARGS (test_timeout));
 
-      /* find the smallest timeout */
-      if (timer == NULL || test_timeout == -1 || test_timeout < timer_timeout) {
-        timer = test;
-        timer_timeout = test_timeout;
-        if (timer_timeout == -1)
-          break;
+      /* no timestamp, timeout immeditately */
+      if (test_timeout == -1 || test_timeout <= now) {
+        switch (test->type) {
+          case TIMER_TYPE_EXPECTED:
+            do_expected_timeout (jitterbuffer, test, now);
+            break;
+          case TIMER_TYPE_LOST:
+            do_lost_timeout (jitterbuffer, test, now);
+            i--;
+            len--;
+            break;
+          case TIMER_TYPE_DEADLINE:
+            do_deadline_timeout (jitterbuffer, test, now);
+            i--;
+            len--;
+            break;
+          case TIMER_TYPE_EOS:
+            do_eos_timeout (jitterbuffer, test, now);
+            i--;
+            len--;
+            break;
+        }
+      } else {
+        /* find the smallest timeout */
+        if (timer == NULL || test_timeout < timer_timeout) {
+          timer = test;
+          timer_timeout = test_timeout;
+        }
       }
     }
     if (timer) {
@@ -2395,17 +2419,14 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       GstClockReturn ret;
       GstClockTimeDiff clock_jitter;
 
-      /* no timestamp, timeout immeditately */
-      if (timer_timeout == -1)
-        goto do_timeout;
-
       GST_OBJECT_LOCK (jitterbuffer);
       clock = GST_ELEMENT_CLOCK (jitterbuffer);
       if (!clock) {
         GST_OBJECT_UNLOCK (jitterbuffer);
         /* let's just push if there is no clock */
         GST_DEBUG_OBJECT (jitterbuffer, "No clock, timeout right away");
-        goto do_timeout;
+        now = timer_timeout;
+        continue;
       }
 
       /* prepare for sync against clock */
@@ -2419,10 +2440,8 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
 
       /* create an entry for the clock */
       id = priv->clock_id = gst_clock_new_single_shot_id (clock, sync_time);
-      priv->unscheduled = FALSE;
       priv->timer_timeout = timer_timeout;
       priv->timer_seqnum = timer->seqnum;
-      timer_idx = timer->idx;
       GST_OBJECT_UNLOCK (jitterbuffer);
 
       /* release the lock so that the other end can push stuff or unlock */
@@ -2440,38 +2459,7 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       gst_clock_id_unref (id);
       priv->clock_id = NULL;
 
-      if (priv->timers->len <= timer_idx)
-        continue;
-
-      /* we released the lock, the array might have changed */
-      timer = &g_array_index (priv->timers, TimerData, timer_idx);
-      /* if changed to timeout immediately, do so */
-      if (timer->timeout == -1)
-        goto do_timeout;
-
-      /* if we got unscheduled and we are not flushing, it's because a new tail
-       * element became available in the queue or we flushed the queue.
-       * Grab it and try to push or sync. */
-      if (ret == GST_CLOCK_UNSCHEDULED || priv->unscheduled) {
-        GST_DEBUG_OBJECT (jitterbuffer, "Wait got unscheduled");
-        continue;
-      }
-
-    do_timeout:
-      switch (timer->type) {
-        case TIMER_TYPE_EXPECTED:
-          do_expected_timeout (jitterbuffer, timer, clock_jitter);
-          break;
-        case TIMER_TYPE_LOST:
-          do_lost_timeout (jitterbuffer, timer, clock_jitter);
-          break;
-        case TIMER_TYPE_DEADLINE:
-          do_deadline_timeout (jitterbuffer, timer, clock_jitter);
-          break;
-        case TIMER_TYPE_EOS:
-          do_eos_timeout (jitterbuffer, timer);
-          break;
-      }
+      now = timer_timeout + MAX (clock_jitter, 0);
     } else {
       /* no timers, wait for activity */
       GST_DEBUG_OBJECT (jitterbuffer, "waiting");
