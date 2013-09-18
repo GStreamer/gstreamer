@@ -918,7 +918,8 @@ gst_live_adder_length_from_duration (GstLiveAdder * adder,
     GstClockTime duration)
 {
   guint64 ret = GST_AUDIO_INFO_BPF (&adder->info) *
-      (duration * GST_AUDIO_INFO_RATE (&adder->info) / GST_SECOND);
+      gst_util_uint64_scale_int_round (duration,
+      GST_AUDIO_INFO_RATE (&adder->info), GST_SECOND);
 
   return (guint) ret;
 }
