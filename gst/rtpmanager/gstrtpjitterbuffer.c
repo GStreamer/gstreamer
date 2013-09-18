@@ -1673,6 +1673,54 @@ calculate_packet_spacing (GstRtpJitterBuffer * jitterbuffer, guint32 rtptime,
   }
 }
 
+static GstFlowReturn
+send_lost_event (GstRtpJitterBuffer * jitterbuffer, guint seqnum,
+    guint lost_packets, GstClockTime timestamp, GstClockTime duration,
+    gboolean late)
+{
+  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
+
+  /* we had a gap and thus we lost some packets. Create an event for this.  */
+  if (lost_packets > 1)
+    GST_DEBUG_OBJECT (jitterbuffer, "Packets #%d -> #%d lost", seqnum,
+        seqnum + lost_packets - 1);
+  else
+    GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d lost", seqnum);
+
+  priv->num_late += lost_packets;
+  priv->discont = TRUE;
+
+  /* update our expected next packet but make sure the seqnum increases */
+  if (seqnum + lost_packets > priv->next_seqnum) {
+    priv->next_seqnum = (seqnum + lost_packets) & 0xffff;
+    priv->last_popped_seqnum = seqnum;
+    priv->last_out_time = timestamp;
+  }
+  if (priv->do_lost) {
+    GstEvent *event;
+
+    /* create paket lost event */
+    event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+        gst_structure_new ("GstRTPPacketLost",
+            "seqnum", G_TYPE_UINT, (guint) seqnum,
+            "timestamp", G_TYPE_UINT64, timestamp,
+            "duration", G_TYPE_UINT64, duration,
+            "late", G_TYPE_BOOLEAN, late, NULL));
+    JBUF_UNLOCK (priv);
+    gst_pad_push_event (priv->srcpad, event);
+    JBUF_LOCK_CHECK (priv, flushing);
+  }
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+flushing:
+  {
+    GST_DEBUG_OBJECT (jitterbuffer, "we are flushing");
+    return GST_FLOW_FLUSHING;
+  }
+}
+
+
 static void
 calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
     guint16 seqnum, GstClockTime dts, gint gap)
@@ -2264,70 +2312,19 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
     GstClockTime now)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  GstClockTime duration = GST_CLOCK_TIME_NONE;
-  guint32 lost_packets = 1;
-  gboolean lost_packets_late = FALSE;
+  GstClockTime duration, timestamp;
+  guint seqnum;
 
-#if 0
-  if (clock_jitter > 0
-      && clock_jitter > (priv->latency_ns + priv->peer_latency)) {
-    GstClockTimeDiff total_duration;
-    GstClockTime out_time_diff;
+  seqnum = timer->seqnum;
+  timestamp = apply_offset (jitterbuffer, timer->timeout);
+  duration = GST_CLOCK_TIME_NONE;
 
-    out_time_diff =
-        apply_offset (jitterbuffer, timer->timeout) - timer->timeout;
-    total_duration = MIN (out_time_diff, clock_jitter);
-
-    if (duration > 0)
-      lost_packets = total_duration / duration;
-    else
-      lost_packets = gap;
-    total_duration = lost_packets * duration;
-
-    GST_DEBUG_OBJECT (jitterbuffer,
-        "Current sync_time has expired a long time ago (+%" GST_TIME_FORMAT
-        ") Cover up %d lost packets with duration %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (clock_jitter),
-        lost_packets, GST_TIME_ARGS (total_duration));
-
-    duration = total_duration;
-    lost_packets_late = TRUE;
-  }
-#endif
-
-  /* we had a gap and thus we lost some packets. Create an event for this.  */
-  if (lost_packets > 1)
-    GST_DEBUG_OBJECT (jitterbuffer, "Packets #%d -> #%d lost", timer->seqnum,
-        timer->seqnum + lost_packets - 1);
-  else
-    GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d lost", timer->seqnum);
-
-  priv->num_late += lost_packets;
-  priv->discont = TRUE;
-
-  /* update our expected next packet */
-  priv->last_popped_seqnum = timer->seqnum;
-  priv->last_out_time = apply_offset (jitterbuffer, timer->timeout);
-  if (timer->seqnum + lost_packets > priv->next_seqnum)
-    priv->next_seqnum = (timer->seqnum + lost_packets) & 0xffff;
   /* remove timer now */
   remove_timer (jitterbuffer, timer);
   JBUF_SIGNAL_EVENT (priv);
 
-  if (priv->do_lost) {
-    GstEvent *event;
+  send_lost_event (jitterbuffer, seqnum, 1, timestamp, duration, FALSE);
 
-    /* create paket lost event */
-    event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-        gst_structure_new ("GstRTPPacketLost",
-            "seqnum", G_TYPE_UINT, (guint) priv->last_popped_seqnum,
-            "timestamp", G_TYPE_UINT64, priv->last_out_time,
-            "duration", G_TYPE_UINT64, duration,
-            "late", G_TYPE_BOOLEAN, lost_packets_late, NULL));
-    JBUF_UNLOCK (priv);
-    gst_pad_push_event (priv->srcpad, event);
-    JBUF_LOCK (priv);
-  }
   return TRUE;
 }
 
