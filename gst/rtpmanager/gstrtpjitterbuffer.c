@@ -1935,6 +1935,9 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
      * while we wait */
     set_timer (jitterbuffer, TIMER_TYPE_DEADLINE, seqnum, dts);
     do_next_seqnum = TRUE;
+    /* take rtptime and dts to calculate packet spacing */
+    priv->ips_rtptime = rtptime;
+    priv->ips_dts = dts;
   }
   if (do_next_seqnum) {
     priv->last_in_seqnum = seqnum;
