@@ -4096,7 +4096,6 @@ activate_sink (GstPlayBin * playbin, GstElement * sink, gboolean * activated)
   GstBus *bus = NULL;
   GstStateChangeReturn sret;
   gboolean ret = FALSE;
-  GstContext *context;
 
   if (activated)
     *activated = FALSE;
@@ -4107,13 +4106,6 @@ activate_sink (GstPlayBin * playbin, GstElement * sink, gboolean * activated)
   if (state >= GST_STATE_READY) {
     ret = TRUE;
     goto done;
-  }
-
-  /* Proxy the playbin context to the sink, just in case */
-  context = gst_element_get_context (GST_ELEMENT_CAST (playbin));
-  if (context) {
-    gst_element_set_context (sink, context);
-    gst_context_unref (context);
   }
 
   if (!GST_OBJECT_PARENT (sink)) {
