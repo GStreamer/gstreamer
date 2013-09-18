@@ -2446,16 +2446,13 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
 
       /* no timestamp, timeout immeditately */
       if (test_timeout == -1 || test_timeout <= now) {
-        if (do_timeout (jitterbuffer, test, now)) {
-          i--;
+        if (do_timeout (jitterbuffer, test, now))
           len--;
-        }
-      } else {
+        i--;
+      } else if (timer == NULL || test_timeout < timer_timeout) {
         /* find the smallest timeout */
-        if (timer == NULL || test_timeout < timer_timeout) {
-          timer = test;
-          timer_timeout = test_timeout;
-        }
+        timer = test;
+        timer_timeout = test_timeout;
       }
     }
     if (timer) {
