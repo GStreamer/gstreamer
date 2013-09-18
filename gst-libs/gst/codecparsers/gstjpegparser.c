@@ -222,7 +222,7 @@ jpeg_parse_to_next_marker (GstByteReader * br, guint8 * marker)
 
   if (marker)
     *marker = br->data[ofs + 1];
-  gst_byte_reader_skip (br, ofs - br->byte + 2);
+  gst_byte_reader_skip_unchecked (br, ofs - br->byte);
   return TRUE;
 }
 
@@ -558,6 +558,7 @@ gst_jpeg_parse (GstJpegMarkerSegment * seg,
     return FALSE;
   }
 
+  gst_byte_reader_skip_unchecked (&br, 2);
   seg->offset = offset + gst_byte_reader_get_pos (&br);
   seg->size = -1;
 
@@ -566,7 +567,7 @@ gst_jpeg_parse (GstJpegMarkerSegment * seg,
     case GST_JPEG_MARKER_SOI:
     case GST_JPEG_MARKER_EOI:
     fixed_size_segment:
-      seg->size = 2;
+      seg->size = 0;
       break;
 
     case (GST_JPEG_MARKER_SOF_MIN + 0):        /* Lf */
