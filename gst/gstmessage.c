@@ -107,6 +107,8 @@ static GstMessageQuarks message_quarks[] = {
   {GST_MESSAGE_TOC, "toc", 0},
   {GST_MESSAGE_RESET_TIME, "reset-time", 0},
   {GST_MESSAGE_STREAM_START, "stream-start", 0},
+  {GST_MESSAGE_NEED_CONTEXT, "need-context", 0},
+  {GST_MESSAGE_HAVE_CONTEXT, "have-context", 0},
   {0, NULL, 0}
 };
 
