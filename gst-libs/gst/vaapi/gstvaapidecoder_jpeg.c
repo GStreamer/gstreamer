@@ -647,11 +647,21 @@ ensure_decoder(GstVaapiDecoderJpeg *decoder)
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
-static inline gint
-scan_for_start_code(GstAdapter *adapter, guint ofs, guint size, guint32 *scp)
+static gint
+scan_for_marker_code(const guchar *buf, guint buf_size,
+    GstJpegMarkerCode marker)
 {
-    return (gint)gst_adapter_masked_scan_uint32_peek(adapter,
-        0xffff0000, 0xffd80000, ofs, size, scp);
+    GstJpegMarkerSegment seg;
+    guint ofs = 0;
+
+    while (gst_jpeg_parse(&seg, buf, buf_size, ofs)) {
+        if (seg.size < 0)
+            return -1;
+        if (seg.marker == marker)
+            return seg.offset - 2;
+        ofs = seg.offset + seg.size;
+    }
+    return -1;
 }
 
 static GstVaapiDecoderStatus
@@ -660,37 +670,54 @@ gst_vaapi_decoder_jpeg_parse(GstVaapiDecoder *base_decoder,
 {
     GstVaapiDecoderJpeg * const decoder =
         GST_VAAPI_DECODER_JPEG_CAST(base_decoder);
+    GstVaapiParserState * const ps = GST_VAAPI_PARSER_STATE(base_decoder);
     GstVaapiDecoderStatus status;
-    guint size, buf_size, flags = 0;
-    gint ofs;
+    const guchar *buf;
+    guint buf_size, flags;
+    gint ofs, ofs1, ofs2;
 
     status = ensure_decoder(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
     /* Expect at least 4 bytes, SOI .. EOI */
-    size = gst_adapter_available(adapter);
-    if (size < 4)
+    buf_size = gst_adapter_available(adapter);
+    if (buf_size < 4)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
-    ofs = scan_for_start_code(adapter, 0, size, NULL);
-    if (ofs < 0)
+    buf = gst_adapter_map(adapter, buf_size);
+    if (!buf)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
-    gst_adapter_flush(adapter, ofs);
-    size -= ofs;
 
-    ofs = G_UNLIKELY(size < 4) ? -1 :
-        scan_for_start_code(adapter, 2, size - 2, NULL);
+    ofs = scan_for_marker_code(buf, buf_size, GST_JPEG_MARKER_SOI);
+    if (ofs < 0) {
+        gst_adapter_unmap(adapter);
+        return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+    }
+    ofs1 = ofs;
+
+    ofs2 = ps->input_offset2 - 2;
+    if (ofs2 < ofs1 + 2)
+        ofs2 = ofs1 + 2;
+
+    ofs = G_UNLIKELY(buf_size < ofs2 + 2) ? -1 :
+        scan_for_marker_code(&buf[ofs2], buf_size - ofs2, GST_JPEG_MARKER_EOI);
+    gst_adapter_unmap(adapter);
     if (ofs < 0) {
         // Assume the whole packet is present if end-of-stream
-        if (!at_eos)
+        if (!at_eos) {
+            ps->input_offset2 = buf_size;
             return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
-        ofs = size;
+        }
+        ofs = buf_size - ofs2;
     }
-    buf_size = ofs;
+    ofs2 += ofs;
 
     unit->size = buf_size;
+    gst_adapter_flush(adapter, ofs1);
+    ps->input_offset2 = 2;
 
+    flags  = 0;
     flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
     flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_END;
     flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
