@@ -1756,10 +1756,12 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
 
     gap_time = total_duration - priv->latency_ns;
 
-    if (duration > 0)
+    if (duration > 0) {
       lost_packets = gap_time / duration;
-    else
+      gap_time = lost_packets * duration;
+    } else {
       lost_packets = gap;
+    }
 
     /* too many lost packets, some of the missing packets are already
      * too late and we can generate lost packet events for them. */
