@@ -37,7 +37,7 @@
  * If #GstX264Enc:dct8x8 is enabled, then High profile is used.
  * Otherwise, if #GstX264Enc:cabac entropy coding is enabled or #GstX264Enc:bframes
  * are allowed, then Main Profile is in effect, and otherwise Baseline profile
- * applies.  The main profile is imposed by default,
+ * applies.  The high profile is imposed by default,
  * which is fine for most software players and settings,
  * but in some cases (e.g. hardware platforms) a more restricted profile/level
  * may be necessary. The recommended way to set a profile is to set it in the
