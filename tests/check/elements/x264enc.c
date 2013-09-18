@@ -30,7 +30,7 @@
 static GstPad *mysrcpad, *mysinkpad;
 
 #define VIDEO_CAPS_STRING "video/x-raw, " \
-                           "format = (string) I420, " \
+                           "format = (string) { I420, Y42B, Y444 }, " \
                            "width = (int) 384, " \
                            "height = (int) 288, " \
                            "framerate = (fraction) 25/1"
@@ -40,7 +40,8 @@ static GstPad *mysrcpad, *mysinkpad;
                            "height = (int) 288, " \
                            "framerate = (fraction) 25/1"
 static GstElement *
-setup_x264enc (const gchar * profile, const gchar * stream_format)
+setup_x264enc (const gchar * profile, const gchar * stream_format,
+    const gchar * input_format)
 {
   GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
       GST_PAD_SINK,
@@ -68,6 +69,7 @@ setup_x264enc (const gchar * profile, const gchar * stream_format)
   gst_pad_set_active (mysinkpad, TRUE);
 
   caps = gst_caps_from_string (VIDEO_CAPS_STRING);
+  gst_caps_set_simple (caps, "format", G_TYPE_STRING, input_format, NULL);
   gst_check_setup_events (mysrcpad, x264enc, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
@@ -90,11 +92,12 @@ cleanup_x264enc (GstElement * x264enc)
 }
 
 static void
-check_caps (GstCaps * caps, gint profile_id)
+check_caps (GstCaps * caps, const gchar * profile, gint profile_id)
 {
   GstStructure *s;
-  const GValue *sf, *avcc;
+  const GValue *sf, *avcc, *pf;
   const gchar *stream_format;
+  const gchar *caps_profile;
 
   fail_unless (caps != NULL);
 
@@ -125,10 +128,18 @@ check_caps (GstCaps * caps, gint profile_id)
   } else {
     fail_if (TRUE, "unexpected stream-format in caps: %s", stream_format);
   }
+
+  pf = gst_structure_get_value (s, "profile");
+  fail_unless (pf != NULL);
+  fail_unless (G_VALUE_HOLDS_STRING (pf));
+  caps_profile = g_value_get_string (pf);
+  fail_unless (caps_profile != NULL);
+  fail_unless (!strcmp (caps_profile, profile));
 }
 
 static void
-test_video_profile (const gchar * profile, gint profile_id)
+test_video_profile (const gchar * profile, gint profile_id,
+    const gchar * input_format)
 {
   GstElement *x264enc;
   GstBuffer *inbuffer, *outbuffer;
@@ -138,13 +149,19 @@ test_video_profile (const gchar * profile, gint profile_id)
   gsize size;
   int i, num_buffers;
 
-  x264enc = setup_x264enc (profile, "avc");
+  x264enc = setup_x264enc (profile, "avc", input_format);
   fail_unless (gst_element_set_state (x264enc,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
       "could not set to playing");
 
   /* corresponds to I420 buffer for the size mentioned in the caps */
-  inbuffer = gst_buffer_new_and_alloc (384 * 288 * 3 / 2);
+  if (!strcmp (input_format, "I420"))
+    inbuffer = gst_buffer_new_and_alloc (384 * 288 * 3 / 2);
+  else if (!strcmp (input_format, "Y42B"))
+    inbuffer = gst_buffer_new_and_alloc (384 * 288 * 2);
+  else if (!strcmp (input_format, "Y444"))
+    inbuffer = gst_buffer_new_and_alloc (384 * 288 * 3);
+
   /* makes valgrind's memcheck happier */
   gst_buffer_memset (inbuffer, 0, 0, -1);
   GST_BUFFER_TIMESTAMP (inbuffer) = 0;
@@ -162,7 +179,7 @@ test_video_profile (const gchar * profile, gint profile_id)
     GstCaps *outcaps;
 
     outcaps = gst_pad_get_current_caps (mysinkpad);
-    check_caps (outcaps, profile_id);
+    check_caps (outcaps, profile, profile_id);
     gst_caps_unref (outcaps);
   }
 
@@ -237,24 +254,40 @@ test_video_profile (const gchar * profile, gint profile_id)
 
 GST_START_TEST (test_video_baseline)
 {
-  test_video_profile ("constrained-baseline", 0x42);
+  test_video_profile ("constrained-baseline", 0x42, "I420");
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_video_main)
 {
-  test_video_profile ("main", 0x4d);
+  test_video_profile ("main", 0x4d, "I420");
 }
 
 GST_END_TEST;
 
 GST_START_TEST (test_video_high)
 {
-  test_video_profile ("high", 0x64);
+  test_video_profile ("high", 0x64, "I420");
 }
 
 GST_END_TEST;
+
+GST_START_TEST (test_video_high422)
+{
+  test_video_profile ("high-4:2:2", 0x7A, "Y42B");
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_video_high444)
+{
+  test_video_profile ("high-4:4:4", 0xF4, "Y444");
+}
+
+GST_END_TEST;
+
+
 
 Suite *
 x264enc_suite (void)
@@ -266,6 +299,8 @@ x264enc_suite (void)
   tcase_add_test (tc_chain, test_video_baseline);
   tcase_add_test (tc_chain, test_video_main);
   tcase_add_test (tc_chain, test_video_high);
+  tcase_add_test (tc_chain, test_video_high422);
+  tcase_add_test (tc_chain, test_video_high444);
 
   return s;
 }

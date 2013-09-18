@@ -412,8 +412,9 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
         "width = (int) [ 1, MAX ], " "height = (int) [ 1, MAX ], "
         "stream-format = (string) { avc, byte-stream }, "
         "alignment = (string) au, "
-        "profile = (string) { high-10, high, main, baseline, "
-        "constrained-baseline, high-10-intra }")
+        "profile = (string) { high-4:4:4, high-4:2:2, high-10, high, main,"
+        " baseline, constrained-baseline, high-4:4:4-intra, high-4:2:2-intra,"
+        " high-10-intra }")
     );
 
 static void gst_x264_enc_finalize (GObject * object);
@@ -498,53 +499,51 @@ set_value (GValue * val, gint count, ...)
     g_value_unset (&sval);
 }
 
-static GstCaps *
-gst_x264_enc_get_supported_input_caps (void)
+static void
+gst_x264_enc_add_x264_chroma_format (GstStructure * s,
+    int x264_chroma_format_local)
 {
   GValue fmt = G_VALUE_INIT;
-  GstCaps *caps;
-
-  caps = gst_caps_new_empty_simple ("video/x-raw");
 
   if (x264_bit_depth == 8) {
     GST_INFO ("This x264 build supports 8-bit depth");
-    if (x264_chroma_format == 0) {
+    if (x264_chroma_format_local == 0) {
       set_value (&fmt, 5, "I420", "YV12", "Y42B", "Y444", "NV12");
-    } else if (x264_chroma_format == X264_CSP_I420) {
+    } else if (x264_chroma_format_local == X264_CSP_I420) {
       set_value (&fmt, 3, "I420", "YV12", "NV12");
-    } else if (x264_chroma_format == X264_CSP_I422) {
+    } else if (x264_chroma_format_local == X264_CSP_I422) {
       set_value (&fmt, 1, "Y42B");
-    } else if (x264_chroma_format == X264_CSP_I444) {
+    } else if (x264_chroma_format_local == X264_CSP_I444) {
       set_value (&fmt, 1, "Y444");
     } else {
-      GST_ERROR ("Unsupported chroma format %d", x264_chroma_format);
+      GST_ERROR ("Unsupported chroma format %d", x264_chroma_format_local);
     }
   } else if (x264_bit_depth == 10) {
     GST_INFO ("This x264 build supports 10-bit depth");
 
     if (G_BYTE_ORDER == G_LITTLE_ENDIAN) {
-      if (x264_chroma_format == 0) {
+      if (x264_chroma_format_local == 0) {
         set_value (&fmt, 3, "I420_10LE", "I422_10LE", "Y444_10LE");
-      } else if (x264_chroma_format == X264_CSP_I420) {
+      } else if (x264_chroma_format_local == X264_CSP_I420) {
         set_value (&fmt, 1, "I420_10LE");
-      } else if (x264_chroma_format == X264_CSP_I422) {
-        set_value (&fmt, 1, "Y422_10LE");
-      } else if (x264_chroma_format == X264_CSP_I444) {
+      } else if (x264_chroma_format_local == X264_CSP_I422) {
+        set_value (&fmt, 1, "I422_10LE");
+      } else if (x264_chroma_format_local == X264_CSP_I444) {
         set_value (&fmt, 1, "Y444_10LE");
       } else {
-        GST_ERROR ("Unsupported chroma format %d", x264_chroma_format);
+        GST_ERROR ("Unsupported chroma format %d", x264_chroma_format_local);
       }
     } else {
-      if (x264_chroma_format == 0) {
+      if (x264_chroma_format_local == 0) {
         set_value (&fmt, 3, "I420_10BE", "I422_10BE", "Y444_10BE");
-      } else if (x264_chroma_format == X264_CSP_I420) {
+      } else if (x264_chroma_format_local == X264_CSP_I420) {
         set_value (&fmt, 1, "I420_10BE");
-      } else if (x264_chroma_format == X264_CSP_I422) {
-        set_value (&fmt, 1, "Y422_10BE");
-      } else if (x264_chroma_format == X264_CSP_I444) {
+      } else if (x264_chroma_format_local == X264_CSP_I422) {
+        set_value (&fmt, 1, "I422_10BE");
+      } else if (x264_chroma_format_local == X264_CSP_I444) {
         set_value (&fmt, 1, "Y444_10BE");
       } else {
-        GST_ERROR ("Unsupported chroma format %d", x264_chroma_format);
+        GST_ERROR ("Unsupported chroma format %d", x264_chroma_format_local);
       }
     }
   } else {
@@ -553,28 +552,135 @@ gst_x264_enc_get_supported_input_caps (void)
   }
 
   if (G_VALUE_TYPE (&fmt) != G_TYPE_INVALID)
-    gst_structure_take_value (gst_caps_get_structure (caps, 0), "format", &fmt);
+    gst_structure_take_value (s, "format", &fmt);
+}
 
-  gst_caps_set_simple (caps,
+static GstCaps *
+gst_x264_enc_get_supported_input_caps (void)
+{
+  GstCaps *caps;
+
+  caps = gst_caps_new_simple ("video/x-raw",
       "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
       "width", GST_TYPE_INT_RANGE, 16, G_MAXINT,
       "height", GST_TYPE_INT_RANGE, 16, G_MAXINT, NULL);
+
+  gst_x264_enc_add_x264_chroma_format (gst_caps_get_structure (caps, 0),
+      x264_chroma_format);
 
   GST_DEBUG ("returning %" GST_PTR_FORMAT, caps);
   return caps;
 }
 
+static void
+check_formats (const gchar * str, gboolean * has_420, gboolean * has_422,
+    gboolean * has_444)
+{
+  if (g_str_has_prefix (str, "high-4:4:4"))
+    *has_444 = TRUE;
+  else if (g_str_has_prefix (str, "high-4:2:2"))
+    *has_422 = TRUE;
+  else
+    *has_420 = TRUE;
+}
+
+
 /* allowed input caps depending on whether libx264 was built for 8 or 10 bits */
 static GstCaps *
 gst_x264_enc_sink_getcaps (GstVideoEncoder * enc, GstCaps * filter)
 {
-  GstCaps *supported_incaps, *caps;
+  GstCaps *supported_incaps;
+  GstCaps *allowed;
+  GstCaps *filter_caps, *fcaps;
+  gint i, j, k;
 
   supported_incaps = gst_x264_enc_get_supported_input_caps ();
-  caps = gst_video_encoder_proxy_getcaps (enc, supported_incaps, filter);
+
+  /* Allow downstream to specify width/height/framerate/PAR constraints
+   * and forward them upstream for video converters to handle
+   */
+  if (!supported_incaps)
+    supported_incaps = gst_pad_get_pad_template_caps (enc->sinkpad);
+  allowed = gst_pad_get_allowed_caps (enc->srcpad);
+
+  if (!allowed || gst_caps_is_empty (allowed) || gst_caps_is_any (allowed)) {
+    fcaps = supported_incaps;
+    goto done;
+  }
+
+  GST_LOG_OBJECT (enc, "template caps %" GST_PTR_FORMAT, supported_incaps);
+  GST_LOG_OBJECT (enc, "allowed caps %" GST_PTR_FORMAT, allowed);
+
+  filter_caps = gst_caps_new_empty ();
+
+  for (i = 0; i < gst_caps_get_size (supported_incaps); i++) {
+    GQuark q_name =
+        gst_structure_get_name_id (gst_caps_get_structure (supported_incaps,
+            i));
+
+    for (j = 0; j < gst_caps_get_size (allowed); j++) {
+      const GstStructure *allowed_s = gst_caps_get_structure (allowed, j);
+      const GValue *val;
+      GstStructure *s;
+
+      s = gst_structure_new_id_empty (q_name);
+      if ((val = gst_structure_get_value (allowed_s, "width")))
+        gst_structure_set_value (s, "width", val);
+      if ((val = gst_structure_get_value (allowed_s, "height")))
+        gst_structure_set_value (s, "height", val);
+      if ((val = gst_structure_get_value (allowed_s, "framerate")))
+        gst_structure_set_value (s, "framerate", val);
+      if ((val = gst_structure_get_value (allowed_s, "pixel-aspect-ratio")))
+        gst_structure_set_value (s, "pixel-aspect-ratio", val);
+      if ((val = gst_structure_get_value (allowed_s, "profile"))) {
+        gboolean has_420 = FALSE;
+        gboolean has_422 = FALSE;
+        gboolean has_444 = FALSE;
+
+        if (G_VALUE_HOLDS_STRING (val)) {
+          check_formats (g_value_get_string (val), &has_420, &has_422,
+              &has_444);
+        } else if (GST_VALUE_HOLDS_LIST (val)) {
+          for (k = 0; k < gst_value_list_get_size (val); k++) {
+            const GValue *vlist = gst_value_list_get_value (val, k);
+
+            if (G_VALUE_HOLDS_STRING (vlist))
+              check_formats (g_value_get_string (vlist), &has_420, &has_422,
+                  &has_444);
+          }
+        }
+
+        if (has_444 && has_422 && has_420)
+          gst_x264_enc_add_x264_chroma_format (s, 0);
+        else if (has_444)
+          gst_x264_enc_add_x264_chroma_format (s, X264_CSP_I444);
+        else if (has_422)
+          gst_x264_enc_add_x264_chroma_format (s, X264_CSP_I422);
+        else if (has_420)
+          gst_x264_enc_add_x264_chroma_format (s, X264_CSP_I420);
+      }
+
+      filter_caps = gst_caps_merge_structure (filter_caps, s);
+    }
+  }
+
+  fcaps = gst_caps_intersect (filter_caps, supported_incaps);
+  gst_caps_unref (filter_caps);
   gst_caps_unref (supported_incaps);
 
-  return caps;
+  if (filter) {
+    GST_LOG_OBJECT (enc, "intersecting with %" GST_PTR_FORMAT, filter);
+    filter_caps = gst_caps_intersect (fcaps, filter);
+    gst_caps_unref (fcaps);
+    fcaps = filter_caps;
+  }
+
+done:
+  gst_caps_replace (&allowed, NULL);
+
+  GST_LOG_OBJECT (enc, "proxy caps %" GST_PTR_FORMAT, fcaps);
+
+  return fcaps;
 }
 
 static void
@@ -1712,15 +1818,19 @@ gst_x264_enc_set_format (GstVideoEncoder * video_enc,
       /* FIXME - if libx264 ever adds support for FMO, ASO or redundant slices
        * make sure constrained profile has a separate case which disables
        * those */
+      if (g_str_has_suffix (profile, "-intra")) {
+        encoder->peer_intra_profile = TRUE;
+      }
       if (!strcmp (profile, "constrained-baseline") ||
           !strcmp (profile, "baseline")) {
         encoder->peer_profile = "baseline";
-      } else if (!strcmp (profile, "high-10-intra")) {
-        encoder->peer_intra_profile = TRUE;
+      } else if (g_str_has_prefix (profile, "high-10")) {
         encoder->peer_profile = "high10";
-      } else if (!strcmp (profile, "high-10")) {
-        encoder->peer_profile = "high10";
-      } else if (!strcmp (profile, "high")) {
+      } else if (g_str_has_prefix (profile, "high-4:2:2")) {
+        encoder->peer_profile = "high422";
+      } else if (g_str_has_prefix (profile, "high-4:4:4")) {
+        encoder->peer_profile = "high444";
+      } else if (g_str_has_prefix (profile, "high")) {
         encoder->peer_profile = "high";
       } else if (!strcmp (profile, "main")) {
         encoder->peer_profile = "main";
