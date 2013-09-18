@@ -1721,35 +1721,64 @@ flushing:
 }
 
 
-static void
+static GstFlowReturn
 calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
     guint16 seqnum, GstClockTime dts, gint gap)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  GstClockTime duration, expected_dts;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstClockTime total_duration, duration, expected_dts;
   TimerType type;
 
   GST_DEBUG_OBJECT (jitterbuffer,
       "dts %" GST_TIME_FORMAT ", last %" GST_TIME_FORMAT,
       GST_TIME_ARGS (dts), GST_TIME_ARGS (priv->last_in_dts));
 
+  /* the total duration spanned by the missing packets */
+  if (dts >= priv->last_in_dts)
+    total_duration = dts - priv->last_in_dts;
+  else
+    total_duration = 0;
+
   /* interpolate between the current time and the last time based on
    * number of packets we are missing, this is the estimated duration
-   * for the missing packet based on equidistant packet spacing. Also make
-   * sure we never go negative. */
-  if (dts >= priv->last_in_dts)
-    duration = (dts - priv->last_in_dts) / (gap + 1);
-  else
-    /* packet already lost, timer will timeout quickly */
-    duration = 0;
+   * for the missing packet based on equidistant packet spacing. */
+  duration = total_duration / (gap + 1);
 
   GST_DEBUG_OBJECT (jitterbuffer, "duration %" GST_TIME_FORMAT,
       GST_TIME_ARGS (duration));
+
+  if (total_duration > priv->latency_ns) {
+    GstClockTime gap_time;
+    guint lost_packets;
+
+    gap_time = total_duration - priv->latency_ns;
+
+    if (duration > 0)
+      lost_packets = gap_time / duration;
+    else
+      lost_packets = gap;
+
+    /* too many lost packets, some of the missing packets are already
+     * too late and we can generate lost packet events for them. */
+    GST_DEBUG_OBJECT (jitterbuffer, "too many lost packets %" GST_TIME_FORMAT
+        " > %" GST_TIME_FORMAT ", consider %u lost",
+        GST_TIME_ARGS (total_duration), GST_TIME_ARGS (priv->latency_ns),
+        lost_packets);
+
+    ret =
+        send_lost_event (jitterbuffer, expected, lost_packets,
+        priv->last_in_dts + duration, gap_time, TRUE);
+
+    expected += lost_packets;
+    priv->last_in_dts += gap_time;
+  }
 
   expected_dts = priv->last_in_dts + duration;
 
   if (priv->do_retransmission) {
     type = TIMER_TYPE_EXPECTED;
+    /* if we had a timer for the first missing packet, leave it. */
     if (find_timer (jitterbuffer, type, expected))
       expected++;
   } else {
@@ -1761,6 +1790,7 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
     expected_dts += duration;
     expected++;
   }
+  return ret;
 }
 
 static GstFlowReturn
@@ -1884,7 +1914,10 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
         } else {
           GST_DEBUG_OBJECT (jitterbuffer, "%d missing packets", gap);
           /* fill in the gap with EXPECTED timers */
-          calculate_expected (jitterbuffer, expected, seqnum, dts, gap);
+          ret = calculate_expected (jitterbuffer, expected, seqnum, dts, gap);
+          if (ret != GST_FLOW_OK)
+            goto out_flushing;
+
           do_next_seqnum = TRUE;
         }
       }
