@@ -37,6 +37,7 @@
 #define EGL_EGLEXT_PROTOTYPES
 
 #include <gst/egl/egl.h>
+#include <string.h>
 
 #if defined (USE_EGL_RPI) && defined(__GNUC__)
 #pragma GCC reset_options
@@ -304,14 +305,17 @@ gst_egl_image_allocator_wrap (GstAllocator * allocator,
   return GST_MEMORY_CAST (mem);
 }
 
-void
-gst_context_set_egl_display (GstContext * context, GstEGLDisplay * display)
+GstContext *
+gst_context_new_egl_display (GstEGLDisplay * display, gboolean persistent)
 {
+  GstContext *context;
   GstStructure *s;
 
+  context = gst_context_new (GST_EGL_DISPLAY_CONTEXT_TYPE, persistent);
   s = gst_context_writable_structure (context);
-  gst_structure_set (s, GST_EGL_DISPLAY_CONTEXT_TYPE, GST_TYPE_EGL_DISPLAY,
-      display, NULL);
+  gst_structure_set (s, "display", GST_TYPE_EGL_DISPLAY, display, NULL);
+
+  return context;
 }
 
 gboolean
@@ -319,9 +323,12 @@ gst_context_get_egl_display (GstContext * context, GstEGLDisplay ** display)
 {
   const GstStructure *s;
 
+  g_return_val_if_fail (GST_IS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (strcmp (gst_context_get_context_type (context),
+          GST_EGL_DISPLAY_CONTEXT_TYPE) == 0, FALSE);
+
   s = gst_context_get_structure (context);
-  return gst_structure_get (s, GST_EGL_DISPLAY_CONTEXT_TYPE,
-      GST_TYPE_EGL_DISPLAY, display, NULL);
+  return gst_structure_get (s, "display", GST_TYPE_EGL_DISPLAY, display, NULL);
 }
 
 struct _GstEGLDisplay

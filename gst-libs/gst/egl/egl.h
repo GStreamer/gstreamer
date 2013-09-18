@@ -56,8 +56,7 @@ GstMemory *gst_egl_image_allocator_wrap (GstAllocator * allocator,
     GDestroyNotify user_data_destroy);
 
 #define GST_EGL_DISPLAY_CONTEXT_TYPE "gst.egl.EGLDisplay"
-void gst_context_set_egl_display (GstContext * context,
-    GstEGLDisplay * display);
+GstContext * gst_context_new_egl_display (GstEGLDisplay * display, gboolean persistent);
 gboolean gst_context_get_egl_display (GstContext * context,
     GstEGLDisplay ** display);
 
