@@ -241,6 +241,7 @@ typedef struct
   guint16 seqnum;
   TimerType type;
   GstClockTime timeout;
+  GstClockTime duration;
   GstClockTime rtx_base;
   GstClockTime rtx_retry;
 } TimerData;
@@ -1485,7 +1486,7 @@ recalculate_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
 
 static TimerData *
 add_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
-    guint16 seqnum, GstClockTime timeout)
+    guint16 seqnum, GstClockTime timeout, GstClockTime duration)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   TimerData *timer;
@@ -1502,6 +1503,7 @@ add_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
   timer->type = type;
   timer->seqnum = seqnum;
   timer->timeout = timeout;
+  timer->duration = duration;
   if (type == TIMER_TYPE_EXPECTED) {
     timer->rtx_base = timeout;
     timer->rtx_retry = 0;
@@ -1560,7 +1562,7 @@ set_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
   /* find the seqnum timer */
   timer = find_timer (jitterbuffer, type, seqnum);
   if (timer == NULL) {
-    timer = add_timer (jitterbuffer, type, seqnum, timeout);
+    timer = add_timer (jitterbuffer, type, seqnum, timeout, -1);
   } else {
     reschedule_timer (jitterbuffer, timer, seqnum, timeout);
   }
@@ -1643,7 +1645,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
       reschedule_timer (jitterbuffer, timer, priv->next_in_seqnum, expected);
     else
       add_timer (jitterbuffer, TIMER_TYPE_EXPECTED, priv->next_in_seqnum,
-          expected);
+          expected, priv->packet_spacing);
   } else if (timer && timer->type != TIMER_TYPE_DEADLINE) {
     /* if we had a timer, remove it, we don't know when to expect the next
      * packet. */
@@ -1786,7 +1788,7 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
   }
 
   while (expected < seqnum) {
-    add_timer (jitterbuffer, type, expected, expected_dts);
+    add_timer (jitterbuffer, type, expected, expected_dts, duration);
     expected_dts += duration;
     expected++;
   }
@@ -2350,7 +2352,9 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 
   seqnum = timer->seqnum;
   timestamp = apply_offset (jitterbuffer, timer->timeout);
-  duration = GST_CLOCK_TIME_NONE;
+  duration = timer->duration;
+  if (duration == GST_CLOCK_TIME_NONE && priv->packet_spacing > 0)
+    duration = priv->packet_spacing;
 
   /* remove timer now */
   remove_timer (jitterbuffer, timer);

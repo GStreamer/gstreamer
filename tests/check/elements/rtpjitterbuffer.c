@@ -613,17 +613,17 @@ GST_START_TEST (test_only_one_lost_event_on_large_gaps)
 
 GST_END_TEST;
 
-#if 0
 GST_START_TEST (test_two_lost_one_arrives_in_time)
 {
   TestData data;
-  GstTestClockPendingID id;
+  GstClockID id;
   guint64 timeout;
   GstBuffer *in_buf, *out_buf;
   GstEvent *out_event;
-  gint jb_latency_ms = 10;
-  GstClockTime buffer_time;
+  gint jb_latency_ms = 100;
+  GstClockTime buffer_time, now;
   gint b;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
 
   setup_testharness (&data);
   timeout = 20 * G_USEC_PER_SEC;
@@ -634,12 +634,11 @@ GST_START_TEST (test_two_lost_one_arrives_in_time)
   in_buf = generate_test_buffer (0 * GST_MSECOND, TRUE, 0, 0);
   gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 0);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
-  g_assert (gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK
-          (data.clock), &id));
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock),
-      jb_latency_ms * GST_MSECOND);
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  now = jb_latency_ms * GST_MSECOND;
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), now);
   g_assert (gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock))
-      == id.clock_id);
+      == id);
   out_buf = g_async_queue_timeout_pop (data.buf_queue, timeout);
   g_assert (out_buf != NULL);
 
@@ -647,7 +646,7 @@ GST_START_TEST (test_two_lost_one_arrives_in_time)
   for (b = 1; b < 3; b++) {
     buffer_time = b * GST_MSECOND * 20;
     in_buf = generate_test_buffer (buffer_time, TRUE, b, b * 160);
-    gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), buffer_time);
+    gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), now + buffer_time);
     g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
     // check for the buffer coming out that was pushed in
@@ -664,15 +663,15 @@ GST_START_TEST (test_two_lost_one_arrives_in_time)
 
   // verify that the jitterbuffer now wait for the latest moment it can push
   // the first lost buffer (buffer 3) out on (buffer-timestamp (60) + latency (10) = 70)
-  g_assert (gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK
-          (data.clock), &id));
-  g_assert_cmpint (id.time, ==,
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  g_assert_cmpint (gst_clock_id_get_time (id), ==,
       (3 * GST_MSECOND * 20) + (jb_latency_ms * GST_MSECOND));
 
   // let the time expire...
-  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), id.time);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock),
+      gst_clock_id_get_time (id));
   g_assert (gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock))
-      == id.clock_id);
+      == id);
 
   // we should now receive a packet-lost-event for buffer 3
   out_event = g_async_queue_timeout_pop (data.event_queue, timeout);
@@ -691,13 +690,17 @@ GST_START_TEST (test_two_lost_one_arrives_in_time)
   out_buf = g_async_queue_timeout_pop (data.buf_queue, timeout);
   g_assert (out_buf != NULL);
   g_assert (GST_BUFFER_FLAG_IS_SET (out_buf, GST_BUFFER_FLAG_DISCONT));
-  g_assert_cmpint (gst_rtp_buffer_get_seq (out_buf), ==, 4);
+  gst_rtp_buffer_map (out_buf, GST_MAP_READ, &rtp);
+  g_assert_cmpint (gst_rtp_buffer_get_seq (&rtp), ==, 4);
+  gst_rtp_buffer_unmap (&rtp);
 
   // and see that buffer 5 now arrives in a normal fashion
   out_buf = g_async_queue_timeout_pop (data.buf_queue, timeout);
   g_assert (out_buf != NULL);
   g_assert (!GST_BUFFER_FLAG_IS_SET (out_buf, GST_BUFFER_FLAG_DISCONT));
-  g_assert_cmpint (gst_rtp_buffer_get_seq (out_buf), ==, 5);
+  gst_rtp_buffer_map (out_buf, GST_MAP_READ, &rtp);
+  g_assert_cmpint (gst_rtp_buffer_get_seq (&rtp), ==, 5);
+  gst_rtp_buffer_unmap (&rtp);
 
   // should still have only seen 1 packet lost event
   g_assert_cmpint (data.lost_event_count, ==, 1);
@@ -707,6 +710,7 @@ GST_START_TEST (test_two_lost_one_arrives_in_time)
 
 GST_END_TEST;
 
+#if 0
 GST_START_TEST (test_late_packets_still_makes_lost_events)
 {
   TestData data;
@@ -865,8 +869,8 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_push_unordered);
   tcase_add_test (tc_chain, test_basetime);
   tcase_add_test (tc_chain, test_only_one_lost_event_on_large_gaps);
-#if 0
   tcase_add_test (tc_chain, test_two_lost_one_arrives_in_time);
+#if 0
   tcase_add_test (tc_chain, test_late_packets_still_makes_lost_events);
   tcase_add_test (tc_chain, test_all_packets_are_timestamped_zero);
 #endif
