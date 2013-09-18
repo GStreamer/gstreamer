@@ -2505,7 +2505,8 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       gst_clock_id_unref (id);
       priv->clock_id = NULL;
 
-      now = timer_timeout + MAX (clock_jitter, 0);
+      if (ret != GST_CLOCK_UNSCHEDULED)
+        now = timer_timeout + MAX (clock_jitter, 0);
     } else {
       /* no timers, wait for activity */
       GST_DEBUG_OBJECT (jitterbuffer, "waiting");
