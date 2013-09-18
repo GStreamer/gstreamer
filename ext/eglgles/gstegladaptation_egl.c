@@ -133,24 +133,13 @@ gst_egl_adaptation_init_egl_display (GstEglAdaptationContext * ctx)
     goto HANDLE_ERROR;
   }
 
-  msg = gst_message_new_need_context (GST_OBJECT_CAST (ctx->element));
-  gst_message_add_context_type (msg, GST_EGL_DISPLAY_CONTEXT_TYPE);
+  msg =
+      gst_message_new_need_context (GST_OBJECT_CAST (ctx->element),
+      GST_EGL_DISPLAY_CONTEXT_TYPE);
   gst_element_post_message (GST_ELEMENT_CAST (ctx->element), msg);
 
   GST_OBJECT_LOCK (ctx->element);
-  if (ctx->set_display) {
-    GstContext *context;
-
-    ctx->display = gst_egl_display_ref (ctx->set_display);
-    GST_OBJECT_UNLOCK (ctx->element);
-    context = gst_element_get_context (GST_ELEMENT_CAST (ctx->element));
-    if (!context)
-      context = gst_context_new ();
-    context = gst_context_make_writable (context);
-    gst_context_set_egl_display (context, ctx->display);
-    gst_element_set_context (GST_ELEMENT_CAST (ctx->element), context);
-    gst_context_unref (context);
-  } else {
+  if (!ctx->set_display) {
     GstContext *context;
 
     GST_OBJECT_UNLOCK (ctx->element);
@@ -162,20 +151,9 @@ gst_egl_adaptation_init_egl_display (GstEglAdaptationContext * ctx)
     }
     ctx->display = gst_egl_display_new (display, (GDestroyNotify) eglTerminate);
 
-    context = gst_context_new ();
-    gst_context_set_egl_display (context, ctx->display);
-
+    context = gst_context_new_egl_display (ctx->display, FALSE);
     msg = gst_message_new_have_context (GST_OBJECT (ctx->element), context);
     gst_element_post_message (GST_ELEMENT_CAST (ctx->element), msg);
-    context = NULL;
-
-    context = gst_element_get_context (GST_ELEMENT_CAST (ctx->element));
-    if (!context)
-      context = gst_context_new ();
-    context = gst_context_make_writable (context);
-    gst_context_set_egl_display (context, ctx->display);
-    gst_element_set_context (GST_ELEMENT_CAST (ctx->element), context);
-    gst_context_unref (context);
   }
 
   if (!eglInitialize (gst_egl_display_get (ctx->display),

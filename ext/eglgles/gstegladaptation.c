@@ -202,7 +202,8 @@ static const char *frag_NV12_NV21_prog = {
 void
 gst_egl_adaption_init (void)
 {
-  GST_DEBUG_CATEGORY_INIT (egladaption_debug, "egladaption", 0, "EGL adaption layer");
+  GST_DEBUG_CATEGORY_INIT (egladaption_debug, "egladaption", 0,
+      "EGL adaption layer");
 }
 
 static GstCaps *
