@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gst-plugins-base package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012.
+# Yuri Chornoivan <yurchor@ukr.net>, 2010, 2011, 2012, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.0.3\n"
+"Project-Id-Version: gst-plugins-base 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:31+0200\n"
-"PO-Revision-Date: 2012-11-28 20:16+0200\n"
+"POT-Creation-Date: 2013-09-19 09:44+0200\n"
+"PO-Revision-Date: 2013-09-14 22:27+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -41,6 +41,8 @@ msgstr "Не вдалося відкрити пристрій для відтв�
 
 msgid "Error outputting to audio device. The device has been disconnected."
 msgstr ""
+"Помилка під час спроби вивести дані на звуковий пристрій. Цей пристрій було "
+"від’єднано."
 
 msgid "Could not open device for recording in mono mode."
 msgstr "Не вдалося відкрити пристрій запису у режимі моно."
@@ -64,6 +66,8 @@ msgstr "Не вдалося відкрити пристрій для запис�
 
 msgid "Error recording from audio device. The device has been disconnected."
 msgstr ""
+"Помилка під час записати дані зі звукового пристрою. Цей пристрій було "
+"від’єднано."
 
 msgid "Could not open CD device for reading."
 msgstr "Не вдалося відкрити пристрій компакт-дисків для читання."
@@ -80,7 +84,7 @@ msgstr "Помилка внутрішнього потоку даних."
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
-"Відсутній елемент «%s». Перевірте чи встановлено GStreamer належним чином."
+"Відсутній елемент «%s». Перевірте, чи встановлено GStreamer належним чином."
 
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
@@ -92,9 +96,8 @@ msgstr "Не вдалося визначити тип даних потоку"
 msgid "This appears to be a text file"
 msgstr "Файл схожий на текстовий файл"
 
-#, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Не вдалося створити елемент \"decodebin\"."
+msgstr "Не вдалося створити елемент \"uridecodebin\"."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -233,12 +236,24 @@ msgstr "Нестиснене відео"
 msgid "Uncompressed gray"
 msgstr "Нестиснене сіре зображення"
 
-#, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr "Нестиснене %s, YUV %s"
+#, fuzzy, c-format
+msgid "Uncompressed packed YUV %s"
+msgstr "Нестиснений пакетний YUV 4:2:2"
 
-#, c-format
-msgid "Uncompressed %s%d-bit %s"
+#, fuzzy, c-format
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "Нестиснений планарний YUV 4:2:0"
+
+#, fuzzy, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "Нестиснений планарний YUV 4:2:0"
+
+#, fuzzy, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "Нестиснене %s%d-бітове %s"
+
+#, fuzzy, c-format
+msgid "Uncompressed %d-bit %s"
 msgstr "Нестиснене %s%d-бітове %s"
 
 #, c-format
@@ -502,10 +517,35 @@ msgid "unparsed id3v2 tag frame"
 msgstr "необроблений блок теґу id3v2"
 
 msgid "musical-key"
-msgstr ""
+msgstr "музична-тональність"
 
 msgid "Initial key in which the sound starts"
+msgstr "Початкова тональність, якою розпочинається звук"
+
+msgid "Buffering..."
 msgstr ""
+
+msgid "Print version information and exit"
+msgstr ""
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr ""
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr ""
+
+msgid "Enable gapless playback"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr ""
+
+msgid "You must provide at least one filename or URI to play."
+msgstr ""
+
+#~ msgid "Uncompressed %s YUV %s"
+#~ msgstr "Нестиснене %s, YUV %s"
 
 #~ msgid "Master"
 #~ msgstr "Головний"
@@ -595,14 +635,8 @@ msgstr ""
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "У з'єднанні з %s:%d відмовлено."
 
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "Нестиснений планарний YUV 4:2:0"
-
 #~ msgid "Uncompressed planar YVU 4:2:0"
 #~ msgstr "Нестиснений планарний YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "Нестиснений пакетний YUV 4:2:2"
 
 #~ msgid "Uncompressed packed YUV 4:1:0"
 #~ msgstr "Нестиснений пакетний YUV 4:1:0"

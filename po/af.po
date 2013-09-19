@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins 0.7.6\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:31+0200\n"
+"POT-Creation-Date: 2013-09-19 09:44+0200\n"
 "PO-Revision-Date: 2004-03-18 14:16+0200\n"
 "Last-Translator: Petri Jooste <rkwjpj@puk.ac.za>\n"
 "Language-Team: Afrikaans <i18n@af.org.za>\n"
@@ -235,11 +235,23 @@ msgid "Uncompressed gray"
 msgstr ""
 
 #, c-format
-msgid "Uncompressed %s YUV %s"
+msgid "Uncompressed packed YUV %s"
 msgstr ""
 
 #, c-format
-msgid "Uncompressed %s%d-bit %s"
+msgid "Uncompressed semi-planar YUV %s"
+msgstr ""
+
+#, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr ""
+
+#, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr ""
+
+#, c-format
+msgid "Uncompressed %d-bit %s"
 msgstr ""
 
 #, c-format
@@ -495,6 +507,28 @@ msgid "musical-key"
 msgstr ""
 
 msgid "Initial key in which the sound starts"
+msgstr ""
+
+msgid "Buffering..."
+msgstr ""
+
+msgid "Print version information and exit"
+msgstr ""
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr ""
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr ""
+
+msgid "Enable gapless playback"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr ""
+
+msgid "You must provide at least one filename or URI to play."
 msgstr ""
 
 #~ msgid "Bass"

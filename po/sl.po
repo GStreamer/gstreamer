@@ -10,7 +10,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:31+0200\n"
+"POT-Creation-Date: 2013-09-19 09:44+0200\n"
 "PO-Revision-Date: 2013-01-05 10:10+0100\n"
 "Last-Translator: Klemen Košir <klemen913@gmail.com>\n"
 "Language-Team: Slovenian <translation-team-sl@lists.sourceforge.net>\n"
@@ -231,12 +231,24 @@ msgstr "Nestisnjen video"
 msgid "Uncompressed gray"
 msgstr "Nestisnjen sivinski video"
 
-#, c-format
-msgid "Uncompressed %s YUV %s"
+#, fuzzy, c-format
+msgid "Uncompressed packed YUV %s"
 msgstr "Nestisnjen %s YUV %s"
 
-#, c-format
-msgid "Uncompressed %s%d-bit %s"
+#, fuzzy, c-format
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "Nestisnjen %s YUV %s"
+
+#, fuzzy, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "Nestisnjen %s YUV %s"
+
+#, fuzzy, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "Nestisnjen %s%d-bitni %s"
+
+#, fuzzy, c-format
+msgid "Uncompressed %d-bit %s"
 msgstr "Nestisnjen %s%d-bitni %s"
 
 #, c-format
@@ -493,4 +505,26 @@ msgid "musical-key"
 msgstr ""
 
 msgid "Initial key in which the sound starts"
+msgstr ""
+
+msgid "Buffering..."
+msgstr ""
+
+msgid "Print version information and exit"
+msgstr ""
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr ""
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr ""
+
+msgid "Enable gapless playback"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr ""
+
+msgid "You must provide at least one filename or URI to play."
 msgstr ""

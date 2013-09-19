@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:31+0200\n"
+"POT-Creation-Date: 2013-09-19 09:44+0200\n"
 "PO-Revision-Date: 2010-06-07 18:17+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -238,11 +238,23 @@ msgid "Uncompressed gray"
 msgstr "Okomprimerad gråskalebild"
 
 #, fuzzy, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr "Okomprimerad YUV"
+msgid "Uncompressed packed YUV %s"
+msgstr "Okomprimerad paketerad YUV 4:2:2"
 
 #, fuzzy, c-format
-msgid "Uncompressed %s%d-bit %s"
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "Okomprimerad plan YUV 4:2:0"
+
+#, fuzzy, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "Okomprimerad plan YUV 4:2:0"
+
+#, fuzzy, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "Okomprimerad palettiserad %d-bitars %s"
+
+#, fuzzy, c-format
+msgid "Uncompressed %d-bit %s"
 msgstr "Okomprimerad palettiserad %d-bitars %s"
 
 #, c-format
@@ -502,6 +514,33 @@ msgstr "Musikal"
 msgid "Initial key in which the sound starts"
 msgstr ""
 
+#, fuzzy
+msgid "Buffering..."
+msgstr "Spelar in..."
+
+msgid "Print version information and exit"
+msgstr ""
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr ""
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr ""
+
+msgid "Enable gapless playback"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr ""
+
+msgid "You must provide at least one filename or URI to play."
+msgstr ""
+
+#, fuzzy
+#~ msgid "Uncompressed %s YUV %s"
+#~ msgstr "Okomprimerad YUV"
+
 #~ msgid "Master"
 #~ msgstr "Övergripande"
 
@@ -538,14 +577,8 @@ msgstr ""
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Anslutningen till %s:%d nekades."
 
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "Okomprimerad plan YUV 4:2:0"
-
 #~ msgid "Uncompressed planar YVU 4:2:0"
 #~ msgstr "Okomprimerad plan YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "Okomprimerad paketerad YUV 4:2:2"
 
 #~ msgid "Uncompressed packed YUV 4:1:0"
 #~ msgstr "Okomprimerad paketerad YUV 4:1:0"
@@ -1771,9 +1804,6 @@ msgstr ""
 
 #~ msgid "%s.%s - Sound Recorder"
 #~ msgstr "%s.%s - Ljudinspelare"
-
-#~ msgid "Recording..."
-#~ msgstr "Spelar in..."
 
 #~ msgid "Record as"
 #~ msgstr "Spela in som"

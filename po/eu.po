@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base-0.10.26.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:31+0200\n"
+"POT-Creation-Date: 2013-09-19 09:44+0200\n"
 "PO-Revision-Date: 2010-03-25 12:32+0100\n"
 "Last-Translator: Mikel Olasagasti Uranga <hey_neken@mundurat.net>\n"
 "Language-Team: Basque <translation-team-eu@lists.sourceforge.net>\n"
@@ -240,11 +240,23 @@ msgid "Uncompressed gray"
 msgstr "Konprimitu gabeko irudi grisa"
 
 #, fuzzy, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr "Konprimitu gabeko YUV"
+msgid "Uncompressed packed YUV %s"
+msgstr "Konprimitu gabeko YUV 4:2:2 paketatua"
 
 #, fuzzy, c-format
-msgid "Uncompressed %s%d-bit %s"
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "Konprimitu gabeko YUV 4:2:0 planarra"
+
+#, fuzzy, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "Konprimitu gabeko YUV 4:2:0 planarra"
+
+#, fuzzy, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "Konprimitu gabeko paleta moduko %d biteko %s"
+
+#, fuzzy, c-format
+msgid "Uncompressed %d-bit %s"
 msgstr "Konprimitu gabeko paleta moduko %d biteko %s"
 
 #, c-format
@@ -503,6 +515,32 @@ msgstr ""
 msgid "Initial key in which the sound starts"
 msgstr ""
 
+msgid "Buffering..."
+msgstr ""
+
+msgid "Print version information and exit"
+msgstr ""
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr ""
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr ""
+
+msgid "Enable gapless playback"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr ""
+
+msgid "You must provide at least one filename or URI to play."
+msgstr ""
+
+#, fuzzy
+#~ msgid "Uncompressed %s YUV %s"
+#~ msgstr "Konprimitu gabeko YUV"
+
 #~ msgid "Master"
 #~ msgstr "Maisua"
 
@@ -539,14 +577,8 @@ msgstr ""
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "%s:%d(e)ra konektatzea ukatu da."
 
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "Konprimitu gabeko YUV 4:2:0 planarra"
-
 #~ msgid "Uncompressed planar YVU 4:2:0"
 #~ msgstr "Konprimitu gabeko YVU 4:2:0 planarra"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "Konprimitu gabeko YUV 4:2:2 paketatua"
 
 #~ msgid "Uncompressed packed YUV 4:1:0"
 #~ msgstr "Konprimitu gabeko YUV 4:1:0 paketatua"

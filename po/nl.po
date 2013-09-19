@@ -1,13 +1,13 @@
-# translation of gst-plugins-base-1.0.3.po to Dutch
+# translation of gst-plugins-base-1.1.4.po to Dutch
 # This file is put in the public domain.
 #
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.0.3\n"
+"Project-Id-Version: gst-plugins-base 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:31+0200\n"
-"PO-Revision-Date: 2012-11-29 22:19+0100\n"
+"POT-Creation-Date: 2013-09-19 09:44+0200\n"
+"PO-Revision-Date: 2013-09-15 13:29+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -39,6 +39,7 @@ msgstr "Kan het audio-apparaat niet openen voor afspelen."
 
 msgid "Error outputting to audio device. The device has been disconnected."
 msgstr ""
+"Fout bij het uitvoeren naar het audio-apparaat. Het apparaat is afgekoppeld."
 
 msgid "Could not open device for recording in mono mode."
 msgstr "Kan het apparaat niet openen in mono."
@@ -62,6 +63,7 @@ msgstr "Kan het audio-apparaat niet openen voor opnemen."
 
 msgid "Error recording from audio device. The device has been disconnected."
 msgstr ""
+"Fout bij het opnemen vanaf het audio-apparaat. Het apparaat is afgekoppeld."
 
 msgid "Could not open CD device for reading."
 msgstr "Kan het CD-apparaat niet openen om te lezen."
@@ -91,9 +93,8 @@ msgstr "Kan het type stream niet bepalen"
 msgid "This appears to be a text file"
 msgstr "Dit lijkt een tekstbestand te zijn"
 
-#, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Kan \"decodebin\"-element niet aanmaken."
+msgstr "Kon element \"uridecodebin\" niet aanmaken."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -231,12 +232,24 @@ msgstr "Niet-gecomprimeerde video"
 msgid "Uncompressed gray"
 msgstr "Niet-gecomprimeerd grijs"
 
-#, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr "Niet-gecomprimeerd %s YUV %s"
+#, fuzzy, c-format
+msgid "Uncompressed packed YUV %s"
+msgstr "Niet-gecomprimeerde packed YUV 4:2:2"
 
-#, c-format
-msgid "Uncompressed %s%d-bit %s"
+#, fuzzy, c-format
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "Niet-gecomprimeerde planar YUV 4:2:0"
+
+#, fuzzy, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "Niet-gecomprimeerde planar YUV 4:2:0"
+
+#, fuzzy, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "Niet-gecomprimeerd %s%d-bits %s"
+
+#, fuzzy, c-format
+msgid "Uncompressed %d-bit %s"
 msgstr "Niet-gecomprimeerd %s%d-bits %s"
 
 #, c-format
@@ -498,10 +511,35 @@ msgid "unparsed id3v2 tag frame"
 msgstr "niet-ontleed id3v2-tagframe"
 
 msgid "musical-key"
-msgstr ""
+msgstr "musical-key"
 
 msgid "Initial key in which the sound starts"
+msgstr "Initiële sleutel waarin het geluid begint"
+
+msgid "Buffering..."
 msgstr ""
+
+msgid "Print version information and exit"
+msgstr ""
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr ""
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr ""
+
+msgid "Enable gapless playback"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr ""
+
+msgid "You must provide at least one filename or URI to play."
+msgstr ""
+
+#~ msgid "Uncompressed %s YUV %s"
+#~ msgstr "Niet-gecomprimeerd %s YUV %s"
 
 #~ msgid "Master"
 #~ msgstr "Master"
@@ -591,14 +629,8 @@ msgstr ""
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Verbinding naar %s:%d is geweigerd."
 
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "Niet-gecomprimeerde planar YUV 4:2:0"
-
 #~ msgid "Uncompressed planar YVU 4:2:0"
 #~ msgstr "Niet-gecomprimeerde planar YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "Niet-gecomprimeerde packed YUV 4:2:2"
 
 #~ msgid "Uncompressed packed YUV 4:1:0"
 #~ msgstr "Niet-gecomprimeerde packed YUV 4:1:0"

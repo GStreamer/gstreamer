@@ -6,10 +6,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base-1.0.3\n"
+"Project-Id-Version: gst-plugins-base-1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:31+0200\n"
-"PO-Revision-Date: 2012-12-02 08:03+0700\n"
+"POT-Creation-Date: 2013-09-19 09:44+0200\n"
+"PO-Revision-Date: 2013-09-16 14:15+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
@@ -20,9 +20,11 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: LocFactoryEditor 1.8\n"
 "X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-Language: Vietnamese\n"
+"X-Poedit-Country: VIET NAM\n"
 
 msgid "Could not open device for playback in mono mode."
-msgstr "Không thể mở thiết bị để phát lại trong chế độ đơn nguồn."
+msgstr "Không thể mở thiết bị để phát lại trong chế độ đơn kênh."
 
 msgid "Could not open device for playback in stereo mode."
 msgstr "Không thể mở thiết bị để phát lại trong chế độ âm lập thể."
@@ -41,7 +43,7 @@ msgid "Could not open audio device for playback."
 msgstr "Không thể mở thiết bị âm thanh để phát lại."
 
 msgid "Error outputting to audio device. The device has been disconnected."
-msgstr ""
+msgstr "Gặp lỗi khi xuất ra thiết bị âm thanh. Thiết bị đã bị ngắt kết nối."
 
 msgid "Could not open device for recording in mono mode."
 msgstr "Không thể mở thiết bị để thu trong chế độ đơn nguồn."
@@ -63,7 +65,7 @@ msgid "Could not open audio device for recording."
 msgstr "Không thể mở thiết bị âm thanh để thu."
 
 msgid "Error recording from audio device. The device has been disconnected."
-msgstr ""
+msgstr "Gặp lỗi khi ghi từ thiết bị âm thanh. Thiết bị đã bị ngắt kết nối."
 
 msgid "Could not open CD device for reading."
 msgstr "Không thể mở thiết bị đĩa CD để đọc."
@@ -79,21 +81,20 @@ msgstr "Lỗi luồng dữ liệu nội bộ."
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr "Thiếu phần tử “%s” — hãy kiểm tra lại cài đặt GStreamer."
+msgstr "Thiếu phần tử “%s” — hãy kiểm tra lại phần cài đặt GStreamer."
 
 #, c-format
 msgid "A %s plugin is required to play this stream, but not installed."
 msgstr "Cần phần bổ sung %s để phát luồng này nhưng chưa cài đặt."
 
 msgid "Could not determine type of stream"
-msgstr "Không thể quyết định loại luồng"
+msgstr "Không thể xác định kiểu của luồng dữ liệu"
 
 msgid "This appears to be a text file"
 msgstr "Hình như đây là tập tin văn bản"
 
-#, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Không thể tạo phần tử “decodebin”."
+msgstr "Không thể tạo phần tử “uridecodebin”."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -139,7 +140,7 @@ msgstr "Phần tử autoaudiosink không hoạt động."
 
 msgid "Can't play a text file without video or visualizations."
 msgstr ""
-"Không thể phát tập tin văn bản mà không có ảnh động hay cách thức hiển thị."
+"Không thể phát tập tin văn bản mà không có phim hay cách thức hiển thị."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -164,7 +165,7 @@ msgstr "Phần tử nguồn không phải hợp lệ."
 
 #, c-format
 msgid "Error while sending data to \"%s:%d\"."
-msgstr "Lỗi khi gởi dữ liệu cho “%s:%d”."
+msgstr "Gặp lỗi khi gửi dữ liệu cho “%s:%d”."
 
 msgid "Can't record audio fast enough"
 msgstr "Không thể thu âm thanh một cách đủ nhanh"
@@ -211,7 +212,7 @@ msgid "Subtitle"
 msgstr "Phụ đề"
 
 msgid "MPL2 subtitle format"
-msgstr "Định dạng phụ MPL2"
+msgstr "Định dạng phụ đề MPL2"
 
 msgid "DKS subtitle format"
 msgstr "Định dạng phụ đề DKS"
@@ -234,12 +235,24 @@ msgstr "Video không nén"
 msgid "Uncompressed gray"
 msgstr "Màu xám không nén"
 
-#, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr "%s YUV %s không nén"
+#, fuzzy, c-format
+msgid "Uncompressed packed YUV %s"
+msgstr "YUV 4:2:2 đóng gói không nén"
 
-#, c-format
-msgid "Uncompressed %s%d-bit %s"
+#, fuzzy, c-format
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "YUV 4:2:0 phẳng không nén"
+
+#, fuzzy, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "YUV 4:2:0 phẳng không nén"
+
+#, fuzzy, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "%s %d-bit %s không nén"
+
+#, fuzzy, c-format
+msgid "Uncompressed %d-bit %s"
 msgstr "%s %d-bit %s không nén"
 
 #, c-format
@@ -274,7 +287,7 @@ msgstr "Nguồn giao thức %s"
 
 #, c-format
 msgid "%s video RTP depayloader"
-msgstr "depayloader (bộ trừ trọng tải?) RTP ảnh động %s"
+msgstr "depayloader (bộ trừ trọng tải?) RTP phim %s"
 
 #, c-format
 msgid "%s audio RTP depayloader"
@@ -294,7 +307,7 @@ msgstr "bộ giải mã %s"
 
 #, c-format
 msgid "%s video RTP payloader"
-msgstr "payloader (bộ cộng trọng tải?) RTP ảnh động %s"
+msgstr "payloader (bộ cộng trọng tải?) RTP phim %s"
 
 #, c-format
 msgid "%s audio RTP payloader"
@@ -335,7 +348,7 @@ msgid "Plugin or element of unknown type"
 msgstr "Không rõ kiểu của phần bổ sung hay phần tử"
 
 msgid "Failed to read tag: not enough data"
-msgstr "Lỗi đọc thẻ: không đủ dữ liệu"
+msgstr "Gặp lỗi khi đọc thẻ: không đủ dữ liệu"
 
 msgid "track ID"
 msgstr "mã rãnh"
@@ -497,10 +510,35 @@ msgid "unparsed id3v2 tag frame"
 msgstr "khung thẻ id3v2 chưa phân tích"
 
 msgid "musical-key"
-msgstr ""
+msgstr "phím-âm-nhạc"
 
 msgid "Initial key in which the sound starts"
+msgstr "Khóa khởi tạo trong cái mà âm thanh khởi chạy"
+
+msgid "Buffering..."
 msgstr ""
+
+msgid "Print version information and exit"
+msgstr ""
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr ""
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr ""
+
+msgid "Enable gapless playback"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr ""
+
+msgid "You must provide at least one filename or URI to play."
+msgstr ""
+
+#~ msgid "Uncompressed %s YUV %s"
+#~ msgstr "%s YUV %s không nén"
 
 #~ msgid "Master"
 #~ msgstr "Chính"
@@ -589,14 +627,8 @@ msgstr ""
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Kết nối tới “%s:%d” bị từ chối."
 
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "YUV 4:2:0 phẳng không nén"
-
 #~ msgid "Uncompressed planar YVU 4:2:0"
 #~ msgstr "YUV 4:2:0 phẳng không nén"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "YUV 4:2:2 đóng gói không nén"
 
 #~ msgid "Uncompressed packed YUV 4:1:0"
 #~ msgstr "YUV 4:1:0 đóng gói không nén"

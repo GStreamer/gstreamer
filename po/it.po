@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:31+0200\n"
+"POT-Creation-Date: 2013-09-19 09:44+0200\n"
 "PO-Revision-Date: 2010-04-28 14:27+0200\n"
 "Last-Translator: Luca Ferretti <elle.uca@infinito.it>\n"
 "Language-Team: Italian <tp@lists.linux.it>\n"
@@ -247,14 +247,43 @@ msgid "Uncompressed gray"
 msgstr "Uncompressed Gray Image"
 
 #, fuzzy, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr "YUV non compresso"
+msgid "Uncompressed packed YUV %s"
+msgstr "YUV 4:2:2 packed non compresso"
+
+# cfr http://en.wikipedia.org/wiki/YUV
+#     http://support.microsoft.com/kb/281188/it
+#     http://support.microsoft.com/kb/294880/it (traduz automatica) :-(
+#     http://www.benis.it/dvd/agg3.htm
+#
+# Dal secondo e terzo, evinco YUV compresso o planare sarebbero
+# buone abbreviazioni, ma tengo planare/packed + compresso/noncompresso
+#, fuzzy, c-format
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "YUV 4:2:0 planare non compresso"
+
+# cfr http://en.wikipedia.org/wiki/YUV
+#     http://support.microsoft.com/kb/281188/it
+#     http://support.microsoft.com/kb/294880/it (traduz automatica) :-(
+#     http://www.benis.it/dvd/agg3.htm
+#
+# Dal secondo e terzo, evinco YUV compresso o planare sarebbero
+# buone abbreviazioni, ma tengo planare/packed + compresso/noncompresso
+#, fuzzy, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "YUV 4:2:0 planare non compresso"
 
 # %s è qualcosa come gli YUV dei precedenti
 #
 # Non so perché, ma senza X$ non lo dava buono....
 #, fuzzy, c-format
-msgid "Uncompressed %s%d-bit %s"
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "%2$s %1$d-bit con tavolozza non compresso"
+
+# %s è qualcosa come gli YUV dei precedenti
+#
+# Non so perché, ma senza X$ non lo dava buono....
+#, fuzzy, c-format
+msgid "Uncompressed %d-bit %s"
 msgstr "%2$s %1$d-bit con tavolozza non compresso"
 
 # o MPEG-4 DivX ?
@@ -516,6 +545,32 @@ msgstr ""
 msgid "Initial key in which the sound starts"
 msgstr ""
 
+msgid "Buffering..."
+msgstr ""
+
+msgid "Print version information and exit"
+msgstr ""
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr ""
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr ""
+
+msgid "Enable gapless playback"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr ""
+
+msgid "You must provide at least one filename or URI to play."
+msgstr ""
+
+#, fuzzy
+#~ msgid "Uncompressed %s YUV %s"
+#~ msgstr "YUV non compresso"
+
 #~ msgid "Master"
 #~ msgstr "Principale"
 
@@ -552,21 +607,8 @@ msgstr ""
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Connessione a %s:%d rifiutata."
 
-# cfr http://en.wikipedia.org/wiki/YUV
-#     http://support.microsoft.com/kb/281188/it
-#     http://support.microsoft.com/kb/294880/it (traduz automatica) :-(
-#     http://www.benis.it/dvd/agg3.htm
-#
-# Dal secondo e terzo, evinco YUV compresso o planare sarebbero
-# buone abbreviazioni, ma tengo planare/packed + compresso/noncompresso
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "YUV 4:2:0 planare non compresso"
-
 #~ msgid "Uncompressed planar YVU 4:2:0"
 #~ msgstr "YVU 4:2:0 planare non compresso"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "YUV 4:2:2 packed non compresso"
 
 #~ msgid "Uncompressed packed YUV 4:1:0"
 #~ msgstr "YUV 4:1:0 packed non compresso"

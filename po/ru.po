@@ -3,13 +3,13 @@
 #
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012.
+# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.0.3\n"
+"Project-Id-Version: gst-plugins-base 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:31+0200\n"
-"PO-Revision-Date: 2012-12-01 13:27+0400\n"
+"POT-Creation-Date: 2013-09-19 09:44+0200\n"
+"PO-Revision-Date: 2013-09-15 08:46+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
@@ -35,14 +35,14 @@ msgid ""
 "Could not open audio device for playback. Device is being used by another "
 "application."
 msgstr ""
-"Не удалось открыть устройство для воспроизведения. Устройство используется "
-"другим приложением."
+"Не удалось открыть аудио-устройство для воспроизведения. Устройство "
+"используется другим приложением."
 
 msgid "Could not open audio device for playback."
-msgstr "Не удалось открыть устройство для воспроизведения."
+msgstr "Не удалось открыть аудио-устройство для воспроизведения."
 
 msgid "Error outputting to audio device. The device has been disconnected."
-msgstr ""
+msgstr "Ошибка вывода в аудио-устройство. Устройство отсоединено."
 
 msgid "Could not open device for recording in mono mode."
 msgstr "Не удалось открыть устройство для записи в режиме моно."
@@ -65,7 +65,7 @@ msgid "Could not open audio device for recording."
 msgstr "Не удалось открыть устройство для записи."
 
 msgid "Error recording from audio device. The device has been disconnected."
-msgstr ""
+msgstr "Ошибка записи из аудио-устройства. Устройство отсоединено."
 
 msgid "Could not open CD device for reading."
 msgstr "Не удалось открыть CD-устройство для чтения."
@@ -74,7 +74,7 @@ msgid "Could not seek CD."
 msgstr "Не удалось сменить позицию воспроизведения CD."
 
 msgid "Could not read CD."
-msgstr "Не удалось прочитать диск."
+msgstr "Не удалось прочитать CD."
 
 msgid "Internal data stream error."
 msgstr "Внутренняя ошибка потока данных."
@@ -94,9 +94,8 @@ msgstr "Не удалось определить тип потока"
 msgid "This appears to be a text file"
 msgstr "Этот файл является текстовым"
 
-#, fuzzy
 msgid "Could not create \"uridecodebin\" element."
-msgstr "Не удалось создать элемент «decodebin»."
+msgstr "Не удалось создать элемент «uridecodebin»."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -142,7 +141,7 @@ msgstr "Элемент autoaudiosink не работает."
 
 msgid "Can't play a text file without video or visualizations."
 msgstr ""
-"Воспроизведение текстового файла без видео или видеотображения невозможно."
+"Воспроизведение текстового файла без видео или визуализации невозможно."
 
 #, c-format
 msgid "No decoder available for type '%s'."
@@ -235,12 +234,24 @@ msgstr "Несжатое видео"
 msgid "Uncompressed gray"
 msgstr "Несжатый серый"
 
-#, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr "Несжатый %s YUV %s"
+#, fuzzy, c-format
+msgid "Uncompressed packed YUV %s"
+msgstr "Несжатый смешанный YUV 4:2:2"
 
-#, c-format
-msgid "Uncompressed %s%d-bit %s"
+#, fuzzy, c-format
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "Несжатый планарный YUV 4:2:0"
+
+#, fuzzy, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "Несжатый планарный YUV 4:2:0"
+
+#, fuzzy, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "Несжатое %s%d-битное %s"
+
+#, fuzzy, c-format
+msgid "Uncompressed %d-bit %s"
 msgstr "Несжатое %s%d-битное %s"
 
 #, c-format
@@ -495,10 +506,35 @@ msgid "unparsed id3v2 tag frame"
 msgstr "неразбираемый тег кадра id3v2"
 
 msgid "musical-key"
-msgstr ""
+msgstr "музыкальный ключ"
 
 msgid "Initial key in which the sound starts"
+msgstr "Начальный ключ, с которого начинается звук"
+
+msgid "Buffering..."
 msgstr ""
+
+msgid "Print version information and exit"
+msgstr ""
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr ""
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr ""
+
+msgid "Enable gapless playback"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr ""
+
+msgid "You must provide at least one filename or URI to play."
+msgstr ""
+
+#~ msgid "Uncompressed %s YUV %s"
+#~ msgstr "Несжатый %s YUV %s"
 
 #~ msgid "Master"
 #~ msgstr "Общий"
@@ -587,14 +623,8 @@ msgstr ""
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "В соединении с %s:%d отказано."
 
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "Несжатый планарный YUV 4:2:0"
-
 #~ msgid "Uncompressed planar YVU 4:2:0"
 #~ msgstr "Несжатый планарный YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "Несжатый смешанный YUV 4:2:2"
 
 #~ msgid "Uncompressed packed YUV 4:1:0"
 #~ msgstr "Несжатый смешанный YUV 4:1:0"

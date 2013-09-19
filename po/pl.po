@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-base.
 # This file is distributed under the same license as the gst-plugins-base package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2012.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2013.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.0.3\n"
+"Project-Id-Version: gst-plugins-base 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:31+0200\n"
-"PO-Revision-Date: 2012-11-28 19:21+0100\n"
+"POT-Creation-Date: 2013-09-19 09:44+0200\n"
+"PO-Revision-Date: 2013-09-15 10:32+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -41,6 +41,8 @@ msgstr "Nie udało się otworzyć urządzenia dźwiękowego do odtwarzania."
 
 msgid "Error outputting to audio device. The device has been disconnected."
 msgstr ""
+"Błąd przekazywania danych do urządzenia dźwiękowego. Urządzenie zostało "
+"odłączone."
 
 msgid "Could not open device for recording in mono mode."
 msgstr ""
@@ -68,6 +70,7 @@ msgstr "Nie udało się otworzyć urządzenia dźwiękowego do nagrywania."
 
 msgid "Error recording from audio device. The device has been disconnected."
 msgstr ""
+"Błąd nagrywania z urządzenia dźwiękowego. Urządzenie zostało odłączone."
 
 msgid "Could not open CD device for reading."
 msgstr "Nie udało się otworzyć urządzenia CD do odczytu."
@@ -98,7 +101,7 @@ msgid "This appears to be a text file"
 msgstr "To wygląda na plik tekstowy"
 
 msgid "Could not create \"uridecodebin\" element."
-msgstr ""
+msgstr "Nie udało się utworzyć elementu \"uridecodebin\"."
 
 #, c-format
 msgid "Both autovideosink and %s elements are missing."
@@ -236,12 +239,24 @@ msgstr "Nieskompresowany obraz"
 msgid "Uncompressed gray"
 msgstr "Nieskompresowane szarości"
 
-#, c-format
-msgid "Uncompressed %s YUV %s"
+#, fuzzy, c-format
+msgid "Uncompressed packed YUV %s"
 msgstr "Nieskompresowany %s YUV %s"
 
-#, c-format
-msgid "Uncompressed %s%d-bit %s"
+#, fuzzy, c-format
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "Nieskompresowany %s YUV %s"
+
+#, fuzzy, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "Nieskompresowany %s YUV %s"
+
+#, fuzzy, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "Nieskompresowany %s%d-bitowy %s"
+
+#, fuzzy, c-format
+msgid "Uncompressed %d-bit %s"
 msgstr "Nieskompresowany %s%d-bitowy %s"
 
 #, c-format
@@ -494,7 +509,29 @@ msgid "unparsed id3v2 tag frame"
 msgstr "ramka znacznika id3v2"
 
 msgid "musical-key"
-msgstr ""
+msgstr "klucz muzyczny"
 
 msgid "Initial key in which the sound starts"
+msgstr "Początkowy klucz, w którym zaczyna się dźwięk"
+
+msgid "Buffering..."
+msgstr ""
+
+msgid "Print version information and exit"
+msgstr ""
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr ""
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr ""
+
+msgid "Enable gapless playback"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr ""
+
+msgid "You must provide at least one filename or URI to play."
 msgstr ""

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:31+0200\n"
+"POT-Creation-Date: 2013-09-19 09:44+0200\n"
 "PO-Revision-Date: 2011-09-02 12:02-0000\n"
 "Last-Translator: Rihards Priedītis <rprieditis@gmail.com>\n"
 "Language-Team: Latvian <translation-team-lv@lists.sourceforge.net>\n"
@@ -241,11 +241,23 @@ msgid "Uncompressed gray"
 msgstr "Neatspiests Pelēks attēls"
 
 #, fuzzy, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr "Nesaspiests YUV"
+msgid "Uncompressed packed YUV %s"
+msgstr "Nesaspiests pakots YUV 4:2:2"
 
 #, fuzzy, c-format
-msgid "Uncompressed %s%d-bit %s"
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "Nesaspiesta plakne YUV 4:2:0"
+
+#, fuzzy, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "Nesaspiesta plakne YUV 4:2:0"
+
+#, fuzzy, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "Nesaspiests paletizēts %d-bitu %s"
+
+#, fuzzy, c-format
+msgid "Uncompressed %d-bit %s"
 msgstr "Nesaspiests paletizēts %d-bitu %s"
 
 #, c-format
@@ -504,6 +516,32 @@ msgstr ""
 msgid "Initial key in which the sound starts"
 msgstr ""
 
+msgid "Buffering..."
+msgstr ""
+
+msgid "Print version information and exit"
+msgstr ""
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr ""
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr ""
+
+msgid "Enable gapless playback"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr ""
+
+msgid "You must provide at least one filename or URI to play."
+msgstr ""
+
+#, fuzzy
+#~ msgid "Uncompressed %s YUV %s"
+#~ msgstr "Nesaspiests YUV"
+
 #~ msgid "Master"
 #~ msgstr "Galvenais"
 
@@ -591,14 +629,8 @@ msgstr ""
 #~ msgid "Error while sending gdp payload data to \"%s:%d\"."
 #~ msgstr "Kļūda sūtot gdp iekrāvēja datus uz \"%s:%d\""
 
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "Nesaspiesta plakne YUV 4:2:0"
-
 #~ msgid "Uncompressed planar YVU 4:2:0"
 #~ msgstr "Nesaspiesta plakne YVU 4:2:0"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "Nesaspiests pakots YUV 4:2:2"
 
 #~ msgid "Uncompressed packed YUV 4:1:0"
 #~ msgstr "Nesaspiests pakots YUP 4:1:0"

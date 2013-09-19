@@ -9,7 +9,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:31+0200\n"
+"POT-Creation-Date: 2013-09-19 09:44+0200\n"
 "PO-Revision-Date: 2011-04-28 09:19+0200\n"
 "Last-Translator: Claude Paroz <claude@2xlibre.net>\n"
 "Language-Team: French <traduc@traduc.org>\n"
@@ -244,11 +244,23 @@ msgid "Uncompressed gray"
 msgstr "Image niveaux de gris non compressée"
 
 #, fuzzy, c-format
-msgid "Uncompressed %s YUV %s"
-msgstr "YUV non compressé"
+msgid "Uncompressed packed YUV %s"
+msgstr "YUV empaqueté 4:2:2 non compressé"
 
 #, fuzzy, c-format
-msgid "Uncompressed %s%d-bit %s"
+msgid "Uncompressed semi-planar YUV %s"
+msgstr "YUV planaire 4:2:0 non compressé"
+
+#, fuzzy, c-format
+msgid "Uncompressed planar YUV %s"
+msgstr "YUV planaire 4:2:0 non compressé"
+
+#, fuzzy, c-format
+msgid "Uncompressed palettized %d-bit %s"
+msgstr "%2$s %1$d bits en palette non compressé"
+
+#, fuzzy, c-format
+msgid "Uncompressed %d-bit %s"
 msgstr "%2$s %1$d bits en palette non compressé"
 
 #, c-format
@@ -521,6 +533,32 @@ msgstr ""
 msgid "Initial key in which the sound starts"
 msgstr ""
 
+msgid "Buffering..."
+msgstr ""
+
+msgid "Print version information and exit"
+msgstr ""
+
+msgid "Video sink to use (default is autovideosink)"
+msgstr ""
+
+msgid "Audio sink to use (default is autoaudiosink)"
+msgstr ""
+
+msgid "Enable gapless playback"
+msgstr ""
+
+#, c-format
+msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
+msgstr ""
+
+msgid "You must provide at least one filename or URI to play."
+msgstr ""
+
+#, fuzzy
+#~ msgid "Uncompressed %s YUV %s"
+#~ msgstr "YUV non compressé"
+
 #~ msgid "Master"
 #~ msgstr "Volume général"
 
@@ -557,14 +595,8 @@ msgstr ""
 #~ msgid "Connection to %s:%d refused."
 #~ msgstr "Connexion refusée vers %s:%d."
 
-#~ msgid "Uncompressed planar YUV 4:2:0"
-#~ msgstr "YUV planaire 4:2:0 non compressé"
-
 #~ msgid "Uncompressed planar YVU 4:2:0"
 #~ msgstr "YVU planaire 4:2:0 non compressé"
-
-#~ msgid "Uncompressed packed YUV 4:2:2"
-#~ msgstr "YUV empaqueté 4:2:2 non compressé"
 
 #~ msgid "Uncompressed packed YUV 4:1:0"
 #~ msgstr "YUV empaqueté 4:1:0 non compressé"
