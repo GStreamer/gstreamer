@@ -244,6 +244,7 @@ typedef struct
   GstClockTime timeout;
   GstClockTime duration;
   GstClockTime rtx_base;
+  GstClockTime rtx_delay;
   GstClockTime rtx_retry;
 } TimerData;
 
@@ -1487,7 +1488,8 @@ recalculate_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer)
 
 static TimerData *
 add_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
-    guint16 seqnum, guint num, GstClockTime timeout, GstClockTime duration)
+    guint16 seqnum, guint num, GstClockTime timeout, GstClockTime delay,
+    GstClockTime duration)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   TimerData *timer;
@@ -1504,10 +1506,11 @@ add_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
   timer->type = type;
   timer->seqnum = seqnum;
   timer->num = num;
-  timer->timeout = timeout;
+  timer->timeout = timeout + delay;
   timer->duration = duration;
   if (type == TIMER_TYPE_EXPECTED) {
     timer->rtx_base = timeout;
+    timer->rtx_delay = delay;
     timer->rtx_retry = 0;
   }
   recalculate_timer (jitterbuffer, timer);
@@ -1518,7 +1521,7 @@ add_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
 
 static void
 reschedule_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
-    guint16 seqnum, GstClockTime timeout)
+    guint16 seqnum, GstClockTime timeout, GstClockTime delay)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   gboolean seqchange, timechange;
@@ -1536,10 +1539,11 @@ reschedule_timer (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
       "replace timer for seqnum %d->%d to %" GST_TIME_FORMAT,
       oldseq, seqnum, GST_TIME_ARGS (timeout));
 
-  timer->timeout = timeout;
+  timer->timeout = timeout + delay;
   timer->seqnum = seqnum;
   if (seqchange && timer->type == TIMER_TYPE_EXPECTED) {
     timer->rtx_base = timeout;
+    timer->rtx_delay = delay;
     timer->rtx_retry = 0;
   }
 
@@ -1564,9 +1568,9 @@ set_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
   /* find the seqnum timer */
   timer = find_timer (jitterbuffer, type, seqnum);
   if (timer == NULL) {
-    timer = add_timer (jitterbuffer, type, seqnum, 0, timeout, -1);
+    timer = add_timer (jitterbuffer, type, seqnum, 0, timeout, 0, -1);
   } else {
-    reschedule_timer (jitterbuffer, timer, seqnum, timeout);
+    reschedule_timer (jitterbuffer, timer, seqnum, timeout, 0);
   }
   return timer;
 }
@@ -1633,21 +1637,24 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
       /* max gap, we exceeded the max reorder distance and we don't expect the
        * missing packet to be this reordered */
       if (test->rtx_retry == 0 && test->type == TIMER_TYPE_EXPECTED)
-        reschedule_timer (jitterbuffer, test, test->seqnum, -1);
+        reschedule_timer (jitterbuffer, test, test->seqnum, -1, 0);
     }
   }
 
   if (priv->packet_spacing > 0 && do_next_seqnum && priv->do_retransmission) {
-    GstClockTime expected;
+    GstClockTime expected, delay;
 
     /* calculate expected arrival time of the next seqnum */
-    expected = dts + priv->packet_spacing + (priv->rtx_delay * GST_MSECOND);
+    expected = dts + priv->packet_spacing;
+    delay = priv->rtx_delay * GST_MSECOND;
+
     /* and update/install timer for next seqnum */
     if (timer)
-      reschedule_timer (jitterbuffer, timer, priv->next_in_seqnum, expected);
+      reschedule_timer (jitterbuffer, timer, priv->next_in_seqnum, expected,
+          delay);
     else
       add_timer (jitterbuffer, TIMER_TYPE_EXPECTED, priv->next_in_seqnum, 0,
-          expected, priv->packet_spacing);
+          expected, delay, priv->packet_spacing);
   } else if (timer && timer->type != TIMER_TYPE_DEADLINE) {
     /* if we had a timer, remove it, we don't know when to expect the next
      * packet. */
@@ -1765,7 +1772,7 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
     /* this timer will fire immediately and the lost event will be pushed from
      * the timer thread */
     add_timer (jitterbuffer, TIMER_TYPE_LOST, expected, lost_packets,
-        priv->last_in_dts + duration, gap_time);
+        priv->last_in_dts + duration, 0, gap_time);
 
     expected += lost_packets;
     priv->last_in_dts += gap_time;
@@ -1783,7 +1790,7 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
   }
 
   while (expected < seqnum) {
-    add_timer (jitterbuffer, type, expected, 0, expected_dts, duration);
+    add_timer (jitterbuffer, type, expected, 0, expected_dts, 0, duration);
     expected_dts += duration;
     expected++;
   }
@@ -2311,11 +2318,12 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
       gst_structure_new ("GstRTPRetransmissionRequest",
           "seqnum", G_TYPE_UINT, (guint) timer->seqnum,
           "running-time", G_TYPE_UINT64, timer->rtx_base,
-          "delay", G_TYPE_UINT, GST_TIME_AS_MSECONDS (timer->rtx_retry),
-          "frequency", G_TYPE_UINT, priv->rtx_retry_timeout,
-          "period", G_TYPE_UINT, priv->rtx_retry_period,
-          "deadline", G_TYPE_UINT, priv->latency_ms,
-          "packet-spacing", G_TYPE_UINT64, priv->packet_spacing, NULL));
+          "delay", G_TYPE_UINT,
+          GST_TIME_AS_MSECONDS (timer->rtx_delay + timer->rtx_retry),
+          "frequency", G_TYPE_UINT, priv->rtx_retry_timeout, "period",
+          G_TYPE_UINT, priv->rtx_retry_period, "deadline", G_TYPE_UINT,
+          priv->latency_ms, "packet-spacing", G_TYPE_UINT64,
+          priv->packet_spacing, NULL));
 
   JBUF_UNLOCK (priv);
   gst_pad_push_event (priv->sinkpad, event);
@@ -2323,15 +2331,17 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 
   /* calculate the timeout for the next retransmission attempt */
   timer->rtx_retry += (priv->rtx_retry_timeout * GST_MSECOND);
-  if (timer->rtx_retry > (priv->rtx_retry_period * GST_MSECOND)) {
+  if (timer->rtx_retry + timer->rtx_delay >
+      (priv->rtx_retry_period * GST_MSECOND)) {
     GST_DEBUG_OBJECT (jitterbuffer, "reschedule as LOST timer");
     /* too many retransmission request, we now convert the timer
      * to a lost timer */
     timer->type = TIMER_TYPE_LOST;
+    timer->rtx_delay = 0;
     timer->rtx_retry = 0;
   }
   reschedule_timer (jitterbuffer, timer, timer->seqnum,
-      timer->rtx_base + timer->rtx_retry);
+      timer->rtx_base + timer->rtx_retry, timer->rtx_delay);
 
   return FALSE;
 }
