@@ -621,9 +621,12 @@ gst_test_clock_new_with_start_time (GstClockTime start_time)
 void
 gst_test_clock_set_time (GstTestClock * test_clock, GstClockTime new_time)
 {
-  GstTestClockPrivate *priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+  GstTestClockPrivate *priv;
 
-  g_assert (GST_IS_TEST_CLOCK (test_clock));
+  g_return_if_fail (GST_IS_TEST_CLOCK (test_clock));
+
+  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+
   g_assert_cmpuint (new_time, !=, GST_CLOCK_TIME_NONE);
 
   GST_OBJECT_LOCK (test_clock);
@@ -653,9 +656,12 @@ gst_test_clock_set_time (GstTestClock * test_clock, GstClockTime new_time)
 void
 gst_test_clock_advance_time (GstTestClock * test_clock, GstClockTimeDiff delta)
 {
-  GstTestClockPrivate *priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+  GstTestClockPrivate *priv;
 
-  g_assert (GST_IS_TEST_CLOCK (test_clock));
+  g_return_if_fail (GST_IS_TEST_CLOCK (test_clock));
+
+  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+
   g_assert_cmpint (delta, >=, 0);
   g_assert_cmpuint (delta, <, G_MAXUINT64 - delta);
 
@@ -687,7 +693,7 @@ gst_test_clock_peek_id_count (GstTestClock * test_clock)
 {
   guint result;
 
-  g_assert (GST_IS_TEST_CLOCK (test_clock));
+  g_return_val_if_fail (GST_IS_TEST_CLOCK (test_clock), 0);
 
   GST_OBJECT_LOCK (test_clock);
   result = gst_test_clock_peek_id_count_unlocked (test_clock);
@@ -716,7 +722,7 @@ gst_test_clock_has_id (GstTestClock * test_clock, GstClockID id)
 {
   gboolean result;
 
-  g_assert (GST_IS_TEST_CLOCK (test_clock));
+  g_return_val_if_fail (GST_IS_TEST_CLOCK (test_clock), FALSE);
   g_assert (id != NULL);
 
   GST_OBJECT_LOCK (test_clock);
@@ -748,7 +754,7 @@ gst_test_clock_peek_next_pending_id (GstTestClock * test_clock,
 {
   gboolean result;
 
-  g_assert (GST_IS_TEST_CLOCK (test_clock));
+  g_return_val_if_fail (GST_IS_TEST_CLOCK (test_clock), FALSE);
 
   GST_OBJECT_LOCK (test_clock);
   result = gst_test_clock_peek_next_pending_id_unlocked (test_clock,
@@ -776,9 +782,11 @@ void
 gst_test_clock_wait_for_next_pending_id (GstTestClock * test_clock,
     GstClockID * pending_id)
 {
-  GstTestClockPrivate *priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+  GstTestClockPrivate *priv;
 
-  g_assert (GST_IS_TEST_CLOCK (test_clock));
+  g_return_if_fail (GST_IS_TEST_CLOCK (test_clock));
+
+  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
 
   GST_OBJECT_LOCK (test_clock);
 
@@ -808,9 +816,11 @@ void
 gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
     guint count)
 {
-  GstTestClockPrivate *priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+  GstTestClockPrivate *priv;
 
-  g_assert (GST_IS_TEST_CLOCK (test_clock));
+  g_return_if_fail (GST_IS_TEST_CLOCK (test_clock));
+
+  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
 
   GST_OBJECT_LOCK (test_clock);
 
@@ -835,12 +845,14 @@ gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
 GstClockID
 gst_test_clock_process_next_clock_id (GstTestClock * test_clock)
 {
-  GstTestClockPrivate *priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+  GstTestClockPrivate *priv;
   GstClockID result = NULL;
   GstClockEntryContext *ctx = NULL;
   GList *cur;
 
-  g_assert (GST_IS_TEST_CLOCK (test_clock));
+  g_return_val_if_fail (GST_IS_TEST_CLOCK (test_clock), NULL);
+
+  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
 
   GST_OBJECT_LOCK (test_clock);
 
@@ -899,11 +911,13 @@ gst_test_clock_process_next_clock_id (GstTestClock * test_clock)
 GstClockTime
 gst_test_clock_get_next_entry_time (GstTestClock * test_clock)
 {
-  GstTestClockPrivate *priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+  GstTestClockPrivate *priv;
   GstClockTime result = GST_CLOCK_TIME_NONE;
   GList *imminent_clock_id;
 
-  g_assert (GST_IS_TEST_CLOCK (test_clock));
+  g_return_val_if_fail (GST_IS_TEST_CLOCK (test_clock), GST_CLOCK_TIME_NONE);
+
+  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
 
   GST_OBJECT_LOCK (test_clock);
 
