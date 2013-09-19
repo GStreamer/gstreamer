@@ -336,8 +336,10 @@ typedef struct
   GstPad *test_sink_pad, *test_src_pad;
   GstClock *clock;
   GAsyncQueue *buf_queue;
-  GAsyncQueue *event_queue;
+  GAsyncQueue *sink_event_queue;
+  GAsyncQueue *src_event_queue;
   gint lost_event_count;
+  gint rtx_event_count;
 } TestData;
 
 static GstCaps *
@@ -361,7 +363,8 @@ generate_test_buffer (GstClockTime gst_ts,
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
 
   buf = gst_rtp_buffer_new_allocate (payload_size, 0, 0);
-  GST_BUFFER_TIMESTAMP (buf) = gst_ts;
+  GST_BUFFER_DTS (buf) = gst_ts;
+  GST_BUFFER_PTS (buf) = gst_ts;
 
   gst_rtp_buffer_map (buf, GST_MAP_READWRITE, &rtp);
   gst_rtp_buffer_set_payload_type (&rtp, pcmu_payload_type);
@@ -398,7 +401,24 @@ test_sink_pad_event_cb (GstPad * pad, GstObject * parent, GstEvent * event)
   if (strcmp (gst_structure_get_name (structure), "GstRTPPacketLost") == 0)
     data->lost_event_count++;
 
-  g_async_queue_push (data->event_queue, event);
+  g_async_queue_push (data->sink_event_queue, event);
+  return TRUE;
+}
+
+static gboolean
+test_src_pad_event_cb (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  TestData *data = gst_pad_get_element_private (pad);
+  const GstStructure *structure = gst_event_get_structure (event);
+
+  GST_DEBUG ("got event %" GST_PTR_FORMAT, event);
+
+  if (structure
+      && strcmp (gst_structure_get_name (structure),
+          "GstRTPRetransmissionRequest") == 0)
+    data->rtx_event_count++;
+
+  g_async_queue_push (data->src_event_queue, event);
   return TRUE;
 }
 
@@ -422,33 +442,39 @@ setup_testharness (TestData * data)
   g_assert_cmpint (gst_element_set_state (data->jitter_buffer,
           GST_STATE_PLAYING), !=, GST_STATE_CHANGE_FAILURE);
 
+  /* set up the buf and event queues */
+  data->buf_queue =
+      g_async_queue_new_full ((GDestroyNotify) gst_mini_object_unref);
+  data->sink_event_queue =
+      g_async_queue_new_full ((GDestroyNotify) gst_mini_object_unref);
+  data->src_event_queue =
+      g_async_queue_new_full ((GDestroyNotify) gst_mini_object_unref);
+
+  data->lost_event_count = 0;
+  data->rtx_event_count = 0;
+
   /* link in the test source-pad */
   data->test_src_pad = gst_pad_new ("src", GST_PAD_SRC);
+  gst_pad_set_element_private (data->test_src_pad, data);
+  gst_pad_set_event_function (data->test_src_pad, test_src_pad_event_cb);
   jb_sink_pad = gst_element_get_static_pad (data->jitter_buffer, "sink");
   g_assert_cmpint (gst_pad_link (data->test_src_pad, jb_sink_pad), ==,
       GST_PAD_LINK_OK);
-  g_assert (gst_pad_set_active (data->test_src_pad, TRUE));
   gst_object_unref (jb_sink_pad);
 
   /* link in the test sink-pad */
   data->test_sink_pad = gst_pad_new ("sink", GST_PAD_SINK);
+  gst_pad_set_element_private (data->test_sink_pad, data);
   gst_pad_set_caps (data->test_sink_pad, generate_caps ());
   gst_pad_set_chain_function (data->test_sink_pad, test_sink_pad_chain_cb);
   gst_pad_set_event_function (data->test_sink_pad, test_sink_pad_event_cb);
   jb_src_pad = gst_element_get_static_pad (data->jitter_buffer, "src");
   g_assert_cmpint (gst_pad_link (jb_src_pad, data->test_sink_pad), ==,
       GST_PAD_LINK_OK);
-  g_assert (gst_pad_set_active (data->test_sink_pad, TRUE));
   gst_object_unref (jb_src_pad);
 
-  /* set up the buf and event queues */
-  data->buf_queue =
-      g_async_queue_new_full ((GDestroyNotify) gst_mini_object_unref);
-  data->event_queue =
-      g_async_queue_new_full ((GDestroyNotify) gst_mini_object_unref);
-
-  data->lost_event_count = 0;
-  gst_pad_set_element_private (data->test_sink_pad, data);
+  g_assert (gst_pad_set_active (data->test_src_pad, TRUE));
+  g_assert (gst_pad_set_active (data->test_sink_pad, TRUE));
 
   gst_segment_init (&seg, GST_FORMAT_TIME);
 
@@ -457,7 +483,7 @@ setup_testharness (TestData * data)
   gst_pad_set_caps (data->test_src_pad, generate_caps ());
   gst_pad_push_event (data->test_src_pad, gst_event_new_segment (&seg));
 
-  while ((obj = g_async_queue_try_pop (data->event_queue)))
+  while ((obj = g_async_queue_try_pop (data->sink_event_queue)))
     gst_mini_object_unref (obj);
 }
 
@@ -482,8 +508,10 @@ destroy_testharness (TestData * data)
   g_async_queue_unref (data->buf_queue);
   data->buf_queue = NULL;
 
-  g_async_queue_unref (data->event_queue);
-  data->event_queue = NULL;
+  g_async_queue_unref (data->sink_event_queue);
+  data->sink_event_queue = NULL;
+  g_async_queue_unref (data->src_event_queue);
+  data->src_event_queue = NULL;
 
   data->lost_event_count = 0;
 }
@@ -499,6 +527,7 @@ verify_lost_event (GstEvent * event, guint32 expected_seqnum,
   GstClockTime timestamp;
   GstClockTime duration;
   gboolean late;
+
   g_assert (gst_structure_get_uint (s, "seqnum", &seqnum));
 
   value = gst_structure_get_value (s, "timestamp");
@@ -515,6 +544,37 @@ verify_lost_event (GstEvent * event, guint32 expected_seqnum,
   g_assert_cmpint (timestamp, ==, expected_timestamp);
   g_assert_cmpint (duration, ==, expected_duration);
   g_assert (late == expected_late);
+}
+
+static void
+verify_rtx_event (GstEvent * event, guint32 expected_seqnum,
+    GstClockTime expected_timestamp, guint expected_delay,
+    GstClockTime expected_spacing)
+{
+  const GstStructure *s = gst_event_get_structure (event);
+  const GValue *value;
+  guint32 seqnum;
+  GstClockTime timestamp, spacing;
+  guint delay;
+
+  g_assert (gst_structure_get_uint (s, "seqnum", &seqnum));
+
+  value = gst_structure_get_value (s, "running-time");
+  g_assert (value && G_VALUE_HOLDS_UINT64 (value));
+  timestamp = g_value_get_uint64 (value);
+
+  value = gst_structure_get_value (s, "delay");
+  g_assert (value && G_VALUE_HOLDS_UINT (value));
+  delay = g_value_get_uint (value);
+
+  value = gst_structure_get_value (s, "packet-spacing");
+  g_assert (value && G_VALUE_HOLDS_UINT64 (value));
+  spacing = g_value_get_uint64 (value);
+
+  g_assert_cmpint (seqnum, ==, expected_seqnum);
+  g_assert_cmpint (timestamp, ==, expected_timestamp);
+  g_assert_cmpint (delay, ==, expected_delay);
+  g_assert_cmpint (spacing, ==, expected_spacing);
 }
 
 GST_START_TEST (test_only_one_lost_event_on_large_gaps)
@@ -578,7 +638,7 @@ GST_START_TEST (test_only_one_lost_event_on_large_gaps)
   g_assert (id == test_id);
 
   /* we should now receive a packet-lost-event for buffers 1 through 489 */
-  out_event = g_async_queue_timeout_pop (data.event_queue, timeout);
+  out_event = g_async_queue_timeout_pop (data.sink_event_queue, timeout);
   g_assert (out_event != NULL);
   g_assert_cmpint (data.lost_event_count, ==, 1);
   verify_lost_event (out_event, 1, 1 * GST_MSECOND * 20, GST_MSECOND * 20 * 490,
@@ -673,7 +733,7 @@ GST_START_TEST (test_two_lost_one_arrives_in_time)
       == id);
 
   /* we should now receive a packet-lost-event for buffer 3 */
-  out_event = g_async_queue_timeout_pop (data.event_queue, timeout);
+  out_event = g_async_queue_timeout_pop (data.sink_event_queue, timeout);
   g_assert (out_event != NULL);
   g_assert_cmpint (data.lost_event_count, ==, 1);
   verify_lost_event (out_event, 3, 3 * GST_MSECOND * 20, GST_MSECOND * 20,
@@ -757,7 +817,7 @@ GST_START_TEST (test_late_packets_still_makes_lost_events)
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   /* we should now receive a packet-lost-event for buffer 3 and 4 */
-  out_event = g_async_queue_timeout_pop (data.event_queue, timeout);
+  out_event = g_async_queue_timeout_pop (data.sink_event_queue, timeout);
   g_assert (out_event != NULL);
   g_assert_cmpint (data.lost_event_count, ==, 1);
   verify_lost_event (out_event, 3, 3 * GST_MSECOND * 20, GST_MSECOND * 20 * 2,
@@ -824,11 +884,11 @@ GST_START_TEST (test_all_packets_are_timestamped_zero)
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   /* we should now receive a packet-lost-event for buffer 3 and 4 */
-  out_event = g_async_queue_timeout_pop (data.event_queue, timeout);
+  out_event = g_async_queue_timeout_pop (data.sink_event_queue, timeout);
   g_assert (out_event != NULL);
   verify_lost_event (out_event, 3, 0, 0, FALSE);
 
-  out_event = g_async_queue_timeout_pop (data.event_queue, timeout);
+  out_event = g_async_queue_timeout_pop (data.sink_event_queue, timeout);
   g_assert (out_event != NULL);
   verify_lost_event (out_event, 4, 0, 0, FALSE);
 
@@ -850,6 +910,85 @@ GST_START_TEST (test_all_packets_are_timestamped_zero)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtx_expected_next)
+{
+  TestData data;
+  GstClockID id, tid;
+  GstBuffer *in_buf, *out_buf;
+  GstEvent *out_event;
+  gint jb_latency_ms = 200;
+  GstClockTime timeout = 20 * G_USEC_PER_SEC;
+
+  setup_testharness (&data);
+  g_object_set (data.jitter_buffer, "do-retransmission", TRUE, NULL);
+  g_object_set (data.jitter_buffer, "latency", jb_latency_ms, NULL);
+  g_object_set (data.jitter_buffer, "rtx-retry-period", 120, NULL);
+
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 0);
+
+  /* push the first buffer in */
+  in_buf = generate_test_buffer (0 * GST_MSECOND, TRUE, 0, 0);
+  g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
+
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 20 * GST_MSECOND);
+
+  /* put second buffer, the jitterbuffer should now know that the packet spacing
+   * is 20ms and should ask for retransmission of seqnum 2 in 20ms */
+  in_buf = generate_test_buffer (20 * GST_MSECOND, TRUE, 1, 160);
+  g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
+
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 60 * GST_MSECOND);
+  g_assert (gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock))
+      == id);
+
+  out_event = g_async_queue_timeout_pop (data.src_event_queue, timeout);
+  g_assert (out_event != NULL);
+  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 20, 20 * GST_MSECOND);
+
+  /* now we wait for the next timeout */
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 100 * GST_MSECOND);
+  tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+  g_assert (id == tid);
+
+  out_event = g_async_queue_timeout_pop (data.src_event_queue, timeout);
+  g_assert (out_event != NULL);
+  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 60, 20 * GST_MSECOND);
+
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 140 * GST_MSECOND);
+  tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+  g_assert (id == tid);
+
+  out_event = g_async_queue_timeout_pop (data.src_event_queue, timeout);
+  g_assert (out_event != NULL);
+  verify_rtx_event (out_event, 2, 40 * GST_MSECOND, 100, 20 * GST_MSECOND);
+
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 200 * GST_MSECOND);
+  tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+  g_assert (id == tid);
+
+  out_buf = g_async_queue_timeout_pop (data.buf_queue, timeout);
+  g_assert (out_buf != NULL);
+
+
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 260 * GST_MSECOND);
+  g_assert (gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock))
+      == id);
+
+  /* we should now receive a packet-lost-event for buffer 2 */
+  out_event = g_async_queue_timeout_pop (data.sink_event_queue, timeout);
+  g_assert (out_event != NULL);
+  verify_lost_event (out_event, 2, 40 * GST_MSECOND, 20 * GST_MSECOND, FALSE);
+
+  destroy_testharness (&data);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpjitterbuffer_suite (void)
 {
@@ -865,6 +1004,7 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_two_lost_one_arrives_in_time);
   tcase_add_test (tc_chain, test_late_packets_still_makes_lost_events);
   tcase_add_test (tc_chain, test_all_packets_are_timestamped_zero);
+  tcase_add_test (tc_chain, test_rtx_expected_next);
 
   return s;
 }
