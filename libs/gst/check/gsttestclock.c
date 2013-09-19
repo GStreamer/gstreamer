@@ -785,8 +785,8 @@ gst_test_clock_wait_for_next_pending_id (GstTestClock * test_clock,
   while (priv->entry_contexts == NULL)
     g_cond_wait (&priv->entry_added_cond, GST_OBJECT_GET_LOCK (test_clock));
 
-  g_assert (gst_test_clock_peek_next_pending_id_unlocked (test_clock,
-          pending_id));
+  if (!gst_test_clock_peek_next_pending_id_unlocked (test_clock, pending_id))
+    g_assert_not_reached ();
 
   GST_OBJECT_UNLOCK (test_clock);
 }
