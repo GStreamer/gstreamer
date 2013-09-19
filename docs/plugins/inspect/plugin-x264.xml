@@ -3,7 +3,7 @@
   <description>libx264-based H264 plugins</description>
   <filename>../../ext/x264/.libs/libgstx264.so</filename>
   <basename>libgstx264.so</basename>
-  <version>1.1.4</version>
+  <version>1.1.90</version>
   <license>GPL</license>
   <source>gst-plugins-ugly</source>
   <package>GStreamer Ugly Plug-ins source release</package>
@@ -26,7 +26,7 @@
           <name>src</name>
           <direction>source</direction>
           <presence>always</presence>
-          <details>video/x-h264, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], stream-format=(string){ avc, byte-stream }, alignment=(string)au, profile=(string){ high-10, high, main, baseline, constrained-baseline, high-10-intra }</details>
+          <details>video/x-h264, framerate=(fraction)[ 0/1, 2147483647/1 ], width=(int)[ 1, 2147483647 ], height=(int)[ 1, 2147483647 ], stream-format=(string){ avc, byte-stream }, alignment=(string)au, profile=(string){ high-4:4:4, high-4:2:2, high-10, high, main, baseline, constrained-baseline, high-4:4:4-intra, high-4:2:2-intra, high-10-intra }</details>
         </caps>
       </pads>
     </element>
