@@ -1510,6 +1510,12 @@ _setup_locked (GstDiscoverer * dc)
   ret =
       gst_element_set_state ((GstElement *) dc->priv->pipeline,
       GST_STATE_PAUSED);
+  if (ret == GST_STATE_CHANGE_NO_PREROLL) {
+    GST_DEBUG ("Source is live, switching to PLAYING");
+    ret =
+        gst_element_set_state ((GstElement *) dc->priv->pipeline,
+        GST_STATE_PLAYING);
+  }
   DISCO_LOCK (dc);
 
   GST_DEBUG_OBJECT (dc, "Pipeline going to PAUSED : %s",
