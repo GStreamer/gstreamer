@@ -652,6 +652,7 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
 {
   gboolean ret = TRUE;
   gchar *lfilename = NULL, *tldir = NULL;
+  const gchar *env_scenariodir = g_getenv ("GST_VALIDATE_SCENARIOS_PATH");
 
   if (!scenario_name)
     goto invalid_name;
@@ -664,6 +665,13 @@ gst_validate_scenario_load (GstValidateScenario * scenario,
   if ((ret = _load_scenario_file (scenario, tldir)))
     goto done;
   g_free (tldir);
+
+  if (env_scenariodir) {
+    tldir = g_build_filename (env_scenariodir, lfilename, NULL);
+    if ((ret = _load_scenario_file (scenario, tldir)))
+      goto done;
+    g_free (tldir);
+  }
 
   /* Try from local profiles */
   tldir =
