@@ -33,6 +33,7 @@
 
 /* GLOBAL VARIABLE */
 static guint repeat = 0;
+static gboolean mute = FALSE;
 static GESPipeline *pipeline = NULL;
 static gboolean seenerrors = FALSE;
 static gchar *save_path = NULL;
@@ -382,6 +383,17 @@ create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
    * our timeline in. */
   pipeline = ges_pipeline_new ();
 
+  if (mute) {
+    GstElement *sink = gst_element_factory_make ("fakesink", NULL);
+
+    g_object_set (sink, "sync", TRUE, NULL);
+    ges_pipeline_preview_set_audio_sink (pipeline, sink);
+
+    sink = gst_element_factory_make ("fakesink", NULL);
+    g_object_set (sink, "sync", TRUE, NULL);
+    ges_pipeline_preview_set_video_sink (pipeline, sink);
+  }
+
   /* Add the timeline to that pipeline */
   if (!ges_pipeline_set_timeline (pipeline, timeline))
     goto failure;
@@ -471,8 +483,6 @@ print_enum (GType enum_type)
 {
   GEnumClass *enum_class = G_ENUM_CLASS (g_type_class_ref (enum_type));
   guint i;
-
-  GST_ERROR ("%d", enum_class->n_values);
 
   for (i = 0; i < enum_class->n_values; i++) {
     g_printf ("%s\n", enum_class->values[i].value_nick);
@@ -685,6 +695,8 @@ main (int argc, gchar ** argv)
         "List of pathes to look assets in if they were moved"},
     {"track-types", 'P', 0, G_OPTION_ARG_CALLBACK, &parse_track_type,
         "Defines the track types to be created"},
+    {"mute", 0, 0, G_OPTION_ARG_NONE, &mute,
+        "Mute playback output, which means that we use faksinks"},
     {NULL}
   };
   GOptionContext *ctx;
