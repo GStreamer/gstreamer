@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.1.4
+Release notes for GStreamer Bad Plugins 1.1.90
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -62,31 +62,13 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 706566 : d3dvideosink: bufferpool implementation does not work well with device-lost/resets
-      * 599298 : [tsdemux] Emit codec tags
-      * 697239 : [mpegtsmux] Let prog-map define the program number
-      * 701681 : [regression] NASA HLS stream
-      * 702357 : codecparser: optimize scanning for start code
-      * 703264 : srtp: Key is required even if cipher and auth are null
-      * 704308 : dash: Stream does not play " assertion `client- > active_streams != NULL' failed " 
-      * 704760 : opencv: disparity-map calculation element
-      * 705208 : [dvbsrc] should check if _XOPEN_SOURCE is already defined
-      * 705349 : bluez: avdtpsrc produces error at EOF
-      * 705452 : h264parse: Does not extract width/height/etc from h264-in-mpeg-ps
-      * 705598 : regression h264parse: incorrect keyframe/delta-unit detection
-      * 705661 : dashdemux: segmentNumber attribute of SegmentTemplate element is not being observed
-      * 705667 : vc1parse: some sequence layer handling fixes for advanced profile
-      * 705674 : aiffparse broken
-      * 705675 : aiffparse: invalid SSND data size
-      * 705679 : dashdemux: faulty buffer timestamps when using SegmentTemplate element
-      * 705683 : [srtp] invalid packets results in GST_FLOW_ERROR
-      * 705812 : neonhttpsrc: fails to configure with neon-0.30.0
-      * 705957 : pcapparse: crash due to bad unref
-      * 705993 : aiffparse: fix sticky event warnings in push mode / add tests
-      * 706091 : srtpdec: Shadowed variable causes buffers to be dropped
-      * 706276 : uvch264src: don't error out on incomplete aux data segment with Logitech C920
-      * 706369 : videoparser/mpegvideoparse: bad switch statements
-      * 706574 : directsoundsrc: 'device-name' property for selecting a audio device
+      * 569015 : Generated win32 config.h file in git
+      * 680526 : tsdemux: crashes when seeking in HLS
+      * 703520 : dfbvideosink: port to 1.0
+      * 706957 : avdtpsrc: Support for AAC
+      * 707074 : examples: port directfb test
+      * 707317 : mpegdemux: doesn't send events to pads that are not linked
+      * 708106 : mpegtspacketizer: Incorrect condition checking
 
 ==== Download ====
 
@@ -123,25 +105,21 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alexandre Rostovtsev
+      * Alex Ashley
       * Andoni Morales Alastruey
-      * Arnaud Vrac
       * Bernhard Miller
-      * Chris Bass
-      * David Schleef
       * Edward Hervey
-      * Jesper Larsen
-      * Kishore Arepalli
-      * Lubosz Sarnecki
+      * Iain Lane
+      * Jorge Luis Zapata
+      * Josep Torra
+      * Julien Isorce
+      * Kazunori Kobayashi
+      * Kerrick Staley
       * Matej Knopp
-      * Matthieu Bouron
-      * Miguel Casas-Sanchez
-      * Nicola Murino
       * Olivier Crête
-      * Robert Krakora
       * Sebastian Dröge
-      * Sreerenj Balachandran
+      * Sudip Jain
       * Thiago Santos
       * Tim-Philipp Müller
-      * Zaheer Abbas Merali
+      * Wim Taymans
  

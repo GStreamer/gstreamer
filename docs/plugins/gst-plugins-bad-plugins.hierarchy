@@ -73,6 +73,7 @@ GObject
           GstRTMPSink
           GstShmSink
           GstVideoSink
+            GstDfbVideoSink
             GstEglGlesSink
             GstFBDEVSink
             GstWaylandSink
@@ -154,22 +155,8 @@ GObject
               GstMirror
               GstRotate
               GstSquare
-            GstGrabcut
-            GstOpencvVideoFilter
-              GstCvDilateErode
-                GstCvDilate
-                GstCvErode
-              GstCvEqualizeHist
-              GstCvLaplace
-              GstCvSmooth
-              GstCvSobel
-              GstFaceDetect
-              GstHanddetect
-              GstSkinDetect
-            GstRetinex
             GstRsvgOverlay
             GstSceneChange
-            GstSegmentation
             GstSmooth
             GstSolarize
             GstVideoDiff
@@ -251,9 +238,6 @@ GObject
         GstDashDemux
         GstDecklinkSink
         GstDecklinkSrc
-        GstDisparity
-        GstEdgeDetect
-        GstFaceBlur
         GstFestival
         GstFieldAnalysis
         GstFluidDec
@@ -274,15 +258,12 @@ GObject
         GstMimDec
         GstMimEnc
         GstModPlug
-        GstMotioncells
         GstMpegPSDemux
         GstMssDemux
-        GstOpencvTextOverlay
         GstPcapParse
         GstPitch
         GstPnmdec
         GstPnmenc
-        GstPyramidSegment
         GstRTPBaseDepayload
           GstRTPOpusDepay
           GstRtpDTMFDepay
@@ -302,7 +283,6 @@ GObject
         GstSrtpEnc
         GstTagMux
           GstId3Mux
-        GstTemplateMatch
         GstUvcH264MjpgDemux
         GstVideoDecoder
           GstOpenJPEGDec
@@ -361,6 +341,7 @@ GObject
       GstRegistry
       GstTask
       GstTaskPool
+  GstColorBalanceChannel
   GstEncodingProfile
   GstVdpDevice
   MXFMetadataBase
@@ -439,6 +420,7 @@ GObject
 GInterface
   GTypePlugin
   GstChildProxy
+  GstColorBalance
   GstNavigation
   GstPhotography
   GstPreset

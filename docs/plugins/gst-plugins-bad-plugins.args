@@ -1259,6 +1259,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstDfbVideoSink::layer-mode</NAME>
+<TYPE>GstDfbVideoSinkLayerMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>The layer cooperative level (administrative or exclusive)</NICK>
+<BLURB>The cooperative level handling the access permission (set this to 'administrative' when the cursor is required).</BLURB>
+<DEFAULT>DLSCL_EXCLUSIVE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstGLImageSink::display</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>
@@ -26750,7 +26760,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>physics</NICK>
 <BLURB>water density: from 1 to 4.</BLURB>
-<DEFAULT>7.7486e-304</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26790,7 +26800,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash (Y)</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>4.77773e-299</DEFAULT>
+<DEFAULT>7.74861e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26800,7 +26810,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash (X)</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>0</DEFAULT>
+<DEFAULT>8.20251e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26850,7 +26860,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>2.5642e-321</DEFAULT>
+<DEFAULT>1.19564e-321</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27230,7 +27240,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>2.22824e-321</DEFAULT>
+<DEFAULT>5.68175e-322</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27240,7 +27250,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lthresh</NICK>
 <BLURB>threshold for edge lightening.</BLURB>
-<DEFAULT>9.53547e-322</DEFAULT>
+<DEFAULT>1.56555e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27250,7 +27260,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>6.55625e-321</DEFAULT>
+<DEFAULT>1.56534e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27610,7 +27620,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>1.16956e-316</DEFAULT>
+<DEFAULT>1.5538e-316</DEFAULT>
 </ARG>
 
 <ARG>
@@ -60495,6 +60505,16 @@ Gestures in the defined region of interest will emit messages.</BLURB>
 <NICK>Discont Wait</NICK>
 <BLURB>Window of time in nanoseconds to wait before creating a discontinuity.</BLURB>
 <DEFAULT>1000000000</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAudioMixer::blocksize</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Block Size</NICK>
+<BLURB>Output block size in number of samples.</BLURB>
+<DEFAULT>1024</DEFAULT>
 </ARG>
 
 <ARG>

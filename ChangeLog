@@ -1,9 +1,481 @@
-=== release 1.1.4 ===
+=== release 1.1.90 ===
 
-2013-08-28  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-09-19  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.4
+	  releasing 1.1.90
+
+2013-09-19 09:46:34 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/cs.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/ru.po:
+	* po/uk.po:
+	* po/vi.po:
+	  po: Update translations
+
+2013-09-18 22:36:51 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/eglgles/gstegladaptation.c:
+	* ext/eglgles/gstegladaptation_egl.c:
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: Update for new GstContext API
+
+2013-09-18 22:24:07 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst-libs/gst/egl/egl.c:
+	* gst-libs/gst/egl/egl.h:
+	  egl: Update for new GstContext API
+
+2013-09-17 17:41:39 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/hls/gsthlsdemux.c:
+	  hlsdemux: Reset GstUriDownloader cancellation when restarting to play
+
+2013-09-15 17:09:16 +0530  Sudip Jain <sudip.jain@st.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtspacketizer: Correct condition check for current next indicator
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708106
+
+2013-09-12 12:03:45 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rawparse/gstrawparse.c:
+	* gst/rawparse/gstrawparse.h:
+	  rawparse: fix event order
+	  Delay forwarding the segment event until we pushed caps.
+	  Send STREAM_START in pull mode.
+
+2013-09-12 13:21:37 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  amcvideodec: Don't put the level restrictions on the sinkpad caps
+	  They tend to be inaccurate and having them in the sinkpad caps
+	  prevents playback of files that would otherwise play fine.
+
+2013-09-10 18:51:52 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* gst/mpegtsdemux/mpegtsbase.c:
+	  tsdemux: respect seqnums on seeks
+	  Pass the seqnum to other events that are consequence of the
+	  original seek event
+
+2013-09-10 11:37:55 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  opencv: We also work with OpenCV 2.4.6.1
+
+2013-09-10 08:48:32 +0000  Iain Lane <iain.lane@canonical.com>
+
+	* ext/modplug/gstmodplug.cc:
+	  modplug: Specify directory when including stdafx.h
+	  modplug stopped exposing their directory in their pcfile, meaining
+	  consumers accessing the headers directly fail to build.
+	  http://sourceforge.net/p/modplug-xmms/git/ci/75e9b166982ed637b59ef7cbc1835a09f768923e/
+
+2013-09-09 13:14:13 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* sys/uvch264/gstuvch264_src.c:
+	  uvch264src: Fix small mem leak
+
+2013-09-07 23:09:31 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: don't update src caps if only codec_data differs
+	  https://bugzilla.gnome.org/show_bug.cgi?id=705333
+
+2013-09-05 19:23:10 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* sys/uvch264/gstuvch264_src.c:
+	  uvch264src: Let the caps be NULL if there is no peer
+
+2013-09-05 19:22:51 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* sys/uvch264/gstuvch264_src.c:
+	  uvch264src: No need to drop segment events
+	  In 1.0, segment events are sticky and not additive, no need to prevent
+	  their accumulation.
+
+2013-09-05 19:10:31 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* sys/decklink/gstdecklinksrc.cpp:
+	  decklinksrc: send caps event before segment
+
+2013-09-04 10:58:24 +0100  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: change pool->sink->last_buffer to pool->last_buffer
+	  So that GstEGLImageBufferPool does not depend on GstEglGlesSink
+	  The goal is still to move it into gstegl lib
+
+2013-09-04 10:56:12 +0100  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: buffer pool does not need to maintain a ref on the display
+	  Because it does not use it and also it may not know it when
+	  we create the pool
+
+2013-09-04 10:52:51 +0100  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: add GstEGLImageBufferPoolSendBlockingAllocate callback
+	  The goal here is to prepare GstEGLBufferPool to be moved into
+	  gstegl lib. So it has to not depend on 'gst_eglglessink_queue_object'
+
+2013-09-04 10:48:34 +0100  Julien Isorce <julien.isorce@collabora.co.uk>
+
+	* ext/eglgles/gstegladaptation.h:
+	* ext/eglgles/gstegladaptation_egl.c:
+	* ext/eglgles/gsteglglessink.c:
+	  eglglessink: prepare gst_egl_adaptation_allocate_eglimage to be moved
+	  into gstegl lib or splited between gstegl lib and gstgl lib
+	  because it both depends on egl and gl
+	  So it has to not depend on GstEglAdaptationContext
+
+2013-08-30 13:54:40 +0100  Alex Ashley <bugzilla@ashley-family.net>
+
+	* gst/videoparsers/gsth264parse.c:
+	* tests/check/elements/h264parse.c:
+	  h264parse: Add support for stream-format=avc3
+	  When outputting in AVC3 stream format, the codec_data should not
+	  contain any SPS or PPS, because they are embedded inside the stream.
+	  In case of avc->bytestream h264parse will push the SPS and PPS from
+	  codec_data downstream at the start of the stream, at intervals
+	  controlled by "config-interval" and when there is a codec_data change.
+	  In the case of avc3->bytstream h264parse detects that there is
+	  already SPS/PPS in the stream and sets h264parse->push_codec to FALSE.
+	  Therefore avc3->bytstream was already supported, except for the stream
+	  type.
+	  In the case of bystream->avc h264parse will generate codec_data caps
+	  from the parsed SPS/PPS in the stream. However it does not remove these
+	  SPS/PPS from the stream. bytestream->avc3 is the same as bytestream->avc
+	  except that the codec_data must not have any SPS/PPS in it.
+	  |--------------+-------------+-------------------|
+	  |stream-format | SPS in-band | SPS in codec_data |
+	  |--------------+-------------+-------------------|
+	  | avc          | maybe       | always            |
+	  |--------------+-------------+-------------------|
+	  | avc3         | always      | never             |
+	  |--------------+-------------+-------------------|
+	  Amendment 2 of ISO/IEC 14496-15 (AVC file format) is defining a new
+	  structure for fragmented MP4 called "avc3". The principal difference
+	  between AVC1 and AVC3 is the location of the codec initialisation
+	  data (e.g. SPS, PPS). In AVC1 this data is placed in the initial MOOV box
+	  (moov.trak.mdia.minf.stbl.stsd.avc1) but in AVC3 this data goes in the
+	  first sample of every fragment.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702004
+
+2013-09-03 17:36:08 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/soundtouch/gstbpmdetect.cc:
+	* ext/soundtouch/gstpitch.cc:
+	  soundtouch: Fix compilation with soundtouch 1.4.0
+	  It used FLOAT_SAMPLES/INTEGER_SAMPLES #defines instead of ones properly
+	  prefixed with a namespace.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707390
+
+2013-09-03 11:14:43 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* .gitignore:
+	  .gitignore: ignore new win32 config.h-new
+
+2013-09-03 11:05:02 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  amcvideodec: Port tiled NV12 conversion to 1.0
+
+2013-09-03 10:56:46 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* sys/androidmedia/gstamcvideodec.c:
+	  amcvideodec: Add FIXME comment
+
+2013-08-12 10:16:16 +0000  Jorge Luis Zapata <jzapata@fluendo.com>
+
+	* sys/androidmedia/gstamc-constants.h:
+	* sys/androidmedia/gstamc.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  androidmedia: add support for a new qualcomm colorspace
+
+2013-09-02 23:28:38 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegpsdemux: minor clean-up
+
+2013-09-02 22:54:32 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpegdemux: send events on pads that are not linked
+	  Someone might be waiting for certain events with a probe.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707317
+
+2013-08-28 20:07:48 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/d3dvideosink/Makefile.am:
+	* sys/d3dvideosink/d3dhelpers.c:
+	* sys/d3dvideosink/d3dvideosink.c:
+	  d3dvideosink: disable buffer pools
+	  On a device lost, all the surfaces allocated in the
+	  device need to be released before resetting the device,
+	  which can't be done for the allocated buffers.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706566
+
+2013-09-02 13:40:37 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* Makefile.am:
+	* configure.ac:
+	* win32/MANIFEST:
+	* win32/common/config.h.in:
+	  Change how win32/common/config.h is updated
+	  Generate win32/common/config.h-new directly from config.h.in,
+	  using shell variables in configure and some hard-coded information.
+	  Change top-level makefile so that 'make win32-update' copies the
+	  generated file to win32/common/config.h, which we keep in source
+	  control.  It's kept in source control so that the git tree is
+	  buildable from VS.
+	  This change is similar to the one recently applied to GStreamer
+	  and gst-plugins-good.  The previous config.h file in -bad was in
+	  pretty bad shape, so unlike core and base, I didn't attempt to
+	  leave it strictly the same, but fixed it as necessary.  Needs
+	  testing I cannot do myself.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=569015
+
+2013-09-02 12:19:12 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tests/check/elements/.gitignore:
+	  tests: ignore new aiffparse test binary
+
+2013-09-02 10:29:08 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/soundtouch/gstbpmdetect.cc:
+	* ext/soundtouch/gstpitch.cc:
+	* ext/soundtouch/gstpitch.hh:
+	  soundtouch: Allow compilation against float and integer version of the library
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707270
+
+2013-08-30 21:52:35 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* ext/dash/gstdashdemux.c:
+	  dashdemux: Fix warnings when building in OS X Snow Leopard
+	  gstdashdemux.c:1753: warning: format '%llu' expects type 'long long unsigned int', but argument 8 has type 'long unsigned int'
+	  gstdashdemux.c:2224: warning: format '%llu' expects type 'long long unsigned int', but argument 9 has type 'guint64'
+	  gstdashdemux.c:2224: warning: format '%llu' expects type 'long long unsigned int', but argument 10 has type 'guint64'
+
+2013-08-30 21:36:19 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* ext/dash/gstmpdparser.c:
+	* ext/dash/gstmpdparser.h:
+	  dashdemux: Fix warnings when building in OS X Snow Leopard
+	  gstmpdparser.h:530: warning: type qualifiers ignored on function return type
+	  gstmpdparser.c:4177: warning: type qualifiers ignored on function return type
+
+2013-08-30 09:05:43 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: Use codecparsers macros
+	  note: I/SI also covers the S_I/S_SI variants
+
+2013-08-29 11:02:37 -0700  Kerrick Staley <kerrick@kerrickstaley.com>
+
+	* tests/examples/directfb/gstdfb.c:
+	  examples: port directfb example to 1.0
+	  gst_pad_get_negotiated_caps was removed from 1.0;
+	  gst_pad_get_current_caps should be used instead. See
+	  http://cgit.freedesktop.org/gstreamer/gstreamer/tree/docs/random
+	  /porting-to-1.0.txt
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707074
+
+2013-08-29 15:55:08 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* win32/common/config.h:
+	  win32: update config.h
+
+2013-08-29 15:46:14 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/directfb/dfbvideosink.c:
+	  dfbvideosink: make "layer-mode" property an enum
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703520
+
+2013-08-29 14:48:28 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/directfb/dfbvideosink.c:
+	  dfbvideosink: don't use deprecated GLib thread API
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703520
+
+2013-06-26 11:07:14 +0900  Kazunori Kobayashi <kkobayas@igel.co.jp>
+
+	* configure.ac:
+	* ext/directfb/dfbvideosink.c:
+	* ext/directfb/dfbvideosink.h:
+	  dfbvideosink: port to 1.0
+	  including the following supports and fixes:
+	  * Create DirectFB surfaces from GstBufferPool
+	  * Add NV12 pixel format support
+	  * Don't use the cursor in the exclusive mode
+	  - EnableCusor() can be only used when the administrative mode is set
+	  in DirectFB 1.6.0 and later.
+	  * Support multiple plane rendering for planar color formats
+	  - This accommodates the chroma plane offsets of the framebuffer
+	  in planar formats.
+	  * Invoke SetConfiguration regardless of video mode setting in setcaps()
+	  - SetConfiguration() method should be invoked regardless of
+	  the result of gst_dfbvideosink_get_best_vmode(), since the two are
+	  unrelated.
+	  * Disable DirectFB signal handler
+	  - "--dfb:no-sighandler" option is passed to DirectFBInit().
+	  This prevents DirectFB from trying to kill the process and allows
+	  GStreamer's termination sequence to proceed normally.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=703520
+
+2013-08-29 10:20:56 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* sys/bluez/gstavdtputil.c:
+	  avdtputil: Some minor cleanup and leak fixes
+
+2013-08-28 14:26:04 +0200  Bernhard Miller <bernhard.miller@streamunlimited.com>
+
+	* sys/bluez/a2dp-codecs.h:
+	* sys/bluez/gstavdtpsrc.c:
+	* sys/bluez/gstavdtputil.c:
+	  bluez: support aac in avdtpsrc
+	  Signed-off-by: Bernhard Miller <bernhard.miller@streamunlimited.com>
+
+2013-08-28 13:26:56 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.4 ===
+
+2013-08-28 13:07:27 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-accurip.xml:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-eglglessink.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-neon.xml:
+	* docs/plugins/inspect/plugin-ofa.xml:
+	* docs/plugins/inspect/plugin-openal.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rfbsrc.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-waylandsink.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* gst-plugins-bad.doap:
+	* gst/bayer/gstbayerorc-dist.c:
+	* gst/fieldanalysis/gstfieldanalysisorc-dist.c:
+	* win32/common/config.h:
+	  Release 1.1.4
+
+2013-08-28 13:07:24 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-08-28 12:33:17 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 
