@@ -6,10 +6,10 @@
 # Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.0.3\n"
+"Project-Id-Version: gst-plugins-good 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:49+0200\n"
-"PO-Revision-Date: 2013-03-09 22:52+0200\n"
+"POT-Creation-Date: 2013-09-19 09:45+0200\n"
+"PO-Revision-Date: 2013-09-14 22:23+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -20,7 +20,7 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 
 msgid "Jack server not found"
-msgstr ""
+msgstr "Не знайдено сервера Jack"
 
 msgid "Failed to decode JPEG image"
 msgstr "Помилка при декодуванні зображення JPEG"
@@ -73,6 +73,8 @@ msgstr "Файл є некоректним, його не можна відтв�
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr ""
+"Відтворення потоку даних неможливе, оскільки дані зашифровано за допомогою "
+"PlayReady DRM."
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Файл пошкоджено, його не можна відтворити."
@@ -176,13 +178,11 @@ msgstr "Вхід AUX 1"
 msgid "AUX 2 In"
 msgstr "Вхід AUX 2"
 
-#, fuzzy
 msgid "Codec Loopback"
-msgstr "Заглушка"
+msgstr "Петля кодека"
 
-#, fuzzy
 msgid "SunVTS Loopback"
-msgstr "Заглушка"
+msgstr "Петля SunVTS"
 
 msgid "Volume"
 msgstr "Гучність"

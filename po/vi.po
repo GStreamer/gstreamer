@@ -1,15 +1,15 @@
 # Vietnamese Translation for GST Plugins Good.
-# Copyright © 2012 Free Software Foundation, Inc.
+# Copyright © 2013 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gst-plugins-good package.
 # Clytie Siddall <clytie@riverland.net.au>, 2005-2010.
-# Trần Ngọc Quân <vnwildman@gmail.com>, 2012.
+# Trần Ngọc Quân <vnwildman@gmail.com>, 2012-2013.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good-1.0.3\n"
+"Project-Id-Version: gst-plugins-good-1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:49+0200\n"
-"PO-Revision-Date: 2012-12-02 08:06+0700\n"
+"POT-Creation-Date: 2013-09-19 09:45+0200\n"
+"PO-Revision-Date: 2013-09-16 14:36+0700\n"
 "Last-Translator: Trần Ngọc Quân <vnwildman@gmail.com>\n"
 "Language-Team: Vietnamese <translation-team-vi@lists.sourceforge.net>\n"
 "Language: vi\n"
@@ -20,9 +20,11 @@ msgstr ""
 "Plural-Forms: nplurals=1; plural=0;\n"
 "X-Generator: LocFactoryEditor 1.8\n"
 "X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-Language: Vietnamese\n"
+"X-Poedit-Country: VIET NAM\n"
 
 msgid "Jack server not found"
-msgstr ""
+msgstr "Không tìm thấy máy phục vụ Jack"
 
 msgid "Failed to decode JPEG image"
 msgstr "Gặp lỗi khi giải mã ảnh JPEG"
@@ -52,7 +54,7 @@ msgstr "Cài đặt kết nối an toàn gặp lỗi."
 
 msgid ""
 "A network error occured, or the server closed the connection unexpectedly."
-msgstr "Một lỗi mạng đã xảy ra, hoặc máy chủ đóng kết nối bất ngờ."
+msgstr "Có lỗi mạng đã xảy ra, hoặc máy chủ đóng kết nối bất ngờ."
 
 msgid "Server sent bad data."
 msgstr "Máy chủ gửi dữ liệu sai."
@@ -63,7 +65,7 @@ msgstr "Lỗi luồng dữ liệu nội bộ."
 msgid "No or invalid input audio, AVI stream will be corrupt."
 msgstr ""
 "Chưa có dữ liệu âm thanh nhập, hoặc dữ liệu âm thanh nhập không hợp lệ. Vì "
-"thế luồng AVI hư."
+"thế luồng AVI sẽ hỏng."
 
 msgid "This file contains no playable streams."
 msgstr "Tập tin này không chứa luồng có thể phát."
@@ -72,7 +74,7 @@ msgid "This file is invalid and cannot be played."
 msgstr "Tập tin này không hợp lệ nên không thể phát được."
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
-msgstr ""
+msgstr "Không thể phát luồng dữ liệu bởi vì nó được mã hóa bằng PlayReady DRM."
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Tập tin này bị hỏng nên không thể phát."
@@ -102,8 +104,8 @@ msgid ""
 "protocols or may otherwise be missing the right GStreamer RTSP extension "
 "plugin."
 msgstr ""
-"Không tìm thấy luồng được hỗ trợ. Người dùng có thể cần cho phép thêm giao "
-"thức truyền, hoặc chưa cài đặt phần bổ sung RTSP Gstreamer đúng."
+"Không tìm thấy luồng dữ liệu được hỗ trợ. Người dùng có thể cần cho phép "
+"thêm giao thức truyền, hoặc chưa cài đặt phần bổ sung RTSP Gstreamer đúng."
 
 msgid "Internal data flow error."
 msgstr "Lỗi luồng dữ liệu nội bộ."
@@ -119,8 +121,8 @@ msgid ""
 "Could not open audio device for playback. You don't have permission to open "
 "the device."
 msgstr ""
-"Không thể mở thiết bị âm thanh để phát lại. Bạn không có quyền mở thiết bị "
-"này."
+"Không thể mở thiết bị âm thanh để phát lại. Bạn không có đủ thẩm quyền để mở "
+"thiết bị này."
 
 msgid "Could not open audio device for playback."
 msgstr "Không thể mở thiết bị âm thanh để phát lại."
@@ -160,7 +162,7 @@ msgid "Microphone"
 msgstr "Micrô"
 
 msgid "Line In"
-msgstr "Dây Vào"
+msgstr "Đầu vào"
 
 msgid "Internal CD"
 msgstr "CD ở trong"
@@ -174,13 +176,11 @@ msgstr "AUX 1 Vào"
 msgid "AUX 2 In"
 msgstr "AUX 2 Vào"
 
-#, fuzzy
 msgid "Codec Loopback"
-msgstr "Mạch nội bộ"
+msgstr "Vòng ngược Codec"
 
-#, fuzzy
 msgid "SunVTS Loopback"
-msgstr "Mạch nội bộ"
+msgstr "Vòng ngược SunVTS"
 
 msgid "Volume"
 msgstr "Âm lượng"
@@ -198,7 +198,7 @@ msgid "Headphone"
 msgstr "Tai nghe"
 
 msgid "Line Out"
-msgstr "Dây Ra"
+msgstr "Đầu ra"
 
 msgid "SPDIF Out"
 msgstr "SPDIF Ra"
@@ -277,7 +277,7 @@ msgstr "Gặp lỗi khi lấy đầu vào radio trên thiết bị “%s”."
 
 #, c-format
 msgid "Failed to set input %d on device %s."
-msgstr "Lỗi đặt dữ liệu nhập %d vào thiết bị “%s”."
+msgstr "Gặp lỗi khi đặt dữ liệu nhập %d vào thiết bị “%s”."
 
 #, c-format
 msgid "Failed to change mute state for device '%s'."
@@ -321,7 +321,7 @@ msgstr "Không thể mở thiết bị “%s” để đọc và ghi."
 
 #, c-format
 msgid "Device '%s' is not a capture device."
-msgstr "Thiết bị “%s” không phải là thiết bị bắt gì."
+msgstr "Thiết bị “%s” không phải là thiết bị bắt hình/tiếng."
 
 #, c-format
 msgid "Device '%s' is not a output device."
@@ -329,24 +329,27 @@ msgstr "Thiết bị “%s” không phải là thiết bị xuất ra."
 
 #, c-format
 msgid "Failed to set norm for device '%s'."
-msgstr "Lỗi đặt chỉ tiêu cho thiết bị “%s”."
+msgstr "Gặp lỗi khi đặt chỉ tiêu cho thiết bị “%s”."
 
 #, c-format
 msgid "Failed to get current tuner frequency for device '%s'."
-msgstr "Lỗi lấy tần số hiện thời của thiết bị điều hưởng cho thiết bị “%s”."
+msgstr ""
+"Gặp lỗi khi lấy tần số hiện thời của thiết bị điều chỉnh cộng hưởng cho "
+"thiết bị “%s”."
 
 #, c-format
 msgid "Failed to set current tuner frequency for device '%s' to %lu Hz."
 msgstr ""
-"Lỗi đặt tần số hiện thời của thiết bị điều hưởng cho thiết bị “%s” là %lu Hz."
+"Gặp lỗi khi đặt tần số hiện thời của thiết bị điều chỉnh cộng hưởng cho "
+"thiết bị “%s” là %lu Hz."
 
 #, c-format
 msgid "Failed to get signal strength for device '%s'."
-msgstr "Lỗi lấy biên độ tín hiệu cho thiết bị “%s”."
+msgstr "Gặp lỗi khi lấy biên độ tín hiệu cho thiết bị “%s”."
 
 #, c-format
 msgid "Failed to get value for control %d on device '%s'."
-msgstr "Lỗi lấy giá trị của bộ điều khiển %d trên thiết bị “%s”."
+msgstr "Gặp lỗi khi lấy giá trị của bộ điều khiển %d trên thiết bị “%s”."
 
 #, c-format
 msgid "Failed to set value %d for control %d on device '%s'."

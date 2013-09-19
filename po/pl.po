@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-good.
 # This file is distributed under the same license as the gst-plugins-good package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2012.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2013.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-good 1.0.3\n"
+"Project-Id-Version: gst-plugins-good 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:49+0200\n"
-"PO-Revision-Date: 2012-11-28 19:27+0100\n"
+"POT-Creation-Date: 2013-09-19 09:45+0200\n"
+"PO-Revision-Date: 2013-09-15 11:26+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 
 msgid "Jack server not found"
-msgstr ""
+msgstr "Nie znaleziono serwera Jack"
 
 msgid "Failed to decode JPEG image"
 msgstr "Nie udało się zdekodować obrazu JPEG"
@@ -65,6 +65,7 @@ msgstr "Ten plik jest błędny i nie może być odtworzony."
 
 msgid "Cannot play stream because it is encrypted with PlayReady DRM."
 msgstr ""
+"Nie można odtwarzać strumienia, ponieważ jest zaszyfrowany DRM-em PlayReady."
 
 msgid "This file is corrupt and cannot be played."
 msgstr "Ten plik jest uszkodzony i nie może być odtworzony."
@@ -148,35 +149,31 @@ msgid "Could not open audio device for recording."
 msgstr "Nie udało się otworzyć urządzenia dźwiękowego do nagrywania."
 
 msgid "Record Source"
-msgstr ""
+msgstr "Źródło nagrywania"
 
 msgid "Microphone"
-msgstr ""
+msgstr "Mikrofon"
 
-#, fuzzy
 msgid "Line In"
-msgstr "Wyjście linii"
+msgstr "Wejście linii"
 
 msgid "Internal CD"
-msgstr ""
+msgstr "Wewnętrzny CD"
 
-#, fuzzy
 msgid "SPDIF In"
-msgstr "Wyjście SPDIF"
+msgstr "Wejście SPDIF"
 
-#, fuzzy
 msgid "AUX 1 In"
-msgstr "Wyjście AUX 1"
+msgstr "Wejście AUX 1"
 
-#, fuzzy
 msgid "AUX 2 In"
-msgstr "Wyjście AUX 2"
+msgstr "Wejście AUX 2"
 
 msgid "Codec Loopback"
-msgstr ""
+msgstr "Pętla zwrotna kodeka"
 
 msgid "SunVTS Loopback"
-msgstr ""
+msgstr "Pętla zwrotna SunVTS"
 
 msgid "Volume"
 msgstr "Głośność"
