@@ -32,7 +32,6 @@ typedef struct _GstV4l2BufferPoolClass GstV4l2BufferPoolClass;
 typedef struct _GstV4l2Meta GstV4l2Meta;
 
 #include "gstv4l2object.h"
-//#include "v4l2_calls.h"
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2buffer_debug);
 
