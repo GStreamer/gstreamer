@@ -205,8 +205,8 @@ gboolean
 gst_context_has_context_type (const GstContext * context,
     const gchar * context_type)
 {
-  g_return_val_if_fail (GST_IS_CONTEXT (context), NULL);
-  g_return_val_if_fail (context_type != NULL, NULL);
+  g_return_val_if_fail (GST_IS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (context_type != NULL, FALSE);
 
   return strcmp (context->context_type, context_type) == 0;
 }
