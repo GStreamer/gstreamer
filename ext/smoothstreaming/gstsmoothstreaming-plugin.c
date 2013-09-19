@@ -28,12 +28,9 @@
 
 #include "gstmssdemux.h"
 
-GST_DEBUG_CATEGORY (fragmented_debug);
-
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (fragmented_debug, "fragmented", 0, "fragmented");
   if (!gst_element_register (plugin, "mssdemux",
           GST_RANK_PRIMARY, GST_TYPE_MSS_DEMUX))
     return FALSE;

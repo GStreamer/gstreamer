@@ -8,8 +8,6 @@
 
 #include "gstdashdemux.h"
 
-GST_DEBUG_CATEGORY (fragmented_debug);
-
 #define XML_BUFFER_SIZE 16
 #define XML_INC_BUFFER {                                                \
   pos++;                                                                \
@@ -91,7 +89,6 @@ dash_type_find (GstTypeFind * tf, gpointer unused)
 static gboolean
 fragmented_init (GstPlugin * plugin)
 {
-  GST_DEBUG_CATEGORY_INIT (fragmented_debug, "dashdemux", 0, "dashdemux");
   if (!gst_element_register (plugin, "dashdemux", GST_RANK_PRIMARY,
           GST_TYPE_DASH_DEMUX) || FALSE)
     return FALSE;
