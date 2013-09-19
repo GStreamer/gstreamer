@@ -1,13 +1,13 @@
 # Polish translation for gst-plugins-bad.
 # This file is distributed under the same license as the gst-plugins-bad package.
-# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2011.
+# Jakub Bogusz <qboosh@pld-linux.org>, 2007-2013.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
+"Project-Id-Version: gst-plugins-bad 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 13:05+0200\n"
-"PO-Revision-Date: 2011-04-26 17:57+0200\n"
+"POT-Creation-Date: 2013-09-19 09:46+0200\n"
+"PO-Revision-Date: 2013-09-15 11:29+0200\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -36,16 +36,16 @@ msgid "Could not read DVD."
 msgstr "Nie udało się odczytać DVD."
 
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Ten plik nie zawiera strumieni do odtworzenia."
 
 msgid "Couldn't get the Manifest's URI"
-msgstr ""
+msgstr "Nie udało się uzyskać URI Manifestu"
 
 msgid "Failed to get fragment URL."
-msgstr ""
+msgstr "Nie udało się uzyskać URL-a fragmentu."
 
 msgid "Couldn't download fragments"
-msgstr ""
+msgstr "Nie udało się pobrać fragmentów"
 
 msgid "No file name specified for writing."
 msgstr "Nie określono nazwy pliku do zapisu."
@@ -62,38 +62,40 @@ msgid "Could not write to file \"%s\"."
 msgstr "Nie udało się zapisać danych do pliku \"%s\"."
 
 msgid "Could not establish connection to sndio"
-msgstr ""
+msgstr "Nie udało się ustanowić połączenia z sndio"
 
 msgid "Failed to query sndio capabilities"
-msgstr ""
+msgstr "Nie udało się odpytać o możliwości sndio"
 
-#, fuzzy
 msgid "Could not configure sndio"
-msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
+msgstr "Nie udało się skonfigurować sndio"
 
-#, fuzzy
 msgid "Could not start sndio"
-msgstr "Nie udało się odczytać DVD."
+msgstr "Nie udało się uruchomić sndio"
 
 msgid "Internal data flow error."
 msgstr "Błąd wewnętrzny przepływu danych."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
+"Wygenerowany plik ma dłuższy czas rozbiegówki niż czas trwania strumieni"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
+msgstr "Brak elementu '%s' - proszę sprawdzić instalację GStreamera."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
+"Położenie pliku ustawiono na NULL, proszę ustawić na poprawną nazwę pliku"
 
 msgid "Subpicture format was not configured before data flow"
-msgstr ""
+msgstr "Format podobrazu nie został skonfigurowany przed przepływem danych"
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
+"Podanej nazwy pliku \"%s\" nie można przekształcić do lokalnego kodowania "
+"nazw plików."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -112,15 +114,15 @@ msgid "Could not open file \"%s\" for reading."
 msgstr "Nie udało się otworzyć pliku \"%s\" do odczytu."
 
 msgid "Couldn't find DVB channel configuration file"
-msgstr ""
+msgstr "Nie udało się odnaleźć pliku konfiguracyjnego kanałów DVB"
 
 #, c-format
 msgid "Couldn't load DVB channel configuration file: %s"
-msgstr ""
+msgstr "Nie udało się wczytać pliku konfiguracyjnego kanałów DVB: %s"
 
 msgid "DVB channel configuration file doesn't contain any channels"
-msgstr ""
+msgstr "Plik konfiguracyjny kanałów DVB nie zawiera żadnych kanałów"
 
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
-msgstr ""
+msgstr "Nie udało się odnaleźć szczegółów dla kanału DVB %s"

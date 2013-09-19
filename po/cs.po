@@ -2,28 +2,32 @@
 # Copyright (C) 2007, 2008, 2009 the author(s) of gst-plugins-bad.
 # Copyright (C) 2004 Miloslav Trmac <mitr@volny.cz>.
 # This file is put in the public domain.
+#
 # Miloslav Trmac <mitr@volny.cz>, 2004.
 # Petr Kovar <pknbe@volny.cz>, 2007, 2008, 2009.
+# Marek Černocký <marek@manet.cz>, 2013.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.13.2\n"
+"Project-Id-Version: gst-plugins-bad 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 13:05+0200\n"
-"PO-Revision-Date: 2009-08-29 01:48+0200\n"
-"Last-Translator: Petr Kovar <pknbe@volny.cz>\n"
+"POT-Creation-Date: 2013-09-19 09:46+0200\n"
+"PO-Revision-Date: 2013-09-18 10:05+0200\n"
+"Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: Gtranslator 2.91.6\n"
 
 msgid "Could not read title information for DVD."
 msgstr "Nezdařilo se přečtení informací o titulu DVD."
 
 #, c-format
 msgid "Failed to open DVD device '%s'."
-msgstr "Nezdařilo se otevření zařízení DVD \"%s\"."
+msgstr "Nezdařilo se otevření zařízení DVD „%s“."
 
 msgid "Failed to set PGC based seeking."
 msgstr "Nezdařilo se nastavení hledání založeného na PGC."
@@ -32,182 +36,101 @@ msgid ""
 "Could not read DVD. This may be because the DVD is encrypted and a DVD "
 "decryption library is not installed."
 msgstr ""
+"Nezdařilo se čtení DVD. Může to být tím, že je DVD šifrováno a knihovna pro "
+"dešifrování DVD není nainstalována."
 
-#, fuzzy
 msgid "Could not read DVD."
-msgstr "Nezdařilo se přečtení informací o titulu DVD."
+msgstr "Nezdařilo se čtení DVD."
 
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Tento soubor neobsahuje žádný proud, který by šel přehrát."
 
 msgid "Couldn't get the Manifest's URI"
-msgstr ""
+msgstr "Nelze získat adresu URI prohlášení."
 
 msgid "Failed to get fragment URL."
-msgstr ""
+msgstr "Selhalo získání adresy URL fragmentu."
 
 msgid "Couldn't download fragments"
-msgstr ""
+msgstr "Nelze stáhnout fragmenty"
 
 msgid "No file name specified for writing."
 msgstr "K zápisu nebyl zadán žádný název souboru."
 
 #, c-format
 msgid "Could not open file \"%s\" for writing."
-msgstr "Nezdařilo se otevření souboru \"%s\" k zápisu."
+msgstr "Nezdařilo se otevření souboru „%s“ k zápisu."
 
 msgid "Internal data stream error."
 msgstr "Chyba proudu vnitřních dat."
 
 #, c-format
 msgid "Could not write to file \"%s\"."
-msgstr "Nezdařil se zápis do souboru \"%s\"."
+msgstr "Nezdařil se zápis do souboru „%s“."
 
 msgid "Could not establish connection to sndio"
-msgstr ""
+msgstr "Nelze ustanovit spojení se sndio"
 
 msgid "Failed to query sndio capabilities"
-msgstr ""
+msgstr "Selhalo dotázání sndio na podporované funkce"
 
-#, fuzzy
 msgid "Could not configure sndio"
-msgstr "Nezdařilo se otevření souboru \"%s\" ke čtení."
+msgstr "Nelze nastavit sndio"
 
-#, fuzzy
 msgid "Could not start sndio"
-msgstr "Nezdařilo se přečtení informací o titulu DVD."
+msgstr "Nelze spustit sndio"
 
 msgid "Internal data flow error."
 msgstr "Vnitřní chyba datového toku."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
+"Vygenerovaný soubor má delší čas videa vloženého před začátek (preroll) než "
+"je délka celého jeho proudu"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
-msgstr ""
+msgstr "Schází prvek „%s“ – zkontrolujte svoji instalaci systému GStreamer."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
+"Umístění souboru je nastavené prázdné, nastavte jej prosím na platný název "
+"souboru"
 
 msgid "Subpicture format was not configured before data flow"
-msgstr ""
+msgstr "Formát podřízeného obrázku nebyl nastaven před datovým tokem"
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
+"Zadaný název souboru „%s“ nelze převést do kódování místních názvů souborů."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
-msgstr "Zařízení \"%s\" neexistuje."
+msgstr "Zařízení „%s“ neexistuje."
 
 #, c-format
 msgid "Could not open frontend device \"%s\"."
-msgstr "Nezdařilo se otevření zařízení rozhraní \"%s\"."
+msgstr "Nezdařilo se otevření zařízení rozhraní „%s“."
 
 #, c-format
 msgid "Could not get settings from frontend device \"%s\"."
-msgstr "Ze zařízení rozhraní \"%s\" se nezdařilo získat nastavení."
+msgstr "Ze zařízení rozhraní „%s“ se nezdařilo získat nastavení."
 
 #, c-format
 msgid "Could not open file \"%s\" for reading."
-msgstr "Nezdařilo se otevření souboru \"%s\" ke čtení."
+msgstr "Nezdařilo se otevření souboru „%s“ ke čtení."
 
-#, fuzzy
 msgid "Couldn't find DVB channel configuration file"
-msgstr "Konfigurace kanálu virtuálního směšovače"
+msgstr "Nelze najít soubor s nastavením kanálů DVB"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Couldn't load DVB channel configuration file: %s"
-msgstr "Konfigurace kanálu virtuálního směšovače"
+msgstr "Nelze načíst soubor s nastavením kanálu DVB: %s"
 
 msgid "DVB channel configuration file doesn't contain any channels"
-msgstr ""
+msgstr "Soubor s nastavením kanálů DVB neobsahuje žádné kanály"
 
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
-msgstr ""
-
-#~ msgid "%s %d"
-#~ msgstr "%s %d"
-
-#~ msgid "Internal clock error."
-#~ msgstr "Vnitřní chyba časovače."
-
-#~ msgid "Failed to configure TwoLAME encoder. Check your encoding parameters."
-#~ msgstr ""
-#~ "Nezdařilo se nastavení kodéru TwoLAME. Zkontrolujte prosím parametry "
-#~ "kódování."
-
-#~ msgid ""
-#~ "The requested bitrate %d kbit/s for property '%s' is not allowed. The "
-#~ "bitrate was changed to %d kbit/s."
-#~ msgstr ""
-#~ "Požadovaná přenosová rychlost %d kbit/s vlastnosti \"%s\" není dovolena. "
-#~ "Přenosová rychlost byla změněna na %d kbit/s."
-
-#~ msgid "PCM 1"
-#~ msgstr "PCM 1"
-
-#~ msgid "PCM 2"
-#~ msgstr "PCM 2"
-
-#~ msgid "PCM 3"
-#~ msgstr "PCM 3"
-
-#~ msgid "PCM 4"
-#~ msgstr "PCM 4"
-
-#~ msgid "Green connector function"
-#~ msgstr "Funkce zeleného konektoru"
-
-#~ msgid "Green front panel connector function"
-#~ msgstr "Funkce zeleného konektoru na předním panelu"
-
-#~ msgid "Pink connector function"
-#~ msgstr "Funkce růžového konektoru"
-
-#~ msgid "Pink front panel connector function"
-#~ msgstr "Funkce růžového konektoru na předním panelu"
-
-#~ msgid "Blue connector function"
-#~ msgstr "Funkce modrého konektoru"
-
-#~ msgid "Blue front panel connector function"
-#~ msgstr "Funkce modrého konektoru na předním panelu"
-
-#~ msgid "Orange connector function"
-#~ msgstr "Funkce oranžového konektoru"
-
-#~ msgid "Orange front panel connector function"
-#~ msgstr "Funkce oranžového konektoru na předním panelu"
-
-#~ msgid "Black connector function"
-#~ msgstr "Funkce černého konektoru"
-
-#~ msgid "Black front panel connector function"
-#~ msgstr "Funkce černého konektoru na předním panelu"
-
-#~ msgid "Gray connector function"
-#~ msgstr "Funkce šedého konektoru"
-
-#~ msgid "Gray front panel connector function"
-#~ msgstr "Funkce šedého konektoru na předním panelu"
-
-#~ msgid "White connector function"
-#~ msgstr "Funkce bílého konektoru"
-
-#~ msgid "White front panel connector function"
-#~ msgstr "Funkce bílého konektoru na předním panelu"
-
-#~ msgid "Red connector function"
-#~ msgstr "Funkce červeného konektoru"
-
-#~ msgid "Red front panel connector function"
-#~ msgstr "Funkce červeného konektoru na předním panelu"
-
-#~ msgid "Yellow connector function"
-#~ msgstr "Funkce žlutého konektoru"
-
-#~ msgid "Yellow front panel connector function"
-#~ msgstr "Funkce žlutého konektoru na předním panelu"
+msgstr "Nelze najít podrobnosti ke kanálu DVB %s"

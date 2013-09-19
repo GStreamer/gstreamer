@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gst-plugins-bad package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2011.
+# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-bad 0.10.21.2\n"
+"Project-Id-Version: gst-plugins-bad 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 13:05+0200\n"
-"PO-Revision-Date: 2011-04-30 14:00+0300\n"
+"POT-Creation-Date: 2013-09-19 09:46+0200\n"
+"PO-Revision-Date: 2013-09-14 22:32+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -18,7 +18,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
-"X-Generator: Lokalize 1.2\n"
+"X-Generator: Lokalize 1.5\n"
 
 msgid "Could not read title information for DVD."
 msgstr "Не вдалося прочитати дані щодо записів на DVD."
@@ -41,16 +41,16 @@ msgid "Could not read DVD."
 msgstr "Не вдалося прочитати DVD."
 
 msgid "This file contains no playable streams."
-msgstr ""
+msgstr "Файл не містить потоків, які можна відтворити."
 
 msgid "Couldn't get the Manifest's URI"
-msgstr ""
+msgstr "Не вдалося отримати адреси Manifest"
 
 msgid "Failed to get fragment URL."
-msgstr ""
+msgstr "Не вдалося отримати адреси фрагмента."
 
 msgid "Couldn't download fragments"
-msgstr ""
+msgstr "Не вдалося отримати фрагменти"
 
 msgid "No file name specified for writing."
 msgstr "Не вказано назви файла для запису."
@@ -67,38 +67,43 @@ msgid "Could not write to file \"%s\"."
 msgstr "Спроба запису до файла «%s» завершилася невдало"
 
 msgid "Could not establish connection to sndio"
-msgstr ""
+msgstr "Не вдалося встановити з’єднання з sndio"
 
 msgid "Failed to query sndio capabilities"
-msgstr ""
+msgstr "Не вдалося виконати опитування щодо можливостей sndio"
 
-#, fuzzy
 msgid "Could not configure sndio"
-msgstr "Не вдалося відкрити файл «%s» для читання."
+msgstr "Не вдалося налаштувати sndio"
 
-#, fuzzy
 msgid "Could not start sndio"
-msgstr "Не вдалося прочитати DVD."
+msgstr "Не вдалося задіяти sndio"
 
 msgid "Internal data flow error."
 msgstr "Помилка внутрішнього перенесення даних."
 
 msgid "Generated file has a larger preroll time than its streams duration"
 msgstr ""
+"Створений файл має більше значення випереджувального просування даних ніж "
+"тривалість відтворення збережених у ньому потоків даних"
 
 #, c-format
 msgid "Missing element '%s' - check your GStreamer installation."
 msgstr ""
+"Відсутній елемент «%s». Перевірте, чи встановлено GStreamer належним чином."
 
 msgid "File location is set to NULL, please set it to a valid filename"
 msgstr ""
+"Значенням розташування файла є NULL. Будь ласка, встановіть чинне значення "
+"назви файла."
 
 msgid "Subpicture format was not configured before data flow"
-msgstr ""
+msgstr "Формат підзображення не було налаштовано до створення потоку даних"
 
 #, c-format
 msgid "Given file name \"%s\" can't be converted to local file name encoding."
 msgstr ""
+"Вказану назву файла, «%s», не можна перетворити у локальне кодування назв "
+"файлів."
 
 #, c-format
 msgid "Device \"%s\" does not exist."
@@ -117,15 +122,15 @@ msgid "Could not open file \"%s\" for reading."
 msgstr "Не вдалося відкрити файл «%s» для читання."
 
 msgid "Couldn't find DVB channel configuration file"
-msgstr ""
+msgstr "Не вдалося знайти файла налаштувань каналів DVB"
 
 #, c-format
 msgid "Couldn't load DVB channel configuration file: %s"
-msgstr ""
+msgstr "Не вдалося завантажити файл налаштувань каналів DVB: %s"
 
 msgid "DVB channel configuration file doesn't contain any channels"
-msgstr ""
+msgstr "У файлі налаштувань каналів DVB не міститься даних щодо жодного каналу"
 
 #, c-format
 msgid "Couldn't find details for DVB channel %s"
-msgstr ""
+msgstr "Не вдалося знайти параметрів каналу DVB %s"
