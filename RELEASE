@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.1.4
+Release notes for GStreamer Base Plugins 1.1.90
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -60,25 +60,19 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 703378 : pbutils: Allow getting descriptions for unfixed caps
-      * 660195 : GstDiscoverer: signals " discovered " and " finished " are only emitted in async mode
-      * 553520 : tools: add gst-play utility that wraps playbin for testing purposes
-      * 691462 : typefind: ADTS/AAC wrongly detected as MP2
-      * 695889 : libs: many headers don't compile by themselves
-      * 703405 : parse: Allow creating plain elements instead of single-element bins
-      * 703669 : gst_rtcp_packet_fb_set_fci_length sets an incorrect buffer size.
-      * 704929 : Prevent oggdemux from seeking a lot when the SEQUENTIAL scheduler flag is set
-      * 705109 : audiodecoder/videodecoder: Needs to flush taglist on reception of stream-start
-      * 705144 : mpegvideoparse: support field encoding for interlaced video
-      * 705157 : tests: playbin_complex check fails during make check
-      * 705369 : playbin: fix get-tags actions
-      * 705555 : streamsynchronizer: should forward queries
-      * 705826 : typefinding: add typefinder for webp imageformat
-      * 705828 : videodecoder/videoencoder: Behaviour changes in ::reset() vfunc
-      * 706061 : typefind: improved and extended typefinder for module music
-      * 706569 : regression: playbin: chained oggs don't work any more
-      * 706680 : dmabuf: fix mmap counting
-      * 706885 : videoencoder: Fix forwarding of GstForceKeyUnit events
+      * 588535 : Elements need special handling of interlaced planar YUV formats with vertical subsampling
+      * 688043 : videodecoder: no timestamps for multifilesrc ! jpegdec ! ...
+      * 706340 : videofilter: it might make sense to implement the " transform_meta " virtual method
+      * 706823 : videoconvert: generic conversion produces artifacts
+      * 707158 : POTFILES.in is out of date
+      * 707304 : testsuite FAIL: elements/audioconvert
+      * 707332 : videoencoder: doesn't check for invalid duration
+      * 707611 : rtspsrc state change always blocks when source is offline (waiting for connect timeout)
+      * 707660 : playbin, playsink: typo in convert-sample signal docs
+      * 707765 : id3v2 blob frames are not encapsuled in a GstSample
+      * 707789 : Strings missed in POT
+      * 707793 : dmabuf allocator shouldn't a singleton
+      * 707878 : riff: Add support for TSCC2
 
 ==== Download ====
 
@@ -115,24 +109,17 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alessandro Decina
-      * Andoni Morales Alastruey
-      * Arnaud Vrac
-      * Carlos Rafael Giani
-      * David Schleef
-      * Edward Hervey
-      * Jie Yang
-      * Jonathan Matthew
-      * Lubosz Sarnecki
+      * Alex Ashley
+      * Christian Fredrik Kalager Schaller
+      * Josep Torra
+      * Loïc Minier
+      * Matej Knopp
+      * Mathieu Duponchelle
       * Matthieu Bouron
-      * Michael Olbrich
       * Olivier Crête
-      * Rico Tzschichholz
+      * Piotr Drąg
       * Sebastian Dröge
-      * Sjoerd Simons
-      * Sreerenj Balachandran
-      * Thibault Saunier
+      * Thiago Santos
       * Tim-Philipp Müller
       * Wim Taymans
-      * Youness Alaoui
  

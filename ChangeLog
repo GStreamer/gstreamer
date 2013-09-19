@@ -1,9 +1,481 @@
-=== release 1.1.4 ===
+=== release 1.1.90 ===
 
-2013-08-28  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-09-19  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.4
+	  releasing 1.1.90
+
+2013-09-18 20:42:55 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: If there is no PTS at all, assume it starts from the segment start
+	  This is to make the multifilesrc ! pngdec case work
+	  https://bugzilla.gnome.org/show_bug.cgi?id=688043
+
+2013-09-19 09:44:47 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: Update translations
+
+2013-09-18 22:05:36 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: Implement context caching for sinks that are not in playsink yet
+
+2013-09-18 18:21:54 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: No need to set the GstContext on the sink before activating it
+	  This is all handled by the GstBin code now.
+
+2013-09-04 20:21:54 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst-libs/gst/allocators/gstdmabuf.c:
+	* gst-libs/gst/allocators/gstdmabuf.h:
+	  dmabuf: Make it not a singleton
+	  Makes it easier to track how many users there are
+	  Also make it possible to create a dmabuf struct on systems without mmap,
+	  it just won't be possible to map it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707793
+
+2013-09-13 16:01:42 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	  rtpbuffer: check for valid payload type
+	  The payload type can't be between 72 and 76 because with the marker bit set,
+	  this could be mistaken for an RTCP packet then. We do a relaxed check and
+	  only refuse 72-76 when the marker bit is set. The effect is that when
+	  we try to map an RTCP packet as an RTP packet, we will certainly fail.
+
+2013-09-13 09:17:38 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  configure: rely solely on pkg-config to find libogg and libvorbis
+	  And get rid of AS_SCRUB_INCLUDES
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707658
+
+2013-09-12 12:23:35 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoscale/vs_4tap.c:
+	  videoscale: fix 4tap for RGB15 and RGB16
+	  Fix component ordering, it's wrong in both the scanline and merge
+	  function so it cancels eachother out and isn't really a except for
+	  loss of precision of the green component.
+	  Fix calculation of the filter weight
+
+2013-09-10 17:02:44 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoscale/vs_scanline.c:
+	  videoscale: optimize merge for RGB15 and RGB16
+
+2013-09-10 16:55:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoscale/vs_4tap.c:
+	  videoscale: remove redundant MAX
+	  The checks above make it inpossible for the value to be smaller than
+	  what we check against with the MAX call.
+
+2013-09-12 09:42:36 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	* gst-libs/gst/audio/gstaudioencoder.c:
+	  audioencoder/decoder: Mark pads as requiring reconfiguration again if negotiation fails
+	  Otherwise we might end up in non-optimal configuration, especially
+	  when a flush happened during reconfiguration.
+
+2013-09-12 09:35:00 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  videodecoder/videoencoder: Mark pads as requiring reconfiguration again if negotiation fails
+	  Otherwise we might end up in non-optimal configuration, especially
+	  when a flush happened during reconfiguration.
+
+2013-09-10 21:44:33 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst-libs/gst/pbutils/descriptions.c:
+	  pbutils: Add description for TechSmith Screen Capture 2
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707878
+
+2013-09-10 21:44:21 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff: Add support for TechSmith Screen Capture 2
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707878
+
+2013-09-06 15:36:12 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/ogg/gstoggdemux.c:
+	  oggdemux: check for full eos after a pad goes eos in push mode
+	  After a pad is on EOS, verify if all pads are EOS and return
+	  upstream, avoiding keeping the buffer flow without having more
+	  data to push
+
+2013-09-06 15:56:39 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* ext/ogg/gstoggdemux.c:
+	* ext/ogg/gstoggdemux.h:
+	  oggdemux: properly handle stop position at seeks in push mode
+	  Store the seek stop and seqnum and properly restore them when
+	  receiving the corresponding Segment from upstream. Also fixes
+	  seqnum for converted seek events.
+
+2013-09-10 16:16:51 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoscale/vs_4tap.c:
+	  videoscale: fix RGB15 masks
+
+2013-09-10 16:06:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoscale/vs_scanline.c:
+	  videoscale: simplify YUYV and UYVY linear scaling
+	  Simplify the code and make it handle odd width
+
+2013-09-10 16:05:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoscale/vs_scanline.c:
+	  videoscale: small cleanups
+	  Use BLEND macro
+	  Fix NV12 corner case
+
+2013-09-10 16:03:08 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoscale/vs_scanline.c:
+	  videoscale: fix RGB15 masks
+
+2013-09-10 12:18:16 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoscale/vs_scanline.c:
+	  videoscale: simplify nearest scaling
+	  Round the accumulator to avoid later checks
+	  Remove some bound checks that would never trigger
+	  Fix odd width scaling
+
+2013-09-10 11:31:57 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoscale/vs_image.c:
+	  videoscale: pick nearest line in scaling
+	  Use rounding to pick the nearest line instead of rounding down.
+
+2013-09-03 17:27:37 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* gst-libs/gst/tag/id3v2.c:
+	* gst-libs/gst/tag/tags.c:
+	  tag: id3: encapsulate ID3V2 blob frames in GstSample
+	  id3mux and id3v2mux expect GST_TAG_ID3V2_FRAME type to be stored in a
+	  GstSample and not a buffer, which is also needed because we can't
+	  attach extradata/caps to buffers any more. These are private tags
+	  no one should be poking at, and also the extra info is missing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707765
+
+2013-09-09 19:26:34 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/gst/pbutils/descriptions.c:
+	  pbutils: fix and improve raw video format description strings
+	  Mark terms such as "planar", "packed", and "palettized" as
+	  translatable, and re-arrange strings a bit to make them
+	  better suited for translation.
+	  Also fix bug in yuv descriptions, one plane is packed, more
+	  is planar (or semi-planar).
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707789
+
+2013-09-09 15:52:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/audio/audio.h:
+	* gst-libs/gst/video/gstvideometa.h:
+	* gst-libs/gst/video/video.h:
+	  docs: fix some doc blocks
+
+2013-08-21 23:54:49 +0200  Mathieu Duponchelle <mathieu.duponchelle@epitech.eu>
+
+	* gst-libs/gst/video/gstvideofilter.c:
+	  videofilter: implement transform_meta virtual method.
+	  If tags of the meta only contain "video", let it be copied.
+
+2013-08-21 23:56:15 +0200  Mathieu Duponchelle <mathieu.duponchelle@epitech.eu>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* gst-libs/gst/audio/audio.h:
+	* gst-libs/gst/audio/gstaudiometa.c:
+	* gst-libs/gst/video/gstvideometa.c:
+	* gst-libs/gst/video/video.h:
+	  video/audio: #define metadata strings.
+	  For instance "orientation" becomes GST_VIDEO_ORIENTATION_METADATA.
+
+2013-09-07 19:14:50 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* tools/gst-play.c:
+	  tools: play: set playbin to NULL state on error to flush messages
+	  Just flushing the bus doesn't work here for some reason, so set
+	  playbin to NULL state, which seems to clear all error state and
+	  makes sure we do play the next playable song and don't pick up
+	  'ghost' error messages from previous files on the bus.
+
+2013-09-06 23:17:44 +0200  Loïc Minier <lool@dooz.org>
+
+	* gst/playback/gstplaybin2.c:
+	* gst/playback/gstplaysink.c:
+	  playback: fix docs of convert-sample action signal
+	  convert-sample returns a GstSample, not a GstBuffer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707660
+
+2013-09-06 13:28:00 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/gst/video/video-orc-dist.c:
+	* gst-libs/gst/video/video-orc-dist.h:
+	  video: fix build without orc or older or versions
+	  ./.libs/libgstvideo-1.0.so: undefined reference to `video_orc_unpack_NV24'
+	  ./.libs/libgstvideo-1.0.so: undefined reference to `video_orc_pack_NV24'
+
+2013-09-06 12:44:10 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	  videoconvert: disable fastpath for odd width on some formats
+
+2013-09-06 12:43:27 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video-format.c:
+	* gst-libs/gst/video/video-orc.orc:
+	  video-format: fix NV24 pack/unpack function
+	  We can't reuse the NV12 functions, we need to make new ones.
+
+2013-09-06 12:42:47 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video-format.c:
+	  video-format: handle odd width in more pack/unpack functions
+
+2013-09-05 18:33:28 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* gst-libs/gst/video/video-format.c:
+	  video-format: minor pack_YVYU optimisation
+	  Re-use already calculated line offset.
+
+2013-09-05 17:46:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videotestsrc/videotestsrc.c:
+	  videotestsrc: flush pending lines on odd height
+
+2013-09-05 17:22:50 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	  videoconvert: add additional width/height constraints
+	  Some of the fastpath function can only work with aligned widht/height
+	  so make sure we check this as well when choosing a fastpath.
+	  Add fastpath for I420/YV12 -> BGRx
+
+2013-09-05 17:06:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video-format.c:
+	  video-format: fix chroma offsets
+
+2013-09-05 16:25:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	  videoconvert: don't convert too much with odd width
+
+2013-09-05 16:15:41 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video-format.c:
+	  video-format: fix unpack functions for odd formats
+
+2013-09-05 15:02:17 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video-format.c:
+	  video-format: clean up pack/unpack functions
+
+2013-09-05 14:12:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video-format.c:
+	  video-format: handle odd width in various pack functions
+
+2013-09-05 12:44:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video-format.c:
+	  video-format: don't overrun the arrays on UYVP
+
+2013-09-05 11:05:36 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	  videoconvert: handle lines in one go
+	  Handle odd heights in 1 go when no vertical subsampling is used.
+
+2013-09-05 11:04:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	  videoconvert: fix height round down
+
+2013-09-04 17:34:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	  videoconvert: also allocate temp lines in fastpath
+	  Some of the fastpath functions need tmplines, so make sure we allocate some in
+	  the fastpath too.
+	  This avoids SEGFAULTs with odd heights.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=663248
+
+2013-09-04 17:21:23 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrising.org>
+
+	* gst-plugins-base.spec.in:
+	  Update specfile with latest changes
+
+2013-09-04 15:07:56 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	  videoconvert: add more fastpaths
+	  Also reuse the I420 code for YV12 because it can handle the swapped UV fields
+	  just fine.
+
+2013-06-10 16:06:21 +0100  Alex Ashley <alex.ashley@youview.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: Added "dash" and "avc3" fourCC codes to qt_type_find.
+	  This commit adds detection of the "dash" and "avc3" compatible brands
+	  in qt_type_find.
+	  Amendment 2 of ISO/IEC 14496-15 (AVC file format) is defining a new
+	  structure for fragmented MP4 called "avc3". The principal difference
+	  between AVC1 and AVC3 is the location of the codec initialisation
+	  data (e.g. SPS, PPS). In AVC1 this data is placed in the initial MOOV
+	  box (moov.trak.mdia.minf.stbl.stsd.avc1) but in AVC3 this data goes in
+	  the first sample of every fragment (i.e. the first sample in each mdat
+	  box).  The principal reason for avc3 is to make it easier for client
+	  implementations, because it removes the requirement to insert the
+	  SPS+PPS in to the decoder pipeline every time there is a representation
+	  change.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702004
+
+2013-08-31 01:05:40 +0200  Piotr Drąg <piotrdrag@gmail.com>
+
+	* po/POTFILES.in:
+	  po: update POTFILES.in
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707158
+
+2013-09-03 17:37:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	  videoconvert: only chroma subsample when needed
+
+2013-09-03 15:42:44 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	  videoconvert: fix handling of chroma resample
+	  Increase the number of temporary lines that we need, it is possible that the
+	  up and downsampling offsets are out of phase and that we need to keep some
+	  extra lines around. Also copy the unhandled output lines for the next round
+	  instead of overwriting them.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=706823
+
+2013-09-03 15:41:56 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/videoconvert/videoconvert.c:
+	  videoconvert: improve debug
+
+2013-09-03 00:47:18 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst-libs/gst/video/gstvideoencoder.c:
+	  videoencoder: Check for invalid stop position before calculating a duration from it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707332
+
+2013-08-29 11:17:15 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* configure.ac:
+	  Require orc >= 0.4.18
+	  Which contains important bug-fixes.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=698520
+
+2013-08-30 15:19:32 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst-libs/gst/pbutils/descriptions.c:
+	  pbutils: add description for MSS1 and MSS2 windows media formats
+
+2013-08-30 13:51:47 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* gst-libs/gst/riff/riff-media.c:
+	  riff: Provide correct media type for MSS1 and MSS2
+	  Windows Media Video Screen (WMV Screen) are video formats that
+	  specilise in screencast content. This provides a correct media type
+	  for them instead of just video/x-asf-unknown.
+
+2013-08-28 13:26:38 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.4 ===
+
+2013-08-28 12:41:42 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.1.4
 
 2013-08-28 12:31:23 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 
