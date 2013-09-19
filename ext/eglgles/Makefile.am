@@ -32,7 +32,7 @@ else
 libgsteglglessink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 endif
 
-libgsteglglessink_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
+libgsteglglessink_la_LIBTOOLFLAGS = --tag=CC $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = gsteglglessink.h gstegladaptation.h video_platform_wrapper.h
 
