@@ -32,8 +32,10 @@
  * Since: 1.2
  */
 
+#ifdef HAVE_MMAP
 #include <sys/mman.h>
 #include <unistd.h>
+#endif
 
 /*
  * GstDmaBufMemory
@@ -61,6 +63,7 @@ GST_DEBUG_CATEGORY_STATIC (dmabuf_debug);
 static void
 gst_dmabuf_allocator_free (GstAllocator * allocator, GstMemory * gmem)
 {
+#ifdef HAVE_MMAP
   GstDmaBufMemory *mem = (GstDmaBufMemory *) gmem;
 
   if (mem->data) {
@@ -71,6 +74,7 @@ gst_dmabuf_allocator_free (GstAllocator * allocator, GstMemory * gmem)
   g_mutex_clear (&mem->lock);
   g_slice_free (GstDmaBufMemory, mem);
   GST_DEBUG ("%p: freed", mem);
+#endif
 }
 
 static gpointer
@@ -128,7 +132,7 @@ out:
 static void
 gst_dmabuf_mem_unmap (GstMemory * gmem)
 {
-#if HAVE_MMAP
+#ifdef HAVE_MMAP
   GstDmaBufMemory *mem = (GstDmaBufMemory *) gmem;
   g_mutex_lock (&mem->lock);
 
@@ -146,6 +150,7 @@ gst_dmabuf_mem_unmap (GstMemory * gmem)
 static GstMemory *
 gst_dmabuf_mem_share (GstMemory * gmem, gssize offset, gssize size)
 {
+#ifdef HAVE_MMAP
   GstDmaBufMemory *mem = (GstDmaBufMemory *) gmem;
   GstDmaBufMemory *sub;
   GstMemory *parent;
@@ -170,6 +175,9 @@ gst_dmabuf_mem_share (GstMemory * gmem, gssize offset, gssize size)
   g_mutex_init (&sub->lock);
 
   return GST_MEMORY_CAST (sub);
+#else /* !HAVE_MMAP */
+  return NULL;
+#endif
 }
 
 typedef struct
@@ -249,6 +257,7 @@ gst_dmabuf_allocator_new (void)
 GstMemory *
 gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
 {
+#ifdef HAVE_MMAP
   GstDmaBufMemory *mem;
 
   if (!GST_IS_DMABUF_ALLOCATOR (allocator)) {
@@ -269,6 +278,9 @@ gst_dmabuf_allocator_alloc (GstAllocator * allocator, gint fd, gsize size)
       mem->mem.maxsize);
 
   return (GstMemory *) mem;
+#else /* !HAVE_MMAP */
+  return NULL;
+#endif
 }
 
 /**
