@@ -1,9 +1,352 @@
-=== release 1.1.4 ===
+=== release 1.1.90 ===
 
-2013-08-28  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-09-19  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.4
+	  releasing 1.1.90
+
+2013-09-19 09:49:40 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstcontext.c:
+	* gst/gstcontext.h:
+	* win32/common/libgstreamer.def:
+	  context: Add convenience function gst_context_has_context_type()
+
+2013-09-19 09:42:15 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  po: Update translations
+
+2013-09-18 23:07:31 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstmessage.c:
+	  message: Implement getting the name of the context message types
+
+2013-09-17 21:36:22 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstcontext.c:
+	* gst/gstmessage.c:
+	* gst/gstquery.c:
+	* tests/check/gst/gstcontext.c:
+	  context: Fix unit test for GstContext changes
+
+2013-09-17 14:34:47 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* tools/gst-launch.c:
+	  gst-launch: Update for GstContext changes
+
+2013-09-17 14:29:06 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* docs/gst/gstreamer-sections.txt:
+	* win32/common/libgstreamer.def:
+	  context: Update docs
+
+2013-09-17 14:25:10 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstbin.c:
+	  bin: Implement context caching and propagation again
+
+2013-09-17 13:50:08 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstmessage.c:
+	* gst/gstmessage.h:
+	* gst/gstquark.c:
+	* gst/gstquark.h:
+	* gst/gstquery.c:
+	* gst/gstquery.h:
+	  message/query: Simplify CONTEXT messages/queries to only contain a single type
+
+2013-09-17 13:33:33 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* docs/design/part-context.txt:
+	* gst/gstcontext.c:
+	  context: Update documentation
+
+2013-09-17 13:28:42 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstcontext.c:
+	* gst/gstcontext.h:
+	* gst/gstinfo.c:
+	  context: Change GstContext to contain only a single context
+	  It was unintuitive that GstContext was actually a list of different
+	  contexts. GstContext now is only a type string and a structure to
+	  contain the actual context.
+
+2013-09-17 13:12:28 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstbin.c:
+	* gst/gstelement.c:
+	* gst/gstelement.h:
+	  element: Remove GstContext caching
+
+2013-09-17 13:10:53 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstcontext.c:
+	* gst/gstcontext.h:
+	  context: Add persistent qualifier for a context
+	  Non-persistent contexts are removed when elements go back
+	  to NULL state, persistent contexts are not. Applications
+	  most likely want to set persistent contexts.
+
+2013-09-17 13:10:16 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstquery.h:
+	  query: Make CONTEXT query upstream and downstream
+
+2013-09-17 13:09:34 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstevent.c:
+	* gst/gstevent.h:
+	* gst/gstquark.c:
+	* gst/gstquark.h:
+	  event: Remove CONTEXT downstream event
+	  This is going to be implemented with an upstream query instead
+	  for consistency and simplicity.
+
+2013-09-13 14:41:45 +0200  Jonas Holmberg <jonashg@axis.com>
+
+	* gst/gst.c:
+	  gst: Stop all unused threads in GThreadPool in gst_deinit()
+	  Since the default number of max unused threads in GThreadPool has been
+	  changed from 0 to 2 it needs to be set to 0 to stop all threads or
+	  valgrind will report them as memory leaks.
+
+2013-09-10 16:39:30 +0100  Rico Tzschichholz <ricotz@t-online.de>
+
+	* libs/gst/controller/gstargbcontrolbinding.c:
+	* libs/gst/controller/gstdirectcontrolbinding.c:
+	  controlbindings: fix pspec relaxation for control source properties
+	  The change should have been from PARAM_CONSTRUCT_ONLY to
+	  PARAM_CONSTRUCT, otherwise bindings are affected, since
+	  they look for the CONSTRUCT flag.
+	  See ec55363d
+
+2013-09-10 10:15:03 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gstqueue2.c:
+	  queue2: Only update current level if we already downloaded a range
+	  Otherwise queue->level is NULL and dereferencing that is not a good
+	  idea in general.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707648
+
+2013-09-09 15:40:25 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstmeta.h:
+	  meta: Deprecate GST_META_TAG_MEMORY
+	  The GQuarks are not exported by any public API
+
+2013-08-22 00:02:28 +0200  Mathieu Duponchelle <mathieu.duponchelle@epitech.eu>
+
+	* docs/gst/gstreamer-sections.txt:
+	* gst/gstmeta.h:
+	* win32/common/libgstreamer.def:
+	  meta: Add a #define for memory metadata
+
+2013-08-22 00:01:44 +0200  Mathieu Duponchelle <mathieu.duponchelle@epitech.eu>
+
+	* gst/gstmeta.c:
+	* libs/gst/base/gstbasetransform.c:
+	  basetransform: implement a default transform_meta. If a metadata has no dependency as shown by the tags, copy it.
+
+2013-08-22 21:32:36 +0200  Mathieu Duponchelle <mathieu.duponchelle@epitech.eu>
+
+	* gst/gstmeta.c:
+	* gst/gstmeta.h:
+	  meta: API: Add gst_meta_api_type_get_tags() to get all meta tags.
+
+2013-09-09 14:21:56 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* tests/check/elements/capsfilter.c:
+	  tests/capsfilter: Fix memory leak and compare caps directly instead of strcmp()
+
+2013-09-06 23:03:54 +0200  Sebastian Rasmussen <sebrn@axis.com>
+
+	* tests/check/elements/capsfilter.c:
+	  tests/capsfilter: Test caps-related queries and property
+
+2013-09-06 15:09:46 -0300  Gustavo Noronha Silva <gns@gnome.org>
+
+	* plugins/elements/gstqueue2.c:
+	  Update the buffering state before stalling for more data
+	  In some cases the wait for more data was happening without updating
+	  the buffering state, meaning the API user would not be able to notice
+	  it should pause the pipeline and update UI to indicate that is the
+	  case, the video would likely stutter instead.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707648
+
+2013-09-04 15:28:10 -0300  Thiago Santos <thiago.sousa.santos@collabora.com>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: preserve seqnum on segments after seeks
+	  The seqnum of the segment after a seek should be the same of
+	  the seek event. Downstream elements might rely on seqnums to
+	  identify events related to a seek.
+	  This is particularly important when a demuxer maps a TIME seek
+	  into a BYTES seek for upstream and it needs to identify the
+	  corresponding segment event and map it back into TIME to push
+	  downstream, possibly using the values from the original seek
+	  event.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707530
+
+2013-09-05 14:14:42 +0200  Zaheer Abbas Merali <zaheermerali@gmail.com>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: Don't unref NULL GstCollectData
+	  If a pad is removed while a collectpads element (say adder) is in a chain
+	  function waiting to be collected, there is a possibility that an unref happens
+	  on a NULL pointer.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707536
+
+2013-09-04 17:11:20 +0200  Christian Fredrik Kalager Schaller <uraeus@linuxrising.org>
+
+	* gstreamer.spec.in:
+	  Remove PyXML from spec file, it is not longer needed
+
+2013-09-04 14:40:57 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gsttypefindelement.c:
+	  typefind: Add missing break after handling the GAP event
+	  Thanks to Edward Hervey for noticing.
+
+2013-09-04 09:18:55 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* scripts/gst-plot-timeline.py:
+	* tools/Makefile.am:
+	* tools/gst-plot-timeline.py:
+	  tools: move gst-plot-timeline.py into scripts directory
+	  So it's not in PATH in an uninstalled setup (thwarting
+	  gst-play autocompletion).
+
+2013-09-03 23:59:05 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Don't reduce single queue visible size below its current level
+	  If the multiqueue has automatically grown chances are good that
+	  we will cause the pipeline to starve if the maximum level is reduced
+	  below that automatically grown size.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707156
+
+2013-09-02 13:53:51 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gstoutputselector.c:
+	  outputselector: Don't adjust segment->start to the current time when switching pads
+	  This does not make any sense at all and breaks timestamp->running_time
+	  calculations in unpredictable ways.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707130
+
+2013-08-29 23:18:31 +0200  Mathieu Duponchelle <mathieu.duponchelle@epitech.eu>
+
+	* plugins/elements/gstcapsfilter.c:
+	  capsfilter: Delete link directly in pending_events.
+	  When removing a segment event.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707088
+
+2013-08-29 11:07:38 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* libs/gst/base/gstbasesink.c:
+	  basesink: demote log message, don't spam INFO level when handling buffer lists
+
+2013-08-28 13:26:28 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.4 ===
+
+2013-08-28 12:36:16 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstversion.h:
+	  Release 1.1.4
+
+2013-08-28 12:36:01 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2013-08-28 12:30:00 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 

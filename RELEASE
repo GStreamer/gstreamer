@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 1.1.4
+Release notes for GStreamer 1.1.90
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -43,20 +43,11 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 Bugs fixed in this release
      
       * 701996 : context: Still inconvenient to use and racy
-      * 705835 : queue: Keeps sticky events around after pad deactivation
-      * 704927 : queue2: forward the upstream scheduling flags
-      * 704934 : Clarify the gst buffer query api documentation slightly
-      * 705156 : Small fixes to get make check to finish
-      * 705332 : queue2: global state is affected by buffery query handling
-      * 705350 : automake 1.14 warns very verbosely about subdir-objects
-      * 705621 : baseparse: Add a property to force processing
-      * 705694 : dataqueue: add gst_data_queue_push_force
-      * 705999 : taglist: handle publisher, interpreted-by and key tags
-      * 706160 : query: crash when parsing uri redirection
-      * 706162 : gst_buffer_memcmp() ignores the buffer size if it goes past the gstbuffer
-      * 706360 : queue2: test_simple_shutdown_while_running fails/racy
-      * 706454 : Sample: add gst_sample_copy function
-      * 706600 : basetransform: Don't push out identical caps
+      * 707088 : capsfilter: Don't forget to update pending_events.
+      * 707130 : output-selector: Changes the start of the segment it sends to a pad when making it active
+      * 707156 : multiqueue: Lowering single queue limits below automatically detected limits can cause the pipeline to starve
+      * 707648 : queue2: Update the buffering state before stalling for more data
+      * 707657 : tests/capsfilter: Improving check test code coverage...
 
 ==== Download ====
 
@@ -93,23 +84,15 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Adrian Pardini
-      * Alessandro Decina
-      * Andoni Morales Alastruey
-      * Arnaud Vrac
-      * Brendan Long
-      * Edward Hervey
+      * Christian Fredrik Kalager Schaller
+      * Gustavo Noronha Silva
       * Jonas Holmberg
-      * Kerrick Staley
-      * Kjartan Maraas
-      * Lubosz Sarnecki
-      * Matthieu Bouron
-      * Nicolas Dufresne
-      * Olivier Crête
+      * Matej Knopp
+      * Mathieu Duponchelle
+      * Rico Tzschichholz
       * Sebastian Dröge
-      * Sjoerd Simons
+      * Sebastian Rasmussen
       * Thiago Santos
       * Tim-Philipp Müller
-      * Wim Taymans
-      * Wonchul Lee
+      * Zaheer Abbas Merali
  
