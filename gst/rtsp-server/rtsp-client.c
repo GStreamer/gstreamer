@@ -1425,6 +1425,9 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (media == NULL)
     goto media_not_found;
 
+  if (path[matched] == '\0')
+    goto control_not_found;
+
   /* path is what matched. We can modify the parsed uri in place */
   path[matched] = '\0';
   /* control is remainder */
@@ -1549,6 +1552,13 @@ media_not_found:
   {
     GST_ERROR ("client %p: media '%s' not found", client, path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    return FALSE;
+  }
+control_not_found:
+  {
+    GST_ERROR ("client %p: no control in path '%s'", client, path);
+    send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    g_object_unref (media);
     return FALSE;
   }
 stream_not_found:
