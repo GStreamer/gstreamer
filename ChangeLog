@@ -1,9 +1,97 @@
-=== release 1.1.4 ===
+=== release 1.1.90 ===
 
-2013-08-28  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-09-19  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.4
+	  releasing 1.1.90
+
+2013-09-12 13:56:31 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  avviddec: Initialize strides with the ones of avcodec_default_get_buffer() if we ever call it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704769
+
+2013-09-12 12:41:51 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst-libs/ext/libav:
+	  libav: Update to v9.9
+
+2013-09-12 12:12:23 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavviddec.c:
+	  avviddec: Use the correct context for negotiation
+	  During get_buffer() it can happen that the main context is not
+	  updated yet and only the context passed here has the correct
+	  width, height, etc.
+
+2013-09-12 12:11:29 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavviddec.h:
+	  avviddec: Remember initially used stride and don't allow stride changes
+	  libav does not allow stride changes currently, fall back to
+	  non-direct rendering here:
+	  https://bugzilla.gnome.org/show_bug.cgi?id=704769
+	  https://bugzilla.libav.org/show_bug.cgi?id=556
+
+2013-09-10 21:47:55 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: Add support for TechSmith Screen Capture 2
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707878
+
+2013-08-30 11:48:51 +0100  Alex Ashley <bugzilla@ashley-family.net>
+
+	* ext/libav/gstavcodecmap.c:
+	  avcodecmap: exclude avc3 stream format from AV_CODEC_ID_H264
+	  As part of the changes to support the "avc3" variant of the ISO-BMFF
+	  (see bug #702004) a new stream-format has been created
+	  (video/x-h264, stream-format="avc3", alignment="au") that requires
+	  changes to gstavcodecmap to exclude this format because avdec_h264
+	  expects the SPS and PPS to be in the codec_data.
+	  Amendment 2 of ISO/IEC 14496-15 (AVC file format) is defining a new
+	  structure for fragmented MP4 called "avc3". The principal difference
+	  between AVC1 and AVC3 is the location of the codec initialisation data
+	  (e.g. SPS, PPS). In AVC1 this data is placed in the initial MOOV box
+	  (moov.trak.mdia.minf.stbl.stsd.avc1) but in AVC3 this data goes in the
+	  first sample of every fragment.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=702004
+
+2013-08-30 13:58:14 +0200  Josep Torra <n770galaxy@gmail.com>
+
+	* ext/libav/gstavcodecmap.c:
+	  codecmap: add mapping for MSS1 and MSS2
+	  Windows Media Video Screen (WMV Screen) are video formats that
+	  specilise in screencast content.
+
+2013-08-29 16:53:28 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/libav/gstavauddec.c:
+	* ext/libav/gstavaudenc.c:
+	* ext/libav/gstavviddec.c:
+	* ext/libav/gstavvidenc.c:
+	  libav: avcodec_close() also resets fields like the AVCodec
+	  We need to reload the defaults for the codec after closing it,
+	  otherwise we can't access codec information like the supported
+	  sample rates and can crash.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707040
+
+2013-08-28 13:27:12 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.4 ===
+
+2013-08-28 13:11:19 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.1.4
 
 2013-08-28 12:09:33 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 
