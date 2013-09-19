@@ -77,10 +77,12 @@ gst_video_frame_map_id (GstVideoFrame * frame, GstVideoInfo * info,
     frame->id = meta->id;
     frame->flags = meta->flags;
 
-    for (i = 0; i < info->finfo->n_planes; i++)
+    for (i = 0; i < info->finfo->n_planes; i++) {
+      frame->info.offset[i] = meta->offset[i];
       if (!gst_video_meta_map (meta, i, &frame->map[i], &frame->data[i],
               &frame->info.stride[i], flags))
         goto frame_map_failed;
+    }
   } else {
     /* no metadata, we really need to have the metadata when the id is
      * specified. */
