@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.0.3\n"
+"Project-Id-Version: gstreamer 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:33+0200\n"
-"PO-Revision-Date: 2013-06-07 08:47+0200\n"
+"POT-Creation-Date: 2013-09-19 09:42+0200\n"
+"PO-Revision-Date: 2013-09-18 19:42+0200\n"
 "Last-Translator: Marek Černocký <marek@manet.cz>\n"
 "Language-Team: Czech <translation-team-cs@lists.sourceforge.net>\n"
 "Language: cs\n"
@@ -18,6 +18,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+"X-Generator: Gtranslator 2.91.6\n"
 
 msgid "Print the GStreamer version"
 msgstr "Vypsat verzi systému GStreamer"
@@ -54,6 +55,8 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Změnit režim obarvení ladicího záznamu. Možné režimy: off, on, disable, "
+"auto, unix"
 
 msgid "Disable debugging"
 msgstr "Zakázat ladění"
@@ -256,7 +259,7 @@ msgstr "Vybrané hodiny nelze použít v rouře."
 
 #, c-format
 msgid "Error writing registry cache to %s: %s"
-msgstr ""
+msgstr "Chyba při zápisu mezipaměti registru do %s: %s"
 
 msgid "title"
 msgstr "název"
@@ -793,27 +796,28 @@ msgid "How the image should be rotated or flipped before display"
 msgstr "Jak by měl být obrázek před zobrazením otočen nebo překlopen"
 
 msgid "publisher"
-msgstr ""
+msgstr "vydavatel"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Název vydavatelství nebo vydavatel"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "ztvárnil"
 
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
+"Informace o lidech stojících za mixováním a dalším podobným zpracováním"
 
 msgid ", "
-msgstr ", "
+msgstr "; "
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "Nebyla nalezena žádná adresa URI ovladače pro protokol %s"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "Schéma URI „%s“ není podporováno"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -896,7 +900,7 @@ msgid "Internal clock error."
 msgstr "Interní chyba hodin."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Selhalo namapování vyrovnávací paměti."
 
 msgid "Filter caps"
 msgstr "Filtrovat schopnosti"
@@ -1139,11 +1143,12 @@ msgid "WARNING: from element %s: %s\n"
 msgstr "VAROVÁNÍ: od prvku %s: %s\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr "Předvinuto, čeká se na dokončení ukládání do vyrovnávací paměti…\n"
+msgstr ""
+"Video vložené před začátek, čeká se na dokončení ulokládání do vyrovnávací "
+"paměti…\n"
 
-#, fuzzy
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Předvinuto, čeká se na dokončení ukládání do vyrovnávací paměti…\n"
+msgstr "Video vložené před začátek, čeká se na dokončení průběhu…\n"
 
 msgid "buffering..."
 msgstr "ukládá se do vyrovnávací paměti…"
@@ -1167,15 +1172,15 @@ msgstr "Přerušení: Zastavuje se roura…\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "Průběh: (%s) %s\n"
 
 #, c-format
 msgid "Missing element: %s\n"
 msgstr "Schází prvek: %s\n"
 
 #, fuzzy, c-format
-msgid "Got context from element '%s': %s\n"
-msgstr "VAROVÁNÍ: od prvku %s: %s\n"
+msgid "Got context from element '%s': %s=%s\n"
+msgstr "Obdržen kontext od prvku „%s“: %s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Vypsat štítky (známé také jako metadata)"

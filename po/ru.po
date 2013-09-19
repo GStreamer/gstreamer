@@ -4,13 +4,13 @@
 # Peter Astakhov <astakhovp@mail.ru>, 2005.
 # Артём Попов <artfwo@gmail.com>, 2009.
 # Pavel Maryanov <acid_jack@ukr.net>, 2009.
-# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012.
+# Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.0.3\n"
+"Project-Id-Version: gstreamer-1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:33+0200\n"
-"PO-Revision-Date: 2012-12-01 13:36+0400\n"
+"POT-Creation-Date: 2013-09-19 09:42+0200\n"
+"PO-Revision-Date: 2013-09-15 08:55+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
@@ -56,6 +56,8 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Изменить цветовой режим отладочного вывода. Возможные режимы: off, on, "
+"disable, auto, unix"
 
 msgid "Disable debugging"
 msgstr "Отключить отладку"
@@ -797,27 +799,27 @@ msgid "How the image should be rotated or flipped before display"
 msgstr "Влияет на вращение или поворот изображения перед показом"
 
 msgid "publisher"
-msgstr ""
+msgstr "издатель"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Название студии или издателя"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "в обработке"
 
 msgid "Information about the people behind a remix and similar interpretations"
-msgstr ""
+msgstr "Информация о людях, которые сделали ремикс или подобные обработки"
 
 msgid ", "
 msgstr ", "
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "Для протокола «%s» не найден URI обработчика"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "Схема URI «%s» не поддерживается"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -900,7 +902,7 @@ msgid "Internal clock error."
 msgstr "Внутренняя ошибка синхронизации."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Ошибка при отображении (map) буфера."
 
 msgid "Filter caps"
 msgstr "Фильтровать возможности"
@@ -1141,9 +1143,8 @@ msgstr "ПРЕДУПРЕЖДЕНИЕ: от элемента %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Конвейер подготовлен, ожидается завершение буферизации…\n"
 
-#, fuzzy
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Конвейер подготовлен, ожидается завершение буферизации…\n"
+msgstr "Время предпуска, ожидается завершение процесса…\n"
 
 msgid "buffering..."
 msgstr "буферизация…"
@@ -1166,15 +1167,15 @@ msgstr "Прерывание: Остановка конвейера…\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "Ход выполнения: (%s) %s\n"
 
 #, c-format
 msgid "Missing element: %s\n"
 msgstr "Элемент отсутствует: %s\n"
 
 #, fuzzy, c-format
-msgid "Got context from element '%s': %s\n"
-msgstr "ПРЕДУПРЕЖДЕНИЕ: от элемента %s: %s\n"
+msgid "Got context from element '%s': %s=%s\n"
+msgstr "Получен контекст из элемента «%s»: %s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Выводить теги (метаданные)"

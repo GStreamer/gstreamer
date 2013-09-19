@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer-0.10.30.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:33+0200\n"
+"POT-Creation-Date: 2013-09-19 09:42+0200\n"
 "PO-Revision-Date: 2010-11-29 11:14+0200\n"
 "Last-Translator: Michael Kotsarinis <mk73628@gmail.com>\n"
 "Language-Team: Greek <team@lists.gnome.gr>\n"
@@ -1190,7 +1190,7 @@ msgid "Missing element: %s\n"
 msgstr "δεν υπάρχει στοιχείο «%s»"
 
 #, fuzzy, c-format
-msgid "Got context from element '%s': %s\n"
+msgid "Got context from element '%s': %s=%s\n"
 msgstr "WARNING: από το στοιχείο %s: %s\n"
 
 msgid "Output tags (also known as metadata)"

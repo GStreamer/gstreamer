@@ -1,17 +1,17 @@
-# translation of gstreamer-1.0.3.po to Dutch
+# translation of gstreamer-1.1.4.po to Dutch
 # Dutch translation of gstreamer
 # Copyright (C) 2003-2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 #
 # Thomas Vander Stichele <thomas@apestaart.org>, 2004.
 # Taco Witte <tcwitte@cs.uu.nl>, 2006.
-# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012.
+# Freek de Kruijf <f.de.kruijf@gmail.com>, 2007, 2008, 2009, 2010, 2011, 2012, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.0.3\n"
+"Project-Id-Version: gstreamer 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:33+0200\n"
-"PO-Revision-Date: 2012-11-29 22:42+0100\n"
+"POT-Creation-Date: 2013-09-19 09:42+0200\n"
+"PO-Revision-Date: 2013-09-15 13:39+0200\n"
 "Last-Translator: Freek de Kruijf <f.de.kruijf@gmail.com>\n"
 "Language-Team: Dutch <vertaling@vrijschrift.org>\n"
 "Language: nl\n"
@@ -57,6 +57,8 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Wijzig de modus van kleuring van de debug-log. Mogelijke modi: off, on, "
+"disable, auto, unix"
 
 msgid "Disable debugging"
 msgstr "Debugging uit zetten"
@@ -261,7 +263,7 @@ msgstr "Geselecteerde klok kan niet gebruikt worden in de pijplijn."
 
 #, c-format
 msgid "Error writing registry cache to %s: %s"
-msgstr ""
+msgstr "Fout bij schrijven van registry-cache naar %s: %s"
 
 msgid "title"
 msgstr "titel"
@@ -804,27 +806,28 @@ msgid "How the image should be rotated or flipped before display"
 msgstr "Hoe de afbeelding geroteerd moet worden of gespiegeld bij tonen"
 
 msgid "publisher"
-msgstr ""
+msgstr "uitgever"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Naam of label van de uitgever"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "geïnterpreteerd-door"
 
 msgid "Information about the people behind a remix and similar interpretations"
 msgstr ""
+"Informatie over de mensen achter een remix en soortgelijke interpretaties"
 
 msgid ", "
 msgstr ", "
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "Geen behandelaar van de URI voor het protocol %s gevonden"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "URI-schema '%s' niet ondersteund"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -907,7 +910,7 @@ msgid "Internal clock error."
 msgstr "Interne fout met de klok."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Mappen van buffer is mislukt."
 
 msgid "Filter caps"
 msgstr "Filteropzetstukken"
@@ -1146,9 +1149,8 @@ msgstr "WAARSCHUWING: van element %s: %s\n"
 msgid "Prerolled, waiting for buffering to finish...\n"
 msgstr "Voorbereid, wacht op gereedkomen van de buffering...\n"
 
-#, fuzzy
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Voorbereid, wacht op gereedkomen van de buffering...\n"
+msgstr "Voorbereid, wacht op voortgang om te beëindigen...\n"
 
 msgid "buffering..."
 msgstr "in buffer opslaan..."
@@ -1171,15 +1173,15 @@ msgstr "Interrupt: Pijplijn ingesteld op gestopt ...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "Voortgang: (%s) %s\n"
 
 #, c-format
 msgid "Missing element: %s\n"
 msgstr "ontbrekend element: \"%s\"\n"
 
 #, fuzzy, c-format
-msgid "Got context from element '%s': %s\n"
-msgstr "WAARSCHUWING: van element %s: %s\n"
+msgid "Got context from element '%s': %s=%s\n"
+msgstr "Context verkregen van element '%s': %s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Tags (ook bekend als metadata) weergeven"

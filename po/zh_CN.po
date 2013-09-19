@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.25.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:33+0200\n"
+"POT-Creation-Date: 2013-09-19 09:42+0200\n"
 "PO-Revision-Date: 2010-02-02 18:58+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -1146,7 +1146,7 @@ msgid "Missing element: %s\n"
 msgstr "无组件“%s”"
 
 #, fuzzy, c-format
-msgid "Got context from element '%s': %s\n"
+msgid "Got context from element '%s': %s=%s\n"
 msgstr "警告：来自组件 %s：%s\n"
 
 msgid "Output tags (also known as metadata)"

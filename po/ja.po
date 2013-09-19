@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:33+0200\n"
+"POT-Creation-Date: 2013-09-19 09:42+0200\n"
 "PO-Revision-Date: 2013-08-20 14:56+0900\n"
 "Last-Translator: Makoto Kato <makoto.kt@gmail.com>\n"
 "Language-Team: Japanese <translation-team-ja@lists.sourceforge.net>\n"
@@ -1128,7 +1128,7 @@ msgid "Missing element: %s\n"
 msgstr "エレメントが見つかりません: %s\n"
 
 #, c-format
-msgid "Got context from element '%s': %s\n"
+msgid "Got context from element '%s': %s=%s\n"
 msgstr ""
 
 msgid "Output tags (also known as metadata)"

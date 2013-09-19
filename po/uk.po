@@ -3,13 +3,13 @@
 # This file is distributed under the same license as the gstreamer package.
 #
 # Maxim V. Dziumanenko <dziumanenko@gmail.com>, 2004-2007.
-# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012.
+# Yuri Chornoivan <yurchor@ukr.net>, 2011, 2012, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.0.3\n"
+"Project-Id-Version: gstreamer 1.1.4\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:33+0200\n"
-"PO-Revision-Date: 2012-11-28 20:11+0200\n"
+"POT-Creation-Date: 2013-09-19 09:42+0200\n"
+"PO-Revision-Date: 2013-09-14 22:39+0300\n"
 "Last-Translator: Yuri Chornoivan <yurchor@ukr.net>\n"
 "Language-Team: Ukrainian <translation-team-uk@lists.sourceforge.net>\n"
 "Language: uk\n"
@@ -55,6 +55,8 @@ msgid ""
 "Changes coloring mode of the debug log. Possible modes: off, on, disable, "
 "auto, unix"
 msgstr ""
+"Змінити режим розфарбовування повідомлень діагностичного журналу. Можливі "
+"режими: off, on, disable, auto, unix"
 
 msgid "Disable debugging"
 msgstr "Вимкнути діагностику"
@@ -794,27 +796,27 @@ msgid "How the image should be rotated or flipped before display"
 msgstr "Визначає обертання та віддзеркалення зображення перед показом"
 
 msgid "publisher"
-msgstr ""
+msgstr "поширювач"
 
 msgid "Name of the label or publisher"
-msgstr ""
+msgstr "Назва лейбла або поширювача"
 
 msgid "interpreted-by"
-msgstr ""
+msgstr "інтерпретація"
 
 msgid "Information about the people behind a remix and similar interpretations"
-msgstr ""
+msgstr "Дані щодо тих, ким було виконано ремікс або подібну інтерпретацію"
 
 msgid ", "
 msgstr ", "
 
 #, c-format
 msgid "No URI handler for the %s protocol found"
-msgstr ""
+msgstr "Не знайдено обробника адрес для протоколу %s"
 
 #, c-format
 msgid "URI scheme '%s' not supported"
-msgstr ""
+msgstr "Підтримки схеми адреси «%s» не передбачено"
 
 #, c-format
 msgid "ERROR: from element %s: %s\n"
@@ -897,7 +899,7 @@ msgid "Internal clock error."
 msgstr "Помилка внутрішньої синхронізації."
 
 msgid "Failed to map buffer."
-msgstr ""
+msgstr "Не вдалося отримати місце під буфер."
 
 msgid "Filter caps"
 msgstr "Фільтр можливостей"
@@ -1136,11 +1138,13 @@ msgid "WARNING: from element %s: %s\n"
 msgstr "ПОПЕРЕДЖЕННЯ: у елементі %s: %s\n"
 
 msgid "Prerolled, waiting for buffering to finish...\n"
-msgstr "Виконано preroll, для буферизації для завершення...\n"
+msgstr ""
+"Виконано випереджальне просування даних, очікуємо на завершення "
+"буферизації...\n"
 
-#, fuzzy
 msgid "Prerolled, waiting for progress to finish...\n"
-msgstr "Виконано preroll, для буферизації для завершення...\n"
+msgstr ""
+"Виконано випереджальне просування даних, очікуємо на завершення обробки...\n"
 
 msgid "buffering..."
 msgstr "буферизація..."
@@ -1163,15 +1167,15 @@ msgstr "Переривання: зупинка каналу...\n"
 
 #, c-format
 msgid "Progress: (%s) %s\n"
-msgstr ""
+msgstr "Поступ: (%s) %s\n"
 
 #, c-format
 msgid "Missing element: %s\n"
 msgstr "Не вистачає елемента: %s\n"
 
 #, fuzzy, c-format
-msgid "Got context from element '%s': %s\n"
-msgstr "ПОПЕРЕДЖЕННЯ: у елементі %s: %s\n"
+msgid "Got context from element '%s': %s=%s\n"
+msgstr "Отримано контекст з елемента «%s»: %s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Вивести мітки (також відомі як метадані)"
@@ -1224,16 +1228,17 @@ msgid "ERROR: Pipeline doesn't want to pause.\n"
 msgstr "ПОМИЛКА: канал не може призупинитись.\n"
 
 msgid "Pipeline is live and does not need PREROLL ...\n"
-msgstr "Конвеєр активний та не потребує PREROLL...\n"
+msgstr "Конвеєр активний та не потребує випереджального просування даних...\n"
 
 msgid "Pipeline is PREROLLING ...\n"
-msgstr "Канал у стані PREROLLING...\n"
+msgstr "Канал у стані приготування до випереджального просування даних...\n"
 
 msgid "ERROR: pipeline doesn't want to preroll.\n"
-msgstr "ПОМИЛКА: канал не може перейти у стан preroll.\n"
+msgstr ""
+"ПОМИЛКА: канал не може перейти у стан випереджального просування даних.\n"
 
 msgid "Pipeline is PREROLLED ...\n"
-msgstr "Канал у стані PREROLLED...\n"
+msgstr "Канал у стані випереджального просування даних...\n"
 
 msgid "Setting pipeline to PLAYING ...\n"
 msgstr "Канал переводиться у стан ВІДТВОРЕННЯ...\n"

@@ -5,7 +5,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gstreamer 0.10.29.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-08-28 12:33+0200\n"
+"POT-Creation-Date: 2013-09-19 09:42+0200\n"
 "PO-Revision-Date: 2010-08-16 01:10+0300\n"
 "Last-Translator: Lucian Adrian Grijincu <lucian.grijincu@gmail.com>\n"
 "Language-Team: Romanian <translation-team-ro@lists.sourceforge.net>\n"
@@ -1196,7 +1196,7 @@ msgid "Missing element: %s\n"
 msgstr "niciun element „%s”"
 
 #, fuzzy, c-format
-msgid "Got context from element '%s': %s\n"
+msgid "Got context from element '%s': %s=%s\n"
 msgstr "AVERTISMENT: de la elementul %s: %s\n"
 
 msgid "Output tags (also known as metadata)"
