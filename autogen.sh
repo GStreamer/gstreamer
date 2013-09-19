@@ -88,12 +88,14 @@ toplevel_check $srcfile
 
 # autopoint
 #    first remove patch if necessary, then run autopoint, then reapply
-if test -f po/Makefile.in.in;
-then
-  patch -p0 -R --forward < common/gettext.patch
+if test -d po ; then
+  if test -f po/Makefile.in.in;
+  then
+    patch -p0 -R --forward < common/gettext.patch
+  fi
+  tool_run "$autopoint" "--force" "patch -p0 < common/gettext.patch"
+  patch -p0 < common/gettext.patch
 fi
-tool_run "$autopoint" "--force" "patch -p0 < common/gettext.patch"
-patch -p0 < common/gettext.patch
 
 # aclocal
 if test -f acinclude.m4; then rm acinclude.m4; fi
