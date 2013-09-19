@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plugins 1.1.4
+Release notes for GStreamer Good Plugins 1.1.90
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -57,20 +57,24 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
+      * 646963 : rtpmanager: Only update last_rtcp_send_time when actually sending a report
+      * 687657 : rtpsession: Demux RTCP buffers from the RTP stream
+      * 695090 : rganalysis: fix tests
+      * 702004 : qtdemux: add support for the avc3 sample entry format of the AVC file  format
+      * 704950 : videomixer: add colorspace conversion
       * 705371 : souphttpsrc: Does network operations from the state change thread
-      * 590768 : GstPulseSrc should allow swapping the device used by the stream
-      * 637754 : multipartdemux: time stamp output buffer based on first input buffer not last
-      * 694445 : pulsesink: add support for AAC pass-through
-      * 700264 : qtdemux: ignores first editlist
-      * 702988 : gdkpixbufoverlay: crashes if any property changes during  playback when location property is not set
-      * 705108 : rtpgstpay: Add a config-interval property
-      * 705442 : matroskademux: prints warnings on seek
-      * 705449 : avidemux: sends stream_start event without group_id
-      * 705553 : rtph264pay: Entries of SPS and PPS duplicated
-      * 705760 : rtspsrc produces GLib error
-      * 705959 : souphttpsrc deprecated symbols
-      * 706076 : qtdemux: failed assertion for fragmented mp4 (DASH) streams
-      * 706642 : avimux: unmap the correct buffer
+      * 706955 : autoaudiosink/autovideosink: Introduce " sync " property
+      * 707042 : udpsrc binds to INADDR_ANY instead of multicast group address
+      * 707303 : flacenc: 'Got data flow before stream-start event' warnings
+      * 707340 : qtmux: should NOT use PTS if DTS is missing
+      * 707411 : qtmux: what is purpose of MAX_TOLERATED_LATENESS?
+      * 707530 : qtdemux: Handle segments correctly in push mode seeks
+      * 707688 : matroskademux: leaking buffer and caps when parsing attachments
+      * 707734 : rtp: add payloader and depayloader for 24bit raw audio
+      * 707758 : v4l2: Incorrect UV plane stride value for NV12/NV21 formats
+      * 707886 : videomixer: build fails due to unrenamed files if orc is not installed
+      * 707933 : matroskademux: Wrong UTF8 detection causes wrong detection of subtitle encoding
+      * 708131 : videomixer: undefined reference to `videomixer_video_convert_orc_convert_I420_BGRA'
 
 ==== Download ====
 
@@ -107,21 +111,20 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Akihiro Tsukada
-      * Andoni Morales Alastruey
-      * Chris Bass
-      * David Schleef
-      * Edward Hervey
-      * Kishore Arepalli
-      * Lubosz Sarnecki
+      * Alex Ashley
+      * Andreea Fulger
+      * Bernhard Miller
+      * Christoph Reiter
+      * David Holroyd
+      * Jan Schmidt
       * Matej Knopp
       * Mathieu Duponchelle
-      * Michael Olbrich
       * Olivier Crête
+      * Rico Tzschichholz
       * Sebastian Dröge
-      * Sjoerd Simons
+      * Seán de Búrca
+      * Thiago Santos
       * Thibault Saunier
       * Tim-Philipp Müller
       * Wim Taymans
-      * Youness Alaoui
  

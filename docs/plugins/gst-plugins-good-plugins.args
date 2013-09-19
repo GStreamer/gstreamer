@@ -484,7 +484,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>Multicast Group</NICK>
-<BLURB>The Address of multicast group to join.</BLURB>
+<BLURB>The Address of multicast group to join. DEPRECATED: Use address property instead.</BLURB>
 <DEFAULT>"0.0.0.0"</DEFAULT>
 </ARG>
 
@@ -635,6 +635,16 @@
 <FLAGS>rw</FLAGS>
 <NICK>Bind Address</NICK>
 <BLURB>Address to bind the socket to. This is equivalent to the multicast-group property.</BLURB>
+<DEFAULT>"0.0.0.0"</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstUDPSrc::address</NAME>
+<TYPE>gchar*</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Address</NICK>
+<BLURB>Address to receive packets for. This is equivalent to the multicast-group property for now.</BLURB>
 <DEFAULT>"0.0.0.0"</DEFAULT>
 </ARG>
 
@@ -3879,6 +3889,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstAutoAudioSink::sync</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync</NICK>
+<BLURB>Sync on the clock.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstAutoVideoSink::filter-caps</NAME>
 <TYPE>GstCaps*</TYPE>
 <RANGE></RANGE>
@@ -3896,6 +3916,16 @@
 <NICK>TS Offset</NICK>
 <BLURB>Timestamp offset in nanoseconds.</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstAutoVideoSink::sync</NAME>
+<TYPE>gboolean</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Sync</NICK>
+<BLURB>Sync on the clock.</BLURB>
+<DEFAULT>TRUE</DEFAULT>
 </ARG>
 
 <ARG>

@@ -3,7 +3,7 @@
   <description>Real-time protocol plugins</description>
   <filename>../../gst/rtp/.libs/libgstrtp.so</filename>
   <basename>libgstrtp.so</basename>
-  <version>1.1.4</version>
+  <version>1.1.90</version>
   <license>LGPL</license>
   <source>gst-plugins-good</source>
   <package>GStreamer Good Plug-ins source release</package>
@@ -69,6 +69,48 @@
           <direction>source</direction>
           <presence>always</presence>
           <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)L16, channels=(int)[ 1, 2147483647 ]; application/x-rtp, media=(string)audio, encoding-name=(string)L16, payload=(int)10, clock-rate=(int)44100; application/x-rtp, media=(string)audio, encoding-name=(string)L16, payload=(int)11, clock-rate=(int)44100</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpL24depay</name>
+      <longname>RTP audio depayloader</longname>
+      <class>Codec/Depayloader/Network/RTP</class>
+      <description>Extracts raw 24-bit audio from RTP packets</description>
+      <author>Zeeshan Ali &lt;zak147@yahoo.com&gt;,Wim Taymans &lt;wim.taymans@gmail.com&gt;,David Holroyd &lt;dave@badgers-in-foil.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)L24</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S24BE, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtpL24pay</name>
+      <longname>RTP audio payloader</longname>
+      <class>Codec/Payloader/Network/RTP</class>
+      <description>Payload-encode Raw 24-bit audio into RTP packets (RFC 3190)</description>
+      <author>Wim Taymans &lt;wim.taymans@gmail.com&gt;,David Holroyd &lt;dave@badgers-in-foil.co.uk&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>audio/x-raw, format=(string)S24BE, layout=(string)interleaved, rate=(int)[ 1, 2147483647 ], channels=(int)[ 1, 2147483647 ]</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp, media=(string)audio, payload=(int)[ 96, 127 ], clock-rate=(int)[ 1, 2147483647 ], encoding-name=(string)L24, channels=(int)[ 1, 2147483647 ]</details>
         </caps>
       </pads>
     </element>

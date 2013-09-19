@@ -195,6 +195,7 @@ GObject
           GstRtpJ2KDepay
           GstRtpJPEGDepay
           GstRtpL16Depay
+          GstRtpL24Depay
           GstRtpMP1SDepay
           GstRtpMP2TDepay
           GstRtpMP4ADepay
@@ -223,6 +224,7 @@ GObject
             GstRtpG722Pay
             GstRtpG726Pay
             GstRtpL16Pay
+            GstRtpL24Pay
             GstRtpPcmaPay
             GstRtpPcmuPay
           GstRTPDVPay
