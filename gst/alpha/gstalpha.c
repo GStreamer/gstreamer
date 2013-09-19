@@ -1344,7 +1344,6 @@ static void
 gst_alpha_set_planar_yuv_ayuv (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
-  const guint8 *src;
   guint8 *dest;
   gint width, height;
   gint b_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
@@ -1355,7 +1354,6 @@ gst_alpha_set_planar_yuv_ayuv (const GstVideoFrame * in_frame,
   gint y_stride, uv_stride;
   gint v_subs, h_subs;
 
-  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
@@ -1364,9 +1362,9 @@ gst_alpha_set_planar_yuv_ayuv (const GstVideoFrame * in_frame,
   y_stride = GST_VIDEO_FRAME_COMP_STRIDE (in_frame, 0);
   uv_stride = GST_VIDEO_FRAME_COMP_STRIDE (in_frame, 1);
 
-  srcY_tmp = srcY = src;
-  srcU_tmp = srcU = src + GST_VIDEO_FRAME_COMP_OFFSET (in_frame, 1);
-  srcV_tmp = srcV = src + GST_VIDEO_FRAME_COMP_OFFSET (in_frame, 2);
+  srcY_tmp = srcY = GST_VIDEO_FRAME_COMP_DATA (in_frame, 0);
+  srcU_tmp = srcU = GST_VIDEO_FRAME_COMP_DATA (in_frame, 1);
+  srcV_tmp = srcV = GST_VIDEO_FRAME_COMP_DATA (in_frame, 2);
 
   switch (GST_VIDEO_FRAME_FORMAT (in_frame)) {
     case GST_VIDEO_FORMAT_I420:
@@ -1458,7 +1456,6 @@ static void
 gst_alpha_chroma_key_planar_yuv_ayuv (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
-  const guint8 *src;
   guint8 *dest;
   gint width, height;
   gint b_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
@@ -1479,7 +1476,6 @@ gst_alpha_chroma_key_planar_yuv_ayuv (const GstVideoFrame * in_frame,
   guint8 kfgy_scale = alpha->kfgy_scale;
   guint noise_level2 = alpha->noise_level2;
 
-  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
@@ -1488,9 +1484,9 @@ gst_alpha_chroma_key_planar_yuv_ayuv (const GstVideoFrame * in_frame,
   y_stride = GST_VIDEO_FRAME_COMP_STRIDE (in_frame, 0);
   uv_stride = GST_VIDEO_FRAME_COMP_STRIDE (in_frame, 1);
 
-  srcY_tmp = srcY = src;
-  srcU_tmp = srcU = src + GST_VIDEO_FRAME_COMP_OFFSET (in_frame, 1);
-  srcV_tmp = srcV = src + GST_VIDEO_FRAME_COMP_OFFSET (in_frame, 2);
+  srcY_tmp = srcY = GST_VIDEO_FRAME_COMP_DATA (in_frame, 0);
+  srcU_tmp = srcU = GST_VIDEO_FRAME_COMP_DATA (in_frame, 1);
+  srcV_tmp = srcV = GST_VIDEO_FRAME_COMP_DATA (in_frame, 2);
 
   switch (GST_VIDEO_FRAME_FORMAT (in_frame)) {
     case GST_VIDEO_FORMAT_I420:
@@ -1597,7 +1593,6 @@ static void
 gst_alpha_set_planar_yuv_argb (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
-  const guint8 *src;
   guint8 *dest;
   gint width, height;
   gint b_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
@@ -1612,7 +1607,6 @@ gst_alpha_set_planar_yuv_argb (const GstVideoFrame * in_frame,
   gint r, g, b;
   gint p[4];
 
-  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
@@ -1626,9 +1620,9 @@ gst_alpha_set_planar_yuv_argb (const GstVideoFrame * in_frame,
   y_stride = GST_VIDEO_FRAME_COMP_STRIDE (in_frame, 0);
   uv_stride = GST_VIDEO_FRAME_COMP_STRIDE (in_frame, 1);
 
-  srcY_tmp = srcY = src;
-  srcU_tmp = srcU = src + GST_VIDEO_FRAME_COMP_OFFSET (in_frame, 1);
-  srcV_tmp = srcV = src + GST_VIDEO_FRAME_COMP_OFFSET (in_frame, 2);
+  srcY_tmp = srcY = GST_VIDEO_FRAME_COMP_DATA (in_frame, 0);
+  srcU_tmp = srcU = GST_VIDEO_FRAME_COMP_DATA (in_frame, 1);
+  srcV_tmp = srcV = GST_VIDEO_FRAME_COMP_DATA (in_frame, 2);
 
   switch (GST_VIDEO_FRAME_FORMAT (in_frame)) {
     case GST_VIDEO_FORMAT_I420:
@@ -1693,7 +1687,6 @@ static void
 gst_alpha_chroma_key_planar_yuv_argb (const GstVideoFrame * in_frame,
     GstVideoFrame * out_frame, GstAlpha * alpha)
 {
-  const guint8 *src;
   guint8 *dest;
   gint width, height;
   gint b_alpha = CLAMP ((gint) (alpha->alpha * 255), 0, 255);
@@ -1717,7 +1710,6 @@ gst_alpha_chroma_key_planar_yuv_argb (const GstVideoFrame * in_frame,
   gint matrix[12];
   gint p[4];
 
-  src = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   dest = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
 
   width = GST_VIDEO_FRAME_WIDTH (in_frame);
@@ -1731,9 +1723,9 @@ gst_alpha_chroma_key_planar_yuv_argb (const GstVideoFrame * in_frame,
   y_stride = GST_VIDEO_FRAME_COMP_STRIDE (in_frame, 0);
   uv_stride = GST_VIDEO_FRAME_COMP_STRIDE (in_frame, 1);
 
-  srcY_tmp = srcY = src;
-  srcU_tmp = srcU = src + GST_VIDEO_FRAME_COMP_OFFSET (in_frame, 1);
-  srcV_tmp = srcV = src + GST_VIDEO_FRAME_COMP_OFFSET (in_frame, 2);
+  srcY_tmp = srcY = GST_VIDEO_FRAME_COMP_DATA (in_frame, 0);
+  srcU_tmp = srcU = GST_VIDEO_FRAME_COMP_DATA (in_frame, 1);
+  srcV_tmp = srcV = GST_VIDEO_FRAME_COMP_DATA (in_frame, 2);
 
   switch (GST_VIDEO_FRAME_FORMAT (in_frame)) {
     case GST_VIDEO_FORMAT_I420:
