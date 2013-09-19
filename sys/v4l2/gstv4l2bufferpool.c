@@ -682,9 +682,9 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
   meta->vbuffer.bytesused = gst_buffer_get_size (buf);
 
   GST_LOG_OBJECT (pool,
-      "enqueue buffer %p, index:%d, queued:%d, flags:%08x used:%d",
+      "enqueue buffer %p, index:%d, queued:%d, flags:%08x mem:%p used:%d",
       buf, index, pool->num_queued, meta->vbuffer.flags,
-      meta->vbuffer.bytesused);
+      meta->mem, meta->vbuffer.bytesused);
 
   if (pool->buffers[index] != NULL)
     goto already_queued;
@@ -720,6 +720,7 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
   struct v4l2_buffer vbuffer;
   GstV4l2Object *obj = pool->obj;
   GstClockTime timestamp;
+  GstV4l2Meta *meta;
 
   if ((res = gst_v4l2_object_poll (obj)) != GST_FLOW_OK)
     goto poll_error;
@@ -750,10 +751,13 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
 
   timestamp = GST_TIMEVAL_TO_TIME (vbuffer.timestamp);
 
+  meta = GST_V4L2_META_GET (outbuf);
+  g_assert (meta != NULL);
+
   GST_LOG_OBJECT (pool,
-      "dequeued buffer %p seq:%d (ix=%d), used %d, flags %08x, ts %"
+      "dequeued buffer %p seq:%d (ix=%d), mem %p used %d, flags %08x, ts %"
       GST_TIME_FORMAT ", pool-queued=%d, buffer=%p", outbuf, vbuffer.sequence,
-      vbuffer.index, vbuffer.bytesused, vbuffer.flags,
+      vbuffer.index, meta->mem, vbuffer.bytesused, vbuffer.flags,
       GST_TIME_ARGS (timestamp), pool->num_queued, outbuf);
 
   /* set top/bottom field first if v4l2_buffer has the information */
@@ -764,9 +768,17 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
     GST_BUFFER_FLAG_UNSET (outbuf, GST_VIDEO_BUFFER_FLAG_TFF);
   }
 
-  /* this can change at every frame, esp. with jpeg */
-  if (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE)
-    gst_buffer_resize (outbuf, 0, vbuffer.bytesused);
+  /* The size can change at every frame, esp. with jpeg. The GstMemory
+   * inside the GstBuffer could have been changed by some other
+   * element, so just put back the original one. We always set it as
+   * no share, so if it's not there, it's not used at all.
+   */
+  if (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
+    gst_buffer_remove_all_memory (outbuf);
+    gst_buffer_append_memory (outbuf,
+        gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
+            meta->mem, vbuffer.length, 0, vbuffer.bytesused, NULL, NULL));
+  }
 
   GST_BUFFER_TIMESTAMP (outbuf) = timestamp;
 
@@ -882,8 +894,9 @@ gst_v4l2_buffer_pool_acquire_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
             }
 #endif
 
-            /* copy the memory */
-            copy = gst_buffer_copy (*buffer);
+            /* copy the buffer */
+            copy = gst_buffer_copy_region (*buffer,
+                GST_BUFFER_COPY_ALL | GST_BUFFER_COPY_DEEP, 0, -1);
             GST_LOG_OBJECT (pool, "copy buffer %p->%p", *buffer, copy);
 
             /* and requeue so that we can continue capturing */
