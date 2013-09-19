@@ -2290,10 +2290,12 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
 
   if (frame->pts == GST_CLOCK_TIME_NONE) {
     /* Last ditch timestamp guess: Just add the duration to the previous
-     * frame */
-    if (priv->last_timestamp_out != GST_CLOCK_TIME_NONE &&
-        frame->duration != GST_CLOCK_TIME_NONE) {
-      frame->pts = priv->last_timestamp_out + frame->duration;
+     * frame. If it's the first frame, just use the segment start. */
+    if (frame->duration != GST_CLOCK_TIME_NONE) {
+      if (GST_CLOCK_TIME_IS_VALID (priv->last_timestamp_out))
+        frame->pts = priv->last_timestamp_out + frame->duration;
+      else
+        frame->pts = decoder->output_segment.start;
       GST_LOG_OBJECT (decoder,
           "Guessing timestamp %" GST_TIME_FORMAT " for frame...",
           GST_TIME_ARGS (frame->pts));
