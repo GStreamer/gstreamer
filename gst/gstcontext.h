@@ -148,6 +148,7 @@ GstContext *          gst_context_new                      (const gchar * contex
                                                             gboolean persistent) G_GNUC_MALLOC;
 
 const gchar *         gst_context_get_context_type         (const GstContext * context);
+gboolean              gst_context_has_context_type         (const GstContext * context, const gchar * context_type);
 const GstStructure *  gst_context_get_structure            (const GstContext * context);
 GstStructure *        gst_context_writable_structure       (GstContext * context);
 

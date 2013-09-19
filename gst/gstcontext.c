@@ -191,6 +191,27 @@ gst_context_get_context_type (const GstContext * context)
 }
 
 /**
+ * gst_context_has_context_type:
+ * @context: The #GstContext.
+ * @context_type: Context type to check.
+ *
+ * Checks if @context has @context_type.
+ *
+ * Returns: %TRUE if @context has @context_type.
+ *
+ * Since: 1.2
+ */
+gboolean
+gst_context_has_context_type (const GstContext * context,
+    const gchar * context_type)
+{
+  g_return_val_if_fail (GST_IS_CONTEXT (context), NULL);
+  g_return_val_if_fail (context_type != NULL, NULL);
+
+  return strcmp (context->context_type, context_type) == 0;
+}
+
+/**
  * gst_context_get_structure:
  * @context: The #GstContext.
  *
