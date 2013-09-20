@@ -3754,6 +3754,12 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       g_assert (stream->alignment <= G_MEM_ALIGN);
       sub = gst_matroska_demux_align_buffer (demux, sub, stream->alignment);
 
+      if (GST_BUFFER_PTS_IS_VALID (sub)) {
+        stream->pos = GST_BUFFER_PTS (sub);
+        if (GST_BUFFER_DURATION_IS_VALID (sub))
+          stream->pos += GST_BUFFER_DURATION (sub);
+      }
+
       ret = gst_pad_push (stream->pad, sub);
 
       if (demux->common.segment.rate < 0) {
