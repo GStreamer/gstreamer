@@ -1344,7 +1344,6 @@ query_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 static gboolean
 init_playbin_player (APP_STATE_T * state, const gchar * uri)
 {
-  GstElement *asink;
   GstElement *vsink;
 
   vsink = gst_element_factory_make ("fakesink", "vsink");
@@ -1360,17 +1359,10 @@ init_playbin_player (APP_STATE_T * state, const gchar * uri)
   gst_pad_add_probe (gst_element_get_static_pad (vsink, "sink"),
       GST_PAD_PROBE_TYPE_QUERY_DOWNSTREAM, query_cb, state, NULL);
 
-#if 0
-  asink = gst_element_factory_make ("fakesink", "asink");
-  g_object_set (asink, "sync", TRUE, "silent", TRUE, NULL);
-#else
-  asink = gst_element_factory_make ("alsasink", "asink");
-#endif
-
   /* Instantiate and configure playbin */
   state->pipeline = gst_element_factory_make ("playbin", "player");
   g_object_set (state->pipeline, "uri", uri,
-      "video-sink", vsink, "audio-sink", asink, "flags",
+      "video-sink", vsink, "flags",
       GST_PLAY_FLAG_NATIVE_VIDEO | GST_PLAY_FLAG_AUDIO, NULL);
 
   return TRUE;
