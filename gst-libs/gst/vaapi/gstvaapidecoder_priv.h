@@ -168,6 +168,7 @@ struct _GstVaapiParserState {
     GstVideoCodecFrame *current_frame;
     GstAdapter         *current_adapter;
     GstAdapter         *input_adapter;
+    gint                input_offset1;
     gint                input_offset2;
     GstAdapter         *output_adapter;
     GstVaapiDecoderUnit next_unit;

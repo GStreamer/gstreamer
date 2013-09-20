@@ -60,6 +60,7 @@ struct _GstVaapiDecoderJpegPrivate {
     guint                       mcu_restart;
     guint                       is_opened       : 1;
     guint                       profile_changed : 1;
+    guint                       expect_SOI      : 1;
 };
 
 /**
@@ -83,14 +84,17 @@ struct _GstVaapiDecoderJpegClass {
     GstVaapiDecoderClass parent_class;
 };
 
-typedef struct _GstJpegScanSegment GstJpegScanSegment;
-struct _GstJpegScanSegment {
-    guint                       header_offset;
-    guint                       header_size;
-    guint                       data_offset;
-    guint                       data_size;
-    guint                       is_valid        : 1;
-};
+static inline void
+unit_set_marker_code(GstVaapiDecoderUnit *unit, GstJpegMarkerCode marker)
+{
+    unit->parsed_info = GSIZE_TO_POINTER(marker);
+}
+
+static inline GstJpegMarkerCode
+unit_get_marker_code(GstVaapiDecoderUnit *unit)
+{
+    return GPOINTER_TO_SIZE(unit->parsed_info);
+}
 
 static void
 gst_vaapi_decoder_jpeg_close(GstVaapiDecoderJpeg *decoder)
@@ -110,8 +114,11 @@ gst_vaapi_decoder_jpeg_close(GstVaapiDecoderJpeg *decoder)
 static gboolean
 gst_vaapi_decoder_jpeg_open(GstVaapiDecoderJpeg *decoder)
 {
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
+
     gst_vaapi_decoder_jpeg_close(decoder);
 
+    priv->expect_SOI = TRUE;
     return TRUE;
 }
 
@@ -182,21 +189,25 @@ ensure_context(GstVaapiDecoderJpeg *decoder)
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
-static gboolean
+static GstVaapiDecoderStatus
 decode_current_picture(GstVaapiDecoderJpeg *decoder)
 {
     GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
     GstVaapiPicture * const picture = priv->current_picture;
-    gboolean success = TRUE;
 
-    if (picture) {
-        if (!gst_vaapi_picture_decode(picture))
-            success = FALSE;
-        else if (!gst_vaapi_picture_output(picture))
-            success = FALSE;
-        gst_vaapi_picture_replace(&priv->current_picture, NULL);
-    }
-    return success;
+    if (!picture)
+        return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+    if (!gst_vaapi_picture_decode(picture))
+        goto error;
+    if (!gst_vaapi_picture_output(picture))
+        goto error;
+    gst_vaapi_picture_replace(&priv->current_picture, NULL);
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+
+error:
+    gst_vaapi_picture_replace(&priv->current_picture, NULL);
+    return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 }
 
 static gboolean
@@ -339,57 +350,28 @@ get_max_vertical_samples(GstJpegFrameHdr *frame_hdr)
 }
 
 static GstVaapiDecoderStatus
-decode_picture(
-    GstVaapiDecoderJpeg *decoder, 
-    guint8               profile,
-    const guchar        *buf,
-    guint                buf_size
-)
+decode_picture(GstVaapiDecoderJpeg *decoder, GstJpegMarkerSegment *seg,
+    const guchar *buf)
 {
     GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
     GstJpegFrameHdr * const frame_hdr = &priv->frame_hdr;
-    GstVaapiPicture *picture;
-    GstVaapiDecoderStatus status;
 
-    switch (profile) {
+    switch (seg->marker) {
     case GST_JPEG_MARKER_SOF_MIN:
         priv->profile = GST_VAAPI_PROFILE_JPEG_BASELINE;
         break;
     default:
-        GST_ERROR("unsupported profile %d", profile);
+        GST_ERROR("unsupported profile %d", seg->marker);
         return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
     }
 
     memset(frame_hdr, 0, sizeof(*frame_hdr));
-    if (!gst_jpeg_parse_frame_hdr(frame_hdr, buf, buf_size, 0)) {
+    if (!gst_jpeg_parse_frame_hdr(frame_hdr, buf + seg->offset, seg->size, 0)) {
         GST_ERROR("failed to parse image");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
     priv->height = frame_hdr->height;
     priv->width  = frame_hdr->width;
-
-    status = ensure_context(decoder);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
-        GST_ERROR("failed to reset context");
-        return status;
-    }
-
-    if (priv->current_picture && !decode_current_picture(decoder))
-        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-
-    picture = GST_VAAPI_PICTURE_NEW(JPEGBaseline, decoder);
-    if (!picture) {
-        GST_ERROR("failed to allocate picture");
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-    }
-    gst_vaapi_picture_replace(&priv->current_picture, picture);
-    gst_vaapi_picture_unref(picture);
-
-    if (!fill_picture(decoder, picture, frame_hdr))
-        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-
-    /* Update presentation time */
-    picture->pts = GST_VAAPI_DECODER_CODEC_FRAME(decoder)->pts;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
@@ -444,47 +426,35 @@ decode_restart_interval(
 }
 
 static GstVaapiDecoderStatus
-decode_scan(
-    GstVaapiDecoderJpeg *decoder,
-    const guchar        *scan_header,
-    guint                scan_header_size,
-    const guchar        *scan_data,
-    guint                scan_data_size
-)
+decode_scan(GstVaapiDecoderJpeg *decoder, GstJpegMarkerSegment *seg,
+    const guchar *buf)
 {
     GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
-    GstVaapiPicture *picture = priv->current_picture;
+    GstVaapiPicture * const picture = priv->current_picture;
+    GstVaapiSlice *slice;
     VASliceParameterBufferJPEGBaseline *slice_param;
-    GstVaapiSlice *gst_slice;
-    guint total_h_samples, total_v_samples;
-    GstJpegScanHdr  scan_hdr;
-    guint i;
+    GstJpegScanHdr scan_hdr;
+    guint scan_hdr_size, scan_data_size;
+    guint i, total_h_samples, total_v_samples;
 
-    if (!picture) {
-        GST_ERROR("There is no VAPicture before decoding scan.");
-        return GST_VAAPI_DECODER_STATUS_ERROR_INVALID_SURFACE;
-    }
-
-    if (!fill_quantization_table(decoder, picture)) {
-        GST_ERROR("failed to fill in quantization table");
-        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-    }
-
-    if (!fill_huffman_table(decoder, picture)) {
-        GST_ERROR("failed to fill in huffman table");
-        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-    }
+    scan_hdr_size = (buf[seg->offset] << 8) | buf[seg->offset + 1];
+    scan_data_size = seg->size - scan_hdr_size;
 
     memset(&scan_hdr, 0, sizeof(scan_hdr));
-    if (!gst_jpeg_parse_scan_hdr(&scan_hdr, scan_header, scan_header_size, 0)) {
+    if (!gst_jpeg_parse_scan_hdr(&scan_hdr, buf + seg->offset, seg->size, 0)) {
         GST_DEBUG("Jpeg parsed scan failed.");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
 
-    gst_slice = GST_VAAPI_SLICE_NEW(JPEGBaseline, decoder, scan_data, scan_data_size);
-    gst_vaapi_picture_add_slice(picture, gst_slice);
+    slice = GST_VAAPI_SLICE_NEW(JPEGBaseline, decoder,
+        buf + seg->offset + scan_hdr_size, scan_data_size);
+    if (!slice) {
+        GST_ERROR("failed to allocate slice");
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    }
+    gst_vaapi_picture_add_slice(picture, slice);
 
-    slice_param = gst_slice->param;
+    slice_param = slice->param;
     slice_param->num_components = scan_hdr.num_components;
     for (i = 0; i < scan_hdr.num_components; i++) {
         slice_param->components[i].component_selector =
@@ -512,128 +482,47 @@ decode_scan(
         slice_param->num_mcus = ((priv->frame_hdr.width + total_h_samples*8 - 1)/(total_h_samples*8)) *
                                 ((priv->frame_hdr.height + total_v_samples*8 -1)/(total_v_samples*8));
     }
-
-    if (picture->slices && picture->slices->len)
-        return GST_VAAPI_DECODER_STATUS_SUCCESS;
-    return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 static GstVaapiDecoderStatus
-decode_buffer(GstVaapiDecoderJpeg *decoder, const guchar *buf, guint buf_size)
+decode_segment(GstVaapiDecoderJpeg *decoder, GstJpegMarkerSegment *seg,
+    const guchar *buf)
 {
     GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
-    GstVaapiDecoderStatus status = GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
-    GstJpegMarkerSegment seg;
-    GstJpegScanSegment scan_seg;
-    guint ofs;
-    gboolean append_ecs;
+    GstVaapiDecoderStatus status;
 
-    memset(&scan_seg, 0, sizeof(scan_seg));
-
-    ofs = 0;
-    while (gst_jpeg_parse(&seg, buf, buf_size, ofs)) {
-        if (seg.size < 0) {
-            GST_DEBUG("buffer to short for parsing");
-            return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
-        }
-        ofs = seg.offset + seg.size;
-
-        /* Decode scan, if complete */
-        if (seg.marker == GST_JPEG_MARKER_EOI && scan_seg.header_size > 0) {
-            scan_seg.data_size = seg.offset - scan_seg.data_offset;
-            scan_seg.is_valid  = TRUE;
-        }
-        if (scan_seg.is_valid) {
-            status = decode_scan(
-                decoder,
-                buf + scan_seg.header_offset,
-                scan_seg.header_size,
-                buf + scan_seg.data_offset,
-                scan_seg.data_size
-            );
-            if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-                break;
-            memset(&scan_seg, 0, sizeof(scan_seg));
-        }
-
-        append_ecs = TRUE;
-        switch (seg.marker) {
-        case GST_JPEG_MARKER_SOI:
-            priv->has_quant_table = FALSE;
-            priv->has_huf_table   = FALSE;
-            priv->mcu_restart     = 0;
-            status = GST_VAAPI_DECODER_STATUS_SUCCESS;
-            break;
-        case GST_JPEG_MARKER_EOI:
-            if (decode_current_picture(decoder)) {
-                /* Get out of the loop, trailing data is not needed */
-                status = GST_VAAPI_DECODER_STATUS_SUCCESS;
-                goto end;
-            }
-            status = GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-            break;
-        case GST_JPEG_MARKER_DHT:
-            status = decode_huffman_table(decoder, buf + seg.offset, seg.size);
-            break;
-        case GST_JPEG_MARKER_DQT:
-            status = decode_quant_table(decoder, buf + seg.offset, seg.size);
-            break;
-        case GST_JPEG_MARKER_DRI:
-            status = decode_restart_interval(decoder, buf + seg.offset, seg.size);
-            break;
-        case GST_JPEG_MARKER_COM:
-            status = GST_VAAPI_DECODER_STATUS_SUCCESS;
-            break;
-        case GST_JPEG_MARKER_DAC:
-            GST_ERROR("unsupported arithmetic coding mode");
-            status = GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
-            break;
-        case GST_JPEG_MARKER_SOS:
-            scan_seg.header_offset = seg.offset;
-            scan_seg.header_size   = seg.size;
-            scan_seg.data_offset   = seg.offset + seg.size;
-            scan_seg.data_size     = 0;
-            append_ecs             = FALSE;
-            break;
-        default:
-            /* Restart marker */
-            if (seg.marker >= GST_JPEG_MARKER_RST_MIN &&
-                seg.marker <= GST_JPEG_MARKER_RST_MAX) {
-                append_ecs = FALSE;
-                break;
-            }
-
-            /* Frame header */
-            if (seg.marker >= GST_JPEG_MARKER_SOF_MIN &&
-                seg.marker <= GST_JPEG_MARKER_SOF_MAX) {
-                status = decode_picture(
-                    decoder,
-                    seg.marker,
-                    buf + seg.offset, seg.size
-                );
-                break;
-            }
-
-            /* Application segments */
-            if (seg.marker >= GST_JPEG_MARKER_APP_MIN &&
-                seg.marker <= GST_JPEG_MARKER_APP_MAX) {
-                status = GST_VAAPI_DECODER_STATUS_SUCCESS;
-                break;
-            }
-
-            GST_WARNING("unsupported marker (0x%02x)", seg.marker);
-            status = GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
-            break;
-        }
-
-        /* Append entropy coded segments */
-        if (append_ecs)
-            scan_seg.data_size = seg.offset - scan_seg.data_offset;
-
-        if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-            break;
+    // Decode segment
+    status = GST_VAAPI_DECODER_STATUS_SUCCESS;
+    switch (seg->marker) {
+    case GST_JPEG_MARKER_SOI:
+        priv->has_quant_table = FALSE;
+        priv->has_huf_table = FALSE;
+        priv->mcu_restart = 0;
+        break;
+    case GST_JPEG_MARKER_DAC:
+        GST_ERROR("unsupported arithmetic coding mode");
+        status = GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_PROFILE;
+        break;
+    case GST_JPEG_MARKER_DHT:
+        status = decode_huffman_table(decoder, buf + seg->offset, seg->size);
+        break;
+    case GST_JPEG_MARKER_DQT:
+        status = decode_quant_table(decoder, buf + seg->offset, seg->size);
+        break;
+    case GST_JPEG_MARKER_DRI:
+        status = decode_restart_interval(decoder, buf + seg->offset, seg->size);
+        break;
+    case GST_JPEG_MARKER_SOS:
+        status = decode_scan(decoder, seg, buf);
+        break;
+    default:
+        // SOFn segments
+        if (seg->marker >= GST_JPEG_MARKER_SOF_MIN &&
+            seg->marker <= GST_JPEG_MARKER_SOF_MAX)
+            status = decode_picture(decoder, seg, buf);
+        break;
     }
-end:
     return status;
 }
 
@@ -650,21 +539,11 @@ ensure_decoder(GstVaapiDecoderJpeg *decoder)
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
-static gint
-scan_for_marker_code(const guchar *buf, guint buf_size,
-    GstJpegMarkerCode marker)
+static gboolean
+is_scan_complete(GstJpegMarkerCode marker)
 {
-    GstJpegMarkerSegment seg;
-    guint ofs = 0;
-
-    while (gst_jpeg_parse(&seg, buf, buf_size, ofs)) {
-        if (seg.size < 0)
-            return -1;
-        if (seg.marker == marker)
-            return seg.offset - 2;
-        ofs = seg.offset + seg.size;
-    }
-    return -1;
+    // Scan is assumed to be complete when the new segment is not RSTi
+    return marker < GST_JPEG_MARKER_RST_MIN || marker > GST_JPEG_MARKER_RST_MAX;
 }
 
 static GstVaapiDecoderStatus
@@ -673,57 +552,113 @@ gst_vaapi_decoder_jpeg_parse(GstVaapiDecoder *base_decoder,
 {
     GstVaapiDecoderJpeg * const decoder =
         GST_VAAPI_DECODER_JPEG_CAST(base_decoder);
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
     GstVaapiParserState * const ps = GST_VAAPI_PARSER_STATE(base_decoder);
     GstVaapiDecoderStatus status;
+    GstJpegMarkerCode marker;
+    GstJpegMarkerSegment seg;
     const guchar *buf;
     guint buf_size, flags;
-    gint ofs, ofs1, ofs2;
+    gint ofs1, ofs2;
 
     status = ensure_decoder(decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
-    /* Expect at least 4 bytes, SOI .. EOI */
+    /* Expect at least 2 bytes for the marker */
     buf_size = gst_adapter_available(adapter);
-    if (buf_size < 4)
+    if (buf_size < 2)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
     buf = gst_adapter_map(adapter, buf_size);
     if (!buf)
         return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
 
-    ofs = scan_for_marker_code(buf, buf_size, GST_JPEG_MARKER_SOI);
-    if (ofs < 0) {
-        gst_adapter_unmap(adapter);
-        return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
-    }
-    ofs1 = ofs;
+    ofs1 = ps->input_offset1 - 2;
+    if (ofs1 < 0)
+        ofs1 = 0;
 
-    ofs2 = ps->input_offset2 - 2;
-    if (ofs2 < ofs1 + 2)
-        ofs2 = ofs1 + 2;
-
-    ofs = G_UNLIKELY(buf_size < ofs2 + 2) ? -1 :
-        scan_for_marker_code(&buf[ofs2], buf_size - ofs2, GST_JPEG_MARKER_EOI);
-    gst_adapter_unmap(adapter);
-    if (ofs < 0) {
-        // Assume the whole packet is present if end-of-stream
-        if (!at_eos) {
-            ps->input_offset2 = buf_size;
+    for (;;) {
+        // Skip any garbage until we reach SOI, if needed
+        if (!gst_jpeg_parse(&seg, buf, buf_size, ofs1)) {
+            gst_adapter_unmap(adapter);
+            ps->input_offset1 = buf_size;
             return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
         }
-        ofs = buf_size - ofs2;
-    }
-    ofs2 += ofs;
+        ofs1 = seg.offset;
 
-    unit->size = buf_size;
+        marker = seg.marker;
+        if (priv->expect_SOI && marker != GST_JPEG_MARKER_SOI)
+            continue;
+        if (marker == GST_JPEG_MARKER_SOS) {
+            ofs2 = ps->input_offset2 - 2;
+            if (ofs2 < ofs1 + seg.size)
+                ofs2 = ofs1 + seg.size;
+
+            // Parse the whole scan + ECSs, including RSTi
+            for (;;) {
+                if (!gst_jpeg_parse(&seg, buf, buf_size, ofs2)) {
+                    gst_adapter_unmap(adapter);
+                    ps->input_offset1 = ofs1;
+                    ps->input_offset2 = buf_size;
+                    return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+                }
+
+                if (is_scan_complete(seg.marker))
+                    break;
+                ofs2 = seg.offset + seg.size;
+            }
+            ofs2 = seg.offset - 2;
+        }
+        else {
+            // Check that the whole segment is actually available (in buffer)
+            ofs2 = ofs1 + seg.size;
+            if (ofs2 > buf_size) {
+                gst_adapter_unmap(adapter);
+                ps->input_offset1 = ofs1;
+                return GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA;
+            }
+        }
+        break;
+    }
+    gst_adapter_unmap(adapter);
+
+    unit->size = ofs2 - ofs1;
+    unit_set_marker_code(unit, marker);
     gst_adapter_flush(adapter, ofs1);
+    ps->input_offset1 = 2;
     ps->input_offset2 = 2;
 
-    flags  = 0;
-    flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
-    flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_END;
-    flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
+    flags = 0;
+    switch (marker) {
+    case GST_JPEG_MARKER_SOI:
+        flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_START;
+        priv->expect_SOI = FALSE;
+        break;
+    case GST_JPEG_MARKER_EOI:
+        flags |= GST_VAAPI_DECODER_UNIT_FLAG_FRAME_END;
+        priv->expect_SOI = TRUE;
+        break;
+    case GST_JPEG_MARKER_SOS:
+        flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
+        break;
+    case GST_JPEG_MARKER_DNL:
+        flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
+        break;
+    case GST_JPEG_MARKER_COM:
+        flags |= GST_VAAPI_DECODER_UNIT_FLAG_SKIP;
+        break;
+    default:
+        /* Application segments */
+        if (marker >= GST_JPEG_MARKER_APP_MIN &&
+            marker <= GST_JPEG_MARKER_APP_MAX)
+            flags |= GST_VAAPI_DECODER_UNIT_FLAG_SKIP;
+
+        /* Reserved */
+        else if (marker >= 0x02 && marker <= 0xbf)
+            flags |= GST_VAAPI_DECODER_UNIT_FLAG_SKIP;
+        break;
+    }
     GST_VAAPI_DECODER_UNIT_FLAG_SET(unit, flags);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
@@ -735,6 +670,7 @@ gst_vaapi_decoder_jpeg_decode(GstVaapiDecoder *base_decoder,
     GstVaapiDecoderJpeg * const decoder =
         GST_VAAPI_DECODER_JPEG_CAST(base_decoder);
     GstVaapiDecoderStatus status;
+    GstJpegMarkerSegment seg;
     GstBuffer * const buffer =
         GST_VAAPI_DECODER_CODEC_FRAME(decoder)->input_buffer;
     GstMapInfo map_info;
@@ -748,11 +684,66 @@ gst_vaapi_decoder_jpeg_decode(GstVaapiDecoder *base_decoder,
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
     }
 
-    status = decode_buffer(decoder, map_info.data + unit->offset, unit->size);
+    seg.marker = unit_get_marker_code(unit);
+    seg.offset = unit->offset;
+    seg.size = unit->size;
+
+    status = decode_segment(decoder, &seg, map_info.data);
     gst_buffer_unmap(buffer, &map_info);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_jpeg_start_frame(GstVaapiDecoder *base_decoder,
+    GstVaapiDecoderUnit *base_unit)
+{
+    GstVaapiDecoderJpeg * const decoder =
+        GST_VAAPI_DECODER_JPEG_CAST(base_decoder);
+    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
+    GstVaapiPicture *picture;
+    GstVaapiDecoderStatus status;
+
+    status = ensure_context(decoder);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS) {
+        GST_ERROR("failed to reset context");
+        return status;
+    }
+
+    picture = GST_VAAPI_PICTURE_NEW(JPEGBaseline, decoder);
+    if (!picture) {
+        GST_ERROR("failed to allocate picture");
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    }
+    gst_vaapi_picture_replace(&priv->current_picture, picture);
+    gst_vaapi_picture_unref(picture);
+
+    if (!fill_picture(decoder, picture, &priv->frame_hdr))
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+
+    if (!fill_quantization_table(decoder, picture)) {
+        GST_ERROR("failed to fill in quantization table");
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    }
+
+    if (!fill_huffman_table(decoder, picture)) {
+        GST_ERROR("failed to fill in huffman table");
+        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
+    }
+
+    /* Update presentation time */
+    picture->pts = GST_VAAPI_DECODER_CODEC_FRAME(decoder)->pts;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
+}
+
+static GstVaapiDecoderStatus
+gst_vaapi_decoder_jpeg_end_frame(GstVaapiDecoder *base_decoder)
+{
+    GstVaapiDecoderJpeg * const decoder =
+        GST_VAAPI_DECODER_JPEG_CAST(base_decoder);
+
+    return decode_current_picture(decoder);
 }
 
 static void
@@ -769,6 +760,8 @@ gst_vaapi_decoder_jpeg_class_init(GstVaapiDecoderJpegClass *klass)
     decoder_class->destroy      = gst_vaapi_decoder_jpeg_destroy;
     decoder_class->parse        = gst_vaapi_decoder_jpeg_parse;
     decoder_class->decode       = gst_vaapi_decoder_jpeg_decode;
+    decoder_class->start_frame  = gst_vaapi_decoder_jpeg_start_frame;
+    decoder_class->end_frame    = gst_vaapi_decoder_jpeg_end_frame;
 }
 
 static inline const GstVaapiDecoderClass *

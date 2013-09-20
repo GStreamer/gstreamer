@@ -85,6 +85,7 @@ parser_state_prepare(GstVaapiParserState *ps, GstAdapter *adapter)
 
 reset:
     ps->current_adapter = adapter;
+    ps->input_offset1 = -1;
     ps->input_offset2 = -1;
 }
 
