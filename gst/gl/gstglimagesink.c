@@ -464,6 +464,7 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
             glimage_sink->display = NULL;
           }
           gst_object_unref (glimage_sink->context);
+          gst_object_unref (window);
 
           return GST_STATE_CHANGE_FAILURE;
         }

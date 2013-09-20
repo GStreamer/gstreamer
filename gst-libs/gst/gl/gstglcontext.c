@@ -94,6 +94,8 @@ _ensure_window (GstGLContext * context)
   window = gst_gl_window_new (context->priv->display);
 
   gst_gl_context_set_window (context, window);
+
+  gst_object_unref (window);
 }
 
 static void
