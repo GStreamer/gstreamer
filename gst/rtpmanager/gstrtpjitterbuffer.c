@@ -2473,6 +2473,10 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       GstClockReturn ret;
       GstClockTimeDiff clock_jitter;
 
+      /* check here, do_timeout could have released the lock */
+      if (!priv->timer_running)
+        break;
+
       GST_OBJECT_LOCK (jitterbuffer);
       clock = GST_ELEMENT_CLOCK (jitterbuffer);
       if (!clock) {
