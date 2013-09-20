@@ -110,7 +110,8 @@ setup_jitterbuffer (gint num_buffers)
   for (i = 0; i < num_buffers; i++) {
     buffer = gst_buffer_new_and_alloc (sizeof (in));
     gst_buffer_fill (buffer, 0, in, sizeof (in));
-    GST_BUFFER_TIMESTAMP (buffer) = ts;
+    GST_BUFFER_DTS (buffer) = ts;
+    GST_BUFFER_PTS (buffer) = ts;
     GST_BUFFER_DURATION (buffer) = tso;
     gst_mini_object_weak_ref (GST_MINI_OBJECT (buffer), buffer_dropped, NULL);
     GST_DEBUG ("created buffer: %p", buffer);
@@ -190,7 +191,8 @@ check_jitterbuffer_results (GstElement * jitterbuffer, gint num_buffers)
   fail_unless_equals_int (g_list_length (buffers), num_buffers);
   for (node = buffers; node; node = g_list_next (node)) {
     fail_if ((buffer = (GstBuffer *) node->data) == NULL);
-    fail_if (GST_BUFFER_TIMESTAMP (buffer) != ts);
+    fail_if (GST_BUFFER_PTS (buffer) != ts);
+    fail_if (GST_BUFFER_DTS (buffer) != ts);
     gst_buffer_map (buffer, &map, GST_MAP_READ);
     cur_sn = ((guint16) map.data[2] << 8) | map.data[3];
     cur_ts = ((guint32) map.data[4] << 24) | ((guint32) map.data[5] << 16) |
@@ -317,7 +319,8 @@ GST_START_TEST (test_basetime)
   fail_unless_equals_int ((g_list_length (buffers) + num_dropped), num_buffers);
 
   buffer = (GstBuffer *) buffers->data;
-  fail_unless (GST_BUFFER_TIMESTAMP (buffer) != (num_buffers * tso));
+  fail_unless (GST_BUFFER_DTS (buffer) != (num_buffers * tso));
+  fail_unless (GST_BUFFER_PTS (buffer) != (num_buffers * tso));
 
   /* cleanup */
   cleanup_jitterbuffer (jitterbuffer);
@@ -614,7 +617,8 @@ GST_START_TEST (test_only_one_lost_event_on_large_gaps)
   /* check for the buffer coming out that was pushed in */
   out_buf = g_async_queue_timeout_pop (data.buf_queue, timeout);
   g_assert (out_buf != NULL);
-  g_assert_cmpint (GST_BUFFER_TIMESTAMP (out_buf), ==, 0);
+  g_assert_cmpint (GST_BUFFER_DTS (out_buf), ==, 0);
+  g_assert_cmpint (GST_BUFFER_PTS (out_buf), ==, 0);
 
   /* move time ahead 10 seconds */
   gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 10 * GST_SECOND);
@@ -665,7 +669,8 @@ GST_START_TEST (test_only_one_lost_event_on_large_gaps)
   gst_rtp_buffer_map (out_buf, GST_MAP_READ, &rtp);
   g_assert_cmpint (gst_rtp_buffer_get_seq (&rtp), ==, 500);
   gst_rtp_buffer_unmap (&rtp);
-  g_assert_cmpint (GST_BUFFER_TIMESTAMP (out_buf), ==, (10 * GST_SECOND));
+  g_assert_cmpint (GST_BUFFER_DTS (out_buf), ==, (10 * GST_SECOND));
+  g_assert_cmpint (GST_BUFFER_PTS (out_buf), ==, (10 * GST_SECOND));
 
   /* we get as many lost events as the the number of buffers the jitterbuffer
    * is able to wait for (+ the one we already got) */
@@ -715,7 +720,8 @@ GST_START_TEST (test_two_lost_one_arrives_in_time)
     /* check for the buffer coming out that was pushed in */
     out_buf = g_async_queue_timeout_pop (data.buf_queue, timeout);
     g_assert (out_buf != NULL);
-    g_assert_cmpint (GST_BUFFER_TIMESTAMP (out_buf), ==, buffer_time);
+    g_assert_cmpint (GST_BUFFER_DTS (out_buf), ==, buffer_time);
+    g_assert_cmpint (GST_BUFFER_PTS (out_buf), ==, buffer_time);
   }
 
   /* hop over 2 packets and make another one (gap of 2) */
@@ -811,7 +817,8 @@ GST_START_TEST (test_late_packets_still_makes_lost_events)
     /* check for the buffer coming out that was pushed in */
     out_buf = g_async_queue_timeout_pop (data.buf_queue, timeout);
     g_assert (out_buf != NULL);
-    g_assert_cmpint (GST_BUFFER_TIMESTAMP (out_buf), ==, buffer_time);
+    g_assert_cmpint (GST_BUFFER_DTS (out_buf), ==, buffer_time);
+    g_assert_cmpint (GST_BUFFER_PTS (out_buf), ==, buffer_time);
   }
 
   /* hop over 2 packets and make another one (gap of 2) */
@@ -879,7 +886,8 @@ GST_START_TEST (test_all_packets_are_timestamped_zero)
     /* check for the buffer coming out that was pushed in */
     out_buf = g_async_queue_timeout_pop (data.buf_queue, timeout);
     g_assert (out_buf != NULL);
-    g_assert_cmpint (GST_BUFFER_TIMESTAMP (out_buf), ==, 0);
+    g_assert_cmpint (GST_BUFFER_DTS (out_buf), ==, 0);
+    g_assert_cmpint (GST_BUFFER_PTS (out_buf), ==, 0);
   }
 
   /* hop over 2 packets and make another one (gap of 2) */
