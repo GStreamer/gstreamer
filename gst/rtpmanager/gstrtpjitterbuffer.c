@@ -937,6 +937,8 @@ gst_jitter_buffer_sink_parse_caps (GstRtpJitterBuffer * jitterbuffer,
 
   GST_DEBUG_OBJECT (jitterbuffer, "got clock-rate %d", priv->clock_rate);
 
+  rtp_jitter_buffer_set_clock_rate (priv->jbuf, priv->clock_rate);
+
   /* The clock base is the RTP timestamp corrsponding to the npt-start value. We
    * can use this to track the amount of time elapsed on the sender. */
   if (gst_structure_get_uint (caps_struct, "clock-base", &val))
@@ -1995,7 +1997,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
    * FALSE if a packet with the same seqnum was already in the queue, meaning we
    * have a duplicate. */
   if (G_UNLIKELY (!rtp_jitter_buffer_insert (priv->jbuf, buffer, dts,
-              priv->clock_rate, &tail, &percent)))
+              &tail, &percent)))
     goto duplicate;
 
   /* update timers */

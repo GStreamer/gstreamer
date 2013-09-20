@@ -166,6 +166,44 @@ rtp_jitter_buffer_set_delay (RTPJitterBuffer * jbuf, GstClockTime delay)
       GST_TIME_ARGS (jbuf->low_level), GST_TIME_ARGS (jbuf->high_level));
 }
 
+/**
+ * rtp_jitter_buffer_set_clock_rate:
+ * @jbuf: an #RTPJitterBuffer
+ *
+ * Set the clock rate in the jitterbuffer.
+ */
+void
+rtp_jitter_buffer_set_clock_rate (RTPJitterBuffer * jbuf, guint32 clock_rate)
+{
+  if (jbuf->clock_rate != clock_rate) {
+    if (jbuf->clock_rate == -1) {
+      GST_DEBUG ("Clock rate changed from %" G_GUINT32_FORMAT " to %"
+          G_GUINT32_FORMAT, jbuf->clock_rate, clock_rate);
+    } else {
+      GST_WARNING ("Clock rate changed from %" G_GUINT32_FORMAT " to %"
+          G_GUINT32_FORMAT, jbuf->clock_rate, clock_rate);
+    }
+    jbuf->base_time = -1;
+    jbuf->base_rtptime = -1;
+    jbuf->clock_rate = clock_rate;
+    jbuf->prev_out_time = -1;
+    jbuf->prev_send_diff = -1;
+  }
+}
+
+/**
+ * rtp_jitter_buffer_get_clock_rate:
+ * @jbuf: an #RTPJitterBuffer
+ *
+ * Get the currently configure clock rate in @jbuf.
+ *
+ * Returns: the current clock-rate
+ */
+guint32
+rtp_jitter_buffer_get_clock_rate (RTPJitterBuffer * jbuf)
+{
+  return jbuf->clock_rate;
+}
 
 /**
  * rtp_jitter_buffer_reset_skew:
@@ -360,8 +398,7 @@ update_buffer_level (RTPJitterBuffer * jbuf, gint * percent)
  * Returns: @time adjusted with the clock skew.
  */
 static GstClockTime
-calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
-    guint32 clock_rate)
+calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time)
 {
   guint64 ext_rtptime;
   guint64 send_diff, recv_diff;
@@ -376,25 +413,11 @@ calculate_skew (RTPJitterBuffer * jbuf, guint32 rtptime, GstClockTime time,
   if (jbuf->last_rtptime != -1 && ext_rtptime == jbuf->last_rtptime)
     return jbuf->prev_out_time;
 
-  gstrtptime = gst_util_uint64_scale_int (ext_rtptime, GST_SECOND, clock_rate);
+  gstrtptime =
+      gst_util_uint64_scale_int (ext_rtptime, GST_SECOND, jbuf->clock_rate);
 
   /* keep track of the last extended rtptime */
   jbuf->last_rtptime = ext_rtptime;
-
-  if (jbuf->clock_rate != clock_rate) {
-    if (jbuf->clock_rate == -1) {
-      GST_DEBUG ("Clock rate changed from %" G_GUINT32_FORMAT " to %"
-          G_GUINT32_FORMAT, jbuf->clock_rate, clock_rate);
-    } else {
-      GST_WARNING ("Clock rate changed from %" G_GUINT32_FORMAT " to %"
-          G_GUINT32_FORMAT, jbuf->clock_rate, clock_rate);
-    }
-    jbuf->base_time = -1;
-    jbuf->base_rtptime = -1;
-    jbuf->clock_rate = clock_rate;
-    jbuf->prev_out_time = -1;
-    jbuf->prev_send_diff = -1;
-  }
 
   /* first time, lock on to time and gstrtptime */
   if (G_UNLIKELY (jbuf->base_time == -1)) {
@@ -593,7 +616,6 @@ no_skew:
  * @jbuf: an #RTPJitterBuffer
  * @buf: a buffer
  * @time: a running_time when this buffer was received in nanoseconds
- * @clock_rate: the clock-rate of the payload of @buf
  * @max_delay: the maximum lateness of @buf
  * @tail: TRUE when the tail element changed.
  *
@@ -606,7 +628,7 @@ no_skew:
  */
 gboolean
 rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
-    GstClockTime time, guint32 clock_rate, gboolean * tail, gint * percent)
+    GstClockTime time, gboolean * tail, gint * percent)
 {
   GList *list;
   guint32 rtptime;
@@ -654,8 +676,8 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
     GstClockTime ext_rtptime = jbuf->ext_rtptime;
 
     ext_rtptime = gst_rtp_buffer_ext_timestamp (&ext_rtptime, rtptime);
-    if (ext_rtptime > jbuf->last_rtptime + 3 * clock_rate ||
-        ext_rtptime + 3 * clock_rate < jbuf->last_rtptime) {
+    if (ext_rtptime > jbuf->last_rtptime + 3 * jbuf->clock_rate ||
+        ext_rtptime + 3 * jbuf->clock_rate < jbuf->last_rtptime) {
       /* reset even if we don't have valid incoming time;
        * still better than producing possibly very bogus output timestamp */
       GST_WARNING ("rtp delta too big, reset skew");
@@ -682,7 +704,7 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, GstBuffer * buf,
   /* do skew calculation by measuring the difference between rtptime and the
    * receive time, this function will retimestamp @buf with the skew corrected
    * running time. */
-  time = calculate_skew (jbuf, rtptime, time, clock_rate);
+  time = calculate_skew (jbuf, rtptime, time);
   GST_BUFFER_PTS (buf) = time;
 
   /* It's more likely that the packet was inserted in the front of the buffer */

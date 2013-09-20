@@ -110,11 +110,13 @@ void                  rtp_jitter_buffer_set_mode         (RTPJitterBuffer *jbuf,
 GstClockTime          rtp_jitter_buffer_get_delay        (RTPJitterBuffer *jbuf);
 void                  rtp_jitter_buffer_set_delay        (RTPJitterBuffer *jbuf, GstClockTime delay);
 
+void                  rtp_jitter_buffer_set_clock_rate   (RTPJitterBuffer *jbuf, guint32 clock_rate);
+guint32               rtp_jitter_buffer_get_clock_rate   (RTPJitterBuffer *jbuf);
+
 void                  rtp_jitter_buffer_reset_skew       (RTPJitterBuffer *jbuf);
 
 gboolean              rtp_jitter_buffer_insert           (RTPJitterBuffer *jbuf, GstBuffer *buf,
                                                           GstClockTime time,
-                                                          guint32 clock_rate,
                                                           gboolean *tail, gint *percent);
 GstBuffer *           rtp_jitter_buffer_peek             (RTPJitterBuffer *jbuf);
 GstBuffer *           rtp_jitter_buffer_pop              (RTPJitterBuffer *jbuf, gint *percent);
