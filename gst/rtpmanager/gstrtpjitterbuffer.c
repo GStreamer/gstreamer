@@ -1496,8 +1496,8 @@ add_timer (GstRtpJitterBuffer * jitterbuffer, TimerType type,
   gint len;
 
   GST_DEBUG_OBJECT (jitterbuffer,
-      "add timer for seqnum %d to %" GST_TIME_FORMAT,
-      seqnum, GST_TIME_ARGS (timeout));
+      "add timer for seqnum %d to %" GST_TIME_FORMAT ", delay %"
+      GST_TIME_FORMAT, seqnum, GST_TIME_ARGS (timeout), GST_TIME_ARGS (delay));
 
   len = priv->timers->len;
   g_array_set_size (priv->timers, len + 1);
@@ -2506,14 +2506,16 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       if (!priv->timer_running)
         break;
 
-      GST_DEBUG_OBJECT (jitterbuffer, "sync done, %d, #%d, %" G_GINT64_FORMAT,
-          ret, priv->timer_seqnum, clock_jitter);
+      if (ret != GST_CLOCK_UNSCHEDULED) {
+        now = timer_timeout + MAX (clock_jitter, 0);
+        GST_DEBUG_OBJECT (jitterbuffer, "sync done, %d, #%d, %" G_GINT64_FORMAT,
+            ret, priv->timer_seqnum, clock_jitter);
+      } else {
+        GST_DEBUG_OBJECT (jitterbuffer, "sync unscheduled");
+      }
       /* and free the entry */
       gst_clock_id_unref (id);
       priv->clock_id = NULL;
-
-      if (ret != GST_CLOCK_UNSCHEDULED)
-        now = timer_timeout + MAX (clock_jitter, 0);
     } else {
       /* no timers, wait for activity */
       GST_DEBUG_OBJECT (jitterbuffer, "waiting");
