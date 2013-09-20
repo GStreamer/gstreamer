@@ -330,9 +330,11 @@ gst_osx_video_sink_osxwindow_destroy (GstOSXVideoSink * osxvideosink)
   g_return_if_fail (GST_IS_OSX_VIDEO_SINK (osxvideosink));
   pool = [[NSAutoreleasePool alloc] init];
 
+  GST_OBJECT_LOCK (osxvideosink);
   gst_osx_video_sink_call_from_main_thread(osxvideosink,
       osxvideosink->osxvideosinkobject,
       @selector(destroy), (id) nil, YES);
+  GST_OBJECT_UNLOCK (osxvideosink);
   gst_osx_video_sink_stop_cocoa_loop (osxvideosink);
   [pool release];
 }
@@ -779,8 +781,13 @@ gst_osx_video_sink_get_type (void)
 -(id) initWithSink: (GstOSXVideoSink*) sink
 {
   self = [super init];
-  self->osxvideosink = sink;
+  self->osxvideosink = gst_object_ref (sink);
   return self;
+}
+
+-(void) dealloc {
+  gst_object_unref (osxvideosink);
+  [super dealloc];
 }
 
 -(void) createInternalWindow
@@ -896,6 +903,7 @@ gst_osx_video_sink_get_type (void)
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   GstBuffer *buf = object->buf;
 
+  GST_OBJECT_LOCK (osxvideosink);
   if (osxvideosink->osxwindow != NULL)
   {
     gst_buffer_map (buf, &info, GST_MAP_READ);
@@ -910,7 +918,7 @@ gst_osx_video_sink_get_type (void)
       gst_buffer_unmap (buf, &info);
     }
   }
-
+  GST_OBJECT_UNLOCK (osxvideosink);
   [object release];
 
   [pool release];
