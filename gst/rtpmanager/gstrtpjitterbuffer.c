@@ -1004,9 +1004,6 @@ gst_rtp_jitter_buffer_flush_start (GstRtpJitterBuffer * jitterbuffer)
   GST_DEBUG_OBJECT (jitterbuffer, "Disabling pop on queue");
   /* this unblocks any waiting pops on the src pad task */
   JBUF_SIGNAL_EVENT (priv);
-  /* unlock clock, we just unschedule, the entry will be released by the
-   * locking streaming thread. */
-  unschedule_current_timer (jitterbuffer);
   JBUF_UNLOCK (priv);
 }
 
@@ -1137,6 +1134,7 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
       JBUF_LOCK (priv);
       gst_buffer_replace (&priv->last_sr, NULL);
       priv->timer_running = FALSE;
+      unschedule_current_timer (jitterbuffer);
       JBUF_SIGNAL_TIMER (priv);
       JBUF_UNLOCK (priv);
       g_thread_join (priv->timer_thread);
