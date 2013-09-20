@@ -398,8 +398,10 @@ test_sink_pad_event_cb (GstPad * pad, GstObject * parent, GstEvent * event)
 
   GST_DEBUG ("got event %" GST_PTR_FORMAT, event);
 
-  if (strcmp (gst_structure_get_name (structure), "GstRTPPacketLost") == 0)
+  if (strcmp (gst_structure_get_name (structure), "GstRTPPacketLost") == 0) {
     data->lost_event_count++;
+    GST_DEBUG ("lost event count %d", data->lost_event_count);
+  }
 
   g_async_queue_push (data->sink_event_queue, event);
   return TRUE;
@@ -415,8 +417,10 @@ test_src_pad_event_cb (GstPad * pad, GstObject * parent, GstEvent * event)
 
   if (structure
       && strcmp (gst_structure_get_name (structure),
-          "GstRTPRetransmissionRequest") == 0)
+          "GstRTPRetransmissionRequest") == 0) {
     data->rtx_event_count++;
+    GST_DEBUG ("rtx event count %d", data->rtx_event_count);
+  }
 
   g_async_queue_push (data->src_event_queue, event);
   return TRUE;
@@ -902,7 +906,7 @@ GST_START_TEST (test_all_packets_are_timestamped_zero)
   g_assert_cmpint (gst_rtp_buffer_get_seq (&rtp), ==, 5);
   gst_rtp_buffer_unmap (&rtp);
 
-  /* should still have only seen 1 packet lost event */
+  /* should still have only seen 2 packet lost events */
   g_assert_cmpint (data.lost_event_count, ==, 2);
 
   destroy_testharness (&data);
