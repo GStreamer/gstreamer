@@ -1783,8 +1783,10 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
   if (priv->do_retransmission) {
     type = TIMER_TYPE_EXPECTED;
     /* if we had a timer for the first missing packet, leave it. */
-    if (find_timer (jitterbuffer, type, expected))
+    if (find_timer (jitterbuffer, type, expected)) {
       expected++;
+      expected_dts += duration;
+    }
   } else {
     type = TIMER_TYPE_LOST;
   }
