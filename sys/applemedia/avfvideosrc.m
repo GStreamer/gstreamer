@@ -361,7 +361,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        GST_FOURCC_ARGS (gst_video_format_to_fourc(format)));
 
 
-    output.videoSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:newformat] forKey:(NSString*)kCVPixelBu
+    output.videoSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:newformat] forKey:(NSString*)kCVPixelBufferPixelFormatTypeKey];
 
     [session startRunning];
   });
