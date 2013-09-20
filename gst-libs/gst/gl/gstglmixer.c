@@ -1746,7 +1746,14 @@ gst_gl_mixer_collected (GstCollectPads * pads, GstGLMixer * mix)
 
     ret = gst_buffer_pool_acquire_buffer (mix->priv->pool, &outbuf, NULL);
 
-    g_assert (mix_class->process_buffers || mix_class->process_textures);
+    GST_BUFFER_TIMESTAMP (outbuf) = output_start_time;
+    GST_BUFFER_DURATION (outbuf) = output_end_time - output_start_time;
+
+    if (!mix_class->process_buffers && !mix_class->process_textures) {
+      ret = GST_FLOW_ERROR;
+      g_assert_not_reached ();
+      goto error;
+    }
 
     if (mix_class->process_buffers)
       gst_gl_mixer_process_buffers (mix, outbuf);
