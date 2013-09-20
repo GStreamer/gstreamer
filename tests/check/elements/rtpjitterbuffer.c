@@ -1126,6 +1126,43 @@ GST_START_TEST (test_rtx_two_missing)
 
 GST_END_TEST;
 
+GST_START_TEST (test_rtx_packet_delay)
+{
+  TestData data;
+  GstBuffer *in_buf;
+  gint jb_latency_ms = 200;
+
+  setup_testharness (&data);
+  g_object_set (data.jitter_buffer, "do-retransmission", TRUE, NULL);
+  g_object_set (data.jitter_buffer, "latency", jb_latency_ms, NULL);
+  g_object_set (data.jitter_buffer, "rtx-retry-period", 120, NULL);
+
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 0);
+
+  /* push the first buffer in */
+  in_buf = generate_test_buffer (0 * GST_MSECOND, TRUE, 0, 0);
+  g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
+
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 20 * GST_MSECOND);
+
+  /* put second buffer, the jitterbuffer should now know that the packet spacing
+   * is 20ms and should ask for retransmission of seqnum 2 at 60ms */
+  in_buf = generate_test_buffer (20 * GST_MSECOND, TRUE, 1, 160);
+  g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
+
+  /* push buffer 8, 2 -> 7 are missing now. note that the rtp time is the same
+   * as packet 1 because it was part of a fragmented payload. This means that
+   * the estimate for 2 could be refined now. also packet 2, 3 and 4 are
+   * exceeding the max allowed reorder distance and should request a
+   * retransmission right away */
+  in_buf = generate_test_buffer (20 * GST_MSECOND, TRUE, 8, 8 * 160);
+  g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
+
+  destroy_testharness (&data);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpjitterbuffer_suite (void)
 {
@@ -1143,6 +1180,7 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_all_packets_are_timestamped_zero);
   tcase_add_test (tc_chain, test_rtx_expected_next);
   tcase_add_test (tc_chain, test_rtx_two_missing);
+  tcase_add_test (tc_chain, test_rtx_packet_delay);
 
   return s;
 }
