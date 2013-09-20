@@ -1782,9 +1782,19 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
   expected_dts = priv->last_in_dts + duration;
 
   if (priv->do_retransmission) {
+    TimerData *timer;
+
     type = TIMER_TYPE_EXPECTED;
-    /* if we had a timer for the first missing packet, leave it. */
-    if (find_timer (jitterbuffer, type, expected)) {
+    /* if we had a timer for the first missing packet, update it. */
+    if ((timer = find_timer (jitterbuffer, type, expected))) {
+      GstClockTime timeout = timer->timeout;
+
+      timer->duration = duration;
+      if (timeout > expected_dts) {
+        GstClockTime delay = timeout - expected_dts - timer->rtx_retry;
+        reschedule_timer (jitterbuffer, timer, timer->seqnum, expected_dts,
+            delay, TRUE);
+      }
       expected++;
       expected_dts += duration;
     }
