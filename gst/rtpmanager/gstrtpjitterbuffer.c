@@ -1702,12 +1702,6 @@ send_lost_event (GstRtpJitterBuffer * jitterbuffer, guint seqnum,
   priv->num_late += lost_packets;
   priv->discont = TRUE;
 
-  /* update our expected next packet but make sure the seqnum increases */
-  if (seqnum + lost_packets > priv->next_seqnum) {
-    priv->next_seqnum = (seqnum + lost_packets) & 0xffff;
-    priv->last_popped_seqnum = seqnum;
-    priv->last_out_time = timestamp;
-  }
   if (priv->do_lost) {
     GstEvent *event;
 
@@ -1721,6 +1715,12 @@ send_lost_event (GstRtpJitterBuffer * jitterbuffer, guint seqnum,
     JBUF_UNLOCK (priv);
     gst_pad_push_event (priv->srcpad, event);
     JBUF_LOCK (priv);
+  }
+  /* update our expected next packet but make sure the seqnum increases */
+  if (seqnum + lost_packets > priv->next_seqnum) {
+    priv->next_seqnum = (seqnum + lost_packets) & 0xffff;
+    priv->last_popped_seqnum = seqnum;
+    priv->last_out_time = timestamp;
   }
 }
 
@@ -2369,9 +2369,12 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 
   /* remove timer now */
   remove_timer (jitterbuffer, timer);
-  JBUF_SIGNAL_EVENT (priv);
 
+  /* this releases the lock */
   send_lost_event (jitterbuffer, seqnum, num, timestamp, duration, late);
+
+  /* now we can let the pushing thread try again */
+  JBUF_SIGNAL_EVENT (priv);
 
   return TRUE;
 }
