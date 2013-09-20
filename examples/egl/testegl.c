@@ -181,6 +181,10 @@ typedef struct
 
   /* Rendering thread state */
   gboolean running;
+
+  /* number of rendered and dropped frames */
+  guint64 rendered;
+  guint64 dropped;
 } APP_STATE_T;
 
 typedef struct
@@ -1351,7 +1355,7 @@ init_playbin_player (APP_STATE_T * state, const gchar * uri)
   GstElement *vsink;
 
   vsink = gst_element_factory_make ("fakesink", "vsink");
-  g_object_set (vsink, "sync", TRUE, "silent", TRUE,
+  g_object_set (vsink, "sync", TRUE, "silent", TRUE, "qos", TRUE,
       "enable-last-sample", FALSE,
       "max-lateness", 20 * GST_MSECOND, "signal-handoffs", TRUE, NULL);
 
@@ -1393,7 +1397,7 @@ init_parse_launch_player (APP_STATE_T * state, const gchar * spipeline)
     return FALSE;
   }
 
-  g_object_set (vsink, "sync", TRUE, "silent", TRUE,
+  g_object_set (vsink, "sync", TRUE, "silent", TRUE, "qos", TRUE,
       "enable-last-sample", FALSE,
       "max-lateness", 20 * GST_MSECOND, "signal-handoffs", TRUE, NULL);
 
@@ -1583,6 +1587,19 @@ state_changed_cb (GstBus * bus, GstMessage * msg, APP_STATE_T * state)
   }
 }
 
+static void
+qos_cb (GstBus * bus, GstMessage * msg, APP_STATE_T * state)
+{
+  GstFormat fmt = GST_FORMAT_BUFFERS;
+  gchar *name = gst_element_get_name (GST_MESSAGE_SRC (msg));
+  gst_message_parse_qos_stats (msg, &fmt, &state->rendered, &state->dropped);
+  g_print ("%s rendered: %" G_GUINT64_FORMAT " dropped: %" G_GUINT64_FORMAT
+      " %s\n",
+      name, state->rendered, state->dropped,
+      (fmt == GST_FORMAT_BUFFERS ? "frames" : "samples"));
+  g_free (name);
+}
+
 //==============================================================================
 
 static void
@@ -1741,6 +1758,7 @@ main (int argc, char **argv)
   g_signal_connect (G_OBJECT (bus), "message::buffering",
       (GCallback) buffering_cb, state);
   g_signal_connect (G_OBJECT (bus), "message::eos", (GCallback) eos_cb, state);
+  g_signal_connect (G_OBJECT (bus), "message::qos", (GCallback) qos_cb, state);
   g_signal_connect (G_OBJECT (bus), "message::state-changed",
       (GCallback) state_changed_cb, state);
   gst_object_unref (bus);
