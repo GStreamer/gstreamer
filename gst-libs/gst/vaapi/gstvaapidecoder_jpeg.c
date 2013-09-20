@@ -214,39 +214,34 @@ static gboolean
 fill_picture(
     GstVaapiDecoderJpeg *decoder, 
     GstVaapiPicture     *picture,
-    GstJpegFrameHdr     *jpeg_frame_hdr
+    GstJpegFrameHdr     *frame_hdr
 )
 {
-    VAPictureParameterBufferJPEGBaseline *pic_param = picture->param;
+    VAPictureParameterBufferJPEGBaseline * const pic_param = picture->param;
     guint i;
 
-    g_assert(pic_param);
-
     memset(pic_param, 0, sizeof(VAPictureParameterBufferJPEGBaseline));
-    pic_param->picture_width    = jpeg_frame_hdr->width;
-    pic_param->picture_height   = jpeg_frame_hdr->height;
+    pic_param->picture_width    = frame_hdr->width;
+    pic_param->picture_height   = frame_hdr->height;
 
-    pic_param->num_components   = jpeg_frame_hdr->num_components;
-    if (jpeg_frame_hdr->num_components > 4)
+    pic_param->num_components   = frame_hdr->num_components;
+    if (frame_hdr->num_components > 4)
         return FALSE;
     for (i = 0; i < pic_param->num_components; i++) {
         pic_param->components[i].component_id =
-            jpeg_frame_hdr->components[i].identifier;
+            frame_hdr->components[i].identifier;
         pic_param->components[i].h_sampling_factor =
-            jpeg_frame_hdr->components[i].horizontal_factor;
+            frame_hdr->components[i].horizontal_factor;
         pic_param->components[i].v_sampling_factor =
-            jpeg_frame_hdr->components[i].vertical_factor;
+            frame_hdr->components[i].vertical_factor;
         pic_param->components[i].quantiser_table_selector =
-            jpeg_frame_hdr->components[i].quant_table_selector;
+            frame_hdr->components[i].quant_table_selector;
     }
     return TRUE;
 }
 
-static gboolean
-fill_quantization_table(
-    GstVaapiDecoderJpeg *decoder, 
-    GstVaapiPicture     *picture
-)
+static GstVaapiDecoderStatus
+fill_quantization_table(GstVaapiDecoderJpeg *decoder, GstVaapiPicture *picture)
 {
     GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
     VAIQMatrixBufferJPEGBaseline *iq_matrix;
@@ -256,7 +251,10 @@ fill_quantization_table(
         gst_jpeg_get_default_quantization_tables(&priv->quant_tables);
     
     picture->iq_matrix = GST_VAAPI_IQ_MATRIX_NEW(JPEGBaseline, decoder);
-    g_assert(picture->iq_matrix);
+    if (!picture->iq_matrix) {
+        GST_ERROR("failed to allocate quantiser table");
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    }
     iq_matrix = picture->iq_matrix->param;
 
     num_tables = MIN(G_N_ELEMENTS(iq_matrix->quantiser_table),
@@ -270,20 +268,22 @@ fill_quantization_table(
         if (!iq_matrix->load_quantiser_table[i])
             continue;
 
-        g_assert(quant_table->quant_precision == 0);
+        if (quant_table->quant_precision != 0) {
+            // Only Baseline profile is supported, thus 8-bit Qk values
+            GST_ERROR("unsupported quantization table element precision");
+            return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT;
+        }
+
         for (j = 0; j < GST_JPEG_MAX_QUANT_ELEMENTS; j++)
             iq_matrix->quantiser_table[i][j] = quant_table->quant_table[j];
         iq_matrix->load_quantiser_table[i] = 1;
         quant_table->valid = FALSE;
     }
-    return TRUE;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
-static gboolean
-fill_huffman_table(
-    GstVaapiDecoderJpeg *decoder, 
-    GstVaapiPicture     *picture
-)
+static GstVaapiDecoderStatus
+fill_huffman_table(GstVaapiDecoderJpeg *decoder, GstVaapiPicture *picture)
 {
     GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
     GstJpegHuffmanTables * const huf_tables = &priv->huf_tables;
@@ -294,7 +294,10 @@ fill_huffman_table(
         gst_jpeg_get_default_huffman_tables(&priv->huf_tables);
     
     picture->huf_table = GST_VAAPI_HUFFMAN_TABLE_NEW(JPEGBaseline, decoder);
-    g_assert(picture->huf_table);
+    if (!picture->huf_table) {
+        GST_ERROR("failed to allocate Huffman tables");
+        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+    }
     huffman_table = picture->huf_table->param;
 
     num_tables = MIN(G_N_ELEMENTS(huffman_table->huffman_table),
@@ -322,7 +325,7 @@ fill_huffman_table(
                0,
                sizeof(huffman_table->huffman_table[i].pad));
     }
-    return TRUE;
+    return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 static guint
@@ -385,7 +388,7 @@ decode_huffman_table(
     GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
 
     if (!gst_jpeg_parse_huffman_table(&priv->huf_tables, buf, buf_size, 0)) {
-        GST_DEBUG("failed to parse Huffman table");
+        GST_ERROR("failed to parse Huffman table");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
     priv->has_huf_table = TRUE;
@@ -402,7 +405,7 @@ decode_quant_table(
     GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
 
     if (!gst_jpeg_parse_quant_table(&priv->quant_tables, buf, buf_size, 0)) {
-        GST_DEBUG("failed to parse quantization table");
+        GST_ERROR("failed to parse quantization table");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
     priv->has_quant_table = TRUE;
@@ -419,7 +422,7 @@ decode_restart_interval(
     GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
 
     if (!gst_jpeg_parse_restart_interval(&priv->mcu_restart, buf, buf_size, 0)) {
-        GST_DEBUG("failed to parse restart interval");
+        GST_ERROR("failed to parse restart interval");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
@@ -442,7 +445,7 @@ decode_scan(GstVaapiDecoderJpeg *decoder, GstJpegMarkerSegment *seg,
 
     memset(&scan_hdr, 0, sizeof(scan_hdr));
     if (!gst_jpeg_parse_scan_hdr(&scan_hdr, buf + seg->offset, seg->size, 0)) {
-        GST_DEBUG("Jpeg parsed scan failed.");
+        GST_ERROR("failed to parse scan header");
         return GST_VAAPI_DECODER_STATUS_ERROR_BITSTREAM_PARSER;
     }
 
@@ -722,15 +725,13 @@ gst_vaapi_decoder_jpeg_start_frame(GstVaapiDecoder *base_decoder,
     if (!fill_picture(decoder, picture, &priv->frame_hdr))
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
-    if (!fill_quantization_table(decoder, picture)) {
-        GST_ERROR("failed to fill in quantization table");
-        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-    }
+    status = fill_quantization_table(decoder, picture);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+        return status;
 
-    if (!fill_huffman_table(decoder, picture)) {
-        GST_ERROR("failed to fill in huffman table");
-        return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
-    }
+    status = fill_huffman_table(decoder, picture);
+    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
+        return status;
 
     /* Update presentation time */
     picture->pts = GST_VAAPI_DECODER_CODEC_FRAME(decoder)->pts;
