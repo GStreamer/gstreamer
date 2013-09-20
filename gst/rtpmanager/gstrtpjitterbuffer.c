@@ -2456,17 +2456,31 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
     for (i = 0; i < len; i++) {
       TimerData *test = &g_array_index (priv->timers, TimerData, i);
       GstClockTime test_timeout = get_timeout (jitterbuffer, test);
+      gboolean save_best = FALSE;
 
       GST_DEBUG_OBJECT (jitterbuffer, "%d, %d, %d, %" GST_TIME_FORMAT,
           i, test->type, test->seqnum, GST_TIME_ARGS (test_timeout));
 
-      /* no timestamp, timeout immeditately */
-      if (test_timeout == -1 || test_timeout <= now) {
-        if (do_timeout (jitterbuffer, test, now))
-          len--;
-        i--;
-      } else if (timer == NULL || test_timeout < timer_timeout) {
-        /* find the smallest timeout */
+      /* find the smallest timeout */
+      if (timer == NULL) {
+        save_best = TRUE;
+      } else if (timer_timeout == -1) {
+        /* we already have an immediate timeout, the new timer must be an
+         * immediate timer with smaller seqnum to become the best */
+        if (test_timeout == -1 && test->seqnum < timer->seqnum)
+          save_best = TRUE;
+      } else if (test_timeout == -1) {
+        /* first immediate timer */
+        save_best = TRUE;
+      } else if (test_timeout < timer_timeout) {
+        /* earlier timer */
+        save_best = TRUE;
+      } else if (test_timeout == timer_timeout && test->seqnum < timer->seqnum) {
+        /* same timer, smaller seqnum */
+        save_best = TRUE;
+      }
+      if (save_best) {
+        GST_DEBUG_OBJECT (jitterbuffer, "new best %d", i);
         timer = test;
         timer_timeout = test_timeout;
       }
@@ -2478,9 +2492,13 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       GstClockReturn ret;
       GstClockTimeDiff clock_jitter;
 
-      /* check here, do_timeout could have released the lock */
-      if (!priv->timer_running)
-        break;
+      if (timer_timeout == -1 || timer_timeout <= now) {
+        do_timeout (jitterbuffer, timer, now);
+        /* check here, do_timeout could have released the lock */
+        if (!priv->timer_running)
+          break;
+        continue;
+      }
 
       GST_OBJECT_LOCK (jitterbuffer);
       clock = GST_ELEMENT_CLOCK (jitterbuffer);
