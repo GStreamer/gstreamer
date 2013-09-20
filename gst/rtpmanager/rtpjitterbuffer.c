@@ -656,7 +656,7 @@ gboolean
 rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
     gboolean * tail, gint * percent)
 {
-  GList *list;
+  GList *list = NULL;
   guint32 rtptime;
   guint16 seqnum;
   GstClockTime dts;
@@ -665,6 +665,9 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
   g_return_val_if_fail (item != NULL, FALSE);
 
   seqnum = item->seqnum;
+  /* no seqnum, simply append then */
+  if (seqnum == -1)
+    goto append;
 
   /* loop the list to skip strictly smaller seqnum buffers */
   for (list = jbuf->packets->head; list; list = g_list_next (list)) {
@@ -673,6 +676,8 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
     RTPJitterBufferItem *qitem = (RTPJitterBufferItem *) list;
 
     qseq = qitem->seqnum;
+    if (qseq == -1)
+      continue;
 
     /* compare the new seqnum to the one in the buffer */
     gap = gst_rtp_buffer_compare_seqnum (seqnum, qseq);
@@ -729,6 +734,7 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
    * receive dts, this function will return the skew corrected rtptime. */
   item->pts = calculate_skew (jbuf, rtptime, dts);
 
+append:
   queue_do_insert (jbuf, list, (GList *) item);
 
   /* buffering mode, update buffer stats */
