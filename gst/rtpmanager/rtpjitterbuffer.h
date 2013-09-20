@@ -25,6 +25,7 @@
 
 typedef struct _RTPJitterBuffer RTPJitterBuffer;
 typedef struct _RTPJitterBufferClass RTPJitterBufferClass;
+typedef struct _RTPJitterBufferItem RTPJitterBufferItem;
 
 #define RTP_TYPE_JITTER_BUFFER             (rtp_jitter_buffer_get_type())
 #define RTP_JITTER_BUFFER(src)             (G_TYPE_CHECK_INSTANCE_CAST((src),RTP_TYPE_JITTER_BUFFER,RTPJitterBuffer))
@@ -99,6 +100,28 @@ struct _RTPJitterBufferClass {
   GObjectClass   parent_class;
 };
 
+/**
+ * RTPJitterBufferItem:
+ * @data: the data of the item
+ * @next: pointer to next item
+ * @prev: pointer to previous item
+ * @dts: input DTS
+ * @pts: output PTS
+ * @seqnum: seqnum
+ * @rtptime: rtp timestamp
+ *
+ * An object containing an RTP packet or event.
+ */
+struct _RTPJitterBufferItem {
+  gpointer data;
+  GList *next;
+  GList *prev;
+  GstClockTime dts;
+  GstClockTime pts;
+  guint seqnum;
+  guint rtptime;
+};
+
 GType rtp_jitter_buffer_get_type (void);
 
 /* managing lifetime */
@@ -115,11 +138,11 @@ guint32               rtp_jitter_buffer_get_clock_rate   (RTPJitterBuffer *jbuf)
 
 void                  rtp_jitter_buffer_reset_skew       (RTPJitterBuffer *jbuf);
 
-gboolean              rtp_jitter_buffer_insert           (RTPJitterBuffer *jbuf, GstBuffer *buf,
-                                                          GstClockTime time,
+gboolean              rtp_jitter_buffer_insert           (RTPJitterBuffer *jbuf,
+                                                          RTPJitterBufferItem *item,
                                                           gboolean *tail, gint *percent);
-GstBuffer *           rtp_jitter_buffer_peek             (RTPJitterBuffer *jbuf);
-GstBuffer *           rtp_jitter_buffer_pop              (RTPJitterBuffer *jbuf, gint *percent);
+RTPJitterBufferItem * rtp_jitter_buffer_peek             (RTPJitterBuffer *jbuf);
+RTPJitterBufferItem * rtp_jitter_buffer_pop              (RTPJitterBuffer *jbuf, gint *percent);
 
 void                  rtp_jitter_buffer_flush            (RTPJitterBuffer *jbuf);
 
