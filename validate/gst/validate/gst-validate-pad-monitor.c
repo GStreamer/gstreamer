@@ -210,6 +210,7 @@ static void
 gst_validate_pad_monitor_check_raw_audio_caps_complete (GstValidatePadMonitor *
     monitor, GstStructure * structure)
 {
+  gint channels;
   _check_field_type (monitor, structure, "format", G_TYPE_STRING, GST_TYPE_LIST,
       0);
   _check_field_type (monitor, structure, "layout", G_TYPE_STRING, GST_TYPE_LIST,
@@ -218,8 +219,11 @@ gst_validate_pad_monitor_check_raw_audio_caps_complete (GstValidatePadMonitor *
       GST_TYPE_INT_RANGE, 0);
   _check_field_type (monitor, structure, "channels", G_TYPE_INT, GST_TYPE_LIST,
       GST_TYPE_INT_RANGE, 0);
-  _check_field_type (monitor, structure, "channel-mask", GST_TYPE_BITMASK,
-      GST_TYPE_LIST, 0);
+  if (gst_structure_get_int(structure, "channels", &channels)) {
+    if (channels > 2)
+      _check_field_type (monitor, structure, "channel-mask", GST_TYPE_BITMASK,
+          GST_TYPE_LIST, 0);
+  }
 }
 
 static void
