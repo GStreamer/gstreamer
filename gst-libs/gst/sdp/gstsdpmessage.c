@@ -1121,8 +1121,7 @@ DEFINE_ARRAY_GETTER (bandwidth, bandwidths, GstSDPBandwidth);
  * gst_sdp_message_insert_bandwidth:
  * @msg: a #GstSDPMessage
  * @idx: an index
- * @bwtype: the bandwidth modifier type
- * @bandwidth: the bandwidth in kilobits per second
+ * @bw: the bandwidth
  *
  * Insert bandwidth parameters into the array of bandwidths in @msg
  * at index @idx.
@@ -1139,10 +1138,9 @@ DEFINE_ARRAY_INSERT (bandwidth, bandwidths, GstSDPBandwidth *, DUP_BANDWIDTH,
  * gst_sdp_message_replace_bandwidth:
  * @msg: a #GstSDPMessage
  * @idx: the bandwidth index
- * @bwtype: the bandwidth modifier type
- * @bandwidth: the bandwidth in kilobits per second
+ * @bw: the bandwidth
  *
- * Replace the bandwidth information in @msg at index @idx with @bwtype and @bandwidth.
+ * Replace the bandwidth information in @msg at index @idx with @bw.
  *
  * Returns: a #GstSDPResult.
  *
@@ -1602,7 +1600,7 @@ gst_sdp_message_get_attribute_val (const GstSDPMessage * msg, const gchar * key)
  * gst_sdp_message_insert_attribute:
  * @msg: a #GstSDPMessage
  * @idx: an index
- * @attribute a #GstSDPAttribute
+ * @attr: a #GstSDPAttribute
  *
  * Insert attribute into the array of attributes in @msg
  * at index @idx.
@@ -1619,9 +1617,9 @@ DEFINE_ARRAY_INSERT (attribute, attributes, GstSDPAttribute *, DUP_ATTRIBUTE,
  * gst_sdp_message_replace_attribute:
  * @msg: a #GstSDPMessage
  * @idx: the index
- * @attribute: a #GstSDPAttribute
+ * @attr: a #GstSDPAttribute
  *
- * Replace the attribute in @msg at index @idx with @attribute.
+ * Replace the attribute in @msg at index @idx with @attr.
  *
  * Returns: a #GstSDPResult.
  *
