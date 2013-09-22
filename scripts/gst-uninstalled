@@ -27,19 +27,30 @@
 
 # This script is run -i so that PS1 doesn't get cleared
 
-# Change this variable to the location of your gstreamer git checkouts
-MYGST=$HOME/gst
+if [ -z $GST_UNINSTALLED_ROOT ];
+then
+    # Change this variable to the location of your gstreamer git checkouts
+    MYGST=$HOME/gst
 
-#
-# Everything below this line shouldn't be edited!
-#
+    #
+    # Everything below this line shouldn't be edited!
+    #
 
-# extract version from $0
-# if this script is called "gst-head" then version will be "head"
-VERSION=`echo $0 | sed s/.*gst-//g`
+    # extract version from $0
+    # if this script is called "gst-head" then version will be "head"
+    VERSION=`echo $0 | sed s/.*gst-//g`
 
-# base path under which dirs are installed
-GST=$MYGST/$VERSION
+    # base path under which dirs are installed
+    GST=$MYGST/$VERSION
+else
+    # Alternatively, you can set the GST_UNINSTALLED_ROOT environment variable to the
+    # location of your checkout and call this script directly.
+    #
+    # Ex: GST_UNINSTALLED_ROOT=$HOME/checkout/location gst-uninstalled
+
+    GST=$GST_UNINSTALLED_ROOT
+fi
+
 GST_PREFIX=$GST/prefix
 if test ! -e $GST; then
   echo "$GST does not exist !"
