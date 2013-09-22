@@ -1183,16 +1183,47 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
     adder->send_caps = FALSE;
   }
 
+  rate = GST_AUDIO_INFO_RATE (&adder->info);
+  bps = GST_AUDIO_INFO_BPS (&adder->info);
+  bpf = GST_AUDIO_INFO_BPF (&adder->info);
+
+  if (g_atomic_int_compare_and_exchange (&adder->new_segment_pending, TRUE,
+          FALSE)) {
+    GstEvent *event;
+
+    /* 
+     * When seeking we set the start and stop positions as given in the seek
+     * event. We also adjust offset & timestamp accordingly.
+     * This basically ignores all newsegments sent by upstream.
+     */
+    event = gst_event_new_segment (&adder->segment);
+    if (adder->segment.rate > 0.0) {
+      adder->segment.position = adder->segment.start;
+    } else {
+      adder->segment.position = adder->segment.stop;
+    }
+    adder->offset = gst_util_uint64_scale (adder->segment.position,
+        rate, GST_SECOND);
+
+    GST_INFO_OBJECT (adder->srcpad, "sending pending new segment event %"
+        GST_SEGMENT_FORMAT, &adder->segment);
+    if (event) {
+      if (!gst_pad_push_event (adder->srcpad, event)) {
+        GST_WARNING_OBJECT (adder->srcpad, "Sending new segment event failed");
+      }
+    } else {
+      GST_WARNING_OBJECT (adder->srcpad, "Creating new segment event for "
+          "start:%" G_GINT64_FORMAT "  end:%" G_GINT64_FORMAT " failed",
+          adder->segment.start, adder->segment.stop);
+    }
+  }
+
   /* get available bytes for reading, this can be 0 which could mean empty
    * buffers or EOS, which we will catch when we loop over the pads. */
   outsize = gst_collect_pads_available (pads);
   /* can only happen when no pads to collect or all EOS */
   if (outsize == 0)
     goto eos;
-
-  rate = GST_AUDIO_INFO_RATE (&adder->info);
-  bps = GST_AUDIO_INFO_BPS (&adder->info);
-  bpf = GST_AUDIO_INFO_BPF (&adder->info);
 
   GST_LOG_OBJECT (adder,
       "starting to cycle through channels, %d bytes available (bps = %d, bpf = %d)",
@@ -1431,37 +1462,6 @@ gst_adder_collected (GstCollectPads * pads, gpointer user_data)
   } else if (gapbuf) {
     /* we had an output buffer, unref the gapbuffer we kept */
     gst_buffer_unref (gapbuf);
-  }
-
-  if (g_atomic_int_compare_and_exchange (&adder->new_segment_pending, TRUE,
-          FALSE)) {
-    GstEvent *event;
-
-    /* 
-     * When seeking we set the start and stop positions as given in the seek
-     * event. We also adjust offset & timestamp accordingly.
-     * This basically ignores all newsegments sent by upstream.
-     */
-    event = gst_event_new_segment (&adder->segment);
-    if (adder->segment.rate > 0.0) {
-      adder->segment.position = adder->segment.start;
-    } else {
-      adder->segment.position = adder->segment.stop;
-    }
-    adder->offset = gst_util_uint64_scale (adder->segment.position,
-        rate, GST_SECOND);
-
-    GST_INFO_OBJECT (adder->srcpad, "sending pending new segment event %"
-        GST_SEGMENT_FORMAT, &adder->segment);
-    if (event) {
-      if (!gst_pad_push_event (adder->srcpad, event)) {
-        GST_WARNING_OBJECT (adder->srcpad, "Sending new segment event failed");
-      }
-    } else {
-      GST_WARNING_OBJECT (adder->srcpad, "Creating new segment event for "
-          "start:%" G_GINT64_FORMAT "  end:%" G_GINT64_FORMAT " failed",
-          adder->segment.start, adder->segment.stop);
-    }
   }
 
   if (G_UNLIKELY (adder->pending_events)) {
