@@ -610,6 +610,8 @@ GST_START_TEST (test_single_layer_automatic_transition)
   g_list_free_full (objects, gst_object_unref);
 
   GST_DEBUG ("Back to previous state");
+  /*  Make sure to keep 1 ref so we can check_destroyed afterward */
+  gst_object_ref (transition);
   ges_timeline_element_set_duration (src, 1100 - 600);
   /*             600____src___1100
    *        500___________src1________1250
@@ -623,7 +625,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   assert_equals_uint64 (_DURATION (src2), 1000);
 
   /* We check that the transition as actually been freed */
-  fail_if (GES_IS_TRANSITION_CLIP (transition));
+  check_destroyed (G_OBJECT (transition), NULL, NULL);
 
   objects = ges_layer_get_clips (layer);
   assert_equals_int (g_list_length (objects), 3);

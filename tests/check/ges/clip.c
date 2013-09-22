@@ -349,7 +349,6 @@ GST_START_TEST (test_clip_refcount_remove_child)
   fail_unless (ges_container_remove (GES_CONTAINER (clip),
           GES_TIMELINE_ELEMENT (effect)));
   fail_unless (called == TRUE);
-  fail_if (G_IS_OBJECT (effect));
 
   check_destroyed (G_OBJECT (track), NULL, NULL);
   check_destroyed (G_OBJECT (clip), NULL, NULL);
