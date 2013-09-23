@@ -71,13 +71,13 @@ noinst_HEADERS =				\
 
 if HAVE_IOS
 
-libgstapplemedia_la_SOURCES +=			\
-	avfvideosrc.m
+#libgstapplemedia_la_SOURCES +=			\
+#	avfvideosrc.m
 
-libgstapplemedia_la_LDFLAGS +=			\
-	-Wl,-framework -Wl,CoreMedia		\
-	-Wl,-framework -Wl,Foundation		\
-	-Wl,-framework -Wl,AVFoundation
+#libgstapplemedia_la_LDFLAGS +=			\
+#	-Wl,-framework -Wl,CoreMedia		\
+#	-Wl,-framework -Wl,Foundation		\
+#	-Wl,-framework -Wl,AVFoundation
 
 else
 

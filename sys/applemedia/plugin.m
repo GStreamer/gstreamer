@@ -50,8 +50,10 @@ plugin_init (GstPlugin * plugin)
   gboolean res = TRUE;
 
 #ifdef HAVE_IOS
+#if 0
   res = gst_element_register (plugin, "avfvideosrc", GST_RANK_NONE,
       GST_TYPE_AVF_VIDEO_SRC);
+#endif
 #else
   enable_mt_mode ();
 
@@ -67,8 +69,10 @@ plugin_init (GstPlugin * plugin)
 #endif
   res &= gst_element_register (plugin, "atdec", GST_RANK_PRIMARY, GST_TYPE_ATDEC);
 
+#ifndef HAVE_IOS
   gst_vtenc_register_elements (plugin);
   gst_vtdec_register_elements (plugin);
+#endif
 
   return res;
 }
