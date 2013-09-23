@@ -609,7 +609,6 @@ static void
 queue_do_insert (RTPJitterBuffer * jbuf, GList * list, GList * item)
 {
   GQueue *queue = jbuf->packets;
-  GList *walk;
 
   /* It's more likely that the packet was inserted in the front of the buffer */
   if (G_LIKELY (list)) {
@@ -629,13 +628,6 @@ queue_do_insert (RTPJitterBuffer * jbuf, GList * list, GList * item)
       queue->head = queue->tail;
   }
   queue->length++;
-
-  GST_DEBUG ("head %p, tail %p", queue->head, queue->tail);
-  for (walk = queue->head; walk; walk = walk->next) {
-    RTPJitterBufferItem *item = (RTPJitterBufferItem *) walk;
-    GST_DEBUG ("item %p, next %p, prev %p, #%d",
-        item, item->next, item->prev, item->seqnum);
-  }
 }
 
 /**
