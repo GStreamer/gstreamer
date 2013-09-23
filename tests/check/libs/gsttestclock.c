@@ -513,12 +513,17 @@ GST_START_TEST (test_single_shot_sync_unschedule)
   GstTestClock *test_clock;
   GstClockID clock_id;
   GtuClockWaitContext *wait_ctx;
+  gboolean wait_complete = FALSE;
 
   clock = gst_test_clock_new_with_start_time (GST_SECOND);
   test_clock = GST_TEST_CLOCK (clock);
 
   clock_id = gst_clock_new_single_shot_id (clock, GST_SECOND);
   gst_clock_id_unschedule (clock_id);
+  /* any wait should timeout immediately */
+  g_assert (gst_clock_id_wait_async (clock_id, test_async_wait_cb,
+          &wait_complete, NULL) == GST_CLOCK_UNSCHEDULED);
+  g_assert (gst_clock_id_wait (clock_id, NULL) == GST_CLOCK_UNSCHEDULED);
   gst_clock_id_unref (clock_id);
 
   clock_id = gst_clock_new_single_shot_id (clock, 2 * GST_SECOND);

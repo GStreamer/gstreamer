@@ -423,6 +423,9 @@ gst_test_clock_wait (GstClock * clock,
       "requesting synchronous clock notification at %" GST_TIME_FORMAT,
       GST_TIME_ARGS (GST_CLOCK_ENTRY_TIME (entry)));
 
+  if (GST_CLOCK_ENTRY_STATUS (entry) == GST_CLOCK_UNSCHEDULED)
+    goto was_unscheduled;
+
   if (gst_test_clock_lookup_entry_context (test_clock, entry) == NULL)
     gst_test_clock_add_entry (test_clock, entry, jitter);
 
@@ -434,6 +437,15 @@ gst_test_clock_wait (GstClock * clock,
   GST_OBJECT_UNLOCK (test_clock);
 
   return GST_CLOCK_ENTRY_STATUS (entry);
+
+  /* ERRORS */
+was_unscheduled:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_TEST_CLOCK, test_clock,
+        "entry was unscheduled");
+    GST_OBJECT_UNLOCK (test_clock);
+    return GST_CLOCK_UNSCHEDULED;
+  }
 }
 
 static GstClockReturn
@@ -442,6 +454,9 @@ gst_test_clock_wait_async (GstClock * clock, GstClockEntry * entry)
   GstTestClock *test_clock = GST_TEST_CLOCK (clock);
 
   GST_OBJECT_LOCK (test_clock);
+
+  if (GST_CLOCK_ENTRY_STATUS (entry) == GST_CLOCK_UNSCHEDULED)
+    goto was_unscheduled;
 
   GST_CAT_DEBUG_OBJECT (GST_CAT_TEST_CLOCK, test_clock,
       "requesting asynchronous clock notification at %" GST_TIME_FORMAT,
@@ -452,6 +467,15 @@ gst_test_clock_wait_async (GstClock * clock, GstClockEntry * entry)
   GST_OBJECT_UNLOCK (test_clock);
 
   return GST_CLOCK_OK;
+
+  /* ERRORS */
+was_unscheduled:
+  {
+    GST_CAT_DEBUG_OBJECT (GST_CAT_TEST_CLOCK, test_clock,
+        "entry was unscheduled");
+    GST_OBJECT_UNLOCK (test_clock);
+    return GST_CLOCK_UNSCHEDULED;
+  }
 }
 
 static void
