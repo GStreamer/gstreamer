@@ -998,6 +998,9 @@ manage_client (GstRTSPServer * server, GstRTSPClient * client)
 
   GST_DEBUG_OBJECT (server, "manage client %p", client);
 
+  g_signal_emit (server, gst_rtsp_server_signals[SIGNAL_CLIENT_CONNECTED], 0,
+      client);
+
   cctx = g_slice_new0 (ClientContext);
   cctx->server = g_object_ref (server);
   cctx->client = client;
@@ -1089,9 +1092,6 @@ gst_rtsp_server_transfer_connection (GstRTSPServer * server, GSocket * socket,
   /* manage the client connection */
   manage_client (server, client);
 
-  g_signal_emit (server, gst_rtsp_server_signals[SIGNAL_CLIENT_CONNECTED], 0,
-      client);
-
   return TRUE;
 
   /* ERRORS */
@@ -1156,9 +1156,6 @@ gst_rtsp_server_io_func (GSocket * socket, GIOCondition condition,
 
     /* manage the client connection */
     manage_client (server, client);
-
-    g_signal_emit (server, gst_rtsp_server_signals[SIGNAL_CLIENT_CONNECTED], 0,
-        client);
   } else {
     GST_WARNING_OBJECT (server, "received unknown event %08x", condition);
   }
