@@ -426,6 +426,13 @@ if test "x$HAVE_CPU_I386" != "xyes" && test "x$HAVE_CPU_X86_64" != "xyes"; then
   AG_GST_DISABLE_PLUGIN(real)
 fi
 
+AC_CHECK_HEADER(MobileCoreServices/MobileCoreServices.h, HAVE_IOS="yes", HAVE_IOS="no", [-])
+
+AM_CONDITIONAL(HAVE_IOS, test "x$HAVE_IOS" = "xyes")
+if test "x$HAVE_IOS" = "xyes"; then
+  AC_DEFINE(HAVE_IOS, 1, [Define if building for Apple iOS])
+fi
+
 dnl disable gst plugins we might not be able to build on this
 dnl platform: (ugly but minimally invasive)
 dnl FIXME: maybe move to sys, or make work with winsock2
@@ -446,7 +453,7 @@ fi
 
 dnl *** gst-libs/gst/egl ***
 AC_ARG_WITH([egl-window-system],
-              AS_HELP_STRING([--with-egl-window-system],[EGL window system to use (x11, mali-fb, rpi, ios, none)]),
+              AS_HELP_STRING([--with-egl-window-system],[EGL window system to use (x11, mali-fb, rpi, none)]),
               [EGL_WINDOW_SYSTEM="$withval"],
               [EGL_WINDOW_SYSTEM="auto"])
 
@@ -479,12 +486,6 @@ if test x"$EGL_WINDOW_SYSTEM" = x"auto"; then
       if test x"$HAVE_X11" = x"yes"; then
         EGL_WINDOW_SYSTEM="x11"
       fi
-  fi
-
-  if test x"$EGL_WINDOW_SYSTEM" = x"auto"; then
-    if test x"$HAVE_IOS" = x"yes"; then
-      EGL_WINDOW_SYSTEM="ios"
-    fi
   fi
 
   if test x"$EGL_WINDOW_SYSTEM" = x"auto"; then
@@ -592,9 +593,6 @@ case "$EGL_WINDOW_SYSTEM" in
 
     LIBS=$old_LIBS
     CFLAGS=$old_CFLAGS
-    ;;
-  ios)
-    HAVE_EGLGLES="yes"
     ;;
   *)
     AC_MSG_ERROR([invalid EGL window system specified])
@@ -859,13 +857,6 @@ case "$host" in
     HAVE_APPLE_MEDIA="no"
     ;;
 esac
-
-AC_CHECK_HEADER(MobileCoreServices/MobileCoreServices.h, HAVE_IOS="yes", HAVE_IOS="no", [-])
-
-AM_CONDITIONAL(HAVE_IOS, test "x$HAVE_IOS" = "xyes")
-if test "x$HAVE_IOS" = "xyes"; then
-  AC_DEFINE(HAVE_IOS, 1, [Define if building for Apple iOS])
-fi
 
 dnl *** bluez ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_BLUEZ, true)
@@ -1848,6 +1839,8 @@ AG_GST_CHECK_FEATURE(EGLGLES, [eglgles sink], eglgles, [
         LIBS=$old_LIBS
         CFLAGS=$old_CFLAGS
       ])
+  elif test x"$HAVE_IOS" = x"yes"; then
+      HAVE_EGLGLES="yes"
   fi
 
   AC_SUBST(EGLGLES_CFLAGS)
