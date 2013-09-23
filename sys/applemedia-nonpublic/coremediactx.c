@@ -44,8 +44,10 @@ static const GstApiProvider api_provider[] = {
   API_PROVIDER (CORE_VIDEO, cv),
   API_PROVIDER (CORE_MEDIA, cm),
 #ifdef HAVE_IOS
+#if 0
   API_PROVIDER (MEDIA_TOOLBOX, mt),
   API_PROVIDER (CELESTIAL, cel)
+#endif
 #else
   API_PROVIDER (MIO, mio),
 #endif

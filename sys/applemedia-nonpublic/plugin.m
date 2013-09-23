@@ -45,8 +45,10 @@ plugin_init (GstPlugin * plugin)
   gboolean res = TRUE;
 
 #ifdef HAVE_IOS
+#if 0
   res &= gst_element_register (plugin, "celvideosrc", GST_RANK_NONE,
       GST_TYPE_CEL_VIDEO_SRC);
+#endif
 #else
   enable_mt_mode ();
 

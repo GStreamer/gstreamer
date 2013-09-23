@@ -69,10 +69,10 @@ noinst_HEADERS =				\
 
 if HAVE_IOS
 
-libgstapplemedia_nonpublic_la_SOURCES +=			\
-	celvideosrc.c				\
-	mtapi.c					\
-	celapi.c
+#libgstapplemedia_nonpublic_la_SOURCES +=			\
+#	celvideosrc.c				\
+#	mtapi.c					\
+#	celapi.c
 
 else
 
