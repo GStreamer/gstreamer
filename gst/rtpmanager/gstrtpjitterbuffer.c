@@ -1678,7 +1678,7 @@ remove_all_timers (GstRtpJitterBuffer * jitterbuffer)
 /* we just received a packet with seqnum and dts.
  *
  * First check for old seqnum that we are still expecting. If the gap with the
- * current timestamp is too big, unschedule the timeouts.
+ * current seqnum is too big, unschedule the timeouts.
  *
  * If we have a valid packet spacing estimate we can set a timer for when we
  * should receive the next packet.
@@ -1735,6 +1735,8 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
     /* if we had a timer, remove it, we don't know when to expect the next
      * packet. */
     remove_timer (jitterbuffer, timer);
+    /* we signal the _loop function because this new packet could be the one
+     * it was waiting for */
     JBUF_SIGNAL_EVENT (priv);
   }
 }
@@ -1757,47 +1759,6 @@ calculate_packet_spacing (GstRtpJitterBuffer * jitterbuffer, guint32 rtptime,
     }
     priv->ips_rtptime = rtptime;
     priv->ips_dts = dts;
-  }
-}
-
-static void
-send_lost_event (GstRtpJitterBuffer * jitterbuffer, guint seqnum,
-    guint lost_packets, GstClockTime timestamp, GstClockTime duration,
-    gboolean late)
-{
-  GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
-  guint next_seqnum;
-  GstEvent *event;
-  RTPJitterBufferItem *item;
-
-  /* we had a gap and thus we lost some packets. Create an event for this.  */
-  if (lost_packets > 1)
-    GST_DEBUG_OBJECT (jitterbuffer, "Packets #%d -> #%d lost", seqnum,
-        seqnum + lost_packets - 1);
-  else
-    GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d lost", seqnum);
-
-  priv->num_late += lost_packets;
-
-  next_seqnum = seqnum + lost_packets - 1;
-
-  /* create paket lost event */
-  event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-      gst_structure_new ("GstRTPPacketLost",
-          "seqnum", G_TYPE_UINT, (guint) seqnum,
-          "timestamp", G_TYPE_UINT64, timestamp,
-          "duration", G_TYPE_UINT64, duration,
-          "late", G_TYPE_BOOLEAN, late, NULL));
-
-  item = alloc_item (event, ITEM_TYPE_LOST, -1, -1, next_seqnum, -1);
-  rtp_jitter_buffer_insert (priv->jbuf, item, NULL, NULL);
-
-  if (seqnum == priv->next_seqnum) {
-    GST_DEBUG_OBJECT (jitterbuffer, "lost seqnum %d == %d next_seqnum -> %d",
-        seqnum, priv->next_seqnum, next_seqnum);
-    priv->next_seqnum = next_seqnum & 0xffff;
-    priv->last_popped_seqnum = next_seqnum;
-    priv->last_out_time = timestamp;
   }
 }
 
@@ -2461,24 +2422,51 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   GstClockTime duration, timestamp;
-  guint seqnum, num;
+  guint seqnum, next_seqnum, lost_packets;
   gboolean late;
+  GstEvent *event;
+  RTPJitterBufferItem *item;
 
   seqnum = timer->seqnum;
   timestamp = apply_offset (jitterbuffer, timer->timeout);
   duration = timer->duration;
   if (duration == GST_CLOCK_TIME_NONE && priv->packet_spacing > 0)
     duration = priv->packet_spacing;
-  num = MAX (timer->num, 1);
+  lost_packets = MAX (timer->num, 1);
   late = timer->num > 0;
+
+  /* we had a gap and thus we lost some packets. Create an event for this.  */
+  if (lost_packets > 1)
+    GST_DEBUG_OBJECT (jitterbuffer, "Packets #%d -> #%d lost", seqnum,
+        seqnum + lost_packets - 1);
+  else
+    GST_DEBUG_OBJECT (jitterbuffer, "Packet #%d lost", seqnum);
+
+  priv->num_late += lost_packets;
+
+  next_seqnum = seqnum + lost_packets - 1;
+
+  /* create paket lost event */
+  event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+      gst_structure_new ("GstRTPPacketLost",
+          "seqnum", G_TYPE_UINT, (guint) seqnum,
+          "timestamp", G_TYPE_UINT64, timestamp,
+          "duration", G_TYPE_UINT64, duration,
+          "late", G_TYPE_BOOLEAN, late, NULL));
+
+  item = alloc_item (event, ITEM_TYPE_LOST, -1, -1, next_seqnum, -1);
+  rtp_jitter_buffer_insert (priv->jbuf, item, NULL, NULL);
+
+  if (seqnum == priv->next_seqnum) {
+    GST_DEBUG_OBJECT (jitterbuffer, "lost seqnum %d == %d next_seqnum -> %d",
+        seqnum, priv->next_seqnum, next_seqnum);
+    priv->next_seqnum = next_seqnum & 0xffff;
+    priv->last_popped_seqnum = next_seqnum;
+    priv->last_out_time = timestamp;
+  }
 
   /* remove timer now */
   remove_timer (jitterbuffer, timer);
-
-  /* this releases the lock */
-  send_lost_event (jitterbuffer, seqnum, num, timestamp, duration, late);
-
-  /* now we can let the pushing thread try again */
   JBUF_SIGNAL_EVENT (priv);
 
   return TRUE;
