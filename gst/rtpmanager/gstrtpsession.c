@@ -21,7 +21,7 @@
  * SECTION:element-rtpsession
  * @see_also: rtpjitterbuffer, rtpbin, rtpptdemux, rtpssrcdemux
  *
- * The RTP session manager models one participant with a unique SSRC in an RTP
+ * The RTP session manager models participants with unique SSRC in an RTP
  * session. This session can be used to send and receive RTP and RTCP packets.
  * Based on what REQUEST pads are requested from the session manager, specific
  * functionality can be activated.
@@ -39,6 +39,9 @@
  *   </listitem>
  *   <listitem>
  *     <para>Scheduling of RR/SR RTCP packets.</para>
+ *   </listitem>
+ *   <listitem>
+ *     <para>Support for multiple sender SSRC.</para>
  *   </listitem>
  * </itemizedlist>
  *
@@ -64,9 +67,8 @@
  * that should be sent to all participants in the session.
  *
  * To use #GstRtpSession as a sender, request a send_rtp_sink pad, which will
- * automatically create a send_rtp_src pad. The session manager will modify the
- * SSRC in the RTP packets to its own SSRC and wil forward the packets on the
- * send_rtp_src pad after updating its internal state.
+ * automatically create a send_rtp_src pad. The session manager will
+ * forward the packets on the send_rtp_src pad after updating its internal state.
  *
  * The session manager needs the clock-rate of the payload types it is handling
  * and will signal the #GstRtpSession::request-pt-map signal when it needs such a

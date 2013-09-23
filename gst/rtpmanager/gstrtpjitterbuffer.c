@@ -27,17 +27,59 @@
  * SECTION:element-rtpjitterbuffer
  *
  * This element reorders and removes duplicate RTP packets as they are received
- * from a network source. It will also wait for missing packets up to a
- * configurable time limit using the #GstRtpJitterBuffer:latency property.
- * Packets arriving too late are considered to be lost packets.
- *
- * This element acts as a live element and so adds #GstRtpJitterBuffer:latency
- * to the pipeline.
+ * from a network source.
  *
  * The element needs the clock-rate of the RTP payload in order to estimate the
  * delay. This information is obtained either from the caps on the sink pad or,
  * when no caps are present, from the #GstRtpJitterBuffer::request-pt-map signal.
  * To clear the previous pt-map use the #GstRtpJitterBuffer::clear-pt-map signal.
+ *
+ * The rtpjitterbuffer will wait for missing packets up to a configurable time
+ * limit using the #GstRtpJitterBuffer:latency property. Packets arriving too
+ * late are considered to be lost packets. If the #GstRtpJitterBuffer:do-lost
+ * property is set, lost packets will result in a custom serialized downstream
+ * event of name GstRTPPacketLost. The lost packet events are usually used by a
+ * depayloader or other element to create concealment data or some other logic
+ * to gracefully handle the missing packets.
+ *
+ * The jitterbuffer will use the DTS (or PTS if no DTS is set) of the incomming
+ * buffer and the rtptime inside the RTP packet to create a PTS on the outgoing
+ * buffer.
+ *
+ * The jitterbuffer can also be configured to send early retransmission events
+ * upstream by setting the #GstRtpJitterBuffer:do-retransmission property. In
+ * this mode, the jitterbuffer tries to estimate when a packet should arrive and
+ * sends a custom upstream event named GstRTPRetransmissionRequest when the
+ * packet is considered late. The initial expected packet arrival time is
+ * calculated as follows:
+ *
+ * - If seqnum N arrived at time T, seqnum N+1 is expected to arrive at
+ *     T + packet-spacing + #GstRtpJitterBuffer:rtx-delay. The packet spacing is
+ *     calculated from the DTS (or PTS is no DTS) of two consecutive RTP
+ *     packets with different rtptime.
+ *
+ * - If seqnum N0 arrived at time T0 and seqnum Nm arrived at time Tm,
+ *     seqnum Ni is expected at time Ti = T0 + i*(Tm - T0)/(Nm - N0). Any
+ *     previously scheduled timeout is overwritten.
+ *
+ * - If seqnum N arrived, all seqnum older than
+ *     N - #GstRtpJitterBuffer:rtx-delay-reorder are considered late
+ *     immediately. This is to request fast feedback for abonormally reorder
+ *     packets before any of the previous timeouts is triggered.
+ *
+ * A late packet triggers the GstRTPRetransmissionRequest custom upstream
+ * event. After the initial timeout expires and the retransmission event is
+ * sent, the timeout is scheduled for
+ * T + #GstRtpJitterBuffer:rtx-retry-timeout. If the missing packet did not
+ * arrive after #GstRtpJitterBuffer:rtx-retry-timeout, a new
+ * GstRTPRetransmissionRequest is sent upstream and the timeout is rescheduled
+ * again for T + #GstRtpJitterBuffer:rtx-retry-timeout. This repeats until
+ * #GstRtpJitterBuffer:rtx-retry-period elapsed, at which point no further
+ * retransmission requests are sent and the regular logic is performed to
+ * schedule a lost packet as discussed above.
+ *
+ * This element acts as a live element and so adds #GstRtpJitterBuffer:latency
+ * to the pipeline.
  *
  * This element will automatically be used inside rtpbin.
  *
