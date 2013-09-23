@@ -216,6 +216,9 @@ struct _GstVaapiSlice {
     VABufferID                  param_id;
     VABufferID                  data_id;
     gpointer                    param;
+
+    /* Per-slice overrides */
+    GstVaapiHuffmanTable       *huf_table;
 };
 
 G_GNUC_INTERNAL

@@ -291,6 +291,11 @@ gst_vaapi_picture_decode(GstVaapiPicture *picture)
         GstVaapiSlice * const slice = g_ptr_array_index(picture->slices, i);
         VABufferID va_buffers[2];
 
+        huf_table = slice->huf_table;
+        if (huf_table && !do_decode(va_display, va_context,
+                &huf_table->param_id, (void **)&huf_table->param))
+            return FALSE;
+
         vaapi_unmap_buffer(va_display, slice->param_id, NULL);
         va_buffers[0] = slice->param_id;
         va_buffers[1] = slice->data_id;
@@ -395,6 +400,9 @@ void
 gst_vaapi_slice_destroy(GstVaapiSlice *slice)
 {
     VADisplay const va_display = GET_VA_DISPLAY(slice);
+
+    gst_vaapi_mini_object_replace((GstVaapiMiniObject **)&slice->huf_table,
+        NULL);
 
     vaapi_destroy_buffer(va_display, &slice->data_id);
     vaapi_destroy_buffer(va_display, &slice->param_id);

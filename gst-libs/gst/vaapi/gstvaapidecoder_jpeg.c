@@ -313,23 +313,37 @@ fill_quantization_table(GstVaapiDecoderJpeg *decoder, GstVaapiPicture *picture)
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
-static GstVaapiDecoderStatus
-fill_huffman_table(GstVaapiDecoderJpeg *decoder, GstVaapiPicture *picture)
+static gboolean
+huffman_tables_updated(const GstJpegHuffmanTables *huf_tables)
 {
-    GstVaapiDecoderJpegPrivate * const priv = &decoder->priv;
-    GstJpegHuffmanTables * const huf_tables = &priv->huf_tables;
-    VAHuffmanTableBufferJPEGBaseline *huffman_table;
-    guint i, num_tables;
+    guint i;
 
-    if (!VALID_STATE(decoder, GOT_HUF_TABLE))
-        gst_jpeg_get_default_huffman_tables(&priv->huf_tables);
-    
-    picture->huf_table = GST_VAAPI_HUFFMAN_TABLE_NEW(JPEGBaseline, decoder);
-    if (!picture->huf_table) {
-        GST_ERROR("failed to allocate Huffman tables");
-        return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
-    }
-    huffman_table = picture->huf_table->param;
+    for (i = 0; i < G_N_ELEMENTS(huf_tables->dc_tables); i++)
+        if (huf_tables->dc_tables[i].valid)
+            return TRUE;
+    for (i = 0; i < G_N_ELEMENTS(huf_tables->ac_tables); i++)
+        if (huf_tables->ac_tables[i].valid)
+            return TRUE;
+    return FALSE;
+}
+
+static void
+huffman_tables_reset(GstJpegHuffmanTables *huf_tables)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS(huf_tables->dc_tables); i++)
+        huf_tables->dc_tables[i].valid = FALSE;
+    for (i = 0; i < G_N_ELEMENTS(huf_tables->ac_tables); i++)
+        huf_tables->ac_tables[i].valid = FALSE;
+}
+
+static void
+fill_huffman_table(GstVaapiHuffmanTable *huf_table,
+    const GstJpegHuffmanTables *huf_tables)
+{
+    VAHuffmanTableBufferJPEGBaseline * const huffman_table = huf_table->param;
+    guint i, num_tables;
 
     num_tables = MIN(G_N_ELEMENTS(huffman_table->huffman_table),
                      GST_JPEG_MAX_SCAN_COMPONENTS);
@@ -356,7 +370,6 @@ fill_huffman_table(GstVaapiDecoderJpeg *decoder, GstVaapiPicture *picture)
                0,
                sizeof(huffman_table->huffman_table[i].pad));
     }
-    return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
 static guint
@@ -506,6 +519,21 @@ decode_scan(GstVaapiDecoderJpeg *decoder, GstJpegMarkerSegment *seg,
         return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
     }
     gst_vaapi_picture_add_slice(picture, slice);
+
+    if (!VALID_STATE(decoder, GOT_HUF_TABLE))
+        gst_jpeg_get_default_huffman_tables(&priv->huf_tables);
+
+    // Update VA Huffman table if it changed for this scan
+    if (huffman_tables_updated(&priv->huf_tables)) {
+        slice->huf_table = GST_VAAPI_HUFFMAN_TABLE_NEW(JPEGBaseline, decoder);
+        if (!slice->huf_table) {
+            GST_ERROR("failed to allocate Huffman tables");
+            huffman_tables_reset(&priv->huf_tables);
+            return GST_VAAPI_DECODER_STATUS_ERROR_ALLOCATION_FAILED;
+        }
+        fill_huffman_table(slice->huf_table, &priv->huf_tables);
+        huffman_tables_reset(&priv->huf_tables);
+    }
 
     slice_param = slice->param;
     slice_param->num_components = scan_hdr.num_components;
@@ -700,6 +728,16 @@ gst_vaapi_decoder_jpeg_parse(GstVaapiDecoder *base_decoder,
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
         priv->parser_state |= GST_JPEG_VIDEO_STATE_GOT_SOS;
         break;
+    case GST_JPEG_MARKER_DAC:
+    case GST_JPEG_MARKER_DHT:
+    case GST_JPEG_MARKER_DQT:
+        if (priv->parser_state & GST_JPEG_VIDEO_STATE_GOT_SOF)
+            flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
+        break;
+    case GST_JPEG_MARKER_DRI:
+        if (priv->parser_state & GST_JPEG_VIDEO_STATE_GOT_SOS)
+            flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
+        break;
     case GST_JPEG_MARKER_DNL:
         flags |= GST_VAAPI_DECODER_UNIT_FLAG_SLICE;
         break;
@@ -789,10 +827,6 @@ gst_vaapi_decoder_jpeg_start_frame(GstVaapiDecoder *base_decoder,
         return GST_VAAPI_DECODER_STATUS_ERROR_UNKNOWN;
 
     status = fill_quantization_table(decoder, picture);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-        return status;
-
-    status = fill_huffman_table(decoder, picture);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         return status;
 
