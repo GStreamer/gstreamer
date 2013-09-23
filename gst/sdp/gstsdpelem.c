@@ -26,7 +26,7 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
-  if (!gst_element_register (plugin, "sdpdemux", GST_RANK_SECONDARY,
+  if (!gst_element_register (plugin, "sdpdemux", GST_RANK_NONE,
           GST_TYPE_SDP_DEMUX))
     return FALSE;
 
