@@ -297,7 +297,7 @@ _test_project (GESProject * project, GESTimeline * timeline)
 }
 
 static void
-_add_keyframes (GESTimeline * timeline)
+_add_properties (GESTimeline * timeline)
 {
   GList *tracks;
   GList *tmp;
@@ -316,6 +316,7 @@ _add_keyframes (GESTimeline * timeline)
         for (tmp_tck = track_elements; tmp_tck; tmp_tck = tmp_tck->next) {
           GESTrackElement *element = GES_TRACK_ELEMENT (tmp_tck->data);
 
+          /* Adding keyframes */
           if (GES_IS_EFFECT (element)) {
             GstControlSource *source;
             GstControlBinding *tmp_binding, *binding;
@@ -349,6 +350,15 @@ _add_keyframes (GESTimeline * timeline)
             gst_timed_value_control_source_set (GST_TIMED_VALUE_CONTROL_SOURCE
                 (source), 10 * GST_SECOND, 1.);
           }
+          /* Adding children properties */
+          else if (GES_IS_VIDEO_SOURCE (element)) {
+            gint64 posx = 42;
+            ges_track_element_set_child_properties (element, "posx", posx,
+                NULL);
+            ges_track_element_get_child_properties (element, "posx", &posx,
+                NULL);
+            fail_unless_equals_int64 (posx, 42);
+          }
         }
         break;
       default:
@@ -358,7 +368,7 @@ _add_keyframes (GESTimeline * timeline)
 }
 
 static void
-_check_keyframes (GESTimeline * timeline)
+_check_properties (GESTimeline * timeline)
 {
   GList *tracks;
   GList *tmp;
@@ -376,7 +386,7 @@ _check_keyframes (GESTimeline * timeline)
 
         for (tmp_tck = track_elements; tmp_tck; tmp_tck = tmp_tck->next) {
           GESTrackElement *element = GES_TRACK_ELEMENT (tmp_tck->data);
-
+          /* Checking keyframes */
           if (GES_IS_EFFECT (element)) {
             GstControlBinding *binding;
             GstControlSource *source;
@@ -406,6 +416,14 @@ _check_keyframes (GESTimeline * timeline)
             fail_unless (value->value == 1.);
             fail_unless (value->timestamp == 10 * GST_SECOND);
           }
+          /* Checking children properties */
+          else if (GES_IS_VIDEO_SOURCE (element)) {
+            /* Init 'posx' with a wrong value */
+            gint64 posx = 27;
+            ges_track_element_get_child_properties (element, "posx", &posx,
+                NULL);
+            fail_unless_equals_int64 (posx, 42);
+          }
         }
         break;
       default:
@@ -414,13 +432,13 @@ _check_keyframes (GESTimeline * timeline)
   }
 }
 
-GST_START_TEST (test_project_add_keyframes)
+GST_START_TEST (test_project_add_properties)
 {
   GESProject *project;
   GESTimeline *timeline;
   GESAsset *formatter_asset;
   gboolean saved;
-  gchar *uri = ges_test_file_uri ("test-keyframes.xges");
+  gchar *uri = ges_test_file_uri ("test-properties.xges");
 
   project = ges_project_new (uri);
   mainloop = g_main_loop_new (NULL, FALSE);
@@ -439,9 +457,9 @@ GST_START_TEST (test_project_add_keyframes)
 
   g_free (uri);
 
-  _add_keyframes (timeline);
+  _add_properties (timeline);
 
-  uri = get_tmp_uri ("test-keyframes-save.xges");
+  uri = get_tmp_uri ("test-properties-save.xges");
   formatter_asset = ges_asset_request (GES_TYPE_FORMATTER, "ges", NULL);
   saved =
       ges_project_save (project, timeline, uri, formatter_asset, TRUE, NULL);
@@ -462,7 +480,7 @@ GST_START_TEST (test_project_add_keyframes)
 
   g_main_loop_run (mainloop);
 
-  _check_keyframes (timeline);
+  _check_properties (timeline);
 
   gst_object_unref (timeline);
   gst_object_unref (project);
@@ -720,7 +738,7 @@ ges_suite (void)
   tcase_add_test (tc_chain, test_project_simple);
   tcase_add_test (tc_chain, test_project_add_assets);
   tcase_add_test (tc_chain, test_project_load_xges);
-  tcase_add_test (tc_chain, test_project_add_keyframes);
+  tcase_add_test (tc_chain, test_project_add_properties);
   tcase_add_test (tc_chain, test_project_auto_transition);
   /*tcase_add_test (tc_chain, test_load_xges_and_play); */
   tcase_add_test (tc_chain, test_project_unexistant_effect);
