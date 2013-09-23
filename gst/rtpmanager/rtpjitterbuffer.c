@@ -96,7 +96,6 @@ rtp_jitter_buffer_finalize (GObject * object)
 
   jbuf = RTP_JITTER_BUFFER_CAST (object);
 
-  rtp_jitter_buffer_flush (jbuf);
   g_queue_free (jbuf->packets);
 
   G_OBJECT_CLASS (rtp_jitter_buffer_parent_class)->finalize (object);
@@ -819,18 +818,22 @@ rtp_jitter_buffer_peek (RTPJitterBuffer * jbuf)
 /**
  * rtp_jitter_buffer_flush:
  * @jbuf: an #RTPJitterBuffer
+ * @free_func: function to free each item
+ * @user_data: user data passed to @free_func
  *
  * Flush all packets from the jitterbuffer.
  */
 void
-rtp_jitter_buffer_flush (RTPJitterBuffer * jbuf)
+rtp_jitter_buffer_flush (RTPJitterBuffer * jbuf, GFunc free_func,
+    gpointer user_data)
 {
-  GstBuffer *buffer;
+  GList *item;
 
   g_return_if_fail (jbuf != NULL);
+  g_return_if_fail (free_func != NULL);
 
-  while ((buffer = g_queue_pop_head (jbuf->packets)))
-    gst_buffer_unref (buffer);
+  while ((item = g_queue_pop_head_link (jbuf->packets)))
+    free_func ((RTPJitterBufferItem *) item, user_data);
 }
 
 /**

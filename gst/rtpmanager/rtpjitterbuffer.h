@@ -144,7 +144,8 @@ gboolean              rtp_jitter_buffer_insert           (RTPJitterBuffer *jbuf,
 RTPJitterBufferItem * rtp_jitter_buffer_peek             (RTPJitterBuffer *jbuf);
 RTPJitterBufferItem * rtp_jitter_buffer_pop              (RTPJitterBuffer *jbuf, gint *percent);
 
-void                  rtp_jitter_buffer_flush            (RTPJitterBuffer *jbuf);
+void                  rtp_jitter_buffer_flush            (RTPJitterBuffer *jbuf,
+                                                          GFunc free_func, gpointer user_data);
 
 gboolean              rtp_jitter_buffer_is_buffering     (RTPJitterBuffer * jbuf);
 void                  rtp_jitter_buffer_set_buffering    (RTPJitterBuffer * jbuf, gboolean buffering);

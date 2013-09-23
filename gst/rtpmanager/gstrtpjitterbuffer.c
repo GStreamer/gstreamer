@@ -654,19 +654,36 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   GST_OBJECT_FLAG_SET (jitterbuffer, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
 }
 
+static RTPJitterBufferItem *
+alloc_item (void)
+{
+  return g_slice_new (RTPJitterBufferItem);
+}
+
+static void
+free_item (RTPJitterBufferItem * item)
+{
+  if (item->data)
+    gst_mini_object_unref (item->data);
+  g_slice_free (RTPJitterBufferItem, item);
+}
+
 static void
 gst_rtp_jitter_buffer_finalize (GObject * object)
 {
   GstRtpJitterBuffer *jitterbuffer;
+  GstRtpJitterBufferPrivate *priv;
 
   jitterbuffer = GST_RTP_JITTER_BUFFER (object);
+  priv = jitterbuffer->priv;
 
-  g_array_free (jitterbuffer->priv->timers, TRUE);
-  g_mutex_clear (&jitterbuffer->priv->jbuf_lock);
-  g_cond_clear (&jitterbuffer->priv->jbuf_timer);
-  g_cond_clear (&jitterbuffer->priv->jbuf_event);
+  g_array_free (priv->timers, TRUE);
+  g_mutex_clear (&priv->jbuf_lock);
+  g_cond_clear (&priv->jbuf_timer);
+  g_cond_clear (&priv->jbuf_event);
 
-  g_object_unref (jitterbuffer->priv->jbuf);
+  rtp_jitter_buffer_flush (priv->jbuf, (GFunc) free_item, NULL);
+  g_object_unref (priv->jbuf);
 
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
@@ -1034,7 +1051,7 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->last_elapsed = 0;
   priv->ext_timestamp = -1;
   GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
-  rtp_jitter_buffer_flush (priv->jbuf);
+  rtp_jitter_buffer_flush (priv->jbuf, (GFunc) free_item, NULL);
   rtp_jitter_buffer_reset_skew (priv->jbuf);
   remove_all_timers (jitterbuffer);
   JBUF_UNLOCK (priv);
@@ -1809,20 +1826,6 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
   }
 }
 
-static RTPJitterBufferItem *
-alloc_item (void)
-{
-  return g_slice_new (RTPJitterBufferItem);
-}
-
-static void
-free_item (RTPJitterBufferItem * item)
-{
-  if (item->data)
-    gst_mini_object_unref (item->data);
-  g_slice_free (RTPJitterBufferItem, item);
-}
-
 static GstFlowReturn
 gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -1952,7 +1955,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
       }
       if (G_UNLIKELY (reset)) {
         GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
-        rtp_jitter_buffer_flush (priv->jbuf);
+        rtp_jitter_buffer_flush (priv->jbuf, (GFunc) free_item, NULL);
         rtp_jitter_buffer_reset_skew (priv->jbuf);
         remove_all_timers (jitterbuffer);
         priv->last_popped_seqnum = -1;
