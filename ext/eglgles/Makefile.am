@@ -4,6 +4,7 @@ if HAVE_IOS
 DISTRO_SRC = gstegladaptation_eagl.m
 else
 DISTRO_SRC = gstegladaptation_egl.c video_platform_wrapper.c
+GST_EGL_LIBS = $(top_builddir)/gst-libs/gst/egl/libgstegl-$(GST_API_VERSION).la
 endif
 
 libgsteglglessink_la_SOURCES = gsteglglessink.c gstegladaptation.c $(DISTRO_SRC)
@@ -23,11 +24,10 @@ libgsteglglessink_la_OBJCFLAGS = $(GST_PLUGINS_BAD_OBJCFLAGS) \
 
 libgsteglglessink_la_LIBADD = $(GST_LIBS) $(GST_BASE_LIBS) \
 	$(GST_PLUGINS_BASE_LIBS) $(EGL_LIBS) $(EGLGLES_LIBS) \
-	-lgstvideo-$(GST_API_VERSION) \
-	$(top_builddir)/gst-libs/gst/egl/libgstegl-$(GST_API_VERSION).la
+	-lgstvideo-$(GST_API_VERSION) $(GST_EGL_LIBS)
 
 if HAVE_IOS
-libgsteglglessink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -Wl,-framework,OpenGLES -Wl,-framework,QuartzCore -Wl,-framework,IOKit -Wl,-framework,UIKit -Wl,-framework,CoreGraphics -Wl,-framework,CoreFoundation -Wl,-framework,Foundation -W
+libgsteglglessink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS) -Wl,-framework,OpenGLES -Wl,-framework,QuartzCore -Wl,-framework,UIKit -Wl,-framework,CoreGraphics -Wl,-framework,CoreFoundation -Wl,-framework,Foundation -W
 else
 libgsteglglessink_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 endif

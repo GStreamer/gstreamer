@@ -273,12 +273,14 @@ gst_egl_adaptation_fill_supported_fbuffer_configs (GstEglAdaptationContext *
     copy1 = gst_caps_copy (caps);
     copy2 = gst_caps_copy (caps);
 
+#ifndef HAVE_IOS
     n = gst_caps_get_size (caps);
     for (i = 0; i < n; i++) {
       GstCapsFeatures *features =
           gst_caps_features_new (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE, NULL);
       gst_caps_set_features (caps, i, features);
     }
+#endif
 
     n = gst_caps_get_size (copy1);
     for (i = 0; i < n; i++) {
@@ -444,7 +446,7 @@ HANDLE_ERROR:
 }
 
 gboolean
-gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
+gst_egl_adaptation_init_surface (GstEglAdaptationContext * ctx,
     GstVideoFormat format)
 {
   GLboolean ret;
@@ -465,7 +467,7 @@ gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx,
 
   gst_egl_adaptation_query_buffer_preserved (ctx);
 
-  gst_egl_adaptation_init_egl_exts (ctx);
+  gst_egl_adaptation_init_exts (ctx);
 
   /* Save surface dims */
   gst_egl_adaptation_update_surface_dimensions (ctx);
