@@ -1984,9 +1984,20 @@ gst_audio_ring_buffer_set_timestamp (GstAudioRingBuffer * buf, gint readseg,
 
   GST_INFO_OBJECT (buf, "Storing timestamp %" GST_TIME_FORMAT
       " @ %d", GST_TIME_ARGS (timestamp), readseg);
-  if (buf->timestamps) {
-    buf->timestamps[readseg] = timestamp;
-  } else {
-    GST_ERROR_OBJECT (buf, "Could not store timestamp, no timestamps buffer");
+
+  GST_OBJECT_LOCK (buf);
+  if (G_UNLIKELY (!buf->acquired))
+    goto not_acquired;
+
+  buf->timestamps[readseg] = timestamp;
+
+done:
+  GST_OBJECT_UNLOCK (buf);
+  return;
+
+not_acquired:
+  {
+    GST_DEBUG_OBJECT (buf, "we are not acquired");
+    goto done;
   }
 }
