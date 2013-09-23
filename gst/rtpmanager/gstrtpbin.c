@@ -633,13 +633,13 @@ create_session (GstRtpBin * rtpbin, gint id)
   /* ERRORS */
 no_session:
   {
-    g_warning ("rtpbin: could not create gstrtpsession element");
+    g_warning ("rtpbin: could not create rtpsession element");
     return NULL;
   }
 no_demux:
   {
     gst_object_unref (session);
-    g_warning ("rtpbin: could not create gstrtpssrcdemux element");
+    g_warning ("rtpbin: could not create rtpssrcdemux element");
     return NULL;
   }
 }
@@ -1465,13 +1465,13 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   /* ERRORS */
 no_jitterbuffer:
   {
-    g_warning ("rtpbin: could not create gstrtpjitterbuffer element");
+    g_warning ("rtpbin: could not create rtpjitterbuffer element");
     return NULL;
   }
 no_demux:
   {
     gst_object_unref (buffer);
-    g_warning ("rtpbin: could not create gstrtpptdemux element");
+    g_warning ("rtpbin: could not create rtpptdemux element");
     return NULL;
   }
 }
@@ -2598,7 +2598,7 @@ new_ssrc_pad_found (GstElement * element, guint ssrc, GstPad * pad,
     stream->demux_ptchange_sig = g_signal_connect (stream->demux,
         "payload-type-change", (GCallback) payload_type_change, session);
   } else {
-    /* add gstrtpjitterbuffer src pad to pads */
+    /* add rtpjitterbuffer src pad to pads */
     GstElementClass *klass;
     GstPadTemplate *templ;
     gchar *padname;

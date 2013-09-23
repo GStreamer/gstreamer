@@ -24,9 +24,9 @@
  */
 
 /**
- * SECTION:element-gstrtpptdemux
+ * SECTION:element-rtpptdemux
  *
- * gstrtpptdemux acts as a demuxer for RTP packets based on the payload type of
+ * rtpptdemux acts as a demuxer for RTP packets based on the payload type of
  * the packets. Its main purpose is to allow an application to easily receive
  * and decode an RTP stream with multiple payload types.
  * 
@@ -42,7 +42,7 @@
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch-1.0 udpsrc caps="application/x-rtp" ! gstrtpptdemux ! fakesink
+ * gst-launch-1.0 udpsrc caps="application/x-rtp" ! rtpptdemux ! fakesink
  * ]| Takes an RTP stream and send the RTP packets with the first detected
  * payload type to fakesink, discarding the other payload types.
  * </refsect2>

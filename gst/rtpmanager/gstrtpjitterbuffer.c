@@ -24,7 +24,7 @@
  */
 
 /**
- * SECTION:element-gstrtpjitterbuffer
+ * SECTION:element-rtpjitterbuffer
  *
  * This element reorders and removes duplicate RTP packets as they are received
  * from a network source. It will also wait for missing packets up to a
@@ -39,12 +39,12 @@
  * when no caps are present, from the #GstRtpJitterBuffer::request-pt-map signal.
  * To clear the previous pt-map use the #GstRtpJitterBuffer::clear-pt-map signal.
  *
- * This element will automatically be used inside gstrtpbin.
+ * This element will automatically be used inside rtpbin.
  *
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
- * gst-launch-1.0 rtspsrc location=rtsp://192.168.1.133:8554/mpeg1or2AudioVideoTest ! gstrtpjitterbuffer ! rtpmpvdepay ! mpeg2dec ! xvimagesink
+ * gst-launch-1.0 rtspsrc location=rtsp://192.168.1.133:8554/mpeg1or2AudioVideoTest ! rtpjitterbuffer ! rtpmpvdepay ! mpeg2dec ! xvimagesink
  * ]| Connect to a streaming server and decode the MPEG video. The jitterbuffer is
  * inserted into the pipeline to smooth out network jitter and to reorder the
  * out-of-order RTP packets.
@@ -593,7 +593,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   klass->set_active = GST_DEBUG_FUNCPTR (gst_rtp_jitter_buffer_set_active);
 
   GST_DEBUG_CATEGORY_INIT
-      (rtpjitterbuffer_debug, "gstrtpjitterbuffer", 0, "RTP Jitter Buffer");
+      (rtpjitterbuffer_debug, "rtpjitterbuffer", 0, "RTP Jitter Buffer");
 }
 
 static void
@@ -801,12 +801,12 @@ gst_rtp_jitter_buffer_request_new_pad (GstElement * element,
   /* ERRORS */
 wrong_template:
   {
-    g_warning ("gstrtpjitterbuffer: this is not our template");
+    g_warning ("rtpjitterbuffer: this is not our template");
     return NULL;
   }
 exists:
   {
-    g_warning ("gstrtpjitterbuffer: pad already requested");
+    g_warning ("rtpjitterbuffer: pad already requested");
     return NULL;
   }
 }
