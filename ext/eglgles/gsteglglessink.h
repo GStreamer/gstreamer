@@ -50,7 +50,6 @@
 #include <gst/video/video.h>
 #include <gst/video/gstvideosink.h>
 #include <gst/base/gstdataqueue.h>
-#include <gst/egl/egl.h>
 
 #include "gstegladaptation.h"
 
@@ -107,7 +106,9 @@ struct _GstEglGlesSink
   GstVideoInfo configured_info;
   gfloat stride[3];
   GstVideoGLTextureOrientation orientation;
+#ifndef HAVE_IOS
   GstBufferPool *pool;
+#endif
 
   GstEglAdaptationContext *egl_context;
 

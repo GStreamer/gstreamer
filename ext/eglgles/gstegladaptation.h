@@ -67,11 +67,10 @@
 #define EGL_EGLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
 
-#include <gst/egl/egl.h>
-
 #ifdef HAVE_IOS
 #include <OpenGLES/ES2/gl.h>
 #else
+#include <gst/egl/egl.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES2/gl2.h>
@@ -82,18 +81,6 @@
 #pragma GCC reset_options
 #pragma GCC diagnostic pop
 #endif
-
-#define GST_EGLGLESSINK_EGL_MIN_VERSION 1
-
-static const EGLint eglglessink_RGBA8888_attribs[] = {
-  EGL_RED_SIZE, 8,
-  EGL_GREEN_SIZE, 8,
-  EGL_BLUE_SIZE, 8,
-  EGL_ALPHA_SIZE, 8,
-  EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-  EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-  EGL_NONE
-};
 
 G_BEGIN_DECLS
 
@@ -134,12 +121,12 @@ struct _GstEglAdaptationContext
 
 #ifdef HAVE_IOS
   GstEaglContext *eaglctx;
+  void * window, *used_window;
 #else
   GstEglGlesRenderContext *eglglesctx;
-#endif
-
   GstEGLDisplay *display, *set_display;
   EGLNativeWindowType window, used_window;
+#endif
 
   GLuint fragshader[2]; /* frame, border */
   GLuint vertshader[2]; /* frame, border */
@@ -155,10 +142,10 @@ struct _GstEglAdaptationContext
   unsigned int position_buffer, index_buffer;
   gint n_textures;
 
-  EGLint surface_width;
-  EGLint surface_height;
-  EGLint pixel_aspect_ratio_n;
-  EGLint pixel_aspect_ratio_d;
+  gint surface_width;
+  gint surface_height;
+  gint pixel_aspect_ratio_n;
+  gint pixel_aspect_ratio_d;
 
   gboolean have_vbo;
   gboolean have_texture;
@@ -194,10 +181,10 @@ gboolean gst_egl_adaptation_create_native_window (GstEglAdaptationContext
 void gst_egl_adaptation_destroy_native_window (GstEglAdaptationContext * ctx, gpointer * own_window_data);
 
 GstCaps *gst_egl_adaptation_fill_supported_fbuffer_configs (GstEglAdaptationContext * ctx);
-gboolean gst_egl_adaptation_init_egl_display (GstEglAdaptationContext * ctx);
+gboolean gst_egl_adaptation_init_display (GstEglAdaptationContext * ctx);
 gboolean gst_egl_adaptation_choose_config (GstEglAdaptationContext * ctx);
-gboolean gst_egl_adaptation_init_egl_surface (GstEglAdaptationContext * ctx, GstVideoFormat format);
-void gst_egl_adaptation_init_egl_exts (GstEglAdaptationContext * ctx);
+gboolean gst_egl_adaptation_init_surface (GstEglAdaptationContext * ctx, GstVideoFormat format);
+void gst_egl_adaptation_init_exts (GstEglAdaptationContext * ctx);
 gboolean gst_egl_adaptation_update_surface_dimensions (GstEglAdaptationContext * ctx);
 gboolean _gst_egl_choose_config (GstEglAdaptationContext * ctx, gboolean try_only, gint * num_configs);
 
@@ -209,8 +196,9 @@ void gst_egl_adaptation_set_window (GstEglAdaptationContext * ctx, guintptr wind
 gboolean gst_egl_adaptation_context_make_current (GstEglAdaptationContext * ctx, gboolean bind);
 void gst_egl_adaptation_cleanup (GstEglAdaptationContext * ctx);
 
-gboolean
-gst_egl_adaptation_context_swap_buffers (GstEglAdaptationContext * ctx);
+void gst_egl_adaptation_bind_API (GstEglAdaptationContext * ctx);
+
+gboolean gst_egl_adaptation_context_swap_buffers (GstEglAdaptationContext * ctx);
 
 #ifndef HAVE_IOS
 /* TODO: The goal is to move this function to gstegl lib (or

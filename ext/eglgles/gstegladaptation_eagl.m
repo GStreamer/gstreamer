@@ -129,11 +129,11 @@ gst_egl_adaptation_create_egl_context (GstEglAdaptationContext * ctx)
       return FALSE;
 
   /* EAGL needs the context to be set here to allow surface creation */
-  return gst_egl_adaptation_make_current (ctx, TRUE);
+  return gst_egl_adaptation_context_make_current (ctx, TRUE);
 }
 
 gboolean
-gst_egl_adaptation_make_current (GstEglAdaptationContext * ctx,
+gst_egl_adaptation_context_make_current (GstEglAdaptationContext * ctx,
     gboolean bind)
 {
   __block EAGLContext *ctx_to_set = nil;
@@ -230,7 +230,7 @@ gst_egl_adaptation_create_surface (GstEglAdaptationContext * ctx)
 }
 
 gboolean
-gst_egl_choose_config (GstEglAdaptationContext * ctx, gboolean try_only, gint * num_configs)
+_gst_egl_choose_config (GstEglAdaptationContext * ctx, gboolean try_only, gint * num_configs)
 {
   CAEAGLLayer *eaglLayer = (CAEAGLLayer *)[ctx->eaglctx->window layer];
   NSDictionary *dict = [NSDictionary dictionaryWithObjectsAndKeys:
@@ -291,7 +291,7 @@ gst_egl_adaptation_update_surface_dimensions (GstEglAdaptationContext *
 }
 
 void
-gst_egl_adaptation_init_egl_exts (GstEglAdaptationContext * ctx)
+gst_egl_adaptation_init_exts (GstEglAdaptationContext * ctx)
 {
   const gchar *extensions = (const gchar *) glGetString(GL_EXTENSIONS);
   NSString *extensionsString = NULL;
@@ -342,7 +342,7 @@ gst_egl_adaptation_destroy_context (GstEglAdaptationContext * ctx)
 }
 
 gboolean
-gst_egl_adaptation_swap_buffers (GstEglAdaptationContext * ctx)
+gst_egl_adaptation_context_swap_buffers (GstEglAdaptationContext * ctx)
 {
   [ctx->eaglctx->eagl_context presentRenderbuffer:GL_RENDERBUFFER];
   return TRUE;

@@ -67,6 +67,18 @@
 #define EGL_SANE_DAR_MIN ((EGL_DISPLAY_SCALING)/10)
 #define EGL_SANE_DAR_MAX ((EGL_DISPLAY_SCALING)*10)
 
+#define GST_EGLGLESSINK_EGL_MIN_VERSION 1
+
+static const EGLint eglglessink_RGBA8888_attribs[] = {
+  EGL_RED_SIZE, 8,
+  EGL_GREEN_SIZE, 8,
+  EGL_BLUE_SIZE, 8,
+  EGL_ALPHA_SIZE, 8,
+  EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+  EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+  EGL_NONE
+};
+
 /*
  * GstEglGlesRenderContext:
  * @config: Current EGL config
@@ -104,7 +116,7 @@ got_egl_error (const char *wtf)
  * EGL/GLES extensions.
  */
 void
-gst_egl_adaptation_init_egl_exts (GstEglAdaptationContext * ctx)
+gst_egl_adaptation_init_exts (GstEglAdaptationContext * ctx)
 {
 #ifndef GST_DISABLE_GST_DEBUG
   const char *eglexts;
@@ -122,7 +134,7 @@ gst_egl_adaptation_init_egl_exts (GstEglAdaptationContext * ctx)
 }
 
 gboolean
-gst_egl_adaptation_init_egl_display (GstEglAdaptationContext * ctx)
+gst_egl_adaptation_init_display (GstEglAdaptationContext * ctx)
 {
   GstMessage *msg;
   EGLDisplay display;
@@ -247,6 +259,12 @@ gst_egl_adaptation_update_surface_dimensions (GstEglAdaptationContext * ctx)
   }
 
   return FALSE;
+}
+
+void
+gst_egl_adaptation_bind_API (GstEglAdaptationContext * ctx)
+{
+  eglBindAPI (EGL_OPENGL_ES_API);
 }
 
 gboolean

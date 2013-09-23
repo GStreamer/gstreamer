@@ -142,16 +142,19 @@ static GstStaticPadTemplate gst_eglglessink_sink_template_factory =
     GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE_WITH_FEATURES
-        (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
+    GST_STATIC_CAPS (
+#ifndef HAVE_IOS
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_EGL_IMAGE,
             "{ " "RGBA, BGRA, ARGB, ABGR, " "RGBx, BGRx, xRGB, xBGR, "
             "AYUV, Y444, I420, YV12, " "NV12, NV21, Y42B, Y41B, "
             "RGB, BGR, RGB16 }") ";"
+#endif
         GST_VIDEO_CAPS_MAKE_WITH_FEATURES
         (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
             "{ " "RGBA, BGRA, ARGB, ABGR, " "RGBx, BGRx, xRGB, xBGR, "
             "AYUV, Y444, I420, YV12, " "NV12, NV21, Y42B, Y41B, "
-            "RGB, BGR, RGB16 }") ";" GST_VIDEO_CAPS_MAKE ("{ "
+            "RGB, BGR, RGB16 }") ";"
+        GST_VIDEO_CAPS_MAKE ("{ "
             "RGBA, BGRA, ARGB, ABGR, " "RGBx, BGRx, xRGB, xBGR, "
             "AYUV, Y444, I420, YV12, " "NV12, NV21, Y42B, Y41B, "
             "RGB, BGR, RGB16 }")));
@@ -213,6 +216,7 @@ static GstFlowReturn gst_eglglessink_queue_object (GstEglGlesSink * sink,
     GstMiniObject * obj);
 static inline gboolean egl_init (GstEglGlesSink * eglglessink);
 
+#ifndef HAVE_IOS
 typedef GstBuffer *(*GstEGLImageBufferPoolSendBlockingAllocate) (GstBufferPool *
     pool, gpointer data);
 
@@ -498,6 +502,7 @@ static void
 gst_egl_image_buffer_pool_init (GstEGLImageBufferPool * pool)
 {
 }
+#endif
 
 #define parent_class gst_eglglessink_parent_class
 G_DEFINE_TYPE_WITH_CODE (GstEglGlesSink, gst_eglglessink, GST_TYPE_VIDEO_SINK,
@@ -509,7 +514,7 @@ egl_init (GstEglGlesSink * eglglessink)
 {
   GstCaps *caps;
 
-  if (!gst_egl_adaptation_init_egl_display (eglglessink->egl_context)) {
+  if (!gst_egl_adaptation_init_display (eglglessink->egl_context)) {
     GST_ERROR_OBJECT (eglglessink, "Couldn't init EGL display");
     goto HANDLE_ERROR;
   }
@@ -553,7 +558,7 @@ render_thread_func (GstEglGlesSink * eglglessink)
   gst_element_post_message (GST_ELEMENT_CAST (eglglessink), message);
   g_value_unset (&val);
 
-  eglBindAPI (EGL_OPENGL_ES_API);
+  gst_egl_adaptation_bind_API (eglglessink->egl_context);
 
   while (gst_data_queue_pop (eglglessink->queue, &item)) {
     GstMiniObject *object = item->object;
@@ -568,6 +573,7 @@ render_thread_func (GstEglGlesSink * eglglessink)
           last_flow = GST_FLOW_NOT_NEGOTIATED;
         }
       }
+#ifndef HAVE_IOS
     } else if (GST_IS_QUERY (object)) {
       GstQuery *query = GST_QUERY_CAST (object);
       GstStructure *s = (GstStructure *) gst_query_get_structure (query);
@@ -598,6 +604,7 @@ render_thread_func (GstEglGlesSink * eglglessink)
         g_assert_not_reached ();
       }
       last_flow = GST_FLOW_OK;
+#endif
     } else if (GST_IS_BUFFER (object)) {
       GstBuffer *buf = GST_BUFFER_CAST (item->object);
 
@@ -728,9 +735,11 @@ gst_eglglessink_stop (GstEglGlesSink * eglglessink)
   }
   eglglessink->last_flow = GST_FLOW_FLUSHING;
 
+#ifndef HAVE_IOS
   if (eglglessink->pool)
     gst_egl_image_buffer_pool_replace_last_buffer (GST_EGL_IMAGE_BUFFER_POOL
         (eglglessink->pool), NULL);
+#endif
 
   if (eglglessink->using_own_window) {
     gst_egl_adaptation_destroy_native_window (eglglessink->egl_context,
@@ -1002,7 +1011,7 @@ gst_eglglessink_set_window_handle (GstVideoOverlay * overlay, guintptr id)
 
   /* OK, we have a new window */
   GST_OBJECT_LOCK (eglglessink);
-  eglglessink->egl_context->window = (EGLNativeWindowType) id;
+  gst_egl_adaptation_set_window (eglglessink->egl_context, id);
   eglglessink->have_window = ((gpointer) id != NULL);
   GST_OBJECT_UNLOCK (eglglessink);
 
@@ -1542,7 +1551,9 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
   if (!buf) {
     GST_DEBUG_OBJECT (eglglessink, "Rendering previous buffer again");
   } else if (buf) {
+#ifndef HAVE_IOS
     GstMemory *mem;
+#endif
     GstVideoGLTextureUploadMeta *upload_meta;
 
     crop = gst_buffer_get_video_crop_meta (buf);
@@ -1589,6 +1600,7 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
       eglglessink->stride[0] = 1;
       eglglessink->stride[1] = 1;
       eglglessink->stride[2] = 1;
+#ifndef HAVE_IOS
     } else if (gst_buffer_n_memory (buf) >= 1 &&
         (mem = gst_buffer_peek_memory (buf, 0))
         && gst_is_egl_image_memory (mem)) {
@@ -1628,6 +1640,7 @@ gst_eglglessink_upload (GstEglGlesSink * eglglessink, GstBuffer * buf)
       eglglessink->stride[0] = 1;
       eglglessink->stride[1] = 1;
       eglglessink->stride[2] = 1;
+#endif
     } else {
       eglglessink->orientation =
           GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL;
@@ -1893,6 +1906,7 @@ gst_eglglessink_query (GstBaseSink * bsink, GstQuery * query)
   eglglessink = GST_EGLGLESSINK (bsink);
 
   switch (GST_QUERY_TYPE (query)) {
+#ifndef HAVE_IOS
     case GST_QUERY_CONTEXT:{
       const gchar *context_type;
 
@@ -1914,6 +1928,7 @@ gst_eglglessink_query (GstBaseSink * bsink, GstQuery * query)
       }
       break;
     }
+#endif
     default:
       return GST_BASE_SINK_CLASS (gst_eglglessink_parent_class)->query (bsink,
           query);
@@ -1924,6 +1939,7 @@ gst_eglglessink_query (GstBaseSink * bsink, GstQuery * query)
 static void
 gst_eglglessink_set_context (GstElement * element, GstContext * context)
 {
+#ifndef HAVE_IOS
   GstEglGlesSink *eglglessink;
   GstEGLDisplay *display = NULL;
 
@@ -1936,11 +1952,13 @@ gst_eglglessink_set_context (GstElement * element, GstContext * context)
     eglglessink->egl_context->set_display = display;
     GST_OBJECT_UNLOCK (eglglessink);
   }
+#endif
 }
 
 static gboolean
 gst_eglglessink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 {
+#ifndef HAVE_IOS
   GstEglGlesSink *eglglessink;
   GstBufferPool *pool;
   GstStructure *config;
@@ -2036,10 +2054,12 @@ gst_eglglessink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   gst_query_add_allocation_param (query, allocator, &params);
   gst_object_unref (allocator);
 
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
   gst_query_add_allocation_meta (query,
       GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL);
+#endif
+
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
+  gst_query_add_allocation_meta (query, GST_VIDEO_CROP_META_API_TYPE, NULL);
 
   return TRUE;
 }
@@ -2107,14 +2127,14 @@ gst_eglglessink_configure_caps (GstEglGlesSink * eglglessink, GstCaps * caps)
       (guintptr) eglglessink->egl_context->used_window);
 
   if (!eglglessink->egl_context->have_surface) {
-    if (!gst_egl_adaptation_init_egl_surface (eglglessink->egl_context,
+    if (!gst_egl_adaptation_init_surface (eglglessink->egl_context,
             eglglessink->configured_info.finfo->format)) {
       GST_ERROR_OBJECT (eglglessink, "Couldn't init EGL surface from window");
       goto HANDLE_ERROR;
     }
   }
 
-  gst_egl_adaptation_init_egl_exts (eglglessink->egl_context);
+  gst_egl_adaptation_init_exts (eglglessink->egl_context);
 
 SUCCEED:
   GST_INFO_OBJECT (eglglessink, "Configured caps successfully");
@@ -2130,9 +2150,11 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 {
   GstEglGlesSink *eglglessink;
   GstVideoInfo info;
+#ifndef HAVE_IOS
   GstBufferPool *newpool, *oldpool;
   GstStructure *config;
   GstAllocationParams params = { 0, };
+#endif
 
   eglglessink = GST_EGLGLESSINK (bsink);
 
@@ -2150,7 +2172,7 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     GST_ERROR_OBJECT (eglglessink, "Invalid caps %" GST_PTR_FORMAT, caps);
     return FALSE;
   }
-
+#ifndef HAVE_IOS
   newpool =
       gst_egl_image_buffer_pool_new
       (gst_eglglessink_egl_image_buffer_pool_send_blocking,
@@ -2173,6 +2195,7 @@ gst_eglglessink_setcaps (GstBaseSink * bsink, GstCaps * caps)
 
   if (oldpool)
     gst_object_unref (oldpool);
+#endif
 
   gst_caps_replace (&eglglessink->current_caps, caps);
 
@@ -2192,20 +2215,22 @@ gst_eglglessink_open (GstEglGlesSink * eglglessink)
 static gboolean
 gst_eglglessink_close (GstEglGlesSink * eglglessink)
 {
+#ifndef HAVE_IOS
   if (eglglessink->egl_context->display) {
     gst_egl_display_unref (eglglessink->egl_context->display);
     eglglessink->egl_context->display = NULL;
   }
-
-  gst_caps_unref (eglglessink->sinkcaps);
-  eglglessink->sinkcaps = NULL;
-  eglglessink->egl_started = FALSE;
 
   GST_OBJECT_LOCK (eglglessink);
   if (eglglessink->pool)
     gst_object_unref (eglglessink->pool);
   eglglessink->pool = NULL;
   GST_OBJECT_UNLOCK (eglglessink);
+#endif
+
+  gst_caps_unref (eglglessink->sinkcaps);
+  eglglessink->sinkcaps = NULL;
+  eglglessink->egl_started = FALSE;
 
   return TRUE;
 }
@@ -2424,6 +2449,7 @@ gst_eglglessink_init (GstEglGlesSink * eglglessink)
   eglglessink->render_region_user = FALSE;
 }
 
+#ifndef HAVE_IOS
 static GstBufferPool *
 gst_egl_image_buffer_pool_new (GstEGLImageBufferPoolSendBlockingAllocate
     blocking_allocate_func, gpointer blocking_allocate_data,
@@ -2439,6 +2465,7 @@ gst_egl_image_buffer_pool_new (GstEGLImageBufferPoolSendBlockingAllocate
 
   return (GstBufferPool *) pool;
 }
+#endif
 
 /* entry point to initialize the plug-in
  * initialize the plug-in itself
