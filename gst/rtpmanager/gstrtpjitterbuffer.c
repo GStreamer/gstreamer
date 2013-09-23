@@ -654,10 +654,26 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   GST_OBJECT_FLAG_SET (jitterbuffer, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
 }
 
+#define ITEM_TYPE_BUFFER        0
+#define ITEM_TYPE_LOST          1
+
 static RTPJitterBufferItem *
-alloc_item (void)
+alloc_item (gpointer data, guint type, GstClockTime dts, GstClockTime pts,
+    guint seqnum, guint rtptime)
 {
-  return g_slice_new (RTPJitterBufferItem);
+  RTPJitterBufferItem *item;
+
+  item = g_slice_new (RTPJitterBufferItem);
+  item->data = data;
+  item->next = NULL;
+  item->prev = NULL;
+  item->type = type;
+  item->dts = dts;
+  item->pts = pts;
+  item->seqnum = seqnum;
+  item->rtptime = rtptime;
+
+  return item;
 }
 
 static void
@@ -2013,14 +2029,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     }
   }
 
-  item = alloc_item ();
-  item->data = buffer;
-  item->next = NULL;
-  item->prev = NULL;
-  item->dts = dts;
-  item->pts = pts;
-  item->seqnum = seqnum;
-  item->rtptime = rtptime;
+  item = alloc_item (buffer, ITEM_TYPE_BUFFER, dts, pts, seqnum, rtptime);
 
   /* now insert the packet into the queue in sorted order. This function returns
    * FALSE if a packet with the same seqnum was already in the queue, meaning we

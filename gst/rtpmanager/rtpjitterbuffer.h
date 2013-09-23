@@ -105,6 +105,7 @@ struct _RTPJitterBufferClass {
  * @data: the data of the item
  * @next: pointer to next item
  * @prev: pointer to previous item
+ * @type: the type of @data
  * @dts: input DTS
  * @pts: output PTS
  * @seqnum: seqnum
@@ -116,6 +117,7 @@ struct _RTPJitterBufferItem {
   gpointer data;
   GList *next;
   GList *prev;
+  guint type;
   GstClockTime dts;
   GstClockTime pts;
   guint seqnum;
