@@ -372,28 +372,39 @@ fill_huffman_table(GstVaapiHuffmanTable *huf_table,
     }
 }
 
-static guint
-get_max_horizontal_samples(GstJpegFrameHdr *frame_hdr)
+static void
+get_max_sampling_factors(const GstJpegFrameHdr *frame_hdr,
+    guint *h_max_ptr, guint *v_max_ptr)
 {
-    guint i, max_factor = 0;
+    guint h_max = frame_hdr->components[0].horizontal_factor;
+    guint v_max = frame_hdr->components[0].vertical_factor;
+    guint i;
 
-    for (i = 0; i < frame_hdr->num_components; i++) {
-        if (frame_hdr->components[i].horizontal_factor > max_factor)
-            max_factor = frame_hdr->components[i].horizontal_factor;
+    for (i = 1; i < frame_hdr->num_components; i++) {
+        const GstJpegFrameComponent * const fcp = &frame_hdr->components[i];
+        if (h_max < fcp->horizontal_factor)
+            h_max = fcp->horizontal_factor;
+        if (v_max < fcp->vertical_factor)
+            v_max = fcp->vertical_factor;
     }
-    return max_factor;
+
+    if (h_max_ptr)
+        *h_max_ptr = h_max;
+    if (v_max_ptr)
+        *v_max_ptr = v_max;
 }
 
-static guint
-get_max_vertical_samples(GstJpegFrameHdr *frame_hdr)
+static const GstJpegFrameComponent *
+get_component(const GstJpegFrameHdr *frame_hdr, guint selector)
 {
-    guint i, max_factor = 0;
+    guint i;
 
     for (i = 0; i < frame_hdr->num_components; i++) {
-        if (frame_hdr->components[i].vertical_factor > max_factor)
-            max_factor = frame_hdr->components[i].vertical_factor;
+        const GstJpegFrameComponent * const fcp = &frame_hdr->components[i];
+        if (fcp->identifier == selector)
+            return fcp;
     }
-    return max_factor;
+    return NULL;
 }
 
 static GstVaapiDecoderStatus
@@ -498,7 +509,7 @@ decode_scan(GstVaapiDecoderJpeg *decoder, GstJpegMarkerSegment *seg,
     VASliceParameterBufferJPEGBaseline *slice_param;
     GstJpegScanHdr scan_hdr;
     guint scan_hdr_size, scan_data_size;
-    guint i, total_h_samples, total_v_samples;
+    guint i, h_max, v_max, mcu_width, mcu_height;
 
     if (!VALID_STATE(decoder, GOT_SOF))
         return GST_VAAPI_DECODER_STATUS_SUCCESS;
@@ -546,23 +557,28 @@ decode_scan(GstVaapiDecoderJpeg *decoder, GstJpegMarkerSegment *seg,
             scan_hdr.components[i].ac_selector;
     }
     slice_param->restart_interval = priv->mcu_restart;
-    if (scan_hdr.num_components == 1) { /*non-interleaved*/
-        slice_param->slice_horizontal_position = 0;
-        slice_param->slice_vertical_position = 0;
-        /* Y mcu numbers*/
-        if (slice_param->components[0].component_selector == priv->frame_hdr.components[0].identifier) {
-            slice_param->num_mcus = (priv->frame_hdr.width/8)*(priv->frame_hdr.height/8);
-        } else { /*Cr, Cb mcu numbers*/
-            slice_param->num_mcus = (priv->frame_hdr.width/16)*(priv->frame_hdr.height/16);
+    slice_param->slice_horizontal_position = 0;
+    slice_param->slice_vertical_position = 0;
+
+    get_max_sampling_factors(&priv->frame_hdr, &h_max, &v_max);
+    mcu_width = 8 * h_max;
+    mcu_height = 8 * v_max;
+
+    if (scan_hdr.num_components == 1) { // Non-interleaved
+        const guint Csj = slice_param->components[0].component_selector;
+        const GstJpegFrameComponent * const fcp =
+            get_component(&priv->frame_hdr, Csj);
+
+        if (!fcp || fcp->horizontal_factor == 0 || fcp->vertical_factor == 0) {
+            GST_ERROR("failed to validate image component %u", Csj);
+            return GST_VAAPI_DECODER_STATUS_ERROR_INVALID_PARAMETER;
         }
-    } else { /* interleaved */
-        slice_param->slice_horizontal_position = 0;
-        slice_param->slice_vertical_position = 0;
-        total_v_samples = get_max_vertical_samples(&priv->frame_hdr);
-        total_h_samples = get_max_horizontal_samples(&priv->frame_hdr);
-        slice_param->num_mcus = ((priv->frame_hdr.width + total_h_samples*8 - 1)/(total_h_samples*8)) *
-                                ((priv->frame_hdr.height + total_v_samples*8 -1)/(total_v_samples*8));
+        mcu_width /= fcp->horizontal_factor;
+        mcu_height /= fcp->vertical_factor;
     }
+    slice_param->num_mcus =
+        ((priv->frame_hdr.width + mcu_width - 1) / mcu_width) *
+        ((priv->frame_hdr.height + mcu_height - 1) / mcu_height);
 
     priv->decoder_state |= GST_JPEG_VIDEO_STATE_GOT_SOS;
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
