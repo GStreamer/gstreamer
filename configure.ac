@@ -355,6 +355,9 @@ else
       *android*)
         target_os=linux
       ;;
+      *darwin*)
+        target_os=darwin
+      ;;
       *)
         target_os=`echo $host_os | sed 's/-gnu//'`
       ;;
