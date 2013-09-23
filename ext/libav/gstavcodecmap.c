@@ -2850,9 +2850,9 @@ gst_ffmpeg_caps_with_codecid (enum CodecID codec_id,
         gint halfpel_flag, thirdpel_flag, low_delay, unknown_svq3_flag;
         guint16 flags;
 
-        if (gst_structure_get_int (str, "halfpel_flag", &halfpel_flag) ||
-            gst_structure_get_int (str, "thirdpel_flag", &thirdpel_flag) ||
-            gst_structure_get_int (str, "low_delay", &low_delay) ||
+        if (gst_structure_get_int (str, "halfpel_flag", &halfpel_flag) &&
+            gst_structure_get_int (str, "thirdpel_flag", &thirdpel_flag) &&
+            gst_structure_get_int (str, "low_delay", &low_delay) &&
             gst_structure_get_int (str, "unknown_svq3_flag",
                 &unknown_svq3_flag)) {
           context->extradata = (guint8 *) av_mallocz (0x64);
