@@ -932,6 +932,8 @@ GST_START_TEST (test_rtx_expected_next)
 
   gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 20 * GST_MSECOND);
 
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+
   /* put second buffer, the jitterbuffer should now know that the packet spacing
    * is 20ms and should ask for retransmission of seqnum 2 in 20ms */
   in_buf = generate_test_buffer (20 * GST_MSECOND, TRUE, 1, 160);
@@ -1023,10 +1025,11 @@ GST_START_TEST (test_rtx_two_missing)
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   /* wait for first retransmission request */
-  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
   gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 60 * GST_MSECOND);
-  g_assert (gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock))
-      == id);
+  do {
+    gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  } while (id !=
+      gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock)));
 
   /* we should have 2 events now, one for 2 and another for 3 */
   out_event = g_async_queue_pop (data.src_event_queue);
@@ -1116,8 +1119,12 @@ GST_END_TEST;
 GST_START_TEST (test_rtx_packet_delay)
 {
   TestData data;
-  GstBuffer *in_buf;
+  GstClockID id, tid;
+  GstBuffer *in_buf, *out_buf;
+  GstEvent *out_event;
   gint jb_latency_ms = 200;
+  gint i;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
 
   setup_testharness (&data);
   g_object_set (data.jitter_buffer, "do-retransmission", TRUE, NULL);
@@ -1128,6 +1135,7 @@ GST_START_TEST (test_rtx_packet_delay)
 
   /* push the first buffer in */
   in_buf = generate_test_buffer (0 * GST_MSECOND, TRUE, 0, 0);
+  GST_BUFFER_FLAG_SET (in_buf, GST_BUFFER_FLAG_DISCONT);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
 
   gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 20 * GST_MSECOND);
@@ -1139,11 +1147,114 @@ GST_START_TEST (test_rtx_packet_delay)
 
   /* push buffer 8, 2 -> 7 are missing now. note that the rtp time is the same
    * as packet 1 because it was part of a fragmented payload. This means that
-   * the estimate for 2 could be refined now. also packet 2, 3 and 4 are
+   * the estimate for 2 could be refined now to 20ms. also packet 2, 3 and 4 are
    * exceeding the max allowed reorder distance and should request a
    * retransmission right away */
   in_buf = generate_test_buffer (20 * GST_MSECOND, TRUE, 8, 8 * 160);
   g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
+
+  /* we should now receive retransmission requests for 2 -> 5 */
+  out_event = g_async_queue_pop (data.src_event_queue);
+  g_assert (out_event != NULL);
+  verify_rtx_event (out_event, 2, 20 * GST_MSECOND, 40, 20 * GST_MSECOND);
+
+  for (i = 3; i < 5; i++) {
+    GST_DEBUG ("popping %d", i);
+    out_event = g_async_queue_pop (data.src_event_queue);
+    g_assert (out_event != NULL);
+    verify_rtx_event (out_event, i, 20 * GST_MSECOND, 0, 20 * GST_MSECOND);
+  }
+  g_assert_cmpint (data.rtx_event_count, ==, 3);
+
+  /* push 9, this should immediately request retransmission of 5 */
+  in_buf = generate_test_buffer (20 * GST_MSECOND, TRUE, 9, 9 * 160);
+  g_assert_cmpint (gst_pad_push (data.test_src_pad, in_buf), ==, GST_FLOW_OK);
+
+  /* we should now receive retransmission requests for 5 */
+  out_event = g_async_queue_pop (data.src_event_queue);
+  g_assert (out_event != NULL);
+  verify_rtx_event (out_event, 5, 20 * GST_MSECOND, 0, 20 * GST_MSECOND);
+
+  /* wait for timeout for rtx 6 -> 7 */
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+  g_assert (id == tid);
+
+  for (i = 6; i < 8; i++) {
+    GST_DEBUG ("popping %d", i);
+    out_event = g_async_queue_pop (data.src_event_queue);
+    g_assert (out_event != NULL);
+    verify_rtx_event (out_event, i, 20 * GST_MSECOND, 0, 20 * GST_MSECOND);
+  }
+
+  /* churn through sync_times until the new buffer gets pushed out */
+  while (g_async_queue_length (data.buf_queue) < 1) {
+    if (gst_test_clock_peek_next_pending_id (GST_TEST_CLOCK (data.clock), &id)) {
+      GstClockTime t = gst_clock_id_get_time (id);
+      if (t > gst_clock_get_time (data.clock)) {
+        gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), t);
+      }
+      gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+    }
+  }
+
+  /* verify that buffer 0 and 1 made it through! */
+  for (i = 0; i < 2; i++) {
+    out_buf = g_async_queue_pop (data.buf_queue);
+    g_assert (out_buf != NULL);
+    if (i == 0)
+      g_assert (GST_BUFFER_FLAG_IS_SET (out_buf, GST_BUFFER_FLAG_DISCONT));
+    gst_rtp_buffer_map (out_buf, GST_MAP_READ, &rtp);
+    g_assert_cmpint (gst_rtp_buffer_get_seq (&rtp), ==, i);
+    gst_rtp_buffer_unmap (&rtp);
+  }
+
+  /* churn through sync_times until the next buffer gets pushed out */
+  while (g_async_queue_length (data.buf_queue) < 1) {
+    if (gst_test_clock_peek_next_pending_id (GST_TEST_CLOCK (data.clock), &id)) {
+      GstClockTime t = gst_clock_id_get_time (id);
+      if (t >= 240 * GST_MSECOND)
+        break;
+      if (t > gst_clock_get_time (data.clock)) {
+        gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), t);
+      }
+      gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+    }
+  }
+
+  for (i = 2; i < 8; i++) {
+    GST_DEBUG ("popping lost event %d", i);
+    out_event = g_async_queue_pop (data.sink_event_queue);
+    g_assert (out_event != NULL);
+    verify_lost_event (out_event, i, 20 * GST_MSECOND, 0, FALSE);
+  }
+
+  /* verify that buffer 8 made it through! */
+  for (i = 8; i < 10; i++) {
+    GST_DEBUG ("popping buffer %d", i);
+    out_buf = g_async_queue_pop (data.buf_queue);
+    g_assert (out_buf != NULL);
+    if (i == 8)
+      g_assert (GST_BUFFER_FLAG_IS_SET (out_buf, GST_BUFFER_FLAG_DISCONT));
+    gst_rtp_buffer_map (out_buf, GST_MAP_READ, &rtp);
+    g_assert_cmpint (gst_rtp_buffer_get_seq (&rtp), ==, i);
+    gst_rtp_buffer_unmap (&rtp);
+  }
+
+  GST_DEBUG ("waiting for 240ms");
+  gst_test_clock_wait_for_next_pending_id (GST_TEST_CLOCK (data.clock), &id);
+  gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), 240 * GST_MSECOND);
+  tid = gst_test_clock_process_next_clock_id (GST_TEST_CLOCK (data.clock));
+  g_assert (id == tid);
+
+  GST_DEBUG ("popping lost event 10");
+  out_event = g_async_queue_pop (data.sink_event_queue);
+  g_assert (out_event != NULL);
+  verify_lost_event (out_event, 10, 40 * GST_MSECOND, 20 * GST_MSECOND, FALSE);
+
+  /* should have seen 6 packet lost events */
+  g_assert_cmpint (data.lost_event_count, ==, 7);
+  g_assert_cmpint (data.rtx_event_count, ==, 26);
 
   destroy_testharness (&data);
 }
