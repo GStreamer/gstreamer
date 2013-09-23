@@ -1725,6 +1725,8 @@ send_lost_event (GstRtpJitterBuffer * jitterbuffer, guint seqnum,
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   guint next_seqnum;
+  GstEvent *event;
+  RTPJitterBufferItem *item;
 
   /* we had a gap and thus we lost some packets. Create an event for this.  */
   if (lost_packets > 1)
@@ -1737,21 +1739,17 @@ send_lost_event (GstRtpJitterBuffer * jitterbuffer, guint seqnum,
 
   next_seqnum = seqnum + lost_packets - 1;
 
-  if (priv->do_lost) {
-    GstEvent *event;
-    RTPJitterBufferItem *item;
+  /* create paket lost event */
+  event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
+      gst_structure_new ("GstRTPPacketLost",
+          "seqnum", G_TYPE_UINT, (guint) seqnum,
+          "timestamp", G_TYPE_UINT64, timestamp,
+          "duration", G_TYPE_UINT64, duration,
+          "late", G_TYPE_BOOLEAN, late, NULL));
 
-    /* create paket lost event */
-    event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
-        gst_structure_new ("GstRTPPacketLost",
-            "seqnum", G_TYPE_UINT, (guint) seqnum,
-            "timestamp", G_TYPE_UINT64, timestamp,
-            "duration", G_TYPE_UINT64, duration,
-            "late", G_TYPE_BOOLEAN, late, NULL));
+  item = alloc_item (event, ITEM_TYPE_LOST, -1, -1, next_seqnum, -1);
+  rtp_jitter_buffer_insert (priv->jbuf, item, NULL, NULL);
 
-    item = alloc_item (event, ITEM_TYPE_LOST, -1, -1, next_seqnum, -1);
-    rtp_jitter_buffer_insert (priv->jbuf, item, NULL, NULL);
-  }
   if (seqnum == priv->next_seqnum) {
     GST_DEBUG_OBJECT (jitterbuffer, "lost seqnum %d == %d next_seqnum -> %d",
         seqnum, priv->next_seqnum, next_seqnum);
@@ -2206,7 +2204,7 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum)
   GstEvent *outevent;
   GstClockTime dts, pts;
   gint percent = -1;
-  gboolean is_buffer;
+  gboolean is_buffer, do_push = TRUE;
 
   /* when we get here we are ready to pop and push the buffer */
   item = rtp_jitter_buffer_pop (priv->jbuf, &percent);
@@ -2244,8 +2242,11 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum)
     priv->last_out_time = GST_BUFFER_PTS (outbuf);
   } else {
     outevent = item->data;
-    if (item->type == ITEM_TYPE_LOST)
+    if (item->type == ITEM_TYPE_LOST) {
       priv->discont = TRUE;
+      if (!priv->do_lost)
+        do_push = FALSE;
+    }
   }
 
   /* now we are ready to push the buffer. Save the seqnum and release the lock
@@ -2270,7 +2271,11 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum)
   } else {
     GST_DEBUG_OBJECT (jitterbuffer, "Pushing event %d", seqnum);
 
-    gst_pad_push_event (priv->srcpad, outevent);
+    if (do_push)
+      gst_pad_push_event (priv->srcpad, outevent);
+    else
+      gst_event_unref (outevent);
+
     result = GST_FLOW_OK;
   }
   JBUF_LOCK_CHECK (priv, out_flushing);
