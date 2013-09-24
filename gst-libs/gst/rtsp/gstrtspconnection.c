@@ -2037,6 +2037,10 @@ gst_rtsp_connection_close (GstRTSPConnection * conn)
     conn->socket1 = NULL;
   }
 
+  /* these were owned by the stream */
+  conn->input_stream = NULL;
+  conn->output_stream = NULL;
+
   g_free (conn->remote_ip);
   conn->remote_ip = NULL;
   g_free (conn->local_ip);
