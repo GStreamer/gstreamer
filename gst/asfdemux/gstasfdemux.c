@@ -719,7 +719,10 @@ gst_asf_demux_handle_seek_event (GstASFDemux * demux, GstEvent * event)
   GST_DEBUG_OBJECT (demux, "seeking to time %" GST_TIME_FORMAT ", segment: "
       "%" GST_SEGMENT_FORMAT, GST_TIME_ARGS (segment.start), &segment);
 
-  seek_time = segment.start;
+  if (cur_type != GST_SEEK_TYPE_SET)
+    seek_time = segment.start;
+  else
+    seek_time = cur;
 
   /* FIXME: should check the KEY_UNIT flag; need to adjust position to
    * real start of data and segment_start to indexed time for key unit seek*/
