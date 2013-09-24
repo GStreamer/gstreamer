@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Ugly Plugins 1.1.90
+Release notes for GStreamer Ugly Plugins 1.2.0
 
-The GStreamer team is proud to announce a new bug-fix release
+The GStreamer team is proud to announce a new feature release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -58,9 +58,7 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 707414 : x264enc: crash and warning
-      * 708010 : asfdemux: Fails to output anything on mms streams after adding support for dvr-ms
-      * 708326 : x264enc caps negotiation broken, tries input 4:4:4 for non-4:4:4 profiles
+      * 708036 : x264enc: Update documentation to specify default profile if no constraints are given
 
 ==== Download ====
 
@@ -97,9 +95,8 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Matej Knopp
-      * Mathieu Duponchelle
-      * Olivier Crête
+      * Andoni Morales Alastruey
+      * Edward Hervey
       * Sebastian Dröge
-      * Thiago Santos
+      * Tim-Philipp Müller
  
