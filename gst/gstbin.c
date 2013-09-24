@@ -3320,7 +3320,7 @@ gst_bin_update_context (GstBin * bin, GstContext * context)
     }
   }
   /* Not found? Add */
-  if (l != NULL)
+  if (l == NULL)
     bin->priv->contexts =
         g_list_prepend (bin->priv->contexts, gst_context_ref (context));
   GST_OBJECT_UNLOCK (bin);
