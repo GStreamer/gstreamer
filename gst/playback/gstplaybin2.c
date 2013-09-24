@@ -5226,15 +5226,31 @@ deactivate_group (GstPlayBin * playbin, GstSourceGroup * group)
       combine->combiner = NULL;
     }
   }
-  /* delete any custom sinks we might have */
-  if (group->audio_sink)
+  /* delete any custom sinks we might have.
+   * conditionally set them to null if they aren't inside playsink yet */
+  if (group->audio_sink) {
+    if (!gst_object_has_ancestor (GST_OBJECT_CAST (group->audio_sink),
+            GST_OBJECT_CAST (playbin->playsink))) {
+      gst_element_set_state (group->audio_sink, GST_STATE_NULL);
+    }
     gst_object_unref (group->audio_sink);
+  }
   group->audio_sink = NULL;
-  if (group->video_sink)
+  if (group->video_sink) {
+    if (!gst_object_has_ancestor (GST_OBJECT_CAST (group->video_sink),
+            GST_OBJECT_CAST (playbin->playsink))) {
+      gst_element_set_state (group->video_sink, GST_STATE_NULL);
+    }
     gst_object_unref (group->video_sink);
+  }
   group->video_sink = NULL;
-  if (group->text_sink)
+  if (group->text_sink) {
+    if (!gst_object_has_ancestor (GST_OBJECT_CAST (group->text_sink),
+            GST_OBJECT_CAST (playbin->playsink))) {
+      gst_element_set_state (group->text_sink, GST_STATE_NULL);
+    }
     gst_object_unref (group->text_sink);
+  }
   group->text_sink = NULL;
 
   if (group->uridecodebin) {
