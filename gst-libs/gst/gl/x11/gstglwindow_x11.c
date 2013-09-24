@@ -620,8 +620,6 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
   gboolean ret = TRUE;
 
   window = GST_GL_WINDOW (window_x11);
-  context = gst_gl_window_get_context (window);
-  context_class = GST_GL_CONTEXT_GET_CLASS (context);
 
   if (g_main_loop_is_running (window_x11->loop)
       && XPending (window_x11->device)) {
@@ -669,8 +667,13 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
 
       case Expose:
         if (window->draw) {
+          context = gst_gl_window_get_context (window);
+          context_class = GST_GL_CONTEXT_GET_CLASS (context);
+
           window->draw (window->draw_data);
           context_class->swap_buffers (context);
+
+          gst_object_unref (context);
         }
         break;
 
@@ -704,8 +707,6 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
 
     }                           // switch
   }                             // while running
-
-  gst_object_unref (context);
 
   return ret;
 }
