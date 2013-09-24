@@ -498,7 +498,7 @@ renderer_process(App *app, RenderFrame *rfp)
     ensure_window_size(app, surface);
 
     crop_rect = gst_vaapi_surface_proxy_get_crop_rect(rfp->proxy);
-    if (!ensure_pixmaps(app, surface, crop_rect))
+    if (g_use_pixmap && !ensure_pixmaps(app, surface, crop_rect))
         SEND_ERROR("failed to create intermediate pixmaps");
 
     if (!gst_vaapi_surface_sync(surface))
