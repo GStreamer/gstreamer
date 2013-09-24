@@ -1,9 +1,43 @@
-=== release 1.1.90 ===
+=== release 1.2.0 ===
 
-2013-09-19  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-09-24  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.90
+	  releasing 1.2.0
+
+2013-09-20 16:18:03 +0200  Edward Hervey <edward@collabora.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b613661 to 6b03ba7
+
+2013-09-19 18:45:20 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 74a6857 to b613661
+
+2013-09-19 17:38:10 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 12af105 to 74a6857
+
+2013-09-19 11:35:08 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.90 ===
+
+2013-09-19 10:53:46 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-libav.doap:
+	  Release 1.1.90
 
 2013-09-12 13:56:31 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 
