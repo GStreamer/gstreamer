@@ -28,6 +28,8 @@
 #include <gst/base/gstbasesink.h>
 
 G_BEGIN_DECLS
+
+
 #define GST_TYPE_FAKE_SINK \
   (gst_fake_sink_get_type())
 #define GST_FAKE_SINK(obj) \
@@ -39,6 +41,7 @@ G_BEGIN_DECLS
 #define GST_IS_FAKE_SINK_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_FAKE_SINK))
 #define GST_FAKE_SINK_CAST(obj) ((GstFakeSink *)obj)
+
 /**
  * GstFakeSinkStateError:
  * @FAKE_SINK_STATE_ERROR_NONE: no error
@@ -51,8 +54,7 @@ G_BEGIN_DECLS
  *
  * Possible state change errors for the state-error property.
  */
-    typedef enum
-{
+typedef enum {
   FAKE_SINK_STATE_ERROR_NONE = 0,
   FAKE_SINK_STATE_ERROR_NULL_READY,
   FAKE_SINK_STATE_ERROR_READY_PAUSED,
@@ -64,52 +66,34 @@ G_BEGIN_DECLS
 
 typedef struct _GstFakeSink GstFakeSink;
 typedef struct _GstFakeSinkClass GstFakeSinkClass;
-typedef struct _GstExampleMgr GstExampleMgr;
 
 /**
  * GstFakeSink:
  *
  * The opaque #GstFakeSink data structure.
  */
-struct _GstFakeSink
-{
-  GstBaseSink element;
+struct _GstFakeSink {
+  GstBaseSink		element;
 
-  gboolean silent;
-  gboolean dump;
-  gboolean signal_handoffs;
+  gboolean		silent;
+  gboolean		dump;
+  gboolean		signal_handoffs;
   GstFakeSinkStateError state_error;
-  gchar *last_message;
-  gint num_buffers;
-  gint num_buffers_left;
-  GstExampleMgr *example_mgr;
+  gchar			*last_message;
+  gint                  num_buffers;
+  gint                  num_buffers_left;
 };
 
-struct _GstFakeSinkClass
-{
+struct _GstFakeSinkClass {
   GstBaseSinkClass parent_class;
 
   /* signals */
-  void (*handoff) (GstElement * element, GstBuffer * buf, GstPad * pad);
-  void (*preroll_handoff) (GstElement * element, GstBuffer * buf, GstPad * pad);
+  void (*handoff) (GstElement *element, GstBuffer *buf, GstPad *pad);
+  void (*preroll_handoff) (GstElement *element, GstBuffer *buf, GstPad *pad);
 };
 
 G_GNUC_INTERNAL GType gst_fake_sink_get_type (void);
 
-#define GST_EXAMPLE_MGR_CONTEXT_TYPE "gst.example.ExampleMgr"
-
-GstContext *gst_example_mgr_new_context (GstExampleMgr * mgr);
-GstQuery *gst_example_mgr_query_context (void);
-void gst_context_set_example_mgr (GstContext * context, GstExampleMgr * mgr);
-gboolean gst_context_get_example_mgr (GstContext * context,
-    GstExampleMgr ** mgr);
-
-#define GST_TYPE_EXAMPLE_MGR (gst_example_mgr_get_type())
-GType gst_example_mgr_get_type (void);
-
-GstExampleMgr *gst_example_mgr_new (GDestroyNotify destroy_notify);
-GstExampleMgr *gst_example_mgr_ref (GstExampleMgr * mgr);
-void gst_example_mgr_unref (GstExampleMgr * mgr);
-
 G_END_DECLS
+
 #endif /* __GST_FAKE_SINK_H__ */
