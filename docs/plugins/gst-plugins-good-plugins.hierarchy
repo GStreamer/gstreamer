@@ -169,7 +169,6 @@ GObject
         GstMatroskaMux
           GstWebMMux
         GstMatroskaParse
-        GstMonoscope
         GstMultipartDemux
         GstMultipartMux
         GstQTDemux

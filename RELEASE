@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Good Plugins 1.1.90
+Release notes for GStreamer Good Plugins 1.2.0
 
 
-The GStreamer team is proud to announce a new bug-fix release
+The GStreamer team is proud to announce a new feature release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -57,24 +57,11 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 646963 : rtpmanager: Only update last_rtcp_send_time when actually sending a report
-      * 687657 : rtpsession: Demux RTCP buffers from the RTP stream
-      * 695090 : rganalysis: fix tests
-      * 702004 : qtdemux: add support for the avc3 sample entry format of the AVC file  format
-      * 704950 : videomixer: add colorspace conversion
-      * 705371 : souphttpsrc: Does network operations from the state change thread
-      * 706955 : autoaudiosink/autovideosink: Introduce " sync " property
-      * 707042 : udpsrc binds to INADDR_ANY instead of multicast group address
-      * 707303 : flacenc: 'Got data flow before stream-start event' warnings
-      * 707340 : qtmux: should NOT use PTS if DTS is missing
-      * 707411 : qtmux: what is purpose of MAX_TOLERATED_LATENESS?
-      * 707530 : qtdemux: Handle segments correctly in push mode seeks
-      * 707688 : matroskademux: leaking buffer and caps when parsing attachments
-      * 707734 : rtp: add payloader and depayloader for 24bit raw audio
-      * 707758 : v4l2: Incorrect UV plane stride value for NV12/NV21 formats
-      * 707886 : videomixer: build fails due to unrenamed files if orc is not installed
+      * 706083 : v4l2src: UVC Allocated buffers wrapped in GstBuffer get orphaned by GstBuffer API
+      * 707242 : qtmux: streamable and faststart property have no effect
       * 707933 : matroskademux: Wrong UTF8 detection causes wrong detection of subtitle encoding
-      * 708131 : videomixer: undefined reference to `videomixer_video_convert_orc_convert_I420_BGRA'
+      * 708501 : osxvideosink: fix segfault releasing the element
+      * 708622 : rtpjitterbuffer: fix various regressions
 
 ==== Download ====
 
@@ -111,20 +98,11 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alex Ashley
-      * Andreea Fulger
-      * Bernhard Miller
-      * Christoph Reiter
-      * David Holroyd
-      * Jan Schmidt
-      * Matej Knopp
-      * Mathieu Duponchelle
+      * Andoni Morales Alastruey
+      * Edward Hervey
       * Olivier Crête
-      * Rico Tzschichholz
+      * Robert Krakora
       * Sebastian Dröge
-      * Seán de Búrca
-      * Thiago Santos
-      * Thibault Saunier
       * Tim-Philipp Müller
       * Wim Taymans
  

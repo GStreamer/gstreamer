@@ -1,9 +1,429 @@
-=== release 1.1.90 ===
+=== release 1.2.0 ===
 
-2013-09-19  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-09-24  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.90
+	  releasing 1.2.0
+
+2013-09-20 19:43:21 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/osxvideo/osxvideosink.m:
+	  osxvideosink: fix segfault releasing the sink
+	  show_frame is deferred to the main thread and can be called
+	  when the sink has been released, so we need to keep an extra ref
+	  on ObjectiveC object helper.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708501
+
+2013-09-19 17:11:34 -0400  Robert Krakora <rob.krakora@messagenetsystems.com>
+
+	* sys/v4l2/gstv4l2bufferpool.c:
+	  v4l2bufferpool: Restore original GstMemory in buffer if it has been changed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706083
+
+2013-09-23 16:34:15 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/gstrtpsession.c:
+	  rtpmanager: update docs
+
+2013-09-23 15:36:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpbin.c:
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/gstrtpptdemux.c:
+	* gst/rtpmanager/gstrtpsession.c:
+	* gst/rtpmanager/gstrtpssrcdemux.c:
+	  docs: update docs with 1.0 element names
+
+2013-09-23 14:13:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/rtpjitterbuffer.c:
+	  tests: add test for retransmission because of reordering
+
+2013-09-23 14:12:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: always store lost event in jitterbuffer
+	  Always prepare a lost event in the jitterbuffer, it is to wake up and make the
+	  pushing thread continue. We drop the event when we are not supposed to push lost
+	  events downstream.
+
+2013-09-23 11:18:46 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: schedule lost event differently
+	  Schedule the lost event by placing it inside the jitterbuffer with the seqnum
+	  that was lost so that the pushing thread can interleave and push it properly.
+
+2013-09-23 11:17:34 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/rtpjitterbuffer.c:
+	  tests: remove timeouts from check
+	  Timeouts make the test unreliable and are not needed.
+
+2013-09-23 11:15:30 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  rtpjitterbuffer: remove list debug
+
+2013-09-23 11:14:01 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	  rtpjitterbuffer: add type to the item
+	  So that the upper layer can know what data is contained in the item.
+
+2013-09-23 09:58:32 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	  rtpjitterbuffer: fix flush
+	  Pass function to flush to properly free the queue items.
+
+2013-09-21 00:08:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	  rtpjitterbuffer: append seqnum -1 packets
+
+2013-09-20 23:48:20 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	  rtpjitterbuffer: use structure to hold packet information
+	  Make the jitterbuffer operate on a structure containing all the packet
+	  information. This avoids mapping the buffer multiple times just to get the RTP
+	  information. It will also make it possible to store other miniobjects such as
+	  events later.
+
+2013-09-20 17:48:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: update expected timer when possible
+	  When we receive a packet and we have some missing packets, we can update their
+	  estimated arrival times based on the timestamp difference.
+
+2013-09-20 17:18:27 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: fix order of timeout events
+	  Improve the order of the timeout events, if there are timers with the same
+	  timeout, we want to trigger the lowest seqnum first. For this we need to loop
+	  over the complete array of timers to find the best one before triggering the
+	  timeout.
+
+2013-09-20 16:58:38 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: send lost event before signaling next buffer
+	  First send the lost event, then update the next_seqnum counter and then
+	  send the signal to the pushing thread that it can retry to push a buffer. This
+	  avoids pushing out buffers before the lost event is pushed.
+
+2013-09-20 15:35:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.c:
+	* gst/rtpmanager/rtpjitterbuffer.h:
+	  jitterbuffer: configure clock-rate on jitterbuffer
+	  Add a get and setter to configure the clock-rate in the jitterbuffer instead of
+	  passing it as an argument to the insert method.
+
+2013-09-20 12:29:39 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/rtpjitterbuffer.c:
+	  tests: add test for packet delay and retransmission
+
+2013-09-20 12:27:26 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: add option to reset retransmission timers
+
+2013-09-20 12:25:43 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: stop the timer thread
+	  The timeout code could release the lock so we need to check if we are allowed to
+	  wait for the clock some more.
+
+2013-09-20 12:25:12 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: unlock only once
+
+2013-09-20 11:30:04 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/rtpjitterbuffer.c:
+	  tests: check both PTS and DTS
+
+2013-09-20 10:55:03 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/rtpjitterbuffer.c:
+	  tests: add unit-test for multiple missing packets
+	  Check if multiple missing packets generate retransmission events and that the
+	  retranmission requests are canceled when the missing packet arrives.
+
+2013-09-20 10:53:29 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: improve flush and shutdown
+	  There is no need to unschedule the timer in flush-start, flush-stop will remove
+	  the timers and unschedule.
+	  Unschedule the current timer before attempting to join the timer thread.
+
+2013-09-20 10:43:53 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/rtpjitterbuffer.c:
+	  tests: improve debug
+
+2013-09-20 10:42:27 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: set correct expected time
+	  When we already have a timer for a packet, skip it but don't forget to adjust
+	  the dts to the expected dts of the next packet.
+
+2013-09-20 10:41:59 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  jitterbuffer: improve debug
+
+2013-09-19 16:55:25 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/alpha/gstalpha.c:
+	  alpha: use POFFSET instead of OFFSET
+	  Use the more correct POFFSET macro to get the offset of a component in its
+	  plane. The offset macro gives the offset of the component relative to the start
+	  of the frame.
+
+2013-09-21 18:46:29 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/goom/mmx.h:
+	  goom: Fix MMX assembly compilation with clang
+	  clang does not want or need a clobber list for emms:
+	  error: clobbers must be last on the x87 stack
+	  Patch taken from the FreeBSD ports, provided by
+	  Dan McGregor <dan.mcgregor@usask.ca>
+
+2013-09-20 16:16:57 +0200  Edward Hervey <edward@collabora.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b613661 to 6b03ba7
+
+2013-09-20 10:19:22 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/matroska/matroska-demux.c:
+	  matroska-demux: Make sure that subtitle buffers are \0-terminated
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707933
+
+2013-09-17 12:17:54 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: handle issues correctly when downstream is not seekable
+	  The streamable property only make sense for fragmented formats.
+	  For regular MP4, when downstream is not seekable we can't rewrite
+	  the headers, so qtmux can only work with fast-start=TRUE, where
+	  the headers are written finishing the file.
+	  For fragmented MP4, when streamable is not seekable and the streamable
+	  property is FALSE, we must enforce streamable=TRUE warning the user
+	  about this change
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707242
+
+2013-09-17 12:06:06 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: make "streamable" TRUE as default
+	  The most common use case for fragmented MP4 (Dash and Smooth Streaming)
+	  is producing streamable content (even for VOD). streamable=FALSE would only
+	  be used to generate fragmented MP4 with and index of MOOF's that could
+	  be reproduced without a playlist/manifest
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707242
+
+2013-09-17 12:01:30 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* gst/isomp4/gstqtmux.c:
+	  qtmux: deprecate the streamable property for non-fragmented MP4
+	  The streamable property only makes sense for fragmented MP4.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707242
+
+2013-09-19 17:08:19 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* sys/v4l2/gstv4l2bufferpool.h:
+	  v4l2: Remove commented out line
+
+2013-09-19 18:43:08 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 74a6857 to b613661
+
+2013-09-19 17:35:27 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From 098c0d7 to 74a6857
+
+2013-09-19 16:50:44 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/alpha/gstalpha.c:
+	  alpha: don't assume planar formats have just 1 block
+	  Don't assume planar formats have just one memory block with the data but use the
+	  macros to access the right memory block where a component can be found.
+
+2013-09-19 14:14:52 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* tests/check/elements/rtpjitterbuffer.c:
+	  tests: add retransmission jitterbuffer test
+	  Store both DTS and PTS on buffers.
+	  Make a queue for srcpad events.
+	  Activate pads after linking so that we don't get RECONFIGURE events.
+	  Add test for retransmission.
+
+2013-09-19 14:12:18 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: keep delay as a separate variable in timer
+	  Keep a separate delay in the timer so that we still know the original timestamp
+	  of the packet that this timer refers to. We can then place the correct
+	  running-time in the Retransmission event.
+
+2013-09-19 14:08:56 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst/rtpmanager/gstrtpjitterbuffer.c:
+	  rtpjitterbuffer: fix writability of properties
+
+2013-09-19 11:34:57 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.90 ===
+
+2013-09-19 10:50:23 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-good-plugins.args:
+	* docs/plugins/gst-plugins-good-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-1394.xml:
+	* docs/plugins/inspect/plugin-aasink.xml:
+	* docs/plugins/inspect/plugin-alaw.xml:
+	* docs/plugins/inspect/plugin-alpha.xml:
+	* docs/plugins/inspect/plugin-alphacolor.xml:
+	* docs/plugins/inspect/plugin-apetag.xml:
+	* docs/plugins/inspect/plugin-audiofx.xml:
+	* docs/plugins/inspect/plugin-audioparsers.xml:
+	* docs/plugins/inspect/plugin-auparse.xml:
+	* docs/plugins/inspect/plugin-autodetect.xml:
+	* docs/plugins/inspect/plugin-avi.xml:
+	* docs/plugins/inspect/plugin-cacasink.xml:
+	* docs/plugins/inspect/plugin-cairo.xml:
+	* docs/plugins/inspect/plugin-cutter.xml:
+	* docs/plugins/inspect/plugin-debug.xml:
+	* docs/plugins/inspect/plugin-deinterlace.xml:
+	* docs/plugins/inspect/plugin-dtmf.xml:
+	* docs/plugins/inspect/plugin-dv.xml:
+	* docs/plugins/inspect/plugin-effectv.xml:
+	* docs/plugins/inspect/plugin-equalizer.xml:
+	* docs/plugins/inspect/plugin-flac.xml:
+	* docs/plugins/inspect/plugin-flv.xml:
+	* docs/plugins/inspect/plugin-flxdec.xml:
+	* docs/plugins/inspect/plugin-gdkpixbuf.xml:
+	* docs/plugins/inspect/plugin-goom.xml:
+	* docs/plugins/inspect/plugin-goom2k1.xml:
+	* docs/plugins/inspect/plugin-icydemux.xml:
+	* docs/plugins/inspect/plugin-id3demux.xml:
+	* docs/plugins/inspect/plugin-imagefreeze.xml:
+	* docs/plugins/inspect/plugin-interleave.xml:
+	* docs/plugins/inspect/plugin-isomp4.xml:
+	* docs/plugins/inspect/plugin-jack.xml:
+	* docs/plugins/inspect/plugin-jpeg.xml:
+	* docs/plugins/inspect/plugin-level.xml:
+	* docs/plugins/inspect/plugin-matroska.xml:
+	* docs/plugins/inspect/plugin-mulaw.xml:
+	* docs/plugins/inspect/plugin-multifile.xml:
+	* docs/plugins/inspect/plugin-multipart.xml:
+	* docs/plugins/inspect/plugin-navigationtest.xml:
+	* docs/plugins/inspect/plugin-oss4.xml:
+	* docs/plugins/inspect/plugin-ossaudio.xml:
+	* docs/plugins/inspect/plugin-png.xml:
+	* docs/plugins/inspect/plugin-pulseaudio.xml:
+	* docs/plugins/inspect/plugin-replaygain.xml:
+	* docs/plugins/inspect/plugin-rtp.xml:
+	* docs/plugins/inspect/plugin-rtpmanager.xml:
+	* docs/plugins/inspect/plugin-rtsp.xml:
+	* docs/plugins/inspect/plugin-shapewipe.xml:
+	* docs/plugins/inspect/plugin-shout2send.xml:
+	* docs/plugins/inspect/plugin-smpte.xml:
+	* docs/plugins/inspect/plugin-soup.xml:
+	* docs/plugins/inspect/plugin-spectrum.xml:
+	* docs/plugins/inspect/plugin-speex.xml:
+	* docs/plugins/inspect/plugin-taglib.xml:
+	* docs/plugins/inspect/plugin-udp.xml:
+	* docs/plugins/inspect/plugin-video4linux2.xml:
+	* docs/plugins/inspect/plugin-videobox.xml:
+	* docs/plugins/inspect/plugin-videocrop.xml:
+	* docs/plugins/inspect/plugin-videofilter.xml:
+	* docs/plugins/inspect/plugin-videomixer.xml:
+	* docs/plugins/inspect/plugin-vpx.xml:
+	* docs/plugins/inspect/plugin-wavenc.xml:
+	* docs/plugins/inspect/plugin-wavpack.xml:
+	* docs/plugins/inspect/plugin-wavparse.xml:
+	* docs/plugins/inspect/plugin-ximagesrc.xml:
+	* docs/plugins/inspect/plugin-y4menc.xml:
+	* gst-plugins-good.doap:
+	* win32/common/config.h:
+	  Release 1.1.90
+
+2013-09-19 10:21:42 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_HK.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2013-09-19 09:45:18 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 
