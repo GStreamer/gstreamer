@@ -1,9 +1,163 @@
-=== release 1.1.90 ===
+=== release 1.2.0 ===
 
-2013-09-19  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-09-24  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.90
+	  releasing 1.2.0
+
+2013-09-24 12:47:26 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: Make sure to cache context types we did not store yet
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708668
+
+2013-09-24 12:10:00 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: Only create writesrc when it is actually needed
+	  Creating a GSource and not attaching it to a context will cause
+	  a leak of it's child sources. That is why we create writesrc right
+	  before attaching it to a context.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708667
+
+2013-09-22 22:55:33 +0200  Mathieu Duponchelle <mathieu.duponchelle@epitech.eu>
+
+	* gst/adder/gstadder.c:
+	  adder: send pending segment out before checking for EOS
+	  Otherwise there would be cases where it would not send its segment
+	  out when the first collected after getting it would already yield EOS.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708590
+
+2013-09-19 17:25:05 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/video/video-frame.c:
+	  video-frame: copy offsets from metadata
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=708606
+
+2013-09-21 15:17:54 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* gst-libs/gst/sdp/gstsdpmessage.c:
+	  sdp: fix docs
+
+2013-09-20 16:16:42 +0200  Edward Hervey <edward@collabora.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b613661 to 6b03ba7
+
+2013-09-19 18:42:49 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 74a6857 to b613661
+
+2013-09-19 17:34:46 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From 098c0d7 to 74a6857
+
+2013-09-19 16:33:29 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst-libs/gst/allocators/gstdmabuf.c:
+	  dmabuf: Fix compilation if no mmap is available
+	  Also #ifdef some more code paths that don't make sense without mmap.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708372
+
+2013-09-19 12:58:53 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	  discoverer: Switch to playing to handle live URI
+	  Fixes discovery on dvb://
+
+2013-09-19 11:34:54 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.90 ===
+
+2013-09-19 10:49:58 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	* win32/common/libgstallocators.def:
+	  Release 1.1.90
+
+2013-09-19 10:13:32 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-09-18 20:42:55 -0400  Olivier Crête <olivier.crete@collabora.com>
 

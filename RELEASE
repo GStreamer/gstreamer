@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Base Plugins 1.1.90
+Release notes for GStreamer Base Plugins 1.2.0
 
 
-The GStreamer team is proud to announce a new bug-fix release
+The GStreamer team is proud to announce a new feature release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -60,19 +60,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 588535 : Elements need special handling of interlaced planar YUV formats with vertical subsampling
-      * 688043 : videodecoder: no timestamps for multifilesrc ! jpegdec ! ...
-      * 706340 : videofilter: it might make sense to implement the " transform_meta " virtual method
-      * 706823 : videoconvert: generic conversion produces artifacts
-      * 707158 : POTFILES.in is out of date
-      * 707304 : testsuite FAIL: elements/audioconvert
-      * 707332 : videoencoder: doesn't check for invalid duration
-      * 707611 : rtspsrc state change always blocks when source is offline (waiting for connect timeout)
-      * 707660 : playbin, playsink: typo in convert-sample signal docs
-      * 707765 : id3v2 blob frames are not encapsuled in a GstSample
-      * 707789 : Strings missed in POT
-      * 707793 : dmabuf allocator shouldn't a singleton
-      * 707878 : riff: Add support for TSCC2
+      * 708667 : rtspconnection: leaks file descriptors/child sources
+      * 708372 : dmabuf: sys/mman.h: No such file or directory
+      * 708590 : adder: Should send its segment before checking for eos
+      * 708606 : video-frame: offsets are not copied from metadata
 
 ==== Download ====
 
@@ -109,17 +100,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alex Ashley
-      * Christian Fredrik Kalager Schaller
-      * Josep Torra
-      * Loïc Minier
-      * Matej Knopp
+      * Edward Hervey
       * Mathieu Duponchelle
-      * Matthieu Bouron
-      * Olivier Crête
-      * Piotr Drąg
+      * Ognyan Tonchev
       * Sebastian Dröge
-      * Thiago Santos
       * Tim-Philipp Müller
       * Wim Taymans
  
