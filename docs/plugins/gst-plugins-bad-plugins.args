@@ -26800,7 +26800,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash (Y)</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>7.74861e-304</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26810,7 +26810,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>splash (X)</NICK>
 <BLURB>make a big splash in the center.</BLURB>
-<DEFAULT>8.20251e-304</DEFAULT>
+<DEFAULT>7.7486e-304</DEFAULT>
 </ARG>
 
 <ARG>
@@ -26860,7 +26860,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>DelayTime</NICK>
 <BLURB>the delay time.</BLURB>
-<DEFAULT>1.19564e-321</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27240,7 +27240,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lredscale</NICK>
 <BLURB>multiplier for downscaling non-edge brightness.</BLURB>
-<DEFAULT>5.68175e-322</DEFAULT>
+<DEFAULT>5.48413e-322</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27250,7 +27250,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lthresh</NICK>
 <BLURB>threshold for edge lightening.</BLURB>
-<DEFAULT>1.56555e-316</DEFAULT>
+<DEFAULT>8.00386e-321</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27260,7 +27260,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>lupscale</NICK>
 <BLURB>multiplier for upscaling edge brightness.</BLURB>
-<DEFAULT>1.56534e-316</DEFAULT>
+<DEFAULT>7.93469e-321</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27440,7 +27440,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>fader</NICK>
 <BLURB>the fader position.</BLURB>
-<DEFAULT>7.75038e-304</DEFAULT>
+<DEFAULT>0</DEFAULT>
 </ARG>
 
 <ARG>
@@ -27620,7 +27620,7 @@
 <FLAGS>rw</FLAGS>
 <NICK>HSync</NICK>
 <BLURB>the hsync offset.</BLURB>
-<DEFAULT>1.5538e-316</DEFAULT>
+<DEFAULT>2.11543e-316</DEFAULT>
 </ARG>
 
 <ARG>

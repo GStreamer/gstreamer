@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Bad Plugins 1.1.90
+Release notes for GStreamer Bad Plugins 1.2.0
 
 
-The GStreamer team is proud to announce a new bug-fix release
+The GStreamer team is proud to announce a new feature release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -60,15 +60,8 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-Bugs fixed in this release
-     
-      * 569015 : Generated win32 config.h file in git
-      * 680526 : tsdemux: crashes when seeking in HLS
-      * 703520 : dfbvideosink: port to 1.0
-      * 706957 : avdtpsrc: Support for AAC
-      * 707074 : examples: port directfb test
-      * 707317 : mpegdemux: doesn't send events to pads that are not linked
-      * 708106 : mpegtspacketizer: Incorrect condition checking
+There were no bugs fixed in this release
+    
 
 ==== Download ====
 
@@ -105,21 +98,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alex Ashley
-      * Andoni Morales Alastruey
-      * Bernhard Miller
       * Edward Hervey
-      * Iain Lane
-      * Jorge Luis Zapata
-      * Josep Torra
-      * Julien Isorce
-      * Kazunori Kobayashi
-      * Kerrick Staley
-      * Matej Knopp
-      * Olivier Crête
       * Sebastian Dröge
-      * Sudip Jain
-      * Thiago Santos
       * Tim-Philipp Müller
-      * Wim Taymans
  
