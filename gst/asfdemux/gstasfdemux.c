@@ -3571,8 +3571,13 @@ gst_asf_demux_process_simple_index (GstASFDemux * demux, guint8 * data,
     demux->sidx_entries = g_new0 (AsfSimpleIndexEntry, count);
 
     for (i = 0; i < count; ++i) {
-      if (G_UNLIKELY (size <= 6))
+      if (G_UNLIKELY (size < 6)) {
+        /* adjust for broken files, to avoid having entries at the end
+         * of the parsed index that point to time=0. Resulting in seeking to
+         * the end of the file leading back to the beginning */
+        demux->sidx_num_entries -= (count - i);
         break;
+      }
       demux->sidx_entries[i].packet = gst_asf_demux_get_uint32 (&data, &size);
       demux->sidx_entries[i].count = gst_asf_demux_get_uint16 (&data, &size);
       GST_LOG_OBJECT (demux, "%" GST_TIME_FORMAT " = packet %4u  count : %2d",
