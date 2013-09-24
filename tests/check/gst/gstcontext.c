@@ -285,6 +285,42 @@ GST_START_TEST (test_element_create_self)
 
 GST_END_TEST;
 
+GST_START_TEST (test_element_bin_caching)
+{
+  GstBus *bus;
+  GstElement *bin;
+  GstElement *element, *element2;
+
+  bin = gst_bin_new (NULL);
+  element = g_object_new (gst_context_element_get_type (), NULL);
+  element2 = g_object_new (gst_context_element_get_type (), NULL);
+  gst_bin_add_many (GST_BIN (bin), element, element2, NULL);
+
+  /* FIXME: This assumes (as currently is true) the GstBin activates
+   * the last added element first if none of them is a sink or has pads
+   */
+  ((GstContextElement *) element2)->create_self = TRUE;
+  ((GstContextElement *) element)->set_from_need_context = TRUE;
+
+  bus = gst_bus_new ();
+  gst_element_set_bus (bin, bus);
+
+  fail_unless (gst_element_set_state (bin,
+          GST_STATE_READY) == GST_STATE_CHANGE_SUCCESS);
+
+  fail_unless (((GstContextElement *) element)->have_foobar);
+  fail_unless (((GstContextElement *) element2)->have_foobar);
+
+  gst_element_set_bus (bin, NULL);
+  fail_unless (gst_element_set_state (bin,
+          GST_STATE_NULL) == GST_STATE_CHANGE_SUCCESS);
+
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
 static Suite *
 gst_context_suite (void)
 {
@@ -298,6 +334,7 @@ gst_context_suite (void)
   tcase_add_test (tc_chain, test_element_set_before_ready);
   tcase_add_test (tc_chain, test_element_set_from_need_context);
   tcase_add_test (tc_chain, test_element_create_self);
+  tcase_add_test (tc_chain, test_element_bin_caching);
 
   return s;
 }
