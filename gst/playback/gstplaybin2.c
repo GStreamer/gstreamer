@@ -4087,7 +4087,7 @@ gst_play_bin_update_context (GstPlayBin * playbin, GstContext * context)
     }
   }
   /* Not found? Add */
-  if (l != NULL)
+  if (l == NULL)
     playbin->contexts =
         g_list_prepend (playbin->contexts, gst_context_ref (context));
   GST_OBJECT_UNLOCK (playbin);
