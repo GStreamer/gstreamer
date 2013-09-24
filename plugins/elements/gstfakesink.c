@@ -136,6 +136,10 @@ static guint gst_fake_sink_signals[LAST_SIGNAL] = { 0 };
 
 static GParamSpec *pspec_last_message = NULL;
 
+static GstExampleMgr *gst_example_mgr_singleton = NULL;
+static void gst_fake_sink_set_context (GstElement * element,
+    GstContext * context);
+
 static void
 gst_fake_sink_class_init (GstFakeSinkClass * klass)
 {
@@ -226,6 +230,7 @@ gst_fake_sink_class_init (GstFakeSinkClass * klass)
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_fake_sink_change_state);
+  gstelement_class->set_context = GST_DEBUG_FUNCPTR (gst_fake_sink_set_context);
 
   gstbase_sink_class->event = GST_DEBUG_FUNCPTR (gst_fake_sink_event);
   gstbase_sink_class->preroll = GST_DEBUG_FUNCPTR (gst_fake_sink_preroll);
@@ -242,6 +247,7 @@ gst_fake_sink_init (GstFakeSink * fakesink)
   fakesink->state_error = DEFAULT_STATE_ERROR;
   fakesink->signal_handoffs = DEFAULT_SIGNAL_HANDOFFS;
   fakesink->num_buffers = DEFAULT_NUM_BUFFERS;
+  fakesink->example_mgr = NULL;
 
   gst_base_sink_set_sync (GST_BASE_SINK (fakesink), DEFAULT_SYNC);
 }
@@ -513,6 +519,7 @@ static gboolean
 gst_fake_sink_query (GstBaseSink * bsink, GstQuery * query)
 {
   gboolean ret;
+  GstFakeSink *fakesink = GST_FAKE_SINK_CAST (bsink);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_SEEKING:{
@@ -522,6 +529,31 @@ gst_fake_sink_query (GstBaseSink * bsink, GstQuery * query)
       gst_query_parse_seeking (query, &fmt, NULL, NULL, NULL);
       gst_query_set_seeking (query, fmt, FALSE, 0, -1);
       ret = TRUE;
+      break;
+    }
+    case GST_QUERY_CONTEXT:{
+      const gchar *context_type = NULL;
+      gst_query_parse_context_type (query, &context_type);
+      GST_DEBUG_OBJECT (fakesink, "query context %s %u", context_type,
+          (guint) fakesink->example_mgr);
+      if (g_strcmp0 (context_type, GST_EXAMPLE_MGR_CONTEXT_TYPE) == 0 &&
+          fakesink->example_mgr) {
+        GstContext *context, *old_context = NULL;
+        GST_DEBUG_OBJECT (fakesink, "GST_EXAMPLE_MGR query reply %u",
+            (guint) fakesink->example_mgr);
+        gst_query_parse_context (query, &old_context);
+        if (old_context) {
+          context = gst_context_copy (old_context);
+          g_assert (context != NULL);
+          gst_context_set_example_mgr (context, fakesink->example_mgr);
+        } else {
+          context = gst_example_mgr_new_context (fakesink->example_mgr);
+        }
+        gst_query_set_context (query, context);
+        gst_context_unref (context);
+        return TRUE;
+      }
+      ret = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
     }
     default:
@@ -540,8 +572,79 @@ gst_fake_sink_change_state (GstElement * element, GstStateChange transition)
 
   switch (transition) {
     case GST_STATE_CHANGE_NULL_TO_READY:
+      GST_DEBUG_OBJECT (fakesink, "GST_STATE_CHANGE_NULL_TO_READY");
       if (fakesink->state_error == FAKE_SINK_STATE_ERROR_NULL_READY)
         goto error;
+      GST_OBJECT_LOCK (fakesink);
+      if (!fakesink->example_mgr) {     /* Query upstream for the context */
+        GstPad *sinkPad = GST_BASE_SINK_PAD (fakesink);
+        GST_DEBUG_OBJECT (fakesink, "Need to find or create an ExampleMgr %u",
+            (guint) gst_example_mgr_singleton);
+        if (sinkPad) {
+          GstQuery *query = gst_example_mgr_query_context ();
+          GstContext *context = NULL;
+          GST_DEBUG_OBJECT (fakesink, "Query upstream for ExampleMgr");
+          GST_OBJECT_UNLOCK (fakesink);
+          gst_pad_query (sinkPad, query);
+          GST_OBJECT_LOCK (fakesink);
+          gst_query_parse_context (query, &context);
+          if (context) {
+            GstExampleMgr *mgr = NULL;
+            GST_DEBUG_OBJECT (fakesink, "Query upstream got context");
+            if (gst_context_get_example_mgr (context, &mgr)) {
+              GST_DEBUG_OBJECT (fakesink,
+                  "Query upstream found ExampleMgr %u", (guint) mgr);
+              if (fakesink->example_mgr) {
+                gst_example_mgr_unref (fakesink->example_mgr);
+              }
+              fakesink->example_mgr = mgr;
+            }
+          }
+          gst_query_unref (query);
+        }
+      }
+      if (!fakesink->example_mgr) {
+        GstMessage *msg;
+        /* Query downstream for the context */
+        /*Post a message in the bus to see if the application has one to share. */
+        GST_DEBUG_OBJECT (fakesink, "Post message to look for ExampleMgr");
+        msg = gst_message_new_need_context (GST_OBJECT_CAST (fakesink),
+            GST_EXAMPLE_MGR_CONTEXT_TYPE);
+        GST_OBJECT_UNLOCK (fakesink);
+        gst_element_post_message (GST_ELEMENT_CAST (fakesink), msg);
+        GST_OBJECT_LOCK (fakesink);
+      }
+      if (fakesink->example_mgr) {
+        GST_OBJECT_UNLOCK (fakesink);
+      } else {
+        fakesink->example_mgr = gst_example_mgr_new (NULL);
+        GST_OBJECT_UNLOCK (fakesink);
+        if (gst_example_mgr_singleton != fakesink->example_mgr) {
+          GST_ERROR_OBJECT (fakesink,
+              "More than one ExampleMgr has been allocated!");
+          goto error;
+        }
+        if (!fakesink->example_mgr) {
+          GST_ERROR_OBJECT (fakesink, "Could not create GstExampleManager");
+          goto error;
+        } else {
+          GstMessage *msg;
+          GstContext *context;
+          /* Create the context if there is none, post a message and
+             send an event letting everyone know that the element 
+             has the context. */
+          context = gst_example_mgr_new_context (fakesink->example_mgr);
+          GST_DEBUG_OBJECT (fakesink,
+              "telling the world about the new ExampleMgr %u",
+              (guint) fakesink->example_mgr);
+          gst_element_set_context (GST_ELEMENT_CAST (fakesink), context);
+          msg = gst_message_new_have_context (GST_OBJECT (fakesink), context);
+          gst_element_post_message (GST_ELEMENT_CAST (fakesink), msg);
+          context = gst_example_mgr_new_context (fakesink->example_mgr);
+          GST_DEBUG_OBJECT (fakesink,
+              "telling the world about the new ExampleMgr done");
+        }
+      }
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       if (fakesink->state_error == FAKE_SINK_STATE_ERROR_READY_PAUSED)
@@ -573,6 +676,10 @@ gst_fake_sink_change_state (GstElement * element, GstStateChange transition)
       GST_OBJECT_LOCK (fakesink);
       g_free (fakesink->last_message);
       fakesink->last_message = NULL;
+      if (fakesink->example_mgr) {
+        gst_example_mgr_unref (fakesink->example_mgr);
+        fakesink->example_mgr = NULL;
+      }
       GST_OBJECT_UNLOCK (fakesink);
       break;
     default:
@@ -587,3 +694,128 @@ error:
       ("Erroring out on state change as requested"));
   return GST_STATE_CHANGE_FAILURE;
 }
+
+static void
+gst_fake_sink_set_context (GstElement * element, GstContext * context)
+{
+  GstExampleMgr *mgr = NULL;
+  GstFakeSink *fakesink = GST_FAKE_SINK (element);
+
+  GST_DEBUG_OBJECT (fakesink, "set context");
+  if (gst_context_get_example_mgr (context, &mgr)) {
+    GST_OBJECT_LOCK (fakesink);
+    GST_DEBUG_OBJECT (fakesink, "ExampleMgr %u", (guint) mgr);
+    if (fakesink->example_mgr) {
+      gst_example_mgr_unref (fakesink->example_mgr);
+    }
+    fakesink->example_mgr = mgr;
+    GST_OBJECT_UNLOCK (fakesink);
+  }
+  /* GstElement no longer keeps context
+     GST_OBJECT_LOCK (fakesink);
+     context = gst_context_copy (context);
+     gst_context_set_example_mgr (context, fakesink->example_mgr);
+     GST_OBJECT_UNLOCK (fakesink);
+     GST_ELEMENT_CLASS (gst_example_sink_parent_class)->set_context (element, context);
+     gst_context_unref (context);
+   */
+}
+
+struct _GstExampleMgr
+{
+  volatile gint refcount;
+  GDestroyNotify destroy_notify;
+};
+
+GstExampleMgr *
+gst_example_mgr_new (GDestroyNotify destroy_notify)
+{
+  GstExampleMgr *mgr;
+
+  mgr = g_slice_new (GstExampleMgr);
+  GST_DEBUG ("new ExampleMgr %u", (guint) mgr);
+  mgr->refcount = 1;
+  mgr->destroy_notify = destroy_notify;
+  if (gst_example_mgr_singleton == NULL) {
+    gst_example_mgr_singleton = mgr;
+  }
+  return mgr;
+}
+
+GstExampleMgr *
+gst_example_mgr_ref (GstExampleMgr * mgr)
+{
+  g_return_val_if_fail (mgr != NULL, NULL);
+
+  g_atomic_int_inc (&mgr->refcount);
+  GST_DEBUG ("ref %u %d", (guint) mgr, mgr->refcount);
+
+  return mgr;
+}
+
+void
+gst_example_mgr_unref (GstExampleMgr * mgr)
+{
+  g_return_if_fail (mgr != NULL);
+
+  GST_DEBUG ("unref %u %d", (guint) mgr, mgr->refcount);
+  if (g_atomic_int_dec_and_test (&mgr->refcount)) {
+    GST_DEBUG ("refcount==0");
+    if (mgr->destroy_notify) {
+      mgr->destroy_notify (mgr);
+    }
+    if (gst_example_mgr_singleton == mgr) {
+      gst_example_mgr_singleton = NULL;
+    }
+    g_slice_free (GstExampleMgr, mgr);
+  }
+}
+
+#define GST_EXAMPLE_MGR_CONTEXT_NAME "ExampleMgr"
+
+gboolean
+gst_context_get_example_mgr (GstContext * context, GstExampleMgr ** mgr)
+{
+  const GstStructure *s;
+  g_return_val_if_fail (GST_IS_CONTEXT (context), FALSE);
+  g_return_val_if_fail (strcmp (gst_context_get_context_type (context),
+          GST_EXAMPLE_MGR_CONTEXT_TYPE) == 0, FALSE);
+
+  s = gst_context_get_structure (context);
+  return gst_structure_get (s, GST_EXAMPLE_MGR_CONTEXT_NAME,
+      GST_TYPE_EXAMPLE_MGR, mgr, NULL);
+}
+
+GstContext *
+gst_example_mgr_new_context (GstExampleMgr * mgr)
+{
+  GstContext *context;
+  context = gst_context_new (GST_EXAMPLE_MGR_CONTEXT_TYPE, FALSE);
+  if (context) {
+    gst_context_set_example_mgr (context, mgr);
+  }
+  return context;
+}
+
+GstQuery *
+gst_example_mgr_query_context (void)
+{
+  GstQuery *context = gst_query_new_context (GST_EXAMPLE_MGR_CONTEXT_TYPE);
+  return context;
+}
+
+void
+gst_context_set_example_mgr (GstContext * context, GstExampleMgr * mgr)
+{
+  GstStructure *s;
+
+  if (context && mgr) {
+    s = gst_context_writable_structure (context);
+    gst_structure_set (s, GST_EXAMPLE_MGR_CONTEXT_NAME,
+        GST_TYPE_EXAMPLE_MGR, mgr, NULL);
+  }
+}
+
+G_DEFINE_BOXED_TYPE (GstExampleMgr, gst_example_mgr,
+    (GBoxedCopyFunc) gst_example_mgr_ref,
+    (GBoxedFreeFunc) gst_example_mgr_unref);
