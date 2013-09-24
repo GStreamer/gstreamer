@@ -585,64 +585,26 @@ gst_rtsp_address_pool_dump (GstRTSPAddressPool * pool)
   g_mutex_unlock (&priv->lock);
 }
 
-/**
- * gst_rtsp_address_pool_reserve_address:
- * @pool: a #GstRTSPAddressPool
- * @address: The IP address to reserve
- * @port: The first port to reserve
- * @n_ports: The number of ports
- * @ttl: The requested ttl
- *
- * Take a specific address and ports from @pool. @n_ports consecutive
- * ports will be allocated of which the first one can be found in
- * @port.
- *
- * If @ttl is 0, @address should be a unicast address. If @ttl > 0, @address
- * should be a valid multicast address.
- *
- * Returns: a #GstRTSPAddress that should be freed with gst_rtsp_address_free
- *   after use or %NULL when no address could be acquired.
- */
-GstRTSPAddress *
-gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
-    const gchar * address, guint port, guint n_ports, guint ttl)
+static GList *
+find_address_in_ranges (GList * addresses, Addr * addr, guint port,
+    guint n_ports, guint ttl)
 {
-  GstRTSPAddressPoolPrivate *priv;
-  Addr input_addr;
   GList *walk, *next;
-  AddrRange *result;
-  GstRTSPAddress *addr;
-  gboolean is_multicast;
 
-  g_return_val_if_fail (GST_IS_RTSP_ADDRESS_POOL (pool), NULL);
-  g_return_val_if_fail (address != NULL, NULL);
-  g_return_val_if_fail (port > 0, NULL);
-  g_return_val_if_fail (n_ports > 0, NULL);
-
-  priv = pool->priv;
-  result = NULL;
-  addr = NULL;
-  is_multicast = ttl != 0;
-
-  if (!fill_address (address, port, &input_addr, is_multicast))
-    goto invalid;
-
-  g_mutex_lock (&priv->lock);
   /* go over available ranges */
-  for (walk = priv->addresses; walk; walk = next) {
+  for (walk = addresses; walk; walk = next) {
     AddrRange *range;
-    gint skip_port, skip_addr;
 
     range = walk->data;
     next = walk->next;
 
     /* Not the right type of address */
-    if (range->min.size != input_addr.size)
+    if (range->min.size != addr->size)
       continue;
 
     /* Check that the address is in the interval */
-    if (memcmp (range->min.bytes, input_addr.bytes, input_addr.size) > 0 ||
-        memcmp (range->max.bytes, input_addr.bytes, input_addr.size) < 0)
+    if (memcmp (range->min.bytes, addr->bytes, addr->size) > 0 ||
+        memcmp (range->max.bytes, addr->bytes, addr->size) < 0)
       continue;
 
     /* Make sure the requested ports are inside the range */
@@ -652,38 +614,112 @@ gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
     if (ttl != range->ttl)
       continue;
 
+    break;
+  }
+
+  return walk;
+}
+
+/**
+ * gst_rtsp_address_pool_reserve_address:
+ * @pool: a #GstRTSPAddressPool
+ * @ip_address: The IP address to reserve
+ * @port: The first port to reserve
+ * @n_ports: The number of ports
+ * @ttl: The requested ttl
+ * @address: (out) storage for a #GstRTSPAddress
+ *
+ * Take a specific address and ports from @pool. @n_ports consecutive
+ * ports will be allocated of which the first one can be found in
+ * @port.
+ *
+ * If @ttl is 0, @address should be a unicast address. If @ttl > 0, @address
+ * should be a valid multicast address.
+ *
+ * Returns: #GST_RTSP_ADDRESS_POOL_OK if an address was reserved. The address
+ * is returned in @address and should be freed with gst_rtsp_address_free
+ * after use.
+ */
+GstRTSPAddressPoolResult
+gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
+    const gchar * ip_address, guint port, guint n_ports, guint ttl,
+    GstRTSPAddress ** address)
+{
+  GstRTSPAddressPoolPrivate *priv;
+  Addr input_addr;
+  GList *list;
+  AddrRange *addr_range;
+  GstRTSPAddress *addr;
+  gboolean is_multicast;
+  GstRTSPAddressPoolResult result;
+
+  g_return_val_if_fail (GST_IS_RTSP_ADDRESS_POOL (pool),
+      GST_RTSP_ADDRESS_POOL_EINVAL);
+  g_return_val_if_fail (ip_address != NULL, GST_RTSP_ADDRESS_POOL_EINVAL);
+  g_return_val_if_fail (port > 0, GST_RTSP_ADDRESS_POOL_EINVAL);
+  g_return_val_if_fail (n_ports > 0, GST_RTSP_ADDRESS_POOL_EINVAL);
+  g_return_val_if_fail (address != NULL, GST_RTSP_ADDRESS_POOL_EINVAL);
+
+  priv = pool->priv;
+  addr_range = NULL;
+  addr = NULL;
+  is_multicast = ttl != 0;
+
+  if (!fill_address (ip_address, port, &input_addr, is_multicast))
+    goto invalid;
+
+  g_mutex_lock (&priv->lock);
+  list = find_address_in_ranges (priv->addresses, &input_addr, port, n_ports,
+      ttl);
+  if (list != NULL) {
+    AddrRange *range = list->data;
+    gint skip_port, skip_addr;
+
     skip_addr = diff_address (&input_addr, &range->min);
     skip_port = port - range->min.port;
 
     /* we found a range, remove from the list */
-    priv->addresses = g_list_delete_link (priv->addresses, walk);
+    priv->addresses = g_list_delete_link (priv->addresses, list);
     /* now split and exit our loop */
-    result = split_range (pool, range, skip_addr, skip_port, n_ports);
-    priv->allocated = g_list_prepend (priv->allocated, result);
-    break;
+    addr_range = split_range (pool, range, skip_addr, skip_port, n_ports);
+    priv->allocated = g_list_prepend (priv->allocated, addr_range);
+  }
+
+  if (addr_range) {
+    addr = g_slice_new0 (GstRTSPAddress);
+    addr->pool = g_object_ref (pool);
+    addr->address = get_address_string (&addr_range->min);
+    addr->n_ports = n_ports;
+    addr->port = addr_range->min.port;
+    addr->ttl = addr_range->ttl;
+    addr->priv = addr_range;
+
+    result = GST_RTSP_ADDRESS_POOL_OK;
+    GST_DEBUG_OBJECT (pool, "reserved address %s:%u ttl %u", addr->address,
+        addr->port, addr->ttl);
+  } else {
+    /* We failed to reserve the address. Check if it was because the address
+     * was already in use or if it wasn't in the pool to begin with */
+    list = find_address_in_ranges (priv->allocated, &input_addr, port, n_ports,
+        ttl);
+    if (list != NULL) {
+      result = GST_RTSP_ADDRESS_POOL_ERESERVED;
+    } else {
+      result = GST_RTSP_ADDRESS_POOL_ERANGE;
+    }
   }
   g_mutex_unlock (&priv->lock);
 
-  if (result) {
-    addr = g_slice_new0 (GstRTSPAddress);
-    addr->pool = g_object_ref (pool);
-    addr->address = get_address_string (&result->min);
-    addr->n_ports = n_ports;
-    addr->port = result->min.port;
-    addr->ttl = result->ttl;
-    addr->priv = result;
-
-    GST_DEBUG_OBJECT (pool, "reserved address %s:%u ttl %u", addr->address,
-        addr->port, addr->ttl);
-  }
-  return addr;
+  *address = addr;
+  return result;
 
   /* ERRORS */
 invalid:
   {
-    GST_ERROR_OBJECT (pool, "invalid address %s:%u/%u/%u", address,
+    GST_ERROR_OBJECT (pool, "invalid address %s:%u/%u/%u", ip_address,
         port, n_ports, ttl);
-    return NULL;
+    *address = NULL;
+    return GST_RTSP_ADDRESS_POOL_EINVAL;
   }
 }
 

@@ -33,6 +33,27 @@ G_BEGIN_DECLS
 #define GST_RTSP_ADDRESS_POOL_CAST(obj)         ((GstRTSPAddressPool*)(obj))
 #define GST_RTSP_ADDRESS_POOL_CLASS_CAST(klass) ((GstRTSPAddressPoolClass*)(klass))
 
+/**
+ * GstRTSPAddressPoolResult:
+ * @GST_RTSP_ADDRESS_POOL_OK: no error
+ * @GST_RTSP_ADDRESS_POOL_EINVAL:invalid arguments were provided to a function
+ * @GST_RTSP_ADDRESS_POOL_ERESERVED: the addres has already been reserved
+ * @GST_RTSP_ADDRESS_POOL_ERANGE: the address is not in the pool
+ * @GST_RTSP_ADDRESS_POOL_ELAST: last error
+ *
+ * Result codes from RTSP address pool functions.
+ */
+typedef enum {
+  GST_RTSP_ADDRESS_POOL_OK         =  0,
+  /* errors */
+  GST_RTSP_ADDRESS_POOL_EINVAL     = -1,
+  GST_RTSP_ADDRESS_POOL_ERESERVED  = -2,
+  GST_RTSP_ADDRESS_POOL_ERANGE     = -3,
+
+  GST_RTSP_ADDRESS_POOL_ELAST      = -4,
+} GstRTSPAddressPoolResult;
+
+
 typedef struct _GstRTSPAddress GstRTSPAddress;
 
 typedef struct _GstRTSPAddressPool GstRTSPAddressPool;
@@ -143,11 +164,12 @@ GstRTSPAddress *       gst_rtsp_address_pool_acquire_address (GstRTSPAddressPool
                                                               GstRTSPAddressFlags flags,
                                                               gint n_ports);
 
-GstRTSPAddress *       gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
-                                                              const gchar *address,
+GstRTSPAddressPoolResult  gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
+                                                              const gchar *ip_address,
                                                               guint port,
                                                               guint n_ports,
-                                                              guint ttl);
+                                                              guint ttl,
+                                                              GstRTSPAddress ** address);
 
 gboolean               gst_rtsp_address_pool_has_unicast_addresses (GstRTSPAddressPool * pool);
 

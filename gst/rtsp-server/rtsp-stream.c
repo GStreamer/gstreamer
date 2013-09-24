@@ -730,12 +730,14 @@ gst_rtsp_stream_reserve_address (GstRTSPStream * stream,
 
   g_mutex_lock (&priv->lock);
   if (*addrp == NULL) {
+    GstRTSPAddressPoolResult res;
+
     if (priv->pool == NULL)
       goto no_pool;
 
-    *addrp = gst_rtsp_address_pool_reserve_address (priv->pool, address,
-        port, n_ports, ttl);
-    if (*addrp == NULL)
+    res = gst_rtsp_address_pool_reserve_address (priv->pool, address,
+        port, n_ports, ttl, addrp);
+    if (res != GST_RTSP_ADDRESS_POOL_OK)
       goto no_address;
   } else {
     if (strcmp ((*addrp)->address, address) ||
