@@ -160,8 +160,9 @@ gst_gl_filter_filtershader_reset (GstGLFilter * filter)
   GstGLFilterShader *filtershader = GST_GL_FILTERSHADER (filter);
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_context_del_shader (filter->context, filtershader->shader0);
-
+  if (filtershader->shader0)
+    gst_gl_context_del_shader (filter->context, filtershader->shader0);
+  filtershader->shader0 = NULL;
 }
 
 static void

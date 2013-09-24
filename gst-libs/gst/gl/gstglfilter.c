@@ -224,7 +224,10 @@ gst_gl_filter_reset (GstGLFilter * filter)
           filter);
     }
     //blocking call, delete the FBO
-    gst_gl_context_del_fbo (filter->context, filter->fbo, filter->depthbuffer);
+    if (filter->fbo != 0) {
+      gst_gl_context_del_fbo (filter->context, filter->fbo,
+          filter->depthbuffer);
+    }
     gst_object_unref (filter->context);
     filter->context = NULL;
   }

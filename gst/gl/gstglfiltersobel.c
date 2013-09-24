@@ -155,10 +155,21 @@ gst_gl_filter_filtersobel_reset (GstGLFilter * filter)
   GstGLFilterSobel *filtersobel = GST_GL_FILTERSOBEL (filter);
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_context_del_shader (filter->context, filtersobel->desat);
-  gst_gl_context_del_shader (filter->context, filtersobel->hconv);
-  gst_gl_context_del_shader (filter->context, filtersobel->vconv);
-  gst_gl_context_del_shader (filter->context, filtersobel->len);
+  if (filtersobel->desat)
+    gst_gl_context_del_shader (filter->context, filtersobel->desat);
+  filtersobel->desat = NULL;
+
+  if (filtersobel->hconv)
+    gst_gl_context_del_shader (filter->context, filtersobel->hconv);
+  filtersobel->hconv = NULL;
+
+  if (filtersobel->vconv)
+    gst_gl_context_del_shader (filter->context, filtersobel->vconv);
+  filtersobel->vconv = NULL;
+
+  if (filtersobel->len)
+    gst_gl_context_del_shader (filter->context, filtersobel->len);
+  filtersobel->len = NULL;
 }
 
 static void

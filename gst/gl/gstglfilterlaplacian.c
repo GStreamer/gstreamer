@@ -131,7 +131,9 @@ gst_gl_filter_laplacian_reset (GstGLFilter * filter)
   GstGLFilterLaplacian *laplacian_filter = GST_GL_FILTER_LAPLACIAN (filter);
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_context_del_shader (filter->context, laplacian_filter->shader);
+  if (laplacian_filter->shader)
+    gst_gl_context_del_shader (filter->context, laplacian_filter->shader);
+  laplacian_filter->shader = NULL;
 }
 
 static void

@@ -176,7 +176,9 @@ gst_gl_mosaic_reset (GstGLMixer * mixer)
   mosaic->input_frames = NULL;
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_context_del_shader (mixer->context, mosaic->shader);
+  if (mosaic->shader)
+    gst_gl_context_del_shader (mixer->context, mosaic->shader);
+  mosaic->shader = NULL;
 }
 
 static gboolean

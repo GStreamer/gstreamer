@@ -288,6 +288,7 @@ gst_gl_filter_cube_reset (GstGLFilter * filter)
   /* blocking call, wait the opengl thread has destroyed the shader */
   if (cube_filter->shader)
     gst_gl_context_del_shader (filter->context, cube_filter->shader);
+  cube_filter->shader = NULL;
 }
 
 static gboolean

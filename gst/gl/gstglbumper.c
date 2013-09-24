@@ -313,7 +313,9 @@ gst_gl_bumper_reset (GstGLFilter * filter)
   GstGLBumper *bumper_filter = GST_GL_BUMPER (filter);
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_context_del_shader (filter->context, bumper_filter->shader);
+  if (bumper_filter->shader)
+    gst_gl_context_del_shader (filter->context, bumper_filter->shader);
+  bumper_filter->shader = NULL;
 }
 
 static void

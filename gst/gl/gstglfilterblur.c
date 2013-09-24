@@ -138,10 +138,14 @@ gst_gl_filter_filterblur_reset (GstGLFilter * filter)
   GstGLFilterBlur *filterblur = GST_GL_FILTERBLUR (filter);
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_context_del_shader (filter->context, filterblur->shader0);
+  if (filterblur->shader0)
+    gst_gl_context_del_shader (filter->context, filterblur->shader0);
+  filterblur->shader0 = NULL;
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_context_del_shader (filter->context, filterblur->shader1);
+  if (filterblur->shader1)
+    gst_gl_context_del_shader (filter->context, filterblur->shader1);
+  filterblur->shader1 = NULL;
 }
 
 static void

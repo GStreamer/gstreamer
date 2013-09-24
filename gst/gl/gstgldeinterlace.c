@@ -189,7 +189,9 @@ gst_gl_deinterlace_reset (GstGLFilter * filter)
     deinterlace_filter->prev_buffer = NULL;
   }
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_context_del_shader (filter->context, deinterlace_filter->shader);
+  if (deinterlace_filter->shader)
+    gst_gl_context_del_shader (filter->context, deinterlace_filter->shader);
+  deinterlace_filter->shader = NULL;
 }
 
 static void

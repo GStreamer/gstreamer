@@ -180,8 +180,13 @@ gst_gl_filter_glass_reset (GstGLFilter * filter)
   GstGLFilterGlass *glass_filter = GST_GL_FILTER_GLASS (filter);
 
   //blocking call, wait the opengl thread has destroyed the shader
-  gst_gl_context_del_shader (filter->context, glass_filter->shader);
-  gst_gl_context_del_shader (filter->context, glass_filter->passthrough_shader);
+  if (glass_filter->shader)
+    gst_gl_context_del_shader (filter->context, glass_filter->shader);
+  glass_filter->shader = NULL;
+  if (glass_filter->passthrough_shader)
+    gst_gl_context_del_shader (filter->context,
+        glass_filter->passthrough_shader);
+  glass_filter->passthrough_shader = NULL;
 }
 
 static void
