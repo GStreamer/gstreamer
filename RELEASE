@@ -1,8 +1,8 @@
 
-Release notes for GStreamer 1.1.90
+Release notes for GStreamer 1.2.0
 
 
-The GStreamer team is proud to announce a new bug-fix release
+The GStreamer team is proud to announce a new feature release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -42,12 +42,10 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 701996 : context: Still inconvenient to use and racy
-      * 707088 : capsfilter: Don't forget to update pending_events.
-      * 707130 : output-selector: Changes the start of the segment it sends to a pad when making it active
-      * 707156 : multiqueue: Lowering single queue limits below automatically detected limits can cause the pipeline to starve
-      * 707648 : queue2: Update the buffering state before stalling for more data
-      * 707657 : tests/capsfilter: Improving check test code coverage...
+      * 706551 : gsttestclock check failed
+      * 708605 : testclock: Does not handle unscheduled entries correctly
+      * 708636 : collectpads: Should set *all* its pads to flushing when set_flushing is called, not only the ones in the public list
+      * 708668 : context: Potential regression
 
 ==== Download ====
 
@@ -84,15 +82,10 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Christian Fredrik Kalager Schaller
-      * Gustavo Noronha Silva
-      * Jonas Holmberg
-      * Matej Knopp
+      * Alex Ashley
+      * Edward Hervey
       * Mathieu Duponchelle
-      * Rico Tzschichholz
       * Sebastian Dröge
-      * Sebastian Rasmussen
-      * Thiago Santos
       * Tim-Philipp Müller
-      * Zaheer Abbas Merali
+      * Wim Taymans
  

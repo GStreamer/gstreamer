@@ -1,9 +1,200 @@
-=== release 1.1.90 ===
+=== release 1.2.0 ===
 
-2013-09-19  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-09-24  Sebastian Dröge <sebastian.droege@collabora.co.uk>
 
 	* configure.ac:
-	  releasing 1.1.90
+	  releasing 1.2.0
+
+2013-09-24 13:10:36 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* tests/check/gst/gstcontext.c:
+	  context: Add test for the context caching in GstBin
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708668
+
+2013-09-24 12:47:52 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* plugins/elements/gstfakesink.c:
+	* plugins/elements/gstfakesink.h:
+	  Revert "Potential GstContext regression"
+	  This reverts commit e658379534eb4a90b654d90f1d0bdf86f37c6e31.
+	  This test commit should've never been pushed. Oops.
+
+2013-09-24 12:46:52 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstbin.c:
+	  bin: Make sure to cache context types that we did not store yet
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708668
+
+2013-09-24 10:29:06 +0100  Alex Ashley <bugzilla@ashley-family.net>
+
+	* plugins/elements/gstfakesink.c:
+	* plugins/elements/gstfakesink.h:
+	  Potential GstContext regression
+	  Since the refactoring of GstContext (commits
+	  qc9fa2771b508e9aaeecc700e66e958190476f,
+	  a7f5dc8b8af837f01782d1572379948ff62daab7,
+	  690326f906dc82e41ea58b81cdb2e3e88b754,
+	  d367dc1b0d4ecb37f4d27267e03d7bf0c6c06a6, and
+	  82d158aed3f2e8545e1e7d35085085ff58f18) I am no longer able to get
+	  a shared context for an element that is used twice in a pipeline.
+	  I used the documentation and eglglessink as my reference for
+	  implementing the GstContext logic.
+	  As the code was tied to a hardware decoder, I have ported the
+	  GstContext code to fakesink to show the problem. Using the old
+	  API a single ExampleMgr instance is created, but using the new
+	  API each element is creating its own instance.
+
+2013-09-24 10:42:06 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: Make sure that the object lock is always taken when accessing the private pad list
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708636
+
+2013-09-17 23:23:34 +0200  Mathieu Duponchelle <mathieu.duponchelle@epitech.eu>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: Use private pad list in set_flushing_unlocked
+	  pads->data is the public list. It is dynamically rebuilt at each call to
+	  check_collected, in check_pads to be specific. When you add a pad and
+	  collectpads have been started, it is not added to the public list.
+	  Thus there exists a possible race where :
+	  1) You would add a pad to collectpads while running.
+	  2) You set collectpads to flushing before check_collected has been called again
+	  -> the pad is not set to flushing
+	  3) the pad starts pushing data as downstream might not be prepared, in the case
+	  of adder it then returns FLOW_FLUSHING.
+	  4) elements like demuxers, when they get a FLOW_FLUSHING, stop their tasks,
+	  never to be seen again.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708636
+
+2013-09-23 11:47:14 +0200  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* libs/gst/check/gsttestclock.c:
+	* tests/check/libs/gsttestclock.c:
+	  tests: handle unscheduled entries correctly
+	  Make the testclock return GST_CLOCK_UNSCHEDULED when an unscheduled entry is
+	  used for gst_clock_wait() or gst_clock_wait_async().
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=708605
+
+2013-09-22 11:09:36 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* scripts/gst-uninstalled:
+	  gst-uninstalled: Allow specifying the checkout directory by env variable
+	  For some rare cases, one might not be able to use the hardcoded $HOME/gst
+	  location yet would still want to use the gst-uninstalled script as-is (which
+	  has the benefit of being constantly updated).
+	  For these cases, the checkout directory can be specified with the
+	  GST_UNINSTALLED_ROOT environment variable.
+	  Ex:
+	  export GST_UNINSTALLED_ROOT=$HOME/somewhere/with/checkouts
+	  And then just call gst-uninstalled directly:
+	  $GST_UNINSTALLED_ROOT/gstreamer/gst-uninstalled
+
+2013-09-20 16:16:26 +0200  Edward Hervey <edward@collabora.com>
+
+	* common:
+	  Automatic update of common submodule
+	  From b613661 to 6b03ba7
+
+2013-09-19 18:42:31 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* common:
+	  Automatic update of common submodule
+	  From 74a6857 to b613661
+
+2013-09-19 17:34:27 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* autogen.sh:
+	* common:
+	  Automatic update of common submodule
+	  From 12af105 to 74a6857
+
+2013-09-19 17:12:14 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* libs/gst/check/gsttestclock.c:
+	  check: testclock: fix function guards
+	  Should be g_return_*() not g_assert(), even if it's for tests only.
+
+2013-09-19 16:43:18 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* libs/gst/check/gsttestclock.c:
+	  check: testclock: don't put code with side-effects in g_assert()
+	  Fixes unit test failures when -DG_DISABLE_ASSERT is used.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706551
+
+2013-09-19 12:07:56 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/gstcontext.c:
+	  gstcontext: Fix return values some more
+	  Return value is a boolean not a pointer
+
+2013-09-19 11:49:26 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstcontext.c:
+	  context: Fix return values for gst_context_has_context_type() in assertions
+
+2013-09-19 11:34:51 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  Back to development
+
+=== release 1.1.90 ===
+
+2013-09-19 10:48:24 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstenumtypes.c:
+	* win32/common/gstversion.h:
+	  Release 1.1.90
+
+2013-09-19 10:05:51 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2013-09-19 09:49:40 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 
