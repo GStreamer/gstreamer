@@ -232,17 +232,16 @@ gst_jpeg_scan_for_marker_code (const guint8 * data, gsize size, guint offset)
   guint i;
 
   g_return_val_if_fail (data != NULL, -1);
-  g_return_val_if_fail (size > offset, -1);
 
-  for (i = offset; i < size - 1;) {
-    if (data[i] != 0xff)
-      i++;
-    else {
-      const guint8 v = data[i + 1];
-      if (v >= 0xc0 && v <= 0xfe)
-        return i;
+  i = offset + 1;
+  while (i < size) {
+    const guint8 v = data[i];
+    if (v < 0xc0)
       i += 2;
-    }
+    else if (v < 0xff && data[i - 1] == 0xff)
+      return i - 1;
+    else
+      i++;
   }
   return -1;
 }
