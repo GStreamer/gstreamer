@@ -726,7 +726,7 @@ unknown_pad:
 }
 
 /*
- * Must be called with STREAM_LOCK.
+ * Must be called with STREAM_LOCK and OBJECT_LOCK.
  */
 static void
 gst_collect_pads_set_flushing_unlocked (GstCollectPads * pads,
@@ -778,7 +778,9 @@ gst_collect_pads_set_flushing (GstCollectPads * pads, gboolean flushing)
 
   /* NOTE since this eventually calls _pop, some (STREAM_)LOCK is needed here */
   GST_COLLECT_PADS_STREAM_LOCK (pads);
+  GST_OBJECT_LOCK (pads);
   gst_collect_pads_set_flushing_unlocked (pads, flushing);
+  GST_OBJECT_UNLOCK (pads);
   GST_COLLECT_PADS_STREAM_UNLOCK (pads);
 }
 
