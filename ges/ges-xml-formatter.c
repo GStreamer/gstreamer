@@ -298,7 +298,7 @@ _parse_track (GMarkupParseContext * context, const gchar * element_name,
 {
   GstCaps *caps;
   GESTrackType track_type;
-
+  GstStructure *props = NULL;
   const gchar *strtrack_type, *strcaps, *strtrack_id, *metadatas =
       NULL, *properties = NULL;
 
@@ -319,8 +319,12 @@ _parse_track (GMarkupParseContext * context, const gchar * element_name,
   if (errno)
     goto convertion_failed;
 
+  if (properties) {
+    props = gst_structure_from_string (properties, NULL);
+  }
+
   ges_base_xml_formatter_add_track (GES_BASE_XML_FORMATTER (self), track_type,
-      caps, strtrack_id, NULL, metadatas, error);
+      caps, strtrack_id, props, metadatas, error);
 
   return;
 
@@ -730,7 +734,13 @@ _serialize_properties (GObject * object, const gchar * fieldname, ...)
     GValue val = { 0 };
 
     spec = pspecs[j];
-    if (_can_serialize_spec (spec)) {
+    if (spec->value_type == GST_TYPE_CAPS) {
+      GstCaps *caps;
+
+      g_object_get (object, spec->name, &caps, NULL);
+      gst_structure_set (structure, spec->name, G_TYPE_STRING,
+          gst_caps_to_string (caps), NULL);
+    } else if (_can_serialize_spec (spec)) {
       _init_value_from_spec_for_serialization (&val, spec);
       g_object_get_property (object, spec->name, &val);
       gst_structure_set_value (structure, spec->name, &val);
@@ -782,20 +792,23 @@ _save_tracks (GString * str, GESTimeline * timeline)
   gchar *strtmp, *metas;
   GESTrack *track;
   GList *tmp, *tracks;
+  char *properties;
 
   guint nb_tracks = 0;
 
   tracks = ges_timeline_get_tracks (timeline);
   for (tmp = tracks; tmp; tmp = tmp->next) {
     track = GES_TRACK (tmp->data);
+    properties = _serialize_properties (G_OBJECT (track), NULL);
     strtmp = gst_caps_to_string (ges_track_get_caps (track));
     metas = ges_meta_container_metas_to_string (GES_META_CONTAINER (track));
     append_escaped (str,
         g_markup_printf_escaped
-        ("      <track caps='%s' track-type='%i' track-id='%i' metadatas='%s'/>\n",
-            strtmp, track->type, nb_tracks++, metas));
+        ("      <track caps='%s' track-type='%i' track-id='%i' properties='%s' metadatas='%s'/>\n",
+            strtmp, track->type, nb_tracks++, properties, metas));
     g_free (strtmp);
     g_free (metas);
+    g_free (properties);
   }
   g_list_free_full (tracks, gst_object_unref);
 }

@@ -913,9 +913,21 @@ ges_base_xml_formatter_add_track (GESBaseXmlFormatter * self,
 
   track = ges_track_new (track_type, caps);
   ges_timeline_add_track (GES_FORMATTER (self)->timeline, track);
-  if (properties)
+
+  if (properties) {
+    gchar *restriction;
+    GstCaps *caps;
+
+    gst_structure_get (properties, "restriction-caps", G_TYPE_STRING,
+        &restriction, NULL);
+    gst_structure_remove_fields (properties, "restriction-caps", "caps", NULL);
+    if (g_strcmp0 (restriction, "NULL")) {
+      caps = gst_caps_from_string (restriction);
+      ges_track_set_restriction_caps (track, caps);
+    }
     gst_structure_foreach (properties,
         (GstStructureForeachFunc) set_property_foreach, track);
+  }
 
   g_hash_table_insert (priv->tracks, g_strdup (id), gst_object_ref (track));
   if (metadatas)
