@@ -1653,7 +1653,11 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
     if (!seekable) {
       if (qtmux_klass->format != GST_QT_MUX_FORMAT_ISML) {
         if (!qtmux->fast_start) {
-          goto not_seekable_error;
+          GST_ELEMENT_WARNING (qtmux, STREAM, FAILED,
+              ("Downstream is not seekable and headers can't be rewritten"),
+              (NULL));
+          /* FIXME: Is there something better we can do? */
+          qtmux->streamable = TRUE;
         }
       } else {
         GST_WARNING_OBJECT (qtmux, "downstream is not seekable, but "
@@ -1773,15 +1777,6 @@ gst_qt_mux_start_file (GstQTMux * qtmux)
 
 exit:
   return ret;
-
-not_seekable_error:
-  {
-    GST_ELEMENT_ERROR (qtmux, STREAM, FAILED,
-        ("Downstream is not seekable and headers can't be rewritten"),
-        GST_ERROR_SYSTEM);
-    GST_OBJECT_UNLOCK (qtmux);
-    return GST_FLOW_ERROR;
-  }
 
   /* ERRORS */
 open_failed:
