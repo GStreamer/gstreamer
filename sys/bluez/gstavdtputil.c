@@ -611,11 +611,11 @@ gst_avdtp_util_parse_aac_raw (void *config)
   GValue value = G_VALUE_INIT;
   GValue value_str = G_VALUE_INIT;
   GValue list = G_VALUE_INIT;
+  a2dp_aac_t aac_local = { 0 };
+  a2dp_aac_t *aac = &aac_local;
 
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
   uint8_t *raw = (uint8_t *) config;
-  a2dp_aac_t aac_local = { 0 };
-  a2dp_aac_t *aac = &aac_local;
   aac->object_type = raw[0];
   aac->frequency = (raw[1] << 4) | ((raw[2] & 0xFF) >> 4);
   aac->channels = (raw[2] >> 2) & 0x3;
@@ -624,7 +624,7 @@ gst_avdtp_util_parse_aac_raw (void *config)
   aac->bitrate = (raw[4] << 16) | (raw[3] << 8) | raw[4];
   aac->bitrate &= ~0x800000;
 #elif G_BYTE_ORDER == G_BIG_ENDIAN
-  *aac = (a2dp_aac_t *) config;
+  *aac = *((a2dp_aac_t *) config);
 #else
 #error "Unknown byte order"
 #endif
