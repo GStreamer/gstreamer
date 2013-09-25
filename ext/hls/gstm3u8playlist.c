@@ -33,7 +33,7 @@
 #define M3U8_MEDIA_SEQUENCE_TAG "#EXT-X-MEDIA-SEQUENCE:%d\n"
 #define M3U8_DISCONTINUITY_TAG "#EXT-X-DISCONTINUITY\n"
 #define M3U8_INT_INF_TAG "#EXTINF:%d,%s\n%s\n"
-#define M3U8_FLOAT_INF_TAG "#EXTINF:%.2f,%s\n%s\n"
+#define M3U8_FLOAT_INF_TAG "#EXTINF:%s,%s\n%s\n"
 #define M3U8_ENDLIST_TAG "#EXT-X-ENDLIST"
 
 enum
@@ -75,12 +75,11 @@ gst_m3u8_entry_free (GstM3U8Entry * entry)
 static gchar *
 gst_m3u8_entry_render (GstM3U8Entry * entry, guint version)
 {
+  gchar buf[G_ASCII_DTOSTR_BUF_SIZE];
+
   g_return_val_if_fail (entry != NULL, NULL);
 
-  /* FIXME: Ensure the radix is always a '.' and not a ',' when printing
-   * floating point number, but for now only use integers*/
-  /* if (version < 3) */
-  if (TRUE)
+  if (version < 3)
     return g_strdup_printf ("%s" M3U8_INT_INF_TAG,
         entry->discontinuous ? M3U8_DISCONTINUITY_TAG : "",
         (gint) ((entry->duration + 500 * GST_MSECOND) / GST_SECOND),
@@ -88,7 +87,8 @@ gst_m3u8_entry_render (GstM3U8Entry * entry, guint version)
 
   return g_strdup_printf ("%s" M3U8_FLOAT_INF_TAG,
       entry->discontinuous ? M3U8_DISCONTINUITY_TAG : "",
-      (entry->duration / GST_SECOND), entry->title, entry->url);
+      g_ascii_dtostr (buf, sizeof (buf), (entry->duration / GST_SECOND)),
+      entry->title, entry->url);
 }
 
 GstM3U8Playlist *
