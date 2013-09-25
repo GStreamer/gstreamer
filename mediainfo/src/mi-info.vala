@@ -840,11 +840,13 @@ public class MediaInfo.Info : Box
       (uint) ((t) % SECOND));
   }
   
-  private string build_toc_info_for_entry (TocEntry e, int indent) {
+  // TODO(ensonic): use a Gtk.TreeStore here, pass parent, instead of indent
+  // TODO(ensonic): one column with the formatted string or 3 strings: label, start, stop
+  
+  private string build_toc_info_for_entry (TocEntry e, string indent) {
     int64 start, stop;
     e.get_start_stop_times(out start, out stop);
-    // TODO(ensonic): indent
-    string s = "";
+    string s = indent;
     if (start != Gst.CLOCK_TIME_NONE) {
       s += "%s ".printf(format_time((ClockTime)start));
     }
@@ -855,22 +857,22 @@ public class MediaInfo.Info : Box
     
     unowned GLib.List<TocEntry> entries = e.get_sub_entries ();
     if (entries != null) {
-      indent +=2;
+      string new_indent = indent + "  ";
       foreach (TocEntry se in entries) {
-        s += build_toc_info_for_entry (se, indent);
+        s += build_toc_info_for_entry (se, new_indent);
       }
     }
     return s;
   }
   
-  private string? build_toc_info (Toc t) {
+  private string? build_toc_info (Toc? t) {
     if (t == null)
       return null;
     
     string s = "";
     unowned GLib.List<TocEntry> entries = t.get_entries ();
     foreach (TocEntry e in entries) {
-      s += build_toc_info_for_entry (e, 0);
+      s += build_toc_info_for_entry (e, "");
     }
     
     return s;
