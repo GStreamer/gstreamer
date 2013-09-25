@@ -2875,7 +2875,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
 
     /* allocate pads for sending the channel data into the manager */
     pad0 = gst_pad_new_from_template (template, "internalsrc_0");
-    gst_pad_link (pad0, stream->channelpad[0]);
+    gst_pad_link_full (pad0, stream->channelpad[0], GST_PAD_LINK_CHECK_NOTHING);
     gst_object_unref (stream->channelpad[0]);
     stream->channelpad[0] = pad0;
     gst_pad_set_event_function (pad0, gst_rtspsrc_handle_internal_src_event);
@@ -2888,7 +2888,8 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
        * manager. */
       pad1 = gst_pad_new_from_template (template, "internalsrc_1");
       gst_pad_set_event_function (pad1, gst_rtspsrc_handle_internal_src_event);
-      gst_pad_link (pad1, stream->channelpad[1]);
+      gst_pad_link_full (pad1, stream->channelpad[1],
+          GST_PAD_LINK_CHECK_NOTHING);
       gst_object_unref (stream->channelpad[1]);
       stream->channelpad[1] = pad1;
       gst_pad_set_active (pad1, TRUE);
@@ -2913,7 +2914,7 @@ gst_rtspsrc_stream_configure_tcp (GstRTSPSrc * src, GstRTSPStream * stream,
 
     /* and link */
     if (pad) {
-      gst_pad_link (pad, stream->rtcppad);
+      gst_pad_link_full (pad, stream->rtcppad, GST_PAD_LINK_CHECK_NOTHING);
       gst_object_unref (pad);
     }
 
@@ -3102,7 +3103,8 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
       GST_DEBUG_OBJECT (src, "connecting UDP source 0 to manager");
       /* configure for UDP delivery, we need to connect the UDP pads to
        * the session plugin. */
-      gst_pad_link (*outpad, stream->channelpad[0]);
+      gst_pad_link_full (*outpad, stream->channelpad[0],
+          GST_PAD_LINK_CHECK_NOTHING);
       gst_object_unref (*outpad);
       *outpad = NULL;
       /* we connected to pad-added signal to get pads from the manager */
@@ -3128,7 +3130,8 @@ gst_rtspsrc_stream_configure_udp (GstRTSPSrc * src, GstRTSPStream * stream,
       GST_DEBUG_OBJECT (src, "connecting UDP source 1 to manager");
 
       pad = gst_element_get_static_pad (stream->udpsrc[1], "src");
-      gst_pad_link (pad, stream->channelpad[1]);
+      gst_pad_link_full (pad, stream->channelpad[1],
+          GST_PAD_LINK_CHECK_NOTHING);
       gst_object_unref (pad);
     } else {
       /* leave unlinked */
@@ -3217,7 +3220,8 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
     gst_object_ref (stream->fakesrc);
     gst_bin_add (GST_BIN_CAST (src), stream->fakesrc);
 
-    gst_element_link (stream->fakesrc, stream->udpsink[0]);
+    gst_element_link_pads_full (stream->fakesrc, "src", stream->udpsink[0],
+        "sink", GST_PAD_LINK_CHECK_NOTHING);
   }
   if (do_rtcp) {
     GST_DEBUG_OBJECT (src, "configure RTCP UDP sink for %s:%d", destination,
@@ -3269,7 +3273,7 @@ gst_rtspsrc_stream_configure_udp_sinks (GstRTSPSrc * src,
 
     /* and link */
     if (pad) {
-      gst_pad_link (pad, stream->rtcppad);
+      gst_pad_link_full (pad, stream->rtcppad, GST_PAD_LINK_CHECK_NOTHING);
       gst_object_unref (pad);
     }
   }
