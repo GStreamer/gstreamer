@@ -1277,7 +1277,6 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_FAAC, true)
 AG_GST_CHECK_FEATURE(FAAC, [AAC encoder plug-in], faac, [
   AG_GST_CHECK_LIBHEADER(FAAC, faac, faacEncOpen, $LIBM, faac.h,
     FAAC_LIBS="-lfaac $LIBM")
-  AS_SCRUB_INCLUDE(FAAC_CFLAGS)
   AC_SUBST(FAAC_LIBS)
 ])
 
@@ -1333,7 +1332,6 @@ AG_GST_CHECK_FEATURE(FAAD, [AAC decoder plug-in], faad, [
       HAVE_FAAD="no"
     ])
   fi
-  AS_SCRUB_INCLUDE(FAAD_CFLAGS)
   AC_SUBST(FAAD_LIBS)
   AC_SUBST(FAAD_IS_NEAAC)
 ])
