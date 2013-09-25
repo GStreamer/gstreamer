@@ -1272,8 +1272,14 @@ gst_audio_base_sink_skew_slaving (GstAudioBaseSink * sink,
     GST_WARNING_OBJECT (sink,
         "correct clock skew %" G_GINT64_FORMAT " > %" G_GINT64_FORMAT,
         sink->priv->avg_skew, mdrift2);
-    cexternal = cexternal > mdrift ? cexternal - mdrift : 0;
-    sink->priv->avg_skew -= mdrift;
+
+    if (sink->priv->avg_skew > (2 * mdrift)) {
+      cexternal -= sink->priv->avg_skew;
+      sink->priv->avg_skew = 0;
+    } else {
+      cexternal = cexternal > mdrift ? cexternal - mdrift : 0;
+      sink->priv->avg_skew -= mdrift;
+    }
 
     driftsamples = (sink->ringbuffer->spec.info.rate * mdrift) / GST_SECOND;
     last_align = sink->priv->last_align;
@@ -1294,8 +1300,14 @@ gst_audio_base_sink_skew_slaving (GstAudioBaseSink * sink,
     GST_WARNING_OBJECT (sink,
         "correct clock skew %" G_GINT64_FORMAT " < %" G_GINT64_FORMAT,
         sink->priv->avg_skew, -mdrift2);
-    cexternal += mdrift;
-    sink->priv->avg_skew += mdrift;
+
+    if (sink->priv->avg_skew < (2 * -mdrift)) {
+      cexternal -= sink->priv->avg_skew;
+      sink->priv->avg_skew = 0;
+    } else {
+      cexternal += mdrift;
+      sink->priv->avg_skew += mdrift;
+    }
 
     driftsamples = (sink->ringbuffer->spec.info.rate * mdrift) / GST_SECOND;
     last_align = sink->priv->last_align;
