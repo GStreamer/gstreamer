@@ -728,7 +728,6 @@ dnl *** aalib ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_AALIB, true)
 AG_GST_CHECK_FEATURE(AALIB, [aalib ASCII Art library], aasink, [
   AM_PATH_AALIB(, HAVE_AALIB=yes, HAVE_AALIB=no)
-  AS_SCRUB_INCLUDE(AALIB_CFLAGS)
 ])
 
 dnl *** cairo ***
