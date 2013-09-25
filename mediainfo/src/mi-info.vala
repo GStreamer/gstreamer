@@ -719,7 +719,7 @@ public class MediaInfo.Info : Box
     table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
   }
   
-  private void add_table_row_for_string (Table table, uint row, string title, string str) {
+  private void add_table_row_for_string (Table table, uint row, string title, string? str) {
     AttachOptions fill = AttachOptions.FILL;
     AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
 
@@ -732,7 +732,7 @@ public class MediaInfo.Info : Box
     table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
   }
 
-  private bool add_table_row_for_structure (Table table, uint row, Structure s) {
+  private bool add_table_row_for_structure (Table table, uint row, Structure? s) {
     if (s == null)
       return false;
 
@@ -750,7 +750,7 @@ public class MediaInfo.Info : Box
     return true;
   }
 
-  private bool add_table_row_for_taglist (Table table, uint row, TagList t) {
+  private bool add_table_row_for_taglist (Table table, uint row, TagList? t) {
     if (t == null)
       return false;
 
