@@ -56,6 +56,12 @@
  * Various methods exist to work with the media types such as subtracting
  * or intersecting.
  *
+ * Be aware that the current #GstCaps / #GstStructure serialization into string
+ * has limited support for nested #GstCaps / #GstStructure fields. It can only
+ * support one level of nesting. Using more levels will lead to unexpected
+ * behavior when using serialization features, such as gst_caps_to_string() or
+ * gst_value_serialize() and their counterparts.
+ *
  * Last reviewed on 2011-03-28 (0.11.3)
  */
 
@@ -2129,6 +2135,9 @@ gst_caps_fixate (GstCaps * caps)
  * ]|
  * This prints the caps in human readable form.
  *
+ * The current implementation of serialization will lead to unexpected results
+ * when there are nested #GstCaps / #GstStructure deeper than one level.
+ *
  * Returns: (transfer full): a newly allocated string representing @caps.
  */
 gchar *
@@ -2297,6 +2306,9 @@ gst_caps_from_string_inplace (GstCaps * caps, const gchar * string)
  * @string: a string to convert to #GstCaps
  *
  * Converts @caps from a string representation.
+ *
+ * The current implementation of serialization will lead to unexpected results
+ * when there are nested #GstCaps / #GstStructure deeper than one level.
  *
  * Returns: (transfer full): a newly allocated #GstCaps
  */

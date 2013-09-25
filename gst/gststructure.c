@@ -53,6 +53,12 @@
  * Strings in structures must be ASCII or UTF-8 encoded. Other encodings are
  * not allowed. Strings must not be empty either, but may be NULL.
  *
+ * Be aware that the current #GstCaps / #GstStructure serialization into string
+ * has limited support for nested #GstCaps / #GstStructure fields. It can only
+ * support one level of nesting. Using more levels will lead to unexpected
+ * behavior when using serialization features, such as gst_caps_to_string() or
+ * gst_value_serialize() and their counterparts.
+ *
  * Last reviewed on 2012-03-29 (0.11.3)
  */
 
@@ -1817,6 +1823,9 @@ priv_gst_structure_append_to_gstring (const GstStructure * structure,
  * ]|
  * This prints the structure in human readble form.
  *
+ * The current implementation of serialization will lead to unexpected results
+ * when there are nested #GstCaps / #GstStructure deeper than one level.
+ *
  * Free-function: g_free
  *
  * Returns: (transfer full): a pointer to string allocated by g_malloc().
@@ -2314,6 +2323,9 @@ priv_gst_structure_parse_fields (gchar * str, gchar ** end,
  * Creates a #GstStructure from a string representation.
  * If end is not NULL, a pointer to the place inside the given string
  * where parsing ended will be returned.
+ *
+ * The current implementation of serialization will lead to unexpected results
+ * when there are nested #GstCaps / #GstStructure deeper than one level.
  *
  * Free-function: gst_structure_free
  *

@@ -2379,11 +2379,17 @@ GST_START_TEST (test_serialize_deserialize_caps)
   , value2 = {
   0};
   GstCaps *caps, *caps2;
+  GstCaps *incaps;
   gchar *serialized;
 
+  incaps = gst_caps_new_simple ("caps/internal",
+      "in-field", G_TYPE_INT, 20, "in-field2",
+      G_TYPE_STRING, "some in ternal field", NULL);
   caps = gst_caps_new_simple ("test/caps",
-      "foo", G_TYPE_INT, 10, "bar", G_TYPE_STRING, "test", NULL);
+      "foo", G_TYPE_INT, 10, "bar", G_TYPE_STRING, "test",
+      "int-caps", GST_TYPE_CAPS, incaps, NULL);
   fail_if (GST_CAPS_REFCOUNT_VALUE (caps) != 1);
+  gst_caps_unref (incaps);
 
   /* and assign caps to gvalue */
   g_value_init (&value, GST_TYPE_CAPS);

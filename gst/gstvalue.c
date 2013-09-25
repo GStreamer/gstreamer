@@ -1887,8 +1887,7 @@ static gchar *
 gst_value_serialize_caps (const GValue * value)
 {
   GstCaps *caps = g_value_get_boxed (value);
-
-  return gst_caps_to_string (caps);
+  return gst_string_take_and_wrap (gst_caps_to_string (caps));
 }
 
 static gboolean
@@ -1896,7 +1895,17 @@ gst_value_deserialize_caps (GValue * dest, const gchar * s)
 {
   GstCaps *caps;
 
-  caps = gst_caps_from_string (s);
+  if (*s != '"') {
+    caps = gst_caps_from_string (s);
+  } else {
+    gchar *str = gst_string_unwrap (s);
+
+    if (G_UNLIKELY (!str))
+      return FALSE;
+
+    caps = gst_caps_from_string (str);
+    g_free (str);
+  }
 
   if (caps) {
     g_value_take_boxed (dest, caps);
