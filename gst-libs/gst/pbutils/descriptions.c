@@ -610,6 +610,8 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
         }
         GST_WARNING ("Unexpected MPEG-1 layer in %" GST_PTR_FORMAT, caps);
         return g_strdup ("MPEG-1 Audio");
+      case 2:
+        return g_strdup ("MPEG-2 AAC");
       case 4:
         return g_strdup ("MPEG-4 AAC");
       default:
