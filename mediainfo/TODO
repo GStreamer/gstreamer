@@ -7,7 +7,9 @@ http://www.headbands.com/gspot/v26x/index.htm
 = browsing =
 - if one has grillo installed we could use grillo sources in addition to local files
 - there should be a "open url" menu entry in addition
-- when a stream play we hide the file-browser pane
+- if initial directory contains a glob as a last entry, we could set a filter on
+  the file-choser
+- when a stream plays we hide the file-browser pane or show a text entry
 - we could also take playlists and use totem-pl-parser
   - needs a list-view to show the playlist instead of the file-browser
 
