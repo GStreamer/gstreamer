@@ -64,6 +64,9 @@ G_DEFINE_ABSTRACT_TYPE (GstGLWindow, gst_gl_window, G_TYPE_OBJECT);
 #define GST_GL_WINDOW_GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW, GstGLWindowPrivate))
 
+static void gst_gl_window_default_send_message (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data);
+
 struct _GstGLWindowPrivate
 {
   GstGLDisplay *display;
@@ -111,6 +114,8 @@ static void
 gst_gl_window_class_init (GstGLWindowClass * klass)
 {
   g_type_class_add_private (klass, sizeof (GstGLWindowPrivate));
+
+  klass->send_message = GST_DEBUG_FUNCPTR (gst_gl_window_default_send_message);
 
   G_OBJECT_CLASS (klass)->finalize = gst_gl_window_finalize;
 }
@@ -257,6 +262,55 @@ gst_gl_window_quit (GstGLWindow * window)
   GST_INFO ("quit received from gl window");
 }
 
+typedef struct _GstGLSyncMessage
+{
+  GMutex lock;
+  GCond cond;
+  gboolean fired;
+
+  GstGLWindowCB callback;
+  gpointer data;
+} GstGLSyncMessage;
+
+static void
+_run_message_sync (GstGLSyncMessage * message)
+{
+  g_mutex_lock (&message->lock);
+
+  if (message->callback)
+    message->callback (message->data);
+
+  message->fired = TRUE;
+  g_cond_signal (&message->cond);
+  g_mutex_unlock (&message->lock);
+}
+
+void
+gst_gl_window_default_send_message (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data)
+{
+  GstGLSyncMessage message;
+
+  message.callback = callback;
+  message.data = data;
+  message.fired = FALSE;
+  g_mutex_init (&message.lock);
+  g_cond_init (&message.cond);
+
+  gst_gl_window_send_message_async (window, (GstGLWindowCB) _run_message_sync,
+      &message, NULL);
+
+  g_mutex_lock (&message.lock);
+
+  /* block until opengl calls have been executed in the gl thread */
+  while (!message.fired)
+    g_cond_wait (&message.cond, &message.lock);
+  g_mutex_unlock (&message.lock);
+
+  g_mutex_clear (&message.lock);
+  g_cond_clear (&message.cond);
+}
+
 void
 gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
     gpointer data)
@@ -266,11 +320,25 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
   g_return_if_fail (GST_GL_IS_WINDOW (window));
   g_return_if_fail (callback != NULL);
   window_class = GST_GL_WINDOW_GET_CLASS (window);
-  g_return_if_fail (window_class->quit != NULL);
+  g_return_if_fail (window_class->send_message != NULL);
 
   GST_GL_WINDOW_LOCK (window);
   window_class->send_message (window, callback, data);
   GST_GL_WINDOW_UNLOCK (window);
+}
+
+void
+gst_gl_window_send_message_async (GstGLWindow * window, GstGLWindowCB callback,
+    gpointer data, GDestroyNotify destroy)
+{
+  GstGLWindowClass *window_class;
+
+  g_return_if_fail (GST_GL_IS_WINDOW (window));
+  g_return_if_fail (callback != NULL);
+  window_class = GST_GL_WINDOW_GET_CLASS (window);
+  g_return_if_fail (window_class->send_message_async != NULL);
+
+  window_class->send_message_async (window, callback, data, destroy);
 }
 
 /**

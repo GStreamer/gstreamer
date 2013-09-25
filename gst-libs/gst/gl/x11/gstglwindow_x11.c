@@ -66,8 +66,8 @@ void gst_gl_window_x11_draw_unlocked (GstGLWindow * window, guint width,
 void gst_gl_window_x11_draw (GstGLWindow * window, guint width, guint height);
 void gst_gl_window_x11_run (GstGLWindow * window);
 void gst_gl_window_x11_quit (GstGLWindow * window);
-void gst_gl_window_x11_send_message (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data);
+void gst_gl_window_x11_send_message_async (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 gboolean gst_gl_window_x11_create_context (GstGLWindow * window,
     GstGLAPI gl_api, guintptr external_gl_context, GError ** error);
 gboolean gst_gl_window_x11_open (GstGLWindow * window, GError ** error);
@@ -153,8 +153,8 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_x11_draw);
   window_class->run = GST_DEBUG_FUNCPTR (gst_gl_window_x11_run);
   window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_x11_quit);
-  window_class->send_message =
-      GST_DEBUG_FUNCPTR (gst_gl_window_x11_send_message);
+  window_class->send_message_async =
+      GST_DEBUG_FUNCPTR (gst_gl_window_x11_send_message_async);
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_x11_open);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_x11_close);
 }
@@ -397,7 +397,7 @@ gst_gl_window_x11_activate (GstGLWindow * window, gboolean activate)
   priv = window_x11->priv;
   priv->activate = activate;
 
-  gst_gl_window_x11_send_message (window, GST_GL_WINDOW_CB (callback_activate),
+  gst_gl_window_send_message (window, GST_GL_WINDOW_CB (callback_activate),
       window_x11);
 
   return priv->activate_result;
@@ -539,32 +539,6 @@ gst_gl_window_x11_draw (GstGLWindow * window, guint width, guint height)
 
     g_mutex_unlock (&window_x11->disp_send_lock);
   }
-}
-
-typedef struct _GstGLMessage
-{
-  GstGLWindow *window;
-  GMutex lock;
-  GCond cond;
-  gboolean fired;
-
-  GstGLWindowCB callback;
-  gpointer data;
-} GstGLMessage;
-
-static gboolean
-_run_message (GstGLMessage * message)
-{
-  g_mutex_lock (&message->lock);
-
-  if (message->callback)
-    message->callback (message->data);
-
-  message->fired = TRUE;
-  g_cond_signal (&message->cond);
-  g_mutex_unlock (&message->lock);
-
-  return FALSE;
 }
 
 void
@@ -726,35 +700,43 @@ gst_gl_window_x11_quit (GstGLWindow * window)
   GST_LOG ("quit sent");
 }
 
-/* Not called by the gl thread */
+typedef struct _GstGLMessage
+{
+  GstGLWindowCB callback;
+  gpointer data;
+  GDestroyNotify destroy;
+} GstGLMessage;
+
+static gboolean
+_run_message (GstGLMessage * message)
+{
+  if (message->callback)
+    message->callback (message->data);
+
+  if (message->destroy)
+    message->destroy (message->data);
+
+  g_slice_free (GstGLMessage, message);
+
+  return FALSE;
+}
+
 void
-gst_gl_window_x11_send_message (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data)
+gst_gl_window_x11_send_message_async (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
 {
   GstGLWindowX11 *window_x11;
+  GstGLMessage *message;
 
   window_x11 = GST_GL_WINDOW_X11 (window);
+  message = g_slice_new (GstGLMessage);
 
-  if (g_main_loop_is_running (window_x11->loop)) {
-    GstGLMessage message;
+  message->callback = callback;
+  message->data = data;
+  message->destroy = destroy;
 
-    message.window = window;
-    message.callback = callback;
-    message.data = data;
-    message.fired = FALSE;
-    g_mutex_init (&message.lock);
-    g_cond_init (&message.cond);
-
-    g_main_context_invoke (window_x11->main_context, (GSourceFunc) _run_message,
-        &message);
-
-    g_mutex_lock (&message.lock);
-
-    /* block until opengl calls have been executed in the gl thread */
-    while (!message.fired)
-      g_cond_wait (&message.cond, &message.lock);
-    g_mutex_unlock (&message.lock);
-  }
+  g_main_context_invoke (window_x11->main_context, (GSourceFunc) _run_message,
+      message);
 }
 
 static int
