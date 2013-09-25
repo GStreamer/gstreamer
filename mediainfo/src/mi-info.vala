@@ -844,8 +844,14 @@ public class MediaInfo.Info : Box
     int64 start, stop;
     e.get_start_stop_times(out start, out stop);
     // TODO(ensonic): indent
-    // TODO(ensonic): add start/stop, if !Gst.ClockTime.CLOCK_TIME_NONE
-    string s = "%s\n".printf(TocEntryType.get_nick(e.get_entry_type()));
+    string s = "";
+    if (start != Gst.CLOCK_TIME_NONE) {
+      s += "%s ".printf(format_time((ClockTime)start));
+    }
+    if (stop != Gst.CLOCK_TIME_NONE) {
+      s += "- %s ".printf(format_time((ClockTime)stop));
+    }    
+    s += "%s\n".printf(TocEntryType.get_nick(e.get_entry_type()));
     
     unowned GLib.List<TocEntry> entries = e.get_sub_entries ();
     if (entries != null) {
