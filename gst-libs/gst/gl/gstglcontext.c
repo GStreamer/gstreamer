@@ -513,6 +513,12 @@ _parse_gl_api (const gchar * apis_s)
   return ret;
 }
 
+static void
+_unlock_create_thread (GstGLContext * context)
+{
+  g_mutex_unlock (&context->priv->render_lock);
+}
+
 //gboolean
 //gst_gl_context_create (GstGLContext * context, GstGLContext * other_context, GError ** error)
 static gpointer
@@ -637,7 +643,10 @@ gst_gl_context_create_thread (GstGLContext * context)
   context->priv->alive = TRUE;
 
   g_cond_signal (&context->priv->create_cond);
-  g_mutex_unlock (&context->priv->render_lock);
+
+//  g_mutex_unlock (&context->priv->render_lock);
+  gst_gl_window_send_message_async (context->window,
+      (GstGLWindowCB) _unlock_create_thread, context, NULL);
 
   gst_gl_window_run (context->window);
 

@@ -54,6 +54,7 @@ struct _GstGLContextCocoaPrivate
   NSOpenGLContext *gl_context;
   NSOpenGLContext *external_gl_context;
   NSRect rect;
+  gint source_id;
 };
 
 

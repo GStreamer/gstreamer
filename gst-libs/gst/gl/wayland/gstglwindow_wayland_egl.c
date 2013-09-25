@@ -48,8 +48,8 @@ static void gst_gl_window_wayland_egl_draw (GstGLWindow * window, guint width,
     guint height);
 static void gst_gl_window_wayland_egl_run (GstGLWindow * window);
 static void gst_gl_window_wayland_egl_quit (GstGLWindow * window);
-static void gst_gl_window_wayland_egl_send_message (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data);
+static void gst_gl_window_wayland_egl_send_message_async (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 static void gst_gl_window_wayland_egl_close (GstGLWindow * window);
 static gboolean gst_gl_window_wayland_egl_open (GstGLWindow * window,
     GError ** error);
@@ -258,8 +258,8 @@ gst_gl_window_wayland_egl_class_init (GstGLWindowWaylandEGLClass * klass)
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_draw);
   window_class->run = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_run);
   window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_quit);
-  window_class->send_message =
-      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_send_message);
+  window_class->send_message_async =
+      GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_send_message_async);
   window_class->close = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_close);
   window_class->open = GST_DEBUG_FUNCPTR (gst_gl_window_wayland_egl_open);
   window_class->get_display =
@@ -379,51 +379,41 @@ gst_gl_window_wayland_egl_quit (GstGLWindow * window)
 
 typedef struct _GstGLMessage
 {
-  GMutex lock;
-  GCond cond;
-  gboolean fired;
-
   GstGLWindowCB callback;
   gpointer data;
+  GDestroyNotify destroy;
 } GstGLMessage;
 
 static gboolean
 _run_message (GstGLMessage * message)
 {
-  g_mutex_lock (&message->lock);
-
   if (message->callback)
     message->callback (message->data);
 
-  message->fired = TRUE;
-  g_cond_signal (&message->cond);
-  g_mutex_unlock (&message->lock);
+  if (message->destroy)
+    message->destroy (message->data);
+
+  g_slice_free (GstGLMessage, message);
 
   return FALSE;
 }
 
 static void
-gst_gl_window_wayland_egl_send_message (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data)
+gst_gl_window_wayland_egl_send_message_async (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
 {
   GstGLWindowWaylandEGL *window_egl;
-  GstGLMessage message;
+  GstGLMessage *message;
 
   window_egl = GST_GL_WINDOW_WAYLAND_EGL (window);
-  message.callback = callback;
-  message.data = data;
-  message.fired = FALSE;
-  g_mutex_init (&message.lock);
-  g_cond_init (&message.cond);
+  message = g_slice_new (GstGLMessage);
+
+  message->callback = callback;
+  message->data = data;
+  message->destroy = destroy;
 
   g_main_context_invoke (window_egl->main_context, (GSourceFunc) _run_message,
-      &message);
-
-  g_mutex_lock (&message.lock);
-
-  while (!message.fired)
-    g_cond_wait (&message.cond, &message.lock);
-  g_mutex_unlock (&message.lock);
+      message);
 }
 
 static guintptr

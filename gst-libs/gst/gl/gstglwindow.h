@@ -104,6 +104,7 @@ struct _GstGLWindowClass {
   void     (*run)                (GstGLWindow *window);
   void     (*quit)               (GstGLWindow *window);
   void     (*send_message)       (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
+  void     (*send_message_async) (GstGLWindow *window, GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 
   gboolean (*open)               (GstGLWindow *window, GError **error);
   void     (*close)              (GstGLWindow *window);
@@ -131,6 +132,7 @@ void     gst_gl_window_draw                 (GstGLWindow *window, guint width, g
 void     gst_gl_window_run                  (GstGLWindow *window);
 void     gst_gl_window_quit                 (GstGLWindow *window);
 void     gst_gl_window_send_message         (GstGLWindow *window, GstGLWindowCB callback, gpointer data);
+void     gst_gl_window_send_message_async   (GstGLWindow *window, GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 guintptr gst_gl_window_get_display          (GstGLWindow *window);
 
 GstGLContext * gst_gl_window_get_context (GstGLWindow *window);

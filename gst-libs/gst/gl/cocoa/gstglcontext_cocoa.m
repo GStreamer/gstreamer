@@ -29,6 +29,7 @@
 
 static gboolean gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
     GstGLContext * other_context, GError **error);
+static void gst_gl_context_cocoa_destroy_context (GstGLContext *context);
 static guintptr gst_gl_context_cocoa_get_gl_context (GstGLContext * window);
 static gboolean gst_gl_context_cocoa_activate (GstGLContext * context, gboolean activate);
 static GstGLAPI gst_gl_context_cocoa_get_gl_api (GstGLContext * context);
@@ -37,6 +38,30 @@ static GstGLAPI gst_gl_context_cocoa_get_gl_api (GstGLContext * context);
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_CONTEXT_COCOA, GstGLContextCocoaPrivate))
 
 G_DEFINE_TYPE (GstGLContextCocoa, gst_gl_context_cocoa, GST_GL_TYPE_CONTEXT);
+
+#ifndef GNUSTEP
+static gboolean
+gst_gl_window_cocoa_nsapp_iteration (gpointer data)
+{
+  NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+
+  NSEvent *event = nil;
+
+  if ([NSThread isMainThread]) {
+
+    while ((event = ([NSApp nextEventMatchingMask:NSAnyEventMask
+      untilDate:[NSDate dateWithTimeIntervalSinceNow:0.5]
+      inMode:NSDefaultRunLoopMode dequeue:YES])) != nil) {
+
+      [NSApp sendEvent:event];
+    }
+  }
+
+  [pool release];
+
+  return TRUE;
+}
+#endif
 
 static void
 gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
@@ -51,6 +76,8 @@ gst_gl_context_cocoa_class_init (GstGLContextCocoaClass * klass)
 
   g_type_class_add_private (klass, sizeof (GstGLContextCocoaPrivate));
 
+  context_class->destroy_context =
+      GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_destroy_context);
   context_class->create_context =
       GST_DEBUG_FUNCPTR (gst_gl_context_cocoa_create_context);
   context_class->get_gl_context =
@@ -191,6 +218,11 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   gst_object_unref (window);
 
   return TRUE;
+}
+
+static void
+gst_gl_context_cocoa_destroy_context (GstGLContext *context)
+{
 }
 
 static guintptr

@@ -62,8 +62,8 @@ static void gst_gl_window_win32_draw (GstGLWindow * window, guint width,
     guint height);
 static void gst_gl_window_win32_run (GstGLWindow * window);
 static void gst_gl_window_win32_quit (GstGLWindow * window);
-static void gst_gl_window_win32_send_message (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data);
+static void gst_gl_window_win32_send_message_async (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 
 static void
 gst_gl_window_win32_class_init (GstGLWindowWin32Class * klass)
@@ -78,8 +78,8 @@ gst_gl_window_win32_class_init (GstGLWindowWin32Class * klass)
   window_class->draw = GST_DEBUG_FUNCPTR (gst_gl_window_win32_draw);
   window_class->run = GST_DEBUG_FUNCPTR (gst_gl_window_win32_run);
   window_class->quit = GST_DEBUG_FUNCPTR (gst_gl_window_win32_quit);
-  window_class->send_message =
-      GST_DEBUG_FUNCPTR (gst_gl_window_win32_send_message);
+  window_class->send_message_async =
+      GST_DEBUG_FUNCPTR (gst_gl_window_win32_send_message_async);
   window_class->get_display =
       GST_DEBUG_FUNCPTR (gst_gl_window_win32_get_display);
 }
@@ -330,19 +330,47 @@ gst_gl_window_win32_quit (GstGLWindow * window)
   }
 }
 
+typedef struct _GstGLMessage
+{
+  GstGLWindowCB callback;
+  gpointer data;
+  GDestroyNotify destroy;
+} GstGLMessage;
+
+static gboolean
+_run_message (GstGLMessage * message)
+{
+  if (message->callback)
+    message->callback (message->data);
+
+  if (message->destroy)
+    message->destroy (message->data);
+
+  g_slice_free (GstGLMessage, message);
+
+  return FALSE;
+}
+
 /* Thread safe */
 static void
-gst_gl_window_win32_send_message (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data)
+gst_gl_window_win32_send_message_async (GstGLWindow * window,
+    GstGLWindowCB callback, gpointer data, GDestroyNotify destroy)
 {
   GstGLWindowWin32 *window_win32;
+  GstGLMessage *message;
 
   window_win32 = GST_GL_WINDOW_WIN32 (window);
+  message = g_slice_new (GstGLMessage);
 
   if (window_win32) {
-    LRESULT res =
-        SendMessage (window_win32->internal_win_id, WM_GST_GL_WINDOW_CUSTOM,
-        (WPARAM) data, (LPARAM) callback);
+    LRESULT res;
+
+    message->callback = callback;
+    message->data = data;
+    message->destroy = destroy;
+
+    res = PostMessage (window_win32->internal_win_id, WM_GST_GL_WINDOW_CUSTOM,
+        (WPARAM) message, (LPARAM) NULL);
     g_return_if_fail (SUCCEEDED (res));
   }
 }
@@ -449,8 +477,8 @@ window_proc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
       case WM_GST_GL_WINDOW_CUSTOM:
       {
         if (!window_win32->is_closed) {
-          GstGLWindowCB custom_cb = (GstGLWindowCB) lParam;
-          custom_cb ((gpointer) wParam);
+          GstGLMessage *message = (GstGLMessage *) wParam;
+          _run_message (message);
         }
         break;
       }
