@@ -34,12 +34,63 @@ struct _GESVideoTrackPrivate
 
 G_DEFINE_TYPE (GESVideoTrack, ges_video_track, GES_TYPE_TRACK);
 
+static void
+_sync_capsfilter_with_track (GESTrack * track, GstElement * capsfilter)
+{
+  GstCaps *restriction, *caps;
+  gint fps_n, fps_d;
+  GstStructure *structure;
+
+  g_object_get (track, "restriction-caps", &restriction, NULL);
+  if (restriction && gst_caps_get_size (restriction) > 0) {
+
+    structure = gst_caps_get_structure (restriction, 0);
+    if (!gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d))
+      return;
+  } else {
+    return;
+  }
+
+  caps =
+      gst_caps_new_simple ("video/x-raw", "framerate", GST_TYPE_FRACTION, fps_n,
+      fps_d, NULL);
+
+  g_object_set (capsfilter, "caps", caps, NULL);
+}
+
+static void
+_track_restriction_changed_cb (GESTrack * track, GParamSpec * arg G_GNUC_UNUSED,
+    GstElement * capsfilter)
+{
+  _sync_capsfilter_with_track (track, capsfilter);
+}
+
+static void
+_weak_notify_cb (GESTrack * track, GstElement * capsfilter)
+{
+  g_signal_handlers_disconnect_by_func (track,
+      (GCallback) _track_restriction_changed_cb, capsfilter);
+}
+
 static GstElement *
 create_element_for_raw_video_gap (GESTrack * track)
 {
-  return gst_parse_bin_from_description
-      ("videotestsrc pattern=2 name=src ! capsfilter caps=video/x-raw", TRUE,
-      NULL);
+  GstElement *bin;
+  GstElement *capsfilter;
+
+  bin = gst_parse_bin_from_description
+      ("videotestsrc pattern=2 name=src ! videorate ! capsfilter name=gapfilter caps=video/x-raw",
+      TRUE, NULL);
+
+  capsfilter = gst_bin_get_by_name (GST_BIN (bin), "gapfilter");
+  g_object_weak_ref (G_OBJECT (capsfilter), (GWeakNotify) _weak_notify_cb,
+      track);
+  g_signal_connect (track, "notify::restriction-caps",
+      (GCallback) _track_restriction_changed_cb, capsfilter);
+
+  _sync_capsfilter_with_track (track, capsfilter);
+
+  return bin;
 }
 
 static void
