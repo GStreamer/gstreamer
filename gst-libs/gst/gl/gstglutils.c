@@ -97,7 +97,8 @@ gst_gl_display_gen_texture_thread (GstGLDisplay * display, GLuint * pTexture,
 void
 gst_gl_display_del_texture_window_cb (GstGLDisplay * display)
 {
-  glDeleteTextures (1, del_texture);
+  const GstGLFuncs *gl = display->gl_vtable;
+  gl->DeleteTextures (1, del_texture);
 }
 
 /* called in the gl thread */
