@@ -13,6 +13,7 @@ m4_append([gst_vaapi_version], gst_vaapi_pre_version, [.pre])
 m4_define([gst_vaapi_lt_current],       [4])
 m4_define([gst0_vaapi_lt_current_bias], [0])
 m4_define([gst1_vaapi_lt_current_bias], [2])
+m4_define([gst2_vaapi_lt_current_bias], [4])
 m4_define([gst_vaapi_lt_revision],      [0])
 m4_define([gst_vaapi_lt_age],           [0])
 
@@ -27,7 +28,7 @@ m4_define([gst0_plugins_bad_version],   [0.10.22])
 m4_define([gst1_version],               [1.0.0])
 m4_define([gst1_plugins_base_version],  [1.0.0])
 m4_define([gst1_plugins_bad_version],   [1.0.0])
-m4_define([gst12_version],              [1.1.0])
+m4_define([gst12_version],              [1.1.90])
 m4_define([gst12_plugins_base_version], [1.1.0])
 m4_define([gst12_plugins_bad_version],  [1.1.0])
 
@@ -188,17 +189,18 @@ AM_CONDITIONAL([USE_GST_API_0_10], [test "$USE_GST_API_0_10" = "yes"])
 AM_CONDITIONAL([USE_GST_API_1_0p], [test "$USE_GST_API_1_0p" = "yes"])
 AM_CONDITIONAL([USE_GST_API_1_2p], [test "$USE_GST_API_1_2p" = "yes"])
 
-dnl XXX: GStreamer 1.2.x APIs don't have their own namespace yet
-GST_API_VERSION_ORIG=$GST_API_VERSION
+dnl GStreamer 1.2.x APIs don't have their own namespace
+GST_PKG_VERSION="$GST_API_VERSION"
 if test "$USE_GST_API_1_2p" = "yes"; then
-    GST_API_VERSION="1.0"
+    GST_PKG_VERSION="1.0"
 fi
+AC_SUBST([GST_PKG_VERSION])
 
 dnl GStreamer Core
 PKG_CHECK_MODULES([GST],
-    [gstreamer-$GST_API_VERSION >= $GST_VERSION_REQUIRED])
+    [gstreamer-$GST_PKG_VERSION >= $GST_VERSION_REQUIRED])
 PKG_CHECK_MODULES([GST_BASE],
-    [gstreamer-base-$GST_API_VERSION >= $GST_VERSION_REQUIRED])
+    [gstreamer-base-$GST_PKG_VERSION >= $GST_VERSION_REQUIRED])
 
 AC_CACHE_CHECK([for GstBaseSink::query hook], ac_cv_have_gst_base_sink_query, [
     saved_CPPFLAGS="$CPPFLAGS"
@@ -221,15 +223,15 @@ fi
 
 dnl GStreamer -base plugins
 PKG_CHECK_MODULES([GST_PLUGINS_BASE],
-    [gstreamer-plugins-base-$GST_API_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+    [gstreamer-plugins-base-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
 if test "$GST_API_VERSION" = "0.10"; then
 PKG_CHECK_MODULES([GST_INTERFACES],
-    [gstreamer-interfaces-$GST_API_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+    [gstreamer-interfaces-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
 fi
 
 dnl ... GstVideoOverlayComposition (gstreamer-video)
 PKG_CHECK_MODULES([GST_VIDEO],
-    [gstreamer-video-$GST_API_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
+    [gstreamer-video-$GST_PKG_VERSION >= $GST_PLUGINS_BASE_VERSION_REQUIRED])
 
 AC_CACHE_CHECK([for GstVideoOverlayComposition],
     ac_cv_have_gst_video_overlay_composition, [
@@ -309,7 +311,7 @@ AM_CONDITIONAL([USE_LOCAL_GST_VIDEO_DECODER],
 dnl GStreamer -bad plugins (deprecated in GStreamer v1.2)
 if test "$USE_GST_API_1_2p" != "yes"; then
 PKG_CHECK_MODULES([GST_BASEVIDEO],
-    [gstreamer-basevideo-$GST_API_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
+    [gstreamer-basevideo-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
 fi
 
 dnl ... bitstream parsers
@@ -319,7 +321,7 @@ if test "$enable_builtin_codecparsers" = "yes"; then
     ac_cv_have_gst_jpeg_parser="no"
 else
 PKG_CHECK_MODULES([GST_CODEC_PARSERS],
-    [gstreamer-codecparsers-$GST_API_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
+    [gstreamer-codecparsers-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
 fi
 
 dnl ... MPEG-2 parser, with the required extensions
@@ -398,6 +400,7 @@ AM_CONDITIONAL([USE_LOCAL_CODEC_PARSERS_JPEG],
 case $GST_API_VERSION in
 0.10)   lt_bias=gst0_vaapi_lt_current_bias;;
 1.0)    lt_bias=gst1_vaapi_lt_current_bias;;
+1.2)    lt_bias=gst2_vaapi_lt_current_bias;;
 esac
 GST_VAAPI_MAJOR_VERSION=`expr gst_vaapi_lt_current - "$lt_bias"`
 AC_SUBST(GST_VAAPI_MAJOR_VERSION)
@@ -430,13 +433,14 @@ AC_MSG_CHECKING([for GStreamer plugins directory])
 case $GST_API_VERSION in
 0.10)   _gst_plugin_path="$GST_PLUGIN_PATH";;
 1.0)    _gst_plugin_path="$GST_PLUGIN_PATH_1_0";;
+1.2)    _gst_plugin_path="$GST_PLUGIN_PATH_1_0";;
 esac
 if test -d "$_gst_plugin_path"; then
     GST_PLUGINS_DIR="$_gst_plugin_path"
 else
-    GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_API_VERSION --variable pluginsdir`
+    GST_PLUGINS_DIR=`$PKG_CONFIG gstreamer-$GST_PKG_VERSION --variable pluginsdir`
     if test -z "$GST_PLUGINS_DIR"; then
-        GST_PLUGINS_DIR="\$(libdir)/gstreamer-$GST_API_VERSION"
+        GST_PLUGINS_DIR="\$(libdir)/gstreamer-$GST_PKG_VERSION"
     fi
 fi
 AC_MSG_RESULT([$GST_PLUGINS_DIR])
@@ -779,7 +783,7 @@ AS_IF([test $USE_WAYLAND -eq 1], [VIDEO_OUTPUTS="$VIDEO_OUTPUTS wayland"])
 echo
 echo $PACKAGE configuration summary:
 echo
-echo GStreamer API version ............ : $GST_API_VERSION_ORIG
+echo GStreamer API version ............ : $GST_API_VERSION
 echo VA-API version ................... : $VA_VERSION_STR
 echo Video outputs .................... : $VIDEO_OUTPUTS
 echo
