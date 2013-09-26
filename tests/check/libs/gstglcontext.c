@@ -28,6 +28,29 @@
 
 #include <stdio.h>
 
+#if GST_GL_HAVE_GLES2
+/* *INDENT-OFF* */
+static const gchar *vertex_shader_str_gles2 =
+      "attribute vec4 a_position;   \n"
+      "attribute vec2 a_texCoord;   \n"
+      "varying vec2 v_texCoord;     \n"
+      "void main()                  \n"
+      "{                            \n"
+      "   gl_Position = a_position; \n"
+      "   v_texCoord = a_texCoord;  \n"
+      "}                            \n";
+
+static const gchar *fragment_shader_str_gles2 =
+      "precision mediump float;                            \n"
+      "varying vec2 v_texCoord;                            \n"
+      "uniform sampler2D s_texture;                        \n"
+      "void main()                                         \n"
+      "{                                                   \n"
+      "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
+      "}                                                   \n";
+/* *INDENT-ON* */
+#endif
+
 static GstGLDisplay *display;
 
 void
@@ -44,6 +67,12 @@ teardown (void)
 
 static GLuint fbo_id, rbo, tex;
 static GstGLFramebuffer *fbo;
+#if GST_GL_HAVE_GLES2
+static GError *error;
+static GstGLShader *shader;
+static GLint shader_attr_position_loc;
+static GLint shader_attr_texture_loc;
+#endif
 
 void
 init (gpointer data)
@@ -54,8 +83,38 @@ init (gpointer data)
   gst_gl_framebuffer_generate (fbo, 320, 240, &fbo_id, &rbo);
   fail_if (fbo == NULL || fbo_id == 0, "failed to create framebuffer object");
 
-  gst_gl_display_gen_texture (display, &tex, GST_VIDEO_FORMAT_RGBA, 320, 240);
+  gst_gl_display_gen_texture_thread (display, &tex, GST_VIDEO_FORMAT_RGBA, 320,
+      240);
   fail_if (tex == 0, "failed to create texture");
+
+#if GST_GL_HAVE_GLES2
+  shader = gst_gl_shader_new (display);
+  fail_if (shader == NULL, "failed to create shader object");
+
+  gst_gl_shader_set_vertex_source (shader, vertex_shader_str_gles2);
+  gst_gl_shader_set_fragment_source (shader, fragment_shader_str_gles2);
+
+  error = NULL;
+  gst_gl_shader_compile (shader, &error);
+  fail_if (error != NULL, "Error compiling shader %s\n",
+      error ? error->message : "Unknown Error");
+
+  shader_attr_position_loc =
+      gst_gl_shader_get_attribute_location (shader, "a_position");
+  shader_attr_texture_loc =
+      gst_gl_shader_get_attribute_location (shader, "a_texCoord");
+#endif
+}
+
+void
+deinit (gpointer data)
+{
+  GstGLFuncs *gl = display->gl_vtable;
+  gl->DeleteTextures (1, &tex);;
+  gst_object_unref (fbo);
+#if GST_GL_HAVE_GLES2
+  gst_object_unref (shader);
+#endif
 }
 
 void
@@ -88,6 +147,7 @@ draw_render (gpointer data)
 
   /* redraw the texture into the system provided framebuffer */
 
+#if GST_GL_HAVE_OPENGL
   GLfloat verts[8] = { 1.0f, 1.0f,
     -1.0f, 1.0f,
     -1.0f, -1.0f,
@@ -120,6 +180,41 @@ draw_render (gpointer data)
   gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
 
   gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+#endif
+#if GST_GL_HAVE_GLES2
+  const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,
+    1.0f, 0.0f,
+    -1.0f, 1.0f, 0.0f,
+    0.0f, 0.0f,
+    -1.0f, -1.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, -1.0f, 0.0f,
+    1.0f, 1.0f
+  };
+
+  GLushort indices[] = { 0, 1, 2, 0, 2, 3 };
+
+  gl->Clear (GL_COLOR_BUFFER_BIT);
+
+  gst_gl_shader_use (shader);
+
+  /* Load the vertex position */
+  gl->VertexAttribPointer (shader_attr_position_loc, 3,
+      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), vVertices);
+
+  /* Load the texture coordinate */
+  gl->VertexAttribPointer (shader_attr_texture_loc, 2,
+      GL_FLOAT, GL_FALSE, 5 * sizeof (GLfloat), &vVertices[3]);
+
+  gl->EnableVertexAttribArray (shader_attr_position_loc);
+  gl->EnableVertexAttribArray (shader_attr_texture_loc);
+
+  gl->ActiveTexture (GL_TEXTURE0);
+  gl->BindTexture (GL_TEXTURE_2D, tex);
+  gst_gl_shader_set_uniform_1i (shader, "s_texture", 0);
+
+  gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
+#endif
 
   context_class->swap_buffers (context);
 }
@@ -167,6 +262,8 @@ GST_START_TEST (test_share)
         context);
     i++;
   }
+
+  gst_gl_window_send_message (other_window, GST_GL_WINDOW_CB (deinit), context);
 
   gst_object_unref (window);
   gst_object_unref (other_window);
