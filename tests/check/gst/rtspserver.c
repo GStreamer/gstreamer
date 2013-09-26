@@ -1016,9 +1016,6 @@ GST_START_TEST (test_play_multithreaded_timeout_client)
   GstRTSPTransport *video_transport = NULL;
   GstRTSPTransport *audio_transport = NULL;
   GstRTSPSessionPool *pool;
-  GstRTSPMessage *request;
-  GstRTSPMessage *response;
-  GstRTSPStatusCode code;
   GstRTSPThreadPool *thread_pool;
 
   thread_pool = gst_rtsp_server_get_thread_pool (server);
@@ -1060,28 +1057,7 @@ GST_START_TEST (test_play_multithreaded_timeout_client)
   sleep (7);
 
   fail_unless (gst_rtsp_session_pool_cleanup (pool) == 1);
-
-
-  /* send TEARDOWN request and check that we get 454 Session Not found */
-  request = create_request (conn, GST_RTSP_TEARDOWN, NULL);
-  gst_rtsp_message_add_header (request, GST_RTSP_HDR_SESSION, session);
-  fail_unless (send_request (conn, request));
-  gst_rtsp_message_free (request);
-
-  fail_unless (gst_rtsp_message_new (&response) == GST_RTSP_OK);
-  fail_unless (gst_rtsp_connection_receive (conn, response, NULL) ==
-      GST_RTSP_OK);
-  gst_rtsp_message_parse_response (response, &code, NULL, NULL);
-  fail_unless (code == GST_RTSP_STS_SESSION_NOT_FOUND);
-  gst_rtsp_message_free (response);
-
-#if 0
-  fail_unless (gst_rtsp_message_new (&response) == GST_RTSP_OK);
-  fail_unless (gst_rtsp_connection_receive (conn, response, NULL) ==
-      GST_RTSP_ESYS);
-  fail_unless (errno == ECONNRESET);
-  gst_rtsp_message_free (response);
-#endif
+  fail_unless (gst_rtsp_session_pool_get_n_sessions (pool) == 0);
 
   /* clean up and iterate so the clean-up can finish */
   g_object_unref (pool);
