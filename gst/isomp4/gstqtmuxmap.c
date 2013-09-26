@@ -49,8 +49,7 @@
 
 #define COMMON_VIDEO_CAPS \
   "width = (int) [ 16, 4096 ], " \
-  "height = (int) [ 16, 4096 ], " \
-  "framerate = (fraction) [ 0, MAX ]"
+  "height = (int) [ 16, 4096 ]"
 
 #define COMMON_VIDEO_CAPS_NO_FRAMERATE \
   "width = (int) [ 16, 4096 ], " \
