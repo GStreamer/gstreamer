@@ -1213,11 +1213,12 @@ gst_hls_demux_switch_playlist (GstHLSDemux * demux)
   GstClockTime diff;
   gsize size;
   gint bitrate;
-  GstFragment *fragment = g_queue_peek_tail (demux->queue);
+  GstFragment *fragment;
   GstBuffer *buffer;
 
   GST_M3U8_CLIENT_LOCK (demux->client);
-  if (!demux->client->main->lists) {
+  fragment = g_queue_peek_tail (demux->queue);
+  if (!demux->client->main->lists || !fragment) {
     GST_M3U8_CLIENT_UNLOCK (demux->client);
     return TRUE;
   }
