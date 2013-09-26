@@ -25,7 +25,7 @@
  * @short_description: Base class for getrange based source elements
  * @see_also: #GstPushSrc, #GstBaseTransform, #GstBaseSink
  *
- * This is a generice base class for source elements. The following
+ * This is a generic base class for source elements. The following
  * types of sources are supported:
  * <itemizedlist>
  *   <listitem><para>random access sources like files</para></listitem>
