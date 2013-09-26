@@ -1,6 +1,7 @@
 /* GStreamer
  * Copyright (C) 2013 Fluendo S.L. <support@fluendo.com>
  *   Authors:    2013 Andoni Morales Alastruey <amorales@fluendo.com>
+ * Copyright (C) 2013 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * gstios_assetsrc.h:
  *
@@ -26,7 +27,7 @@
 #include <sys/types.h>
 
 #include <gst/gst.h>
-#include <gst/base/gstbasesrc.h>
+#include <gst/base/base.h>
 #include <AssetsLibrary/ALAssetsLibrary.h>
 #include <AssetsLibrary/ALAssetRepresentation.h>
 

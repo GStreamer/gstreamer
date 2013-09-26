@@ -1,6 +1,7 @@
 /* GStreamer
- * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
- *               2000,2005 Wim Taymans <wim@fluendo.com>
+ * Copyright (C) 2013 Fluendo S.L. <support@fluendo.com>
+ *   Authors:    2013 Andoni Morales Alastruey <amorales@fluendo.com>
+ * Copyright (C) 2013 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * gstios_assetsrc.c:
  *
@@ -59,8 +60,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_ios_asset_src_debug);
 
 enum
 {
-  ARG_0,
-  ARG_URI,
+  PROP_0,
+  PROP_URI,
 };
 
 static void gst_ios_asset_src_finalize (GObject * object);
@@ -96,15 +97,32 @@ _do_init (GType ios_assetsrc_type)
   GST_DEBUG_CATEGORY_INIT (gst_ios_asset_src_debug, "iosassetsrc", 0, "iosassetsrc element");
 }
 
-GST_BOILERPLATE_FULL (GstIOSAssetSrc, gst_ios_asset_src, GstBaseSrc, GST_TYPE_BASE_SRC,
-    _do_init);
+G_DEFINE_TYPE_WITH_CODE (GstIOSAssetSrc, gst_ios_asset_src, GST_TYPE_BASE_SRC,
+    _do_init (g_define_type_id));
 
 static void
-gst_ios_asset_src_base_init (gpointer g_class)
+gst_ios_asset_src_class_init (GstIOSAssetSrcClass * klass)
 {
-  GstElementClass *gstelement_class = GST_ELEMENT_CLASS (g_class);
+  GObjectClass *gobject_class;
+  GstElementClass *gstelement_class;
+  GstBaseSrcClass *gstbasesrc_class;
 
-  gst_element_class_set_details_simple (gstelement_class,
+  gobject_class = G_OBJECT_CLASS (klass);
+  gstelement_class = GST_ELEMENT_CLASS (klass);
+  gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
+
+  gobject_class->set_property = gst_ios_asset_src_set_property;
+  gobject_class->get_property = gst_ios_asset_src_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_URI,
+      g_param_spec_string ("uri", "Asset URI",
+          "URI of the asset to read", NULL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
+          GST_PARAM_MUTABLE_READY));
+
+  gobject_class->finalize = gst_ios_asset_src_finalize;
+
+  gst_element_class_set_static_metadata (gstelement_class,
       "IOSAsset Source",
       "Source/File",
       "Read from arbitrary point in a iOS asset",
@@ -112,27 +130,6 @@ gst_ios_asset_src_base_init (gpointer g_class)
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
-}
-
-static void
-gst_ios_asset_src_class_init (GstIOSAssetSrcClass * klass)
-{
-  GObjectClass *gobject_class;
-  GstBaseSrcClass *gstbasesrc_class;
-
-  gobject_class = G_OBJECT_CLASS (klass);
-  gstbasesrc_class = GST_BASE_SRC_CLASS (klass);
-
-  gobject_class->set_property = gst_ios_asset_src_set_property;
-  gobject_class->get_property = gst_ios_asset_src_get_property;
-
-  g_object_class_install_property (gobject_class, ARG_URI,
-      g_param_spec_string ("uri", "Asset URI",
-          "URI of the asset to read", NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
-          GST_PARAM_MUTABLE_READY));
-
-  gobject_class->finalize = gst_ios_asset_src_finalize;
 
   gstbasesrc_class->start = GST_DEBUG_FUNCPTR (gst_ios_asset_src_start);
   gstbasesrc_class->stop = GST_DEBUG_FUNCPTR (gst_ios_asset_src_stop);
@@ -143,7 +140,7 @@ gst_ios_asset_src_class_init (GstIOSAssetSrcClass * klass)
 }
 
 static void
-gst_ios_asset_src_init (GstIOSAssetSrc * src, GstIOSAssetSrcClass * g_class)
+gst_ios_asset_src_init (GstIOSAssetSrc * src)
 {
   OBJC_CALLOUT_BEGIN ();
   src->uri = NULL;
@@ -185,11 +182,11 @@ gst_ios_asset_src_finalize (GObject * object)
   [src->library release];
 
   OBJC_CALLOUT_END ();
-  G_OBJECT_CLASS (parent_class)->finalize (object);
+  G_OBJECT_CLASS (gst_ios_asset_src_parent_class)->finalize (object);
 }
 
 static gboolean
-gst_ios_asset_src_set_uri (GstIOSAssetSrc * src, const gchar * uri)
+gst_ios_asset_src_set_uri (GstIOSAssetSrc * src, const gchar * uri, GError **err)
 {
   GstState state;
   NSString *nsuristr;
@@ -209,7 +206,9 @@ gst_ios_asset_src_set_uri (GstIOSAssetSrc * src, const gchar * uri)
   url = [[NSURL alloc] initWithString:nsuristr];
 
   if (url == NULL) {
-    GST_ERROR_OBJECT (src, "Invalid URI      : %s", src->uri);
+    GST_ERROR_OBJECT (src, "Invalid URI: %s", src->uri);
+    g_set_error (err, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Invalid URI: %s", src->uri);
     return FALSE;
   }
 
@@ -217,7 +216,6 @@ gst_ios_asset_src_set_uri (GstIOSAssetSrc * src, const gchar * uri)
   src->url = url;
   src->uri = g_strdup (uri);
   g_object_notify (G_OBJECT (src), "uri");
-  gst_uri_handler_new_uri (GST_URI_HANDLER (src), src->uri);
 
   OBJC_CALLOUT_END ();
   return TRUE;
@@ -226,6 +224,9 @@ gst_ios_asset_src_set_uri (GstIOSAssetSrc * src, const gchar * uri)
 wrong_state:
   {
     g_warning ("Changing the 'uri' property on iosassetsrc when an asset is "
+        "open is not supported.");
+    g_set_error (err, GST_URI_ERROR, GST_URI_ERROR_BAD_STATE,
+        "Changing the 'uri' property on iosassetsrc when an asset is "
         "open is not supported.");
     GST_OBJECT_UNLOCK (src);
     OBJC_CALLOUT_END ();
@@ -244,8 +245,8 @@ gst_ios_asset_src_set_property (GObject * object, guint prop_id,
   src = GST_IOS_ASSET_SRC (object);
 
   switch (prop_id) {
-    case ARG_URI:
-      gst_ios_asset_src_set_uri (src, g_value_get_string (value));
+    case PROP_URI:
+      gst_ios_asset_src_set_uri (src, g_value_get_string (value), NULL);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -264,7 +265,7 @@ gst_ios_asset_src_get_property (GObject * object, guint prop_id, GValue * value,
   src = GST_IOS_ASSET_SRC (object);
 
   switch (prop_id) {
-    case ARG_URI:
+    case PROP_URI:
       g_value_set_string (value, src->uri);
       break;
     default:
@@ -277,25 +278,25 @@ static GstFlowReturn
 gst_ios_asset_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
     GstBuffer ** buffer)
 {
-  GstBuffer *buf;
+  GstBuffer *buf = NULL;
+  GstMapInfo info;
   NSError *err = nil;
   guint bytes_read;
   GstFlowReturn ret;
   GstIOSAssetSrc *src = GST_IOS_ASSET_SRC (basesrc);
 
   OBJC_CALLOUT_BEGIN ();
-  buf = gst_buffer_try_new_and_alloc (length);
+  buf = gst_buffer_new_and_alloc (length);
   if (G_UNLIKELY (buf == NULL && length > 0)) {
     GST_ERROR_OBJECT (src, "Failed to allocate %u bytes", length);
     ret = GST_FLOW_ERROR;
     goto exit;
   }
 
+  gst_buffer_map (buf, &info, GST_MAP_READWRITE);
+
   /* No need to read anything if length is 0 */
-  GST_BUFFER_SIZE (buf) = 0;
-  GST_BUFFER_OFFSET (buf) = offset;
-  GST_BUFFER_OFFSET_END (buf) = offset;
-  bytes_read = [src->asset getBytes: GST_BUFFER_DATA (buf)
+  bytes_read = [src->asset getBytes: info.data
                            fromOffset:offset
                            length:length
                            error:&err];
@@ -305,30 +306,29 @@ gst_ios_asset_src_create (GstBaseSrc * basesrc, guint64 offset, guint length,
 
   /* we should eos if we read less than what was requested */
   if (G_UNLIKELY (bytes_read < length)) {
-    goto eos;
+    GST_DEBUG ("EOS");
+    ret = GST_FLOW_EOS;
+  } else {
+    ret = GST_FLOW_OK;
   }
 
-  GST_BUFFER_SIZE (buf) = bytes_read;
+  gst_buffer_unmap (buf, &info);
+  gst_buffer_set_size (buf, bytes_read);
+
+  GST_BUFFER_OFFSET (buf) = offset;
   GST_BUFFER_OFFSET_END (buf) = offset + bytes_read;
 
   *buffer = buf;
 
-  ret = GST_FLOW_OK;
   goto exit;
 
   /* ERROR */
 could_not_read:
   {
     GST_ELEMENT_ERROR (src, RESOURCE, READ, (NULL), GST_ERROR_SYSTEM);
+    gst_buffer_unmap (buf, &info);
     gst_buffer_unref (buf);
     ret = GST_FLOW_ERROR;
-    goto exit;
-  }
-eos:
-  {
-    GST_DEBUG ("EOS");
-    gst_buffer_unref (buf);
-    ret = GST_FLOW_UNEXPECTED;
     goto exit;
   }
 exit:
@@ -356,7 +356,7 @@ gst_ios_asset_src_query (GstBaseSrc * basesrc, GstQuery * query)
   }
 
   if (!ret)
-    ret = GST_BASE_SRC_CLASS (parent_class)->query (basesrc, query);
+    ret = GST_BASE_SRC_CLASS (gst_ios_asset_src_parent_class)->query (basesrc, query);
 
   return ret;
 }
@@ -413,40 +413,40 @@ gst_ios_asset_src_stop (GstBaseSrc * basesrc)
 }
 
 static GstURIType
-gst_ios_asset_src_uri_get_type (void)
+gst_ios_asset_src_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
-static gchar **
-gst_ios_asset_src_uri_get_protocols (void)
+static const gchar * const *
+gst_ios_asset_src_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (char *) "assets-library", NULL };
+  static const gchar * const protocols[] = { "assets-library", NULL };
 
   return protocols;
 }
 
-static const gchar *
+static gchar *
 gst_ios_asset_src_uri_get_uri (GstURIHandler * handler)
 {
   GstIOSAssetSrc *src = GST_IOS_ASSET_SRC (handler);
 
-  return src->uri;
+  return g_strdup (src->uri);
 }
 
 static gboolean
-gst_ios_asset_src_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+gst_ios_asset_src_uri_set_uri (GstURIHandler * handler, const gchar * uri, GError **err)
 {
   GstIOSAssetSrc *src = GST_IOS_ASSET_SRC (handler);
-  GError *error = NULL;
 
   if (! g_str_has_prefix (uri, "assets-library://")) {
-    GST_WARNING_OBJECT (src, "Invalid URI '%s' for ios_assetsrc: %s", uri,
-        error->message);
+    GST_WARNING_OBJECT (src, "Invalid URI '%s' for ios_assetsrc", uri);
+    g_set_error (err, GST_URI_ERROR, GST_URI_ERROR_BAD_URI,
+        "Invalid URI '%s' for ios_assetsrc", uri);
     return FALSE;
   }
 
-  return gst_ios_asset_src_set_uri (src, uri);
+  return gst_ios_asset_src_set_uri (src, uri, err);
 }
 
 static void
