@@ -564,11 +564,13 @@ no_factory_access:
   {
     GST_ERROR ("client %p: not authorized to see factory path %s", client,
         path);
+    /* error reply is already sent */
     return NULL;
   }
 not_authorized:
   {
     GST_ERROR ("client %p: not authorized for factory path %s", client, path);
+    /* error reply is already sent */
     return NULL;
   }
 no_media:
@@ -1420,10 +1422,12 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   } else {
     if ((media = gst_rtsp_session_media_get_media (sessmedia)))
       g_object_ref (media);
+    else
+      goto media_not_found;
   }
   /* no media, not found then */
   if (media == NULL)
-    goto media_not_found;
+    goto media_not_found_no_reply;
 
   if (path[matched] == '\0')
     goto control_not_found;
@@ -1546,6 +1550,12 @@ no_pool:
   {
     GST_ERROR ("client %p: no session pool configured", client);
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
+    return FALSE;
+  }
+media_not_found_no_reply:
+  {
+    GST_ERROR ("client %p: media '%s' not found", client, path);
+    /* error reply is already sent */
     return FALSE;
   }
 media_not_found:
@@ -1980,6 +1990,7 @@ session_not_found:
 not_authorized:
   {
     GST_ERROR ("client %p: not allowed", client);
+    /* error reply is already sent */
     goto done;
   }
 not_implemented:
