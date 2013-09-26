@@ -138,8 +138,6 @@ static GstClockTime gst_mpd_client_get_segment_duration (GstMpdClient * client,
     GstActiveStream * stream);
 static GstDateTime *gst_mpd_client_get_availability_start_time (GstMpdClient *
     client);
-static gint64 gst_mpd_client_calculate_time_difference (const GstDateTime * t1,
-    const GstDateTime * t2);
 
 /* Adaptation Set */
 static GstAdaptationSetNode
@@ -2863,7 +2861,7 @@ gst_mpd_client_get_segment_duration (GstMpdClient * client,
 {
   GstStreamPeriod *stream_period;
   GstMultSegmentBaseType *base = NULL;
-  GstClockTime duration;
+  GstClockTime duration = 0;
   guint timescale;
 
   g_return_val_if_fail (stream != NULL, GST_CLOCK_TIME_NONE);
@@ -3564,7 +3562,7 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
   return TRUE;
 }
 
-static gint64
+gint64
 gst_mpd_client_calculate_time_difference (const GstDateTime * t1,
     const GstDateTime * t2)
 {
@@ -3633,17 +3631,19 @@ gst_mpd_client_get_segment_index_at_time (GstMpdClient * client,
   return diff / seg_duration;
 }
 
-GstDateTime *
+static GstDateTime *
 gst_mpd_client_get_availability_start_time (GstMpdClient * client)
 {
-  GstDateTime *t;
+  GstDateTime *start_time;
 
-  g_return_val_if_fail (client != NULL, NULL);
+  if (client == NULL)
+    return (GstDateTime *) NULL;
 
   GST_MPD_CLIENT_LOCK (client);
-  t = client->mpd_node->availabilityStartTime;
+  start_time = client->mpd_node->availabilityStartTime;
+  gst_date_time_ref (start_time);
   GST_MPD_CLIENT_UNLOCK (client);
-  return t;
+  return start_time;
 }
 
 gboolean
@@ -4281,6 +4281,45 @@ gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient * client,
   }
 
   return nb_adapatation_set;
+}
+
+
+GstDateTime *
+gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client,
+    GstActiveStream * stream)
+{
+  GstDateTime *availability_start_time, *rv;
+  guint seg_idx;
+  GstClockTime seg_duration;
+  gint64 offset;
+  GstStreamPeriod *stream_period;
+
+  g_return_val_if_fail (client != NULL, NULL);
+  g_return_val_if_fail (stream != NULL, NULL);
+
+  stream_period = gst_mpdparser_get_stream_period (client);
+
+  seg_idx = gst_mpd_client_get_segment_index (stream);
+  seg_duration = gst_mpd_client_get_segment_duration (client, stream);
+  if (seg_duration == 0)
+    return NULL;
+  availability_start_time = gst_mpd_client_get_availability_start_time (client);
+  if (availability_start_time == NULL)
+    return (GstDateTime *) NULL;
+
+  if (stream_period && stream_period->period) {
+    GstDateTime *t =
+        gst_mpd_client_add_time_difference (availability_start_time,
+        stream_period->period->start * 1000);
+    gst_date_time_unref (availability_start_time);
+    availability_start_time = t;
+  }
+
+  offset = (1 + seg_idx) * seg_duration;
+  rv = gst_mpd_client_add_time_difference (availability_start_time,
+      offset / GST_USECOND);
+  gst_date_time_unref (availability_start_time);
+  return rv;
 }
 
 gint

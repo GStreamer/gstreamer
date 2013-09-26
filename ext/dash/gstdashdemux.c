@@ -2113,6 +2113,36 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux,
         gst_mpdparser_get_active_stream_by_index (demux->client,
         selected_stream->index);
 
+  /* If this is a live stream, check the segment end time to make sure
+   * it is available to download
+   */
+  if (selected_stream && gst_mpd_client_is_live (demux->client) &&
+      demux->client->mpd_node->minimumUpdatePeriod != -1) {
+    GstDateTime *seg_end_time;
+    GstDateTime *cur_time = gst_date_time_new_now_utc ();
+
+    seg_end_time =
+        gst_mpd_client_get_next_segment_availability_end_time (demux->client,
+        *stream);
+
+    if (seg_end_time) {
+      gint64 diff;
+
+      cur_time = gst_date_time_new_now_utc ();
+      diff = gst_mpd_client_calculate_time_difference (cur_time, seg_end_time)
+          / GST_MSECOND;
+      gst_date_time_unref (seg_end_time);
+      gst_date_time_unref (cur_time);
+      if (diff > 0) {
+        GST_DEBUG_OBJECT (demux,
+            "Selected fragment has end timestamp > now (%" PRIi64
+            "), delaying download", diff);
+        end_of_period = FALSE;
+        gst_dash_demux_download_wait (demux, diff);
+      }
+    }
+  }
+
   /* Get the fragment corresponding to each stream index */
   if (selected_stream) {
     guint stream_idx = selected_stream->index;

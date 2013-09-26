@@ -504,6 +504,7 @@ gboolean gst_mpd_client_set_period_id (GstMpdClient *client, const gchar * perio
 guint gst_mpd_client_get_period_index (GstMpdClient *client);
 const gchar *gst_mpd_client_get_period_id (GstMpdClient *client);
 gboolean gst_mpd_client_has_next_period (GstMpdClient *client);
+GstDateTime *gst_mpd_client_get_next_segment_availability_end_time (GstMpdClient * client, GstActiveStream * stream);
 
 /* Representation selection */
 gint gst_mpdparser_get_rep_idx_with_max_bandwidth (GList *Representations, gint max_bandwidth);
@@ -535,6 +536,9 @@ guint gst_mpd_client_get_audio_stream_num_channels (GstActiveStream * stream);
 
 /* Support multi language */
 guint gst_mpdparser_get_list_and_nb_of_audio_language (GstMpdClient *client, GList **lang);
+
+gint64 gst_mpd_client_calculate_time_difference (const GstDateTime * t1, const GstDateTime * t2);
+
 G_END_DECLS
 
 #endif /* __GST_MPDPARSER_H__ */
