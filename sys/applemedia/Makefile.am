@@ -76,9 +76,9 @@ libgstapplemedia_la_SOURCES +=			\
 	iosassetsrc.m
 #	avfvideosrc.m
 
-#libgstapplemedia_la_LDFLAGS +=			\
-#	-Wl,-framework -Wl,CoreMedia		\
-#	-Wl,-framework -Wl,Foundation		\
+libgstapplemedia_la_LDFLAGS +=			\
+	-Wl,-framework -Wl,Foundation		\
+	-Wl,-framework -Wl,AssetsLibrary
 #	-Wl,-framework -Wl,AVFoundation
 
 else
