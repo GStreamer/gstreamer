@@ -67,11 +67,13 @@ noinst_HEADERS =				\
 	vtapi.h					\
 	atdec.h 				\
 	dynapi.h				\
-	dynapi-internal.h
+	dynapi-internal.h                       \
+	iosassetsrc.h
 
 if HAVE_IOS
 
-#libgstapplemedia_la_SOURCES +=			\
+libgstapplemedia_la_SOURCES +=			\
+	iosassetsrc.m
 #	avfvideosrc.m
 
 #libgstapplemedia_la_LDFLAGS +=			\
