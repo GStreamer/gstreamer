@@ -576,7 +576,7 @@ not_authorized:
 no_media:
   {
     GST_ERROR ("client %p: can't create media", client);
-    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     g_object_unref (factory);
     ctx->factory = NULL;
     return NULL;
