@@ -136,6 +136,7 @@ struct _GstPadPrivate
 {
   guint events_cookie;
   GArray *events;
+  guint last_cookie;
 
   gint using;
   guint probe_list_cookie;
@@ -356,6 +357,8 @@ gst_pad_init (GstPad * pad)
   g_hook_list_init (&pad->probes, sizeof (GstProbe));
 
   pad->priv->events = g_array_sized_new (FALSE, TRUE, sizeof (PadEvent), 16);
+  pad->priv->events_cookie = 0;
+  pad->priv->last_cookie = -1;
 }
 
 /* called when setting the pad inactive. It removes all sticky events from
@@ -3674,15 +3677,18 @@ gst_pad_chain_data_unchecked (GstPad * pad, GstPadProbeType type, void *data)
     goto wrong_mode;
 
 #ifndef G_DISABLE_ASSERT
-  if (!find_event_by_type (pad, GST_EVENT_STREAM_START, 0)) {
-    g_warning (G_STRLOC
-        ":%s:<%s:%s> Got data flow before stream-start event",
-        G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
-  }
-  if (!find_event_by_type (pad, GST_EVENT_SEGMENT, 0)) {
-    g_warning (G_STRLOC
-        ":%s:<%s:%s> Got data flow before segment event",
-        G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
+  if (G_UNLIKELY (pad->priv->last_cookie != pad->priv->events_cookie)) {
+    if (!find_event_by_type (pad, GST_EVENT_STREAM_START, 0)) {
+      g_warning (G_STRLOC
+          ":%s:<%s:%s> Got data flow before stream-start event",
+          G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
+    }
+    if (!find_event_by_type (pad, GST_EVENT_SEGMENT, 0)) {
+      g_warning (G_STRLOC
+          ":%s:<%s:%s> Got data flow before segment event",
+          G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
+    }
+    pad->priv->last_cookie = pad->priv->events_cookie;
   }
 #endif
 
@@ -3905,15 +3911,18 @@ gst_pad_push_data (GstPad * pad, GstPadProbeType type, void *data)
     goto wrong_mode;
 
 #ifndef G_DISABLE_ASSERT
-  if (!find_event_by_type (pad, GST_EVENT_STREAM_START, 0)) {
-    g_warning (G_STRLOC
-        ":%s:<%s:%s> Got data flow before stream-start event",
-        G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
-  }
-  if (!find_event_by_type (pad, GST_EVENT_SEGMENT, 0)) {
-    g_warning (G_STRLOC
-        ":%s:<%s:%s> Got data flow before segment event",
-        G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
+  if (G_UNLIKELY (pad->priv->last_cookie != pad->priv->events_cookie)) {
+    if (!find_event_by_type (pad, GST_EVENT_STREAM_START, 0)) {
+      g_warning (G_STRLOC
+          ":%s:<%s:%s> Got data flow before stream-start event",
+          G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
+    }
+    if (!find_event_by_type (pad, GST_EVENT_SEGMENT, 0)) {
+      g_warning (G_STRLOC
+          ":%s:<%s:%s> Got data flow before segment event",
+          G_STRFUNC, GST_DEBUG_PAD_NAME (pad));
+    }
+    pad->priv->last_cookie = pad->priv->events_cookie;
   }
 #endif
 
