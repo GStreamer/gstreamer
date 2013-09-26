@@ -685,6 +685,9 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
   dts = item->dts;
   rtptime = item->rtptime;
 
+  if (rtptime == -1)
+    goto append;
+
   /* rtp time jumps are checked for during skew calculation, but bypassed
    * in other mode, so mind those here and reset jb if needed.
    * Only reset if valid input time, which is likely for UDP input
