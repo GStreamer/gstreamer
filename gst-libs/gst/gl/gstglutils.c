@@ -50,56 +50,7 @@
 #define USING_GLES2(context) (gst_gl_context_get_gl_apie (context)->gl_api & GST_GL_API_GLES2)
 #define USING_GLES3(context) (gst_gl_context_get_gl_apie (context) & GST_GL_API_GLES3)
 
-static GLuint gen_texture;
-static GLuint gen_texture_width;
-static GLuint gen_texture_height;
-static GstVideoFormat gen_texture_video_format;
-
-static GLuint *del_texture;
-
 static gchar *error_message;
-
-static void
-gst_gl_context_gen_texture_window_cb (GstGLContext * context)
-{
-  gst_gl_context_gen_texture_thread (context, &gen_texture,
-      gen_texture_video_format, gen_texture_width, gen_texture_height);
-}
-
-/* Generate a texture if no one is available in the pool
- * Called in the gl thread */
-void
-gst_gl_context_gen_texture_thread (GstGLContext * context, GLuint * pTexture,
-    GstVideoFormat v_format, GLint width, GLint height)
-{
-  const GstGLFuncs *gl = context->gl_vtable;
-
-  GST_TRACE ("Generating texture format:%u dimensions:%ux%u", v_format,
-      width, height);
-
-  gl->GenTextures (1, pTexture);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, *pTexture);
-  gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, width, height, 0,
-      GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-      GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-      GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-      GL_CLAMP_TO_EDGE);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-      GL_CLAMP_TO_EDGE);
-
-  GST_LOG ("generated texture id:%d", *pTexture);
-}
-
-void
-gst_gl_context_del_texture_window_cb (GstGLContext * context)
-{
-  const GstGLFuncs *gl = context->gl_vtable;
-  gl->DeleteTextures (1, del_texture);
-}
 
 /* called in the gl thread */
 gboolean
@@ -139,40 +90,61 @@ gst_gl_context_check_framebuffer_status (GstGLContext * context)
   return FALSE;
 }
 
+typedef struct _GenTexture
+{
+  guint width, height;
+  GstVideoFormat format;
+  guint result;
+} GenTexture;
+
+static void
+_gen_texture (GstGLContext * context, GenTexture * data)
+{
+  const GstGLFuncs *gl = context->gl_vtable;
+
+  GST_TRACE ("Generating texture format:%u dimensions:%ux%u", data->format,
+      data->width, data->height);
+
+  gl->GenTextures (1, &data->result);
+  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, data->result);
+  gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, data->width,
+      data->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
+      GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
+      GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
+      GL_CLAMP_TO_EDGE);
+  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
+      GL_CLAMP_TO_EDGE);
+
+  GST_LOG ("generated texture id:%d", data->result);
+}
+
 void
 gst_gl_context_gen_texture (GstGLContext * context, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height)
 {
-  GstGLWindow *window;
+  GenTexture data = { width, height, v_format, 0 };
 
-  window = gst_gl_context_get_window (context);
+  gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _gen_texture,
+      &data);
 
-  if (gst_gl_window_is_running (window)) {
-    gen_texture_width = width;
-    gen_texture_height = height;
-    gen_texture_video_format = v_format;
-    gst_gl_window_send_message (window,
-        GST_GL_WINDOW_CB (gst_gl_context_gen_texture_window_cb), context);
-    *pTexture = gen_texture;
-  } else
-    *pTexture = 0;
+  *pTexture = data.result;
+}
 
-  gst_object_unref (window);
+void
+_del_texture (GstGLContext * context, guint * texture)
+{
+  glDeleteTextures (1, texture);
 }
 
 void
 gst_gl_context_del_texture (GstGLContext * context, GLuint * pTexture)
 {
-  GstGLWindow *window;
-
-  window = gst_gl_context_get_window (context);
-  if (gst_gl_window_is_running (window) && *pTexture) {
-    del_texture = pTexture;
-    gst_gl_window_send_message (window,
-        GST_GL_WINDOW_CB (gst_gl_context_del_texture_window_cb), context);
-  }
-
-  gst_object_unref (window);
+  gst_gl_context_thread_add (context, (GstGLContextThreadFunc) _del_texture,
+      pTexture);
 }
 
 typedef struct _GenFBO

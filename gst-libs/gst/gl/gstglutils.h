@@ -76,8 +76,6 @@ typedef void (*GLCB_V2) (gpointer stuff);
 
 void gst_gl_context_gen_texture (GstGLContext * context, GLuint * pTexture,
     GstVideoFormat v_format, GLint width, GLint height);
-void gst_gl_context_gen_texture_thread (GstGLContext * context, GLuint * pTexture,
-    GstVideoFormat v_format, GLint width, GLint height);
 void gst_gl_context_del_texture (GstGLContext * context, GLuint * pTexture);
 
 gboolean gst_gl_context_gen_fbo (GstGLContext * context, gint width, gint height,

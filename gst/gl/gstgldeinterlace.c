@@ -293,7 +293,7 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
   gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
 
   if (G_UNLIKELY (deinterlace_filter->prev_tex == 0)) {
-    gst_gl_context_gen_texture_thread (filter->context,
+    gst_gl_context_gen_texture (filter->context,
         &deinterlace_filter->prev_tex,
         GST_VIDEO_INFO_FORMAT (&filter->out_info),
         GST_VIDEO_INFO_WIDTH (&filter->out_info),
