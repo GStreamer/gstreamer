@@ -997,6 +997,7 @@ gst_dash_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
         max += dashdemux->max_buffering_time;
 
       gst_query_set_latency (query, live, min, max);
+      ret = TRUE;
       break;
     }
     default:{
