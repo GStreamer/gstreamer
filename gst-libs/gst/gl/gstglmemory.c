@@ -225,8 +225,7 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
     goto error;
   }
 
-  gst_gl_context_gen_texture_thread (src->context, &tex_id, v_format, width,
-      height);
+  gst_gl_context_gen_texture (src->context, &tex_id, v_format, width, height);
   if (!tex_id) {
     GST_CAT_WARNING (GST_CAT_GL_MEMORY,
         "Could not create GL texture with context:%p", src->context);
