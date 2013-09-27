@@ -9,6 +9,7 @@ libgstvalidate_@GST_API_VERSION@_la_SOURCES = \
 	gst-validate-report.c \
 	gst-validate-scenario.c \
 	gst-validate-override.c \
+	gst-validate-utils.c \
 	gst-validate-override-registry.c \
 	gst-validate-media-info.c \
         validate.c
@@ -28,6 +29,7 @@ noinst_HEADERS = \
 	gst-validate-report.h \
 	gst-validate-runner.h \
 	gst-validate-scenario.h \
+	gst-validate-utils.h \
 	gst-validate-media-info.h
 
 lib_LTLIBRARIES = \

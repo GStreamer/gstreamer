@@ -33,6 +33,7 @@
 #include "gst-validate-scenario.h"
 #include "gst-validate-reporter.h"
 #include "gst-validate-report.h"
+#include "gst-validate-utils.h"
 
 #define GST_VALIDATE_SCENARIO_GET_PRIVATE(o) \
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GST_TYPE_VALIDATE_SCENARIO, GstValidateScenarioPrivate))
@@ -81,7 +82,6 @@ struct _GstValidateScenarioPrivate
 };
 
 
-/* Some helper method that are missing iin Json itscenario */
 static guint
 get_flags_from_string (GType type, const gchar * str_flags)
 {
@@ -125,10 +125,42 @@ _free_scenario_action (GstValidateAction * act)
 }
 
 static gboolean
+_set_variable_func (const gchar *name, double *value, gpointer user_data)
+{
+  GstValidateScenario *scenario = GST_VALIDATE_SCENARIO (user_data);
+
+  if (!g_strcmp0 (name, "duration")) {
+    gint64 duration;
+
+    if (!gst_element_query_duration (scenario->priv->pipeline,
+        GST_FORMAT_TIME, &duration)) {
+      GST_WARNING_OBJECT (scenario, "Could not query duration");
+      return FALSE;
+    }
+    *value = duration / GST_SECOND;
+
+    return TRUE;
+  } else if (!g_strcmp0 (name, "position")) {
+    gint64 position;
+
+    if (!gst_element_query_position (scenario->priv->pipeline,
+        GST_FORMAT_TIME, &position)) {
+      GST_WARNING_OBJECT (scenario, "Could not query position");
+      return FALSE;
+    }
+    *value = ((double) position / GST_SECOND);
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+static gboolean
 _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
-  const char *str_format, *str_flags, *str_start_type, *str_stop_type;
+  const char *str_format, *str_flags, *str_start_type, *str_stop_type, *str_start;
   gboolean ret = TRUE;
 
   gdouble rate = 1.0, dstart, dstop;
@@ -141,9 +173,16 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
   GstEvent *seek;
 
   if (!gst_structure_get_double (action->structure, "start", &dstart)) {
-    GST_WARNING_OBJECT (scenario, "Could not find start for a seek, FAILED");
-    return FALSE;
+    gchar *error = NULL;
+
+    if (!(str_start = gst_structure_get_string(action->structure, "start"))) {
+      GST_WARNING_OBJECT (scenario, "Could not find start for a seek, FAILED");
+      return FALSE;
+    }
+    dstart = parse_expression (str_start, _set_variable_func,
+        scenario, &error);
   }
+
   if (dstart == -1.0)
     start = GST_CLOCK_TIME_NONE;
   else
