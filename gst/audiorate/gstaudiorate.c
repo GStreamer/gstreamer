@@ -557,7 +557,10 @@ gst_audio_rate_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         audiorate->discont = FALSE;
       }
 
-      ret = gst_pad_push (audiorate->srcpad, fill);
+      fill = gst_audio_buffer_clip (fill, &audiorate->src_segment, rate, bpf);
+      if (fill)
+        ret = gst_pad_push (audiorate->srcpad, fill);
+
       if (ret != GST_FLOW_OK)
         goto beach;
       audiorate->out += cursamples;
@@ -640,11 +643,14 @@ send:
     GST_BUFFER_FLAG_UNSET (buf, GST_BUFFER_FLAG_DISCONT);
   }
 
-  /* set last_stop on segment */
-  audiorate->src_segment.position =
-      GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
+  buf = gst_audio_buffer_clip (buf, &audiorate->src_segment, rate, bpf);
+  if (buf) {
+    /* set last_stop on segment */
+    audiorate->src_segment.position =
+        GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
 
-  ret = gst_pad_push (audiorate->srcpad, buf);
+    ret = gst_pad_push (audiorate->srcpad, buf);
+  }
   buf = NULL;
 
   audiorate->next_offset = in_offset_end;
