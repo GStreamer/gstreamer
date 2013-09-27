@@ -48,6 +48,7 @@ struct _GstValidateAction
   const gchar *type;
   const gchar *name;
   guint action_number;
+  gint repeat;
   GstClockTime playback_time;
   GstStructure *structure;
 };

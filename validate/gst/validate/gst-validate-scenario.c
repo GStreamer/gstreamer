@@ -210,9 +210,10 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
       stop = dstop * GST_SECOND;
   }
 
-  g_print ("%s (num %u), seeking to: %" GST_TIME_FORMAT " stop: %"
-      GST_TIME_FORMAT " Rate %lf\n", action->name,
-      action->action_number, GST_TIME_ARGS (start), GST_TIME_ARGS (stop), rate);
+  g_print ("%s (num %u, missing repeat: %i), seeking to: %" GST_TIME_FORMAT
+      " stop: %" GST_TIME_FORMAT " Rate %lf\n", action->name,
+      action->action_number, action->repeat, GST_TIME_ARGS (start),
+      GST_TIME_ARGS (stop), rate);
 
   seek = gst_event_new_seek (rate, format, flags, start_type, start,
       stop_type, stop);
@@ -266,7 +267,6 @@ _execute_pause (GstValidateScenario * scenario, GstValidateAction * action)
 
     return FALSE;
   }
-  gst_element_get_state (priv->pipeline, NULL, NULL, -1);
   if (duration)
     g_timeout_add (duration * 1000,
         (GSourceFunc) _pause_action_restore_playing, scenario);
@@ -541,14 +541,32 @@ get_position (GstValidateScenario * scenario)
       return TRUE;
 
     type = g_hash_table_lookup (action_types_table, act->type);
+
+    if (act->repeat == -1 &&
+        !gst_structure_get_int (act->structure, "repeat", &act->repeat)) {
+      gchar *error = NULL;
+      const gchar *repeat_expr = gst_structure_get_string (act->structure,
+          "repeat");
+
+      if (repeat_expr) {
+        act->repeat = parse_expression (repeat_expr, _set_variable_func,
+            scenario, &error);
+        g_print ("REPEAT %i", act->repeat);
+      }
+    }
+
     if (!type->execute (scenario, act))
       GST_WARNING_OBJECT (scenario, "Could not execute %" GST_PTR_FORMAT,
           act->structure);
 
-    tmp = priv->actions;
-    priv->actions = g_list_remove_link (priv->actions, tmp);
-    _free_scenario_action (act);
-    g_list_free (tmp);
+    if (act->repeat > 0) {
+      act->repeat--;
+    } else {
+      tmp = priv->actions;
+      priv->actions = g_list_remove_link (priv->actions, tmp);
+      _free_scenario_action (act);
+      g_list_free (tmp);
+    }
   }
 
   return TRUE;
@@ -648,6 +666,7 @@ _load_scenario_file (GstValidateScenario * scenario,
 
     action = g_slice_new0 (GstValidateAction);
     action->type = type;
+    action->repeat = -1;
     if (gst_structure_get_double (structure, "playback_time", &playback_time))
       action->playback_time = playback_time * GST_SECOND;
     else
