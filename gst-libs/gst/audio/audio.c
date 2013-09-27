@@ -185,8 +185,16 @@ gst_audio_buffer_clip (GstBuffer * buffer, GstSegment * segment, gint rate,
   }
 
   if (trim == 0 && size == osize) {
-    /* nothing changed */
     ret = buffer;
+
+    if (GST_BUFFER_TIMESTAMP (ret) != timestamp) {
+      ret = gst_buffer_make_writable (ret);
+      GST_BUFFER_TIMESTAMP (ret) = timestamp;
+    }
+    if (GST_BUFFER_DURATION (ret) != duration) {
+      ret = gst_buffer_make_writable (ret);
+      GST_BUFFER_DURATION (ret) = duration;
+    }
   } else {
     /* Get a writable buffer and apply all changes */
     GST_DEBUG ("trim %" G_GSIZE_FORMAT " size %" G_GSIZE_FORMAT, trim, size);
