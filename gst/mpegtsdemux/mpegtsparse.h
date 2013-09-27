@@ -58,6 +58,7 @@ struct _MpegTSParse2 {
 
   /* state */
   gboolean first;
+  GList *pending_buffers;
 };
 
 struct _MpegTSParse2Class {

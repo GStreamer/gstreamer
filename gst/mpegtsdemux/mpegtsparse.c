@@ -190,6 +190,10 @@ mpegts_parse_reset (MpegTSBase * base)
   GST_MPEGTS_PARSE (base)->first = TRUE;
   GST_MPEGTS_PARSE (base)->have_group_id = FALSE;
   GST_MPEGTS_PARSE (base)->group_id = G_MAXUINT;
+
+  g_list_free_full (GST_MPEGTS_PARSE (base)->pending_buffers,
+      (GDestroyNotify) gst_buffer_unref);
+  GST_MPEGTS_PARSE (base)->pending_buffers = NULL;;
 }
 
 static void
@@ -559,9 +563,33 @@ static GstFlowReturn
 mpegts_parse_input_done (MpegTSBase * base, GstBuffer * buffer)
 {
   MpegTSParse2 *parse = GST_MPEGTS_PARSE (base);
+  GstFlowReturn ret = GST_FLOW_OK;
 
   if (G_UNLIKELY (parse->first))
     prepare_src_pad (base, parse);
+
+  if (G_UNLIKELY (parse->first)) {
+    parse->pending_buffers = g_list_append (parse->pending_buffers, buffer);
+    return GST_FLOW_OK;
+  }
+
+  if (G_UNLIKELY (parse->pending_buffers)) {
+    GList *l;
+
+    for (l = parse->pending_buffers; l; l = l->next) {
+      if (ret == GST_FLOW_OK)
+        ret = gst_pad_push (parse->srcpad, l->data);
+      else
+        gst_buffer_unref (l->data);
+    }
+    g_list_free (parse->pending_buffers);
+    parse->pending_buffers = NULL;
+
+    if (ret != GST_FLOW_OK) {
+      gst_buffer_unref (buffer);
+      return ret;
+    }
+  }
 
   return gst_pad_push (parse->srcpad, buffer);
 }
