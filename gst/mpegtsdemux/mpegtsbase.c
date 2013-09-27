@@ -598,6 +598,18 @@ mpegts_base_deactivate_program (MpegTSBase * base, MpegTSBaseProgram * program)
        * program */
       if (!mpegts_pid_in_active_programs (base, stream->pid)) {
         switch (stream->stream_type) {
+          case GST_MPEG_TS_STREAM_TYPE_SCTE_DSMCC_DCB:
+          case GST_MPEG_TS_STREAM_TYPE_SCTE_SIGNALING:
+          {
+            guint32 registration_id =
+                get_registration_from_descriptors (stream->descriptors);
+
+            /* Not a private section stream */
+            if (registration_id != DRF_ID_CUEI
+                && registration_id != DRF_ID_ETV1)
+              break;
+            /* Fall through on purpose - remove this PID from known_psi */
+          }
           case GST_MPEG_TS_STREAM_TYPE_PRIVATE_SECTIONS:
           case GST_MPEG_TS_STREAM_TYPE_MHEG:
           case GST_MPEG_TS_STREAM_TYPE_DSM_CC:
@@ -664,6 +676,16 @@ mpegts_base_activate_program (MpegTSBase * base, MpegTSBaseProgram * program,
     GstMpegTsPMTStream *stream = g_ptr_array_index (pmt->streams, i);
 
     switch (stream->stream_type) {
+      case GST_MPEG_TS_STREAM_TYPE_SCTE_DSMCC_DCB:
+      case GST_MPEG_TS_STREAM_TYPE_SCTE_SIGNALING:
+      {
+        guint32 registration_id =
+            get_registration_from_descriptors (stream->descriptors);
+        /* Not a private section stream */
+        if (registration_id != DRF_ID_CUEI && registration_id != DRF_ID_ETV1)
+          break;
+        /* Fall through on purpose - remove this PID from known_psi */
+      }
       case GST_MPEG_TS_STREAM_TYPE_PRIVATE_SECTIONS:
       case GST_MPEG_TS_STREAM_TYPE_MHEG:
       case GST_MPEG_TS_STREAM_TYPE_DSM_CC:

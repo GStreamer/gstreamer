@@ -73,7 +73,8 @@ typedef enum {
  *
  * These are the registered ITU H.222.0 | ISO/IEC 13818-1 table_id variants.
  *
- * see also #GstMpegTsSectionATSCTableID and #GstMpegTsSectionDVBTableID.
+ * see also #GstMpegTsSectionATSCTableID, #GstMpegTsSectionDVBTableID, and
+ * #GstMpegTsSectionSCTETableID
  */
 typedef enum {
   /* ITU H.222.0 / IEC 13818-1 */

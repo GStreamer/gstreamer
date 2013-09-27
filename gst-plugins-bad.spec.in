@@ -325,6 +325,7 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gst-atsc-section.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gst-dvb-descriptor.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gst-dvb-section.h
+%{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gst-scte-section.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gstmpegtsdescriptor.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mpegts/gstmpegtssection.h
 %{_includedir}/gstreamer-%{majorminor}/gst/mpegts/mpegts.h
