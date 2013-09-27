@@ -35,7 +35,7 @@ public class MediaInfo.Info : Box
   private Notebook video_streams;  // depending on screen resolution
   private Notebook audio_streams;
   private Notebook subtitle_streams;
-  private Label toc_entries;       // TODO(ensonic): use treeview
+  private TreeView toc_entries;
   private Preview preview;
   private ScrolledWindow info_area;
   // gstreamer objects
@@ -239,8 +239,19 @@ public class MediaInfo.Info : Box
     table.attach (label, 0, 3, row, row+1, fill_exp, 0, 0, 1);
     row++;
 
-    toc_entries = new Label (null); // TODO(ensonic): use TreeView
-    //toc.row_activated.connect (on_toc_entry_activated);
+    // TODO(ensonic): use tabs for editions?
+    toc_entries = new TreeView ();
+    toc_entries.set_enable_search (false);
+    toc_entries.set_headers_visible (false);
+    toc_entries.get_selection ().set_mode (SelectionMode.BROWSE);
+    //toc_entries.row_activated.connect (on_toc_entry_activated);
+
+    TreeViewColumn column = new TreeViewColumn ();
+    toc_entries.append_column (column);
+    CellRendererText renderer = new CellRendererText ();
+    column.pack_start (renderer, false);
+    column.add_attribute (renderer, "text", 0);
+
     table.attach (toc_entries, 0, 3, row, row+1, fill_exp, 0, 0, 1);
     row++;
     
@@ -441,7 +452,8 @@ public class MediaInfo.Info : Box
     }
     nb.show_all();
 
-    toc_entries.set_text (build_toc_info (toc));
+    toc_entries.set_model (build_toc_info (toc));
+    toc_entries.expand_all ();
     
     if (have_video) {
       Gdk.Point res = video_resolutions[0];
@@ -843,36 +855,39 @@ public class MediaInfo.Info : Box
   // TODO(ensonic): use a Gtk.TreeStore here, pass parent, instead of indent
   // TODO(ensonic): one column with the formatted string or 3 strings: label, start, stop
   
-  private string build_toc_info_for_entry (TocEntry e, string indent) {
+  private void build_toc_info_for_entry (TreeStore s, TocEntry e, TreeIter? p) {
+    TreeIter iter;
     int64 start, stop;
+
     e.get_start_stop_times(out start, out stop);
-    string s = indent;
+    string str = "";
     if (start != Gst.CLOCK_TIME_NONE) {
-      s += "%s ".printf(format_time((ClockTime)start));
+      str += "%s ".printf(format_time((ClockTime)start));
     }
     if (stop != Gst.CLOCK_TIME_NONE) {
-      s += "- %s ".printf(format_time((ClockTime)stop));
+      str += "- %s ".printf(format_time((ClockTime)stop));
     }    
-    s += "%s\n".printf(TocEntryType.get_nick(e.get_entry_type()));
+    str += TocEntryType.get_nick(e.get_entry_type());
+    
+    s.append(out iter, p);
+    s.set(iter, 0, str, -1);
     
     unowned GLib.List<TocEntry> entries = e.get_sub_entries ();
     if (entries != null) {
-      string new_indent = indent + "  ";
       foreach (TocEntry se in entries) {
-        s += build_toc_info_for_entry (se, new_indent);
+        build_toc_info_for_entry (s, se, iter);
       }
     }
-    return s;
   }
   
-  private string? build_toc_info (Toc? t) {
+  private TreeStore? build_toc_info (Toc? t) {
     if (t == null)
       return null;
     
-    string s = "";
+    TreeStore s = new TreeStore(1, typeof (string));
     unowned GLib.List<TocEntry> entries = t.get_entries ();
     foreach (TocEntry e in entries) {
-      s += build_toc_info_for_entry (e, "");
+      build_toc_info_for_entry (s, e, null);
     }
     
     return s;
