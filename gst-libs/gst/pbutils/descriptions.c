@@ -269,6 +269,7 @@ static const FormatInfo formats[] = {
   {"image/vnd.wap.wbmp", "Wireless Bitmap", FLAG_IMAGE, "wbmp"},
 
   /* subtitle formats with static descriptions */
+  {"text/x-raw", N_("Timed Text"), FLAG_SUB, ""},
   {"application/x-ssa", "SubStation Alpha", FLAG_SUB, ""},
   {"application/x-ass", "Advanced SubStation Alpha", FLAG_SUB, ""},
   /* FIXME: add variant field to typefinder? */
