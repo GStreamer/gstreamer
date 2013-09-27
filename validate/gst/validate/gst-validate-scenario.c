@@ -597,14 +597,14 @@ _load_scenario_file (GstValidateScenario * scenario,
 
     structure = gst_structure_from_string (lines[i], NULL);
     if (structure == NULL) {
-      GST_WARNING_OBJECT (scenario, "Could not parse action %s", lines[i]);
-      continue;
+      GST_ERROR_OBJECT (scenario, "Could not parse action %s", lines[i]);
+      goto failed;
     }
 
     type = gst_structure_get_name (structure);
     if (!g_hash_table_lookup (action_types_table, type)) {
-      GST_WARNING_OBJECT (scenario, "We do not handle action types %s", type);
-      continue;
+      GST_ERROR_OBJECT (scenario, "We do not handle action types %s", type);
+      goto failed;
     }
 
     action = g_slice_new0 (GstValidateAction);
@@ -692,6 +692,12 @@ done:
     g_free (tldir);
   if (lfilename)
     g_free (lfilename);
+
+  if (ret == FALSE) {
+    g_printerr ("Could not set scenario %s => EXIT\n", scenario_name);
+
+    exit (0);
+  }
 
   return ret;
 
