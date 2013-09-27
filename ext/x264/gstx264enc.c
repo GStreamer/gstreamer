@@ -1360,6 +1360,7 @@ gst_x264_enc_init_encoder (GstX264Enc * encoder)
     }
   } else {
     /* FPS available so set it up */
+    encoder->x264param.b_vfr_input = FALSE;
     encoder->x264param.i_fps_num = info->fps_n;
     encoder->x264param.i_fps_den = info->fps_d;
     encoder->x264param.i_keyint_max =
