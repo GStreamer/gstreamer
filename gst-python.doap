@@ -34,6 +34,16 @@ It also comes with a number of examples.
 
  <release>
   <Version>
+   <revision>1.1.90</revision>
+   <branch>1.1</branch>
+   <created>2013-09-25</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-python/gst-python-1.1.90.tar.bz2" />
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-python/gst-python-1.1.90.tar.gz" />
+  </Version>
+ </release>
+
+ <release>
+  <Version>
    <revision>0.10.22</revision>
    <branch>0.10</branch>
    <name>Ninety Tons of Thunder</name>

@@ -1,9 +1,399 @@
-=== release 0.10.22 ===
+=== release 1.1.90 ===
 
-2011-10-29  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+2013-09-24  Thibault Saunier <thibault.saunier@collabora.com>
 
 	* configure.ac:
-	  releasing 0.10.22, "Ninety Tons of Thunder"
+	  releasing 1.1.90
+
+2013-08-27 01:07:48 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* configure.ac:
+	  configure: fail if pygobject is not found
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706853
+
+2013-08-26 17:35:48 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gi/overrides/Gst.py:
+	  Gst: Do not initialize Gst at init
+	  Letting the user choose when to initialize it himself
+
+2013-08-23 23:18:57 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* TODO:
+	  todo: Update the todo
+
+2013-08-23 23:08:27 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* Makefile.am:
+	* configure.ac:
+	  Disable examples amd testsuite as long as they have not been ported
+
+2013-08-23 22:01:46 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gi/overrides/Makefile.am:
+	  overrides: Force symlinks when making
+	  Making make distcheck pass
+
+2013-08-23 21:42:37 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gi/overrides/gstmodule.c:
+	  gstmodule: Check that we could retrieve the module before using it
+	  And plug a small leak
+
+2013-02-07 16:12:23 -0600  George McCollister <george.mccollister@gmail.com>
+
+	* configure.ac:
+	  configure: replace deprecated AM_CONFIG_HEADER with AC_CONFIG_HEADERS
+	  AM_CONFIG_HEADER was removed in automake 1.13
+	  https://bugzilla.gnome.org/show_bug.cgi?id=693367
+
+2012-12-30 16:11:30 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gi/overrides/Makefile.am:
+	  overrides: symlink some more to use uninstalled out-of-source build
+
+2012-12-07 14:18:21 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: implement Gst.Structure.__setitem__
+
+2012-11-22 07:11:45 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: implement Gst.Structure.__getitem__
+
+2012-11-04 17:02:24 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: move add(*args) override from Gst.Pipeline to Gst.Bin
+
+2012-11-04 17:00:14 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: move the Gst.Pad override before Gst.GhostPad
+	  ...else gi will screw up the type hierarchy and GhostPad will inherit from the
+	  non-overridden Gst.Pad. Got it?
+
+2012-10-24 20:47:07 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: override GhostPad.__init__
+
+2012-10-15 09:56:43 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: make Gst.Pad.link still return Gst.PadLinkReturn when successful
+
+2012-10-15 09:49:00 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gi/overrides/GstPbutils.py:
+	* gi/overrides/Makefile.am:
+	  overrides: add encoding profile(s) overrides in GstPbutils
+
+2012-10-15 09:18:00 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: make filter arg in Gst.Pad.query_caps(filter) default to None
+
+2012-10-15 09:15:21 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: set default value for name arg in ElementFactory.make(factory, name)
+	  So you can use Gst.ElementFactory.make('fakesrc') instead of
+	  Gst.ElementFactory.make('fakesrc', None)
+
+2012-10-15 09:13:44 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: make Gst.Pad.link raise Gst.LinkError
+
+2012-10-15 09:12:33 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: implement Gst.Pipeline.add(e1, e2, ...)
+
+2012-10-15 09:10:25 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: implement the python iterator protocol for Gst.Iterator
+	  So that you can use: for value in gst_iterator: ...
+
+2012-10-15 09:00:03 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gi/overrides/Gst.py:
+	  overrides: implement caps[i] and len(caps)
+
+2012-10-15 08:58:59 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gi/overrides/Makefile.am:
+	  overrides: don't install our gi/overrides/__init__.py
+	  We don't want to override the gi/overrides/__init__.py from pygobject
+
+2012-09-27 14:41:29 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gi/overrides/Gst.py:
+	* gi/overrides/gstmodule.c:
+	  overrides: provide for gst-python style debug logging
+	  Also provide a default debug category for the binding glue code.
+
+2012-09-27 14:19:52 +0200  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gi/overrides/Makefile.am:
+	  overrides: symlink some more to use uninstalled
+
+2012-08-29 10:05:37 -0700  René Stadler <rene.stadler@collabora.co.uk>
+
+	* gi/overrides/gstmodule.c:
+	  overrides: Fix crash in add_template
+	  templ vs. templates. Moved variable declarations to the inner scope to prevent
+	  such a mistake.
+
+2012-08-19 22:40:06 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gi/overrides/Gst.py:
+	* gi/overrides/Makefile.am:
+	  Make it possible to use uninstalled symlinking the .so file
+
+2012-08-19 02:25:13 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gi/overrides/gstmodule.c:
+	  overrides: Make it possible to add metadatas and PadTemplates to GstElementClass
+
+2012-08-08 14:00:05 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* autogen.sh:
+	* configure.ac:
+	* gi/overrides/Gst.py:
+	* gi/overrides/Makefile.am:
+	* gi/overrides/gstmodule.c:
+	  Implement the glue code so GstFraction works
+
+2012-08-08 13:59:09 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* Makefile.am:
+	* configure.ac:
+	* gi/Makefile.am:
+	* gi/__init__.py:
+	* gi/overrides/Gst.py:
+	* gi/overrides/Makefile.am:
+	* gi/overrides/__init__.py:
+	  Add overrides for GObject Introspection
+
+2012-07-30 16:24:10 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* Makefile.am:
+	* codegen/.gitignore:
+	* codegen/Makefile.am:
+	* codegen/__init__.py:
+	* codegen/argtypes.py:
+	* codegen/code-coverage.py:
+	* codegen/codegen.py:
+	* codegen/definitions.py:
+	* codegen/defsparser.py:
+	* codegen/docextract.py:
+	* codegen/docgen.py:
+	* codegen/h2def.py:
+	* codegen/mergedefs.py:
+	* codegen/mkskel.py:
+	* codegen/override.py:
+	* codegen/reversewrapper.py:
+	* codegen/scmexpr.py:
+	* configure.ac:
+	* gst/.gitignore:
+	* gst/Makefile.am:
+	* gst/__init__.py.in:
+	* gst/arg-types.py:
+	* gst/audio.defs:
+	* gst/audio.override:
+	* gst/audiomodule.c:
+	* gst/base.defs:
+	* gst/common.h:
+	* gst/extend/.gitignore:
+	* gst/extend/Makefile.am:
+	* gst/extend/__init__.py:
+	* gst/extend/discoverer.py:
+	* gst/extend/jukebox.py:
+	* gst/extend/leveller.py:
+	* gst/extend/pygobject.py:
+	* gst/extend/sources.py:
+	* gst/extend/utils.py:
+	* gst/gst-0.10.21.ignore:
+	* gst/gst-0.10.22.ignore:
+	* gst/gst-0.10.23.ignore:
+	* gst/gst-0.10.24.ignore:
+	* gst/gst-0.10.25.ignore:
+	* gst/gst-0.10.26.ignore:
+	* gst/gst-0.10.29.ignore:
+	* gst/gst-0.10.30.ignore:
+	* gst/gst-0.10.31.ignore:
+	* gst/gst-0.10.32.ignore:
+	* gst/gst-0.10.36.ignore:
+	* gst/gst-argtypes.c:
+	* gst/gst-disable-loadsave.ignore:
+	* gst/gst-extrafuncs.defs:
+	* gst/gst-pb-0.10.23.ignore:
+	* gst/gst-pb-0.10.25.ignore:
+	* gst/gst-pb-0.10.26.ignore:
+	* gst/gst-pb-0.10.29.ignore:
+	* gst/gst-pb-0.10.30.ignore:
+	* gst/gst-pb-0.10.31.ignore:
+	* gst/gst-pb-0.10.32.ignore:
+	* gst/gst-pb-0.10.36.ignore:
+	* gst/gst-types.defs:
+	* gst/gst.defs:
+	* gst/gst.override:
+	* gst/gstbase.override:
+	* gst/gstbin.override:
+	* gst/gstbuffer.override:
+	* gst/gstbus.override:
+	* gst/gstcaps.override:
+	* gst/gstelement.override:
+	* gst/gstelementfactory.override:
+	* gst/gstevent.override:
+	* gst/gstlibs.override:
+	* gst/gstmessage.override:
+	* gst/gstmodule.c:
+	* gst/gstobject.override:
+	* gst/gstpad.override:
+	* gst/gstquery.override:
+	* gst/gstreamer.py:
+	* gst/gststructure.override:
+	* gst/gsttaglist.override:
+	* gst/gstversion.override.in:
+	* gst/interfaces.defs:
+	* gst/interfaces.override:
+	* gst/interfacesmodule.c:
+	* gst/libs.defs:
+	* gst/pbutils.defs:
+	* gst/pbutils.override:
+	* gst/pbutilsmodule.c:
+	* gst/pygst-private.h:
+	* gst/pygst.h:
+	* gst/pygstexception.c:
+	* gst/pygstexception.h:
+	* gst/pygstiterator.c:
+	* gst/pygstminiobject-private.h:
+	* gst/pygstminiobject.c:
+	* gst/pygstminiobject.h:
+	* gst/pygstvalue.c:
+	* gst/pygstvalue.h:
+	* gst/tag.defs:
+	* gst/tag.override:
+	* gst/tagmodule.c:
+	* gst/video.defs:
+	* gst/video.override:
+	* gst/videomodule.c:
+	* gst/xoverlay.defs:
+	* gst/xoverlay.override:
+	* gstlibtoolimporter.py:
+	* gstltihooks.py:
+	* gstoptionmodule.c:
+	* pkgconfig/.gitignore:
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gst-python-uninstalled.pc.in:
+	* pkgconfig/gst-python.pc.in:
+	* plugin/Makefile.am:
+	* plugin/gstpythonplugin.c:
+	* testsuite/Makefile.am:
+	  Keep only the testsuite as we are now using GObject Introspection for bindings
+
+2012-04-08 00:01:12 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  Revert nonsense that happened to git master, but make configure error out with an error message pointing people to the 0.10 branch.
+
+2012-03-07 16:50:11 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/gstpad.override:
+	  pad: fix unit test again after previous commit
+	  https://bugzilla.gnome.org/show_bug.cgi?id=660357
+
+2011-09-28 15:16:07 +0200  Andoni Morales Alastruey <amorales@flumotion.com>
+
+	* gst/gstpad.override:
+	  pad: fix Py_DECREF of null pointer in pad probe and pad block marshallers
+	  https://bugzilla.gnome.org/show_bug.cgi?id=660357
+
+2012-01-26 13:20:53 +0100  Mark Nauwelaerts <mark.nauwelaerts@collabora.co.uk>
+
+	* gst/pbutils.override:
+	  pbutils: fix copy-and-mutate-paste for gst_encoding_list_all_targets
+
+2011-12-29 16:02:29 +0100  Alessandro Decina <alessandro.d@gmail.com>
+
+	* gst/pbutils.defs:
+	  pbutils: fix EncodingContainerProfile.add_profile refcount
+
+2011-12-19 13:09:42 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/videomodule.c:
+	  videomodule: fix compiler warning
+	  videomodule.c:43:21: error: variable 'gst' set but not used
+
+2011-12-18 20:45:52 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst-python.spec.in:
+	  rpm: add new header files to .spec file, add -devel package for that
+	  Not actually tested though.
+
+2011-12-09 17:24:40 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* gst/pbutilsmodule.c:
+	  pbutilsmodule: avoid unused-but-set-variable compiler warning
+	  https://bugzilla.gnome.org/show_bug.cgi?id=665868
+
+2011-12-09 17:22:31 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	* gst/gst-0.10.36.ignore:
+	* gst/gstversion.override.in:
+	  Add gst-0.10.36.ignore file
+	  So things still compile with older versions of GStreamer.
+
+2011-12-09 14:05:12 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gst.defs:
+	  preset: expose new gst.preset_{set,get}_app_dir() on python
+
+2011-08-07 19:05:14 +0200  Alessandro Decina <alessandro.d@gmail.com>
+
+	* configure.ac:
+	* gst/Makefile.am:
+	* gst/gst-pb-0.10.36.ignore:
+	* gst/gstversion.override.in:
+	* gst/video.defs:
+	* gst/video.override:
+	  video: wrap force key unit API
+
+2011-10-31 10:51:46 +0000  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* configure.ac:
+	  configure: back to development
+	  Apparently.
+
+2011-10-31 10:49:41 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* examples/Makefile.am:
+	* examples/helloworld.py:
+	  examples: add helloworld example
+	  Add a straight 1:1 copy from cores' helloworld.c to show how the c api maps into
+	  the pythong bindings. It would rock to have the same in other bindings.
+
+2011-10-31 10:48:29 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst/gst.defs:
+	  uri: add filename_to_uri to bindings
+
+=== release 0.10.22 ===
+
+2011-10-29 17:49:01 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* gst-python.doap:
+	  Release 0.10.22
 
 2011-10-29 16:01:24 +0100  Tim-Philipp Müller <tim.muller@collabora.co.uk>
 
