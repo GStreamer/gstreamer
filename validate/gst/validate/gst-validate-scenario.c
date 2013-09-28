@@ -597,19 +597,47 @@ gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
 }
 
 static gboolean
-async_done_cb (GstBus * bus, GstMessage * message,
+message_cb (GstBus * bus, GstMessage * message,
     GstValidateScenario * scenario)
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
 
-  if (priv->last_seek) {
-    gst_validate_scenario_update_segment_from_seek (scenario, priv->last_seek);
-    gst_event_replace (&priv->last_seek, NULL);
-  }
+  switch (GST_MESSAGE_TYPE (message))
+  {
+    case GST_MESSAGE_ASYNC_DONE:
+      if (priv->last_seek) {
+        gst_validate_scenario_update_segment_from_seek (scenario, priv->last_seek);
+        gst_event_replace (&priv->last_seek, NULL);
+      }
 
-  if (priv->get_pos_id == 0) {
-    get_position (scenario);
-    priv->get_pos_id = g_timeout_add (50, (GSourceFunc) get_position, scenario);
+      if (priv->get_pos_id == 0) {
+        get_position (scenario);
+        priv->get_pos_id = g_timeout_add (50, (GSourceFunc) get_position, scenario);
+      }
+      break;
+    case GST_MESSAGE_ERROR:
+    case GST_MESSAGE_EOS:
+      {
+        if (scenario->priv->actions) {
+          GList *tmp;
+          gchar *actions = g_strdup (""), *tmpconcat;
+
+          for (tmp = scenario->priv->actions; tmp; tmp = tmp->next) {
+            GstValidateAction *action = ((GstValidateAction*) tmp->data);
+            tmpconcat = actions;
+            actions = g_strdup_printf ("%s\n%*s%s",
+                actions, 20, "", gst_structure_to_string (action->structure));
+            g_free (tmpconcat);
+
+          }
+
+          GST_VALIDATE_REPORT (scenario, SCENARIO_NOT_ENDED,
+              "The following action were not executed: %s", actions);
+          g_free (actions);
+        }
+      }
+    default:
+      break;
   }
 
   return TRUE;
@@ -873,7 +901,7 @@ gst_validate_scenario_factory_create (GstValidateRunner * runner,
 
   bus = gst_element_get_bus (pipeline);
   gst_bus_add_signal_watch (bus);
-  g_signal_connect (bus, "message::async-done", (GCallback) async_done_cb,
+  g_signal_connect (bus, "message", (GCallback) message_cb,
       scenario);
   gst_object_unref (bus);
 

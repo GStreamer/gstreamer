@@ -207,6 +207,9 @@ gst_validate_report_load_issues (void)
   REGISTER_VALIDATE_ISSUE (WARNING, QUERY_POSITION_OUT_OF_SEGMENT,
       _("Query position reported a value outside of the current expected "
           "segment"), NULL);
+  REGISTER_VALIDATE_ISSUE (CRITICAL, SCENARIO_NOT_ENDED,
+      _("All the actions were not executed before the program stoped"),
+        NULL);
 }
 
 void
@@ -278,6 +281,8 @@ gst_validate_report_area_get_name (GstValidateReportArea area)
       return "run-error";
     case GST_VALIDATE_AREA_OTHER:
       return "other";
+    case GST_VALIDATE_AREA_SCENARIO:
+      return "scenario";
     default:
       g_assert_not_reached ();
       return "unknown";
