@@ -730,10 +730,12 @@ public class MediaInfo.Info : Box
     AttachOptions fill = AttachOptions.FILL;
     AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
 
-    Label label = new Label (caps.to_string ());
+    string str = caps.to_string( );
+    Label label = new Label (str);
     label.set_ellipsize (Pango.EllipsizeMode.END);
     label.set_alignment (0.0f, 0.5f);
     label.set_selectable (true);
+    label.set_tooltip_text (str);
     table.attach (label, 0, 2, row, row+1, fill_exp, 0, 0, 1);
     row++;
 
