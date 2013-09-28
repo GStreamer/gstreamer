@@ -222,6 +222,7 @@ enum
   SNAPING_STARTED,
   SNAPING_ENDED,
   SELECT_TRACKS_FOR_OBJECT,
+  COMMITED,
   LAST_SIGNAL
 };
 
@@ -518,6 +519,14 @@ ges_timeline_class_init (GESTimelineClass * klass)
       g_signal_new ("select-tracks-for-object", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, 0, _gst_array_accumulator, NULL, NULL,
       G_TYPE_PTR_ARRAY, 2, GES_TYPE_CLIP, GES_TYPE_TRACK_ELEMENT);
+
+  /**
+   * GESTimeline::commited
+   * @timeline: the #GESTimeline
+   */
+  ges_timeline_signals[COMMITED] =
+      g_signal_new ("commited", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, 0, NULL, NULL, NULL, G_TYPE_NONE, 0);
 }
 
 static void
@@ -2875,6 +2884,9 @@ ges_timeline_commit (GESTimeline * timeline)
 
   /* Make sure we reset the context */
   timeline->priv->movecontext.needs_move_ctx = TRUE;
+
+  if (res)
+    g_signal_emit (timeline, ges_timeline_signals[COMMITED], 0);
 
   return res;
 }
