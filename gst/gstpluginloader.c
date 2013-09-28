@@ -1011,7 +1011,7 @@ exchange_packets (GstPluginLoader * l)
 
     if (l->tx_buf_read < l->tx_buf_write) {
       if (gst_poll_fd_has_error (l->fdset, &l->fd_w) ||
-          gst_poll_fd_has_closed (l->fdset, &l->fd_r)) {
+          gst_poll_fd_has_closed (l->fdset, &l->fd_w)) {
         GST_ERROR ("write fd %d closed/errored", l->fd_w.fd);
         goto fail_and_cleanup;
       }
