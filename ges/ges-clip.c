@@ -1417,16 +1417,23 @@ _trim (GESTimelineElement * element, GstClockTime start)
  *
  * Takes a reference on @track_element.
  *
- * Returns: %TRUE on success, %FALSE on failure.
+ * Returns: (transfer none)(allow-none): Created #GESTrackElement or NULL
+ * if an error happened
  */
-gboolean
+GESTrackElement *
 ges_clip_add_asset (GESClip * clip, GESAsset * asset)
 {
-  g_return_val_if_fail (GES_IS_CLIP (clip), FALSE);
-  g_return_val_if_fail (GES_IS_ASSET (asset), FALSE);
-  g_return_val_if_fail (g_type_is_a (ges_asset_get_extractable_type
-          (asset), GES_TYPE_TRACK_ELEMENT), FALSE);
+  GESTrackElement *element;
 
-  return ges_container_add (GES_CONTAINER (clip),
-      GES_TIMELINE_ELEMENT (ges_asset_extract (asset, NULL)));
+  g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
+  g_return_val_if_fail (GES_IS_ASSET (asset), NULL);
+  g_return_val_if_fail (g_type_is_a (ges_asset_get_extractable_type
+          (asset), GES_TYPE_TRACK_ELEMENT), NULL);
+
+  element = GES_TRACK_ELEMENT (ges_asset_extract (asset, NULL));
+
+  if (!ges_container_add (GES_CONTAINER (clip), GES_TIMELINE_ELEMENT (element)))
+    return NULL;
+
+  return element;
 }
