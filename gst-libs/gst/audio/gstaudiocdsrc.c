@@ -1189,13 +1189,23 @@ gst_audio_cd_src_calculate_musicbrainz_discid (GstAudioCdSrc * src)
   gchar *ptr;
   gchar tmp[9];
   gulong i;
+  unsigned int last_audio_track;
   guint leadout_sector;
   gsize digest_len;
 
   s = g_string_new (NULL);
 
+  /* MusicBrainz doesn't consider trailing data tracks
+   * data tracks up front stay, since the disc has to start with 1 */
+  last_audio_track = 0;
+  for (i = 0; i < src->priv->num_tracks; i++) {
+    if (src->priv->tracks[i].is_audio) {
+      last_audio_track = src->priv->tracks[i].num;
+    }
+  }
+
   leadout_sector =
-      src->priv->tracks[src->priv->num_tracks - 1].end + 1 + CD_MSF_OFFSET;
+      src->priv->tracks[last_audio_track - 1].end + 1 + CD_MSF_OFFSET;
 
   /* generate SHA digest */
   sha = g_checksum_new (G_CHECKSUM_SHA1);
@@ -1203,10 +1213,8 @@ gst_audio_cd_src_calculate_musicbrainz_discid (GstAudioCdSrc * src)
   g_string_append_printf (s, "%02X", src->priv->tracks[0].num);
   g_checksum_update (sha, (guchar *) tmp, 2);
 
-  g_snprintf (tmp, sizeof (tmp), "%02X",
-      src->priv->tracks[src->priv->num_tracks - 1].num);
-  g_string_append_printf (s, " %02X",
-      src->priv->tracks[src->priv->num_tracks - 1].num);
+  g_snprintf (tmp, sizeof (tmp), "%02X", last_audio_track);
+  g_string_append_printf (s, " %02X", last_audio_track);
   g_checksum_update (sha, (guchar *) tmp, 2);
 
   g_snprintf (tmp, sizeof (tmp), "%08X", leadout_sector);
@@ -1214,7 +1222,7 @@ gst_audio_cd_src_calculate_musicbrainz_discid (GstAudioCdSrc * src)
   g_checksum_update (sha, (guchar *) tmp, 8);
 
   for (i = 0; i < 99; i++) {
-    if (i < src->priv->num_tracks) {
+    if (i < last_audio_track) {
       guint frame_offset = src->priv->tracks[i].start + CD_MSF_OFFSET;
 
       g_snprintf (tmp, sizeof (tmp), "%08X", frame_offset);
