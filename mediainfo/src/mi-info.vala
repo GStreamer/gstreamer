@@ -244,7 +244,7 @@ public class MediaInfo.Info : Box
     toc_entries.set_enable_search (false);
     toc_entries.set_headers_visible (false);
     toc_entries.get_selection ().set_mode (SelectionMode.BROWSE);
-    //toc_entries.row_activated.connect (on_toc_entry_activated);
+    toc_entries.cursor_changed.connect (on_toc_entry_changed);
 
     TreeViewColumn column = new TreeViewColumn ();
     toc_entries.append_column (column);
@@ -550,6 +550,23 @@ public class MediaInfo.Info : Box
     }
   }
   
+  private void on_toc_entry_changed (TreeView view) {
+    TreeSelection sel = view.get_selection ();
+    if (sel == null)
+      return;
+    
+    TreeModel model;
+    TreeIter iter;
+    if (sel.get_selected (out model, out iter)) {
+      int64 start;
+      model.get(iter, 1, out start, -1);
+      if (start != Gst.CLOCK_TIME_NONE) {
+        // we ignore 'stop' right now
+        pb.seek_simple (Gst.Format.TIME, Gst.SeekFlags.FLUSH, start);
+      }
+    }
+  }
+  
   // helpers
   
   private Widget describe_container_stream (DiscovererStreamInfo sinfo) {
@@ -851,10 +868,7 @@ public class MediaInfo.Info : Box
       (uint) ((t / SECOND) % 60),
       (uint) ((t) % SECOND));
   }
-  
-  // TODO(ensonic): use a Gtk.TreeStore here, pass parent, instead of indent
-  // TODO(ensonic): one column with the formatted string or 3 strings: label, start, stop
-  
+    
   private void build_toc_info_for_entry (TreeStore s, TocEntry e, TreeIter? p) {
     TreeIter iter;
     int64 start, stop;
@@ -870,7 +884,7 @@ public class MediaInfo.Info : Box
     str += TocEntryType.get_nick(e.get_entry_type());
     
     s.append(out iter, p);
-    s.set(iter, 0, str, -1);
+    s.set(iter, 0, str, 1, start, 2, stop, -1);
     
     unowned GLib.List<TocEntry> entries = e.get_sub_entries ();
     if (entries != null) {
@@ -884,7 +898,7 @@ public class MediaInfo.Info : Box
     if (t == null)
       return null;
     
-    TreeStore s = new TreeStore(1, typeof (string));
+    TreeStore s = new TreeStore(3, typeof (string), typeof (int64), typeof (int64));
     unowned GLib.List<TocEntry> entries = t.get_entries ();
     foreach (TocEntry e in entries) {
       build_toc_info_for_entry (s, e, null);

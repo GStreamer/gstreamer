@@ -52,8 +52,6 @@ http://www.headbands.com/gspot/v26x/index.htm
 = unsorted =
 - show named audio channel configurations instead only numbers
   e.g. "mono", "stereo", "5.1"
-- handle chapters (toc)
-  - also use toc for seeking
 - tag lists
   - if there is a "language-code" in the tags (or subtitles?) use flag icons
     - deluge installs some under: /usr/share/pyshared/deluge/data/mediainfo/pixmaps/flags/
