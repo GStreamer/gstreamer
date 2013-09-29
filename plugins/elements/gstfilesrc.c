@@ -241,7 +241,7 @@ gst_file_src_set_location (GstFileSrc * src, const gchar * location)
   g_free (src->filename);
   g_free (src->uri);
 
-  /* clear the filename if we get a NULL (is that possible?) */
+  /* clear the filename if we get a NULL */
   if (location == NULL) {
     src->filename = NULL;
     src->uri = NULL;
