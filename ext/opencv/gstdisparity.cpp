@@ -461,11 +461,11 @@ static void
 gst_disparity_finalize (GObject * object)
 {
   GstDisparity *filter;
+
   filter = GST_DISPARITY (object);
   gst_disparity_release_all_pointers (filter);
 
-  gst_caps_unref (filter->caps);
-  filter->caps = NULL;
+  gst_caps_replace (&filter->caps, NULL);
 
   g_cond_clear (&filter->cond);
   g_mutex_clear (&filter->lock);
