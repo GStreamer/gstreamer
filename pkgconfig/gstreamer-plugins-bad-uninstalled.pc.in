@@ -10,6 +10,5 @@ Name: GStreamer Bad Plugin libraries, Uninstalled
 Description: Streaming media framework, bad plugins libraries, uninstalled
 Version: @VERSION@
 Requires: gstreamer-@GST_API_VERSION@
-Libs: -L@abs_top_builddir@/gst-libs/gst/basecamerabinsrc -L@abs_top_builddir@/gst-libs/gst/codecparsers -L@abs_top_builddir@/gst-libs/gst/egl -L@abs_top_builddir@/gst-libs/gst/insertbin -L@abs_top_builddir@/gst-libs/gst/interfaces -L@abs_top_builddir@/gst-libs/gst/signalprocessor -L@abs_top_builddir@/gst-libs/gst/video
+Libs: -L@abs_top_builddir@/gst-libs/gst/basecamerabinsrc -L@abs_top_builddir@/gst-libs/gst/codecparsers -L@abs_top_builddir@/gst-libs/gst/egl -L@abs_top_builddir@/gst-libs/gst/insertbin -L@abs_top_builddir@/gst-libs/gst/interfaces -L@abs_top_builddir@/gst-libs/gst/mpegts -L@abs_top_builddir@/gst-libs/gst/signalprocessor -L@abs_top_builddir@/gst-libs/gst/video
 Cflags: -I@abs_top_srcdir@/gst-libs -I@abs_top_builddir@/gst-libs
-

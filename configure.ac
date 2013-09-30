@@ -2519,6 +2519,8 @@ pkgconfig/gstreamer-insertbin.pc
 pkgconfig/gstreamer-insertbin-uninstalled.pc
 pkgconfig/gstreamer-egl.pc
 pkgconfig/gstreamer-egl-uninstalled.pc
+pkgconfig/gstreamer-mpegts.pc
+pkgconfig/gstreamer-mpegts-uninstalled.pc
 tools/Makefile
 m4/Makefile
 )
