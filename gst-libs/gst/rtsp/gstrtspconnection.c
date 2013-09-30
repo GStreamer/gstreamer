@@ -517,8 +517,13 @@ setup_tunneling (GstRTSPConnection * conn, GTimeVal * timeout, gchar * uri)
       url->abspath, url->query ? "?" : "", url->query ? url->query : "");
 
   /* connect to the host/port */
-  connection = g_socket_client_connect_to_uri (conn->client,
-      uri, 0, conn->cancellable, &error);
+  if (conn->proxy_host) {
+    connection = g_socket_client_connect_to_host (conn->client,
+        conn->proxy_host, conn->proxy_port, conn->cancellable, &error);
+  } else {
+    connection = g_socket_client_connect_to_uri (conn->client,
+        uri, 0, conn->cancellable, &error);
+  }
   if (connection == NULL)
     goto connect_failed;
 
@@ -652,8 +657,13 @@ gst_rtsp_connection_connect (GstRTSPConnection * conn, GTimeVal * timeout)
     uri = gst_rtsp_url_get_request_uri (url);
   }
 
-  connection = g_socket_client_connect_to_uri (conn->client,
-      uri, url_port, conn->cancellable, &error);
+  if (conn->proxy_host) {
+    connection = g_socket_client_connect_to_host (conn->client,
+        conn->proxy_host, conn->proxy_port, conn->cancellable, &error);
+  } else {
+    connection = g_socket_client_connect_to_uri (conn->client,
+        uri, url_port, conn->cancellable, &error);
+  }
   if (connection == NULL)
     goto connect_failed;
 
