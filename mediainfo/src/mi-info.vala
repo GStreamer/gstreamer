@@ -730,7 +730,17 @@ public class MediaInfo.Info : Box
     AttachOptions fill = AttachOptions.FILL;
     AttachOptions fill_exp = AttachOptions.EXPAND|AttachOptions.FILL;
 
-    string str = caps.to_string( );
+    // filter buffer entries from caps
+    // TODO(ensonic): add filtering api to gstreamer
+    Structure structure = caps.get_structure (0).copy();
+    while (structure.foreach ( (id, val) => {
+      if (val.holds(typeof (Gst.Buffer))) {
+        structure.remove_field (id.to_string ());
+        return false;
+      }
+      return true;
+    }) == false) {}
+    string str = structure.to_string( );
     Label label = new Label (str);
     label.set_ellipsize (Pango.EllipsizeMode.END);
     label.set_alignment (0.0f, 0.5f);
