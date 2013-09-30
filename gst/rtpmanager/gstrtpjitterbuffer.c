@@ -186,7 +186,7 @@ enum
 } G_STMT_END
 #define JBUF_SIGNAL_EVENT(priv) G_STMT_START {           \
   if (G_UNLIKELY ((priv)->waiting_event)) {              \
-    GST_DEBUG ("signal timer");                          \
+    GST_DEBUG ("signal event");                          \
     g_cond_signal (&(priv)->jbuf_event);                 \
   }                                                      \
 } G_STMT_END
