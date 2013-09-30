@@ -162,25 +162,33 @@ enum
 #define JBUF_UNLOCK(priv) (g_mutex_unlock (&(priv)->jbuf_lock))
 
 #define JBUF_WAIT_TIMER(priv)   G_STMT_START {            \
+  GST_DEBUG ("waiting timer");                            \
   (priv)->waiting_timer = TRUE;                           \
   g_cond_wait (&(priv)->jbuf_timer, &(priv)->jbuf_lock);  \
   (priv)->waiting_timer = FALSE;                          \
+  GST_DEBUG ("waiting timer done");                       \
 } G_STMT_END
-#define JBUF_SIGNAL_TIMER(priv) G_STMT_START {    \
-  if (G_UNLIKELY ((priv)->waiting_timer))         \
-    g_cond_signal (&(priv)->jbuf_timer);          \
+#define JBUF_SIGNAL_TIMER(priv) G_STMT_START {            \
+  if (G_UNLIKELY ((priv)->waiting_timer)) {               \
+    GST_DEBUG ("signal timer");                           \
+    g_cond_signal (&(priv)->jbuf_timer);                  \
+  }                                                       \
 } G_STMT_END
 
 #define JBUF_WAIT_EVENT(priv,label) G_STMT_START {       \
+  GST_DEBUG ("waiting event");                           \
   (priv)->waiting_event = TRUE;                          \
   g_cond_wait (&(priv)->jbuf_event, &(priv)->jbuf_lock); \
   (priv)->waiting_event = FALSE;                         \
+  GST_DEBUG ("waiting event done");                      \
   if (G_UNLIKELY (priv->srcresult != GST_FLOW_OK))       \
     goto label;                                          \
 } G_STMT_END
-#define JBUF_SIGNAL_EVENT(priv) G_STMT_START {    \
-  if (G_UNLIKELY ((priv)->waiting_event))         \
-    g_cond_signal (&(priv)->jbuf_event);          \
+#define JBUF_SIGNAL_EVENT(priv) G_STMT_START {           \
+  if (G_UNLIKELY ((priv)->waiting_event)) {              \
+    GST_DEBUG ("signal timer");                          \
+    g_cond_signal (&(priv)->jbuf_event);                 \
+  }                                                      \
 } G_STMT_END
 
 struct _GstRtpJitterBufferPrivate
@@ -2693,9 +2701,7 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
       priv->clock_id = NULL;
     } else {
       /* no timers, wait for activity */
-      GST_DEBUG_OBJECT (jitterbuffer, "waiting");
       JBUF_WAIT_TIMER (priv);
-      GST_DEBUG_OBJECT (jitterbuffer, "waiting done");
     }
   }
   JBUF_UNLOCK (priv);
@@ -2722,10 +2728,8 @@ gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
   do {
     result = handle_next_buffer (jitterbuffer);
     if (G_LIKELY (result == GST_FLOW_WAIT)) {
-      GST_DEBUG_OBJECT (jitterbuffer, "waiting for event");
       /* now wait for the next event */
       JBUF_WAIT_EVENT (priv, flushing);
-      GST_DEBUG_OBJECT (jitterbuffer, "waiting for event done");
       result = GST_FLOW_OK;
     }
   }
