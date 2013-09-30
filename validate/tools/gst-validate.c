@@ -144,8 +144,6 @@ main (int argc, gchar ** argv)
     g_setenv ("GST_VALIDATE_SCENARIO", scenario, TRUE);
   }
 
-  g_option_context_free (ctx);
-
   gst_init (&argc, &argv);
   gst_validate_init ();
 
@@ -154,8 +152,11 @@ main (int argc, gchar ** argv)
 
   if (argc == 1) {
     g_print ("%s", g_option_context_get_help (ctx, FALSE, NULL));
+    g_option_context_free (ctx);
     exit (1);
   }
+
+  g_option_context_free (ctx);
 
   /* Create the pipeline */
   argvn = g_new0 (char *, argc);
