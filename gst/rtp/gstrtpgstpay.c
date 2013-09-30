@@ -353,15 +353,16 @@ static GstFlowReturn
 gst_rtp_gst_pay_flush (GstRtpGSTPay * rtpgstpay, GstClockTime timestamp)
 {
   GstFlowReturn ret = GST_FLOW_OK;
-  GList *iter, *next;
+  GList *iter;
 
   gst_rtp_gst_pay_create_from_adapter (rtpgstpay, timestamp);
-  for (iter = rtpgstpay->pending_buffers; iter; iter = next) {
+
+  iter = rtpgstpay->pending_buffers;
+  while (iter) {
     GstBufferList *list = iter->data;
 
-    next = iter->next;
-    rtpgstpay->pending_buffers = g_list_remove_link (rtpgstpay->pending_buffers,
-        iter);
+    rtpgstpay->pending_buffers = iter =
+        g_list_delete_link (rtpgstpay->pending_buffers, iter);
 
     /* push the whole buffer list at once */
     ret = gst_rtp_base_payload_push_list (GST_RTP_BASE_PAYLOAD (rtpgstpay),
