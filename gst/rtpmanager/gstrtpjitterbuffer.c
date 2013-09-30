@@ -1199,6 +1199,7 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
       /* unblock to allow streaming in PLAYING */
       priv->blocked = FALSE;
       JBUF_SIGNAL_EVENT (priv);
+      JBUF_SIGNAL_TIMER (priv);
       JBUF_UNLOCK (priv);
       break;
     default:
@@ -1218,6 +1219,7 @@ gst_rtp_jitter_buffer_change_state (GstElement * element,
       JBUF_LOCK (priv);
       /* block to stop streaming when PAUSED */
       priv->blocked = TRUE;
+      unschedule_current_timer (jitterbuffer);
       JBUF_UNLOCK (priv);
       if (ret != GST_STATE_CHANGE_FAILURE)
         ret = GST_STATE_CHANGE_NO_PREROLL;
@@ -2640,7 +2642,7 @@ wait_next_timeout (GstRtpJitterBuffer * jitterbuffer)
         timer_timeout = test_timeout;
       }
     }
-    if (timer) {
+    if (timer && !priv->blocked) {
       GstClock *clock;
       GstClockTime sync_time;
       GstClockID id;
