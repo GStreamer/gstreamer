@@ -1,0 +1,12 @@
+prefix=
+exec_prefix=
+libdir=${pcfiledir}/../gst-libs/gst/mpegts
+includedir=${pcfiledir}/../gst-libs
+
+Name: GStreamer MPEG-TS, Uninstalled
+Description: GStreamer MPEG-TS support, uninstalled
+Requires: gstreamer-@GST_API_VERSION@ gstreamer-base-@GST_API_VERSION@
+Version: @VERSION@
+Libs: -L${libdir} ${libdir}/libgstmpegts-@GST_API_VERSION@.la
+Cflags: -I${includedir}
+
