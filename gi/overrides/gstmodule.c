@@ -32,12 +32,34 @@
 
 #include <locale.h>
 
+#if PY_MAJOR_VERSION >= 3
+#define PYGLIB_MODULE_START(symbol, modname)	        \
+    static struct PyModuleDef _##symbol##module = {     \
+    PyModuleDef_HEAD_INIT,                              \
+    modname,                                            \
+    NULL,                                               \
+    -1,                                                 \
+    symbol##_functions,                                 \
+    NULL,                                               \
+    NULL,                                               \
+    NULL,                                               \
+    NULL                                                \
+};                                                      \
+PyMODINIT_FUNC PyInit_##symbol(void);                   \
+PyMODINIT_FUNC PyInit_##symbol(void)                    \
+{                                                       \
+    PyObject *module;                                   \
+    module = PyModule_Create(&_##symbol##module);
+#define PYGLIB_MODULE_END return module; }
+#else
 #define PYGLIB_MODULE_START(symbol, modname)            \
+DL_EXPORT(void) init##symbol(void);         \
 DL_EXPORT(void) init##symbol(void)          \
 {                                                       \
     PyObject *module;                                   \
     module = Py_InitModule(modname, symbol##_functions);
 #define PYGLIB_MODULE_END }
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (python_debug);
 GST_DEBUG_CATEGORY_STATIC (pygst_debug);
@@ -227,15 +249,36 @@ pygst_debug_log (PyObject * pyobject, PyObject * string, GstDebugLevel level,
   }
 
   frame = PyEval_GetFrame ();
-  function = PyString_AsString (frame->f_code->co_name);
+#if PY_MAJOR_VERSION >= 3
+  {
+    PyObject *utf8;
+    const gchar *utf8_str;
+
+    utf8 = PyUnicode_AsUTF8String (frame->f_code->co_name);
+    utf8_str = PyBytes_AS_STRING (utf8);
+
+    function = g_strdup (utf8_str);
+    Py_DECREF (utf8);
+
+    utf8 = PyUnicode_AsUTF8String (frame->f_code->co_filename);
+    utf8_str = PyBytes_AS_STRING (utf8);
+
+    filename = g_strdup (utf8_str);
+    Py_DECREF (utf8);
+  }
+#else
+  function = g_strdup (PyString_AsString (frame->f_code->co_name));
   filename =
       g_path_get_basename (PyString_AsString (frame->f_code->co_filename));
+#endif
   lineno = PyCode_Addr2Line (frame->f_code, frame->f_lasti);
   /* gst_debug_log : category, level, file, function, line, object, format, va_list */
   if (isgstobject)
     object = G_OBJECT (pygobject_get (pyobject));
   gst_debug_log (python_debug, level, filename, function, lineno, object,
       "%s", str);
+  if (function)
+    g_free (function);
   if (filename)
     g_free (filename);
 #endif
