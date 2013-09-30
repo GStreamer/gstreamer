@@ -5,7 +5,8 @@
  * Copyright (C) <2007> Julien Moutte <julien@fluendo.com>
  * Copyright (C) <2009> Tim-Philipp Müller <tim centricular net>
  * Copyright (C) <2009> STEricsson <benjamin.gaignard@stericsson.com>
- *
+ * Copyright (C) <2013> Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+ * Copyright (C) <2013> Intel Coroporation
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
  * License as published by the Free Software Foundation; either
@@ -5454,6 +5455,24 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
         qtdemux_parse_container (qtdemux, node, buffer + 0x56, end);
         break;
       }
+      case FOURCC_H265:
+      {
+        GST_MEMDUMP_OBJECT (qtdemux, "H265", buffer, end - buffer);
+        qtdemux_parse_container (qtdemux, node, buffer + 0x56, end);
+        break;
+      }
+      case FOURCC_hvc1:
+      {
+        GST_MEMDUMP_OBJECT (qtdemux, "hvc1", buffer, end - buffer);
+        qtdemux_parse_container (qtdemux, node, buffer + 0x56, end);
+        break;
+      }
+      case FOURCC_hev1:
+      {
+        GST_MEMDUMP_OBJECT (qtdemux, "hev1", buffer, end - buffer);
+        qtdemux_parse_container (qtdemux, node, buffer + 0x56, end);
+        break;
+      }
       case FOURCC_mjp2:
       {
         qtdemux_parse_container (qtdemux, node, buffer + 86, end);
@@ -7397,10 +7416,9 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 
                 /* First 4 bytes are the length of the atom, the next 4 bytes
                  * are the fourcc, the next 1 byte is the version, and the
-                 * subsequent bytes are sequence parameter set like data. */
+                 * subsequent bytes are profile_tier_level structure like data. */
                 gst_codec_utils_h264_caps_set_level_and_profile (stream->caps,
                     avc_data + 8 + 1, size - 1);
-
                 buf = gst_buffer_new_and_alloc (size);
                 gst_buffer_fill (buf, 0, avc_data + 0x8, size);
                 gst_caps_set_simple (stream->caps,
@@ -7479,6 +7497,55 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
             avc_data += size + 8;
           }
 
+          break;
+        }
+        case FOURCC_H265:
+        case FOURCC_hvc1:
+        case FOURCC_hev1:
+        {
+          gint len = QT_UINT32 (stsd_data) - 0x66;
+          const guint8 *hevc_data = stsd_data + 0x66;
+
+          /* find hevc */
+          while (len >= 0x8) {
+            gint size;
+
+            if (QT_UINT32 (hevc_data) <= len)
+              size = QT_UINT32 (hevc_data) - 0x8;
+            else
+              size = len - 0x8;
+
+            if (size < 1)
+              /* No real data, so break out */
+              break;
+
+            switch (QT_FOURCC (hevc_data + 0x4)) {
+              case FOURCC_hvcC:
+              {
+                /* parse, if found */
+                GstBuffer *buf;
+
+                GST_DEBUG_OBJECT (qtdemux, "found avcC codec_data in stsd");
+
+                /* First 4 bytes are the length of the atom, the next 4 bytes
+                 * are the fourcc, the next 1 byte is the version, and the
+                 * subsequent bytes are sequence parameter set like data. */
+                gst_codec_utils_h265_caps_set_level_tier_and_profile
+                    (stream->caps, hevc_data + 8 + 1, size - 1);
+
+                buf = gst_buffer_new_and_alloc (size);
+                gst_buffer_fill (buf, 0, hevc_data + 0x8, size);
+                gst_caps_set_simple (stream->caps,
+                    "codec_data", GST_TYPE_BUFFER, buf, NULL);
+                gst_buffer_unref (buf);
+                break;
+              }
+              default:
+                break;
+            }
+            len -= size + 8;
+            hevc_data += size + 8;
+          }
           break;
         }
         case FOURCC_mp4v:
@@ -10412,6 +10479,19 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       _codec ("H.264 / AVC");
       caps = gst_caps_new_simple ("video/x-h264",
           "stream-format", G_TYPE_STRING, "avc3",
+          "alignment", G_TYPE_STRING, "au", NULL);
+      break;
+    case GST_MAKE_FOURCC ('H', '2', '6', '5'):
+    case GST_MAKE_FOURCC ('h', 'v', 'c', '1'):
+      _codec ("H.265 / HEVC");
+      caps = gst_caps_new_simple ("video/x-h265",
+          "stream-format", G_TYPE_STRING, "hvc1",
+          "alignment", G_TYPE_STRING, "au", NULL);
+      break;
+    case GST_MAKE_FOURCC ('h', 'e', 'v', '1'):
+      _codec ("H.265 / HEVC");
+      caps = gst_caps_new_simple ("video/x-h265",
+          "stream-format", G_TYPE_STRING, "hev1",
           "alignment", G_TYPE_STRING, "au", NULL);
       break;
     case GST_MAKE_FOURCC ('r', 'l', 'e', ' '):
