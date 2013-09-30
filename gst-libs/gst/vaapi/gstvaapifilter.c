@@ -657,6 +657,7 @@ find_operation(GstVaapiFilter *filter, GstVaapiFilterOp op)
 }
 
 /* Ensure the operation's VA buffer is allocated */
+#if USE_VA_VPP
 static inline gboolean
 op_ensure_buffer(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data)
 {
@@ -666,6 +667,7 @@ op_ensure_buffer(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data)
         VAProcFilterParameterBufferType, op_data->va_buffer_size, NULL,
         &op_data->va_buffer, NULL);
 }
+#endif
 
 /* Update a generic filter (float value) */
 #if USE_VA_VPP
@@ -822,6 +824,7 @@ op_set_deinterlace(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data,
 static GArray *
 ensure_formats(GstVaapiFilter *filter)
 {
+#if VA_CHECK_VERSION(0,34,0)
     VASurfaceAttrib *surface_attribs = NULL;
     guint i, num_surface_attribs = 0;
     VAStatus va_status;
@@ -829,7 +832,6 @@ ensure_formats(GstVaapiFilter *filter)
     if (G_LIKELY(filter->formats))
         return filter->formats;
 
-#if VA_CHECK_VERSION(0,34,0)
     GST_VAAPI_DISPLAY_LOCK(filter->display);
     va_status = vaQuerySurfaceAttributes(filter->va_display, filter->va_config,
         NULL, &num_surface_attribs);
@@ -868,13 +870,13 @@ ensure_formats(GstVaapiFilter *filter)
             continue;
         g_array_append_val(filter->formats, format);
     }
-#endif
 
     g_free(surface_attribs);
     return filter->formats;
 
 error:
     g_free(surface_attribs);
+#endif
     return NULL;
 }
 
