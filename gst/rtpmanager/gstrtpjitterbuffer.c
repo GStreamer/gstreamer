@@ -716,7 +716,7 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
 
 static RTPJitterBufferItem *
 alloc_item (gpointer data, guint type, GstClockTime dts, GstClockTime pts,
-    guint seqnum, guint rtptime)
+    guint seqnum, guint count, guint rtptime)
 {
   RTPJitterBufferItem *item;
 
@@ -728,6 +728,7 @@ alloc_item (gpointer data, guint type, GstClockTime dts, GstClockTime pts,
   item->dts = dts;
   item->pts = pts;
   item->seqnum = seqnum;
+  item->count = count;
   item->rtptime = rtptime;
 
   return item;
@@ -2085,7 +2086,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     }
   }
 
-  item = alloc_item (buffer, ITEM_TYPE_BUFFER, dts, pts, seqnum, rtptime);
+  item = alloc_item (buffer, ITEM_TYPE_BUFFER, dts, pts, seqnum, 1, rtptime);
 
   /* now insert the packet into the queue in sorted order. This function returns
    * FALSE if a packet with the same seqnum was already in the queue, meaning we
@@ -2306,7 +2307,7 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum)
   /* now we are ready to push the buffer. Save the seqnum and release the lock
    * so the other end can push stuff in the queue again. */
   priv->last_popped_seqnum = seqnum;
-  priv->next_seqnum = (seqnum + 1) & 0xffff;
+  priv->next_seqnum = (seqnum + item->count) & 0xffff;
   JBUF_UNLOCK (priv);
 
   item->data = NULL;
@@ -2483,7 +2484,7 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   GstClockTime duration, timestamp;
-  guint seqnum, next_seqnum, lost_packets, num_rtx_retry;
+  guint seqnum, lost_packets, num_rtx_retry;
   gboolean late;
   GstEvent *event;
   RTPJitterBufferItem *item;
@@ -2507,8 +2508,6 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   priv->num_late += lost_packets;
   priv->num_rtx_failed += num_rtx_retry;
 
-  next_seqnum = seqnum + lost_packets - 1;
-
   /* create paket lost event */
   event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM,
       gst_structure_new ("GstRTPPacketLost",
@@ -2518,16 +2517,8 @@ do_lost_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
           "late", G_TYPE_BOOLEAN, late,
           "retry", G_TYPE_UINT, num_rtx_retry, NULL));
 
-  item = alloc_item (event, ITEM_TYPE_LOST, -1, -1, next_seqnum, -1);
+  item = alloc_item (event, ITEM_TYPE_LOST, -1, -1, seqnum, lost_packets, -1);
   rtp_jitter_buffer_insert (priv->jbuf, item, NULL, NULL);
-
-  if (seqnum == priv->next_seqnum) {
-    GST_DEBUG_OBJECT (jitterbuffer, "lost seqnum %d == %d next_seqnum -> %d",
-        seqnum, priv->next_seqnum, next_seqnum);
-    priv->next_seqnum = next_seqnum & 0xffff;
-    priv->last_popped_seqnum = next_seqnum;
-    priv->last_out_time = timestamp;
-  }
 
   /* remove timer now */
   remove_timer (jitterbuffer, timer);

@@ -109,6 +109,7 @@ struct _RTPJitterBufferClass {
  * @dts: input DTS
  * @pts: output PTS
  * @seqnum: seqnum
+ * @count: amount of seqnum in this item
  * @rtptime: rtp timestamp
  *
  * An object containing an RTP packet or event.
@@ -121,6 +122,7 @@ struct _RTPJitterBufferItem {
   GstClockTime dts;
   GstClockTime pts;
   guint seqnum;
+  guint count;
   guint rtptime;
 };
 
