@@ -43,9 +43,9 @@ AC_DEFUN([AM_CHECK_PYTHON_HEADERS],
 [AC_REQUIRE([AM_PATH_PYTHON])
 AC_MSG_CHECKING(for headers required to compile python extensions)
 dnl deduce PYTHON_INCLUDES
-py_prefix=`$PYTHON -c "import sys; print sys.prefix"`
-py_exec_prefix=`$PYTHON -c "import sys; print sys.exec_prefix"`
-if $PYTHON-config --help 2>/dev/null; then
+py_prefix=`$PYTHON -c "import sys; print(sys.prefix)"`
+py_exec_prefix=`$PYTHON -c "import sys; print(sys.exec_prefix)"`
+if $PYTHON-config --help 1>/dev/null 2>/dev/null; then
   PYTHON_INCLUDES=`$PYTHON-config --includes 2>/dev/null`
 else
   PYTHON_INCLUDES="-I${py_prefix}/include/python${PYTHON_VERSION}"
@@ -73,9 +73,9 @@ AC_DEFUN([AM_CHECK_PYTHON_LIBS],
 AC_MSG_CHECKING(for libraries required to embed python)
 
 dnl deduce PYTHON_LIBS
-if $PYTHON-config --help 2>/dev/null; then
+if $PYTHON-config --help 1>/dev/null 2>/dev/null; then
   PYTHON_LIBS=`$PYTHON-config --ldflags 2>/dev/null`
-  PYTHON_LIB=`$PYTHON -c "import distutils.sysconfig as s; print s.get_python_lib(standard_lib=1)"`
+  PYTHON_LIB=`$PYTHON -c "import distutils.sysconfig as s; print(s.get_python_lib(standard_lib=1))"`
   if echo "$host_os" | grep darwin >/dev/null 2>&1; then
     dnl OSX is a pain. Python as shipped by apple installs libpython in /usr/lib
     dnl so we hardcode that. Other systems can use --with-libpython-dir to
