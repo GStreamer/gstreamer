@@ -2248,11 +2248,11 @@ track_element_removed_cb (GESTrack * track,
 
   /* Disconnect all signal handlers */
   g_signal_handlers_disconnect_by_func (track_element,
-      trackelement_start_changed_cb, NULL);
+      trackelement_start_changed_cb, timeline);
   g_signal_handlers_disconnect_by_func (track_element,
-      trackelement_duration_changed_cb, NULL);
+      trackelement_duration_changed_cb, timeline);
   g_signal_handlers_disconnect_by_func (track_element,
-      trackelement_priority_changed_cb, NULL);
+      trackelement_priority_changed_cb, timeline);
 
   stop_tracking_track_element (timeline, track_element);
 }
