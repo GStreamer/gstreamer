@@ -453,16 +453,19 @@ gst_gl_context_egl_get_gl_api (GstGLContext * context)
 static gpointer
 gst_gl_context_egl_get_proc_address (GstGLContext * context, const gchar * name)
 {
-  gpointer result;
+  gpointer result = NULL;
 
   /* FIXME: On Android this returns wrong addresses for non-EGL functions */
 #ifdef GST_GL_HAVE_WINDOW_ANDROID
-  return NULL;
-#endif
-
+  if (!(result = gst_gl_context_default_get_proc_address (context, name))) {
+    if (g_str_has_prefix (name, "egl"))
+      result = eglGetProcAddress (name);
+  }
+#else
   if (!(result = eglGetProcAddress (name))) {
     result = gst_gl_context_default_get_proc_address (context, name);
   }
+#endif
 
   return result;
 }

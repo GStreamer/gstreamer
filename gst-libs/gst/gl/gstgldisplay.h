@@ -24,6 +24,8 @@
 #ifndef __GST_GL_DISPLAY_H__
 #define __GST_GL_DISPLAY_H__
 
+#include <gst/gst.h>
+
 #include <gst/gl/gstgl_fwd.h>
 
 G_BEGIN_DECLS
