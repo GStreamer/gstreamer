@@ -307,6 +307,7 @@ static const FormatInfo formats[] = {
   {"video/x-dv", "Digital Video (DV)", FLAG_VIDEO, ""},
   {"video/x-h263", NULL, FLAG_VIDEO, "h263"},
   {"video/x-h264", NULL, FLAG_VIDEO, "h264"},
+  {"video/x-h265", NULL, FLAG_VIDEO, "h265"},
   {"video/x-indeo", NULL, FLAG_VIDEO, ""},
   {"video/x-msmpeg", NULL, FLAG_VIDEO, ""},
   {"video/x-pn-realvideo", NULL, FLAG_VIDEO, ""},
@@ -442,6 +443,9 @@ format_info_get_desc (const FormatInfo * info, const GstCaps * caps)
       ret = "H.264";
     }
     return g_strdup (ret);
+  } else if (strcmp (info->type, "video/x-h265") == 0) {
+    /* TODO: Any variants? */
+    return g_strdup ("H.265");
   } else if (strcmp (info->type, "video/x-divx") == 0) {
     gint ver = 0;
 
