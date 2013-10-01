@@ -1389,7 +1389,10 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
     goto no_uri;
 
   uri = ctx->uri;
-  path = uri->abspath;
+  if (uri->query)
+    path = g_strconcat (uri->abspath, "?", uri->query, NULL);
+  else
+    path = g_strdup (uri->abspath);
 
   /* parse the transport */
   res =
@@ -1528,6 +1531,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
       break;
   }
   g_object_unref (session);
+  g_free (path);
 
   g_signal_emit (client, gst_rtsp_client_signals[SIGNAL_SETUP_REQUEST], 0, ctx);
 
@@ -1544,17 +1548,20 @@ no_transport:
   {
     GST_ERROR ("client %p: no transport", client);
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
+    g_free (path);
     return FALSE;
   }
 no_pool:
   {
     GST_ERROR ("client %p: no session pool configured", client);
     send_generic_response (client, GST_RTSP_STS_SESSION_NOT_FOUND, ctx);
+    g_free (path);
     return FALSE;
   }
 media_not_found_no_reply:
   {
     GST_ERROR ("client %p: media '%s' not found", client, path);
+    g_free (path);
     /* error reply is already sent */
     return FALSE;
   }
@@ -1562,6 +1569,7 @@ media_not_found:
   {
     GST_ERROR ("client %p: media '%s' not found", client, path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    g_free (path);
     return FALSE;
   }
 control_not_found:
@@ -1569,6 +1577,7 @@ control_not_found:
     GST_ERROR ("client %p: no control in path '%s'", client, path);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     g_object_unref (media);
+    g_free (path);
     return FALSE;
   }
 stream_not_found:
@@ -1576,6 +1585,7 @@ stream_not_found:
     GST_ERROR ("client %p: stream '%s' not found", client, control);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
     g_object_unref (media);
+    g_free (path);
     return FALSE;
   }
 service_unavailable:
@@ -1583,6 +1593,7 @@ service_unavailable:
     GST_ERROR ("client %p: can't create session", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     g_object_unref (media);
+    g_free (path);
     return FALSE;
   }
 sessmedia_unavailable:
@@ -1591,6 +1602,7 @@ sessmedia_unavailable:
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     g_object_unref (media);
     g_object_unref (session);
+    g_free (path);
     return FALSE;
   }
 invalid_blocksize:
@@ -1598,6 +1610,7 @@ invalid_blocksize:
     GST_ERROR ("client %p: invalid blocksize", client);
     send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
     g_object_unref (session);
+    g_free (path);
     return FALSE;
   }
 unsupported_transports:
@@ -1606,6 +1619,7 @@ unsupported_transports:
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
     gst_rtsp_transport_free (ct);
     g_object_unref (session);
+    g_free (path);
     return FALSE;
   }
 unsupported_client_transport:
@@ -1614,6 +1628,7 @@ unsupported_client_transport:
     send_generic_response (client, GST_RTSP_STS_UNSUPPORTED_TRANSPORT, ctx);
     gst_rtsp_transport_free (ct);
     g_object_unref (session);
+    g_free (path);
     return FALSE;
   }
 }
