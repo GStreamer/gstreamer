@@ -89,7 +89,7 @@ init (gpointer data)
   fail_if (tex == 0, "failed to create texture");
 
 #if GST_GL_HAVE_GLES2
-  shader = gst_gl_shader_new (display);
+  shader = gst_gl_shader_new (context);
   fail_if (shader == NULL, "failed to create shader object");
 
   gst_gl_shader_set_vertex_source (shader, vertex_shader_str_gles2);
