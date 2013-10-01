@@ -346,6 +346,7 @@ public class MediaInfo.Info : Box
     }
 
     if (info == null) {
+      toc_entries.set_model (null);
       duration.set_text ("");
       return;
     }
