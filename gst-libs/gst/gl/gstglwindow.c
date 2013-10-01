@@ -149,13 +149,13 @@ gst_gl_window_new (GstGLDisplay * display)
     window = GST_GL_WINDOW (gst_gl_window_cocoa_new ());
   }
 #endif
-#if GST_GL_HAVE_WINDOW_DISPMANX
-  if (!window && (!user_choice || g_strstr_len (user_choice, 8, "dispmanx")))
-    window = GST_GL_WINDOW (gst_gl_window_dispmanx_egl_new ());
-#endif
 #if GST_GL_HAVE_WINDOW_WAYLAND
   if (!window && (!user_choice || g_strstr_len (user_choice, 7, "wayland")))
     window = GST_GL_WINDOW (gst_gl_window_wayland_egl_new ());
+#endif
+#if GST_GL_HAVE_WINDOW_DISPMANX
+  if (!window && (!user_choice || g_strstr_len (user_choice, 8, "dispmanx")))
+    window = GST_GL_WINDOW (gst_gl_window_dispmanx_egl_new ());
 #endif
 #if GST_GL_HAVE_WINDOW_ANDROID
   if (!window && (!user_choice || g_strstr_len (user_choice, 7, "android")))
