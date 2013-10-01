@@ -1368,29 +1368,6 @@ gst_vaapisink_query(GstBaseSink *base_sink, GstQuery *query)
         return TRUE;
     }
 
-    switch(GST_QUERY_TYPE(query)) {
-#if GST_CHECK_VERSION(1,1,0)
-      case GST_QUERY_CONTEXT: {
-          const gchar *context_type = NULL;
-
-          if (gst_query_parse_context_type(query, &context_type) &&
-              !g_strcmp0(context_type, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME) &&
-              sink->display) {
-              GstContext *context;
-
-              context = gst_vaapi_video_context_new_with_display(
-                  sink->display, FALSE);
-              gst_query_set_context(query, context);
-              gst_context_unref(context);
-              return TRUE;
-          }
-          // fall-through
-      }
-#endif
-      default:
-          break;
-    }
-
     return GST_BASE_SINK_CLASS(gst_vaapisink_parent_class)->query(base_sink,
         query);
 }

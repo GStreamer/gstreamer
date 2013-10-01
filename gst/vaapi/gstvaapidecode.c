@@ -933,24 +933,6 @@ gst_vaapidecode_query(GST_PAD_QUERY_FUNCTION_ARGS)
             break;
         }
 #endif
-#if GST_CHECK_VERSION(1,1,0)
-        case GST_QUERY_CONTEXT: {
-            const gchar *context_type = NULL;
-
-            if (gst_query_parse_context_type(query, &context_type) &&
-                !g_strcmp0(context_type, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME) &&
-                decode->display) {
-                GstContext *context;
-
-                context = gst_vaapi_video_context_new_with_display(
-                    decode->display, FALSE);
-                gst_query_set_context(query, context);
-                gst_context_unref(context);
-                return TRUE;
-            }
-            // fall-through
-        }
-#endif
         default:
             res = GST_PAD_QUERY_FUNCTION_CALL(decode->sinkpad_query,
                 decode->sinkpad, parent, query);

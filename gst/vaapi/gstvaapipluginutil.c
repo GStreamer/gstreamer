@@ -220,7 +220,26 @@ gboolean
 gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display)
 {
 #if GST_CHECK_VERSION(1,1,0)
-    return FALSE;
+    const gchar *type = NULL;
+    GstContext *context;
+
+    if (GST_QUERY_TYPE(query) != GST_QUERY_CONTEXT)
+        return FALSE;
+
+    if (!display)
+        return FALSE;
+
+    if (!gst_query_parse_context_type(query, &type))
+        return FALSE;
+
+    if (g_strcmp0(type, GST_VAAPI_DISPLAY_CONTEXT_TYPE_NAME))
+        return FALSE;
+
+    context = gst_vaapi_video_context_new_with_display(display, FALSE);
+    gst_query_set_context(query, context);
+    gst_context_unref(context);
+
+    return TRUE;
 #else
     GstVaapiDisplayType display_type;
     const gchar **types;
