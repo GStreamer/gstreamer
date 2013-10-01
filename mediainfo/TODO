@@ -12,6 +12,8 @@ http://www.headbands.com/gspot/v26x/index.htm
 - when a stream plays we hide the file-browser pane or show a text entry
 - we could also take playlists and use totem-pl-parser
   - needs a list-view to show the playlist instead of the file-browser
+- if the input arg starts with '@' we could read the file and show uris listed
+  line by lien in the tree view. 
 
 = compare =
 - dup detail pane and allow to pick a new file
@@ -22,14 +24,6 @@ http://www.headbands.com/gspot/v26x/index.htm
 - diffing one (broken) file against several known working files would be nice
   - it would build ranges for the group of files (e.g. for the video width)
   - it would highlight fields that the are different to any of the working files
-
-= analyse =
-- play the file by using fakesinks and gather statistics:
-  - bitrate profiles for each a/mediainfo/v track
-  - media specific:
-    - audio: volume profile
-    - video: contrast profile
-  - show disconts as vertical bars
 
 = structural view/hex view =
 - make parsing elements post structural messages (if enabled via property)
@@ -59,8 +53,11 @@ http://www.headbands.com/gspot/v26x/index.htm
   - geo-tags: map-widget?, link to google-maps?, rev-geocoding
   - artist: links to {last.fm,wikipedia}
   - format dates nicely
+- more codec details
+  - caps have profile/level strings, can we also turn them into wikilinks?
 
 == deep scan mode ==
+- play the file by using fakesinks and gather statistics:
 - update fields when playing
   - listen for duration messages on the bus
 - get bit-rate over time
@@ -70,9 +67,10 @@ http://www.headbands.com/gspot/v26x/index.htm
   - number of keyframes
   - min,max,avg keyframe interval
 - disconts
+- read-pos on source (show if there is excessive seeking)
 - raw data statistics
   - audio: level, ...
-  - video: histogram, ...
+  - video: histogram, contrast, ...
 
 = TODO for gstreamer =
 - file/stream layout
@@ -110,6 +108,7 @@ http://www.headbands.com/gspot/v26x/index.htm
 - get duration per stream
   - this would need individual queries on the demuxer src pads
   - or duration as part of per stream tags
+   - we need byte-durations for calculating compression ratio
 - errors/warnings about files/stream processing
   - we'd like to know about fixable, unfixable issues in the file/stream
   - many elements do this already (178 uses in 89 files)
@@ -133,6 +132,8 @@ http://www.headbands.com/gspot/v26x/index.htm
     - some video formats can be lossless (dirac, ...)
   - show compression raitio (in/out)
     - depends on the target raw format
+    - need binary size for each stream, can we do byte queries on each pad?
+  - if we have stream sizes we could also show container overhead
 
 = discoverer workflow =
 == sync quick-scan ==
