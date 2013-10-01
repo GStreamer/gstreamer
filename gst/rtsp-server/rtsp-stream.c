@@ -391,7 +391,7 @@ gst_rtsp_stream_has_control (GstRTSPStream * stream, const gchar * control)
 
   g_mutex_lock (&priv->lock);
   if (priv->control)
-    res = g_strcmp0 (priv->control, control);
+    res = (g_strcmp0 (priv->control, control) == 0);
   else {
     guint streamid;
     sscanf (control, "stream=%u", &streamid);
