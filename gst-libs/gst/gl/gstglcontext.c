@@ -22,6 +22,13 @@
 # include "config.h"
 #endif
 
+#if defined(ANDROID) || defined(__ANDROID__)
+/* Avoid a linker error with _isoc99_sscanf() when building a shared library
+ * for android
+ */
+#define _GNU_SOURCE
+#endif
+
 #include <gmodule.h>
 
 #include "gl.h"

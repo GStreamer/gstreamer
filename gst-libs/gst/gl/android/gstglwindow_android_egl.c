@@ -28,8 +28,7 @@
 #include "config.h"
 #endif
 
-#include "../gstgl_fwd.h"
-#include <gst/gl/gstglcontext.h>
+#include <gst/gst.h>
 
 #include "gstglwindow_android_egl.h"
 
@@ -39,6 +38,7 @@
 G_DEFINE_TYPE (GstGLWindowAndroidEGL, gst_gl_window_android_egl,
     GST_GL_TYPE_WINDOW);
 
+static guintptr gst_gl_window_android_egl_get_display (GstGLWindow * window);
 static guintptr gst_gl_window_android_egl_get_window_handle (GstGLWindow *
     window);
 static void gst_gl_window_android_egl_set_window_handle (GstGLWindow * window,
@@ -46,8 +46,7 @@ static void gst_gl_window_android_egl_set_window_handle (GstGLWindow * window,
 static void gst_gl_window_android_egl_draw (GstGLWindow * window, guint width,
     guint height);
 static void gst_gl_window_android_egl_run (GstGLWindow * window);
-static void gst_gl_window_android_egl_quit (GstGLWindow * window,
-    GstGLWindowCB callback, gpointer data);
+static void gst_gl_window_android_egl_quit (GstGLWindow * window);
 static void gst_gl_window_android_egl_send_message_async (GstGLWindow * window,
     GstGLWindowCB callback, gpointer data, GDestroyNotify destroy);
 static gboolean gst_gl_window_android_egl_open (GstGLWindow * window,
@@ -59,6 +58,8 @@ gst_gl_window_android_egl_class_init (GstGLWindowAndroidEGLClass * klass)
 {
   GstGLWindowClass *window_class = (GstGLWindowClass *) klass;
 
+  window_class->get_display =
+      GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_get_display);
   window_class->get_window_handle =
       GST_DEBUG_FUNCPTR (gst_gl_window_android_egl_get_window_handle);
   window_class->set_window_handle =
@@ -131,15 +132,11 @@ gst_gl_window_android_egl_run (GstGLWindow * window)
 }
 
 static void
-gst_gl_window_android_egl_quit (GstGLWindow * window, GstGLWindowCB callback,
-    gpointer data)
+gst_gl_window_android_egl_quit (GstGLWindow * window)
 {
   GstGLWindowAndroidEGL *window_egl;
 
   window_egl = GST_GL_WINDOW_ANDROID_EGL (window);
-
-  if (callback)
-    gst_gl_window_android_egl_send_message (window, callback, data);
 
   GST_LOG ("sending quit");
 
@@ -216,13 +213,15 @@ draw_cb (gpointer data)
   struct draw *draw_data = data;
   GstGLWindowAndroidEGL *window_egl = draw_data->window;
   GstGLWindow *window = GST_GL_WINDOW (window_egl);
-  GstGLContext *context = window->context;
-  GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (window->context);
+  GstGLContext *context = gst_gl_window_get_context (window);
+  GstGLContextClass *context_class = GST_GL_CONTEXT_GET_CLASS (context);
 
   if (window->draw)
     window->draw (window->draw_data);
 
   context_class->swap_buffers (context);
+
+  gst_object_unref (context);
 }
 
 static void
@@ -235,4 +234,10 @@ gst_gl_window_android_egl_draw (GstGLWindow * window, guint width, guint height)
   draw_data.height = height;
 
   gst_gl_window_send_message (window, (GstGLWindowCB) draw_cb, &draw_data);
+}
+
+static guintptr
+gst_gl_window_android_egl_get_display (GstGLWindow * window)
+{
+  return 0;
 }

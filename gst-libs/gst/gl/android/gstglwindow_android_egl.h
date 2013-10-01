@@ -41,8 +41,7 @@ typedef struct _GstGLWindowAndroidEGLClass   GstGLWindowAndroidEGLClass;
 struct _GstGLWindowAndroidEGL {
   /*< private >*/
   GstGLWindow parent;
-  
-  GstGLEGL *egl;
+
   /* This is actually an ANativeWindow */
   EGLNativeWindowType native_window;
 
