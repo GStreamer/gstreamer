@@ -25,6 +25,8 @@
 #include "config.h"
 #endif
 
+#include <linux/input.h>
+
 #include "wayland_event_source.h"
 
 #include "../gstgl_fwd.h"
@@ -60,7 +62,21 @@ pointer_handle_enter (void *data, struct wl_pointer *pointer, uint32_t serial,
     struct wl_surface *surface, wl_fixed_t sx_w, wl_fixed_t sy_w)
 {
   GstGLWindowWaylandEGL *window_egl = data;
+  struct wl_buffer *buffer;
+  struct wl_cursor_image *image = NULL;
+
   window_egl->display.serial = serial;
+
+  if (window_egl->display.default_cursor) {
+    image = window_egl->display.default_cursor->images[0];
+    buffer = wl_cursor_image_get_buffer (image);
+    wl_pointer_set_cursor (pointer, serial,
+        window_egl->display.cursor_surface, image->hotspot_x, image->hotspot_y);
+    wl_surface_attach (window_egl->display.cursor_surface, buffer, 0, 0);
+    wl_surface_damage (window_egl->display.cursor_surface, 0, 0,
+        image->width, image->height);
+    wl_surface_commit (window_egl->display.cursor_surface);
+  }
 }
 
 static void
@@ -83,6 +99,10 @@ pointer_handle_button (void *data, struct wl_pointer *pointer, uint32_t serial,
 {
   GstGLWindowWaylandEGL *window_egl = data;
   window_egl->display.serial = serial;
+
+  if (button == BTN_LEFT && state_w == WL_POINTER_BUTTON_STATE_PRESSED)
+    wl_shell_surface_move (window_egl->window.shell_surface,
+        window_egl->display.seat, serial);
 }
 
 static void
@@ -145,14 +165,10 @@ handle_configure (void *data, struct wl_shell_surface *shell_surface,
     uint32_t edges, int32_t width, int32_t height)
 {
   GstGLWindowWaylandEGL *window_egl = data;
-  GstGLWindow *window = GST_GL_WINDOW (window_egl);
 
   GST_DEBUG ("configure event %ix%i", width, height);
 
   window_resize (window_egl, width, height);
-
-  if (window->resize)
-    window->resize (window->resize_data, width, height);
 }
 
 static void
@@ -222,7 +238,8 @@ static void
 registry_handle_global (void *data, struct wl_registry *registry,
     uint32_t name, const char *interface, uint32_t version)
 {
-  struct display *d = data;
+  GstGLWindowWaylandEGL *window_egl = data;
+  struct display *d = &window_egl->display;
 
   if (g_strcmp0 (interface, "wl_compositor") == 0) {
     d->compositor =
@@ -231,7 +248,7 @@ registry_handle_global (void *data, struct wl_registry *registry,
     d->shell = wl_registry_bind (registry, name, &wl_shell_interface, 1);
   } else if (g_strcmp0 (interface, "wl_seat") == 0) {
     d->seat = wl_registry_bind (registry, name, &wl_seat_interface, 1);
-    wl_seat_add_listener (d->seat, &seat_listener, d);
+    wl_seat_add_listener (d->seat, &seat_listener, window_egl);
   } else if (g_strcmp0 (interface, "wl_shm") == 0) {
     d->shm = wl_registry_bind (registry, name, &wl_shm_interface, 1);
     d->cursor_theme = wl_cursor_theme_load (NULL, 32, d->shm);
@@ -329,7 +346,7 @@ gst_gl_window_wayland_egl_open (GstGLWindow * window, GError ** error)
   window_egl->display.registry =
       wl_display_get_registry (window_egl->display.display);
   wl_registry_add_listener (window_egl->display.registry, &registry_listener,
-      &window_egl->display);
+      window_egl);
 
   wl_display_dispatch (window_egl->display.display);
 
@@ -431,6 +448,8 @@ gst_gl_window_wayland_egl_set_window_handle (GstGLWindow * window,
 static void
 window_resize (GstGLWindowWaylandEGL * window_egl, guint width, guint height)
 {
+  GstGLWindow *window = GST_GL_WINDOW (window_egl);
+
   GST_DEBUG ("resizing window from %ux%u to %ux%u",
       window_egl->window.window_width, window_egl->window.window_height, width,
       height);
@@ -438,6 +457,9 @@ window_resize (GstGLWindowWaylandEGL * window_egl, guint width, guint height)
   if (window_egl->window.native) {
     wl_egl_window_resize (window_egl->window.native, width, height, 0, 0);
   }
+
+  if (window->resize)
+    window->resize (window->resize_data, width, height);
 
   window_egl->window.window_width = width;
   window_egl->window.window_height = height;
@@ -466,9 +488,7 @@ draw_cb (gpointer data)
   if (window_egl->window.window_width != draw_data->width
       || window_egl->window.window_height != draw_data->height) {
     GST_DEBUG ("dimensions don't match, attempting resize");
-#if 0
     window_resize (window_egl, draw_data->width, draw_data->height);
-#endif
   }
 
   if (window->draw)
