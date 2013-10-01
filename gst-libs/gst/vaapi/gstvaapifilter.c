@@ -633,7 +633,7 @@ error:
 /* Determine the set of supported VPP operations by the specific
    filter, or known to this library if filter is NULL */
 static GPtrArray *
-ensure_operations(GstVaapiFilter *filter)
+get_operations(GstVaapiFilter *filter)
 {
 #if USE_VA_VPP
     GPtrArray *ops;
@@ -647,6 +647,27 @@ ensure_operations(GstVaapiFilter *filter)
     return filter ? get_operations_ordered(filter, ops) : ops;
 #endif
     return NULL;
+}
+
+/* Ensure the set of supported VPP operations is cached into the
+   GstVaapiFilter::operations member */
+static inline gboolean
+ensure_operations(GstVaapiFilter *filter)
+{
+    GPtrArray *ops;
+
+    if (!filter)
+        return FALSE;
+
+    if (filter->operations)
+        return TRUE;
+
+    ops = get_operations(filter);
+    if (!ops)
+        return FALSE;
+
+    g_ptr_array_unref(ops);
+    return TRUE;
 }
 
 /* Find whether the VPP operation is supported or not */
@@ -1092,11 +1113,7 @@ gst_vaapi_filter_replace(GstVaapiFilter **old_filter_ptr,
 GPtrArray *
 gst_vaapi_filter_get_operations(GstVaapiFilter *filter)
 {
-#if USE_VA_VPP
-    return ensure_operations(filter);
-#else
-    return NULL;
-#endif
+    return get_operations(filter);
 }
 
 /**
