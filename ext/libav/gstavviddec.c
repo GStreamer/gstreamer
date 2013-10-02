@@ -1515,6 +1515,15 @@ gst_ffmpegviddec_stop (GstVideoDecoder * decoder)
     gst_video_codec_state_unref (ffmpegdec->output_state);
   ffmpegdec->output_state = NULL;
 
+  ffmpegdec->ctx_width = 0;
+  ffmpegdec->ctx_height = 0;
+  ffmpegdec->ctx_ticks = 0;
+  ffmpegdec->ctx_time_n = 0;
+  ffmpegdec->ctx_time_d = 0;
+  ffmpegdec->ctx_pix_fmt = 0;
+  ffmpegdec->ctx_par_n = 0;
+  ffmpegdec->ctx_par_d = 0;
+
   return TRUE;
 }
 
