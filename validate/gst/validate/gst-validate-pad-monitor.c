@@ -836,6 +836,16 @@ gst_validate_pad_monitor_check_first_buffer (GstValidatePadMonitor *
 }
 
 static void
+gst_validate_pad_monitor_check_eos (GstValidatePadMonitor *
+    pad_monitor, GstBuffer * buffer)
+{
+  if (G_UNLIKELY (pad_monitor->is_eos)) {
+    GST_VALIDATE_REPORT (pad_monitor, BUFFER_AFTER_EOS,
+          "Received buffer %" GST_PTR_FORMAT " after EOS", buffer);
+  }
+}
+
+static void
 gst_validate_pad_monitor_update_buffer_data (GstValidatePadMonitor *
     pad_monitor, GstBuffer * buffer)
 {
@@ -1463,6 +1473,7 @@ gst_validate_pad_monitor_chain_func (GstPad * pad, GstObject * parent,
 
   gst_validate_pad_monitor_check_first_buffer (pad_monitor, buffer);
   gst_validate_pad_monitor_update_buffer_data (pad_monitor, buffer);
+  gst_validate_pad_monitor_check_eos (pad_monitor, buffer);
 
   GST_VALIDATE_MONITOR_UNLOCK (pad_monitor);
   GST_VALIDATE_PAD_MONITOR_PARENT_UNLOCK (pad_monitor);
@@ -1475,6 +1486,9 @@ gst_validate_pad_monitor_chain_func (GstPad * pad, GstObject * parent,
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
 
   pad_monitor->last_flow_return = ret;
+  if (ret == GST_FLOW_EOS) {
+    pad_monitor->is_eos = ret;
+  }
   if (PAD_PARENT_IS_DEMUXER (pad_monitor))
     gst_validate_pad_monitor_check_aggregated_return (pad_monitor, ret);
 
@@ -1630,6 +1644,7 @@ gst_validate_pad_monitor_buffer_probe (GstPad * pad, GstBuffer * buffer,
 
   gst_validate_pad_monitor_check_first_buffer (monitor, buffer);
   gst_validate_pad_monitor_update_buffer_data (monitor, buffer);
+  gst_validate_pad_monitor_check_eos (monitor, buffer);
 
   if (PAD_PARENT_IS_DECODER (monitor) || PAD_PARENT_IS_ENCODER (monitor)) {
     GstClockTime tolerance = 0;

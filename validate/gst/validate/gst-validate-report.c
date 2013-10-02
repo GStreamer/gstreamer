@@ -120,6 +120,9 @@ gst_validate_report_load_issues (void)
       _("flow return from a 1:1 sink/src pad element is as simple as "
           "returning what downstream returned. For elements that have multiple "
           "src pads, flow returns should be properly combined"));
+  REGISTER_VALIDATE_ISSUE (ISSUE, BUFFER_AFTER_EOS,
+      _("buffer was received after EOS"),
+      _("a pad shouldn't receive any more buffers after it gets EOS"));
 
   REGISTER_VALIDATE_ISSUE (ISSUE, CAPS_IS_MISSING_FIELD,
       _("caps is missing a required field for its type"),
