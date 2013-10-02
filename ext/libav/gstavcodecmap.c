@@ -159,6 +159,22 @@ gst_ffmpeg_channel_layout_to_gst (guint64 channel_layout, gint channels,
   return TRUE;
 }
 
+static gboolean
+_gst_value_list_contains (const GValue * list, const GValue * value)
+{
+  guint i, n;
+  const GValue *tmp;
+
+  n = gst_value_list_get_size (list);
+  for (i = 0; i < n; i++) {
+    tmp = gst_value_list_get_value (list, i);
+    if (gst_value_compare (value, tmp) == GST_VALUE_EQUAL)
+      return TRUE;
+  }
+
+  return FALSE;
+}
+
 static void
 gst_ffmpeg_video_set_pix_fmts (GstCaps * caps, const enum AVPixelFormat *fmts)
 {
@@ -192,8 +208,7 @@ gst_ffmpeg_video_set_pix_fmts (GstCaps * caps, const enum AVPixelFormat *fmts)
     if (format != GST_VIDEO_FORMAT_UNKNOWN) {
       g_value_set_string (&v, gst_video_format_to_string (format));
       /* Only append values we don't have yet */
-      if (gst_value_list_get_size (&va) == 0
-          || !gst_value_can_intersect (&v, &va))
+      if (!_gst_value_list_contains (&va, &v))
         gst_value_list_append_value (&va, &v);
     }
     fmts++;
@@ -456,8 +471,7 @@ gst_ffmpeg_audio_set_sample_fmts (GstCaps * caps,
     if (format != GST_AUDIO_FORMAT_UNKNOWN) {
       g_value_set_string (&v, gst_audio_format_to_string (format));
       /* Only append values we don't have yet */
-      if (gst_value_list_get_size (&va) == 0
-          || !gst_value_can_intersect (&v, &va))
+      if (!_gst_value_list_contains (&va, &v))
         gst_value_list_append_value (&va, &v);
     }
     fmts++;
