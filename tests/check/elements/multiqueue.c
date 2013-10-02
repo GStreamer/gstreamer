@@ -739,7 +739,10 @@ multiqueue_suite (void)
   tcase_add_test (tc_chain, test_request_pads);
   tcase_add_test (tc_chain, test_request_pads_named);
 
-  tcase_add_test (tc_chain, test_output_order);
+  /* Disabled, The test (and not multiqueue itself) is racy.
+   * See https://bugzilla.gnome.org/show_bug.cgi?id=708661 */
+  if (0)
+    tcase_add_test (tc_chain, test_output_order);
 
   tcase_add_test (tc_chain, test_sparse_stream);
   return s;
