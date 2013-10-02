@@ -21,6 +21,7 @@
 #define __GST_VTENC_H__
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 
 #include "coremediactx.h"
 
@@ -72,6 +73,7 @@ struct _GstVTEnc
   gint negotiated_fps_n, negotiated_fps_d;
   gint caps_width, caps_height;
   gint caps_fps_n, caps_fps_d;
+  GstVideoInfo video_info;
   VTCompressionSessionRef session;
   CFMutableDictionaryRef options;
 
