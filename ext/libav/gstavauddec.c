@@ -441,6 +441,7 @@ caps_failed:
     GST_ELEMENT_ERROR (ffmpegdec, CORE, NEGOTIATION, (NULL),
         ("Could not set caps for libav decoder (%s), not fixed?",
             oclass->in_plugin->name));
+    memset (&ffmpegdec->info, 0, sizeof (ffmpegdec->info));
 
     return FALSE;
   }
