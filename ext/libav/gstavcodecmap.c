@@ -191,7 +191,10 @@ gst_ffmpeg_video_set_pix_fmts (GstCaps * caps, const enum AVPixelFormat *fmts)
     format = gst_ffmpeg_pixfmt_to_videoformat (*fmts);
     if (format != GST_VIDEO_FORMAT_UNKNOWN) {
       g_value_set_string (&v, gst_video_format_to_string (format));
-      gst_value_list_append_value (&va, &v);
+      /* Only append values we don't have yet */
+      if (gst_value_list_get_size (&va) == 0
+          || !gst_value_can_intersect (&v, &va))
+        gst_value_list_append_value (&va, &v);
     }
     fmts++;
   }
@@ -452,7 +455,10 @@ gst_ffmpeg_audio_set_sample_fmts (GstCaps * caps,
     format = gst_ffmpeg_smpfmt_to_audioformat (*fmts);
     if (format != GST_AUDIO_FORMAT_UNKNOWN) {
       g_value_set_string (&v, gst_audio_format_to_string (format));
-      gst_value_list_append_value (&va, &v);
+      /* Only append values we don't have yet */
+      if (gst_value_list_get_size (&va) == 0
+          || !gst_value_can_intersect (&v, &va))
+        gst_value_list_append_value (&va, &v);
     }
     fmts++;
   }
