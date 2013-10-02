@@ -947,7 +947,8 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
   /* calculate and update par now */
   gst_ffmpegviddec_update_par (ffmpegdec, in_info, out_info);
 
-  gst_video_decoder_negotiate (GST_VIDEO_DECODER (ffmpegdec));
+  if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (ffmpegdec)))
+    goto negotiate_failed;
 
   return TRUE;
 
@@ -956,6 +957,21 @@ unknown_format:
   {
     GST_ERROR_OBJECT (ffmpegdec,
         "decoder requires a video format unsupported by GStreamer");
+    return FALSE;
+  }
+negotiate_failed:
+  {
+    /* Reset so we try again next time even if force==FALSE */
+    ffmpegdec->ctx_width = 0;
+    ffmpegdec->ctx_height = 0;
+    ffmpegdec->ctx_ticks = 0;
+    ffmpegdec->ctx_time_n = 0;
+    ffmpegdec->ctx_time_d = 0;
+    ffmpegdec->ctx_pix_fmt = 0;
+    ffmpegdec->ctx_par_n = 0;
+    ffmpegdec->ctx_par_d = 0;
+
+    GST_ERROR_OBJECT (ffmpegdec, "negotiation failed");
     return FALSE;
   }
 }
