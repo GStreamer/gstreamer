@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2010, 2013 Ole André Vadla Ravnås <oleavr@soundrop.com>
+ * Copyright (C) 2013 Intel Corporation
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -45,7 +46,7 @@ typedef struct _GstVTEncFrame GstVTEncFrame;
 struct _GstVTEncFrame
 {
   GstBuffer *buf;
-  GstMapInfo map;
+  GstVideoFrame videoframe;
 };
 
 static GstElementClass *parent_class = NULL;
@@ -94,7 +95,8 @@ static VTStatus gst_vtenc_enqueue_buffer (void *data, int a2, int a3, int a4,
 static gboolean gst_vtenc_buffer_is_keyframe (GstVTEnc * self,
     CMSampleBufferRef sbuf);
 
-static GstVTEncFrame *gst_vtenc_frame_new (GstBuffer * buf);
+static GstVTEncFrame *gst_vtenc_frame_new (GstBuffer * buf,
+    GstVideoInfo * videoinfo);
 static void gst_vtenc_frame_free (GstVTEncFrame * frame);
 
 static void
@@ -116,7 +118,7 @@ gst_vtenc_base_init (GstVTEncClass * klass)
 
   gst_element_class_set_metadata (element_class, longname,
       "Codec/Encoder/Video", description,
-      "Ole André Vadla Ravnås <oleavr@soundrop.com>");
+      "Ole André Vadla Ravnås <oleavr@soundrop.com>, Dominik Röttsches <dominik.rottsches@intel.com>");
 
   g_free (longname);
   g_free (description);
@@ -197,6 +199,8 @@ gst_vtenc_init (GstVTEnc * self)
   /* These could be controlled by properties later */
   self->dump_properties = FALSE;
   self->dump_attributes = FALSE;
+
+  self->session = NULL;
 }
 
 static gint
@@ -376,6 +380,9 @@ gst_vtenc_sink_setcaps (GstVTEnc * self, GstCaps * caps)
   gst_structure_get_int (structure, "height", &self->negotiated_height);
   gst_structure_get_fraction (structure, "framerate",
       &self->negotiated_fps_n, &self->negotiated_fps_d);
+
+  if (!gst_video_info_from_caps (&self->video_info, caps))
+    return FALSE;
 
   gst_vtenc_destroy_session (self, &self->session);
 
@@ -760,8 +767,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
 
   self->cur_inbuf = buf;
 
-  ts = CMTimeMake
-      (GST_TIME_AS_MSECONDS (GST_BUFFER_TIMESTAMP (buf)), 1000);
+  ts = CMTimeMake (GST_TIME_AS_MSECONDS (GST_BUFFER_TIMESTAMP (buf)), 1000);
   duration = CMTimeMake
       (GST_TIME_AS_MSECONDS (GST_BUFFER_DURATION (buf)), 1000);
 
@@ -774,16 +780,45 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
     GstVTEncFrame *frame;
     CVReturn cv_ret;
 
-    frame = gst_vtenc_frame_new (buf);
-    cv_ret = CVPixelBufferCreateWithBytes (NULL,
-        self->negotiated_width, self->negotiated_height,
-        kCVPixelFormatType_422YpCbCr8, frame->map.data,
-        self->negotiated_width * 2,
-        (CVPixelBufferReleaseBytesCallback) gst_vtenc_frame_free, frame,
-        NULL, &pbuf);
-    if (cv_ret != kCVReturnSuccess) {
-      gst_vtenc_frame_free (frame);
+    frame = gst_vtenc_frame_new (buf, &self->video_info);
+    if (!frame)
       goto cv_error;
+
+    {
+      const size_t num_planes = GST_VIDEO_FRAME_N_PLANES (&frame->videoframe);
+      void *plane_base_addresses[num_planes];
+      size_t plane_widths[num_planes];
+      size_t plane_heights[num_planes];
+      size_t plane_bytes_per_row[num_planes];
+      size_t i;
+
+      for (i = 0; i < num_planes; i++) {
+        plane_base_addresses[i] =
+            GST_VIDEO_FRAME_PLANE_DATA (&frame->videoframe, i);
+        plane_widths[i] = GST_VIDEO_FRAME_COMP_WIDTH (&frame->videoframe, i);
+        plane_heights[i] = GST_VIDEO_FRAME_COMP_HEIGHT (&frame->videoframe, i);
+        plane_bytes_per_row[i] =
+            GST_VIDEO_FRAME_COMP_STRIDE (&frame->videoframe, i);
+        plane_bytes_per_row[i] =
+            GST_VIDEO_FRAME_COMP_STRIDE (&frame->videoframe, i);
+      }
+
+      cv_ret = CVPixelBufferCreateWithPlanarBytes (NULL,
+          self->negotiated_width, self->negotiated_height,
+          kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
+          NULL,
+          GST_VIDEO_FRAME_SIZE (&frame->videoframe),
+          num_planes,
+          plane_base_addresses,
+          plane_widths,
+          plane_heights,
+          plane_bytes_per_row,
+          (CVPixelBufferReleaseBytesCallback) gst_vtenc_frame_free, frame,
+          NULL, &pbuf);
+      if (cv_ret != kCVReturnSuccess) {
+        gst_vtenc_frame_free (frame);
+        goto cv_error;
+      }
     }
   }
 
@@ -884,8 +919,7 @@ gst_vtenc_buffer_is_keyframe (GstVTEnc * self, CMSampleBufferRef sbuf)
   gboolean result = FALSE;
   CFArrayRef attachments_for_sample;
 
-  attachments_for_sample =
-      CMSampleBufferGetSampleAttachmentsArray (sbuf, 0);
+  attachments_for_sample = CMSampleBufferGetSampleAttachmentsArray (sbuf, 0);
   if (attachments_for_sample != NULL) {
     CFDictionaryRef attachments;
     CFBooleanRef depends_on_others;
@@ -900,13 +934,17 @@ gst_vtenc_buffer_is_keyframe (GstVTEnc * self, CMSampleBufferRef sbuf)
 }
 
 static GstVTEncFrame *
-gst_vtenc_frame_new (GstBuffer * buf)
+gst_vtenc_frame_new (GstBuffer * buf, GstVideoInfo * video_info)
 {
   GstVTEncFrame *frame;
 
   frame = g_slice_new (GstVTEncFrame);
   frame->buf = gst_buffer_ref (buf);
-  gst_buffer_map (buf, &frame->map, GST_MAP_READ);
+  if (!gst_video_frame_map (&frame->videoframe, video_info, buf, GST_MAP_READ)) {
+    gst_buffer_unref (frame->buf);
+    g_slice_free (GstVTEncFrame, frame);
+    return NULL;
+  }
 
   return frame;
 }
@@ -914,7 +952,7 @@ gst_vtenc_frame_new (GstBuffer * buf)
 static void
 gst_vtenc_frame_free (GstVTEncFrame * frame)
 {
-  gst_buffer_unmap (frame->buf, &frame->map);
+  gst_video_frame_unmap (&frame->videoframe);
   gst_buffer_unref (frame->buf);
   g_slice_free (GstVTEncFrame, frame);
 }
