@@ -3468,7 +3468,7 @@ gst_matroska_demux_parse_blockgroup_or_simpleblock (GstMatroskaDemux * demux,
       segment_event = gst_event_new_segment (segment);
       if (demux->segment_seqnum)
         gst_event_set_seqnum (segment_event, demux->segment_seqnum);
-      gst_matroska_demux_send_event (demux, gst_event_new_segment (segment));
+      gst_matroska_demux_send_event (demux, segment_event);
       demux->need_segment = FALSE;
       demux->segment_seqnum = 0;
     }
