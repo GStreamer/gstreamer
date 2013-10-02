@@ -99,6 +99,9 @@ static GstVTEncFrame *gst_vtenc_frame_new (GstBuffer * buf,
     GstVideoInfo * videoinfo);
 static void gst_vtenc_frame_free (GstVTEncFrame * frame);
 
+static GstStaticCaps sink_caps =
+GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ NV12, I420 }"));
+
 static void
 gst_vtenc_base_init (GstVTEncClass * klass)
 {
@@ -124,14 +127,7 @@ gst_vtenc_base_init (GstVTEncClass * klass)
   g_free (description);
 
   sink_template = gst_pad_template_new ("sink",
-      GST_PAD_SINK,
-      GST_PAD_ALWAYS,
-      gst_caps_new_simple ("video/x-raw",
-          "format", G_TYPE_STRING, "NV12",
-          "width", GST_TYPE_INT_RANGE, min_width, max_width,
-          "height", GST_TYPE_INT_RANGE, min_height, max_height,
-          "framerate", GST_TYPE_FRACTION_RANGE,
-          min_fps_n, min_fps_d, max_fps_n, max_fps_d, NULL));
+      GST_PAD_SINK, GST_PAD_ALWAYS, gst_static_caps_get (&sink_caps));
   gst_element_class_add_pad_template (element_class, sink_template);
 
   src_caps = gst_caps_new_simple (codec_details->mimetype,
@@ -537,8 +533,6 @@ gst_vtenc_create_session (GstVTEnc * self)
 
   pb_attrs = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
-  gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferPixelFormatTypeKey,
-      kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange);
   gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferWidthKey,
       self->negotiated_width);
   gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferHeightKey,
@@ -790,6 +784,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
       size_t plane_widths[num_planes];
       size_t plane_heights[num_planes];
       size_t plane_bytes_per_row[num_planes];
+      OSType pixel_format_type;
       size_t i;
 
       for (i = 0; i < num_planes; i++) {
@@ -803,9 +798,20 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
             GST_VIDEO_FRAME_COMP_STRIDE (&frame->videoframe, i);
       }
 
+      switch (GST_VIDEO_INFO_FORMAT (&self->video_info)) {
+        case GST_VIDEO_FORMAT_I420:
+          pixel_format_type = kCVPixelFormatType_420YpCbCr8Planar;
+          break;
+        case GST_VIDEO_FORMAT_NV12:
+          pixel_format_type = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+          break;
+        default:
+          goto cv_error;
+      }
+
       cv_ret = CVPixelBufferCreateWithPlanarBytes (NULL,
           self->negotiated_width, self->negotiated_height,
-          kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange,
+          pixel_format_type,
           NULL,
           GST_VIDEO_FRAME_SIZE (&frame->videoframe),
           num_planes,
