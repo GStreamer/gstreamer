@@ -1,6 +1,7 @@
 /* 
  * Copyright (C) 2012 Collabora Ltd.
  *     Author: Sebastian Dröge <sebastian.droege@collabora.co.uk>
+ * Copyright (C) 2013 Sebastian Dröge <slomo@circular-chaos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -25,6 +26,8 @@
 
 #include "gstopenjpegenc.h"
 
+#include <string.h>
+
 GST_DEBUG_CATEGORY_STATIC (gst_openjpeg_enc_debug);
 #define GST_CAT_DEFAULT gst_openjpeg_enc_debug
 
@@ -33,11 +36,11 @@ static GType
 gst_openjpeg_enc_progression_order_get_type (void)
 {
   static const GEnumValue values[] = {
-    {LRCP, "LRCP", "lrcp"},
-    {RLCP, "RLCP", "rlcp"},
-    {RPCL, "RPCL", "rpcl"},
-    {PCRL, "PCRL", "pcrl"},
-    {CPRL, "CPRL", "crpl"},
+    {OPJ_LRCP, "LRCP", "lrcp"},
+    {OPJ_RLCP, "RLCP", "rlcp"},
+    {OPJ_RPCL, "RPCL", "rpcl"},
+    {OPJ_PCRL, "PCRL", "pcrl"},
+    {OPJ_CPRL, "CPRL", "crpl"},
     {0, NULL, NULL}
   };
   static volatile GType id = 0;
@@ -67,7 +70,7 @@ enum
 
 #define DEFAULT_NUM_LAYERS 1
 #define DEFAULT_NUM_RESOLUTIONS 6
-#define DEFAULT_PROGRESSION_ORDER LRCP
+#define DEFAULT_PROGRESSION_ORDER OPJ_LRCP
 #define DEFAULT_TILE_OFFSET_X 0
 #define DEFAULT_TILE_OFFSET_Y 0
 #define DEFAULT_TILE_WIDTH 0
@@ -531,7 +534,7 @@ fill_image_planar16_1 (opj_image_t * image, GstVideoFrame * frame)
   w = GST_VIDEO_FRAME_COMP_WIDTH (frame, 0);
   h = GST_VIDEO_FRAME_COMP_HEIGHT (frame, 0);
   data_in = (guint16 *) GST_VIDEO_FRAME_COMP_DATA (frame, 0);
-  sstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0);
+  sstride = GST_VIDEO_FRAME_PLANE_STRIDE (frame, 0) / 2;
   data_out = image->comps[0].data;
 
   for (y = 0; y < h; y++) {
@@ -565,13 +568,13 @@ gst_openjpeg_enc_set_format (GstVideoEncoder * encoder,
   allowed_caps = gst_caps_truncate (allowed_caps);
   s = gst_caps_get_structure (allowed_caps, 0);
   if (gst_structure_has_name (s, "image/jp2")) {
-    self->codec_format = CODEC_JP2;
+    self->codec_format = OPJ_CODEC_JP2;
     self->is_jp2c = FALSE;
   } else if (gst_structure_has_name (s, "image/x-j2c")) {
-    self->codec_format = CODEC_J2K;
+    self->codec_format = OPJ_CODEC_J2K;
     self->is_jp2c = TRUE;
   } else if (gst_structure_has_name (s, "image/x-jpc")) {
-    self->codec_format = CODEC_J2K;
+    self->codec_format = OPJ_CODEC_J2K;
     self->is_jp2c = FALSE;
   } else {
     g_return_val_if_reached (FALSE);
@@ -676,11 +679,11 @@ gst_openjpeg_enc_fill_image (GstOpenJPEGEnc * self, GstVideoFrame * frame)
   }
 
   if ((frame->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_YUV))
-    colorspace = CLRSPC_SYCC;
+    colorspace = OPJ_CLRSPC_SYCC;
   else if ((frame->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_RGB))
-    colorspace = CLRSPC_SRGB;
+    colorspace = OPJ_CLRSPC_SRGB;
   else if ((frame->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_GRAY))
-    colorspace = CLRSPC_GRAY;
+    colorspace = OPJ_CLRSPC_GRAY;
   else
     g_return_val_if_reached (NULL);
 
@@ -697,7 +700,7 @@ gst_openjpeg_enc_fill_image (GstOpenJPEGEnc * self, GstVideoFrame * frame)
 }
 
 static void
-gst_openjpeg_dec_opj_error (const char *msg, void *userdata)
+gst_openjpeg_enc_opj_error (const char *msg, void *userdata)
 {
   GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (userdata);
   gchar *trimmed = g_strchomp (g_strdup (msg));
@@ -706,7 +709,7 @@ gst_openjpeg_dec_opj_error (const char *msg, void *userdata)
 }
 
 static void
-gst_openjpeg_dec_opj_warning (const char *msg, void *userdata)
+gst_openjpeg_enc_opj_warning (const char *msg, void *userdata)
 {
   GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (userdata);
   gchar *trimmed = g_strchomp (g_strdup (msg));
@@ -715,7 +718,7 @@ gst_openjpeg_dec_opj_warning (const char *msg, void *userdata)
 }
 
 static void
-gst_openjpeg_dec_opj_info (const char *msg, void *userdata)
+gst_openjpeg_enc_opj_info (const char *msg, void *userdata)
 {
   GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (userdata);
   gchar *trimmed = g_strchomp (g_strdup (msg));
@@ -723,19 +726,93 @@ gst_openjpeg_dec_opj_info (const char *msg, void *userdata)
   g_free (trimmed);
 }
 
+
+#ifndef HAVE_OPENJPEG_1
+typedef struct
+{
+  guint8 *data;
+  guint allocsize;
+  guint offset;
+  guint size;
+} MemStream;
+
+static OPJ_SIZE_T
+read_fn (void *p_buffer, OPJ_SIZE_T p_nb_bytes, void *p_user_data)
+{
+  g_return_val_if_reached (-1);
+}
+
+static OPJ_SIZE_T
+write_fn (void *p_buffer, OPJ_SIZE_T p_nb_bytes, void *p_user_data)
+{
+  MemStream *mstream = p_user_data;
+
+  if (mstream->offset + p_nb_bytes > mstream->allocsize) {
+    while (mstream->offset + p_nb_bytes > mstream->allocsize)
+      mstream->allocsize *= 2;
+    mstream->data = g_realloc (mstream->data, mstream->allocsize);
+  }
+
+  memcpy (mstream->data + mstream->offset, p_buffer, p_nb_bytes);
+
+  if (mstream->offset + p_nb_bytes > mstream->size)
+    mstream->size = mstream->offset + p_nb_bytes;
+  mstream->offset += p_nb_bytes;
+
+  return p_nb_bytes;
+}
+
+static OPJ_OFF_T
+skip_fn (OPJ_OFF_T p_nb_bytes, void *p_user_data)
+{
+  MemStream *mstream = p_user_data;
+
+  if (mstream->offset + p_nb_bytes > mstream->allocsize) {
+    while (mstream->offset + p_nb_bytes > mstream->allocsize)
+      mstream->allocsize *= 2;
+    mstream->data = g_realloc (mstream->data, mstream->allocsize);
+  }
+
+  if (mstream->offset + p_nb_bytes > mstream->size)
+    mstream->size = mstream->offset + p_nb_bytes;
+
+  mstream->offset += p_nb_bytes;
+
+  return p_nb_bytes;
+}
+
+static OPJ_BOOL
+seek_fn (OPJ_OFF_T p_nb_bytes, void *p_user_data)
+{
+  MemStream *mstream = p_user_data;
+
+  if (p_nb_bytes > mstream->size)
+    return OPJ_FALSE;
+
+  mstream->offset = p_nb_bytes;
+
+  return OPJ_TRUE;
+}
+#endif
+
 static GstFlowReturn
 gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame)
 {
   GstOpenJPEGEnc *self = GST_OPENJPEG_ENC (encoder);
   GstFlowReturn ret = GST_FLOW_OK;
-  GstMapInfo map;
+#ifdef HAVE_OPENJPEG_1
   opj_cinfo_t *enc;
-  opj_event_mgr_t callbacks;
+  GstMapInfo map;
+  guint length;
   opj_cio_t *io;
+#else
+  opj_codec_t *enc;
+  opj_stream_t *stream;
+  MemStream mstream;
+#endif
   opj_image_t *image;
   GstVideoFrame vframe;
-  gint length;
 
   GST_DEBUG_OBJECT (self, "Handling frame");
 
@@ -743,15 +820,30 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
   if (!enc)
     goto initialization_error;
 
+#ifdef HAVE_OPENJPEG_1
   if (G_UNLIKELY (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >=
           GST_LEVEL_TRACE)) {
-    callbacks.error_handler = gst_openjpeg_dec_opj_error;
-    callbacks.warning_handler = gst_openjpeg_dec_opj_warning;
-    callbacks.info_handler = gst_openjpeg_dec_opj_info;
+    opj_event_mgr_t callbacks;
+
+    callbacks.error_handler = gst_openjpeg_enc_opj_error;
+    callbacks.warning_handler = gst_openjpeg_enc_opj_warning;
+    callbacks.info_handler = gst_openjpeg_enc_opj_info;
     opj_set_event_mgr ((opj_common_ptr) enc, &callbacks, self);
   } else {
     opj_set_event_mgr ((opj_common_ptr) enc, NULL, NULL);
   }
+#else
+  if (G_UNLIKELY (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >=
+          GST_LEVEL_TRACE)) {
+    opj_set_info_handler (enc, gst_openjpeg_enc_opj_info, self);
+    opj_set_warning_handler (enc, gst_openjpeg_enc_opj_warning, self);
+    opj_set_error_handler (enc, gst_openjpeg_enc_opj_error, self);
+  } else {
+    opj_set_info_handler (enc, NULL, NULL);
+    opj_set_warning_handler (enc, NULL, NULL);
+    opj_set_error_handler (enc, NULL, NULL);
+  }
+#endif
 
   if (!gst_video_frame_map (&vframe, &self->input_state->info,
           frame->input_buffer, GST_MAP_READ))
@@ -764,6 +856,7 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
 
   opj_setup_encoder (enc, &self->params, image);
 
+#ifdef HAVE_OPENJPEG_1
   io = opj_cio_open ((opj_common_ptr) enc, NULL, 0);
   if (!io)
     goto open_error;
@@ -792,6 +885,54 @@ gst_openjpeg_enc_handle_frame (GstVideoEncoder * encoder,
 
   opj_cio_close (io);
   opj_destroy_compress (enc);
+#else
+  stream = opj_stream_create (4096, OPJ_FALSE);
+  if (!stream)
+    goto open_error;
+
+  mstream.allocsize = 4096;
+  mstream.data = g_malloc (mstream.allocsize);
+  mstream.offset = 0;
+  mstream.size = 0;
+
+  opj_stream_set_read_function (stream, read_fn);
+  opj_stream_set_write_function (stream, write_fn);
+  opj_stream_set_skip_function (stream, skip_fn);
+  opj_stream_set_seek_function (stream, seek_fn);
+  opj_stream_set_user_data (stream, &mstream);
+  opj_stream_set_user_data_length (stream, mstream.size);
+
+  if (!opj_start_compress (enc, image, stream))
+    goto encode_error;
+
+  if (!opj_encode (enc, stream))
+    goto encode_error;
+
+  if (!opj_end_compress (enc, stream))
+    goto encode_error;
+
+  opj_image_destroy (image);
+  opj_stream_destroy (stream);
+  opj_destroy_codec (enc);
+
+  frame->output_buffer = gst_buffer_new ();
+
+  if (self->is_jp2c) {
+    GstMapInfo map;
+    GstMemory *mem;
+
+    mem = gst_allocator_alloc (NULL, 8, NULL);
+    gst_memory_map (mem, &map, GST_MAP_WRITE);
+    GST_WRITE_UINT32_BE (map.data, mstream.size + 8);
+    GST_WRITE_UINT32_BE (map.data + 4, GST_MAKE_FOURCC ('j', 'p', '2', 'c'));
+    gst_memory_unmap (mem, &map);
+    gst_buffer_append_memory (frame->output_buffer, mem);
+  }
+
+  gst_buffer_append_memory (frame->output_buffer,
+      gst_memory_new_wrapped (0, mstream.data, mstream.allocsize, 0,
+          mstream.size, NULL, (GDestroyNotify) g_free));
+#endif
 
   ret = gst_video_encoder_finish_frame (encoder, frame);
 
@@ -806,7 +947,11 @@ initialization_error:
   }
 map_read_error:
   {
+#ifdef HAVE_OPENJPEG_1
     opj_destroy_compress (enc);
+#else
+    opj_destroy_codec (enc);
+#endif
     gst_video_codec_frame_unref (frame);
 
     GST_ELEMENT_ERROR (self, CORE, FAILED,
@@ -815,7 +960,11 @@ map_read_error:
   }
 fill_image_error:
   {
+#ifdef HAVE_OPENJPEG_1
     opj_destroy_compress (enc);
+#else
+    opj_destroy_codec (enc);
+#endif
     gst_video_frame_unmap (&vframe);
     gst_video_codec_frame_unref (frame);
 
@@ -826,7 +975,11 @@ fill_image_error:
 open_error:
   {
     opj_image_destroy (image);
+#ifdef HAVE_OPENJPEG_1
     opj_destroy_compress (enc);
+#else
+    opj_destroy_codec (enc);
+#endif
     gst_video_codec_frame_unref (frame);
 
     GST_ELEMENT_ERROR (self, LIBRARY, INIT,
@@ -835,15 +988,23 @@ open_error:
   }
 encode_error:
   {
+#ifdef HAVE_OPENJPEG_1
     opj_cio_close (io);
     opj_image_destroy (image);
     opj_destroy_compress (enc);
+#else
+    opj_stream_destroy (stream);
+    g_free (mstream.data);
+    opj_image_destroy (image);
+    opj_destroy_codec (enc);
+#endif
     gst_video_codec_frame_unref (frame);
 
     GST_ELEMENT_ERROR (self, STREAM, ENCODE,
         ("Failed to encode OpenJPEG stream"), (NULL));
     return GST_FLOW_ERROR;
   }
+#ifdef HAVE_OPENJPEG_1
 allocate_error:
   {
     opj_cio_close (io);
@@ -854,6 +1015,7 @@ allocate_error:
         ("Failed to allocate output buffer"), (NULL));
     return ret;
   }
+#endif
 }
 
 static gboolean

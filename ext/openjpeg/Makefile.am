@@ -11,4 +11,5 @@ libgstopenjpeg_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
 	gstopenjpegdec.h \
-	gstopenjpegenc.h
+	gstopenjpegenc.h \
+	gstopenjpeg.h

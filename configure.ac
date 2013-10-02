@@ -1761,10 +1761,17 @@ dnl *** OpenJPEG ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENJPEG, true)
 AG_GST_CHECK_FEATURE(OPENJPEG, [openjpeg library], openjpeg, [
   HAVE_OPENJPEG="no"
-  PKG_CHECK_MODULES(OPENJPEG, libopenjpeg1,
-    HAVE_OPENJPEG="yes",
-    AG_GST_CHECK_LIBHEADER(OPENJPEG, openjpeg, opj_version, , openjpeg.h, OPENJPEG_LIBS="-lopenjpeg")
-  )
+  
+  AG_GST_CHECK_LIBHEADER(OPENJPEG, openjp2, opj_version, ,openjpeg-2.0/openjpeg.h, OPENJPEG_LIBS="-lopenjp2")
+  if test x"$HAVE_OPENJPEG" = x"no"; then
+    PKG_CHECK_MODULES(OPENJPEG, libopenjpeg1,
+      HAVE_OPENJPEG="yes",
+      AG_GST_CHECK_LIBHEADER(OPENJPEG, openjpeg, opj_version, , openjpeg.h, OPENJPEG_LIBS="-lopenjpeg")
+    )
+    if test x"$HAVE_OPENJPEG" = x"yes"; then
+      AC_DEFINE([HAVE_OPENJPEG_1], 1, [Define if OpenJPEG 1 is used])
+    fi
+  fi
   AC_SUBST(OPENJPEG_CFLAGS)
   AC_SUBST(OPENJPEG_LIBS)
 ])

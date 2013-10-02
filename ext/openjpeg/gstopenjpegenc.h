@@ -25,7 +25,7 @@
 #include <gst/gst.h>
 #include <gst/video/video.h>
 
-#include <openjpeg.h>
+#include "gstopenjpeg.h"
 
 G_BEGIN_DECLS
 
