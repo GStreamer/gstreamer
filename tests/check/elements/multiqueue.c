@@ -741,8 +741,7 @@ multiqueue_suite (void)
 
   /* Disabled, The test (and not multiqueue itself) is racy.
    * See https://bugzilla.gnome.org/show_bug.cgi?id=708661 */
-  if (0)
-    tcase_add_test (tc_chain, test_output_order);
+  tcase_skip_broken_test (tc_chain, test_output_order);
 
   tcase_add_test (tc_chain, test_sparse_stream);
   return s;
