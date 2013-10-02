@@ -51,6 +51,22 @@ gboolean      gst_codec_utils_h264_caps_set_level_and_profile (GstCaps      * ca
                                                                const guint8 * sps,
                                                                guint          len);
 
+/* H.265 */
+
+const gchar * gst_codec_utils_h265_get_profile                     (const guint8 * profile_tier_level,
+                                                                    guint len);
+
+const gchar * gst_codec_utils_h265_get_tier                        (const guint8 * profile_tier_level,
+                                                                    guint len);
+
+const gchar * gst_codec_utils_h265_get_level                       (const guint8 * profile_tier_level,
+                                                                    guint len);
+
+guint8        gst_codec_utils_h265_get_level_idc                   (const gchar  * level);
+
+gboolean      gst_codec_utils_h265_caps_set_level_tier_and_profile (GstCaps      * caps,
+                                                                    const guint8 * profile_tier_level,
+                                                                    guint          len);
 /* MPEG-4 part 2 */
 
 const gchar * gst_codec_utils_mpeg4video_get_profile (const guint8 * vis_obj_seq, guint len);
