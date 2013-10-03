@@ -602,8 +602,7 @@ public class MediaInfo.Info : Box
     add_table_rows_for_caps (table, row, "Codec:", sinfo.get_caps ());
     row+=2;
     
-    str = "%u / %u bits/second".printf (vinfo.get_bitrate(), vinfo.get_max_bitrate());
-    add_table_row_for_string (table, row, "Bitrate:", str);
+    add_table_row_for_bitrates (table, row, vinfo.get_bitrate(), vinfo.get_max_bitrate());
     row++;
 
     // add named resolutions: (640x480=VGA)
@@ -654,8 +653,7 @@ public class MediaInfo.Info : Box
     add_table_rows_for_caps (table, row, "Codec:", sinfo.get_caps ());
     row+=2;
 
-    str = "%u / %u bits/second".printf (ainfo.get_bitrate(),ainfo.get_max_bitrate());
-    add_table_row_for_string (table, row, "Bitrate:", str);
+    add_table_row_for_bitrates (table, row, ainfo.get_bitrate(), ainfo.get_max_bitrate());
     row++;
 
     str = "%u samples/second".printf (ainfo.get_sample_rate());
@@ -759,6 +757,25 @@ public class MediaInfo.Info : Box
     label.set_use_markup (true);
     set_wikilink (label, caps); 
     table.attach (label, 1, 2, row, row+1, fill_exp, 0, 3, 1);
+  }
+  
+  private void add_table_row_for_bitrates (Table table, uint row, uint br, uint mbr) {
+    string str;
+    
+    if (br == mbr) {
+      mbr = 0; // no point in printing this as a range
+    }
+    
+    if (mbr != 0) {
+      str = "%.2f ... %.2f kbit/second".printf (br/1024.0, mbr/1024.0);
+    } else {
+      if (br != 0) {
+        str = "%.2f kbit/second".printf (br/1024.0);
+      } else {
+        str = "unknown";
+      }
+    }
+    add_table_row_for_string (table, row, "Bitrate:", str);
   }
   
   private void add_table_row_for_string (Table table, uint row, string title, string? str) {
