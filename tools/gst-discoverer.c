@@ -51,6 +51,34 @@ my_g_string_append_printf (GString * str, int depth, const gchar * format, ...)
   va_end (args);
 }
 
+static void
+gst_stream_information_to_string (GstDiscovererStreamInfo * info, GString * s,
+    gint depth)
+{
+  gchar *tmp;
+  GstCaps *caps;
+  const GstStructure *misc;
+
+  my_g_string_append_printf (s, depth, "Codec:\n");
+  caps = gst_discoverer_stream_info_get_caps (info);
+  tmp = gst_caps_to_string (caps);
+  gst_caps_unref (caps);
+  my_g_string_append_printf (s, depth, "  %s\n", tmp);
+  g_free (tmp);
+
+  my_g_string_append_printf (s, depth, "Additional info:\n");
+  if ((misc = gst_discoverer_stream_info_get_misc (info))) {
+    tmp = gst_structure_to_string (misc);
+    my_g_string_append_printf (s, depth, "  %s\n", tmp);
+    g_free (tmp);
+  } else {
+    my_g_string_append_printf (s, depth, "  None\n");
+  }
+
+  my_g_string_append_printf (s, depth, "Stream ID: %s\n",
+      gst_discoverer_stream_info_get_stream_id (info));
+}
+
 static gchar *
 gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
     gint depth)
@@ -61,30 +89,12 @@ gst_stream_audio_information_to_string (GstDiscovererStreamInfo * info,
   const gchar *ctmp;
   int len = 400;
   const GstTagList *tags;
-  GstCaps *caps;
 
   g_return_val_if_fail (info != NULL, NULL);
 
   s = g_string_sized_new (len);
 
-  my_g_string_append_printf (s, depth, "Codec:\n");
-  caps = gst_discoverer_stream_info_get_caps (info);
-  tmp = gst_caps_to_string (caps);
-  gst_caps_unref (caps);
-  my_g_string_append_printf (s, depth, "  %s\n", tmp);
-  g_free (tmp);
-
-  my_g_string_append_printf (s, depth, "Additional info:\n");
-  if (gst_discoverer_stream_info_get_misc (info)) {
-    tmp = gst_structure_to_string (gst_discoverer_stream_info_get_misc (info));
-    my_g_string_append_printf (s, depth, "  %s\n", tmp);
-    g_free (tmp);
-  } else {
-    my_g_string_append_printf (s, depth, "  None\n");
-  }
-
-  my_g_string_append_printf (s, depth, "Stream ID: %s\n",
-      gst_discoverer_stream_info_get_stream_id (info));
+  gst_stream_information_to_string (info, s, depth);
 
   audio_info = (GstDiscovererAudioInfo *) info;
   ctmp = gst_discoverer_audio_info_get_language (audio_info);
@@ -125,33 +135,13 @@ gst_stream_video_information_to_string (GstDiscovererStreamInfo * info,
   GString *s;
   gchar *tmp;
   int len = 500;
-  const GstStructure *misc;
   const GstTagList *tags;
-  GstCaps *caps;
 
   g_return_val_if_fail (info != NULL, NULL);
 
   s = g_string_sized_new (len);
 
-  my_g_string_append_printf (s, depth, "Codec:\n");
-  caps = gst_discoverer_stream_info_get_caps (info);
-  tmp = gst_caps_to_string (caps);
-  gst_caps_unref (caps);
-  my_g_string_append_printf (s, depth, "  %s\n", tmp);
-  g_free (tmp);
-
-  my_g_string_append_printf (s, depth, "Additional info:\n");
-  misc = gst_discoverer_stream_info_get_misc (info);
-  if (misc) {
-    tmp = gst_structure_to_string (misc);
-    my_g_string_append_printf (s, depth, "  %s\n", tmp);
-    g_free (tmp);
-  } else {
-    my_g_string_append_printf (s, depth, "  None\n");
-  }
-
-  my_g_string_append_printf (s, depth, "Stream ID: %s\n",
-      gst_discoverer_stream_info_get_stream_id (info));
+  gst_stream_information_to_string (info, s, depth);
 
   video_info = (GstDiscovererVideoInfo *) info;
   my_g_string_append_printf (s, depth, "Width: %u\n",
@@ -202,30 +192,12 @@ gst_stream_subtitle_information_to_string (GstDiscovererStreamInfo * info,
   const gchar *ctmp;
   int len = 400;
   const GstTagList *tags;
-  GstCaps *caps;
 
   g_return_val_if_fail (info != NULL, NULL);
 
   s = g_string_sized_new (len);
 
-  my_g_string_append_printf (s, depth, "Codec:\n");
-  caps = gst_discoverer_stream_info_get_caps (info);
-  tmp = gst_caps_to_string (caps);
-  gst_caps_unref (caps);
-  my_g_string_append_printf (s, depth, "  %s\n", tmp);
-  g_free (tmp);
-
-  my_g_string_append_printf (s, depth, "Additional info:\n");
-  if (gst_discoverer_stream_info_get_misc (info)) {
-    tmp = gst_structure_to_string (gst_discoverer_stream_info_get_misc (info));
-    my_g_string_append_printf (s, depth, "  %s\n", tmp);
-    g_free (tmp);
-  } else {
-    my_g_string_append_printf (s, depth, "  None\n");
-  }
-
-  my_g_string_append_printf (s, depth, "Stream ID: %s\n",
-      gst_discoverer_stream_info_get_stream_id (info));
+  gst_stream_information_to_string (info, s, depth);
 
   subtitle_info = (GstDiscovererSubtitleInfo *) info;
   ctmp = gst_discoverer_subtitle_info_get_language (subtitle_info);
