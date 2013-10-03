@@ -69,6 +69,7 @@ public class MediaInfo.Preview : DrawingArea {
     if (ratio != 0.0) {
       minimal_width = 16;
       natural_width = (int)(alloc_height * ratio);
+      natural_width = int.max (minimal_width, natural_width);
     } else {
       minimal_width = natural_width = 0;
     }
@@ -79,6 +80,7 @@ public class MediaInfo.Preview : DrawingArea {
     if (ratio != 0.0) {
       minimal_height = 12;
       natural_height = (int)(alloc_width / ratio);
+      natural_height = int.max (minimal_height, natural_height);
     } else {
       minimal_height = natural_height = 0;
     }
