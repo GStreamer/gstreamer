@@ -927,7 +927,7 @@ gst_hls_demux_updates_loop (GstHLSDemux * demux)
       if (!gst_hls_demux_get_next_fragment (demux, FALSE)) {
         if (demux->cancelled) {
           goto quit;
-        } else if (!demux->end_of_playlist && !demux->cancelled) {
+        } else if (!demux->end_of_playlist) {
           demux->client->update_failed_count++;
           if (demux->client->update_failed_count < DEFAULT_FAILED_COUNT) {
             GST_WARNING_OBJECT (demux, "Could not fetch the next fragment");
