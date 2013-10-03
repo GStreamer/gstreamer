@@ -312,6 +312,12 @@ gst_vaapi_video_buffer_new(GstVaapiVideoMeta *meta)
 }
 
 GstBuffer *
+gst_vaapi_video_buffer_new_empty(void)
+{
+    return gst_surface_buffer_new();
+}
+
+GstBuffer *
 gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool)
 {
     return new_vbuffer(gst_vaapi_video_meta_new_from_pool(pool));

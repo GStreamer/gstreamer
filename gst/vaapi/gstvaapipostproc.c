@@ -106,7 +106,7 @@ gst_video_context_interface_init(GstVideoContextInterface *iface)
 G_DEFINE_TYPE_WITH_CODE(
     GstVaapiPostproc,
     gst_vaapipostproc,
-    GST_TYPE_ELEMENT,
+    GST_TYPE_BASE_TRANSFORM,
 #if !GST_CHECK_VERSION(1,0,0)
     G_IMPLEMENT_INTERFACE(GST_TYPE_IMPLEMENTS_INTERFACE,
                           gst_vaapipostproc_implements_iface_init);
@@ -149,12 +149,6 @@ gst_vaapi_deinterlace_mode_get_type(void)
     return deinterlace_mode_type;
 }
 
-static inline GstVaapiPostproc *
-get_vaapipostproc_from_pad(GstPad *pad)
-{
-    return GST_VAAPIPOSTPROC(gst_pad_get_parent_element(pad));
-}
-
 static inline gboolean
 gst_vaapipostproc_ensure_display(GstVaapiPostproc *postproc)
 {
@@ -163,111 +157,127 @@ gst_vaapipostproc_ensure_display(GstVaapiPostproc *postproc)
 }
 
 static gboolean
-gst_vaapipostproc_create(GstVaapiPostproc *postproc, GstCaps *caps)
+gst_vaapipostproc_create(GstVaapiPostproc *postproc)
 {
     if (!gst_vaapipostproc_ensure_display(postproc))
         return FALSE;
-
-    gst_caps_replace(&postproc->postproc_caps, caps);
     return TRUE;
 }
 
 static void
 gst_vaapipostproc_destroy(GstVaapiPostproc *postproc)
 {
-    gst_caps_replace(&postproc->postproc_caps, NULL);
-
     gst_vaapi_display_replace(&postproc->display, NULL);
+
+    gst_caps_replace(&postproc->sinkpad_caps, NULL);
+    gst_caps_replace(&postproc->srcpad_caps,  NULL);
+    gst_caps_replace(&postproc->allowed_caps, NULL);
 }
 
 static gboolean
-gst_vaapipostproc_reset(GstVaapiPostproc *postproc, GstCaps *caps)
+gst_vaapipostproc_reset(GstVaapiPostproc *postproc)
 {
-    if (postproc->postproc_caps &&
-        gst_caps_is_always_compatible(caps, postproc->postproc_caps))
-        return TRUE;
-
     gst_vaapipostproc_destroy(postproc);
-    return gst_vaapipostproc_create(postproc, caps);
+    return gst_vaapipostproc_create(postproc);
 }
 
 static gboolean
-gst_vaapipostproc_start(GstVaapiPostproc *postproc)
+gst_vaapipostproc_start(GstBaseTransform *trans)
 {
+    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
+
     if (!gst_vaapipostproc_ensure_display(postproc))
         return FALSE;
     return TRUE;
 }
 
 static gboolean
-gst_vaapipostproc_stop(GstVaapiPostproc *postproc)
+gst_vaapipostproc_stop(GstBaseTransform *trans)
 {
+    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
+
     gst_vaapi_display_replace(&postproc->display, NULL);
     return TRUE;
 }
 
-static GstFlowReturn
-gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
+static GstBuffer *
+create_output_buffer(GstVaapiPostproc *postproc)
 {
+    GstBuffer *outbuf;
+
+    /* Create a raw VA video buffer without GstVaapiVideoMeta attached
+       to it yet, as this will be done next in the transform() hook */
+    outbuf = gst_vaapi_video_buffer_new_empty();
+    if (!outbuf)
+        goto error_create_buffer;
+
+#if !GST_CHECK_VERSION(1,0,0)
+    gst_buffer_set_caps(outbuf, postproc->srcpad_caps);
+#endif
+    return outbuf;
+
+    /* ERRORS */
+error_create_buffer:
+    {
+        GST_ERROR("failed to create output video buffer");
+        return NULL;
+    }
+}
+
+static inline void
+append_output_buffer_metadata(GstBuffer *outbuf, GstBuffer *inbuf, guint flags)
+{
+    gst_buffer_copy_into(outbuf, inbuf, flags |
+        GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_META | GST_BUFFER_COPY_MEMORY,
+        0, -1);
+}
+
+static GstFlowReturn
+gst_vaapipostproc_process(GstBaseTransform *trans, GstBuffer *inbuf,
+    GstBuffer *outbuf)
+{
+    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
     GstVaapiVideoMeta *meta;
-    GstVaapiSurfaceProxy *proxy;
     GstClockTime timestamp;
     GstFlowReturn ret;
-    GstBuffer *outbuf;
-    guint outbuf_flags, flags;
+    GstBuffer *fieldbuf;
+    guint fieldbuf_flags, outbuf_flags, flags;
     gboolean tff;
 
-    meta = gst_buffer_get_vaapi_video_meta(buf);
+    meta = gst_buffer_get_vaapi_video_meta(inbuf);
     if (!meta)
         goto error_invalid_buffer;
 
-    /* Deinterlacing disabled, push frame */
-    if (!postproc->deinterlace) {
-        outbuf = gst_buffer_ref(buf);
-        if (!outbuf)
-            goto error_create_buffer;
-        ret = gst_pad_push(postproc->srcpad, outbuf);
-        if (ret != GST_FLOW_OK)
-            goto error_push_buffer;
-        gst_buffer_unref(buf);
-        return GST_FLOW_OK;
-    }
-
-    timestamp  = GST_BUFFER_TIMESTAMP(buf);
-    proxy      = gst_vaapi_video_meta_get_surface_proxy(meta);
-    tff        = GST_BUFFER_FLAG_IS_SET(buf, GST_VIDEO_BUFFER_FLAG_TFF);
+    timestamp  = GST_BUFFER_TIMESTAMP(inbuf);
+    tff        = GST_BUFFER_FLAG_IS_SET(inbuf, GST_VIDEO_BUFFER_FLAG_TFF);
 
     flags = gst_vaapi_video_meta_get_render_flags(meta) &
         ~(GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD|
           GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD);
 
     /* First field */
-    outbuf = gst_vaapi_video_buffer_new_with_surface_proxy(proxy);
-    if (!outbuf)
+    fieldbuf = create_output_buffer(postproc);
+    if (!fieldbuf)
         goto error_create_buffer;
+    append_output_buffer_metadata(fieldbuf, inbuf, 0);
 
-    meta = gst_buffer_get_vaapi_video_meta(outbuf);
-    outbuf_flags = flags;
-    outbuf_flags |= postproc->deinterlace ? (
+    meta = gst_buffer_get_vaapi_video_meta(fieldbuf);
+    fieldbuf_flags = flags;
+    fieldbuf_flags |= postproc->deinterlace ? (
         tff ?
         GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD :
         GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD) :
         GST_VAAPI_PICTURE_STRUCTURE_FRAME;
-    gst_vaapi_video_meta_set_render_flags(meta, outbuf_flags);
+    gst_vaapi_video_meta_set_render_flags(meta, fieldbuf_flags);
 
-    GST_BUFFER_TIMESTAMP(outbuf) = timestamp;
-    GST_BUFFER_DURATION(outbuf)  = postproc->field_duration;
-#if !GST_CHECK_VERSION(1,0,0)
-    gst_buffer_set_caps(outbuf, postproc->srcpad_caps);
-#endif
-    ret = gst_pad_push(postproc->srcpad, outbuf);
+    GST_BUFFER_TIMESTAMP(fieldbuf) = timestamp;
+    GST_BUFFER_DURATION(fieldbuf)  = postproc->field_duration;
+    ret = gst_pad_push(trans->srcpad, fieldbuf);
     if (ret != GST_FLOW_OK)
         goto error_push_buffer;
 
     /* Second field */
-    outbuf = gst_vaapi_video_buffer_new_with_surface_proxy(proxy);
-    if (!outbuf)
-        goto error_create_buffer;
+    append_output_buffer_metadata(outbuf, inbuf, 0);
 
     meta = gst_buffer_get_vaapi_video_meta(outbuf);
     outbuf_flags = flags;
@@ -280,118 +290,118 @@ gst_vaapipostproc_process(GstVaapiPostproc *postproc, GstBuffer *buf)
 
     GST_BUFFER_TIMESTAMP(outbuf) = timestamp + postproc->field_duration;
     GST_BUFFER_DURATION(outbuf)  = postproc->field_duration;
-#if !GST_CHECK_VERSION(1,0,0)
-    gst_buffer_set_caps(outbuf, postproc->srcpad_caps);
-#endif
-    ret = gst_pad_push(postproc->srcpad, outbuf);
-    if (ret != GST_FLOW_OK)
-        goto error_push_buffer;
-
-    gst_buffer_unref(buf);
     return GST_FLOW_OK;
 
     /* ERRORS */
 error_invalid_buffer:
     {
-        GST_ERROR("failed to receive a valid video buffer");
-        gst_buffer_unref(buf);
-        return GST_FLOW_EOS;
+        GST_ERROR("failed to validate source buffer");
+        return GST_FLOW_ERROR;
     }
 error_create_buffer:
     {
         GST_ERROR("failed to create output buffer");
-        gst_buffer_unref(buf);
         return GST_FLOW_EOS;
     }
 error_push_buffer:
     {
         if (ret != GST_FLOW_FLUSHING)
             GST_ERROR("failed to push output buffer to video sink");
-        gst_buffer_unref(buf);
         return GST_FLOW_EOS;
     }
 }
 
+static GstFlowReturn
+gst_vaapipostproc_passthrough(GstBaseTransform *trans, GstBuffer *inbuf,
+    GstBuffer *outbuf)
+{
+    GstVaapiVideoMeta *meta;
+
+    /* No video processing needed, simply copy buffer metadata */
+    meta = gst_buffer_get_vaapi_video_meta(inbuf);
+    if (!meta)
+        goto error_invalid_buffer;
+
+    append_output_buffer_metadata(outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS);
+    return GST_FLOW_OK;
+
+    /* ERRORS */
+error_invalid_buffer:
+    {
+        GST_ERROR("failed to validate source buffer");
+        return GST_FLOW_ERROR;
+    }
+}
+
 static gboolean
-gst_vaapipostproc_update_sink_caps(GstVaapiPostproc *postproc, GstCaps *caps)
+is_deinterlace_enabled(GstVaapiPostproc *postproc, GstVideoInfo *vip)
+{
+    gboolean deinterlace;
+
+    switch (postproc->deinterlace_mode) {
+    case GST_VAAPI_DEINTERLACE_MODE_AUTO:
+        deinterlace = GST_VIDEO_INFO_IS_INTERLACED(vip);
+        break;
+    case GST_VAAPI_DEINTERLACE_MODE_INTERLACED:
+        deinterlace = TRUE;
+        break;
+    default:
+        deinterlace = FALSE;
+        break;
+    }
+    return deinterlace;
+}
+
+static gboolean
+video_info_changed(GstVideoInfo *old_vip, GstVideoInfo *new_vip)
+{
+    if (GST_VIDEO_INFO_FORMAT(old_vip) != GST_VIDEO_INFO_FORMAT(new_vip))
+        return TRUE;
+    if (GST_VIDEO_INFO_INTERLACE_MODE(old_vip) !=
+        GST_VIDEO_INFO_INTERLACE_MODE(new_vip))
+        return TRUE;
+    if (GST_VIDEO_INFO_WIDTH(old_vip) != GST_VIDEO_INFO_WIDTH(new_vip))
+        return TRUE;
+    if (GST_VIDEO_INFO_HEIGHT(old_vip) != GST_VIDEO_INFO_HEIGHT(new_vip))
+        return TRUE;
+    return FALSE;
+}
+
+static gboolean
+gst_vaapipostproc_update_sink_caps(GstVaapiPostproc *postproc, GstCaps *caps,
+    gboolean *caps_changed_ptr)
 {
     GstVideoInfo vi;
 
     if (!gst_video_info_from_caps(&vi, caps))
         return FALSE;
-    postproc->fps_n = GST_VIDEO_INFO_FPS_N(&vi);
-    postproc->fps_d = GST_VIDEO_INFO_FPS_D(&vi);
 
-    switch (postproc->deinterlace_mode) {
-    case GST_VAAPI_DEINTERLACE_MODE_AUTO:
-        postproc->deinterlace = GST_VIDEO_INFO_IS_INTERLACED(&vi);
-        break;
-    case GST_VAAPI_DEINTERLACE_MODE_INTERLACED:
-        postproc->deinterlace = TRUE;
-        break;
-    case GST_VAAPI_DEINTERLACE_MODE_DISABLED:
-        postproc->deinterlace = FALSE;
-        break;
-    }
+    if (video_info_changed(&vi, &postproc->sinkpad_info))
+        postproc->sinkpad_info = vi, *caps_changed_ptr = TRUE;
 
+    postproc->deinterlace = is_deinterlace_enabled(postproc, &vi);
     postproc->field_duration = gst_util_uint64_scale(
-        GST_SECOND,
-        postproc->fps_d,
-        (1 + postproc->deinterlace) * postproc->fps_n
-    );
-
-    gst_caps_replace(&postproc->sinkpad_caps, caps);
+        GST_SECOND, GST_VIDEO_INFO_FPS_D(&vi),
+        (1 + postproc->deinterlace) * GST_VIDEO_INFO_FPS_N(&vi));
     return TRUE;
 }
 
 static gboolean
-gst_vaapipostproc_update_src_caps(GstVaapiPostproc *postproc, GstCaps *caps)
+gst_vaapipostproc_update_src_caps(GstVaapiPostproc *postproc, GstCaps *caps,
+    gboolean *caps_changed_ptr)
 {
-    GstCaps *src_caps;
-    GstStructure *structure;
-    const GValue *v_width, *v_height, *v_par;
-    gint fps_n, fps_d;
+    GstVideoInfo vi;
 
-    if (postproc->srcpad_caps)
-        src_caps = gst_caps_make_writable(postproc->srcpad_caps);
-    else
-        src_caps = gst_caps_from_string(GST_VAAPI_SURFACE_CAPS_NAME);
-    if (!src_caps)
+    if (!gst_video_info_from_caps(&vi, caps))
         return FALSE;
-    postproc->srcpad_caps = src_caps;
 
-    structure    = gst_caps_get_structure(caps, 0);
-    v_width      = gst_structure_get_value(structure, "width");
-    v_height     = gst_structure_get_value(structure, "height");
-    v_par        = gst_structure_get_value(structure, "pixel-aspect-ratio");
-
-    structure = gst_caps_get_structure(src_caps, 0);
-    if (v_width && v_height) {
-        gst_structure_set_value(structure, "width", v_width);
-        gst_structure_set_value(structure, "height", v_height);
-    }
-    if (v_par)
-        gst_structure_set_value(structure, "pixel-aspect-ratio", v_par);
-
-    gst_structure_set(structure, "type", G_TYPE_STRING, "vaapi", NULL);
-    gst_structure_set(structure, "opengl", G_TYPE_BOOLEAN, USE_GLX, NULL);
-
-    if (postproc->deinterlace) {
-        /* Set double framerate in interlaced mode */
-        if (!gst_util_fraction_multiply(postproc->fps_n, postproc->fps_d,
-                                        2, 1,
-                                        &fps_n, &fps_d))
-            return FALSE;
-
-        gst_structure_set(structure, "framerate",
-            GST_TYPE_FRACTION, fps_n, fps_d, NULL);
-    }
-    gst_caps_set_interlaced(src_caps, NULL);
-    return gst_pad_set_caps(postproc->srcpad, src_caps);
+    if (video_info_changed(&vi, &postproc->srcpad_info))
+        postproc->srcpad_info = vi, *caps_changed_ptr = TRUE;
+    return TRUE;
 }
 
 static gboolean
-gst_vaapipostproc_ensure_allowed_caps(GstVaapiPostproc *postproc)
+ensure_allowed_caps(GstVaapiPostproc *postproc)
 {
     if (postproc->allowed_caps)
         return TRUE;
@@ -406,116 +416,161 @@ gst_vaapipostproc_ensure_allowed_caps(GstVaapiPostproc *postproc)
 }
 
 static GstCaps *
-gst_vaapipostproc_get_caps(GstPad *pad)
+gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
+    GstPadDirection direction, GstCaps *caps)
 {
-    GstVaapiPostproc * const postproc = get_vaapipostproc_from_pad(pad);
+    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
+    GstVideoInfo vi;
+    GstVideoFormat format;
     GstCaps *out_caps;
+    gint fps_n, fps_d, par_n, par_d;
 
-    if (gst_vaapipostproc_ensure_allowed_caps(postproc))
-        out_caps = gst_caps_ref(postproc->allowed_caps);
-    else
-        out_caps = gst_caps_new_empty();
+    if (!gst_caps_is_fixed(caps)) {
+        if (direction == GST_PAD_SINK)
+            return gst_caps_from_string(gst_vaapipostproc_src_caps_str);
 
-    gst_object_unref(postproc);
+        /* Generate the allowed set of caps on the sink pad */
+        if (!ensure_allowed_caps(postproc))
+            return NULL;
+        return gst_caps_ref(postproc->allowed_caps);
+    }
+
+    /* Generate the other pad caps, based on the current pad caps, as
+       specified by the direction argument */
+    if (!gst_video_info_from_caps(&vi, caps))
+        return NULL;
+
+    format = GST_VIDEO_INFO_FORMAT(&vi);
+    if (format == GST_VIDEO_FORMAT_UNKNOWN)
+        return NULL;
+
+    fps_n = GST_VIDEO_INFO_FPS_N(&vi);
+    fps_d = GST_VIDEO_INFO_FPS_D(&vi);
+    if (direction == GST_PAD_SINK) {
+        if (is_deinterlace_enabled(postproc, &vi)) {
+            /* Set double framerate in interlaced mode */
+            if (!gst_util_fraction_multiply(fps_n, fps_d, 2, 1, &fps_n, &fps_d))
+                return NULL;
+
+            /* Signal the other pad that we generate only progressive frames */
+            GST_VIDEO_INFO_INTERLACE_MODE(&vi) =
+                GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+        }
+    }
+    else {
+        if (is_deinterlace_enabled(postproc, &vi)) {
+            /* Set half framerate in interlaced mode */
+            if (!gst_util_fraction_multiply(fps_n, fps_d, 1, 2, &fps_n, &fps_d))
+                return NULL;
+        }
+    }
+
+    /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
+       reconstruct suitable caps for "encoded" video formats */
+    out_caps = gst_caps_from_string(GST_VAAPI_SURFACE_CAPS_NAME);
+    if (!out_caps)
+        return NULL;
+
+    par_n = GST_VIDEO_INFO_PAR_N(&vi);
+    par_d = GST_VIDEO_INFO_PAR_D(&vi);
+    gst_caps_set_simple(out_caps,
+        "type", G_TYPE_STRING, "vaapi",
+        "opengl", G_TYPE_BOOLEAN, USE_GLX,
+        "width", G_TYPE_INT, GST_VIDEO_INFO_WIDTH(&vi),
+        "height", G_TYPE_INT, GST_VIDEO_INFO_HEIGHT(&vi),
+        "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
+        NULL);
+
+    gst_caps_set_interlaced(out_caps, &vi);
     return out_caps;
 }
 
-static gboolean
-gst_vaapipostproc_set_caps(GstPad *pad, GstCaps *caps)
+#if GST_CHECK_VERSION(1,0,0)
+static GstCaps *
+gst_vaapipostproc_transform_caps(GstBaseTransform *trans,
+    GstPadDirection direction, GstCaps *caps, GstCaps *filter)
 {
-    GstVaapiPostproc * const postproc = get_vaapipostproc_from_pad(pad);
-    gboolean success = FALSE;
+    GstCaps *out_caps;
 
-    g_return_val_if_fail(pad == postproc->sinkpad, FALSE);
-
-    do {
-        if (!gst_vaapipostproc_update_sink_caps(postproc, caps))
-            break;
-        if (!gst_vaapipostproc_update_src_caps(postproc, caps))
-            break;
-        if (!gst_vaapipostproc_reset(postproc, postproc->sinkpad_caps))
-            break;
-        success = TRUE;
-    } while (0);
-    gst_object_unref(postproc);
-    return success;
+    caps = gst_vaapipostproc_transform_caps_impl(trans, direction, caps);
+    if (caps && filter) {
+        out_caps = gst_caps_intersect_full(caps, filter,
+            GST_CAPS_INTERSECT_FIRST);
+        gst_caps_unref(caps);
+        return out_caps;
+    }
+    return caps;
 }
+#else
+#define gst_vaapipostproc_transform_caps \
+    gst_vaapipostproc_transform_caps_impl
+#endif
 
 static GstFlowReturn
-gst_vaapipostproc_chain(GST_PAD_CHAIN_FUNCTION_ARGS)
+gst_vaapipostproc_transform(GstBaseTransform *trans, GstBuffer *inbuf,
+    GstBuffer *outbuf)
 {
-    GstVaapiPostproc * const postproc = get_vaapipostproc_from_pad(pad);
+    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
     GstFlowReturn ret;
 
-    ret = gst_vaapipostproc_process(postproc, buffer);
-    gst_object_unref(postproc);
+    if (postproc->deinterlace)
+        ret = gst_vaapipostproc_process(trans, inbuf, outbuf);
+    else
+        ret = gst_vaapipostproc_passthrough(trans, inbuf, outbuf);
     return ret;
 }
 
-static gboolean
-gst_vaapipostproc_sink_event(GST_PAD_EVENT_FUNCTION_ARGS)
-{
-    GstVaapiPostproc * const postproc = get_vaapipostproc_from_pad(pad);
-    gboolean success;
-
-    GST_DEBUG("handle sink event '%s'", GST_EVENT_TYPE_NAME(event));
-
-    switch (GST_EVENT_TYPE(event)) {
-#if GST_CHECK_VERSION(1,0,0)
-    case GST_EVENT_CAPS: {
-        GstCaps *caps;
-        gst_event_parse_caps(event, &caps);
-        success = gst_vaapipostproc_set_caps(pad, caps);
-        break;
-    }
+static GstFlowReturn
+gst_vaapipostproc_prepare_output_buffer(GstBaseTransform *trans,
+    GstBuffer *inbuf,
+#if !GST_CHECK_VERSION(1,0,0)
+    gint size, GstCaps *caps,
 #endif
-    default:
-        /* Propagate event downstream */
-        success = gst_pad_push_event(postproc->srcpad, event);
-        break;
-    }
-    gst_object_unref(postproc);
-    return success;
+    GstBuffer **outbuf_ptr)
+{
+    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
+
+    *outbuf_ptr = create_output_buffer(postproc);
+    return *outbuf_ptr ? GST_FLOW_OK : GST_FLOW_ERROR;
 }
 
 static gboolean
-gst_vaapipostproc_src_event(GST_PAD_EVENT_FUNCTION_ARGS)
+gst_vaapipostproc_set_caps(GstBaseTransform *trans, GstCaps *caps,
+    GstCaps *out_caps)
 {
-    GstVaapiPostproc * const postproc = get_vaapipostproc_from_pad(pad);
-    gboolean success;
+    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
+    gboolean caps_changed = FALSE;
 
-    GST_DEBUG("handle src event '%s'", GST_EVENT_TYPE_NAME(event));
+    if (!gst_vaapipostproc_update_sink_caps(postproc, caps, &caps_changed))
+        return FALSE;
+    if (!gst_vaapipostproc_update_src_caps(postproc, out_caps, &caps_changed))
+        return FALSE;
 
-    /* Propagate event upstream */
-    success = gst_pad_push_event(postproc->sinkpad, event);
-    gst_object_unref(postproc);
-    return success;
+    if (caps_changed) {
+        if (!gst_vaapipostproc_reset(postproc))
+            return FALSE;
+        gst_caps_replace(&postproc->sinkpad_caps, caps);
+        gst_caps_replace(&postproc->srcpad_caps, out_caps);
+    }
+    return TRUE;
 }
 
 static gboolean
-gst_vaapipostproc_query(GST_PAD_QUERY_FUNCTION_ARGS)
+gst_vaapipostproc_query(GstBaseTransform *trans, GstPadDirection direction,
+    GstQuery *query)
 {
-    GstVaapiPostproc * const postproc = get_vaapipostproc_from_pad(pad);
-    gboolean success;
+    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
 
-    GST_DEBUG("sharing display %p", postproc->display);
+    GST_INFO_OBJECT(trans, "query type `%s'", GST_QUERY_TYPE_NAME(query));
 
-    if (gst_vaapi_reply_to_query(query, postproc->display))
-        success = TRUE;
-#if GST_CHECK_VERSION(1,0,0)
-    else if (GST_PAD_IS_SINK(pad) && GST_QUERY_TYPE(query) == GST_QUERY_CAPS) {
-        GstCaps * const caps = gst_vaapipostproc_get_caps(pad);
-        gst_query_set_caps_result(query, caps);
-        gst_caps_unref(caps);
-        success = TRUE;
+    if (gst_vaapi_reply_to_query(query, postproc->display)) {
+        GST_DEBUG("sharing display %p", postproc->display);
+        return TRUE;
     }
-#endif
-    else
-        success = GST_PAD_QUERY_FUNCTION_CALL(gst_pad_query_default, pad,
-            parent, query);
 
-    gst_object_unref(postproc);
-    return success;
+    return GST_BASE_TRANSFORM_CLASS(gst_vaapipostproc_parent_class)->query(
+        trans, direction, query);
 }
 
 static void
@@ -524,10 +579,6 @@ gst_vaapipostproc_finalize(GObject *object)
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(object);
 
     gst_vaapipostproc_destroy(postproc);
-
-    gst_caps_replace(&postproc->sinkpad_caps, NULL);
-    gst_caps_replace(&postproc->srcpad_caps,  NULL);
-    gst_caps_replace(&postproc->allowed_caps, NULL);
 
     G_OBJECT_CLASS(gst_vaapipostproc_parent_class)->finalize(object);
 }
@@ -578,49 +629,12 @@ gst_vaapipostproc_get_property(
     }
 }
 
-static GstStateChangeReturn
-gst_vaapipostproc_change_state(GstElement *element, GstStateChange transition)
-{
-    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(element);
-    GstStateChangeReturn ret = GST_STATE_CHANGE_SUCCESS;
-
-    switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-        if (!gst_vaapipostproc_start(postproc))
-            return GST_STATE_CHANGE_FAILURE;
-        break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-        break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-        break;
-    default:
-        break;
-    }
-
-    ret = GST_ELEMENT_CLASS(gst_vaapipostproc_parent_class)->change_state(element, transition);
-    if (ret != GST_STATE_CHANGE_SUCCESS)
-        return ret;
-
-    switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-        break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-        break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-        if (!gst_vaapipostproc_stop(postproc))
-            return GST_STATE_CHANGE_FAILURE;
-        break;
-    default:
-        break;
-    }
-    return GST_STATE_CHANGE_SUCCESS;
-}
-
 static void
 gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
 {
     GObjectClass * const object_class = G_OBJECT_CLASS(klass);
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
+    GstBaseTransformClass * const trans_class = GST_BASE_TRANSFORM_CLASS(klass);
     GstPadTemplate *pad_template;
 
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapipostproc,
@@ -629,8 +643,15 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
     object_class->finalize      = gst_vaapipostproc_finalize;
     object_class->set_property  = gst_vaapipostproc_set_property;
     object_class->get_property  = gst_vaapipostproc_get_property;
+    trans_class->start          = gst_vaapipostproc_start;
+    trans_class->stop           = gst_vaapipostproc_stop;
+    trans_class->transform_caps = gst_vaapipostproc_transform_caps;
+    trans_class->transform      = gst_vaapipostproc_transform;
+    trans_class->set_caps       = gst_vaapipostproc_set_caps;
+    trans_class->query          = gst_vaapipostproc_query;
 
-    element_class->change_state = gst_vaapipostproc_change_state;
+    trans_class->prepare_output_buffer =
+        gst_vaapipostproc_prepare_output_buffer;
 
     gst_element_class_set_static_metadata(element_class,
         "VA-API video postprocessing",
@@ -656,8 +677,8 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
     g_object_class_install_property
         (object_class,
          PROP_DEINTERLACE_MODE,
-         g_param_spec_enum("deinterlace",
-                           "Deinterlace",
+         g_param_spec_enum("deinterlace-mode",
+                           "Deinterlace mode",
                            "Deinterlace mode to use",
                            GST_VAAPI_TYPE_DEINTERLACE_MODE,
                            DEFAULT_DEINTERLACE_MODE,
@@ -682,45 +703,11 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
 static void
 gst_vaapipostproc_init(GstVaapiPostproc *postproc)
 {
-    GstVaapiPostprocClass *klass = GST_VAAPIPOSTPROC_GET_CLASS(postproc);
-    GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
-
-    postproc->allowed_caps              = NULL;
-    postproc->postproc_caps             = NULL;
-    postproc->display                   = NULL;
-    postproc->surface_width             = 0;
-    postproc->surface_height            = 0;
     postproc->deinterlace               = FALSE;
     postproc->deinterlace_mode          = DEFAULT_DEINTERLACE_MODE;
     postproc->deinterlace_method        = DEFAULT_DEINTERLACE_METHOD;
     postproc->field_duration            = GST_CLOCK_TIME_NONE;
-    postproc->fps_n                     = 0;
-    postproc->fps_d                     = 0;
 
-    /* Pad through which data comes in to the element */
-    postproc->sinkpad = gst_pad_new_from_template(
-        gst_element_class_get_pad_template(element_class, "sink"),
-        "sink"
-    );
-    postproc->sinkpad_caps = NULL;
-
-#if !GST_CHECK_VERSION(1,0,0)
-    gst_pad_set_getcaps_function(postproc->sinkpad, gst_vaapipostproc_get_caps);
-    gst_pad_set_setcaps_function(postproc->sinkpad, gst_vaapipostproc_set_caps);
-#endif
-    gst_pad_set_chain_function(postproc->sinkpad, gst_vaapipostproc_chain);
-    gst_pad_set_event_function(postproc->sinkpad, gst_vaapipostproc_sink_event);
-    gst_pad_set_query_function(postproc->sinkpad, gst_vaapipostproc_query);
-    gst_element_add_pad(GST_ELEMENT(postproc), postproc->sinkpad);
-
-    /* Pad through which data goes out of the element */
-    postproc->srcpad = gst_pad_new_from_template(
-        gst_element_class_get_pad_template(element_class, "src"),
-        "src"
-    );
-    postproc->srcpad_caps = NULL;
-
-    gst_pad_set_event_function(postproc->srcpad, gst_vaapipostproc_src_event);
-    gst_pad_set_query_function(postproc->srcpad, gst_vaapipostproc_query);
-    gst_element_add_pad(GST_ELEMENT(postproc), postproc->srcpad);
+    gst_video_info_init(&postproc->sinkpad_info);
+    gst_video_info_init(&postproc->srcpad_info);
 }

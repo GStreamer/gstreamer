@@ -84,6 +84,11 @@ typedef enum {
 } GstMemoryFlags;
 
 typedef enum {
+    GST_BUFFER_COPY_META        = GST_BUFFER_COPY_QDATA,
+    GST_BUFFER_COPY_MEMORY      = 0,
+} GstBufferCopyFlags1_0;
+
+typedef enum {
     GST_MAP_READ        = 1 << 0,
     GST_MAP_WRITE       = 1 << 1
 } GstMapFlags;
@@ -110,6 +115,9 @@ typedef struct {
 #undef  gst_buffer_extract
 #define gst_buffer_extract(buffer, offset, dest, size) \
     gst_compat_buffer_extract(buffer, offset, dest, size)
+#undef  gst_buffer_copy_into
+#define gst_buffer_copy_into(dest, src, flags, offset, size) \
+    gst_compat_buffer_copy_into(dest, src, flags, offset, size)
 
 static inline GstBuffer *
 gst_compat_buffer_new_wrapped_full(GstMemoryFlags flags, gpointer data,
@@ -164,6 +172,16 @@ gst_compat_buffer_extract(GstBuffer *buffer, gsize offset, gpointer dest,
     esize = MIN(size, GST_BUFFER_SIZE(buffer) - offset);
     memcpy(dest, GST_BUFFER_DATA(buffer) + offset, esize);
     return esize;
+}
+
+static inline void
+gst_compat_buffer_copy_into(GstBuffer *dest, GstBuffer *src,
+    GstBufferCopyFlags flags, gsize offset, gsize size)
+{
+    g_return_if_fail(offset == 0);
+    g_return_if_fail(size == (gsize)-1);
+
+    gst_buffer_copy_metadata(dest, src, flags);
 }
 
 /* GstAdapter */

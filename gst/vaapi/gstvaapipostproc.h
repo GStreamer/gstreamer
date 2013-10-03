@@ -22,7 +22,7 @@
 #ifndef GST_VAAPIPOSTPROC_H
 #define GST_VAAPIPOSTPROC_H
 
-#include <gst/gst.h>
+#include <gst/base/gstbasetransform.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
@@ -71,31 +71,25 @@ typedef enum {
 
 struct _GstVaapiPostproc {
     /*< private >*/
-    GstElement                  parent_instance;
-
-    GstPad                     *sinkpad;
-    GstCaps                    *sinkpad_caps;
-    GstPad                     *srcpad;
-    GstCaps                    *srcpad_caps;
-    GstCaps                    *allowed_caps;
-    GstCaps                    *postproc_caps;
+    GstBaseTransform            parent_instance;
 
     GstVaapiDisplay            *display;
-    guint                       surface_width;
-    guint                       surface_height;
+    GstCaps                    *allowed_caps;
+    GstCaps                    *sinkpad_caps;
+    GstVideoInfo                sinkpad_info;
+    GstCaps                    *srcpad_caps;
+    GstVideoInfo                srcpad_info;
 
     /* Deinterlacing */
     gboolean                    deinterlace;
     GstVaapiDeinterlaceMode     deinterlace_mode;
     GstVaapiDeinterlaceMethod   deinterlace_method;
     GstClockTime                field_duration;
-    gint                        fps_n;
-    gint                        fps_d;
 };
 
 struct _GstVaapiPostprocClass {
     /*< private >*/
-    GstElementClass             parent_class;
+    GstBaseTransformClass       parent_class;
 };
 
 GType

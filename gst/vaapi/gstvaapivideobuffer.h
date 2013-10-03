@@ -35,6 +35,10 @@ gst_vaapi_video_buffer_new(GstVaapiVideoMeta *meta);
 
 G_GNUC_INTERNAL
 GstBuffer *
+gst_vaapi_video_buffer_new_empty(void);
+
+G_GNUC_INTERNAL
+GstBuffer *
 gst_vaapi_video_buffer_new_from_pool(GstVaapiVideoPool *pool);
 
 G_GNUC_INTERNAL
