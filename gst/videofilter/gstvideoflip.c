@@ -97,6 +97,8 @@ static const GEnumValue video_flip_methods[] = {
       "Flip across upper left/lower right diagonal", "upper-left-diagonal"},
   {GST_VIDEO_FLIP_METHOD_OTHER,
       "Flip across upper right/lower left diagonal", "upper-right-diagonal"},
+  {GST_VIDEO_FLIP_METHOD_AUTO,
+      "Select flip method based on image-orientation tag", "automatic"},
   {0, NULL, NULL},
 };
 
@@ -132,7 +134,7 @@ gst_video_flip_transform_caps (GstBaseTransform * trans,
     if (gst_structure_get_int (structure, "width", &width) &&
         gst_structure_get_int (structure, "height", &height)) {
 
-      switch (videoflip->method) {
+      switch (videoflip->active_method) {
         case GST_VIDEO_FLIP_METHOD_90R:
         case GST_VIDEO_FLIP_METHOD_90L:
         case GST_VIDEO_FLIP_METHOD_TRANS:
@@ -220,7 +222,7 @@ gst_video_flip_planar_yuv (GstVideoFlip * videoflip, GstVideoFrame * dest,
   dest_u_height = GST_VIDEO_FRAME_COMP_HEIGHT (dest, 1);
   dest_v_height = GST_VIDEO_FRAME_COMP_HEIGHT (dest, 2);
 
-  switch (videoflip->method) {
+  switch (videoflip->active_method) {
     case GST_VIDEO_FLIP_METHOD_90R:
       /* Flip Y */
       s = GST_VIDEO_FRAME_PLANE_DATA (src, 0);
@@ -464,7 +466,7 @@ gst_video_flip_semi_planar_yuv (GstVideoFlip * videoflip, GstVideoFrame * dest,
   dest_y_height = GST_VIDEO_FRAME_COMP_HEIGHT (dest, 0);
   dest_uv_height = GST_VIDEO_FRAME_COMP_HEIGHT (dest, 1);
 
-  switch (videoflip->method) {
+  switch (videoflip->active_method) {
     case GST_VIDEO_FLIP_METHOD_90R:
       /* Flip Y */
       s = GST_VIDEO_FRAME_PLANE_DATA (src, 0);
@@ -650,7 +652,7 @@ gst_video_flip_packed_simple (GstVideoFlip * videoflip, GstVideoFrame * dest,
   /* This is only true for non-subsampled formats! */
   bpp = GST_VIDEO_FRAME_COMP_PSTRIDE (src, 0);
 
-  switch (videoflip->method) {
+  switch (videoflip->active_method) {
     case GST_VIDEO_FLIP_METHOD_90R:
       for (y = 0; y < dh; y++) {
         for (x = 0; x < dw; x++) {
@@ -760,7 +762,7 @@ gst_video_flip_y422 (GstVideoFlip * videoflip, GstVideoFrame * dest,
   y_stride = GST_VIDEO_FRAME_COMP_PSTRIDE (src, 0);
   bpp = y_stride;
 
-  switch (videoflip->method) {
+  switch (videoflip->active_method) {
     case GST_VIDEO_FLIP_METHOD_90R:
       for (y = 0; y < dh; y++) {
         for (x = 0; x < dw; x += 2) {
@@ -959,7 +961,7 @@ gst_video_flip_set_info (GstVideoFilter * vfilter, GstCaps * incaps,
     goto invalid_caps;
 
   /* Check that they are correct */
-  switch (vf->method) {
+  switch (vf->active_method) {
     case GST_VIDEO_FLIP_METHOD_90R:
     case GST_VIDEO_FLIP_METHOD_90L:
     case GST_VIDEO_FLIP_METHOD_TRANS:
@@ -1038,6 +1040,43 @@ invalid_caps:
 }
 
 static void
+gst_video_flip_set_method (GstVideoFlip * videoflip, GstVideoFlipMethod method,
+    gboolean from_tag)
+{
+  GST_OBJECT_LOCK (videoflip);
+
+  /* Store updated method */
+  if (from_tag)
+    videoflip->tag_method = method;
+  else
+    videoflip->method = method;
+
+  /* Get the new method */
+  if (videoflip->method == GST_VIDEO_FLIP_METHOD_AUTO)
+    method = videoflip->tag_method;
+  else
+    method = videoflip->method;
+
+  if (method != videoflip->active_method) {
+    GstBaseTransform *btrans = GST_BASE_TRANSFORM (videoflip);
+
+    GST_DEBUG_OBJECT (videoflip, "Changing method from %s to %s",
+        video_flip_methods[videoflip->active_method].value_nick,
+        video_flip_methods[method].value_nick);
+
+    videoflip->active_method = method;
+
+    GST_OBJECT_UNLOCK (videoflip);
+
+    gst_base_transform_set_passthrough (btrans,
+        method == GST_VIDEO_FLIP_METHOD_IDENTITY);
+    gst_base_transform_reconfigure_src (btrans);
+  } else {
+    GST_OBJECT_UNLOCK (videoflip);
+  }
+}
+
+static void
 gst_video_flip_before_transform (GstBaseTransform * trans, GstBuffer * in)
 {
   GstVideoFlip *videoflip = GST_VIDEO_FLIP (trans);
@@ -1064,7 +1103,7 @@ gst_video_flip_transform_frame (GstVideoFilter * vfilter,
     goto not_negotiated;
 
   GST_LOG_OBJECT (videoflip, "videoflip: flipping (%s)",
-      video_flip_methods[videoflip->method].value_nick);
+      video_flip_methods[videoflip->active_method].value_nick);
 
   GST_OBJECT_LOCK (videoflip);
   videoflip->process (videoflip, out_frame, in_frame);
@@ -1099,7 +1138,7 @@ gst_video_flip_src_event (GstBaseTransform * trans, GstEvent * event)
       if (gst_structure_get_double (structure, "pointer_x", &x) &&
           gst_structure_get_double (structure, "pointer_y", &y)) {
         GST_DEBUG_OBJECT (vf, "converting %fx%f", x, y);
-        switch (vf->method) {
+        switch (vf->active_method) {
           case GST_VIDEO_FLIP_METHOD_90R:
             new_x = y;
             new_y = out_info->width - x;
@@ -1147,6 +1186,50 @@ gst_video_flip_src_event (GstBaseTransform * trans, GstEvent * event)
   return ret;
 }
 
+static gboolean
+gst_video_flip_sink_event (GstBaseTransform * trans, GstEvent * event)
+{
+  GstVideoFlip *vf = GST_VIDEO_FLIP (trans);
+  GstTagList *taglist;
+  gchar *orientation;
+  gboolean ret;
+
+  GST_DEBUG_OBJECT (vf, "handling %s event", GST_EVENT_TYPE_NAME (event));
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_TAG:
+      gst_event_parse_tag (event, &taglist);
+
+      if (gst_tag_list_get_string (taglist, "image-orientation", &orientation)) {
+        if (!g_strcmp0 ("rotate-0", orientation))
+          gst_video_flip_set_method (vf, GST_VIDEO_FLIP_METHOD_IDENTITY, TRUE);
+        else if (!g_strcmp0 ("rotate-90", orientation))
+          gst_video_flip_set_method (vf, GST_VIDEO_FLIP_METHOD_90R, TRUE);
+        else if (!g_strcmp0 ("rotate-180", orientation))
+          gst_video_flip_set_method (vf, GST_VIDEO_FLIP_METHOD_180, TRUE);
+        else if (!g_strcmp0 ("rotate-270", orientation))
+          gst_video_flip_set_method (vf, GST_VIDEO_FLIP_METHOD_90L, TRUE);
+        else if (!g_strcmp0 ("flip-rotate-0", orientation))
+          gst_video_flip_set_method (vf, GST_VIDEO_FLIP_METHOD_HORIZ, TRUE);
+        else if (!g_strcmp0 ("flip-rotate-90", orientation))
+          gst_video_flip_set_method (vf, GST_VIDEO_FLIP_METHOD_TRANS, TRUE);
+        else if (!g_strcmp0 ("flip-rotate-180", orientation))
+          gst_video_flip_set_method (vf, GST_VIDEO_FLIP_METHOD_VERT, TRUE);
+        else if (!g_strcmp0 ("flip-rotate-270", orientation))
+          gst_video_flip_set_method (vf, GST_VIDEO_FLIP_METHOD_OTHER, TRUE);
+      }
+
+      g_free (orientation);
+      break;
+    default:
+      break;
+  }
+
+  ret = GST_BASE_TRANSFORM_CLASS (parent_class)->sink_event (trans, event);
+
+  return ret;
+}
+
 static void
 gst_video_flip_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -1155,28 +1238,7 @@ gst_video_flip_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_METHOD:
-    {
-      GstVideoFlipMethod method;
-
-      method = g_value_get_enum (value);
-      GST_OBJECT_LOCK (videoflip);
-      if (method != videoflip->method) {
-        GstBaseTransform *btrans = GST_BASE_TRANSFORM (videoflip);
-
-        GST_DEBUG_OBJECT (videoflip, "Changing method from %s to %s",
-            video_flip_methods[videoflip->method].value_nick,
-            video_flip_methods[method].value_nick);
-
-        videoflip->method = method;
-        GST_OBJECT_UNLOCK (videoflip);
-
-        gst_base_transform_set_passthrough (btrans,
-            method == GST_VIDEO_FLIP_METHOD_IDENTITY);
-        gst_base_transform_reconfigure_src (btrans);
-      } else {
-        GST_OBJECT_UNLOCK (videoflip);
-      }
-    }
+      gst_video_flip_set_method (videoflip, g_value_get_enum (value), FALSE);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1232,6 +1294,7 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
   trans_class->before_transform =
       GST_DEBUG_FUNCPTR (gst_video_flip_before_transform);
   trans_class->src_event = GST_DEBUG_FUNCPTR (gst_video_flip_src_event);
+  trans_class->sink_event = GST_DEBUG_FUNCPTR (gst_video_flip_sink_event);
 
   vfilter_class->set_info = GST_DEBUG_FUNCPTR (gst_video_flip_set_info);
   vfilter_class->transform_frame =
@@ -1241,6 +1304,7 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
 static void
 gst_video_flip_init (GstVideoFlip * videoflip)
 {
-  videoflip->method = PROP_METHOD_DEFAULT;
-  gst_base_transform_set_passthrough (GST_BASE_TRANSFORM (videoflip), TRUE);
+  /* AUTO is not valid for active method, this is just to ensure we setup the
+   * method in gst_video_flip_set_method() */
+  videoflip->active_method = GST_VIDEO_FLIP_METHOD_AUTO;
 }

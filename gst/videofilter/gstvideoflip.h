@@ -36,6 +36,7 @@ G_BEGIN_DECLS
  * @GST_VIDEO_FLIP_METHOD_VERT: Flip vertically
  * @GST_VIDEO_FLIP_METHOD_TRANS: Flip across upper left/lower right diagonal
  * @GST_VIDEO_FLIP_METHOD_OTHER: Flip across upper right/lower left diagonal
+ * @GST_VIDEO_FLIP_METHOD_AUTO: Select flip method based on image-orientation tag
  *
  * The different flip methods.
  */
@@ -47,7 +48,8 @@ typedef enum {
   GST_VIDEO_FLIP_METHOD_HORIZ,
   GST_VIDEO_FLIP_METHOD_VERT,
   GST_VIDEO_FLIP_METHOD_TRANS,
-  GST_VIDEO_FLIP_METHOD_OTHER
+  GST_VIDEO_FLIP_METHOD_OTHER,
+  GST_VIDEO_FLIP_METHOD_AUTO
 } GstVideoFlipMethod;
 
 #define GST_TYPE_VIDEO_FLIP \
@@ -74,6 +76,8 @@ struct _GstVideoFlip {
 
   /* < private > */
   GstVideoFlipMethod method;
+  GstVideoFlipMethod tag_method;
+  GstVideoFlipMethod active_method;
   void (*process) (GstVideoFlip *videoflip, GstVideoFrame *dest, const GstVideoFrame *src);
 };
 
