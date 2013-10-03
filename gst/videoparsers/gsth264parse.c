@@ -1000,9 +1000,7 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
       }
     }
   }
-  for (i = 0;
-      i < GST_H264_MAX_PPS_COUNT
-      && h264parse->format != GST_H264_PARSE_FORMAT_AVC3; i++) {
+  for (i = 0; i < GST_H264_MAX_PPS_COUNT; i++) {
     if ((nal = h264parse->pps_nals[i])) {
       num_pps++;
       /* size bytes also count */
@@ -1010,8 +1008,10 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
     }
   }
 
+  /* AVC3 has SPS/PPS inside the stream, not in the codec_data */
   if (h264parse->format == GST_H264_PARSE_FORMAT_AVC3) {
     num_sps = sps_size = 0;
+    num_pps = pps_size = 0;
   }
 
   GST_DEBUG_OBJECT (h264parse,
@@ -1034,23 +1034,27 @@ gst_h264_parse_make_codec_data (GstH264Parse * h264parse)
   data[5] = 0xe0 | num_sps;     /* number of SPSs */
 
   data += 6;
-  for (i = 0; i < num_sps; i++) {
-    if ((nal = h264parse->sps_nals[i])) {
-      gsize nal_size = gst_buffer_get_size (nal);
-      GST_WRITE_UINT16_BE (data, nal_size);
-      gst_buffer_extract (nal, 0, data + 2, nal_size);
-      data += 2 + nal_size;
+  if (h264parse->format != GST_H264_PARSE_FORMAT_AVC3) {
+    for (i = 0; i < GST_H264_MAX_SPS_COUNT; i++) {
+      if ((nal = h264parse->sps_nals[i])) {
+        gsize nal_size = gst_buffer_get_size (nal);
+        GST_WRITE_UINT16_BE (data, nal_size);
+        gst_buffer_extract (nal, 0, data + 2, nal_size);
+        data += 2 + nal_size;
+      }
     }
   }
 
   data[0] = num_pps;
   data++;
-  for (i = 0; i < num_pps; i++) {
-    if ((nal = h264parse->pps_nals[i])) {
-      gsize nal_size = gst_buffer_get_size (nal);
-      GST_WRITE_UINT16_BE (data, nal_size);
-      gst_buffer_extract (nal, 0, data + 2, nal_size);
-      data += 2 + nal_size;
+  if (h264parse->format != GST_H264_PARSE_FORMAT_AVC3) {
+    for (i = 0; i < GST_H264_MAX_PPS_COUNT; i++) {
+      if ((nal = h264parse->pps_nals[i])) {
+        gsize nal_size = gst_buffer_get_size (nal);
+        GST_WRITE_UINT16_BE (data, nal_size);
+        gst_buffer_extract (nal, 0, data + 2, nal_size);
+        data += 2 + nal_size;
+      }
     }
   }
 
