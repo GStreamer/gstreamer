@@ -43,14 +43,14 @@ typedef struct _GstValidateAction        GstValidateAction;
 
 typedef gboolean (*GstValidateExecuteAction) (GstValidateScenario * scenario, GstValidateAction * action);
 
-typedef struct _GstValidateAction
+struct _GstValidateAction
 {
   const gchar *type;
   const gchar *name;
   guint action_number;
   GstClockTime playback_time;
   GstStructure *structure;
-} GstValidateAction;
+};
 
 struct _GstValidateScenarioClass
 {
