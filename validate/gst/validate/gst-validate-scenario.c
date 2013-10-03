@@ -70,6 +70,9 @@ struct _GstValidateScenarioPrivate
   GstValidateRunner *runner;
 
   GList *actions;
+  /*  List of action that need parsing when reaching ASYNC_DONE
+   *  most probably to be able to query duration */
+  GList *needs_parsing;
 
   GstEvent *last_seek;
   GstClockTime segment_start;
@@ -137,7 +140,7 @@ _set_variable_func (const gchar *name, double *value, gpointer user_data)
       GST_WARNING_OBJECT (scenario, "Could not query duration");
       return FALSE;
     }
-    *value = duration / GST_SECOND;
+    *value = ((double) (duration / GST_SECOND));
 
     return TRUE;
   } else if (!g_strcmp0 (name, "position")) {
@@ -210,8 +213,9 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
       stop = dstop * GST_SECOND;
   }
 
-  g_print ("%s (num %u, missing repeat: %i), seeking to: %" GST_TIME_FORMAT
-      " stop: %" GST_TIME_FORMAT " Rate %lf\n", action->name,
+  g_print ("(position %" GST_TIME_FORMAT "), %s (num %u, missing repeat: %i), seeking to: %" GST_TIME_FORMAT
+      " stop: %" GST_TIME_FORMAT " Rate %lf\n", GST_TIME_ARGS (action->playback_time),
+      action->name,
       action->action_number, action->repeat, GST_TIME_ARGS (start),
       GST_TIME_ARGS (stop), rate);
 
@@ -555,6 +559,8 @@ get_position (GstValidateScenario * scenario)
       }
     }
 
+    GST_DEBUG_OBJECT (scenario, "Executing %" GST_PTR_FORMAT
+        " at %" GST_TIME_FORMAT, act->structure, GST_TIME_ARGS (position));
     if (!type->execute (scenario, act))
       GST_WARNING_OBJECT (scenario, "Could not execute %" GST_PTR_FORMAT,
           act->structure);
@@ -608,6 +614,36 @@ message_cb (GstBus * bus, GstMessage * message,
       if (priv->last_seek) {
         gst_validate_scenario_update_segment_from_seek (scenario, priv->last_seek);
         gst_event_replace (&priv->last_seek, NULL);
+      }
+
+      if (priv->needs_parsing) {
+        GList *tmp;
+        gdouble time;
+        const gchar *str_playback_time;
+        gchar *error = NULL;
+
+        for (tmp = priv->needs_parsing; tmp; tmp=tmp->next) {
+          GstValidateAction *action = tmp->data;
+
+          if ((str_playback_time = gst_structure_get_string(action->structure, "playback_time")))
+            time = parse_expression (str_playback_time, _set_variable_func,
+                scenario, &error);
+          else
+            continue;
+
+
+          if (error) {
+            GST_ERROR_OBJECT (scenario, "No playback time for action %s", str_playback_time);
+            g_free (error);
+            error = NULL;
+            continue;
+          }
+          action->playback_time = time * GST_SECOND;
+          str_playback_time = NULL;
+        }
+
+        g_list_free (priv->needs_parsing);
+        priv->needs_parsing = NULL;
       }
 
       if (priv->get_pos_id == 0) {
@@ -672,7 +708,7 @@ _load_scenario_file (GstValidateScenario * scenario,
 
   lines = g_strsplit (content, "\n", 0);
   for (i = 0; lines[i]; i++) {
-    const gchar *type;
+    const gchar *type, *str_playback_time;
     gdouble playback_time;
     GstValidateAction *action;
     GstStructure *structure;
@@ -695,9 +731,11 @@ _load_scenario_file (GstValidateScenario * scenario,
     action = g_slice_new0 (GstValidateAction);
     action->type = type;
     action->repeat = -1;
-    if (gst_structure_get_double (structure, "playback_time", &playback_time))
+    if (gst_structure_get_double (structure, "playback_time", &playback_time)) {
       action->playback_time = playback_time * GST_SECOND;
-    else
+    } else if ((str_playback_time = gst_structure_get_string(structure, "playback_time"))) {
+      priv->needs_parsing = g_list_append (priv->needs_parsing, action);
+    } else
       GST_WARNING_OBJECT (scenario, "No playback time for action %s", lines[i]);
 
     if (!(action->name = gst_structure_get_string (structure, "name")))
