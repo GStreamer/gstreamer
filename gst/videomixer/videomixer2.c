@@ -1192,6 +1192,9 @@ gst_videomixer2_collected (GstCollectPads * pads, GstVideoMixer2 * mix)
     mix->send_stream_start = FALSE;
   }
 
+  if (gst_pad_check_reconfigure (mix->srcpad))
+    gst_videomixer2_update_src_caps (mix);
+
   if (mix->send_caps) {
     if (!gst_pad_push_event (mix->srcpad,
             gst_event_new_caps (mix->current_caps))) {
