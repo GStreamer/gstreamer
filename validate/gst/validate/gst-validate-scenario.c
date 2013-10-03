@@ -133,7 +133,7 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
 
   gdouble rate = 1.0, dstart, dstop;
   GstFormat format = GST_FORMAT_TIME;
-  GstSeekFlags flags = GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH;
+  GstSeekFlags flags = 0;
   GstSeekType start_type = GST_SEEK_TYPE_SET;
   GstClockTime start;
   GstSeekType stop_type = GST_SEEK_TYPE_SET;
