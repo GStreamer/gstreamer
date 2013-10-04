@@ -108,34 +108,49 @@ public class MediaInfo.Info : Box
     wikilinks = new HashMap<string, string> ();
     // container/tag formats
     wikilinks["application/mxf"] = "Material_Exchange_Format";
+    wikilinks["audio/x-aiff"] = "Audio_Interchange_File_Format";
     wikilinks["audio/ogg"] = "Ogg";
     wikilinks["application/vnd.rn-realmedia"] = "RealMedia";
     wikilinks["application/x-3gp"] = "3GP_and_3G2";
     wikilinks["application/x-annodex"] = "Ogg";
     wikilinks["application/x-id3"] = "ID3";
     wikilinks["application/x-pn-realaudio"] = "RealAudio";
-    wikilinks["video/ogg"] = "Ogg";
     wikilinks["video/x-flv"] = "Flash_Video";
     wikilinks["video/x-matroska"] = "Matroska";
+    wikilinks["video/mpeg"] = "MPEG-1#Part_1:_Systems";
+    wikilinks["video/mpegts"] = "MPEG_transport_stream";
+    wikilinks["video/ogg"] = "Ogg";
     wikilinks["video/webm"] = "WebM";
     wikilinks["video/x-ms-asf"] = "Advanced_Systems_Format";
     wikilinks["video/x-msvideo"] = "Audio_Video_Interleave";
     wikilinks["video/x-quicktime"] = "QuickTime_File_Format";
     wikilinks["video/quicktime"] = "QuickTime_File_Format";
     // audio codecs
+    wikilinks["MPEG-1 Layer 2 (MP2)"] = "MPEG-1_Audio_Layer_II";
     wikilinks["MPEG-1 Layer 3 (MP3)"] = "MP3";
     wikilinks["MPEG-4 AAC"] = "Advanced_Audio_Coding";
+    wikilinks["Windows Media Audio 8"] = "Windows_Media_Audio#Windows_Media_Audio";
+    wikilinks["audio/x-ac3"] = "Dolby_AC-3";
     wikilinks["audio/x-flac"] = "Flac";
+    wikilinks["audio/x-qdm"] = "QDesign";
     wikilinks["audio/x-vorbis"] = "Vorbis";
     wikilinks["audio/x-wav"] = "WAV";
     // video codecs
+    wikilinks["MPEG-1 Video"] = "MPEG-1#Part_2:_Video";
+    wikilinks["MPEG-4 Video"] = "MPEG4";
+    wikilinks["Windows Media Video 9 Screen"] = "Windows_Media_Video#Windows_Media_Video_Screen";
+    wikilinks["image/gif"] = "GIF";
+    wikilinks["image/jpeg"] = "JPEG";
+    wikilinks["image/png"] = "Portable_Network_Graphics";
     wikilinks["video/x-divx"] = "MPEG-4_Part_2";
+    wikilinks["video/x-flash-video"] = "Sorenson_codec#Sorenson_Spark_.28FLV1.29";
     wikilinks["video/x-h264"] = "H.264/MPEG-4_AVC";
     wikilinks["video/x-msmpeg"] = "MPEG-4_Part_2";
-    wikilinks["video/x-svq"] = "Sorenson_codec";
+    wikilinks["video/x-svq"] = "Sorenson_codec#Sorenson_Video_.28SVQ1.2FSVQ3.29";
     wikilinks["video/x-theora"] = "Theora";
+    wikilinks["video/x-vp8"] = "VP8";
     wikilinks["video/x-xvid"] = "Xvid";
-    
+
     video_resolutions = new ArrayList<Gdk.Point?> ();
 
     int screen_height = Gdk.Screen.get_default().get_height();
@@ -637,6 +652,7 @@ public class MediaInfo.Info : Box
     add_table_row_for_string (table, row, "PixelAspect:", str);
     row++;
 
+    // TODO(ensonic): this seems to be always 0
     str = "%u bits/pixel".printf (vinfo.get_depth());
     add_table_row_for_string (table, row, "Bitdepth:", str);
     row++;
