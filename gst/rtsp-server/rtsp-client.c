@@ -711,6 +711,19 @@ close_connection (GstRTSPClient * client)
   gst_rtsp_connection_close (priv->connection);
 }
 
+static gchar *
+make_path_from_uri (GstRTSPClient * client, GstRTSPUrl * uri)
+{
+  gchar *path;
+
+  if (uri->query)
+    path = g_strconcat (uri->abspath, "?", uri->query, NULL);
+  else
+    path = g_strdup (uri->abspath);
+
+  return path;
+}
+
 static gboolean
 handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
@@ -718,7 +731,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPSession *session;
   GstRTSPSessionMedia *sessmedia;
   GstRTSPStatusCode code;
-  const gchar *path;
+  gchar *path;
   gint matched;
 
   if (!ctx->session)
@@ -729,7 +742,7 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!ctx->uri)
     goto no_uri;
 
-  path = ctx->uri->abspath;
+  path = make_path_from_uri (client, ctx->uri);
 
   /* get a handle to the configuration of the media in the session */
   sessmedia = gst_rtsp_session_get_media (session, path, &matched);
@@ -739,6 +752,8 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
   /* only aggregate control for now.. */
   if (path[matched] != '\0')
     goto no_aggregate;
+
+  g_free (path);
 
   ctx->sessmedia = sessmedia;
 
@@ -786,6 +801,7 @@ not_found:
   {
     GST_ERROR ("client %p: no media for uri", client);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    g_free (path);
     return FALSE;
   }
 no_aggregate:
@@ -793,6 +809,7 @@ no_aggregate:
     GST_ERROR ("client %p: no aggregate path %s", client, path);
     send_generic_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
+    g_free (path);
     return FALSE;
   }
 }
@@ -898,7 +915,7 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPSessionMedia *sessmedia;
   GstRTSPStatusCode code;
   GstRTSPState rtspstate;
-  const gchar *path;
+  gchar *path;
   gint matched;
 
   if (!(session = ctx->session))
@@ -907,7 +924,7 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!ctx->uri)
     goto no_uri;
 
-  path = ctx->uri->abspath;
+  path = make_path_from_uri (client, ctx->uri);
 
   /* get a handle to the configuration of the media in the session */
   sessmedia = gst_rtsp_session_get_media (session, path, &matched);
@@ -916,6 +933,8 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   if (path[matched] != '\0')
     goto no_aggregate;
+
+  g_free (path);
 
   ctx->sessmedia = sessmedia;
 
@@ -962,6 +981,7 @@ not_found:
   {
     GST_ERROR ("client %p: no media for uri", client);
     send_generic_response (client, GST_RTSP_STS_NOT_FOUND, ctx);
+    g_free (path);
     return FALSE;
   }
 no_aggregate:
@@ -969,6 +989,7 @@ no_aggregate:
     GST_ERROR ("client %p: no aggregate path %s", client, path);
     send_generic_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
+    g_free (path);
     return FALSE;
   }
 invalid_state:
@@ -1026,7 +1047,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!(uri = ctx->uri))
     goto no_uri;
 
-  path = uri->abspath;
+  path = make_path_from_uri (client, uri);
 
   /* get a handle to the configuration of the media in the session */
   sessmedia = gst_rtsp_session_get_media (session, path, &matched);
@@ -1098,6 +1119,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
     }
   }
   g_free (base_url);
+  g_free (path);
 
   /* construct the response now */
   code = GST_RTSP_STS_OK;
@@ -1152,6 +1174,7 @@ no_aggregate:
     GST_ERROR ("client %p: no aggregate path %s", client, path);
     send_generic_response (client,
         GST_RTSP_STS_ONLY_AGGREGATE_OPERATION_ALLOWED, ctx);
+    g_free (path);
     return FALSE;
   }
 invalid_state:
@@ -1159,6 +1182,7 @@ invalid_state:
     GST_ERROR ("client %p: not PLAYING or READY", client);
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
         ctx);
+    g_free (path);
     return FALSE;
   }
 }
@@ -1389,10 +1413,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
     goto no_uri;
 
   uri = ctx->uri;
-  if (uri->query)
-    path = g_strconcat (uri->abspath, "?", uri->query, NULL);
-  else
-    path = g_strdup (uri->abspath);
+  path = make_path_from_uri (client, uri);
 
   /* parse the transport */
   res =
