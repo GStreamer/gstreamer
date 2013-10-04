@@ -64,7 +64,7 @@ gst_vaapi_apply_composition(GstVaapiSurface *surface, GstBuffer *buffer);
 /* Helpers to handle interlaced contents */
 #if GST_CHECK_VERSION(1,0,0)
 # define GST_CAPS_INTERLACED_MODES \
-    "interlace-mode = (string){ progressive, interleaved }"
+    "interlace-mode = (string){ progressive, interleaved, mixed }"
 # define GST_CAPS_INTERLACED_FALSE \
     "interlace-mode = (string)progressive"
 #else

@@ -200,6 +200,28 @@ gst_vaapipostproc_stop(GstBaseTransform *trans)
     return TRUE;
 }
 
+static gboolean
+is_interlaced_buffer(GstVaapiPostproc *postproc, GstBuffer *buf)
+{
+    if (!postproc->deinterlace)
+        return FALSE;
+
+    switch (GST_VIDEO_INFO_INTERLACE_MODE(&postproc->sinkpad_info)) {
+    case GST_VIDEO_INTERLACE_MODE_MIXED:
+#if GST_CHECK_VERSION(1,0,0)
+        if (!GST_BUFFER_FLAG_IS_SET(buf, GST_VIDEO_BUFFER_FLAG_INTERLACED))
+            return FALSE;
+#else
+        if (GST_BUFFER_FLAG_IS_SET(buf, GST_VIDEO_BUFFER_PROGRESSIVE))
+            return FALSE;
+#endif
+        break;
+    default:
+        break;
+    }
+    return TRUE;
+}
+
 static GstBuffer *
 create_output_buffer(GstVaapiPostproc *postproc)
 {
@@ -242,7 +264,7 @@ gst_vaapipostproc_process(GstBaseTransform *trans, GstBuffer *inbuf,
     GstFlowReturn ret;
     GstBuffer *fieldbuf;
     guint fieldbuf_flags, outbuf_flags, flags;
-    gboolean tff;
+    gboolean tff, deint;
 
     meta = gst_buffer_get_vaapi_video_meta(inbuf);
     if (!meta)
@@ -250,6 +272,7 @@ gst_vaapipostproc_process(GstBaseTransform *trans, GstBuffer *inbuf,
 
     timestamp  = GST_BUFFER_TIMESTAMP(inbuf);
     tff        = GST_BUFFER_FLAG_IS_SET(inbuf, GST_VIDEO_BUFFER_FLAG_TFF);
+    deint      = is_interlaced_buffer(postproc, inbuf);
 
     flags = gst_vaapi_video_meta_get_render_flags(meta) &
         ~(GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD|
@@ -263,7 +286,7 @@ gst_vaapipostproc_process(GstBaseTransform *trans, GstBuffer *inbuf,
 
     meta = gst_buffer_get_vaapi_video_meta(fieldbuf);
     fieldbuf_flags = flags;
-    fieldbuf_flags |= postproc->deinterlace ? (
+    fieldbuf_flags |= deint ? (
         tff ?
         GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD :
         GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD) :
@@ -281,7 +304,7 @@ gst_vaapipostproc_process(GstBaseTransform *trans, GstBuffer *inbuf,
 
     meta = gst_buffer_get_vaapi_video_meta(outbuf);
     outbuf_flags = flags;
-    outbuf_flags |= postproc->deinterlace ? (
+    outbuf_flags |= deint ? (
         tff ?
         GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD :
         GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD) :

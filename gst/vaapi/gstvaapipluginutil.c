@@ -397,6 +397,9 @@ gst_caps_set_interlaced(GstCaps *caps, GstVideoInfo *vip)
     case GST_VIDEO_INTERLACE_MODE_INTERLEAVED:
         mode_str = "interleaved";
         break;
+    case GST_VIDEO_INTERLACE_MODE_MIXED:
+        mode_str = "mixed";
+        break;
     default:
         GST_ERROR("unsupported `interlace-mode' %d", mode);
         return FALSE;
