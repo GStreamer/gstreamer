@@ -451,6 +451,7 @@ gst_vaapi_uploader_get_buffer(GstVaapiUploader *uploader)
     GstVaapiUploaderPrivate *priv;
     GstVaapiImage *image;
     GstVaapiVideoMeta *meta;
+    GstVaapiSurfaceProxy *proxy;
     GstBuffer *buffer;
 
     g_return_val_if_fail(GST_VAAPI_IS_UPLOADER(uploader), NULL);
@@ -463,11 +464,16 @@ gst_vaapi_uploader_get_buffer(GstVaapiUploader *uploader)
         goto error;
     }
 
-    meta = gst_buffer_get_vaapi_video_meta(buffer);
-    if (!gst_vaapi_video_meta_set_surface_from_pool(meta, priv->surfaces)) {
+    proxy = gst_vaapi_surface_proxy_new_from_pool(
+        GST_VAAPI_SURFACE_POOL(priv->surfaces));
+    if (!proxy) {
         GST_WARNING("failed to allocate VA surface");
         goto error;
     }
+
+    meta = gst_buffer_get_vaapi_video_meta(buffer);
+    gst_vaapi_video_meta_set_surface_proxy(meta, proxy);
+    gst_vaapi_surface_proxy_unref(proxy);
 
     image = gst_vaapi_video_meta_get_image(meta);
     if (!gst_vaapi_image_map(image)) {
