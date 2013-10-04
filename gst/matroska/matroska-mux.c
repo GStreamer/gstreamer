@@ -2481,6 +2481,7 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   };
   const gchar *media_type;
   gboolean audio_only;
+  gboolean is_webm = FALSE;
   guint64 master, child;
   GSList *collected;
   int i;
@@ -2521,9 +2522,13 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   g_snprintf (s_id, sizeof (s_id), "matroskamux-%08x", g_random_int ());
   gst_pad_push_event (mux->srcpad, gst_event_new_stream_start (s_id));
 
+  /* Are we muxing a WebM stream? */
+  if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
+    is_webm = TRUE;
+  }
   /* output caps */
   audio_only = mux->num_v_streams == 0 && mux->num_a_streams > 0;
-  if (!strcmp (mux->doctype, GST_MATROSKA_DOCTYPE_WEBM)) {
+  if (is_webm) {
     media_type = (audio_only) ? "audio/webm" : "video/webm";
   } else {
     media_type = (audio_only) ? "audio/x-matroska" : "video/x-matroska";
@@ -2581,11 +2586,16 @@ gst_matroska_mux_start (GstMatroskaMux * mux)
   /* segment info */
   mux->info_pos = ebml->pos;
   master = gst_ebml_write_master_start (ebml, GST_MATROSKA_ID_SEGMENTINFO);
-  for (i = 0; i < 4; i++) {
-    segment_uid[i] = g_random_int ();
+
+  /* WebM does not support SegmentUID field on SegmentInfo */
+  if (!is_webm) {
+    for (i = 0; i < 4; i++) {
+      segment_uid[i] = g_random_int ();
+    }
+    gst_ebml_write_binary (ebml, GST_MATROSKA_ID_SEGMENTUID,
+        (guint8 *) segment_uid, 16);
   }
-  gst_ebml_write_binary (ebml, GST_MATROSKA_ID_SEGMENTUID,
-      (guint8 *) segment_uid, 16);
+
   gst_ebml_write_uint (ebml, GST_MATROSKA_ID_TIMECODESCALE, mux->time_scale);
   mux->duration_pos = ebml->pos;
   /* get duration */
