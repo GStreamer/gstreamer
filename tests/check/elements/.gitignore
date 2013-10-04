@@ -9,6 +9,7 @@ camerabin
 camerabin2
 curlfilesink
 curlftpsink
+curlsftpsink
 curlhttpsink
 curlsmtpsink
 deinterleave

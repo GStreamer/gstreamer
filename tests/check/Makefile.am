@@ -142,10 +142,17 @@ else
 check_opus =
 endif
 
+if USE_SSH2
+check_curl_sftp = elements/curlsftpsink
+else
+check_curl_sftp =
+endif
+
 if USE_CURL
 check_curl = elements/curlhttpsink \
 	elements/curlfilesink \
 	elements/curlftpsink \
+	$(check_curl_sftp) \
 	elements/curlsmtpsink
 else
 check_curl =

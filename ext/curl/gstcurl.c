@@ -26,6 +26,9 @@
 #include "gstcurlfilesink.h"
 #include "gstcurlftpsink.h"
 #include "gstcurlsmtpsink.h"
+#ifdef HAVE_SSH2
+#include "gstcurlsftpsink.h"
+#endif
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -46,6 +49,12 @@ plugin_init (GstPlugin * plugin)
   if (!gst_element_register (plugin, "curlsmtpsink", GST_RANK_NONE,
           GST_TYPE_CURL_SMTP_SINK))
     return FALSE;
+
+#ifdef HAVE_SSH2
+  if (!gst_element_register (plugin, "curlsftpsink", GST_RANK_NONE,
+          GST_TYPE_CURL_SFTP_SINK))
+    return FALSE;
+#endif
 
   return TRUE;
 }
