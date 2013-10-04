@@ -618,7 +618,18 @@ public class MediaInfo.Info : Box
 
     double fps_num = (double)vinfo.get_framerate_num();
     double fps_denom = (double)vinfo.get_framerate_denom();
-    str = "%.3lf frames/second".printf (fps_num/fps_denom);
+    if (fps_num != 0) {
+      str = "%.3lf frames/second".printf (fps_num/fps_denom);
+    } else {
+      if (fps_denom == 1) {
+        // TODO(ensonic): there are a few files where video is flaged as still image
+        // ~/temp/Video/luc_00036.MTS
+        // ~/temp/Video/lookinggood.asx
+        str = "still image";
+      } else {
+        str = "unknown";
+      }
+    }
     add_table_row_for_string (table, row, "Framerate:", str);
     row++;
 
