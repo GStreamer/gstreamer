@@ -26,12 +26,16 @@
 #  include <config.h>
 #endif
 
+#if HAVE_DECL_V4L2_MEMORY_DMABUF
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE            /* O_CLOEXEC */
+#endif
+#include <fcntl.h>
+#endif
+
 #include <sys/mman.h>
 #include <string.h>
 #include <unistd.h>
-#if HAVE_DECL_V4L2_MEMORY_DMABUF
-#include <fcntl.h>
-#endif
 
 #include "gst/video/video.h"
 #include "gst/video/gstvideometa.h"
