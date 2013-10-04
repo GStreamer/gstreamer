@@ -789,6 +789,7 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
   GstAudioConvert *this = GST_AUDIO_CONVERT (base);
   GstMapInfo srcmap, dstmap;
   gint insize, outsize;
+  gboolean inbuf_writable;
 
   gint samples;
 
@@ -803,8 +804,13 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
   if (insize == 0 || outsize == 0)
     return GST_FLOW_OK;
 
+  inbuf_writable = gst_buffer_is_writable (inbuf)
+      && gst_buffer_n_memory (inbuf) == 1
+      && gst_memory_is_writable (gst_buffer_peek_memory (inbuf, 0));
+
   /* get src and dst data */
-  gst_buffer_map (inbuf, &srcmap, GST_MAP_READ);
+  gst_buffer_map (inbuf, &srcmap,
+      inbuf_writable ? GST_MAP_READWRITE : GST_MAP_READ);
   gst_buffer_map (outbuf, &dstmap, GST_MAP_WRITE);
 
   /* check in and outsize */
@@ -816,7 +822,7 @@ gst_audio_convert_transform (GstBaseTransform * base, GstBuffer * inbuf,
   /* and convert the samples */
   if (!GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_GAP)) {
     if (!audio_convert_convert (&this->ctx, srcmap.data, dstmap.data,
-            samples, gst_buffer_is_writable (inbuf)))
+            samples, inbuf_writable))
       goto convert_error;
   } else {
     /* Create silence buffer */
