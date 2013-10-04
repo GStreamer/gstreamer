@@ -35,6 +35,10 @@
 #include "gstvaapipostproc.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideobuffer.h"
+#if GST_CHECK_VERSION(1,0,0)
+#include "gstvaapivideobufferpool.h"
+#include "gstvaapivideomemory.h"
+#endif
 
 #define GST_PLUGIN_NAME "vaapipostproc"
 #define GST_PLUGIN_DESC "A video postprocessing filter"
@@ -45,6 +49,15 @@ GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapipostproc);
 /* Default templates */
 static const char gst_vaapipostproc_sink_caps_str[] =
     GST_VAAPI_SURFACE_CAPS ", "
+    GST_CAPS_INTERLACED_MODES "; "
+#if GST_CHECK_VERSION(1,0,0)
+    GST_VIDEO_CAPS_MAKE(GST_VIDEO_FORMATS_ALL) ", "
+#else
+    "video/x-raw-yuv, "
+    "width  = " GST_VIDEO_SIZE_RANGE ", "
+    "height = " GST_VIDEO_SIZE_RANGE ", "
+    "framerate = " GST_VIDEO_FPS_RANGE ", "
+#endif
     GST_CAPS_INTERLACED_MODES;
 
 static const char gst_vaapipostproc_src_caps_str[] =
@@ -94,6 +107,9 @@ gst_vaapipostproc_set_video_context(
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(context);
 
     gst_vaapi_set_display(type, value, &postproc->display);
+
+    if (postproc->uploader)
+        gst_vaapi_uploader_ensure_display(postproc->uploader, postproc->display);
 }
 
 static void
@@ -157,9 +173,42 @@ gst_vaapipostproc_ensure_display(GstVaapiPostproc *postproc)
 }
 
 static gboolean
+gst_vaapipostproc_ensure_uploader(GstVaapiPostproc *postproc)
+{
+    if (!gst_vaapipostproc_ensure_display(postproc))
+        return FALSE;
+
+    if (!postproc->uploader) {
+        postproc->uploader = gst_vaapi_uploader_new(postproc->display);
+        if (!postproc->uploader)
+            return FALSE;
+    }
+
+    if (!gst_vaapi_uploader_ensure_display(postproc->uploader,
+            postproc->display))
+        return FALSE;
+    return TRUE;
+}
+
+static gboolean
+gst_vaapipostproc_ensure_uploader_caps(GstVaapiPostproc *postproc)
+{
+#if !GST_CHECK_VERSION(1,0,0)
+    if (postproc->is_raw_yuv && !gst_vaapi_uploader_ensure_caps(
+            postproc->uploader, postproc->sinkpad_caps, NULL))
+        return FALSE;
+#endif
+    return TRUE;
+}
+
+static gboolean
 gst_vaapipostproc_create(GstVaapiPostproc *postproc)
 {
     if (!gst_vaapipostproc_ensure_display(postproc))
+        return FALSE;
+    if (!gst_vaapipostproc_ensure_uploader(postproc))
+        return FALSE;
+    if (!gst_vaapipostproc_ensure_uploader_caps(postproc))
         return FALSE;
     return TRUE;
 }
@@ -167,18 +216,15 @@ gst_vaapipostproc_create(GstVaapiPostproc *postproc)
 static void
 gst_vaapipostproc_destroy(GstVaapiPostproc *postproc)
 {
+#if GST_CHECK_VERSION(1,0,0)
+    g_clear_object(&postproc->sinkpad_buffer_pool);
+#endif
+    g_clear_object(&postproc->uploader);
     gst_vaapi_display_replace(&postproc->display, NULL);
 
     gst_caps_replace(&postproc->sinkpad_caps, NULL);
     gst_caps_replace(&postproc->srcpad_caps,  NULL);
     gst_caps_replace(&postproc->allowed_caps, NULL);
-}
-
-static gboolean
-gst_vaapipostproc_reset(GstVaapiPostproc *postproc)
-{
-    gst_vaapipostproc_destroy(postproc);
-    return gst_vaapipostproc_create(postproc);
 }
 
 static gboolean
@@ -406,6 +452,18 @@ gst_vaapipostproc_update_sink_caps(GstVaapiPostproc *postproc, GstCaps *caps,
     postproc->field_duration = gst_util_uint64_scale(
         GST_SECOND, GST_VIDEO_INFO_FPS_D(&vi),
         (1 + postproc->deinterlace) * GST_VIDEO_INFO_FPS_N(&vi));
+
+    postproc->is_raw_yuv = GST_VIDEO_INFO_IS_YUV(&vi);
+#if !GST_CHECK_VERSION(1,0,0)
+    if (postproc->is_raw_yuv) {
+        /* Ensure the uploader is set up for upstream allocated buffers */
+        GstVaapiUploader * const uploader = postproc->uploader;
+        if (!gst_vaapi_uploader_ensure_display(uploader, postproc->display))
+            return FALSE;
+        if (!gst_vaapi_uploader_ensure_caps(uploader, caps, NULL))
+            return FALSE;
+    }
+#endif
     return TRUE;
 }
 
@@ -426,13 +484,28 @@ gst_vaapipostproc_update_src_caps(GstVaapiPostproc *postproc, GstCaps *caps,
 static gboolean
 ensure_allowed_caps(GstVaapiPostproc *postproc)
 {
+    GstCaps *out_caps, *yuv_caps;
+
     if (postproc->allowed_caps)
         return TRUE;
 
-    postproc->allowed_caps =
-        gst_caps_from_string(gst_vaapipostproc_sink_caps_str);
-    if (!postproc->allowed_caps)
+    /* Create VA caps */
+    out_caps = gst_caps_from_string(GST_VAAPI_SURFACE_CAPS ", "
+        GST_CAPS_INTERLACED_MODES);
+    if (!out_caps) {
+        GST_ERROR("failed to create VA sink caps");
         return FALSE;
+    }
+
+    /* Append YUV caps */
+    if (gst_vaapipostproc_ensure_uploader(postproc)) {
+        yuv_caps = gst_vaapi_uploader_get_caps(postproc->uploader);
+        if (yuv_caps)
+            gst_caps_append(out_caps, gst_caps_ref(yuv_caps));
+        else
+            GST_WARNING("failed to create YUV sink caps");
+    }
+    postproc->allowed_caps = out_caps;
 
     /* XXX: append VA/VPP filters */
     return TRUE;
@@ -479,6 +552,7 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
             GST_VIDEO_INFO_INTERLACE_MODE(&vi) =
                 GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
         }
+        format = GST_VIDEO_FORMAT_ENCODED;
     }
     else {
         if (is_deinterlace_enabled(postproc, &vi)) {
@@ -488,22 +562,29 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
         }
     }
 
-    /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
-       reconstruct suitable caps for "encoded" video formats */
-    out_caps = gst_caps_from_string(GST_VAAPI_SURFACE_CAPS_NAME);
-    if (!out_caps)
-        return NULL;
+    if (format != GST_VIDEO_FORMAT_ENCODED) {
+        out_caps = gst_video_info_to_caps(&vi);
+        if (!out_caps)
+            return NULL;
+    }
+    else {
+        /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
+           reconstruct suitable caps for "encoded" video formats */
+        out_caps = gst_caps_from_string(GST_VAAPI_SURFACE_CAPS_NAME);
+        if (!out_caps)
+            return NULL;
 
-    par_n = GST_VIDEO_INFO_PAR_N(&vi);
-    par_d = GST_VIDEO_INFO_PAR_D(&vi);
-    gst_caps_set_simple(out_caps,
-        "type", G_TYPE_STRING, "vaapi",
-        "opengl", G_TYPE_BOOLEAN, USE_GLX,
-        "width", G_TYPE_INT, GST_VIDEO_INFO_WIDTH(&vi),
-        "height", G_TYPE_INT, GST_VIDEO_INFO_HEIGHT(&vi),
-        "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
-        NULL);
+        par_n = GST_VIDEO_INFO_PAR_N(&vi);
+        par_d = GST_VIDEO_INFO_PAR_D(&vi);
+        gst_caps_set_simple(out_caps,
+            "type", G_TYPE_STRING, "vaapi",
+            "opengl", G_TYPE_BOOLEAN, USE_GLX,
+            "width", G_TYPE_INT, GST_VIDEO_INFO_WIDTH(&vi),
+            "height", G_TYPE_INT, GST_VIDEO_INFO_HEIGHT(&vi),
+            "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
+            "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
+            NULL);
+    }
 
     gst_caps_set_interlaced(out_caps, &vi);
     return out_caps;
@@ -530,17 +611,85 @@ gst_vaapipostproc_transform_caps(GstBaseTransform *trans,
     gst_vaapipostproc_transform_caps_impl
 #endif
 
+static gboolean
+gst_vaapipostproc_transform_size(GstBaseTransform *trans,
+    GstPadDirection direction, GstCaps *caps, gsize size,
+    GstCaps *othercaps, gsize *othersize)
+{
+    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
+
+    if (direction == GST_PAD_SINK || !postproc->is_raw_yuv)
+        *othersize = 0;
+    else
+        *othersize = size;
+    return TRUE;
+}
+
+static GstBuffer *
+get_source_buffer(GstVaapiPostproc *postproc, GstBuffer *inbuf)
+{
+    GstVaapiVideoMeta *meta;
+    GstBuffer *outbuf;
+
+    meta = gst_buffer_get_vaapi_video_meta(inbuf);
+    if (meta)
+        return gst_buffer_ref(inbuf);
+
+#if GST_CHECK_VERSION(1,0,0)
+    outbuf = NULL;
+    goto error_invalid_buffer;
+    return outbuf;
+
+    /* ERRORS */
+error_invalid_buffer:
+    {
+        GST_ERROR("failed to validate source buffer");
+        return NULL;
+    }
+#else
+    outbuf = gst_vaapi_uploader_get_buffer(postproc->uploader);
+    if (!outbuf)
+        goto error_create_buffer;
+    if (!gst_vaapi_uploader_process(postproc->uploader, inbuf, outbuf))
+        goto error_copy_buffer;
+
+    gst_buffer_copy_metadata(outbuf, inbuf,
+        GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
+    return outbuf;
+
+    /* ERRORS */
+error_create_buffer:
+    {
+        GST_ERROR("failed to create buffer");
+        return NULL;
+    }
+error_copy_buffer:
+    {
+        GST_ERROR("failed to upload buffer to VA surface");
+        gst_buffer_unref(outbuf);
+        return NULL;
+    }
+#endif
+}
+
 static GstFlowReturn
 gst_vaapipostproc_transform(GstBaseTransform *trans, GstBuffer *inbuf,
     GstBuffer *outbuf)
 {
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
+    GstBuffer *buf;
     GstFlowReturn ret;
 
+    buf = get_source_buffer(postproc, inbuf);
+    if (!buf)
+        return GST_FLOW_ERROR;
+
     if (postproc->deinterlace)
-        ret = gst_vaapipostproc_process(trans, inbuf, outbuf);
+        ret = gst_vaapipostproc_process(trans, buf, outbuf);
     else
-        ret = gst_vaapipostproc_passthrough(trans, inbuf, outbuf);
+        ret = gst_vaapipostproc_passthrough(trans, buf, outbuf);
+
+    gst_buffer_unref(buf);
     return ret;
 }
 
@@ -559,6 +708,72 @@ gst_vaapipostproc_prepare_output_buffer(GstBaseTransform *trans,
 }
 
 static gboolean
+ensure_sinkpad_buffer_pool(GstVaapiPostproc *postproc, GstCaps *caps)
+{
+#if GST_CHECK_VERSION(1,0,0)
+    GstBufferPool *pool;
+    GstCaps *pool_caps;
+    GstStructure *config;
+    GstVideoInfo vi;
+    gboolean need_pool;
+
+    if (!gst_vaapipostproc_ensure_display(postproc))
+        return FALSE;
+
+    if (postproc->sinkpad_buffer_pool) {
+        config = gst_buffer_pool_get_config(postproc->sinkpad_buffer_pool);
+        gst_buffer_pool_config_get_params(config, &pool_caps, NULL, NULL, NULL);
+        need_pool = !gst_caps_is_equal(caps, pool_caps);
+        gst_structure_free(config);
+        if (!need_pool)
+            return TRUE;
+        g_clear_object(&postproc->sinkpad_buffer_pool);
+        postproc->sinkpad_buffer_size = 0;
+    }
+
+    pool = gst_vaapi_video_buffer_pool_new(postproc->display);
+    if (!pool)
+        goto error_create_pool;
+
+    gst_video_info_init(&vi);
+    gst_video_info_from_caps(&vi, caps);
+    if (GST_VIDEO_INFO_FORMAT(&vi) == GST_VIDEO_FORMAT_ENCODED) {
+        GST_DEBUG("assume sink pad buffer pool format is NV12");
+        gst_video_info_set_format(&vi, GST_VIDEO_FORMAT_NV12,
+            GST_VIDEO_INFO_WIDTH(&vi), GST_VIDEO_INFO_HEIGHT(&vi));
+    }
+    postproc->sinkpad_buffer_size = vi.size;
+
+    config = gst_buffer_pool_get_config(pool);
+    gst_buffer_pool_config_set_params(config, caps,
+        postproc->sinkpad_buffer_size, 0, 0);
+    gst_buffer_pool_config_add_option(config,
+        GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META);
+    gst_buffer_pool_config_add_option(config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
+    if (!gst_buffer_pool_set_config(pool, config))
+        goto error_pool_config;
+    postproc->sinkpad_buffer_pool = pool;
+    return TRUE;
+
+    /* ERRORS */
+error_create_pool:
+    {
+        GST_ERROR("failed to create buffer pool");
+        return FALSE;
+    }
+error_pool_config:
+    {
+        GST_ERROR("failed to reset buffer pool config");
+        gst_object_unref(pool);
+        return FALSE;
+    }
+#else
+    return TRUE;
+#endif
+}
+
+static gboolean
 gst_vaapipostproc_set_caps(GstBaseTransform *trans, GstCaps *caps,
     GstCaps *out_caps)
 {
@@ -571,11 +786,15 @@ gst_vaapipostproc_set_caps(GstBaseTransform *trans, GstCaps *caps,
         return FALSE;
 
     if (caps_changed) {
-        if (!gst_vaapipostproc_reset(postproc))
-            return FALSE;
+        gst_vaapipostproc_destroy(postproc);
         gst_caps_replace(&postproc->sinkpad_caps, caps);
         gst_caps_replace(&postproc->srcpad_caps, out_caps);
+        if (!gst_vaapipostproc_create(postproc))
+            return FALSE;
     }
+
+    if (!ensure_sinkpad_buffer_pool(postproc, caps))
+        return FALSE;
     return TRUE;
 }
 
@@ -595,6 +814,49 @@ gst_vaapipostproc_query(GstBaseTransform *trans, GstPadDirection direction,
     return GST_BASE_TRANSFORM_CLASS(gst_vaapipostproc_parent_class)->query(
         trans, direction, query);
 }
+
+#if GST_CHECK_VERSION(1,0,0)
+static gboolean
+gst_vaapipostproc_propose_allocation(GstBaseTransform *trans,
+    GstQuery *decide_query, GstQuery *query)
+{
+    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
+    GstCaps *caps = NULL;
+    gboolean need_pool;
+
+    /* Let vaapidecode allocate the video buffers */
+    if (!postproc->is_raw_yuv)
+        return FALSE;
+
+    gst_query_parse_allocation(query, &caps, &need_pool);
+
+    if (need_pool) {
+        if (!caps)
+            goto error_no_caps;
+        if (!ensure_sinkpad_buffer_pool(postproc, caps))
+            return FALSE;
+        gst_query_add_allocation_pool(query, postproc->sinkpad_buffer_pool,
+            postproc->sinkpad_buffer_size, 0, 0);
+    }
+
+    gst_query_add_allocation_meta(query,
+        GST_VAAPI_VIDEO_META_API_TYPE, NULL);
+    gst_query_add_allocation_meta(query,
+        GST_VIDEO_META_API_TYPE, NULL);
+    gst_query_add_allocation_meta(query,
+        GST_VIDEO_CROP_META_API_TYPE, NULL);
+    gst_query_add_allocation_meta(query,
+        GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
+    return TRUE;
+
+    /* ERRORS */
+error_no_caps:
+    {
+        GST_ERROR("no caps specified");
+        return FALSE;
+    }
+}
+#endif
 
 static void
 gst_vaapipostproc_finalize(GObject *object)
@@ -669,9 +931,14 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
     trans_class->start          = gst_vaapipostproc_start;
     trans_class->stop           = gst_vaapipostproc_stop;
     trans_class->transform_caps = gst_vaapipostproc_transform_caps;
+    trans_class->transform_size = gst_vaapipostproc_transform_size;
     trans_class->transform      = gst_vaapipostproc_transform;
     trans_class->set_caps       = gst_vaapipostproc_set_caps;
     trans_class->query          = gst_vaapipostproc_query;
+
+#if GST_CHECK_VERSION(1,0,0)
+    trans_class->propose_allocation = gst_vaapipostproc_propose_allocation;
+#endif
 
     trans_class->prepare_output_buffer =
         gst_vaapipostproc_prepare_output_buffer;
