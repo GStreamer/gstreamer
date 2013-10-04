@@ -2750,7 +2750,7 @@ gst_matroska_demux_push_dvd_clut_change_event (GstMatroskaDemux * demux,
           G_TYPE_INT, clut[15], NULL);
 
       gst_pad_push_event (stream->pad,
-          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s));
+          gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM_STICKY, s));
     }
   }
   g_free (buf);
