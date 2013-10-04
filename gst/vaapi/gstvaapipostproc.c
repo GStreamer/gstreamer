@@ -376,9 +376,7 @@ gst_vaapipostproc_update_src_caps(GstVaapiPostproc *postproc, GstCaps *caps)
     gst_structure_set(structure, "type", G_TYPE_STRING, "vaapi", NULL);
     gst_structure_set(structure, "opengl", G_TYPE_BOOLEAN, USE_GLX, NULL);
 
-    if (!postproc->deinterlace)
-        gst_structure_remove_interlaced_field(structure);
-    else {
+    if (postproc->deinterlace) {
         /* Set double framerate in interlaced mode */
         if (!gst_util_fraction_multiply(postproc->fps_n, postproc->fps_d,
                                         2, 1,
@@ -387,8 +385,8 @@ gst_vaapipostproc_update_src_caps(GstVaapiPostproc *postproc, GstCaps *caps)
 
         gst_structure_set(structure, "framerate",
             GST_TYPE_FRACTION, fps_n, fps_d, NULL);
-        gst_structure_set_interlaced(structure, FALSE);
     }
+    gst_caps_set_interlaced(src_caps, NULL);
     return gst_pad_set_caps(postproc->srcpad, src_caps);
 }
 

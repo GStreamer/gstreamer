@@ -380,3 +380,32 @@ gst_vaapi_apply_composition(GstVaapiSurface *surface, GstBuffer *buffer)
     return gst_vaapi_surface_set_subpictures_from_composition(surface,
             composition, TRUE);
 }
+
+gboolean
+gst_caps_set_interlaced(GstCaps *caps, GstVideoInfo *vip)
+{
+#if GST_CHECK_VERSION(1,0,0)
+    GstVideoInterlaceMode mode;
+    const gchar *mode_str;
+
+    mode = vip ? GST_VIDEO_INFO_INTERLACE_MODE(vip) :
+        GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+    switch (mode) {
+    case GST_VIDEO_INTERLACE_MODE_PROGRESSIVE:
+        mode_str = "progressive";
+        break;
+    case GST_VIDEO_INTERLACE_MODE_INTERLEAVED:
+        mode_str = "interleaved";
+        break;
+    default:
+        GST_ERROR("unsupported `interlace-mode' %d", mode);
+        return FALSE;
+    }
+
+    gst_caps_set_simple(caps, "interlace-mode", G_TYPE_STRING, mode_str, NULL);
+#else
+    gst_caps_set_simple(caps, "interlaced", G_TYPE_BOOLEAN,
+        vip ? GST_VIDEO_INFO_IS_INTERLACED(vip) : FALSE, NULL);
+#endif
+    return TRUE;
+}

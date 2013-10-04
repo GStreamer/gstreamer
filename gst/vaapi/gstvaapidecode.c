@@ -209,11 +209,7 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, vi->par_n, vi->par_d,
         NULL);
 
-    if (GST_VIDEO_INFO_IS_INTERLACED(vi)) {
-        GstStructure * const structure =
-            gst_caps_get_structure(state->caps, 0);
-        gst_structure_set_interlaced(structure, TRUE);
-    }
+    gst_caps_set_interlaced(state->caps, vi);
 #endif
     gst_caps_replace(&decode->srcpad_caps, state->caps);
     return TRUE;

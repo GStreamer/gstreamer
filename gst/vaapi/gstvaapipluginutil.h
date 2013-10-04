@@ -67,37 +67,15 @@ gst_vaapi_apply_composition(GstVaapiSurface *surface, GstBuffer *buffer);
     "interlace-mode = (string){ progressive, interleaved }"
 # define GST_CAPS_INTERLACED_FALSE \
     "interlace-mode = (string)progressive"
-
-static inline void
-gst_structure_remove_interlaced_field(GstStructure *structure)
-{
-    gst_structure_remove_field(structure, "interlace-mode");
-}
-
-static inline void
-gst_structure_set_interlaced(GstStructure *structure, gboolean interlaced)
-{
-    gst_structure_set(structure, "interlace-mode",
-        G_TYPE_STRING, interlaced ? "interleaved" : "progressive", NULL);
-}
 #else
 # define GST_CAPS_INTERLACED_MODES \
     "interlaced = (boolean){ true, false }"
 # define GST_CAPS_INTERLACED_FALSE \
     "interlaced = (boolean)false"
-
-static inline void
-gst_structure_remove_interlaced_field(GstStructure *structure)
-{
-    gst_structure_remove_field(structure, "interlaced");
-}
-
-static inline void
-gst_structure_set_interlaced(GstStructure *structure, gboolean interlaced)
-{
-    gst_structure_set(structure, "interlaced",
-        G_TYPE_BOOLEAN, interlaced, NULL);
-}
 #endif
+
+G_GNUC_INTERNAL
+gboolean
+gst_caps_set_interlaced(GstCaps *caps, GstVideoInfo *vip);
 
 #endif /* GST_VAAPI_PLUGIN_UTIL_H */
