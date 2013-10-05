@@ -278,20 +278,15 @@ mpegts_base_finalize (GObject * object)
 /* returns NULL if no matching descriptor found *
  * otherwise returns a descriptor that needs to *
  * be freed */
-/* FIXME : Return the GstMpegTsDescriptor */
-const guint8 *
+const GstMpegTsDescriptor *
 mpegts_get_descriptor_from_stream (MpegTSBaseStream * stream, guint8 tag)
 {
-  const GstMpegTsDescriptor *desc;
   GstMpegTsPMTStream *pmt = stream->stream;
 
   GST_DEBUG ("Searching for tag 0x%02x in stream 0x%04x (stream_type 0x%02x)",
       tag, stream->pid, stream->stream_type);
 
-  desc = gst_mpegts_find_descriptor (pmt->descriptors, tag);
-  if (desc)
-    return desc->data;
-  return NULL;
+  return gst_mpegts_find_descriptor (pmt->descriptors, tag);
 }
 
 typedef struct
@@ -326,18 +321,12 @@ mpegts_pid_in_active_programs (MpegTSBase * base, guint16 pid)
 /* returns NULL if no matching descriptor found *
  * otherwise returns a descriptor that needs to *
  * be freed */
-/* FIXME : Return the GstMpegTsDescriptor */
-const guint8 *
+const GstMpegTsDescriptor *
 mpegts_get_descriptor_from_program (MpegTSBaseProgram * program, guint8 tag)
 {
-  const GstMpegTsDescriptor *descriptor;
   const GstMpegTsPMT *pmt = program->pmt;
 
-  descriptor = gst_mpegts_find_descriptor (pmt->descriptors, tag);
-  if (descriptor)
-    return descriptor->data;
-
-  return NULL;
+  return gst_mpegts_find_descriptor (pmt->descriptors, tag);
 }
 
 static MpegTSBaseProgram *

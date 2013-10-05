@@ -677,7 +677,7 @@ static void
 gst_ts_demux_create_tags (TSDemuxStream * stream)
 {
   MpegTSBaseStream *bstream = (MpegTSBaseStream *) stream;
-  const guint8 *desc = NULL;
+  const GstMpegTsDescriptor *desc = NULL;
   int i;
 
   desc =
@@ -694,13 +694,13 @@ gst_ts_demux_create_tags (TSDemuxStream * stream)
     if (!stream->taglist)
       stream->taglist = gst_tag_list_new_empty ();
 
-    for (i = 0; i < DESC_ISO_639_LANGUAGE_codes_n (desc); i++) {
+    for (i = 0; i < DESC_ISO_639_LANGUAGE_codes_n (desc->data); i++) {
       const gchar *lc;
       gchar lang_code[4];
       gchar *language_n;
 
       language_n = (gchar *)
-          DESC_ISO_639_LANGUAGE_language_code_nth (desc, i);
+          DESC_ISO_639_LANGUAGE_language_code_nth (desc->data, i);
 
       /* Language codes should be 3 character long, we allow
        * a bit more flexibility by allowing 2 characters. */
@@ -731,7 +731,7 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
   gchar *name = NULL;
   GstCaps *caps = NULL;
   GstPadTemplate *template = NULL;
-  const guint8 *desc = NULL;
+  const GstMpegTsDescriptor *desc = NULL;
   GstPad *pad = NULL;
 
   gst_ts_demux_create_tags (stream);
@@ -745,13 +745,13 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
     switch (bstream->stream_type) {
       case ST_BD_AUDIO_AC3:
       {
-        const guint8 *ac3_desc;
+        const GstMpegTsDescriptor *ac3_desc;
 
         /* ATSC ac3 audio descriptor */
         ac3_desc =
             mpegts_get_descriptor_from_stream (bstream,
             GST_MTS_DESC_AC3_AUDIO_STREAM);
-        if (ac3_desc && DESC_AC_AUDIO_STREAM_bsid (ac3_desc) != 16) {
+        if (ac3_desc && DESC_AC_AUDIO_STREAM_bsid (ac3_desc->data) != 16) {
           GST_LOG ("ac3 audio");
           template = gst_static_pad_template_get (&audio_template);
           name = g_strdup_printf ("audio_%04x", bstream->pid);
