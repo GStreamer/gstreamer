@@ -128,9 +128,9 @@ gst_validate_runner_printf (GstValidateRunner * runner)
 
     gst_validate_report_printf (report);
     if (ret == 0 && report->level == GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
-      g_printerr ("Got critical error %s, setting return value to -1\n",
+      g_printerr ("Got critical error %s, setting return value to 18\n",
           ((GstValidateReport *) (tmp->data))->message);
-      ret = -1;
+      ret = 18;
     }
     count++;
   }

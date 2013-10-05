@@ -329,18 +329,17 @@ int
 main (int argc, gchar ** argv)
 {
   guint i;
-  GSList *tmp;
   GstBus *bus;
   GstValidateRunner *runner;
   GstValidateMonitor *monitor;
   GOptionContext *ctx;
+  int rep_err;
 #ifdef G_OS_UNIX
   guint signal_watch_id;
 #endif
 
   GError *err = NULL;
   const gchar *scenario = NULL;
-  guint count = 0;
   gboolean want_help = FALSE;
   gboolean list_scenarios = FALSE;
 
@@ -451,25 +450,9 @@ main (int argc, gchar ** argv)
   g_timeout_add (50, (GSourceFunc) print_position, NULL);
   g_main_loop_run (mainloop);
 
-  for (tmp = gst_validate_runner_get_reports (runner); tmp; tmp = tmp->next) {
-    if (ret == 0 && ((GstValidateReport *) (tmp->data))->level ==
-        GST_VALIDATE_REPORT_LEVEL_CRITICAL) {
-      g_printerr ("Got critical error %s, setting return value to -1\n",
-          ((GstValidateReport *) (tmp->data))->message);
-      ret = -1;
-    }
-    count++;
-  }
-  g_print ("Pipeline finished, total issues found: %u\n", count);
-  if (count) {
-    GSList *iter;
-    GSList *issues = gst_validate_runner_get_reports (runner);
-
-    for (iter = issues; iter; iter = g_slist_next (iter)) {
-      GstValidateReport *report = iter->data;
-      gst_validate_report_printf (report);
-    }
-  }
+  rep_err = gst_validate_runner_printf (runner);
+  if (ret == 0)
+    ret = rep_err;
 
 exit:
   gst_element_set_state (pipeline, GST_STATE_NULL);

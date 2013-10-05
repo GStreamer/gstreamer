@@ -75,4 +75,6 @@ gst-validate will try to replace GstPipeline creating functions and configure
 monitors automatically for you, reports will be printed to stderr when
 they are found. You can also use GST_DEBUG to view the issues that were found
 
+NOTS: The exit code will be "18" in case a critical issue has
+been seen while running any of those tools.
 
