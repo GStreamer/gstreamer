@@ -275,9 +275,6 @@ typedef enum {
   GST_MPEGTS_AUDIO_TYPE_VISUAL_IMPAIRED_COMMENTARY
 } GstMpegTsIso639AudioType;
 
-/* FIXME: Make two methods. One for getting the number of languages,
- * and the other for getting the (allocated, null-terminated) language 
- * and audio type */
 typedef struct _GstMpegTsISO639LanguageDescriptor GstMpegTsISO639LanguageDescriptor;
 struct _GstMpegTsISO639LanguageDescriptor
 {
@@ -288,6 +285,10 @@ struct _GstMpegTsISO639LanguageDescriptor
 
 gboolean gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *descriptor,
 						       GstMpegTsISO639LanguageDescriptor *res);
+gboolean gst_mpegts_descriptor_parse_iso_639_language_idx (const GstMpegTsDescriptor *descriptor,
+                                                           guint idx, gchar (*lang)[4],
+                                                           GstMpegTsIso639AudioType *audio_type);
+guint gst_mpegts_descriptor_parse_iso_639_language_nb (const GstMpegTsDescriptor *descriptor);
 
 
 
