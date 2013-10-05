@@ -834,11 +834,8 @@ done:
   if (lfilename)
     g_free (lfilename);
 
-  if (ret == FALSE) {
-    g_printerr ("Could not set scenario %s => EXIT\n", scenario_name);
-
-    exit (0);
-  }
+  if (ret == FALSE)
+    g_error ("Could not set scenario %s => EXIT\n", scenario_name);
 
   return ret;
 
