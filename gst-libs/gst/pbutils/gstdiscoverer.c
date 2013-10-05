@@ -877,7 +877,7 @@ collect_information (GstDiscoverer * dc, const GstStructure * st,
       info->width = (guint) vinfo.width;
       info->height = (guint) vinfo.height;
 
-      info->depth = (guint) 0;
+      info->depth = vinfo.finfo->bits * vinfo.finfo->n_components;
 
       info->par_num = vinfo.par_n;
       info->par_denom = vinfo.par_d;
