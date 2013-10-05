@@ -679,6 +679,17 @@ message_cb (GstBus * bus, GstMessage * message,
   return TRUE;
 }
 
+static void
+_pipeline_freed_cb (GstValidateScenario * scenario, GObject * where_the_object_was)
+{
+  GstValidateScenarioPrivate *priv = scenario->priv;
+
+  g_source_remove (priv->get_pos_id);
+  priv->pipeline = NULL;
+
+  GST_DEBUG_OBJECT (scenario, "pipeline was freed");
+}
+
 static gboolean
 _load_scenario_file (GstValidateScenario * scenario,
     const gchar * scenario_file)
@@ -933,7 +944,9 @@ gst_validate_scenario_factory_create (GstValidateRunner * runner,
     return NULL;
   }
 
-  scenario->priv->pipeline = gst_object_ref (pipeline);
+  scenario->priv->pipeline = pipeline;
+  g_object_weak_ref (G_OBJECT (pipeline),
+      (GWeakNotify) _pipeline_freed_cb, scenario);
   gst_validate_reporter_set_name (GST_VALIDATE_REPORTER (scenario),
       g_strdup (scenario_name));
 
