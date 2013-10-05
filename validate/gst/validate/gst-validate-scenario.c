@@ -160,13 +160,46 @@ _set_variable_func (const gchar *name, double *value, gpointer user_data)
 }
 
 static gboolean
+_get_clocktime_from_structure(GstValidateScenario *scenario,
+    const GstStructure * structure, const gchar *name, GstClockTime *retval)
+{
+  gdouble val;
+  const gchar *strval;
+
+  if (!gst_structure_get_double (structure, name, &val)) {
+    gchar *error = NULL;
+
+    if (!(strval = gst_structure_get_string(structure, name))) {
+      GST_DEBUG_OBJECT (scenario, "Could not find %s", name);
+      return FALSE;
+    }
+    val = parse_expression (strval, _set_variable_func,
+        scenario, &error);
+
+    if (error) {
+      GST_WARNING ("Error while parsing %s: %s", strval, error);
+      g_free (error);
+
+      return FALSE;
+    }
+  }
+
+  if (val == -1.0)
+    *retval = GST_CLOCK_TIME_NONE;
+  else
+    *retval = val * GST_SECOND;
+
+  return TRUE;
+}
+
+static gboolean
 _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
-  const char *str_format, *str_flags, *str_start_type, *str_stop_type, *str_start;
+  const char *str_format, *str_flags, *str_start_type, *str_stop_type;
   gboolean ret = TRUE;
 
-  gdouble rate = 1.0, dstart, dstop;
+  gdouble rate = 1.0;
   GstFormat format = GST_FORMAT_TIME;
   GstSeekFlags flags = 0;
   GstSeekType start_type = GST_SEEK_TYPE_SET;
@@ -175,21 +208,8 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
   GstClockTime stop = GST_CLOCK_TIME_NONE;
   GstEvent *seek;
 
-  if (!gst_structure_get_double (action->structure, "start", &dstart)) {
-    gchar *error = NULL;
-
-    if (!(str_start = gst_structure_get_string(action->structure, "start"))) {
-      GST_WARNING_OBJECT (scenario, "Could not find start for a seek, FAILED");
+  if (!_get_clocktime_from_structure (scenario, action->structure, "start", &start))
       return FALSE;
-    }
-    dstart = parse_expression (str_start, _set_variable_func,
-        scenario, &error);
-  }
-
-  if (dstart == -1.0)
-    start = GST_CLOCK_TIME_NONE;
-  else
-    start = dstart * GST_SECOND;
 
   gst_structure_get_double (action->structure, "rate", &rate);
   if ((str_format = gst_structure_get_string (action->structure, "format")))
@@ -206,12 +226,7 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
   if ((str_flags = gst_structure_get_string (action->structure, "flags")))
     flags = get_flags_from_string (GST_TYPE_SEEK_FLAGS, str_flags);
 
-  if (gst_structure_get_double (action->structure, "stop", &dstop)) {
-    if (dstop == -1.0)
-      stop = GST_CLOCK_TIME_NONE;
-    else
-      stop = dstop * GST_SECOND;
-  }
+  _get_clocktime_from_structure (scenario, action->structure, "stop", &stop);
 
   g_print ("(position %" GST_TIME_FORMAT "), %s (num %u, missing repeat: %i), seeking to: %" GST_TIME_FORMAT
       " stop: %" GST_TIME_FORMAT " Rate %lf\n", GST_TIME_ARGS (action->playback_time),
@@ -618,28 +633,19 @@ message_cb (GstBus * bus, GstMessage * message,
 
       if (priv->needs_parsing) {
         GList *tmp;
-        gdouble time;
-        const gchar *str_playback_time;
-        gchar *error = NULL;
 
         for (tmp = priv->needs_parsing; tmp; tmp=tmp->next) {
           GstValidateAction *action = tmp->data;
 
-          if ((str_playback_time = gst_structure_get_string(action->structure, "playback_time")))
-            time = parse_expression (str_playback_time, _set_variable_func,
-                scenario, &error);
-          else
-            continue;
+          if (!_get_clocktime_from_structure (scenario, action->structure, "playback_time",
+                &action->playback_time)) {
+            gchar *str = gst_structure_to_string (action->structure);
 
+            g_error ("Could not parse playback_time on structure: %s", str);
+            g_free (str);
 
-          if (error) {
-            GST_ERROR_OBJECT (scenario, "No playback time for action %s", str_playback_time);
-            g_free (error);
-            error = NULL;
-            continue;
+            return FALSE;
           }
-          action->playback_time = time * GST_SECOND;
-          str_playback_time = NULL;
         }
 
         g_list_free (priv->needs_parsing);
