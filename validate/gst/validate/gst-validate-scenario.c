@@ -60,7 +60,7 @@ G_DEFINE_TYPE_WITH_CODE (GstValidateScenario, gst_validate_scenario,
 typedef struct _GstValidateActionType
 {
   GstValidateExecuteAction execute;
-  gchar ** mandatory_fields;
+  gchar **mandatory_fields;
   gchar *description;
 } GstValidateActionType;
 
@@ -128,7 +128,7 @@ _free_scenario_action (GstValidateAction * act)
 }
 
 static gboolean
-_set_variable_func (const gchar *name, double *value, gpointer user_data)
+_set_variable_func (const gchar * name, double *value, gpointer user_data)
 {
   GstValidateScenario *scenario = GST_VALIDATE_SCENARIO (user_data);
 
@@ -136,7 +136,7 @@ _set_variable_func (const gchar *name, double *value, gpointer user_data)
     gint64 duration;
 
     if (!gst_element_query_duration (scenario->priv->pipeline,
-        GST_FORMAT_TIME, &duration)) {
+            GST_FORMAT_TIME, &duration)) {
       GST_WARNING_OBJECT (scenario, "Could not query duration");
       return FALSE;
     }
@@ -147,7 +147,7 @@ _set_variable_func (const gchar *name, double *value, gpointer user_data)
     gint64 position;
 
     if (!gst_element_query_position (scenario->priv->pipeline,
-        GST_FORMAT_TIME, &position)) {
+            GST_FORMAT_TIME, &position)) {
       GST_WARNING_OBJECT (scenario, "Could not query position");
       return FALSE;
     }
@@ -160,8 +160,8 @@ _set_variable_func (const gchar *name, double *value, gpointer user_data)
 }
 
 static gboolean
-_get_clocktime_from_structure(GstValidateScenario *scenario,
-    const GstStructure * structure, const gchar *name, GstClockTime *retval)
+_get_clocktime_from_structure (GstValidateScenario * scenario,
+    const GstStructure * structure, const gchar * name, GstClockTime * retval)
 {
   gdouble val;
   const gchar *strval;
@@ -169,12 +169,11 @@ _get_clocktime_from_structure(GstValidateScenario *scenario,
   if (!gst_structure_get_double (structure, name, &val)) {
     gchar *error = NULL;
 
-    if (!(strval = gst_structure_get_string(structure, name))) {
+    if (!(strval = gst_structure_get_string (structure, name))) {
       GST_DEBUG_OBJECT (scenario, "Could not find %s", name);
       return FALSE;
     }
-    val = parse_expression (strval, _set_variable_func,
-        scenario, &error);
+    val = parse_expression (strval, _set_variable_func, scenario, &error);
 
     if (error) {
       GST_WARNING ("Error while parsing %s: %s", strval, error);
@@ -208,8 +207,9 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
   GstClockTime stop = GST_CLOCK_TIME_NONE;
   GstEvent *seek;
 
-  if (!_get_clocktime_from_structure (scenario, action->structure, "start", &start))
-      return FALSE;
+  if (!_get_clocktime_from_structure (scenario, action->structure, "start",
+          &start))
+    return FALSE;
 
   gst_structure_get_double (action->structure, "rate", &rate);
   if ((str_format = gst_structure_get_string (action->structure, "format")))
@@ -228,9 +228,10 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
 
   _get_clocktime_from_structure (scenario, action->structure, "stop", &stop);
 
-  g_print ("(position %" GST_TIME_FORMAT "), %s (num %u, missing repeat: %i), seeking to: %" GST_TIME_FORMAT
-      " stop: %" GST_TIME_FORMAT " Rate %lf\n", GST_TIME_ARGS (action->playback_time),
-      action->name,
+  g_print ("(position %" GST_TIME_FORMAT
+      "), %s (num %u, missing repeat: %i), seeking to: %" GST_TIME_FORMAT
+      " stop: %" GST_TIME_FORMAT " Rate %lf\n",
+      GST_TIME_ARGS (action->playback_time), action->name,
       action->action_number, action->repeat, GST_TIME_ARGS (start),
       GST_TIME_ARGS (stop), rate);
 
@@ -326,7 +327,7 @@ _execute_eos (GstValidateScenario * scenario, GstValidateAction * action)
 }
 
 static int
-find_input_selector (GValue * velement, const gchar *type)
+find_input_selector (GValue * velement, const gchar * type)
 {
   GstElement *element = g_value_get_object (velement);
 
@@ -342,14 +343,14 @@ find_input_selector (GValue * velement, const gchar *type)
         gboolean found = FALSE;
 
         if (g_strcmp0 (type, "audio") == 0)
-            found = g_str_has_prefix (mime, "audio/");
+          found = g_str_has_prefix (mime, "audio/");
         else if (g_strcmp0 (type, "video") == 0)
-            found = g_str_has_prefix (mime, "video/")
-                && !g_str_has_prefix (mime, "video/x-dvd-subpicture");
+          found = g_str_has_prefix (mime, "video/")
+              && !g_str_has_prefix (mime, "video/x-dvd-subpicture");
         else if (g_strcmp0 (type, "text") == 0)
-            found = g_str_has_prefix (mime, "text/")
-                || g_str_has_prefix (mime, "subtitle/")
-                || g_str_has_prefix (mime, "video/x-dvd-subpicture");
+          found = g_str_has_prefix (mime, "text/")
+              || g_str_has_prefix (mime, "subtitle/")
+              || g_str_has_prefix (mime, "video/x-dvd-subpicture");
 
         gst_object_unref (srcpad);
         if (found)
@@ -361,14 +362,14 @@ find_input_selector (GValue * velement, const gchar *type)
 }
 
 static GstElement *
-find_input_selector_with_type (GstBin * bin, const gchar *type)
+find_input_selector_with_type (GstBin * bin, const gchar * type)
 {
-  GValue result = {0, };
+  GValue result = { 0, };
   GstElement *input_selector = NULL;
   GstIterator *iterator = gst_bin_iterate_recurse (bin);
 
   if (gst_iterator_find_custom (iterator,
-      (GCompareFunc) find_input_selector, &result, (gpointer) type)) {
+          (GCompareFunc) find_input_selector, &result, (gpointer) type)) {
     input_selector = g_value_get_object (&result);
   }
   gst_iterator_free (iterator);
@@ -448,7 +449,8 @@ find_sink_pad_index (GstElement * element, GstPad * pad)
 }
 
 static gboolean
-_execute_switch_track (GstValidateScenario * scenario, GstValidateAction * action)
+_execute_switch_track (GstValidateScenario * scenario,
+    GstValidateAction * action)
 {
   guint index;
   gboolean relative = FALSE;
@@ -459,7 +461,8 @@ _execute_switch_track (GstValidateScenario * scenario, GstValidateAction * actio
     type = "audio";
 
   /* First find an input selector that has the right type */
-  input_selector = find_input_selector_with_type (GST_BIN (scenario->priv->pipeline), type);
+  input_selector =
+      find_input_selector_with_type (GST_BIN (scenario->priv->pipeline), type);
   if (input_selector) {
     GstPad *pad;
 
@@ -474,7 +477,7 @@ _execute_switch_track (GstValidateScenario * scenario, GstValidateAction * actio
       index = g_ascii_strtoll (str_index, NULL, 10);
     }
 
-    if (relative) { /* We are changing track relatively to current track */
+    if (relative) {             /* We are changing track relatively to current track */
       int npads;
 
       g_object_get (input_selector, "active-pad", &pad, "n-pads", &npads, NULL);
@@ -618,27 +621,26 @@ gst_validate_scenario_update_segment_from_seek (GstValidateScenario * scenario,
 }
 
 static gboolean
-message_cb (GstBus * bus, GstMessage * message,
-    GstValidateScenario * scenario)
+message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
 
-  switch (GST_MESSAGE_TYPE (message))
-  {
+  switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_ASYNC_DONE:
       if (priv->last_seek) {
-        gst_validate_scenario_update_segment_from_seek (scenario, priv->last_seek);
+        gst_validate_scenario_update_segment_from_seek (scenario,
+            priv->last_seek);
         gst_event_replace (&priv->last_seek, NULL);
       }
 
       if (priv->needs_parsing) {
         GList *tmp;
 
-        for (tmp = priv->needs_parsing; tmp; tmp=tmp->next) {
+        for (tmp = priv->needs_parsing; tmp; tmp = tmp->next) {
           GstValidateAction *action = tmp->data;
 
-          if (!_get_clocktime_from_structure (scenario, action->structure, "playback_time",
-                &action->playback_time)) {
+          if (!_get_clocktime_from_structure (scenario, action->structure,
+                  "playback_time", &action->playback_time)) {
             gchar *str = gst_structure_to_string (action->structure);
 
             g_error ("Could not parse playback_time on structure: %s", str);
@@ -654,30 +656,31 @@ message_cb (GstBus * bus, GstMessage * message,
 
       if (priv->get_pos_id == 0) {
         get_position (scenario);
-        priv->get_pos_id = g_timeout_add (50, (GSourceFunc) get_position, scenario);
+        priv->get_pos_id =
+            g_timeout_add (50, (GSourceFunc) get_position, scenario);
       }
       break;
     case GST_MESSAGE_ERROR:
     case GST_MESSAGE_EOS:
-      {
-        if (scenario->priv->actions) {
-          GList *tmp;
-          gchar *actions = g_strdup (""), *tmpconcat;
+    {
+      if (scenario->priv->actions) {
+        GList *tmp;
+        gchar *actions = g_strdup (""), *tmpconcat;
 
-          for (tmp = scenario->priv->actions; tmp; tmp = tmp->next) {
-            GstValidateAction *action = ((GstValidateAction*) tmp->data);
-            tmpconcat = actions;
-            actions = g_strdup_printf ("%s\n%*s%s",
-                actions, 20, "", gst_structure_to_string (action->structure));
-            g_free (tmpconcat);
+        for (tmp = scenario->priv->actions; tmp; tmp = tmp->next) {
+          GstValidateAction *action = ((GstValidateAction *) tmp->data);
+          tmpconcat = actions;
+          actions = g_strdup_printf ("%s\n%*s%s",
+              actions, 20, "", gst_structure_to_string (action->structure));
+          g_free (tmpconcat);
 
-          }
-
-          GST_VALIDATE_REPORT (scenario, SCENARIO_NOT_ENDED,
-              "The following action were not executed: %s", actions);
-          g_free (actions);
         }
+
+        GST_VALIDATE_REPORT (scenario, SCENARIO_NOT_ENDED,
+            "The following action were not executed: %s", actions);
+        g_free (actions);
       }
+    }
     default:
       break;
   }
@@ -686,7 +689,8 @@ message_cb (GstBus * bus, GstMessage * message,
 }
 
 static void
-_pipeline_freed_cb (GstValidateScenario * scenario, GObject * where_the_object_was)
+_pipeline_freed_cb (GstValidateScenario * scenario,
+    GObject * where_the_object_was)
 {
   GstValidateScenarioPrivate *priv = scenario->priv;
 
@@ -750,7 +754,8 @@ _load_scenario_file (GstValidateScenario * scenario,
     action->repeat = -1;
     if (gst_structure_get_double (structure, "playback_time", &playback_time)) {
       action->playback_time = playback_time * GST_SECOND;
-    } else if ((str_playback_time = gst_structure_get_string(structure, "playback_time"))) {
+    } else if ((str_playback_time =
+            gst_structure_get_string (structure, "playback_time"))) {
       priv->needs_parsing = g_list_append (priv->needs_parsing, action);
     } else
       GST_WARNING_OBJECT (scenario, "No playback time for action %s", lines[i]);
@@ -955,8 +960,7 @@ gst_validate_scenario_factory_create (GstValidateRunner * runner,
 
   bus = gst_element_get_bus (pipeline);
   gst_bus_add_signal_watch (bus);
-  g_signal_connect (bus, "message", (GCallback) message_cb,
-      scenario);
+  g_signal_connect (bus, "message", (GCallback) message_cb, scenario);
   gst_object_unref (bus);
 
   g_print ("\n=========================================\n"
@@ -1022,7 +1026,7 @@ gst_validate_list_scenarios (void)
 }
 
 static void
-_free_action_type (GstValidateActionType *type)
+_free_action_type (GstValidateActionType * type)
 {
   g_free (type->description);
 
@@ -1034,17 +1038,18 @@ _free_action_type (GstValidateActionType *type)
 }
 
 void
-gst_validate_add_action_type (const gchar *type_name, GstValidateExecuteAction function,
-    const gchar * const * mandatory_fields, const gchar *description)
+gst_validate_add_action_type (const gchar * type_name,
+    GstValidateExecuteAction function, const gchar * const *mandatory_fields,
+    const gchar * description)
 {
-  GstValidateActionType *type  = g_slice_new0 (GstValidateActionType);
+  GstValidateActionType *type = g_slice_new0 (GstValidateActionType);
 
   if (action_types_table == NULL)
     action_types_table = g_hash_table_new_full (g_str_hash, g_str_equal,
         (GDestroyNotify) _free_action_type, NULL);
 
   type->execute = function;
-  type->mandatory_fields = g_strdupv ( (gchar **) mandatory_fields);
+  type->mandatory_fields = g_strdupv ((gchar **) mandatory_fields);
   type->description = g_strdup (description);
 
   g_hash_table_insert (action_types_table, g_strdup (type_name), type);
@@ -1053,17 +1058,17 @@ gst_validate_add_action_type (const gchar *type_name, GstValidateExecuteAction f
 void
 init_scenarios (void)
 {
-  const gchar * seek_mandatory_fields[] = { "start", NULL };
+  const gchar *seek_mandatory_fields[] = { "start", NULL };
 
   gst_validate_add_action_type ("seek", _execute_seek, seek_mandatory_fields,
       "Allows to seek into the files");
-  gst_validate_add_action_type ("pause",_execute_pause, NULL,
+  gst_validate_add_action_type ("pause", _execute_pause, NULL,
       "Make it possible to set pipeline to PAUSED, you can add a duration"
       " parametter so the pipeline goaes back to playing after that duration"
       " (in second)");
-  gst_validate_add_action_type ("play",_execute_play, NULL,
+  gst_validate_add_action_type ("play", _execute_play, NULL,
       "Make it possible to set the pipeline state to PLAYING");
-  gst_validate_add_action_type ("eos",_execute_eos, NULL,
+  gst_validate_add_action_type ("eos", _execute_eos, NULL,
       "Make it possible to send an EOS to the pipeline");
   gst_validate_add_action_type ("switch-track", _execute_switch_track, NULL,
       "The 'switch-track' command can be used to switch tracks.\n"
