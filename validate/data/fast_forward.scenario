@@ -1,5 +1,5 @@
-seek, name=Fast-forward-seek, playback_time=0.0,   rate=2.0,  start=0.0
-seek, name=Fast-forward-seek, playback_time=10.0,  rate=4.0,  start=10.0
-seek, name=Fast-forward-seek, playback_time=30.0,  rate=8.0,  start=30.0
-seek, name=Fast-forward-seek, playback_time=70.0,  rate=16.0, start=70.0
-seek, name=Fast-forward-seek, playback_time=150.0, rate=32.0, start=150.0, stop=310.0
+seek, name=Fast-forward-seek, playback_time=0.0,   rate=2.0,  start=0.0, flags=accurate+flush
+seek, name=Fast-forward-seek, playback_time=10.0,  rate=4.0,  start=10.0, flags=accurate+flush
+seek, name=Fast-forward-seek, playback_time=30.0,  rate=8.0,  start=30.0, flags=accurate+flush
+seek, name=Fast-forward-seek, playback_time=70.0,  rate=16.0, start=70.0, flags=accurate+flush
+seek, name=Fast-forward-seek, playback_time=150.0, rate=32.0, start=150.0, stop=310.0, flags=accurate+flush

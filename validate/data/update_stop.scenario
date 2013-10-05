@@ -1,1 +1,1 @@
-seek, playback_time=5.0, rate=1.0, start_type=none, start=0.0, stop_type=set, stop=10.0
+seek, playback_time=5.0, rate=1.0, start_type=none, start=0.0, stop_type=set, stop=10.0, flags=accurate+flush
