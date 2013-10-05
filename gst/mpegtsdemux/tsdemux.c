@@ -691,28 +691,18 @@ gst_ts_demux_create_tags (TSDemuxStream * stream)
   }
 
   if (desc) {
+    gchar lang_code[4];
+    GstMpegTsIso639AudioType audio_type;
+
     if (!stream->taglist)
       stream->taglist = gst_tag_list_new_empty ();
 
-    for (i = 0; i < DESC_ISO_639_LANGUAGE_codes_n (desc->data); i++) {
+    for (i = 0; gst_mpegts_descriptor_parse_iso_639_language_idx (desc,
+            i, &lang_code, &audio_type); i++) {
+
       const gchar *lc;
-      gchar lang_code[4];
-      gchar *language_n;
 
-      language_n = (gchar *)
-          DESC_ISO_639_LANGUAGE_language_code_nth (desc->data, i);
-
-      /* Language codes should be 3 character long, we allow
-       * a bit more flexibility by allowing 2 characters. */
-      if (!language_n[0] || !language_n[1])
-        continue;
-
-      GST_LOG ("Add language code for stream: %s", language_n);
-
-      lang_code[0] = language_n[0];
-      lang_code[1] = language_n[1];
-      lang_code[2] = language_n[2];
-      lang_code[3] = 0;
+      GST_LOG ("Add language code for stream: %s", lang_code);
 
       /* descriptor contains ISO 639-2 code, we want the ISO 639-1 code */
       lc = gst_tag_get_language_code (lang_code);
