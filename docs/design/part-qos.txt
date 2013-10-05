@@ -152,7 +152,7 @@ return value from the clock. The jitter J1 is simply calculated as
   J1 = CT - B1
 
 Where CT is the clock time when the entry arrives in the sink. This value
-is calculated inside the clock when we perform gst_clock_entry_wait().
+is calculated inside the clock when we perform gst_clock_id_wait().
 
 If the jitter is negative, the entry arrived in time and can be rendered
 after waiting for the clock to reach time B1 (which is also CT - J1).
