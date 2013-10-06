@@ -3467,7 +3467,7 @@ gst_matroska_mux_handle_buffer (GstCollectPads * pads, GstCollectData * data,
 
   /* if there is no best pad, we have reached EOS */
   if (best == NULL) {
-    GST_DEBUG_OBJECT (mux, "No best pad finishing...");
+    GST_DEBUG_OBJECT (mux, "No best pad. Finishing...");
     if (!mux->streamable) {
       gst_matroska_mux_finish (mux);
     } else {
