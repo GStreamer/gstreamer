@@ -97,4 +97,5 @@ static void
 gst_webm_mux_init (GstWebMMux * mux)
 {
   GST_MATROSKA_MUX (mux)->doctype = GST_MATROSKA_DOCTYPE_WEBM;
+  GST_MATROSKA_MUX (mux)->is_webm = TRUE;
 }
