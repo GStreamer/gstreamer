@@ -494,7 +494,7 @@ if test x"$EGL_WINDOW_SYSTEM" = x"auto"; then
 fi
 
 case "$EGL_WINDOW_SYSTEM" in
-  x11|none)
+  x11)
     PKG_CHECK_MODULES(EGL, egl, HAVE_EGL="yes", [
       HAVE_EGL="no"
       old_LIBS=$LIBS
@@ -593,6 +593,10 @@ case "$EGL_WINDOW_SYSTEM" in
 
     LIBS=$old_LIBS
     CFLAGS=$old_CFLAGS
+    ;;
+  none|no)
+    HAVE_EGL="no"
+    AC_MSG_WARN([No EGL window system specified, will not build gstreamer-egl])
     ;;
   *)
     AC_MSG_ERROR([invalid EGL window system specified])
