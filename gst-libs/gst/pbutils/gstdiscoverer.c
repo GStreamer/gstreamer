@@ -136,8 +136,8 @@ _do_init (void)
 
   _CAPS_QUARK = g_quark_from_static_string ("caps");
   _TAGS_QUARK = g_quark_from_static_string ("tags");
-  _TOC_QUARK = g_quark_from_static_string ("stream-id");
-  _STREAM_ID_QUARK = g_quark_from_static_string ("toc");
+  _TOC_QUARK = g_quark_from_static_string ("toc");
+  _STREAM_ID_QUARK = g_quark_from_static_string ("stream-id");
   _MISSING_PLUGIN_QUARK = g_quark_from_static_string ("missing-plugin");
   _STREAM_TOPOLOGY_QUARK = g_quark_from_static_string ("stream-topology");
   _TOPOLOGY_PAD_QUARK = g_quark_from_static_string ("pad");
