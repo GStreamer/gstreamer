@@ -281,6 +281,7 @@ gst_soup_http_src_reset (GstSoupHTTPSrc * src)
   src->request_position = 0;
   src->stop_position = -1;
   src->content_size = 0;
+  src->have_body = FALSE;
 
   gst_caps_replace (&src->src_caps, NULL);
   g_free (src->iradio_name);
@@ -892,7 +893,7 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
    * don't output any data (such as an error html page), and return
    * GST_FLOW_ERROR from the create function instead of having
    * got_chunk_cb overwrite src->ret with FLOW_OK again. */
-  if (src->ret == GST_FLOW_ERROR) {
+  if (src->ret == GST_FLOW_ERROR || src->ret == GST_FLOW_EOS) {
     gst_soup_http_src_session_pause_message (src);
 
     if (src->loop)
@@ -916,9 +917,14 @@ gst_soup_http_src_got_body_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
   }
   GST_DEBUG_OBJECT (src, "got body");
   src->ret = GST_FLOW_EOS;
-  if (src->loop)
-    g_main_loop_quit (src->loop);
-  gst_soup_http_src_session_pause_message (src);
+  src->have_body = TRUE;
+
+  /* no need to interrupt the message here, we do it on the
+   * finished_cb anyway if needed. And getting the body might mean
+   * that the connection was hang up before finished. This happens when
+   * the pipeline is stalled for too long (long pauses during playback).
+   * Best to let it continue from here and pause because it reached the
+   * final bytes based on content_size or received an out of range error */
 }
 
 /* Finished. Signal EOS. */
@@ -936,7 +942,8 @@ gst_soup_http_src_finished_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
      * that occurred in the QUEUEING state; i.e. before the connection setup
      * was complete. Do nothing */
   } else if (src->session_io_status ==
-      GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING && src->read_position > 0) {
+      GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING && src->read_position > 0 &&
+      (!src->have_size || src->read_position < src->content_size)) {
     /* The server disconnected while streaming. Reconnect and seeking to the
      * last location. */
     src->retry = TRUE;
@@ -1047,6 +1054,7 @@ gst_soup_http_src_got_chunk_cb (SoupMessage * msg, SoupBuffer * chunk,
     GST_DEBUG_OBJECT (src, "got chunk, but not for current message");
     return;
   }
+  src->have_body = FALSE;
   if (G_UNLIKELY (src->session_io_status !=
           GST_SOUP_HTTP_SRC_SESSION_IO_STATUS_RUNNING)) {
     /* Probably a redirect. */
@@ -1164,6 +1172,18 @@ gst_soup_http_src_parse_status (SoupMessage * msg, GstSoupHTTPSrc * src)
       SOUP_STATUS_IS_REDIRECTION (msg->status_code) ||
       SOUP_STATUS_IS_SERVER_ERROR (msg->status_code)) {
     /* Report HTTP error. */
+
+    /* when content_size is unknown and we have just finished receiving
+     * a body message, requests that go beyond the content limits will result
+     * in an error. Here we convert those to EOS */
+    if (msg->status_code == SOUP_STATUS_REQUESTED_RANGE_NOT_SATISFIABLE &&
+        src->have_body && src->have_size) {
+      GST_DEBUG_OBJECT (src, "Requested range out of limits and received full "
+          "body, returning EOS");
+      src->ret = GST_FLOW_EOS;
+      return;
+    }
+
     /* FIXME: reason_phrase is not translated and not suitable for user
      * error dialog according to libsoup documentation.
      * FIXME: error code (OPEN_READ vs. READ) should depend on http status? */
