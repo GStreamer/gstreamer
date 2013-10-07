@@ -110,6 +110,7 @@ public class MediaInfo.Info : Box
     // container/tag formats
     wikilinks["application/mxf"] = "Material_Exchange_Format";
     wikilinks["audio/x-aiff"] = "Audio_Interchange_File_Format";
+    wikilinks["application/x-apetag"] = "APE_tag";
     wikilinks["audio/ogg"] = "Ogg";
     wikilinks["application/vnd.rn-realmedia"] = "RealMedia";
     wikilinks["application/x-3gp"] = "3GP_and_3G2";
@@ -136,6 +137,7 @@ public class MediaInfo.Info : Box
     wikilinks["audio/x-qdm"] = "QDesign";
     wikilinks["audio/x-vorbis"] = "Vorbis";
     wikilinks["audio/x-wav"] = "WAV";
+    wikilinks["audio/x-wavpack"] = "Wavpack";
     // video codecs
     wikilinks["MPEG-1 Video"] = "MPEG-1#Part_2:_Video";
     wikilinks["MPEG-4 Video"] = "MPEG4";
