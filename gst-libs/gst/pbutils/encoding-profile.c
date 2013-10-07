@@ -150,6 +150,15 @@ struct _GstEncodingProfileClass
   GObjectClass parent_class;
 };
 
+enum
+{
+  FIRST_PROPERTY,
+  PROP_RESTRICTION_CAPS,
+  LAST_PROPERTY
+};
+
+static GParamSpec *_properties[LAST_PROPERTY];
+
 static void string_to_profile_transform (const GValue * src_value,
     GValue * dest_value);
 static gboolean gst_encoding_profile_deserialize_valfunc (GValue * value,
@@ -198,6 +207,42 @@ gst_encoding_profile_get_type (void)
   return g_define_type_id__volatile;
 }
 
+
+static void
+_encoding_profile_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstEncodingProfile *prof = (GstEncodingProfile *) object;
+
+  switch (prop_id) {
+    case PROP_RESTRICTION_CAPS:
+    {
+      gst_value_set_caps (value, prof->restriction);
+      break;
+    }
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+_encoding_profile_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstEncodingProfile *prof = (GstEncodingProfile *) object;
+
+  switch (prop_id) {
+    case PROP_RESTRICTION_CAPS:
+      gst_encoding_profile_set_restriction (prof, gst_caps_copy
+          (gst_value_get_caps (value)));
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 static void
 gst_encoding_profile_finalize (GObject * object)
 {
@@ -220,6 +265,18 @@ gst_encoding_profile_class_init (GstEncodingProfileClass * klass)
   GObjectClass *gobject_class = (GObjectClass *) klass;
 
   gobject_class->finalize = gst_encoding_profile_finalize;
+
+  gobject_class->set_property = _encoding_profile_set_property;
+  gobject_class->get_property = _encoding_profile_get_property;
+
+  _properties[PROP_RESTRICTION_CAPS] =
+      g_param_spec_boxed ("restriction-caps", "Restriction caps",
+      "The restriction caps to use", GST_TYPE_CAPS,
+      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+  g_object_class_install_property (gobject_class,
+      PROP_RESTRICTION_CAPS, _properties[PROP_RESTRICTION_CAPS]);
+
 }
 
 /**
@@ -426,6 +483,9 @@ gst_encoding_profile_set_restriction (GstEncodingProfile * profile,
   if (profile->restriction)
     gst_caps_unref (profile->restriction);
   profile->restriction = restriction;
+
+  g_object_notify_by_pspec (G_OBJECT (profile),
+      _properties[PROP_RESTRICTION_CAPS]);
 }
 
 /* Container profiles */
