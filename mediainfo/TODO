@@ -52,9 +52,13 @@ http://www.headbands.com/gspot/v26x/index.htm
     - famfamfam-flag-png: locale/usr/share/flags/countries/
   - geo-tags: map-widget?, link to google-maps?, rev-geocoding
   - artist: links to {last.fm,wikipedia}
-  - format dates nicely
+  - format dates nicely (current locale, xx days ago?)
 - more codec details
   - caps have profile/level strings, can we also turn them into wikilinks?
+- bitrate and encode_size are related, calculate one from the other if missing
+  - encoded_size = duration * bitrate;
+  - bitrate = encoded_size / duration;
+  - needed in: quicktime, ogg/theora
 
 == deep scan mode ==
 - play the file by using fakesinks and gather statistics:
@@ -91,6 +95,10 @@ http://www.headbands.com/gspot/v26x/index.htm
   - we would need a cairo custom widget to draw a table
     - one row per element
     - each row contains colored segments
+
+= TODO for gstreamer-plugins =
+- wav: no bitrate for uncompressed files
+- mp4: no bitrate for many formats
 
 = TODO for discoverer =
 - add deep-scan mode (see above)

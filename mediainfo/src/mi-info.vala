@@ -655,7 +655,6 @@ public class MediaInfo.Info : Box
     add_table_row_for_string (table, row, "PixelAspect:", str);
     row++;
 
-    // TODO(ensonic): this seems to be always 0
     str = "%u bits/pixel".printf (vinfo.get_depth());
     add_table_row_for_string (table, row, "Bitdepth:", str);
     row++;
