@@ -347,6 +347,9 @@ _structures_field_is_contained (GstStructure * s1, GstStructure * s2,
   if (!v1)
     return FALSE;
 
+  if (!gst_value_is_fixed (v1) && !gst_value_is_fixed (v2))
+    return TRUE;
+
   if (gst_value_compare (v1, v2) == GST_VALUE_EQUAL)
     return TRUE;
 
