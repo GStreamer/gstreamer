@@ -148,7 +148,7 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstElement * encodebin)
   GstCaps *caps;
   GstPad *sinkpad = NULL;
 
-  caps = gst_pad_get_current_caps (pad);
+  caps = gst_pad_query_caps (pad, NULL);
 
   /* Ask encodebin for a compatible pad */
   GST_DEBUG_OBJECT (uridecodebin, "Pad added, caps: %" GST_PTR_FORMAT, caps);
