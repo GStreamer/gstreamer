@@ -1054,10 +1054,7 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
       /* FIXME : aggregate with information from main streams */
       GST_DEBUG ("Coudn't find 'next' ! might be the last entry");
     } else {
-      GstCaps *caps;
-      const GstStructure *st;
-
-      st = gst_value_get_structure (nval);
+      st = (GstStructure *) gst_value_get_structure (nval);
 
       GST_DEBUG ("next is a structure %" GST_PTR_FORMAT, st);
 
