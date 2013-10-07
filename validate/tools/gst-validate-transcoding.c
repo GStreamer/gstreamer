@@ -64,6 +64,101 @@ intr_handler (gpointer user_data)
 #endif /* G_OS_UNIX */
 
 static gboolean
+_execute_set_restriction (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  GstCaps *caps;
+  GType profile_type = G_TYPE_NONE;
+  const gchar *restriction_caps, *profile_type_name, *profile_name;
+
+  restriction_caps =
+      gst_structure_get_string (action->structure, "restriction-caps");
+  profile_type_name =
+      gst_structure_get_string (action->structure, "profile-type");
+  profile_name = gst_structure_get_string (action->structure, "profile-name");
+
+  if (profile_type_name) {
+    profile_type = g_type_from_name (profile_type_name);
+
+    if (profile_type == G_TYPE_NONE) {
+      g_error ("Profile name %s not known", profile_name);
+
+      return FALSE;
+    } else if (profile_type == GST_TYPE_ENCODING_CONTAINER_PROFILE) {
+      g_error ("Can not set restrictions on container profiles");
+
+      return FALSE;
+    }
+  } else if (profile_name == NULL) {
+    if (g_strrstr (restriction_caps, "audio/x-raw") == restriction_caps)
+      profile_type = GST_TYPE_ENCODING_AUDIO_PROFILE;
+    else if (g_strrstr (restriction_caps, "video/x-raw") == restriction_caps)
+      profile_type = GST_TYPE_ENCODING_VIDEO_PROFILE;
+    else {
+      g_error
+          ("No information on what profiles to apply action, you should set either"
+          "profile_name or profile_type_name and the caps %s give us no hint",
+          restriction_caps);
+
+      return FALSE;
+    }
+  }
+
+  caps = gst_caps_from_string (restriction_caps);
+  if (caps == NULL) {
+    g_error ("Could not parse caps: %s", restriction_caps);
+
+    return FALSE;
+  }
+
+  if (GST_IS_ENCODING_CONTAINER_PROFILE (encoding_profile)) {
+    gboolean found = FALSE;
+    const GList *tmp;
+
+    for (tmp =
+        gst_encoding_container_profile_get_profiles
+        (GST_ENCODING_CONTAINER_PROFILE (encoding_profile)); tmp;
+        tmp = tmp->next) {
+      GstEncodingProfile *profile = tmp->data;
+
+      if (profile_type != G_TYPE_NONE
+          && G_OBJECT_TYPE (profile) == profile_type) {
+        gst_encoding_profile_set_restriction (profile, gst_caps_copy (caps));
+        found = TRUE;
+      } else if (profile_name
+          && g_strcmp0 (gst_encoding_profile_get_name (profile),
+              profile_name) == 0) {
+        gst_encoding_profile_set_restriction (profile, gst_caps_copy (caps));
+        found = TRUE;
+      }
+    }
+
+    if (!found) {
+      g_error ("Could not find profile for %s%s",
+          profile_type_name ? profile_type_name : "",
+          profile_name ? profile_name : "");
+
+      gst_caps_unref (caps);
+      return FALSE;
+
+    }
+  }
+
+  if (profile_type != G_TYPE_NONE) {
+    g_print ("\n%s (num %u), setting caps to %s on profiles of type %s\n",
+        action->name, action->action_number, restriction_caps,
+        g_type_name (profile_type));
+  } else {
+    g_print ("\n%s (num %u), setting caps to %s on profile %s\n",
+        action->name, action->action_number, restriction_caps, profile_name);
+
+  }
+
+  gst_caps_unref (caps);
+  return TRUE;
+}
+
+static gboolean
 print_position (void)
 {
   GstQuery *query;
@@ -343,6 +438,7 @@ main (int argc, gchar ** argv)
   gboolean want_help = FALSE;
   gboolean list_scenarios = FALSE;
 
+  const gchar *resize_video_mandatory_fields[] = { "restriction-caps", NULL };
   GOptionEntry options[] = {
     {"output-format", 'o', 0, G_OPTION_ARG_CALLBACK, &_parse_encoding_profile,
           "Set the properties to use for the encoding profile "
@@ -403,6 +499,9 @@ main (int argc, gchar ** argv)
     gst_validate_list_scenarios ();
 
   gst_validate_init ();
+
+  gst_validate_add_action_type ("set-restriction", _execute_set_restriction,
+      resize_video_mandatory_fields, "Change the restriction caps on the fly");
 
   if (argc != 3) {
     g_printerr ("%i arguments recived, 2 expected.\n"
