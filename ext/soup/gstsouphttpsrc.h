@@ -78,6 +78,11 @@ struct _GstSoupHTTPSrc {
                                   Range. */
   guint64 request_position;    /* Seek to this position. */
   guint64 stop_position;       /* Stop at this position. */
+  gboolean have_body;          /* Indicates if it has just been signaled the
+                                * end of the message body. This is used to
+                                * decide if an out of range request should be
+                                * handled as an error or EOS when the content
+                                * size is unknown */
 
   /* Shoutcast/icecast metadata extraction handling. */
   gboolean iradio_mode;
