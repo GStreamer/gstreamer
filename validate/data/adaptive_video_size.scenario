@@ -1,0 +1,3 @@
+set-restriction, playback_time=5.0, restriction-caps="video/x-raw,height=20,width=20"
+set-restriction, playback_time=10.0, restriction-caps="video/x-raw,height=720,width=1280"
+eos, playback_time=15.0
