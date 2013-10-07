@@ -997,6 +997,24 @@ find_stream_for_node (GstDiscoverer * dc, const GstStructure * topology)
   return st;
 }
 
+/* this can fail due to parsed=TRUE/FALSE differences, thus we filter the
+ * parent */
+static gboolean
+child_is_same_stream (const GstCaps * _parent, const GstCaps * child)
+{
+  GstCaps *parent = gst_caps_copy (_parent);
+  guint i, size = gst_caps_get_size (parent);
+  gboolean res;
+
+  for (i = 0; i < size; i++) {
+    gst_structure_remove_field (gst_caps_get_structure (parent, i), "parsed");
+  }
+  res = gst_caps_can_intersect (parent, child);
+  gst_caps_unref (parent);
+  return res;
+}
+
+
 static gboolean
 child_is_raw_stream (const GstCaps * parent, const GstCaps * child)
 {
@@ -1062,7 +1080,7 @@ parse_stream_topology (GstDiscoverer * dc, const GstStructure * topology,
         parent = res;
 
       if (gst_structure_id_get (st, _CAPS_QUARK, GST_TYPE_CAPS, &caps, NULL)) {
-        if (gst_caps_can_intersect (parent->caps, caps)) {
+        if (child_is_same_stream (parent->caps, caps)) {
           /* We sometimes get an extra sub-stream from the parser. If this is
            * the case, we just replace the parent caps with this stream's caps
            * since they might contain more information */
