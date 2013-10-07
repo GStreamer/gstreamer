@@ -556,9 +556,9 @@ main (int argc, gchar ** argv)
 exit:
   gst_element_set_state (pipeline, GST_STATE_NULL);
   g_main_loop_unref (mainloop);
+  g_object_unref (pipeline);
   g_object_unref (monitor);
   g_object_unref (runner);
-  g_object_unref (pipeline);
 
 #ifdef G_OS_UNIX
   g_source_remove (signal_watch_id);
