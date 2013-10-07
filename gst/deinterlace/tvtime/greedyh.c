@@ -727,7 +727,7 @@ deinterlace_frame_di_greedyh_packed (GstDeinterlaceMethod * method,
   gint InfoIsOdd = 0;
   gint Line;
   gint RowStride = GST_VIDEO_FRAME_COMP_STRIDE (outframe, 0);
-  gint FieldHeight = GST_VIDEO_INFO_HEIGHT (method->vinfo) / 2;
+  gint FieldHeight = GST_VIDEO_FRAME_HEIGHT (outframe) / 2;
   gint Pitch = RowStride * 2;
   const guint8 *L1;             // ptr to Line1, of 3
   const guint8 *L2;             // ptr to Line2, the weave line
@@ -912,8 +912,8 @@ deinterlace_frame_di_greedyh_planar (GstDeinterlaceMethod * method,
 
   for (i = 0; i < 3; i++) {
     InfoIsOdd = (history[cur_field_idx - 1].flags == PICTURE_INTERLACED_BOTTOM);
-    RowStride = GST_VIDEO_FRAME_PLANE_STRIDE (outframe, i);
-    FieldHeight = GST_VIDEO_FRAME_HEIGHT (outframe) / 2;
+    RowStride = GST_VIDEO_FRAME_COMP_STRIDE (outframe, i);
+    FieldHeight = GST_VIDEO_FRAME_COMP_HEIGHT (outframe, i) / 2;
     Pitch = RowStride * 2;
 
     if (i == 0)
@@ -921,18 +921,18 @@ deinterlace_frame_di_greedyh_planar (GstDeinterlaceMethod * method,
     else
       scanline = klass->scanline_planar_uv;
 
-    Dest = GST_VIDEO_FRAME_PLANE_DATA (outframe, i);
+    Dest = GST_VIDEO_FRAME_COMP_DATA (outframe, i);
 
-    L1 = GST_VIDEO_FRAME_PLANE_DATA (history[cur_field_idx - 2].frame, i);
+    L1 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 2].frame, i);
     if (history[cur_field_idx - 2].flags & PICTURE_INTERLACED_BOTTOM)
       L1 += RowStride;
 
-    L2 = GST_VIDEO_FRAME_PLANE_DATA (history[cur_field_idx - 1].frame, i);
+    L2 = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 1].frame, i);
     if (history[cur_field_idx - 1].flags & PICTURE_INTERLACED_BOTTOM)
       L2 += RowStride;
 
     L3 = L1 + Pitch;
-    L2P = GST_VIDEO_FRAME_PLANE_DATA (history[cur_field_idx - 3].frame, i);
+    L2P = GST_VIDEO_FRAME_COMP_DATA (history[cur_field_idx - 3].frame, i);
     if (history[cur_field_idx - 3].flags & PICTURE_INTERLACED_BOTTOM)
       L2P += RowStride;
 
