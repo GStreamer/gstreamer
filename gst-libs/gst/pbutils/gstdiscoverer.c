@@ -729,9 +729,8 @@ collect_stream_information (GstDiscoverer * dc, PrivateStream * ps, guint idx)
     caps = gst_pad_query_caps (ps->pad, NULL);
   }
   if (caps) {
-    GST_DEBUG ("Got caps %" GST_PTR_FORMAT, caps);
+    GST_DEBUG ("stream-%02d, got caps %" GST_PTR_FORMAT, idx, caps);
     gst_structure_id_set (st, _CAPS_QUARK, GST_TYPE_CAPS, caps, NULL);
-
     gst_caps_unref (caps);
   }
   if (ps->tags)
