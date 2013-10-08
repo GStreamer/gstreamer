@@ -131,16 +131,10 @@ typedef struct
     "; "                                 \
     "audio/x-alaw, "                     \
     "rate = (int) [ 8000, 192000 ], "    \
-    "channels = (int) [ 1, 2 ], "        \
-    "width = (int) 8, "                  \
-    "depth = (int) 8, "                  \
-    "signed = (boolean) false; "         \
+    "channels = (int) [ 1, 2 ]; "        \
     "audio/x-mulaw, "                    \
     "rate = (int) [ 8000, 192000 ], "    \
-    "channels = (int) [ 1, 2 ], "        \
-    "width = (int) 8, "                  \
-    "depth = (int) 8, "                  \
-    "signed = (boolean) false"
+    "channels = (int) [ 1, 2 ]"
 
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
