@@ -707,3 +707,55 @@ const GstAudioChannelPosition alsa_position[][8] = {
         GST_AUDIO_CHANNEL_POSITION_SIDE_LEFT,
       GST_AUDIO_CHANNEL_POSITION_SIDE_RIGHT}
 };
+
+#ifdef SND_CHMAP_API_VERSION
+/* +1 is to make zero as holes */
+#define ITEM(x, y) \
+  [SND_CHMAP_ ## x] = GST_AUDIO_CHANNEL_POSITION_ ## y + 1
+
+static GstAudioChannelPosition gst_pos[SND_CHMAP_LAST + 1] = {
+  ITEM(MONO, MONO),
+  ITEM(FL, FRONT_LEFT),
+  ITEM(FR, FRONT_RIGHT),
+  ITEM(FC, FRONT_CENTER),
+  ITEM(RL, REAR_LEFT),
+  ITEM(RR, REAR_RIGHT),
+  ITEM(RC, REAR_CENTER),
+  ITEM(LFE, LFE1),
+  ITEM(SL, SIDE_LEFT),
+  ITEM(SR, SIDE_RIGHT),
+  ITEM(FLC, FRONT_LEFT_OF_CENTER),
+  ITEM(FRC, FRONT_RIGHT_OF_CENTER),
+  ITEM(FLW, WIDE_LEFT),
+  ITEM(FRW, WIDE_RIGHT),
+  ITEM(TC, TOP_CENTER),
+  ITEM(TFL, TOP_FRONT_LEFT),
+  ITEM(TFR, TOP_FRONT_RIGHT),
+  ITEM(TFC, TOP_FRONT_CENTER),
+  ITEM(TRL, TOP_REAR_LEFT),
+  ITEM(TRR, TOP_REAR_RIGHT),
+  ITEM(TRC, TOP_REAR_CENTER),
+  ITEM(LLFE, LFE1),
+  ITEM(RLFE, LFE2),
+  ITEM(BC, BOTTOM_FRONT_CENTER),
+  ITEM(BLC, BOTTOM_FRONT_LEFT),
+  ITEM(BRC, BOTTOM_FRONT_LEFT),
+};
+#undef ITEM
+
+gboolean alsa_chmap_to_channel_positions (const snd_pcm_chmap_t *chmap,
+					  GstAudioChannelPosition *pos)
+{
+  int c;
+
+  for (c = 0; c < chmap->channels; c++) {
+    if (chmap->pos[c] > SND_CHMAP_LAST)
+      return FALSE;
+    pos[c] = gst_pos[chmap->pos[c]];
+    if (!pos[c])
+      return FALSE;
+    pos[c]--;
+  }
+  return TRUE;
+}
+#endif /* SND_CHMAP_API_VERSION */

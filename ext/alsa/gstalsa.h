@@ -71,5 +71,9 @@ void      gst_alsa_add_channel_reorder_map (GstObject * obj,
                                             GstCaps   * caps);
 
 extern const GstAudioChannelPosition alsa_position[][8];
+#ifdef SND_CHMAP_API_VERSION
+gboolean alsa_chmap_to_channel_positions (const snd_pcm_chmap_t *chmap,
+					  GstAudioChannelPosition *pos);
+#endif
 
 #endif /* __GST_ALSA_H__ */
