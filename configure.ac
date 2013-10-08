@@ -489,12 +489,12 @@ if test x"$EGL_WINDOW_SYSTEM" = x"auto"; then
   fi
 
   if test x"$EGL_WINDOW_SYSTEM" = x"auto"; then
-    EGL_WINDOW_SYSTEM="none"
+    EGL_WINDOW_SYSTEM="auto"
   fi
 fi
 
 case "$EGL_WINDOW_SYSTEM" in
-  x11)
+  x11|auto)
     PKG_CHECK_MODULES(EGL, egl, HAVE_EGL="yes", [
       HAVE_EGL="no"
       old_LIBS=$LIBS
@@ -516,6 +516,7 @@ case "$EGL_WINDOW_SYSTEM" in
       CFLAGS=$old_CFLAGS
     ])
       
+    dnl X11 specific part, above is auto and X11
     if test x"$HAVE_EGL" = x"yes" -a x"$EGL_WINDOW_SYSTEM" = x"x11"; then
       if test x"$HAVE_X11" != x"yes"; then
         AC_MSG_ERROR([libX11 not found and is required for EGL X11 window system])
