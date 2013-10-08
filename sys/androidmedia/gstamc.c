@@ -1857,13 +1857,6 @@ scan_codecs (GstPlugin * plugin)
       }
 
       for (k = 0; k < n_elems; k++) {
-        if (strcmp (name_str, "OMX.k3.video.decoder.avc") == 0)
-          if (n_elems == 1 && color_formats_elems[k] == COLOR_FormatYCbYCr) {
-            GST_INFO ("On HuaweiMediaPad it reports a wrong COLOR_FormatYCbYCr,"
-                "should be COLOR_TI_FormatYUV420PackedSemiPlanar, fix it.");
-            color_formats_elems[k] = COLOR_TI_FormatYUV420PackedSemiPlanar;
-          }
-
         GST_INFO ("Color format %d: 0x%x", k, color_formats_elems[k]);
         gst_codec_type->color_formats[k] = color_formats_elems[k];
       }
@@ -2144,7 +2137,8 @@ static const struct
   COLOR_QCOM_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}, {
   COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka, GST_VIDEO_FORMAT_NV12}, {
   COLOR_QCOM_FormatYVU420SemiPlanar32m, GST_VIDEO_FORMAT_NV12}, {
-  COLOR_OMX_SEC_FormatNV12Tiled, GST_VIDEO_FORMAT_NV12}
+  COLOR_OMX_SEC_FormatNV12Tiled, GST_VIDEO_FORMAT_NV12}, {
+  COLOR_FormatYCbYCr, GST_VIDEO_FORMAT_YUY2}
 };
 
 static gboolean
@@ -2179,9 +2173,36 @@ accepted_color_formats (GstAmcCodecType * type, gboolean is_encoder)
 }
 
 GstVideoFormat
-gst_amc_color_format_to_video_format (gint color_format)
+gst_amc_color_format_to_video_format (const GstAmcCodecInfo * codec_info,
+    const gchar * mime, gint color_format)
 {
   gint i;
+
+  if (color_format == COLOR_FormatYCbYCr) {
+    if (strcmp (codec_info->name, "OMX.k3.video.decoder.avc") == 0) {
+      GST_INFO
+          ("OMX.k3.video.decoder.avc: COLOR_FormatYCbYCr is actually GST_VIDEO_FORMAT_NV12.");
+      return GST_VIDEO_FORMAT_NV12;
+    }
+
+    /* FIXME COLOR_FormatYCbYCr doesn't work properly for OMX.k3.video.encoder.avc temporarily. */
+    if (strcmp (codec_info->name, "OMX.k3.video.encoder.avc") == 0) {
+      GST_INFO
+          ("OMX.k3.video.encoder.avc: COLOR_FormatYCbYCr is not supported yet.");
+      return GST_VIDEO_FORMAT_UNKNOWN;
+    }
+
+    /* FIXME COLOR_FormatYCbYCr is not supported in gst_amc_color_format_info_set yet, mask it. */
+    return GST_VIDEO_FORMAT_UNKNOWN;
+  }
+
+  if (color_format == COLOR_FormatYUV420SemiPlanar) {
+    if (strcmp (codec_info->name, "OMX.k3.video.encoder.avc") == 0) {
+      GST_INFO
+          ("OMX.k3.video.encoder.avc: COLOR_FormatYUV420SemiPlanar is actually GST_VIDEO_FORMAT_NV21.");
+      return GST_VIDEO_FORMAT_NV21;
+    }
+  }
 
   for (i = 0; i < G_N_ELEMENTS (color_format_mapping_table); i++) {
     if (color_format_mapping_table[i].color_format == color_format)
@@ -2192,13 +2213,48 @@ gst_amc_color_format_to_video_format (gint color_format)
 }
 
 gint
-gst_amc_video_format_to_color_format (GstVideoFormat video_format)
+gst_amc_video_format_to_color_format (const GstAmcCodecInfo * codec_info,
+    const gchar * mime, GstVideoFormat video_format)
 {
-  gint i;
+  const GstAmcCodecType *codec_type = NULL;
+  gint i, j;
+
+  for (i = 0; i < codec_info->n_supported_types; i++) {
+    if (strcmp (codec_info->supported_types[i].mime, mime) == 0) {
+      codec_type = &codec_info->supported_types[i];
+      break;
+    }
+  }
+
+  if (!codec_type)
+    return -1;
+
+  if (video_format == GST_VIDEO_FORMAT_NV12) {
+    if (strcmp (codec_info->name, "OMX.k3.video.decoder.avc") == 0) {
+      GST_INFO
+          ("OMX.k3.video.decoder.avc: GST_VIDEO_FORMAT_NV12 is reported as COLOR_FormatYCbYCr.");
+
+      return COLOR_FormatYCbYCr;
+    }
+  }
+
+  if (video_format == GST_VIDEO_FORMAT_NV21) {
+    if (strcmp (codec_info->name, "OMX.k3.video.encoder.avc") == 0) {
+      GST_INFO
+          ("OMX.k3.video.encoder.avc: GST_VIDEO_FORMAT_NV21 is reported as COLOR_FormatYUV420SemiPlanar.");
+
+      return COLOR_FormatYUV420SemiPlanar;
+    }
+  }
 
   for (i = 0; i < G_N_ELEMENTS (color_format_mapping_table); i++) {
-    if (color_format_mapping_table[i].video_format == video_format)
-      return color_format_mapping_table[i].color_format;
+    if (color_format_mapping_table[i].video_format == video_format) {
+      gint color_format = color_format_mapping_table[i].color_format;
+
+      for (j = 0; j < codec_type->n_color_formats; j++)
+        if (color_format == codec_type->color_formats[j])
+          return color_format;
+    }
   }
 
   return -1;
@@ -2851,6 +2907,405 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   return TRUE;
+}
+
+void
+gst_amc_codec_info_to_caps (const GstAmcCodecInfo * codec_info,
+    GstCaps ** sink_caps, GstCaps ** src_caps)
+{
+  GstCaps *raw_ret = NULL, *encoded_ret = NULL;
+  gint i;
+
+  if (codec_info->is_encoder) {
+    if (sink_caps)
+      *sink_caps = raw_ret = gst_caps_new_empty ();
+
+    if (src_caps)
+      *src_caps = encoded_ret = gst_caps_new_empty ();
+  } else {
+    if (sink_caps)
+      *sink_caps = encoded_ret = gst_caps_new_empty ();
+
+    if (src_caps)
+      *src_caps = raw_ret = gst_caps_new_empty ();
+  }
+
+  for (i = 0; i < codec_info->n_supported_types; i++) {
+    const GstAmcCodecType *type = &codec_info->supported_types[i];
+    GstStructure *tmp, *tmp2, *tmp3;
+
+    if (g_str_has_prefix (type->mime, "audio/")) {
+      if (raw_ret) {
+        tmp = gst_structure_new ("audio/x-raw",
+            "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+            "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+            "format", G_TYPE_STRING, GST_AUDIO_NE (S16), NULL);
+
+        raw_ret = gst_caps_merge_structure (raw_ret, tmp);
+      }
+
+      if (encoded_ret) {
+        if (strcmp (type->mime, "audio/mpeg") == 0) {
+          tmp = gst_structure_new ("audio/mpeg",
+              "mpegversion", G_TYPE_INT, 1,
+              "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "audio/3gpp") == 0) {
+          tmp = gst_structure_new ("audio/AMR",
+              "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "audio/amr-wb") == 0) {
+          tmp = gst_structure_new ("audio/AMR-WB",
+              "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "audio/mp4a-latm") == 0) {
+          gint j;
+          gboolean have_profile = FALSE;
+          GValue va = { 0, };
+          GValue v = { 0, };
+
+          g_value_init (&va, GST_TYPE_LIST);
+          g_value_init (&v, G_TYPE_STRING);
+          g_value_set_string (&v, "raw");
+          gst_value_list_append_value (&va, &v);
+          g_value_set_string (&v, "adts");
+          gst_value_list_append_value (&va, &v);
+          g_value_unset (&v);
+
+          tmp = gst_structure_new ("audio/mpeg",
+              "mpegversion", G_TYPE_INT, 4,
+              "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+          gst_structure_set_value (tmp, "stream-format", &va);
+          g_value_unset (&va);
+
+          for (j = 0; j < type->n_profile_levels; j++) {
+            const gchar *profile;
+
+            profile =
+                gst_amc_aac_profile_to_string (type->profile_levels[j].profile);
+
+            if (!profile) {
+              GST_ERROR ("Unable to map AAC profile 0x%08x",
+                  type->profile_levels[j].profile);
+              continue;
+            }
+
+            tmp2 = gst_structure_copy (tmp);
+            gst_structure_set (tmp2, "profile", G_TYPE_STRING, profile, NULL);
+            encoded_ret = gst_caps_merge_structure (encoded_ret, tmp2);
+
+            have_profile = TRUE;
+          }
+
+          if (!have_profile) {
+            encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+          } else {
+            gst_structure_free (tmp);
+          }
+        } else if (strcmp (type->mime, "audio/g711-alaw") == 0) {
+          tmp = gst_structure_new ("audio/x-alaw",
+              "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "audio/g711-mlaw") == 0) {
+          tmp = gst_structure_new ("audio/x-mulaw",
+              "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "audio/vorbis") == 0) {
+          tmp = gst_structure_new ("audio/x-vorbis",
+              "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT, NULL);
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "audio/flac") == 0) {
+          tmp = gst_structure_new ("audio/x-flac",
+              "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "framed", G_TYPE_BOOLEAN, TRUE, NULL);
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "audio/mpeg-L2") == 0) {
+          tmp = gst_structure_new ("audio/mpeg",
+              "mpegversion", G_TYPE_INT, 1,
+              "layer", G_TYPE_INT, 2,
+              "rate", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "channels", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else {
+          GST_WARNING ("Unsupported mimetype '%s'", type->mime);
+        }
+      }
+    } else if (g_str_has_prefix (type->mime, "video/")) {
+      if (raw_ret) {
+        gint j;
+
+        for (j = 0; j < type->n_color_formats; j++) {
+          GstVideoFormat format;
+
+          format =
+              gst_amc_color_format_to_video_format (codec_info,
+              type->mime, type->color_formats[j]);
+          if (format == GST_VIDEO_FORMAT_UNKNOWN) {
+            GST_WARNING ("Unknown color format 0x%08x", type->color_formats[j]);
+            continue;
+          }
+
+          tmp = gst_structure_new ("video/x-raw",
+              "format", G_TYPE_STRING, gst_video_format_to_string (format),
+              "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
+          raw_ret = gst_caps_merge_structure (raw_ret, tmp);
+        }
+      }
+
+      if (encoded_ret) {
+        if (strcmp (type->mime, "video/mp4v-es") == 0) {
+          gint j;
+          gboolean have_profile_level = FALSE;
+
+          tmp = gst_structure_new ("video/mpeg",
+              "width", GST_TYPE_INT_RANGE, 16, 4096,
+              "height", GST_TYPE_INT_RANGE, 16, 4096,
+              "framerate", GST_TYPE_FRACTION_RANGE,
+              0, 1, G_MAXINT, 1,
+              "mpegversion", G_TYPE_INT, 4,
+              "systemstream", G_TYPE_BOOLEAN, FALSE,
+              "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+          if (type->n_profile_levels) {
+            for (j = type->n_profile_levels - 1; j >= 0; j--) {
+              const gchar *profile;
+
+              profile =
+                  gst_amc_mpeg4_profile_to_string (type->
+                  profile_levels[j].profile);
+              if (!profile) {
+                GST_ERROR ("Unable to map MPEG4 profile 0x%08x",
+                    type->profile_levels[j].profile);
+                continue;
+              }
+
+              tmp2 = gst_structure_copy (tmp);
+              gst_structure_set (tmp2, "profile", G_TYPE_STRING, profile, NULL);
+
+              /* Don't put the level restrictions on the sinkpad caps for decoders,
+               * see 2b94641a4 */
+              if (codec_info->is_encoder) {
+                const gchar *level;
+                gint k;
+                GValue va = { 0, };
+                GValue v = { 0, };
+
+                g_value_init (&va, GST_TYPE_LIST);
+                g_value_init (&v, G_TYPE_STRING);
+
+                for (k = 1; k <= type->profile_levels[j].level && k != 0;
+                    k <<= 1) {
+                  level = gst_amc_mpeg4_level_to_string (k);
+                  if (!level)
+                    continue;
+
+                  g_value_set_string (&v, level);
+                  gst_value_list_append_value (&va, &v);
+                  g_value_reset (&v);
+                }
+
+                gst_structure_set_value (tmp2, "level", &va);
+                g_value_unset (&va);
+                g_value_unset (&v);
+              }
+
+              encoded_ret = gst_caps_merge_structure (encoded_ret, tmp2);
+              have_profile_level = TRUE;
+            }
+          }
+
+          if (!have_profile_level) {
+            encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+          } else {
+            gst_structure_free (tmp);
+          }
+
+          tmp = gst_structure_new ("video/x-divx",
+              "width", GST_TYPE_INT_RANGE, 16, 4096,
+              "height", GST_TYPE_INT_RANGE, 16, 4096,
+              "framerate", GST_TYPE_FRACTION_RANGE,
+              0, 1, G_MAXINT, 1,
+              "divxversion", GST_TYPE_INT_RANGE, 3, 5,
+              "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "video/3gpp") == 0) {
+          gint j;
+          gboolean have_profile_level = FALSE;
+
+          tmp = gst_structure_new ("video/x-h263",
+              "width", GST_TYPE_INT_RANGE, 16, 4096,
+              "height", GST_TYPE_INT_RANGE, 16, 4096,
+              "framerate", GST_TYPE_FRACTION_RANGE,
+              0, 1, G_MAXINT, 1,
+              "parsed", G_TYPE_BOOLEAN, TRUE,
+              "variant", G_TYPE_STRING, "itu", NULL);
+
+          if (type->n_profile_levels) {
+            for (j = type->n_profile_levels - 1; j >= 0; j--) {
+              gint profile;
+
+              profile =
+                  gst_amc_h263_profile_to_gst_id (type->
+                  profile_levels[j].profile);
+
+              if (profile == -1) {
+                GST_ERROR ("Unable to map h263 profile 0x%08x",
+                    type->profile_levels[j].profile);
+                continue;
+              }
+
+              tmp2 = gst_structure_copy (tmp);
+              gst_structure_set (tmp2, "profile", G_TYPE_UINT, profile, NULL);
+
+              if (codec_info->is_encoder) {
+                gint k;
+                gint level;
+                GValue va = { 0, };
+                GValue v = { 0, };
+
+                g_value_init (&va, GST_TYPE_LIST);
+                g_value_init (&v, G_TYPE_UINT);
+
+                for (k = 1; k <= type->profile_levels[j].level && k != 0;
+                    k <<= 1) {
+                  level = gst_amc_h263_level_to_gst_id (k);
+                  if (level == -1)
+                    continue;
+
+                  g_value_set_uint (&v, level);
+                  gst_value_list_append_value (&va, &v);
+                  g_value_reset (&v);
+                }
+
+                gst_structure_set_value (tmp2, "level", &va);
+                g_value_unset (&va);
+                g_value_unset (&v);
+              }
+
+              encoded_ret = gst_caps_merge_structure (encoded_ret, tmp2);
+              have_profile_level = TRUE;
+            }
+          }
+
+          if (!have_profile_level) {
+            encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+          } else {
+            gst_structure_free (tmp);
+          }
+        } else if (strcmp (type->mime, "video/avc") == 0) {
+          gint j;
+          gboolean have_profile_level = FALSE;
+
+          tmp = gst_structure_new ("video/x-h264",
+              "width", GST_TYPE_INT_RANGE, 16, 4096,
+              "height", GST_TYPE_INT_RANGE, 16, 4096,
+              "framerate", GST_TYPE_FRACTION_RANGE,
+              0, 1, G_MAXINT, 1,
+              "parsed", G_TYPE_BOOLEAN, TRUE,
+              "stream-format", G_TYPE_STRING, "byte-stream",
+              "alignment", G_TYPE_STRING, "au", NULL);
+
+          if (type->n_profile_levels) {
+            for (j = type->n_profile_levels - 1; j >= 0; j--) {
+              const gchar *profile, *alternative = NULL;
+
+              profile =
+                  gst_amc_avc_profile_to_string (type->
+                  profile_levels[j].profile, &alternative);
+
+              if (!profile) {
+                GST_ERROR ("Unable to map H264 profile 0x%08x",
+                    type->profile_levels[j].profile);
+                continue;
+              }
+
+              tmp2 = gst_structure_copy (tmp);
+              gst_structure_set (tmp2, "profile", G_TYPE_STRING, profile, NULL);
+
+              if (alternative) {
+                tmp3 = gst_structure_copy (tmp);
+                gst_structure_set (tmp3, "profile", G_TYPE_STRING, alternative,
+                    NULL);
+              } else
+                tmp3 = NULL;
+
+              if (codec_info->is_encoder) {
+                const gchar *level;
+                gint k;
+                GValue va = { 0, };
+                GValue v = { 0, };
+
+                g_value_init (&va, GST_TYPE_LIST);
+                g_value_init (&v, G_TYPE_STRING);
+                for (k = 1; k <= type->profile_levels[j].level && k != 0;
+                    k <<= 1) {
+                  level = gst_amc_avc_level_to_string (k);
+                  if (!level)
+                    continue;
+
+                  g_value_set_string (&v, level);
+                  gst_value_list_append_value (&va, &v);
+                  g_value_reset (&v);
+                }
+
+                gst_structure_set_value (tmp2, "level", &va);
+                if (tmp3)
+                  gst_structure_set_value (tmp3, "level", &va);
+
+                g_value_unset (&va);
+                g_value_unset (&v);
+              }
+
+              encoded_ret = gst_caps_merge_structure (encoded_ret, tmp2);
+              if (tmp3)
+                encoded_ret = gst_caps_merge_structure (encoded_ret, tmp3);
+              have_profile_level = TRUE;
+            }
+          }
+
+          if (!have_profile_level) {
+            encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+          } else {
+            gst_structure_free (tmp);
+          }
+        } else if (strcmp (type->mime, "video/x-vnd.on2.vp8") == 0) {
+          tmp = gst_structure_new ("video/x-vp8",
+              "width", GST_TYPE_INT_RANGE, 16, 4096,
+              "height", GST_TYPE_INT_RANGE, 16, 4096,
+              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else if (strcmp (type->mime, "video/mpeg2") == 0) {
+          tmp = gst_structure_new ("video/mpeg",
+              "width", GST_TYPE_INT_RANGE, 16, 4096,
+              "height", GST_TYPE_INT_RANGE, 16, 4096,
+              "framerate", GST_TYPE_FRACTION_RANGE,
+              0, 1, G_MAXINT, 1,
+              "mpegversion", GST_TYPE_INT_RANGE, 1, 2,
+              "systemstream", G_TYPE_BOOLEAN, FALSE,
+              "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+
+          encoded_ret = gst_caps_merge_structure (encoded_ret, tmp);
+        } else {
+          GST_WARNING ("Unsupported mimetype '%s'", type->mime);
+        }
+      }
+    }
+  }
 }
 
 GST_PLUGIN_DEFINE (GST_VERSION_MAJOR,
