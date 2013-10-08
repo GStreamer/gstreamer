@@ -605,15 +605,15 @@ gst_video_rawvideo_convert (GstVideoCodecState * state,
     res = TRUE;
   } else if (src_format == GST_FORMAT_TIME &&
       *dest_format == GST_FORMAT_BYTES && fps_d && vidsize) {
-    /* convert time to frames */
+    /* convert time to bytes */
     *dest_value = gst_util_uint64_scale (src_value,
-        fps_n * vidsize, GST_SECOND * fps_d);
+        fps_n * (guint64) vidsize, GST_SECOND * fps_d);
     res = TRUE;
   } else if (src_format == GST_FORMAT_BYTES &&
       *dest_format == GST_FORMAT_TIME && fps_n && vidsize) {
-    /* convert frames to time */
+    /* convert bytes to time */
     *dest_value = gst_util_uint64_scale (src_value,
-        GST_SECOND * fps_d, fps_n * vidsize);
+        GST_SECOND * fps_d, fps_n * (guint64) vidsize);
     res = TRUE;
   }
 
