@@ -427,6 +427,55 @@ GST_START_TEST (test_backward_playback)
 
 GST_END_TEST;
 
+GST_START_TEST (test_duration_query)
+{
+  GstElement *bin;
+  GError *error = NULL;
+  GstStateChangeReturn ret;
+  gboolean queryret;
+  gint64 duration = -1;
+
+  bin =
+      gst_parse_launch ("videotestsrc ! fakesink name=sink sync=true", &error);
+  ret = gst_element_set_state (bin, GST_STATE_PAUSED);
+  if (ret == GST_STATE_CHANGE_ASYNC) {
+    ret = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+    fail_if (ret != GST_STATE_CHANGE_SUCCESS, "Could not start test pipeline");
+  }
+  queryret = gst_element_query_duration (bin, GST_FORMAT_TIME, &duration);
+  /* should have unknown duration */
+  if (queryret && duration != -1) {
+    fail ("Should return false on duration query");
+  }
+  gst_element_set_state (bin, GST_STATE_NULL);
+  gst_object_unref (bin);
+
+  bin = gst_parse_launch ("videotestsrc num-buffers=100 ! capsfilter "
+      "caps=\"video/x-raw,framerate=(fraction)10/1\" ! "
+      "fakesink name=sink sync=true", &error);
+  ret = gst_element_set_state (bin, GST_STATE_PAUSED);
+  if (ret == GST_STATE_CHANGE_ASYNC) {
+    ret = gst_element_get_state (bin, NULL, NULL, GST_CLOCK_TIME_NONE);
+    fail_if (ret != GST_STATE_CHANGE_SUCCESS, "Could not start test pipeline");
+  }
+  queryret = gst_element_query_duration (bin, GST_FORMAT_TIME, &duration);
+  fail_unless (queryret, "Duration should be returned");
+  fail_unless (duration == GST_SECOND * 10, "Expected duration didn't match");
+
+  /* reverse playback should have no impact on duration */
+  gst_element_seek (bin, -1.0, GST_FORMAT_TIME,
+      GST_SEEK_FLAG_ACCURATE | GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET,
+      0, GST_SEEK_TYPE_SET, 1 * GST_SECOND);
+  queryret = gst_element_query_duration (bin, GST_FORMAT_TIME, &duration);
+  fail_unless (queryret, "Duration should be returned");
+  fail_unless (duration == GST_SECOND * 10, "Expected duration didn't match");
+
+  gst_element_set_state (bin, GST_STATE_NULL);
+  gst_object_unref (bin);
+}
+
+GST_END_TEST;
+
 
 /* FIXME: add tests for YUV formats */
 
@@ -448,6 +497,7 @@ videotestsrc_suite (void)
   tcase_add_test (tc_chain, test_all_patterns);
   tcase_add_test (tc_chain, test_rgb_formats);
   tcase_add_test (tc_chain, test_backward_playback);
+  tcase_add_test (tc_chain, test_duration_query);
 
   return s;
 }

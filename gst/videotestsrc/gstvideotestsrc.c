@@ -773,6 +773,16 @@ gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
       gst_query_set_convert (query, src_fmt, src_val, dest_fmt, dest_val);
       break;
     }
+    case GST_QUERY_DURATION:{
+      if (bsrc->num_buffers != -1) {
+        gint64 dur = gst_util_uint64_scale_int_round (bsrc->num_buffers
+            * GST_SECOND, src->info.fps_d, src->info.fps_n);
+        res = TRUE;
+        gst_query_set_duration (query, GST_FORMAT_TIME, dur);
+        break;
+      }
+      /* fall through */
+    }
     default:
       res = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
       break;
