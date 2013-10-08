@@ -1351,8 +1351,8 @@ gst_flups_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gst_query_parse_position (query, &format, NULL);
 
       if (format != GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (demux, "position not supported for format %d",
-            format);
+        GST_DEBUG_OBJECT (demux, "position not supported for format: %s",
+            gst_format_get_name (format));
         goto not_supported;
       }
 
@@ -1381,8 +1381,8 @@ gst_flups_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 
       /* For any format other than bytes, see if upstream knows first */
       if (format == GST_FORMAT_BYTES) {
-        GST_DEBUG_OBJECT (demux, "duration not supported for format %d",
-            format);
+        GST_DEBUG_OBJECT (demux, "duration not supported for format: %s",
+            gst_format_get_name (format));
         goto not_supported;
       }
 
@@ -1394,8 +1394,8 @@ gst_flups_demux_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       /* Upstream didn't know, so we can only answer TIME queries from
        * here on */
       if (format != GST_FORMAT_TIME) {
-        GST_DEBUG_OBJECT (demux, "duration not supported for format %d",
-            format);
+        GST_DEBUG_OBJECT (demux, "duration not supported for format: %s",
+            gst_format_get_name (format));
         goto not_supported;
       }
 
