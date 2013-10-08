@@ -139,6 +139,7 @@ struct _GstVideoTestSrc {
   /* running time and frames for current caps */
   GstClockTime running_time;            /* total running time */
   gint64 n_frames;                      /* total frames sent */
+  gboolean reverse;
 
   /* previous caps running time and frames */
   GstClockTime accum_rtime;              /* accumulated running_time */
