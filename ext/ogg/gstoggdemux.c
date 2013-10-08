@@ -259,7 +259,7 @@ gst_ogg_pad_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       gint64 total_time = -1;
 
       gst_query_parse_duration (query, &format, NULL);
-      /* can only get position in time */
+      /* can only get duration in time */
       if (format != GST_FORMAT_TIME)
         goto wrong_format;
 
