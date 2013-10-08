@@ -493,6 +493,23 @@ _init_formatter_assets (void)
   g_free (formatters);
 }
 
+static gint
+_sort_formatters (GESAsset * asset, GESAsset * asset1)
+{
+  GESFormatterClass *class =
+      g_type_class_peek (ges_asset_get_extractable_type (asset));
+  GESFormatterClass *class1 =
+      g_type_class_peek (ges_asset_get_extractable_type (asset1));
+
+  /* We want the highest ranks to be first! */
+  if (class->rank > class1->rank)
+    return -1;
+  else if (class->rank < class1->rank)
+    return 1;
+
+  return 0;
+}
+
 GESAsset *
 _find_formatter_asset_for_uri (const gchar * uri)
 {
@@ -500,7 +517,8 @@ _find_formatter_asset_for_uri (const gchar * uri)
   GList *formatter_assets, *tmp;
   GESAsset *asset = NULL;
 
-  formatter_assets = ges_list_assets (GES_TYPE_FORMATTER);
+  formatter_assets = g_list_sort (ges_list_assets (GES_TYPE_FORMATTER),
+      (GCompareFunc) _sort_formatters);
   for (tmp = formatter_assets; tmp; tmp = tmp->next) {
     GESFormatter *dummy_instance;
 
