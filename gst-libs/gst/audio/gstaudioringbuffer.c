@@ -1950,10 +1950,10 @@ gst_audio_ring_buffer_set_channel_positions (GstAudioRingBuffer * buf,
   channels = buf->spec.info.channels;
   to = buf->spec.info.position;
 
-  buf->need_reorder = FALSE;
   if (memcmp (position, to, channels * sizeof (to[0])) == 0)
     return;
 
+  buf->need_reorder = FALSE;
   if (!gst_audio_get_channel_reorder_map (channels, position, to,
           buf->channel_reorder_map))
     g_return_if_reached ();
