@@ -594,7 +594,7 @@ speed_chain (GstPad * pad, GstObject * parent, GstBuffer * in_buf)
   out_buf = gst_buffer_new_and_alloc (out_size);
 
   in_samples = gst_buffer_get_size (in_buf) /
-      GST_AUDIO_INFO_BPS (&filter->info);
+      GST_AUDIO_INFO_BPF (&filter->info);
 
   out_samples = 0;
 
@@ -606,13 +606,13 @@ speed_chain (GstPad * pad, GstObject * parent, GstBuffer * in_buf)
           speed_chain_float32 (filter, in_buf, out_buf, c, in_samples);
   }
 
-  size = out_samples * GST_AUDIO_INFO_BPS (&filter->info);
+  size = out_samples * GST_AUDIO_INFO_BPF (&filter->info);
   gst_buffer_set_size (out_buf, size);
 
   GST_BUFFER_OFFSET (out_buf) = filter->offset;
   GST_BUFFER_TIMESTAMP (out_buf) = filter->timestamp;
 
-  filter->offset += size / GST_AUDIO_INFO_BPS (&filter->info);
+  filter->offset += size / GST_AUDIO_INFO_BPF (&filter->info);
   filter->timestamp = gst_util_uint64_scale_int (filter->offset, GST_SECOND,
       GST_AUDIO_INFO_RATE (&filter->info));
 
