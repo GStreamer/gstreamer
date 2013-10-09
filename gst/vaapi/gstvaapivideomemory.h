@@ -96,6 +96,10 @@ gboolean
 gst_video_meta_unmap_vaapi_memory(GstVideoMeta *meta, guint plane,
     GstMapInfo *info);
 
+G_GNUC_INTERNAL
+void
+gst_vaapi_video_memory_reset_surface(GstVaapiVideoMemory *mem);
+
 /* ------------------------------------------------------------------------ */
 /* --- GstVaapiVideoAllocator                                           --- */
 /* ------------------------------------------------------------------------ */

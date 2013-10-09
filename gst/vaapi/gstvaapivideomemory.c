@@ -258,6 +258,16 @@ gst_vaapi_video_memory_free(GstVaapiVideoMemory *mem)
     g_slice_free(GstVaapiVideoMemory, mem);
 }
 
+void
+gst_vaapi_video_memory_reset_surface(GstVaapiVideoMemory *mem)
+{
+    mem->surface = NULL;
+    gst_vaapi_surface_proxy_replace(&mem->proxy, NULL);
+    if (mem->use_direct_rendering)
+        gst_vaapi_object_replace(&mem->image, NULL);
+    gst_vaapi_video_meta_set_surface_proxy(mem->meta, NULL);
+}
+
 static gpointer
 gst_vaapi_video_memory_map(GstVaapiVideoMemory *mem, gsize maxsize, guint flags)
 {

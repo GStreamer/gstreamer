@@ -234,10 +234,10 @@ error_create_memory:
 static void
 gst_vaapi_video_buffer_pool_reset_buffer(GstBufferPool *pool, GstBuffer *buffer)
 {
-    GstVaapiVideoMeta * const meta = gst_buffer_get_vaapi_video_meta(buffer);
+    GstMemory * const mem = gst_buffer_peek_memory(buffer, 0);
 
     /* Release the underlying surface proxy */
-    gst_vaapi_video_meta_set_surface_proxy(meta, NULL);
+    gst_vaapi_video_memory_reset_surface(GST_VAAPI_VIDEO_MEMORY_CAST(mem));
 
     GST_BUFFER_POOL_CLASS(gst_vaapi_video_buffer_pool_parent_class)->
         reset_buffer(pool, buffer);
