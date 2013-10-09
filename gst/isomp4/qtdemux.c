@@ -138,7 +138,7 @@ struct _QtDemuxSample
  * is called the media_time.
  *
  * The segments now describe the pieces that should be played from this track
- * and are basically tupples of media_time/duration/rate entries. We can have
+ * and are basically tuples of media_time/duration/rate entries. We can have
  * multiple segments and they are all played after one another. An example:
  *
  * segment 1: media_time: 1 second, duration: 1 second, rate 1
@@ -168,8 +168,8 @@ struct _QtDemuxSample
  *         '--------------'         '--------------'
  *
  * The challenge here is to cut out the right pieces of the track for each of
- * the playback segments. This fortunatly can easily be done with the SEGMENT
- * events of gstreamer.
+ * the playback segments. This fortunately can easily be done with the SEGMENT
+ * events of GStreamer.
  *
  * For playback of segment 1, we need to provide the decoder with the keyframe
  * (a), in the above figure, but we must instruct it only to output the decoded
@@ -315,7 +315,7 @@ struct _QtDemuxStream
   GstByteReader stps;
   GstByteReader ctts;
 
-  gboolean chunks_are_chunks;
+  gboolean chunks_are_chunks;   /* FALSE means treat chunks as samples */
   gint64 stbl_index;
   /* stco */
   guint co_size;
@@ -6115,7 +6115,7 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   if (!gst_byte_reader_skip (&stream->stco, 1 + 3))
     goto corrupt_file;
 
-  /* chunks_are_chunks == 0 means treat chunks as samples */
+  /* chunks_are_chunks == FALSE means treat chunks as samples */
   stream->chunks_are_chunks = !stream->sample_size || stream->sampled;
   if (stream->chunks_are_chunks) {
     /* skip number of entries */
@@ -6332,8 +6332,8 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
         chunk_offset = stream->chunk_offset;
 
         for (k = stream->stsc_sample_index; k < samples_per_chunk; k++) {
-          GST_LOG_OBJECT (qtdemux, "Creating entry %d with offset %"
-              G_GUINT64_FORMAT "and size %d",
+          GST_LOG_OBJECT (qtdemux, "creating entry %d with offset %"
+              G_GUINT64_FORMAT " and size %d",
               (guint) (cur - samples), stream->chunk_offset, cur->size);
 
           cur->offset = chunk_offset;
@@ -8284,6 +8284,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
           break;
         }
         default:
+          GST_INFO_OBJECT (qtdemux,
+              "unhandled type %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
           break;
       }
     }
@@ -8365,6 +8367,8 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
         break;
       }
       default:
+        GST_INFO_OBJECT (qtdemux,
+            "unhandled type %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc));
         break;
     }
     GST_INFO_OBJECT (qtdemux,
@@ -8560,13 +8564,20 @@ gst_qtdemux_guess_bitrate (GstQTDemux * qtdemux)
     switch (qtdemux->streams[i]->subtype) {
       case FOURCC_soun:
       case FOURCC_vide:
+        GST_DEBUG_OBJECT (qtdemux, "checking bitrate for %" GST_PTR_FORMAT,
+            qtdemux->streams[i]->caps);
         /* retrieve bitrate, prefer avg then max */
         bitrate = 0;
         if (qtdemux->streams[i]->pending_tags) {
           gst_tag_list_get_uint (qtdemux->streams[i]->pending_tags,
               GST_TAG_MAXIMUM_BITRATE, &bitrate);
+          GST_DEBUG_OBJECT (qtdemux, "max-bitrate: %u", bitrate);
+          gst_tag_list_get_uint (qtdemux->streams[i]->pending_tags,
+              GST_TAG_NOMINAL_BITRATE, &bitrate);
+          GST_DEBUG_OBJECT (qtdemux, "nominal-bitrate: %u", bitrate);
           gst_tag_list_get_uint (qtdemux->streams[i]->pending_tags,
               GST_TAG_BITRATE, &bitrate);
+          GST_DEBUG_OBJECT (qtdemux, "bitrate: %u", bitrate);
         }
         if (bitrate)
           sum_bitrate += bitrate;
