@@ -29,6 +29,7 @@
 #include "gstmpeg4videoparse.h"
 #include "gstpngparse.h"
 #include "gstvc1parse.h"
+#include "gsth265parse.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -47,6 +48,8 @@ plugin_init (GstPlugin * plugin)
       GST_RANK_PRIMARY + 1, GST_TYPE_MPEG4VIDEO_PARSE);
   ret |= gst_element_register (plugin, "pngparse",
       GST_RANK_PRIMARY, GST_TYPE_PNG_PARSE);
+  ret |= gst_element_register (plugin, "h265parse",
+      GST_RANK_SECONDARY, GST_TYPE_H265_PARSE);
   ret |= gst_element_register (plugin, "vc1parse",
       GST_RANK_NONE, GST_TYPE_VC1_PARSE);
 

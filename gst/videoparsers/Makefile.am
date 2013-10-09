@@ -6,7 +6,8 @@ libgstvideoparsersbad_la_SOURCES = plugin.c \
 	gsth264parse.c gstmpegvideoparse.c \
 	gstmpeg4videoparse.c \
 	gstpngparse.c \
-	gstvc1parse.c
+	gstvc1parse.c \
+	gsth265parse.c
 
 libgstvideoparsersbad_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
@@ -29,7 +30,8 @@ noinst_HEADERS = gsth263parse.h h263parse.h \
 	gsth264parse.h gstmpegvideoparse.h \
 	gstmpeg4videoparse.h \
 	gstpngparse.h \
-	gstvc1parse.h
+	gstvc1parse.h \
+	gsth265parse.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \
