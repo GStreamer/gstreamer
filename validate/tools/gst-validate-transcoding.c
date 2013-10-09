@@ -29,8 +29,10 @@
 #include <string.h>
 
 #include <gst/gst.h>
+#include <gst/video/video.h>
 #include <gst/validate/validate.h>
 #include <gst/pbutils/encoding-profile.h>
+
 
 #ifdef G_OS_UNIX
 #include <glib-unix.h>
@@ -40,9 +42,33 @@
 
 static gint ret = 0;
 static GMainLoop *mainloop;
-static GstElement *pipeline;
+static GstElement *pipeline, *encodebin;
 static GstEncodingProfile *encoding_profile = NULL;
 static gboolean eos_on_shutdown = FALSE;
+
+typedef struct
+{
+  volatile gint refcount;
+
+  GstSegment segment; /* The currently configured segment */
+
+  /* FIXME Do we need a weak ref here? */
+  GstValidateScenario *scenario;
+  guint count_bufs;
+  gboolean seen_event;
+  GstClockTime running_time;
+
+  /* Make sure to remove all probes when we are done */
+  gboolean done;
+
+} KeyUnitProbeInfo;
+
+/* This is used to
+ *  1) Make sure we receive the event
+ *  2) Count the number of frames that were not KF seen after the event
+ */
+#define FORCE_KF_DATA_NAME "force-key-unit"
+#define NOT_KF_AFTER_FORCE_KF_EVT_TOLERANCE 1
 
 #ifdef G_OS_UNIX
 static gboolean
@@ -62,6 +88,238 @@ intr_handler (gpointer user_data)
   return FALSE;
 }
 #endif /* G_OS_UNIX */
+
+static void
+key_unit_data_unref (KeyUnitProbeInfo *info)
+{
+  if (G_UNLIKELY (g_atomic_int_dec_and_test (&info->refcount))) {
+    g_slice_free (KeyUnitProbeInfo, info);
+  }
+}
+
+static KeyUnitProbeInfo *
+key_unit_data_ref (KeyUnitProbeInfo *info)
+{
+  g_atomic_int_inc (&info->refcount);
+
+  return info;
+}
+
+static KeyUnitProbeInfo *
+key_unit_data_new (GstValidateScenario *scenario, GstClockTime running_time)
+{
+  KeyUnitProbeInfo *info = g_slice_new0 (KeyUnitProbeInfo);
+  info->refcount = 1;
+
+  info->scenario = scenario;
+  info->running_time = running_time;
+
+  return info;
+}
+
+static GstPadProbeReturn
+_check_is_key_unit_cb (GstPad * pad, GstPadProbeInfo * info, KeyUnitProbeInfo *kuinfo)
+{
+  if (GST_IS_EVENT (GST_PAD_PROBE_INFO_DATA (info))) {
+    if (gst_video_event_is_force_key_unit (GST_PAD_PROBE_INFO_DATA (info)))
+      kuinfo->seen_event = TRUE;
+    else if (GST_EVENT_TYPE (info->data) == GST_EVENT_SEGMENT &&
+        GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
+      const GstSegment *segment = NULL;
+
+      gst_event_parse_segment (info->data, &segment);
+      kuinfo->segment = *segment;
+    }
+  } else if (GST_IS_BUFFER (GST_PAD_PROBE_INFO_DATA (info)) && kuinfo->seen_event) {
+
+     if (GST_CLOCK_TIME_IS_VALID (kuinfo->running_time)) {
+       GstClockTime running_time = gst_segment_to_running_time (&kuinfo->segment,
+           GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (info->data));
+
+       if (running_time < kuinfo->running_time)
+         return GST_PAD_PROBE_OK;
+     }
+
+     if (GST_BUFFER_FLAG_IS_SET (GST_PAD_PROBE_INFO_BUFFER (info), GST_BUFFER_FLAG_DELTA_UNIT)) {
+       if (kuinfo->count_bufs >= NOT_KF_AFTER_FORCE_KF_EVT_TOLERANCE) {
+         GST_VALIDATE_REPORT (kuinfo->scenario,
+             SCENARIO_ACTION_EXECUTION_ERROR,
+             "Did not receive a key frame after requested one, "
+             " at running_time %" GST_TIME_FORMAT " (with a %i "
+             "frame tolerance)", GST_TIME_ARGS (kuinfo->running_time),
+             NOT_KF_AFTER_FORCE_KF_EVT_TOLERANCE);
+
+         return GST_PAD_PROBE_REMOVE;
+       }
+
+       kuinfo->count_bufs++;
+     } else {
+       GST_DEBUG_OBJECT (kuinfo->scenario,
+           "Properly got keyframe after \"force-keyframe\" event "
+           "with running_time %" GST_TIME_FORMAT " (latency %d frame(s))",
+           GST_TIME_ARGS (kuinfo->running_time), kuinfo->count_bufs);
+
+       return GST_PAD_PROBE_REMOVE;
+     }
+   }
+
+  return GST_PAD_PROBE_OK;
+}
+
+static int
+_find_video_encoder (GValue * velement, gpointer udata)
+{
+  GstElement *element = g_value_get_object (velement);
+
+  const gchar *klass = gst_element_class_get_metadata (GST_ELEMENT_GET_CLASS (element),
+      GST_ELEMENT_METADATA_KLASS);
+
+  if (g_strstr_len (klass, -1, "Video") &&
+    g_strstr_len (klass, -1, "Encoder")) {
+
+    return 0;
+  }
+
+  return !0;
+}
+
+
+static gboolean
+_execute_request_key_unit (GstValidateScenario * scenario,
+    GstValidateAction * action)
+{
+  guint count;
+  GstIterator *iter;
+  gboolean all_headers;
+
+  gboolean ret = TRUE;
+  GValue result = { 0, };
+  GstEvent *event = NULL;
+  GstQuery *segment_query;
+  KeyUnitProbeInfo *info = NULL;
+  GstElement *video_encoder = NULL;
+  GstPad *pad = NULL, *encoder_srcpad = NULL;
+  GstClockTime running_time = GST_CLOCK_TIME_NONE;
+  const gchar *direction = gst_structure_get_string (action->structure,
+      "direction");
+
+  iter = gst_bin_iterate_recurse (GST_BIN (encodebin));
+  if (!gst_iterator_find_custom (iter,
+          (GCompareFunc) _find_video_encoder, &result,NULL)) {
+    g_error ("Could not find any video encode");
+
+    goto fail;
+  }
+
+  gst_iterator_free (iter);
+  video_encoder = g_value_get_object (&result);
+  encoder_srcpad = gst_element_get_static_pad (video_encoder, "src");
+
+  if (!encoder_srcpad) {
+    GST_FIXME ("Implement weird encoder management");
+    g_error ("We do not handle encoder with not static srcpad");
+
+    goto fail;
+  }
+
+  gst_validate_action_get_clocktime (scenario, action,
+      "running-time", &running_time);
+
+  if (gst_structure_get_boolean (action->structure, "all-headers",
+          &all_headers)) {
+    g_error ("Missing field: all-headers");
+
+    goto fail;
+  }
+
+  if (!gst_structure_get_uint (action->structure, "count", &count)) {
+    if (!gst_structure_get_int (action->structure, "count", (gint *) & count)) {
+      g_error ("Missing field: count");
+
+      goto fail;
+    }
+  }
+
+  info = key_unit_data_new (scenario, running_time);
+  if (g_strcmp0 (direction, "upstream") == 0) {
+    event = gst_video_event_new_upstream_force_key_unit (running_time,
+        all_headers, count);
+
+    pad = gst_element_get_static_pad (video_encoder, "src");
+    gst_pad_add_probe (encoder_srcpad,
+        GST_PAD_PROBE_TYPE_EVENT_UPSTREAM,
+        (GstPadProbeCallback) _check_is_key_unit_cb,
+        key_unit_data_ref (info),
+        (GDestroyNotify) key_unit_data_unref);
+  } else if (g_strcmp0 (direction, "downstream") == 0) {
+    GstClockTime timestamp = GST_CLOCK_TIME_NONE,
+        stream_time = GST_CLOCK_TIME_NONE;
+
+    pad = gst_element_get_static_pad (video_encoder, "sink");
+    if (!pad) {
+      GST_FIXME ("Implement weird encoder management");
+      g_error ("We do not handle encoder with not static sinkpad");
+
+      goto fail;
+    }
+
+    gst_validate_action_get_clocktime (scenario, action,
+        "timestamp", &timestamp);
+
+    gst_validate_action_get_clocktime (scenario, action,
+        "stream-time", &stream_time);
+
+    event = gst_video_event_new_downstream_force_key_unit (timestamp, stream_time,
+        running_time, all_headers, count);
+
+    gst_pad_add_probe (pad,
+        GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+        (GstPadProbeCallback) _check_is_key_unit_cb,
+        key_unit_data_ref (info),
+        (GDestroyNotify) key_unit_data_unref);
+  } else {
+    g_error ("request keyunit direction %s invalide (should be in"
+        " [downstrean, upstream]", direction);
+
+    goto fail;
+  }
+
+  g_print ("Sendings a \"force key unit\" event %s\n", direction);
+
+  segment_query = gst_query_new_segment (GST_FORMAT_TIME);
+  gst_pad_query (encoder_srcpad, segment_query);
+
+  gst_query_parse_segment (segment_query, &(info->segment.rate),
+    &(info->segment.format),
+    (gint64*) &(info->segment.start),
+    (gint64*) &(info->segment.stop));
+
+  gst_pad_add_probe (encoder_srcpad,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_EVENT_DOWNSTREAM,
+      (GstPadProbeCallback) _check_is_key_unit_cb, info,
+      (GDestroyNotify) key_unit_data_unref);
+
+
+  if (!gst_pad_send_event (pad, event)) {
+     GST_VALIDATE_REPORT (scenario, SCENARIO_ACTION_EXECUTION_ERROR,
+         "Could not send \"force key unit\" event %s", direction);
+    goto fail;
+  }
+
+done:
+  if (video_encoder)
+    gst_object_unref (video_encoder);
+  if (pad)
+    gst_object_unref (pad);
+  if (encoder_srcpad)
+    gst_object_unref (encoder_srcpad);
+
+  return ret;
+
+fail:
+  ret = FALSE;
+  goto done;
+}
 
 static gboolean
 _execute_set_restriction (GstValidateScenario * scenario,
@@ -275,24 +533,24 @@ pad_added_cb (GstElement * uridecodebin, GstPad * pad, GstElement * encodebin)
 static void
 create_transcoding_pipeline (gchar * uri, gchar * outuri)
 {
-  GstElement *src, *ebin, *sink;
+  GstElement *src, *sink;
 
   mainloop = g_main_loop_new (NULL, FALSE);
 
   pipeline = gst_pipeline_new ("encoding-pipeline");
   src = gst_element_factory_make ("uridecodebin", NULL);
 
-  ebin = gst_element_factory_make ("encodebin", NULL);
+  encodebin = gst_element_factory_make ("encodebin", NULL);
   sink = gst_element_make_from_uri (GST_URI_SINK, outuri, "sink", NULL);
   g_assert (sink);
 
   g_object_set (src, "uri", uri, NULL);
-  g_object_set (ebin, "profile", encoding_profile, NULL);
+  g_object_set (encodebin, "profile", encoding_profile, NULL);
 
-  g_signal_connect (src, "pad-added", G_CALLBACK (pad_added_cb), ebin);
+  g_signal_connect (src, "pad-added", G_CALLBACK (pad_added_cb), encodebin);
 
-  gst_bin_add_many (GST_BIN (pipeline), src, ebin, sink, NULL);
-  gst_element_link (ebin, sink);
+  gst_bin_add_many (GST_BIN (pipeline), src, encodebin, sink, NULL);
+  gst_element_link (encodebin, sink);
 }
 
 static gboolean
@@ -420,6 +678,20 @@ _parse_encoding_profile (const gchar * option_name, const gchar * value,
   return TRUE;
 }
 
+static void
+_register_actions (void)
+{
+  const gchar *resize_video_mandatory_fields[] = { "restriction-caps", NULL };
+  const gchar *force_key_unit_mandatory_fields[] = { "direction",
+    "running-time", "all-headers", "count", NULL };
+
+  gst_validate_add_action_type ("set-restriction", _execute_set_restriction,
+      resize_video_mandatory_fields, "Change the restriction caps on the fly");
+  gst_validate_add_action_type ("video-request-key-unit",
+      _execute_request_key_unit, force_key_unit_mandatory_fields,
+      "Request a video key unit");
+}
+
 int
 main (int argc, gchar ** argv)
 {
@@ -438,7 +710,6 @@ main (int argc, gchar ** argv)
   gboolean want_help = FALSE;
   gboolean list_scenarios = FALSE;
 
-  const gchar *resize_video_mandatory_fields[] = { "restriction-caps", NULL };
   GOptionEntry options[] = {
     {"output-format", 'o', 0, G_OPTION_ARG_CALLBACK, &_parse_encoding_profile,
           "Set the properties to use for the encoding profile "
@@ -500,9 +771,8 @@ main (int argc, gchar ** argv)
 
   gst_validate_init ();
 
-  gst_validate_add_action_type ("set-restriction", _execute_set_restriction,
-      resize_video_mandatory_fields, "Change the restriction caps on the fly");
 
+  _register_actions ();
   if (argc != 3) {
     g_printerr ("%i arguments recived, 2 expected.\n"
         "You should run the test using:\n"

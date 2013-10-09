@@ -12,6 +12,7 @@ scenarios_DATA = simple_seeks.scenario \
                  adaptive_video_size.scenario \
                  adaptive_video_framerate.scenario \
                  adaptive_video_framerate_size.scenario\
+                 force_key_unit.scenario\
                  switch_audio_track.scenario
 
 EXTRA_DIST = simple_seeks.scenario \
@@ -27,4 +28,5 @@ EXTRA_DIST = simple_seeks.scenario \
              adaptive_video_size.scenario \
              adaptive_video_framerate.scenario \
              adaptive_video_framerate_size.scenario\
+             force_key_unit.scenario\
              switch_audio_track.scenario
