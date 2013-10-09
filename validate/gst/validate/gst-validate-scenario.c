@@ -159,17 +159,17 @@ _set_variable_func (const gchar * name, double *value, gpointer user_data)
   return FALSE;
 }
 
-static gboolean
-_get_clocktime_from_structure (GstValidateScenario * scenario,
-    const GstStructure * structure, const gchar * name, GstClockTime * retval)
+gboolean
+gst_validate_action_get_clocktime (GstValidateScenario * scenario,
+    GstValidateAction *action, const gchar * name, GstClockTime * retval)
 {
   gdouble val;
   const gchar *strval;
 
-  if (!gst_structure_get_double (structure, name, &val)) {
+  if (!gst_structure_get_double (action->structure, name, &val)) {
     gchar *error = NULL;
 
-    if (!(strval = gst_structure_get_string (structure, name))) {
+    if (!(strval = gst_structure_get_string (action->structure, name))) {
       GST_DEBUG_OBJECT (scenario, "Could not find %s", name);
       return FALSE;
     }
@@ -207,7 +207,7 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
   GstClockTime stop = GST_CLOCK_TIME_NONE;
   GstEvent *seek;
 
-  if (!_get_clocktime_from_structure (scenario, action->structure, "start",
+  if (!gst_validate_action_get_clocktime (scenario, action, "start",
           &start))
     return FALSE;
 
@@ -226,7 +226,7 @@ _execute_seek (GstValidateScenario * scenario, GstValidateAction * action)
   if ((str_flags = gst_structure_get_string (action->structure, "flags")))
     flags = get_flags_from_string (GST_TYPE_SEEK_FLAGS, str_flags);
 
-  _get_clocktime_from_structure (scenario, action->structure, "stop", &stop);
+  gst_validate_action_get_clocktime (scenario, action, "stop", &stop);
 
   g_print ("(position %" GST_TIME_FORMAT
       "), %s (num %u, missing repeat: %i), seeking to: %" GST_TIME_FORMAT
@@ -639,7 +639,7 @@ message_cb (GstBus * bus, GstMessage * message, GstValidateScenario * scenario)
         for (tmp = priv->needs_parsing; tmp; tmp = tmp->next) {
           GstValidateAction *action = tmp->data;
 
-          if (!_get_clocktime_from_structure (scenario, action->structure,
+          if (!gst_validate_action_get_clocktime (scenario, action,
                   "playback_time", &action->playback_time)) {
             gchar *str = gst_structure_to_string (action->structure);
 

@@ -74,6 +74,11 @@ void gst_validate_list_scenarios  (void);
 void gst_validate_add_action_type (const gchar *type_name, GstValidateExecuteAction function,
                                    const gchar * const * mandatory_fields, const gchar *description);
 
+gboolean gst_validate_action_get_clocktime (GstValidateScenario * scenario,
+                                            GstValidateAction *action,
+                                            const gchar * name,
+                                            GstClockTime * retval);
+
 G_END_DECLS
 
 #endif /* __GST_VALIDATE_SCENARIOS__ */
