@@ -68,18 +68,23 @@ static GstVaapiSurface *
 new_surface(GstVaapiDisplay *display, const GstVideoInfo *vip)
 {
     GstVaapiSurface *surface;
+    GstVaapiChromaType chroma_type;
 
     /* Try with explicit format first */
-    surface = gst_vaapi_surface_new_with_format(display,
-        GST_VIDEO_INFO_FORMAT(vip), GST_VIDEO_INFO_WIDTH(vip),
-        GST_VIDEO_INFO_HEIGHT(vip));
-    if (surface)
-        return surface;
+    if (GST_VIDEO_INFO_FORMAT(vip) != GST_VIDEO_FORMAT_ENCODED) {
+        surface = gst_vaapi_surface_new_with_format(display,
+            GST_VIDEO_INFO_FORMAT(vip), GST_VIDEO_INFO_WIDTH(vip),
+            GST_VIDEO_INFO_HEIGHT(vip));
+        if (surface)
+            return surface;
+    }
 
-    /* Try to pick something compatible. Best bet: NV12 (YUV 4:2:0) */
-    if (GST_VIDEO_INFO_FORMAT(vip) != GST_VIDEO_FORMAT_NV12)
+    /* Try to pick something compatible, i.e. with same chroma type */
+    chroma_type = gst_vaapi_video_format_get_chroma_type(
+        GST_VIDEO_INFO_FORMAT(vip));
+    if (!chroma_type)
         return NULL;
-    return gst_vaapi_surface_new(display, GST_VAAPI_CHROMA_TYPE_YUV420,
+    return gst_vaapi_surface_new(display, chroma_type,
         GST_VIDEO_INFO_WIDTH(vip), GST_VIDEO_INFO_HEIGHT(vip));
 }
 
@@ -500,6 +505,8 @@ gst_vaapi_video_allocator_new(GstVaapiDisplay *display, GstCaps *caps)
                 break;
             image = gst_vaapi_surface_derive_image(surface);
             if (!image)
+                break;
+            if (GST_VAAPI_IMAGE_FORMAT(image) != GST_VIDEO_INFO_FORMAT(vip))
                 break;
             if (!gst_vaapi_image_map(image))
                 break;
