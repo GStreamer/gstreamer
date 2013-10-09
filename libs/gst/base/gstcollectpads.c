@@ -1284,7 +1284,9 @@ gst_collect_pads_check_collected (GstCollectPads * pads)
     GST_DEBUG_OBJECT (pads, "All active pads (%d) are EOS, calling %s",
         pads->priv->numpads, GST_DEBUG_FUNCPTR_NAME (func));
 
-    flow_ret = func (pads, user_data);
+    do {
+      flow_ret = func (pads, user_data);
+    } while (flow_ret == GST_FLOW_OK);
   } else {
     gboolean collected = FALSE;
 
