@@ -31,7 +31,8 @@ check_PROGRAMS = \
 	gst/mountpoints \
 	gst/mediafactory \
 	gst/media \
-	gst/addresspool
+	gst/addresspool \
+	gst/threadpool
 
 # these tests don't even pass
 noinst_PROGRAMS =
