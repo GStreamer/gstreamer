@@ -67,11 +67,11 @@ _sync_element_to_layer_property_float (GESTrackElement * trksrc,
 static GstElement *
 ges_audio_source_create_element (GESTrackElement * trksrc)
 {
+  GstElement *volume, *vbin;
   GstElement *topbin;
   GstElement *sub_element;
   GESAudioSourceClass *source_class = GES_AUDIO_SOURCE_GET_CLASS (trksrc);
   const gchar *props[] = { "volume", "mute", NULL };
-  GstElement *volume;
 
   if (!source_class->create_source)
     return NULL;
@@ -79,8 +79,12 @@ ges_audio_source_create_element (GESTrackElement * trksrc)
   sub_element = source_class->create_source (trksrc);
 
   GST_DEBUG_OBJECT (trksrc, "Creating a bin sub_element ! volume");
-  volume = gst_element_factory_make ("volume", NULL);
-  topbin = ges_source_create_topbin ("audiosrcbin", sub_element, volume, NULL);
+  vbin =
+      gst_parse_bin_from_description
+      ("audioconvert ! audioresample ! volume name=v", TRUE, NULL);
+  topbin = ges_source_create_topbin ("audiosrcbin", sub_element, vbin, NULL);
+  volume = gst_bin_get_by_name (GST_BIN (vbin), "v");
+
   _sync_element_to_layer_property_float (trksrc, volume, GES_META_VOLUME,
       "volume");
   ges_track_element_add_children_props (trksrc, volume, NULL, NULL, props);
