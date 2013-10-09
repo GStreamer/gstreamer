@@ -184,6 +184,15 @@ create_sink_caps (const GstAmcCodecInfo * codec_info)
       } else {
         gst_structure_free (tmp);
       }
+
+      tmp = gst_structure_new ("video/x-divx",
+          "width", GST_TYPE_INT_RANGE, 16, 4096,
+          "height", GST_TYPE_INT_RANGE, 16, 4096,
+          "framerate", GST_TYPE_FRACTION_RANGE,
+          0, 1, G_MAXINT, 1,
+          "divxversion", GST_TYPE_INT_RANGE, 3, 5,
+          "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
+      gst_caps_merge_structure (ret, tmp);
     } else if (strcmp (type->mime, "video/3gpp") == 0) {
       gint j;
       GstStructure *tmp, *tmp2;
@@ -327,6 +336,8 @@ caps_to_mime (GstCaps * caps)
     return "video/avc";
   } else if (strcmp (name, "video/x-vp8") == 0) {
     return "video/x-vnd.on2.vp8";
+  } else if (strcmp (name, "video/x-divx") == 0) {
+    return "video/mp4v-es";
   }
 
   return NULL;
