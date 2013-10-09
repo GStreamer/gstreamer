@@ -132,8 +132,6 @@ gst_video_meta_map_vaapi_memory(GstVideoMeta *meta, guint plane,
     if (mem->map_type &&
         mem->map_type != GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_PLANAR)
         goto error_incompatible_map;
-    if ((flags & GST_MAP_READWRITE) != GST_MAP_WRITE)
-        goto error_unsupported_map;
 
     /* Map for writing */
     if (++mem->map_count == 1) {
@@ -141,6 +139,12 @@ gst_video_meta_map_vaapi_memory(GstVideoMeta *meta, guint plane,
             goto error_ensure_surface;
         if (!ensure_image(mem))
             goto error_ensure_image;
+
+        // Check that we can actually map the surface, or image
+        if ((flags & GST_MAP_READWRITE) != GST_MAP_WRITE &&
+            !mem->use_direct_rendering)
+            goto error_unsupported_map;
+
         if (!gst_vaapi_image_map(mem->image))
             goto error_map_image;
         mem->map_type = GST_VAAPI_VIDEO_MEMORY_MAP_TYPE_PLANAR;
