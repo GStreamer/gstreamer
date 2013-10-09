@@ -480,24 +480,20 @@ gst_video_info_update_from_image(GstVideoInfo *vip, GstVaapiImage *image)
 }
 
 GstAllocator *
-gst_vaapi_video_allocator_new(GstVaapiDisplay *display, GstCaps *caps)
+gst_vaapi_video_allocator_new(GstVaapiDisplay *display, const GstVideoInfo *vip)
 {
     GstVaapiVideoAllocator *allocator;
-    GstVideoInfo *vip;
     GstVaapiSurface *surface;
     GstVaapiImage *image;
 
     g_return_val_if_fail(display != NULL, NULL);
-    g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
+    g_return_val_if_fail(vip != NULL, NULL);
 
     allocator = g_object_new(GST_VAAPI_TYPE_VIDEO_ALLOCATOR, NULL);
     if (!allocator)
         return NULL;
 
-    vip = &allocator->video_info;
-    gst_video_info_init(vip);
-    gst_video_info_from_caps(vip, caps);
-
+    allocator->video_info = *vip;
     gst_video_info_set_format(&allocator->surface_info, GST_VIDEO_FORMAT_NV12,
         GST_VIDEO_INFO_WIDTH(vip), GST_VIDEO_INFO_HEIGHT(vip));
 

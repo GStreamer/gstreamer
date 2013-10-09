@@ -38,7 +38,8 @@ enum {
 };
 
 struct _GstVaapiVideoBufferPoolPrivate {
-    GstCaps            *caps;
+    GstVideoInfo        video_info[2];
+    guint               video_info_index;
     GstAllocator       *allocator;
     GstVaapiDisplay    *display;
     guint               has_video_meta  : 1;
@@ -59,7 +60,6 @@ gst_vaapi_video_buffer_pool_finalize(GObject *object)
 
     gst_vaapi_display_replace(&priv->display, NULL);
     g_clear_object(&priv->allocator);
-    gst_caps_replace(&priv->caps, NULL);
 }
 
 static void
@@ -114,18 +114,29 @@ gst_vaapi_video_buffer_pool_set_config(GstBufferPool *pool,
     GstVaapiVideoBufferPoolPrivate * const priv =
         GST_VAAPI_VIDEO_BUFFER_POOL(pool)->priv;
     GstCaps *caps = NULL;
+    GstVideoInfo * const cur_vip = &priv->video_info[priv->video_info_index];
+    GstVideoInfo * const new_vip = &priv->video_info[!priv->video_info_index];
+    GstAllocator *allocator;
+    gboolean changed_caps;
 
     if (!gst_buffer_pool_config_get_params(config, &caps, NULL, NULL, NULL))
         goto error_invalid_config;
-    if (!caps)
+    if (!caps || !gst_video_info_from_caps(new_vip, caps))
         goto error_no_caps;
 
-    if (!priv->caps || !gst_caps_is_equal(priv->caps, caps)) {
-        g_clear_object(&priv->allocator);
-        priv->allocator = gst_vaapi_video_allocator_new(priv->display, caps);
-        if (!priv->allocator)
+    changed_caps = !priv->allocator ||
+        GST_VIDEO_INFO_FORMAT(cur_vip) != GST_VIDEO_INFO_FORMAT(new_vip) ||
+        GST_VIDEO_INFO_WIDTH(cur_vip)  != GST_VIDEO_INFO_WIDTH(new_vip) ||
+        GST_VIDEO_INFO_HEIGHT(cur_vip) != GST_VIDEO_INFO_HEIGHT(new_vip);
+
+    if (changed_caps) {
+        allocator = gst_vaapi_video_allocator_new(priv->display, new_vip);
+        if (!allocator)
             goto error_create_allocator;
-        gst_caps_replace(&priv->caps, caps);
+        gst_object_replace((GstObject **)&priv->allocator,
+            GST_OBJECT_CAST(allocator));
+        gst_object_unref(allocator);
+        priv->video_info_index ^= 1;
     }
 
     if (!gst_buffer_pool_config_has_option(config,
@@ -146,7 +157,7 @@ error_invalid_config:
     }
 error_no_caps:
     {
-        GST_ERROR("no caps in config");
+        GST_ERROR("no valid caps in config");
         return FALSE;
     }
 error_create_allocator:
@@ -283,6 +294,9 @@ gst_vaapi_video_buffer_pool_init(GstVaapiVideoBufferPool *pool)
         GST_VAAPI_VIDEO_BUFFER_POOL_GET_PRIVATE(pool);
 
     pool->priv = priv;
+
+    gst_video_info_init(&priv->video_info[0]);
+    gst_video_info_init(&priv->video_info[1]);
 }
 
 GstBufferPool *
