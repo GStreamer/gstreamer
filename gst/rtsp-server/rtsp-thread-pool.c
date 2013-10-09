@@ -143,10 +143,10 @@ gst_rtsp_thread_reuse (GstRTSPThread * thread)
 
 /**
  * gst_rtsp_thread_stop:
- * @thread: a #GstRTSPThread
+ * @thread: (transfer full): a #GstRTSPThread
  *
- * Stop @thread. When no threads are using the mainloop, the thread will be
- * stopped and the final ref to @thread will be released.
+ * Stop and unref @thread. When no threads are using the mainloop, the thread
+ * will be stopped and the final ref to @thread will be released.
  */
 void
 gst_rtsp_thread_stop (GstRTSPThread * thread)
@@ -161,6 +161,8 @@ gst_rtsp_thread_stop (GstRTSPThread * thread)
     GST_DEBUG ("stop mainloop of thread %p", thread);
     g_main_loop_quit (thread->loop);
   }
+
+  gst_rtsp_thread_unref (thread);
 }
 
 #define GST_RTSP_THREAD_POOL_GET_PRIVATE(obj)  \
@@ -450,7 +452,8 @@ default_get_thread (GstRTSPThreadPool * pool,
           GST_DEBUG_OBJECT (pool, "make new client thread");
           thread = make_thread (pool, type, ctx);
 
-          if (!g_thread_pool_push (klass->pool, thread, &error))
+          if (!g_thread_pool_push (klass->pool, gst_rtsp_thread_ref (thread),
+              &error))
             goto thread_error;
         }
         g_queue_push_tail (&priv->threads, thread);
@@ -461,7 +464,8 @@ default_get_thread (GstRTSPThreadPool * pool,
       GST_DEBUG_OBJECT (pool, "make new media thread");
       thread = make_thread (pool, type, ctx);
 
-      if (!g_thread_pool_push (klass->pool, thread, &error))
+      if (!g_thread_pool_push (klass->pool, gst_rtsp_thread_ref (thread),
+          &error))
         goto thread_error;
       break;
     default:
@@ -474,6 +478,8 @@ default_get_thread (GstRTSPThreadPool * pool,
 thread_error:
   {
     GST_ERROR_OBJECT (pool, "failed to push thread %s", error->message);
+    gst_rtsp_thread_unref (thread);
+    /* drop also the ref dedicated for the pool */
     gst_rtsp_thread_unref (thread);
     g_clear_error (&error);
     return NULL;
