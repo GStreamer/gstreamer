@@ -277,11 +277,34 @@ gst_dvdemux_reset (GstDVDemux * dvdemux)
   dvdemux->group_id = G_MAXUINT;
 }
 
+static gboolean
+have_group_id (GstDVDemux * demux)
+{
+  GstEvent *event;
+
+  event = gst_pad_get_sticky_event (demux->sinkpad, GST_EVENT_STREAM_START, 0);
+  if (event) {
+    if (gst_event_parse_group_id (event, &demux->group_id))
+      demux->have_group_id = TRUE;
+    else
+      demux->have_group_id = FALSE;
+    gst_event_unref (event);
+  } else if (!demux->have_group_id) {
+    demux->have_group_id = TRUE;
+    demux->group_id = gst_util_group_id_next ();
+  }
+
+  return demux->have_group_id;
+}
+
 static GstPad *
-gst_dvdemux_add_pad (GstDVDemux * dvdemux, GstStaticPadTemplate * template)
+gst_dvdemux_add_pad (GstDVDemux * dvdemux, GstStaticPadTemplate * template,
+    GstCaps * caps)
 {
   gboolean no_more_pads;
   GstPad *pad;
+  GstEvent *event;
+  gchar *stream_id;
 
   pad = gst_pad_new_from_static_template (template, template->name_template);
 
@@ -291,6 +314,21 @@ gst_dvdemux_add_pad (GstDVDemux * dvdemux, GstStaticPadTemplate * template)
       GST_DEBUG_FUNCPTR (gst_dvdemux_handle_src_event));
   gst_pad_use_fixed_caps (pad);
   gst_pad_set_active (pad, TRUE);
+
+  stream_id =
+      gst_pad_create_stream_id (pad,
+      GST_ELEMENT_CAST (dvdemux),
+      template == &video_src_temp ? "video" : "audio");
+  event = gst_event_new_stream_start (stream_id);
+  if (have_group_id (dvdemux))
+    gst_event_set_group_id (event, dvdemux->group_id);
+  gst_pad_push_event (pad, event);
+  g_free (stream_id);
+
+  gst_pad_set_caps (pad, caps);
+
+  gst_pad_push_event (pad, gst_event_new_segment (&dvdemux->time_segment));
+
   gst_element_add_pad (GST_ELEMENT (dvdemux), pad);
 
   no_more_pads =
@@ -300,14 +338,18 @@ gst_dvdemux_add_pad (GstDVDemux * dvdemux, GstStaticPadTemplate * template)
   if (no_more_pads)
     gst_element_no_more_pads (GST_ELEMENT (dvdemux));
 
-  gst_pad_push_event (pad, gst_event_new_segment (&dvdemux->time_segment));
-
   if (no_more_pads) {
     GstTagList *tags;
 
     tags = gst_tag_list_new (GST_TAG_CONTAINER_FORMAT, "DV", NULL);
     gst_tag_list_set_scope (tags, GST_TAG_SCOPE_GLOBAL);
-    gst_pad_push_event (pad, gst_event_new_tag (tags));
+    if (dvdemux->videosrcpad)
+      gst_pad_push_event (dvdemux->videosrcpad,
+          gst_event_new_tag (gst_tag_list_ref (tags)));
+    if (dvdemux->audiosrcpad)
+      gst_pad_push_event (dvdemux->audiosrcpad,
+          gst_event_new_tag (gst_tag_list_ref (tags)));
+    gst_tag_list_unref (tags);
   }
 
   return pad;
@@ -1126,26 +1168,6 @@ gst_dvdemux_handle_src_event (GstPad * pad, GstObject * parent,
   return res;
 }
 
-static gboolean
-have_group_id (GstDVDemux * demux)
-{
-  GstEvent *event;
-
-  event = gst_pad_get_sticky_event (demux->sinkpad, GST_EVENT_STREAM_START, 0);
-  if (event) {
-    if (gst_event_parse_group_id (event, &demux->group_id))
-      demux->have_group_id = TRUE;
-    else
-      demux->have_group_id = FALSE;
-    gst_event_unref (event);
-  } else if (!demux->have_group_id) {
-    demux->have_group_id = TRUE;
-    demux->group_id = gst_util_group_id_next ();
-  }
-
-  return demux->have_group_id;
-}
-
 /* does not take ownership of buffer */
 static GstFlowReturn
 gst_dvdemux_demux_audio (GstDVDemux * dvdemux, GstBuffer * buffer,
@@ -1165,28 +1187,15 @@ gst_dvdemux_demux_audio (GstDVDemux * dvdemux, GstBuffer * buffer,
     GstBuffer *outbuf;
     gint frequency, channels;
 
-    if (G_UNLIKELY (dvdemux->audiosrcpad == NULL))
-      dvdemux->audiosrcpad = gst_dvdemux_add_pad (dvdemux, &audio_src_temp);
-
     /* get initial format or check if format changed */
     frequency = dv_get_frequency (dvdemux->decoder);
     channels = dv_get_num_channels (dvdemux->decoder);
 
-    if (G_UNLIKELY ((frequency != dvdemux->frequency)
+    if (G_UNLIKELY ((dvdemux->audiosrcpad == NULL)
+            || (frequency != dvdemux->frequency)
             || (channels != dvdemux->channels))) {
       GstCaps *caps;
       GstAudioInfo info;
-      GstEvent *event;
-      gchar *stream_id;
-
-      stream_id =
-          gst_pad_create_stream_id (dvdemux->audiosrcpad,
-          GST_ELEMENT_CAST (dvdemux), "audio");
-      event = gst_event_new_stream_start (stream_id);
-      if (have_group_id (dvdemux))
-        gst_event_set_group_id (event, dvdemux->group_id);
-      gst_pad_push_event (dvdemux->audiosrcpad, event);
-      g_free (stream_id);
 
       dvdemux->frequency = frequency;
       dvdemux->channels = channels;
@@ -1195,7 +1204,12 @@ gst_dvdemux_demux_audio (GstDVDemux * dvdemux, GstBuffer * buffer,
       gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16LE,
           frequency, channels, NULL);
       caps = gst_audio_info_to_caps (&info);
-      gst_pad_set_caps (dvdemux->audiosrcpad, caps);
+      if (G_UNLIKELY (dvdemux->audiosrcpad == NULL)) {
+        dvdemux->audiosrcpad =
+            gst_dvdemux_add_pad (dvdemux, &audio_src_temp, caps);
+      } else {
+        gst_pad_set_caps (dvdemux->audiosrcpad, caps);
+      }
       gst_caps_unref (caps);
     }
 
@@ -1243,29 +1257,16 @@ gst_dvdemux_demux_video (GstDVDemux * dvdemux, GstBuffer * buffer,
   gboolean wide;
   GstFlowReturn ret = GST_FLOW_OK;
 
-  if (G_UNLIKELY (dvdemux->videosrcpad == NULL))
-    dvdemux->videosrcpad = gst_dvdemux_add_pad (dvdemux, &video_src_temp);
-
   /* get params */
   /* framerate is already up-to-date */
   height = dvdemux->decoder->height;
   wide = dv_format_wide (dvdemux->decoder);
 
   /* see if anything changed */
-  if (G_UNLIKELY ((dvdemux->height != height) || dvdemux->wide != wide)) {
-    GstCaps *caps;
+  if (G_UNLIKELY ((dvdemux->videosrcpad == NULL) || (dvdemux->height != height)
+          || dvdemux->wide != wide)) {
     gint par_x, par_y;
-    GstEvent *event;
-    gchar *stream_id;
-
-    stream_id =
-        gst_pad_create_stream_id (dvdemux->videosrcpad,
-        GST_ELEMENT_CAST (dvdemux), "video");
-    event = gst_event_new_stream_start (stream_id);
-    if (have_group_id (dvdemux))
-      gst_event_set_group_id (event, dvdemux->group_id);
-    gst_pad_push_event (dvdemux->videosrcpad, event);
-    g_free (stream_id);
+    GstCaps *caps;
 
     dvdemux->height = height;
     dvdemux->wide = wide;
@@ -1295,7 +1296,13 @@ gst_dvdemux_demux_video (GstDVDemux * dvdemux, GstBuffer * buffer,
         "framerate", GST_TYPE_FRACTION, dvdemux->framerate_numerator,
         dvdemux->framerate_denominator,
         "pixel-aspect-ratio", GST_TYPE_FRACTION, par_x, par_y, NULL);
-    gst_pad_set_caps (dvdemux->videosrcpad, caps);
+
+    if (G_UNLIKELY (dvdemux->videosrcpad == NULL)) {
+      dvdemux->videosrcpad =
+          gst_dvdemux_add_pad (dvdemux, &video_src_temp, caps);
+    } else {
+      gst_pad_set_caps (dvdemux->videosrcpad, caps);
+    }
     gst_caps_unref (caps);
   }
 
@@ -1690,7 +1697,6 @@ gst_dvdemux_loop (GstPad * pad)
       }
     }
   }
-
 
   if (G_UNLIKELY (dvdemux->pending_segment)) {
 
