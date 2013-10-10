@@ -101,5 +101,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace/struct[@cname='GstMessage']/method[@cname='gst_message_parse_error']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstMessage']/method[@cname='gst_message_get_stream_status_object']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstMessage']/method[@cname='gst_message_set_stream_status_object']" name="hidden">true</attr>
+
+	<!-- GstVideo -->
+	<attr path="/api/namespace/boxed[@cname='GstVideoCodecState']/field[@cname='padding']" name="type">gpointer</attr>
+	<attr path="/api/namespace/object[@cname='GstVideoDecoder']/field[@cname='padding']" name="type">gpointer</attr>
+	<attr path="/api/namespace/object[@cname='GstVideoDecoder']/class_struct/field[@cname='padding']" name="type">gpointer</attr>
+	<attr path="/api/namespace/enum[@cname='GstVideoColorRange']/member[@name='0255']" name="name">EightBit</attr>
+	<attr path="/api/namespace/enum[@cname='GstVideoColorRange']/member[@name='16235']" name="name">SixteenBit</attr>
+	<attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_copy']" name="hidden">1</attr>
+	<attr path="/api/namespace/struct[@cname='GstByteReader']" name="opaque">1</attr>
+	<remove-node path="/api/namespace//struct[@cname='GstByteReader']//method" />
 </metadata>
 

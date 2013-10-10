@@ -33,7 +33,7 @@ generated-stamp: $(API)
 	 $(GAPI_CODEGEN) --generate $(srcdir)/$(API) $(GLIB_SHARP_CFLAGS) \
 		--outdir=generated \
 		--glue-filename=$(GLUEDIR)/generated.c --gluelib-name=libgstreamersharpglue-1.0.6.so \
-		--glue-includes=gst/gst.h \
+		--glue-includes=gst/gst.h,gst/base/gstadapter.h,gst/base/gstbaseparse.h,gst/base/gstbasesink.h,gst/base/gstbasesrc.h,gst/base/gstbasetransform.h,gst/base/gstbitreader.h,gst/base/gstbytereader.h,gst/base/gstbytewriter.h,gst/base/gstcollectpads.h,gst/base/gstpushsrc.h,gst/base/gsttypefindhelper.h,gst/video/colorbalance.h,gst/video/colorbalancechannel.h,gst/video/gstvideodecoder.h,gst/video/gstvideoencoder.h,gst/video/gstvideofilter.h,gst/video/gstvideometa.h,gst/video/gstvideopool.h,gst/video/gstvideosink.h,gst/video/gstvideoutils.h,gst/video/navigation.h,gst/video/video-blend.h,gst/video/video-color.h,gst/video/video-enumtypes.h,gst/video/video-event.h,gst/video/video-format.h,gst/video/video-frame.h,gst/video/video-info.h,gst/video/video-overlay-composition.h,gst/video/video.h,gst/video/videoorientation.h,gst/video/videooverlay.h \
 	 	--assembly-name=$(ASSEMBLY_NAME) && touch generated-stamp
 
 $(DLL): $(build_sources) generated-stamp
