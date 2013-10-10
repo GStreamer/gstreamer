@@ -30,14 +30,14 @@ $(API): $(srcdir)/$(RAW_API) $(srcdir)/$(METADATA)
 	$(GAPI_FIXUP) --api=$(srcdir)/$(API) --metadata=$(srcdir)/$(METADATA)
 
 generated-stamp: $(API)
-	 $(GAPI_CODEGEN) --generate $(srcdir)/$(API) $(GTK_SHARP_CFLAGS) \
+	 $(GAPI_CODEGEN) --generate $(srcdir)/$(API) $(GLIB_SHARP_CFLAGS) \
 		--outdir=generated \
 		--glue-filename=$(GLUEDIR)/generated.c --gluelib-name=libgstreamersharpglue-1.0.6.so \
 		--glue-includes=gst/gst.h \
 	 	--assembly-name=$(ASSEMBLY_NAME) && touch generated-stamp
 
 $(DLL): $(build_sources) generated-stamp
-	$(CSC) -nowarn:169 -unsafe -target:library $(GTK_SHARP_LIBS) \
+	$(CSC) -nowarn:169 -unsafe -target:library $(GLIB_SHARP_LIBS) \
 		$(build_sources)  generated/*.cs -out:$(DLL)
 
 install-data-local:
