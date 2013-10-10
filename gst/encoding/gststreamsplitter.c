@@ -149,6 +149,25 @@ nopad:
   return GST_FLOW_ERROR;
 }
 
+static GList *
+_flush_events (GstPad * pad, GList * events)
+{
+  GList *tmp;
+
+  for (tmp = events; tmp; tmp = tmp->next) {
+    if (GST_EVENT_TYPE (tmp->data) == GST_EVENT_EOS ||
+        GST_EVENT_TYPE (tmp->data) == GST_EVENT_SEGMENT ||
+        !GST_EVENT_IS_STICKY (tmp->data) || pad == NULL) {
+      gst_event_unref (tmp->data);
+    } else {
+      gst_pad_store_sticky_event (pad, GST_EVENT_CAST (tmp->data));
+    }
+  }
+  g_list_free (events);
+
+  return NULL;
+}
+
 static gboolean
 gst_stream_splitter_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
@@ -157,8 +176,6 @@ gst_stream_splitter_sink_event (GstPad * pad, GstObject * parent,
   gboolean res = TRUE;
   gboolean toall = FALSE;
   gboolean store = FALSE;
-  gboolean flushpending = FALSE;
-
   /* FLUSH_START/STOP : forward to all
    * INBAND events : store to send in chain function to selected chain
    * OUT_OF_BAND events : send to all
@@ -179,8 +196,11 @@ gst_stream_splitter_sink_event (GstPad * pad, GstObject * parent,
       break;
     }
     case GST_EVENT_FLUSH_STOP:
-      flushpending = TRUE;
       toall = TRUE;
+      STREAMS_LOCK (stream_splitter);
+      stream_splitter->pending_events = _flush_events (stream_splitter->current,
+          stream_splitter->pending_events);
+      STREAMS_UNLOCK (stream_splitter);
       break;
     case GST_EVENT_FLUSH_START:
       toall = TRUE;
@@ -206,13 +226,6 @@ gst_stream_splitter_sink_event (GstPad * pad, GstObject * parent,
     default:
       if (GST_EVENT_TYPE (event) & GST_EVENT_TYPE_SERIALIZED)
         store = TRUE;
-  }
-
-  if (flushpending) {
-    g_list_foreach (stream_splitter->pending_events, (GFunc) gst_event_unref,
-        NULL);
-    g_list_free (stream_splitter->pending_events);
-    stream_splitter->pending_events = NULL;
   }
 
   if (store) {
