@@ -1435,6 +1435,25 @@ gst_audio_encoder_getcaps_default (GstAudioEncoder * enc, GstCaps * filter)
   return caps;
 }
 
+static GList *
+_flush_events (GstPad * pad, GList * events)
+{
+  GList *tmp;
+
+  for (tmp = events; tmp; tmp = tmp->next) {
+    if (GST_EVENT_TYPE (tmp->data) == GST_EVENT_EOS ||
+        GST_EVENT_TYPE (tmp->data) == GST_EVENT_SEGMENT ||
+        !GST_EVENT_IS_STICKY (tmp->data)) {
+      gst_event_unref (tmp->data);
+    } else {
+      gst_pad_store_sticky_event (pad, GST_EVENT_CAST (tmp->data));
+    }
+  }
+  g_list_free (events);
+
+  return NULL;
+}
+
 static gboolean
 gst_audio_encoder_sink_event_default (GstAudioEncoder * enc, GstEvent * event)
 {
@@ -1489,9 +1508,8 @@ gst_audio_encoder_sink_event_default (GstAudioEncoder * enc, GstEvent * event)
       /* and get (re)set for the sequel */
       gst_audio_encoder_reset (enc, FALSE);
 
-      g_list_foreach (enc->priv->pending_events, (GFunc) gst_event_unref, NULL);
-      g_list_free (enc->priv->pending_events);
-      enc->priv->pending_events = NULL;
+      enc->priv->pending_events = _flush_events (enc->srcpad,
+          enc->priv->pending_events);
       GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
 
       res = gst_audio_encoder_push_event (enc, event);

@@ -278,6 +278,110 @@ GST_START_TEST (audioencoder_playback)
 
 GST_END_TEST;
 
+
+GST_START_TEST (audioencoder_flush_events)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  guint64 i;
+  GList *events_iter;
+
+  setup_audioencodertester ();
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (enc, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push buffers, the data is actually a number so we can track them */
+  for (i = 0; i < NUM_BUFFERS; i++) {
+    if (i % 10 == 0) {
+      GstTagList *tags;
+
+      tags = gst_tag_list_new (GST_TAG_TRACK_NUMBER, i, NULL);
+      fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_tag (tags)));
+    } else {
+      buffer = create_test_buffer (i);
+
+      fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+    }
+  }
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  events_iter = events;
+  /* make sure the usual events have been received */
+  {
+    GstEvent *sstart = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (sstart) == GST_EVENT_STREAM_START);
+    events_iter = g_list_next (events_iter);
+  }
+  {
+    GstEvent *caps_event = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (caps_event) == GST_EVENT_CAPS);
+    events_iter = g_list_next (events_iter);
+  }
+  {
+    GstEvent *segment_event = events_iter->data;
+    fail_unless (GST_EVENT_TYPE (segment_event) == GST_EVENT_SEGMENT);
+    events_iter = g_list_next (events_iter);
+  }
+
+  /* check that EOS was received */
+  fail_unless (GST_PAD_IS_EOS (mysrcpad));
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_flush_start ()));
+  fail_unless (GST_PAD_IS_EOS (mysrcpad));
+
+  /* Check that we have tags */
+  {
+    GstEvent *tags = gst_pad_get_sticky_event (mysrcpad, GST_EVENT_TAG, 0);
+
+    fail_unless (tags != NULL);
+    gst_event_unref (tags);
+  }
+
+  /* Check that we still have a segment set */
+  {
+    GstEvent *segment =
+        gst_pad_get_sticky_event (mysrcpad, GST_EVENT_SEGMENT, 0);
+
+    fail_unless (segment != NULL);
+    gst_event_unref (segment);
+  }
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_flush_stop (TRUE)));
+  fail_if (GST_PAD_IS_EOS (mysrcpad));
+
+  /* Check that the segment was flushed on FLUSH_STOP */
+  {
+    GstEvent *segment =
+        gst_pad_get_sticky_event (mysrcpad, GST_EVENT_SEGMENT, 0);
+
+    fail_unless (segment == NULL);
+  }
+
+  /* Check the tags were not lost on FLUSH_STOP */
+  {
+    GstEvent *tags = gst_pad_get_sticky_event (mysrcpad, GST_EVENT_TAG, 0);
+
+    fail_unless (tags != NULL);
+    gst_event_unref (tags);
+
+  }
+
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  cleanup_audioencodertest ();
+}
+
+GST_END_TEST;
+
 /* make sure tags sent right before eos are pushed */
 GST_START_TEST (audioencoder_tags_before_eos)
 {
@@ -404,6 +508,7 @@ gst_audioencoder_suite (void)
 
   tcase_add_test (tc, audioencoder_tags_before_eos);
   tcase_add_test (tc, audioencoder_events_before_eos);
+  tcase_add_test (tc, audioencoder_flush_events);
 
   return s;
 }
