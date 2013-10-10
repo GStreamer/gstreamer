@@ -120,5 +120,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace[@name='GstVideo']" name="name">Gst.Video</attr>
 	<attr path="/api/namespace[@name='GstAudio']" name="name">Gst.Audio</attr>
 	<attr path="/api/namespace[@name='GstBase']" name="name">Gst.Base</attr>
+	<attr path="/api/namespace[@name='GstPbutils']" name="name">Gst.PbUtils</attr>
 </metadata>
 
