@@ -240,7 +240,7 @@ gst_init_get_option_group (void)
         NULL},
     {"gst-debug-level", 0, 0, G_OPTION_ARG_CALLBACK,
           (gpointer) parse_goption_arg,
-          N_("Default debug level from 1 (only error) to 5 (anything) or "
+          N_("Default debug level from 1 (only error) to 9 (anything) or "
               "0 for no output"),
         N_("LEVEL")},
     {"gst-debug", 0, 0, G_OPTION_ARG_CALLBACK, (gpointer) parse_goption_arg,

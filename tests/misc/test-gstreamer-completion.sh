@@ -37,9 +37,9 @@ _assert_expected() {
 test_gst_inspect_completion '' -- --version --gst-debug-level coreelements fakesrc
 test_gst_inspect_completion --ver -- --version
 test_gst_inspect_completion --gst-debug-le -- --gst-debug-level
-test_gst_inspect_completion --gst-debug-level '' -- 0 1 2 3 4 5
-test_gst_inspect_completion --gst-debug-level = -- 0 1 2 3 4 5
-test_gst_inspect_completion --gst-debug-level= -- 0 1 2 3 4 5
+test_gst_inspect_completion --gst-debug-level '' -- 0 1 2 3 4 5 6 7 8 9
+test_gst_inspect_completion --gst-debug-level = -- 0 1 2 3 4 5 6 7 8 9
+test_gst_inspect_completion --gst-debug-level= -- 0 1 2 3 4 5 6 7 8 9
 test_gst_inspect_completion --gst-debug-level=4 -- 4
 test_gst_inspect_completion coreel -- coreelements
 test_gst_inspect_completion fake -- fakesrc fakesink
@@ -67,9 +67,9 @@ test_gst_launch_completion() {
 test_gst_launch_completion '' -- --eos-on-shutdown --gst-debug-level fakesrc fakesink
 test_gst_launch_completion --mes -- --messages
 test_gst_launch_completion --gst-debug-le -- --gst-debug-level
-test_gst_launch_completion --gst-debug-level '' -- 0 1 2 3 4 5
-test_gst_launch_completion --gst-debug-level = -- 0 1 2 3 4 5
-test_gst_launch_completion --gst-debug-level= -- 0 1 2 3 4 5
+test_gst_launch_completion --gst-debug-level '' -- 0 1 2 3 4 5 6 7 8 9
+test_gst_launch_completion --gst-debug-level = -- 0 1 2 3 4 5 6 7 8 9
+test_gst_launch_completion --gst-debug-level= -- 0 1 2 3 4 5 6 7 8 9
 test_gst_launch_completion --gst-debug-level=4 -- 4
 test_gst_launch_completion fak -- fakesrc fakesink
 test_gst_launch_completion --messages fak -- fakesrc fakesink
