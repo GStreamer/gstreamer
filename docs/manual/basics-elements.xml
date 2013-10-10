@@ -3,7 +3,7 @@
   <para> 
     The most important object in &GStreamer; for the application programmer
     is the <ulink type="http"
-    url="../../gstreamer/html/GstElement.html"><classname>GstElement</classname></ulink>
+    url="&URLAPI;GstElement.html"><classname>GstElement</classname></ulink>
     object. An element is the basic building block for a media pipeline. All
     the different high-level components you will use are derived from
     <classname>GstElement</classname>. Every decoder, encoder, demuxer, video

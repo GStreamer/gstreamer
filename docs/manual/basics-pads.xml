@@ -226,9 +226,9 @@ link_to_multiplexer (GstPad     *tolink_pad,
       <para>
         A pad's capabilities are described in a <classname>GstCaps</classname>
         object. Internally, a <ulink type="http"
-        url="../../gstreamer/html/gstreamer-GstCaps.html"><classname>GstCaps</classname></ulink>
+        url="&URLAPI;gstreamer-GstCaps.html"><classname>GstCaps</classname></ulink>
         will contain one or more <ulink type="http"
-        url="../../gstreamer/html/gstreamer-GstStructure.html"><classname>GstStructure</classname></ulink>
+        url="&URLAPI;gstreamer-GstStructure.html"><classname>GstStructure</classname></ulink>
         that will describe one media type. A negotiated pad will have
         capabilities set that contain exactly <emphasis>one</emphasis>
         structure. Also, this structure will contain only
@@ -608,7 +608,7 @@ link_elements_with_filter (GstElement *element1, GstElement *element2)
     </para>
     <figure float="1" id="section-bin-noghost-img">
       <title>Visualisation of a <ulink type="http"
-      url="../../gstreamer/html/GstBin.html"><classname>GstBin</classname></ulink>
+      url="&URLAPI;GstBin.html"><classname>GstBin</classname></ulink>
       element without ghost pads</title>
       <mediaobject>
         <imageobject>
@@ -627,7 +627,7 @@ link_elements_with_filter (GstElement *element1, GstElement *element2)
     
     <figure float="1" id="section-bin-ghost-img">
       <title>Visualisation of a <ulink type="http"
-      url="../../gstreamer/html/GstBin.html"><classname>GstBin</classname></ulink>
+      url="&URLAPI;GstBin.html"><classname>GstBin</classname></ulink>
       element with a ghost pad</title>
       <mediaobject>
         <imageobject>
