@@ -48,18 +48,17 @@ namespace Gst {
 		public object this[string property] {
 		  get {
 				if (PropertyExists (property)) {
-					GLib.Value v = GetProperty (property);
-					object o = v.Val;
-					v.Dispose ();
-					return o;
+					using (GLib.Value v = GetProperty (property)) {
+						return v.Val;
+					}
 				} else
 					throw new PropertyNotFoundException ();
 		  } set {
 				if (PropertyExists (property)) {
-					GLib.Value v = new GLib.Value (this, property);
-					v.Val = value;
-					SetProperty (property, v);
-					v.Dispose ();
+					using (GLib.Value v = new GLib.Value (this, property)) {
+						v.Val = value;
+						SetProperty (property, v);
+					}
 				} else
 					throw new PropertyNotFoundException ();
 		  }
