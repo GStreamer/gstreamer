@@ -115,5 +115,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<!-- GstAudio -->
 	<attr path="/api/namespace/object[@cname='GstAudioClock']/field[@cname='destroy_notify']" name="hidden">1</attr>
 	<attr path="/api/namespace/interface[@cname='GstStreamVolume']/property[@cname='volume']" name="hidden">1</attr>
+
+	<!-- Namespace switches -->
+	<attr path="/api/namespace[@name='GstVideo']" name="name">Gst.Video</attr>
+	<attr path="/api/namespace[@name='GstAudio']" name="name">Gst.Audio</attr>
+	<attr path="/api/namespace[@name='GstBase']" name="name">Gst.Base</attr>
 </metadata>
 
