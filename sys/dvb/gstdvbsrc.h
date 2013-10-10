@@ -70,6 +70,9 @@ struct _GstDvbSrc
   int transmission_mode;
   int hierarchy_information;
   int inversion;
+  int pilot;
+  int rolloff;
+  int stream_id;
   guint64 timeout;
 
   GstDvbSrcPol pol;
