@@ -42,31 +42,26 @@ SinkPipeline::SinkPipeline(QGraphicsView *parent) : QObject(parent)
     if (sret != GST_STATE_CHANGE_SUCCESS) {
       gst_element_set_state (sink, GST_STATE_NULL);
       gst_object_unref (sink);
-  
-      if ((sink = gst_element_factory_make ("ximagesink", NULL))) {
+    }
+  } else if ((sink = gst_element_factory_make ("ximagesink", NULL))) {
+    sret = gst_element_set_state (sink, GST_STATE_READY);
+    if (sret != GST_STATE_CHANGE_SUCCESS) {
+      gst_element_set_state (sink, GST_STATE_NULL);
+      gst_object_unref (sink);
+    }
+  } else if (strcmp (DEFAULT_VIDEOSINK, "xvimagesink") != 0 &&
+             strcmp (DEFAULT_VIDEOSINK, "ximagesink") != 0) {
+    if ((sink = gst_element_factory_make (DEFAULT_VIDEOSINK, NULL))) {
+      if (!GST_IS_BIN (sink)) {
         sret = gst_element_set_state (sink, GST_STATE_READY);
         if (sret != GST_STATE_CHANGE_SUCCESS) {
           gst_element_set_state (sink, GST_STATE_NULL);
           gst_object_unref (sink);
-    
-          if (strcmp (DEFAULT_VIDEOSINK, "xvimagesink") != 0 &&
-              strcmp (DEFAULT_VIDEOSINK, "ximagesink") != 0) {
-    
-            if ((sink = gst_element_factory_make (DEFAULT_VIDEOSINK, NULL))) {
-              if (!GST_IS_BIN (sink)) {
-                sret = gst_element_set_state (sink, GST_STATE_READY);
-                if (sret != GST_STATE_CHANGE_SUCCESS) {
-                  gst_element_set_state (sink, GST_STATE_NULL);
-                  gst_object_unref (sink);
-                  sink = NULL;
-                }
-              } else {
-                gst_object_unref (sink);
-                sink = NULL;
-              }
-            }
-          }
+          sink = NULL;
         }
+      } else {
+        gst_object_unref (sink);
+        sink = NULL;
       }
     }
   }
