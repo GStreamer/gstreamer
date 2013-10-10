@@ -364,6 +364,13 @@ theora_enc_flush (GstVideoEncoder * encoder)
   ogg_uint32_t keyframe_force;
   int rate_flags;
 
+
+  if (enc->input_state == NULL) {
+    GST_INFO_OBJECT (enc, "Not configured yet, returning FALSE");
+
+    return FALSE;
+  }
+
   GST_OBJECT_LOCK (enc);
   enc->info.target_bitrate = enc->video_bitrate;
   enc->info.quality = enc->video_quality;
