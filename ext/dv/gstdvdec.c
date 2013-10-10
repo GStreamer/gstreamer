@@ -368,15 +368,24 @@ gst_dvdec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_STOP:
       gst_segment_init (&dvdec->segment, GST_FORMAT_UNDEFINED);
+      dvdec->need_segment = FALSE;
       break;
     case GST_EVENT_SEGMENT:{
       const GstSegment *segment;
 
       gst_event_parse_segment (event, &segment);
 
-      GST_DEBUG_OBJECT (dvdec, "Got NEWSEGMENT %" GST_SEGMENT_FORMAT, &segment);
+      GST_DEBUG_OBJECT (dvdec, "Got SEGMENT %" GST_SEGMENT_FORMAT, &segment);
 
       gst_segment_copy_into (segment, &dvdec->segment);
+      if (!gst_pad_has_current_caps (dvdec->srcpad)) {
+        dvdec->need_segment = TRUE;
+        gst_event_unref (event);
+        event = NULL;
+        res = TRUE;
+      } else {
+        dvdec->need_segment = FALSE;
+      }
       break;
     }
     case GST_EVENT_CAPS:
@@ -477,6 +486,11 @@ gst_dvdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     gst_caps_unref (caps);
   }
 
+  if (dvdec->need_segment) {
+    gst_pad_push_event (dvdec->srcpad, gst_event_new_segment (&dvdec->segment));
+    dvdec->need_segment = FALSE;
+  }
+
   ret = gst_buffer_pool_acquire_buffer (dvdec->pool, &outbuf, NULL);
   if (G_UNLIKELY (ret != GST_FLOW_OK))
     goto no_buffer;
@@ -573,6 +587,7 @@ gst_dvdec_change_state (GstElement * element, GstStateChange transition)
       gst_segment_init (&dvdec->segment, GST_FORMAT_UNDEFINED);
       dvdec->src_negotiated = FALSE;
       dvdec->sink_negotiated = FALSE;
+      dvdec->need_segment = FALSE;
       /* 
        * Enable this function call when libdv2 0.100 or higher is more
        * common
