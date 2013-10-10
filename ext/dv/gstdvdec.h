@@ -83,6 +83,7 @@ struct _GstDVDec {
 
   GstBufferPool *pool;
   GstSegment     segment;
+  gboolean       need_segment;
 };
 
 struct _GstDVDecClass {
