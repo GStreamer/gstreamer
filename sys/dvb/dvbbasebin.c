@@ -70,7 +70,8 @@ enum
   PROP_HIERARCHY,
   PROP_INVERSION,
   PROP_PROGRAM_NUMBERS,
-  PROP_STATS_REPORTING_INTERVAL
+  PROP_STATS_REPORTING_INTERVAL,
+  PROP_DELSYS
       /* FILL ME */
 };
 
@@ -214,6 +215,7 @@ dvb_base_bin_class_init (DvbBaseBinClass * klass)
     {PROP_HIERARCHY, "hierarchy"},
     {PROP_INVERSION, "inversion"},
     {PROP_STATS_REPORTING_INTERVAL, "stats-reporting-interval"},
+    {PROP_DELSYS, "delsys"},
     {0, NULL}
   };
 
@@ -453,6 +455,7 @@ dvb_base_bin_set_property (GObject * object, guint prop_id,
     case PROP_HIERARCHY:
     case PROP_INVERSION:
     case PROP_STATS_REPORTING_INTERVAL:
+    case PROP_DELSYS:
       /* FIXME: check if we can tune (state < PLAYING || program-numbers == "") */
       g_object_set_property (G_OBJECT (dvbbasebin->dvbsrc), pspec->name, value);
       break;
@@ -486,6 +489,7 @@ dvb_base_bin_get_property (GObject * object, guint prop_id,
     case PROP_HIERARCHY:
     case PROP_INVERSION:
     case PROP_STATS_REPORTING_INTERVAL:
+    case PROP_DELSYS:
       g_object_get_property (G_OBJECT (dvbbasebin->dvbsrc), pspec->name, value);
       break;
     case PROP_PROGRAM_NUMBERS:

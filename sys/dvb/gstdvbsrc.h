@@ -44,7 +44,7 @@ struct _GstDvbSrc
   GMutex tune_mutex;
   gboolean need_tune;
 
-  int adapter_type;
+  guchar delsys;
 
   int adapter_number;           /* the device directory with the sub-devices */
   int frontend_number;
