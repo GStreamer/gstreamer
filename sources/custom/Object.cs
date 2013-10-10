@@ -13,23 +13,43 @@
 // You should have received a copy of the GNU Affero General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace Gst {
-	using System;
-	using System.Runtime.InteropServices;
+using System;
+using System.Runtime.InteropServices;
 
+namespace Gst {
+
+	public class PropertyNotFoundException : Exception {}
+	
 	partial class Object 
 	{
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr g_object_class_find_property (IntPtr klass, IntPtr name);
+
+		bool PropertyExists (string name) {
+			var ptr = g_object_class_find_property (GType.GetClassPtr (), GLib.Marshaller.StringToPtrGStrdup (name));
+			var result = ptr != IntPtr.Zero;
+			GLib.Marshaller.Free (ptr);
+
+			return result;
+		}
+
 		public object this[string property] {
 		  get {
-		    GLib.Value v = GetProperty (property);
-		    object o = v.Val;
-		    v.Dispose ();
-		    return o;
+				if (PropertyExists (property)) {
+					GLib.Value v = GetProperty (property);
+					object o = v.Val;
+					v.Dispose ();
+					return o;
+				} else
+					throw new PropertyNotFoundException ();
 		  } set {
-		    GLib.Value v = new GLib.Value (this, property);
-		    v.Val = value;
-		    SetProperty (property, v);
-		    v.Dispose ();
+				if (PropertyExists (property)) {
+					GLib.Value v = new GLib.Value (this, property);
+					v.Val = value;
+					SetProperty (property, v);
+					v.Dispose ();
+				} else
+					throw new PropertyNotFoundException ();
 		  }
 		}
 
