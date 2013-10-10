@@ -90,7 +90,7 @@
          <para>
           <option>--gst-debug-level=<replaceable>LEVEL</replaceable></option> 
 	  will set the default debug level (which can range from 0 (no
-          output) to 5 (everything)).
+          output) to 9 (everything)).
          </para>
        </listitem>
        <listitem>
