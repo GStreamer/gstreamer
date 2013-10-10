@@ -639,7 +639,7 @@ gst_mpegts_descriptor_parse_iso_639_language (const GstMpegTsDescriptor *
  * @descriptor: a %GST_MTS_DESC_ISO_639_LANGUAGE #GstMpegTsDescriptor
  * @idx: Table id of the language to parse
  * @lang (out) (transfer none): 4-byte gchar array to hold the language code
- * @audio_type: (out) (transfer none): the #GstMpegTsIso639AudioType to set
+ * @audio_type: (out) (transfer none) (allow-none): the #GstMpegTsIso639AudioType to set
  *
  * Extracts the iso 639-2 language information from specific table id in @descriptor.
  *
@@ -659,17 +659,19 @@ gst_mpegts_descriptor_parse_iso_639_language_idx (const GstMpegTsDescriptor *
   g_return_val_if_fail (lang != NULL, FALSE);
   g_return_val_if_fail (descriptor->tag == GST_MTS_DESC_ISO_639_LANGUAGE,
       FALSE);
-  g_return_val_if_fail (audio_type != NULL, FALSE);
-  g_return_val_if_fail (descriptor->length / 4 > idx, FALSE);
+
+  if (descriptor->length / 4 <= idx)
+    return FALSE;
 
   data = (guint8 *) descriptor->data + 2 + idx * 4;
 
   memcpy (lang, data, 3);
-  *lang[3] = 0;
+  (*lang)[3] = 0;
 
   data += 3;
 
-  *audio_type = *data;
+  if (audio_type)
+    *audio_type = *data;
 
   return TRUE;
 }
