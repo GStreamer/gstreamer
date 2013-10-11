@@ -141,7 +141,12 @@ _request_id_update (GESAsset * self, gchar ** proposed_new_id, GError * error)
         gchar *basename = g_file_get_basename (file);
         GFile *new_file = g_file_get_child (new_parent, basename);
 
-        *proposed_new_id = g_file_get_uri (new_file);
+        /* FIXME Handle the GCancellable */
+        if (g_file_query_exists (file, NULL)) {
+          *proposed_new_id = g_file_get_uri (new_file);
+          GST_DEBUG_OBJECT (self, "Proposing path: %s as proxy",
+              *proposed_new_id);
+        }
 
         gst_object_unref (new_file);
         g_free (basename);

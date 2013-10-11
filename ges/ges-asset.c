@@ -587,7 +587,9 @@ ges_asset_set_proxy (GESAsset * asset, const gchar * new_id)
 
     return FALSE;
   } else if (g_strcmp0 (asset->priv->proxied_asset_id, new_id) == 0) {
-    GST_WARNING_OBJECT (asset, "Trying to proxy to same currently set proxy");
+    GST_WARNING_OBJECT (asset,
+        "Trying to proxy to same currently set proxy: %s -- %s",
+        asset->priv->proxied_asset_id, new_id);
 
     return FALSE;
   }
