@@ -1513,7 +1513,7 @@ gst_ts_demux_queue_data (GstTSDemux * demux, TSDemuxStream * stream,
           (stream->continuity_counter == MAX_CONTINUITY && cc == 0))) {
     GST_LOG ("CONTINUITY: Got expected %d", cc);
   } else {
-    GST_ERROR ("CONTINUITY: Mismatch packet %d, stream %d",
+    GST_WARNING ("CONTINUITY: Mismatch packet %d, stream %d",
         cc, stream->continuity_counter);
     stream->state = PENDING_PACKET_DISCONT;
   }
