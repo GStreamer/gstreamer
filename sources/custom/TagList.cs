@@ -18,7 +18,7 @@ namespace Gst
 	using System;
 	using System.Runtime.InteropServices;
 
-	partial class TagList
+	public partial class TagList
 	{
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern int gst_structure_n_fields (IntPtr raw);
