@@ -73,14 +73,14 @@ AC_SUBST(LIB_PREFIX)
 AC_SUBST(LIB_SUFFIX)
 
 dnl Check for gtk-sharp
-PKG_CHECK_MODULES(GLIB_SHARP, glib-sharp-3.0 >= 2.99.2)
+PKG_CHECK_MODULES(GLIB_SHARP, glib-sharp-3.0 >= 2.99.1)
 AC_SUBST(GLIB_SHARP_CFLAGS)
 AC_SUBST(GLIB_SHARP_LIBS)
 gtksharp_prefix=`pkg-config --variable=prefix gtk-sharp-3.0`
 AC_SUBST(gtksharp_prefix)
 
 dnl Find GAPI
-PKG_CHECK_MODULES(GAPI, gapi-3.0 >= 2.99.2)
+PKG_CHECK_MODULES(GAPI, gapi-3.0 >= 2.99.1)
 
 dnl Check for gapi
 AC_PATH_PROG(GAPI_PARSER, gapi3-parser, no)
