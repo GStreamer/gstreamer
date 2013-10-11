@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace/callback[@cname='GstMessageFunc']" name="name">MessageFunc</attr>
 	<attr path="/api/namespace/callback[@cname='GstQueryFunc']" name="name">QueryFunc</attr>
 	<!-- No Conversion for GLib.Value -->
-	<attr path="/api/namespace/object[@cname='GstPad']/property[@name='Caps']" name="type">gpointer</attr>
+	<remove-node path="/api/namespace/object[@cname='GstPad']/property[@name='Caps']" />
 	<!-- Error with array -->
 	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_formats_contains']" name="hidden">true</attr>
 	<!-- MiniObject issues -->
