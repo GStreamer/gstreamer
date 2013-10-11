@@ -83,19 +83,6 @@ namespace Gst
 			GLib.Marshaller.Free (raw_string);
 		}
 
-		public void Add (Gst.TagMergeMode mode, params object[] parameters)
-		{
-			if (parameters.Length % 2 != 0)
-				throw new ArgumentException ();
-
-			for (int i = 0; i < parameters.Length; i += 2) {
-				if (parameters [i].GetType () != typeof(string))
-					throw new ArgumentException ();
-
-				Add (mode, parameters [i] as string, parameters [i + 1]);
-			}
-		}
-
 		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_structure_nth_field_name (IntPtr raw, uint index);
 
