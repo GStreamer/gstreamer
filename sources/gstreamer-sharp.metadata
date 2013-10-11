@@ -95,7 +95,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_event')]">/api/namespace/struct[@cname='GstEvent']</move-node>
 	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_query')]">/api/namespace/struct[@cname='GstQuery']</move-node>
 	<move-node path="/api/namespace/object[@name='Global']//method[starts-with(@cname, 'gst_pad')]">/api/namespace/object[@cname='GstPad']</move-node>
-	<attr path="/api/namespace/object[@name='Global']" name ="hidden">true</attr>
 
 	<!-- Things implemented on our own -->
 	<attr path="/api/namespace/struct[@cname='GstMessage']/method[@cname='gst_message_parse_error']" name="hidden">true</attr>
@@ -121,5 +120,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace[@name='GstAudio']" name="name">Gst.Audio</attr>
 	<attr path="/api/namespace[@name='GstBase']" name="name">Gst.Base</attr>
 	<attr path="/api/namespace[@name='GstPbutils']" name="name">Gst.PbUtils</attr>
+	<attr path="/api/namespace[@name='Gst.Base']/object[@name='Global']" name="name">GlobalBase</attr>
+	<attr path="/api/namespace[@name='Gst.Video']/object[@name='Global']" name="name">GlobalVideo</attr>
+	<attr path="/api/namespace[@name='Gst.Audio']/object[@name='Global']" name="name">GlobalAudio</attr>
+	<attr path="/api/namespace[@name='Gst.PbUtils']/object[@name='Global']" name="name">GlobalPbUtil</attr>
+	<attr path="/api/namespace[@name='GstPbutils']" name="name">Gst.PbUtils</attr>
+	<attr path="/api/namespace[@name='Gst.Base']/object[@name='Constants']" name="name">ConstantsBase</attr>
+	<attr path="/api/namespace[@name='Gst.Video']/object[@name='Constants']" name="name">ConstantsVideo</attr>
+	<attr path="/api/namespace[@name='Gst.Audio']/object[@name='Constants']" name="name">ConstantsAudio</attr>
+	<attr path="/api/namespace[@name='Gst.PbUtils']/object[@name='Constants']" name="name">ConstantsPbUtil</attr>
 </metadata>
 
