@@ -69,6 +69,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<!-- Add miniobject methods to all miniobject types -->
 	<copy-node path="/api/namespace/struct[@cname='GstMiniObject']//method">/api/namespace//boxed[field/@cname='mini_object']</copy-node>
 	<attr path="/api/namespace/struct[@cname='GstMiniObject']//method" name="hidden">true</attr>
+	<!-- hide user data -->
+	<attr path="/api/namespace/object[@cname='GstBus']/method[@cname='gst_bus_sync_signal_handler']/parameters/parameter[@name='data']" name="hidden">1</attr>
 	<!-- API improvements -->
 	<!-- FIXME: Remove when https://github.com/mono/gtk-sharp/pull/74 is merged -->
 	<attr path="/api/namespace/object[@cname='GstGlobal']/method[@cname='gst_tag_exists']" name="name">Exists</attr>
