@@ -315,6 +315,11 @@ mpegts_packetizer_parse_adaptation_field_control (MpegTSPacketizer2 *
 
   if ((packet->scram_afc_cc & 0x30) == 0x20) {
     /* no payload, adaptation field of 183 bytes */
+    if (length > 183) {
+      GST_WARNING ("PID %d afc == 0x%02x and length %d > 183",
+          packet->pid, packet->scram_afc_cc & 0x30, length);
+      return FALSE;
+    }
     if (length != 183) {
       GST_WARNING ("PID %d afc == 0x%02x and length %d != 183",
           packet->pid, packet->scram_afc_cc & 0x30, length);
