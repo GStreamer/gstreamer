@@ -47,6 +47,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace//struct[field/@cname='mini_object']" name="native">true</attr>
 	<change-node-type path="/api/namespace//boxed[@cname='GstStructure']">struct</change-node-type>
 	<attr path="/api/namespace/struct[@cname='GstStructure']" name="native">true</attr>
+	<change-node-type path="/api/namespace//boxed[@cname='GstIterator']">struct</change-node-type>
+	<attr path="/api/namespace/struct[@cname='GstIterator']" name="native">true</attr>
 	<remove-node path="/api/namespace/boxed[@cname='GstStructure']/field[@cname='name']" />
 	<!-- Maybe some problems with the name -->
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/class_struct/method[@vm='get_type']" name="vm" />
