@@ -673,42 +673,64 @@ done:
   return ret;
 }
 
+static inline void
+add_iso639_language_to_tags (TSDemuxStream * stream, gchar * lang_code)
+{
+  const gchar *lc;
+
+  GST_LOG ("Add language code for stream: '%s'", lang_code);
+
+  if (!stream->taglist)
+    stream->taglist = gst_tag_list_new_empty ();
+
+  /* descriptor contains ISO 639-2 code, we want the ISO 639-1 code */
+  lc = gst_tag_get_language_code (lang_code);
+
+  /* Only set tag if we have a valid one */
+  if (lc || (lang_code[0] && lang_code[1]))
+    gst_tag_list_add (stream->taglist, GST_TAG_MERGE_REPLACE,
+        GST_TAG_LANGUAGE_CODE, (lc) ? lc : lang_code, NULL);
+}
+
 static void
 gst_ts_demux_create_tags (TSDemuxStream * stream)
 {
   MpegTSBaseStream *bstream = (MpegTSBaseStream *) stream;
   const GstMpegTsDescriptor *desc = NULL;
-  int i;
+  int i, nb;
 
   desc =
       mpegts_get_descriptor_from_stream (bstream,
       GST_MTS_DESC_ISO_639_LANGUAGE);
+  if (desc) {
+    gchar lang_code[4];
 
-  if (!desc) {
-    desc =
-        mpegts_get_descriptor_from_stream (bstream,
-        GST_MTS_DESC_DVB_SUBTITLING);
+    nb = gst_mpegts_descriptor_parse_iso_639_language_nb (desc);
+
+    GST_DEBUG ("Found ISO 639 descriptor (%d entries)", nb);
+
+    for (i = 0; i < nb; i++)
+      if (gst_mpegts_descriptor_parse_iso_639_language_idx (desc, i, &lang_code,
+              NULL))
+        add_iso639_language_to_tags (stream, lang_code);
+
+    return;
   }
+
+  desc =
+      mpegts_get_descriptor_from_stream (bstream, GST_MTS_DESC_DVB_SUBTITLING);
 
   if (desc) {
     gchar lang_code[4];
-    GstMpegTsIso639AudioType audio_type;
 
-    if (!stream->taglist)
-      stream->taglist = gst_tag_list_new_empty ();
+    nb = gst_mpegts_descriptor_parse_dvb_subtitling_nb (desc);
 
-    for (i = 0; gst_mpegts_descriptor_parse_iso_639_language_idx (desc,
-            i, &lang_code, &audio_type); i++) {
+    GST_DEBUG ("Found SUBTITLING descriptor (%d entries)", nb);
 
-      const gchar *lc;
-
-      GST_LOG ("Add language code for stream: %s", lang_code);
-
-      /* descriptor contains ISO 639-2 code, we want the ISO 639-1 code */
-      lc = gst_tag_get_language_code (lang_code);
-      gst_tag_list_add (stream->taglist, GST_TAG_MERGE_REPLACE,
-          GST_TAG_LANGUAGE_CODE, (lc) ? lc : lang_code, NULL);
-    }
+    for (i = 0; i < nb; i++)
+      if (gst_mpegts_descriptor_parse_dvb_subtitling_idx (desc, i, &lang_code,
+              NULL, NULL, NULL))
+        add_iso639_language_to_tags (stream, lang_code);
   }
 }
 
