@@ -335,6 +335,15 @@ gboolean gst_mpegts_descriptor_parse_dvb_component (const GstMpegTsDescriptor *d
 gboolean gst_mpegts_descriptor_parse_dvb_stream_identifier (const GstMpegTsDescriptor *descriptor,
 							    guint8 *component_tag);
 
+/* GST_MTS_DESC_DVB_SUBTITLING (0x59) */
+gboolean gst_mpegts_descriptor_parse_dvb_subtitling_idx (const GstMpegTsDescriptor *descriptor,
+							 guint idx, gchar (*lang)[4],
+							 guint8 *type, guint16 *composition_page_id,
+							 guint16 *ancillary_page_id);
+guint gst_mpegts_descriptor_parse_dvb_subtitling_nb (const GstMpegTsDescriptor *descriptor);
+
+
+
 /* GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM (0x5A) */
 /* FIXME : Implement */
 

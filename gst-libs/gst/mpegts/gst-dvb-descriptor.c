@@ -284,3 +284,70 @@ gst_mpegts_descriptor_parse_dvb_short_event (const GstMpegTsDescriptor *
     *text = get_encoding_and_convert ((const gchar *) data + 1, *data);
   return TRUE;
 }
+
+/* GST_MTS_DESC_DVB_SUBTITLING (0x59) */
+
+/**
+ * gst_mpegts_descriptor_parse_dvb_subtitling_idx:
+ * @descriptor: a %GST_MTS_DESC_DVB_SUBTITLING #GstMpegTsDescriptor
+ * @idx: Table id of the entry to parse
+ * @lang (out) (transfer none): 4-byte gchar array to hold the language code
+ * @type: (out) (transfer none) (allow-none): the type of subtitling
+ * @composition_page_id: (out) (transfer none) (allow-none): the composition page id
+ * @ancillary_page_id: (out) (transfer none) (allow-none): the ancillary page id
+ *
+ * Extracts the DVB subtitling informatio from specific table id in @descriptor.
+ *
+ * Note: Use #gst_tag_get_language_code if you want to get the the
+ * ISO 639-1 language code from the returned ISO 639-2 one.
+ *
+ * Returns: %TRUE if parsing succeeded, else %FALSE.
+ */
+gboolean
+gst_mpegts_descriptor_parse_dvb_subtitling_idx (const GstMpegTsDescriptor *
+    descriptor, guint idx, gchar (*lang)[4], guint8 * type,
+    guint16 * composition_page_id, guint16 * ancillary_page_id)
+{
+  guint8 *data;
+
+  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, FALSE);
+  g_return_val_if_fail (lang != NULL, FALSE);
+  g_return_val_if_fail (descriptor->tag == GST_MTS_DESC_DVB_SUBTITLING, FALSE);
+
+  /* If we went too far, return FALSE */
+  if (descriptor->length / 8 <= idx)
+    return FALSE;
+
+  data = (guint8 *) descriptor->data + 2 + idx * 8;
+
+  memcpy (lang, data, 3);
+  (*lang)[3] = 0;
+
+  data += 3;
+
+  if (type)
+    *type = *data;
+  data += 1;
+  if (composition_page_id)
+    *composition_page_id = GST_READ_UINT16_BE (data);
+  data += 2;
+  if (ancillary_page_id)
+    *ancillary_page_id = GST_READ_UINT16_BE (data);
+
+  return TRUE;
+}
+
+/**
+ * gst_mpegts_descriptor_parse_dvb_subtitling_nb:
+ * @descriptor: a %GST_MTS_DESC_DVB_SUBTITLING #GstMpegTsDescriptor
+ *
+ * Returns: The number of entries in @descriptor
+ */
+guint
+gst_mpegts_descriptor_parse_dvb_subtitling_nb (const GstMpegTsDescriptor *
+    descriptor)
+{
+  g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, 0);
+
+  return descriptor->length / 8;
+}
