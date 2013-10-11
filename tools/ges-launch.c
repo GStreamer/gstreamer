@@ -37,6 +37,7 @@ static GESPipeline *pipeline = NULL;
 static gboolean seenerrors = FALSE;
 static gchar **new_paths = NULL;
 static GMainLoop *mainloop;
+static GHashTable *tried_uris;
 
 static gchar *
 ensure_uri (gchar * location)
@@ -73,14 +74,18 @@ source_moved_cb (GESProject * project, GError * error, GESAsset * asset)
 
   for (i = 0; new_paths[i] != NULL; i++) {
     gchar *basename, *res;
-    if (g_str_has_prefix (old_uri, new_paths[i]))
-      continue;
 
     basename = g_path_get_basename (old_uri);
     res = g_build_filename (new_paths[i], basename, NULL);
     g_free (basename);
 
-    return res;
+    if (g_hash_table_lookup (tried_uris, res)) {
+      GST_DEBUG ("File already tried: %s\n", res);
+      g_free (res);
+    } else {
+      g_hash_table_add (tried_uris, g_strdup (res));
+      return res;
+    }
   }
 
   return NULL;
@@ -90,7 +95,7 @@ static void
 error_loading_asset_cb (GESProject * project, GError * error,
     const gchar * failed_id, GType extractable_type)
 {
-  g_printerr ("Error loading asset %s: %s", failed_id, error->message);
+  g_printerr ("Error loading asset %s: %s\n", failed_id, error->message);
 
   g_main_loop_quit (mainloop);
 }
@@ -624,6 +629,7 @@ main (int argc, gchar ** argv)
     exit (0);
   }
 
+  tried_uris = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, NULL);
   if (((!load_path && (argc < 4)))) {
     g_printf ("%s", g_option_context_get_help (ctx, TRUE, NULL));
     g_option_context_free (ctx);
@@ -704,5 +710,6 @@ main (int argc, gchar ** argv)
 
   gst_object_unref (pipeline);
 
+  g_hash_table_unref (tried_uris);
   return (int) seenerrors;
 }
