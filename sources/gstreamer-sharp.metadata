@@ -112,6 +112,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace/object[@cname='GstAdapter']/method[@cname='gst_adapter_copy']" name="hidden">1</attr>
 	<attr path="/api/namespace/struct[@cname='GstByteReader']" name="opaque">1</attr>
 	<remove-node path="/api/namespace//struct[@cname='GstByteReader']//method" />
+	<!-- FIXME: remove when https://bugzilla.gnome.org/show_bug.cgi?id=709938 is fixed -->
+	<attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_query_parse_commands_length']/parameters/parameter[@name='n_cmds']" name="pass_as">out</attr>
+	<attr path="/api/namespace/interface[@cname='GstNavigation']/method[@cname='gst_navigation_query_parse_commands_nth']/parameters/parameter[@name='cmd']" name="pass_as">out</attr>
 
 	<!-- GstAudio -->
 	<attr path="/api/namespace/object[@cname='GstAudioClock']/field[@cname='destroy_notify']" name="hidden">1</attr>
