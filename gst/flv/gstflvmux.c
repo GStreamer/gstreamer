@@ -1008,7 +1008,7 @@ end:
   data[1] = 0;
   data[2] = 9;                  /* end marker */
   script_tag = gst_buffer_append (script_tag, tmp);
-  tags_written++;
+
 
   _gst_buffer_new_and_alloc (4, &tmp, &data);
   GST_WRITE_UINT32_BE (data, gst_buffer_get_size (script_tag));
