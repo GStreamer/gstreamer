@@ -355,7 +355,8 @@ gst_gl_window_x11_close (GstGLWindow * window)
   g_source_unref (window_x11->x11_source);
   window_x11->x11_source = NULL;
   g_main_loop_unref (window_x11->loop);
-  window_x11->loop = NULL, g_main_context_unref (window_x11->main_context);
+  window_x11->loop = NULL;
+  g_main_context_unref (window_x11->main_context);
   window_x11->main_context = NULL;
 
   window_x11->running = FALSE;
@@ -414,7 +415,11 @@ gst_gl_window_x11_set_window_handle (GstGLWindow * window, guintptr id)
 
   window_x11->parent_win = (Window) id;
 
-  if (g_main_loop_is_running (window_x11->loop)) {
+  /* The loop may not exist yet because it's created in GstGLWindow::open
+   * which is only called when going from READY to PAUSED state.
+   * If no loop then the parent is directly set in XCreateWindow
+   */
+  if (window_x11->loop && g_main_loop_is_running (window_x11->loop)) {
     GST_LOG ("set parent window id: %lud", id);
 
     g_mutex_lock (&window_x11->disp_send_lock);
