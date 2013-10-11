@@ -62,6 +62,7 @@
 #include <gst/video/video.h>
 
 #include "gstrpicamsrc.h"
+#include "RaspiCapture.h"
 
 #include "bcm_host.h"
 #include "interface/vcos/vcos.h"
@@ -95,7 +96,6 @@ enum
   "width = " GST_VIDEO_SIZE_RANGE ","             \
   "height = " GST_VIDEO_SIZE_RANGE ","            \
   "framerate = " GST_VIDEO_FPS_RANGE
-
 #define H264_CAPS 				\
   "video/x-h264, "                              \
   "width = " GST_VIDEO_SIZE_RANGE ", "          \
@@ -106,49 +106,34 @@ enum
   "profile = (string) { baseline, main, high }"
 
 static GstStaticPadTemplate video_src_template =
-  GST_STATIC_PAD_TEMPLATE ("vidsrc",
+  GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS (RAW_AND_JPEG_CAPS "; " H264_CAPS)
-    );
-static GstStaticPadTemplate viewfind_src_template =
-  GST_STATIC_PAD_TEMPLATE ("vfsrc",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (RAW_AND_JPEG_CAPS "; " H264_CAPS)
-    );
-static GstStaticPadTemplate image_src_template =
-  GST_STATIC_PAD_TEMPLATE ("imgsrc",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (RAW_AND_JPEG_CAPS)
     );
 
 #define gst_rpi_cam_src_parent_class parent_class
-G_DEFINE_TYPE (GstRpiCamSrc, gst_rpi_cam_src, GST_TYPE_BASE_CAMERA_SRC);
+G_DEFINE_TYPE (GstRpiCamSrc, gst_rpi_cam_src, GST_TYPE_PUSH_SRC);
 
 static void gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static void gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
-
-static gboolean
-gst_rpi_cam_src_setup_pipeline (GstBaseCameraSrc *parent)
-{
-  GstRpiCamSrc *self = GST_RPICAMSRC(parent);
-  g_print ("In setup_pipeline\n");
-}
+static gboolean gst_rpi_cam_src_start (GstBaseSrc *parent);
+static GstFlowReturn gst_rpi_cam_src_fill_buffer (GstPushSrc *parent, GstBuffer *buf);
 
 static void
 gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
-  GstBaseCameraSrcClass *basecamsrc_class;
+  GstBaseSrcClass *basesrc_class;
+  GstPushSrcClass *pushsrc_class;
 
   gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-  basecamsrc_class = (GstBaseCameraSrcClass *) klass;
+  basesrc_class = (GstBaseSrcClass *) klass;
+  pushsrc_class = (GstPushSrcClass *) klass;
 
   gobject_class->set_property = gst_rpi_cam_src_set_property;
   gobject_class->get_property = gst_rpi_cam_src_get_property;
@@ -160,18 +145,17 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
     "Jan Schmidt <jan@centricular.com>");
 
   gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&viewfind_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&video_src_template));
-  gst_element_class_add_pad_template (gstelement_class,
-      gst_static_pad_template_get (&image_src_template));
 
-  basecamsrc_class->setup_pipeline = gst_rpi_cam_src_setup_pipeline;
+  basesrc_class->start = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_start);
+  pushsrc_class->fill = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_fill_buffer);
 }
 
 static void
 gst_rpi_cam_src_init (GstRpiCamSrc *src)
 {
+  gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
+  gst_base_src_set_live (GST_BASE_SRC (src), TRUE); 
 }
 
 static void
@@ -208,6 +192,21 @@ rpicamsrc_init (GstPlugin * rpicamsrc)
 
   return gst_element_register (rpicamsrc, "rpicamsrc", GST_RANK_NONE,
       GST_TYPE_RPICAMSRC);
+}
+
+static gboolean
+gst_rpi_cam_src_start (GstBaseSrc *parent)
+{
+  GstRpiCamSrc *src = GST_RPICAMSRC(parent);
+  g_print ("In start()\n");
+  raspi_capture_start();
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_rpi_cam_src_fill_buffer (GstPushSrc *parent, GstBuffer *buf)
+{
+  return GST_FLOW_ERROR;
 }
 
 #ifndef PACKAGE

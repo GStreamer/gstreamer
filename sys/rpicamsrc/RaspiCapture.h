@@ -41,41 +41,42 @@
  * Boston, MA 02111-1307, USA.
  */
 
-#ifndef __GST_RPICAMSRC_H__
-#define __GST_RPICAMSRC_H__
+#ifndef __RASPICAPTURE_H__
+#define __RASPICAPTURE_H__
 
-#include <gst/gst.h>
-#include <gst/base/gstpushsrc.h>
+#include <glib.h>
+#include <inttypes.h>
+
+#include "interface/mmal/mmal_common.h"
+#include "interface/mmal/mmal_types.h"
+#include "interface/mmal/mmal_parameters_camera.h"
+#include "interface/mmal/mmal_component.h"
+#include "RaspiCamControl.h"
+#include "RaspiPreview.h"
 
 G_BEGIN_DECLS
 
-#define GST_TYPE_RPICAMSRC (gst_rpi_cam_src_get_type())
-#define GST_RPICAMSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_RPICAMSRC,GstRpiCamSrc))
-#define GST_RPICAMSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_RPICAMSRC,GstRpiCamSrcClass))
-#define GST_IS_RPICAMSRC(obj) \
-  (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_RPICAMSRC))
-#define GST_IS_RPICAMSRC_CLASS(klass) \
-  (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_RPICAMSRC))
-
-typedef struct _GstRpiCamSrc      GstRpiCamSrc;
-typedef struct _GstRpiCamSrcClass GstRpiCamSrcClass;
-
-struct _GstRpiCamSrc
+/** Structure containing all state information for the current run
+ */
+typedef struct
 {
-  GstPushSrc parent;
+   int timeout;                        /// Time taken before frame is grabbed and app then shuts down. Units are milliseconds
+   int width;                          /// Requested width of image
+   int height;                         /// requested height of image
+   int bitrate;                        /// Requested bitrate
+   int framerate;                      /// Requested frame rate (fps)
+   int intraperiod;                    /// Intra-refresh period (key frame rate)
+   int demoMode;                       /// Run app in demo mode
+   int demoInterval;                   /// Interval between camera settings changes
+   int immutableInput;                 /// Flag to specify whether encoder works in place or creates a new buffer. Result is preview can display either
+                                       /// the camera output or the encoder output (with compression artifacts)
+   int profile;                        /// H264 profile to use for encoding
+   RASPIPREVIEW_PARAMETERS preview_parameters;   /// Preview setup parameters
+   RASPICAM_CAMERA_PARAMETERS camera_parameters; /// Camera setup parameters
+} RASPIVID_STATE;
 
-  GstPad *video_srcpad;
-};
-
-struct _GstRpiCamSrcClass 
-{
-  GstPushSrcClass parent_class;
-};
-
-GType gst_rpi_cam_src_get_type (void);
+int raspi_capture_start();
 
 G_END_DECLS
 
-#endif /* __GST_RPICAMSRC_H__ */
+#endif
