@@ -70,7 +70,7 @@ namespace Gst
 
 		public void Add (Gst.TagMergeMode mode, string tag, object value)
 		{
-			if (!Tag.TagExists (tag))
+			if (!Tag.Exists (tag))
 				throw new ArgumentException (String.Format ("Invalid tag name '{0}'", tag));
 
 			GLib.Value v = new GLib.Value (value);
