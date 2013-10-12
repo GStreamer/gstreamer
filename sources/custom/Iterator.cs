@@ -34,6 +34,15 @@ namespace Gst {
 		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr g_value_reset (ref GLib.Value val);
 
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern int gst_iterator_next(IntPtr raw, ref GLib.Value elem);
+
+		public Gst.IteratorResult Next(ref GLib.Value elem) {
+			int raw_ret = gst_iterator_next(Handle, ref elem);
+			Gst.IteratorResult ret = (Gst.IteratorResult) raw_ret;
+			return ret;
+		}
+
 		private class Enumerator : IEnumerator {
 			Iterator iterator;
 			Hashtable seen = new Hashtable ();
@@ -53,11 +62,10 @@ namespace Gst {
 					return false;
 
 				do {
-					GLib.Value value = new GLib.Value ();
-					IntPtr ptr = g_value_reset (ref value);
-					value = (GLib.Value) Marshal.PtrToStructure (ptr, typeof(GLib.Value));
+					GLib.Value value = new GLib.Value (GLib.GType.Boolean);
+					value.Dispose ();
 
-					IteratorResult ret = iterator.Next (out value);
+					IteratorResult ret = iterator.Next (ref value);
 
 					switch (ret) {
 					case IteratorResult.Done:
