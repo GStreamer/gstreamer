@@ -53,6 +53,14 @@ namespace Gst {
 					throw new PropertyNotFoundException ();
 		  } set {
 				if (PropertyExists (property)) {
+					if (value == null) {
+						throw new ArgumentNullException ();
+					}
+					var type = value.GetType ();
+					var gtype = (GLib.GType)type;
+					if (gtype == null) {
+						throw new Exception ("Could not find a GType for type " + type.FullName);
+					}
 					using (GLib.Value v = new GLib.Value ((GLib.GType)value.GetType ())) {
 						v.Val = value;
 						SetProperty (property, v);
