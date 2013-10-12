@@ -83,6 +83,7 @@ typedef struct RASPIVID_STATE_T RASPIVID_STATE;
 void raspicapture_init();
 void raspicapture_default_config(RASPIVID_CONFIG *config);
 RASPIVID_STATE *raspi_capture_start(RASPIVID_CONFIG *config);
+GstFlowReturn raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **buf);
 void raspi_capture_stop(RASPIVID_STATE *state);
 
 G_END_DECLS

@@ -121,7 +121,11 @@ static void gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_rpi_cam_src_start (GstBaseSrc *parent);
 static gboolean gst_rpi_cam_src_stop (GstBaseSrc *parent);
-static GstFlowReturn gst_rpi_cam_src_fill_buffer (GstPushSrc *parent, GstBuffer *buf);
+static gboolean gst_rpi_cam_src_decide_allocation (GstBaseSrc * src,
+    GstQuery * query);
+static GstFlowReturn gst_rpi_cam_src_create (GstPushSrc *parent, GstBuffer **buf);
+static GstCaps *gst_rpi_cam_src_get_caps (GstBaseSrc * src, GstCaps * filter);
+static GstCaps *gst_rpi_cam_src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
 
 static void
 gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
@@ -150,7 +154,10 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
 
   basesrc_class->start = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_start);
   basesrc_class->stop = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_stop);
-  pushsrc_class->fill = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_fill_buffer);
+  basesrc_class->decide_allocation = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_decide_allocation);
+  basesrc_class->get_caps = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_get_caps);
+  basesrc_class->fixate = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_fixate);
+  pushsrc_class->create = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_create);
 
   raspicapture_init();
 }
@@ -197,6 +204,7 @@ static gboolean
 gst_rpi_cam_src_start (GstBaseSrc *parent)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC(parent);
+  g_print ("In src_start()\n");
   src->capture_state = raspi_capture_start(&src->capture_config);
   return TRUE;
 }
@@ -209,10 +217,61 @@ gst_rpi_cam_src_stop (GstBaseSrc *parent)
   return TRUE;
 }
 
-static GstFlowReturn
-gst_rpi_cam_src_fill_buffer (GstPushSrc *parent, GstBuffer *buf)
+static GstCaps *
+gst_rpi_cam_src_get_caps (GstBaseSrc * src, GstCaps * filter)
 {
-  return GST_FLOW_ERROR;
+  g_print ("In get_caps\n");
+  //if (src->state == NULL)
+    return gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (src));
+  /* Retrieve limiting parameters from the camera module, max width/height fps-range */
+}
+
+static gboolean gst_rpi_cam_src_decide_allocation (GstBaseSrc *bsrc,
+    GstQuery * query)
+{
+  g_print ("In decide_allocation\n");
+  return GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
+}
+
+static GstCaps *gst_rpi_cam_src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
+{
+  GstStructure *structure;
+  gint i;
+
+  GST_DEBUG_OBJECT (basesrc, "fixating caps %" GST_PTR_FORMAT, caps);
+
+  caps = gst_caps_make_writable (caps);
+
+  for (i = 0; i < gst_caps_get_size (caps); ++i) {
+    structure = gst_caps_get_structure (caps, i);
+
+    /* Fixate to the camera's 1920x1080 resolution if possible */
+    gst_structure_fixate_field_nearest_int (structure, "width", 1920);
+    gst_structure_fixate_field_nearest_int (structure, "height", 1080);
+    gst_structure_fixate_field_nearest_fraction (structure, "framerate",
+        G_MAXINT, 1);
+    gst_structure_fixate_field (structure, "format");
+  }
+
+  GST_DEBUG_OBJECT (basesrc, "fixated caps %" GST_PTR_FORMAT, caps);
+
+  caps = GST_BASE_SRC_CLASS (parent_class)->fixate (basesrc, caps);
+
+  return caps;
+}
+
+static GstFlowReturn
+gst_rpi_cam_src_create (GstPushSrc *parent, GstBuffer **buf)
+{
+  GstRpiCamSrc *src = GST_RPICAMSRC(parent);
+  GstFlowReturn ret;
+
+  /* FIXME: Use custom allocator */
+  ret = raspi_capture_fill_buffer(src->capture_state, buf);
+  if (*buf)
+    g_print ("Made buffer of size %" G_GSIZE_FORMAT "\n", gst_buffer_get_size(*buf));
+
+  return ret;
 }
 
 static gboolean

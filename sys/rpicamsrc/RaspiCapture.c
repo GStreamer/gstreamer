@@ -57,6 +57,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory.h>
 #include <sysexits.h>
 
+#include <gst/gst.h>
 
 #include "bcm_host.h"
 #include "interface/vcos/vcos.h"
@@ -124,6 +125,8 @@ struct RASPIVID_STATE_T
    MMAL_POOL_T *encoder_pool; /// Pointer to the pool of buffers used by encoder output port
 
    PORT_USERDATA callback_data;
+
+   MMAL_QUEUE_T *encoded_buffer_q;
 };
 
 #if 0
@@ -499,57 +502,62 @@ static void camera_control_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buf
  */
 static void encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buffer)
 {
-   MMAL_BUFFER_HEADER_T *new_buffer;
-
-   // We pass our file handle and other stuff in via the userdata field.
-
    PORT_USERDATA *pData = (PORT_USERDATA *)port->userdata;
    RASPIVID_STATE *state  = pData->state;
 
-   if (pData)
-   {
-      int bytes_written = buffer->length;
-
-      vcos_assert(state->output_file);
-
-      if (buffer->length)
-      {
-         mmal_buffer_header_mem_lock(buffer);
-
-         bytes_written = fwrite(buffer->data, 1, buffer->length, state->output_file);
-
-         mmal_buffer_header_mem_unlock(buffer);
-      }
-
-      if (bytes_written != buffer->length)
-      {
-         vcos_log_error("Failed to write buffer data (%d from %d)- aborting", bytes_written, buffer->length);
-         pData->abort = 1;
-      }
-   }
-   else
+   if (pData == NULL)
    {
       vcos_log_error("Received a encoder buffer callback with no state");
+      // release buffer back to the pool
+      mmal_buffer_header_release(buffer);
+      return;
    }
 
-   // release buffer back to the pool
-   mmal_buffer_header_release(buffer);
-
-   // and send one back to the port (if still open)
-   if (port->is_enabled)
-   {
-      MMAL_STATUS_T status = MMAL_SUCCESS;
-
-      new_buffer = mmal_queue_get(state->encoder_pool->queue);
-
-      if (new_buffer)
-         status = mmal_port_send_buffer(port, new_buffer);
-
-      if (!new_buffer || status != MMAL_SUCCESS)
-         vcos_log_error("Unable to return a buffer to the encoder port");
-   }
+   /* Send buffer to GStreamer element for pushing to the pipeline */
+   mmal_queue_put(state->encoded_buffer_q, buffer);
 }
 
+GstFlowReturn
+raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp)
+{
+  GstBuffer *buf;
+  MMAL_BUFFER_HEADER_T *buffer;
+  GstFlowReturn ret = GST_FLOW_ERROR;
+
+  /* FIXME: Use our own interruptible cond wait: */
+  buffer = mmal_queue_wait(state->encoded_buffer_q);
+
+  mmal_buffer_header_mem_lock(buffer);
+  buf = gst_buffer_new_allocate(NULL, buffer->length, NULL);
+  if (buf) {
+    gst_buffer_fill(buf, 0, buffer->data, buffer->length);
+    g_print("Buffer of size %u\n", (guint) buffer->length);
+    ret = GST_FLOW_OK;
+  }
+
+  mmal_buffer_header_mem_unlock(buffer);
+
+  *bufp = buf;
+  // release buffer back to the pool
+  mmal_buffer_header_release(buffer);
+
+  // and send one back to the port (if still open)
+  if (state->encoder_output_port->is_enabled)
+  {
+     MMAL_STATUS_T status = MMAL_SUCCESS;
+
+     buffer = mmal_queue_get(state->encoder_pool->queue);
+     if (buffer)
+        status = mmal_port_send_buffer(state->encoder_output_port, buffer);
+
+     if (!buffer || status != MMAL_SUCCESS) {
+       vcos_log_error("Unable to return a buffer to the encoder port");
+       ret = GST_FLOW_ERROR;
+     }
+  }
+
+  return ret;
+}
 
 /**
  * Create the camera component, set up its ports
@@ -785,6 +793,8 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
    if (encoder_output->buffer_size < encoder_output->buffer_size_min)
       encoder_output->buffer_size = encoder_output->buffer_size_min;
 
+   g_print("encoder buffer size is %u\n", (guint)encoder_output->buffer_size);
+
    encoder_output->buffer_num = encoder_output->buffer_num_recommended;
 
    if (encoder_output->buffer_num < encoder_output->buffer_num_min)
@@ -859,7 +869,6 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
 
    /* Create pool of buffer headers for the output port to consume */
    pool = mmal_port_pool_create(encoder_output, encoder_output->buffer_num, encoder_output->buffer_size);
-
    if (!pool)
    {
       vcos_log_error("Failed to create buffer header pool for encoder output port %s", encoder_output->name);
@@ -888,6 +897,11 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
  */
 static void destroy_encoder_component(RASPIVID_STATE *state)
 {
+  /* Empty the buffer header q */
+  while (mmal_queue_length(state->encoded_buffer_q))
+    (void)(mmal_queue_get(state->encoded_buffer_q));
+  mmal_queue_destroy(state->encoded_buffer_q);
+
    // Get rid of any port buffers first
    if (state->encoder_pool)
    {
@@ -1004,6 +1018,8 @@ raspi_capture_start(RASPIVID_CONFIG *config)
   state->camera_still_port   = state->camera_component->output[MMAL_CAMERA_CAPTURE_PORT];
   state->encoder_output_port = state->encoder_component->output[0];
 
+  state->encoded_buffer_q = mmal_queue_create();
+
   if (state->config.preview_parameters.wantPreview )
   {
      if (state->config.verbose)
@@ -1096,7 +1112,7 @@ raspi_capture_start(RASPIVID_CONFIG *config)
      // Only encode stuff if we have a filename and it opened
      if (state->output_file)
      {
-        int wait;
+        //int wait;
 
         if (state->config.verbose)
            fprintf(stderr, "Starting video capture\n");
@@ -1127,6 +1143,7 @@ raspi_capture_start(RASPIVID_CONFIG *config)
         // out of storage space)
         // Going to check every ABORT_INTERVAL milliseconds
 
+#if 0
         for (wait = 0; state->config.timeout == 0 || wait < state->config.timeout; wait+= ABORT_INTERVAL)
         {
            vcos_sleep(ABORT_INTERVAL);
@@ -1136,13 +1153,16 @@ raspi_capture_start(RASPIVID_CONFIG *config)
 
         if (state->config.verbose)
            fprintf(stderr, "Finished capture\n");
+#endif
      }
      else
      {
+#if 0
         if (state->config.timeout)
            vcos_sleep(state->config.timeout);
         else
            for (;;) vcos_sleep(ABORT_INTERVAL);
+#endif
      }
   }
 
