@@ -119,7 +119,7 @@ guint                 gst_rtsp_server_attach               (GstRTSPServer *serve
 /**
  * GstRTSPServerClientFilterFunc:
  * @server: a #GstRTSPServer object
- * @sess: a #GstRTSPClient in @server
+ * @client: a #GstRTSPClient in @server
  * @user_data: user data that has been given to gst_rtsp_server_client_filter()
  *
  * This function will be called by the gst_rtsp_server_client_filter(). An

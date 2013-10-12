@@ -176,7 +176,7 @@ gst_rtsp_auth_new (void)
 /**
  * gst_rtsp_auth_set_tls_certificate:
  * @auth: a #GstRTSPAuth
- * @cert: (allow none): a #GTlsCertificate
+ * @cert: (allow-none): a #GTlsCertificate
  *
  * Set the TLS certificate for the auth. Client connections will only
  * be accepted when TLS is negotiated.
@@ -233,7 +233,7 @@ gst_rtsp_auth_get_tls_certificate (GstRTSPAuth * auth)
 /**
  * gst_rtsp_auth_set_default_token:
  * @auth: a #GstRTSPAuth
- * @token: (allow none): a #GstRTSPToken
+ * @token: (allow-none): a #GstRTSPToken
  *
  * Set the default #GstRTSPToken to @token in @auth. The default token will
  * be used for unauthenticated users.

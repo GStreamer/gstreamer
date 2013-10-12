@@ -312,7 +312,7 @@ gst_rtsp_stream_get_index (GstRTSPStream * stream)
  *
  * Get the srcpad associated with @stream.
  *
- * Return: the srcpad. Unref after usage.
+ * Returns: (transfer full): the srcpad. Unref after usage.
  */
 GstPad *
 gst_rtsp_stream_get_srcpad (GstRTSPStream * stream)
@@ -328,7 +328,7 @@ gst_rtsp_stream_get_srcpad (GstRTSPStream * stream)
  *
  * Get the control string to identify this stream.
  *
- * Return: the control string. free after usage.
+ * Returns: (transfer full): the control string. free after usage.
  */
 gchar *
 gst_rtsp_stream_get_control (GstRTSPStream * stream)
@@ -1076,7 +1076,7 @@ gst_rtsp_stream_get_server_port (GstRTSPStream * stream,
  *
  * Get the RTP session of this stream.
  *
- * Returns: The RTP session of this stream. Unref after usage.
+ * Returns: (transfer full): The RTP session of this stream. Unref after usage.
  */
 GObject *
 gst_rtsp_stream_get_rtpsession (GstRTSPStream * stream)

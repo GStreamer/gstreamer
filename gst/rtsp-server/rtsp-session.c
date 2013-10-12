@@ -264,7 +264,7 @@ gst_rtsp_session_release_media (GstRTSPSession * sess,
  * gst_rtsp_session_get_media:
  * @sess: a #GstRTSPSession
  * @path: the path for the media
- * @matched: the amount of matched characters
+ * @matched: (out): the amount of matched characters
  *
  * Get the session media for @path. @matched will contain the number of matched
  * characters of @path.

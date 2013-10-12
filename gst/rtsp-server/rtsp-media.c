@@ -483,7 +483,7 @@ gst_rtsp_media_new (GstElement * element)
  *
  * Get the element that was used when constructing @media.
  *
- * Returns: a #GstElement. Unref after usage.
+ * Returns: (transfer full): a #GstElement. Unref after usage.
  */
 GstElement *
 gst_rtsp_media_get_element (GstRTSPMedia * media)
@@ -2000,7 +2000,7 @@ get_clock_unlocked (GstRTSPMedia * media)
  *
  * @media must be prepared before this method returns a valid clock object.
  *
- * Returns: the #GstClock used by @media. unref after usage.
+ * Returns: (transfer full): the #GstClock used by @media. unref after usage.
  */
 GstClock *
 gst_rtsp_media_get_clock (GstRTSPMedia * media)
@@ -2066,7 +2066,7 @@ not_prepared:
  * Get the #GstNetTimeProvider for the clock used by @media. The time provider
  * will listen on @address and @port for client time requests.
  *
- * Returns: the #GstNetTimeProvider of @media.
+ * Returns: (transfer full): the #GstNetTimeProvider of @media.
  */
 GstNetTimeProvider *
 gst_rtsp_media_get_time_provider (GstRTSPMedia * media, const gchar * address,
@@ -2131,7 +2131,8 @@ gst_rtsp_media_set_pipeline_state (GstRTSPMedia * media, GstState state)
  * gst_rtsp_media_set_state:
  * @media: a #GstRTSPMedia
  * @state: the target state of the media
- * @transports: a #GPtrArray of #GstRTSPStreamTransport pointers
+ * @transports: (element-type GstRtspServer.RTSPStreamTransport): a #GPtrArray
+ * of #GstRTSPStreamTransport pointers
  *
  * Set the state of @media to @state and for the transports in @transports.
  *

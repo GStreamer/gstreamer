@@ -82,12 +82,15 @@ GstRtspServer-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libgstrtspserver-@
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-rtsp-@GST_API_VERSION@` \
 		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-sdp-@GST_API_VERSION@` \
+		--add-include-path=`$(PKG_CONFIG) --variable=girdir gstreamer-net-@GST_API_VERSION@` \
 		--library=libgstrtspserver-@GST_API_VERSION@.la \
 		--include=Gst-@GST_API_VERSION@ \
 		--include=GstRtsp-@GST_API_VERSION@ \
+		--include=GstNet-@GST_API_VERSION@ \
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-rtsp-@GST_API_VERSION@ \
+		--pkg gstreamer-net-@GST_API_VERSION@ \
 		--pkg-export gstreamer-rtsp-server-@GST_API_VERSION@ \
 		--output $@ \
 		$(gir_headers) \
@@ -110,6 +113,7 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 	--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-@GST_API_VERSION@` \
 	--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-rtsp-@GST_API_VERSION@` \
 	--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-sdp-@GST_API_VERSION@` \
+	--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-net-@GST_API_VERSION@` \
 	$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 
 CLEANFILES += $(BUILT_GIRSOURCES) $(typelibs_DATA)

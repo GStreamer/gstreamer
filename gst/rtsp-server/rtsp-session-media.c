@@ -163,7 +163,7 @@ gst_rtsp_session_media_new (const gchar * path, GstRTSPMedia * media)
  * gst_rtsp_session_media_matches:
  * @media: a #GstRTSPSessionMedia
  * @path: a path
- * @matched: the amount of matched characters of @path
+ * @matched: (out): the amount of matched characters of @path
  *
  * Check if the path of @media matches @path. It @path matches, the amount of
  * matched characters is returned in @matched.
