@@ -226,6 +226,8 @@ gst_rpi_cam_src_init (GstRpiCamSrc *src)
   raspicapture_default_config(&src->capture_config);
 
   src->capture_config.verbose = 1;
+  /* do-timestamping by default for now. FIXME: Implement proper timestamping */
+  gst_base_src_set_do_timestamp(GST_BASE_SRC(src), TRUE);
 }
 
 static void
