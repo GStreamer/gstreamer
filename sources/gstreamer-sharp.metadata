@@ -145,5 +145,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace[@name='Gst.Base']" name="library">libgstbase-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Audio']" name="library">libgstaudio-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Video']" name="library">libgstvideo-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.PbUtils']" name="library">libgstpbutils-1.0-0.dll</attr>
 </metadata>
 
