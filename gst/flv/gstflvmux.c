@@ -26,8 +26,8 @@
  * <refsect2>
  * <title>Example launch line</title>
  * |[
- * gst-launch-1.0 -v filesrc location=/path/to/audio ! decodebin2 ! queue ! flvmux name=m ! filesink location=file.flv   filesrc location=/path/to/video ! decodebin2 ! queue ! m.
- * ]| This pipeline muxes an audio and video file into a single FLV file.
+ * gst-launch-1.0 -v flvmux name=mux ! filesink location=test.flv  audiotestsrc samplesperbuffer=44100 num-buffers=10 ! faac ! mux.  videotestsrc num-buffers=250 ! video/x-raw,framerate=25/1 ! x264enc ! mux.
+ * ]| This pipeline encodes a test audio and video stream and muxes both into an FLV file.
  * </refsect2>
  */
 
