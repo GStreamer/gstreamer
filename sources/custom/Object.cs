@@ -53,7 +53,7 @@ namespace Gst {
 					throw new PropertyNotFoundException ();
 		  } set {
 				if (PropertyExists (property)) {
-					using (GLib.Value v = new GLib.Value (this, property)) {
+					using (GLib.Value v = new GLib.Value ((GLib.GType)value.GetType ())) {
 						v.Val = value;
 						SetProperty (property, v);
 					}
