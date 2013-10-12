@@ -35,6 +35,7 @@
 static guint repeat = 0;
 static GESPipeline *pipeline = NULL;
 static gboolean seenerrors = FALSE;
+static gchar *save_path = NULL;
 static gchar **new_paths = NULL;
 static GMainLoop *mainloop;
 static GHashTable *tried_uris;
@@ -130,6 +131,41 @@ error_loading_asset_cb (GESProject * project, GError * error,
   g_main_loop_quit (mainloop);
 }
 
+static void
+project_loaded_cb (GESProject * project, GESTimeline * timeline)
+{
+  GST_INFO ("Project loaded, playing it");
+
+  if (save_path) {
+    gchar *uri;
+    GError *error = NULL;
+
+    if (g_strcmp0 (save_path, "+r") == 0) {
+      uri = ges_project_get_uri (project);
+    } else if (!(uri = ensure_uri (save_path))) {
+      g_error ("couldn't create uri for '%s", save_path);
+
+      seenerrors = TRUE;
+      g_main_loop_quit (mainloop);
+    }
+
+    g_print ("\nSaving project to %s\n", uri);
+    ges_project_save (project, timeline, uri, NULL, TRUE, &error);
+    g_free (uri);
+
+    g_assert_no_error (error);
+    if (error) {
+      seenerrors = TRUE;
+      g_main_loop_quit (mainloop);
+    }
+  }
+
+  if (gst_element_set_state (GST_ELEMENT (pipeline),
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+    g_error ("Failed to start the pipeline\n");
+  }
+}
+
 static gboolean
 check_time (char *time)
 {
@@ -171,6 +207,10 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
 
   g_signal_connect (project, "error-loading-asset",
       G_CALLBACK (error_loading_asset_cb), NULL);
+
+  if (proj_uri != NULL) {
+    g_signal_connect (project, "loaded", G_CALLBACK (project_loaded_cb), NULL);
+  }
 
   timeline = GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
 
@@ -303,7 +343,7 @@ build_failure:
 
 static GESPipeline *
 create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
-    gchar * save_path, int argc, char **argv)
+    int argc, char **argv)
 {
   gchar *uri = NULL;
   GESPipeline *pipeline = NULL;
@@ -328,7 +368,7 @@ create_pipeline (GESTimeline ** ret_timeline, gchar * load_path,
 
   /* save project if path is given. we do this now in case GES crashes or
    * hangs during playback. */
-  if (save_path) {
+  if (save_path && !load_path) {
     gchar *uri;
     if (!(uri = ensure_uri (save_path))) {
       g_error ("couldn't create uri for '%s", save_path);
@@ -465,6 +505,8 @@ _print_position (void)
         &duration);
     g_print ("<Position: %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "/>\r",
         GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
+    GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+        GST_DEBUG_GRAPH_SHOW_ALL, "ges-launch-position");
   }
 
   return TRUE;
@@ -598,6 +640,7 @@ _parse_encoding_profile (const gchar * format)
 int
 main (int argc, gchar ** argv)
 {
+  gint validate_res;
   GError *err = NULL;
   gchar *outputuri = NULL;
   const gchar *format = NULL;
@@ -607,7 +650,6 @@ main (int argc, gchar ** argv)
   static gboolean list_patterns = FALSE;
   static gdouble thumbinterval = 0;
   static gboolean verbose = FALSE;
-  gchar *save_path = NULL;
   gchar *load_path = NULL;
   GOptionEntry options[] = {
     {"thumbnail", 'm', 0.0, G_OPTION_ARG_DOUBLE, &thumbinterval,
@@ -680,6 +722,7 @@ main (int argc, gchar ** argv)
   /* Initialize the GStreamer Editing Services */
   if (!ges_init ()) {
     g_printerr ("Error initializing GES\n");
+
     exit (1);
   }
 
@@ -703,8 +746,7 @@ main (int argc, gchar ** argv)
   g_option_context_free (ctx);
 
   /* Create the pipeline */
-  pipeline =
-      create_pipeline (&timeline, load_path, save_path, argc - 1, argv + 1);
+  pipeline = create_pipeline (&timeline, load_path, argc - 1, argv + 1);
   if (!pipeline)
     exit (1);
 
@@ -763,9 +805,9 @@ main (int argc, gchar ** argv)
   gst_bus_add_signal_watch (bus);
   g_signal_connect (bus, "message", G_CALLBACK (bus_message_cb), mainloop);
 
-  if (gst_element_set_state (GST_ELEMENT (pipeline),
+  if (load_path == NULL && gst_element_set_state (GST_ELEMENT (pipeline),
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
-    g_error ("Failed to start the encoding\n");
+    g_error ("Failed to start the pipeline\n");
     return 1;
   }
   g_timeout_add (100, (GSourceFunc) _print_position, NULL);
