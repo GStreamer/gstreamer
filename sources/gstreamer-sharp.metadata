@@ -140,5 +140,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace[@name='Gst.Video']/object[@name='Constants']" name="name">ConstantsVideo</attr>
 	<attr path="/api/namespace[@name='Gst.Audio']/object[@name='Constants']" name="name">ConstantsAudio</attr>
 	<attr path="/api/namespace[@name='Gst.PbUtils']/object[@name='Constants']" name="name">ConstantsPbUtil</attr>
+
+	<!-- FIXME: Remove when https://bugzilla.gnome.org/show_bug.cgi?id=710001 is fixed -->
+	<attr path="/api/namespace[@name='Gst.Base']" name="library">libgstbase-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Audio']" name="library">libgstaudio-1.0-0.dll</attr>
 </metadata>
 
