@@ -207,7 +207,7 @@ _gst_parse_escape (const gchar * str)
  * @error will contain an error message if an erroneuos pipeline is specified.
  * An error does not mean that the pipeline could not be constructed.
  *
- * Returns: (transfer full): a new element on success and %NULL on failure.
+ * Returns: (transfer floating): a new element on success and %NULL on failure.
  */
 GstElement *
 gst_parse_launchv (const gchar ** argv, GError ** error)
@@ -227,7 +227,7 @@ gst_parse_launchv (const gchar ** argv, GError ** error)
  * @error will contain an error message if an erroneous pipeline is specified.
  * An error does not mean that the pipeline could not be constructed.
  *
- * Returns: (transfer full): a new element on success; on failure, either %NULL
+ * Returns: (transfer floating): a new element on success; on failure, either %NULL
  *   or a partially-constructed bin or element will be returned and @error will
  *   be set (unless you passed #GST_PARSE_FLAG_FATAL_ERRORS in @flags, then
  *   %NULL will always be returned on failure)
@@ -304,7 +304,7 @@ gst_parse_launch (const gchar * pipeline_description, GError ** error)
  * the @error is set. In this case there was a recoverable parsing error and you
  * can try to play the pipeline.
  *
- * Returns: (transfer full): a new element on success, %NULL on failure. If
+ * Returns: (transfer floating): a new element on success, %NULL on failure. If
  *    more than one toplevel element is specified by the @pipeline_description,
  *    all elements are put into a #GstPipeline, which then is returned.
  */

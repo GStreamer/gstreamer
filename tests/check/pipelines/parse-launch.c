@@ -48,6 +48,8 @@ setup_pipeline (const gchar * pipe_descr)
     g_error_free (error);
   }
   fail_unless (pipeline != NULL, "Failed to create pipeline %s", pipe_descr);
+  /* Newly returned object should be floating reffed */
+  fail_unless (g_object_is_floating (pipeline));
   return pipeline;
 }
 
