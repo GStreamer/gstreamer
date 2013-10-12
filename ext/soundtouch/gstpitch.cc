@@ -313,7 +313,7 @@ gst_pitch_setcaps (GstPitch * pitch, GstCaps * caps)
 
   priv = GST_PITCH_GET_PRIVATE (pitch);
 
-  if (gst_audio_info_from_caps (&pitch->info, caps))
+  if (!gst_audio_info_from_caps (&pitch->info, caps))
     return FALSE;
 
   GST_OBJECT_LOCK (pitch);
