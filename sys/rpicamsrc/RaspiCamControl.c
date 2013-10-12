@@ -187,6 +187,7 @@ static int update_cycle_parameter(int *option, int min, int max, int increment)
    else
       return 1;
 }
+#endif
 
 
 /**
@@ -203,6 +204,9 @@ static int update_cycle_parameter(int *option, int min, int max, int increment)
 
 int raspicamcontrol_cycle_test(MMAL_COMPONENT_T *camera)
 {
+   return 1;
+}
+#if 0
    static int parameter = 0;
    static int parameter_option = parameter_reset; // which value the parameter currently has
 

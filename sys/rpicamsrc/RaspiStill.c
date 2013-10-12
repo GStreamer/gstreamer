@@ -290,7 +290,7 @@ static void dump_status(RASPISTILL_STATE *state)
    }
 
    raspipreview_dump_parameters(&state->preview_parameters);
-   raspicamcontrol_dump_parameters(&state->camera_parameters);
+   //raspicamcontrol_dump_parameters(&state->camera_parameters);
 }
 
 /**

@@ -60,6 +60,9 @@ G_BEGIN_DECLS
  */
 typedef struct
 {
+   char *filename;
+   int verbose; /// !0 if want detailed run information
+   
    int timeout;                        /// Time taken before frame is grabbed and app then shuts down. Units are milliseconds
    int width;                          /// Requested width of image
    int height;                         /// requested height of image
@@ -73,9 +76,14 @@ typedef struct
    int profile;                        /// H264 profile to use for encoding
    RASPIPREVIEW_PARAMETERS preview_parameters;   /// Preview setup parameters
    RASPICAM_CAMERA_PARAMETERS camera_parameters; /// Camera setup parameters
-} RASPIVID_STATE;
+} RASPIVID_CONFIG;
 
-int raspi_capture_start();
+typedef struct RASPIVID_STATE_T RASPIVID_STATE;
+
+void raspicapture_init();
+void raspicapture_default_config(RASPIVID_CONFIG *config);
+RASPIVID_STATE *raspi_capture_start(RASPIVID_CONFIG *config);
+void raspi_capture_stop(RASPIVID_STATE *state);
 
 G_END_DECLS
 

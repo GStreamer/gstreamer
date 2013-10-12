@@ -109,7 +109,7 @@ static GstStaticPadTemplate video_src_template =
   GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (RAW_AND_JPEG_CAPS "; " H264_CAPS)
+    GST_STATIC_CAPS (/*RAW_AND_JPEG_CAPS "; "*/ H264_CAPS)
     );
 
 #define gst_rpi_cam_src_parent_class parent_class
@@ -120,6 +120,7 @@ static void gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
 static void gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 static gboolean gst_rpi_cam_src_start (GstBaseSrc *parent);
+static gboolean gst_rpi_cam_src_stop (GstBaseSrc *parent);
 static GstFlowReturn gst_rpi_cam_src_fill_buffer (GstPushSrc *parent, GstBuffer *buf);
 
 static void
@@ -148,7 +149,10 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
       gst_static_pad_template_get (&video_src_template));
 
   basesrc_class->start = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_start);
+  basesrc_class->stop = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_stop);
   pushsrc_class->fill = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_fill_buffer);
+
+  raspicapture_init();
 }
 
 static void
@@ -156,6 +160,11 @@ gst_rpi_cam_src_init (GstRpiCamSrc *src)
 {
   gst_base_src_set_format (GST_BASE_SRC (src), GST_FORMAT_TIME);
   gst_base_src_set_live (GST_BASE_SRC (src), TRUE); 
+  raspicapture_default_config(&src->capture_config);
+
+  src->capture_config.verbose = 1;
+  src->capture_config.filename = "test.out";
+
 }
 
 static void
@@ -185,21 +194,18 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
 }
 
 static gboolean
-rpicamsrc_init (GstPlugin * rpicamsrc)
-{
-  GST_DEBUG_CATEGORY_INIT (gst_rpi_cam_src_debug, "rpicamsrc",
-      0, "rpicamsrc debug");
-
-  return gst_element_register (rpicamsrc, "rpicamsrc", GST_RANK_NONE,
-      GST_TYPE_RPICAMSRC);
-}
-
-static gboolean
 gst_rpi_cam_src_start (GstBaseSrc *parent)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC(parent);
-  g_print ("In start()\n");
-  raspi_capture_start();
+  src->capture_state = raspi_capture_start(&src->capture_config);
+  return TRUE;
+}
+
+static gboolean
+gst_rpi_cam_src_stop (GstBaseSrc *parent)
+{
+  GstRpiCamSrc *src = GST_RPICAMSRC(parent);
+  raspi_capture_stop(src->capture_state);
   return TRUE;
 }
 
@@ -207,6 +213,16 @@ static GstFlowReturn
 gst_rpi_cam_src_fill_buffer (GstPushSrc *parent, GstBuffer *buf)
 {
   return GST_FLOW_ERROR;
+}
+
+static gboolean
+plugin_init (GstPlugin * rpicamsrc)
+{
+  GST_DEBUG_CATEGORY_INIT (gst_rpi_cam_src_debug, "rpicamsrc",
+      0, "rpicamsrc debug");
+
+  return gst_element_register (rpicamsrc, "rpicamsrc", GST_RANK_NONE,
+      GST_TYPE_RPICAMSRC);
 }
 
 #ifndef PACKAGE
@@ -218,7 +234,7 @@ GST_PLUGIN_DEFINE (
     GST_VERSION_MINOR,
     rpicamsrc,
     "Raspberry Pi Camera Source",
-    rpicamsrc_init,
+    plugin_init,
     VERSION,
     "LGPL",
     "GStreamer",

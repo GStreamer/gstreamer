@@ -46,6 +46,7 @@
 
 #include <gst/gst.h>
 #include <gst/base/gstpushsrc.h>
+#include "RaspiCapture.h"
 
 G_BEGIN_DECLS
 
@@ -67,6 +68,9 @@ struct _GstRpiCamSrc
   GstPushSrc parent;
 
   GstPad *video_srcpad;
+
+  RASPIVID_CONFIG capture_config;
+  RASPIVID_STATE *capture_state;
 };
 
 struct _GstRpiCamSrcClass 
