@@ -397,7 +397,7 @@ namespace Gst {
       return ret;
     }
 
-    [DllImport ("libgstsharpglue-1\t.0.6.so") ]
+    [DllImport ("libgstsharpglue-1.0.6.so") ]
     static extern IntPtr gstsharp_g_type_from_instance (IntPtr o);
 
     [DllImport ("libgobject-2.0-0.dll") ]
