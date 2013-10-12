@@ -31,6 +31,9 @@ namespace Gst {
 
 	public partial class Iterator : IEnumerable {
 
+		[DllImport ("libgobject-2.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
+		static extern IntPtr g_value_reset (ref GLib.Value val);
+
 		private class Enumerator : IEnumerator {
 			Iterator iterator;
 			Hashtable seen = new Hashtable ();
@@ -50,7 +53,10 @@ namespace Gst {
 					return false;
 
 				do {
-					GLib.Value value;
+					GLib.Value value = new GLib.Value ();
+					IntPtr ptr = g_value_reset (ref value);
+					value = (GLib.Value) Marshal.PtrToStructure (ptr, typeof(GLib.Value));
+
 					IteratorResult ret = iterator.Next (out value);
 
 					switch (ret) {
@@ -70,7 +76,7 @@ namespace Gst {
 						break;
 						default:
 					case IteratorResult.Error:
-						throw new Exception ("Error while iterating pads");
+						throw new Exception ("Error while iterating");
 					}
 				} while (retry);
 
