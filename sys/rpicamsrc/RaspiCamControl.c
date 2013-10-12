@@ -565,6 +565,7 @@ void raspicamcontrol_display_help()
    fprintf(stderr, "\n");
 }
 
+#endif
 /**
  * Dump contents of camera parameter structure to stdout for debugging/verbose logging
  *
@@ -572,19 +573,18 @@ void raspicamcontrol_display_help()
  */
 void raspicamcontrol_dump_parameters(const RASPICAM_CAMERA_PARAMETERS *params)
 {
-   const char *exp_mode = raspicli_unmap_xref(params->exposureMode, exposure_map, exposure_map_size);
-   const char *awb_mode = raspicli_unmap_xref(params->awbMode, awb_map, awb_map_size);
-   const char *image_effect = raspicli_unmap_xref(params->imageEffect, imagefx_map, imagefx_map_size);
-   const char *metering_mode = raspicli_unmap_xref(params->exposureMeterMode, metering_mode_map, metering_mode_map_size);
+   //const char *exp_mode = raspicli_unmap_xref(params->exposureMode, exposure_map, exposure_map_size);
+   //const char *awb_mode = raspicli_unmap_xref(params->awbMode, awb_map, awb_map_size);
+   //const char *image_effect = raspicli_unmap_xref(params->imageEffect, imagefx_map, imagefx_map_size);
+   //const char *metering_mode = raspicli_unmap_xref(params->exposureMeterMode, metering_mode_map, metering_mode_map_size);
 
    fprintf(stderr, "Sharpness %d, Contrast %d, Brightness %d\n", params->sharpness, params->contrast, params->brightness);
    fprintf(stderr, "Saturation %d, ISO %d, Video Stabilisation %s, Exposure compensation %d\n", params->saturation, params->ISO, params->videoStabilisation ? "Yes": "No", params->exposureCompensation);
-   fprintf(stderr, "Exposure Mode '%s', AWB Mode '%s', Image Effect '%s'\n", exp_mode, awb_mode, image_effect);
-   fprintf(stderr, "Metering Mode '%s', Colour Effect Enabled %s with U = %d, V = %d\n", metering_mode, params->colourEffects.enable ? "Yes":"No", params->colourEffects.u, params->colourEffects.v);
+   //fprintf(stderr, "Exposure Mode '%s', AWB Mode '%s', Image Effect '%s'\n", exp_mode, awb_mode, image_effect);
+   //fprintf(stderr, "Metering Mode '%s', Colour Effect Enabled %s with U = %d, V = %d\n", metering_mode, params->colourEffects.enable ? "Yes":"No", params->colourEffects.u, params->colourEffects.v);
    fprintf(stderr, "Rotation %d, hflip %s, vflip %s\n", params->rotation, params->hflip ? "Yes":"No",params->vflip ? "Yes":"No");
    fprintf(stderr, "ROI x %lf, y %f, w %f h %f\n", params->roi.x, params->roi.y, params->roi.w, params->roi.h);
 }
-#endif
 
 /**
  * Convert a MMAL status return value to a simple boolean of success

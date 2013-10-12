@@ -60,14 +60,14 @@ G_BEGIN_DECLS
  */
 typedef struct
 {
-   char *filename;
    int verbose; /// !0 if want detailed run information
    
    int timeout;                        /// Time taken before frame is grabbed and app then shuts down. Units are milliseconds
    int width;                          /// Requested width of image
    int height;                         /// requested height of image
    int bitrate;                        /// Requested bitrate
-   int framerate;                      /// Requested frame rate (fps)
+   int fps_n;                      /// Requested frame rate (fps) numerator
+   int fps_d;                      /// Requested frame rate (fps) denominator
    int intraperiod;                    /// Intra-refresh period (key frame rate)
    int demoMode;                       /// Run app in demo mode
    int demoInterval;                   /// Interval between camera settings changes
@@ -82,9 +82,11 @@ typedef struct RASPIVID_STATE_T RASPIVID_STATE;
 
 void raspicapture_init();
 void raspicapture_default_config(RASPIVID_CONFIG *config);
-RASPIVID_STATE *raspi_capture_start(RASPIVID_CONFIG *config);
+RASPIVID_STATE *raspi_capture_setup(RASPIVID_CONFIG *config);
+gboolean raspi_capture_start(RASPIVID_STATE *state);
 GstFlowReturn raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **buf);
 void raspi_capture_stop(RASPIVID_STATE *state);
+void raspi_capture_free(RASPIVID_STATE *state);
 
 G_END_DECLS
 

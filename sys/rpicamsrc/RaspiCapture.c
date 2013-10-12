@@ -110,7 +110,7 @@ typedef struct
 
 struct RASPIVID_STATE_T
 {
-   RASPIVID_CONFIG config;
+   RASPIVID_CONFIG *config;
 
    FILE *output_file;
 
@@ -119,6 +119,7 @@ struct RASPIVID_STATE_T
    MMAL_CONNECTION_T *preview_connection; /// Pointer to the connection from camera to preview
    MMAL_CONNECTION_T *encoder_connection; /// Pointer to the connection from camera to encoder
 
+   MMAL_PORT_T *camera_video_port;
    MMAL_PORT_T *camera_still_port;
    MMAL_PORT_T *encoder_output_port;
 
@@ -164,7 +165,6 @@ static COMMAND_LIST cmdline_commands[] =
    { CommandWidth,   "-width",      "w",  "Set image width <size>. Default 1920", 1 },
    { CommandHeight,  "-height",     "h",  "Set image height <size>. Default 1080", 1 },
    { CommandBitrate, "-bitrate",    "b",  "Set bitrate. Use bits per second (e.g. 10MBits/s would be -b 10000000)", 1 },
-   { CommandOutput,  "-output",     "o",  "Output filename <filename> (to write to stdout, use '-o -')", 1 },
    { CommandVerbose, "-verbose",    "v",  "Output verbose information during run", 0 },
    { CommandTimeout, "-timeout",    "t",  "Time (in ms) to capture for. If not specified, set to 5s. Zero to disable", 1 },
    { CommandDemoMode,"-demo",       "d",  "Run a demo mode (cycle through range of camera options, no capture)", 1},
@@ -192,7 +192,8 @@ void raspicapture_default_config(RASPIVID_CONFIG *config)
    config->width = 1920;       // Default to 1080p
    config->height = 1080;
    config->bitrate = 17000000; // This is a decent default bitrate for 1080p
-   config->framerate = VIDEO_FRAME_RATE_NUM;
+   config->fps_n = VIDEO_FRAME_RATE_NUM;
+   config->fps_d = VIDEO_FRAME_RATE_DEN;
    config->intraperiod = 0;    // Not set
    config->demoMode = 0;
    config->demoInterval = 250; // ms
@@ -220,12 +221,12 @@ static void dump_state(RASPIVID_STATE *state)
       return;
    }
 
-   fprintf(stderr, "Width %d, Height %d, filename %s\n", state->config.width, state->config.height, state->config.filename);
-   fprintf(stderr, "bitrate %d, framerate %d, time delay %d\n", state->config.bitrate, state->config.framerate, state->config.timeout);
-   //fprintf(stderr, "H264 Profile %s\n", raspicli_unmap_xref(state->config.profile, profile_map, profile_map_size));
+   fprintf(stderr, "Width %d, Height %d\n", state->config->width, state->config->height);
+   fprintf(stderr, "bitrate %d, framerate %d/%d, time delay %d\n", state->config->bitrate, state->config->fps_n, state->config->fps_d, state->config->timeout);
+   //fprintf(stderr, "H264 Profile %s\n", raspicli_unmap_xref(state->config->profile, profile_map, profile_map_size));
 
-   raspipreview_dump_parameters(&state->config.preview_parameters);
-   //raspicamcontrol_dump_parameters(&state->config.camera_parameters);
+   raspipreview_dump_parameters(&state->config->preview_parameters);
+   raspicamcontrol_dump_parameters(&state->config->camera_parameters);
 }
 
 #if 0
@@ -426,12 +427,6 @@ static int parse_cmdline(int argc, const char **argv, RASPIVID_STATE *state)
       return 1;
    }
 
-   // Always disable verbose if output going to stdout
-   if (state->filename && state->filename[0] == '-')
-   {
-      state->verbose = 0;
-   }
-
    return 0;
 }
 
@@ -531,7 +526,6 @@ raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp)
   buf = gst_buffer_new_allocate(NULL, buffer->length, NULL);
   if (buf) {
     gst_buffer_fill(buf, 0, buffer->data, buffer->length);
-    g_print("Buffer of size %u\n", (guint) buffer->length);
     ret = GST_FLOW_OK;
   }
 
@@ -569,9 +563,7 @@ raspi_capture_fill_buffer(RASPIVID_STATE *state, GstBuffer **bufp)
  */
 static MMAL_STATUS_T create_camera_component(RASPIVID_STATE *state)
 {
-   MMAL_COMPONENT_T *camera = 0;
-   MMAL_ES_FORMAT_T *format;
-   MMAL_PORT_T *preview_port = NULL, *video_port = NULL, *still_port = NULL;
+   MMAL_COMPONENT_T *camera = NULL;
    MMAL_STATUS_T status;
 
    /* Create the component */
@@ -590,9 +582,6 @@ static MMAL_STATUS_T create_camera_component(RASPIVID_STATE *state)
       goto error;
    }
 
-   preview_port = camera->output[MMAL_CAMERA_PREVIEW_PORT];
-   video_port = camera->output[MMAL_CAMERA_VIDEO_PORT];
-   still_port = camera->output[MMAL_CAMERA_CAPTURE_PORT];
 
    // Enable the camera, and tell it its control callback function
    status = mmal_port_enable(camera->control, camera_control_callback);
@@ -603,24 +592,48 @@ static MMAL_STATUS_T create_camera_component(RASPIVID_STATE *state)
       goto error;
    }
 
+   state->camera_component = camera;
+
+   return status;
+
+error:
+   if (camera)
+     mmal_component_destroy(camera);
+
+   return status;
+}
+
+MMAL_STATUS_T
+raspi_capture_set_format_and_start(RASPIVID_STATE *state)
+{
+   MMAL_COMPONENT_T *camera = NULL;
+   MMAL_STATUS_T status;
+   MMAL_ES_FORMAT_T *format;
+   MMAL_PORT_T *preview_port = NULL, *video_port = NULL, *still_port = NULL;
+
    //  set up the camera configuration
+
+   MMAL_PARAMETER_CAMERA_CONFIG_T cam_config =
    {
-      MMAL_PARAMETER_CAMERA_CONFIG_T cam_config =
-      {
-         { MMAL_PARAMETER_CAMERA_CONFIG, sizeof(cam_config) },
-         .max_stills_w = state->config.width,
-         .max_stills_h = state->config.height,
-         .stills_yuv422 = 0,
-         .one_shot_stills = 0,
-         .max_preview_video_w = state->config.width,
-         .max_preview_video_h = state->config.height,
-         .num_preview_video_frames = 3,
-         .stills_capture_circular_buffer_height = 0,
-         .fast_preview_resume = 0,
-         .use_stc_timestamp = MMAL_PARAM_TIMESTAMP_MODE_RESET_STC
-      };
-      mmal_port_parameter_set(camera->control, &cam_config.hdr);
-   }
+      { MMAL_PARAMETER_CAMERA_CONFIG, sizeof(cam_config) },
+      .max_stills_w = state->config->width,
+      .max_stills_h = state->config->height,
+      .stills_yuv422 = 0,
+      .one_shot_stills = 0,
+      .max_preview_video_w = state->config->width,
+      .max_preview_video_h = state->config->height,
+      .num_preview_video_frames = 3,
+      .stills_capture_circular_buffer_height = 0,
+      .fast_preview_resume = 0,
+      .use_stc_timestamp = MMAL_PARAM_TIMESTAMP_MODE_RESET_STC
+   };
+
+   camera = state->camera_component;
+   preview_port = camera->output[MMAL_CAMERA_PREVIEW_PORT];
+   video_port = camera->output[MMAL_CAMERA_VIDEO_PORT];
+   still_port = camera->output[MMAL_CAMERA_CAPTURE_PORT];
+
+   mmal_port_parameter_set(camera->control, &cam_config.hdr);
 
    // Now set up the port formats
 
@@ -633,14 +646,14 @@ static MMAL_STATUS_T create_camera_component(RASPIVID_STATE *state)
    format->encoding_variant = MMAL_ENCODING_I420;
 
    format->encoding = MMAL_ENCODING_OPAQUE;
-   format->es->video.width = state->config.width;
-   format->es->video.height = state->config.height;
+   format->es->video.width = state->config->width;
+   format->es->video.height = state->config->height;
    format->es->video.crop.x = 0;
    format->es->video.crop.y = 0;
-   format->es->video.crop.width = state->config.width;
-   format->es->video.crop.height = state->config.height;
-   format->es->video.frame_rate.num = state->config.framerate;
-   format->es->video.frame_rate.den = VIDEO_FRAME_RATE_DEN;
+   format->es->video.crop.width = state->config->width;
+   format->es->video.crop.height = state->config->height;
+   format->es->video.frame_rate.num = state->config->fps_n;
+   format->es->video.frame_rate.den = state->config->fps_d;
 
    status = mmal_port_format_commit(preview_port);
 
@@ -656,14 +669,14 @@ static MMAL_STATUS_T create_camera_component(RASPIVID_STATE *state)
    format->encoding_variant = MMAL_ENCODING_I420;
 
    format->encoding = MMAL_ENCODING_OPAQUE;
-   format->es->video.width = state->config.width;
-   format->es->video.height = state->config.height;
+   format->es->video.width = state->config->width;
+   format->es->video.height = state->config->height;
    format->es->video.crop.x = 0;
    format->es->video.crop.y = 0;
-   format->es->video.crop.width = state->config.width;
-   format->es->video.crop.height = state->config.height;
-   format->es->video.frame_rate.num = state->config.framerate;
-   format->es->video.frame_rate.den = VIDEO_FRAME_RATE_DEN;
+   format->es->video.crop.width = state->config->width;
+   format->es->video.crop.height = state->config->height;
+   format->es->video.frame_rate.num = state->config->fps_n;
+   format->es->video.frame_rate.den = state->config->fps_d;
 
    status = mmal_port_format_commit(video_port);
 
@@ -685,12 +698,12 @@ static MMAL_STATUS_T create_camera_component(RASPIVID_STATE *state)
    format->encoding = MMAL_ENCODING_OPAQUE;
    format->encoding_variant = MMAL_ENCODING_I420;
 
-   format->es->video.width = state->config.width;
-   format->es->video.height = state->config.height;
+   format->es->video.width = state->config->width;
+   format->es->video.height = state->config->height;
    format->es->video.crop.x = 0;
    format->es->video.crop.y = 0;
-   format->es->video.crop.width = state->config.width;
-   format->es->video.crop.height = state->config.height;
+   format->es->video.crop.width = state->config->width;
+   format->es->video.crop.height = state->config->height;
    format->es->video.frame_rate.num = 1;
    format->es->video.frame_rate.den = 1;
 
@@ -715,20 +728,12 @@ static MMAL_STATUS_T create_camera_component(RASPIVID_STATE *state)
       goto error;
    }
 
-   raspicamcontrol_set_all_parameters(camera, &state->config.camera_parameters);
+   raspicamcontrol_set_all_parameters(camera, &state->config->camera_parameters);
 
-   state->camera_component = camera;
-
-   if (state->config.verbose)
+   if (state->config->verbose)
       fprintf(stderr, "Camera component done\n");
 
-   return status;
-
 error:
-
-   if (camera)
-      mmal_component_destroy(camera);
-
    return status;
 }
 
@@ -786,7 +791,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
    // Only supporting H264 at the moment
    encoder_output->format->encoding = MMAL_ENCODING_H264;
 
-   encoder_output->format->bitrate = state->config.bitrate;
+   encoder_output->format->bitrate = state->config->bitrate;
 
    encoder_output->buffer_size = encoder_output->buffer_size_recommended;
 
@@ -823,9 +828,9 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
 
    }
 
-   if (state->config.intraperiod)
+   if (state->config->intraperiod)
    {
-      MMAL_PARAMETER_UINT32_T param = {{ MMAL_PARAMETER_INTRAPERIOD, sizeof(param)}, state->config.intraperiod};
+      MMAL_PARAMETER_UINT32_T param = {{ MMAL_PARAMETER_INTRAPERIOD, sizeof(param)}, state->config->intraperiod};
       status = mmal_port_parameter_set(encoder_output, &param.hdr);
       if (status != MMAL_SUCCESS)
       {
@@ -840,7 +845,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
       param.hdr.id = MMAL_PARAMETER_PROFILE;
       param.hdr.size = sizeof(param);
 
-      param.profile[0].profile = state->config.profile;
+      param.profile[0].profile = state->config->profile;
       param.profile[0].level = MMAL_VIDEO_LEVEL_H264_4; // This is the only value supported
 
       status = mmal_port_parameter_set(encoder_output, &param.hdr);
@@ -852,7 +857,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
    }
 
 
-   if (mmal_port_parameter_set_boolean(encoder_input, MMAL_PARAMETER_VIDEO_IMMUTABLE_INPUT, state->config.immutableInput) != MMAL_SUCCESS)
+   if (mmal_port_parameter_set_boolean(encoder_input, MMAL_PARAMETER_VIDEO_IMMUTABLE_INPUT, state->config->immutableInput) != MMAL_SUCCESS)
    {
       vcos_log_error("Unable to set immutable input flag");
       // Continue rather than abort..
@@ -877,7 +882,7 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
    state->encoder_pool = pool;
    state->encoder_component = encoder;
 
-   if (state->config.verbose)
+   if (state->config->verbose)
       fprintf(stderr, "Encoder component done\n");
 
    return status;
@@ -898,8 +903,10 @@ static MMAL_STATUS_T create_encoder_component(RASPIVID_STATE *state)
 static void destroy_encoder_component(RASPIVID_STATE *state)
 {
   /* Empty the buffer header q */
-  while (mmal_queue_length(state->encoded_buffer_q))
-    (void)(mmal_queue_get(state->encoded_buffer_q));
+  while (mmal_queue_length(state->encoded_buffer_q)) {
+    MMAL_BUFFER_HEADER_T *buffer = mmal_queue_get(state->encoded_buffer_q);
+    mmal_buffer_header_release(buffer);
+  }
   mmal_queue_destroy(state->encoded_buffer_q);
 
    // Get rid of any port buffers first
@@ -961,29 +968,22 @@ void raspicapture_init()
 }
 
 RASPIVID_STATE *
-raspi_capture_start(RASPIVID_CONFIG *config)
+raspi_capture_setup(RASPIVID_CONFIG *config)
 {
   // Our main data storage vessel..
   RASPIVID_STATE *state;
-  //int exit_code = EX_OK;
 
   MMAL_STATUS_T status = MMAL_SUCCESS;
-  MMAL_PORT_T *camera_preview_port = NULL;
-  MMAL_PORT_T *camera_video_port = NULL;
-  MMAL_PORT_T *preview_input_port = NULL;
-  MMAL_PORT_T *encoder_input_port = NULL;
 
   /* Default everything to zero */
   state = calloc(1, sizeof(RASPIVID_STATE));
 
   /* Apply passed in config */
-  state->config = *config;
+  state->config = config;
 
-  if (state->config.verbose)
-  {
-     dump_state(state);
-  }
-
+  /* So far, all we can do is create the camera component. Actual
+   * config and connection of encoders etc happens in _start()
+   */
   // OK, we have a nice set of parameters. Now set up our components
   // We have three components. Camera, Preview and encoder.
 
@@ -993,7 +993,7 @@ raspi_capture_start(RASPIVID_CONFIG *config)
      return NULL;
   }
 
-  if ((status = raspipreview_create(&state->config.preview_parameters)) != MMAL_SUCCESS)
+  if ((status = raspipreview_create(&state->config->preview_parameters)) != MMAL_SUCCESS)
   {
      vcos_log_error("%s: Failed to create preview component", __func__);
      destroy_camera_component(state);
@@ -1003,26 +1003,47 @@ raspi_capture_start(RASPIVID_CONFIG *config)
   if ((status = create_encoder_component(state)) != MMAL_SUCCESS)
   {
      vcos_log_error("%s: Failed to create encode component", __func__);
-     raspipreview_destroy(&state->config.preview_parameters);
+     raspipreview_destroy(&state->config->preview_parameters);
      destroy_camera_component(state);
      return NULL;
   }
 
-  if (state->config.verbose)
+  state->encoded_buffer_q = mmal_queue_create();
+
+  return state;
+}
+
+gboolean
+raspi_capture_start(RASPIVID_STATE *state)
+{
+  MMAL_STATUS_T status = MMAL_SUCCESS;
+  MMAL_PORT_T *camera_preview_port = NULL;
+  MMAL_PORT_T *preview_input_port = NULL;
+  MMAL_PORT_T *encoder_input_port = NULL;
+
+  if (state->config->verbose)
+  {
+     dump_state(state);
+  }
+
+  if ((status = raspi_capture_set_format_and_start(state)) != MMAL_SUCCESS) {
+     return FALSE;
+  }
+
+  if (state->config->verbose)
      fprintf(stderr, "Starting component connection stage\n");
 
   camera_preview_port = state->camera_component->output[MMAL_CAMERA_PREVIEW_PORT];
-  camera_video_port   = state->camera_component->output[MMAL_CAMERA_VIDEO_PORT];
-  preview_input_port  = state->config.preview_parameters.preview_component->input[0];
+  preview_input_port  = state->config->preview_parameters.preview_component->input[0];
   encoder_input_port  = state->encoder_component->input[0];
+
+  state->camera_video_port   = state->camera_component->output[MMAL_CAMERA_VIDEO_PORT];
   state->camera_still_port   = state->camera_component->output[MMAL_CAMERA_CAPTURE_PORT];
   state->encoder_output_port = state->encoder_component->output[0];
 
-  state->encoded_buffer_q = mmal_queue_create();
-
-  if (state->config.preview_parameters.wantPreview )
+  if (state->config->preview_parameters.wantPreview )
   {
-     if (state->config.verbose)
+     if (state->config->verbose)
      {
         fprintf(stderr, "Connecting camera preview port to preview input port\n");
         fprintf(stderr, "Starting video preview\n");
@@ -1032,46 +1053,22 @@ raspi_capture_start(RASPIVID_CONFIG *config)
      status = connect_ports(camera_preview_port, preview_input_port, &state->preview_connection);
      if (status != MMAL_SUCCESS)
      {
-        mmal_status_to_int(status);
         vcos_log_error("%s: Failed to connect camera to preview", __func__);
-        goto error;
+        return FALSE;
      }
   }
 
-  if (state->config.verbose)
+  if (state->config->verbose)
      fprintf(stderr, "Connecting camera stills port to encoder input port\n");
 
   // Now connect the camera to the encoder
-  status = connect_ports(camera_video_port, encoder_input_port, &state->encoder_connection);
-
+  status = connect_ports(state->camera_video_port, encoder_input_port, &state->encoder_connection);
   if (status != MMAL_SUCCESS)
   {
-     vcos_log_error("%s: Failed to connect camera video port to encoder input", __func__);
-     goto error;
-  }
-
-  if (state->config.filename)
-  {
-     if (state->config.filename[0] == '-')
-     {
-        state->output_file = stdout;
-
-        // Ensure we don't upset the output stream with diagnostics/info
-        state->config.verbose = 0;
-     }
-     else
-     {
-        if (state->config.verbose)
-           fprintf(stderr, "Opening output file \"%s\"\n", state->config.filename);
-
-        state->output_file = fopen(state->config.filename, "wb");
-     }
-
-     if (!state->output_file)
-     {
-        // Notify user, carry on but discarding encoded output buffers
-        vcos_log_error("%s: Error opening output file: %s\nNo output file will be generated\n", __func__, state->config.filename);
-     }
+    if (state->config->preview_parameters.wantPreview )
+      mmal_connection_destroy(state->preview_connection);
+    vcos_log_error("%s: Failed to connect camera video port to encoder input", __func__);
+    return FALSE;
   }
 
   // Set up our userdata - this is passed though to the callback where we need the information.
@@ -1080,93 +1077,75 @@ raspi_capture_start(RASPIVID_CONFIG *config)
 
   state->encoder_output_port->userdata = (struct MMAL_PORT_USERDATA_T *)&state->callback_data;
 
-  if (state->config.verbose)
+  if (state->config->verbose)
      fprintf(stderr, "Enabling encoder output port\n");
 
   // Enable the encoder output port and tell it its callback function
   status = mmal_port_enable(state->encoder_output_port, encoder_buffer_callback);
-
   if (status != MMAL_SUCCESS)
   {
      vcos_log_error("Failed to setup encoder output");
      goto error;
   }
 
-  if (state->config.demoMode)
+  if (state->config->demoMode)
   {
      // Run for the user specific time..
-     int num_iterations = state->config.timeout / state->config.demoInterval;
+     int num_iterations = state->config->timeout / state->config->demoInterval;
      int i;
 
-     if (state->config.verbose)
+     if (state->config->verbose)
         fprintf(stderr, "Running in demo mode\n");
 
-     for (i=0;state->config.timeout == 0 || i<num_iterations;i++)
+     for (i=0;state->config->timeout == 0 || i<num_iterations;i++)
      {
         raspicamcontrol_cycle_test(state->camera_component);
-        vcos_sleep(state->config.demoInterval);
+        vcos_sleep(state->config->demoInterval);
      }
   }
-  else
+
+  if (state->config->verbose)
+    fprintf(stderr, "Starting video capture\n");
+
+  if (mmal_port_parameter_set_boolean(state->camera_video_port, MMAL_PARAMETER_CAPTURE, 1) != MMAL_SUCCESS)
   {
-     // Only encode stuff if we have a filename and it opened
-     if (state->output_file)
+     goto error;
+  }
+
+  // Send all the buffers to the encoder output port
+  {
+     int num = mmal_queue_length(state->encoder_pool->queue);
+     int q;
+     for (q=0;q<num;q++)
      {
-        //int wait;
+        MMAL_BUFFER_HEADER_T *buffer = mmal_queue_get(state->encoder_pool->queue);
 
-        if (state->config.verbose)
-           fprintf(stderr, "Starting video capture\n");
+        if (!buffer)
+           vcos_log_error("Unable to get a required buffer %d from pool queue", q);
 
-        if (mmal_port_parameter_set_boolean(camera_video_port, MMAL_PARAMETER_CAPTURE, 1) != MMAL_SUCCESS)
-        {
-           goto error;
-        }
+        if (mmal_port_send_buffer(state->encoder_output_port, buffer)!= MMAL_SUCCESS)
+           vcos_log_error("Unable to send a buffer to encoder output port (%d)", q);
 
-        // Send all the buffers to the encoder output port
-        {
-           int num = mmal_queue_length(state->encoder_pool->queue);
-           int q;
-           for (q=0;q<num;q++)
-           {
-              MMAL_BUFFER_HEADER_T *buffer = mmal_queue_get(state->encoder_pool->queue);
-
-              if (!buffer)
-                 vcos_log_error("Unable to get a required buffer %d from pool queue", q);
-
-              if (mmal_port_send_buffer(state->encoder_output_port, buffer)!= MMAL_SUCCESS)
-                 vcos_log_error("Unable to send a buffer to encoder output port (%d)", q);
-
-           }
-        }
-
-        // Now wait until we need to stop. Whilst waiting we do need to check to see if we have aborted (for example
-        // out of storage space)
-        // Going to check every ABORT_INTERVAL milliseconds
-
-#if 0
-        for (wait = 0; state->config.timeout == 0 || wait < state->config.timeout; wait+= ABORT_INTERVAL)
-        {
-           vcos_sleep(ABORT_INTERVAL);
-           if (state->callback_data.abort)
-              break;
-        }
-
-        if (state->config.verbose)
-           fprintf(stderr, "Finished capture\n");
-#endif
-     }
-     else
-     {
-#if 0
-        if (state->config.timeout)
-           vcos_sleep(state->config.timeout);
-        else
-           for (;;) vcos_sleep(ABORT_INTERVAL);
-#endif
      }
   }
 
-  return state;
+  // Now wait until we need to stop. Whilst waiting we do need to check to see if we have aborted (for example
+  // out of storage space)
+  // Going to check every ABORT_INTERVAL milliseconds
+
+#if 0
+  for (wait = 0; state->config->timeout == 0 || wait < state->config->timeout; wait+= ABORT_INTERVAL)
+  {
+     vcos_sleep(ABORT_INTERVAL);
+     if (state->callback_data.abort)
+        break;
+  }
+
+  if (state->config->verbose)
+     fprintf(stderr, "Finished capture\n");
+#endif
+
+  return (status == MMAL_SUCCESS);
 
 error:
   raspi_capture_stop(state);
@@ -1176,23 +1155,27 @@ error:
     raspicamcontrol_check_configuration(128);
   }
 
-  return NULL;
+  return FALSE;
 }
 
 void
 raspi_capture_stop(RASPIVID_STATE *state)
 {
-  if (state->config.verbose)
+  if (state->config->verbose)
      fprintf(stderr, "Closing down\n");
+
+  if (state->config->preview_parameters.wantPreview )
+     mmal_connection_destroy(state->preview_connection);
+  mmal_connection_destroy(state->encoder_connection);
 
   // Disable all our ports that are not handled by connections
   check_disable_port(state->camera_still_port);
   check_disable_port(state->encoder_output_port);
+}
 
-  if (state->config.preview_parameters.wantPreview )
-     mmal_connection_destroy(state->preview_connection);
-  mmal_connection_destroy(state->encoder_connection);
-
+void
+raspi_capture_free(RASPIVID_STATE *state)
+{
   // Can now close our file. Note disabling ports may flush buffers which causes
   // problems if we have already closed the file!
   if (state->output_file && state->output_file != stdout)
@@ -1202,17 +1185,17 @@ raspi_capture_stop(RASPIVID_STATE *state)
   if (state->encoder_component)
      mmal_component_disable(state->encoder_component);
 
-  if (state->config.preview_parameters.preview_component)
-     mmal_component_disable(state->config.preview_parameters.preview_component);
+  if (state->config->preview_parameters.preview_component)
+     mmal_component_disable(state->config->preview_parameters.preview_component);
 
   if (state->camera_component)
      mmal_component_disable(state->camera_component);
 
   destroy_encoder_component(state);
-  raspipreview_destroy(&state->config.preview_parameters);
+  raspipreview_destroy(&state->config->preview_parameters);
   destroy_camera_component(state);
 
-  if (state->config.verbose)
+  if (state->config->verbose)
      fprintf(stderr, "Close down completed, all components disconnected, disabled and destroyed\n\n");
 
   free(state);

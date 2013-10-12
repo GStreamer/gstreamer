@@ -88,7 +88,40 @@ enum
 enum
 {
   PROP_0,
+  PROP_BITRATE,
+  PROP_SHARPNESS,
+  PROP_CONTRAST,
+  PROP_BRIGHTNESS,
+  PROP_SATURATION,
+  PROP_ISO,
+  PROP_VIDEO_STABILISATION,
+  PROP_EXPOSURE_COMPENSATION,
 };
+
+#define BITRATE_DEFAULT 17000000 /* 17Mbit/s default for 1080p */
+#define BITRATE_HIGHEST 25000000
+
+#define SHARPNESS_DEFAULT 0
+#define CONTRAST_DEFAULT 0
+#define BRIGHTNESS_DEFAULT 50
+#define SATURATION_DEFAULT 0
+#define ISO_DEFAULT 0
+#define VIDEO_STABILISATION_DEFAULT FALSE
+#define EXPOSURE_COMPENSATION_DEFAULT FALSE
+
+/*
+   params->exposureMode = MMAL_PARAM_EXPOSUREMODE_AUTO;
+   params->exposureMeterMode = MMAL_PARAM_EXPOSUREMETERINGMODE_AVERAGE;
+   params->awbMode = MMAL_PARAM_AWBMODE_AUTO;
+   params->imageEffect = MMAL_PARAM_IMAGEFX_NONE;
+   params->colourEffects.enable = 0;
+   params->colourEffects.u = 128;
+   params->colourEffects.v = 128;
+   params->rotation = 0;
+   params->hflip = params->vflip = 0;
+   params->roi.x = params->roi.y = 0.0;
+   params->roi.w = params->roi.h = 1.0;
+*/
 
 #define RAW_AND_JPEG_CAPS \
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ";" \
@@ -125,6 +158,7 @@ static gboolean gst_rpi_cam_src_decide_allocation (GstBaseSrc * src,
     GstQuery * query);
 static GstFlowReturn gst_rpi_cam_src_create (GstPushSrc *parent, GstBuffer **buf);
 static GstCaps *gst_rpi_cam_src_get_caps (GstBaseSrc * src, GstCaps * filter);
+static gboolean gst_rpi_cam_src_set_caps (GstBaseSrc * src, GstCaps *caps);
 static GstCaps *gst_rpi_cam_src_fixate (GstBaseSrc * basesrc, GstCaps * caps);
 
 static void
@@ -143,6 +177,27 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   gobject_class->set_property = gst_rpi_cam_src_set_property;
   gobject_class->get_property = gst_rpi_cam_src_get_property;
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BITRATE,
+      g_param_spec_int ("bitrate", "Bitrate", "Bitrate for encoding",
+          1, BITRATE_HIGHEST, BITRATE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SHARPNESS,
+      g_param_spec_int ("sharpness", "Sharpness", "Image capture sharpness",
+          -100, 100, SHARPNESS_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CONTRAST,
+      g_param_spec_int ("contrast", "Contrast", "Image capture contrast",
+          -100, 100, CONTRAST_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BRIGHTNESS,
+      g_param_spec_int ("brightness", "Brightness", "Image capture brightness",
+          0, 100, BRIGHTNESS_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SATURATION,
+      g_param_spec_int ("saturation", "Saturation", "Image capture saturation",
+          -100, 100, SATURATION_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   gst_element_class_set_static_metadata (gstelement_class,
       "Raspberry Pi Camera Source",
       "Source/Video",
@@ -156,6 +211,7 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   basesrc_class->stop = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_stop);
   basesrc_class->decide_allocation = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_decide_allocation);
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_get_caps);
+  basesrc_class->set_caps = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_set_caps);
   basesrc_class->fixate = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_fixate);
   pushsrc_class->create = GST_DEBUG_FUNCPTR(gst_rpi_cam_src_create);
 
@@ -170,8 +226,6 @@ gst_rpi_cam_src_init (GstRpiCamSrc *src)
   raspicapture_default_config(&src->capture_config);
 
   src->capture_config.verbose = 1;
-  src->capture_config.filename = "test.out";
-
 }
 
 static void
@@ -181,6 +235,21 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
   GstRpiCamSrc *src = GST_RPICAMSRC (object);
 
   switch (prop_id) {
+    case PROP_BITRATE:
+      src->capture_config.bitrate = g_value_get_int(value);
+      break;
+    case PROP_SHARPNESS:
+      src->capture_config.camera_parameters.sharpness = g_value_get_int(value);
+      break;
+    case PROP_CONTRAST:
+      src->capture_config.camera_parameters.contrast = g_value_get_int(value);
+      break;
+    case PROP_BRIGHTNESS:
+      src->capture_config.camera_parameters.brightness = g_value_get_int(value);
+      break;
+    case PROP_SATURATION:
+      src->capture_config.camera_parameters.saturation = g_value_get_int(value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -194,6 +263,21 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
   GstRpiCamSrc *src = GST_RPICAMSRC (object);
 
   switch (prop_id) {
+    case PROP_BITRATE:
+      g_value_set_int(value, src->capture_config.bitrate);
+      break;
+    case PROP_SHARPNESS:
+      g_value_set_int(value, src->capture_config.camera_parameters.sharpness);
+      break;
+    case PROP_CONTRAST:
+      g_value_set_int(value, src->capture_config.camera_parameters.contrast);
+      break;
+    case PROP_BRIGHTNESS:
+      g_value_set_int(value, src->capture_config.camera_parameters.brightness);
+      break;
+    case PROP_SATURATION:
+      g_value_set_int(value, src->capture_config.camera_parameters.saturation);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -205,7 +289,10 @@ gst_rpi_cam_src_start (GstBaseSrc *parent)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC(parent);
   g_print ("In src_start()\n");
-  src->capture_state = raspi_capture_start(&src->capture_config);
+  src->capture_state = raspi_capture_setup(&src->capture_config);
+  if (src->capture_state == NULL)
+    return FALSE;
+
   return TRUE;
 }
 
@@ -213,17 +300,52 @@ static gboolean
 gst_rpi_cam_src_stop (GstBaseSrc *parent)
 {
   GstRpiCamSrc *src = GST_RPICAMSRC(parent);
-  raspi_capture_stop(src->capture_state);
+  if (src->started)
+    raspi_capture_stop(src->capture_state);
+  raspi_capture_free(src->capture_state);
+  src->capture_state = NULL;
   return TRUE;
 }
 
 static GstCaps *
-gst_rpi_cam_src_get_caps (GstBaseSrc * src, GstCaps * filter)
+gst_rpi_cam_src_get_caps (GstBaseSrc *bsrc, GstCaps * filter)
 {
-  g_print ("In get_caps\n");
-  //if (src->state == NULL)
-    return gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (src));
-  /* Retrieve limiting parameters from the camera module, max width/height fps-range */
+  GstRpiCamSrc *src = GST_RPICAMSRC(bsrc);
+  GstCaps *caps;
+  
+  caps = gst_pad_get_pad_template_caps (GST_BASE_SRC_PAD (bsrc));
+  if (src->capture_state == NULL)
+    goto done;
+
+  /* FIXME: Retrieve limiting parameters from the camera module, max width/height fps-range */
+  caps = gst_caps_make_writable(caps);
+  gst_caps_set_simple (caps,
+      "width", GST_TYPE_INT_RANGE, 1, 1920,
+      "height", GST_TYPE_INT_RANGE, 1, 1080,
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 60, 1,
+      NULL);
+
+done:
+  GST_DEBUG_OBJECT(src, "get_caps returning %" GST_PTR_FORMAT, caps);
+  return caps;
+}
+
+static gboolean
+gst_rpi_cam_src_set_caps (GstBaseSrc *bsrc, GstCaps *caps)
+{
+  GstRpiCamSrc *src = GST_RPICAMSRC(bsrc);
+  GstVideoInfo info;
+
+  GST_DEBUG_OBJECT (src, "In set_caps %" GST_PTR_FORMAT, caps);
+  if (!gst_video_info_from_caps (&info, caps))
+    return FALSE;
+    
+  src->capture_config.width = info.width;
+  src->capture_config.height = info.height;
+  src->capture_config.fps_n = info.fps_n;
+  src->capture_config.fps_d = info.fps_d;
+  
+  return TRUE;
 }
 
 static gboolean gst_rpi_cam_src_decide_allocation (GstBaseSrc *bsrc,
@@ -245,11 +367,10 @@ static GstCaps *gst_rpi_cam_src_fixate (GstBaseSrc * basesrc, GstCaps * caps)
   for (i = 0; i < gst_caps_get_size (caps); ++i) {
     structure = gst_caps_get_structure (caps, i);
 
-    /* Fixate to the camera's 1920x1080 resolution if possible */
+    /* Fixate to 1920x1080 resolution if possible */
     gst_structure_fixate_field_nearest_int (structure, "width", 1920);
     gst_structure_fixate_field_nearest_int (structure, "height", 1080);
-    gst_structure_fixate_field_nearest_fraction (structure, "framerate",
-        G_MAXINT, 1);
+    gst_structure_fixate_field_nearest_fraction (structure, "framerate", 30, 1);
     gst_structure_fixate_field (structure, "format");
   }
 
@@ -266,10 +387,16 @@ gst_rpi_cam_src_create (GstPushSrc *parent, GstBuffer **buf)
   GstRpiCamSrc *src = GST_RPICAMSRC(parent);
   GstFlowReturn ret;
 
+  if (!src->started) {
+    if (!raspi_capture_start(src->capture_state))
+      return GST_FLOW_ERROR;
+    src->started = TRUE;
+  }
+
   /* FIXME: Use custom allocator */
   ret = raspi_capture_fill_buffer(src->capture_state, buf);
   if (*buf)
-    g_print ("Made buffer of size %" G_GSIZE_FORMAT "\n", gst_buffer_get_size(*buf));
+    GST_LOG_OBJECT(src, "Made buffer of size %" G_GSIZE_FORMAT "\n", gst_buffer_get_size(*buf));
 
   return ret;
 }
