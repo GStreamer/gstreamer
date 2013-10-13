@@ -261,8 +261,14 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
           "White Balance mode", GST_RPI_CAM_TYPE_RPI_CAM_SRC_AWB_MODE,
           GST_RPI_CAM_SRC_AWB_MODE_AUTO,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_IMAGE_EFFECT,
+      g_param_spec_enum ("image-effect", "Image effect",
+          "Visual FX to apply to the image",
+          GST_RPI_CAM_TYPE_RPI_CAM_SRC_IMAGE_EFFECT,
+          GST_RPI_CAM_SRC_IMAGEFX_NONE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #if 0
-  PROP_IMAGE_EFFECT, PROP_IMAGE_EFFECT_PARAMS, PROP_COLOUR_EFFECTS,
+  PROP_IMAGE_EFFECT_PARAMS, PROP_COLOUR_EFFECTS,
 #endif
       g_object_class_install_property (gobject_class, PROP_ROTATION,
       g_param_spec_int ("rotation", "Rotation",
@@ -387,6 +393,9 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
     case PROP_AWB_MODE:
       src->capture_config.camera_parameters.awbMode = g_value_get_enum (value);
       break;
+    case PROP_IMAGE_EFFECT:
+      src->capture_config.camera_parameters.imageEffect = g_value_get_enum (value);
+      break;
     case PROP_HFLIP:
       src->capture_config.camera_parameters.hflip = g_value_get_boolean (value);
       break;
@@ -471,6 +480,9 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_AWB_MODE:
       g_value_set_enum (value, src->capture_config.camera_parameters.awbMode);
+      break;
+    case PROP_IMAGE_EFFECT:
+      g_value_set_enum (value, src->capture_config.camera_parameters.imageEffect);
       break;
     case PROP_HFLIP:
       g_value_set_boolean (value,
