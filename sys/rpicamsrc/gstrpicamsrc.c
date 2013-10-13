@@ -62,6 +62,8 @@
 #include <gst/video/video.h>
 
 #include "gstrpicamsrc.h"
+#include "gstrpicam_types.h"
+#include "gstrpicam-enum-types.h"
 #include "RaspiCapture.h"
 
 #include "bcm_host.h"
@@ -89,6 +91,10 @@ enum
 {
   PROP_0,
   PROP_BITRATE,
+  PROP_PREVIEW,
+  PROP_PREVIEW_ENCODED,
+  PROP_PREVIEW_OPACITY,
+  PROP_FULLSCREEN,
   PROP_SHARPNESS,
   PROP_CONTRAST,
   PROP_BRIGHTNESS,
@@ -96,6 +102,19 @@ enum
   PROP_ISO,
   PROP_VIDEO_STABILISATION,
   PROP_EXPOSURE_COMPENSATION,
+  PROP_EXPOSURE_MODE,
+  PROP_EXPOSURE_METERING_MODE,
+  PROP_AWB_MODE,
+  PROP_IMAGE_EFFECT,
+  PROP_IMAGE_EFFECT_PARAMS,
+  PROP_COLOUR_EFFECTS,
+  PROP_ROTATION,
+  PROP_HFLIP,
+  PROP_VFLIP,
+  PROP_ROI_X,
+  PROP_ROI_Y,
+  PROP_ROI_W,
+  PROP_ROI_H,
 };
 
 #define BITRATE_DEFAULT 17000000 /* 17Mbit/s default for 1080p */
@@ -107,7 +126,10 @@ enum
 #define SATURATION_DEFAULT 0
 #define ISO_DEFAULT 0
 #define VIDEO_STABILISATION_DEFAULT FALSE
-#define EXPOSURE_COMPENSATION_DEFAULT FALSE
+#define EXPOSURE_COMPENSATION_DEFAULT 0
+
+#define EXPOSURE_MODE_DEFAULT GST_RPI_CAM_SRC_EXPOSURE_MODE_AUTO
+#define EXPOSURE_METERING_MODE_DEFAULT GST_RPI_CAM_SRC_EXPOSURE_METERING_MODE_AVERAGE
 
 /*
    params->exposureMode = MMAL_PARAM_EXPOSUREMODE_AUTO;
@@ -177,26 +199,96 @@ gst_rpi_cam_src_class_init (GstRpiCamSrcClass * klass)
   gobject_class->set_property = gst_rpi_cam_src_set_property;
   gobject_class->get_property = gst_rpi_cam_src_get_property;
 
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BITRATE,
+  g_object_class_install_property (gobject_class, PROP_BITRATE,
       g_param_spec_int ("bitrate", "Bitrate", "Bitrate for encoding",
           1, BITRATE_HIGHEST, BITRATE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PREVIEW,
+      g_param_spec_boolean ("preview",
+          "Preview Window", "Display preview window overlay",
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_FULLSCREEN,
+      g_param_spec_boolean ("fullscreen",
+          "Fullscreen Preview", "Display preview window full screen",
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PREVIEW_ENCODED,
+      g_param_spec_boolean ("preview-encoded",
+          "Preview Encoded", "Display encoder output in the preview",
+          TRUE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_PREVIEW_OPACITY,
+      g_param_spec_int ("preview-opacity", "Preview Opacity", "Opacity to use for the preview window",
+          0, 255, 255,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SHARPNESS,
       g_param_spec_int ("sharpness", "Sharpness", "Image capture sharpness",
           -100, 100, SHARPNESS_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CONTRAST,
+  g_object_class_install_property (gobject_class, PROP_CONTRAST,
       g_param_spec_int ("contrast", "Contrast", "Image capture contrast",
           -100, 100, CONTRAST_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_BRIGHTNESS,
+  g_object_class_install_property (gobject_class, PROP_BRIGHTNESS,
       g_param_spec_int ("brightness", "Brightness", "Image capture brightness",
           0, 100, BRIGHTNESS_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SATURATION,
+  g_object_class_install_property (gobject_class, PROP_SATURATION,
       g_param_spec_int ("saturation", "Saturation", "Image capture saturation",
           -100, 100, SATURATION_DEFAULT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ISO,
+      g_param_spec_int ("iso", "ISO", "ISO value to use (0 = Auto)",
+          0, 3200, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_VIDEO_STABILISATION,
+      g_param_spec_boolean ("video-stabilisation",
+          "Video Stabilisation", "Enable or disable video stabilisation",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_EXPOSURE_COMPENSATION,
+      g_param_spec_int ("exposure-compensation", "EV compensation", "Exposure Value compensation",
+          -10, 10, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_EXPOSURE_MODE,
+      g_param_spec_enum ("exposure-mode", "Exposure Mode",
+          "Camera exposure mode to use",
+          GST_RPI_CAM_TYPE_RPI_CAM_SRC_EXPOSURE_MODE, EXPOSURE_MODE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_EXPOSURE_METERING_MODE,
+      g_param_spec_enum ("metering-mode", "Exposure Metering Mode",
+          "Camera exposure metering mode to use",
+          GST_RPI_CAM_TYPE_RPI_CAM_SRC_EXPOSURE_METERING_MODE, EXPOSURE_METERING_MODE_DEFAULT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_AWB_MODE,
+      g_param_spec_enum ("awb-mode", "Automatic White Balance Mode",
+          "White Balance mode",
+          GST_RPI_CAM_TYPE_RPI_CAM_SRC_AWB_MODE, GST_RPI_CAM_SRC_AWB_MODE_AUTO,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#if 0
+  PROP_IMAGE_EFFECT,
+  PROP_IMAGE_EFFECT_PARAMS,
+  PROP_COLOUR_EFFECTS,
+#endif
+  g_object_class_install_property (gobject_class, PROP_ROTATION,
+      g_param_spec_int ("rotation", "Rotation", "Rotate captured image (0, 90, 180, 270 degrees)",
+          0, 270, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_HFLIP,
+      g_param_spec_boolean ("hflip",
+          "Horizontal Flip", "Flip capture horizontally",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_VFLIP,
+      g_param_spec_boolean ("vflip",
+          "Vertical Flip", "Flip capture vertically",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ROI_X,
+      g_param_spec_float ("roi-x", "ROI X", "Normalised region-of-interest X coord",
+          0, 1.0, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ROI_Y,
+      g_param_spec_float ("roi-y", "ROI Y", "Normalised region-of-interest Y coord",
+          0, 1.0, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ROI_W,
+      g_param_spec_float ("roi-w", "ROI W", "Normalised region-of-interest W coord",
+          0, 1.0, 1.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_ROI_H,
+      g_param_spec_float ("roi-h", "ROI H", "Normalised region-of-interest H coord",
+          0, 1.0, 1.0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class,
       "Raspberry Pi Camera Source",
@@ -240,6 +332,18 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
     case PROP_BITRATE:
       src->capture_config.bitrate = g_value_get_int(value);
       break;
+    case PROP_PREVIEW:
+      src->capture_config.preview_parameters.wantPreview = g_value_get_boolean(value);
+      break;
+    case PROP_PREVIEW_ENCODED:
+      src->capture_config.immutableInput = g_value_get_boolean(value);
+      break;
+    case PROP_FULLSCREEN:
+      src->capture_config.preview_parameters.wantFullScreenPreview = g_value_get_boolean(value);
+      break;
+    case PROP_PREVIEW_OPACITY:
+      src->capture_config.preview_parameters.opacity = g_value_get_int(value);
+      break;
     case PROP_SHARPNESS:
       src->capture_config.camera_parameters.sharpness = g_value_get_int(value);
       break;
@@ -251,6 +355,45 @@ gst_rpi_cam_src_set_property (GObject * object, guint prop_id,
       break;
     case PROP_SATURATION:
       src->capture_config.camera_parameters.saturation = g_value_get_int(value);
+      break;
+    case PROP_ISO:
+      src->capture_config.camera_parameters.ISO = g_value_get_int(value);
+      break;
+    case PROP_VIDEO_STABILISATION:
+      src->capture_config.camera_parameters.videoStabilisation = g_value_get_boolean(value);
+      break;
+    case PROP_EXPOSURE_COMPENSATION:
+      src->capture_config.camera_parameters.exposureCompensation = g_value_get_int(value);
+      break;
+    case PROP_EXPOSURE_MODE:
+      src->capture_config.camera_parameters.exposureMode = g_value_get_enum(value);
+      break;
+    case PROP_EXPOSURE_METERING_MODE:
+      src->capture_config.camera_parameters.exposureMeterMode = g_value_get_enum(value);
+      break;
+    case PROP_ROTATION:
+      src->capture_config.camera_parameters.rotation = g_value_get_int(value);
+      break;
+    case PROP_AWB_MODE:
+      src->capture_config.camera_parameters.awbMode = g_value_get_enum(value);
+      break;
+    case PROP_HFLIP:
+      src->capture_config.camera_parameters.hflip = g_value_get_boolean(value);
+      break;
+    case PROP_VFLIP:
+      src->capture_config.camera_parameters.vflip = g_value_get_boolean(value);
+      break;
+    case PROP_ROI_X:
+      src->capture_config.camera_parameters.roi.x = g_value_get_float(value);
+      break;
+    case PROP_ROI_Y:
+      src->capture_config.camera_parameters.roi.y = g_value_get_float(value);
+      break;
+    case PROP_ROI_W:
+      src->capture_config.camera_parameters.roi.w = g_value_get_float(value);
+      break;
+    case PROP_ROI_H:
+      src->capture_config.camera_parameters.roi.h = g_value_get_float(value);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -268,6 +411,18 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
     case PROP_BITRATE:
       g_value_set_int(value, src->capture_config.bitrate);
       break;
+    case PROP_PREVIEW:
+      g_value_set_boolean(value, src->capture_config.preview_parameters.wantPreview);
+      break;
+    case PROP_PREVIEW_ENCODED:
+      g_value_set_boolean(value, src->capture_config.immutableInput);
+      break;
+    case PROP_FULLSCREEN:
+      g_value_set_boolean(value, src->capture_config.preview_parameters.wantFullScreenPreview);
+      break;
+    case PROP_PREVIEW_OPACITY:
+      g_value_set_int(value, src->capture_config.preview_parameters.opacity);
+      break;
     case PROP_SHARPNESS:
       g_value_set_int(value, src->capture_config.camera_parameters.sharpness);
       break;
@@ -279,6 +434,45 @@ gst_rpi_cam_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_SATURATION:
       g_value_set_int(value, src->capture_config.camera_parameters.saturation);
+      break;
+    case PROP_ISO:
+      g_value_set_int(value, src->capture_config.camera_parameters.ISO);
+      break;
+    case PROP_VIDEO_STABILISATION:
+      g_value_set_boolean(value, !!(src->capture_config.camera_parameters.videoStabilisation));
+      break;
+    case PROP_EXPOSURE_COMPENSATION:
+      g_value_set_int(value, src->capture_config.camera_parameters.exposureCompensation);
+      break;
+    case PROP_EXPOSURE_MODE:
+      g_value_set_enum(value, src->capture_config.camera_parameters.exposureMode);
+      break;
+    case PROP_EXPOSURE_METERING_MODE:
+      g_value_set_enum(value, src->capture_config.camera_parameters.exposureMeterMode);
+      break;
+    case PROP_ROTATION:
+      g_value_set_int(value, src->capture_config.camera_parameters.rotation);
+      break;
+    case PROP_AWB_MODE:
+      g_value_set_enum(value, src->capture_config.camera_parameters.awbMode);
+      break;
+    case PROP_HFLIP:
+      g_value_set_boolean(value, !!(src->capture_config.camera_parameters.hflip));
+      break;
+    case PROP_VFLIP:
+      g_value_set_boolean(value, !!(src->capture_config.camera_parameters.vflip));
+      break;
+    case PROP_ROI_X:
+      g_value_set_float(value, src->capture_config.camera_parameters.roi.x);
+      break;
+    case PROP_ROI_Y:
+      g_value_set_float(value, src->capture_config.camera_parameters.roi.y);
+      break;
+    case PROP_ROI_W:
+      g_value_set_float(value, src->capture_config.camera_parameters.roi.w);
+      break;
+    case PROP_ROI_H:
+      g_value_set_float(value, src->capture_config.camera_parameters.roi.h);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
