@@ -64,9 +64,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace/struct[@cname='GstClockEntry']/field[@cname='func']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstClockEntry']/field[@cname='destroy_data']" name="hidden">true</attr>
 	<attr path="/api/namespace/object[@cname='GstTask']/field[@cname='notify']" name="hidden">true</attr>
-	<!-- Element is not abstract but should not be instantiable from managed -->
+
+	<!-- Element,BaseSrc are not abstract but should not be instantiable from managed. FIXME: bug in gir metadata? -->
 	<remove-attr path="/api/namespace/object[@cname='GstElement']" name="abstract" />
 	<attr path="/api/namespace/object[@cname='GstElement']" name="defaultconstructoraccess" >protected</attr>
+	<remove-attr path="/api/namespace/object[@cname='GstBaseSrc']" name="abstract" />
+	<attr path="/api/namespace/object[@cname='GstBaseSrc']" name="defaultconstructoraccess" >protected</attr>
+
 	<!-- Add miniobject methods to all miniobject types -->
 	<copy-node path="/api/namespace/struct[@cname='GstMiniObject']//method">/api/namespace//boxed[field/@cname='mini_object']</copy-node>
 	<attr path="/api/namespace/struct[@cname='GstMiniObject']//method" name="hidden">true</attr>
