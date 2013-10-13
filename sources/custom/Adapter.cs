@@ -17,7 +17,7 @@ namespace Gst.Base	 {
 	using System;
 	using System.Runtime.InteropServices;
 
-	partial class Adapter 
+	public partial class Adapter 
 	{
 		[DllImport("libgstbase-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_adapter_copy(IntPtr raw, out IntPtr dest, int offset, int size);
