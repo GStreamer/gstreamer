@@ -842,6 +842,29 @@ gst_rtsp_server_create_socket (GstRTSPServer * server,
     }
 
     if (g_socket_bind (socket, sockaddr, TRUE, bind_error ? NULL : &bind_error)) {
+      /* ask what port the socket has been bound to */
+      if (port == 0 || !strcmp (priv->service, "0")) {
+        GError *addr_error = NULL;
+
+        g_object_unref (sockaddr);
+        sockaddr = g_socket_get_local_address (socket, &addr_error);
+
+        if (addr_error != NULL) {
+          GST_DEBUG_OBJECT (server,
+              "failed to get the local address of a bound socket %s",
+              addr_error->message);
+          g_clear_error (&addr_error);
+          break;
+        }
+        port = g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (sockaddr));
+
+        if (port != 0) {
+          g_free (priv->service);
+          priv->service = g_strdup_printf ("%d", port);
+        } else {
+          GST_DEBUG_OBJECT (server, "failed to get the port of a bound socket");
+        }
+      }
       g_object_unref (sockaddr);
       break;
     }

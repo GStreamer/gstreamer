@@ -61,38 +61,6 @@ iterate (void)
   }
 }
 
-/* returns an unused port that can be used by the test */
-static int
-get_unused_port (gint type)
-{
-  int sock;
-  struct sockaddr_in addr;
-  socklen_t addr_len;
-  gint port;
-
-  /* create socket */
-  fail_unless ((sock = socket (AF_INET, type, 0)) > 0);
-
-  /* pass port 0 to bind, which will bind to any free port */
-  memset (&addr, 0, sizeof addr);
-  addr.sin_family = AF_INET;
-  addr.sin_addr.s_addr = INADDR_ANY;
-  addr.sin_port = htons (0);
-  fail_unless (bind (sock, (struct sockaddr *) &addr, sizeof addr) == 0);
-
-  /* ask what port was bound using getsockname */
-  addr_len = sizeof addr;
-  memset (&addr, 0, addr_len);
-  fail_unless (getsockname (sock, (struct sockaddr *) &addr, &addr_len) == 0);
-  port = ntohs (addr.sin_port);
-
-  /* close the socket so the port gets unbound again (and can be used by the
-   * test) */
-  close (sock);
-
-  return port;
-}
-
 static void
 get_client_ports_full (GstRTSPRange * range, GSocket ** rtp_socket,
     GSocket ** rtcp_socket)
@@ -197,15 +165,18 @@ start_server (void)
   gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT, factory);
   g_object_unref (mounts);
 
-  /* set port */
-  test_port = get_unused_port (SOCK_STREAM);
-  service = g_strdup_printf ("%d", test_port);
-  gst_rtsp_server_set_service (server, service);
-  g_free (service);
+  /* set port to any */
+  gst_rtsp_server_set_service (server, "0");
 
   /* attach to default main context */
   source_id = gst_rtsp_server_attach (server, NULL);
   fail_if (source_id == 0);
+
+  /* get port */
+  service = gst_rtsp_server_get_service (server);
+  test_port = atoi (service);
+  fail_unless (test_port != 0);
+  g_free (service);
 
   GST_DEBUG ("rtsp server listening on port %d", test_port);
 }
@@ -1252,15 +1223,18 @@ GST_START_TEST (test_play_specific_server_port)
   gst_rtsp_mount_points_add_factory (mounts, TEST_MOUNT_POINT, factory);
   g_object_unref (mounts);
 
-  /* set port */
-  test_port = get_unused_port (SOCK_STREAM);
-  service = g_strdup_printf ("%d", test_port);
-  gst_rtsp_server_set_service (server, service);
-  g_free (service);
+  /* set port to any */
+  gst_rtsp_server_set_service (server, "0");
 
   /* attach to default main context */
   source_id = gst_rtsp_server_attach (server, NULL);
   fail_if (source_id == 0);
+
+  /* get port */
+  service = gst_rtsp_server_get_service (server);
+  test_port = atoi (service);
+  fail_unless (test_port != 0);
+  g_free (service);
 
   GST_DEBUG ("rtsp server listening on port %d", test_port);
 
