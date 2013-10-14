@@ -18,9 +18,9 @@ Message types
 
 GST_MESSAGE_EOS:
 
-  Posted by sink elements. This message is posted to the application when
-  all the sinks in a pipeline posted an EOS message. When performing a seek,
-  the EOS state of the pipeline and sinks is undone.
+  Posted by sink elements. This message is posted when all the sinks in a
+  pipeline have posted an EOS message. When performing a flushing seek, the
+  EOS state of the pipeline (and hence, its sinks) is resetted.
 
 GST_MESSAGE_ERROR:
 
@@ -67,11 +67,11 @@ GST_MESSAGE_STEP_DONE:
 
 GST_MESSAGE_CLOCK_PROVIDE:
 
-  An element notifies it capability of providing a clock for the pipeline.
+  An element notifies its capability of providing a clock for the pipeline.
 
 GST_MESSAGE_CLOCK_LOST:
 
-  The current clock as selected by the pipeline became unusable. The pipeline 
+  The current clock, as selected by the pipeline, became unusable. The pipeline 
   will select a new clock on the next PLAYING state change.
 
 GST_MESSAGE_NEW_CLOCK:
@@ -80,16 +80,15 @@ GST_MESSAGE_NEW_CLOCK:
 
 GST_MESSAGE_STRUCTURE_CHANGE:
 
-  The pipeline changed of structure, This means elements were added or removed or
+  The pipeline changed its structure, This means elements were added or removed or
   pads were linked or unlinked. This messages is not yet used.
 
 GST_MESSAGE_STREAM_STATUS:
 
-  Posted by an element when it start/stop/pauses a streaming task. It
+  Posted by an element when it starts/stops/pauses a streaming task. It
   contains information about the reason why the stream state changed along
   with the thread id. The application can use this information to detect
-  failures in streaming threads. It can also be used to adjust streaming
-  thread priorities by the application.
+  failures in streaming threads and/or to adjust streaming thread priorities.
   
 GST_MESSAGE_APPLICATION:
 
@@ -98,12 +97,12 @@ GST_MESSAGE_APPLICATION:
 
 GST_MESSAGE_ELEMENT:
 
-  Element-specific message, see the specific element's documentation
+  Element-specific message. See the specific element's documentation
 
 GST_MESSAGE_SEGMENT_START:
 
   An element started playback of a new segment. This message is not forwarded
-  the application but is used internally to schedule SEGMENT_DONE messages.
+  to applications but is used internally to schedule SEGMENT_DONE messages.
 
 GST_MESSAGE_SEGMENT_DONE:
 
