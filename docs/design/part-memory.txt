@@ -17,7 +17,7 @@ Requirements
 Memory layout
 ~~~~~~~~~~~~~
 
- GstMemory manages a memory region. The accesible part of the managed region is
+ GstMemory manages a memory region. The accessible part of the managed region is
  defined by an offset relative to the start of the region and a size. This
  means that the managed region can be larger than what is visible to the user of
  GstMemory API.
@@ -129,8 +129,8 @@ Data Access
  After the data has been accessed in the object, the unmap call must be
  performed, which will unlock the memory again.
 
- It is allowed to recusively map multiple times with the same or narrower
- access modes. for each of the map calls, an corresponding unmap call needs to
+ It is allowed to recursively map multiple times with the same or narrower
+ access modes. For each of the map calls, a corresponding unmap call needs to
  be made. WRITE-only memory cannot be mapped in READ mode and READ-only memory
  cannot be mapped in WRITE mode.
  
@@ -144,7 +144,7 @@ Data Access
  When the final reference on a memory object is dropped, all outstanding
  mappings should have been unmapped.
 
- Resizing a GstMemory does not influence any current mappings an any way.
+ Resizing a GstMemory does not influence any current mappings in any way.
 
 Copy
 ~~~~
@@ -153,8 +153,8 @@ Copy
  allocators will implement a custom version of this function to make a copy of
  the same kind of memory as the original one.
 
- This is what the fallback version of the copy function will do, albeit slower
- than what as custom implementation could do.
+ This is what the fallback version of the copy function does, albeit slower
+ than what a custom implementation could do.
 
  The copy operation is only required to copy the visible range of the memory
  block.
