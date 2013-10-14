@@ -52,6 +52,7 @@ enum
   PROP_0,
   PROP_BIT_RATE,
   PROP_RTP_PAYLOAD_SIZE,
+  PROP_COMPLIANCE,
 };
 
 /* A number of function prototypes are given so we can refer to them later. */
@@ -151,6 +152,11 @@ gst_ffmpegaudenc_class_init (GstFFMpegAudEncClass * klass)
       g_param_spec_int ("bitrate", "Bit Rate",
           "Target Audio Bitrate", 0, G_MAXINT, DEFAULT_AUDIO_BITRATE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_COMPLIANCE,
+      g_param_spec_enum ("compliance", "Compliance",
+          "Adherence of the encoder to the specifications",
+          GST_TYPE_FFMPEG_COMPLIANCE, FFMPEG_DEFAULT_COMPLIANCE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gobject_class->finalize = gst_ffmpegaudenc_finalize;
 
@@ -173,6 +179,8 @@ gst_ffmpegaudenc_init (GstFFMpegAudEnc * ffmpegaudenc)
   /* ffmpeg objects */
   ffmpegaudenc->context = avcodec_alloc_context3 (klass->in_plugin);
   ffmpegaudenc->opened = FALSE;
+
+  ffmpegaudenc->compliance = FFMPEG_DEFAULT_COMPLIANCE;
 
   gst_audio_encoder_set_drainable (GST_AUDIO_ENCODER (ffmpegaudenc), TRUE);
 }
@@ -265,7 +273,7 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
   }
 
   /* if we set it in _getcaps we should set it also in _link */
-  ffmpegaudenc->context->strict_std_compliance = -1;
+  ffmpegaudenc->context->strict_std_compliance = ffmpegaudenc->compliance;
 
   /* user defined properties */
   if (ffmpegaudenc->bitrate > 0) {
@@ -641,6 +649,9 @@ gst_ffmpegaudenc_set_property (GObject * object,
     case PROP_RTP_PAYLOAD_SIZE:
       ffmpegaudenc->rtp_payload_size = g_value_get_int (value);
       break;
+    case PROP_COMPLIANCE:
+      ffmpegaudenc->compliance = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -664,6 +675,9 @@ gst_ffmpegaudenc_get_property (GObject * object,
       break;
     case PROP_RTP_PAYLOAD_SIZE:
       g_value_set_int (value, ffmpegaudenc->rtp_payload_size);
+      break;
+    case PROP_COMPLIANCE:
+      g_value_set_enum (value, ffmpegaudenc->compliance);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);

@@ -62,7 +62,8 @@ enum
   PROP_ME_METHOD,
   PROP_BUFSIZE,
   PROP_RTP_PAYLOAD_SIZE,
-  PROP_CFG_BASE
+  PROP_CFG_BASE,
+  PROP_COMPLIANCE,
 };
 
 #define GST_TYPE_ME_METHOD (gst_ffmpegvidenc_me_method_get_type())
@@ -206,8 +207,14 @@ gst_ffmpegvidenc_class_init (GstFFMpegVidEncClass * klass)
           "RTP Payload Size", "Target GOB length", 0, G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_COMPLIANCE,
+      g_param_spec_enum ("compliance", "Compliance",
+          "Adherence of the encoder to the specifications",
+          GST_TYPE_FFMPEG_COMPLIANCE, FFMPEG_DEFAULT_COMPLIANCE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   /* register additional properties, possibly dependent on the exact CODEC */
-  gst_ffmpeg_cfg_install_property (klass, PROP_CFG_BASE);
+  gst_ffmpeg_cfg_install_property (klass, PROP_COMPLIANCE);
 
   venc_class->start = gst_ffmpegvidenc_start;
   venc_class->stop = gst_ffmpegvidenc_stop;
@@ -239,6 +246,7 @@ gst_ffmpegvidenc_init (GstFFMpegVidEnc * ffmpegenc)
   ffmpegenc->buffer_size = 512 * 1024;
   ffmpegenc->gop_size = DEFAULT_VIDEO_GOP_SIZE;
   ffmpegenc->rtp_payload_size = 0;
+  ffmpegenc->compliance = FFMPEG_DEFAULT_COMPLIANCE;
 
   ffmpegenc->lmin = 2;
   ffmpegenc->lmax = 31;
@@ -301,7 +309,7 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   }
 
   /* if we set it in _getcaps we should set it also in _link */
-  ffmpegenc->context->strict_std_compliance = -1;
+  ffmpegenc->context->strict_std_compliance = ffmpegenc->compliance;
 
   /* user defined properties */
   ffmpegenc->context->bit_rate = ffmpegenc->bitrate;
@@ -761,6 +769,9 @@ gst_ffmpegvidenc_set_property (GObject * object,
     case PROP_RTP_PAYLOAD_SIZE:
       ffmpegenc->rtp_payload_size = g_value_get_int (value);
       break;
+    case PROP_COMPLIANCE:
+      ffmpegenc->compliance = g_value_get_enum (value);
+      break;
     default:
       if (!gst_ffmpeg_cfg_set_property (object, value, pspec))
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -793,6 +804,9 @@ gst_ffmpegvidenc_get_property (GObject * object,
       break;
     case PROP_RTP_PAYLOAD_SIZE:
       g_value_set_int (value, ffmpegenc->rtp_payload_size);
+      break;
+    case PROP_COMPLIANCE:
+      g_value_set_enum (value, ffmpegenc->compliance);
       break;
     default:
       if (!gst_ffmpeg_cfg_get_property (object, value, pspec))
