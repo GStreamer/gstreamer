@@ -1078,7 +1078,7 @@ default_create_client (GstRTSPServer * server)
 /**
  * gst_rtsp_server_transfer_connection:
  * @server: a #GstRTSPServer
- * @socket: a network socket
+ * @socket: (transfer full): a network socket
  * @ip: the IP address of the remote client
  * @port: the port used by the other end
  * @initial_buffer: any initial data that was already read from the socket
@@ -1108,6 +1108,7 @@ gst_rtsp_server_transfer_connection (GstRTSPServer * server, GSocket * socket,
 
   GST_RTSP_CHECK (gst_rtsp_connection_create_from_socket (socket, ip, port,
           initial_buffer, &conn), no_connection);
+  g_object_unref (socket);
 
   /* set connection on the client now */
   gst_rtsp_client_set_connection (client, conn);
@@ -1121,6 +1122,7 @@ gst_rtsp_server_transfer_connection (GstRTSPServer * server, GSocket * socket,
 client_failed:
   {
     GST_ERROR_OBJECT (server, "failed to create a client");
+    g_object_unref (socket);
     return FALSE;
   }
 no_connection:
@@ -1128,6 +1130,7 @@ no_connection:
     gchar *str = gst_rtsp_strresult (res);
     GST_ERROR ("could not create connection from socket %p: %s", socket, str);
     g_free (str);
+    g_object_unref (socket);
     return FALSE;
   }
 }
