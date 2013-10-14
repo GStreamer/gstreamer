@@ -978,6 +978,25 @@ gst_video_decoder_drain_out (GstVideoDecoder * dec, gboolean at_eos)
   return ret;
 }
 
+static GList *
+_flush_events (GstPad * pad, GList * events)
+{
+  GList *tmp;
+
+  for (tmp = events; tmp; tmp = tmp->next) {
+    if (GST_EVENT_TYPE (tmp->data) == GST_EVENT_EOS ||
+        GST_EVENT_TYPE (tmp->data) == GST_EVENT_SEGMENT ||
+        !GST_EVENT_IS_STICKY (tmp->data)) {
+      gst_event_unref (tmp->data);
+    } else {
+      gst_pad_store_sticky_event (pad, GST_EVENT_CAST (tmp->data));
+    }
+  }
+  g_list_free (events);
+
+  return NULL;
+}
+
 static gboolean
 gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     GstEvent * event)
@@ -1128,7 +1147,17 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
     }
     case GST_EVENT_FLUSH_STOP:
     {
+      GList *l;
+
       GST_VIDEO_DECODER_STREAM_LOCK (decoder);
+      for (l = priv->frames; l; l = l->next) {
+        GstVideoCodecFrame *frame = l->data;
+
+        frame->events = _flush_events (decoder->srcpad, frame->events);
+      }
+      priv->current_frame_events = _flush_events (decoder->srcpad,
+          decoder->priv->current_frame_events);
+
       /* well, this is kind of worse than a DISCONT */
       gst_video_decoder_flush (decoder, TRUE);
       GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
