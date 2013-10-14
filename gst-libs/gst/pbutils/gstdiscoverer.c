@@ -1033,8 +1033,8 @@ find_stream_for_node (GstDiscoverer * dc, const GstStructure * topology)
   return st;
 }
 
-/* this can fail due to parsed=TRUE/FALSE differences, thus we filter the
- * parent */
+/* this can fail due to {framed,parsed}={TRUE,FALSE} differences, thus we filter
+ * the parent */
 static gboolean
 child_is_same_stream (const GstCaps * _parent, const GstCaps * child)
 {
@@ -1044,6 +1044,7 @@ child_is_same_stream (const GstCaps * _parent, const GstCaps * child)
 
   for (i = 0; i < size; i++) {
     gst_structure_remove_field (gst_caps_get_structure (parent, i), "parsed");
+    gst_structure_remove_field (gst_caps_get_structure (parent, i), "framed");
   }
   res = gst_caps_can_intersect (parent, child);
   gst_caps_unref (parent);
