@@ -318,6 +318,7 @@ gst_validate_report_new (GstValidateIssue * issue,
 {
   GstValidateReport *report = g_slice_new0 (GstValidateReport);
 
+  report->refcount = 1;
   report->issue = issue;
   report->reporter = reporter;  /* TODO should we ref? */
   report->message = g_strdup (message);
