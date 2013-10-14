@@ -638,6 +638,12 @@ flushing:
     g_mutex_unlock (&sink->client_lock);
     g_clear_error (&err);
 
+    /* unmap all memory */
+    for (i = 0; i < n_mem; i++) {
+      gst_memory_unmap (map[i].memory, &map[i]);
+      gst_memory_unref (map[i].memory);
+    }
+
     return GST_FLOW_FLUSHING;
   }
 }
