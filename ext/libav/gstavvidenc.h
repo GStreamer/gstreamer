@@ -49,6 +49,7 @@ struct _GstFFMpegVidEnc
   gint gop_size;
   gint buffer_size;
   gint rtp_payload_size;
+  gint compliance;
 
   guint8 *working_buf;
   gsize working_buf_size;
