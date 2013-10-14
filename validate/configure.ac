@@ -140,6 +140,14 @@ fi
 AC_SUBST(GST_PBUTILS_LIBS)
 AC_SUBST(GST_PBUTILS_CFLAGS)
 
+dnl check for gstreamer-video
+PKG_CHECK_MODULES(GST_VIDEO, gstreamer-video-$GST_API_VERSION, HAVE_GST_VIDEO="yes", HAVE_GST_VIDEO="no")
+if test "x$HAVE_GST_VIDEO" != "xyes"; then
+  AC_ERROR([gst-video is required])
+fi
+AC_SUBST(GST_VIDEO_LIBS)
+AC_SUBST(GST_VIDEO_CFLAGS)
+
 dnl needed for scenarios definition files
 GST_PREFIX="`$PKG_CONFIG --variable=prefix gstreamer-$GST_API_VERSION`"
 AC_SUBST(GST_PREFIX)
