@@ -2000,6 +2000,24 @@ not_negotiated:
   }
 }
 
+static GList *
+_flush_events (GstPad * pad, GList * events)
+{
+  GList *tmp;
+
+  for (tmp = events; tmp; tmp = tmp->next) {
+    if (GST_EVENT_TYPE (tmp->data) == GST_EVENT_EOS ||
+        GST_EVENT_TYPE (tmp->data) == GST_EVENT_SEGMENT ||
+        !GST_EVENT_IS_STICKY (tmp->data)) {
+      gst_event_unref (tmp->data);
+    } else {
+      gst_pad_store_sticky_event (pad, GST_EVENT_CAST (tmp->data));
+    }
+  }
+
+  return NULL;
+}
+
 static gboolean
 gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
 {
@@ -2095,9 +2113,8 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       /* prepare for fresh start */
       gst_audio_decoder_flush (dec, TRUE);
 
-      g_list_foreach (dec->priv->pending_events, (GFunc) gst_event_unref, NULL);
-      g_list_free (dec->priv->pending_events);
-      dec->priv->pending_events = NULL;
+      dec->priv->pending_events = _flush_events (dec->srcpad,
+          dec->priv->pending_events);
       GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
 
       /* Forward FLUSH_STOP, it is expected to be forwarded immediately
