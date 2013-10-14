@@ -1726,6 +1726,7 @@ gst_flow_get_name
 gst_flow_to_quark
 GstPadMode
 gst_pad_mode_get_name
+gst_pad_store_sticky_event
 
 <SUBSECTION Application>
 gst_pad_get_name
