@@ -34,6 +34,8 @@ GST_START_TEST (test_pool)
   fail_if (gst_rtsp_address_pool_add_range (pool,
           "233.252.0.1", "::1", 5000, 5010, 1));
   fail_if (gst_rtsp_address_pool_add_range (pool,
+          "233.252.0.1", "ff02::1", 5000, 5010, 1));
+  fail_if (gst_rtsp_address_pool_add_range (pool,
           "233.252.0.1.1", "233.252.0.1", 5000, 5010, 1));
   fail_if (gst_rtsp_address_pool_add_range (pool,
           "233.252.0.1", "233.252.0.1.1", 5000, 5010, 1));
@@ -99,6 +101,10 @@ GST_START_TEST (test_pool)
       GST_RTSP_ADDRESS_FLAG_MULTICAST, 1);
   fail_unless (addr2 == NULL);
 
+  addr2 = gst_rtsp_address_pool_acquire_address (pool,
+      GST_RTSP_ADDRESS_FLAG_IPV4 | GST_RTSP_ADDRESS_FLAG_MULTICAST, 1);
+  fail_unless (addr2 == NULL);
+
   gst_rtsp_address_free (addr);
 
   gst_rtsp_address_pool_clear (pool);
@@ -121,8 +127,11 @@ GST_START_TEST (test_pool)
   gst_rtsp_address_free (addr);
   gst_rtsp_address_free (addr2);
 
-  gst_rtsp_address_pool_clear (pool);
+  addr = gst_rtsp_address_pool_acquire_address (pool,
+      GST_RTSP_ADDRESS_FLAG_IPV6 | GST_RTSP_ADDRESS_FLAG_MULTICAST, 1);
+  fail_unless (addr == NULL);
 
+  gst_rtsp_address_pool_clear (pool);
 
   fail_unless (gst_rtsp_address_pool_add_range (pool,
           "233.252.1.1", "233.252.1.1", 5000, 5001, 1));
@@ -150,6 +159,11 @@ GST_START_TEST (test_pool)
   res = gst_rtsp_address_pool_reserve_address (pool, "2000::1", 5000, 2, 2,
       &addr);
   fail_unless (res == GST_RTSP_ADDRESS_POOL_EINVAL);
+  fail_unless (addr == NULL);
+
+  res = gst_rtsp_address_pool_reserve_address (pool, "ff02::1", 5000, 2, 2,
+      &addr);
+  fail_unless (res == GST_RTSP_ADDRESS_POOL_ERANGE);
   fail_unless (addr == NULL);
 
   res = gst_rtsp_address_pool_reserve_address (pool, "1.1", 5000, 2, 2, &addr);
@@ -203,8 +217,10 @@ GST_START_TEST (test_pool)
 
   fail_unless (gst_rtsp_address_pool_add_range (pool,
           "233.252.1.1", "233.252.1.1", 5000, 5001, 1));
+  fail_if (gst_rtsp_address_pool_has_unicast_addresses (pool));
   fail_unless (gst_rtsp_address_pool_add_range (pool,
           "192.168.1.1", "192.168.1.1", 6000, 6001, 0));
+  fail_unless (gst_rtsp_address_pool_has_unicast_addresses (pool));
 
   addr = gst_rtsp_address_pool_acquire_address (pool,
       GST_RTSP_ADDRESS_FLAG_EVEN_PORT | GST_RTSP_ADDRESS_FLAG_MULTICAST, 2);
