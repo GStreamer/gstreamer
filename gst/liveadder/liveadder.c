@@ -1114,15 +1114,18 @@ gst_live_live_adder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     mix_duration = mix_end - mix_start;
 
-    gst_buffer_map (oldbuffer, &oldmap, GST_MAP_WRITE);
-    gst_buffer_map (buffer, &map, GST_MAP_READ);
-    adder->func (oldmap.data +
-        gst_live_adder_length_from_duration (adder, old_skip),
-        map.data +
-        gst_live_adder_length_from_duration (adder, skip),
-        gst_live_adder_length_from_duration (adder, mix_duration));
-    gst_buffer_unmap (oldbuffer, &oldmap);
-    gst_buffer_unmap (buffer, &map);
+    if (!GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_GAP)) {
+      GST_BUFFER_FLAG_UNSET (oldbuffer, GST_BUFFER_FLAG_GAP);
+      gst_buffer_map (oldbuffer, &oldmap, GST_MAP_WRITE);
+      gst_buffer_map (buffer, &map, GST_MAP_READ);
+      adder->func (oldmap.data +
+          gst_live_adder_length_from_duration (adder, old_skip),
+          map.data +
+          gst_live_adder_length_from_duration (adder, skip),
+          gst_live_adder_length_from_duration (adder, mix_duration));
+      gst_buffer_unmap (oldbuffer, &oldmap);
+      gst_buffer_unmap (buffer, &map);
+    }
     skip += mix_duration;
   }
 
