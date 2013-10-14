@@ -1112,8 +1112,12 @@ gst_validate_media_info_compare (GstValidateMediaInfo * expected,
   if (expected->stream_info
       && !gst_caps_is_equal_fixed (expected->stream_info->caps,
           extracted->stream_info->caps)) {
-    g_print ("Media caps changed: '%" GST_PTR_FORMAT "' -> '%" GST_PTR_FORMAT
-        "'\n", expected->stream_info->caps, extracted->stream_info->caps);
+    gchar *caps1 = gst_caps_to_string (expected->stream_info->caps);
+    gchar *caps2 = gst_caps_to_string (extracted->stream_info->caps);
+
+    g_print ("Media caps changed: '%s' -> '%s'\n", caps1, caps2);
+    g_free (caps1);
+    g_free (caps2);
     ret = FALSE;
   }
   return ret;
