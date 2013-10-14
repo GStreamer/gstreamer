@@ -305,6 +305,25 @@ gst_video_encoder_class_init (GstVideoEncoderClass * klass)
   klass->src_query = gst_video_encoder_src_query_default;
 }
 
+static GList *
+_flush_events (GstPad * pad, GList * events)
+{
+  GList *tmp;
+
+  for (tmp = events; tmp; tmp = tmp->next) {
+    if (GST_EVENT_TYPE (tmp->data) == GST_EVENT_EOS ||
+        GST_EVENT_TYPE (tmp->data) == GST_EVENT_SEGMENT ||
+        !GST_EVENT_IS_STICKY (tmp->data)) {
+      gst_event_unref (tmp->data);
+    } else {
+      gst_pad_store_sticky_event (pad, GST_EVENT_CAST (tmp->data));
+    }
+  }
+  g_list_free (events);
+
+  return NULL;
+}
+
 static gboolean
 gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
 {
@@ -322,10 +341,6 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
   priv->force_key_unit = NULL;
 
   priv->drained = TRUE;
-
-  g_list_foreach (priv->current_frame_events, (GFunc) gst_event_unref, NULL);
-  g_list_free (priv->current_frame_events);
-  priv->current_frame_events = NULL;
 
   g_list_foreach (priv->frames, (GFunc) gst_video_codec_frame_unref, NULL);
   g_list_free (priv->frames);
@@ -362,6 +377,21 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
       gst_object_unref (priv->allocator);
       priv->allocator = NULL;
     }
+
+    g_list_foreach (priv->current_frame_events, (GFunc) gst_event_unref, NULL);
+    g_list_free (priv->current_frame_events);
+    priv->current_frame_events = NULL;
+
+  } else {
+    GList *l;
+
+    for (l = priv->frames; l; l = l->next) {
+      GstVideoCodecFrame *frame = l->data;
+
+      frame->events = _flush_events (encoder->srcpad, frame->events);
+    }
+    priv->current_frame_events = _flush_events (encoder->srcpad,
+        encoder->priv->current_frame_events);
   }
 
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
