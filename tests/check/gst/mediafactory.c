@@ -210,6 +210,76 @@ GST_START_TEST (test_addresspool)
 
 GST_END_TEST;
 
+GST_START_TEST (test_permissions)
+{
+  GstRTSPMediaFactory *factory;
+  GstRTSPPermissions *perms;
+  GstRTSPMedia *media;
+  GstRTSPUrl *url;
+
+  factory = gst_rtsp_media_factory_new ();
+  fail_if (gst_rtsp_media_factory_is_shared (factory));
+  fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
+          &url) == GST_RTSP_OK);
+
+  gst_rtsp_media_factory_set_launch (factory,
+      "( videotestsrc ! rtpvrawpay pt=96 name=pay0 )");
+
+  gst_rtsp_media_factory_add_role (factory, "admin",
+      "media.factory.access", G_TYPE_BOOLEAN, TRUE,
+      "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL);
+
+  perms = gst_rtsp_media_factory_get_permissions (factory);
+  fail_unless (gst_rtsp_permissions_is_allowed (perms, "admin",
+          "media.factory.access"));
+  fail_unless (gst_rtsp_permissions_is_allowed (perms, "admin",
+          "media.factory.construct"));
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "missing",
+          "media.factory.access"));
+  gst_rtsp_permissions_unref (perms);
+
+  perms = gst_rtsp_permissions_new ();
+  gst_rtsp_permissions_add_role (perms, "user",
+      "media.factory.access", G_TYPE_BOOLEAN, TRUE,
+      "media.factory.construct", G_TYPE_BOOLEAN, FALSE, NULL);
+  gst_rtsp_media_factory_set_permissions (factory, perms);
+  gst_rtsp_permissions_unref (perms);
+
+  perms = gst_rtsp_media_factory_get_permissions (factory);
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "admin",
+          "media.factory.access"));
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "admin",
+          "media.factory.construct"));
+  fail_unless (gst_rtsp_permissions_is_allowed (perms, "user",
+          "media.factory.access"));
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "user",
+          "media.factory.construct"));
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "missing",
+          "media.factory.access"));
+  gst_rtsp_permissions_unref (perms);
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+  perms = gst_rtsp_media_get_permissions (media);
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "admin",
+          "media.factory.access"));
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "admin",
+          "media.factory.construct"));
+  fail_unless (gst_rtsp_permissions_is_allowed (perms, "user",
+          "media.factory.access"));
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "user",
+          "media.factory.construct"));
+  fail_if (gst_rtsp_permissions_is_allowed (perms, "missing",
+          "media.factory.access"));
+  gst_rtsp_permissions_unref (perms);
+  g_object_unref (media);
+
+  gst_rtsp_url_free (url);
+  g_object_unref (factory);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspmediafactory_suite (void)
 {
@@ -223,6 +293,7 @@ rtspmediafactory_suite (void)
   tcase_add_test (tc, test_launch_construct);
   tcase_add_test (tc, test_shared);
   tcase_add_test (tc, test_addresspool);
+  tcase_add_test (tc, test_permissions);
 
   return s;
 }
