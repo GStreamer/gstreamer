@@ -1,8 +1,8 @@
 Caps
 ----
 
-Caps are lighweight refcounted objects describing media types.
-They are composed of an array of GstStructures plus optionally
+Caps are lightweight refcounted objects describing media types.
+They are composed of an array of GstStructures plus, optionally,
 a GstCapsFeatures set for the GstStructure.
 
 Caps are exposed on GstPadTemplates to describe all possible types a
@@ -23,22 +23,21 @@ Fixating
 --------
 Caps are fixed if they only contain a single structure and this
 structure is fixed. A structure is fixed if none of the fields of the
-structure is a unfixed types, for example a range, list or array.
+structure is an unfixed type, for example a range, list or array.
 
 For fixating caps only the first structure is kept as the order of
 structures is meant to express the preferences for the different
-structures.
-Afterwards each unfixed field of this structure is set to a value
-that makes most sense for the media format by the element or pad
-implementation and afterwards every remaining unfixed fields is set to
-an arbitrary value that would be a subset of the unfixed field value.
+structures. Afterwards, each unfixed field of this structure is set
+to the value that makes most sense for the media format by the element
+or pad implementation and then every remaining unfixed fields are set to
+an arbitrary value that is a subset of the unfixed field possible values.
 
-EMPTY caps are fixed caps, ANY caps are not fixed. Caps with ANY caps
-features are not fixed.
+EMPTY caps are fixed caps and ANY caps are not. Caps with ANY caps features
+are not fixed.
 
 Subset
 ------
-One caps "A" is the subset of another caps "B" if for each structure in
+One caps "A" is a subset of another caps "B" if for each structure in
 "A" there exists a structure in "B" that is a superset of the structure
 in "A".
 
@@ -47,7 +46,7 @@ structure name, the same caps features and each field in "b" exists
 in "a" and the value of the field in "a" is a subset of the value of
 the field in "b". "a" can have additional fields that are not in "b".
 
-EMPTY caps are a subset of every other caps, every caps are a subset of
+EMPTY caps are a subset of every other caps. Every caps are a subset of
 ANY caps.
 
 Equality
@@ -69,8 +68,8 @@ If one structure contains a field that is not existing in the other
 structure it will be copied over to the intersection with the same
 value.
 
-The intersection with ANY caps is always the other caps, the
-intersection with EMPTY caps is always EMPTY.
+The intersection with ANY caps is always the other caps and the intersection
+with EMPTY caps is always EMPTY.
 
 Union
 -----
@@ -78,12 +77,12 @@ The union of caps "A" and caps "B" are the caps that contain the union
 of all their structures with each other.
 
 The union of structure "a" and structure "b" are the two structures "a"
-and "b" if the structure names or caps features are not equal. Otherwise
+and "b" if the structure names or caps features are not equal. Otherwise,
 the union is the structure that contains the union of each fields value.
 If a field is only in one of the two structures it is not contained in
 the union.
 
-The union with ANY caps is always ANY, the union with EMPTY caps is
+The union with ANY caps is always ANY and the union with EMPTY caps is
 always the other caps.
 
 Subtraction
@@ -108,13 +107,13 @@ Each of these structures has a name that specifies the media type, e.g.
 structure add additional constraints and/or information about the media
 type, like the width and height of a video frame, or the codec profile
 that is used. These fields can be non-fixed (e.g. ranges) for non-fixed
-caps but must be fixed to a fixed value during negotiation.
+caps but must be fixated to a fixed value during negotiation.
 If a field is included in the caps returned by a pad via the CAPS query,
 it imposes an additional constraint during negotiation. The caps in the
 end must have this field with a value that is a subset of the non-fixed
 value. Additional fields that are added in the negotiated caps give
 additional information about the media but are treated as optional.
-Information that can change for every buffer and are not relevant during
+Information that can change for every buffer and is not relevant during
 negotiation must not be stored inside the caps.
 
 
@@ -124,9 +123,9 @@ for a specific structure, and only structures with the same name _and_
 equal caps features are considered compatible.
 Caps features can be used to require a specific memory representation
 or a specific meta to be set on buffers, for example a pad could require
-for a specific structure that it is passed EGLImage memory or buffers
-with the video meta.
-If not caps features are provided for a structure, it is assumed that
+for a specific structure that includes EGLImage memory or buffers with
+the video meta.
+If no caps features are provided for a structure, it is assumed that
 system memory is required unless later negotiation steps (e.g. the
 ALLOCATION query) detect that something else can be used. The special
 ANY caps features can be used to specify that any caps feature would
@@ -143,6 +142,7 @@ not enough. Instead the fixed caps must be at least a subset of the
 pad's caps but pads can introduce additional constraints which would be
 checked in the ACCEPT_CAPS query handler.
 
-Data flow can only happen after pads have decided on a common, fixed
-caps and these caps are distributed to both pads with the CAPS event.
+Data flow can only happen after pads have decided on a common and fixed
+set of caps. These caps are then distributed to both pads with the CAPS
+event.
 
