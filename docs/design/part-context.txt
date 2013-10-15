@@ -15,7 +15,7 @@ queries, messages and functions to set a context on a complete pipeline.
 Context types
 ~~~~~~~~~~~~~
 Context type names should be unique and be put in appropiate namespaces,
-e.g. "gst.egl.EGLDisplay", go prevent name conflicts. Only one specific
+to prevent name conflicts, e.g. "gst.egl.EGLDisplay". Only one specific
 type is allowed per context type name.
 
 
@@ -42,9 +42,9 @@ do the following steps until one succeeds:
     on the bus.
 
 
-Bins will propagate any context that is set on them via
-gst_element_set_context() to their child elements, including newly added
-elements after the context was set.
+Bins will propagate any context that is set on them to their child elements via
+gst_element_set_context(). Even to elements added after a given context has
+been set.
 
 Bins can handle the GST_MESSAGE_NEED_CONTEXT message, can filter both
 messages and can also set different contexts for different pipeline parts.
@@ -57,10 +57,9 @@ a pipeline with gst_element_set_context().
 
 If an element inside the pipeline needs a specific context, it will post
 a GST_MESSAGE_NEED_CONTEXT message on the bus. The application can now
-create a context of the requested type or pass an already existing
-context to the element (or the complete pipeline).
+create a context of the requested type or pass an already existing context
+to the element (or to the complete pipeline).
 
 Whenever an element creates a context internally it will post a
 GST_MESSAGE_HAVE_CONTEXT message on the bus. Bins will cache these
-contexts and pass them to any future elements that request them.
-
+contexts and pass them to any future elements that requests them.
