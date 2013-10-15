@@ -4,7 +4,7 @@ Bufferpool
 This document details the design of how buffers are be allocated and
 managed in pools.
 
-Bufferpools increases performance by reducing allocation overhead and
+Bufferpools increase performance by reducing allocation overhead and
 improving possibilities to implement zero-copy memory transfer.
 
 Together with the ALLOCATION query, elements can negotiate allocation properties
@@ -40,7 +40,7 @@ GstBufferPool
  The bufferpool object manages a list of buffers with the same properties such
  as size, padding and alignment.
 
- The bufferpool has two states: active and inactive. In the in-active
+ The bufferpool has two states: active and inactive. In the inactive
  state, the bufferpool can be configured with the required allocation
  preferences. In the active state, buffers can be retrieved from and
  returned to the pool.
@@ -99,13 +99,13 @@ Allocation query
         guint          max_buffers;
       }
 
-      use gst_query_parse_nth_allocation_pool() to get the values.
+      Use gst_query_parse_nth_allocation_pool() to get the values.
 
       The allocator can contain multiple pool configurations. If need-pool
       was TRUE, the pool member might contain a GstBufferPool when the
       downstream element can provide one.
 
-      Size contains the size of the bufferpool buffers and is never 0.
+      Size contains the size of the bufferpool's buffers and is never 0.
 
       min_buffers and max_buffers contain the suggested min and max amount of
       buffers that should be managed by the pool.
@@ -125,7 +125,7 @@ Allocation query
         GstAllocationParams params;
       }
 
-      use gst_query_parse_nth_allocation_param() to get the values
+      Use gst_query_parse_nth_allocation_param() to get the values.
 
       The element performing the query can use the allocators and its
       parameters to allocate memory for the downstream element. 
@@ -144,7 +144,7 @@ Allocation query
 
       These metadata items can be accepted by the downstream element when
       placed on buffers. There is also an arbitrary GstStructure associated
-      with the metadata that contains metadata specific options.
+      with the metadata that contains metadata-specific options.
 
       Some bufferpools have options to enable metadata on the buffers
       allocated by the pool.
@@ -214,7 +214,7 @@ of a caps change), alignment or number of buffers.
   RECONFIGURE event upstream. This instructs upstream to renegotiate both
   the format and the bufferpool when needed.
 
-  A pipeline reconfiguration is when new elements are added or removed from
+  A pipeline reconfiguration happens when new elements are added or removed from
   the pipeline or when the topology of the pipeline changes. Pipeline
   reconfiguration also triggers possible renegotiation of the bufferpool and
   caps.
@@ -293,13 +293,13 @@ Use cases
  those elements require more than that amount of buffers for temporary
  storage.
 
- The bufferpool of myvideosink will then be configured with the size of the
+ Myvideosink's bufferpool will then be configured with the size of the
  buffers for the negotiated format and according to the padding and alignment
  rules. When videotestsrc sets the pool to active, the 3 video
  buffers will be preallocated in the pool.
 
  videotestsrc acquires a buffer from the configured pool on its srcpad and
- pushes this into the queue. When the videotestsrc has acquired and pushed
+ pushes this into the queue. When videotestsrc has acquired and pushed
  3 frames, the next call to gst_buffer_pool_acquire_buffer() will block
  (assuming the GST_BUFFER_POOL_FLAG_DONTWAIT is not specified).
 
@@ -324,9 +324,9 @@ Use cases
  decoder linked to a fakesink but we will then dynamically change the
  sink to one that can provide a bufferpool.
 
- When it negotiates the size with the downstream element fakesink, it will
+ When myvideodecoder negotiates the size with the downstream fakesink element, it will
  receive a NULL bufferpool because fakesink does not provide a bufferpool.
- It will then select its own custom bufferpool to start the datatransfer.
+ It will then select its own custom bufferpool to start the data transfer.
 
  At some point we block the queue srcpad, unlink the queue from the 
  fakesink, link a new sink and set the new sink to the PLAYING state.
@@ -334,7 +334,7 @@ Use cases
  and, through queue, inform myvideodecoder that it should renegotiate its
  bufferpool because downstream has been reconfigured.
 
- Before pushing the next buffer, myvideodecoder would renegotiate a new
+ Before pushing the next buffer, myvideodecoder has to renegotiate a new
  bufferpool. To do this, it performs the usual bufferpool negotiation
  algorithm. If it can obtain and configure a new bufferpool from downstream,
  it sets its own (old) pool to inactive and unrefs it. This will eventually
@@ -348,13 +348,13 @@ Use cases
 
  myvideodecoder has negotiated a bufferpool with the downstream myvideosink
  to handle buffers of size 320x240. It has now detected a change in the 
- video format and need to renegotiate to a resolution of 640x480. This
- requires it to negotiate a new bufferpool with a larger buffersize.
+ video format and needs to renegotiate to a resolution of 640x480. This
+ requires it to negotiate a new bufferpool with a larger buffer size.
 
  When myvideodecoder needs to get the bigger buffer, it starts the 
  negotiation of a new bufferpool. It queries a bufferpool from downstream,
  reconfigures it with the new configuration (which includes the bigger buffer
- size) and it then sets the bufferpool to active. The old pool is inactivated
+ size) and sets the bufferpool to active. The old pool is inactivated
  and unreffed, which causes the old format to drain.
 
  It then uses the new bufferpool for allocating new buffers of the new 
@@ -371,7 +371,7 @@ Use cases
  change the resolution.
 
  myvideosink sends a RECONFIGURE event upstream to notify upstream that a
- new format is desirable. upstream elements try to negotiate a new format
+ new format is desirable. Upstream elements try to negotiate a new format
  and bufferpool before pushing out a new buffer. The old bufferpools are
  drained in the regular way.
 
