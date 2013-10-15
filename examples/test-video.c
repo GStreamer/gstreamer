@@ -25,7 +25,8 @@
  * user/password as the password */
 #undef WITH_AUTH
 
-/* define this if you want the server to use TLS */
+/* define this if you want the server to use TLS (it will also need WITH_AUTH
+ * to be defined) */
 #undef WITH_TLS
 
 /* this timeout is periodically run to clean up the expired sessions from the
@@ -53,7 +54,6 @@ main (int argc, char *argv[])
 #ifdef WITH_AUTH
   GstRTSPAuth *auth;
   GstRTSPToken *token;
-  GstStructure *s;
   gchar *basic;
   GstRTSPPermissions *permissions;
 #endif
@@ -101,9 +101,9 @@ main (int argc, char *argv[])
 #endif
 
   /* make user token */
-  token = gst_rtsp_token_new ();
-  s = gst_rtsp_token_writable_structure (token);
-  gst_structure_set (s, "media.factory.role", G_TYPE_STRING, "user", NULL);
+  token =
+      gst_rtsp_token_new (GST_RTSP_TOKEN_MEDIA_FACTORY_ROLE, G_TYPE_STRING,
+      "user", NULL);
   basic = gst_rtsp_auth_make_basic ("user", "password");
   gst_rtsp_auth_add_basic (auth, basic, token);
   g_free (basic);
@@ -118,7 +118,7 @@ main (int argc, char *argv[])
   mounts = gst_rtsp_server_get_mount_points (server);
 
   /* make a media factory for a test stream. The default media factory can use
-   * gst-launch syntax to create pipelines. 
+   * gst-launch syntax to create pipelines.
    * any launch line works as long as it contains elements named pay%d. Each
    * element with pay%d names will be a stream */
   factory = gst_rtsp_media_factory_new ();
@@ -131,9 +131,8 @@ main (int argc, char *argv[])
   /* add permissions for the user media role */
   permissions = gst_rtsp_permissions_new ();
   gst_rtsp_permissions_add_role (permissions, "user",
-      gst_structure_new ("user",
-          "media.factory.access", G_TYPE_BOOLEAN, TRUE,
-          "media.factory.construct", G_TYPE_BOOLEAN, TRUE, NULL));
+      GST_RTSP_PERM_MEDIA_FACTORY_ACCESS, G_TYPE_BOOLEAN, TRUE,
+      GST_RTSP_PERM_MEDIA_FACTORY_CONSTRUCT, G_TYPE_BOOLEAN, TRUE, NULL);
   gst_rtsp_media_factory_set_permissions (factory, permissions);
   gst_rtsp_permissions_unref (permissions);
 #endif
