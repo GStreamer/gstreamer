@@ -34,7 +34,8 @@ GST_START_TEST (test_launch)
 
   factory = gst_rtsp_media_factory_new ();
   fail_if (gst_rtsp_media_factory_is_shared (factory));
-  gst_rtsp_url_parse ("rtsp://localhost:8554/test", &url);
+  fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
+          &url) == GST_RTSP_OK);
 
   gst_rtsp_media_factory_set_launch (factory,
       "( videotestsrc ! rtpvrawpay pt=96 name=pay0 )");
@@ -135,7 +136,8 @@ GST_START_TEST (test_media_prepare)
   /* test non-reusable media first */
   factory = gst_rtsp_media_factory_new ();
   fail_if (gst_rtsp_media_factory_is_shared (factory));
-  gst_rtsp_url_parse ("rtsp://localhost:8554/test", &url);
+  fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
+          &url) == GST_RTSP_OK);
 
   gst_rtsp_media_factory_set_launch (factory,
       "( videotestsrc ! rtpvrawpay pt=96 name=pay0 )");
@@ -161,7 +163,8 @@ GST_START_TEST (test_media_prepare)
   /* test reusable media */
   factory = gst_rtsp_media_factory_new ();
   fail_if (gst_rtsp_media_factory_is_shared (factory));
-  gst_rtsp_url_parse ("rtsp://localhost:8554/test", &url);
+  fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
+          &url) == GST_RTSP_OK);
 
   gst_rtsp_media_factory_set_launch (factory,
       "( videotestsrc ! rtpvrawpay pt=96 name=pay0 )");
@@ -279,7 +282,8 @@ GST_START_TEST (test_media_take_pipeline)
   GstElement *pipeline;
 
   factory = gst_rtsp_media_factory_new ();
-  gst_rtsp_url_parse ("rtsp://localhost:8554/test", &url);
+  fail_unless (gst_rtsp_url_parse ("rtsp://localhost:8554/test",
+          &url) == GST_RTSP_OK);
   gst_rtsp_media_factory_set_launch (factory,
       "( fakesrc ! text/plain ! rtpgstpay name=pay0 )");
 

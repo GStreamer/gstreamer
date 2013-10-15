@@ -203,7 +203,7 @@ connect_to_server (gint port, const gchar * mount_point)
   address = gst_rtsp_server_get_address (server);
   uri_string = g_strdup_printf ("rtsp://%s:%d%s", address, port, mount_point);
   g_free (address);
-  gst_rtsp_url_parse (uri_string, &url);
+  fail_unless (gst_rtsp_url_parse (uri_string, &url) == GST_RTSP_OK);
   g_free (uri_string);
 
   fail_unless (gst_rtsp_connection_create (url, &conn) == GST_RTSP_OK);
