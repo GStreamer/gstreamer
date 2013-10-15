@@ -135,7 +135,7 @@ struct _GESFormatterClass {
 
 GType ges_formatter_get_type (void);
 
-void ges_formatter_class_register_metas (GESFormatterClass * class,
+void ges_formatter_class_register_metas (GESFormatterClass * klass,
                                          const gchar *name,
                                          const gchar *description,
                                          const gchar *extension,

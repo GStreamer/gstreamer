@@ -75,7 +75,7 @@ void ges_uri_clip_asset_new                         (const gchar *uri,
                                                      GAsyncReadyCallback callback,
                                                      gpointer user_data);
 GESUriClipAsset* ges_uri_clip_asset_request_sync    (const gchar *uri, GError **error);
-void ges_uri_clip_asset_class_set_timeout           (GESUriClipAssetClass *class,
+void ges_uri_clip_asset_class_set_timeout           (GESUriClipAssetClass *klass,
                                                      GstClockTime timeout);
 const GList * ges_uri_clip_asset_get_stream_assets  (GESUriClipAsset *self);
 

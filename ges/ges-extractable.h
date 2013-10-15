@@ -72,7 +72,7 @@ struct _GESExtractableInterface
                                          const gchar *id);
 
   gboolean (*register_metas)            (GESExtractableInterface *self,
-                                         GObjectClass *class,
+                                         GObjectClass *klass,
                                          GESAsset *asset);
 
   gpointer _ges_reserved[GES_PADDING];
