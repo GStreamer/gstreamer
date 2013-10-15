@@ -14,7 +14,7 @@ Elements don't need to do much. They need to:
   before accessing the parameters.
   
 All ordered property types can be automated (int, double, boolean, enum). Other
-property types can be automates as well by using special control bindings. One can
+property types can also be automated by using special control bindings. One can
 e.g. write a control-binding that updates a text property based on timestamps.
 
 Application view
@@ -52,8 +52,8 @@ control-source value ranges
 ranged-control-binding
 - it might be a nice thing to have a control-binding that has scale and offset
   properties
-- when attaching a contro-source to e.g. volume one needs to be aware that the values
-  go from [0.0 to 4.0]
+- when attaching a control-source to e.g. volume, one needs to be aware that
+  the values go from [0.0 to 4.0]
 - we can also have a "mapping-mode"={AS_IS, TRANSFORMED} on direct-control-binding
   and two extra properties that are used in TRANSFORMED mode
   
