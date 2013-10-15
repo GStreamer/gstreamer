@@ -26,7 +26,7 @@ defines and enums
 Values and macros defined as enums and preprocessor macros will be referred to in all capitals, as per their 
 definition.  This includes object flags and element states, as well as general enums.  Examples are the states NULL, 
 READY, PLAYING, and PAUSED; the element flags LOCKED_STATE , and state return values SUCCESS, FAILURE, and 
-ASYNC.  Where there is a prefix, as in the element flags, this is usually dropped, and implied.  Not however that 
+ASYNC.  Where there is a prefix, as in the element flags, it is usually dropped and implied.  Note however that 
 element flags should be cross-checked with the header, as there are currently two conventions in use: with and without 
 _FLAGS_ in the middle.
 
