@@ -21,8 +21,8 @@
 #include "config.h"
 #endif
 
-#include "glib-compat-private.h"
 #include "gst_private.h"
+#include "glib-compat-private.h"
 #include "gstdatetime.h"
 #include "gstvalue.h"
 #include <glib.h>
