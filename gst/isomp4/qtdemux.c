@@ -315,7 +315,7 @@ struct _QtDemuxStream
   GstByteReader stps;
   GstByteReader ctts;
 
-  gboolean chunks_are_chunks;   /* FALSE means treat chunks as samples */
+  gboolean chunks_are_samples;  /* TRUE means treat chunks as samples */
   gint64 stbl_index;
   /* stco */
   guint co_size;
@@ -6115,9 +6115,13 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
   if (!gst_byte_reader_skip (&stream->stco, 1 + 3))
     goto corrupt_file;
 
-  /* chunks_are_chunks == FALSE means treat chunks as samples */
-  stream->chunks_are_chunks = !stream->sample_size || stream->sampled;
-  if (stream->chunks_are_chunks) {
+  /* chunks_are_samples == TRUE means treat chunks as samples */
+  stream->chunks_are_samples = stream->sample_size && !stream->sampled;
+  if (stream->chunks_are_samples) {
+    /* treat chunks as samples */
+    if (!gst_byte_reader_get_uint32_be (&stream->stco, &stream->n_samples))
+      goto corrupt_file;
+  } else {
     /* skip number of entries */
     if (!gst_byte_reader_skip (&stream->stco, 4))
       goto corrupt_file;
@@ -6128,10 +6132,6 @@ qtdemux_stbl_init (GstQTDemux * qtdemux, QtDemuxStream * stream, GNode * stbl)
       if (!qt_atom_parser_has_chunks (&stream->stsz, stream->n_samples, 4))
         goto corrupt_file;
     }
-  } else {
-    /* treat chunks as samples */
-    if (!gst_byte_reader_get_uint32_be (&stream->stco, &stream->n_samples))
-      goto corrupt_file;
   }
 
   GST_DEBUG_OBJECT (qtdemux, "allocating n_samples %u * %u (%.2f MB)",
@@ -6241,7 +6241,12 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
   first = &samples[stream->stbl_index];
   last = &samples[n];
 
-  if (stream->chunks_are_chunks) {
+  if (stream->chunks_are_samples) {
+    /* samples have the same size */
+    GST_LOG_OBJECT (qtdemux, "all samples have size %u", stream->sample_size);
+    for (cur = first; cur <= last; cur++)
+      cur->size = stream->sample_size;
+  } else {
     /* set the sample sizes */
     if (stream->sample_size == 0) {
       /* different sizes for each sample */
@@ -6250,11 +6255,6 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
         GST_LOG_OBJECT (qtdemux, "sample %d has size %u",
             (guint) (cur - samples), cur->size);
       }
-    } else {
-      /* samples have the same size */
-      GST_LOG_OBJECT (qtdemux, "all samples have size %u", stream->sample_size);
-      for (cur = first; cur <= last; cur++)
-        cur->size = stream->sample_size;
     }
   }
 
@@ -6318,40 +6318,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
 
     last_chunk = stream->last_chunk;
 
-    if (stream->chunks_are_chunks) {
-      for (j = stream->stsc_chunk_index; j < last_chunk; j++) {
-        guint32 samples_per_chunk;
-        guint64 chunk_offset;
-
-        if (!stream->stsc_sample_index
-            && !qt_atom_parser_get_offset (&stream->co_chunk, stream->co_size,
-                &stream->chunk_offset))
-          goto corrupt_file;
-
-        samples_per_chunk = stream->samples_per_chunk;
-        chunk_offset = stream->chunk_offset;
-
-        for (k = stream->stsc_sample_index; k < samples_per_chunk; k++) {
-          GST_LOG_OBJECT (qtdemux, "creating entry %d with offset %"
-              G_GUINT64_FORMAT " and size %d",
-              (guint) (cur - samples), stream->chunk_offset, cur->size);
-
-          cur->offset = chunk_offset;
-          chunk_offset += cur->size;
-          cur++;
-
-          if (G_UNLIKELY (cur > last)) {
-            /* save state */
-            stream->stsc_sample_index = k + 1;
-            stream->chunk_offset = chunk_offset;
-            stream->stsc_chunk_index = j;
-            goto done2;
-          }
-        }
-        stream->stsc_sample_index = 0;
-      }
-      stream->stsc_chunk_index = j;
-    } else {
+    if (stream->chunks_are_samples) {
       cur = &samples[stream->stsc_chunk_index];
 
       for (j = stream->stsc_chunk_index; j < last_chunk; j++) {
@@ -6392,11 +6359,44 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
         stream->stco_sample_index += stream->samples_per_chunk;
       }
       stream->stsc_chunk_index = j;
+    } else {
+      for (j = stream->stsc_chunk_index; j < last_chunk; j++) {
+        guint32 samples_per_chunk;
+        guint64 chunk_offset;
+
+        if (!stream->stsc_sample_index
+            && !qt_atom_parser_get_offset (&stream->co_chunk, stream->co_size,
+                &stream->chunk_offset))
+          goto corrupt_file;
+
+        samples_per_chunk = stream->samples_per_chunk;
+        chunk_offset = stream->chunk_offset;
+
+        for (k = stream->stsc_sample_index; k < samples_per_chunk; k++) {
+          GST_LOG_OBJECT (qtdemux, "creating entry %d with offset %"
+              G_GUINT64_FORMAT " and size %d",
+              (guint) (cur - samples), stream->chunk_offset, cur->size);
+
+          cur->offset = chunk_offset;
+          chunk_offset += cur->size;
+          cur++;
+
+          if (G_UNLIKELY (cur > last)) {
+            /* save state */
+            stream->stsc_sample_index = k + 1;
+            stream->chunk_offset = chunk_offset;
+            stream->stsc_chunk_index = j;
+            goto done2;
+          }
+        }
+        stream->stsc_sample_index = 0;
+      }
+      stream->stsc_chunk_index = j;
     }
     stream->stsc_index++;
   }
 
-  if (!stream->chunks_are_chunks)
+  if (stream->chunks_are_samples)
     goto ctts;
 done2:
   {
