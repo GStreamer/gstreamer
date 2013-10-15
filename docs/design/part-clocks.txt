@@ -47,7 +47,7 @@ To perform a blocking wait for the specific time of the GstClockID use the
 gst_clock_id_wait(). To receive a callback when the specific time is reached
 in the clock use gst_clock_id_wait_async(). Both these calls can be interrupted
 with the gst_clock_id_unschedule() call. If the blocking wait is unscheduled
-a return value of GST_CLOCK_UNSCHEDULED is returned.
+a value of GST_CLOCK_UNSCHEDULED is returned.
 
 The async callbacks can happen from any thread, either provided by the
 core or from a streaming thread. The application should be prepared for this.
@@ -60,7 +60,7 @@ threads. However, registering the same ID for multiple async notifications is
 not possible, the callback will only be called once.
 
 None of the wait operations unref the GstClockID, the owner is 
-responsible for unreffing the ids itself. This holds for both periodic and
+responsible for unreffing the ids itself. This holds true for both periodic and
 single shot notifications. The reason being that the owner of the ClockID
 has to keep a handle to the ID to unblock the wait on FLUSHING events
 or state changes and if we unref it automatically, the handle might be
@@ -83,6 +83,6 @@ implements the async notification.
 
 Subclasses can however override all of the important methods for sync and
 async notifications to implement their own callback methods or blocking
-wait operations. 
+wait operations.
 
 
