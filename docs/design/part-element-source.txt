@@ -20,8 +20,8 @@ A source is said to be a live source when it has the following property:
  * temporarily stopping reading from the source causes data to be lost. 
 
 In general when this property holds, the source also produces data at a fixed
-rate. Most sources have a limit to the rate at which they can deliver data, which
-might be faster or slower than the consumption rate. this property however does
+rate. Most sources have a limit on the rate at which they can deliver data, which
+might be faster or slower than the consumption rate. This property however does
 not make them a live source.
 
 Let's look at some example sources.
@@ -32,7 +32,7 @@ Let's look at some example sources.
    for example) in which case you might need to use some buffering
    (see part-buffering.txt).
 
- - http network element: you can PAUSE without data loss. Depending on the
+ - HTTP network element: you can PAUSE without data loss. Depending on the
    available network bandwidth, consumption rate might be higher than production
    rate in which case buffering should be used (see part-buffering.txt).
   
@@ -105,7 +105,7 @@ elements that cannot do random access, or at least very slowly. The
 source usually prefers to push out a fixed size buffer.
 
 Classes extending this base class will usually be scheduled in a push
-based mode. It the peer accepts to operate without offsets and withing
+based mode. If the peer accepts to operate without offsets and within
 the limits of the allowed block size, this class can operate in getrange
 based mode automatically.
 
