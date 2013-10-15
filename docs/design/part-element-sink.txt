@@ -1,7 +1,7 @@
 Sink elements
 -------------
 
-Sink elements consume data. They normally have no source pads.
+Sink elements consume data and normally have no source pads.
 
 Typical sink elements include:
 
@@ -35,7 +35,7 @@ sink overview
 
 
 
-  # commit the state. We return TRUE if we can continue
+  # Commit the state. We return TRUE if we can continue
   # streaming, FALSE in the case we go to a READY or NULL state.
   # if we go to PLAYING, we don't need to block on preroll.
   commit
@@ -61,9 +61,9 @@ sink overview
     return TRUE
   }
 
-  # sync an object. We have to wait for the element to reach
+  # Sync an object. We have to wait for the element to reach
   # the PLAYING state before we can wait on the clock.
-  # some items do not need synchronisation (most events) so the
+  # Some items do not need synchronisation (most events) so the
   # get_times method returns FALSE (not syncable)
   # need_preroll indicates that we are not in the PLAYING state
   # and therefore need to commit and potentially block on preroll
