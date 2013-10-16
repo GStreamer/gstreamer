@@ -550,12 +550,12 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
             /* Set double framerate in interlaced mode */
             if (!gst_util_fraction_multiply(fps_n, fps_d, 2, 1, &fps_n, &fps_d))
                 return NULL;
-
-            /* Signal the other pad that we generate only progressive frames */
-            GST_VIDEO_INFO_INTERLACE_MODE(&vi) =
-                GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
         }
         format = GST_VIDEO_FORMAT_ENCODED;
+
+        /* Signal the other pad that we generate only progressive frames */
+        GST_VIDEO_INFO_INTERLACE_MODE(&vi) =
+            GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
     }
     else {
         if (is_deinterlace_enabled(postproc, &vi)) {
