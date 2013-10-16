@@ -565,7 +565,8 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
   gchar *fourcc = (gchar *) xmlGetProp (node, (xmlChar *) "FourCC");
   gchar *channels_str = (gchar *) xmlGetProp (node, (xmlChar *) "Channels");
   gchar *rate_str = (gchar *) xmlGetProp (node, (xmlChar *) "SamplingRate");
-  gchar *block_align_str = (gchar *) xmlGetProp(node, (xmlChar *) "PacketSize");
+  gchar *block_align_str =
+      (gchar *) xmlGetProp (node, (xmlChar *) "PacketSize");
   gchar *codec_data_str =
       (gchar *) xmlGetProp (node, (xmlChar *) "CodecPrivateData");
   GstBuffer *codec_data = NULL;
