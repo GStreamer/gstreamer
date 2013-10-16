@@ -70,12 +70,42 @@ typedef enum {
     GST_VAAPI_DEINTERLACE_MODE_DISABLED,
 } GstVaapiDeinterlaceMode;
 
+/**
+ * GstVaapiPostprocFlags:
+ * @GST_VAAPI_POSTPROC_FLAG_FORMAT: Pixel format conversion.
+ * @GST_VAAPI_POSTPROC_FLAG_DENOISE: Noise reduction.
+ * @GST_VAAPI_POSTPROC_FLAG_SHARPEN: Sharpening.
+ * @GST_VAAPI_POSTPROC_FLAG_HUE: Change color hue.
+ * @GST_VAAPI_POSTPROC_FLAG_SATURATION: Change saturation.
+ * @GST_VAAPI_POSTPROC_FLAG_BRIGHTNESS: Change brightness.
+ * @GST_VAAPI_POSTPROC_FLAG_CONTRAST: Change contrast.
+ * @GST_VAAPI_POSTPROC_FLAG_DEINTERLACE: Deinterlacing.
+ * @GST_VAAPI_POSTPROC_FLAG_SIZE: Video scaling.
+ *
+ * The set of operations that are to be performed for each frame.
+ */
+typedef enum {
+    GST_VAAPI_POSTPROC_FLAG_FORMAT      = 1 << GST_VAAPI_FILTER_OP_FORMAT,
+    GST_VAAPI_POSTPROC_FLAG_DENOISE     = 1 << GST_VAAPI_FILTER_OP_DENOISE,
+    GST_VAAPI_POSTPROC_FLAG_SHARPEN     = 1 << GST_VAAPI_FILTER_OP_SHARPEN,
+    GST_VAAPI_POSTPROC_FLAG_HUE         = 1 << GST_VAAPI_FILTER_OP_HUE,
+    GST_VAAPI_POSTPROC_FLAG_SATURATION  = 1 << GST_VAAPI_FILTER_OP_SATURATION,
+    GST_VAAPI_POSTPROC_FLAG_BRIGHTNESS  = 1 << GST_VAAPI_FILTER_OP_BRIGHTNESS,
+    GST_VAAPI_POSTPROC_FLAG_CONTRAST    = 1 << GST_VAAPI_FILTER_OP_CONTRAST,
+    GST_VAAPI_POSTPROC_FLAG_DEINTERLACE = 1 << GST_VAAPI_FILTER_OP_DEINTERLACING,
+
+    /* Additional custom flags */
+    GST_VAAPI_POSTPROC_FLAG_CUSTOM      = 1 << 20,
+    GST_VAAPI_POSTPROC_FLAG_SIZE        = GST_VAAPI_POSTPROC_FLAG_CUSTOM,
+} GstVaapiPostprocFlags;
+
 struct _GstVaapiPostproc {
     /*< private >*/
     GstBaseTransform            parent_instance;
 
     GstVaapiDisplay            *display;
     GstVaapiUploader           *uploader;
+    guint                       flags;
     gboolean                    is_raw_yuv;
 
     GstCaps                    *allowed_caps;
@@ -89,7 +119,6 @@ struct _GstVaapiPostproc {
     GstVideoInfo                srcpad_info;
 
     /* Deinterlacing */
-    gboolean                    deinterlace;
     GstVaapiDeinterlaceMode     deinterlace_mode;
     GstVaapiDeinterlaceMethod   deinterlace_method;
     GstClockTime                field_duration;

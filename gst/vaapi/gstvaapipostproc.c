@@ -249,7 +249,7 @@ gst_vaapipostproc_stop(GstBaseTransform *trans)
 static gboolean
 is_interlaced_buffer(GstVaapiPostproc *postproc, GstBuffer *buf)
 {
-    if (!postproc->deinterlace)
+    if (!(postproc->flags & GST_VAAPI_POSTPROC_FLAG_DEINTERLACE))
         return FALSE;
 
     switch (GST_VIDEO_INFO_INTERLACE_MODE(&postproc->sinkpad_info)) {
@@ -441,6 +441,7 @@ gst_vaapipostproc_update_sink_caps(GstVaapiPostproc *postproc, GstCaps *caps,
     gboolean *caps_changed_ptr)
 {
     GstVideoInfo vi;
+    gboolean deinterlace;
 
     if (!gst_video_info_from_caps(&vi, caps))
         return FALSE;
@@ -448,10 +449,12 @@ gst_vaapipostproc_update_sink_caps(GstVaapiPostproc *postproc, GstCaps *caps,
     if (video_info_changed(&vi, &postproc->sinkpad_info))
         postproc->sinkpad_info = vi, *caps_changed_ptr = TRUE;
 
-    postproc->deinterlace = is_deinterlace_enabled(postproc, &vi);
+    deinterlace = is_deinterlace_enabled(postproc, &vi);
+    if (deinterlace)
+        postproc->flags |= GST_VAAPI_POSTPROC_FLAG_DEINTERLACE;
     postproc->field_duration = gst_util_uint64_scale(
         GST_SECOND, GST_VIDEO_INFO_FPS_D(&vi),
-        (1 + postproc->deinterlace) * GST_VIDEO_INFO_FPS_N(&vi));
+        (1 + deinterlace) * GST_VIDEO_INFO_FPS_N(&vi));
 
     postproc->is_raw_yuv = GST_VIDEO_INFO_IS_YUV(&vi);
 #if !GST_CHECK_VERSION(1,0,0)
@@ -684,7 +687,7 @@ gst_vaapipostproc_transform(GstBaseTransform *trans, GstBuffer *inbuf,
     if (!buf)
         return GST_FLOW_ERROR;
 
-    if (postproc->deinterlace)
+    if (postproc->flags == GST_VAAPI_POSTPROC_FLAG_DEINTERLACE)
         ret = gst_vaapipostproc_process(trans, buf, outbuf);
     else
         ret = gst_vaapipostproc_passthrough(trans, buf, outbuf);
@@ -993,7 +996,6 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
 static void
 gst_vaapipostproc_init(GstVaapiPostproc *postproc)
 {
-    postproc->deinterlace               = FALSE;
     postproc->deinterlace_mode          = DEFAULT_DEINTERLACE_MODE;
     postproc->deinterlace_method        = DEFAULT_DEINTERLACE_METHOD;
     postproc->field_duration            = GST_CLOCK_TIME_NONE;
