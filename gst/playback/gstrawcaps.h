@@ -30,6 +30,7 @@ G_BEGIN_DECLS
     "audio/x-raw; " \
     "text/x-raw; " \
     "subpicture/x-dvd; " \
+    "subpicture/x-dvb; " \
     "subpicture/x-pgs"
 
 G_END_DECLS
