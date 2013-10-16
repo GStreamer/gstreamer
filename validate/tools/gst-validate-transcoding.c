@@ -480,6 +480,8 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       gst_message_parse_error (message, &err, &debug);
       g_print ("Error: %s %s\n", GST_OBJECT_NAME (GST_MESSAGE_SRC (message)),
           err->message);
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+          GST_DEBUG_GRAPH_SHOW_ALL, "gst-validate-transcode.error");
       g_error_free (err);
       g_free (debug);
       g_main_loop_quit (loop);
