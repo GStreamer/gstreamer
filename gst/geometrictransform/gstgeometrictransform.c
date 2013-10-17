@@ -240,7 +240,16 @@ gst_geometric_transform_transform_frame (GstVideoFilter * vfilter,
 
   in_data = GST_VIDEO_FRAME_PLANE_DATA (in_frame, 0);
   out_data = GST_VIDEO_FRAME_PLANE_DATA (out_frame, 0);
-  memset (out_data, 0, out_frame->map[0].size);
+
+  if (GST_VIDEO_FRAME_FORMAT (out_frame) == GST_VIDEO_FORMAT_AYUV) {
+    /* in AYUV black is not just all zeros:
+     * 0x10 is black for Y,
+     * 0x80 is black for Cr and Cb */
+    for (int i = 0; i < out_frame->map[0].size; i += 4)
+      GST_WRITE_UINT32_BE (out_data + i, 0xff108080);
+  } else {
+    memset (out_data, 0, out_frame->map[0].size);
+  }
 
   GST_OBJECT_LOCK (gt);
   if (gt->precalc_map) {
