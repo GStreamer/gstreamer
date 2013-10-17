@@ -63,8 +63,10 @@ destroy_pad (PadInfos * infos)
     gst_bin_remove (GST_BIN (infos->self), infos->bin);
   }
 
-  if (infos->adder_pad)
+  if (infos->adder_pad) {
     gst_element_release_request_pad (infos->self->adder, infos->adder_pad);
+    gst_object_unref (infos->adder_pad);
+  }
   g_slice_free (PadInfos, infos);
 }
 
@@ -191,6 +193,7 @@ ges_smart_adder_init (GESSmartAdder * self)
   pad = gst_element_get_static_pad (self->adder, "src");
   self->srcpad = gst_ghost_pad_new ("src", pad);
   gst_pad_set_active (self->srcpad, TRUE);
+  gst_object_unref (pad);
 
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 

@@ -733,6 +733,7 @@ pad_removed_cb (GstElement * timeline, GstPad * pad, GESPipeline * self)
     gst_object_unref (peer);
     gst_element_release_request_pad (self->priv->encodebin,
         chain->encodebinpad);
+    gst_object_unref (chain->encodebinpad);
   }
 
   /* Unlink playsink */

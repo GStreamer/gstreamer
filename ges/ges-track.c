@@ -265,10 +265,12 @@ pad_added_cb (GstElement * element, GstPad * pad, GESTrack * track)
   GST_DEBUG ("track:%p, pad %s:%s", track, GST_DEBUG_PAD_NAME (pad));
 
   gst_pad_link (pad, capsfilter_sink);
+  gst_object_unref (capsfilter_sink);
 
   capsfilter_src = gst_element_get_static_pad (priv->capsfilter, "src");
   /* ghost the pad */
   priv->srcpad = gst_ghost_pad_new ("src", capsfilter_src);
+  gst_object_unref (capsfilter_src);
   gst_pad_set_active (priv->srcpad, TRUE);
   gst_element_add_pad (GST_ELEMENT (track), priv->srcpad);
 
@@ -422,6 +424,9 @@ ges_track_dispose (GObject * object)
       (GFunc) dispose_trackelements_foreach, track);
   g_sequence_free (priv->trackelements_by_start);
   g_list_free_full (priv->gaps, (GDestroyNotify) free_gap);
+
+  if (priv->mixing_operation)
+    gst_object_unref (priv->mixing_operation);
 
   if (priv->composition) {
     gst_bin_remove (GST_BIN (object), priv->composition);
@@ -758,6 +763,8 @@ ges_track_set_mixing (GESTrack * track, gboolean mixing)
   }
 
   if (mixing) {
+    // increase ref count to hold the object
+    gst_object_ref (track->priv->mixing_operation);
     if (!gst_bin_add (GST_BIN (track->priv->composition),
             track->priv->mixing_operation)) {
       GST_WARNING_OBJECT (track, "Could not add the mixer to our composition");

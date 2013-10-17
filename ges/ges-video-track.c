@@ -90,6 +90,8 @@ create_element_for_raw_video_gap (GESTrack * track)
 
   _sync_capsfilter_with_track (track, capsfilter);
 
+  gst_object_unref (capsfilter);
+
   return bin;
 }
 

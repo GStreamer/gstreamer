@@ -144,7 +144,7 @@ ges_title_source_create_source (GESTrackElement * object)
   GESTitleSource *self = GES_TITLE_SOURCE (object);
   GESTitleSourcePrivate *priv = self->priv;
   GstElement *topbin, *background, *text;
-  GstPad *src;
+  GstPad *src, *pad;
 
   topbin = gst_bin_new ("titlesrc-bin");
   background = gst_element_factory_make ("videotestsrc", "titlesrc-bg");
@@ -172,7 +172,9 @@ ges_title_source_create_source (GESTrackElement * object)
   gst_element_link_pads_full (background, "src", text, "video_sink",
       GST_PAD_LINK_CHECK_NOTHING);
 
-  src = gst_ghost_pad_new ("src", gst_element_get_static_pad (text, "src"));
+  pad = gst_element_get_static_pad (text, "src");
+  src = gst_ghost_pad_new ("src", pad);
+  gst_object_unref (pad);
   gst_element_add_pad (topbin, src);
 
   gst_object_ref (text);

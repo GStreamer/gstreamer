@@ -59,8 +59,10 @@ destroy_pad (PadInfos * infos)
     gst_bin_remove (GST_BIN (infos->self), infos->bin);
   }
 
-  if (infos->mixer_pad)
+  if (infos->mixer_pad) {
     gst_element_release_request_pad (infos->self->mixer, infos->mixer_pad);
+    gst_object_unref (infos->mixer_pad);
+  }
 
   g_slice_free (PadInfos, infos);
 }
@@ -216,7 +218,7 @@ ges_smart_mixer_init (GESSmartMixer * self)
   pad = gst_element_get_static_pad (self->mixer, "src");
   self->srcpad = gst_ghost_pad_new ("src", pad);
   gst_pad_set_active (self->srcpad, TRUE);
-
+  gst_object_unref (pad);
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 
   self->pads_infos = g_hash_table_new_full (g_direct_hash, g_direct_equal,

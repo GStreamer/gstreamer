@@ -116,6 +116,9 @@ ges_source_create_topbin (const gchar * bin_name, GstElement * sub_element, ...)
         G_CALLBACK (_ghost_pad_added_cb), bin);
   }
 
+  if (sub_srcpad)
+    gst_object_unref (sub_srcpad);
+
   return bin;
 }
 

@@ -98,12 +98,11 @@ pad_added_cb (GstElement * timeline, GstPad * pad, GstElement * scale)
     GST_DEBUG ("got sink pad, trying to link");
 
     ret = gst_pad_link (pad, sinkpad);
-    if GST_PAD_LINK_SUCCESSFUL
-      (ret) {
+    gst_object_unref (sinkpad);
+    if (GST_PAD_LINK_SUCCESSFUL (ret)) {
       GST_DEBUG ("linked ok, returning");
-      gst_object_unref (sinkpad);
       return;
-      }
+    }
   }
 
   GST_DEBUG ("pad failed to link properly");

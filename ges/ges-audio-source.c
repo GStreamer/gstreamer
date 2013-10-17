@@ -88,6 +88,7 @@ ges_audio_source_create_element (GESTrackElement * trksrc)
   _sync_element_to_layer_property_float (trksrc, volume, GES_META_VOLUME,
       "volume");
   ges_track_element_add_children_props (trksrc, volume, NULL, NULL, props);
+  gst_object_unref (volume);
 
   return topbin;
 }
