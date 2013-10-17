@@ -14109,7 +14109,7 @@
           <parameter name="render_y" type="gint"/>
           <parameter name="render_width" type="guint"/>
           <parameter name="render_height" type="guint"/>
-          <parameter name="flags" type="int"/>
+          <parameter name="flags" type="GstVideoOverlayFormatFlags"/>
         </parameters>
       </constructor>
       <method name="Copy" cname="gst_video_overlay_rectangle_copy">
@@ -14119,7 +14119,7 @@
         <parameters/>
       </method>
       <method name="GetFlags" cname="gst_video_overlay_rectangle_get_flags">
-        <return-type type="int"/>
+        <return-type type="GstVideoOverlayFormatFlags"/>
         <parameters/>
       </method>
       <method name="GetGlobalAlpha" cname="gst_video_overlay_rectangle_get_global_alpha">
@@ -14131,7 +14131,7 @@
           <warning>missing glib:type-name</warning>
         </return-type>
         <parameters>
-          <parameter name="flags" type="int"/>
+          <parameter name="flags" type="GstVideoOverlayFormatFlags"/>
         </parameters>
       </method>
       <method name="GetPixelsAyuv" cname="gst_video_overlay_rectangle_get_pixels_ayuv">
@@ -14139,7 +14139,7 @@
           <warning>missing glib:type-name</warning>
         </return-type>
         <parameters>
-          <parameter name="flags" type="int"/>
+          <parameter name="flags" type="GstVideoOverlayFormatFlags"/>
         </parameters>
       </method>
       <method name="GetPixelsRaw" cname="gst_video_overlay_rectangle_get_pixels_raw">
@@ -14147,7 +14147,7 @@
           <warning>missing glib:type-name</warning>
         </return-type>
         <parameters>
-          <parameter name="flags" type="int"/>
+          <parameter name="flags" type="GstVideoOverlayFormatFlags"/>
         </parameters>
       </method>
       <method name="GetPixelsUnscaledArgb" cname="gst_video_overlay_rectangle_get_pixels_unscaled_argb">
@@ -14155,7 +14155,7 @@
           <warning>missing glib:type-name</warning>
         </return-type>
         <parameters>
-          <parameter name="flags" type="int"/>
+          <parameter name="flags" type="GstVideoOverlayFormatFlags"/>
         </parameters>
       </method>
       <method name="GetPixelsUnscaledAyuv" cname="gst_video_overlay_rectangle_get_pixels_unscaled_ayuv">
@@ -14163,7 +14163,7 @@
           <warning>missing glib:type-name</warning>
         </return-type>
         <parameters>
-          <parameter name="flags" type="int"/>
+          <parameter name="flags" type="GstVideoOverlayFormatFlags"/>
         </parameters>
       </method>
       <method name="GetPixelsUnscaledRaw" cname="gst_video_overlay_rectangle_get_pixels_unscaled_raw">
@@ -14171,7 +14171,7 @@
           <warning>missing glib:type-name</warning>
         </return-type>
         <parameters>
-          <parameter name="flags" type="int"/>
+          <parameter name="flags" type="GstVideoOverlayFormatFlags"/>
         </parameters>
       </method>
       <method name="GetRenderRectangle" cname="gst_video_overlay_rectangle_get_render_rectangle">
@@ -14924,8 +14924,8 @@
       <method name="ConvertVolume" cname="gst_stream_volume_convert_volume" shared="true">
         <return-type type="gdouble"/>
         <parameters>
-          <parameter name="from" type="int"/>
-          <parameter name="to" type="int"/>
+          <parameter name="from" type="GstStreamVolumeFormat"/>
+          <parameter name="to" type="GstStreamVolumeFormat"/>
           <parameter name="val" type="gdouble"/>
         </parameters>
       </method>
@@ -14936,7 +14936,7 @@
       <method name="GetVolume" cname="gst_stream_volume_get_volume">
         <return-type type="gdouble"/>
         <parameters>
-          <parameter name="format" type="int"/>
+          <parameter name="format" type="GstStreamVolumeFormat"/>
         </parameters>
       </method>
       <method name="SetMute" cname="gst_stream_volume_set_mute">
@@ -14948,7 +14948,7 @@
       <method name="SetVolume" cname="gst_stream_volume_set_volume">
         <return-type type="void"/>
         <parameters>
-          <parameter name="format" type="int"/>
+          <parameter name="format" type="GstStreamVolumeFormat"/>
           <parameter name="val" type="gdouble"/>
         </parameters>
       </method>
@@ -16576,8 +16576,8 @@
       <method name="StreamVolumeConvertVolume" cname="gst_stream_volume_convert_volume" shared="true">
         <return-type type="gdouble"/>
         <parameters>
-          <parameter name="from" type="int"/>
-          <parameter name="to" type="int"/>
+          <parameter name="from" type="GstStreamVolumeFormat"/>
+          <parameter name="to" type="GstStreamVolumeFormat"/>
           <parameter name="val" type="gdouble"/>
         </parameters>
       </method>
