@@ -163,8 +163,6 @@ public class MediaInfo.Info : Box
 
     // add widgets
     preview = new Preview ();
-    preview.draw.connect (on_preview_draw);
-    preview.size_allocate.connect (on_preview_size_allocate);
     pack_start (preview, false, false, 0);
 
     info_area = new ScrolledWindow (null, null);
@@ -368,7 +366,12 @@ public class MediaInfo.Info : Box
       duration.set_text ("");
       return;
     }
+    
+    // prepare file from preview
+    ((GLib.Object)pb).set_property ("uri", info.get_uri());
+    pb.set_state (State.PAUSED);
 
+    // update info view
     duration.set_text (format_time(info.get_duration ()));
 
     /*
@@ -473,49 +476,25 @@ public class MediaInfo.Info : Box
 
     toc_entries.set_model (build_toc_info (toc));
     toc_entries.expand_all ();
-    
+
+    // TODO(ensonic): ideally do async wait for PAUSED
     if (have_video) {
       Gdk.Point res = video_resolutions[0];
       preview.set_content_size(res.x, res.y);
+      preview.set_double_buffered (false);
     } else if (album_art != null) {
       preview.set_static_content(album_art);
+      preview.set_double_buffered (true);
     } else {
       preview.reset();
+      preview.set_double_buffered (true);
     }
 
-    //l = info.get_container_streams ();
-
     // play file
-    ((GLib.Object)pb).set_property ("uri", info.get_uri());
     pb.set_state (State.PLAYING);
   }
 
   // signal handlers
-  
-  private void on_preview_size_allocate (Widget widget, Gtk.Allocation box) {
-    /*
-    Gtk.Allocation alloc;
-    get_allocation (out alloc);
-    debug ("size_allocate: %d x %d", alloc.width, alloc.height);
-
-    Gtk.Requisition requisition;
-    info_area.get_child ().get_preferred_size (null, out requisition);
-    debug ("info_area: %d x %d", requisition.width, requisition.height);
-    debug ("video_area: %d x %d", box.width, box.height);
-    
-    int max_h = alloc.height - box.height;
-    info_area.set_min_content_height (int.min (requisition.height, max_h));
-    */
-  }
-
-  private bool on_preview_draw (Widget widget, Cairo.Context cr) {
-    if (pb.current_state < State.PAUSED || !have_video) {
-      widget.set_double_buffered (true);
-    } else {      
-      widget.set_double_buffered (false);
-    }
-    return false;
-  }
 
   private void on_element_sync_message (Gst.Bus bus, Message message) {
     if (Gst.Video.is_video_overlay_prepare_window_handle_message (message)) {
