@@ -197,7 +197,7 @@ gst_rotate_class_init (GstRotateClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_ANGLE,
       g_param_spec_double ("angle", "angle",
-          "Angle at which the arc starts in radians",
+          "Angle by which the picture is rotated, in radians",
           -G_MAXDOUBLE, G_MAXDOUBLE, DEFAULT_ANGLE,
           GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 

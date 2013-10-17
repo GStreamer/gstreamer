@@ -47599,7 +47599,7 @@
 <RANGE></RANGE>
 <FLAGS>rw</FLAGS>
 <NICK>angle</NICK>
-<BLURB>Angle at which the arc starts in radians.</BLURB>
+<BLURB>Angle by which the picture is rotated, in radians.</BLURB>
 <DEFAULT>0</DEFAULT>
 </ARG>
 
