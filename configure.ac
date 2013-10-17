@@ -38,7 +38,7 @@ dnl Check for Mono
 PKG_CHECK_MODULES(MONO_DEPENDENCY, mono >= 1.0, has_mono=true, has_mono=false)
 
 if test "x$has_mono" = "xtrue"; then
-1	AC_PATH_PROG(RUNTIME, mono, no)
+	AC_PATH_PROG(RUNTIME, mono, no)
 	AC_PATH_PROG(CSC, gmcs, no)
 	LIB_PREFIX=.so
 	LIB_SUFFIX=
