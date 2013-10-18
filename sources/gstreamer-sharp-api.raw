@@ -12297,6 +12297,541 @@
       <constant value="src" ctype="gchar*" gtype="gchar*" name="BASE_TRANSFORM_SRC_NAME"/>
     </object>
   </namespace>
+  <namespace name="GstTag" library="gsttag-1.0">
+    <enum name="TagDemuxResult" cname="GstTagDemuxResult" type="enum" gtype="gst_tag_demux_result_get_type">
+      <member cname="GST_TAG_DEMUX_RESULT_BROKEN_TAG" name="BrokenTag" value="0"/>
+      <member cname="GST_TAG_DEMUX_RESULT_AGAIN" name="Again" value="1"/>
+      <member cname="GST_TAG_DEMUX_RESULT_OK" name="Ok" value="2"/>
+    </enum>
+    <enum name="TagImageType" cname="GstTagImageType" type="enum" gtype="gst_tag_image_type_get_type">
+      <member cname="GST_TAG_IMAGE_TYPE_NONE" name="None" value="-1"/>
+      <member cname="GST_TAG_IMAGE_TYPE_UNDEFINED" name="Undefined" value="0"/>
+      <member cname="GST_TAG_IMAGE_TYPE_FRONT_COVER" name="FrontCover" value="1"/>
+      <member cname="GST_TAG_IMAGE_TYPE_BACK_COVER" name="BackCover" value="2"/>
+      <member cname="GST_TAG_IMAGE_TYPE_LEAFLET_PAGE" name="LeafletPage" value="3"/>
+      <member cname="GST_TAG_IMAGE_TYPE_MEDIUM" name="Medium" value="4"/>
+      <member cname="GST_TAG_IMAGE_TYPE_LEAD_ARTIST" name="LeadArtist" value="5"/>
+      <member cname="GST_TAG_IMAGE_TYPE_ARTIST" name="Artist" value="6"/>
+      <member cname="GST_TAG_IMAGE_TYPE_CONDUCTOR" name="Conductor" value="7"/>
+      <member cname="GST_TAG_IMAGE_TYPE_BAND_ORCHESTRA" name="BandOrchestra" value="8"/>
+      <member cname="GST_TAG_IMAGE_TYPE_COMPOSER" name="Composer" value="9"/>
+      <member cname="GST_TAG_IMAGE_TYPE_LYRICIST" name="Lyricist" value="10"/>
+      <member cname="GST_TAG_IMAGE_TYPE_RECORDING_LOCATION" name="RecordingLocation" value="11"/>
+      <member cname="GST_TAG_IMAGE_TYPE_DURING_RECORDING" name="DuringRecording" value="12"/>
+      <member cname="GST_TAG_IMAGE_TYPE_DURING_PERFORMANCE" name="DuringPerformance" value="13"/>
+      <member cname="GST_TAG_IMAGE_TYPE_VIDEO_CAPTURE" name="VideoCapture" value="14"/>
+      <member cname="GST_TAG_IMAGE_TYPE_FISH" name="Fish" value="15"/>
+      <member cname="GST_TAG_IMAGE_TYPE_ILLUSTRATION" name="Illustration" value="16"/>
+      <member cname="GST_TAG_IMAGE_TYPE_BAND_ARTIST_LOGO" name="ArtistLogo" value="17"/>
+      <member cname="GST_TAG_IMAGE_TYPE_PUBLISHER_STUDIO_LOGO" name="PublisherStudioLogo" value="18"/>
+    </enum>
+    <enum name="TagLicenseFlags" cname="GstTagLicenseFlags" type="flags" gtype="gst_tag_license_flags_get_type">
+      <member cname="GST_TAG_LICENSE_PERMITS_REPRODUCTION" name="PermitsReproduction" value="1"/>
+      <member cname="GST_TAG_LICENSE_PERMITS_DISTRIBUTION" name="PermitsDistribution" value="2"/>
+      <member cname="GST_TAG_LICENSE_PERMITS_DERIVATIVE_WORKS" name="PermitsDerivativeWorks" value="4"/>
+      <member cname="GST_TAG_LICENSE_PERMITS_SHARING" name="PermitsSharing" value="8"/>
+      <member cname="GST_TAG_LICENSE_REQUIRES_NOTICE" name="RequiresNotice" value="256"/>
+      <member cname="GST_TAG_LICENSE_REQUIRES_ATTRIBUTION" name="RequiresAttributions" value="512"/>
+      <member cname="GST_TAG_LICENSE_REQUIRES_SHARE_ALIKE" name="RequiresShareAlike" value="1024"/>
+      <member cname="GST_TAG_LICENSE_REQUIRES_SOURCE_CODE" name="RequiresSourceCode" value="2048"/>
+      <member cname="GST_TAG_LICENSE_REQUIRES_COPYLEFT" name="RequiresCopyleft" value="4096"/>
+      <member cname="GST_TAG_LICENSE_REQUIRES_LESSER_COPYLEFT" name="RequiresLesserCopyleft" value="8192"/>
+      <member cname="GST_TAG_LICENSE_PROHIBITS_COMMERCIAL_USE" name="ProhibitsCommercialUse" value="65536"/>
+      <member cname="GST_TAG_LICENSE_PROHIBITS_HIGH_INCOME_NATION_USE" name="ProhibitsHighIncomeNationUse" value="131072"/>
+      <member cname="GST_TAG_LICENSE_CREATIVE_COMMONS_LICENSE" name="CreativeCommonsLicense" value="16777216"/>
+      <member cname="GST_TAG_LICENSE_FREE_SOFTWARE_FOUNDATION_LICENSE" name="FreeSoftwareFoundationLicense" value="33554432"/>
+    </enum>
+    <interface name="TagXmpWriter" cname="GstTagXmpWriter" abstract="false" opaque="false" hidden="false">
+      <class_struct cname="GstTagXmpWriterInterface">
+        <field cname="parent" access="public" writeable="false" readable="true" name="Parent" type="GTypeInterface">
+          <warning>missing glib:type-name</warning>
+        </field>
+      </class_struct>
+      <method name="GetType" cname="gst_tag_xmp_writer_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <method name="AddAllSchemas" cname="gst_tag_xmp_writer_add_all_schemas">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="AddSchema" cname="gst_tag_xmp_writer_add_schema">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="schema" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="HasSchema" cname="gst_tag_xmp_writer_has_schema">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="schema" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="RemoveAllSchemas" cname="gst_tag_xmp_writer_remove_all_schemas">
+        <return-type type="void"/>
+        <parameters/>
+      </method>
+      <method name="RemoveSchema" cname="gst_tag_xmp_writer_remove_schema">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="schema" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagListToXmpBuffer" cname="gst_tag_xmp_writer_tag_list_to_xmp_buffer">
+        <return-type type="GstBuffer*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="taglist" type="GstTagList*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="read_only" type="gboolean"/>
+        </parameters>
+      </method>
+    </interface>
+    <object name="TagDemux" cname="GstTagDemux" abstract="true" opaque="false" hidden="false" parent="GstElement">
+      <class_struct cname="GstTagDemuxClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" name="ParentClass" type="GstElementClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <field cname="min_start_size" access="public" writeable="false" readable="true" name="MinStartSize" type="guint"/>
+        <field cname="min_end_size" access="public" writeable="false" readable="true" name="MinEndSize" type="guint"/>
+        <method vm="identify_tag"/>
+        <method vm="parse_tag"/>
+        <method vm="merge_tags"/>
+        <field cname="reserved" access="private" writeable="false" readable="false" name="Reserved" type="gpointer" array="true" array_len="4"/>
+      </class_struct>
+      <method name="GetType" cname="gst_tag_demux_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <virtual_method name="IdentifyTag" cname="identify_tag">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="start_tag" type="gboolean"/>
+          <parameter name="tag_size" type="guint"/>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="MergeTags" cname="merge_tags">
+        <return-type type="GstTagList*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="start_tags" type="GstTagList*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="end_tags" type="GstTagList*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="ParseTag" cname="parse_tag">
+        <return-type type="GstTagDemuxResult"/>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="start_tag" type="gboolean"/>
+          <parameter name="tag_size" type="guint"/>
+          <parameter name="tags" type="GstTagList**">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <field cname="element" access="public" writeable="false" readable="true" name="Element" type="GstElement*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" name="Priv" type="GstTagDemuxPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="reserved" access="private" writeable="false" readable="false" name="Reserved" type="gpointer" array="true" array_len="4"/>
+    </object>
+    <object name="TagMux" cname="GstTagMux" abstract="true" opaque="false" hidden="false" parent="GstElement">
+      <implements>
+        <interface cname="GstTagSetter"/>
+      </implements>
+      <class_struct cname="GstTagMuxClass">
+        <field cname="parent_class" access="public" writeable="false" readable="true" name="ParentClass" type="GstElementClass">
+          <warning>missing glib:type-name</warning>
+        </field>
+        <method vm="render_start_tag"/>
+        <method vm="render_end_tag"/>
+        <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
+      </class_struct>
+      <method name="GetType" cname="gst_tag_mux_get_type" shared="true">
+        <return-type type="GType"/>
+      </method>
+      <virtual_method name="RenderEndTag" cname="render_end_tag">
+        <return-type type="GstBuffer*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="tag_list" type="GstTagList*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <virtual_method name="RenderStartTag" cname="render_start_tag">
+        <return-type type="GstBuffer*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="tag_list" type="GstTagList*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </virtual_method>
+      <field cname="element" access="public" writeable="false" readable="true" name="Element" type="GstElement*"/>
+      <field cname="priv" access="private" writeable="false" readable="false" name="Priv" type="GstTagMuxPrivate*">
+        <warning>missing glib:type-name</warning>
+      </field>
+      <field cname="_gst_reserved" access="private" writeable="false" readable="false" name="_gstGstReserved" type="gpointer" array="true" array_len="4"/>
+    </object>
+    <struct name="TagDemuxPrivate" cname="GstTagDemuxPrivate" opaque="true" hidden="true"/>
+    <struct name="TagMuxPrivate" cname="GstTagMuxPrivate" opaque="true" hidden="true"/>
+    <object name="Global" cname="GstTagGlobal" opaque="true">
+      <method name="TagCheckLanguageCode" cname="gst_tag_check_language_code" shared="true">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="lang_code" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagFreeformStringToUtf8" cname="gst_tag_freeform_string_to_utf8" shared="true">
+        <return-type type="gchar*" owned="true"/>
+        <parameters>
+          <parameter name="data" type="const-gchar*"/>
+          <parameter name="size" type="gint"/>
+          <parameter name="env_vars" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagFromId3Tag" cname="gst_tag_from_id3_tag" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="id3_tag" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagFromId3UserTag" cname="gst_tag_from_id3_user_tag" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="type" type="const-gchar*"/>
+          <parameter name="id3_user_tag" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagFromVorbisTag" cname="gst_tag_from_vorbis_tag" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="vorbis_tag" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagGetId3v2TagSize" cname="gst_tag_get_id3v2_tag_size" shared="true">
+        <return-type type="guint"/>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="TagGetLanguageCodeIso6391" cname="gst_tag_get_language_code_iso_639_1" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="lang_code" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagGetLanguageCodeIso6392B" cname="gst_tag_get_language_code_iso_639_2B" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="lang_code" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagGetLanguageCodeIso6392T" cname="gst_tag_get_language_code_iso_639_2T" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="lang_code" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagGetLanguageCodes" cname="gst_tag_get_language_codes" shared="true">
+        <return-type type="gchar***" owned="true" array="true" null_term_array="true"/>
+      </method>
+      <method name="TagGetLanguageName" cname="gst_tag_get_language_name" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="language_code" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagGetLicenseDescription" cname="gst_tag_get_license_description" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="license_ref" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagGetLicenseFlags" cname="gst_tag_get_license_flags" shared="true">
+        <return-type type="GstTagLicenseFlags"/>
+        <parameters>
+          <parameter name="license_ref" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagGetLicenseJurisdiction" cname="gst_tag_get_license_jurisdiction" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="license_ref" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagGetLicenseNick" cname="gst_tag_get_license_nick" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="license_ref" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagGetLicenseTitle" cname="gst_tag_get_license_title" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="license_ref" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagGetLicenseVersion" cname="gst_tag_get_license_version" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="license_ref" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagGetLicenses" cname="gst_tag_get_licenses" shared="true">
+        <return-type type="gchar***" owned="true" array="true" null_term_array="true"/>
+      </method>
+      <method name="TagId3GenreCount" cname="gst_tag_id3_genre_count" shared="true">
+        <return-type type="guint"/>
+      </method>
+      <method name="TagId3GenreGet" cname="gst_tag_id3_genre_get" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="id" type="guint"/>
+        </parameters>
+      </method>
+      <method name="TagImageDataToImageSample" cname="gst_tag_image_data_to_image_sample" shared="true">
+        <return-type type="GstSample*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="image_data" type="guint8"/>
+          <parameter name="image_data_len" type="guint"/>
+          <parameter name="image_type" type="GstTagImageType"/>
+        </parameters>
+      </method>
+      <method name="TagListAddId3Image" cname="gst_tag_list_add_id3_image" shared="true">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="tag_list" type="GstTagList*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="image_data" type="guint8"/>
+          <parameter name="image_data_len" type="guint"/>
+          <parameter name="id3_picture_type" type="guint"/>
+        </parameters>
+      </method>
+      <method name="TagListFromExifBuffer" cname="gst_tag_list_from_exif_buffer" shared="true">
+        <return-type type="GstTagList*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="byte_order" type="gint"/>
+          <parameter name="base_offset" type="guint32"/>
+        </parameters>
+      </method>
+      <method name="TagListFromExifBufferWithTiffHeader" cname="gst_tag_list_from_exif_buffer_with_tiff_header" shared="true">
+        <return-type type="GstTagList*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="TagListFromId3v2Tag" cname="gst_tag_list_from_id3v2_tag" shared="true">
+        <return-type type="GstTagList*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="TagListFromVorbiscomment" cname="gst_tag_list_from_vorbiscomment" shared="true">
+        <return-type type="GstTagList*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="data" type="guint8"/>
+          <parameter name="size" type="gsize"/>
+          <parameter name="id_data" type="guint8"/>
+          <parameter name="id_data_length" type="guint"/>
+          <parameter name="vendor_string" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagListFromVorbiscommentBuffer" cname="gst_tag_list_from_vorbiscomment_buffer" shared="true">
+        <return-type type="GstTagList*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="id_data" type="guint8"/>
+          <parameter name="id_data_length" type="guint"/>
+          <parameter name="vendor_string" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagListFromXmpBuffer" cname="gst_tag_list_from_xmp_buffer" shared="true">
+        <return-type type="GstTagList*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="buffer" type="GstBuffer*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="TagListNewFromId3v1" cname="gst_tag_list_new_from_id3v1" shared="true">
+        <return-type type="GstTagList*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="data" type="guint8"/>
+        </parameters>
+      </method>
+      <method name="TagListToExifBuffer" cname="gst_tag_list_to_exif_buffer" shared="true">
+        <return-type type="GstBuffer*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="taglist" type="GstTagList*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="byte_order" type="gint"/>
+          <parameter name="base_offset" type="guint32"/>
+        </parameters>
+      </method>
+      <method name="TagListToExifBufferWithTiffHeader" cname="gst_tag_list_to_exif_buffer_with_tiff_header" shared="true">
+        <return-type type="GstBuffer*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="taglist" type="GstTagList*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+        </parameters>
+      </method>
+      <method name="TagListToVorbiscommentBuffer" cname="gst_tag_list_to_vorbiscomment_buffer" shared="true">
+        <return-type type="GstBuffer*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="list" type="GstTagList*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="id_data" type="guint8"/>
+          <parameter name="id_data_length" type="guint"/>
+          <parameter name="vendor_string" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagListToXmpBuffer" cname="gst_tag_list_to_xmp_buffer" shared="true">
+        <return-type type="GstBuffer*" owned="true">
+          <warning>missing glib:type-name</warning>
+        </return-type>
+        <parameters>
+          <parameter name="list" type="GstTagList*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="read_only" type="gboolean"/>
+          <parameter name="schemas" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagParseExtendedComment" cname="gst_tag_parse_extended_comment" shared="true">
+        <return-type type="gboolean"/>
+        <parameters>
+          <parameter name="ext_comment" type="const-gchar*"/>
+          <parameter name="key" type="const-gchar*"/>
+          <parameter name="lang" type="const-gchar*"/>
+          <parameter name="value" type="const-gchar*"/>
+          <parameter name="fail_if_no_key" type="gboolean"/>
+        </parameters>
+      </method>
+      <method name="TagRegisterMusicbrainzTags" cname="gst_tag_register_musicbrainz_tags" shared="true">
+        <return-type type="void"/>
+      </method>
+      <method name="TagToId3Tag" cname="gst_tag_to_id3_tag" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="gst_tag" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagToVorbisComments" cname="gst_tag_to_vorbis_comments" shared="true">
+        <return-type type="GList*" element_type="gchar*" elements_owned="true" owned="true"/>
+        <parameters>
+          <parameter name="list" type="GstTagList*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="tag" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagToVorbisTag" cname="gst_tag_to_vorbis_tag" shared="true">
+        <return-type type="const-gchar*"/>
+        <parameters>
+          <parameter name="gst_tag" type="const-gchar*"/>
+        </parameters>
+      </method>
+      <method name="TagXmpListSchemas" cname="gst_tag_xmp_list_schemas" shared="true">
+        <return-type type="const gchar**" array="true" null_term_array="true"/>
+      </method>
+      <method name="VorbisTagAdd" cname="gst_vorbis_tag_add" shared="true">
+        <return-type type="void"/>
+        <parameters>
+          <parameter name="list" type="GstTagList*">
+            <warning>missing glib:type-name</warning>
+          </parameter>
+          <parameter name="tag" type="const-gchar*"/>
+          <parameter name="value" type="const-gchar*"/>
+        </parameters>
+      </method>
+    </object>
+    <object name="Constants" cname="GstTagConstants" opaque="true">
+      <constant value="capturing-contrast" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_CONTRAST"/>
+      <constant value="capturing-digital-zoom-ratio" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_DIGITAL_ZOOM_RATIO"/>
+      <constant value="capturing-exposure-compensation" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_EXPOSURE_COMPENSATION"/>
+      <constant value="capturing-exposure-mode" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_EXPOSURE_MODE"/>
+      <constant value="capturing-exposure-program" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_EXPOSURE_PROGRAM"/>
+      <constant value="capturing-flash-fired" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_FLASH_FIRED"/>
+      <constant value="capturing-flash-mode" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_FLASH_MODE"/>
+      <constant value="capturing-focal-length" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_FOCAL_LENGTH"/>
+      <constant value="capturing-focal-ratio" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_FOCAL_RATIO"/>
+      <constant value="capturing-gain-adjustment" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_GAIN_ADJUSTMENT"/>
+      <constant value="capturing-iso-speed" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_ISO_SPEED"/>
+      <constant value="capturing-metering-mode" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_METERING_MODE"/>
+      <constant value="capturing-saturation" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_SATURATION"/>
+      <constant value="capturing-scene-capture-type" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_SCENE_CAPTURE_TYPE"/>
+      <constant value="capturing-sharpness" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_SHARPNESS"/>
+      <constant value="capturing-shutter-speed" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_SHUTTER_SPEED"/>
+      <constant value="capturing-source" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_SOURCE"/>
+      <constant value="capturing-white-balance" ctype="gchar*" gtype="gchar*" name="TAG_CAPTURING_WHITE_BALANCE"/>
+      <constant value="discid" ctype="gchar*" gtype="gchar*" name="TAG_CDDA_CDDB_DISCID"/>
+      <constant value="discid-full" ctype="gchar*" gtype="gchar*" name="TAG_CDDA_CDDB_DISCID_FULL"/>
+      <constant value="musicbrainz-discid" ctype="gchar*" gtype="gchar*" name="TAG_CDDA_MUSICBRAINZ_DISCID"/>
+      <constant value="musicbrainz-discid-full" ctype="gchar*" gtype="gchar*" name="TAG_CDDA_MUSICBRAINZ_DISCID_FULL"/>
+      <constant value="cmml-clip" ctype="gchar*" gtype="gchar*" name="TAG_CMML_CLIP"/>
+      <constant value="cmml-head" ctype="gchar*" gtype="gchar*" name="TAG_CMML_HEAD"/>
+      <constant value="cmml-stream" ctype="gchar*" gtype="gchar*" name="TAG_CMML_STREAM"/>
+      <constant value="10" ctype="gint" gtype="gint" name="TAG_ID3V2_HEADER_SIZE"/>
+      <constant value="image-horizontal-ppi" ctype="gchar*" gtype="gchar*" name="TAG_IMAGE_HORIZONTAL_PPI"/>
+      <constant value="image-vertical-ppi" ctype="gchar*" gtype="gchar*" name="TAG_IMAGE_VERTICAL_PPI"/>
+      <constant value="musicbrainz-albumartistid" ctype="gchar*" gtype="gchar*" name="TAG_MUSICBRAINZ_ALBUMARTISTID"/>
+      <constant value="musicbrainz-albumid" ctype="gchar*" gtype="gchar*" name="TAG_MUSICBRAINZ_ALBUMID"/>
+      <constant value="musicbrainz-artistid" ctype="gchar*" gtype="gchar*" name="TAG_MUSICBRAINZ_ARTISTID"/>
+      <constant value="musicbrainz-trackid" ctype="gchar*" gtype="gchar*" name="TAG_MUSICBRAINZ_TRACKID"/>
+      <constant value="musicbrainz-trmid" ctype="gchar*" gtype="gchar*" name="TAG_MUSICBRAINZ_TRMID"/>
+    </object>
+  </namespace>
   <namespace name="GstVideo" library="gstvideo-1.0">
     <enum name="ColorBalanceType" cname="GstColorBalanceType" type="enum" gtype="gst_color_balance_type_get_type">
       <member cname="GST_COLOR_BALANCE_HARDWARE" name="Hardware" value="0"/>

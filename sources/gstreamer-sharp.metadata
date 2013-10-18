@@ -149,20 +149,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace[@name='GstAudio']" name="name">Gst.Audio</attr>
 	<attr path="/api/namespace[@name='GstBase']" name="name">Gst.Base</attr>
 	<attr path="/api/namespace[@name='GstPbutils']" name="name">Gst.PbUtils</attr>
+	<attr path="/api/namespace[@name='GstTag']" name="name">Gst.Tags</attr>
 	<attr path="/api/namespace[@name='Gst.Base']/object[@name='Global']" name="name">GlobalBase</attr>
 	<attr path="/api/namespace[@name='Gst.Video']/object[@name='Global']" name="name">GlobalVideo</attr>
 	<attr path="/api/namespace[@name='Gst.Audio']/object[@name='Global']" name="name">GlobalAudio</attr>
 	<attr path="/api/namespace[@name='Gst.PbUtils']/object[@name='Global']" name="name">GlobalPbUtil</attr>
-	<attr path="/api/namespace[@name='GstPbutils']" name="name">Gst.PbUtils</attr>
+	<attr path="/api/namespace[@name='Gst.Tags']/object[@name='Global']" name="name">GlobalTag</attr>
 	<attr path="/api/namespace[@name='Gst.Base']/object[@name='Constants']" name="name">ConstantsBase</attr>
 	<attr path="/api/namespace[@name='Gst.Video']/object[@name='Constants']" name="name">ConstantsVideo</attr>
 	<attr path="/api/namespace[@name='Gst.Audio']/object[@name='Constants']" name="name">ConstantsAudio</attr>
 	<attr path="/api/namespace[@name='Gst.PbUtils']/object[@name='Constants']" name="name">ConstantsPbUtil</attr>
+	<attr path="/api/namespace[@name='Gst.Tags']/object[@name='Constants']" name="name">ConstantsTag</attr>
 
 	<!-- FIXME: Remove when https://bugzilla.gnome.org/show_bug.cgi?id=710001 is fixed -->
 	<attr path="/api/namespace[@name='Gst.Base']" name="library">libgstbase-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Audio']" name="library">libgstaudio-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Video']" name="library">libgstvideo-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.PbUtils']" name="library">libgstpbutils-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Tags']" name="library">libgsttag-1.0-0.dll</attr>
 </metadata>
 
