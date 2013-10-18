@@ -62,10 +62,6 @@ public class MediaInfo.App : Window
     chooser = new FileChooserWidget (FileChooserAction.OPEN);
     paned.pack1 (chooser, false, false);
 
-    if (directory != null) {
-      //chooser.set_current_folder (GLib.Environment.get_home_dir ());
-      chooser.set_current_folder (directory);
-    }
     chooser.set_show_hidden (false);
     
     if (uri != null) {
@@ -75,6 +71,13 @@ public class MediaInfo.App : Window
         return false;
       });
     } else {
+      if (directory != null) {
+        //chooser.set_current_folder (GLib.Environment.get_home_dir ());
+        Idle.add ( () => {
+          chooser.set_current_folder (directory);
+          return false;
+        });
+      }
       chooser.selection_changed.connect (on_update_preview);
     }
 
