@@ -134,6 +134,9 @@ enum {
     PROP_0,
 
     PROP_FORMAT,
+    PROP_WIDTH,
+    PROP_HEIGHT,
+    PROP_FORCE_ASPECT_RATIO,
     PROP_DEINTERLACE_MODE,
     PROP_DEINTERLACE_METHOD,
 };
@@ -611,6 +614,11 @@ gst_vaapipostproc_update_src_caps(GstVaapiPostproc *postproc, GstCaps *caps,
 
     if (postproc->format != GST_VIDEO_INFO_FORMAT(&postproc->sinkpad_info))
         postproc->flags |= GST_VAAPI_POSTPROC_FLAG_FORMAT;
+
+    if ((postproc->width || postproc->height) &&
+        postproc->width != GST_VIDEO_INFO_WIDTH(&postproc->sinkpad_info) &&
+        postproc->height != GST_VIDEO_INFO_HEIGHT(&postproc->sinkpad_info))
+        postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SIZE;
     return TRUE;
 }
 
@@ -743,6 +751,38 @@ ensure_allowed_srcpad_caps(GstVaapiPostproc *postproc)
     return postproc->allowed_srcpad_caps != NULL;
 }
 
+static void
+find_best_size(GstVaapiPostproc *postproc, GstVideoInfo *vip,
+    guint *width_ptr, guint *height_ptr)
+{
+    guint width, height;
+
+    width  = GST_VIDEO_INFO_WIDTH(vip);
+    height = GST_VIDEO_INFO_HEIGHT(vip);
+    if (postproc->width && postproc->height) {
+        width = postproc->width;
+        height = postproc->height;
+    }
+    else if (postproc->keep_aspect) {
+        const gdouble ratio  = (gdouble)width / height;
+        if (postproc->width) {
+            width = postproc->width;
+            height = postproc->width / ratio;
+        }
+        else if (postproc->height) {
+            height = postproc->height;
+            width = postproc->height * ratio;
+        }
+    }
+    else if (postproc->width)
+        width = postproc->width;
+    else if (postproc->height)
+        height = postproc->height;
+
+    *width_ptr = width;
+    *height_ptr = height;
+}
+
 static GstCaps *
 gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
     GstPadDirection direction, GstCaps *caps)
@@ -751,6 +791,7 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
     GstVideoInfo vi;
     GstVideoFormat format;
     GstCaps *out_caps;
+    guint width, height;
     gint fps_n, fps_d, par_n, par_d;
 
     if (!gst_caps_is_fixed(caps)) {
@@ -790,6 +831,9 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
         /* Signal the other pad that we generate only progressive frames */
         GST_VIDEO_INFO_INTERLACE_MODE(&vi) =
             GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+
+        find_best_size(postproc, &vi, &width, &height);
+        gst_video_info_set_format(&vi, format, width, height);
     }
     else {
         if (is_deinterlace_enabled(postproc, &vi)) {
@@ -1165,6 +1209,15 @@ gst_vaapipostproc_set_property(
     case PROP_FORMAT:
         postproc->format = g_value_get_enum(value);
         break;
+    case PROP_WIDTH:
+        postproc->width = g_value_get_uint(value);
+        break;
+    case PROP_HEIGHT:
+        postproc->height = g_value_get_uint(value);
+        break;
+    case PROP_FORCE_ASPECT_RATIO:
+        postproc->keep_aspect = g_value_get_boolean(value);
+        break;
     case PROP_DEINTERLACE_MODE:
         postproc->deinterlace_mode = g_value_get_enum(value);
         break;
@@ -1190,6 +1243,15 @@ gst_vaapipostproc_get_property(
     switch (prop_id) {
     case PROP_FORMAT:
         g_value_set_enum(value, postproc->format);
+        break;
+    case PROP_WIDTH:
+        g_value_set_uint(value, postproc->width);
+        break;
+    case PROP_HEIGHT:
+        g_value_set_uint(value, postproc->height);
+        break;
+    case PROP_FORCE_ASPECT_RATIO:
+        g_value_set_boolean(value, postproc->keep_aspect);
         break;
     case PROP_DEINTERLACE_MODE:
         g_value_set_enum(value, postproc->deinterlace_mode);
@@ -1294,6 +1356,54 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
         g_object_class_install_property(object_class,
             PROP_FORMAT, filter_op->pspec);
 
+    /**
+     * GstVaapiPostproc:width:
+     *
+     * The forced output width in pixels. If set to zero, the width is
+     * calculated from the height if aspect ration is preserved, or
+     * inherited from the sink caps width
+     */
+    g_object_class_install_property
+        (object_class,
+         PROP_WIDTH,
+         g_param_spec_uint("width",
+                           "Width",
+                           "Forced output width",
+                           0, G_MAXINT, 0,
+                           G_PARAM_READWRITE));
+
+    /**
+     * GstVaapiPostproc:height:
+     *
+     * The forced output height in pixels. If set to zero, the height
+     * is calculated from the width if aspect ration is preserved, or
+     * inherited from the sink caps height
+     */
+    g_object_class_install_property
+        (object_class,
+         PROP_HEIGHT,
+         g_param_spec_uint("height",
+                           "Height",
+                           "Forced output height",
+                           0, G_MAXINT, 0,
+                           G_PARAM_READWRITE));
+
+    /**
+     * GstVaapiPostproc:force-aspect-ratio:
+     *
+     * When enabled, scaling respects video aspect ratio; when
+     * disabled, the video is distorted to fit the width and height
+     * properties.
+     */
+    g_object_class_install_property
+        (object_class,
+         PROP_FORCE_ASPECT_RATIO,
+         g_param_spec_boolean("force-aspect-ratio",
+                              "Force aspect ratio",
+                              "When enabled, scaling will respect original aspect ratio",
+                              TRUE,
+                              G_PARAM_READWRITE));
+
     g_ptr_array_unref(filter_ops);
 }
 
@@ -1304,6 +1414,7 @@ gst_vaapipostproc_init(GstVaapiPostproc *postproc)
     postproc->deinterlace_mode          = DEFAULT_DEINTERLACE_MODE;
     postproc->deinterlace_method        = DEFAULT_DEINTERLACE_METHOD;
     postproc->field_duration            = GST_CLOCK_TIME_NONE;
+    postproc->keep_aspect               = TRUE;
 
     gst_video_info_init(&postproc->sinkpad_info);
     gst_video_info_init(&postproc->srcpad_info);

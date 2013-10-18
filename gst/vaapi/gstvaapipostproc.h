@@ -111,6 +111,8 @@ struct _GstVaapiPostproc {
     GstVideoInfo                filter_pool_info;
     GArray                     *filter_formats;
     GstVideoFormat              format; /* output video format (encoded) */
+    guint                       width;
+    guint                       height;
     guint                       flags;
 
     GstCaps                    *allowed_sinkpad_caps;
@@ -131,6 +133,7 @@ struct _GstVaapiPostproc {
 
     guint                       is_raw_yuv      : 1;
     guint                       use_vpp         : 1;
+    guint                       keep_aspect     : 1;
 };
 
 struct _GstVaapiPostprocClass {
