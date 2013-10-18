@@ -2223,7 +2223,9 @@ gst_amc_avc_profile_from_string (const gchar * profile)
   g_return_val_if_fail (profile != NULL, -1);
 
   for (i = 0; i < G_N_ELEMENTS (avc_profile_mapping_table); i++) {
-    if (strcmp (avc_profile_mapping_table[i].str, profile) == 0)
+    if (strcmp (avc_profile_mapping_table[i].str, profile) == 0 ||
+        (avc_profile_mapping_table[i].alt_str &&
+            strcmp (avc_profile_mapping_table[i].alt_str, profile) == 0))
       return avc_profile_mapping_table[i].id;
   }
 
