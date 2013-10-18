@@ -24,12 +24,12 @@ public class MediaInfo.App : Window
 {
   private FileChooserWidget chooser;
   private Info info;
+  private string directory = null;
+  private string uri = null;
 
   public App (string? directory_or_uri) {
     GLib.Object (type :  WindowType.TOPLEVEL);
     
-    string directory = null;
-    string uri = null;
     if (directory_or_uri != null) {
       if (FileUtils.test (directory_or_uri, FileTest.IS_DIR)) {
         directory = directory_or_uri;
@@ -63,26 +63,23 @@ public class MediaInfo.App : Window
     paned.pack1 (chooser, false, false);
 
     chooser.set_show_hidden (false);
-    
-    if (uri != null) {
-      chooser.set_sensitive (false);
-      Idle.add ( () => {
-        info.discover (uri);
-        return false;
-      });
-    } else {
-      if (directory != null) {
-        //chooser.set_current_folder (GLib.Environment.get_home_dir ());
-        Idle.add ( () => {
-          chooser.set_current_folder (directory);
-          return false;
-        });
-      }
-      chooser.selection_changed.connect (on_update_preview);
-    }
 
     info = new Info ();
     paned.pack2 (info, true, true);
+    
+    realize.connect ( () => {
+      debug ("realized");
+      if (uri != null) {
+        chooser.set_sensitive (false);
+        info.discover (uri);
+      } else {
+        if (directory != null) {
+          //chooser.set_current_folder (GLib.Environment.get_home_dir ());
+          chooser.set_current_folder (directory);
+        }
+        chooser.selection_changed.connect (on_update_preview);
+      }
+    });
   }
 
   // helper

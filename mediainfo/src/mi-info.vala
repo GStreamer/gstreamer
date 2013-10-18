@@ -41,6 +41,7 @@ public class MediaInfo.Info : Box
   // gstreamer objects
   private Discoverer dc;
   private Pipeline pb;
+  private Video.Overlay overlay;
   private bool have_video = false;
   private uint num_video_streams;
   private uint num_audio_streams;
@@ -163,6 +164,8 @@ public class MediaInfo.Info : Box
 
     // add widgets
     preview = new Preview ();
+    preview.add_events (Gdk.EventMask.STRUCTURE_MASK);
+    preview.configure_event.connect (on_preview_configured);
     pack_start (preview, false, false, 0);
 
     info_area = new ScrolledWindow (null, null);
@@ -272,8 +275,6 @@ public class MediaInfo.Info : Box
     row++;
     
     // TODO: add message list widget
-
-    show_all ();
 
     // set up the gstreamer components
     try {
@@ -495,10 +496,16 @@ public class MediaInfo.Info : Box
   }
 
   // signal handlers
+  
+  private bool on_preview_configured (Gdk.EventConfigure event) {
+    if (overlay != null)
+      overlay.expose();
+    return false;
+  }  
 
   private void on_element_sync_message (Gst.Bus bus, Message message) {
     if (Gst.Video.is_video_overlay_prepare_window_handle_message (message)) {
-      Gst.Video.Overlay overlay = message.src as Gst.Video.Overlay;
+      overlay = message.src as Gst.Video.Overlay;
       overlay.set_window_handle ((uint *)Gdk.X11Window.get_xid (preview.get_window ()));
     }
   }

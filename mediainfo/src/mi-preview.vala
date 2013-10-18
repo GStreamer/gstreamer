@@ -109,10 +109,11 @@ public class MediaInfo.Preview : DrawingArea {
   
   public override void size_allocate (Gtk.Allocation alloc) {
     base.size_allocate (alloc);
-
+    
     alloc_width = alloc.width;
     alloc_height = alloc.height;
-    debug ("alloc w,h: %d,%d", alloc_width, alloc_height);
+    debug ("alloc x,y: %d,%d  w,h: %d,%d", 
+        alloc.x, alloc.y, alloc_width, alloc_height);
   }
   
   public override bool draw (Cairo.Context cr) {
