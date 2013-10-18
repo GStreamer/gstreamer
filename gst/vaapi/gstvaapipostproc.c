@@ -133,10 +133,12 @@ G_DEFINE_TYPE_WITH_CODE(
 enum {
     PROP_0,
 
+    PROP_FORMAT,
     PROP_DEINTERLACE_MODE,
     PROP_DEINTERLACE_METHOD,
 };
 
+#define DEFAULT_FORMAT                  GST_VIDEO_FORMAT_ENCODED
 #define DEFAULT_DEINTERLACE_MODE        GST_VAAPI_DEINTERLACE_MODE_AUTO
 #define DEFAULT_DEINTERLACE_METHOD      GST_VAAPI_DEINTERLACE_METHOD_BOB
 
@@ -163,6 +165,22 @@ gst_vaapi_deinterlace_mode_get_type(void)
             g_enum_register_static("GstVaapiDeinterlaceMode", mode_types);
     }
     return deinterlace_mode_type;
+}
+
+static GstVaapiFilterOpInfo *
+find_filter_op(GPtrArray *filter_ops, GstVaapiFilterOp op)
+{
+    guint i;
+
+    if (filter_ops) {
+        for (i = 0; i < filter_ops->len; i++) {
+            GstVaapiFilterOpInfo * const filter_op =
+                g_ptr_array_index(filter_ops, i);
+            if (filter_op->op == op)
+                return filter_op;
+        }
+    }
+    return NULL;
 }
 
 static inline gboolean
@@ -202,6 +220,37 @@ gst_vaapipostproc_ensure_uploader_caps(GstVaapiPostproc *postproc)
 }
 
 static gboolean
+gst_vaapipostproc_ensure_filter(GstVaapiPostproc *postproc)
+{
+    if (postproc->filter)
+        return TRUE;
+
+    if (!gst_vaapipostproc_ensure_display(postproc))
+        return FALSE;
+
+    postproc->filter = gst_vaapi_filter_new(postproc->display);
+    if (!postproc->filter)
+        return FALSE;
+    return TRUE;
+}
+
+static gboolean
+gst_vaapipostproc_ensure_filter_caps(GstVaapiPostproc *postproc)
+{
+    if (!gst_vaapipostproc_ensure_filter(postproc))
+        return FALSE;
+
+    postproc->filter_ops = gst_vaapi_filter_get_operations(postproc->filter);
+    if (!postproc->filter_ops)
+        return FALSE;
+
+    postproc->filter_formats = gst_vaapi_filter_get_formats(postproc->filter);
+    if (!postproc->filter_formats)
+        return FALSE;
+    return TRUE;
+}
+
+static gboolean
 gst_vaapipostproc_create(GstVaapiPostproc *postproc)
 {
     if (!gst_vaapipostproc_ensure_display(postproc))
@@ -210,7 +259,24 @@ gst_vaapipostproc_create(GstVaapiPostproc *postproc)
         return FALSE;
     if (!gst_vaapipostproc_ensure_uploader_caps(postproc))
         return FALSE;
+    if (gst_vaapipostproc_ensure_filter(postproc))
+        postproc->use_vpp = TRUE;
     return TRUE;
+}
+
+static void
+gst_vaapipostproc_destroy_filter(GstVaapiPostproc *postproc)
+{
+    if (postproc->filter_formats) {
+        g_array_unref(postproc->filter_formats);
+        postproc->filter_formats = NULL;
+    }
+
+    if (postproc->filter_ops) {
+        g_ptr_array_unref(postproc->filter_ops);
+        postproc->filter_ops = NULL;
+    }
+    gst_vaapi_filter_replace(&postproc->filter, NULL);
 }
 
 static void
@@ -220,11 +286,13 @@ gst_vaapipostproc_destroy(GstVaapiPostproc *postproc)
     g_clear_object(&postproc->sinkpad_buffer_pool);
 #endif
     g_clear_object(&postproc->uploader);
+    gst_vaapipostproc_destroy_filter(postproc);
     gst_vaapi_display_replace(&postproc->display, NULL);
 
+    gst_caps_replace(&postproc->allowed_sinkpad_caps, NULL);
     gst_caps_replace(&postproc->sinkpad_caps, NULL);
+    gst_caps_replace(&postproc->allowed_srcpad_caps, NULL);
     gst_caps_replace(&postproc->srcpad_caps,  NULL);
-    gst_caps_replace(&postproc->allowed_caps, NULL);
 }
 
 static gboolean
@@ -298,6 +366,65 @@ append_output_buffer_metadata(GstBuffer *outbuf, GstBuffer *inbuf, guint flags)
     gst_buffer_copy_into(outbuf, inbuf, flags |
         GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_META | GST_BUFFER_COPY_MEMORY,
         0, -1);
+}
+
+static GstFlowReturn
+gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
+    GstBuffer *outbuf)
+{
+    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
+    GstVaapiVideoMeta *inbuf_meta, *outbuf_meta;
+    GstVaapiSurface *inbuf_surface, *outbuf_surface;
+    GstVaapiFilterStatus status;
+    guint flags;
+
+    /* Validate filters */
+    if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_FORMAT) &&
+        !gst_vaapi_filter_set_format(postproc->filter, postproc->format))
+        return GST_FLOW_NOT_SUPPORTED;
+
+    inbuf_meta = gst_buffer_get_vaapi_video_meta(inbuf);
+    if (!inbuf_meta)
+        goto error_invalid_buffer;
+    inbuf_surface = gst_vaapi_video_meta_get_surface(inbuf_meta);
+
+    flags = gst_vaapi_video_meta_get_render_flags(inbuf_meta) &
+        ~(GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD|
+          GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD);
+
+    outbuf_meta = gst_vaapi_video_meta_new_from_pool(postproc->filter_pool);
+    if (!outbuf_meta)
+        goto error_create_meta;
+    outbuf_surface = gst_vaapi_video_meta_get_surface(outbuf_meta);
+
+    status = gst_vaapi_filter_process(postproc->filter, inbuf_surface,
+        outbuf_surface, flags);
+    if (status != GST_VAAPI_FILTER_STATUS_SUCCESS)
+        goto error_process_vpp;
+
+    gst_buffer_copy_into(outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
+    gst_buffer_set_vaapi_video_meta(outbuf, outbuf_meta);
+    gst_vaapi_video_meta_unref(outbuf_meta);
+    return GST_FLOW_OK;
+
+    /* ERRORS */
+error_invalid_buffer:
+    {
+        GST_ERROR("failed to validate source buffer");
+        return GST_FLOW_ERROR;
+    }
+error_create_meta:
+    {
+        GST_ERROR("failed to create new output buffer meta");
+        gst_vaapi_video_meta_unref(outbuf_meta);
+        return GST_FLOW_ERROR;
+    }
+error_process_vpp:
+    {
+        GST_ERROR("failed to apply VPP filters (error %d)", status);
+        gst_vaapi_video_meta_unref(outbuf_meta);
+        return GST_FLOW_ERROR;
+    }
 }
 
 static GstFlowReturn
@@ -481,15 +608,18 @@ gst_vaapipostproc_update_src_caps(GstVaapiPostproc *postproc, GstCaps *caps,
 
     if (video_info_changed(&vi, &postproc->srcpad_info))
         postproc->srcpad_info = vi, *caps_changed_ptr = TRUE;
+
+    if (postproc->format != GST_VIDEO_INFO_FORMAT(&postproc->sinkpad_info))
+        postproc->flags |= GST_VAAPI_POSTPROC_FLAG_FORMAT;
     return TRUE;
 }
 
 static gboolean
-ensure_allowed_caps(GstVaapiPostproc *postproc)
+ensure_allowed_sinkpad_caps(GstVaapiPostproc *postproc)
 {
     GstCaps *out_caps, *yuv_caps;
 
-    if (postproc->allowed_caps)
+    if (postproc->allowed_sinkpad_caps)
         return TRUE;
 
     /* Create VA caps */
@@ -508,10 +638,109 @@ ensure_allowed_caps(GstVaapiPostproc *postproc)
         else
             GST_WARNING("failed to create YUV sink caps");
     }
-    postproc->allowed_caps = out_caps;
+    postproc->allowed_sinkpad_caps = out_caps;
 
     /* XXX: append VA/VPP filters */
     return TRUE;
+}
+
+/* Build list of supported formats */
+static gboolean
+build_format_list_value(GArray *formats, GValue *out_value)
+{
+    GValue v_format = { 0, };
+    guint i;
+#if GST_CHECK_VERSION(1,0,0)
+    const gchar *str;
+
+    g_value_init(out_value, GST_TYPE_LIST);
+
+    g_value_init(&v_format, G_TYPE_STRING);
+    g_value_set_string(&v_format, "encoded");
+    gst_value_list_append_value(out_value, &v_format);
+
+    for (i = 0; i < formats->len; i++) {
+        GstVideoFormat const format =
+            g_array_index(formats, GstVideoFormat, i);
+
+        str = gst_vaapi_video_format_to_string(format);
+        if (!str)
+            continue;
+        g_value_set_string(&v_format, str);
+        gst_value_list_append_value(out_value, &v_format);
+    }
+#else
+    guint32 fourcc;
+
+    g_value_init(out_value, GST_TYPE_LIST);
+    g_value_init(&v_format, GST_TYPE_FOURCC);
+    for (i = 0; i < formats->len; i++) {
+        GstVideoFormat const format =
+            g_array_index(formats, GstVideoFormat, i);
+
+        fourcc = gst_video_format_to_fourcc(format);
+        if (!fourcc)
+            continue;
+        gst_value_set_fourcc(&v_format, fourcc);
+        gst_value_list_append_value(out_value, &v_format);
+    }
+#endif
+
+    g_value_unset(&v_format);
+    return TRUE;
+}
+
+/* Fixup output caps so that to reflect the supported set of pixel formats */
+static GstCaps *
+expand_allowed_srcpad_caps(GstVaapiPostproc *postproc, GstCaps *caps)
+{
+    GValue value = { 0, };
+    guint i, num_structures;
+    gboolean had_filter;
+
+    had_filter = postproc->filter != NULL;
+    if (!had_filter && !gst_vaapipostproc_ensure_filter(postproc))
+        goto cleanup;
+    if (!gst_vaapipostproc_ensure_filter_caps(postproc))
+        goto cleanup;
+
+    /* Reset "format" field for each structure */
+    if (!build_format_list_value(postproc->filter_formats, &value))
+        goto cleanup;
+
+    num_structures = gst_caps_get_size(caps);
+    for (i = 0; i < num_structures; i++) {
+        GstStructure * const structure = gst_caps_get_structure(caps, i);
+        if (!structure)
+            continue;
+        gst_structure_set_value(structure, "format", &value);
+    }
+    g_value_unset(&value);
+
+cleanup:
+    if (!had_filter)
+        gst_vaapipostproc_destroy_filter(postproc);
+    return caps;
+}
+
+static gboolean
+ensure_allowed_srcpad_caps(GstVaapiPostproc *postproc)
+{
+    GstCaps *out_caps;
+
+    if (postproc->allowed_srcpad_caps)
+        return TRUE;
+
+    /* Create initial caps from pad template */
+    out_caps = gst_caps_from_string(gst_vaapipostproc_src_caps_str);
+    if (!out_caps) {
+        GST_ERROR("failed to create VA src caps");
+        return FALSE;
+    }
+
+    postproc->allowed_srcpad_caps =
+        expand_allowed_srcpad_caps(postproc, out_caps);
+    return postproc->allowed_srcpad_caps != NULL;
 }
 
 static GstCaps *
@@ -525,13 +754,18 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
     gint fps_n, fps_d, par_n, par_d;
 
     if (!gst_caps_is_fixed(caps)) {
-        if (direction == GST_PAD_SINK)
-            return gst_caps_from_string(gst_vaapipostproc_src_caps_str);
-
-        /* Generate the allowed set of caps on the sink pad */
-        if (!ensure_allowed_caps(postproc))
-            return NULL;
-        return gst_caps_ref(postproc->allowed_caps);
+        out_caps = NULL;
+        if (direction == GST_PAD_SINK) {
+            /* Generate the allowed set of caps on the src pad */
+            if (ensure_allowed_srcpad_caps(postproc))
+                out_caps = gst_caps_ref(postproc->allowed_srcpad_caps);
+        }
+        else {
+            /* Generate the allowed set of caps on the sink pad */
+            if (ensure_allowed_sinkpad_caps(postproc))
+                out_caps = gst_caps_ref(postproc->allowed_sinkpad_caps);
+        }
+        return out_caps;
     }
 
     /* Generate the other pad caps, based on the current pad caps, as
@@ -687,11 +921,30 @@ gst_vaapipostproc_transform(GstBaseTransform *trans, GstBuffer *inbuf,
     if (!buf)
         return GST_FLOW_ERROR;
 
-    if (postproc->flags == GST_VAAPI_POSTPROC_FLAG_DEINTERLACE)
-        ret = gst_vaapipostproc_process(trans, buf, outbuf);
-    else
-        ret = gst_vaapipostproc_passthrough(trans, buf, outbuf);
+    ret = GST_FLOW_NOT_SUPPORTED;
+    if (postproc->flags) {
+        /* Use VA/VPP extensions to process this frame */
+        if (postproc->use_vpp &&
+            postproc->flags != GST_VAAPI_POSTPROC_FLAG_DEINTERLACE) {
+            ret = gst_vaapipostproc_process_vpp(trans, buf, outbuf);
+            if (ret != GST_FLOW_NOT_SUPPORTED)
+                goto done;
+            GST_WARNING("unsupported VPP filters. Disabling");
+            postproc->use_vpp = FALSE;
+        }
 
+        /* Only append picture structure meta data (top/bottom field) */
+        if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_DEINTERLACE) {
+            ret = gst_vaapipostproc_process(trans, buf, outbuf);
+            if (ret != GST_FLOW_NOT_SUPPORTED)
+                goto done;
+        }
+    }
+
+    /* Fallback: passthrough to the downstream element as is */
+    ret = gst_vaapipostproc_passthrough(trans, buf, outbuf);
+
+done:
     gst_buffer_unref(buf);
     return ret;
 }
@@ -777,6 +1030,31 @@ error_pool_config:
 }
 
 static gboolean
+ensure_srcpad_buffer_pool(GstVaapiPostproc *postproc, GstCaps *caps)
+{
+    GstVideoInfo vi;
+    GstVaapiVideoPool *pool;
+
+    gst_video_info_init(&vi);
+    gst_video_info_from_caps(&vi, caps);
+    gst_video_info_set_format(&vi, postproc->format,
+        GST_VIDEO_INFO_WIDTH(&vi), GST_VIDEO_INFO_HEIGHT(&vi));
+
+    if (!video_info_changed(&vi, &postproc->filter_pool_info))
+        return TRUE;
+    postproc->filter_pool_info = vi;
+
+    pool = gst_vaapi_surface_pool_new(postproc->display,
+        &postproc->filter_pool_info);
+    if (!pool)
+        return FALSE;
+
+    gst_vaapi_video_pool_replace(&postproc->filter_pool, pool);
+    gst_vaapi_video_pool_unref(pool);
+    return TRUE;
+}
+
+static gboolean
 gst_vaapipostproc_set_caps(GstBaseTransform *trans, GstCaps *caps,
     GstCaps *out_caps)
 {
@@ -797,6 +1075,8 @@ gst_vaapipostproc_set_caps(GstBaseTransform *trans, GstCaps *caps,
     }
 
     if (!ensure_sinkpad_buffer_pool(postproc, caps))
+        return FALSE;
+    if (!ensure_srcpad_buffer_pool(postproc, out_caps))
         return FALSE;
     return TRUE;
 }
@@ -882,6 +1162,9 @@ gst_vaapipostproc_set_property(
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(object);
 
     switch (prop_id) {
+    case PROP_FORMAT:
+        postproc->format = g_value_get_enum(value);
+        break;
     case PROP_DEINTERLACE_MODE:
         postproc->deinterlace_mode = g_value_get_enum(value);
         break;
@@ -905,6 +1188,9 @@ gst_vaapipostproc_get_property(
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(object);
 
     switch (prop_id) {
+    case PROP_FORMAT:
+        g_value_set_enum(value, postproc->format);
+        break;
     case PROP_DEINTERLACE_MODE:
         g_value_set_enum(value, postproc->deinterlace_mode);
         break;
@@ -924,6 +1210,8 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
     GstElementClass * const element_class = GST_ELEMENT_CLASS(klass);
     GstBaseTransformClass * const trans_class = GST_BASE_TRANSFORM_CLASS(klass);
     GstPadTemplate *pad_template;
+    GPtrArray *filter_ops;
+    GstVaapiFilterOpInfo *filter_op;
 
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapipostproc,
                             GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
@@ -991,15 +1279,33 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
                            GST_VAAPI_TYPE_DEINTERLACE_METHOD,
                            DEFAULT_DEINTERLACE_METHOD,
                            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+    filter_ops = gst_vaapi_filter_get_operations(NULL);
+    if (!filter_ops)
+        return;
+
+    /**
+     * GstVaapiPostproc:format:
+     *
+     * The forced output pixel format, expressed as a #GstVideoFormat.
+     */
+    filter_op = find_filter_op(filter_ops, GST_VAAPI_FILTER_OP_FORMAT);
+    if (filter_op)
+        g_object_class_install_property(object_class,
+            PROP_FORMAT, filter_op->pspec);
+
+    g_ptr_array_unref(filter_ops);
 }
 
 static void
 gst_vaapipostproc_init(GstVaapiPostproc *postproc)
 {
+    postproc->format                    = DEFAULT_FORMAT;
     postproc->deinterlace_mode          = DEFAULT_DEINTERLACE_MODE;
     postproc->deinterlace_method        = DEFAULT_DEINTERLACE_METHOD;
     postproc->field_duration            = GST_CLOCK_TIME_NONE;
 
     gst_video_info_init(&postproc->sinkpad_info);
     gst_video_info_init(&postproc->srcpad_info);
+    gst_video_info_init(&postproc->filter_pool_info);
 }

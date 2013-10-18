@@ -105,16 +105,22 @@ struct _GstVaapiPostproc {
 
     GstVaapiDisplay            *display;
     GstVaapiUploader           *uploader;
+    GstVaapiFilter             *filter;
+    GPtrArray                  *filter_ops;
+    GstVaapiVideoPool          *filter_pool;
+    GstVideoInfo                filter_pool_info;
+    GArray                     *filter_formats;
+    GstVideoFormat              format; /* output video format (encoded) */
     guint                       flags;
-    gboolean                    is_raw_yuv;
 
-    GstCaps                    *allowed_caps;
+    GstCaps                    *allowed_sinkpad_caps;
     GstCaps                    *sinkpad_caps;
     GstVideoInfo                sinkpad_info;
 #if GST_CHECK_VERSION(1,0,0)
     GstBufferPool              *sinkpad_buffer_pool;
 #endif
     guint                       sinkpad_buffer_size;
+    GstCaps                    *allowed_srcpad_caps;
     GstCaps                    *srcpad_caps;
     GstVideoInfo                srcpad_info;
 
@@ -122,6 +128,9 @@ struct _GstVaapiPostproc {
     GstVaapiDeinterlaceMode     deinterlace_mode;
     GstVaapiDeinterlaceMethod   deinterlace_method;
     GstClockTime                field_duration;
+
+    guint                       is_raw_yuv      : 1;
+    guint                       use_vpp         : 1;
 };
 
 struct _GstVaapiPostprocClass {
