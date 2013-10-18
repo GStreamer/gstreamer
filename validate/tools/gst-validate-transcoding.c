@@ -45,6 +45,8 @@ static GMainLoop *mainloop;
 static GstElement *pipeline, *encodebin;
 static GstEncodingProfile *encoding_profile = NULL;
 static gboolean eos_on_shutdown = FALSE;
+static gboolean force_reencoding = FALSE;
+static GList *all_raw_caps = NULL;
 
 typedef struct
 {
@@ -543,6 +545,7 @@ create_transcoding_pipeline (gchar * uri, gchar * outuri)
   src = gst_element_factory_make ("uridecodebin", NULL);
 
   encodebin = gst_element_factory_make ("encodebin", NULL);
+  g_object_set (encodebin, "avoid-reencoding", !force_reencoding, NULL);
   sink = gst_element_make_from_uri (GST_URI_SINK, outuri, "sink", NULL);
   g_assert (sink);
 
@@ -643,6 +646,7 @@ _parse_encoding_profile (const gchar * option_name, const gchar * value,
       return FALSE;
     }
 
+    all_raw_caps = g_list_append (all_raw_caps, gst_caps_copy (caps));
     if (g_str_has_prefix (strcaps_v[i], "audio/")) {
       profile = GST_ENCODING_PROFILE (gst_encoding_audio_profile_new (caps,
               preset_name, restrictioncaps, presence));
@@ -737,6 +741,9 @@ main (int argc, gchar ** argv)
           "exiting.", NULL},
     {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
         "List the avalaible scenarios that can be run", NULL},
+    {"force-reencoding", 'r', 0, G_OPTION_ARG_NONE, &force_reencoding,
+        "Whether to try to force reencoding, meaning trying to only remux "
+        "if possible(default: TRUE)", NULL},
     {NULL}
   };
 
