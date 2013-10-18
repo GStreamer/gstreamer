@@ -1507,8 +1507,6 @@ gst_amc_video_dec_flush (GstVideoDecoder * decoder)
   }
 
   self->flushing = TRUE;
-  gst_amc_codec_flush (self->codec);
-
   /* Wait until the srcpad loop is finished,
    * unlock GST_VIDEO_DECODER_STREAM_LOCK to prevent deadlocks
    * caused by using this lock from inside the loop function */
@@ -1516,6 +1514,7 @@ gst_amc_video_dec_flush (GstVideoDecoder * decoder)
   GST_PAD_STREAM_LOCK (GST_VIDEO_DECODER_SRC_PAD (self));
   GST_PAD_STREAM_UNLOCK (GST_VIDEO_DECODER_SRC_PAD (self));
   GST_VIDEO_DECODER_STREAM_LOCK (self);
+  gst_amc_codec_flush (self->codec);
   self->flushing = FALSE;
 
   /* Start the srcpad loop again */

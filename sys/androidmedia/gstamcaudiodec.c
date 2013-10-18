@@ -1017,8 +1017,6 @@ gst_amc_audio_dec_flush (GstAudioDecoder * decoder, gboolean hard)
   }
 
   self->flushing = TRUE;
-  gst_amc_codec_flush (self->codec);
-
   /* Wait until the srcpad loop is finished,
    * unlock GST_AUDIO_DECODER_STREAM_LOCK to prevent deadlocks
    * caused by using this lock from inside the loop function */
@@ -1026,6 +1024,7 @@ gst_amc_audio_dec_flush (GstAudioDecoder * decoder, gboolean hard)
   GST_PAD_STREAM_LOCK (GST_AUDIO_DECODER_SRC_PAD (self));
   GST_PAD_STREAM_UNLOCK (GST_AUDIO_DECODER_SRC_PAD (self));
   GST_AUDIO_DECODER_STREAM_LOCK (self);
+  gst_amc_codec_flush (self->codec);
   self->flushing = FALSE;
 
   /* Start the srcpad loop again */
