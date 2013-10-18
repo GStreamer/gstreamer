@@ -487,7 +487,7 @@ gst_net_client_clock_stop (GstNetClientClock * self)
  * clock.
  */
 GstClock *
-gst_net_client_clock_new (gchar * name, const gchar * remote_address,
+gst_net_client_clock_new (const gchar * name, const gchar * remote_address,
     gint remote_port, GstClockTime base_time)
 {
   /* FIXME: gst_net_client_clock_new() should be a thin wrapper for g_object_new() */

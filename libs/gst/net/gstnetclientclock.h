@@ -70,7 +70,7 @@ struct _GstNetClientClockClass {
 
 GType           gst_net_client_clock_get_type	(void);
 
-GstClock*	gst_net_client_clock_new	(gchar *name, const gchar *remote_address,
+GstClock*	gst_net_client_clock_new	(const gchar *name, const gchar *remote_address,
                                                  gint remote_port, GstClockTime base_time);
 
 G_END_DECLS
