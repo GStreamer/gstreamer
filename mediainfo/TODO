@@ -61,6 +61,7 @@ http://www.headbands.com/gspot/v26x/index.htm
   - needed in: quicktime, ogg/theora
 
 == deep scan mode ==
+- could be done in gst_devtools/validate
 - play the file by using fakesinks and gather statistics:
 - update fields when playing
   - listen for duration messages on the bus
@@ -91,10 +92,14 @@ http://www.headbands.com/gspot/v26x/index.htm
     - offset is not neccesarily easy to determine for later elements, not sure
       if we can make it relative
   - elements could emit messages with this info
-    - need a common way to enable it ("post-stream-layout" property)
-  - we would need a cairo custom widget to draw a table
-    - one row per element
-    - each row contains colored segments
+    - need a common way to enable it:
+      - "post-stream-layout" property
+      - message-mask as api
+  - visulaisation
+    - we would need a cairo custom widget to draw a table
+      - one row per element
+      - each row contains colored segments
+    - tree- view with data as hex dump
 
 = TODO for gstreamer-plugins =
 - wav: no bitrate for uncompressed files
