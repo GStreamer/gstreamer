@@ -161,7 +161,6 @@ gst_rtsp_permissions_add_role_valist (GstRTSPPermissions * permissions,
   GstRTSPPermissionsImpl *impl = (GstRTSPPermissionsImpl *) permissions;
   GstStructure *structure;
   guint i, len;
-  gboolean found;
 
   g_return_if_fail (GST_IS_RTSP_PERMISSIONS (permissions));
   g_return_if_fail (gst_mini_object_is_writable (&permissions->mini_object));
@@ -172,23 +171,18 @@ gst_rtsp_permissions_add_role_valist (GstRTSPPermissions * permissions,
   g_return_if_fail (structure != NULL);
 
   len = impl->roles->len;
-  found = FALSE;
   for (i = 0; i < len; i++) {
     GstStructure *entry = g_ptr_array_index (impl->roles, i);
 
     if (gst_structure_has_name (entry, role)) {
-      gst_structure_free (entry);
-      found = TRUE;
+      g_ptr_array_remove_index_fast (impl->roles, i);
       break;
     }
   }
 
   gst_structure_set_parent_refcount (structure,
       &impl->permissions.mini_object.refcount);
-  if (!found)
-    g_ptr_array_add (impl->roles, structure);
-  else
-    g_ptr_array_index (impl->roles, i) = structure;
+  g_ptr_array_add (impl->roles, structure);
 }
 
 /**
@@ -215,7 +209,6 @@ gst_rtsp_permissions_remove_role (GstRTSPPermissions * permissions,
 
     if (gst_structure_has_name (entry, role)) {
       g_ptr_array_remove_index_fast (impl->roles, i);
-      gst_structure_free (entry);
       break;
     }
   }
