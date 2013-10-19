@@ -316,7 +316,8 @@ public class MediaInfo.Info : Box
         debug ("Failed to query file info from %s: %s: %s", uri, e.domain.to_string (), e.message);
       }
 
-      if (false) {
+      debug ("Discovering '%s'", uri);
+      if (true) {
         /* sync API */
         try {
           process_new_uri (dc.discover_uri (uri));
@@ -324,6 +325,7 @@ public class MediaInfo.Info : Box
           debug ("Failed to extract metadata from %s: %s: %s", uri, e.domain.to_string (), e.message);
         }
       } else {
+        // TODO(ensonic): this breaks when discovering 'too quickly'
         /* async API */
         dc.stop();
         dc.start();
