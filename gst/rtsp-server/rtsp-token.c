@@ -239,6 +239,9 @@ gst_rtsp_token_is_allowed (GstRTSPToken * token, const gchar * field)
 {
   gboolean result;
 
+  g_return_val_if_fail (GST_IS_RTSP_TOKEN (token), FALSE);
+  g_return_val_if_fail (field != NULL, FALSE);
+
   if (!gst_structure_get_boolean (GST_RTSP_TOKEN_STRUCTURE (token), field,
           &result))
     result = FALSE;
