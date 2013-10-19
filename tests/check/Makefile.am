@@ -33,6 +33,7 @@ check_PROGRAMS = \
 	gst/media \
 	gst/addresspool \
 	gst/threadpool
+	gst/permissions
 
 # these tests don't even pass
 noinst_PROGRAMS =
