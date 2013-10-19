@@ -548,7 +548,7 @@ gst_rpi_cam_src_get_caps (GstBaseSrc * bsrc, GstCaps * filter)
   gst_caps_set_simple (caps,
       "width", GST_TYPE_INT_RANGE, 1, 1920,
       "height", GST_TYPE_INT_RANGE, 1, 1080,
-      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 60, 1, NULL);
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 90, 1, NULL);
 
 done:
   GST_DEBUG_OBJECT (src, "get_caps returning %" GST_PTR_FORMAT, caps);
