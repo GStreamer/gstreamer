@@ -708,7 +708,7 @@ main (int argc, gchar ** argv)
 #endif
 
   GError *err = NULL;
-  const gchar *scenario = NULL;
+  const gchar *scenario = NULL, *configs = NULL;
   gboolean want_help = FALSE;
   gboolean list_scenarios = FALSE;
 
@@ -725,6 +725,11 @@ main (int argc, gchar ** argv)
     {"set-scenario", '\0', 0, G_OPTION_ARG_STRING, &scenario,
         "Let you set a scenario, it will override the GST_VALIDATE_SCENARIO "
           "environment variable", NULL},
+    {"set-configs", '\0', 0, G_OPTION_ARG_STRING, &configs,
+        "Let you set a config scenario, the scenario needs to be set as 'config"
+        "' you can specify a list of scenario separated by ':'"
+        " it will override the GST_VALIDATE_SCENARIO environment variable,",
+        NULL},
     {"eos-on-shutdown", 'e', 0, G_OPTION_ARG_NONE, &eos_on_shutdown,
         "If an EOS event should be sent to the pipeline if an interrupt is "
           "received, instead of forcing the pipeline to stop. Sending an EOS "
@@ -765,8 +770,17 @@ main (int argc, gchar ** argv)
 
   g_option_context_free (ctx);
 
-  if (scenario)
-    g_setenv ("GST_VALIDATE_SCENARIO", scenario, TRUE);
+  if (scenario || configs) {
+    gchar *scenarios;
+
+    if (scenario)
+      scenarios = g_strjoin (":", scenario, configs, NULL);
+    else
+      scenarios = g_strdup (configs);
+
+    g_setenv ("GST_VALIDATE_SCENARIO", scenarios, TRUE);
+    g_free (scenarios);
+  }
 
   if (list_scenarios)
     gst_validate_list_scenarios ();

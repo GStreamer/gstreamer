@@ -99,7 +99,7 @@ int
 main (int argc, gchar ** argv)
 {
   GError *err = NULL;
-  const gchar *scenario = NULL;
+  const gchar *scenario = NULL, *configs = NULL;
   gboolean list_scenarios = FALSE;
 #ifdef G_OS_UNIX
   guint signal_watch_id;
@@ -112,6 +112,11 @@ main (int argc, gchar ** argv)
           "environment variable", NULL},
     {"list-scenarios", 'l', 0, G_OPTION_ARG_NONE, &list_scenarios,
         "List the avalaible scenarios that can be run", NULL},
+    {"set-configs", '\0', 0, G_OPTION_ARG_STRING, &configs,
+        "Let you set a config scenario, the scenario needs to be set as 'config"
+        "' you can specify a list of scenario separated by ':'"
+        " it will override the GST_VALIDATE_SCENARIO environment variable,",
+        NULL},
     {NULL}
   };
   GOptionContext *ctx;
@@ -140,8 +145,16 @@ main (int argc, gchar ** argv)
     exit (1);
   }
 
-  if (scenario) {
-    g_setenv ("GST_VALIDATE_SCENARIO", scenario, TRUE);
+  if (scenario || configs) {
+    gchar *scenarios;
+
+    if (scenario)
+      scenarios = g_strjoin (":", scenario, configs, NULL);
+    else
+      scenarios = g_strdup (configs);
+
+    g_setenv ("GST_VALIDATE_SCENARIO", scenarios, TRUE);
+    g_free (scenarios);
   }
 
   gst_init (&argc, &argv);

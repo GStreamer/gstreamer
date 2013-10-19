@@ -922,10 +922,10 @@ invalid_name:
   }
 one_actions_scenario_max:
   {
-    GST_ERROR ("You can not set several actions scenario (you can "
-        "have set various confi scenario though, meaning you have to set"
-        " 'scenario, is-config=true' in the scenario file, and all actions"
-        " should be executable at parsing time)");
+    GST_ERROR ("You can set at most only one action scenario. "
+        "You can have several config scenarios though (a config scenario's "
+        "file must have is-config=true, and all its actions must be executable "
+        "at parsing time).");
     ret = FALSE;
     goto done;
 
