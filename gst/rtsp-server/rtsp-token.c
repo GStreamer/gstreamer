@@ -105,7 +105,16 @@ gst_rtsp_token_init (GstRTSPTokenImpl * token, GstStructure * structure)
 GstRTSPToken *
 gst_rtsp_token_new_empty (void)
 {
-  return gst_rtsp_token_new (NULL, NULL);
+  GstRTSPTokenImpl *token;
+  GstStructure *s;
+
+  s = gst_structure_new_empty ("GstRTSPToken");
+  g_return_val_if_fail (s != NULL, NULL);
+
+  token = g_slice_new0 (GstRTSPTokenImpl);
+  gst_rtsp_token_init (token, s);
+
+  return (GstRTSPToken *) token;
 }
 
 /**
@@ -144,18 +153,16 @@ gst_rtsp_token_new (const gchar * firstfield, ...)
 GstRTSPToken *
 gst_rtsp_token_new_valist (const gchar * firstfield, va_list var_args)
 {
-  GstRTSPTokenImpl *token;
+  GstRTSPToken *token;
   GstStructure *s;
 
   g_return_val_if_fail (firstfield != NULL, NULL);
 
-  s = gst_structure_new_valist ("GstRTSPToken", firstfield, var_args);
-  g_return_val_if_fail (s != NULL, NULL);
+  token = gst_rtsp_token_new_empty ();
+  s = GST_RTSP_TOKEN_STRUCTURE (token);
+  gst_structure_set_valist (s, firstfield, var_args);
 
-  token = g_slice_new0 (GstRTSPTokenImpl);
-  gst_rtsp_token_init (token, s);
-
-  return (GstRTSPToken *) token;
+  return token;
 }
 
 
