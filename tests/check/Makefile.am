@@ -32,8 +32,9 @@ check_PROGRAMS = \
 	gst/mediafactory \
 	gst/media \
 	gst/addresspool \
-	gst/threadpool
-	gst/permissions
+	gst/threadpool \
+	gst/permissions \
+	gst/token
 
 # these tests don't even pass
 noinst_PROGRAMS =
