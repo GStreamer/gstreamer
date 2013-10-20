@@ -18,7 +18,8 @@ libgstgeometrictransform_la_SOURCES = plugin.c \
                                       gsttunnel.c \
                                       gstsquare.c \
                                       gstmirror.c \
-                                      gstfisheye.c
+                                      gstfisheye.c \
+                                      gstperspective.c
 
 libgstgeometrictransform_la_CFLAGS = $(GST_CFLAGS) $(GST_BASE_CFLAGS) \
 			    $(GST_PLUGINS_BASE_CFLAGS)
@@ -46,7 +47,8 @@ noinst_HEADERS = gstgeometrictransform.h \
                  gsttunnel.h \
                  gstsquare.h \
                  gstmirror.h \
-                 gstfisheye.h
+                 gstfisheye.h \
+                 gstperspective.h
 
 Android.mk: Makefile.am $(BUILT_SOURCES)
 	androgenizer \

@@ -36,6 +36,7 @@
 #include "gstsquare.h"
 #include "gstmirror.h"
 #include "gstfisheye.h"
+#include "gstperspective.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -83,6 +84,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_fisheye_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_perspective_plugin_init (plugin))
     return FALSE;
 
   return TRUE;
