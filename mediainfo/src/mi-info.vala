@@ -289,6 +289,8 @@ public class MediaInfo.Info : Box
     //bus.set_sync_handler ((Gst.BusSyncHandler)bus.sync_signal_handler);
     bus.enable_sync_message_emission();
     bus.sync_message["element"].connect (on_element_sync_message);
+    bus.add_signal_watch();
+    bus.message["elemnt"].connect (on_element_message);
   }
 
   ~Info () {
@@ -322,6 +324,7 @@ public class MediaInfo.Info : Box
         try {
           process_new_uri (dc.discover_uri (uri));
         } catch (Error e) {
+          // we're failing here when there are missing container plugins
           debug ("Failed to extract metadata from %s: %s: %s", uri, e.domain.to_string (), e.message);
         }
       } else {
@@ -512,6 +515,14 @@ public class MediaInfo.Info : Box
       overlay = message.src as Gst.Video.Overlay;
       overlay.set_window_handle ((uint *)Gdk.X11Window.get_xid (window));
       debug ("prepared overlay");
+    }
+  }
+
+  private void on_element_message (Gst.Bus bus, Message message) {
+    if (PbUtils.is_missing_plugin_message (message)) {
+      string details = PbUtils.missing_plugin_message_get_description(message);
+      debug ("Missing plugin: %s", details);
+      // TODO(ensonic): use this in addition to e.. container/codec names
     }
   }
 
