@@ -923,6 +923,9 @@ public class MediaInfo.Info : Box
   }
   
   private string format_time(ClockTime t) {
+    if (t == Gst.CLOCK_TIME_NONE)
+      return "unknown";
+
     return "%u:%02u:%02u.%09u".printf (
       (uint) (t / (SECOND * 60 * 60)),
       (uint) ((t / (SECOND * 60)) % 60),
