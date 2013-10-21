@@ -506,9 +506,12 @@ public class MediaInfo.Info : Box
   }  
 
   private void on_element_sync_message (Gst.Bus bus, Message message) {
-    if (Gst.Video.is_video_overlay_prepare_window_handle_message (message)) {
+    if (Video.is_video_overlay_prepare_window_handle_message (message)) {
+      Gdk.Window window = preview.get_window ();
+      debug ("prepare overlay: %p", window);
       overlay = message.src as Gst.Video.Overlay;
-      overlay.set_window_handle ((uint *)Gdk.X11Window.get_xid (preview.get_window ()));
+      overlay.set_window_handle ((uint *)Gdk.X11Window.get_xid (window));
+      debug ("prepared overlay");
     }
   }
 

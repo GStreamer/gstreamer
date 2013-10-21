@@ -116,6 +116,13 @@ public class MediaInfo.Preview : DrawingArea {
         alloc.x, alloc.y, alloc_width, alloc_height);
   }
   
+  public override void realize () {
+    base.realize();
+    debug ("realize");
+    if (!get_window ().ensure_native ())
+      error ("Couldn't create native window needed for GstVideoOverlay!");
+  }
+
   public override bool draw (Cairo.Context cr) {
     if (content != null) {
       Gdk.Pixbuf pb = content.scale_simple (alloc_width, alloc_height, Gdk.InterpType.BILINEAR);
