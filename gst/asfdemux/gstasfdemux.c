@@ -4109,7 +4109,7 @@ gst_asf_demux_descramble_buffer (GstASFDemux * demux, AsfStream * stream,
     GST_DEBUG ("gst_buffer_get_size (scrambled_buffer) = %" G_GSIZE_FORMAT,
         gst_buffer_get_size (scrambled_buffer));
     sub_buffer =
-        gst_buffer_copy_region (scrambled_buffer, GST_BUFFER_COPY_NONE,
+        gst_buffer_copy_region (scrambled_buffer, GST_BUFFER_COPY_MEMORY,
         idx * demux->ds_chunk_size, demux->ds_chunk_size);
     if (!offset) {
       descrambled_buffer = sub_buffer;
