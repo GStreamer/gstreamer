@@ -135,6 +135,7 @@ public class MediaInfo.Info : Box
     wikilinks["Windows Media Audio 8"] = "Windows_Media_Audio#Windows_Media_Audio";
     wikilinks["audio/x-ac3"] = "Dolby_AC-3";
     wikilinks["audio/x-flac"] = "Flac";
+    wikilinks["audio/x-opus"] = "Opus_codec";
     wikilinks["audio/x-qdm"] = "QDesign";
     wikilinks["audio/x-vorbis"] = "Vorbis";
     wikilinks["audio/x-wav"] = "WAV";
