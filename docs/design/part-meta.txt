@@ -3,8 +3,8 @@ GstMeta
 
 This document describes the design for arbitrary per-buffer metadata.
 
-Buffer metadata typically describes the lowlevel properties of the buffer
-content. These properties are typically not negotiated with caps but they are
+Buffer metadata typically describes the low level properties of the buffer
+content. These properties are commonly not negotiated with caps but they are
 negotiated in the bufferpools.
 
 Some examples of metadata:
@@ -49,7 +49,7 @@ Use cases
 
  Pan and crop information can be added to the buffer data when the downstream
  element can understand and use this metadata. An imagesink can, for example,
- use the pan and cropping formation when it blits the image on the screen
+ use the pan and cropping information when blitting the image on the screen
  with little overhead.
 
 
@@ -112,7 +112,7 @@ GstMeta derived structures define the API of the metadata. The API can consist o
 fields and/or methods. It is possible to have different implementations for the
 same GstMeta structure.
 
-The implementation of the GstMeta api would typically add more fields to the
+The implementation of the GstMeta API would typically add more fields to the
 public structure that allow it to implement the API.
 
 GstMetaInfo will point to more information about the metadata and looks like this:
@@ -127,7 +127,7 @@ GstMetaInfo will point to more information about the metadata and looks like thi
     GstMetaTransformFunction   transform_func;
   };
 
-api will contain a GType of the metadata api. A repository of registered MetaInfo
+api will contain a GType of the metadata API. A repository of registered MetaInfo
 will be maintained by the core. We will register some common metadata structures
 in core and some media specific info for audio/video/text in -base. Plugins can
 register additional custom metadata.
@@ -371,7 +371,7 @@ Compatibility
 ~~~~~~~~~~~~~
 
 We need to make sure that elements exchange metadata that they both understand,
-This is particulary important when the metadata describes the data layout in
+This is particularly important when the metadata describes the data layout in
 memory (such as strides).
 
 The ALLOCATION query is used to let upstream know what metadata we can suport.
