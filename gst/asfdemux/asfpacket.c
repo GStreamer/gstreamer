@@ -374,6 +374,8 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
           GST_TIME_ARGS (payload.ts));
       GST_LOG_OBJECT (demux, "media object dur    : %" GST_TIME_FORMAT,
           GST_TIME_ARGS (payload.duration));
+    } else if (payload.rep_data_len == 0) {
+      payload.mo_size = 0;
     } else if (payload.rep_data_len != 0) {
       GST_WARNING_OBJECT (demux, "invalid replicated data length, very bad");
       *p_data += payload_len;
@@ -407,9 +409,10 @@ gst_asf_demux_parse_payload (GstASFDemux * demux, AsfPacket * packet,
         AsfPayload *prev;
 
         if ((prev = asf_payload_find_previous_fragment (&payload, stream))) {
-          if (prev->buf == NULL || payload.mo_size != prev->mo_size ||
-              payload.mo_offset >= gst_buffer_get_size (prev->buf) ||
-              payload.mo_offset + payload_len >
+          if (prev->buf == NULL || (payload.mo_size > 0
+                  && payload.mo_size != prev->mo_size)
+              || payload.mo_offset >= gst_buffer_get_size (prev->buf)
+              || payload.mo_offset + payload_len >
               gst_buffer_get_size (prev->buf)) {
             GST_WARNING_OBJECT (demux, "Offset doesn't match previous data?!");
           } else {
