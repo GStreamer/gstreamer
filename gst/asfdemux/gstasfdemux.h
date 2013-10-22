@@ -99,6 +99,12 @@ typedef struct
 
   gboolean    discont;
 
+  /* Descrambler settings */
+  guint8               span;
+  guint16              ds_packet_size;
+  guint16              ds_chunk_size;
+  guint16              ds_data_size;
+
   /* for new parsing code */
   GstFlowReturn   last_flow; /* last flow return */
   GArray         *payloads;  /* pending payloads */
@@ -189,12 +195,6 @@ struct _GstASFDemux {
   gboolean             segment_running;  /* if we've started the current segment    */
   gboolean             streaming;        /* TRUE if we are operating chain-based    */
   GstClockTime         latency;
-
-  /* Descrambler settings */
-  guint8               span;
-  guint16              ds_packet_size;
-  guint16              ds_chunk_size;
-  guint16              ds_data_size;
 
   /* for debugging only */
   gchar               *objpath;
