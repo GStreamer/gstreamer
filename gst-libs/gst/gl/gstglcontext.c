@@ -172,7 +172,7 @@ gst_gl_context_new (GstGLDisplay * display)
     return NULL;
   }
 
-  context->priv->display = display;
+  context->priv->display = gst_object_ref (display);
 
   return context;
 }
@@ -206,6 +206,7 @@ gst_gl_context_finalize (GObject * object)
   }
 
   gst_object_unref (context->window);
+  gst_object_unref (context->priv->display);
 
   if (context->gl_vtable) {
     g_slice_free (GstGLFuncs, context->gl_vtable);
