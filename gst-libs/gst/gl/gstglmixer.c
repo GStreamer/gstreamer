@@ -1744,6 +1744,8 @@ gst_gl_mixer_collected (GstCollectPads * pads, GstGLMixer * mix)
     }
 
     ret = gst_buffer_pool_acquire_buffer (mix->priv->pool, &outbuf, NULL);
+    if (ret != GST_FLOW_OK)
+      goto error;
 
     GST_BUFFER_TIMESTAMP (outbuf) = output_start_time;
     GST_BUFFER_DURATION (outbuf) = output_end_time - output_start_time;
