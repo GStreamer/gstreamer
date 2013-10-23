@@ -104,7 +104,7 @@ mpegtsmux_prepare_teletext (GstBuffer * buf, MpegTsPadData * pad_data,
   GstBuffer *out_buf;
   guint8 *data, *odata;
   gint size, stuff;
-  gboolean add_id;
+  gboolean add_id = FALSE;
   GstMapInfo map, omap;
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
