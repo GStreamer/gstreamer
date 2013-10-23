@@ -819,7 +819,7 @@ gst_vtenc_encode_frame (GstVTEnc * self, GstBuffer * buf)
           plane_widths,
           plane_heights,
           plane_bytes_per_row,
-          (CVPixelBufferReleaseBytesCallback) gst_vtenc_frame_free, frame,
+          (CVPixelBufferReleasePlanarBytesCallback) gst_vtenc_frame_free, frame,
           NULL, &pbuf);
       if (cv_ret != kCVReturnSuccess) {
         gst_vtenc_frame_free (frame);
