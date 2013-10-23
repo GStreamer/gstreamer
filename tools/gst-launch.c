@@ -335,11 +335,13 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
   count = gst_tag_list_get_tag_size (list, tag);
 
   for (i = 0; i < count; i++) {
-    gchar *str;
+    gchar *str = NULL;
 
     if (gst_tag_get_type (tag) == G_TYPE_STRING) {
-      if (!gst_tag_list_get_string_index (list, tag, i, &str))
+      if (!gst_tag_list_get_string_index (list, tag, i, &str)) {
+        g_warning ("Couldn't fetch string for %s tag", tag);
         g_assert_not_reached ();
+      }
     } else if (gst_tag_get_type (tag) == GST_TYPE_SAMPLE) {
       GstSample *sample = NULL;
 
@@ -362,6 +364,9 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
         } else {
           str = g_strdup ("NULL buffer");
         }
+      } else {
+        g_warning ("Couldn't fetch sample for %s tag", tag);
+        g_assert_not_reached ();
       }
     } else if (gst_tag_get_type (tag) == GST_TYPE_DATE_TIME) {
       GstDateTime *dt = NULL;
@@ -392,13 +397,10 @@ print_tag (const GstTagList * list, const gchar * tag, gpointer unused)
           g_strdup_value_contents (gst_tag_list_get_value_index (list, tag, i));
     }
 
-    if (i == 0) {
-      PRINT ("%16s: %s\n", gst_tag_get_nick (tag), str);
-    } else {
-      PRINT ("%16s: %s\n", "", str);
+    if (str) {
+      PRINT ("%16s: %s\n", i == 0 ? gst_tag_get_nick (tag) : "", str);
+      g_free (str);
     }
-
-    g_free (str);
   }
 }
 
