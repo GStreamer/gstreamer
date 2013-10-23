@@ -728,7 +728,7 @@ out:
 static gboolean
 mpegts_packetizer_sync (MpegTSPacketizer2 * packetizer)
 {
-  gboolean found;
+  gboolean found = FALSE;
   guint8 *data;
   guint packet_size;
   gsize size, sync_offset, i;
