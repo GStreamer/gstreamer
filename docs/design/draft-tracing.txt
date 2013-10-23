@@ -27,9 +27,18 @@ GST_TRACER_PUSH_BUFFER (pad, buffer)
 
 If tracing is disable at compile time the macro will evaluate to nothing. Otherwise
 it will become something along the lines of:
-if (__tracer) {
+if (__tracer && __tracer_hook_is_used) {
   gst_tracer_push_buffer (pad, buffer);
 }
+
+TODO(ensonic): we should eval if we can use something like jump_label in the kernel
+- http://lwn.net/Articles/412072/ + http://lwn.net/Articles/435215/
+- http://lxr.free-electrons.com/source/kernel/jump_label.c
+- http://lxr.free-electrons.com/source/include/linux/jump_label.h
+- http://lxr.free-electrons.com/source/arch/x86/kernel/jump_label.c
+TODO(ensonic): liblttng-ust provides such a mechanism for user-space
+- but this is mostly about logging traces
+- it is linux specific :/
 
 In addition to api hooks we should also provide timer hooks. Interval timers are
 useful to get e.g. resource usage snapshots. Also absolute timers might make sense. 
@@ -37,8 +46,8 @@ useful to get e.g. resource usage snapshots. Also absolute timers might make sen
 Plugins can attach handlers to one or more hooks. When a hook such as
 gst_tracer_push_buffer () is called it will take a timestamp and call all attached
 handlers. Hooks will be called from misc threads. The trace plugins should only
-consume the provided data. Most trace plugins will log data to a trace channel.
-
+consume (=read) the provided data. Most trace plugins will log data to a trace
+channel.
 
 TODO(ensonic): use GSignal for the hooks?
 
