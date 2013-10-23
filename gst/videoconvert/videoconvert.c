@@ -597,7 +597,7 @@ videoconvert_convert_generic (VideoConvert * convert, GstVideoFrame * dest,
       for (j = 0; j < down_n_lines; j += lines) {
         idx = down_offset + j;
 
-        if (idx >= 0 && idx < height) {
+        if (idx < height) {
           GST_DEBUG ("packing line %d %d %d", j + start, down_offset, idx);
           /* FIXME, not correct if lines > 1 */
           PACK_FRAME (dest, out_tmplines[j + start], idx, width);
