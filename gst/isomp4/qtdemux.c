@@ -1825,7 +1825,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
 #endif
     qtdemux->major_brand = 0;
     if (qtdemux->pending_newsegment)
-      gst_object_unref (qtdemux->pending_newsegment);
+      gst_event_unref (qtdemux->pending_newsegment);
     qtdemux->pending_newsegment = NULL;
     qtdemux->upstream_newsegment = TRUE;
     qtdemux->upstream_seekable = FALSE;
