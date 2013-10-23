@@ -67,6 +67,7 @@ GType gst_gl_effects_get_type (void);
 #include "gstglcolorscale.h"
 #include "gstgldeinterlace.h"
 #include "gstglmosaic.h"
+#include "gstglvideomixer.h"
 
 GType gst_gl_deinterlace_get_type (void);
 GType gst_gl_filter_app_get_type (void);
@@ -175,6 +176,11 @@ plugin_init (GstPlugin * plugin)
 
   if (!gst_element_register (plugin, "glmosaic",
           GST_RANK_NONE, GST_TYPE_GL_MOSAIC)) {
+    return FALSE;
+  }
+
+  if (!gst_element_register (plugin, "glvideomixer",
+          GST_RANK_NONE, GST_TYPE_GL_VIDEO_MIXER)) {
     return FALSE;
   }
 #if HAVE_PNG
