@@ -1873,12 +1873,17 @@ retry:
       GST_TIME_FORMAT, opos, GST_TIME_ARGS (otime),
       GST_TIME_ARGS (otime - demux->stream_start_time),
       GST_TIME_ARGS (demux->stream_start_time), GST_TIME_ARGS (time));
-  newpos =
-      gst_util_uint64_scale (opos - demux->common.ebml_segment_start,
-      time - demux->stream_start_time,
-      otime - demux->stream_start_time) - chunk;
-  if (newpos < 0)
+
+  if (otime <= demux->stream_start_time) {
     newpos = 0;
+  } else {
+    newpos =
+        gst_util_uint64_scale (opos - demux->common.ebml_segment_start,
+        time - demux->stream_start_time,
+        otime - demux->stream_start_time) - chunk;
+    if (newpos < 0)
+      newpos = 0;
+  }
   /* favour undershoot */
   newpos = newpos * 90 / 100;
   newpos += demux->common.ebml_segment_start;
