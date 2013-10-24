@@ -585,7 +585,6 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
 
     GST_INFO ("Creating GstGLDisplay");
     src->context = gst_gl_context_new (src->display);
-    gst_gl_display_set_context (src->display, src->context);
 
     if (!gst_gl_context_create (src->context, 0, &error)) {
       GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,

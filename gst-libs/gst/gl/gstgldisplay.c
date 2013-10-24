@@ -104,46 +104,6 @@ gst_gl_display_get_gl_api (GstGLDisplay * display)
 }
 
 void
-gst_gl_display_set_context (GstGLDisplay * display, GstGLContext * context)
-{
-  g_return_if_fail (GST_IS_GL_DISPLAY (display));
-  g_return_if_fail (GST_GL_IS_CONTEXT (context));
-
-  gst_gl_display_lock (display);
-
-  if (display->context)
-    gst_object_unref (display->context);
-
-  display->context = gst_object_ref (context);
-
-  gst_gl_display_unlock (display);
-}
-
-GstGLContext *
-gst_gl_display_get_context (GstGLDisplay * display)
-{
-  GstGLContext *context;
-
-  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), NULL);
-
-  gst_gl_display_lock (display);
-
-  context = display->context ? gst_object_ref (display->context) : NULL;
-
-  gst_gl_display_unlock (display);
-
-  return context;
-}
-
-GstGLContext *
-gst_gl_display_get_context_unlocked (GstGLDisplay * display)
-{
-  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), NULL);
-
-  return display->context ? gst_object_ref (display->context) : NULL;
-}
-
-void
 gst_context_set_gl_display (GstContext * context, GstGLDisplay * display)
 {
   GstStructure *s;

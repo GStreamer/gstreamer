@@ -233,7 +233,6 @@ GST_START_TEST (test_share)
 
   display = gst_gl_display_new ();
   context = gst_gl_context_new (display);
-  gst_gl_display_set_context (display, context);
 
   window = gst_gl_window_new (display);
   gst_gl_context_set_window (context, window);

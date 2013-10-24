@@ -68,9 +68,6 @@ GstGLDisplay *gst_gl_display_new (void);
 
 GstGLAPI       gst_gl_display_get_gl_api             (GstGLDisplay * display);
 gpointer       gst_gl_display_get_gl_vtable          (GstGLDisplay * display);
-void           gst_gl_display_set_context             (GstGLDisplay * display, GstGLContext * context);
-GstGLContext * gst_gl_display_get_context             (GstGLDisplay * display);
-GstGLContext * gst_gl_display_get_context_unlocked    (GstGLDisplay * display);
 
 #define GST_GL_DISPLAY_CONTEXT_TYPE "gst.gl.GLDisplay"
 void     gst_context_set_gl_display (GstContext * context, GstGLDisplay * display);
