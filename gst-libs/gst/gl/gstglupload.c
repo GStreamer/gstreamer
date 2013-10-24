@@ -452,6 +452,8 @@ gst_gl_upload_finalize (GObject * object)
     upload->context = NULL;
   }
 
+  g_mutex_clear (&upload->lock);
+
   G_OBJECT_CLASS (gst_gl_upload_parent_class)->finalize (object);
 }
 
