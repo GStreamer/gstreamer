@@ -38,7 +38,6 @@ setup (void)
 {
   display = gst_gl_display_new ();
   context = gst_gl_context_new (display);
-  gst_gl_display_set_context (display, context);
   gst_gl_context_create (context, 0, NULL);
   gst_gl_memory_init ();
 }

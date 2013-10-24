@@ -965,7 +965,6 @@ gst_gl_mixer_activate (GstGLMixer * mix, gboolean activate)
 
       GST_INFO ("Creating GstGLDisplay");
       mix->context = gst_gl_context_new (mix->display);
-      gst_gl_display_set_context (mix->display, mix->context);
 
       if (!gst_gl_context_create (mix->context, 0, &error)) {
         GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
