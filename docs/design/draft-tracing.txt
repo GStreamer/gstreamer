@@ -11,25 +11,56 @@ per process or none if tracing is off (not enabled via envvar or compiled out).
 Certain GStreamer core function (such as gst_pad_push or gst_element_add_pad) will
 call into the tracer. The tracer will dispatch into loaded tracing plugins.
 Developers will be able to select a list of plugins by setting an environment
-variable, such as GST_TRACE="meminfo,dbus". When then plugins are loaded, they will
-add them to certain hooks. Another env var GST_TRACE_CHANNEL can be used to send
-the tracing to a file or a socket (Do the same for GST_DEBUG_CHANNEL). The syntax
-could be GST_XXX_CHANNEL=file:///path/to/file or GST_XXX_CHANNEL=tcp://<ip>:<port>.
+variable, such as GST_TRACE="meminfo,dbus". One can also pass parameters to
+plugins:  GST_TRACE="log(events;buffers),stats(all)".
+When then plugins are loaded, we'll add them to certain hooks according to that
+they are interested in.
+
+Another env var GST_TRACE_CHANNEL can be used to send the tracing to a file or
+a socket (Do the same for GST_DEBUG_CHANNEL). The syntax could be
+GST_XXX_CHANNEL=file:///path/to/file or GST_XXX_CHANNEL=tcp://<ip>:<port>.
 If no channel is set, the tracing goes to stderr like the debug logging.
 
-TODO(ensonic): we might want to have GST_{DEBUG|TRACE)_FORMAT envars as well. These
-could be raw, ansi-color, binary, ...
+TODO(ensonic): we might want to have GST_{DEBUG|TRACE)_FORMAT envars as well.
+These could be raw, ansi-color, binary, suitable for babeltrace (see lttng), ...
 
-Hooks
------
-e.g. gst_pad_push() will do add this line:
-GST_TRACER_PUSH_BUFFER (pad, buffer)
+With these we can deprecate GST_DEBUG_FILE and GST_DEBUG_NO_COLOR.
 
-If tracing is disable at compile time the macro will evaluate to nothing. Otherwise
-it will become something along the lines of:
-if (__tracer && __tracer_hook_is_used) {
-  gst_tracer_push_buffer (pad, buffer);
+Hook api
+--------
+e.g. gst_pad_push() would become:
+
+#ifndef GST_DISABLE_GST_DEBUG
+static inline GstFlowReturn __gst_pad_push (GstPad * pad, GstBuffer * buffer);
+#endif
+
+GstFlowReturn
+gst_pad_push (GstPad * pad, GstBuffer * buffer)
+#ifndef GST_DISABLE_GST_DEBUG
+{
+  if (__tracer_enabled && __tracer_hook_is_used)
+    gst_tracer_push_buffer_pre (pad, buffer);
+  GstFlowReturn res = __gst_pad_push (GstPad * pad, GstBuffer * buffer);
+  if (__tracer_enabled && __tracer_hook_is_used)
+    gst_tracer_push_buffer_post (pad, res);
+  return res;
 }
+
+static inline GstFlowReturn
+__gst_pad_push (GstPad * pad, GstBuffer * buffer)
+#endif
+{
+  g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
+  g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
+
+  return gst_pad_push_data (pad,
+      GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH, buffer);
+}
+
+TODO(ensonic): gcc has some magic for wrapping functions
+- http://gcc.gnu.org/onlinedocs/gcc/Constructing-Calls.html
+- http://www.clifford.at/cfun/gccfeat/#gccfeat05.c
 
 TODO(ensonic): we should eval if we can use something like jump_label in the kernel
 - http://lwn.net/Articles/412072/ + http://lwn.net/Articles/435215/
@@ -41,18 +72,49 @@ TODO(ensonic): liblttng-ust provides such a mechanism for user-space
 - it is linux specific :/
 
 In addition to api hooks we should also provide timer hooks. Interval timers are
-useful to get e.g. resource usage snapshots. Also absolute timers might make sense. 
+useful to get e.g. resource usage snapshots. Also absolute timers might make
+sense. All this could be implemented with a clock thread.
 
-Plugins can attach handlers to one or more hooks. When a hook such as
-gst_tracer_push_buffer () is called it will take a timestamp and call all attached
-handlers. Hooks will be called from misc threads. The trace plugins should only
-consume (=read) the provided data. Most trace plugins will log data to a trace
-channel.
+Hooks
+-----
+  gst_bin_add
+  gst_bin_remove
+  gst_element_add_pad
+  gst_element_post_message
+  gst_element_query
+  gst_element_remove_pad
+  gst_pad_link
+  gst_pad_pull_range
+  gst_pad_push
+  gst_pad_push_list
+  gst_pad_push_event
+  gst_pad_unlink
 
-TODO(ensonic): use GSignal for the hooks?
+Plugin api
+----------
 
-Plugins
-=======
+TracerPlugins are plugin features. They have a simple api:
+
+GstTracerHookMask init(gchar *params);
+Plugins can attach handlers to one or more hooks. They use a HookMask to tell
+which events they are interested in. The params are the extra detail from the
+environment var.
+
+void invoke(GstStructure *s);
+Hooks marshall the parameters given to a trace hook into a GstStructure and also
+add some extra into such as a timestamp. The hooks will receive this structure.
+Hooks will be called from misc threads. The trace plugins should only consume 
+(=read) the provided data. Most trace plugins will log data to a trace channel.
+
+void done(void);
+Plugins can output results and release data. This would ideally be done at the
+end of the applications, but gst_deinit() is not mandatory. gst_tracelib was
+using a gcc_destructor
+
+Plugins ideas
+=============
+
+We can have some under gstreamer/plugins/tracers/
 
 meminfo
 -------
@@ -68,17 +130,19 @@ dbus
 ----
 - provide a dbus iface to announce applications that are traced
 - tracing UIs can use the dbus iface to find the channels where logging and tracing
-  is getting logged to, one would start the tracing UI first and when the
-  application is started with tracing activated, the dbus plugin will announce the
-  new application, upon which the tracing UI can start reading from the log channels
+  is getting logged to
+- one would start the tracing UI first and when the application is started with
+  tracing activated, the dbus plugin will announce the new application,
+  upon which the tracing UI can start reading from the log channels, this avoid
+  missing some data
 
 topology
 --------
 - register to pipeline topology hooks
 - tracing UIs can show a live pipeline graph
 
-communication
--------------
+stats
+-----
 - register to buffer, event, message and query flow
 - tracing apps can do e.g. statistics
 
@@ -92,14 +156,21 @@ Alternatively it would show a dialog that shows all local apps (if the dbus plug
 is loaded) and read the log streams from the sockets/files that are configured for
 the app.
 
-gst-trace-stats
----------------
-Such a tool could read a trace and summarize the content like gst-tracelib did for
-stats in 0.10.
+gst-tracer
+----------
+Counterpart of gst-tracelib-ui
 
 
 Problems / Open items
 =====================
+- when hooking into a timer, should we just have some predefined intervals?
+- how to trigger the shutdown processing?
 - when connecting to a running app, we cant easily get the 'current' state if logging
 is using a socket, as past events are not stored
+
+
+Try it
+======
+GST_DEBUG="GST_REG*:4,GST_TRACER:4,log:7" GST_TRACE=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink
+- traces for buffer flow in TRACE level and default category
 

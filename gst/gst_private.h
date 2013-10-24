@@ -393,6 +393,27 @@ struct _GstTypeFindFactoryClass {
   gpointer _gst_reserved[GST_PADDING];
 };
 
+struct _GstTracerFactory {
+  GstPluginFeature              feature;
+  /* <private> */
+
+  GType                         type;
+
+  /*
+  gpointer                      user_data;
+  GDestroyNotify                user_data_notify;
+  */
+
+  gpointer _gst_reserved[GST_PADDING];
+};
+
+struct _GstTracerFactoryClass {
+  GstPluginFeatureClass         parent;
+  /* <private> */
+
+  gpointer _gst_reserved[GST_PADDING];
+};
+
 struct _GstElementFactory {
   GstPluginFeature      parent;
 

@@ -94,6 +94,7 @@
 #include "gstutils.h"
 #include "gstinfo.h"
 #include "gsterror.h"
+#include "gsttracer.h"
 #include "gstvalue.h"
 #include "glib-compat-private.h"
 
@@ -4442,8 +4443,28 @@ not_linked:
  *
  * MT safe.
  */
+#ifndef GST_DISABLE_GST_DEBUG
+static inline GstFlowReturn __gst_pad_push (GstPad * pad, GstBuffer * buffer);
+#endif
+
 GstFlowReturn
 gst_pad_push (GstPad * pad, GstBuffer * buffer)
+#ifndef GST_DISABLE_GST_DEBUG
+{
+  const gboolean trace = gst_tracer_is_enabled (GST_TRACER_HOOK_ID_BUFFERS);
+  GstFlowReturn res;
+
+  if (trace)
+    gst_tracer_push_buffer_pre (pad, buffer);
+  res = __gst_pad_push (pad, buffer);
+  if (trace)
+    gst_tracer_push_buffer_post (pad, res);
+  return res;
+}
+
+static inline GstFlowReturn
+__gst_pad_push (GstPad * pad, GstBuffer * buffer)
+#endif
 {
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);

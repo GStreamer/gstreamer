@@ -1,3 +1,4 @@
-SUBDIRS = elements
+SUBDIRS = elements tracers
 
-DIST_SUBDIRS = elements
+DIST_SUBDIRS = elements tracers
+
