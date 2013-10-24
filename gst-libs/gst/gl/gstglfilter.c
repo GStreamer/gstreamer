@@ -234,7 +234,7 @@ gst_gl_filter_reset (GstGLFilter * filter)
 
   if (filter->display) {
     gst_object_unref (filter->display);
-    filter->context = NULL;
+    filter->display = NULL;
   }
 
   filter->fbo = 0;
@@ -274,7 +274,6 @@ gst_gl_filter_start (GstBaseTransform * bt)
     GST_INFO ("Creating GstGLDisplay");
     filter->display = gst_gl_display_new ();
     filter->context = gst_gl_context_new (filter->display);
-    gst_gl_display_set_context (filter->display, filter->context);
 
     if (!gst_gl_context_create (filter->context, filter->other_context, &error)) {
       GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
