@@ -94,7 +94,7 @@ gst_validate_bin_monitor_create_scenarios (GstValidateBinMonitor * monitor)
     const gchar *scenario_name;
 
     if ((scenario_name = g_getenv ("GST_VALIDATE_SCENARIO"))) {
-      gchar **scenario_v = g_strsplit (scenario_name, ":", 2);
+      gchar **scenario_v = g_strsplit (scenario_name, "->", 2);
 
       if (scenario_v[1] && GST_VALIDATE_MONITOR_GET_OBJECT (monitor)) {
         if (!g_pattern_match_simple (scenario_v[1],

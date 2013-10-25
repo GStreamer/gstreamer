@@ -688,10 +688,10 @@ _register_actions (void)
     "running-time", "all-headers", "count", NULL };
 
   gst_validate_add_action_type ("set-restriction", _execute_set_restriction,
-      resize_video_mandatory_fields, "Change the restriction caps on the fly");
+      resize_video_mandatory_fields, "Change the restriction caps on the fly", FALSE);
   gst_validate_add_action_type ("video-request-key-unit",
       _execute_request_key_unit, force_key_unit_mandatory_fields,
-      "Request a video key unit");
+      "Request a video key unit", FALSE);
 }
 
 int

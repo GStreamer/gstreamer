@@ -62,6 +62,7 @@ typedef struct _GstValidateActionType
   GstValidateExecuteAction execute;
   gchar **mandatory_fields;
   gchar *description;
+  gboolean is_config;
 } GstValidateActionType;
 
 struct _GstValidateScenarioPrivate
@@ -702,7 +703,7 @@ _pipeline_freed_cb (GstValidateScenario * scenario,
 
 static gboolean
 _load_scenario_file (GstValidateScenario * scenario,
-    const gchar * scenario_file)
+    const gchar * scenario_file, gboolean *is_config)
 {
   guint i;
   gsize xmlsize;
@@ -727,12 +728,14 @@ _load_scenario_file (GstValidateScenario * scenario,
   if (g_strcmp0 (content, "") == 0)
     goto failed;
 
+  *is_config = FALSE;
   lines = g_strsplit (content, "\n", 0);
   for (i = 0; lines[i]; i++) {
     const gchar *type, *str_playback_time;
     gdouble playback_time;
     GstValidateAction *action;
     GstStructure *structure;
+    GstValidateActionType *action_type;
 
     if (g_strcmp0 (lines[i], "") == 0)
       continue;
@@ -744,7 +747,11 @@ _load_scenario_file (GstValidateScenario * scenario,
     }
 
     type = gst_structure_get_name (structure);
-    if (!g_hash_table_lookup (action_types_table, type)) {
+    if (!g_strcmp0 (type, "scenario")) {
+      gst_structure_get_boolean (structure, "is-config", is_config);
+
+      continue;
+    } else if (!(action_type = g_hash_table_lookup (action_types_table, type))) {
       GST_ERROR_OBJECT (scenario, "We do not handle action types %s", type);
       goto failed;
     }
@@ -763,8 +770,18 @@ _load_scenario_file (GstValidateScenario * scenario,
     if (!(action->name = gst_structure_get_string (structure, "name")))
       action->name = "";
 
-    action->action_number = priv->num_actions++;
     action->structure = structure;
+    if (action_type->is_config) {
+      ret = action_type->execute (scenario, action);
+      g_slice_free (GstValidateAction, action);
+
+      if (ret == FALSE)
+        goto failed;
+
+      continue;
+    }
+
+    action->action_number = priv->num_actions++;
     priv->actions = g_list_append (priv->actions, action);
   }
 
@@ -796,48 +813,67 @@ static gboolean
 gst_validate_scenario_load (GstValidateScenario * scenario,
     const gchar * scenario_name)
 {
-  gboolean ret = TRUE;
+  gchar **scenarios;
+  guint i;
   gchar *lfilename = NULL, *tldir = NULL;
+  gboolean found_actions = FALSE, is_config, ret = TRUE;
   const gchar *env_scenariodir = g_getenv ("GST_VALIDATE_SCENARIOS_PATH");
 
   if (!scenario_name)
     goto invalid_name;
 
-  lfilename =
-      g_strdup_printf ("%s" GST_VALIDATE_SCENARIO_SUFFIX, scenario_name);
+  scenarios = g_strsplit (scenario_name, ":", -1);
 
-  tldir = g_build_filename ("data/", lfilename, NULL);
+  for (i=0; scenarios[i]; i++) {
+    lfilename =
+      g_strdup_printf ("%s" GST_VALIDATE_SCENARIO_SUFFIX, scenarios[i]);
 
-  if ((ret = _load_scenario_file (scenario, tldir)))
-    goto done;
-  g_free (tldir);
+    tldir = g_build_filename ("data/", lfilename, NULL);
 
-  if (env_scenariodir) {
-    tldir = g_build_filename (env_scenariodir, lfilename, NULL);
-    if ((ret = _load_scenario_file (scenario, tldir)))
-      goto done;
+    if ((ret = _load_scenario_file (scenario, tldir, &is_config)))
+      goto check_scenario;
+
     g_free (tldir);
-  }
 
-  /* Try from local profiles */
-  tldir =
+    if (env_scenariodir) {
+      tldir = g_build_filename (env_scenariodir, lfilename, NULL);
+      if ((ret = _load_scenario_file (scenario, tldir, &is_config)))
+        goto check_scenario;
+      g_free (tldir);
+    }
+
+    /* Try from local profiles */
+    tldir =
       g_build_filename (g_get_user_data_dir (), "gstreamer-" GST_API_VERSION,
-      GST_VALIDATE_SCENARIO_DIRECTORY, lfilename, NULL);
+          GST_VALIDATE_SCENARIO_DIRECTORY, lfilename, NULL);
 
 
-  if (!(ret = _load_scenario_file (scenario, tldir))) {
-    g_free (tldir);
-    /* Try from system-wide profiles */
-    tldir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
-        GST_VALIDATE_SCENARIO_DIRECTORY, lfilename, NULL);
-    ret = _load_scenario_file (scenario, tldir);
+    if (!(ret = _load_scenario_file (scenario, tldir, &is_config))) {
+      g_free (tldir);
+      /* Try from system-wide profiles */
+      tldir = g_build_filename (GST_DATADIR, "gstreamer-" GST_API_VERSION,
+          GST_VALIDATE_SCENARIO_DIRECTORY, lfilename, NULL);
+
+      if (!(ret = _load_scenario_file (scenario, tldir, &is_config))) {
+        goto invalid_name;
+      }
+    } /* else check scenario */
+
+check_scenario:
+    if (tldir)
+      g_free (tldir);
+    if (lfilename)
+      g_free (lfilename);
+
+    if (!is_config) {
+      if (found_actions == TRUE)
+        goto one_actions_scenario_max;
+      else
+        found_actions = TRUE;
+    }
   }
 
 done:
-  if (tldir)
-    g_free (tldir);
-  if (lfilename)
-    g_free (lfilename);
 
   if (ret == FALSE)
     g_error ("Could not set scenario %s => EXIT\n", scenario_name);
@@ -849,6 +885,16 @@ invalid_name:
     GST_ERROR ("Invalid name for scenario '%s'", scenario_name);
     ret = FALSE;
     goto done;
+  }
+one_actions_scenario_max:
+  {
+    GST_ERROR ("You can not set several actions scenario (you can "
+        "have set various confi scenario though, meaning you have to set"
+        " 'scenario, is-config=true' in the scenario file, and all actions"
+        " should be executable at parsing time)");
+    ret = FALSE;
+    goto done;
+
   }
 }
 
@@ -1040,7 +1086,7 @@ _free_action_type (GstValidateActionType * type)
 void
 gst_validate_add_action_type (const gchar * type_name,
     GstValidateExecuteAction function, const gchar * const *mandatory_fields,
-    const gchar * description)
+    const gchar * description, gboolean is_config)
 {
   GstValidateActionType *type = g_slice_new0 (GstValidateActionType);
 
@@ -1051,6 +1097,7 @@ gst_validate_add_action_type (const gchar * type_name,
   type->execute = function;
   type->mandatory_fields = g_strdupv ((gchar **) mandatory_fields);
   type->description = g_strdup (description);
+  type->is_config = is_config;
 
   g_hash_table_insert (action_types_table, g_strdup (type_name), type);
 }
@@ -1061,15 +1108,15 @@ init_scenarios (void)
   const gchar *seek_mandatory_fields[] = { "start", NULL };
 
   gst_validate_add_action_type ("seek", _execute_seek, seek_mandatory_fields,
-      "Allows to seek into the files");
+      "Allows to seek into the files", FALSE);
   gst_validate_add_action_type ("pause", _execute_pause, NULL,
       "Make it possible to set pipeline to PAUSED, you can add a duration"
       " parametter so the pipeline goaes back to playing after that duration"
-      " (in second)");
+      " (in second)", FALSE);
   gst_validate_add_action_type ("play", _execute_play, NULL,
-      "Make it possible to set the pipeline state to PLAYING");
+      "Make it possible to set the pipeline state to PLAYING", FALSE);
   gst_validate_add_action_type ("eos", _execute_eos, NULL,
-      "Make it possible to send an EOS to the pipeline");
+      "Make it possible to send an EOS to the pipeline", FALSE);
   gst_validate_add_action_type ("switch-track", _execute_switch_track, NULL,
       "The 'switch-track' command can be used to switch tracks.\n"
       "The 'type' argument selects which track type to change (can be 'audio', 'video',"
@@ -1078,5 +1125,5 @@ init_scenarios (void)
       " the given type, or a number with a '+' or '-' prefix, which means"
       " a relative change (eg, '+1' means 'next track', '-1' means 'previous"
       " track'), note that you need to state that it is a string in the scenario file"
-      " prefixing it with (string).");
+      " prefixing it with (string).", FALSE);
 }
