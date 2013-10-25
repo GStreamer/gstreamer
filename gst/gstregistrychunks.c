@@ -231,6 +231,7 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
   GstRegistryChunkPluginFeature *pf = NULL;
   GstRegistryChunk *chk = NULL;
   GList *walk;
+  gsize pf_size = 0;
 
   if (!type_name) {
     GST_ERROR ("NULL feature type_name, aborting.");
@@ -245,9 +246,8 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
      * valgrind complaining about copying unitialized memory
      */
     ef = g_slice_new0 (GstRegistryChunkElementFactory);
-    chk =
-        gst_registry_chunks_make_data (ef,
-        sizeof (GstRegistryChunkElementFactory));
+    pf_size = sizeof (GstRegistryChunkElementFactory);
+    chk = gst_registry_chunks_make_data (ef, pf_size);
     ef->npadtemplates = ef->ninterfaces = ef->nuriprotocols = 0;
     pf = (GstRegistryChunkPluginFeature *) ef;
 
@@ -306,9 +306,8 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
      * valgrind complaining about copying unitialized memory
      */
     tff = g_slice_new0 (GstRegistryChunkTypeFindFactory);
-    chk =
-        gst_registry_chunks_make_data (tff,
-        sizeof (GstRegistryChunkTypeFindFactory));
+    pf_size = sizeof (GstRegistryChunkTypeFindFactory);
+    chk = gst_registry_chunks_make_data (tff, pf_size);
     tff->nextensions = 0;
     pf = (GstRegistryChunkPluginFeature *) tff;
 
@@ -349,8 +348,8 @@ gst_registry_chunks_save_feature (GList ** list, GstPluginFeature * feature)
 
   /* Errors */
 fail:
-  g_free (chk);
-  g_free (pf);
+  g_slice_free (GstRegistryChunk, chk);
+  g_slice_free1 (pf_size, pf);
   return FALSE;
 }
 
@@ -465,8 +464,8 @@ _priv_gst_registry_chunks_save_plugin (GList ** list, GstRegistry * registry,
   /* Errors */
 fail:
   gst_plugin_feature_list_free (plugin_features);
-  g_free (chk);
-  g_free (pe);
+  g_slice_free (GstRegistryChunk, chk);
+  g_slice_free (GstRegistryChunkPluginElement, pe);
   return FALSE;
 }
 
