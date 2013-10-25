@@ -30,11 +30,11 @@
  * #GInitiallyUnowned. It is an abstract class that is not very usable on its own.
  *
  * #GstObject gives us basic refcounting, parenting functionality and locking.
- * Most of the function are just extended for special GStreamer needs and can be
+ * Most of the functions are just extended for special GStreamer needs and can be
  * found under the same name in the base class of #GstObject which is #GObject
  * (e.g. g_object_ref() becomes gst_object_ref()).
  *
- * Since #GstObject dereives from #GInitiallyUnowned, it also inherits the
+ * Since #GstObject derives from #GInitiallyUnowned, it also inherits the
  * floating reference. Be aware that functions such as gst_bin_add() and
  * gst_element_add_pad() take ownership of the floating reference.
  *
@@ -45,10 +45,10 @@
  * <refsect2>
  * <title>controlled properties</title>
  * <para>
- * Controlled properties offers a lightweight way to adjust gobject
- * properties over stream-time. It works by using time-stamped value pairs that
- * are queued for element-properties. At run-time the elements continuously pull
- * values changes for the current stream-time.
+ * Controlled properties offers a lightweight way to adjust gobject properties
+ * over stream-time. It works by using time-stamped value pairs that are queued
+ * for element-properties. At run-time the elements continuously pull value
+ * changes for the current stream-time.
  *
  * What needs to be changed in a #GstElement?
  * Very little - it is just two steps to make a plugin controllable!
@@ -60,7 +60,7 @@
  *   <listitem><para>
  *     when processing data (get, chain, loop function) at the beginning call
  *     gst_object_sync_values(element,timestamp).
- *     This will made the controller to update all gobject properties that are under
+ *     This will make the controller to update all gobject properties that are under
  *     control with the current values based on timestamp.
  *   </para></listitem>
  * </orderedlist>
