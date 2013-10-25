@@ -352,7 +352,7 @@ struct _GstTypeFindFactory {
 
   GstTypeFindFunction           function;
   gchar **                      extensions;
-  GstCaps *                     caps; /* FIXME: not yet saved in registry */
+  GstCaps *                     caps;
 
   gpointer                      user_data;
   GDestroyNotify                user_data_notify;
