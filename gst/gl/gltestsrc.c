@@ -86,7 +86,7 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 #if GST_GL_HAVE_OPENGL
   int i;
 
-  if (gst_gl_display_get_gl_api (v->display) & GST_GL_API_OPENGL) {
+  if (gst_gl_context_get_gl_api (v->context) & GST_GL_API_OPENGL) {
 
     glClearColor (0.0, 0.0, 0.0, 1.0);
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -192,7 +192,7 @@ void
 gst_gl_test_src_snow (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
 {
 #if GST_GL_HAVE_OPENGL
-  if (gst_gl_display_get_gl_api (v->display) & GST_GL_API_OPENGL) {
+  if (gst_gl_context_get_gl_api (v->context) & GST_GL_API_OPENGL) {
     glClearColor (0.0, 0.0, 0.0, 1.0);
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -219,7 +219,7 @@ gst_gl_test_src_unicolor (GstGLTestSrc * v, GstBuffer * buffer, int w,
     int h, const struct vts_color_struct *color)
 {
 #if GST_GL_HAVE_OPENGL
-  if (gst_gl_display_get_gl_api (v->display) & GST_GL_API_OPENGL) {
+  if (gst_gl_context_get_gl_api (v->context) & GST_GL_API_OPENGL) {
     glClearColor (color->R * (1 / 255.0f), color->G * (1 / 255.0f),
         color->B * (1 / 255.0f), 1.0f);
     glClear (GL_COLOR_BUFFER_BIT);
