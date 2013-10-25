@@ -147,8 +147,11 @@ main (int argc, gchar ** argv)
   gst_init (&argc, &argv);
   gst_validate_init ();
 
-  if (list_scenarios)
+  if (list_scenarios) {
     gst_validate_list_scenarios ();
+
+    return 0;
+  }
 
   if (argc == 1) {
     g_print ("%s", g_option_context_get_help (ctx, FALSE, NULL));
