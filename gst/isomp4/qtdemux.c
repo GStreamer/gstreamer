@@ -3746,7 +3746,8 @@ gst_qtdemux_sync_streams (GstQTDemux * demux)
     GST_LOG_OBJECT (demux, "current position: %" GST_TIME_FORMAT
         ", stream end: %" GST_TIME_FORMAT,
         GST_TIME_ARGS (demux->segment.position), GST_TIME_ARGS (end_time));
-    if (end_time + 2 * GST_SECOND < demux->segment.position) {
+    if (GST_CLOCK_TIME_IS_VALID (end_time)
+        && (end_time + 2 * GST_SECOND < demux->segment.position)) {
       GST_DEBUG_OBJECT (demux, "sending EOS for stream %s",
           GST_PAD_NAME (stream->pad));
       stream->sent_eos = TRUE;
