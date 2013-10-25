@@ -1040,7 +1040,7 @@ gst_hls_src_buf_to_utf8_playlist (GstBuffer * buf)
   gchar *playlist;
 
   if (!gst_buffer_map (buf, &info, GST_MAP_READ))
-    return NULL;
+    goto map_error;
 
   if (!g_utf8_validate ((gchar *) info.data, info.size, NULL))
     goto validate_error;
@@ -1055,6 +1055,7 @@ gst_hls_src_buf_to_utf8_playlist (GstBuffer * buf)
 
 validate_error:
   gst_buffer_unmap (buf, &info);
+map_error:
   gst_buffer_unref (buf);
   return NULL;
 }
@@ -1243,7 +1244,7 @@ static GstFragment *
 gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
     GstFragment * encrypted_fragment, const gchar * key, const guint8 * iv)
 {
-  GstFragment *key_fragment, *ret;
+  GstFragment *key_fragment, *ret = NULL;
   GstBuffer *key_buffer, *encrypted_buffer, *decrypted_buffer;
   GstMapInfo key_info, encrypted_info, decrypted_info;
   gnutls_cipher_hd_t aes_ctx;
@@ -1253,7 +1254,7 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   GST_INFO_OBJECT (demux, "Fetching key %s", key);
   key_fragment = gst_uri_downloader_fetch_uri (demux->downloader, key);
   if (key_fragment == NULL)
-    return NULL;
+    goto key_failed;
 
   key_buffer = gst_fragment_get_buffer (key_fragment);
   encrypted_buffer = gst_fragment_get_buffer (encrypted_fragment);
@@ -1288,12 +1289,12 @@ gst_hls_demux_decrypt_fragment (GstHLSDemux * demux,
   gst_buffer_unref (key_buffer);
   gst_buffer_unref (encrypted_buffer);
   g_object_unref (key_fragment);
-  g_object_unref (encrypted_fragment);
 
   ret = gst_fragment_new ();
   gst_fragment_add_buffer (ret, decrypted_buffer);
   ret->completed = TRUE;
-
+key_failed:
+  g_object_unref (encrypted_fragment);
   return ret;
 }
 
@@ -1353,6 +1354,9 @@ gst_hls_demux_get_next_fragment (GstHLSDemux * demux, gboolean caching)
     GST_DEBUG_OBJECT (demux, "Marking fragment as discontinuous");
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DISCONT);
   }
+
+  /* The buffer ref is still kept inside the fragment download */
+  gst_buffer_unref (buf);
 
   GST_DEBUG_OBJECT (demux, "Pushing fragment in queue");
   g_queue_push_tail (demux->queue, download);
