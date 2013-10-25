@@ -531,6 +531,8 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->got_moov = FALSE;
   qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
   qtdemux->mdatbuffer = NULL;
+  qtdemux->restoredata_buffer = NULL;
+  qtdemux->restoredata_offset = GST_CLOCK_TIME_NONE;
   qtdemux->fragment_start = -1;
   qtdemux->media_caps = NULL;
   qtdemux->exposed = FALSE;
@@ -1803,9 +1805,13 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->first_mdat = -1;
     qtdemux->header_size = 0;
     qtdemux->mdatoffset = GST_CLOCK_TIME_NONE;
+    qtdemux->restoredata_offset = GST_CLOCK_TIME_NONE;
     if (qtdemux->mdatbuffer)
       gst_buffer_unref (qtdemux->mdatbuffer);
+    if (qtdemux->restoredata_buffer)
+      gst_buffer_unref (qtdemux->restoredata_buffer);
     qtdemux->mdatbuffer = NULL;
+    qtdemux->restoredata_buffer = NULL;
     qtdemux->mdatleft = 0;
     if (qtdemux->comp_brands)
       gst_buffer_unref (qtdemux->comp_brands);
@@ -4768,13 +4774,29 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
         data = NULL;
 
         if (demux->mdatbuffer && demux->n_streams) {
+          gsize remaining_data_size = 0;
+
           /* the mdat was before the header */
           GST_DEBUG_OBJECT (demux, "We have n_streams:%d and mdatbuffer:%p",
               demux->n_streams, demux->mdatbuffer);
           /* restore our adapter/offset view of things with upstream;
            * put preceding buffered data ahead of current moov data.
            * This should also handle evil mdat, moov, mdat cases and alike */
-          gst_adapter_clear (demux->adapter);
+          gst_adapter_flush (demux->adapter, demux->neededbytes);
+
+          /* Store any remaining data after the mdat for later usage */
+          remaining_data_size = gst_adapter_available (demux->adapter);
+          if (remaining_data_size > 0) {
+            g_assert (demux->restoredata_buffer == NULL);
+            demux->restoredata_buffer =
+                gst_adapter_take_buffer (demux->adapter, remaining_data_size);
+            demux->restoredata_offset = demux->offset + demux->neededbytes;
+            GST_DEBUG_OBJECT (demux,
+                "Stored %" G_GSIZE_FORMAT " post mdat bytes at offset %"
+                G_GUINT64_FORMAT, remaining_data_size,
+                demux->restoredata_offset);
+          }
+
           gst_adapter_push (demux->adapter, demux->mdatbuffer);
           demux->mdatbuffer = NULL;
           demux->offset = demux->mdatoffset;
@@ -4859,6 +4881,16 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
             /* need to resume atom parsing so we do not miss any other pieces */
             demux->state = QTDEMUX_STATE_INITIAL;
             demux->neededbytes = 16;
+
+            /* check if there was any stored post mdat data from previous buffers */
+            if (demux->restoredata_buffer) {
+              g_assert (gst_adapter_available (demux->adapter) == 0);
+
+              gst_adapter_push (demux->adapter, demux->restoredata_buffer);
+              demux->restoredata_buffer = NULL;
+              demux->offset = demux->restoredata_offset;
+            }
+
             break;
           }
         }

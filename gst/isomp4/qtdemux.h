@@ -91,6 +91,15 @@ struct _GstQTDemux {
   GstAdapter *adapter;
   GstBuffer *mdatbuffer;
   guint64 mdatleft;
+  /* When restoring the mdat to the adatpter, this buffer
+   * stores any trailing data that was after the last atom parsed as it
+   * has to be restored later along with the correct offset. Used in
+   * fragmented scenario where mdat/moof are one after the other
+   * in any order.
+   *
+   * Check https://bugzilla.gnome.org/show_bug.cgi?id=710623 */
+  GstBuffer *restoredata_buffer;
+  guint64 restoredata_offset;
 
   guint64 offset;
   /* offset of the mdat atom */
