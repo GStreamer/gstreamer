@@ -249,7 +249,7 @@ gst_my_filter_setcaps (GstMyFilter *filter,
 
   outcaps = gst_caps_new_simple ("audio/x-raw",
       "format", G_TYPE_STRING, GST_AUDIO_NE(S16),
-      "rate", G_TYPE_INT, samplerate,
+      "rate", G_TYPE_INT, rate,
       "channels", G_TYPE_INT, channels, NULL);
   ret = gst_pad_set_caps (filter->srcpad, outcaps);
   gst_caps_unref (outcaps);
