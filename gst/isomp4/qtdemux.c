@@ -4606,10 +4606,11 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
           break;
         }
         if (fourcc == FOURCC_mdat) {
-          if (demux->n_streams > 0) {
+          gint next_entry = next_entry_size (demux);
+          if (demux->n_streams > 0 && (next_entry != -1 || !demux->fragmented)) {
             /* we have the headers, start playback */
             demux->state = QTDEMUX_STATE_MOVIE;
-            demux->neededbytes = next_entry_size (demux);
+            demux->neededbytes = next_entry;
             demux->mdatleft = size;
           } else {
             /* no headers yet, try to get them */
@@ -4673,7 +4674,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
         } else {
           /* this means we already started buffering and still no moov header,
            * let's continue buffering everything till we get moov */
-          if (demux->mdatbuffer && (fourcc != FOURCC_moov))
+          if (demux->mdatbuffer && !(fourcc == FOURCC_moov
+                  || fourcc == FOURCC_moof))
             goto buffer_data;
           demux->neededbytes = size;
           demux->state = QTDEMUX_STATE_HEADER;
