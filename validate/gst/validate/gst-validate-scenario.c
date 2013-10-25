@@ -504,6 +504,40 @@ _execute_switch_track (GstValidateScenario * scenario,
 }
 
 static gboolean
+_set_rank (GstValidateScenario * scenario, GstValidateAction * action)
+{
+  guint rank;
+  GstPluginFeature *feature;
+  const gchar *feature_name;
+
+  if (!(feature_name = gst_structure_get_string (action->structure, "feature-name"))) {
+    GST_ERROR ("Could not find the name of the feature to tweak");
+
+    return FALSE;
+  }
+
+  if (!(gst_structure_get_uint (action->structure, "rank", &rank) ||
+        gst_structure_get_int (action->structure, "rank", (gint*) &rank))) {
+    GST_ERROR ("Could not get rank to set on %s", feature_name);
+
+    return FALSE;
+  }
+
+  feature = gst_registry_lookup_feature (gst_registry_get (), feature_name);
+  if (!feature) {
+    GST_ERROR ("Could not find feaure %s", feature_name);
+
+    return FALSE;
+  }
+
+  gst_plugin_feature_set_rank (feature, rank);
+  GST_ERROR ("Setting %s rank to %i", feature_name, rank);
+  gst_object_unref (feature);
+
+  return TRUE;
+}
+
+static gboolean
 get_position (GstValidateScenario * scenario)
 {
   GList *tmp;
@@ -1126,4 +1160,7 @@ init_scenarios (void)
       " a relative change (eg, '+1' means 'next track', '-1' means 'previous"
       " track'), note that you need to state that it is a string in the scenario file"
       " prefixing it with (string).", FALSE);
+  gst_validate_add_action_type ("set-feature-rank", _set_rank, NULL,
+      "Allows you to change the ranking of a particular plugin feature",
+      TRUE);
 }
