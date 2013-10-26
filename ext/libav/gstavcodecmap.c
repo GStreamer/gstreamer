@@ -953,7 +953,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case AV_CODEC_ID_LJPEG:
       caps =
           gst_ff_vid_caps_new (context, NULL, codec_id, encode, "image/jpeg",
-          "parsed", G_TYPE_BOOLEAN, 1, NULL);
+          "parsed", G_TYPE_BOOLEAN, TRUE, NULL);
       break;
 
     case AV_CODEC_ID_SP5X:
