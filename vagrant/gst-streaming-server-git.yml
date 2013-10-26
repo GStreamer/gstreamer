@@ -1,0 +1,10 @@
+---
+- name: Get GStreamer Streaming Server from git
+  git: repo=git://anongit.freedesktop.org/gstreamer/{{ item }} dest=/tmp/{{ item }}
+  with_items:
+   - gst-streaming-server
+
+- name: Install GStreamer Streaming Server into a temporary prefix
+  action: shell cd /tmp/{{ item }} ; ./autogen.sh --prefix=/usr && make && make install
+  with_items:
+   - gst-streaming-server

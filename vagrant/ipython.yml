@@ -1,0 +1,6 @@
+---
+- name: Ensure ipython is installed
+  apt: pkg={{ item }} state=present
+  with_items:
+   - ipython
+   - ipython3

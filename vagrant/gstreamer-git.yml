@@ -1,0 +1,38 @@
+---
+- name: Ensure Python gobject-introspection and some helper stuff is installed
+  apt: pkg={{ item }} state=present
+  with_items:
+   - python3-gi
+   - python-gi
+   - autoconf
+   - automake
+   - libtool
+
+- name: Add multiverse into ubuntu
+  apt_repository: repo="deb http://archive.ubuntu.com/ubuntu saucy multiverse"
+
+- name: Ensure GStreamer dependencies are installed
+  action: shell apt-get -y update && apt-get -y build-dep gstreamer1.0-tools gir1.2-gstreamer-1.0 gir1.2-gst-plugins-base-1.0 gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-libav
+
+- name: Get GStreamer from git
+  git: repo=git://anongit.freedesktop.org/gstreamer/{{ item }} dest=/tmp/{{ item }}
+  with_items:
+   - gstreamer
+   - gst-plugins-base
+   - gst-plugins-good
+   - gst-plugins-ugly
+   - gst-plugins-bad
+   - gst-libav
+
+- name: Uninstall system gstreamer
+  action: shell apt-get -y remove libgstreamer1.0 gstreamer1.0-plugins-base
+
+- name: Install gstreamer into a temporary prefix
+  action: shell cd /tmp/{{ item }} ; ./autogen.sh --prefix=/usr && make && make install
+  with_items:
+   - gstreamer
+   - gst-plugins-base
+   - gst-plugins-good
+   - gst-plugins-ugly
+   - gst-plugins-bad
+   - gst-libav
