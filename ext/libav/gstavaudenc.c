@@ -324,6 +324,16 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
     if (avcodec_get_context_defaults3 (ffmpegaudenc->context,
             oclass->in_plugin) < 0)
       GST_DEBUG_OBJECT (ffmpegaudenc, "Failed to set context defaults");
+
+    if ((oclass->in_plugin->capabilities & CODEC_CAP_EXPERIMENTAL) &&
+        ffmpegaudenc->compliance != GST_FFMPEG_EXPERIMENTAL) {
+      GST_ELEMENT_ERROR (ffmpegaudenc, LIBRARY, SETTINGS,
+          ("Codec is experimental, but settings don't allow encoders to "
+              "produce output of experimental quality"),
+          ("This codec may not create output that is conformant to the specs "
+              "or of good quality. If you must use it anyway, set the "
+              "compliance property to experimental"));
+    }
     return FALSE;
   }
 
