@@ -130,7 +130,7 @@ gst_tracer_invoke (GstTracer * self, GstTracerHookId id, GstStructure * s)
 
   g_return_if_fail (klass->invoke);
 
-  klass->invoke (id, s);
+  klass->invoke (self, id, s);
 }
 
 /* tracing modules */

@@ -81,7 +81,7 @@ struct _GstTracer {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-typedef void		      (*GstTracerInvokeFunction) (GstTracerHookId id, GstStructure *s);
+typedef void		      (*GstTracerInvokeFunction) (GstTracer * self, GstTracerHookId id, GstStructure *s);
 
 struct _GstTracerClass {
   GstObjectClass parent_class;
