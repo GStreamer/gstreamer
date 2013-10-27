@@ -106,6 +106,8 @@ gboolean gst_tracer_is_enabled (GstTracerHookId id);
 void gst_tracer_push_buffer_pre (GstPad *pad, GstBuffer *buffer);
 void gst_tracer_push_buffer_post (GstPad *pad, GstFlowReturn res);
 
+void gst_tracer_push_buffer_list_pre (GstPad * pad, GstBufferList * list);
+void gst_tracer_push_buffer_list_post (GstPad * pad, GstFlowReturn res);
 
 #endif /* GST_DISABLE_GST_DEBUG */
 

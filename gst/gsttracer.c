@@ -21,6 +21,7 @@
 
 #include "gst_private.h"
 #include "gstenumtypes.h"
+#include "gstquark.h"
 #include "gstregistry.h"
 #include "gsttracer.h"
 #include "gsttracerfactory.h"
@@ -295,19 +296,41 @@ dispatch (GstTracerHookId id, GstStructure * s)
 void
 gst_tracer_push_buffer_pre (GstPad * pad, GstBuffer * buffer)
 {
-  // TODO(ensonic): gst_structure_new_id
-  dispatch (GST_TRACER_HOOK_ID_BUFFERS, gst_structure_new ("push_buffer::pre",
-          ".ts", G_TYPE_UINT64, gst_util_get_timestamp (),
-          "pad", GST_TYPE_PAD, pad, "buffer", GST_TYPE_BUFFER, buffer, NULL));
+  dispatch (GST_TRACER_HOOK_ID_BUFFERS,
+      gst_structure_new_id (GST_QUARK (PUSH_BUFFER_PRE),
+          GST_QUARK (DOT_TS), G_TYPE_UINT64, gst_util_get_timestamp (),
+          GST_QUARK (PAD), GST_TYPE_PAD, pad,
+          GST_QUARK (BUFFER), GST_TYPE_BUFFER, buffer, NULL));
 }
 
 void
 gst_tracer_push_buffer_post (GstPad * pad, GstFlowReturn res)
 {
-  // TODO(ensonic): gst_structure_new_id
-  dispatch (GST_TRACER_HOOK_ID_BUFFERS, gst_structure_new ("push_buffer::post",
-          ".ts", G_TYPE_UINT64, gst_util_get_timestamp (),
-          "pad", GST_TYPE_PAD, pad, "return", G_TYPE_INT, res, NULL));
+  dispatch (GST_TRACER_HOOK_ID_BUFFERS,
+      gst_structure_new_id (GST_QUARK (PUSH_BUFFER_POST),
+          GST_QUARK (DOT_TS), G_TYPE_UINT64, gst_util_get_timestamp (),
+          GST_QUARK (PAD), GST_TYPE_PAD, pad,
+          GST_QUARK (RETURN), G_TYPE_INT, res, NULL));
+}
+
+void
+gst_tracer_push_buffer_list_pre (GstPad * pad, GstBufferList * list)
+{
+  dispatch (GST_TRACER_HOOK_ID_BUFFERS,
+      gst_structure_new_id (GST_QUARK (PUSH_BUFFER_LIST_PRE),
+          GST_QUARK (DOT_TS), G_TYPE_UINT64, gst_util_get_timestamp (),
+          GST_QUARK (PAD), GST_TYPE_PAD, pad,
+          GST_QUARK (LIST), GST_TYPE_BUFFER_LIST, list, NULL));
+}
+
+void
+gst_tracer_push_buffer_list_post (GstPad * pad, GstFlowReturn res)
+{
+  dispatch (GST_TRACER_HOOK_ID_BUFFERS,
+      gst_structure_new_id (GST_QUARK (PUSH_BUFFER_LIST_POST),
+          GST_QUARK (DOT_TS), G_TYPE_UINT64, gst_util_get_timestamp (),
+          GST_QUARK (PAD), GST_TYPE_PAD, pad,
+          GST_QUARK (RETURN), G_TYPE_INT, res, NULL));
 }
 
 #endif /* GST_DISABLE_GST_DEBUG */
