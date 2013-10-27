@@ -39,11 +39,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace/object[@cname='GstPlugin']" name="opaque">true</attr>
 	<attr path="/api/namespace/object[@cname='GstBus']" name="opaque">true</attr>
 	<attr path="/api/namespace/object[@cname='GstRegistry']" name="opaque">true</attr>
+	<!-- hide some fields which do not exist -->
+	<attr path="/api/namespace/object[@cname='GstBus']/field[@cname='object']" name="hidden">true</attr>
+	<attr path="/api/namespace/object[@cname='GstElement']/field[@cname='object']" name="hidden">true</attr>
+	<attr path="/api/namespace/object[@cname='GstBin']/field[@cname='element']" name="hidden">true</attr>
+	<attr path="/api/namespace/object[@cname='GstPipeline']/field[@cname='bin']" name="hidden">true</attr>
 	<!-- add native attribute to all structs which need special handling -->
 	<change-node-type path="/api/namespace//boxed[field/@cname='mini_object']">struct</change-node-type>
 	<attr path="/api/namespace//struct[field/@cname='mini_object']" name="native">true</attr>
 	<change-node-type path="/api/namespace//boxed[@cname='GstStructure']">struct</change-node-type>
 	<attr path="/api/namespace/struct[@cname='GstStructure']" name="native">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstRTSPMessage']" name="native">true</attr>
 	<change-node-type path="/api/namespace//boxed[@cname='GstIterator']">struct</change-node-type>
 	<attr path="/api/namespace/struct[@cname='GstIterator']" name="native">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstIterator']/method[@cname='gst_iterator_next']" name="hidden">true</attr>
@@ -51,6 +57,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<!-- Fix for GstChildProxy -->
 	<attr path="/api/namespace/interface[@cname='GstChildProxy']/method[@cname='gst_child_proxy_get_property']" name="hidden">1</attr>
 	<attr path="/api/namespace/interface[@cname='GstChildProxy']/method[@cname='gst_child_proxy_set_property']" name="hidden">1</attr>
+	<!-- FIXME: array handling -->
+	<attr path="/api/namespace/struct[@cname='GstRTCPPacket']/method[@cname='gst_rtcp_packet_sdes_copy_entry']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstRTCPPacket']/method[@cname='gst_rtcp_packet_sdes_get_entry']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstRTCPPacket']/method[@cname='gst_rtcp_packet_sdes_extension_data']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstRTPBuffer']/method[@cname='gst_rtp_buffer_get_extension_data']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstRTPBuffer']/method[@cname='gst_rtp_buffer_get_extension_onebyte_header']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstRTPBuffer']/method[@cname='gst_rtp_buffer_get_extension_twobytes_header']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstRTSPMessage']/method[@cname='gst_rtsp_message_get_body']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstRTSPMessage']/method[@cname='gst_rtsp_message_steal_body']" name="hidden">true</attr>
 	<!-- Maybe some problems with the name -->
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/class_struct/method[@vm='get_type']" name="vm" />
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/virtual_method[@cname='get_type']" name="hidden" />
@@ -143,29 +158,67 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<!-- GstAudio -->
 	<attr path="/api/namespace/object[@cname='GstAudioClock']/field[@cname='destroy_notify']" name="hidden">1</attr>
 	<attr path="/api/namespace/interface[@cname='GstStreamVolume']/property[@cname='volume']" name="hidden">1</attr>
-
+	<!-- Name clashes -->
+	<attr path="/api/namespace/struct[@cname='GstRTCPBuffer']/field[@cname='map']" name="name">MapInfo</attr>
+	<attr path="/api/namespace/struct[@cname='GstRTPBuffer']/field[@cname='map']" name="name">MapInfo</attr>
+	<!-- Enums starting with numbers -->
+	<attr path="/api/namespace/enum[@cname='GstRTPPayload']/member[@name='1016']" name="name">ThousandSixteen</attr>
+	<attr path="/api/namespace/enum[@cname='GstRTSPVersion']/member[@name='10']" name="name">Ten</attr>
+	<attr path="/api/namespace/enum[@cname='GstRTSPVersion']/member[@name='11']" name="name">Eleven</attr>
 	<!-- Namespace switches -->
 	<attr path="/api/namespace[@name='GstVideo']" name="name">Gst.Video</attr>
 	<attr path="/api/namespace[@name='GstAudio']" name="name">Gst.Audio</attr>
 	<attr path="/api/namespace[@name='GstBase']" name="name">Gst.Base</attr>
 	<attr path="/api/namespace[@name='GstPbutils']" name="name">Gst.PbUtils</attr>
 	<attr path="/api/namespace[@name='GstTag']" name="name">Gst.Tags</attr>
+	<attr path="/api/namespace[@name='GstApp']" name="name">Gst.App</attr>
+	<attr path="/api/namespace[@name='GstController']" name="name">Gst.Controller</attr>
+	<attr path="/api/namespace[@name='GstFft']" name="name">Gst.FFT</attr>
+	<attr path="/api/namespace[@name='GstNet']" name="name">Gst.Net</attr>
+	<attr path="/api/namespace[@name='GstRiff']" name="name">Gst.Riff</attr>
+	<attr path="/api/namespace[@name='GstRtp']" name="name">Gst.Rtp</attr>
+	<attr path="/api/namespace[@name='GstRtsp']" name="name">Gst.Rtsp</attr>
+	<attr path="/api/namespace[@name='GstSdp']" name="name">Gst.Sdp</attr>
 	<attr path="/api/namespace[@name='Gst.Base']/object[@name='Global']" name="name">GlobalBase</attr>
 	<attr path="/api/namespace[@name='Gst.Video']/object[@name='Global']" name="name">GlobalVideo</attr>
 	<attr path="/api/namespace[@name='Gst.Audio']/object[@name='Global']" name="name">GlobalAudio</attr>
 	<attr path="/api/namespace[@name='Gst.PbUtils']/object[@name='Global']" name="name">GlobalPbUtil</attr>
 	<attr path="/api/namespace[@name='Gst.Tags']/object[@name='Global']" name="name">GlobalTag</attr>
+	<attr path="/api/namespace[@name='Gst.App']/object[@name='Global']" name="name">GlobalApp</attr>
+	<attr path="/api/namespace[@name='Gst.Controller']/object[@name='Global']" name="name">GlobalController</attr>
+	<attr path="/api/namespace[@name='Gst.FFT']/object[@name='Global']" name="name">GlobalFFT</attr>
+	<attr path="/api/namespace[@name='Gst.Net']/object[@name='Global']" name="name">GlobalNet</attr>
+	<attr path="/api/namespace[@name='Gst.Riff']/object[@name='Global']" name="name">GlobalRiff</attr>
+	<attr path="/api/namespace[@name='Gst.Rtp']/object[@name='Global']" name="name">GlobalRtp</attr>
+	<attr path="/api/namespace[@name='Gst.Rtsp']/object[@name='Global']" name="name">GlobalRtsp</attr>
+	<attr path="/api/namespace[@name='Gst.Sdp']/object[@name='Global']" name="name">GlobalSdp</attr>
 	<attr path="/api/namespace[@name='Gst.Base']/object[@name='Constants']" name="name">ConstantsBase</attr>
 	<attr path="/api/namespace[@name='Gst.Video']/object[@name='Constants']" name="name">ConstantsVideo</attr>
 	<attr path="/api/namespace[@name='Gst.Audio']/object[@name='Constants']" name="name">ConstantsAudio</attr>
 	<attr path="/api/namespace[@name='Gst.PbUtils']/object[@name='Constants']" name="name">ConstantsPbUtil</attr>
 	<attr path="/api/namespace[@name='Gst.Tags']/object[@name='Constants']" name="name">ConstantsTag</attr>
+	<attr path="/api/namespace[@name='Gst.App']/object[@name='Constants']" name="name">ConstantsApp</attr>
+	<attr path="/api/namespace[@name='Gst.Controller']/object[@name='Constants']" name="name">ConstantsController</attr>
+	<attr path="/api/namespace[@name='Gst.FFT']/object[@name='Constants']" name="name">ConstantsFFT</attr>
+	<attr path="/api/namespace[@name='Gst.Net']/object[@name='Constants']" name="name">ConstantsNet</attr>
+	<attr path="/api/namespace[@name='Gst.Riff']/object[@name='Constants']" name="name">ConstantsRiff</attr>
+	<attr path="/api/namespace[@name='Gst.Rtp']/object[@name='Constants']" name="name">ConstantsRtp</attr>
+	<attr path="/api/namespace[@name='Gst.Rtsp']/object[@name='Constants']" name="name">ConstantsRtsp</attr>
+	<attr path="/api/namespace[@name='Gst.Sdp']/object[@name='Constants']" name="name">ConstantsSdp</attr>
 
 	<!-- FIXME: Remove when https://bugzilla.gnome.org/show_bug.cgi?id=710001 is fixed -->
 	<attr path="/api/namespace[@name='Gst.Base']" name="library">libgstbase-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Audio']" name="library">libgstaudio-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Video']" name="library">libgstvideo-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.PbUtils']" name="library">libgstpbutils-1.0-0.dll</attr>
-	<attr path="/api/namespace[@name='Gst.Tags']" name="library">libgsttag-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.App']" name="library">libgstapp-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Controller']" name="library">libgstcontroller-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.FFT']" name="library">libgstfft-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Net']" name="library">libgstnet-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Riff']" name="library">libgstriff-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Rtp']" name="library">libgstrtp-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Rtsp']" name="library">libgstrtsp-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Sdp']" name="library">libgstsdp-1.0-0.dll</attr>
+
 </metadata>
 
