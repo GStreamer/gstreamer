@@ -51,6 +51,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace/struct[@cname='GstIterator']" name="native">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstIterator']/method[@cname='gst_iterator_next']" name="hidden">true</attr>
 	<remove-node path="/api/namespace/boxed[@cname='GstStructure']/field[@cname='name']" />
+	<!-- Fix for GstChildProxy -->
+	<attr path="/api/namespace/interface[@cname='GstChildProxy']/method[@cname='gst_child_proxy_get_property']" name="hidden">1</attr>
+	<attr path="/api/namespace/interface[@cname='GstChildProxy']/method[@cname='gst_child_proxy_set_property']" name="hidden">1</attr>
 	<!-- Maybe some problems with the name -->
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/class_struct/method[@vm='get_type']" name="vm" />
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/virtual_method[@cname='get_type']" name="hidden" />
