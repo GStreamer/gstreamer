@@ -95,18 +95,18 @@ Plugin api
 
 TracerPlugins are plugin features. They have a simple api:
 
-GstTracerHookMask init(gchar *params);
+'instance creation'
 Plugins can attach handlers to one or more hooks. They use a HookMask to tell
 which events they are interested in. The params are the extra detail from the
 environment var.
 
-void invoke(GstStructure *s);
+void invoke(GstTracerHookId id, GstStructure *s);
 Hooks marshall the parameters given to a trace hook into a GstStructure and also
 add some extra into such as a timestamp. The hooks will receive this structure.
 Hooks will be called from misc threads. The trace plugins should only consume 
 (=read) the provided data. Most trace plugins will log data to a trace channel.
 
-void done(void);
+'instance destruction'
 Plugins can output results and release data. This would ideally be done at the
 end of the applications, but gst_deinit() is not mandatory. gst_tracelib was
 using a gcc_destructor

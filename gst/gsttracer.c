@@ -123,13 +123,13 @@ gst_tracer_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_tracer_invoke (GstTracer * self, GstStructure * s)
+gst_tracer_invoke (GstTracer * self, GstTracerHookId id, GstStructure * s)
 {
   GstTracerClass *klass = GST_TRACER_GET_CLASS (self);
 
   g_return_if_fail (klass->invoke);
 
-  klass->invoke (s);
+  klass->invoke (id, s);
 }
 
 /* tracing modules */
@@ -287,7 +287,7 @@ dispatch (GstTracerHookId id, GstStructure * s)
 {
   GList *node;
   for (node = tracers[id]; node; node = g_list_next (node)) {
-    gst_tracer_invoke (node->data, s);
+    gst_tracer_invoke (node->data, id, s);
   }
 }
 

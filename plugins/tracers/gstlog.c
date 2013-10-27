@@ -34,7 +34,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_log_debug);
 G_DEFINE_TYPE_WITH_CODE (GstLogTracer, gst_log_tracer, GST_TYPE_TRACER,
     _do_init);
 
-static void gst_log_tracer_invoke (GstStructure * s);
+static void gst_log_tracer_invoke (GstTracerHookId id, GstStructure * s);
 
 static void
 gst_log_tracer_class_init (GstLogTracerClass * klass)
@@ -51,10 +51,10 @@ gst_log_tracer_init (GstLogTracer * self)
 }
 
 static void
-gst_log_tracer_invoke (GstStructure * s)
+gst_log_tracer_invoke (GstTracerHookId id, GstStructure * s)
 {
   gchar *str = gst_structure_to_string (s);
-  /* TODO(ensonic): log to different categories depending on GstHookId */
+  /* TODO(ensonic): log to different categories depending on 'id' */
   GST_TRACE ("%s", str);
   g_free (str);
 }
