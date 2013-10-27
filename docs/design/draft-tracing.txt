@@ -1,15 +1,16 @@
 Tracing
 =======
 
-This subsystem will provide a mechanism to get structured tracing info from GStreamer
-applications. This can be used for post-run analysis as well as for live
-introspection.
+This subsystem will provide a mechanism to get structured tracing info from
+GStreamer applications. This can be used for post-run analysis as well as for
+live introspection.
 
-We are going to introduce a GstTracer object. There will be only a single instance
-per process or none if tracing is off (not enabled via envvar or compiled out).
+We are going to introduce a GstTracer object. There will be only a single
+instance per process or none if tracing is off (not enabled via envvar or
+compiled out).
 
-Certain GStreamer core function (such as gst_pad_push or gst_element_add_pad) will
-call into the tracer. The tracer will dispatch into loaded tracing plugins.
+Certain GStreamer core function (such as gst_pad_push or gst_element_add_pad)
+will call into the tracer. The tracer will dispatch into loaded tracing plugins.
 Developers will be able to select a list of plugins by setting an environment
 variable, such as GST_TRACE="meminfo,dbus". One can also pass parameters to
 plugins:  GST_TRACE="log(events;buffers),stats(all)".
@@ -77,18 +78,18 @@ sense. All this could be implemented with a clock thread.
 
 Hooks
 -----
-  gst_bin_add
-  gst_bin_remove
-  gst_element_add_pad
-  gst_element_post_message
-  gst_element_query
-  gst_element_remove_pad
-  gst_pad_link
-  gst_pad_pull_range
-  gst_pad_push
-  gst_pad_push_list
-  gst_pad_push_event
-  gst_pad_unlink
+- gst_bin_add
+- gst_bin_remove
+- gst_element_add_pad
+- gst_element_post_message
+- gst_element_query
+- gst_element_remove_pad
+- gst_pad_link
+- gst_pad_pull_range
+* gst_pad_push
+* gst_pad_push_list
+- gst_pad_push_event
+- gst_pad_unlink
 
 Plugin api
 ----------
@@ -129,8 +130,8 @@ rusage
 dbus
 ----
 - provide a dbus iface to announce applications that are traced
-- tracing UIs can use the dbus iface to find the channels where logging and tracing
-  is getting logged to
+- tracing UIs can use the dbus iface to find the channels where logging and
+  tracing is getting logged to
 - one would start the tracing UI first and when the application is started with
   tracing activated, the dbus plugin will announce the new application,
   upon which the tracing UI can start reading from the log channels, this avoid
@@ -152,9 +153,9 @@ UI
 gst-debug-viewer
 ----------------
 gst-debug-viewer could be given the tracelog in addition to the debug log.
-Alternatively it would show a dialog that shows all local apps (if the dbus plugin
-is loaded) and read the log streams from the sockets/files that are configured for
-the app.
+Alternatively it would show a dialog that shows all local apps (if the dbus
+plugin is loaded) and read the log streams from the sockets/files that are
+configured for the app.
 
 gst-tracer
 ----------
@@ -165,8 +166,16 @@ Problems / Open items
 =====================
 - when hooking into a timer, should we just have some predefined intervals?
 - how to trigger the shutdown processing?
-- when connecting to a running app, we cant easily get the 'current' state if logging
-is using a socket, as past events are not stored
+  gst_deinit() (apps can call it from atexit())
+- how to share the quark table from gst/gstquark?
+  use a separate table in gst/gsttracers or add a getter to gst/gstquark
+- how to chain tracers (use the rank?)
+  e.g. how can the stats tracer get data from rusage/mallinfo tracers
+  or should all tracers just log and we would use a gst-stats tool to collect
+  the data from the log and process it then (that would also solve the deinit()
+  issue)
+- when connecting to a running app, we can't easily get the 'current' state if
+  logging is using a socket, as past events are not stored
 
 
 Try it
