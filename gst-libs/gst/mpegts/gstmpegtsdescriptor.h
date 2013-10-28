@@ -254,7 +254,7 @@ struct _GstMpegTsDescriptor
   guint8 tag;
   guint8 tag_extension;
   guint8 length;
-  const guint8 *data;
+  guint8 *data;
 };
 
 GPtrArray *gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len);

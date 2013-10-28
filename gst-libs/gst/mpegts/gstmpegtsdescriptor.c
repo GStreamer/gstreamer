@@ -627,6 +627,51 @@ failed:
   }
 }
 
+GstMpegTsDescriptor *
+_new_descriptor (guint8 tag, guint8 length)
+{
+  GstMpegTsDescriptor *descriptor;
+  guint8 *data;
+
+  descriptor = g_slice_new (GstMpegTsDescriptor);
+
+  descriptor->tag = tag;
+  descriptor->tag_extension = 0;
+  descriptor->length = length;
+
+  descriptor->data = g_malloc (length + 2);
+
+  data = descriptor->data;
+
+  *data++ = descriptor->tag;
+  *data = descriptor->length;
+
+  return descriptor;
+}
+
+GstMpegTsDescriptor *
+_new_descriptor_with_extension (guint8 tag, guint8 tag_extension, guint8 length)
+{
+  GstMpegTsDescriptor *descriptor;
+  guint8 *data;
+
+  descriptor = g_slice_new (GstMpegTsDescriptor);
+
+  descriptor->tag = tag;
+  descriptor->tag_extension = tag_extension;
+  descriptor->length = length;
+
+  descriptor->data = g_malloc (length + 3);
+
+  data = descriptor->data;
+
+  *data++ = descriptor->tag;
+  *data++ = descriptor->tag_extension;
+  *data = descriptor->length;
+
+  return descriptor;
+}
+
 static GstMpegTsDescriptor *
 _copy_descriptor (GstMpegTsDescriptor * desc)
 {
@@ -638,7 +683,7 @@ _copy_descriptor (GstMpegTsDescriptor * desc)
   return copy;
 }
 
-static void
+void
 _free_descriptor (GstMpegTsDescriptor * desc)
 {
   g_free ((gpointer) desc->data);

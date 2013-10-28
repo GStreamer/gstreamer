@@ -715,6 +715,24 @@ _identify_section (guint16 pid, guint8 table_id)
 
 }
 
+GstMpegTsSection *
+_gst_mpegts_section_init (guint16 pid, guint8 table_id)
+{
+  GstMpegTsSection *section;
+
+  section = g_slice_new0 (GstMpegTsSection);
+  gst_mini_object_init (GST_MINI_OBJECT_CAST (section), 0, MPEG_TYPE_TS_SECTION,
+      (GstMiniObjectCopyFunction) _gst_mpegts_section_copy, NULL,
+      (GstMiniObjectFreeFunction) _gst_mpegts_section_free);
+
+  section->pid = pid;
+  section->table_id = table_id;
+  section->current_next_indicator = TRUE;
+  section->section_type = _identify_section (pid, table_id);
+
+  return section;
+}
+
 /**
  * gst_mpegts_section_new:
  * @pid: the PID to which this section belongs
@@ -739,6 +757,7 @@ gst_mpegts_section_new (guint16 pid, guint8 * data, gsize data_size)
 {
   GstMpegTsSection *res = NULL;
   guint8 tmp;
+  guint8 table_id;
   guint16 section_length;
 
   /* Check for length */
@@ -746,15 +765,14 @@ gst_mpegts_section_new (guint16 pid, guint8 * data, gsize data_size)
   if (G_UNLIKELY (data_size < section_length + 3))
     goto short_packet;
 
-  res = g_slice_new0 (GstMpegTsSection);
-  gst_mini_object_init (GST_MINI_OBJECT_CAST (res), 0, MPEG_TYPE_TS_SECTION,
-      (GstMiniObjectCopyFunction) _gst_mpegts_section_copy, NULL,
-      (GstMiniObjectFreeFunction) _gst_mpegts_section_free);
+  /* Table id is in first byte */
+  table_id = *data;
 
-  res->pid = pid;
+  res = _gst_mpegts_section_init (pid, table_id);
+
   res->data = data;
-  /* table_id                        : 8  bit */
-  res->table_id = *data++;
+  /* table_id (already parsed)       : 8  bit */
+  data++;
   /* section_syntax_indicator        : 1  bit
    * other_fields (reserved)         : 3  bit*/
   res->short_section = (*data & 0x80) == 0x00;
@@ -779,8 +797,6 @@ gst_mpegts_section_new (guint16 pid, guint8 * data, gsize data_size)
     /* last_section_number                : 8  bit */
     res->last_section_number = *data;
   }
-
-  res->section_type = _identify_section (res->pid, res->table_id);
 
   return res;
 
