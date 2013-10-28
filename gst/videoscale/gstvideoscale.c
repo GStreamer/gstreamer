@@ -1378,6 +1378,10 @@ do_scale (GstVideoFilter * filter, VSImage dest[4], VSImage src[4])
       }
       break;
     case GST_VIDEO_FORMAT_NV12:
+      if (add_borders) {
+        vs_fill_borders_Y (&dest[0], black);
+        vs_fill_borders_Y16 (&dest[1], (black[1] << 8) | black[2]);
+      }
       switch (method) {
         case GST_VIDEO_SCALE_NEAREST:
           vs_image_scale_nearest_Y (&dest[0], &src[0], videoscale->tmp_buf);
