@@ -489,7 +489,7 @@ gst_validate_pad_monitor_check_late_serialized_events (GstValidatePadMonitor *
     GST_DEBUG_OBJECT (monitor->pad, "Event #%d (%s) ts: %" GST_TIME_FORMAT,
         i, GST_EVENT_TYPE_NAME (data->event), GST_TIME_ARGS (data->timestamp));
 
-    if (data->timestamp < ts) {
+    if (GST_CLOCK_TIME_IS_VALID (data->timestamp) && data->timestamp < ts) {
       GST_VALIDATE_REPORT (monitor, SERIALIZED_EVENT_WASNT_PUSHED_IN_TIME,
           "Serialized event %" GST_PTR_FORMAT " wasn't pushed before expected "
           "timestamp %" GST_TIME_FORMAT " on pad %s:%s", data->event,
@@ -1483,14 +1483,12 @@ gst_validate_pad_monitor_sink_event_func (GstPad * pad, GstObject * parent,
   GST_VALIDATE_MONITOR_LOCK (pad_monitor);
 
   if (gst_validate_pad_monitor_event_is_tracked (pad_monitor, event)) {
-    GstClockTime last_ts;
+    GstClockTime last_ts = GST_CLOCK_TIME_NONE;
     if (GST_CLOCK_TIME_IS_VALID (pad_monitor->current_timestamp)) {
       last_ts = pad_monitor->current_timestamp;
       if (GST_CLOCK_TIME_IS_VALID (pad_monitor->current_duration)) {
         last_ts += pad_monitor->current_duration;
       }
-    } else {
-      last_ts = 0;
     }
     gst_validate_pad_monitor_otherpad_add_pending_serialized_event (pad_monitor,
         event, last_ts);
