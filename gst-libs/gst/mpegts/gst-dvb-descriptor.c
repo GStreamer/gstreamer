@@ -75,6 +75,40 @@ gst_mpegts_descriptor_parse_dvb_network_name (const GstMpegTsDescriptor *
   return TRUE;
 }
 
+/**
+ * gst_mpegts_descriptor_from_dvb_network_name:
+ * @name: the network name to set
+ *
+ * Fills a #GstMpegTsDescriptor to be a %GST_MTS_DESC_DVB_NETWORK_NAME,
+ * with the network name @name. The data field of the #GstMpegTsDescriptor
+ * will be allocated, and transferred to the caller.
+ *
+ * Returns: (transfer full): the #GstMpegTsDescriptor or %NULL on fail
+ */
+GstMpegTsDescriptor *
+gst_mpegts_descriptor_from_dvb_network_name (const gchar * name)
+{
+  GstMpegTsDescriptor *descriptor;
+  guint8 *converted_name;
+  gsize size;
+
+  g_return_val_if_fail (name != NULL, NULL);
+  g_return_val_if_fail (strlen (name) <= 256, NULL);
+
+  converted_name = dvb_text_from_utf8 (name, &size);
+
+  if (!converted_name) {
+    GST_WARNING ("Could not find proper encoding for string `%s`", name);
+    return NULL;
+  }
+
+  descriptor = _new_descriptor (GST_MTS_DESC_DVB_NETWORK_NAME, size);
+  memcpy (descriptor->data + 2, converted_name, size);
+  g_free (converted_name);
+
+  return descriptor;
+}
+
 /* GST_MTS_DESC_DVB_SATELLITE_DELIVERY_SYSTEM (0x43) */
 /**
  * gst_mpegts_descriptor_parse_satellite_delivery_system:

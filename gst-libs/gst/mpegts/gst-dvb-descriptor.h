@@ -123,6 +123,8 @@ typedef enum {
 gboolean gst_mpegts_descriptor_parse_dvb_network_name (const GstMpegTsDescriptor *descriptor,
 						       gchar **name);
 
+GstMpegTsDescriptor *gst_mpegts_descriptor_from_dvb_network_name (const gchar * name);
+
 /* GST_MTS_DESC_DVB_SATELLITE_DELIVERY_SYSTEM (0x43) */
 typedef struct _GstMpegTsSatelliteDeliverySystemDescriptor GstMpegTsSatelliteDeliverySystemDescriptor;
 
