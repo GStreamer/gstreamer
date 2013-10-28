@@ -4443,35 +4443,20 @@ not_linked:
  *
  * MT safe.
  */
-#ifndef GST_DISABLE_GST_DEBUG
-static inline GstFlowReturn __gst_pad_push (GstPad * pad, GstBuffer * buffer);
-#endif
-
 GstFlowReturn
 gst_pad_push (GstPad * pad, GstBuffer * buffer)
-#ifndef GST_DISABLE_GST_DEBUG
 {
-  const gboolean trace = gst_tracer_is_enabled (GST_TRACER_HOOK_ID_BUFFERS);
   GstFlowReturn res;
 
-  if (trace)
-    gst_tracer_push_buffer_pre (gst_util_get_timestamp (), pad, buffer);
-  res = __gst_pad_push (pad, buffer);
-  if (trace)
-    gst_tracer_push_buffer_post (gst_util_get_timestamp (), pad, res);
-  return res;
-}
-
-static inline GstFlowReturn
-__gst_pad_push (GstPad * pad, GstBuffer * buffer)
-#endif
-{
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  return gst_pad_push_data (pad,
+  GST_TRACER_PAD_PUSH_PRE (pad, buffer);
+  res = gst_pad_push_data (pad,
       GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH, buffer);
+  GST_TRACER_PAD_PUSH_POST (pad, res);
+  return res;
 }
 
 /**
@@ -4498,36 +4483,20 @@ __gst_pad_push (GstPad * pad, GstBuffer * buffer)
  *
  * MT safe.
  */
-#ifndef GST_DISABLE_GST_DEBUG
-static inline GstFlowReturn __gst_pad_push_list (GstPad * pad,
-    GstBufferList * list);
-#endif
-
 GstFlowReturn
 gst_pad_push_list (GstPad * pad, GstBufferList * list)
-#ifndef GST_DISABLE_GST_DEBUG
 {
-  const gboolean trace = gst_tracer_is_enabled (GST_TRACER_HOOK_ID_BUFFERS);
   GstFlowReturn res;
 
-  if (trace)
-    gst_tracer_push_buffer_list_pre (gst_util_get_timestamp (), pad, list);
-  res = __gst_pad_push_list (pad, list);
-  if (trace)
-    gst_tracer_push_buffer_list_post (gst_util_get_timestamp (), pad, res);
-  return res;
-}
-
-static inline GstFlowReturn
-__gst_pad_push_list (GstPad * pad, GstBufferList * list)
-#endif
-{
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER_LIST (list), GST_FLOW_ERROR);
 
-  return gst_pad_push_data (pad,
+  GST_TRACER_PAD_PUSH_LIST_PRE (pad, list);
+  res = gst_pad_push_data (pad,
       GST_PAD_PROBE_TYPE_BUFFER_LIST | GST_PAD_PROBE_TYPE_PUSH, list);
+  GST_TRACER_PAD_PUSH_LIST_POST (pad, res);
+  return res;
 }
 
 static GstFlowReturn

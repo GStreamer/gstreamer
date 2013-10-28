@@ -31,32 +31,20 @@ Hook api
 --------
 e.g. gst_pad_push() would become:
 
-#ifndef GST_DISABLE_GST_DEBUG
-static inline GstFlowReturn __gst_pad_push (GstPad * pad, GstBuffer * buffer);
-#endif
-
 GstFlowReturn
 gst_pad_push (GstPad * pad, GstBuffer * buffer)
-#ifndef GST_DISABLE_GST_DEBUG
 {
-  if (__tracer_enabled && __tracer_hook_is_used)
-    gst_tracer_push_buffer_pre (pad, buffer);
-  GstFlowReturn res = __gst_pad_push (GstPad * pad, GstBuffer * buffer);
-  if (__tracer_enabled && __tracer_hook_is_used)
-    gst_tracer_push_buffer_post (pad, res);
-  return res;
-}
+  GstFlowReturn res;
 
-static inline GstFlowReturn
-__gst_pad_push (GstPad * pad, GstBuffer * buffer)
-#endif
-{
   g_return_val_if_fail (GST_IS_PAD (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_PAD_IS_SRC (pad), GST_FLOW_ERROR);
   g_return_val_if_fail (GST_IS_BUFFER (buffer), GST_FLOW_ERROR);
 
-  return gst_pad_push_data (pad,
+  GST_TRACER_PAD_PUSH_PRE (pad, buffer);
+  res = gst_pad_push_data (pad,
       GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH, buffer);
+  GST_TRACER_PAD_PUSH_POST (pad, res);
+  return res;
 }
 
 TODO(ensonic): gcc has some magic for wrapping functions
@@ -167,8 +155,6 @@ Problems / Open items
 - when hooking into a timer, should we just have some predefined intervals?
 - how to trigger the shutdown processing?
   gst_deinit() (apps can call it from atexit())
-- how to share the quark table from gst/gstquark?
-  use a separate table in gst/gsttracers or add a getter to gst/gstquark
 - how to chain tracers (use the rank?)
   e.g. how can the stats tracer get data from rusage/mallinfo tracers
   or should all tracers just log and we would use a gst-stats tool to collect
@@ -183,3 +169,5 @@ Try it
 GST_DEBUG="GST_REG*:4,GST_TRACER:4,log:7" GST_TRACE=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink
 - traces for buffer flow in TRACE level and default category
 
+GST_DEBUG="GST_REG*:4,GST_TRACER:4" GST_TRACE=stats gst-launch-1.0 fakesrc num-buffers=10 ! queue ! fakesink
+- print some pipeline stats on exit

@@ -105,10 +105,37 @@ gboolean gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type
 
 gboolean gst_tracer_is_enabled (GstTracerHookId id);
 
-void gst_tracer_push_buffer_pre (guint64 ts, GstPad *pad, GstBuffer *buffer);
-void gst_tracer_push_buffer_post (guint64 ts, GstPad *pad, GstFlowReturn res);
-void gst_tracer_push_buffer_list_pre (guint64 ts, GstPad * pad, GstBufferList * list);
-void gst_tracer_push_buffer_list_post (guint64 ts, GstPad * pad, GstFlowReturn res);
+void gst_tracer_push_pre (guint64 ts, GstPad *pad, GstBuffer *buffer);
+void gst_tracer_push_post (guint64 ts, GstPad *pad, GstFlowReturn res);
+void gst_tracer_push_list_pre (guint64 ts, GstPad * pad, GstBufferList * list);
+void gst_tracer_push_list_post (guint64 ts, GstPad * pad, GstFlowReturn res);
+
+#define GST_TRACER_PAD_PUSH_PRE(pad, buffer) G_STMT_START{ \
+  if (gst_tracer_is_enabled (GST_TRACER_HOOK_ID_BUFFERS)) \
+    gst_tracer_push_pre (gst_util_get_timestamp (), pad, buffer); \
+}G_STMT_END
+
+#define GST_TRACER_PAD_PUSH_POST(pad, res) G_STMT_START{ \
+  if (gst_tracer_is_enabled (GST_TRACER_HOOK_ID_BUFFERS)) \
+    gst_tracer_push_post (gst_util_get_timestamp (), pad, res); \
+}G_STMT_END
+
+#define GST_TRACER_PAD_PUSH_LIST_PRE(pad, list) G_STMT_START{ \
+  if (gst_tracer_is_enabled (GST_TRACER_HOOK_ID_BUFFERS)) \
+    gst_tracer_push_list_pre (gst_util_get_timestamp (), pad, list); \
+}G_STMT_END
+
+#define GST_TRACER_PAD_PUSH_LIST_POST(pad, res) G_STMT_START{ \
+  if (gst_tracer_is_enabled (GST_TRACER_HOOK_ID_BUFFERS)) \
+    gst_tracer_push_list_post (gst_util_get_timestamp (), pad, res); \
+}G_STMT_END
+
+#else /* !GST_DISABLE_GST_DEBUG */
+
+#define GST_TRACER_PAD_PUSH_PRE(pad, buffer)
+#define GST_TRACER_PAD_PUSH_POST(pad, res)
+#define GST_TRACER_PAD_PUSH_LIST_PRE(pad, list)
+#define GST_TRACER_PAD_PUSH_LIST_POST(pad, res)
 
 #endif /* GST_DISABLE_GST_DEBUG */
 

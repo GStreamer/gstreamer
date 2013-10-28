@@ -295,7 +295,7 @@ dispatch (GstTracerHookId id, guint64 ts, GstStructure * s)
 
 /* tracing hooks */
 void
-gst_tracer_push_buffer_pre (guint64 ts, GstPad * pad, GstBuffer * buffer)
+gst_tracer_push_pre (guint64 ts, GstPad * pad, GstBuffer * buffer)
 {
   dispatch (GST_TRACER_HOOK_ID_BUFFERS, ts,
       gst_structure_new_id (GST_QUARK (PUSH_BUFFER_PRE),
@@ -304,7 +304,7 @@ gst_tracer_push_buffer_pre (guint64 ts, GstPad * pad, GstBuffer * buffer)
 }
 
 void
-gst_tracer_push_buffer_post (guint64 ts, GstPad * pad, GstFlowReturn res)
+gst_tracer_push_post (guint64 ts, GstPad * pad, GstFlowReturn res)
 {
   dispatch (GST_TRACER_HOOK_ID_BUFFERS, ts,
       gst_structure_new_id (GST_QUARK (PUSH_BUFFER_POST),
@@ -313,7 +313,7 @@ gst_tracer_push_buffer_post (guint64 ts, GstPad * pad, GstFlowReturn res)
 }
 
 void
-gst_tracer_push_buffer_list_pre (guint64 ts, GstPad * pad, GstBufferList * list)
+gst_tracer_push_list_pre (guint64 ts, GstPad * pad, GstBufferList * list)
 {
   dispatch (GST_TRACER_HOOK_ID_BUFFERS, ts,
       gst_structure_new_id (GST_QUARK (PUSH_BUFFER_LIST_PRE),
@@ -322,7 +322,7 @@ gst_tracer_push_buffer_list_pre (guint64 ts, GstPad * pad, GstBufferList * list)
 }
 
 void
-gst_tracer_push_buffer_list_post (guint64 ts, GstPad * pad, GstFlowReturn res)
+gst_tracer_push_list_post (guint64 ts, GstPad * pad, GstFlowReturn res)
 {
   dispatch (GST_TRACER_HOOK_ID_BUFFERS, ts,
       gst_structure_new_id (GST_QUARK (PUSH_BUFFER_LIST_POST),
