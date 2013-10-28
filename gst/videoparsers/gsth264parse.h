@@ -56,9 +56,8 @@ struct _GstH264Parse
   /* stream */
   gint width, height;
   gint fps_num, fps_den;
-  gint aspect_ratio_idc;
-  gint sar_width, sar_height;
   gint upstream_par_n, upstream_par_d;
+  gint parsed_par_n, parsed_par_d;
   /* current codec_data in output caps, if any */
   GstBuffer *codec_data;
   /* input codec_data, if any */
