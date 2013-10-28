@@ -1074,11 +1074,7 @@ gst_h264_parse_get_par (GstH264Parse * h264parse, gint * num, gint * den)
     return;
   }
 
-  par_n = par_d = 0;
   switch (h264parse->aspect_ratio_idc) {
-    case 0:
-      par_n = par_d = 0;
-      break;
     case 1:
       par_n = 1;
       par_d = 1;
@@ -1148,7 +1144,9 @@ gst_h264_parse_get_par (GstH264Parse * h264parse, gint * num, gint * den)
       par_d = h264parse->sar_height;
       break;
     default:
+      /* 0 and other values are undefined */
       par_n = par_d = 0;
+      break;
   }
 
   *num = par_n;
