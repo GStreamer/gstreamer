@@ -489,7 +489,8 @@ _parse_nit (GstMpegTsSection * section)
   data = section->data;
   end = data + section->section_length;
 
-  /* Skip already parsed data */
+  /* Set network id, and skip the rest of what is already parsed */
+  nit->network_id = section->subtable_extension;
   data += 8;
 
   nit->actual_network = section->table_id == 0x40;
