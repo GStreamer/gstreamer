@@ -276,7 +276,7 @@ gst_y4m_encode_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   timestamp = GST_BUFFER_TIMESTAMP (buf);
 
   if (G_UNLIKELY (!filter->header)) {
-    gboolean tff;
+    gboolean tff = FALSE;
 
     if (GST_VIDEO_INFO_IS_INTERLACED (&filter->info)) {
       tff = GST_BUFFER_FLAG_IS_SET (buf, GST_VIDEO_BUFFER_FLAG_TFF);
