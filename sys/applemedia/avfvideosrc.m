@@ -34,19 +34,20 @@
 GST_DEBUG_CATEGORY (gst_avf_video_src_debug);
 #define GST_CAT_DEFAULT gst_avf_video_src_debug
 
-#define VIDEO_CAPS_YUV(width, height) "video/x-raw-yuv, "       \
-    "format = (fourcc) { NV12, UYVY, YUY2 }, "                  \
+#define VIDEO_CAPS_YUV(width, height) "video/x-raw, "           \
+    "format = (string) { NV12, UYVY, YUY2 }, "                  \
     "framerate = " GST_VIDEO_FPS_RANGE ", "                     \
     "width = (int) " G_STRINGIFY (width) ", height = (int) " G_STRINGIFY (height)
 
-#define VIDEO_CAPS_BGRA(width, height) "video/x-raw-rgb, "      \
+#define VIDEO_CAPS_BGRA(width, height) "video/x-raw, "          \
+    "format = (string) { BGRA }, "                              \
     "bpp = (int) 32, "                                          \
     "depth = (int) 32, "                                        \
     "endianness = (int) BIG_ENDIAN, "                           \
-    "red_mask = (int) " GST_VIDEO_BYTE3_MASK_32 ", "            \
-    "green_mask = (int) " GST_VIDEO_BYTE2_MASK_32 ", "          \
-    "blue_mask = (int) " GST_VIDEO_BYTE1_MASK_32 ", "           \
-    "alpha_mask = (int) " GST_VIDEO_BYTE4_MASK_32 ", "          \
+    "red_mask = (int)0x0000FF00, "                              \
+    "green_mask = (int)0x00FF0000, "                            \
+    "blue_mask = (int)0xFF000000, "                             \
+    "alpha_mask = (int)0x000000FF, "                            \
     "width = (int) " G_STRINGIFY (width) ", height = (int) " G_STRINGIFY (height)
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
@@ -71,7 +72,8 @@ typedef enum _QueueState {
   HAS_BUFFER_OR_STOP_REQUEST,
 } QueueState;
 
-static GstPushSrcClass * parent_class;
+#define gst_avf_video_src_parent_class parent_class
+G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
 
 @interface GstAVFVideoSrcImpl : NSObject <AVCaptureVideoDataOutputSampleBufferDelegate> {
   GstElement *element;
@@ -217,7 +219,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     [output setSampleBufferDelegate:self
                               queue:workerQueue];
     output.alwaysDiscardsLateVideoFrames = YES;
-    output.minFrameDuration = kCMTimeZero; /* unlimited */
     output.videoSettings = nil; /* device native format */
 
     session = [[AVCaptureSession alloc] init];
@@ -254,9 +255,13 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   [self waitForMainQueueToDrain];
 }
 
-#define GST_AVF_CAPS_NEW(format, w, h)                    \
-    (gst_video_format_new_caps (format, w, h, \
-                                DEVICE_FPS_N, DEVICE_FPS_D, 1, 1))
+#define GST_AVF_CAPS_NEW(format, w, h)                                \
+    (gst_caps_new_simple ("video/x-raw",                              \
+        "width", G_TYPE_INT, w,                                       \
+        "height", G_TYPE_INT, h,                                      \
+        "format", G_TYPE_STRING, gst_video_format_to_string (format), \
+        "framerate", GST_TYPE_FRACTION, DEVICE_FPS_N, DEVICE_FPS_D,   \
+        NULL))
 
 - (GstCaps *)getCaps
 {
@@ -308,7 +313,14 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (BOOL)setCaps:(GstCaps *)caps
 {
-  gst_video_format_parse_caps (caps, &format, &width, &height);
+  GstVideoInfo info;
+
+  gst_video_info_init (&info);
+  gst_video_info_from_caps (&info, caps);
+
+  width = info.width;
+  height = info.height;
+  format = info.finfo->format;
 
   dispatch_async (mainQueue, ^{
     int newformat;
@@ -358,7 +370,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     GST_DEBUG_OBJECT(element,
        "Width: %d Height: %d Format: %" GST_FOURCC_FORMAT,
        width, height,
-       GST_FOURCC_ARGS (gst_video_format_to_fourc(format)));
+       GST_FOURCC_ARGS (gst_video_format_to_fourcc (format)));
 
 
     output.videoSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:newformat] forKey:(NSString*)kCVPixelBufferPixelFormatTypeKey];
@@ -600,8 +612,6 @@ enum
   PROP_FPS
 };
 
-GST_BOILERPLATE (GstAVFVideoSrc, gst_avf_video_src, GstPushSrc,
-    GST_TYPE_PUSH_SRC);
 
 static void gst_avf_video_src_finalize (GObject * obj);
 static void gst_avf_video_src_get_property (GObject * object, guint prop_id,
@@ -610,7 +620,8 @@ static void gst_avf_video_src_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec);
 static GstStateChangeReturn gst_avf_video_src_change_state (
     GstElement * element, GstStateChange transition);
-static GstCaps * gst_avf_video_src_get_caps (GstBaseSrc * basesrc);
+static GstCaps * gst_avf_video_src_get_caps (GstBaseSrc * basesrc,
+    GstCaps * filter);
 static gboolean gst_avf_video_src_set_caps (GstBaseSrc * basesrc,
     GstCaps * caps);
 static gboolean gst_avf_video_src_start (GstBaseSrc * basesrc);
@@ -622,19 +633,6 @@ static gboolean gst_avf_video_src_unlock_stop (GstBaseSrc * basesrc);
 static GstFlowReturn gst_avf_video_src_create (GstPushSrc * pushsrc,
     GstBuffer ** buf);
 
-static void
-gst_avf_video_src_base_init (gpointer gclass)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (gclass);
-
-  gst_element_class_set_metadata (element_class,
-      "Video Source (AVFoundation)", "Source/Video",
-      "Reads frames from an iOS AVFoundation device",
-      "Ole André Vadla Ravnås <oleavr@soundrop.com>");
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&src_template));
-}
 
 static void
 gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
@@ -659,6 +657,14 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
   gstbasesrc_class->unlock_stop = gst_avf_video_src_unlock_stop;
 
   gstpushsrc_class->create = gst_avf_video_src_create;
+
+  gst_element_class_set_metadata (gstelement_class,
+      "Video Source (AVFoundation)", "Source/Video",
+      "Reads frames from an iOS AVFoundation device",
+      "Ole André Vadla Ravnås <oleavr@soundrop.com>");
+
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&src_template));
 
   g_object_class_install_property (gobject_class, PROP_DEVICE_INDEX,
       g_param_spec_int ("device-index", "Device Index",
@@ -685,8 +691,9 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
 #define OBJC_CALLOUT_END() \
   [pool release]
 
+
 static void
-gst_avf_video_src_init (GstAVFVideoSrc * src, GstAVFVideoSrcClass * gclass)
+gst_avf_video_src_init (GstAVFVideoSrc * src)
 {
   OBJC_CALLOUT_BEGIN ();
   src->impl = [[GstAVFVideoSrcImpl alloc] initWithSrc:GST_PUSH_SRC (src)];
@@ -759,7 +766,7 @@ gst_avf_video_src_change_state (GstElement * element, GstStateChange transition)
 }
 
 static GstCaps *
-gst_avf_video_src_get_caps (GstBaseSrc * basesrc)
+gst_avf_video_src_get_caps (GstBaseSrc * basesrc, GstCaps * filter)
 {
   GstCaps *ret;
 
