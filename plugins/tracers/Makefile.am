@@ -4,6 +4,7 @@ plugin_LTLIBRARIES = libgstcoretracers.la
 libgstcoretracers_la_DEPENDENCIES = $(top_builddir)/gst/libgstreamer-@GST_API_VERSION@.la
 libgstcoretracers_la_SOURCES = \
   gstlog.c \
+  gststats.c \
 	gsttracers.c
 
 libgstcoretracers_la_CFLAGS = $(GST_OBJ_CFLAGS)
@@ -14,7 +15,8 @@ libgstcoretracers_la_LDFLAGS = $(GST_PLUGIN_LDFLAGS)
 libgstcoretracers_la_LIBTOOLFLAGS = $(GST_PLUGIN_LIBTOOLFLAGS)
 
 noinst_HEADERS = \
-  gstlog.h
+  gstlog.h \
+  gststats.h
 
 CLEANFILES = *.gcno *.gcda *.gcov *.gcov.out
 
