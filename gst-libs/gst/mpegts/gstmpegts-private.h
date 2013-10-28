@@ -37,7 +37,10 @@ G_GNUC_INTERNAL void _free_descriptor (GstMpegTsDescriptor *descriptor);
 G_GNUC_INTERNAL GstMpegTsDescriptor *_new_descriptor (guint8 tag, guint8 length);
 G_GNUC_INTERNAL GstMpegTsDescriptor *_new_descriptor_with_extension (guint8 tag,
     guint8 tag_extension, guint8 length);
+G_GNUC_INTERNAL void _packetize_descriptor_array (GPtrArray * array,
+    guint8 ** out_data);
 G_GNUC_INTERNAL GstMpegTsSection *_gst_mpegts_section_init (guint16 pid, guint8 table_id);
+G_GNUC_INTERNAL void _packetize_common_section (GstMpegTsSection * section, gsize length);
 
 typedef gpointer (*GstMpegTsParseFunc) (GstMpegTsSection *section);
 G_GNUC_INTERNAL gpointer __common_desc_checks (GstMpegTsSection *section,

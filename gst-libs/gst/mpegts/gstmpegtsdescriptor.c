@@ -627,6 +627,32 @@ failed:
   }
 }
 
+void
+_packetize_descriptor_array (GPtrArray * array, guint8 ** out_data)
+{
+  guint i;
+  guint8 header_size;
+  GstMpegTsDescriptor *descriptor;
+
+  g_return_if_fail (out_data != NULL);
+  g_return_if_fail (*out_data != NULL);
+
+  if (array == NULL)
+    return;
+
+  for (i = 0; i < array->len; i++) {
+    descriptor = g_ptr_array_index (array, i);
+
+    if (descriptor->tag == GST_MTS_DESC_DVB_EXTENSION)
+      header_size = 3;
+    else
+      header_size = 2;
+
+    memcpy (*out_data, descriptor->data, descriptor->length + header_size);
+    *out_data += descriptor->length + header_size;
+  }
+}
+
 GstMpegTsDescriptor *
 _new_descriptor (guint8 tag, guint8 length)
 {

@@ -733,6 +733,44 @@ _gst_mpegts_section_init (guint16 pid, guint8 table_id)
   return section;
 }
 
+void
+_packetize_common_section (GstMpegTsSection * section, gsize length)
+{
+  guint8 *data;
+
+  section->section_length = length;
+  data = section->data = g_malloc (length);
+
+  /* table_id                         - 8 bit uimsbf */
+  *data++ = section->table_id;
+
+  /* section_syntax_indicator         - 1  bit
+     reserved                         - 3  bit
+     section_length                   - 12 bit uimsbf */
+  GST_WRITE_UINT16_BE (data, (section->section_length - 3) | 0x7000);
+
+  if (!section->short_section)
+    *data |= 0x80;
+
+  data += 2;
+
+  /* subtable_extension               - 16 bit uimsbf */
+  GST_WRITE_UINT16_BE (data, section->subtable_extension);
+  data += 2;
+
+  /* reserved                         - 2  bit
+     version_number                   - 5  bit uimsbf
+     current_next_indicator           - 1  bit */
+  *data++ =
+      0xC0 | ((section->version_number & 0x1F) << 1) | (section->
+      current_next_indicator & 0x01);
+
+  /* section_number                   - 8  bit uimsbf */
+  *data++ = section->section_number;
+  /* last_section_number              - 8  bit uimsbf */
+  *data++ = section->last_section_number;
+}
+
 /**
  * gst_mpegts_section_new:
  * @pid: the PID to which this section belongs
@@ -807,4 +845,40 @@ short_packet:
         ", need:%d)", pid, data_size, section_length + 3);
     return NULL;
   }
+}
+
+/**
+ * gst_mpegts_section_packetize:
+ * @section: (transfer none): the #GstMpegTsSection that holds the data
+ * @output_size: (out): #gsize to hold the size of the data
+ *
+ * If the data in @section has aldready been packetized, the data pointer is returned
+ * immediately. Otherwise, the data field is allocated and populated.
+ *
+ * Returns: (transfer none): pointer to section data, or %NULL on fail
+ */
+guint8 *
+gst_mpegts_section_packetize (GstMpegTsSection * section, gsize * output_size)
+{
+  guint8 *crc;
+  g_return_val_if_fail (section != NULL, NULL);
+  g_return_val_if_fail (output_size != NULL, NULL);
+  g_return_val_if_fail (section->packetizer != NULL, NULL);
+
+  /* Section data has already been packetized */
+  if (section->data)
+    return section->data;
+
+  if (!section->packetizer (section))
+    return NULL;
+
+  if (!section->short_section) {
+    /* Update the CRC in the last 4 bytes of the section */
+    crc = section->data + section->section_length - 4;
+    GST_WRITE_UINT32_BE (crc, _calc_crc32 (section->data, crc - section->data));
+  }
+
+  *output_size = section->section_length;
+
+  return section->data;
 }
