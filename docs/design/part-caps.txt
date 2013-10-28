@@ -29,8 +29,8 @@ For fixating caps only the first structure is kept as the order of
 structures is meant to express the preferences for the different
 structures. Afterwards, each unfixed field of this structure is set
 to the value that makes most sense for the media format by the element
-or pad implementation and then every remaining unfixed fields are set to
-an arbitrary value that is a subset of the unfixed field possible values.
+or pad implementation and then every remaining unfixed field is set to
+an arbitrary value that is a subset of the unfixed field's values.
 
 EMPTY caps are fixed caps and ANY caps are not. Caps with ANY caps features
 are not fixed.
@@ -123,7 +123,7 @@ for a specific structure, and only structures with the same name _and_
 equal caps features are considered compatible.
 Caps features can be used to require a specific memory representation
 or a specific meta to be set on buffers, for example a pad could require
-for a specific structure that includes EGLImage memory or buffers with
+for a specific structure that it is passed EGLImage memory or buffers with
 the video meta.
 If no caps features are provided for a structure, it is assumed that
 system memory is required unless later negotiation steps (e.g. the
@@ -142,7 +142,6 @@ not enough. Instead the fixed caps must be at least a subset of the
 pad's caps but pads can introduce additional constraints which would be
 checked in the ACCEPT_CAPS query handler.
 
-Data flow can only happen after pads have decided on a common and fixed
-set of caps. These caps are then distributed to both pads with the CAPS
-event.
+Data flow can only happen after pads have decided on common fixed caps.
+These caps are distributed to both pads with the CAPS event.
 

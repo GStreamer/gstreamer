@@ -62,4 +62,4 @@ to the element (or to the complete pipeline).
 
 Whenever an element creates a context internally it will post a
 GST_MESSAGE_HAVE_CONTEXT message on the bus. Bins will cache these
-contexts and pass them to any future elements that requests them.
+contexts and pass them to any future element that requests them.

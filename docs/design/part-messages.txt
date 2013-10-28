@@ -18,9 +18,9 @@ Message types
 
 GST_MESSAGE_EOS:
 
-  Posted by sink elements. This message is posted when all the sinks in a
-  pipeline have posted an EOS message. When performing a flushing seek, the
-  EOS state of the pipeline (and hence, its sinks) is resetted.
+  Posted by sink elements. This message is posted to the application when all
+  the sinks in a pipeline have posted an EOS message. When performing a
+  flushing seek, the EOS state of the pipeline and sinks is reset.
 
 GST_MESSAGE_ERROR:
 
@@ -81,7 +81,7 @@ GST_MESSAGE_NEW_CLOCK:
 GST_MESSAGE_STRUCTURE_CHANGE:
 
   The pipeline changed its structure, This means elements were added or removed or
-  pads were linked or unlinked. This messages is not yet used.
+  pads were linked or unlinked. This message is not yet used.
 
 GST_MESSAGE_STREAM_STATUS:
 

@@ -12,7 +12,7 @@ Requirements
  - It must be fast
     * allocation, free, low fragmentation
  - Must be able to attach multiple memory blocks to the buffer
- - Must be able to attach artbitrary metadata to buffers
+ - Must be able to attach arbitrary metadata to buffers
  - efficient handling of subbuffer, copy, span, trim
 
 Lifecycle
@@ -125,7 +125,7 @@ Use cases
 Generating RTP packets from h264 video
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We receive a GstBuffer as input with an encoded h264 image and we need to
+We receive as input a GstBuffer with an encoded h264 image and we need to
 create RTP packets containing this h264 data as the payload. We typically need
 to fragment the h264 data into multiple packets, each with their own RTP and
 payload specific header.
