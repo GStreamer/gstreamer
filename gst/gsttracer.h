@@ -81,7 +81,8 @@ struct _GstTracer {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-typedef void		      (*GstTracerInvokeFunction) (GstTracer * self, GstTracerHookId id, GstStructure *s);
+typedef void (*GstTracerInvokeFunction) (GstTracer * self, GstTracerHookId id,
+    guint64 ts, GstStructure *s);
 
 struct _GstTracerClass {
   GstObjectClass parent_class;
@@ -103,11 +104,11 @@ void _priv_gst_tracer_deinit (void);
 gboolean gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type);
 
 gboolean gst_tracer_is_enabled (GstTracerHookId id);
-void gst_tracer_push_buffer_pre (GstPad *pad, GstBuffer *buffer);
-void gst_tracer_push_buffer_post (GstPad *pad, GstFlowReturn res);
 
-void gst_tracer_push_buffer_list_pre (GstPad * pad, GstBufferList * list);
-void gst_tracer_push_buffer_list_post (GstPad * pad, GstFlowReturn res);
+void gst_tracer_push_buffer_pre (guint64 ts, GstPad *pad, GstBuffer *buffer);
+void gst_tracer_push_buffer_post (guint64 ts, GstPad *pad, GstFlowReturn res);
+void gst_tracer_push_buffer_list_pre (guint64 ts, GstPad * pad, GstBufferList * list);
+void gst_tracer_push_buffer_list_post (guint64 ts, GstPad * pad, GstFlowReturn res);
 
 #endif /* GST_DISABLE_GST_DEBUG */
 

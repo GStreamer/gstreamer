@@ -124,13 +124,14 @@ gst_tracer_get_property (GObject * object, guint prop_id,
 }
 
 static void
-gst_tracer_invoke (GstTracer * self, GstTracerHookId id, GstStructure * s)
+gst_tracer_invoke (GstTracer * self, GstTracerHookId id, guint64 ts,
+    GstStructure * s)
 {
   GstTracerClass *klass = GST_TRACER_GET_CLASS (self);
 
   g_return_if_fail (klass->invoke);
 
-  klass->invoke (self, id, s);
+  klass->invoke (self, id, ts, s);
 }
 
 /* tracing modules */
@@ -284,51 +285,47 @@ gst_tracer_is_enabled (GstTracerHookId id)
 }
 
 static void
-dispatch (GstTracerHookId id, GstStructure * s)
+dispatch (GstTracerHookId id, guint64 ts, GstStructure * s)
 {
   GList *node;
   for (node = tracers[id]; node; node = g_list_next (node)) {
-    gst_tracer_invoke (node->data, id, s);
+    gst_tracer_invoke (node->data, id, ts, s);
   }
 }
 
 /* tracing hooks */
 void
-gst_tracer_push_buffer_pre (GstPad * pad, GstBuffer * buffer)
+gst_tracer_push_buffer_pre (guint64 ts, GstPad * pad, GstBuffer * buffer)
 {
-  dispatch (GST_TRACER_HOOK_ID_BUFFERS,
+  dispatch (GST_TRACER_HOOK_ID_BUFFERS, ts,
       gst_structure_new_id (GST_QUARK (PUSH_BUFFER_PRE),
-          GST_QUARK (DOT_TS), G_TYPE_UINT64, gst_util_get_timestamp (),
           GST_QUARK (PAD), GST_TYPE_PAD, pad,
           GST_QUARK (BUFFER), GST_TYPE_BUFFER, buffer, NULL));
 }
 
 void
-gst_tracer_push_buffer_post (GstPad * pad, GstFlowReturn res)
+gst_tracer_push_buffer_post (guint64 ts, GstPad * pad, GstFlowReturn res)
 {
-  dispatch (GST_TRACER_HOOK_ID_BUFFERS,
+  dispatch (GST_TRACER_HOOK_ID_BUFFERS, ts,
       gst_structure_new_id (GST_QUARK (PUSH_BUFFER_POST),
-          GST_QUARK (DOT_TS), G_TYPE_UINT64, gst_util_get_timestamp (),
           GST_QUARK (PAD), GST_TYPE_PAD, pad,
           GST_QUARK (RETURN), G_TYPE_INT, res, NULL));
 }
 
 void
-gst_tracer_push_buffer_list_pre (GstPad * pad, GstBufferList * list)
+gst_tracer_push_buffer_list_pre (guint64 ts, GstPad * pad, GstBufferList * list)
 {
-  dispatch (GST_TRACER_HOOK_ID_BUFFERS,
+  dispatch (GST_TRACER_HOOK_ID_BUFFERS, ts,
       gst_structure_new_id (GST_QUARK (PUSH_BUFFER_LIST_PRE),
-          GST_QUARK (DOT_TS), G_TYPE_UINT64, gst_util_get_timestamp (),
           GST_QUARK (PAD), GST_TYPE_PAD, pad,
           GST_QUARK (LIST), GST_TYPE_BUFFER_LIST, list, NULL));
 }
 
 void
-gst_tracer_push_buffer_list_post (GstPad * pad, GstFlowReturn res)
+gst_tracer_push_buffer_list_post (guint64 ts, GstPad * pad, GstFlowReturn res)
 {
-  dispatch (GST_TRACER_HOOK_ID_BUFFERS,
+  dispatch (GST_TRACER_HOOK_ID_BUFFERS, ts,
       gst_structure_new_id (GST_QUARK (PUSH_BUFFER_LIST_POST),
-          GST_QUARK (DOT_TS), G_TYPE_UINT64, gst_util_get_timestamp (),
           GST_QUARK (PAD), GST_TYPE_PAD, pad,
           GST_QUARK (RETURN), G_TYPE_INT, res, NULL));
 }

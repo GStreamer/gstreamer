@@ -35,7 +35,7 @@ G_DEFINE_TYPE_WITH_CODE (GstLogTracer, gst_log_tracer, GST_TYPE_TRACER,
     _do_init);
 
 static void gst_log_tracer_invoke (GstTracer * self, GstTracerHookId id,
-    GstStructure * s);
+    guint64 ts, GstStructure * s);
 
 static void
 gst_log_tracer_class_init (GstLogTracerClass * klass)
@@ -52,7 +52,8 @@ gst_log_tracer_init (GstLogTracer * self)
 }
 
 static void
-gst_log_tracer_invoke (GstTracer * self, GstTracerHookId id, GstStructure * s)
+gst_log_tracer_invoke (GstTracer * self, GstTracerHookId id, guint64 ts,
+    GstStructure * s)
 {
   gchar *str = gst_structure_to_string (s);
   /* TODO(ensonic): log to different categories depending on 'id'

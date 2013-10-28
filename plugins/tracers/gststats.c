@@ -453,7 +453,7 @@ do_element_stats (GstStatsTracer * self, GstPad * pad, GstClockTime elapsed1,
 
 static void gst_stats_tracer_finalize (GObject * obj);
 static void gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId id,
-    GstStructure * s);
+    guint64 ts, GstStructure * s);
 
 static void
 gst_stats_tracer_class_init (GstStatsTracerClass * klass)
@@ -477,16 +477,14 @@ gst_stats_tracer_init (GstStatsTracer * self)
 }
 
 static void
-do_push_buffer_pre (GstStatsTracer * self, GstStructure * s)
+do_push_buffer_pre (GstStatsTracer * self, guint64 ts, GstStructure * s)
 {
   GstPad *pad;
   GstBuffer *buffer;
   GstPadStats *stats;
-  guint64 ts;
 
   gst_structure_get (s,
-      "pad", GST_TYPE_PAD, &pad,
-      ".ts", G_TYPE_UINT64, &ts, "buffer", GST_TYPE_BUFFER, &buffer, NULL);
+      "pad", GST_TYPE_PAD, &pad, "buffer", GST_TYPE_BUFFER, &buffer, NULL);
   stats = get_pad_stats (self, pad);
 
   do_pad_stats (self, pad, stats, buffer, ts);
@@ -494,29 +492,28 @@ do_push_buffer_pre (GstStatsTracer * self, GstStructure * s)
 }
 
 static void
-do_push_buffer_post (GstStatsTracer * self, GstStructure * s)
+do_push_buffer_post (GstStatsTracer * self, guint64 ts, GstStructure * s)
 {
   GstPad *pad;
   GstPadStats *stats;
-  guint64 ts;
 
-  gst_structure_get (s,
-      "pad", GST_TYPE_PAD, &pad, ".ts", G_TYPE_UINT64, &ts, NULL);
+  gst_structure_get (s, "pad", GST_TYPE_PAD, &pad, NULL);
   stats = get_pad_stats (self, pad);
 
   do_element_stats (self, pad, stats->last_ts, ts);
 }
 
 static void
-gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId id, GstStructure * s)
+gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId id, guint64 ts,
+    GstStructure * s)
 {
   GstStatsTracer *self = GST_STATS_TRACER_CAST (obj);
   GQuark func = gst_structure_get_name_id (s);
 
   if (func == funcs[PUSH_BUFFER_PRE])
-    do_push_buffer_pre (self, s);
+    do_push_buffer_pre (self, ts, s);
   else if (func == funcs[PUSH_BUFFER_POST])
-    do_push_buffer_post (self, s);
+    do_push_buffer_post (self, ts, s);
 }
 
 static void

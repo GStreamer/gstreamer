@@ -4455,10 +4455,10 @@ gst_pad_push (GstPad * pad, GstBuffer * buffer)
   GstFlowReturn res;
 
   if (trace)
-    gst_tracer_push_buffer_pre (pad, buffer);
+    gst_tracer_push_buffer_pre (gst_util_get_timestamp (), pad, buffer);
   res = __gst_pad_push (pad, buffer);
   if (trace)
-    gst_tracer_push_buffer_post (pad, res);
+    gst_tracer_push_buffer_post (gst_util_get_timestamp (), pad, res);
   return res;
 }
 
@@ -4511,10 +4511,10 @@ gst_pad_push_list (GstPad * pad, GstBufferList * list)
   GstFlowReturn res;
 
   if (trace)
-    gst_tracer_push_buffer_list_pre (pad, list);
+    gst_tracer_push_buffer_list_pre (gst_util_get_timestamp (), pad, list);
   res = __gst_pad_push_list (pad, list);
   if (trace)
-    gst_tracer_push_buffer_list_post (pad, res);
+    gst_tracer_push_buffer_list_post (gst_util_get_timestamp (), pad, res);
   return res;
 }
 
