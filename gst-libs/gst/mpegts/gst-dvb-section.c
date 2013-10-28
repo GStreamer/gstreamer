@@ -605,6 +605,171 @@ gst_mpegts_section_get_nit (GstMpegTsSection * section)
   return (const GstMpegTsNIT *) section->cached_parsed;
 }
 
+/**
+ * gst_mpegts_nit_new:
+ *
+ * Allocates and initializes a #GstMpegTsNIT.
+ *
+ * Returns: (transfer full): A newly allocated #GstMpegTsNIT
+ */
+GstMpegTsNIT *
+gst_mpegts_nit_new (void)
+{
+  GstMpegTsNIT *nit;
+
+  nit = g_slice_new0 (GstMpegTsNIT);
+
+  nit->descriptors =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) _free_descriptor);
+  nit->streams = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_nit_stream_free);
+
+  return nit;
+}
+
+/**
+ * gst_mpegts_nit_stream_new:
+ *
+ * Allocates and initializes a #GstMpegTsNITStream
+ *
+ * Returns: (transfer full): A newly allocated #GstMpegTsNITStream
+ */
+GstMpegTsNITStream *
+gst_mpegts_nit_stream_new (void)
+{
+  GstMpegTsNITStream *stream;
+
+  stream = g_slice_new0 (GstMpegTsNITStream);
+
+  stream->descriptors = g_ptr_array_new_with_free_func (
+      (GDestroyNotify) _free_descriptor);
+
+  return stream;
+}
+
+static gboolean
+_packetize_nit (GstMpegTsSection * section)
+{
+  gsize length, network_length, loop_length;
+  const GstMpegTsNIT *nit;
+  GstMpegTsNITStream *stream;
+  GstMpegTsDescriptor *descriptor;
+  guint i, j;
+  guint8 *data, *pos;
+
+  nit = gst_mpegts_section_get_nit (section);
+
+  if (nit == NULL)
+    return FALSE;
+
+  /* 8 byte common section fields
+     2 byte network_descriptors_length
+     2 byte transport_stream_loop_length
+     4 byte CRC */
+  length = 16;
+
+  /* Find length of network descriptors */
+  network_length = 0;
+  if (nit->descriptors) {
+    for (i = 0; i < nit->descriptors->len; i++) {
+      descriptor = g_ptr_array_index (nit->descriptors, i);
+      network_length += descriptor->length + 2;
+    }
+  }
+
+  /* Find length of loop */
+  loop_length = 0;
+  if (nit->streams) {
+    for (i = 0; i < nit->streams->len; i++) {
+      stream = g_ptr_array_index (nit->streams, i);
+      loop_length += 6;
+      if (stream->descriptors) {
+        for (j = 0; j < stream->descriptors->len; j++) {
+          descriptor = g_ptr_array_index (stream->descriptors, i);
+          loop_length += descriptor->length + 2;
+        }
+      }
+    }
+  }
+
+  length += network_length + loop_length;
+
+  /* Max length of NIT section is 1024 bytes */
+  g_return_val_if_fail (length <= 1024, FALSE);
+
+  _packetize_common_section (section, length);
+
+  data = section->data + 8;
+  /* reserved                         - 4  bit
+     network_descriptors_length       - 12 bit uimsbf */
+  GST_WRITE_UINT16_BE (data, network_length | 0xF000);
+  data += 2;
+
+  _packetize_descriptor_array (nit->descriptors, &data);
+
+  /* reserved                         - 4  bit
+     transport_stream_loop_length     - 12 bit uimsbf */
+  GST_WRITE_UINT16_BE (data, loop_length | 0xF000);
+  data += 2;
+
+  if (nit->streams) {
+    for (i = 0; i < nit->streams->len; i++) {
+      stream = g_ptr_array_index (nit->streams, i);
+      /* transport_stream_id          - 16 bit uimsbf */
+      GST_WRITE_UINT16_BE (data, stream->transport_stream_id);
+      data += 2;
+
+      /* original_network_id          - 16 bit uimsbf */
+      GST_WRITE_UINT16_BE (data, stream->original_network_id);
+      data += 2;
+
+      /* reserved                     -  4 bit
+         transport_descriptors_length - 12 bit uimsbf
+
+         Set length to zero, and update in loop */
+      pos = data;
+      *data++ = 0xF0;
+      *data++ = 0x00;
+
+      _packetize_descriptor_array (stream->descriptors, &data);
+
+      /* Go back and update the descriptor length */
+      GST_WRITE_UINT16_BE (pos, data - pos - 2);
+    }
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_mpegts_section_from_nit:
+ * @nit: (transfer full): a #GstMpegTsNIT to create the #GstMpegTsSection from
+ *
+ * Ownership of @nit is taken. The data in @nit is managed by the #GstMpegTsSection
+ *
+ * Returns: (transfer full): the #GstMpegTsSection
+ */
+GstMpegTsSection *
+gst_mpegts_section_from_nit (GstMpegTsNIT * nit)
+{
+  GstMpegTsSection *section;
+
+  g_return_val_if_fail (nit != NULL, NULL);
+
+  if (nit->actual_network)
+    section = _gst_mpegts_section_init (0x10,
+        GST_MTS_TABLE_ID_NETWORK_INFORMATION_ACTUAL_NETWORK);
+  else
+    section = _gst_mpegts_section_init (0x10,
+        GST_MTS_TABLE_ID_NETWORK_INFORMATION_OTHER_NETWORK);
+
+  section->subtable_extension = nit->network_id;
+  section->cached_parsed = (gpointer) nit;
+  section->packetizer = _packetize_nit;
+  section->destroy_parsed = (GDestroyNotify) _gst_mpegts_nit_free;
+
+  return section;
+}
 
 /* Service Description Table (SDT) */
 

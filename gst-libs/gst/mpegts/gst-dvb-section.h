@@ -166,6 +166,11 @@ GType gst_mpegts_nit_get_type (void);
 GType gst_mpegts_nit_stream_get_type (void);
 
 const GstMpegTsNIT *gst_mpegts_section_get_nit (GstMpegTsSection *section);
+GstMpegTsSection *gst_mpegts_section_from_nit (GstMpegTsNIT *nit);
+
+GstMpegTsNIT *gst_mpegts_nit_new (void);
+GstMpegTsNITStream *gst_mpegts_nit_stream_new (void);
+
 
 /* BAT */
 
