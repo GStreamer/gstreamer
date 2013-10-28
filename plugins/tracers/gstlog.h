@@ -36,6 +36,7 @@ G_BEGIN_DECLS
   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_LOG_TRACER))
 #define GST_IS_LOG_TRACER_CLASS(klass) \
   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_LOG_TRACER))
+#define GST_LOG_TRACER_CAST(obj) ((GstLogTracer *)(obj))
 
 typedef struct _GstLogTracer GstLogTracer;
 typedef struct _GstLogTracerClass GstLogTracerClass;
