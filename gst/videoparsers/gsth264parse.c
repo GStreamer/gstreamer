@@ -282,15 +282,15 @@ gst_h264_parse_get_string (GstH264Parse * parse, gboolean format, gint code)
 static void
 gst_h264_parse_format_from_caps (GstCaps * caps, guint * format, guint * align)
 {
-  g_return_if_fail (gst_caps_is_fixed (caps));
-
-  GST_DEBUG ("parsing caps: %" GST_PTR_FORMAT, caps);
-
   if (format)
     *format = GST_H264_PARSE_FORMAT_NONE;
 
   if (align)
     *align = GST_H264_PARSE_ALIGN_NONE;
+
+  g_return_if_fail (gst_caps_is_fixed (caps));
+
+  GST_DEBUG ("parsing caps: %" GST_PTR_FORMAT, caps);
 
   if (caps && gst_caps_get_size (caps) > 0) {
     GstStructure *s = gst_caps_get_structure (caps, 0);
