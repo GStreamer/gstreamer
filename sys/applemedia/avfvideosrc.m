@@ -151,9 +151,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
     deviceIndex = DEFAULT_DEVICE_INDEX;
 
-    mainQueue = dispatch_get_main_queue ();
+    mainQueue =
+        dispatch_queue_create ("org.freedesktop.gstreamer.avfvideosrc.main", NULL);
     workerQueue =
-        dispatch_queue_create ("org.freedesktop.gstreamer.avfvideosrc", NULL);
+        dispatch_queue_create ("org.freedesktop.gstreamer.avfvideosrc.output", NULL);
 
     gst_base_src_set_live (baseSrc, TRUE);
     gst_base_src_set_format (baseSrc, GST_FORMAT_TIME);
@@ -164,6 +165,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (void)finalize
 {
+  dispatch_release (mainQueue);
   mainQueue = NULL;
   dispatch_release (workerQueue);
   workerQueue = NULL;
