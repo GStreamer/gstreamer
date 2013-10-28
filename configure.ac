@@ -427,7 +427,13 @@ if test "x$HAVE_CPU_I386" != "xyes" && test "x$HAVE_CPU_X86_64" != "xyes"; then
   AG_GST_DISABLE_PLUGIN(real)
 fi
 
+AC_CHECK_HEADER(AVFoundation/AVFoundation.h, HAVE_AVFOUNDATION="yes", HAVE_AVFOUNDATION="no", [-])
 AC_CHECK_HEADER(MobileCoreServices/MobileCoreServices.h, HAVE_IOS="yes", HAVE_IOS="no", [-])
+
+AM_CONDITIONAL(HAVE_AVFOUNDATION, test "x$HAVE_AVFOUNDATION" = "xyes")
+if test "x$HAVE_AVFOUNDATION" = "xyes"; then
+  AC_DEFINE(HAVE_AVFOUNDATION, 1, [Define if building with AVFoundation])
+fi
 
 AM_CONDITIONAL(HAVE_IOS, test "x$HAVE_IOS" = "xyes")
 if test "x$HAVE_IOS" = "xyes"; then
