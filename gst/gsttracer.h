@@ -60,6 +60,15 @@ typedef enum
   GST_TRACER_HOOK_ID_LAST
 } GstTracerHookId;
 
+typedef enum
+{
+  GST_TRACER_MESSAGE_ID_PAD_PUSH_PRE = 0,
+  GST_TRACER_MESSAGE_ID_PAD_PUSH_POST,
+  GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_PRE,
+  GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_POST,
+  GST_TRACER_MESSAGE_ID_LAST
+} GstTracerMessageId;
+
 /* tracing plugins */
 
 typedef struct _GstTracer GstTracer;
@@ -81,8 +90,8 @@ struct _GstTracer {
   gpointer _gst_reserved[GST_PADDING];
 };
 
-typedef void (*GstTracerInvokeFunction) (GstTracer * self, GstTracerHookId id,
-    guint64 ts, GstStructure *s);
+typedef void (*GstTracerInvokeFunction) (GstTracer * self, GstTracerHookId hid,
+    GstTracerMessageId mid, va_list var_args);
 
 struct _GstTracerClass {
   GstObjectClass parent_class;
@@ -102,32 +111,46 @@ void _priv_gst_tracer_init (void);
 void _priv_gst_tracer_deinit (void);
 
 gboolean gst_tracer_register (GstPlugin * plugin, const gchar * name, GType type);
+void gst_tracer_dispatch (GstTracerHookId hid, GstTracerMessageId mid, ...);
 
-gboolean gst_tracer_is_enabled (GstTracerHookId id);
+extern gboolean _priv_tracer_enabled;
+extern GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST];
 
-void gst_tracer_push_pre (guint64 ts, GstPad *pad, GstBuffer *buffer);
-void gst_tracer_push_post (guint64 ts, GstPad *pad, GstFlowReturn res);
-void gst_tracer_push_list_pre (guint64 ts, GstPad * pad, GstBufferList * list);
-void gst_tracer_push_list_post (guint64 ts, GstPad * pad, GstFlowReturn res);
+#define GST_TRACER_IS_ENABLED(id) \
+  (_priv_tracer_enabled && (_priv_tracers[id] != NULL))
+
+/* tracing hooks */
 
 #define GST_TRACER_PAD_PUSH_PRE(pad, buffer) G_STMT_START{ \
-  if (gst_tracer_is_enabled (GST_TRACER_HOOK_ID_BUFFERS)) \
-    gst_tracer_push_pre (gst_util_get_timestamp (), pad, buffer); \
+  if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_BUFFERS)) { \
+    gst_tracer_dispatch (GST_TRACER_HOOK_ID_BUFFERS, \
+        GST_TRACER_MESSAGE_ID_PAD_PUSH_PRE, gst_util_get_timestamp (), \
+        pad, buffer); \
+  } \
 }G_STMT_END
 
 #define GST_TRACER_PAD_PUSH_POST(pad, res) G_STMT_START{ \
-  if (gst_tracer_is_enabled (GST_TRACER_HOOK_ID_BUFFERS)) \
-    gst_tracer_push_post (gst_util_get_timestamp (), pad, res); \
+  if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_BUFFERS)) { \
+    gst_tracer_dispatch (GST_TRACER_HOOK_ID_BUFFERS, \
+        GST_TRACER_MESSAGE_ID_PAD_PUSH_POST, gst_util_get_timestamp (), \
+        pad, res); \
+  } \
 }G_STMT_END
 
 #define GST_TRACER_PAD_PUSH_LIST_PRE(pad, list) G_STMT_START{ \
-  if (gst_tracer_is_enabled (GST_TRACER_HOOK_ID_BUFFERS)) \
-    gst_tracer_push_list_pre (gst_util_get_timestamp (), pad, list); \
+  if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_BUFFERS)) { \
+    gst_tracer_dispatch (GST_TRACER_HOOK_ID_BUFFERS, \
+        GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_PRE, gst_util_get_timestamp (), \
+        pad, list); \
+  } \
 }G_STMT_END
 
 #define GST_TRACER_PAD_PUSH_LIST_POST(pad, res) G_STMT_START{ \
-  if (gst_tracer_is_enabled (GST_TRACER_HOOK_ID_BUFFERS)) \
-    gst_tracer_push_list_post (gst_util_get_timestamp (), pad, res); \
+  if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_BUFFERS)) { \
+    gst_tracer_dispatch (GST_TRACER_HOOK_ID_BUFFERS, \
+        GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_POST, gst_util_get_timestamp (), \
+        pad, res); \
+  } \
 }G_STMT_END
 
 #else /* !GST_DISABLE_GST_DEBUG */

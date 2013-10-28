@@ -30,26 +30,12 @@
 GST_DEBUG_CATEGORY_STATIC (gst_stats_debug);
 #define GST_CAT_DEFAULT gst_stats_debug
 
-/* TODO(ensonic): the quark table from gst/gstquark.{c,h} is not exported
- * - we need a tracer specific quark table
- * - or we add a GQuark gst_quark_get (GstQuarkId id); there for external use
- */
-enum _FuncEnum
-{
-  PUSH_BUFFER_PRE,
-  PUSH_BUFFER_POST,
-  N_FUNCS
-};
-
 static GQuark data_quark;
-static GQuark funcs[N_FUNCS];
 G_LOCK_DEFINE (_stats);
 
 #define _do_init \
     GST_DEBUG_CATEGORY_INIT (gst_stats_debug, "stats", 0, "stats tracer"); \
-    data_quark = g_quark_from_static_string ("gststats:data"); \
-    funcs[PUSH_BUFFER_PRE] = g_quark_from_static_string ("push_buffer::pre"); \
-    funcs[PUSH_BUFFER_POST] = g_quark_from_static_string ("push_buffer::post");
+    data_quark = g_quark_from_static_string ("gststats:data");
 #define gst_stats_tracer_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstStatsTracer, gst_stats_tracer, GST_TYPE_TRACER,
     _do_init);
@@ -453,7 +439,7 @@ do_element_stats (GstStatsTracer * self, GstPad * pad, GstClockTime elapsed1,
 
 static void gst_stats_tracer_finalize (GObject * obj);
 static void gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId id,
-    guint64 ts, GstStructure * s);
+    GstTracerMessageId mid, va_list var_args);
 
 static void
 gst_stats_tracer_class_init (GstStatsTracerClass * klass)
@@ -477,43 +463,43 @@ gst_stats_tracer_init (GstStatsTracer * self)
 }
 
 static void
-do_push_buffer_pre (GstStatsTracer * self, guint64 ts, GstStructure * s)
+do_push_buffer_pre (GstStatsTracer * self, va_list var_args)
 {
-  GstPad *pad;
-  GstBuffer *buffer;
-  GstPadStats *stats;
-
-  gst_structure_get (s,
-      "pad", GST_TYPE_PAD, &pad, "buffer", GST_TYPE_BUFFER, &buffer, NULL);
-  stats = get_pad_stats (self, pad);
+  guint64 ts = va_arg (var_args, guint64);
+  GstPad *pad = va_arg (var_args, GstPad *);
+  GstBuffer *buffer = va_arg (var_args, GstBuffer *);
+  GstPadStats *stats = get_pad_stats (self, pad);
 
   do_pad_stats (self, pad, stats, buffer, ts);
   do_transmission_stats (self, pad, buffer, ts);
 }
 
 static void
-do_push_buffer_post (GstStatsTracer * self, guint64 ts, GstStructure * s)
+do_push_buffer_post (GstStatsTracer * self, va_list var_args)
 {
-  GstPad *pad;
-  GstPadStats *stats;
-
-  gst_structure_get (s, "pad", GST_TYPE_PAD, &pad, NULL);
-  stats = get_pad_stats (self, pad);
+  guint64 ts = va_arg (var_args, guint64);
+  GstPad *pad = va_arg (var_args, GstPad *);
+  GstPadStats *stats = get_pad_stats (self, pad);
 
   do_element_stats (self, pad, stats->last_ts, ts);
 }
 
 static void
-gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId id, guint64 ts,
-    GstStructure * s)
+gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
+    GstTracerMessageId mid, va_list var_args)
 {
   GstStatsTracer *self = GST_STATS_TRACER_CAST (obj);
-  GQuark func = gst_structure_get_name_id (s);
 
-  if (func == funcs[PUSH_BUFFER_PRE])
-    do_push_buffer_pre (self, ts, s);
-  else if (func == funcs[PUSH_BUFFER_POST])
-    do_push_buffer_post (self, ts, s);
+  switch (mid) {
+    case GST_TRACER_MESSAGE_ID_PAD_PUSH_PRE:
+      do_push_buffer_pre (self, var_args);
+      break;
+    case GST_TRACER_MESSAGE_ID_PAD_PUSH_POST:
+      do_push_buffer_post (self, var_args);
+      break;
+    default:
+      break;
+  }
 }
 
 static void
