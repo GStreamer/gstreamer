@@ -681,7 +681,7 @@ const gchar* gst_keycode_to_keyname(gint16 keycode)
   }
 }
 
-- (void) setVideoSize: (int) w:(int) h {
+- (void) setVideoSize: (int)w : (int)h {
   GST_LOG ("width:%d, height:%d", w, h);
 
   width = w;
@@ -769,7 +769,7 @@ const gchar* gst_keycode_to_keyname(gint16 keycode)
   navigation = nav;
 }
 
-- (void)sendMouseEvent:(NSEvent *)event: (const char *)event_name
+- (void)sendMouseEvent:(NSEvent *)event : (const char *)event_name
 {
   NSPoint location;
   gint button;
@@ -806,7 +806,7 @@ const gchar* gst_keycode_to_keyname(gint16 keycode)
   gst_navigation_send_mouse_event (navigation, event_name, button, x, y);
 }
 
-- (void)sendKeyEvent:(NSEvent *)event: (const char *)event_name
+- (void)sendKeyEvent:(NSEvent *)event : (const char *)event_name
 {
   if (!navigation)
     return;

@@ -63,7 +63,7 @@ struct _GstOSXImage;
 - (void) setFullScreen: (BOOL) flag;
 - (void) setKeepAspectRatio: (BOOL) flag;
 - (void) reshape;
-- (void) setVideoSize: (int) w: (int) h;
+- (void) setVideoSize:(int)w : (int)h;
 - (NSRect) getDrawingBounds;
 - (BOOL) haveSuperview;
 - (void) haveSuperviewReal: (NSMutableArray *)closure;
