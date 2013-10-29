@@ -470,7 +470,8 @@ main (int   argc,
       a bin will disconnect any already existing links. Also, you cannot
       directly link elements that are not in the same bin or pipeline; if
       you want to link elements or pads at different hierarchy levels, you
-      will need to use ghost pads (more about ghost pads later).
+      will need to use ghost pads (more about ghost pads later,
+      see <xref linkend="section-pads-ghost"/>).
     </para>
   </sect1>
 
