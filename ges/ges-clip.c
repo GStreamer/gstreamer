@@ -959,7 +959,7 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
 /**
  * ges_clip_find_track_element:
  * @clip: a #GESClip
- * @track: a #GESTrack or NULL
+ * @track: (allow-none): a #GESTrack or NULL
  * @type: a #GType indicating the type of track element you are looking
  * for or %G_TYPE_NONE if you do not care about the track type.
  *
@@ -976,21 +976,21 @@ ges_clip_move_to_layer (GESClip * clip, GESLayer * layer)
 GESTrackElement *
 ges_clip_find_track_element (GESClip * clip, GESTrack * track, GType type)
 {
-  GESTrackElement *ret = NULL;
   GList *tmp;
   GESTrackElement *otmp;
 
+  GESTrackElement *ret = NULL;
+
   g_return_val_if_fail (GES_IS_CLIP (clip), NULL);
-  g_return_val_if_fail (GES_IS_TRACK (track), NULL);
+  g_return_val_if_fail (!(track == NULL && type == G_TYPE_NONE), NULL);
 
   for (tmp = GES_CONTAINER_CHILDREN (clip); tmp; tmp = g_list_next (tmp)) {
     otmp = (GESTrackElement *) tmp->data;
 
-    if (ges_track_element_get_track (otmp) == track) {
-      if ((type != G_TYPE_NONE) &&
-          !G_TYPE_CHECK_INSTANCE_TYPE (tmp->data, type))
-        continue;
+    if ((type != G_TYPE_NONE) && !G_TYPE_CHECK_INSTANCE_TYPE (tmp->data, type))
+      continue;
 
+    if ((track == NULL) || (ges_track_element_get_track (otmp) == track)) {
       ret = GES_TRACK_ELEMENT (tmp->data);
       gst_object_ref (ret);
       break;
