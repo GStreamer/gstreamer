@@ -1,7 +1,6 @@
 #import "GStreamerBackend.h"
 
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
 #include <gst/video/video.h>
 
 GST_DEBUG_CATEGORY_STATIC (debug_category);
@@ -120,7 +119,6 @@ GST_DEBUG_CATEGORY_STATIC (debug_category);
 /* If we have pipeline and it is running, query the current position and clip duration and inform
  * the application */
 static gboolean refresh_ui (GStreamerBackend *self) {
-    GstFormat fmt = GST_FORMAT_TIME;
     gint64 position;
 
     /* We do not want to update anything unless we have a working pipeline in the PAUSED or PLAYING state */
@@ -129,10 +127,10 @@ static gboolean refresh_ui (GStreamerBackend *self) {
 
     /* If we didn't know it yet, query the stream duration */
     if (!GST_CLOCK_TIME_IS_VALID (self->duration)) {
-        gst_element_query_duration (self->pipeline, &fmt, &self->duration);
+        gst_element_query_duration (self->pipeline, GST_FORMAT_TIME,&self->duration);
     }
 
-    if (gst_element_query_position (self->pipeline, &fmt, &position)) {
+    if (gst_element_query_position (self->pipeline, GST_FORMAT_TIME, &position)) {
         /* The UI expects these values in milliseconds, and GStreamer provides nanoseconds */
         [self setCurrentUIPosition:position / GST_MSECOND duration:self->duration / GST_MSECOND];
     }
@@ -246,9 +244,7 @@ static void check_media_size (GStreamerBackend *self) {
     GstElement *video_sink;
     GstPad *video_sink_pad;
     GstCaps *caps;
-    GstVideoFormat fmt;
-    int width;
-    int height;
+    GstVideoInfo info;
 
     /* Retrieve the Caps at the entrance of the video sink */
     g_object_get (self->pipeline, "video-sink", &video_sink, NULL);
@@ -257,18 +253,15 @@ static void check_media_size (GStreamerBackend *self) {
     if (!video_sink) return;
 
     video_sink_pad = gst_element_get_static_pad (video_sink, "sink");
-    caps = gst_pad_get_negotiated_caps (video_sink_pad);
+    caps = gst_pad_get_current_caps (video_sink_pad);
 
-    if (gst_video_format_parse_caps(caps, &fmt, &width, &height)) {
-        int par_n, par_d;
-        if (gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d)) {
-            width = width * par_n / par_d;
-        }
-        GST_DEBUG ("Media size is %dx%d, notifying application", width, height);
+    if (gst_video_info_from_caps (&info, caps)) {
+        info.width = info.width * info.par_n / info.par_d;
+        GST_DEBUG ("Media size is %dx%d, notifying application", info.width, info.height);
 
         if (self->ui_delegate && [self->ui_delegate respondsToSelector:@selector(mediaSizeChanged:height:)])
         {
-            [self->ui_delegate mediaSizeChanged:width height:height];
+            [self->ui_delegate mediaSizeChanged:info.width height:info.height];
         }
     }
 
@@ -329,7 +322,7 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     g_main_context_push_thread_default(context);
     
     /* Build pipeline */
-    pipeline = gst_parse_launch("playbin2", &error);
+    pipeline = gst_parse_launch("playbin", &error);
     if (error) {
         gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
         g_clear_error (&error);
@@ -341,12 +334,12 @@ static void state_changed_cb (GstBus *bus, GstMessage *msg, GStreamerBackend *se
     /* Set the pipeline to READY, so it can already accept a window handle */
     gst_element_set_state(pipeline, GST_STATE_READY);
     
-    video_sink = gst_bin_get_by_interface(GST_BIN(pipeline), GST_TYPE_X_OVERLAY);
+    video_sink = gst_bin_get_by_interface(GST_BIN(pipeline), GST_TYPE_VIDEO_OVERLAY);
     if (!video_sink) {
         GST_ERROR ("Could not retrieve video sink");
         return;
     }
-    gst_x_overlay_set_window_handle(GST_X_OVERLAY(video_sink), (guintptr) (id) ui_video_view);
+    gst_video_overlay_set_window_handle(GST_VIDEO_OVERLAY(video_sink), (guintptr) (id) ui_video_view);
 
     /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
     bus = gst_element_get_bus (pipeline);
