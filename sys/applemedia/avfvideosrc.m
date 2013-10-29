@@ -295,7 +295,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
       continue;
     }
 
-    gst_caps_append (result, GST_AVF_CAPS_NEW (gstformat, 192, 144));
+    if ([session canSetSessionPreset:AVCaptureSessionPresetLow])
+      gst_caps_append (result, GST_AVF_CAPS_NEW (gstformat, 192, 144));
     if ([session canSetSessionPreset:AVCaptureSessionPreset352x288])
       gst_caps_append (result, GST_AVF_CAPS_NEW (gstformat, 352, 288));
     if ([session canSetSessionPreset:AVCaptureSessionPresetMedium])
