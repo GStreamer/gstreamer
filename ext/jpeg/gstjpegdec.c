@@ -374,9 +374,8 @@ gst_jpeg_dec_parse (GstVideoDecoder * bdec, GstVideoCodecFrame * frame,
       /* Skip this frame if we found another SOI marker */
       GST_DEBUG ("0x%08x: SOI marker before EOI, skipping", offset + 2);
       dec->parse_resync = FALSE;
-      /* FIXME : Need to skip data */
-      toadd -= offset + 2;
-      goto have_full_frame;
+      size = offset + 2;
+      goto drop_frame;
     }
 
 
