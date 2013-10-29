@@ -1229,7 +1229,7 @@ ges_clip_split (GESClip * clip, guint64 position)
         GES_TIMELINE_ELEMENT (new_trackelement));
 
     ges_track_element_split_bindings (trackelement, new_trackelement,
-        position + inpoint);
+        position - start + inpoint);
   }
 
   _set_duration0 (GES_TIMELINE_ELEMENT (clip), position - _START (clip));
