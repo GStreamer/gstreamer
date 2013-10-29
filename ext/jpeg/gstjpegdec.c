@@ -1183,7 +1183,6 @@ decode_error:
     need_unmap = FALSE;
     jpeg_abort_decompress (&dec->cinfo);
 
-    ret = GST_FLOW_ERROR;
     goto done;
   }
 decode_direct_failed:
