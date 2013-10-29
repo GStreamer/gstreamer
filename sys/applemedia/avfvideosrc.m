@@ -268,7 +268,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
   if (session == nil)
     return NULL; /* BaseSrc will return template caps */
- 
+
   result = gst_caps_new_empty ();
 
   formats = output.availableVideoCVPixelFormatTypes;
