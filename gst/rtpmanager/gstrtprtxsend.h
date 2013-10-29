@@ -57,8 +57,12 @@ struct _GstRtpRtxSend
   guint16 next_seqnum;
   guint8 rtx_payload_type;
 
+  gint clock_rate;
+
   /* retreived from SDP */
   guint rtx_payload_type_pending;
+
+  /* buffering control properties */
   guint max_size_time;
   guint max_size_packets;
 

@@ -77,6 +77,8 @@ static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink",
 
 static gboolean gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
+static gboolean gst_rtp_rtx_send_sink_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static GstFlowReturn gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer);
 
@@ -125,7 +127,7 @@ gst_rtp_rtx_send_class_init (GstRtpRtxSendClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MAX_SIZE_TIME,
-      g_param_spec_uint ("max-size-time", "Max Size Times",
+      g_param_spec_uint ("max-size-time", "Max Size Time",
           "Amount of ms to queue (0 = unlimited)", 0, G_MAXUINT,
           DEFAULT_MAX_SIZE_TIME, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -207,6 +209,8 @@ gst_rtp_rtx_send_init (GstRtpRtxSend * rtx)
           "sink"), "sink");
   GST_PAD_SET_PROXY_CAPS (rtx->sinkpad);
   GST_PAD_SET_PROXY_ALLOCATION (rtx->sinkpad);
+  gst_pad_set_event_function (rtx->sinkpad,
+      GST_DEBUG_FUNCPTR (gst_rtp_rtx_send_sink_event));
   gst_pad_set_chain_function (rtx->sinkpad,
       GST_DEBUG_FUNCPTR (gst_rtp_rtx_send_chain));
   gst_element_add_pad (GST_ELEMENT (rtx), rtx->sinkpad);
@@ -356,6 +360,61 @@ gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return res;
 }
 
+static gboolean
+gst_rtp_rtx_send_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GstRtpRtxSend *rtx = GST_RTP_RTX_SEND (parent);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+    {
+      GstCaps *caps;
+      GstStructure *s;
+
+      gst_event_parse_caps (event, &caps);
+      g_assert (gst_caps_is_fixed (caps));
+
+      s = gst_caps_get_structure (caps, 0);
+      gst_structure_get_int (s, "clock-rate", &rtx->clock_rate);
+
+      GST_DEBUG_OBJECT (rtx, "got clock-rate from caps: %d", rtx->clock_rate);
+
+      break;
+    }
+    default:
+      break;
+  }
+  return gst_pad_event_default (pad, parent, event);
+}
+
+/* like rtp_jitter_buffer_get_ts_diff() */
+static guint32
+gst_rtp_rtx_send_get_ts_diff (GstRtpRtxSend * self)
+{
+  guint64 high_ts, low_ts;
+  BufferQueueItem *high_buf, *low_buf;
+  guint32 result;
+
+  high_buf = g_queue_peek_head (self->queue);
+  low_buf = g_queue_peek_tail (self->queue);
+
+  if (!high_buf || !low_buf || high_buf == low_buf)
+    return 0;
+
+  high_ts = high_buf->timestamp;
+  low_ts = low_buf->timestamp;
+
+  /* it needs to work if ts wraps */
+  if (high_ts >= low_ts) {
+    result = (guint32) (high_ts - low_ts);
+  } else {
+    result = (guint32) (high_ts + G_MAXUINT32 + 1 - low_ts);
+  }
+
+  /* return value in ms instead of clock ticks */
+  return (guint32) gst_util_uint64_scale_int (result, 1000, self->clock_rate);
+}
+
 /* Copy fixed header and extension. Add OSN before to copy payload
  * Copy memory to avoid to manually copy each rtp buffer field.
  */
@@ -468,6 +527,10 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   /* remove oldest packets from history if they are too many */
   if (rtx->max_size_packets) {
     while (g_queue_get_length (rtx->queue) > rtx->max_size_packets)
+      buffer_queue_item_free (g_queue_pop_tail (rtx->queue));
+  }
+  if (rtx->max_size_time) {
+    while (gst_rtp_rtx_send_get_ts_diff (rtx) > rtx->max_size_time)
       buffer_queue_item_free (g_queue_pop_tail (rtx->queue));
   }
 
