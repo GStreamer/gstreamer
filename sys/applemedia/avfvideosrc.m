@@ -98,6 +98,7 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
   NSMutableArray *bufQueue;
   BOOL stopRequest;
 
+  GstCaps *caps;
   GstVideoFormat format;
   gint width, height;
   GstClockTime duration;
@@ -119,7 +120,7 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
 - (BOOL)openDevice;
 - (void)closeDevice;
 - (GstCaps *)getCaps;
-- (BOOL)setCaps:(GstCaps *)caps;
+- (BOOL)setCaps:(GstCaps *)new_caps;
 - (BOOL)start;
 - (BOOL)stop;
 - (BOOL)unlock;
@@ -252,6 +253,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
     [device release];
     device = nil;
+
+    if (caps)
+      gst_caps_unref (caps);
   });
 }
 
@@ -314,12 +318,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   return result;
 }
 
-- (BOOL)setCaps:(GstCaps *)caps
+- (BOOL)setCaps:(GstCaps *)new_caps
 {
   GstVideoInfo info;
 
   gst_video_info_init (&info);
-  gst_video_info_from_caps (&info, caps);
+  gst_video_info_from_caps (&info, new_caps);
 
   width = info.width;
   height = info.height;
@@ -379,6 +383,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
     output.videoSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:newformat] forKey:(NSString*)kCVPixelBufferPixelFormatTypeKey];
 
+    caps = gst_caps_copy (new_caps);
     [session startRunning];
   });
 
@@ -495,6 +500,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 - (GstFlowReturn)create:(GstBuffer **)buf
 {
   CMSampleBufferRef sbuf;
+  CVImageBufferRef image_buf;
+  CVPixelBufferRef pixel_buf;
+  size_t cur_width, cur_height;
 
   [bufQueueLock lockWhenCondition:HAS_BUFFER_OR_STOP_REQUEST];
   if (stopRequest) {
@@ -507,6 +515,27 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   [bufQueue removeLastObject];
   [bufQueueLock unlockWithCondition:
       ([bufQueue count] == 0) ? NO_BUFFERS : HAS_BUFFER_OR_STOP_REQUEST];
+
+  /* Check output frame size dimensions */
+  image_buf = CMSampleBufferGetImageBuffer (sbuf);
+  if (image_buf) {
+    pixel_buf = (CVPixelBufferRef) image_buf;
+    cur_width = CVPixelBufferGetWidth (pixel_buf);
+    cur_height = CVPixelBufferGetHeight (pixel_buf);
+
+    if (width != cur_width || height != cur_height) {
+      /* Set new caps according to current frame dimensions */
+      GST_WARNING ("Output frame size has changed %dx%d -> %dx%d, updating caps",
+          width, height, (int)cur_width, (int)cur_height);
+      width = cur_width;
+      height = cur_height;
+      gst_caps_set_simple (caps,
+        "width", G_TYPE_INT, width,
+        "height", G_TYPE_INT, height,
+        NULL);
+      gst_pad_push_event (GST_BASE_SINK_PAD (baseSrc), gst_event_new_caps (caps));
+    }
+  }
 
   *buf = gst_core_media_buffer_new (sbuf);
   CFRelease (sbuf);
