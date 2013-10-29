@@ -333,6 +333,8 @@ struct _GstVideoDecoderPrivate
   /* Error handling */
   gint max_errors;
   gint error_count;
+  gboolean had_output_data;
+  gboolean had_input_data;
 
   gboolean do_caps;
 
@@ -1015,6 +1017,14 @@ gst_video_decoder_sink_event_default (GstVideoDecoder * decoder,
 
       flow_ret = gst_video_decoder_drain_out (decoder, TRUE);
       ret = (flow_ret == GST_FLOW_OK);
+
+      /* Error out even if EOS was ok when we had input, but no output */
+      if (ret && priv->had_input_data && !priv->had_output_data) {
+        GST_ELEMENT_ERROR (decoder, STREAM, DECODE,
+            ("No valid frames decoded before end of stream"),
+            ("no valid frames found"));
+      }
+
       /* Forward EOS immediately. This is required because no
        * buffer or serialized event will come after EOS and
        * nothing could trigger another _finish_frame() call.
@@ -1668,6 +1678,8 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
 
     priv->error_count = 0;
     priv->max_errors = GST_VIDEO_DECODER_MAX_ERRORS;
+    priv->had_output_data = FALSE;
+    priv->had_input_data = FALSE;
 
     GST_OBJECT_LOCK (decoder);
     priv->earliest_time = GST_CLOCK_TIME_NONE;
@@ -1999,6 +2011,8 @@ gst_video_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     decoder->priv->current_frame_events =
         g_list_prepend (decoder->priv->current_frame_events, event);
   }
+
+  decoder->priv->had_input_data = TRUE;
 
   if (decoder->input_segment.rate > 0.0)
     ret = gst_video_decoder_chain_forward (decoder, buf, FALSE);
@@ -2524,6 +2538,9 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
   /* Check for clipping */
   start = GST_BUFFER_PTS (buf);
   duration = GST_BUFFER_DURATION (buf);
+
+  /* store that we have valid decoded data */
+  priv->had_output_data = TRUE;
 
   stop = GST_CLOCK_TIME_NONE;
 
