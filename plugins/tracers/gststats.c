@@ -484,6 +484,46 @@ do_push_buffer_post (GstStatsTracer * self, va_list var_args)
   do_element_stats (self, pad, stats->last_ts, ts);
 }
 
+typedef struct
+{
+  GstStatsTracer *self;
+  GstPad *pad;
+  GstPadStats *stats;
+  guint64 ts;
+} DoPushBufferListArgs;
+
+static gboolean
+do_push_buffer_list_item (GstBuffer ** buffer, guint idx, gpointer user_data)
+{
+  DoPushBufferListArgs *args = (DoPushBufferListArgs *) user_data;
+
+  do_pad_stats (args->self, args->pad, args->stats, *buffer, args->ts);
+  do_transmission_stats (args->self, args->pad, *buffer, args->ts);
+  return TRUE;
+}
+
+static void
+do_push_buffer_list_pre (GstStatsTracer * self, va_list var_args)
+{
+  guint64 ts = va_arg (var_args, guint64);
+  GstPad *pad = va_arg (var_args, GstPad *);
+  GstBufferList *list = va_arg (var_args, GstBufferList *);
+  GstPadStats *stats = get_pad_stats (self, pad);
+  DoPushBufferListArgs args = { self, pad, stats, ts };
+
+  gst_buffer_list_foreach (list, do_push_buffer_list_item, &args);
+}
+
+static void
+do_push_buffer_list_post (GstStatsTracer * self, va_list var_args)
+{
+  guint64 ts = va_arg (var_args, guint64);
+  GstPad *pad = va_arg (var_args, GstPad *);
+  GstPadStats *stats = get_pad_stats (self, pad);
+
+  do_element_stats (self, pad, stats->last_ts, ts);
+}
+
 static void
 gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
     GstTracerMessageId mid, va_list var_args)
@@ -496,6 +536,12 @@ gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
       break;
     case GST_TRACER_MESSAGE_ID_PAD_PUSH_POST:
       do_push_buffer_post (self, var_args);
+      break;
+    case GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_PRE:
+      do_push_buffer_list_pre (self, var_args);
+      break;
+    case GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_POST:
+      do_push_buffer_list_post (self, var_args);
       break;
     default:
       break;
