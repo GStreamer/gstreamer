@@ -265,6 +265,9 @@ gst_collect_pads_init (GstCollectPads * pads)
   pads->priv->seeking = FALSE;
   pads->priv->pending_flush_start = FALSE;
   pads->priv->pending_flush_stop = FALSE;
+
+  /* clear floating flag */
+  gst_object_ref_sink (pads);
 }
 
 static void

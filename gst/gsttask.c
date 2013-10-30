@@ -197,6 +197,9 @@ gst_task_init (GstTask * task)
   g_mutex_lock (&pool_lock);
   task->priv->pool = gst_object_ref (klass->pool);
   g_mutex_unlock (&pool_lock);
+
+  /* clear floating flag */
+  gst_object_ref_sink (task);
 }
 
 static void
