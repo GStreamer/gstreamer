@@ -2775,8 +2775,10 @@ register_codecs (GstPlugin * plugin)
           codec_info->name);
 
       /* Give the Google software codec a secondary rank,
-       * everything else is likely a hardware codec */
-      if (g_str_has_prefix (codec_info->name, "OMX.google"))
+       * everything else is likely a hardware codec, except
+       * OMX.SEC.*.sw.dec (as seen in Galaxy S4) */
+      if (g_str_has_prefix (codec_info->name, "OMX.google") ||
+          g_str_has_suffix (codec_info->name, ".sw.dec"))
         rank = GST_RANK_SECONDARY;
       else
         rank = GST_RANK_PRIMARY;
