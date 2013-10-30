@@ -58,14 +58,18 @@ static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
         VIDEO_CAPS_YUV (352, 288) ";"
         VIDEO_CAPS_YUV (640, 480) ";"
         VIDEO_CAPS_YUV (1280, 720) ";"
+#if HAVE_IOS
         VIDEO_CAPS_YUV (1920, 1280) ";"
+#endif
         VIDEO_CAPS_BGRA (192, 144) ";"
         VIDEO_CAPS_BGRA (480, 360) ";"
         VIDEO_CAPS_BGRA (352, 288) ";"
         VIDEO_CAPS_BGRA (640, 480) ";"
-        VIDEO_CAPS_BGRA (1280, 720) ";"
-        VIDEO_CAPS_BGRA (1920, 1280))
-);
+        VIDEO_CAPS_BGRA (1280, 720)
+#if HAVE_IOS
+        ";" VIDEO_CAPS_BGRA (1920, 1280)
+#endif
+));
 
 typedef enum _QueueState {
   NO_BUFFERS = 1,
@@ -304,8 +308,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
       gst_caps_append (result, GST_AVF_CAPS_NEW (gstformat, 640, 480));
     if ([session canSetSessionPreset:AVCaptureSessionPreset1280x720])
       gst_caps_append (result, GST_AVF_CAPS_NEW (gstformat, 1280, 720));
+#if HAVE_IOS
     if ([session canSetSessionPreset:AVCaptureSessionPreset1920x1080])
       gst_caps_append (result, GST_AVF_CAPS_NEW (gstformat, 1920, 1080));
+#endif
   }
 
   return result;
@@ -343,9 +349,11 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
       case 1280:
         session.sessionPreset = AVCaptureSessionPreset1280x720;
         break;
+#if HAVE_IOS
       case 1920:
         session.sessionPreset = AVCaptureSessionPreset1920x1080;
         break;
+#endif
       default:
         g_assert_not_reached ();
     }
