@@ -75,12 +75,10 @@ if HAVE_IOS
 
 libgstapplemedia_la_SOURCES +=			\
 	iosassetsrc.m
-#	avfvideosrc.m
 
 libgstapplemedia_la_LDFLAGS +=			\
 	-Wl,-framework -Wl,Foundation		\
 	-Wl,-framework -Wl,AssetsLibrary
-#	-Wl,-framework -Wl,AVFoundation
 
 else
 
@@ -95,3 +93,12 @@ libgstapplemedia_la_LDFLAGS +=			\
 
 endif
 
+if HAVE_AVFOUNDATION
+
+libgstapplemedia_la_SOURCES +=			\
+	avfvideosrc.m
+
+libgstapplemedia_la_LDFLAGS +=			\
+	-Wl,-framework -Wl,AVFoundation
+
+endif
