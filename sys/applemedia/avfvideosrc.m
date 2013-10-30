@@ -133,10 +133,6 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
 didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        fromConnection:(AVCaptureConnection *)connection;
 
-- (void)waitForMainQueueToDrain;
-- (void)waitForWorkerQueueToDrain;
-- (void)waitForQueueToDrain:(dispatch_queue_t)dispatchQueue;
-
 @end
 
 @implementation GstAVFVideoSrcImpl
@@ -181,7 +177,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 {
   BOOL success = NO, *successPtr = &success;
 
-  dispatch_async (mainQueue, ^{
+  dispatch_sync (mainQueue, ^{
     NSString *mediaType = AVMediaTypeVideo;
     NSError *err;
 
@@ -231,14 +227,13 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
     *successPtr = YES;
   });
-  [self waitForMainQueueToDrain];
 
   return success;
 }
 
 - (void)closeDevice
 {
-  dispatch_async (mainQueue, ^{
+  dispatch_sync (mainQueue, ^{
     g_assert (![session isRunning]);
 
     [session removeInput:input];
@@ -256,7 +251,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     [device release];
     device = nil;
   });
-  [self waitForMainQueueToDrain];
 }
 
 #define GST_AVF_CAPS_NEW(format, w, h)                                \
@@ -328,7 +322,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   height = info.height;
   format = info.finfo->format;
 
-  dispatch_async (mainQueue, ^{
+  dispatch_sync (mainQueue, ^{
     int newformat;
 
     g_assert (![session isRunning]);
@@ -380,12 +374,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        width, height,
        GST_FOURCC_ARGS (gst_video_format_to_fourcc (format)));
 
-
     output.videoSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:newformat] forKey:(NSString*)kCVPixelBufferPixelFormatTypeKey];
 
     [session startRunning];
   });
-  [self waitForMainQueueToDrain];
 
   return YES;
 }
@@ -408,9 +400,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 - (BOOL)stop
 {
-  dispatch_async (mainQueue, ^{ [session stopRunning]; });
-  [self waitForMainQueueToDrain];
-  [self waitForWorkerQueueToDrain];
+  dispatch_sync (mainQueue, ^{ [session stopRunning]; });
+  dispatch_sync (workerQueue, ^{});
 
   [bufQueueLock release];
   bufQueueLock = nil;
@@ -588,22 +579,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
       lastSampling = now;
     }
   }
-}
-
-- (void)waitForMainQueueToDrain
-{
-  [self waitForQueueToDrain:mainQueue];
-}
-
-- (void)waitForWorkerQueueToDrain
-{
-  [self waitForQueueToDrain:workerQueue];
-}
-
-- (void)waitForQueueToDrain:(dispatch_queue_t)dispatchQueue
-{
-  if (dispatchQueue != dispatch_get_current_queue())
-      dispatch_sync (dispatchQueue, ^{});
 }
 
 @end
