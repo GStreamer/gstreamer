@@ -259,6 +259,160 @@ _get_iconv (LocalIconvCode from, LocalIconvCode to)
   return __iconvs[from][to];
 }
 
+static void
+_encode_control_codes (gchar * text, gsize length, gboolean is_multibyte)
+{
+  gsize pos = 0;
+
+  while (pos < length) {
+    if (is_multibyte) {
+      guint16 code = GST_READ_UINT16_BE (text + pos);
+      if (code == 0x000A) {
+        text[pos] = 0xE0;
+        text[pos + 1] = 0x8A;
+      }
+      pos += 2;
+    } else {
+      guint8 code = text[pos];
+      if (code == 0x0A)
+        text[pos] = 0x8A;
+      pos++;
+    }
+  }
+}
+
+/**
+ * dvb_text_from_utf8:
+ * @text: The text to convert. This should be in UTF-8 format
+ * @out_size: (out) the byte length of the new text
+ *
+ * Converts UTF-8 strings to text characters compliant with EN 300 468.
+ * The converted text can be used directly in DVB #GstMpegTsDescriptor
+ *
+ * The function will try different character maps until the string is
+ * completely converted.
+ *
+ * The function tries the default ISO 6937 character map first.
+ *
+ * If no character map that contains all characters could be found, the
+ * string is converted to ISO 6937 with unknown characters set to `?`.
+ *
+ * Returns: (transfer full) byte array of size @out_size
+ */
+guint8 *
+dvb_text_from_utf8 (const gchar * text, gsize * out_size)
+{
+  GError *error = NULL;
+  gchar *out_text;
+  guint8 *out_buffer;
+  guint encoding;
+  GIConv giconv = (GIConv) - 1;
+
+  /* We test character maps one-by-one. Start with the default */
+  encoding = _ICONV_ISO6937;
+  giconv = _get_iconv (_ICONV_UTF8, encoding);
+  out_text = g_convert_with_iconv (text, -1, giconv, NULL, out_size, &error);
+
+  if (out_text) {
+    GST_DEBUG ("Using default ISO6937 encoding");
+    goto out;
+  }
+
+  g_clear_error (&error);
+
+  for (encoding = _ICONV_ISO8859_1; encoding <= _ICONV_ISO10646_UTF8;
+      encoding++) {
+    giconv = _get_iconv (_ICONV_UTF8, encoding);
+    if (giconv == (GIConv) - 1)
+      continue;
+    out_text = g_convert_with_iconv (text, -1, giconv, NULL, out_size, &error);
+
+    if (out_text) {
+      GST_DEBUG ("Found suitable character map - %s", iconvtablename[encoding]);
+      goto out;
+    }
+
+    g_clear_error (&error);
+  }
+
+  out_text = g_convert_with_fallback (text, -1, iconvtablename[_ICONV_ISO6937],
+      iconvtablename[_ICONV_UTF8], "?", NULL, out_size, &error);
+
+out:
+
+  if (error) {
+    GST_WARNING ("Could not convert from utf-8: %s", error->message);
+    g_error_free (error);
+    if (out_text)
+      g_free (out_text);
+    return NULL;
+  }
+
+  switch (encoding) {
+    case _ICONV_ISO6937:
+      /* Default encoding contains no selection bytes. */
+      _encode_control_codes (out_text, *out_size, FALSE);
+      return (guint8 *) out_text;
+    case _ICONV_ISO8859_1:
+    case _ICONV_ISO8859_2:
+    case _ICONV_ISO8859_3:
+    case _ICONV_ISO8859_4:
+      /* These character sets requires 3 selection bytes */
+      _encode_control_codes (out_text, *out_size, FALSE);
+      out_buffer = g_malloc (*out_size + 3);
+      out_buffer[0] = 0x10;
+      out_buffer[1] = 0x00;
+      out_buffer[2] = encoding - _ICONV_ISO8859_1 + 1;
+      memcpy (out_buffer + 3, out_text, *out_size);
+      *out_size += 3;
+      g_free (out_text);
+      return out_buffer;
+    case _ICONV_ISO8859_5:
+    case _ICONV_ISO8859_6:
+    case _ICONV_ISO8859_7:
+    case _ICONV_ISO8859_8:
+    case _ICONV_ISO8859_9:
+    case _ICONV_ISO8859_10:
+    case _ICONV_ISO8859_11:
+    case _ICONV_ISO8859_12:
+    case _ICONV_ISO8859_13:
+    case _ICONV_ISO8859_14:
+    case _ICONV_ISO8859_15:
+      /* These character sets requires 1 selection byte */
+      _encode_control_codes (out_text, *out_size, FALSE);
+      out_buffer = g_malloc (*out_size + 1);
+      out_buffer[0] = encoding - _ICONV_ISO8859_5 + 1;
+      memcpy (out_buffer + 1, out_text, *out_size);
+      *out_size += 1;
+      g_free (out_text);
+      return out_buffer;
+    case _ICONV_UCS_2BE:
+    case _ICONV_EUC_KR:
+    case _ICONV_UTF_16BE:
+      /* These character sets requires 1 selection byte */
+      _encode_control_codes (out_text, *out_size, TRUE);
+      out_buffer = g_malloc (*out_size + 1);
+      out_buffer[0] = encoding - _ICONV_UCS_2BE + 0x11;
+      memcpy (out_buffer + 1, out_text, *out_size);
+      *out_size += 1;
+      g_free (out_text);
+      return out_buffer;
+    case _ICONV_GB2312:
+    case _ICONV_ISO10646_UTF8:
+      /* These character sets requires 1 selection byte */
+      _encode_control_codes (out_text, *out_size, FALSE);
+      out_buffer = g_malloc (*out_size + 1);
+      out_buffer[0] = encoding - _ICONV_UCS_2BE + 0x11;
+      memcpy (out_buffer + 1, out_text, *out_size);
+      *out_size += 1;
+      g_free (out_text);
+      return out_buffer;
+    default:
+      g_free (out_text);
+      return NULL;
+  }
+}
+
 /*
  * @text: The text to convert. It may include pango markup (<b> and </b>)
  * @length: The length of the string -1 if it's nul-terminated
