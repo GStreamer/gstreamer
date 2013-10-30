@@ -53,6 +53,8 @@ rtp_jitter_buffer_mode_get_type (void)
     {RTP_JITTER_BUFFER_MODE_SLAVE, "Slave receiver to sender clock", "slave"},
     {RTP_JITTER_BUFFER_MODE_BUFFER, "Do low/high watermark buffering",
         "buffer"},
+    {RTP_JITTER_BUFFER_MODE_SYNCED, "Synchronized sender and receiver clocks",
+        "synced"},
     {0, NULL, NULL},
   };
 
@@ -714,6 +716,12 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
       if (jbuf->base_time == -1)
         dts = 0;
       else
+        dts = -1;
+      break;
+    case RTP_JITTER_BUFFER_MODE_SYNCED:
+      /* synchronized clocks, take first timestamp as base, use RTP timestamps
+       * to interpolate */
+      if (jbuf->base_time != -1)
         dts = -1;
       break;
     case RTP_JITTER_BUFFER_MODE_SLAVE:
