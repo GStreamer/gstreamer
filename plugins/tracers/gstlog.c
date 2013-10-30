@@ -27,9 +27,13 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_log_debug);
 #define GST_CAT_DEFAULT gst_log_debug
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_BUFFER);
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_BUFFER_LIST);
 
 #define _do_init \
-    GST_DEBUG_CATEGORY_INIT (gst_log_debug, "log", 0, "log tracer");
+    GST_DEBUG_CATEGORY_INIT (gst_log_debug, "log", 0, "log tracer"); \
+    GST_DEBUG_CATEGORY_GET (GST_CAT_BUFFER, "GST_BUFFER"); \
+    GST_DEBUG_CATEGORY_GET (GST_CAT_BUFFER_LIST, "GST_BUFFER_LIST");
 #define gst_log_tracer_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstLogTracer, gst_log_tracer, GST_TYPE_TRACER,
     _do_init);
@@ -55,13 +59,43 @@ static void
 gst_log_tracer_invoke (GstTracer * self, GstTracerHookId hid,
     GstTracerMessageId mid, va_list var_args)
 {
+  const gchar *fmt = NULL;
+  GstDebugCategory *cat = GST_CAT_DEFAULT;
   guint64 ts = va_arg (var_args, guint64);
-  /* TODO(ensonic): log to different categories depending on 'hid'/'mid'
-   * GST_TRACER_HOOK_ID_BUFFERS  -> GST_CAT_BUFFER
+
+  /* TODO(ensonic): log to different categories depending on 'mid'
    * GST_TRACER_HOOK_ID_EVENTS   -> GST_CAT_EVENT
    * GST_TRACER_HOOK_ID_MESSAGES -> GST_CAT_MESSAGE
-   * GST_TRACER_HOOK_ID_QUERIES  -> ?
+   * GST_TRACER_HOOK_ID_QUERIES  -> (static category)
    * GST_TRACER_HOOK_ID_TOPLOGY  -> ?
    */
-  GST_TRACE ("[%d,%d] %" GST_TIME_FORMAT, hid, mid, GST_TIME_ARGS (ts));
+  switch (mid) {
+    case GST_TRACER_MESSAGE_ID_PAD_PUSH_PRE:
+      cat = GST_CAT_BUFFER;
+      fmt = "pad=%" GST_PTR_FORMAT ", buffer=%" GST_PTR_FORMAT;
+      break;
+    case GST_TRACER_MESSAGE_ID_PAD_PUSH_POST:
+      cat = GST_CAT_BUFFER;
+      fmt = "pad=%" GST_PTR_FORMAT ", res=%d";
+      break;
+    case GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_PRE:
+      cat = GST_CAT_BUFFER_LIST;
+      fmt = "pad=%" GST_PTR_FORMAT ", list=%p";
+      break;
+    case GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_POST:
+      cat = GST_CAT_BUFFER_LIST;
+      fmt = "pad=%" GST_PTR_FORMAT ", res=%d";
+      break;
+    default:
+      break;
+  }
+  if (fmt) {
+    gchar *str = g_strdup_vprintf (fmt, var_args);
+    GST_CAT_TRACE (cat, "[%d,%d] %" GST_TIME_FORMAT ", %s",
+        hid, mid, GST_TIME_ARGS (ts), str);
+    g_free (str);
+  } else {
+    GST_CAT_TRACE (cat, "[%d,%d] %" GST_TIME_FORMAT,
+        hid, mid, GST_TIME_ARGS (ts));
+  }
 }

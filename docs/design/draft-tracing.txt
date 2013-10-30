@@ -166,8 +166,8 @@ Problems / Open items
 
 Try it
 ======
-GST_DEBUG="GST_REG*:4,GST_TRACER:4,log:7" GST_TRACE=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink
+GST_DEBUG="GST_TRACER:4,GST_BUFFER*:7,log:7" GST_TRACE=log gst-launch-1.0 fakesrc num-buffers=10 ! fakesink
 - traces for buffer flow in TRACE level and default category
 
-GST_DEBUG="GST_REG*:4,GST_TRACER:4" GST_TRACE=stats gst-launch-1.0 fakesrc num-buffers=10 ! queue ! fakesink
+GST_DEBUG="GST_TRACER:4" GST_TRACE=stats gst-launch-1.0 fakesrc num-buffers=10 ! queue ! fakesink
 - print some pipeline stats on exit
