@@ -293,7 +293,7 @@ gst_rtsp_session_pool_find (GstRTSPSessionPool * pool, const gchar * sessionid)
 static gchar *
 create_session_id (GstRTSPSessionPool * pool)
 {
-  gchar id[16];
+  gchar id[17];
   gint i;
 
   for (i = 0; i < 16; i++) {
@@ -301,8 +301,9 @@ create_session_id (GstRTSPSessionPool * pool)
         session_id_charset[g_random_int_range (0,
             G_N_ELEMENTS (session_id_charset))];
   }
+  id[16] = 0;
 
-  return g_strndup (id, 16);
+  return g_uri_escape_string (id, NULL, FALSE);
 }
 
 static GstRTSPSession *
