@@ -75,7 +75,10 @@
 
 #define MAX_KNOWN_ICONV 25
 
-static GIConv __iconvs[MAX_KNOWN_ICONV];
+/* First column is the original encoding,
+ * second column is the target encoding */
+
+static GIConv __iconvs[MAX_KNOWN_ICONV][MAX_KNOWN_ICONV];
 
 /* All these conversions will be to UTF8 */
 typedef enum
@@ -102,6 +105,7 @@ typedef enum
   _ICONV_UTF_16BE,
   _ICONV_ISO10646_UTF8,
   _ICONV_ISO6937,
+  _ICONV_UTF8,
   /* Insert more here if needed */
   _ICONV_MAX
 } LocalIconvCode;
@@ -127,19 +131,22 @@ static const gchar *iconvtablename[] = {
   "GB2312",
   "UTF-16BE",
   "ISO-10646/UTF8",
-  "iso6937"
+  "iso6937",
+  "utf-8"
       /* Insert more here if needed */
 };
 
 void
 __initialize_descriptors (void)
 {
-  guint i;
+  guint i, j;
 
   /* Initialize converters */
   /* FIXME : How/when should we close them ??? */
-  for (i = 0; i < MAX_KNOWN_ICONV; i++)
-    __iconvs[i] = ((GIConv) - 1);
+  for (i = 0; i < MAX_KNOWN_ICONV; i++) {
+    for (j = 0; j < MAX_KNOWN_ICONV; j++)
+      __iconvs[i][j] = ((GIConv) - 1);
+  }
 }
 
 /*
@@ -241,6 +248,15 @@ beach:
       encoding, firstbyte, *start_text, *is_multibyte);
 
   return encoding;
+}
+
+static GIConv
+_get_iconv (LocalIconvCode from, LocalIconvCode to)
+{
+  if (__iconvs[from][to] == (GIConv) - 1)
+    __iconvs[from][to] = g_iconv_open (iconvtablename[to],
+        iconvtablename[from]);
+  return __iconvs[from][to];
 }
 
 /*
@@ -395,9 +411,7 @@ get_encoding_and_convert (const gchar * text, guint length)
 
   if (encoding > _ICONV_UNKNOWN && encoding < _ICONV_MAX) {
     GST_DEBUG ("Encoding %s", iconvtablename[encoding]);
-    if (__iconvs[encoding] == ((GIConv) - 1))
-      __iconvs[encoding] = g_iconv_open ("utf-8", iconvtablename[encoding]);
-    giconv = __iconvs[encoding];
+    giconv = _get_iconv (encoding, _ICONV_UTF8);
   } else {
     GST_FIXME ("Could not detect encoding. Returning NULL string");
     converted_str = NULL;
@@ -416,10 +430,7 @@ get_encoding_and_convert (const gchar * text, guint length)
     if (encoding >= _ICONV_ISO8859_2 && encoding <= _ICONV_ISO8859_15) {
       /* Sometimes using the standard 8859-1 set fixes issues */
       GST_DEBUG ("Encoding %s", iconvtablename[_ICONV_ISO8859_1]);
-      if (__iconvs[_ICONV_ISO8859_1] == (GIConv) - 1)
-        __iconvs[_ICONV_ISO8859_1] =
-            g_iconv_open ("utf-8", iconvtablename[_ICONV_ISO8859_1]);
-      giconv = __iconvs[_ICONV_ISO8859_1];
+      giconv = _get_iconv (_ICONV_ISO8859_1, _ICONV_UTF8);
 
       GST_INFO ("Trying encoding ISO 8859-1");
       converted_str = convert_to_utf8 (text, length, 1, giconv, FALSE, &error);
@@ -437,10 +448,7 @@ get_encoding_and_convert (const gchar * text, guint length)
        * provide the first byte that indicates ISO 8859-9 encoding.
        * If decoding from ISO 6937 failed, we try ISO 8859-9 here.
        */
-      if (__iconvs[_ICONV_ISO8859_9] == (GIConv) - 1)
-        __iconvs[_ICONV_ISO8859_9] =
-            g_iconv_open ("utf-8", iconvtablename[_ICONV_ISO8859_9]);
-      giconv = __iconvs[_ICONV_ISO8859_9];
+      giconv = _get_iconv (_ICONV_ISO8859_9, _ICONV_UTF8);
 
       GST_INFO ("Trying encoding ISO 8859-9");
       converted_str = convert_to_utf8 (text, length, 0, giconv, FALSE, &error);
