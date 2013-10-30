@@ -207,7 +207,7 @@ gst_buffer_pool_finalize (GObject * object)
  *
  * Creates a new #GstBufferPool instance.
  *
- * Returns: (transfer full): a new #GstBufferPool instance
+ * Returns: (transfer floating): a new #GstBufferPool instance
  */
 GstBufferPool *
 gst_buffer_pool_new (void)

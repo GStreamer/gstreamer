@@ -749,7 +749,7 @@ gst_pad_new (const gchar * name, GstPadDirection direction)
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
- * Returns: (transfer full): a new #GstPad, or NULL in case of an error.
+ * Returns: (transfer floating): a new #GstPad, or NULL in case of an error.
  */
 GstPad *
 gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
@@ -770,7 +770,7 @@ gst_pad_new_from_template (GstPadTemplate * templ, const gchar * name)
  * will be assigned.
  * This function makes a copy of the name so you can safely free the name.
  *
- * Returns: (transfer full): a new #GstPad, or NULL in case of an error.
+ * Returns: (transfer floating): a new #GstPad, or NULL in case of an error.
  */
 GstPad *
 gst_pad_new_from_static_template (GstStaticPadTemplate * templ,
