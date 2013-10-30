@@ -51,6 +51,7 @@ stamp-h.in
 /tests/check/gst/mediafactory
 /tests/check/gst/mountpoints
 /tests/check/gst/rtspserver
+/tests/check/gst/threadpool
 /tests/check/test-registry.reg
 /tests/test-reuse
 
