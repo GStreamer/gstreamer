@@ -99,7 +99,7 @@ typedef enum
   _ICONV_ISO8859_13,
   _ICONV_ISO8859_14,
   _ICONV_ISO8859_15,
-  _ICONV_ISO10646_UC2,
+  _ICONV_UCS_2BE,
   _ICONV_EUC_KR,
   _ICONV_GB2312,
   _ICONV_UTF_16BE,
@@ -126,7 +126,7 @@ static const gchar *iconvtablename[] = {
   "iso-8859-13",
   "iso-8859-14",
   "iso-8859-15",
-  "ISO-10646/UCS2",
+  "UCS-2BE",
   "EUC-KR",
   "GB2312",
   "UTF-16BE",
@@ -200,7 +200,7 @@ get_encoding (const gchar * text, guint * start_text, gboolean * is_multibyte)
       break;
     }
     case 0x11:
-      encoding = _ICONV_ISO10646_UC2;
+      encoding = _ICONV_UCS_2BE;
       *start_text = 1;
       *is_multibyte = TRUE;
       break;
