@@ -934,9 +934,9 @@ gboolean                gst_pad_peer_query_convert      (GstPad *pad, GstFormat 
 GstCaps *               gst_pad_peer_query_caps         (GstPad * pad, GstCaps *filter);
 gboolean                gst_pad_peer_query_accept_caps  (GstPad * pad, GstCaps *caps);
 
-gchar *                 gst_pad_create_stream_id               (GstPad * pad, GstElement * parent, const gchar *stream_id);
-gchar *                 gst_pad_create_stream_id_printf        (GstPad * pad, GstElement * parent, const gchar *stream_id, ...);
-gchar *                 gst_pad_create_stream_id_printf_valist (GstPad * pad, GstElement * parent, const gchar *stream_id, va_list var_args);
+gchar *                 gst_pad_create_stream_id               (GstPad * pad, GstElement * parent, const gchar *stream_id) G_GNUC_MALLOC;
+gchar *                 gst_pad_create_stream_id_printf        (GstPad * pad, GstElement * parent, const gchar *stream_id, ...) G_GNUC_PRINTF (3, 4) G_GNUC_MALLOC;
+gchar *                 gst_pad_create_stream_id_printf_valist (GstPad * pad, GstElement * parent, const gchar *stream_id, va_list var_args) G_GNUC_PRINTF (3, 0) G_GNUC_MALLOC;
 
 gchar *                 gst_pad_get_stream_id           (GstPad * pad);
 

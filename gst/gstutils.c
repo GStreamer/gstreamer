@@ -3563,32 +3563,9 @@ gst_util_fraction_compare (gint a_n, gint a_d, gint b_n, gint b_d)
   g_return_val_if_reached (0);
 }
 
-/**
- * gst_pad_create_stream_id_printf_valist:
- * @pad: A source #GstPad
- * @parent: Parent #GstElement of @pad
- * @stream_id: (allow-none): The stream-id
- * @var_args: parameters for the @stream_id format string
- *
- * Creates a stream-id for the source #GstPad @pad by combining the
- * upstream information with the optional @stream_id of the stream
- * of @pad. @pad must have a parent #GstElement and which must have zero
- * or one sinkpad. @stream_id can only be %NULL if the parent element
- * of @pad has only a single source pad.
- *
- * This function generates an unique stream-id by getting the upstream
- * stream-start event stream ID and appending @stream_id to it. If the
- * element has no sinkpad it will generate an upstream stream-id by
- * doing an URI query on the element and in the worst case just uses
- * a random number. Source elements that don't implement the URI
- * handler interface should ideally generate a unique, deterministic
- * stream-id manually instead.
- *
- * Returns: A stream-id for @pad. g_free() after usage.
- */
-gchar *
-gst_pad_create_stream_id_printf_valist (GstPad * pad, GstElement * parent,
-    const gchar * stream_id, va_list var_args)
+static gchar *
+gst_pad_create_stream_id_internal (GstPad * pad, GstElement * parent,
+    const gchar * stream_id)
 {
   GstEvent *upstream_event;
   gchar *upstream_stream_id = NULL, *new_stream_id;
@@ -3656,14 +3633,51 @@ gst_pad_create_stream_id_printf_valist (GstPad * pad, GstElement * parent,
   }
 
   if (stream_id) {
-    gchar *expanded = g_strdup_vprintf (stream_id, var_args);
-    new_stream_id = g_strconcat (upstream_stream_id, "/", expanded, NULL);
-    g_free (expanded);
+    new_stream_id = g_strconcat (upstream_stream_id, "/", stream_id, NULL);
   } else {
     new_stream_id = g_strdup (upstream_stream_id);
   }
 
   g_free (upstream_stream_id);
+
+  return new_stream_id;
+}
+
+/**
+ * gst_pad_create_stream_id_printf_valist:
+ * @pad: A source #GstPad
+ * @parent: Parent #GstElement of @pad
+ * @stream_id: (allow-none): The stream-id
+ * @var_args: parameters for the @stream_id format string
+ *
+ * Creates a stream-id for the source #GstPad @pad by combining the
+ * upstream information with the optional @stream_id of the stream
+ * of @pad. @pad must have a parent #GstElement and which must have zero
+ * or one sinkpad. @stream_id can only be %NULL if the parent element
+ * of @pad has only a single source pad.
+ *
+ * This function generates an unique stream-id by getting the upstream
+ * stream-start event stream ID and appending @stream_id to it. If the
+ * element has no sinkpad it will generate an upstream stream-id by
+ * doing an URI query on the element and in the worst case just uses
+ * a random number. Source elements that don't implement the URI
+ * handler interface should ideally generate a unique, deterministic
+ * stream-id manually instead.
+ *
+ * Returns: A stream-id for @pad. g_free() after usage.
+ */
+gchar *
+gst_pad_create_stream_id_printf_valist (GstPad * pad, GstElement * parent,
+    const gchar * stream_id, va_list var_args)
+{
+  gchar *expanded = NULL, *new_stream_id;
+
+  if (stream_id)
+    expanded = g_strdup_vprintf (stream_id, var_args);
+
+  new_stream_id = gst_pad_create_stream_id_internal (pad, parent, expanded);
+
+  g_free (expanded);
 
   return new_stream_id;
 }
@@ -3736,7 +3750,7 @@ gchar *
 gst_pad_create_stream_id (GstPad * pad, GstElement * parent,
     const gchar * stream_id)
 {
-  return gst_pad_create_stream_id_printf (pad, parent, stream_id, NULL);
+  return gst_pad_create_stream_id_internal (pad, parent, stream_id);
 }
 
 /**
