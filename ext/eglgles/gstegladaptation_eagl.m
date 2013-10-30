@@ -85,12 +85,6 @@ gst_egl_adaptation_init_display (GstEglAdaptationContext * ctx)
 }
 
 void
-gst_egl_adaptation_terminate_display (GstEglAdaptationContext * ctx)
-{
-  /* NOP */
-}
-
-void
 gst_egl_adaptation_bind_API (GstEglAdaptationContext * ctx)
 {
   /* NOP */
@@ -352,16 +346,4 @@ void
 gst_egl_adaptation_set_window (GstEglAdaptationContext * ctx, guintptr window)
 {
   ctx->eaglctx->window = (UIView *) window;
-}
-
-void
-gst_egl_adaptation_update_used_window (GstEglAdaptationContext * ctx)
-{
-  ctx->eaglctx->used_window = ctx->eaglctx->window;
-}
-
-guintptr
-gst_egl_adaptation_get_window (GstEglAdaptationContext * ctx)
-{
-  return (guintptr) ctx->eaglctx->window;
 }
