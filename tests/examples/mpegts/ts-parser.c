@@ -106,6 +106,30 @@ descriptor_name (gint val)
 }
 
 static const gchar *
+table_id_name (gint val)
+{
+  GEnumValue *en;
+
+  en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+          (GST_TYPE_MPEG_TS_SECTION_TABLE_ID)), val);
+  if (en == NULL)
+    /* Else try with DVB enum types */
+    en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+            (GST_TYPE_MPEG_TS_SECTION_DVB_TABLE_ID)), val);
+  if (en == NULL)
+    /* Else try with ATSC enum types */
+    en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+            (GST_TYPE_MPEG_TS_SECTION_ATSC_TABLE_ID)), val);
+  if (en == NULL)
+    /* Else try with SCTE enum types */
+    en = g_enum_get_value (G_ENUM_CLASS (g_type_class_peek
+            (GST_TYPE_MPEG_TS_SECTION_SCTE_TABLE_ID)), val);
+  if (en == NULL)
+    return "UNKNOWN/PRIVATE";
+  return en->value_nick;
+}
+
+static const gchar *
 enum_name (GType instance_type, gint val)
 {
   GEnumValue *en;
@@ -509,12 +533,14 @@ _on_bus_message (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
     {
       GstMpegTsSection *section;
       if ((section = gst_message_parse_mpegts_section (message))) {
+        const gchar *table_name;
+
+        table_name = table_id_name (section->table_id);
         g_print
             ("Got section: PID:0x%04x type:%s (table_id 0x%02x (%s)) at offset %"
             G_GUINT64_FORMAT "\n", section->pid,
             enum_name (GST_TYPE_MPEG_TS_SECTION_TYPE, section->section_type),
-            section->table_id, enum_name (GST_TYPE_MPEG_TS_SECTION_TABLE_ID,
-                section->table_id), section->offset);
+            section->table_id, table_name, section->offset);
         if (!section->short_section) {
           g_print
               ("   subtable_extension:0x%04x, version_number:0x%02x\n",
@@ -567,6 +593,9 @@ main (int argc, gchar ** argv)
   g_type_class_ref (GST_TYPE_MPEG_TS_DVB_SERVICE_TYPE);
   g_type_class_ref (GST_TYPE_MPEG_TS_DVB_TELETEXT_TYPE);
   g_type_class_ref (GST_TYPE_MPEG_TS_STREAM_TYPE);
+  g_type_class_ref (GST_TYPE_MPEG_TS_SECTION_DVB_TABLE_ID);
+  g_type_class_ref (GST_TYPE_MPEG_TS_SECTION_ATSC_TABLE_ID);
+  g_type_class_ref (GST_TYPE_MPEG_TS_SECTION_SCTE_TABLE_ID);
 
   mainloop = g_main_loop_new (NULL, FALSE);
 
