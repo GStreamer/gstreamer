@@ -4,7 +4,6 @@
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
 #include <gst/video/video.h>
 #include <pthread.h>
 
@@ -43,7 +42,7 @@ typedef struct _CustomData {
   gboolean is_live;             /* Live streams do not use buffering */
 } CustomData;
 
-/* playbin2 flags */
+/* playbin flags */
 typedef enum {
   GST_PLAY_FLAG_TEXT = (1 << 2)  /* We want subtitle output */
 } GstPlayFlags;
@@ -124,7 +123,6 @@ static void set_current_ui_position (gint position, gint duration, CustomData *d
 /* If we have pipeline and it is running, query the current position and clip duration and inform
  * the application */
 static gboolean refresh_ui (CustomData *data) {
-  GstFormat fmt = GST_FORMAT_TIME;
   gint64 current = -1;
   gint64 position;
 
@@ -134,12 +132,12 @@ static gboolean refresh_ui (CustomData *data) {
 
   /* If we didn't know it yet, query the stream duration */
   if (!GST_CLOCK_TIME_IS_VALID (data->duration)) {
-    if (!gst_element_query_duration (data->pipeline, &fmt, &data->duration)) {
+    if (!gst_element_query_duration (data->pipeline, GST_FORMAT_TIME, &data->duration)) {
       GST_WARNING ("Could not query current duration");
     }
   }
 
-  if (gst_element_query_position (data->pipeline, &fmt, &position)) {
+  if (gst_element_query_position (data->pipeline, GST_FORMAT_TIME, &position)) {
     /* Java expects these values in milliseconds, and GStreamer provides nanoseconds */
     set_current_ui_position (position / GST_MSECOND, data->duration / GST_MSECOND, data);
   }
@@ -254,23 +252,18 @@ static void check_media_size (CustomData *data) {
   GstElement *video_sink;
   GstPad *video_sink_pad;
   GstCaps *caps;
-  GstVideoFormat fmt;
-  int width;
-  int height;
+  GstVideoInfo info;
 
   /* Retrieve the Caps at the entrance of the video sink */
   g_object_get (data->pipeline, "video-sink", &video_sink, NULL);
   video_sink_pad = gst_element_get_static_pad (video_sink, "sink");
-  caps = gst_pad_get_negotiated_caps (video_sink_pad);
+  caps = gst_pad_get_current_caps (video_sink_pad);
 
-  if (gst_video_format_parse_caps(caps, &fmt, &width, &height)) {
-    int par_n, par_d;
-    if (gst_video_parse_caps_pixel_aspect_ratio (caps, &par_n, &par_d)) {
-      width = width * par_n / par_d;
-    }
-    GST_DEBUG ("Media size is %dx%d, notifying application", width, height);
+  if (gst_video_info_from_caps (&info, caps)) {
+    info.width = info.width * info.par_n / info.par_d;
+    GST_DEBUG ("Media size is %dx%d, notifying application", info.width, info.height);
 
-    (*env)->CallVoidMethod (env, data->app, on_media_size_changed_method_id, (jint)width, (jint)height);
+    (*env)->CallVoidMethod (env, data->app, on_media_size_changed_method_id, (jint)info.width, (jint)info.height);
     if ((*env)->ExceptionCheck (env)) {
       GST_ERROR ("Failed to call Java method");
       (*env)->ExceptionClear (env);
@@ -313,7 +306,7 @@ static void check_initialization_complete (CustomData *data) {
     GST_DEBUG ("Initialization complete, notifying application. native_window:%p main_loop:%p", data->native_window, data->main_loop);
 
     /* The main loop is running and we received a native window, inform the sink about it */
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->pipeline), (guintptr)data->native_window);
+    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (data->pipeline), (guintptr)data->native_window);
 
     (*env)->CallVoidMethod (env, data->app, on_gstreamer_initialized_method_id);
     if ((*env)->ExceptionCheck (env)) {
@@ -341,7 +334,7 @@ static void *app_function (void *userdata) {
   g_main_context_push_thread_default(data->context);
 
   /* Build pipeline */
-  data->pipeline = gst_parse_launch("playbin2", &error);
+  data->pipeline = gst_parse_launch("playbin", &error);
   if (error) {
     gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
     g_clear_error (&error);
@@ -432,7 +425,7 @@ static void gst_native_finalize (JNIEnv* env, jobject thiz) {
   GST_DEBUG ("Done finalizing");
 }
 
-/* Set playbin2's URI */
+/* Set playbin's URI */
 void gst_native_set_uri (JNIEnv* env, jobject thiz, jstring uri) {
   CustomData *data = GET_CUSTOM_DATA (env, thiz, custom_data_field_id);
   if (!data || !data->pipeline) return;
@@ -505,10 +498,10 @@ static void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface)
   if (data->native_window) {
     ANativeWindow_release (data->native_window);
     if (data->native_window == new_native_window) {
-      GST_DEBUG ("New native window is the same as the previous one", data->native_window);
+      GST_DEBUG ("New native window is the same as the previous one %p", data->native_window);
       if (data->pipeline) {
-        gst_x_overlay_expose(GST_X_OVERLAY (data->pipeline));
-        gst_x_overlay_expose(GST_X_OVERLAY (data->pipeline));
+        gst_video_overlay_expose(GST_VIDEO_OVERLAY (data->pipeline));
+        gst_video_overlay_expose(GST_VIDEO_OVERLAY (data->pipeline));
       }
       return;
     } else {
@@ -527,7 +520,7 @@ static void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
   GST_DEBUG ("Releasing Native Window %p", data->native_window);
 
   if (data->pipeline) {
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->pipeline), (guintptr)NULL);
+    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (data->pipeline), (guintptr)NULL);
     gst_element_set_state (data->pipeline, GST_STATE_READY);
   }
 

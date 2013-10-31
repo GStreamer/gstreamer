@@ -8,12 +8,12 @@ LOCAL_SHARED_LIBRARIES := gstreamer_android
 LOCAL_LDLIBS := -llog
 include $(BUILD_SHARED_LIBRARY)
 
-ifndef GSTREAMER_SDK_ROOT
-ifndef GSTREAMER_SDK_ROOT_ANDROID
-$(error GSTREAMER_SDK_ROOT_ANDROID is not defined!)
+ifndef GSTREAMER_ROOT
+ifndef GSTREAMER_ROOT_ANDROID
+$(error GSTREAMER_ROOT_ANDROID is not defined!)
 endif
-GSTREAMER_SDK_ROOT        := $(GSTREAMER_SDK_ROOT_ANDROID)
+GSTREAMER_ROOT        := $(GSTREAMER_ROOT_ANDROID)
 endif
-GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_SDK_ROOT)/share/gst-android/ndk-build/
+GSTREAMER_NDK_BUILD_PATH  := $(GSTREAMER_ROOT)/share/gst-android/ndk-build/
 GSTREAMER_PLUGINS         := coreelements
-include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer.mk
+include $(GSTREAMER_NDK_BUILD_PATH)/gstreamer-1.0.mk

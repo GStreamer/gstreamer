@@ -4,7 +4,6 @@
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include <gst/gst.h>
-#include <gst/interfaces/xoverlay.h>
 #include <gst/video/video.h>
 #include <pthread.h>
 
@@ -130,7 +129,7 @@ static void check_initialization_complete (CustomData *data) {
     GST_DEBUG ("Initialization complete, notifying application. native_window:%p main_loop:%p", data->native_window, data->main_loop);
 
     /* The main loop is running and we received a native window, inform the sink about it */
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->video_sink), (guintptr)data->native_window);
+    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (data->video_sink), (guintptr)data->native_window);
 
     (*env)->CallVoidMethod (env, data->app, on_gstreamer_initialized_method_id);
     if ((*env)->ExceptionCheck (env)) {
@@ -156,7 +155,7 @@ static void *app_function (void *userdata) {
   g_main_context_push_thread_default(data->context);
 
   /* Build pipeline */
-  data->pipeline = gst_parse_launch("videotestsrc ! warptv ! ffmpegcolorspace ! autovideosink", &error);
+  data->pipeline = gst_parse_launch("videotestsrc ! warptv ! videoconvert ! autovideosink", &error);
   if (error) {
     gchar *message = g_strdup_printf("Unable to build pipeline: %s", error->message);
     g_clear_error (&error);
@@ -168,7 +167,7 @@ static void *app_function (void *userdata) {
   /* Set the pipeline to READY, so it can already accept a window handle, if we have one */
   gst_element_set_state(data->pipeline, GST_STATE_READY);
 
-  data->video_sink = gst_bin_get_by_interface(GST_BIN(data->pipeline), GST_TYPE_X_OVERLAY);
+  data->video_sink = gst_bin_get_by_interface(GST_BIN(data->pipeline), GST_TYPE_VIDEO_OVERLAY);
   if (!data->video_sink) {
     GST_ERROR ("Could not retrieve video sink");
     return NULL;
@@ -276,10 +275,10 @@ static void gst_native_surface_init (JNIEnv *env, jobject thiz, jobject surface)
   if (data->native_window) {
     ANativeWindow_release (data->native_window);
     if (data->native_window == new_native_window) {
-      GST_DEBUG ("New native window is the same as the previous one", data->native_window);
+      GST_DEBUG ("New native window is the same as the previous one %p", data->native_window);
       if (data->video_sink) {
-        gst_x_overlay_expose(GST_X_OVERLAY (data->video_sink));
-        gst_x_overlay_expose(GST_X_OVERLAY (data->video_sink));
+        gst_video_overlay_expose(GST_VIDEO_OVERLAY (data->video_sink));
+        gst_video_overlay_expose(GST_VIDEO_OVERLAY (data->video_sink));
       }
       return;
     } else {
@@ -298,7 +297,7 @@ static void gst_native_surface_finalize (JNIEnv *env, jobject thiz) {
   GST_DEBUG ("Releasing Native Window %p", data->native_window);
 
   if (data->video_sink) {
-    gst_x_overlay_set_window_handle (GST_X_OVERLAY (data->video_sink), (guintptr)NULL);
+    gst_video_overlay_set_window_handle (GST_VIDEO_OVERLAY (data->video_sink), (guintptr)NULL);
     gst_element_set_state (data->pipeline, GST_STATE_READY);
   }
 
