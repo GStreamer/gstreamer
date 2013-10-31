@@ -511,7 +511,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
        width, height,
        GST_FOURCC_ARGS (gst_video_format_to_fourcc (format)));
 
-    output.videoSettings = [NSDictionary dictionaryWithObject:[NSNumber numberWithInt:newformat] forKey:(NSString*)kCVPixelBufferPixelFormatTypeKey];
+    output.videoSettings = [NSDictionary
+        dictionaryWithObject:[NSNumber numberWithInt:newformat]
+        forKey:(NSString*)kCVPixelBufferPixelFormatTypeKey];
 
     caps = gst_caps_copy (new_caps);
     [session startRunning];
