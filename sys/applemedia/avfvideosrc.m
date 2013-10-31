@@ -34,41 +34,27 @@
 GST_DEBUG_CATEGORY (gst_avf_video_src_debug);
 #define GST_CAT_DEFAULT gst_avf_video_src_debug
 
-#define VIDEO_CAPS_YUV(width, height) "video/x-raw, "           \
-    "format = (string) { NV12, UYVY, YUY2 }, "                  \
-    "framerate = " GST_VIDEO_FPS_RANGE ", "                     \
-    "width = (int) " G_STRINGIFY (width) ", height = (int) " G_STRINGIFY (height)
-
-#define VIDEO_CAPS_BGRA(width, height) "video/x-raw, "          \
-    "format = (string) { BGRA }, "                              \
-    "bpp = (int) 32, "                                          \
-    "depth = (int) 32, "                                        \
-    "endianness = (int) BIG_ENDIAN, "                           \
-    "red_mask = (int)0x0000FF00, "                              \
-    "green_mask = (int)0x00FF0000, "                            \
-    "blue_mask = (int)0xFF000000, "                             \
-    "alpha_mask = (int)0x000000FF, "                            \
-    "width = (int) " G_STRINGIFY (width) ", height = (int) " G_STRINGIFY (height)
-
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (VIDEO_CAPS_YUV (192, 144) ";"
-        VIDEO_CAPS_YUV (480, 360) ";"
-        VIDEO_CAPS_YUV (352, 288) ";"
-        VIDEO_CAPS_YUV (640, 480) ";"
-        VIDEO_CAPS_YUV (1280, 720) ";"
-#if HAVE_IOS
-        VIDEO_CAPS_YUV (1920, 1280) ";"
-#endif
-        VIDEO_CAPS_BGRA (192, 144) ";"
-        VIDEO_CAPS_BGRA (480, 360) ";"
-        VIDEO_CAPS_BGRA (352, 288) ";"
-        VIDEO_CAPS_BGRA (640, 480) ";"
-        VIDEO_CAPS_BGRA (1280, 720)
-#if HAVE_IOS
-        ";" VIDEO_CAPS_BGRA (1920, 1280)
-#endif
+    GST_STATIC_CAPS ("video/x-raw, "
+        "format = (string) { NV12, UYVY, YUY2 }, "
+        "framerate = " GST_VIDEO_FPS_RANGE ", "
+        "width = " GST_VIDEO_SIZE_RANGE ", "
+        "height = " GST_VIDEO_SIZE_RANGE "; "
+
+        "video/x-raw, "
+        "format = (string) { BGRA }, "
+        "bpp = (int) 32, "
+        "depth = (int) 32, "
+        "endianness = (int) BIG_ENDIAN, "
+        "red_mask = (int) 0x0000FF00, "
+        "green_mask = (int) 0x00FF0000, "
+        "blue_mask = (int) 0xFF000000, "
+        "alpha_mask = (int) 0x000000FF, "
+        "framerate = " GST_VIDEO_FPS_RANGE ", "
+        "width = " GST_VIDEO_SIZE_RANGE ", "
+        "height = " GST_VIDEO_SIZE_RANGE "; "
 ));
 
 typedef enum _QueueState {
@@ -119,6 +105,11 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
 
 - (BOOL)openDevice;
 - (void)closeDevice;
+- (GstVideoFormat)getGstVideoFormat:(NSNumber *)pixel_format;
+- (BOOL)getDeviceCaps:(GstCaps *)result;
+- (BOOL)setDeviceCaps:(GstVideoInfo *)info;
+- (BOOL)getSessionPresetCaps:(GstCaps *)result;
+- (BOOL)setSessionPresetCaps:(GstVideoInfo *)info;
 - (GstCaps *)getCaps;
 - (BOOL)setCaps:(GstCaps *)new_caps;
 - (BOOL)start;
@@ -259,60 +250,199 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   });
 }
 
-#define GST_AVF_CAPS_NEW(format, w, h)                                \
+#define GST_AVF_CAPS_NEW(format, w, h, fps_n, fps_d)                  \
     (gst_caps_new_simple ("video/x-raw",                              \
         "width", G_TYPE_INT, w,                                       \
         "height", G_TYPE_INT, h,                                      \
         "format", G_TYPE_STRING, gst_video_format_to_string (format), \
-        "framerate", GST_TYPE_FRACTION, DEVICE_FPS_N, DEVICE_FPS_D,   \
+        "framerate", GST_TYPE_FRACTION, (fps_n), (fps_d),             \
         NULL))
+
+- (GstVideoFormat)getGstVideoFormat:(NSNumber *)pixel_format
+{
+  GstVideoFormat gst_format = GST_VIDEO_FORMAT_UNKNOWN;
+
+  switch ([pixel_format integerValue]) {
+  case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange: /* 420v */
+    gst_format = GST_VIDEO_FORMAT_NV12;
+    break;
+  case kCVPixelFormatType_422YpCbCr8: /* 2vuy */
+    gst_format = GST_VIDEO_FORMAT_UYVY;
+    break;
+  case kCVPixelFormatType_32BGRA: /* BGRA */
+    gst_format = GST_VIDEO_FORMAT_BGRA;
+    break;
+  case kCVPixelFormatType_422YpCbCr8_yuvs: /* yuvs */
+    gst_format = GST_VIDEO_FORMAT_YUY2;
+    break;
+  default:
+    GST_DEBUG ("Pixel format %s is not handled by avfvideosrc", [[pixel_format stringValue] UTF8String]);
+    break;
+  }
+
+  return gst_format;
+}
+
+- (BOOL)getDeviceCaps:(GstCaps *)result
+{
+  NSArray *formats = [device valueForKey:@"formats"];
+  NSArray *pixel_formats = output.availableVideoCVPixelFormatTypes;
+
+  for (AVCaptureDeviceFormat *f in formats) {
+    CMFormatDescriptionRef formatDescription = f.formatDescription;
+    CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
+
+    for (AVFrameRateRange *rate in f.videoSupportedFrameRateRanges) {
+      int fps_n, fps_d;
+
+      gst_util_double_to_fraction (rate.maxFrameRate, &fps_n, &fps_d);
+
+      for (NSNumber *pixel_format in pixel_formats) {
+        GstVideoFormat gst_format = [self getGstVideoFormat:pixel_format];
+        if (gst_format != GST_VIDEO_FORMAT_UNKNOWN)
+          gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, dimensions.width, dimensions.height, fps_n, fps_d));
+      }
+    }
+  }
+  return YES;
+}
+
+- (BOOL)setDeviceCaps:(GstVideoInfo *)info
+{
+  double framerate;
+  gboolean found_format = FALSE, found_framerate = FALSE;
+  NSArray *formats = [device valueForKey:@"formats"];
+  gst_util_fraction_to_double (info->fps_n, info->fps_d, &framerate);
+
+  if ([device lockForConfiguration:NULL] == YES) {
+    for (AVCaptureDeviceFormat *f in formats) {
+      CMFormatDescriptionRef formatDescription = f.formatDescription;
+      CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
+      if (dimensions.width == info->width && dimensions.height == info->height) {
+        found_format = TRUE;
+        device.activeFormat = f;
+        for (AVFrameRateRange *rate in f.videoSupportedFrameRateRanges) {
+          if (abs (framerate - rate.maxFrameRate) < 0.00001) {
+            found_framerate = TRUE;
+            device.activeVideoMinFrameDuration = rate.minFrameDuration;
+            [device setValue:[NSValue valueWithCMTime:rate.minFrameDuration]
+                    forKey:@"activeVideoMinFrameDuration"];
+            @try {
+              /* Only available on OSX >= 10.8 and iOS >= 7.0 */
+              [device setValue:[NSValue valueWithCMTime:rate.maxFrameDuration]
+                      forKey:@"activeVideoMaxFrameDuration"];
+            } @catch (NSException *exception) {
+              if (![[exception name] isEqualTo:NSUndefinedKeyException]) {
+                GST_WARNING ("An unexcepted error occured: %s",
+                              [exception.reason UTF8String]);
+              }
+            }
+            break;
+          }
+        }
+      }
+    }
+    if (!found_format) {
+      GST_WARNING ("Unsupported capture dimensions %dx%d", info->width, info->height);
+      return NO;
+    }
+    if (!found_framerate) {
+      GST_WARNING ("Unsupported capture framerate %d/%d", info->fps_n, info->fps_d);
+      return NO;
+    }
+  } else {
+    GST_WARNING ("Couldn't lock device for configuration");
+    return NO;
+  }
+  return YES;
+}
+
+- (BOOL)getSessionPresetCaps:(GstCaps *)result
+{
+  NSArray *pixel_formats = output.availableVideoCVPixelFormatTypes;
+  for (NSNumber *pixel_format in pixel_formats) {
+    GstVideoFormat gst_format = [self getGstVideoFormat:pixel_format];
+    if (gst_format == GST_VIDEO_FORMAT_UNKNOWN)
+      continue;
+
+    if ([session canSetSessionPreset:AVCaptureSessionPresetLow])
+      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 192, 144, DEVICE_FPS_N, DEVICE_FPS_D));
+    if ([session canSetSessionPreset:AVCaptureSessionPreset352x288])
+      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 352, 288, DEVICE_FPS_N, DEVICE_FPS_D));
+    if ([session canSetSessionPreset:AVCaptureSessionPresetMedium])
+      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 480, 360, DEVICE_FPS_N, DEVICE_FPS_D));
+    if ([session canSetSessionPreset:AVCaptureSessionPreset640x480])
+      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 640, 480, DEVICE_FPS_N, DEVICE_FPS_D));
+    if ([session canSetSessionPreset:AVCaptureSessionPreset1280x720])
+      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 1280, 720, DEVICE_FPS_N, DEVICE_FPS_D));
+#if HAVE_IOS
+    if ([session canSetSessionPreset:AVCaptureSessionPreset1920x1080])
+      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 1920, 1080, DEVICE_FPS_N, DEVICE_FPS_D));
+#endif
+  }
+  return YES;
+}
+
+- (BOOL)setSessionPresetCaps:(GstVideoInfo *)info;
+{
+
+  if ([device lockForConfiguration:NULL] != YES) {
+    GST_WARNING ("Couldn't lock device for configuration");
+    return NO;
+  }
+
+  switch (info->width) {
+  case 192:
+    session.sessionPreset = AVCaptureSessionPresetLow;
+    break;
+  case 352:
+    session.sessionPreset = AVCaptureSessionPreset352x288;
+    break;
+  case 480:
+    session.sessionPreset = AVCaptureSessionPresetMedium;
+    break;
+  case 640:
+    session.sessionPreset = AVCaptureSessionPreset640x480;
+    break;
+  case 1280:
+    session.sessionPreset = AVCaptureSessionPreset1280x720;
+    break;
+#if HAVE_IOS
+  case 1920:
+    session.sessionPreset = AVCaptureSessionPreset1920x1080;
+    break;
+#endif
+  default:
+    GST_WARNING ("Unsupported capture dimensions %dx%d", info->width, info->height);
+    return NO;
+  }
+  return YES;
+}
 
 - (GstCaps *)getCaps
 {
   GstCaps *result;
-  NSArray *formats;
+  NSArray *pixel_formats;
 
   if (session == nil)
     return NULL; /* BaseSrc will return template caps */
 
   result = gst_caps_new_empty ();
+  pixel_formats = output.availableVideoCVPixelFormatTypes;
 
-  formats = output.availableVideoCVPixelFormatTypes;
-  for (id object in formats) {
-    NSNumber *nsformat = object;
-    GstVideoFormat gstformat = GST_VIDEO_FORMAT_UNKNOWN;
+  @try {
 
-    switch ([nsformat integerValue]) {
-    case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange: /* 420v */
-      gstformat = GST_VIDEO_FORMAT_NV12;
-      break;
-    case kCVPixelFormatType_422YpCbCr8: /* 2vuy */
-      gstformat = GST_VIDEO_FORMAT_UYVY;
-      break;
-    case kCVPixelFormatType_32BGRA: /* BGRA */
-      gstformat = GST_VIDEO_FORMAT_BGRA;
-      break;
-    case kCVPixelFormatType_422YpCbCr8_yuvs: /* yuvs */
-      gstformat = GST_VIDEO_FORMAT_YUY2;
-      break;
-    default:
-      continue;
+    [self getDeviceCaps:result];
+
+  } @catch (NSException *exception) {
+
+    if (![[exception name] isEqualTo:NSUndefinedKeyException]) {
+      GST_WARNING ("An unexcepted error occured: %s", [exception.reason UTF8String]);
+      return result;
     }
 
-    if ([session canSetSessionPreset:AVCaptureSessionPresetLow])
-      gst_caps_append (result, GST_AVF_CAPS_NEW (gstformat, 192, 144));
-    if ([session canSetSessionPreset:AVCaptureSessionPreset352x288])
-      gst_caps_append (result, GST_AVF_CAPS_NEW (gstformat, 352, 288));
-    if ([session canSetSessionPreset:AVCaptureSessionPresetMedium])
-      gst_caps_append (result, GST_AVF_CAPS_NEW (gstformat, 480, 360));
-    if ([session canSetSessionPreset:AVCaptureSessionPreset640x480]) 
-      gst_caps_append (result, GST_AVF_CAPS_NEW (gstformat, 640, 480));
-    if ([session canSetSessionPreset:AVCaptureSessionPreset1280x720])
-      gst_caps_append (result, GST_AVF_CAPS_NEW (gstformat, 1280, 720));
-#if HAVE_IOS
-    if ([session canSetSessionPreset:AVCaptureSessionPreset1920x1080])
-      gst_caps_append (result, GST_AVF_CAPS_NEW (gstformat, 1920, 1080));
-#endif
+    /* Fallback on session presets API for iOS < 7.0 */
+    [self getSessionPresetCaps:result];
   }
 
   return result;
@@ -321,6 +451,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 - (BOOL)setCaps:(GstCaps *)new_caps
 {
   GstVideoInfo info;
+  BOOL success = YES, *successPtr = &success;
 
   gst_video_info_init (&info);
   gst_video_info_from_caps (&info, new_caps);
@@ -334,29 +465,25 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
     g_assert (![session isRunning]);
 
-    switch (width) {
-      case 192:
-        session.sessionPreset = AVCaptureSessionPresetLow;
-        break;
-      case 352:
-        session.sessionPreset = AVCaptureSessionPreset352x288;
-        break;
-      case 480:
-        session.sessionPreset = AVCaptureSessionPresetMedium;
-        break;
-      case 640:
-        session.sessionPreset = AVCaptureSessionPreset640x480;
-        break;
-      case 1280:
-        session.sessionPreset = AVCaptureSessionPreset1280x720;
-        break;
-#if HAVE_IOS
-      case 1920:
-        session.sessionPreset = AVCaptureSessionPreset1920x1080;
-        break;
-#endif
-      default:
-        g_assert_not_reached ();
+    @try {
+
+      /* formats and activeFormat keys are only available on OSX >= 10.7 and iOS >= 7.0 */
+      *successPtr = [self setDeviceCaps:(GstVideoInfo *)&info];
+      if (*successPtr != YES)
+        return;
+
+    } @catch (NSException *exception) {
+
+      if (![[exception name] isEqualTo:NSUndefinedKeyException]) {
+        GST_WARNING ("An unexcepted error occured: %s", [exception.reason UTF8String]);
+        *successPtr = NO;
+        return;
+      }
+
+      /* Fallback on session presets API for iOS < 7.0 */
+      *successPtr = [self setSessionPresetCaps:(GstVideoInfo *)&info];
+      if (*successPtr != YES)
+        return;
     }
 
     switch (format) {
@@ -373,7 +500,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
          newformat = kCVPixelFormatType_32BGRA;
         break;
       default:
-        g_assert_not_reached ();
+        *successPtr = NO;
+        GST_WARNING ("Unsupported output format %s",
+            gst_video_format_to_string (format));
+        return;
     }
 
     GST_DEBUG_OBJECT(element,
@@ -385,9 +515,13 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
     caps = gst_caps_copy (new_caps);
     [session startRunning];
+
+    /* Unlock device configuration only after session is started so the session
+     * won't reset the capture formats */
+    [device unlockForConfiguration];
   });
 
-  return YES;
+  return success;
 }
 
 - (BOOL)start
