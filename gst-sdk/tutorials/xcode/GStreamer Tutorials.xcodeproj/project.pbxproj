@@ -1172,7 +1172,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "/Library/Frameworks/GStreamer.framework/Versions/0.10/Headers/**";
+				HEADER_SEARCH_PATHS = "/Library/Frameworks/GStreamer.framework/Versions/1.0/Headers/**";
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = "";
@@ -1195,7 +1195,7 @@
 				GCC_WARN_ABOUT_MISSING_PROTOTYPES = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				HEADER_SEARCH_PATHS = "/Library/Frameworks/GStreamer.framework/Versions/0.10/Headers/**";
+				HEADER_SEARCH_PATHS = "/Library/Frameworks/GStreamer.framework/Versions/1.0/Headers/**";
 				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				SDKROOT = "";
 				VALID_ARCHS = "x86_64 i386";
