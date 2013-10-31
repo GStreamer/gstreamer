@@ -4,17 +4,17 @@ Transform elements
 Transform elements transform input buffers to output buffers based
 on the sink and source caps. 
 
-An important requirement for a transform is that the ouput caps are completely
+An important requirement for a transform is that the output caps are completely
 defined by the input caps and vice versa. This means that a typical decoder
 element can NOT be implemented with a transform element, this is because the
-output caps like width and height of the decompessed video frame, for example,
-are endcoded in the stream and thus not defined by the input caps.
+output caps like width and height of the decompressed video frame, for example,
+are encoded in the stream and thus not defined by the input caps.
 
 Typical transform elements include:
 
  - audio convertors (audioconvert, audioresample,...)
  - video convertors (colorspace, videoscale, ...)
- - filters (capfilter, volume, colorbalance, ...)
+ - filters (capsfilter, volume, colorbalance, ...)
 
 The implementation of the transform element has to take care of
 the following things:
@@ -299,7 +299,7 @@ retrieve the size. There are two functions:
 
   - get_unit_size()
 
-    When the input size and output size are always a multiple of eachother
+    When the input size and output size are always a multiple of each other
     (audio conversion, ..) we can define a more simple get_unit_size() function.
     The transform will use this function to get the same amount of units in the
     source and destination buffers.

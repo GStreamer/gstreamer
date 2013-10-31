@@ -86,7 +86,7 @@ Use Cases
       consumed the amount of time.
     - sink posts STEP_DONE with amount of frames stepped and corresponding time
       interval. The sink will then wait for another step event. Since the
-      STEP_DONE message was emited by the sink when it handed off the buffer to
+      STEP_DONE message was emitted by the sink when it handed off the buffer to
       the device, there is usually sufficient time to queue a new STEP event so
       that one can seamlessly continue stepping.
 
@@ -190,13 +190,13 @@ A GST_MESSAGE_STEP_START is created. It contains the following fields.
   "intermediate", G_TYPE_BOOLEAN
      If this is an intermediate step operation that queued/activated.
 
-The STEP_START message is emited 2 times:
+The STEP_START message is emitted 2 times:
  
   * first when an element received the STEP event and queued it. The "active"
     field will be FALSE in this case.
 
   * second when the step operation started in the streaming thread. The "active"
-    field is TRUE in this case. After this message is emited, the application
+    field is TRUE in this case. After this message is emitted, the application
     can queue a new step operation.
 
 The purpose of this message is to find out how many elements participate in the
@@ -227,7 +227,7 @@ fields:
   "eos", G_TYPE_BOOLEAN
      The step ended because of EOS.
 
-The message is emited by the element that performs the step operation. The
+The message is emitted by the element that performs the step operation. The
 purpose is to return the duration in GST_FORMAT_TIME of the stepped media. This
 especially interesting to align other stream in case of stepping frames on the
 video sink element.

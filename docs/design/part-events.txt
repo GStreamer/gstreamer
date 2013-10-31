@@ -104,7 +104,7 @@ elements so that the running_time is reset to 0.
 EOS
 ~~~
 
-The EOS event can only be sent on a sinkpad. It is typically emited by the
+The EOS event can only be sent on a sinkpad. It is typically emitted by the
 source element when it has finished sending data. This event is mainly sent
 in the streaming thread but can also be sent from the application thread.
 
@@ -153,7 +153,7 @@ point for all next buffer's timestamps has to be propagated through the
 pipeline using the SEGMENT event.
 
 Before sending buffers, an element must send a SEGMENT event. An element is
-free to refuse buffers if they were not preceeded by a SEGMENT event.
+free to refuse buffers if they were not preceded by a SEGMENT event.
 
 Elements that sync to the clock should store the SEGMENT start and end values
 and subtract the start value from the buffer timestamp before comparing

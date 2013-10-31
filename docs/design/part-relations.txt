@@ -113,7 +113,7 @@ parent-child relation
      call _set_parent() on the children with the same parent, the parent
      can then add all those to its lists.
 
-   Note: that the signal is emited before the parent has added the 
+   Note: that the signal is emitted before the parent has added the
    element to its internal data structures. This is not a problem
    since the parent usually has his own signal to inform the app that
    the child was reffed. One possible solution would be to update the
@@ -350,7 +350,7 @@ unreffed relation
       
  - properties
 
-   - two objects have references to eachother
+   - two objects have references to each other
    - both objects can only have 1 reference to another object.
    - reference fields protected with LOCK
    - the references held by each object are NOT reflected in the
@@ -475,7 +475,7 @@ double-reffed relation
 
  - properties
 
-   - two objects have references to eachother
+   - two objects have references to each other
    - reference fields protected with LOCK
    - the references held by each object are reflected in the
      refcount of the other object.

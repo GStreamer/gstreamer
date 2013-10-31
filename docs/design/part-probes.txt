@@ -309,7 +309,7 @@ any data.
 To do this, the source pads of the decoders is blocked so that no
 events or buffers can escape and we don't interrupt the stream.
 
-When all of the dynamic pad are created (no-more-pads emited by the
+When all of the dynamic pad are created (no-more-pads emitted by the
 branching point, ie, the demuxer or the queues filled) and the pads
 are blocked (blocked callback received) the pipeline is completely
 prerolled.

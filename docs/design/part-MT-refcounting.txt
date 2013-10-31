@@ -41,7 +41,7 @@ Shared data structures and writability:
   decrease the refcount.
 
   Each thread having a refcount to the object can safely read from the object.
-  but modifications made to the object should be preceeded with a
+  but modifications made to the object should be preceded with a
   _get_writable() function call. This function will check the refcount of the
   object and if the object is referenced by more than one instance, a copy is
   made of the object that is then by definition only referenced from the calling

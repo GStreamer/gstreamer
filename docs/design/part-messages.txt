@@ -46,7 +46,7 @@ GST_MESSAGE_TAG:
 GST_MESSAGE_BUFFERING:
 
   An element is buffering data and that could potentially take some time. This
-  message is typically emited by elements that perform some sort of network
+  message is typically emitted by elements that perform some sort of network
   buffering. While the pipeline is buffering it should remain in the PAUSED
   state. When the buffering is finished, it can resume PLAYING.
 
