@@ -32,6 +32,9 @@
 
 #include "gstmssmanifest.h"
 
+GST_DEBUG_CATEGORY_EXTERN (mssdemux_debug);
+#define GST_CAT_DEFAULT mssdemux_debug
+
 #define DEFAULT_TIMESCALE             10000000
 
 #define MSS_NODE_STREAM_FRAGMENT      "c"
