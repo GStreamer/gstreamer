@@ -1,8 +1,9 @@
+#include <stdio.h>
 #include <gst/gst.h>
   
 /* Structure to contain all our information, so we can pass it around */
 typedef struct _CustomData {
-  GstElement *playbin2;  /* Our one and only element */
+  GstElement *playbin;  /* Our one and only element */
   
   gint n_video;          /* Number of embedded video streams */
   gint n_audio;          /* Number of embedded audio streams */
@@ -15,7 +16,7 @@ typedef struct _CustomData {
   GMainLoop *main_loop;  /* GLib's Main Loop */
 } CustomData;
   
-/* playbin2 flags */
+/* playbin flags */
 typedef enum {
   GST_PLAY_FLAG_VIDEO         = (1 << 0), /* We want video output */
   GST_PLAY_FLAG_AUDIO         = (1 << 1), /* We want audio output */
@@ -37,31 +38,31 @@ int main(int argc, char *argv[]) {
   gst_init (&argc, &argv);
    
   /* Create the elements */
-  data.playbin2 = gst_element_factory_make ("playbin2", "playbin2");
+  data.playbin = gst_element_factory_make ("playbin", "playbin");
   
-  if (!data.playbin2) {
+  if (!data.playbin) {
     g_printerr ("Not all elements could be created.\n");
     return -1;
   }
   
   /* Set the URI to play */
-  g_object_set (data.playbin2, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.ogv", NULL);
+  g_object_set (data.playbin, "uri", "http://docs.gstreamer.com/media/sintel_trailer-480p.ogv", NULL);
   
   /* Set the subtitle URI to play and some font description */
-  g_object_set (data.playbin2, "suburi", "http://docs.gstreamer.com/media/sintel_trailer_gr.srt", NULL);
-  g_object_set (data.playbin2, "subtitle-font-desc", "Sans, 18", NULL);
+  g_object_set (data.playbin, "suburi", "http://docs.gstreamer.com/media/sintel_trailer_gr.srt", NULL);
+  g_object_set (data.playbin, "subtitle-font-desc", "Sans, 18", NULL);
   
   /* Set flags to show Audio, Video and Subtitles */
-  g_object_get (data.playbin2, "flags", &flags, NULL);
+  g_object_get (data.playbin, "flags", &flags, NULL);
   flags |= GST_PLAY_FLAG_VIDEO | GST_PLAY_FLAG_AUDIO | GST_PLAY_FLAG_TEXT;
-  g_object_set (data.playbin2, "flags", flags, NULL);
+  g_object_set (data.playbin, "flags", flags, NULL);
   
   /* Add a bus watch, so we get notified when a message arrives */
-  bus = gst_element_get_bus (data.playbin2);
+  bus = gst_element_get_bus (data.playbin);
   gst_bus_add_watch (bus, (GstBusFunc)handle_message, &data);
   
   /* Add a keyboard watch so we get notified of keystrokes */
-#ifdef _WIN32
+#ifdef G_OS_WIN32
   io_stdin = g_io_channel_win32_new_fd (fileno (stdin));
 #else
   io_stdin = g_io_channel_unix_new (fileno (stdin));
@@ -69,10 +70,10 @@ int main(int argc, char *argv[]) {
   g_io_add_watch (io_stdin, G_IO_IN, (GIOFunc)handle_keyboard, &data);
   
   /* Start playing */
-  ret = gst_element_set_state (data.playbin2, GST_STATE_PLAYING);
+  ret = gst_element_set_state (data.playbin, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
     g_printerr ("Unable to set the pipeline to the playing state.\n");
-    gst_object_unref (data.playbin2);
+    gst_object_unref (data.playbin);
     return -1;
   }
   
@@ -84,8 +85,8 @@ int main(int argc, char *argv[]) {
   g_main_loop_unref (data.main_loop);
   g_io_channel_unref (io_stdin);
   gst_object_unref (bus);
-  gst_element_set_state (data.playbin2, GST_STATE_NULL);
-  gst_object_unref (data.playbin2);
+  gst_element_set_state (data.playbin, GST_STATE_NULL);
+  gst_object_unref (data.playbin);
   return 0;
 }
   
@@ -97,9 +98,9 @@ static void analyze_streams (CustomData *data) {
   guint rate;
   
   /* Read some properties */
-  g_object_get (data->playbin2, "n-video", &data->n_video, NULL);
-  g_object_get (data->playbin2, "n-audio", &data->n_audio, NULL);
-  g_object_get (data->playbin2, "n-text", &data->n_text, NULL);
+  g_object_get (data->playbin, "n-video", &data->n_video, NULL);
+  g_object_get (data->playbin, "n-audio", &data->n_audio, NULL);
+  g_object_get (data->playbin, "n-text", &data->n_text, NULL);
   
   g_print ("%d video stream(s), %d audio stream(s), %d text stream(s)\n",
     data->n_video, data->n_audio, data->n_text);
@@ -108,7 +109,7 @@ static void analyze_streams (CustomData *data) {
   for (i = 0; i < data->n_video; i++) {
     tags = NULL;
     /* Retrieve the stream's video tags */
-    g_signal_emit_by_name (data->playbin2, "get-video-tags", i, &tags);
+    g_signal_emit_by_name (data->playbin, "get-video-tags", i, &tags);
     if (tags) {
       g_print ("video stream %d:\n", i);
       gst_tag_list_get_string (tags, GST_TAG_VIDEO_CODEC, &str);
@@ -122,7 +123,7 @@ static void analyze_streams (CustomData *data) {
   for (i = 0; i < data->n_audio; i++) {
     tags = NULL;
     /* Retrieve the stream's audio tags */
-    g_signal_emit_by_name (data->playbin2, "get-audio-tags", i, &tags);
+    g_signal_emit_by_name (data->playbin, "get-audio-tags", i, &tags);
     if (tags) {
       g_print ("audio stream %d:\n", i);
       if (gst_tag_list_get_string (tags, GST_TAG_AUDIO_CODEC, &str)) {
@@ -145,7 +146,7 @@ static void analyze_streams (CustomData *data) {
     tags = NULL;
     /* Retrieve the stream's subtitle tags */
     g_print ("subtitle stream %d:\n", i);
-    g_signal_emit_by_name (data->playbin2, "get-text-tags", i, &tags);
+    g_signal_emit_by_name (data->playbin, "get-text-tags", i, &tags);
     if (tags) {
       if (gst_tag_list_get_string (tags, GST_TAG_LANGUAGE_CODE, &str)) {
         g_print ("  language: %s\n", str);
@@ -157,9 +158,9 @@ static void analyze_streams (CustomData *data) {
     }
   }
   
-  g_object_get (data->playbin2, "current-video", &data->current_video, NULL);
-  g_object_get (data->playbin2, "current-audio", &data->current_audio, NULL);
-  g_object_get (data->playbin2, "current-text", &data->current_text, NULL);
+  g_object_get (data->playbin, "current-video", &data->current_video, NULL);
+  g_object_get (data->playbin, "current-audio", &data->current_audio, NULL);
+  g_object_get (data->playbin, "current-text", &data->current_text, NULL);
   
   g_print ("\n");
   g_print ("Currently playing video stream %d, audio stream %d and subtitle stream %d\n",
@@ -188,7 +189,7 @@ static gboolean handle_message (GstBus *bus, GstMessage *msg, CustomData *data) 
     case GST_MESSAGE_STATE_CHANGED: {
       GstState old_state, new_state, pending_state;
       gst_message_parse_state_changed (msg, &old_state, &new_state, &pending_state);
-      if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->playbin2)) {
+      if (GST_MESSAGE_SRC (msg) == GST_OBJECT (data->playbin)) {
         if (new_state == GST_STATE_PLAYING) {
           /* Once we are in the playing state, analyze the streams */
           analyze_streams (data);
@@ -208,13 +209,13 @@ static gboolean handle_keyboard (GIOChannel *source, GIOCondition cond, CustomDa
   gchar *str = NULL;
   
   if (g_io_channel_read_line (source, &str, NULL, NULL, NULL) == G_IO_STATUS_NORMAL) {
-    int index = atoi (str);
+    int index = g_ascii_strtoull (str, NULL, 0);
     if (index < 0 || index >= data->n_text) {
       g_printerr ("Index out of bounds\n");
     } else {
       /* If the input was a valid subtitle stream index, set the current subtitle stream */
       g_print ("Setting current subtitle stream to %d\n", index);
-      g_object_set (data->playbin2, "current-text", index, NULL);
+      g_object_set (data->playbin, "current-text", index, NULL);
     }
   }
   g_free (str);

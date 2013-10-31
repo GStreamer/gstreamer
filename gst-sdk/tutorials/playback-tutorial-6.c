@@ -30,7 +30,7 @@ int main(int argc, char *argv[]) {
   gst_init (&argc, &argv);
   
   /* Get a list of all visualization plugins */
-  list = gst_registry_feature_filter (gst_registry_get_default (), filter_vis_features, FALSE, NULL);
+  list = gst_registry_feature_filter (gst_registry_get (), filter_vis_features, FALSE, NULL);
   
   /* Print their names */
   g_print("Available visualization plugins:\n");
@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     return -1;
   
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin2 uri=http://radio.hbr1.com:19800/ambient.ogg", NULL);
+  pipeline = gst_parse_launch ("playbin uri=http://radio.hbr1.com:19800/ambient.ogg", NULL);
   
   /* Set the visualization flag */
   g_object_get (pipeline, "flags", &flags, NULL);

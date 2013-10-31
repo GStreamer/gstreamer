@@ -1,9 +1,9 @@
 #include <gst/gst.h>
 #include <string.h>
   
-#define GRAPH_LENGTH 80
+#define GRAPH_LENGTH 78
   
-/* playbin2 flags */
+/* playbin flags */
 typedef enum {
   GST_PLAY_FLAG_DOWNLOAD      = (1 << 7) /* Enable progressive download (on selected formats) */
 } GstPlayFlags;
@@ -19,6 +19,7 @@ static void got_location (GstObject *gstobject, GstObject *prop_object, GParamSp
   gchar *location;
   g_object_get (G_OBJECT (prop_object), "temp-location", &location, NULL);
   g_print ("Temporary file: %s\n", location);
+  g_free (location);
   /* Uncomment this line to keep the temporary file after the program exits */
   /* g_object_set (G_OBJECT (prop_object), "temp-remove", FALSE, NULL); */
 }
@@ -76,7 +77,6 @@ static gboolean refresh_ui (CustomData *data) {
   if (result) {
     gint n_ranges, range, i;
     gchar graph[GRAPH_LENGTH + 1];
-    GstFormat format = GST_FORMAT_TIME;
     gint64 position = 0, duration = 0;
     
     memset (graph, ' ', GRAPH_LENGTH);
@@ -86,14 +86,14 @@ static gboolean refresh_ui (CustomData *data) {
     for (range = 0; range < n_ranges; range++) {
       gint64 start, stop;
       gst_query_parse_nth_buffering_range (query, range, &start, &stop);
-      start = start * GRAPH_LENGTH / 100;
-      stop = stop * GRAPH_LENGTH / 100;
+      start = start * GRAPH_LENGTH / (stop - start);
+      stop = stop * GRAPH_LENGTH / (stop - start);
       for (i = (gint)start; i < stop; i++)
         graph [i] = '-';
     }
-    if (gst_element_query_position (data->pipeline, &format, &position) &&
+    if (gst_element_query_position (data->pipeline, GST_FORMAT_TIME, &position) &&
         GST_CLOCK_TIME_IS_VALID (position) &&
-        gst_element_query_duration (data->pipeline, &format, &duration) &&
+        gst_element_query_duration (data->pipeline, GST_FORMAT_TIME, &duration) &&
         GST_CLOCK_TIME_IS_VALID (duration)) {
       i = (gint)(GRAPH_LENGTH * (double)position / (double)(duration + 1));
       graph [i] = data->buffering_level < 100 ? 'X' : '>';
@@ -127,7 +127,7 @@ int main(int argc, char *argv[]) {
   data.buffering_level = 100;
   
   /* Build the pipeline */
-  pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
   bus = gst_element_get_bus (pipeline);
   
   /* Set the download flag */

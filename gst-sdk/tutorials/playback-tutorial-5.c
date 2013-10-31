@@ -1,6 +1,7 @@
 #include <string.h>
+#include <stdio.h>
 #include <gst/gst.h>
-#include <gst/interfaces/colorbalance.h>
+#include <gst/video/colorbalance.h>
   
 typedef struct _CustomData {
   GstElement *pipeline;
@@ -113,10 +114,10 @@ int main(int argc, char *argv[]) {
     " 'Q' to quit\n");
   
   /* Build the pipeline */
-  data.pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  data.pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
   
   /* Add a keyboard watch so we get notified of keystrokes */
-#ifdef _WIN32
+#ifdef G_OS_WIN32
   io_stdin = g_io_channel_win32_new_fd (fileno (stdin));
 #else
   io_stdin = g_io_channel_unix_new (fileno (stdin));

@@ -1,9 +1,9 @@
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <string.h>
   
 #define CHUNK_SIZE 1024   /* Amount of bytes we are sending in each buffer */
 #define SAMPLE_RATE 44100 /* Samples per second we are sending */
-#define AUDIO_CAPS "audio/x-raw-int,channels=1,rate=%d,signed=(boolean)true,width=16,depth=16,endianness=BYTE_ORDER"
   
 /* Structure to contain all our information, so we can pass it to callbacks */
 typedef struct _CustomData {
@@ -26,6 +26,7 @@ static gboolean push_data (CustomData *data) {
   GstBuffer *buffer;
   GstFlowReturn ret;
   int i;
+  GstMapInfo map;
   gint16 *raw;
   gint num_samples = CHUNK_SIZE / 2; /* Because each sample is 16 bits */
   gfloat freq;
@@ -38,7 +39,8 @@ static gboolean push_data (CustomData *data) {
   GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (CHUNK_SIZE, GST_SECOND, SAMPLE_RATE);
   
   /* Generate some psychodelic waveforms */
-  raw = (gint16 *)GST_BUFFER_DATA (buffer);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  raw = (gint16 *)map.data;
   data->c += data->d;
   data->d -= data->c / 1000;
   freq = 1100 + 1000 * data->d;
@@ -47,6 +49,7 @@ static gboolean push_data (CustomData *data) {
     data->b -= data->a / freq;
     raw[i] = (gint16)(500 * data->a);
   }
+  gst_buffer_unmap (buffer, &map);
   data->num_samples += num_samples;
   
   /* Push the buffer into the appsrc */
@@ -97,23 +100,22 @@ static void error_cb (GstBus *bus, GstMessage *msg, CustomData *data) {
   g_main_loop_quit (data->main_loop);
 }
   
-/* This function is called when playbin2 has created the appsrc element, so we have
+/* This function is called when playbin has created the appsrc element, so we have
  * a chance to configure it. */
 static void source_setup (GstElement *pipeline, GstElement *source, CustomData *data) {
-  gchar *audio_caps_text;
+  GstAudioInfo info;
   GstCaps *audio_caps;
   
   g_print ("Source has been created. Configuring.\n");
   data->app_source = source;
   
   /* Configure appsrc */
-  audio_caps_text = g_strdup_printf (AUDIO_CAPS, SAMPLE_RATE);
-  audio_caps = gst_caps_from_string (audio_caps_text);
-  g_object_set (source, "caps", audio_caps, NULL);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16, SAMPLE_RATE, 1, NULL);
+  audio_caps = gst_audio_info_to_caps (&info);
+  g_object_set (source, "caps", audio_caps, "format", GST_FORMAT_TIME, NULL);
   g_signal_connect (source, "need-data", G_CALLBACK (start_feed), data);
   g_signal_connect (source, "enough-data", G_CALLBACK (stop_feed), data);
   gst_caps_unref (audio_caps);
-  g_free (audio_caps_text);
 }
   
 int main(int argc, char *argv[]) {
@@ -128,8 +130,8 @@ int main(int argc, char *argv[]) {
   /* Initialize GStreamer */
   gst_init (&argc, &argv);
   
-  /* Create the playbin2 element */
-  data.pipeline = gst_parse_launch ("playbin2 uri=appsrc://", NULL);
+  /* Create the playbin element */
+  data.pipeline = gst_parse_launch ("playbin uri=appsrc://", NULL);
   g_signal_connect (data.pipeline, "source-setup", G_CALLBACK (source_setup), &data);
   
   /* Instruct the bus to emit signals for each received message, and connect to the interesting signals */
