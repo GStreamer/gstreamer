@@ -186,7 +186,7 @@ static void
 gst_audio_iir_filter_init (GstAudioIIRFilter * self)
 {
   GValue v = { 0, };
-  GValueArray *a, *b;
+  GValueArray *a;
 
   a = g_value_array_new (1);
 
@@ -195,8 +195,7 @@ gst_audio_iir_filter_init (GstAudioIIRFilter * self)
   g_value_array_append (a, &v);
   g_value_unset (&v);
 
-  b = NULL;
-  gst_audio_iir_filter_update_coefficients (self, a, b);
+  gst_audio_iir_filter_update_coefficients (self, a, a);
 
   g_mutex_init (&self->lock);
 }
