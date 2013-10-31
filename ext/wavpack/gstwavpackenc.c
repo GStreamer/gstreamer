@@ -590,7 +590,9 @@ gst_wavpack_enc_push_block (void *id, void *data, int32_t count)
         enc->pending_offset = wph.block_index;
       }
 
-      if (!(wph.flags & FINAL_BLOCK))
+      /* Is this the not-final block of multi-channel data? If so, just
+       * accumulate and return here. */
+      if (!(wph.flags & FINAL_BLOCK) && ((block[32] & ID_OPTIONAL_DATA) == 0))
         return TRUE;
 
       buffer = enc->pending_buffer;
