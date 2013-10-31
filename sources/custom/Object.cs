@@ -61,10 +61,10 @@ namespace Gst {
 					if (gtype == null) {
 						throw new Exception ("Could not find a GType for type " + type.FullName);
 					}
-					using (GLib.Value v = new GLib.Value ((GLib.GType)value.GetType ())) {
-						v.Val = value;
-						SetProperty (property, v);
-					}
+					GLib.Value v = new GLib.Value ((GLib.GType)value.GetType ());
+					v.Val = value;
+					SetProperty (property, v);
+					v.Dispose ();
 				} else
 					throw new PropertyNotFoundException ();
 		  }
