@@ -211,6 +211,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace[@name='Gst.Audio']" name="library">libgstaudio-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Video']" name="library">libgstvideo-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.PbUtils']" name="library">libgstpbutils-1.0-0.dll</attr>
+	<attr path="/api/namespace[@name='Gst.Tags']" name="library">libgsttag-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.App']" name="library">libgstapp-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Controller']" name="library">libgstcontroller-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.FFT']" name="library">libgstfft-1.0-0.dll</attr>
