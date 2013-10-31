@@ -360,6 +360,8 @@ GPtrArray *gst_mpegts_section_get_tsdt (GstMpegTsSection *section);
 #define gst_mpegts_section_unref(section) (gst_mini_object_unref (GST_MINI_OBJECT_CAST (section)))
 
 GstMessage *gst_message_new_mpegts_section (GstObject *parent, GstMpegTsSection *section);
+gboolean gst_mpegts_section_send_event (GstMpegTsSection * section, GstElement * element);
+GstMpegTsSection *gst_event_parse_mpegts_section (GstEvent * event);
 
 GstMpegTsSection *gst_message_parse_mpegts_section (GstMessage *message);
 

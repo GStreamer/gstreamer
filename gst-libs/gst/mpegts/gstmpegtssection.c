@@ -257,20 +257,9 @@ gst_message_parse_mpegts_section (GstMessage * message)
   return section;
 }
 
-/**
- * gst_message_new_mpegts_section:
- * @parent: (transfer none): The creator of the message
- * @section: (transfer none): The #GstMpegTsSection to put in a message
- *
- * Creates a new #GstMessage for a @GstMpegTsSection.
- *
- * Returns: (transfer full): The new #GstMessage to be posted, or %NULL if the
- * section is not valid.
- */
-GstMessage *
-gst_message_new_mpegts_section (GstObject * parent, GstMpegTsSection * section)
+static GstStructure *
+_mpegts_section_get_structure (GstMpegTsSection * section)
 {
-  GstMessage *msg;
   GstStructure *st;
   GQuark quark;
 
@@ -303,7 +292,7 @@ gst_message_new_mpegts_section (GstObject * parent, GstMpegTsSection * section)
       quark = QUARK_TOT;
       break;
     default:
-      GST_DEBUG ("Creating message for unknown GstMpegTsSection");
+      GST_DEBUG ("Creating structure for unknown GstMpegTsSection");
       quark = QUARK_SECTION;
       break;
   }
@@ -311,9 +300,94 @@ gst_message_new_mpegts_section (GstObject * parent, GstMpegTsSection * section)
   st = gst_structure_new_id (quark, QUARK_SECTION, MPEG_TYPE_TS_SECTION,
       section, NULL);
 
+  return st;
+}
+
+/**
+ * gst_message_new_mpegts_section:
+ * @parent: (transfer none): The creator of the message
+ * @section: (transfer none): The #GstMpegTsSection to put in a message
+ *
+ * Creates a new #GstMessage for a @GstMpegTsSection.
+ *
+ * Returns: (transfer full): The new #GstMessage to be posted, or %NULL if the
+ * section is not valid.
+ */
+GstMessage *
+gst_message_new_mpegts_section (GstObject * parent, GstMpegTsSection * section)
+{
+  GstMessage *msg;
+  GstStructure *st;
+
+  st = _mpegts_section_get_structure (section);
+
   msg = gst_message_new_element (parent, st);
 
   return msg;
+}
+
+static GstEvent *
+_mpegts_section_get_event (GstMpegTsSection * section)
+{
+  GstStructure *structure;
+  GstEvent *event;
+
+  structure = _mpegts_section_get_structure (section);
+
+  event = gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, structure);
+
+  return event;
+}
+
+/**
+ * gst_event_parse_mpegts_section:
+ * @event: (transfer none): #GstEvent containing a #GstMpegTsSection
+ *
+ * Extracts the #GstMpegTsSection contained in the @event #GstEvent
+ *
+ * Returns: (transfer full): The extracted #GstMpegTsSection
+ */
+GstMpegTsSection *
+gst_event_parse_mpegts_section (GstEvent * event)
+{
+  const GstStructure *structure;
+  GstMpegTsSection *section;
+
+  structure = gst_event_get_structure (event);
+
+  if (!gst_structure_id_get (structure, QUARK_SECTION, MPEG_TYPE_TS_SECTION,
+          &section, NULL))
+    return NULL;
+
+  return section;
+}
+
+/**
+ * gst_mpegts_section_send_event:
+ * @element: (transfer none): The #GstElement to send to section event to
+ * @section: (transfer none): The #GstMpegTsSection to put in the event
+ *
+ * Creates a custom #GstEvent with a @GstMpegTsSection.
+ * The #GstEvent is sent to the @element #GstElement.
+ *
+ * Returns: %TRUE if the event is sent
+ */
+gboolean
+gst_mpegts_section_send_event (GstMpegTsSection * section, GstElement * element)
+{
+  GstEvent *event;
+
+  g_return_val_if_fail (section != NULL, FALSE);
+  g_return_val_if_fail (element != NULL, FALSE);
+
+  event = _mpegts_section_get_event (section);
+
+  if (!gst_element_send_event (element, event)) {
+    gst_event_unref (event);
+    return FALSE;
+  }
+
+  return TRUE;
 }
 
 static GstMpegTsPatProgram *
@@ -761,9 +835,9 @@ _packetize_common_section (GstMpegTsSection * section, gsize length)
   /* reserved                         - 2  bit
      version_number                   - 5  bit uimsbf
      current_next_indicator           - 1  bit */
-  *data++ =
-      0xC0 | ((section->version_number & 0x1F) << 1) | (section->
-      current_next_indicator & 0x01);
+  *data++ = 0xC0 |
+      ((section->version_number & 0x1F) << 1) |
+      (section->current_next_indicator & 0x01);
 
   /* section_number                   - 8  bit uimsbf */
   *data++ = section->section_number;
