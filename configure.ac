@@ -344,7 +344,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  sdi stereo tta \
  videomeasure videosignal vmnc \
  linsys vcd \
- apexsink cdaudio dc1394 \
+ apexsink dc1394 \
  gsettings \
  musepack nas sdl sndfile timidity \
  directdraw acm wininet \

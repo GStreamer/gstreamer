@@ -100,7 +100,6 @@ static void gst_cdaudio_get_property (GObject * object, guint prop_id,
 static GstStateChangeReturn gst_cdaudio_change_state (GstElement * element,
     GstStateChange transition);
 
-static const GstQueryType *gst_cdaudio_get_query_types (GstElement * element);
 static gboolean gst_cdaudio_query (GstElement * element, GstQuery * query);
 
 static gboolean gst_cdaudio_send_event (GstElement * element, GstEvent * event);
@@ -113,36 +112,13 @@ static GstFormat sector_format;
 static GstElementClass *parent_class;
 static guint gst_cdaudio_signals[LAST_SIGNAL] = { 0 };
 
-static void
-_do_init (GType cdaudio_type)
-{
-  static const GInterfaceInfo urihandler_info = {
-    cdaudio_uri_handler_init,
-    NULL,
-    NULL,
-  };
-
-  g_type_add_interface_static (cdaudio_type, GST_TYPE_URI_HANDLER,
-      &urihandler_info);
-}
-
 GType gst_cdaudio_get_type (void);
-GST_BOILERPLATE_FULL (GstCDAudio, gst_cdaudio, GstElement, GST_TYPE_ELEMENT,
-    _do_init);
 
-static void
-gst_cdaudio_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
+#define _do_init \
+  G_IMPLEMENT_INTERFACE (GST_TYPE_URI_HANDLER, cdaudio_uri_handler_init); \
+  GST_DEBUG_CATEGORY_INIT (gst_cdaudio_debug, "cdaudio", 0, "CDAudio Element");
 
-  gst_element_class_set_static_metadata (element_class, "CD player",
-      "Generic/Bin",
-      "Play CD audio through the CD Drive", "Wim Taymans <wim@fluendo.com>");
-
-  /* Register the track and sector format */
-  track_format = gst_format_register ("track", "CD track");
-  sector_format = gst_format_register ("sector", "CD sector");
-}
+G_DEFINE_TYPE_WITH_CODE (GstCDAudio, gst_cdaudio, GST_TYPE_ELEMENT, _do_init);
 
 static void
 gst_cdaudio_class_init (GstCDAudioClass * klass)
@@ -154,6 +130,10 @@ gst_cdaudio_class_init (GstCDAudioClass * klass)
   gstelement_klass = (GstElementClass *) klass;
 
   parent_class = g_type_class_peek_parent (klass);
+
+  gst_element_class_set_static_metadata (gstelement_klass, "CD player",
+      "Generic/Bin",
+      "Play CD audio through the CD Drive", "Wim Taymans <wim@fluendo.com>");
 
   gobject_klass->set_property = gst_cdaudio_set_property;
   gobject_klass->get_property = gst_cdaudio_get_property;
@@ -177,21 +157,21 @@ gst_cdaudio_class_init (GstCDAudioClass * klass)
   gst_cdaudio_signals[TRACK_CHANGE] =
       g_signal_new ("track-change", G_TYPE_FROM_CLASS (klass),
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstCDAudioClass, track_change), NULL,
-      NULL, gst_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+      NULL, NULL, G_TYPE_NONE, 1, G_TYPE_INT);
 
   gobject_klass->finalize = GST_DEBUG_FUNCPTR (gst_cdaudio_finalize);
 
   gstelement_klass->change_state = GST_DEBUG_FUNCPTR (gst_cdaudio_change_state);
   gstelement_klass->send_event = GST_DEBUG_FUNCPTR (gst_cdaudio_send_event);
-  gstelement_klass->get_query_types =
-      GST_DEBUG_FUNCPTR (gst_cdaudio_get_query_types);
   gstelement_klass->query = GST_DEBUG_FUNCPTR (gst_cdaudio_query);
 
-  GST_DEBUG_CATEGORY_INIT (gst_cdaudio_debug, "cdaudio", 0, "CDAudio Element");
+  /* Register the track and sector format */
+  track_format = gst_format_register ("track", "CD track");
+  sector_format = gst_format_register ("sector", "CD sector");
 }
 
 static void
-gst_cdaudio_init (GstCDAudio * cdaudio, GstCDAudioClass * g_class)
+gst_cdaudio_init (GstCDAudio * cdaudio)
 {
   cdaudio->device = g_strdup (DEFAULT_DEVICE);
   cdaudio->volume.vol_front.right = DEFAULT_VOLUME_FR;
@@ -202,7 +182,7 @@ gst_cdaudio_init (GstCDAudio * cdaudio, GstCDAudioClass * g_class)
   cdaudio->was_playing = FALSE;
   cdaudio->timer = g_timer_new ();
 
-  GST_OBJECT_FLAG_SET (cdaudio, GST_ELEMENT_IS_SINK);
+  GST_OBJECT_FLAG_SET (cdaudio, GST_ELEMENT_FLAG_SINK);
 }
 
 static void
@@ -475,18 +455,6 @@ seek_failed:
   }
 }
 
-static const GstQueryType *
-gst_cdaudio_get_query_types (GstElement * element)
-{
-  static const GstQueryType query_types[] = {
-    GST_QUERY_DURATION,
-    GST_QUERY_POSITION,
-    0
-  };
-
-  return query_types;
-}
-
 static gboolean
 gst_cdaudio_query (GstElement * element, GstQuery * query)
 {
@@ -580,21 +548,21 @@ plugin_init (GstPlugin * plugin)
 
 /*** GSTURIHANDLER INTERFACE *************************************************/
 
-static guint
-cdaudio_uri_get_type (void)
+static GstURIType
+cdaudio_uri_get_type (GType type)
 {
   return GST_URI_SRC;
 }
 
-static gchar **
-cdaudio_uri_get_protocols (void)
+static const gchar *const *
+cdaudio_uri_get_protocols (GType type)
 {
-  static gchar *protocols[] = { (char *) "cd", NULL };
+  static const gchar *protocols[] = { "cd", NULL };
 
   return protocols;
 }
 
-static const gchar *
+static gchar *
 cdaudio_uri_get_uri (GstURIHandler * handler)
 {
   GstCDAudio *cdaudio = GST_CDAUDIO (handler);
@@ -603,7 +571,8 @@ cdaudio_uri_get_uri (GstURIHandler * handler)
 }
 
 static gboolean
-cdaudio_uri_set_uri (GstURIHandler * handler, const gchar * uri)
+cdaudio_uri_set_uri (GstURIHandler * handler, const gchar * uri,
+    GError ** error)
 {
   gchar *protocol, *location;
   gboolean ret;
@@ -632,6 +601,8 @@ cdaudio_uri_set_uri (GstURIHandler * handler, const gchar * uri)
   /* ERRORS */
 wrong_protocol:
   {
+    g_set_error (error, GST_URI_ERROR, GST_URI_ERROR_UNSUPPORTED_PROTOCOL,
+        "Unsupported cdaudio protocol");
     g_free (protocol);
     return FALSE;
   }
