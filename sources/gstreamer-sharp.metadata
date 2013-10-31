@@ -17,7 +17,6 @@ You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -->
 <metadata>
-	<attr path="/api/namespace" name="library">libgstreamer-1.0-0.dll</attr>
 	<!-- No Conversion for GLib.Value -->
 	<remove-node path="/api/namespace/object[@cname='GstPad']/property[@name='Caps']" />
 	<!-- Error with array -->
@@ -207,6 +206,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace[@name='Gst.Sdp']/object[@name='Constants']" name="name">ConstantsSdp</attr>
 
 	<!-- FIXME: Remove when https://bugzilla.gnome.org/show_bug.cgi?id=710001 is fixed -->
+	<attr path="/api/namespace" name="library">libgstreamer-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Base']" name="library">libgstbase-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Audio']" name="library">libgstaudio-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Video']" name="library">libgstvideo-1.0-0.dll</attr>
