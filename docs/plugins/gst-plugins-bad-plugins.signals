@@ -16,14 +16,6 @@ gint64  arg3
 </SIGNAL>
 
 <SIGNAL>
-<NAME>GstCDAudio::track-change</NAME>
-<RETURNS>void</RETURNS>
-<FLAGS>l</FLAGS>
-GstCDAudio *gstcdaudio
-gint  arg1
-</SIGNAL>
-
-<SIGNAL>
 <NAME>GstInputSelector::block</NAME>
 <RETURNS>gint64</RETURNS>
 <FLAGS>la</FLAGS>

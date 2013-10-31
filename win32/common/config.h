@@ -71,13 +71,13 @@
 #undef GST_MJPEGTOOLS_API
 
 /* package name in plugins */
-#define GST_PACKAGE_NAME "GStreamer Bad Plug-ins source release"
+#define GST_PACKAGE_NAME "GStreamer Bad Plug-ins git"
 
 /* package origin */
 #define GST_PACKAGE_ORIGIN "Unknown package origin"
 
 /* GStreamer package release date/time for plugins as YYYY-MM-DD */
-#define GST_PACKAGE_RELEASE_DATETIME "2013-09-24"
+#define GST_PACKAGE_RELEASE_DATETIME "2013-10-31T21:09Z"
 
 /* Define if static plugins should be built */
 #undef GST_PLUGIN_BUILD_STATIC
@@ -105,9 +105,6 @@
 
 /* Define to enable bz2 library (used by bz2). */
 #undef HAVE_BZ2
-
-/* Define to enable cdaudio (used by cdaudio). */
-#undef HAVE_CDAUDIO
 
 /* Define to 1 if you have the MacOS X function CFLocaleCopyCurrent in the
    CoreFoundation framework. */
@@ -370,6 +367,9 @@
 /* Define to enable openjpeg library (used by openjpeg). */
 #undef HAVE_OPENJPEG
 
+/* Define if OpenJPEG 1 is used */
+#undef HAVE_OPENJPEG_1
+
 /* Define to enable OpenSL ES (used by opensl). */
 #undef HAVE_OPENSLES
 
@@ -583,7 +583,7 @@
 #define PACKAGE_NAME "GStreamer Bad Plug-ins"
 
 /* Define to the full name and version of this package. */
-#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.2.0"
+#define PACKAGE_STRING "GStreamer Bad Plug-ins 1.3.0.1"
 
 /* Define to the one symbol short name of this package. */
 #define PACKAGE_TARNAME "gst-plugins-bad"
@@ -592,7 +592,7 @@
 #undef PACKAGE_URL
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "1.2.0"
+#define PACKAGE_VERSION "1.3.0.1"
 
 /* directory where plugins are located */
 #ifdef _DEBUG
@@ -635,7 +635,7 @@
 #undef USE_EGL_X11
 
 /* Version number of package */
-#define VERSION "1.2.0"
+#define VERSION "1.3.0.1"
 
 /* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
    significant byte first (like Motorola and SPARC, unlike Intel). */

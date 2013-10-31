@@ -1103,18 +1103,6 @@ AG_GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
 #  AC_SUBST(CAIRO_LIBS)
 #])
 
-dnl *** cdaudio ***
-translit(dnm, m, l) AM_CONDITIONAL(USE_CDAUDIO, true)
-AG_GST_CHECK_FEATURE(CDAUDIO, [cdaudio], cdaudio, [
-  PKG_CHECK_MODULES(CDAUDIO, libcdaudio, [
-          HAVE_CDAUDIO="yes"
-  ], [
-          HAVE_CDAUDIO="no"
-  ])
-  AC_SUBST(CDAUDIO_CFLAGS)
-  AC_SUBST(CDAUDIO_LIBS)
-])
-
 dnl *** chromaprint ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_CHROMAPRINT, true)
 AG_GST_CHECK_FEATURE(CHROMAPRINT, [chromaprint], chromaprint, [
@@ -2190,7 +2178,6 @@ AM_CONDITIONAL(USE_VOAMRWBENC, false)
 AM_CONDITIONAL(USE_VOAACENC, false)
 AM_CONDITIONAL(USE_APEXSINK, false)
 AM_CONDITIONAL(USE_BZ2, false)
-AM_CONDITIONAL(USE_CDAUDIO, false)
 AM_CONDITIONAL(USE_CHROMAPRINT, false)
 AM_CONDITIONAL(USE_CURL, false)
 AM_CONDITIONAL(USE_DASH, false)
@@ -2461,7 +2448,6 @@ ext/voaacenc/Makefile
 ext/assrender/Makefile
 ext/apexsink/Makefile
 ext/bz2/Makefile
-ext/cdaudio/Makefile
 ext/chromaprint/Makefile
 ext/curl/Makefile
 ext/dash/Makefile

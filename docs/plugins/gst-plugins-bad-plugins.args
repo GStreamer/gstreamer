@@ -16879,56 +16879,6 @@
 </ARG>
 
 <ARG>
-<NAME>GstCDAudio::device</NAME>
-<TYPE>gchar*</TYPE>
-<RANGE></RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Device</NICK>
-<BLURB>CDROM device.</BLURB>
-<DEFAULT>NULL</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstCDAudio::volume-bl</NAME>
-<TYPE>gint</TYPE>
-<RANGE>[0,255]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Volume bl</NICK>
-<BLURB>Back left volume.</BLURB>
-<DEFAULT>255</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstCDAudio::volume-br</NAME>
-<TYPE>gint</TYPE>
-<RANGE>[0,255]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Volume br</NICK>
-<BLURB>Back right volume.</BLURB>
-<DEFAULT>255</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstCDAudio::volume-fl</NAME>
-<TYPE>gint</TYPE>
-<RANGE>[0,255]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Volume fl</NICK>
-<BLURB>Front left volume.</BLURB>
-<DEFAULT>255</DEFAULT>
-</ARG>
-
-<ARG>
-<NAME>GstCDAudio::volume-fr</NAME>
-<TYPE>gint</TYPE>
-<RANGE>[0,255]</RANGE>
-<FLAGS>rw</FLAGS>
-<NICK>Volume fr</NICK>
-<BLURB>Front right volume.</BLURB>
-<DEFAULT>255</DEFAULT>
-</ARG>
-
-<ARG>
 <NAME>GstNasSink::host</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>

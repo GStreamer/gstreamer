@@ -28,12 +28,6 @@ else
 BZ2_DIR=
 endif
 
-if USE_CDAUDIO
-CDAUDIO_DIR=cdaudio
-else
-CDAUDIO_DIR=
-endif
-
 if USE_CHROMAPRINT
 CHROMAPRINT_DIR=chromaprint
 else
@@ -389,7 +383,6 @@ SUBDIRS=\
 	$(APEXSINK_DIR) \
 	$(AUDIOFILE_DIR) \
 	$(BZ2_DIR) \
-	$(CDAUDIO_DIR) \
 	$(CHROMAPRINT_DIR) \
 	$(CURL_DIR) \
 	$(DASH_DIR) \
@@ -451,7 +444,6 @@ DIST_SUBDIRS = \
 	assrender \
 	apexsink \
 	bz2 \
-	cdaudio \
 	chromaprint \
 	curl \
 	dash \
