@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
   audio_sink = gst_element_factory_make ("autoaudiosink", "audio_sink");
   video_queue = gst_element_factory_make ("queue", "video_queue");
   visual = gst_element_factory_make ("wavescope", "visual");
-  video_convert = gst_element_factory_make ("ffmpegcolorspace", "csp");
+  video_convert = gst_element_factory_make ("videoconvert", "video_convert");
   video_sink = gst_element_factory_make ("autovideosink", "video_sink");
   
   /* Create the empty pipeline */
@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
   }
   
   /* Manually link the Tee, which has "Request" pads */
-  tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (tee), "src%d");
+  tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (tee), "src_%u");
   tee_audio_pad = gst_element_request_pad (tee, tee_src_pad_template, NULL, NULL);
   g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (tee_audio_pad));
   queue_audio_pad = gst_element_get_static_pad (audio_queue, "sink");

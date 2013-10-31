@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdio.h>
 #include <gst/gst.h>
   
 typedef struct _CustomData {
@@ -13,11 +14,10 @@ typedef struct _CustomData {
 /* Send seek event to change rate */
 static void send_seek_event (CustomData *data) {
   gint64 position;
-  GstFormat format = GST_FORMAT_TIME;
   GstEvent *seek_event;
   
   /* Obtain the current position, needed for the seek event */
-  if (!gst_element_query_position (data->pipeline, &format, &position)) {
+  if (!gst_element_query_position (data->pipeline, GST_FORMAT_TIME, &position)) {
     g_printerr ("Unable to retrieve current position.\n");
     return;
   }
@@ -111,10 +111,10 @@ int main(int argc, char *argv[]) {
     " 'Q' to quit\n");
   
   /* Build the pipeline */
-  data.pipeline = gst_parse_launch ("playbin2 uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
+  data.pipeline = gst_parse_launch ("playbin uri=http://docs.gstreamer.com/media/sintel_trailer-480p.webm", NULL);
   
   /* Add a keyboard watch so we get notified of keystrokes */
-#ifdef _WIN32
+#ifdef G_OS_WIN32
   io_stdin = g_io_channel_win32_new_fd (fileno (stdin));
 #else
   io_stdin = g_io_channel_unix_new (fileno (stdin));

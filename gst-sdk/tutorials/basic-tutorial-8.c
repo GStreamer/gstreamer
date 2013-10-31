@@ -1,9 +1,9 @@
 #include <gst/gst.h>
+#include <gst/audio/audio.h>
 #include <string.h>
   
 #define CHUNK_SIZE 1024   /* Amount of bytes we are sending in each buffer */
 #define SAMPLE_RATE 44100 /* Samples per second we are sending */
-#define AUDIO_CAPS "audio/x-raw-int,channels=1,rate=%d,signed=(boolean)true,width=16,depth=16,endianness=BYTE_ORDER"
   
 /* Structure to contain all our information, so we can pass it to callbacks */
 typedef struct _CustomData {
@@ -27,6 +27,7 @@ static gboolean push_data (CustomData *data) {
   GstBuffer *buffer;
   GstFlowReturn ret;
   int i;
+  GstMapInfo map;
   gint16 *raw;
   gint num_samples = CHUNK_SIZE / 2; /* Because each sample is 16 bits */
   gfloat freq;
@@ -39,7 +40,8 @@ static gboolean push_data (CustomData *data) {
   GST_BUFFER_DURATION (buffer) = gst_util_uint64_scale (CHUNK_SIZE, GST_SECOND, SAMPLE_RATE);
   
   /* Generate some psychodelic waveforms */
-  raw = (gint16 *)GST_BUFFER_DATA (buffer);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  raw = (gint16 *)map.data;
   data->c += data->d;
   data->d -= data->c / 1000;
   freq = 1100 + 1000 * data->d;
@@ -48,6 +50,7 @@ static gboolean push_data (CustomData *data) {
     data->b -= data->a / freq;
     raw[i] = (gint16)(500 * data->a);
   }
+  gst_buffer_unmap (buffer, &map);
   data->num_samples += num_samples;
   
   /* Push the buffer into the appsrc */
@@ -84,15 +87,15 @@ static void stop_feed (GstElement *source, CustomData *data) {
 }
   
 /* The appsink has received a buffer */
-static void new_buffer (GstElement *sink, CustomData *data) {
-  GstBuffer *buffer;
+static void new_sample (GstElement *sink, CustomData *data) {
+  GstSample *sample;
   
   /* Retrieve the buffer */
-  g_signal_emit_by_name (sink, "pull-buffer", &buffer);
-  if (buffer) {
+  g_signal_emit_by_name (sink, "pull-sample", &sample);
+  if (sample) {
     /* The only thing we do in this example is print a * to indicate a received buffer */
     g_print ("*");
-    gst_buffer_unref (buffer);
+    gst_sample_unref (sample);
   }
 }
   
@@ -116,7 +119,7 @@ int main(int argc, char *argv[]) {
   GstPadTemplate *tee_src_pad_template;
   GstPad *tee_audio_pad, *tee_video_pad, *tee_app_pad;
   GstPad *queue_audio_pad, *queue_video_pad, *queue_app_pad;
-  gchar *audio_caps_text;
+  GstAudioInfo info;
   GstCaps *audio_caps;
   GstBus *bus;
   
@@ -138,7 +141,7 @@ int main(int argc, char *argv[]) {
   data.video_queue = gst_element_factory_make ("queue", "video_queue");
   data.audio_convert2 = gst_element_factory_make ("audioconvert", "audio_convert2");
   data.visual = gst_element_factory_make ("wavescope", "visual");
-  data.video_convert = gst_element_factory_make ("ffmpegcolorspace", "csp");
+  data.video_convert = gst_element_factory_make ("videoconvert", "video_convert");
   data.video_sink = gst_element_factory_make ("autovideosink", "video_sink");
   data.app_queue = gst_element_factory_make ("queue", "app_queue");
   data.app_sink = gst_element_factory_make ("appsink", "app_sink");
@@ -157,17 +160,16 @@ int main(int argc, char *argv[]) {
   g_object_set (data.visual, "shader", 0, "style", 0, NULL);
   
   /* Configure appsrc */
-  audio_caps_text = g_strdup_printf (AUDIO_CAPS, SAMPLE_RATE);
-  audio_caps = gst_caps_from_string (audio_caps_text);
-  g_object_set (data.app_source, "caps", audio_caps, NULL);
+  gst_audio_info_set_format (&info, GST_AUDIO_FORMAT_S16, SAMPLE_RATE, 1, NULL);
+  audio_caps = gst_audio_info_to_caps (&info);
+  g_object_set (data.app_source, "caps", audio_caps, "format", GST_FORMAT_TIME, NULL);
   g_signal_connect (data.app_source, "need-data", G_CALLBACK (start_feed), &data);
   g_signal_connect (data.app_source, "enough-data", G_CALLBACK (stop_feed), &data);
   
   /* Configure appsink */
   g_object_set (data.app_sink, "emit-signals", TRUE, "caps", audio_caps, NULL);
-  g_signal_connect (data.app_sink, "new-buffer", G_CALLBACK (new_buffer), &data);
+  g_signal_connect (data.app_sink, "new-sample", G_CALLBACK (new_sample), &data);
   gst_caps_unref (audio_caps);
-  g_free (audio_caps_text);
   
   /* Link all elements that can be automatically linked because they have "Always" pads */
   gst_bin_add_many (GST_BIN (data.pipeline), data.app_source, data.tee, data.audio_queue, data.audio_convert1, data.audio_resample, 
@@ -183,7 +185,7 @@ int main(int argc, char *argv[]) {
   }
   
   /* Manually link the Tee, which has "Request" pads */
-  tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (data.tee), "src%d");
+  tee_src_pad_template = gst_element_class_get_pad_template (GST_ELEMENT_GET_CLASS (data.tee), "src_%u");
   tee_audio_pad = gst_element_request_pad (data.tee, tee_src_pad_template, NULL, NULL);
   g_print ("Obtained request pad %s for audio branch.\n", gst_pad_get_name (tee_audio_pad));
   queue_audio_pad = gst_element_get_static_pad (data.audio_queue, "sink");

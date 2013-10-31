@@ -37,14 +37,14 @@ static void print_pad_templates_information (GstElementFactory * factory) {
   GstStaticPadTemplate *padtemplate;
   
   g_print ("Pad Templates for %s:\n", gst_element_factory_get_longname (factory));
-  if (!factory->numpadtemplates) {
+  if (!gst_element_factory_get_num_pad_templates (factory)) {
     g_print ("  none\n");
     return;
   }
   
-  pads = factory->staticpadtemplates;
+  pads = gst_element_factory_get_static_pad_templates (factory);
   while (pads) {
-    padtemplate = (GstStaticPadTemplate *) (pads->data);
+    padtemplate = pads->data;
     pads = g_list_next (pads);
     
     if (padtemplate->direction == GST_PAD_SRC)
@@ -64,8 +64,12 @@ static void print_pad_templates_information (GstElementFactory * factory) {
       g_print ("    Availability: UNKNOWN!!!\n");
     
     if (padtemplate->static_caps.string) {
+      GstCaps *caps;
+
       g_print ("    Capabilities:\n");
-      print_caps (gst_static_caps_get (&padtemplate->static_caps), "      ");
+      caps = gst_static_caps_get (&padtemplate->static_caps);
+      print_caps (caps, "      ");
+      gst_caps_unref (caps);
     }
     
     g_print ("\n");
@@ -85,9 +89,9 @@ static void print_pad_capabilities (GstElement *element, gchar *pad_name) {
   }
   
   /* Retrieve negotiated caps (or acceptable caps if negotiation is not finished yet) */
-  caps = gst_pad_get_negotiated_caps (pad);
+  caps = gst_pad_get_current_caps (pad);
   if (!caps)
-    caps = gst_pad_get_caps_reffed (pad);
+    caps = gst_pad_query_caps (pad, NULL);
   
   /* Print and free */
   g_print ("Caps for the %s pad:\n", pad_name);

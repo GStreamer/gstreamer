@@ -123,7 +123,7 @@ static void pad_added_handler (GstElement *src, GstPad *new_pad, CustomData *dat
   }
   
   /* Check the new pad's type */
-  new_pad_caps = gst_pad_get_caps (new_pad);
+  new_pad_caps = gst_pad_query_caps (new_pad, NULL);
   new_pad_struct = gst_caps_get_structure (new_pad_caps, 0);
   new_pad_type = gst_structure_get_name (new_pad_struct);
   if (!g_str_has_prefix (new_pad_type, "audio/x-raw")) {
