@@ -393,6 +393,7 @@ struct _GstVaapiDecoderH264Private {
     GstVaapiParserInfoH264     *active_sps;
     GstVaapiParserInfoH264     *pps[GST_H264_MAX_PPS_COUNT];
     GstVaapiParserInfoH264     *active_pps;
+    GstVaapiParserInfoH264     *prev_pi;
     GstVaapiParserInfoH264     *prev_slice_pi;
     GstVaapiFrameStore         *prev_frame;
     GstVaapiFrameStore         *dpb[16];
@@ -750,6 +751,7 @@ gst_vaapi_decoder_h264_close(GstVaapiDecoderH264 *decoder)
 
     gst_vaapi_picture_replace(&priv->current_picture, NULL);
     gst_vaapi_parser_info_h264_replace(&priv->prev_slice_pi, NULL);
+    gst_vaapi_parser_info_h264_replace(&priv->prev_pi, NULL);
 
     dpb_clear(decoder, NULL);
 
@@ -1180,12 +1182,41 @@ parse_slice(GstVaapiDecoderH264 *decoder, GstVaapiDecoderUnit *unit)
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
     GstVaapiParserInfoH264 * const pi = unit->parsed_info;
     GstH264SliceHdr * const slice_hdr = &pi->data.slice_hdr;
+    GstH264NalUnit * const nalu = &pi->nalu;
     GstH264ParserResult result;
 
     GST_DEBUG("parse slice");
 
     priv->parser_state &= (GST_H264_VIDEO_STATE_GOT_SPS|
                            GST_H264_VIDEO_STATE_GOT_PPS);
+
+    /* Propagate Prefix NAL unit info, if necessary */
+    switch (nalu->type) {
+    case GST_H264_NAL_SLICE:
+    case GST_H264_NAL_SLICE_IDR: {
+        GstVaapiParserInfoH264 * const prev_pi = priv->prev_pi;
+        if (prev_pi && prev_pi->nalu.type == GST_H264_NAL_PREFIX_UNIT) {
+            /* MVC sequences shall have a Prefix NAL unit immediately
+               preceding this NAL unit */
+            pi->nalu.extension_type = prev_pi->nalu.extension_type;
+            pi->nalu.extension = prev_pi->nalu.extension;
+        }
+        else {
+            /* In the very unlikely case there is no Prefix NAL unit
+               immediately preceding this NAL unit, try to infer some
+               defaults (H.7.4.1.1) */
+            GstH264NalUnitExtensionMVC * const mvc = &pi->nalu.extension.mvc;
+            mvc->non_idr_flag = !(nalu->type == GST_H264_NAL_SLICE_IDR);
+            nalu->idr_pic_flag = !mvc->non_idr_flag;
+            mvc->priority_id = 0;
+            mvc->view_id = 0;
+            mvc->temporal_id = 0;
+            mvc->anchor_pic_flag = 0;
+            mvc->inter_view_flag = 1;
+        }
+        break;
+    }
+    }
 
     /* Variables that don't have inferred values per the H.264
        standard but that should get a default value anyway */
@@ -3273,6 +3304,7 @@ gst_vaapi_decoder_h264_parse(GstVaapiDecoder *base_decoder,
 
     pi->nalu.data = NULL;
     pi->state = priv->parser_state;
+    gst_vaapi_parser_info_h264_replace(&priv->prev_pi, pi);
     return GST_VAAPI_DECODER_STATUS_SUCCESS;
 }
 
