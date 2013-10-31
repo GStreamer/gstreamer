@@ -188,6 +188,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
 #define DEFAULT_MULTICAST_IFACE  NULL
 #define DEFAULT_NTP_SYNC         FALSE
 #define DEFAULT_USE_PIPELINE_CLOCK      FALSE
+#define DEFAULT_TLS_VALIDATION_FLAGS G_TLS_CERTIFICATE_VALIDATE_ALL
 
 enum
 {
@@ -220,6 +221,7 @@ enum
   PROP_NTP_SYNC,
   PROP_USE_PIPELINE_CLOCK,
   PROP_SDES,
+  PROP_TLS_VALIDATION_FLAGS,
   PROP_LAST
 };
 
@@ -585,6 +587,20 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
+   * GstRTSPSrc::tls-validation-flags:
+   *
+   * TLS certificate validation flags used to validate server
+   * certificate.
+   *
+   * Since: 1.2.1
+   */
+  g_object_class_install_property (gobject_class, PROP_TLS_VALIDATION_FLAGS,
+      g_param_spec_flags ("tls-validation-flags", "TLS validation flags",
+          "TLS certificate validation flags used to validate the server certificate",
+          G_TYPE_TLS_CERTIFICATE_FLAGS, DEFAULT_TLS_VALIDATION_FLAGS,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
    * GstRTSPSrc::handle-request:
    * @rtspsrc: a #GstRTSPSrc
    * @request: a #GstRTSPMessage
@@ -696,6 +712,7 @@ gst_rtspsrc_init (GstRTSPSrc * src)
   src->ntp_sync = DEFAULT_NTP_SYNC;
   src->use_pipeline_clock = DEFAULT_USE_PIPELINE_CLOCK;
   src->sdes = NULL;
+  src->tls_validation_flags = DEFAULT_TLS_VALIDATION_FLAGS;
 
   /* get a list of all extensions */
   src->extensions = gst_rtsp_ext_list_get ();
@@ -950,6 +967,9 @@ gst_rtspsrc_set_property (GObject * object, guint prop_id, const GValue * value,
     case PROP_SDES:
       rtspsrc->sdes = g_value_dup_boxed (value);
       break;
+    case PROP_TLS_VALIDATION_FLAGS:
+      rtspsrc->tls_validation_flags = g_value_get_flags (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -1074,6 +1094,9 @@ gst_rtspsrc_get_property (GObject * object, guint prop_id, GValue * value,
       break;
     case PROP_SDES:
       g_value_set_boxed (value, rtspsrc->sdes);
+      break;
+    case PROP_TLS_VALIDATION_FLAGS:
+      g_value_set_flags (value, rtspsrc->tls_validation_flags);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -3633,6 +3656,12 @@ gst_rtsp_conninfo_connect (GstRTSPSrc * src, GstRTSPConnInfo * info,
     info->url_str = gst_rtsp_url_get_request_uri (info->url);
 
     GST_DEBUG_OBJECT (src, "sanitized uri %s", info->url_str);
+
+    if (info->url->transports & GST_RTSP_LOWER_TRANS_TLS) {
+      if (!gst_rtsp_connection_set_tls_validation_flags (info->connection,
+              src->tls_validation_flags))
+        GST_WARNING_OBJECT (src, "Unable to set TLS validation flags");
+    }
 
     if (info->url->transports & GST_RTSP_LOWER_TRANS_HTTP)
       gst_rtsp_connection_set_tunneled (info->connection, TRUE);
