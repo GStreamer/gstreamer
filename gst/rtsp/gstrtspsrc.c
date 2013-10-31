@@ -138,7 +138,8 @@ enum _GstRtspSrcBufferMode
   BUFFER_MODE_NONE,
   BUFFER_MODE_SLAVE,
   BUFFER_MODE_BUFFER,
-  BUFFER_MODE_AUTO
+  BUFFER_MODE_AUTO,
+  BUFFER_MODE_SYNCED
 };
 
 #define GST_TYPE_RTSP_SRC_BUFFER_MODE (gst_rtsp_src_buffer_mode_get_type())
@@ -151,6 +152,7 @@ gst_rtsp_src_buffer_mode_get_type (void)
     {BUFFER_MODE_SLAVE, "Slave receiver to sender clock", "slave"},
     {BUFFER_MODE_BUFFER, "Do low/high watermark buffering", "buffer"},
     {BUFFER_MODE_AUTO, "Choose mode depending on stream live", "auto"},
+    {BUFFER_MODE_SYNCED, "Synchronized sender and receiver clocks", "synced"},
     {0, NULL, NULL},
   };
 

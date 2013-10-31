@@ -57,7 +57,8 @@ typedef enum {
   RTP_JITTER_BUFFER_MODE_NONE    = 0,
   RTP_JITTER_BUFFER_MODE_SLAVE   = 1,
   RTP_JITTER_BUFFER_MODE_BUFFER  = 2,
-  RTP_JITTER_BUFFER_MODE_SYNCED  = 3,
+  /* FIXME 3 is missing because it was used for 'auto' in jitterbuffer */
+  RTP_JITTER_BUFFER_MODE_SYNCED  = 4,
   RTP_JITTER_BUFFER_MODE_LAST
 } RTPJitterBufferMode;
 
