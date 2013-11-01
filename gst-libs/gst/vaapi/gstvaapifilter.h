@@ -206,4 +206,9 @@ gboolean
 gst_vaapi_filter_set_deinterlacing(GstVaapiFilter *filter,
     GstVaapiDeinterlaceMethod method, guint flags);
 
+gboolean
+gst_vaapi_filter_set_deinterlacing_references(GstVaapiFilter *filter,
+    GstVaapiSurface **forward_references, guint num_forward_references,
+    GstVaapiSurface **backward_references, guint num_backward_references);
+
 #endif /* GST_VAAPI_FILTER_H */

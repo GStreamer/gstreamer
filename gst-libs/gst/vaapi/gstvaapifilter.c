@@ -63,6 +63,8 @@ struct _GstVaapiFilter {
     GPtrArray          *operations;
     GstVideoFormat      format;
     GArray             *formats;
+    GArray             *forward_references;
+    GArray             *backward_references;
     GstVaapiRectangle   crop_rect;
     GstVaapiRectangle   target_rect;
     guint               use_crop_rect   : 1;
@@ -851,6 +853,33 @@ op_set_deinterlace(GstVaapiFilter *filter, GstVaapiFilterOpData *op_data,
     return success;
 }
 
+static gboolean
+deint_refs_set(GArray *refs, GstVaapiSurface **surfaces, guint num_surfaces)
+{
+    guint i;
+
+    if (num_surfaces > 0 && !surfaces)
+        return FALSE;
+
+    for (i = 0; i < num_surfaces; i++)
+        g_array_append_val(refs, GST_VAAPI_OBJECT_ID(surfaces[i]));
+    return TRUE;
+}
+
+static void
+deint_refs_clear(GArray *refs)
+{
+    if (refs->len > 0)
+        g_array_remove_range(refs, 0, refs->len);
+}
+
+static inline void
+deint_refs_clear_all(GstVaapiFilter *filter)
+{
+    deint_refs_clear(filter->forward_references);
+    deint_refs_clear(filter->backward_references);
+}
+
 /* ------------------------------------------------------------------------- */
 /* --- Surface Formats                                                   --- */
 /* ------------------------------------------------------------------------- */
@@ -952,6 +981,16 @@ gst_vaapi_filter_init(GstVaapiFilter *filter, GstVaapiDisplay *display)
     filter->va_context  = VA_INVALID_ID;
     filter->format      = DEFAULT_FORMAT;
 
+    filter->forward_references =
+        g_array_sized_new(FALSE, FALSE, sizeof(VASurfaceID), 4);
+    if (!filter->forward_references)
+        return FALSE;
+
+    filter->backward_references =
+        g_array_sized_new(FALSE, FALSE, sizeof(VASurfaceID), 4);
+    if (!filter->backward_references)
+        return FALSE;
+
     if (!GST_VAAPI_DISPLAY_HAS_VPP(display))
         return FALSE;
 
@@ -994,6 +1033,16 @@ gst_vaapi_filter_finalize(GstVaapiFilter *filter)
     }
     GST_VAAPI_DISPLAY_UNLOCK(filter->display);
     gst_vaapi_display_replace(&filter->display, NULL);
+
+    if (filter->forward_references) {
+        g_array_unref(filter->forward_references);
+        filter->backward_references = NULL;
+    }
+
+    if (filter->backward_references) {
+        g_array_unref(filter->backward_references);
+        filter->backward_references = NULL;
+    }
 
     if (filter->formats) {
         g_array_unref(filter->formats);
@@ -1252,6 +1301,7 @@ gst_vaapi_filter_process_unlocked(GstVaapiFilter *filter,
     VAProcPipelineParameterBuffer *pipeline_param = NULL;
     VABufferID pipeline_param_buf_id;
     VABufferID filters[N_PROPERTIES];
+    VAProcPipelineCaps pipeline_caps;
     guint i, num_filters = 0;
     VAStatus va_status;
     VARectangle src_rect, dst_rect;
@@ -1316,6 +1366,12 @@ gst_vaapi_filter_process_unlocked(GstVaapiFilter *filter,
         filters[num_filters++] = op_data->va_buffer;
     }
 
+    /* Validate pipeline caps */
+    va_status = vaQueryVideoProcPipelineCaps(filter->va_display,
+        filter->va_context, filters, num_filters, &pipeline_caps);
+    if (!vaapi_check_status(va_status, "vaQueryVideoProcPipelineCaps()"))
+        goto error;
+
     if (!vaapi_create_buffer(filter->va_display, filter->va_context,
             VAProcPipelineParameterBufferType, sizeof(*pipeline_param),
             NULL, &pipeline_param_buf_id, (gpointer *)&pipeline_param))
@@ -1332,6 +1388,31 @@ gst_vaapi_filter_process_unlocked(GstVaapiFilter *filter,
     pipeline_param->filters = filters;
     pipeline_param->num_filters = num_filters;
 
+    // Reference frames for advanced deinterlacing
+    if (filter->forward_references->len > 0) {
+        pipeline_param->forward_references = (VASurfaceID *)
+            filter->forward_references->data;
+        pipeline_param->num_forward_references =
+            MIN(filter->forward_references->len,
+                pipeline_caps.num_forward_references);
+    }
+    else {
+        pipeline_param->forward_references = NULL;
+        pipeline_param->num_forward_references = 0;
+    }
+
+    if (filter->backward_references->len > 0) {
+        pipeline_param->backward_references = (VASurfaceID *)
+            filter->backward_references->data;
+        pipeline_param->num_backward_references =
+            MIN(filter->backward_references->len,
+                pipeline_caps.num_backward_references);
+    }
+    else {
+        pipeline_param->backward_references = NULL;
+        pipeline_param->num_backward_references = 0;
+    }
+
     vaapi_unmap_buffer(filter->va_display, pipeline_param_buf_id, NULL);
 
     va_status = vaBeginPicture(filter->va_display, filter->va_context,
@@ -1347,10 +1428,13 @@ gst_vaapi_filter_process_unlocked(GstVaapiFilter *filter,
     va_status = vaEndPicture(filter->va_display, filter->va_context);
     if (!vaapi_check_status(va_status, "vaEndPicture()"))
         goto error;
+
+    deint_refs_clear_all(filter);
     return GST_VAAPI_FILTER_STATUS_SUCCESS;
 
 error:
     vaDestroyBuffer(filter->va_display, pipeline_param_buf_id);
+    deint_refs_clear_all(filter);
     return GST_VAAPI_FILTER_STATUS_ERROR_OPERATION_FAILED;
 #endif
     return GST_VAAPI_FILTER_STATUS_ERROR_UNSUPPORTED_OPERATION;
@@ -1604,4 +1688,56 @@ gst_vaapi_filter_set_deinterlacing(GstVaapiFilter *filter,
     return op_set_deinterlace(filter,
         find_operation(filter, GST_VAAPI_FILTER_OP_DEINTERLACING), method,
         flags);
+}
+
+/**
+ * gst_vaapi_filter_set_deinterlacing_references:
+ * @filter: a #GstVaapiFilter
+ * @forward_references: the set of #GstVaapiSurface objects used as
+ *   forward references
+ * @num_forward_references: the number of elements in the
+ *   @forward_references array
+ * @backward_references: the set of #GstVaapiSurface objects used as
+ *   backward references
+ * @num_backward_references: the number of elements in the
+ *   @backward_references array
+ *
+ * Specifies the list of surfaces used for forward or backward reference in
+ * advanced deinterlacing mode. The caller is responsible for maintaining
+ * the associated surfaces live until gst_vaapi_filter_process() completes.
+ * e.g. by holding an extra reference to the associated #GstVaapiSurfaceProxy.
+ *
+ * Temporal ordering is maintained as follows: the shorter index in
+ * either array is, the closest the matching surface is relatively to
+ * the current source surface to process. e.g. surface in
+ * @forward_references array index 0 represents the immediately
+ * preceding surface in display order, surface at index 1 is the one
+ * preceding surface at index 0, etc.
+ *
+ * The video processing filter will only use the recommended number of
+ * surfaces for backward and forward references.
+ *
+ * Note: the supplied lists of reference surfaces are not sticky. This
+ * means that they are only valid for the next gst_vaapi_filter_process()
+ * call, and thus needs to be submitted again for subsequent calls.
+ *
+ * Return value: %TRUE if the operation is supported, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_filter_set_deinterlacing_references(GstVaapiFilter *filter,
+    GstVaapiSurface **forward_references, guint num_forward_references,
+    GstVaapiSurface **backward_references, guint num_backward_references)
+{
+    g_return_val_if_fail(filter != NULL, FALSE);
+
+    deint_refs_clear_all(filter);
+
+    if (!deint_refs_set(filter->forward_references, forward_references,
+            num_forward_references))
+        return FALSE;
+
+    if (!deint_refs_set(filter->backward_references, backward_references,
+            num_backward_references))
+        return FALSE;
+    return TRUE;
 }
