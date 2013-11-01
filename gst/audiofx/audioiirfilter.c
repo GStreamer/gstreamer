@@ -195,7 +195,7 @@ gst_audio_iir_filter_init (GstAudioIIRFilter * self)
   g_value_array_append (a, &v);
   g_value_unset (&v);
 
-  gst_audio_iir_filter_update_coefficients (self, a, a);
+  gst_audio_iir_filter_update_coefficients (self, a, g_value_array_copy (a));
 
   g_mutex_init (&self->lock);
 }
