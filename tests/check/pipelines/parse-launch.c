@@ -651,6 +651,11 @@ GST_START_TEST (test_flags)
   fail_unless (element == NULL, "expected NULL return with FATAL_ERRORS");
   g_error_free (err);
   err = NULL;
+
+  /* test GST_PARSE_FLAG_FATAL_ERRORS without GError */
+  element = gst_parse_launch_full ("fakesrc ! coffeesink", NULL,
+      GST_PARSE_FLAG_FATAL_ERRORS, NULL);
+  fail_unless (element == NULL, "expected NULL return with FATAL_ERRORS");
 }
 
 GST_END_TEST;
