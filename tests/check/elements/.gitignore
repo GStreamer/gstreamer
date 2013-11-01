@@ -53,6 +53,7 @@ rtpcollision
 rtpjitterbuffer
 rtpsession
 rtpmux
+rtprtx
 shapewipe
 souphttpsrc
 spectrum
