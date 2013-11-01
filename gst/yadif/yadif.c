@@ -32,13 +32,18 @@ typedef gint64 x86_reg;
 #define DECLARE_ALIGNED(n,t,v)      t __attribute__ ((aligned (n))) v
 #define DECLARE_ASM_CONST(n,t,v)    static const t __attribute__((used)) __attribute__ ((aligned (n))) v
 
+#if defined(__APPLE__)
+#    define EXTERN_PREFIX "_"
+#else
+#    define EXTERN_PREFIX ""
+#endif
+
 #if defined(__PIC__)
 #    define LOCAL_MANGLE(a) #a "(%%rip)"
 #else
 #    define LOCAL_MANGLE(a) #a
 #endif
 
-#define EXTERN_PREFIX ""
 #define MANGLE(a) EXTERN_PREFIX LOCAL_MANGLE(a)
 
 DECLARE_ASM_CONST (16, const xmm_reg, pb_1) = {
