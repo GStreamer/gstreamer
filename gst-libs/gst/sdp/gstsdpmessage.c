@@ -1383,7 +1383,7 @@ DEFINE_ARRAY_LEN (zones);
  *
  * Returns: a #GstSDPZone.
  */
-DEFINE_ARRAY_GETTER (zone, zones, const GstSDPZone);
+DEFINE_ARRAY_GETTER (zone, zones, GstSDPZone);
 
 #define DUP_ZONE(v, val) memcpy (v, val, sizeof (GstSDPZone))
 #define FREE_ZONE(v) gst_sdp_zone_clear(v)
@@ -1546,7 +1546,7 @@ DEFINE_ARRAY_LEN (attributes);
  *
  * Returns: the #GstSDPAttribute at position @idx.
  */
-DEFINE_ARRAY_GETTER (attribute, attributes, const GstSDPAttribute);
+DEFINE_ARRAY_GETTER (attribute, attributes, GstSDPAttribute);
 
 /**
  * gst_sdp_message_get_attribute_val_n:
@@ -1681,7 +1681,7 @@ DEFINE_ARRAY_LEN (medias);
  *
  * Returns: a #GstSDPMedia.
  */
-DEFINE_ARRAY_GETTER (media, medias, const GstSDPMedia);
+DEFINE_ARRAY_GETTER (media, medias, GstSDPMedia);
 
 /**
  * gst_sdp_message_add_media:
