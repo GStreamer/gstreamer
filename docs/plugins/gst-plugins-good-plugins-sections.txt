@@ -977,6 +977,34 @@ GST_IS_RTP_SSRC_DEMUX_CLASS
 </SECTION>
 
 <SECTION>
+<FILE>element-rtprtxsend</FILE>
+<TITLE>rtprtxsend</TITLE>
+GstRtpRtxSend
+<SUBSECTION Standard>
+GstRtpRtxSendClass
+GST_RTP_RTX_SEND
+GST_IS_RTP_RTX_SEND
+GST_TYPE_RTP_RTX_SEND
+gst_rtp_rtx_send_get_type
+GST_RTP_RTX_SEND_CLASS
+GST_IS_RTP_RTX_SEND_CLASS
+</SECTION>
+
+<SECTION>
+<FILE>element-rtprtxreceive</FILE>
+<TITLE>rtprtxreceive</TITLE>
+GstRtpRtxReceive
+<SUBSECTION Standard>
+GstRtpRtxReceiveClass
+GST_RTP_RTX_RECEIVE
+GST_IS_RTP_RTX_RECEIVE
+GST_TYPE_RTP_RTX_RECEIVE
+gst_rtp_rtx_receive_get_type
+GST_RTP_RTX_RECEIVE_CLASS
+GST_IS_RTP_RTX_RECEIVE_CLASS
+</SECTION>
+
+<SECTION>
 <FILE>element-icydemux</FILE>
 <TITLE>icydemux</TITLE>
 GstICYDemux

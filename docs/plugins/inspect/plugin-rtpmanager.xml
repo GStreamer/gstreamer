@@ -255,5 +255,47 @@
         </caps>
       </pads>
     </element>
+    <element>
+      <name>rtprtxsend</name>
+      <longname>RTP Retransmission Sender</longname>
+      <class>Codec</class>
+      <description>Retransmit RTP packets when needed, according to RFC4588</description>
+      <author>Julien Isorce &lt;julien.isorce@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
+    <element>
+      <name>rtprtxreceive</name>
+      <longname>RTP Retransmission Receiver</longname>
+      <class>Codec</class>
+      <description>Receive retransmitted RTP packets according to RFC4588</description>
+      <author>Julien Isorce &lt;julien.isorce@gmail.com&gt;</author>
+      <pads>
+        <caps>
+          <name>sink</name>
+          <direction>sink</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+        <caps>
+          <name>src</name>
+          <direction>source</direction>
+          <presence>always</presence>
+          <details>application/x-rtp</details>
+        </caps>
+      </pads>
+    </element>
   </elements>
 </plugin>

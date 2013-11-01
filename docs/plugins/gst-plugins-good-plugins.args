@@ -21489,6 +21489,96 @@
 </ARG>
 
 <ARG>
+<NAME>GstRtpRtxSend::rtx-payload-type</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>RTX Payload Type</NICK>
+<BLURB>Payload type of the retransmission stream (fmtp in SDP).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpRtxSend::max-size-time</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Size Times</NICK>
+<BLURB>Amount of ms to queue (0 = unlimited).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpRtxSend::max-size-packets</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Max Size Packets</NICK>
+<BLURB>Amount of packets to queue (0 = unlimited).</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpRtxSend::num-rtx-requests</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Num RTX Requests</NICK>
+<BLURB>Number of retransmission events received.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpRtxSend::num-rtx-packets</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Num RTX Packet</NICK>
+<BLURB>Number of retransmission packets sent.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpRtxReceive::rtx-payload-types</NAME>
+<TYPE>string</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Colon separated list of payload format type</NICK>
+<BLURB>Set through SDP (fmtp), it helps to detect restransmission streams.</BLURB>
+<DEFAULT>""</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpRtxReceive::num-rtx-requests</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Num RTX Requests</NICK>
+<BLURB>Number of retransmission events received.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpRtxReceive::num-rtx-packets</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Num RTX Packet</NICK>
+<BLURB>Number of retransmission packets received.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpRtxReceive::num-rtx-assoc-packets</NAME>
+<TYPE>guint</TYPE>
+<RANGE></RANGE>
+<FLAGS>r</FLAGS>
+<NICK>Num RTX Associated Packets</NICK>
+<BLURB>correctly associated with retransmission requests.</BLURB>
+<DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstV4l2Sink::device</NAME>
 <TYPE>gchar*</TYPE>
 <RANGE></RANGE>

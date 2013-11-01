@@ -260,6 +260,8 @@ GObject
         GstRtpPtDemux
         GstRtpSession
         GstRtpSsrcDemux
+        GstRtpRtxSend
+        GstRtpRtxReceive
         GstSMPTE
         GstShapeWipe
         GstTagDemux
