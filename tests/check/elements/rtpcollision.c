@@ -265,6 +265,178 @@ GST_START_TEST (test_master_ssrc_collision)
 
 GST_END_TEST;
 
+static guint ssrc_before;
+static guint ssrc_after;
+static guint rtx_ssrc_before;
+static guint rtx_ssrc_after;
+
+static GstPadProbeReturn
+rtpsession_sinkpad_probe2 (GstPad * pad, GstPadProbeInfo * info,
+    gpointer user_data)
+{
+  GstPadProbeReturn ret = GST_PAD_PROBE_OK;
+
+  if (info->type == (GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH)) {
+    GstBuffer *buffer = GST_BUFFER (info->data);
+    GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+    guint payload_type = 0;
+
+    static gint i = 0;
+
+    /* retrieve current ssrc for retransmission stream only */
+    gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
+    payload_type = gst_rtp_buffer_get_payload_type (&rtp);
+    if (payload_type == 99) {
+      if (i < 3)
+        rtx_ssrc_before = gst_rtp_buffer_get_ssrc (&rtp);
+      else
+        rtx_ssrc_after = gst_rtp_buffer_get_ssrc (&rtp);
+    } else {
+      /* ask to retransmit every packet */
+      GstEvent *event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
+          gst_structure_new ("GstRTPRetransmissionRequest",
+              "seqnum", G_TYPE_UINT, gst_rtp_buffer_get_seq (&rtp),
+              "ssrc", G_TYPE_UINT, gst_rtp_buffer_get_ssrc (&rtp),
+              NULL));
+      gst_pad_push_event (pad, event);
+
+      if (i < 3)
+        ssrc_before = gst_rtp_buffer_get_ssrc (&rtp);
+      else
+        ssrc_after = gst_rtp_buffer_get_ssrc (&rtp);
+    }
+    gst_rtp_buffer_unmap (&rtp);
+
+    /* feint a collision on recv_rtcp_sink pad of gstrtpsession
+     * (note that after being marked as collied the rtpsession ignores
+     * all non bye packets)
+     */
+    if (i == 2) {
+      GstBuffer *rtcp_buffer = create_rtcp_app (rtx_ssrc_before);
+
+      /* push collied packet on recv_rtcp_sink */
+      gst_pad_push (srcpad, rtcp_buffer);
+    }
+
+    ++i;
+  }
+
+  return ret;
+}
+
+/* This test build the pipeline audiotestsrc ! speexenc ! rtpspeexpay ! \
+ * rtprtxsend ! rtpsession ! fakesink
+ * It manually pushs buffer into rtpsession with same ssrc than rtx stream
+ * but different ip so that collision can be detected
+ * The test checks that the rtx elements changes its ssrc whereas
+ * the payloader keeps its master ssrc
+ */
+GST_START_TEST (test_rtx_ssrc_collision)
+{
+  GstElement *bin, *src, *encoder, *rtppayloader, *rtprtxsend, *rtpsession,
+      *sink;
+  GstBus *bus = NULL;
+  gboolean res = FALSE;
+  GstSegment segment;
+  GstPad *sinkpad = NULL;
+  GstPad *rtcp_sinkpad = NULL;
+  GstPad *fake_udp_sinkpad = NULL;
+  GstPad *rtcp_srcpad = NULL;
+  GstStateChangeReturn state_res = GST_STATE_CHANGE_FAILURE;
+
+  GST_INFO ("preparing test");
+
+  /* build pipeline */
+  bin = gst_pipeline_new ("pipeline");
+  bus = gst_element_get_bus (bin);
+  gst_bus_add_signal_watch_full (bus, G_PRIORITY_HIGH);
+
+  src = gst_element_factory_make ("audiotestsrc", "src");
+  g_object_set (src, "num-buffers", 5, NULL);
+  encoder = gst_element_factory_make ("speexenc", NULL);
+  rtppayloader = gst_element_factory_make ("rtpspeexpay", NULL);
+  g_object_set (rtppayloader, "pt", 96, NULL);
+  rtprtxsend = gst_element_factory_make ("rtprtxsend", NULL);
+  g_object_set (rtprtxsend, "rtx-payload-type", 99, NULL);
+  rtpsession = gst_element_factory_make ("rtpsession", NULL);
+  sink = gst_element_factory_make ("fakesink", "sink");
+  gst_bin_add_many (GST_BIN (bin), src, encoder, rtppayloader, rtprtxsend,
+      rtpsession, sink, NULL);
+
+  /* link elements */
+  res = gst_element_link (src, encoder);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (encoder, rtppayloader);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link (rtppayloader, rtprtxsend);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link_pads_full (rtprtxsend, "src",
+      rtpsession, "send_rtp_sink", GST_PAD_LINK_CHECK_NOTHING);
+  fail_unless (res == TRUE, NULL);
+  res = gst_element_link_pads_full (rtpsession, "send_rtp_src",
+      sink, "sink", GST_PAD_LINK_CHECK_NOTHING);
+  fail_unless (res == TRUE, NULL);
+
+  /* add probe on rtpsession sink pad to induce collision */
+  sinkpad = gst_element_get_static_pad (rtpsession, "send_rtp_sink");
+  gst_pad_add_probe (sinkpad,
+      (GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH),
+      (GstPadProbeCallback) rtpsession_sinkpad_probe2, NULL, NULL);
+  gst_object_unref (sinkpad);
+
+  /* setup rtcp link */
+  srcpad = gst_pad_new_from_static_template (&srctemplate, "src");
+  rtcp_sinkpad = gst_element_get_request_pad (rtpsession, "recv_rtcp_sink");
+  fail_unless (gst_pad_link (srcpad, rtcp_sinkpad) == GST_PAD_LINK_OK, NULL);
+  gst_object_unref (rtcp_sinkpad);
+  res = gst_pad_set_active (srcpad, TRUE);
+  fail_if (res == FALSE);
+  res =
+      gst_pad_push_event (srcpad,
+      gst_event_new_stream_start ("my_rtcp_stream_id"));
+  fail_if (res == FALSE);
+  res = gst_pad_push_event (srcpad, gst_event_new_segment (&segment));
+  fail_if (res == FALSE);
+
+  fake_udp_sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
+  gst_pad_set_chain_function (fake_udp_sinkpad, fake_udp_sink_chain_func);
+  rtcp_srcpad = gst_element_get_request_pad (rtpsession, "send_rtcp_src");
+  fail_unless (gst_pad_link (rtcp_srcpad, fake_udp_sinkpad) == GST_PAD_LINK_OK,
+      NULL);
+  gst_object_unref (rtcp_srcpad);
+  res = gst_pad_set_active (fake_udp_sinkpad, TRUE);
+  fail_if (res == FALSE);
+
+  /* connect messages */
+  main_loop = g_main_loop_new (NULL, FALSE);
+  g_signal_connect (bus, "message::error", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::warning", (GCallback) message_received, bin);
+  g_signal_connect (bus, "message::eos", (GCallback) message_received, bin);
+
+  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  GST_INFO ("running main loop");
+  g_main_loop_run (main_loop);
+
+  state_res = gst_element_set_state (bin, GST_STATE_NULL);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  /* cleanup */
+  gst_object_unref (srcpad);
+  gst_object_unref (fake_udp_sinkpad);
+  g_main_loop_unref (main_loop);
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+
+  /* check results */
+  fail_if (rtx_ssrc_before == rtx_ssrc_after);
+  fail_if (ssrc_before != ssrc_after);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtpcollision_suite (void)
 {
@@ -276,6 +448,7 @@ rtpcollision_suite (void)
   suite_add_tcase (s, tc_chain);
 
   tcase_add_test (tc_chain, test_master_ssrc_collision);
+  tcase_add_test (tc_chain, test_rtx_ssrc_collision);
 
   return s;
 }
