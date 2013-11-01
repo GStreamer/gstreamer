@@ -139,6 +139,8 @@ enum {
     PROP_FORCE_ASPECT_RATIO,
     PROP_DEINTERLACE_MODE,
     PROP_DEINTERLACE_METHOD,
+    PROP_DENOISE,
+    PROP_SHARPEN,
 };
 
 #define DEFAULT_FORMAT                  GST_VIDEO_FORMAT_ENCODED
@@ -468,6 +470,16 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     /* Validate filters */
     if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_FORMAT) &&
         !gst_vaapi_filter_set_format(postproc->filter, postproc->format))
+        return GST_FLOW_NOT_SUPPORTED;
+
+    if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_DENOISE) &&
+        !gst_vaapi_filter_set_denoising_level(postproc->filter,
+            postproc->denoise_level))
+        return GST_FLOW_NOT_SUPPORTED;
+
+    if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_SHARPEN) &&
+        !gst_vaapi_filter_set_denoising_level(postproc->filter,
+            postproc->sharpen_level))
         return GST_FLOW_NOT_SUPPORTED;
 
     inbuf_meta = gst_buffer_get_vaapi_video_meta(inbuf);
@@ -1446,6 +1458,14 @@ gst_vaapipostproc_set_property(
     case PROP_DEINTERLACE_METHOD:
         postproc->deinterlace_method = g_value_get_enum(value);
         break;
+     case PROP_DENOISE:
+         postproc->denoise_level = g_value_get_float(value);
+         postproc->flags |= GST_VAAPI_POSTPROC_FLAG_DENOISE;
+         break;
+     case PROP_SHARPEN:
+         postproc->sharpen_level = g_value_get_float(value);
+         postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SHARPEN;
+         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -1480,6 +1500,12 @@ gst_vaapipostproc_get_property(
         break;
     case PROP_DEINTERLACE_METHOD:
         g_value_set_enum(value, postproc->deinterlace_method);
+        break;
+    case PROP_DENOISE:
+        g_value_set_float(value, postproc->denoise_level);
+        break;
+    case PROP_SHARPEN:
+        g_value_set_float(value, postproc->sharpen_level);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -1625,6 +1651,27 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
                               "When enabled, scaling will respect original aspect ratio",
                               TRUE,
                               G_PARAM_READWRITE));
+
+    /**
+     * GstVaapiPostproc:denoise:
+     *
+     * The level of noise reduction to apply.
+     */
+    filter_op = find_filter_op(filter_ops, GST_VAAPI_FILTER_OP_DENOISE);
+    if (filter_op)
+        g_object_class_install_property(object_class,
+            PROP_DENOISE, filter_op->pspec);
+
+    /**
+     * GstVaapiPostproc:sharpen:
+     *
+     * The level of sharpening to apply for positive values, or the
+     * level of blurring for negative values.
+     */
+    filter_op = find_filter_op(filter_ops, GST_VAAPI_FILTER_OP_SHARPEN);
+    if (filter_op)
+        g_object_class_install_property(object_class,
+            PROP_SHARPEN, filter_op->pspec);
 
     g_ptr_array_unref(filter_ops);
 }

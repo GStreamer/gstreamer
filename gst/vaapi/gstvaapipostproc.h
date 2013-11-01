@@ -165,6 +165,10 @@ struct _GstVaapiPostproc {
     GstVaapiDeinterlaceState    deinterlace_state;
     GstClockTime                field_duration;
 
+    /* Basic filter values */
+    gfloat                      denoise_level;
+    gfloat                      sharpen_level;
+
     guint                       is_raw_yuv      : 1;
     guint                       use_vpp         : 1;
     guint                       keep_aspect     : 1;
