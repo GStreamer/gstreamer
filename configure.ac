@@ -47,7 +47,7 @@ AS_LIBTOOL(GST, 200, 0, 200)
 
 dnl *** required versions of GStreamer stuff ***
 GST_REQ=1.2.0
-GSTPB_REQ=1.2.0
+GSTPB_REQ=1.2.1
 
 dnl *** autotools stuff ****
 
