@@ -26,6 +26,8 @@
 #include "gstrtpptdemux.h"
 #include "gstrtpsession.h"
 #include "gstrtprtxqueue.h"
+#include "gstrtprtxreceive.h"
+#include "gstrtprtxsend.h"
 #include "gstrtpssrcdemux.h"
 #include "gstrtpdtmfmux.h"
 #include "gstrtpmux.h"
@@ -49,6 +51,12 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_rtx_queue_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_rtx_receive_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_rtx_send_plugin_init (plugin))
     return FALSE;
 
   if (!gst_element_register (plugin, "rtpssrcdemux", GST_RANK_NONE,
