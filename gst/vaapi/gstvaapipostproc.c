@@ -1030,20 +1030,70 @@ get_source_buffer(GstVaapiPostproc *postproc, GstBuffer *inbuf)
 {
     GstVaapiVideoMeta *meta;
     GstBuffer *outbuf;
+#if GST_CHECK_VERSION(1,0,0)
+    GstVideoFrame src_frame, out_frame;
+#endif
 
     meta = gst_buffer_get_vaapi_video_meta(inbuf);
     if (meta)
         return gst_buffer_ref(inbuf);
 
 #if GST_CHECK_VERSION(1,0,0)
+    if (!postproc->is_raw_yuv)
+        goto error_invalid_buffer;
+
+    if (!postproc->sinkpad_buffer_pool)
+        goto error_no_pool;
+
+    if (!gst_buffer_pool_set_active(postproc->sinkpad_buffer_pool, TRUE))
+        goto error_active_pool;
+
     outbuf = NULL;
-    goto error_invalid_buffer;
+    if (gst_buffer_pool_acquire_buffer(postproc->sinkpad_buffer_pool,
+            &outbuf, NULL) != GST_FLOW_OK)
+        goto error_create_buffer;
+
+    if (!gst_video_frame_map(&src_frame, &postproc->sinkpad_info, inbuf,
+            GST_MAP_READ))
+        goto error_map_src_buffer;
+
+    if (!gst_video_frame_map(&out_frame, &postproc->sinkpad_info, outbuf,
+            GST_MAP_WRITE))
+        goto error_map_dst_buffer;
+
+    if (!gst_video_frame_copy(&out_frame, &src_frame))
+        goto error_copy_buffer;
+
+    gst_video_frame_unmap(&out_frame);
+    gst_video_frame_unmap(&src_frame);
+    gst_buffer_copy_into(outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
     return outbuf;
 
     /* ERRORS */
 error_invalid_buffer:
     {
         GST_ERROR("failed to validate source buffer");
+        return NULL;
+    }
+error_no_pool:
+    {
+        GST_ERROR("no buffer pool was negotiated");
+        return NULL;
+    }
+error_active_pool:
+    {
+        GST_ERROR("failed to activate buffer pool");
+        return NULL;
+    }
+error_map_dst_buffer:
+    {
+        gst_video_frame_unmap(&src_frame);
+        // fall-through
+    }
+error_map_src_buffer:
+    {
+        GST_ERROR("failed to map buffer");
+        gst_buffer_unref(outbuf);
         return NULL;
     }
 #else
@@ -1056,6 +1106,7 @@ error_invalid_buffer:
     gst_buffer_copy_metadata(outbuf, inbuf,
         GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
     return outbuf;
+#endif
 
     /* ERRORS */
 error_create_buffer:
@@ -1066,10 +1117,13 @@ error_create_buffer:
 error_copy_buffer:
     {
         GST_ERROR("failed to upload buffer to VA surface");
+#if GST_CHECK_VERSION(1,0,0)
+        gst_video_frame_unmap(&out_frame);
+        gst_video_frame_unmap(&src_frame);
+#endif
         gst_buffer_unref(outbuf);
         return NULL;
     }
-#endif
 }
 
 static GstFlowReturn
