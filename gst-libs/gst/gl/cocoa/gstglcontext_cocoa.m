@@ -135,7 +135,9 @@ gst_gl_context_cocoa_create_context (GstGLContext *context, GstGLAPI gl_api,
   else
     priv->external_gl_context = NULL;
 
+#ifdef GNUSTEP
   GSRegisterCurrentThread();
+#endif
 
   pool = [[NSAutoreleasePool alloc] init];
 
