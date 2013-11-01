@@ -49,6 +49,7 @@ rgvolume
 rtp-payloading
 rtpbin
 rtpbin_buffer_list
+rtpcollision
 rtpjitterbuffer
 rtpsession
 rtpmux

@@ -142,6 +142,7 @@ check_PROGRAMS = \
 	elements/rganalysis \
 	elements/rglimiter \
 	elements/rgvolume \
+	elements/rtpcollision \
 	elements/rtp-payloading \
 	elements/rtpbin \
 	elements/rtpsession \
@@ -325,6 +326,9 @@ elements_rtpjitterbuffer_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-$(GST_API_VER
 
 elements_rtpsession_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_rtpsession_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-$(GST_API_VERSION) $(LDADD)
+
+elements_rtpcollision_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+elements_rtpcollision_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstnet-$(GST_API_VERSION) -lgstrtp-$(GST_API_VERSION) $(GIO_LIBS) $(LDADD)
 
 # FIXME: configure should check for gdk-pixbuf not gtk
 # only need video.h header, not the lib
