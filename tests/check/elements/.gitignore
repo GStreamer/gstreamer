@@ -47,6 +47,7 @@ rganalysis
 rglimiter
 rgvolume
 rtp-payloading
+rtpaux
 rtpbin
 rtpbin_buffer_list
 rtpcollision
