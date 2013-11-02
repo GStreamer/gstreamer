@@ -98,6 +98,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace/object[@cname='GstVideoDecoder']" name="defaultconstructoraccess">protected</attr>
 	<remove-attr path="/api/namespace/object[@cname='GstVideoFilter']" name="abstract" />
 	<attr path="/api/namespace/object[@cname='GstVideoFilter']" name="defaultconstructoraccess">protected</attr>
+	<remove-attr path="/api/namespace/object[@cname='GstTagDemux']" name="abstract" />
+	<attr path="/api/namespace/object[@cname='GstTagDemux']" name="defaultconstructoraccess">protected</attr>
 
 	<!-- Add miniobject methods to all miniobject types -->
 	<copy-node path="/api/namespace/struct[@cname='GstMiniObject']//method">/api/namespace//boxed[field/@cname='mini_object']</copy-node>
