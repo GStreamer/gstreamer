@@ -2292,8 +2292,8 @@ gst_base_src_update_length (GstBaseSrc * src, guint64 offset, guint * length,
   /* check size if we have one */
   if (maxsize != -1) {
     /* if we run past the end, check if the file became bigger and
-     * retry. */
-    if (G_UNLIKELY (offset + *length >= maxsize || force)) {
+     * retry.  Mind wrap when checking. */
+    if (G_UNLIKELY (offset >= maxsize || offset + *length >= maxsize || force)) {
       /* see if length of the file changed */
       if (bclass->get_size)
         if (!bclass->get_size (src, &size))
