@@ -52,6 +52,7 @@ G_BEGIN_DECLS
 #include <gst/rtsp/gstrtspmessage.h>
 #include <gst/rtsp/gstrtspurl.h>
 #include <gst/rtsp/gstrtsprange.h>
+#include <gio/gio.h>
 
 #include "gstrtspext.h"
 
