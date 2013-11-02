@@ -214,7 +214,7 @@ namespace Gst {
       }
     }
 
-    [DllImport ("libgstreamersharpglue-1.0.6.so") ]
+    [DllImport ("libgstreamersharpglue-1.0.0.dll") ]
     static extern int gstsharp_g_closure_sizeof ();
 
     public static void Disconnect (GLib.Object o, string name, Delegate handler) {
@@ -397,7 +397,7 @@ namespace Gst {
       return ret;
     }
 
-    [DllImport ("libgstreamersharpglue-1.0.6.so") ]
+    [DllImport ("libgstreamersharpglue-1.0.0.dll") ]
     static extern IntPtr gstsharp_g_type_from_instance (IntPtr o);
 
     [DllImport ("libgobject-2.0-0.dll") ]
