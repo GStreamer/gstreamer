@@ -3893,7 +3893,7 @@ gst_base_parse_locate_time (GstBaseParse * parse, GstClockTime * _time,
 
   GST_DEBUG_OBJECT (parse,
       "Bisection initial bounds: bytes %" G_GINT64_FORMAT " %" G_GINT64_FORMAT
-      ", times %" GST_TIME_FORMAT " %" GST_TIME_FORMAT, lpos, htime,
+      ", times %" GST_TIME_FORMAT " %" GST_TIME_FORMAT, lpos, hpos,
       GST_TIME_ARGS (ltime), GST_TIME_ARGS (htime));
 
   /* check preconditions are satisfied;
