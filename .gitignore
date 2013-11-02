@@ -26,7 +26,8 @@ sources/glue/.libs/
 sources/generated/*.cs
 sources/glue/generated.c
 doc/*
-sources/generate-stamp
+sources/generated-stamp
+sources/gstreamer-sharp-api.xml
 
 # our "bin" folder when using makefile build
 out/*
