@@ -268,7 +268,7 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
   if (segment->duration != -1)
     start = MIN (start, segment->duration);
   else
-    start = MAX (start, 0);
+    start = MAX ((gint64) start, 0);
 
   /* stop can be -1 if we have not configured a stop. */
   switch (stop_type) {
@@ -292,9 +292,9 @@ gst_segment_do_seek (GstSegment * segment, gdouble rate,
   /* if we have a valid stop time, make sure it is clipped */
   if (stop != -1) {
     if (segment->duration != -1)
-      stop = CLAMP (stop, 0, segment->duration);
+      stop = CLAMP ((gint64) stop, 0, (gint64) segment->duration);
     else
-      stop = MAX (stop, 0);
+      stop = MAX ((gint64) stop, 0);
   }
 
   /* we can't have stop before start */
