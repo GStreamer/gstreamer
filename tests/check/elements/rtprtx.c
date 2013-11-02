@@ -1060,7 +1060,7 @@ GST_END_TEST;
 
 struct GenerateTestBuffersData
 {
-  GstElement *src, *payloader, *sink;
+  GstElement *src, *capsfilter, *payloader, *sink;
   GMutex mutex;
   GCond cond;
   GList *buffers;
@@ -1093,6 +1093,7 @@ static GList *
 generate_test_buffers (const gint num_buffers, guint ssrc, guint * payload_type)
 {
   GstElement *bin;
+  GstCaps *videotestsrc_caps;
   gboolean res;
   struct GenerateTestBuffersData data;
 
@@ -1105,15 +1106,28 @@ generate_test_buffers (const gint num_buffers, guint ssrc, guint * payload_type)
 
   bin = gst_pipeline_new (NULL);
   data.src = gst_element_factory_make ("videotestsrc", NULL);
+  data.capsfilter = gst_element_factory_make ("capsfilter", NULL);
   data.payloader = gst_element_factory_make ("rtpvrawpay", NULL);
   data.sink = gst_element_factory_make ("fakesink", NULL);
 
+  /* small frame size will cause vrawpay to generate exactly one rtp packet
+   * per video frame, which we need for the max-size-time test */
+  videotestsrc_caps =
+      gst_caps_from_string
+      ("video/x-raw,format=I420,width=10,height=10,framerate=30/1");
+
+  g_object_set (data.src, "do-timestamp", TRUE, NULL);
+  g_object_set (data.capsfilter, "caps", videotestsrc_caps, NULL);
   g_object_set (data.payloader, "seqnum-offset", 1, "ssrc", ssrc, NULL);
   g_object_set (data.sink, "signal-handoffs", TRUE, NULL);
   g_signal_connect (data.sink, "handoff", (GCallback) fakesink_handoff, &data);
 
-  gst_bin_add_many (GST_BIN (bin), data.src, data.payloader, data.sink, NULL);
-  res = gst_element_link_many (data.src, data.payloader, data.sink, NULL);
+  gst_caps_unref (videotestsrc_caps);
+
+  gst_bin_add_many (GST_BIN (bin), data.src, data.capsfilter, data.payloader,
+      data.sink, NULL);
+  res = gst_element_link_many (data.src, data.capsfilter, data.payloader,
+      data.sink, NULL);
   fail_unless_equals_int (res, TRUE);
 
   g_mutex_lock (&data.mutex);
@@ -1146,9 +1160,10 @@ create_rtx_event (guint seqnum, guint ssrc, guint payload_type)
           "payload-type", G_TYPE_UINT, payload_type, NULL));
 }
 
-GST_START_TEST (test_rtxsender_packet_retention)
+static void
+test_rtxsender_packet_retention (gboolean test_with_time)
 {
-  const gint num_buffers = 10;
+  const gint num_buffers = test_with_time ? 30 : 10;
   const gint half_buffers = num_buffers / 2;
   const guint ssrc = 1234567;
   const guint rtx_payload_type = 99;
@@ -1169,7 +1184,14 @@ GST_START_TEST (test_rtxsender_packet_retention)
 
   /* setup element & pads */
   rtxsend = gst_check_setup_element ("rtprtxsend");
-  g_object_set (rtxsend, "max-size-packets", half_buffers,
+
+  /* in both cases we want the rtxsend queue to store 'half_buffers'
+   * amount of buffers at most. In max-size-packets mode, it's trivial.
+   * In max-size-time mode, we specify almost half a second, which is
+   * the equivalent of 15 frames in a 30fps video stream */
+  g_object_set (rtxsend,
+      "max-size-packets", test_with_time ? 0 : half_buffers,
+      "max-size-time", test_with_time ? 499 : 0,
       "rtx-payload-type", rtx_payload_type, NULL);
 
   srcpad = gst_check_setup_src_pad (rtxsend, &srctemplate);
@@ -1263,8 +1285,8 @@ GST_START_TEST (test_rtxsender_packet_retention)
         fail_unless_equals_int (GST_READ_UINT16_BE (gst_rtp_buffer_get_payload (&rtp)), j);     /* j == rtx seqnum */
 
         /* open the original packet for this rtx packet and verify timestamps */
-        res = gst_rtp_buffer_map (GST_BUFFER (g_list_nth_data (in_buffers, j)),
-            GST_MAP_READ, &orig_rtp);
+        res = gst_rtp_buffer_map (GST_BUFFER (g_list_nth_data (in_buffers,
+                    j - 1)), GST_MAP_READ, &orig_rtp);
         fail_unless_equals_int (res, TRUE);
         fail_unless_equals_int (gst_rtp_buffer_get_timestamp (&orig_rtp),
             gst_rtp_buffer_get_timestamp (&rtp));
@@ -1284,6 +1306,18 @@ GST_START_TEST (test_rtxsender_packet_retention)
   gst_check_teardown_element (rtxsend);
 }
 
+GST_START_TEST (test_rtxsender_max_size_packets)
+{
+  test_rtxsender_packet_retention (FALSE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_rtxsender_max_size_time)
+{
+  test_rtxsender_packet_retention (TRUE);
+}
+
 GST_END_TEST;
 
 static Suite *
@@ -1299,7 +1333,8 @@ rtprtx_suite (void)
   tcase_add_test (tc_chain, test_push_forward_seq);
   tcase_add_test (tc_chain, test_drop_one_sender);
   tcase_add_test (tc_chain, test_drop_multiple_sender);
-  tcase_add_test (tc_chain, test_rtxsender_packet_retention);
+  tcase_add_test (tc_chain, test_rtxsender_max_size_packets);
+  tcase_add_test (tc_chain, test_rtxsender_max_size_time);
 
   return s;
 }
