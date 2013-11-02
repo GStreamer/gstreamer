@@ -208,15 +208,23 @@ _priv_gst_tracer_init (void)
     GstTracerFactory *factory;
     GstTracerHook mask;
     GstTracer *tracer;
-    gchar **t = g_strsplit_set (env, ",", 0);
+    gchar **t = g_strsplit_set (env, ";", 0);
     gint i = 0, j;
     gchar *params;
 
     GST_INFO ("enabling tracers: '%s'", env);
 
     while (t[i]) {
-      // TODO(ensonic): check t[i] for params
-      params = NULL;
+      // check t[i] for params
+      if ((params = strchr (t[i], '('))) {
+        gchar *end = strchr (&params[1], ')');
+        *params = '\0';
+        params++;
+        if (end)
+          *end = '\0';
+      } else {
+        params = NULL;
+      }
 
       GST_INFO ("checking tracer: '%s'", t[i]);
 
