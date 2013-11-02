@@ -41,6 +41,17 @@ namespace Gst
 			}
 		}
 
+		public string[] Tags {
+			get {
+				int size = NTags ();
+				string[] tags = new string[size];
+				for (uint i = 0; i < size; i++)
+					tags [i] = NthTagName (i);
+
+				return tags;
+			}
+		}
+
 		public void Add (Gst.TagMergeMode mode, string tag, object value)
 		{
 			if (!Tag.Exists (tag))
