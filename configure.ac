@@ -140,6 +140,8 @@ AC_SUBST(gstreamer_prefix)
 AC_SUBST(GST_LIBS)
 AC_SUBST(GST_CFLAGS)
 
+GST_INCLUDEDIR=`pkg-config gstreamer-1.0 --variable=includedir`
+AC_SUBST(GST_INCLUDEDIR)
 
 
 AC_CONFIG_FILES([
