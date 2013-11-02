@@ -3885,6 +3885,9 @@ gst_base_parse_locate_time (GstBaseParse * parse, GstClockTime * _time,
   /* need initial positions; start and end */
   lpos = parse->priv->first_frame_offset;
   ltime = parse->priv->first_frame_pts;
+  /* try other one if no luck */
+  if (!GST_CLOCK_TIME_IS_VALID (ltime))
+    ltime = parse->priv->first_frame_dts;
   if (!gst_base_parse_get_duration (parse, GST_FORMAT_TIME, &htime)) {
     GST_DEBUG_OBJECT (parse, "Unknown time duration, cannot bisect");
     return GST_FLOW_ERROR;
