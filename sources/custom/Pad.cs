@@ -23,7 +23,7 @@ namespace Gst {
 		public Gst.Caps Caps {
 			get {
 				GLib.Value val = GetProperty ("caps");
-				Gst.Caps ret = new Gst.Caps ((IntPtr)val);
+				Gst.Caps ret = (Gst.Caps) val.Val;
 				val.Dispose ();
 				return ret;
 			}
