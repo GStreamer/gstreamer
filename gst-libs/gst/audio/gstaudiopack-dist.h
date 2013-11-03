@@ -116,6 +116,9 @@ void audio_orc_pack_f32 (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT 
 void audio_orc_pack_f32_swap (gfloat * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1, int n);
 void audio_orc_pack_f64 (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1, int n);
 void audio_orc_pack_f64_swap (gdouble * ORC_RESTRICT d1, const gdouble * ORC_RESTRICT s1, int n);
+void audio_orc_splat_u16 (guint16 * ORC_RESTRICT d1, int p1, int n);
+void audio_orc_splat_u32 (guint32 * ORC_RESTRICT d1, int p1, int n);
+void audio_orc_splat_u64 (guint64 * ORC_RESTRICT d1, int p1, int n);
 
 #ifdef __cplusplus
 }
