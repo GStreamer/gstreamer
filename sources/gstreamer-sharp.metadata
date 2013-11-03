@@ -65,6 +65,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace/struct[@cname='GstRTPBuffer']/method[@cname='gst_rtp_buffer_get_extension_twobytes_header']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstRTSPMessage']/method[@cname='gst_rtsp_message_get_body']" name="hidden">true</attr>
 	<attr path="/api/namespace/struct[@cname='GstRTSPMessage']/method[@cname='gst_rtsp_message_steal_body']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstFFTF32']/method[@cname='gst_fft_f32_fft']" name="hidden">true</attr>
+	<attr path="/api/namespace/struct[@cname='GstFFTF32']/method[@cname='gst_fft_f32_window']" name="hidden">true</attr>
 	<!-- Maybe some problems with the name -->
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/class_struct/method[@vm='get_type']" name="vm" />
 	<remove-node path="/api/namespace/interface[@cname='GstURIHandler']/virtual_method[@cname='get_type']" name="hidden" />
