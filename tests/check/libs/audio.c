@@ -591,6 +591,27 @@ GST_START_TEST (test_audio_info)
 
 GST_END_TEST;
 
+GST_START_TEST (test_fill_silence)
+{
+  GstAudioInfo info;
+  GstAudioFormat f;
+  gint i;
+  guint8 test_silence[32];
+
+  for (f = GST_AUDIO_FORMAT_S8; f < GST_AUDIO_FORMAT_F64; f++) {
+    gst_audio_info_set_format (&info, f, 48000, 1, NULL);
+
+    gst_audio_format_fill_silence (info.finfo, test_silence,
+        GST_AUDIO_INFO_BPF (&info) * 4);
+
+    for (i = 0; i < 4; i++)
+      fail_unless (memcmp (test_silence + i * GST_AUDIO_INFO_BPF (&info),
+              info.finfo->silence, GST_AUDIO_INFO_BPF (&info)) == 0);
+  }
+}
+
+GST_END_TEST;
+
 static Suite *
 audio_suite (void)
 {
@@ -604,6 +625,7 @@ audio_suite (void)
   tcase_add_test (tc_chain, test_buffer_clipping_samples);
   tcase_add_test (tc_chain, test_multichannel_checks);
   tcase_add_test (tc_chain, test_multichannel_reorder);
+  tcase_add_test (tc_chain, test_fill_silence);
 
   return s;
 }
