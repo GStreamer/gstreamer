@@ -336,3 +336,22 @@ copyq d1, s1
 .source 8 s1 gdouble
 
 swapq d1, s1
+
+.function audio_orc_splat_u16
+.dest 2 d1 guint16
+.param 2 p1
+
+copyw d1, p1
+
+.function audio_orc_splat_u32
+.dest 4 d1 guint32
+.param 4 p1
+
+copyl d1, p1
+
+.function audio_orc_splat_u64
+.dest 8 d1 guint64
+.param 8 p1
+
+copyq d1, p1
+

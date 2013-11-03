@@ -27,6 +27,12 @@
 
 #include "gstaudiopack.h"
 
+#ifdef HAVE_ORC
+#include <orc/orcfunctions.h>
+#else
+#define orc_memset memset
+#endif
+
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
 # define audio_orc_unpack_s16le audio_orc_unpack_s16
 # define audio_orc_unpack_s16be audio_orc_unpack_s16_swap
@@ -453,14 +459,41 @@ gst_audio_format_fill_silence (const GstAudioFormatInfo * info,
   if (info->flags & GST_AUDIO_FORMAT_FLAG_FLOAT ||
       info->flags & GST_AUDIO_FORMAT_FLAG_SIGNED) {
     /* float or signed always 0 */
-    memset (dest, 0, length);
+    orc_memset (dest, 0, length);
   } else {
     gint i, j, bps = info->width >> 3;
 
     switch (bps) {
       case 1:
-        memset (dest, info->silence[0], length);
+        orc_memset (dest, info->silence[0], length);
         break;
+      case 2:{
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+        guint16 silence = GST_READ_UINT16_LE (info->silence);
+#else
+        guint16 silence = GST_READ_UINT16_BE (info->silence);
+#endif
+        audio_orc_splat_u16 (dest, silence, length / bps);
+        break;
+      }
+      case 4:{
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+        guint32 silence = GST_READ_UINT32_LE (info->silence);
+#else
+        guint32 silence = GST_READ_UINT32_BE (info->silence);
+#endif
+        audio_orc_splat_u32 (dest, silence, length / bps);
+        break;
+      }
+      case 8:{
+#if G_BYTE_ORDER == G_LITTLE_ENDIAN
+        guint64 silence = GST_READ_UINT64_LE (info->silence);
+#else
+        guint64 silence = GST_READ_UINT64_BE (info->silence);
+#endif
+        audio_orc_splat_u64 (dest, silence, length / bps);
+        break;
+      }
       default:
         for (i = 0; i < length; i += bps) {
           for (j = 0; j < bps; j++)
