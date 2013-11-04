@@ -98,73 +98,6 @@ print_caps (const GstCaps * caps, const gchar * pfx)
   }
 }
 
-#if 0
-static void
-print_formats (const GstFormat * formats)
-{
-  while (formats && *formats) {
-    const GstFormatDefinition *definition;
-
-    definition = gst_format_get_details (*formats);
-    if (definition)
-      n_print ("\t\t(%d):\t%s (%s)\n", *formats,
-          definition->nick, definition->description);
-    else
-      n_print ("\t\t(%d):\tUnknown format\n", *formats);
-
-    formats++;
-  }
-}
-
-static void
-print_event_masks (const GstEventMask * masks)
-{
-  GType event_type;
-  GEnumClass *klass;
-  GType event_flags;
-  GFlagsClass *flags_class = NULL;
-
-  event_type = gst_event_type_get_type ();
-  klass = (GEnumClass *) g_type_class_ref (event_type);
-
-  while (masks && masks->type) {
-    GEnumValue *value;
-    gint flags = 0, index = 0;
-
-    switch (masks->type) {
-      case GST_EVENT_SEEK:
-        flags = masks->flags;
-        event_flags = gst_seek_type_get_type ();
-        flags_class = (GFlagsClass *) g_type_class_ref (event_flags);
-        break;
-      default:
-        break;
-    }
-
-    value = g_enum_get_value (klass, masks->type);
-    g_print ("\t\t%s ", value->value_nick);
-
-    while (flags) {
-      GFlagsValue *value;
-
-      if (flags & 1) {
-        value = g_flags_get_first_value (flags_class, 1 << index);
-
-        if (value)
-          g_print ("| %s ", value->value_nick);
-        else
-          g_print ("| ? ");
-      }
-      flags >>= 1;
-      index++;
-    }
-    g_print ("\n");
-
-    masks++;
-  }
-}
-#endif
-
 static const char *
 get_rank_name (char *s, gint rank)
 {
@@ -1038,15 +971,6 @@ print_element_list (gboolean print_all)
               GST_OBJECT_NAME (factory),
               gst_element_factory_get_metadata (factory,
                   GST_ELEMENT_METADATA_LONGNAME));
-#if 0
-      } else if (GST_IS_INDEX_FACTORY (feature)) {
-        GstIndexFactory *factory;
-
-        factory = GST_INDEX_FACTORY (feature);
-        if (!print_all)
-          g_print ("%s:  %s: %s\n", plugin->desc.name,
-              GST_OBJECT_NAME (factory), factory->longdesc);
-#endif
       } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
         GstTypeFindFactory *factory;
         const gchar *const *extensions;
@@ -1241,14 +1165,6 @@ print_plugin_features (GstPlugin * plugin)
           gst_element_factory_get_metadata (factory,
               GST_ELEMENT_METADATA_LONGNAME));
       num_elements++;
-#if 0
-    } else if (GST_IS_INDEX_FACTORY (feature)) {
-      GstIndexFactory *factory;
-
-      factory = GST_INDEX_FACTORY (feature);
-      n_print ("  %s: %s\n", GST_OBJECT_NAME (factory), factory->longdesc);
-      num_indexes++;
-#endif
     } else if (GST_IS_TYPE_FIND_FACTORY (feature)) {
       GstTypeFindFactory *factory;
       const gchar *const *extensions;
@@ -1301,14 +1217,6 @@ print_element_features (const gchar * element_name)
   GstPluginFeature *feature;
 
   /* FIXME implement other pretty print function for these */
-#if 0
-  feature = gst_default_registry_find_feature (element_name,
-      GST_TYPE_INDEX_FACTORY);
-  if (feature) {
-    n_print ("%s: an index\n", element_name);
-    return 0;
-  }
-#endif
   feature = gst_registry_find_feature (gst_registry_get (), element_name,
       GST_TYPE_TYPE_FIND_FACTORY);
   if (feature) {
