@@ -290,7 +290,7 @@ gst_memory_map (GstMemory * mem, GstMapInfo * info, GstMapFlags flags)
   g_return_val_if_fail (mem != NULL, FALSE);
   g_return_val_if_fail (info != NULL, FALSE);
 
-  if (!gst_memory_lock (mem, flags))
+  if (!gst_memory_lock (mem, (GstLockFlags) flags))
     goto lock_failed;
 
   info->data = mem->allocator->mem_map (mem, mem->maxsize, flags);
@@ -316,7 +316,7 @@ error:
   {
     /* something went wrong, restore the orginal state again */
     GST_CAT_ERROR (GST_CAT_MEMORY, "mem %p: subclass map failed", mem);
-    gst_memory_unlock (mem, flags);
+    gst_memory_unlock (mem, (GstLockFlags) flags);
     return FALSE;
   }
 }
@@ -336,7 +336,7 @@ gst_memory_unmap (GstMemory * mem, GstMapInfo * info)
   g_return_if_fail (info->memory == mem);
 
   mem->allocator->mem_unmap (mem);
-  gst_memory_unlock (mem, info->flags);
+  gst_memory_unlock (mem, (GstLockFlags) info->flags);
 }
 
 /**
