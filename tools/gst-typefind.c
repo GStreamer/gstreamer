@@ -167,7 +167,7 @@ main (int argc, char *argv[])
   gst_tools_print_version ();
 
   if (filenames == NULL || *filenames == NULL) {
-    g_print ("Please give a filename to typefind\n\n");
+    g_print ("Please give one or more filenames to %s\n\n", g_get_prgname ());
     return 1;
   }
 
