@@ -532,6 +532,8 @@ rtp_session_init (RTPSession * sess)
       DEFAULT_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD;
 
   sess->last_keyframe_request = GST_CLOCK_TIME_NONE;
+
+  sess->is_doing_ptp = TRUE;
 }
 
 static void
@@ -1308,11 +1310,88 @@ check_collision (RTPSession * sess, RTPSource * source,
   return TRUE;
 }
 
-static RTPSource *
-find_source (RTPSession * sess, guint32 ssrc)
+typedef struct
 {
-  return g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
-      GINT_TO_POINTER (ssrc));
+  gboolean is_doing_ptp;
+  GSocketAddress *new_addr;
+} CompareAddrData;
+
+/* check if the two given ip addr are the same (do not care about the port) */
+static gboolean
+ip_addr_equal (GSocketAddress * a, GSocketAddress * b)
+{
+  return
+      g_inet_address_equal (g_inet_socket_address_get_address
+      (G_INET_SOCKET_ADDRESS (a)),
+      g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (b)));
+}
+
+static void
+compare_rtp_source_addr (const gchar * key, RTPSource * source,
+    CompareAddrData * data)
+{
+  /* only compare ip addr of remote sources which are also not closing */
+  if (!source->internal && !source->closing && source->rtp_from) {
+    /* look for the first rtp source */
+    if (!data->new_addr)
+      data->new_addr = source->rtp_from;
+    /* compare current ip addr with the first one */
+    else
+      data->is_doing_ptp &= ip_addr_equal (data->new_addr, source->rtp_from);
+  }
+}
+
+static void
+compare_rtcp_source_addr (const gchar * key, RTPSource * source,
+    CompareAddrData * data)
+{
+  /* only compare ip addr of remote sources which are also not closing */
+  if (!source->internal && !source->closing && source->rtcp_from) {
+    /* look for the first rtcp source */
+    if (!data->new_addr)
+      data->new_addr = source->rtcp_from;
+    else
+      /* compare current ip addr with the first one */
+      data->is_doing_ptp &= ip_addr_equal (data->new_addr, source->rtcp_from);
+  }
+}
+
+/* loop over our non-internal source to know if the session
+ * is doing point-to-point */
+static void
+session_update_ptp (RTPSession * sess)
+{
+  /* to know if the session is doing point to point, the ip addr
+   * of each non-internal (=remotes) source have to be compared
+   * to each other.
+   */
+  gboolean is_doing_rtp_ptp = FALSE;
+  gboolean is_doing_rtcp_ptp = FALSE;
+  CompareAddrData data;
+
+  /* compare the first remote source's ip addr that receive rtp packets
+   * with other remote rtp source.
+   * it's enough because the session just needs to know if they are all
+   * equals or not
+   */
+  data.is_doing_ptp = TRUE;
+  data.new_addr = NULL;
+  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+      (GHFunc) compare_rtp_source_addr, (gpointer) & data);
+  is_doing_rtp_ptp = data.is_doing_ptp;
+
+  /* same but about rtcp */
+  data.is_doing_ptp = TRUE;
+  data.new_addr = NULL;
+  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+      (GHFunc) compare_rtcp_source_addr, (gpointer) & data);
+  is_doing_rtcp_ptp = data.is_doing_ptp;
+
+  /* the session is doing point-to-point if all rtp remote have the same
+   * ip addr and if all rtcp remote sources have the same ip addr */
+  sess->is_doing_ptp = is_doing_rtp_ptp && is_doing_rtcp_ptp;
+
+  GST_DEBUG ("doing point-to-point: %d", sess->is_doing_ptp);
 }
 
 static void
@@ -1331,6 +1410,17 @@ add_source (RTPSession * sess, RTPSource * src)
     if (sess->suggested_ssrc != src->ssrc)
       sess->suggested_ssrc = src->ssrc;
   }
+
+  /* update point-to-point status */
+  if (!src->internal)
+    session_update_ptp (sess);
+}
+
+static RTPSource *
+find_source (RTPSession * sess, guint32 ssrc)
+{
+  return g_hash_table_lookup (sess->ssrcs[sess->mask_idx],
+      GINT_TO_POINTER (ssrc));
 }
 
 /* must be called with the session lock, the returned source needs to be
@@ -3489,6 +3579,9 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   g_hash_table_foreach_remove (sess->ssrcs[sess->mask_idx],
       (GHRFunc) remove_closing_sources, &data);
 
+  /* update point-to-point status */
+  session_update_ptp (sess);
+
   /* see if we need to generate SR or RR packets */
   if (!is_rtcp_time (sess, current_time, &data))
     goto done;
@@ -3586,7 +3679,10 @@ rtp_session_request_early_rtcp (RTPSession * sess, GstClockTime current_time,
 
   /*  RFC 4585 section 3.5.2 step 2b */
   /* If the total sources is <=2, then there is only us and one peer */
-  if (sess->total_sources <= 2) {
+  /* When there is one auxiliary stream the session can still do point
+   * to point.
+   */
+  if (sess->is_doing_ptp) {
     T_dither_max = 0;
   } else {
     /* Divide by 2 because l = 0.5 */

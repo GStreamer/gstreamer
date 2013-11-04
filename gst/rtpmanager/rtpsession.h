@@ -252,6 +252,8 @@ struct _RTPSession {
 
   GstClockTime last_keyframe_request;
   gboolean     last_keyframe_all_headers;
+
+  gboolean      is_doing_ptp;
 };
 
 /**
