@@ -48,7 +48,7 @@ struct _GstRtpRtxSend
   GMutex lock;
 
   /* history of rtp packets */
-  GQueue *queue;
+  GSequence *queue;
   /* rtp packets that will be pushed upon next buffer */
   GQueue *pending;
 
