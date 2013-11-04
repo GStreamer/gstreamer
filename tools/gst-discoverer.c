@@ -26,6 +26,10 @@
 #include <gst/gst.h>
 #include <gst/pbutils/pbutils.h>
 
+/* *INDENT-OFF* */
+static void my_g_string_append_printf (GString * str, int depth, const gchar * format, ...) G_GNUC_PRINTF (3, 4);
+/* *INDENT-ON* */
+
 static gboolean async = FALSE;
 static gboolean show_toc = FALSE;
 static gboolean verbose = FALSE;
@@ -39,7 +43,6 @@ typedef struct
 
 static void
 my_g_string_append_printf (GString * str, int depth, const gchar * format, ...)
-G_GNUC_PRINTF (3, 4)
 {
   va_list args;
 
