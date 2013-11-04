@@ -72,9 +72,12 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
 
   gint deviceIndex;
   BOOL doStats;
+#ifndef HAVE_IOS
+  CGDirectDisplayID displayId;
+#endif
 
   AVCaptureSession *session;
-  AVCaptureDeviceInput *input;
+  AVCaptureInput *input;
   AVCaptureVideoDataOutput *output;
   AVCaptureDevice *device;
 
@@ -102,7 +105,12 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
 @property int deviceIndex;
 @property BOOL doStats;
 @property int fps;
+@property BOOL captureScreen;
+@property BOOL captureScreenCursor;
+@property BOOL captureScreenMouseClicks;
 
+- (BOOL)openScreenInput;
+- (BOOL)openDeviceInput;
 - (BOOL)openDevice;
 - (void)closeDevice;
 - (GstVideoFormat)getGstVideoFormat:(NSNumber *)pixel_format;
@@ -142,6 +150,12 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     pushSrc = src;
 
     deviceIndex = DEFAULT_DEVICE_INDEX;
+    captureScreen = NO;
+    captureScreenCursor = NO;
+    captureScreenMouseClicks = NO;
+#ifndef HAVE_IOS
+    displayId = kCGDirectMainDisplay;
+#endif
 
     mainQueue =
         dispatch_queue_create ("org.freedesktop.gstreamer.avfvideosrc.main", NULL);
@@ -165,49 +179,90 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   [super finalize];
 }
 
-@synthesize deviceIndex, doStats, fps;
+@synthesize deviceIndex, doStats, fps, captureScreen,
+            captureScreenCursor, captureScreenMouseClicks;
+
+- (BOOL)openDeviceInput
+{
+  NSString *mediaType = AVMediaTypeVideo;
+  NSError *err;
+
+  if (deviceIndex == -1) {
+    device = [AVCaptureDevice defaultDeviceWithMediaType:mediaType];
+    if (device == nil) {
+      GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+                          ("No video capture devices found"), (NULL));
+      return NO;
+    }
+  } else {
+    NSArray *devices = [AVCaptureDevice devicesWithMediaType:mediaType];
+    if (deviceIndex >= [devices count]) {
+      GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
+                          ("Invalid video capture device index"), (NULL));
+      return NO;
+    }
+    device = [devices objectAtIndex:deviceIndex];
+  }
+  g_assert (device != nil);
+  [device retain];
+
+  GST_INFO ("Opening '%s'", [[device localizedName] UTF8String]);
+
+  input = [AVCaptureDeviceInput deviceInputWithDevice:device
+                                                error:&err];
+  if (input == nil) {
+    GST_ELEMENT_ERROR (element, RESOURCE, BUSY,
+        ("Failed to open device: %s",
+        [[err localizedDescription] UTF8String]),
+        (NULL));
+    [device release];
+    device = nil;
+    return NO;
+  }
+  [input retain];
+  return YES;
+}
+
+- (BOOL)openScreenInput
+{
+#if HAVE_IOS
+  return NO;
+#else
+  AVCaptureScreenInput *screenInput =
+      [[AVCaptureScreenInput alloc] initWithDisplayID:displayId];
+
+  @try {
+    [screenInput setValue:[NSNumber numberWithBool:captureScreenCursor]
+                 forKey:@"capturesCursor"];
+
+  } @catch (NSException *exception) {
+    if (![[exception name] isEqualTo:NSUndefinedKeyException]) {
+      GST_WARNING ("An unexpected error occured: %s",
+                   [[exception reason] UTF8String]);
+    }
+    GST_WARNING ("Capturing cursor is only supported in OS X >= 10.8");
+  }
+  screenInput.capturesMouseClicks = captureScreenMouseClicks;
+  input = screenInput;
+  [input retain];
+  return YES;
+#endif
+}
 
 - (BOOL)openDevice
 {
   BOOL success = NO, *successPtr = &success;
 
   dispatch_sync (mainQueue, ^{
-    NSString *mediaType = AVMediaTypeVideo;
-    NSError *err;
+    BOOL ret;
 
-    if (deviceIndex == -1) {
-      device = [AVCaptureDevice defaultDeviceWithMediaType:mediaType];
-      if (device == nil) {
-        GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
-                           ("No video capture devices found"), (NULL));
-        return;
-      }
-    } else {
-      NSArray *devices = [AVCaptureDevice devicesWithMediaType:mediaType];
-      if (deviceIndex >= [devices count]) {
-        GST_ELEMENT_ERROR (element, RESOURCE, NOT_FOUND,
-                           ("Invalid video capture device index"), (NULL));
-        return;
-      }
-      device = [devices objectAtIndex:deviceIndex];
-    }
-    g_assert (device != nil);
-    [device retain];
+    if (captureScreen)
+      ret = [self openScreenInput];
+    else
+      ret = [self openDeviceInput];
 
-    GST_INFO ("Opening '%s'", [[device localizedName] UTF8String]);
-
-    input = [AVCaptureDeviceInput deviceInputWithDevice:device
-                                                  error:&err];
-    if (input == nil) {
-      GST_ELEMENT_ERROR (element, RESOURCE, BUSY,
-          ("Failed to open device: %s",
-           [[err localizedDescription] UTF8String]),
-          (NULL));
-      [device release];
-      device = nil;
+    if (!ret)
       return;
-    }
-    [input retain];
 
     output = [[AVCaptureVideoDataOutput alloc] init];
     [output setSampleBufferDelegate:self
@@ -242,8 +297,10 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     [output release];
     output = nil;
 
-    [device release];
-    device = nil;
+    if (!captureScreen) {
+      [device release];
+      device = nil;
+    }
 
     if (caps)
       gst_caps_unref (caps);
@@ -430,6 +487,24 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   result = gst_caps_new_empty ();
   pixel_formats = output.availableVideoCVPixelFormatTypes;
 
+  if (captureScreen) {
+#ifndef HAVE_IOS
+    CGRect rect = CGDisplayBounds (displayId);
+    for (NSNumber *pixel_format in pixel_formats) {
+      GstVideoFormat gst_format = [self getGstVideoFormat:pixel_format];
+      if (gst_format != GST_VIDEO_FORMAT_UNKNOWN)
+        gst_caps_append (result, gst_caps_new_simple ("video/x-raw",
+            "width", G_TYPE_INT, (int)rect.size.width,
+            "height", G_TYPE_INT, (int)rect.size.height,
+            "format", G_TYPE_STRING, gst_video_format_to_string (gst_format),
+            NULL));
+    }
+#else
+    GST_WARNING ("Screen capture is not supported by iOS");
+#endif
+    return result;
+  }
+
   @try {
 
     [self getDeviceCaps:result];
@@ -465,25 +540,36 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
     g_assert (![session isRunning]);
 
-    @try {
+    if (captureScreen) {
+#ifndef HAVE_IOS
+      AVCaptureScreenInput *screenInput = (AVCaptureScreenInput *)input;
+      screenInput.minFrameDuration = CMTimeMake(info.fps_d, info.fps_n);
+#else
+      GST_WARNING ("Screen capture is not supported by iOS");
+      *successPtr = NO;
+      return;
+#endif
+    } else {
+      @try {
 
-      /* formats and activeFormat keys are only available on OSX >= 10.7 and iOS >= 7.0 */
-      *successPtr = [self setDeviceCaps:(GstVideoInfo *)&info];
-      if (*successPtr != YES)
-        return;
+        /* formats and activeFormat keys are only available on OSX >= 10.7 and iOS >= 7.0 */
+        *successPtr = [self setDeviceCaps:(GstVideoInfo *)&info];
+        if (*successPtr != YES)
+          return;
 
-    } @catch (NSException *exception) {
+      } @catch (NSException *exception) {
 
-      if (![[exception name] isEqualTo:NSUndefinedKeyException]) {
-        GST_WARNING ("An unexcepted error occured: %s", [exception.reason UTF8String]);
-        *successPtr = NO;
-        return;
+        if (![[exception name] isEqualTo:NSUndefinedKeyException]) {
+          GST_WARNING ("An unexcepted error occured: %s", [exception.reason UTF8String]);
+          *successPtr = NO;
+          return;
+        }
+
+        /* Fallback on session presets API for iOS < 7.0 */
+        *successPtr = [self setSessionPresetCaps:(GstVideoInfo *)&info];
+        if (*successPtr != YES)
+          return;
       }
-
-      /* Fallback on session presets API for iOS < 7.0 */
-      *successPtr = [self setSessionPresetCaps:(GstVideoInfo *)&info];
-      if (*successPtr != YES)
-        return;
     }
 
     switch (format) {
@@ -760,7 +846,12 @@ enum
   PROP_0,
   PROP_DEVICE_INDEX,
   PROP_DO_STATS,
-  PROP_FPS
+  PROP_FPS,
+#ifndef HAVE_IOS
+  PROP_CAPTURE_SCREEN,
+  PROP_CAPTURE_SCREEN_CURSOR,
+  PROP_CAPTURE_SCREEN_MOUSE_CLICKS,
+#endif
 };
 
 
@@ -830,6 +921,20 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
       g_param_spec_int ("fps", "Frames per second",
           "Last measured framerate, if statistics are enabled",
           -1, G_MAXINT, -1, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+#ifndef HAVE_IOS
+  g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN,
+      g_param_spec_boolean ("capture-screen", "Enable screen capture",
+          "Enable screen capture functionality", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN_CURSOR,
+      g_param_spec_boolean ("capture-screen-cursor", "Capture screen cursor",
+          "Enable cursor capture while capturing screen", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN_MOUSE_CLICKS,
+      g_param_spec_boolean ("capture-screen-mouse-clicks", "Enable mouse clicks capture",
+          "Enable mouse clicks capture while capturing screen", FALSE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+#endif
 
   GST_DEBUG_CATEGORY_INIT (gst_avf_video_src_debug, "avfvideosrc",
       0, "iOS AVFoundation video source");
@@ -868,6 +973,17 @@ gst_avf_video_src_get_property (GObject * object, guint prop_id, GValue * value,
   GstAVFVideoSrcImpl *impl = GST_AVF_VIDEO_SRC_IMPL (object);
 
   switch (prop_id) {
+#ifndef HAVE_IOS
+    case PROP_CAPTURE_SCREEN:
+      g_value_set_boolean (value, impl.captureScreen);
+      break;
+    case PROP_CAPTURE_SCREEN_CURSOR:
+      g_value_set_boolean (value, impl.captureScreenCursor);
+      break;
+    case PROP_CAPTURE_SCREEN_MOUSE_CLICKS:
+      g_value_set_boolean (value, impl.captureScreenMouseClicks);
+      break;
+#endif
     case PROP_DEVICE_INDEX:
       g_value_set_int (value, impl.deviceIndex);
       break;
@@ -892,6 +1008,17 @@ gst_avf_video_src_set_property (GObject * object, guint prop_id,
   GstAVFVideoSrcImpl *impl = GST_AVF_VIDEO_SRC_IMPL (object);
 
   switch (prop_id) {
+#ifndef HAVE_IOS
+    case PROP_CAPTURE_SCREEN:
+      impl.captureScreen = g_value_get_boolean (value);
+      break;
+    case PROP_CAPTURE_SCREEN_CURSOR:
+      impl.captureScreenCursor = g_value_get_boolean (value);
+      break;
+    case PROP_CAPTURE_SCREEN_MOUSE_CLICKS:
+      impl.captureScreenMouseClicks = g_value_get_boolean (value);
+      break;
+#endif
     case PROP_DEVICE_INDEX:
       impl.deviceIndex = g_value_get_int (value);
       break;
