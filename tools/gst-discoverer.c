@@ -39,6 +39,7 @@ typedef struct
 
 static void
 my_g_string_append_printf (GString * str, int depth, const gchar * format, ...)
+G_GNUC_PRINTF (3, 4)
 {
   va_list args;
 
