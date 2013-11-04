@@ -20,5 +20,6 @@ gst-typefind.1
 
 gst-inspect-?.?*
 gst-launch-?.?*
+gst-stats-?.?*
 gst-typefind-?.?*
 

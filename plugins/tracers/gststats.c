@@ -42,69 +42,70 @@ G_DEFINE_TYPE_WITH_CODE (GstStatsTracer, gst_stats_tracer, GST_TYPE_TRACER,
 
 typedef struct
 {
-  /* human readable pad name and details */
-  gchar *name;
+  /* we can't rely on the address to be unique over time */
   guint index;
-  GType type;
-  GstPadDirection dir;
-  /* buffer statistics */
-  guint num_buffers;
-  guint num_discont, num_gap, num_delta;
-  guint min_size, max_size, avg_size;
-  /* first and last activity on the pad, expected next_ts */
-  GstClockTime first_ts, last_ts, next_ts;
-  /* in which thread does it operate */
-  gpointer thread_id;
+  /* for pre + post */
+  GstClockTime last_ts;
+  /* hierarchy */
+  guint parent_ix;
 } GstPadStats;
 
 typedef struct
 {
-  /* human readable element name */
-  gchar *name;
+  /* we can't rely on the address to be unique over time */
   guint index;
-  GType type;
-  /* buffer statistics */
-  guint recv_buffers, sent_buffers;
-  guint64 recv_bytes, sent_bytes;
-  /* event, message statistics */
-  guint num_events, num_messages, num_queries;
-  /* first activity on the element */
-  GstClockTime first_ts, last_ts;
+  /* for pre + post */
+  GstClockTime last_ts;
   /* time spend in this element */
   GstClockTime treal;
   /* hierarchy */
   guint parent_ix;
 } GstElementStats;
 
+/* logging */
+
+static void
+log_trace (GstStructure * s)
+{
+  gchar *data;
+
+  // TODO(ensonic): use a GVariant?
+  data = gst_structure_to_string (s);
+  GST_TRACE ("%s", data);
+  g_free (data);
+  gst_structure_free (s);
+}
+
 /* data helper */
+
+static GstElementStats no_elem_stats = { 0, };
 
 static GstElementStats *
 fill_element_stats (GstStatsTracer * self, GstElement * element)
 {
   GstElementStats *stats = g_slice_new0 (GstElementStats);
 
-  if (GST_IS_BIN (element)) {
-    self->num_bins++;
-  }
   stats->index = self->num_elements++;
-  stats->type = G_OBJECT_TYPE (element);
-  stats->first_ts = GST_CLOCK_TIME_NONE;
   stats->parent_ix = G_MAXUINT;
+
+  log_trace (gst_structure_new ("new-element",
+          "ix", G_TYPE_UINT, stats->index,
+          "name", G_TYPE_STRING, GST_OBJECT_NAME (element),
+          "type", G_TYPE_STRING, G_OBJECT_TYPE_NAME (element),
+          "is-bin", G_TYPE_BOOLEAN, GST_IS_BIN (element), NULL));
+
   return stats;
 }
-
-#if 0
-static GstElementStats *
-get_element_stats_by_id (GstStatsTracer * self, guint ix)
-{
-  return g_ptr_array_index (self->elements, ix);
-}
-#endif
 
 static inline GstElementStats *
 get_element_stats (GstStatsTracer * self, GstElement * element)
 {
   GstElementStats *stats;
+
+  if (!element) {
+    no_elem_stats.index = G_MAXUINT;
+    return &no_elem_stats;
+  }
 
   G_LOCK (_stats);
   if (!(stats = g_object_get_qdata ((GObject *) element, data_quark))) {
@@ -122,11 +123,6 @@ get_element_stats (GstStatsTracer * self, GstElement * element)
       stats->parent_ix = parent_stats->index;
     }
   }
-  if (G_UNLIKELY (!stats->name)) {
-    if (GST_OBJECT_NAME (element)) {
-      stats->name = g_strdup (GST_OBJECT_NAME (element));
-    }
-  }
   return stats;
 }
 
@@ -136,21 +132,64 @@ free_element_stats (gpointer data)
   g_slice_free (GstElementStats, data);
 }
 
+static GstPadStats no_pad_stats = { 0, };
+
 static GstPadStats *
 fill_pad_stats (GstStatsTracer * self, GstPad * pad)
 {
   GstPadStats *stats = g_slice_new0 (GstPadStats);
 
-  if (GST_IS_GHOST_PAD (pad)) {
-    self->num_ghostpads++;
-  }
   stats->index = self->num_pads++;
-  stats->type = G_OBJECT_TYPE (pad);
-  stats->dir = GST_PAD_DIRECTION (pad);
-  stats->min_size = G_MAXUINT;
-  stats->first_ts = stats->last_ts = stats->next_ts = GST_CLOCK_TIME_NONE;
-  stats->thread_id = g_thread_self ();
+  stats->parent_ix = G_MAXUINT;
+
+  log_trace (gst_structure_new ("new-pad",
+          "ix", G_TYPE_UINT, stats->index,
+          "name", G_TYPE_STRING, GST_OBJECT_NAME (pad),
+          "type", G_TYPE_STRING, G_OBJECT_TYPE_NAME (pad),
+          "is-ghostpad", G_TYPE_BOOLEAN, GST_IS_GHOST_PAD (pad),
+          "pad-direction", GST_TYPE_PAD_DIRECTION, GST_PAD_DIRECTION (pad),
+          "thread-id", G_TYPE_UINT, GPOINTER_TO_UINT (g_thread_self ()), NULL));
+
   return stats;
+}
+
+/*
+ * Get the element/bin owning the pad. 
+ *
+ * in: a normal pad
+ * out: the element
+ *
+ * in: a proxy pad
+ * out: the element that contains the peer of the proxy
+ *
+ * in: a ghost pad
+ * out: the bin owning the ghostpad
+ */
+/* TODO(ensonic): gst_pad_get_parent_element() would not work here, should we
+ * add this as new api, e.g. gst_pad_find_parent_element();
+ */
+static GstElement *
+get_real_pad_parent (GstPad * pad)
+{
+  GstObject *parent;
+
+  if (!pad)
+    return NULL;
+
+  parent = GST_OBJECT_PARENT (pad);
+
+  /* if parent of pad is a ghost-pad, then pad is a proxy_pad */
+  if (parent && GST_IS_GHOST_PAD (parent)) {
+    pad = GST_PAD_CAST (parent);
+    parent = GST_OBJECT_PARENT (pad);
+  }
+  /* if pad is a ghost-pad, then parent is a bin and it is the parent of a
+   * proxy_pad */
+  while (parent && GST_IS_GHOST_PAD (pad)) {
+    pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
+    parent = pad ? GST_OBJECT_PARENT (pad) : NULL;
+  }
+  return GST_ELEMENT_CAST (parent);
 }
 
 static GstPadStats *
@@ -158,8 +197,10 @@ get_pad_stats (GstStatsTracer * self, GstPad * pad)
 {
   GstPadStats *stats;
 
-  if (!pad)
-    return NULL;
+  if (!pad) {
+    no_pad_stats.index = G_MAXUINT;
+    return &no_pad_stats;
+  }
 
   G_LOCK (_stats);
   if (!(stats = g_object_get_qdata ((GObject *) pad, data_quark))) {
@@ -170,25 +211,12 @@ get_pad_stats (GstStatsTracer * self, GstPad * pad)
     g_ptr_array_index (self->pads, stats->index) = stats;
   }
   G_UNLOCK (_stats);
-  if (G_UNLIKELY (!stats->name)) {
-    GstObject *parent = GST_OBJECT_PARENT (pad);
-    /* yes we leak the names right now ... */
-    if (GST_IS_ELEMENT (parent)) {
-      /* pad is regular pad */
-      get_element_stats (self, GST_ELEMENT_CAST (parent));
-      if (GST_OBJECT_NAME (parent) && GST_OBJECT_NAME (pad)) {
-        stats->name =
-            g_strdup_printf ("%s_%s", GST_OBJECT_NAME (parent),
-            GST_OBJECT_NAME (pad));
-      }
-    } else if (GST_IS_GHOST_PAD (parent)) {
-      /* pad is proxy pad */
-      get_pad_stats (self, GST_PAD_CAST (parent));
-      if (GST_OBJECT_NAME (parent) && GST_OBJECT_NAME (pad)) {
-        stats->name =
-            g_strdup_printf ("%s_%s", GST_OBJECT_NAME (parent),
-            GST_OBJECT_NAME (pad));
-      }
+  if (G_UNLIKELY (stats->parent_ix == G_MAXUINT)) {
+    GstElement *elem = get_real_pad_parent (pad);
+    if (elem) {
+      GstElementStats *elem_stats = get_element_stats (self, elem);
+
+      stats->parent_ix = elem_stats->index;
     }
   }
   return stats;
@@ -201,161 +229,30 @@ free_pad_stats (gpointer data)
 }
 
 static void
-do_pad_stats (GstStatsTracer * self, GstPad * pad, GstPadStats * stats,
-    GstBuffer * buffer, GstClockTime elapsed)
+do_buffer_stats (GstStatsTracer * self, GstPad * this_pad,
+    GstPadStats * this_pad_stats, GstPad * that_pad,
+    GstPadStats * that_pad_stats, GstBuffer * buf, GstClockTime elapsed)
 {
-  guint size = gst_buffer_get_size (buffer);
-  gulong avg_size;
+  GstElement *this_elem = get_real_pad_parent (this_pad);
+  GstElementStats *this_elem_stats = get_element_stats (self, this_elem);
+  GstElement *that_elem = get_real_pad_parent (that_pad);
+  GstElementStats *that_elem_stats = get_element_stats (self, that_elem);
 
-  self->num_buffers++;
-  /* size stats */
-  avg_size = (((gulong) stats->avg_size * (gulong) stats->num_buffers) + size);
-  stats->num_buffers++;
-  stats->avg_size = (guint) (avg_size / stats->num_buffers);
-  if (size < stats->min_size)
-    stats->min_size = size;
-  else if (size > stats->max_size)
-    stats->max_size = size;
-  /* time stats */
-  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (stats->first_ts)))
-    stats->first_ts = elapsed;
-  stats->last_ts = elapsed;
-  /* flag stats */
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_GAP))
-    stats->num_gap++;
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT))
-    stats->num_delta++;
-  if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT))
-    stats->num_discont++;
-  /* TODO(ensonic): there is a bunch of new flags in 1.0 */
-
-  /* update timestamps */
-  if (GST_BUFFER_TIMESTAMP_IS_VALID (buffer) +
-      GST_BUFFER_DURATION_IS_VALID (buffer)) {
-    stats->next_ts =
-        GST_BUFFER_TIMESTAMP (buffer) + GST_BUFFER_DURATION (buffer);
-  } else {
-    stats->next_ts = GST_CLOCK_TIME_NONE;
-  }
-}
-
-static void
-do_transmission_stats (GstStatsTracer * self, GstPad * pad, GstBuffer * buf,
-    GstClockTime elapsed)
-{
-  GstObject *parent = GST_OBJECT_PARENT (pad);
-  GstElement *this =
-      GST_ELEMENT_CAST (GST_IS_PAD (parent) ? GST_OBJECT_PARENT (parent) :
-      parent);
-  GstElementStats *this_stats = get_element_stats (self, this);
-  GstPad *peer_pad = GST_PAD_PEER (pad);
-  GstElementStats *peer_stats;
-  GSList *bin_i_stats = NULL, *bin_o_stats = NULL;
-  GstPadStats *peer_pad_stats;
-
-  if (!peer_pad)
-    return;
-
-  parent = GST_OBJECT_PARENT (peer_pad);
-#ifdef _ENABLE_BLACK_MAGIC_
-  /* walk the ghost pad chain downstream to get the real pad */
-  /* if parent of peer_pad is a ghost-pad, then peer_pad is a proxy_pad */
-  while (parent && GST_IS_GHOST_PAD (parent)) {
-    peer_pad = GST_PAD_CAST (parent);
-    /* if this is now the ghost pad, get the peer of this */
-    get_pad_stats (self, peer_pad);
-    if (parent = GST_OBJECT_PARENT (peer_pad)) {
-      peer_stats = get_element_stats (self, GST_ELEMENT_CAST (parent));
-      bin_o_stats = g_slist_prepend (bin_o_stats, peer_stats);
-    }
-    peer_pad = GST_PAD_PEER (GST_GHOST_PAD_CAST (peer_pad));
-    parent = peer_pad ? GST_OBJECT_PARENT (peer_pad) : NULL;
-  }
-  /* walk the ghost pad chain upstream to get the real pad */
-  /* if peer_pad is a ghost-pad, then parent is a bin adn it is the parent of
-   * a proxy_pad */
-  while (peer_pad && GST_IS_GHOST_PAD (peer_pad)) {
-    get_pad_stats (self, peer_pad);
-    peer_stats = get_element_stats (self, GST_ELEMENT_CAST (parent));
-    bin_i_stats = g_slist_prepend (bin_i_stats, peer_stats);
-    peer_pad = gst_ghost_pad_get_target (GST_GHOST_PAD_CAST (peer_pad));
-    parent = peer_pad ? GST_OBJECT_PARENT (peer_pad) : NULL;
-  }
-#else
-  if (parent && GST_IS_GHOST_PAD (parent)) {
-    peer_pad = GST_PAD_CAST (parent);
-    parent = GST_OBJECT_PARENT (peer_pad);
-  }
-#endif
-
-  if (!parent) {
-    fprintf (stderr,
-        "%" GST_TIME_FORMAT " transmission on unparented target pad%s_%s\n",
-        GST_TIME_ARGS (elapsed), GST_DEBUG_PAD_NAME (peer_pad));
-    return;
-  }
-  peer_stats = get_element_stats (self, GST_ELEMENT_CAST (parent));
-
-  peer_pad_stats = get_pad_stats (self, peer_pad);
-  do_pad_stats (self, peer_pad, peer_pad_stats, buf, elapsed);
-
-  if (GST_PAD_DIRECTION (pad) == GST_PAD_SRC) {
-    /* push */
-    this_stats->sent_buffers++;
-    peer_stats->recv_buffers++;
-    this_stats->sent_bytes += gst_buffer_get_size (buf);
-    peer_stats->recv_bytes += gst_buffer_get_size (buf);
-    /* time stats */
-    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (this_stats->first_ts))) {
-      this_stats->first_ts = elapsed;
-      //printf("%" GST_TIME_FORMAT " %s pushes on %s\n",GST_TIME_ARGS(elapsed),this_stats->name,peer_stats->name);
-    }
-    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (peer_stats->first_ts))) {
-      peer_stats->first_ts = elapsed + 1;
-      //printf("%" GST_TIME_FORMAT " %s is beeing pushed from %s\n",GST_TIME_ARGS(elapsed),peer_stats->name,this_stats->name);
-    }
-#ifdef _ENABLE_BLACK_MAGIC_
-    for (node = bin_o_stats; node; node = g_slist_next (node)) {
-      peer_stats = node->data;
-      peer_stats->sent_buffers++;
-      peer_stats->sent_bytes += gst_buffer_get_size (buf);
-    }
-    for (node = bin_i_stats; node; node = g_slist_next (node)) {
-      peer_stats = node->data;
-      peer_stats->recv_buffers++;
-      peer_stats->recv_bytes += gst_buffer_get_size (buf);
-    }
-#endif
-  } else {
-    /* pull */
-    peer_stats->sent_buffers++;
-    this_stats->recv_buffers++;
-    peer_stats->sent_bytes += gst_buffer_get_size (buf);
-    this_stats->recv_bytes += gst_buffer_get_size (buf);
-    /* time stats */
-    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (this_stats->first_ts))) {
-      this_stats->first_ts = elapsed + 1;
-      //printf("%" GST_TIME_FORMAT " %s pulls from %s\n",GST_TIME_ARGS(elapsed),this_stats->name,peer_stats->name);
-    }
-    if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (peer_stats->first_ts))) {
-      peer_stats->first_ts = elapsed;
-      //printf("%" GST_TIME_FORMAT " %s is beeing pulled from %s\n",GST_TIME_ARGS(elapsed),peer_stats->name,this_stats->name);
-    }
-#ifdef _ENABLE_BLACK_MAGIC_
-    for (node = bin_i_stats; node; node = g_slist_next (node)) {
-      peer_stats = node->data;
-      peer_stats->sent_buffers++;
-      peer_stats->sent_bytes += gst_buffer_get_size (buf);
-    }
-    for (node = bin_o_stats; node; node = g_slist_next (node)) {
-      peer_stats = node->data;
-      peer_stats->recv_buffers++;
-      peer_stats->recv_bytes += gst_buffer_get_size (buf);
-    }
-#endif
-  }
-  g_slist_free (bin_o_stats);
-  g_slist_free (bin_i_stats);
+  /* TODO(ensonic): need a quark-table (shared with the tracer-front-ends?) */
+  log_trace (gst_structure_new ("buffer",
+          "ts", G_TYPE_UINT64, elapsed,
+          "pad-ix", G_TYPE_UINT, this_pad_stats->index,
+          "elem-ix", G_TYPE_UINT, this_elem_stats->index,
+          "peer-pad-ix", G_TYPE_UINT, that_pad_stats->index,
+          "peer-elem-ix", G_TYPE_UINT, that_elem_stats->index,
+          "buffer-size", G_TYPE_UINT, gst_buffer_get_size (buf),
+          "buffer-ts", G_TYPE_UINT64, GST_BUFFER_TIMESTAMP (buf),
+          "buffer-duration", G_TYPE_UINT64, GST_BUFFER_DURATION (buf),
+          "buffer-flags", GST_TYPE_BUFFER_FLAGS, GST_BUFFER_FLAGS (buf),
+          /*
+             scheduling-jitter: for this we need the last_ts on the pad
+           */
+          NULL));
 }
 
 static void
@@ -398,11 +295,9 @@ do_element_stats (GstStatsTracer * self, GstPad * pad, GstClockTime elapsed1,
   }
 
   if (!parent) {
-    GstPadStats *pad_stats = get_pad_stats (self, pad);
-
     printf ("%" GST_TIME_FORMAT
-        " transmission on unparented target pad %s -> %s_%s\n",
-        GST_TIME_ARGS (elapsed), pad_stats->name,
+        " transmission on unparented target pad %s_%s -> %s_%s\n",
+        GST_TIME_ARGS (elapsed), GST_DEBUG_PAD_NAME (pad),
         GST_DEBUG_PAD_NAME (peer_pad));
     return;
   }
@@ -435,36 +330,6 @@ do_element_stats (GstStatsTracer * self, GstPad * pad, GstClockTime elapsed1,
 #endif
 }
 
-/* FIXME: this looks a bit weired, check that we really want to do this
- *
- * in: a normal pad
- * out: the element
- *
- * in: a proxy pad
- * out: the element that contains the peer of the proxy
- *
- * in: a ghost pad
- * out: the bin owning the ghostpad
- */
-static GstObject *
-get_real_pad_parent (GstPad * pad)
-{
-  GstObject *parent = GST_OBJECT_PARENT (pad);
-
-  /* if parent of pad is a ghost-pad, then pad is a proxy_pad */
-  if (parent && GST_IS_GHOST_PAD (parent)) {
-    pad = GST_PAD_CAST (parent);
-    parent = GST_OBJECT_PARENT (pad);
-  }
-  /* if pad is a ghost-pad, then parent is a bin and it is the parent of a
-   * proxy_pad */
-  while (parent && GST_IS_GHOST_PAD (pad)) {
-    pad = gst_ghost_pad_get_target (GST_GHOST_PAD (pad));
-    parent = pad ? GST_OBJECT_PARENT (pad) : NULL;
-  }
-  return parent;
-}
-
 /* tracer class */
 
 static void gst_stats_tracer_finalize (GObject * obj);
@@ -492,16 +357,20 @@ gst_stats_tracer_init (GstStatsTracer * self)
   self->pads = g_ptr_array_new_with_free_func (free_pad_stats);
 }
 
+/* hooks */
+
 static void
 do_push_buffer_pre (GstStatsTracer * self, va_list var_args)
 {
   guint64 ts = va_arg (var_args, guint64);
-  GstPad *pad = va_arg (var_args, GstPad *);
+  GstPad *this_pad = va_arg (var_args, GstPad *);
   GstBuffer *buffer = va_arg (var_args, GstBuffer *);
-  GstPadStats *stats = get_pad_stats (self, pad);
+  GstPadStats *this_pad_stats = get_pad_stats (self, this_pad);
+  GstPad *that_pad = GST_PAD_PEER (this_pad);
+  GstPadStats *that_pad_stats = get_pad_stats (self, that_pad);
 
-  do_pad_stats (self, pad, stats, buffer, ts);
-  do_transmission_stats (self, pad, buffer, ts);
+  do_buffer_stats (self, this_pad, this_pad_stats, that_pad, that_pad_stats,
+      buffer, ts);
 }
 
 static void
@@ -517,8 +386,10 @@ do_push_buffer_post (GstStatsTracer * self, va_list var_args)
 typedef struct
 {
   GstStatsTracer *self;
-  GstPad *pad;
-  GstPadStats *stats;
+  GstPad *this_pad;
+  GstPadStats *this_pad_stats;
+  GstPad *that_pad;
+  GstPadStats *that_pad_stats;
   guint64 ts;
 } DoPushBufferListArgs;
 
@@ -527,8 +398,8 @@ do_push_buffer_list_item (GstBuffer ** buffer, guint idx, gpointer user_data)
 {
   DoPushBufferListArgs *args = (DoPushBufferListArgs *) user_data;
 
-  do_pad_stats (args->self, args->pad, args->stats, *buffer, args->ts);
-  do_transmission_stats (args->self, args->pad, *buffer, args->ts);
+  do_buffer_stats (args->self, args->this_pad, args->this_pad_stats,
+      args->that_pad, args->that_pad_stats, *buffer, args->ts);
   return TRUE;
 }
 
@@ -536,10 +407,14 @@ static void
 do_push_buffer_list_pre (GstStatsTracer * self, va_list var_args)
 {
   guint64 ts = va_arg (var_args, guint64);
-  GstPad *pad = va_arg (var_args, GstPad *);
+  GstPad *this_pad = va_arg (var_args, GstPad *);
   GstBufferList *list = va_arg (var_args, GstBufferList *);
-  GstPadStats *stats = get_pad_stats (self, pad);
-  DoPushBufferListArgs args = { self, pad, stats, ts };
+  GstPadStats *this_pad_stats = get_pad_stats (self, this_pad);
+  GstPad *that_pad = GST_PAD_PEER (this_pad);
+  GstPadStats *that_pad_stats = get_pad_stats (self, that_pad);
+  DoPushBufferListArgs args = { self, this_pad, this_pad_stats, that_pad,
+    that_pad_stats, ts
+  };
 
   gst_buffer_list_foreach (list, do_push_buffer_list_item, &args);
 }
@@ -555,7 +430,7 @@ do_push_buffer_list_post (GstStatsTracer * self, va_list var_args)
 }
 
 static void
-do_pull_range_list_pre (GstStatsTracer * self, va_list var_args)
+do_pull_range_pre (GstStatsTracer * self, va_list var_args)
 {
   guint64 ts = va_arg (var_args, guint64);
   GstPad *pad = va_arg (var_args, GstPad *);
@@ -564,19 +439,21 @@ do_pull_range_list_pre (GstStatsTracer * self, va_list var_args)
 }
 
 static void
-do_pull_range_list_post (GstStatsTracer * self, va_list var_args)
+do_pull_range_post (GstStatsTracer * self, va_list var_args)
 {
   guint64 ts = va_arg (var_args, guint64);
-  GstPad *pad = va_arg (var_args, GstPad *);
+  GstPad *this_pad = va_arg (var_args, GstPad *);
   GstBuffer *buffer = va_arg (var_args, GstBuffer *);
-  GstPadStats *stats = get_pad_stats (self, pad);
-  guint64 last_ts = stats->last_ts;
+  GstPadStats *this_pad_stats = get_pad_stats (self, this_pad);
+  guint64 last_ts = this_pad_stats->last_ts;
+  GstPad *that_pad = GST_PAD_PEER (this_pad);
+  GstPadStats *that_pad_stats = get_pad_stats (self, that_pad);
 
   if (buffer != NULL) {
-    do_pad_stats (self, pad, stats, buffer, ts);
-    do_transmission_stats (self, pad, buffer, ts);
+    do_buffer_stats (self, this_pad, this_pad_stats, that_pad, that_pad_stats,
+        buffer, ts);
   }
-  do_element_stats (self, pad, last_ts, ts);
+  do_element_stats (self, this_pad, last_ts, ts);
 }
 
 static void
@@ -584,18 +461,15 @@ do_push_event_pre (GstStatsTracer * self, va_list var_args)
 {
   guint64 ts = va_arg (var_args, guint64);
   GstPad *pad = va_arg (var_args, GstPad *);
-  GstObject *parent;
-  GstElement *elem;
+  GstElement *elem = get_real_pad_parent (pad);
+  GstPadStats *pad_stats = get_pad_stats (self, pad);
+  GstElementStats *elem_stats = get_element_stats (self, elem);
 
-  parent = get_real_pad_parent (pad);
-  if ((elem = GST_ELEMENT (parent))) {
-    GstElementStats *stats = get_element_stats (self, elem);
-    get_pad_stats (self, pad);
-
-    stats->last_ts = ts;
-    stats->num_events++;
-    self->num_events++;
-  }
+  elem_stats->last_ts = ts;
+  log_trace (gst_structure_new ("event",
+          "ts", G_TYPE_UINT64, ts,
+          "pad-ix", G_TYPE_UINT, pad_stats->index,
+          "elem-ix", G_TYPE_UINT, elem_stats->index, NULL));
 }
 
 static void
@@ -615,8 +489,8 @@ do_post_message_pre (GstStatsTracer * self, va_list var_args)
   GstElementStats *stats = get_element_stats (self, elem);
 
   stats->last_ts = ts;
-  stats->num_messages++;
-  self->num_messages++;
+  log_trace (gst_structure_new ("message",
+          "ts", G_TYPE_UINT64, ts, "elem-ix", G_TYPE_UINT, stats->index, NULL));
 }
 
 static void
@@ -636,8 +510,8 @@ do_query_pre (GstStatsTracer * self, va_list var_args)
   GstElementStats *stats = get_element_stats (self, elem);
 
   stats->last_ts = ts;
-  stats->num_queries++;
-  self->num_queries++;
+  log_trace (gst_structure_new ("query",
+          "ts", G_TYPE_UINT64, ts, "elem-ix", G_TYPE_UINT, stats->index, NULL));
 }
 
 static void
@@ -669,10 +543,10 @@ gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
       do_push_buffer_list_post (self, var_args);
       break;
     case GST_TRACER_MESSAGE_ID_PAD_PULL_RANGE_PRE:
-      do_pull_range_list_pre (self, var_args);
+      do_pull_range_pre (self, var_args);
       break;
     case GST_TRACER_MESSAGE_ID_PAD_PULL_RANGE_POST:
-      do_pull_range_list_post (self, var_args);
+      do_pull_range_post (self, var_args);
       break;
     case GST_TRACER_MESSAGE_ID_PAD_PUSH_EVENT_PRE:
       do_push_event_pre (self, var_args);
@@ -700,21 +574,7 @@ gst_stats_tracer_invoke (GstTracer * obj, GstTracerHookId hid,
 static void
 gst_stats_tracer_finalize (GObject * obj)
 {
-  GstStatsTracer *self = GST_STATS_TRACER_CAST (obj);
-
-  /* print overall stats */
-  puts ("\nOverall Statistics:");
-  printf ("Number of Elements: %u\n", self->num_elements - self->num_bins);
-  printf ("Number of Bins: %u\n", self->num_bins);
-  printf ("Number of Pads: %u\n", self->num_pads - self->num_ghostpads);
-  printf ("Number of GhostPads: %u\n", self->num_ghostpads);
-  printf ("Number of Buffers passed: %" G_GUINT64_FORMAT "\n",
-      self->num_buffers);
-  printf ("Number of Events sent: %" G_GUINT64_FORMAT "\n", self->num_events);
-  printf ("Number of Message sent: %" G_GUINT64_FORMAT "\n",
-      self->num_messages);
-  printf ("Number of Queries sent: %" G_GUINT64_FORMAT "\n", self->num_queries);
-  //printf("Time: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (self->last_ts));
+  //GstStatsTracer *self = GST_STATS_TRACER_CAST (obj);
 
   G_OBJECT_CLASS (parent_class)->finalize (obj);
 }

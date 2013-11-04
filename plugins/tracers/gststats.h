@@ -52,8 +52,7 @@ struct _GstStatsTracer {
   /*< private >*/
   GPtrArray *elements;
   GPtrArray *pads;
-  guint64 num_buffers, num_events, num_messages, num_queries;
-  guint num_elements, num_bins, num_pads, num_ghostpads;
+  guint num_elements, num_pads;
 };
 
 struct _GstStatsTracerClass {
