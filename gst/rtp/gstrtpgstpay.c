@@ -411,6 +411,9 @@ gst_rtp_gst_pay_send_caps (GstRtpGSTPay * rtpgstpay, guint8 cv, GstCaps * caps)
   guint capslen;
   GstBuffer *outbuf;
 
+  if (rtpgstpay->flags & (1 << 7))
+    return;
+
   capsstr = gst_caps_to_string (caps);
   capslen = strlen (capsstr);
   /* for 0 byte */
