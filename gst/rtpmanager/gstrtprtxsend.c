@@ -167,9 +167,8 @@ gst_rtp_rtx_send_reset (GstRtpRtxSend * rtx, gboolean full)
   g_mutex_lock (&rtx->lock);
   g_queue_foreach (rtx->queue, (GFunc) buffer_queue_item_free, NULL);
   g_queue_clear (rtx->queue);
-  g_list_foreach (rtx->pending, (GFunc) gst_buffer_unref, NULL);
-  g_list_free (rtx->pending);
-  rtx->pending = NULL;
+  g_queue_foreach (rtx->pending, (GFunc) gst_buffer_unref, NULL);
+  g_queue_clear (rtx->pending);
   rtx->master_ssrc = 0;
   rtx->next_seqnum = g_random_int_range (0, G_MAXUINT16);
   rtx->rtx_ssrc = g_random_int ();
@@ -185,6 +184,7 @@ gst_rtp_rtx_send_finalize (GObject * object)
 
   gst_rtp_rtx_send_reset (rtx, TRUE);
   g_queue_free (rtx->queue);
+  g_queue_free (rtx->pending);
   g_mutex_clear (&rtx->lock);
 
   G_OBJECT_CLASS (gst_rtp_rtx_send_parent_class)->finalize (object);
@@ -216,7 +216,7 @@ gst_rtp_rtx_send_init (GstRtpRtxSend * rtx)
   gst_element_add_pad (GST_ELEMENT (rtx), rtx->sinkpad);
 
   rtx->queue = g_queue_new ();
-  rtx->pending = NULL;
+  rtx->pending = g_queue_new ();
   g_mutex_init (&rtx->lock);
 
   rtx->next_seqnum = g_random_int_range (0, G_MAXUINT16);
@@ -262,7 +262,7 @@ push_seqnum (BufferQueueItem * item, RTXData * data)
   if (item->seqnum == data->seqnum) {
     data->found = TRUE;
     GST_DEBUG_OBJECT (rtx, "found %" G_GUINT16_FORMAT, item->seqnum);
-    rtx->pending = g_list_prepend (rtx->pending, gst_buffer_ref (item->buffer));
+    g_queue_push_tail (rtx->pending, gst_buffer_ref (item->buffer));
   }
 }
 
@@ -330,9 +330,8 @@ gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
           g_queue_clear (rtx->queue);
 
           /* clear buffers that are about to be retransmited */
-          g_list_foreach (rtx->pending, (GFunc) gst_buffer_unref, NULL);
-          g_list_free (rtx->pending);
-          rtx->pending = NULL;
+          g_queue_foreach (rtx->pending, (GFunc) gst_buffer_unref, NULL);
+          g_queue_clear (rtx->pending);
 
           g_mutex_unlock (&rtx->lock);
 
@@ -475,7 +474,7 @@ _gst_rtp_rtx_buffer_new (GstBuffer * buffer, guint32 ssrc, guint16 seqnum,
   return new_buffer;
 }
 
-/* psuh pending retransmission packet.
+/* push pending retransmission packet.
  * it constructs rtx packet from original paclets */
 static void
 do_push (GstBuffer * buffer, GstRtpRtxSend * rtx)
@@ -494,7 +493,7 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 {
   GstRtpRtxSend *rtx = GST_RTP_RTX_SEND (parent);
   GstFlowReturn ret = GST_FLOW_ERROR;
-  GList *pending = NULL;
+  GQueue *pending = NULL;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   BufferQueueItem *item;
   guint16 seqnum;
@@ -535,11 +534,13 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
   /* within lock, get packets that have to be retransmited */
-  pending = rtx->pending;
-  rtx->pending = NULL;
+  if (g_queue_get_length (rtx->pending) > 0) {
+    pending = rtx->pending;
+    rtx->pending = g_queue_new ();
 
-  /* update statistics - assume we will succeed to retransmit those packets */
-  rtx->num_rtx_packets += g_list_length (pending);
+    /* update statistics - assume we will succeed to retransmit those packets */
+    rtx->num_rtx_packets += g_queue_get_length (pending);
+  }
 
   /* transfer payload type while holding the lock */
   rtx->rtx_payload_type = rtx->rtx_payload_type_pending;
@@ -548,9 +549,10 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   g_mutex_unlock (&rtx->lock);
 
   /* retransmit requested packets */
-  g_list_foreach (pending, (GFunc) do_push, rtx);
-  g_list_foreach (pending, (GFunc) gst_buffer_unref, NULL);
-  g_list_free (pending);
+  if (pending) {
+    g_queue_foreach (pending, (GFunc) do_push, rtx);
+    g_queue_free_full (pending, (GDestroyNotify) gst_buffer_unref);
+  }
 
   GST_LOG_OBJECT (rtx,
       "push seqnum: %" G_GUINT16_FORMAT ", ssrc: %" G_GUINT32_FORMAT, seqnum,

@@ -1235,7 +1235,7 @@ test_rtxsender_packet_retention (gboolean test_with_time)
   }
 
   /* verify the result. buffers should be in this order (numbers are seqnums):
-   * 1, 1rtx, 2, 2rtx, 1rtx, 3, ... , 9, 9rtx, 8rtx, 7rtx, 6rtx, 5rtx, 10 */
+   * 1, 1rtx, 2, 1rtx, 2rtx, 3, ... , 9, 5rtx, 6rtx, 7rtx, 8rtx, 9rtx, 10 */
   {
     GstRTPBuffer orig_rtp = GST_RTP_BUFFER_INIT;
     gint expected_rtx_requests, expected_rtx_packets;
@@ -1258,22 +1258,8 @@ test_rtxsender_packet_retention (gboolean test_with_time)
 
     node = buffers;
     for (i = 1; i <= num_buffers; i++) {
-      /* verify the normal rtp flow packet */
-      res = gst_rtp_buffer_map (GST_BUFFER (node->data), GST_MAP_READ, &rtp);
-      fail_unless_equals_int (res, TRUE);
-      fail_unless_equals_int (gst_rtp_buffer_get_ssrc (&rtp), ssrc);
-      fail_unless_equals_int (gst_rtp_buffer_get_payload_type (&rtp),
-          payload_type);
-      fail_unless_equals_int (gst_rtp_buffer_get_seq (&rtp), i);
-      gst_rtp_buffer_unmap (&rtp);
-      node = g_list_next (node);
-
-      /* there are no rtx packets after the last normal one */
-      if (i == num_buffers)
-        break;
-
-      /* now verify the retransmission packets */
-      for (j = i; j > MAX (i - half_buffers, 0); j--) {
+      /* verify the retransmission packets */
+      for (j = MAX (i - half_buffers, 1); j < i; j++) {
         GST_INFO ("checking %d, %d", i, j);
 
         res = gst_rtp_buffer_map (GST_BUFFER (node->data), GST_MAP_READ, &rtp);
@@ -1295,6 +1281,16 @@ test_rtxsender_packet_retention (gboolean test_with_time)
         gst_rtp_buffer_unmap (&rtp);
         node = g_list_next (node);
       }
+
+      /* verify the normal rtp flow packet */
+      res = gst_rtp_buffer_map (GST_BUFFER (node->data), GST_MAP_READ, &rtp);
+      fail_unless_equals_int (res, TRUE);
+      fail_unless_equals_int (gst_rtp_buffer_get_ssrc (&rtp), ssrc);
+      fail_unless_equals_int (gst_rtp_buffer_get_payload_type (&rtp),
+          payload_type);
+      fail_unless_equals_int (gst_rtp_buffer_get_seq (&rtp), i);
+      gst_rtp_buffer_unmap (&rtp);
+      node = g_list_next (node);
     }
   }
 

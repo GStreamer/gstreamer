@@ -50,7 +50,7 @@ struct _GstRtpRtxSend
   /* history of rtp packets */
   GQueue *queue;
   /* rtp packets that will be pushed upon next buffer */
-  GList *pending;
+  GQueue *pending;
 
   guint32 master_ssrc;
   guint32 rtx_ssrc;
