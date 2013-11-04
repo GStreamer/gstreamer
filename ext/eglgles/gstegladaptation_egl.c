@@ -136,6 +136,7 @@ gst_egl_adaptation_init_exts (GstEglAdaptationContext * ctx)
 gboolean
 gst_egl_adaptation_init_display (GstEglAdaptationContext * ctx)
 {
+  GstQuery *query;
   GstMessage *msg;
   EGLDisplay display;
   GST_DEBUG_OBJECT (ctx->element, "Enter EGL initial configuration");
@@ -145,10 +146,23 @@ gst_egl_adaptation_init_display (GstEglAdaptationContext * ctx)
     goto HANDLE_ERROR;
   }
 
-  msg =
-      gst_message_new_need_context (GST_OBJECT_CAST (ctx->element),
-      GST_EGL_DISPLAY_CONTEXT_TYPE);
-  gst_element_post_message (GST_ELEMENT_CAST (ctx->element), msg);
+  if (!ctx->set_display) {
+    query = gst_query_new_context (GST_EGL_DISPLAY_CONTEXT_TYPE);
+    if (gst_pad_peer_query (GST_BASE_SINK_PAD (ctx->element), query)) {
+      GstContext *context;
+
+      gst_query_parse_context (query, &context);
+      gst_context_get_egl_display (context, &ctx->set_display);
+    }
+    gst_query_unref (query);
+  }
+
+  if (!ctx->set_display) {
+    msg =
+        gst_message_new_need_context (GST_OBJECT_CAST (ctx->element),
+        GST_EGL_DISPLAY_CONTEXT_TYPE);
+    gst_element_post_message (GST_ELEMENT_CAST (ctx->element), msg);
+  }
 
   GST_OBJECT_LOCK (ctx->element);
   if (!ctx->set_display) {
@@ -166,6 +180,8 @@ gst_egl_adaptation_init_display (GstEglAdaptationContext * ctx)
     context = gst_context_new_egl_display (ctx->display, FALSE);
     msg = gst_message_new_have_context (GST_OBJECT (ctx->element), context);
     gst_element_post_message (GST_ELEMENT_CAST (ctx->element), msg);
+  } else {
+    ctx->display = gst_egl_display_ref (ctx->set_display);
   }
 
   if (!eglInitialize (gst_egl_display_get (ctx->display),
