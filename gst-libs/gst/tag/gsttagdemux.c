@@ -75,6 +75,7 @@
 #include "gsttagdemux.h"
 
 #include <gst/base/gsttypefindhelper.h>
+#include <gst/base/gstadapter.h>
 #include <gst/gst-i18n-plugin.h>
 #include <string.h>
 
@@ -101,8 +102,10 @@ struct _GstTagDemuxPrivate
   gint64 upstream_size;
 
   GstTagDemuxState state;
+  GstAdapter *adapter;
   GstBuffer *collect;
   gsize collect_size;
+  guint tagsize;
   GstCaps *src_caps;
 
   GstTagList *event_tags;
@@ -266,6 +269,8 @@ gst_tag_demux_reset (GstTagDemux * tagdemux)
 
   gst_buffer_replace (buffer_p, NULL);
   tagdemux->priv->collect_size = 0;
+  tagdemux->priv->tagsize = 0;
+  gst_adapter_clear (tagdemux->priv->adapter);
   gst_caps_replace (caps_p, NULL);
 
   if (tagdemux->priv->event_tags) {
@@ -328,6 +333,7 @@ gst_tag_demux_init (GstTagDemux * demux, GstTagDemuxClass * gclass)
   gst_pad_use_fixed_caps (demux->priv->srcpad);
   gst_element_add_pad (GST_ELEMENT (demux), demux->priv->srcpad);
 
+  demux->priv->adapter = gst_adapter_new ();
   gst_tag_demux_reset (demux);
 }
 
@@ -337,6 +343,10 @@ gst_tag_demux_dispose (GObject * object)
   GstTagDemux *tagdemux = GST_TAG_DEMUX (object);
 
   gst_tag_demux_reset (tagdemux);
+  if (tagdemux->priv->adapter) {
+    g_object_unref (tagdemux->priv->adapter);
+    tagdemux->priv->adapter = NULL;
+  }
 
   G_OBJECT_CLASS (parent_class)->dispose (object);
 }
@@ -487,16 +497,57 @@ no_out_buffer_start:
 }
 
 static void
-gst_tag_demux_chain_parse_tag (GstTagDemux * demux, GstBuffer * collect)
+update_collected (GstTagDemux * demux)
 {
+  guint avail;
+  GstBuffer *buf;
+
+  avail = gst_adapter_available (demux->priv->adapter);
+  if (avail == 0)
+    return;
+
+  buf = gst_adapter_take_buffer (demux->priv->adapter, avail);
+
+  if (demux->priv->collect == NULL) {
+    demux->priv->collect = buf;
+  } else {
+    demux->priv->collect = gst_buffer_append (demux->priv->collect, buf);
+  }
+  demux->priv->collect_size += avail;
+}
+
+static void
+gst_tag_demux_chain_parse_tag (GstTagDemux * demux)
+{
+  GstBuffer *collect;
   GstTagDemuxResult parse_ret;
   GstTagDemuxClass *klass;
   guint tagsize = 0;
   guint available;
 
-  g_assert (gst_buffer_is_writable (collect));
+  available =
+      demux->priv->collect_size + gst_adapter_available (demux->priv->adapter);
 
   klass = GST_TAG_DEMUX_CLASS (G_OBJECT_GET_CLASS (demux));
+
+  if (available < klass->min_start_size) {
+    GST_DEBUG_OBJECT (demux, "Only %u bytes available, but %u needed "
+        "to identify tag", available, klass->min_start_size);
+    return;                     /* wait for more data */
+  }
+
+  if (available < demux->priv->tagsize) {
+    GST_DEBUG_OBJECT (demux, "Only %u bytes available, but %u needed "
+        "to parse tag", available, demux->priv->tagsize);
+    return;                     /* wait for more data */
+  }
+
+  update_collected (demux);
+  demux->priv->collect = gst_buffer_make_writable (demux->priv->collect);
+  collect = demux->priv->collect;
+
+  g_assert (gst_buffer_is_writable (collect));
+
 
   /* If we receive a buffer that's from the middle of the file, 
    * we can't read tags so move to typefinding */
@@ -510,19 +561,13 @@ gst_tag_demux_chain_parse_tag (GstTagDemux * demux, GstBuffer * collect)
   g_assert (klass->identify_tag != NULL);
   g_assert (klass->parse_tag != NULL);
 
-  available = gst_buffer_get_size (collect);
-
-  if (available < klass->min_start_size) {
-    GST_DEBUG_OBJECT (demux, "Only %u bytes available, but %u needed "
-        "to identify tag", available, klass->min_start_size);
-    return;                     /* wait for more data */
-  }
-
   if (!klass->identify_tag (demux, collect, TRUE, &tagsize)) {
     GST_DEBUG_OBJECT (demux, "Could not identify start tag");
     demux->priv->state = GST_TAG_DEMUX_TYPEFINDING;
     return;
   }
+
+  demux->priv->tagsize = tagsize;
 
   /* need to set offset of first buffer to 0 or trimming won't work */
   if (!GST_BUFFER_OFFSET_IS_VALID (collect)) {
@@ -599,18 +644,12 @@ gst_tag_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       demux->priv->segment.position += GST_BUFFER_DURATION (buf);
   }
 
-  if (demux->priv->collect == NULL) {
-    demux->priv->collect = buf;
-  } else {
-    demux->priv->collect = gst_buffer_append (demux->priv->collect, buf);
-  }
-  demux->priv->collect_size += size;
+  gst_adapter_push (demux->priv->adapter, buf);
   buf = NULL;
 
   switch (demux->priv->state) {
     case GST_TAG_DEMUX_READ_START_TAG:
-      demux->priv->collect = gst_buffer_make_writable (demux->priv->collect);
-      gst_tag_demux_chain_parse_tag (demux, demux->priv->collect);
+      gst_tag_demux_chain_parse_tag (demux);
       if (demux->priv->state != GST_TAG_DEMUX_TYPEFINDING)
         break;
       /* Fall-through */
@@ -619,6 +658,8 @@ gst_tag_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       GstBuffer *typefind_buf = NULL;
       gsize typefind_size;
       GstCaps *caps;
+
+      update_collected (demux);
 
       if (demux->priv->collect_size <
           TYPE_FIND_MIN_SIZE + demux->priv->strip_start)
@@ -671,6 +712,8 @@ gst_tag_demux_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     case GST_TAG_DEMUX_STREAMING:{
       GstBuffer *outbuf = NULL;
       gsize outbuf_size;
+
+      update_collected (demux);
 
       /* Trim the buffer and adjust offset */
       if (demux->priv->collect) {
