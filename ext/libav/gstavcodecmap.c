@@ -522,20 +522,18 @@ gst_ff_aud_caps_new (AVCodecContext * context, AVCodec * codec,
   /* fixed, non-probing context */
   if (context != NULL && context->channels != -1) {
     GstAudioChannelPosition pos[64];
+    guint64 mask;
 
     caps = gst_caps_new_simple (mimetype,
         "rate", G_TYPE_INT, context->sample_rate,
         "channels", G_TYPE_INT, context->channels, NULL);
 
-    if (gst_ffmpeg_channel_layout_to_gst (context->channel_layout,
-            context->channels, pos)) {
-      guint64 mask;
-
-      if (gst_audio_channel_positions_to_mask (pos, context->channels, FALSE,
-              &mask)) {
-        gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, mask,
-            NULL);
-      }
+    if (context->channels > 1 &&
+        gst_ffmpeg_channel_layout_to_gst (context->channel_layout,
+            context->channels, pos) &&
+        gst_audio_channel_positions_to_mask (pos, context->channels, FALSE,
+            &mask)) {
+      gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, mask, NULL);
     }
   } else if (encode) {
     gint maxchannels = 2;
