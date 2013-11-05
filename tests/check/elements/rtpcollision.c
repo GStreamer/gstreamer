@@ -109,8 +109,8 @@ create_rtcp_app (guint32 ssrc)
   return rtcp_buffer;
 }
 
-static guint ssrc_before;
-static guint ssrc_after;
+static guint nb_ssrc_changes;
+static guint ssrc_prev;
 
 static GstPadProbeReturn
 rtpsession_sinkpad_probe (GstPad * pad, GstPadProbeInfo * info,
@@ -121,29 +121,29 @@ rtpsession_sinkpad_probe (GstPad * pad, GstPadProbeInfo * info,
   if (info->type == (GST_PAD_PROBE_TYPE_BUFFER | GST_PAD_PROBE_TYPE_PUSH)) {
     GstBuffer *buffer = GST_BUFFER (info->data);
     GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
-
-    static gint i = 0;
+    GstBuffer *rtcp_buffer = 0;
+    guint ssrc = 0;
 
     /* retrieve current ssrc */
     gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
-    if (i < 3)
-      ssrc_before = gst_rtp_buffer_get_ssrc (&rtp);
-    else
-      ssrc_after = gst_rtp_buffer_get_ssrc (&rtp);
+    ssrc = gst_rtp_buffer_get_ssrc (&rtp);
     gst_rtp_buffer_unmap (&rtp);
+
+    /* if not first buffer, check that our ssrc has changed */
+    if (ssrc_prev != -1 && ssrc != ssrc_prev)
+      ++nb_ssrc_changes;
+
+    /* update prev ssrc */
+    ssrc_prev = ssrc;
 
     /* feint a collision on recv_rtcp_sink pad of gstrtpsession
      * (note that after being marked as collied the rtpsession ignores
      * all non bye packets)
      */
-    if (i == 2) {
-      GstBuffer *rtcp_buffer = create_rtcp_app (ssrc_before);
+    rtcp_buffer = create_rtcp_app (ssrc);
 
-      /* push collied packet on recv_rtcp_sink */
-      gst_pad_push (srcpad, rtcp_buffer);
-    }
-
-    ++i;
+    /* push collied packet on recv_rtcp_sink */
+    gst_pad_push (srcpad, rtcp_buffer);
   }
 
   return ret;
@@ -174,6 +174,9 @@ GST_START_TEST (test_master_ssrc_collision)
   GstStateChangeReturn state_res = GST_STATE_CHANGE_FAILURE;
 
   GST_INFO ("preparing test");
+
+  nb_ssrc_changes = 0;
+  ssrc_prev = -1;
 
   /* build pipeline */
   bin = gst_pipeline_new ("pipeline");
@@ -256,7 +259,7 @@ GST_START_TEST (test_master_ssrc_collision)
   gst_object_unref (bin);
 
   /* check results */
-  fail_if (ssrc_before == ssrc_after);
+  fail_unless_equals_int (nb_ssrc_changes, 7);
 }
 
 GST_END_TEST;
