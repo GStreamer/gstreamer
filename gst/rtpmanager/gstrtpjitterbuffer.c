@@ -2453,9 +2453,6 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   priv->num_rtx_requests++;
   timer->num_rtx_retry++;
   timer->rtx_last = now;
-  JBUF_UNLOCK (priv);
-  gst_pad_push_event (priv->sinkpad, event);
-  JBUF_LOCK (priv);
 
   /* calculate the timeout for the next retransmission attempt */
   timer->rtx_retry += (priv->rtx_retry_timeout * GST_MSECOND);
@@ -2475,6 +2472,10 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   }
   reschedule_timer (jitterbuffer, timer, timer->seqnum,
       timer->rtx_base + timer->rtx_retry, timer->rtx_delay, FALSE);
+
+  JBUF_UNLOCK (priv);
+  gst_pad_push_event (priv->sinkpad, event);
+  JBUF_LOCK (priv);
 
   return FALSE;
 }
