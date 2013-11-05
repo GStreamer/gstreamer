@@ -133,7 +133,7 @@ gst_rtp_rtx_send_class_init (GstRtpRtxSendClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_MAX_SIZE_PACKETS,
       g_param_spec_uint ("max-size-packets", "Max Size Packets",
-          "Amount of packets to queue (0 = unlimited)", 0, G_MAXUINT,
+          "Amount of packets to queue (0 = unlimited)", 0, G_MAXINT16,
           DEFAULT_MAX_SIZE_PACKETS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
