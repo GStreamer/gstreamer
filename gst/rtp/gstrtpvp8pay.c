@@ -36,7 +36,36 @@
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_vp8_pay_debug);
 #define GST_CAT_DEFAULT gst_rtp_vp8_pay_debug
 
-#define DEFAULT_PICTURE_ID_MODE VP8_PAY_PICTURE_ID_7BITS
+#define DEFAULT_PICTURE_ID_MODE VP8_PAY_NO_PICTURE_ID
+
+enum
+{
+  PROP_0,
+  PROP_PICTURE_ID_MODE
+};
+
+#define GST_TYPE_RTP_VP8_PAY_PICTURE_ID_MODE (gst_rtp_vp8_pay_picture_id_mode_get_type())
+static GType
+gst_rtp_vp8_pay_picture_id_mode_get_type (void)
+{
+  static GType mode_type = 0;
+  static const GEnumValue modes[] = {
+    {VP8_PAY_NO_PICTURE_ID, "No Picture ID", "none"},
+    {VP8_PAY_PICTURE_ID_7BITS, "7-bit Picture ID", "7-bit"},
+    {VP8_PAY_PICTURE_ID_15BITS, "15-bit Picture ID", "15-bit"},
+    {0, NULL, NULL},
+  };
+
+  if (!mode_type) {
+    mode_type = g_enum_register_static ("GstVP8RTPPayMode", modes);
+  }
+  return mode_type;
+}
+
+static void gst_rtp_vp8_pay_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec);
+static void gst_rtp_vp8_pay_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec);
 
 static GstFlowReturn gst_rtp_vp8_pay_handle_buffer (GstRTPBasePayload * payload,
     GstBuffer * buffer);
@@ -64,7 +93,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
 static void
 gst_rtp_vp8_pay_init (GstRtpVP8Pay * obj)
 {
-  /* TODO: Make it configurable */
   obj->picture_id_mode = DEFAULT_PICTURE_ID_MODE;
   if (obj->picture_id_mode == VP8_PAY_PICTURE_ID_7BITS)
     obj->picture_id = g_random_int_range (0, G_MAXUINT8) & 0x7F;
@@ -75,9 +103,19 @@ gst_rtp_vp8_pay_init (GstRtpVP8Pay * obj)
 static void
 gst_rtp_vp8_pay_class_init (GstRtpVP8PayClass * gst_rtp_vp8_pay_class)
 {
+  GObjectClass *gobject_class = G_OBJECT_CLASS (gst_rtp_vp8_pay_class);
   GstElementClass *element_class = GST_ELEMENT_CLASS (gst_rtp_vp8_pay_class);
   GstRTPBasePayloadClass *pay_class =
       GST_RTP_BASE_PAYLOAD_CLASS (gst_rtp_vp8_pay_class);
+
+  gobject_class->set_property = gst_rtp_vp8_pay_set_property;
+  gobject_class->get_property = gst_rtp_vp8_pay_get_property;
+
+  g_object_class_install_property (gobject_class, PROP_PICTURE_ID_MODE,
+      g_param_spec_enum ("picture-id-mode", "Picture ID Mode",
+          "The picture ID mode for payloading",
+          GST_TYPE_RTP_VP8_PAY_PICTURE_ID_MODE, DEFAULT_PICTURE_ID_MODE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_rtp_vp8_pay_sink_template));
@@ -94,6 +132,42 @@ gst_rtp_vp8_pay_class_init (GstRtpVP8PayClass * gst_rtp_vp8_pay_class)
 
   GST_DEBUG_CATEGORY_INIT (gst_rtp_vp8_pay_debug, "rtpvp8pay", 0,
       "VP8 Video RTP Payloader");
+}
+
+static void
+gst_rtp_vp8_pay_set_property (GObject * object,
+    guint prop_id, const GValue * value, GParamSpec * pspec)
+{
+  GstRtpVP8Pay *rtpvp8pay = GST_RTP_VP8_PAY (object);
+
+  switch (prop_id) {
+    case PROP_PICTURE_ID_MODE:
+      rtpvp8pay->picture_id_mode = g_value_get_enum (value);
+      if (rtpvp8pay->picture_id_mode == VP8_PAY_PICTURE_ID_7BITS)
+        rtpvp8pay->picture_id = g_random_int_range (0, G_MAXUINT8) & 0x7F;
+      else if (rtpvp8pay->picture_id_mode == VP8_PAY_PICTURE_ID_15BITS)
+        rtpvp8pay->picture_id = g_random_int_range (0, G_MAXUINT16) & 0x7FFF;
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_rtp_vp8_pay_get_property (GObject * object,
+    guint prop_id, GValue * value, GParamSpec * pspec)
+{
+  GstRtpVP8Pay *rtpvp8pay = GST_RTP_VP8_PAY (object);
+
+  switch (prop_id) {
+    case PROP_PICTURE_ID_MODE:
+      g_value_set_enum (value, rtpvp8pay->picture_id_mode);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
 }
 
 static gboolean
