@@ -88,6 +88,8 @@ DYLD_LIBRARY_PATH=$GST/gst-editing-services/ges/.libs:$DYLD_LIBRARY_PATH
 GI_TYPELIB_PATH=$GST/gst-editing-services/ges:$GI_TYPELIB_PATH
 PATH=$GST/gst-editing-services/tools:$PATH
 
+# GStreamer plugins gl libraries
+DYLD_LIBRARY_PATH=$GST/gst-plugins-gl/gst-libs/gst/gl/.libs:$DYLD_LIBRARY_PATH
 
 # GStreamer plugins base libraries
 for path in allocators app audio fft pbutils riff rtp rtsp sdp tag utils video
