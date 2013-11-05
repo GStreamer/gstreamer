@@ -146,13 +146,22 @@ gst_vaapisink_ensure_display(GstVaapiSink *sink);
 
 /* GstVideoOverlay interface */
 
+static void
+gst_vaapisink_video_overlay_expose(GstVideoOverlay *overlay);
+
 #if USE_X11
 static gboolean
 gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id);
 #endif
 
+static void
+gst_vaapisink_set_event_handling(GstVideoOverlay *overlay, gboolean handle_events);
+
 static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer);
+
+static gboolean
+gst_vaapisink_ensure_render_rect(GstVaapiSink *sink, guint width, guint height);
 
 static void
 gst_vaapisink_video_overlay_set_window_handle(GstVideoOverlay *overlay,
@@ -179,6 +188,7 @@ gst_vaapisink_video_overlay_set_window_handle(GstVideoOverlay *overlay,
 #if USE_X11
     case GST_VAAPI_DISPLAY_TYPE_X11:
         gst_vaapisink_ensure_window_xid(sink, window);
+        gst_vaapisink_set_event_handling(GST_VIDEO_OVERLAY(sink), sink->handle_events);
         break;
 #endif
     default:
@@ -208,13 +218,175 @@ gst_vaapisink_video_overlay_set_render_rectangle(
               display_rect->width, display_rect->height);
 }
 
+static gboolean
+gst_vaapisink_reconfigure_window(GstVaapiSink * sink)
+{
+    guint win_width, win_height;
+
+    gst_vaapi_window_reconfigure(sink->window);
+    gst_vaapi_window_get_size(sink->window, &win_width, &win_height);
+    if (win_width != sink->window_width || win_height != sink->window_height) {
+        if (!gst_vaapisink_ensure_render_rect(sink, win_width, win_height))
+            return FALSE;
+        GST_INFO("window was resized from %ux%u to %ux%u",
+            sink->window_width, sink->window_height, win_width, win_height);
+        sink->window_width = win_width;
+        sink->window_height = win_height;
+        return TRUE;
+    }
+    return FALSE;
+}
+
+#if USE_X11
+static void
+gst_vaapisink_event_thread_loop_x11(GstVaapiSink *sink)
+{
+    GstVaapiDisplay * const display = GST_VAAPI_PLUGIN_BASE_DISPLAY(sink);
+    gboolean has_events, do_expose = FALSE;
+    XEvent e;
+
+    if (sink->window) {
+        Display * const x11_dpy =
+            gst_vaapi_display_x11_get_display(GST_VAAPI_DISPLAY_X11(display));
+        Window x11_win =
+            gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window));
+
+        /* Handle Expose + ConfigureNotify */
+        /* Need to lock whole loop or we corrupt the XEvent queue: */
+        for (;;) {
+            gst_vaapi_display_lock(display);
+            has_events = XCheckWindowEvent(x11_dpy, x11_win,
+                StructureNotifyMask | ExposureMask, &e);
+            gst_vaapi_display_unlock(display);
+            if (!has_events)
+                break;
+
+            switch (e.type) {
+            case Expose:
+                do_expose = TRUE;
+                break;
+            case ConfigureNotify:
+                if (gst_vaapisink_reconfigure_window(sink))
+                    do_expose = TRUE;
+                break;
+            default:
+                break;
+            }
+        }
+        if (do_expose)
+            gst_vaapisink_video_overlay_expose(GST_VIDEO_OVERLAY(sink));
+        /* FIXME: handle mouse and key events */
+    }
+}
+#endif
+
+static void
+gst_vaapisink_event_thread_loop_default(GstVaapiSink *sink)
+{
+}
+
+static gpointer
+gst_vaapisink_event_thread (GstVaapiSink *sink)
+{
+    void (*thread_loop)(GstVaapiSink *sink);
+
+    switch (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink)) {
+#if USE_X11
+    case GST_VAAPI_DISPLAY_TYPE_X11:
+    case GST_VAAPI_DISPLAY_TYPE_GLX:
+        thread_loop = gst_vaapisink_event_thread_loop_x11;
+        break;
+#endif
+    default:
+        thread_loop = gst_vaapisink_event_thread_loop_default;
+        break;
+    }
+
+    GST_OBJECT_LOCK(sink);
+    while (!sink->event_thread_cancel) {
+        GST_OBJECT_UNLOCK(sink);
+        thread_loop(sink);
+        g_usleep(G_USEC_PER_SEC / 20);
+        GST_OBJECT_LOCK(sink);
+    }
+    GST_OBJECT_UNLOCK(sink);
+
+  return NULL;
+}
+
 static void
 gst_vaapisink_video_overlay_expose(GstVideoOverlay *overlay)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(overlay);
 
-    if (sink->video_buffer)
+    if (sink->video_buffer) {
+        gst_vaapisink_reconfigure_window(sink);
         gst_vaapisink_show_frame(GST_BASE_SINK_CAST(sink), sink->video_buffer);
+    }
+}
+
+static void
+gst_vaapisink_set_event_handling(GstVideoOverlay *overlay,
+    gboolean handle_events)
+{
+    GThread *thread = NULL;
+    GstVaapiSink * const sink = GST_VAAPISINK(overlay);
+#if USE_X11
+    GstVaapiDisplayX11 * const display =
+        GST_VAAPI_DISPLAY_X11(GST_VAAPI_PLUGIN_BASE_DISPLAY(sink));
+#endif
+
+    GST_OBJECT_LOCK(sink);
+    sink->handle_events = handle_events;
+    if (handle_events && !sink->event_thread) {
+        /* Setup our event listening thread */
+        GST_DEBUG("starting xevent thread");
+        switch (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink)) {
+#if USE_X11
+        case GST_VAAPI_DISPLAY_TYPE_X11:
+        case GST_VAAPI_DISPLAY_TYPE_GLX:
+            XSelectInput(gst_vaapi_display_x11_get_display(display),
+                gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window)),
+                StructureNotifyMask | ExposureMask);
+            break;
+#endif
+        default:
+            break;
+        }
+
+        sink->event_thread_cancel = FALSE;
+        sink->event_thread = g_thread_try_new("vaapisink-events",
+                (GThreadFunc) gst_vaapisink_event_thread, sink, NULL);
+    }
+    else if (!handle_events && sink->event_thread) {
+        GST_DEBUG("stopping xevent thread");
+        if (sink->window) {
+            switch (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink)) {
+#if USE_X11
+            case GST_VAAPI_DISPLAY_TYPE_X11:
+            case GST_VAAPI_DISPLAY_TYPE_GLX:
+                XSelectInput(gst_vaapi_display_x11_get_display(display),
+                    gst_vaapi_window_x11_get_xid(GST_VAAPI_WINDOW_X11(sink->window)),
+                    0);
+                break;
+#endif
+            default:
+                break;
+            }
+        }
+
+        /* grab thread and mark it as NULL */
+        thread = sink->event_thread;
+        sink->event_thread = NULL;
+        sink->event_thread_cancel = TRUE;
+    }
+    GST_OBJECT_UNLOCK(sink);
+
+    /* Wait for our event thread to finish */
+    if (thread) {
+        g_thread_join(thread);
+        GST_DEBUG("xevent thread stopped");
+    }
 }
 
 static void
@@ -223,11 +395,14 @@ gst_vaapisink_video_overlay_iface_init(GstVideoOverlayInterface *iface)
     iface->set_window_handle    = gst_vaapisink_video_overlay_set_window_handle;
     iface->set_render_rectangle = gst_vaapisink_video_overlay_set_render_rectangle;
     iface->expose               = gst_vaapisink_video_overlay_expose;
+    iface->handle_events        = gst_vaapisink_set_event_handling;
 }
 
 static void
 gst_vaapisink_destroy(GstVaapiSink *sink)
 {
+    gst_vaapisink_set_event_handling(GST_VIDEO_OVERLAY(sink), FALSE);
+
     gst_buffer_replace(&sink->video_buffer, NULL);
 #if USE_GLX
     gst_vaapi_texture_replace(&sink->texture, NULL);
@@ -728,6 +903,7 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
         gst_vaapi_window_set_fullscreen(sink->window, sink->fullscreen);
         gst_vaapi_window_show(sink->window);
         gst_vaapi_window_get_size(sink->window, &win_width, &win_height);
+        gst_vaapisink_set_event_handling(GST_VIDEO_OVERLAY(sink), sink->handle_events);
     }
     sink->window_width  = win_width;
     sink->window_height = win_height;
@@ -961,9 +1137,8 @@ gst_vaapisink_put_surface(
 }
 
 static GstFlowReturn
-gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
+gst_vaapisink_show_frame_unlocked(GstVaapiSink *sink, GstBuffer *src_buffer)
 {
-    GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstVaapiVideoMeta *meta;
     GstVaapiSurfaceProxy *proxy;
     GstVaapiSurface *surface;
@@ -1081,6 +1256,21 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
 error:
     gst_buffer_unref(buffer);
     return GST_FLOW_EOS;
+}
+
+static GstFlowReturn
+gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
+{
+    GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
+    GstFlowReturn ret;
+
+   /* At least we need at least to protect the _set_subpictures_()
+    * call to prevent a race during subpicture desctruction.
+    * FIXME: Could use a less coarse grained lock, though: */
+    gst_vaapi_display_lock(GST_VAAPI_PLUGIN_BASE_DISPLAY(sink));
+    ret = gst_vaapisink_show_frame_unlocked(sink, src_buffer);
+    gst_vaapi_display_unlock(GST_VAAPI_PLUGIN_BASE_DISPLAY(sink));
+    return ret;
 }
 
 #if GST_CHECK_VERSION(1,0,0)
@@ -1409,6 +1599,7 @@ gst_vaapisink_init(GstVaapiSink *sink)
     sink->video_par_n    = 1;
     sink->video_par_d    = 1;
     sink->view_id        = -1;
+    sink->handle_events  = TRUE;
     sink->foreign_window = FALSE;
     sink->fullscreen     = FALSE;
     sink->synchronous    = FALSE;

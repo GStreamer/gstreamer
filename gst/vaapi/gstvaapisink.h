@@ -88,6 +88,9 @@ struct _GstVaapiSink {
     GstVaapiRotation    rotation_req;
     guint               color_standard;
     gint32              view_id;
+    GThread            *event_thread;
+    volatile gboolean   event_thread_cancel;
+    guint               handle_events   : 1;
     guint               foreign_window  : 1;
     guint               fullscreen      : 1;
     guint               synchronous     : 1;
