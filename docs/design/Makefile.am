@@ -2,6 +2,7 @@ SUBDIRS =
 
 
 EXTRA_DIST = \
-	design-rtpcollision.txt \
+	design-rtpauxiliary.txt \
+	design-rtcollision.txt \
 	design-rtpretransmission.txt
 
