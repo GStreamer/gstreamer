@@ -17,6 +17,24 @@ EXPORTS
 	gst_h264_video_quant_matrix_4x4_get_zigzag_from_raster
 	gst_h264_video_quant_matrix_8x8_get_raster_from_zigzag
 	gst_h264_video_quant_matrix_8x8_get_zigzag_from_raster
+	gst_h265_parse_pps
+	gst_h265_parse_sps
+	gst_h265_parse_vps
+	gst_h265_parser_free
+	gst_h265_parser_identify_nalu
+	gst_h265_parser_identify_nalu_hevc
+	gst_h265_parser_identify_nalu_unchecked
+	gst_h265_parser_new
+	gst_h265_parser_parse_nal
+	gst_h265_parser_parse_pps
+	gst_h265_parser_parse_sei
+	gst_h265_parser_parse_slice_hdr
+	gst_h265_parser_parse_sps
+	gst_h265_parser_parse_vps
+	gst_h265_sei_copy
+	gst_h265_sei_free
+	gst_h265_slice_hdr_copy
+	gst_h265_slice_hdr_free
 	gst_mpeg4_parse
 	gst_mpeg4_parse_group_of_vop
 	gst_mpeg4_parse_video_object_layer
