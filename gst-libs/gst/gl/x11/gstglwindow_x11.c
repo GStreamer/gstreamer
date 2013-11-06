@@ -645,6 +645,20 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
         break;
 
       case Expose:
+        /* non-zero means that other Expose follows
+         * so just wait for the last one
+         * in theory we should not receive non-zero because
+         * we have no sub areas here but just in case */
+        if (event.xexpose.count != 0) {
+          break;
+        }
+
+        /* just ignore request that does not come from us
+         * they are un-necessary and it overloads the drawer
+         */
+        if (!event.xexpose.send_event)
+          break;
+
         if (window->draw) {
           context = gst_gl_window_get_context (window);
           context_class = GST_GL_CONTEXT_GET_CLASS (context);
@@ -657,28 +671,8 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
         break;
 
       case VisibilityNotify:
-      {
-        switch (event.xvisibility.state) {
-          case VisibilityUnobscured:
-            if (window->draw)
-              window->draw (window->draw_data);
-            break;
-
-          case VisibilityPartiallyObscured:
-            if (window->draw)
-              window->draw (window->draw_data);
-            break;
-
-          case VisibilityFullyObscured:
-            break;
-
-          default:
-            GST_DEBUG ("unknown xvisibility event: %d",
-                event.xvisibility.state);
-            break;
-        }
+        /* actually nothing to do here */
         break;
-      }
 
       default:
         GST_DEBUG ("unknown XEvent type: %u", event.type);
