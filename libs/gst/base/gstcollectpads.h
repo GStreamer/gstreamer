@@ -249,7 +249,7 @@ typedef GstFlowReturn (*GstCollectPadsClipFunction) (GstCollectPads *pads, GstCo
  * @pads object. It is therefore not necessary to call
  * gst_collect_pads_set_flushing nor gst_collect_pads_clear from this function.
  *
- * Since: FIXME
+ * Since: 1.4
  */
 typedef void (*GstCollectPadsFlushFunction) (GstCollectPads *pads, gpointer user_data);
 

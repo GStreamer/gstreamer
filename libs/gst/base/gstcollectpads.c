@@ -531,7 +531,7 @@ gst_collect_pads_clip_running_time (GstCollectPads * pads,
   return GST_FLOW_OK;
 }
 
- /**
+/**
  * gst_collect_pads_set_clip_function:
  * @pads: the collectpads to use
  * @clipfunc: clip function to install
@@ -551,6 +551,18 @@ gst_collect_pads_set_clip_function (GstCollectPads * pads,
   pads->priv->clip_user_data = user_data;
 }
 
+/**
+ * gst_collect_pads_set_flush_function:
+ * @pads: the collectpads to use
+ * @func: flush function to install
+ * @user_data: user data to pass to @func
+ *
+ * Install a flush function that is called when the internal
+ * state of all pads should be flushed as part of flushing seek
+ * handling. See #GstCollectPadsFlushFunction for more info.
+ *
+ * Since: 1.4
+ */
 void
 gst_collect_pads_set_flush_function (GstCollectPads * pads,
     GstCollectPadsFlushFunction func, gpointer user_data)
@@ -1865,6 +1877,18 @@ forward_event_to_all_sinkpads (GstPad * srcpad, GstEvent * event)
   return data.result;
 }
 
+/**
+ * gst_collect_pads_src_event_default:
+ * @pads: the collectpads to use
+ * @pad: src #GstPad that received the event
+ * @event: event being processed
+ *
+ * Default GstCollectPads event handling for the src pad of elements.
+ * Elements can chain up to this to let flushing seek event handling
+ * be done by GstCollectPads.
+ *
+ * Since: 1.4
+ */
 gboolean
 gst_collect_pads_src_event_default (GstCollectPads * pads, GstPad * pad,
     GstEvent * event)
