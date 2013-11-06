@@ -137,6 +137,9 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
 @implementation GstAVFVideoSrcImpl
 
+@synthesize deviceIndex, doStats, fps, captureScreen,
+            captureScreenCursor, captureScreenMouseClicks;
+
 - (id)init
 {
   return [self initWithSrc:NULL];
@@ -178,9 +181,6 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
   [super finalize];
 }
-
-@synthesize deviceIndex, doStats, fps, captureScreen,
-            captureScreenCursor, captureScreenMouseClicks;
 
 - (BOOL)openDeviceInput
 {
