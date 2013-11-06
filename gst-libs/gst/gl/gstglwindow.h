@@ -76,6 +76,8 @@ struct _GstGLWindow {
 
   guintptr      external_gl_context;
 
+  gboolean      is_drawing;
+
   GstGLWindowCB         draw;
   gpointer              draw_data;
   GDestroyNotify        draw_notify;

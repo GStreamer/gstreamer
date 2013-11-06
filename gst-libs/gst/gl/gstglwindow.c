@@ -107,6 +107,8 @@ gst_gl_window_init (GstGLWindow * window)
   g_cond_init (&window->priv->cond_destroy_context);
   window->priv->context_created = FALSE;
 
+  window->is_drawing = FALSE;
+
   g_weak_ref_init (&window->context_ref, NULL);
 }
 
@@ -221,6 +223,13 @@ gst_gl_window_draw (GstGLWindow * window, guint width, guint height)
   g_return_if_fail (window_class->draw != NULL);
 
   GST_GL_WINDOW_LOCK (window);
+
+  /* avoid to overload the drawer */
+  if (window->is_drawing) {
+    GST_GL_WINDOW_UNLOCK (window);
+    return;
+  }
+
   window_class->draw (window, width, height);
   GST_GL_WINDOW_UNLOCK (window);
 }

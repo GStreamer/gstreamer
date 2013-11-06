@@ -984,6 +984,7 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
    */
 
   const GstGLFuncs *gl = NULL;
+  GstGLWindow *window = NULL;
 
   g_return_if_fail (GST_IS_GLIMAGE_SINK (gl_sink));
 
@@ -996,6 +997,9 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
     GST_GLIMAGE_SINK_UNLOCK (gl_sink);
     return;
   }
+
+  window = gst_gl_context_get_window (gl_sink->context);
+  window->is_drawing = TRUE;
 
   /* opengl scene */
   GST_TRACE ("redrawing texture:%u", gl_sink->redisplay_texture);
@@ -1019,15 +1023,10 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
         GST_VIDEO_INFO_HEIGHT (&gl_sink->info),
         gl_sink->client_data);
 
-    if (doRedisplay) {
-      GstGLWindow *window = gst_gl_context_get_window (gl_sink->context);
-
+    if (doRedisplay)
       gst_gl_window_draw_unlocked (window,
           GST_VIDEO_INFO_WIDTH (&gl_sink->info),
           GST_VIDEO_INFO_HEIGHT (&gl_sink->info));
-
-      gst_object_unref (window);
-    }
   }
   /* default opengl scene */
   else {
@@ -1102,6 +1101,9 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
     }
 #endif
   }                             /* end default opengl scene */
+
+  window->is_drawing = FALSE;
+  gst_object_unref (window);
 
   GST_GLIMAGE_SINK_UNLOCK (gl_sink);
 }
