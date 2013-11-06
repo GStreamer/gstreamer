@@ -212,6 +212,7 @@ check_PROGRAMS = \
 	elements/aiffparse \
 	elements/autoconvert \
 	elements/autovideoconvert \
+	elements/audiomixer \
 	elements/asfmux \
 	elements/baseaudiovisualizer \
 	elements/camerabin \
@@ -250,6 +251,9 @@ AM_CFLAGS = $(GST_CFLAGS) $(GST_CHECK_CFLAGS) $(GST_OPTION_CFLAGS) \
 		-DGST_TEST_FILES_PATH="\"$(TEST_FILES_DIRECTORY)\"" \
 		-UG_DISABLE_ASSERT -UG_DISABLE_CAST_CHECKS
 LDADD = $(GST_CHECK_LIBS)
+
+elements_audiomixer_LDADD = $(GST_BASE_LIBS) -lgstbase-@GST_API_VERSION@ $(LDADD)
+elements_audiomixer_CFLAGS = $(GST_BASE_CFLAGS) $(AM_CFLAGS)
 
 # parser unit test convenience lib
 noinst_LTLIBRARIES = libparser.la
