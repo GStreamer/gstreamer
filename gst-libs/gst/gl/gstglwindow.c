@@ -183,6 +183,8 @@ gst_gl_window_finalize (GObject * object)
 
   g_weak_ref_clear (&window->context_ref);
 
+  g_mutex_clear (&window->lock);
+
   G_OBJECT_CLASS (gst_gl_window_parent_class)->finalize (object);
 }
 
