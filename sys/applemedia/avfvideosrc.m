@@ -345,7 +345,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   NSArray *formats = [device valueForKey:@"formats"];
   NSArray *pixel_formats = output.availableVideoCVPixelFormatTypes;
 
-  for (AVCaptureDeviceFormat *f in formats) {
+  for (AVCaptureDeviceFormat *f in [formats reverseObjectEnumerator]) {
     CMFormatDescriptionRef formatDescription = f.formatDescription;
     CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
 
@@ -422,20 +422,20 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     if (gst_format == GST_VIDEO_FORMAT_UNKNOWN)
       continue;
 
-    if ([session canSetSessionPreset:AVCaptureSessionPresetLow])
-      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 192, 144, DEVICE_FPS_N, DEVICE_FPS_D));
-    if ([session canSetSessionPreset:AVCaptureSessionPreset352x288])
-      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 352, 288, DEVICE_FPS_N, DEVICE_FPS_D));
-    if ([session canSetSessionPreset:AVCaptureSessionPresetMedium])
-      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 480, 360, DEVICE_FPS_N, DEVICE_FPS_D));
-    if ([session canSetSessionPreset:AVCaptureSessionPreset640x480])
-      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 640, 480, DEVICE_FPS_N, DEVICE_FPS_D));
-    if ([session canSetSessionPreset:AVCaptureSessionPreset1280x720])
-      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 1280, 720, DEVICE_FPS_N, DEVICE_FPS_D));
 #if HAVE_IOS
     if ([session canSetSessionPreset:AVCaptureSessionPreset1920x1080])
       gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 1920, 1080, DEVICE_FPS_N, DEVICE_FPS_D));
 #endif
+    if ([session canSetSessionPreset:AVCaptureSessionPreset1280x720])
+      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 1280, 720, DEVICE_FPS_N, DEVICE_FPS_D));
+    if ([session canSetSessionPreset:AVCaptureSessionPreset640x480])
+      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 640, 480, DEVICE_FPS_N, DEVICE_FPS_D));
+    if ([session canSetSessionPreset:AVCaptureSessionPresetMedium])
+      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 480, 360, DEVICE_FPS_N, DEVICE_FPS_D));
+    if ([session canSetSessionPreset:AVCaptureSessionPreset352x288])
+      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 352, 288, DEVICE_FPS_N, DEVICE_FPS_D));
+    if ([session canSetSessionPreset:AVCaptureSessionPresetLow])
+      gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 192, 144, DEVICE_FPS_N, DEVICE_FPS_D));
   }
   return YES;
 }
