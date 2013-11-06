@@ -1316,6 +1316,119 @@ GST_START_TEST (test_rtxsender_max_size_time)
 
 GST_END_TEST;
 
+static void
+compare_rtp_packets (GstBuffer * a, GstBuffer * b)
+{
+  GstRTPBuffer rtp_a = GST_RTP_BUFFER_INIT;
+  GstRTPBuffer rtp_b = GST_RTP_BUFFER_INIT;
+
+  gst_rtp_buffer_map (a, GST_MAP_READ, &rtp_a);
+  gst_rtp_buffer_map (b, GST_MAP_READ, &rtp_b);
+
+  fail_unless_equals_int (gst_rtp_buffer_get_header_len (&rtp_a),
+      gst_rtp_buffer_get_header_len (&rtp_b));
+  fail_unless_equals_int (gst_rtp_buffer_get_version (&rtp_a),
+      gst_rtp_buffer_get_version (&rtp_b));
+  fail_unless_equals_int (gst_rtp_buffer_get_ssrc (&rtp_a),
+      gst_rtp_buffer_get_ssrc (&rtp_b));
+  fail_unless_equals_int (gst_rtp_buffer_get_seq (&rtp_a),
+      gst_rtp_buffer_get_seq (&rtp_b));
+  fail_unless_equals_int (gst_rtp_buffer_get_csrc_count (&rtp_a),
+      gst_rtp_buffer_get_csrc_count (&rtp_b));
+  fail_unless_equals_int (gst_rtp_buffer_get_marker (&rtp_a),
+      gst_rtp_buffer_get_marker (&rtp_b));
+  fail_unless_equals_int (gst_rtp_buffer_get_payload_type (&rtp_a),
+      gst_rtp_buffer_get_payload_type (&rtp_b));
+  fail_unless_equals_int (gst_rtp_buffer_get_timestamp (&rtp_a),
+      gst_rtp_buffer_get_timestamp (&rtp_b));
+  fail_unless_equals_int (gst_rtp_buffer_get_extension (&rtp_a),
+      gst_rtp_buffer_get_extension (&rtp_b));
+
+  fail_unless_equals_int (gst_rtp_buffer_get_payload_len (&rtp_a),
+      gst_rtp_buffer_get_payload_len (&rtp_b));
+  fail_unless_equals_int (memcmp (gst_rtp_buffer_get_payload (&rtp_a),
+          gst_rtp_buffer_get_payload (&rtp_b),
+          gst_rtp_buffer_get_payload_len (&rtp_a)), 0);
+
+  gst_rtp_buffer_unmap (&rtp_a);
+  gst_rtp_buffer_unmap (&rtp_b);
+}
+
+GST_START_TEST (test_rtxreceive_data_reconstruction)
+{
+  const guint ssrc = 1234567;
+  GList *in_buffers;
+  guint payload_type;
+  GstElement *rtxsend, *rtxrecv;
+  GstPad *srcpad, *sinkpad;
+  GstCaps *caps;
+  GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
+  GstBuffer *buffer;
+
+  /* generate test data  */
+  in_buffers = generate_test_buffers (1, ssrc, &payload_type);
+
+  /* clear the global buffers list, which we are going to use later */
+  gst_check_drop_buffers ();
+
+  /* setup element & pads */
+  rtxsend = gst_check_setup_element ("rtprtxsend");
+  rtxrecv = gst_check_setup_element ("rtprtxreceive");
+
+  g_object_set (rtxsend, "rtx-payload-type", 99, NULL);
+  g_object_set (rtxrecv, "rtx-payload-types", "99", NULL);
+
+  fail_unless_equals_int (gst_element_link (rtxsend, rtxrecv), TRUE);
+
+  srcpad = gst_check_setup_src_pad (rtxsend, &srctemplate);
+  fail_unless_equals_int (gst_pad_set_active (srcpad, TRUE), TRUE);
+
+  sinkpad = gst_check_setup_sink_pad (rtxrecv, &sinktemplate);
+  fail_unless_equals_int (gst_pad_set_active (sinkpad, TRUE), TRUE);
+
+  ASSERT_SET_STATE (rtxsend, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+  ASSERT_SET_STATE (rtxrecv, GST_STATE_PLAYING, GST_STATE_CHANGE_SUCCESS);
+
+  caps = gst_caps_from_string ("application/x-rtp, "
+      "media = (string)video, payload = (int)96, "
+      "clock-rate = (int)90000, encoding-name = (string)RAW");
+  gst_check_setup_events (srcpad, rtxsend, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
+
+  /* push buffer and retransmission request */
+  buffer = gst_buffer_ref (GST_BUFFER (in_buffers->data));
+  fail_unless_equals_int (gst_pad_push (srcpad, gst_buffer_ref (buffer)),
+      GST_FLOW_OK);
+  fail_unless_equals_int (gst_pad_push_event (sinkpad,
+          create_rtx_event (1, ssrc, payload_type)), TRUE);
+
+  /* push with the next seqnum to trigger retransmission in rtxsend */
+  buffer = gst_buffer_make_writable (buffer);
+  gst_rtp_buffer_map (buffer, GST_MAP_WRITE, &rtp);
+  gst_rtp_buffer_set_seq (&rtp, 2);
+  gst_rtp_buffer_unmap (&rtp);
+  fail_unless_equals_int (gst_pad_push (srcpad, gst_buffer_ref (buffer)),
+      GST_FLOW_OK);
+
+  /* verify */
+  fail_unless_equals_int (g_list_length (buffers), 3);
+  compare_rtp_packets (GST_BUFFER (buffers->data),
+      GST_BUFFER (buffers->next->data));
+
+  /* cleanup */
+  gst_buffer_unref (buffer);
+  g_list_free_full (in_buffers, (GDestroyNotify) gst_buffer_unref);
+  gst_check_drop_buffers ();
+
+  gst_check_teardown_src_pad (rtxsend);
+  gst_check_teardown_sink_pad (rtxrecv);
+  gst_element_unlink (rtxsend, rtxrecv);
+  gst_check_teardown_element (rtxsend);
+  gst_check_teardown_element (rtxrecv);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtprtx_suite (void)
 {
@@ -1331,6 +1444,7 @@ rtprtx_suite (void)
   tcase_add_test (tc_chain, test_drop_multiple_sender);
   tcase_add_test (tc_chain, test_rtxsender_max_size_packets);
   tcase_add_test (tc_chain, test_rtxsender_max_size_time);
+  tcase_add_test (tc_chain, test_rtxreceive_data_reconstruction);
 
   return s;
 }
