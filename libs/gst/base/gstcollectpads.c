@@ -1859,7 +1859,9 @@ static gboolean
 event_forward_func (GstPad * pad, EventData * data)
 {
   data->result &= gst_pad_push_event (pad, gst_event_ref (data->event));
-  return !data->result;
+
+  /* Always send to all pads */
+  return FALSE;
 }
 
 static gboolean
