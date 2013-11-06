@@ -120,6 +120,7 @@ gst_valve_init (GstValve * valve)
       GST_DEBUG_FUNCPTR (gst_valve_event));
   gst_pad_set_query_function (valve->srcpad,
       GST_DEBUG_FUNCPTR (gst_valve_query));
+  GST_PAD_SET_PROXY_CAPS (valve->srcpad);
   gst_element_add_pad (GST_ELEMENT (valve), valve->srcpad);
 
   valve->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
@@ -130,6 +131,7 @@ gst_valve_init (GstValve * valve)
   gst_pad_set_query_function (valve->sinkpad,
       GST_DEBUG_FUNCPTR (gst_valve_query));
   GST_PAD_SET_PROXY_CAPS (valve->sinkpad);
+  GST_PAD_SET_PROXY_ALLOCATION (valve->sinkpad);
   gst_element_add_pad (GST_ELEMENT (valve), valve->sinkpad);
 }
 
