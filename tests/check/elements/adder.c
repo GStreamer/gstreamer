@@ -685,6 +685,7 @@ GST_START_TEST (test_live_seeking)
 
   /* cleanup */
   GST_INFO ("cleaning up");
+  gst_consistency_checker_free (consist);
   if (main_loop)
     g_main_loop_unref (main_loop);
   if (play_seek_event)
