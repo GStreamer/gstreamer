@@ -228,6 +228,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 #if HAVE_IOS
   return NO;
 #else
+  GST_DEBUG_OBJECT (element, "Opening screen input");
+
   AVCaptureScreenInput *screenInput =
       [[AVCaptureScreenInput alloc] initWithDisplayID:displayId];
 
@@ -253,6 +255,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 {
   BOOL success = NO, *successPtr = &success;
 
+  GST_DEBUG_OBJECT (element, "Opening device");
+
   dispatch_sync (mainQueue, ^{
     BOOL ret;
 
@@ -277,11 +281,15 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     *successPtr = YES;
   });
 
+  GST_DEBUG_OBJECT (element, "Opening device %s", success ? "succeed" : "failed");
+
   return success;
 }
 
 - (void)closeDevice
 {
+  GST_DEBUG_OBJECT (element, "Closing device");
+
   dispatch_sync (mainQueue, ^{
     g_assert (![session isRunning]);
 
@@ -333,7 +341,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     gst_format = GST_VIDEO_FORMAT_YUY2;
     break;
   default:
-    GST_DEBUG ("Pixel format %s is not handled by avfvideosrc", [[pixel_format stringValue] UTF8String]);
+    GST_LOG_OBJECT (element, "Pixel format %s is not handled by avfvideosrc",
+        [[pixel_format stringValue] UTF8String]);
     break;
   }
 
@@ -344,6 +353,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 {
   NSArray *formats = [device valueForKey:@"formats"];
   NSArray *pixel_formats = output.availableVideoCVPixelFormatTypes;
+
+  GST_DEBUG_OBJECT (element, "Getting device caps");
 
   for (AVCaptureDeviceFormat *f in [formats reverseObjectEnumerator]) {
     CMFormatDescriptionRef formatDescription = f.formatDescription;
@@ -361,6 +372,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
       }
     }
   }
+  GST_LOG_OBJECT (element, "Device returned the following caps %" GST_PTR_FORMAT, result);
   return YES;
 }
 
@@ -370,6 +382,8 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   gboolean found_format = FALSE, found_framerate = FALSE;
   NSArray *formats = [device valueForKey:@"formats"];
   gst_util_fraction_to_double (info->fps_n, info->fps_d, &framerate);
+
+  GST_DEBUG_OBJECT (element, "Setting device caps");
 
   if ([device lockForConfiguration:NULL] == YES) {
     for (AVCaptureDeviceFormat *f in formats) {
@@ -437,11 +451,15 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     if ([session canSetSessionPreset:AVCaptureSessionPresetLow])
       gst_caps_append (result, GST_AVF_CAPS_NEW (gst_format, 192, 144, DEVICE_FPS_N, DEVICE_FPS_D));
   }
+
+  GST_LOG_OBJECT (element, "Session presets returned the following caps %" GST_PTR_FORMAT, result);
+
   return YES;
 }
 
 - (BOOL)setSessionPresetCaps:(GstVideoInfo *)info;
 {
+  GST_DEBUG_OBJECT (element, "Setting session presset caps");
 
   if ([device lockForConfiguration:NULL] != YES) {
     GST_WARNING ("Couldn't lock device for configuration");
