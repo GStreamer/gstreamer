@@ -73,12 +73,6 @@ struct _GstGLWindowPrivate
 
   GThread *gl_thread;
 
-  /* conditions */
-  GMutex render_lock;
-  GCond cond_create_context;
-  GCond cond_destroy_context;
-
-  gboolean context_created;
   gboolean alive;
 
   guintptr external_gl_context;
@@ -101,12 +95,6 @@ gst_gl_window_init (GstGLWindow * window)
 
   g_mutex_init (&window->lock);
   window->need_lock = TRUE;
-
-  g_mutex_init (&window->priv->render_lock);
-  g_cond_init (&window->priv->cond_create_context);
-  g_cond_init (&window->priv->cond_destroy_context);
-  window->priv->context_created = FALSE;
-
   window->is_drawing = FALSE;
 
   g_weak_ref_init (&window->context_ref, NULL);
