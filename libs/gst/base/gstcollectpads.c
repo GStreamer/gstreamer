@@ -1200,7 +1200,7 @@ gst_collect_pads_set_waiting (GstCollectPads * pads, GstCollectData * data,
   /* Do something only on a change and if not locked */
   if (!GST_COLLECT_PADS_STATE_IS_SET (data, GST_COLLECT_PADS_STATE_LOCKED) &&
       (GST_COLLECT_PADS_STATE_IS_SET (data, GST_COLLECT_PADS_STATE_WAITING) !=
-          !!waiting)) {
+          ! !waiting)) {
     /* Set waiting state for this pad */
     if (waiting)
       GST_COLLECT_PADS_STATE_SET (data, GST_COLLECT_PADS_STATE_WAITING);
@@ -1859,6 +1859,9 @@ forward_event_to_all_sinkpads (GstPad * srcpad, GstEvent * event)
   data.result = TRUE;
 
   gst_pad_forward (srcpad, (GstPadForwardFunction) event_forward_func, &data);
+
+  gst_event_unref (event);
+
   return data.result;
 }
 
