@@ -110,6 +110,7 @@ gst_gl_context_init (GstGLContext * context)
 {
   context->priv = GST_GL_CONTEXT_GET_PRIVATE (context);
 
+  context->window = NULL;
   context->gl_vtable = g_slice_alloc0 (sizeof (GstGLFuncs));
 
   g_mutex_init (&context->priv->render_lock);
