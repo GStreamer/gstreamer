@@ -249,6 +249,8 @@ gst_audiomixer_sink_getcaps (GstPad * pad, GstCaps * filter)
 {
   GstAudioMixer *audiomixer;
   GstCaps *result, *peercaps, *current_caps, *filter_caps;
+  GstStructure *s;
+  gint i, n;
 
   audiomixer = GST_AUDIO_MIXER (GST_PAD_PARENT (pad));
 
@@ -309,6 +311,22 @@ gst_audiomixer_sink_getcaps (GstPad * pad, GstCaps * filter)
     }
   }
 
+  result = gst_caps_make_writable (result);
+
+  n = gst_caps_get_size (result);
+  for (i = 0; i < n; i++) {
+    GstStructure *sref;
+
+    s = gst_caps_get_structure (result, i);
+    sref = gst_structure_copy (s);
+    gst_structure_set (sref, "channels", GST_TYPE_INT_RANGE, 0, 2, NULL);
+    if (gst_structure_is_subset (s, sref)) {
+      /* This field is irrelevant when in mono or stereo */
+      gst_structure_remove_field (s, "channel-mask");
+    }
+    gst_structure_free (sref);
+  }
+
   if (filter_caps)
     gst_caps_unref (filter_caps);
 
@@ -349,9 +367,19 @@ gst_audiomixer_sink_query (GstCollectPads * pads, GstCollectData * pad,
  */
 static gboolean
 gst_audiomixer_setcaps (GstAudioMixer * audiomixer, GstPad * pad,
-    GstCaps * caps)
+    GstCaps * orig_caps)
 {
+  GstCaps *caps;
   GstAudioInfo info;
+  GstStructure *s;
+  gint channels;
+
+  caps = gst_caps_copy (orig_caps);
+
+  s = gst_caps_get_structure (caps, 0);
+  if (gst_structure_get_int (s, "channels", &channels))
+    if (channels <= 2)
+      gst_structure_remove_field (s, "channel-mask");
 
   if (!gst_audio_info_from_caps (&info, caps))
     goto invalid_format;
@@ -364,30 +392,36 @@ gst_audiomixer_setcaps (GstAudioMixer * audiomixer, GstPad * pad,
   if (audiomixer->current_caps != NULL) {
     if (gst_audio_info_is_equal (&info, &audiomixer->info)) {
       GST_OBJECT_UNLOCK (audiomixer);
+      gst_caps_unref (caps);
       return TRUE;
     } else {
       GST_DEBUG_OBJECT (pad, "got input caps %" GST_PTR_FORMAT ", but "
           "current caps are %" GST_PTR_FORMAT, caps, audiomixer->current_caps);
       GST_OBJECT_UNLOCK (audiomixer);
       gst_pad_push_event (pad, gst_event_new_reconfigure ());
+      gst_caps_unref (caps);
       return FALSE;
     }
   }
 
   GST_INFO_OBJECT (pad, "setting caps to %" GST_PTR_FORMAT, caps);
-  audiomixer->current_caps = gst_caps_ref (caps);
+  gst_caps_replace (&audiomixer->current_caps, caps);
 
   memcpy (&audiomixer->info, &info, sizeof (info));
+  audiomixer->send_caps = TRUE;
   GST_OBJECT_UNLOCK (audiomixer);
   /* send caps event later, after stream-start event */
 
   GST_INFO_OBJECT (pad, "handle caps change to %" GST_PTR_FORMAT, caps);
+
+  gst_caps_unref (caps);
 
   return TRUE;
 
   /* ERRORS */
 invalid_format:
   {
+    gst_caps_unref (caps);
     GST_WARNING_OBJECT (audiomixer, "invalid format set as caps");
     return FALSE;
   }
