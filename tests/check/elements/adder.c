@@ -974,6 +974,7 @@ GST_START_TEST (test_clip)
   ck_assert_int_eq (ret, GST_FLOW_OK);
   fail_unless (handoff_buffer == NULL);
 
+  gst_element_release_request_pad (adder, sinkpad);
   gst_object_unref (sinkpad);
   gst_element_set_state (bin, GST_STATE_NULL);
   gst_bus_remove_signal_watch (bus);
@@ -1239,6 +1240,11 @@ GST_START_TEST (test_flush_start_flush_stop)
   gst_pad_send_event (sinkpad1, gst_event_new_flush_stop (TRUE));
   fail_if (GST_PAD_IS_FLUSHING (adder_src));
   gst_object_unref (adder_src);
+
+  gst_element_release_request_pad (adder, sinkpad1);
+  gst_object_unref (sinkpad1);
+  gst_element_release_request_pad (adder, sinkpad2);
+  gst_object_unref (sinkpad2);
 
   /* cleanup */
   gst_element_set_state (pipeline, GST_STATE_NULL);
