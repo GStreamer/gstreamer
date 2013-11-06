@@ -371,8 +371,9 @@ gst_core_audio_audio_device_get_channel_layout (AudioDeviceID device_id)
     }
   }
 
-beach:
   gst_core_audio_dump_channel_layout (layout);
+
+beach:
   return layout;
 
 failed:
