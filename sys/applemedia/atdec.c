@@ -323,18 +323,18 @@ gst_atdec_set_format (GstAudioDecoder * decoder, GstCaps * caps)
 
 create_queue_error:
   GST_ELEMENT_ERROR (atdec, STREAM, FORMAT, (NULL),
-      ("AudioQueueNewOutput returned error: %d", status));
+      ("AudioQueueNewOutput returned error: %d", (gint) status));
   return FALSE;
 
 set_format_error:
   GST_ELEMENT_ERROR (atdec, STREAM, FORMAT, (NULL),
-      ("AudioQueueSetOfflineRenderFormat returned error: %d", status));
+      ("AudioQueueSetOfflineRenderFormat returned error: %d", (gint) status));
   gst_atdec_destroy_queue (atdec, FALSE);
   return FALSE;
 
 start_error:
   GST_ELEMENT_ERROR (atdec, STREAM, FORMAT, (NULL),
-      ("AudioQueueStart returned error: %d", status));
+      ("AudioQueueStart returned error: %d", (gint) status));
   gst_atdec_destroy_queue (atdec, FALSE);
   return FALSE;
 }
