@@ -76,7 +76,7 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
 
   gint deviceIndex;
   BOOL doStats;
-#ifndef HAVE_IOS
+#if !HAVE_IOS
   CGDirectDisplayID displayId;
 #endif
 
@@ -160,7 +160,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     captureScreen = NO;
     captureScreenCursor = NO;
     captureScreenMouseClicks = NO;
-#ifndef HAVE_IOS
+#if !HAVE_IOS
     displayId = kCGDirectMainDisplay;
 #endif
 
@@ -510,7 +510,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   pixel_formats = output.availableVideoCVPixelFormatTypes;
 
   if (captureScreen) {
-#ifndef HAVE_IOS
+#if !HAVE_IOS
     CGRect rect = CGDisplayBounds (displayId);
     for (NSNumber *pixel_format in pixel_formats) {
       GstVideoFormat gst_format = [self getGstVideoFormat:pixel_format];
@@ -563,7 +563,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
     g_assert (![session isRunning]);
 
     if (captureScreen) {
-#ifndef HAVE_IOS
+#if !HAVE_IOS
       AVCaptureScreenInput *screenInput = (AVCaptureScreenInput *)input;
       screenInput.minFrameDuration = CMTimeMake(info.fps_d, info.fps_n);
 #else
@@ -869,7 +869,7 @@ enum
   PROP_DEVICE_INDEX,
   PROP_DO_STATS,
   PROP_FPS,
-#ifndef HAVE_IOS
+#if !HAVE_IOS
   PROP_CAPTURE_SCREEN,
   PROP_CAPTURE_SCREEN_CURSOR,
   PROP_CAPTURE_SCREEN_MOUSE_CLICKS,
@@ -943,7 +943,7 @@ gst_avf_video_src_class_init (GstAVFVideoSrcClass * klass)
       g_param_spec_int ("fps", "Frames per second",
           "Last measured framerate, if statistics are enabled",
           -1, G_MAXINT, -1, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
-#ifndef HAVE_IOS
+#if !HAVE_IOS
   g_object_class_install_property (gobject_class, PROP_CAPTURE_SCREEN,
       g_param_spec_boolean ("capture-screen", "Enable screen capture",
           "Enable screen capture functionality", FALSE,
@@ -995,7 +995,7 @@ gst_avf_video_src_get_property (GObject * object, guint prop_id, GValue * value,
   GstAVFVideoSrcImpl *impl = GST_AVF_VIDEO_SRC_IMPL (object);
 
   switch (prop_id) {
-#ifndef HAVE_IOS
+#if !HAVE_IOS
     case PROP_CAPTURE_SCREEN:
       g_value_set_boolean (value, impl.captureScreen);
       break;
@@ -1030,7 +1030,7 @@ gst_avf_video_src_set_property (GObject * object, guint prop_id,
   GstAVFVideoSrcImpl *impl = GST_AVF_VIDEO_SRC_IMPL (object);
 
   switch (prop_id) {
-#ifndef HAVE_IOS
+#if !HAVE_IOS
     case PROP_CAPTURE_SCREEN:
       impl.captureScreen = g_value_get_boolean (value);
       break;
