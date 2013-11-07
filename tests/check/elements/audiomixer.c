@@ -127,6 +127,17 @@ GST_START_TEST (test_filter_caps)
 
 GST_END_TEST;
 
+static gboolean
+set_playing (GstElement * element)
+{
+  GstStateChangeReturn state_res;
+
+  state_res = gst_element_set_state (element, GST_STATE_PLAYING);
+  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+
+  return FALSE;
+}
+
 static void
 message_received (GstBus * bus, GstMessage * message, GstPipeline * bin)
 {
@@ -267,8 +278,7 @@ GST_START_TEST (test_event)
   fail_unless (res == TRUE, NULL);
 
   /* run pipeline */
-  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
-  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+  g_idle_add ((GSourceFunc) set_playing, bin);
 
   GST_INFO ("running main loop");
   g_main_loop_run (main_loop);
@@ -405,8 +415,7 @@ GST_START_TEST (test_play_twice)
   GST_INFO ("seeked");
 
   /* run pipeline */
-  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
-  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+  g_idle_add ((GSourceFunc) set_playing, bin);
 
   g_main_loop_run (main_loop);
 
@@ -496,8 +505,7 @@ GST_START_TEST (test_play_twice_then_add_and_play_again)
     GST_INFO ("seeked");
 
     /* run pipeline */
-    state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
-    ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+    g_idle_add ((GSourceFunc) set_playing, bin);
 
     g_main_loop_run (main_loop);
 
@@ -672,8 +680,7 @@ GST_START_TEST (test_live_seeking)
     GST_INFO ("seeked");
 
     /* run pipeline */
-    state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
-    ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+    g_idle_add ((GSourceFunc) set_playing, bin);
 
     GST_INFO ("playing");
 
@@ -764,8 +771,7 @@ GST_START_TEST (test_add_pad)
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
   /* now play all */
-  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
-  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+  g_idle_add ((GSourceFunc) set_playing, bin);
 
   g_main_loop_run (main_loop);
 
@@ -846,8 +852,7 @@ GST_START_TEST (test_remove_pad)
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
   /* now play all */
-  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
-  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+  g_idle_add ((GSourceFunc) set_playing, bin);
 
   g_main_loop_run (main_loop);
 
@@ -1183,8 +1188,7 @@ GST_START_TEST (test_loop)
   fail_unless (res == TRUE, NULL);
 
   /* run pipeline */
-  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
-  ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
+  g_idle_add ((GSourceFunc) set_playing, bin);
 
   GST_INFO ("running main loop");
   g_main_loop_run (main_loop);
@@ -1314,8 +1318,8 @@ GST_START_TEST (test_sync)
   res = gst_element_link (audiomixer, sink);
   fail_unless (res == TRUE, NULL);
 
-  /* set to playing */
-  state_res = gst_element_set_state (bin, GST_STATE_PLAYING);
+  /* set to paused */
+  state_res = gst_element_set_state (bin, GST_STATE_PAUSED);
   ck_assert_int_ne (state_res, GST_STATE_CHANGE_FAILURE);
 
   /* create an unconnected sinkpad in audiomixer, should also automatically activate
@@ -1402,6 +1406,9 @@ GST_START_TEST (test_sync)
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
   gst_pad_send_event (queue2_sinkpad, gst_event_new_eos ());
+
+  /* Set PLAYING */
+  g_idle_add ((GSourceFunc) set_playing, bin);
 
   /* Collect buffers and messages */
   g_main_loop_run (main_loop);
