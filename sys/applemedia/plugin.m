@@ -58,7 +58,7 @@ plugin_init (GstPlugin * plugin)
 #else
   enable_mt_mode ();
 
-  res = gst_element_register (plugin, "qtkitvideosrc", GST_RANK_PRIMARY,
+  res = gst_element_register (plugin, "qtkitvideosrc", GST_RANK_SECONDARY,
       GST_TYPE_QTKIT_VIDEO_SRC);
 #endif
 
