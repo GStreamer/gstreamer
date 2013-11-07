@@ -941,6 +941,7 @@ gst_app_src_emit_need_data (GstAppSrc * appsrc, guint size)
   /* we can be flushing now because we released the lock */
 }
 
+/* must be called with the appsrc mutex */
 static gboolean
 gst_app_src_do_negotiate (GstBaseSrc * basesrc)
 {
@@ -953,12 +954,16 @@ gst_app_src_do_negotiate (GstBaseSrc * basesrc)
   caps = priv->caps ? gst_caps_ref (priv->caps) : NULL;
   GST_OBJECT_UNLOCK (basesrc);
 
+  /* Avoid deadlock by unlocking mutex
+   * otherwise we get deadlock between this and stream lock */
+  g_mutex_unlock (&priv->mutex);
   if (caps) {
     result = gst_base_src_set_caps (basesrc, caps);
     gst_caps_unref (caps);
   } else {
     result = GST_BASE_SRC_CLASS (parent_class)->negotiate (basesrc);
   }
+  g_mutex_lock (&priv->mutex);
 
   return result;
 }
@@ -971,8 +976,8 @@ gst_app_src_negotiate (GstBaseSrc * basesrc)
   gboolean result;
 
   g_mutex_lock (&priv->mutex);
-  result = gst_app_src_do_negotiate (basesrc);
   priv->new_caps = FALSE;
+  result = gst_app_src_do_negotiate (basesrc);
   g_mutex_unlock (&priv->mutex);
   return result;
 }
@@ -1029,10 +1034,18 @@ gst_app_src_create (GstBaseSrc * bsrc, guint64 offset, guint size,
       guint buf_size;
 
       if (priv->new_caps) {
-        gst_app_src_do_negotiate (bsrc);
         priv->new_caps = FALSE;
-      }
+        gst_app_src_do_negotiate (bsrc);
 
+        /* Lock has released so now may need
+         *- flushing
+         *- new caps change
+         *- check queue has data */
+        if (G_UNLIKELY (priv->flushing))
+          goto flushing;
+        /* Contiue checks caps and queue */
+        continue;
+      }
       *buf = g_queue_pop_head (priv->queue);
       buf_size = gst_buffer_get_size (*buf);
 
