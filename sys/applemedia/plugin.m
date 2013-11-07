@@ -63,7 +63,7 @@ plugin_init (GstPlugin * plugin)
 #endif
 
 #ifdef HAVE_AVFOUNDATION
-  res &= gst_element_register (plugin, "avfvideosrc", GST_RANK_NONE,
+  res &= gst_element_register (plugin, "avfvideosrc", GST_RANK_PRIMARY,
       GST_TYPE_AVF_VIDEO_SRC);
 #endif
 
