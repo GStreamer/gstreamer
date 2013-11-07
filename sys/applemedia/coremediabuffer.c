@@ -22,9 +22,14 @@
 static void
 gst_core_media_meta_free (GstCoreMediaMeta * meta, GstBuffer * buf)
 {
-  if (meta->image_buf != NULL)
+  if (meta->image_buf != NULL) {
     CVPixelBufferUnlockBaseAddress (meta->image_buf,
         kCVPixelBufferLock_ReadOnly);
+    CVBufferRelease(meta->image_buf);
+  }
+  if (meta->block_buf != NULL) {
+    CFRelease (meta->block_buf);
+  }
 
   CFRelease (meta->sample_buf);
 }
@@ -112,6 +117,10 @@ gst_core_media_buffer_new (CMSampleBufferRef sample_buf)
   meta = (GstCoreMediaMeta *) gst_buffer_add_meta (buf,
       gst_core_media_meta_get_info (), NULL);
   CFRetain (sample_buf);
+  if (image_buf)
+    CVBufferRetain (image_buf);
+  if (block_buf)
+    CFRetain (block_buf);
   meta->sample_buf = sample_buf;
   meta->image_buf = image_buf;
   meta->pixel_buf = pixel_buf;
