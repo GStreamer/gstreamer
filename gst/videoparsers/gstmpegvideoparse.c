@@ -666,7 +666,7 @@ next:
     } else {
       GST_LOG_OBJECT (mpvparse, "need more data");
       /* resume scan where we left it */
-      mpvparse->last_sc = size - 3;
+      mpvparse->last_sc = size - 4;
       /* request best next available */
       off = G_MAXUINT;
       goto exit;
