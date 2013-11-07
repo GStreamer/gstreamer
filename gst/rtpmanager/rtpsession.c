@@ -1370,6 +1370,7 @@ obtain_internal_source (RTPSession * sess, guint32 ssrc, gboolean * created)
 
     source->validated = TRUE;
     source->internal = TRUE;
+    source->probation = FALSE;
     rtp_source_set_sdes_struct (source, gst_structure_copy (sess->sdes));
     rtp_source_set_callbacks (source, &callbacks, sess);
 

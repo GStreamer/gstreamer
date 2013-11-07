@@ -1174,6 +1174,8 @@ rtp_source_send_rtp (RTPSource * src, RTPPacketInfo * pinfo)
   src->stats.packets_sent += pinfo->packets;
   src->stats.octets_sent += pinfo->payload_len;
   src->bytes_sent += pinfo->payload_len;
+  /* we are also a receiver of our packets */
+  update_receiver_stats (src, pinfo);
 
   running_time = pinfo->running_time;
 
