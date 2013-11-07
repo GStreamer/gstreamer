@@ -1606,6 +1606,125 @@ GST_START_TEST (test_sync_discont)
 
 GST_END_TEST;
 
+static void
+send_buffers_sync_unaligned (GstPad * pad1, GstPad * pad2)
+{
+  GstBuffer *buffer;
+  GstMapInfo map;
+  GstFlowReturn ret;
+
+  buffer = gst_buffer_new_and_alloc (2000);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  memset (map.data, 1, map.size);
+  gst_buffer_unmap (buffer, &map);
+  GST_BUFFER_TIMESTAMP (buffer) = 750 * GST_MSECOND;
+  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+  GST_DEBUG ("pushing buffer %p", buffer);
+  ret = gst_pad_chain (pad1, buffer);
+  ck_assert_int_eq (ret, GST_FLOW_OK);
+
+  buffer = gst_buffer_new_and_alloc (2000);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  memset (map.data, 1, map.size);
+  gst_buffer_unmap (buffer, &map);
+  GST_BUFFER_TIMESTAMP (buffer) = 1750 * GST_MSECOND;
+  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+  GST_DEBUG ("pushing buffer %p", buffer);
+  ret = gst_pad_chain (pad1, buffer);
+  ck_assert_int_eq (ret, GST_FLOW_OK);
+
+  gst_pad_send_event (pad1, gst_event_new_eos ());
+
+  buffer = gst_buffer_new_and_alloc (2000);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  memset (map.data, 2, map.size);
+  gst_buffer_unmap (buffer, &map);
+  GST_BUFFER_TIMESTAMP (buffer) = 1750 * GST_MSECOND;
+  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+  GST_DEBUG ("pushing buffer %p", buffer);
+  ret = gst_pad_chain (pad2, buffer);
+  ck_assert_int_eq (ret, GST_FLOW_OK);
+
+  buffer = gst_buffer_new_and_alloc (2000);
+  gst_buffer_map (buffer, &map, GST_MAP_WRITE);
+  memset (map.data, 2, map.size);
+  gst_buffer_unmap (buffer, &map);
+  GST_BUFFER_TIMESTAMP (buffer) = 2750 * GST_MSECOND;
+  GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
+  GST_DEBUG ("pushing buffer %p", buffer);
+  ret = gst_pad_chain (pad2, buffer);
+  ck_assert_int_eq (ret, GST_FLOW_OK);
+
+  gst_pad_send_event (pad2, gst_event_new_eos ());
+}
+
+static void
+check_buffers_sync_unaligned (GList * received_buffers)
+{
+  GstBuffer *buffer;
+  GList *l;
+  gint i;
+  GstMapInfo map;
+
+  /* Should have 8 * 0.5s buffers */
+  fail_unless_equals_int (g_list_length (received_buffers), 8);
+  for (i = 0, l = received_buffers; l; l = l->next, i++) {
+    buffer = l->data;
+
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+    if (i == 0 && GST_BUFFER_TIMESTAMP (buffer) == 0) {
+      fail_unless (map.data[0] == 0);
+      fail_unless (map.data[map.size - 1] == 0);
+    } else if (i == 1 && GST_BUFFER_TIMESTAMP (buffer) == 500 * GST_MSECOND) {
+      fail_unless (map.data[0] == 0);
+      fail_unless (map.data[499] == 0);
+      fail_unless (map.data[500] == 1);
+      fail_unless (map.data[map.size - 1] == 1);
+    } else if (i == 2 && GST_BUFFER_TIMESTAMP (buffer) == 1000 * GST_MSECOND) {
+      fail_unless (map.data[0] == 1);
+      fail_unless (map.data[map.size - 1] == 1);
+    } else if (i == 3 && GST_BUFFER_TIMESTAMP (buffer) == 1500 * GST_MSECOND) {
+      fail_unless (map.data[0] == 1);
+      fail_unless (map.data[499] == 1);
+      fail_unless (map.data[500] == 3);
+      fail_unless (map.data[map.size - 1] == 3);
+    } else if (i == 4 && GST_BUFFER_TIMESTAMP (buffer) == 2000 * GST_MSECOND) {
+      fail_unless (map.data[0] == 3);
+      fail_unless (map.data[499] == 3);
+      fail_unless (map.data[500] == 3);
+      fail_unless (map.data[map.size - 1] == 3);
+    } else if (i == 5 && GST_BUFFER_TIMESTAMP (buffer) == 2500 * GST_MSECOND) {
+      fail_unless (map.data[0] == 3);
+      fail_unless (map.data[499] == 3);
+      fail_unless (map.data[500] == 2);
+      fail_unless (map.data[map.size - 1] == 2);
+    } else if (i == 6 && GST_BUFFER_TIMESTAMP (buffer) == 3000 * GST_MSECOND) {
+      fail_unless (map.data[0] == 2);
+      fail_unless (map.data[499] == 2);
+      fail_unless (map.data[500] == 2);
+      fail_unless (map.data[map.size - 1] == 2);
+    } else if (i == 7 && GST_BUFFER_TIMESTAMP (buffer) == 3500 * GST_MSECOND) {
+      fail_unless (map.size == 500);
+      fail_unless (GST_BUFFER_DURATION (buffer) == 250 * GST_MSECOND);
+      fail_unless (map.data[0] == 2);
+      fail_unless (map.data[499] == 2);
+    } else {
+      g_assert_not_reached ();
+    }
+
+    gst_buffer_unmap (buffer, &map);
+
+  }
+}
+
+GST_START_TEST (test_sync_unaligned)
+{
+  run_sync_test (send_buffers_sync_unaligned, check_buffers_sync_unaligned);
+}
+
+GST_END_TEST;
+
 static Suite *
 audiomixer_suite (void)
 {
@@ -1628,6 +1747,7 @@ audiomixer_suite (void)
   tcase_add_test (tc_chain, test_flush_start_flush_stop);
   tcase_add_test (tc_chain, test_sync);
   tcase_add_test (tc_chain, test_sync_discont);
+  tcase_add_test (tc_chain, test_sync_unaligned);
 
   /* Use a longer timeout */
 #ifdef HAVE_VALGRIND
