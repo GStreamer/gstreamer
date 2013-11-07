@@ -24,6 +24,7 @@
 
 #include "gstvaapiencode_h264.h"
 #include "gstvaapipluginutil.h"
+#include "gstvaapivideomemory.h"
 #include "gst/vaapi/gstvaapiencoder_h264.h"
 #include "gst/vaapi/gstvaapiencoder_h264_priv.h"
 #include "gst/vaapi/gstvaapidisplay.h"
@@ -38,9 +39,14 @@ GST_DEBUG_CATEGORY_STATIC (gst_vaapi_h264_encode_debug);
 #define GST_CAPS_CODEC(CODEC) CODEC "; "
 
 static const char gst_vaapiencode_h264_sink_caps_str[] =
+#if GST_CHECK_VERSION(1,1,0)
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE,
+      "{ ENCODED, NV12, I420, YV12 }") ", "
+#else
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
   GST_CAPS_INTERLACED_FALSE "; "
   GST_VAAPI_SURFACE_CAPS ", "
+#endif
   GST_CAPS_INTERLACED_FALSE;
 
 static const char gst_vaapiencode_h264_src_caps_str[] =
