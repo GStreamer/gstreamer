@@ -133,6 +133,8 @@ static GstRTSPResult default_params_set (GstRTSPClient * client,
     GstRTSPContext * ctx);
 static GstRTSPResult default_params_get (GstRTSPClient * client,
     GstRTSPContext * ctx);
+static gchar * default_make_path_from_uri (GstRTSPClient *client,
+    const GstRTSPUrl *uri);
 
 G_DEFINE_TYPE (GstRTSPClient, gst_rtsp_client, G_TYPE_OBJECT);
 
@@ -153,6 +155,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   klass->configure_client_transport = default_configure_client_transport;
   klass->params_set = default_params_set;
   klass->params_get = default_params_get;
+  klass->make_path_from_uri = default_make_path_from_uri;
 
   g_object_class_install_property (gobject_class, PROP_SESSION_POOL,
       g_param_spec_object ("session-pool", "Session Pool",
@@ -712,7 +715,7 @@ close_connection (GstRTSPClient * client)
 }
 
 static gchar *
-make_path_from_uri (GstRTSPClient * client, GstRTSPUrl * uri)
+default_make_path_from_uri (GstRTSPClient * client, const GstRTSPUrl * uri)
 {
   gchar *path;
 
@@ -728,6 +731,7 @@ static gboolean
 handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
   GstRTSPClientPrivate *priv = client->priv;
+  GstRTSPClientClass *klass;
   GstRTSPSession *session;
   GstRTSPSessionMedia *sessmedia;
   GstRTSPStatusCode code;
@@ -742,7 +746,8 @@ handle_teardown_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!ctx->uri)
     goto no_uri;
 
-  path = make_path_from_uri (client, ctx->uri);
+  klass = GST_RTSP_CLIENT_GET_CLASS (client);
+  path = klass->make_path_from_uri (client, ctx->uri);
 
   /* get a handle to the configuration of the media in the session */
   sessmedia = gst_rtsp_session_get_media (session, path, &matched);
@@ -912,6 +917,7 @@ static gboolean
 handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
   GstRTSPSession *session;
+  GstRTSPClientClass *klass;
   GstRTSPSessionMedia *sessmedia;
   GstRTSPStatusCode code;
   GstRTSPState rtspstate;
@@ -924,7 +930,8 @@ handle_pause_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!ctx->uri)
     goto no_uri;
 
-  path = make_path_from_uri (client, ctx->uri);
+  klass = GST_RTSP_CLIENT_GET_CLASS (client);
+  path = klass->make_path_from_uri (client, ctx->uri);
 
   /* get a handle to the configuration of the media in the session */
   sessmedia = gst_rtsp_session_get_media (session, path, &matched);
@@ -1027,6 +1034,7 @@ static gboolean
 handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
 {
   GstRTSPSession *session;
+  GstRTSPClientClass *klass;
   GstRTSPSessionMedia *sessmedia;
   GstRTSPMedia *media;
   GstRTSPStatusCode code;
@@ -1047,7 +1055,8 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!(uri = ctx->uri))
     goto no_uri;
 
-  path = make_path_from_uri (client, uri);
+  klass = GST_RTSP_CLIENT_GET_CLASS (client);
+  path = klass->make_path_from_uri (client, uri);
 
   /* get a handle to the configuration of the media in the session */
   sessmedia = gst_rtsp_session_get_media (session, path, &matched);
@@ -1413,7 +1422,8 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
     goto no_uri;
 
   uri = ctx->uri;
-  path = make_path_from_uri (client, uri);
+  klass = GST_RTSP_CLIENT_GET_CLASS (client);
+  path = klass->make_path_from_uri (client, uri);
 
   /* parse the transport */
   res =
@@ -1512,7 +1522,6 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
     goto unsupported_transports;
 
   /* update the client transport */
-  klass = GST_RTSP_CLIENT_GET_CLASS (client);
   if (!klass->configure_client_transport (client, ctx, ct))
     goto unsupported_client_transport;
 

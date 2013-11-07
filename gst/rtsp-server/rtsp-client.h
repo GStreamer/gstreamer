@@ -92,6 +92,7 @@ struct _GstRTSPClientClass {
                                                  GstRTSPTransport * ct);
   GstRTSPResult   (*params_set) (GstRTSPClient *client, GstRTSPContext *ctx);
   GstRTSPResult   (*params_get) (GstRTSPClient *client, GstRTSPContext *ctx);
+  gchar *         (*make_path_from_uri) (GstRTSPClient *client, const GstRTSPUrl *uri);
 
   /* signals */
   void     (*closed)                  (GstRTSPClient *client);
