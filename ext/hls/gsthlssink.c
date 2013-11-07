@@ -183,6 +183,9 @@ gst_hls_sink_init (GstHlsSink * sink)
   sink->max_files = DEFAULT_MAX_FILES;
   sink->target_duration = DEFAULT_TARGET_DURATION;
 
+  /* haven't added a sink yet, make it is detected as a sink meanwhile */
+  GST_OBJECT_FLAG_SET (sink, GST_ELEMENT_FLAG_SINK);
+
   gst_hls_sink_reset (sink);
 }
 
