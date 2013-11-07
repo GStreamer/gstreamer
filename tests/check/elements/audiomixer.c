@@ -1273,7 +1273,12 @@ handoff_buffer_collect_cb (GstElement * fakesink, GstBuffer * buffer,
       g_list_append (*received_buffers, gst_buffer_ref (buffer));
 }
 
-GST_START_TEST (test_sync)
+typedef void (*SendBuffersFunction) (GstPad * pad1, GstPad * pad2);
+typedef void (*CheckBuffersFunction) (GList * buffers);
+
+static void
+run_sync_test (SendBuffersFunction send_buffers,
+    CheckBuffersFunction check_buffers)
 {
   GstSegment segment;
   GstElement *bin, *audiomixer, *queue1, *queue2, *sink;
@@ -1283,13 +1288,9 @@ GST_START_TEST (test_sync)
   GstPad *pad;
   gboolean res;
   GstStateChangeReturn state_res;
-  GstFlowReturn ret;
   GstEvent *event;
-  GstBuffer *buffer;
   GstCaps *caps;
-  GList *received_buffers = NULL, *l;
-  gint i;
-  GstMapInfo map;
+  GList *received_buffers = NULL;
 
   GST_INFO ("preparing test");
 
@@ -1363,6 +1364,40 @@ GST_START_TEST (test_sync)
   gst_pad_send_event (queue2_sinkpad, event);
 
   /* Push buffers */
+  send_buffers (queue1_sinkpad, queue2_sinkpad);
+
+  /* Set PLAYING */
+  g_idle_add ((GSourceFunc) set_playing, bin);
+
+  /* Collect buffers and messages */
+  g_main_loop_run (main_loop);
+
+  /* Here we get once we got EOS, for errors we failed */
+
+  check_buffers (received_buffers);
+
+  g_list_free_full (received_buffers, (GDestroyNotify) gst_buffer_unref);
+
+  gst_element_release_request_pad (audiomixer, sinkpad1);
+  gst_object_unref (sinkpad1);
+  gst_object_unref (queue1_sinkpad);
+  gst_element_release_request_pad (audiomixer, sinkpad2);
+  gst_object_unref (sinkpad2);
+  gst_object_unref (queue2_sinkpad);
+  gst_element_set_state (bin, GST_STATE_NULL);
+  gst_bus_remove_signal_watch (bus);
+  gst_object_unref (bus);
+  gst_object_unref (bin);
+  g_main_loop_unref (main_loop);
+}
+
+static void
+send_buffers_sync (GstPad * pad1, GstPad * pad2)
+{
+  GstBuffer *buffer;
+  GstMapInfo map;
+  GstFlowReturn ret;
+
   buffer = gst_buffer_new_and_alloc (2000);
   gst_buffer_map (buffer, &map, GST_MAP_WRITE);
   memset (map.data, 1, map.size);
@@ -1370,7 +1405,7 @@ GST_START_TEST (test_sync)
   GST_BUFFER_TIMESTAMP (buffer) = 1 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
   GST_DEBUG ("pushing buffer %p", buffer);
-  ret = gst_pad_chain (queue1_sinkpad, buffer);
+  ret = gst_pad_chain (pad1, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
   buffer = gst_buffer_new_and_alloc (2000);
@@ -1380,10 +1415,10 @@ GST_START_TEST (test_sync)
   GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
   GST_DEBUG ("pushing buffer %p", buffer);
-  ret = gst_pad_chain (queue1_sinkpad, buffer);
+  ret = gst_pad_chain (pad1, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
-  gst_pad_send_event (queue1_sinkpad, gst_event_new_eos ());
+  gst_pad_send_event (pad1, gst_event_new_eos ());
 
   buffer = gst_buffer_new_and_alloc (2000);
   gst_buffer_map (buffer, &map, GST_MAP_WRITE);
@@ -1392,7 +1427,7 @@ GST_START_TEST (test_sync)
   GST_BUFFER_TIMESTAMP (buffer) = 2 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
   GST_DEBUG ("pushing buffer %p", buffer);
-  ret = gst_pad_chain (queue2_sinkpad, buffer);
+  ret = gst_pad_chain (pad2, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
   buffer = gst_buffer_new_and_alloc (2000);
@@ -1402,18 +1437,19 @@ GST_START_TEST (test_sync)
   GST_BUFFER_TIMESTAMP (buffer) = 3 * GST_SECOND;
   GST_BUFFER_DURATION (buffer) = 1 * GST_SECOND;
   GST_DEBUG ("pushing buffer %p", buffer);
-  ret = gst_pad_chain (queue2_sinkpad, buffer);
+  ret = gst_pad_chain (pad2, buffer);
   ck_assert_int_eq (ret, GST_FLOW_OK);
 
-  gst_pad_send_event (queue2_sinkpad, gst_event_new_eos ());
+  gst_pad_send_event (pad2, gst_event_new_eos ());
+}
 
-  /* Set PLAYING */
-  g_idle_add ((GSourceFunc) set_playing, bin);
-
-  /* Collect buffers and messages */
-  g_main_loop_run (main_loop);
-
-  /* Here we get once we got EOS, for errors we failed */
+static void
+check_buffers_sync (GList * received_buffers)
+{
+  GstBuffer *buffer;
+  GList *l;
+  gint i;
+  GstMapInfo map;
 
   /* Should have 8 * 0.5s buffers */
   fail_unless_equals_int (g_list_length (received_buffers), 8);
@@ -1445,20 +1481,11 @@ GST_START_TEST (test_sync)
     gst_buffer_unmap (buffer, &map);
 
   }
+}
 
-  g_list_free_full (received_buffers, (GDestroyNotify) gst_buffer_unref);
-
-  gst_element_release_request_pad (audiomixer, sinkpad1);
-  gst_object_unref (sinkpad1);
-  gst_object_unref (queue1_sinkpad);
-  gst_element_release_request_pad (audiomixer, sinkpad2);
-  gst_object_unref (sinkpad2);
-  gst_object_unref (queue2_sinkpad);
-  gst_element_set_state (bin, GST_STATE_NULL);
-  gst_bus_remove_signal_watch (bus);
-  gst_object_unref (bus);
-  gst_object_unref (bin);
-  g_main_loop_unref (main_loop);
+GST_START_TEST (test_sync)
+{
+  run_sync_test (send_buffers_sync, check_buffers_sync);
 }
 
 GST_END_TEST;
