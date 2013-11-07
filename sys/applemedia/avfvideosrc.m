@@ -360,14 +360,22 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
   GST_DEBUG_OBJECT (element, "Getting device caps");
 
-  for (AVCaptureDeviceFormat *f in [formats reverseObjectEnumerator]) {
-    CMFormatDescriptionRef formatDescription = f.formatDescription;
-    CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
+  /* Do not use AVCaptureDeviceFormat or AVFrameRateRange only
+   * available in iOS >= 7.0. We use a dynamic approach with key-value
+   * coding or performSelector */
+  for (NSObject *f in [formats reverseObjectEnumerator]) {
+    CMFormatDescriptionRef formatDescription;
+    CMVideoDimensions dimensions;
 
-    for (AVFrameRateRange *rate in f.videoSupportedFrameRateRanges) {
+    /* formatDescription can't be retrieved with valueForKey so use a selector here */
+    formatDescription = (CMFormatDescriptionRef) [f performSelector:@selector(formatDescription)];
+    dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
+    for (NSObject *rate in [f valueForKey:@"videoSupportedFrameRateRanges"]) {
       int fps_n, fps_d;
+      gdouble max_fps;
 
-      gst_util_double_to_fraction (rate.maxFrameRate, &fps_n, &fps_d);
+      [[rate valueForKey:@"maxFrameRate"] getValue:&max_fps];
+      gst_util_double_to_fraction (max_fps, &fps_n, &fps_d);
 
       for (NSNumber *pixel_format in pixel_formats) {
         GstVideoFormat gst_format = [self getGstVideoFormat:pixel_format];
@@ -390,22 +398,29 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   GST_DEBUG_OBJECT (element, "Setting device caps");
 
   if ([device lockForConfiguration:NULL] == YES) {
-    for (AVCaptureDeviceFormat *f in formats) {
-      CMFormatDescriptionRef formatDescription = f.formatDescription;
-      CMVideoDimensions dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
+    for (NSObject *f in formats) {
+      CMFormatDescriptionRef formatDescription;
+      CMVideoDimensions dimensions;
+
+      formatDescription = (CMFormatDescriptionRef) [f performSelector:@selector(formatDescription)];
+      dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription);
       if (dimensions.width == info->width && dimensions.height == info->height) {
         found_format = TRUE;
-        device.activeFormat = f;
-        for (AVFrameRateRange *rate in f.videoSupportedFrameRateRanges) {
-          if (abs (framerate - rate.maxFrameRate) < 0.00001) {
+        [device setValue:f forKey:@"activeFormat"];
+        for (NSObject *rate in [f valueForKey:@"videoSupportedFrameRateRanges"]) {
+          gdouble max_frame_rate;
+
+          [[rate valueForKey:@"maxFrameRate"] getValue:&max_frame_rate];
+          if (abs (framerate - max_frame_rate) < 0.00001) {
+            NSValue *min_frame_duration, *max_frame_duration;
+
             found_framerate = TRUE;
-            device.activeVideoMinFrameDuration = rate.minFrameDuration;
-            [device setValue:[NSValue valueWithCMTime:rate.minFrameDuration]
-                    forKey:@"activeVideoMinFrameDuration"];
+            min_frame_duration = [rate valueForKey:@"minFrameDuration"];
+            max_frame_duration = [rate valueForKey:@"maxFrameDuration"];
+            [device setValue:min_frame_duration forKey:@"activeVideoMinFrameDuration"];
             @try {
               /* Only available on OSX >= 10.8 and iOS >= 7.0 */
-              [device setValue:[NSValue valueWithCMTime:rate.maxFrameDuration]
-                      forKey:@"activeVideoMaxFrameDuration"];
+              [device setValue:max_frame_duration forKey:@"activeVideoMaxFrameDuration"];
             } @catch (NSException *exception) {
               if (![[exception name] isEqualTo:NSUndefinedKeyException]) {
                 GST_WARNING ("An unexcepted error occured: %s",
