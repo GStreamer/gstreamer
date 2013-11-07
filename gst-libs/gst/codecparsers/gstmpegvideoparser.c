@@ -126,30 +126,6 @@ GST_DEBUG_CATEGORY (mpegvideo_parser_debug);
 
 static gboolean initialized = FALSE;
 
-static inline gboolean
-find_start_code (GstBitReader * b)
-{
-  guint32 bits;
-
-  /* 0 bits until byte aligned */
-  while (b->bit != 0) {
-    GET_BITS (b, 1, &bits);
-  }
-
-  /* 0 bytes until startcode */
-  while (gst_bit_reader_peek_bits_uint32 (b, &bits, 32)) {
-    if (bits >> 8 == 0x1) {
-      return TRUE;
-    } else if (gst_bit_reader_skip (b, 8) == FALSE)
-      break;
-  }
-
-  return FALSE;
-
-failed:
-  return FALSE;
-}
-
 /* Set the Pixel Aspect Ratio in our hdr from a ASR code in the data */
 static void
 set_par_from_asr_mpeg1 (GstMpegVideoSequenceHdr * seqhdr, guint8 asr_code)
