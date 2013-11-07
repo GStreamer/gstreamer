@@ -1614,7 +1614,6 @@ gst_audiomixer_collected (GstCollectPads * pads, gpointer user_data)
   gboolean dropped = FALSE;
   gboolean is_eos = TRUE;
   gboolean is_done = TRUE;
-  gboolean handled_buffer = FALSE;
 
   audiomixer = GST_AUDIO_MIXER (user_data);
 
@@ -1788,7 +1787,6 @@ gst_audiomixer_collected (GstCollectPads * pads, gpointer user_data)
       } else {
         is_done = FALSE;
       }
-      handled_buffer = TRUE;
     }
   }
 
@@ -1810,14 +1808,10 @@ gst_audiomixer_collected (GstCollectPads * pads, gpointer user_data)
 
   if (is_eos) {
     gint64 max_offset = 0;
+    gboolean empty_buffer = TRUE;
 
     GST_DEBUG_OBJECT (audiomixer, "We're EOS");
 
-    /* This means EOS or no pads at all */
-    if (!handled_buffer) {
-      gst_buffer_replace (&audiomixer->current_buffer, NULL);
-      goto eos;
-    }
 
     for (collected = pads->data; collected; collected = collected->next) {
       GstCollectData *collect_data;
@@ -1827,6 +1821,14 @@ gst_audiomixer_collected (GstCollectPads * pads, gpointer user_data)
       adata = (GstAudioMixerCollect *) collect_data;
 
       max_offset = MAX (max_offset, adata->output_offset);
+      if (adata->output_offset > audiomixer->offset)
+        empty_buffer = FALSE;
+    }
+
+    /* This means EOS or no pads at all */
+    if (empty_buffer) {
+      gst_buffer_replace (&audiomixer->current_buffer, NULL);
+      goto eos;
     }
 
     if (max_offset <= next_offset) {
