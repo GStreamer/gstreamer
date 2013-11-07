@@ -237,12 +237,13 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
   AVCaptureScreenInput *screenInput =
       [[AVCaptureScreenInput alloc] initWithDisplayID:displayId];
 
+
   @try {
     [screenInput setValue:[NSNumber numberWithBool:captureScreenCursor]
                  forKey:@"capturesCursor"];
 
   } @catch (NSException *exception) {
-    if (![[exception name] isEqualTo:NSUndefinedKeyException]) {
+    if (![[exception name] isEqualToString:NSUndefinedKeyException]) {
       GST_WARNING ("An unexpected error occured: %s",
                    [[exception reason] UTF8String]);
     }
@@ -422,7 +423,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
               /* Only available on OSX >= 10.8 and iOS >= 7.0 */
               [device setValue:max_frame_duration forKey:@"activeVideoMaxFrameDuration"];
             } @catch (NSException *exception) {
-              if (![[exception name] isEqualTo:NSUndefinedKeyException]) {
+              if (![[exception name] isEqualToString:NSUndefinedKeyException]) {
                 GST_WARNING ("An unexcepted error occured: %s",
                               [exception.reason UTF8String]);
               }
@@ -548,7 +549,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
   } @catch (NSException *exception) {
 
-    if (![[exception name] isEqualTo:NSUndefinedKeyException]) {
+    if (![[exception name] isEqualToString:NSUndefinedKeyException]) {
       GST_WARNING ("An unexcepted error occured: %s", [exception.reason UTF8String]);
       return result;
     }
@@ -596,7 +597,7 @@ didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer
 
       } @catch (NSException *exception) {
 
-        if (![[exception name] isEqualTo:NSUndefinedKeyException]) {
+        if (![[exception name] isEqualToString:NSUndefinedKeyException]) {
           GST_WARNING ("An unexcepted error occured: %s", [exception.reason UTF8String]);
           *successPtr = NO;
           return;
