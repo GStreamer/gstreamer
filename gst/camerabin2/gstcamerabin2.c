@@ -955,6 +955,16 @@ gst_camera_bin_skip_next_preview (GstCameraBin2 * camerabin)
   g_mutex_unlock (&camerabin->preview_list_mutex);
 }
 
+static void
+gst_camera_bin_finish_video_file (GstCameraBin2 * camerabin)
+{
+  /* make sure the file is closed */
+  gst_element_set_state (camerabin->videosink, GST_STATE_NULL);
+
+  gst_video_capture_bin_post_video_done (camerabin);
+  GST_CAMERA_BIN2_PROCESSING_DEC (camerabin);
+}
+
 static gpointer
 gst_camera_bin_video_reset_elements (gpointer u_data)
 {
@@ -962,6 +972,8 @@ gst_camera_bin_video_reset_elements (gpointer u_data)
 
   GST_DEBUG_OBJECT (camerabin, "Resetting video elements state");
   g_mutex_lock (&camerabin->video_capture_mutex);
+
+  gst_camera_bin_finish_video_file (camerabin);
 
   /* reset element states to clear eos/flushing pads */
   gst_element_set_state (camerabin->video_encodebin, GST_STATE_READY);
@@ -1081,9 +1093,6 @@ gst_camera_bin_handle_message (GstBin * bin, GstMessage * message)
         g_mutex_lock (&camerabin->video_capture_mutex);
         GST_DEBUG_OBJECT (bin, "EOS from video branch");
         g_assert (camerabin->video_state == GST_CAMERA_BIN_VIDEO_FINISHING);
-
-        gst_video_capture_bin_post_video_done (GST_CAMERA_BIN2_CAST (bin));
-        dec_counter = TRUE;
 
         if (!g_thread_try_new ("reset-element-thread",
                 gst_camera_bin_video_reset_elements, gst_object_ref (camerabin),
