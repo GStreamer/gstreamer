@@ -66,7 +66,6 @@ struct _GstGLContextCocoaPrivate
 
 @interface GstGLNSOpenGLView: NSOpenGLView {
   GstGLWindowCocoa *m_cocoa;
-  gint m_resizeCount;
 }
 - (id) initWithFrame:(GstGLWindowCocoa *)window rect:(NSRect)contentRect
     pixelFormat:(NSOpenGLPixelFormat *)fmt;
