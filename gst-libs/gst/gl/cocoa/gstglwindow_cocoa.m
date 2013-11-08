@@ -449,7 +449,6 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
   self = [super initWithFrame: contentRect pixelFormat: fmt];
 
   m_cocoa = window;
-  m_resizeCount = 0;
 
 #ifndef GNUSTEP
   [self setWantsLayer:NO];
@@ -463,23 +462,19 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
 
   window = GST_GL_WINDOW (m_cocoa);
 
-  if (m_resizeCount % 5 == 0) {
-    m_resizeCount = 0;
-    if (window->resize) {
+  if (window->resize) {
 
-      NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
-      NSRect bounds = [self bounds];
-      AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc]
-        initWithSize:m_cocoa callback:window->resize userData:window->resize_data 
-        toSize:bounds.size];
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSRect bounds = [self bounds];
+    AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc]
+      initWithSize:m_cocoa callback:window->resize userData:window->resize_data
+      toSize:bounds.size];
 
-      [app_thread_performer performSelector:@selector(resizeWindow) onThread:m_cocoa->priv->thread 
-        withObject:nil waitUntilDone:YES];
+    [app_thread_performer performSelector:@selector(resizeWindow) onThread:m_cocoa->priv->thread
+      withObject:nil waitUntilDone:YES];
 
-      [pool release];
-    }
+    [pool release];
   }
-  m_resizeCount++;
 }
 
 - (void) update {
