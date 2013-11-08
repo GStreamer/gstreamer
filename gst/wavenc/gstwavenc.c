@@ -854,8 +854,7 @@ gst_wavenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     /* starting a file, means we have to finish it properly */
     wavenc->finished_properly = FALSE;
 
-    /* use bogus size initially, we'll write the real
-     * header when we get EOS and know the exact length */
+    /* push initial bogus header, it will be updated on EOS */
     flow = gst_wavenc_push_header (wavenc);
     if (flow != GST_FLOW_OK) {
       GST_WARNING_OBJECT (wavenc, "error pushing header: %s",
@@ -863,6 +862,7 @@ gst_wavenc_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
       return flow;
     }
     GST_DEBUG_OBJECT (wavenc, "wrote dummy header");
+    wavenc->audio_length = 0;
     wavenc->sent_header = TRUE;
   }
 
@@ -894,7 +894,9 @@ gst_wavenc_change_state (GstElement * element, GstStateChange transition)
       wavenc->channels = 0;
       wavenc->width = 0;
       wavenc->rate = 0;
-      wavenc->audio_length = 0;
+      /* use bogus size initially, we'll write the real
+       * header when we get EOS and know the exact length */
+      wavenc->audio_length = 0x7FFF0000;
       wavenc->meta_length = 0;
       wavenc->sent_header = FALSE;
       /* its true because we haven't writen anything */
