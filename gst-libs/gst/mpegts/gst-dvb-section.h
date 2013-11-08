@@ -155,7 +155,7 @@ struct _GstMpegTsNIT
 {
   gboolean   actual_network;
 
-  GPtrArray    *descriptors;
+  GPtrArray  *descriptors;
 
   GPtrArray *streams;
 };
@@ -183,6 +183,7 @@ struct _GstMpegTsBATStream
 
 /**
  * GstMpegTsBAT:
+ *
  * @descriptors: (element-type GstMpegTsDescriptor):
  * @streams: (element-type GstMpegTsBATStream):
  *
@@ -207,6 +208,12 @@ const GstMpegTsBAT *gst_mpegts_section_get_bat (GstMpegTsSection *section);
 typedef struct _GstMpegTsSDTService GstMpegTsSDTService;
 typedef struct _GstMpegTsSDT GstMpegTsSDT;
 
+/**
+ * GstMpegTsSDTService:
+ *
+ * @descriptors: (element-type GstMpegTsDescriptor): List of descriptors
+ *
+ */
 struct _GstMpegTsSDTService
 {
   guint16    service_id;
@@ -222,7 +229,10 @@ struct _GstMpegTsSDTService
 /**
  * GstMpegTsSDT:
  *
+ * @services: (element-type GstMpegTsSDTService): List of services
+ *
  * Service Description Table (EN 300 468)
+ *
  */
 struct _GstMpegTsSDT
 {
@@ -248,6 +258,8 @@ typedef struct _GstMpegTsEIT GstMpegTsEIT;
 /**
  * GstMpegTsEITEvent:
  *
+ * @descriptors: (element-type GstMpegTsDescriptor): List of descriptors
+ *
  * Event from a @GstMpegTsEIT
  */
 struct _GstMpegTsEITEvent
@@ -266,7 +278,10 @@ struct _GstMpegTsEITEvent
 /**
  * GstMpegTsEIT:
  *
+ * @events: (element-type GstMpegTsEITEvent): List of events
+ *
  * Event Information Table (EN 300 468)
+ *
  */
 struct _GstMpegTsEIT
 {
@@ -296,7 +311,10 @@ typedef struct _GstMpegTsTOT GstMpegTsTOT;
 /**
  * GstMpegTsTOT:
  *
+ * @descriptors: (element-type GstMpegTsDescriptor): List of descriptors
+ *
  * Time Offset Table (EN 300 468)
+ *
  */
 struct _GstMpegTsTOT
 {
