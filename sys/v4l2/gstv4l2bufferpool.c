@@ -191,6 +191,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
 
       GST_LOG_OBJECT (pool, "creating buffer %u, %p", index, newbuf);
 
+      memset (&meta->vbuffer, 0x0, sizeof (struct v4l2_buffer));
       meta->vbuffer.index = index;
       meta->vbuffer.type = obj->type;
       meta->vbuffer.memory = V4L2_MEMORY_MMAP;
