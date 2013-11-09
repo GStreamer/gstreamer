@@ -327,6 +327,11 @@ static void
 bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
 {
   switch (GST_MESSAGE_TYPE (message)) {
+    case GST_MESSAGE_WARNING:{
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+          GST_DEBUG_GRAPH_SHOW_ALL, "ges-launch.warning");
+      break;
+    }
     case GST_MESSAGE_ERROR:{
       GError *err = NULL;
       gchar *dbg_info = NULL;
@@ -357,6 +362,25 @@ bus_message_cb (GstBus * bus, GstMessage * message, GMainLoop * mainloop)
       } else {
         g_printerr ("Done\n");
         g_main_loop_quit (mainloop);
+      }
+      break;
+    case GST_MESSAGE_STATE_CHANGED:
+      if (GST_MESSAGE_SRC (message) == GST_OBJECT_CAST (pipeline)) {
+        gchar *dump_name;
+        GstState old, new, pending;
+        gchar *state_transition_name;
+
+        gst_message_parse_state_changed (message, &old, &new, &pending);
+        state_transition_name = g_strdup_printf ("%s_%s",
+            gst_element_state_get_name (old), gst_element_state_get_name (new));
+        dump_name = g_strconcat ("ges-launch.", state_transition_name, NULL);
+
+
+        GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
+            GST_DEBUG_GRAPH_SHOW_ALL, dump_name);
+
+        g_free (dump_name);
+        g_free (state_transition_name);
       }
       break;
     default:
