@@ -1,8 +1,8 @@
 
-Release notes for GStreamer 1.2.0
+Release notes for GStreamer 1.2.1
 
 
-The GStreamer team is proud to announce a new feature release
+The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -42,10 +42,7 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 706551 : gsttestclock check failed
-      * 708605 : testclock: Does not handle unscheduled entries correctly
-      * 708636 : collectpads: Should set *all* its pads to flushing when set_flushing is called, not only the ones in the public list
-      * 708668 : context: Potential regression
+      * 709832 : max DEBUG_LEVEL Incongruence on docs & autocompletion logic between 5 and 9
 
 ==== Download ====
 
@@ -82,10 +79,14 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alex Ashley
       * Edward Hervey
-      * Mathieu Duponchelle
+      * Fabian Kirsch
+      * Jan Schmidt
+      * Mark Nauwelaerts
+      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
+      * Stefan Sauer
+      * Thibault Saunier
       * Tim-Philipp Müller
       * Wim Taymans
  

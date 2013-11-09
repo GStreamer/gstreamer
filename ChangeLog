@@ -1,9 +1,200 @@
-=== release 1.2.0 ===
+=== release 1.2.1 ===
 
-2013-09-24  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-11-09  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.0
+	  releasing 1.2.1
+
+2013-11-09 12:00:23 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  po: Update translations
+
+2013-11-02 15:38:13 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: try first frame pts and dts for a valid start timestamp
+
+2013-11-02 15:37:30 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: print proper variable in debug statement
+
+2013-11-02 15:36:19 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/gstsegment.c:
+	  segment: resurrect sanitizing start and stop for seeking
+
+2013-11-02 15:42:07 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* libs/gst/base/gstbasesrc.c:
+	  basesrc: mind boggling wrap when comparing offsets
+
+2013-11-04 18:57:18 +0100  Stefan Sauer <ensonic@users.sf.net>
+
+	* tools/gst-typefind.c:
+	  typefind: use g_get_prgname() for error message
+
+2013-11-06 10:15:59 +0100  Wim Taymans <wim.taymans@collabora.co.uk>
+
+	* plugins/elements/gstvalve.c:
+	  valve: proxy caps and allocation
+	  Proxy the caps queries on the srcpad as well.
+	  Proxy the allocation query on the sinkpad.
+
+2013-10-15 11:44:05 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/gstdatetime.c:
+	  datetime: Make sure to include gst_private.h before glib-compat-private.h
+	  We need to define the GLib log domain before including glib.h, which is
+	  included by glib-compat-private.h.
+
+2013-10-12 16:16:09 +1100  Jan Schmidt <thaytan@noraisin.net>
+
+	* gst/gstparse.c:
+	* tests/check/pipelines/parse-launch.c:
+	  parse: Fix transfer annotations for parse_launch functions.
+	  gst_parse_launchv, gst_parse_launchv_full and gst_parse_launch_full
+	  all return floating refs, the same as gst_parse_launch, which just
+	  calls gst_parse_launch_full internally anyway.
+	  Add a unit test assertion to check it's true.
+	  Spotted by nemequ on IRC.
+
+2013-10-09 15:36:48 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* libs/gst/base/gstcollectpads.c:
+	  collectpads: Call the collected function while it returns FLOW_OK
+	  This allows us to make sure the elements is EOS and does not have
+	  remaining buffers to be drained.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709637
+
+2013-10-10 08:30:27 -0700  Reynaldo H. Verdejo Pinochet <r.verdejo@partner.samsung.com>
+
+	* docs/manual/appendix-checklist.xml:
+	* gst/gst.c:
+	* tests/misc/test-gstreamer-completion.sh:
+	  core: Fix max DEBUG_LEVEL incongruence on 5 vs 9
+	  In the docs and the autocompletion logic the maximum
+	  value jumped incongruently between 5 and 9.
+
+2013-10-10 12:56:54 +0200  Fabian Kirsch <derFakir@web.de>
+
+	* docs/manual/basics-elements.xml:
+	* docs/manual/basics-pads.xml:
+	* docs/manual/intro-motivation.xml:
+	* docs/manual/manual.xml:
+	  docs: Fix some reference URIs
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709804
+
+2013-09-28 08:40:42 +0200  Edward Hervey <bilboed@bilboed.com>
+
+	* gst/gstpluginloader.c:
+	  pluginloader: Check errors on the proper fd
+	  Most likely a copy-paste error from the block before.
+	  If we're going to check for error/closed on the write fd... do it
+	  on the write fd
+
+2013-09-24 17:23:54 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* README:
+	* common:
+	  Automatic update of common submodule
+	  From 6b03ba7 to 7412249
+
+=== release 1.2.0 ===
+
+2013-09-24 14:07:02 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.2.0
+
+2013-09-24 14:06:28 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2013-09-24 13:10:36 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 
