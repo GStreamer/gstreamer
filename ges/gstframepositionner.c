@@ -26,6 +26,10 @@
 
 #include "gstframepositionner.h"
 
+/* We  need to define a max number of pixel so we can interpolate them */
+#define MAX_PIXELS 100000
+#define MIN_PIXELS -100000
+
 static void gst_frame_positionner_set_property (GObject * object,
     guint property_id, const GValue * value, GParamSpec * pspec);
 static void gst_frame_positionner_get_property (GObject * object,
@@ -258,7 +262,9 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_POSX,
       g_param_spec_int ("posx", "posx", "x position of the stream",
-          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          MIN_PIXELS, MAX_PIXELS, 0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+
 
   /**
    * gstframepositionner:posy:
@@ -267,7 +273,8 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_POSY,
       g_param_spec_int ("posy", "posy", "y position of the stream",
-          G_MININT, G_MAXINT, 0, G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
+          MIN_PIXELS, MAX_PIXELS, 0,
+          G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE));
 
   /**
    * gstframepositionner:zorder:
@@ -286,7 +293,7 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_WIDTH,
       g_param_spec_int ("width", "width", "width of the source",
-          0, G_MAXSHORT, 0, G_PARAM_READWRITE));
+          0, MAX_PIXELS, 0, G_PARAM_READWRITE));
 
   /**
    * gesframepositionner:height:
@@ -296,7 +303,7 @@ gst_frame_positionner_class_init (GstFramePositionnerClass * klass)
    */
   g_object_class_install_property (gobject_class, PROP_HEIGHT,
       g_param_spec_int ("height", "height", "height of the source",
-          0, G_MAXSHORT, 0, G_PARAM_READWRITE));
+          0, MAX_PIXELS, 0, G_PARAM_READWRITE));
 
   gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
       "frame positionner", "Metadata",
