@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.32.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
+"POT-Creation-Date: 2013-11-09 12:01+0100\n"
 "PO-Revision-Date: 2011-04-26 22:31+0300\n"
 "Last-Translator: Alexander Shopov <ash@kambanaria.org>\n"
 "Language-Team: Bulgarian <dict@fsa-bg.org>\n"
@@ -204,6 +204,9 @@ msgstr "MSZH без загуба на качество"
 
 msgid "Run-length encoding"
 msgstr "Последователно кодиране RLE"
+
+msgid "Timed Text"
+msgstr ""
 
 msgid "Subtitle"
 msgstr ""

@@ -33,7 +33,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 1.0.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
+"POT-Creation-Date: 2013-11-09 12:01+0100\n"
 "PO-Revision-Date: 2013-01-01 16:38+0100\n"
 "Last-Translator: Joe Hansen <joedalton2@yahoo.dk>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
@@ -227,6 +227,9 @@ msgstr "Lossless MSZH"
 
 msgid "Run-length encoding"
 msgstr "Kørsels-længde indkodning"
+
+msgid "Timed Text"
+msgstr ""
 
 msgid "Subtitle"
 msgstr "Undertekst"

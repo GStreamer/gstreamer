@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.28.2\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
+"POT-Creation-Date: 2013-11-09 12:01+0100\n"
 "PO-Revision-Date: 2010-06-07 18:17+0100\n"
 "Last-Translator: Daniel Nylander <po@danielnylander.se>\n"
 "Language-Team: Swedish <tp-sv@listor.tp-sv.se>\n"
@@ -203,6 +203,10 @@ msgstr "Förlustfri MSZH"
 
 msgid "Run-length encoding"
 msgstr "Körlängdskodning"
+
+#, fuzzy
+msgid "Timed Text"
+msgstr "Tidslinje"
 
 #, fuzzy
 msgid "Subtitle"
@@ -1432,9 +1436,6 @@ msgstr ""
 
 #~ msgid "_Extra track data:"
 #~ msgstr "_Extra spårdata:"
-
-#~ msgid "Time Line"
-#~ msgstr "Tidslinje"
 
 #~ msgid "Line for displaying the time elapsed for the current track"
 #~ msgstr "Linje för visning av den tid som gått tid för aktuellt spår"

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: gst-plugins-base 0.10.21.3\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-09-24 14:11+0200\n"
+"POT-Creation-Date: 2013-11-09 12:01+0100\n"
 "PO-Revision-Date: 2009-01-14 12:41+0800\n"
 "Last-Translator: Ji ZhengYu <zhengyuji@gmail.com>\n"
 "Language-Team: Chinese (simplified) <i18n-zh@googlegroups.com>\n"
@@ -201,6 +201,9 @@ msgstr "无损 MSZH"
 
 msgid "Run-length encoding"
 msgstr "Run-length 编码"
+
+msgid "Timed Text"
+msgstr ""
 
 msgid "Subtitle"
 msgstr ""
