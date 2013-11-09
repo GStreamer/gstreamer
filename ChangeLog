@@ -1,9 +1,146 @@
-=== release 1.2.0 ===
+=== release 1.2.1 ===
 
-2013-09-24  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-11-09  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.0
+	  releasing 1.2.1
+
+2013-11-09 12:02:38 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/de.po:
+	* po/sr.po:
+	  po: Update translations
+
+2013-10-22 15:03:15 -0300  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	* gst/asfdemux/gstasfdemux.h:
+	  asfdemux: Keep audio error checking fields only for audio
+	  Video shouldn't need to be descrambled, this can cause frames data
+	  to be corrupted
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684942
+
+2013-10-22 00:56:29 -0300  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: really copy the buffer data
+	  Pass the copy-memory flag to copy the memory for the output buffer,
+	  otherwise we end with 0-sized buffers
+	  https://bugzilla.gnome.org/show_bug.cgi?id=684942
+
+2013-10-22 16:02:04 +0900  HyeJin Choi <meeshel@meeshel78@hotmail.com>
+
+	* gst/asfdemux/asfpacket.c:
+	  asfdemux: mo_size check bug fix. mo_size is not mandatory field.
+	  So, don't need to check previous payload's mo_size and current
+	  payload's mo_size when merging it.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710609
+
+2013-09-27 08:05:25 -0700  Michael Esemplare <michael.esemplare@gmail.com>
+
+	* ext/x264/gstx264enc.c:
+	  x264enc: If FPS is available, set VFR to false
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708940
+
+2013-09-24 10:07:25 -0700  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Parse last simple index entry
+	  The entry size is fixed at 6, fix typo to finish parsing the index
+	  correctly until the last sample
+
+2013-09-24 10:08:10 -0700  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* gst/asfdemux/gstasfdemux.c:
+	  asfdemux: Only use segment.start as seek_time if it is relative
+	  Relying on the gst_segment_do_seek results for getting the
+	  seeking time should not be used if seek type is SET because the
+	  do_seek function makes the 'cur` position of the seek normalized
+	  on the segment range. This means that seeking beyond the end of the
+	  file might not result in instant EOS as it will end up seeking to
+	  the final ts of the file.
+	  In asf seeking to the final timestamp can lead to seeking to the last
+	  keyframe, meaning a few seconds of video will still be played, which should
+	  not be the desired behavior when seeking beyong file limits.
+
+2013-09-24 17:25:01 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* README:
+	* common:
+	  Automatic update of common submodule
+	  From 6b03ba7 to 7412249
+
+=== release 1.2.0 ===
+
+2013-09-24 14:27:45 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-a52dec.xml:
+	* docs/plugins/inspect/plugin-amrnb.xml:
+	* docs/plugins/inspect/plugin-amrwbdec.xml:
+	* docs/plugins/inspect/plugin-asf.xml:
+	* docs/plugins/inspect/plugin-cdio.xml:
+	* docs/plugins/inspect/plugin-dvdlpcmdec.xml:
+	* docs/plugins/inspect/plugin-dvdread.xml:
+	* docs/plugins/inspect/plugin-dvdsub.xml:
+	* docs/plugins/inspect/plugin-lame.xml:
+	* docs/plugins/inspect/plugin-mad.xml:
+	* docs/plugins/inspect/plugin-mpeg2dec.xml:
+	* docs/plugins/inspect/plugin-realmedia.xml:
+	* docs/plugins/inspect/plugin-siddec.xml:
+	* docs/plugins/inspect/plugin-twolame.xml:
+	* docs/plugins/inspect/plugin-x264.xml:
+	* docs/plugins/inspect/plugin-xingmux.xml:
+	* gst-plugins-ugly.doap:
+	* win32/common/config.h:
+	  Release 1.2.0
+
+2013-09-24 14:27:39 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/ms.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-09-18 11:34:56 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
 

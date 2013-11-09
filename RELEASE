@@ -1,7 +1,7 @@
 
-Release notes for GStreamer Ugly Plugins 1.2.0
+Release notes for GStreamer Ugly Plugins 1.2.1
 
-The GStreamer team is proud to announce a new feature release
+The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -58,7 +58,9 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 708036 : x264enc: Update documentation to specify default profile if no constraints are given
+      * 684942 : asfdemux: First buffers are 0-sized on some files
+      * 708940 : x264enc: Never disables VFR when framerate is known
+      * 710609 : ASF demux : bug fix - check mo_size
 
 ==== Download ====
 
@@ -95,8 +97,9 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Andoni Morales Alastruey
-      * Edward Hervey
+      * HyeJin Choi
+      * Michael Esemplare
       * Sebastian Dröge
+      * Thiago Santos
       * Tim-Philipp Müller
  
