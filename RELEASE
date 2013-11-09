@@ -1,7 +1,7 @@
 
-Release notes for GStreamer libav Plugins 1.2.0
+Release notes for GStreamer libav Plugins 1.2.1
 
-The GStreamer team is proud to announce a new feature release
+The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -36,8 +36,10 @@ contains a set of less supported plugins that haven't passed the
 
   
 
-There were no bugs fixed in this release
-    
+Bugs fixed in this release
+     
+      * 708732 : avvidenc: Don't fail configuring codec if framerate is unknown
+      * 708769 : avdec_mp2float: negotiation error
 
 ==== Download ====
 
@@ -74,7 +76,7 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
+      * Matthieu Bouron
       * Sebastian Dröge
       * Tim-Philipp Müller
  
