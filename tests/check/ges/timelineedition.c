@@ -52,7 +52,7 @@ GST_START_TEST (test_basic_timeline_edition)
   track = GES_TRACK (ges_audio_track_new ());
   fail_unless (track != NULL);
 
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   fail_unless (timeline != NULL);
   fail_unless (ges_timeline_add_track (timeline, track));
 
@@ -254,7 +254,7 @@ GST_START_TEST (test_snapping)
   track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
 
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   fail_unless (timeline != NULL);
 
   fail_unless (ges_timeline_add_track (timeline, track));
@@ -511,7 +511,7 @@ GST_START_TEST (test_simple_triming)
   g_main_loop_run (mainloop);
 
   /* the asset is now loaded */
-  timeline = ges_timeline_new_audio_video ();
+  timeline = create_timeline_sync (TRUE);
   assets = ges_project_list_assets (project, GES_TYPE_CLIP);
 
   assert_equals_int (g_list_length (assets), 1);
@@ -552,7 +552,7 @@ GST_START_TEST (test_timeline_edition_mode)
   track = GES_TRACK (ges_video_track_new ());
   fail_unless (track != NULL);
 
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   fail_unless (timeline != NULL);
 
   fail_unless (ges_timeline_add_track (timeline, track));
@@ -999,7 +999,7 @@ GST_START_TEST (test_groups)
 
   ges_init ();
 
-  timeline = ges_timeline_new_audio_video ();
+  timeline = create_timeline_sync (TRUE);
 
   /* Our timeline
    *
@@ -1185,7 +1185,7 @@ GST_START_TEST (test_snapping_groups)
 
   ges_init ();
 
-  timeline = ges_timeline_new_audio_video ();
+  timeline = create_timeline_sync (TRUE);
   g_object_set (timeline, "snapping-distance", (guint64) 3, NULL);
 
   /* Our timeline
@@ -1324,7 +1324,7 @@ GST_START_TEST (test_scaling)
       G_TYPE_INT, 1000, NULL);
 
   ges_init ();
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   ges_timeline_add_track (timeline, trackv);
   layer = ges_layer_new ();
   fail_unless (ges_timeline_add_layer (timeline, layer));

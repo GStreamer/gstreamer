@@ -48,7 +48,7 @@ GST_START_TEST (test_add_effect_to_clip)
 
   ges_init ();
 
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   layer = (GESLayer *) ges_simple_layer_new ();
   track_audio = GES_TRACK (ges_audio_track_new ());
   track_video = GES_TRACK (ges_video_track_new ());
@@ -96,7 +96,7 @@ GST_START_TEST (test_get_effects_from_tl)
 
   ges_init ();
 
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   layer = (GESLayer *) ges_layer_new ();
   track_video = GES_TRACK (ges_video_track_new ());
 
@@ -185,7 +185,7 @@ GST_START_TEST (test_effect_clip)
 
   ges_init ();
 
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   layer = (GESLayer *) ges_simple_layer_new ();
   track_audio = GES_TRACK (ges_audio_track_new ());
   track_video = GES_TRACK (ges_video_track_new ());
@@ -255,7 +255,7 @@ GST_START_TEST (test_priorities_clip)
 
   ges_init ();
 
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   layer = ges_layer_new ();
   track_audio = GES_TRACK (ges_audio_track_new ());
   track_video = GES_TRACK (ges_video_track_new ());
@@ -365,7 +365,7 @@ GST_START_TEST (test_effect_set_properties)
 
   ges_init ();
 
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   layer = (GESLayer *) ges_simple_layer_new ();
   track_video = GES_TRACK (ges_video_track_new ());
 
@@ -453,7 +453,7 @@ GST_START_TEST (test_clip_signals)
 
   ges_init ();
 
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   layer = (GESLayer *) ges_simple_layer_new ();
   track_video = GES_TRACK (ges_video_track_new ());
 

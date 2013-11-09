@@ -37,7 +37,7 @@ GST_START_TEST (test_transition_basic)
 
   track = GES_TRACK (ges_video_track_new ());
   layer = ges_layer_new ();
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   fail_unless (track != NULL);
   fail_unless (layer != NULL);
   fail_unless (timeline != NULL);
@@ -81,7 +81,7 @@ GST_START_TEST (test_transition_properties)
 
   track = GES_TRACK (ges_video_track_new ());
   layer = ges_layer_new ();
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   fail_unless (track != NULL);
   fail_unless (layer != NULL);
   fail_unless (timeline != NULL);

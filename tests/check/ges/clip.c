@@ -36,7 +36,7 @@ GST_START_TEST (test_object_properties)
 
   layer = ges_layer_new ();
   fail_unless (layer != NULL);
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   fail_unless (timeline != NULL);
   fail_unless (ges_timeline_add_layer (timeline, layer));
   fail_unless (ges_timeline_add_track (timeline, track));
@@ -114,7 +114,7 @@ GST_START_TEST (test_split_object)
 
   layer = ges_layer_new ();
   fail_unless (layer != NULL);
-  timeline = ges_timeline_new_audio_video ();
+  timeline = create_timeline_sync (TRUE);
   fail_unless (timeline != NULL);
   fail_unless (ges_timeline_add_layer (timeline, layer));
   ASSERT_OBJECT_REFCOUNT (timeline, "timeline", 1);
@@ -203,7 +203,7 @@ GST_START_TEST (test_clip_group_ungroup)
 
   ges_init ();
 
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   layer = ges_layer_new ();
   audio_track = GES_TRACK (ges_audio_track_new ());
   video_track = GES_TRACK (ges_video_track_new ());

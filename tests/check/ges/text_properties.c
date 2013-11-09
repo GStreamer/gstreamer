@@ -33,7 +33,7 @@ GST_START_TEST (test_text_properties_in_layer)
 
   ges_init ();
 
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   layer = (GESLayer *) ges_simple_layer_new ();
   a = GES_TRACK (ges_audio_track_new ());
   v = GES_TRACK (ges_video_track_new ());

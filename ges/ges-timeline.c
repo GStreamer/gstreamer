@@ -2364,7 +2364,9 @@ pad_removed_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
 GESTimeline *
 ges_timeline_new (void)
 {
-  return g_object_new (GES_TYPE_TIMELINE, NULL);
+  GESProject *project = ges_project_new (NULL);
+
+  return GES_TIMELINE (ges_asset_extract (GES_ASSET (project), NULL));
 }
 
 /**

@@ -277,3 +277,32 @@ play_timeline (GESTimeline * timeline)
 
   return TRUE;
 }
+
+static void
+_project_loaded_cb (GESProject * project, GESTimeline * timeline, GMainLoop * l)
+{
+  GST_DEBUG_OBJECT (project, "Loaded");
+  g_main_loop_quit (l);
+}
+
+GESTimeline *
+create_timeline_sync (gboolean audio_video)
+{
+  GMainLoop *l;
+  GESAsset *project;
+  GESTimeline *timeline;
+
+  if (audio_video)
+    timeline = ges_timeline_new_audio_video ();
+  else
+    timeline = ges_timeline_new ();
+
+  project = ges_extractable_get_asset (GES_EXTRACTABLE (timeline));
+
+  l = g_main_loop_new (NULL, FALSE);
+  g_signal_connect (project, "loaded", G_CALLBACK (_project_loaded_cb), l);
+  g_main_loop_run (l);
+  g_main_loop_unref (l);
+
+  return timeline;
+}

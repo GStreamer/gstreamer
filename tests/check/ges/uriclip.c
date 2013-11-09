@@ -87,7 +87,7 @@ GST_START_TEST (test_filesource_basic)
 
   mainloop = g_main_loop_new (NULL, FALSE);
 
-  timeline = ges_timeline_new_audio_video ();
+  timeline = create_timeline_sync (TRUE);
   fail_unless (timeline != NULL);
 
   layer = ges_layer_new ();
@@ -131,7 +131,7 @@ GST_START_TEST (test_filesource_properties)
 
   layer = ges_layer_new ();
   fail_unless (layer != NULL);
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   fail_unless (GES_IS_TIMELINE (timeline));
   fail_unless (ges_timeline_add_layer (timeline, layer));
   fail_unless (ges_timeline_add_track (timeline, track));
@@ -220,7 +220,7 @@ GST_START_TEST (test_filesource_images)
 
   layer = ges_layer_new ();
   fail_unless (layer != NULL);
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   fail_unless (timeline != NULL);
   fail_unless (ges_timeline_add_layer (timeline, layer));
   fail_unless (ges_timeline_add_track (timeline, a));

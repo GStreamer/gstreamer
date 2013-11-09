@@ -34,7 +34,7 @@ GST_START_TEST (test_gsl_add)
   /* This is the simplest scenario ever */
 
   /* Timeline and 1 Layer */
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   layer = (GESLayer *) ges_simple_layer_new ();
   fail_unless (ges_timeline_add_layer (timeline, layer));
   track = GES_TRACK (ges_video_track_new ());
@@ -102,7 +102,7 @@ GST_START_TEST (test_gsl_move_simple)
   ges_init ();
 
   /* Timeline and 1 Layer */
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   layer = (GESLayer *) ges_simple_layer_new ();
   fail_unless (ges_timeline_add_layer (timeline, layer));
   track = ges_track_new (GES_TRACK_TYPE_CUSTOM, gst_caps_new_any ());
@@ -201,7 +201,7 @@ GST_START_TEST (test_gsl_with_transitions)
   ges_init ();
 
   /* Timeline and 1 Layer */
-  timeline = ges_timeline_new ();
+  timeline = create_timeline_sync (FALSE);
   layer = (GESLayer *) ges_simple_layer_new ();
 
   g_signal_connect (G_OBJECT (layer), "notify::valid",

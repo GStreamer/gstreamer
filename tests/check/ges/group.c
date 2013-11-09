@@ -34,7 +34,7 @@ GST_START_TEST (test_move_group)
 
   ges_init ();
 
-  timeline = ges_timeline_new_audio_video ();
+  timeline = create_timeline_sync (TRUE);
 
   layer = ges_timeline_append_layer (timeline);
   layer1 = ges_timeline_append_layer (timeline);
@@ -328,7 +328,7 @@ GST_START_TEST (test_group_in_group)
 
   ges_init ();
 
-  timeline = ges_timeline_new_audio_video ();
+  timeline = create_timeline_sync (TRUE);
 
   /* Our timeline
    *

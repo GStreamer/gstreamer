@@ -47,6 +47,13 @@ ges_generate_test_file_audio_video (const gchar * filedest,
 gboolean
 play_timeline (GESTimeline * timeline);
 
+
+/*  This function is needed to avoid having an extra refcount when creating a blanck
+ *  timeline and while the project::loaded signal has not been emited, as this is 
+ *  done on idle. This function will wait for that signal to be emited before
+ *  returning the new timeline*/
+GESTimeline * create_timeline_sync (gboolean audio_video);
+
 #define gnl_object_check(gnlobj, start, duration, mstart, mduration, priority, active) { \
   guint64 pstart, pdur, inpoint, pprio, pact;			\
   g_object_get (gnlobj, "start", &pstart, "duration", &pdur,		\
