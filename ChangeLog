@@ -1,9 +1,463 @@
-=== release 1.2.0 ===
+=== release 1.2.1 ===
 
-2013-09-24  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-11-09  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.0
+	  releasing 1.2.1
+
+2013-11-09 13:32:21 +0100  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: check for same TSN only for interlaced streams (fixes unit test)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711721
+
+2013-11-09 12:02:17 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/de.po:
+	* po/id.po:
+	* po/sr.po:
+	  po: Update translations
+
+2013-10-11 10:32:52 +0200  Edward Hervey <edward@collabora.com>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtspacketizer: Skip packets with corrupted length
+	  This is similar to what we do for packets with payload
+
+2013-10-23 23:34:27 +0100  Matthieu Bouron <matthieu.bouron@gmail.com>
+
+	* sys/applemedia-nonpublic/plugin.m:
+	  applemedia-nonpublic: fix plugin name
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711135
+
+2013-10-17 12:53:31 +0200  Antonio Ospite <ospite@studenti.unina.it>
+
+	* gst/geometrictransform/gstgeometrictransform.c:
+	  geometrictransform: Fix setting black background for AYUV buffers
+	  When the frame buffer is AYUV writing all zeros does not set it to
+	  black, in YUV colorspace 0x10 is the black level for luminance and 0x80
+	  is the black level for chrominance.
+	  Fix setting the background to black when the out_frame format is AYUV;
+	  in all the other supported formats zeroing the data with memset is still
+	  the right thing to do.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710392
+
+2013-11-08 20:23:27 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/mpegts/gst-dvb-section.h:
+	  mpegts: Add some more element-type annotations for g-i
+
+2013-11-09 09:44:34 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  Revert "mpegvparse: Fix last start code position when input buffer is empty"
+	  This reverts commit f0ebc684c270a8470a45a4179b8dbc8842c95388.
+	  The fix was not complete, see discussion in
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711627
+
+2013-11-07 10:57:22 -0700  Greg Rutz <greg@gsr-tek.com>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvparse: Fix last start code position when input buffer is empty
+	  When the input buffer is empty and we need more data to determine
+	  whether or not to terminate the previous frame, the last start code
+	  location needs to be set to 4 bytes before the the current position
+	  (size of start_code is 32-bits)
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711627
+
+2013-11-07 14:39:26 +0100  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* gst-libs/gst/codecparsers/gsth264parser.c:
+	  codecparsers: Fix bad condition in h264 parser
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711615
+
+2013-11-07 12:47:51 -0300  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* ext/hls/gsthlssink.c:
+	  hlssink: do not lose ref to the multifilesink
+	  It is needed to update location properties and it was being lost on
+	  state changes, causing issues if the pipeline was to be reused
+
+2013-11-07 12:35:55 -0300  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* ext/hls/gsthlssink.c:
+	  hlssink: make sure it is handled as a sink
+	  It only gets the sink flag set when it adds the multifilesink, that
+	  happens in null->ready and it might be too late. Set the flag
+	  explicitly on the constructor.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711086
+
+2013-11-06 22:13:13 -0300  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* gst/camerabin2/gstcamerabin2.c:
+	  camerabin: Make sure video-done is post only when file is closed
+	  Force filesink to null before posting video-done to make sure the
+	  file was closed.
+	  Had to do it from a separate thread to avoid calling state_change from
+	  a sync message handler.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709373
+
+2013-11-04 10:04:59 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/applemedia-nonpublic/Makefile.am:
+	  applemedia-nonpublic: Link with gmodule for g_module_open() and others
+
+2013-11-04 10:04:42 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/applemedia/Makefile.am:
+	  applemedia: Link with gmodule for g_module_open() and others
+
+2013-11-01 22:32:32 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* configure.ac:
+	  configure: Always define AM_CONDITIONAL USE_EGLGLES
+
+2013-11-01 10:41:16 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/yadif/yadif.c:
+	  yadif: Fix compiler warning caused by specifying const twice
+	  yadif.c:49:24: warning: duplicate 'const' declaration specifier [-Wduplicate-decl-specifier]
+	  DECLARE_ASM_CONST (16, const xmm_reg, pb_1) = {
+	  ^
+	  yadif.c:33:50: note: expanded from macro 'DECLARE_ASM_CONST'
+	  #define DECLARE_ASM_CONST(n,t,v)    static const t __attribute__((used)) __attribute__ ((aligned (n))) v
+	  ^
+	  yadif.c:52:24: warning: duplicate 'const' declaration specifier [-Wduplicate-decl-specifier]
+	  DECLARE_ASM_CONST (16, const xmm_reg, pw_1) = {
+	  ^
+	  yadif.c:33:50: note: expanded from macro 'DECLARE_ASM_CONST'
+	  #define DECLARE_ASM_CONST(n,t,v)    static const t __attribute__((used)) __attribute__ ((aligned (n)))
+
+2013-11-01 10:40:06 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/yadif/yadif.c:
+	  yadif: Fix build with XCode
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710451
+
+2013-10-30 18:25:50 +0100  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/androidmedia/gstamc.c:
+	  androidmedia: fix rank for more software decoders
+	  In Galaxy S4 the codecs list contains some OMX.SEC.foo.sw.dec
+	  as software decoders
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711214
+
+2013-10-18 10:12:56 +0800  Chen Jie <chenj@lemote.com>
+
+	* sys/androidmedia/gstamc.c:
+	  androidmedia: make gst_amc_avc_profile_from_string recognize alt name
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710433
+
+2013-10-18 11:54:12 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/androidmedia/gstamcaudiodec.c:
+	* sys/androidmedia/gstamcvideodec.c:
+	  androidmedia: fix access to invalid buffers in the decoding loop
+	  Flushing the decoder invalidates all buffers, so it should be done
+	  after quiting the decoding loop. Otherwise we can jump into
+	  "failed_release" and stop everything
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711156
+
+2013-10-25 11:11:30 +0100  Alex Ashley <bugzilla@ashley-family.net>
+
+	* ext/hls/gsthlsdemux.c:
+	  hlsdemux: fix memory leak in gst_hls_demux_get_next_fragment
+	  This patch fixes three memory leaks in hlsdemux, one that occurs
+	  during normal operation and two that occur during error conditions.
+	  The gst_hls_demux_get_next_fragment function calls
+	  gst_fragment_get_buffer which increments the reference count
+	  on the buffer but gst_hls_demux_get_next_fragment never calls unref on
+	  the buffer. This means that the reference count for each downloaded
+	  fragment never gets to zero and so its memory is never released.
+	  This patch adds a call to gst_buffer_unref after the flags have been
+	  updated on the buffer.
+	  There is a leak-on-error in gst_hls_demux_decrypt_fragment if it fails
+	  to download the key file. If the key fails to download, null is
+	  returned without doing an unref on the encrypted fragment. The
+	  semantics of gst_hls_demux_decrypt_fragment is that it takes ownership
+	  of the encrypted fragment and releases it before returning.
+	  There is a leak-on-error in gst_hls_src_buf_to_utf8_playlist in the
+	  unlikely event that the gst_buffer_map fails. In the "happy path"
+	  operation of gst_hls_src_buf_to_utf8_playlist the buffer gets an unref
+	  before the function returns, therefore the error condition must do the
+	  same.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710881
+
+2013-09-21 00:20:36 +0100  Matthieu Bouron <matthieu.bouron@collabora.com>
+
+	* sys/applemedia/avfvideosrc.m:
+	  avfvideosrc: fix truncated line
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710657
+
+2013-10-12 16:04:25 -0400  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/soundtouch/gstpitch.cc:
+	  pitch: Fix inverted condition in setcaps
+
+2013-10-09 17:18:41 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/speed/gstspeed.c:
+	  speed: Fix some bytes-per-frame vs. bytes-per-sample mixups
+	  Otherwise we will crash when handling multiple channels and
+	  miscalculate timestamps.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709734
+
+2013-10-08 11:10:49 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure: Make sure to try window-system-agnostic EGL if nothing was auto-detected
+
+2013-10-06 17:37:38 +0200  Gilles Dartiguelongue <eva@gentoo.org>
+
+	* configure.ac:
+	  egl: Allow disabling gstreamer-egl library
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709531
+
+2013-10-03 07:56:21 -0300  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* ext/hls/gsthlsdemux.c:
+	  hlsdemux: Do not call _stop holding the updates lock
+	  It will cause a deadlock and the calers for _get_next_fragment
+	  will already call _stop if required when _get_next_fragment fails.
+	  Fixes #690148
+
+2013-10-03 13:26:06 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: Fix conversion to AVC if a SPS/PPS not from the first indizes is used
+	  https://bugzilla.gnome.org/show_bug.cgi?id=707974
+
+2013-09-30 15:32:55 -0600  Brendan Long <b.long@cablelabs.com>
+
+	* configure.ac:
+	* gst-plugins-bad.spec.in:
+	* pkgconfig/Makefile.am:
+	* pkgconfig/gstreamer-mpegts-uninstalled.pc.in:
+	* pkgconfig/gstreamer-mpegts.pc.in:
+	* pkgconfig/gstreamer-plugins-bad-uninstalled.pc.in:
+	  Add gstreamer-mpegts pkg-config file.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709145
+
+2013-09-26 16:51:25 +0100  Alex Ashley <bugzilla@ashley-family.net>
+
+	* ext/hls/gsthlsdemux.c:
+	  hlsdemux: Fix dereferencing of NULL pointer
+	  On some live HLS streams, gst_hls_demux_switch_playlist causes
+	  assertion failures because it tried to dereference a NULL fragment.
+	  This is because g_queue_peek_tail sometimes was returning NULL and
+	  this case was not being checked.
+	  This patch does two things:
+	  * move the g_queue_peek_tail inside the semaphore protection
+	  * check if q_queue_peek_tail returns NULL
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708849
+
+2013-09-27 16:10:54 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/mpegtsdemux/mpegtsparse.c:
+	* gst/mpegtsdemux/mpegtsparse.h:
+	  mpegtsparse: Queue buffers until we have enough to know the caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708222
+
+2013-09-16 11:46:27 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/mpegtsdemux/mpegtspacketizer.c:
+	  mpegtspacketizer: rework TS packet sync and extraction
+	  The previous code could enter an infinite loop because the adapter state
+	  could get out of sync with its mapped data state after sync was lost.
+	  The code was pretty confusing so it's been rewritten to be clearer.
+	  The easiest way to reproduce the infinite loop is to use the breakmydata
+	  element before tsdemux to trigger a resync.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708161
+
+2013-09-16 11:42:48 +0200  Arnaud Vrac <avrac@freebox.fr>
+
+	* gst/mpegtsdemux/tsdemux.c:
+	  tsdemux: fix buffer overflow
+	  This can happen with a corrupt TS file, found with breakmydata element
+	  plugged before tsdemux.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708161
+
+2013-09-26 13:37:09 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* sys/applemedia/Makefile.am:
+	* sys/applemedia/iosassetsrc.h:
+	* sys/applemedia/iosassetsrc.m:
+	  iosassetsrc: Port to 1.0 and fix some bugs on the way
+
+2013-09-26 13:21:59 +0200  Andoni Morales Alastruey <ylatuya@gmail.com>
+
+	* sys/applemedia/Makefile.am:
+	* sys/applemedia/iosassetsrc.h:
+	* sys/applemedia/iosassetsrc.m:
+	* sys/applemedia/plugin.m:
+	  iosassetsrc: Add new element from the GStreamer SDK project
+
+2013-09-23 14:36:40 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ext/eglgles/Makefile.am:
+	* ext/eglgles/gstegladaptation.c:
+	* ext/eglgles/gstegladaptation.h:
+	* ext/eglgles/gstegladaptation_eagl.m:
+	* ext/eglgles/gstegladaptation_egl.c:
+	* ext/eglgles/gsteglglessink.c:
+	* ext/eglgles/gsteglglessink.h:
+	  eglglessink: Port iOS part to 1.0
+
+2013-09-23 13:20:46 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* configure.ac:
+	  configure: Fix iOS check for eglglessink
+
+2013-09-23 11:35:56 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* sys/applemedia-nonpublic/Makefile.am:
+	* sys/applemedia-nonpublic/coremediactx.c:
+	* sys/applemedia-nonpublic/plugin.m:
+	* sys/applemedia/Makefile.am:
+	* sys/applemedia/plugin.m:
+	  applemedia: avfvideosrc is not ported to 1.0 yet
+
+2013-09-25 20:25:03 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* sys/bluez/gstavdtputil.c:
+	  bluez: Fix compilation on big endian systems
+
+2013-09-24 17:24:43 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* README:
+	* common:
+	  Automatic update of common submodule
+	  From 6b03ba7 to 7412249
+
+=== release 1.2.0 ===
+
+2013-09-24 14:37:58 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-accurip.xml:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-eglglessink.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-neon.xml:
+	* docs/plugins/inspect/plugin-ofa.xml:
+	* docs/plugins/inspect/plugin-openal.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rfbsrc.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-waylandsink.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* gst-plugins-bad.doap:
+	* win32/common/config.h:
+	  Release 1.2.0
+
+2013-09-24 14:37:29 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-09-23 16:18:43 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 

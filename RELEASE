@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Bad Plugins 1.2.0
+Release notes for GStreamer Bad Plugins 1.2.1
 
 
-The GStreamer team is proud to announce a new feature release
+The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -60,8 +60,28 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
   
 
-There were no bugs fixed in this release
-    
+Bugs fixed in this release
+     
+      * 711627 : mpegvparse: Incorrect repositioning of start code location when input buffer is empty
+      * 690148 : hlsdemux: hangs when network disconnects or when server is unreachable
+      * 707974 : h264parse: Broken conversion to AVC if a SPS/PPS not from the first indizes is used
+      * 708161 : mpegtspacketizer: rework packet extraction and sync
+      * 708222 : tsparse: Pushes unparsed data immediately on the srcpad
+      * 708849 : hlsdemux: occasionally dereferencing NULL in gst_hls_demux_switch_playlist()
+      * 709145 : mpegts: Can't link against mpegts
+      * 709373 : camerabin: Filesink not closing file after stop-capture
+      * 709531 : egl: Make dependency on egl optional
+      * 709886 :  " pitch " plugin prevent pipeline creation
+      * 710392 : geometrictransform: fix setting black background for AYUV buffers
+      * 710433 : androidmedia: gst_amc_avc_profile_from_string not recognize alternative profile names
+      * 710451 : yadif: OSX linking fails because of unresolved symbols: " pb_1 " and " pw_1 " unreferenced
+      * 710657 : avfvideosrc: fix truncated line
+      * 710881 : memory leaks in hlsdemux
+      * 711135 : applemedia-nonpublic: fix plugin name
+      * 711156 : androidmedia: fix access to invalid buffers in the decoding loop
+      * 711214 : androidmedia: fix rank for more software decoders
+      * 711615 : codecparsers: Condition mistake in h264parser
+      * 711721 : mpegvideoparse: Unit test fails
 
 ==== Download ====
 
@@ -98,7 +118,20 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Alex Ashley
+      * Andoni Morales Alastruey
+      * Antonio Ospite
+      * Arnaud Vrac
+      * Aurélien Zanelli
+      * Brendan Long
+      * Chen Jie
       * Edward Hervey
+      * Gilles Dartiguelongue
+      * Greg Rutz
+      * Matej Knopp
+      * Matthieu Bouron
+      * Olivier Crête
       * Sebastian Dröge
+      * Thiago Santos
       * Tim-Philipp Müller
  

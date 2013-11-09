@@ -32,6 +32,16 @@ real live maintainer, or some actual wide use.
      <browse rdf:resource="http://cgit.freedesktop.org/gstreamer/gst-plugins-bad"/>
    </GitRepository>
  </repository> 
+ 
+<release>
+  <Version>
+   <revision>1.2.1</revision>
+   <branch>1.2</branch>
+   <name></name>
+   <created>2013-11-09</created>
+   <file-release rdf:resource="http://gstreamer.freedesktop.org/src/gst-plugins-bad/gst-plugins-bad-1.2.1.tar.xz" />
+  </Version>
+ </release>
 
 <release>
   <Version>

@@ -21,7 +21,6 @@ GObject
         GstAssRender
         GstAudioDecoder
           ADPCMDec
-          GstCeltDec
           GstDtsDec
           GstFaad
           GstGSMDec
@@ -31,7 +30,6 @@ GObject
           GstSirenDec
         GstAudioEncoder
           ADPCMEnc
-          GstCeltEnc
           GstFaac
           GstGSMEnc
           GstOpusEnc
@@ -39,7 +37,6 @@ GObject
           GstSirenEnc
           GstVoAacEnc
           GstVoAmrWbEnc
-        GstAudioMixer
         GstAudioVisualizer-BadGstAudioVisualizers
           GstSpaceScope
           GstSpectraScope
@@ -79,7 +76,6 @@ GObject
             GstWaylandSink
         GstBaseSrc
           GstAvdtpSrc
-          GstDTMFSrc
           GstDataURISrc
           GstFliteTestSrc
           GstInterAudioSrc
@@ -104,7 +100,6 @@ GObject
             frei0r-src-onecol0r
             frei0r-src-partik0l
             frei0r-src-plasma
-          GstRTPDTMFSrc
         GstBaseTransform
           GstAudioFilter
             GstAccurip
@@ -286,7 +281,6 @@ GObject
         GstPyramidSegment
         GstRTPBaseDepayload
           GstRTPOpusDepay
-          GstRtpDTMFDepay
         GstRTPBasePayload
           GstRtpAsfPay
           GstRtpOPUSPay
