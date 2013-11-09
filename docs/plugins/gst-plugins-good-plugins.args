@@ -989,6 +989,16 @@
 </ARG>
 
 <ARG>
+<NAME>GstRTSPSrc::tls-validation-flags</NAME>
+<TYPE>GTlsCertificateFlags</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>TLS validation flags</NICK>
+<BLURB>TLS certificate validation flags used to validate the server certificate.</BLURB>
+<DEFAULT>G_TLS_CERTIFICATE_UNKNOWN_CA|G_TLS_CERTIFICATE_BAD_IDENTITY|G_TLS_CERTIFICATE_NOT_ACTIVATED|G_TLS_CERTIFICATE_EXPIRED|G_TLS_CERTIFICATE_REVOKED|G_TLS_CERTIFICATE_INSECURE|G_TLS_CERTIFICATE_GENERIC_ERROR</DEFAULT>
+</ARG>
+
+<ARG>
 <NAME>GstRTPDec::skip</NAME>
 <TYPE>gint</TYPE>
 <RANGE></RANGE>
@@ -23986,5 +23996,15 @@
 <NICK>Caps/Tags Send Interval</NICK>
 <BLURB>Interval for sending caps and TAG events in seconds (0 = disabled).</BLURB>
 <DEFAULT>0</DEFAULT>
+</ARG>
+
+<ARG>
+<NAME>GstRtpVP8Pay::picture-id-mode</NAME>
+<TYPE>GstVP8RTPPayMode</TYPE>
+<RANGE></RANGE>
+<FLAGS>rw</FLAGS>
+<NICK>Picture ID Mode</NICK>
+<BLURB>The picture ID mode for payloading.</BLURB>
+<DEFAULT>No Picture ID</DEFAULT>
 </ARG>
 

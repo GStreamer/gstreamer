@@ -1,8 +1,8 @@
 
-Release notes for GStreamer Good Plugins 1.2.0
+Release notes for GStreamer Good Plugins 1.2.1
 
 
-The GStreamer team is proud to announce a new feature release
+The GStreamer team is proud to announce a new bug-fix release
 in the 1.x stable series of the
 core of the GStreamer streaming media framework.
 
@@ -57,11 +57,26 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 706083 : v4l2src: UVC Allocated buffers wrapped in GstBuffer get orphaned by GstBuffer API
-      * 707242 : qtmux: streamable and faststart property have no effect
+      * 683536 : souphttpsrc: Handles long pause (long enough to timeout TCP socket connection) as EOS
       * 707933 : matroskademux: Wrong UTF8 detection causes wrong detection of subtitle encoding
-      * 708501 : osxvideosink: fix segfault releasing the element
-      * 708622 : rtpjitterbuffer: fix various regressions
+      * 707975 : qtdemux: Can't handle datetimes before 1970 yet
+      * 708505 : matroskademux: sends unnecessary gap events
+      * 708864 : mp4mux: Does not negotiate due to framerate caps not set on peer pad
+      * 709270 : qtdemux: Does not support mp2v fourcc for MPEG-2 video
+      * 709352 : jpegdec: Does not require width/height on caps or parsed input
+      * 709384 : videomixer: Check if the source pad needs reconfiguration and update the source caps in that case
+      * 709390 : videomixer: Update videoconversion code
+      * 709423 : v4l2bufferpool: O_CLOEXEC needs _GNU_SOURCE
+      * 709457 : Do not write out SegmentUID when muxing to WebM
+      * 709507 : deinterlace: Segfault in handling of planar YUV video formats
+      * 709614 : wavenc: Uses invalid caps for alaw and mulaw
+      * 709728 : dvdemux/dvdec: Sends stream-start, caps and segment events in wrong order
+      * 710110 : multiudpsink: Leaks GstMemories when flushing
+      * 710215 : audioiirfilter: Crashes when no coefficients are provided
+      * 710623 : qtdemux: Video captured by iPad couldn't play in push mode
+      * 711230 : rtspsrc: allow setting certificate validation flags
+      * 711497 : rtpvp8pay: Compatibility issue with linphone due to always sending a picture id
+      * 711699 : wavenc: bogus header generated
 
 ==== Download ====
 
@@ -98,11 +113,20 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
+      * Aleix Conchillo Flaque
       * Andoni Morales Alastruey
-      * Edward Hervey
+      * Hans Månsson
+      * Matej Knopp
+      * Mathieu Duponchelle
+      * Matthieu Bouron
+      * Ognyan Tonchev
       * Olivier Crête
-      * Robert Krakora
+      * Peter Korsgaard
+      * Philippe Normand
+      * Reynaldo H. Verdejo Pinochet
+      * Rico Tzschichholz
       * Sebastian Dröge
+      * Thiago Santos
       * Tim-Philipp Müller
       * Wim Taymans
  
