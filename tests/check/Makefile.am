@@ -125,7 +125,7 @@ check_mimic=
 endif
 
 if HAVE_ORC
-check_orc = orc/bayer
+check_orc = orc/bayer orc/audiomixer
 else
 check_orc =
 endif
@@ -390,6 +390,14 @@ orc_bayer_LDADD = $(ORC_LIBS) -lorc-test-0.4
 orc/bayer.c: $(top_srcdir)/gst/bayer/gstbayerorc.orc
 	$(MKDIR_P) orc
 	$(ORCC) --test -o $@ $<
+
+orc_audiomixer_CFLAGS = $(ORC_CFLAGS)
+orc_audiomixer_LDADD = $(ORC_LIBS) -lorc-test-0.4
+
+orc/audiomixer.c: $(top_srcdir)/gst/audiomixer/gstaudiomixerorc.orc
+	$(MKDIR_P) orc
+	$(ORCC) --test -o $@ $<
+
 
 distclean-local-orc:
 	rm -rf orc
