@@ -1,9 +1,317 @@
-=== release 1.2.0 ===
+=== release 1.2.1 ===
 
-2013-09-24  Sebastian Dröge <sebastian.droege@collabora.co.uk>
+2013-11-09  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.0
+	  releasing 1.2.1
+
+2013-11-09 12:01:11 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  po: Update translations
+
+2013-10-16 16:46:05 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gst/playback/gstrawcaps.h:
+	  playback: Add subpicture/x-dvb as raw caps
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710325
+
+2013-11-07 15:03:34 +0000  Tom Greenwood <tcdgreenwood@hotmail.com>
+
+	* gst-libs/gst/app/gstappsrc.c:
+	  appsrc: Fix deadlock that may occur when multiple threads access appsrc at once
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711550
+
+2013-11-01 17:02:22 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* win32/common/libgstrtsp.def:
+	  rtspconnection: Add new API to the docs and .def file
+
+2013-11-01 16:43:56 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.h:
+	  rtspconnection: Fix indention in header
+
+2013-11-01 07:25:01 -0700  Aleix Conchillo Flaque <aleix@oblong.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	* gst-libs/gst/rtsp/gstrtspconnection.h:
+	  rtspconnection: allow setting tls certificate validation
+	  Added new functions gst_rtsp_connection_set_tls_validation_flags() to
+	  allow setting the TLS certificate validation flags when establishing a
+	  TLS connection.
+	  A getter is also available, gst_rtsp_connection_get_tls_validation_flags().
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711231
+
+2013-10-28 12:36:04 +0100  Antonio Ospite <ospite@studenti.unina.it>
+
+	* gst/videoscale/gstvideoscale.c:
+	  videoscale: fix adding borders when NV12 is used
+	  When the frame buffer is NV12 the borders are not added at all, fix that
+	  and fill them to black.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711003
+
+2013-10-07 22:51:04 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	  discoverer: early return when we have no streams
+
+2013-10-07 22:51:46 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	  discoverer: don't shadow local variables
+
+2013-10-14 18:45:16 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	  discoverer: also filter 'framed' field when looking for same streams
+	  Fixes extra streams for some mp4 files containing aac audio.
+
+2013-10-07 22:52:27 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst-libs/gst/pbutils/gstdiscoverer.c:
+	  discoverer: filter 'parsed' field when checking for same caps
+	  We're checking the caps to see if we got more caps details after a parser got
+	  plugged. This will also have a flipped 'parsed' field. If the field was already
+	  present before the parse the match will fail. Add a function that will do the
+	  check while excluding this field.
+
+2013-10-11 21:51:00 +0200  Stephan Sundermann <stephansundermann@gmail.com>
+
+	* gst-libs/gst/video/navigation.c:
+	  navigation: Add missing out parameter annotations to GstNavigation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709938
+
+2013-10-08 16:02:46 +0200  Takashi Iwai <tiwai@suse.de>
+
+	* gst-libs/gst/audio/gstaudioringbuffer.c:
+	  audioringbuffer: Don't clear need_reorder flag too early
+	  gst_audio_ring_buffer_set_channel_positions() checks whether the given
+	  positions are identical with the current setup and returns
+	  immediately if so.  But it also clears need_reorder flag before this
+	  comparison, thus this flag might be wrongly cleared if the function is
+	  called twice with the same channel positions.
+	  Move the flag clearance after the check.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709754
+
+2013-10-08 09:13:50 +0200  Stefan Sauer <ensonic@users.sf.net>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: don't overflow in bytes<->time conversion
+	  fps_n and _d values can be large and this can overflow a uint. Also fix
+	  copy'n'paste mistake in comments.
+
+2013-10-04 13:57:51 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/audioconvert/gstaudioconvert.c:
+	  audioconvert: Map buffer as READWRITE if the buffer and memory is writable
+	  and only use the input buffer as temporary buffer in that case.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709408
+
+2013-10-02 15:02:44 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: If the visualisation is changing and reconfiguration is pending, do it all during reconfiguration
+	  Otherwise we will have two pad blocks that want to use the same mutex
+	  and block each other via the streamlock.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709210
+
+2013-10-08 16:13:58 -0300  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* tests/check/elements/videotestsrc.c:
+	  videotestsrc: improve test for backwards playback
+	  Improve test by checking that timestamps are decreasing
+
+2013-06-07 16:32:23 -0400  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* tests/check/elements/videotestsrc.c:
+	  tests: test videotestsrc in reverse playback
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701813
+
+2013-10-08 00:08:34 -0300  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* gst/videotestsrc/gstvideotestsrc.c:
+	* gst/videotestsrc/gstvideotestsrc.h:
+	  videotestsrc: implement reverse playback
+	  Decrement the n_frames counter when doing reverse playback to
+	  have timestamps and offsets reducing instead of increasing
+	  https://bugzilla.gnome.org/show_bug.cgi?id=701813
+
+2013-09-24 16:47:52 -0700  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* gst/playback/gstplaybin2.c:
+	  playbin: make sure elements are in null before disposing
+	  If a pipeline fails to preroll, it might happen that the sinks are
+	  put into READY state from playbin's sink activation, but they are never
+	  set to playsink, so they aren't being managed by a GstBin and will keep
+	  their READY state until they are unreffed, leading to a warning.
+	  Prevent this by always forcing them to NULL when deactivating a group
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708789
+
+2013-09-30 21:46:10 +0200  Hans Månsson <hansm@axis.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: Connect to proxy if specified
+	  Reference: https://bugzilla.gnome.org/show_bug.cgi?id=708880
+
+2013-09-27 22:41:28 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst/audiorate/gstaudiorate.c:
+	  audiorate: clip buffer before pushing it
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708953
+
+2013-09-27 22:40:28 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst-libs/gst/audio/audio.c:
+	  audio: change buffer timestamp when clipping even if data hasn't been trimmed
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708952
+
+2013-09-27 22:53:43 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst-libs/gst/pbutils/descriptions.c:
+	  pbutils: Add entry for text/x-raw
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708954
+
+2013-09-25 19:29:24 +0200  Matej Knopp <matej.knopp@gmail.com>
+
+	* gst-libs/gst/pbutils/descriptions.c:
+	  pbutils: add MPEG 2 AAC description
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708773
+
+2013-09-24 16:26:37 +0200  Ognyan Tonchev <ognyan@axis.com>
+
+	* gst-libs/gst/rtsp/gstrtspconnection.c:
+	  rtspconnection: Unset input/output_stream after freeing the GIOStream
+	  watch->input_stream and watch->output_stream are owned by the GIOStream
+	  and should be unset after freeing the stream.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708689
+
+2013-09-24 17:24:05 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* README:
+	* common:
+	  Automatic update of common submodule
+	  From 6b03ba7 to 7412249
+
+=== release 1.2.0 ===
+
+2013-09-24 14:16:22 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.2.0
+
+2013-09-24 14:14:18 +0200  Sebastian Dröge <slomo@circular-chaos.org>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-09-24 12:47:26 +0200  Sebastian Dröge <slomo@circular-chaos.org>
 
