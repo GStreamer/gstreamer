@@ -544,7 +544,9 @@ gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse,
     /* if terminating packet is a picture, we need to check if it has same TSN as the picture that is being
        terminated. If it does, we need to keep those together, as these packets are two fields of the same
        frame */
-    if (packet->type == GST_MPEG_VIDEO_PACKET_PICTURE) {
+    if (packet->type == GST_MPEG_VIDEO_PACKET_PICTURE
+        && (mpvparse->config_flags & FLAG_SEQUENCE_EXT)
+        && !mpvparse->sequenceext.progressive) {
       if (info->size - off < 2) {       /* we need at least two bytes to read the TSN */
         ret = FALSE;
       } else {
