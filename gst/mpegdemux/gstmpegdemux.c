@@ -661,11 +661,11 @@ gst_flups_demux_send_data (GstFluPSDemux * demux, GstFluPSStream * stream,
   demux->next_pts = G_MAXUINT64;
   demux->next_dts = G_MAXUINT64;
 
+  GST_LOG_OBJECT (demux, "pushing stream id 0x%02x type 0x%02x, pts time: %"
+      GST_TIME_FORMAT ", size %" G_GSIZE_FORMAT,
+      stream->id, stream->type, GST_TIME_ARGS (pts), gst_buffer_get_size (buf));
   stream->last_flow = result = gst_pad_push (stream->pad, buf);
-  GST_LOG_OBJECT (demux, "pushed stream id 0x%02x type 0x%02x, pts time: %"
-      GST_TIME_FORMAT ", size %" G_GSIZE_FORMAT ". result: %s",
-      stream->id, stream->type, GST_TIME_ARGS (pts),
-      gst_buffer_get_size (buf), gst_flow_get_name (result));
+  GST_LOG_OBJECT (demux, "result: %s", gst_flow_get_name (result));
 
   return result;
 
