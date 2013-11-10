@@ -501,9 +501,14 @@ gst_mpegv_parse_process_sc (GstMpegvParse * mpvparse,
       break;
     case GST_MPEG_VIDEO_PACKET_EXTENSION:
       GST_LOG_OBJECT (mpvparse, "startcode is VIDEO PACKET EXTENSION");
-      parse_packet_extension (mpvparse, info, off);
-      if (mpvparse->ext_count < G_N_ELEMENTS (mpvparse->ext_offsets))
-        mpvparse->ext_offsets[mpvparse->ext_count++] = off;
+      if (mpvparse->pic_offset >= 0) {
+        GST_LOG_OBJECT (mpvparse, "... considered PICTURE EXTENSION");
+        parse_packet_extension (mpvparse, info, off);
+      } else {
+        GST_LOG_OBJECT (mpvparse, "... considered SEQUENCE EXTENSION");
+        if (mpvparse->ext_count < G_N_ELEMENTS (mpvparse->ext_offsets))
+          mpvparse->ext_offsets[mpvparse->ext_count++] = off;
+      }
       checkconfig = FALSE;
       break;
     default:
