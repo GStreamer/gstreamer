@@ -690,24 +690,83 @@ cleanup:
  * */
 
 static GstFlowReturn
-gst_ac3_parse_chain_priv (GstPad * pad, GstObject * parent, GstBuffer * buffer)
+gst_ac3_parse_chain_priv (GstPad * pad, GstObject * parent, GstBuffer * buf)
 {
   GstAc3Parse *ac3parse = GST_AC3_PARSE (parent);
   GstFlowReturn ret;
-  GstBuffer *newbuf;
   gsize size;
+  guint8 data[2];
+  gint offset;
+  gint len;
+  GstBuffer *subbuf;
+  gint first_access;
 
-  size = gst_buffer_get_size (buffer);
-  if (size >= 2) {
-    newbuf = gst_buffer_copy_region (buffer, GST_BUFFER_COPY_ALL, 2, size - 2);
-    gst_buffer_unref (buffer);
-    ret = ac3parse->baseparse_chainfunc (pad, parent, newbuf);
+  size = gst_buffer_get_size (buf);
+  if (size < 2)
+    goto not_enough_data;
+
+  gst_buffer_extract (buf, 0, data, 2);
+  first_access = (data[0] << 8) | data[1];
+
+  /* Skip the first_access header */
+  offset = 2;
+
+  if (first_access > 1) {
+    /* Length of data before first_access */
+    len = first_access - 1;
+
+    if (len <= 0 || offset + len > size)
+      goto bad_first_access_parameter;
+
+    subbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, len);
+    GST_BUFFER_DTS (subbuf) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_PTS (subbuf) = GST_CLOCK_TIME_NONE;
+    ret = ac3parse->baseparse_chainfunc (pad, parent, subbuf);
+    if (ret != GST_FLOW_OK) {
+      gst_buffer_unref (buf);
+      goto done;
+    }
+
+    offset += len;
+    len = size - offset;
+
+    if (len > 0) {
+      subbuf = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset, len);
+      GST_BUFFER_PTS (subbuf) = GST_BUFFER_PTS (buf);
+      GST_BUFFER_DTS (subbuf) = GST_BUFFER_DTS (buf);
+
+      ret = ac3parse->baseparse_chainfunc (pad, parent, subbuf);
+    }
+    gst_buffer_unref (buf);
   } else {
-    gst_buffer_unref (buffer);
-    ret = GST_FLOW_OK;
+    /* first_access = 0 or 1, so if there's a timestamp it applies to the first byte */
+    subbuf =
+        gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, offset,
+        size - offset);
+    GST_BUFFER_PTS (subbuf) = GST_BUFFER_PTS (buf);
+    GST_BUFFER_DTS (subbuf) = GST_BUFFER_DTS (buf);
+    gst_buffer_unref (buf);
+    ret = ac3parse->baseparse_chainfunc (pad, parent, subbuf);
   }
 
+done:
   return ret;
+
+/* ERRORS */
+not_enough_data:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (ac3parse), STREAM, FORMAT, (NULL),
+        ("Insufficient data in buffer. Can't determine first_acess"));
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
+bad_first_access_parameter:
+  {
+    GST_ELEMENT_ERROR (GST_ELEMENT (ac3parse), STREAM, FORMAT, (NULL),
+        ("Bad first_access parameter (%d) in buffer", first_access));
+    gst_buffer_unref (buf);
+    return GST_FLOW_ERROR;
+  }
 }
 
 static gboolean
