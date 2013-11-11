@@ -2928,7 +2928,7 @@ static gboolean
 gst_video_decoder_decide_allocation_default (GstVideoDecoder * decoder,
     GstQuery * query)
 {
-  GstCaps *outcaps;
+  GstCaps *outcaps = NULL;
   GstBufferPool *pool = NULL;
   guint size, min, max;
   GstAllocator *allocator = NULL;
@@ -2939,7 +2939,8 @@ gst_video_decoder_decide_allocation_default (GstVideoDecoder * decoder,
 
   gst_query_parse_allocation (query, &outcaps, NULL);
   gst_video_info_init (&vinfo);
-  gst_video_info_from_caps (&vinfo, outcaps);
+  if (outcaps)
+    gst_video_info_from_caps (&vinfo, outcaps);
 
   /* we got configuration from our peer or the decide_allocation method,
    * parse them */
@@ -3003,73 +3004,18 @@ gst_video_decoder_propose_allocation_default (GstVideoDecoder * decoder,
 }
 
 static gboolean
-gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
+gst_video_decoder_negotiate_pool (GstVideoDecoder * decoder, GstCaps * caps)
 {
-  GstVideoCodecState *state = decoder->priv->output_state;
   GstVideoDecoderClass *klass;
   GstQuery *query = NULL;
   GstBufferPool *pool = NULL;
   GstAllocator *allocator;
   GstAllocationParams params;
   gboolean ret = TRUE;
-  GstVideoCodecFrame *frame;
-  GstCaps *prevcaps;
-
-  g_return_val_if_fail (GST_VIDEO_INFO_WIDTH (&state->info) != 0, FALSE);
-  g_return_val_if_fail (GST_VIDEO_INFO_HEIGHT (&state->info) != 0, FALSE);
 
   klass = GST_VIDEO_DECODER_GET_CLASS (decoder);
 
-  GST_DEBUG_OBJECT (decoder, "output_state par %d/%d fps %d/%d",
-      state->info.par_n, state->info.par_d,
-      state->info.fps_n, state->info.fps_d);
-
-  if (state->caps == NULL)
-    state->caps = gst_video_info_to_caps (&state->info);
-
-  GST_DEBUG_OBJECT (decoder, "setting caps %" GST_PTR_FORMAT, state->caps);
-
-  /* Push all pending pre-caps events of the oldest frame before
-   * setting caps */
-  frame = decoder->priv->frames ? decoder->priv->frames->data : NULL;
-  if (frame || decoder->priv->current_frame_events) {
-    GList **events, *l;
-
-    if (frame) {
-      events = &frame->events;
-    } else {
-      events = &decoder->priv->current_frame_events;
-    }
-
-    for (l = g_list_last (*events); l;) {
-      GstEvent *event = GST_EVENT (l->data);
-      GList *tmp;
-
-      if (GST_EVENT_TYPE (event) < GST_EVENT_CAPS) {
-        gst_video_decoder_push_event (decoder, event);
-        tmp = l;
-        l = l->prev;
-        *events = g_list_delete_link (*events, tmp);
-      } else {
-        l = l->prev;
-      }
-    }
-  }
-
-  prevcaps = gst_pad_get_current_caps (decoder->srcpad);
-  if (!prevcaps || !gst_caps_is_equal (prevcaps, state->caps))
-    ret = gst_pad_set_caps (decoder->srcpad, state->caps);
-  else
-    ret = TRUE;
-  if (prevcaps)
-    gst_caps_unref (prevcaps);
-
-  if (!ret)
-    goto done;
-  decoder->priv->output_state_changed = FALSE;
-
-  /* Negotiate pool */
-  query = gst_query_new_allocation (state->caps, TRUE);
+  query = gst_query_new_allocation (caps, TRUE);
 
   if (!gst_pad_peer_query (decoder->srcpad, query)) {
     GST_DEBUG_OBJECT (decoder, "didn't get downstream ALLOCATION hints");
@@ -3130,6 +3076,78 @@ no_decide_allocation:
   }
 }
 
+static gboolean
+gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
+{
+  GstVideoCodecState *state = decoder->priv->output_state;
+  gboolean ret = TRUE;
+  GstVideoCodecFrame *frame;
+  GstCaps *prevcaps;
+
+  if (!state) {
+    GST_DEBUG_OBJECT (decoder,
+        "Trying to negotiate the pool with out setting the o/p format");
+    ret = gst_video_decoder_negotiate_pool (decoder, NULL);
+    goto done;
+  }
+
+  g_return_val_if_fail (GST_VIDEO_INFO_WIDTH (&state->info) != 0, FALSE);
+  g_return_val_if_fail (GST_VIDEO_INFO_HEIGHT (&state->info) != 0, FALSE);
+
+  GST_DEBUG_OBJECT (decoder, "output_state par %d/%d fps %d/%d",
+      state->info.par_n, state->info.par_d,
+      state->info.fps_n, state->info.fps_d);
+
+  if (state->caps == NULL)
+    state->caps = gst_video_info_to_caps (&state->info);
+
+  GST_DEBUG_OBJECT (decoder, "setting caps %" GST_PTR_FORMAT, state->caps);
+
+  /* Push all pending pre-caps events of the oldest frame before
+   * setting caps */
+  frame = decoder->priv->frames ? decoder->priv->frames->data : NULL;
+  if (frame || decoder->priv->current_frame_events) {
+    GList **events, *l;
+
+    if (frame) {
+      events = &frame->events;
+    } else {
+      events = &decoder->priv->current_frame_events;
+    }
+
+    for (l = g_list_last (*events); l;) {
+      GstEvent *event = GST_EVENT (l->data);
+      GList *tmp;
+
+      if (GST_EVENT_TYPE (event) < GST_EVENT_CAPS) {
+        gst_video_decoder_push_event (decoder, event);
+        tmp = l;
+        l = l->prev;
+        *events = g_list_delete_link (*events, tmp);
+      } else {
+        l = l->prev;
+      }
+    }
+  }
+
+  prevcaps = gst_pad_get_current_caps (decoder->srcpad);
+  if (!prevcaps || !gst_caps_is_equal (prevcaps, state->caps))
+    ret = gst_pad_set_caps (decoder->srcpad, state->caps);
+  else
+    ret = TRUE;
+  if (prevcaps)
+    gst_caps_unref (prevcaps);
+
+  if (!ret)
+    goto done;
+  decoder->priv->output_state_changed = FALSE;
+  /* Negotiate pool */
+  ret = gst_video_decoder_negotiate_pool (decoder, state->caps);
+
+done:
+  return ret;
+}
+
 /**
  * gst_video_decoder_negotiate:
  * @decoder: a #GstVideoDecoder
@@ -3145,7 +3163,6 @@ gst_video_decoder_negotiate (GstVideoDecoder * decoder)
   gboolean ret = TRUE;
 
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (decoder), FALSE);
-  g_return_val_if_fail (decoder->priv->output_state, FALSE);
 
   klass = GST_VIDEO_DECODER_GET_CLASS (decoder);
 
@@ -3176,17 +3193,21 @@ gst_video_decoder_allocate_output_buffer (GstVideoDecoder * decoder)
   GstFlowReturn flow;
   GstBuffer *buffer = NULL;
 
-  g_return_val_if_fail (decoder->priv->output_state, NULL);
-
   GST_DEBUG ("alloc src buffer");
 
   GST_VIDEO_DECODER_STREAM_LOCK (decoder);
-  if (G_UNLIKELY (decoder->priv->output_state_changed
+  if (G_UNLIKELY (!decoder->priv->output_state
+          || decoder->priv->output_state_changed
           || gst_pad_check_reconfigure (decoder->srcpad))) {
     if (!gst_video_decoder_negotiate (decoder)) {
-      GST_DEBUG_OBJECT (decoder, "Failed to negotiate, fallback allocation");
-      gst_pad_mark_reconfigure (decoder->srcpad);
-      goto fallback;
+      if (decoder->priv->output_state) {
+        GST_DEBUG_OBJECT (decoder, "Failed to negotiate, fallback allocation");
+        gst_pad_mark_reconfigure (decoder->srcpad);
+        goto fallback;
+      } else {
+        GST_DEBUG_OBJECT (decoder, "Failed to negotiate, output_buffer=NULL");
+        goto failed_allocation;
+      }
     }
   }
 
@@ -3195,17 +3216,24 @@ gst_video_decoder_allocate_output_buffer (GstVideoDecoder * decoder)
   if (flow != GST_FLOW_OK) {
     GST_INFO_OBJECT (decoder, "couldn't allocate output buffer, flow %s",
         gst_flow_get_name (flow));
-    goto fallback;
+    if (decoder->priv->output_state && decoder->priv->output_state->info.size)
+      goto fallback;
+    else
+      goto failed_allocation;
   }
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
   return buffer;
 
 fallback:
+  GST_INFO_OBJECT (decoder,
+      "Fallback allocation, creating new buffer which doesn't belongs to any buffer pool");
   buffer =
       gst_buffer_new_allocate (NULL, decoder->priv->output_state->info.size,
       NULL);
 
+failed_allocation:
+  GST_ERROR_OBJECT (decoder, "Failed to allocate the buffer..");
   GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
 
   return buffer;
