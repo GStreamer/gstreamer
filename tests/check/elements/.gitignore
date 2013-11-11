@@ -50,6 +50,7 @@ rtp-payloading
 rtpbin
 rtpbin_buffer_list
 rtpjitterbuffer
+rtpsession
 rtpmux
 shapewipe
 souphttpsrc

@@ -144,6 +144,7 @@ check_PROGRAMS = \
 	elements/rgvolume \
 	elements/rtp-payloading \
 	elements/rtpbin \
+	elements/rtpsession \
 	elements/rtpbin_buffer_list \
 	elements/rtpjitterbuffer \
 	elements/rtpmux \
@@ -293,8 +294,8 @@ elements_qtmux_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstpbutils-@GST_API_VERSION@ \
 elements_rtpbin_buffer_list_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_CFLAGS) \
 	$(WARNING_CFLAGS) $(ERROR_CFLAGS) $(GST_CHECK_CFLAGS) $(AM_CFLAGS)
 elements_rtpbin_buffer_list_LDADD = $(GST_PLUGINS_BASE_LIBS) \
-             -lgstrtp-@GST_API_VERSION@ \
-             $(GST_BASE_LIBS) $(GST_LIBS) $(GST_CHECK_LIBS)
+             -lgstrtp-$(GST_API_VERSION) \
+             $(GST_BASE_LIBS) $(GST_LIBS) $(GST_CHECK_LIBS) $(LDADD)
 elements_rtpbin_buffer_list_SOURCES = elements/rtpbin_buffer_list.c
 
 elements_rtpmux_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(GST_BASE_CFLAGS) $(AM_CFLAGS)
@@ -321,6 +322,9 @@ elements_videofilter_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstvideo-$(GST_API_VERSI
 
 elements_rtpjitterbuffer_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
 elements_rtpjitterbuffer_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-$(GST_API_VERSION) $(LDADD)
+
+elements_rtpsession_CFLAGS = $(GST_PLUGINS_BASE_CFLAGS) $(CFLAGS) $(AM_CFLAGS)
+elements_rtpsession_LDADD = $(GST_PLUGINS_BASE_LIBS) -lgstrtp-$(GST_API_VERSION) $(LDADD)
 
 # FIXME: configure should check for gdk-pixbuf not gtk
 # only need video.h header, not the lib
