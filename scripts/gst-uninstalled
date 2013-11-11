@@ -89,6 +89,7 @@ GI_TYPELIB_PATH=$GST/gst-editing-services/ges:$GI_TYPELIB_PATH
 PATH=$GST/gst-editing-services/tools:$PATH
 
 # GStreamer plugins gl libraries
+LD_LIBRARY_PATH=$GST/gst-plugins-gl/gst-libs/gst/gl/.libs:$LD_LIBRARY_PATH
 DYLD_LIBRARY_PATH=$GST/gst-plugins-gl/gst-libs/gst/gl/.libs:$DYLD_LIBRARY_PATH
 
 # GStreamer plugins base libraries
