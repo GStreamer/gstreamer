@@ -406,6 +406,13 @@ gst_mpeg2dec_alloc_sized_buf (GstMpeg2dec * mpeg2dec, guint size,
   state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (mpeg2dec));
 
   if (!mpeg2dec->need_cropping || mpeg2dec->has_cropping) {
+    /* need parsed input, but that might be slightly bogus,
+     * so avoid giving up altogether and mark it as error */
+    if (frame->output_buffer) {
+      gst_buffer_replace (&frame->output_buffer, NULL);
+      GST_VIDEO_DECODER_ERROR (mpeg2dec, 1, STREAM, DECODE,
+          ("decoding error"), ("Input not correctly parsed"), ret);
+    }
     ret =
         gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (mpeg2dec),
         frame);
