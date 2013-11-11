@@ -81,6 +81,7 @@ struct _GstSystemClockClass {
 GType                   gst_system_clock_get_type       (void);
 
 GstClock*               gst_system_clock_obtain         (void);
+void                    gst_system_clock_set_default    (GstClock *new_clock);
 
 G_END_DECLS
 

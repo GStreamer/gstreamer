@@ -117,6 +117,38 @@ notify_callback (GstClock * clock, GstClockTime time,
   return FALSE;
 }
 
+GST_START_TEST (test_set_default)
+{
+  GstClock *clock, *static_clock;
+
+  /* obtain the default system clock, which keeps a static ref and bumps the
+   * refcount before returning */
+  static_clock = gst_system_clock_obtain ();
+  fail_unless (static_clock != NULL, "Could not create default system clock");
+  g_assert_cmpint (GST_OBJECT_REFCOUNT (static_clock), ==, 2);
+
+  /* set a new default clock to a different instance which should replace the
+   * static clock with this one, and unref the static clock */
+  clock = g_object_new (GST_TYPE_SYSTEM_CLOCK, "name", "TestClock", NULL);
+  gst_system_clock_set_default (clock);
+  g_assert_cmpint (GST_OBJECT_REFCOUNT (static_clock), ==, 1);
+  static_clock = gst_system_clock_obtain ();
+  fail_unless (static_clock == clock);
+  g_assert_cmpint (GST_OBJECT_REFCOUNT (clock), ==, 3);
+  g_object_unref (static_clock);
+
+  /* Reset the default clock to the static one */
+  gst_system_clock_set_default (NULL);
+  static_clock = gst_system_clock_obtain ();
+  fail_unless (static_clock != clock);
+  g_assert_cmpint (GST_OBJECT_REFCOUNT (clock), ==, 1);
+  g_assert_cmpint (GST_OBJECT_REFCOUNT (static_clock), ==, 2);
+  g_object_unref (clock);
+  g_object_unref (static_clock);
+}
+
+GST_END_TEST;
+
 GST_START_TEST (test_single_shot)
 {
   GstClock *clock;
@@ -654,6 +686,7 @@ gst_systemclock_suite (void)
   tcase_add_test (tc_chain, test_diff);
   tcase_add_test (tc_chain, test_mixed);
   tcase_add_test (tc_chain, test_async_full);
+  tcase_add_test (tc_chain, test_set_default);
 
   return s;
 }

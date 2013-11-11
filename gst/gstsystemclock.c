@@ -112,6 +112,7 @@ enum
 
 /* the one instance of the systemclock */
 static GstClock *_the_system_clock = NULL;
+static gboolean _external_default_clock = FALSE;
 
 static void gst_system_clock_dispose (GObject * object);
 static void gst_system_clock_set_property (GObject * object, guint prop_id,
@@ -281,6 +282,43 @@ gst_system_clock_get_property (GObject * object, guint prop_id, GValue * value,
 }
 
 /**
+ * gst_system_clock_set_default:
+ * @new_clock: a #GstClock
+ *
+ * Sets the default system clock that can be obtained with
+ * gst_system_clock_obtain.
+ *
+ * This is mostly used for testing and debugging purposes when you
+ * want to have control over the time reported by the default system
+ * clock.
+ *
+ * MT safe.
+ */
+void
+gst_system_clock_set_default (GstClock * new_clock)
+{
+  GstClock *clock;
+
+  g_mutex_lock (&_gst_sysclock_mutex);
+  clock = _the_system_clock;
+
+  if (clock != NULL)
+    g_object_unref (clock);
+
+  if (new_clock == NULL) {
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "resetting default system clock");
+    _external_default_clock = FALSE;
+  } else {
+    GST_CAT_DEBUG (GST_CAT_CLOCK, "setting new default system clock to %p",
+        new_clock);
+    _external_default_clock = TRUE;
+    g_object_ref (new_clock);
+  }
+  _the_system_clock = new_clock;
+  g_mutex_unlock (&_gst_sysclock_mutex);
+}
+
+/**
  * gst_system_clock_obtain:
  *
  * Get a handle to the default system clock. The refcount of the
@@ -301,6 +339,7 @@ gst_system_clock_obtain (void)
 
   if (clock == NULL) {
     GST_CAT_DEBUG (GST_CAT_CLOCK, "creating new static system clock");
+    g_assert (_external_default_clock == FALSE);
     clock = g_object_new (GST_TYPE_SYSTEM_CLOCK,
         "name", "GstSystemClock", NULL);
 
