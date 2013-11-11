@@ -100,6 +100,9 @@ G_DEFINE_TYPE (GstAVFVideoSrc, gst_avf_video_src, GST_TYPE_PUSH_SRC);
   GstClockTime lastSampling;
   guint count;
   gint fps;
+  BOOL captureScreen;
+  BOOL captureScreenCursor;
+  BOOL captureScreenMouseClicks;
 }
 
 - (id)init;
