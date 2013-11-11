@@ -893,6 +893,11 @@ gst_mss_demux_process_manifest (GstMssDemux * mssdemux)
 
     mssdemux->manifest_uri = g_strdup (uri);
     baseurl_end = g_strrstr (uri, "/Manifest");
+    if (baseurl_end == NULL) {
+      /* second try */
+      baseurl_end = g_strrstr (uri, "/manifest");
+    }
+
     if (baseurl_end) {
       /* set the new end of the string */
       baseurl_end[0] = '\0';
