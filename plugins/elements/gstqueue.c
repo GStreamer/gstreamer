@@ -223,6 +223,7 @@ typedef struct
 {
   gboolean is_query;
   GstMiniObject *item;
+  gsize size;
 } GstQueueItem;
 
 #define GST_TYPE_QUEUE_LEAKY (queue_leaky_get_type ())
@@ -620,16 +621,18 @@ static inline void
 gst_queue_locked_enqueue_buffer (GstQueue * queue, gpointer item)
 {
   GstBuffer *buffer = GST_BUFFER_CAST (item);
+  gsize bsize = gst_buffer_get_size (buffer);
 
   /* add buffer to the statistics */
   queue->cur_level.buffers++;
-  queue->cur_level.bytes += gst_buffer_get_size (buffer);
+  queue->cur_level.bytes += bsize;
   apply_buffer (queue, buffer, &queue->sink_segment, TRUE, TRUE);
 
   if (item) {
     GstQueueItem *qitem = g_slice_new (GstQueueItem);
     qitem->item = item;
     qitem->is_query = FALSE;
+    qitem->size = bsize;
     gst_queue_array_push_tail (queue->queue, qitem);
   }
   GST_QUEUE_SIGNAL_ADD (queue);
@@ -683,12 +686,14 @@ gst_queue_locked_dequeue (GstQueue * queue)
 {
   GstQueueItem *qitem;
   GstMiniObject *item;
+  gsize bufsize;
 
   qitem = gst_queue_array_pop_head (queue->queue);
   if (qitem == NULL)
     goto no_item;
 
   item = qitem->item;
+  bufsize = qitem->size;
   g_slice_free (GstQueueItem, qitem);
 
   if (GST_IS_BUFFER (item)) {
@@ -698,7 +703,7 @@ gst_queue_locked_dequeue (GstQueue * queue)
         "retrieved buffer %p from queue", buffer);
 
     queue->cur_level.buffers--;
-    queue->cur_level.bytes -= gst_buffer_get_size (buffer);
+    queue->cur_level.bytes -= bufsize;
     apply_buffer (queue, buffer, &queue->src_segment, TRUE, FALSE);
 
     /* if the queue is empty now, update the other side */
