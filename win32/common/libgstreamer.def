@@ -1127,7 +1127,6 @@ EXPORTS
 	gst_structure_to_string
 	gst_system_clock_get_type
 	gst_system_clock_obtain
-	gst_system_clock_set_default
 	gst_tag_exists
 	gst_tag_flag_get_type
 	gst_tag_get_description

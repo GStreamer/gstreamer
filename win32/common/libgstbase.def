@@ -238,10 +238,12 @@ EXPORTS
 	gst_collect_pads_set_clip_function
 	gst_collect_pads_set_compare_function
 	gst_collect_pads_set_event_function
+	gst_collect_pads_set_flush_function
 	gst_collect_pads_set_flushing
 	gst_collect_pads_set_function
 	gst_collect_pads_set_query_function
 	gst_collect_pads_set_waiting
+	gst_collect_pads_src_event_default
 	gst_collect_pads_start
 	gst_collect_pads_stop
 	gst_collect_pads_take_buffer
