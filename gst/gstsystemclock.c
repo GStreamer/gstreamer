@@ -293,6 +293,8 @@ gst_system_clock_get_property (GObject * object, guint prop_id, GValue * value,
  * clock.
  *
  * MT safe.
+ *
+ * Since: 1.4
  */
 void
 gst_system_clock_set_default (GstClock * new_clock)
