@@ -264,7 +264,7 @@ gst_rtsp_auth_set_default_token (GstRTSPAuth * auth, GstRTSPToken * token)
  * gst_rtsp_auth_get_default_token:
  * @auth: a #GstRTSPAuth
  *
- * Get the default token for @auth. This token will be used for unauthorized
+ * Get the default token for @auth. This token will be used for unauthenticated
  * users.
  *
  * Returns: (transfer full): the #GstRTSPToken of @auth. gst_rtsp_token_unref() after
@@ -321,7 +321,7 @@ gst_rtsp_auth_add_basic (GstRTSPAuth * auth, const gchar * basic,
  * @basic: (transfer none): the basic token
  *
  * Add a basic token for the default authentication algorithm that
- * enables the client qith privileges from @authgroup.
+ * enables the client with privileges from @authgroup.
  */
 void
 gst_rtsp_auth_remove_basic (GstRTSPAuth * auth, const gchar * basic)
