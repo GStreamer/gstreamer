@@ -71,6 +71,8 @@ struct _GstRTSPContext {
   GstRTSPMessage      *response;
 };
 
+GType gst_rtsp_context_get_type (void);
+
 GstRTSPContext *     gst_rtsp_context_get_current   (void);
 void                 gst_rtsp_context_push_current  (GstRTSPContext * ctx);
 void                 gst_rtsp_context_pop_current   (GstRTSPContext * ctx);
