@@ -318,6 +318,108 @@ gst_gl_mixer_pad_sink_acceptcaps (GstPad * pad, GstGLMixer * mix,
 }
 
 static gboolean
+gst_gl_mixer_propose_allocation (GstGLMixer * mix,
+    GstQuery * decide_query, GstQuery * query)
+{
+  GstBufferPool *pool;
+  GstStructure *config;
+  GstCaps *caps;
+  guint size;
+  gboolean need_pool;
+  GError *error = NULL;
+  GstStructure *gl_context;
+
+  gst_query_parse_allocation (query, &caps, &need_pool);
+
+  if (caps == NULL)
+    goto no_caps;
+
+  if ((pool = mix->priv->pool))
+    gst_object_ref (pool);
+
+  if (pool != NULL) {
+    GstCaps *pcaps;
+
+    /* we had a pool, check caps */
+    GST_DEBUG_OBJECT (mix, "check existing pool caps");
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get_params (config, &pcaps, &size, NULL, NULL);
+
+    if (!gst_caps_is_equal (caps, pcaps)) {
+      GST_DEBUG_OBJECT (mix, "pool has different caps");
+      /* different caps, we can't use this pool */
+      gst_object_unref (pool);
+      pool = NULL;
+    }
+    gst_structure_free (config);
+  }
+
+  if (!gst_gl_ensure_display (mix, &mix->display))
+    return FALSE;
+
+  if (!mix->context) {
+    mix->context = gst_gl_context_new (mix->display);
+    if (!gst_gl_context_create (mix->context, NULL, &error))
+      goto context_error;
+  }
+
+  if (pool == NULL && need_pool) {
+    GstVideoInfo info;
+
+    if (!gst_video_info_from_caps (&info, caps))
+      goto invalid_caps;
+
+    GST_DEBUG_OBJECT (mix, "create new pool");
+    pool = gst_gl_buffer_pool_new (mix->context);
+
+    /* the normal size of a frame */
+    size = info.size;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_set_params (config, caps, size, 0, 0);
+    if (!gst_buffer_pool_set_config (pool, config))
+      goto config_failed;
+  }
+  gst_query_add_allocation_pool (query, pool, size, 1, 0);
+  gst_object_unref (pool);
+
+  /* we also support various metadata */
+  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
+
+  gl_context =
+      gst_structure_new ("GstVideoGLTextureUploadMeta", "gst.gl.GstGLContext",
+      GST_GL_TYPE_CONTEXT, mix->context, NULL);
+  gst_query_add_allocation_meta (query,
+      GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, gl_context);
+  gst_structure_free (gl_context);
+
+  return TRUE;
+
+  /* ERRORS */
+no_caps:
+  {
+    GST_DEBUG_OBJECT (mix, "no caps specified");
+    return FALSE;
+  }
+invalid_caps:
+  {
+    GST_DEBUG_OBJECT (mix, "invalid caps specified");
+    return FALSE;
+  }
+config_failed:
+  {
+    GST_DEBUG_OBJECT (mix, "failed setting config");
+    return FALSE;
+  }
+context_error:
+  {
+    GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("%s", error->message),
+        (NULL));
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_gl_mixer_sink_query (GstCollectPads * pads, GstCollectData * data,
     GstQuery * query, GstGLMixer * mix)
 {
@@ -327,6 +429,35 @@ gst_gl_mixer_sink_query (GstCollectPads * pads, GstCollectData * data,
   GST_TRACE ("QUERY %" GST_PTR_FORMAT, query);
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_ALLOCATION:
+    {
+      GstQuery *decide_query = NULL;
+      gboolean negotiated;
+
+      GST_OBJECT_LOCK (mix);
+      if (G_UNLIKELY (!(negotiated = mix->priv->negotiated))) {
+        GST_DEBUG_OBJECT (mix,
+            "not negotiated yet, can't answer ALLOCATION query");
+        GST_OBJECT_UNLOCK (mix);
+        return FALSE;
+      }
+      if ((decide_query = mix->priv->query))
+        gst_query_ref (decide_query);
+      GST_OBJECT_UNLOCK (mix);
+
+      GST_DEBUG_OBJECT (mix,
+          "calling propose allocation with query %" GST_PTR_FORMAT,
+          decide_query);
+
+      /* pass the query to the propose_allocation vmethod if any */
+      ret = gst_gl_mixer_propose_allocation (mix, decide_query, query);
+
+      if (decide_query)
+        gst_query_unref (decide_query);
+
+      GST_DEBUG_OBJECT (mix, "ALLOCATION ret %d, %" GST_PTR_FORMAT, ret, query);
+      break;
+    }
     case GST_QUERY_CAPS:
     {
       GstCaps *filter, *caps;
@@ -940,37 +1071,8 @@ static gboolean
 gst_gl_mixer_activate (GstGLMixer * mix, gboolean activate)
 {
   if (activate) {
-    GstStructure *structure;
-    GstQuery *context_query;
-    const GValue *id_value;
-
     if (!gst_gl_ensure_display (mix, &mix->display)) {
       return FALSE;
-    }
-
-    structure = gst_structure_new_empty ("gstglcontext");
-    context_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
-
-    if (!gst_pad_peer_query (mix->srcpad, context_query)) {
-      GST_WARNING
-          ("Could not query GstGLContext from downstream (peer query failed)");
-    }
-
-    id_value = gst_structure_get_value (structure, "gstglcontext");
-    if (G_VALUE_HOLDS_POINTER (id_value)) {
-      mix->context =
-          gst_object_ref (GST_GL_CONTEXT (g_value_get_pointer (id_value)));
-    } else {
-      GError *error = NULL;
-
-      GST_INFO ("Creating GstGLDisplay");
-      mix->context = gst_gl_context_new (mix->display);
-
-      if (!gst_gl_context_create (mix->context, 0, &error)) {
-        GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
-            ("%s", error->message), (NULL));
-        return FALSE;
-      }
     }
   }
 
@@ -980,11 +1082,15 @@ gst_gl_mixer_activate (GstGLMixer * mix, gboolean activate)
 static gboolean
 gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
 {
+  GstGLMixerClass *mixer_class = GST_GL_MIXER_GET_CLASS (mix);
   GstBufferPool *pool = NULL;
   GstStructure *config;
   GstCaps *caps;
   guint min, max, size;
   gboolean update_pool;
+  GError *error = NULL;
+  guint idx;
+  guint out_width, out_height;
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -1001,6 +1107,41 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
     min = max = 0;
     update_pool = FALSE;
   }
+
+  if (!gst_gl_ensure_display (mix, &mix->display))
+    return FALSE;
+
+  if (gst_query_find_allocation_meta (query,
+          GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx)) {
+    GstGLContext *context;
+    const GstStructure *upload_meta_params;
+
+    gst_query_parse_nth_allocation_meta (query, idx, &upload_meta_params);
+    if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
+            GST_GL_TYPE_CONTEXT, &context, NULL) && context)
+      gst_object_replace ((GstObject **) & mix->context, (GstObject *) context);
+  }
+
+  if (!mix->context) {
+    mix->context = gst_gl_context_new (mix->display);
+    if (!gst_gl_context_create (mix->context, NULL, &error))
+      goto context_error;
+  }
+
+  out_width = GST_VIDEO_INFO_WIDTH (&mix->out_info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&mix->out_info);
+
+  if (!gst_gl_context_gen_fbo (mix->context, out_width, out_height,
+          &mix->fbo, &mix->depthbuffer))
+    goto context_error;
+
+  if (mix->out_tex_id)
+    gst_gl_context_del_texture (mix->context, &mix->out_tex_id);
+  gst_gl_context_gen_texture (mix->context, &mix->out_tex_id,
+      GST_VIDEO_FORMAT_RGBA, out_width, out_height);
+
+  if (mixer_class->set_caps)
+    mixer_class->set_caps (mix, caps);
 
   if (!pool)
     pool = gst_gl_buffer_pool_new (mix->context);
@@ -1020,6 +1161,13 @@ gst_gl_mixer_decide_allocation (GstGLMixer * mix, GstQuery * query)
   gst_object_unref (pool);
 
   return TRUE;
+
+context_error:
+  {
+    GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND, ("%s", error->message),
+        (NULL));
+    return FALSE;
+  }
 }
 
 /* takes ownership of the pool, allocator and query */
@@ -1122,16 +1270,14 @@ no_decide_allocation:
 static gboolean
 gst_gl_mixer_src_setcaps (GstPad * pad, GstGLMixer * mix, GstCaps * caps)
 {
-  GstGLMixerClass *mixer_class = GST_GL_MIXER_GET_CLASS (mix);
   GstGLMixerPrivate *priv = mix->priv;
   GstVideoInfo info;
-  guint out_width, out_height;
   gboolean ret = TRUE;
 
   GST_INFO_OBJECT (mix, "set src caps: %" GST_PTR_FORMAT, caps);
 
   if (!gst_video_info_from_caps (&info, caps)) {
-    ret = TRUE;
+    ret = FALSE;
     goto done;
   }
 
@@ -1148,22 +1294,7 @@ gst_gl_mixer_src_setcaps (GstPad * pad, GstGLMixer * mix, GstCaps * caps)
 
   mix->out_info = info;
 
-  out_width = GST_VIDEO_INFO_WIDTH (&mix->out_info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&mix->out_info);
-
-  if (!gst_gl_context_gen_fbo (mix->context, out_width, out_height,
-          &mix->fbo, &mix->depthbuffer))
-    goto context_error;
-
-  if (mix->out_tex_id)
-    gst_gl_context_del_texture (mix->context, &mix->out_tex_id);
-  gst_gl_context_gen_texture (mix->context, &mix->out_tex_id,
-      GST_VIDEO_FORMAT_RGBA, out_width, out_height);
-
   GST_GL_MIXER_UNLOCK (mix);
-
-  if (mixer_class->set_caps)
-    mixer_class->set_caps (mix, caps);
 
   ret = gst_pad_set_caps (mix->srcpad, caps);
 
@@ -1173,14 +1304,6 @@ done:
   priv->negotiated = ret;
 
   return ret;
-
-/* ERRORS */
-context_error:
-  {
-    GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
-    return FALSE;
-  }
 }
 
 static GstPad *

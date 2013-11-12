@@ -381,17 +381,6 @@ gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
           &glimage_sink->display);
       break;
     }
-    case GST_QUERY_CUSTOM:
-    {
-      GstStructure *structure = gst_query_writable_structure (query);
-      if (gst_structure_has_name (structure, "gstglcontext")) {
-        gst_structure_set (structure, "gstglcontext", G_TYPE_POINTER,
-            glimage_sink->context, NULL);
-        res = TRUE;
-      } else
-        res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
-      break;
-    }
     default:
       res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
       break;
@@ -845,6 +834,8 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstCaps *caps;
   guint size;
   gboolean need_pool;
+  GError *error = NULL;
+  GstStructure *gl_context;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
@@ -870,6 +861,16 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
     }
     gst_structure_free (config);
   }
+
+  if (!gst_gl_ensure_display (glimage_sink, &glimage_sink->display))
+    return FALSE;
+
+  if (!glimage_sink->context) {
+    glimage_sink->context = gst_gl_context_new (glimage_sink->display);
+    if (!gst_gl_context_create (glimage_sink->context, NULL, &error))
+      goto context_error;
+  }
+
   if (pool == NULL && need_pool) {
     GstVideoInfo info;
 
@@ -895,6 +896,13 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
 
   gst_object_unref (pool);
 
+  gl_context =
+      gst_structure_new ("GstVideoGLTextureUploadMeta", "gst.gl.GstGLContext",
+      GST_GL_TYPE_CONTEXT, glimage_sink->context, NULL);
+  gst_query_add_allocation_meta (query,
+      GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, gl_context);
+  gst_structure_free (gl_context);
+
   return TRUE;
 
   /* ERRORS */
@@ -911,6 +919,12 @@ invalid_caps:
 config_failed:
   {
     GST_DEBUG_OBJECT (bsink, "failed setting config");
+    return FALSE;
+  }
+context_error:
+  {
+    GST_ELEMENT_ERROR (bsink, RESOURCE, NOT_FOUND, ("%s", error->message),
+        (NULL));
     return FALSE;
   }
 }

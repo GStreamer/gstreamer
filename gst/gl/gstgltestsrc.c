@@ -308,7 +308,6 @@ static gboolean
 gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 {
   GstGLTestSrc *gltestsrc = GST_GL_TEST_SRC (bsrc);
-  guint out_width, out_height;
 
   GST_DEBUG ("setcaps");
 
@@ -316,12 +315,6 @@ gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
     goto wrong_caps;
 
   gltestsrc->negotiated = TRUE;
-  out_width = GST_VIDEO_INFO_WIDTH (&gltestsrc->out_info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&gltestsrc->out_info);
-
-  if (!gst_gl_context_gen_fbo (gltestsrc->context, out_width, out_height,
-          &gltestsrc->fbo, &gltestsrc->depthbuffer))
-    goto context_error;
 
   return TRUE;
 
@@ -329,13 +322,6 @@ gst_gl_test_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
 wrong_caps:
   {
     GST_WARNING ("wrong caps");
-    return FALSE;
-  }
-
-context_error:
-  {
-    GST_ELEMENT_ERROR (gltestsrc, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
     return FALSE;
   }
 }
@@ -560,38 +546,9 @@ static gboolean
 gst_gl_test_src_start (GstBaseSrc * basesrc)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (basesrc);
-  GstStructure *structure;
-  GstQuery *context_query;
-  const GValue *id_value;
 
   if (!gst_gl_ensure_display (src, &src->display))
     return FALSE;
-
-  structure = gst_structure_new_empty ("gstglcontext");
-  context_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
-
-  if (!gst_pad_peer_query (basesrc->srcpad, context_query)) {
-    GST_WARNING
-        ("Could not query GstGLContext from downstream (peer query failed)");
-  }
-
-  id_value = gst_structure_get_value (structure, "gstglcontext");
-  if (G_VALUE_HOLDS_POINTER (id_value)) {
-    /* at least one gl element is after in our gl chain */
-    src->context =
-        gst_object_ref (GST_GL_CONTEXT (g_value_get_pointer (id_value)));
-  } else {
-    GError *error = NULL;
-
-    GST_INFO ("Creating GstGLDisplay");
-    src->context = gst_gl_context_new (src->display);
-
-    if (!gst_gl_context_create (src->context, 0, &error)) {
-      GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND,
-          ("%s", error->message), (NULL));
-      return FALSE;
-    }
-  }
 
   src->running_time = 0;
   src->n_frames = 0;
@@ -637,6 +594,9 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
   GstCaps *caps;
   guint min, max, size;
   gboolean update_pool;
+  GError *error = NULL;
+  guint idx;
+  guint out_width, out_height;
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -654,6 +614,33 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
     update_pool = FALSE;
   }
 
+  if (!gst_gl_ensure_display (src, &src->display))
+    return FALSE;
+
+  if (gst_query_find_allocation_meta (query,
+          GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx)) {
+    GstGLContext *context;
+    const GstStructure *upload_meta_params;
+
+    gst_query_parse_nth_allocation_meta (query, idx, &upload_meta_params);
+    if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
+            GST_GL_TYPE_CONTEXT, &context, NULL) && context)
+      gst_object_replace ((GstObject **) & src->context, (GstObject *) context);
+  }
+
+  if (!src->context) {
+    src->context = gst_gl_context_new (src->display);
+    if (!gst_gl_context_create (src->context, NULL, &error))
+      goto context_error;
+  }
+
+  out_width = GST_VIDEO_INFO_WIDTH (&src->out_info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&src->out_info);
+
+  if (!gst_gl_context_gen_fbo (src->context, out_width, out_height,
+          &src->fbo, &src->depthbuffer))
+    goto context_error;
+
   if (!pool)
     pool = gst_gl_buffer_pool_new (src->context);
 
@@ -670,6 +657,13 @@ gst_gl_test_src_decide_allocation (GstBaseSrc * basesrc, GstQuery * query)
   gst_object_unref (pool);
 
   return TRUE;
+
+context_error:
+  {
+    GST_ELEMENT_ERROR (src, RESOURCE, NOT_FOUND, ("%s", error->message),
+        (NULL));
+    return FALSE;
+  }
 }
 
 //opengl scene
