@@ -328,7 +328,7 @@ invalid:
 }
 
 static void
-inc_address (Addr * addr, guint8 count)
+inc_address (Addr * addr, guint count)
 {
   gint i;
   guint carry;
@@ -342,7 +342,6 @@ inc_address (Addr * addr, guint8 count)
 }
 
 /* tells us the number of addresses between min_addr and max_addr */
-
 static guint
 diff_address (Addr * max_addr, Addr * min_addr)
 {
@@ -360,7 +359,6 @@ diff_address (Addr * max_addr, Addr * min_addr)
 
   return result;
 }
-
 
 static AddrRange *
 split_range (GstRTSPAddressPool * pool, AddrRange * range, guint skip_addr,
@@ -673,10 +671,12 @@ gst_rtsp_address_pool_reserve_address (GstRTSPAddressPool * pool,
       ttl);
   if (list != NULL) {
     AddrRange *range = list->data;
-    gint skip_port, skip_addr;
+    guint skip_port, skip_addr;
 
     skip_addr = diff_address (&input_addr, &range->min);
     skip_port = port - range->min.port;
+
+    GST_DEBUG_OBJECT (pool, "diff 0x%08x/%u", skip_addr, skip_port);
 
     /* we found a range, remove from the list */
     priv->addresses = g_list_delete_link (priv->addresses, list);

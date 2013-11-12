@@ -236,6 +236,34 @@ GST_START_TEST (test_pool)
   fail_unless (!strcmp (addr->address, "192.168.1.1"));
   gst_rtsp_address_free (addr);
 
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          GST_RTSP_ADDRESS_POOL_ANY_IPV4, GST_RTSP_ADDRESS_POOL_ANY_IPV4, 5000,
+          5001, 0));
+  res =
+      gst_rtsp_address_pool_reserve_address (pool, "192.168.0.1", 5000, 1, 0,
+      &addr);
+  fail_unless (res == GST_RTSP_ADDRESS_POOL_ERANGE);
+  res =
+      gst_rtsp_address_pool_reserve_address (pool, "0.0.0.0", 5000, 1, 0,
+      &addr);
+  fail_unless (res == GST_RTSP_ADDRESS_POOL_OK);
+  gst_rtsp_address_free (addr);
+  gst_rtsp_address_pool_clear (pool);
+
+  /* Error case 2. Using ANY as min address makes it possible to allocate the
+   * same address twice */
+  fail_unless (gst_rtsp_address_pool_add_range (pool,
+          GST_RTSP_ADDRESS_POOL_ANY_IPV4, "255.255.255.255", 5000, 5001, 0));
+  res =
+      gst_rtsp_address_pool_reserve_address (pool, "192.168.0.1", 5000, 1, 0,
+      &addr);
+  fail_unless (res == GST_RTSP_ADDRESS_POOL_OK);
+  res =
+      gst_rtsp_address_pool_reserve_address (pool, "192.168.0.1", 5000, 1, 0,
+      &addr2);
+  fail_unless (res == GST_RTSP_ADDRESS_POOL_ERESERVED);
+  gst_rtsp_address_free (addr);
+  gst_rtsp_address_pool_clear (pool);
 
   g_object_unref (pool);
 }
