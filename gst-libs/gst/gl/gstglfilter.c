@@ -62,6 +62,8 @@ static void gst_gl_filter_set_property (GObject * object, guint prop_id,
 static void gst_gl_filter_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
+static void gst_gl_filter_set_context (GstElement * element,
+    GstContext * context);
 static gboolean gst_gl_filter_query (GstBaseTransform * trans,
     GstPadDirection direction, GstQuery * query);
 static GstCaps *gst_gl_filter_transform_caps (GstBaseTransform * bt,
@@ -111,6 +113,8 @@ gst_gl_filter_class_init (GstGLFilterClass * klass)
   GST_BASE_TRANSFORM_CLASS (klass)->decide_allocation =
       gst_gl_filter_decide_allocation;
   GST_BASE_TRANSFORM_CLASS (klass)->get_unit_size = gst_gl_filter_get_unit_size;
+
+  element_class->set_context = gst_gl_filter_set_context;
 
   g_object_class_install_property (gobject_class, PROP_OTHER_CONTEXT,
       g_param_spec_object ("other-context",
@@ -176,6 +180,14 @@ gst_gl_filter_get_property (GObject * object, guint prop_id,
   }
 }
 
+static void
+gst_gl_filter_set_context (GstElement * element, GstContext * context)
+{
+  GstGLFilter *filter = GST_GL_FILTER (element);
+
+  gst_gl_handle_set_context (element, context, &filter->display);
+}
+
 static gboolean
 gst_gl_filter_query (GstBaseTransform * trans, GstPadDirection direction,
     GstQuery * query)
@@ -186,13 +198,19 @@ gst_gl_filter_query (GstBaseTransform * trans, GstPadDirection direction,
   filter = GST_GL_FILTER (trans);
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONTEXT:
+    {
+      res = gst_gl_handle_context_query ((GstElement *) filter, query,
+          &filter->display);
+      break;
+    }
     case GST_QUERY_CUSTOM:
     {
       GstStructure *structure = gst_query_writable_structure (query);
       if (direction == GST_PAD_SINK &&
-          gst_structure_has_name (structure, "gstgldisplay")) {
-        gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
-            filter->display, NULL);
+          gst_structure_has_name (structure, "gstglcontext")) {
+        gst_structure_set (structure, "gstglcontext", G_TYPE_POINTER,
+            filter->context, NULL);
         res = TRUE;
       } else
         res =
@@ -243,6 +261,10 @@ gst_gl_filter_reset (GstGLFilter * filter)
   if (filter->other_context)
     gst_object_unref (filter->other_context);
   filter->other_context = NULL;
+
+  if (filter->context)
+    gst_object_unref (filter->context);
+  filter->context = NULL;
 }
 
 static gboolean
@@ -251,28 +273,29 @@ gst_gl_filter_start (GstBaseTransform * bt)
   GstGLFilter *filter = GST_GL_FILTER (bt);
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
   GstStructure *structure;
-  GstQuery *display_query;
+  GstQuery *context_query;
   const GValue *id_value;
 
-  structure = gst_structure_new_empty ("gstgldisplay");
-  display_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
+  if (!gst_gl_ensure_display (filter, &filter->display))
+    return FALSE;
 
-  if (!gst_pad_peer_query (bt->srcpad, display_query)) {
+  structure = gst_structure_new_empty ("gstglcontext");
+  context_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
+
+  if (!gst_pad_peer_query (bt->srcpad, context_query)) {
     GST_WARNING
-        ("Could not query GstGLDisplay from downstream (peer query failed)");
+        ("Could not query GstGLContext from downstream (peer query failed)");
   }
 
-  id_value = gst_structure_get_value (structure, "gstgldisplay");
+  id_value = gst_structure_get_value (structure, "gstglcontext");
   if (G_VALUE_HOLDS_POINTER (id_value)) {
     /* at least one gl element is after in our gl chain */
-    filter->display =
-        gst_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
-    filter->context = gst_gl_display_get_context (filter->display);
+    filter->context =
+        gst_object_ref (GST_GL_CONTEXT (g_value_get_pointer (id_value)));
   } else {
     GError *error = NULL;
 
-    GST_INFO ("Creating GstGLDisplay");
-    filter->display = gst_gl_display_new ();
+    GST_INFO ("Creating GstGLContext");
     filter->context = gst_gl_context_new (filter->display);
 
     if (!gst_gl_context_create (filter->context, filter->other_context, &error)) {
@@ -281,6 +304,8 @@ gst_gl_filter_start (GstBaseTransform * bt)
       return FALSE;
     }
   }
+
+  gst_query_unref (context_query);
 
   if (filter_class->onStart)
     filter_class->onStart (filter);
@@ -1066,6 +1091,9 @@ gst_gl_filter_transform (GstBaseTransform * bt, GstBuffer * inbuf,
 
   filter = GST_GL_FILTER (bt);
   filter_class = GST_GL_FILTER_GET_CLASS (bt);
+
+  if (!gst_gl_ensure_display (filter, &filter->display))
+    return GST_FLOW_NOT_NEGOTIATED;
 
   g_assert (filter_class->filter || filter_class->filter_texture);
 

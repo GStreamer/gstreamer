@@ -65,7 +65,6 @@ struct _GstGLFilter
   GstBufferPool     *pool;
 
   GstGLDisplay      *display;
-  GstGLContext      *context;
 
   GstVideoInfo       in_info;
   GstVideoInfo       out_info;
@@ -81,6 +80,7 @@ struct _GstGLFilter
 
   GstGLShader       *default_shader;
 
+  GstGLContext      *context;
   GstGLContext      *other_context;
 };
 

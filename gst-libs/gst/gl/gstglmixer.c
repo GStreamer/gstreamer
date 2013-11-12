@@ -60,6 +60,8 @@ static gboolean gst_gl_mixer_sink_event (GstCollectPads * pads,
     GstCollectData * cdata, GstEvent * event, GstGLMixer * mix);
 static gboolean gst_gl_mixer_src_setcaps (GstPad * pad, GstGLMixer * mix,
     GstCaps * caps);
+static void gst_gl_mixer_set_context (GstElement * element,
+    GstContext * context);
 
 enum
 {
@@ -346,15 +348,21 @@ gst_gl_mixer_sink_query (GstCollectPads * pads, GstCollectData * data,
       ret = TRUE;
       break;
     }
+    case GST_QUERY_CONTEXT:
+    {
+      ret = gst_gl_handle_context_query ((GstElement *) mix, query,
+          &mix->display);
+      break;
+    }
     case GST_QUERY_CUSTOM:
     {
       /* mix is a sink in terms of gl chain, so we are sharing the gldisplay that
        * comes from src pad with every display of the sink pads */
       GstStructure *structure = gst_query_writable_structure (query);
 
-      if (gst_structure_has_name (structure, "gstgldisplay")) {
-        gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
-            mix->display, NULL);
+      if (gst_structure_has_name (structure, "gstglcontext")) {
+        gst_structure_set (structure, "gstglcontext", G_TYPE_POINTER,
+            mix->context, NULL);
       } else {
         ret = gst_collect_pads_query_default (pads, data, query, FALSE);
       }
@@ -513,6 +521,7 @@ gst_gl_mixer_class_init (GstGLMixerClass * klass)
       GST_DEBUG_FUNCPTR (gst_gl_mixer_request_new_pad);
   element_class->release_pad = GST_DEBUG_FUNCPTR (gst_gl_mixer_release_pad);
   element_class->change_state = GST_DEBUG_FUNCPTR (gst_gl_mixer_change_state);
+  element_class->set_context = GST_DEBUG_FUNCPTR (gst_gl_mixer_set_context);
 
   /* Register the pad class */
   g_type_class_ref (GST_TYPE_GL_MIXER_PAD);
@@ -845,6 +854,14 @@ gst_gl_mixer_read_qos (GstGLMixer * mix, gdouble * proportion,
   GST_OBJECT_UNLOCK (mix);
 }
 
+static void
+gst_gl_mixer_set_context (GstElement * element, GstContext * context)
+{
+  GstGLMixer *mix = GST_GL_MIXER (element);
+
+  gst_gl_handle_set_context (element, context, &mix->display);
+}
+
 static gboolean
 gst_gl_mixer_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
@@ -852,6 +869,12 @@ gst_gl_mixer_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONTEXT:
+    {
+      res = gst_gl_handle_context_query ((GstElement *) mix, query,
+          &mix->display);
+      break;
+    }
     case GST_QUERY_POSITION:
     {
       GstFormat format;
@@ -918,27 +941,29 @@ gst_gl_mixer_activate (GstGLMixer * mix, gboolean activate)
 {
   if (activate) {
     GstStructure *structure;
-    GstQuery *display_query;
+    GstQuery *context_query;
     const GValue *id_value;
 
-    structure = gst_structure_new_empty ("gstgldisplay");
-    display_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
-
-    if (!gst_pad_peer_query (mix->srcpad, display_query)) {
-      GST_WARNING
-          ("Could not query GstGLDisplay from downstream (peer query failed)");
+    if (!gst_gl_ensure_display (mix, &mix->display)) {
+      return FALSE;
     }
 
-    id_value = gst_structure_get_value (structure, "gstgldisplay");
+    structure = gst_structure_new_empty ("gstglcontext");
+    context_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
+
+    if (!gst_pad_peer_query (mix->srcpad, context_query)) {
+      GST_WARNING
+          ("Could not query GstGLContext from downstream (peer query failed)");
+    }
+
+    id_value = gst_structure_get_value (structure, "gstglcontext");
     if (G_VALUE_HOLDS_POINTER (id_value)) {
-      mix->display =
-          gst_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
-      mix->context = gst_gl_display_get_context (mix->display);
+      mix->context =
+          gst_object_ref (GST_GL_CONTEXT (g_value_get_pointer (id_value)));
     } else {
       GError *error = NULL;
 
       GST_INFO ("Creating GstGLDisplay");
-      mix->display = gst_gl_display_new ();
       mix->context = gst_gl_context_new (mix->display);
       gst_gl_display_set_context (mix->display, mix->context);
 

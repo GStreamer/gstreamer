@@ -102,4 +102,10 @@ gboolean gst_gl_context_check_framebuffer_status (GstGLContext * context);
 void gst_gl_context_set_error (GstGLContext * context, const char * format, ...);
 gchar *gst_gl_context_get_error (void);
 
+gboolean gst_gl_ensure_display (gpointer element, GstGLDisplay **display_ptr);
+gboolean gst_gl_handle_set_context (GstElement * element, GstContext * context, 
+    GstGLDisplay ** display);
+gboolean gst_gl_handle_context_query (GstElement * element, GstQuery * query, 
+    GstGLDisplay ** display);
+
 #endif /* __GST_GL_UTILS_H__ */

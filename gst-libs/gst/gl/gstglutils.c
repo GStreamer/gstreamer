@@ -365,3 +365,227 @@ gst_gl_context_del_shader (GstGLContext * context, GstGLShader * shader)
 {
   gst_object_unref (shader);
 }
+
+static gboolean
+gst_gl_display_found (GstElement * element, GstGLDisplay * display)
+{
+  if (display) {
+    GST_INFO_OBJECT (element, "already have a display (%p)", display);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+GST_DEBUG_CATEGORY_STATIC (GST_CAT_CONTEXT);
+
+static gboolean
+context_pad_query (const GValue * item, GValue * value, gpointer user_data)
+{
+  GstPad *pad = g_value_get_object (item);
+  GstQuery *query = user_data;
+  gboolean res;
+
+  res = gst_pad_peer_query (pad, query);
+
+  if (res) {
+    g_value_set_boolean (value, TRUE);
+    return FALSE;
+  }
+
+  GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, pad, "context pad peer query failed");
+  return TRUE;
+}
+
+static gboolean
+run_context_query (GstElement * element, GstQuery * query,
+    GstPadDirection direction)
+{
+  GstIterator *it;
+  GstIteratorFoldFunction func = context_pad_query;
+  GValue res = { 0 };
+
+  g_value_init (&res, G_TYPE_BOOLEAN);
+  g_value_set_boolean (&res, FALSE);
+
+  /* Ask neighbor */
+  if (direction == GST_PAD_SRC)
+    it = gst_element_iterate_src_pads (element);
+  else
+    it = gst_element_iterate_sink_pads (element);
+
+  while (gst_iterator_fold (it, func, &res, query) == GST_ITERATOR_RESYNC)
+    gst_iterator_resync (it);
+
+  gst_iterator_free (it);
+
+  return g_value_get_boolean (&res);
+}
+
+static void
+gst_gl_display_context_prepare (GstElement * element,
+    GstGLDisplay ** display_ptr)
+{
+  GstContext *ctxt;
+  GstQuery *query;
+
+  if (!GST_CAT_CONTEXT)
+    GST_DEBUG_CATEGORY_GET (GST_CAT_CONTEXT, "GST_CONTEXT");
+
+  /*  2a) Query downstream with GST_QUERY_CONTEXT for the context and
+   *      check if downstream already has a context of the specific type
+   *  2b) Query upstream as above.
+   */
+  ctxt = NULL;
+  query = gst_query_new_context (GST_GL_DISPLAY_CONTEXT_TYPE);
+  if (run_context_query (element, query, GST_PAD_SRC)) {
+    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+        "found context (%p) in downstream query", ctxt);
+    gst_query_parse_context (query, &ctxt);
+  } else if (run_context_query (element, query, GST_PAD_SINK)) {
+    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+        "found context (%p) in upstream query", ctxt);
+    gst_query_parse_context (query, &ctxt);
+  } else {
+    /* 3) Post a GST_MESSAGE_NEED_CONTEXT message on the bus with
+     *    the required context type and afterwards check if a
+     *    usable context was set now as in 1). The message could
+     *    be handled by the parent bins of the element and the
+     *    application.
+     */
+    GstMessage *msg;
+
+    GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+        "posting need context message");
+    msg = gst_message_new_need_context (GST_OBJECT_CAST (element),
+        GST_GL_DISPLAY_CONTEXT_TYPE);
+    gst_element_post_message (element, msg);
+  }
+
+  /*
+   * Whomever responds to the need-context message performs a
+   * GstElement::set_context() with the required context in which the element
+   * is required to update the display_ptr or call gst_gl_handle_set_context().
+   */
+  if (ctxt) {
+    if (gst_context_has_context_type (ctxt, GST_GL_DISPLAY_CONTEXT_TYPE)) {
+      gst_context_get_gl_display (ctxt, display_ptr);
+    }
+  }
+
+  gst_query_unref (query);
+}
+
+/*  4) Create a context by itself and post a GST_MESSAGE_HAVE_CONTEXT
+ *     message.
+ */
+static void
+gst_gl_display_context_propagate (GstElement * element, GstGLDisplay * display)
+{
+  GstContext *context;
+  GstMessage *msg;
+
+  if (!display) {
+    GST_ERROR_OBJECT (element, "Could not get GL display connection");
+    return;
+  }
+
+  context = gst_context_new (GST_GL_DISPLAY_CONTEXT_TYPE, TRUE);
+  gst_context_set_gl_display (context, display);
+
+  GST_CAT_INFO_OBJECT (GST_CAT_CONTEXT, element,
+      "posting have context (%p) message with display (%p)", context, display);
+  msg = gst_message_new_have_context (GST_OBJECT_CAST (element), context);
+  gst_element_post_message (GST_ELEMENT_CAST (element), msg);
+}
+
+gboolean
+gst_gl_ensure_display (gpointer element, GstGLDisplay ** display_ptr)
+{
+  GstGLDisplay *display;
+
+  g_return_val_if_fail (element != NULL, FALSE);
+  g_return_val_if_fail (display_ptr != NULL, FALSE);
+
+  /*  1) Check if the element already has a context of the specific
+   *     type.
+   */
+  display = *display_ptr;
+  if (gst_gl_display_found (element, display))
+    return TRUE;
+
+  gst_gl_display_context_prepare (element, display_ptr);
+
+  /* Neighbour found and it updated the display */
+  if (gst_gl_display_found (element, *display_ptr))
+    return TRUE;
+
+  /* If no neighboor, or application not interested, use system default */
+  display = gst_gl_display_new ();
+
+  *display_ptr = display;
+
+  gst_gl_display_context_propagate (element, display);
+
+  return display != NULL;
+}
+
+gboolean
+gst_gl_handle_set_context (GstElement * element, GstContext * context,
+    GstGLDisplay ** display)
+{
+  GstGLDisplay *replacement = NULL;
+  const gchar *context_type;
+
+  g_return_val_if_fail (display, FALSE);
+
+  if (!context)
+    return FALSE;
+
+  context_type = gst_context_get_context_type (context);
+
+  if (g_strcmp0 (context_type, GST_GL_DISPLAY_CONTEXT_TYPE) == 0) {
+    if (!gst_context_get_gl_display (context, &replacement)) {
+      GST_WARNING_OBJECT (element, "Failed to get display from context");
+      return FALSE;
+    }
+  }
+
+  if (replacement)
+    gst_object_replace ((GstObject **) display, (GstObject *) replacement);
+
+  return TRUE;
+}
+
+gboolean
+gst_gl_handle_context_query (GstElement * element, GstQuery * query,
+    GstGLDisplay ** display)
+{
+  gboolean res = FALSE;
+  const gchar *context_type;
+  GstContext *context, *old_context;
+
+  g_return_val_if_fail (element != NULL, FALSE);
+  g_return_val_if_fail (query != NULL, FALSE);
+  g_return_val_if_fail (display != NULL, FALSE);
+
+  gst_query_parse_context_type (query, &context_type);
+
+  if (g_strcmp0 (context_type, GST_GL_DISPLAY_CONTEXT_TYPE) == 0) {
+
+    gst_query_parse_context (query, &old_context);
+
+    if (old_context)
+      context = gst_context_copy (old_context);
+    else
+      context = gst_context_new (GST_GL_DISPLAY_CONTEXT_TYPE, TRUE);
+
+    gst_context_set_gl_display (context, *display);
+    gst_query_set_context (query, context);
+    gst_context_unref (context);
+
+    res = *display != NULL;
+  }
+
+  return res;
+}

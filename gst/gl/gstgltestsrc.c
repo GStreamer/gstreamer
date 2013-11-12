@@ -78,6 +78,8 @@ static gboolean gst_gl_test_src_is_seekable (GstBaseSrc * psrc);
 static gboolean gst_gl_test_src_do_seek (GstBaseSrc * bsrc,
     GstSegment * segment);
 static gboolean gst_gl_test_src_query (GstBaseSrc * bsrc, GstQuery * query);
+static void gst_gl_test_src_set_context (GstElement * element,
+    GstContext * context);
 
 static void gst_gl_test_src_get_times (GstBaseSrc * basesrc,
     GstBuffer * buffer, GstClockTime * start, GstClockTime * end);
@@ -159,6 +161,8 @@ gst_gl_test_src_class_init (GstGLTestSrcClass * klass)
   gst_element_class_add_pad_template (element_class,
       gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
           gst_caps_from_string (GST_GL_DOWNLOAD_VIDEO_CAPS)));
+
+  element_class->set_context = gst_gl_test_src_set_context;
 
   gstbasesrc_class->set_caps = gst_gl_test_src_setcaps;
   gstbasesrc_class->is_seekable = gst_gl_test_src_is_seekable;
@@ -336,16 +340,29 @@ context_error:
   }
 }
 
+static void
+gst_gl_test_src_set_context (GstElement * element, GstContext * context)
+{
+  GstGLTestSrc *src = GST_GL_TEST_SRC (element);
+
+  gst_gl_handle_set_context (element, context, &src->display);
+}
 
 static gboolean
 gst_gl_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
 {
-  gboolean res;
+  gboolean res = FALSE;
   GstGLTestSrc *src;
 
   src = GST_GL_TEST_SRC (bsrc);
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONTEXT:
+    {
+      res = gst_gl_handle_context_query ((GstElement *) src, query,
+          &src->display);
+      break;
+    }
     case GST_QUERY_CONVERT:
     {
       GstFormat src_fmt, dest_fmt;
@@ -544,28 +561,29 @@ gst_gl_test_src_start (GstBaseSrc * basesrc)
 {
   GstGLTestSrc *src = GST_GL_TEST_SRC (basesrc);
   GstStructure *structure;
-  GstQuery *display_query;
+  GstQuery *context_query;
   const GValue *id_value;
 
-  structure = gst_structure_new_empty ("gstgldisplay");
-  display_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
+  if (!gst_gl_ensure_display (src, &src->display))
+    return FALSE;
 
-  if (!gst_pad_peer_query (basesrc->srcpad, display_query)) {
+  structure = gst_structure_new_empty ("gstglcontext");
+  context_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
+
+  if (!gst_pad_peer_query (basesrc->srcpad, context_query)) {
     GST_WARNING
-        ("Could not query GstGLDisplay from downstream (peer query failed)");
+        ("Could not query GstGLContext from downstream (peer query failed)");
   }
 
-  id_value = gst_structure_get_value (structure, "gstgldisplay");
+  id_value = gst_structure_get_value (structure, "gstglcontext");
   if (G_VALUE_HOLDS_POINTER (id_value)) {
     /* at least one gl element is after in our gl chain */
-    src->display =
-        gst_object_ref (GST_GL_DISPLAY (g_value_get_pointer (id_value)));
-    src->context = gst_gl_display_get_context (src->display);
+    src->context =
+        gst_object_ref (GST_GL_CONTEXT (g_value_get_pointer (id_value)));
   } else {
     GError *error = NULL;
 
     GST_INFO ("Creating GstGLDisplay");
-    src->display = gst_gl_display_new ();
     src->context = gst_gl_context_new (src->display);
     gst_gl_display_set_context (src->display, src->context);
 

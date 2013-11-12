@@ -121,6 +121,8 @@ static void gst_glimage_sink_get_property (GObject * object, guint prop_id,
 static gboolean gst_glimage_sink_stop (GstBaseSink * bsink);
 
 static gboolean gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query);
+static void gst_glimage_sink_set_context (GstElement * element,
+    GstContext * context);
 
 static GstStateChangeReturn
 gst_glimage_sink_change_state (GstElement * element, GstStateChange transition);
@@ -245,7 +247,7 @@ gst_glimage_sink_class_init (GstGLImageSinkClass * klass)
   gobject_class->finalize = gst_glimage_sink_finalize;
 
   gstelement_class->change_state = gst_glimage_sink_change_state;
-
+  gstelement_class->set_context = gst_glimage_sink_set_context;
   gstbasesink_class->query = GST_DEBUG_FUNCPTR (gst_glimage_sink_query);
   gstbasesink_class->set_caps = gst_glimage_sink_set_caps;
   gstbasesink_class->get_times = gst_glimage_sink_get_times;
@@ -373,12 +375,18 @@ gst_glimage_sink_query (GstBaseSink * bsink, GstQuery * query)
   gboolean res = FALSE;
 
   switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_CONTEXT:
+    {
+      return gst_gl_handle_context_query ((GstElement *) glimage_sink, query,
+          &glimage_sink->display);
+      break;
+    }
     case GST_QUERY_CUSTOM:
     {
       GstStructure *structure = gst_query_writable_structure (query);
-      if (gst_structure_has_name (structure, "gstgldisplay")) {
-        gst_structure_set (structure, "gstgldisplay", G_TYPE_POINTER,
-            glimage_sink->display, NULL);
+      if (gst_structure_has_name (structure, "gstglcontext")) {
+        gst_structure_set (structure, "gstglcontext", G_TYPE_POINTER,
+            glimage_sink->context, NULL);
         res = TRUE;
       } else
         res = GST_BASE_SINK_CLASS (parent_class)->query (bsink, query);
@@ -420,6 +428,14 @@ gst_glimage_sink_stop (GstBaseSink * bsink)
   return TRUE;
 }
 
+static void
+gst_glimage_sink_set_context (GstElement * element, GstContext * context)
+{
+  GstGLImageSink *gl_sink = GST_GLIMAGE_SINK (element);
+
+  gst_gl_handle_set_context (element, context, &gl_sink->display);
+}
+
 static GstStateChangeReturn
 gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
 {
@@ -439,8 +455,9 @@ gst_glimage_sink_change_state (GstElement * element, GstStateChange transition)
         GstGLWindow *window;
         GError *error = NULL;
 
-        GST_INFO ("Creating GstGLDisplay");
-        glimage_sink->display = gst_gl_display_new ();
+        if (!gst_gl_ensure_display (glimage_sink, &glimage_sink->display))
+          return GST_STATE_CHANGE_FAILURE;
+
         glimage_sink->context = gst_gl_context_new (glimage_sink->display);
         gst_gl_display_set_context (glimage_sink->display,
             glimage_sink->context);
@@ -690,6 +707,9 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
       GST_VIDEO_SINK_HEIGHT (glimage_sink) < 1) {
     return GST_FLOW_NOT_NEGOTIATED;
   }
+
+  if (!gst_gl_ensure_display (bsink, &glimage_sink->display))
+    return GST_FLOW_NOT_NEGOTIATED;
 
   if (!gst_video_frame_map (&frame, &glimage_sink->info, buf,
           GST_MAP_READ | GST_MAP_GL)) {
