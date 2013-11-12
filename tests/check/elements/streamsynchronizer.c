@@ -162,7 +162,7 @@ my_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return TRUE;
 }
 
-static void
+static gpointer
 my_push_thread (MyPushInfo * pushinfo)
 {
   GList *tmp;
@@ -174,6 +174,9 @@ my_push_thread (MyPushInfo * pushinfo)
     else
       gst_pad_push (pushinfo->pad, GST_BUFFER (tmp->data));
   }
+
+  GST_INFO ("leaving thread");
+  return NULL;
 }
 
 GST_START_TEST (test_basic)
@@ -271,6 +274,9 @@ GST_START_TEST (test_basic)
   g_mutex_unlock (&push_mutex);
 
   fail_if (expected != NULL);
+
+  /* wait for thread to exit before freeing things */
+  g_thread_join (thread);
 
   /* Cleanup */
   g_list_free (to_push);
