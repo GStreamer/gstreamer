@@ -999,6 +999,8 @@ GST_START_TEST (test_rtx_two_missing)
   GstEvent *out_event;
   gint jb_latency_ms = 200;
   gint i;
+  GstStructure *rtx_stats;
+  const GValue *rtx_stat;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
 
   setup_testharness (&data);
@@ -1110,6 +1112,17 @@ GST_START_TEST (test_rtx_two_missing)
   }
   /* should still have only seen 1 packet lost events */
   g_assert_cmpint (data.lost_event_count, ==, 1);
+
+  g_object_get (data.jitter_buffer, "stats", &rtx_stats, NULL);
+
+  rtx_stat = gst_structure_get_value (rtx_stats, "count");
+  g_assert_cmpuint (g_value_get_uint64 (rtx_stat), ==, 5);
+
+  rtx_stat = gst_structure_get_value (rtx_stats, "success-count");
+  g_assert_cmpuint (g_value_get_uint64 (rtx_stat), ==, 1);
+
+  rtx_stat = gst_structure_get_value (rtx_stats, "rtx-rtt");
+  g_assert_cmpuint (g_value_get_uint64 (rtx_stat), ==, 0);
 
   destroy_testharness (&data);
 }
