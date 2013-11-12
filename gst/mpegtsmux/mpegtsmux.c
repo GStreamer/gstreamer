@@ -92,6 +92,7 @@
  * with newer GLib versions (>= 2.31.0) */
 #define GLIB_DISABLE_DEPRECATION_WARNINGS
 
+#include <gst/tag/tag.h>
 #include <gst/video/video.h>
 
 #include "mpegtsmux.h"
@@ -340,6 +341,12 @@ mpegtsmux_pad_reset (MpegTsPadData * pad_data)
   /* reference owned elsewhere */
   pad_data->stream = NULL;
   pad_data->prog = NULL;
+
+  if (pad_data->language) {
+    g_free (pad_data->language);
+    pad_data->language = NULL;
+  }
+
 }
 
 static void
@@ -646,7 +653,8 @@ mpegtsmux_create_stream (MpegTsMux * mux, MpegTsPadData * ts_data)
   }
 
   if (st != TSMUX_ST_RESERVED) {
-    ts_data->stream = tsmux_create_stream (mux->tsmux, st, ts_data->pid);
+    ts_data->stream = tsmux_create_stream (mux->tsmux, st, ts_data->pid,
+        ts_data->language);
   } else {
     GST_DEBUG_OBJECT (pad, "Failed to determine stream type");
   }
@@ -781,6 +789,7 @@ mpegtsmux_sink_event (GstCollectPads * pads, GstCollectData * data,
   gboolean forward = TRUE;
 #ifndef GST_DISABLE_GST_DEBUG
   GstPad *pad;
+  MpegTsPadData *pad_data = (MpegTsPadData *) data;
 
   pad = data->pad;
 #endif
@@ -816,6 +825,32 @@ mpegtsmux_sink_event (GstCollectPads * pads, GstCollectData * data,
 
       mux->pending_key_unit_ts = running_time;
       gst_event_replace (&mux->force_key_unit_event, event);
+      break;
+    }
+    case GST_EVENT_TAG:{
+      GstTagList *list;
+      gchar *lang = NULL;
+
+      GST_DEBUG_OBJECT (mux, "received tag event");
+      gst_event_parse_tag (event, &list);
+
+      /* Matroska wants ISO 639-2B code, taglist most likely contains 639-1 */
+      if (gst_tag_list_get_string (list, GST_TAG_LANGUAGE_CODE, &lang)) {
+        const gchar *lang_code;
+
+        lang_code = gst_tag_get_language_code_iso_639_2B (lang);
+        if (lang_code) {
+          GST_DEBUG_OBJECT (pad, "Setting language to '%s'", lang_code);
+          pad_data->language = g_strdup (lang_code);
+        } else {
+          GST_WARNING_OBJECT (pad, "Did not get language code for '%s'", lang);
+        }
+        g_free (lang);
+      }
+
+      /* handled this, don't want collectpads to forward it downstream */
+      res = TRUE;
+      forward = FALSE;
       break;
     }
     default:

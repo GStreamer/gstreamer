@@ -189,7 +189,7 @@ void 		tsmux_set_pmt_interval          (TsMuxProgram *program, guint interval);
 guint 		tsmux_get_pmt_interval   	(TsMuxProgram *program);
 
 /* stream management */
-TsMuxStream *	tsmux_create_stream 		(TsMux *mux, TsMuxStreamType stream_type, guint16 pid);
+TsMuxStream *	tsmux_create_stream 		(TsMux *mux, TsMuxStreamType stream_type, guint16 pid, gchar *language);
 TsMuxStream *	tsmux_find_stream 		(TsMux *mux, guint16 pid);
 
 void 		tsmux_program_add_stream 	(TsMuxProgram *program, TsMuxStream *stream);

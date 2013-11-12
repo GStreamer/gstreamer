@@ -203,6 +203,9 @@ struct TsMuxStream {
   gint audio_sampling;
   gint audio_channels;
   gint audio_bitrate;
+
+  gboolean is_dvb_sub;
+  gchar language[4];
 };
 
 /* stream management */

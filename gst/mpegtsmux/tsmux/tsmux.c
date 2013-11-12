@@ -419,7 +419,8 @@ tsmux_get_new_pid (TsMux * mux)
  * Returns: a new #TsMuxStream.
  */
 TsMuxStream *
-tsmux_create_stream (TsMux * mux, TsMuxStreamType stream_type, guint16 pid)
+tsmux_create_stream (TsMux * mux, TsMuxStreamType stream_type, guint16 pid,
+    gchar * language)
 {
   TsMuxStream *stream;
   guint16 new_pid;
@@ -440,6 +441,11 @@ tsmux_create_stream (TsMux * mux, TsMuxStreamType stream_type, guint16 pid)
 
   mux->streams = g_list_prepend (mux->streams, stream);
   mux->nb_streams++;
+
+  if (language)
+    g_strlcat (stream->language, language, 3 * sizeof (gchar));
+  else
+    g_strlcat (stream->language, "eng", 3 * sizeof (gchar));
 
   return stream;
 }

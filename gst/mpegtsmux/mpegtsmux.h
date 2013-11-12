@@ -208,6 +208,8 @@ struct MpegTsPadData {
   gint prog_id;
   /* program this stream belongs to == mux->programs[prog_id] */
   TsMuxProgram *prog;
+
+  gchar *language;
 };
 
 GType mpegtsmux_get_type (void);

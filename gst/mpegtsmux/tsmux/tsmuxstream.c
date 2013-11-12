@@ -181,6 +181,7 @@ tsmux_stream_new (guint16 pid, TsMuxStreamType stream_type)
     case TSMUX_ST_PS_DVB_SUBPICTURE:
       /* private stream 1 */
       stream->id = 0xBD;
+      stream->is_dvb_sub = TRUE;
       stream->stream_type = TSMUX_ST_PRIVATE_DATA;
       stream->pi.flags |=
           TSMUX_PACKET_FLAG_PES_FULL_HEADER |
@@ -877,13 +878,6 @@ tsmux_stream_get_es_descrs (TsMuxStream * stream, guint8 * buf, guint16 * len)
     case TSMUX_ST_PS_AUDIO_LPCM:
       /* FIXME */
       break;
-    case TSMUX_ST_PS_DVB_SUBPICTURE:
-      /* tag */
-      *pos++ = 0x59;
-      /* FIXME empty descriptor for now;
-       * should be provided by upstream in event or so ? */
-      *pos = 0;
-      break;
     case TSMUX_ST_PS_TELETEXT:
       /* tag */
       *pos++ = 0x56;
@@ -891,6 +885,26 @@ tsmux_stream_get_es_descrs (TsMuxStream * stream, guint8 * buf, guint16 * len)
        * should be provided by upstream in event or so ? */
       *pos = 0;
       break;
+    case TSMUX_ST_PS_DVB_SUBPICTURE:
+      /* falltrough ...
+       * that should never happen anyway as
+       * dvb subtitles are private data */
+    case TSMUX_ST_PRIVATE_DATA:
+      if (stream->is_dvb_sub) {
+        GST_DEBUG ("Stream language %s", stream->language);
+        *pos++ = 0x59;          /* dvb subtitles */
+        *pos++ = 0x08;          /* descriptor length */
+        *pos++ = stream->language[0];   /* Language */
+        *pos++ = stream->language[1];
+        *pos++ = stream->language[2];
+        *pos++ = 0x10;          /* Simple DVB subtitles with no monitor aspect ratio critical
+                                   FIXME, how do we make it settable? */
+        *pos++ = 0x00;          /* Default composition page ID */
+        *pos++ = 0x01;
+        *pos++ = 0x01;          /* Default ancillary_page_id */
+        *pos++ = 0x52;
+        break;
+      }
     default:
       break;
   }
