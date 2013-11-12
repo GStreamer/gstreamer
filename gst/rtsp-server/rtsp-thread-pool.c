@@ -141,6 +141,14 @@ gst_rtsp_thread_reuse (GstRTSPThread * thread)
   return g_atomic_int_add (&impl->reused, 1) > 0;
 }
 
+static gboolean
+do_quit (GstRTSPThread * thread)
+{
+  GST_DEBUG ("stop mainloop of thread %p", thread);
+  g_main_loop_quit (thread->loop);
+  return FALSE;
+}
+
 /**
  * gst_rtsp_thread_stop:
  * @thread: (transfer full): a #GstRTSPThread
@@ -158,11 +166,15 @@ gst_rtsp_thread_stop (GstRTSPThread * thread)
   GST_DEBUG ("stop thread %p", thread);
 
   if (g_atomic_int_dec_and_test (&impl->reused)) {
-    GST_DEBUG ("stop mainloop of thread %p", thread);
-    g_main_loop_quit (thread->loop);
-  }
+    GSource *source;
 
-  gst_rtsp_thread_unref (thread);
+    GST_DEBUG ("add idle source to quit mainloop of thread %p", thread);
+    source = g_idle_source_new ();
+    g_source_set_callback (source, (GSourceFunc) do_quit,
+        thread, (GDestroyNotify) gst_rtsp_thread_unref);
+    g_source_attach (source, thread->context);
+    g_source_unref (source);
+  }
 }
 
 #define GST_RTSP_THREAD_POOL_GET_PRIVATE(obj)  \
@@ -453,7 +465,7 @@ default_get_thread (GstRTSPThreadPool * pool,
           thread = make_thread (pool, type, ctx);
 
           if (!g_thread_pool_push (klass->pool, gst_rtsp_thread_ref (thread),
-              &error))
+                  &error))
             goto thread_error;
         }
         g_queue_push_tail (&priv->threads, thread);
@@ -465,7 +477,7 @@ default_get_thread (GstRTSPThreadPool * pool,
       thread = make_thread (pool, type, ctx);
 
       if (!g_thread_pool_push (klass->pool, gst_rtsp_thread_ref (thread),
-          &error))
+              &error))
         goto thread_error;
       break;
     default:
@@ -535,8 +547,9 @@ gst_rtsp_thread_pool_cleanup (void)
 {
   GstRTSPThreadPoolClass *klass;
 
-  klass = GST_RTSP_THREAD_POOL_CLASS (
-      g_type_class_peek (gst_rtsp_thread_pool_get_type ()));
+  klass =
+      GST_RTSP_THREAD_POOL_CLASS (g_type_class_peek
+      (gst_rtsp_thread_pool_get_type ()));
   if (klass->pool != NULL) {
     g_thread_pool_free (klass->pool, FALSE, TRUE);
     klass->pool = NULL;
