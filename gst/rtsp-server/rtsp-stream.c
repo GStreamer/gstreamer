@@ -1996,3 +1996,71 @@ gst_rtsp_stream_remove_transport (GstRTSPStream * stream,
 
   return res;
 }
+
+/**
+ * gst_rtsp_stream_get_rtp_socket:
+ * @stream: a #GstRTSPStream
+ * @family: the socket family
+ *
+ * Get the RTP socket from @stream for a @family.
+ *
+ * @stream must be joined to a bin.
+ *
+ * Returns: the RTP socket or %NULL if no socket could be allocated for @family.
+ *     Unref after usage
+ */
+GSocket *
+gst_rtsp_stream_get_rtp_socket (GstRTSPStream * stream, GSocketFamily family)
+{
+  GstRTSPStreamPrivate *priv = GST_RTSP_STREAM_GET_PRIVATE (stream);
+  GSocket *socket;
+  gchar *name;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+  g_return_val_if_fail (family == G_SOCKET_FAMILY_IPV4 ||
+      family == G_SOCKET_FAMILY_IPV6, NULL);
+  g_return_val_if_fail (priv->udpsink[0], NULL);
+
+  if (family == G_SOCKET_FAMILY_IPV6)
+    name = "socket-v6";
+  else
+    name = "socket";
+
+  g_object_get (priv->udpsink[0], name, &socket, NULL);
+
+  return socket;
+}
+
+/**
+ * gst_rtsp_stream_get_rtcp_socket:
+ * @stream: a #GstRTSPStream
+ * @family: the socket family
+ *
+ * Get the RTCP socket from @stream for a @family.
+ *
+ * @stream must be joined to a bin.
+ *
+ * Returns: the RTCP socket or %NULL if no socket could be allocated for
+ *     @family. Unref after usage
+ */
+GSocket *
+gst_rtsp_stream_get_rtcp_socket (GstRTSPStream * stream, GSocketFamily family)
+{
+  GstRTSPStreamPrivate *priv = GST_RTSP_STREAM_GET_PRIVATE (stream);
+  GSocket *socket;
+  gchar *name;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+  g_return_val_if_fail (family == G_SOCKET_FAMILY_IPV4 ||
+      family == G_SOCKET_FAMILY_IPV6, NULL);
+  g_return_val_if_fail (priv->udpsink[1], NULL);
+
+  if (family == G_SOCKET_FAMILY_IPV6)
+    name = "socket-v6";
+  else
+    name = "socket";
+
+  g_object_get (priv->udpsink[1], name, &socket, NULL);
+
+  return socket;
+}

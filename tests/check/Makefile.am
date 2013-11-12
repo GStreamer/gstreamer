@@ -31,6 +31,7 @@ check_PROGRAMS = \
 	gst/mountpoints \
 	gst/mediafactory \
 	gst/media \
+	gst/stream \
 	gst/addresspool \
 	gst/threadpool \
 	gst/permissions \

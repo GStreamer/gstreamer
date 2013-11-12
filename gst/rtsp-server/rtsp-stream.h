@@ -122,6 +122,11 @@ gboolean          gst_rtsp_stream_add_transport    (GstRTSPStream *stream,
 gboolean          gst_rtsp_stream_remove_transport (GstRTSPStream *stream,
                                                     GstRTSPStreamTransport *trans);
 
+GSocket *         gst_rtsp_stream_get_rtp_socket   (GstRTSPStream *stream,
+                                                    GSocketFamily family);
+GSocket *         gst_rtsp_stream_get_rtcp_socket  (GstRTSPStream *stream,
+                                                    GSocketFamily family);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_STREAM_H__ */

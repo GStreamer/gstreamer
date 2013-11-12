@@ -522,6 +522,9 @@ gst_rtsp_stream_recv_rtp
 
 gst_rtsp_stream_add_transport
 gst_rtsp_stream_remove_transport
+
+gst_rtsp_stream_get_rtp_socket
+gst_rtsp_stream_get_rtcp_socket
 <SUBSECTION Standard>
 GST_RTSP_STREAM_CAST
 GST_RTSP_STREAM_CLASS_CAST
