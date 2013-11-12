@@ -1934,8 +1934,34 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
   /* we always try to parse the url first */
   if (strcmp (uristr, "*") == 0) {
     /* special case where we have * as uri, keep uri = NULL */
-  } else if (gst_rtsp_url_parse (uristr, &uri) != GST_RTSP_OK)
-    goto bad_request;
+  } else if (gst_rtsp_url_parse (uristr, &uri) != GST_RTSP_OK) {
+    /* check if the uristr is an absolute path <=> scheme and host information
+     * is missing */
+    gchar *scheme;
+
+    scheme = g_uri_parse_scheme (uristr);
+    if (scheme == NULL && g_str_has_prefix (uristr, "/")) {
+      gchar *absolute_uristr = NULL;
+
+      GST_WARNING_OBJECT (client, "request doesn't contain absolute url");
+      if (priv->server_ip == NULL) {
+        GST_WARNING_OBJECT (client, "host information missing");
+        goto bad_request;
+      }
+
+      absolute_uristr = g_strdup_printf ("rtsp://%s%s", priv->server_ip, uristr);
+
+      GST_DEBUG_OBJECT (client, "absolute url: %s", absolute_uristr);
+      if (gst_rtsp_url_parse (absolute_uristr, &uri) != GST_RTSP_OK) {
+        g_free (absolute_uristr);
+        goto bad_request;
+      }
+      g_free (absolute_uristr);
+    } else {
+      g_free (scheme);
+      goto bad_request;
+    }
+  }
 
   /* get the session if there is any */
   res = gst_rtsp_message_get_header (request, GST_RTSP_HDR_SESSION, &sessid, 0);

@@ -155,6 +155,9 @@ GST_START_TEST (test_request)
   GstRTSPClient *client;
   GstRTSPMessage request = { 0, };
   gchar *str;
+  GstRTSPConnection *conn;
+  GSocket *sock;
+  GError *error = NULL;
 
   client = gst_rtsp_client_new ();
 
@@ -183,6 +186,41 @@ GST_START_TEST (test_request)
   fail_unless (gst_rtsp_client_handle_message (client,
           &request) == GST_RTSP_OK);
 
+  gst_rtsp_message_unset (&request);
+
+  /* OPTIONS with an absolute path instead of an absolute url */
+  /* set host information */
+  sock = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_STREAM,
+      G_SOCKET_PROTOCOL_TCP, &error);
+  g_assert_no_error (error);
+  gst_rtsp_connection_create_from_socket (sock, "localhost", 444, NULL, &conn);
+  fail_unless (gst_rtsp_client_set_connection (client, conn));
+  g_object_unref (sock);
+
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_OPTIONS,
+          "/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_CSEQ, str);
+  g_free (str);
+
+  gst_rtsp_client_set_send_func (client, test_response_200, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
+  gst_rtsp_message_unset (&request);
+
+  /* OPTIONS with an absolute path instead of an absolute url with invalid
+   * host information */
+  g_object_unref (client);
+  client = gst_rtsp_client_new ();
+  fail_unless (gst_rtsp_message_init_request (&request, GST_RTSP_OPTIONS,
+          "/test") == GST_RTSP_OK);
+  str = g_strdup_printf ("%d", cseq);
+  gst_rtsp_message_add_header (&request, GST_RTSP_HDR_CSEQ, str);
+  g_free (str);
+
+  gst_rtsp_client_set_send_func (client, test_response_400, NULL, NULL);
+  fail_unless (gst_rtsp_client_handle_message (client,
+          &request) == GST_RTSP_OK);
   gst_rtsp_message_unset (&request);
 
   g_object_unref (client);
