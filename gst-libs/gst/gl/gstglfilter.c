@@ -204,20 +204,6 @@ gst_gl_filter_query (GstBaseTransform * trans, GstPadDirection direction,
           &filter->display);
       break;
     }
-    case GST_QUERY_CUSTOM:
-    {
-      GstStructure *structure = gst_query_writable_structure (query);
-      if (direction == GST_PAD_SINK &&
-          gst_structure_has_name (structure, "gstglcontext")) {
-        gst_structure_set (structure, "gstglcontext", G_TYPE_POINTER,
-            filter->context, NULL);
-        res = TRUE;
-      } else
-        res =
-            GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
-            query);
-      break;
-    }
     default:
       res =
           GST_BASE_TRANSFORM_CLASS (parent_class)->query (trans, direction,
@@ -272,40 +258,9 @@ gst_gl_filter_start (GstBaseTransform * bt)
 {
   GstGLFilter *filter = GST_GL_FILTER (bt);
   GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
-  GstStructure *structure;
-  GstQuery *context_query;
-  const GValue *id_value;
 
   if (!gst_gl_ensure_display (filter, &filter->display))
     return FALSE;
-
-  structure = gst_structure_new_empty ("gstglcontext");
-  context_query = gst_query_new_custom (GST_QUERY_CUSTOM, structure);
-
-  if (!gst_pad_peer_query (bt->srcpad, context_query)) {
-    GST_WARNING
-        ("Could not query GstGLContext from downstream (peer query failed)");
-  }
-
-  id_value = gst_structure_get_value (structure, "gstglcontext");
-  if (G_VALUE_HOLDS_POINTER (id_value)) {
-    /* at least one gl element is after in our gl chain */
-    filter->context =
-        gst_object_ref (GST_GL_CONTEXT (g_value_get_pointer (id_value)));
-  } else {
-    GError *error = NULL;
-
-    GST_INFO ("Creating GstGLContext");
-    filter->context = gst_gl_context_new (filter->display);
-
-    if (!gst_gl_context_create (filter->context, filter->other_context, &error)) {
-      GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
-          ("%s", error->message), (NULL));
-      return FALSE;
-    }
-  }
-
-  gst_query_unref (context_query);
 
   if (filter_class->onStart)
     filter_class->onStart (filter);
@@ -747,7 +702,6 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
 {
   GstGLFilter *filter;
   GstGLFilterClass *filter_class;
-  guint in_width, in_height, out_width, out_height;
 
   filter = GST_GL_FILTER (bt);
   filter_class = GST_GL_FILTER_GET_CLASS (filter);
@@ -756,35 +710,6 @@ gst_gl_filter_set_caps (GstBaseTransform * bt, GstCaps * incaps,
     goto wrong_caps;
   if (!gst_video_info_from_caps (&filter->out_info, outcaps))
     goto wrong_caps;
-
-  in_width = GST_VIDEO_INFO_WIDTH (&filter->in_info);
-  in_height = GST_VIDEO_INFO_HEIGHT (&filter->in_info);
-  out_width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
-  out_height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
-
-  //blocking call, generate a FBO
-  if (!gst_gl_context_gen_fbo (filter->context, out_width, out_height,
-          &filter->fbo, &filter->depthbuffer))
-    goto display_error;
-
-  gst_gl_context_gen_texture (filter->context, &filter->in_tex_id,
-      GST_VIDEO_FORMAT_RGBA, in_width, in_height);
-
-  gst_gl_context_gen_texture (filter->context, &filter->out_tex_id,
-      GST_VIDEO_FORMAT_RGBA, out_width, out_height);
-
-  if (filter_class->display_init_cb != NULL) {
-    gst_gl_context_thread_add (filter->context, gst_gl_filter_start_gl, filter);
-  }
-#if 0
-  if (!filter->display->isAlive)
-    goto error;
-#endif
-
-  if (filter_class->onInitFBO) {
-    if (!filter_class->onInitFBO (filter))
-      goto error;
-  }
 
   if (filter_class->set_caps) {
     if (!filter_class->set_caps (filter, incaps, outcaps))
@@ -802,14 +727,6 @@ wrong_caps:
     GST_WARNING ("Wrong caps");
     return FALSE;
   }
-
-display_error:
-  {
-    GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
-        ("%s", gst_gl_context_get_error ()), (NULL));
-    return FALSE;
-  }
-
 error:
   {
     return FALSE;
@@ -826,6 +743,8 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
   GstCaps *caps;
   guint size;
   gboolean need_pool;
+  GError *error = NULL;
+  GstStructure *gl_context;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
@@ -851,6 +770,16 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
     }
     gst_structure_free (config);
   }
+
+  if (!gst_gl_ensure_display (filter, &filter->display))
+    return FALSE;
+
+  if (!filter->context) {
+    filter->context = gst_gl_context_new (filter->display);
+    if (!gst_gl_context_create (filter->context, filter->other_context, &error))
+      goto context_error;
+  }
+
   if (pool == NULL && need_pool) {
     GstVideoInfo info;
 
@@ -870,11 +799,17 @@ gst_gl_filter_propose_allocation (GstBaseTransform * trans,
   }
   /* we need at least 2 buffer because we hold on to the last one */
   gst_query_add_allocation_pool (query, pool, size, 1, 0);
+  gst_object_unref (pool);
 
   /* we also support various metadata */
   gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, 0);
 
-  gst_object_unref (pool);
+  gl_context =
+      gst_structure_new ("GstVideoGLTextureUploadMeta", "gst.gl.GstGLContext",
+      GST_GL_TYPE_CONTEXT, filter->context, NULL);
+  gst_query_add_allocation_meta (query,
+      GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, gl_context);
+  gst_structure_free (gl_context);
 
   return TRUE;
 
@@ -894,17 +829,27 @@ config_failed:
     GST_DEBUG_OBJECT (trans, "failed setting config");
     return FALSE;
   }
+context_error:
+  {
+    GST_ELEMENT_ERROR (trans, RESOURCE, NOT_FOUND, ("%s", error->message),
+        (NULL));
+    return FALSE;
+  }
 }
 
 static gboolean
 gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
 {
   GstGLFilter *filter = GST_GL_FILTER (trans);
+  GstGLFilterClass *filter_class = GST_GL_FILTER_GET_CLASS (filter);
   GstBufferPool *pool = NULL;
   GstStructure *config;
   GstCaps *caps;
   guint min, max, size;
   gboolean update_pool;
+  guint idx;
+  GError *error = NULL;
+  guint in_width, in_height, out_width, out_height;
 
   gst_query_parse_allocation (query, &caps, NULL);
 
@@ -920,6 +865,52 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
     size = vinfo.size;
     min = max = 0;
     update_pool = FALSE;
+  }
+
+  if (!gst_gl_ensure_display (filter, &filter->display))
+    return FALSE;
+
+  if (gst_query_find_allocation_meta (query,
+          GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, &idx)) {
+    GstGLContext *context;
+    const GstStructure *upload_meta_params;
+
+    gst_query_parse_nth_allocation_meta (query, idx, &upload_meta_params);
+    if (gst_structure_get (upload_meta_params, "gst.gl.GstGLContext",
+            GST_GL_TYPE_CONTEXT, &context, NULL) && context)
+      gst_object_replace ((GstObject **) & filter->context,
+          (GstObject *) context);
+  }
+
+  if (!filter->context) {
+    filter->context = gst_gl_context_new (filter->display);
+    if (!gst_gl_context_create (filter->context, filter->other_context, &error))
+      goto context_error;
+  }
+
+  in_width = GST_VIDEO_INFO_WIDTH (&filter->in_info);
+  in_height = GST_VIDEO_INFO_HEIGHT (&filter->in_info);
+  out_width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
+  out_height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
+
+  //blocking call, generate a FBO
+  if (!gst_gl_context_gen_fbo (filter->context, out_width, out_height,
+          &filter->fbo, &filter->depthbuffer))
+    goto context_error;
+
+  gst_gl_context_gen_texture (filter->context, &filter->in_tex_id,
+      GST_VIDEO_FORMAT_RGBA, in_width, in_height);
+
+  gst_gl_context_gen_texture (filter->context, &filter->out_tex_id,
+      GST_VIDEO_FORMAT_RGBA, out_width, out_height);
+
+  if (filter_class->display_init_cb != NULL) {
+    gst_gl_context_thread_add (filter->context, gst_gl_filter_start_gl, filter);
+  }
+
+  if (filter_class->onInitFBO) {
+    if (!filter_class->onInitFBO (filter))
+      goto error;
   }
 
   if (!pool)
@@ -938,6 +929,19 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   gst_object_unref (pool);
 
   return TRUE;
+
+context_error:
+  {
+    GST_ELEMENT_ERROR (trans, RESOURCE, NOT_FOUND, ("%s", error->message),
+        (NULL));
+    return FALSE;
+  }
+error:
+  {
+    GST_ELEMENT_ERROR (trans, LIBRARY, INIT,
+        ("Subclass failed to initialize."), (NULL));
+    return FALSE;
+  }
 }
 
 /**
