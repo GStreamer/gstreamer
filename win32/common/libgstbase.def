@@ -149,6 +149,27 @@ EXPORTS
 	gst_bit_reader_set_pos
 	gst_bit_reader_skip
 	gst_bit_reader_skip_to_byte
+	gst_bit_writer_align_bytes
+	gst_bit_writer_free
+	gst_bit_writer_free_and_get_buffer
+	gst_bit_writer_free_and_get_data
+	gst_bit_writer_get_data
+	gst_bit_writer_get_size
+	gst_bit_writer_init
+	gst_bit_writer_init_with_data
+	gst_bit_writer_init_with_size
+	gst_bit_writer_new
+	gst_bit_writer_new_with_data
+	gst_bit_writer_new_with_size
+	gst_bit_writer_put_bits_uint16
+	gst_bit_writer_put_bits_uint32
+	gst_bit_writer_put_bits_uint64
+	gst_bit_writer_put_bits_uint8
+	gst_bit_writer_put_bytes
+	gst_bit_writer_reset
+	gst_bit_writer_reset_and_get_buffer
+	gst_bit_writer_reset_and_get_data
+	gst_bit_writer_set_pos
 	gst_byte_reader_dup_data
 	gst_byte_reader_dup_string_utf16
 	gst_byte_reader_dup_string_utf32
