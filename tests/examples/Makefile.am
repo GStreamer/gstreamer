@@ -16,6 +16,7 @@ noinst_PROGRAMS = 	\
 	overlays	\
 	text_properties	\
 	assets \
+	multifilesrc \
 	$(graphical)
 
 AM_CFLAGS =  -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) $(GST_CFLAGS) $(GTK_CFLAGS)

@@ -62,6 +62,7 @@
 #include <ges/ges-video-uri-source.h>
 #include <ges/ges-audio-uri-source.h>
 #include <ges/ges-image-source.h>
+#include <ges/ges-multi-file-source.h>
 #include <ges/ges-video-test-source.h>
 #include <ges/ges-audio-test-source.h>
 #include <ges/ges-title-source.h>

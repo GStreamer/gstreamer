@@ -271,6 +271,23 @@ ges_image_source_get_type
 </SECTION>
 
 <SECTION>
+<FILE>ges-multi-file-source</FILE>
+<TITLE>GESMultiFileSource</TITLE>
+GESMultiFileSource
+ges_multi_file_source_new
+<SUBSECTION Standard>
+GESMultiFileSourcePrivate
+GES_IS_MULTI_FILE_SOURCE
+GES_IS_MULTI_FILE_SOURCE_CLASS
+GES_MULTI_FILE_SOURCE
+GES_MULTI_FILE_SOURCE_CLASS
+GES_MULTI_FILE_SOURCE_GET_CLASS
+GES_TYPE_MULTI_FILE_SOURCE
+GESMultiFileSourceClass
+ges_multi_file_source_get_type
+</SECTION>
+
+<SECTION>
 <FILE>ges-transition</FILE>
 <TITLE>GESTransition</TITLE>
 GESTransition

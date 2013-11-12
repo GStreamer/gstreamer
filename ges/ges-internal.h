@@ -304,4 +304,16 @@ G_GNUC_INTERNAL GESImageSource     * ges_image_source_new      (gchar *uri);
 G_GNUC_INTERNAL GESTitleSource     * ges_title_source_new      (void);
 G_GNUC_INTERNAL GESVideoTestSource * ges_video_test_source_new (void);
 
+/******************************
+ *  GESMultiFile internal API *
+ ******************************/
+typedef struct GESMultiFileURI
+{
+  gchar *location;
+  gint start;
+  gint end;
+} GESMultiFileURI;
+
+G_GNUC_INTERNAL GESMultiFileURI * ges_multi_file_uri_new (const gchar * uri);
+
 #endif /* __GES_INTERNAL_H__ */

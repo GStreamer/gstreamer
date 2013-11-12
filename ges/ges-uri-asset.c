@@ -438,7 +438,8 @@ ges_uri_clip_asset_new (const gchar * uri, GCancellable * cancellable,
 
 /**
  * ges_uri_clip_asset_request_sync:
- * @uri: The URI of the file for which to create a #GESUriClipAsset
+ * @uri: The URI of the file for which to create a #GESUriClipAsset.
+ * You can also use multi file uris for #GESMultiFileSource.
  * @error: (allow-none): An error to be set in case something wrong happens or %NULL
  *
  * Creates a #GESUriClipAsset for @uri syncronously. You should avoid
@@ -453,6 +454,7 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
   GstDiscovererInfo *info;
   GstDiscoverer *discoverer;
   GESUriClipAsset *asset;
+  gchar *first_file, *first_file_uri;
 
   asset = GES_URI_CLIP_ASSET (ges_asset_request (GES_TYPE_URI_CLIP, uri,
           &lerror));
@@ -470,7 +472,22 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
   asset = g_object_new (GES_TYPE_URI_CLIP_ASSET, "id", uri,
       "extractable-type", GES_TYPE_URI_CLIP, NULL);
   discoverer = GES_URI_CLIP_ASSET_GET_CLASS (asset)->sync_discoverer;
-  info = gst_discoverer_discover_uri (discoverer, uri, &lerror);
+
+  if (g_str_has_prefix (uri, GES_MULTI_FILE_URI_PREFIX)) {
+    GESMultiFileURI *uri_data;
+
+    uri_data = ges_multi_file_uri_new (uri);
+    first_file = g_strdup_printf (uri_data->location, uri_data->start);
+    first_file_uri = gst_filename_to_uri (first_file, &lerror);
+    info = gst_discoverer_discover_uri (discoverer, first_file_uri, &lerror);
+    GST_DEBUG ("Got multifile uri. Discovering first file %s", first_file_uri);
+    g_free (uri_data);
+    g_free (first_file_uri);
+    g_free (first_file);
+  } else {
+    info = gst_discoverer_discover_uri (discoverer, uri, &lerror);
+  }
+
   if (info == NULL || lerror != NULL) {
     gst_object_unref (asset);
     if (lerror)
@@ -552,8 +569,11 @@ _extract (GESAsset * asset, GError ** error)
     return NULL;
   }
 
-  if (GST_IS_DISCOVERER_VIDEO_INFO (priv->sinfo) &&
-      gst_discoverer_video_info_is_image ((GstDiscovererVideoInfo *)
+  if (g_str_has_prefix (priv->uri, GES_MULTI_FILE_URI_PREFIX)) {
+    trackelement =
+        GES_TRACK_ELEMENT (ges_multi_file_source_new (g_strdup (priv->uri)));
+  } else if (GST_IS_DISCOVERER_VIDEO_INFO (priv->sinfo)
+      && gst_discoverer_video_info_is_image ((GstDiscovererVideoInfo *)
           priv->sinfo))
     trackelement =
         GES_TRACK_ELEMENT (ges_image_source_new (g_strdup (priv->uri)));
