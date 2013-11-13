@@ -2654,6 +2654,55 @@ on_ssrc_active (GObject * session, GObject * source, GstRTSPStream * stream)
       stream->id);
 }
 
+static void
+set_manager_buffer_mode (GstRTSPSrc * src)
+{
+  GObjectClass *klass;
+
+  g_return_if_fail (G_IS_OBJECT (src->manager));
+
+  klass = G_OBJECT_GET_CLASS (G_OBJECT (src->manager));
+
+  if (!g_object_class_find_property (klass, "buffer-mode"))
+    return;
+
+  if (src->buffer_mode != BUFFER_MODE_AUTO) {
+    g_object_set (src->manager, "buffer-mode", src->buffer_mode, NULL);
+
+    return;
+  }
+
+  GST_DEBUG_OBJECT (src,
+      "auto buffering mode, have clock %" GST_PTR_FORMAT, src->provided_clock);
+
+  if (src->provided_clock) {
+    GstClock *clock = gst_element_get_clock (GST_ELEMENT_CAST (src));
+
+    if (clock == src->provided_clock) {
+      GST_DEBUG_OBJECT (src, "selected synced");
+      g_object_set (src->manager, "buffer-mode", BUFFER_MODE_SYNCED, NULL);
+
+      if (clock)
+        gst_object_unref (clock);
+
+      return;
+    }
+
+    /* Otherwise fall-through and use another buffer mode */
+    if (clock)
+      gst_object_unref (clock);
+  }
+
+  GST_DEBUG_OBJECT (src, "auto buffering mode");
+  if (src->use_buffering) {
+    GST_DEBUG_OBJECT (src, "selected buffer");
+    g_object_set (src->manager, "buffer-mode", BUFFER_MODE_BUFFER, NULL);
+  } else {
+    GST_DEBUG_OBJECT (src, "selected slave");
+    g_object_set (src->manager, "buffer-mode", BUFFER_MODE_SLAVE, NULL);
+  }
+}
+
 /* try to get and configure a manager */
 static gboolean
 gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
@@ -2673,6 +2722,9 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
     /* configure the manager */
     if (src->manager == NULL) {
       GObjectClass *klass;
+      GstStructure *s;
+      const gchar *encoding;
+      gboolean need_slave;
 
       if (!(src->manager = gst_element_factory_make (manager, "manager"))) {
         /* fallback */
@@ -2716,39 +2768,26 @@ gst_rtspsrc_stream_configure_manager (GstRTSPSrc * src, GstRTSPStream * stream,
             NULL);
       }
 
-      if (g_object_class_find_property (klass, "buffer-mode")) {
-        if (src->buffer_mode != BUFFER_MODE_AUTO) {
-          g_object_set (src->manager, "buffer-mode", src->buffer_mode, NULL);
-        } else {
-          gboolean need_slave;
-          GstStructure *s;
-          const gchar *encoding;
-
-          /* buffer mode pauses are handled by adding offsets to buffer times,
-           * but some depayloaders may have a hard time syncing output times
-           * with such input times, e.g. container ones, most notably ASF */
-          /* TODO alternatives are having an event that indicates these shifts,
-           * or having rtsp extensions provide suggestion on buffer mode */
-          need_slave = stream->container;
-          if (stream->caps && (s = gst_caps_get_structure (stream->caps, 0)) &&
-              (encoding = gst_structure_get_string (s, "encoding-name")))
-            need_slave = need_slave || (strcmp (encoding, "X-ASF-PF") == 0);
-          GST_DEBUG_OBJECT (src, "auto buffering mode, need_slave %d",
-              need_slave);
-          /* valid duration implies not likely live pipeline,
-           * so slaving in jitterbuffer does not make much sense
-           * (and might mess things up due to bursts) */
-          if (GST_CLOCK_TIME_IS_VALID (src->segment.duration) &&
-              src->segment.duration && !need_slave) {
-            GST_DEBUG_OBJECT (src, "selected buffer");
-            g_object_set (src->manager, "buffer-mode", BUFFER_MODE_BUFFER,
-                NULL);
-          } else {
-            GST_DEBUG_OBJECT (src, "selected slave");
-            g_object_set (src->manager, "buffer-mode", BUFFER_MODE_SLAVE, NULL);
-          }
-        }
+      /* buffer mode pauses are handled by adding offsets to buffer times,
+       * but some depayloaders may have a hard time syncing output times
+       * with such input times, e.g. container ones, most notably ASF */
+      /* TODO alternatives are having an event that indicates these shifts,
+       * or having rtsp extensions provide suggestion on buffer mode */
+      need_slave = stream->container;
+      if (stream->caps && (s = gst_caps_get_structure (stream->caps, 0)) &&
+          (encoding = gst_structure_get_string (s, "encoding-name")))
+        need_slave = need_slave || (strcmp (encoding, "X-ASF-PF") == 0);
+      /* valid duration implies not likely live pipeline,
+       * so slaving in jitterbuffer does not make much sense
+       * (and might mess things up due to bursts) */
+      if (GST_CLOCK_TIME_IS_VALID (src->segment.duration) &&
+          src->segment.duration && !need_slave) {
+        src->use_buffering = TRUE;
+      } else {
+        src->use_buffering = FALSE;
       }
+
+      set_manager_buffer_mode (src);
 
       /* connect to signals if we did not already do so */
       GST_DEBUG_OBJECT (src, "connect to signals on session manager, stream %p",
@@ -7135,6 +7174,8 @@ gst_rtspsrc_change_state (GstElement * element, GstStateChange transition)
       gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_OPEN, 0);
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
+      set_manager_buffer_mode (rtspsrc);
+      /* fall-through */
     case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
       /* unblock the tcp tasks and make the loop waiting */
       if (gst_rtspsrc_loop_send_cmd (rtspsrc, CMD_WAIT, CMD_LOOP)) {

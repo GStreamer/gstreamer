@@ -251,6 +251,7 @@ struct _GstRTSPSrc {
   GstElement      *manager;
   gulong           manager_sig_id;
   gulong           manager_ptmap_id;
+  gboolean         use_buffering;
 
   GstRTSPConnInfo  conninfo;
 
