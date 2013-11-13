@@ -55,6 +55,13 @@
 #define V4L2_FIELD_INTERLACED_BT 9
 #endif
 
+#ifndef V4L2_PIX_FMT_NV12M
+#define V4L2_PIX_FMT_NV12M GST_MAKE_FOURCC ('N', 'M', '1', '2')
+#endif
+#ifndef V4L2_PIX_FMT_NV21M
+#define V4L2_PIX_FMT_NV21M GST_MAKE_FOURCC ('N', 'M', '2', '1')
+#endif
+
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 #define GST_CAT_DEFAULT v4l2_debug
@@ -561,6 +568,28 @@ gst_v4l2_object_new (GstElement * element,
 
   v4l2object->keep_aspect = TRUE;
 
+  v4l2object->n_v4l2_planes = 0;
+
+  /*
+   * this boolean only applies in v4l2-MPLANE mode.
+   * TRUE: means it prefers to use several v4l2 (non contiguous)
+   * planes. For example if the device supports NV12 and NV12M
+   * both in MPLANE mode, then it will prefer NV12M
+   * FALSE: means it prefers to use one v4l2 plane (which contains
+   * all gst planes as if it was working in non-v4l2-MPLANE mode.
+   * For example if the device supports NV12 and NV12M
+   * both in MPLANE mode, then it will prefer NV12
+   *
+   * this boolean is also used to manage the case where the
+   * device only supports the mode MPLANE and at the same time it
+   * does not support both NV12 and NV12M. So in this case we first
+   * try to use the prefered config, and at least try the other case
+   * if it fails. For example in MPLANE mode if it has NV12 and not
+   * NV21M then even if you set prefered_non_contiguous to TRUE it will
+   * try NV21 as well.
+   */
+  v4l2object->prefered_non_contiguous = TRUE;
+
   return v4l2object;
 }
 
@@ -767,6 +796,12 @@ gst_v4l2_object_get_property_helper (GstV4l2Object * v4l2object,
             V4L2_CAP_VIDEO_OVERLAY |
             V4L2_CAP_VBI_CAPTURE |
             V4L2_CAP_VBI_OUTPUT | V4L2_CAP_TUNER | V4L2_CAP_AUDIO);
+
+        if (v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE)
+          flags |= V4L2_CAP_VIDEO_CAPTURE;
+
+        if (v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT_MPLANE)
+          flags |= V4L2_CAP_VIDEO_OUTPUT;
       }
       g_value_set_flags (value, flags);
       break;
@@ -936,7 +971,9 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
 
   /* two planes -- one Y, one Cr + Cb interleaved  */
   {V4L2_PIX_FMT_NV12, TRUE},
+  {V4L2_PIX_FMT_NV12M, TRUE},
   {V4L2_PIX_FMT_NV21, TRUE},
+  {V4L2_PIX_FMT_NV21M, TRUE},
 
   /*  The following formats are not defined in the V4L2 specification */
   {V4L2_PIX_FMT_YUV410, TRUE},
@@ -1091,7 +1128,9 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
       break;
 
     case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
+    case V4L2_PIX_FMT_NV12M:   /* Same as NV12      */
     case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
+    case V4L2_PIX_FMT_NV21M:   /* Same as NV21      */
     case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
     case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
       rank = YUV_ODD_BASE_RANK;
@@ -1192,7 +1231,8 @@ format_cmp_func (gconstpointer a, gconstpointer b)
  * return value: TRUE on success, FALSE on error
  ******************************************************/
 static gboolean
-gst_v4l2_object_fill_format_list (GstV4l2Object * v4l2object)
+gst_v4l2_object_fill_format_list (GstV4l2Object * v4l2object,
+    enum v4l2_buf_type type)
 {
   gint n;
   struct v4l2_fmtdesc *format;
@@ -1204,7 +1244,7 @@ gst_v4l2_object_fill_format_list (GstV4l2Object * v4l2object)
     format = g_new0 (struct v4l2_fmtdesc, 1);
 
     format->index = n;
-    format->type = v4l2object->type;
+    format->type = type;
 
     if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_ENUM_FMT, format) < 0) {
       if (errno == EINVAL) {
@@ -1258,14 +1298,38 @@ failed:
 }
 
 /*
- * Get the list of supported capture formats, a list of
- * <code>struct v4l2_fmtdesc</code>.
- */
+  * Get the list of supported capture formats, a list of
+  * <code>struct v4l2_fmtdesc</code>.
+  */
 static GSList *
 gst_v4l2_object_get_format_list (GstV4l2Object * v4l2object)
 {
-  if (!v4l2object->formats)
-    gst_v4l2_object_fill_format_list (v4l2object);
+  if (!v4l2object->formats) {
+
+    /* check usual way */
+    gst_v4l2_object_fill_format_list (v4l2object, v4l2object->type);
+
+    /* if our driver supports multi-planar
+     * and if formats are still empty then we can workaround driver bug
+     * by also looking up formats as if our device was not supporting
+     * multiplanar */
+    if (!v4l2object->formats) {
+      switch (v4l2object->type) {
+        case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
+          gst_v4l2_object_fill_format_list (v4l2object,
+              V4L2_BUF_TYPE_VIDEO_CAPTURE);
+          break;
+
+        case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
+          gst_v4l2_object_fill_format_list (v4l2object,
+              V4L2_BUF_TYPE_VIDEO_OUTPUT);
+          break;
+
+        default:
+          break;
+      }
+    }
+  }
   return v4l2object->formats;
 }
 
@@ -1318,7 +1382,9 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
     case V4L2_PIX_FMT_RGB32:
     case V4L2_PIX_FMT_BGR32:
     case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
+    case V4L2_PIX_FMT_NV12M:
     case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
+    case V4L2_PIX_FMT_NV21M:
     case V4L2_PIX_FMT_YVU410:
     case V4L2_PIX_FMT_YUV410:
     case V4L2_PIX_FMT_YUV420:  /* I420/IYUV */
@@ -1358,9 +1424,11 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
           format = GST_VIDEO_FORMAT_BGRx;
           break;
         case V4L2_PIX_FMT_NV12:
+        case V4L2_PIX_FMT_NV12M:
           format = GST_VIDEO_FORMAT_NV12;
           break;
         case V4L2_PIX_FMT_NV21:
+        case V4L2_PIX_FMT_NV21M:
           format = GST_VIDEO_FORMAT_NV21;
           break;
         case V4L2_PIX_FMT_YVU410:
@@ -1402,8 +1470,9 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
           g_assert_not_reached ();
           break;
       }
-      structure = gst_structure_new ("video/x-raw",
-          "format", G_TYPE_STRING, gst_video_format_to_string (format), NULL);
+      if (format != GST_VIDEO_FORMAT_UNKNOWN)
+        structure = gst_structure_new ("video/x-raw",
+            "format", G_TYPE_STRING, gst_video_format_to_string (format), NULL);
       break;
     }
     case V4L2_PIX_FMT_DV:
@@ -1477,6 +1546,31 @@ gst_v4l2_object_get_all_caps (void)
 }
 
 
+/* if the device actually support multi-planar
+ * we also allow to use plane in a contiguous manner
+ * if the device can do that. Through prefered_non_contiguous */
+static gboolean
+gst_v4l2_object_has_mplane (GstV4l2Object * obj)
+{
+  gboolean ret = FALSE;
+
+  switch (obj->type) {
+    case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
+      ret = (obj->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE) != 0
+          && obj->prefered_non_contiguous;
+      break;
+    case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
+      ret = (obj->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT_MPLANE) != 0
+          && obj->prefered_non_contiguous;
+      break;
+    default:
+      ret = FALSE;
+      break;
+  }
+
+  return ret;
+}
+
 /* collect data for the given caps
  * @caps: given input caps
  * @format: location for the v4l format
@@ -1529,10 +1623,14 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
         fourcc = V4L2_PIX_FMT_YUV422P;
         break;
       case GST_VIDEO_FORMAT_NV12:
-        fourcc = V4L2_PIX_FMT_NV12;
+        fourcc =
+            gst_v4l2_object_has_mplane (v4l2object) ? V4L2_PIX_FMT_NV12M :
+            V4L2_PIX_FMT_NV12;
         break;
       case GST_VIDEO_FORMAT_NV21:
-        fourcc = V4L2_PIX_FMT_NV21;
+        fourcc =
+            gst_v4l2_object_has_mplane (v4l2object) ? V4L2_PIX_FMT_NV21M :
+            V4L2_PIX_FMT_NV21;
         break;
 #ifdef V4L2_PIX_FMT_YVYU
       case GST_VIDEO_FORMAT_YVYU:
@@ -2320,9 +2418,30 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   struct v4l2_fmtdesc *fmtdesc;
   GstVideoInfo info;
   gint width, height, fps_n, fps_d, stride;
+  gint i = 0;
 
-  if (!gst_v4l2_object_get_caps_info (v4l2object, caps, &fmtdesc, &info))
-    goto invalid_caps;
+  if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
+    /* gst does not distinguish GST_VIDEO_FORMAT_NV21 than GST_VIDEO_FORMAT_NV21M so
+     * we have to check it blindly
+     */
+    if (!gst_v4l2_object_get_caps_info (v4l2object, caps, &fmtdesc, &info)) {
+      /* for example if the device supports NV21 and not NV21M, let's try with
+       * the non prefered one if we initially prefered_non_contiguous to TRUE
+       * in this case.
+       */
+      GST_DEBUG_OBJECT (v4l2object->element,
+          "prefered multiplanar does not exist, try the other one");
+
+      v4l2object->prefered_non_contiguous =
+          !v4l2object->prefered_non_contiguous;
+
+      if (!gst_v4l2_object_get_caps_info (v4l2object, caps, &fmtdesc, &info))
+        goto invalid_caps;
+    }
+  } else {
+    if (!gst_v4l2_object_get_caps_info (v4l2object, caps, &fmtdesc, &info))
+      goto invalid_caps;
+  }
 
   pixelformat = fmtdesc->pixelformat;
   width = GST_VIDEO_INFO_WIDTH (&info);
@@ -2330,6 +2449,10 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   fps_n = GST_VIDEO_INFO_FPS_N (&info);
   fps_d = GST_VIDEO_INFO_FPS_D (&info);
   stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, 0);
+
+  /* get bytesperline for each plane */
+  for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++)
+    v4l2object->bytesperline[i] = GST_VIDEO_INFO_PLANE_STRIDE (&info, i);
 
   if (GST_VIDEO_INFO_IS_INTERLACED (&info)) {
     GST_DEBUG_OBJECT (v4l2object->element, "interlaced video");
@@ -2366,48 +2489,132 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   if (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) < 0)
     goto get_fmt_failed;
 
-  GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
-      "%" GST_FOURCC_FORMAT " bytesperline %d, colorspace %d",
-      format.fmt.pix.width, format.fmt.pix.height,
-      GST_FOURCC_ARGS (format.fmt.pix.pixelformat), format.fmt.pix.bytesperline,
-      format.fmt.pix.colorspace);
-
-  if (format.type != v4l2object->type ||
-      format.fmt.pix.width != width ||
-      format.fmt.pix.height != height ||
-      format.fmt.pix.pixelformat != pixelformat ||
-      format.fmt.pix.field != field || format.fmt.pix.bytesperline != stride) {
-    /* something different, set the format */
-    GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
-        "%" GST_FOURCC_FORMAT " bytesperline %d", width, height,
-        GST_FOURCC_ARGS (pixelformat), stride);
-
-    format.type = v4l2object->type;
-    format.fmt.pix.width = width;
-    format.fmt.pix.height = height;
-    format.fmt.pix.pixelformat = pixelformat;
-    format.fmt.pix.field = field;
-    /* try to ask our prefered stride */
-    format.fmt.pix.bytesperline = stride;
-
-    if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
-      goto set_fmt_failed;
+  if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
+    /* even in v4l2 multiplanar mode we can work in contiguous mode
+     * if the device supports it */
+    gint n_v4l_planes =
+        v4l2object->prefered_non_contiguous ? GST_VIDEO_INFO_N_PLANES (&info) :
+        1;
 
     GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
-        "%" GST_FOURCC_FORMAT " stride %d", format.fmt.pix.width,
-        format.fmt.pix.height, GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
-        format.fmt.pix.bytesperline);
+        "%" GST_FOURCC_FORMAT " colorspace %d, nb planes %d",
+        format.fmt.pix_mp.width, format.fmt.pix_mp.height,
+        GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
+        format.fmt.pix_mp.colorspace, format.fmt.pix_mp.num_planes);
 
-    if (format.fmt.pix.width != width || format.fmt.pix.height != height)
-      goto invalid_dimensions;
+    if (format.type != v4l2object->type ||
+        format.fmt.pix_mp.width != width ||
+        format.fmt.pix_mp.height != height ||
+        format.fmt.pix_mp.pixelformat != pixelformat ||
+        format.fmt.pix_mp.field != field ||
+        format.fmt.pix_mp.num_planes != n_v4l_planes) {
+      /* something different, set the format */
+      GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
+          "%" GST_FOURCC_FORMAT, width, height, GST_FOURCC_ARGS (pixelformat));
 
-    if (format.fmt.pix.pixelformat != pixelformat)
-      goto invalid_pixelformat;
+      format.type = v4l2object->type;
+      format.fmt.pix_mp.pixelformat = pixelformat;
+      format.fmt.pix_mp.width = width;
+      format.fmt.pix_mp.height = height;
+      format.fmt.pix_mp.field = field;
+      format.fmt.pix_mp.num_planes = n_v4l_planes;
+      /* try to ask our prefered stride but it's not a failure
+       * if not accepted */
+      for (i = 0; i < format.fmt.pix_mp.num_planes; i++)
+        format.fmt.pix_mp.plane_fmt[i].bytesperline =
+            v4l2object->bytesperline[i];
+
+      if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
+        goto set_fmt_failed;
+
+      GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
+          "%" GST_FOURCC_FORMAT ", nb planes %d", format.fmt.pix.width,
+          format.fmt.pix_mp.height,
+          GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
+          format.fmt.pix_mp.num_planes);
+
+#ifndef GST_DISABLE_GST_DEBUG
+      for (i = 0; i < format.fmt.pix_mp.num_planes; i++)
+        GST_DEBUG_OBJECT (v4l2object->element, "  stride %d",
+            format.fmt.pix_mp.plane_fmt[i].bytesperline);
+#endif
+
+      if (format.fmt.pix_mp.width != width
+          || format.fmt.pix_mp.height != height)
+        goto invalid_dimensions;
+
+      if (format.fmt.pix_mp.pixelformat != pixelformat)
+        goto invalid_pixelformat;
+
+      if (format.fmt.pix_mp.num_planes != n_v4l_planes)
+        goto invalid_planes;
+    }
+
+    /* figure out the frame layout */
+    v4l2object->n_v4l2_planes = format.fmt.pix_mp.num_planes;
+    v4l2object->sizeimage = 0;
+    for (i = 0; i < format.fmt.pix_mp.num_planes; i++) {
+      /* For compatibility reasons with the non-v4l2-multiplanar mode
+       * we have to use the bytesperline of the first v4l plane
+       * See plane_fmt[0] instead of plane_fmt[i] in next line */
+      v4l2object->bytesperline[i] = format.fmt.pix_mp.plane_fmt[0].bytesperline;
+      v4l2object->sizeimage += format.fmt.pix_mp.plane_fmt[i].sizeimage;
+    }
+  } else {
+    GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
+        "%" GST_FOURCC_FORMAT " bytesperline %d, colorspace %d",
+        format.fmt.pix.width, format.fmt.pix.height,
+        GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
+        format.fmt.pix.bytesperline, format.fmt.pix.colorspace);
+
+    if (format.type != v4l2object->type ||
+        format.fmt.pix.width != width ||
+        format.fmt.pix.height != height ||
+        format.fmt.pix.pixelformat != pixelformat ||
+        format.fmt.pix.field != field
+        || format.fmt.pix.bytesperline != stride) {
+      /* something different, set the format */
+      GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
+          "%" GST_FOURCC_FORMAT " bytesperline %d", width, height,
+          GST_FOURCC_ARGS (pixelformat), stride);
+
+      format.type = v4l2object->type;
+      format.fmt.pix.width = width;
+      format.fmt.pix.height = height;
+      format.fmt.pix.pixelformat = pixelformat;
+      format.fmt.pix.field = field;
+      /* try to ask our prefered stride */
+      format.fmt.pix.bytesperline = stride;
+
+      if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
+        goto set_fmt_failed;
+
+      GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
+          "%" GST_FOURCC_FORMAT " stride %d", format.fmt.pix.width,
+          format.fmt.pix.height, GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
+          format.fmt.pix.bytesperline);
+
+      if (format.fmt.pix.width != width || format.fmt.pix.height != height)
+        goto invalid_dimensions;
+
+      if (format.fmt.pix.pixelformat != pixelformat)
+        goto invalid_pixelformat;
+    }
+
+    /* only one plane in non-MPLANE mode */
+    v4l2object->n_v4l2_planes = 1;
+
+    /* figure out the frame layout */
+    for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
+      /* In non-multiplanar mode, there is only one field for bytesperline
+       * Just set it everywhere in order to the code factorized
+       * with multiplanar case in gstv4l2bufferpool.c::alloc_buffer function
+       */
+      v4l2object->bytesperline[i] = format.fmt.pix.bytesperline;
+    }
+
+    v4l2object->sizeimage = format.fmt.pix.sizeimage;
   }
-
-  /* figure out the frame layout */
-  v4l2object->bytesperline = format.fmt.pix.bytesperline;
-  v4l2object->sizeimage = format.fmt.pix.sizeimage;
 
   GST_DEBUG_OBJECT (v4l2object->element, "Got sizeimage %u",
       v4l2object->sizeimage);
@@ -2426,7 +2633,8 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
       streamparm.parm.capture.timeperframe.denominator;
   GST_VIDEO_INFO_FPS_D (&info) = streamparm.parm.capture.timeperframe.numerator;
 
-  if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
+  if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE
+      || v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
     GST_DEBUG_OBJECT (v4l2object->element, "Got framerate: %u/%u",
         streamparm.parm.capture.timeperframe.denominator,
         streamparm.parm.capture.timeperframe.numerator);
@@ -2532,6 +2740,14 @@ invalid_pixelformat:
             ", but device returned format" " %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (pixelformat),
             GST_FOURCC_ARGS (format.fmt.pix.pixelformat)));
+    return FALSE;
+  }
+invalid_planes:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+        (_("Device '%s' does support non-contiguous planes"),
+            v4l2object->videodev),
+        ("Device wants %d planes", format.fmt.pix_mp.num_planes));
     return FALSE;
   }
 get_parm_failed:

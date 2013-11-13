@@ -118,9 +118,21 @@ struct _GstV4l2Object {
   struct v4l2_fmtdesc *fmtdesc;
   GstVideoInfo info;
 
-  guint32 bytesperline;
+  /* only used if the device supports MPLANE
+   * nb planes is meaning of v4l2 planes
+   * the gstreamer equivalent is gst_buffer_n_memory
+   */
+  gint n_v4l2_planes;
+
+  guint32 bytesperline[GST_VIDEO_MAX_PLANES];
   guint32 sizeimage;
   GstClockTime duration;
+
+  /* if the MPLANE device support both contiguous and non contiguous 
+   * it allows to select which one we want. But we prefered_non_contiguous
+   * non contiguous mode.
+   */
+  gboolean prefered_non_contiguous;
 
   /* wanted mode */
   GstV4l2IOMode req_mode;

@@ -74,7 +74,17 @@ struct _GstV4l2BufferPoolClass
 struct _GstV4l2Meta {
   GstMeta meta;
 
-  gpointer mem;
+  /* VIDEO_MAX_PLANES is defined to 8 in videodev2.h
+   * whereas GST_VIDEO_MAX_PLANES is defined to 4 in
+   * video-format.h so lets use the minimum */
+  
+  /* only useful in GST_V4L2_IO_MMAP case.
+   * it contains address at which the mapping
+   * was placed for each v4l2 plane */
+  gpointer mem[GST_VIDEO_MAX_PLANES];
+  /* plane info for multi-planar buffers */
+  struct v4l2_plane vplanes[GST_VIDEO_MAX_PLANES];
+  /* video buffer info */
   struct v4l2_buffer vbuffer;
 };
 

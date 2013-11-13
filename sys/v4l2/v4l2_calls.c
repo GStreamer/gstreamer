@@ -525,12 +525,42 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
 
   /* do we need to be a capture device? */
   if (GST_IS_V4L2SRC (v4l2object->element) &&
-      !(v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE))
+      !(v4l2object->vcap.capabilities & (V4L2_CAP_VIDEO_CAPTURE |
+              V4L2_CAP_VIDEO_CAPTURE_MPLANE)))
     goto not_capture;
 
   if (GST_IS_V4L2SINK (v4l2object->element) &&
-      !(v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT))
+      !(v4l2object->vcap.capabilities & (V4L2_CAP_VIDEO_OUTPUT |
+              V4L2_CAP_VIDEO_OUTPUT_MPLANE)))
     goto not_output;
+
+  /* when calling gst_v4l2_object_new the user decides the initial type
+   * so adjust it if multi-planar is supported
+   * the driver should make it exclusive. So the driver should
+   * not support both MPLANE and non-PLANE.
+   * Because even when using MPLANE it still possibles to use it
+   * in a contiguous manner. In this case the first v4l2 plane
+   * contains all the gst planes.
+   */
+  switch (v4l2object->type) {
+    case V4L2_BUF_TYPE_VIDEO_OUTPUT:
+      if (v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT_MPLANE) {
+        GST_DEBUG ("adjust type to multi-planar output");
+        v4l2object->type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE;
+      }
+      break;
+    case V4L2_BUF_TYPE_VIDEO_CAPTURE:
+      if (v4l2object->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE) {
+        /* FIXME: for now it's an untested case so just put a warning */
+        GST_WARNING ("untested V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE");
+
+        GST_DEBUG ("adjust type to multi-planar capture");
+        v4l2object->type = V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE;
+      }
+      break;
+    default:
+      break;
+  }
 
   /* create enumerations, posts errors. */
   if (!gst_v4l2_fill_lists (v4l2object))
@@ -542,7 +572,8 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
 
   pollfd.fd = v4l2object->video_fd;
   gst_poll_add_fd (v4l2object->poll, &pollfd);
-  if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE)
+  if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE
+      || v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE)
     gst_poll_fd_ctl_read (v4l2object->poll, &pollfd, TRUE);
   else
     gst_poll_fd_ctl_write (v4l2object->poll, &pollfd, TRUE);
