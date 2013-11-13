@@ -1911,7 +1911,7 @@ gst_eglglessink_query (GstBaseSink * bsink, GstQuery * query)
       const gchar *context_type;
 
       if (gst_query_parse_context_type (query, &context_type) &&
-          strcmp (context_type, GST_EGL_DISPLAY_CONTEXT_TYPE) &&
+          strcmp (context_type, GST_EGL_DISPLAY_CONTEXT_TYPE) == 0 &&
           eglglessink->egl_context->display) {
         GstContext *context;
 
