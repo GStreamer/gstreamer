@@ -153,6 +153,7 @@ GstGLMemory * gst_gl_memory_wrapped (GstGLContext * context, GstVideoFormat form
                                      gpointer user_data, GDestroyNotify notify);
 
 gboolean gst_is_gl_memory (GstMemory * mem);
+gboolean gst_gl_memory_copy_into_texture (GstGLMemory *gl_mem, guint tex_id);
 
 /**
  * GstGLAllocator

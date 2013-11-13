@@ -57,6 +57,7 @@ typedef struct
 {
   GstGLMemory *src;
   GLuint tex_id;
+  gboolean result;
 } GstGLMemoryCopyParams;
 
 static void
@@ -212,6 +213,7 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
 
   copy_params = (GstGLMemoryCopyParams *) data;
   src = copy_params->src;
+  tex_id = copy_params->tex_id;
   width = src->width;
   height = src->height;
   v_format = src->v_format;
@@ -225,14 +227,18 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
     goto error;
   }
 
-  gst_gl_context_gen_texture (src->context, &tex_id, v_format, width, height);
+  if (!tex_id)
+    gst_gl_context_gen_texture (src->context, &tex_id, v_format, width, height);
+
   if (!tex_id) {
     GST_CAT_WARNING (GST_CAT_GL_MEMORY,
         "Could not create GL texture with context:%p", src->context);
   }
 
-  GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "created texture %i", tex_id);
+  GST_CAT_LOG (GST_CAT_GL_MEMORY, "copying memory %p, tex %u into texture %i",
+      src, src->tex_id, tex_id);
 
+  /* FIXME: try and avoid creating and destroying fbo's every copy... */
   /* create a framebuffer object */
   gl->GenFramebuffers (1, &fboId);
   gl->BindFramebuffer (GL_FRAMEBUFFER, fboId);
@@ -288,12 +294,13 @@ fbo_error:
     gl->DeleteFramebuffers (1, &fboId);
 
     copy_params->tex_id = 0;
-
+    copy_params->result = FALSE;
     return;
   }
 
 error:
   {
+    copy_params->result = FALSE;
     return;
   }
 }
@@ -320,8 +327,11 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
     _gl_mem_init (dest, src->mem.allocator, NULL, src->context, src->v_format,
         src->width, src->height, NULL, NULL);
 
-    if (!copy_params.tex_id)
+    if (!copy_params.result) {
       GST_CAT_WARNING (GST_CAT_GL_MEMORY, "Could not copy GL Memory");
+      gst_memory_unref ((GstMemory *) dest);
+      return NULL;
+    }
 
     dest->tex_id = copy_params.tex_id;
     dest->data = g_malloc (src->mem.maxsize);
@@ -332,9 +342,6 @@ _gl_mem_copy (GstGLMemory * src, gssize offset, gssize size)
     }
     GST_GL_MEMORY_FLAG_SET (dest, GST_GL_MEMORY_FLAG_NEED_DOWNLOAD);
   }
-
-  GST_CAT_DEBUG (GST_CAT_GL_MEMORY, "copied texture:%u into texture %u",
-      src->tex_id, dest->tex_id);
 
   return (GstMemory *) dest;
 }
@@ -382,6 +389,20 @@ _gl_mem_free (GstAllocator * allocator, GstMemory * mem)
   }
 
   g_slice_free (GstGLMemory, gl_mem);
+}
+
+gboolean
+gst_gl_memory_copy_into_texture (GstGLMemory * gl_mem, guint tex_id)
+{
+  GstGLMemoryCopyParams copy_params;
+
+  copy_params.src = gl_mem;
+  copy_params.tex_id = tex_id;
+
+  gst_gl_context_thread_add (gl_mem->context, _gl_mem_copy_thread,
+      &copy_params);
+
+  return copy_params.result;
 }
 
 /**
