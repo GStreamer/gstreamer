@@ -34,6 +34,7 @@ typedef struct _GstAmcCodec GstAmcCodec;
 typedef struct _GstAmcBufferInfo GstAmcBufferInfo;
 typedef struct _GstAmcFormat GstAmcFormat;
 typedef struct _GstAmcBuffer GstAmcBuffer;
+typedef struct _GstAmcColorFormatInfo GstAmcColorFormatInfo;
 
 struct _GstAmcCodecType {
   gchar *mime;
@@ -121,6 +122,29 @@ void gst_amc_format_set_buffer (GstAmcFormat *format, const gchar *key, guint8 *
 
 GstVideoFormat gst_amc_color_format_to_video_format (const GstAmcCodecInfo * codec_info, const gchar * mime, gint color_format);
 gint gst_amc_video_format_to_color_format (const GstAmcCodecInfo * codec_info, const gchar * mime, GstVideoFormat video_format);
+
+struct _GstAmcColorFormatInfo {
+  gint color_format;
+  gint width, height, stride, slice_height;
+  gint crop_left, crop_right;
+  gint crop_top, crop_bottom;
+  gint frame_size;
+};
+
+gboolean gst_amc_color_format_info_set (GstAmcColorFormatInfo * color_format_info,
+    const GstAmcCodecInfo * codec_info, const gchar * mime,
+    gint color_format, gint width, gint height, gint stride, gint slice_height,
+    gint crop_left, gint crop_right, gint crop_top, gint crop_bottom);
+
+typedef enum
+{
+  COLOR_FORMAT_COPY_OUT,
+  COLOR_FORMAT_COPY_IN
+} GstAmcColorFormatCopyDirection;
+
+gboolean gst_amc_color_format_copy (
+    GstAmcColorFormatInfo * cinfo, GstAmcBuffer * cbuffer, const GstAmcBufferInfo * cbuffer_info,
+    GstVideoInfo * vinfo, GstBuffer * vbuffer, GstAmcColorFormatCopyDirection direction);
 
 const gchar * gst_amc_avc_profile_to_string (gint profile, const gchar **alternative);
 gint gst_amc_avc_profile_from_string (const gchar *profile);

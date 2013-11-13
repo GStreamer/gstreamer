@@ -59,10 +59,7 @@ struct _GstAmcVideoDec
 
   /* Output format of the codec */
   GstVideoFormat format;
-  gint color_format;
-  gint width, height, stride, slice_height;
-  gint crop_left, crop_right;
-  gint crop_top, crop_bottom;
+  GstAmcColorFormatInfo color_format_info;
 
   guint8 *codec_data;
   gsize codec_data_size;

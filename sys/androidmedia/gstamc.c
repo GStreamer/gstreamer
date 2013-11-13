@@ -22,6 +22,12 @@
 #include "config.h"
 #endif
 
+#ifdef HAVE_ORC
+#include <orc/orc.h>
+#else
+#define orc_memcpy memcpy
+#endif
+
 #include "gstamc.h"
 #include "gstamc-constants.h"
 
@@ -2258,6 +2264,410 @@ gst_amc_video_format_to_color_format (const GstAmcCodecInfo * codec_info,
   }
 
   return -1;
+}
+
+/*
+ * The format is called QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka.
+ * Which is actually NV12 (interleaved U&V).
+ */
+#define TILE_WIDTH 64
+#define TILE_HEIGHT 32
+#define TILE_SIZE (TILE_WIDTH * TILE_HEIGHT)
+#define TILE_GROUP_SIZE (4 * TILE_SIZE)
+
+/* get frame tile coordinate. XXX: nothing to be understood here, don't try. */
+static size_t
+tile_pos (size_t x, size_t y, size_t w, size_t h)
+{
+  size_t flim = x + (y & ~1) * w;
+
+  if (y & 1) {
+    flim += (x & ~3) + 2;
+  } else if ((h & 1) == 0 || y != (h - 1)) {
+    flim += (x + 2) & ~3;
+  }
+
+  return flim;
+}
+
+gboolean
+gst_amc_color_format_info_set (GstAmcColorFormatInfo * color_format_info,
+    const GstAmcCodecInfo * codec_info, const gchar * mime, gint color_format,
+    gint width, gint height, gint stride, gint slice_height, gint crop_left,
+    gint crop_right, gint crop_top, gint crop_bottom)
+{
+  gint frame_size = 0;
+
+  if (color_format == COLOR_FormatYCbYCr) {
+    if (strcmp (codec_info->name, "OMX.k3.video.decoder.avc") == 0)
+      color_format = COLOR_FormatYUV420SemiPlanar;
+  }
+
+  /* Samsung Galaxy S3 seems to report wrong strides.
+   * I.e. BigBuckBunny 854x480 H264 reports a stride of 864 when it is
+   * actually 854, so we use width instead of stride here.
+   * This is obviously bound to break in the future. */
+  if (g_str_has_prefix (codec_info->name, "OMX.SEC.")) {
+    stride = width;
+  }
+
+  if (strcmp (codec_info->name, "OMX.k3.video.decoder.avc") == 0) {
+    stride = width;
+    slice_height = height;
+  }
+
+  if (slice_height == 0) {
+    /* NVidia Tegra 3 on Nexus 7 does not set this */
+    if (g_str_has_prefix (codec_info->name, "OMX.Nvidia."))
+      slice_height = GST_ROUND_UP_32 (height);
+  }
+
+  if (width == 0 || height == 0) {
+    GST_ERROR ("Width or height is 0");
+    return FALSE;
+  }
+
+  switch (color_format) {
+    case COLOR_FormatYUV420Planar:{
+      if (stride == 0 || slice_height == 0) {
+        GST_ERROR ("Stride or slice height is 0");
+        return FALSE;
+      }
+
+      frame_size =
+          stride * slice_height + 2 * (((stride + 1) / 2) * (slice_height +
+              1) / 2);
+      break;
+    }
+    case COLOR_TI_FormatYUV420PackedSemiPlanar:
+    case COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced:{
+      if (stride == 0 || slice_height == 0) {
+        GST_ERROR ("Stride or slice height is 0");
+        return FALSE;
+      }
+
+      frame_size =
+          stride * (slice_height - crop_top / 2) +
+          (GST_ROUND_UP_2 (stride) * ((slice_height + 1) / 2));
+      break;
+    }
+    case COLOR_QCOM_FormatYUV420SemiPlanar:
+    case COLOR_FormatYUV420SemiPlanar:{
+      if (stride == 0 || slice_height == 0) {
+        GST_ERROR ("Stride or slice height is 0");
+        return FALSE;
+      }
+
+      frame_size = stride * slice_height + stride * ((slice_height + 1) / 2);
+      break;
+    }
+    case COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka:{
+      const size_t tile_w = (width - 1) / TILE_WIDTH + 1;
+      const size_t tile_w_align = (tile_w + 1) & ~1;
+      const size_t tile_h_luma = (height - 1) / TILE_HEIGHT + 1;
+      frame_size =
+          tile_pos (tile_w, tile_h_luma, tile_w_align, tile_h_luma) * TILE_SIZE;
+      break;
+    }
+    default:
+      GST_ERROR ("Unsupported color format %d", color_format);
+      return FALSE;
+      break;
+  }
+
+  color_format_info->color_format = color_format;
+  color_format_info->width = width;
+  color_format_info->height = height;
+  color_format_info->stride = stride;
+  color_format_info->slice_height = slice_height;
+  color_format_info->crop_left = crop_left;
+  color_format_info->crop_right = crop_right;
+  color_format_info->crop_top = crop_top;
+  color_format_info->crop_bottom = crop_bottom;
+  color_format_info->frame_size = frame_size;
+
+  return TRUE;
+}
+
+/* The weird handling of cropping, alignment and everything is taken from
+ * platform/frameworks/media/libstagefright/colorconversion/ColorConversion.cpp
+ */
+gboolean
+gst_amc_color_format_copy (GstAmcColorFormatInfo * cinfo,
+    GstAmcBuffer * cbuffer, const GstAmcBufferInfo * cbuffer_info,
+    GstVideoInfo * vinfo, GstBuffer * vbuffer,
+    GstAmcColorFormatCopyDirection direction)
+{
+  gboolean ret = FALSE;
+  guint8 *cptr = NULL, *vptr = NULL;
+  guint8 **src, **dest;
+
+  if (direction == COLOR_FORMAT_COPY_OUT) {
+    src = &cptr;
+    dest = &vptr;
+  } else {
+    src = &vptr;
+    dest = &cptr;
+  }
+
+  /* Same video format */
+  if (cbuffer_info->size == gst_buffer_get_size (vbuffer)) {
+    GstMapInfo minfo;
+
+    GST_DEBUG ("Buffer sizes equal, doing fast copy");
+    gst_buffer_map (vbuffer, &minfo, GST_MAP_WRITE);
+
+    cptr = cbuffer->data + cbuffer_info->offset;
+    vptr = minfo.data;
+    orc_memcpy (*dest, *src, cbuffer_info->size);
+
+    gst_buffer_unmap (vbuffer, &minfo);
+    ret = TRUE;
+    goto done;
+  }
+
+  GST_DEBUG ("Sizes not equal (%d vs %d), doing slow line-by-line copying",
+      cbuffer_info->size, gst_buffer_get_size (vbuffer));
+
+  /* Different video format, try to convert */
+  switch (cinfo->color_format) {
+    case COLOR_FormatYUV420Planar:{
+      GstVideoFrame vframe;
+      gint i, j, height;
+      gint stride, slice_height;
+      gint c_stride, v_stride;
+      gint row_length;
+
+      stride = cinfo->stride;
+      slice_height = cinfo->slice_height;
+      g_assert (stride > 0 && slice_height > 0);
+
+      gst_video_frame_map (&vframe, vinfo, vbuffer, GST_MAP_WRITE);
+
+      for (i = 0; i < 3; i++) {
+        if (i == 0) {
+          c_stride = stride;
+          v_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, i);
+        } else {
+          c_stride = (stride + 1) / 2;
+          v_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, i);
+        }
+
+        cptr = cbuffer->data + cbuffer_info->offset;
+
+        if (i == 0) {
+          cptr += cinfo->crop_top * stride;
+          cptr += cinfo->crop_left;
+          row_length = cinfo->width;
+        } else if (i > 0) {
+          /* skip the Y plane */
+          cptr += slice_height * stride;
+
+          /* crop_top/crop_left divided by two
+           * because one byte of the U/V planes
+           * corresponds to two pixels horizontally/vertically */
+          cptr += cinfo->crop_top / 2 * c_stride;
+          cptr += cinfo->crop_left / 2;
+          row_length = (cinfo->width + 1) / 2;
+        }
+        if (i == 2) {
+          /* skip the U plane */
+          cptr += ((slice_height + 1) / 2) * ((stride + 1) / 2);
+        }
+
+        vptr = GST_VIDEO_FRAME_COMP_DATA (&vframe, i);
+        height = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, i);
+
+        for (j = 0; j < height; j++) {
+          orc_memcpy (*dest, *src, row_length);
+          cptr += c_stride;
+          vptr += v_stride;
+        }
+      }
+      gst_video_frame_unmap (&vframe);
+      ret = TRUE;
+      break;
+    }
+    case COLOR_TI_FormatYUV420PackedSemiPlanar:
+    case COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced:{
+      gint i, j, height;
+      gint c_stride, v_stride;
+      gint row_length;
+      GstVideoFrame vframe;
+
+      /* This should always be set */
+      g_assert (cinfo->stride > 0 && cinfo->slice_height > 0);
+
+      /* FIXME: This does not work for odd widths or heights
+       * but might as well be a bug in the codec */
+      gst_video_frame_map (&vframe, vinfo, vbuffer, GST_MAP_WRITE);
+      for (i = 0; i < 2; i++) {
+        if (i == 0) {
+          c_stride = cinfo->stride;
+          v_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, i);
+        } else {
+          c_stride = GST_ROUND_UP_2 (cinfo->stride);
+          v_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, i);
+        }
+
+        cptr = cbuffer->data + cbuffer_info->offset;
+        if (i == 0) {
+          row_length = cinfo->width;
+        } else if (i == 1) {
+          cptr += (cinfo->slice_height - cinfo->crop_top / 2) * cinfo->stride;
+          row_length = GST_ROUND_UP_2 (cinfo->width);
+        }
+
+        vptr = GST_VIDEO_FRAME_COMP_DATA (&vframe, i);
+        height = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, i);
+
+        for (j = 0; j < height; j++) {
+          orc_memcpy (*dest, *src, row_length);
+          cptr += c_stride;
+          vptr += v_stride;
+        }
+      }
+      gst_video_frame_unmap (&vframe);
+      ret = TRUE;
+      break;
+    }
+    case COLOR_QCOM_FormatYUV420SemiPlanar:
+    case COLOR_FormatYUV420SemiPlanar:{
+      gint i, j, height;
+      gint c_stride, v_stride;
+      gint row_length;
+      GstVideoFrame vframe;
+
+      /* This should always be set */
+      g_assert (cinfo->stride > 0 && cinfo->slice_height > 0);
+
+      gst_video_frame_map (&vframe, vinfo, vbuffer, GST_MAP_WRITE);
+
+      for (i = 0; i < 2; i++) {
+        c_stride = cinfo->stride;
+        v_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, i);
+
+        cptr = cbuffer->data + cbuffer_info->offset;
+        if (i == 0) {
+          cptr += cinfo->crop_top * cinfo->stride;
+          cptr += cinfo->crop_left;
+          row_length = cinfo->width;
+        } else if (i == 1) {
+          cptr += cinfo->slice_height * cinfo->stride;
+          cptr += cinfo->crop_top * cinfo->stride;
+          cptr += cinfo->crop_left;
+          row_length = cinfo->width;
+        }
+
+        vptr = GST_VIDEO_FRAME_COMP_DATA (&vframe, i);
+        height = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, i);
+
+        for (j = 0; j < height; j++) {
+          orc_memcpy (*dest, *src, row_length);
+          cptr += c_stride;
+          vptr += v_stride;
+        }
+      }
+      gst_video_frame_unmap (&vframe);
+      ret = TRUE;
+      break;
+    }
+      /* FIXME: This should be in libgstvideo as MT12 or similar, see v4l2 */
+    case COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka:{
+      GstVideoFrame vframe;
+      gint width = cinfo->width;
+      gint height = cinfo->height;
+      gint v_luma_stride, v_chroma_stride;
+      guint8 *cdata = cbuffer->data + cbuffer_info->offset;
+      guint8 *v_luma, *v_chroma;
+      gint y;
+      const size_t tile_w = (width - 1) / TILE_WIDTH + 1;
+      const size_t tile_w_align = (tile_w + 1) & ~1;
+      const size_t tile_h_luma = (height - 1) / TILE_HEIGHT + 1;
+      const size_t tile_h_chroma = (height / 2 - 1) / TILE_HEIGHT + 1;
+      size_t luma_size = tile_w_align * tile_h_luma * TILE_SIZE;
+
+      gst_video_frame_map (&vframe, vinfo, vbuffer, GST_MAP_WRITE);
+      v_luma = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
+      v_chroma = GST_VIDEO_FRAME_PLANE_DATA (&vframe, 1);
+      v_luma_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, 0);
+      v_chroma_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, 1);
+
+      if ((luma_size % TILE_GROUP_SIZE) != 0)
+        luma_size = (((luma_size - 1) / TILE_GROUP_SIZE) + 1) * TILE_GROUP_SIZE;
+
+      for (y = 0; y < tile_h_luma; y++) {
+        size_t row_width = width;
+        gint x;
+
+        for (x = 0; x < tile_w; x++) {
+          size_t tile_width = row_width;
+          size_t tile_height = height;
+          gint luma_idx;
+          gint chroma_idx;
+          /* luma source pointer for this tile */
+          uint8_t *c_luma =
+              cdata + tile_pos (x, y, tile_w_align, tile_h_luma) * TILE_SIZE;
+
+          /* chroma source pointer for this tile */
+          uint8_t *c_chroma =
+              cdata + luma_size + tile_pos (x, y / 2, tile_w_align,
+              tile_h_chroma) * TILE_SIZE;
+          if (y & 1)
+            c_chroma += TILE_SIZE / 2;
+
+          /* account for right columns */
+          if (tile_width > TILE_WIDTH)
+            tile_width = TILE_WIDTH;
+
+          /* account for bottom rows */
+          if (tile_height > TILE_HEIGHT)
+            tile_height = TILE_HEIGHT;
+
+          /* vptr luma memory index for this tile */
+          luma_idx = y * TILE_HEIGHT * v_luma_stride + x * TILE_WIDTH;
+
+          /* vptr chroma memory index for this tile */
+          /* XXX: remove divisions */
+          chroma_idx = y * TILE_HEIGHT / 2 * v_chroma_stride + x * TILE_WIDTH;
+
+          tile_height /= 2;     // we copy 2 luma lines at once
+          while (tile_height--) {
+            vptr = v_luma + luma_idx;
+            cptr = c_luma;
+            memcpy (*dest, *src, tile_width);
+            c_luma += TILE_WIDTH;
+            luma_idx += v_luma_stride;
+
+            vptr = v_luma + luma_idx;
+            cptr = c_luma;
+            memcpy (*dest, *src, tile_width);
+            c_luma += TILE_WIDTH;
+            luma_idx += v_luma_stride;
+
+            vptr = v_chroma + chroma_idx;
+            cptr = c_chroma;
+            memcpy (*dest, *src, tile_width);
+            c_chroma += TILE_WIDTH;
+            chroma_idx += v_chroma_stride;
+          }
+          row_width -= TILE_WIDTH;
+        }
+        height -= TILE_HEIGHT;
+      }
+      gst_video_frame_unmap (&vframe);
+      ret = TRUE;
+      break;
+
+    }
+    default:
+      GST_ERROR ("Unsupported color format %d", cinfo->color_format);
+      goto done;
+      break;
+  }
+
+done:
+  return ret;
 }
 
 static const struct

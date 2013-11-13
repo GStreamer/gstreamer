@@ -31,6 +31,7 @@
 #include "gstamc.h"
 
 G_BEGIN_DECLS
+
 #define GST_TYPE_AMC_VIDEO_ENC \
   (gst_amc_video_enc_get_type())
 #define GST_AMC_VIDEO_ENC(obj) \
@@ -60,8 +61,7 @@ struct _GstAmcVideoEnc
 
   /* Input format of the codec */
   GstVideoFormat format;
-  gint width, height, stride, slice_height;
-  gint buffer_size;
+  GstAmcColorFormatInfo color_format_info;
 
   guint bitrate;
   guint i_frame_int;
@@ -95,4 +95,5 @@ struct _GstAmcVideoEncClass
 GType gst_amc_video_enc_get_type (void);
 
 G_END_DECLS
+
 #endif /* __GST_AMC_VIDEO_ENC_H__ */

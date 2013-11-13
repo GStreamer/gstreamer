@@ -257,24 +257,22 @@ create_amc_format (GstAmcVideoEnc * encoder, GstVideoCodecState * input_state,
         ((gfloat) info->fps_n) / info->fps_d);
 
   encoder->format = info->finfo->format;
-  encoder->height = info->height;
-  encoder->width = info->width;
-  encoder->stride = stride;
-  encoder->slice_height = slice_height;
+  if (!gst_amc_color_format_info_set (&encoder->color_format_info,
+          klass->codec_info, mime, color_format, info->width, info->height,
+          stride, slice_height, 0, 0, 0, 0))
+    goto color_format_info_failed_to_set;
 
-  switch (encoder->format) {
-    case GST_VIDEO_FORMAT_I420:
-      encoder->buffer_size =
-          stride * slice_height + 2 * ((stride / 2) * (slice_height + 1) / 2);
-      break;
-    case GST_VIDEO_FORMAT_NV12:
-    case GST_VIDEO_FORMAT_NV21:
-      encoder->buffer_size =
-          stride * slice_height + (stride * ((slice_height + 1) / 2));
-      break;
-    default:
-      goto unsupported_video_format;
-  };
+  GST_DEBUG_OBJECT (encoder,
+      "Color format info: {color_format=%d, width=%d, height=%d, "
+      "stride=%d, slice-height=%d, crop-left=%d, crop-top=%d, "
+      "crop-right=%d, crop-bottom=%d, frame-size=%d}",
+      encoder->color_format_info.color_format, encoder->color_format_info.width,
+      encoder->color_format_info.height, encoder->color_format_info.stride,
+      encoder->color_format_info.slice_height,
+      encoder->color_format_info.crop_left, encoder->color_format_info.crop_top,
+      encoder->color_format_info.crop_right,
+      encoder->color_format_info.crop_bottom,
+      encoder->color_format_info.frame_size);
 
   return format;
 
@@ -283,9 +281,8 @@ video_format_failed_to_convert:
   gst_amc_format_free (format);
   return NULL;
 
-unsupported_video_format:
-  GST_ERROR_OBJECT (encoder, "Unsupported GstVideoFormat '%d'",
-      encoder->format);
+color_format_info_failed_to_set:
+  GST_ERROR_OBJECT (encoder, "Failed to set up GstAmcColorFormatInfo");
   gst_amc_format_free (format);
   return NULL;
 
@@ -787,134 +784,12 @@ gst_amc_video_enc_fill_buffer (GstAmcVideoEnc * self, GstBuffer * inbuf,
   /* The fill_buffer runs in the same thread as set_format?
    * then we can use state->info safely */
   GstVideoInfo *info = &input_state->info;
-  gpointer dest_data;
-  gboolean ret = FALSE;
 
-  if (buffer_info->size < self->buffer_size)
+  if (buffer_info->size < self->color_format_info.frame_size)
     return FALSE;
 
-  /* Same video format */
-  if (gst_buffer_get_size (inbuf) == self->buffer_size) {
-    GST_DEBUG_OBJECT (self, "Buffer sizes equal, doing fast copy");
-    gst_buffer_extract (inbuf, 0, outbuf->data + buffer_info->offset,
-        self->buffer_size);
-
-    ret = TRUE;
-
-    goto done;
-  }
-
-  GST_DEBUG_OBJECT (self,
-      "Sizes not equal (%d vs %d), doing slow line-by-line copying",
-      gst_buffer_get_size (inbuf), self->buffer_size);
-
-  dest_data = outbuf->data + buffer_info->offset;
-
-  /* Different video format, try to convert */
-  switch (self->format) {
-    case GST_VIDEO_FORMAT_I420:{
-      gint i, j, height;
-      guint8 *src, *dest;
-      gint slice_height;
-      gint src_stride, dest_stride;
-      gint row_length;
-      GstVideoFrame vframe;
-
-      slice_height = self->slice_height;
-
-      gst_video_frame_map (&vframe, info, inbuf, GST_MAP_READ);
-      for (i = 0; i < 3; i++) {
-        if (i == 0) {
-          dest_stride = self->stride;
-          src_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, i);
-          /* XXX: Try this if no stride was set */
-          if (dest_stride == 0)
-            dest_stride = src_stride;
-        } else {
-          dest_stride = (self->stride + 1) / 2;
-          src_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, i);
-          /* XXX: Try this if no stride was set */
-          if (dest_stride == 0)
-            dest_stride = src_stride;
-        }
-
-        dest = dest_data;
-
-        if (i == 0) {
-          row_length = self->width;
-        } else if (i > 0) {
-          dest += slice_height * self->stride;
-          row_length = (self->width + 1) / 2;
-        }
-        if (i == 2)
-          dest += ((slice_height + 1) / 2) * ((self->stride + 1) / 2);
-
-        src = GST_VIDEO_FRAME_COMP_DATA (&vframe, i);
-        height = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, i);
-
-        for (j = 0; j < height; j++) {
-          orc_memcpy (dest, src, row_length);
-          src += src_stride;
-          dest += dest_stride;
-        }
-      }
-      gst_video_frame_unmap (&vframe);
-      ret = TRUE;
-      break;
-    }
-    case GST_VIDEO_FORMAT_NV21:
-    case GST_VIDEO_FORMAT_NV12:{
-      gint i, j, height;
-      guint8 *src, *dest;
-      gint src_stride, dest_stride;
-      gint row_length;
-      GstVideoFrame vframe;
-
-      gst_video_frame_map (&vframe, info, inbuf, GST_MAP_READ);
-      for (i = 0; i < 2; i++) {
-        if (i == 0) {
-          dest_stride = self->stride;
-          src_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, i);
-          /* XXX: Try this if no stride was set */
-          if (dest_stride == 0)
-            dest_stride = src_stride;
-        } else {
-          dest_stride = GST_ROUND_UP_2 (self->stride);
-          src_stride = GST_VIDEO_FRAME_COMP_STRIDE (&vframe, i);
-          /* XXX: Try this if no stride was set */
-          if (dest_stride == 0)
-            dest_stride = src_stride;
-        }
-
-        dest = dest_data;
-        if (i == 0) {
-          row_length = self->width;
-        } else if (i == 1) {
-          dest += self->slice_height * self->stride;
-          row_length = GST_ROUND_UP_2 (self->width);
-        }
-
-        src = GST_VIDEO_FRAME_COMP_DATA (&vframe, i);
-        height = GST_VIDEO_FRAME_COMP_HEIGHT (&vframe, i);
-
-        for (j = 0; j < height; j++) {
-          orc_memcpy (dest, src, row_length);
-          src += src_stride;
-          dest += dest_stride;
-        }
-      }
-      gst_video_frame_unmap (&vframe);
-      ret = TRUE;
-      break;
-    }
-    default:
-      GST_ERROR_OBJECT (self, "Unsupported video format %d", self->format);
-      goto done;
-      break;
-  }
-
-done:
-  return ret;
+  return gst_amc_color_format_copy (&self->color_format_info, outbuf,
+      buffer_info, info, inbuf, COLOR_FORMAT_COPY_IN);
 }
 
 static GstFlowReturn
@@ -1317,8 +1192,8 @@ gst_amc_video_enc_set_format (GstVideoEncoder * encoder,
   /* Check if the caps change is a real format change or if only irrelevant
    * parts of the caps have changed or nothing at all.
    */
-  is_format_change |= self->width != state->info.width;
-  is_format_change |= self->height != state->info.height;
+  is_format_change |= self->color_format_info.width != state->info.width;
+  is_format_change |= self->color_format_info.height != state->info.height;
   needs_disable = self->started;
 
   /* If the component is not started and a real format change happens
@@ -1544,11 +1419,14 @@ again:
 
   memset (&buffer_info, 0, sizeof (buffer_info));
   buffer_info.offset = 0;
-  buffer_info.size = MIN (self->buffer_size, buf->size);
+  buffer_info.size = MIN (self->color_format_info.frame_size, buf->size);
 
   if (!gst_amc_video_enc_fill_buffer (self, frame->input_buffer, buf,
-          &buffer_info))
-    goto buffer_fill_error;     /* no way to release @buf ? */
+          &buffer_info)) {
+    memset (&buffer_info, 0, sizeof (buffer_info));
+    gst_amc_codec_queue_input_buffer (self->codec, idx, &buffer_info);
+    goto buffer_fill_error;
+  }
 
   if (timestamp != GST_CLOCK_TIME_NONE) {
     buffer_info.presentation_time_us =
@@ -1593,8 +1471,8 @@ invalid_buffer_index:
 buffer_fill_error:
   {
     GST_ELEMENT_ERROR (self, RESOURCE, WRITE, (NULL),
-        ("Failed to write input into the OpenMAX buffer(write %dB to a %dB buffer)",
-            self->buffer_size, buf->size));
+        ("Failed to write input into the amc buffer(write %dB to a %dB buffer)",
+            self->color_format_info.frame_size, buf->size));
     gst_video_codec_frame_unref (frame);
     return GST_FLOW_ERROR;
   }
