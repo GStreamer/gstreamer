@@ -88,6 +88,50 @@ enum
 G_DEFINE_TYPE (GstMultiFileSrc, gst_multi_file_src, GST_TYPE_PUSH_SRC);
 
 
+static gboolean
+is_seekable (GstBaseSrc * src)
+{
+  GstMultiFileSrc *mfs = GST_MULTI_FILE_SRC (src);
+
+  if (mfs->fps_n != -1)
+    return TRUE;
+
+  return FALSE;
+}
+
+static gboolean
+do_seek (GstBaseSrc * bsrc, GstSegment * segment)
+{
+  gboolean reverse;
+  GstClockTime position;
+  GstMultiFileSrc *src;
+
+  src = GST_MULTI_FILE_SRC (bsrc);
+
+  segment->time = segment->start;
+  position = segment->position;
+  reverse = segment->rate < 0;
+
+  if (reverse) {
+    GST_FIXME_OBJECT (src, "Handle reverse playback");
+
+    return FALSE;
+  }
+
+  /* now move to the position indicated */
+  if (src->fps_n) {
+    src->index = gst_util_uint64_scale (position,
+        src->fps_n, src->fps_d * GST_SECOND);
+  } else {
+    src->index = 0;
+    GST_WARNING_OBJECT (src, "No FPS set, can not seek");
+
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
 static void
 gst_multi_file_src_class_init (GstMultiFileSrcClass * klass)
 {
@@ -136,6 +180,8 @@ gst_multi_file_src_class_init (GstMultiFileSrcClass * klass)
 
   gstbasesrc_class->get_caps = gst_multi_file_src_getcaps;
   gstbasesrc_class->query = gst_multi_file_src_query;
+  gstbasesrc_class->is_seekable = is_seekable;
+  gstbasesrc_class->do_seek = do_seek;
 
   gstpushsrc_class->create = gst_multi_file_src_create;
 
@@ -158,6 +204,8 @@ gst_multi_file_src_init (GstMultiFileSrc * multifilesrc)
   multifilesrc->stop_index = -1;
   multifilesrc->filename = g_strdup (DEFAULT_LOCATION);
   multifilesrc->successful_read = FALSE;
+  multifilesrc->fps_n = multifilesrc->fps_d = -1;
+
 }
 
 static void
@@ -261,6 +309,7 @@ gst_multi_file_src_set_property (GObject * object, guint prop_id,
       break;
     case ARG_CAPS:
     {
+      GstStructure *st = NULL;
       const GstCaps *caps = gst_value_get_caps (value);
       GstCaps *new_caps;
 
@@ -271,6 +320,17 @@ gst_multi_file_src_set_property (GObject * object, guint prop_id,
       }
       gst_caps_replace (&src->caps, new_caps);
       gst_pad_set_caps (GST_BASE_SRC_PAD (src), new_caps);
+
+      if (new_caps && gst_caps_get_size (new_caps) == 1 &&
+          (st = gst_caps_get_structure (new_caps, 0))
+          && gst_structure_get_fraction (st, "framerate", &src->fps_n,
+              &src->fps_d)) {
+        GST_INFO_OBJECT (src, "Seting framerate to %d/%d", src->fps_n,
+            src->fps_d);
+      } else {
+        src->fps_n = -1;
+        src->fps_d = -1;
+      }
     }
       break;
     case ARG_LOOP:

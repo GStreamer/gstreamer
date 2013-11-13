@@ -56,6 +56,8 @@ struct _GstMultiFileSrc
 
   GstCaps *caps;
   gboolean successful_read;
+
+  gint fps_n, fps_d;
 };
 
 struct _GstMultiFileSrcClass
