@@ -1,7 +1,16 @@
-noinst_PROGRAMS = server-alsasrc-PCMA client-PCMA
+noinst_PROGRAMS = server-alsasrc-PCMA client-PCMA \
+	client-rtpaux server-rtpaux
 
 # FIXME 0.11: ignore GValueArray warnings for now until this is sorted
 ERROR_CFLAGS=
+
+server_rtpaux_SOURCES = server-rtpaux.c
+server_rtpaux_CFLAGS = $(GST_CFLAGS)
+server_rtpaux_LDADD = $(GST_LIBS)
+
+client_rtpaux_SOURCES = client-rtpaux.c
+client_rtpaux_CFLAGS = $(GST_CFLAGS)
+client_rtpaux_LDADD = $(GST_LIBS)
 
 server_alsasrc_PCMA_SOURCES = server-alsasrc-PCMA.c
 server_alsasrc_PCMA_CFLAGS = $(GST_CFLAGS)
