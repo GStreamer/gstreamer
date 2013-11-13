@@ -1939,7 +1939,9 @@ gst_v4l2_object_probe_caps_for_format (GstV4l2Object * v4l2object,
   size.index = 0;
   size.pixel_format = pixelformat;
 
-  GST_DEBUG_OBJECT (v4l2object->element, "Enumerating frame sizes");
+  GST_DEBUG_OBJECT (v4l2object->element,
+      "Enumerating frame sizes for %" GST_FOURCC_FORMAT,
+      GST_FOURCC_ARGS (pixelformat));
 
   if (v4l2_ioctl (fd, VIDIOC_ENUM_FRAMESIZES, &size) < 0)
     goto enum_framesizes_failed;
