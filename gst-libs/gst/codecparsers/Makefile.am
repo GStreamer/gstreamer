@@ -21,7 +21,8 @@ libgstcodecparsers_@GST_API_VERSION@_la_CFLAGS = \
 
 libgstcodecparsers_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_BASE_LIBS) \
-	$(GST_LIBS)
+	$(GST_LIBS) \
+	$(LIBM)
 
 libgstcodecparsers_@GST_API_VERSION@_la_LDFLAGS = \
 	$(GST_LIB_LDFLAGS) \
