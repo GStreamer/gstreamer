@@ -2421,7 +2421,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     guint32 d_sample_flags, gint64 moof_offset, gint64 moof_length,
     gint64 * base_offset, gint64 * running_offset)
 {
-  guint64 timestamp;
+  guint64 timestamp, elst_timestamp;
   gint32 data_offset = 0;
   guint32 flags = 0, first_flags = 0, samples_count = 0;
   gint i;
@@ -2555,6 +2555,8 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     }
   }
   sample = stream->samples + stream->n_samples;
+  elst_timestamp = gst_util_uint64_scale (stream->elst_offset,
+      stream->timescale, GST_SECOND);
   for (i = 0; i < samples_count; i++) {
     guint32 dur, size, sflags, ct;
 
@@ -2591,9 +2593,7 @@ qtdemux_parse_trun (GstQTDemux * qtdemux, GstByteReader * trun,
     sample->offset = *running_offset;
     sample->pts_offset = ct;
     sample->size = size;
-    sample->timestamp =
-        timestamp + gst_util_uint64_scale (stream->elst_offset,
-        stream->timescale, GST_SECOND);
+    sample->timestamp = timestamp + elst_timestamp;
     sample->duration = dur;
     /* sample-is-difference-sample */
     /* ismv seems to use 0x40 for keyframe, 0xc0 for non-keyframe,
@@ -6354,7 +6354,11 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
     last_chunk = stream->last_chunk;
 
     if (stream->chunks_are_samples) {
+      guint64 elst_timestamp;
+
       cur = &samples[stream->stsc_chunk_index];
+      elst_timestamp = gst_util_uint64_scale (stream->elst_offset,
+          stream->timescale, GST_SECOND);
 
       for (j = stream->stsc_chunk_index; j < last_chunk; j++) {
         if (j > n) {
@@ -6383,10 +6387,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
             j, GST_TIME_ARGS (gst_util_uint64_scale (stream->stco_sample_index,
                     GST_SECOND, stream->timescale)), cur->size);
 
-        cur->timestamp =
-            stream->stco_sample_index +
-            gst_util_uint64_scale (stream->elst_offset, stream->timescale,
-            GST_SECOND);
+        cur->timestamp = stream->stco_sample_index + elst_timestamp;
         cur->duration = stream->samples_per_chunk;
         cur->keyframe = TRUE;
         cur++;
