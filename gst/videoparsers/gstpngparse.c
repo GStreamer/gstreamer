@@ -161,13 +161,28 @@ gst_png_parse_handle_frame (GstBaseParse * parse,
 
     if (code == GST_MAKE_FOURCC ('I', 'E', 'N', 'D')) {
       if (pngparse->width != width || pngparse->height != height) {
-        GstCaps *caps;
+        GstStructure *st = NULL;
+        GstCaps *caps, *sink_caps;
+        gint fr_num, fr_denom;
 
         pngparse->height = height;
         pngparse->width = width;
 
+        sink_caps =
+            gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (pngparse));
+        if (sink_caps && (st = gst_caps_get_structure (sink_caps, 0))
+            && gst_structure_get_fraction (st, "framerate", &fr_num, &fr_denom)) {
+          /* Got it in caps - nothing more to do */
+          GST_DEBUG_OBJECT (pngparse,
+              "sink caps override framerate from headers");
+        } else {
+          GST_INFO_OBJECT (pngparse, "No framerate set");
+        }
+
         caps = gst_caps_new_simple ("image/png",
-            "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
+            "width", G_TYPE_INT, width, "height", G_TYPE_INT, height,
+            "framerate", GST_TYPE_FRACTION, fr_num, fr_denom, NULL);
+
         if (!gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps)) {
           ret = GST_FLOW_NOT_NEGOTIATED;
         }
