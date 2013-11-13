@@ -4466,24 +4466,51 @@ gst_value_compare (const GValue * value1, const GValue * value2)
      as well as lists and ranges ("{ 1, 2 }" and "[ 1, 2 ]" are equal) */
   ltype = gst_value_list_get_type ();
   if (G_VALUE_HOLDS (value1, ltype) && !G_VALUE_HOLDS (value2, ltype)) {
+    gint i, n, ret;
 
     if (gst_value_list_equals_range (value1, value2)) {
       return GST_VALUE_EQUAL;
-    } else if (gst_value_list_get_size (value1) == 1) {
+    }
+
+    n = gst_value_list_get_size (value1);
+    if (n == 0)
+      return GST_VALUE_UNORDERED;
+
+    for (i = 0; i < n; i++) {
       const GValue *elt;
 
-      elt = gst_value_list_get_value (value1, 0);
-      return gst_value_compare (elt, value2);
+      elt = gst_value_list_get_value (value1, i);
+      ret = gst_value_compare (elt, value2);
+      if (ret != GST_VALUE_EQUAL && n == 1)
+        return ret;
+      else if (ret != GST_VALUE_EQUAL)
+        return GST_VALUE_UNORDERED;
     }
+
+    return GST_VALUE_EQUAL;
   } else if (G_VALUE_HOLDS (value2, ltype) && !G_VALUE_HOLDS (value1, ltype)) {
+    gint i, n, ret;
+
     if (gst_value_list_equals_range (value2, value1)) {
       return GST_VALUE_EQUAL;
-    } else if (gst_value_list_get_size (value2) == 1) {
+    }
+
+    n = gst_value_list_get_size (value2);
+    if (n == 0)
+      return GST_VALUE_UNORDERED;
+
+    for (i = 0; i < n; i++) {
       const GValue *elt;
 
-      elt = gst_value_list_get_value (value2, 0);
-      return gst_value_compare (elt, value1);
+      elt = gst_value_list_get_value (value2, i);
+      ret = gst_value_compare (elt, value1);
+      if (ret != GST_VALUE_EQUAL && n == 1)
+        return ret;
+      else if (ret != GST_VALUE_EQUAL)
+        return GST_VALUE_UNORDERED;
     }
+
+    return GST_VALUE_EQUAL;
   }
 
   if (G_VALUE_TYPE (value1) != G_VALUE_TYPE (value2))
