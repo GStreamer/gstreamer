@@ -17,13 +17,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
+#ifndef __GES_ERROR_H__
+#define __GES_ERROR_H__
+
 /**
  * SECTION: ges-gerror
  * @short_description: GError — Categorized error messages
  */
-
-#ifndef __GES_ERROR_H__
-#define __GES_ERROR_H__
 
 G_BEGIN_DECLS
 

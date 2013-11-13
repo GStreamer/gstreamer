@@ -130,12 +130,12 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-smart-adder.h \
 	ges-smart-video-mixer.h \
 	ges-utils.h \
-	ges-group.h \
-	gstframepositionner.h
+	ges-group.h
 
 noinst_HEADERS = \
 	ges-internal.h \
-	ges-auto-transition.h
+	ges-auto-transition.h \
+	gstframepositionner.h
 
 libges_@GST_API_VERSION@_la_CFLAGS = -I$(top_srcdir) $(GST_PBUTILS_CFLAGS) \
 		$(GST_VIDEO_CFLAGS) $(GST_CONTROLLER_CFLAGS) $(GST_PLUGINS_BASE_CFLAGS) \
@@ -189,6 +189,7 @@ GES-@GST_API_VERSION@.gir: $(INTROSPECTION_SCANNER) libges-@GST_API_VERSION@.la
 		--libtool="$(top_builddir)/libtool" \
 		--pkg gstreamer-@GST_API_VERSION@ \
 		--pkg gstreamer-pbutils-@GST_API_VERSION@ \
+		--pkg gstreamer-controller-@GST_API_VERSION@ \
 		--pkg gio-2.0 \
 		--pkg-export ges-@GST_API_VERSION@ \
 		--add-init-section="gst_init(NULL, NULL);" \
@@ -218,6 +219,7 @@ typelibs_DATA = $(BUILT_GIRSOURCES:.gir=.typelib)
 		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-video-@GST_API_VERSION@` \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-tag-@GST_API_VERSION@` \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-base-@GST_API_VERSION@` \
+		--includedir=`$(PKG_CONFIG) --variable=girdir gstreamer-controller-@GST_API_VERSION@` \
 		--includedir=`$(PKG_CONFIG) --variable=girdir gio-2.0` \
 		$(INTROSPECTION_COMPILER_OPTS) $< -o $(@F)
 

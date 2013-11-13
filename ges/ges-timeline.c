@@ -521,7 +521,7 @@ ges_timeline_class_init (GESTimelineClass * klass)
       G_TYPE_PTR_ARRAY, 2, GES_TYPE_CLIP, GES_TYPE_TRACK_ELEMENT);
 
   /**
-   * GESTimeline::commited
+   * GESTimeline::commited:
    * @timeline: the #GESTimeline
    */
   ges_timeline_signals[COMMITED] =

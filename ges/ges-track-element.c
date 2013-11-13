@@ -279,7 +279,7 @@ ges_track_element_init (GESTrackElement * self)
   priv->bindings_hashtable = g_hash_table_new_full (g_str_hash, g_str_equal,
       g_free, NULL);
   priv->children_props =
-      g_hash_table_new_full ((GHashFunc) pspec_hash, pspec_equal,
+      g_hash_table_new_full ((GHashFunc) ges_pspec_hash, ges_pspec_equal,
       (GDestroyNotify) g_param_spec_unref, gst_object_unref);
 
 }
@@ -733,7 +733,7 @@ strv_find_str (const gchar ** strv, const char *str)
  * take into account (as defined in the factory meta "klass" field)
  * @blacklist: (array zero-terminated=1) (transfer none) (allow-none): A
  * blacklist of elements factory names to not take into account
- * @witelist: (array zero-terminated=1) (transfer none) (allow-none): A list
+ * @whitelist: (array zero-terminated=1) (transfer none) (allow-none): A list
  * of propery names to add as children properties
  *
  * Looks for the properties defines with the various parametters and add

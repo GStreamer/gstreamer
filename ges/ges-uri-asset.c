@@ -487,19 +487,19 @@ ges_uri_clip_asset_request_sync (const gchar * uri, GError ** error)
 
 /**
  * ges_uri_clip_asset_class_set_timeout:
- * @class: The #GESUriClipAssetClass on which to set the discoverer timeout
+ * @klass: The #GESUriClipAssetClass on which to set the discoverer timeout
  * @timeout: The timeout to set
  *
  * Sets the timeout of #GESUriClipAsset loading
  */
 void
-ges_uri_clip_asset_class_set_timeout (GESUriClipAssetClass * class,
+ges_uri_clip_asset_class_set_timeout (GESUriClipAssetClass * klass,
     GstClockTime timeout)
 {
-  g_return_if_fail (GES_IS_URI_CLIP_ASSET_CLASS (class));
+  g_return_if_fail (GES_IS_URI_CLIP_ASSET_CLASS (klass));
 
-  g_object_set (class->discoverer, "timeout", timeout, NULL);
-  g_object_set (class->sync_discoverer, "timeout", timeout, NULL);
+  g_object_set (klass->discoverer, "timeout", timeout, NULL);
+  g_object_set (klass->sync_discoverer, "timeout", timeout, NULL);
 }
 
 /**

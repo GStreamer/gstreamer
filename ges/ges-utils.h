@@ -27,8 +27,8 @@
 G_BEGIN_DECLS
 
 GESTimeline * ges_timeline_new_audio_video (void);
-gboolean pspec_equal (gconstpointer key_spec_1, gconstpointer key_spec_2);
-guint pspec_hash (gconstpointer key_spec);
+gboolean ges_pspec_equal (gconstpointer key_spec_1, gconstpointer key_spec_2);
+guint ges_pspec_hash (gconstpointer key_spec);
 
 
 G_END_DECLS

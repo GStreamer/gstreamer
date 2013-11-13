@@ -101,7 +101,7 @@ element_end_compare (GESTimelineElement * a, GESTimelineElement * b)
 }
 
 gboolean
-pspec_equal (gconstpointer key_spec_1, gconstpointer key_spec_2)
+ges_pspec_equal (gconstpointer key_spec_1, gconstpointer key_spec_2)
 {
   const GParamSpec *key1 = key_spec_1;
   const GParamSpec *key2 = key_spec_2;
@@ -111,7 +111,7 @@ pspec_equal (gconstpointer key_spec_1, gconstpointer key_spec_2)
 }
 
 guint
-pspec_hash (gconstpointer key_spec)
+ges_pspec_hash (gconstpointer key_spec)
 {
   const GParamSpec *key = key_spec;
   const gchar *p;
