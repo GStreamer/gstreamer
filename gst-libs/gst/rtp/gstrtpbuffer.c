@@ -1243,7 +1243,7 @@ gst_rtp_buffer_ext_timestamp (guint64 * exttimestamp, guint32 timestamp)
     result = timestamp;
   } else {
     /* pick wraparound counter from previous timestamp and add to new timestamp */
-    result = timestamp + (ext & ~(G_GINT64_CONSTANT (0xffffffff)));
+    result = timestamp + (ext & ~(G_GUINT64_CONSTANT (0xffffffff)));
 
     /* check for timestamp wraparound */
     if (result < ext)
@@ -1254,7 +1254,7 @@ gst_rtp_buffer_ext_timestamp (guint64 * exttimestamp, guint32 timestamp)
     if (diff > G_MAXINT32) {
       /* timestamp went backwards more than allowed, we wrap around and get
        * updated extended timestamp. */
-      result += (G_GINT64_CONSTANT (1) << 32);
+      result += (G_GUINT64_CONSTANT (1) << 32);
     }
   }
   *exttimestamp = result;
