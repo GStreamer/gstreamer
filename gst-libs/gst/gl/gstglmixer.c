@@ -1476,6 +1476,11 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
       GstSegment *seg;
       guint in_tex;
       GstVideoFrame *in_frame;
+      GstGLMixerFrameData *frame;
+
+      frame = g_ptr_array_index (mix->frames, array_index);
+      frame->pad = pad;
+      frame->texture = 0;
 
       seg = &mixcol->collect.segment;
 
@@ -1537,13 +1542,12 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
         pad->mapped = TRUE;
       }
 
-      g_array_index (mix->array_textures, guint, array_index) = in_tex;
+      frame->texture = in_tex;
     }
     ++array_index;
   }
 
-  mix_class->process_textures (mix, mix->array_textures, mix->in_frames,
-      out_tex);
+  mix_class->process_textures (mix, mix->frames, out_tex);
 
   if (out_gl_wrapped) {
     if (gst_gl_download_perform_with_data (mix->download, out_tex,
@@ -2127,15 +2131,18 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
 
       mix->array_buffers = g_ptr_array_new_full (mix->numpads, NULL);
       mix->in_frames = g_ptr_array_new_full (mix->numpads, NULL);
-      mix->array_textures =
-          g_array_sized_new (FALSE, TRUE, sizeof (guint), mix->numpads);
+      mix->frames = g_ptr_array_new_full (mix->numpads, NULL);
 
       g_ptr_array_set_size (mix->array_buffers, mix->numpads);
       g_ptr_array_set_size (mix->in_frames, mix->numpads);
-      g_array_set_size (mix->array_textures, mix->numpads);
+      g_ptr_array_set_size (mix->frames, mix->numpads);
 
       for (i = 0; i < mix->numpads; i++) {
-        mix->in_frames->pdata[i] = g_slice_alloc (sizeof (GstVideoFrame));
+        mix->in_frames->pdata[i] = g_slice_new0 (GstVideoFrame);
+      }
+
+      for (i = 0; i < mix->numpads; i++) {
+        mix->frames->pdata[i] = g_slice_new0 (GstGLMixerFrameData);
       }
 
       GST_LOG_OBJECT (mix, "starting collectpads");
@@ -2154,9 +2161,13 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
         g_slice_free1 (sizeof (GstVideoFrame), mix->in_frames->pdata[i]);
       }
 
+      for (i = 0; i < mix->numpads; i++) {
+        g_slice_free1 (sizeof (GstGLMixerFrameData), mix->in_frames->pdata[i]);
+      }
+
       g_ptr_array_free (mix->array_buffers, TRUE);
       g_ptr_array_free (mix->in_frames, TRUE);
-      g_array_free (mix->array_textures, TRUE);
+      g_ptr_array_free (mix->frames, TRUE);
 
       if (mixer_class->reset)
         mixer_class->reset (mix);

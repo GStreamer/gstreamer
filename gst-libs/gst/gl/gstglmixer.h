@@ -43,6 +43,7 @@ G_BEGIN_DECLS
 typedef struct _GstGLMixer GstGLMixer;
 typedef struct _GstGLMixerClass GstGLMixerClass;
 typedef struct _GstGLMixerPrivate GstGLMixerPrivate;
+typedef struct _GstGLMixerFrameData GstGLMixerFrameData;
 
 typedef gboolean (*GstGLMixerSetCaps) (GstGLMixer* mixer,
   GstCaps* outcaps);
@@ -50,7 +51,7 @@ typedef void (*GstGLMixerReset) (GstGLMixer *mixer);
 typedef gboolean (*GstGLMixerProcessFunc) (GstGLMixer *mix,
   GPtrArray *buffers, GstBuffer *outbuf);
 typedef gboolean (*GstGLMixerProcessTextures) (GstGLMixer *mix,
-  GArray *in_textures, GPtrArray *in_frames, guint out_tex);
+  GPtrArray *frames, guint out_tex);
 
 struct _GstGLMixer
 {
@@ -73,8 +74,8 @@ struct _GstGLMixer
   gint next_sinkpad;
 
   GPtrArray *array_buffers;
-  GArray *array_textures;
   GPtrArray *in_frames;
+  GPtrArray *frames;
 
   GstVideoInfo out_info;
   GLuint out_tex_id;
@@ -106,6 +107,12 @@ struct _GstGLMixerClass
   GstGLMixerReset reset;
   GstGLMixerProcessFunc process_buffers;
   GstGLMixerProcessTextures process_textures;
+};
+
+struct _GstGLMixerFrameData
+{
+  GstGLMixerPad *pad;
+  guint texture;
 };
 
 GType gst_gl_mixer_get_type(void);

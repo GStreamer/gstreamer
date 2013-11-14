@@ -40,7 +40,6 @@ struct _GstGLVideoMixer
     GstGLMixer mixer;
 
     GstGLShader *shader;
-    GArray *input_textures;
     GPtrArray *input_frames;
 };
 

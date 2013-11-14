@@ -65,7 +65,7 @@ static gboolean gst_gl_mosaic_init_shader (GstGLMixer * mixer,
     GstCaps * outcaps);
 
 static gboolean gst_gl_mosaic_process_textures (GstGLMixer * mixer,
-    GArray * in_textures, GPtrArray * in_frames, guint out_tex);
+    GPtrArray * frames, guint out_tex);
 static void gst_gl_mosaic_callback (gpointer stuff);
 
 //vertex source
@@ -135,7 +135,6 @@ static void
 gst_gl_mosaic_init (GstGLMosaic * mosaic)
 {
   mosaic->shader = NULL;
-  mosaic->input_textures = NULL;
   mosaic->input_frames = NULL;
 }
 
@@ -170,7 +169,6 @@ gst_gl_mosaic_reset (GstGLMixer * mixer)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mixer);
 
-  mosaic->input_textures = NULL;
   mosaic->input_frames = NULL;
 
   //blocking call, wait the opengl thread has destroyed the shader
@@ -190,13 +188,12 @@ gst_gl_mosaic_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
 }
 
 static gboolean
-gst_gl_mosaic_process_textures (GstGLMixer * mix, GArray * in_textures,
-    GPtrArray * in_frames, guint out_tex)
+gst_gl_mosaic_process_textures (GstGLMixer * mix, GPtrArray * frames,
+    guint out_tex)
 {
   GstGLMosaic *mosaic = GST_GL_MOSAIC (mix);
 
-  mosaic->input_textures = in_textures;
-  mosaic->input_frames = in_frames;
+  mosaic->input_frames = frames;
 
   //blocking call, use a FBO
   gst_gl_context_use_fbo_v2 (mix->context,
@@ -251,20 +248,20 @@ gst_gl_mosaic_callback (gpointer stuff)
   attr_texture_loc =
       gst_gl_shader_get_attribute_location (mosaic->shader, "a_texCoord");
 
-  while (count < mosaic->input_textures->len && count < 6) {
-    GstVideoFrame *in_frame;
+  while (count < mosaic->input_frames->len && count < 6) {
+    GstGLMixerFrameData *frame;
     GLfloat *v_vertices;
     guint in_tex;
     guint width, height;
 
-    in_frame = g_ptr_array_index (mosaic->input_frames, count);
-    in_tex = g_array_index (mosaic->input_textures, guint, count);
-    width = GST_VIDEO_FRAME_WIDTH (in_frame);
-    height = GST_VIDEO_FRAME_HEIGHT (in_frame);
+    frame = g_ptr_array_index (mosaic->input_frames, count);
+    in_tex = frame->texture;
+    width = GST_VIDEO_INFO_WIDTH (&frame->pad->in_info);
+    height = GST_VIDEO_INFO_HEIGHT (&frame->pad->in_info);
 
-    if (!in_frame || !in_tex || width <= 0 || height <= 0) {
+    if (!frame || !in_tex || width <= 0 || height <= 0) {
       GST_DEBUG ("skipping texture:%u frame:%p width:%u height %u",
-          in_tex, in_frame, width, height);
+          in_tex, frame, width, height);
       count++;
       continue;
     }

@@ -65,7 +65,7 @@ static gboolean gst_gl_video_mixer_init_shader (GstGLMixer * mixer,
     GstCaps * outcaps);
 
 static gboolean gst_gl_video_mixer_process_textures (GstGLMixer * mixer,
-    GArray * in_textures, GPtrArray * in_frames, guint out_tex);
+    GPtrArray * in_frames, guint out_tex);
 static void gst_gl_video_mixer_callback (gpointer stuff);
 
 /* vertex source */
@@ -116,7 +116,6 @@ static void
 gst_gl_video_mixer_init (GstGLVideoMixer * video_mixer)
 {
   video_mixer->shader = NULL;
-  video_mixer->input_textures = NULL;
   video_mixer->input_frames = NULL;
 }
 
@@ -147,7 +146,6 @@ gst_gl_video_mixer_reset (GstGLMixer * mixer)
 {
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (mixer);
 
-  video_mixer->input_textures = NULL;
   video_mixer->input_frames = NULL;
 
   if (video_mixer->shader)
@@ -165,13 +163,12 @@ gst_gl_video_mixer_init_shader (GstGLMixer * mixer, GstCaps * outcaps)
 }
 
 static gboolean
-gst_gl_video_mixer_process_textures (GstGLMixer * mix, GArray * in_textures,
-    GPtrArray * in_frames, guint out_tex)
+gst_gl_video_mixer_process_textures (GstGLMixer * mix, GPtrArray * frames,
+    guint out_tex)
 {
   GstGLVideoMixer *video_mixer = GST_GL_VIDEO_MIXER (mix);
 
-  video_mixer->input_textures = in_textures;
-  video_mixer->input_frames = in_frames;
+  video_mixer->input_frames = frames;
 
   gst_gl_context_use_fbo_v2 (mix->context,
       GST_VIDEO_INFO_WIDTH (&mix->out_info),
@@ -222,21 +219,21 @@ gst_gl_video_mixer_callback (gpointer stuff)
 
   gl->Enable (GL_BLEND);
 
-  while (count < video_mixer->input_textures->len) {
-    GstVideoFrame *in_frame;
+  while (count < video_mixer->input_frames->len) {
+    GstGLMixerFrameData *frame;
     GLfloat *v_vertices;
     guint in_tex;
     guint in_width, in_height;
     gfloat w, h;
 
-    in_frame = g_ptr_array_index (video_mixer->input_frames, count);
-    in_tex = g_array_index (video_mixer->input_textures, guint, count);
-    in_width = GST_VIDEO_FRAME_WIDTH (in_frame);
-    in_height = GST_VIDEO_FRAME_HEIGHT (in_frame);
+    frame = g_ptr_array_index (video_mixer->input_frames, count);
+    in_tex = frame->texture;
+    in_width = GST_VIDEO_INFO_WIDTH (&frame->pad->in_info);
+    in_height = GST_VIDEO_INFO_HEIGHT (&frame->pad->in_info);
 
-    if (!in_frame || !in_tex || in_width <= 0 || in_height <= 0) {
+    if (!frame || !in_tex || in_width <= 0 || in_height <= 0) {
       GST_DEBUG ("skipping texture:%u frame:%p width:%u height %u",
-          in_tex, in_frame, in_width, in_height);
+          in_tex, frame, in_width, in_height);
       count++;
       continue;
     }
