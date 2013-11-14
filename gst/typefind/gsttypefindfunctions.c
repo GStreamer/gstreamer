@@ -2178,10 +2178,13 @@ mpeg_sys_type_find (GstTypeFind * tf, gpointer unused)
     gint len;
 
     len = MPEG2_MAX_PROBE_LENGTH;
-    do {
-      len = len / 2;
+
+    while (len >= 16) {
       data = gst_type_find_peek (tf, 0, 5 + len);
-    } while (data == NULL && len >= 32);
+      if (data != NULL)
+        break;
+      len = len / 2;
+    }
 
     if (!data)
       return;
