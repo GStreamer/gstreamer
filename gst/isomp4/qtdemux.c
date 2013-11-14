@@ -6276,12 +6276,7 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
   first = &samples[stream->stbl_index];
   last = &samples[n];
 
-  if (stream->chunks_are_samples) {
-    /* samples have the same size */
-    GST_LOG_OBJECT (qtdemux, "all samples have size %u", stream->sample_size);
-    for (cur = first; cur <= last; cur++)
-      cur->size = stream->sample_size;
-  } else {
+  if (!stream->chunks_are_samples) {
     /* set the sample sizes */
     if (stream->sample_size == 0) {
       /* different sizes for each sample */
@@ -6290,6 +6285,11 @@ qtdemux_parse_samples (GstQTDemux * qtdemux, QtDemuxStream * stream, guint32 n)
         GST_LOG_OBJECT (qtdemux, "sample %d has size %u",
             (guint) (cur - samples), cur->size);
       }
+    } else {
+      /* samples have the same size */
+      GST_LOG_OBJECT (qtdemux, "all samples have size %u", stream->sample_size);
+      for (cur = first; cur <= last; cur++)
+        cur->size = stream->sample_size;
     }
   }
 
