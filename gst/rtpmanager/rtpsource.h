@@ -136,6 +136,8 @@ struct _RTPSource {
   guint32       ssrc;
 
   guint16       generation;
+  GHashTable    *reported_in_sr_of;     /* set of SSRCs */
+
   guint         probation;
   guint         curr_probation;
   gboolean      validated;

@@ -224,6 +224,7 @@ rtp_source_reset (RTPSource * src)
     g_free (src->bye_reason);
   src->bye_reason = NULL;
   src->sent_bye = FALSE;
+  g_hash_table_remove_all (src->reported_in_sr_of);
 
   src->stats.cycles = -1;
   src->stats.jitter = 0;
@@ -260,6 +261,8 @@ rtp_source_init (RTPSource * src)
 
   src->retained_feedback = g_queue_new ();
   src->nacks = g_array_new (FALSE, FALSE, sizeof (guint32));
+
+  src->reported_in_sr_of = g_hash_table_new (g_direct_hash, g_direct_equal);
 
   rtp_source_reset (src);
 }
@@ -303,6 +306,8 @@ rtp_source_finalize (GObject * object)
     g_object_unref (src->rtp_from);
   if (src->rtcp_from)
     g_object_unref (src->rtcp_from);
+
+  g_hash_table_unref (src->reported_in_sr_of);
 
   G_OBJECT_CLASS (rtp_source_parent_class)->finalize (object);
 }

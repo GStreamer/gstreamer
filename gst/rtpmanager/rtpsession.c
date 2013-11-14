@@ -2975,14 +2975,20 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
     return;
   }
 
-  /* only report about other sender */
-  if (source == data->source)
-    goto reported;
+  if (g_hash_table_contains (source->reported_in_sr_of,
+          GUINT_TO_POINTER (data->source->ssrc))) {
+    GST_DEBUG ("source %08x already reported in this generation", source->ssrc);
+    return;
+  }
 
   if (gst_rtcp_packet_get_rb_count (packet) == GST_RTCP_MAX_RB_COUNT) {
     GST_DEBUG ("max RB count reached");
     return;
   }
+
+  /* only report about other sender */
+  if (source == data->source)
+    goto reported;
 
   if (!RTP_SOURCE_IS_SENDER (source)) {
     GST_DEBUG ("source %08x not sender", source->ssrc);
@@ -3009,14 +3015,8 @@ session_report_blocks (const gchar * key, RTPSource * source, ReportData * data)
       exthighestseq, jitter, lsr, dlsr);
 
 reported:
-  /* source is reported, move to next generation */
-  source->generation = sess->generation + 1;
-
-  /* if we reported all sources in this generation, move to next */
-  if (--data->num_to_report == 0) {
-    sess->generation++;
-    GST_DEBUG ("all reported, generation now %u", sess->generation);
-  }
+  g_hash_table_add (source->reported_in_sr_of,
+      GUINT_TO_POINTER (data->source->ssrc));
 }
 
 /* construct FIR */
@@ -3534,6 +3534,28 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
   g_queue_push_tail (&data->output, output);
 }
 
+static void
+update_generation (const gchar * key, RTPSource * source, ReportData * data)
+{
+  RTPSession *sess = data->sess;
+
+  if (g_hash_table_size (source->reported_in_sr_of) >=
+      sess->stats.internal_sources) {
+    /* source is reported, move to next generation */
+    source->generation = sess->generation + 1;
+    g_hash_table_remove_all (source->reported_in_sr_of);
+
+    GST_LOG ("reported source %x, new generation: %d", source->ssrc,
+        source->generation);
+
+    /* if we reported all sources in this generation, move to next */
+    if (--data->num_to_report == 0) {
+      sess->generation++;
+      GST_DEBUG ("all reported, generation now %u", sess->generation);
+    }
+  }
+}
+
 /**
  * rtp_session_on_timeout:
  * @sess: an #RTPSession
@@ -3620,6 +3642,10 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   /* generate RTCP for all internal sources */
   g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
       (GHFunc) generate_rtcp, &data);
+
+  /* update the generation for all the sources that have been reported */
+  g_hash_table_foreach (sess->ssrcs[sess->mask_idx],
+      (GHFunc) update_generation, &data);
 
   /* we keep track of the last report time in order to timeout inactive
    * receivers or senders */
