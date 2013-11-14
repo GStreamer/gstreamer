@@ -42,6 +42,7 @@ GST_DEBUG_CATEGORY_EXTERN (mssdemux_debug);
 
 #define MSS_PROP_BITRATE              "Bitrate"
 #define MSS_PROP_DURATION             "d"
+#define MSS_PROP_LANGUAGE             "Language"
 #define MSS_PROP_NUMBER               "n"
 #define MSS_PROP_STREAM_DURATION      "Duration"
 #define MSS_PROP_TIME                 "t"
@@ -74,6 +75,7 @@ struct _GstMssStream
   GList *qualities;
 
   gchar *url;
+  gchar *lang;
 
   GList *current_fragment;
   GList *current_quality;
@@ -149,6 +151,7 @@ _gst_mss_stream_init (GstMssStream * stream, xmlNodePtr node)
 
   /* get the base url path generator */
   stream->url = (gchar *) xmlGetProp (node, (xmlChar *) MSS_PROP_URL);
+  stream->lang = (gchar *) xmlGetProp (node, (xmlChar *) MSS_PROP_LANGUAGE);
 
   for (iter = node->children; iter; iter = iter->next) {
     if (node_has_type (iter, MSS_NODE_STREAM_FRAGMENT)) {
@@ -265,6 +268,7 @@ gst_mss_stream_free (GstMssStream * stream)
   g_list_free_full (stream->qualities,
       (GDestroyNotify) gst_mss_stream_quality_free);
   xmlFree (stream->url);
+  xmlFree (stream->lang);
   g_regex_unref (stream->regex_position);
   g_regex_unref (stream->regex_bitrate);
   g_free (stream);
@@ -1185,4 +1189,10 @@ gst_buffer_from_hex_string (const gchar * s)
 
   gst_buffer_unmap (buffer, &info);
   return buffer;
+}
+
+const gchar *
+gst_mss_stream_get_lang (GstMssStream * stream)
+{
+  return stream->lang;
 }
