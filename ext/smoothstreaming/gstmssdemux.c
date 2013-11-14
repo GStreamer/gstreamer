@@ -255,7 +255,6 @@ gst_mss_demux_stream_new (GstMssDemux * mssdemux,
 static void
 gst_mss_demux_stream_free (GstMssDemuxStream * stream)
 {
-  gst_download_rate_deinit (&stream->download_rate);
   if (stream->download_task) {
     if (GST_TASK_STATE (stream->download_task) != GST_TASK_STOPPED) {
       GST_DEBUG_OBJECT (stream->parent, "Leaving streaming task %s:%s",
@@ -273,11 +272,11 @@ gst_mss_demux_stream_free (GstMssDemuxStream * stream)
     stream->download_task = NULL;
   }
 
+  gst_download_rate_deinit (&stream->download_rate);
   if (stream->pending_newsegment) {
     gst_event_unref (stream->pending_newsegment);
     stream->pending_newsegment = NULL;
   }
-
 
   if (stream->downloader != NULL) {
     g_object_unref (stream->downloader);
