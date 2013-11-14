@@ -52,6 +52,7 @@
 #include <glib/gprintf.h>
 #include <gst/tag/tag.h>
 #include <gst/audio/audio.h>
+#include <gst/video/video.h>
 
 #include "qtatomparser.h"
 #include "qtdemux_types.h"
@@ -10215,8 +10216,7 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     guint32 fourcc, const guint8 * stsd_data, gchar ** codec_name)
 {
   GstCaps *caps;
-  const GstStructure *s;
-  const gchar *name;
+  GstVideoFormat format = GST_VIDEO_FORMAT_UNKNOWN;
 
   switch (fourcc) {
     case GST_MAKE_FOURCC ('p', 'n', 'g', ' '):
@@ -10264,23 +10264,19 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     {
       guint16 bps;
 
-      _codec ("Raw RGB video");
       bps = QT_UINT16 (stsd_data + 98);
-      /* set common stuff */
-      caps = gst_caps_new_empty_simple ("video/x-raw");
-
       switch (bps) {
         case 15:
-          gst_caps_set_simple (caps, "format", G_TYPE_STRING, "RGB15", NULL);
+          format = GST_VIDEO_FORMAT_RGB15;
           break;
         case 16:
-          gst_caps_set_simple (caps, "format", G_TYPE_STRING, "RGB16", NULL);
+          format = GST_VIDEO_FORMAT_RGB16;
           break;
         case 24:
-          gst_caps_set_simple (caps, "format", G_TYPE_STRING, "RGB", NULL);
+          format = GST_VIDEO_FORMAT_RGB;
           break;
         case 32:
-          gst_caps_set_simple (caps, "format", G_TYPE_STRING, "ARGB", NULL);
+          format = GST_VIDEO_FORMAT_ARGB;
           break;
         default:
           /* unknown */
@@ -10289,31 +10285,19 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
       break;
     }
     case GST_MAKE_FOURCC ('y', 'v', '1', '2'):
-      _codec ("Raw planar YUV 4:2:0");
-      caps = gst_caps_new_simple ("video/x-raw",
-          "format", G_TYPE_STRING, "I420", NULL);
+      format = GST_VIDEO_FORMAT_I420;
       break;
     case GST_MAKE_FOURCC ('y', 'u', 'v', '2'):
     case GST_MAKE_FOURCC ('Y', 'u', 'v', '2'):
-      _codec ("Raw packed YUV 4:2:2");
-      caps = gst_caps_new_simple ("video/x-raw",
-          "format", G_TYPE_STRING, "YUY2", NULL);
+      format = GST_VIDEO_FORMAT_I420;
       break;
     case GST_MAKE_FOURCC ('2', 'v', 'u', 'y'):
     case GST_MAKE_FOURCC ('2', 'V', 'u', 'y'):
-      _codec ("Raw packed YUV 4:2:2");
-      caps = gst_caps_new_simple ("video/x-raw",
-          "format", G_TYPE_STRING, "UYVY", NULL);
-      break;
     case GST_MAKE_FOURCC ('v', '2', '1', '0'):
-      _codec ("Raw packed YUV 10-bit 4:2:2");
-      caps = gst_caps_new_simple ("video/x-raw",
-          "format", G_TYPE_STRING, "v210", NULL);
+      format = GST_VIDEO_FORMAT_UYVY;
       break;
     case GST_MAKE_FOURCC ('r', '2', '1', '0'):
-      _codec ("Raw packed RGB 10-bit 4:4:4");
-      caps = gst_caps_new_simple ("video/x-raw",
-          "format", G_TYPE_STRING, "r210", NULL);
+      format = GST_VIDEO_FORMAT_r210;
       break;
     case GST_MAKE_FOURCC ('m', 'p', 'e', 'g'):
     case GST_MAKE_FOURCC ('m', 'p', 'g', '1'):
@@ -10582,12 +10566,18 @@ qtdemux_video_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     }
   }
 
-  /* enable clipping for raw video streams */
-  s = gst_caps_get_structure (caps, 0);
-  name = gst_structure_get_name (s);
-  if (g_str_has_prefix (name, "video/x-raw")) {
+  if (format != GST_VIDEO_FORMAT_UNKNOWN) {
+    GstVideoInfo info;
+
+    gst_video_info_init (&info);
+    gst_video_info_set_format (&info, format, stream->width, stream->height);
+    caps = gst_video_info_to_caps (&info);
+    *codec_name = gst_pb_utils_get_codec_description (caps);
+
+    /* enable clipping for raw video streams */
     stream->need_clip = TRUE;
   }
+
   return caps;
 }
 
