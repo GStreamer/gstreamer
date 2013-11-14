@@ -38,6 +38,7 @@ static gboolean seenerrors = FALSE;
 static gchar **new_paths = NULL;
 static GMainLoop *mainloop;
 static GHashTable *tried_uris;
+static GESTrackType track_types = GES_TRACK_TYPE_AUDIO | GES_TRACK_TYPE_VIDEO;
 
 static gchar *
 ensure_uri (gchar * location)
@@ -46,6 +47,35 @@ ensure_uri (gchar * location)
     return g_strdup (location);
   else
     return gst_filename_to_uri (location, NULL);
+}
+
+static guint
+get_flags_from_string (GType type, const gchar * str_flags)
+{
+  guint i;
+  gint flags = 0;
+  GFlagsClass *class = g_type_class_ref (type);
+
+  for (i = 0; i < class->n_values; i++) {
+    if (g_strrstr (str_flags, class->values[i].value_nick)) {
+      flags |= class->values[i].value;
+    }
+  }
+  g_type_class_unref (class);
+
+  return flags;
+}
+
+static gboolean
+parse_track_type (const gchar * option_name, const gchar * value,
+    gpointer udata, GError ** error)
+{
+  track_types = get_flags_from_string (GES_TYPE_TRACK_TYPE, value);
+
+  if (track_types == 0)
+    return FALSE;
+
+  return TRUE;
 }
 
 static gboolean
@@ -147,17 +177,25 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
   if (proj_uri)
     return timeline;
 
-  tracka = GES_TRACK (ges_audio_track_new ());
-  trackv = GES_TRACK (ges_video_track_new ());
-
   /* We are only going to be doing one layer of clips */
   layer = (GESLayer *) ges_simple_layer_new ();
 
   /* Add the tracks and the layer to the timeline */
-  if (!ges_timeline_add_layer (timeline, layer) ||
-      !(ges_timeline_add_track (timeline, tracka)) ||
-      !(ges_timeline_add_track (timeline, trackv)))
+  if (!ges_timeline_add_layer (timeline, layer))
     goto build_failure;
+
+  if (track_types & GES_TRACK_TYPE_AUDIO) {
+    tracka = GES_TRACK (ges_audio_track_new ());
+    if (!(ges_timeline_add_track (timeline, tracka)))
+      goto build_failure;
+  }
+
+  if (track_types & GES_TRACK_TYPE_VIDEO) {
+    trackv = GES_TRACK (ges_video_track_new ());
+
+    if (!(ges_timeline_add_track (timeline, trackv)))
+      goto build_failure;
+  }
 
   /* Here we've finished initializing our timeline, we're
    * ready to start using it... by solely working with the layer !*/
@@ -603,6 +641,8 @@ main (int argc, gchar ** argv)
         "Do not output status information of TYPE", "TYPE1,TYPE2,..."},
     {"sample-paths", 'P', 0, G_OPTION_ARG_STRING_ARRAY, &new_paths,
         "List of pathes to look assets in if they were moved"},
+    {"track-types", 'P', 0, G_OPTION_ARG_CALLBACK, &parse_track_type,
+        "Defines the track types to be created"},
     {NULL}
   };
   GOptionContext *ctx;
