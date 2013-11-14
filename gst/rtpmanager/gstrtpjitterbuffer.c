@@ -149,7 +149,7 @@ enum
   PROP_RTX_DELAY_REORDER,
   PROP_RTX_RETRY_TIMEOUT,
   PROP_RTX_RETRY_PERIOD,
-  PROP_RTX_STATS,
+  PROP_STATS,
   PROP_LAST
 };
 
@@ -559,9 +559,9 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           "(-1 automatic)", -1, G_MAXINT, DEFAULT_RTX_RETRY_PERIOD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRtpJitterBuffer::rtx-stats:
+   * GstRtpJitterBuffer::stats:
    *
-   * Various retransmission statistics. This property returns a GstStructure
+   * Various jitterbuffer statistics. This property returns a GstStructure
    * with name application/x-rtp-jitterbuffer-stats with the following fields:
    *
    *  "count"          G_TYPE_UINT64   The number of retransmissions requested
@@ -571,9 +571,9 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    *
    * Since: 1.2.1
    */
-  g_object_class_install_property (gobject_class, PROP_RTX_STATS,
-      g_param_spec_boxed ("rtx-stats", "RTX statistics",
-          "Various retransmission statistics", GST_TYPE_STRUCTURE,
+  g_object_class_install_property (gobject_class, PROP_STATS,
+      g_param_spec_boxed ("stats", "Statistics",
+          "Various statistics", GST_TYPE_STRUCTURE,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -3228,7 +3228,7 @@ gst_rtp_jitter_buffer_get_property (GObject * object,
       g_value_set_int (value, priv->rtx_retry_period);
       JBUF_UNLOCK (priv);
       break;
-    case PROP_RTX_STATS:
+    case PROP_STATS:
       g_value_take_boxed (value,
           gst_rtp_jitter_buffer_create_stats (jitterbuffer));
       break;
