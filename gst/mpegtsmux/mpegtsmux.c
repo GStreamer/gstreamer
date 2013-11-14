@@ -787,9 +787,10 @@ mpegtsmux_sink_event (GstCollectPads * pads, GstCollectData * data,
   MpegTsMux *mux = GST_MPEG_TSMUX (user_data);
   gboolean res = FALSE;
   gboolean forward = TRUE;
+  MpegTsPadData *pad_data = (MpegTsPadData *) data;
+
 #ifndef GST_DISABLE_GST_DEBUG
   GstPad *pad;
-  MpegTsPadData *pad_data = (MpegTsPadData *) data;
 
   pad = data->pad;
 #endif
