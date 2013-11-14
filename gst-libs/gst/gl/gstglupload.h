@@ -109,9 +109,15 @@ gboolean gst_gl_upload_init_format         (GstGLUpload * upload, GstVideoFormat
                                             guint in_width, guint in_height,
                                             guint out_width, guint out_height);
 
+gboolean gst_gl_upload_add_video_gl_texture_upload_meta (GstGLUpload * upload, GstBuffer * buffer);
+
+gboolean gst_gl_upload_perform_with_buffer (GstGLUpload * upload, GstBuffer * buffer, guint * tex_id);
+void gst_gl_upload_release_buffer (GstGLUpload * upload);
 gboolean gst_gl_upload_perform_with_memory        (GstGLUpload * upload, GstGLMemory * gl_mem);
 gboolean gst_gl_upload_perform_with_data          (GstGLUpload * upload, GLuint texture_id,
                                                    gpointer data[GST_VIDEO_MAX_PLANES]);
+
+gboolean gst_gl_upload_perform_with_gl_texture_upload_meta (GstGLUpload *upload, GstVideoGLTextureUploadMeta *meta, guint texture_id[4]);
 
 G_END_DECLS
 

@@ -485,20 +485,6 @@ gst_gl_mixer_sink_query (GstCollectPads * pads, GstCollectData * data,
           &mix->display);
       break;
     }
-    case GST_QUERY_CUSTOM:
-    {
-      /* mix is a sink in terms of gl chain, so we are sharing the gldisplay that
-       * comes from src pad with every display of the sink pads */
-      GstStructure *structure = gst_query_writable_structure (query);
-
-      if (gst_structure_has_name (structure, "gstglcontext")) {
-        gst_structure_set (structure, "gstglcontext", G_TYPE_POINTER,
-            mix->context, NULL);
-      } else {
-        ret = gst_collect_pads_query_default (pads, data, query, FALSE);
-      }
-      break;
-    }
     default:
       ret = gst_collect_pads_query_default (pads, data, query, FALSE);
       break;
@@ -527,22 +513,25 @@ enum
 static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_UPLOAD_VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_GL_DOWNLOAD_FORMATS) "; "
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
+            "RGBA"))
     );
 
 static GstStaticPadTemplate sink_factory = GST_STATIC_PAD_TEMPLATE ("sink_%d",
     GST_PAD_SINK,
     GST_PAD_REQUEST,
-    GST_STATIC_CAPS (GST_GL_DOWNLOAD_VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_GL_UPLOAD_FORMATS) "; "
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
+            "RGBA"))
     );
 
 static void gst_gl_mixer_finalize (GObject * object);
 
 static gboolean gst_gl_mixer_src_query (GstPad * pad, GstObject * object,
     GstQuery * query);
-static gboolean gst_gl_mixer_src_activate_mode (GstPad * pad,
-    GstObject * parent, GstPadMode mode, gboolean active);
-static gboolean gst_gl_mixer_activate (GstGLMixer * mix, gboolean activate);
 static GstFlowReturn gst_gl_mixer_sink_clip (GstCollectPads * pads,
     GstCollectData * data, GstBuffer * buf, GstBuffer ** outbuf,
     GstGLMixer * mix);
@@ -714,8 +703,6 @@ gst_gl_mixer_init (GstGLMixer * mix)
       GST_DEBUG_FUNCPTR (gst_gl_mixer_src_query));
   gst_pad_set_event_function (GST_PAD (mix->srcpad),
       GST_DEBUG_FUNCPTR (gst_gl_mixer_src_event));
-  gst_pad_set_activatemode_function (GST_PAD (mix->srcpad),
-      GST_DEBUG_FUNCPTR (gst_gl_mixer_src_activate_mode));
   gst_element_add_pad (GST_ELEMENT (mix), mix->srcpad);
 
   mix->collect = gst_collect_pads_new ();
@@ -1041,42 +1028,6 @@ gst_gl_mixer_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   }
 
   return res;
-}
-
-static gboolean
-gst_gl_mixer_src_activate_mode (GstPad * pad, GstObject * parent,
-    GstPadMode mode, gboolean active)
-{
-  gboolean result = FALSE;
-  GstGLMixer *mix;
-
-  mix = GST_GL_MIXER (parent);
-
-  switch (mode) {
-    case GST_PAD_MODE_PULL:
-    case GST_PAD_MODE_PUSH:
-    {
-      result = gst_gl_mixer_activate (mix, active);
-      break;
-    }
-    default:
-      result = TRUE;
-      break;
-  }
-
-  return result;
-}
-
-static gboolean
-gst_gl_mixer_activate (GstGLMixer * mix, gboolean activate)
-{
-  if (activate) {
-    if (!gst_gl_ensure_display (mix, &mix->display)) {
-      return FALSE;
-    }
-  }
-
-  return TRUE;
 }
 
 static gboolean
@@ -1624,8 +1575,10 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
       gint64 stream_time;
       GstSegment *seg;
       guint in_tex;
-      GstVideoFrame *in_frame;
       GstGLMixerFrameData *frame;
+      GstVideoFormat in_format;
+      guint in_width, in_height, out_width, out_height;
+
 
       frame = g_ptr_array_index (mix->frames, array_index);
       frame->pad = pad;
@@ -1642,57 +1595,31 @@ gst_gl_mixer_process_textures (GstGLMixer * mix, GstBuffer * outbuf)
       if (GST_CLOCK_TIME_IS_VALID (stream_time))
         gst_object_sync_values (GST_OBJECT (pad), stream_time);
 
-      in_frame = g_ptr_array_index (mix->in_frames, array_index);
+      in_format = GST_VIDEO_INFO_FORMAT (&pad->in_info);
+      in_width = GST_VIDEO_INFO_WIDTH (&pad->in_info);
+      in_height = GST_VIDEO_INFO_HEIGHT (&pad->in_info);
+      out_width = GST_VIDEO_INFO_WIDTH (&mix->out_info);
+      out_height = GST_VIDEO_INFO_HEIGHT (&mix->out_info);
 
-      if (!gst_video_frame_map (in_frame, &pad->in_info, mixcol->buffer,
-              GST_MAP_READ | GST_MAP_GL)) {
+      if (!pad->upload) {
+        pad->upload = gst_gl_upload_new (mix->context);
+
+        if (!gst_gl_upload_init_format (pad->upload, in_format,
+                in_width, in_height, out_width, out_height)) {
+          GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
+              ("%s", "Failed to init upload format"), (NULL));
+          res = FALSE;
+          goto out;
+        }
+      }
+
+      if (!gst_gl_upload_perform_with_buffer (pad->upload, mixcol->buffer,
+              &in_tex)) {
         ++array_index;
         pad->mapped = FALSE;
         continue;
       }
       pad->mapped = TRUE;
-
-      if (gst_is_gl_memory (in_frame->map[0].memory)) {
-        in_tex = *(guint *) in_frame->data[0];
-      } else {
-        GstVideoFormat in_format;
-        guint in_width, in_height, out_width, out_height;
-
-        GST_DEBUG ("Input buffer:%p does not contain correct memory, "
-            "attempting to wrap for upload", mixcol->buffer);
-
-        in_format = GST_VIDEO_INFO_FORMAT (&pad->in_info);
-        in_width = GST_VIDEO_INFO_WIDTH (&pad->in_info);
-        in_height = GST_VIDEO_INFO_HEIGHT (&pad->in_info);
-        out_width = GST_VIDEO_INFO_WIDTH (&mix->out_info);
-        out_height = GST_VIDEO_INFO_HEIGHT (&mix->out_info);
-
-        if (!pad->upload) {
-          pad->upload = gst_gl_upload_new (mix->context);
-
-          if (!gst_gl_upload_init_format (pad->upload, in_format,
-                  in_width, in_height, in_width, in_height)) {
-            GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
-                ("%s", "Failed to init upload format"), (NULL));
-            res = FALSE;
-            goto out;
-          }
-
-          if (!pad->in_tex_id)
-            gst_gl_context_gen_texture (mix->context, &pad->in_tex_id,
-                GST_VIDEO_FORMAT_RGBA, out_width, out_height);
-        }
-
-        if (!gst_gl_upload_perform_with_data (pad->upload, pad->in_tex_id,
-                in_frame->data)) {
-          GST_ELEMENT_ERROR (mix, RESOURCE, NOT_FOUND,
-              ("%s", "Failed to upload video frame"), (NULL));
-          res = FALSE;
-          goto out;
-        }
-
-        in_tex = pad->in_tex_id;
-      }
 
       frame->texture = in_tex;
     }
@@ -1716,10 +1643,9 @@ out:
   walk = mix->sinkpads;
   while (walk) {
     GstGLMixerPad *pad = GST_GL_MIXER_PAD (walk->data);
-    GstVideoFrame *in_frame = g_ptr_array_index (mix->in_frames, i);
 
-    if (in_frame && pad->mapped)
-      gst_video_frame_unmap (in_frame);
+    if (pad->mapped)
+      gst_gl_upload_release_buffer (pad->upload);
 
     pad->mapped = FALSE;
     walk = g_slist_next (walk);
@@ -2284,16 +2210,10 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
       guint i;
 
       mix->array_buffers = g_ptr_array_new_full (mix->numpads, NULL);
-      mix->in_frames = g_ptr_array_new_full (mix->numpads, NULL);
       mix->frames = g_ptr_array_new_full (mix->numpads, NULL);
 
       g_ptr_array_set_size (mix->array_buffers, mix->numpads);
-      g_ptr_array_set_size (mix->in_frames, mix->numpads);
       g_ptr_array_set_size (mix->frames, mix->numpads);
-
-      for (i = 0; i < mix->numpads; i++) {
-        mix->in_frames->pdata[i] = g_slice_new0 (GstVideoFrame);
-      }
 
       for (i = 0; i < mix->numpads; i++) {
         mix->frames->pdata[i] = g_slice_new0 (GstGLMixerFrameData);
@@ -2312,15 +2232,10 @@ gst_gl_mixer_change_state (GstElement * element, GstStateChange transition)
       gst_collect_pads_stop (mix->collect);
 
       for (i = 0; i < mix->numpads; i++) {
-        g_slice_free1 (sizeof (GstVideoFrame), mix->in_frames->pdata[i]);
-      }
-
-      for (i = 0; i < mix->numpads; i++) {
-        g_slice_free1 (sizeof (GstGLMixerFrameData), mix->in_frames->pdata[i]);
+        g_slice_free1 (sizeof (GstGLMixerFrameData), mix->frames->pdata[i]);
       }
 
       g_ptr_array_free (mix->array_buffers, TRUE);
-      g_ptr_array_free (mix->in_frames, TRUE);
       g_ptr_array_free (mix->frames, TRUE);
 
       if (mixer_class->reset)

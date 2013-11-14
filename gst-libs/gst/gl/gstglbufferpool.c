@@ -179,6 +179,9 @@ gst_gl_buffer_pool_alloc (GstBufferPool * pool, GstBuffer ** buffer,
     gst_buffer_add_video_meta (buf, 0,
         GST_VIDEO_INFO_FORMAT (info), GST_VIDEO_INFO_WIDTH (info),
         GST_VIDEO_INFO_HEIGHT (info));
+
+    gst_gl_upload_add_video_gl_texture_upload_meta (((GstGLMemory *)
+            gl_mem)->upload, buf);
   }
 
   *buffer = buf;
