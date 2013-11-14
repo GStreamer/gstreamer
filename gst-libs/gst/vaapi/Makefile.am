@@ -366,6 +366,7 @@ libgstvaapi_wayland_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_BASE_CFLAGS)			\
 	$(WAYLAND_CFLAGS)			\
 	$(LIBVA_WAYLAND_CFLAGS)			\
+	$(top_builddir)/gst-libs/gst/video/libgstvaapi-videoutils.la \
 	$(NULL)
 
 libgstvaapi_wayland_@GST_API_VERSION@_la_LIBADD = \
