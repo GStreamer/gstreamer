@@ -74,7 +74,6 @@ struct _GstGLMixer
   gint next_sinkpad;
 
   GPtrArray *array_buffers;
-  GPtrArray *in_frames;
   GPtrArray *frames;
 
   GstVideoInfo out_info;

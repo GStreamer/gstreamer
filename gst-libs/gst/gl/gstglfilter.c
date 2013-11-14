@@ -31,17 +31,23 @@ GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
 
 
 static GstStaticPadTemplate gst_gl_filter_src_pad_template =
-GST_STATIC_PAD_TEMPLATE ("src",
+    GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_DOWNLOAD_VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_GL_DOWNLOAD_FORMATS) "; "
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
+            "RGBA"))
     );
 
 static GstStaticPadTemplate gst_gl_filter_sink_pad_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_UPLOAD_VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_GL_UPLOAD_FORMATS) "; "
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
+            "RGBA"))
     );
 
 /* Properties */
@@ -893,6 +899,12 @@ gst_gl_filter_decide_allocation (GstBaseTransform * trans, GstQuery * query)
   out_width = GST_VIDEO_INFO_WIDTH (&filter->out_info);
   out_height = GST_VIDEO_INFO_HEIGHT (&filter->out_info);
 
+  if (!filter->upload) {
+    filter->upload = gst_gl_upload_new (filter->context);
+    gst_gl_upload_init_format (filter->upload,
+        GST_VIDEO_INFO_FORMAT (&filter->in_info), in_width, in_height,
+        out_width, out_height);
+  }
   //blocking call, generate a FBO
   if (!gst_gl_context_gen_fbo (filter->context, out_width, out_height,
           &filter->fbo, &filter->depthbuffer))
@@ -960,52 +972,29 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
     GstBuffer * outbuf)
 {
   GstGLFilterClass *filter_class;
-  GstVideoFrame in_frame;
-  GstVideoFrame out_frame;
   guint in_tex, out_tex;
-  gboolean ret, in_gl_wrapped, out_gl_wrapped;
+  GstVideoFrame out_frame;
+  gboolean ret, out_gl_mem;
+  GstVideoGLTextureUploadMeta *out_tex_upload_meta;
 
   filter_class = GST_GL_FILTER_GET_CLASS (filter);
 
-  if (!gst_video_frame_map (&in_frame, &filter->in_info, inbuf,
-          GST_MAP_READ | GST_MAP_GL)) {
+  if (!gst_gl_upload_perform_with_buffer (filter->upload, inbuf, &in_tex))
     return FALSE;
-  }
+
   if (!gst_video_frame_map (&out_frame, &filter->out_info, outbuf,
           GST_MAP_WRITE | GST_MAP_GL)) {
-    gst_video_frame_unmap (&in_frame);
-    return FALSE;
+    ret = FALSE;
+    goto inbuf_error;
   }
 
-  in_gl_wrapped = !gst_is_gl_memory (in_frame.map[0].memory);
-  out_gl_wrapped = !gst_is_gl_memory (out_frame.map[0].memory);
+  out_gl_mem = gst_is_gl_memory (out_frame.map[0].memory);
+  out_tex_upload_meta = gst_buffer_get_video_gl_texture_upload_meta (outbuf);
 
-  if (!in_gl_wrapped && !out_gl_wrapped) {      /* both GL */
-    in_tex = *(guint *) in_frame.data[0];
+  if (out_gl_mem) {
     out_tex = *(guint *) out_frame.data[0];
-  } else if (in_gl_wrapped && !out_gl_wrapped) {        /* input: non-GL, output: GL */
-    GST_INFO ("Input Buffer does not contain correct meta, "
-        "attempting to wrap for upload");
-
-    if (!filter->upload) {
-      filter->upload = gst_gl_upload_new (filter->context);
-
-      if (!gst_gl_upload_init_format (filter->upload,
-              GST_VIDEO_FRAME_FORMAT (&in_frame),
-              GST_VIDEO_FRAME_WIDTH (&in_frame),
-              GST_VIDEO_FRAME_HEIGHT (&in_frame),
-              GST_VIDEO_FRAME_WIDTH (&out_frame),
-              GST_VIDEO_FRAME_HEIGHT (&out_frame))) {
-        GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
-            ("%s", "Failed to init upload format"), (NULL));
-        return FALSE;
-      }
-    }
-
-    in_tex = filter->in_tex_id;
-    out_tex = *(guint *) out_frame.data[0];
-  } else if (!in_gl_wrapped && out_gl_wrapped) {        /* input: GL, output: non-GL */
-    GST_INFO ("Output Buffer does not contain correct memory, "
+  } else {
+    GST_LOG ("Output Buffer does not contain correct memory, "
         "attempting to wrap for download");
 
     if (!filter->download) {
@@ -1017,52 +1006,11 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
               GST_VIDEO_FRAME_HEIGHT (&out_frame))) {
         GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
             ("%s", "Failed to init download format"), (NULL));
-        return FALSE;
+        ret = FALSE;
+        goto error;
       }
     }
-
-    in_tex = *(guint *) in_frame.data[0];
     out_tex = filter->out_tex_id;
-  } else {                      /* both non-GL */
-    if (!filter->upload) {
-      filter->upload = gst_gl_upload_new (filter->context);
-
-      if (!gst_gl_upload_init_format (filter->upload,
-              GST_VIDEO_FRAME_FORMAT (&in_frame),
-              GST_VIDEO_FRAME_WIDTH (&in_frame),
-              GST_VIDEO_FRAME_HEIGHT (&in_frame),
-              GST_VIDEO_FRAME_WIDTH (&out_frame),
-              GST_VIDEO_FRAME_HEIGHT (&out_frame))) {
-        GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
-            ("%s", "Failed to init upload format"), (NULL));
-        return FALSE;
-      }
-    }
-
-    if (!filter->download) {
-      filter->download = gst_gl_download_new (filter->context);
-
-      if (!gst_gl_download_init_format (filter->download,
-              GST_VIDEO_FRAME_FORMAT (&out_frame),
-              GST_VIDEO_FRAME_WIDTH (&out_frame),
-              GST_VIDEO_FRAME_HEIGHT (&out_frame))) {
-        GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
-            ("%s", "Failed to init download format"), (NULL));
-        return FALSE;
-      }
-    }
-
-    out_tex = filter->out_tex_id;
-    in_tex = filter->in_tex_id;
-  }
-
-  if (in_gl_wrapped) {
-    if (!gst_gl_upload_perform_with_data (filter->upload, in_tex,
-            in_frame.data)) {
-      GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND, ("%s",
-              "Failed to upload video frame"), (NULL));
-      return FALSE;
-    }
   }
 
   GST_DEBUG ("calling filter_texture with textures in:%i out:%i", in_tex,
@@ -1071,17 +1019,20 @@ gst_gl_filter_filter_texture (GstGLFilter * filter, GstBuffer * inbuf,
   g_assert (filter_class->filter_texture);
   ret = filter_class->filter_texture (filter, in_tex, out_tex);
 
-  if (out_gl_wrapped) {
+  if (!out_gl_mem && !out_tex_upload_meta) {
     if (!gst_gl_download_perform_with_data (filter->download, out_tex,
             out_frame.data)) {
       GST_ELEMENT_ERROR (filter, RESOURCE, NOT_FOUND,
           ("%s", "Failed to download video frame"), (NULL));
-      return FALSE;
+      ret = FALSE;
+      goto error;
     }
   }
 
-  gst_video_frame_unmap (&in_frame);
+error:
   gst_video_frame_unmap (&out_frame);
+inbuf_error:
+  gst_gl_upload_release_buffer (filter->upload);
 
   return ret;
 }

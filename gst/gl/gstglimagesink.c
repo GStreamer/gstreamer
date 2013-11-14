@@ -166,10 +166,13 @@ static const gchar *redisplay_fragment_shader_str_gles2 =
 #endif
 
 static GstStaticPadTemplate gst_glimage_sink_template =
-GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (GST_GL_UPLOAD_VIDEO_CAPS)
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE (GST_GL_UPLOAD_FORMATS) "; "
+        GST_VIDEO_CAPS_MAKE_WITH_FEATURES
+        (GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META,
+            GST_GL_UPLOAD_FORMATS))
     );
 
 enum
@@ -365,6 +368,47 @@ gst_glimage_sink_get_property (GObject * object, guint prop_id,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
+  }
+}
+
+static gboolean
+_ensure_gl_setup (GstGLImageSink * gl_sink)
+{
+  GError *error = NULL;
+
+  if (!gst_gl_ensure_display (gl_sink, &gl_sink->display))
+    return FALSE;
+
+  if (!gl_sink->context) {
+    gl_sink->context = gst_gl_context_new (gl_sink->display);
+    if (!gst_gl_context_create (gl_sink->context, NULL, &error))
+      goto context_error;
+  }
+
+  if (!gl_sink->upload) {
+    gl_sink->upload = gst_gl_upload_new (gl_sink->context);
+    if (!gst_gl_upload_init_format (gl_sink->upload,
+            GST_VIDEO_INFO_FORMAT (&gl_sink->info),
+            GST_VIDEO_INFO_WIDTH (&gl_sink->info),
+            GST_VIDEO_INFO_HEIGHT (&gl_sink->info),
+            GST_VIDEO_INFO_WIDTH (&gl_sink->info),
+            GST_VIDEO_INFO_HEIGHT (&gl_sink->info)))
+      goto upload_error;
+  }
+
+  return TRUE;
+
+upload_error:
+  {
+    GST_ELEMENT_ERROR (gl_sink, RESOURCE, NOT_FOUND, ("Failed to init upload"),
+        (NULL));
+    return FALSE;
+  }
+context_error:
+  {
+    GST_ELEMENT_ERROR (gl_sink, RESOURCE, NOT_FOUND, ("%s", error->message),
+        (NULL));
+    return FALSE;
   }
 }
 
@@ -684,7 +728,6 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 {
   GstGLImageSink *glimage_sink;
   guint tex_id;
-  GstVideoFrame frame;
 
   GST_TRACE ("rendering buffer:%p", buf);
 
@@ -695,44 +738,11 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
     return GST_FLOW_NOT_NEGOTIATED;
   }
 
-  if (!gst_gl_ensure_display (bsink, &glimage_sink->display))
+  if (!_ensure_gl_setup (glimage_sink))
     return GST_FLOW_NOT_NEGOTIATED;
 
-  if (!gst_video_frame_map (&frame, &glimage_sink->info, buf,
-          GST_MAP_READ | GST_MAP_GL)) {
-    GST_WARNING ("Failed to map memory");
-    return GST_FLOW_ERROR;
-  }
-
-  if (frame.map[0].memory && gst_is_gl_memory (frame.map[0].memory)) {
-    tex_id = *(guint *) frame.data[0];
-  } else {
-    GST_INFO ("Input Buffer does not contain correct meta, "
-        "attempting to wrap for upload");
-
-    if (!glimage_sink->upload) {
-      glimage_sink->upload = gst_gl_upload_new (glimage_sink->context);
-
-      if (!gst_gl_upload_init_format (glimage_sink->upload,
-              GST_VIDEO_FRAME_FORMAT (&frame), GST_VIDEO_FRAME_WIDTH (&frame),
-              GST_VIDEO_FRAME_HEIGHT (&frame), GST_VIDEO_FRAME_WIDTH (&frame),
-              GST_VIDEO_FRAME_HEIGHT (&frame))) {
-        GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-            ("%s", "Failed to init upload format"), (NULL));
-        return GST_FLOW_ERROR;
-      }
-    }
-    //FIXME: here stored_buffer is not usefull
-    // so here we have to use 2 textures (stored_texture and tex)
-    if (!gst_gl_upload_perform_with_data (glimage_sink->upload,
-            glimage_sink->tex_id, frame.data)) {
-      GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
-          ("%s", "Failed to init upload format"), (NULL));
-      return FALSE;
-    }
-
-    tex_id = glimage_sink->tex_id;
-  }
+  if (!gst_gl_upload_perform_with_buffer (glimage_sink->upload, buf, &tex_id))
+    goto upload_failed;
 
   if (glimage_sink->window_id != glimage_sink->new_window_id) {
     GstGLWindow *window = gst_gl_context_get_window (glimage_sink->context);
@@ -761,23 +771,30 @@ gst_glimage_sink_render (GstBaseSink * bsink, GstBuffer * buf)
 
   GST_TRACE ("post redisplay");
 
-  gst_video_frame_unmap (&frame);
-
   if (g_atomic_int_get (&glimage_sink->to_quit) != 0) {
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
         ("%s", gst_gl_context_get_error ()), (NULL));
+    gst_gl_upload_release_buffer (glimage_sink->upload);
     return GST_FLOW_ERROR;
   }
 
+  gst_gl_upload_release_buffer (glimage_sink->upload);
   return GST_FLOW_OK;
 
 /* ERRORS */
 redisplay_failed:
   {
-    gst_video_frame_unmap (&frame);
+    gst_gl_upload_release_buffer (glimage_sink->upload);
     GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
         ("%s", gst_gl_context_get_error ()), (NULL));
     return GST_FLOW_ERROR;
+  }
+
+upload_failed:
+  {
+    GST_ELEMENT_ERROR (glimage_sink, RESOURCE, NOT_FOUND,
+        ("%s", "Failed to upload format"), (NULL));
+    return FALSE;
   }
 }
 
@@ -834,8 +851,10 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
   GstCaps *caps;
   guint size;
   gboolean need_pool;
-  GError *error = NULL;
   GstStructure *gl_context;
+
+  if (!_ensure_gl_setup (glimage_sink))
+    return FALSE;
 
   gst_query_parse_allocation (query, &caps, &need_pool);
 
@@ -860,15 +879,6 @@ gst_glimage_sink_propose_allocation (GstBaseSink * bsink, GstQuery * query)
       pool = NULL;
     }
     gst_structure_free (config);
-  }
-
-  if (!gst_gl_ensure_display (glimage_sink, &glimage_sink->display))
-    return FALSE;
-
-  if (!glimage_sink->context) {
-    glimage_sink->context = gst_gl_context_new (glimage_sink->display);
-    if (!gst_gl_context_create (glimage_sink->context, NULL, &error))
-      goto context_error;
   }
 
   if (pool == NULL && need_pool) {
@@ -919,12 +929,6 @@ invalid_caps:
 config_failed:
   {
     GST_DEBUG_OBJECT (bsink, "failed setting config");
-    return FALSE;
-  }
-context_error:
-  {
-    GST_ELEMENT_ERROR (bsink, RESOURCE, NOT_FOUND, ("%s", error->message),
-        (NULL));
     return FALSE;
   }
 }
