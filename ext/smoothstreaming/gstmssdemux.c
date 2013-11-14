@@ -801,6 +801,7 @@ gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
 
   if (media_caps) {
     gchar *name = gst_pad_get_name (pad);
+    const gchar *lang;
     GstEvent *event;
     gchar *stream_id;
     gst_pad_set_active (pad, TRUE);
@@ -833,6 +834,14 @@ gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
 
     gst_pad_set_caps (pad, caps);
     stream->caps = caps;
+
+    lang = gst_mss_stream_get_lang (stream->manifest_stream);
+    if (lang != NULL) {
+      GstTagList *tags;
+
+      tags = gst_tag_list_new (GST_TAG_LANGUAGE_CODE, lang, NULL);
+      gst_pad_push_event (stream->pad, gst_event_new_tag (tags));
+    }
 
     GST_INFO_OBJECT (mssdemux, "Adding srcpad %s:%s with caps %" GST_PTR_FORMAT,
         GST_DEBUG_PAD_NAME (pad), caps);
