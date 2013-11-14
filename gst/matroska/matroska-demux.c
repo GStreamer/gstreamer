@@ -62,6 +62,7 @@
 #include <gst/audio/audio.h>
 #include <gst/tag/tag.h>
 #include <gst/pbutils/pbutils.h>
+#include <gst/video/video.h>
 
 #include "matroska-demux.h"
 #include "matroska-ids.h"
@@ -5016,28 +5017,25 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
         g_free (vids);
     }
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_UNCOMPRESSED)) {
-    const gchar *format = NULL;
+    GstVideoInfo info;
+    GstVideoFormat format;
 
+    gst_video_info_init (&info);
     switch (videocontext->fourcc) {
       case GST_MAKE_FOURCC ('I', '4', '2', '0'):
-        *codec_name = g_strdup ("Raw planar YUV 4:2:0");
-        format = "I420";
+        format = GST_VIDEO_FORMAT_I420;
         break;
       case GST_MAKE_FOURCC ('Y', 'U', 'Y', '2'):
-        *codec_name = g_strdup ("Raw packed YUV 4:2:2");
-        format = "YUY2";
+        format = GST_VIDEO_FORMAT_YUY2;
         break;
       case GST_MAKE_FOURCC ('Y', 'V', '1', '2'):
-        *codec_name = g_strdup ("Raw packed YUV 4:2:0");
-        format = "YV12";
+        format = GST_VIDEO_FORMAT_YV12;
         break;
       case GST_MAKE_FOURCC ('U', 'Y', 'V', 'Y'):
-        *codec_name = g_strdup ("Raw packed YUV 4:2:2");
-        format = "UYVY";
+        format = GST_VIDEO_FORMAT_UYVY;
         break;
       case GST_MAKE_FOURCC ('A', 'Y', 'U', 'V'):
-        *codec_name = g_strdup ("Raw packed YUV 4:4:4 with alpha channel");
-        format = "AYUV";
+        format = GST_VIDEO_FORMAT_AYUV;
         break;
 
       default:
@@ -5046,8 +5044,10 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
         return NULL;
     }
 
-    caps = gst_caps_new_simple ("video/x-raw",
-        "format", G_TYPE_STRING, format, NULL);
+    gst_video_info_set_format (&info, format, videocontext->pixel_width,
+        videocontext->pixel_height);
+    caps = gst_video_info_to_caps (&info);
+    *codec_name = gst_pb_utils_get_codec_description (caps);
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEG4_SP)) {
     caps = gst_caps_new_simple ("video/x-divx",
         "divxversion", G_TYPE_INT, 4, NULL);

@@ -32,6 +32,7 @@ libgstmatroska_la_LIBADD = \
 	$(GST_PLUGINS_BASE_LIBS) \
 	-lgstriff-@GST_API_VERSION@ \
 	-lgstaudio-@GST_API_VERSION@ \
+	-lgstvideo-@GST_API_VERSION@ \
 	-lgsttag-@GST_API_VERSION@ \
 	-lgstpbutils-@GST_API_VERSION@ \
 	$(GST_BASE_LIBS) \
