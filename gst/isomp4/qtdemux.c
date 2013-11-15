@@ -7078,6 +7078,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
   GNode *tref;
 
   QtDemuxStream *stream = NULL;
+  gboolean new_stream = FALSE;
   GstTagList *list = NULL;
   gchar *codec = NULL;
   const guint8 *stsd_data;
@@ -7107,6 +7108,7 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
       goto existing_stream;
     stream = _create_stream ();
     stream->track_id = track_id;
+    new_stream = TRUE;
   } else {
     stream = qtdemux_find_stream (qtdemux, track_id);
     if (!stream) {
@@ -8494,20 +8496,23 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
 skip_track:
   {
     GST_INFO_OBJECT (qtdemux, "skip disabled track");
-    g_free (stream);
+    if (new_stream)
+      g_free (stream);
     return TRUE;
   }
 corrupt_file:
   {
     GST_ELEMENT_ERROR (qtdemux, STREAM, DEMUX,
         (_("This file is corrupt and cannot be played.")), (NULL));
-    g_free (stream);
+    if (new_stream)
+      g_free (stream);
     return FALSE;
   }
 error_encrypted:
   {
     GST_ELEMENT_ERROR (qtdemux, STREAM, DECRYPT, (NULL), (NULL));
-    g_free (stream);
+    if (new_stream)
+      g_free (stream);
     return FALSE;
   }
 samples_failed:
@@ -8516,14 +8521,15 @@ segments_failed:
     /* we posted an error already */
     /* free stbl sub-atoms */
     gst_qtdemux_stbl_free (stream);
-    g_free (stream);
+    if (new_stream)
+      g_free (stream);
     return FALSE;
   }
 existing_stream:
   {
     GST_INFO_OBJECT (qtdemux, "stream with track id %i already exists",
         track_id);
-    if (stream)
+    if (new_stream)
       g_free (stream);
     return TRUE;
   }
@@ -8531,7 +8537,8 @@ unknown_stream:
   {
     GST_INFO_OBJECT (qtdemux, "unknown subtype %" GST_FOURCC_FORMAT,
         GST_FOURCC_ARGS (stream->subtype));
-    g_free (stream);
+    if (new_stream)
+      g_free (stream);
     return TRUE;
   }
 too_many_streams:
