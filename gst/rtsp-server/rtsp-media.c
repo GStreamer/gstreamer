@@ -67,6 +67,8 @@
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
 
+#include <gst/rtp/gstrtpbasepayload.h>
+
 #include "rtsp-media.h"
 
 #define GST_RTSP_MEDIA_GET_PRIVATE(obj)  \
@@ -1529,15 +1531,41 @@ watch_destroyed (GstRTSPMedia * media)
   g_object_unref (media);
 }
 
+static GstElement *
+find_payload_element (GstElement * payloader)
+{
+  GValue item = { 0 };
+  GstIterator *iter;
+  GstElement *element;
+  GstElement *pay = NULL;
+
+  iter = gst_bin_iterate_recurse (GST_BIN (payloader));
+  while (gst_iterator_next (iter, &item) == GST_ITERATOR_OK) {
+    element = (GstElement *) g_value_get_object (&item);
+    if (GST_IS_RTP_BASE_PAYLOAD (element)) {
+      pay = gst_object_ref (element);
+      g_value_unset (&item);
+      break;
+    }
+    g_value_unset (&item);
+  }
+  gst_iterator_free (iter);
+
+  return pay;
+}
+
 /* called from streaming threads */
 static void
 pad_added_cb (GstElement * element, GstPad * pad, GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
   GstRTSPStream *stream;
+  GstElement *pay;
 
-  /* FIXME, element is likely not a payloader, find the payloader here */
-  stream = gst_rtsp_media_create_stream (media, element, pad);
+  /* find the real payload element */
+  pay = find_payload_element (element);
+  stream = gst_rtsp_media_create_stream (media, pay, pad);
+  gst_object_unref (pay);
 
   g_object_set_data (G_OBJECT (pad), "gst-rtsp-dynpad-stream", stream);
 

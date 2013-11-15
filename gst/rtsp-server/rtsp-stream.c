@@ -307,6 +307,29 @@ gst_rtsp_stream_get_index (GstRTSPStream * stream)
 }
 
 /**
+ * gst_rtsp_stream_get_pt:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the stream payload type.
+ *
+ * Return: the stream payload type.
+ */
+guint
+gst_rtsp_stream_get_pt (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  guint pt;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), -1);
+
+  priv = stream->priv;
+
+  g_object_get (G_OBJECT (priv->payloader), "pt", &pt, NULL);
+
+  return pt;
+}
+
+/**
  * gst_rtsp_stream_get_srcpad:
  * @stream: a #GstRTSPStream
  *
