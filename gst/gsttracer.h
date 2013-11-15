@@ -124,15 +124,19 @@ void gst_tracer_dispatch (GstTracerHookId hid, GstTracerMessageId mid, ...);
 extern gboolean _priv_tracer_enabled;
 extern GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST];
 
+extern GstClockTime _priv_gst_info_start_time;
 #define GST_TRACER_IS_ENABLED(id) \
   (_priv_tracer_enabled && (_priv_tracers[id] != NULL))
+
+#define GST_TRACER_TS \
+  GST_CLOCK_DIFF (_priv_gst_info_start_time, gst_util_get_timestamp ())
 
 /* tracing hooks */
 
 #define GST_TRACER_PAD_PUSH_PRE(pad, buffer) G_STMT_START{ \
   if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_BUFFERS)) { \
     gst_tracer_dispatch (GST_TRACER_HOOK_ID_BUFFERS, \
-        GST_TRACER_MESSAGE_ID_PAD_PUSH_PRE, gst_util_get_timestamp (), \
+        GST_TRACER_MESSAGE_ID_PAD_PUSH_PRE, GST_TRACER_TS, \
         pad, buffer); \
   } \
 }G_STMT_END
@@ -140,7 +144,7 @@ extern GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST];
 #define GST_TRACER_PAD_PUSH_POST(pad, res) G_STMT_START{ \
   if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_BUFFERS)) { \
     gst_tracer_dispatch (GST_TRACER_HOOK_ID_BUFFERS, \
-        GST_TRACER_MESSAGE_ID_PAD_PUSH_POST, gst_util_get_timestamp (), \
+        GST_TRACER_MESSAGE_ID_PAD_PUSH_POST, GST_TRACER_TS, \
         pad, res); \
   } \
 }G_STMT_END
@@ -148,7 +152,7 @@ extern GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST];
 #define GST_TRACER_PAD_PUSH_LIST_PRE(pad, list) G_STMT_START{ \
   if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_BUFFERS)) { \
     gst_tracer_dispatch (GST_TRACER_HOOK_ID_BUFFERS, \
-        GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_PRE, gst_util_get_timestamp (), \
+        GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_PRE, GST_TRACER_TS, \
         pad, list); \
   } \
 }G_STMT_END
@@ -156,7 +160,7 @@ extern GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST];
 #define GST_TRACER_PAD_PUSH_LIST_POST(pad, res) G_STMT_START{ \
   if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_BUFFERS)) { \
     gst_tracer_dispatch (GST_TRACER_HOOK_ID_BUFFERS, \
-        GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_POST, gst_util_get_timestamp (), \
+        GST_TRACER_MESSAGE_ID_PAD_PUSH_LIST_POST, GST_TRACER_TS, \
         pad, res); \
   } \
 }G_STMT_END
@@ -164,7 +168,7 @@ extern GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST];
 #define GST_TRACER_PAD_PULL_RANGE_PRE(pad, offset, size) G_STMT_START{ \
   if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_BUFFERS)) { \
     gst_tracer_dispatch (GST_TRACER_HOOK_ID_BUFFERS, \
-        GST_TRACER_MESSAGE_ID_PAD_PULL_RANGE_PRE, gst_util_get_timestamp (), \
+        GST_TRACER_MESSAGE_ID_PAD_PULL_RANGE_PRE, GST_TRACER_TS, \
         pad, offset, size); \
   } \
 }G_STMT_END
@@ -172,7 +176,7 @@ extern GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST];
 #define GST_TRACER_PAD_PULL_RANGE_POST(pad, buffer, res) G_STMT_START{ \
   if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_BUFFERS)) { \
     gst_tracer_dispatch (GST_TRACER_HOOK_ID_BUFFERS, \
-        GST_TRACER_MESSAGE_ID_PAD_PULL_RANGE_POST, gst_util_get_timestamp (), \
+        GST_TRACER_MESSAGE_ID_PAD_PULL_RANGE_POST, GST_TRACER_TS, \
         pad, buffer, res); \
   } \
 }G_STMT_END
@@ -180,7 +184,7 @@ extern GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST];
 #define GST_TRACER_PAD_PUSH_EVENT_PRE(pad, event) G_STMT_START{ \
   if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_EVENTS)) { \
     gst_tracer_dispatch (GST_TRACER_HOOK_ID_EVENTS, \
-        GST_TRACER_MESSAGE_ID_PAD_PUSH_EVENT_PRE, gst_util_get_timestamp (), \
+        GST_TRACER_MESSAGE_ID_PAD_PUSH_EVENT_PRE, GST_TRACER_TS, \
         pad, event); \
   } \
 }G_STMT_END
@@ -188,7 +192,7 @@ extern GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST];
 #define GST_TRACER_PAD_PUSH_EVENT_POST(pad, res) G_STMT_START{ \
   if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_EVENTS)) { \
     gst_tracer_dispatch (GST_TRACER_HOOK_ID_EVENTS, \
-        GST_TRACER_MESSAGE_ID_PAD_PUSH_EVENT_POST, gst_util_get_timestamp (), \
+        GST_TRACER_MESSAGE_ID_PAD_PUSH_EVENT_POST, GST_TRACER_TS, \
         pad, res); \
   } \
 }G_STMT_END
@@ -196,7 +200,7 @@ extern GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST];
 #define GST_TRACER_ELEMENT_POST_MESSAGE_PRE(element, message) G_STMT_START{ \
   if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_MESSAGES)) { \
     gst_tracer_dispatch (GST_TRACER_HOOK_ID_MESSAGES, \
-        GST_TRACER_MESSAGE_ID_ELEMENT_POST_MESSAGE_PRE, gst_util_get_timestamp (), \
+        GST_TRACER_MESSAGE_ID_ELEMENT_POST_MESSAGE_PRE, GST_TRACER_TS, \
         element, message); \
   } \
 }G_STMT_END
@@ -204,7 +208,7 @@ extern GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST];
 #define GST_TRACER_ELEMENT_POST_MESSAGE_POST(element, res) G_STMT_START{ \
   if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_MESSAGES)) { \
     gst_tracer_dispatch (GST_TRACER_HOOK_ID_MESSAGES, \
-        GST_TRACER_MESSAGE_ID_ELEMENT_POST_MESSAGE_POST, gst_util_get_timestamp (), \
+        GST_TRACER_MESSAGE_ID_ELEMENT_POST_MESSAGE_POST, GST_TRACER_TS, \
         element, res); \
   } \
 }G_STMT_END
@@ -212,7 +216,7 @@ extern GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST];
 #define GST_TRACER_ELEMENT_QUERY_PRE(element, query) G_STMT_START{ \
   if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_QUERIES)) { \
     gst_tracer_dispatch (GST_TRACER_HOOK_ID_QUERIES, \
-        GST_TRACER_MESSAGE_ID_ELEMENT_QUERY_PRE, gst_util_get_timestamp (), \
+        GST_TRACER_MESSAGE_ID_ELEMENT_QUERY_PRE, GST_TRACER_TS, \
         element, query); \
   } \
 }G_STMT_END
@@ -220,7 +224,7 @@ extern GList *_priv_tracers[GST_TRACER_HOOK_ID_LAST];
 #define GST_TRACER_ELEMENT_QUERY_POST(element, res) G_STMT_START{ \
   if (GST_TRACER_IS_ENABLED(GST_TRACER_HOOK_ID_QUERIES)) { \
     gst_tracer_dispatch (GST_TRACER_HOOK_ID_QUERIES, \
-        GST_TRACER_MESSAGE_ID_ELEMENT_QUERY_POST, gst_util_get_timestamp (), \
+        GST_TRACER_MESSAGE_ID_ELEMENT_QUERY_POST, GST_TRACER_TS, \
         element, res); \
   } \
 }G_STMT_END
