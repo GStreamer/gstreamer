@@ -4086,7 +4086,8 @@ gst_bin_set_context (GstElement * element, GstContext * context)
 
   children = gst_bin_iterate_elements (bin);
   while (gst_iterator_foreach (children, set_context,
-          context) == GST_ITERATOR_RESYNC);
+          context) == GST_ITERATOR_RESYNC)
+    gst_iterator_resync (children);
   gst_iterator_free (children);
 }
 
