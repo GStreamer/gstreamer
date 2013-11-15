@@ -655,6 +655,7 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
 {
   //GstGLFilter* filter = GST_GL_FILTER (bt);
   GstStructure *structure;
+  GstCapsFeatures *features;
   GstCaps *newcaps, *result;
   const GValue *par;
   guint i, n;
@@ -665,11 +666,14 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
 
   for (i = 0; i < n; i++) {
     structure = gst_caps_get_structure (caps, i);
+    features = gst_caps_get_features (caps, i);
 
-    if (i > 0 && gst_caps_is_subset_structure (newcaps, structure))
+    if (i > 0
+        && gst_caps_is_subset_structure_full (newcaps, structure, features))
       continue;
 
     structure = gst_structure_copy (structure);
+    features = gst_caps_features_copy (features);
 
     gst_structure_set (structure,
         "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
@@ -683,7 +687,7 @@ gst_gl_filter_transform_caps (GstBaseTransform * bt,
           NULL);
     }
 
-    gst_caps_append_structure (newcaps, structure);
+    gst_caps_append_structure_full (newcaps, structure, features);
   }
 
   if (filter) {
