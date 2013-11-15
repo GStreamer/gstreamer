@@ -106,6 +106,7 @@ struct _GstQTDemux {
   guint64 mdatoffset;
   guint64 first_mdat;
   gboolean got_moov;
+  guint64 last_moov_offset;
   guint header_size;
 
   GstTagList *tag_list;

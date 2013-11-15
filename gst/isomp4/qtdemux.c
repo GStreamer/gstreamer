@@ -1819,6 +1819,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     if (qtdemux->comp_brands)
       gst_buffer_unref (qtdemux->comp_brands);
     qtdemux->comp_brands = NULL;
+    qtdemux->last_moov_offset = -1;
     if (qtdemux->moov_node)
       g_node_destroy (qtdemux->moov_node);
     qtdemux->moov_node = NULL;
@@ -4413,6 +4414,39 @@ pause:
 }
 
 /*
+ * has_next_entry
+ *
+ * Returns if there are samples to be played.
+ */
+static gboolean
+has_next_entry (GstQTDemux * demux)
+{
+  QtDemuxStream *stream;
+  int i;
+
+  GST_DEBUG_OBJECT (demux, "Checking if there are samples not played yet");
+
+  for (i = 0; i < demux->n_streams; i++) {
+    stream = demux->streams[i];
+
+    if (stream->sample_index == -1) {
+      stream->sample_index = 0;
+      stream->offset_in_sample = 0;
+    }
+
+    if (stream->sample_index >= stream->n_samples) {
+      GST_LOG_OBJECT (demux, "stream %d samples exhausted", i);
+      continue;
+    }
+    GST_DEBUG_OBJECT (demux, "Found a sample");
+    return TRUE;
+  }
+
+  GST_DEBUG_OBJECT (demux, "There wasn't any next sample");
+  return FALSE;
+}
+
+/*
  * next_entry_size
  *
  * Returns the size of the first entry at the current offset.
@@ -4704,9 +4738,11 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
         if (fourcc == FOURCC_moov) {
           /* in usual fragmented setup we could try to scan for more
            * and end up at the the moov (after mdat) again */
-          if (demux->got_moov && demux->n_streams > 0 && !demux->fragmented) {
+          if (demux->got_moov && demux->n_streams > 0 &&
+              (!demux->fragmented
+                  || demux->last_moov_offset == demux->offset)) {
             GST_DEBUG_OBJECT (demux,
-                "Skipping moov atom as we have one already");
+                "Skipping moov atom as we have (this) one already");
           } else {
             GST_DEBUG_OBJECT (demux, "Parsing [moov]");
 
@@ -4723,6 +4759,8 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
                 demux->pending_newsegment =
                     gst_event_new_segment (&demux->segment);
             }
+
+            demux->last_moov_offset = demux->offset;
 
             qtdemux_parse_moov (demux, data, demux->neededbytes);
             qtdemux_node_dump (demux, demux->moov_node);
@@ -4817,7 +4855,9 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
           GST_DEBUG_OBJECT (demux, "Carrying on normally");
           gst_adapter_flush (demux->adapter, demux->neededbytes);
 
-          if (demux->got_moov && demux->first_mdat != -1) {
+          /* only go back to the mdat if there are samples to play */
+          if (demux->got_moov && demux->first_mdat != -1
+              && has_next_entry (demux)) {
             gboolean res;
 
             /* we need to seek back */
