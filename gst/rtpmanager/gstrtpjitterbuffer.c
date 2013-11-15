@@ -564,12 +564,12 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    * Various jitterbuffer statistics. This property returns a GstStructure
    * with name application/x-rtp-jitterbuffer-stats with the following fields:
    *
-   *  "count"          G_TYPE_UINT64   The number of retransmissions requested
-   *  "success-count"  G_TYPE_UINT64   The number of successful retransmissions
-   *  "rtx-per-packet" G_TYPE_DOUBLE   Average number of RTX per packet
-   *  "rtx-rtt"        G_TYPE_UINT64   Average round trip time per RTX
+   *  "rtx-count"         G_TYPE_UINT64 The number of retransmissions requested
+   *  "rtx-success-count" G_TYPE_UINT64 The number of successful retransmissions
+   *  "rtx-per-packet"    G_TYPE_DOUBLE Average number of RTX per packet
+   *  "rtx-rtt"           G_TYPE_UINT64 Average round trip time per RTX
    *
-   * Since: 1.2.1
+   * Since: 1.3.1
    */
   g_object_class_install_property (gobject_class, PROP_STATS,
       g_param_spec_boxed ("stats", "Statistics",
@@ -3245,8 +3245,8 @@ gst_rtp_jitter_buffer_create_stats (GstRtpJitterBuffer * jbuf)
 
   JBUF_LOCK (jbuf->priv);
   s = gst_structure_new ("application/x-rtp-jitterbuffer-stats",
-      "count", G_TYPE_UINT64, jbuf->priv->num_rtx_requests,
-      "success-count", G_TYPE_UINT64, jbuf->priv->num_rtx_success,
+      "rtx-count", G_TYPE_UINT64, jbuf->priv->num_rtx_requests,
+      "rtx-success-count", G_TYPE_UINT64, jbuf->priv->num_rtx_success,
       "rtx-per-packet", G_TYPE_DOUBLE, jbuf->priv->avg_rtx_num,
       "rtx-rtt", G_TYPE_UINT64, jbuf->priv->avg_rtx_rtt, NULL);
   JBUF_UNLOCK (jbuf->priv);

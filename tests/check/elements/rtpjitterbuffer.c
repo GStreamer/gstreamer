@@ -1115,10 +1115,10 @@ GST_START_TEST (test_rtx_two_missing)
 
   g_object_get (data.jitter_buffer, "stats", &rtx_stats, NULL);
 
-  rtx_stat = gst_structure_get_value (rtx_stats, "count");
+  rtx_stat = gst_structure_get_value (rtx_stats, "rtx-count");
   g_assert_cmpuint (g_value_get_uint64 (rtx_stat), ==, 5);
 
-  rtx_stat = gst_structure_get_value (rtx_stats, "success-count");
+  rtx_stat = gst_structure_get_value (rtx_stats, "rtx-success-count");
   g_assert_cmpuint (g_value_get_uint64 (rtx_stat), ==, 1);
 
   rtx_stat = gst_structure_get_value (rtx_stats, "rtx-rtt");
