@@ -205,6 +205,9 @@ typedef struct {
   guint         active_sources;
   guint         avg_rtcp_packet_size;
   guint         bye_members;
+  guint         nacks_dropped;
+  guint         nacks_sent;
+  guint         nacks_received;
 } RTPSessionStats;
 
 void           rtp_stats_init_defaults              (RTPSessionStats *stats);

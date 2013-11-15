@@ -218,6 +218,7 @@ enum
   PROP_USE_PIPELINE_CLOCK,
   PROP_RTCP_MIN_INTERVAL,
   PROP_PROBATION,
+  PROP_STATS,
   PROP_LAST
 };
 
@@ -251,6 +252,8 @@ struct _GstRtpSessionPrivate
   GstClockTime send_latency;
 
   gboolean use_pipeline_clock;
+
+  guint rtx_count;
 };
 
 /* callbacks to handle actions from the session manager */
@@ -304,6 +307,8 @@ static gboolean gst_rtp_session_setcaps_send_rtp (GstPad * pad,
     GstRtpSession * rtpsession, GstCaps * caps);
 
 static void gst_rtp_session_clear_pt_map (GstRtpSession * rtpsession);
+
+static GstStructure *gst_rtp_session_create_stats (GstRtpSession * rtpsession);
 
 static guint gst_rtp_session_signals[LAST_SIGNAL] = { 0 };
 
@@ -605,6 +610,26 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
           0, G_MAXUINT, DEFAULT_PROBATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstRtpSession::stats:
+   *
+   * Various session statistics. This property returns a GstStructure
+   * with name application/x-rtp-session-stats with the following fields:
+   *
+   *  "rtx-count"       G_TYPE_UINT   The number of retransmission events
+   *      received from downstream (in receiver mode)
+   *  "rtx-drop-count"  G_TYPE_UINT   The number of retransmission events
+   *      dropped (due to bandwidth constraints)
+   *  "sent-nack-count" G_TYPE_UINT   Number of NACKs sent
+   *  "recv-nack-count" G_TYPE_UINT   Number of NACKs received
+   *
+   * Since: 1.3.1
+   */
+  g_object_class_install_property (gobject_class, PROP_STATS,
+      g_param_spec_boxed ("stats", "Statistics",
+          "Various statistics", GST_TYPE_STRUCTURE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_rtp_session_change_state);
   gstelement_class->request_new_pad =
@@ -678,6 +703,8 @@ gst_rtp_session_init (GstRtpSession * rtpsession)
   gst_segment_init (&rtpsession->send_rtp_seg, GST_FORMAT_UNDEFINED);
 
   rtpsession->priv->thread_stopped = TRUE;
+
+  rtpsession->priv->rtx_count = 0;
 }
 
 static void
@@ -788,10 +815,25 @@ gst_rtp_session_get_property (GObject * object, guint prop_id,
     case PROP_PROBATION:
       g_object_get_property (G_OBJECT (priv->session), "probation", value);
       break;
+    case PROP_STATS:
+      g_value_take_boxed (value, gst_rtp_session_create_stats (rtpsession));
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static GstStructure *
+gst_rtp_session_create_stats (GstRtpSession * rtpsession)
+{
+  GstStructure *s;
+
+  g_object_get (rtpsession->priv->session, "stats", &s, NULL);
+  gst_structure_set (s, "rtx-count", G_TYPE_UINT, rtpsession->priv->rtx_count,
+      NULL);
+
+  return s;
 }
 
 static void
@@ -1510,6 +1552,10 @@ gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstObject * parent,
       } else if (gst_structure_has_name (s, "GstRTPRetransmissionRequest")) {
         GstClockTime running_time;
         guint seqnum, delay, deadline, max_delay;
+
+        GST_RTP_SESSION_LOCK (rtpsession);
+        rtpsession->priv->rtx_count++;
+        GST_RTP_SESSION_UNLOCK (rtpsession);
 
         if (!gst_structure_get_clock_time (s, "running-time", &running_time))
           running_time = -1;

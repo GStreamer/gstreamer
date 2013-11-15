@@ -31,6 +31,9 @@ rtp_stats_init_defaults (RTPSessionStats * stats)
   rtp_stats_set_bandwidths (stats, -1, -1, -1, -1);
   stats->min_interval = RTP_STATS_MIN_INTERVAL;
   stats->bye_timeout = RTP_STATS_BYE_TIMEOUT;
+  stats->nacks_dropped = 0;
+  stats->nacks_sent = 0;
+  stats->nacks_received = 0;
 }
 
 /**

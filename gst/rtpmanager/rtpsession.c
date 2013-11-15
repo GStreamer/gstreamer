@@ -86,6 +86,7 @@ enum
   PROP_RTCP_FEEDBACK_RETENTION_WINDOW,
   PROP_RTCP_IMMEDIATE_FEEDBACK_THRESHOLD,
   PROP_PROBATION,
+  PROP_STATS,
   PROP_LAST
 };
 
@@ -442,6 +443,24 @@ rtp_session_class_init (RTPSessionClass * klass)
           0, G_MAXUINT, DEFAULT_PROBATION,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * RTPSession::stats:
+   *
+   * Various session statistics. This property returns a GstStructure
+   * with name application/x-rtp-session-stats with the following fields:
+   *
+   *  "rtx-drop-count"  G_TYPE_UINT   The number of retransmission events
+   *      dropped (due to bandwidth constraints)
+   *  "sent-nack-count" G_TYPE_UINT   Number of NACKs sent
+   *  "recv-nack-count" G_TYPE_UINT   Number of NACKs received
+   *
+   * Since: 1.3.1
+   */
+  g_object_class_install_property (gobject_class, PROP_STATS,
+      g_param_spec_boxed ("stats", "Statistics",
+          "Various statistics", GST_TYPE_STRUCTURE,
+          G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
+
   klass->get_source_by_ssrc =
       GST_DEBUG_FUNCPTR (rtp_session_get_source_by_ssrc);
   klass->send_rtcp = GST_DEBUG_FUNCPTR (rtp_session_send_rtcp);
@@ -561,6 +580,19 @@ rtp_session_create_sources (RTPSession * sess)
   RTP_SESSION_UNLOCK (sess);
 
   return res;
+}
+
+static GstStructure *
+rtp_session_create_stats (RTPSession * sess)
+{
+  GstStructure *s;
+
+  s = gst_structure_new ("application/x-rtp-session-stats",
+      "rtx-drop-count", G_TYPE_UINT, sess->stats.nacks_dropped,
+      "sent-nack-count", G_TYPE_UINT, sess->stats.nacks_sent,
+      "recv-nack-count", G_TYPE_UINT, sess->stats.nacks_received, NULL);
+
+  return s;
 }
 
 static void
@@ -683,6 +715,9 @@ rtp_session_get_property (GObject * object, guint prop_id,
       break;
     case PROP_PROBATION:
       g_value_set_uint (value, sess->probation);
+      break;
+    case PROP_STATS:
+      g_value_take_boxed (value, rtp_session_create_stats (sess));
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -2260,6 +2295,8 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
       GST_BUFFER_TIMESTAMP (fci_buffer) = pinfo->running_time;
     }
 
+    sess->stats.nacks_received++;
+
     RTP_SESSION_UNLOCK (sess);
     g_signal_emit (sess, rtp_session_signals[SIGNAL_ON_FEEDBACK_RTCP], 0,
         type, fbtype, sender_ssrc, media_ssrc, fci_buffer);
@@ -2771,6 +2808,7 @@ typedef struct
   gboolean is_early;
   gboolean may_suppress;
   GQueue output;
+  guint nacked_seqnums;
 } ReportData;
 
 static void
@@ -3000,6 +3038,7 @@ session_nack (const gchar * key, RTPSource * source, ReportData * data)
   for (i = 0; i < n_nacks; i++) {
     GST_WRITE_UINT32_BE (fci_data, nacks[i]);
     fci_data += 4;
+    data->nacked_seqnums++;
   }
 
   rtp_source_clear_nacks (source);
@@ -3417,6 +3456,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
   data.running_time = running_time;
   data.num_to_report = 0;
   data.may_suppress = FALSE;
+  data.nacked_seqnums = 0;
   g_queue_init (&data.output);
 
   RTP_SESSION_LOCK (sess);
@@ -3492,10 +3532,12 @@ done:
       result =
           sess->callbacks.send_rtcp (sess, source, buffer, output->is_bye,
           sess->send_rtcp_user_data);
+      sess->stats.nacks_sent += data.nacked_seqnums;
     } else {
       GST_DEBUG ("freeing packet callback: %p"
           " do_not_suppress: %d may_suppress: %d",
           sess->callbacks.send_rtcp, do_not_suppress, data.may_suppress);
+      sess->stats.nacks_dropped += data.nacked_seqnums;
       gst_buffer_unref (buffer);
     }
     g_object_unref (source);
