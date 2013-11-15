@@ -1080,6 +1080,7 @@ _list_scenarios_in_dir (GFile * dir)
 void
 gst_validate_list_scenarios (void)
 {
+  const gchar *env_scenariodir = g_getenv ("GST_VALIDATE_SCENARIOS_PATH");
   gchar *tldir = g_build_filename (g_get_user_data_dir (),
       "gstreamer-" GST_API_VERSION, GST_VALIDATE_SCENARIO_DIRECTORY,
       NULL);
@@ -1097,6 +1098,12 @@ gst_validate_list_scenarios (void)
   _list_scenarios_in_dir (dir);
   g_object_unref (dir);
   g_free (tldir);
+
+  if (env_scenariodir) {
+    dir = g_file_new_for_path (env_scenariodir);
+    _list_scenarios_in_dir (dir);
+    g_object_unref (dir);
+  }
 
   /* Hack to make it work uninstalled */
   dir = g_file_new_for_path ("data/");
