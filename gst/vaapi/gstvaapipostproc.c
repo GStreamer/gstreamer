@@ -892,10 +892,16 @@ gst_vaapipostproc_transform_caps(GstBaseTransform *trans,
     gst_vaapipostproc_transform_caps_impl
 #endif
 
+#if GST_CHECK_VERSION(1,0,0)
+typedef gsize GstBaseTransformSizeType;
+#else
+typedef guint GstBaseTransformSizeType;
+#endif
+
 static gboolean
 gst_vaapipostproc_transform_size(GstBaseTransform *trans,
-    GstPadDirection direction, GstCaps *caps, gsize size,
-    GstCaps *othercaps, gsize *othersize)
+    GstPadDirection direction, GstCaps *caps, GstBaseTransformSizeType size,
+    GstCaps *othercaps, GstBaseTransformSizeType *othersize)
 {
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
 
