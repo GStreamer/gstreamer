@@ -74,16 +74,16 @@ static void _do_download_draw_yuv_gles2 (GstGLContext * context,
 /* YUY2:y2,u,y1,v
    UYVY:v,y1,u,y2 */
 static const gchar *text_shader_YUY2_UYVY_opengl =
-    "#extension GL_ARB_texture_rectangle : enable\n"
-    "uniform sampler2DRect tex;\n"
+    "uniform sampler2D tex;\n"
+    "uniform float width;\n"
     RGB_TO_YUV_COEFFICIENTS
     "void main(void) {\n"
     "  vec3 rgb1, rgb2;\n"
     "  float fx,fy,y1,y2,u,v;\n"
     "  fx = gl_TexCoord[0].x;\n"
     "  fy = gl_TexCoord[0].y;\n"
-    "  rgb1=texture2DRect(tex,vec2(fx*2.0,fy)).rgb;\n"
-    "  rgb2=texture2DRect(tex,vec2(fx*2.0+1.0,fy)).rgb;\n"
+    "  rgb1=texture2D(tex,vec2(fx*2.0,fy)).rgb;\n"
+    "  rgb2=texture2D(tex,vec2(fx*2.0+1.0/width,fy)).rgb;\n"
     "  y1=dot(rgb1, ycoeff);\n"
     "  y2=dot(rgb2, ycoeff);\n"
     "  u=dot(rgb1, ucoeff);\n"
@@ -96,8 +96,7 @@ static const gchar *text_shader_YUY2_UYVY_opengl =
     "}\n";
 
 static const gchar *text_shader_I420_YV12_opengl =
-    "#extension GL_ARB_texture_rectangle : enable\n"
-    "uniform sampler2DRect tex;\n"
+    "uniform sampler2D tex;\n"
     "uniform float w, h;\n"
     RGB_TO_YUV_COEFFICIENTS
     "void main(void) {\n"
@@ -105,8 +104,8 @@ static const gchar *text_shader_I420_YV12_opengl =
     "  float y,u,v;\n"
     "  vec2 nxy=gl_TexCoord[0].xy;\n"
     "  vec2 nxy2=nxy*2.0;\n"
-    "  rgb1=texture2DRect(tex,nxy).rgb;\n"
-    "  rgb2=texture2DRect(tex,nxy2).rgb;\n"
+    "  rgb1=texture2D(tex,nxy).rgb;\n"
+    "  rgb2=texture2D(tex,nxy2).rgb;\n"
     "  y=dot(rgb1, ycoeff);\n"
     "  u=dot(rgb2, ucoeff);\n"
     "  v=dot(rgb2, vcoeff);\n"
@@ -119,14 +118,13 @@ static const gchar *text_shader_I420_YV12_opengl =
     "}\n";
 
 static const gchar *text_shader_AYUV_opengl =
-    "#extension GL_ARB_texture_rectangle : enable\n"
-    "uniform sampler2DRect tex;\n"
+    "uniform sampler2D tex;\n"
     RGB_TO_YUV_COEFFICIENTS
     "void main(void) {\n"
     "  vec3 rgb;\n"
     "  float y,u,v;\n"
     "  vec2 nxy=gl_TexCoord[0].xy;\n"
-    "  rgb=texture2DRect(tex,nxy).rgb;\n"
+    "  rgb=texture2D(tex,nxy).rgb;\n"
     "  y=dot(rgb, ycoeff);\n"
     "  u=dot(rgb, ucoeff);\n"
     "  v=dot(rgb, vcoeff);\n"
@@ -591,61 +589,47 @@ _init_download (GstGLContext * context, GstGLDownload * download)
 
       /* setup a first texture to render to */
       gl->GenTextures (1, &download->out_texture[0]);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->out_texture[0]);
-      gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+      gl->BindTexture (GL_TEXTURE_2D, download->out_texture[0]);
+      gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
           out_width, out_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-          GL_LINEAR);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-          GL_CLAMP_TO_EDGE);
-      gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-          GL_CLAMP_TO_EDGE);
+      gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
       /* attach the first texture to the FBO to renderer to */
       gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-          GL_TEXTURE_RECTANGLE_ARB, download->out_texture[0], 0);
+          GL_TEXTURE_2D, download->out_texture[0], 0);
 
       if (v_format == GST_VIDEO_FORMAT_I420 ||
           v_format == GST_VIDEO_FORMAT_YV12) {
         /* setup a second texture to render to */
         gl->GenTextures (1, &download->out_texture[1]);
-        gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->out_texture[1]);
-        gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+        gl->BindTexture (GL_TEXTURE_2D, download->out_texture[1]);
+        gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
             out_width, out_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-            GL_LINEAR);
-        gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-            GL_LINEAR);
-        glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-            GL_CLAMP_TO_EDGE);
-        gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-            GL_CLAMP_TO_EDGE);
+        gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         /* attach the second texture to the FBO to renderer to */
         gl->FramebufferTexture2D (GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT1, GL_TEXTURE_RECTANGLE_ARB,
-            download->out_texture[1], 0);
+            GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, download->out_texture[1], 0);
 
         /* setup a third texture to render to */
         gl->GenTextures (1, &download->out_texture[2]);
-        gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->out_texture[2]);
-        gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+        gl->BindTexture (GL_TEXTURE_2D, download->out_texture[2]);
+        gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
             out_width, out_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-            GL_LINEAR);
-        gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-            GL_LINEAR);
-        gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-            GL_CLAMP_TO_EDGE);
-        gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-            GL_CLAMP_TO_EDGE);
+        gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
         /* attach the third texture to the FBO to renderer to */
         gl->FramebufferTexture2D (GL_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT2, GL_TEXTURE_RECTANGLE_ARB,
-            download->out_texture[2], 0);
+            GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, download->out_texture[2], 0);
       }
 
       /* attach the depth render buffer to the FBO */
@@ -931,48 +915,48 @@ _do_download_draw_rgb_opengl (GstGLContext * context, GstGLDownload * download)
 
   gst_gl_context_clear_shader (context);
 
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, download->in_texture);
 
   v_format = GST_VIDEO_INFO_FORMAT (&download->info);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGBA:
     case GST_VIDEO_FORMAT_RGBx:
-      gl->GetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+      gl->GetTexImage (GL_TEXTURE_2D, 0, GL_RGBA,
           GL_UNSIGNED_BYTE, download->data[0]);
       break;
     case GST_VIDEO_FORMAT_xRGB:
     case GST_VIDEO_FORMAT_ARGB:
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      gl->GetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
+      gl->GetTexImage (GL_TEXTURE_2D, 0, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8, download->data[0]);
 #else
-      gl->GetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
+      gl->GetTexImage (GL_TEXTURE_2D, 0, GL_BGRA,
           GL_UNSIGNED_INT_8_8_8_8_REV, download->data[0]);
 #endif /* G_BYTE_ORDER */
       break;
     case GST_VIDEO_FORMAT_BGRx:
     case GST_VIDEO_FORMAT_BGRA:
-      gl->GetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGRA,
+      gl->GetTexImage (GL_TEXTURE_2D, 0, GL_BGRA,
           GL_UNSIGNED_BYTE, download->data[0]);
       break;
     case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_ABGR:
 #if G_BYTE_ORDER == G_LITTLE_ENDIAN
-      gl->GetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+      gl->GetTexImage (GL_TEXTURE_2D, 0, GL_RGBA,
           GL_UNSIGNED_INT_8_8_8_8, download->data[0]);
 #else
-      glGetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+      glGetTexImage (GL_TEXTURE_2D, 0, GL_RGBA,
           GL_UNSIGNED_INT_8_8_8_8_REV, download->data[0]);
 #endif /* G_BYTE_ORDER */
       break;
     case GST_VIDEO_FORMAT_RGB:
-      gl->GetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGB,
+      gl->GetTexImage (GL_TEXTURE_2D, 0, GL_RGB,
           GL_UNSIGNED_BYTE, download->data[0]);
       break;
     case GST_VIDEO_FORMAT_BGR:
-      gl->GetTexImage (GL_TEXTURE_RECTANGLE_ARB, 0, GL_BGR,
+      gl->GetTexImage (GL_TEXTURE_2D, 0, GL_BGR,
           GL_UNSIGNED_BYTE, download->data[0]);
       break;
     default:
@@ -982,7 +966,7 @@ _do_download_draw_rgb_opengl (GstGLContext * context, GstGLDownload * download)
       break;
   }
 
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Disable (GL_TEXTURE_2D);
 }
 #endif
 
@@ -1036,7 +1020,7 @@ _do_download_draw_rgb_gles2 (GstGLContext * context, GstGLDownload * download)
 
   gl->ActiveTexture (GL_TEXTURE0);
   gst_gl_shader_set_uniform_1i (download->shader, "tex", 0);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
+  gl->BindTexture (GL_TEXTURE_2D, download->in_texture);
 
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
 
@@ -1096,10 +1080,10 @@ _do_download_draw_yuv_opengl (GstGLContext * context, GstGLDownload * download)
     -1.0f, 1.0f,
     1.0f, 1.0f
   };
-  gfloat texcoords[8] = { out_width, 0.0,
+  gfloat texcoords[8] = { 1.0, 0.0,
     0.0, 0.0,
-    0.0, out_height,
-    out_width, out_height
+    0.0, 1.0,
+    1.0, 1.0
   };
 
   gl = context->gl_vtable;
@@ -1141,7 +1125,8 @@ _do_download_draw_yuv_opengl (GstGLContext * context, GstGLDownload * download)
 
       gl->ActiveTexture (GL_TEXTURE0);
       gst_gl_shader_set_uniform_1i (download->shader, "tex", 0);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
+      gst_gl_shader_set_uniform_1f (download->shader, "width", out_width);
+      gl->BindTexture (GL_TEXTURE_2D, download->in_texture);
     }
       break;
 
@@ -1162,7 +1147,7 @@ _do_download_draw_yuv_opengl (GstGLContext * context, GstGLDownload * download)
       gst_gl_shader_set_uniform_1i (download->shader, "tex", 0);
       gst_gl_shader_set_uniform_1f (download->shader, "w", (gfloat) out_width);
       gst_gl_shader_set_uniform_1f (download->shader, "h", (gfloat) out_height);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
+      gl->BindTexture (GL_TEXTURE_2D, download->in_texture);
     }
       break;
 
@@ -1193,7 +1178,7 @@ _do_download_draw_yuv_opengl (GstGLContext * context, GstGLDownload * download)
    */
   gl->UseProgramObject (0);
 
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Disable (GL_TEXTURE_2D);
   gl->MatrixMode (GL_PROJECTION);
   gl->PopMatrix ();
   gl->MatrixMode (GL_MODELVIEW);
@@ -1333,7 +1318,7 @@ _do_download_draw_yuv_gles2 (GstGLContext * context, GstGLDownload * download)
 
       gl->ActiveTexture (GL_TEXTURE0);
       gst_gl_shader_set_uniform_1i (download->shader, "tex", 0);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
+      gl->BindTexture (GL_TEXTURE_2D, download->in_texture);
     }
       break;
 
@@ -1349,7 +1334,7 @@ _do_download_draw_yuv_gles2 (GstGLContext * context, GstGLDownload * download)
       gst_gl_shader_set_uniform_1i (download->shader, "tex", 0);
       gst_gl_shader_set_uniform_1f (download->shader, "w", (gfloat) out_width);
       gst_gl_shader_set_uniform_1f (download->shader, "h", (gfloat) out_height);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, download->in_texture);
+      gl->BindTexture (GL_TEXTURE_2D, download->in_texture);
     }
       break;
 

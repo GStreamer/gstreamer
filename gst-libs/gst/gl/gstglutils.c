@@ -106,18 +106,14 @@ _gen_texture (GstGLContext * context, GenTexture * data)
       data->width, data->height);
 
   gl->GenTextures (1, &data->result);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, data->result);
-  gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, data->width,
+  gl->BindTexture (GL_TEXTURE_2D, data->result);
+  gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, data->width,
       data->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-      GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-      GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-      GL_CLAMP_TO_EDGE);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-      GL_CLAMP_TO_EDGE);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   GST_LOG ("generated texture id:%d", data->result);
 }

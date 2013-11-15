@@ -1127,11 +1127,13 @@ _draw_with_shader_cb (gint width, gint height, guint texture, gpointer stuff)
   gst_gl_shader_use (filter->default_shader);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (filter->default_shader, "tex", 1);
+  gst_gl_shader_set_uniform_1f (filter->default_shader, "width", width);
+  gst_gl_shader_set_uniform_1f (filter->default_shader, "height", height);
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }
@@ -1184,17 +1186,17 @@ gst_gl_filter_draw_texture (GstGLFilter * filter, GLuint texture,
     1.0f, 1.0f,
     -1.0f, 1.0f
   };
-  GLfloat texcoords[] = { 0, 0,
-    width, 0,
-    width, height,
-    0, height
+  GLfloat texcoords[] = { 0.0f, 0.0f,
+    1.0f, 0.0f,
+    1.0f, 1.0f,
+    0.0f, 1.0f
   };
 
   GST_DEBUG ("drawing texture:%u dimensions:%ux%u", texture, width, height);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
 
   gl->ClientActiveTexture (GL_TEXTURE0);
 

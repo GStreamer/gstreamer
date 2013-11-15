@@ -71,8 +71,7 @@ static gboolean _do_upload_draw_gles2 (GstGLContext * context,
 #if GST_GL_HAVE_OPENGL
 
 static const char *frag_AYUV_opengl = {
-      "#extension GL_ARB_texture_rectangle : enable\n"
-      "uniform sampler2DRect tex;\n"
+      "uniform sampler2D tex;\n"
       "uniform vec2 tex_scale0;\n"
       "uniform vec2 tex_scale1;\n"
       "uniform vec2 tex_scale2;\n"
@@ -80,7 +79,7 @@ static const char *frag_AYUV_opengl = {
       "void main(void) {\n"
       "  float r,g,b;\n"
       "  vec3 yuv;\n"
-      "  yuv  = texture2DRect(tex, gl_TexCoord[0].xy * tex_scale0).gba;\n"
+      "  yuv  = texture2D(tex, gl_TexCoord[0].xy * tex_scale0).gba;\n"
       "  yuv += offset;\n"
       "  r = dot(yuv, rcoeff);\n"
       "  g = dot(yuv, gcoeff);\n"
@@ -91,8 +90,7 @@ static const char *frag_AYUV_opengl = {
 
 /** YUV to RGB conversion */
 static const char *frag_PLANAR_YUV_opengl = {
-      "#extension GL_ARB_texture_rectangle : enable\n"
-      "uniform sampler2DRect Ytex,Utex,Vtex;\n"
+      "uniform sampler2D Ytex,Utex,Vtex;\n"
       "uniform vec2 tex_scale0;\n"
       "uniform vec2 tex_scale1;\n"
       "uniform vec2 tex_scale2;\n"
@@ -100,9 +98,9 @@ static const char *frag_PLANAR_YUV_opengl = {
       "void main(void) {\n"
       "  float r,g,b;\n"
       "  vec3 yuv;\n"
-      "  yuv.x=texture2DRect(Ytex, gl_TexCoord[0].xy * tex_scale0).r;\n"
-      "  yuv.y=texture2DRect(Utex, gl_TexCoord[0].xy * tex_scale1).r;\n"
-      "  yuv.z=texture2DRect(Vtex, gl_TexCoord[0].xy * tex_scale2).r;\n"
+      "  yuv.x=texture2D(Ytex, gl_TexCoord[0].xy * tex_scale0).r;\n"
+      "  yuv.y=texture2D(Utex, gl_TexCoord[0].xy * tex_scale1).r;\n"
+      "  yuv.z=texture2D(Vtex, gl_TexCoord[0].xy * tex_scale2).r;\n"
       "  yuv += offset;\n"
       "  r = dot(yuv, rcoeff);\n"
       "  g = dot(yuv, gcoeff);\n"
@@ -113,8 +111,7 @@ static const char *frag_PLANAR_YUV_opengl = {
 
 /** NV12/NV21 to RGB conversion */
 static const char *frag_NV12_NV21_opengl = {
-      "#extension GL_ARB_texture_rectangle : enable\n"
-      "uniform sampler2DRect Ytex,UVtex;\n"
+      "uniform sampler2D Ytex,UVtex;\n"
       "uniform vec2 tex_scale0;\n"
       "uniform vec2 tex_scale1;\n"
       "uniform vec2 tex_scale2;\n"
@@ -122,8 +119,8 @@ static const char *frag_NV12_NV21_opengl = {
       "void main(void) {\n\n"
       "  float r,g,b;\n"
       "  vec3 yuv;\n"
-      "  yuv.x = texture2DRect(Ytex, gl_TexCoord[0].xy * tex_scale0).r;\n"
-      "  yuv.yz = texture2DRect(UVtex, gl_TexCoord[0].xy * tex_scale1).%c%c;\n"
+      "  yuv.x = texture2D(Ytex, gl_TexCoord[0].xy * tex_scale0).r;\n"
+      "  yuv.yz = texture2D(UVtex, gl_TexCoord[0].xy * tex_scale1).%c%c;\n"
       "  yuv += offset;\n"
       "  r = dot(yuv, rcoeff);\n"
       "  g = dot(yuv, gcoeff);\n"
@@ -134,28 +131,26 @@ static const char *frag_NV12_NV21_opengl = {
 
 /* Channel reordering for XYZ <-> ZYX conversion */
 static const char *frag_REORDER_opengl = {
-      "#extension GL_ARB_texture_rectangle : enable\n"
-      "uniform sampler2DRect tex;\n"
+      "uniform sampler2D tex;\n"
       "uniform vec2 tex_scale0;\n"
       "uniform vec2 tex_scale1;\n"
       "uniform vec2 tex_scale2;\n"
       "void main(void)\n"
       "{\n"
-      " vec4 t = texture2DRect(tex, gl_TexCoord[0].xy);\n"
+      " vec4 t = texture2D(tex, gl_TexCoord[0].xy);\n"
       " gl_FragColor = vec4(t.%c, t.%c, t.%c, 1.0);\n"
       "}"
 };
 
 /* Direct fragments copy with stride-scaling */
 static const char *frag_COPY_opengl = {
-      "#extension GL_ARB_texture_rectangle : enable\n"
-      "uniform sampler2DRect tex;\n"
+      "uniform sampler2D tex;\n"
       "uniform vec2 tex_scale0;\n"
       "uniform vec2 tex_scale1;\n"
       "uniform vec2 tex_scale2;\n"
       "void main(void)\n"
       "{\n"
-      " vec4 t = texture2DRect(tex, gl_TexCoord[0].xy);\n"
+      " vec4 t = texture2D(tex, gl_TexCoord[0].xy);\n"
       " gl_FragColor = vec4(t.rgb, 1.0);\n"
       "}\n"
 };
@@ -163,8 +158,7 @@ static const char *frag_COPY_opengl = {
 /* YUY2:r,g,a
    UYVY:a,b,r */
 static const gchar *frag_YUY2_UYVY_opengl =
-    "#extension GL_ARB_texture_rectangle : enable\n"
-    "uniform sampler2DRect Ytex, UVtex;\n"
+    "uniform sampler2D Ytex, UVtex;\n"
     "uniform vec2 tex_scale0;\n"
     "uniform vec2 tex_scale1;\n"
     "uniform vec2 tex_scale2;\n"
@@ -172,9 +166,9 @@ static const gchar *frag_YUY2_UYVY_opengl =
     "void main(void) {\n"
     "  float fx, fy, y, u, v, r, g, b;\n"
     "  vec3 yuv;\n"
-    "  yuv.x = texture2DRect(Ytex, gl_TexCoord[0].xy * tex_scale0).%c;\n"
-    "  yuv.y = texture2DRect(UVtex, gl_TexCoord[0].xy * tex_scale1).%c;\n"
-    "  yuv.z = texture2DRect(UVtex, gl_TexCoord[0].xy * tex_scale2).%c;\n"
+    "  yuv.x = texture2D(Ytex, gl_TexCoord[0].xy * tex_scale0).%c;\n"
+    "  yuv.y = texture2D(UVtex, gl_TexCoord[0].xy * tex_scale1).%c;\n"
+    "  yuv.z = texture2D(UVtex, gl_TexCoord[0].xy * tex_scale2).%c;\n"
     "  yuv += offset;\n"
     "  r = dot(yuv, rcoeff);\n"
     "  g = dot(yuv, gcoeff);\n"
@@ -794,21 +788,17 @@ _init_upload_fbo (GstGLContext * context, GstGLUpload * upload)
 
   /* a fake texture is attached to the upload FBO (cannot init without it) */
   gl->GenTextures (1, &fake_texture);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, fake_texture);
-  gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8, out_width, out_height,
+  gl->BindTexture (GL_TEXTURE_2D, fake_texture);
+  gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8, out_width, out_height,
       0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-      GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-      GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-      GL_CLAMP_TO_EDGE);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-      GL_CLAMP_TO_EDGE);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   /* attach the texture to the FBO to renderer to */
   gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_RECTANGLE_ARB, fake_texture, 0);
+      GL_TEXTURE_2D, fake_texture, 0);
 
   /* attach the depth render buffer to the FBO */
   gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
@@ -924,7 +914,7 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
       tex[1].internal_format = GL_RGBA8;
       tex[1].format = GL_BGRA;
       tex[1].type = GL_UNSIGNED_INT_8_8_8_8;
-      tex[1].width = in_width;
+      tex[1].width = GST_ROUND_UP_2 (in_width) / 2;
       tex[1].height = in_height;
       break;
     case GST_VIDEO_FORMAT_UYVY:
@@ -936,7 +926,7 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
       tex[1].internal_format = GL_RGBA8;
       tex[1].format = GL_BGRA;
       tex[1].type = GL_UNSIGNED_INT_8_8_8_8_REV;
-      tex[1].width = in_width;
+      tex[1].width = GST_ROUND_UP_2 (in_width) / 2;
       tex[1].height = in_height;
       break;
     case GST_VIDEO_FORMAT_NV12:
@@ -949,8 +939,8 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
       tex[1].internal_format = GL_LUMINANCE_ALPHA;
       tex[1].format = GL_LUMINANCE_ALPHA;
       tex[1].type = GL_UNSIGNED_BYTE;
-      tex[1].width = in_width / 2;
-      tex[1].height = in_height / 2;
+      tex[1].width = GST_ROUND_UP_2 (in_width) / 2;
+      tex[1].height = GST_ROUND_UP_2 (in_height) / 2;
       break;
     case GST_VIDEO_FORMAT_Y444:
       tex[0].internal_format = GL_LUMINANCE;
@@ -1030,9 +1020,9 @@ _do_upload_make (GstGLContext * context, GstGLUpload * upload)
 
   for (i = 0; i < upload->priv->n_textures; i++) {
     gl->GenTextures (1, &upload->in_texture[i]);
-    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[i]);
+    gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[i]);
 
-    gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, tex[i].internal_format,
+    gl->TexImage2D (GL_TEXTURE_2D, 0, tex[i].internal_format,
         tex[i].width, tex[i].height, 0, tex[i].format, tex[i].type, NULL);
   }
 
@@ -1054,12 +1044,12 @@ _do_upload_fill (GstGLContext * context, GstGLUpload * upload)
   in_height = upload->in_height;
   v_format = GST_VIDEO_INFO_FORMAT (&upload->info);
 
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[0]);
+  gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[0]);
 
   switch (v_format) {
     case GST_VIDEO_FORMAT_RGB:
     case GST_VIDEO_FORMAT_BGR:
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
           GL_RGB, GL_UNSIGNED_BYTE, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_RGBx:
@@ -1071,111 +1061,111 @@ _do_upload_fill (GstGLContext * context, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_AYUV:
     case GST_VIDEO_FORMAT_xBGR:
     case GST_VIDEO_FORMAT_ABGR:
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
           GL_RGBA, GL_UNSIGNED_BYTE, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_YUY2:
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width,
           in_height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
 
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
           GST_ROUND_UP_2 (in_width) / 2, in_height,
           GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_UYVY:
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width,
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width,
           in_height, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[0]);
 
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
           GST_ROUND_UP_2 (in_width) / 2, in_height,
           GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, upload->data[0]);
       break;
     case GST_VIDEO_FORMAT_NV12:
     case GST_VIDEO_FORMAT_NV21:
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
 
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
           in_width / 2, in_height / 2,
           GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, upload->data[1]);
       break;
     case GST_VIDEO_FORMAT_I420:
     {
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
 
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
           GST_ROUND_UP_2 (in_width) / 2, GST_ROUND_UP_2 (in_height) / 2,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
 
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[2]);
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
           GST_ROUND_UP_2 (in_width) / 2, GST_ROUND_UP_2 (in_height) / 2,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
     }
       break;
     case GST_VIDEO_FORMAT_YV12:        /* same as I420 except plane 1+2 swapped */
     {
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
 
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[2]);
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
           GST_ROUND_UP_2 (in_width) / 2, GST_ROUND_UP_2 (in_height) / 2,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
 
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
           GST_ROUND_UP_2 (in_width) / 2, GST_ROUND_UP_2 (in_height) / 2,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
     }
       break;
     case GST_VIDEO_FORMAT_Y444:
     {
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
 
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
           in_width, in_height, GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
 
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[2]);
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
           in_width, in_height, GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
     }
       break;
     case GST_VIDEO_FORMAT_Y42B:
     {
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
 
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
           GST_ROUND_UP_2 (in_width) / 2, in_height,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
 
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[2]);
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
           GST_ROUND_UP_2 (in_width) / 2, in_height,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
     }
       break;
     case GST_VIDEO_FORMAT_Y41B:
     {
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0, in_width, in_height,
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0, in_width, in_height,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[0]);
 
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[1]);
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[1]);
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
           GST_ROUND_UP_4 (in_width) / 4, in_height,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[1]);
 
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[2]);
-      gl->TexSubImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, 0, 0,
+      gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[2]);
+      gl->TexSubImage2D (GL_TEXTURE_2D, 0, 0, 0,
           GST_ROUND_UP_4 (in_width) / 4, in_height,
           GL_LUMINANCE, GL_UNSIGNED_BYTE, upload->data[2]);
     }
@@ -1190,7 +1180,7 @@ _do_upload_fill (GstGLContext * context, GstGLUpload * upload)
   /* make sure no texture is in use in our opengl context 
    * in case we want to use the upload texture in an other opengl context
    */
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+  glBindTexture (GL_TEXTURE_2D, 0);
 
   return TRUE;
 }
@@ -1203,8 +1193,6 @@ _do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
   GstGLFuncs *gl;
   GstVideoFormat v_format;
   guint out_width, out_height;
-  guint in_width = upload->in_width;
-  guint in_height = upload->in_height;
   char *texnames[GST_VIDEO_MAX_PLANES];
   gint i;
   gfloat tex_scaling[6] = { 1.0, 1.0, 1.0, 1.0, 1.0, 1.0 };
@@ -1214,10 +1202,10 @@ _do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
     -1.0f, 1.0f,
     1.0f, 1.0f
   };
-  GLfloat texcoords[8] = { in_width, 0,
-    0, 0,
-    0, in_height,
-    in_width, in_height
+  GLfloat texcoords[8] = { 1.0f, 0.0f,
+    0.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, 1.0f
   };
 
   gl = context->gl_vtable;
@@ -1229,12 +1217,12 @@ _do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
   gl->BindFramebuffer (GL_FRAMEBUFFER, upload->fbo);
 
   /* setup a texture to render to */
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->out_texture);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, upload->out_texture);
 
   /* attach the texture to the FBO to renderer to */
   gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_RECTANGLE_ARB, upload->out_texture, 0);
+      GL_TEXTURE_2D, upload->out_texture, 0);
 
   gst_gl_context_clear_shader (context);
 
@@ -1318,21 +1306,17 @@ _do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
   gl->MatrixMode (GL_PROJECTION);
   gl->LoadIdentity ();
 
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
 
   for (i = upload->priv->n_textures - 1; i >= 0; i--) {
     gl->ActiveTexture (GL_TEXTURE0 + i);
     gst_gl_shader_set_uniform_1i (upload->shader, texnames[i], i);
 
-    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[i]);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-        GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-        GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-        GL_CLAMP_TO_EDGE);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-        GL_CLAMP_TO_EDGE);
+    gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[i]);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   }
 
   gl->EnableClientState (GL_VERTEX_ARRAY);
@@ -1351,7 +1335,7 @@ _do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
   /* we are done with the shader */
   gst_gl_context_clear_shader (context);
 
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Disable (GL_TEXTURE_2D);
 
   gl->MatrixMode (GL_PROJECTION);
   gl->PopMatrix ();
@@ -1401,11 +1385,11 @@ _do_upload_draw_gles2 (GstGLContext * context, GstGLUpload * upload)
   gl->BindFramebuffer (GL_FRAMEBUFFER, upload->fbo);
 
   /* setup a texture to render to */
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->out_texture);
+  gl->BindTexture (GL_TEXTURE_2D, upload->out_texture);
 
   /* attach the texture to the FBO to renderer to */
   gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_RECTANGLE_ARB, upload->out_texture, 0);
+      GL_TEXTURE_2D, upload->out_texture, 0);
 
   gst_gl_context_clear_shader (context);
 
@@ -1433,12 +1417,10 @@ _do_upload_draw_gles2 (GstGLContext * context, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_NV21:
       texnames[0] = "Ytex";
       texnames[1] = "UVtex";
-      tex_scaling[2] = tex_scaling[3] = 0.5;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
       texnames[0] = "Ytex";
       texnames[1] = "UVtex";
-      tex_scaling[2] = tex_scaling[4] = 0.5;
       break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
@@ -1448,13 +1430,6 @@ _do_upload_draw_gles2 (GstGLContext * context, GstGLUpload * upload)
       texnames[0] = "Ytex";
       texnames[1] = "Utex";
       texnames[2] = "Vtex";
-      if (v_format == GST_VIDEO_FORMAT_I420
-          || v_format == GST_VIDEO_FORMAT_YV12)
-        tex_scaling[2] = tex_scaling[3] = tex_scaling[4] = tex_scaling[5] = 0.5;
-      else if (v_format == GST_VIDEO_FORMAT_Y42B)
-        tex_scaling[2] = tex_scaling[4] = 0.5;
-      else if (v_format == GST_VIDEO_FORMAT_Y41B)
-        tex_scaling[2] = tex_scaling[4] = 0.25;
       break;
     case GST_VIDEO_FORMAT_AYUV:
       texnames[0] = "tex";
@@ -1486,15 +1461,11 @@ _do_upload_draw_gles2 (GstGLContext * context, GstGLUpload * upload)
     gl->ActiveTexture (GL_TEXTURE0 + i);
     gst_gl_shader_set_uniform_1i (upload->shader, texnames[i], i);
 
-    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, upload->in_texture[i]);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-        GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-        GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-        GL_CLAMP_TO_EDGE);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-        GL_CLAMP_TO_EDGE);
+    gl->BindTexture (GL_TEXTURE_2D, upload->in_texture[i]);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   }
 
   gl->DrawElements (GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, indices);
