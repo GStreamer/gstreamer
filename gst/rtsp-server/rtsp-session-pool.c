@@ -483,7 +483,14 @@ typedef struct
 static gboolean
 filter_func (gchar * sessionid, GstRTSPSession * sess, FilterData * data)
 {
-  switch (data->func (data->pool, sess, data->user_data)) {
+  GstRTSPFilterResult res;
+
+  if (data->func)
+    res = data->func (data->pool, sess, data->user_data);
+  else
+    res = GST_RTSP_FILTER_REF;
+
+  switch (res) {
     case GST_RTSP_FILTER_REMOVE:
       return TRUE;
     case GST_RTSP_FILTER_REF:
@@ -515,6 +522,8 @@ filter_func (gchar * sessionid, GstRTSPSession * sess, FilterData * data)
  * will also be added with an additional ref to the result GList of this
  * function..
  *
+ * When @func is %NULL, #GST_RTSP_FILTER_REF will be assumed for all sessions.
+ *
  * Returns: (element-type GstRTSPSession) (transfer full): a GList with all
  * sessions for which @func returned #GST_RTSP_FILTER_REF. After usage, each
  * element in the GList should be unreffed before the list is freed.
@@ -527,7 +536,6 @@ gst_rtsp_session_pool_filter (GstRTSPSessionPool * pool,
   FilterData data;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION_POOL (pool), NULL);
-  g_return_val_if_fail (func != NULL, NULL);
 
   priv = pool->priv;
 

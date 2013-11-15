@@ -133,8 +133,8 @@ static GstRTSPResult default_params_set (GstRTSPClient * client,
     GstRTSPContext * ctx);
 static GstRTSPResult default_params_get (GstRTSPClient * client,
     GstRTSPContext * ctx);
-static gchar * default_make_path_from_uri (GstRTSPClient *client,
-    const GstRTSPUrl *uri);
+static gchar *default_make_path_from_uri (GstRTSPClient * client,
+    const GstRTSPUrl * uri);
 
 G_DEFINE_TYPE (GstRTSPClient, gst_rtsp_client, G_TYPE_OBJECT);
 
@@ -1949,7 +1949,8 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
         goto bad_request;
       }
 
-      absolute_uristr = g_strdup_printf ("rtsp://%s%s", priv->server_ip, uristr);
+      absolute_uristr =
+          g_strdup_printf ("rtsp://%s%s", priv->server_ip, uristr);
 
       GST_DEBUG_OBJECT (client, "absolute url: %s", absolute_uristr);
       if (gst_rtsp_url_parse (absolute_uristr, &uri) != GST_RTSP_OK) {
@@ -2899,6 +2900,8 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
  * will also be added with an additional ref to the result #GList of this
  * function..
  *
+ * When @func is %NULL, #GST_RTSP_FILTER_REF will be assumed for each session.
+ *
  * Returns: (element-type GstRTSPSession) (transfer full): a #GList with all
  * sessions for which @func returned #GST_RTSP_FILTER_REF. After usage, each
  * element in the #GList should be unreffed before the list is freed.
@@ -2911,7 +2914,6 @@ gst_rtsp_client_session_filter (GstRTSPClient * client,
   GList *result, *walk, *next;
 
   g_return_val_if_fail (GST_IS_RTSP_CLIENT (client), NULL);
-  g_return_val_if_fail (func != NULL, NULL);
 
   priv = client->priv;
 
@@ -2920,10 +2922,16 @@ gst_rtsp_client_session_filter (GstRTSPClient * client,
   g_mutex_lock (&priv->lock);
   for (walk = priv->sessions; walk; walk = next) {
     GstRTSPSession *sess = walk->data;
+    GstRTSPFilterResult res;
 
     next = g_list_next (walk);
 
-    switch (func (client, sess, user_data)) {
+    if (func)
+      res = func (client, sess, user_data);
+    else
+      res = GST_RTSP_FILTER_REF;
+
+    switch (res) {
       case GST_RTSP_FILTER_REMOVE:
         /* stop watching the session and pretent it went away */
         client_cleanup_session (client, sess);

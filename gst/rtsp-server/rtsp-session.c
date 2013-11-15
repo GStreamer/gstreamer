@@ -327,6 +327,8 @@ gst_rtsp_session_get_media (GstRTSPSession * sess, const gchar * path,
  * will also be added with an additional ref to the result #GList of this
  * function..
  *
+ * When @func is %NULL, #GST_RTSP_FILTER_REF will be assumed for all media.
+ *
  * Returns: (element-type GstRTSPSessionMedia) (transfer full): a GList with all
  * media for which @func returned #GST_RTSP_FILTER_REF. After usage, each
  * element in the #GList should be unreffed before the list is freed.
@@ -339,7 +341,6 @@ gst_rtsp_session_filter (GstRTSPSession * sess,
   GList *result, *walk, *next;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), NULL);
-  g_return_val_if_fail (func != NULL, NULL);
 
   priv = sess->priv;
 
@@ -348,10 +349,16 @@ gst_rtsp_session_filter (GstRTSPSession * sess,
   g_mutex_lock (&priv->lock);
   for (walk = priv->medias; walk; walk = next) {
     GstRTSPSessionMedia *media = walk->data;
+    GstRTSPFilterResult res;
 
     next = g_list_next (walk);
 
-    switch (func (sess, media, user_data)) {
+    if (func)
+      res = func (sess, media, user_data);
+    else
+      res = GST_RTSP_FILTER_REF;
+
+    switch (res) {
       case GST_RTSP_FILTER_REMOVE:
         g_object_unref (media);
         priv->medias = g_list_delete_link (priv->medias, walk);

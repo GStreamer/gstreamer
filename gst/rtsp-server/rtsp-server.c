@@ -856,7 +856,8 @@ gst_rtsp_server_create_socket (GstRTSPServer * server,
           g_clear_error (&addr_error);
           break;
         }
-        port = g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (sockaddr));
+        port =
+            g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (sockaddr));
 
         if (port != 0) {
           g_free (priv->service);
@@ -1345,6 +1346,8 @@ no_source:
  * will also be added with an additional ref to the result #GList of this
  * function..
  *
+ * When @func is %NULL, #GST_RTSP_FILTER_REF will be assumed for each client.
+ *
  * Returns: (element-type GstRTSPClient) (transfer full): a #GList with all
  * clients for which @func returned #GST_RTSP_FILTER_REF. After usage, each
  * element in the #GList should be unreffed before the list is freed.
@@ -1357,7 +1360,6 @@ gst_rtsp_server_client_filter (GstRTSPServer * server,
   GList *result, *walk, *next;
 
   g_return_val_if_fail (GST_IS_RTSP_SERVER (server), NULL);
-  g_return_val_if_fail (func != NULL, NULL);
 
   priv = server->priv;
 
@@ -1366,10 +1368,16 @@ gst_rtsp_server_client_filter (GstRTSPServer * server,
   GST_RTSP_SERVER_LOCK (server);
   for (walk = priv->clients; walk; walk = next) {
     ClientContext *cctx = walk->data;
+    GstRTSPFilterResult res;
 
     next = g_list_next (walk);
 
-    switch (func (server, cctx->client, user_data)) {
+    if (func)
+      res = func (server, cctx->client, user_data);
+    else
+      res = GST_RTSP_FILTER_REF;
+
+    switch (res) {
       case GST_RTSP_FILTER_REMOVE:
         /* remove client, FIXME */
         break;
