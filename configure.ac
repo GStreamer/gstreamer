@@ -190,6 +190,7 @@ AC_LINK_IFELSE([
 AC_LANG_PROGRAM([[
   #include <arm_neon.h>
   int32x4_t testfunc(int16_t *a, int16_t *b) {
+      asm volatile ("vmull.s16 q0, d0, d0" : : : "q0");
       return vmull_s16(vld1_s16(a), vld1_s16(b));
   }
 ]])],
