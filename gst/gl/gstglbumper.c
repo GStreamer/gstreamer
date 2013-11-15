@@ -107,9 +107,8 @@ static const gchar *bumper_v_src =
 
 //fragment source
 static const gchar *bumper_f_src =
-    "#extension GL_ARB_texture_rectangle : enable\n"
-    "uniform sampler2DRect texture0;\n"
-    "uniform sampler2DRect texture1;\n"
+    "uniform sampler2D texture0;\n"
+    "uniform sampler2D texture1;\n"
     "\n"
     "varying vec3 vNormal;\n"
     "varying vec3 vTangent;\n"
@@ -119,8 +118,8 @@ static const gchar *bumper_f_src =
     "void main()\n"
     "{\n"
     "  // get the color of the textures\n"
-    "  vec4 textureColor = texture2DRect(texture0, gl_TexCoord[0].st);\n"
-    "  vec3 normalmapItem = texture2DRect(texture1, gl_TexCoord[1].st).xyz * 2.0 - 1.0;\n"
+    "  vec4 textureColor = texture2D(texture0, gl_TexCoord[0].st);\n"
+    "  vec3 normalmapItem = texture2D(texture1, gl_TexCoord[1].st).xyz * 2.0 - 1.0;\n"
     "\n"
     "  // calculate matrix that transform from tangent space to normalmap space (contrary of intuition)\n"
     "  vec3 binormal = cross(vNormal, vTangent);\n"
@@ -154,6 +153,7 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
 {
   GstGLBumper *bumper = GST_GL_BUMPER (filter);
   GstGLContext *context = filter->context;
+  const GstGLFuncs *gl = context->gl_vtable;
 
   png_structp png_ptr;
   png_infop info_ptr;
@@ -247,11 +247,15 @@ gst_gl_bumper_init_resources (GstGLFilter * filter)
   bumper->bumpmap_width = width;
   bumper->bumpmap_height = height;
 
-  glGenTextures (1, &bumper->bumpmap);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, bumper->bumpmap);
-  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+  gl->GenTextures (1, &bumper->bumpmap);
+  gl->BindTexture (GL_TEXTURE_2D, bumper->bumpmap);
+  gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA,
       bumper->bumpmap_width, bumper->bumpmap_height, 0,
       GL_RGB, GL_UNSIGNED_BYTE, raw_data);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   free (raw_data);
 }
@@ -411,40 +415,33 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   GLfloat light_diffuse1[] = { 1.0, 1.0, 1.0, 1.0 };
   GLfloat mat_diffuse[] = { 1.0, 1.0, 1.0, 1.0 };
 
-  /* image size */
-  gfloat i_w = (gfloat) width;
-  gfloat i_h = (gfloat) height;
-  /* bumpmap size */
-  gfloat b_w = (gfloat) bumper->bumpmap_width;
-  gfloat b_h = (gfloat) bumper->bumpmap_height;
-
 /* *INDENT-OFF* */
   MeshData mesh[] = {
    /* |     Vertex      |     Normal      |TexCoord0|TexCoord1|  VertexAttrib  | */
 /*F*/ { 1.0,  1.0, -1.0,  0.0,  0.0, -1.0, 0.0, 0.0, 0.0, 0.0,  0.0,  1.0,  0.0},
-/*r*/ { 1.0, -1.0, -1.0,  0.0,  0.0, -1.0, i_w, 0.0, b_w, 0.0,  0.0,  1.0,  0.0},
-/*o*/ {-1.0, -1.0, -1.0,  0.0,  0.0, -1.0, i_w, i_h, b_w, b_h,  0.0,  1.0,  0.0},
-      {-1.0,  1.0, -1.0,  0.0,  0.0, -1.0, 0.0, i_h, 0.0, b_h,  0.0,  1.0,  0.0},
+/*r*/ { 1.0, -1.0, -1.0,  0.0,  0.0, -1.0, 1.0, 0.0, 1.0, 0.0,  0.0,  1.0,  0.0},
+/*o*/ {-1.0, -1.0, -1.0,  0.0,  0.0, -1.0, 1.0, 1.0, 1.0, 1.0,  0.0,  1.0,  0.0},
+      {-1.0,  1.0, -1.0,  0.0,  0.0, -1.0, 0.0, 1.0, 0.0, 1.0,  0.0,  1.0,  0.0},
 /*R*/ {-1.0,  1.0, -1.0, -1.0,  0.0,  0.0, 0.0, 0.0, 0.0, 0.0,  0.0,  1.0,  0.0},
-/*i*/ {-1.0, -1.0, -1.0, -1.0,  0.0,  0.0, i_w, 0.0, b_w, 0.0,  0.0,  1.0,  0.0},
-/*g*/ {-1.0, -1.0,  1.0, -1.0,  0.0,  0.0, i_w, i_h, b_w, b_h,  0.0,  1.0,  0.0},
-      {-1.0,  1.0,  1.0, -1.0,  0.0,  0.0, 0.0, i_h, 0.0, b_h,  0.0,  1.0,  0.0},
+/*i*/ {-1.0, -1.0, -1.0, -1.0,  0.0,  0.0, 1.0, 0.0, 1.0, 0.0,  0.0,  1.0,  0.0},
+/*g*/ {-1.0, -1.0,  1.0, -1.0,  0.0,  0.0, 1.0, 1.0, 1.0, 1.0,  0.0,  1.0,  0.0},
+      {-1.0,  1.0,  1.0, -1.0,  0.0,  0.0, 0.0, 1.0, 0.0, 1.0,  0.0,  1.0,  0.0},
 /*B*/ {-1.0,  1.0,  1.0,  0.0,  0.0,  1.0, 0.0, 0.0, 0.0, 0.0,  0.0,  1.0,  0.0},
-/*a*/ {-1.0, -1.0,  1.0,  0.0,  0.0,  1.0, i_w, 0.0, b_w, 0.0,  0.0,  1.0,  0.0},
-/*c*/ { 1.0, -1.0,  1.0,  0.0,  0.0,  1.0, i_w, i_h, b_w, b_h,  0.0,  1.0,  0.0},
-      { 1.0,  1.0,  1.0,  0.0,  0.0,  1.0, 0.0, i_h, 0.0, b_h,  0.0,  1.0,  0.0},
+/*a*/ {-1.0, -1.0,  1.0,  0.0,  0.0,  1.0, 1.0, 0.0, 1.0, 0.0,  0.0,  1.0,  0.0},
+/*c*/ { 1.0, -1.0,  1.0,  0.0,  0.0,  1.0, 1.0, 1.0, 1.0, 1.0,  0.0,  1.0,  0.0},
+      { 1.0,  1.0,  1.0,  0.0,  0.0,  1.0, 0.0, 1.0, 0.0, 1.0,  0.0,  1.0,  0.0},
 /*L*/ { 1.0,  1.0,  1.0,  1.0,  0.0,  0.0, 0.0, 0.0, 0.0, 0.0,  0.0,  1.0,  0.0},
-/*e*/ { 1.0, -1.0,  1.0,  1.0,  0.0,  0.0, i_w, 0.0, b_w, 0.0,  0.0,  1.0,  0.0},
-/*f*/ { 1.0, -1.0, -1.0,  1.0,  0.0,  0.0, i_w, i_h, b_w, b_h,  0.0,  1.0,  0.0},
-      { 1.0,  1.0, -1.0,  1.0,  0.0,  0.0, 0.0, i_h, 0.0, b_h,  0.0,  1.0,  0.0},
+/*e*/ { 1.0, -1.0,  1.0,  1.0,  0.0,  0.0, 1.0, 0.0, 1.0, 0.0,  0.0,  1.0,  0.0},
+/*f*/ { 1.0, -1.0, -1.0,  1.0,  0.0,  0.0, 1.0, 1.0, 1.0, 1.0,  0.0,  1.0,  0.0},
+      { 1.0,  1.0, -1.0,  1.0,  0.0,  0.0, 0.0, 1.0, 0.0, 1.0,  0.0,  1.0,  0.0},
 /*T*/ { 1.0,  1.0,  1.0,  0.0,  1.0,  0.0, 0.0, 0.0, 0.0, 0.0,  0.0,  0.0,  1.0},
-/*o*/ { 1.0,  1.0, -1.0,  0.0,  1.0,  0.0, i_w, 0.0, b_w, 0.0,  0.0,  0.0,  1.0},
-/*p*/ {-1.0,  1.0, -1.0,  0.0,  1.0,  0.0, i_w, i_h, b_w, b_h,  0.0,  0.0,  1.0},
-      {-1.0,  1.0,  1.0,  0.0,  1.0,  0.0, 0.0, i_h, 0.0, b_h,  0.0,  0.0,  1.0},
+/*o*/ { 1.0,  1.0, -1.0,  0.0,  1.0,  0.0, 1.0, 0.0, 1.0, 0.0,  0.0,  0.0,  1.0},
+/*p*/ {-1.0,  1.0, -1.0,  0.0,  1.0,  0.0, 1.0, 1.0, 1.0, 1.0,  0.0,  0.0,  1.0},
+      {-1.0,  1.0,  1.0,  0.0,  1.0,  0.0, 0.0, 1.0, 0.0, 1.0,  0.0,  0.0,  1.0},
 /*B*/ { 1.0, -1.0, -1.0,  0.0, -1.0,  0.0, 0.0, 0.0, 0.0, 0.0,  0.0,  0.0, -1.0},
-/*o*/ { 1.0, -1.0,  1.0,  0.0, -1.0,  0.0, i_w, 0.0, b_w, 0.0,  0.0,  0.0, -1.0},
-/*t*/ {-1.0, -1.0,  1.0,  0.0, -1.0,  0.0, i_w, i_h, b_w, b_h,  0.0,  0.0, -1.0},
-      {-1.0, -1.0, -1.0,  0.0, -1.0,  0.0, 0.0, i_h, 0.0, b_h,  0.0,  0.0, -1.0},
+/*o*/ { 1.0, -1.0,  1.0,  0.0, -1.0,  0.0, 1.0, 0.0, 1.0, 0.0,  0.0,  0.0, -1.0},
+/*t*/ {-1.0, -1.0,  1.0,  0.0, -1.0,  0.0, 1.0, 1.0, 1.0, 1.0,  0.0,  0.0, -1.0},
+      {-1.0, -1.0, -1.0,  0.0, -1.0,  0.0, 0.0, 1.0, 0.0, 1.0,  0.0,  0.0, -1.0},
   };
 
   GLushort indices[] = {
@@ -497,12 +494,12 @@ gst_gl_bumper_callback (gint width, gint height, guint texture, gpointer stuff)
   //set the normal map
   gl->ActiveTexture (GL_TEXTURE1);
   gst_gl_shader_set_uniform_1i (bumper->shader, "texture1", 1);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, bumper->bumpmap);
+  gl->BindTexture (GL_TEXTURE_2D, bumper->bumpmap);
 
   //set the video texture
   gl->ActiveTexture (GL_TEXTURE0);
   gst_gl_shader_set_uniform_1i (bumper->shader, "texture0", 0);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
 
   gl->Rotatef (xrot, 1.0f, 0.0f, 0.0f);
   gl->Rotatef (yrot, 0.0f, 1.0f, 0.0f);

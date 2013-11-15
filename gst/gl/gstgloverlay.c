@@ -32,6 +32,8 @@
  * </refsect2>
  */
 
+/* FIXME: Redo this */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -272,8 +274,8 @@ gst_gl_overlay_init_texture (GstGLOverlay * o, GLuint tex, int flag)
     gl->Enable (GL_TEXTURE_2D);
     gl->BindTexture (GL_TEXTURE_2D, tex);
   } else {
-    gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
+    gl->Enable (GL_TEXTURE_2D);
+    gl->BindTexture (GL_TEXTURE_2D, tex);
   }
 }
 
@@ -303,8 +305,8 @@ gst_gl_overlay_draw (GstGLOverlay * o, int flag)
 /* *INDENT-ON* */
 
   if (flag == 1) {
-    width = o->width_window;
-    height = o->height_window;
+    width = 1.0f;
+    height = 1.0f;
   } else if (flag == 0 && o->type_file == 1) {
     width = (gfloat) o->width;
     height = (gfloat) o->height;
@@ -400,7 +402,7 @@ gst_gl_overlay_load_texture (GstGLOverlay * o, GLuint tex, int flag)
 
   gst_gl_overlay_draw (o, flag);
   if (flag == 1)
-    gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+    gl->Disable (GL_TEXTURE_2D);
 }
 
 static void
@@ -620,8 +622,8 @@ init_pixbuf_texture (GstGLContext * context, gpointer data)
     gl->DeleteTextures (1, &overlay->pbuftexture);
     gl->GenTextures (1, &overlay->pbuftexture);
     if (overlay->type_file == 1) {
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, overlay->pbuftexture);
-      gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+      gl->BindTexture (GL_TEXTURE_2D, overlay->pbuftexture);
+      gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA,
           (gint) overlay->width, (gint) overlay->height, 0,
           GL_RGBA, GL_UNSIGNED_BYTE, overlay->pixbuf);
     } else if (overlay->type_file == 2) {

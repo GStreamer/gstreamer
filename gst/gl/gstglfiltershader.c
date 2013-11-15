@@ -89,16 +89,14 @@ static void gst_gl_filtershader_hcallback (gint width, gint height,
 static void
 gst_gl_filtershader_init_resources (GstGLFilter * filter)
 {
-  glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+  glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info),
       0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-      GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-      GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
 static void
@@ -360,9 +358,9 @@ gst_gl_filtershader_hcallback (gint width, gint height, guint texture,
   gst_gl_shader_use (filtershader->shader0);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (filtershader->shader0, "tex", 1);
 

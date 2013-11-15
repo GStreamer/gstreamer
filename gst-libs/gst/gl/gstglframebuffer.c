@@ -125,21 +125,17 @@ gst_gl_framebuffer_generate (GstGLFramebuffer * frame, gint width, gint height,
 
   /* setup a texture to render to */
   gl->GenTextures (1, &fake_texture);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, fake_texture);
-  gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+  gl->BindTexture (GL_TEXTURE_2D, fake_texture);
+  gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
       width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-      GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-      GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-      GL_CLAMP_TO_EDGE);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-      GL_CLAMP_TO_EDGE);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   /* attach the texture to the FBO to renderer to */
   gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_RECTANGLE_ARB, fake_texture, 0);
+      GL_TEXTURE_2D, fake_texture, 0);
 
   /* attach the depth render buffer to the FBO */
   gl->FramebufferRenderbuffer (GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
@@ -194,11 +190,11 @@ gst_gl_framebuffer_use (GstGLFramebuffer * frame, gint texture_fbo_width,
   gl->BindFramebuffer (GL_FRAMEBUFFER, fbo);
 
   /*setup a texture to render to */
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture_fbo);
+  gl->BindTexture (GL_TEXTURE_2D, texture_fbo);
 
   /* attach the texture to the FBO to renderer to */
   gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_RECTANGLE_ARB, texture_fbo, 0);
+      GL_TEXTURE_2D, texture_fbo, 0);
 
   gst_gl_context_clear_shader (frame->context);
 
@@ -290,11 +286,11 @@ gst_gl_framebuffer_use_v2 (GstGLFramebuffer * frame, gint texture_fbo_width,
   gl->BindFramebuffer (GL_FRAMEBUFFER, fbo);
 
   /* setup a texture to render to */
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture_fbo);
+  gl->BindTexture (GL_TEXTURE_2D, texture_fbo);
 
   /* attach the texture to the FBO to renderer to */
   gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_RECTANGLE_ARB, texture_fbo, 0);
+      GL_TEXTURE_2D, texture_fbo, 0);
 
   gl->GetIntegerv (GL_VIEWPORT, viewport_dim);
 

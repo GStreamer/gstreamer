@@ -261,17 +261,16 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   }
 
   gl->FramebufferTexture2D (GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-      GL_TEXTURE_RECTANGLE_ARB, src->tex_id, 0);
+      GL_TEXTURE_2D, src->tex_id, 0);
 
   /* check FBO status */
   if (!gst_gl_context_check_framebuffer_status (src->context))
     goto fbo_error;
 
   /* copy tex */
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, tex_id);
-  gl->CopyTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, gl_format, 0, 0,
-      width, height, 0);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+  gl->BindTexture (GL_TEXTURE_2D, tex_id);
+  gl->CopyTexImage2D (GL_TEXTURE_2D, 0, gl_format, 0, 0, width, height, 0);
+  gl->BindTexture (GL_TEXTURE_2D, 0);
 
   gl->BindFramebuffer (GL_FRAMEBUFFER, 0);
 

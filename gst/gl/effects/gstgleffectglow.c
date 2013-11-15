@@ -57,8 +57,8 @@ gst_gl_effects_glow_step_one (gint width, gint height, guint texture,
   gst_gl_shader_use (shader);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
@@ -100,12 +100,13 @@ gst_gl_effects_glow_step_two (gint width, gint height, guint texture,
   gst_gl_shader_use (shader);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 7, gauss_kernel);
+  gst_gl_shader_set_uniform_1f (shader, "height", height);
 
   gst_gl_effects_draw_texture (effects, texture, width, height);
 }
@@ -140,12 +141,13 @@ gst_gl_effects_glow_step_three (gint width, gint height, guint texture,
   gst_gl_shader_use (shader);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 1);
   gst_gl_shader_set_uniform_1fv (shader, "kernel", 7, gauss_kernel);
+  gst_gl_shader_set_uniform_1f (shader, "width", width);
 
   gst_gl_effects_draw_texture (effects, texture, width, height);
 }
@@ -180,17 +182,17 @@ gst_gl_effects_glow_step_four (gint width, gint height, guint texture,
   gst_gl_shader_use (shader);
 
   gl->ActiveTexture (GL_TEXTURE2);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, effects->intexture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, effects->intexture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1f (shader, "alpha", 1.0);
   gst_gl_shader_set_uniform_1i (shader, "base", 2);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1f (shader, "beta", (gfloat) 1 / 3.5f);
   gst_gl_shader_set_uniform_1i (shader, "blend", 1);

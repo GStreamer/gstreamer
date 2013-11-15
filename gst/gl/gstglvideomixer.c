@@ -70,7 +70,6 @@ static void gst_gl_video_mixer_callback (gpointer stuff);
 
 /* vertex source */
 static const gchar *video_mixer_v_src =
-    "#extension GL_ARB_texture_rectangle : enable\n"
     "attribute vec4 a_position;                                   \n"
     "attribute vec2 a_texCoord;                                   \n"
     "uniform float x_scale;                                       \n"
@@ -83,12 +82,11 @@ static const gchar *video_mixer_v_src =
 
 /* fragment source */
 static const gchar *video_mixer_f_src =
-    "#extension GL_ARB_texture_rectangle : enable\n"
-    "uniform sampler2DRect texture;                     \n"
+    "uniform sampler2D texture;                     \n"
     "varying vec2 v_texCoord;                            \n"
     "void main()                                         \n"
     "{                                                   \n"
-    "  vec4 rgba = texture2DRect( texture, v_texCoord );\n"
+    "  vec4 rgba = texture2D( texture, v_texCoord );\n"
     "  gl_FragColor = vec4(rgba.rgb, 1.0);\n"
     "}                                                   \n";
 
@@ -206,8 +204,8 @@ gst_gl_video_mixer_callback (gpointer stuff)
   out_height = GST_VIDEO_INFO_HEIGHT (&mixer->out_info);
 
   gst_gl_context_clear_shader (mixer->context);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_2D, 0);
+  gl->Disable (GL_TEXTURE_2D);
 
   gl->Disable (GL_DEPTH_TEST);
   gl->Disable (GL_CULL_FACE);
@@ -278,7 +276,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
     gl->BlendEquation (GL_FUNC_ADD);
 
     gl->ActiveTexture (GL_TEXTURE0);
-    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, in_tex);
+    gl->BindTexture (GL_TEXTURE_2D, in_tex);
     gst_gl_shader_set_uniform_1i (video_mixer->shader, "texture", 0);
     gst_gl_shader_set_uniform_1f (video_mixer->shader, "x_scale", w);
     gst_gl_shader_set_uniform_1f (video_mixer->shader, "y_scale", h);
@@ -291,7 +289,7 @@ gst_gl_video_mixer_callback (gpointer stuff)
   gl->DisableVertexAttribArray (attr_position_loc);
   gl->DisableVertexAttribArray (attr_texture_loc);
 
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+  gl->BindTexture (GL_TEXTURE_2D, 0);
 
   gl->Disable (GL_BLEND);
 

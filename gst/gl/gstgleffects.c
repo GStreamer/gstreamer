@@ -197,19 +197,15 @@ gst_gl_effects_init_gl_resources (GstGLFilter * filter)
 
   for (i = 0; i < NEEDED_TEXTURES; i++) {
     glGenTextures (1, &effects->midtexture[i]);
-    glBindTexture (GL_TEXTURE_RECTANGLE_ARB, effects->midtexture[i]);
-    glTexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+    glBindTexture (GL_TEXTURE_2D, effects->midtexture[i]);
+    glTexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
         GST_VIDEO_INFO_WIDTH (&filter->out_info),
         GST_VIDEO_INFO_HEIGHT (&filter->out_info),
         0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-        GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-        GL_LINEAR);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-        GL_CLAMP_TO_EDGE);
-    glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-        GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   }
 }
 
@@ -285,16 +281,16 @@ gst_gl_effects_draw_texture (GstGLEffects * effects, GLuint tex, guint width,
       1.0f, 1.0f,
       -1.0f, 1.0f
     };
-    GLfloat texcoords[] = { 0, 0,
-      width, 0,
-      width, height,
-      0, height
+    GLfloat texcoords[] = { 0.0f, 0.0f,
+      1.0f, 0.0f,
+      1.0f, 1.0f,
+      0.0f, 1.0f
     };
 
     gl->ActiveTexture (GL_TEXTURE0);
 
-    gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
+    gl->Enable (GL_TEXTURE_2D);
+    gl->BindTexture (GL_TEXTURE_2D, tex);
 
     gl->EnableClientState (GL_VERTEX_ARRAY);
     gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);

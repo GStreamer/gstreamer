@@ -68,45 +68,44 @@ static void gst_gl_deinterlace_callback (gint width, gint height,
 
 /* *INDENT-OFF* */
 static const gchar *greedyh_fragment_source =
-  "#extension GL_ARB_texture_rectangle : enable\n"
-  "uniform sampler2DRect tex;\n"
-  "uniform sampler2DRect tex_prev;\n"
+  "uniform sampler2D tex;\n"
+  "uniform sampler2D tex_prev;\n"
   "uniform float max_comb;\n"
   "uniform float motion_threshold;\n"
   "uniform float motion_sense;\n"
-  "uniform int width;\n"
-  "uniform int height;\n"
+  "uniform float width;\n"
+  "uniform float height;\n"
 
   "void main () {\n"
   "  vec2 texcoord = gl_TexCoord[0].xy;\n"
-  "  if (int(mod(texcoord.y, 2.0)) == 0) {\n"
-  "    gl_FragColor = vec4(texture2DRect(tex_prev, texcoord).rgb, 1.0);\n"
+  "  if (int(mod(texcoord.y * width, 2.0)) == 0) {\n"
+  "    gl_FragColor = vec4(texture2D(tex_prev, texcoord).rgb, 1.0);\n"
   "  } else {\n"
   "    vec2 texcoord_L1_a1, texcoord_L3_a1, texcoord_L1, texcoord_L3, texcoord_L1_1, texcoord_L3_1;\n"
   "    vec3 L1_a1, L3_a1, L1, L3, L1_1, L3_1;\n"
 
-  "    texcoord_L1 = vec2(texcoord.x, texcoord.y - 1.0);\n"
-  "    texcoord_L3 = vec2(texcoord.x, texcoord.y + 1.0);\n"
-  "    L1 = texture2DRect(tex_prev, texcoord_L1).rgb;\n"
-  "    L3 = texture2DRect(tex_prev, texcoord_L3).rgb;\n"
-  "    if (int(ceil(texcoord.x)) == width && int(ceil(texcoord.y)) == height) {\n"
+  "    texcoord_L1 = vec2(texcoord.x, texcoord.y - 1.0 / height);\n"
+  "    texcoord_L3 = vec2(texcoord.x, texcoord.y + 1.0 / height);\n"
+  "    L1 = texture2D(tex_prev, texcoord_L1).rgb;\n"
+  "    L3 = texture2D(tex_prev, texcoord_L3).rgb;\n"
+  "    if (texcoord.x == 1.0 && texcoord.y == 1.0) {\n"
   "      L1_1 = L1;\n"
   "      L3_1 = L3;\n"
   "    } else {\n"
-  "      texcoord_L1_1 = vec2(texcoord.x + 1.0, texcoord.y - 1.0);\n"
-  "      texcoord_L3_1 = vec2(texcoord.x + 1.0, texcoord.y + 1.0);\n"
-  "      L1_1 = texture2DRect(tex_prev, texcoord_L1_1).rgb;\n"
-  "      L3_1 = texture2DRect(tex_prev, texcoord_L3_1).rgb;\n"
+  "      texcoord_L1_1 = vec2(texcoord.x + 1.0 / width, texcoord.y - 1.0 / height);\n"
+  "      texcoord_L3_1 = vec2(texcoord.x + 1.0 / width, texcoord.y + 1.0 / height);\n"
+  "      L1_1 = texture2D(tex_prev, texcoord_L1_1).rgb;\n"
+  "      L3_1 = texture2D(tex_prev, texcoord_L3_1).rgb;\n"
   "    }\n"
 
   "    if (int(ceil(texcoord.x + texcoord.y)) == 0) {\n"
   "      L1_a1 = L1;\n"
   "      L3_a1 = L3;\n"
   "    } else {\n"
-  "      texcoord_L1_a1 = vec2(texcoord.x - 1.0, texcoord.y - 1.0);\n"
-  "      texcoord_L3_a1 = vec2(texcoord.x - 1.0, texcoord.y + 1.0);\n"
-  "      L1_a1 = texture2DRect(tex_prev, texcoord_L1_a1).rgb;\n"
-  "      L3_a1 = texture2DRect(tex_prev, texcoord_L3_a1).rgb;\n"
+  "      texcoord_L1_a1 = vec2(texcoord.x - 1.0 / width, texcoord.y - 1.0 / height);\n"
+  "      texcoord_L3_a1 = vec2(texcoord.x - 1.0 / width, texcoord.y + 1.0 / height);\n"
+  "      L1_a1 = texture2D(tex_prev, texcoord_L1_a1).rgb;\n"
+  "      L3_a1 = texture2D(tex_prev, texcoord_L3_a1).rgb;\n"
   "    }\n"
           //STEP 1
   "    vec3 avg_a1 = (L1_a1 + L3_a1) / 2.0;\n"
@@ -114,8 +113,8 @@ static const gchar *greedyh_fragment_source =
   "    vec3 avg_1 = (L1_1 + L3_1) / 2.0;\n"
   "    vec3 avg_s = (avg_a1 + avg_1) / 2.0;\n"
   "    vec3 avg_sc = (avg_s + avg) / 2.0;\n"
-  "    vec3 L2 = texture2DRect(tex, texcoord).rgb;\n"
-  "    vec3 LP2 = texture2DRect(tex_prev, texcoord).rgb;\n"
+  "    vec3 L2 = texture2D(tex, texcoord).rgb;\n"
+  "    vec3 LP2 = texture2D(tex_prev, texcoord).rgb;\n"
   "    vec3 best;\n"
   "    if (abs(L2.r - avg_sc.r) < abs(LP2.r - avg_sc.r)) {\n"
   "      best.r = L2.r;\n" "    } else {\n"
@@ -274,15 +273,15 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
     1.0, 1.0,
     -1.0, 1.0
   };
-  GLfloat texcoords0[] = { 0, 0,
-    width, 0,
-    width, height,
-    0, height
+  GLfloat texcoords0[] = { 0.0f, 0.0f,
+    1.0f, 0.0f,
+    1.0f, 1.0f,
+    0.0f, 1.0f
   };
-  GLfloat texcoords1[] = { 0, 0,
-    width, 0,
-    width, height,
-    0, height
+  GLfloat texcoords1[] = { 0.0f, 0.0f,
+    1.0f, 0.0f,
+    1.0f, 1.0f,
+    0.0f, 1.0f
   };
 
   gl->MatrixMode (GL_PROJECTION);
@@ -290,7 +289,7 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
 
   gst_gl_shader_use (deinterlace_filter->shader);
 
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
 
   if (G_UNLIKELY (deinterlace_filter->prev_tex == 0)) {
     gst_gl_context_gen_texture (filter->context,
@@ -301,12 +300,12 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
   } else {
     gl->ActiveTexture (GL_TEXTURE1);
     gst_gl_shader_set_uniform_1i (deinterlace_filter->shader, "tex_prev", 1);
-    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, deinterlace_filter->prev_tex);
+    gl->BindTexture (GL_TEXTURE_2D, deinterlace_filter->prev_tex);
   }
 
   gl->ActiveTexture (GL_TEXTURE0);
   gst_gl_shader_set_uniform_1i (deinterlace_filter->shader, "tex", 0);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
 
   gst_gl_shader_set_uniform_1f (deinterlace_filter->shader, "max_comb",
       5.0f / 255.0f);
@@ -315,9 +314,9 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
   gst_gl_shader_set_uniform_1f (deinterlace_filter->shader, "motion_sense",
       30.0f / 255.0f);
 
-  gst_gl_shader_set_uniform_1i (deinterlace_filter->shader, "width",
+  gst_gl_shader_set_uniform_1f (deinterlace_filter->shader, "width",
       GST_VIDEO_INFO_WIDTH (&filter->out_info));
-  gst_gl_shader_set_uniform_1i (deinterlace_filter->shader, "height",
+  gst_gl_shader_set_uniform_1f (deinterlace_filter->shader, "height",
       GST_VIDEO_INFO_HEIGHT (&filter->out_info));
 
   gl->ClientActiveTexture (GL_TEXTURE0);
@@ -340,7 +339,7 @@ gst_gl_deinterlace_callback (gint width, gint height, guint texture,
   gl->ClientActiveTexture (GL_TEXTURE0);
   gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
 
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Disable (GL_TEXTURE_2D);
 
   if (texture == filter->in_tex_id) {
     temp = filter->in_tex_id;

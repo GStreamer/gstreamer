@@ -92,7 +92,7 @@ gst_gl_test_src_smpte (GstGLTestSrc * v, GstBuffer * buffer, int w, int h)
     glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glDisable (GL_CULL_FACE);
-    glDisable (GL_TEXTURE_RECTANGLE_ARB);
+    glDisable (GL_TEXTURE_2D);
 
     glMatrixMode (GL_PROJECTION);
     glLoadIdentity ();

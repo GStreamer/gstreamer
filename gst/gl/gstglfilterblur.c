@@ -70,19 +70,15 @@ gst_gl_filterblur_init_resources (GstGLFilter * filter)
   GstGLFuncs *gl = filter->context->gl_vtable;
 
   gl->GenTextures (1, &filterblur->midtexture);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, filterblur->midtexture);
-  gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+  gl->BindTexture (GL_TEXTURE_2D, filterblur->midtexture);
+  gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
       GST_VIDEO_INFO_WIDTH (&filter->out_info),
       GST_VIDEO_INFO_HEIGHT (&filter->out_info),
       0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-      GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-      GL_LINEAR);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-      GL_CLAMP_TO_EDGE);
-  gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-      GL_CLAMP_TO_EDGE);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 }
 
 static void
@@ -221,13 +217,14 @@ gst_gl_filterblur_hcallback (gint width, gint height, guint texture,
   gst_gl_shader_use (filterblur->shader0);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (filterblur->shader0, "tex", 1);
   gst_gl_shader_set_uniform_1fv (filterblur->shader0, "kernel", 7,
       filterblur->gauss_kernel);
+  gst_gl_shader_set_uniform_1f (filterblur->shader0, "width", width);
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }
@@ -247,13 +244,14 @@ gst_gl_filterblur_vcallback (gint width, gint height, guint texture,
   gst_gl_shader_use (filterblur->shader1);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (filterblur->shader1, "tex", 1);
   gst_gl_shader_set_uniform_1fv (filterblur->shader1, "kernel", 7,
       filterblur->gauss_kernel);
+  gst_gl_shader_set_uniform_1f (filterblur->shader1, "height", height);
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }

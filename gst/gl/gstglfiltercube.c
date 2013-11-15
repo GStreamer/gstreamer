@@ -352,42 +352,39 @@ _callback_opengl (gint width, gint height, guint texture, gpointer stuff)
   static GLfloat yrot = 0;
   static GLfloat zrot = 0;
 
-  gfloat w = (gfloat) width;
-  gfloat h = (gfloat) height;
-
 /* *INDENT-OFF* */
   const GLfloat v_vertices[] = {
  /*|     Vertex     | TexCoord |*/ 
     /* front face */
      1.0,  1.0, -1.0, 0.0, 0.0,
-     1.0, -1.0, -1.0,   w, 0.0,
-    -1.0, -1.0, -1.0,   w,   h,
-    -1.0,  1.0, -1.0, 0.0,   h,
+     1.0, -1.0, -1.0, 1.0, 0.0,
+    -1.0, -1.0, -1.0, 1.0, 1.0,
+    -1.0,  1.0, -1.0, 0.0, 1.0,
     /* back face */
     -1.0,  1.0,  1.0, 0.0, 0.0,
-    -1.0, -1.0,  1.0,   w, 0.0,
-     1.0, -1.0,  1.0,   w,   h,
-     1.0,  1.0,  1.0, 0.0,   h,
+    -1.0, -1.0,  1.0, 1.0, 0.0,
+     1.0, -1.0,  1.0, 1.0, 1.0,
+     1.0,  1.0,  1.0, 0.0, 1.0,
     /* right face */
     -1.0,  1.0, -1.0, 0.0, 0.0,
-    -1.0, -1.0, -1.0,   w, 0.0,
-    -1.0, -1.0,  1.0,   w,   h,
-    -1.0,  1.0,  1.0, 0.0,   h,
+    -1.0, -1.0, -1.0, 1.0, 0.0,
+    -1.0, -1.0,  1.0, 1.0, 1.0,
+    -1.0,  1.0,  1.0, 0.0, 1.0,
     /* left face */
      1.0,  1.0,  1.0, 0.0, 0.0,
-     1.0, -1.0,  1.0,   w, 0.0,
-     1.0, -1.0, -1.0,   w,   h,
-     1.0,  1.0, -1.0, 0.0,   h,
+     1.0, -1.0,  1.0, 1.0, 0.0,
+     1.0, -1.0, -1.0, 1.0, 1.0,
+     1.0,  1.0, -1.0, 0.0, 1.0,
     /* top face */
      1.0,  1.0,  1.0, 0.0, 0.0,
-     1.0,  1.0, -1.0,   w, 0.0,
-    -1.0,  1.0, -1.0,   w,   h,
-    -1.0,  1.0,  1.0, 0.0,   h,
+     1.0,  1.0, -1.0, 1.0, 0.0,
+    -1.0,  1.0, -1.0, 1.0, 1.0,
+    -1.0,  1.0,  1.0, 0.0, 1.0,
     /* bottom face */
      1.0, -1.0,  1.0, 0.0, 0.0,
-     1.0, -1.0, -1.0,   w, 0.0,
-    -1.0, -1.0, -1.0,   w,   h,
-    -1.0, -1.0,  1.0, 0.0,   h,
+     1.0, -1.0, -1.0, 1.0, 0.0,
+    -1.0, -1.0, -1.0, 1.0, 1.0,
+    -1.0, -1.0,  1.0, 0.0, 1.0,
   };
 /* *INDENT-ON* */
 
@@ -408,8 +405,8 @@ _callback_opengl (gint width, gint height, guint texture, gpointer stuff)
 
   gl->Enable (GL_DEPTH_TEST);
 
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
 
   gl->ClearColor (cube_filter->red, cube_filter->green, cube_filter->blue, 0.0);
   gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

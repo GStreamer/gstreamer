@@ -71,12 +71,12 @@ gst_gl_effects_rgb_to_curve (GstGLEffects * effects,
   }
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
 
   gst_gl_shader_set_uniform_1i (shader, "tex", 0);
 
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Disable (GL_TEXTURE_2D);
 
   gl->ActiveTexture (GL_TEXTURE1);
   gl->Enable (GL_TEXTURE_1D);

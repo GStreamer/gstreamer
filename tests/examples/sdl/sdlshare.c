@@ -100,14 +100,12 @@ DrawGLScene (GstGLBuffer * gst_gl_buf)
   glVertex3f (-1.0f, -1.0f, 0.0f);      // Bottom Left  
   glEnd ();                     // we're done with the polygon (smooth color interpolation)
 
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-      GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-      GL_CLAMP_TO_EDGE);
+  glEnable (GL_TEXTURE_2D);
+  glBindTexture (GL_TEXTURE_2D, texture);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexEnvi (GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
 
   glLoadIdentity ();            // make sure we're no longer rotated.
@@ -127,7 +125,7 @@ DrawGLScene (GstGLBuffer * gst_gl_buf)
   glVertex3f (-1.0f, -1.0f, 0.0f);      // Bottom Left  
   glEnd ();                     // done with the polygon
 
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+  glBindTexture (GL_TEXTURE_2D, 0);
 
   rtri += 1.0f;                 // Increase The Rotation Variable For The Triangle
   rquad -= 1.0f;                // Decrease The Rotation Variable For The Quad 

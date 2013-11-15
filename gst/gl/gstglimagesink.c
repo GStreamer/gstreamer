@@ -1009,10 +1009,10 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
 
 #if GST_GL_HAVE_OPENGL
   if (USING_OPENGL (gl_sink->context))
-    gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+    gl->Disable (GL_TEXTURE_2D);
 #endif
 
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+  gl->BindTexture (GL_TEXTURE_2D, 0);
 
   /* check if a client draw callback is registered */
   if (gl_sink->clientDrawCallback) {
@@ -1037,19 +1037,18 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
         -1.0f, -1.0f,
         1.0f, -1.0f
       };
-      GLfloat texcoords[8] = { GST_VIDEO_INFO_WIDTH (&gl_sink->info), 0,
-        0, 0,
-        0, GST_VIDEO_INFO_HEIGHT (&gl_sink->info),
-        GST_VIDEO_INFO_WIDTH (&gl_sink->info),
-        GST_VIDEO_INFO_HEIGHT (&gl_sink->info)
+      GLfloat texcoords[8] = { 1.0f, 0.0f,
+        0.0f, 0.0f,
+        0.0f, 1.0f,
+        1.0f, 1.0f
       };
       gl->Clear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
       gl->MatrixMode (GL_PROJECTION);
       gl->LoadIdentity ();
 
-      gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-      gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, gl_sink->redisplay_texture);
+      gl->Enable (GL_TEXTURE_2D);
+      gl->BindTexture (GL_TEXTURE_2D, gl_sink->redisplay_texture);
 
       gl->EnableClientState (GL_VERTEX_ARRAY);
       gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
@@ -1061,7 +1060,7 @@ gst_glimage_sink_on_draw (const GstGLImageSink * gl_sink)
       gl->DisableClientState (GL_VERTEX_ARRAY);
       gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
 
-      gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+      gl->Disable (GL_TEXTURE_2D);
     }
 #endif
 #if GST_GL_HAVE_GLES2

@@ -156,10 +156,10 @@ draw_render (gpointer data)
     -1.0f, -1.0f,
     1.0f, -1.0f
   };
-  GLfloat texcoords[8] = { 320.0f, 0.0f,
+  GLfloat texcoords[8] = { 1.0f, 0.0f,
     0.0f, 0.0f,
-    0.0f, 240.0f,
-    320.0f, 240.0f
+    0.0f, 1.0f,
+    1.0f, 1.0f
   };
 
   gl->Viewport (0, 0, 320, 240);
@@ -169,8 +169,8 @@ draw_render (gpointer data)
   gl->MatrixMode (GL_PROJECTION);
   gl->LoadIdentity ();
 
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, tex);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, tex);
 
   gl->EnableClientState (GL_VERTEX_ARRAY);
   gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
@@ -182,7 +182,7 @@ draw_render (gpointer data)
   gl->DisableClientState (GL_VERTEX_ARRAY);
   gl->DisableClientState (GL_TEXTURE_COORD_ARRAY);
 
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Disable (GL_TEXTURE_2D);
 #endif
 #if GST_GL_HAVE_GLES2
   const GLfloat vVertices[] = { 1.0f, 1.0f, 0.0f,

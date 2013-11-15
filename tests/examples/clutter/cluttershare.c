@@ -137,14 +137,14 @@ update_texture_actor (gpointer data)
   tex_id = *(guint *) frame.data[0];
 
   /* Create a cogl texture from the gst gl texture */
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, tex_id);
+  glEnable (GL_TEXTURE_2D);
+  glBindTexture (GL_TEXTURE_2D, tex_id);
   if (glGetError () != GL_NO_ERROR)
     g_debug ("failed to bind texture that comes from gst-gl\n");
   cogl_texture = cogl_texture_new_from_foreign (tex_id,
-      GL_TEXTURE_RECTANGLE_ARB, v_meta->width, v_meta->height, 0, 0,
+      GL_TEXTURE_2D, v_meta->width, v_meta->height, 0, 0,
       COGL_PIXEL_FORMAT_RGBA_8888);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+  glBindTexture (GL_TEXTURE_2D, 0);
 
   gst_video_frame_unmap (&frame);
 

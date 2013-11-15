@@ -848,8 +848,8 @@ bottom_up_to_top_down (gint width, gint height, guint texture,
     GstVisualGL * visual)
 {
 
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  glEnable (GL_TEXTURE_2D);
+  glBindTexture (GL_TEXTURE_2D, texture);
 
   glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -867,8 +867,8 @@ bottom_up_to_top_down (gint width, gint height, guint texture,
   glVertex2i (-1, -1);
   glEnd ();
 
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  glBindTexture (GL_TEXTURE_2D, 0);
+  glDisable (GL_TEXTURE_2D);
 
   GST_DEBUG_OBJECT (visual, "bottom up to top down");
 }

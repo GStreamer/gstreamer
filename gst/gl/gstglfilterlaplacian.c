@@ -72,24 +72,26 @@ static void gst_gl_filter_laplacian_callback (gint width, gint height,
    kernel into the shader and remove unneeded zero multiplications in
    the convolution */
 static const gchar *convolution_fragment_source =
-  "#extension GL_ARB_texture_rectangle : enable\n"
-  "uniform sampler2DRect tex;"
+  "uniform sampler2D tex;"
   "uniform float kernel[9];"
+  "uniform float width, height;"
   "void main () {"
+  "  float w = 1.0 / width;"
+  "  float h = 1.0 / height;"
   "  vec2 texturecoord[9];"
   "  texturecoord[4] = gl_TexCoord[0].st;"                /*  0  0 */
-  "  texturecoord[5] = texturecoord[4] + vec2(1.0, 0.0);" /*  1  0 */
-  "  texturecoord[2] = texturecoord[5] - vec2(0.0, 1.0);" /*  1 -1 */
-  "  texturecoord[1] = texturecoord[2] - vec2(1.0, 0.0);" /*  0 -1 */
-  "  texturecoord[0] = texturecoord[1] - vec2(1.0, 0.0);" /* -1 -1 */
-  "  texturecoord[3] = texturecoord[0] + vec2(0.0, 1.0);" /* -1  0 */
-  "  texturecoord[6] = texturecoord[3] + vec2(0.0, 1.0);" /* -1  1 */
-  "  texturecoord[7] = texturecoord[6] + vec2(1.0, 0.0);" /*  0  1 */
-  "  texturecoord[8] = texturecoord[7] + vec2(1.0, 0.0);" /*  1  1 */
+  "  texturecoord[5] = texturecoord[4] + vec2(w,   0.0);" /*  1  0 */
+  "  texturecoord[2] = texturecoord[5] - vec2(0.0, h);" /*  1 -1 */
+  "  texturecoord[1] = texturecoord[2] - vec2(w,   0.0);" /*  0 -1 */
+  "  texturecoord[0] = texturecoord[1] - vec2(w,   0.0);" /* -1 -1 */
+  "  texturecoord[3] = texturecoord[0] + vec2(0.0, h);" /* -1  0 */
+  "  texturecoord[6] = texturecoord[3] + vec2(0.0, h);" /* -1  1 */
+  "  texturecoord[7] = texturecoord[6] + vec2(w,   0.0);" /*  0  1 */
+  "  texturecoord[8] = texturecoord[7] + vec2(w,   0.0);" /*  1  1 */
   "  int i;"
   "  vec4 sum = vec4 (0.0);"
   "  for (i = 0; i < 9; i++) { "
-  "    vec4 neighbor = texture2DRect(tex, texturecoord[i]);"
+  "    vec4 neighbor = texture2D(tex, texturecoord[i]);"
   "    sum += neighbor * kernel[i];"
   "  }"
   "  gl_FragColor = sum;"
@@ -206,11 +208,15 @@ gst_gl_filter_laplacian_callback (gint width, gint height, guint texture,
   gst_gl_shader_use (laplacian_filter->shader);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
 
   gst_gl_shader_set_uniform_1i (laplacian_filter->shader, "tex", 0);
   gst_gl_shader_set_uniform_1fv (laplacian_filter->shader, "kernel", 9, kernel);
+  gst_gl_shader_set_uniform_1f (laplacian_filter->shader, "width",
+      (gfloat) width);
+  gst_gl_shader_set_uniform_1f (laplacian_filter->shader, "height",
+      (gfloat) height);
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }

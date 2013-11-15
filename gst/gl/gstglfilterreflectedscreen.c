@@ -249,47 +249,45 @@ gst_gl_filter_reflected_screen_draw_separated_screen (GstGLFilter * filter,
 {
   //enable ARB Rectangular texturing
   //that's necessary to have the video displayed on our screen (with gstreamer)
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  glEnable (GL_TEXTURE_2D);
+  glBindTexture (GL_TEXTURE_2D, texture);
   //configure parameters for the texturing
   //the two first are used to specified how the texturing will be done if the screen is greater than the texture herself
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   //the next two specified how the texture will comport near the limits
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-      GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-      GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   //creating screen and setting the texture (depending on texture's height and width)
   glBegin (GL_QUADS);
 
   // right Face
   glColor4f (1.0f, 1.0f, 1.0f, alphs);
-  glTexCoord2f ((gfloat) (width / 2.0), (gfloat) height);
+  glTexCoord2f (0.5f, 1.0f);
   glVertex3f (-0.75f, 0.0f, -1.0f);
   glColor4f (1.0f, 1.0f, 1.0f, alphe);
-  glTexCoord2f ((gfloat) (width / 2.0), 0.0f);
+  glTexCoord2f (0.5f, 0.0f);
   glVertex3f (-0.75f, 1.25f, -1.0f);
-  glTexCoord2f ((gfloat) width, 0.0f);
+  glTexCoord2f (1.0f, 0.0f);
   glVertex3f (1.25f, 1.25f, -1.0f);
   glColor4f (1.0f, 1.0f, 1.0f, alphs);
-  glTexCoord2f ((gfloat) width, (gfloat) height);
+  glTexCoord2f (1.0f, 1.0f);
   glVertex3f (1.25f, 0.0f, -1.0f);
   // Left Face
   glColor4f (1.0f, 1.0f, 1.0f, alphs);
-  glTexCoord2f (((gfloat) width / 2.0f), (gfloat) height);
+  glTexCoord2f (0.5f, 1.0f);
   glVertex3f (-1.0f, 0.0f, -0.75f);
-  glTexCoord2f (0.0f, (gfloat) height);
+  glTexCoord2f (0.0f, 1.0f);
   glVertex3f (-1.0f, 0.0f, 1.25f);
   glColor4f (1.0f, 1.0f, 1.0f, alphe);
   glTexCoord2f (0.0f, 0.0f);
   glVertex3f (-1.0f, 1.25f, 1.25f);
-  glTexCoord2f (((gfloat) width / 2.0f), 0.0f);
+  glTexCoord2f (0.5f, 0.0f);
   glVertex3f (-1.0f, 1.25f, -0.75f);
 
   glEnd ();
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  glDisable (GL_TEXTURE_2D);
 }
 
 static void
@@ -298,43 +296,41 @@ gst_gl_filter_reflected_screen_draw_screen (GstGLFilter * filter,
 {
   //enable ARB Rectangular texturing
   //that's necessary to have the video displayed on our screen (with gstreamer)
-  glEnable (GL_TEXTURE_RECTANGLE_ARB);
-  glBindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
+  glEnable (GL_TEXTURE_2D);
+  glBindTexture (GL_TEXTURE_2D, texture);
   //configure parameters for the texturing
   //the two first are used to specified how the texturing will be done if the screen is greater than the texture herself
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   //the next two specified how the texture will comport near the limits
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-      GL_CLAMP_TO_EDGE);
-  glTexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-      GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   //creating screen and setting the texture (depending on texture's height and width)
   glBegin (GL_QUADS);
 
-  glTexCoord2f ((gfloat) (width / 2.0), (gfloat) height);
+  glTexCoord2f (0.5f, 1.0f);
   glVertex3f (-1.0f, 0.0f, -1.0f);
-  glTexCoord2f ((gfloat) (width / 2.0), 0.0f);
+  glTexCoord2f (0.5f, 0.0f);
   glVertex3f (-1.0f, 1.0f, -1.0f);
-  glTexCoord2f ((gfloat) width, 0.0f);
+  glTexCoord2f (1.0f, 0.0f);
   glVertex3f (1.0f, 1.0f, -1.0f);
-  glTexCoord2f ((gfloat) width, (gfloat) height);
+  glTexCoord2f (1.0f, 1.0f);
   glVertex3f (1.0f, 0.0f, -1.0f);
   // Left Face
-  glTexCoord2f (((gfloat) width / 2.0f), (gfloat) height);
+  glTexCoord2f (0.5f, 1.0f);
   glVertex3f (-1.0f, 0.0f, -1.0f);
-  glTexCoord2f (0.0f, (gfloat) height);
+  glTexCoord2f (0.0f, 1.0f);
   glVertex3f (-1.0f, 0.0f, 1.0f);
   glTexCoord2f (0.0f, 0.0f);
   glVertex3f (-1.0f, 1.0f, 1.0f);
-  glTexCoord2f (((gfloat) width / 2.0f), 0.0f);
+  glTexCoord2f (0.5f, 0.0f);
   glVertex3f (-1.0f, 1.0f, -1.0f);
 
   glEnd ();
 
   //disable this kind of texturing (useless for the gluDisk)
-  glDisable (GL_TEXTURE_RECTANGLE_ARB);
+  glDisable (GL_TEXTURE_2D);
 }
 
 static void

@@ -76,15 +76,13 @@ static void gst_gl_filter_glass_callback (gpointer stuff);
 
 /* *INDENT-OFF* */
 static const gchar *glass_fragment_source =
-    "#extension GL_ARB_texture_rectangle : enable\n"
-    "uniform sampler2DRect tex;\n"
-    "uniform float width, height;\n"
+    "uniform sampler2D tex;\n"
     "varying float alpha;\n"
     "void main () {\n"
     "  float p = 0.0525;\n"
-    "  float L1 = p*width;\n"
-    "  float L2 = width - L1;\n"
-    "  float L3 = height - L1;\n"
+    "  float L1 = p*1.0;\n"
+    "  float L2 = 1.0 - L1;\n"
+    "  float L3 = 1.0 - L1;\n"
     "  float w = 1.0;\n"
     "  float r = L1;\n"
     "  if (gl_TexCoord[0].x < L1 && gl_TexCoord[0].y < L1)\n"
@@ -97,13 +95,13 @@ static const gchar *glass_fragment_source =
     "      r = sqrt( (gl_TexCoord[0].x - L1) * (gl_TexCoord[0].x - L1) + (gl_TexCoord[0].y - L3) * (gl_TexCoord[0].y - L3) );\n"
     "  if (r > L1)\n"
     "      w = 0.0;\n"
-    "  vec4 color = texture2DRect (tex, gl_TexCoord[0].st);\n"
+    "  vec4 color = texture2D (tex, gl_TexCoord[0].st);\n"
     "  gl_FragColor = vec4(color.rgb, alpha * w);\n"
     "}\n";
 
 static const gchar *glass_vertex_source =
     "uniform float yrot;\n"
-    "uniform float width, height;\n"
+    "uniform float aspect;\n"
     "const float fovy = 80.0;\n"
     "const float znear = 1.0;\n"
     "const float zfar = 5000.0;\n"
@@ -111,7 +109,6 @@ static const gchar *glass_vertex_source =
     "void main () {\n"
     "   float f = 1.0/(tan(radians(fovy/2.0)));\n"
     "   float rot = radians (yrot);\n"
-    "   float aspect = width/height;\n"
     "   // replacement for gluPerspective\n"
     "   mat4 perspective = mat4 (\n"
     "            f/aspect, 0.0,  0.0,                      0.0,\n"
@@ -306,17 +303,15 @@ gst_gl_filter_glass_draw_video_plane (GstGLFilter * filter,
   GstGLFilterGlass *glass_filter = GST_GL_FILTER_GLASS (filter);
   GstGLFuncs *gl = filter->context->gl_vtable;
 
-  gfloat w = (gfloat) width;
-  gfloat h = (gfloat) height;
   gfloat topy = reversed ? center_y - 1.0f : center_y + 1.0f;
   gfloat bottomy = reversed ? center_y + 1.0f : center_y - 1.0f;
 
 /* *INDENT-OFF* */
   gfloat mesh[] = {
  /*|           Vertex          |TexCoord0|      Colour               |*/
-    center_x-1.6, topy,    0.0, 0.0, h,   1.0, 1.0, 1.0, start_alpha,
-    center_x+1.6, topy,    0.0, w,   h,   1.0, 1.0, 1.0, start_alpha,
-    center_x+1.6, bottomy, 0.0, w,   0.0, 1.0, 1.0, 1.0, stop_alpha,
+    center_x-1.6, topy,    0.0, 0.0, 1.0, 1.0, 1.0, 1.0, start_alpha,
+    center_x+1.6, topy,    0.0, 1.0, 1.0, 1.0, 1.0, 1.0, start_alpha,
+    center_x+1.6, bottomy, 0.0, 1.0, 0.0, 1.0, 1.0, 1.0, stop_alpha,
     center_x-1.6, bottomy, 0.0, 0.0, 0.0, 1.0, 1.0, 1.0, stop_alpha,
   };
 /* *INDENT-ON* */
@@ -327,15 +322,14 @@ gst_gl_filter_glass_draw_video_plane (GstGLFilter * filter,
   };
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (glass_filter->shader, "tex", 0);
-  gst_gl_shader_set_uniform_1f (glass_filter->shader, "width", (gfloat) width);
-  gst_gl_shader_set_uniform_1f (glass_filter->shader, "height",
-      (gfloat) height);
   gst_gl_shader_set_uniform_1f (glass_filter->shader, "yrot", rotation);
+  gst_gl_shader_set_uniform_1f (glass_filter->shader, "aspect",
+      (gfloat) width / (gfloat) height);
 
   gl->ClientActiveTexture (GL_TEXTURE0);
   gl->EnableClientState (GL_TEXTURE_COORD_ARRAY);
@@ -407,6 +401,6 @@ gst_gl_filter_glass_callback (gpointer stuff)
 
   gst_gl_context_clear_shader (filter->context);
 
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Disable (GL_TEXTURE_2D);
   gl->Disable (GL_BLEND);
 }

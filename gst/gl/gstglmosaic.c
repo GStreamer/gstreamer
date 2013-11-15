@@ -70,7 +70,6 @@ static void gst_gl_mosaic_callback (gpointer stuff);
 
 //vertex source
 static const gchar *mosaic_v_src =
-    "#extension GL_ARB_texture_rectangle : enable\n"
     "uniform mat4 u_matrix;                                       \n"
     "uniform float xrot_degree, yrot_degree, zrot_degree;         \n"
     "attribute vec4 a_position;                                   \n"
@@ -103,13 +102,12 @@ static const gchar *mosaic_v_src =
 
 //fragment source
 static const gchar *mosaic_f_src =
-    "#extension GL_ARB_texture_rectangle : enable\n"
-    "uniform sampler2DRect s_texture;                    \n"
+    "uniform sampler2D s_texture;                    \n"
     "varying vec2 v_texCoord;                            \n"
     "void main()                                         \n"
     "{                                                   \n"
     //"  gl_FragColor = vec4( 1.0, 0.5, 1.0, 1.0 );\n"
-    "  gl_FragColor = texture2DRect( s_texture, v_texCoord );\n"
+    "  gl_FragColor = texture2D( s_texture, v_texCoord );\n"
     "}                                                   \n";
 
 static void
@@ -238,8 +236,8 @@ gst_gl_mosaic_callback (gpointer stuff)
   guint count = 0;
 
   gst_gl_context_clear_shader (mixer->context);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->BindTexture (GL_TEXTURE_2D, 0);
+  gl->Disable (GL_TEXTURE_2D);
 
   gl->Enable (GL_DEPTH_TEST);
 
@@ -277,58 +275,58 @@ gst_gl_mosaic_callback (gpointer stuff)
     v_vertices = (GLfloat[]) {
       /* front face */
       1.0f, 1.0f, -1.0f,
-      width, 0.0f,
+      1.0f, 0.0f,
       1.0f, -1.0f, -1.0f,
-      width, height,
+      1.0f, 1.0f,
       -1.0f, -1.0f, -1.0f,
-      0.0f, height,
+      0.0f, 1.0f,
       -1.0f, 1.0f, -1.0f,
       0.0f, 0.0f,
       /* right face */
       1.0f, 1.0f, 1.0f,
-      width, 0.0f,
+      1.0f, 0.0f,
       1.0f, -1.0f, 1.0f,
       0.0f, 0.0f,
       1.0f, -1.0f, -1.0f,
-      0.0f, height,
+      0.0f, 1.0f,
       1.0f, 1.0f, -1.0f,
-      width, height,
+      1.0f, 1.0f,
       /* left face */
       -1.0f, 1.0f, 1.0f,
-      width, 0.0f,
+      1.0f, 0.0f,
       -1.0f, 1.0f, -1.0f,
-      width, height,
+      1.0f, 1.0f,
       -1.0f, -1.0f, -1.0f,
-      0.0f, height,
+      0.0f, 1.0f,
       -1.0f, -1.0f, 1.0f,
       0.0f, 0.0f,
       /* top face */
       1.0f, -1.0f, 1.0f,
-      width, 0.0f,
+      1.0f, 0.0f,
       -1.0f, -1.0f, 1.0f,
       0.0f, 0.0f,
       -1.0f, -1.0f, -1.0f,
-      0.0f, height,
+      0.0f, 1.0f,
       1.0f, -1.0f, -1.0f,
-      width, height,
+      1.0f, 1.0f,
       /* bottom face */
       1.0f, 1.0f, 1.0f,
-      width, 0.0f,
+      1.0f, 0.0f,
       1.0f, 1.0f, -1.0f,
-      width, height,
+      1.0f, 1.0f,
       -1.0f, 1.0f, -1.0f,
-      0.0f, height,
+      0.0f, 1.0f,
       -1.0f, 1.0f, 1.0f,
       0.0f, 0.0f,
       /* back face */
       1.0f, 1.0f, 1.0f,
-      width, 0.0f,
+      1.0f, 0.0f,
       -1.0f, 1.0f, 1.0f,
       0.0f, 0.0f,
       -1.0f, -1.0f, 1.0f,
-      0.0f, height,
+      0.0f, 1.0f,
       1.0f, -1.0f, 1.0f,
-      width, height
+      1.0f, 1.0f
     };
     /* *INDENT-ON* */
 
@@ -342,7 +340,7 @@ gst_gl_mosaic_callback (gpointer stuff)
     gl->EnableVertexAttribArray (attr_texture_loc);
 
     gl->ActiveTexture (GL_TEXTURE0);
-    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, in_tex);
+    gl->BindTexture (GL_TEXTURE_2D, in_tex);
     gst_gl_shader_set_uniform_1i (mosaic->shader, "s_texture", 0);
     gst_gl_shader_set_uniform_1f (mosaic->shader, "xrot_degree", xrot);
     gst_gl_shader_set_uniform_1f (mosaic->shader, "yrot_degree", yrot);
@@ -358,7 +356,7 @@ gst_gl_mosaic_callback (gpointer stuff)
   gl->DisableVertexAttribArray (attr_position_loc);
   gl->DisableVertexAttribArray (attr_texture_loc);
 
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, 0);
+  gl->BindTexture (GL_TEXTURE_2D, 0);
 
   gl->Disable (GL_DEPTH_TEST);
 

@@ -86,19 +86,15 @@ gst_gl_differencematte_init_gl_resources (GstGLFilter * filter)
 
   for (i = 0; i < 4; i++) {
     gl->GenTextures (1, &differencematte->midtexture[i]);
-    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->midtexture[i]);
-    gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+    gl->BindTexture (GL_TEXTURE_2D, differencematte->midtexture[i]);
+    gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
         GST_VIDEO_INFO_WIDTH (&filter->out_info),
         GST_VIDEO_INFO_HEIGHT (&filter->out_info),
         0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-        GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-        GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-        GL_CLAMP_TO_EDGE);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-        GL_CLAMP_TO_EDGE);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     differencematte->shader[i] = gst_gl_shader_new (filter->context);
   }
 
@@ -284,26 +280,26 @@ init_pixbuf_texture (GstGLContext * context, gpointer data)
 
   gl->DeleteTextures (1, &differencematte->newbgtexture);
   gl->GenTextures (1, &differencematte->newbgtexture);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->newbgtexture);
-  gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA,
+  gl->BindTexture (GL_TEXTURE_2D, differencematte->newbgtexture);
+  gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA,
       (gint) differencematte->pbuf_width, (gint) differencematte->pbuf_height,
       0, GL_RGBA, GL_UNSIGNED_BYTE, differencematte->pixbuf);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
   if (differencematte->savedbgtexture == 0) {
     gl->GenTextures (1, &differencematte->savedbgtexture);
-    gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->savedbgtexture);
-    gl->TexImage2D (GL_TEXTURE_RECTANGLE_ARB, 0, GL_RGBA8,
+    gl->BindTexture (GL_TEXTURE_2D, differencematte->savedbgtexture);
+    gl->TexImage2D (GL_TEXTURE_2D, 0, GL_RGBA8,
         GST_VIDEO_INFO_WIDTH (&filter->out_info),
         GST_VIDEO_INFO_HEIGHT (&filter->out_info),
         0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MAG_FILTER,
-        GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_MIN_FILTER,
-        GL_LINEAR);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_S,
-        GL_CLAMP_TO_EDGE);
-    gl->TexParameteri (GL_TEXTURE_RECTANGLE_ARB, GL_TEXTURE_WRAP_T,
-        GL_CLAMP_TO_EDGE);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    gl->TexParameteri (GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   }
 }
 
@@ -321,16 +317,16 @@ gst_gl_differencematte_diff (gint width, gint height, guint texture,
   gst_gl_shader_use (differencematte->shader[0]);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[0], "current", 0);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->savedbgtexture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, differencematte->savedbgtexture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[0], "saved", 1);
 
@@ -351,14 +347,15 @@ gst_gl_differencematte_hblur (gint width, gint height, guint texture,
   gst_gl_shader_use (differencematte->shader[1]);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[1], "tex", 0);
 
   gst_gl_shader_set_uniform_1fv (differencematte->shader[1], "kernel", 7,
       differencematte->kernel);
+  gst_gl_shader_set_uniform_1f (differencematte->shader[1], "width", width);
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }
@@ -377,14 +374,15 @@ gst_gl_differencematte_vblur (gint width, gint height, guint texture,
   gst_gl_shader_use (differencematte->shader[2]);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[2], "tex", 0);
 
   gst_gl_shader_set_uniform_1fv (differencematte->shader[2], "kernel", 7,
       differencematte->kernel);
+  gst_gl_shader_set_uniform_1f (differencematte->shader[2], "height", height);
 
   gst_gl_filter_draw_texture (filter, texture, width, height);
 }
@@ -403,32 +401,23 @@ gst_gl_differencematte_interp (gint width, gint height, guint texture,
   gst_gl_shader_use (differencematte->shader[3]);
 
   gl->ActiveTexture (GL_TEXTURE0);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, texture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, texture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[3], "blend", 0);
 
   gl->ActiveTexture (GL_TEXTURE1);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->newbgtexture);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, differencematte->newbgtexture);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[3], "base", 1);
-  gst_gl_shader_set_uniform_1f (differencematte->shader[3],
-      "base_width", (gfloat) differencematte->pbuf_width);
-  gst_gl_shader_set_uniform_1f (differencematte->shader[3],
-      "base_height", (gfloat) differencematte->pbuf_height);
-
-  gst_gl_shader_set_uniform_1f (differencematte->shader[3],
-      "final_width", (gfloat) GST_VIDEO_INFO_WIDTH (&filter->out_info));
-  gst_gl_shader_set_uniform_1f (differencematte->shader[3],
-      "final_height", (gfloat) GST_VIDEO_INFO_HEIGHT (&filter->out_info));
 
   gl->ActiveTexture (GL_TEXTURE2);
-  gl->Enable (GL_TEXTURE_RECTANGLE_ARB);
-  gl->BindTexture (GL_TEXTURE_RECTANGLE_ARB, differencematte->midtexture[2]);
-  gl->Disable (GL_TEXTURE_RECTANGLE_ARB);
+  gl->Enable (GL_TEXTURE_2D);
+  gl->BindTexture (GL_TEXTURE_2D, differencematte->midtexture[2]);
+  gl->Disable (GL_TEXTURE_2D);
 
   gst_gl_shader_set_uniform_1i (differencematte->shader[3], "alpha", 2);
 
