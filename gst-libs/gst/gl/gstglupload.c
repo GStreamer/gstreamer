@@ -1261,12 +1261,10 @@ _do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
     case GST_VIDEO_FORMAT_NV21:
       texnames[0] = "Ytex";
       texnames[1] = "UVtex";
-      tex_scaling[2] = tex_scaling[3] = 0.5;
     case GST_VIDEO_FORMAT_YUY2:
     case GST_VIDEO_FORMAT_UYVY:
       texnames[0] = "Ytex";
       texnames[1] = "UVtex";
-      tex_scaling[2] = tex_scaling[4] = 0.5;
       break;
     case GST_VIDEO_FORMAT_I420:
     case GST_VIDEO_FORMAT_YV12:
@@ -1276,13 +1274,6 @@ _do_upload_draw_opengl (GstGLContext * context, GstGLUpload * upload)
       texnames[0] = "Ytex";
       texnames[1] = "Utex";
       texnames[2] = "Vtex";
-      if (v_format == GST_VIDEO_FORMAT_I420
-          || v_format == GST_VIDEO_FORMAT_YV12)
-        tex_scaling[2] = tex_scaling[3] = tex_scaling[4] = tex_scaling[5] = 0.5;
-      else if (v_format == GST_VIDEO_FORMAT_Y42B)
-        tex_scaling[2] = tex_scaling[4] = 0.5;
-      else if (v_format == GST_VIDEO_FORMAT_Y41B)
-        tex_scaling[2] = tex_scaling[4] = 0.25;
       break;
     case GST_VIDEO_FORMAT_AYUV:
       texnames[0] = "tex";
