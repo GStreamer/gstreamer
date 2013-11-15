@@ -135,7 +135,7 @@ gst_gl_mixer_update_src_caps (GstGLMixer * mix)
     width = GST_VIDEO_INFO_WIDTH (&mpad->in_info);
     height = GST_VIDEO_INFO_HEIGHT (&mpad->in_info);
 
-    if (fps_n == 0 || fps_d == 0 || width == 0 || height == 0)
+    if (width == 0 || height == 0)
       continue;
 
     this_width = width;
@@ -158,13 +158,13 @@ gst_gl_mixer_update_src_caps (GstGLMixer * mix)
     }
   }
 
-  if (best_fps_n <= 0 && best_fps_d <= 0) {
+  if (best_fps_n == 0 || (best_fps_n < 0 && best_fps_d <= 0)) {
     best_fps_n = 25;
     best_fps_d = 1;
     best_fps = 25.0;
   }
 
-  if (best_width > 0 && best_height > 0 && best_fps > 0) {
+  if (best_width > 0 && best_height > 0 && best_fps > 0.0) {
     GstCaps *caps, *peercaps;
     GstStructure *s;
     GstVideoInfo info;
@@ -209,7 +209,7 @@ gst_gl_mixer_update_src_caps (GstGLMixer * mix)
     GST_GL_MIXER_UNLOCK (mix);
     ret = gst_gl_mixer_src_setcaps (mix->srcpad, mix, caps);
   } else {
-    GST_INFO_OBJECT (mix, "Invalid caps");
+    GST_ERROR_OBJECT (mix, "Invalid caps");
     GST_GL_MIXER_UNLOCK (mix);
   }
 
