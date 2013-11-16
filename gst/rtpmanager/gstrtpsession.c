@@ -623,7 +623,7 @@ gst_rtp_session_class_init (GstRtpSessionClass * klass)
    *  "sent-nack-count" G_TYPE_UINT   Number of NACKs sent
    *  "recv-nack-count" G_TYPE_UINT   Number of NACKs received
    *
-   * Since: 1.3.1
+   * Since: 1.4
    */
   g_object_class_install_property (gobject_class, PROP_STATS,
       g_param_spec_boxed ("stats", "Statistics",

@@ -569,7 +569,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    *  "rtx-per-packet"    G_TYPE_DOUBLE Average number of RTX per packet
    *  "rtx-rtt"           G_TYPE_UINT64 Average round trip time per RTX
    *
-   * Since: 1.3.1
+   * Since: 1.4
    */
   g_object_class_install_property (gobject_class, PROP_STATS,
       g_param_spec_boxed ("stats", "Statistics",
