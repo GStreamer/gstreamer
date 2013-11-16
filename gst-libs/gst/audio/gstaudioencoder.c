@@ -798,6 +798,7 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
       GST_BUFFER_TIMESTAMP (buf) = priv->base_ts +
           gst_util_uint64_scale (priv->samples - ctx->lookahead, GST_SECOND,
           ctx->info.rate);
+      GST_BUFFER_DTS (buf) = GST_BUFFER_TIMESTAMP (buf);
       GST_DEBUG_OBJECT (enc, "out samples %d", samples);
       if (G_LIKELY (samples > 0)) {
         priv->samples += samples;
