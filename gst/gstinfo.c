@@ -1759,7 +1759,7 @@ parse_debug_level (gchar * str, GstDebugLevel * level)
  * the order matters when you use wild cards, e.g. "foosrc:6,*src:3,*:2" sets
  * everything to log level 2.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 void
 gst_debug_set_threshold_from_string (const gchar * list, gboolean reset)

@@ -208,7 +208,7 @@ gst_plugin_feature_get_plugin (GstPluginFeature * feature)
  * Returns: the name of the plugin that provides this feature, or %NULL if
  *     the feature is not associated with a plugin.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 const gchar *
 gst_plugin_feature_get_plugin_name (GstPluginFeature * feature)

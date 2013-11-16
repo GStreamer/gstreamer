@@ -222,7 +222,7 @@ gst_data_queue_init (GstDataQueue * queue)
  *
  * Returns: a new #GstDataQueue.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 GstDataQueue *
 gst_data_queue_new (GstDataQueueCheckFullFunction checkfull,
@@ -318,7 +318,7 @@ gst_data_queue_locked_is_full (GstDataQueue * queue)
  * #gst_data_queue_pop will be released.
  * MT safe.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 void
 gst_data_queue_flush (GstDataQueue * queue)
@@ -338,7 +338,7 @@ gst_data_queue_flush (GstDataQueue * queue)
  *
  * Returns: #TRUE if @queue is empty.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 gboolean
 gst_data_queue_is_empty (GstDataQueue * queue)
@@ -362,7 +362,7 @@ gst_data_queue_is_empty (GstDataQueue * queue)
  *
  * Returns: #TRUE if @queue is full.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 gboolean
 gst_data_queue_is_full (GstDataQueue * queue)
@@ -389,7 +389,7 @@ gst_data_queue_is_full (GstDataQueue * queue)
  *
  * MT Safe.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 void
 gst_data_queue_set_flushing (GstDataQueue * queue, gboolean flushing)
@@ -441,7 +441,7 @@ gst_data_queue_push_force_unlocked (GstDataQueue * queue,
  *
  * Returns: #TRUE if the @item was successfully pushed on the @queue.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 gboolean
 gst_data_queue_push_force (GstDataQueue * queue, GstDataQueueItem * item)
@@ -489,7 +489,7 @@ flushing:
  *
  * Returns: #TRUE if the @item was successfully pushed on the @queue.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 gboolean
 gst_data_queue_push (GstDataQueue * queue, GstDataQueueItem * item)
@@ -568,7 +568,7 @@ _gst_data_queue_wait_non_empty (GstDataQueue * queue)
  *
  * Returns: #TRUE if an @item was successfully retrieved from the @queue.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 gboolean
 gst_data_queue_pop (GstDataQueue * queue, GstDataQueueItem ** item)
@@ -638,7 +638,7 @@ is_of_type (gconstpointer a, gconstpointer b)
  *
  * Returns: #TRUE if an @item was successfully retrieved from the @queue.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 gboolean
 gst_data_queue_peek (GstDataQueue * queue, GstDataQueueItem ** item)
@@ -690,7 +690,7 @@ flushing:
  *
  * Returns: TRUE if an element was removed.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 gboolean
 gst_data_queue_drop_head (GstDataQueue * queue, GType type)
@@ -736,7 +736,7 @@ done:
  * Inform the queue that the limits for the fullness check have changed and that
  * any blocking gst_data_queue_push() should be unblocked to recheck the limts.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 void
 gst_data_queue_limits_changed (GstDataQueue * queue)
@@ -760,7 +760,7 @@ gst_data_queue_limits_changed (GstDataQueue * queue)
  *
  * Get the current level of the queue.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 void
 gst_data_queue_get_level (GstDataQueue * queue, GstDataQueueSize * level)

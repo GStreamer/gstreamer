@@ -52,7 +52,7 @@ struct _GstQueueArray
  *
  * Returns: a new #GstQueueArray object
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 GstQueueArray *
 gst_queue_array_new (guint initial_size)
@@ -75,7 +75,7 @@ gst_queue_array_new (guint initial_size)
  *
  * Frees queue @array and all memory associated to it.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 void
 gst_queue_array_free (GstQueueArray * array)
@@ -93,7 +93,7 @@ gst_queue_array_free (GstQueueArray * array)
  *
  * Returns: The head of the queue
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 gpointer
 gst_queue_array_pop_head (GstQueueArray * array)
@@ -119,7 +119,7 @@ gst_queue_array_pop_head (GstQueueArray * array)
  *
  * Returns: The head of the queue
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 gpointer
 gst_queue_array_peek_head (GstQueueArray * array)
@@ -137,7 +137,7 @@ gst_queue_array_peek_head (GstQueueArray * array)
  *
  * Pushes @data to the tail of the queue @array.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 void
 gst_queue_array_push_tail (GstQueueArray * array, gpointer data)
@@ -190,7 +190,7 @@ gst_queue_array_push_tail (GstQueueArray * array, gpointer data)
  *
  * Returns: %TRUE if the queue @array is empty
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 gboolean
 gst_queue_array_is_empty (GstQueueArray * array)
@@ -207,7 +207,7 @@ gst_queue_array_is_empty (GstQueueArray * array)
  *
  * Returns: the dropped element
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 gpointer
 gst_queue_array_drop_element (GstQueueArray * array, guint idx)
@@ -301,7 +301,7 @@ gst_queue_array_drop_element (GstQueueArray * array, guint idx)
  *
  * Returns: Index of the found element or -1 if nothing was found.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 guint
 gst_queue_array_find (GstQueueArray * array, GCompareFunc func, gpointer data)
@@ -332,7 +332,7 @@ gst_queue_array_find (GstQueueArray * array, GCompareFunc func, gpointer data)
  *
  * Returns: the length of the queue @array.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 guint
 gst_queue_array_get_length (GstQueueArray * array)

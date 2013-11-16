@@ -341,7 +341,7 @@ _priv_gst_buffer_initialize (void)
  *
  * Returns: the maximum amount of memory blocks that a buffer can hold.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 guint
 gst_buffer_get_max_memory (void)

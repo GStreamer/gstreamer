@@ -198,7 +198,7 @@ struct _GstPluginDesc {
  * and must be placed outside any block to declare the plugin initialization
  * function.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 #define GST_PLUGIN_STATIC_DECLARE(name) \
   extern void G_PASTE(gst_plugin_, G_PASTE(name, _register)) (void)
@@ -212,7 +212,7 @@ struct _GstPluginDesc {
  * It has to be used in combination with GST_PLUGIN_STATIC_DECLARE and
  * calls the plugin initialization function.
  *
- * Since: 1.2.0
+ * Since: 1.2
  */
 #define GST_PLUGIN_STATIC_REGISTER(name) G_PASTE(gst_plugin_, G_PASTE(name, _register)) ()
 

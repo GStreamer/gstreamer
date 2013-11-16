@@ -529,7 +529,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    * Setting this property to a value bigger than 0 will make the sink delay
    * rendering of the buffers when it would exceed to max-bitrate.
    *
-   * Since: 1.1.1
+   * Since: 1.2
    */
   g_object_class_install_property (gobject_class, PROP_MAX_BITRATE,
       g_param_spec_uint64 ("max-bitrate", "Max Bitrate",
@@ -1280,7 +1280,7 @@ gst_base_sink_get_throttle_time (GstBaseSink * sink)
  *
  * Set the maximum amount of bits per second that the sink will render.
  *
- * Since: 1.1.1
+ * Since: 1.2
  */
 void
 gst_base_sink_set_max_bitrate (GstBaseSink * sink, guint64 max_bitrate)
@@ -1301,7 +1301,7 @@ gst_base_sink_set_max_bitrate (GstBaseSink * sink, guint64 max_bitrate)
  *
  * Returns: the maximum number of bits per second @sink will render.
  *
- * Since: 1.1.1
+ * Since: 1.2
  */
 guint64
 gst_base_sink_get_max_bitrate (GstBaseSink * sink)
