@@ -5238,6 +5238,28 @@ dirac_type_find (GstTypeFind * tf, gpointer unused)
   }
 }
 
+/*** audio/x-tap-tap ***/
+
+/* NOTE: we cannot replace this function with TYPE_FIND_REGISTER_START_WITH,
+ * as it is only possible to register one typefind factory per 'name'
+ * (which is in this case the caps), and the first one would be replaced by
+ * the second one. */
+static GstStaticCaps tap_caps = GST_STATIC_CAPS ("audio/x-tap-tap");
+
+#define TAP_CAPS (gst_static_caps_get(&tap_caps))
+static void
+tap_type_find (GstTypeFind * tf, gpointer unused)
+{
+  const guint8 *data = gst_type_find_peek (tf, 0, 8);
+
+  if (data) {
+    if (memcmp (data, "C64-TAPE-RAW", 12) == 0
+        || memcmp (data, "C16-TAPE-RAW", 12) == 0) {
+      gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, TAP_CAPS);
+    }
+  }
+}
+
 /*** video/vivo ***/
 
 static GstStaticCaps vivo_caps = GST_STATIC_CAPS ("video/vivo");
@@ -6072,6 +6094,11 @@ plugin_init (GstPlugin * plugin)
 
   TYPE_FIND_REGISTER (plugin, "audio/audible", GST_RANK_MARGINAL,
       aa_type_find, "aa,aax", AA_CAPS, NULL, NULL);
+
+  TYPE_FIND_REGISTER (plugin, "audio/x-tap-tap", GST_RANK_PRIMARY,
+      tap_type_find, "tap", TAP_CAPS, NULL, NULL);
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-tap-dmp",
+      GST_RANK_SECONDARY, "dmp", "DC2N-TAP-RAW", 12, GST_TYPE_FIND_LIKELY);
 
   return TRUE;
 }
