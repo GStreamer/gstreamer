@@ -474,7 +474,7 @@ gst_rtsp_options_as_text (GstRTSPMethod options)
  *
  * Returns: a #GstRTSPMethod
  *
- * Since: 1.1.1
+ * Since: 1.2
  */
 GstRTSPMethod
 gst_rtsp_options_from_text (const gchar * options)

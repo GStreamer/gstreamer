@@ -114,7 +114,7 @@ struct _GstRTSPTime {
  *
  * Extra fields for a time indication.
  *
- * Since: 1.1.1
+ * Since: 1.2
  */
 struct _GstRTSPTime2 {
   gdouble         frames;
@@ -128,8 +128,8 @@ struct _GstRTSPTime2 {
  * @unit: the time units used
  * @min: the minimum interval
  * @max: the maximum interval
- * @min2: extra fields in the minimum interval (Since: 1.1.1)
- * @max2: extra fields in the maximum interval (Since: 1.1.1)
+ * @min2: extra fields in the minimum interval (Since: 1.2)
+ * @max2: extra fields in the maximum interval (Since: 1.2)
  *
  * A time range.
  */

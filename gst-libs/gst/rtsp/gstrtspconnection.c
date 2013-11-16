@@ -3264,7 +3264,7 @@ gst_rtsp_watch_unref (GstRTSPWatch * watch)
  *
  * A value of 0 for @bytes or @messages means no limits.
  *
- * Since: 1.1.1
+ * Since: 1.2
  */
 void
 gst_rtsp_watch_set_send_backlog (GstRTSPWatch * watch,
@@ -3290,7 +3290,7 @@ gst_rtsp_watch_set_send_backlog (GstRTSPWatch * watch,
  * Get the maximum amount of bytes and messages that will be queued in @watch.
  * See gst_rtsp_watch_set_send_backlog().
  *
- * Since: 1.1.1
+ * Since: 1.2
  */
 void
 gst_rtsp_watch_get_send_backlog (GstRTSPWatch * watch,
