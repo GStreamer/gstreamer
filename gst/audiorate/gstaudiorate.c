@@ -158,13 +158,11 @@ gst_audio_rate_class_init (GstAudioRateClass * klass)
           "Don't emit notify for dropped and duplicated frames", DEFAULT_SILENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstAudioRate:tolerance
+   * GstAudioRate:tolerance:
    *
    * The difference between incoming timestamp and next timestamp must exceed
    * the given value for audiorate to add or drop samples.
-   *
-   * Since: 0.10.26
-   **/
+   */
   g_object_class_install_property (object_class, ARG_TOLERANCE,
       g_param_spec_uint64 ("tolerance", "tolerance",
           "Only act if timestamp jitter/imperfection exceeds indicated tolerance (ns)",
@@ -175,9 +173,7 @@ gst_audio_rate_class_init (GstAudioRateClass * klass)
    * GstAudioRate:skip-to-first:
    *
    * Don't produce buffers before the first one we receive.
-   *
-   * Since: 0.10.33
-   **/
+   */
   g_object_class_install_property (object_class, ARG_SKIP_TO_FIRST,
       g_param_spec_boolean ("skip-to-first", "Skip to first buffer",
           "Don't produce buffers before the first one we receive",

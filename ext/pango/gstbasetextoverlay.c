@@ -417,24 +417,20 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
           "Shift Y position up or down. Unit is pixels.", G_MININT, G_MAXINT,
           DEFAULT_PROP_DELTAY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstBaseTextOverlay:xpos
+   * GstBaseTextOverlay:xpos:
    *
    * Horizontal position of the rendered text when using positioned alignment.
-   *
-   * Since: 0.10.31
-   **/
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_XPOS,
       g_param_spec_double ("xpos", "horizontal position",
           "Horizontal position when using position alignment", 0, 1.0,
           DEFAULT_PROP_XPOS,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstBaseTextOverlay:ypos
+   * GstBaseTextOverlay:ypos:
    *
    * Vertical position of the rendered text when using positioned alignment.
-   *
-   * Since: 0.10.31
-   **/
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_YPOS,
       g_param_spec_double ("ypos", "vertical position",
           "Vertical position when using position alignment", 0, 1.0,
@@ -452,24 +448,20 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
           "for syntax.", DEFAULT_PROP_FONT_DESC,
           G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstBaseTextOverlay:color
+   * GstBaseTextOverlay:color:
    *
    * Color of the rendered text.
-   *
-   * Since: 0.10.31
-   **/
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_COLOR,
       g_param_spec_uint ("color", "Color",
           "Color to use for text (big-endian ARGB).", 0, G_MAXUINT32,
           DEFAULT_PROP_COLOR,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstTextOverlay:outline-color
+   * GstTextOverlay:outline-color:
    *
    * Color of the outline of the rendered text.
-   *
-   * Since: 0.10.35
-   **/
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_OUTLINE_COLOR,
       g_param_spec_uint ("outline-color", "Text Outline Color",
           "Color to use for outline the text (big-endian ARGB).", 0,
@@ -477,25 +469,21 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstBaseTextOverlay:line-alignment
+   * GstBaseTextOverlay:line-alignment:
    *
    * Alignment of text lines relative to each other (for multi-line text)
-   *
-   * Since: 0.10.15
-   **/
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_LINE_ALIGNMENT,
       g_param_spec_enum ("line-alignment", "line alignment",
           "Alignment of text lines relative to each other.",
           GST_TYPE_BASE_TEXT_OVERLAY_LINE_ALIGN, DEFAULT_PROP_LINE_ALIGNMENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstBaseTextOverlay:silent
+   * GstBaseTextOverlay:silent:
    *
    * If set, no text is rendered. Useful to switch off text rendering
    * temporarily without removing the textoverlay element from the pipeline.
-   *
-   * Since: 0.10.15
-   **/
+   */
   /* FIXME 0.11: rename to "visible" or "text-visible" or "render-text" */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SILENT,
       g_param_spec_boolean ("silent", "silent",
@@ -503,14 +491,12 @@ gst_base_text_overlay_class_init (GstBaseTextOverlayClass * klass)
           DEFAULT_PROP_SILENT,
           G_PARAM_READWRITE | GST_PARAM_CONTROLLABLE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstBaseTextOverlay:wait-text
+   * GstBaseTextOverlay:wait-text:
    *
    * If set, the video will block until a subtitle is received on the text pad.
    * If video and subtitles are sent in sync, like from the same demuxer, this
    * property should be set.
-   *
-   * Since: 0.10.20
-   **/
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_WAIT_TEXT,
       g_param_spec_boolean ("wait-text", "Wait Text",
           "Whether to wait for subtitles",

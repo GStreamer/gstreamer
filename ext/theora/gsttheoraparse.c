@@ -126,8 +126,6 @@ gst_theora_parse_class_init (GstTheoraParseClass * klass)
    * GstTheoraParse:sychronization-points
    *
    * An array of (granuletime, buffertime) pairs
-   *
-   * Since: 0.10.10
    */
   g_object_class_install_property (gobject_class, PROP_SYNCHRONIZATION_POINTS,
       g_param_spec_value_array ("synchronization-points",

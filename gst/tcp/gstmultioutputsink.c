@@ -29,7 +29,7 @@
  * file descriptors can be added to multioutputsink by emitting the #GstMultiOutputSink::add signal. 
  * For each descriptor added, the #GstMultiOutputSink::client-added signal will be called.
  *
- * As of version 0.10.8, a client can also be added with the #GstMultiOutputSink::add-full signal
+ * A client can also be added with the #GstMultiOutputSink::add-full signal
  * that allows for more control over what and how much data a client 
  * initially receives.
  *
@@ -61,7 +61,7 @@
  * Multioutputsink will always keep at least one keyframe in its internal buffers
  * when the sync-mode is set to latest-keyframe.
  *
- * As of version 0.10.8, there are additional values for the #GstMultiOutputSink:sync-method 
+ * There are additional values for the #GstMultiOutputSink:sync-method
  * property to allow finer control over burst-on-connect behaviour. By selecting
  * the 'burst' method a minimum burst size can be chosen, 'burst-keyframe'
  * additionally requires that the burst begin with a keyframe, and 
@@ -424,8 +424,6 @@ gst_multi_output_sink_class_init (GstMultiOutputSinkClass * klass)
    * GstMultiOutputSink::handle-read
    *
    * Handle read requests from clients and discard the data.
-   *
-   * Since: 0.10.23
    */
   g_object_class_install_property (gobject_class, PROP_HANDLE_READ,
       g_param_spec_boolean ("handle-read", "Handle Read",
@@ -435,8 +433,6 @@ gst_multi_output_sink_class_init (GstMultiOutputSinkClass * klass)
    * GstMultiOutputSink::resend-streamheader
    *
    * Resend the streamheaders to existing clients when they change.
-   *
-   * Since: 0.10.23
    */
   g_object_class_install_property (gobject_class, PROP_RESEND_STREAMHEADER,
       g_param_spec_boolean ("resend-streamheader", "Resend streamheader",
@@ -587,8 +583,6 @@ gst_multi_output_sink_class_init (GstMultiOutputSinkClass * klass)
    * In this callback, @gstmultioutputsink has removed all the information
    * associated with @output and it is therefore not possible to call get-stats
    * with @output. It is however safe to close() and reuse @fd in the callback.
-   *
-   * Since: 0.10.7
    */
   gst_multi_output_sink_signals[SIGNAL_CLIENT_OUTPUT_REMOVED] =
       g_signal_new ("client-output-removed", G_TYPE_FROM_CLASS (klass),

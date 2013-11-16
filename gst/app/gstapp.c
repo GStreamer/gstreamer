@@ -26,8 +26,6 @@
  * For the documentation of the API, please see the
  * <link linkend="gst-plugins-base-libs-appsrc">libgstapp</link> section in the
  * GStreamer Plugins Base Libraries documentation.
- *
- * Since: 0.10.22
  */
 /**
  * SECTION:element-appsink
@@ -39,8 +37,6 @@
  * For the documentation of the API, please see the
  * <link linkend="gst-plugins-base-libs-appsink">libgstapp</link> section in
  * the GStreamer Plugins Base Libraries documentation.
- *
- * Since: 0.10.22
  */
 
 #ifdef HAVE_CONFIG_H

@@ -503,8 +503,6 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
    * Control the synchronisation offset between the audio and video streams.
    * Positive values make the audio ahead of the video and negative values make
    * the audio go behind the video.
-   *
-   * Since: 0.10.30
    */
   g_object_class_install_property (gobject_klass, PROP_AV_OFFSET,
       g_param_spec_int64 ("av-offset", "AV Offset",
@@ -517,8 +515,6 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
    *
    * Set the used video sink element. NULL will use the default sink. playsink
    * must be in %GST_STATE_NULL
-   *
-   * Since: 0.10.36
    */
   g_object_class_install_property (gobject_klass, PROP_VIDEO_SINK,
       g_param_spec_object ("video-sink", "Video Sink",
@@ -529,8 +525,6 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
    *
    * Set the used audio sink element. NULL will use the default sink. playsink
    * must be in %GST_STATE_NULL
-   *
-   * Since: 0.10.36
    */
   g_object_class_install_property (gobject_klass, PROP_AUDIO_SINK,
       g_param_spec_object ("audio-sink", "Audio Sink",
@@ -542,8 +536,6 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
    *
    * Set the used text sink element. NULL will use the default sink. playsink
    * must be in %GST_STATE_NULL
-   *
-   * Since: 0.10.36
    */
   g_object_class_install_property (gobject_klass, PROP_TEXT_SINK,
       g_param_spec_object ("text-sink", "Text sink",
@@ -556,8 +548,6 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
    * Sets the handling method used for events received from send_event
    * function. The default is %MODE_DEFAULT, that uses %GstBin's default
    * handling (push the event to all internal sinks).
-   *
-   * Since: 0.10.37
    */
   g_object_class_install_property (gobject_klass, PROP_SEND_EVENT_MODE,
       g_param_spec_enum ("send-event-mode", "Send event mode",
@@ -569,8 +559,6 @@ gst_play_sink_class_init (GstPlaySinkClass * klass)
    * GstPlaySink::force-aspect-ratio:
    *
    * Requests the video sink to enforce the video display aspect ratio.
-   *
-   * Since: 0.10.37
    */
   g_object_class_install_property (gobject_klass, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio", "Force Aspect Ratio",

@@ -1942,8 +1942,6 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
    *
    * When enabled, the current frame will always be drawn in response to X
    * Expose.
-   *
-   * Since: 0.10.14
    */
   g_object_class_install_property (gobject_class, PROP_HANDLE_EXPOSE,
       g_param_spec_boolean ("handle-expose", "Handle expose",
@@ -1955,8 +1953,6 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
    * GstXvImageSink:double-buffer
    *
    * Whether to double-buffer the output.
-   *
-   * Since: 0.10.14
    */
   g_object_class_install_property (gobject_class, PROP_DOUBLE_BUFFER,
       g_param_spec_boolean ("double-buffer", "Double-buffer",
@@ -1966,8 +1962,6 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
    * GstXvImageSink:autopaint-colorkey
    *
    * Whether to autofill overlay with colorkey
-   *
-   * Since: 0.10.21
    */
   g_object_class_install_property (gobject_class, PROP_AUTOPAINT_COLORKEY,
       g_param_spec_boolean ("autopaint-colorkey", "Autofill with colorkey",
@@ -1977,8 +1971,6 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
    * GstXvImageSink:colorkey
    *
    * Color to use for the overlay mask.
-   *
-   * Since: 0.10.21
    */
   g_object_class_install_property (gobject_class, PROP_COLORKEY,
       g_param_spec_int ("colorkey", "Colorkey",
@@ -1990,8 +1982,6 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
    *
    * Draw black borders when using GstXvImageSink:force-aspect-ratio to fill
    * unused parts of the video area.
-   *
-   * Since: 0.10.21
    */
   g_object_class_install_property (gobject_class, PROP_DRAW_BORDERS,
       g_param_spec_boolean ("draw-borders", "Colorkey",
@@ -2002,8 +1992,6 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
    * GstXvImageSink:window-width
    *
    * Actual width of the video window.
-   *
-   * Since: 0.10.32
    */
   g_object_class_install_property (gobject_class, PROP_WINDOW_WIDTH,
       g_param_spec_uint64 ("window-width", "window-width",
@@ -2014,8 +2002,6 @@ gst_xvimagesink_class_init (GstXvImageSinkClass * klass)
    * GstXvImageSink:window-height
    *
    * Actual height of the video window.
-   *
-   * Since: 0.10.32
    */
   g_object_class_install_property (gobject_class, PROP_WINDOW_HEIGHT,
       g_param_spec_uint64 ("window-height", "window-height",

@@ -29,7 +29,7 @@
  * file descriptors can be added to multisocketsink by emitting the #GstMultiSocketSink::add signal. 
  * For each descriptor added, the #GstMultiSocketSink::client-added signal will be called.
  *
- * As of version 0.10.8, a client can also be added with the #GstMultiSocketSink::add-full signal
+ * A client can also be added with the #GstMultiSocketSink::add-full signal
  * that allows for more control over what and how much data a client 
  * initially receives.
  *
@@ -61,7 +61,7 @@
  * Multisocketsink will always keep at least one keyframe in its internal buffers
  * when the sync-mode is set to latest-keyframe.
  *
- * As of version 0.10.8, there are additional values for the #GstMultiSocketSink:sync-method 
+ * There are additional values for the #GstMultiSocketSink:sync-method
  * property to allow finer control over burst-on-connect behaviour. By selecting
  * the 'burst' method a minimum burst size can be chosen, 'burst-keyframe'
  * additionally requires that the burst begin with a keyframe, and 
@@ -340,8 +340,6 @@ gst_multi_socket_sink_class_init (GstMultiSocketSinkClass * klass)
    * In this callback, @gstmultisocketsink has removed all the information
    * associated with @socket and it is therefore not possible to call get-stats
    * with @socket. It is however safe to close() and reuse @fd in the callback.
-   *
-   * Since: 0.10.7
    */
   gst_multi_socket_sink_signals[SIGNAL_CLIENT_SOCKET_REMOVED] =
       g_signal_new ("client-socket-removed", G_TYPE_FROM_CLASS (klass),

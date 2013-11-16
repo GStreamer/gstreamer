@@ -149,8 +149,7 @@
  * value that shows the progress of the buffering process. Applications need
  * to set playbin to PLAYING or PAUSED state in response to these messages.
  * They may also want to convey the buffering progress to the user in some
- * way. Here is how to extract the percentage information from the message
- * (requires GStreamer >= 0.10.11):
+ * way. Here is how to extract the percentage information from the message:
  * |[
  * switch (GST_MESSAGE_TYPE (msg)) {
  *   case GST_MESSAGE_BUFFERING: {
@@ -942,8 +941,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * Control the synchronisation offset between the audio and video streams.
    * Positive values make the audio ahead of the video and negative values make
    * the audio go behind the video.
-   *
-   * Since: 0.10.30
    */
   g_object_class_install_property (gobject_klass, PROP_AV_OFFSET,
       g_param_spec_int64 ("av-offset", "AV Offset",
@@ -956,8 +953,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    *
    * The maximum size of the ring buffer in bytes. If set to 0, the ring
    * buffer is disabled. Default 0.
-   *
-   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_klass, PROP_RING_BUFFER_MAX_SIZE,
       g_param_spec_uint64 ("ring-buffer-max-size",
@@ -970,8 +965,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * GstPlayBin::force-aspect-ratio:
    *
    * Requests the video sink to enforce the video display aspect ratio.
-   *
-   * Since: 0.10.37
    */
   g_object_class_install_property (gobject_klass, PROP_FORCE_ASPECT_RATIO,
       g_param_spec_boolean ("force-aspect-ratio", "Force Aspect Ratio",
@@ -1059,8 +1052,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * This signal may be emitted from the context of a GStreamer streaming thread.
    * You can use gst_message_new_application() and gst_element_post_message()
    * to notify your application's main thread.
-   *
-   * Since: 0.10.24
    */
   gst_play_bin_signals[SIGNAL_VIDEO_TAGS_CHANGED] =
       g_signal_new ("video-tags-changed", G_TYPE_FROM_CLASS (klass),
@@ -1079,8 +1070,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * This signal may be emitted from the context of a GStreamer streaming thread.
    * You can use gst_message_new_application() and gst_element_post_message()
    * to notify your application's main thread.
-   *
-   * Since: 0.10.24
    */
   gst_play_bin_signals[SIGNAL_AUDIO_TAGS_CHANGED] =
       g_signal_new ("audio-tags-changed", G_TYPE_FROM_CLASS (klass),
@@ -1099,8 +1088,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    * This signal may be emitted from the context of a GStreamer streaming thread.
    * You can use gst_message_new_application() and gst_element_post_message()
    * to notify your application's main thread.
-   *
-   * Since: 0.10.24
    */
   gst_play_bin_signals[SIGNAL_TEXT_TAGS_CHANGED] =
       g_signal_new ("text-tags-changed", G_TYPE_FROM_CLASS (klass),
@@ -1121,8 +1108,6 @@ gst_play_bin_class_init (GstPlayBinClass * klass)
    *
    * This signal is usually emitted from the context of a GStreamer streaming
    * thread.
-   *
-   * Since: 0.10.33
    */
   gst_play_bin_signals[SIGNAL_SOURCE_SETUP] =
       g_signal_new ("source-setup", G_TYPE_FROM_CLASS (klass),

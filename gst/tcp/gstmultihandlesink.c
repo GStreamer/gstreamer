@@ -29,7 +29,7 @@
  * file descriptors can be added to multihandlesink by emitting the #GstMultiHandleSink::add signal. 
  * For each descriptor added, the #GstMultiHandleSink::client-added signal will be called.
  *
- * As of version 0.10.8, a client can also be added with the #GstMultiHandleSink::add-full signal
+ * A client can also be added with the #GstMultiHandleSink::add-full signal
  * that allows for more control over what and how much data a client 
  * initially receives.
  *
@@ -61,7 +61,7 @@
  * Multisocketsink will always keep at least one keyframe in its internal buffers
  * when the sync-mode is set to latest-keyframe.
  *
- * As of version 0.10.8, there are additional values for the #GstMultiHandleSink:sync-method 
+ * There are additional values for the #GstMultiHandleSink:sync-method
  * property to allow finer control over burst-on-connect behaviour. By selecting
  * the 'burst' method a minimum burst size can be chosen, 'burst-keyframe'
  * additionally requires that the burst begin with a keyframe, and 
@@ -432,8 +432,6 @@ gst_multi_handle_sink_class_init (GstMultiHandleSinkClass * klass)
    * GstMultiHandleSink::resend-streamheader
    *
    * Resend the streamheaders to existing clients when they change.
-   *
-   * Since: 0.10.23
    */
   g_object_class_install_property (gobject_class, PROP_RESEND_STREAMHEADER,
       g_param_spec_boolean ("resend-streamheader", "Resend streamheader",

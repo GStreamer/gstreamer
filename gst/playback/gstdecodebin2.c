@@ -822,8 +822,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * @bin: The decodebin
    *
    * This signal is emitted once decodebin has finished decoding all the data.
-   *
-   * Since: 0.10.16
    */
   gst_decode_bin_signals[SIGNAL_DRAINED] =
       g_signal_new ("drained", G_TYPE_FROM_CLASS (klass),
@@ -852,8 +850,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    *
    * Activate buffering in decodebin. This will instruct the multiqueues behind
    * decoders to emit BUFFERING messages.
-
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_USE_BUFFERING,
       g_param_spec_boolean ("use-buffering", "Use Buffering",
@@ -864,8 +860,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * GstDecodeBin:low-percent
    *
    * Low threshold percent for buffering to start.
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_LOW_PERCENT,
       g_param_spec_int ("low-percent", "Low percent",
@@ -875,8 +869,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * GstDecodeBin:high-percent
    *
    * High threshold percent for buffering to finish.
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_HIGH_PERCENT,
       g_param_spec_int ("high-percent", "High percent",
@@ -887,8 +879,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * GstDecodeBin:max-size-bytes
    *
    * Max amount of bytes in the queue (0=automatic).
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_MAX_SIZE_BYTES,
       g_param_spec_uint ("max-size-bytes", "Max. size (bytes)",
@@ -899,8 +889,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * GstDecodeBin:max-size-buffers
    *
    * Max amount of buffers in the queue (0=automatic).
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_MAX_SIZE_BUFFERS,
       g_param_spec_uint ("max-size-buffers", "Max. size (buffers)",
@@ -911,8 +899,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * GstDecodeBin:max-size-time
    *
    * Max amount of time in the queue (in ns, 0=automatic).
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_MAX_SIZE_TIME,
       g_param_spec_uint64 ("max-size-time", "Max. size (ns)",
@@ -924,8 +910,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * GstDecodeBin::post-stream-topology
    *
    * Post stream-topology messages on the bus every time the topology changes.
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_klass, PROP_POST_STREAM_TOPOLOGY,
       g_param_spec_boolean ("post-stream-topology", "Post Stream Topology",
@@ -942,8 +926,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * caps (see 'caps' property) will have a pad exposed. Streams that do not
    * match those caps but could have been decoded will not have decoder plugged
    * in internally and will not have a pad exposed.
-   *
-   * Since: 0.10.30
    */
   g_object_class_install_property (gobject_klass, PROP_EXPOSE_ALL_STREAMS,
       g_param_spec_boolean ("expose-all-streams", "Expose All Streams",
@@ -955,8 +937,6 @@ gst_decode_bin_class_init (GstDecodeBinClass * klass)
    * GstDecodeBin2::connection-speed
    *
    * Network connection speed in kbps (0 = unknownw)
-   *
-   * Since: 0.10.XX
    */
   g_object_class_install_property (gobject_klass, PROP_CONNECTION_SPEED,
       g_param_spec_uint64 ("connection-speed", "Connection Speed",

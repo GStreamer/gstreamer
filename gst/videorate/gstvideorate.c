@@ -200,8 +200,6 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
    * GstVideoRate:skip-to-first:
    * 
    * Don't produce buffers before the first one we receive.
-   *
-   * Since: 0.10.25
    */
   g_object_class_install_property (object_class, PROP_SKIP_TO_FIRST,
       g_param_spec_boolean ("skip-to-first", "Skip to first buffer",
@@ -212,8 +210,6 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
    * GstVideoRate:drop-only:
    *
    * Only drop frames, no duplicates are produced.
-   *
-   * Since: 0.10.36
    */
   g_object_class_install_property (object_class, PROP_DROP_ONLY,
       g_param_spec_boolean ("drop-only", "Only Drop",
@@ -226,8 +222,6 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
    * Arrange for maximum framerate by dropping frames beyond a certain framerate,
    * where the framerate is calculated using a moving average over the
    * configured.
-   *
-   * Since: 0.10.36
    */
   g_object_class_install_property (object_class, PROP_AVERAGE_PERIOD,
       g_param_spec_uint64 ("average-period", "Period over which to average",
@@ -239,8 +233,6 @@ gst_video_rate_class_init (GstVideoRateClass * klass)
    * GstVideoRate:max-rate:
    *
    * maximum framerate to pass through
-   *
-   * Since: 0.10.36
    */
   g_object_class_install_property (object_class, PROP_MAX_RATE,
       g_param_spec_int ("max-rate", "maximum framerate",

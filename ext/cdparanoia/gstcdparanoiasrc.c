@@ -156,11 +156,9 @@ gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
           75, DEFAULT_SEARCH_OVERLAP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstCdParanoiaSrc:cache-size
+   * GstCdParanoiaSrc:cache-size:
    *
    * Set CD cache size to n sectors (-1 = auto)
-   *
-   * Since: 0.10.24
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_CACHE_SIZE,
       g_param_spec_int ("cache-size", "Cache size",
@@ -171,7 +169,7 @@ gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
   /* FIXME: we don't really want signals for this, but messages on the bus,
    * but then we can't check any longer whether anyone is interested in them */
   /**
-   * GstCdParanoiaSrc::transport-error
+   * GstCdParanoiaSrc::transport-error:
    * @cdparanoia: The CdParanoia instance
    * @sector: The sector number at which the error was encountered.
    *
@@ -184,7 +182,7 @@ gst_cd_paranoia_src_class_init (GstCdParanoiaSrcClass * klass)
       G_STRUCT_OFFSET (GstCdParanoiaSrcClass, transport_error),
       NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
   /**
-   * GstCdParanoiaSrc::uncorrected-error
+   * GstCdParanoiaSrc::uncorrected-error:
    * @cdparanoia: The CdParanoia instance
    * @sector: The sector number at which the error was encountered.
    *

@@ -117,12 +117,10 @@ gst_gio_src_class_init (GstGioSrcClass * klass)
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstGioSrc:file
+   * GstGioSrc:file:
    * 
    * %GFile to read from.
-   * 
-   * Since: 0.10.20
-   **/
+   */
   g_object_class_install_property (gobject_class, PROP_FILE,
       g_param_spec_object ("file", "File", "GFile to read from",
           G_TYPE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));

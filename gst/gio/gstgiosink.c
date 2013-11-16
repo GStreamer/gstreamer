@@ -121,12 +121,10 @@ gst_gio_sink_class_init (GstGioSinkClass * klass)
           NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstGioSink:file
+   * GstGioSink:file:
    *
    * %GFile to write to.
-   * 
-   * Since: 0.10.20
-   **/
+   */
   g_object_class_install_property (gobject_class, PROP_FILE,
       g_param_spec_object ("file", "File", "GFile to write to",
           G_TYPE_FILE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
