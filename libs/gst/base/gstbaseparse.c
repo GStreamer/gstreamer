@@ -305,6 +305,7 @@ struct _GstBaseParsePrivate
   gboolean upstream_seekable;
   gboolean upstream_has_duration;
   gint64 upstream_size;
+  GstFormat upstream_format;
   /* minimum distance between two index entries */
   GstClockTimeDiff idx_interval;
   guint64 idx_byte_interval;
@@ -820,6 +821,7 @@ gst_base_parse_reset (GstBaseParse * parse)
   parse->priv->upstream_seekable = FALSE;
   parse->priv->upstream_size = 0;
   parse->priv->upstream_has_duration = FALSE;
+  parse->priv->upstream_format = GST_FORMAT_UNDEFINED;
   parse->priv->idx_interval = 0;
   parse->priv->idx_byte_interval = 0;
   parse->priv->exact_position = TRUE;
@@ -1008,6 +1010,7 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
 
       GST_DEBUG_OBJECT (parse, "segment %" GST_SEGMENT_FORMAT, in_segment);
 
+      parse->priv->upstream_format = in_segment->format;
       if (in_segment->format == GST_FORMAT_BYTES) {
         GstBaseParseSeek *seek = NULL;
         GSList *node;
@@ -2057,6 +2060,12 @@ gst_base_parse_handle_and_push_frame (GstBaseParse * parse,
     }
   }
 
+  /* track upstream time if provided, not subclass' internal notion of it */
+  if (parse->priv->upstream_format == GST_FORMAT_TIME) {
+    GST_BUFFER_PTS (frame->buffer) = GST_CLOCK_TIME_NONE;
+    GST_BUFFER_DTS (frame->buffer) = GST_CLOCK_TIME_NONE;
+  }
+
   /* interpolating and no valid pts yet,
    * start with dts and carry on from there */
   if (parse->priv->infer_ts && parse->priv->pts_interpolate
@@ -2821,6 +2830,13 @@ gst_base_parse_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
      * since what is passed is tied to the adapter */
     tmpbuf = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY |
         GST_MEMORY_FLAG_NO_SHARE, (gpointer) data, av, 0, av, NULL, NULL);
+
+    /* already inform subclass what timestamps we have planned,
+     * at least if provided by time-based upstream */
+    if (parse->priv->upstream_format == GST_FORMAT_TIME) {
+      GST_BUFFER_PTS (tmpbuf) = parse->priv->next_pts;
+      GST_BUFFER_DTS (tmpbuf) = parse->priv->next_dts;
+    }
 
     /* keep the adapter mapped, so keep track of what has to be flushed */
     ret = gst_base_parse_handle_buffer (parse, tmpbuf, &skip, &flush);
