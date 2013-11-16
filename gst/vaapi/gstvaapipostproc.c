@@ -371,6 +371,39 @@ append_output_buffer_metadata(GstBuffer *outbuf, GstBuffer *inbuf, guint flags)
         0, -1);
 }
 
+static GstVaapiDeinterlaceMethod
+get_next_deint_method(GstVaapiDeinterlaceMethod deint_method)
+{
+    switch (deint_method) {
+    case GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED:
+        deint_method = GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE;
+        break;
+    default:
+        /* Default to basic "bob" for all others */
+        deint_method = GST_VAAPI_DEINTERLACE_METHOD_BOB;
+        break;
+    }
+    return deint_method;
+}
+
+static gboolean
+set_best_deint_method(GstVaapiPostproc *postproc, guint flags,
+    GstVaapiDeinterlaceMethod *deint_method_ptr)
+{
+    GstVaapiDeinterlaceMethod deint_method = postproc->deinterlace_method;
+    gboolean success;
+
+    for (;;) {
+        success = gst_vaapi_filter_set_deinterlacing(postproc->filter,
+            deint_method, flags);
+        if (success || deint_method == GST_VAAPI_DEINTERLACE_METHOD_BOB)
+            break;
+        deint_method = get_next_deint_method(deint_method);
+    }
+    *deint_method_ptr = deint_method;
+    return success;
+}
+
 static GstFlowReturn
 gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     GstBuffer *outbuf)
@@ -415,10 +448,15 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
         outbuf_surface = gst_vaapi_video_meta_get_surface(outbuf_meta);
 
         if (deint) {
+            GstVaapiDeinterlaceMethod deint_method;
             deint_flags = (tff ? GST_VAAPI_DEINTERLACE_FLAG_TFF : 0);
-            if (!gst_vaapi_filter_set_deinterlacing(postproc->filter,
-                    postproc->deinterlace_method, deint_flags))
+            if (!set_best_deint_method(postproc, flags, &deint_method))
                 goto error_op_deinterlace;
+            if (deint_method != postproc->deinterlace_method) {
+                GST_DEBUG("unsupported deinterlace-method %u. Using %u instead",
+                          postproc->deinterlace_method, deint_method);
+                postproc->deinterlace_method = deint_method;
+            }
         }
 
         status = gst_vaapi_filter_process(postproc->filter, inbuf_surface,
