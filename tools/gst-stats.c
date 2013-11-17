@@ -50,7 +50,8 @@ typedef struct
   GstPadDirection dir;
   /* buffer statistics */
   guint num_buffers;
-  guint num_readonly, num_preroll, num_discont, num_gap, num_delta;
+  guint num_live, num_decode_only, num_discont, num_resync, num_corrupted,
+      num_marker, num_header, num_gap, num_droppable, num_delta;
   guint min_size, max_size, avg_size;
   /* first and last activity on the pad, expected next_ts */
   GstClockTime first_ts, last_ts, next_ts;
@@ -216,13 +217,26 @@ do_pad_stats (GstPadStats * stats, guint elem_ix, guint size, guint64 ts,
     stats->first_ts = ts;
   stats->last_ts = ts;
   /* flag stats */
-  if (buffer_flags & GST_BUFFER_FLAG_GAP)
-    stats->num_gap++;
-  if (buffer_flags & GST_BUFFER_FLAG_DELTA_UNIT)
-    stats->num_delta++;
+  if (buffer_flags & GST_BUFFER_FLAG_LIVE)
+    stats->num_live++;
+  if (buffer_flags & GST_BUFFER_FLAG_DECODE_ONLY)
+    stats->num_decode_only++;
   if (buffer_flags & GST_BUFFER_FLAG_DISCONT)
     stats->num_discont++;
-  /* TODO(ensonic): there is a bunch of new flags in 1.0 */
+  if (buffer_flags & GST_BUFFER_FLAG_RESYNC)
+    stats->num_resync++;
+  if (buffer_flags & GST_BUFFER_FLAG_CORRUPTED)
+    stats->num_corrupted++;
+  if (buffer_flags & GST_BUFFER_FLAG_MARKER)
+    stats->num_marker++;
+  if (buffer_flags & GST_BUFFER_FLAG_HEADER)
+    stats->num_header++;
+  if (buffer_flags & GST_BUFFER_FLAG_GAP)
+    stats->num_gap++;
+  if (buffer_flags & GST_BUFFER_FLAG_DROPPABLE)
+    stats->num_droppable++;
+  if (buffer_flags & GST_BUFFER_FLAG_DELTA_UNIT)
+    stats->num_delta++;
   /* update timestamps */
   if (GST_CLOCK_TIME_IS_VALID (buffer_ts) &&
       GST_CLOCK_TIME_IS_VALID (buffer_dur)) {
@@ -365,10 +379,13 @@ print_pad_stats (gpointer value, gpointer user_data)
       g_snprintf (fullname, 30, "%s.%s", elem_stats->name, stats->name);
 
       printf
-          ("    %c %-30.30s: buffers %7u (ro %5u,pre %3u,dis %5u,gap %5u,dlt %5u),",
-          (stats->dir == GST_PAD_SRC) ? '>' : '<', fullname,
-          stats->num_buffers, stats->num_readonly, stats->num_preroll,
-          stats->num_discont, stats->num_gap, stats->num_delta);
+          ("    %c %-30.30s: buffers %7u (live %5u,dec %5u,dis %5u,res %5u,"
+          "cor %5u,mar %5u,hdr %5u,gap %5u,drop %5u,dlt %5u),",
+          (stats->dir == GST_PAD_SRC) ? '>' : '<', fullname, stats->num_buffers,
+          stats->num_live, stats->num_decode_only, stats->num_discont,
+          stats->num_resync, stats->num_corrupted, stats->num_marker,
+          stats->num_header, stats->num_gap, stats->num_droppable,
+          stats->num_delta);
       if (stats->min_size == stats->max_size) {
         printf (" size (min/avg/max) ......./%7u/.......,", stats->avg_size);
       } else {
