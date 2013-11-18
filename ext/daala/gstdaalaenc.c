@@ -175,9 +175,10 @@ daala_enc_finalize (GObject * object)
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
-static void
-daala_enc_flush (GstDaalaEnc * enc)
+static gboolean
+daala_enc_flush (GstVideoEncoder * benc)
 {
+  GstDaalaEnc *enc = GST_DAALA_ENC (benc);
   int quant;
 
   GST_OBJECT_LOCK (enc);
@@ -192,6 +193,8 @@ daala_enc_flush (GstDaalaEnc * enc)
   enc->encoder = daala_encode_create (&enc->info);
 
   daala_encode_ctl (enc->encoder, OD_SET_QUANT, &quant, sizeof (int));
+
+  return TRUE;
 }
 
 static gboolean
@@ -361,7 +364,7 @@ daala_enc_set_format (GstVideoEncoder * benc, GstVideoCodecState * state)
     gst_video_codec_state_unref (enc->input_state);
   enc->input_state = gst_video_codec_state_ref (state);
 
-  daala_enc_flush (enc);
+  daala_enc_flush (benc);
   enc->initialised = TRUE;
 
   return TRUE;
