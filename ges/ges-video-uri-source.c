@@ -23,6 +23,8 @@
  * @short_description: outputs a single video stream from a given file
  */
 
+#include <gst/pbutils/missing-plugins.h>
+
 #include "ges-utils.h"
 #include "ges-internal.h"
 #include "ges-track-element.h"
@@ -41,12 +43,23 @@ enum
   PROP_URI
 };
 
+static void
+post_missing_element_message (GstElement * element, const gchar * name)
+{
+  GstMessage *msg;
+
+  msg = gst_missing_element_message_new (element, name);
+  gst_element_post_message (element, msg);
+}
+
 /* GESSource VMethod */
 static GstElement *
 ges_video_uri_source_create_source (GESTrackElement * trksrc)
 {
   GESVideoUriSource *self;
   GESTrack *track;
+  GstDiscovererVideoInfo *info;
+  GESUriSourceAsset *asset;
   GstElement *decodebin;
 
   self = (GESVideoUriSource *) trksrc;
@@ -57,6 +70,34 @@ ges_video_uri_source_create_source (GESTrackElement * trksrc)
 
   g_object_set (decodebin, "caps", ges_track_get_caps (track),
       "expose-all-streams", FALSE, "uri", self->uri, NULL);
+
+  if ((asset =
+          GES_URI_SOURCE_ASSET (ges_extractable_get_asset (GES_EXTRACTABLE
+                  (trksrc)))) != NULL) {
+    info =
+        GST_DISCOVERER_VIDEO_INFO (ges_uri_source_asset_get_stream_info
+        (asset));
+
+    g_assert (info);
+    if (gst_discoverer_video_info_is_interlaced (info)) {
+      GstElement *deinterlace;
+
+      deinterlace = gst_element_factory_make ("deinterlace", "deinterlace");
+      if (deinterlace == NULL) {
+        deinterlace = gst_element_factory_make ("avdeinterlace", "deinterlace");
+      }
+      if (deinterlace == NULL) {
+        post_missing_element_message (decodebin, "deinterlace");
+        GST_ELEMENT_WARNING (decodebin, CORE, MISSING_PLUGIN,
+            ("Missing element '%s' - check your GStreamer installation.",
+                "deinterlace"), ("deinterlacing won't work"));
+      }
+
+      return ges_source_create_topbin ("deinterlace-bin", decodebin,
+          gst_element_factory_make ("videoconvert", NULL), deinterlace, NULL);
+    }
+  }
+
 
   return decodebin;
 }
