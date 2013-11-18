@@ -553,6 +553,27 @@ gst_selector_pad_event (GstPad * pad, GstObject * parent, GstEvent * event)
       }
       GST_DEBUG_OBJECT (pad, "received EOS");
       break;
+    case GST_EVENT_GAP:{
+      GstClockTime ts, dur;
+
+      GST_DEBUG_OBJECT (pad, "Received gap event: %" GST_PTR_FORMAT, event);
+
+      gst_event_parse_gap (event, &ts, &dur);
+      if (GST_CLOCK_TIME_IS_VALID (ts)) {
+        if (GST_CLOCK_TIME_IS_VALID (dur))
+          ts += dur;
+
+        /* update the segment position */
+        GST_OBJECT_LOCK (pad);
+        selpad->position = ts;
+        selpad->segment.position = ts;
+        GST_OBJECT_UNLOCK (pad);
+        if (sel->sync_streams && active_sinkpad == pad)
+          GST_INPUT_SELECTOR_BROADCAST (sel);
+      }
+
+    }
+      break;
     default:
       break;
   }
