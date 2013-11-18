@@ -1000,8 +1000,6 @@ gst_poll_fd_has_closed (const GstPoll * set, GstPollFD * fd)
   g_return_val_if_fail (fd != NULL, FALSE);
   g_return_val_if_fail (fd->fd >= 0, FALSE);
 
-  GST_DEBUG ("%p: fd (fd:%d, idx:%d)", set, fd->fd, fd->idx);
-
   g_mutex_lock (&((GstPoll *) set)->lock);
 
   idx = find_index (set->active_fds, fd);
@@ -1018,8 +1016,9 @@ gst_poll_fd_has_closed (const GstPoll * set, GstPollFD * fd)
   } else {
     GST_WARNING ("%p: couldn't find fd !", set);
   }
-
   g_mutex_unlock (&((GstPoll *) set)->lock);
+
+  GST_DEBUG ("%p: fd (fd:%d, idx:%d) %d", set, fd->fd, fd->idx, res);
 
   return res;
 }
@@ -1043,8 +1042,6 @@ gst_poll_fd_has_error (const GstPoll * set, GstPollFD * fd)
   g_return_val_if_fail (fd != NULL, FALSE);
   g_return_val_if_fail (fd->fd >= 0, FALSE);
 
-  GST_DEBUG ("%p: fd (fd:%d, idx:%d)", set, fd->fd, fd->idx);
-
   g_mutex_lock (&((GstPoll *) set)->lock);
 
   idx = find_index (set->active_fds, fd);
@@ -1065,8 +1062,9 @@ gst_poll_fd_has_error (const GstPoll * set, GstPollFD * fd)
   } else {
     GST_WARNING ("%p: couldn't find fd !", set);
   }
-
   g_mutex_unlock (&((GstPoll *) set)->lock);
+
+  GST_DEBUG ("%p: fd (fd:%d, idx:%d) %d", set, fd->fd, fd->idx, res);
 
   return res;
 }
@@ -1076,8 +1074,6 @@ gst_poll_fd_can_read_unlocked (const GstPoll * set, GstPollFD * fd)
 {
   gboolean res = FALSE;
   gint idx;
-
-  GST_DEBUG ("%p: fd (fd:%d, idx:%d)", set, fd->fd, fd->idx);
 
   idx = find_index (set->active_fds, fd);
   if (idx >= 0) {
@@ -1093,6 +1089,7 @@ gst_poll_fd_can_read_unlocked (const GstPoll * set, GstPollFD * fd)
   } else {
     GST_WARNING ("%p: couldn't find fd !", set);
   }
+  GST_DEBUG ("%p: fd (fd:%d, idx:%d) %d", set, fd->fd, fd->idx, res);
 
   return res;
 }
@@ -1143,8 +1140,6 @@ gst_poll_fd_can_write (const GstPoll * set, GstPollFD * fd)
   g_return_val_if_fail (fd != NULL, FALSE);
   g_return_val_if_fail (fd->fd >= 0, FALSE);
 
-  GST_DEBUG ("%p: fd (fd:%d, idx:%d)", set, fd->fd, fd->idx);
-
   g_mutex_lock (&((GstPoll *) set)->lock);
 
   idx = find_index (set->active_fds, fd);
@@ -1161,8 +1156,9 @@ gst_poll_fd_can_write (const GstPoll * set, GstPollFD * fd)
   } else {
     GST_WARNING ("%p: couldn't find fd !", set);
   }
-
   g_mutex_unlock (&((GstPoll *) set)->lock);
+
+  GST_DEBUG ("%p: fd (fd:%d, idx:%d) %d", set, fd->fd, fd->idx, res);
 
   return res;
 }
