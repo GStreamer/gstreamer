@@ -21,7 +21,7 @@ m4_define([gst_vaapi_lt_age],           [0])
 m4_define([glib_version], [2.28])
 
 # gstreamer version number
-m4_define([gst_api_version],            [1.0])
+m4_define([gst_api_version],            [autodetect])
 m4_define([gst0_version],               [0.10.36])
 m4_define([gst0_plugins_base_version],  [0.10.31])
 m4_define([gst0_plugins_bad_version],   [0.10.22])
@@ -149,6 +149,32 @@ AC_SUBST([DLOPEN_LIBS])
 dnl ---------------------------------------------------------------------------
 dnl -- GStreamer                                                             --
 dnl ---------------------------------------------------------------------------
+
+dnl If GStreamer API version is to be autodetected, then always try
+dnl with the latest version first
+AC_MSG_CHECKING([for GStreamer API version])
+if test "$GST_API_VERSION" = "autodetect"; then
+    gst_pkg_versions="1.0 0.10"
+else
+    AS_VERSION_COMPARE([$GST_API_VERSION], [1.0],
+        [gst_pkg_versions="0.10"], [gst_pkg_versions="1.0"],
+        dnl GStreamer 1.2.x APIs don't have their own namespace
+        [gst_pkg_versions="1.0"])
+fi
+for gst_pkg_version in ${gst_pkg_versions}; do
+    if $PKG_CONFIG --exists "gstreamer-$gst_pkg_version"; then
+        gst_version=`$PKG_CONFIG --modversion "gstreamer-$gst_pkg_version"`
+        gst_major_version=`echo "$gst_version" | cut -d'.' -f1`
+        gst_minor_version=`echo "$gst_version" | cut -d'.' -f2`
+        GST_API_VERSION="${gst_major_version}.${gst_minor_version}"
+        GST_PKG_VERSION="$gst_pkg_version"
+        break
+    fi
+done
+if test -z "$GST_PKG_VERSION"; then
+    AC_MSG_ERROR([version $GST_API_VERSION not found])
+fi
+AC_MSG_RESULT([$GST_API_VERSION])
 
 dnl Versions for GStreamer and plugins-base
 case $GST_API_VERSION in
