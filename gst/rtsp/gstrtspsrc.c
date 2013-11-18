@@ -2643,7 +2643,8 @@ set_manager_buffer_mode (GstRTSPSrc * src)
 {
   GObjectClass *klass;
 
-  g_return_if_fail (G_IS_OBJECT (src->manager));
+  if (src->manager == NULL)
+    return;
 
   klass = G_OBJECT_GET_CLASS (G_OBJECT (src->manager));
 
