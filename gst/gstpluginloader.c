@@ -997,27 +997,31 @@ exchange_packets (GstPluginLoader * l)
         l->tx_buf_write - l->tx_buf_read);
 
     if (!l->rx_done) {
-      if (gst_poll_fd_has_error (l->fdset, &l->fd_r) ||
-          gst_poll_fd_has_closed (l->fdset, &l->fd_r)) {
-        GST_LOG ("read fd %d closed/errored", l->fd_r.fd);
+      if (gst_poll_fd_has_error (l->fdset, &l->fd_r)) {
+        GST_LOG ("read fd %d errored", l->fd_r.fd);
         goto fail_and_cleanup;
       }
 
       if (gst_poll_fd_can_read (l->fdset, &l->fd_r)) {
         if (!read_one (l))
           goto fail_and_cleanup;
+      } else if (gst_poll_fd_has_closed (l->fdset, &l->fd_r)) {
+        GST_LOG ("read fd %d closed", l->fd_r.fd);
+        goto fail_and_cleanup;
       }
     }
 
     if (l->tx_buf_read < l->tx_buf_write) {
-      if (gst_poll_fd_has_error (l->fdset, &l->fd_w) ||
-          gst_poll_fd_has_closed (l->fdset, &l->fd_w)) {
-        GST_ERROR ("write fd %d closed/errored", l->fd_w.fd);
+      if (gst_poll_fd_has_error (l->fdset, &l->fd_w)) {
+        GST_ERROR ("write fd %d errored", l->fd_w.fd);
         goto fail_and_cleanup;
       }
       if (gst_poll_fd_can_write (l->fdset, &l->fd_w)) {
         if (!write_one (l))
           goto fail_and_cleanup;
+      } else if (gst_poll_fd_has_closed (l->fdset, &l->fd_w)) {
+        GST_LOG ("write fd %d closed", l->fd_w.fd);
+        goto fail_and_cleanup;
       }
     }
   } while (l->tx_buf_read < l->tx_buf_write);
