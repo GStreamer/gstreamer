@@ -143,6 +143,7 @@ static gboolean
 on_source_message (GstBus * bus, GstMessage * message, ProgramData * data)
 {
   GstElement *source;
+  gboolean ret = TRUE;
 
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_EOS:
@@ -152,29 +153,34 @@ on_source_message (GstBus * bus, GstMessage * message, ProgramData * data)
       break;
     case GST_MESSAGE_ERROR:
       g_main_loop_quit (data->loop);
+      ret = FALSE;
       break;
     default:
       break;
   }
-  return TRUE;
+  return ret;
 }
 
 static gboolean
 on_sink_message (GstBus * bus, GstMessage * message, ProgramData * data)
 {
+  gboolean ret = TRUE;
+
   switch (GST_MESSAGE_TYPE (message)) {
     case GST_MESSAGE_EOS:
       g_main_loop_quit (data->loop);
+      ret = FALSE;
       break;
     case GST_MESSAGE_ERROR:
       ASSERT_SET_STATE (data->sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
       ASSERT_SET_STATE (data->source, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
       g_main_loop_quit (data->loop);
+      ret = FALSE;
       break;
     default:
       break;
   }
-  return TRUE;
+  return ret;
 }
 
 static gboolean
@@ -208,8 +214,6 @@ GST_START_TEST (test_appsrc_block_deadlock)
     GstBus *bus = NULL;
     GstElement *testsink = NULL;
 
-    gint tout;
-
     data = g_new0 (ProgramData, 1);
 
     data->loop = g_main_loop_new (NULL, FALSE);
@@ -242,7 +246,7 @@ GST_START_TEST (test_appsrc_block_deadlock)
     gst_bus_add_watch (bus, (GstBusFunc) on_sink_message, data);
     gst_object_unref (bus);
 
-    tout = g_timeout_add (150, (GSourceFunc) error_timeout, data);
+    g_timeout_add (150, (GSourceFunc) error_timeout, data);
 
     ASSERT_SET_STATE (data->sink, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
     ASSERT_SET_STATE (data->source, GST_STATE_PLAYING, GST_STATE_CHANGE_ASYNC);
@@ -252,7 +256,6 @@ GST_START_TEST (test_appsrc_block_deadlock)
     ASSERT_SET_STATE (data->sink, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
     ASSERT_SET_STATE (data->source, GST_STATE_NULL, GST_STATE_CHANGE_SUCCESS);
 
-    g_source_remove (tout);
     gst_object_unref (data->source);
     gst_object_unref (data->sink);
     g_main_loop_unref (data->loop);
