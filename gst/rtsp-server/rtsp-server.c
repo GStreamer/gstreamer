@@ -1330,7 +1330,7 @@ no_source:
 /**
  * gst_rtsp_server_client_filter:
  * @server: a #GstRTSPServer
- * @func: (scope call): a callback
+ * @func: (scope call) (allow-none): a callback
  * @user_data: user data passed to @func
  *
  * Call @func for each client managed by @server. The result value of @func

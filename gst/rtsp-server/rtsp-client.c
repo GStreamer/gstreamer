@@ -2884,7 +2884,7 @@ gst_rtsp_client_attach (GstRTSPClient * client, GMainContext * context)
 /**
  * gst_rtsp_client_session_filter:
  * @client: a #GstRTSPClient
- * @func: (scope call): a callback
+ * @func: (scope call) (allow-none): a callback
  * @user_data: user data passed to @func
  *
  * Call @func for each session managed by @client. The result value of @func

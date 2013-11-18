@@ -506,7 +506,7 @@ filter_func (gchar * sessionid, GstRTSPSession * sess, FilterData * data)
 /**
  * gst_rtsp_session_pool_filter:
  * @pool: a #GstRTSPSessionPool
- * @func: (scope call): a callback
+ * @func: (scope call) (allow-none): a callback
  * @user_data: user data passed to @func
  *
  * Call @func for each session in @pool. The result value of @func determines

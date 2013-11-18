@@ -2068,7 +2068,7 @@ gst_rtsp_stream_get_rtcp_socket (GstRTSPStream * stream, GSocketFamily family)
 /**
  * gst_rtsp_stream_transport_filter:
  * @stream: a #GstRTSPStream
- * @func: (scope call): a callback
+ * @func: (scope call) (allow-none): a callback
  * @user_data: user data passed to @func
  *
  * Call @func for each transport managed by @stream. The result value of @func
