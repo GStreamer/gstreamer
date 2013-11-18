@@ -43,6 +43,7 @@ typedef struct _GstRTSPStreamPrivate GstRTSPStreamPrivate;
 
 #include "rtsp-stream-transport.h"
 #include "rtsp-address-pool.h"
+#include "rtsp-session.h"
 
 /**
  * GstRTSPStream:
@@ -126,6 +127,35 @@ GSocket *         gst_rtsp_stream_get_rtp_socket   (GstRTSPStream *stream,
                                                     GSocketFamily family);
 GSocket *         gst_rtsp_stream_get_rtcp_socket  (GstRTSPStream *stream,
                                                     GSocketFamily family);
+
+/**
+ * GstRTSPStreamTransportFilterFunc:
+ * @stream: a #GstRTSPStream object
+ * @trans: a #GstRTSPStreamTransport in @stream
+ * @user_data: user data that has been given to gst_rtsp_stream_transport_filter()
+ *
+ * This function will be called by the gst_rtsp_stream_transport_filter(). An
+ * implementation should return a value of #GstRTSPFilterResult.
+ *
+ * When this function returns #GST_RTSP_FILTER_REMOVE, @trans will be removed
+ * from @stream.
+ *
+ * A return value of #GST_RTSP_FILTER_KEEP will leave @trans untouched in
+ * @stream.
+ *
+ * A value of #GST_RTSP_FILTER_REF will add @trans to the result #GList of
+ * gst_rtsp_stream_transport_filter().
+ *
+ * Returns: a #GstRTSPFilterResult.
+ */
+typedef GstRTSPFilterResult (*GstRTSPStreamTransportFilterFunc) (GstRTSPStream *stream,
+                                                                 GstRTSPStreamTransport *trans,
+                                                                 gpointer user_data);
+
+GList *                gst_rtsp_stream_transport_filter  (GstRTSPStream *stream,
+                                                          GstRTSPStreamTransportFilterFunc func,
+                                                          gpointer user_data);
+
 
 G_END_DECLS
 

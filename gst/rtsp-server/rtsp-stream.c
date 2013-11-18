@@ -2064,3 +2064,70 @@ gst_rtsp_stream_get_rtcp_socket (GstRTSPStream * stream, GSocketFamily family)
 
   return socket;
 }
+
+/**
+ * gst_rtsp_stream_transport_filter:
+ * @stream: a #GstRTSPStream
+ * @func: (scope call): a callback
+ * @user_data: user data passed to @func
+ *
+ * Call @func for each transport managed by @stream. The result value of @func
+ * determines what happens to the transport. @func will be called with @stream
+ * locked so no further actions on @stream can be performed from @func.
+ *
+ * If @func returns #GST_RTSP_FILTER_REMOVE, the transport will be removed from
+ * @stream.
+ *
+ * If @func returns #GST_RTSP_FILTER_KEEP, the transport will remain in @stream.
+ *
+ * If @func returns #GST_RTSP_FILTER_REF, the transport will remain in @stream but
+ * will also be added with an additional ref to the result #GList of this
+ * function..
+ *
+ * When @func is %NULL, #GST_RTSP_FILTER_REF will be assumed for each transport.
+ *
+ * Returns: (element-type GstRTSPStreamTransport) (transfer full): a #GList with all
+ * transports for which @func returned #GST_RTSP_FILTER_REF. After usage, each
+ * element in the #GList should be unreffed before the list is freed.
+ */
+GList *
+gst_rtsp_stream_transport_filter (GstRTSPStream * stream,
+    GstRTSPStreamTransportFilterFunc func, gpointer user_data)
+{
+  GstRTSPStreamPrivate *priv;
+  GList *result, *walk, *next;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), NULL);
+
+  priv = stream->priv;
+
+  result = NULL;
+
+  g_mutex_lock (&priv->lock);
+  for (walk = priv->transports; walk; walk = next) {
+    GstRTSPStreamTransport *trans = walk->data;
+    GstRTSPFilterResult res;
+
+    next = g_list_next (walk);
+
+    if (func)
+      res = func (stream, trans, user_data);
+    else
+      res = GST_RTSP_FILTER_REF;
+
+    switch (res) {
+      case GST_RTSP_FILTER_REMOVE:
+        update_transport (stream, trans, FALSE);
+        break;
+      case GST_RTSP_FILTER_REF:
+        result = g_list_prepend (result, g_object_ref (trans));
+        break;
+      case GST_RTSP_FILTER_KEEP:
+      default:
+        break;
+    }
+  }
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
