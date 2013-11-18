@@ -76,10 +76,10 @@ switch_timer (GstElement * video_switch)
   g_object_get (G_OBJECT (video_switch), "active-pad", &active_pad, NULL);
 
   active_name = gst_pad_get_name (active_pad);
-  if (strcmp (active_name, "sink0") == 0) {
-    new_pad = gst_element_get_static_pad (video_switch, "sink1");
+  if (strcmp (active_name, "sink_0") == 0) {
+    new_pad = gst_element_get_static_pad (video_switch, "sink_1");
   } else {
-    new_pad = gst_element_get_static_pad (video_switch, "sink0");
+    new_pad = gst_element_get_static_pad (video_switch, "sink_0");
   }
   g_object_set (G_OBJECT (video_switch), "active-pad", new_pad, NULL);
   g_free (active_name);
