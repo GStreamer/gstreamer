@@ -232,7 +232,8 @@ GST_START_TEST (test_watch_with_custom_context)
   fail_unless_equals_int (num_eos, 10);
   fail_unless_equals_int (num_app, 10);
 
-  g_source_remove (id);
+  if ((source = g_main_context_find_source_by_id (ctx, id)))
+    g_source_destroy (source);
   g_main_loop_unref (main_loop);
   g_main_context_unref (ctx);
 
