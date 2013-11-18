@@ -2501,13 +2501,11 @@ gst_video_box_class_init (GstVideoBoxClass * klass)
           "Alpha value of the border", 0.0, 1.0, DEFAULT_BORDER_ALPHA,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   /**
-   * GstVideoBox:autocrop
+   * GstVideoBox:autocrop:
    *
    * If set to %TRUE videobox will automatically crop/pad the input
    * video to be centered in the output.
-   *
-   * Since: 0.10.16
-   **/
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_AUTOCROP,
       g_param_spec_boolean ("autocrop", "Auto crop",
           "Auto crop", FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));

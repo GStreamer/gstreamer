@@ -184,7 +184,7 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
   g_free (clientname);
 
   /**
-   * GstPulseSrc:stream-properties
+   * GstPulseSrc:stream-properties:
    *
    * List of pulseaudio stream properties. A list of defined properties can be
    * found in the <ulink href="http://0pointer.de/lennart/projects/pulseaudio/doxygen/proplist_8h.html">pulseaudio api docs</ulink>.
@@ -197,8 +197,6 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
    * g_object_set (pulse, "stream-properties", props, NULL);
    * gst_structure_free (props);
    * ]|
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class,
       PROP_STREAM_PROPERTIES,
@@ -206,11 +204,9 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
           "list of pulseaudio stream properties",
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstPulseSrc:source-output-index
+   * GstPulseSrc:source-output-index:
    *
    * The index of the PulseAudio source output corresponding to this element.
-   *
-   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class,
       PROP_SOURCE_OUTPUT_INDEX,
@@ -227,7 +223,7 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
       gst_static_pad_template_get (&pad_template));
 
   /**
-   * GstPulseSrc:volume
+   * GstPulseSrc:volume:
    *
    * The volume of the record stream.
    */
@@ -238,7 +234,7 @@ gst_pulsesrc_class_init (GstPulseSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPulseSrc:mute
+   * GstPulseSrc:mute:
    *
    * Whether the stream is muted or not.
    */

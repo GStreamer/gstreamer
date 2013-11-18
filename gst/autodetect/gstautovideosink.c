@@ -88,16 +88,14 @@ gst_auto_video_sink_class_init (GstAutoVideoSinkClass * klass)
 
   eklass->change_state = GST_DEBUG_FUNCPTR (gst_auto_video_sink_change_state);
   /**
-   * GstAutoVideoSink:filter-caps
+   * GstAutoVideoSink:filter-caps:
    *
    * This property will filter out candidate sinks that can handle the specified
    * caps. By default only video sinks that support raw rgb and yuv video
    * are selected.
    *
    * This property can only be set before the element goes to the READY state.
-   *
-   * Since: 0.10.7
-   **/
+   */
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("filter-caps", "Filter caps",
           "Filter sink candidates using these caps.", GST_TYPE_CAPS,

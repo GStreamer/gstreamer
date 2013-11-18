@@ -38,8 +38,6 @@
  * ]| will play an Ogg/Vorbis audio file and output it using the Open Sound System
  * version 4.
  * </refsect2>
- *
- * Since: 0.10.7
  */
 
 #ifdef HAVE_CONFIG_H

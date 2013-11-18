@@ -1607,8 +1607,6 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * @pt: the pt
    *
    * Signal that the current payload type changed to @pt in @session.
-   *
-   * Since: 0.10.17
    */
   gst_rtp_bin_signals[SIGNAL_PAYLOAD_TYPE_CHANGE] =
       g_signal_new ("payload-type-change", G_TYPE_FROM_CLASS (klass),
@@ -1814,26 +1812,22 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           DEFAULT_USE_PIPELINE_CLOCK,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRtpBin::buffer-mode:
+   * GstRtpBin:buffer-mode:
    *
    * Control the buffering and timestamping mode used by the jitterbuffer.
-   *
-   * Since: 0.10.17
    */
   g_object_class_install_property (gobject_class, PROP_BUFFER_MODE,
       g_param_spec_enum ("buffer-mode", "Buffer Mode",
           "Control the buffering algorithm in use", RTP_TYPE_JITTER_BUFFER_MODE,
           DEFAULT_BUFFER_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRtpBin::ntp-sync:
+   * GstRtpBin:ntp-sync:
    *
    * Set the NTP time from the sender reports as the running-time on the
    * buffers. When both the sender and receiver have sychronized
    * running-time, i.e. when the clock and base-time is shared
    * between the receivers and the and the senders, this option can be
    * used to synchronize receivers on multiple machines.
-   *
-   * Since: 0.10.21
    */
   g_object_class_install_property (gobject_class, PROP_NTP_SYNC,
       g_param_spec_boolean ("ntp-sync", "Sync on NTP clock",
@@ -1841,12 +1835,10 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRtpBin::rtcp-sync:
+   * GstRtpBin:rtcp-sync:
    *
    * If not synchronizing (directly) to the NTP clock, determines how to sync
    * the various streams.
-   *
-   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_RTCP_SYNC,
       g_param_spec_enum ("rtcp-sync", "RTCP Sync",
@@ -1854,11 +1846,9 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
           DEFAULT_RTCP_SYNC, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRtpBin::rtcp-sync-interval:
+   * GstRtpBin:rtcp-sync-interval:
    *
    * Determines how often to sync streams using RTCP data.
-   *
-   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_RTCP_SYNC_INTERVAL,
       g_param_spec_uint ("rtcp-sync-interval", "RTCP Sync Interval",

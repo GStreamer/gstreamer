@@ -19,7 +19,6 @@
 
 /**
  * SECTION:element-gdkpixbufsink
- * @Since: 0.10.8
  *
  * This sink element takes RGB or RGBA images as input and wraps them into
  * #GdkPixbuf objects, for easy saving to file via the
@@ -160,8 +159,6 @@ gst_gdk_pixbuf_sink_class_init (GstGdkPixbufSinkClass * klass)
    * GstGdkPixbuf:post-messages:
    *
    * Post messages on the bus containing pixbufs.
-   *
-   * Since: 0.10.17
    */
   g_object_class_install_property (gobject_class, PROP_POST_MESSAGES,
       g_param_spec_boolean ("post-messages", "Post Messages",

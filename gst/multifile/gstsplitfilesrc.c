@@ -38,8 +38,6 @@
  * gst-launch-1.0 playbin uri="splitfile://path/to/foo.avi.*"
  * ]| Plays the different parts as if they were one single AVI file.
  * </refsect2>
- *
- * Since: 0.10.31
  */
 
 #ifdef HAVE_CONFIG_H

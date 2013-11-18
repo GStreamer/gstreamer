@@ -543,12 +543,10 @@ gst_audio_fx_base_fir_filter_class_init (GstAudioFXBaseFIRFilterClass * klass)
   gobject_class->get_property = gst_audio_fx_base_fir_filter_get_property;
 
   /**
-   * GstAudioFXBaseFIRFilter::low-latency:
+   * GstAudioFXBaseFIRFilter:low-latency:
    *
    * Work in low-latency mode. This mode is much slower for large filter sizes
    * but the latency is always only the pre-latency of the filter.
-   *
-   * Since: 0.10.18
    */
   g_object_class_install_property (gobject_class, PROP_LOW_LATENCY,
       g_param_spec_boolean ("low-latency", "Low latency",
@@ -558,14 +556,12 @@ gst_audio_fx_base_fir_filter_class_init (GstAudioFXBaseFIRFilterClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstAudioFXBaseFIRFilter::drain-on-changes:
+   * GstAudioFXBaseFIRFilter:drain-on-changes:
    *
    * Whether the filter should be drained when its coeficients change
    *
    * Note: Currently this only works if the kernel size is not changed!
    * Support for drainless kernel size changes will be added in the future.
-   *
-   * Since: 0.10.18
    */
   g_object_class_install_property (gobject_class, PROP_DRAIN_ON_CHANGES,
       g_param_spec_boolean ("drain-on-changes", "Drain on changes",

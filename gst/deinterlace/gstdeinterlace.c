@@ -501,12 +501,11 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
   gobject_class->finalize = gst_deinterlace_finalize;
 
   /**
-   * GstDeinterlace:mode
+   * GstDeinterlace:mode:
    *
    * This selects whether the deinterlacing methods should
    * always be applied or if they should only be applied
    * on content that has the "interlaced" flag on the caps.
-   *
    */
   g_object_class_install_property (gobject_class, PROP_MODE,
       g_param_spec_enum ("mode",
@@ -517,7 +516,7 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
       );
 
   /**
-   * GstDeinterlace:method
+   * GstDeinterlace:method:
    *
    * Selects the different deinterlacing algorithms that can be used.
    * These provide different quality and CPU usage.
@@ -599,11 +598,10 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
       );
 
   /**
-   * GstDeinterlace:fields
+   * GstDeinterlace:fields:
    *
    * This selects which fields should be output. If "all" is selected
    * the output framerate will be double.
-   *
    */
   g_object_class_install_property (gobject_class, PROP_FIELDS,
       g_param_spec_enum ("fields",
@@ -614,7 +612,7 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
       );
 
   /**
-   * GstDeinterlace:layout
+   * GstDeinterlace:layout:
    *
    * This selects which fields is the first in time.
    *
@@ -628,14 +626,11 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
       );
 
   /**
-   * GstDeinterlace:locking
+   * GstDeinterlace:locking:
    *
    * This selects which approach to pattern locking is used which affects
    * processing latency and accuracy of timestamp adjustment for telecine
    * streams.
-   *
-   * Since: 0.10.31
-   *
    */
   g_object_class_install_property (gobject_class, PROP_LOCKING,
       g_param_spec_enum ("locking", "locking", "Pattern locking mode",
@@ -643,13 +638,10 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstDeinterlace:ignore-obscure
+   * GstDeinterlace:ignore-obscure:
    *
    * This selects whether to ignore obscure/rare telecine patterns.
    * NTSC 2:3 pulldown variants are the only really common patterns.
-   *
-   * Since: 0.10.31
-   *
    */
   g_object_class_install_property (gobject_class, PROP_IGNORE_OBSCURE,
       g_param_spec_boolean ("ignore-obscure", "ignore-obscure",
@@ -658,13 +650,10 @@ gst_deinterlace_class_init (GstDeinterlaceClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstDeinterlace:drop-orphans
+   * GstDeinterlace:drop-orphans:
    *
    * This selects whether to drop orphan fields at the beginning of telecine
    * patterns in active locking mode.
-   *
-   * Since: 0.10.31
-   *
    */
   g_object_class_install_property (gobject_class, PROP_DROP_ORPHANS,
       g_param_spec_boolean ("drop-orphans", "drop-orphans",

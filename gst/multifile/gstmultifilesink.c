@@ -217,22 +217,18 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
           0, G_MAXINT, DEFAULT_INDEX,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstMultiFileSink:post-messages
+   * GstMultiFileSink:post-messages:
    *
    * Post a message on the GstBus for each file.
-   *
-   * Since: 0.10.17
    */
   g_object_class_install_property (gobject_class, PROP_POST_MESSAGES,
       g_param_spec_boolean ("post-messages", "Post Messages",
           "Post a message for each file with information of the buffer",
           DEFAULT_POST_MESSAGES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstMultiFileSink:next-file
+   * GstMultiFileSink:next-file:
    *
    * When to start a new file.
-   *
-   * Since: 0.10.17
    */
   g_object_class_install_property (gobject_class, PROP_NEXT_FILE,
       g_param_spec_enum ("next-file", "Next File",
@@ -242,12 +238,10 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
 
 
   /**
-   * GstMultiFileSink:max-files
+   * GstMultiFileSink:max-files:
    *
    * Maximum number of files to keep on disk. Once the maximum is reached, old
    * files start to be deleted to make room for new ones.
-   *
-   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_MAX_FILES,
       g_param_spec_uint ("max-files", "Max files",
@@ -257,11 +251,9 @@ gst_multi_file_sink_class_init (GstMultiFileSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstMultiFileSink:max-file-size
+   * GstMultiFileSink:max-file-size:
    *
    * Maximum file size before starting a new file in max-size mode.
-   *
-   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_MAX_FILE_SIZE,
       g_param_spec_uint64 ("max-file-size", "Maximum File Size",

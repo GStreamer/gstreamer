@@ -1153,95 +1153,79 @@ gst_ximage_src_class_init (GstXImageSrcClass * klass)
           "Show mouse pointer (if XFixes extension enabled)", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstXImageSrc:use-damage
+   * GstXImageSrc:use-damage:
    *
    * Use XDamage (if the XDamage extension is enabled)
-   *
-   * Since: 0.10.4
-   **/
+   */
   g_object_class_install_property (gc, PROP_USE_DAMAGE,
       g_param_spec_boolean ("use-damage", "Use XDamage",
           "Use XDamage (if XDamage extension enabled)", TRUE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstXImageSrc:startx
+   * GstXImageSrc:startx:
    *
    * X coordinate of top left corner of area to be recorded
    * (0 for top left of screen)
-   *
-   * Since: 0.10.4
-   **/
+   */
   g_object_class_install_property (gc, PROP_STARTX,
       g_param_spec_uint ("startx", "Start X co-ordinate",
           "X coordinate of top left corner of area to be recorded (0 for top left of screen)",
           0, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstXImageSrc:starty
+   * GstXImageSrc:starty:
    *
    * Y coordinate of top left corner of area to be recorded
    * (0 for top left of screen)
-   *
-   * Since: 0.10.4
-   **/
+   */
   g_object_class_install_property (gc, PROP_STARTY,
       g_param_spec_uint ("starty", "Start Y co-ordinate",
           "Y coordinate of top left corner of area to be recorded (0 for top left of screen)",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
   /**
-   * GstXImageSrc:endx
+   * GstXImageSrc:endx:
    *
    * X coordinate of bottom right corner of area to be recorded
    * (0 for bottom right of screen)
-   *
-   * Since: 0.10.4
-   **/
+   */
   g_object_class_install_property (gc, PROP_ENDX,
       g_param_spec_uint ("endx", "End X",
           "X coordinate of bottom right corner of area to be recorded (0 for bottom right of screen)",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
   /**
-   * GstXImageSrc:endy
+   * GstXImageSrc:endy:
    *
    * Y coordinate of bottom right corner of area to be recorded
    * (0 for bottom right of screen)
-   *
-   * Since: 0.10.4
-   **/
+   */
   g_object_class_install_property (gc, PROP_ENDY,
       g_param_spec_uint ("endy", "End Y",
           "Y coordinate of bottom right corner of area to be recorded (0 for bottom right of screen)",
           0, G_MAXINT, 0, G_PARAM_READWRITE));
 
   /**
-   * GstXImageSrc:remote
+   * GstXImageSrc:remote:
    *
    * Whether the X display is remote. The element will try to use alternate calls
    * known to work better with remote displays.
-   *
-   * Since: 0.10.26
-   **/
+   */
   g_object_class_install_property (gc, PROP_REMOTE,
       g_param_spec_boolean ("remote", "Remote dispay",
           "Whether the display is remote", FALSE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstXImageSrc:xid
+   * GstXImageSrc:xid:
    *
    * The XID of the window to capture. 0 for the root window (default).
-   *
-   * Since: 0.10.31
-   **/
+   */
   g_object_class_install_property (gc, PROP_XID,
       g_param_spec_uint64 ("xid", "Window XID",
           "Window XID to capture from", 0, G_MAXUINT64, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstXImageSrc:xname
+   * GstXImageSrc:xname:
    *
    * The name of the window to capture, if any.
-   *
-   * Since: 0.10.31
-   **/
+   */
   g_object_class_install_property (gc, PROP_XNAME,
       g_param_spec_string ("xname", "Window name",
           "Window name to capture from", NULL,

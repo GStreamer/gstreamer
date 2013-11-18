@@ -309,7 +309,7 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
           " FALSE = disable", DEFAULT_LOOP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstMultiUDPSink::force-ipv4
+   * GstMultiUDPSink::force-ipv4:
    *
    * Force the use of an IPv4 socket.
    *
@@ -326,12 +326,10 @@ gst_multiudpsink_class_init (GstMultiUDPSinkClass * klass)
           -1, 63, DEFAULT_QOS_DSCP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstMultiUDPSink::send-duplicates
+   * GstMultiUDPSink::send-duplicates:
    *
    * When a host/port pair is added mutliple times, send the packet to the host
    * multiple times as well.
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_SEND_DUPLICATES,
       g_param_spec_boolean ("send-duplicates", "Send Duplicates",

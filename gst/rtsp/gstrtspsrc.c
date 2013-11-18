@@ -416,12 +416,10 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRTSPSrc::do-rtcp
+   * GstRTSPSrc:do-rtcp:
    *
    * Enable RTCP support. Some old server don't like RTCP and then this property
    * needs to be set to FALSE.
-   *
-   * Since: 0.10.15
    */
   g_object_class_install_property (gobject_class, PROP_DO_RTCP,
       g_param_spec_boolean ("do-rtcp", "Do RTCP",
@@ -429,12 +427,10 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           DEFAULT_DO_RTCP, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRTSPSrc::do-rtsp-keep-alive
+   * GstRTSPSrc:do-rtsp-keep-alive:
    *
-   * Enable RTSP keep laive support. Some old server don't like RTSP
+   * Enable RTSP keep alive support. Some old server don't like RTSP
    * keep alive and then this property needs to be set to FALSE.
-   *
-   * Since: 0.10.32
    */
   g_object_class_install_property (gobject_class, PROP_DO_RTSP_KEEP_ALIVE,
       g_param_spec_boolean ("do-rtsp-keep-alive", "Do RTSP Keep Alive",
@@ -443,19 +439,17 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRTSPSrc::proxy
+   * GstRTSPSrc:proxy:
    *
    * Set the proxy parameters. This has to be a string of the format
    * [http://][user:passwd@]host[:port].
-   *
-   * Since: 0.10.15
    */
   g_object_class_install_property (gobject_class, PROP_PROXY,
       g_param_spec_string ("proxy", "Proxy",
           "Proxy settings for HTTP tunneling. Format: [http://][user:passwd@]host[:port]",
           DEFAULT_PROXY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRTSPSrc::proxy-id
+   * GstRTSPSrc:proxy-id:
    *
    * Sets the proxy URI user id for authentication. If the URI set via the
    * "proxy" property contains a user-id already, that will take precedence.
@@ -467,7 +461,7 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           "HTTP proxy URI user id for authentication", "",
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRTSPSrc::proxy-pw
+   * GstRTSPSrc:proxy-pw:
    *
    * Sets the proxy URI password for authentication. If the URI set via the
    * "proxy" property contains a password already, that will take precedence.
@@ -480,11 +474,9 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRTSPSrc::rtp_blocksize
+   * GstRTSPSrc:rtp-blocksize:
    *
    * RTP package size to suggest to server.
-   *
-   * Since: 0.10.16
    */
   g_object_class_install_property (gobject_class, PROP_RTP_BLOCKSIZE,
       g_param_spec_uint ("rtp-blocksize", "RTP Blocksize",
@@ -503,11 +495,9 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRTSPSrc::buffer-mode:
+   * GstRTSPSrc:buffer-mode:
    *
    * Control the buffering and timestamping mode used by the jitterbuffer.
-   *
-   * Since: 0.10.22
    */
   g_object_class_install_property (gobject_class, PROP_BUFFER_MODE,
       g_param_spec_enum ("buffer-mode", "Buffer Mode",
@@ -516,12 +506,10 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRTSPSrc::port-range:
+   * GstRTSPSrc:port-range:
    *
    * Configure the client port numbers that can be used to recieve RTP and
    * RTCP.
-   *
-   * Since: 0.10.25
    */
   g_object_class_install_property (gobject_class, PROP_PORT_RANGE,
       g_param_spec_string ("port-range", "Port range",
@@ -530,11 +518,9 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRTSPSrc::udp-buffer-size:
+   * GstRTSPSrc:udp-buffer-size:
    *
    * Size of the kernel UDP receive buffer in bytes.
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_UDP_BUFFER_SIZE,
       g_param_spec_int ("udp-buffer-size", "UDP Buffer Size",
@@ -543,11 +529,9 @@ gst_rtspsrc_class_init (GstRTSPSrcClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRTSPSrc::short-header:
+   * GstRTSPSrc:short-header:
    *
    * Only send the basic RTSP headers for broken encoders.
-   *
-   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_SHORT_HEADER,
       g_param_spec_boolean ("short-header", "Short Header",

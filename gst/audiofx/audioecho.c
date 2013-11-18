@@ -20,7 +20,6 @@
 
 /**
  * SECTION:element-audioecho
- * @Since: 0.10.14
  *
  * audioecho adds an echo or (simple) reverb effect to an audio stream. The echo
  * delay, intensity and the percentage of feedback can be configured.

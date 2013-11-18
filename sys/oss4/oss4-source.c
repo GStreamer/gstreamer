@@ -31,8 +31,6 @@
  * Ogg/Vorbis file (this will only work if your mixer settings are right
  * and the right inputs areenabled etc.)
  * </refsect2>
- *
- * Since: 0.10.7
  */
 
 /* FIXME: make sure we're not doing ioctls from the app thread (e.g. via the

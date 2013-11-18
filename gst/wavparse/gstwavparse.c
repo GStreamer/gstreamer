@@ -158,15 +158,13 @@ gst_wavparse_class_init (GstWavParseClass * klass)
   object_class->get_property = gst_wavparse_get_property;
 
   /**
-   * GstWavParse:ignore-length
+   * GstWavParse:ignore-length:
    *
    * This selects whether the length found in a data chunk
    * should be ignored. This may be useful for streamed audio
    * where the length is unknown until the end of streaming,
    * and various software/hardware just puts some random value
    * in there and hopes it doesn't break too much.
-   *
-   * Since: 0.10.36
    */
   g_object_class_install_property (object_class, PROP_IGNORE_LENGTH,
       g_param_spec_boolean ("ignore-length",

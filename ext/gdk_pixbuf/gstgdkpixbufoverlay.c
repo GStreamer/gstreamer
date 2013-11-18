@@ -41,8 +41,6 @@
  * Overlays the image in image.png onto the test video picture produced by
  * videotestsrc.
  * </refsect2>
- *
- * Since: 0.10.33
  */
 
 #ifdef HAVE_CONFIG_H

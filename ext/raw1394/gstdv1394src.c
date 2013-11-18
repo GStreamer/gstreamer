@@ -201,12 +201,10 @@ gst_dv1394src_class_init (GstDV1394SrcClass * klass)
           "like 0xhhhhhhhhhhhhhhhh. (0 = no guid)", 0, G_MAXUINT64,
           DEFAULT_GUID, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstDV1394Src:device-name
+   * GstDV1394Src:device-name:
    *
    * Descriptive name of the currently opened device
-   *
-   * Since: 0.10.7
-   **/
+   */
   g_object_class_install_property (G_OBJECT_CLASS (klass), PROP_DEVICE_NAME,
       g_param_spec_string ("device-name", "device name",
           "user-friendly name of the device", "Default",

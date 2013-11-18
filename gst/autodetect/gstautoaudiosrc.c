@@ -86,16 +86,14 @@ gst_auto_audio_src_class_init (GstAutoAudioSrcClass * klass)
   eklass->change_state = GST_DEBUG_FUNCPTR (gst_auto_audio_src_change_state);
 
   /**
-   * GstAutoAudioSrc:filter-caps
+   * GstAutoAudioSrc:filter-caps:
    *
    * This property will filter out candidate sinks that can handle the specified
    * caps. By default only audio sinks that support raw floating point and
    * integer audio are selected.
    *
    * This property can only be set before the element goes to the READY state.
-   *
-   * Since: 0.10.14
-   **/
+   */
   g_object_class_install_property (gobject_class, PROP_CAPS,
       g_param_spec_boxed ("filter-caps", "Filter caps",
           "Filter sink candidates using these caps.", GST_TYPE_CAPS,

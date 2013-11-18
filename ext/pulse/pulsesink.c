@@ -1899,7 +1899,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstPulseSink:client-name
+   * GstPulseSink:client-name:
    *
    * The PulseAudio client name to use.
    */
@@ -1913,7 +1913,7 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
   g_free (clientname);
 
   /**
-   * GstPulseSink:stream-properties
+   * GstPulseSink:stream-properties:
    *
    * List of pulseaudio stream properties. A list of defined properties can be
    * found in the <ulink url="http://0pointer.de/lennart/projects/pulseaudio/doxygen/proplist_8h.html">pulseaudio api docs</ulink>.
@@ -1926,8 +1926,6 @@ gst_pulsesink_class_init (GstPulseSinkClass * klass)
    * g_object_set (pulse, "stream-properties", props, NULL);
    * gst_structure_free
    * ]|
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class,
       PROP_STREAM_PROPERTIES,

@@ -421,11 +421,9 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
           G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstV4l2Src:brightness
+   * GstV4l2Src:brightness:
    *
    * Picture brightness, or more precisely, the black level
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_BRIGHTNESS,
       g_param_spec_int ("brightness", "Brightness",
@@ -433,11 +431,9 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
           G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   /**
-   * GstV4l2Src:contrast
+   * GstV4l2Src:contrast:
    *
    * Picture contrast or luma gain
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_CONTRAST,
       g_param_spec_int ("contrast", "Contrast",
@@ -445,11 +441,9 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
           G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   /**
-   * GstV4l2Src:saturation
+   * GstV4l2Src:saturation:
    *
    * Picture color saturation or chroma gain
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_SATURATION,
       g_param_spec_int ("saturation", "Saturation",
@@ -457,11 +451,9 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
           G_MAXINT, 0,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
   /**
-   * GstV4l2Src:hue
+   * GstV4l2Src:hue:
    *
    * Hue or color balance
-   *
-   * Since: 0.10.26
    */
   g_object_class_install_property (gobject_class, PROP_HUE,
       g_param_spec_int ("hue", "Hue",
@@ -470,11 +462,9 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | GST_PARAM_CONTROLLABLE));
 
   /**
-   * GstV4l2Src:norm
+   * GstV4l2Src:norm:
    *
    * TV norm
-   *
-   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_TV_NORM,
       g_param_spec_enum ("norm", "TV norm",
@@ -483,7 +473,7 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstV4l2Src:io-mode
+   * GstV4l2Src:io-mode:
    *
    * IO Mode
    */
@@ -494,7 +484,7 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstV4l2Src:extra-controls
+   * GstV4l2Src:extra-controls:
    *
    * Additional v4l2 controls for the device. The controls are identified
    * by the control name (lowercase with '_' for any non-alphanumeric
@@ -508,7 +498,7 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
           GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstV4l2Src:pixel-aspect-ratio
+   * GstV4l2Src:pixel-aspect-ratio:
    *
    * The pixel aspect ratio of the device. This overwrites the pixel aspect
    * ratio queried from the device.
@@ -521,7 +511,7 @@ gst_v4l2_object_install_properties_helper (GObjectClass * gobject_class,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstV4l2Src:force-aspect-ratio
+   * GstV4l2Src:force-aspect-ratio:
    *
    * When enabled, the pixel aspect ratio queried from the device or set
    * with the pixel-aspect-ratio property will be enforced.

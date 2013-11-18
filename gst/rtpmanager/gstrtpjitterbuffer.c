@@ -420,7 +420,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
   gobject_class->get_property = gst_rtp_jitter_buffer_get_property;
 
   /**
-   * GstRtpJitterBuffer::latency:
+   * GstRtpJitterBuffer:latency:
    *
    * The maximum latency of the jitterbuffer. Packets will be kept in the buffer
    * for at most this time.
@@ -430,7 +430,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           "Amount of ms to buffer", 0, G_MAXUINT, DEFAULT_LATENCY_MS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRtpJitterBuffer::drop-on-latency:
+   * GstRtpJitterBuffer:drop-on-latency:
    *
    * Drop oldest buffers when the queue is completely filled.
    */
@@ -440,7 +440,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           "Tells the jitterbuffer to never exceed the given latency in size",
           DEFAULT_DROP_ON_LATENCY, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRtpJitterBuffer::ts-offset:
+   * GstRtpJitterBuffer:ts-offset:
    *
    * Adjust GStreamer output buffer timestamps in the jitterbuffer with offset.
    * This is mainly used to ensure interstream synchronisation.
@@ -452,7 +452,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRtpJitterBuffer::do-lost:
+   * GstRtpJitterBuffer:do-lost:
    *
    * Send out a GstRTPPacketLost event downstream when a packet is considered
    * lost.
@@ -463,7 +463,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRtpJitterBuffer::mode:
+   * GstRtpJitterBuffer:mode:
    *
    * Control the buffering and timestamping mode used by the jitterbuffer.
    */
@@ -472,18 +472,16 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           "Control the buffering algorithm in use", RTP_TYPE_JITTER_BUFFER_MODE,
           DEFAULT_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRtpJitterBuffer::percent:
+   * GstRtpJitterBuffer:percent:
    *
    * The percent of the jitterbuffer that is filled.
-   *
-   * Since: 0.10.19
    */
   g_object_class_install_property (gobject_class, PROP_PERCENT,
       g_param_spec_int ("percent", "percent",
           "The buffer filled percent", 0, 100,
           0, G_PARAM_READABLE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRtpJitterBuffer::do-retransmission:
+   * GstRtpJitterBuffer:do-retransmission:
    *
    * Send out a GstRTPRetransmission event upstream when a packet is considered
    * late and should be retransmitted.
@@ -497,7 +495,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstRtpJitterBuffer::rtx-delay:
+   * GstRtpJitterBuffer:rtx-delay:
    *
    * When a packet did not arrive at the expected time, wait this extra amount
    * of time before sending a retransmission event.
@@ -512,7 +510,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           "event (-1 automatic)", -1, G_MAXINT, DEFAULT_RTX_DELAY,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRtpJitterBuffer::rtx-delay-reorder:
+   * GstRtpJitterBuffer:rtx-delay-reorder:
    *
    * Assume that a retransmission event should be sent when we see
    * this much packet reordering.
@@ -544,7 +542,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           "ms (-1 automatic)", -1, G_MAXINT, DEFAULT_RTX_RETRY_TIMEOUT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRtpJitterBuffer::rtx-retry-period:
+   * GstRtpJitterBuffer:rtx-retry-period:
    *
    * The amount of time to try to get a retransmission.
    *
@@ -559,7 +557,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
           "(-1 automatic)", -1, G_MAXINT, DEFAULT_RTX_RETRY_PERIOD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   /**
-   * GstRtpJitterBuffer::stats:
+   * GstRtpJitterBuffer:stats:
    *
    * Various jitterbuffer statistics. This property returns a GstStructure
    * with name application/x-rtp-jitterbuffer-stats with the following fields:
@@ -602,7 +600,7 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
       G_TYPE_NONE, 1, GST_TYPE_STRUCTURE | G_SIGNAL_TYPE_STATIC_SCOPE);
 
   /**
-   * GstRtpJitterBuffer::on-npt-stop
+   * GstRtpJitterBuffer::on-npt-stop:
    * @buffer: the object which received the signal
    *
    * Signal that the jitterbufer has pushed the RTP packet that corresponds to
@@ -635,8 +633,6 @@ gst_rtp_jitter_buffer_class_init (GstRtpJitterBufferClass * klass)
    * useful in buffering mode.
    *
    * Returns: the time of the last pushed packet.
-   *
-   * Since: 0.10.19
    */
   gst_rtp_jitter_buffer_signals[SIGNAL_SET_ACTIVE] =
       g_signal_new ("set-active", G_TYPE_FROM_CLASS (klass),

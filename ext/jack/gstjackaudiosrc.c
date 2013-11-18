@@ -758,11 +758,9 @@ gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
           DEFAULT_PROP_SERVER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstJackAudioSrc:client-name
+   * GstJackAudioSrc:client-name:
    *
    * The client name to use.
-   *
-   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_CLIENT_NAME,
       g_param_spec_string ("client-name", "Client name",
@@ -777,11 +775,9 @@ gst_jack_audio_src_class_init (GstJackAudioSrcClass * klass)
           G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstJackAudioSink:transport
+   * GstJackAudioSink:transport:
    *
    * The jack transport behaviour for the client.
-   *
-   * Since: 0.10.31
    */
   g_object_class_install_property (gobject_class, PROP_TRANSPORT,
       g_param_spec_flags ("transport", "Transport mode",

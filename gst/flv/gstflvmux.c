@@ -174,9 +174,7 @@ gst_flv_mux_class_init (GstFlvMuxClass * klass)
    *
    * If True, the output will be streaming friendly. (ie without indexes and
    * duration)
-   *
-   * Since: 0.10.24
-   **/
+   */
   g_object_class_install_property (gobject_class, PROP_STREAMABLE,
       g_param_spec_boolean ("streamable", "streamable",
           "If set to true, the output should be as if it is to be streamed "
