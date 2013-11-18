@@ -89,7 +89,6 @@ static gboolean daala_dec_start (GstVideoDecoder * decoder);
 static gboolean daala_dec_stop (GstVideoDecoder * decoder);
 static gboolean daala_dec_set_format (GstVideoDecoder * decoder,
     GstVideoCodecState * state);
-static gboolean daala_dec_flush (GstVideoDecoder * decoder);
 static GstFlowReturn daala_dec_parse (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos);
 static GstFlowReturn daala_dec_handle_frame (GstVideoDecoder * decoder,
@@ -117,7 +116,6 @@ gst_daala_dec_class_init (GstDaalaDecClass * klass)
 
   video_decoder_class->start = GST_DEBUG_FUNCPTR (daala_dec_start);
   video_decoder_class->stop = GST_DEBUG_FUNCPTR (daala_dec_stop);
-  video_decoder_class->flush = GST_DEBUG_FUNCPTR (daala_dec_flush);
   video_decoder_class->set_format = GST_DEBUG_FUNCPTR (daala_dec_set_format);
   video_decoder_class->parse = GST_DEBUG_FUNCPTR (daala_dec_parse);
   video_decoder_class->handle_frame =
