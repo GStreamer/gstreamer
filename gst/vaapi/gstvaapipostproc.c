@@ -30,10 +30,10 @@
 
 #include "gst/vaapi/sysdeps.h"
 #include <gst/video/video.h>
-#include <gst/video/videocontext.h>
 
 #include "gstvaapipostproc.h"
 #include "gstvaapipluginutil.h"
+#include "gstvaapivideocontext.h"
 #include "gstvaapivideobuffer.h"
 #if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideobufferpool.h"
@@ -48,7 +48,12 @@ GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapipostproc);
 
 /* Default templates */
 static const char gst_vaapipostproc_sink_caps_str[] =
+#if GST_CHECK_VERSION(1,1,0)
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
+        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, NV12, I420, YV12 }") ", "
+#else
     GST_VAAPI_SURFACE_CAPS ", "
+#endif
     GST_CAPS_INTERLACED_MODES "; "
 #if GST_CHECK_VERSION(1,0,0)
     GST_VIDEO_CAPS_MAKE(GST_VIDEO_FORMATS_ALL) ", "
@@ -61,7 +66,12 @@ static const char gst_vaapipostproc_sink_caps_str[] =
     GST_CAPS_INTERLACED_MODES;
 
 static const char gst_vaapipostproc_src_caps_str[] =
+#if GST_CHECK_VERSION(1,1,0)
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
+        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, NV12, I420, YV12 }") ", "
+#else
     GST_VAAPI_SURFACE_CAPS ", "
+#endif
     GST_CAPS_INTERLACED_FALSE;
 
 static GstStaticPadTemplate gst_vaapipostproc_sink_factory =
@@ -97,6 +107,7 @@ gst_vaapipostproc_implements_iface_init(GstImplementsInterfaceClass *iface)
 #endif
 
 /* GstVideoContext interface */
+#if !GST_CHECK_VERSION(1,1,0)
 static void
 gst_vaapipostproc_set_video_context(
     GstVideoContext *context,
@@ -119,6 +130,8 @@ gst_video_context_interface_init(GstVideoContextInterface *iface)
 }
 
 #define GstVideoContextClass GstVideoContextInterface
+#endif
+
 G_DEFINE_TYPE_WITH_CODE(
     GstVaapiPostproc,
     gst_vaapipostproc,
@@ -127,8 +140,11 @@ G_DEFINE_TYPE_WITH_CODE(
     G_IMPLEMENT_INTERFACE(GST_TYPE_IMPLEMENTS_INTERFACE,
                           gst_vaapipostproc_implements_iface_init);
 #endif
+#if !GST_CHECK_VERSION(1,1,0)
     G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
-                          gst_video_context_interface_init))
+                          gst_video_context_interface_init)
+#endif
+    )
 
 enum {
     PROP_0,
@@ -187,6 +203,20 @@ find_filter_op(GPtrArray *filter_ops, GstVaapiFilterOp op)
     }
     return NULL;
 }
+
+#if GST_CHECK_VERSION(1,1,0)
+static void
+gst_vaapipostproc_set_context(GstElement *element, GstContext *context)
+{
+    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(element);
+    GstVaapiDisplay *display = NULL;
+
+    if (gst_vaapi_video_context_get_display(context, &display)) {
+        GST_INFO_OBJECT(element, "set display %p", display);
+        gst_vaapi_display_replace(&postproc->display, display);
+    }
+}
+#endif
 
 static inline gboolean
 gst_vaapipostproc_ensure_display(GstVaapiPostproc *postproc)
@@ -824,8 +854,13 @@ ensure_allowed_sinkpad_caps(GstVaapiPostproc *postproc)
         return TRUE;
 
     /* Create VA caps */
+#if GST_CHECK_VERSION(1,1,0)
+    out_caps = gst_static_pad_template_get_caps(
+        &gst_vaapipostproc_sink_factory);
+#else
     out_caps = gst_caps_from_string(GST_VAAPI_SURFACE_CAPS ", "
         GST_CAPS_INTERLACED_MODES);
+#endif
     if (!out_caps) {
         GST_ERROR("failed to create VA sink caps");
         return FALSE;
@@ -834,8 +869,10 @@ ensure_allowed_sinkpad_caps(GstVaapiPostproc *postproc)
     /* Append YUV caps */
     if (gst_vaapipostproc_ensure_uploader(postproc)) {
         yuv_caps = gst_vaapi_uploader_get_caps(postproc->uploader);
-        if (yuv_caps)
-            gst_caps_append(out_caps, gst_caps_ref(yuv_caps));
+        if (yuv_caps) {
+            out_caps = gst_caps_make_writable(out_caps);
+            gst_caps_append(out_caps, gst_caps_copy(yuv_caps));
+        }
         else
             GST_WARNING("failed to create YUV sink caps");
     }
@@ -1020,10 +1057,22 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
     GST_VIDEO_INFO_INTERLACE_MODE(&vi) = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
     // Update size from user-specified parameters
+#if GST_CHECK_VERSION(1,1,0)
+    format = postproc->format;
+#else
     format = GST_VIDEO_FORMAT_ENCODED;
+#endif
     find_best_size(postproc, &vi, &width, &height);
     gst_video_info_set_format(&vi, format, width, height);
 
+#if GST_CHECK_VERSION(1,1,0)
+    out_caps = gst_video_info_to_caps(&vi);
+    if (!out_caps)
+        return NULL;
+
+    gst_caps_set_features(out_caps, 0,
+        gst_caps_features_new(GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, NULL));
+#else
     /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
        reconstruct suitable caps for "encoded" video formats */
     out_caps = gst_caps_from_string(GST_VAAPI_SURFACE_CAPS_NAME);
@@ -1042,6 +1091,7 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
         NULL);
 
     gst_caps_set_interlaced(out_caps, &vi);
+#endif
     return out_caps;
 }
 
@@ -1543,6 +1593,10 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
 
     trans_class->prepare_output_buffer =
         gst_vaapipostproc_prepare_output_buffer;
+
+#if GST_CHECK_VERSION(1,1,0)
+    element_class->set_context = gst_vaapipostproc_set_context;
+#endif
 
     gst_element_class_set_static_metadata(element_class,
         "VA-API video postprocessing",
