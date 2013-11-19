@@ -2587,7 +2587,6 @@ gst_pad_peer_query_position (GstPad * pad, GstFormat format, gint64 * cur)
   gboolean ret = FALSE;
 
   g_return_val_if_fail (GST_IS_PAD (pad), FALSE);
-  g_return_val_if_fail (GST_PAD_IS_SINK (pad), FALSE);
   g_return_val_if_fail (format != GST_FORMAT_UNDEFINED, FALSE);
 
   query = gst_query_new_position (format);
