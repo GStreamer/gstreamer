@@ -117,27 +117,19 @@ gst_v4l2_buffer_pool_free_buffer (GstBufferPool * bpool, GstBuffer * buffer)
     {
       GstV4l2Meta *meta;
       gint index;
+      gint i = 0;
 
       meta = GST_V4L2_META_GET (buffer);
       g_assert (meta != NULL);
 
       index = meta->vbuffer.index;
 
-      if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
-        gint i = 0;
-        for (i = 0; i < meta->vbuffer.length; i++) {
-          GST_LOG_OBJECT (pool,
-              "unmap multiplanar buffer %p idx %d (data %p, len %u, plane %u)",
-              buffer, index, meta->mem[i], meta->vbuffer.m.planes[i].length, i);
-
-          v4l2_munmap (meta->mem[i], meta->vbuffer.m.planes[i].length);
-        }
-      } else {
+      for (i = 0; i < meta->n_planes; i++) {
         GST_LOG_OBJECT (pool,
-            "unmap buffer %p idx %d (data %p, len %u)", buffer,
-            index, meta->mem[0], meta->vbuffer.length);
+            "unmap multiplanar buffer %p idx %d (data %p, len %u, plane %u)",
+            buffer, index, meta->mem[i], meta->vplanes[i].length, i);
 
-        v4l2_munmap (meta->mem[0], meta->vbuffer.length);
+        v4l2_munmap (meta->mem[i], meta->vplanes[i].length);
       }
 
       pool->buffers[index] = NULL;
@@ -161,6 +153,7 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
   GstV4l2Object *obj;
   GstVideoInfo *info;
   guint index;
+  gint i;
 
   obj = pool->obj;
   info = &obj->info;
@@ -210,6 +203,9 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
       meta->vbuffer.type = obj->type;
       meta->vbuffer.memory = V4L2_MEMORY_MMAP;
 
+      /* main information */
+      meta->n_planes = obj->n_v4l2_planes;
+
       /* prepare the planes of the buffer */
       if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
         /* length is the number of elements in the
@@ -222,65 +218,51 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
       if (v4l2_ioctl (pool->video_fd, VIDIOC_QUERYBUF, &meta->vbuffer) < 0)
         goto querybuf_failed;
 
+      /* in non MPLANE mode we emulate one plane in order to
+       * factorize the code */
+      if (!V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
+        /* here meta->n_planes == 1 */
+        meta->vplanes[0].length = meta->vbuffer.length;
+        meta->vplanes[0].bytesused = meta->vbuffer.bytesused;
+        meta->vplanes[0].m.mem_offset = meta->vbuffer.m.offset;
+        meta->vplanes[0].data_offset = 0;
+      }
+
       GST_LOG_OBJECT (pool, "  index:     %u", meta->vbuffer.index);
       GST_LOG_OBJECT (pool, "  type:      %d", meta->vbuffer.type);
       GST_LOG_OBJECT (pool, "  flags:     %08x", meta->vbuffer.flags);
       GST_LOG_OBJECT (pool, "  field:     %d", meta->vbuffer.field);
       GST_LOG_OBJECT (pool, "  memory:    %d", meta->vbuffer.memory);
-      GST_LOG_OBJECT (pool, "  planes:    %d", obj->n_v4l2_planes);
+      GST_LOG_OBJECT (pool, "  planes:    %d", meta->n_planes);
 
 #ifndef GST_DISABLE_GST_DEBUG
       if (meta->vbuffer.memory == V4L2_MEMORY_MMAP) {
-        if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
-          gint i = 0;
-          for (i = 0; i < meta->vbuffer.length; i++) {
-            GST_LOG_OBJECT (pool, "  bytesused: %u, plane: %u",
-                meta->vbuffer.m.planes[i].bytesused, i);
-            GST_LOG_OBJECT (pool, "  MMAP offset:  %u, plane: %u",
-                meta->vbuffer.m.planes[i].m.mem_offset, i);
-          }
-        } else {
-          GST_LOG_OBJECT (pool, "  bytesused: %u", meta->vbuffer.bytesused);
-          GST_LOG_OBJECT (pool, "  MMAP offset:  %u", meta->vbuffer.m.offset);
+        for (i = 0; i < meta->n_planes; i++) {
+          GST_LOG_OBJECT (pool, "  bytesused: %u, plane: %u",
+              meta->vplanes[i].bytesused, i);
+          GST_LOG_OBJECT (pool, "  MMAP offset:  %u, plane: %u",
+              meta->vplanes[i].m.mem_offset, i);
         }
       }
 #endif
 
       if (obj->mode == GST_V4L2_IO_MMAP) {
-
-        if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
-          /* append one gstmemory for each plane */
-          gint i = 0;
-          for (i = 0; i < meta->vbuffer.length; i++) {
-            meta->mem[i] = v4l2_mmap (0, meta->vbuffer.m.planes[i].length,
-                PROT_READ | PROT_WRITE, MAP_SHARED, pool->video_fd,
-                meta->vbuffer.m.planes[i].m.mem_offset);
-            if (meta->mem[i] == MAP_FAILED)
-              goto mmap_failed;
-
-            GST_LOG_OBJECT (pool, "  buffer length %d for plane %d",
-                meta->vbuffer.m.planes[i].length, i);
-
-            gst_buffer_append_memory (newbuf,
-                gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
-                    meta->mem[i], meta->vbuffer.m.planes[i].length,
-                    meta->vbuffer.m.planes[i].data_offset,
-                    meta->vbuffer.m.planes[i].length, NULL, NULL));
-          }
-        } else {
-          /* append one gstmemory that contains all the planes */
-          meta->mem[0] = v4l2_mmap (0, meta->vbuffer.length,
+        /* append one gstmemory for each plane */
+        for (i = 0; i < meta->n_planes; i++) {
+          meta->mem[i] = v4l2_mmap (0, meta->vplanes[i].length,
               PROT_READ | PROT_WRITE, MAP_SHARED, pool->video_fd,
-              meta->vbuffer.m.offset);
-          if (meta->mem[0] == MAP_FAILED)
+              meta->vplanes[i].m.mem_offset);
+          if (meta->mem[i] == MAP_FAILED)
             goto mmap_failed;
 
-          GST_LOG_OBJECT (pool, "  buffer length %d", meta->vbuffer.length);
+          GST_LOG_OBJECT (pool, "  buffer length %d, data offset %d, plane %d",
+              meta->vplanes[i].length, meta->vplanes[i].data_offset, i);
 
           gst_buffer_append_memory (newbuf,
               gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
-                  meta->mem[0], meta->vbuffer.length, 0, meta->vbuffer.length,
-                  NULL, NULL));
+                  meta->mem[i], meta->vplanes[i].length,
+                  meta->vplanes[i].data_offset,
+                  meta->vplanes[i].length, NULL, NULL));
         }
       }
 #if HAVE_DECL_V4L2_MEMORY_DMABUF
@@ -341,9 +323,9 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
           }
 
           /* when using multiplanar mode and if there is one v4l plane for
-           * each gst plane (here meta->vbuffer.length is the number of planes)
+           * each gst plane
            */
-          if (V4L2_TYPE_IS_MULTIPLANAR (obj->type) && meta->vbuffer.length > 1)
+          if (V4L2_TYPE_IS_MULTIPLANAR (obj->type) && meta->n_planes > 1)
             /* non_contiguous case here so we have to make sure that gst goes to the
              * next plane (using default gstvideometa.c::default_map).
              * And the next plane is after length bytes of the previous one from
@@ -760,8 +742,8 @@ static GstFlowReturn
 gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
 {
   GstV4l2Meta *meta;
-  GstV4l2Object *obj = NULL;
   gint index;
+  gint i = 0;
 
   meta = GST_V4L2_META_GET (buf);
   if (meta == NULL) {
@@ -771,28 +753,19 @@ gst_v4l2_buffer_pool_qbuf (GstV4l2BufferPool * pool, GstBuffer * buf)
     return GST_FLOW_OK;
   }
 
-  obj = pool->obj;
   index = meta->vbuffer.index;
 
   /* this field is common to MPLANE and not MPLANE */
   meta->vbuffer.bytesused = gst_buffer_get_size (buf);
 
-  if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
-    gint i = 0;
-    for (i = 0; i < meta->vbuffer.length; i++) {
-      meta->vbuffer.m.planes[i].bytesused =
-          gst_buffer_get_sizes_range (buf, i, 1, NULL, NULL);
+  for (i = 0; i < meta->n_planes; i++) {
+    meta->vplanes[i].bytesused =
+        gst_buffer_get_sizes_range (buf, i, 1, NULL, NULL);
 
-      GST_LOG_OBJECT (pool,
-          "enqueue buffer %p, index:%d, queued:%d, flags:%08x mem:%p used:%d, plane:%d",
-          buf, index, pool->num_queued, meta->vbuffer.flags,
-          meta->mem[i], meta->vbuffer.m.planes[i].bytesused, i);
-    }
-  } else {
     GST_LOG_OBJECT (pool,
-        "enqueue buffer %p, index:%d, queued:%d, flags:%08x mem:%p used:%d",
+        "enqueue buffer %p, index:%d, queued:%d, flags:%08x mem:%p used:%d, plane:%d",
         buf, index, pool->num_queued, meta->vbuffer.flags,
-        meta->mem[0], meta->vbuffer.bytesused);
+        meta->mem[i], meta->vplanes[i].bytesused, i);
   }
 
   if (pool->buffers[index] != NULL)
@@ -831,7 +804,7 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
   GstV4l2Object *obj = pool->obj;
   GstClockTime timestamp;
   GstV4l2Meta *meta;
-  gint i = 0;
+  gint i;
 
   if ((res = gst_v4l2_object_poll (obj)) != GST_FLOW_OK)
     goto poll_error;
@@ -886,7 +859,7 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
     meta->vbuffer.bytesused = vbuffer.bytesused;
 
     if (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
-      for (i = 0; i < meta->vbuffer.length; i++) {
+      for (i = 0; i < meta->n_planes; i++) {
         /* the following also update meta->vbuffer.m.planes[i].length */
         meta->vplanes[i].length = vbuffer.m.planes[i].length;
         /* the following also update meta->vbuffer.m.planes[i].bytesused */
@@ -894,23 +867,19 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
         /* the following also update meta->vbuffer.m.planes[i].data_offset */
         meta->vplanes[i].data_offset = vbuffer.m.planes[i].data_offset;
       }
+    } else {
+      meta->vplanes[0].length = vbuffer.length;
+      meta->vplanes[0].bytesused = vbuffer.bytesused;
+      meta->vplanes[0].data_offset = 0;
     }
   }
 #ifndef GST_DISABLE_GST_DEBUG
-  if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
-    for (i = 0; i < meta->vbuffer.length; i++) {
-      GST_LOG_OBJECT (pool,
-          "dequeued buffer %p seq:%d (ix=%d), mem %p used %d, plane=%d, flags %08x, ts %"
-          GST_TIME_FORMAT ", pool-queued=%d, buffer=%p", outbuf,
-          vbuffer.sequence, vbuffer.index, meta->mem[i],
-          meta->vbuffer.m.planes[i].bytesused, i, vbuffer.flags,
-          GST_TIME_ARGS (timestamp), pool->num_queued, outbuf);
-    }
-  } else {
+  for (i = 0; i < meta->n_planes; i++) {
     GST_LOG_OBJECT (pool,
-        "dequeued buffer %p seq:%d (ix=%d), mem %p used %d, flags %08x, ts %"
-        GST_TIME_FORMAT ", pool-queued=%d, buffer=%p", outbuf, vbuffer.sequence,
-        vbuffer.index, meta->mem[0], vbuffer.bytesused, vbuffer.flags,
+        "dequeued buffer %p seq:%d (ix=%d), mem %p used %d, plane=%d, flags %08x, ts %"
+        GST_TIME_FORMAT ", pool-queued=%d, buffer=%p", outbuf,
+        vbuffer.sequence, vbuffer.index, meta->mem[i],
+        meta->vplanes[i].bytesused, i, vbuffer.flags,
         GST_TIME_ARGS (timestamp), pool->num_queued, outbuf);
   }
 #endif
@@ -928,19 +897,15 @@ gst_v4l2_buffer_pool_dqbuf (GstV4l2BufferPool * pool, GstBuffer ** buffer)
    * element, so just put back the original one. We always set it as
    * no share, so if it's not there, it's not used at all.
    */
-  if (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE) {
+  if (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE
+      || obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
     gst_buffer_remove_all_memory (outbuf);
-    gst_buffer_append_memory (outbuf,
-        gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
-            meta->mem[0], vbuffer.length, 0, vbuffer.bytesused, NULL, NULL));
-  } else if (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
-    gst_buffer_remove_all_memory (outbuf);
-    for (i = 0; i < meta->vbuffer.length; i++) {
+    for (i = 0; i < meta->n_planes; i++) {
       gst_buffer_append_memory (outbuf,
           gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
-              meta->mem[i], vbuffer.m.planes[i].length,
-              vbuffer.m.planes[i].data_offset, vbuffer.m.planes[i].bytesused,
-              NULL, NULL));
+              meta->mem[i], meta->vplanes[i].length,
+              meta->vplanes[i].data_offset,
+              meta->vplanes[i].bytesused, NULL, NULL));
     }
   }
 
@@ -1176,8 +1141,8 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
             if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
               gint i = 0;
               gint total_length = 0;
-              for (i = 0; i < meta->vbuffer.length; i++)
-                total_length += meta->vbuffer.m.planes[i].length;
+              for (i = 0; i < meta->n_planes; i++)
+                total_length += meta->vplanes[i].length;
 
               if (total_length != gst_buffer_get_size (buffer)) {
                 /* FIXME if the lengths has actually changed it may require
