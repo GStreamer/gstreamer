@@ -390,7 +390,7 @@ gst_mpegts_descriptor_parse_dvb_teletext_nb (const GstMpegTsDescriptor *
  * gst_mpegts_descriptor_parse_dvb_subtitling_idx:
  * @descriptor: a %GST_MTS_DESC_DVB_SUBTITLING #GstMpegTsDescriptor
  * @idx: Table id of the entry to parse
- * @lang (out) (transfer none): 4-byte gchar array to hold the language code
+ * @lang: (out) (transfer none): 4-byte gchar array to hold the language code
  * @type: (out) (transfer none) (allow-none): the type of subtitling
  * @composition_page_id: (out) (transfer none) (allow-none): the composition page id
  * @ancillary_page_id: (out) (transfer none) (allow-none): the ancillary page id
@@ -449,4 +449,38 @@ gst_mpegts_descriptor_parse_dvb_subtitling_nb (const GstMpegTsDescriptor *
   g_return_val_if_fail (descriptor != NULL && descriptor->data != NULL, 0);
 
   return descriptor->length / 8;
+}
+
+/**
+ * gst_mpegts_descriptor_from_dvb_subtitling:
+ * @lang: (transfer none): a string containing the ISO639 language
+ * @type: subtitling type
+ * @composition: composition page id
+ * @ancillary: ancillary page id
+ */
+GstMpegTsDescriptor *
+gst_mpegts_descriptor_from_dvb_subtitling (const gchar * lang,
+    guint8 type, guint16 composition, guint16 ancillary)
+{
+  GstMpegTsDescriptor *descriptor;
+  guint8 *data;
+
+  g_return_val_if_fail (lang != NULL, NULL);
+
+  descriptor = _new_descriptor (GST_MTS_DESC_DVB_SUBTITLING, 8);
+
+  data = descriptor->data + 2;
+
+  memcpy (data, lang, 3);
+  data += 3;
+
+  *data++ = type;
+
+  GST_WRITE_UINT16_BE (data, composition);
+  data += 2;
+
+  GST_WRITE_UINT16_BE (data, ancillary);
+  data += 2;
+
+  return descriptor;
 }

@@ -370,6 +370,9 @@ gboolean gst_mpegts_descriptor_parse_dvb_subtitling_idx (const GstMpegTsDescript
 							 guint16 *ancillary_page_id);
 guint gst_mpegts_descriptor_parse_dvb_subtitling_nb (const GstMpegTsDescriptor *descriptor);
 
+GstMpegTsDescriptor * gst_mpegts_descriptor_from_dvb_subtitling (const gchar *lang,
+    guint8 type, guint16 composition, guint16 ancillary);
+
 
 
 /* GST_MTS_DESC_DVB_TERRESTRIAL_DELIVERY_SYSTEM (0x5A) */
