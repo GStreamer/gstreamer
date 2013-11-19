@@ -262,6 +262,12 @@ GPtrArray *gst_mpegts_parse_descriptors (guint8 * buffer, gsize buf_len);
 const GstMpegTsDescriptor * gst_mpegts_find_descriptor (GPtrArray *descriptors,
 							guint8 tag);
 
+/* GST_MTS_DESC_REGISTRATION (0x05) */
+
+GstMpegTsDescriptor *gst_mpegts_descriptor_from_registration (
+    const gchar *format_identifier,
+    guint8 *additional_info, gsize additional_info_length);
+
 /* GST_MTS_DESC_ISO_639_LANGUAGE (0x0A) */
 /**
  * GstMpegTsISO639AudioType:
@@ -316,6 +322,9 @@ struct _GstMpegTsLogicalChannelDescriptor
 gboolean
 gst_mpegts_descriptor_parse_logical_channel (const GstMpegTsDescriptor *descriptor,
 					     GstMpegTsLogicalChannelDescriptor *res);
+
+GstMpegTsDescriptor *
+gst_mpegts_descriptor_from_custom (guint8 tag, const guint8 *data, gsize length);
 
 G_END_DECLS
 

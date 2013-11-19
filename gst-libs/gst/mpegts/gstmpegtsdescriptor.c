@@ -830,6 +830,34 @@ gst_mpegts_find_descriptor (GPtrArray * descriptors, guint8 tag)
   return NULL;
 }
 
+/* GST_MTS_DESC_REGISTRATION (0x05) */
+/**
+ * gst_mpegts_descriptor_from_registration:
+ * @format_identifier: (transfer none): a 4 character format identifier string
+ * @additional_info: (transfer none) (allow-none): pointer to optional additional info
+ * @additional_info_length: length of the optional @additional_info
+ *
+ * Creates a %GST_MTS_DESC_REGISTRATION #GstMpegTsDescriptor
+ *
+ * Return: #GstMpegTsDescriptor, %NULL on failure
+ */
+GstMpegTsDescriptor *
+gst_mpegts_descriptor_from_registration (const gchar * format_identifier,
+    guint8 * additional_info, gsize additional_info_length)
+{
+  GstMpegTsDescriptor *descriptor;
+
+  g_return_val_if_fail (format_identifier != NULL, NULL);
+
+  descriptor = _new_descriptor (GST_MTS_DESC_REGISTRATION,
+      4 + additional_info_length);
+
+  memcpy (descriptor->data + 2, format_identifier, 4);
+  if (additional_info && (additional_info_length > 0))
+    memcpy (descriptor->data + 6, additional_info, additional_info_length);
+
+  return descriptor;
+}
 
 /* GST_MTS_DESC_ISO_639_LANGUAGE (0x0A) */
 /**
@@ -956,4 +984,28 @@ gst_mpegts_descriptor_parse_logical_channel (const GstMpegTsDescriptor *
   }
 
   return TRUE;
+}
+
+/**
+ * gst_mpegts_descriptor_from_custom:
+ * @tag: descriptor tag
+ * @data: (transfer none): descriptor data (after tag and length field)
+ * @length: length of @data
+ *
+ * Creates a #GstMpegTsDescriptor with custom @tag and @data
+ *
+ * Returns: #GstMpegTsDescriptor
+ */
+GstMpegTsDescriptor *
+gst_mpegts_descriptor_from_custom (guint8 tag, const guint8 * data,
+    gsize length)
+{
+  GstMpegTsDescriptor *descriptor;
+
+  descriptor = _new_descriptor (tag, length);
+
+  if (data && (length > 0))
+    memcpy (descriptor->data + 2, data, length);
+
+  return descriptor;
 }
