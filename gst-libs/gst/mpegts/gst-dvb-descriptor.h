@@ -339,6 +339,30 @@ gboolean gst_mpegts_descriptor_parse_dvb_component (const GstMpegTsDescriptor *d
 gboolean gst_mpegts_descriptor_parse_dvb_stream_identifier (const GstMpegTsDescriptor *descriptor,
 							    guint8 *component_tag);
 
+/* GST_MTS_DESC_DVB_TELETEXT (0x56) */
+/**
+ * GstMpegTsDVBTeletextType:
+ *
+ * The type of teletext page.
+ *
+ * As specified in Table 100 of ETSI EN 300 468 v1.13.1
+ */
+typedef enum {
+	INITIAL_PAGE = 0x01,
+	SUBTITLE_PAGE,
+	ADDITIONAL_INFO_PAGE,
+	PROGRAMME_SCHEDULE_PAGE,
+	HEARING_IMPAIRED_PAGE
+} GstMpegTsDVBTeletextType;
+
+gboolean gst_mpegts_descriptor_parse_dvb_teletext_idx (const GstMpegTsDescriptor *
+    descriptor, guint idx, gchar (*language_code)[4],
+    GstMpegTsDVBTeletextType * teletext_type, guint8 * magazine_number,
+    guint8 * page_number);
+
+guint gst_mpegts_descriptor_parse_dvb_teletext_nb (const GstMpegTsDescriptor *
+    descriptor);
+
 /* GST_MTS_DESC_DVB_SUBTITLING (0x59) */
 gboolean gst_mpegts_descriptor_parse_dvb_subtitling_idx (const GstMpegTsDescriptor *descriptor,
 							 guint idx, gchar (*lang)[4],
