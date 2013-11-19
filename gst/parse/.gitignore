@@ -4,6 +4,7 @@ grammar.tab.c
 grammar.tab.h
 lex.yy.c
 parse.c
+parse_lex.h
 lex.priv_gst_parse_yy.c
 *.bb
 *.bbg
