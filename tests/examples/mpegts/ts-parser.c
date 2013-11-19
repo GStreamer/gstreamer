@@ -239,6 +239,44 @@ dump_descriptors (GPtrArray * descriptors, guint spacing)
         }
       }
         break;
+      case GST_MTS_DESC_DVB_SUBTITLING:
+      {
+        gchar lang[4];
+        guint8 type;
+        guint16 composition;
+        guint16 ancillary;
+        guint i;
+
+        for (i = 0;
+            gst_mpegts_descriptor_parse_dvb_subtitling_idx (desc, i, &lang,
+                &type, &composition, &ancillary); i++) {
+          g_printf ("%*s   Subtitling, language_code:%s\n", spacing, "", lang);
+          g_printf ("%*s      type                : %u\n", spacing, "", type);
+          g_printf ("%*s      composition page id : %u\n", spacing, "",
+              composition);
+          g_printf ("%*s      ancillary page id   : %u\n", spacing, "",
+              ancillary);
+        }
+      }
+        break;
+      case GST_MTS_DESC_DVB_TELETEXT:
+      {
+        GstMpegTsDVBTeletextType type;
+        gchar lang[4];
+        guint8 magazine, page_number;
+        guint i;
+
+        for (i = 0;
+            gst_mpegts_descriptor_parse_dvb_teletext_idx (desc, i, &lang, &type,
+                &magazine, &page_number); i++) {
+          g_printf ("%*s   Teletext, type:0x%02x (%s)\n", spacing, "", type,
+              enum_name (GST_TYPE_MPEG_TS_DVB_TELETEXT_TYPE, type));
+          g_printf ("%*s      language    : %s\n", spacing, "", lang);
+          g_printf ("%*s      magazine    : %u\n", spacing, "", magazine);
+          g_printf ("%*s      page number : %u\n", spacing, "", page_number);
+        }
+      }
+        break;
       default:
         break;
     }
@@ -527,6 +565,7 @@ main (int argc, gchar ** argv)
   g_type_class_ref (GST_TYPE_MPEG_TS_MISC_DESCRIPTOR_TYPE);
   g_type_class_ref (GST_TYPE_MPEG_TS_ISO639_AUDIO_TYPE);
   g_type_class_ref (GST_TYPE_MPEG_TS_DVB_SERVICE_TYPE);
+  g_type_class_ref (GST_TYPE_MPEG_TS_DVB_TELETEXT_TYPE);
   g_type_class_ref (GST_TYPE_MPEG_TS_STREAM_TYPE);
 
   mainloop = g_main_loop_new (NULL, FALSE);
