@@ -87,20 +87,25 @@ fill_element_stats (GstStatsTracer * self, GstElement * element)
 
   stats->index = self->num_elements++;
   stats->parent_ix = G_MAXUINT;
+  return stats;
+}
 
+static void
+log_new_element_stats (GstElementStats * stats, GstElement * element)
+{
   log_trace (gst_structure_new ("new-element",
           "ix", G_TYPE_UINT, stats->index,
+          "parent-ix", G_TYPE_UINT, stats->parent_ix,
           "name", G_TYPE_STRING, GST_OBJECT_NAME (element),
           "type", G_TYPE_STRING, G_OBJECT_TYPE_NAME (element),
           "is-bin", G_TYPE_BOOLEAN, GST_IS_BIN (element), NULL));
-
-  return stats;
 }
 
 static inline GstElementStats *
 get_element_stats (GstStatsTracer * self, GstElement * element)
 {
   GstElementStats *stats;
+  gboolean is_new = FALSE;
 
   if (!element) {
     no_elem_stats.index = G_MAXUINT;
@@ -114,6 +119,7 @@ get_element_stats (GstStatsTracer * self, GstElement * element)
     if (self->elements->len <= stats->index)
       g_ptr_array_set_size (self->elements, stats->index + 1);
     g_ptr_array_index (self->elements, stats->index) = stats;
+    is_new = TRUE;
   }
   G_UNLOCK (_stats);
   if (G_UNLIKELY (stats->parent_ix == G_MAXUINT)) {
@@ -123,6 +129,9 @@ get_element_stats (GstStatsTracer * self, GstElement * element)
       stats->parent_ix = parent_stats->index;
     }
   }
+  if (G_UNLIKELY (is_new)) {
+    log_new_element_stats (stats, element);
+  }
   return stats;
 }
 
@@ -130,27 +139,6 @@ static void
 free_element_stats (gpointer data)
 {
   g_slice_free (GstElementStats, data);
-}
-
-static GstPadStats no_pad_stats = { 0, };
-
-static GstPadStats *
-fill_pad_stats (GstStatsTracer * self, GstPad * pad)
-{
-  GstPadStats *stats = g_slice_new0 (GstPadStats);
-
-  stats->index = self->num_pads++;
-  stats->parent_ix = G_MAXUINT;
-
-  log_trace (gst_structure_new ("new-pad",
-          "ix", G_TYPE_UINT, stats->index,
-          "name", G_TYPE_STRING, GST_OBJECT_NAME (pad),
-          "type", G_TYPE_STRING, G_OBJECT_TYPE_NAME (pad),
-          "is-ghostpad", G_TYPE_BOOLEAN, GST_IS_GHOST_PAD (pad),
-          "pad-direction", GST_TYPE_PAD_DIRECTION, GST_PAD_DIRECTION (pad),
-          "thread-id", G_TYPE_UINT, GPOINTER_TO_UINT (g_thread_self ()), NULL));
-
-  return stats;
 }
 
 /*
@@ -192,10 +180,37 @@ get_real_pad_parent (GstPad * pad)
   return GST_ELEMENT_CAST (parent);
 }
 
+static GstPadStats no_pad_stats = { 0, };
+
+static GstPadStats *
+fill_pad_stats (GstStatsTracer * self, GstPad * pad)
+{
+  GstPadStats *stats = g_slice_new0 (GstPadStats);
+
+  stats->index = self->num_pads++;
+  stats->parent_ix = G_MAXUINT;
+
+  return stats;
+}
+
+static void
+log_new_pad_stats (GstPadStats * stats, GstPad * pad)
+{
+  log_trace (gst_structure_new ("new-pad",
+          "ix", G_TYPE_UINT, stats->index,
+          "parent-ix", G_TYPE_UINT, stats->parent_ix,
+          "name", G_TYPE_STRING, GST_OBJECT_NAME (pad),
+          "type", G_TYPE_STRING, G_OBJECT_TYPE_NAME (pad),
+          "is-ghostpad", G_TYPE_BOOLEAN, GST_IS_GHOST_PAD (pad),
+          "pad-direction", GST_TYPE_PAD_DIRECTION, GST_PAD_DIRECTION (pad),
+          "thread-id", G_TYPE_UINT, GPOINTER_TO_UINT (g_thread_self ()), NULL));
+}
+
 static GstPadStats *
 get_pad_stats (GstStatsTracer * self, GstPad * pad)
 {
   GstPadStats *stats;
+  gboolean is_new = FALSE;
 
   if (!pad) {
     no_pad_stats.index = G_MAXUINT;
@@ -209,6 +224,7 @@ get_pad_stats (GstStatsTracer * self, GstPad * pad)
     if (self->pads->len <= stats->index)
       g_ptr_array_set_size (self->pads, stats->index + 1);
     g_ptr_array_index (self->pads, stats->index) = stats;
+    is_new = TRUE;
   }
   G_UNLOCK (_stats);
   if (G_UNLIKELY (stats->parent_ix == G_MAXUINT)) {
@@ -218,6 +234,9 @@ get_pad_stats (GstStatsTracer * self, GstPad * pad)
 
       stats->parent_ix = elem_stats->index;
     }
+  }
+  if (G_UNLIKELY (is_new)) {
+    log_new_pad_stats (stats, pad);
   }
   return stats;
 }
@@ -461,15 +480,17 @@ do_push_event_pre (GstStatsTracer * self, va_list var_args)
 {
   guint64 ts = va_arg (var_args, guint64);
   GstPad *pad = va_arg (var_args, GstPad *);
+  GstEvent *ev = va_arg (var_args, GstEvent *);
   GstElement *elem = get_real_pad_parent (pad);
-  GstPadStats *pad_stats = get_pad_stats (self, pad);
   GstElementStats *elem_stats = get_element_stats (self, elem);
+  GstPadStats *pad_stats = get_pad_stats (self, pad);
 
   elem_stats->last_ts = ts;
   log_trace (gst_structure_new ("event",
           "ts", G_TYPE_UINT64, ts,
           "pad-ix", G_TYPE_UINT, pad_stats->index,
-          "elem-ix", G_TYPE_UINT, elem_stats->index, NULL));
+          "elem-ix", G_TYPE_UINT, elem_stats->index,
+          "name", G_TYPE_STRING, GST_EVENT_TYPE_NAME (ev), NULL));
 }
 
 static void
@@ -486,11 +507,14 @@ do_post_message_pre (GstStatsTracer * self, va_list var_args)
 {
   guint64 ts = va_arg (var_args, guint64);
   GstElement *elem = va_arg (var_args, GstElement *);
+  GstMessage *msg = va_arg (var_args, GstMessage *);
   GstElementStats *stats = get_element_stats (self, elem);
 
   stats->last_ts = ts;
   log_trace (gst_structure_new ("message",
-          "ts", G_TYPE_UINT64, ts, "elem-ix", G_TYPE_UINT, stats->index, NULL));
+          "ts", G_TYPE_UINT64, ts,
+          "elem-ix", G_TYPE_UINT, stats->index,
+          "name", G_TYPE_STRING, GST_MESSAGE_TYPE_NAME (msg), NULL));
 }
 
 static void
@@ -507,11 +531,14 @@ do_query_pre (GstStatsTracer * self, va_list var_args)
 {
   guint64 ts = va_arg (var_args, guint64);
   GstElement *elem = va_arg (var_args, GstElement *);
+  GstQuery *qry = va_arg (var_args, GstQuery *);
   GstElementStats *stats = get_element_stats (self, elem);
 
   stats->last_ts = ts;
   log_trace (gst_structure_new ("query",
-          "ts", G_TYPE_UINT64, ts, "elem-ix", G_TYPE_UINT, stats->index, NULL));
+          "ts", G_TYPE_UINT64, ts,
+          "elem-ix", G_TYPE_UINT, stats->index,
+          "name", G_TYPE_STRING, GST_QUERY_TYPE_NAME (qry), NULL));
 }
 
 static void

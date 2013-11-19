@@ -117,7 +117,7 @@ static void
 new_pad_stats (GstStructure * s)
 {
   GstPadStats *stats;
-  guint ix;
+  guint ix, parent_ix;
   gchar *type, *name;
   gboolean is_ghost_pad;
   GstPadDirection dir;
@@ -125,6 +125,7 @@ new_pad_stats (GstStructure * s)
 
   gst_structure_get (s,
       "ix", G_TYPE_UINT, &ix,
+      "parent-ix", G_TYPE_UINT, &parent_ix,
       "name", G_TYPE_STRING, &name,
       "type", G_TYPE_STRING, &type,
       "is-ghostpad", G_TYPE_BOOLEAN, &is_ghost_pad,
@@ -143,6 +144,7 @@ new_pad_stats (GstStructure * s)
   stats->min_size = G_MAXUINT;
   stats->first_ts = stats->last_ts = stats->next_ts = GST_CLOCK_TIME_NONE;
   stats->thread_id = thread_id;
+  stats->parent_ix = parent_ix;
 
   if (pads->len <= ix)
     g_ptr_array_set_size (pads, ix + 1);
@@ -162,12 +164,13 @@ static void
 new_element_stats (GstStructure * s)
 {
   GstElementStats *stats;
-  guint ix;
+  guint ix, parent_ix;
   gchar *type, *name;
   gboolean is_bin;
 
   gst_structure_get (s,
       "ix", G_TYPE_UINT, &ix,
+      "parent-ix", G_TYPE_UINT, &parent_ix,
       "name", G_TYPE_STRING, &name,
       "type", G_TYPE_STRING, &type, "is-bin", G_TYPE_BOOLEAN, &is_bin, NULL);
 
@@ -180,7 +183,7 @@ new_element_stats (GstStructure * s)
   stats->type_name = type;
   stats->is_bin = is_bin;
   stats->first_ts = GST_CLOCK_TIME_NONE;
-  stats->parent_ix = G_MAXUINT;
+  stats->parent_ix = parent_ix;
 
   if (elements->len <= ix)
     g_ptr_array_set_size (elements, ix + 1);
@@ -321,7 +324,8 @@ do_event_stats (GstStructure * s)
     return;
   }
   if (!(elem_stats = get_element_stats (elem_ix))) {
-    GST_WARNING ("no element stats found for ix=%u", elem_ix);
+    // e.g. reconfigure events are send over unparented pads
+    GST_INFO ("no element stats found for ix=%u", elem_ix);
     return;
   }
   elem_stats->num_events++;
