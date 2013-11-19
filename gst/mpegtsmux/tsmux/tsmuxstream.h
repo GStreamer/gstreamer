@@ -228,7 +228,7 @@ void 		tsmux_stream_pcr_unref  	(TsMuxStream *stream);
 gboolean	tsmux_stream_is_pcr 		(TsMuxStream *stream);
 
 gboolean 	tsmux_stream_at_pes_start 	(TsMuxStream *stream);
-void 		tsmux_stream_get_es_descrs 	(TsMuxStream *stream, guint8 *buf, guint16 *len);
+void 		tsmux_stream_get_es_descrs 	(TsMuxStream *stream, GstMpegTsPMTStream *pmt_stream);
 
 gint 		tsmux_stream_bytes_in_buffer 	(TsMuxStream *stream);
 gint 		tsmux_stream_bytes_avail 	(TsMuxStream *stream);

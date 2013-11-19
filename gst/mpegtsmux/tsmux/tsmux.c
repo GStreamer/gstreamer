@@ -87,7 +87,6 @@
 
 #include "tsmux.h"
 #include "tsmuxstream.h"
-#include "crc.h"
 
 #define GST_CAT_DEFAULT mpegtsmux_debug
 
@@ -120,6 +119,7 @@ static void
 tsmux_section_free (TsMuxSection * section)
 {
   gst_mpegts_section_unref (section->section);
+  g_slice_free (TsMuxSection, section);
 }
 
 /**
@@ -307,6 +307,10 @@ tsmux_free (TsMux * mux)
   GList *cur;
 
   g_return_if_fail (mux != NULL);
+
+  /* Free PAT section */
+  if (mux->pat.section)
+    gst_mpegts_section_unref (mux->pat.section);
 
   /* Free all programs */
   for (cur = mux->programs; cur; cur = cur->next) {
@@ -846,7 +850,7 @@ tsmux_section_write_packet (GstMpegTsSectionType * type,
   GstMemory *mem;
   guint8 *packet;
   guint8 *data;
-  gsize data_size;
+  gsize data_size = 0;
   gsize payload_written;
   guint len = 0, offset = 0, payload_len = 0;
 
@@ -867,7 +871,10 @@ tsmux_section_write_packet (GstMpegTsSectionType * type,
   section->pi.stream_avail = data_size;
   payload_written = 0;
 
-  section_buffer = gst_buffer_new_wrapped (data, data_size);
+  /* Wrap section data in a buffer without free function.
+     The data will be freed when the GstMpegTsSection is destroyed. */
+  section_buffer = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+      data, data_size, 0, data_size, NULL, NULL);
 
   TS_DEBUG ("Section buffer with size %" G_GSIZE_FORMAT " created",
       gst_buffer_get_size (section_buffer));
@@ -921,6 +928,8 @@ tsmux_section_write_packet (GstMpegTsSectionType * type,
     payload_written += payload_len;
     section->pi.packet_start_unit_indicator = FALSE;
   }
+
+  gst_buffer_unref (section_buffer);
 
   return TRUE;
 
@@ -1103,129 +1112,20 @@ tsmux_program_free (TsMuxProgram * program)
 {
   g_return_if_fail (program != NULL);
 
+  /* Free PMT section */
+  if (program->pmt.section)
+    gst_mpegts_section_unref (program->pmt.section);
+
   g_array_free (program->streams, TRUE);
   g_slice_free (TsMuxProgram, program);
 }
 
 static gboolean
-tsmux_write_section (TsMux * mux, TsMuxSection * section)
-{
-  guint8 *cur_in;
-  guint payload_remain;
-  guint payload_len, payload_offs;
-  TsMuxPacketInfo *pi;
-  GstBuffer *buf = NULL;
-  GstMapInfo map;
-
-  pi = &section->pi;
-
-  pi->packet_start_unit_indicator = TRUE;
-
-  cur_in = section->data;
-  payload_remain = pi->stream_avail;
-
-  while (payload_remain > 0) {
-
-    /* obtain buffer */
-    map.data = NULL;
-    if (!tsmux_get_buffer (mux, &buf))
-      goto fail;
-
-    gst_buffer_map (buf, &map, GST_MAP_WRITE);
-
-    if (pi->packet_start_unit_indicator) {
-      /* Need to write an extra single byte start pointer */
-      pi->stream_avail++;
-
-      if (!tsmux_write_ts_header (map.data, pi, &payload_len, &payload_offs)) {
-        pi->stream_avail--;
-        goto fail;
-      }
-      pi->stream_avail--;
-
-      /* Write the pointer byte */
-      map.data[payload_offs] = 0x00;
-
-      payload_offs++;
-      payload_len--;
-      pi->packet_start_unit_indicator = FALSE;
-    } else {
-      if (!tsmux_write_ts_header (map.data, pi, &payload_len, &payload_offs))
-        goto fail;
-    }
-
-    TS_DEBUG ("Outputting %d bytes to section. %d remaining after",
-        payload_len, payload_remain - payload_len);
-
-    memcpy (map.data + payload_offs, cur_in, payload_len);
-
-    cur_in += payload_len;
-    payload_remain -= payload_len;
-
-    gst_buffer_unmap (buf, &map);
-
-    /* we do not write PCR in section */
-    if (G_UNLIKELY (!tsmux_packet_out (mux, buf, -1))) {
-      /* buffer given away */
-      buf = NULL;
-      goto fail;
-    }
-    buf = NULL;
-  }
-
-  return TRUE;
-
-  /* ERRORS */
-fail:
-  {
-    if (map.data && buf)
-      gst_buffer_unmap (buf, &map);
-    if (buf)
-      gst_buffer_unref (buf);
-    return FALSE;
-  }
-}
-
-static void
-tsmux_write_section_hdr (guint8 * pos, guint8 table_id, guint16 len,
-    guint16 id, guint8 version, guint8 section_nr, guint8 last_section_nr)
-{
-  /* The length passed is the total length of the section, but we're not 
-   * supposed to include the first 3 bytes of the header in the count */
-  len -= 3;
-
-  /* 1 byte table identifier */
-  *pos++ = table_id;
-  /* section_syntax_indicator = '0' | '0' | '11' reserved bits | (len >> 8) */
-  tsmux_put16 (&pos, 0xB000 | len);
-  /* 2 bytes transport/program id */
-  tsmux_put16 (&pos, id);
-
-  /* '11' reserved | version 'xxxxxx' | 'x' current_next */
-  *pos++ = 0xC0 | ((version & 0x1F) << 1) | 0x01;
-  *pos++ = section_nr;
-  *pos++ = last_section_nr;
-}
-
-static gboolean
 tsmux_write_pat (TsMux * mux)
 {
-  GList *cur;
-  TsMuxSection *pat = &mux->pat;
 
   if (mux->pat_changed) {
     /* program_association_section ()
-     * table_id                                   8   uimsbf
-     * section_syntax_indicator                   1   bslbf
-     * '0'                                        1   bslbf
-     * reserved                                   2   bslbf
-     * section_length                            12   uimsbf
-     * transport_stream_id                       16   uimsbf
-     * reserved                                   2   bslbf
-     * version_number                             5   uimsbf
-     * current_next_indicator                     1   bslbf
-     * section_number                             8   uimsbf 
-     * last_section_number                        8   uimsbf
      * for (i = 0; i < N; i++) {
      *    program_number                         16   uimsbf
      *    reserved                                3   bslbf
@@ -1233,58 +1133,43 @@ tsmux_write_pat (TsMux * mux)
      * }
      * CRC_32                                    32   rbchof
      */
-    guint8 *pos;
-    guint32 crc;
+    GList *cur;
+    GPtrArray *pat;
 
-    /* Prepare the section data after the section header */
-    pos = pat->data + TSMUX_SECTION_HDR_SIZE;
+    pat = gst_mpegts_pat_new ();
 
     for (cur = mux->programs; cur; cur = cur->next) {
+      GstMpegTsPatProgram *pat_pgm;
       TsMuxProgram *program = (TsMuxProgram *) cur->data;
 
-      tsmux_put16 (&pos, program->pgm_number);
-      tsmux_put16 (&pos, 0xE000 | program->pmt_pid);
+      pat_pgm = gst_mpegts_pat_program_new ();
+      pat_pgm->program_number = program->pgm_number;
+      pat_pgm->network_or_program_map_PID = program->pmt_pid;
+
+      g_ptr_array_add (pat, pat_pgm);
     }
 
-    /* Measure the section length, include extra 4 bytes for CRC below */
-    pat->pi.stream_avail = pos - pat->data + 4;
+    if (mux->pat.section)
+      gst_mpegts_section_unref (mux->pat.section);
 
-    /* Go back and write the header now that we know the final length.
-     * table_id = 0 for PAT */
-    tsmux_write_section_hdr (pat->data, 0x00, pat->pi.stream_avail,
-        mux->transport_id, mux->pat_version, 0, 0);
+    mux->pat.section = gst_mpegts_section_from_pat (pat, mux->transport_id);
 
-    /* Calc and output CRC for data bytes, not including itself */
-    crc = calc_crc32 (pat->data, pat->pi.stream_avail - 4);
-    tsmux_put32 (&pos, crc);
+    mux->pat.section->version_number = mux->pat_version++;
 
-    TS_DEBUG ("PAT has %d programs, is %u bytes",
-        mux->nb_programs, pat->pi.stream_avail);
+    TS_DEBUG ("PAT has %d programs", mux->nb_programs);
     mux->pat_changed = FALSE;
-    mux->pat_version++;
   }
 
-  return tsmux_write_section (mux, pat);
+  return tsmux_section_write_packet (GINT_TO_POINTER (GST_MPEGTS_SECTION_PAT),
+      &mux->pat, mux);
 }
 
 static gboolean
 tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
 {
-  TsMuxSection *pmt = &program->pmt;
 
   if (program->pmt_changed) {
     /* program_association_section ()
-     * table_id                                   8   uimsbf
-     * section_syntax_indicator                   1   bslbf
-     * '0'                                        1   bslbf
-     * reserved                                   2   bslbf
-     * section_length                            12   uimsbf
-     * program_id                                16   uimsbf
-     * reserved                                   2   bslbf
-     * version_number                             5   uimsbf
-     * current_next_indicator                     1   bslbf
-     * section_number                             8   uimsbf 
-     * last_section_number                        8   uimsbf
      * reserved                                   3   bslbf
      * PCR_PID                                   13   uimsbf
      * reserved                                   4   bslbf
@@ -1302,74 +1187,56 @@ tsmux_write_pmt (TsMux * mux, TsMuxProgram * program)
      *      descriptor ();
      *    }
      * }
-     * CRC_32                                    32   rbchof
      */
-    guint8 *pos;
-    guint32 crc;
+    GstMpegTsDescriptor *descriptor;
+    GstMpegTsPMT *pmt;
+    guint8 desc[] = { 0x0F, 0xFF, 0xFC, 0xFC };
     guint i;
 
-    /* Prepare the section data after the basic section header */
-    pos = pmt->data + TSMUX_SECTION_HDR_SIZE;
+    pmt = gst_mpegts_pmt_new ();
 
     if (program->pcr_stream == NULL)
-      tsmux_put16 (&pos, 0xFFFF);
+      pmt->pcr_pid = 0x1FFF;
     else
-      tsmux_put16 (&pos, 0xE000 | tsmux_stream_get_pid (program->pcr_stream));
+      pmt->pcr_pid = tsmux_stream_get_pid (program->pcr_stream);
 
-    /* 4 bits reserved, 12 bits program_info_length, descriptor : HDMV */
-    tsmux_put16 (&pos, 0xF00C);
-    tsmux_put16 (&pos, 0x0504);
-    tsmux_put16 (&pos, 0x4844);
-    tsmux_put16 (&pos, 0x4D56);
-    tsmux_put16 (&pos, 0x8804);
-    tsmux_put16 (&pos, 0x0FFF);
-    tsmux_put16 (&pos, 0xFCFC);
+    descriptor = gst_mpegts_descriptor_from_registration ("HDMV", NULL, 0);
+    g_ptr_array_add (pmt->descriptors, descriptor);
+
+    descriptor = gst_mpegts_descriptor_from_custom (0x88, desc, 4);
+    g_ptr_array_add (pmt->descriptors, descriptor);
 
     /* Write out the entries */
     for (i = 0; i < program->streams->len; i++) {
+      GstMpegTsPMTStream *pmt_stream;
       TsMuxStream *stream = g_array_index (program->streams, TsMuxStream *, i);
-      guint16 es_info_len;
+
+      pmt_stream = gst_mpegts_pmt_stream_new ();
 
       /* FIXME: Use API to retrieve this from the stream */
-      *pos++ = stream->stream_type;
-      tsmux_put16 (&pos, 0xE000 | tsmux_stream_get_pid (stream));
+      pmt_stream->stream_type = stream->stream_type;
+      pmt_stream->pid = tsmux_stream_get_pid (stream);
 
       /* Write any ES descriptors needed */
-      tsmux_stream_get_es_descrs (stream, mux->es_info_buf, &es_info_len);
-      tsmux_put16 (&pos, 0xF000 | es_info_len);
-
-      if (es_info_len > 0) {
-        TS_DEBUG ("Writing descriptor of len %d for PID 0x%04x",
-            es_info_len, tsmux_stream_get_pid (stream));
-        if (G_UNLIKELY (pos + es_info_len >=
-                pmt->data + TSMUX_MAX_SECTION_LENGTH))
-          return FALSE;
-
-        memcpy (pos, mux->es_info_buf, es_info_len);
-        pos += es_info_len;
-      }
+      tsmux_stream_get_es_descrs (stream, pmt_stream);
+      g_ptr_array_add (pmt->streams, pmt_stream);
     }
 
-    /* Include the CRC in the byte count */
-    pmt->pi.stream_avail = pos - pmt->data + 4;
+    TS_DEBUG ("PMT for program %d has %d streams",
+        program->pgm_number, program->streams->len);
 
-    /* Go back and patch the pmt_header now that we know the length.
-     * table_id = 2 for PMT */
-    tsmux_write_section_hdr (pmt->data, 0x02, pmt->pi.stream_avail,
-        program->pgm_number, program->pmt_version, 0, 0);
+    pmt->program_number = program->pgm_number;
 
-    /* Calc and output CRC for data bytes, 
-     * but not counting the CRC bytes this time */
-    crc = calc_crc32 (pmt->data, pmt->pi.stream_avail - 4);
-    tsmux_put32 (&pos, crc);
-
-    TS_DEBUG ("PMT for program %d has %d streams, is %u bytes",
-        program->pgm_number, program->streams->len, pmt->pi.stream_avail);
-
-    pmt->pi.pid = program->pmt_pid;
+    program->pmt.pi.pid = program->pmt_pid;
     program->pmt_changed = FALSE;
-    program->pmt_version++;
+
+    if (program->pmt.section)
+      gst_mpegts_section_unref (program->pmt.section);
+
+    program->pmt.section = gst_mpegts_section_from_pmt (pmt, program->pmt_pid);
+    program->pmt.section->version_number = program->pmt_version++;
   }
 
-  return tsmux_write_section (mux, pmt);
+  return tsmux_section_write_packet (GINT_TO_POINTER (GST_MPEGTS_SECTION_PMT),
+      &program->pmt, mux);
 }
