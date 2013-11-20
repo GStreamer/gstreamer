@@ -685,31 +685,50 @@ gst_srtp_dec_sink_setcaps (GstPad * pad, GstObject * parent,
 }
 
 static gboolean
-gst_srtp_dec_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event, gboolean is_rtcp)
+gst_srtp_dec_sink_event_rtp (GstPad * pad, GstObject * parent, GstEvent * event)
 {
   GstCaps *caps;
+  GstSrtpDec *filter = GST_SRTP_DEC (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
       gst_event_parse_caps (event, &caps);
-      return gst_srtp_dec_sink_setcaps (pad, parent, caps, is_rtcp);
+      return gst_srtp_dec_sink_setcaps (pad, parent, caps, FALSE);
+    case GST_EVENT_SEGMENT:
+      filter->rtp_has_segment = TRUE;
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      filter->rtp_has_segment = FALSE;
+      break;
     default:
-      return gst_pad_event_default (pad, parent, event);
+      break;
   }
-}
 
-static gboolean
-gst_srtp_dec_sink_event_rtp (GstPad * pad, GstObject * parent, GstEvent * event)
-{
-  return gst_srtp_dec_sink_event (pad, parent, event, FALSE);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static gboolean
 gst_srtp_dec_sink_event_rtcp (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
-  return gst_srtp_dec_sink_event (pad, parent, event, TRUE);
+  GstCaps *caps;
+  GstSrtpDec *filter = GST_SRTP_DEC (parent);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CAPS:
+      gst_event_parse_caps (event, &caps);
+      return gst_srtp_dec_sink_setcaps (pad, parent, caps, TRUE);
+    case GST_EVENT_SEGMENT:
+      filter->rtcp_has_segment = TRUE;
+      break;
+    case GST_EVENT_FLUSH_STOP:
+      filter->rtcp_has_segment = FALSE;
+      break;
+    default:
+      break;
+  }
+
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static gboolean
@@ -842,6 +861,71 @@ gst_srtp_dec_iterate_internal_links_rtcp (GstPad * pad, GstObject * parent)
   return gst_srtp_dec_iterate_internal_links (pad, parent, TRUE);
 }
 
+static void
+gst_srtp_dec_push_early_events (GstSrtpDec * filter, GstPad * pad,
+    GstPad * otherpad, gboolean is_rtcp)
+{
+  GstEvent *otherev, *ev;
+
+  ev = gst_pad_get_sticky_event (pad, GST_EVENT_STREAM_START, 0);
+  if (ev) {
+    gst_event_unref (ev);
+  } else {
+    gchar *new_stream_id;
+
+    otherev = gst_pad_get_sticky_event (otherpad, GST_EVENT_STREAM_START, 0);
+
+    if (otherev) {
+      const gchar *other_stream_id;
+
+      gst_event_parse_stream_start (otherev, &other_stream_id);
+
+      new_stream_id = g_strdup_printf ("%s/%s", other_stream_id,
+          is_rtcp ? "rtcp" : "rtp");
+      gst_event_unref (otherev);
+    } else {
+      new_stream_id = gst_pad_create_stream_id (pad, GST_ELEMENT (filter),
+          is_rtcp ? "rtcp" : "rtp");
+    }
+
+    ev = gst_event_new_stream_start (new_stream_id);
+    g_free (new_stream_id);
+
+    gst_pad_push_event (pad, ev);
+  }
+
+  ev = gst_pad_get_sticky_event (pad, GST_EVENT_CAPS, 0);
+  if (ev) {
+    gst_event_unref (ev);
+  } else {
+    GstCaps *caps;
+
+    if (is_rtcp)
+      caps = gst_caps_new_empty_simple ("application/x-rtcp");
+    else
+      caps = gst_caps_new_empty_simple ("application/x-rtp");
+
+    gst_pad_set_caps (pad, caps);
+    gst_caps_unref (caps);
+  }
+
+  ev = gst_pad_get_sticky_event (pad, GST_EVENT_SEGMENT, 0);
+  if (ev) {
+    gst_event_unref (ev);
+  } else {
+    ev = gst_pad_get_sticky_event (otherpad, GST_EVENT_SEGMENT, 0);
+
+    if (ev)
+      gst_pad_push_event (pad, ev);
+  }
+
+  if (is_rtcp)
+    filter->rtcp_has_segment = TRUE;
+  else
+    filter->rtp_has_segment = TRUE;
+
+}
+
 static GstFlowReturn
 gst_srtp_dec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf,
     gboolean is_rtcp)
@@ -939,10 +1023,17 @@ unprotect:
 
 push_out:
   /* Push buffer to source pad */
-  if (is_rtcp)
+  if (is_rtcp) {
     otherpad = filter->rtcp_srcpad;
-  else
+    if (!filter->rtcp_has_segment)
+      gst_srtp_dec_push_early_events (filter, filter->rtcp_srcpad,
+          filter->rtp_srcpad, TRUE);
+  } else {
     otherpad = filter->rtp_srcpad;
+    if (!filter->rtp_has_segment)
+      gst_srtp_dec_push_early_events (filter, filter->rtp_srcpad,
+          filter->rtcp_srcpad, FALSE);
+  }
   ret = gst_pad_push (otherpad, buf);
 
   return ret;
@@ -980,6 +1071,8 @@ gst_srtp_dec_change_state (GstElement * element, GstStateChange transition)
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       filter->streams = g_hash_table_new_full (g_direct_hash, g_direct_equal,
           NULL, (GDestroyNotify) clear_stream);
+      filter->rtp_has_segment = FALSE;
+      filter->rtcp_has_segment = FALSE;
       break;
     case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
       break;

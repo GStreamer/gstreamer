@@ -78,6 +78,9 @@ struct _GstSrtpDec
   srtp_t session;
   gboolean first_session;
   GHashTable *streams;
+
+  gboolean rtp_has_segment;
+  gboolean rtcp_has_segment;
 };
 
 struct _GstSrtpDecClass
