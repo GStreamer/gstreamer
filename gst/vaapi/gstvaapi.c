@@ -32,6 +32,7 @@
 
 #if USE_ENCODERS
 #include "gstvaapiencode_h264.h"
+#include "gstvaapiencode_mpeg2.h"
 #endif
 
 #define PLUGIN_NAME     "vaapi"
@@ -62,6 +63,9 @@ plugin_init (GstPlugin *plugin)
     gst_element_register(plugin, "vaapiencode_h264",
                          GST_RANK_PRIMARY,
                          GST_TYPE_VAAPIENCODE_H264);
+    gst_element_register(plugin, "vaapiencode_mpeg2",
+                         GST_RANK_PRIMARY,
+                         GST_TYPE_VAAPIENCODE_MPEG2);
 #endif
 
     return TRUE;
