@@ -379,6 +379,8 @@ check_new_stream_locked (GstSrtpEnc * filter, guint32 ssrc)
   else
     ret = srtp_add_stream (filter->session, &policy);
 
+  filter->first_session = FALSE;
+
   if (HAS_CRYPTO (filter))
     gst_buffer_unmap (filter->key, &map);
 
