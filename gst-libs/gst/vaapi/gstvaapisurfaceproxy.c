@@ -36,9 +36,6 @@
 static void
 gst_vaapi_surface_proxy_finalize(GstVaapiSurfaceProxy *proxy)
 {
-    if (proxy->destroy_func)
-        proxy->destroy_func(proxy->destroy_data);
-
     if (proxy->surface) {
         if (proxy->pool)
             gst_vaapi_video_pool_put_object(proxy->pool, proxy->surface);
@@ -46,6 +43,10 @@ gst_vaapi_surface_proxy_finalize(GstVaapiSurfaceProxy *proxy)
         proxy->surface = NULL;
     }
     gst_vaapi_video_pool_replace(&proxy->pool, NULL);
+
+    /* Notify the user function that the object is now destroyed */
+    if (proxy->destroy_func)
+        proxy->destroy_func(proxy->destroy_data);
 }
 
 static inline const GstVaapiMiniObjectClass *
