@@ -72,7 +72,7 @@ static const char gst_vaapidecode_sink_caps_str[] =
 static const char gst_vaapidecode_src_caps_str[] =
 #if GST_CHECK_VERSION(1,1,0)
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
-        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, GST_VIDEO_FORMATS_ALL) ";"
+        GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, "{ ENCODED, NV12, I420, YV12 }") ";"
     GST_VIDEO_CAPS_MAKE_WITH_FEATURES(
         GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, "RGBA");
 #else
