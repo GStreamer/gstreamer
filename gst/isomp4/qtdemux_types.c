@@ -174,6 +174,7 @@ static const QtNodeType qt_node_types[] = {
   {FOURCC_avcC, "AV codec configuration container", 0},
   {FOURCC_avc1, "AV codec configuration v1", 0},
   {FOURCC_avc3, "AV codec configuration v3", 0},
+  {FOURCC_mp4s, "VOBSUB codec configuration", 0},
   {FOURCC_hvc1, "HEVC codec configuration", 0},
   {FOURCC_hev1, "HEVC codec configuration", 0},
   {FOURCC_hvcC, "HEVC codec configuration container", 0},

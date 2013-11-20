@@ -58,6 +58,7 @@
 #include "qtdemux_types.h"
 #include "qtdemux_dump.h"
 #include "fourcc.h"
+#include "descriptors.h"
 #include "qtdemux_lang.h"
 #include "qtdemux.h"
 #include "qtpalette.h"
@@ -5372,6 +5373,7 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
         }
         GST_DEBUG_OBJECT (qtdemux,
             "parsing stsd (sample table, sample description) atom");
+        /* Skip over 8 byte atom hdr + 1 byte version, 3 bytes flags, 4 byte num_entries */
         qtdemux_parse_container (qtdemux, node, buffer + 16, end);
         break;
       }
@@ -5517,6 +5519,13 @@ qtdemux_parse_node (GstQTDemux * qtdemux, GNode * node, const guint8 * buffer,
       {
         GST_DEBUG_OBJECT (qtdemux, "parsing meta atom");
         qtdemux_parse_container (qtdemux, node, buffer + 12, end);
+        break;
+      }
+      case FOURCC_mp4s:
+      {
+        GST_MEMDUMP_OBJECT (qtdemux, "mp4s", buffer, end - buffer);
+        /* Skip 8 byte header, plus 8 byte version + flags + entry_count */
+        qtdemux_parse_container (qtdemux, node, buffer + 16, end);
         break;
       }
       case FOURCC_XiTh:
@@ -8360,46 +8369,20 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     switch (fourcc) {
       case FOURCC_mp4s:
       {
-        guint len;
-        const guint8 *data;
+        GNode *mp4s = NULL;
+        GNode *esds = NULL;
 
-        /* look for palette */
-        /* target mp4s atom */
-        len = QT_UINT32 (stsd_data + offset);
-        data = stsd_data + offset;
-        /* verify sufficient length,
-         * and esds present with decConfigDescr of expected size and position */
-        if ((len >= 106 + 8)
-            && (QT_FOURCC (data + 8 + 8 + 4) == FOURCC_esds)
-            && (QT_UINT16 (data + 8 + 40) == 0x0540)) {
-          GstStructure *s;
-          guint32 clut[16];
-          gint i;
-
-          /* move to decConfigDescr data */
-          data = data + 8 + 42;
-          for (i = 0; i < 16; i++) {
-            clut[i] = QT_UINT32 (data);
-            data += 4;
-          }
-
-          s = gst_structure_new ("application/x-gst-dvd", "event",
-              G_TYPE_STRING, "dvd-spu-clut-change",
-              "clut00", G_TYPE_INT, clut[0], "clut01", G_TYPE_INT, clut[1],
-              "clut02", G_TYPE_INT, clut[2], "clut03", G_TYPE_INT, clut[3],
-              "clut04", G_TYPE_INT, clut[4], "clut05", G_TYPE_INT, clut[5],
-              "clut06", G_TYPE_INT, clut[6], "clut07", G_TYPE_INT, clut[7],
-              "clut08", G_TYPE_INT, clut[8], "clut09", G_TYPE_INT, clut[9],
-              "clut10", G_TYPE_INT, clut[10], "clut11", G_TYPE_INT, clut[11],
-              "clut12", G_TYPE_INT, clut[12], "clut13", G_TYPE_INT, clut[13],
-              "clut14", G_TYPE_INT, clut[14], "clut15", G_TYPE_INT, clut[15],
-              NULL);
-
-          /* store event and trigger custom processing */
-          stream->pending_event =
-              gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
-          stream->need_process = TRUE;
+        /* look for palette in a stsd->mp4s->esds sub-atom */
+        mp4s = qtdemux_tree_get_child_by_type (stsd, FOURCC_mp4s);
+        if (mp4s)
+          esds = qtdemux_tree_get_child_by_type (mp4s, FOURCC_esds);
+        if (esds == NULL) {
+          /* Invalid STSD */
+          GST_LOG_OBJECT (qtdemux, "Skipping invalid stsd: no esds child");
+          break;
         }
+
+        gst_qtdemux_handle_esds (qtdemux, stream, esds, list);
         break;
       }
       default:
@@ -8410,7 +8393,6 @@ qtdemux_parse_trak (GstQTDemux * qtdemux, GNode * trak)
     GST_INFO_OBJECT (qtdemux,
         "type %" GST_FOURCC_FORMAT " caps %" GST_PTR_FORMAT,
         GST_FOURCC_ARGS (fourcc), stream->caps);
-
   } else {
     /* everything in 1 sample */
     stream->sampled = TRUE;
@@ -10063,22 +10045,24 @@ qtdemux_parse_tree (GstQTDemux * qtdemux)
 }
 
 /* taken from ffmpeg */
-static unsigned int
-get_size (guint8 * ptr, guint8 ** end)
+static int
+read_descr_size (guint8 * ptr, guint8 * end, guint8 ** end_out)
 {
   int count = 4;
   int len = 0;
 
   while (count--) {
-    int c = *ptr;
+    int c;
 
-    ptr++;
+    if (ptr >= end)
+      return -1;
+
+    c = *ptr++;
     len = (len << 7) | (c & 0x7f);
     if (!(c & 0x80))
       break;
   }
-  if (end)
-    *end = ptr;
+  *end_out = ptr;
   return len;
 }
 
@@ -10101,20 +10085,24 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
   ptr += 8;
   GST_DEBUG_OBJECT (qtdemux, "version/flags = %08x", QT_UINT32 (ptr));
   ptr += 4;
-  while (ptr < end) {
+  while (ptr + 1 < end) {
     tag = QT_UINT8 (ptr);
     GST_DEBUG_OBJECT (qtdemux, "tag = %02x", tag);
     ptr++;
-    len = get_size (ptr, &ptr);
+    len = read_descr_size (ptr, end, &ptr);
     GST_DEBUG_OBJECT (qtdemux, "len = %d", len);
 
+    /* Check the stated amount of data is available for reading */
+    if (len < 0 || ptr + len > end)
+      break;
+
     switch (tag) {
-      case 0x03:
+      case ES_DESCRIPTOR_TAG:
         GST_DEBUG_OBJECT (qtdemux, "ID %04x", QT_UINT16 (ptr));
         GST_DEBUG_OBJECT (qtdemux, "priority %04x", QT_UINT8 (ptr + 2));
         ptr += 3;
         break;
-      case 0x04:{
+      case DECODER_CONFIG_DESC_TAG:{
         guint max_bitrate, avg_bitrate;
 
         object_type_id = QT_UINT8 (ptr);
@@ -10136,18 +10124,56 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
         ptr += 13;
         break;
       }
-      case 0x05:
+      case DECODER_SPECIFIC_INFO_TAG:
         GST_MEMDUMP_OBJECT (qtdemux, "data", ptr, len);
-        data_ptr = ptr;
-        data_len = len;
+        if (object_type_id == 0xe0 && len == 0x40) {
+          guint8 *data;
+          GstStructure *s;
+          guint32 clut[16];
+          gint i;
+
+          GST_DEBUG_OBJECT (qtdemux,
+              "Have VOBSUB palette. Creating palette event");
+          /* move to decConfigDescr data and read palette */
+          data = ptr;
+          for (i = 0; i < 16; i++) {
+            clut[i] = QT_UINT32 (data);
+            data += 4;
+          }
+
+          s = gst_structure_new ("application/x-gst-dvd", "event",
+              G_TYPE_STRING, "dvd-spu-clut-change",
+              "clut00", G_TYPE_INT, clut[0], "clut01", G_TYPE_INT, clut[1],
+              "clut02", G_TYPE_INT, clut[2], "clut03", G_TYPE_INT, clut[3],
+              "clut04", G_TYPE_INT, clut[4], "clut05", G_TYPE_INT, clut[5],
+              "clut06", G_TYPE_INT, clut[6], "clut07", G_TYPE_INT, clut[7],
+              "clut08", G_TYPE_INT, clut[8], "clut09", G_TYPE_INT, clut[9],
+              "clut10", G_TYPE_INT, clut[10], "clut11", G_TYPE_INT, clut[11],
+              "clut12", G_TYPE_INT, clut[12], "clut13", G_TYPE_INT, clut[13],
+              "clut14", G_TYPE_INT, clut[14], "clut15", G_TYPE_INT, clut[15],
+              NULL);
+
+          /* store event and trigger custom processing */
+          stream->pending_event =
+              gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
+          stream->need_process = TRUE;
+        } else {
+          /* Generic codec_data handler puts it on the caps */
+          data_ptr = ptr;
+          data_len = len;
+        }
+
         ptr += len;
         break;
-      case 0x06:
+      case SL_CONFIG_DESC_TAG:
         GST_DEBUG_OBJECT (qtdemux, "data %02x", QT_UINT8 (ptr));
         ptr += 1;
         break;
       default:
-        GST_ERROR_OBJECT (qtdemux, "parse error");
+        GST_DEBUG_OBJECT (qtdemux, "Unknown/unhandled descriptor tag %02x",
+            tag);
+        GST_MEMDUMP_OBJECT (qtdemux, "descriptor data", ptr, len);
+        ptr += len;
         break;
     }
   }
