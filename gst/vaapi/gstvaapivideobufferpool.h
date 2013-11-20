@@ -60,6 +60,21 @@ typedef struct _GstVaapiVideoBufferPoolPrivate  GstVaapiVideoBufferPoolPrivate;
 #define GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META "GstBufferPoolOptionVaapiVideoMeta"
 
 /**
+ *
+ * GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META:
+ *
+ * An option that can be activated on bufferpool to request gl texture
+ * upload on buffers from the pool.
+ *
+ * When this option is enabled on the bufferpool,
+ * #GST_BUFFER_POOL_OPTION_VIDEO_META should also be enabled.
+ */
+#ifndef GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META
+#define GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META \
+    "GstBufferPoolOptionVideoGLTextureUploadMeta"
+#endif
+
+/**
  * GstVaapiVideoBufferPool:
  *
  * A VA video buffer pool object.

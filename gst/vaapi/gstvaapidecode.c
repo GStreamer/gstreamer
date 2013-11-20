@@ -343,7 +343,7 @@ gst_vaapidecode_push_decoded_frame(GstVideoDecoder *vdec,
 
 #if GST_CHECK_VERSION(1,1,0)
         if (decode->has_texture_upload_meta)
-            gst_buffer_add_texture_upload_meta(out_frame->output_buffer);
+            gst_buffer_ensure_texture_upload_meta(out_frame->output_buffer);
 #endif
 #else
         out_frame->output_buffer =
@@ -552,11 +552,14 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
         config = gst_buffer_pool_get_config(pool);
         gst_buffer_pool_config_add_option(config,
             GST_BUFFER_POOL_OPTION_VIDEO_META);
-        gst_buffer_pool_set_config(pool, config);
 #if GST_CHECK_VERSION(1,1,0)
         decode->has_texture_upload_meta = gst_query_find_allocation_meta(query,
             GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL);
+        if (decode->has_texture_upload_meta)
+            gst_buffer_pool_config_add_option(config,
+                GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
 #endif
+        gst_buffer_pool_set_config(pool, config);
     }
 
     if (update_pool)

@@ -24,6 +24,9 @@
 #include "gstvaapivideobufferpool.h"
 #include "gstvaapivideobuffer.h"
 #include "gstvaapivideomemory.h"
+#if GST_CHECK_VERSION(1,1,0)
+#include "gstvaapivideometa_texture.h"
+#endif
 
 GST_DEBUG_CATEGORY_STATIC(gst_debug_vaapivideopool);
 #define GST_CAT_DEFAULT gst_debug_vaapivideopool
@@ -43,7 +46,8 @@ struct _GstVaapiVideoBufferPoolPrivate {
     guint               video_info_index;
     GstAllocator       *allocator;
     GstVaapiDisplay    *display;
-    guint               has_video_meta  : 1;
+    guint               has_video_meta          : 1;
+    guint               has_texture_upload_meta : 1;
 };
 
 #define GST_VAAPI_VIDEO_BUFFER_POOL_GET_PRIVATE(obj)    \
@@ -103,6 +107,7 @@ gst_vaapi_video_buffer_pool_get_options(GstBufferPool *pool)
     static const gchar *g_options[] = {
         GST_BUFFER_POOL_OPTION_VIDEO_META,
         GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META,
+        GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META,
         NULL,
     };
     return g_options;
@@ -146,6 +151,9 @@ gst_vaapi_video_buffer_pool_set_config(GstBufferPool *pool,
 
     priv->has_video_meta = gst_buffer_pool_config_has_option(config,
         GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+    priv->has_texture_upload_meta = gst_buffer_pool_config_has_option(config,
+        GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
 
     return GST_BUFFER_POOL_CLASS(gst_vaapi_video_buffer_pool_parent_class)->
         set_config(pool, config);
@@ -213,6 +221,11 @@ gst_vaapi_video_buffer_pool_alloc_buffer(GstBufferPool *pool,
         vmeta->map = gst_video_meta_map_vaapi_memory;
         vmeta->unmap = gst_video_meta_unmap_vaapi_memory;
     }
+
+#if GST_CHECK_VERSION(1,1,0)
+    if (priv->has_texture_upload_meta)
+        gst_buffer_add_texture_upload_meta(buffer);
+#endif
 
     *out_buffer_ptr = buffer;
     return GST_FLOW_OK;

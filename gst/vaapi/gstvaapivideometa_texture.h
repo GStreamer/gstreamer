@@ -35,6 +35,10 @@ G_GNUC_INTERNAL
 gboolean
 gst_buffer_add_texture_upload_meta(GstBuffer *buffer);
 
+G_GNUC_INTERNAL
+gboolean
+gst_buffer_ensure_texture_upload_meta(GstBuffer *buffer);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_VIDEO_META_TEXTURE_H */

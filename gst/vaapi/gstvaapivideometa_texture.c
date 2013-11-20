@@ -96,4 +96,11 @@ gst_buffer_add_texture_upload_meta(GstBuffer *buffer)
 #endif
     return meta != NULL;
 }
+
+gboolean
+gst_buffer_ensure_texture_upload_meta(GstBuffer *buffer)
+{
+    return gst_buffer_get_video_gl_texture_upload_meta(buffer) ||
+        gst_buffer_add_texture_upload_meta(buffer);
+}
 #endif
