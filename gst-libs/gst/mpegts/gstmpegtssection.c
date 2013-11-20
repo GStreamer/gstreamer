@@ -482,6 +482,109 @@ gst_mpegts_section_get_pat (GstMpegTsSection * section)
   return NULL;
 }
 
+/**
+ * gst_mpegts_pat_new:
+ *
+ * Allocates a new #GPtrArray for #GstMpegTsPatProgram
+ *
+ * Returns: (transfer full) (element-type GstMpegTsPatProgram): A newly allocated #GPtrArray
+ */
+GPtrArray *
+gst_mpegts_pat_new (void)
+{
+  GPtrArray *pat;
+
+  pat = g_ptr_array_new_with_free_func (
+      (GDestroyNotify) _mpegts_pat_program_free);
+
+  return pat;
+}
+
+/**
+ * gst_mpegts_pat_program_new:
+ *
+ * Allocates a new #GstMpegTsPatProgram.
+ *
+ * Returns: (transfer full): A newly allocated #GstMpegTsPatProgram
+ */
+GstMpegTsPatProgram *
+gst_mpegts_pat_program_new (void)
+{
+  GstMpegTsPatProgram *program;
+
+  program = g_slice_new0 (GstMpegTsPatProgram);
+
+  return program;
+}
+
+static gboolean
+_packetize_pat (GstMpegTsSection * section)
+{
+  GPtrArray *programs;
+  guint8 *data;
+  gsize length;
+  guint i;
+
+  programs = gst_mpegts_section_get_pat (section);
+
+  if (programs == NULL)
+    return FALSE;
+
+  /* 8 byte common section fields
+     4 byte CRC */
+  length = 12;
+
+  /* 2 byte program number
+     2 byte program/network PID */
+  length += programs->len * 4;
+
+  _packetize_common_section (section, length);
+  data = section->data + 8;
+
+  for (i = 0; i < programs->len; i++) {
+    GstMpegTsPatProgram *program;
+
+    program = g_ptr_array_index (programs, i);
+
+    /* program_number       - 16 bit uimsbf */
+    GST_WRITE_UINT16_BE (data, program->program_number);
+    data += 2;
+
+    /* reserved             - 3  bit
+       program/network_PID  - 13 uimsbf */
+    GST_WRITE_UINT16_BE (data, program->network_or_program_map_PID | 0xE000);
+    data += 2;
+  }
+
+  g_ptr_array_unref (programs);
+
+  return TRUE;
+}
+
+/**
+ * gst_mpegts_section_from_pat:
+ * @programs: (transfer full) (element-type GstMpegTsPatProgram): an array of #GstMpegTsPatProgram
+ * @ts_id: Transport stream ID of the PAT
+ *
+ * Creates a PAT #GstMpegTsSection from the @programs array of #GstMpegTsPatPrograms
+ *
+ * Returns: (transfer full): a #GstMpegTsSection
+ */
+GstMpegTsSection *
+gst_mpegts_section_from_pat (GPtrArray * programs, guint16 ts_id)
+{
+  GstMpegTsSection *section;
+
+  section = _gst_mpegts_section_init (0x00,
+      GST_MTS_TABLE_ID_PROGRAM_ASSOCIATION);
+
+  section->subtable_extension = ts_id;
+  section->cached_parsed = (gpointer) programs;
+  section->packetizer = _packetize_pat;
+  section->destroy_parsed = (GDestroyNotify) g_ptr_array_unref;
+
+  return section;
+}
 
 /* Program Map Table */
 
@@ -639,6 +742,167 @@ gst_mpegts_section_get_pmt (GstMpegTsSection * section)
   return (const GstMpegTsPMT *) section->cached_parsed;
 }
 
+/**
+ * gst_mpegts_pmt_new:
+ *
+ * Allocates and initializes a new #GstMpegTsPMT.
+ *
+ * Returns: (transfer full): #GstMpegTsPMT
+ */
+GstMpegTsPMT *
+gst_mpegts_pmt_new (void)
+{
+  GstMpegTsPMT *pmt;
+
+  pmt = g_slice_new0 (GstMpegTsPMT);
+
+  pmt->descriptors =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) _free_descriptor);
+  pmt->streams = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      _gst_mpegts_pmt_stream_free);
+
+  return pmt;
+}
+
+/**
+ * gst_mpegts_pmt_stream_new:
+ *
+ * Allocates and initializes a new #GstMpegTsPMTStream.
+ *
+ * Returns: (transfer full): #GstMpegTsPMTStream
+ */
+GstMpegTsPMTStream *
+gst_mpegts_pmt_stream_new (void)
+{
+  GstMpegTsPMTStream *stream;
+
+  stream = g_slice_new0 (GstMpegTsPMTStream);
+
+  stream->descriptors =
+      g_ptr_array_new_with_free_func ((GDestroyNotify) _free_descriptor);
+
+  return stream;
+}
+
+static gboolean
+_packetize_pmt (GstMpegTsSection * section)
+{
+  const GstMpegTsPMT *pmt;
+  GstMpegTsPMTStream *stream;
+  GstMpegTsDescriptor *descriptor;
+  gsize length, pgm_info_length, stream_length;
+  guint8 *data;
+  guint i, j;
+
+  pmt = gst_mpegts_section_get_pmt (section);
+
+  if (pmt == NULL)
+    return FALSE;
+
+  /* 8 byte common section fields
+     2 byte PCR pid
+     2 byte program info length
+     4 byte CRC */
+  length = 16;
+
+  /* Find length of program info */
+  pgm_info_length = 0;
+  if (pmt->descriptors) {
+    for (i = 0; i < pmt->descriptors->len; i++) {
+      descriptor = g_ptr_array_index (pmt->descriptors, i);
+      pgm_info_length += descriptor->length + 2;
+    }
+  }
+
+  /* Find length of PMT streams */
+  stream_length = 0;
+  if (pmt->streams) {
+    for (i = 0; i < pmt->streams->len; i++) {
+      stream = g_ptr_array_index (pmt->streams, i);
+
+      /* 1 byte stream type
+         2 byte PID
+         2 byte ES info length */
+      stream_length += 5;
+
+      if (stream->descriptors) {
+        for (j = 0; j < stream->descriptors->len; j++) {
+          descriptor = g_ptr_array_index (stream->descriptors, i);
+          stream_length += descriptor->length + 2;
+        }
+      }
+    }
+  }
+
+  length += pgm_info_length + stream_length;
+
+  _packetize_common_section (section, length);
+  data = section->data + 8;
+
+  /* reserved                         - 3  bit
+     PCR_PID                          - 13 uimsbf */
+  GST_WRITE_UINT16_BE (data, pmt->pcr_pid | 0xE000);
+  data += 2;
+
+  /* reserved                         - 4  bit
+     program_info_length              - 12 uimsbf */
+  GST_WRITE_UINT16_BE (data, pgm_info_length | 0xF000);
+  data += 2;
+
+  _packetize_descriptor_array (pmt->descriptors, &data);
+
+  if (pmt->streams) {
+    guint8 *pos;
+
+    for (i = 0; i < pmt->streams->len; i++) {
+      stream = g_ptr_array_index (pmt->streams, i);
+      /* stream_type                  - 8  bit uimsbf */
+      *data++ = stream->stream_type;
+
+      /* reserved                     - 3  bit
+         elementary_PID               - 13 bit uimsbf */
+      GST_WRITE_UINT16_BE (data, stream->pid | 0xE000);
+      data += 2;
+
+      /* reserved                     - 4  bit
+         ES_info_length               - 12 bit uimsbf */
+      pos = data;
+      data += 2;
+      _packetize_descriptor_array (stream->descriptors, &data);
+
+      /* Go back and update descriptor length */
+      GST_WRITE_UINT16_BE (pos, (data - pos - 2) | 0xF000);
+    }
+  }
+
+  return TRUE;
+}
+
+/**
+ * gst_mpegts_section_from_pmt:
+ * @pmt: (transfer full): a #GstMpegTsPMT to create a #GstMpegTsSection from
+ * @pid: The PID that the #GstMpegTsPMT belongs to
+ *
+ * Creates a #GstMpegTsSection from @pmt that is bound to @pid
+ *
+ * Returns: (transfer full): #GstMpegTsSection
+ */
+GstMpegTsSection *
+gst_mpegts_section_from_pmt (GstMpegTsPMT * pmt, guint16 pid)
+{
+  GstMpegTsSection *section;
+
+  g_return_val_if_fail (pmt != NULL, NULL);
+
+  section = _gst_mpegts_section_init (pid, GST_MTS_TABLE_ID_TS_PROGRAM_MAP);
+
+  section->subtable_extension = pmt->program_number;
+  section->cached_parsed = (gpointer) pmt;
+  section->packetizer = _packetize_pmt;
+  section->destroy_parsed = (GDestroyNotify) _gst_mpegts_pmt_free;
+
+  return section;
+}
 
 /* Conditional Access Table */
 static gpointer
