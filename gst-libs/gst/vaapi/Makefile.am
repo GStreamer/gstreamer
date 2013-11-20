@@ -137,12 +137,14 @@ endif
 libgstvaapi_enc_source_c =			\
 	gstvaapiencoder.c			\
 	gstvaapiencoder_h264.c			\
+	gstvaapiencoder_mpeg2.c			\
 	gstvaapiencoder_objects.c		\
 	$(NULL)
 
 libgstvaapi_enc_source_h =			\
 	gstvaapiencoder.h			\
 	gstvaapiencoder_h264.h			\
+	gstvaapiencoder_mpeg2.h			\
 	$(NULL)
 
 libgstvaapi_enc_source_priv_h =			\
