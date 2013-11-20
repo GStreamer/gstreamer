@@ -339,6 +339,7 @@ struct _GstMpegTsPMTStream
 struct _GstMpegTsPMT
 {
   guint16    pcr_pid;
+  guint16    program_number;
 
   GPtrArray    *descriptors;
   GPtrArray *streams;

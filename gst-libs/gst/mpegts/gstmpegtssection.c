@@ -547,7 +547,9 @@ _parse_pmt (GstMpegTsSection * section)
 
   GST_DEBUG ("Parsing %d Program Map Table", section->subtable_extension);
 
-  /* Skip already parsed data */
+  /* Assign program number from subtable extenstion,
+     and skip already parsed data */
+  pmt->program_number = section->subtable_extension;
   data += 8;
 
   pmt->pcr_pid = GST_READ_UINT16_BE (data) & 0x1FFF;
