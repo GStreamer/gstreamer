@@ -238,10 +238,6 @@ gst_vaapidecode_decode_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
     GstVaapiDecoderStatus status;
     GstFlowReturn ret;
 
-    ret =  g_atomic_int_get(&decode->decoder_loop_status);
-    if (ret != GST_FLOW_OK)
-        return ret;
-
     /* Decode current frame */
     for (;;) {
         status = gst_vaapi_decoder_decode(decode->decoder, frame);
@@ -251,6 +247,8 @@ gst_vaapidecode_decode_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
             g_cond_wait(&decode->decoder_ready, &decode->decoder_mutex);
             g_mutex_unlock(&decode->decoder_mutex);
             GST_VIDEO_DECODER_STREAM_LOCK(vdec);
+            if (decode->decoder_loop_status < 0)
+                goto error_decode_loop;
             continue;
         }
         if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
@@ -259,10 +257,17 @@ gst_vaapidecode_decode_frame(GstVideoDecoder *vdec, GstVideoCodecFrame *frame)
     }
 
     /* Try to report back early any error that occured in the decode task */
-    ret = g_atomic_int_get(&decode->decoder_loop_status);
-    return ret;
+    GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
+    GST_VIDEO_DECODER_STREAM_LOCK(vdec);
+    return decode->decoder_loop_status;
 
     /* ERRORS */
+error_decode_loop:
+    {
+        GST_ERROR("decode loop error %d", decode->decoder_loop_status);
+        gst_video_decoder_drop_frame(vdec, frame);
+        return decode->decoder_loop_status;
+    }
 error_decode:
     {
         GST_ERROR("decode error %d", status);
@@ -282,23 +287,17 @@ error_decode:
 }
 
 static GstFlowReturn
-gst_vaapidecode_push_decoded_frame(GstVideoDecoder *vdec)
+gst_vaapidecode_push_decoded_frame(GstVideoDecoder *vdec,
+    GstVideoCodecFrame *out_frame)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
     GstVaapiSurfaceProxy *proxy;
-    GstVaapiDecoderStatus status;
-    GstVideoCodecFrame *out_frame;
     GstFlowReturn ret;
 #if GST_CHECK_VERSION(1,0,0)
     const GstVaapiRectangle *crop_rect;
     GstVaapiVideoMeta *meta;
     guint flags;
 #endif
-
-    status = gst_vaapi_decoder_get_frame_with_timeout(decode->decoder,
-        &out_frame, 100000);
-    if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
-        return GST_VIDEO_DECODER_FLOW_NEED_DATA;
 
     if (!GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY(out_frame)) {
         proxy = gst_video_codec_frame_get_user_data(out_frame);
@@ -407,13 +406,30 @@ static void
 gst_vaapidecode_decode_loop(GstVaapiDecode *decode)
 {
     GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
+    GstVaapiDecoderStatus status;
+    GstVideoCodecFrame *out_frame;
     GstFlowReturn ret;
 
-    ret = gst_vaapidecode_push_decoded_frame(vdec);
+    status = gst_vaapi_decoder_get_frame_with_timeout(decode->decoder,
+        &out_frame, 100000);
+
+    GST_VIDEO_DECODER_STREAM_LOCK(vdec);
+    switch (status) {
+    case GST_VAAPI_DECODER_STATUS_SUCCESS:
+        ret = gst_vaapidecode_push_decoded_frame(vdec, out_frame);
+        break;
+    case GST_VAAPI_DECODER_STATUS_ERROR_NO_DATA:
+        ret = GST_VIDEO_DECODER_FLOW_NEED_DATA;
+        break;
+    default:
+        ret = GST_FLOW_ERROR;
+        break;
+    }
+    decode->decoder_loop_status = ret;
+    GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
+
     if (ret == GST_FLOW_OK)
         return;
-    g_atomic_int_compare_and_exchange(&decode->decoder_loop_status,
-        GST_FLOW_OK, ret);
 
     /* If invoked from gst_vaapidecode_finish(), then return right
        away no matter the errors, or the GstVaapiDecoder needs further
