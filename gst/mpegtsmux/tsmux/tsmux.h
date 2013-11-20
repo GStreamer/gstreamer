@@ -90,7 +90,6 @@
 G_BEGIN_DECLS
 
 #define TSMUX_MAX_ES_INFO_LENGTH ((1 << 12) - 1)
-#define TSMUX_MAX_SECTION_LENGTH (4096)
 
 #define TSMUX_PID_AUTO ((guint16)-1)
 
@@ -107,9 +106,6 @@ typedef void (*TsMuxAllocFunc) (GstBuffer ** buf, void *user_data);
 struct TsMuxSection {
   TsMuxPacketInfo pi;
   GstMpegTsSection *section;
-
-  /* Private sections can be up to 4096 bytes */
-  guint8 data[TSMUX_MAX_SECTION_LENGTH];
 };
 
 /* Information for the streams associated with one program */
