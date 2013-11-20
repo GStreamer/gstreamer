@@ -950,7 +950,7 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
 
   switch (dvdspu->spu_input_type) {
     case SPU_INPUT_TYPE_VOBSUB:
-      if (size > 4) {
+      if (size >= 2) {
         guint8 header[2];
         guint16 packet_size;
 
@@ -958,6 +958,10 @@ gst_dvd_spu_subpic_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
         packet_size = GST_READ_UINT16_BE (header);
         if (packet_size == size) {
           submit_new_spu_packet (dvdspu, dvdspu->partial_spu);
+          dvdspu->partial_spu = NULL;
+        } else if (packet_size == 0) {
+          GST_LOG_OBJECT (dvdspu, "Discarding empty SPU buffer");
+          gst_buffer_unref (dvdspu->partial_spu);
           dvdspu->partial_spu = NULL;
         } else if (packet_size < size) {
           /* Somehow we collected too much - something is wrong. Drop the
