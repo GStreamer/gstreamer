@@ -94,6 +94,7 @@
 
 #include <gst/tag/tag.h>
 #include <gst/video/video.h>
+#include <gst/mpegts/mpegts.h>
 
 #include "mpegtsmux.h"
 
@@ -110,7 +111,8 @@ enum
   ARG_M2TS_MODE,
   ARG_PAT_INTERVAL,
   ARG_PMT_INTERVAL,
-  ARG_ALIGNMENT
+  ARG_ALIGNMENT,
+  ARG_SI_INTERVAL
 };
 
 #define MPEGTSMUX_DEFAULT_ALIGNMENT    -1
@@ -177,6 +179,7 @@ static GstPad *mpegtsmux_request_new_pad (GstElement * element,
 static void mpegtsmux_release_pad (GstElement * element, GstPad * pad);
 static GstStateChangeReturn mpegtsmux_change_state (GstElement * element,
     GstStateChange transition);
+static gboolean mpegtsmux_send_event (GstElement * element, GstEvent * event);
 static void mpegtsdemux_set_header_on_caps (MpegTsMux * mux);
 static gboolean mpegtsmux_src_event (GstPad * pad, GstObject * parent,
     GstEvent * event);
@@ -242,6 +245,7 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
   gstelement_class->request_new_pad = mpegtsmux_request_new_pad;
   gstelement_class->release_pad = mpegtsmux_release_pad;
   gstelement_class->change_state = mpegtsmux_change_state;
+  gstelement_class->send_event = mpegtsmux_send_event;
 
 #if 0
   gstelement_class->set_index = GST_DEBUG_FUNCPTR (mpegtsmux_set_index);
@@ -277,6 +281,12 @@ mpegtsmux_class_init (MpegTsMuxClass * klass)
           "(-1 = auto, 0 = all available packets)",
           -1, G_MAXINT, MPEGTSMUX_DEFAULT_ALIGNMENT,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_SI_INTERVAL,
+      g_param_spec_uint ("si-interval", "SI interval",
+          "Set the interval (in ticks of the 90kHz clock) for writing out the Service"
+          "Information tables", 1, G_MAXUINT, TSMUX_DEFAULT_SI_INTERVAL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -310,6 +320,7 @@ mpegtsmux_init (MpegTsMux * mux)
   mux->m2ts_mode = MPEGTSMUX_DEFAULT_M2TS;
   mux->pat_interval = TSMUX_DEFAULT_PAT_INTERVAL;
   mux->pmt_interval = TSMUX_DEFAULT_PMT_INTERVAL;
+  mux->si_interval = TSMUX_DEFAULT_SI_INTERVAL;
   mux->prog_map = NULL;
   mux->alignment = MPEGTSMUX_DEFAULT_ALIGNMENT;
 
@@ -478,6 +489,10 @@ gst_mpegtsmux_set_property (GObject * object, guint prop_id,
     case ARG_ALIGNMENT:
       mux->alignment = g_value_get_int (value);
       break;
+    case ARG_SI_INTERVAL:
+      mux->si_interval = g_value_get_uint (value);
+      tsmux_set_si_interval (mux->tsmux, mux->si_interval);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -505,6 +520,9 @@ gst_mpegtsmux_get_property (GObject * object, guint prop_id,
       break;
     case ARG_ALIGNMENT:
       g_value_set_int (value, mux->alignment);
+      break;
+    case ARG_SI_INTERVAL:
+      g_value_set_uint (value, mux->si_interval);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -1704,6 +1722,29 @@ mpegtsmux_change_state (GstElement * element, GstStateChange transition)
   }
 
   return ret;
+}
+
+static gboolean
+mpegtsmux_send_event (GstElement * element, GstEvent * event)
+{
+  GstMpegTsSection *section;
+  MpegTsMux *mux = GST_MPEG_TSMUX (element);
+
+  g_return_val_if_fail (event != NULL, FALSE);
+
+  section = gst_event_parse_mpegts_section (event);
+  gst_event_unref (event);
+
+  if (section) {
+    GST_DEBUG ("Received event with mpegts section");
+
+    /* TODO: Check that the section type is supported */
+    tsmux_add_mpegts_si_section (mux->tsmux, section);
+
+    return TRUE;
+  }
+
+  return FALSE;
 }
 
 static gboolean

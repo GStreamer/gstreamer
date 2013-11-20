@@ -83,6 +83,8 @@
 
 #include <string.h>
 
+#include <gst/mpegts/mpegts.h>
+
 #include "tsmux.h"
 #include "tsmuxstream.h"
 #include "crc.h"
@@ -114,6 +116,11 @@
 
 static gboolean tsmux_write_pat (TsMux * mux);
 static gboolean tsmux_write_pmt (TsMux * mux, TsMuxProgram * program);
+static void
+tsmux_section_free (TsMuxSection * section)
+{
+  gst_mpegts_section_unref (section->section);
+}
 
 /**
  * tsmux_new:
@@ -138,6 +145,13 @@ tsmux_new (void)
   mux->pat_changed = TRUE;
   mux->last_pat_ts = -1;
   mux->pat_interval = TSMUX_DEFAULT_PAT_INTERVAL;
+
+  mux->si_changed = TRUE;
+  mux->last_si_ts = -1;
+  mux->si_interval = TSMUX_DEFAULT_SI_INTERVAL;
+
+  mux->si_sections = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+      NULL, (GDestroyNotify) tsmux_section_free);
 
   return mux;
 }
@@ -215,6 +229,72 @@ tsmux_get_pat_interval (TsMux * mux)
 }
 
 /**
+ * tsmux_set_si_interval:
+ * @mux: a #TsMux
+ * @freq: a new SI table interval
+ *
+ * Set the interval (in cycles of the 90kHz clock) for writing out the SI tables.
+ *
+ */
+void
+tsmux_set_si_interval (TsMux * mux, guint freq)
+{
+  g_return_if_fail (mux != NULL);
+
+  mux->si_interval = freq;
+}
+
+/**
+ * tsmux_get_si_interval:
+ * @mux: a #TsMux
+ *
+ * Get the configured SI table interval. See also tsmux_set_si_interval().
+ *
+ * Returns: the configured SI interval
+ */
+guint
+tsmux_get_si_interval (TsMux * mux)
+{
+  g_return_val_if_fail (mux != NULL, 0);
+
+  return mux->si_interval;
+}
+
+/**
+ * tsmux_add_mpegts_si_section:
+ * @mux: a #TsMux
+ * @section: (transfer full): a #GstMpegTsSection to add
+ *
+ * Add a Service Information #GstMpegTsSection to the stream
+ *
+ * Returns: #TRUE on success, #FALSE otherwise
+ */
+gboolean
+tsmux_add_mpegts_si_section (TsMux * mux, GstMpegTsSection * section)
+{
+  TsMuxSection *tsmux_section;
+
+  g_return_val_if_fail (mux != NULL, FALSE);
+  g_return_val_if_fail (section != NULL, FALSE);
+  g_return_val_if_fail (mux->si_sections != NULL, FALSE);
+
+  tsmux_section = g_slice_new0 (TsMuxSection);
+
+  GST_DEBUG ("Adding mpegts section with type %d to mux",
+      section->section_type);
+
+  tsmux_section->section = section;
+  tsmux_section->pi.pid = section->pid;
+
+  g_hash_table_insert (mux->si_sections,
+      GINT_TO_POINTER (section->section_type), tsmux_section);
+
+  mux->si_changed = TRUE;
+
+  return TRUE;
+}
+
+/**
  * tsmux_free:
  * @mux: a #TsMux
  *
@@ -243,6 +323,9 @@ tsmux_free (TsMux * mux)
     tsmux_stream_free (stream);
   }
   g_list_free (mux->streams);
+
+  /* Free SI table sections */
+  g_hash_table_destroy (mux->si_sections);
 
   g_slice_free (TsMux, mux);
 }
@@ -754,6 +837,115 @@ tsmux_write_ts_header (guint8 * buf, TsMuxPacketInfo * pi,
   return TRUE;
 }
 
+static gboolean
+tsmux_section_write_packet (GstMpegTsSectionType * type,
+    TsMuxSection * section, TsMux * mux)
+{
+  GstBuffer *section_buffer;
+  GstBuffer *packet_buffer = NULL;
+  GstMemory *mem;
+  guint8 *packet;
+  guint8 *data;
+  gsize data_size;
+  gsize payload_written;
+  guint len = 0, offset = 0, payload_len = 0;
+
+  g_return_val_if_fail (section != NULL, FALSE);
+  g_return_val_if_fail (mux != NULL, FALSE);
+
+  /* Mark the start of new PES unit */
+  section->pi.packet_start_unit_indicator = TRUE;
+
+  data = gst_mpegts_section_packetize (section->section, &data_size);
+
+  if (!data) {
+    TS_DEBUG ("Could not packetize section");
+    return FALSE;
+  }
+
+  /* Mark payload data size */
+  section->pi.stream_avail = data_size;
+  payload_written = 0;
+
+  section_buffer = gst_buffer_new_wrapped (data, data_size);
+
+  TS_DEBUG ("Section buffer with size %" G_GSIZE_FORMAT " created",
+      gst_buffer_get_size (section_buffer));
+
+  while (section->pi.stream_avail > 0) {
+
+    packet = g_malloc (TSMUX_PACKET_LENGTH);
+
+    if (section->pi.packet_start_unit_indicator) {
+      /* Wee need room for a pointer byte */
+      section->pi.stream_avail++;
+
+      if (!tsmux_write_ts_header (packet, &section->pi, &len, &offset))
+        goto fail;
+
+      /* Write the pointer byte */
+      packet[offset++] = 0x00;
+      payload_len = len - 1;
+
+    } else {
+      if (!tsmux_write_ts_header (packet, &section->pi, &len, &offset))
+        goto fail;
+      payload_len = len;
+    }
+
+    /* Wrap the TS header and adaption field in a GstMemory */
+    mem = gst_memory_new_wrapped (GST_MEMORY_FLAG_READONLY,
+        packet, TSMUX_PACKET_LENGTH, 0, offset, packet, g_free);
+
+    TS_DEBUG ("Creating packet buffer at offset "
+        "%" G_GSIZE_FORMAT " with length %u", payload_written, payload_len);
+
+    packet_buffer = gst_buffer_copy_region (section_buffer, GST_BUFFER_COPY_ALL,
+        payload_written, payload_len);
+
+    /* Prepend the header to the section data */
+    gst_buffer_prepend_memory (packet_buffer, mem);
+
+    TS_DEBUG ("Writing %d bytes to section. %d bytes remaining",
+        len, section->pi.stream_avail - len);
+
+    /* Push the packet without PCR */
+    if G_UNLIKELY
+      (!tsmux_packet_out (mux, packet_buffer, -1)) {
+      /* Buffer given away */
+      packet_buffer = NULL;
+      goto fail;
+      }
+
+    section->pi.stream_avail -= len;
+    payload_written += payload_len;
+    section->pi.packet_start_unit_indicator = FALSE;
+  }
+
+  return TRUE;
+
+fail:
+  if (packet)
+    g_free (packet);
+  if (packet_buffer)
+    gst_buffer_unref (packet_buffer);
+  if (section_buffer)
+    gst_buffer_unref (section_buffer);
+  return FALSE;
+}
+
+static gboolean
+tsmux_write_si (TsMux * mux)
+{
+  g_hash_table_foreach (mux->si_sections,
+      (GHFunc) tsmux_section_write_packet, mux);
+
+  mux->si_changed = FALSE;
+
+  return TRUE;
+
+}
+
 /**
  * tsmux_write_stream_packet:
  * @mux: a #TsMux
@@ -779,6 +971,7 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
   if (tsmux_stream_is_pcr (stream)) {
     gint64 cur_pts = tsmux_stream_get_pts (stream);
     gboolean write_pat;
+    gboolean write_si;
     GList *cur;
 
     cur_pcr = 0;
@@ -819,6 +1012,20 @@ tsmux_write_stream_packet (TsMux * mux, TsMuxStream * stream)
     if (write_pat) {
       mux->last_pat_ts = cur_pts;
       if (!tsmux_write_pat (mux))
+        return FALSE;
+    }
+
+    /* check if we need to rewrite sit */
+    if (mux->last_si_ts == -1 || mux->si_changed)
+      write_si = TRUE;
+    else if (cur_pts >= mux->last_si_ts + mux->si_interval)
+      write_si = TRUE;
+    else
+      write_si = FALSE;
+
+    if (write_si) {
+      mux->last_si_ts = cur_pts;
+      if (!tsmux_write_si (mux))
         return FALSE;
     }
 

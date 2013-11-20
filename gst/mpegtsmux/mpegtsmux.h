@@ -140,6 +140,7 @@ struct MpegTsMux {
   guint pat_interval;
   guint pmt_interval;
   gint alignment;
+  guint si_interval;
 
   /* state */
   gboolean first;
