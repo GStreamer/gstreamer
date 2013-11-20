@@ -191,6 +191,15 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
     gst_video_codec_state_unref(state);
 
 #if GST_CHECK_VERSION(1,1,0)
+    vis = *vi;
+    if (GST_VIDEO_INFO_FORMAT(vi) == GST_VIDEO_FORMAT_ENCODED) {
+        /* XXX: this is a workaround until auto-plugging is fixed when
+           format=ENCODED + memory:VASurface caps feature are provided.
+           Meanwhile, providing a random format here works but this is
+           a terribly wrong thing per se. */
+        gst_video_info_set_format(&vis, GST_VIDEO_FORMAT_NV12,
+            GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
+    }
     state->caps = gst_video_info_to_caps(&vis);
 #else
     /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
