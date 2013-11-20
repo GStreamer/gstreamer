@@ -23,7 +23,6 @@ noinst_HEADERS = \
 	qtdemux.h        \
 	qtdemux_types.h  \
 	qtdemux_dump.h   \
-	qtdemux_fourcc.h \
 	qtdemux_lang.h   \
 	qtpalette.h      \
 	gstrtpxqtdepay.h \
@@ -34,7 +33,6 @@ noinst_HEADERS = \
 	descriptors.h    \
 	properties.h     \
 	fourcc.h         \
-	ftypcc.h         \
 	gstqtmuxmap.h
 
 EXTRA_DIST = \

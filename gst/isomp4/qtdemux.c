@@ -57,7 +57,7 @@
 #include "qtatomparser.h"
 #include "qtdemux_types.h"
 #include "qtdemux_dump.h"
-#include "qtdemux_fourcc.h"
+#include "fourcc.h"
 #include "qtdemux_lang.h"
 #include "qtdemux.h"
 #include "qtpalette.h"

@@ -49,7 +49,6 @@
 #include "descriptors.h"
 #include "properties.h"
 #include "fourcc.h"
-#include "ftypcc.h"
 
 /* helper storage struct */
 #define ATOM_ARRAY(struct_type) \

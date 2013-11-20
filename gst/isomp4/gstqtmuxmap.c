@@ -43,7 +43,6 @@
 
 #include "gstqtmuxmap.h"
 #include "fourcc.h"
-#include "ftypcc.h"
 
 /* static info related to various format */
 

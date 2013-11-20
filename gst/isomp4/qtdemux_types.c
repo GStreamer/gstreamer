@@ -19,7 +19,7 @@
 
 #include "qtdemux_types.h"
 #include "qtdemux_dump.h"
-#include "qtdemux_fourcc.h"
+#include "fourcc.h"
 
 static const QtNodeType qt_node_types[] = {
   {FOURCC_moov, "movie", QT_FLAG_CONTAINER,},

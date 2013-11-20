@@ -21,6 +21,7 @@
 
 #include "qtdemux_types.h"
 #include "qtdemux_dump.h"
+#include "fourcc.h"
 
 #include "qtatomparser.h"
 
