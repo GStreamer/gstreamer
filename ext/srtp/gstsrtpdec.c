@@ -685,7 +685,7 @@ gst_srtp_dec_sink_event (GstPad * pad, GstObject * parent,
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_CAPS:
       gst_event_parse_caps (event, &caps);
-      return gst_srtp_dec_sink_setcaps (pad, parent, caps, FALSE);
+      return gst_srtp_dec_sink_setcaps (pad, parent, caps, is_rtcp);
     default:
       return gst_pad_event_default (pad, parent, event);
   }
