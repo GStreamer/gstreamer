@@ -490,7 +490,7 @@ html_context_handle_element (HtmlContext * ctxt,
 
   attrs = g_new0 (gchar *, (count + 1) * 2);
 
-  for (i = 0; i < count; i += 2) {
+  for (i = 0; i < count && next != NULL; i += 2) {
     gchar *attr_name = NULL, *attr_value = NULL;
     gsize length;
     next = string_token (next + 1, "=", &attr_name);
