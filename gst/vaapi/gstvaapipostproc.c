@@ -905,80 +905,61 @@ gst_vaapipostproc_transform_caps_impl(GstBaseTransform *trans,
     GstVideoFormat format;
     GstCaps *out_caps;
     guint width, height;
-    gint fps_n, fps_d, par_n, par_d;
 
-    if (!gst_caps_is_fixed(caps)) {
-        out_caps = NULL;
-        if (direction == GST_PAD_SINK) {
-            /* Generate the allowed set of caps on the src pad */
-            if (ensure_allowed_srcpad_caps(postproc))
-                out_caps = gst_caps_ref(postproc->allowed_srcpad_caps);
-        }
-        else {
-            /* Generate the allowed set of caps on the sink pad */
-            if (ensure_allowed_sinkpad_caps(postproc))
-                out_caps = gst_caps_ref(postproc->allowed_sinkpad_caps);
-        }
-        return out_caps;
+    /* Generate the sink pad caps, that could be fixated afterwards */
+    if (direction == GST_PAD_SRC) {
+        if (!ensure_allowed_sinkpad_caps(postproc))
+            return NULL;
+        return gst_caps_ref(postproc->allowed_sinkpad_caps);
     }
 
-    /* Generate the other pad caps, based on the current pad caps, as
-       specified by the direction argument */
+    /* Generate complete set of src pad caps if non-fixated sink pad
+       caps are provided */
+    if (!gst_caps_is_fixed(caps)) {
+        if (!ensure_allowed_srcpad_caps(postproc))
+            return NULL;
+        return gst_caps_ref(postproc->allowed_srcpad_caps);
+    }
+
+    /* Generate the expected src pad caps, from the current fixated
+       sink pad caps */
     if (!gst_video_info_from_caps(&vi, caps))
         return NULL;
 
-    format = GST_VIDEO_INFO_FORMAT(&vi);
-    if (format == GST_VIDEO_FORMAT_UNKNOWN)
+    // Set double framerate in interlaced mode
+    if (is_deinterlace_enabled(postproc, &vi)) {
+        gint fps_n = GST_VIDEO_INFO_FPS_N(&vi);
+        gint fps_d = GST_VIDEO_INFO_FPS_D(&vi);
+        if (!gst_util_fraction_multiply(fps_n, fps_d, 2, 1, &fps_n, &fps_d))
+            return NULL;
+        GST_VIDEO_INFO_FPS_N(&vi) = fps_n;
+        GST_VIDEO_INFO_FPS_D(&vi) = fps_d;
+    }
+
+    // Signal the other pad that we only generate progressive frames
+    GST_VIDEO_INFO_INTERLACE_MODE(&vi) = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+
+    // Update size from user-specified parameters
+    format = GST_VIDEO_FORMAT_ENCODED;
+    find_best_size(postproc, &vi, &width, &height);
+    gst_video_info_set_format(&vi, format, width, height);
+
+    /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
+       reconstruct suitable caps for "encoded" video formats */
+    out_caps = gst_caps_from_string(GST_VAAPI_SURFACE_CAPS_NAME);
+    if (!out_caps)
         return NULL;
 
-    fps_n = GST_VIDEO_INFO_FPS_N(&vi);
-    fps_d = GST_VIDEO_INFO_FPS_D(&vi);
-    if (direction == GST_PAD_SINK) {
-        if (is_deinterlace_enabled(postproc, &vi)) {
-            /* Set double framerate in interlaced mode */
-            if (!gst_util_fraction_multiply(fps_n, fps_d, 2, 1, &fps_n, &fps_d))
-                return NULL;
-        }
-        format = GST_VIDEO_FORMAT_ENCODED;
-
-        /* Signal the other pad that we generate only progressive frames */
-        GST_VIDEO_INFO_INTERLACE_MODE(&vi) =
-            GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
-
-        find_best_size(postproc, &vi, &width, &height);
-        gst_video_info_set_format(&vi, format, width, height);
-    }
-    else {
-        if (is_deinterlace_enabled(postproc, &vi)) {
-            /* Set half framerate in interlaced mode */
-            if (!gst_util_fraction_multiply(fps_n, fps_d, 1, 2, &fps_n, &fps_d))
-                return NULL;
-        }
-    }
-
-    if (format != GST_VIDEO_FORMAT_ENCODED) {
-        out_caps = gst_video_info_to_caps(&vi);
-        if (!out_caps)
-            return NULL;
-    }
-    else {
-        /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
-           reconstruct suitable caps for "encoded" video formats */
-        out_caps = gst_caps_from_string(GST_VAAPI_SURFACE_CAPS_NAME);
-        if (!out_caps)
-            return NULL;
-
-        par_n = GST_VIDEO_INFO_PAR_N(&vi);
-        par_d = GST_VIDEO_INFO_PAR_D(&vi);
-        gst_caps_set_simple(out_caps,
-            "type", G_TYPE_STRING, "vaapi",
-            "opengl", G_TYPE_BOOLEAN, USE_GLX,
-            "width", G_TYPE_INT, GST_VIDEO_INFO_WIDTH(&vi),
-            "height", G_TYPE_INT, GST_VIDEO_INFO_HEIGHT(&vi),
-            "framerate", GST_TYPE_FRACTION, fps_n, fps_d,
-            "pixel-aspect-ratio", GST_TYPE_FRACTION, par_n, par_d,
-            NULL);
-    }
+    gst_caps_set_simple(out_caps,
+        "type", G_TYPE_STRING, "vaapi",
+        "opengl", G_TYPE_BOOLEAN, USE_GLX,
+        "width", G_TYPE_INT, GST_VIDEO_INFO_WIDTH(&vi),
+        "height", G_TYPE_INT, GST_VIDEO_INFO_HEIGHT(&vi),
+        "framerate", GST_TYPE_FRACTION, GST_VIDEO_INFO_FPS_N(&vi),
+            GST_VIDEO_INFO_FPS_D(&vi),
+        "pixel-aspect-ratio", GST_TYPE_FRACTION, GST_VIDEO_INFO_PAR_N(&vi),
+            GST_VIDEO_INFO_PAR_D(&vi),
+        NULL);
 
     gst_caps_set_interlaced(out_caps, &vi);
     return out_caps;
