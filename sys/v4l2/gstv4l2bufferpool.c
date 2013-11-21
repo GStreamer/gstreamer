@@ -273,13 +273,25 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
         expbuf.type = meta->vbuffer.type;
         expbuf.index = meta->vbuffer.index;
         expbuf.flags = O_CLOEXEC;
-        if (v4l2_ioctl (pool->video_fd, VIDIOC_EXPBUF, &expbuf) < 0)
-          goto expbuf_failed;
+
+        for (i = 0; i < meta->n_planes; i++) {
+          expbuf.plane = i;
+
+          if (v4l2_ioctl (pool->video_fd, VIDIOC_EXPBUF, &expbuf) < 0)
+            goto expbuf_failed;
+
+          gst_buffer_append_memory (newbuf,
+              gst_dmabuf_allocator_alloc (pool->allocator, expbuf.fd,
+                  meta->vplanes[i].length));
+        }
 
         meta->vbuffer.memory = V4L2_MEMORY_DMABUF;
-        gst_buffer_append_memory (newbuf,
-            gst_dmabuf_allocator_alloc (pool->allocator, expbuf.fd,
-                meta->vbuffer.length));
+
+        /* in non-MPLANE mode our meta is not automatically updated
+         * because the plane is emulated (not referenced by
+         * meta->vbuffer) */
+        if (!V4L2_TYPE_IS_MULTIPLANAR (obj->type))
+          meta->vplanes[0].m.fd = meta->vbuffer.m.fd;
       }
 #endif
       /* add metadata to raw video buffers */
@@ -425,8 +437,8 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
       GST_VIDEO_INFO_FORMAT (&obj->info) != GST_VIDEO_FORMAT_ENCODED) {
     /* in non MPLANE mode, there is only one  bytesperline field */
     gint nb_checked_planes =
-        V4L2_TYPE_IS_MULTIPLANAR (obj->
-        type) ? GST_VIDEO_INFO_N_PLANES (&obj->info) : 1;
+        V4L2_TYPE_IS_MULTIPLANAR (obj->type) ? GST_VIDEO_INFO_N_PLANES (&obj->
+        info) : 1;
     gint stride = 0;
     gint i = 0;
     for (i = 0; i < nb_checked_planes; i++) {
