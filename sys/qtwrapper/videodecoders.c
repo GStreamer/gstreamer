@@ -605,11 +605,11 @@ decompressCb (void *decompressionTrackingRefCon,
 
       /* special copy for stride handling */
       for (i = 0; i < qtwrapper->height; i++)
-        g_memmove (GST_BUFFER_DATA (outbuf) + realpixels * i,
+        memmove (GST_BUFFER_DATA (outbuf) + realpixels * i,
             addr + stride * i, realpixels);
 
     } else
-      g_memmove (GST_BUFFER_DATA (outbuf), addr, (int) qtwrapper->outsize);
+      memmove (GST_BUFFER_DATA (outbuf), addr, (int) qtwrapper->outsize);
 
     /* Release CVPixelBuffer */
     CVPixelBufferUnlockBaseAddress (pixelBuffer, 0);

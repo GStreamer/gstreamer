@@ -837,7 +837,7 @@ qtwrapper_audio_decoder_chain (GstPad * pad, GstBuffer * buf)
       goto beach;
 
     /* copy data from bufferlist to output buffer */
-    g_memmove (GST_BUFFER_DATA (outbuf),
+    memmove (GST_BUFFER_DATA (outbuf),
         qtwrapper->bufferlist->mBuffers[0].mData, realbytes);
 
     /* 5. calculate timestamp and duration */
