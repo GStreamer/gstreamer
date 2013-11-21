@@ -425,7 +425,7 @@ GstRTSPClient
  - Handle RTSP Requests from connected clients. All other objects
    are called by this object.
 
-GstRTSPClientState
+GstRTSPContext
  - Helper structure contaning the current state of the request
    handled by the client.
 
@@ -482,7 +482,7 @@ GstRTSPThreadPool
 
 GstRTSPAuth
  - Hooks for checking authorizations, all client activity will call this
-   object with the GstRTSPClientState structure. By default it supports
+   object with the GstRTSPContext structure. By default it supports
    basic authentication.
 
 GstRTSPToken
