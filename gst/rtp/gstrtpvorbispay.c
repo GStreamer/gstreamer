@@ -727,7 +727,7 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GST_LOG_OBJECT (rtpvorbispay, "size %" G_GSIZE_FORMAT
       ", duration %" GST_TIME_FORMAT, size, GST_TIME_ARGS (duration));
 
-  if (G_UNLIKELY (size < 1 || size > 0xffff))
+  if (G_UNLIKELY (size < 1))
     goto wrong_size;
 
   /* find packet type */
@@ -822,8 +822,7 @@ done:
 wrong_size:
   {
     GST_ELEMENT_WARNING (rtpvorbispay, STREAM, DECODE,
-        ("Invalid packet size (1 < %" G_GSIZE_FORMAT " <= 0xffff)", size),
-        (NULL));
+        ("Invalid packet size (1 < %" G_GSIZE_FORMAT ")", size), (NULL));
     gst_buffer_unmap (buffer, &map);
     gst_buffer_unref (buffer);
     return GST_FLOW_OK;
