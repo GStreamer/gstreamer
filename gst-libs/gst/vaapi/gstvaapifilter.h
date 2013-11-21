@@ -150,6 +150,12 @@ GPtrArray *
 gst_vaapi_filter_get_operations(GstVaapiFilter *filter);
 
 gboolean
+gst_vaapi_filter_has_operation(GstVaapiFilter *filter, GstVaapiFilterOp op);
+
+gboolean
+gst_vaapi_filter_use_operation(GstVaapiFilter *filter, GstVaapiFilterOp op);
+
+gboolean
 gst_vaapi_filter_set_operation(GstVaapiFilter *filter, GstVaapiFilterOp op,
     const GValue *value);
 

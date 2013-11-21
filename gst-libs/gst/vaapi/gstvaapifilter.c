@@ -1117,6 +1117,53 @@ gst_vaapi_filter_get_operations(GstVaapiFilter *filter)
 }
 
 /**
+ * gst_vaapi_filter_has_operation:
+ * @filter: a #GstVaapiFilter
+ * @op: a #GstVaapiFilterOp
+ *
+ * Determines whether the underlying VA driver advertises support for
+ * the supplied operation @op.
+ *
+ * Return value: %TRUE if the specified operation may be supported by
+ *   the underlying hardware, %FALSE otherwise
+ */
+gboolean
+gst_vaapi_filter_has_operation(GstVaapiFilter *filter, GstVaapiFilterOp op)
+{
+    g_return_val_if_fail(filter != NULL, FALSE);
+
+    return find_operation(filter, op) != NULL;
+}
+
+/**
+ * gst_vaapi_filter_use_operation:
+ * @filter: a #GstVaapiFilter
+ * @op: a #GstVaapiFilterOp
+ *
+ * Determines whether the supplied operation @op was already enabled
+ * through a prior call to gst_vaapi_filter_set_operation() or any
+ * other operation-specific function.
+ *
+ * Note: should an operation be set to its default value, this means
+ * that it is actually not enabled.
+ *
+ * Return value: %TRUE if the specified operation was already enabled,
+ *   %FALSE otherwise
+ */
+gboolean
+gst_vaapi_filter_use_operation(GstVaapiFilter *filter, GstVaapiFilterOp op)
+{
+    GstVaapiFilterOpData *op_data;
+
+    g_return_val_if_fail(filter != NULL, FALSE);
+
+    op_data = find_operation(filter, op);
+    if (!op_data)
+        return FALSE;
+    return op_data->is_enabled;
+}
+
+/**
  * gst_vaapi_filter_set_operation:
  * @filter: a #GstVaapiFilter
  * @op: a #GstVaapiFilterOp
