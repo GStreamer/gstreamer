@@ -57,6 +57,7 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiPostproc                GstVaapiPostproc;
 typedef struct _GstVaapiPostprocClass           GstVaapiPostprocClass;
+typedef struct _GstVaapiDeinterlaceState        GstVaapiDeinterlaceState;
 
 /**
  * GstVaapiDeinterlaceMode:
@@ -69,6 +70,18 @@ typedef enum {
     GST_VAAPI_DEINTERLACE_MODE_INTERLACED,
     GST_VAAPI_DEINTERLACE_MODE_DISABLED,
 } GstVaapiDeinterlaceMode;
+
+/*
+ * GST_VAAPI_DEINTERLACE_MAX_REFERENCES:
+ *
+ * This represents the maximum number of VA surfaces we could keep as
+ * references for advanced deinterlacing.
+ *
+ * Note: if the upstream element is vaapidecode, then the maximum
+ * number of allowed surfaces used as references shall be less than
+ * the actual number of scratch surfaces used for decoding (4).
+ */
+#define GST_VAAPI_DEINTERLACE_MAX_REFERENCES 3
 
 /**
  * GstVaapiPostprocFlags:
@@ -98,6 +111,26 @@ typedef enum {
     GST_VAAPI_POSTPROC_FLAG_CUSTOM      = 1 << 20,
     GST_VAAPI_POSTPROC_FLAG_SIZE        = GST_VAAPI_POSTPROC_FLAG_CUSTOM,
 } GstVaapiPostprocFlags;
+
+/*
+ * GstVaapiDeinterlaceState:
+ * @buffers: history buffer, maintained as a cyclic array
+ * @buffers_index: next free slot in the history buffer
+ * @surfaces: array of surfaces used as references
+ * @num_surfaces: number of active surfaces in that array
+ * @deint: flag: previous buffers were interlaced?
+ * @tff: flag: previous buffers were organized as top-field-first?
+ *
+ * Context used to maintain deinterlacing state.
+ */
+struct _GstVaapiDeinterlaceState {
+    GstBuffer                  *buffers[GST_VAAPI_DEINTERLACE_MAX_REFERENCES];
+    guint                       buffers_index;
+    GstVaapiSurface            *surfaces[GST_VAAPI_DEINTERLACE_MAX_REFERENCES];
+    guint                       num_surfaces;
+    guint                       deint           : 1;
+    guint                       tff             : 1;
+};
 
 struct _GstVaapiPostproc {
     /*< private >*/
@@ -129,6 +162,7 @@ struct _GstVaapiPostproc {
     /* Deinterlacing */
     GstVaapiDeinterlaceMode     deinterlace_mode;
     GstVaapiDeinterlaceMethod   deinterlace_method;
+    GstVaapiDeinterlaceState    deinterlace_state;
     GstClockTime                field_duration;
 
     guint                       is_raw_yuv      : 1;

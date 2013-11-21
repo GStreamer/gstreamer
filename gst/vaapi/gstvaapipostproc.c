@@ -371,6 +371,51 @@ append_output_buffer_metadata(GstBuffer *outbuf, GstBuffer *inbuf, guint flags)
         0, -1);
 }
 
+static void
+ds_reset(GstVaapiDeinterlaceState *ds)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS(ds->buffers); i++)
+        gst_buffer_replace(&ds->buffers[i], NULL);
+    ds->buffers_index = 0;
+    ds->num_surfaces = 0;
+    ds->deint = FALSE;
+    ds->tff = FALSE;
+}
+
+static void
+ds_add_buffer(GstVaapiDeinterlaceState *ds, GstBuffer *buf)
+{
+    gst_buffer_replace(&ds->buffers[ds->buffers_index], buf);
+    ds->buffers_index = (ds->buffers_index + 1) % G_N_ELEMENTS(ds->buffers);
+}
+
+static inline GstBuffer *
+ds_get_buffer(GstVaapiDeinterlaceState *ds, guint index)
+{
+    const guint n = ds->buffers_index + G_N_ELEMENTS(ds->buffers) - index - 1;
+    return ds->buffers[n % G_N_ELEMENTS(ds->buffers)];
+}
+
+static void
+ds_set_surfaces(GstVaapiDeinterlaceState *ds)
+{
+    GstVaapiVideoMeta *meta;
+    guint i;
+
+    ds->num_surfaces = 0;
+    for (i = 0; i < G_N_ELEMENTS(ds->buffers); i++) {
+        GstBuffer * const buf = ds_get_buffer(ds, i);
+        if (!buf)
+            break;
+
+        meta = gst_buffer_get_vaapi_video_meta(buf);
+        ds->surfaces[ds->num_surfaces++] =
+            gst_vaapi_video_meta_get_surface(meta);
+    }
+}
+
 static GstVaapiDeinterlaceMethod
 get_next_deint_method(GstVaapiDeinterlaceMethod deint_method)
 {
@@ -409,6 +454,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     GstBuffer *outbuf)
 {
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
+    GstVaapiDeinterlaceState * const ds = &postproc->deinterlace_state;
     GstVaapiVideoMeta *inbuf_meta, *outbuf_meta;
     GstVaapiSurface *inbuf_surface, *outbuf_surface;
     GstVaapiFilterStatus status;
@@ -433,6 +479,12 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     tff        = GST_BUFFER_FLAG_IS_SET(inbuf, GST_VIDEO_BUFFER_FLAG_TFF);
     deint      = is_interlaced_buffer(postproc, inbuf);
 
+    /* Drop references if deinterlacing conditions changed */
+    if (deint != ds->deint || (ds->num_surfaces > 0 && tff != ds->tff))
+        ds_reset(ds);
+    ds->deint = deint;
+    ds->tff = tff;
+
     flags = gst_vaapi_video_meta_get_render_flags(inbuf_meta) &
         ~(GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD|
           GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD);
@@ -451,8 +503,16 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
 
         if (deint) {
             deint_flags = (tff ? GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD : 0);
+            if (tff)
+                deint_flags |= GST_VAAPI_DEINTERLACE_FLAG_TFF;
             if (!set_best_deint_method(postproc, deint_flags, &deint_method))
                 goto error_op_deinterlace;
+
+            ds_set_surfaces(ds);
+            if (!gst_vaapi_filter_set_deinterlacing_references(postproc->filter,
+                    ds->surfaces, ds->num_surfaces, NULL, 0))
+                goto error_op_deinterlace;
+
             if (deint_method != postproc->deinterlace_method) {
                 GST_DEBUG("unsupported deinterlace-method %u. Using %u instead",
                           postproc->deinterlace_method, deint_method);
@@ -484,8 +544,14 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
 
     if (deint) {
         deint_flags = (tff ? 0 : GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD);
+        if (tff)
+            deint_flags |= GST_VAAPI_DEINTERLACE_FLAG_TFF;
         if (!gst_vaapi_filter_set_deinterlacing(postproc->filter,
                 deint_method, deint_flags))
+            goto error_op_deinterlace;
+
+        if (!gst_vaapi_filter_set_deinterlacing_references(postproc->filter,
+                ds->surfaces, ds->num_surfaces, NULL, 0))
             goto error_op_deinterlace;
     }
 
@@ -502,6 +568,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     }
     gst_buffer_set_vaapi_video_meta(outbuf, outbuf_meta);
     gst_vaapi_video_meta_unref(outbuf_meta);
+    ds_add_buffer(ds, inbuf);
     return GST_FLOW_OK;
 
     /* ERRORS */
