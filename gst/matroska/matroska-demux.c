@@ -2942,7 +2942,7 @@ gst_matroska_demux_add_wvpk_header (GstElement * element,
       GST_WRITE_UINT32_LE (outdata + outpos + 24, crc);
       outpos += 28;
 
-      g_memmove (outdata + outpos, data, blocksize);
+      memmove (outdata + outpos, data, blocksize);
       outpos += blocksize;
       data += blocksize;
       size -= blocksize;

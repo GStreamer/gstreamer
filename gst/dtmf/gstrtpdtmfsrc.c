@@ -609,7 +609,7 @@ gst_rtp_dtmf_src_create_next_rtp_packet (GstRTPDTMFSrc * dtmfsrc)
   payload = (GstRTPDTMFPayload *) gst_rtp_buffer_get_payload (&rtpbuffer);
 
   /* copy payload and convert to network-byte order */
-  g_memmove (payload, dtmfsrc->payload, sizeof (GstRTPDTMFPayload));
+  memmove (payload, dtmfsrc->payload, sizeof (GstRTPDTMFPayload));
 
   payload->duration = g_htons (payload->duration);
 

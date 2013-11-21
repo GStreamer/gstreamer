@@ -39,7 +39,7 @@ gst_wavpack_stream_reader_read_bytes (void *id, void *data, int32_t bcount)
       rid->length, rid->position);
 
   if (to_read > 0) {
-    g_memmove (data, rid->buffer + rid->position, to_read);
+    memmove (data, rid->buffer + rid->position, to_read);
     rid->position += to_read;
     return to_read;
   } else {

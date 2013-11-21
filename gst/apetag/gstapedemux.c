@@ -214,7 +214,7 @@ ape_demux_parse_tags (const guint8 * data, gint size)
       while (sp != NULL && (sp2 = strchr (sp + 1, ' ')) != NULL)
         sp = sp2;
       if (sp) {
-        g_memmove (val, sp + 1, strlen (sp + 1) + 1);
+        memmove (val, sp + 1, strlen (sp + 1) + 1);
       }
     }
 

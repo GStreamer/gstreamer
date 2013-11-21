@@ -206,7 +206,7 @@ gst_auto_video_src_create_element_with_pretty_name (GstAutoVideoSrc * src,
   if (g_str_has_suffix (marker, "src"))
     marker[strlen (marker) - 4] = '\0';
   if (g_str_has_prefix (marker, "gst"))
-    g_memmove (marker, marker + 3, strlen (marker + 3) + 1);
+    memmove (marker, marker + 3, strlen (marker + 3) + 1);
   name = g_strdup_printf ("%s-actual-src-%s", GST_OBJECT_NAME (src), marker);
   g_free (marker);
 

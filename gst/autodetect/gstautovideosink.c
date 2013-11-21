@@ -220,7 +220,7 @@ gst_auto_video_sink_create_element_with_pretty_name (GstAutoVideoSink * sink,
   if (g_str_has_suffix (marker, "sink"))
     marker[strlen (marker) - 4] = '\0';
   if (g_str_has_prefix (marker, "gst"))
-    g_memmove (marker, marker + 3, strlen (marker + 3) + 1);
+    memmove (marker, marker + 3, strlen (marker + 3) + 1);
   name = g_strdup_printf ("%s-actual-sink-%s", GST_OBJECT_NAME (sink), marker);
   g_free (marker);
 

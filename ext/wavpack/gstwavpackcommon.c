@@ -36,7 +36,7 @@ GST_DEBUG_CATEGORY_EXTERN (wavpack_debug);
 gboolean
 gst_wavpack_read_header (WavpackHeader * header, guint8 * buf)
 {
-  g_memmove (header, buf, sizeof (WavpackHeader));
+  memmove (header, buf, sizeof (WavpackHeader));
 
 #ifndef WAVPACK_OLD_API
   WavpackLittleEndianToNative (header, (char *) WavpackHeaderFormat);

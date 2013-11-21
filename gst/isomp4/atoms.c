@@ -2870,7 +2870,7 @@ atom_moov_add_tag (AtomMOOV * moov, guint32 fourcc, guint32 flags,
   tag = atom_tag_new (fourcc, flags);
   tdata = &tag->data;
   atom_tag_data_alloc_data (tdata, size);
-  g_memmove (tdata->data, data, size);
+  memmove (tdata->data, data, size);
 
   atom_moov_append_tag (moov,
       build_atom_info_wrapper ((Atom *) tag, atom_tag_copy_data,
