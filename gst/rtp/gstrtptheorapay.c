@@ -734,9 +734,6 @@ gst_rtp_theora_pay_handle_buffer (GstRTPBasePayload * basepayload,
   GST_DEBUG_OBJECT (rtptheorapay, "size %" G_GSIZE_FORMAT
       ", duration %" GST_TIME_FORMAT, size, GST_TIME_ARGS (duration));
 
-  if (G_UNLIKELY (size > 0xffff))
-    goto wrong_size;
-
   /* find packet type */
   if (size == 0) {
     TDT = 0;
@@ -833,14 +830,6 @@ done:
   return ret;
 
   /* ERRORS */
-wrong_size:
-  {
-    GST_ELEMENT_WARNING (rtptheorapay, STREAM, DECODE,
-        ("Invalid packet size (%" G_GSIZE_FORMAT " <= 0xffff)", size), (NULL));
-    gst_buffer_unmap (buffer, &map);
-    gst_buffer_unref (buffer);
-    return GST_FLOW_OK;
-  }
 parse_id_failed:
   {
     gst_buffer_unmap (buffer, &map);

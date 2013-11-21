@@ -398,6 +398,7 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
   guint32 header, ident;
   guint8 F, TDT, packets;
   GstRTPBuffer rtp = { NULL };
+  guint length;
 
   rtptheoradepay = GST_RTP_THEORA_DEPAY (depayload);
 
@@ -488,10 +489,14 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
     /* construct assembled buffer */
     payload_len = gst_adapter_available (rtptheoradepay->adapter);
     payload = gst_adapter_take (rtptheoradepay->adapter, payload_len);
-    /* fix the length */
-    payload[0] = ((payload_len - 2) >> 8) & 0xff;
-    payload[1] = (payload_len - 2) & 0xff;
+
+    /* use this length */
+    length = payload_len - 2;
+
     to_free = payload;
+  } else {
+    /* read length from data */
+    length = 0;
   }
 
   GST_DEBUG_OBJECT (depayload, "assemble done, payload_len %d", payload_len);
@@ -516,9 +521,9 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
    * +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+*
    */
   while (payload_len >= 2) {
-    guint16 length;
+    if (length == 0)
+      length = GST_READ_UINT16_BE (payload);
 
-    length = GST_READ_UINT16_BE (payload);
     payload += 2;
     payload_len -= 2;
 
@@ -557,6 +562,8 @@ gst_rtp_theora_depay_process (GstRTPBaseDepayload * depayload, GstBuffer * buf)
 
     payload += length;
     payload_len -= length;
+    /* make sure to read next length */
+    length = 0;
 
     ret = gst_rtp_base_depayload_push (depayload, outbuf);
     if (ret != GST_FLOW_OK)
