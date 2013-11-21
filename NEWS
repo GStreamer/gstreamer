@@ -1,7 +1,21 @@
-gst-vaapi NEWS -- summary of changes.  2013-08-29
+gst-vaapi NEWS -- summary of changes.  2013-11-DD
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
+
+Version 0.5.7 - DD.Nov.2013
+* Add support for GStreamer 1.2 (+Victor Jaquez, Sreerenj Balachandran)
+* Add support for video processing (VA/VPP) (+Halley Zhao)
+  + Scaling and color conversion
+  + Image enhancement filters: Sharpening, Noise Reduction
+  + Advanced deinterlacing: Motion-Adaptive, Motion-Compensated
+* Fix vaapidecode pause/resume/seek capabilities (+Guangxin Xu)
+* JPEG decoder bug fixes and improvements
+  + Add support for multiscan images
+  + Improve overall performance by +12%
+  + Fix robustness and tolerance to missing packets
+  + Fix detection of image boundaries (Junfeng Xu)
+  + Fix decoding from Logitech Pro C920 cameras (Junfeng Xu)
 
 Version 0.5.6 - 29.Aug.2013
 * Add render-to-pixmap API to bypass VA/GLX in clutter-gst
