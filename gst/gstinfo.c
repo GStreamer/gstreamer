@@ -562,7 +562,7 @@ prettify_structure_string (gchar * str)
     if (count > MAX_BUFFER_DUMP_STRING_LEN) {
       memcpy (pos + MAX_BUFFER_DUMP_STRING_LEN - 6, "..", 2);
       memcpy (pos + MAX_BUFFER_DUMP_STRING_LEN - 4, pos + count - 4, 4);
-      g_memmove (pos + MAX_BUFFER_DUMP_STRING_LEN, pos + count,
+      memmove (pos + MAX_BUFFER_DUMP_STRING_LEN, pos + count,
           strlen (pos + count) + 1);
       pos += MAX_BUFFER_DUMP_STRING_LEN;
     }
@@ -2153,7 +2153,7 @@ __gst_info_fallback_vasprintf (char **result, char const *format, va_list args)
       continue;
     }
     len = strlen (c + 4);
-    g_memmove (c + 2, c + 4, len + 1);
+    memmove (c + 2, c + 4, len + 1);
     c += 2;
   }
   while ((c = strstr (clean_format, "%P")))     /* old GST_PTR_FORMAT */

@@ -282,7 +282,7 @@ _replace_memory (GstBuffer * buffer, guint len, guint idx, guint length,
   }
 
   if (end < len) {
-    g_memmove (&GST_BUFFER_MEM_PTR (buffer, idx),
+    memmove (&GST_BUFFER_MEM_PTR (buffer, idx),
         &GST_BUFFER_MEM_PTR (buffer, end), (len - end) * sizeof (gpointer));
   }
   GST_BUFFER_MEM_LEN (buffer) = len - length;

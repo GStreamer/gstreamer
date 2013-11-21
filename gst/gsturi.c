@@ -426,7 +426,7 @@ gst_uri_get_location (const gchar * uri)
       g_ascii_isalpha (unescaped[1]) &&
       (unescaped[2] == ':' || unescaped[2] == '|')) {
     unescaped[2] = ':';
-    g_memmove (unescaped, unescaped + 1, strlen (unescaped + 1) + 1);
+    memmove (unescaped, unescaped + 1, strlen (unescaped + 1) + 1);
   }
 #endif
 
@@ -801,7 +801,7 @@ gst_file_utils_canonicalise_path (const gchar * path)
     if (strcmp (*p, ".") == 0) {
       /* just move all following parts on top of this, incl. NUL terminator */
       g_free (*p);
-      g_memmove (p, p + 1, (g_strv_length (p + 1) + 1) * sizeof (gchar *));
+      memmove (p, p + 1, (g_strv_length (p + 1) + 1) * sizeof (gchar *));
       /* re-check the new current part again in the next iteration */
       continue;
     } else if (strcmp (*p, "..") == 0 && p > parts) {
@@ -809,7 +809,7 @@ gst_file_utils_canonicalise_path (const gchar * path)
        * NUL terminator */
       g_free (*(p - 1));
       g_free (*p);
-      g_memmove (p - 1, p + 1, (g_strv_length (p + 1) + 1) * sizeof (gchar *));
+      memmove (p - 1, p + 1, (g_strv_length (p + 1) + 1) * sizeof (gchar *));
       /* re-check the new current part again in the next iteration */
       --p;
       continue;
@@ -821,7 +821,7 @@ gst_file_utils_canonicalise_path (const gchar * path)
 
     num_parts = g_strv_length (parts) + 1;      /* incl. terminator */
     parts = g_renew (gchar *, parts, num_parts + 1);
-    g_memmove (parts + 1, parts, num_parts * sizeof (gchar *));
+    memmove (parts + 1, parts, num_parts * sizeof (gchar *));
     parts[0] = g_strdup ("/");
   }
 
