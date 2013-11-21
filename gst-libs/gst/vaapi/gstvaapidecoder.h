@@ -25,7 +25,6 @@
 
 #include <gst/gstbuffer.h>
 #include <gst/base/gstadapter.h>
-#include <gst/vaapi/gstvaapicontext.h>
 #include <gst/vaapi/gstvaapisurfaceproxy.h>
 #include <gst/video/gstvideoutils.h>
 
