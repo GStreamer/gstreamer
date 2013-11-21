@@ -1,9 +1,9 @@
-gst-vaapi NEWS -- summary of changes.  2013-11-DD
+gst-vaapi NEWS -- summary of changes.  2013-11-21
 Copyright (C) 2010-2011 Splitted-Desktop Systems
 Copyright (C) 2011-2013 Intel Corporation
 Copyright (C) 2011 Collabora
 
-Version 0.5.7 - DD.Nov.2013
+Version 0.5.7 - 21.Nov.2013
 * Add support for GStreamer 1.2 (+Victor Jaquez, Sreerenj Balachandran)
 * Add support for video processing (VA/VPP) (+Halley Zhao)
   + Scaling and color conversion
