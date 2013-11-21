@@ -446,20 +446,40 @@ gst_vaapidecode_decode_loop(GstVaapiDecode *decode)
         gst_pad_pause_task(decode->srcpad);
 }
 
-static GstFlowReturn
-gst_vaapidecode_finish(GstVideoDecoder *vdec)
+static gboolean
+gst_vaapidecode_flush(GstVideoDecoder *vdec)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
     GstVaapiDecoderStatus status;
 
     /* If there is something in GstVideoDecoder's output adapter, then
        submit the frame for decoding */
-    if (decode->current_frame_size)
+    if (decode->current_frame_size) {
         gst_video_decoder_have_frame(vdec);
+        decode->current_frame_size = 0;
+    }
 
     status = gst_vaapi_decoder_flush(decode->decoder);
     if (status != GST_VAAPI_DECODER_STATUS_SUCCESS)
         goto error_flush;
+    return TRUE;
+
+    /* ERRORS */
+error_flush:
+    {
+        GST_ERROR("failed to flush decoder (status %d)", status);
+        return FALSE;
+    }
+}
+
+static GstFlowReturn
+gst_vaapidecode_finish(GstVideoDecoder *vdec)
+{
+    GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
+    GstFlowReturn ret = GST_FLOW_OK;
+
+    if (!gst_vaapidecode_flush(vdec))
+        ret = GST_FLOW_OK;
 
     /* Make sure the decode loop function has a chance to return, thus
        possibly unlocking gst_video_decoder_finish_frame() */
@@ -470,14 +490,7 @@ gst_vaapidecode_finish(GstVideoDecoder *vdec)
     g_mutex_unlock(&decode->decoder_mutex);
     gst_pad_stop_task(decode->srcpad);
     GST_VIDEO_DECODER_STREAM_LOCK(vdec);
-    return GST_FLOW_OK;
-
-    /* ERRORS */
-error_flush:
-    {
-        GST_ERROR("failed to flush decoder (status %d)", status);
-        return GST_FLOW_EOS;
-    }
+    return ret;
 }
 
 #if GST_CHECK_VERSION(1,0,0)
@@ -653,6 +666,9 @@ gst_vaapidecode_reset_full(GstVaapiDecode *decode, GstCaps *caps, gboolean hard)
 
     decode->has_texture_upload_meta = FALSE;
 
+    /* Reset tracked frame size */
+    decode->current_frame_size = 0;
+
     /* Reset timers if hard reset was requested (e.g. seek) */
     if (hard) {
         GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
@@ -680,9 +696,6 @@ gst_vaapidecode_reset_full(GstVaapiDecode *decode, GstCaps *caps, gboolean hard)
         if (codec == gst_vaapi_decoder_get_codec(decode->decoder))
             return TRUE;
     }
-
-    /* Reset tracked frame size */
-    decode->current_frame_size = 0;
 
     gst_vaapidecode_destroy(decode);
     return gst_vaapidecode_create(decode, caps);
@@ -740,6 +753,9 @@ gst_vaapidecode_reset(GstVideoDecoder *vdec, gboolean hard)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
 
+    /* In GStreamer 1.0 context, this means a flush */
+    if (decode->decoder && !hard && !gst_vaapidecode_flush(vdec))
+        return FALSE;
     return gst_vaapidecode_reset_full(decode, decode->sinkpad_caps, hard);
 }
 
