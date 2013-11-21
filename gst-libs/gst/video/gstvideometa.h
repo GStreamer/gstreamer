@@ -189,6 +189,19 @@ typedef gboolean (*GstVideoGLTextureUpload) (GstVideoGLTextureUploadMeta *meta, 
 #define GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META "meta:GstVideoGLTextureUploadMeta"
 
 /**
+ * GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META:
+ *
+ * An option that can be activated on a bufferpool to request gl texture upload
+ * meta on buffers from the pool.
+ *
+ * When this option is enabled on the bufferpool,
+ * @GST_BUFFER_POOL_OPTION_VIDEO_META should also be enabled.
+ *
+ * Since: 1.2.2
+ */
+#define GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META "GstBufferPoolOptionVideoGLTextureUploadMeta"
+
+/**
  * GstVideoGLTextureUploadMeta:
  * @meta: parent #GstMeta
  * @texture_orientation: Orientation of the textures
