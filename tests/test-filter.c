@@ -291,7 +291,9 @@ end:
 static inline gboolean
 parse_deinterlace(const gchar *str, GstVaapiDeinterlaceMethod *deinterlace_ptr)
 {
-    return parse_enum(str, GST_VAAPI_TYPE_DEINTERLACE_METHOD,
+    g_return_val_if_fail(deinterlace_ptr != NULL, FALSE);
+
+    return str && parse_enum(str, GST_VAAPI_TYPE_DEINTERLACE_METHOD,
         GST_VAAPI_DEINTERLACE_METHOD_NONE, (gint *)deinterlace_ptr);
 }
 
@@ -390,7 +392,7 @@ main(int argc, char *argv[])
             g_error("failed to set deinterlacing method");
     }
     else if (deinterlace_flags) {
-        if (deinterlace_flags & GST_VAAPI_DEINTERLACE_FLAG_TFF)
+        if (deinterlace_flags & GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD)
             filter_flags = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
         else
             filter_flags = GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
@@ -401,7 +403,7 @@ main(int argc, char *argv[])
         if (!(deinterlace_flags & GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD))
             surface_flags = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD |
                 GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;
-        else if (deinterlace_flags & GST_VAAPI_DEINTERLACE_FLAG_TFF)
+        else if (deinterlace_flags & GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD)
             surface_flags = GST_VAAPI_PICTURE_STRUCTURE_TOP_FIELD;
         else
             surface_flags = GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD;

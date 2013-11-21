@@ -112,6 +112,8 @@ gst_vaapi_deinterlace_flags_get_type(void)
           "Top-field first", "top-field-first" },
         { GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD,
           "One field", "one-field" },
+        { GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD,
+          "Top field", "top-field" },
         { 0, NULL, NULL }
     };
 

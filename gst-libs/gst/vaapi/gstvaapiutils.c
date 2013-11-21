@@ -471,11 +471,11 @@ from_GstVaapiDeinterlaceFlags(guint flags)
     if (!(flags & GST_VAAPI_DEINTERLACE_FLAG_TFF))
         va_flags |= VA_DEINTERLACING_BOTTOM_FIELD_FIRST;
 
-    if (flags & GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD) {
+    if (flags & GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD)
         va_flags |= VA_DEINTERLACING_ONE_FIELD;
-        if (!(flags & GST_VAAPI_DEINTERLACE_FLAG_TFF))
-            va_flags |= VA_DEINTERLACING_BOTTOM_FIELD;
-    }
+
+    if (!(flags & GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD))
+        va_flags |= VA_DEINTERLACING_BOTTOM_FIELD;
 #endif
     return va_flags;
 }

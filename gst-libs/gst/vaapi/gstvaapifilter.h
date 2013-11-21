@@ -109,16 +109,23 @@ typedef enum {
 /**
  * GstVaapiDeinterlaceFlags:
  * @GST_VAAPI_DEINTERLACE_FLAG_TFF: Top-field first. If this flag is
- *   not set, then bottom-field first order is assumed.
+ *   not set, then bottom-field first order is assumed. Note: this
+ *   only affects the way reference frames are organized for advanced
+ *   deinterlacing modes.
  * @GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD: The input frame represents a
  *   single field. If this flag is not set, then the whole frame holds
- *   two fields.
+ *   two interleaved fields.
+ * @GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD: The top field of the input
+ *   frame is to be used for deinterlacing. Otherwise, if this flag is
+ *   not set, then the bottom field of the input frame will be used
+ *   for deinterlacing.
  *
  * The set of gst_vaapi_filter_set_deinterlacing() flags.
  */
 typedef enum {
     GST_VAAPI_DEINTERLACE_FLAG_TFF      = 1 << 31,
     GST_VAAPI_DEINTERLACE_FLAG_ONEFIELD = 1 << 30,
+    GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD = 1 << 29,
 } GstVaapiDeinterlaceFlags;
 
 #define GST_VAAPI_TYPE_DEINTERLACE_METHOD \

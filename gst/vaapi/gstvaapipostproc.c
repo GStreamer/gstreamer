@@ -449,7 +449,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
 
         if (deint) {
             GstVaapiDeinterlaceMethod deint_method;
-            deint_flags = (tff ? GST_VAAPI_DEINTERLACE_FLAG_TFF : 0);
+            deint_flags = (tff ? GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD : 0);
             if (!set_best_deint_method(postproc, flags, &deint_method))
                 goto error_op_deinterlace;
             if (deint_method != postproc->deinterlace_method) {
@@ -482,7 +482,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     outbuf_surface = gst_vaapi_video_meta_get_surface(outbuf_meta);
 
     if (deint) {
-        deint_flags = (tff ? 0 : GST_VAAPI_DEINTERLACE_FLAG_TFF);
+        deint_flags = (tff ? 0 : GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD);
         if (!gst_vaapi_filter_set_deinterlacing(postproc->filter,
                 postproc->deinterlace_method, deint_flags))
             goto error_op_deinterlace;
