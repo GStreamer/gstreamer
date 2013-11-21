@@ -61,6 +61,8 @@ typedef enum {
   GST_PAD_MODE_PULL
 } GstPadMode;
 
+const gchar   * gst_pad_mode_get_name (GstPadMode mode);
+
 #include <gst/gstobject.h>
 #include <gst/gstbuffer.h>
 #include <gst/gstbufferlist.h>
@@ -999,8 +1001,6 @@ gboolean		gst_pad_query_default			(GstPad *pad, GstObject *parent,
 /* misc helper functions */
 gboolean		gst_pad_forward                         (GstPad *pad, GstPadForwardFunction forward,
 								 gpointer user_data);
-
-const gchar   * gst_pad_mode_get_name (GstPadMode mode);
 
 G_END_DECLS
 
