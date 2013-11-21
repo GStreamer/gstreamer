@@ -2314,6 +2314,8 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
           GST_TIME_FORMAT ")",
           GST_TIME_ARGS (frame->pts), GST_TIME_ARGS (priv->last_timestamp_out));
       priv->reordered_output = TRUE;
+      /* make it a bit less weird downstream */
+      frame->pts = priv->last_timestamp_out;
     }
   }
 
