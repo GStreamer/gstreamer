@@ -415,6 +415,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     GstClockTime timestamp;
     GstFlowReturn ret;
     GstBuffer *fieldbuf;
+    GstVaapiDeinterlaceMethod deint_method;
     guint flags, deint_flags;
     gboolean tff, deint;
 
@@ -437,6 +438,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
           GST_VAAPI_PICTURE_STRUCTURE_BOTTOM_FIELD);
 
     /* First field */
+    deint_method = postproc->deinterlace_method;
     if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_DEINTERLACE) {
         fieldbuf = create_output_buffer(postproc);
         if (!fieldbuf)
@@ -448,9 +450,8 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
         outbuf_surface = gst_vaapi_video_meta_get_surface(outbuf_meta);
 
         if (deint) {
-            GstVaapiDeinterlaceMethod deint_method;
             deint_flags = (tff ? GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD : 0);
-            if (!set_best_deint_method(postproc, flags, &deint_method))
+            if (!set_best_deint_method(postproc, deint_flags, &deint_method))
                 goto error_op_deinterlace;
             if (deint_method != postproc->deinterlace_method) {
                 GST_DEBUG("unsupported deinterlace-method %u. Using %u instead",
@@ -484,7 +485,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     if (deint) {
         deint_flags = (tff ? 0 : GST_VAAPI_DEINTERLACE_FLAG_TOPFIELD);
         if (!gst_vaapi_filter_set_deinterlacing(postproc->filter,
-                postproc->deinterlace_method, deint_flags))
+                deint_method, deint_flags))
             goto error_op_deinterlace;
     }
 
