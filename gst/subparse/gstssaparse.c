@@ -234,7 +234,7 @@ gst_ssa_parse_remove_override_codes (GstSsaParse * parse, gchar * txt)
       return removed_any;
     }
     /* move terminating NUL character forward as well */
-    g_memmove (t, end + 1, strlen (end + 1) + 1);
+    memmove (t, end + 1, strlen (end + 1) + 1);
     removed_any = TRUE;
   }
 

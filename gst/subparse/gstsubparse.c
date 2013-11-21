@@ -398,7 +398,7 @@ gst_convert_to_utf8 (const gchar * str, gsize len, const gchar * encoding,
   len = strlen (ret);
   if (len >= 3 && (guint8) ret[0] == 0xEF && (guint8) ret[1] == 0xBB
       && (guint8) ret[2] == 0xBF)
-    g_memmove (ret, ret + 3, len + 1 - 3);
+    memmove (ret, ret + 3, len + 1 - 3);
 
   return ret;
 }
@@ -674,7 +674,7 @@ subrip_unescape_formatting (gchar * txt)
       pos[1] = g_ascii_tolower (pos[4]);
       pos[2] = '>';
       /* move NUL terminator as well */
-      g_memmove (pos + 3, pos + 9, strlen (pos + 9) + 1);
+      memmove (pos + 3, pos + 9, strlen (pos + 9) + 1);
       pos += 2;
     }
   }
@@ -688,7 +688,7 @@ subrip_unescape_formatting (gchar * txt)
       pos[2] = g_ascii_tolower (pos[5]);
       pos[3] = '>';
       /* move NUL terminator as well */
-      g_memmove (pos + 4, pos + 10, strlen (pos + 10) + 1);
+      memmove (pos + 4, pos + 10, strlen (pos + 10) + 1);
       pos += 3;
     }
   }
@@ -711,7 +711,7 @@ subrip_remove_unhandled_tag (gchar * start, gchar * stop)
   *stop = '\0';
   GST_LOG ("removing unhandled tag '%s'", start);
   *stop = saved;
-  g_memmove (start, stop, strlen (stop) + 1);
+  memmove (start, stop, strlen (stop) + 1);
   return TRUE;
 }
 
@@ -754,7 +754,7 @@ subrip_fix_up_markup (gchar ** p_txt)
         ++next_tag;
         if (num_open_tags == 0 || open_tags[num_open_tags - 1] != *next_tag) {
           GST_LOG ("broken input, closing tag '%c' is not open", *next_tag);
-          g_memmove (next_tag - 2, next_tag + 2, strlen (next_tag + 2) + 1);
+          memmove (next_tag - 2, next_tag + 2, strlen (next_tag + 2) + 1);
           next_tag -= 2;
         } else {
           /* it's all good, closing tag which is open */
