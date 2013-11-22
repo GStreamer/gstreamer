@@ -2730,6 +2730,8 @@ gst_rtp_jitter_buffer_loop (GstRtpJitterBuffer * jitterbuffer)
     }
   }
   while (result == GST_FLOW_OK);
+  /* store result for upstream */
+  priv->srcresult = result;
   JBUF_UNLOCK (priv);
 
   /* if we get here we need to pause */
