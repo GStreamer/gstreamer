@@ -189,6 +189,55 @@ gst_vaapi_deinterlace_mode_get_type(void)
     return deinterlace_mode_type;
 }
 
+static void
+ds_reset(GstVaapiDeinterlaceState *ds)
+{
+    guint i;
+
+    for (i = 0; i < G_N_ELEMENTS(ds->buffers); i++)
+        gst_buffer_replace(&ds->buffers[i], NULL);
+    ds->buffers_index = 0;
+    ds->num_surfaces = 0;
+    ds->deint = FALSE;
+    ds->tff = FALSE;
+}
+
+static void
+ds_add_buffer(GstVaapiDeinterlaceState *ds, GstBuffer *buf)
+{
+    gst_buffer_replace(&ds->buffers[ds->buffers_index], buf);
+    ds->buffers_index = (ds->buffers_index + 1) % G_N_ELEMENTS(ds->buffers);
+}
+
+static inline GstBuffer *
+ds_get_buffer(GstVaapiDeinterlaceState *ds, guint index)
+{
+    /* Note: the index increases towards older buffers.
+       i.e. buffer at index 0 means the immediately preceding buffer
+       in the history, buffer at index 1 means the one preceding the
+       surface at index 0, etc. */
+    const guint n = ds->buffers_index + G_N_ELEMENTS(ds->buffers) - index - 1;
+    return ds->buffers[n % G_N_ELEMENTS(ds->buffers)];
+}
+
+static void
+ds_set_surfaces(GstVaapiDeinterlaceState *ds)
+{
+    GstVaapiVideoMeta *meta;
+    guint i;
+
+    ds->num_surfaces = 0;
+    for (i = 0; i < G_N_ELEMENTS(ds->buffers); i++) {
+        GstBuffer * const buf = ds_get_buffer(ds, i);
+        if (!buf)
+            break;
+
+        meta = gst_buffer_get_vaapi_video_meta(buf);
+        ds->surfaces[ds->num_surfaces++] =
+            gst_vaapi_video_meta_get_surface(meta);
+    }
+}
+
 static GstVaapiFilterOpInfo *
 find_filter_op(GPtrArray *filter_ops, GstVaapiFilterOp op)
 {
@@ -318,6 +367,7 @@ gst_vaapipostproc_destroy_filter(GstVaapiPostproc *postproc)
 static void
 gst_vaapipostproc_destroy(GstVaapiPostproc *postproc)
 {
+    ds_reset(&postproc->deinterlace_state);
 #if GST_CHECK_VERSION(1,0,0)
     g_clear_object(&postproc->sinkpad_buffer_pool);
 #endif
@@ -336,6 +386,7 @@ gst_vaapipostproc_start(GstBaseTransform *trans)
 {
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
 
+    ds_reset(&postproc->deinterlace_state);
     if (!gst_vaapipostproc_ensure_display(postproc))
         return FALSE;
     return TRUE;
@@ -346,6 +397,7 @@ gst_vaapipostproc_stop(GstBaseTransform *trans)
 {
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
 
+    ds_reset(&postproc->deinterlace_state);
     gst_vaapi_display_replace(&postproc->display, NULL);
     return TRUE;
 }
@@ -402,51 +454,6 @@ append_output_buffer_metadata(GstBuffer *outbuf, GstBuffer *inbuf, guint flags)
     gst_buffer_copy_into(outbuf, inbuf, flags |
         GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_META | GST_BUFFER_COPY_MEMORY,
         0, -1);
-}
-
-static void
-ds_reset(GstVaapiDeinterlaceState *ds)
-{
-    guint i;
-
-    for (i = 0; i < G_N_ELEMENTS(ds->buffers); i++)
-        gst_buffer_replace(&ds->buffers[i], NULL);
-    ds->buffers_index = 0;
-    ds->num_surfaces = 0;
-    ds->deint = FALSE;
-    ds->tff = FALSE;
-}
-
-static void
-ds_add_buffer(GstVaapiDeinterlaceState *ds, GstBuffer *buf)
-{
-    gst_buffer_replace(&ds->buffers[ds->buffers_index], buf);
-    ds->buffers_index = (ds->buffers_index + 1) % G_N_ELEMENTS(ds->buffers);
-}
-
-static inline GstBuffer *
-ds_get_buffer(GstVaapiDeinterlaceState *ds, guint index)
-{
-    const guint n = ds->buffers_index + G_N_ELEMENTS(ds->buffers) - index - 1;
-    return ds->buffers[n % G_N_ELEMENTS(ds->buffers)];
-}
-
-static void
-ds_set_surfaces(GstVaapiDeinterlaceState *ds)
-{
-    GstVaapiVideoMeta *meta;
-    guint i;
-
-    ds->num_surfaces = 0;
-    for (i = 0; i < G_N_ELEMENTS(ds->buffers); i++) {
-        GstBuffer * const buf = ds_get_buffer(ds, i);
-        if (!buf)
-            break;
-
-        meta = gst_buffer_get_vaapi_video_meta(buf);
-        ds->surfaces[ds->num_surfaces++] =
-            gst_vaapi_video_meta_get_surface(meta);
-    }
 }
 
 static GstVaapiDeinterlaceMethod
