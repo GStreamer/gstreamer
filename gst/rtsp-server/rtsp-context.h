@@ -43,13 +43,13 @@ typedef struct _GstRTSPContext GstRTSPContext;
  * @request: the complete request
  * @uri: the complete url parsed from @request
  * @method: the parsed method of @uri
- * @auth: the current auth object or NULL
+ * @auth: the current auth object or %NULL
  * @token: authorisation token
- * @session: the session, can be NULL
- * @sessmedia: the session media for the url can be NULL
- * @factory: the media factory for the url, can be NULL.
- * @media: the media for the url can be NULL
- * @stream: the stream for the url can be NULL
+ * @session: the session, can be %NULL
+ * @sessmedia: the session media for the url can be %NULL
+ * @factory: the media factory for the url, can be %NULL
+ * @media: the media for the url can be %NULL
+ * @stream: the stream for the url can be %NULL
  * @response: the response
  *
  * Information passed around containing the context of a request.

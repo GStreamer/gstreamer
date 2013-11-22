@@ -225,7 +225,7 @@ has_prefix (DataItem * str, DataItem * prefix)
  *
  * Find the factory in @mounts that has the longest match with @path.
  *
- * If @matched is NULL, @path willt match the factory exactly otherwise
+ * If @matched is %NULL, @path will match the factory exactly otherwise
  * the amount of characters that matched is returned in @matched.
  *
  * Returns: (transfer full): the #GstRTSPMediaFactory for @path.

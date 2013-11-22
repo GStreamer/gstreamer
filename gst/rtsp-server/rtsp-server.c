@@ -777,7 +777,7 @@ gst_rtsp_server_set_property (GObject * object, guint propid,
  * Create a #GSocket for @server. The socket will listen on the
  * configured service.
  *
- * Returns: (transfer full): the #GSocket for @server or NULL when an error occured.
+ * Returns: (transfer full): the #GSocket for @server or %NULL when an error occured.
  */
 GSocket *
 gst_rtsp_server_create_socket (GstRTSPServer * server,
@@ -1235,12 +1235,12 @@ watch_destroyed (GstRTSPServer * server)
  * Create a #GSource for @server. The new source will have a default
  * #GSocketSourceFunc of gst_rtsp_server_io_func().
  *
- * @cancellable if not NULL can be used to cancel the source, which will cause
+ * @cancellable if not %NULL can be used to cancel the source, which will cause
  * the source to trigger, reporting the current condition (which is likely 0
  * unless cancellation happened at the same time as a condition change). You can
  * check for this in the callback using g_cancellable_is_cancelled().
  *
- * Returns: the #GSource for @server or NULL when an error occured. Free with
+ * Returns: the #GSource for @server or %NULL when an error occured. Free with
  * g_source_unref ()
  */
 GSource *
@@ -1292,7 +1292,7 @@ no_socket:
  * @context: (allow-none): a #GMainContext
  *
  * Attaches @server to @context. When the mainloop for @context is run, the
- * server will be dispatched. When @context is NULL, the default context will be
+ * server will be dispatched. When @context is %NULL, the default context will be
  * used).
  *
  * This function should be called when the server properties and urls are fully

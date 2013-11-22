@@ -195,7 +195,7 @@ gst_rtsp_token_get_structure (GstRTSPToken * token)
  * Returns: The structure of the token. The structure is still
  * owned by the token, which means that you should not free it and
  * that the pointer becomes invalid when you free the token.
- * This function checks if @token is writable and will never return NULL.
+ * This function checks if @token is writable and will never return %NULL.
  *
  * MT safe.
  */
@@ -216,7 +216,7 @@ gst_rtsp_token_writable_structure (GstRTSPToken * token)
  *
  * Get the string value of @field in @token.
  *
- * Returns: the string value of @field in @token or NULL when @field is not
+ * Returns: the string value of @field in @token or %NULL when @field is not
  * defined in @token.
  */
 const gchar *

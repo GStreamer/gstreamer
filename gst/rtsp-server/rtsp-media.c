@@ -2060,7 +2060,7 @@ not_prepared:
 /**
  * gst_rtsp_media_get_time_provider:
  * @media: a #GstRTSPMedia
- * @address: an address or NULL
+ * @address: an address or %NULL
  * @port: a port or 0
  *
  * Get the #GstNetTimeProvider for the clock used by @media. The time provider

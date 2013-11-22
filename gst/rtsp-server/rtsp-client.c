@@ -2846,7 +2846,7 @@ client_watch_notify (GstRTSPClient * client)
  * @context: (allow-none): a #GMainContext
  *
  * Attaches @client to @context. When the mainloop for @context is run, the
- * client will be dispatched. When @context is NULL, the default context will be
+ * client will be dispatched. When @context is %NULL, the default context will be
  * used).
  *
  * This function should be called when the client properties and urls are fully
