@@ -503,7 +503,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     GstBuffer *fieldbuf;
     GstVaapiDeinterlaceMethod deint_method;
     guint flags, deint_flags;
-    gboolean tff, deint;
+    gboolean tff, deint, deint_changed;
 
     /* Validate filters */
     if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_FORMAT) &&
@@ -530,7 +530,8 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     deint      = is_interlaced_buffer(postproc, inbuf);
 
     /* Drop references if deinterlacing conditions changed */
-    if (deint != ds->deint || (ds->num_surfaces > 0 && tff != ds->tff))
+    deint_changed = deint != ds->deint;
+    if (deint_changed || (ds->num_surfaces > 0 && tff != ds->tff))
         ds_reset(ds);
     ds->deint = deint;
     ds->tff = tff;
@@ -569,6 +570,13 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
                 postproc->deinterlace_method = deint_method;
             }
         }
+        else if (deint_changed) {
+            // Reset internal filter to non-deinterlacing mode
+            deint_method = GST_VAAPI_DEINTERLACE_METHOD_NONE;
+            if (!gst_vaapi_filter_set_deinterlacing(postproc->filter,
+                    deint_method, 0))
+                goto error_op_deinterlace;
+        }
 
         status = gst_vaapi_filter_process(postproc->filter, inbuf_surface,
             outbuf_surface, flags);
@@ -604,6 +612,9 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
                 ds->surfaces, ds->num_surfaces, NULL, 0))
             goto error_op_deinterlace;
     }
+    else if (deint_changed && !gst_vaapi_filter_set_deinterlacing(
+                 postproc->filter, deint_method, 0))
+        goto error_op_deinterlace;
 
     status = gst_vaapi_filter_process(postproc->filter, inbuf_surface,
         outbuf_surface, flags);
