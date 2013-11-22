@@ -885,7 +885,7 @@ deint_refs_clear_all(GstVaapiFilter *filter)
 /* --- Surface Formats                                                   --- */
 /* ------------------------------------------------------------------------- */
 
-static GArray *
+static gboolean
 ensure_formats(GstVaapiFilter *filter)
 {
 #if VA_CHECK_VERSION(0,34,0)
@@ -894,25 +894,25 @@ ensure_formats(GstVaapiFilter *filter)
     VAStatus va_status;
 
     if (G_LIKELY(filter->formats))
-        return filter->formats;
+        return TRUE;
 
     GST_VAAPI_DISPLAY_LOCK(filter->display);
     va_status = vaQuerySurfaceAttributes(filter->va_display, filter->va_config,
         NULL, &num_surface_attribs);
     GST_VAAPI_DISPLAY_UNLOCK(filter->display);
     if (!vaapi_check_status(va_status, "vaQuerySurfaceAttributes()"))
-        return NULL;
+        return FALSE;
 
     surface_attribs = g_malloc(num_surface_attribs * sizeof(*surface_attribs));
     if (!surface_attribs)
-        return NULL;
+        return FALSE;
 
     GST_VAAPI_DISPLAY_LOCK(filter->display);
     va_status = vaQuerySurfaceAttributes(filter->va_display, filter->va_config,
         surface_attribs, &num_surface_attribs);
     GST_VAAPI_DISPLAY_UNLOCK(filter->display);
     if (!vaapi_check_status(va_status, "vaQuerySurfaceAttributes()"))
-        return NULL;
+        return FALSE;
 
     filter->formats = g_array_sized_new(FALSE, FALSE, sizeof(GstVideoFormat),
         num_surface_attribs);
@@ -936,12 +936,12 @@ ensure_formats(GstVaapiFilter *filter)
     }
 
     g_free(surface_attribs);
-    return filter->formats;
+    return TRUE;
 
 error:
     g_free(surface_attribs);
 #endif
-    return NULL;
+    return FALSE;
 }
 
 static inline gboolean
@@ -1037,7 +1037,7 @@ gst_vaapi_filter_finalize(GstVaapiFilter *filter)
 
     if (filter->forward_references) {
         g_array_unref(filter->forward_references);
-        filter->backward_references = NULL;
+        filter->forward_references = NULL;
     }
 
     if (filter->backward_references) {
@@ -1300,7 +1300,7 @@ gst_vaapi_filter_process_unlocked(GstVaapiFilter *filter,
 {
 #if USE_VA_VPP
     VAProcPipelineParameterBuffer *pipeline_param = NULL;
-    VABufferID pipeline_param_buf_id;
+    VABufferID pipeline_param_buf_id = VA_INVALID_ID;
     VABufferID filters[N_PROPERTIES];
     VAProcPipelineCaps pipeline_caps;
     guint i, num_filters = 0;
@@ -1431,11 +1431,12 @@ gst_vaapi_filter_process_unlocked(GstVaapiFilter *filter,
         goto error;
 
     deint_refs_clear_all(filter);
+    vaapi_destroy_buffer(filter->va_display, &pipeline_param_buf_id);
     return GST_VAAPI_FILTER_STATUS_SUCCESS;
 
 error:
-    vaDestroyBuffer(filter->va_display, pipeline_param_buf_id);
     deint_refs_clear_all(filter);
+    vaapi_destroy_buffer(filter->va_display, &pipeline_param_buf_id);
     return GST_VAAPI_FILTER_STATUS_ERROR_OPERATION_FAILED;
 #endif
     return GST_VAAPI_FILTER_STATUS_ERROR_UNSUPPORTED_OPERATION;
@@ -1477,7 +1478,9 @@ gst_vaapi_filter_get_formats(GstVaapiFilter *filter)
 {
     g_return_val_if_fail(filter != NULL, NULL);
 
-    return ensure_formats(filter);
+    if (!ensure_formats(filter))
+        return NULL;
+    return g_array_ref(filter->formats);
 }
 
 /**

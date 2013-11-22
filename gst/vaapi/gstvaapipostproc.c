@@ -362,6 +362,7 @@ gst_vaapipostproc_destroy_filter(GstVaapiPostproc *postproc)
         postproc->filter_ops = NULL;
     }
     gst_vaapi_filter_replace(&postproc->filter, NULL);
+    gst_vaapi_video_pool_replace(&postproc->filter_pool, NULL);
 }
 
 static void
