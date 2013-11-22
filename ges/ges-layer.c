@@ -219,7 +219,7 @@ ges_layer_init (GESLayer * self)
  * ges_layer_resync_priorities:
  * @layer: a #GESLayer
  *
- * Resyncs the priorities of the objects controlled by @layer.
+ * Resyncs the priorities of the clips controlled by @layer.
  * This method
  */
 static gboolean
@@ -283,6 +283,28 @@ new_asset_cb (GESAsset * source, GAsyncResult * res, NewAssetUData * udata)
 
   gst_object_unref (asset);
   g_slice_free (NewAssetUData, udata);
+}
+
+/**
+ * ges_layer_get_duration:
+ * @layer: The #GESLayer to get the duration from
+ *
+ * Lets you retrieve the duration of the layer, which means
+ * the end time of the last clip inside it
+ *
+ * Returns: The duration of a layer
+ */
+GstClockTime
+ges_layer_get_duration (GESLayer * layer)
+{
+  GList *tmp;
+  GstClockTime duration = 0;
+
+  for (tmp = layer->priv->clips_start; tmp; tmp = tmp->next) {
+    duration = MAX (duration, _END (tmp->data));
+  }
+
+  return duration;
 }
 
 /* Public methods */

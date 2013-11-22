@@ -124,6 +124,7 @@ void ges_layer_set_auto_transition (GESLayer * layer,
 					     gboolean auto_transition);
 
 GList*   ges_layer_get_clips   (GESLayer * layer);
+GstClockTime ges_layer_get_duration (GESLayer *layer);
 
 G_END_DECLS
 
