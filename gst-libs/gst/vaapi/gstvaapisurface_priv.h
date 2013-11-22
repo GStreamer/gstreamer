@@ -2,6 +2,7 @@
  *  gstvaapisurface_priv.h - VA surface abstraction (private data)
  *
  *  Copyright (C) 2011-2012 Intel Corporation
+ *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License

@@ -2,6 +2,7 @@
  *  gstvaapidisplay_glx_priv.h - Internal VA/GLX interface
  *
  *  Copyright (C) 2010-2011 Splitted-Desktop Systems
+ *    Author: Gwenole Beauchesne <gwenole.beauchesne@splitted-desktop.com>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License

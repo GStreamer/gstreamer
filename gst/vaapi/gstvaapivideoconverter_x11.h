@@ -2,6 +2,7 @@
  *  gstvaapivideoconverter_x11.h - VA video converter to X11 pixmap
  *
  *  Copyright (C) 2013 Intel Corporation
+ *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License

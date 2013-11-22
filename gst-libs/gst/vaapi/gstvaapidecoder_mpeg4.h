@@ -2,6 +2,7 @@
  *  gstvaapidecoder_mpeg4.h - MPEG-4 decoder
  *
  *  Copyright (C) 2011-2012 Intel Corporation
+ *    Author: Halley Zhao <halley.zhao@intel.com>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License

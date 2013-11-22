@@ -2,7 +2,9 @@
  *  gstvaapivideocontext.c - GStreamer/VA video context
  *
  *  Copyright (C) 2010-2011 Splitted-Desktop Systems
+ *    Author: Gwenole Beauchesne <gwenole.beauchesne@splitted-desktop.com>
  *  Copyright (C) 2011-2013 Intel Corporation
+ *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *  Copyright (C) 2013 Igalia
  *
  *  This library is free software; you can redistribute it and/or

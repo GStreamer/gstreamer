@@ -2,6 +2,8 @@
  *  gstvaapiwindow_wayland.c - VA/Wayland window abstraction
  *
  *  Copyright (C) 2012-2013 Intel Corporation
+ *    Author: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
+ *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License

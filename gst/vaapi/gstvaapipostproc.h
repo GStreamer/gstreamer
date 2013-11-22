@@ -2,6 +2,7 @@
  *  gstvaapipostproc.h - VA-API video post processing
  *
  *  Copyright (C) 2012 Intel Corporation
+ *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *
  *  This program is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License

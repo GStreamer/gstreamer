@@ -2,6 +2,7 @@
  *  gstvaapipluginutil.h - VA-API plugin helpers
  *
  *  Copyright (C) 2011-2012 Intel Corporation
+ *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *  Copyright (C) 2011 Collabora
  *    Author: Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>
  *

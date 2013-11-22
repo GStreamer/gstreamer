@@ -2,6 +2,8 @@
  *  gstvaapidecoder_jpeg.c - JPEG decoder
  *
  *  Copyright (C) 2011-2013 Intel Corporation
+ *    Author: Wind Yuan <feng.yuan@intel.com>
+ *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License

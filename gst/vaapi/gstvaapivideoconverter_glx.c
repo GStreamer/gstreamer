@@ -2,6 +2,7 @@
  *  gstvaapivideoconverter_glx.c - Gst VA video converter
  *
  *  Copyright (C) 2011-2013 Intel Corporation
+ *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *  Copyright (C) 2011 Collabora Ltd.
  *    Author: Nicolas Dufresne <nicolas.dufresne@collabora.com>
  *

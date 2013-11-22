@@ -2,6 +2,7 @@
  *  gstvaapidecoder_dpb.c - Decoded Picture Buffer
  *
  *  Copyright (C) 2012-2013 Intel Corporation
+ *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public License
