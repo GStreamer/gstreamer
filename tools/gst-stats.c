@@ -40,6 +40,9 @@ static GPtrArray *pads = NULL;
 static guint64 num_buffers = 0, num_events = 0, num_messages = 0, num_queries =
     0;
 static guint num_elements = 0, num_bins = 0, num_pads = 0, num_ghostpads = 0;
+static GstClockTime last_ts = G_GUINT64_CONSTANT (0);
+static GstClockTime tusersys = G_GUINT64_CONSTANT (0);
+static guint64 total_cpuload = 0;
 
 typedef struct
 {
@@ -84,7 +87,6 @@ typedef struct
 {
   /* time spend in this thread */
   GstClockTime treal;
-  guint max_cpuload;
 } GstThreadStats;
 
 /* stats helper */
@@ -111,6 +113,18 @@ static void
 free_pad_stats (gpointer data)
 {
   g_slice_free (GstPadStats, data);
+}
+
+static inline GstThreadStats *
+get_thread_stats (guint id)
+{
+  GstThreadStats *stats = g_hash_table_lookup (threads, GUINT_TO_POINTER (id));
+
+  if (G_UNLIKELY (!stats)) {
+    stats = g_slice_new0 (GstThreadStats);
+    g_hash_table_insert (threads, GUINT_TO_POINTER (id), stats);
+  }
+  return stats;
 }
 
 static void
@@ -149,15 +163,6 @@ new_pad_stats (GstStructure * s)
   if (pads->len <= ix)
     g_ptr_array_set_size (pads, ix + 1);
   g_ptr_array_index (pads, ix) = stats;
-
-  if (thread_id) {
-    GstThreadStats *thread_stats;
-    if (!(thread_stats = g_hash_table_lookup (threads,
-                GUINT_TO_POINTER (thread_id)))) {
-      thread_stats = g_slice_new0 (GstThreadStats);
-      g_hash_table_insert (threads, GUINT_TO_POINTER (thread_id), thread_stats);
-    }
-  }
 }
 
 static void
@@ -205,6 +210,10 @@ do_pad_stats (GstPadStats * stats, guint elem_ix, guint size, guint64 ts,
   /* parentage */
   if (stats->parent_ix == G_MAXUINT) {
     stats->parent_ix = elem_ix;
+  }
+
+  if (stats->thread_id) {
+    get_thread_stats (stats->thread_id);
   }
 
   /* size stats */
@@ -285,6 +294,7 @@ do_buffer_stats (GstStructure * s)
       "buffer-ts", G_TYPE_UINT64, &buffer_ts,
       "buffer-duration", G_TYPE_UINT64, &buffer_dur,
       "buffer-flags", GST_TYPE_BUFFER_FLAGS, &buffer_flags, NULL);
+  last_ts = ts;
   if (!(pad_stats = get_pad_stats (pad_ix))) {
     GST_WARNING ("no pad stats found for ix=%u", pad_ix);
     return;
@@ -319,6 +329,7 @@ do_event_stats (GstStructure * s)
   num_events++;
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
       "pad-ix", G_TYPE_UINT, &pad_ix, "elem-ix", G_TYPE_UINT, &elem_ix, NULL);
+  last_ts = ts;
   if (!(pad_stats = get_pad_stats (pad_ix))) {
     GST_WARNING ("no pad stats found for ix=%u", pad_ix);
     return;
@@ -341,6 +352,7 @@ do_message_stats (GstStructure * s)
   num_messages++;
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
       "elem-ix", G_TYPE_UINT, &elem_ix, NULL);
+  last_ts = ts;
   if (!(elem_stats = get_element_stats (elem_ix))) {
     GST_WARNING ("no element stats found for ix=%u", elem_ix);
     return;
@@ -358,11 +370,28 @@ do_query_stats (GstStructure * s)
   num_queries++;
   gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
       "elem-ix", G_TYPE_UINT, &elem_ix, NULL);
+  last_ts = ts;
   if (!(elem_stats = get_element_stats (elem_ix))) {
     GST_WARNING ("no element stats found for ix=%u", elem_ix);
     return;
   }
   elem_stats->num_queries++;
+}
+
+static void
+do_rusage_stats (GstStructure * s)
+{
+  guint64 ts, treal;
+  guint thread_id, cpuload;
+  GstThreadStats *thread_stats;
+
+  gst_structure_get (s, "ts", G_TYPE_UINT64, &ts,
+      "thread-id", G_TYPE_UINT, &thread_id,
+      "cpuload", G_TYPE_UINT, &cpuload,
+      "treal", G_TYPE_UINT64, &treal, "tsum", G_TYPE_UINT64, &tusersys, NULL);
+  thread_stats = get_thread_stats (thread_id);
+  thread_stats->treal = treal;
+  last_ts = ts;
 }
 
 /* reporting */
@@ -422,36 +451,27 @@ print_thread_stats (gpointer key, gpointer value, gpointer user_data)
 {
   GSList *list = user_data;
   GSList *node = g_slist_find_custom (list, key, find_pad_stats_for_thread);
+  GstThreadStats *stats = (GstThreadStats *) value;
+  guint cpuload = 0;
+  guint time_percent;
 
   /* skip stats if there are no pads for that thread (e.g. a pipeline) */
   if (!node)
     return;
 
-#if 0
-  GstThreadStats *stats = (GstThreadStats *) value;
-  guint cpuload = 0;
-  guint time_percent;
-
   time_percent =
       (guint) gst_util_uint64_scale (stats->treal, G_GINT64_CONSTANT (100),
       last_ts);
 
-  if (tusersys) {
-    guint64 total;
-    /* cpuload for the process, scaled by the timeslice of this thread */
-    //cpuload = (guint) gst_util_uint64_scale (tusersys, G_GINT64_CONSTANT(100) * stats->treal, last_ts * last_ts);
-
-    total = gst_util_uint64_scale (tusersys, G_GINT64_CONSTANT (100), last_ts);
-    cpuload = gst_util_uint64_scale (total, stats->treal, last_ts);
+  if (total_cpuload) {
+    cpuload =
+        (guint) gst_util_uint64_scale (total_cpuload, stats->treal, last_ts);
   }
-#endif
 
   printf ("Thread %p Statistics:\n", key);
-#if 0
   printf ("  Time: %" GST_TIME_FORMAT ", %u %%\n", GST_TIME_ARGS (stats->treal),
       (guint) time_percent);
-  printf ("  Avg/Max CPU load: %u %%, %u %%\n", cpuload, stats->max_cpuload);
-#endif
+  printf ("  Avg CPU load: %u %%\n", cpuload);
 
   puts ("  Pad Statistics:");
   g_slist_foreach (node, print_pad_stats, key);
@@ -464,7 +484,6 @@ print_element_stats (gpointer value, gpointer user_data)
 
   /* skip temporary elements */
   if (stats->first_ts != GST_CLOCK_TIME_NONE) {
-    //GstClockTimeDiff running = GST_CLOCK_DIFF (stats->first_ts, stats->last_ts);
     gchar fullname[45 + 1];
 
     g_snprintf (fullname, 45, "%s:%s", stats->type_name, stats->name);
@@ -486,10 +505,9 @@ print_element_stats (gpointer value, gpointer user_data)
       printf ("/%12" G_GUINT64_FORMAT, stats->sent_bytes);
     else
       printf ("/%12s", "-");
-    printf (" first activity %" GST_TIME_FORMAT ", " " ev/msg/qry sent %5u/%5u/%5u"     /*", "
-                                                                                           " cpu usage %u %%" */
-        "\n", GST_TIME_ARGS (stats->first_ts), stats->num_events, stats->num_messages, stats->num_queries       /*,
-                                                                                                                   (guint)(100*stats->treal/last_ts) */ );
+    printf (" first activity %" GST_TIME_FORMAT ", "
+        " ev/msg/qry sent %5u/%5u/%5u\n", GST_TIME_ARGS (stats->first_ts),
+        stats->num_events, stats->num_messages, stats->num_queries);
   }
 }
 
@@ -681,6 +699,12 @@ print_stats (void)
   printf ("Number of Events sent: %" G_GUINT64_FORMAT "\n", num_events);
   printf ("Number of Message sent: %" G_GUINT64_FORMAT "\n", num_messages);
   printf ("Number of Queries sent: %" G_GUINT64_FORMAT "\n", num_queries);
+  printf ("Time: %" GST_TIME_FORMAT "\n", GST_TIME_ARGS (last_ts));
+  if (tusersys) {
+    total_cpuload = gst_util_uint64_scale (tusersys,
+        G_GINT64_CONSTANT (100), last_ts);
+    printf ("Avg CPU load: %u %%\n", (guint) total_cpuload);
+  }
   puts ("");
 
   /* thread stats */
@@ -783,6 +807,8 @@ collect_stats (const gchar * filename)
                   do_message_stats (s);
                 } else if (!strcmp (name, "query")) {
                   do_query_stats (s);
+                } else if (!strcmp (name, "rusage")) {
+                  do_rusage_stats (s);
                 } else {
                   GST_WARNING ("unknown log entry: '%s'", data);
                 }
@@ -808,7 +834,6 @@ collect_stats (const gchar * filename)
         }
       }
       fclose (log);
-      // TODO(ensonic): print stats
     } else {
       GST_WARNING ("empty log");
     }
