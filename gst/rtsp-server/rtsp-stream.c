@@ -1348,7 +1348,7 @@ static GstAppSinkCallbacks sink_cb = {
  * @rtpbin: a rtpbin element in @bin
  * @state: the target state of the new elements
  *
- * Join the #Gstbin @bin that contains the element @rtpbin.
+ * Join the #GstBin @bin that contains the element @rtpbin.
  *
  * @stream will link to @rtpbin, which must be inside @bin. The elements
  * added to @bin will be set to the state given in @state.

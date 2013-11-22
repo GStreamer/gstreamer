@@ -21,7 +21,7 @@
  * @short_description: Roles and associated permissions
  * @see_also: #GstRTSPToken, #GstRTSPAuth
  *
- * The #GstRTSPPermission object contains an array of roles and associated
+ * The #GstRTSPPermissions object contains an array of roles and associated
  * permissions. The roles are represented with a string and the permissions with
  * a generic #GstStructure.
  *

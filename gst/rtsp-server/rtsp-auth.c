@@ -19,7 +19,7 @@
 /**
  * SECTION:rtsp-auth
  * @short_description: Authentication and authorization
- * @see_also: #GstRTSPPermission, #GstRTSPtoken
+ * @see_also: #GstRTSPPermissions, #GstRTSPToken
  *
  * The #GstRTSPAuth object is responsible for checking if the current user is
  * allowed to perform requested actions. The default implementation has some
@@ -30,7 +30,7 @@
  *
  * The RTSP server will call gst_rtsp_auth_check() with a string describing the
  * check to perform. The possible checks are prefixed with
- * #GST_RTSP_AUTH_CHECK_*. Depending on the check, the default implementation
+ * GST_RTSP_AUTH_CHECK_*. Depending on the check, the default implementation
  * will use the current #GstRTSPToken, #GstRTSPContext and
  * #GstRTSPPermissions on the object to check if an operation is allowed.
  *

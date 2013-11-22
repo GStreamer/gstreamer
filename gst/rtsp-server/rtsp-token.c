@@ -19,7 +19,7 @@
 /**
  * SECTION:rtsp-token
  * @short_description: Roles and permissions for a client
- * @see_also: #GstRTSPClient, #GstRTSPPermission, #GstRTSPAuth
+ * @see_also: #GstRTSPClient, #GstRTSPPermissions, #GstRTSPAuth
  *
  * A #GstRTSPToken contains the permissions and roles of the user
  * performing the current request. A token is usually created when a user is

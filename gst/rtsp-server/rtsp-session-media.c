@@ -125,7 +125,7 @@ free_session_media (gpointer data)
  * @path: the path
  * @media: the #GstRTSPMedia
  *
- * Create a new #GstRTPSessionMedia that manages the streams
+ * Create a new #GstRTSPSessionMedia that manages the streams
  * in @media for @path. @media should be prepared.
  *
  * Ownership is taken of @media.
