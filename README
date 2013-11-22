@@ -31,7 +31,7 @@ GStreamer and helper libraries.
     surfaces to video/x-raw-yuv pixels.
 
   * `vaapipostproc' is used to postprocess video/x-vaapi-surface
-    surfaces, for e.g. deinterlacing.
+    surfaces, for e.g. deinterlacing, denoising and sharpening.
 
   * `vaapisink' is used to display video/x-vaapi-surface surfaces to
     screen.
@@ -87,17 +87,22 @@ Usage
 -----
 
   VA elements are automatically plugged into GStreamer pipelines. So,
-  using playbin2 should work as is. However, here are a few alternate
-  pipelines constructed manually.
+  using playbin (or playbin2 with GStreamer 0.10) should work as is.
+  However, here are a few alternate pipelines that could be manually
+  constructed.
 
   * Play an H.264 video with an MP4 container in fullscreen mode
-  $ gst-launch-0.10 -v filesrc location=/path/to/video.mp4 ! \
+  $ gst-launch-1.0 -v filesrc location=/path/to/video.mp4 ! \
       qtdemux ! vaapidecode ! vaapisink fullscreen=true
 
   * Play a raw MPEG-2 interlaced stream
-  $ gst-launch-0.10 -v filesrc location=/path/to/mpeg2.bits ! \
+  $ gst-launch-1.0 -v filesrc location=/path/to/mpeg2.bits ! \
       mpegvideoparse ! vaapidecode ! vaapipostproc ! vaapisink
 
+  * Convert from one pixel format to another, while also downscaling
+  $ gst-launch-1.0 -v filesrc location=/path/to/raw_video.yuv ! \
+      videoparse format=yuy2 width=1280 height=720 ! \
+      vaapipostproc format=nv12 height=480 ! vaapisink
 
 Reporting Bugs
 --------------
