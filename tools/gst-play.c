@@ -427,6 +427,24 @@ add_to_playlist (GPtrArray * playlist, const gchar * filename)
     g_warning ("Could not make URI out of filename '%s'", filename);
 }
 
+static void
+shuffle_uris (gchar ** uris, guint num)
+{
+  gchar *tmp;
+  guint i, j;
+
+  if (num < 2)
+    return;
+
+  for (i = 0; i < num; i++) {
+    /* gets equally distributed random number in 0..num-1 [0;num[ */
+    j = g_random_int_range (0, num);
+    tmp = uris[j];
+    uris[j] = uris[i];
+    uris[i] = tmp;
+  }
+}
+
 int
 main (int argc, char **argv)
 {
@@ -434,6 +452,7 @@ main (int argc, char **argv)
   GPtrArray *playlist;
   gboolean print_version = FALSE;
   gboolean gapless = FALSE;
+  gboolean shuffle = FALSE;
   gchar **filenames = NULL;
   gchar *audio_sink = NULL;
   gchar *video_sink = NULL;
@@ -450,6 +469,8 @@ main (int argc, char **argv)
         N_("Audio sink to use (default is autoaudiosink)"), NULL},
     {"gapless", 0, 0, G_OPTION_ARG_NONE, &gapless,
         N_("Enable gapless playback"), NULL},
+    {"shuffle", 0, 0, G_OPTION_ARG_NONE, &shuffle,
+        N_("Shuffle playlist"), NULL},
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL},
     {NULL}
   };
@@ -503,10 +524,15 @@ main (int argc, char **argv)
   }
   g_strfreev (filenames);
 
+  num = playlist->len;
   g_ptr_array_add (playlist, NULL);
 
-  /* play */
   uris = (gchar **) g_ptr_array_free (playlist, FALSE);
+
+  if (shuffle)
+    shuffle_uris (uris, num);
+
+  /* play */
   play = play_new (uris, audio_sink, video_sink, gapless);
 
   do_play (play);
