@@ -25,6 +25,10 @@ libgstvaapi_LIBS += \
 endif
 
 if USE_WAYLAND
+libgstvaapi_CFLAGS += \
+	$(WAYLAND_CFLAGS)	\
+	$(NULL)
+
 libgstvaapi_LIBS += \
 	$(top_builddir)/gst-libs/gst/vaapi/libgstvaapi-wayland-$(GST_API_VERSION).la
 endif
