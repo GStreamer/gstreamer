@@ -456,6 +456,23 @@ append_output_buffer_metadata(GstBuffer *outbuf, GstBuffer *inbuf, guint flags)
         0, -1);
 }
 
+static gboolean
+deint_method_is_advanced(GstVaapiDeinterlaceMethod deint_method)
+{
+    gboolean is_advanced;
+
+    switch (deint_method) {
+    case GST_VAAPI_DEINTERLACE_METHOD_MOTION_ADAPTIVE:
+    case GST_VAAPI_DEINTERLACE_METHOD_MOTION_COMPENSATED:
+        is_advanced = TRUE;
+        break;
+    default:
+        is_advanced = FALSE;
+        break;
+    }
+    return is_advanced;
+}
+
 static GstVaapiDeinterlaceMethod
 get_next_deint_method(GstVaapiDeinterlaceMethod deint_method)
 {
@@ -503,7 +520,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     GstBuffer *fieldbuf;
     GstVaapiDeinterlaceMethod deint_method;
     guint flags, deint_flags;
-    gboolean tff, deint, deint_changed;
+    gboolean tff, deint, deint_refs, deint_changed;
 
     /* Validate filters */
     if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_FORMAT) &&
@@ -542,6 +559,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
 
     /* First field */
     deint_method = postproc->deinterlace_method;
+    deint_refs = deint_method_is_advanced(deint_method);
     if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_DEINTERLACE) {
         fieldbuf = create_output_buffer(postproc);
         if (!fieldbuf)
@@ -559,15 +577,19 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
             if (!set_best_deint_method(postproc, deint_flags, &deint_method))
                 goto error_op_deinterlace;
 
-            ds_set_surfaces(ds);
-            if (!gst_vaapi_filter_set_deinterlacing_references(postproc->filter,
-                    ds->surfaces, ds->num_surfaces, NULL, 0))
-                goto error_op_deinterlace;
-
             if (deint_method != postproc->deinterlace_method) {
                 GST_DEBUG("unsupported deinterlace-method %u. Using %u instead",
                           postproc->deinterlace_method, deint_method);
                 postproc->deinterlace_method = deint_method;
+                deint_refs = deint_method_is_advanced(deint_method);
+            }
+
+            if (deint_refs) {
+                ds_set_surfaces(ds);
+                if (!gst_vaapi_filter_set_deinterlacing_references(
+                        postproc->filter, ds->surfaces, ds->num_surfaces,
+                        NULL, 0))
+                    goto error_op_deinterlace;
             }
         }
         else if (deint_changed) {
@@ -608,8 +630,8 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
                 deint_method, deint_flags))
             goto error_op_deinterlace;
 
-        if (!gst_vaapi_filter_set_deinterlacing_references(postproc->filter,
-                ds->surfaces, ds->num_surfaces, NULL, 0))
+        if (deint_refs && !gst_vaapi_filter_set_deinterlacing_references(
+                postproc->filter, ds->surfaces, ds->num_surfaces, NULL, 0))
             goto error_op_deinterlace;
     }
     else if (deint_changed && !gst_vaapi_filter_set_deinterlacing(
@@ -629,7 +651,9 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     }
     gst_buffer_set_vaapi_video_meta(outbuf, outbuf_meta);
     gst_vaapi_video_meta_unref(outbuf_meta);
-    ds_add_buffer(ds, inbuf);
+
+    if (deint && deint_refs)
+        ds_add_buffer(ds, inbuf);
     return GST_FLOW_OK;
 
     /* ERRORS */

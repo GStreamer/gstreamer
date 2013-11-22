@@ -82,7 +82,7 @@ typedef enum {
  * number of allowed surfaces used as references shall be less than
  * the actual number of scratch surfaces used for decoding (4).
  */
-#define GST_VAAPI_DEINTERLACE_MAX_REFERENCES 3
+#define GST_VAAPI_DEINTERLACE_MAX_REFERENCES 2
 
 /**
  * GstVaapiPostprocFlags:
