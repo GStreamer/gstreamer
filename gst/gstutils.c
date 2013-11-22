@@ -3742,7 +3742,7 @@ gst_pad_create_stream_id_printf (GstPad * pad, GstElement * parent,
  *
  * Since stream IDs are sorted alphabetically, any numbers in the
  * stream ID should be printed with a fixed number of characters,
- * preceded by 0's, such as by using the format %%03u instead of %%u.
+ * preceded by 0's, such as by using the format \%03u instead of \%u.
  *
  * Returns: A stream-id for @pad. g_free() after usage.
  */
