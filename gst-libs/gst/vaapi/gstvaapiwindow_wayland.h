@@ -1,7 +1,7 @@
 /*
  *  gstvaapiwindow_wayland.h - VA/Wayland window abstraction
  *
- *  Copyright (C) 2012 Intel Corporation
+ *  Copyright (C) 2012-2013 Intel Corporation
  *    Author: Sreerenj Balachandran <sreerenj.balachandran@intel.com>
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *

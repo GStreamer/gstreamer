@@ -1,7 +1,7 @@
 /*
  *  test-mpeg4.c - MPEG-4 test data
  *
- *  Copyright (C) 2012 Intel Corporation
+ *  Copyright (C) 2012-2013 Intel Corporation
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *
  *  This library is free software; you can redistribute it and/or

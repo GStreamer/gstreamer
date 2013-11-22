@@ -1,7 +1,7 @@
 /*
  *  gstvaapidecoder_jpeg.h - JPEG decoder
  *
- *  Copyright (C) 2011-2012 Intel Corporation
+ *  Copyright (C) 2011-2013 Intel Corporation
  *    Author: Wind Yuan <feng.yuan@intel.com>
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *

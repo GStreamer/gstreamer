@@ -1,7 +1,7 @@
 /*
  *  gstvaapi.c - VA-API element registration
  *
- *  Copyright (C) 2011-2012 Intel Corporation
+ *  Copyright (C) 2011-2013 Intel Corporation
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *  Copyright (C) 2011 Collabora Ltd.
  *    Author: Nicolas Dufresne <nicolas.dufresne@collabora.co.uk>

@@ -1,7 +1,7 @@
 /*
  *  gstvaapidecoder_mpeg2.h - MPEG-2 decoder
  *
- *  Copyright (C) 2011-2012 Intel Corporation
+ *  Copyright (C) 2011-2013 Intel Corporation
  *    Author: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
  *
  *  This library is free software; you can redistribute it and/or
