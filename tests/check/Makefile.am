@@ -33,7 +33,6 @@ check_PROGRAMS = \
 	ges/layer	\
 	ges/effects	\
 	ges/uriclip	\
-	ges/simplelayer	\
 	ges/clip	\
 	ges/timelineedition	\
 	ges/titles\

@@ -32,10 +32,6 @@
  * property. The default value is "crossfade". For audio, only "crossfade" is
  * supported.
  *
- * #GESSimpleLayer will automatically manage the priorities of sources
- * and transitions. If you use #GESTransitionClips in another type of
- * #GESLayer, you will need to manage priorities yourself.
- *
  * The ID of the ExtractableType is the nickname of the vtype property value. Note
  * that this value can be changed after creation and the GESExtractable.asset value
  * will be updated when needed.

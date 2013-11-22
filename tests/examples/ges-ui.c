@@ -203,11 +203,7 @@ update_move_up_down_sensitivity (App * app)
 static void
 update_play_sensitivity (App * app)
 {
-  gboolean valid;
-
-  g_object_get (app->layer, "valid", &valid, NULL);
-
-  gtk_action_set_sensitive (app->play, (app->n_objects && valid));
+  gtk_action_set_sensitive (app->play, app->n_objects);
 }
 
 /* Backend callbacks ********************************************************/
@@ -744,9 +740,9 @@ get_video_patterns (void)
 static void
 layer_added_cb (GESTimeline * timeline, GESLayer * layer, App * app)
 {
-  if (!GES_IS_SIMPLE_LAYER (layer)) {
+  if (!GES_IS_LAYER (layer)) {
     GST_ERROR ("This timeline contains a layer type other than "
-        "GESSimpleLayer. Timeline editing disabled");
+        "GESLayer. Timeline editing disabled");
     return;
   }
 
@@ -1054,18 +1050,7 @@ app_delete_objects (App * app, GList * objects)
 static void
 app_move_selected_up (App * app)
 {
-  GList *objects, *tmp;
-  gint pos;
-
-  objects = ges_layer_get_clips (app->layer);
-  pos = g_list_index (objects, app->selected_objects->data);
-
-  ges_simple_layer_move_object (GES_SIMPLE_LAYER (app->layer),
-      GES_CLIP (app->selected_objects->data), pos - 1);
-
-  for (tmp = objects; tmp; tmp = tmp->next) {
-    gst_object_unref (tmp->data);
-  }
+  GST_FIXME ("This function is not implement, please implement it :)");
 }
 
 static void
@@ -1123,18 +1108,7 @@ on_apply_effect_cb (GtkButton * button, App * app)
 static void
 app_move_selected_down (App * app)
 {
-  GList *objects, *tmp;
-  gint pos;
-
-  objects = ges_layer_get_clips (app->layer);
-  pos = g_list_index (objects, app->selected_objects->data);
-
-  ges_simple_layer_move_object (GES_SIMPLE_LAYER (app->layer),
-      GES_CLIP (app->selected_objects->data), pos - 1);
-
-  for (tmp = objects; tmp; tmp = tmp->next) {
-    gst_object_unref (tmp->data);
-  }
+  GST_FIXME ("This function is not implement, please implement it :)");
 }
 
 static void
@@ -1145,8 +1119,10 @@ app_add_file (App * app, gchar * uri)
   GST_DEBUG ("adding file %s", uri);
 
   clip = GES_CLIP (ges_uri_clip_new (uri));
+  ges_timeline_element_set_start (GES_TIMELINE_ELEMENT (clip),
+      ges_layer_get_duration (app->layer));
 
-  ges_simple_layer_add_object (GES_SIMPLE_LAYER (app->layer), clip, -1);
+  ges_layer_add_clip (app->layer, clip);
 }
 
 static void
@@ -1184,9 +1160,9 @@ app_add_title (App * app)
   GST_DEBUG ("adding title");
 
   clip = GES_CLIP (ges_title_clip_new ());
-  g_object_set (G_OBJECT (clip), "duration", GST_SECOND, NULL);
-
-  ges_simple_layer_add_object (GES_SIMPLE_LAYER (app->layer), clip, -1);
+  g_object_set (G_OBJECT (clip), "duration", GST_SECOND,
+      "start", ges_layer_get_duration (app->layer), NULL);
+  ges_layer_add_clip (app->layer, clip);
 }
 
 static void
@@ -1197,23 +1173,16 @@ app_add_test (App * app)
   GST_DEBUG ("adding test");
 
   clip = GES_CLIP (ges_test_clip_new ());
-  g_object_set (G_OBJECT (clip), "duration", GST_SECOND, NULL);
+  g_object_set (G_OBJECT (clip), "duration", GST_SECOND,
+      "start", ges_layer_get_duration (app->layer), NULL);
 
-  ges_simple_layer_add_object (GES_SIMPLE_LAYER (app->layer), clip, -1);
+  ges_layer_add_clip (app->layer, clip);
 }
 
 static void
 app_add_transition (App * app)
 {
-  GESClip *clip;
-
-  GST_DEBUG ("adding transition");
-
-  clip = GES_CLIP (ges_transition_clip_new
-      (GES_VIDEO_STANDARD_TRANSITION_TYPE_CROSSFADE));
-  g_object_set (G_OBJECT (clip), "duration", GST_SECOND, NULL);
-
-  ges_simple_layer_add_object (GES_SIMPLE_LAYER (app->layer), clip, -1);
+  GST_FIXME ("This function is not implement, please implement it :)");
 }
 
 static void
@@ -1334,7 +1303,7 @@ app_new (void)
   if (!(ges_timeline_add_track (ret->timeline, v)))
     goto fail;
 
-  if (!(ret->layer = (GESLayer *) ges_simple_layer_new ()))
+  if (!(ret->layer = ges_layer_new ()))
     goto fail;
 
   if (!(ges_timeline_add_layer (ret->timeline, ret->layer)))

@@ -76,8 +76,8 @@ main (int argc, gchar ** argv)
   tracka = GES_TRACK (ges_audio_track_new ());
   trackv = GES_TRACK (ges_video_track_new ());
 
-  layer1 = (GESLayer *) ges_simple_layer_new ();
-  layer2 = (GESLayer *) ges_simple_layer_new ();
+  layer1 = ges_layer_new ();
+  layer2 = ges_layer_new ();
   g_object_set (layer2, "priority", 1, NULL);
 
   if (!ges_timeline_add_layer (timeline, layer1) ||
@@ -92,7 +92,7 @@ main (int argc, gchar ** argv)
     /* Add the main audio/video file */
     src = ges_uri_clip_new (uri);
     g_free (uri);
-    g_object_set (src, "in-point", inpoint * GST_SECOND,
+    g_object_set (src, "start", 0, "in-point", inpoint * GST_SECOND,
         "duration", duration * GST_SECOND, "mute", mute, NULL);
     ges_layer_add_clip (layer1, GES_CLIP (src));
   }

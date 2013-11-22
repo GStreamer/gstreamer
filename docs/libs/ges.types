@@ -2,7 +2,6 @@
 #include <ges/ges.h>
 
 ges_formatter_get_type
-ges_simple_layer_get_type
 %ges_text_halign_get_type
 %ges_text_valign_get_type
 ges_timeline_get_type

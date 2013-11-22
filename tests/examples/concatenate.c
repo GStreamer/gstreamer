@@ -86,7 +86,7 @@ main (int argc, char **argv)
 
   timeline = ges_timeline_new_audio_video ();
 
-  layer = (GESLayer *) ges_simple_layer_new ();
+  layer = (GESLayer *) ges_layer_new ();
   if (!ges_timeline_add_layer (timeline, layer))
     return -1;
 

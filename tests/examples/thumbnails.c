@@ -83,7 +83,7 @@ create_timeline (void)
   tracka = GES_TRACK (ges_audio_track_new ());
   trackv = GES_TRACK (ges_video_track_new ());
 
-  layer = (GESLayer *) ges_simple_layer_new ();
+  layer = ges_layer_new ();
 
   /* Add the tracks and the layer to the timeline */
   if (!ges_timeline_add_layer (timeline, layer) ||
@@ -95,9 +95,9 @@ create_timeline (void)
   src = GES_CLIP (ges_test_clip_new ());
   g_object_set (src,
       "vpattern", GES_VIDEO_TEST_PATTERN_SNOW,
-      "duration", 10 * GST_SECOND, NULL);
+      "start", 0, "duration", 10 * GST_SECOND, NULL);
 
-  ges_simple_layer_add_object ((GESSimpleLayer *) layer, GES_CLIP (src), 0);
+  ges_layer_add_clip (layer, GES_CLIP (src));
 
   pipeline = ges_pipeline_new ();
 

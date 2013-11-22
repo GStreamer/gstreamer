@@ -671,28 +671,6 @@ ges_transition_clip_get_type
 
 
 <SECTION>
-<FILE>ges-simple-layer</FILE>
-<TITLE>GESSimpleLayer</TITLE>
-GESSimpleLayer
-ges_simple_layer_new
-ges_simple_layer_add_object
-ges_simple_layer_move_object
-ges_simple_layer_nth
-ges_simple_layer_index
-ges_simple_layer_is_valid
-<SUBSECTION Standard>
-GESSimpleLayerClass
-ges_simple_layer_get_type
-GESSimpleLayerPrivate
-GES_IS_SIMPLE_LAYER
-GES_IS_SIMPLE_LAYER_CLASS
-GES_SIMPLE_LAYER
-GES_SIMPLE_LAYER_CLASS
-GES_SIMPLE_LAYER_GET_CLASS
-GES_TYPE_SIMPLE_LAYER
-</SECTION>
-
-<SECTION>
 <FILE>ges-test-clip</FILE>
 <TITLE>GESTestClip</TITLE>
 GESTestClip

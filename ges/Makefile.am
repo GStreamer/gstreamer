@@ -12,7 +12,6 @@ libges_@GST_API_VERSION@_la_SOURCES = 		\
 	ges.c					\
 	ges-enums.c				\
 	ges-meta-container.c        \
-	ges-simple-layer.c		\
 	ges-timeline.c				\
 	ges-layer.c			\
 	ges-clip.c			\
@@ -77,7 +76,6 @@ libges_@GST_API_VERSION@include_HEADERS = 	\
 	ges-enums.h				\
 	ges-gerror.h				\
 	ges-meta-container.h        \
-	ges-simple-layer.h		\
 	ges-timeline.h				\
 	ges-layer.h			\
 	ges-clip.h			\

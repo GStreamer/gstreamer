@@ -28,7 +28,6 @@
 
 #include <ges/ges-timeline.h>
 #include <ges/ges-layer.h>
-#include <ges/ges-simple-layer.h>
 #include <ges/ges-timeline-element.h>
 #include <ges/ges-clip.h>
 #include <ges/ges-pipeline.h>

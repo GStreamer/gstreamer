@@ -82,11 +82,6 @@ platform as well as Windows. It is released under the GNU Library General Public
   </chapter>
 
   <chapter>
-    <title>Simple Timeline interface</title>
-    <xi:include href="xml/ges-simple-layer.xml"/>
-  </chapter>
-
-  <chapter>
     <title>Convenience classes</title>
     <xi:include href="xml/ges-pipeline.xml"/>
   </chapter>

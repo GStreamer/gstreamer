@@ -24,10 +24,6 @@
  *
  * The effect will be applied on the sources that have lower priorities
  * (higher number) between the inpoint and the end of it.
- *
- * In a #GESSimpleLayer, the priorities will be set for you but if
- * you use another type of #GESLayer, you will have to handle it
- * yourself.
  */
 
 #include <ges/ges.h>

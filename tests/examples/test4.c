@@ -104,7 +104,7 @@ main (int argc, gchar ** argv)
   tracka = GES_TRACK (ges_audio_track_new ());
 
   /* We are only going to be doing one layer of clips */
-  layer = (GESLayer *) ges_simple_layer_new ();
+  layer = ges_layer_new ();
 
   /* Add the tracks and the layer to the timeline */
   if (!ges_timeline_add_layer (timeline, layer))
@@ -122,7 +122,8 @@ main (int argc, gchar ** argv)
     g_assert (src);
     g_free (uri);
 
-    g_object_set (src, "duration", GST_SECOND, NULL);
+    g_object_set (src, "start", ges_layer_get_duration (layer),
+        "duration", GST_SECOND, NULL);
     /* Since we're using a GESSimpleLayer, objects will be automatically
      * appended to the end of the layer */
     ges_layer_add_clip (layer, (GESClip *) src);

@@ -178,7 +178,7 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
     return timeline;
 
   /* We are only going to be doing one layer of clips */
-  layer = (GESLayer *) ges_simple_layer_new ();
+  layer = (GESLayer *) ges_layer_new ();
 
   /* Add the tracks and the layer to the timeline */
   if (!ges_timeline_add_layer (timeline, layer))
@@ -287,8 +287,8 @@ create_timeline (int nbargs, gchar ** argv, const gchar * proj_uri)
       g_free (uri);
     }
 
-    /* Since we're using a GESSimpleLayer, objects will be automatically
-     * appended to the end of the layer */
+    g_object_set (G_OBJECT (clip), "start", ges_layer_get_duration (layer),
+        NULL);
     ges_layer_add_clip (layer, clip);
   }
 

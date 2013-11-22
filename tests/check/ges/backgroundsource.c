@@ -132,7 +132,7 @@ GST_START_TEST (test_test_source_in_layer)
   ges_init ();
 
   timeline = create_timeline_sync (FALSE);
-  layer = (GESLayer *) ges_simple_layer_new ();
+  layer = ges_layer_new ();
   a = GES_TRACK (ges_audio_track_new ());
   v = GES_TRACK (ges_video_track_new ());
 
@@ -146,7 +146,7 @@ GST_START_TEST (test_test_source_in_layer)
 
   g_object_set (source, "duration", (guint64) GST_SECOND, NULL);
 
-  ges_simple_layer_add_object ((GESSimpleLayer *) layer, (GESClip *) source, 0);
+  ges_layer_add_clip (layer, (GESClip *) source);
 
   /* specifically test the vpattern property */
   g_object_set (source, "vpattern", (gint) GES_VIDEO_TEST_PATTERN_WHITE, NULL);
