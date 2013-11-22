@@ -937,10 +937,10 @@ gst_rtsp_media_get_address_pool (GstRTSPMedia * media)
  * gst_rtsp_media_collect_streams:
  * @media: a #GstRTSPMedia
  *
- * Find all payloader elements, they should be named pay%d in the
+ * Find all payloader elements, they should be named pay\%d in the
  * element of @media, and create #GstRTSPStreams for them.
  *
- * Collect all dynamic elements, named dynpay%d, and add them to
+ * Collect all dynamic elements, named dynpay\%d, and add them to
  * the list of dynamic elements.
  */
 void

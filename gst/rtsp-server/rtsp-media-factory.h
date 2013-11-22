@@ -63,12 +63,12 @@ struct _GstRTSPMediaFactory {
  *       including the query parameters to return a key.
  * @create_element: Construct and return a #GstElement that is a #GstBin containing
  *       the elements to use for streaming the media. The bin should contain
- *       payloaders pay%d for each stream. The default implementation of this
+ *       payloaders pay\%d for each stream. The default implementation of this
  *       function returns the bin created from the launch parameter.
  * @construct: the vmethod that will be called when the factory has to create the
  *       #GstRTSPMedia for @url. The default implementation of this
  *       function calls create_element to retrieve an element and then looks for
- *       pay%d to create the streams.
+ *       pay\%d to create the streams.
  * @create_pipeline: create a new pipeline or re-use an existing one and
  *       add the #GstRTSPMedia's element created by @construct to the pipeline.
  * @configure: configure the media created with @construct. The default

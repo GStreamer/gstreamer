@@ -981,7 +981,7 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
  * Construct and return a #GstElement that is a #GstBin containing
  * the elements to use for streaming the media.
  *
- * The bin should contain payloaders pay%d for each stream. The default
+ * The bin should contain payloaders pay\%d for each stream. The default
  * implementation of this function returns the bin created from the
  * launch parameter.
  *
