@@ -595,7 +595,9 @@ ges_layer_add_clip (GESLayer * layer, GESClip * clip)
  * ges_layer_add_asset:
  * @layer: a #GESLayer
  * @asset: The asset to add to
- * @start: The start value to set on the new #GESClip
+ * @start: The start value to set on the new #GESClip,
+ * if @start == GST_CLOCK_TIME_NONE, it will be set to
+ * the current duration of @layer
  * @inpoint: The inpoint value to set on the new #GESClip
  * @duration: The duration value to set on the new #GESClip
  * @track_types: The #GESTrackType to set on the the new #GESClip
@@ -624,6 +626,15 @@ ges_layer_add_asset (GESLayer * layer,
       ges_track_type_name (track_types));
 
   clip = GES_CLIP (ges_asset_extract (asset, NULL));
+
+  if (!GST_CLOCK_TIME_IS_VALID (start)) {
+    start = ges_layer_get_duration (layer);
+
+    GST_DEBUG_OBJECT (layer,
+        "No start specified, setting it to %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (start));
+  }
+
   _set_start0 (GES_TIMELINE_ELEMENT (clip), start);
   _set_inpoint0 (GES_TIMELINE_ELEMENT (clip), inpoint);
   if (track_types != GES_TRACK_TYPE_UNKNOWN)
