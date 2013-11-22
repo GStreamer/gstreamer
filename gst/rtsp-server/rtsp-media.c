@@ -67,8 +67,6 @@
 #include <gst/app/gstappsrc.h>
 #include <gst/app/gstappsink.h>
 
-#include <gst/rtp/gstrtpbasepayload.h>
-
 #include "rtsp-media.h"
 
 #define GST_RTSP_MEDIA_GET_PRIVATE(obj)  \
@@ -1536,13 +1534,19 @@ find_payload_element (GstElement * payloader)
 {
   GValue item = { 0 };
   GstIterator *iter;
-  GstElement *element;
   GstElement *pay = NULL;
 
   iter = gst_bin_iterate_recurse (GST_BIN (payloader));
   while (gst_iterator_next (iter, &item) == GST_ITERATOR_OK) {
-    element = (GstElement *) g_value_get_object (&item);
-    if (GST_IS_RTP_BASE_PAYLOAD (element)) {
+    GstElement *element = (GstElement *) g_value_get_object (&item);
+    GstElementClass *eclass = GST_ELEMENT_GET_CLASS (element);
+    const gchar *klass;
+
+    klass = gst_element_class_get_metadata (eclass, GST_ELEMENT_METADATA_KLASS);
+    if (klass == NULL)
+      continue;
+
+    if (strstr (klass, "Payloader") && strstr (klass, "RTP")) {
       pay = gst_object_ref (element);
       g_value_unset (&item);
       break;
