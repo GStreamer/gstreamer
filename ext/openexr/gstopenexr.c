@@ -29,6 +29,10 @@
 static gboolean
 plugin_init (GstPlugin * plugin)
 {
+  if (!gst_element_register (plugin, "openexrdec", GST_RANK_PRIMARY,
+          GST_TYPE_OPENEXR_DEC))
+    return FALSE;
+
   return TRUE;
 }
 
