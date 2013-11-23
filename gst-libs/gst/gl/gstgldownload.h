@@ -24,7 +24,7 @@
 #include <gst/video/video.h>
 #include <gst/gstmemory.h>
 
-#include <gst/gl/gstgl_fwd.h>
+#include <gst/gl/gl.h>
 
 G_BEGIN_DECLS
 
@@ -37,16 +37,13 @@ GType gst_gl_download_get_type (void);
 #define GST_GL_DOWNLOAD_CAST(obj) ((GstGLDownload*)(obj))
 
 /**
- * GstGLDownload
- * @parent: the parent object
- * @lock: thread safety
- * @display: a #GstGLDisplay
- * @info: the output video info
+ * GstGLDownload:
  *
- * Download information about GL textures
+ * Opaque #GstGLDownload object
  */
 struct _GstGLDownload
 {
+  /* <private> */
   GObject          parent;
 
   GMutex           lock;
@@ -56,7 +53,6 @@ struct _GstGLDownload
   /* output data */
   GstVideoInfo     info;
 
-  /* <private> */
   gpointer         data[GST_VIDEO_MAX_PLANES];
   gboolean         initted;
 
@@ -81,6 +77,7 @@ struct _GstGLDownload
  */
 struct _GstGLDownloadClass
 {
+  /* <private> */
   GObjectClass object_class;
 };
 
