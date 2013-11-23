@@ -67,7 +67,7 @@ typedef enum
 /**
  * GstGLMemory:
  * @mem: the parent object
- * @display: the #GstGLDisplay to use for GL operations
+ * @context: the #GstGLContext to use for GL operations
  * @tex_id: the texture id for this memory
  * @v_format: the video format of this texture
  * @gl_format: the format of the texture
@@ -121,7 +121,7 @@ struct _GstGLMemory
  * @mem: a #GstGLMemory
  * @flag: a flag
  *
- * Returns: Whether @flag is set on @mem
+ * Whether @flag is set on @mem
  */
 #define GST_GL_MEMORY_FLAG_IS_SET(mem,flag) GST_MEMORY_FLAG_IS_SET(mem,flag)
 

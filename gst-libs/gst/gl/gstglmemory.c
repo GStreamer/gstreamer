@@ -391,6 +391,16 @@ _gl_mem_free (GstAllocator * allocator, GstMemory * mem)
   g_slice_free (GstGLMemory, gl_mem);
 }
 
+/**
+ * gst_gl_memory_copy_into_texture:
+ * @gl_mem:a #GstGLMemory
+ * @tex_id:OpenGL texture id
+ *
+ * Copies @gl_mem into the texture specfified by @tex_id.  This assumes that
+ * @tex_id has the same dimensions as @gl_mem.
+ *
+ * Returns: Whether the copy suceeded
+ */
 gboolean
 gst_gl_memory_copy_into_texture (GstGLMemory * gl_mem, guint tex_id)
 {
