@@ -25,6 +25,8 @@
 #include <gst/gst.h>
 
 #include <gst/gl/gstgl_fwd.h>
+#include <gst/gl/gstglcontext.h>
+#include <gst/gl/gstgldisplay.h>
 
 G_BEGIN_DECLS
 
@@ -64,11 +66,16 @@ typedef void (*GstGLWindowResizeCB) (gpointer data, guint width, guint height);
 #define	GST_GL_WINDOW_CB(f)			 ((GstGLWindowCB) (f))
 #define	GST_GL_WINDOW_RESIZE_CB(f)		 ((GstGLWindowResizeCB) (f))
 
+/**
+ * GstGLWindow:
+ *
+ * #GstGLWindow is an opaque struct and should only be accessed through the
+ * provided api.
+ */
 struct _GstGLWindow {
   /*< private >*/
   GObject parent;
 
-  /*< public >*/
   GMutex        lock;
   gboolean      need_lock;
 
@@ -94,8 +101,24 @@ struct _GstGLWindow {
   GstGLWindowPrivate *priv;
 };
 
+/**
+ * GstGLWindowClass:
+ * @parent_class: Parent class
+ * @get_display: Gets the current windowing system display connection
+ * @set_window_handle: Set a window to render into
+ * @get_window_handle: Gets the current window that this #GstGLWindow is
+ *                     rendering into
+ * @draw_unlocked: redraw the window with the specified dimensions
+ * @draw: redraw the window with the specified dimensions
+ * @run: run the mainloop
+ * @quit: send a quit to the mainloop
+ * @send_message: invoke a function on the window thread.  Required to be reentrant.
+ * @send_message_async: invoke a function on the window thread. @run may or may
+ *                      not have been called.  Required to be reentrant.
+ * @open: open the connection to the display
+ * @close: close the connection to the display
+ */
 struct _GstGLWindowClass {
-  /*< private >*/
   GObjectClass parent_class;
 
   guintptr (*get_display)        (GstGLWindow *window);
