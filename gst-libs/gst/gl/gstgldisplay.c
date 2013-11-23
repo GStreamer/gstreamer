@@ -21,6 +21,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstgldisplay
+ * @short_description: window system display connection abstraction
+ * @title: GstGLDisplay
+ * @see_also: #GstContext, #GstGLContext, #GstGLWindow
+ *
+ * #GstGLDisplay represents a connection to the underlying windowing system. 
+ * Elements are required to make use of #GstContext to share and propogate
+ * a #GstGLDisplay.
+ */
+
 #ifdef HAVE_CONFIG_H
 #include "config.h"
 #endif
@@ -103,6 +114,13 @@ gst_gl_display_get_gl_api (GstGLDisplay * display)
   return gst_gl_context_get_gl_api (display->context);
 }
 
+/**
+ * gst_context_set_gl_display:
+ * @context: a #GstContext
+ * @display: resulting #GstGLDisplay
+ *
+ * Sets @display on @context
+ */
 void
 gst_context_set_gl_display (GstContext * context, GstGLDisplay * display)
 {
@@ -118,6 +136,13 @@ gst_context_set_gl_display (GstContext * context, GstGLDisplay * display)
       display, NULL);
 }
 
+/**
+ * gst_context_get_gl_display:
+ * @context: a #GstContext
+ * @display: resulting #GstGLDisplay
+ *
+ * Returns: Whether @display was in @context
+ */
 gboolean
 gst_context_get_gl_display (GstContext * context, GstGLDisplay ** display)
 {

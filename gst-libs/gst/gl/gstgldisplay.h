@@ -42,14 +42,14 @@ GType gst_gl_display_get_type (void);
 /**
  * GstGLDisplay:
  *
- * the contents of a #GstGLDisplay are private and should only be accessed
+ * The contents of a #GstGLDisplay are private and should only be accessed
  * through the provided API
  */
 struct _GstGLDisplay
 {
+  /* <private> */
   GstObject             object;
 
-  /* <private> */
   GstGLContext         *context;
   GstGLAPI              gl_api;
 
