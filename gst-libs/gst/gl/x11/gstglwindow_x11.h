@@ -39,7 +39,13 @@ typedef struct _GstGLWindowX11        GstGLWindowX11;
 typedef struct _GstGLWindowX11Private GstGLWindowX11Private;
 typedef struct _GstGLWindowX11Class   GstGLWindowX11Class;
 
-struct _GstGLWindowX11 {
+/**
+ * GstGLWindowX11:
+ *
+ * Opaque #GstGLWindowX11 object
+ */
+struct _GstGLWindowX11
+{
   /*< private >*/
   GstGLWindow parent;
 
@@ -80,6 +86,11 @@ struct _GstGLWindowX11 {
   gpointer _reserved[GST_PADDING];
 };
 
+/**
+ * GstGLWindowX11Class:
+ *
+ * Opaque #GstGLWindowX11Class object
+ */
 struct _GstGLWindowX11Class {
   /*< private >*/
   GstGLWindowClass parent_class;
