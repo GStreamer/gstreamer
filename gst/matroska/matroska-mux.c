@@ -3381,12 +3381,15 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   if (relative_timestamp64 >= 0) {
     /* round the timestamp */
     relative_timestamp64 += gst_util_uint64_scale (mux->time_scale, 1, 2);
+    relative_timestamp = gst_util_uint64_scale (relative_timestamp64, 1,
+        mux->time_scale);
   } else {
     /* round the timestamp */
     relative_timestamp64 -= gst_util_uint64_scale (mux->time_scale, 1, 2);
+    relative_timestamp =
+        -((gint16) gst_util_uint64_scale (-relative_timestamp64, 1,
+            mux->time_scale));
   }
-  relative_timestamp = gst_util_uint64_scale (relative_timestamp64, 1,
-      mux->time_scale);
 
   if (is_video_invisible)
     flags |= 0x08;
