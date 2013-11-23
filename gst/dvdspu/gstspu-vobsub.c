@@ -261,8 +261,10 @@ gst_dvd_spu_setup_cmd_blk (GstDVDSpu * dvdspu, guint16 cmd_blk_offset,
   guint16 delay;
   guint8 *cmd_blk = start + cmd_blk_offset;
 
-  if (G_UNLIKELY (cmd_blk + 5 >= end))
+  if (G_UNLIKELY (cmd_blk + 5 >= end)) {
+    GST_DEBUG_OBJECT (dvdspu, "No valid command block");
     return FALSE;               /* No valid command block to read */
+  }
 
   delay = GST_READ_UINT16_BE (cmd_blk);
   state->next_ts = state->vobsub.base_ts + STM_TO_GST (delay);
@@ -368,6 +370,7 @@ gstspu_vobsub_execute_event (GstDVDSpu * dvdspu)
   guint8 *start, *cmd_blk, *end;
   guint16 next_blk;
   SpuState *state = &dvdspu->spu_state;
+  gboolean ret = TRUE;
 
   if (state->vobsub.buf == NULL)
     return FALSE;
@@ -394,17 +397,16 @@ gstspu_vobsub_execute_event (GstDVDSpu * dvdspu)
   next_blk = GST_READ_UINT16_BE (cmd_blk + 2);
   if (next_blk != state->vobsub.cur_cmd_blk) {
     /* Advance to the next block of commands */
-    gst_dvd_spu_setup_cmd_blk (dvdspu, next_blk, start, end);
+    ret = gst_dvd_spu_setup_cmd_blk (dvdspu, next_blk, start, end);
   } else {
     /* Next Block points to the current block, so we're finished with this
      * SPU buffer */
-    gst_buffer_unmap (state->vobsub.buf, &map);
     gst_dvd_spu_finish_spu_buf (dvdspu);
-    return FALSE;
+    ret = FALSE;
   }
   gst_buffer_unmap (state->vobsub.buf, &map);
 
-  return TRUE;
+  return ret;
 }
 
 gboolean
