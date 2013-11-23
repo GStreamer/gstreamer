@@ -226,6 +226,12 @@ else
 OPENCV_DIR=
 endif
 
+if USE_OPENEXR
+OPENEXR_DIR = openexr
+else
+OPENEXR_DIR =
+endif
+
 if USE_OPENJPEG
 OPENJPEG_DIR = openjpeg
 else
@@ -417,6 +423,7 @@ SUBDIRS=\
 	$(OFA_DIR) \
 	$(OPENAL_DIR) \
 	$(OPENCV_DIR) \
+	$(OPENEXR_DIR) \
 	$(OPENJPEG_DIR) \
 	$(OPUS_DIR) \
 	$(RSVG_DIR) \
@@ -476,6 +483,7 @@ DIST_SUBDIRS = \
 	ofa \
 	openal \
 	opencv \
+	openexr \
 	openjpeg \
 	opus \
 	rsvg \

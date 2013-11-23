@@ -1766,6 +1766,12 @@ AG_GST_CHECK_FEATURE(OPENCV, [opencv plugins], opencv, [
   AC_SUBST(OPENCV_LIBS)
 ])
 
+dnl *** OpenEXR ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPENEXR, true)
+AG_GST_CHECK_FEATURE(OPENEXR, [openexr library], openexr, [
+  AG_GST_PKG_CHECK_MODULES(OPENEXR, OpenEXR)
+])
+
 dnl *** OpenJPEG ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPENJPEG, true)
 AG_GST_CHECK_FEATURE(OPENJPEG, [openjpeg library], openjpeg, [
@@ -2499,6 +2505,7 @@ ext/neon/Makefile
 ext/ofa/Makefile
 ext/openal/Makefile
 ext/opencv/Makefile
+ext/openexr/Makefile
 ext/openjpeg/Makefile
 ext/opus/Makefile
 ext/rsvg/Makefile
