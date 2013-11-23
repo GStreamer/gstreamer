@@ -40,10 +40,10 @@ GQuark gst_gl_context_error_quark (void);
 
 /**
  * GstGLContextThreadFunc:
- * @display: a #GstGLDisplay
+ * @context: a #GstGLContext
  * @data: user data
  *
- * Represents a function to run in the GL thread
+ * Represents a function to run in the GL thread with @context and @data
  */
 typedef void (*GstGLContextThreadFunc) (GstGLContext * context, gpointer data);
 
@@ -57,23 +57,36 @@ typedef enum
   GST_GL_CONTEXT_ERROR_RESOURCE_UNAVAILABLE,
 } GstGLContextError;
 
+/**
+ * GstGLContext:
+ *
+ * Opaque #GstGLContext object
+ */
 struct _GstGLContext {
   /*< private >*/
   GObject parent;
 
-  /*< public >*/
   GstGLWindow  *window;
 
   GstGLFuncs *gl_vtable;
 
-  /*< private >*/
   gpointer _reserved[GST_PADDING];
 
   GstGLContextPrivate *priv;
 };
 
+/**
+ * GstGLContextClass:
+ * @get_gl_context: get the backing platform specific OpenGL context
+ * @get_gl_api: get the available OpenGL api's that this context can work with
+ * @get_proc_address: get an function pointer to an OpenGL function
+ * @activate: call eglMakeCurrent or similar
+ * @choose_format: choose a format for the framebuffer
+ * @create_context: create the OpenGL context
+ * @destroy_context: destroy the OpenGL context
+ * @swap_buffers: swap the default framebuffer's front/back buffers
+ */
 struct _GstGLContextClass {
-  /*< private >*/
   GObjectClass parent_class;
 
   guintptr (*get_gl_context)     (GstGLContext *context);
@@ -110,7 +123,7 @@ gboolean      gst_gl_context_set_window (GstGLContext *context, GstGLWindow *win
 GstGLWindow * gst_gl_context_get_window (GstGLContext *context);
 
 /* FIXME: remove */
-void gst_gl_context_thread_add (GstGLContext * display,
+void gst_gl_context_thread_add (GstGLContext * context,
     GstGLContextThreadFunc func, gpointer data);
 
 G_END_DECLS
