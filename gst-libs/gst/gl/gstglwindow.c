@@ -18,6 +18,16 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstglwindow
+ * @short_description: window/surface abstraction
+ * @title: GstGLWindow
+ * @see_also: #GstGLContext, #GstGLDisplay
+ *
+ * GstGLWindow represents a window that elements can render into.  A window can
+ * either be a user visible window (onscreen) or hidden (offscreen).
+ */
+
 #if HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -110,6 +120,12 @@ gst_gl_window_class_init (GstGLWindowClass * klass)
   G_OBJECT_CLASS (klass)->finalize = gst_gl_window_finalize;
 }
 
+/**
+ * gst_gl_window_new:
+ * @display: a #GstGLDisplay
+ *
+ * Returns: (transfer full): a new #GstGLWindow using @display's connection
+ */
 GstGLWindow *
 gst_gl_window_new (GstGLDisplay * display)
 {
@@ -175,6 +191,14 @@ gst_gl_window_finalize (GObject * object)
   G_OBJECT_CLASS (gst_gl_window_parent_class)->finalize (object);
 }
 
+/**
+ * gst_gl_window_set_window_handle:
+ * @window: a #GstGLWindow
+ * @handle: handle to the window
+ *
+ * Sets the window that this @window should render into.  Some implementations
+ * require this to be called with a valid handle before drawing can commence.
+ */
 void
 gst_gl_window_set_window_handle (GstGLWindow * window, guintptr handle)
 {
@@ -190,6 +214,14 @@ gst_gl_window_set_window_handle (GstGLWindow * window, guintptr handle)
   GST_GL_WINDOW_UNLOCK (window);
 }
 
+/**
+ * gst_gl_window_draw_unlocked:
+ * @window: a #GstGLWindow
+ * @width: requested width of the window
+ * @height: requested height of the window
+ *
+ * Redraw the window contents.  Implementations should invoke the draw callback.
+ */
 void
 gst_gl_window_draw_unlocked (GstGLWindow * window, guint width, guint height)
 {
@@ -202,6 +234,14 @@ gst_gl_window_draw_unlocked (GstGLWindow * window, guint width, guint height)
   window_class->draw_unlocked (window, width, height);
 }
 
+/**
+ * gst_gl_window_draw:
+ * @window: a #GstGLWindow
+ * @width: requested width of the window
+ * @height: requested height of the window
+ *
+ * Redraw the window contents.  Implementations should invoke the draw callback.
+ */
 void
 gst_gl_window_draw (GstGLWindow * window, guint width, guint height)
 {
@@ -223,6 +263,12 @@ gst_gl_window_draw (GstGLWindow * window, guint width, guint height)
   GST_GL_WINDOW_UNLOCK (window);
 }
 
+/**
+ * gst_gl_window_run:
+ * @window: a #GstGLWindow
+ *
+ * Start the execution of the runloop.
+ */
 void
 gst_gl_window_run (GstGLWindow * window)
 {
@@ -238,6 +284,12 @@ gst_gl_window_run (GstGLWindow * window)
   GST_GL_WINDOW_UNLOCK (window);
 }
 
+/**
+ * gst_gl_window_quit:
+ * @window: a #GstGLWindow
+ *
+ * Quit the runloop's execution.
+ */
 void
 gst_gl_window_quit (GstGLWindow * window)
 {
@@ -309,6 +361,15 @@ gst_gl_window_default_send_message (GstGLWindow * window,
   g_cond_clear (&message.cond);
 }
 
+/**
+ * gst_gl_window_send_message:
+ * @window: a #GstGLWindow
+ * @callback: (scope async): function to invoke
+ * @data: (closure): data to invoke @callback with
+ *
+ * Invoke @callback with data on the window thread.  @callback is guarenteed to
+ * have executed when this function returns.
+ */
 void
 gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
     gpointer data)
@@ -325,6 +386,16 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
   GST_GL_WINDOW_UNLOCK (window);
 }
 
+/**
+ * gst_gl_window_send_message_async:
+ * @window: a #GstGLWindow
+ * @callback: (scope async): function to invoke
+ * @data: (closure): data to invoke @callback with
+ * @destroy: (destroy): called when @data is not needed anymore
+ *
+ * Invoke @callback with @data on the window thread.  The callback may not
+ * have been executed when this function returns.
+ */
 void
 gst_gl_window_send_message_async (GstGLWindow * window, GstGLWindowCB callback,
     gpointer data, GDestroyNotify destroy)
@@ -341,9 +412,8 @@ gst_gl_window_send_message_async (GstGLWindow * window, GstGLWindowCB callback,
 
 /**
  * gst_gl_window_set_need_lock:
- *
- * window: a #GstGLWindow
- * need_lock: whether the @window needs to lock for concurrent access
+ * @window: a #GstGLWindow
+ * @need_lock: whether the @window needs to lock for concurrent access
  *
  * This API is intended only for subclasses of #GstGLWindow in order to ensure
  * correct interaction with the underlying window system.
@@ -356,6 +426,15 @@ gst_gl_window_set_need_lock (GstGLWindow * window, gboolean need_lock)
   window->need_lock = need_lock;
 }
 
+/**
+ * gst_gl_window_set_draw_callback:
+ * @window: a #GstGLWindow
+ * @callback: (scope notified): function to invoke
+ * @data: (closure): data to invoke @callback with
+ * @destroy_notify: (destroy): called when @data is not needed any more
+ *
+ * Sets the draw callback called everytime gst_gl_window_draw() is called
+ */
 void
 gst_gl_window_set_draw_callback (GstGLWindow * window, GstGLWindowCB callback,
     gpointer data, GDestroyNotify destroy_notify)
@@ -374,6 +453,15 @@ gst_gl_window_set_draw_callback (GstGLWindow * window, GstGLWindowCB callback,
   GST_GL_WINDOW_UNLOCK (window);
 }
 
+/**
+ * gst_gl_window_set_resize_callback:
+ * @window: a #GstGLWindow
+ * @callback: (scope notified): function to invoke
+ * @data: (closure): data to invoke @callback with
+ * @destroy_notify: (destroy): called when @data is not needed any more
+ *
+ * Sets the resize callback called everytime a resize of the window occurs.
+ */
 void
 gst_gl_window_set_resize_callback (GstGLWindow * window,
     GstGLWindowResizeCB callback, gpointer data, GDestroyNotify destroy_notify)
@@ -392,6 +480,15 @@ gst_gl_window_set_resize_callback (GstGLWindow * window,
   GST_GL_WINDOW_UNLOCK (window);
 }
 
+/**
+ * gst_gl_window_set_close_callback:
+ * @window: a #GstGLWindow
+ * @callback: (scope notified): function to invoke
+ * @data: (closure): data to invoke @callback with
+ * @destroy_notify: (destroy): called when @data is not needed any more
+ *
+ * Sets the callback called when the window is about to close.
+ */
 void
 gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
     gpointer data, GDestroyNotify destroy_notify)
@@ -410,12 +507,24 @@ gst_gl_window_set_close_callback (GstGLWindow * window, GstGLWindowCB callback,
   GST_GL_WINDOW_UNLOCK (window);
 }
 
+/**
+ * gst_gl_window_is_running:
+ * @window: a #GstGLWindow
+ *
+ * Whether the runloop is running
+ */
 gboolean
 gst_gl_window_is_running (GstGLWindow * window)
 {
   return window->priv->alive;
 }
 
+/**
+ * gst_gl_window_get_display:
+ * @window: a #GstGLWindow
+ *
+ * Returns: the windowing system display handle for this @window
+ */
 guintptr
 gst_gl_window_get_display (GstGLWindow * window)
 {
@@ -435,6 +544,12 @@ gst_gl_window_get_display (GstGLWindow * window)
   return ret;
 }
 
+/**
+ * gst_gl_window_get_window_handle:
+ * @window: a #GstGLWindow
+ *
+ * Returns: the window handle we are currently rendering into
+ */
 guintptr
 gst_gl_window_get_window_handle (GstGLWindow * window)
 {
@@ -454,6 +569,12 @@ gst_gl_window_get_window_handle (GstGLWindow * window)
   return ret;
 }
 
+/**
+ * gst_gl_window_get_context:
+ * @window: a #GstGLWindow
+ *
+ * Returns: (transfer full): the #GstGLContext associated with this @window
+ */
 GstGLContext *
 gst_gl_window_get_context (GstGLWindow * window)
 {
