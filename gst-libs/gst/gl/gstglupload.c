@@ -529,8 +529,8 @@ gst_gl_upload_init_format (GstGLUpload * upload, GstVideoFormat v_format,
  * @buffer: a #GstBuffer
  * @tex_id: resulting texture
  *
- * Uploads @buffer to the texture given by @texture_id.  @texture_id is valid
- * until gst_gl_upload_release() is called.
+ * Uploads @buffer to the texture given by @tex_id.  @tex_id is valid
+ * until gst_gl_upload_release_buffer() is called.
  *
  * Returns: whether the upload was successful
  */
@@ -873,7 +873,7 @@ gst_gl_upload_add_video_gl_texture_upload_meta (GstGLUpload * upload,
  * @texture_id: the texture id to download
  * @data: where the downloaded data should go
  *
- * Uploads @data into @texture_id. @data size and format is specified by
+ * Uploads @data into @texture_id. data size and format is specified by
  * the #GstVideoFormat passed to gst_gl_upload_init_format() 
  *
  * Returns: whether the upload was successful
