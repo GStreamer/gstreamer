@@ -3806,6 +3806,33 @@ tiff_type_find (GstTypeFind * tf, gpointer ununsed)
   }
 }
 
+/*** image/x-exr ***/
+static GstStaticCaps exr_caps = GST_STATIC_CAPS ("image/x-exr");
+#define EXR_CAPS (gst_static_caps_get(&exr_caps))
+static void
+exr_type_find (GstTypeFind * tf, gpointer ununsed)
+{
+  const guint8 *data = gst_type_find_peek (tf, 0, 8);
+
+  if (data) {
+    guint32 flags;
+
+    if (GST_READ_UINT32_LE (data) != 0x01312f76)
+      return;
+
+    flags = GST_READ_UINT32_LE (data + 4);
+    if ((flags & 0xff) != 1 && (flags & 0xff) != 2)
+      return;
+
+    /* If bit 9 is set, bit 11 and 12 must be 0 */
+    if ((flags & 0x200) && (flags & 0x1800))
+      return;
+
+    gst_type_find_suggest (tf, GST_TYPE_FIND_MAXIMUM, EXR_CAPS);
+  }
+}
+
+
 /*** PNM ***/
 
 static GstStaticCaps pnm_caps = GST_STATIC_CAPS ("image/x-portable-bitmap; "
@@ -5544,6 +5571,8 @@ plugin_init (GstPlugin * plugin)
       "tif,tiff", TIFF_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER_RIFF (plugin, "image/webp", GST_RANK_PRIMARY,
       "webp", "WEBP");
+  TYPE_FIND_REGISTER (plugin, "image/x-exr", GST_RANK_PRIMARY, exr_type_find,
+      "exr", EXR_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "image/x-portable-pixmap", GST_RANK_SECONDARY,
       pnm_type_find, "pnm,ppm,pgm,pbm", PNM_CAPS, NULL, NULL);
   TYPE_FIND_REGISTER (plugin, "video/x-matroska", GST_RANK_PRIMARY,
