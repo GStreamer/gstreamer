@@ -284,6 +284,7 @@ _gl_mem_copy_thread (GstGLContext * context, gpointer data)
   gl->DeleteFramebuffers (1, &fboId);
 
   copy_params->tex_id = tex_id;
+  copy_params->result = TRUE;
 
   return;
 
