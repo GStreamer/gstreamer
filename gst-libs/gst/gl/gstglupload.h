@@ -38,15 +38,12 @@ GType gst_gl_upload_get_type (void);
 
 /**
  * GstGLUpload
- * @parent: the parent object
- * @lock: thread safety
- * @display: a #GstGLDisplay
- * @info: the output video info
  *
- * Upload information for GL textures
+ * Opaque #GstGLUpload object
  */
 struct _GstGLUpload
 {
+  /* <private> */
   GObject          parent;
 
   GMutex           lock;
@@ -56,7 +53,6 @@ struct _GstGLUpload
   /* input data */
   GstVideoInfo    info;
 
-  /* <private> */
   gpointer         data[GST_VIDEO_MAX_PLANES];
   gboolean         initted;
 
