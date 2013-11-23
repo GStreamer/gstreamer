@@ -379,9 +379,14 @@ gst_mpeg4vparse_process_sc (GstMpeg4VParse * mp4vparse, GstMpeg4Packet * packet,
 
         GST_LOG_OBJECT (mp4vparse, "Video Object Layer");
 
-        /*  wee keep track of the offset to parse later on */
+        /* we keep track of the offset to parse later on */
         if (mp4vparse->vol_offset < 0)
           mp4vparse->vol_offset = packet->offset;
+
+        /* Video Object below is merely a start code,
+         * if that is considered as config, then certainly Video Object Layer
+         * which really contains some needed data */
+        mp4vparse->config_found = TRUE;
 
         /* VO (video object) cases */
       } else if (packet->type <= GST_MPEG4_VIDEO_OBJ_LAST) {
@@ -458,8 +463,11 @@ retry:
     default:
       if (packet.type <= GST_MPEG4_VIDEO_OBJ_LAST)
         break;
+      if (packet.type >= GST_MPEG4_VIDEO_LAYER_FIRST &&
+          packet.type <= GST_MPEG4_VIDEO_LAYER_LAST)
+        break;
       /* undesirable sc */
-      GST_LOG_OBJECT (mp4vparse, "start code is no VOS, VO, VOP or GOP");
+      GST_LOG_OBJECT (mp4vparse, "start code is no VOS, VO, VOL, VOP or GOP");
       goto retry;
   }
 
