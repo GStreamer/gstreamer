@@ -197,7 +197,7 @@ gst_openjpeg_enc_class_init (GstOpenJPEGEncClass * klass)
   video_encoder_class->propose_allocation = gst_openjpeg_enc_propose_allocation;
 
   GST_DEBUG_CATEGORY_INIT (gst_openjpeg_enc_debug, "openjpegenc", 0,
-      "VP8 Encoder");
+      "OpenJPEG Encoder");
 }
 
 static void

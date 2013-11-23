@@ -99,7 +99,7 @@ gst_openjpeg_dec_class_init (GstOpenJPEGDecClass * klass)
   video_decoder_class->decide_allocation = gst_openjpeg_dec_decide_allocation;
 
   GST_DEBUG_CATEGORY_INIT (gst_openjpeg_dec_debug, "openjpegdec", 0,
-      "VP8 Decoder");
+      "OpenJPEG Decoder");
 }
 
 static void
