@@ -459,12 +459,14 @@ gst_openexr_dec_negotiate (GstOpenEXRDec * self, RgbaInputFile * file)
 {
   GstVideoFormat format;
   gint width, height;
+  gfloat par;
 
   /* TODO: Use displayWindow here and also support output of ARGB_F16 */
   format = GST_VIDEO_FORMAT_ARGB64;
   Box2i dw = file->dataWindow ();
   width = dw.max.x - dw.min.x + 1;
   height = dw.max.y - dw.min.y + 1;
+  par = file->pixelAspectRatio ();
 
   if (!self->output_state ||
       self->output_state->info.finfo->format != format ||
@@ -476,7 +478,8 @@ gst_openexr_dec_negotiate (GstOpenEXRDec * self, RgbaInputFile * file)
         gst_video_decoder_set_output_state (GST_VIDEO_DECODER (self), format,
         width, height, self->input_state);
 
-    GST_DEBUG_OBJECT (self, "Have image of size %dx%d", width, height);
+    GST_DEBUG_OBJECT (self, "Have image of size %dx%d (par %f)", width, height, par);
+    gst_util_double_to_fraction (par, &self->output_state->info.par_n, &self->output_state->info.par_d);
 
     if (!gst_video_decoder_negotiate (GST_VIDEO_DECODER (self)))
       return GST_FLOW_NOT_NEGOTIATED;
