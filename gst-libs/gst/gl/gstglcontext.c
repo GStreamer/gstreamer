@@ -18,6 +18,17 @@
  * Boston, MA 02110-1301, USA.
  */
 
+/**
+ * SECTION:gstglcontext
+ * @short_description: OpenGL context abstraction
+ * @title: GstGLContext
+ * @see_also: #GstGLDisplay, #GstGLWindow
+ *
+ * #GstGLContext wraps an OpenGL context object in a uniform API.  As a result
+ * of the limitation on OpenGL context, this object is not thread safe unless
+ * specified and must only be activated in a single thread.
+ */
+
 #if HAVE_CONFIG_H
 # include "config.h"
 #endif
@@ -131,6 +142,14 @@ gst_gl_context_class_init (GstGLContextClass * klass)
   G_OBJECT_CLASS (klass)->finalize = gst_gl_context_finalize;
 }
 
+/**
+ * gst_gl_context_new:
+ * @display: a #GstGLDisplay
+ *
+ * Create a new #GstGLContext with the specified @display
+ *
+ * Returns: a new #GstGLContext
+ */
 GstGLContext *
 gst_gl_context_new (GstGLDisplay * display)
 {
@@ -221,6 +240,18 @@ gst_gl_context_finalize (GObject * object)
   G_OBJECT_CLASS (gst_gl_context_parent_class)->finalize (object);
 }
 
+/**
+ * gst_gl_context_activate:
+ * @context: a #GstGLContext
+ * @activate: %TRUE to activate, %FALSE to deactivate
+ *
+ * (De)activate the OpenGL context represented by this @context.
+ *
+ * In OpenGL terms, calls eglMakeCurrent or similar with this context and the
+ * currently set window.  See gst_gl_context_set_window() for details.
+ *
+ * Returns: Whether the activation succeeded
+ */
 gboolean
 gst_gl_context_activate (GstGLContext * context, gboolean activate)
 {
@@ -236,6 +267,17 @@ gst_gl_context_activate (GstGLContext * context, gboolean activate)
   return result;
 }
 
+/**
+ * gst_gl_context_get_gl_api:
+ * @context: a #GstGLContext
+ *
+ * Get the currently enabled OpenGL api.
+ *
+ * The currently available API may be limited by the #GstGLDisplay in use and/or
+ * the #GstGLWindow chosen.
+ *
+ * Returns: the currently available OpenGL api
+ */
 GstGLAPI
 gst_gl_context_get_gl_api (GstGLContext * context)
 {
@@ -248,6 +290,19 @@ gst_gl_context_get_gl_api (GstGLContext * context)
   return context_class->get_gl_api (context);
 }
 
+/**
+ * gst_gl_context_get_proc_address:
+ * @context: a #GstGLContext
+ * @name: an opengl function name
+ *
+ * Get a function pointer to a specified opengl function, @name.  If the the
+ * specific function does not exist, NULL is returned instead.
+ *
+ * Platform specfic functions (names starting 'egl', 'glX', 'wgl', etc) can also
+ * be retreived using this method.
+ *
+ * Returns: a function pointer or NULL
+ */
 gpointer
 gst_gl_context_get_proc_address (GstGLContext * context, const gchar * name)
 {
@@ -314,6 +369,17 @@ gst_gl_context_default_get_proc_address (GstGLContext * context,
   return ret;
 }
 
+/**
+ * gst_gl_context_set_window:
+ * @context: a #GstGLContext
+ * @window: (transfer full): a #GstGLWindow
+ *
+ * Set's the current window on @context to @window.  The window can only be
+ * changed before gst_gl_context_create() has been called and the @window is not
+ * already running.
+ *
+ * Returns: Whether the window was successfully updated
+ */
 gboolean
 gst_gl_context_set_window (GstGLContext * context, GstGLWindow * window)
 {
@@ -336,6 +402,12 @@ gst_gl_context_set_window (GstGLContext * context, GstGLWindow * window)
   return TRUE;
 }
 
+/**
+ * gst_gl_context_get_window:
+ * @context: a #GstGLContext
+ *
+ * Returns: the currently set window
+ */
 GstGLWindow *
 gst_gl_context_get_window (GstGLContext * context)
 {
@@ -346,7 +418,23 @@ gst_gl_context_get_window (GstGLContext * context)
   return gst_object_ref (context->window);
 }
 
-/* Create an opengl context (one context for one GstGLDisplay) */
+/**
+ * gst_gl_context_create:
+ * @context: a #GstGLContext:
+ * @other_context: (allow-none): a #GstGLContext to share OpenGL objects with
+ * @error: (allow-none): a #GError
+ *
+ * Creates an OpenGL context in the current thread with the specified
+ * @other_context as a context to share shareable OpenGL objects with.  See the
+ * OpenGL specification for what is shared between contexts.
+ *
+ * If an error occurs, and @error is not %NULL, then error will contain details
+ * of the error and %FALSE will be returned.
+ *
+ * Should only be called once.
+ *
+ * Returns: whether the context could successfully be created
+ */
 gboolean
 gst_gl_context_create (GstGLContext * context,
     GstGLContext * other_context, GError ** error)
@@ -689,6 +777,14 @@ failure:
   }
 }
 
+/**
+ * gst_gl_context_get_gl_context:
+ * @context: a #GstGLContext:
+ *
+ * Gets the backing OpenGL context used by @context.
+ *
+ * Returns: The platform specific backing OpenGL context
+ */
 guintptr
 gst_gl_context_get_gl_context (GstGLContext * context)
 {
@@ -704,6 +800,12 @@ gst_gl_context_get_gl_context (GstGLContext * context)
   return result;
 }
 
+/**
+ * gst_gl_context_get_display:
+ * @context: a #GstGLContext:
+ *
+ * Returns: the #GstGLDisplay associated with this @context
+ */
 GstGLDisplay *
 gst_gl_context_get_display (GstGLContext * context)
 {
@@ -727,6 +829,16 @@ _gst_gl_context_thread_run_generic (RunGenericData * data)
   data->func (data->context, data->data);
 }
 
+/**
+ * gst_gl_context_thread_add:
+ * @context: a #GstGLContext
+ * @func: a #GstGLContextThreadFunc
+ * @data: (closure): user data to call @func with
+ *
+ * Execute @func in the OpenGL thread of @context with @data
+ *
+ * MT-safe
+ */
 void
 gst_gl_context_thread_add (GstGLContext * context,
     GstGLContextThreadFunc func, gpointer data)
