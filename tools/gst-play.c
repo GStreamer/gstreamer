@@ -27,6 +27,10 @@
 #include <gst/gst-i18n-app.h>
 #include <gst/pbutils/pbutils.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+
+#include "gst-play-kb.h"
 
 GST_DEBUG_CATEGORY (play_debug);
 #define GST_CAT_DEFAULT play_debug
@@ -48,6 +52,8 @@ typedef struct
 
   gboolean buffering;
   gboolean is_live;
+
+  GstState desired_state;       /* as per user interaction, PAUSED or PLAYING */
 
   /* configuration */
   gboolean gapless;
@@ -100,6 +106,8 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
   play->missing = NULL;
   play->buffering = FALSE;
   play->is_live = FALSE;
+
+  play->desired_state = GST_STATE_PLAYING;
 
   play->gapless = gapless;
   if (gapless) {
@@ -177,7 +185,7 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
         /* a 100% message means buffering is done */
         if (play->buffering) {
           play->buffering = FALSE;
-          gst_element_set_state (play->playbin, GST_STATE_PLAYING);
+          gst_element_set_state (play->playbin, play->desired_state);
         }
       } else {
         /* buffering... */
@@ -276,12 +284,18 @@ play_timeout (gpointer user_data)
 {
   GstPlay *play = user_data;
   gint64 pos = -1, dur = -1;
+  gchar status[64] = { 0, };
 
   if (play->buffering)
     return TRUE;
 
   gst_element_query_position (play->playbin, GST_FORMAT_TIME, &pos);
   gst_element_query_duration (play->playbin, GST_FORMAT_TIME, &dur);
+
+  if (play->desired_state == GST_STATE_PAUSED)
+    g_snprintf (status, sizeof (status), "Paused");
+  else
+    memset (status, ' ', sizeof (status) - 1);
 
   if (pos >= 0 && dur > 0) {
     gchar dstr[32], pstr[32];
@@ -291,7 +305,7 @@ play_timeout (gpointer user_data)
     pstr[9] = '\0';
     g_snprintf (dstr, 32, "%" GST_TIME_FORMAT, GST_TIME_ARGS (dur));
     dstr[9] = '\0';
-    g_print ("%s / %s\r", pstr, dstr);
+    g_print ("%s / %s %s\r", pstr, dstr, status);
   }
 
   return TRUE;
@@ -335,7 +349,7 @@ play_next (GstPlay * play)
 
   g_object_set (play->playbin, "uri", next_uri, NULL);
 
-  sret = gst_element_set_state (play->playbin, GST_STATE_PLAYING);
+  sret = gst_element_set_state (play->playbin, play->desired_state);
   switch (sret) {
     case GST_STATE_CHANGE_FAILURE:
       /* ignore, we should get an error message posted on the bus */
@@ -445,12 +459,52 @@ shuffle_uris (gchar ** uris, guint num)
   }
 }
 
+static void
+restore_terminal (void)
+{
+  gst_play_kb_set_key_handler (NULL, NULL);
+}
+
+static void
+toggle_paused (GstPlay * play)
+{
+  if (play->desired_state == GST_STATE_PLAYING)
+    play->desired_state = GST_STATE_PAUSED;
+  else
+    play->desired_state = GST_STATE_PLAYING;
+
+  if (!play->buffering) {
+    gst_element_set_state (play->playbin, play->desired_state);
+  } else if (play->desired_state == GST_STATE_PLAYING) {
+    g_print ("\nWill play as soon as buffering finishes)\n");
+  }
+}
+
+static void
+keyboard_cb (const gchar * key_input, gpointer user_data)
+{
+  GstPlay *play = (GstPlay *) user_data;
+
+  switch (g_ascii_tolower (key_input[0])) {
+    case ' ':
+      toggle_paused (play);
+      break;
+    case 27:                   /* ESC */
+    default:
+      GST_INFO ("keyboard input:");
+      while (*key_input)
+        GST_INFO ("  code %3d", *key_input++);
+      break;
+  }
+}
+
 int
 main (int argc, char **argv)
 {
   GstPlay *play;
   GPtrArray *playlist;
   gboolean print_version = FALSE;
+  gboolean interactive = FALSE; /* FIXME: maybe enable by default? */
   gboolean gapless = FALSE;
   gboolean shuffle = FALSE;
   gchar **filenames = NULL;
@@ -471,6 +525,8 @@ main (int argc, char **argv)
         N_("Enable gapless playback"), NULL},
     {"shuffle", 0, 0, G_OPTION_ARG_NONE, &shuffle,
         N_("Shuffle playlist"), NULL},
+    {"interactive", 0, 0, G_OPTION_ARG_NONE, &interactive,
+        N_("interactive"), NULL},
     {G_OPTION_REMAINING, 0, 0, G_OPTION_ARG_FILENAME_ARRAY, &filenames, NULL},
     {NULL}
   };
@@ -532,9 +588,18 @@ main (int argc, char **argv)
   if (shuffle)
     shuffle_uris (uris, num);
 
-  /* play */
+  /* prepare */
   play = play_new (uris, audio_sink, video_sink, gapless);
 
+  if (interactive) {
+    if (gst_play_kb_set_key_handler (keyboard_cb, play)) {
+      atexit (restore_terminal);
+    } else {
+      g_print ("Interactive keyboard handling in terminal not available.\n");
+    }
+  }
+
+  /* play */
   do_play (play);
 
   /* clean up */
