@@ -61,6 +61,7 @@ typedef struct
 
 static gboolean play_bus_msg (GstBus * bus, GstMessage * msg, gpointer data);
 static gboolean play_next (GstPlay * play);
+static gboolean play_prev (GstPlay * play);
 static gboolean play_timeout (gpointer user_data);
 static void play_about_to_finish (GstElement * playbin, gpointer user_data);
 static void play_reset (GstPlay * play);
@@ -328,21 +329,15 @@ play_uri_get_display_name (GstPlay * play, const gchar * uri)
   return loc;
 }
 
-/* returns FALSE if we have reached the end of the playlist */
-static gboolean
-play_next (GstPlay * play)
+static void
+play_uri (GstPlay * play, const gchar * next_uri)
 {
   GstStateChangeReturn sret;
-  const gchar *next_uri;
   gchar *loc;
-
-  if (++play->cur_idx >= play->num_uris)
-    return FALSE;
 
   gst_element_set_state (play->playbin, GST_STATE_READY);
   play_reset (play);
 
-  next_uri = play->uris[play->cur_idx];
   loc = play_uri_get_display_name (play, next_uri);
   g_print ("Now playing %s\n", loc);
   g_free (loc);
@@ -364,7 +359,27 @@ play_next (GstPlay * play)
     default:
       break;
   }
+}
 
+/* returns FALSE if we have reached the end of the playlist */
+static gboolean
+play_next (GstPlay * play)
+{
+  if ((play->cur_idx + 1) >= play->num_uris)
+    return FALSE;
+
+  play_uri (play, play->uris[++play->cur_idx]);
+  return TRUE;
+}
+
+/* returns FALSE if we have reached the beginning of the playlist */
+static gboolean
+play_prev (GstPlay * play)
+{
+  if (play->cur_idx == 0 || play->num_uris <= 1)
+    return FALSE;
+
+  play_uri (play, play->uris[--play->cur_idx]);
   return TRUE;
 }
 
@@ -488,6 +503,15 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
   switch (g_ascii_tolower (key_input[0])) {
     case ' ':
       toggle_paused (play);
+      break;
+    case '>':
+      if (!play_next (play)) {
+        g_print ("\nReached end of play list.\n");
+        g_main_loop_quit (play->loop);
+      }
+      break;
+    case '<':
+      play_prev (play);
       break;
     case 27:                   /* ESC */
     default:
