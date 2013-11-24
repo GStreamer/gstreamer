@@ -23,10 +23,10 @@
 
 #include <glib.h>
 
-#define GST_PLAY_KB_KEY_UP    "\033[A"
-#define GST_PLAY_KB_KEY_DOWN  "\033[B"
-#define GST_PLAY_KB_KEY_RIGHT "\033[C"
-#define GST_PLAY_KB_KEY_LEFT  "\033[D"
+#define GST_PLAY_KB_ARROW_UP    "\033[A"
+#define GST_PLAY_KB_ARROW_DOWN  "\033[B"
+#define GST_PLAY_KB_ARROW_RIGHT "\033[C"
+#define GST_PLAY_KB_ARROW_LEFT  "\033[D"
 
 typedef void (*GstPlayKbFunc) (const gchar * kb_input, gpointer user_data);
 

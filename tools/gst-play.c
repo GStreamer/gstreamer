@@ -496,6 +496,52 @@ toggle_paused (GstPlay * play)
 }
 
 static void
+relative_seek (GstPlay * play, gdouble percent)
+{
+  GstQuery *query;
+  gboolean seekable = FALSE;
+  gint64 dur = -1, pos = -1;
+
+  g_return_if_fail (percent >= -1.0 && percent <= 1.0);
+
+  if (!gst_element_query_position (play->playbin, GST_FORMAT_TIME, &pos))
+    goto seek_failed;
+
+  query = gst_query_new_seeking (GST_FORMAT_TIME);
+  if (!gst_element_query (play->playbin, query)) {
+    gst_query_unref (query);
+    goto seek_failed;
+  }
+
+  gst_query_parse_seeking (query, NULL, &seekable, NULL, &dur);
+  gst_query_unref (query);
+
+  if (!seekable || dur <= 0)
+    goto seek_failed;
+
+  pos = pos + dur * percent;
+  if (pos > dur) {
+    if (!play_next (play)) {
+      g_print ("\nReached end of play list.\n");
+      g_main_loop_quit (play->loop);
+    }
+  } else {
+    if (pos < 0)
+      pos = 0;
+    if (!gst_element_seek_simple (play->playbin, GST_FORMAT_TIME,
+            GST_SEEK_FLAG_FLUSH | GST_SEEK_FLAG_KEY_UNIT, pos))
+      goto seek_failed;
+  }
+
+  return;
+
+seek_failed:
+  {
+    g_print ("\nCould not seek.\n");
+  }
+}
+
+static void
 keyboard_cb (const gchar * key_input, gpointer user_data)
 {
   GstPlay *play = (GstPlay *) user_data;
@@ -515,9 +561,15 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
       break;
     case 27:                   /* ESC */
     default:
-      GST_INFO ("keyboard input:");
-      for (; *key_input != '\0'; ++key_input)
-        GST_INFO ("  code %3d", *key_input);
+      if (strcmp (key_input, GST_PLAY_KB_ARROW_RIGHT) == 0) {
+        relative_seek (play, +0.08);
+      } else if (strcmp (key_input, GST_PLAY_KB_ARROW_LEFT) == 0) {
+        relative_seek (play, -0.01);
+      } else {
+        GST_INFO ("keyboard input:");
+        for (; *key_input != '\0'; ++key_input)
+          GST_INFO ("  code %3d", *key_input);
+      }
       break;
   }
 }
