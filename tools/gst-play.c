@@ -516,8 +516,8 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
     case 27:                   /* ESC */
     default:
       GST_INFO ("keyboard input:");
-      while (*key_input)
-        GST_INFO ("  code %3d", *key_input++);
+      for (; *key_input != '\0'; ++key_input)
+        GST_INFO ("  code %3d", *key_input);
       break;
   }
 }
