@@ -79,15 +79,9 @@ static void gst_gl_window_default_send_message (GstGLWindow * window,
 
 struct _GstGLWindowPrivate
 {
-  GstGLDisplay *display;
-
   GThread *gl_thread;
 
   gboolean alive;
-
-  guintptr external_gl_context;
-  GstGLAPI gl_api;
-  GError **error;
 };
 
 static void gst_gl_window_finalize (GObject * object);
@@ -132,6 +126,8 @@ gst_gl_window_new (GstGLDisplay * display)
   const gchar *user_choice;
   static volatile gsize _init = 0;
 
+  g_return_val_if_fail (display != NULL, NULL);
+
   if (g_once_init_enter (&_init)) {
     GST_DEBUG_CATEGORY_INIT (gst_gl_window_debug, "glwindow", 0,
         "glwindow element");
@@ -173,7 +169,7 @@ gst_gl_window_new (GstGLDisplay * display)
     return NULL;
   }
 
-  window->priv->display = display;
+  window->display = gst_object_ref (display);
 
   return window;
 }
@@ -186,6 +182,7 @@ gst_gl_window_finalize (GObject * object)
   g_weak_ref_clear (&window->context_ref);
 
   g_mutex_clear (&window->lock);
+  gst_object_unref (window->display);
 
   G_OBJECT_CLASS (gst_gl_window_parent_class)->finalize (object);
 }
