@@ -2076,8 +2076,8 @@ gst_base_sink_wait_clock (GstBaseSink * sink, GstClockTime time,
   /* FIXME: Casting to GstClockEntry only works because the types
    * are the same */
   if (G_LIKELY (sink->priv->cached_clock_id != NULL
-          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->priv->
-              cached_clock_id) == clock)) {
+          && GST_CLOCK_ENTRY_CLOCK ((GstClockEntry *) sink->
+              priv->cached_clock_id) == clock)) {
     if (!gst_clock_single_shot_id_reinit (clock, sink->priv->cached_clock_id,
             time)) {
       gst_clock_id_unref (sink->priv->cached_clock_id);
@@ -4785,6 +4785,9 @@ gst_base_sink_default_query (GstBaseSink * basesink, GstQuery * query)
       gst_query_parse_accept_caps (query, &caps);
       allowed = gst_base_sink_query_caps (basesink, basesink->sinkpad, NULL);
       subset = gst_caps_is_subset (caps, allowed);
+      GST_DEBUG_OBJECT (basesink, "Checking if requested caps %" GST_PTR_FORMAT
+          " are a subset of pad caps %" GST_PTR_FORMAT " result %d", caps,
+          allowed, subset);
       gst_caps_unref (allowed);
       gst_query_set_accept_caps_result (query, subset);
       res = TRUE;
