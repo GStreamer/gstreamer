@@ -398,13 +398,14 @@ gstspu_vobsub_execute_event (GstDVDSpu * dvdspu)
   if (next_blk != state->vobsub.cur_cmd_blk) {
     /* Advance to the next block of commands */
     ret = gst_dvd_spu_setup_cmd_blk (dvdspu, next_blk, start, end);
+    gst_buffer_unmap (state->vobsub.buf, &map);
   } else {
     /* Next Block points to the current block, so we're finished with this
      * SPU buffer */
+    gst_buffer_unmap (state->vobsub.buf, &map);
     gst_dvd_spu_finish_spu_buf (dvdspu);
     ret = FALSE;
   }
-  gst_buffer_unmap (state->vobsub.buf, &map);
 
   return ret;
 }
