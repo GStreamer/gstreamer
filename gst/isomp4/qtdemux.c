@@ -3940,12 +3940,11 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
     if (stream->pending_event && stream->pad)
       gst_pad_push_event (stream->pad, stream->pending_event);
     stream->pending_event = NULL;
-    /* no further processing needed */
-    stream->need_process = FALSE;
   }
 
   if (G_UNLIKELY (stream->subtype != FOURCC_text
-          && stream->subtype != FOURCC_sbtl)) {
+          && stream->subtype != FOURCC_sbtl &&
+          stream->subtype != FOURCC_subp)) {
     return buf;
   }
 
@@ -3956,6 +3955,11 @@ gst_qtdemux_process_buffer (GstQTDemux * qtdemux, QtDemuxStream * stream,
     gst_buffer_unmap (buf, &map);
     gst_buffer_unref (buf);
     return NULL;
+  }
+  if (stream->subtype == FOURCC_subp) {
+    /* That's all the processing needed for subpictures */
+    gst_buffer_unmap (buf, &map);
+    return buf;
   }
 
   nsize = GST_READ_UINT16_BE (map.data);
@@ -10157,7 +10161,6 @@ gst_qtdemux_handle_esds (GstQTDemux * qtdemux, QtDemuxStream * stream,
           /* store event and trigger custom processing */
           stream->pending_event =
               gst_event_new_custom (GST_EVENT_CUSTOM_DOWNSTREAM, s);
-          stream->need_process = TRUE;
         } else {
           /* Generic codec_data handler puts it on the caps */
           data_ptr = ptr;
@@ -10989,6 +10992,7 @@ qtdemux_sub_caps (GstQTDemux * qtdemux, QtDemuxStream * stream,
     case GST_MAKE_FOURCC ('m', 'p', '4', 's'):
       _codec ("DVD subtitle");
       caps = gst_caps_new_empty_simple ("subpicture/x-dvd");
+      stream->need_process = TRUE;
       break;
     case GST_MAKE_FOURCC ('t', 'e', 'x', 't'):
       _codec ("Quicktime timed text");
