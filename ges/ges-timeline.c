@@ -2042,6 +2042,8 @@ clip_track_element_removed_cb (GESClip * clip,
 static void
 layer_object_added_cb (GESLayer * layer, GESClip * clip, GESTimeline * timeline)
 {
+  GESProject *project;
+
   /* We make sure not to be connected twice */
   g_signal_handlers_disconnect_by_func (clip, clip_track_element_added_cb,
       timeline);
@@ -2063,7 +2065,15 @@ layer_object_added_cb (GESLayer * layer, GESClip * clip, GESTimeline * timeline)
     return;
   }
 
+
   add_object_to_tracks (timeline, clip, NULL);
+
+  GST_DEBUG ("Making sure that the asset is in our project");
+  project =
+      GES_PROJECT (ges_extractable_get_asset (GES_EXTRACTABLE (timeline)));
+  ges_project_add_asset (project,
+      ges_extractable_get_asset (GES_EXTRACTABLE (clip)));
+
   GST_DEBUG ("Done");
 }
 

@@ -236,6 +236,7 @@ ges_project_extract (GESAsset * project, GError ** error)
 {
   GESTimeline *timeline = g_object_new (GES_TYPE_TIMELINE, NULL);
 
+  ges_extractable_set_asset (GES_EXTRACTABLE (timeline), GES_ASSET (project));
   if (_load_project (GES_PROJECT (project), timeline, error))
     return GES_EXTRACTABLE (timeline);
 
