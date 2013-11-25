@@ -1278,7 +1278,8 @@ gst_video_flip_class_init (GstVideoFlipClass * klass)
   g_object_class_install_property (gobject_class, PROP_METHOD,
       g_param_spec_enum ("method", "method", "method",
           GST_TYPE_VIDEO_FLIP_METHOD, PROP_METHOD_DEFAULT,
-          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          GST_PARAM_CONTROLLABLE | G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+          G_PARAM_STATIC_STRINGS));
 
   gst_element_class_set_static_metadata (gstelement_class, "Video flipper",
       "Filter/Effect/Video",
