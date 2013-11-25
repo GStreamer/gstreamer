@@ -82,6 +82,7 @@ struct _GstNetClientClockPrivate
   GCancellable *cancel;
 
   GstClockTime timeout_expiration;
+  GstClockTime rtt_avg;
 
   gchar *address;
   gint port;
@@ -140,6 +141,7 @@ gst_net_client_clock_init (GstNetClientClock * self)
   priv->thread = NULL;
 
   priv->servaddr = NULL;
+  priv->rtt_avg = GST_CLOCK_TIME_NONE;
 }
 
 static void
@@ -213,21 +215,46 @@ static void
 gst_net_client_clock_observe_times (GstNetClientClock * self,
     GstClockTime local_1, GstClockTime remote, GstClockTime local_2)
 {
+  GstNetClientClockPrivate *priv = self->priv;
   GstClockTime current_timeout;
   GstClockTime local_avg;
   gdouble r_squared;
   GstClock *clock;
+  GstClockTime rtt;
 
   if (local_2 < local_1)
     goto bogus_observation;
 
+  rtt = local_2 - local_1;
+
+  /* Track an average round trip time, for a bit of smoothing */
+  /* Always update before discarding a sample, so genuine changes in
+   * the network get picked up, eventually */
+  if (priv->rtt_avg == GST_CLOCK_TIME_NONE)
+    priv->rtt_avg = rtt;
+  else if (rtt < priv->rtt_avg) // Shorter RTTs carry more weight than longer
+    priv->rtt_avg = (3 * priv->rtt_avg + rtt) / 4;
+  else
+    priv->rtt_avg = (7 * priv->rtt_avg + rtt) / 8;
+
+  if (rtt > 2 * priv->rtt_avg) {
+    GST_LOG_OBJECT (self,
+        "Dropping observation, long RTT %" GST_TIME_FORMAT " > 2 * avg %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (rtt), GST_TIME_ARGS (priv->rtt_avg));
+    goto bogus_observation;
+  }
+
   local_avg = (local_2 + local_1) / 2;
+
+  GST_LOG_OBJECT (self, "local1 %" G_GUINT64_FORMAT " remote %" G_GUINT64_FORMAT
+      " localavg %" G_GUINT64_FORMAT " local2 %" G_GUINT64_FORMAT,
+      local_1, remote, local_avg, local_2);
 
   clock = GST_CLOCK_CAST (self);
 
   if (gst_clock_add_observation (GST_CLOCK (self), local_avg, remote,
           &r_squared)) {
-    /* geto formula */
+    /* ghetto formula - shorter timeout for bad correlations */
     current_timeout = (1e-3 / (1 - MIN (r_squared, 0.99999))) * GST_SECOND;
     current_timeout = MIN (current_timeout, gst_clock_get_timeout (clock));
   } else {
@@ -242,8 +269,11 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
 bogus_observation:
   {
     GST_WARNING_OBJECT (self, "time packet receive time < send time (%"
-        GST_TIME_FORMAT " < %" GST_TIME_FORMAT ")", GST_TIME_ARGS (local_1),
-        GST_TIME_ARGS (local_2));
+        GST_TIME_FORMAT " < %" GST_TIME_FORMAT ") or too large",
+        GST_TIME_ARGS (local_1), GST_TIME_ARGS (local_2));
+    /* Schedule a new packet again soon */
+    self->priv->timeout_expiration =
+        gst_util_get_timestamp () + (GST_SECOND / 4);
     return;
   }
 }
