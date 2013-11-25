@@ -328,6 +328,52 @@ GST_START_TEST (test_basetime)
 
 GST_END_TEST;
 
+static GstCaps *
+request_pt_map (GstElement * jitterbuffer, guint pt)
+{
+  fail_unless (pt == 0);
+
+  return gst_caps_from_string (RTP_CAPS_STRING);
+}
+
+GST_START_TEST (test_clear_pt_map)
+{
+  GstElement *jitterbuffer;
+  const guint num_buffers = 10;
+  gint i;
+  GstBuffer *buffer;
+  GList *node;
+
+  jitterbuffer = setup_jitterbuffer (num_buffers);
+  fail_unless (start_jitterbuffer (jitterbuffer)
+      == GST_STATE_CHANGE_SUCCESS, "could not set to playing");
+
+  g_signal_connect (jitterbuffer, "request-pt-map", (GCallback)
+      request_pt_map, NULL);
+
+  /* push buffers: 0,1,2, */
+  for (node = inbuffers, i = 0; node && i < 3; node = g_list_next (node), i++) {
+    buffer = (GstBuffer *) node->data;
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  }
+
+  g_usleep (400 * 1000);
+
+  g_signal_emit_by_name (jitterbuffer, "clear-pt-map", NULL);
+
+  for (; node && i < 10; node = g_list_next (node), i++) {
+    buffer = (GstBuffer *) node->data;
+    fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+  }
+
+  /* check the buffer list */
+  check_jitterbuffer_results (jitterbuffer, num_buffers);
+
+  /* cleanup */
+  cleanup_jitterbuffer (jitterbuffer);
+}
+
+GST_END_TEST;
 static const guint payload_size = 160;
 static const guint clock_rate = 8000;
 static const guint pcmu_payload_type = 0;
@@ -1272,6 +1318,7 @@ rtpjitterbuffer_suite (void)
   tcase_add_test (tc_chain, test_push_backward_seq);
   tcase_add_test (tc_chain, test_push_unordered);
   tcase_add_test (tc_chain, test_basetime);
+  tcase_add_test (tc_chain, test_clear_pt_map);
   tcase_add_test (tc_chain, test_only_one_lost_event_on_large_gaps);
   tcase_add_test (tc_chain, test_two_lost_one_arrives_in_time);
   tcase_add_test (tc_chain, test_late_packets_still_makes_lost_events);
