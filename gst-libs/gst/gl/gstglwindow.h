@@ -68,6 +68,7 @@ struct _GstGLWindow {
 
   GMutex        lock;
 
+  GstGLDisplay *display;
   GWeakRef      context_ref;
 
   guintptr      external_gl_context;
