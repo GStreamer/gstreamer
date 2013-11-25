@@ -232,7 +232,7 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
    * the network get picked up, eventually */
   if (priv->rtt_avg == GST_CLOCK_TIME_NONE)
     priv->rtt_avg = rtt;
-  else if (rtt < priv->rtt_avg) // Shorter RTTs carry more weight than longer
+  else if (rtt < priv->rtt_avg) /* Shorter RTTs carry more weight than longer */
     priv->rtt_avg = (3 * priv->rtt_avg + rtt) / 4;
   else
     priv->rtt_avg = (7 * priv->rtt_avg + rtt) / 8;
