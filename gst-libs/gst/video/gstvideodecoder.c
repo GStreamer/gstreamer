@@ -3216,7 +3216,11 @@ gst_video_decoder_clip_and_push_buf (GstVideoDecoder * decoder, GstBuffer * buf)
   }
 #endif
 
+  /* release STREAM_LOCK not to block upstream 
+   * while pushing buffer downstream */
+  GST_VIDEO_DECODER_STREAM_UNLOCK (decoder);
   ret = gst_pad_push (decoder->srcpad, buf);
+  GST_VIDEO_DECODER_STREAM_LOCK (decoder);
 
 done:
   return ret;
