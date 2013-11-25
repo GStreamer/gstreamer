@@ -88,8 +88,6 @@ static void
 gst_gl_window_win32_init (GstGLWindowWin32 * window)
 {
   window->priv = GST_GL_WINDOW_WIN32_GET_PRIVATE (window);
-
-  gst_gl_window_set_need_lock (GST_GL_WINDOW (window), FALSE);
 }
 
 /* Must be called in the gl thread */

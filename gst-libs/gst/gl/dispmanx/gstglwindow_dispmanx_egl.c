@@ -91,8 +91,6 @@ gst_gl_window_dispmanx_egl_new (void)
 
   window = g_object_new (GST_GL_TYPE_WINDOW_DISPMANX_EGL, NULL);
 
-  gst_gl_window_set_need_lock (GST_GL_WINDOW (window), FALSE);
-
   window->egldisplay = EGL_DEFAULT_DISPLAY;
 
   window->display = 0;
