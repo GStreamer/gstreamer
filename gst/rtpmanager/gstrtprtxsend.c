@@ -55,6 +55,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_rtx_send_debug);
 enum
 {
   PROP_0,
+  PROP_RTX_SSRC,
   PROP_RTX_PAYLOAD_TYPE,
   PROP_MAX_SIZE_TIME,
   PROP_MAX_SIZE_PACKETS,
@@ -119,6 +120,12 @@ gst_rtp_rtx_send_class_init (GstRtpRtxSendClass * klass)
   gobject_class->get_property = gst_rtp_rtx_send_get_property;
   gobject_class->set_property = gst_rtp_rtx_send_set_property;
   gobject_class->finalize = gst_rtp_rtx_send_finalize;
+
+  g_object_class_install_property (gobject_class, PROP_RTX_SSRC,
+      g_param_spec_uint ("rtx-ssrc", "Retransmission SSRC",
+          "SSRC of the retransmission stream for SSRC-multiplexed mode "
+          "(default = random)", 0, G_MAXUINT, -1,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_RTX_PAYLOAD_TYPE,
       g_param_spec_uint ("rtx-payload-type", "RTX Payload Type",
@@ -565,6 +572,11 @@ gst_rtp_rtx_send_get_property (GObject * object,
   GstRtpRtxSend *rtx = GST_RTP_RTX_SEND (object);
 
   switch (prop_id) {
+    case PROP_RTX_SSRC:
+      g_mutex_lock (&rtx->lock);
+      g_value_set_uint (value, rtx->rtx_ssrc);
+      g_mutex_unlock (&rtx->lock);
+      break;
     case PROP_RTX_PAYLOAD_TYPE:
       g_mutex_lock (&rtx->lock);
       g_value_set_uint (value, rtx->rtx_payload_type_pending);
@@ -603,6 +615,11 @@ gst_rtp_rtx_send_set_property (GObject * object,
   GstRtpRtxSend *rtx = GST_RTP_RTX_SEND (object);
 
   switch (prop_id) {
+    case PROP_RTX_SSRC:
+      g_mutex_lock (&rtx->lock);
+      rtx->rtx_ssrc = g_value_get_uint (value);
+      g_mutex_unlock (&rtx->lock);
+      break;
     case PROP_RTX_PAYLOAD_TYPE:
       g_mutex_lock (&rtx->lock);
       rtx->rtx_payload_type_pending = g_value_get_uint (value);
