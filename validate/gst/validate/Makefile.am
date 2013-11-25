@@ -14,7 +14,8 @@ libgstvalidate_@GST_API_VERSION@_la_SOURCES = \
 	gst-validate-media-info.c \
         validate.c
 
-noinst_HEADERS = \
+libgstvalidate_@GST_API_VERSION@include_HEADERS = \
+    validate.h \
 	gettext.h \
 	gst-validate-bin-monitor.h \
 	gst-validate-element-monitor.h \
@@ -45,8 +46,6 @@ libgstvalidate_@GST_API_VERSION@_la_LIBADD = \
 	$(GST_ALL_LIBS) $(GIO_LIBS)
 
 libgstvalidate_@GST_API_VERSION@includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/validate
-libgstvalidate_@GST_API_VERSION@include_HEADERS = \
-	validate.h
 
 libgstvalidate_default_overrides_@GST_API_VERSION@_la_SOURCES = \
     gst-validate-default-overrides.c

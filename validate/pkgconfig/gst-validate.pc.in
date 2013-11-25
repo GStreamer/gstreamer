@@ -7,5 +7,5 @@ Name: gst-validate
 Description: Gstreamer Validate
 Version: @VERSION@
 Requires: gstreamer-@GST_API_VERSION@
-Libs: -L${libdir} -lgstvalidate@GST_API_VERSION@
+Libs: -L${libdir} -lgstvalidate-@GST_API_VERSION@
 Cflags: -I${includedir}
