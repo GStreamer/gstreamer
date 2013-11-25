@@ -161,31 +161,35 @@ gst_png_parse_handle_frame (GstBaseParse * parse,
 
     if (code == GST_MAKE_FOURCC ('I', 'E', 'N', 'D')) {
       if (pngparse->width != width || pngparse->height != height) {
-        GstStructure *st = NULL;
         GstCaps *caps, *sink_caps;
-        gint fr_num, fr_denom;
 
         pngparse->height = height;
         pngparse->width = width;
 
+        caps = gst_caps_new_simple ("image/png",
+            "width", G_TYPE_INT, width, "height", G_TYPE_INT, height, NULL);
+
         sink_caps =
             gst_pad_get_current_caps (GST_BASE_PARSE_SINK_PAD (pngparse));
-        if (sink_caps && (st = gst_caps_get_structure (sink_caps, 0))
-            && gst_structure_get_fraction (st, "framerate", &fr_num, &fr_denom)) {
-          /* Got it in caps - nothing more to do */
-          GST_DEBUG_OBJECT (pngparse,
-              "sink caps override framerate from headers");
-        } else {
-          GST_INFO_OBJECT (pngparse, "No framerate set");
+
+        if (sink_caps) {
+          GstStructure *st;
+          gint fr_num, fr_denom;
+
+          st = gst_caps_get_structure (sink_caps, 0);
+          if (st
+              && gst_structure_get_fraction (st, "framerate", &fr_num,
+                  &fr_denom)) {
+            gst_caps_set_simple (caps,
+                "framerate", GST_TYPE_FRACTION, fr_num, fr_denom, NULL);
+          } else {
+            GST_WARNING_OBJECT (pngparse, "No framerate set");
+          }
         }
 
-        caps = gst_caps_new_simple ("image/png",
-            "width", G_TYPE_INT, width, "height", G_TYPE_INT, height,
-            "framerate", GST_TYPE_FRACTION, fr_num, fr_denom, NULL);
-
-        if (!gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps)) {
+        if (!gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (parse), caps))
           ret = GST_FLOW_NOT_NEGOTIATED;
-        }
+
         gst_caps_unref (caps);
 
         if (ret != GST_FLOW_OK)
