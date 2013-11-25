@@ -2123,7 +2123,7 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     do_handle_sync (jitterbuffer);
 
   /* signal addition of new buffer when the _loop is waiting. */
-  if (priv->active && priv->waiting_timer)
+  if (priv->active)
     JBUF_SIGNAL_EVENT (priv);
 
   /* let's unschedule and unblock any waiting buffers. We only want to do this
