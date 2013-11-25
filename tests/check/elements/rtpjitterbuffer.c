@@ -1250,6 +1250,8 @@ GST_START_TEST (test_rtx_packet_delay)
   while (g_async_queue_length (data.buf_queue) < 1) {
     if (gst_test_clock_peek_next_pending_id (GST_TEST_CLOCK (data.clock), &id)) {
       GstClockTime t = gst_clock_id_get_time (id);
+      if (t >= 240 * GST_MSECOND)
+        break;
       if (t > gst_clock_get_time (data.clock)) {
         gst_test_clock_set_time (GST_TEST_CLOCK (data.clock), t);
       }
