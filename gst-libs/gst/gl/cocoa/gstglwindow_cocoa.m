@@ -123,8 +123,6 @@ static void
 gst_gl_window_cocoa_init (GstGLWindowCocoa * window)
 {
   window->priv = GST_GL_WINDOW_COCOA_GET_PRIVATE (window);
-
-  gst_gl_window_set_need_lock (GST_GL_WINDOW (window), FALSE);
 }
 
 /* Must be called in the gl thread */

@@ -37,18 +37,8 @@ G_BEGIN_DECLS
 #define GST_GL_IS_WINDOW_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_GL_TYPE_WINDOW))
 #define GST_GL_WINDOW_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_GL_TYPE_WINDOW, GstGLWindowClass))
 
-#define GST_GL_WINDOW_LOCK(w) \
-  do { \
-    if (GST_GL_WINDOW(w)->need_lock) \
-      g_mutex_lock (&GST_GL_WINDOW(w)->lock); \
-  } while (0)
-
-#define GST_GL_WINDOW_UNLOCK(w) \
-  do { \
-    if (GST_GL_WINDOW(w)->need_lock) \
-      g_mutex_unlock (&GST_GL_WINDOW(w)->lock); \
-  } while (0)
-
+#define GST_GL_WINDOW_LOCK(w) g_mutex_lock(&GST_GL_WINDOW(w)->lock)
+#define GST_GL_WINDOW_UNLOCK(w) g_mutex_unlock(&GST_GL_WINDOW(w)->lock)
 #define GST_GL_WINDOW_GET_LOCK(w) (&GST_GL_WINDOW(w)->lock)
 
 #define GST_GL_WINDOW_ERROR (gst_gl_window_error_quark ())
@@ -77,7 +67,6 @@ struct _GstGLWindow {
   GObject parent;
 
   GMutex        lock;
-  gboolean      need_lock;
 
   GWeakRef      context_ref;
 
@@ -148,7 +137,6 @@ GstGLWindow * gst_gl_window_new  (GstGLDisplay *display);
 void     gst_gl_window_set_draw_callback    (GstGLWindow *window, GstGLWindowCB callback, gpointer data, GDestroyNotify destroy_notify);
 void     gst_gl_window_set_resize_callback  (GstGLWindow *window, GstGLWindowResizeCB callback, gpointer data, GDestroyNotify destroy_notify);
 void     gst_gl_window_set_close_callback   (GstGLWindow *window, GstGLWindowCB callback, gpointer data, GDestroyNotify destroy_notify);
-void     gst_gl_window_set_need_lock        (GstGLWindow *window, gboolean need_lock);
 
 void     gst_gl_window_set_window_handle    (GstGLWindow *window, guintptr handle);
 guintptr gst_gl_window_get_window_handle    (GstGLWindow *window);

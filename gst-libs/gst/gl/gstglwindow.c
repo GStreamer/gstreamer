@@ -104,7 +104,6 @@ gst_gl_window_init (GstGLWindow * window)
   window->priv = GST_GL_WINDOW_GET_PRIVATE (window);
 
   g_mutex_init (&window->lock);
-  window->need_lock = TRUE;
   window->is_drawing = FALSE;
 
   g_weak_ref_init (&window->context_ref, NULL);
@@ -209,9 +208,7 @@ gst_gl_window_set_window_handle (GstGLWindow * window, guintptr handle)
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->set_window_handle != NULL);
 
-  GST_GL_WINDOW_LOCK (window);
   window_class->set_window_handle (window, handle);
-  GST_GL_WINDOW_UNLOCK (window);
 }
 
 /**
@@ -251,16 +248,12 @@ gst_gl_window_draw (GstGLWindow * window, guint width, guint height)
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->draw != NULL);
 
-  GST_GL_WINDOW_LOCK (window);
-
   /* avoid to overload the drawer */
   if (window->is_drawing) {
-    GST_GL_WINDOW_UNLOCK (window);
     return;
   }
 
   window_class->draw (window, width, height);
-  GST_GL_WINDOW_UNLOCK (window);
 }
 
 /**
@@ -278,10 +271,8 @@ gst_gl_window_run (GstGLWindow * window)
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->run != NULL);
 
-  GST_GL_WINDOW_LOCK (window);
   window->priv->alive = TRUE;
   window_class->run (window);
-  GST_GL_WINDOW_UNLOCK (window);
 }
 
 /**
@@ -308,8 +299,6 @@ gst_gl_window_quit (GstGLWindow * window)
   GST_INFO ("quit sent to gl window loop");
 
   GST_GL_WINDOW_UNLOCK (window);
-
-  GST_INFO ("quit received from gl window");
 }
 
 typedef struct _GstGLSyncMessage
@@ -381,9 +370,7 @@ gst_gl_window_send_message (GstGLWindow * window, GstGLWindowCB callback,
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_if_fail (window_class->send_message != NULL);
 
-  GST_GL_WINDOW_LOCK (window);
   window_class->send_message (window, callback, data);
-  GST_GL_WINDOW_UNLOCK (window);
 }
 
 /**
@@ -408,22 +395,6 @@ gst_gl_window_send_message_async (GstGLWindow * window, GstGLWindowCB callback,
   g_return_if_fail (window_class->send_message_async != NULL);
 
   window_class->send_message_async (window, callback, data, destroy);
-}
-
-/**
- * gst_gl_window_set_need_lock:
- * @window: a #GstGLWindow
- * @need_lock: whether the @window needs to lock for concurrent access
- *
- * This API is intended only for subclasses of #GstGLWindow in order to ensure
- * correct interaction with the underlying window system.
- */
-void
-gst_gl_window_set_need_lock (GstGLWindow * window, gboolean need_lock)
-{
-  g_return_if_fail (GST_GL_IS_WINDOW (window));
-
-  window->need_lock = need_lock;
 }
 
 /**
@@ -528,20 +499,13 @@ gst_gl_window_is_running (GstGLWindow * window)
 guintptr
 gst_gl_window_get_display (GstGLWindow * window)
 {
-  guintptr ret;
   GstGLWindowClass *window_class;
 
   g_return_val_if_fail (GST_GL_IS_WINDOW (window), 0);
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_val_if_fail (window_class->get_display != NULL, 0);
 
-  GST_GL_WINDOW_LOCK (window);
-
-  ret = window_class->get_display (window);
-
-  GST_GL_WINDOW_UNLOCK (window);
-
-  return ret;
+  return window_class->get_display (window);
 }
 
 /**
@@ -553,20 +517,13 @@ gst_gl_window_get_display (GstGLWindow * window)
 guintptr
 gst_gl_window_get_window_handle (GstGLWindow * window)
 {
-  guintptr ret;
   GstGLWindowClass *window_class;
 
   g_return_val_if_fail (GST_GL_IS_WINDOW (window), 0);
   window_class = GST_GL_WINDOW_GET_CLASS (window);
   g_return_val_if_fail (window_class->get_window_handle != NULL, 0);
 
-  GST_GL_WINDOW_LOCK (window);
-
-  ret = window_class->get_window_handle (window);
-
-  GST_GL_WINDOW_UNLOCK (window);
-
-  return ret;
+  return window_class->get_window_handle (window);
 }
 
 /**

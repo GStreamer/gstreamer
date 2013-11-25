@@ -175,8 +175,6 @@ gst_gl_window_x11_new (void)
 
   window = g_object_new (GST_GL_TYPE_WINDOW_X11, NULL);
 
-  gst_gl_window_set_need_lock (GST_GL_WINDOW (window), FALSE);
-
   return window;
 }
 
@@ -314,7 +312,7 @@ gst_gl_window_x11_close (GstGLWindow * window)
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
   XEvent event;
 
-  GST_GL_WINDOW_LOCK (window_x11);
+  g_mutex_lock (&window_x11->disp_send_lock);
 
   if (window_x11->device) {
     if (window_x11->internal_win_id)
@@ -361,7 +359,7 @@ gst_gl_window_x11_close (GstGLWindow * window)
 
   window_x11->running = FALSE;
 
-  GST_GL_WINDOW_UNLOCK (window_x11);
+  g_mutex_unlock (&window_x11->disp_send_lock);
 }
 
 guintptr
