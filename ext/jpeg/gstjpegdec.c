@@ -148,11 +148,13 @@ gst_jpeg_dec_class_init (GstJpegDecClass * klass)
    *
    * Error out after receiving N consecutive decoding errors
    * (-1 = never error out, 0 = automatic, 1 = fail on first error, etc.)
+   *
+   * Deprecated: 1.3.1: Property wasn't used internally
    */
   g_object_class_install_property (gobject_class, PROP_MAX_ERRORS,
       g_param_spec_int ("max-errors", "Maximum Consecutive Decoding Errors",
-          "Error out after receiving N consecutive decoding errors "
-          "(-1 = never fail, 0 = automatic, 1 = fail on first error)",
+          "(Deprecated) Error out after receiving N consecutive decoding errors"
+          " (-1 = never fail, 0 = automatic, 1 = fail on first error)",
           -1, G_MAXINT, JPEG_DEFAULT_MAX_ERRORS,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
