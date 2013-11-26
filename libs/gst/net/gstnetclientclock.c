@@ -38,6 +38,8 @@
  * This clock will poll the time provider and will update its calibration
  * parameters based on the local and remote observations.
  *
+ * The "round-trip" property limits the maximum round trip packets can take.
+ *
  * Various parameters of the clock can be configured with the parent #GstClock
  * "timeout", "window-size" and "window-threshold" object properties.
  *
@@ -62,12 +64,14 @@ GST_DEBUG_CATEGORY_STATIC (ncc_debug);
 #define DEFAULT_ADDRESS         "127.0.0.1"
 #define DEFAULT_PORT            5637
 #define DEFAULT_TIMEOUT         GST_SECOND
+#define DEFAULT_ROUNDTRIP_LIMIT GST_SECOND
 
 enum
 {
   PROP_0,
   PROP_ADDRESS,
-  PROP_PORT
+  PROP_PORT,
+  PROP_ROUNDTRIP_LIMIT
 };
 
 #define GST_NET_CLIENT_CLOCK_GET_PRIVATE(obj)  \
@@ -82,6 +86,7 @@ struct _GstNetClientClockPrivate
   GCancellable *cancel;
 
   GstClockTime timeout_expiration;
+  GstClockTime roundtrip_limit;
   GstClockTime rtt_avg;
 
   gchar *address;
@@ -123,6 +128,26 @@ gst_net_client_clock_class_init (GstNetClientClockClass * klass)
       g_param_spec_int ("port", "port",
           "The port on which the remote server is listening", 0, G_MAXUINT16,
           DEFAULT_PORT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstNetClientClock::roundtrip-limit:
+   *
+   * Maximum allowed round-trip for packets. If this property is set to a nonzero
+   * value, all packets with a round-trip interval larger than this limit will be
+   * ignored. This is useful for networks with severe and fluctuating transport
+   * delays. Filtering out these packets increases stability of the synchronization.
+   * On the other hand, the lower the limit, the higher the amount of filtered
+   * packets. Empirical tests are typically necessary to estimate a good value
+   * for the limit.
+   * If the property is set to zero, the limit is disabled.
+   *
+   * Since: 1.4
+   */
+  g_object_class_install_property (gobject_class, PROP_ROUNDTRIP_LIMIT,
+      g_param_spec_uint64 ("round-trip-limit", "round-trip limit",
+          "Maximum tolerable round-trip interval for packets, in nanoseconds "
+          "(0 = no limit)", 0, G_MAXUINT64, DEFAULT_ROUNDTRIP_LIMIT,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
@@ -142,6 +167,7 @@ gst_net_client_clock_init (GstNetClientClock * self)
 
   priv->servaddr = NULL;
   priv->rtt_avg = GST_CLOCK_TIME_NONE;
+  priv->roundtrip_limit = DEFAULT_ROUNDTRIP_LIMIT;
 }
 
 static void
@@ -186,6 +212,9 @@ gst_net_client_clock_set_property (GObject * object, guint prop_id,
     case PROP_PORT:
       self->priv->port = g_value_get_int (value);
       break;
+    case PROP_ROUNDTRIP_LIMIT:
+      self->priv->roundtrip_limit = g_value_get_uint64 (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -205,6 +234,9 @@ gst_net_client_clock_get_property (GObject * object, guint prop_id,
     case PROP_PORT:
       g_value_set_int (value, self->priv->port);
       break;
+    case PROP_ROUNDTRIP_LIMIT:
+      g_value_set_uint64 (value, self->priv->roundtrip_limit);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -222,10 +254,22 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
   GstClock *clock;
   GstClockTime rtt;
 
-  if (local_2 < local_1)
+  if (local_2 < local_1) {
+    GST_LOG_OBJECT (self, "Dropping observation: receive time %" GST_TIME_FORMAT
+        " < send time %" GST_TIME_FORMAT, GST_TIME_ARGS (local_1),
+        GST_TIME_ARGS (local_2));
     goto bogus_observation;
+  }
 
-  rtt = local_2 - local_1;
+  rtt = GST_CLOCK_DIFF (local_1, local_2);
+
+  if ((self->priv->roundtrip_limit > 0) && (rtt > self->priv->roundtrip_limit)) {
+    GST_LOG_OBJECT (self,
+        "Dropping observation: RTT %" GST_TIME_FORMAT " > limit %"
+        GST_TIME_FORMAT, GST_TIME_ARGS (rtt),
+        GST_TIME_ARGS (self->priv->roundtrip_limit));
+    goto bogus_observation;
+  }
 
   /* Track an average round trip time, for a bit of smoothing */
   /* Always update before discarding a sample, so genuine changes in
@@ -268,9 +312,11 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
 
 bogus_observation:
   {
-    GST_WARNING_OBJECT (self, "time packet receive time < send time (%"
-        GST_TIME_FORMAT " < %" GST_TIME_FORMAT ") or too large",
-        GST_TIME_ARGS (local_1), GST_TIME_ARGS (local_2));
+    GST_WARNING_OBJECT (self,
+        "bogus round-trip interval; too long round trip or "
+        "receive time < send time (%" GST_TIME_FORMAT " - %" GST_TIME_FORMAT
+        " => %" GST_TIME_FORMAT ")", GST_TIME_ARGS (local_1),
+        GST_TIME_ARGS (local_2), GST_TIME_ARGS (rtt));
     /* Schedule a new packet again soon */
     self->priv->timeout_expiration =
         gst_util_get_timestamp () + (GST_SECOND / 4);
