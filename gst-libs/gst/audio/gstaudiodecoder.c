@@ -2523,9 +2523,10 @@ _gst_audio_decoder_error (GstAudioDecoder * dec, gint weight,
     GST_WARNING_OBJECT (dec, "error: %s", dbg);
   dec->priv->error_count += weight;
   dec->priv->discont = TRUE;
-  if (dec->priv->ctx.max_errors < dec->priv->error_count) {
-    gst_element_message_full (GST_ELEMENT (dec), GST_MESSAGE_ERROR,
-        domain, code, txt, dbg, file, function, line);
+  if (dec->priv->ctx.max_errors >= 0
+      && dec->priv->ctx.max_errors < dec->priv->error_count) {
+    gst_element_message_full (GST_ELEMENT (dec), GST_MESSAGE_ERROR, domain,
+        code, txt, dbg, file, function, line);
     return GST_FLOW_ERROR;
   } else {
     g_free (txt);
@@ -2626,8 +2627,9 @@ gst_audio_decoder_get_delay (GstAudioDecoder * dec)
  * @num: max tolerated errors
  *
  * Sets numbers of tolerated decoder errors, where a tolerated one is then only
- * warned about, but more than tolerated will lead to fatal error.  Default
- * is set to GST_AUDIO_DECODER_MAX_ERRORS.
+ * warned about, but more than tolerated will lead to fatal error. You can set
+ * -1 for never returning fatal errors. Default is set to
+ * GST_AUDIO_DECODER_MAX_ERRORS.
  */
 void
 gst_audio_decoder_set_max_errors (GstAudioDecoder * dec, gint num)
