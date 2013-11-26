@@ -705,8 +705,8 @@ gst_vaapiencode_finish (GstVideoEncoder * venc)
   while (status == GST_VAAPI_ENCODER_STATUS_SUCCESS && ret == GST_FLOW_OK)
     ret = gst_vaapiencode_push_frame (encode, 0);
 
-  if (ret == GST_VAAPI_ENCODE_FLOW_TIMEOUT);
-  ret = GST_FLOW_OK;
+  if (ret == GST_VAAPI_ENCODE_FLOW_TIMEOUT)
+    ret = GST_FLOW_OK;
   return ret;
 }
 
