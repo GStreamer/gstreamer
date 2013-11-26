@@ -1532,28 +1532,34 @@ watch_destroyed (GstRTSPMedia * media)
 static GstElement *
 find_payload_element (GstElement * payloader)
 {
-  GValue item = { 0 };
-  GstIterator *iter;
   GstElement *pay = NULL;
 
-  iter = gst_bin_iterate_recurse (GST_BIN (payloader));
-  while (gst_iterator_next (iter, &item) == GST_ITERATOR_OK) {
-    GstElement *element = (GstElement *) g_value_get_object (&item);
-    GstElementClass *eclass = GST_ELEMENT_GET_CLASS (element);
-    const gchar *klass;
+  if (GST_IS_BIN (payloader)) {
+    GstIterator *iter;
+    GValue item = { 0 };
 
-    klass = gst_element_class_get_metadata (eclass, GST_ELEMENT_METADATA_KLASS);
-    if (klass == NULL)
-      continue;
+    iter = gst_bin_iterate_recurse (GST_BIN (payloader));
+    while (gst_iterator_next (iter, &item) == GST_ITERATOR_OK) {
+      GstElement *element = (GstElement *) g_value_get_object (&item);
+      GstElementClass *eclass = GST_ELEMENT_GET_CLASS (element);
+      const gchar *klass;
 
-    if (strstr (klass, "Payloader") && strstr (klass, "RTP")) {
-      pay = gst_object_ref (element);
+      klass =
+          gst_element_class_get_metadata (eclass, GST_ELEMENT_METADATA_KLASS);
+      if (klass == NULL)
+        continue;
+
+      if (strstr (klass, "Payloader") && strstr (klass, "RTP")) {
+        pay = gst_object_ref (element);
+        g_value_unset (&item);
+        break;
+      }
       g_value_unset (&item);
-      break;
     }
-    g_value_unset (&item);
+    gst_iterator_free (iter);
+  } else {
+    pay = g_object_ref (payloader);
   }
-  gst_iterator_free (iter);
 
   return pay;
 }
