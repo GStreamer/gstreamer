@@ -2854,6 +2854,8 @@ gen_vis_chain (GstPlaySink * playsink)
     GST_DEBUG_OBJECT (playsink, "trying goom");
     elem = gst_element_factory_make ("goom", "vis");
     chain->vis = try_element (playsink, elem, TRUE);
+    gst_object_replace ((GstObject **) & playsink->visualisation,
+        (GstObject *) elem);
   }
   if (chain->vis == NULL)
     goto no_goom;
