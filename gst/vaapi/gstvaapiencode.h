@@ -30,35 +30,26 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_VAAPIENCODE \
-    (gst_vaapiencode_get_type ())
-
+  (gst_vaapiencode_get_type ())
+#define GST_VAAPIENCODE_CAST(obj) \
+  ((GstVaapiEncode *)(obj))
+#define GST_VAAPIENCODE(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPIENCODE, GstVaapiEncode))
+#define GST_VAAPIENCODE_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VAAPIENCODE, GstVaapiEncodeClass))
+#define GST_VAAPIENCODE_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPIENCODE, GstVaapiEncodeClass))
 #define GST_IS_VAAPIENCODE(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPIENCODE))
-
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPIENCODE))
 #define GST_IS_VAAPIENCODE_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VAAPIENCODE))
-
-#define GST_VAAPIENCODE_GET_CLASS(obj)                  \
-    (G_TYPE_INSTANCE_GET_CLASS ((obj),                  \
-                                GST_TYPE_VAAPIENCODE,   \
-                                GstVaapiEncodeClass))
-
-#define GST_VAAPIENCODE(obj)                            \
-    (G_TYPE_CHECK_INSTANCE_CAST ((obj),                 \
-                                 GST_TYPE_VAAPIENCODE,  \
-                                 GstVaapiEncode))
-
-#define GST_VAAPIENCODE_CLASS(klass)                    \
-    (G_TYPE_CHECK_CLASS_CAST ((klass),                  \
-                              GST_TYPE_VAAPIENCODE,     \
-                              GstVaapiEncodeClass))
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VAAPIENCODE))
 
 typedef struct _GstVaapiEncode GstVaapiEncode;
 typedef struct _GstVaapiEncodeClass GstVaapiEncodeClass;
 
 struct _GstVaapiEncode
 {
-  /*< private > */
+  /*< private >*/
   GstVideoEncoder parent_instance;
 
   GstPad *sinkpad;
@@ -82,7 +73,7 @@ struct _GstVaapiEncode
 
 struct _GstVaapiEncodeClass
 {
-  /*< private > */
+  /*< private >*/
   GstVideoEncoderClass parent_class;
 
   GstVaapiEncoder *   (*create_encoder)    (GstVaapiEncode * encode,

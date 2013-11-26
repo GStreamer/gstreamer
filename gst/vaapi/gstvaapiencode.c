@@ -45,10 +45,7 @@ typedef struct _GstVaapiEncodeFrameUserData
 } GstVaapiEncodeFrameUserData;
 
 GST_DEBUG_CATEGORY_STATIC (gst_vaapiencode_debug);
-
 #define GST_CAT_DEFAULT gst_vaapiencode_debug
-
-#define GstVideoContextClass GstVideoContextInterface
 
 /* GstImplementsInterface interface */
 #if !GST_CHECK_VERSION(1,0,0)
@@ -66,12 +63,12 @@ gst_vaapiencode_implements_iface_init (GstImplementsInterfaceClass * iface)
 }
 #endif
 
-/* context(display) interface */
+/* GstContext interface */
 #if GST_CHECK_VERSION(1,1,0)
 static void
 gst_vaapiencode_set_context (GstElement * element, GstContext * context)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE (element);
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (element);
   GstVaapiDisplay *display = NULL;
 
   if (gst_vaapi_video_context_get_display (context, &display)) {
@@ -84,7 +81,7 @@ static void
 gst_vaapiencode_set_video_context (GstVideoContext * context,
     const gchar * type, const GValue * value)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE (context);
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (context);
 
   gst_vaapi_set_display (type, value, &encode->display);
 }
@@ -94,6 +91,8 @@ gst_video_context_interface_init (GstVideoContextInterface * iface)
 {
   iface->set_context = gst_vaapiencode_set_video_context;
 }
+
+#define GstVideoContextClass GstVideoContextInterface
 #endif
 
 G_DEFINE_TYPE_WITH_CODE (GstVaapiEncode,
@@ -112,10 +111,10 @@ static gboolean
 gst_vaapiencode_query (GstPad * pad, GstObject * parent,
     GstQuery * query)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE (parent);
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (parent);
   gboolean success;
 
-  GST_DEBUG ("vaapiencode query %s", GST_QUERY_TYPE_NAME (query));
+  GST_INFO_OBJECT(encode, "query type %s", GST_QUERY_TYPE_NAME(query));
 
   if (gst_vaapi_reply_to_query (query, encode->display))
     success = TRUE;
@@ -277,7 +276,7 @@ gst_vaapiencode_buffer_loop (GstVaapiEncode * encode)
 static GstCaps *
 gst_vaapiencode_get_caps_impl (GstVideoEncoder * venc)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE (venc);
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
   GstCaps *caps;
 
   if (encode->sinkpad_caps)
@@ -306,17 +305,8 @@ gst_vaapiencode_destroy (GstVaapiEncode * encode)
 {
   gst_vaapi_encoder_replace (&encode->encoder, NULL);
   g_clear_object (&encode->video_buffer_pool);
-
-  if (encode->sinkpad_caps) {
-    gst_caps_unref (encode->sinkpad_caps);
-    encode->sinkpad_caps = NULL;
-  }
-
-  if (encode->srcpad_caps) {
-    gst_caps_unref (encode->srcpad_caps);
-    encode->srcpad_caps = NULL;
-  }
-
+  gst_caps_replace (&encode->sinkpad_caps, NULL);
+  gst_caps_replace (&encode->srcpad_caps, NULL);
   gst_vaapi_display_replace (&encode->display, NULL);
   return TRUE;
 }
@@ -339,14 +329,15 @@ ensure_encoder (GstVaapiEncode * encode)
     return FALSE;
 
   encode->encoder = klass->create_encoder (encode, encode->display);
-  g_assert (encode->encoder);
-  return (encode->encoder ? TRUE : FALSE);
+  if (!encode->encoder)
+    return FALSE;
+  return TRUE;
 }
 
 static gboolean
 gst_vaapiencode_open (GstVideoEncoder * venc)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE (venc);
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
   GstVaapiDisplay *const old_display = encode->display;
   gboolean success;
 
@@ -354,18 +345,13 @@ gst_vaapiencode_open (GstVideoEncoder * venc)
   success = ensure_display (encode);
   if (old_display)
     gst_vaapi_display_unref (old_display);
-
-  GST_DEBUG ("ensure display %s, display:%p",
-      (success ? "okay" : "failed"), encode->display);
   return success;
 }
 
 static gboolean
 gst_vaapiencode_close (GstVideoEncoder * venc)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE (venc);
-
-  GST_DEBUG ("vaapiencode starting close");
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
 
   return gst_vaapiencode_destroy (encode);
 }
@@ -502,7 +488,7 @@ error_pool_config:
 static gboolean
 gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE (venc);
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
 
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
@@ -524,13 +510,12 @@ gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
 
   return gst_pad_start_task (encode->srcpad,
       (GstTaskFunction) gst_vaapiencode_buffer_loop, encode, NULL);
-  return TRUE;
 }
 
 static gboolean
 gst_vaapiencode_reset (GstVideoEncoder * venc, gboolean hard)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE (venc);
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
 
   GST_DEBUG ("vaapiencode starting reset");
 
@@ -671,7 +656,7 @@ static GstFlowReturn
 gst_vaapiencode_handle_frame (GstVideoEncoder * venc,
     GstVideoCodecFrame * frame)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE (venc);
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
   GstFlowReturn ret = GST_FLOW_OK;
   GstVaapiEncoderStatus encoder_ret = GST_VAAPI_ENCODER_STATUS_SUCCESS;
   GstBuffer *buf;
@@ -707,11 +692,9 @@ end:
 static GstFlowReturn
 gst_vaapiencode_finish (GstVideoEncoder * venc)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE (venc);
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
   GstVaapiEncoderStatus status;
   GstFlowReturn ret = GST_FLOW_OK;
-
-  GST_DEBUG ("vaapiencode starting finish");
 
   status = gst_vaapi_encoder_flush (encode->encoder);
 
@@ -730,7 +713,7 @@ gst_vaapiencode_finish (GstVideoEncoder * venc)
 static gboolean
 gst_vaapiencode_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE (venc);
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
   GstCaps *caps = NULL;
   gboolean need_pool;
 
@@ -760,7 +743,7 @@ error_no_caps:
 static void
 gst_vaapiencode_finalize (GObject * object)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE (object);
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (object);
 
   gst_vaapiencode_destroy (encode);
 
@@ -791,13 +774,19 @@ static void
 gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
 {
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
+#if GST_CHECK_VERSION(1,1,0)
   GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
+#endif
   GstVideoEncoderClass *const venc_class = GST_VIDEO_ENCODER_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (gst_vaapiencode_debug,
       GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
 
   object_class->finalize = gst_vaapiencode_finalize;
+
+#if GST_CHECK_VERSION(1,1,0)
+  element_class->set_context = GST_DEBUG_FUNCPTR (gst_vaapiencode_set_context);
+#endif
 
   venc_class->open = GST_DEBUG_FUNCPTR (gst_vaapiencode_open);
   venc_class->close = GST_DEBUG_FUNCPTR (gst_vaapiencode_close);
@@ -811,10 +800,6 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
       GST_DEBUG_FUNCPTR (gst_vaapiencode_propose_allocation);
 
   klass->allocate_buffer = gst_vaapiencode_default_allocate_buffer;
-
-#if GST_CHECK_VERSION(1,1,0)
-  element_class->set_context = GST_DEBUG_FUNCPTR (gst_vaapiencode_set_context);
-#endif
 
   /* Registering debug symbols for function pointers */
   GST_DEBUG_REGISTER_FUNCPTR (gst_vaapiencode_query);

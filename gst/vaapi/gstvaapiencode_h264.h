@@ -29,32 +29,29 @@ G_BEGIN_DECLS
 
 #define GST_TYPE_VAAPIENCODE_H264 \
     (gst_vaapiencode_h264_get_type ())
+#define GST_VAAPIENCODE_H264_CAST(obj) \
+  ((GstVaapiEncodeH264 *)(obj))
+#define GST_VAAPIENCODE_H264(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPIENCODE_H264, \
+      GstVaapiEncodeH264))
+#define GST_VAAPIENCODE_H264_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VAAPIENCODE_H264, \
+      GstVaapiEncodeH264Class))
+#define GST_VAAPIENCODE_H264_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPIENCODE_H264, \
+      GstVaapiEncodeH264Class))
 #define GST_IS_VAAPIENCODE_H264(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPIENCODE_H264))
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPIENCODE_H264))
 #define GST_IS_VAAPIENCODE_H264_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VAAPIENCODE_H264))
-
-#define GST_VAAPIENCODE_H264_GET_CLASS(obj)                     \
-    (G_TYPE_INSTANCE_GET_CLASS ((obj),                          \
-                                GST_TYPE_VAAPIENCODE_H264,      \
-                                GstVaapiEncodeH264Class))
-
-#define GST_VAAPIENCODE_H264(obj)                               \
-    (G_TYPE_CHECK_INSTANCE_CAST ((obj),                         \
-                                 GST_TYPE_VAAPIENCODE_H264,     \
-                                 GstVaapiEncodeH264))
-
-#define GST_VAAPIENCODE_H264_CLASS(klass)                       \
-    (G_TYPE_CHECK_CLASS_CAST ((klass),                          \
-                              GST_TYPE_VAAPIENCODE_H264,        \
-                              GstVaapiEncodeH264Class))
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VAAPIENCODE_H264))
 
 typedef struct _GstVaapiEncodeH264 GstVaapiEncodeH264;
 typedef struct _GstVaapiEncodeH264Class GstVaapiEncodeH264Class;
 
 struct _GstVaapiEncodeH264
 {
-  GstVaapiEncode parent;
+  /*< private >*/
+  GstVaapiEncode parent_instance;
 
   GstVaapiProfile profile;
   guint32 level;
@@ -69,6 +66,7 @@ struct _GstVaapiEncodeH264
 
 struct _GstVaapiEncodeH264Class
 {
+  /*< private >*/
   GstVaapiEncodeClass parent_class;
 };
 

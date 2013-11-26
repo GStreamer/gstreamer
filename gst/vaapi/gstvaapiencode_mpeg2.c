@@ -20,18 +20,13 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
-#include "gst/vaapi/gstvaapicompat.h"
-
+#include <gst/vaapi/gstvaapivalue.h>
+#include <gst/vaapi/gstvaapidisplay.h>
+#include <gst/vaapi/gstvaapiencoder_mpeg2.h>
+#include "gst/vaapi/gstvaapiencoder_mpeg2_priv.h"
 #include "gstvaapiencode_mpeg2.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideomemory.h"
-#include "gst/vaapi/gstvaapiencoder_mpeg2.h"
-#include "gst/vaapi/gstvaapiencoder_mpeg2_priv.h"
-#include "gst/vaapi/gstvaapidisplay.h"
-#include "gst/vaapi/gstvaapivalue.h"
-#include "gst/vaapi/gstvaapisurface.h"
-
-#include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_vaapi_mpeg2_encode_debug);
 #define GST_CAT_DEFAULT gst_vaapi_mpeg2_encode_debug
@@ -98,7 +93,7 @@ static void
 gst_vaapiencode_mpeg2_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstVaapiEncodeMpeg2 *encode = GST_VAAPIENCODE_MPEG2 (object);
+  GstVaapiEncodeMpeg2 *encode = GST_VAAPIENCODE_MPEG2_CAST (object);
 
   switch (prop_id) {
     case PROP_RATE_CONTROL:
@@ -134,7 +129,7 @@ static void
 gst_vaapiencode_mpeg2_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstVaapiEncodeMpeg2 *encode = GST_VAAPIENCODE_MPEG2 (object);
+  GstVaapiEncodeMpeg2 *encode = GST_VAAPIENCODE_MPEG2_CAST (object);
 
   switch (prop_id) {
     case PROP_RATE_CONTROL:
@@ -162,22 +157,23 @@ static GstVaapiEncoder *
 gst_vaapiencode_mpeg2_create_encoder (GstVaapiEncode * base,
     GstVaapiDisplay * display)
 {
-  GstVaapiEncodeMpeg2 *encode = GST_VAAPIENCODE_MPEG2 (base);
-  GstVaapiEncoder *ret;
-  GstVaapiEncoderMpeg2 *mpeg2encoder;
+  GstVaapiEncodeMpeg2 *encode = GST_VAAPIENCODE_MPEG2_CAST (base);
+  GstVaapiEncoder *base_encoder;
+  GstVaapiEncoderMpeg2 *encoder;
 
-  ret = gst_vaapi_encoder_mpeg2_new (display);
-  mpeg2encoder = GST_VAAPI_ENCODER_MPEG2 (ret);
+  base_encoder = gst_vaapi_encoder_mpeg2_new (display);
+  if (!base_encoder)
+    return NULL;
+  encoder = GST_VAAPI_ENCODER_MPEG2 (base_encoder);
 
-  mpeg2encoder->profile = GST_VAAPI_ENCODER_MPEG2_DEFAULT_PROFILE;
-  mpeg2encoder->level = GST_VAAPI_ENCODER_MPEG2_DEFAULT_LEVEL;
-  GST_VAAPI_ENCODER_RATE_CONTROL (mpeg2encoder) = encode->rate_control;
-  mpeg2encoder->bitrate = encode->bitrate;
-  mpeg2encoder->cqp = encode->quantizer;
-  mpeg2encoder->intra_period = encode->intra_period;
-  mpeg2encoder->ip_period = encode->ip_period;
-
-  return ret;
+  encoder->profile = GST_VAAPI_ENCODER_MPEG2_DEFAULT_PROFILE;
+  encoder->level = GST_VAAPI_ENCODER_MPEG2_DEFAULT_LEVEL;
+  GST_VAAPI_ENCODER_RATE_CONTROL (encoder) = encode->rate_control;
+  encoder->bitrate = encode->bitrate;
+  encoder->cqp = encode->quantizer;
+  encoder->intra_period = encode->intra_period;
+  encoder->ip_period = encode->ip_period;
+  return base_encoder;
 }
 
 static void

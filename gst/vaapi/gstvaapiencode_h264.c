@@ -20,18 +20,13 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
-#include "gst/vaapi/gstvaapicompat.h"
-
+#include <gst/vaapi/gstvaapivalue.h>
+#include <gst/vaapi/gstvaapidisplay.h>
+#include <gst/vaapi/gstvaapiencoder_h264.h>
+#include "gst/vaapi/gstvaapiencoder_h264_priv.h"
 #include "gstvaapiencode_h264.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideomemory.h"
-#include "gst/vaapi/gstvaapiencoder_h264.h"
-#include "gst/vaapi/gstvaapiencoder_h264_priv.h"
-#include "gst/vaapi/gstvaapidisplay.h"
-#include "gst/vaapi/gstvaapivalue.h"
-#include "gst/vaapi/gstvaapisurface.h"
-
-#include <string.h>
 
 GST_DEBUG_CATEGORY_STATIC (gst_vaapi_h264_encode_debug);
 #define GST_CAT_DEFAULT gst_vaapi_h264_encode_debug
@@ -69,14 +64,14 @@ G_DEFINE_TYPE (GstVaapiEncodeH264, gst_vaapiencode_h264, GST_TYPE_VAAPIENCODE)
 
 enum
 {
-  H264_PROP_0,
-  H264_PROP_RATE_CONTROL,
-  H264_PROP_BITRATE,
-  H264_PROP_KEY_PERIOD,
-  H264_PROP_MAX_BFRAMES,
-  H264_PROP_INIT_QP,
-  H264_PROP_MIN_QP,
-  H264_PROP_NUM_SLICES,
+  PROP_0,
+  PROP_RATE_CONTROL,
+  PROP_BITRATE,
+  PROP_KEY_PERIOD,
+  PROP_MAX_BFRAMES,
+  PROP_INIT_QP,
+  PROP_MIN_QP,
+  PROP_NUM_SLICES,
 };
 
 static void
@@ -94,28 +89,28 @@ static void
 gst_vaapiencode_h264_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264 (object);
+  GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (object);
 
   switch (prop_id) {
-    case H264_PROP_RATE_CONTROL:
+    case PROP_RATE_CONTROL:
       encode->rate_control = g_value_get_enum (value);
       break;
-    case H264_PROP_BITRATE:
+    case PROP_BITRATE:
       encode->bitrate = g_value_get_uint (value);
       break;
-    case H264_PROP_KEY_PERIOD:
+    case PROP_KEY_PERIOD:
       encode->intra_period = g_value_get_uint (value);
       break;
-    case H264_PROP_INIT_QP:
+    case PROP_INIT_QP:
       encode->init_qp = g_value_get_uint (value);
       break;
-    case H264_PROP_MIN_QP:
+    case PROP_MIN_QP:
       encode->min_qp = g_value_get_uint (value);
       break;
-    case H264_PROP_NUM_SLICES:
+    case PROP_NUM_SLICES:
       encode->num_slices = g_value_get_uint (value);
       break;
-    case H264_PROP_MAX_BFRAMES:
+    case PROP_MAX_BFRAMES:
       encode->max_bframes = g_value_get_uint (value);
       break;
     default:
@@ -128,28 +123,28 @@ static void
 gst_vaapiencode_h264_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264 (object);
+  GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (object);
 
   switch (prop_id) {
-    case H264_PROP_RATE_CONTROL:
+    case PROP_RATE_CONTROL:
       g_value_set_enum (value, encode->rate_control);
       break;
-    case H264_PROP_BITRATE:
+    case PROP_BITRATE:
       g_value_set_uint (value, encode->bitrate);
       break;
-    case H264_PROP_KEY_PERIOD:
+    case PROP_KEY_PERIOD:
       g_value_set_uint (value, encode->intra_period);
       break;
-    case H264_PROP_INIT_QP:
+    case PROP_INIT_QP:
       g_value_set_uint (value, encode->init_qp);
       break;
-    case H264_PROP_MIN_QP:
+    case PROP_MIN_QP:
       g_value_set_uint (value, encode->min_qp);
       break;
-    case H264_PROP_NUM_SLICES:
+    case PROP_NUM_SLICES:
       g_value_set_uint (value, encode->num_slices);
       break;
-    case H264_PROP_MAX_BFRAMES:
+    case PROP_MAX_BFRAMES:
       g_value_set_uint (value, encode->max_bframes);
       break;
     default:
@@ -162,23 +157,25 @@ static GstVaapiEncoder *
 gst_vaapiencode_h264_create_encoder (GstVaapiEncode * base,
     GstVaapiDisplay * display)
 {
-  GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264 (base);
-  GstVaapiEncoder *ret;
-  GstVaapiEncoderH264 *h264encoder;
+  GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (base);
+  GstVaapiEncoder *base_encoder;
+  GstVaapiEncoderH264 *encoder;
 
-  ret = gst_vaapi_encoder_h264_new (display);
-  h264encoder = GST_VAAPI_ENCODER_H264 (ret);
+  base_encoder = gst_vaapi_encoder_h264_new (display);
+  if (!base_encoder)
+    return NULL;
+  encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
 
-  h264encoder->profile = GST_VAAPI_PROFILE_UNKNOWN;
-  h264encoder->level = GST_VAAPI_ENCODER_H264_DEFAULT_LEVEL;
-  GST_VAAPI_ENCODER_RATE_CONTROL (h264encoder) = encode->rate_control;
-  h264encoder->bitrate = encode->bitrate;
-  h264encoder->intra_period = encode->intra_period;
-  h264encoder->init_qp = encode->init_qp;
-  h264encoder->min_qp = encode->min_qp;
-  h264encoder->slice_num = encode->num_slices;
-  h264encoder->b_frame_num = encode->max_bframes;
-  return ret;
+  encoder->profile = GST_VAAPI_PROFILE_UNKNOWN;
+  encoder->level = GST_VAAPI_ENCODER_H264_DEFAULT_LEVEL;
+  GST_VAAPI_ENCODER_RATE_CONTROL (encoder) = encode->rate_control;
+  encoder->bitrate = encode->bitrate;
+  encoder->intra_period = encode->intra_period;
+  encoder->init_qp = encode->init_qp;
+  encoder->min_qp = encode->min_qp;
+  encoder->slice_num = encode->num_slices;
+  encoder->b_frame_num = encode->max_bframes;
+  return base_encoder;
 }
 
 /* h264 NAL byte stream operations */
@@ -292,7 +289,7 @@ gst_vaapiencode_h264_alloc_buffer (GstVaapiEncode * encode,
   if (!gst_vaapi_encoder_h264_is_avc (h264encoder))
     return ret;
 
-  /* convert to avc format */
+  /* Convert to avcC format */
   if (!_h264_convert_byte_stream_to_avc (*out_buf)) {
     GST_ERROR ("convert H.264 bytestream to avc buf failed.");
     gst_buffer_replace (out_buf, NULL);
@@ -333,7 +330,7 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
       );
 
   g_object_class_install_property (object_class,
-      H264_PROP_RATE_CONTROL,
+      PROP_RATE_CONTROL,
       g_param_spec_enum ("rate-control",
           "Rate Control",
           "Rate control mode",
@@ -342,14 +339,14 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class,
-      H264_PROP_BITRATE,
+      PROP_BITRATE,
       g_param_spec_uint ("bitrate",
           "Bitrate (kbps)",
           "The desired bitrate expressed in kbps (0: auto-calculate)",
           0, 100 * 1024, 0, G_PARAM_READWRITE));
 
   g_object_class_install_property (object_class,
-      H264_PROP_KEY_PERIOD,
+      PROP_KEY_PERIOD,
       g_param_spec_uint ("key-period",
           "Key Period",
           "Maximal distance between two key-frames",
@@ -357,27 +354,27 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
           300, GST_VAAPI_ENCODER_H264_DEFAULT_INTRA_PERIOD, G_PARAM_READWRITE));
 
   g_object_class_install_property (object_class,
-      H264_PROP_MAX_BFRAMES,
+      PROP_MAX_BFRAMES,
       g_param_spec_uint ("max-bframes",
           "Max B-Frames",
           "Number of B-frames between I and P", 0, 10, 0, G_PARAM_READWRITE));
 
   g_object_class_install_property (object_class,
-      H264_PROP_INIT_QP,
+      PROP_INIT_QP,
       g_param_spec_uint ("init-qp",
           "Initial QP",
           "Initial quantizer value",
           1, 51, GST_VAAPI_ENCODER_H264_DEFAULT_INIT_QP, G_PARAM_READWRITE));
 
   g_object_class_install_property (object_class,
-      H264_PROP_MIN_QP,
+      PROP_MIN_QP,
       g_param_spec_uint ("min-qp",
           "Minimum QP",
           "Minimum quantizer value",
           1, 51, GST_VAAPI_ENCODER_H264_DEFAULT_MIN_QP, G_PARAM_READWRITE));
 
   g_object_class_install_property (object_class,
-      H264_PROP_NUM_SLICES,
+      PROP_NUM_SLICES,
       g_param_spec_uint ("num-slices",
           "Number of Slices", "Number of slices per frame", 1, 200,
           1, G_PARAM_READWRITE));

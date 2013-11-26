@@ -28,33 +28,30 @@
 G_BEGIN_DECLS
 
 #define GST_TYPE_VAAPIENCODE_MPEG2 \
-    (gst_vaapiencode_mpeg2_get_type())
+    (gst_vaapiencode_mpeg2_get_type ())
+#define GST_VAAPIENCODE_MPEG2_CAST(obj) \
+  ((GstVaapiEncodeMpeg2 *)(obj))
+#define GST_VAAPIENCODE_MPEG2(obj) \
+  (G_TYPE_CHECK_INSTANCE_CAST ((obj), GST_TYPE_VAAPIENCODE_MPEG2, \
+      GstVaapiEncodeMpeg2))
+#define GST_VAAPIENCODE_MPEG2_CLASS(klass) \
+  (G_TYPE_CHECK_CLASS_CAST ((klass), GST_TYPE_VAAPIENCODE_MPEG2, \
+      GstVaapiEncodeMpeg2Class))
+#define GST_VAAPIENCODE_MPEG2_GET_CLASS(obj) \
+  (G_TYPE_INSTANCE_GET_CLASS ((obj), GST_TYPE_VAAPIENCODE_MPEG2, \
+      GstVaapiEncodeMpeg2Class))
 #define GST_IS_VAAPIENCODE_MPEG2(obj) \
-    (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPIENCODE_MPEG2))
+  (G_TYPE_CHECK_INSTANCE_TYPE ((obj), GST_TYPE_VAAPIENCODE_MPEG2))
 #define GST_IS_VAAPIENCODE_MPEG2_CLASS(klass) \
-    (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VAAPIENCODE_MPEG2))
-
-#define GST_VAAPIENCODE_MPEG2_GET_CLASS(obj)                   \
-    (G_TYPE_INSTANCE_GET_CLASS ((obj),                         \
-                                GST_TYPE_VAAPIENCODE_MPEG2,    \
-                                GstVaapiEncodeMpeg2Class))
-
-#define GST_VAAPIENCODE_MPEG2(obj)                             \
-    (G_TYPE_CHECK_INSTANCE_CAST ((obj),                        \
-                                 GST_TYPE_VAAPIENCODE_MPEG2,   \
-                                 GstVaapiEncodeMpeg2))
-
-#define GST_VAAPIENCODE_MPEG2_CLASS(klass)                     \
-    (G_TYPE_CHECK_CLASS_CAST ((klass),                         \
-                              GST_TYPE_VAAPIENCODE_MPEG2,      \
-                              GstVaapiEncodeMpeg2Class))
+  (G_TYPE_CHECK_CLASS_TYPE ((klass), GST_TYPE_VAAPIENCODE_MPEG2))
 
 typedef struct _GstVaapiEncodeMpeg2 GstVaapiEncodeMpeg2;
 typedef struct _GstVaapiEncodeMpeg2Class GstVaapiEncodeMpeg2Class;
 
 struct _GstVaapiEncodeMpeg2
 {
-  GstVaapiEncode parent;
+  /*< private >*/
+  GstVaapiEncode parent_instance;
 
   GstVaapiRateControl rate_control;
   guint32 bitrate;              /* kbps */
@@ -65,6 +62,7 @@ struct _GstVaapiEncodeMpeg2
 
 struct _GstVaapiEncodeMpeg2Class
 {
+  /*< private >*/
   GstVaapiEncodeClass parent_class;
 };
 
