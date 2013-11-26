@@ -661,7 +661,7 @@ gst_query_parse_segment (GstQuery * query, gdouble * rate, GstFormat * format,
 /**
  * gst_query_new_custom:
  * @type: the query type
- * @structure: a structure for the query
+ * @structure: (allow-none) (transfer full): a structure for the query
  *
  * Constructs a new custom query object. Use gst_query_unref()
  * when done with it.
