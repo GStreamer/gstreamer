@@ -46,6 +46,7 @@ struct _GstRTPBasePayloadPrivate
 
   guint64 base_offset;
   gint64 base_rtime;
+  guint64 base_rtime_hz;
   guint64 running_time;
 
   gint64 prop_max_ptime;
@@ -350,7 +351,7 @@ gst_rtp_base_payload_init (GstRTPBasePayload * rtpbasepayload, gpointer g_class)
   rtpbasepayload->priv->perfect_rtptime = DEFAULT_PERFECT_RTPTIME;
   rtpbasepayload->ptime_multiple = DEFAULT_PTIME_MULTIPLE;
   rtpbasepayload->priv->base_offset = GST_BUFFER_OFFSET_NONE;
-  rtpbasepayload->priv->base_rtime = GST_BUFFER_OFFSET_NONE;
+  rtpbasepayload->priv->base_rtime_hz = GST_BUFFER_OFFSET_NONE;
 
   rtpbasepayload->media = NULL;
   rtpbasepayload->encoding_name = NULL;
@@ -969,9 +970,12 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
   /* convert to RTP time */
   if (priv->perfect_rtptime && data.offset != GST_BUFFER_OFFSET_NONE &&
       priv->base_offset != GST_BUFFER_OFFSET_NONE) {
-    /* if we have an offset, use that for making an RTP timestamp */
-    data.rtptime = payload->ts_base + priv->base_rtime +
-        data.offset - priv->base_offset;
+    /* generate perfect RTP time by adding together the base timestamp, the
+     * running time of the first buffer and difference between the offset of the
+     * first buffer and the offset of the current buffer. */
+    guint64 offset = data.offset - priv->base_offset;
+    data.rtptime = payload->ts_base + priv->base_rtime_hz + offset;
+
     GST_LOG_OBJECT (payload,
         "Using offset %" G_GUINT64_FORMAT " for RTP timestamp", data.offset);
 
@@ -981,31 +985,39 @@ gst_rtp_base_payload_prepare_push (GstRTPBasePayload * payload,
         data.offset - priv->base_offset);
     priv->running_time = priv->base_rtime + data.offset - priv->base_offset;
   } else if (GST_CLOCK_TIME_IS_VALID (data.pts)) {
-    gint64 rtime;
+    guint64 rtime_ns;
+    guint64 rtime_hz;
 
     /* no offset, use the gstreamer pts */
-    rtime = gst_segment_to_running_time (&payload->segment, GST_FORMAT_TIME,
+    rtime_ns = gst_segment_to_running_time (&payload->segment, GST_FORMAT_TIME,
         data.pts);
 
-    if (rtime == -1) {
+    if (!GST_CLOCK_TIME_IS_VALID (rtime_ns)) {
       GST_LOG_OBJECT (payload, "Clipped pts, using base RTP timestamp");
-      rtime = 0;
+      rtime_hz = 0;
     } else {
       GST_LOG_OBJECT (payload,
           "Using running_time %" GST_TIME_FORMAT " for RTP timestamp",
-          GST_TIME_ARGS (rtime));
-      rtime =
-          gst_util_uint64_scale_int (rtime, payload->clock_rate, GST_SECOND);
+          GST_TIME_ARGS (rtime_ns));
+      rtime_hz =
+          gst_util_uint64_scale_int (rtime_ns, payload->clock_rate, GST_SECOND);
       priv->base_offset = data.offset;
-      priv->base_rtime = rtime;
+      priv->base_rtime_hz = rtime_hz;
     }
+
     /* add running_time in clock-rate units to the base timestamp */
-    data.rtptime = payload->ts_base + rtime;
+    data.rtptime = payload->ts_base + rtime_hz;
 
     /* store buffer's running time */
-    GST_LOG_OBJECT (payload,
-        "setting running-time to %" G_GUINT64_FORMAT, rtime);
-    priv->running_time = rtime;
+    if (priv->perfect_rtptime) {
+      GST_LOG_OBJECT (payload,
+          "setting running-time to %" G_GUINT64_FORMAT, rtime_hz);
+      priv->running_time = rtime_hz;
+    } else {
+      GST_LOG_OBJECT (payload,
+          "setting running-time to %" GST_TIME_FORMAT, GST_TIME_ARGS (rtime_ns));
+      priv->running_time = rtime_ns;
+    }
   } else {
     GST_LOG_OBJECT (payload,
         "Using previous RTP timestamp %" G_GUINT32_FORMAT, payload->timestamp);
