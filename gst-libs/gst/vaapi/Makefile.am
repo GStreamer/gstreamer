@@ -280,6 +280,7 @@ libgstvaapi_drm_@GST_API_VERSION@_la_CFLAGS =	\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
 	$(GST_BASE_CFLAGS)			\
+	$(GST_VIDEO_CFLAGS)			\
 	$(UDEV_CFLAGS)				\
 	$(DRM_CFLAGS)				\
 	$(LIBVA_DRM_CFLAGS)			\
@@ -315,6 +316,7 @@ libgstvaapi_x11_@GST_API_VERSION@_la_CFLAGS =	\
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
 	$(GST_BASE_CFLAGS)			\
+	$(GST_VIDEO_CFLAGS)			\
 	$(X11_CFLAGS)				\
 	$(XRANDR_CFLAGS)			\
 	$(XRENDER_CFLAGS)			\
@@ -389,6 +391,7 @@ libgstvaapi_wayland_@GST_API_VERSION@_la_CFLAGS = \
 	-I$(top_srcdir)/gst-libs		\
 	$(GLIB_CFLAGS)				\
 	$(GST_BASE_CFLAGS)			\
+	$(GST_VIDEO_CFLAGS)			\
 	$(WAYLAND_CFLAGS)			\
 	$(LIBVA_WAYLAND_CFLAGS)			\
 	$(top_builddir)/gst-libs/gst/video/libgstvaapi-videoutils.la \

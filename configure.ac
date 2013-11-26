@@ -14,6 +14,7 @@ m4_define([gst_vaapi_lt_current],       [4])
 m4_define([gst0_vaapi_lt_current_bias], [0])
 m4_define([gst1_vaapi_lt_current_bias], [2])
 m4_define([gst2_vaapi_lt_current_bias], [4])
+m4_define([gst4_vaapi_lt_current_bias], [4])
 m4_define([gst_vaapi_lt_revision],      [0])
 m4_define([gst_vaapi_lt_age],           [0])
 
@@ -31,6 +32,9 @@ m4_define([gst1_plugins_bad_version],   [1.0.0])
 m4_define([gst12_version],              [1.1.90])
 m4_define([gst12_plugins_base_version], [1.1.0])
 m4_define([gst12_plugins_bad_version],  [1.1.0])
+m4_define([gst14_version],              [1.2.90])
+m4_define([gst14_plugins_base_version], [1.3.0])
+m4_define([gst14_plugins_bad_version],  [1.3.0])
 
 # Wayland minimum version number
 m4_define([wayland_api_version], [1.0.0])
@@ -200,6 +204,11 @@ case $GST_API_VERSION in
     GST_PLUGINS_BASE_VERSION_REQUIRED=gst12_plugins_base_version
     GST_PLUGINS_BAD_VERSION_REQUIRED=gst12_plugins_bad_version
     ;;
+1.3)
+    GST_VERSION_REQUIRED=gst14_version
+    GST_PLUGINS_BASE_VERSION_REQUIRED=gst14_plugins_base_version
+    GST_PLUGINS_BAD_VERSION_REQUIRED=gst14_plugins_bad_version
+    ;;
 *)
     AC_MSG_ERROR([unsupported GStreamer API version $GST_API_VERSION])
     ;;
@@ -269,9 +278,9 @@ PKG_CHECK_MODULES([GST_VIDEO],
 AC_CACHE_CHECK([for GstVideoOverlayComposition],
     ac_cv_have_gst_video_overlay_composition, [
     saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $GST_CFLAGS"
+    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_VIDEO_CFLAGS"
     saved_LIBS="$LIBS"
-    LIBS="$LIBS $GST_LIBS"
+    LIBS="$LIBS $GST_LIBS $GST_VIDEO_LIBS"
     AC_COMPILE_IFELSE(
         [AC_LANG_PROGRAM(
             [[#include <gst/video/video-overlay-composition.h>]],
@@ -434,6 +443,7 @@ case $GST_API_VERSION in
 0.10)   lt_bias=gst0_vaapi_lt_current_bias;;
 1.0)    lt_bias=gst1_vaapi_lt_current_bias;;
 1.2)    lt_bias=gst2_vaapi_lt_current_bias;;
+1.3)    lt_bias=gst4_vaapi_lt_current_bias;;
 esac
 GST_VAAPI_MAJOR_VERSION=`expr gst_vaapi_lt_current - "$lt_bias"`
 AC_SUBST(GST_VAAPI_MAJOR_VERSION)

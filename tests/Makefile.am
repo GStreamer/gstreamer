@@ -20,6 +20,7 @@ TEST_CFLAGS = \
 	-I$(top_builddir)/gst-libs	\
 	$(LIBVA_CFLAGS)			\
 	$(GST_CFLAGS)			\
+	$(GST_VIDEO_CFLAGS)		\
 	$(NULL)
 
 TEST_LIBS = \
@@ -87,7 +88,7 @@ test_display_CFLAGS	= $(TEST_CFLAGS)
 test_display_LDADD	= libutils.la $(TEST_LIBS)
 
 test_filter_SOURCES	= test-filter.c
-test_filter_CFLAGS	= $(TEST_CFLAGS) $(GST_VIDEO_CFLAGS)
+test_filter_CFLAGS	= $(TEST_CFLAGS)
 test_filter_LDADD	= libutils.la $(TEST_LIBS) $(GST_VIDEO_LIBS) \
 	$(top_builddir)/gst-libs/gst/video/libgstvaapi-videoutils.la
 
