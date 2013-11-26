@@ -167,9 +167,8 @@ static gboolean default_handle_message (GstRTSPMedia * media,
     GstMessage * message);
 static void finish_unprepare (GstRTSPMedia * media);
 static gboolean default_unprepare (GstRTSPMedia * media);
-static gboolean
-default_convert_range (GstRTSPMedia * media, GstRTSPTimeRange * range,
-    GstRTSPRangeUnit unit);
+static gboolean default_convert_range (GstRTSPMedia * media,
+    GstRTSPTimeRange * range, GstRTSPRangeUnit unit);
 static gboolean default_query_position (GstRTSPMedia * media,
     gint64 * position);
 static gboolean default_query_stop (GstRTSPMedia * media, gint64 * stop);
@@ -378,6 +377,30 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, propid, pspec);
   }
+}
+
+static gboolean
+default_query_position (GstRTSPMedia * media, gint64 * position)
+{
+  return gst_element_query_position (media->priv->pipeline, GST_FORMAT_TIME,
+      position);
+}
+
+static gboolean
+default_query_stop (GstRTSPMedia * media, gint64 * stop)
+{
+  GstQuery *query;
+  gboolean res;
+
+  query = gst_query_new_segment (GST_FORMAT_TIME);
+  if ((res = gst_element_query (media->priv->pipeline, query))) {
+    GstFormat format;
+    gst_query_parse_segment (query, NULL, &format, NULL, stop);
+    if (format != GST_FORMAT_TIME)
+      *stop = -1;
+  }
+  gst_query_unref (query);
+  return res;
 }
 
 /* must be called with state lock */
@@ -1164,6 +1187,14 @@ gst_rtsp_media_find_stream (GstRTSPMedia * media, const gchar * control)
   g_mutex_unlock (&priv->lock);
 
   return res;
+}
+
+/* called with state-lock */
+static gboolean
+default_convert_range (GstRTSPMedia * media, GstRTSPTimeRange * range,
+    GstRTSPRangeUnit unit)
+{
+  return gst_rtsp_range_convert_units (range, unit);
 }
 
 /**
@@ -2306,36 +2337,4 @@ error_status:
     g_rec_mutex_unlock (&priv->state_lock);
     return FALSE;
   }
-}
-
-/* called with state-lock */
-static gboolean
-default_convert_range (GstRTSPMedia * media, GstRTSPTimeRange * range,
-    GstRTSPRangeUnit unit)
-{
-  return gst_rtsp_range_convert_units (range, unit);
-}
-
-static gboolean
-default_query_position (GstRTSPMedia * media, gint64 * position)
-{
-  return gst_element_query_position (media->priv->pipeline, GST_FORMAT_TIME,
-      position);
-}
-
-static gboolean
-default_query_stop (GstRTSPMedia * media, gint64 * stop)
-{
-  GstQuery *query;
-  gboolean res;
-
-  query = gst_query_new_segment (GST_FORMAT_TIME);
-  if ((res = gst_element_query (media->priv->pipeline, query))) {
-    GstFormat format;
-    gst_query_parse_segment (query, NULL, &format, NULL, stop);
-    if (format != GST_FORMAT_TIME)
-      *stop = -1;
-  }
-  gst_query_unref (query);
-  return res;
 }
