@@ -366,6 +366,9 @@ GstFlowReturn    gst_video_decoder_finish_frame (GstVideoDecoder *decoder,
 GstFlowReturn    gst_video_decoder_drop_frame (GstVideoDecoder *dec,
 					       GstVideoCodecFrame *frame);
 
+void             gst_video_decoder_release_frame (GstVideoDecoder * dec,
+						  GstVideoCodecFrame * frame);
+
 void             gst_video_decoder_merge_tags (GstVideoDecoder *dec,
                                                const GstTagList *tags,
                                                GstTagMergeMode mode);
