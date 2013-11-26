@@ -192,6 +192,9 @@ typedef struct _GstAudioDecoderContext
   gboolean eos;
   gboolean sync;
 
+  gboolean had_output_data;
+  gboolean had_input_data;
+
   /* misc */
   gint delay;
 
@@ -494,6 +497,8 @@ gst_audio_decoder_reset (GstAudioDecoder * dec, gboolean full)
 
     gst_audio_info_init (&dec->priv->ctx.info);
     dec->priv->ctx.max_errors = GST_AUDIO_DECODER_MAX_ERRORS;
+    dec->priv->ctx.had_output_data = FALSE;
+    dec->priv->ctx.had_input_data = FALSE;
   }
 
   g_queue_foreach (&dec->priv->frames, (GFunc) gst_buffer_unref, NULL);
@@ -825,6 +830,8 @@ gst_audio_decoder_push_forward (GstAudioDecoder * dec, GstBuffer * buf)
     g_assert_not_reached ();
     return GST_FLOW_OK;
   }
+
+  ctx->had_output_data = TRUE;
 
   GST_LOG_OBJECT (dec,
       "clipping buffer of size %" G_GSIZE_FORMAT " with ts %" GST_TIME_FORMAT
@@ -1646,6 +1653,8 @@ gst_audio_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   GST_AUDIO_DECODER_STREAM_LOCK (dec);
 
+  dec->priv->ctx.had_input_data = TRUE;
+
   if (GST_BUFFER_FLAG_IS_SET (buffer, GST_BUFFER_FLAG_DISCONT)) {
     gint64 samples, ts;
 
@@ -1835,6 +1844,12 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       GST_AUDIO_DECODER_STREAM_LOCK (dec);
       gst_audio_decoder_drain (dec);
       GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+
+      if (dec->priv->ctx.had_input_data && !dec->priv->ctx.had_output_data) {
+        GST_ELEMENT_ERROR (dec, STREAM, DECODE,
+            ("No valid frames decoded before end of stream"),
+            ("no valid frames found"));
+      }
 
       /* Forward EOS because no buffer or serialized event will come after
        * EOS and nothing could trigger another _finish_frame() call. */
