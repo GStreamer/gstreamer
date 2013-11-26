@@ -539,11 +539,12 @@ gst_ffmpegviddec_video_frame_new (GstVideoCodecFrame * frame)
 }
 
 static void
-gst_ffmpegviddec_video_frame_free (GstFFMpegVidDecVideoFrame * frame)
+gst_ffmpegviddec_video_frame_free (GstFFMpegVidDec * ffmpegdec,
+    GstFFMpegVidDecVideoFrame * frame)
 {
   if (frame->mapped)
     gst_video_frame_unmap (&frame->vframe);
-  gst_video_codec_frame_unref (frame->frame);
+  gst_video_decoder_release_frame (GST_VIDEO_DECODER (ffmpegdec), frame->frame);
   g_slice_free (GstFFMpegVidDecVideoFrame, frame);
 }
 
@@ -768,7 +769,7 @@ gst_ffmpegviddec_release_buffer (AVCodecContext * context, AVFrame * picture)
   /* we remove the opaque data now */
   picture->opaque = NULL;
 
-  gst_ffmpegviddec_video_frame_free (frame);
+  gst_ffmpegviddec_video_frame_free (ffmpegdec, frame);
 
   /* zero out the reference in ffmpeg */
   for (i = 0; i < 4; i++) {
