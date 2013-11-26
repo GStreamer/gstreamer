@@ -2138,15 +2138,8 @@ gst_rtsp_media_get_time_provider (GstRTSPMedia * media, const gchar * address,
   return provider;
 }
 
-/**
- * gst_rtsp_media_set_pipeline_state:
- * @media: a #GstRTSPMedia
- * @state: the target state of the pipeline
- *
- * Set the state of the pipeline managed by @media to @state
- */
-void
-gst_rtsp_media_set_pipeline_state (GstRTSPMedia * media, GstState state)
+static void
+media_set_pipeline_state_locked (GstRTSPMedia * media, GstState state)
 {
   GstRTSPMediaPrivate *priv = media->priv;
 
@@ -2163,6 +2156,23 @@ gst_rtsp_media_set_pipeline_state (GstRTSPMedia * media, GstState state)
       gst_element_set_state (priv->pipeline, state);
     }
   }
+}
+
+/**
+ * gst_rtsp_media_set_pipeline_state:
+ * @media: a #GstRTSPMedia
+ * @state: the target state of the pipeline
+ *
+ * Set the state of the pipeline managed by @media to @state
+ */
+void
+gst_rtsp_media_set_pipeline_state (GstRTSPMedia * media, GstState state)
+{
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  g_rec_mutex_lock (&media->priv->state_lock);
+  media_set_pipeline_state_locked (media, state);
+  g_rec_mutex_unlock (&media->priv->state_lock);
 }
 
 /**
@@ -2254,7 +2264,7 @@ gst_rtsp_media_set_state (GstRTSPMedia * media, GstState state,
 
   if (priv->target_state != state) {
     if (do_state)
-      gst_rtsp_media_set_pipeline_state (media, state);
+      media_set_pipeline_state_locked (media, state);
 
     g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_NEW_STATE], 0, state,
         NULL);
