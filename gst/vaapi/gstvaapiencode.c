@@ -275,16 +275,30 @@ gst_vaapiencode_buffer_loop (GstVaapiEncode * encode)
 }
 
 static GstCaps *
-gst_vaapiencode_get_caps (GstPad * pad)
+gst_vaapiencode_get_caps_impl (GstVideoEncoder * venc)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE (GST_OBJECT_PARENT (pad));
+  GstVaapiEncode *const encode = GST_VAAPIENCODE (venc);
   GstCaps *caps;
 
   if (encode->sinkpad_caps)
     caps = gst_caps_ref (encode->sinkpad_caps);
   else
-    caps = gst_caps_copy (gst_pad_get_pad_template_caps (pad));
+    caps = gst_pad_get_pad_template_caps (encode->sinkpad);
   return caps;
+}
+
+static GstCaps *
+gst_vaapiencode_get_caps (GstVideoEncoder * venc, GstCaps * filter)
+{
+  GstCaps *caps, *out_caps;
+
+  out_caps = gst_vaapiencode_get_caps_impl (venc);
+  if (out_caps && filter) {
+    caps = gst_caps_intersect_full (out_caps, filter, GST_CAPS_INTERSECT_FIRST);
+    gst_caps_unref (out_caps);
+    out_caps = caps;
+  }
+  return out_caps;
 }
 
 static gboolean
@@ -770,6 +784,7 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
   venc_class->reset = GST_DEBUG_FUNCPTR (gst_vaapiencode_reset);
   venc_class->handle_frame = GST_DEBUG_FUNCPTR (gst_vaapiencode_handle_frame);
   venc_class->finish = GST_DEBUG_FUNCPTR (gst_vaapiencode_finish);
+  venc_class->getcaps = GST_DEBUG_FUNCPTR (gst_vaapiencode_get_caps);
 
   venc_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_vaapiencode_propose_allocation);
@@ -781,6 +796,5 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
 #endif
 
   /* Registering debug symbols for function pointers */
-  GST_DEBUG_REGISTER_FUNCPTR (gst_vaapiencode_get_caps);
   GST_DEBUG_REGISTER_FUNCPTR (gst_vaapiencode_query);
 }
