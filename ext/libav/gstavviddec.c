@@ -575,6 +575,11 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
   if (G_UNLIKELY (frame == NULL))
     goto no_frame;
 
+  /* now it has a buffer allocated, so it is real and will also
+   * be _released */
+  GST_VIDEO_CODEC_FRAME_FLAG_UNSET (frame,
+      GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
+
   if (G_UNLIKELY (frame->output_buffer != NULL))
     goto duplicate_frame;
 
@@ -1252,6 +1257,41 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
           GST_VIDEO_BUFFER_FLAG_INTERLACED);
   }
 
+  /* cleaning time */
+  /* so we decoded this frame, frames preceding it in decoding order
+   * that still do not have a buffer allocated seem rather useless,
+   * and can be discarded, due to e.g. misparsed bogus frame
+   * or non-keyframe in skipped decoding, ...
+   * In any case, not likely to be seen again, so discard those,
+   * before they pile up and/or mess with timestamping */
+  {
+    GList *l, *ol;
+    GstVideoDecoder *dec = GST_VIDEO_DECODER (ffmpegdec);
+    gboolean old = TRUE;
+
+    ol = l = gst_video_decoder_get_frames (dec);
+    while (l) {
+      GstVideoCodecFrame *tmp = l->data;
+
+      if (tmp == frame)
+        old = FALSE;
+
+      if (old && GST_VIDEO_CODEC_FRAME_IS_DECODE_ONLY (tmp)) {
+        GST_LOG_OBJECT (dec,
+            "discarding ghost frame %p (#%d) PTS:%" GST_TIME_FORMAT " DTS:%"
+            GST_TIME_FORMAT, tmp, tmp->system_frame_number,
+            GST_TIME_ARGS (tmp->pts), GST_TIME_ARGS (tmp->dts));
+        /* drop extra ref and remove from frame list */
+        gst_video_decoder_release_frame (dec, tmp);
+      } else {
+        /* drop extra ref we got */
+        gst_video_codec_frame_unref (tmp);
+      }
+      l = l->next;
+    }
+    g_list_free (ol);
+  }
+
   *ret =
       gst_video_decoder_finish_frame (GST_VIDEO_DECODER (ffmpegdec), out_frame);
 
@@ -1386,6 +1426,10 @@ gst_ffmpegviddec_handle_frame (GstVideoDecoder * decoder,
     GST_ERROR_OBJECT (ffmpegdec, "Failed to map buffer");
     return GST_FLOW_ERROR;
   }
+
+  /* treat frame as void until a buffer is requested for it */
+  GST_VIDEO_CODEC_FRAME_FLAG_SET (frame,
+      GST_VIDEO_CODEC_FRAME_FLAG_DECODE_ONLY);
 
   bdata = minfo.data;
   bsize = minfo.size;
