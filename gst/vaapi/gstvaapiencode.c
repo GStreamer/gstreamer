@@ -129,6 +129,7 @@ static GstFlowReturn
 gst_vaapiencode_default_allocate_buffer (GstVaapiEncode * encode,
     GstVaapiCodedBuffer * coded_buf, GstBuffer ** outbuf_ptr)
 {
+  GstVideoEncoder *const venc = GST_VIDEO_ENCODER_CAST (encode);
   GstBuffer *buf;
   gint32 buf_size;
 
@@ -139,27 +140,39 @@ gst_vaapiencode_default_allocate_buffer (GstVaapiEncode * encode,
     return GST_VAAPI_ENCODE_FLOW_MEM_ERROR;
 
   buf_size = gst_vaapi_coded_buffer_get_size (coded_buf);
-  if (buf_size <= 0) {
-    GST_ERROR ("get GstVaapiCodedBuf buffer size:%d", buf_size);
-    return GST_VAAPI_ENCODE_FLOW_MEM_ERROR;
-  }
+  if (buf_size <= 0)
+    goto error_invalid_buffer;
 
-  buf =
-      gst_video_encoder_allocate_output_buffer (GST_VIDEO_ENCODER_CAST (encode),
-      buf_size);
-  if (!buf) {
-    GST_ERROR ("failed to allocate output buffer of size %d", buf_size);
-    return GST_VAAPI_ENCODE_FLOW_MEM_ERROR;
-  }
+  buf = gst_video_encoder_allocate_output_buffer (venc, buf_size);
+  if (!buf)
+    goto error_create_buffer;
+  if (!gst_vaapi_coded_buffer_get_buffer (coded_buf, buf))
+    goto error_copy_buffer;
 
-  if (!gst_vaapi_coded_buffer_get_buffer (coded_buf, buf)) {
-    GST_ERROR ("failed to get encoded buffer");
-    gst_buffer_replace (&buf, NULL);
-    return GST_VAAPI_ENCODE_FLOW_MEM_ERROR;
-  }
   gst_vaapi_coded_buffer_unmap (coded_buf);
   *outbuf_ptr = buf;
   return GST_FLOW_OK;
+
+  /* ERRORS */
+error_invalid_buffer:
+  {
+    GST_ERROR ("invalid GstVaapiCodedBuffer size (%d)", buf_size);
+    gst_vaapi_coded_buffer_unmap (coded_buf);
+    return GST_VAAPI_ENCODE_FLOW_MEM_ERROR;
+  }
+error_create_buffer:
+  {
+    GST_ERROR ("failed to create output buffer of size %d", buf_size);
+    gst_vaapi_coded_buffer_unmap (coded_buf);
+    return GST_VAAPI_ENCODE_FLOW_MEM_ERROR;
+  }
+error_copy_buffer:
+  {
+    GST_ERROR ("failed to copy GstVaapiCodedBuffer data");
+    gst_buffer_unref (buf);
+    gst_vaapi_coded_buffer_unmap (coded_buf);
+    return GST_VAAPI_ENCODE_FLOW_MEM_ERROR;
+  }
 }
 
 static GstFlowReturn
