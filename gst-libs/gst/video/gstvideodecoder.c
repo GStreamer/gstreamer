@@ -2273,7 +2273,7 @@ gst_video_decoder_prepare_finish_frame (GstVideoDecoder *
     /* if we detected reordered output, then PTS are void,
      * however those were obtained; bogus input, subclass etc */
     if (priv->reordered_output && !seen_none) {
-      GST_DEBUG_OBJECT (decoder, "invaliding PTS");
+      GST_DEBUG_OBJECT (decoder, "invalidating PTS");
       frame->pts = GST_CLOCK_TIME_NONE;
     }
 
