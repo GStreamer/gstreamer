@@ -541,13 +541,13 @@ gst_vaapiencode_reset (GstVideoEncoder * venc, gboolean hard)
 }
 
 static GstFlowReturn
-gst_vaapiencode_get_vaapi_buffer (GstVaapiEncode * encode,
-    GstBuffer * src_buffer, GstBuffer ** out_buffer_ptr)
+get_source_buffer (GstVaapiEncode * encode, GstBuffer * src_buffer,
+    GstBuffer ** out_buffer_ptr)
 {
   GstVaapiVideoMeta *meta;
   GstBuffer *out_buffer;
   GstVideoFrame src_frame, out_frame;
-  GstFlowReturn ret;
+  gboolean success;
 
   *out_buffer_ptr = NULL;
   meta = gst_buffer_get_vaapi_video_meta (src_buffer);
@@ -556,12 +556,8 @@ gst_vaapiencode_get_vaapi_buffer (GstVaapiEncode * encode,
     return GST_FLOW_OK;
   }
 
-  if (!GST_VIDEO_INFO_IS_YUV (&encode->sink_video_info)) {
-    GST_ERROR ("unsupported video buffer");
-    return GST_FLOW_EOS;
-  }
-
-  GST_DEBUG ("buffer %p not from our pool, copying", src_buffer);
+  if (!GST_VIDEO_INFO_IS_YUV (&encode->sink_video_info))
+    goto error_invalid_buffer;
 
   if (!encode->video_buffer_pool)
     goto error_no_pool;
@@ -569,9 +565,10 @@ gst_vaapiencode_get_vaapi_buffer (GstVaapiEncode * encode,
   if (!gst_buffer_pool_set_active (encode->video_buffer_pool, TRUE))
     goto error_activate_pool;
 
-  ret = gst_buffer_pool_acquire_buffer (encode->video_buffer_pool,
-      &out_buffer, NULL);
-  if (ret != GST_FLOW_OK)
+  out_buffer = NULL;
+  success = gst_buffer_pool_acquire_buffer (encode->video_buffer_pool,
+      &out_buffer, NULL) == GST_FLOW_OK;
+  if (!success)
     goto error_create_buffer;
 
   if (!gst_video_frame_map (&src_frame, &encode->sink_video_info, src_buffer,
@@ -582,30 +579,56 @@ gst_vaapiencode_get_vaapi_buffer (GstVaapiEncode * encode,
           GST_MAP_WRITE))
     goto error_map_dst_buffer;
 
-  gst_video_frame_copy (&out_frame, &src_frame);
+  success = gst_video_frame_copy (&out_frame, &src_frame);
   gst_video_frame_unmap (&out_frame);
   gst_video_frame_unmap (&src_frame);
+  if (!success)
+    goto error_copy_buffer;
+
+  gst_buffer_copy_into (out_buffer, src_buffer, GST_BUFFER_COPY_TIMESTAMPS, 0,
+      -1);
 
   *out_buffer_ptr = out_buffer;
   return GST_FLOW_OK;
 
   /* ERRORS */
+error_invalid_buffer:
+  {
+    GST_ERROR ("unsupported video buffer");
+    return GST_FLOW_EOS;
+  }
 error_no_pool:
-  GST_ERROR ("no buffer pool was negotiated");
-  return GST_FLOW_ERROR;
+  {
+    GST_ERROR ("no buffer pool was negotiated");
+    return GST_FLOW_ERROR;
+  }
 error_activate_pool:
-  GST_ERROR ("failed to activate buffer pool");
-  return GST_FLOW_ERROR;
+  {
+    GST_ERROR ("failed to activate buffer pool");
+    return GST_FLOW_ERROR;
+  }
 error_create_buffer:
-  GST_WARNING ("failed to create image. Skipping this frame");
-  return GST_FLOW_OK;
+  {
+    GST_WARNING ("failed to create buffer. Skipping this frame");
+    return GST_FLOW_OK;
+  }
 error_map_dst_buffer:
-  gst_video_frame_unmap (&src_frame);
-  // fall-through
+  {
+    gst_video_frame_unmap (&src_frame);
+    // fall-through
+  }
 error_map_src_buffer:
-  GST_WARNING ("failed to map buffer. Skipping this frame");
-  gst_buffer_unref (out_buffer);
-  return GST_FLOW_OK;
+  {
+    GST_WARNING ("failed to map buffer. Skipping this frame");
+    gst_buffer_unref (out_buffer);
+    return GST_FLOW_OK;
+  }
+error_copy_buffer:
+  {
+    GST_WARNING ("failed to upload buffer to VA surface. Skipping this frame");
+    gst_buffer_unref (out_buffer);
+    return GST_FLOW_OK;
+  }
 }
 
 static inline gpointer
@@ -651,19 +674,17 @@ gst_vaapiencode_handle_frame (GstVideoEncoder * venc,
   GstVaapiEncode *const encode = GST_VAAPIENCODE (venc);
   GstFlowReturn ret = GST_FLOW_OK;
   GstVaapiEncoderStatus encoder_ret = GST_VAAPI_ENCODER_STATUS_SUCCESS;
-  GstBuffer *vaapi_buf = NULL;
+  GstBuffer *buf;
   gpointer user_data;
 
   g_assert (encode && encode->encoder);
   g_assert (frame && frame->input_buffer);
 
-  ret =
-      gst_vaapiencode_get_vaapi_buffer (encode, frame->input_buffer,
-      &vaapi_buf);
-  GST_VAAPI_ENCODER_CHECK_STATUS (ret == GST_FLOW_OK, ret,
-      "convert to vaapi buffer failed");
+  ret = get_source_buffer (encode, frame->input_buffer, &buf);
+  if (ret != GST_FLOW_OK)
+    return ret;
 
-  user_data = _create_user_data (vaapi_buf);
+  user_data = _create_user_data (buf);
   GST_VAAPI_ENCODER_CHECK_STATUS (user_data,
       ret, "create frame user data failed");
 
@@ -679,7 +700,7 @@ gst_vaapiencode_handle_frame (GstVideoEncoder * venc,
 
 end:
   gst_video_codec_frame_unref (frame);
-  gst_buffer_replace (&vaapi_buf, NULL);
+  gst_buffer_replace (&buf, NULL);
   return ret;
 }
 
