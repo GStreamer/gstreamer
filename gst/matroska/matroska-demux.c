@@ -5223,19 +5223,14 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
       }
 
       if (videocontext->default_fps > 0.0) {
-        GValue fps_double = { 0, };
-        GValue fps_fraction = { 0, };
+        gint fps_n, fps_d;
 
-        g_value_init (&fps_double, G_TYPE_DOUBLE);
-        g_value_init (&fps_fraction, GST_TYPE_FRACTION);
-        g_value_set_double (&fps_double, videocontext->default_fps);
-        g_value_transform (&fps_double, &fps_fraction);
+        gst_util_double_to_fraction (videocontext->default_fps, &fps_n, &fps_d);
 
-        GST_DEBUG ("using default fps %f", videocontext->default_fps);
+        GST_DEBUG ("using default fps %d/%d", fps_n, fps_d);
 
-        gst_structure_set_value (structure, "framerate", &fps_fraction);
-        g_value_unset (&fps_double);
-        g_value_unset (&fps_fraction);
+        gst_structure_set (structure, "framerate", GST_TYPE_FRACTION, fps_n,
+            fps_d, NULL);
       } else if (context->default_duration > 0) {
         int fps_n, fps_d;
 
