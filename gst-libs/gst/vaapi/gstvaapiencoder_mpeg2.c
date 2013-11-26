@@ -224,7 +224,7 @@ fill_picture (GstVaapiEncoderMpeg2 * encoder,
     GstVaapiCodedBuffer * codedbuf, GstVaapiSurfaceProxy * surface)
 {
   VAEncPictureParameterBufferMPEG2 *pic = picture->param;
-  uint8_t f_code_x, f_code_y;
+  guint8 f_code_x, f_code_y;
 
   memset (pic, 0, sizeof (VAEncPictureParameterBufferMPEG2));
 
