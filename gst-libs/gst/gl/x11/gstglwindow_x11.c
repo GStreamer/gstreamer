@@ -30,6 +30,7 @@
 
 #include "x11_event_source.h"
 #include "gstglwindow_x11.h"
+#include "gstgldisplay_x11.h"
 
 #define GST_GL_WINDOW_X11_GET_PRIVATE(o)  \
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_GL_TYPE_WINDOW_X11, GstGLWindowX11Private))
@@ -74,46 +75,6 @@ gboolean gst_gl_window_x11_open (GstGLWindow * window, GError ** error);
 void gst_gl_window_x11_close (GstGLWindow * window);
 
 static void
-gst_gl_window_x11_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstGLWindowX11 *window_x11;
-
-  g_return_if_fail (GST_GL_IS_WINDOW_X11 (object));
-
-  window_x11 = GST_GL_WINDOW_X11 (object);
-
-  switch (prop_id) {
-    case ARG_DISPLAY:
-      window_x11->display_name = g_strdup (g_value_get_string (value));
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_gl_window_x11_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstGLWindowX11 *window_x11;
-
-  g_return_if_fail (GST_GL_IS_WINDOW_X11 (object));
-
-  window_x11 = GST_GL_WINDOW_X11 (object);
-
-  switch (prop_id) {
-    case ARG_DISPLAY:
-      g_value_set_string (value, window_x11->display_name);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
 gst_gl_window_x11_finalize (GObject * object)
 {
   GstGLWindowX11 *window_x11;
@@ -135,13 +96,7 @@ gst_gl_window_x11_class_init (GstGLWindowX11Class * klass)
 
   g_type_class_add_private (klass, sizeof (GstGLWindowX11Private));
 
-  obj_class->set_property = gst_gl_window_x11_set_property;
-  obj_class->get_property = gst_gl_window_x11_get_property;
   obj_class->finalize = gst_gl_window_x11_finalize;
-
-  g_object_class_install_property (obj_class, ARG_DISPLAY,
-      g_param_spec_string ("display", "Display", "X Display name", NULL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   window_class->get_display = GST_DEBUG_FUNCPTR (gst_gl_window_x11_get_display);
   window_class->set_window_handle =
@@ -169,9 +124,15 @@ gst_gl_window_x11_init (GstGLWindowX11 * window)
 
 /* Must be called in the gl thread */
 GstGLWindowX11 *
-gst_gl_window_x11_new (void)
+gst_gl_window_x11_new (GstGLDisplay * display)
 {
   GstGLWindowX11 *window = NULL;
+
+  if ((display->type & GST_GL_DISPLAY_TYPE_X11) == GST_GL_DISPLAY_TYPE_NONE) {
+    GST_INFO ("Wrong display type %u for this window type %u", display->type,
+        GST_GL_DISPLAY_TYPE_X11);
+    return NULL;
+  }
 
   window = g_object_new (GST_GL_TYPE_WINDOW_X11, NULL);
 
@@ -182,8 +143,10 @@ gboolean
 gst_gl_window_x11_open (GstGLWindow * window, GError ** error)
 {
   GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
+  GstGLDisplayX11 *display_x11 = (GstGLDisplayX11 *) window->display;
 
-  window_x11->device = XOpenDisplay (window_x11->display_name);
+  window_x11->device = XOpenDisplay (display_x11->name);
+//  window_x11->device = display_x11->display;
   if (window_x11->device == NULL) {
     g_set_error (error, GST_GL_WINDOW_ERROR,
         GST_GL_WINDOW_ERROR_RESOURCE_UNAVAILABLE,
@@ -195,13 +158,12 @@ gst_gl_window_x11_open (GstGLWindow * window, GError ** error)
 
   GST_LOG ("gl device id: %ld", (gulong) window_x11->device);
 
-  window_x11->disp_send = XOpenDisplay (window_x11->display_name);
+//  window_x11->disp_send = XOpenDisplay (DisplayString (display_x11->display));
+  window_x11->disp_send = XOpenDisplay (display_x11->name);
 
   XSynchronize (window_x11->disp_send, FALSE);
 
   GST_LOG ("gl display sender: %ld", (gulong) window_x11->disp_send);
-
-  g_assert (window_x11->device);
 
   window_x11->screen = DefaultScreenOfDisplay (window_x11->device);
   window_x11->screen_num = DefaultScreen (window_x11->device);
@@ -279,8 +241,8 @@ gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
 
   XSync (window_x11->device, FALSE);
 
-  XSetWindowBackgroundPixmap (window_x11->device, window_x11->internal_win_id,
-      None);
+  XSetWindowBackgroundPixmap (window_x11->device,
+      window_x11->internal_win_id, None);
 
   GST_LOG ("gl window id: %lud", (gulong) window_x11->internal_win_id);
   GST_LOG ("gl window props: x:%d y:%d", x, y);
@@ -289,8 +251,8 @@ gst_gl_window_x11_create_window (GstGLWindowX11 * window_x11)
   if (wm_atoms[0] == None)
     GST_DEBUG ("Cannot create WM_DELETE_WINDOW");
 
-  XSetWMProtocols (window_x11->device, window_x11->internal_win_id, wm_atoms,
-      1);
+  XSetWMProtocols (window_x11->device, window_x11->internal_win_id,
+      wm_atoms, 1);
 
   wm_hints.flags = StateHint;
   wm_hints.initial_state = NormalState;
@@ -330,8 +292,6 @@ gst_gl_window_x11_close (GstGLWindow * window)
     while (XPending (window_x11->device))
       XNextEvent (window_x11->device, &event);
 
-    XSetCloseDownMode (window_x11->device, DestroyAll);
-
     /*XAddToSaveSet (display, w)
        Display *display;
        Window w; */
@@ -360,46 +320,6 @@ gst_gl_window_x11_close (GstGLWindow * window)
   window_x11->running = FALSE;
 
   g_mutex_unlock (&window_x11->disp_send_lock);
-}
-
-guintptr
-gst_gl_window_x11_get_gl_context (GstGLWindow * window)
-{
-  GstGLWindowX11Class *window_class;
-
-  window_class = GST_GL_WINDOW_X11_GET_CLASS (window);
-
-  return window_class->get_gl_context (GST_GL_WINDOW_X11 (window));
-}
-
-static void
-callback_activate (GstGLWindow * window)
-{
-  GstGLWindowX11Class *window_class;
-  GstGLWindowX11Private *priv;
-  GstGLWindowX11 *window_x11;
-
-  window_x11 = GST_GL_WINDOW_X11 (window);
-  window_class = GST_GL_WINDOW_X11_GET_CLASS (window_x11);
-  priv = window_x11->priv;
-
-  priv->activate_result = window_class->activate (window_x11, priv->activate);
-}
-
-gboolean
-gst_gl_window_x11_activate (GstGLWindow * window, gboolean activate)
-{
-  GstGLWindowX11 *window_x11;
-  GstGLWindowX11Private *priv;
-
-  window_x11 = GST_GL_WINDOW_X11 (window);
-  priv = window_x11->priv;
-  priv->activate = activate;
-
-  gst_gl_window_send_message (window, GST_GL_WINDOW_CB (callback_activate),
-      window_x11);
-
-  return priv->activate_result;
 }
 
 /* Not called by the gl thread */
@@ -593,7 +513,6 @@ gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11)
   GstGLContext *context;
   GstGLContextClass *context_class;
   GstGLWindow *window;
-
   gboolean ret = TRUE;
 
   window = GST_GL_WINDOW (window_x11);
@@ -773,9 +692,7 @@ gst_gl_window_x11_untrap_x_errors (void)
 guintptr
 gst_gl_window_x11_get_display (GstGLWindow * window)
 {
-  GstGLWindowX11 *window_x11;
-
-  window_x11 = GST_GL_WINDOW_X11 (window);
+  GstGLWindowX11 *window_x11 = GST_GL_WINDOW_X11 (window);
 
   return (guintptr) window_x11->device;
 }

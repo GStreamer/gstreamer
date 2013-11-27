@@ -75,6 +75,8 @@ struct _GstGLDisplay
 struct _GstGLDisplayClass
 {
   GstObjectClass object_class;
+
+  guintptr (*get_handle)      (GstGLDisplay * display);
 };
 
 GstGLDisplay *gst_gl_display_new (void);
@@ -84,6 +86,7 @@ GstGLDisplay *gst_gl_display_new (void);
 
 GstGLAPI       gst_gl_display_get_gl_api             (GstGLDisplay * display);
 gpointer       gst_gl_display_get_gl_vtable          (GstGLDisplay * display);
+guintptr       gst_gl_display_get_handle             (GstGLDisplay * display);
 
 #define GST_GL_DISPLAY_CONTEXT_TYPE "gst.gl.GLDisplay"
 void     gst_context_set_gl_display (GstContext * context, GstGLDisplay * display);

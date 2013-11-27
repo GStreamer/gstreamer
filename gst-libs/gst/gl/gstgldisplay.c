@@ -39,6 +39,10 @@
 #include "gl.h"
 #include "gstgldisplay.h"
 
+#if GST_GL_HAVE_WINDOW_X11
+#include <gst/gl/x11/gstgldisplay_x11.h>
+#endif
+
 GST_DEBUG_CATEGORY_STATIC (gst_context);
 GST_DEBUG_CATEGORY_STATIC (gst_gl_display_debug);
 #define GST_CAT_DEFAULT gst_gl_display_debug
@@ -54,23 +58,22 @@ G_DEFINE_TYPE_WITH_CODE (GstGLDisplay, gst_gl_display, G_TYPE_OBJECT,
   (G_TYPE_INSTANCE_GET_PRIVATE((o), GST_TYPE_GL_DISPLAY, GstGLDisplayPrivate))
 
 static void gst_gl_display_finalize (GObject * object);
+static guintptr gst_gl_display_default_get_handle (GstGLDisplay * display);
 
 struct _GstGLDisplayPrivate
 {
   gint dummy;
 };
 
-/*------------------------------------------------------------
-  --------------------- For klass GstGLDisplay ---------------
-  ----------------------------------------------------------*/
 static void
 gst_gl_display_class_init (GstGLDisplayClass * klass)
 {
   g_type_class_add_private (klass, sizeof (GstGLDisplayPrivate));
 
+  klass->get_handle = gst_gl_display_default_get_handle;
+
   G_OBJECT_CLASS (klass)->finalize = gst_gl_display_finalize;
 }
-
 
 static void
 gst_gl_display_init (GstGLDisplay * display)
@@ -108,7 +111,32 @@ gst_gl_display_finalize (GObject * object)
 GstGLDisplay *
 gst_gl_display_new (void)
 {
-  return g_object_new (GST_TYPE_GL_DISPLAY, NULL);
+  GstGLDisplay *display = NULL;
+  const gchar *user_choice;
+  static volatile gsize _init = 0;
+
+  if (g_once_init_enter (&_init)) {
+    GST_DEBUG_CATEGORY_INIT (gst_gl_display_debug, "gldisplay", 0,
+        "gldisplay element");
+    g_once_init_leave (&_init, 1);
+  }
+
+  user_choice = g_getenv ("GST_GL_WINDOW");
+  GST_INFO ("creating a window, user choice:%s", user_choice);
+
+#if GST_GL_HAVE_WINDOW_X11
+  if (!display && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
+    display = GST_GL_DISPLAY (gst_gl_display_x11_new (NULL));
+#endif
+  if (!display) {
+    /* subclass returned a NULL window */
+    GST_WARNING ("Could not create display. user specified %s, creating dummy",
+        user_choice ? user_choice : "(null)");
+
+    return g_object_new (GST_TYPE_GL_DISPLAY, NULL);
+  }
+
+  return display;
 }
 
 GstGLAPI
@@ -117,6 +145,24 @@ gst_gl_display_get_gl_api (GstGLDisplay * display)
   g_return_val_if_fail (GST_IS_GL_DISPLAY (display), GST_GL_API_NONE);
 
   return display->gl_api;
+}
+
+guintptr
+gst_gl_display_get_handle (GstGLDisplay * display)
+{
+  GstGLDisplayClass *klass;
+
+  g_return_val_if_fail (GST_IS_GL_DISPLAY (display), 0);
+  klass = GST_GL_DISPLAY_GET_CLASS (display);
+  g_return_val_if_fail (klass->get_handle != NULL, 0);
+
+  return klass->get_handle (display);
+}
+
+static guintptr
+gst_gl_display_default_get_handle (GstGLDisplay * display)
+{
+  return 0;
 }
 
 /**

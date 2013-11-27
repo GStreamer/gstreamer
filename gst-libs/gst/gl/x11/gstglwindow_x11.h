@@ -54,7 +54,6 @@ struct _GstGLWindowX11
   gboolean      allow_extra_expose_events;
 
   /* opengl context */
-  gchar        *display_name;
   Display      *device;
   Screen       *screen;
   gint          screen_num;
@@ -95,21 +94,13 @@ struct _GstGLWindowX11Class {
   /*< private >*/
   GstGLWindowClass parent_class;
 
-  gboolean (*choose_format)    (GstGLWindowX11 *window, GError ** error);
-  gboolean (*create_context)   (GstGLWindowX11 *window, GstGLAPI gl_api,
-                                guintptr external_gl_context, GError ** error);
-  void     (*swap_buffers)     (GstGLWindowX11 *window);
-  gboolean (*activate)         (GstGLWindowX11 *window, gboolean activate);
-  void     (*destroy_context)  (GstGLWindowX11 *window);
-  guintptr (*get_gl_context)   (GstGLWindowX11 *window);
-
   /*< private >*/
   gpointer _reserved[GST_PADDING_LARGE];
 };
 
 GType gst_gl_window_x11_get_type     (void);
 
-GstGLWindowX11 * gst_gl_window_x11_new (void);
+GstGLWindowX11 * gst_gl_window_x11_new (GstGLDisplay * display);
 
 void gst_gl_window_x11_trap_x_errors (void);
 gint gst_gl_window_x11_untrap_x_errors (void);

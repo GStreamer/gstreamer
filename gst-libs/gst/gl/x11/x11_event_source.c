@@ -26,6 +26,7 @@
 #include <stdlib.h>
 
 #include "x11_event_source.h"
+#include "gstgldisplay_x11.h"
 
 extern gboolean gst_gl_window_x11_handle_event (GstGLWindowX11 * window_x11);
 
@@ -45,7 +46,7 @@ x11_event_source_prepare (GSource * base, gint * timeout)
 
   *timeout = -1;
 
-  retval = XPending (source->window->device);   //clutter_events_pending ();
+  retval = XPending (source->window->device);
 
   return retval;
 }
@@ -56,7 +57,7 @@ x11_event_source_check (GSource * base)
   X11EventSource *source = (X11EventSource *) base;
   gboolean retval;
 
-  retval = source->pfd.revents; // || clutter_events_pending();
+  retval = source->pfd.revents;
 
   return retval;
 }
@@ -89,7 +90,7 @@ x11_event_source_new (GstGLWindowX11 * window_x11)
   source = (X11EventSource *)
       g_source_new (&x11_event_source_funcs, sizeof (X11EventSource));
   source->window = window_x11;
-  source->pfd.fd = ConnectionNumber (window_x11->device);
+  source->pfd.fd = ConnectionNumber (source->window->device);
   source->pfd.events = G_IO_IN | G_IO_ERR;
   g_source_add_poll (&source->source, &source->pfd);
 

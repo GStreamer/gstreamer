@@ -31,6 +31,7 @@
 
 #if GST_GL_HAVE_WINDOW_X11
 #include "../x11/gstglwindow_x11.h"
+#include <gst/gl/x11/gstgldisplay_x11.h>
 #endif
 #if GST_GL_HAVE_WINDOW_WIN32
 #include "../win32/gstglwindow_win32.h"
@@ -232,13 +233,24 @@ gst_gl_context_egl_create_context (GstGLContext * context,
     goto failure;
   }
 
-  if (other_context) {
-    GstGLContextEGL *other_egl = (GstGLContextEGL *) other_context;
-    egl->egl_display = other_egl->egl_display;
-  } else {
-    egl->egl_display = eglGetDisplay ((EGLNativeDisplayType)
-        gst_gl_window_get_display (window));
+  display = gst_gl_context_get_display (context);
+  native_display = gst_gl_display_get_handle (display);
+
+  if (!native_display) {
+    GstGLWindow *window = NULL;
+
+    if (other_context)
+      window = gst_gl_context_get_window (other_context);
+    if (!window)
+      window = gst_gl_context_get_window (context);
+    if (window) {
+      native_display = gst_gl_window_get_display (window);
+      gst_object_unref (window);
+    }
   }
+
+  egl->egl_display = eglGetDisplay ((EGLNativeDisplayType) native_display);
+  gst_object_unref (display);
 
   if (eglInitialize (egl->egl_display, &majorVersion, &minorVersion)) {
     GST_INFO ("egl initialized, version: %d.%d", majorVersion, minorVersion);
