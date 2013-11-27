@@ -26,7 +26,9 @@
 #include "gst/vaapi/gstvaapiencoder_mpeg2_priv.h"
 #include "gstvaapiencode_mpeg2.h"
 #include "gstvaapipluginutil.h"
+#if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideomemory.h"
+#endif
 
 GST_DEBUG_CATEGORY_STATIC (gst_vaapi_mpeg2_encode_debug);
 #define GST_CAT_DEFAULT gst_vaapi_mpeg2_encode_debug
@@ -41,7 +43,13 @@ static const char gst_vaapiencode_mpeg2_sink_caps_str[] =
   GST_VAAPI_SURFACE_CAPS ", "
 #endif
   GST_CAPS_INTERLACED_FALSE "; "
+#if GST_CHECK_VERSION(1,0,0)
   GST_VIDEO_CAPS_MAKE (GST_VIDEO_FORMATS_ALL) ", "
+#else
+  "video/x-raw-yuv, "
+  "width  = (int) [ 1, MAX ], "
+  "height = (int) [ 1, MAX ], "
+#endif
   GST_CAPS_INTERLACED_FALSE;
 
 static const char gst_vaapiencode_mpeg2_src_caps_str[] =

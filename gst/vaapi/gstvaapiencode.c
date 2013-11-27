@@ -27,8 +27,10 @@
 #include "gstvaapivideocontext.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideometa.h"
+#if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideomemory.h"
 #include "gstvaapivideobufferpool.h"
+#endif
 
 #define GST_PLUGIN_NAME "vaapiencode"
 #define GST_PLUGIN_DESC "A VA-API based video encoder"
@@ -107,11 +109,49 @@ G_DEFINE_TYPE_WITH_CODE (GstVaapiEncode,
 #endif
     )
 
-static gboolean
-gst_vaapiencode_query (GstPad * pad, GstObject * parent,
-    GstQuery * query)
+static inline gboolean
+ensure_display (GstVaapiEncode * encode)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (parent);
+  return gst_vaapi_ensure_display (encode,
+      GST_VAAPI_DISPLAY_TYPE_ANY, &encode->display);
+}
+
+static gboolean
+ensure_uploader (GstVaapiEncode * encode)
+{
+#if !GST_CHECK_VERSION(1,0,0)
+  if (!ensure_display (encode))
+    return FALSE;
+
+  if (!encode->uploader) {
+    encode->uploader = gst_vaapi_uploader_new (encode->display);
+    if (!encode->uploader)
+      return FALSE;
+  }
+
+  if (!gst_vaapi_uploader_ensure_display (encode->uploader, encode->display))
+    return FALSE;
+#endif
+  return TRUE;
+}
+
+static gboolean
+ensure_uploader_caps (GstVaapiEncode * encode)
+{
+#if !GST_CHECK_VERSION(1,0,0)
+  if (GST_VIDEO_INFO_IS_YUV (&encode->sink_video_info) &&
+      !gst_vaapi_uploader_ensure_caps (encode->uploader, encode->sinkpad_caps,
+          NULL))
+    return FALSE;
+#endif
+  return TRUE;
+}
+
+static gboolean
+gst_vaapiencode_query (GST_PAD_QUERY_FUNCTION_ARGS)
+{
+  GstVaapiEncode *const encode =
+      GST_VAAPIENCODE_CAST (gst_pad_get_parent_element (pad));
   gboolean success;
 
   GST_INFO_OBJECT(encode, "query type %s", GST_QUERY_TYPE_NAME(query));
@@ -119,9 +159,13 @@ gst_vaapiencode_query (GstPad * pad, GstObject * parent,
   if (gst_vaapi_reply_to_query (query, encode->display))
     success = TRUE;
   else if (GST_PAD_IS_SINK (pad))
-    success = encode->sinkpad_query (pad, parent, query);
+    success = GST_PAD_QUERY_FUNCTION_CALL (encode->sinkpad_query,
+        encode->sinkpad, parent, query);
   else
-    success = encode->srcpad_query (pad, parent, query);;
+    success = GST_PAD_QUERY_FUNCTION_CALL (encode->srcpad_query,
+        encode->srcpad, parent, query);
+
+  gst_object_unref (encode);
   return success;
 }
 
@@ -129,7 +173,6 @@ static GstFlowReturn
 gst_vaapiencode_default_allocate_buffer (GstVaapiEncode * encode,
     GstVaapiCodedBuffer * coded_buf, GstBuffer ** outbuf_ptr)
 {
-  GstVideoEncoder *const venc = GST_VIDEO_ENCODER_CAST (encode);
   GstBuffer *buf;
   gint32 buf_size;
 
@@ -143,7 +186,13 @@ gst_vaapiencode_default_allocate_buffer (GstVaapiEncode * encode,
   if (buf_size <= 0)
     goto error_invalid_buffer;
 
-  buf = gst_video_encoder_allocate_output_buffer (venc, buf_size);
+#if GST_CHECK_VERSION(1,0,0)
+  buf =
+      gst_video_encoder_allocate_output_buffer (GST_VIDEO_ENCODER_CAST (encode),
+      buf_size);
+#else
+  buf = gst_buffer_new_and_alloc (buf_size);
+#endif
   if (!buf)
     goto error_create_buffer;
   if (!gst_vaapi_coded_buffer_get_buffer (coded_buf, buf))
@@ -240,12 +289,14 @@ gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 ms_timeout)
           gst_caps_ref (encode->srcpad_caps), old_state);
       gst_video_codec_state_unref (old_state);
       gst_video_codec_state_unref (new_state);
+#if GST_CHECK_VERSION(1,0,0)
       if (!gst_video_encoder_negotiate (GST_VIDEO_ENCODER_CAST (encode))) {
         GST_ERROR ("failed to negotiate with caps %" GST_PTR_FORMAT,
             encode->srcpad_caps);
         ret = GST_FLOW_NOT_NEGOTIATED;
         goto error_unlock;
       }
+#endif
       GST_DEBUG ("updated srcpad caps to: %" GST_PTR_FORMAT,
           encode->srcpad_caps);
     }
@@ -294,11 +345,25 @@ gst_vaapiencode_get_caps_impl (GstVideoEncoder * venc)
 
   if (encode->sinkpad_caps)
     caps = gst_caps_ref (encode->sinkpad_caps);
-  else
+  else {
+#if GST_CHECK_VERSION(1,0,0)
     caps = gst_pad_get_pad_template_caps (encode->sinkpad);
+#else
+    caps = gst_caps_from_string (GST_VAAPI_SURFACE_CAPS);
+
+    if (caps && ensure_uploader (encode)) {
+      GstCaps *const yuv_caps = gst_vaapi_uploader_get_caps (encode->uploader);
+      if (yuv_caps) {
+        caps = gst_caps_make_writable (caps);
+        gst_caps_append (caps, gst_caps_copy (yuv_caps));
+      }
+    }
+#endif
+  }
   return caps;
 }
 
+#if GST_CHECK_VERSION(1,0,0)
 static GstCaps *
 gst_vaapiencode_get_caps (GstVideoEncoder * venc, GstCaps * filter)
 {
@@ -312,23 +377,22 @@ gst_vaapiencode_get_caps (GstVideoEncoder * venc, GstCaps * filter)
   }
   return out_caps;
 }
+#else
+#define gst_vaapiencode_get_caps gst_vaapiencode_get_caps_impl
+#endif
 
 static gboolean
 gst_vaapiencode_destroy (GstVaapiEncode * encode)
 {
   gst_vaapi_encoder_replace (&encode->encoder, NULL);
+#if GST_CHECK_VERSION(1,0,0)
   g_clear_object (&encode->video_buffer_pool);
+#endif
+  g_clear_object (&encode->uploader);
   gst_caps_replace (&encode->sinkpad_caps, NULL);
   gst_caps_replace (&encode->srcpad_caps, NULL);
   gst_vaapi_display_replace (&encode->display, NULL);
   return TRUE;
-}
-
-static inline gboolean
-ensure_display (GstVaapiEncode * encode)
-{
-  return gst_vaapi_ensure_display (encode,
-      GST_VAAPI_DISPLAY_TYPE_ANY, &encode->display);
 }
 
 static gboolean
@@ -339,6 +403,10 @@ ensure_encoder (GstVaapiEncode * encode)
   g_return_val_if_fail (klass->create_encoder, FALSE);
 
   if (!ensure_display (encode))
+    return FALSE;
+  if (!ensure_uploader (encode))
+    return FALSE;
+  if (!ensure_uploader_caps (encode))
     return FALSE;
 
   encode->encoder = klass->create_encoder (encode, encode->display);
@@ -375,6 +443,17 @@ gst_vaapiencode_update_sink_caps (GstVaapiEncode * encode,
 {
   gst_caps_replace (&encode->sinkpad_caps, state->caps);
   encode->sink_video_info = state->info;
+
+#if !GST_CHECK_VERSION(1,0,0)
+  if (GST_VIDEO_INFO_IS_YUV (&encode->sink_video_info)) {
+    /* Ensure the uploader is set up for upstream allocated buffers */
+    GstVaapiUploader *const uploader = encode->uploader;
+    if (!gst_vaapi_uploader_ensure_display (uploader, encode->display))
+      return FALSE;
+    if (!gst_vaapi_uploader_ensure_caps (uploader, state->caps, NULL))
+      return FALSE;
+  }
+#endif
   return TRUE;
 }
 
@@ -440,6 +519,7 @@ static gboolean
 gst_vaapiencode_ensure_video_buffer_pool (GstVaapiEncode * encode,
     GstCaps * caps)
 {
+#if GST_CHECK_VERSION(1,0,0)
   GstBufferPool *pool;
   GstCaps *pool_caps;
   GstStructure *config;
@@ -496,6 +576,9 @@ error_pool_config:
     gst_object_unref (pool);
     return FALSE;
   }
+#else
+  return TRUE;
+#endif
 }
 
 static gboolean
@@ -515,11 +598,13 @@ gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
   if (!gst_vaapiencode_update_src_caps (encode, state))
     return FALSE;
 
+#if GST_CHECK_VERSION(1,0,0)
   if (encode->out_caps_done && !gst_video_encoder_negotiate (venc)) {
     GST_ERROR ("failed to negotiate with caps %" GST_PTR_FORMAT,
         encode->srcpad_caps);
     return FALSE;
   }
+#endif
 
   return gst_pad_start_task (encode->srcpad,
       (GstTaskFunction) gst_vaapiencode_buffer_loop, encode, NULL);
@@ -544,8 +629,10 @@ get_source_buffer (GstVaapiEncode * encode, GstBuffer * src_buffer,
 {
   GstVaapiVideoMeta *meta;
   GstBuffer *out_buffer;
+#if GST_CHECK_VERSION(1,0,0)
   GstVideoFrame src_frame, out_frame;
   gboolean success;
+#endif
 
   *out_buffer_ptr = NULL;
   meta = gst_buffer_get_vaapi_video_meta (src_buffer);
@@ -554,6 +641,7 @@ get_source_buffer (GstVaapiEncode * encode, GstBuffer * src_buffer,
     return GST_FLOW_OK;
   }
 
+#if GST_CHECK_VERSION(1,0,0)
   if (!GST_VIDEO_INFO_IS_YUV (&encode->sink_video_info))
     goto error_invalid_buffer;
 
@@ -605,11 +693,6 @@ error_activate_pool:
     GST_ERROR ("failed to activate buffer pool");
     return GST_FLOW_ERROR;
   }
-error_create_buffer:
-  {
-    GST_WARNING ("failed to create buffer. Skipping this frame");
-    return GST_FLOW_OK;
-  }
 error_map_dst_buffer:
   {
     gst_video_frame_unmap (&src_frame);
@@ -619,6 +702,26 @@ error_map_src_buffer:
   {
     GST_WARNING ("failed to map buffer. Skipping this frame");
     gst_buffer_unref (out_buffer);
+    return GST_FLOW_OK;
+  }
+#else
+  out_buffer = gst_vaapi_uploader_get_buffer (encode->uploader);
+  if (!out_buffer)
+    goto error_create_buffer;
+  if (!gst_vaapi_uploader_process (encode->uploader, src_buffer, out_buffer))
+    goto error_copy_buffer;
+
+  gst_buffer_copy_metadata (out_buffer, src_buffer,
+      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
+
+  *out_buffer_ptr = out_buffer;
+  return GST_FLOW_OK;
+#endif
+
+  /* ERRORS */
+error_create_buffer:
+  {
+    GST_WARNING ("failed to create buffer. Skipping this frame");
     return GST_FLOW_OK;
   }
 error_copy_buffer:
@@ -723,6 +826,7 @@ gst_vaapiencode_finish (GstVideoEncoder * venc)
   return ret;
 }
 
+#if GST_CHECK_VERSION(1,0,0)
 static gboolean
 gst_vaapiencode_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
 {
@@ -752,6 +856,7 @@ error_no_caps:
     return FALSE;
   }
 }
+#endif
 
 static void
 gst_vaapiencode_finalize (GObject * object)
@@ -809,8 +914,10 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
   venc_class->finish = GST_DEBUG_FUNCPTR (gst_vaapiencode_finish);
   venc_class->getcaps = GST_DEBUG_FUNCPTR (gst_vaapiencode_get_caps);
 
+#if GST_CHECK_VERSION(1,0,0)
   venc_class->propose_allocation =
       GST_DEBUG_FUNCPTR (gst_vaapiencode_propose_allocation);
+#endif
 
   klass->allocate_buffer = gst_vaapiencode_default_allocate_buffer;
 

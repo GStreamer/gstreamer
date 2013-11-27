@@ -1643,7 +1643,9 @@ gst_vaapi_encoder_h264_set_format (GstVaapiEncoder * base,
   else                          /* need codec data later */
     encoder->is_avc = TRUE;
 
+#if GST_CHECK_VERSION(1,0,0)
   result = gst_caps_fixate (result);
+#endif
 
   if (!init_encoder_public_attributes (encoder)) {
     GST_WARNING ("encoder ensure public attributes failed ");

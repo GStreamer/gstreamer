@@ -26,6 +26,7 @@
 #include <gst/video/gstvideoencoder.h>
 #include <gst/vaapi/gstvaapiencoder.h>
 #include "gst/vaapi/gstvaapiencoder_objects.h"
+#include "gstvaapiuploader.h"
 
 G_BEGIN_DECLS
 
@@ -63,8 +64,11 @@ struct _GstVaapiEncode
 
   GstVaapiDisplay *display;
   GstVaapiEncoder *encoder;
+  GstVaapiUploader *uploader;
 
+#if GST_CHECK_VERSION(1,0,0)
   GstBufferPool *video_buffer_pool;
+#endif
   guint video_buffer_size;
 
   guint32 is_running:1;

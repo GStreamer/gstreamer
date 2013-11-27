@@ -670,7 +670,9 @@ gst_vaapi_encoder_mpeg2_set_format (GstVaapiEncoder * base,
   result = gst_caps_intersect (tmp, ref_caps);
   gst_caps_unref (tmp);
 
+#if GST_CHECK_VERSION(1,0,0)
   result = gst_caps_fixate (result);
+#endif
 
   if (!ensure_public_attributes (encoder)) {
     GST_WARNING ("encoder ensure public attributes failed ");

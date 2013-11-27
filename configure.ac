@@ -706,11 +706,6 @@ if test "$enable_encoders" = "yes"; then
             ])
         CPPFLAGS="$saved_CPPFLAGS"
     fi
-
-    if test "$USE_GST_API_1_0p" != "yes"; then
-        AC_MSG_WARN([GStreamer API < 1.0, disabling encoders])
-        USE_ENCODERS=0
-    fi
 fi
 
 dnl VA/Wayland API
