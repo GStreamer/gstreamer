@@ -130,7 +130,7 @@ gst_net_client_clock_class_init (GstNetClientClockClass * klass)
           DEFAULT_PORT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
-   * GstNetClientClock::roundtrip-limit:
+   * GstNetClientClock::round-trip-limit:
    *
    * Maximum allowed round-trip for packets. If this property is set to a nonzero
    * value, all packets with a round-trip interval larger than this limit will be
@@ -311,17 +311,9 @@ gst_net_client_clock_observe_times (GstNetClientClock * self,
   return;
 
 bogus_observation:
-  {
-    GST_WARNING_OBJECT (self,
-        "bogus round-trip interval; too long round trip or "
-        "receive time < send time (%" GST_TIME_FORMAT " - %" GST_TIME_FORMAT
-        " => %" GST_TIME_FORMAT ")", GST_TIME_ARGS (local_1),
-        GST_TIME_ARGS (local_2), GST_TIME_ARGS (rtt));
-    /* Schedule a new packet again soon */
-    self->priv->timeout_expiration =
-        gst_util_get_timestamp () + (GST_SECOND / 4);
-    return;
-  }
+  /* Schedule a new packet again soon */
+  self->priv->timeout_expiration = gst_util_get_timestamp () + (GST_SECOND / 4);
+  return;
 }
 
 static gpointer
