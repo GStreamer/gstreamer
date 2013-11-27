@@ -107,6 +107,9 @@ typedef struct {
 #undef  gst_buffer_new_wrapped_full
 #define gst_buffer_new_wrapped_full(flags, data, maxsize, ofs, size, ud, udd) \
     gst_compat_buffer_new_wrapped_full(flags, data, maxsize, ofs, size, ud, udd)
+#undef  gst_buffer_new_allocate
+#define gst_buffer_new_allocate(allocator, size, params) \
+    gst_compat_buffer_new_allocate((allocator), (size), (params))
 #undef  gst_buffer_get_size
 #define gst_buffer_get_size(buffer)     gst_compat_buffer_get_size(buffer)
 #undef  gst_buffer_map
@@ -116,6 +119,9 @@ typedef struct {
 #undef  gst_buffer_extract
 #define gst_buffer_extract(buffer, offset, dest, size) \
     gst_compat_buffer_extract(buffer, offset, dest, size)
+#undef  gst_buffer_fill
+#define gst_buffer_fill(buffer, offset, src, size) \
+    gst_compat_buffer_fill((buffer), (offset), (src), (size))
 #undef  gst_buffer_copy_into
 #define gst_buffer_copy_into(dest, src, flags, offset, size) \
     gst_compat_buffer_copy_into(dest, src, flags, offset, size)
@@ -128,8 +134,6 @@ gst_compat_buffer_new_wrapped_full(GstMemoryFlags flags, gpointer data,
     GstBuffer *buffer;
 
     /* XXX: unsupported */
-    g_return_val_if_fail(user_data == NULL, NULL);
-    g_return_val_if_fail(notify == NULL, NULL);
     g_return_val_if_fail(maxsize >= size, NULL);
 
     buffer = gst_buffer_new();
@@ -138,7 +142,21 @@ gst_compat_buffer_new_wrapped_full(GstMemoryFlags flags, gpointer data,
 
     GST_BUFFER_DATA(buffer) = data + offset;
     GST_BUFFER_SIZE(buffer) = size;
+
+    if (notify)
+        gst_mini_object_weak_ref(GST_MINI_OBJECT_CAST(buffer),
+            (GstMiniObjectWeakNotify)notify, user_data);
     return buffer;
+}
+
+static inline GstBuffer *
+gst_compat_buffer_new_allocate(gpointer allocator, gsize size, gpointer params)
+{
+    /* XXX: unsupported */
+    g_return_val_if_fail(allocator == NULL, NULL);
+    g_return_val_if_fail(params == NULL, NULL);
+
+    return gst_buffer_new_and_alloc(size);
 }
 
 static inline gsize
@@ -173,6 +191,20 @@ gst_compat_buffer_extract(GstBuffer *buffer, gsize offset, gpointer dest,
     esize = MIN(size, GST_BUFFER_SIZE(buffer) - offset);
     memcpy(dest, GST_BUFFER_DATA(buffer) + offset, esize);
     return esize;
+}
+
+static inline gsize
+gst_compat_buffer_fill(GstBuffer *buffer, gsize offset, gconstpointer src,
+    gsize size)
+{
+    gsize fsize;
+
+    if (!buffer || !src || offset >= GST_BUFFER_SIZE(buffer))
+        return 0;
+
+    fsize = MIN(size, GST_BUFFER_SIZE(buffer) - offset);
+    memcpy(GST_BUFFER_DATA(buffer) + offset, src, fsize);
+    return fsize;
 }
 
 static inline void
