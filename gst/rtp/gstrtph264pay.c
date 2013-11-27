@@ -750,6 +750,7 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
 {
   GstRtpH264Pay *rtph264pay;
   GstFlowReturn ret;
+  guint8 nalHeader;
   guint8 nalType;
   guint packet_len, payload_len, mtu;
   GstBuffer *outbuf;
@@ -762,8 +763,8 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
   rtph264pay = GST_RTP_H264_PAY (basepayload);
   mtu = GST_RTP_BASE_PAYLOAD_MTU (rtph264pay);
 
-  gst_buffer_extract (paybuf, 0, &nalType, 1);
-  nalType &= 0x1f;
+  gst_buffer_extract (paybuf, 0, &nalHeader, 1);
+  nalType = nalHeader & 0x1f;
 
   GST_DEBUG_OBJECT (rtph264pay, "Processing Buffer with NAL TYPE=%d", nalType);
 
@@ -852,14 +853,12 @@ gst_rtp_h264_pay_payload_nal (GstRTPBasePayload * basepayload,
     ret = gst_rtp_base_payload_push_list (basepayload, list);
   } else {
     /* fragmentation Units FU-A */
-    guint8 nalHeader;
     guint limitedSize;
     int ii = 0, start = 1, end = 0, pos = 0;
 
     GST_DEBUG_OBJECT (basepayload,
         "NAL Unit DOES NOT fit in one packet datasize=%d mtu=%d", size, mtu);
 
-    gst_buffer_extract (paybuf, 0, &nalHeader, 1);
     pos++;
     size--;
 
