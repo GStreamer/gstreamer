@@ -324,32 +324,6 @@ if test "$ac_cv_have_gst_video_overlay_hwcaps" = "yes"; then
         [Defined to 1 if GstVideoOverlayComposition API supports HW hints.])
 fi
 
-dnl ... GstVideoDecoder (gstreamer-video)
-AC_CACHE_CHECK([for GstVideoDecoder],
-    ac_cv_have_gst_video_decoder, [
-    saved_CPPFLAGS="$CPPFLAGS"
-    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_VIDEO_CFLAGS"
-    saved_LIBS="$LIBS"
-    LIBS="$LIBS $GST_LIBS $GST_VIDEO_LIBS"
-    AC_COMPILE_IFELSE(
-        [AC_LANG_PROGRAM(
-            [[#include <gst/video/gstvideodecoder.h>]],
-            [[GstVideoCodecFrame *f;
-              GstVideoDecoder vdec;
-              f = g_slice_new0(GstVideoCodecFrame);
-              f->ref_count = 1;
-              gst_video_decoder_have_frame(&vdec);
-              gst_video_decoder_finish_frame(&vdec, f);
-              gst_video_codec_frame_unref(f);]])],
-        [ac_cv_have_gst_video_decoder="yes"],
-        [ac_cv_have_gst_video_decoder="no"]
-    )
-    CPPFLAGS="$saved_CPPFLAGS"
-    LIBS="$saved_LIBS"
-])
-AM_CONDITIONAL([USE_LOCAL_GST_VIDEO_DECODER],
-    [test "$ac_cv_have_gst_video_decoder" != "yes"])
-
 dnl GStreamer -bad plugins (deprecated in GStreamer v1.2)
 if test "$USE_GST_API_1_2p" != "yes"; then
 PKG_CHECK_MODULES([GST_BASEVIDEO],
