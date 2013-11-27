@@ -3,12 +3,17 @@
 noinst_LTLIBRARIES = libgstgl-x11.la
 
 libgstgl_x11_la_SOURCES = \
+	gstgldisplay_x11.c \
 	gstglwindow_x11.c \
 	x11_event_source.c
 
 noinst_HEADERS = \
 	gstglwindow_x11.h \
 	x11_event_source.h
+
+libgstgl_x11includedir = $(includedir)/gstreamer-@GST_API_VERSION@/gst/gl/x11
+libgstgl_x11include_HEADERS = \
+	gstgldisplay_x11.h
 
 if USE_GLX
 libgstgl_x11_la_SOURCES += gstglcontext_glx.c

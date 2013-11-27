@@ -143,7 +143,7 @@ gst_gl_window_new (GstGLDisplay * display)
 #endif
 #if GST_GL_HAVE_WINDOW_X11
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
-    window = GST_GL_WINDOW (gst_gl_window_x11_new ());
+    window = GST_GL_WINDOW (gst_gl_window_x11_new (display));
 #endif
 #if GST_GL_HAVE_WINDOW_WIN32
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "win32")))
