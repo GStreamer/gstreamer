@@ -244,6 +244,16 @@ struct _GstVideoDecoder
  * @flush:              Optional.
  *                      Flush all remaining data from the decoder without
  *                      pushing it downstream. Since: 1.2
+ * @sink_query:     Optional.
+ *                  Query handler on the sink pad. This function should
+ *                  return TRUE if the query could be performed. Subclasses
+ *                  should chain up to the parent implementation to invoke the
+ *                  default handler. Since 1.4
+ * @src_query:      Optional.
+ *                  Query handler on the source pad. This function should
+ *                  return TRUE if the query could be performed. Subclasses
+ *                  should chain up to the parent implementation to invoke the
+ *                  default handler. Since 1.4
  *
  * Subclasses can override any of the available virtual methods or not, as
  * needed. At minimum @handle_frame needs to be overridden, and @set_format
@@ -294,8 +304,15 @@ struct _GstVideoDecoderClass
 
   gboolean      (*flush)              (GstVideoDecoder *decoder);
 
+  gboolean      (*sink_query)     (GstVideoDecoder *decoder,
+				   GstQuery *query);
+
+  gboolean      (*src_query)      (GstVideoDecoder *decoder,
+				   GstQuery *query);
+
+
   /*< private >*/
-  void         *padding[GST_PADDING_LARGE-1];
+  void         *padding[GST_PADDING_LARGE-3];
 };
 
 GType    gst_video_decoder_get_type (void);

@@ -461,6 +461,10 @@ static GstFlowReturn gst_video_decoder_parse_available (GstVideoDecoder * dec,
     gboolean at_eos, gboolean new_buffer);
 static gboolean gst_video_decoder_negotiate_unlocked (GstVideoDecoder *
     decoder);
+static gboolean gst_video_decoder_sink_query_default (GstVideoDecoder * decoder,
+    GstQuery * query);
+static gboolean gst_video_decoder_src_query_default (GstVideoDecoder * decoder,
+    GstQuery * query);
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
@@ -515,6 +519,8 @@ gst_video_decoder_class_init (GstVideoDecoderClass * klass)
   klass->decide_allocation = gst_video_decoder_decide_allocation_default;
   klass->propose_allocation = gst_video_decoder_propose_allocation_default;
   klass->negotiate = gst_video_decoder_negotiate_default;
+  klass->sink_query = gst_video_decoder_sink_query_default;
+  klass->src_query = gst_video_decoder_src_query_default;
 }
 
 static void
@@ -1384,12 +1390,10 @@ gst_video_decoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static gboolean
-gst_video_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+gst_video_decoder_src_query_default (GstVideoDecoder * dec, GstQuery * query)
 {
-  GstVideoDecoder *dec;
+  GstPad *pad = GST_VIDEO_DECODER_SRC_PAD (dec);
   gboolean res = TRUE;
-
-  dec = GST_VIDEO_DECODER (parent);
 
   GST_LOG_OBJECT (dec, "handling query: %" GST_PTR_FORMAT, query);
 
@@ -1432,7 +1436,7 @@ gst_video_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
       GstFormat format;
 
       /* upstream in any case */
-      if ((res = gst_pad_query_default (pad, parent, query)))
+      if ((res = gst_pad_query_default (pad, GST_OBJECT (dec), query)))
         break;
 
       gst_query_parse_duration (query, &format, NULL);
@@ -1498,7 +1502,7 @@ gst_video_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
       break;
     default:
-      res = gst_pad_query_default (pad, parent, query);
+      res = gst_pad_query_default (pad, GST_OBJECT (dec), query);
   }
   return res;
 
@@ -1508,14 +1512,32 @@ error:
 }
 
 static gboolean
-gst_video_decoder_sink_query (GstPad * pad, GstObject * parent,
-    GstQuery * query)
+gst_video_decoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
 {
   GstVideoDecoder *decoder;
+  GstVideoDecoderClass *decoder_class;
+  gboolean ret = FALSE;
+
+  decoder = GST_VIDEO_DECODER (parent);
+  decoder_class = GST_VIDEO_DECODER_GET_CLASS (decoder);
+
+  GST_DEBUG_OBJECT (decoder, "received query %d, %s", GST_QUERY_TYPE (query),
+      GST_QUERY_TYPE_NAME (query));
+
+  if (decoder_class->src_query)
+    ret = decoder_class->src_query (decoder, query);
+
+  return ret;
+}
+
+static gboolean
+gst_video_decoder_sink_query_default (GstVideoDecoder * decoder,
+    GstQuery * query)
+{
+  GstPad *pad = GST_VIDEO_DECODER_SINK_PAD (decoder);
   GstVideoDecoderPrivate *priv;
   gboolean res = FALSE;
 
-  decoder = GST_VIDEO_DECODER (parent);
   priv = decoder->priv;
 
   GST_LOG_OBJECT (decoder, "handling query: %" GST_PTR_FORMAT, query);
@@ -1543,7 +1565,7 @@ gst_video_decoder_sink_query (GstPad * pad, GstObject * parent,
       break;
     }
     default:
-      res = gst_pad_query_default (pad, parent, query);
+      res = gst_pad_query_default (pad, GST_OBJECT (decoder), query);
       break;
   }
 done:
@@ -1552,6 +1574,27 @@ done:
 error:
   GST_DEBUG_OBJECT (decoder, "query failed");
   goto done;
+
+}
+
+static gboolean
+gst_video_decoder_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
+{
+  GstVideoDecoder *decoder;
+  GstVideoDecoderClass *decoder_class;
+  gboolean ret = FALSE;
+
+  decoder = GST_VIDEO_DECODER (parent);
+  decoder_class = GST_VIDEO_DECODER_GET_CLASS (decoder);
+
+  GST_DEBUG_OBJECT (decoder, "received query %d, %s", GST_QUERY_TYPE (query),
+      GST_QUERY_TYPE_NAME (query));
+
+  if (decoder_class->sink_query)
+    ret = decoder_class->sink_query (decoder, query);
+
+  return ret;
 }
 
 typedef struct _Timestamp Timestamp;
