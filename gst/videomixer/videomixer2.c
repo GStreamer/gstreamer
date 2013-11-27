@@ -300,6 +300,7 @@ gst_videomixer2_update_converters (GstVideoMixer2 * mix)
   GstVideoInfo best_info;
   GstVideoMixer2Pad *pad;
   gboolean need_alpha = FALSE;
+  gboolean at_least_one_alpha = FALSE;
   GstCaps *downstream_caps;
   GstCaps *possible_caps;
   gchar *best_colorimetry;
@@ -324,6 +325,9 @@ gst_videomixer2_update_converters (GstVideoMixer2 * mix)
 
     if (!pad->info.finfo)
       continue;
+
+    if (pad->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_ALPHA)
+      at_least_one_alpha = TRUE;
 
     /* If we want alpha, disregard all the other formats */
     if (need_alpha && !(pad->info.finfo->flags & GST_VIDEO_FORMAT_FLAG_ALPHA))
@@ -378,6 +382,14 @@ gst_videomixer2_update_converters (GstVideoMixer2 * mix)
   }
 
   gst_caps_unref (downstream_caps);
+
+  if (at_least_one_alpha
+      && !(best_info.finfo->flags & GST_VIDEO_FORMAT_FLAG_ALPHA)) {
+    GST_ELEMENT_ERROR (mix, CORE, NEGOTIATION,
+        ("At least one of the input pads contains alpha, but downstream can't support alpha."),
+        ("Either convert your inputs to not contain alpha or add a videoconvert after the mixer"));
+    return FALSE;
+  }
 
   best_colorimetry = gst_video_colorimetry_to_string (&(best_info.colorimetry));
   best_chroma = gst_video_chroma_to_string (best_info.chroma_site);
