@@ -920,6 +920,20 @@ gst_v4l2_object_open (GstV4l2Object * v4l2object)
 }
 
 gboolean
+gst_v4l2_object_open_shared (GstV4l2Object * v4l2object, GstV4l2Object * other)
+{
+  gboolean ret;
+
+  ret = gst_v4l2_dup (v4l2object, other);
+
+#ifdef HAVE_XVIDEO
+  gst_v4l2_video_overlay_start (v4l2object);
+#endif
+
+  return ret;
+}
+
+gboolean
 gst_v4l2_object_close (GstV4l2Object * v4l2object)
 {
 #ifdef HAVE_XVIDEO
