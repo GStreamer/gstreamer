@@ -47,6 +47,7 @@
 
 #include "gstv4l2src.h"
 #include "gstv4l2sink.h"
+#include "gstv4l2videodec.h"
 
 #include "gst/gst-i18n-plugin.h"
 
@@ -56,6 +57,13 @@
 #endif
 #ifndef V4L2_CID_VCENTER
 #define V4L2_CID_VCENTER V4L2_CID_VCENTER_DEPRECATED
+#endif
+
+#ifndef V4L2_CAP_VIDEO_M2M
+#define V4L2_CAP_VIDEO_M2M              0x00008000
+#endif
+#ifndef V4L2_CAP_VIDEO_M2M_MPLANE
+#define V4L2_CAP_VIDEO_M2M_MPLANE       0x00004000
 #endif
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
@@ -581,6 +589,16 @@ gst_v4l2_open (GstV4l2Object * v4l2object)
               V4L2_CAP_VIDEO_OUTPUT_MPLANE)))
     goto not_output;
 
+  if (GST_IS_V4L2_VIDEO_DEC (v4l2object->element) &&
+      /* Today's M2M device only expose M2M */
+      !((v4l2object->vcap.capabilities & (V4L2_CAP_VIDEO_M2M |
+                  V4L2_CAP_VIDEO_M2M_MPLANE)) ||
+          /* But legacy driver may expose both CAPTURE and OUTPUT */
+          ((v4l2object->vcap.capabilities &
+                  (V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_VIDEO_CAPTURE_MPLANE)) &&
+              (v4l2object->vcap.capabilities &
+                  (V4L2_CAP_VIDEO_OUTPUT | V4L2_CAP_VIDEO_OUTPUT_MPLANE)))))
+    goto not_m2m;
 
   gst_v4l2_adjust_buf_type (v4l2object);
 
@@ -646,6 +664,14 @@ not_output:
   {
     GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
         (_("Device '%s' is not a output device."),
+            v4l2object->videodev),
+        ("Capabilities: 0x%x", v4l2object->vcap.capabilities));
+    goto error;
+  }
+not_m2m:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, NOT_FOUND,
+        (_("Device '%s' is not a M2M device."),
             v4l2object->videodev),
         ("Capabilities: 0x%x", v4l2object->vcap.capabilities));
     goto error;

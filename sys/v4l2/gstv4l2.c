@@ -33,6 +33,7 @@
 #include "gstv4l2src.h"
 #include "gstv4l2sink.h"
 #include "gstv4l2radio.h"
+#include "gstv4l2videodec.h"
 /* #include "gstv4l2jpegsrc.h" */
 /* #include "gstv4l2mjpegsrc.h" */
 /* #include "gstv4l2mjpegsink.h" */
@@ -51,6 +52,8 @@ plugin_init (GstPlugin * plugin)
           GST_TYPE_V4L2SINK) ||
       !gst_element_register (plugin, "v4l2radio", GST_RANK_NONE,
           GST_TYPE_V4L2RADIO) ||
+      !gst_element_register (plugin, "v4l2videodec", GST_RANK_PRIMARY + 1,
+          GST_TYPE_V4L2_VIDEO_DEC) ||
       /*       !gst_element_register (plugin, "v4l2jpegsrc", */
       /*           GST_RANK_NONE, GST_TYPE_V4L2JPEGSRC) || */
       /*       !gst_element_register (plugin, "v4l2mjpegsrc", */
