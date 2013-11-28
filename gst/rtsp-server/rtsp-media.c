@@ -86,6 +86,7 @@ struct _GstRTSPMediaPrivate
   gboolean eos_shutdown;
   guint buffer_size;
   GstRTSPAddressPool *pool;
+  gboolean blocked;
 
   GstElement *element;
   GRecMutex state_lock;         /* locking order: state lock, lock */
@@ -1265,6 +1266,22 @@ conversion_failed:
   }
 }
 
+static void
+stream_update_blocked (GstRTSPStream * stream, GstRTSPMedia * media)
+{
+  gst_rtsp_stream_set_blocked (stream, media->priv->blocked);
+}
+
+static void
+media_streams_set_blocked (GstRTSPMedia * media, gboolean blocked)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+
+  GST_DEBUG ("media %p set blocked %d", media, blocked);
+  priv->blocked = blocked;
+  g_ptr_array_foreach (priv->streams, (GFunc) stream_update_blocked, media);
+}
+
 /**
  * gst_rtsp_media_seek:
  * @media: a #GstRTSPMedia
@@ -1341,6 +1358,10 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
   if (start != GST_CLOCK_TIME_NONE || stop != GST_CLOCK_TIME_NONE) {
     GST_INFO ("seeking to %" GST_TIME_FORMAT " - %" GST_TIME_FORMAT,
         GST_TIME_ARGS (start), GST_TIME_ARGS (stop));
+
+    priv->status = GST_RTSP_MEDIA_STATUS_PREPARING;
+    if (priv->blocked)
+      media_streams_set_blocked (media, TRUE);
 
     res = gst_element_seek (priv->pipeline, 1.0, GST_FORMAT_TIME,
         flags, start_type, start, stop_type, stop);
@@ -1435,6 +1456,23 @@ gst_rtsp_media_get_status (GstRTSPMedia * media)
   return result;
 }
 
+static void
+stream_collect_blocking (GstRTSPStream * stream, gboolean * blocked)
+{
+  *blocked &= gst_rtsp_stream_is_blocking (stream);
+}
+
+static gboolean
+media_streams_blocking (GstRTSPMedia * media)
+{
+  gboolean blocking = TRUE;
+
+  g_ptr_array_foreach (media->priv->streams, (GFunc) stream_collect_blocking,
+      &blocking);
+
+  return blocking;
+}
+
 /* called with state-lock */
 static gboolean
 default_handle_message (GstRTSPMedia * media, GstMessage * message)
@@ -1512,7 +1550,22 @@ default_handle_message (GstRTSPMedia * media, GstMessage * message)
       break;
     }
     case GST_MESSAGE_ELEMENT:
+    {
+      const GstStructure *s;
+
+      s = gst_message_get_structure (message);
+      if (gst_structure_has_name (s, "GstRTSPStreamBlocking")) {
+        GST_DEBUG ("media received blocking message");
+        if (priv->blocked && media_streams_blocking (media)) {
+          GST_DEBUG ("media is blocking");
+          collect_media_stats (media);
+
+          if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
+            gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_PREPARED);
+        }
+      }
       break;
+    }
     case GST_MESSAGE_STREAM_STATUS:
       break;
     case GST_MESSAGE_ASYNC_DONE:
@@ -1721,6 +1774,8 @@ start_preroll (GstRTSPMedia * media)
        * seeking query in preroll instead */
       priv->seekable = FALSE;
       priv->is_live = TRUE;
+      /* start blocked  to make sure nothing goes to the sink */
+      media_streams_set_blocked (media, TRUE);
       ret = gst_element_set_state (priv->pipeline, GST_STATE_PLAYING);
       if (ret == GST_STATE_CHANGE_FAILURE)
         goto state_failed;
@@ -2231,6 +2286,10 @@ media_set_pipeline_state_locked (GstRTSPMedia * media, GstState state)
     if (priv->buffering) {
       GST_INFO ("Buffering busy, delay state change");
     } else {
+      if (state == GST_STATE_PLAYING)
+        /* make sure pads are not blocking anymore when going to PLAYING */
+        media_streams_set_blocked (media, FALSE);
+
       gst_element_set_state (priv->pipeline, state);
     }
   }
