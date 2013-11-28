@@ -336,32 +336,38 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
       g_param_spec_uint ("key-period",
           "Key Period",
           "Maximal distance between two key-frames",
-          1,
-          300, GST_VAAPI_ENCODER_H264_DEFAULT_INTRA_PERIOD, G_PARAM_READWRITE));
+          1, 300, GST_VAAPI_ENCODER_H264_DEFAULT_INTRA_PERIOD,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class,
       PROP_MAX_BFRAMES,
       g_param_spec_uint ("max-bframes",
           "Max B-Frames",
-          "Number of B-frames between I and P", 0, 10, 0, G_PARAM_READWRITE));
+          "Number of B-frames between I and P",
+          0, 10, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class,
       PROP_INIT_QP,
       g_param_spec_uint ("init-qp",
           "Initial QP",
           "Initial quantizer value",
-          1, 51, GST_VAAPI_ENCODER_H264_DEFAULT_INIT_QP, G_PARAM_READWRITE));
+          1, 51, GST_VAAPI_ENCODER_H264_DEFAULT_INIT_QP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class,
       PROP_MIN_QP,
       g_param_spec_uint ("min-qp",
           "Minimum QP",
           "Minimum quantizer value",
-          1, 51, GST_VAAPI_ENCODER_H264_DEFAULT_MIN_QP, G_PARAM_READWRITE));
+          1, 51, GST_VAAPI_ENCODER_H264_DEFAULT_MIN_QP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class,
       PROP_NUM_SLICES,
       g_param_spec_uint ("num-slices",
-          "Number of Slices", "Number of slices per frame", 1, 200,
-          1, G_PARAM_READWRITE));
+          "Number of Slices",
+          "Number of slices per frame",
+          1, 200, 1,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }

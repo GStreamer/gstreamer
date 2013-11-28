@@ -271,7 +271,7 @@ init_properties(void)
                           "The forced output pixel format",
                           GST_TYPE_VIDEO_FORMAT,
                           DEFAULT_FORMAT,
-                          G_PARAM_READWRITE);
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     /**
      * GstVaapiFilter:crop-rect:
@@ -283,7 +283,7 @@ init_properties(void)
                            "Cropping Rectangle",
                            "The cropping rectangle",
                            GST_VAAPI_TYPE_RECTANGLE,
-                           G_PARAM_READWRITE);
+                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     /**
      * GstVaapiFilter:denoise:
@@ -295,7 +295,7 @@ init_properties(void)
                            "Denoising Level",
                            "The level of denoising to apply",
                            0.0, 1.0, 0.0,
-                           G_PARAM_READWRITE);
+                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     /**
      * GstVaapiFilter:sharpen:
@@ -308,7 +308,7 @@ init_properties(void)
                            "Sharpening Level",
                            "The level of sharpening/blurring to apply",
                            -1.0, 1.0, 0.0,
-                           G_PARAM_READWRITE);
+                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     /**
      * GstVaapiFilter:hue:
@@ -321,7 +321,7 @@ init_properties(void)
                            "Hue",
                            "The color hue value",
                            -180.0, 180.0, 0.0,
-                           G_PARAM_READWRITE);
+                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     /**
      * GstVaapiFilter:saturation:
@@ -334,7 +334,7 @@ init_properties(void)
                            "Saturation",
                            "The color saturation value",
                            0.0, 2.0, 1.0,
-                           G_PARAM_READWRITE);
+                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     /**
      * GstVaapiFilter:brightness:
@@ -347,7 +347,7 @@ init_properties(void)
                            "Brightness",
                            "The color brightness value",
                            -1.0, 1.0, 0.0,
-                           G_PARAM_READWRITE);
+                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     /**
      * GstVaapiFilter:contrast:
@@ -360,7 +360,7 @@ init_properties(void)
                            "Contrast",
                            "The color contrast value",
                            0.0, 2.0, 1.0,
-                           G_PARAM_READWRITE);
+                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 
     /**
      * GstVaapiFilter:deinterlace-method:
@@ -374,7 +374,7 @@ init_properties(void)
                           "Deinterlacing method to apply",
                           GST_VAAPI_TYPE_DEINTERLACE_METHOD,
                           GST_VAAPI_DEINTERLACE_METHOD_NONE,
-                          G_PARAM_READWRITE);
+                          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
 }
 
 static void

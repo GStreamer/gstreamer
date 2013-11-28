@@ -1716,7 +1716,7 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
                            "Width",
                            "Forced output width",
                            0, G_MAXINT, 0,
-                           G_PARAM_READWRITE));
+                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     /**
      * GstVaapiPostproc:height:
@@ -1732,7 +1732,7 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
                            "Height",
                            "Forced output height",
                            0, G_MAXINT, 0,
-                           G_PARAM_READWRITE));
+                           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     /**
      * GstVaapiPostproc:force-aspect-ratio:
@@ -1748,7 +1748,7 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
                               "Force aspect ratio",
                               "When enabled, scaling will respect original aspect ratio",
                               TRUE,
-                              G_PARAM_READWRITE));
+                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     /**
      * GstVaapiPostproc:denoise:

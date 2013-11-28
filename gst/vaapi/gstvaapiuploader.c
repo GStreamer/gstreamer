@@ -307,7 +307,7 @@ gst_vaapi_uploader_class_init(GstVaapiUploaderClass *klass)
             "display",
             "Display",
             "The GstVaapiDisplay this object is bound to",
-            G_PARAM_READWRITE));
+            G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void

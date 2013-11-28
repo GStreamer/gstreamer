@@ -214,7 +214,8 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
           "Constant quantizer (if rate-control mode is CQP)",
           GST_VAAPI_ENCODER_MPEG2_MIN_CQP,
           GST_VAAPI_ENCODER_MPEG2_MAX_CQP,
-          GST_VAAPI_ENCODER_MPEG2_DEFAULT_CQP, G_PARAM_READWRITE));
+          GST_VAAPI_ENCODER_MPEG2_DEFAULT_CQP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class,
       PROP_KEY_PERIOD,
@@ -223,7 +224,8 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
           "Maximal distance between two key-frames",
           1,
           GST_VAAPI_ENCODER_MPEG2_MAX_GOP_SIZE,
-          GST_VAAPI_ENCODER_MPEG2_DEFAULT_GOP_SIZE, G_PARAM_READWRITE));
+          GST_VAAPI_ENCODER_MPEG2_DEFAULT_GOP_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class,
       PROP_MAX_BFRAMES,
@@ -232,5 +234,6 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
           "Number of B-frames between I and P",
           0,
           GST_VAAPI_ENCODER_MPEG2_MAX_MAX_BFRAMES,
-          GST_VAAPI_ENCODER_MPEG2_DEFAULT_MAX_BFRAMES, G_PARAM_READWRITE));
+          GST_VAAPI_ENCODER_MPEG2_DEFAULT_MAX_BFRAMES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }

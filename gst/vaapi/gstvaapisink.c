@@ -1514,7 +1514,7 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                               "OpenGL rendering",
                               "Enables OpenGL rendering",
                               FALSE,
-                              G_PARAM_READWRITE));
+                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     g_object_class_install_property
         (object_class,
@@ -1523,7 +1523,7 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                               "Reflection effect",
                               "Enables OpenGL reflection effect",
                               FALSE,
-                              G_PARAM_READWRITE));
+                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 #endif
 
     g_object_class_install_property
@@ -1533,7 +1533,7 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                               "Fullscreen",
                               "Requests window in fullscreen state",
                               FALSE,
-                              G_PARAM_READWRITE));
+                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     /**
      * GstVaapiSink:synchronous:
@@ -1548,7 +1548,7 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                               "Synchronous mode",
                               "Toggles X display synchronous mode",
                               FALSE,
-                              G_PARAM_READWRITE));
+                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
     /**
      * GstVaapiSink:rotation:
@@ -1578,7 +1578,7 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                               "Force aspect ratio",
                               "When enabled, scaling will respect original aspect ratio",
                               TRUE,
-                              G_PARAM_READWRITE));
+                              G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
 
 static void
