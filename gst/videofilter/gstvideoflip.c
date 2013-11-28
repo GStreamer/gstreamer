@@ -1217,9 +1217,9 @@ gst_video_flip_sink_event (GstBaseTransform * trans, GstEvent * event)
           gst_video_flip_set_method (vf, GST_VIDEO_FLIP_METHOD_VERT, TRUE);
         else if (!g_strcmp0 ("flip-rotate-270", orientation))
           gst_video_flip_set_method (vf, GST_VIDEO_FLIP_METHOD_OTHER, TRUE);
-      }
 
-      g_free (orientation);
+        g_free (orientation);
+      }
       break;
     default:
       break;
