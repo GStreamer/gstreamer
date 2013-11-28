@@ -173,6 +173,8 @@ static gboolean default_query_position (GstRTSPMedia * media,
     gint64 * position);
 static gboolean default_query_stop (GstRTSPMedia * media, gint64 * stop);
 
+static gboolean wait_preroll (GstRTSPMedia * media);
+
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
 
 G_DEFINE_TYPE (GstRTSPMedia, gst_rtsp_media, G_TYPE_OBJECT);
@@ -1345,10 +1347,14 @@ gst_rtsp_media_seek (GstRTSPMedia * media, GstRTSPTimeRange * range)
 
     /* and block for the seek to complete */
     GST_INFO ("done seeking %d", res);
-    gst_element_get_state (priv->pipeline, NULL, NULL, -1);
-    GST_INFO ("prerolled again");
+    g_rec_mutex_unlock (&priv->state_lock);
 
-    collect_media_stats (media);
+    /* wait until pipeline is prerolled again, this will also collect stats */
+    if (!wait_preroll (media))
+      goto preroll_failed;
+
+    g_rec_mutex_lock (&priv->state_lock);
+    GST_INFO ("prerolled again");
   } else {
     GST_INFO ("no seek needed");
     res = TRUE;
@@ -1374,6 +1380,11 @@ not_supported:
   {
     g_rec_mutex_unlock (&priv->state_lock);
     GST_WARNING ("conversion to npt not supported");
+    return FALSE;
+  }
+preroll_failed:
+  {
+    GST_WARNING ("failed to preroll after seek");
     return FALSE;
   }
 }
@@ -1684,10 +1695,74 @@ struct _DynPaySignalHandlers
 };
 
 static gboolean
-start_prepare (GstRTSPMedia * media)
+start_preroll (GstRTSPMedia * media)
 {
   GstRTSPMediaPrivate *priv = media->priv;
   GstStateChangeReturn ret;
+
+  GST_INFO ("setting pipeline to PAUSED for media %p", media);
+  /* first go to PAUSED */
+  ret = gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
+  priv->target_state = GST_STATE_PAUSED;
+
+  switch (ret) {
+    case GST_STATE_CHANGE_SUCCESS:
+      GST_INFO ("SUCCESS state change for media %p", media);
+      priv->seekable = TRUE;
+      break;
+    case GST_STATE_CHANGE_ASYNC:
+      GST_INFO ("ASYNC state change for media %p", media);
+      priv->seekable = TRUE;
+      break;
+    case GST_STATE_CHANGE_NO_PREROLL:
+      /* we need to go to PLAYING */
+      GST_INFO ("NO_PREROLL state change: live media %p", media);
+      /* FIXME we disable seeking for live streams for now. We should perform a
+       * seeking query in preroll instead */
+      priv->seekable = FALSE;
+      priv->is_live = TRUE;
+      ret = gst_element_set_state (priv->pipeline, GST_STATE_PLAYING);
+      if (ret == GST_STATE_CHANGE_FAILURE)
+        goto state_failed;
+      break;
+    case GST_STATE_CHANGE_FAILURE:
+      goto state_failed;
+  }
+
+  return TRUE;
+
+state_failed:
+  {
+    GST_WARNING ("failed to preroll pipeline");
+    return FALSE;
+  }
+}
+
+static gboolean
+wait_preroll (GstRTSPMedia * media)
+{
+  GstRTSPMediaStatus status;
+
+  GST_DEBUG ("wait to preroll pipeline");
+
+  /* wait until pipeline is prerolled */
+  status = gst_rtsp_media_get_status (media);
+  if (status == GST_RTSP_MEDIA_STATUS_ERROR)
+    goto preroll_failed;
+
+  return TRUE;
+
+preroll_failed:
+  {
+    GST_WARNING ("failed to preroll pipeline");
+    return FALSE;
+  }
+}
+
+static gboolean
+start_prepare (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
   guint i;
   GList *walk;
 
@@ -1723,38 +1798,12 @@ start_prepare (GstRTSPMedia * media)
     gst_bin_add (GST_BIN (priv->pipeline), priv->fakesink);
   }
 
-  GST_INFO ("setting pipeline to PAUSED for media %p", media);
-  /* first go to PAUSED */
-  ret = gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
-  priv->target_state = GST_STATE_PAUSED;
-
-  switch (ret) {
-    case GST_STATE_CHANGE_SUCCESS:
-      GST_INFO ("SUCCESS state change for media %p", media);
-      priv->seekable = TRUE;
-      break;
-    case GST_STATE_CHANGE_ASYNC:
-      GST_INFO ("ASYNC state change for media %p", media);
-      priv->seekable = TRUE;
-      break;
-    case GST_STATE_CHANGE_NO_PREROLL:
-      /* we need to go to PLAYING */
-      GST_INFO ("NO_PREROLL state change: live media %p", media);
-      /* FIXME we disable seeking for live streams for now. We should perform a
-       * seeking query in preroll instead */
-      priv->seekable = FALSE;
-      priv->is_live = TRUE;
-      ret = gst_element_set_state (priv->pipeline, GST_STATE_PLAYING);
-      if (ret == GST_STATE_CHANGE_FAILURE)
-        goto state_failed;
-      break;
-    case GST_STATE_CHANGE_FAILURE:
-      goto state_failed;
-  }
+  if (!start_preroll (media))
+    goto preroll_failed;
 
   return FALSE;
 
-state_failed:
+preroll_failed:
   {
     GST_WARNING ("failed to preroll pipeline");
     gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_ERROR);
@@ -1780,7 +1829,6 @@ gboolean
 gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
 {
   GstRTSPMediaPrivate *priv;
-  GstRTSPMediaStatus status;
   GstBus *bus;
   GSource *source;
 
@@ -1856,9 +1904,8 @@ wait_status:
 
   /* now wait for all pads to be prerolled, FIXME, we should somehow be
    * able to do this async so that we don't block the server thread. */
-  status = gst_rtsp_media_get_status (media);
-  if (status == GST_RTSP_MEDIA_STATUS_ERROR)
-    goto state_failed;
+  if (!wait_preroll (media))
+    goto preroll_failed;
 
   g_signal_emit (media, gst_rtsp_media_signals[SIGNAL_PREPARED], 0, NULL);
 
@@ -1896,7 +1943,7 @@ no_rtpbin:
     g_warning ("failed to create element 'rtpbin', check your installation");
     return FALSE;
   }
-state_failed:
+preroll_failed:
   {
     GST_WARNING ("failed to preroll pipeline");
     gst_rtsp_media_unprepare (media);
