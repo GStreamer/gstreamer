@@ -589,6 +589,8 @@ gst_v4l2_object_new (GstElement * element,
    */
   v4l2object->prefered_non_contiguous = TRUE;
 
+  v4l2object->no_initial_format = FALSE;
+
   return v4l2object;
 }
 
@@ -2292,7 +2294,7 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
   struct v4l2_format fmt, prevfmt;
   int fd;
   int r;
-  int prevfmt_valid;
+  int prevfmt_valid = FALSE;
   gboolean ret = FALSE;
 
   g_return_val_if_fail (width != NULL, FALSE);
@@ -2307,8 +2309,10 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
   /* Some drivers are buggy and will modify the currently set format
      when processing VIDIOC_TRY_FMT, so we remember what is set at the
      minute, and will reset it when done. */
-  prevfmt.type = v4l2object->type;
-  prevfmt_valid = (v4l2_ioctl (fd, VIDIOC_G_FMT, &prevfmt) >= 0);
+  if (!v4l2object->no_initial_format) {
+    prevfmt.type = v4l2object->type;
+    prevfmt_valid = (v4l2_ioctl (fd, VIDIOC_G_FMT, &prevfmt) >= 0);
+  }
 
   /* get size delimiters */
   memset (&fmt, 0, sizeof (fmt));
@@ -2545,8 +2549,10 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   memset (&format, 0x00, sizeof (struct v4l2_format));
   format.type = v4l2object->type;
 
-  if (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) < 0)
-    goto get_fmt_failed;
+  if (!v4l2object->no_initial_format) {
+    if (v4l2_ioctl (fd, VIDIOC_G_FMT, &format) < 0)
+      goto get_fmt_failed;
+  }
 
   if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
     /* even in v4l2 multiplanar mode we can work in contiguous mode
