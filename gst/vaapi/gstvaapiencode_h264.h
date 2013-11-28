@@ -55,8 +55,6 @@ struct _GstVaapiEncodeH264
 
   GstVaapiProfile profile;
   guint32 level;
-  GstVaapiRateControl rate_control;
-  guint32 bitrate;              /* kbps */
   guint32 intra_period;
   guint32 init_qp;
   guint32 min_qp;

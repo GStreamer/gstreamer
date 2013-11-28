@@ -53,8 +53,6 @@ struct _GstVaapiEncodeMpeg2
   /*< private >*/
   GstVaapiEncode parent_instance;
 
-  GstVaapiRateControl rate_control;
-  guint32 bitrate;              /* kbps */
   guint32 quantizer;
   guint32 intra_period;
   guint32 ip_period;

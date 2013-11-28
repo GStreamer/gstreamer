@@ -20,7 +20,6 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
-#include <gst/vaapi/gstvaapivalue.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiencoder_mpeg2.h>
 #include "gst/vaapi/gstvaapiencoder_mpeg2_priv.h"
@@ -77,8 +76,6 @@ G_DEFINE_TYPE (GstVaapiEncodeMpeg2, gst_vaapiencode_mpeg2, GST_TYPE_VAAPIENCODE)
 enum
 {
   PROP_0,
-  PROP_RATE_CONTROL,
-  PROP_BITRATE,
   PROP_QUANTIZER,
   PROP_KEY_PERIOD,
   PROP_MAX_BFRAMES
@@ -87,8 +84,9 @@ enum
 static void
 gst_vaapiencode_mpeg2_init (GstVaapiEncodeMpeg2 * mpeg2_encode)
 {
-  mpeg2_encode->rate_control = GST_VAAPI_ENCODER_MPEG2_DEFAULT_RATE_CONTROL;
-  mpeg2_encode->bitrate = 0;
+  GstVaapiEncode *const base_encode = GST_VAAPIENCODE_CAST (mpeg2_encode);
+
+  base_encode->rate_control = GST_VAAPI_ENCODER_MPEG2_DEFAULT_RATE_CONTROL;
   mpeg2_encode->quantizer = GST_VAAPI_ENCODER_MPEG2_DEFAULT_CQP;
   mpeg2_encode->intra_period = GST_VAAPI_ENCODER_MPEG2_DEFAULT_GOP_SIZE;
   mpeg2_encode->ip_period = GST_VAAPI_ENCODER_MPEG2_DEFAULT_MAX_BFRAMES;
@@ -107,20 +105,6 @@ gst_vaapiencode_mpeg2_set_property (GObject * object,
   GstVaapiEncodeMpeg2 *encode = GST_VAAPIENCODE_MPEG2_CAST (object);
 
   switch (prop_id) {
-    case PROP_RATE_CONTROL:
-    {
-      GstVaapiRateControl rate_control = g_value_get_enum (value);
-      if (rate_control == GST_VAAPI_RATECONTROL_CBR ||
-          rate_control == GST_VAAPI_RATECONTROL_CQP) {
-        encode->rate_control = g_value_get_enum (value);
-      } else {
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      }
-      break;
-    }
-    case PROP_BITRATE:
-      encode->bitrate = g_value_get_uint (value);
-      break;
     case PROP_QUANTIZER:
       encode->quantizer = g_value_get_uint (value);
       break;
@@ -143,12 +127,6 @@ gst_vaapiencode_mpeg2_get_property (GObject * object,
   GstVaapiEncodeMpeg2 *encode = GST_VAAPIENCODE_MPEG2_CAST (object);
 
   switch (prop_id) {
-    case PROP_RATE_CONTROL:
-      g_value_set_enum (value, encode->rate_control);
-      break;
-    case PROP_BITRATE:
-      g_value_set_uint (value, encode->bitrate);
-      break;
     case PROP_QUANTIZER:
       g_value_set_uint (value, encode->quantizer);
       break;
@@ -169,6 +147,7 @@ gst_vaapiencode_mpeg2_create_encoder (GstVaapiEncode * base,
     GstVaapiDisplay * display)
 {
   GstVaapiEncodeMpeg2 *encode = GST_VAAPIENCODE_MPEG2_CAST (base);
+  GstVaapiEncode *const base_encode = GST_VAAPIENCODE_CAST (base);
   GstVaapiEncoder *base_encoder;
   GstVaapiEncoderMpeg2 *encoder;
 
@@ -179,12 +158,21 @@ gst_vaapiencode_mpeg2_create_encoder (GstVaapiEncode * base,
 
   encoder->profile = GST_VAAPI_ENCODER_MPEG2_DEFAULT_PROFILE;
   encoder->level = GST_VAAPI_ENCODER_MPEG2_DEFAULT_LEVEL;
-  GST_VAAPI_ENCODER_RATE_CONTROL (encoder) = encode->rate_control;
-  encoder->bitrate = encode->bitrate;
+  GST_VAAPI_ENCODER_RATE_CONTROL (encoder) = base_encode->rate_control;
+  encoder->bitrate = base_encode->bitrate;
   encoder->cqp = encode->quantizer;
   encoder->intra_period = encode->intra_period;
   encoder->ip_period = encode->ip_period;
   return base_encoder;
+}
+
+static gboolean
+gst_vaapiencode_mpeg2_check_ratecontrol (GstVaapiEncode * encode,
+    GstVaapiRateControl rate_control)
+{
+  /* XXX: get information from GstVaapiEncoder object */
+  return rate_control == GST_VAAPI_RATECONTROL_CQP ||
+      rate_control == GST_VAAPI_RATECONTROL_CBR;
 }
 
 static void
@@ -202,6 +190,7 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
   object_class->get_property = gst_vaapiencode_mpeg2_get_property;
 
   encode_class->create_encoder = gst_vaapiencode_mpeg2_create_encoder;
+  encode_class->check_ratecontrol = gst_vaapiencode_mpeg2_check_ratecontrol;
 
   gst_element_class_set_static_metadata (element_class,
       "VA-API MPEG-2 encoder",
@@ -217,22 +206,6 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_vaapiencode_mpeg2_src_factory)
       );
-
-  g_object_class_install_property (object_class,
-      PROP_RATE_CONTROL,
-      g_param_spec_enum ("rate-control",
-          "Rate Control",
-          "Rate control mode (CQP or CBR only)",
-          GST_VAAPI_TYPE_RATE_CONTROL,
-          GST_VAAPI_RATECONTROL_NONE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (object_class,
-      PROP_BITRATE,
-      g_param_spec_uint ("bitrate",
-          "Bitrate (kbps)",
-          "The desired bitrate expressed in kbps (0: auto-calculate)",
-          0, GST_VAAPI_ENCODER_MPEG2_MAX_BITRATE, 0, G_PARAM_READWRITE));
 
   g_object_class_install_property (object_class,
       PROP_QUANTIZER,

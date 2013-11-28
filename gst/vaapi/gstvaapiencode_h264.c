@@ -20,7 +20,6 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
-#include <gst/vaapi/gstvaapivalue.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiencoder_h264.h>
 #include "gst/vaapi/gstvaapiencoder_h264_priv.h"
@@ -76,8 +75,6 @@ G_DEFINE_TYPE (GstVaapiEncodeH264, gst_vaapiencode_h264, GST_TYPE_VAAPIENCODE)
 enum
 {
   PROP_0,
-  PROP_RATE_CONTROL,
-  PROP_BITRATE,
   PROP_KEY_PERIOD,
   PROP_MAX_BFRAMES,
   PROP_INIT_QP,
@@ -103,12 +100,6 @@ gst_vaapiencode_h264_set_property (GObject * object,
   GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (object);
 
   switch (prop_id) {
-    case PROP_RATE_CONTROL:
-      encode->rate_control = g_value_get_enum (value);
-      break;
-    case PROP_BITRATE:
-      encode->bitrate = g_value_get_uint (value);
-      break;
     case PROP_KEY_PERIOD:
       encode->intra_period = g_value_get_uint (value);
       break;
@@ -137,12 +128,6 @@ gst_vaapiencode_h264_get_property (GObject * object,
   GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (object);
 
   switch (prop_id) {
-    case PROP_RATE_CONTROL:
-      g_value_set_enum (value, encode->rate_control);
-      break;
-    case PROP_BITRATE:
-      g_value_set_uint (value, encode->bitrate);
-      break;
     case PROP_KEY_PERIOD:
       g_value_set_uint (value, encode->intra_period);
       break;
@@ -169,6 +154,7 @@ gst_vaapiencode_h264_create_encoder (GstVaapiEncode * base,
     GstVaapiDisplay * display)
 {
   GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (base);
+  GstVaapiEncode *const base_encode = GST_VAAPIENCODE_CAST (base);
   GstVaapiEncoder *base_encoder;
   GstVaapiEncoderH264 *encoder;
 
@@ -179,8 +165,8 @@ gst_vaapiencode_h264_create_encoder (GstVaapiEncode * base,
 
   encoder->profile = GST_VAAPI_PROFILE_UNKNOWN;
   encoder->level = GST_VAAPI_ENCODER_H264_DEFAULT_LEVEL;
-  GST_VAAPI_ENCODER_RATE_CONTROL (encoder) = encode->rate_control;
-  encoder->bitrate = encode->bitrate;
+  GST_VAAPI_ENCODER_RATE_CONTROL (encoder) = base_encode->rate_control;
+  encoder->bitrate = base_encode->bitrate;
   encoder->intra_period = encode->intra_period;
   encoder->init_qp = encode->init_qp;
   encoder->min_qp = encode->min_qp;
@@ -339,22 +325,6 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_vaapiencode_h264_src_factory)
       );
-
-  g_object_class_install_property (object_class,
-      PROP_RATE_CONTROL,
-      g_param_spec_enum ("rate-control",
-          "Rate Control",
-          "Rate control mode",
-          GST_VAAPI_TYPE_RATE_CONTROL,
-          GST_VAAPI_RATECONTROL_NONE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (object_class,
-      PROP_BITRATE,
-      g_param_spec_uint ("bitrate",
-          "Bitrate (kbps)",
-          "The desired bitrate expressed in kbps (0: auto-calculate)",
-          0, 100 * 1024, 0, G_PARAM_READWRITE));
 
   g_object_class_install_property (object_class,
       PROP_KEY_PERIOD,

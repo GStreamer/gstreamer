@@ -71,6 +71,9 @@ struct _GstVaapiEncode
 #endif
   guint video_buffer_size;
 
+  GstVaapiRateControl rate_control;
+  guint32 bitrate;              /* kbps */
+
   guint32 is_running:1;
   guint32 out_caps_done:1;
 };
@@ -80,6 +83,8 @@ struct _GstVaapiEncodeClass
   /*< private >*/
   GstVideoEncoderClass parent_class;
 
+  gboolean            (*check_ratecontrol) (GstVaapiEncode * encode,
+                                            GstVaapiRateControl rate_control);
   GstVaapiEncoder *   (*create_encoder)    (GstVaapiEncode * encode,
                                             GstVaapiDisplay * display);
   GstFlowReturn       (*allocate_buffer)   (GstVaapiEncode * encode,

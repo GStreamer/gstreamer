@@ -20,6 +20,7 @@
  */
 
 #include "gst/vaapi/sysdeps.h"
+#include <gst/vaapi/gstvaapivalue.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiencoder_priv.h>
 #include <gst/vaapi/gstvaapiencoder_objects.h>
@@ -108,6 +109,13 @@ G_DEFINE_TYPE_WITH_CODE (GstVaapiEncode,
         gst_video_context_interface_init)
 #endif
     )
+
+enum
+{
+  PROP_0,
+  PROP_RATE_CONTROL,
+  PROP_BITRATE,
+};
 
 static inline gboolean
 ensure_display (GstVaapiEncode * encode)
@@ -858,6 +866,60 @@ error_no_caps:
 }
 #endif
 
+static inline gboolean
+check_ratecontrol (GstVaapiEncode * encode, GstVaapiRateControl rate_control)
+{
+  GstVaapiEncodeClass *const klass = GST_VAAPIENCODE_GET_CLASS (encode);
+
+  return !klass->check_ratecontrol || klass->check_ratecontrol (encode,
+      rate_control);
+}
+
+static void
+gst_vaapiencode_set_property (GObject * object, guint prop_id,
+    const GValue * value, GParamSpec * pspec)
+{
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (object);
+
+  switch (prop_id) {
+    case PROP_RATE_CONTROL:
+    {
+      GstVaapiRateControl rate_control = g_value_get_enum (value);
+      if (check_ratecontrol (encode, rate_control)) {
+        encode->rate_control = rate_control;
+      } else {
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      }
+      break;
+    }
+    case PROP_BITRATE:
+      encode->bitrate = g_value_get_uint (value);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
+static void
+gst_vaapiencode_get_property (GObject * object, guint prop_id,
+    GValue * value, GParamSpec * pspec)
+{
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (object);
+
+  switch (prop_id) {
+    case PROP_RATE_CONTROL:
+      g_value_set_enum (value, encode->rate_control);
+      break;
+    case PROP_BITRATE:
+      g_value_set_uint (value, encode->bitrate);
+      break;
+    default:
+      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      break;
+  }
+}
+
 static void
 gst_vaapiencode_finalize (GObject * object)
 {
@@ -901,6 +963,8 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
       GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
 
   object_class->finalize = gst_vaapiencode_finalize;
+  object_class->set_property = gst_vaapiencode_set_property;
+  object_class->get_property = gst_vaapiencode_get_property;
 
 #if GST_CHECK_VERSION(1,1,0)
   element_class->set_context = GST_DEBUG_FUNCPTR (gst_vaapiencode_set_context);
@@ -923,4 +987,20 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
 
   /* Registering debug symbols for function pointers */
   GST_DEBUG_REGISTER_FUNCPTR (gst_vaapiencode_query);
+
+  g_object_class_install_property (object_class,
+      PROP_RATE_CONTROL,
+      g_param_spec_enum ("rate-control",
+          "Rate Control",
+          "Rate control mode",
+          GST_VAAPI_TYPE_RATE_CONTROL,
+          GST_VAAPI_RATECONTROL_NONE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (object_class,
+      PROP_BITRATE,
+      g_param_spec_uint ("bitrate",
+          "Bitrate (kbps)",
+          "The desired bitrate expressed in kbps (0: auto-calculate)",
+          0, 100 * 1024, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }
