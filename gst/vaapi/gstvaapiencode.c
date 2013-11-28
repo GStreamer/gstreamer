@@ -41,12 +41,6 @@
 #define GST_VAAPI_ENCODE_FLOW_CONVERT_ERROR     GST_FLOW_CUSTOM_ERROR_1
 #define GST_VAAPI_ENCODE_FLOW_CODEC_DATA_ERROR  GST_FLOW_CUSTOM_ERROR_2
 
-typedef struct _GstVaapiEncodeFrameUserData
-{
-  GstVaapiEncObjUserDataHead head;
-  GstBuffer *vaapi_buf;
-} GstVaapiEncodeFrameUserData;
-
 GST_DEBUG_CATEGORY_STATIC (gst_vaapiencode_debug);
 #define GST_CAT_DEFAULT gst_vaapiencode_debug
 
@@ -630,7 +624,6 @@ get_source_buffer (GstVaapiEncode * encode, GstBuffer * src_buffer,
   gboolean success;
 #endif
 
-  *out_buffer_ptr = NULL;
   meta = gst_buffer_get_vaapi_video_meta (src_buffer);
   if (meta) {
     *out_buffer_ptr = gst_buffer_ref (src_buffer);
@@ -728,77 +721,73 @@ error_copy_buffer:
   }
 }
 
-static inline gpointer
-_create_user_data (GstBuffer * buf)
-{
-  GstVaapiVideoMeta *meta;
-  GstVaapiSurface *surface;
-  GstVaapiEncodeFrameUserData *user_data;
-
-  meta = gst_buffer_get_vaapi_video_meta (buf);
-  if (!meta) {
-    GST_DEBUG ("convert to vaapi buffer failed");
-    return NULL;
-  }
-  surface = gst_vaapi_video_meta_get_surface (meta);
-  if (!surface) {
-    GST_DEBUG ("vaapi_meta of codec frame doesn't have vaapisurfaceproxy");
-    return NULL;
-  }
-
-  user_data = g_slice_new0 (GstVaapiEncodeFrameUserData);
-  user_data->head.surface = surface;
-  user_data->vaapi_buf = gst_buffer_ref (buf);
-  return user_data;
-}
-
-static void
-_destroy_user_data (gpointer data)
-{
-  GstVaapiEncodeFrameUserData *user_data = (GstVaapiEncodeFrameUserData *) data;
-
-  g_assert (data);
-  if (!user_data)
-    return;
-  gst_buffer_replace (&user_data->vaapi_buf, NULL);
-  g_slice_free (GstVaapiEncodeFrameUserData, user_data);
-}
-
 static GstFlowReturn
 gst_vaapiencode_handle_frame (GstVideoEncoder * venc,
     GstVideoCodecFrame * frame)
 {
   GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
-  GstFlowReturn ret = GST_FLOW_OK;
-  GstVaapiEncoderStatus status = GST_VAAPI_ENCODER_STATUS_SUCCESS;
+  GstVaapiEncoderStatus status;
+  GstVaapiVideoMeta *meta;
+  GstVaapiSurfaceProxy *proxy;
+  GstFlowReturn ret;
   GstBuffer *buf;
-  gpointer user_data;
 
-  g_assert (encode && encode->encoder);
-  g_assert (frame && frame->input_buffer);
-
+  buf = NULL;
   ret = get_source_buffer (encode, frame->input_buffer, &buf);
   if (ret != GST_FLOW_OK)
-    return ret;
+    goto error_buffer_invalid;
 
-  user_data = _create_user_data (buf);
-  GST_VAAPI_ENCODER_CHECK_STATUS (user_data,
-      ret, "create frame user data failed");
+  gst_buffer_replace (&frame->input_buffer, buf);
+  gst_buffer_unref (buf);
 
-  gst_video_codec_frame_set_user_data (frame, user_data, _destroy_user_data);
+  meta = gst_buffer_get_vaapi_video_meta (buf);
+  if (!meta)
+    goto error_buffer_no_meta;
+
+  proxy = gst_vaapi_video_meta_get_surface_proxy (meta);
+  if (!proxy)
+    goto error_buffer_no_surface_proxy;
+
+  gst_video_codec_frame_set_user_data (frame,
+      gst_vaapi_surface_proxy_ref (proxy),
+      (GDestroyNotify)gst_vaapi_surface_proxy_unref);
 
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
-  /*encoding frames */
   status = gst_vaapi_encoder_put_frame (encode->encoder, frame);
   GST_VIDEO_ENCODER_STREAM_LOCK (encode);
+  if (status < GST_VAAPI_ENCODER_STATUS_SUCCESS)
+    goto error_encode_frame;
 
-  GST_VAAPI_ENCODER_CHECK_STATUS (GST_VAAPI_ENCODER_STATUS_SUCCESS <=
-      status, GST_FLOW_ERROR, "gst_vaapiencoder_encode failed.");
-
-end:
   gst_video_codec_frame_unref (frame);
-  gst_buffer_replace (&buf, NULL);
-  return ret;
+  return GST_FLOW_OK;
+
+  /* ERRORS */
+error_buffer_invalid:
+  {
+    if (buf)
+      gst_buffer_unref (buf);
+    gst_video_codec_frame_unref (frame);
+    return ret;
+  }
+error_buffer_no_meta:
+  {
+    GST_ERROR ("failed to get GstVaapiVideoMeta information");
+    gst_video_codec_frame_unref (frame);
+    return GST_FLOW_ERROR;
+  }
+error_buffer_no_surface_proxy:
+  {
+    GST_ERROR ("failed to get VA surface proxy");
+    gst_video_codec_frame_unref (frame);
+    return GST_FLOW_ERROR;
+  }
+error_encode_frame:
+  {
+    GST_ERROR ("failed to encode frame %d (status %d)",
+        frame->system_frame_number, status);
+    gst_video_codec_frame_unref (frame);
+    return GST_FLOW_ERROR;
+  }
 }
 
 static GstFlowReturn

@@ -261,11 +261,6 @@ typedef enum
 #define GST_VAAPI_ENC_PICTURE_GET_FRAME(picture) \
     (picture)->frame
 
-typedef struct
-{
-  GstVaapiSurface *surface;
-} GstVaapiEncObjUserDataHead;
-
 /**
  * GstVaapiEncPicture:
  *
@@ -276,6 +271,7 @@ struct _GstVaapiEncPicture
   /*< private > */
   GstVaapiCodecObject parent_instance;
   GstVideoCodecFrame *frame;
+  GstVaapiSurfaceProxy *proxy;
   GstVaapiSurface *surface;
   GstVaapiEncSequence *sequence;
   /*< private >, picture packed header */

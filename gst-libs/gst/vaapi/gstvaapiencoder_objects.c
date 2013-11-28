@@ -25,6 +25,7 @@
 #include "gstvaapiencoder_objects.h"
 #include "gstvaapiencoder.h"
 #include "gstvaapiencoder_priv.h"
+#include "gstvaapisurfaceproxy_priv.h"
 #include "gstvaapiutils.h"
 
 #define DEBUG 1
@@ -387,7 +388,7 @@ gst_vaapi_enc_picture_destroy (GstVaapiEncPicture * picture)
   gst_vaapi_mini_object_replace (
       (GstVaapiMiniObject **) (&picture->sequence), NULL);
 
-  g_assert (picture->surface);
+  gst_vaapi_surface_proxy_replace (&picture->proxy, NULL);
   picture->surface_id = VA_INVALID_ID;
   picture->surface = NULL;
 
@@ -405,19 +406,22 @@ gboolean
 gst_vaapi_enc_picture_create (GstVaapiEncPicture * picture,
     const GstVaapiCodecObjectConstructorArgs * args)
 {
-  GstVideoCodecFrame *frame;
-  GstVaapiSurface *surface;
-  GstVaapiEncObjUserDataHead *user_data;
+  GstVideoCodecFrame *const frame = (GstVideoCodecFrame *)args->data;
   gboolean success;
 
-  g_assert (args->data);
-  g_return_val_if_fail (args->data, FALSE);
+  g_return_val_if_fail (frame != NULL, FALSE);
 
-  frame = (GstVideoCodecFrame *) args->data;
-  user_data = gst_video_codec_frame_get_user_data (frame);
-  g_assert (user_data);
-  surface = user_data->surface;
-  g_return_val_if_fail (surface, FALSE);
+  picture->proxy = gst_video_codec_frame_get_user_data (frame);
+  if (!gst_vaapi_surface_proxy_ref (picture->proxy))
+    return FALSE;
+
+  picture->surface = GST_VAAPI_SURFACE_PROXY_SURFACE (picture->proxy);
+  if (!picture->surface)
+    return FALSE;
+
+  picture->surface_id = GST_VAAPI_OBJECT_ID (picture->surface);
+  if (picture->surface_id == VA_INVALID_ID)
+    return FALSE;
 
   picture->sequence = NULL;
   picture->type = GST_VAAPI_PICTURE_TYPE_NONE;
@@ -446,10 +450,6 @@ gst_vaapi_enc_picture_create (GstVaapiEncPicture * picture,
     return FALSE;
 
   picture->frame = gst_video_codec_frame_ref (frame);
-  picture->surface = surface;
-  g_assert (picture->surface);
-  picture->surface_id = gst_vaapi_surface_get_id (picture->surface);
-  g_assert (picture->surface_id != VA_INVALID_SURFACE);
 
   return TRUE;
 }
