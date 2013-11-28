@@ -9367,6 +9367,7 @@ qtdemux_tag_add_revdns (GstQTDemux * demux, const char *tag,
     return;
   }
   meanstr = ((gchar *) mean->data) + 12;
+  meansize -= 12;
 
   name = qtdemux_tree_get_child_by_type (node, FOURCC_name);
   if (!name) {
@@ -9380,6 +9381,7 @@ qtdemux_tag_add_revdns (GstQTDemux * demux, const char *tag,
     return;
   }
   namestr = ((gchar *) name->data) + 12;
+  namesize -= 12;
 
   /*
    * Data atom is:
@@ -9402,7 +9404,8 @@ qtdemux_tag_add_revdns (GstQTDemux * demux, const char *tag,
   }
   datatype = QT_UINT32 (((gchar *) data->data) + 8) & 0xFFFFFF;
 
-  if (strncmp (meanstr, "com.apple.iTunes", meansize - 12) == 0) {
+  if ((strncmp (meanstr, "com.apple.iTunes", meansize) == 0) ||
+      (strncmp (meanstr, "org.hydrogenaudio.replaygain", meansize) == 0)) {
     static const struct
     {
       const gchar name[28];
@@ -9421,7 +9424,7 @@ qtdemux_tag_add_revdns (GstQTDemux * demux, const char *tag,
     int i;
 
     for (i = 0; i < G_N_ELEMENTS (tags); ++i) {
-      if (!g_ascii_strncasecmp (tags[i].name, namestr, namesize - 12)) {
+      if (!g_ascii_strncasecmp (tags[i].name, namestr, namesize)) {
         switch (gst_tag_get_type (tags[i].tag)) {
           case G_TYPE_DOUBLE:
             qtdemux_add_double_tag_from_str (demux, tags[i].tag,
@@ -9447,12 +9450,13 @@ qtdemux_tag_add_revdns (GstQTDemux * demux, const char *tag,
 
 /* errors */
 unknown_tag:
+#ifndef GST_DISABLE_GST_DEBUG
   {
     gchar *namestr_dbg;
     gchar *meanstr_dbg;
 
-    meanstr_dbg = g_strndup (meanstr, meansize - 12);
-    namestr_dbg = g_strndup (namestr, namesize - 12);
+    meanstr_dbg = g_strndup (meanstr, meansize);
+    namestr_dbg = g_strndup (namestr, namesize);
 
     GST_WARNING_OBJECT (demux, "This tag %s:%s type:%u is not mapped, "
         "file a bug at bugzilla.gnome.org", meanstr_dbg, namestr_dbg, datatype);
@@ -9461,6 +9465,7 @@ unknown_tag:
     g_free (meanstr_dbg);
     return;
   }
+#endif
 }
 
 static void
