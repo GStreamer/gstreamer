@@ -39,12 +39,13 @@ static void
 gst_vaapi_surface_proxy_finalize(GstVaapiSurfaceProxy *proxy)
 {
     if (proxy->surface) {
-        if (proxy->pool)
+        if (proxy->pool && !proxy->parent)
             gst_vaapi_video_pool_put_object(proxy->pool, proxy->surface);
         gst_vaapi_object_unref(proxy->surface);
         proxy->surface = NULL;
     }
     gst_vaapi_video_pool_replace(&proxy->pool, NULL);
+    gst_vaapi_surface_proxy_replace(&proxy->parent, NULL);
 
     /* Notify the user function that the object is now destroyed */
     if (proxy->destroy_func)
@@ -61,6 +62,17 @@ gst_vaapi_surface_proxy_class(void)
     return &GstVaapiSurfaceProxyClass;
 }
 
+/**
+ * gst_vaapi_surface_proxy_new_from_pool:
+ * @pool: a #GstVaapiSurfacePool
+ *
+ * Allocates a new surface from the supplied surface @pool and creates
+ * the wrapped surface proxy object from it. When the last reference
+ * to the proxy object is released, then the underlying VA surface is
+ * pushed back to its parent pool.
+ *
+ * Returns: The same newly allocated @proxy object, or %NULL on error
+ */
 GstVaapiSurfaceProxy *
 gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool)
 {
@@ -73,6 +85,7 @@ gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool)
     if (!proxy)
         return NULL;
 
+    proxy->parent = NULL;
     proxy->destroy_func = NULL;
     proxy->pool = gst_vaapi_video_pool_ref(pool);
     proxy->surface = gst_vaapi_video_pool_get_object(proxy->pool);
@@ -87,6 +100,48 @@ gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool)
 error:
     gst_vaapi_surface_proxy_unref(proxy);
     return NULL;
+}
+
+
+/**
+ * gst_vaapi_surface_proxy_copy:
+ * @proxy: the parent #GstVaapiSurfaceProxy
+ *
+ * Creates are new VA surface proxy object from the supplied parent
+ * @proxy object with the same initial information, e.g. timestamp,
+ * duration.
+ *
+ * Note: the destroy notify function is not copied into the new
+ * surface proxy object.
+ *
+ * Returns: The same newly allocated @proxy object, or %NULL on error
+ */
+GstVaapiSurfaceProxy *
+gst_vaapi_surface_proxy_copy(GstVaapiSurfaceProxy *proxy)
+{
+    GstVaapiSurfaceProxy *copy;
+
+    g_return_val_if_fail(proxy != NULL, NULL);
+
+    copy = (GstVaapiSurfaceProxy *)
+        gst_vaapi_mini_object_new(gst_vaapi_surface_proxy_class());
+    if (!copy)
+        return NULL;
+
+    GST_VAAPI_SURFACE_PROXY_FLAGS(copy) =
+        GST_VAAPI_SURFACE_PROXY_FLAGS(proxy);
+
+    copy->parent = gst_vaapi_surface_proxy_ref(proxy->parent ?
+        proxy->parent : proxy);
+    copy->pool = gst_vaapi_video_pool_ref(proxy->pool);
+    copy->surface = gst_vaapi_object_ref(proxy->surface);
+    copy->timestamp = proxy->timestamp;
+    copy->duration = proxy->duration;
+    copy->destroy_func = NULL;
+    copy->has_crop_rect = proxy->has_crop_rect;
+    if (copy->has_crop_rect)
+        copy->crop_rect = proxy->crop_rect;
+    return copy;
 }
 
 /**

@@ -36,6 +36,7 @@
 struct _GstVaapiSurfaceProxy {
     /*< private >*/
     GstVaapiMiniObject  parent_instance;
+    GstVaapiSurfaceProxy *parent;
 
     GstVaapiVideoPool  *pool;
     GstVaapiSurface    *surface;

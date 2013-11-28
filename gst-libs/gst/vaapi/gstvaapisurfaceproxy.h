@@ -91,6 +91,9 @@ GstVaapiSurfaceProxy *
 gst_vaapi_surface_proxy_new_from_pool(GstVaapiSurfacePool *pool);
 
 GstVaapiSurfaceProxy *
+gst_vaapi_surface_proxy_copy(GstVaapiSurfaceProxy *proxy);
+
+GstVaapiSurfaceProxy *
 gst_vaapi_surface_proxy_ref(GstVaapiSurfaceProxy *proxy);
 
 void
