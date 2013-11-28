@@ -1074,6 +1074,10 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (rtspstate != GST_RTSP_STATE_PLAYING && rtspstate != GST_RTSP_STATE_READY)
     goto invalid_state;
 
+  /* in play we first unsuspend, media could be suspended from SDP or PAUSED */
+  if (!gst_rtsp_media_unsuspend (media))
+    goto unsuspend_failed;
+
   /* parse the range header if we have one */
   res = gst_rtsp_message_get_header (ctx->request, GST_RTSP_HDR_RANGE, &str, 0);
   if (res == GST_RTSP_OK) {
@@ -1191,6 +1195,13 @@ invalid_state:
     GST_ERROR ("client %p: not PLAYING or READY", client);
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
         ctx);
+    g_free (path);
+    return FALSE;
+  }
+unsuspend_failed:
+  {
+    GST_ERROR ("client %p: unsuspend failed", client);
+    send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
     g_free (path);
     return FALSE;
   }
@@ -1755,6 +1766,8 @@ handle_describe_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (!(sdp = klass->create_sdp (client, media)))
     goto no_sdp;
 
+  /* we suspend after the describe */
+  gst_rtsp_media_suspend (media);
   g_object_unref (media);
 
   gst_rtsp_message_init_response (ctx->response, GST_RTSP_STS_OK,
