@@ -98,6 +98,39 @@ set_surface_from_pool(GstVaapiVideoMeta *meta, GstVaapiVideoPool *pool)
     return TRUE;
 }
 
+static gboolean
+set_surface_proxy(GstVaapiVideoMeta *meta, GstVaapiSurfaceProxy *proxy)
+{
+    GstVaapiSurface *surface;
+
+    surface = GST_VAAPI_SURFACE_PROXY_SURFACE(proxy);
+    if (!surface)
+        return FALSE;
+
+    set_surface(meta, surface);
+    meta->proxy = gst_vaapi_surface_proxy_ref(proxy);
+    return TRUE;
+}
+
+static gboolean
+set_surface_proxy_from_pool(GstVaapiVideoMeta *meta, GstVaapiVideoPool *pool)
+{
+    GstVaapiSurfaceProxy *proxy;
+    gboolean success;
+
+    proxy = gst_vaapi_surface_proxy_new_from_pool(GST_VAAPI_SURFACE_POOL(pool));
+    if (!proxy)
+        return FALSE;
+
+    success = set_surface_proxy(meta, proxy);
+    gst_vaapi_surface_proxy_unref(proxy);
+    if (!success)
+        return FALSE;
+
+    meta->surface_pool = gst_vaapi_video_pool_ref(pool);
+    return TRUE;
+}
+
 static void
 gst_vaapi_video_meta_destroy_image(GstVaapiVideoMeta *meta)
 {
@@ -299,7 +332,7 @@ gst_vaapi_video_meta_new_from_pool(GstVaapiVideoPool *pool)
             goto error;
         break;
     case GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE:
-        if (!set_surface_from_pool(meta, pool))
+        if (!set_surface_proxy_from_pool(meta, pool))
             goto error;
         break;
     }
@@ -638,7 +671,6 @@ void
 gst_vaapi_video_meta_set_surface_proxy(GstVaapiVideoMeta *meta,
     GstVaapiSurfaceProxy *proxy)
 {
-    GstVaapiSurface *surface;
     const GstVaapiRectangle *crop_rect;
 
     g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
@@ -646,11 +678,8 @@ gst_vaapi_video_meta_set_surface_proxy(GstVaapiVideoMeta *meta,
     gst_vaapi_video_meta_destroy_surface(meta);
 
     if (proxy) {
-        surface = GST_VAAPI_SURFACE_PROXY_SURFACE(proxy);
-        if (!surface)
+        if (!set_surface_proxy(meta, proxy))
             return;
-        set_surface(meta, surface);
-        meta->proxy = gst_vaapi_surface_proxy_ref(proxy);
 
         crop_rect = gst_vaapi_surface_proxy_get_crop_rect(proxy);
         if (crop_rect)
