@@ -91,6 +91,7 @@
 
 /* open/close the device */
 gboolean	gst_v4l2_open			(GstV4l2Object *v4l2object);
+gboolean	gst_v4l2_dup			(GstV4l2Object *v4l2object, GstV4l2Object *other);
 gboolean	gst_v4l2_close			(GstV4l2Object *v4l2object);
 
 /* norm/input/output */
