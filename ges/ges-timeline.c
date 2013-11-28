@@ -2374,7 +2374,13 @@ pad_removed_cb (GESTrack * track, GstPad * pad, TrackPrivate * tr_priv)
 GESTimeline *
 ges_timeline_new (void)
 {
-  return g_object_new (GES_TYPE_TIMELINE, NULL);
+  GESProject *project = ges_project_new (NULL);
+  GESExtractable *timeline = g_object_new (GES_TYPE_TIMELINE, NULL);
+
+  ges_extractable_set_asset (timeline, GES_ASSET (project));
+  gst_object_unref (project);
+
+  return GES_TIMELINE (timeline);
 }
 
 /**
