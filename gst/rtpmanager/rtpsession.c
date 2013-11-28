@@ -1797,7 +1797,6 @@ rtp_session_process_rtp (RTPSession * sess, GstBuffer * buffer,
 collision:
   {
     RTP_SESSION_UNLOCK (sess);
-    gst_buffer_unref (buffer);
     clean_packet_info (&pinfo);
     GST_DEBUG ("ignoring packet because its collisioning");
     return GST_FLOW_OK;
