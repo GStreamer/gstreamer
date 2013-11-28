@@ -48,7 +48,7 @@ GST_START_TEST (test_add_effect_to_clip)
 
   ges_init ();
 
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   layer = ges_layer_new ();
   track_audio = GES_TRACK (ges_audio_track_new ());
   track_video = GES_TRACK (ges_video_track_new ());
@@ -95,7 +95,7 @@ GST_START_TEST (test_get_effects_from_tl)
 
   ges_init ();
 
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   layer = ges_layer_new ();
   track_video = GES_TRACK (ges_video_track_new ());
 
@@ -184,7 +184,7 @@ GST_START_TEST (test_effect_clip)
 
   ges_init ();
 
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   layer = ges_layer_new ();
   track_audio = GES_TRACK (ges_audio_track_new ());
   track_video = GES_TRACK (ges_video_track_new ());
@@ -224,8 +224,8 @@ GST_START_TEST (test_effect_clip)
         GES_BASE_EFFECT (tmp->data));
     fail_unless (priority > effect_prio);
     fail_unless (GES_IS_EFFECT (tmp->data));
-    fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (tmp->
-                data))->type == track_type[i]);
+    fail_unless (ges_track_element_get_track (GES_TRACK_ELEMENT (tmp->data))->
+        type == track_type[i]);
     effect_prio = priority;
 
     gst_object_unref (tmp->data);
@@ -253,7 +253,7 @@ GST_START_TEST (test_priorities_clip)
 
   ges_init ();
 
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   layer = ges_layer_new ();
   track_audio = GES_TRACK (ges_audio_track_new ());
   track_video = GES_TRACK (ges_video_track_new ());
@@ -363,7 +363,7 @@ GST_START_TEST (test_effect_set_properties)
 
   ges_init ();
 
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   layer = ges_layer_new ();
   track_video = GES_TRACK (ges_video_track_new ());
 
@@ -450,7 +450,7 @@ GST_START_TEST (test_clip_signals)
 
   ges_init ();
 
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   layer = ges_layer_new ();
   track_video = GES_TRACK (ges_video_track_new ());
 

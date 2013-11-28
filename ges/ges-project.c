@@ -234,7 +234,7 @@ _uri_missing_accumulator (GSignalInvocationHint * ihint, GValue * return_accu,
 static GESExtractable *
 ges_project_extract (GESAsset * project, GError ** error)
 {
-  GESTimeline *timeline = g_object_new (GES_TYPE_TIMELINE, NULL);
+  GESTimeline *timeline = ges_timeline_new ();
 
   ges_extractable_set_asset (GES_EXTRACTABLE (timeline), GES_ASSET (project));
   if (_load_project (GES_PROJECT (project), timeline, error))
@@ -329,7 +329,7 @@ ges_project_class_init (GESProjectClass * klass)
 
   /**
    * GESProject::asset-added:
-   * @project: the #GESProject
+   * @formatter: the #GESProject
    * @asset: The #GESAsset that has been added to @project
    */
   _signals[ASSET_ADDED_SIGNAL] =
@@ -339,7 +339,7 @@ ges_project_class_init (GESProjectClass * klass)
 
   /**
    * GESProject::asset-removed:
-   * @project: the #GESProject
+   * @formatter: the #GESProject
    * @asset: The #GESAsset that has been removed from @project
    */
   _signals[ASSET_REMOVED_SIGNAL] =

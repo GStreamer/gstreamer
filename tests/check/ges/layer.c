@@ -34,7 +34,7 @@ GST_START_TEST (test_layer_properties)
   ges_init ();
 
   /* Timeline and 1 Layer */
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   layer = (GESLayer *) ges_layer_new ();
 
   /* The default priority is 0 */
@@ -124,7 +124,7 @@ GST_START_TEST (test_layer_priorities)
   ges_init ();
 
   /* Timeline and 3 Layer */
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   layer1 = (GESLayer *) ges_layer_new ();
   layer2 = (GESLayer *) ges_layer_new ();
   layer3 = (GESLayer *) ges_layer_new ();
@@ -276,7 +276,7 @@ GST_START_TEST (test_timeline_auto_transition)
   fail_unless (GES_IS_ASSET (asset));
 
   GST_DEBUG ("Create timeline");
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   assert_is_type (timeline, GES_TYPE_TIMELINE);
 
   GST_DEBUG ("Create layers");
@@ -340,7 +340,7 @@ GST_START_TEST (test_single_layer_automatic_transition)
   fail_unless (GES_IS_ASSET (asset));
 
   GST_DEBUG ("Create timeline");
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   assert_is_type (timeline, GES_TYPE_TIMELINE);
 
   GST_DEBUG ("Create first layer");
@@ -745,7 +745,7 @@ GST_START_TEST (test_multi_layer_automatic_transition)
   fail_unless (GES_IS_ASSET (asset));
 
   GST_DEBUG ("Create timeline");
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   assert_is_type (timeline, GES_TYPE_TIMELINE);
 
   GST_DEBUG ("Create first layer");
@@ -1235,7 +1235,7 @@ GST_START_TEST (test_layer_activate_automatic_transition)
   fail_unless (GES_IS_ASSET (asset));
 
   GST_DEBUG ("Create timeline");
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   assert_is_type (timeline, GES_TYPE_TIMELINE);
 
   GST_DEBUG ("Append a layer to the timeline");
@@ -1457,7 +1457,7 @@ GST_START_TEST (test_layer_meta_string)
 
   ges_init ();
 
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 
@@ -1480,7 +1480,7 @@ GST_START_TEST (test_layer_meta_boolean)
 
   ges_init ();
 
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 
@@ -1502,7 +1502,7 @@ GST_START_TEST (test_layer_meta_int)
 
   ges_init ();
 
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 
@@ -1524,7 +1524,7 @@ GST_START_TEST (test_layer_meta_uint)
 
   ges_init ();
 
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 
@@ -1546,7 +1546,7 @@ GST_START_TEST (test_layer_meta_int64)
 
   ges_init ();
 
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 
@@ -1568,7 +1568,7 @@ GST_START_TEST (test_layer_meta_uint64)
 
   ges_init ();
 
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 
@@ -1590,7 +1590,7 @@ GST_START_TEST (test_layer_meta_float)
 
   ges_init ();
 
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 
@@ -1613,7 +1613,7 @@ GST_START_TEST (test_layer_meta_double)
 
   ges_init ();
 
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 
@@ -1639,7 +1639,7 @@ GST_START_TEST (test_layer_meta_date)
 
   ges_init ();
 
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 
@@ -1667,7 +1667,7 @@ GST_START_TEST (test_layer_meta_date_time)
 
   ges_init ();
 
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 
@@ -1700,7 +1700,7 @@ GST_START_TEST (test_layer_meta_value)
 
   ges_init ();
 
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 
@@ -1728,7 +1728,7 @@ GST_START_TEST (test_layer_meta_register)
 
   ges_init ();
 
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 
@@ -1764,7 +1764,7 @@ GST_START_TEST (test_layer_meta_foreach)
 
   ges_init ();
 
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   layer = ges_layer_new ();
   ges_timeline_add_layer (timeline, layer);
 

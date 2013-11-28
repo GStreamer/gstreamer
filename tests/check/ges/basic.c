@@ -46,7 +46,7 @@ GST_START_TEST (test_ges_scenario)
 
   /* Timeline and 1 Layer */
   GST_DEBUG ("Create a timeline");
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   fail_unless (timeline != NULL);
 
   GST_DEBUG ("Create a layer");
@@ -169,7 +169,7 @@ GST_START_TEST (test_ges_timeline_add_layer)
 
   /* Timeline and 1 Layer */
   GST_DEBUG ("Create a timeline");
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   fail_unless (timeline != NULL);
 
   GST_DEBUG ("Create a layer");
@@ -280,7 +280,7 @@ GST_START_TEST (test_ges_timeline_add_layer_first)
 
   /* Timeline and 1 Layer */
   GST_DEBUG ("Create a timeline");
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   fail_unless (timeline != NULL);
 
   GST_DEBUG ("Create a layer");
@@ -382,7 +382,7 @@ GST_START_TEST (test_ges_timeline_remove_track)
 
   /* Timeline and 1 Layer */
   GST_DEBUG ("Create a timeline");
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   fail_unless (timeline != NULL);
 
   GST_DEBUG ("Create a layer");
@@ -540,7 +540,7 @@ GST_START_TEST (test_ges_timeline_multiple_tracks)
 
   /* Timeline and 1 Layer */
   GST_DEBUG ("Create a timeline");
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   fail_unless (timeline != NULL);
 
   g_signal_connect (timeline, "select-tracks-for-object",
@@ -683,7 +683,7 @@ GST_START_TEST (test_ges_pipeline_change_state)
   ges_init ();
 
   layer = ges_layer_new ();
-  timeline = create_timeline_sync (TRUE);
+  timeline = ges_timeline_new_audio_video ();
   fail_unless (ges_timeline_add_layer (timeline, layer));
 
   pipeline = ges_test_create_pipeline (timeline);

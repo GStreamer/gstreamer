@@ -49,7 +49,7 @@ GST_START_TEST (test_overlay_properties)
   fail_unless (track != NULL);
   layer = ges_layer_new ();
   fail_unless (layer != NULL);
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   fail_unless (timeline != NULL);
   fail_unless (ges_timeline_add_layer (timeline, layer));
   fail_unless (ges_timeline_add_track (timeline, track));
@@ -120,7 +120,7 @@ GST_START_TEST (test_overlay_in_layer)
 
   ges_init ();
 
-  timeline = create_timeline_sync (FALSE);
+  timeline = ges_timeline_new ();
   layer = (GESLayer *) ges_layer_new ();
   a = GES_TRACK (ges_audio_track_new ());
   v = GES_TRACK (ges_video_track_new ());

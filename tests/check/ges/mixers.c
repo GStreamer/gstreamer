@@ -86,7 +86,7 @@ GST_START_TEST (simple_audio_mixed_with_pipeline)
   GstMessage *message;
   GESLayer *layer, *layer1;
   GESTrack *track = GES_TRACK (ges_audio_track_new ());
-  GESTimeline *timeline = create_timeline_sync (FALSE);
+  GESTimeline *timeline = ges_timeline_new ();
   GESPipeline *pipeline = ges_test_create_pipeline (timeline);
 
   ges_timeline_add_track (timeline, track);
@@ -146,7 +146,7 @@ GST_START_TEST (audio_video_mixed_with_pipeline)
   GESLayer *layer, *layer1;
   GESTrack *track = GES_TRACK (ges_video_track_new ());
   GESTrack *track_audio = GES_TRACK (ges_audio_track_new ());
-  GESTimeline *timeline = create_timeline_sync (FALSE);
+  GESTimeline *timeline = ges_timeline_new ();
   GESPipeline *pipeline = ges_test_create_pipeline (timeline);
 
   ges_timeline_add_track (timeline, track);
