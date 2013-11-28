@@ -386,8 +386,7 @@ gst_v4l2_tv_norm_get_type (void)
   return v4l2_tv_norm;
 }
 
-#define GST_TYPE_V4L2_IO_MODE (gst_v4l2_io_mode_get_type ())
-static GType
+GType
 gst_v4l2_io_mode_get_type (void)
 {
   static GType v4l2_io_mode = 0;

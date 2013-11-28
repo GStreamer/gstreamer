@@ -69,6 +69,9 @@ typedef struct _GstV4l2Xv GstV4l2Xv;
 
 G_BEGIN_DECLS
 
+#define GST_TYPE_V4L2_IO_MODE (gst_v4l2_io_mode_get_type ())
+GType gst_v4l2_io_mode_get_type (void);
+
 #define GST_V4L2_OBJECT(obj) (GstV4l2Object *)(obj)
 
 typedef enum {
