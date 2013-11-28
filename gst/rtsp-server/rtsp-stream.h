@@ -98,6 +98,10 @@ gboolean          gst_rtsp_stream_join_bin         (GstRTSPStream *stream,
 gboolean          gst_rtsp_stream_leave_bin        (GstRTSPStream *stream,
                                                     GstBin *bin, GstElement *rtpbin);
 
+gboolean          gst_rtsp_stream_set_blocked      (GstRTSPStream * stream,
+                                                    gboolean blocked);
+gboolean          gst_rtsp_stream_is_blocking      (GstRTSPStream * stream);
+
 void              gst_rtsp_stream_get_server_port  (GstRTSPStream *stream,
                                                     GstRTSPRange *server_port,
                                                     GSocketFamily family);
@@ -156,7 +160,6 @@ typedef GstRTSPFilterResult (*GstRTSPStreamTransportFilterFunc) (GstRTSPStream *
 GList *                gst_rtsp_stream_transport_filter  (GstRTSPStream *stream,
                                                           GstRTSPStreamTransportFilterFunc func,
                                                           gpointer user_data);
-
 
 G_END_DECLS
 

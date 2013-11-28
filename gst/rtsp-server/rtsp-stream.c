@@ -120,6 +120,10 @@ struct _GstRTSPStreamPrivate
   GList *transports;
 
   gint dscp_qos;
+
+  /* stream blocking */
+  gulong blocked_id;
+  gboolean blocking;
 };
 
 #define DEFAULT_CONTROL         NULL
@@ -2150,6 +2154,92 @@ gst_rtsp_stream_transport_filter (GstRTSPStream * stream,
         break;
     }
   }
+  g_mutex_unlock (&priv->lock);
+
+  return result;
+}
+
+static GstPadProbeReturn
+pad_blocking (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
+{
+  GstRTSPStreamPrivate *priv;
+  GstRTSPStream *stream;
+
+  stream = user_data;
+  priv = stream->priv;
+
+  GST_DEBUG_OBJECT (pad, "now blocking");
+
+  g_mutex_lock (&priv->lock);
+  priv->blocking = TRUE;
+  g_mutex_unlock (&priv->lock);
+
+  gst_element_post_message (priv->payloader,
+      gst_message_new_element (GST_OBJECT_CAST (priv->payloader),
+          gst_structure_new_empty ("GstRTSPStreamBlocking")));
+
+  return GST_PAD_PROBE_OK;
+}
+
+/**
+ * gst_rtsp_stream_set_blocked:
+ * @stream: a #GstRTSPStream
+ * @blocked: boolean indicating we should block or unblock
+ *
+ * Blocks or unblocks the dataflow on @stream.
+ *
+ * Returns: %TRUE on success
+ */
+gboolean
+gst_rtsp_stream_set_blocked (GstRTSPStream * stream, gboolean blocked)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if (blocked) {
+    priv->blocking = FALSE;
+    if (priv->blocked_id == 0) {
+      priv->blocked_id = gst_pad_add_probe (priv->srcpad,
+          GST_PAD_PROBE_TYPE_BLOCK | GST_PAD_PROBE_TYPE_BUFFER |
+          GST_PAD_PROBE_TYPE_BUFFER_LIST, pad_blocking,
+          g_object_ref (stream), g_object_unref);
+    }
+  } else {
+    if (priv->blocked_id != 0) {
+      gst_pad_remove_probe (priv->srcpad, priv->blocked_id);
+      priv->blocked_id = 0;
+      priv->blocking = FALSE;
+    }
+  }
+  g_mutex_unlock (&priv->lock);
+
+  return TRUE;
+}
+
+/**
+ * gst_rtsp_stream_is_blocking:
+ * @stream: a #GstRTSPStream
+ *
+ * Check if @stream is blocking on a #GstBuffer.
+ *
+ * Returns: %TRUE if @stream is blocking
+ */
+gboolean
+gst_rtsp_stream_is_blocking (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  result = priv->blocking;
   g_mutex_unlock (&priv->lock);
 
   return result;
