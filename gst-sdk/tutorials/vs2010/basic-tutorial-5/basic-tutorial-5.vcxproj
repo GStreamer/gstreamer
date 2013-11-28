@@ -43,17 +43,17 @@
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Platform)'=='Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(GSTREAMER_ROOT_X86)\share\vs\2010\libs\gstreamer-1.0.props" Condition="exists('$(GSTREAMER_ROOT_X86)\share\vs\2010\libs\gstreamer-1.0.props')" />
-    <Import Project="$(GSTREAMER_ROOT_X86)\share\vs\2010\libs\gstreamer-video-1.0.props" Condition="exists('$(GSTREAMER_ROOT_X86)\share\vs\2010\libs\gstreamer-video-1.0.props')" />
-    <Import Project="$(GSTREAMER_ROOT_X86)\share\vs\2010\libs\gtk+-2.0.props" Condition="exists('$(GSTREAMER_ROOT_X86)\share\vs\2010\libs\gtk+-2.0.props')" />
-    <Import Project="$(GSTREAMER_ROOT_X86)\share\vs\2010\msvc\x86.props" Condition="exists('$(GSTREAMER_ROOT_X86)\share\vs\2010\msvc\x86.props')" />
+    <Import Project="$(GSTREAMER_1_0_ROOT_X86)\share\vs\2010\libs\gstreamer-1.0.props" Condition="exists('$(GSTREAMER_1_0_ROOT_X86)\share\vs\2010\libs\gstreamer-1.0.props')" />
+    <Import Project="$(GSTREAMER_1_0_ROOT_X86)\share\vs\2010\libs\gstreamer-video-1.0.props" Condition="exists('$(GSTREAMER_1_0_ROOT_X86)\share\vs\2010\libs\gstreamer-video-1.0.props')" />
+    <Import Project="$(GSTREAMER_1_0_ROOT_X86)\share\vs\2010\libs\gtk+-2.0.props" Condition="exists('$(GSTREAMER_1_0_ROOT_X86)\share\vs\2010\libs\gtk+-2.0.props')" />
+    <Import Project="$(GSTREAMER_1_0_ROOT_X86)\share\vs\2010\msvc\x86.props" Condition="exists('$(GSTREAMER_1_0_ROOT_X86)\share\vs\2010\msvc\x86.props')" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Platform)'=='x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-    <Import Project="$(GSTREAMER_ROOT_X86_64)\share\vs\2010\libs\gstreamer-1.0.props" Condition="exists('$(GSTREAMER_ROOT_X86_64)\share\vs\2010\libs\gstreamer-1.0.props')" />
-    <Import Project="$(GSTREAMER_ROOT_X86_64)\share\vs\2010\libs\gstreamer-video-1.0.props" Condition="exists('$(GSTREAMER_ROOT_X86_64)\share\vs\2010\libs\gstreamer-video-1.0.props')" />
-    <Import Project="$(GSTREAMER_ROOT_X86_64)\share\vs\2010\libs\gtk+-2.0.props" Condition="exists('$(GSTREAMER_ROOT_X86_64)\share\vs\2010\libs\gtk+-2.0.props')" />
-    <Import Project="$(GSTREAMER_ROOT_X86_64)\share\vs\2010\msvc\x86_64.props" Condition="exists('$(GSTREAMER_ROOT_X86_64)\share\vs\2010\msvc\x86_64.props')" />
+    <Import Project="$(GSTREAMER_1_0_ROOT_X86_64)\share\vs\2010\libs\gstreamer-1.0.props" Condition="exists('$(GSTREAMER_1_0_ROOT_X86_64)\share\vs\2010\libs\gstreamer-1.0.props')" />
+    <Import Project="$(GSTREAMER_1_0_ROOT_X86_64)\share\vs\2010\libs\gstreamer-video-1.0.props" Condition="exists('$(GSTREAMER_1_0_ROOT_X86_64)\share\vs\2010\libs\gstreamer-video-1.0.props')" />
+    <Import Project="$(GSTREAMER_1_0_ROOT_X86_64)\share\vs\2010\libs\gtk+-2.0.props" Condition="exists('$(GSTREAMER_1_0_ROOT_X86_64)\share\vs\2010\libs\gtk+-2.0.props')" />
+    <Import Project="$(GSTREAMER_1_0_ROOT_X86_64)\share\vs\2010\msvc\x86_64.props" Condition="exists('$(GSTREAMER_1_0_ROOT_X86_64)\share\vs\2010\msvc\x86_64.props')" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)'=='Debug'">
