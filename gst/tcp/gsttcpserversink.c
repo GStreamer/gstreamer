@@ -152,6 +152,7 @@ gst_tcp_server_sink_finalize (GObject * gobject)
 static gboolean
 gst_tcp_server_sink_handle_server_read (GstTCPServerSink * sink)
 {
+  GstMultiSinkHandle handle;
   GSocket *client_socket;
   GError *err = NULL;
 
@@ -161,8 +162,8 @@ gst_tcp_server_sink_handle_server_read (GstTCPServerSink * sink)
   if (!client_socket)
     goto accept_failed;
 
-  gst_multi_handle_sink_add (GST_MULTI_HANDLE_SINK (sink),
-      (GstMultiSinkHandle) client_socket);
+  handle.socket = client_socket;
+  gst_multi_handle_sink_add (GST_MULTI_HANDLE_SINK (sink), handle);
 
 #ifndef GST_DISABLE_GST_DEBUG
   {
