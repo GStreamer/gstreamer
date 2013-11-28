@@ -30,6 +30,9 @@
 #include "gstvaapivideomemory.h"
 #endif
 
+#define GST_PLUGIN_NAME "vaapiencode_mpeg2"
+#define GST_PLUGIN_DESC "A VA-API based MPEG-2 video encoder"
+
 GST_DEBUG_CATEGORY_STATIC (gst_vaapi_mpeg2_encode_debug);
 #define GST_CAT_DEFAULT gst_vaapi_mpeg2_encode_debug
 
@@ -192,7 +195,7 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
   GstVaapiEncodeClass *const encode_class = GST_VAAPIENCODE_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (gst_vaapi_mpeg2_encode_debug,
-      "vaapimpeg2encode", 0, "vaapimpeg2encode element");
+      GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
 
   object_class->finalize = gst_vaapiencode_mpeg2_finalize;
   object_class->set_property = gst_vaapiencode_mpeg2_set_property;
@@ -201,9 +204,9 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
   encode_class->create_encoder = gst_vaapiencode_mpeg2_create_encoder;
 
   gst_element_class_set_static_metadata (element_class,
-      "VA-API mpeg2 encoder",
+      "VA-API MPEG-2 encoder",
       "Codec/Encoder/Video",
-      "A VA-API based video encoder", "Guangxin Xu <guangxin.xu@intel.com>");
+      GST_PLUGIN_DESC, "Guangxin Xu <guangxin.xu@intel.com>");
 
   /* sink pad */
   gst_element_class_add_pad_template (element_class,

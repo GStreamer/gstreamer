@@ -30,6 +30,9 @@
 #include "gstvaapivideomemory.h"
 #endif
 
+#define GST_PLUGIN_NAME "vaapiencode_h264"
+#define GST_PLUGIN_DESC "A VA-API based H.264 video encoder"
+
 GST_DEBUG_CATEGORY_STATIC (gst_vaapi_h264_encode_debug);
 #define GST_CAT_DEFAULT gst_vaapi_h264_encode_debug
 
@@ -313,7 +316,7 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
   GstVaapiEncodeClass *const encode_class = GST_VAAPIENCODE_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (gst_vaapi_h264_encode_debug,
-      "vaapih264encode", 0, "vaapih264encode element");
+      GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
 
   object_class->finalize = gst_vaapiencode_h264_finalize;
   object_class->set_property = gst_vaapiencode_h264_set_property;
@@ -323,9 +326,9 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
   encode_class->allocate_buffer = gst_vaapiencode_h264_alloc_buffer;
 
   gst_element_class_set_static_metadata (element_class,
-      "VA-API h264 encoder",
+      "VA-API H.264 encoder",
       "Codec/Encoder/Video",
-      "A VA-API based video encoder", "Wind Yuan <feng.yuan@intel.com>");
+      GST_PLUGIN_DESC, "Wind Yuan <feng.yuan@intel.com>");
 
   /* sink pad */
   gst_element_class_add_pad_template (element_class,
