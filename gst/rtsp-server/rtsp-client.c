@@ -1041,7 +1041,7 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPUrl *uri;
   GString *rtpinfo;
   guint n_streams, i, infocount;
-  gchar *str, *base_url;
+  gchar *str;
   GstRTSPTimeRange *range;
   GstRTSPResult res;
   GstRTSPState rtspstate;
@@ -1092,8 +1092,6 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   /* grab RTPInfo from the payloaders now */
   rtpinfo = g_string_new ("");
 
-  base_url = make_base_url (client, uri, path);
-
   n_streams = gst_rtsp_media_n_streams (media);
   for (i = 0, infocount = 0; i < n_streams; i++) {
     GstRTSPStreamTransport *trans;
@@ -1116,22 +1114,23 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
     stream = gst_rtsp_stream_transport_get_stream (trans);
     if (gst_rtsp_stream_get_rtpinfo (stream, &rtptime, &seq)) {
-      gchar *control;
+      const GstRTSPUrl *url;
+      gchar *url_str;
 
       if (infocount > 0)
         g_string_append (rtpinfo, ", ");
 
-      control = gst_rtsp_stream_get_control (stream);
-      g_string_append_printf (rtpinfo, "url=%s%s;seq=%u;rtptime=%u",
-          base_url, control, seq, rtptime);
-      g_free (control);
+      url = gst_rtsp_stream_transport_get_url (trans);
+      url_str = gst_rtsp_url_get_request_uri (url);
+      g_string_append_printf (rtpinfo, "url=%s;seq=%u;rtptime=%u",
+          url_str, seq, rtptime);
+      g_free (url_str);
 
       infocount++;
     } else {
       GST_WARNING ("RTP-Info cannot be determined for stream %d", i);
     }
   }
-  g_free (base_url);
   g_free (path);
 
   /* construct the response now */
@@ -1477,7 +1476,7 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   if (path[matched] == '\0')
     goto control_not_found;
 
-  /* path is what matched. We can modify the parsed uri in place */
+  /* path is what matched. */
   path[matched] = '\0';
   /* control is remainder */
   control = &path[matched + 1];
@@ -1538,6 +1537,10 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   /* set in the session media transport */
   trans = gst_rtsp_session_media_set_transport (sessmedia, stream, ct);
+
+  /* configure the url used to set this transport, this we will use when
+   * generating the response for the PLAY request */
+  gst_rtsp_stream_transport_set_url (trans, uri);
 
   /* configure keepalive for this transport */
   gst_rtsp_stream_transport_set_keepalive (trans,
