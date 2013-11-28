@@ -340,12 +340,6 @@ gst_vaapi_video_buffer_new_with_image(GstVaapiImage *image)
 }
 
 GstBuffer *
-gst_vaapi_video_buffer_new_with_surface(GstVaapiSurface *surface)
-{
-    return new_vbuffer(gst_vaapi_video_meta_new_with_surface(surface));
-}
-
-GstBuffer *
 gst_vaapi_video_buffer_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy)
 {
     return new_vbuffer(gst_vaapi_video_meta_new_with_surface_proxy(proxy));

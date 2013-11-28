@@ -53,10 +53,6 @@ gst_vaapi_video_buffer_new_with_image(GstVaapiImage *image);
 
 G_GNUC_INTERNAL
 GstBuffer *
-gst_vaapi_video_buffer_new_with_surface(GstVaapiSurface *surface);
-
-G_GNUC_INTERNAL
-GstBuffer *
 gst_vaapi_video_buffer_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy);
 
 G_END_DECLS

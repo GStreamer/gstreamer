@@ -62,10 +62,6 @@ gst_vaapi_video_meta_new_with_image(GstVaapiImage *image);
 
 G_GNUC_INTERNAL
 GstVaapiVideoMeta *
-gst_vaapi_video_meta_new_with_surface(GstVaapiSurface *surface);
-
-G_GNUC_INTERNAL
-GstVaapiVideoMeta *
 gst_vaapi_video_meta_new_with_surface_proxy(GstVaapiSurfaceProxy *proxy);
 
 G_GNUC_INTERNAL
@@ -101,16 +97,6 @@ gst_vaapi_video_meta_set_image_from_pool(GstVaapiVideoMeta *meta,
 G_GNUC_INTERNAL
 GstVaapiSurface *
 gst_vaapi_video_meta_get_surface(GstVaapiVideoMeta *meta);
-
-G_GNUC_INTERNAL
-void
-gst_vaapi_video_meta_set_surface(GstVaapiVideoMeta *meta,
-    GstVaapiSurface *surface);
-
-G_GNUC_INTERNAL
-gboolean
-gst_vaapi_video_meta_set_surface_from_pool(GstVaapiVideoMeta *meta,
-    GstVaapiVideoPool *pool);
 
 G_GNUC_INTERNAL
 GstVaapiSurfaceProxy *

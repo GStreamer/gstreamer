@@ -86,19 +86,6 @@ set_surface(GstVaapiVideoMeta *meta, GstVaapiSurface *surface)
 }
 
 static gboolean
-set_surface_from_pool(GstVaapiVideoMeta *meta, GstVaapiVideoPool *pool)
-{
-    GstVaapiSurface *surface;
-
-    surface = gst_vaapi_video_pool_get_object(pool);
-    if (!surface)
-        return FALSE;
-    set_surface(meta, surface);
-    meta->surface_pool = gst_vaapi_video_pool_ref(pool);
-    return TRUE;
-}
-
-static gboolean
 set_surface_proxy(GstVaapiVideoMeta *meta, GstVaapiSurfaceProxy *proxy)
 {
     GstVaapiSurface *surface;
@@ -372,33 +359,6 @@ gst_vaapi_video_meta_new_with_image(GstVaapiImage *image)
 }
 
 /**
- * gst_vaapi_video_meta_new_with_surface:
- * @surface: a #GstVaapiSurface
- *
- * Creates a #GstVaapiVideoMeta with the specified @surface. The resulting
- * meta holds an additional reference to the @surface.
- *
- * This function shall only be called from within gstreamer-vaapi
- * plugin elements.
- *
- * Return value: the newly allocated #GstVaapiVideoMeta, or %NULL on error
- */
-GstVaapiVideoMeta *
-gst_vaapi_video_meta_new_with_surface(GstVaapiSurface *surface)
-{
-    GstVaapiVideoMeta *meta;
-
-    g_return_val_if_fail(surface != NULL, NULL);
-
-    meta = _gst_vaapi_video_meta_new();
-    if (G_UNLIKELY(!meta))
-        return NULL;
-
-    gst_vaapi_video_meta_set_surface(meta, surface);
-    return meta;
-}
-
-/**
  * gst_vaapi_video_meta_new_with_surface_proxy:
  * @proxy: a #GstVaapiSurfaceProxy
  *
@@ -591,52 +551,6 @@ gst_vaapi_video_meta_get_surface(GstVaapiVideoMeta *meta)
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), NULL);
 
     return meta->surface;
-}
-
-/**
- * gst_vaapi_video_meta_set_surface:
- * @meta: a #GstVaapiVideoMeta
- * @surface: a #GstVaapiSurface
- *
- * Binds @surface to the @meta. If the @meta contains another
- * surface previously allocated from a pool, it's pushed back to its
- * parent pool and the pool is also released.
- */
-void
-gst_vaapi_video_meta_set_surface(GstVaapiVideoMeta *meta,
-    GstVaapiSurface *surface)
-{
-    g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
-
-    gst_vaapi_video_meta_destroy_surface(meta);
-
-    if (surface)
-        set_surface(meta, surface);
-}
-
-/**
- * gst_vaapi_video_meta_set_surface_from_pool
- * @meta: a #GstVaapiVideoMeta
- * @pool: a #GstVaapiVideoPool
- *
- * Binds a newly allocated video object from the @pool. The @pool
- * shall be of type #GstVaapiSurfacePool. Previously allocated objects
- * are released and returned to their parent pools, if any.
- *
- * Return value: %TRUE on success
- */
-gboolean
-gst_vaapi_video_meta_set_surface_from_pool(GstVaapiVideoMeta *meta,
-    GstVaapiVideoPool *pool)
-{
-    g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), FALSE);
-    g_return_val_if_fail(pool != NULL, FALSE);
-    g_return_val_if_fail(gst_vaapi_video_pool_get_object_type(pool) ==
-        GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE, FALSE);
-
-    gst_vaapi_video_meta_destroy_surface(meta);
-
-    return set_surface_from_pool(meta, pool);
 }
 
 /**
