@@ -233,61 +233,50 @@ error_copy_buffer:
 }
 
 static GstFlowReturn
-gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 ms_timeout)
+gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 timeout)
 {
   GstVideoEncoder *const venc = GST_VIDEO_ENCODER_CAST (encode);
   GstVaapiEncodeClass *const klass = GST_VAAPIENCODE_GET_CLASS (encode);
   GstVideoCodecFrame *out_frame = NULL;
   GstVaapiCodedBufferProxy *coded_buf_proxy = NULL;
-  GstVaapiCodedBuffer *coded_buf;
   GstVaapiEncoderStatus status;
   GstBuffer *out_buffer;
   GstFlowReturn ret;
 
-  g_return_val_if_fail (klass->allocate_buffer, GST_FLOW_ERROR);
-
   status = gst_vaapi_encoder_get_buffer (encode->encoder,
-      &out_frame, &coded_buf_proxy, ms_timeout);
+      &out_frame, &coded_buf_proxy, timeout);
   if (status == GST_VAAPI_ENCODER_STATUS_TIMEOUT)
     return GST_VAAPI_ENCODE_FLOW_TIMEOUT;
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+    goto error_get_buffer;
 
-  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS) {
-    GST_ERROR ("get encoded buffer failed, status:%d", status);
-    ret = GST_FLOW_ERROR;
-    goto error;
-  }
-
-  g_assert (out_frame);
   gst_video_codec_frame_set_user_data (out_frame, NULL, NULL);
 
-  coded_buf = coded_buf_proxy->buffer;
-  g_assert (coded_buf);
-
-  /* alloc buffer */
-  ret = klass->allocate_buffer (encode, coded_buf, &out_buffer);
-  if (ret != GST_FLOW_OK)
-    goto error;
-
-  out_frame->output_buffer = out_buffer;
-
+  /* Allocate and copy buffer into system memory */
+  out_buffer = NULL;
+  ret = klass->allocate_buffer (encode, coded_buf_proxy->buffer, &out_buffer);
   gst_vaapi_coded_buffer_proxy_replace (&coded_buf_proxy, NULL);
+  if (ret != GST_FLOW_OK)
+    goto error_allocate_buffer;
 
-  /* check out_caps, need lock first */
+  gst_buffer_replace (&out_frame->output_buffer, out_buffer);
+  gst_buffer_unref (out_buffer);
+
+  /* Check output caps */
   GST_VIDEO_ENCODER_STREAM_LOCK (encode);
   if (!encode->out_caps_done) {
     GstVideoCodecState *old_state, *new_state;
     GstBuffer *codec_data;
 
     status = gst_vaapi_encoder_get_codec_data (encode->encoder, &codec_data);
-    if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS) {
-      ret = GST_VAAPI_ENCODE_FLOW_CODEC_DATA_ERROR;
-      goto error_unlock;
-    }
+    if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+      goto error_codec_data;
+
     if (codec_data) {
       encode->srcpad_caps = gst_caps_make_writable (encode->srcpad_caps);
       gst_caps_set_simple (encode->srcpad_caps,
           "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
-      gst_buffer_replace (&codec_data, NULL);
+      gst_buffer_unref (codec_data);
       old_state =
           gst_video_encoder_get_output_state (GST_VIDEO_ENCODER_CAST (encode));
       new_state =
@@ -295,14 +284,6 @@ gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 ms_timeout)
           gst_caps_ref (encode->srcpad_caps), old_state);
       gst_video_codec_state_unref (old_state);
       gst_video_codec_state_unref (new_state);
-#if GST_CHECK_VERSION(1,0,0)
-      if (!gst_video_encoder_negotiate (GST_VIDEO_ENCODER_CAST (encode))) {
-        GST_ERROR ("failed to negotiate with caps %" GST_PTR_FORMAT,
-            encode->srcpad_caps);
-        ret = GST_FLOW_NOT_NEGOTIATED;
-        goto error_unlock;
-      }
-#endif
       GST_DEBUG ("updated srcpad caps to: %" GST_PTR_FORMAT,
           encode->srcpad_caps);
     }
@@ -313,21 +294,32 @@ gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 ms_timeout)
   GST_DEBUG ("output:%" GST_TIME_FORMAT ", size:%d",
       GST_TIME_ARGS (out_frame->pts), gst_buffer_get_size (out_buffer));
 
-  ret = gst_video_encoder_finish_frame (venc, out_frame);
-  out_frame = NULL;
-  if (ret != GST_FLOW_OK)
-    goto error;
+  return gst_video_encoder_finish_frame (venc, out_frame);
 
-  return GST_FLOW_OK;
-
-error_unlock:
-  GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
-error:
-  gst_vaapi_coded_buffer_proxy_replace (&coded_buf_proxy, NULL);
-  if (out_frame)
+  /* ERRORS */
+error_get_buffer:
+  {
+    GST_ERROR ("failed to get encoded buffer (status %d)", status);
+    if (out_frame)
+      gst_video_codec_frame_unref (out_frame);
+    if (coded_buf_proxy)
+      gst_vaapi_coded_buffer_proxy_unref (coded_buf_proxy);
+    return GST_FLOW_ERROR;
+  }
+error_allocate_buffer:
+  {
+    GST_ERROR ("failed to allocate encoded buffer in system memory");
+    if (out_buffer)
+      gst_buffer_unref (out_buffer);
+    return ret;
+  }
+error_codec_data:
+  {
+    GST_ERROR ("failed to construct codec-data (status %d)", status);
+    GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
     gst_video_codec_frame_unref (out_frame);
-
-  return ret;
+    return GST_VAAPI_ENCODE_FLOW_CODEC_DATA_ERROR;
+  }
 }
 
 static void
