@@ -75,8 +75,8 @@ cleanup_filter (GstElement * filter)
 }
 
 static void
-check_filter_caps (const gchar * name, GstCaps * caps, gint size,
-    gint num_buffers, const gchar * prop, va_list varargs)
+check_filter_caps (const gchar * name, GstEvent * event, GstCaps * caps,
+    gint size, gint num_buffers, const gchar * prop, va_list varargs)
 {
   GstElement *filter;
   GstBuffer *inbuffer, *outbuffer;
@@ -93,6 +93,9 @@ check_filter_caps (const gchar * name, GstCaps * caps, gint size,
   /* ensure segment (format) properly setup */
   gst_segment_init (&segment, GST_FORMAT_TIME);
   fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  if (event)
+    fail_unless (gst_pad_push_event (mysrcpad, event));
 
   for (i = 0; i < num_buffers; ++i) {
     inbuffer = gst_buffer_new_and_alloc (size);
@@ -131,7 +134,8 @@ check_filter_caps (const gchar * name, GstCaps * caps, gint size,
 }
 
 static void
-check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
+check_filter_varargs (const gchar * name, GstEvent * event, gint num_buffers,
+    const gchar * prop, va_list varargs)
 {
   static const struct
   {
@@ -143,7 +147,6 @@ check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
   gint i, n, r;
   gint size;
   GstCaps *allcaps, *templ = gst_caps_from_string (VIDEO_CAPS_TEMPLATE_STRING);
-  va_list varargs;
 
   allcaps = gst_caps_normalize (templ);
 
@@ -158,6 +161,7 @@ check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
     /* try various resolutions */
     for (r = 0; r < G_N_ELEMENTS (resolutions); ++r) {
       GstVideoInfo info;
+      va_list args_cp;
 
       caps = gst_caps_make_writable (caps);
       gst_caps_set_simple (caps, "width", G_TYPE_INT, resolutions[r].width,
@@ -168,15 +172,39 @@ check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
       gst_video_info_from_caps (&info, caps);
       size = GST_VIDEO_INFO_SIZE (&info);
 
-      va_start (varargs, prop);
-      check_filter_caps (name, caps, size, num_buffers, prop, varargs);
-      va_end (varargs);
+      if (event)
+        gst_event_ref (event);
+
+      va_copy (args_cp, varargs);
+      check_filter_caps (name, event, caps, size, num_buffers, prop, args_cp);
+      va_end (args_cp);
     }
 
     gst_caps_unref (caps);
   }
 
   gst_caps_unref (allcaps);
+  if (event)
+    gst_event_unref (event);
+}
+
+static void
+check_filter (const gchar * name, gint num_buffers, const gchar * prop, ...)
+{
+  va_list varargs;
+  va_start (varargs, prop);
+  check_filter_varargs (name, NULL, num_buffers, prop, varargs);
+  va_end (varargs);
+}
+
+static void
+check_filter_with_event (const gchar * name, GstEvent * event,
+    gint num_buffers, const gchar * prop, ...)
+{
+  va_list varargs;
+  va_start (varargs, prop);
+  check_filter_varargs (name, event, num_buffers, prop, varargs);
+  va_end (varargs);
 }
 
 GST_START_TEST (test_videobalance)
@@ -190,11 +218,24 @@ GST_END_TEST;
 
 GST_START_TEST (test_videoflip)
 {
+  GstEvent *event;
+
   /* these we can handle with the caps */
   check_filter ("videoflip", 2, "method", 0, NULL);
   check_filter ("videoflip", 2, "method", 2, NULL);
   check_filter ("videoflip", 2, "method", 4, NULL);
   check_filter ("videoflip", 2, "method", 5, NULL);
+
+  event = gst_event_new_tag (gst_tag_list_new_empty ());
+  check_filter_with_event ("videoflip", event, 2, "method", 8, NULL);
+
+  event = gst_event_new_tag (gst_tag_list_new (GST_TAG_IMAGE_ORIENTATION,
+          "rotate-180", NULL));
+  check_filter_with_event ("videoflip", event, 2, "method", 8, NULL);
+
+  event = gst_event_new_tag (gst_tag_list_new (GST_TAG_IMAGE_ORIENTATION,
+          "invalid", NULL));
+  check_filter_with_event ("videoflip", event, 2, "method", 8, NULL);
 }
 
 GST_END_TEST;
