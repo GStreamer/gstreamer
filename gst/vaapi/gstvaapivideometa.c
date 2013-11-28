@@ -43,8 +43,6 @@ struct _GstVaapiVideoMeta {
     GstVaapiDisplay            *display;
     GstVaapiVideoPool          *image_pool;
     GstVaapiImage              *image;
-    GstVaapiVideoPool          *surface_pool;
-    GstVaapiSurface            *surface;
     GstVaapiSurfaceProxy       *proxy;
     GFunc                       converter;
     guint                       render_flags;
@@ -73,16 +71,10 @@ set_image_from_pool(GstVaapiVideoMeta *meta, GstVaapiVideoPool *pool)
     image = gst_vaapi_video_pool_get_object(pool);
     if (!image)
         return FALSE;
+
     set_image(meta, image);
     meta->image_pool = gst_vaapi_video_pool_ref(pool);
     return TRUE;
-}
-
-static inline void
-set_surface(GstVaapiVideoMeta *meta, GstVaapiSurface *surface)
-{
-    meta->surface = gst_vaapi_object_ref(surface);
-    set_display(meta, gst_vaapi_object_get_display(GST_VAAPI_OBJECT(surface)));
 }
 
 static gboolean
@@ -94,8 +86,8 @@ set_surface_proxy(GstVaapiVideoMeta *meta, GstVaapiSurfaceProxy *proxy)
     if (!surface)
         return FALSE;
 
-    set_surface(meta, surface);
     meta->proxy = gst_vaapi_surface_proxy_ref(proxy);
+    set_display(meta, gst_vaapi_object_get_display(GST_VAAPI_OBJECT(surface)));
     return TRUE;
 }
 
@@ -111,11 +103,7 @@ set_surface_proxy_from_pool(GstVaapiVideoMeta *meta, GstVaapiVideoPool *pool)
 
     success = set_surface_proxy(meta, proxy);
     gst_vaapi_surface_proxy_unref(proxy);
-    if (!success)
-        return FALSE;
-
-    meta->surface_pool = gst_vaapi_video_pool_ref(pool);
-    return TRUE;
+    return success;
 }
 
 static void
@@ -130,18 +118,10 @@ gst_vaapi_video_meta_destroy_image(GstVaapiVideoMeta *meta)
     gst_vaapi_video_pool_replace(&meta->image_pool, NULL);
 }
 
-static void
-gst_vaapi_video_meta_destroy_surface(GstVaapiVideoMeta *meta)
+static inline void
+gst_vaapi_video_meta_destroy_proxy(GstVaapiVideoMeta *meta)
 {
     gst_vaapi_surface_proxy_replace(&meta->proxy, NULL);
-
-    if (meta->surface) {
-        if (meta->surface_pool)
-            gst_vaapi_video_pool_put_object(meta->surface_pool, meta->surface);
-        gst_vaapi_object_unref(meta->surface);
-        meta->surface = NULL;
-    }
-    gst_vaapi_video_pool_replace(&meta->surface_pool, NULL);
 }
 
 #if !GST_CHECK_VERSION(1,0,0)
@@ -166,7 +146,7 @@ static void
 gst_vaapi_video_meta_finalize(GstVaapiVideoMeta *meta)
 {
     gst_vaapi_video_meta_destroy_image(meta);
-    gst_vaapi_video_meta_destroy_surface(meta);
+    gst_vaapi_video_meta_destroy_proxy(meta);
     gst_vaapi_display_replace(&meta->display, NULL);
 }
 
@@ -177,8 +157,6 @@ gst_vaapi_video_meta_init(GstVaapiVideoMeta *meta)
     meta->display       = NULL;
     meta->image_pool    = NULL;
     meta->image         = NULL;
-    meta->surface_pool  = NULL;
-    meta->surface       = NULL;
     meta->proxy         = NULL;
     meta->converter     = NULL;
     meta->render_flags  = 0;
@@ -237,7 +215,7 @@ gst_vaapi_video_meta_copy(GstVaapiVideoMeta *meta)
 
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), NULL);
 
-    if (meta->image_pool || meta->surface_pool)
+    if (meta->image_pool)
         return NULL;
 
     copy = _gst_vaapi_video_meta_create();
@@ -248,10 +226,8 @@ gst_vaapi_video_meta_copy(GstVaapiVideoMeta *meta)
     copy->display       = gst_vaapi_display_ref(meta->display);
     copy->image_pool    = NULL;
     copy->image         = meta->image ? gst_vaapi_object_ref(meta->image) : NULL;
-    copy->surface_pool  = NULL;
-    copy->surface       = meta->surface ? gst_vaapi_object_ref(meta->surface) : NULL;
     copy->proxy         = meta->proxy ?
-        gst_vaapi_surface_proxy_ref(meta->proxy) : NULL;
+        gst_vaapi_surface_proxy_copy(meta->proxy) : NULL;
     copy->converter     = meta->converter;
     copy->render_flags  = meta->render_flags;
 
@@ -550,7 +526,7 @@ gst_vaapi_video_meta_get_surface(GstVaapiVideoMeta *meta)
 {
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), NULL);
 
-    return meta->surface;
+    return meta->proxy ? GST_VAAPI_SURFACE_PROXY_SURFACE(meta->proxy) : NULL;
 }
 
 /**
@@ -589,7 +565,7 @@ gst_vaapi_video_meta_set_surface_proxy(GstVaapiVideoMeta *meta,
 
     g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
 
-    gst_vaapi_video_meta_destroy_surface(meta);
+    gst_vaapi_video_meta_destroy_proxy(meta);
 
     if (proxy) {
         if (!set_surface_proxy(meta, proxy))
@@ -644,7 +620,7 @@ guint
 gst_vaapi_video_meta_get_render_flags(GstVaapiVideoMeta *meta)
 {
     g_return_val_if_fail(GST_VAAPI_IS_VIDEO_META(meta), 0);
-    g_return_val_if_fail(meta->surface != NULL, 0);
+    g_return_val_if_fail(meta->proxy != NULL, 0);
 
     return meta->render_flags;
 }
@@ -660,7 +636,7 @@ void
 gst_vaapi_video_meta_set_render_flags(GstVaapiVideoMeta *meta, guint flags)
 {
     g_return_if_fail(GST_VAAPI_IS_VIDEO_META(meta));
-    g_return_if_fail(meta->surface != NULL);
+    g_return_if_fail(meta->proxy != NULL);
 
     meta->render_flags = flags;
 }
