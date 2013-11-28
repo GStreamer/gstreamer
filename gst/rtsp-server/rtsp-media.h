@@ -41,11 +41,6 @@ typedef struct _GstRTSPMedia GstRTSPMedia;
 typedef struct _GstRTSPMediaClass GstRTSPMediaClass;
 typedef struct _GstRTSPMediaPrivate GstRTSPMediaPrivate;
 
-#include "rtsp-stream.h"
-#include "rtsp-thread-pool.h"
-#include "rtsp-permissions.h"
-#include "rtsp-address-pool.h"
-
 /**
  * GstRTSPMediaStatus:
  * @GST_RTSP_MEDIA_STATUS_UNPREPARED: media pipeline not prerolled
@@ -53,6 +48,7 @@ typedef struct _GstRTSPMediaPrivate GstRTSPMediaPrivate;
  *                                     shutdown.
  * @GST_RTSP_MEDIA_STATUS_PREPARING: media pipeline is prerolling
  * @GST_RTSP_MEDIA_STATUS_PREPARED: media pipeline is prerolled
+ * @GST_RTSP_MEDIA_STATUS_SUSPENDED: media is suspended
  * @GST_RTSP_MEDIA_STATUS_ERROR: media pipeline is in error
  *
  * The state of the media pipeline.
@@ -62,8 +58,32 @@ typedef enum {
   GST_RTSP_MEDIA_STATUS_UNPREPARING = 1,
   GST_RTSP_MEDIA_STATUS_PREPARING   = 2,
   GST_RTSP_MEDIA_STATUS_PREPARED    = 3,
-  GST_RTSP_MEDIA_STATUS_ERROR       = 4
+  GST_RTSP_MEDIA_STATUS_SUSPENDED   = 4,
+  GST_RTSP_MEDIA_STATUS_ERROR       = 5
 } GstRTSPMediaStatus;
+
+/**
+ * GstRTSPSuspendMode:
+ * @GST_RTSP_SUSPEND_MODE_NONE: Media is not suspended
+ * @GST_RTSP_SUSPEND_MODE_PAUSE: Media is PAUSED in suspend
+ * @GST_RTSP_SUSPEND_MODE_RESET: The media is set to NULL when suspended
+ *
+ * The suspend mode of the media pipeline. A media pipeline is suspended right
+ * after creating the SDP and when the client preforms a PAUSED request.
+ */
+typedef enum {
+  GST_RTSP_SUSPEND_MODE_NONE   = 0,
+  GST_RTSP_SUSPEND_MODE_PAUSE  = 1,
+  GST_RTSP_SUSPEND_MODE_RESET  = 2
+} GstRTSPSuspendMode;
+
+#define GST_TYPE_RTSP_SUSPEND_MODE (gst_rtsp_suspend_mode_get_type())
+GType gst_rtsp_suspend_mode_get_type (void);
+
+#include "rtsp-stream.h"
+#include "rtsp-thread-pool.h"
+#include "rtsp-permissions.h"
+#include "rtsp-address-pool.h"
 
 /**
  * GstRTSPMedia:
@@ -153,6 +173,12 @@ GstNetTimeProvider *  gst_rtsp_media_get_time_provider (GstRTSPMedia *media,
 /* prepare the media for playback */
 gboolean              gst_rtsp_media_prepare          (GstRTSPMedia *media, GstRTSPThread *thread);
 gboolean              gst_rtsp_media_unprepare        (GstRTSPMedia *media);
+
+void                  gst_rtsp_media_set_suspend_mode (GstRTSPMedia *media, GstRTSPSuspendMode mode);
+GstRTSPSuspendMode    gst_rtsp_media_get_suspend_mode (GstRTSPMedia *media);
+
+gboolean              gst_rtsp_media_suspend          (GstRTSPMedia *media);
+gboolean              gst_rtsp_media_unsuspend        (GstRTSPMedia *media);
 
 /* creating streams */
 void                  gst_rtsp_media_collect_streams  (GstRTSPMedia *media);

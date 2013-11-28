@@ -114,6 +114,10 @@ void                  gst_rtsp_media_factory_set_shared       (GstRTSPMediaFacto
                                                                gboolean shared);
 gboolean              gst_rtsp_media_factory_is_shared        (GstRTSPMediaFactory *factory);
 
+void                  gst_rtsp_media_factory_set_suspend_mode (GstRTSPMediaFactory *factory,
+                                                               GstRTSPSuspendMode mode);
+GstRTSPSuspendMode    gst_rtsp_media_factory_get_suspend_mode (GstRTSPMediaFactory *factory);
+
 void                  gst_rtsp_media_factory_set_eos_shutdown (GstRTSPMediaFactory *factory,
                                                                gboolean eos_shutdown);
 gboolean              gst_rtsp_media_factory_is_eos_shutdown  (GstRTSPMediaFactory *factory);

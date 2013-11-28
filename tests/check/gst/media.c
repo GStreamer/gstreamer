@@ -300,6 +300,50 @@ GST_START_TEST (test_media_take_pipeline)
 
 GST_END_TEST;
 
+GST_START_TEST (test_media_reset)
+{
+  GstRTSPMediaFactory *factory;
+  GstRTSPMedia *media;
+  GstRTSPUrl *url;
+  GstRTSPThreadPool *pool;
+  GstRTSPThread *thread;
+
+  pool = gst_rtsp_thread_pool_new ();
+
+  factory = gst_rtsp_media_factory_new ();
+  fail_if (gst_rtsp_media_factory_is_shared (factory));
+  gst_rtsp_url_parse ("rtsp://localhost:8554/test", &url);
+
+  gst_rtsp_media_factory_set_launch (factory,
+      "( videotestsrc ! rtpvrawpay pt=96 name=pay0 )");
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+  fail_unless (gst_rtsp_media_prepare (media, thread));
+  fail_unless (gst_rtsp_media_suspend (media));
+  fail_unless (gst_rtsp_media_unprepare (media));
+  g_object_unref (media);
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+
+  thread = gst_rtsp_thread_pool_get_thread (pool,
+      GST_RTSP_THREAD_TYPE_MEDIA, NULL);
+  gst_rtsp_media_set_suspend_mode (media, GST_RTSP_SUSPEND_MODE_RESET);
+  fail_unless (gst_rtsp_media_prepare (media, thread));
+  fail_unless (gst_rtsp_media_suspend (media));
+  fail_unless (gst_rtsp_media_unprepare (media));
+  g_object_unref (media);
+
+  gst_rtsp_url_free (url);
+  g_object_unref (factory);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspmedia_suite (void)
 {
@@ -313,6 +357,7 @@ rtspmedia_suite (void)
   tcase_add_test (tc, test_media_prepare);
   tcase_add_test (tc, test_media_dyn_prepare);
   tcase_add_test (tc, test_media_take_pipeline);
+  tcase_add_test (tc, test_media_reset);
 
   return s;
 }

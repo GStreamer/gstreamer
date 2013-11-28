@@ -51,6 +51,7 @@ struct _GstRTSPMediaFactoryPrivate
   GstRTSPPermissions *permissions;
   gchar *launch;
   gboolean shared;
+  GstRTSPSuspendMode suspend_mode;
   gboolean eos_shutdown;
   GstRTSPLowerTrans protocols;
   guint buffer_size;
@@ -62,6 +63,7 @@ struct _GstRTSPMediaFactoryPrivate
 
 #define DEFAULT_LAUNCH          NULL
 #define DEFAULT_SHARED          FALSE
+#define DEFAULT_SUSPEND_MODE    GST_RTSP_SUSPEND_MODE_NONE
 #define DEFAULT_EOS_SHUTDOWN    FALSE
 #define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | \
                                         GST_RTSP_LOWER_TRANS_TCP
@@ -72,6 +74,7 @@ enum
   PROP_0,
   PROP_LAUNCH,
   PROP_SHARED,
+  PROP_SUSPEND_MODE,
   PROP_EOS_SHUTDOWN,
   PROP_PROTOCOLS,
   PROP_BUFFER_SIZE,
@@ -148,6 +151,11 @@ gst_rtsp_media_factory_class_init (GstRTSPMediaFactoryClass * klass)
           "If media from this factory is shared", DEFAULT_SHARED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_SUSPEND_MODE,
+      g_param_spec_enum ("suspend-mode", "Suspend Mode",
+          "Control how media will be suspended", GST_TYPE_RTSP_SUSPEND_MODE,
+          DEFAULT_SUSPEND_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_EOS_SHUTDOWN,
       g_param_spec_boolean ("eos-shutdown", "EOS Shutdown",
           "Send EOS down the pipeline before shutting down",
@@ -194,6 +202,7 @@ gst_rtsp_media_factory_init (GstRTSPMediaFactory * factory)
 
   priv->launch = g_strdup (DEFAULT_LAUNCH);
   priv->shared = DEFAULT_SHARED;
+  priv->suspend_mode = DEFAULT_SUSPEND_MODE;
   priv->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
   priv->protocols = DEFAULT_PROTOCOLS;
   priv->buffer_size = DEFAULT_BUFFER_SIZE;
@@ -235,6 +244,10 @@ gst_rtsp_media_factory_get_property (GObject * object, guint propid,
     case PROP_SHARED:
       g_value_set_boolean (value, gst_rtsp_media_factory_is_shared (factory));
       break;
+    case PROP_SUSPEND_MODE:
+      g_value_set_enum (value,
+          gst_rtsp_media_factory_get_suspend_mode (factory));
+      break;
     case PROP_EOS_SHUTDOWN:
       g_value_set_boolean (value,
           gst_rtsp_media_factory_is_eos_shutdown (factory));
@@ -263,6 +276,10 @@ gst_rtsp_media_factory_set_property (GObject * object, guint propid,
       break;
     case PROP_SHARED:
       gst_rtsp_media_factory_set_shared (factory, g_value_get_boolean (value));
+      break;
+    case PROP_SUSPEND_MODE:
+      gst_rtsp_media_factory_set_suspend_mode (factory,
+          g_value_get_enum (value));
       break;
     case PROP_EOS_SHUTDOWN:
       gst_rtsp_media_factory_set_eos_shutdown (factory,
@@ -437,6 +454,54 @@ gst_rtsp_media_factory_get_launch (GstRTSPMediaFactory * factory)
 
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
   result = g_strdup (priv->launch);
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+
+  return result;
+}
+
+/**
+ * gst_rtsp_media_factory_set_suspend_mode:
+ * @factory: a #GstRTSPMediaFactory
+ * @mode: the new #GstRTSPSuspendMode
+ *
+ * Configure how media created from this factory will be suspended.
+ */
+void
+gst_rtsp_media_factory_set_suspend_mode (GstRTSPMediaFactory * factory,
+    GstRTSPSuspendMode mode)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory));
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  priv->suspend_mode = mode;
+  GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
+}
+
+/**
+ * gst_rtsp_media_factory_get_suspend_mode:
+ * @factory: a #GstRTSPMediaFactory
+ *
+ * Get how media created from this factory will be suspended.
+ *
+ * Returns: a #GstRTSPSuspendMode.
+ */
+GstRTSPSuspendMode
+gst_rtsp_media_factory_get_suspend_mode (GstRTSPMediaFactory * factory)
+{
+  GstRTSPMediaFactoryPrivate *priv;
+  GstRTSPSuspendMode result;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA_FACTORY (factory),
+      GST_RTSP_SUSPEND_MODE_NONE);
+
+  priv = factory->priv;
+
+  GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  result = priv->suspend_mode;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
   return result;
@@ -946,18 +1011,21 @@ default_configure (GstRTSPMediaFactory * factory, GstRTSPMedia * media)
   GstRTSPMediaFactoryPrivate *priv = factory->priv;
   gboolean shared, eos_shutdown;
   guint size;
+  GstRTSPSuspendMode suspend_mode;
   GstRTSPLowerTrans protocols;
   GstRTSPAddressPool *pool;
   GstRTSPPermissions *perms;
 
   /* configure the sharedness */
   GST_RTSP_MEDIA_FACTORY_LOCK (factory);
+  suspend_mode = priv->suspend_mode;
   shared = priv->shared;
   eos_shutdown = priv->eos_shutdown;
   size = priv->buffer_size;
   protocols = priv->protocols;
   GST_RTSP_MEDIA_FACTORY_UNLOCK (factory);
 
+  gst_rtsp_media_set_suspend_mode (media, suspend_mode);
   gst_rtsp_media_set_shared (media, shared);
   gst_rtsp_media_set_eos_shutdown (media, eos_shutdown);
   gst_rtsp_media_set_buffer_size (media, size);

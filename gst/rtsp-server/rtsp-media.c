@@ -80,6 +80,7 @@ struct _GstRTSPMediaPrivate
   /* protected by lock */
   GstRTSPPermissions *permissions;
   gboolean shared;
+  gboolean suspend_mode;
   gboolean reusable;
   GstRTSPLowerTrans protocols;
   gboolean reused;
@@ -122,6 +123,7 @@ struct _GstRTSPMediaPrivate
 };
 
 #define DEFAULT_SHARED          FALSE
+#define DEFAULT_SUSPEND_MODE    GST_RTSP_SUSPEND_MODE_NONE
 #define DEFAULT_REUSABLE        FALSE
 #define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | \
                                         GST_RTSP_LOWER_TRANS_TCP
@@ -136,6 +138,7 @@ enum
 {
   PROP_0,
   PROP_SHARED,
+  PROP_SUSPEND_MODE,
   PROP_REUSABLE,
   PROP_PROTOCOLS,
   PROP_EOS_SHUTDOWN,
@@ -178,6 +181,29 @@ static gboolean wait_preroll (GstRTSPMedia * media);
 
 static guint gst_rtsp_media_signals[SIGNAL_LAST] = { 0 };
 
+#define C_ENUM(v) ((gint) v)
+
+#define GST_TYPE_RTSP_SUSPEND_MODE (gst_rtsp_suspend_mode_get_type())
+GType
+gst_rtsp_suspend_mode_get_type (void)
+{
+  static gsize id = 0;
+  static const GEnumValue values[] = {
+    {C_ENUM (GST_RTSP_SUSPEND_MODE_NONE), "GST_RTSP_SUSPEND_MODE_NONE", "none"},
+    {C_ENUM (GST_RTSP_SUSPEND_MODE_PAUSE), "GST_RTSP_SUSPEND_MODE_PAUSE",
+        "pause"},
+    {C_ENUM (GST_RTSP_SUSPEND_MODE_RESET), "GST_RTSP_SUSPEND_MODE_RESET",
+        "reset"},
+    {0, NULL, NULL}
+  };
+
+  if (g_once_init_enter (&id)) {
+    GType tmp = g_enum_register_static ("GstRTSPSuspendMode", values);
+    g_once_init_leave (&id, tmp);
+  }
+  return (GType) id;
+}
+
 G_DEFINE_TYPE (GstRTSPMedia, gst_rtsp_media, G_TYPE_OBJECT);
 
 static void
@@ -197,6 +223,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
       g_param_spec_boolean ("shared", "Shared",
           "If this media pipeline can be shared", DEFAULT_SHARED,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  g_object_class_install_property (gobject_class, PROP_SUSPEND_MODE,
+      g_param_spec_enum ("suspend-mode", "Suspend Mode",
+          "How to suspend the media in PAUSED", GST_TYPE_RTSP_SUSPEND_MODE,
+          DEFAULT_SUSPEND_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_REUSABLE,
       g_param_spec_boolean ("reusable", "Reusable",
@@ -276,6 +307,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   g_rec_mutex_init (&priv->state_lock);
 
   priv->shared = DEFAULT_SHARED;
+  priv->suspend_mode = DEFAULT_SUSPEND_MODE;
   priv->reusable = DEFAULT_REUSABLE;
   priv->protocols = DEFAULT_PROTOCOLS;
   priv->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
@@ -328,6 +360,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_SHARED:
       g_value_set_boolean (value, gst_rtsp_media_is_shared (media));
       break;
+    case PROP_SUSPEND_MODE:
+      g_value_set_enum (value, gst_rtsp_media_get_suspend_mode (media));
+      break;
     case PROP_REUSABLE:
       g_value_set_boolean (value, gst_rtsp_media_is_reusable (media));
       break;
@@ -361,6 +396,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_SHARED:
       gst_rtsp_media_set_shared (media, g_value_get_boolean (value));
+      break;
+    case PROP_SUSPEND_MODE:
+      gst_rtsp_media_set_suspend_mode (media, g_value_get_enum (value));
       break;
     case PROP_REUSABLE:
       gst_rtsp_media_set_reusable (media, g_value_get_boolean (value));
@@ -604,6 +642,66 @@ gst_rtsp_media_get_permissions (GstRTSPMedia * media)
   g_mutex_unlock (&priv->lock);
 
   return result;
+}
+
+/**
+ * gst_rtsp_media_set_suspend_mode:
+ * @media: a #GstRTSPMedia
+ * @mode: the new #GstRTSPSuspendMode
+ *
+ * Control how @ media will be suspended after the SDP has been generated and
+ * after a PAUSE request has been performed.
+ *
+ * Media must be unprepared when setting the suspend mode.
+ */
+void
+gst_rtsp_media_set_suspend_mode (GstRTSPMedia * media, GstRTSPSuspendMode mode)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  priv = media->priv;
+
+  g_rec_mutex_lock (&priv->state_lock);
+  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED)
+    goto was_prepared;
+  priv->suspend_mode = mode;
+  g_rec_mutex_unlock (&priv->state_lock);
+
+  return;
+
+  /* ERRORS */
+was_prepared:
+  {
+    GST_WARNING ("media %p was prepared", media);
+    g_rec_mutex_unlock (&priv->state_lock);
+  }
+}
+
+/**
+ * gst_rtsp_media_get_suspend_mode:
+ * @media: a #GstRTSPMedia
+ *
+ * Get how @media will be suspended.
+ *
+ * Returns: #GstRTSPSuspendMode.
+ */
+GstRTSPSuspendMode
+gst_rtsp_media_get_suspend_mode (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  GstRTSPSuspendMode res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), GST_RTSP_SUSPEND_MODE_NONE);
+
+  priv = media->priv;
+
+  g_rec_mutex_lock (&priv->state_lock);
+  res = priv->suspend_mode;
+  g_rec_mutex_unlock (&priv->state_lock);
+
+  return res;
 }
 
 /**
@@ -2271,6 +2369,144 @@ gst_rtsp_media_get_time_provider (GstRTSPMedia * media, const gchar * address,
   return provider;
 }
 
+/**
+ * gst_rtsp_media_suspend:
+ * @media: a #GstRTSPMedia
+ *
+ * Suspend @media. The state of the pipeline managed by @media is set to
+ * GST_STATE_NULL but all streams are kept. @media can be prepared again
+ * with gst_rtsp_media_undo_reset()
+ *
+ * @media must be prepared with gst_rtsp_media_prepare();
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_rtsp_media_suspend (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+  GstStateChangeReturn ret;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  GST_FIXME ("suspend for dynamic pipelines needs fixing");
+
+  g_rec_mutex_lock (&priv->state_lock);
+  if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED)
+    goto not_prepared;
+
+  /* don't attempt to suspend when something is busy */
+  if (priv->n_active > 0)
+    goto done;
+
+  switch (priv->suspend_mode) {
+    case GST_RTSP_SUSPEND_MODE_NONE:
+      GST_DEBUG ("media %p no suspend", media);
+      break;
+    case GST_RTSP_SUSPEND_MODE_PAUSE:
+      GST_DEBUG ("media %p suspend to PAUSED", media);
+      priv->target_state = GST_STATE_PAUSED;
+      ret = gst_element_set_state (priv->pipeline, GST_STATE_PAUSED);
+      if (ret == GST_STATE_CHANGE_FAILURE)
+        goto state_failed;
+      break;
+    case GST_RTSP_SUSPEND_MODE_RESET:
+      GST_DEBUG ("media %p suspend to NULL", media);
+      priv->target_state = GST_STATE_NULL;
+      ret = gst_element_set_state (priv->pipeline, GST_STATE_NULL);
+      if (ret == GST_STATE_CHANGE_FAILURE)
+        goto state_failed;
+      break;
+    default:
+      break;
+  }
+  /* let the streams do the state changes freely, if any */
+  media_streams_set_blocked (media, FALSE);
+  priv->status = GST_RTSP_MEDIA_STATUS_SUSPENDED;
+done:
+  g_rec_mutex_unlock (&priv->state_lock);
+
+  return TRUE;
+
+  /* ERRORS */
+not_prepared:
+  {
+    g_rec_mutex_unlock (&priv->state_lock);
+    GST_WARNING ("media %p was not prepared", media);
+    return FALSE;
+  }
+state_failed:
+  {
+    g_rec_mutex_unlock (&priv->state_lock);
+    gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_ERROR);
+    GST_WARNING ("failed changing pipeline's state for media %p", media);
+    return FALSE;
+  }
+}
+
+/**
+ * gst_rtsp_media_unsuspend:
+ * @media: a #GstRTSPMedia
+ *
+ * Unsuspend @media if it was in a suspended state. This method does nothing
+ * when the media was not in the suspended state.
+ *
+ * Returns: %TRUE on success.
+ */
+gboolean
+gst_rtsp_media_unsuspend (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv = media->priv;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+
+  g_rec_mutex_lock (&priv->state_lock);
+  if (priv->status != GST_RTSP_MEDIA_STATUS_SUSPENDED)
+    goto done;
+
+  switch (priv->suspend_mode) {
+    case GST_RTSP_SUSPEND_MODE_NONE:
+      priv->status = GST_RTSP_MEDIA_STATUS_PREPARED;
+      break;
+    case GST_RTSP_SUSPEND_MODE_PAUSE:
+      priv->status = GST_RTSP_MEDIA_STATUS_PREPARED;
+      break;
+    case GST_RTSP_SUSPEND_MODE_RESET:
+    {
+      priv->status = GST_RTSP_MEDIA_STATUS_PREPARING;
+      if (!start_preroll (media))
+        goto start_failed;
+      g_rec_mutex_unlock (&priv->state_lock);
+
+      if (!wait_preroll (media))
+        goto preroll_failed;
+
+      g_rec_mutex_lock (&priv->state_lock);
+    }
+    default:
+      break;
+  }
+done:
+  g_rec_mutex_unlock (&priv->state_lock);
+
+  return TRUE;
+
+  /* ERRORS */
+start_failed:
+  {
+    g_rec_mutex_unlock (&priv->state_lock);
+    GST_WARNING ("failed to preroll pipeline");
+    gst_rtsp_media_set_status (media, GST_RTSP_MEDIA_STATUS_ERROR);
+    return FALSE;
+  }
+preroll_failed:
+  {
+    GST_WARNING ("failed to preroll pipeline");
+    return FALSE;
+  }
+}
+
+/* must be called with state-lock */
 static void
 media_set_pipeline_state_locked (GstRTSPMedia * media, GstState state)
 {
@@ -2291,6 +2527,10 @@ media_set_pipeline_state_locked (GstRTSPMedia * media, GstState state)
         media_streams_set_blocked (media, FALSE);
 
       gst_element_set_state (priv->pipeline, state);
+
+      /* and suspend after pause */
+      if (state == GST_STATE_PAUSED)
+        gst_rtsp_media_suspend (media);
     }
   }
 }

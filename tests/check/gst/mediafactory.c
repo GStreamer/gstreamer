@@ -280,6 +280,40 @@ GST_START_TEST (test_permissions)
 
 GST_END_TEST;
 
+GST_START_TEST (test_reset)
+{
+  GstRTSPMediaFactory *factory;
+  GstRTSPMedia *media;
+  GstRTSPUrl *url;
+
+  factory = gst_rtsp_media_factory_new ();
+  fail_if (gst_rtsp_media_factory_is_shared (factory));
+  gst_rtsp_url_parse ("rtsp://localhost:8554/test", &url);
+
+  gst_rtsp_media_factory_set_launch (factory,
+      "( videotestsrc ! rtpvrawpay pt=96 name=pay0 )");
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+  fail_if (gst_rtsp_media_get_suspend_mode (media) !=
+      GST_RTSP_SUSPEND_MODE_NONE);
+  g_object_unref (media);
+
+  gst_rtsp_media_factory_set_suspend_mode (factory,
+      GST_RTSP_SUSPEND_MODE_RESET);
+
+  media = gst_rtsp_media_factory_construct (factory, url);
+  fail_unless (GST_IS_RTSP_MEDIA (media));
+  fail_if (gst_rtsp_media_get_suspend_mode (media) !=
+      GST_RTSP_SUSPEND_MODE_RESET);
+  g_object_unref (media);
+
+  gst_rtsp_url_free (url);
+  g_object_unref (factory);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtspmediafactory_suite (void)
 {
@@ -294,6 +328,7 @@ rtspmediafactory_suite (void)
   tcase_add_test (tc, test_shared);
   tcase_add_test (tc, test_addresspool);
   tcase_add_test (tc, test_permissions);
+  tcase_add_test (tc, test_reset);
 
   return s;
 }

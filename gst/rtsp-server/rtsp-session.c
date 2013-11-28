@@ -205,12 +205,14 @@ gst_rtsp_session_manage_media (GstRTSPSession * sess, const gchar * path,
 {
   GstRTSPSessionPrivate *priv;
   GstRTSPSessionMedia *result;
+  GstRTSPMediaStatus status;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION (sess), NULL);
   g_return_val_if_fail (path != NULL, NULL);
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), NULL);
-  g_return_val_if_fail (gst_rtsp_media_get_status (media) ==
-      GST_RTSP_MEDIA_STATUS_PREPARED, NULL);
+  status = gst_rtsp_media_get_status (media);
+  g_return_val_if_fail (status == GST_RTSP_MEDIA_STATUS_PREPARED || status ==
+      GST_RTSP_MEDIA_STATUS_SUSPENDED, NULL);
 
   priv = sess->priv;
 
