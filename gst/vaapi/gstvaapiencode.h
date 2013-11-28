@@ -74,7 +74,6 @@ struct _GstVaapiEncode
   GstVaapiRateControl rate_control;
   guint32 bitrate;              /* kbps */
 
-  guint32 is_running:1;
   guint32 out_caps_done:1;
 };
 

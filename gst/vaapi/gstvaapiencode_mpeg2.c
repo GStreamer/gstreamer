@@ -82,14 +82,14 @@ enum
 };
 
 static void
-gst_vaapiencode_mpeg2_init (GstVaapiEncodeMpeg2 * mpeg2_encode)
+gst_vaapiencode_mpeg2_init (GstVaapiEncodeMpeg2 * encode)
 {
-  GstVaapiEncode *const base_encode = GST_VAAPIENCODE_CAST (mpeg2_encode);
+  GstVaapiEncode *const base_encode = GST_VAAPIENCODE_CAST (encode);
 
   base_encode->rate_control = GST_VAAPI_ENCODER_MPEG2_DEFAULT_RATE_CONTROL;
-  mpeg2_encode->quantizer = GST_VAAPI_ENCODER_MPEG2_DEFAULT_CQP;
-  mpeg2_encode->intra_period = GST_VAAPI_ENCODER_MPEG2_DEFAULT_GOP_SIZE;
-  mpeg2_encode->ip_period = GST_VAAPI_ENCODER_MPEG2_DEFAULT_MAX_BFRAMES;
+  encode->quantizer = GST_VAAPI_ENCODER_MPEG2_DEFAULT_CQP;
+  encode->intra_period = GST_VAAPI_ENCODER_MPEG2_DEFAULT_GOP_SIZE;
+  encode->ip_period = GST_VAAPI_ENCODER_MPEG2_DEFAULT_MAX_BFRAMES;
 }
 
 static void
@@ -102,7 +102,7 @@ static void
 gst_vaapiencode_mpeg2_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstVaapiEncodeMpeg2 *encode = GST_VAAPIENCODE_MPEG2_CAST (object);
+  GstVaapiEncodeMpeg2 *const encode = GST_VAAPIENCODE_MPEG2_CAST (object);
 
   switch (prop_id) {
     case PROP_QUANTIZER:
@@ -124,7 +124,7 @@ static void
 gst_vaapiencode_mpeg2_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstVaapiEncodeMpeg2 *encode = GST_VAAPIENCODE_MPEG2_CAST (object);
+  GstVaapiEncodeMpeg2 *const encode = GST_VAAPIENCODE_MPEG2_CAST (object);
 
   switch (prop_id) {
     case PROP_QUANTIZER:
@@ -146,7 +146,7 @@ static GstVaapiEncoder *
 gst_vaapiencode_mpeg2_create_encoder (GstVaapiEncode * base,
     GstVaapiDisplay * display)
 {
-  GstVaapiEncodeMpeg2 *encode = GST_VAAPIENCODE_MPEG2_CAST (base);
+  GstVaapiEncodeMpeg2 *const encode = GST_VAAPIENCODE_MPEG2_CAST (base);
   GstVaapiEncode *const base_encode = GST_VAAPIENCODE_CAST (base);
   GstVaapiEncoder *base_encoder;
   GstVaapiEncoderMpeg2 *encoder;

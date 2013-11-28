@@ -53,8 +53,6 @@ struct _GstVaapiEncodeH264
   /*< private >*/
   GstVaapiEncode parent_instance;
 
-  GstVaapiProfile profile;
-  guint32 level;
   guint32 intra_period;
   guint32 init_qp;
   guint32 min_qp;

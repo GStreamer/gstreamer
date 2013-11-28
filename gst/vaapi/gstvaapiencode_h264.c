@@ -180,7 +180,7 @@ static guint8 *
 _h264_byte_stream_next_nal (guint8 * buffer, guint32 len, guint32 * nal_size)
 {
   const guint8 *cur = buffer;
-  const guint8 *end = buffer + len;
+  const guint8 *const end = buffer + len;
   guint8 *nal_start = NULL;
   guint32 flag = 0xFFFFFFFF;
   guint32 nal_start_len = 0;
@@ -268,30 +268,35 @@ error:
 }
 
 static GstFlowReturn
-gst_vaapiencode_h264_alloc_buffer (GstVaapiEncode * encode,
-    GstVaapiCodedBuffer * coded_buf, GstBuffer ** out_buf)
+gst_vaapiencode_h264_allocate_buffer (GstVaapiEncode * encode,
+    GstVaapiCodedBuffer * coded_buf, GstBuffer ** out_buffer_ptr)
 {
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (encode->encoder);
   GstFlowReturn ret;
-  GstVaapiEncoderH264 *h264encoder;
 
-  g_return_val_if_fail (encode->encoder, GST_FLOW_ERROR);
+  g_return_val_if_fail (encoder != NULL, GST_FLOW_ERROR);
 
   ret =
       GST_VAAPIENCODE_CLASS (gst_vaapiencode_h264_parent_class)->allocate_buffer
-      (encode, coded_buf, out_buf);
+      (encode, coded_buf, out_buffer_ptr);
   if (ret != GST_FLOW_OK)
     return ret;
 
-  h264encoder = GST_VAAPI_ENCODER_H264 (encode->encoder);
-  if (!gst_vaapi_encoder_h264_is_avc (h264encoder))
-    return ret;
+  if (!gst_vaapi_encoder_h264_is_avc (encoder))
+    return GST_FLOW_OK;
 
   /* Convert to avcC format */
-  if (!_h264_convert_byte_stream_to_avc (*out_buf)) {
-    GST_ERROR ("convert H.264 bytestream to avc buf failed.");
-    gst_buffer_replace (out_buf, NULL);
-  }
+  if (!_h264_convert_byte_stream_to_avc (*out_buffer_ptr))
+    goto error_convert_buffer;
   return GST_FLOW_OK;
+
+  /* ERRORS */
+error_convert_buffer:
+  {
+    GST_ERROR ("failed to convert from bytestream format to avcC format");
+    gst_buffer_replace (out_buffer_ptr, NULL);
+    return GST_FLOW_ERROR;
+  }
 }
 
 static void
@@ -309,7 +314,7 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
   object_class->get_property = gst_vaapiencode_h264_get_property;
 
   encode_class->create_encoder = gst_vaapiencode_h264_create_encoder;
-  encode_class->allocate_buffer = gst_vaapiencode_h264_alloc_buffer;
+  encode_class->allocate_buffer = gst_vaapiencode_h264_allocate_buffer;
 
   gst_element_class_set_static_metadata (element_class,
       "VA-API H.264 encoder",
