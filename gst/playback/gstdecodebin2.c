@@ -1511,6 +1511,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     chain->current_pad = gst_decode_pad_new (dbin, chain);
 
   dpad = gst_object_ref (chain->current_pad);
+  gst_pad_set_active (GST_PAD_CAST (dpad), TRUE);
   gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), pad);
 
   /* 1. Emit 'autoplug-continue' the result will tell us if this pads needs
