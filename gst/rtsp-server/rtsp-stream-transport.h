@@ -91,6 +91,10 @@ void                     gst_rtsp_stream_transport_set_transport (GstRTSPStreamT
                                                                   GstRTSPTransport * tr);
 const GstRTSPTransport * gst_rtsp_stream_transport_get_transport (GstRTSPStreamTransport *trans);
 
+void                     gst_rtsp_stream_transport_set_url       (GstRTSPStreamTransport *trans,
+                                                                  const GstRTSPUrl * url);
+const GstRTSPUrl *       gst_rtsp_stream_transport_get_url       (GstRTSPStreamTransport *trans);
+
 void                     gst_rtsp_stream_transport_set_callbacks (GstRTSPStreamTransport *trans,
                                                                   GstRTSPSendFunc send_rtp,
                                                                   GstRTSPSendFunc send_rtcp,

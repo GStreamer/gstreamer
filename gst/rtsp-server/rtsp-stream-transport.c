@@ -62,6 +62,7 @@ struct _GstRTSPStreamTransportPrivate
   gboolean timed_out;
 
   GstRTSPTransport *transport;
+  GstRTSPUrl *url;
 
   GObject *rtpsource;
 };
@@ -264,6 +265,46 @@ gst_rtsp_stream_transport_get_transport (GstRTSPStreamTransport * trans)
   g_return_val_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans), NULL);
 
   return trans->priv->transport;
+}
+
+/**
+ * gst_rtsp_stream_transport_set_url:
+ * @trans: a #GstRTSPStreamTransport
+ * @url: (transfer none): a client #GstRTSPUrl
+ *
+ * Set @url as the client url.
+ */
+void
+gst_rtsp_stream_transport_set_url (GstRTSPStreamTransport * trans,
+    const GstRTSPUrl * url)
+{
+  GstRTSPStreamTransportPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans));
+
+  priv = trans->priv;
+
+  /* keep track of the transports in the stream. */
+  if (priv->url)
+    gst_rtsp_url_free (priv->url);
+  priv->url = (url ? gst_rtsp_url_copy (url) : NULL);
+}
+
+/**
+ * gst_rtsp_stream_transport_get_url:
+ * @trans: a #GstRTSPStreamTransport
+ *
+ * Get the url configured in @trans.
+ *
+ * Returns: (transfer none): the url configured in @trans. It remains
+ *     valid for as long as @trans is valid.
+ */
+const GstRTSPUrl *
+gst_rtsp_stream_transport_get_url (GstRTSPStreamTransport * trans)
+{
+  g_return_val_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans), NULL);
+
+  return trans->priv->url;
 }
 
 /**
