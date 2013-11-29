@@ -550,6 +550,10 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
     case ' ':
       toggle_paused (play);
       break;
+    case 'q':
+    case 'Q':
+      g_main_loop_quit (play->loop);
+      break;
     case '>':
       if (!play_next (play)) {
         g_print ("\nReached end of play list.\n");
@@ -560,6 +564,11 @@ keyboard_cb (const gchar * key_input, gpointer user_data)
       play_prev (play);
       break;
     case 27:                   /* ESC */
+      if (key_input[1] == '\0') {
+        g_main_loop_quit (play->loop);
+        break;
+      }
+      /* fall through */
     default:
       if (strcmp (key_input, GST_PLAY_KB_ARROW_RIGHT) == 0) {
         relative_seek (play, +0.08);
@@ -681,5 +690,6 @@ main (int argc, char **argv)
   /* clean up */
   play_free (play);
 
+  g_print ("\n");
   return 0;
 }
