@@ -804,26 +804,6 @@ gst_ghost_pad_get_target (GstGhostPad * gpad)
   return ret;
 }
 
-static gboolean
-clear_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
-{
-  GST_DEBUG_OBJECT (pad, "clearing sticky event %" GST_PTR_FORMAT, *event);
-  gst_event_unref (*event);
-  *event = NULL;
-  return TRUE;
-}
-
-static gboolean
-copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
-{
-  GstPad *internal = GST_PAD_CAST (user_data);
-
-  GST_DEBUG_OBJECT (internal, "store sticky event %" GST_PTR_FORMAT, *event);
-  gst_pad_store_sticky_event (internal, *event);
-
-  return TRUE;
-}
-
 /**
  * gst_ghost_pad_set_target:
  * @gpad: the #GstGhostPad
@@ -864,14 +844,6 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
       gst_pad_unlink (internal, oldtarget);
     else
       gst_pad_unlink (oldtarget, internal);
-
-    if (GST_PAD_IS_SRC (gpad)) {
-      /* only clear the events on the SRC ghostpad. We don't clear sink
-       * ghostpads, they got their events from downstream and we want to
-       * set the same events on the target later. */
-      gst_pad_sticky_events_foreach (GST_PAD_CAST (gpad), clear_sticky_events,
-          NULL);
-    }
   } else {
     GST_OBJECT_UNLOCK (gpad);
   }
@@ -890,13 +862,6 @@ gst_ghost_pad_set_target (GstGhostPad * gpad, GstPad * newtarget)
 
     if (lret != GST_PAD_LINK_OK)
       goto link_failed;
-
-    if (GST_PAD_IS_SRC (gpad)) {
-      /* only copy the events to the SRC ghostpad. We don't copy to sink
-       * ghostpads, they got their events from downstream and we don't want
-       * to overwrite those with events from this new target. */
-      gst_pad_sticky_events_foreach (newtarget, copy_sticky_events, gpad);
-    }
   }
 
   return TRUE;
