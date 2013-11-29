@@ -1223,44 +1223,35 @@ gst_x264_enc_gst_to_x264_video_format (GstVideoFormat format, gint * nplanes)
       if (nplanes)
         *nplanes = 3;
       return X264_CSP_I420;
-      break;
     case GST_VIDEO_FORMAT_I420_10BE:
     case GST_VIDEO_FORMAT_I420_10LE:
       if (nplanes)
         *nplanes = 3;
       return X264_CSP_I420 | X264_CSP_HIGH_DEPTH;
-      break;
     case GST_VIDEO_FORMAT_Y42B:
       if (nplanes)
         *nplanes = 3;
       return X264_CSP_I422;
-      break;
     case GST_VIDEO_FORMAT_I422_10BE:
     case GST_VIDEO_FORMAT_I422_10LE:
       if (nplanes)
         *nplanes = 3;
       return X264_CSP_I422 | X264_CSP_HIGH_DEPTH;
-      break;
     case GST_VIDEO_FORMAT_Y444:
       if (nplanes)
         *nplanes = 3;
       return X264_CSP_I444;
-      break;
     case GST_VIDEO_FORMAT_Y444_10BE:
     case GST_VIDEO_FORMAT_Y444_10LE:
       if (nplanes)
         *nplanes = 3;
       return X264_CSP_I444 | X264_CSP_HIGH_DEPTH;
-      break;
     case GST_VIDEO_FORMAT_NV12:
       if (nplanes)
         *nplanes = 2;
       return X264_CSP_NV12;
-      break;
     default:
-      g_assert_not_reached ();
-      return GST_VIDEO_FORMAT_UNKNOWN;
-      break;
+      g_return_val_if_reached (GST_VIDEO_FORMAT_UNKNOWN);
   }
 }
 
@@ -1947,7 +1938,7 @@ gst_x264_enc_handle_frame (GstVideoEncoder * video_enc,
   x264_picture_t pic_in;
   gint i_nal, i;
   FrameData *fdata;
-  gint nplanes;
+  gint nplanes = 0;
 
   if (G_UNLIKELY (encoder->x264enc == NULL))
     goto not_inited;
