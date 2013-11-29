@@ -1552,6 +1552,10 @@ gst_x264_enc_set_profile_and_level (GstX264Enc * encoder, GstCaps * caps)
   profile = gst_structure_get_string (s, "profile");
 
   allowed_caps = gst_pad_get_allowed_caps (GST_VIDEO_ENCODER_SRC_PAD (encoder));
+
+  if (allowed_caps == NULL)
+    goto no_peer;
+
   if (!gst_caps_can_intersect (allowed_caps, caps)) {
     allowed_caps = gst_caps_make_writable (allowed_caps);
     allowed_caps = gst_caps_truncate (allowed_caps);
@@ -1580,6 +1584,8 @@ gst_x264_enc_set_profile_and_level (GstX264Enc * encoder, GstCaps * caps)
     }
   }
   gst_caps_unref (allowed_caps);
+
+no_peer:
 
   return TRUE;
 }
