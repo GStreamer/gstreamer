@@ -9463,9 +9463,9 @@ unknown_tag:
 
     g_free (namestr_dbg);
     g_free (meanstr_dbg);
-    return;
   }
 #endif
+  return;
 }
 
 static void
