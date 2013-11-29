@@ -607,6 +607,7 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   BufferQueueItem *item;
   SSRCRtxData *data;
   guint16 seqnum;
+  guint8 payload_type;
   guint32 ssrc, rtptime;
 
   rtx = GST_RTP_RTX_SEND (parent);
@@ -614,29 +615,41 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   /* read the information we want from the buffer */
   gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
   seqnum = gst_rtp_buffer_get_seq (&rtp);
+  payload_type = gst_rtp_buffer_get_payload_type (&rtp);
   ssrc = gst_rtp_buffer_get_ssrc (&rtp);
   rtptime = gst_rtp_buffer_get_timestamp (&rtp);
   gst_rtp_buffer_unmap (&rtp);
 
   g_mutex_lock (&rtx->lock);
 
-  data = gst_rtp_rtx_send_get_ssrc_data (rtx, ssrc);
-
-  /* add current rtp buffer to queue history */
-  item = g_new0 (BufferQueueItem, 1);
-  item->seqnum = seqnum;
-  item->timestamp = rtptime;
-  item->buffer = gst_buffer_ref (buffer);
-  g_sequence_append (data->queue, item);
-
-  /* remove oldest packets from history if they are too many */
-  if (rtx->max_size_packets) {
-    while (g_sequence_get_length (data->queue) > rtx->max_size_packets)
-      g_sequence_remove (g_sequence_get_begin_iter (data->queue));
+  /* transfer payload type while holding the lock */
+  if (rtx->rtx_pt_map_changed) {
+    g_hash_table_remove_all (rtx->rtx_pt_map);
+    gst_structure_foreach (rtx->pending_rtx_pt_map, structure_to_hash_table,
+        rtx->rtx_pt_map);
+    rtx->rtx_pt_map_changed = FALSE;
   }
-  if (rtx->max_size_time) {
-    while (gst_rtp_rtx_send_get_ts_diff (data) > rtx->max_size_time)
-      g_sequence_remove (g_sequence_get_begin_iter (data->queue));
+
+  /* do not store the buffer if it's payload type is unknown */
+  if (g_hash_table_contains (rtx->rtx_pt_map, GUINT_TO_POINTER (payload_type))) {
+    data = gst_rtp_rtx_send_get_ssrc_data (rtx, ssrc);
+
+    /* add current rtp buffer to queue history */
+    item = g_new0 (BufferQueueItem, 1);
+    item->seqnum = seqnum;
+    item->timestamp = rtptime;
+    item->buffer = gst_buffer_ref (buffer);
+    g_sequence_append (data->queue, item);
+
+    /* remove oldest packets from history if they are too many */
+    if (rtx->max_size_packets) {
+      while (g_sequence_get_length (data->queue) > rtx->max_size_packets)
+        g_sequence_remove (g_sequence_get_begin_iter (data->queue));
+    }
+    if (rtx->max_size_time) {
+      while (gst_rtp_rtx_send_get_ts_diff (data) > rtx->max_size_time)
+        g_sequence_remove (g_sequence_get_begin_iter (data->queue));
+    }
   }
 
   /* within lock, get packets that have to be retransmited */
@@ -646,14 +659,6 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
     /* update statistics - assume we will succeed to retransmit those packets */
     rtx->num_rtx_packets += g_queue_get_length (pending);
-  }
-
-  /* transfer payload type while holding the lock */
-  if (rtx->rtx_pt_map_changed) {
-    g_hash_table_remove_all (rtx->rtx_pt_map);
-    gst_structure_foreach (rtx->pending_rtx_pt_map, structure_to_hash_table,
-        rtx->rtx_pt_map);
-    rtx->rtx_pt_map_changed = FALSE;
   }
 
   /* no need to hold the lock to push rtx packets */
