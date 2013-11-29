@@ -121,6 +121,9 @@ gst_rtsp_stream_transport_finalize (GObject * obj)
   if (priv->transport)
     gst_rtsp_transport_free (priv->transport);
 
+  if (priv->url)
+    gst_rtsp_url_free (priv->url);
+
   G_OBJECT_CLASS (gst_rtsp_stream_transport_parent_class)->finalize (obj);
 }
 
