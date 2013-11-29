@@ -185,7 +185,7 @@ gst_rtp_asf_pay_handle_packet (GstRtpAsfPay * rtpasfpay, GstBuffer * buffer)
      * This flag tells us to push the packet.
      */
     gboolean force_push = FALSE;
-    GstRTPBuffer rtp;
+    GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
 
     /* we have no output buffer pending, create one */
     if (rtpasfpay->current == NULL) {
