@@ -530,16 +530,6 @@ gst_base_parse_finalize (GObject * object)
 
   g_object_unref (parse->priv->adapter);
 
-  if (parse->priv->cache) {
-    gst_buffer_unref (parse->priv->cache);
-    parse->priv->cache = NULL;
-  }
-
-  g_list_foreach (parse->priv->pending_events, (GFunc) gst_mini_object_unref,
-      NULL);
-  g_list_free (parse->priv->pending_events);
-  parse->priv->pending_events = NULL;
-
   if (parse->priv->index) {
     gst_object_unref (parse->priv->index);
     parse->priv->index = NULL;
