@@ -4787,6 +4787,10 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
         } else if (fourcc == FOURCC_moof) {
           if ((demux->got_moov || demux->media_caps) && demux->fragmented) {
             GST_DEBUG_OBJECT (demux, "Parsing [moof]");
+
+            /* the timestamp of the moof buffer is relevant as some scenarios
+             * won't have the initial timestamp in the atoms */
+            demux->fragment_start = gst_adapter_prev_pts (demux->adapter, NULL);
             if (!qtdemux_parse_moof (demux, data, demux->neededbytes,
                     demux->offset, NULL)) {
               gst_adapter_unmap (demux->adapter);
