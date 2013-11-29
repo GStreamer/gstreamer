@@ -591,6 +591,7 @@ gst_vaapidecode_set_context(GstElement *element, GstContext *context)
     if (gst_vaapi_video_context_get_display(context, &display)) {
         GST_INFO_OBJECT(element, "set display %p", display);
         gst_vaapi_display_replace(&decode->display, display);
+        gst_vaapi_display_unref(display);
     }
 }
 #endif
