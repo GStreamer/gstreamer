@@ -892,7 +892,7 @@ fill_checker_##name##_c (GstVideoFrame * frame) \
   width = GST_VIDEO_FRAME_WIDTH (frame); \
   width = GST_ROUND_UP_2 (width); \
   height = GST_VIDEO_FRAME_HEIGHT (frame); \
-  dest = GST_VIDEO_FRAME_COMP_DATA (frame, 0); \
+  dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0); \
   dest_add = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0) - width * 2; \
   width /= 2; \
   \
@@ -922,7 +922,7 @@ fill_color_##name (GstVideoFrame * frame, \
   width = GST_VIDEO_FRAME_WIDTH (frame); \
   width = GST_ROUND_UP_2 (width); \
   height = GST_VIDEO_FRAME_HEIGHT (frame); \
-  dest = GST_VIDEO_FRAME_COMP_DATA (frame, 0); \
+  dest = GST_VIDEO_FRAME_PLANE_DATA (frame, 0); \
   dest_stride = GST_VIDEO_FRAME_COMP_STRIDE (frame, 0); \
   width /= 2; \
   \
