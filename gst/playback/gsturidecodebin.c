@@ -1093,6 +1093,18 @@ decoded_pad_event_probe (GstPad * pad, GstPadProbeInfo * info,
   return GST_PAD_PROBE_OK;
 }
 
+
+static gboolean
+copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GstPad *gpad = GST_PAD_CAST (user_data);
+
+  GST_DEBUG_OBJECT (gpad, "store sticky event %" GST_PTR_FORMAT, *event);
+  gst_pad_store_sticky_event (gpad, *event);
+
+  return TRUE;
+}
+
 /* Called by the signal handlers when a decodebin has found a new raw pad */
 static void
 new_decoded_pad_added_cb (GstElement * element, GstPad * pad,
@@ -1128,6 +1140,7 @@ new_decoded_pad_added_cb (GstElement * element, GstPad * pad,
   GST_URI_DECODE_BIN_UNLOCK (decoder);
 
   gst_pad_set_active (newpad, TRUE);
+  gst_pad_sticky_events_foreach (pad, copy_sticky_events, newpad);
   gst_element_add_pad (GST_ELEMENT_CAST (decoder), newpad);
 }
 
