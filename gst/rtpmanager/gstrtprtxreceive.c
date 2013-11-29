@@ -120,18 +120,17 @@
 #include <gst/gst.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "gstrtprtxreceive.h"
 
 GST_DEBUG_CATEGORY_STATIC (gst_rtp_rtx_receive_debug);
 #define GST_CAT_DEFAULT gst_rtp_rtx_receive_debug
 
-#define DEFAULT_RTX_PAYLOAD_TYPES ""
-
 enum
 {
   PROP_0,
-  PROP_RTX_PAYLOAD_TYPES,
+  PROP_PAYLOAD_TYPE_MAP,
   PROP_NUM_RTX_REQUESTS,
   PROP_NUM_RTX_PACKETS,
   PROP_NUM_RTX_ASSOC_PACKETS,
@@ -179,12 +178,10 @@ gst_rtp_rtx_receive_class_init (GstRtpRtxReceiveClass * klass)
   gobject_class->set_property = gst_rtp_rtx_receive_set_property;
   gobject_class->finalize = gst_rtp_rtx_receive_finalize;
 
-  g_object_class_install_property (gobject_class, PROP_RTX_PAYLOAD_TYPES,
-      g_param_spec_string ("rtx-payload-types",
-          "Colon separated list of payload format type",
-          "Set through SDP (fmtp), it helps to detect restransmission streams "
-          "eg 97:101:127", DEFAULT_RTX_PAYLOAD_TYPES,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PAYLOAD_TYPE_MAP,
+      g_param_spec_boxed ("payload-type-map", "Payload Type Map",
+          "Map of original payload types to their retransmission payload types",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_NUM_RTX_REQUESTS,
       g_param_spec_uint ("num-rtx-requests", "Num RTX Requests",
@@ -221,9 +218,7 @@ gst_rtp_rtx_receive_reset (GstRtpRtxReceive * rtx)
 {
   g_mutex_lock (&rtx->lock);
   g_hash_table_remove_all (rtx->ssrc2_ssrc1_map);
-  g_hash_table_remove_all (rtx->ssrc1_payload_type_map);
   g_hash_table_remove_all (rtx->seqnum_ssrc1_map);
-  g_hash_table_remove_all (rtx->rtx_payload_type_set);
   rtx->num_rtx_requests = 0;
   rtx->num_rtx_packets = 0;
   rtx->num_rtx_assoc_packets = 0;
@@ -242,20 +237,14 @@ gst_rtp_rtx_receive_finalize (GObject * object)
     rtx->ssrc2_ssrc1_map = NULL;
   }
 
-  if (rtx->ssrc1_payload_type_map) {
-    g_hash_table_destroy (rtx->ssrc1_payload_type_map);
-    rtx->ssrc1_payload_type_map = NULL;
-  }
-
   if (rtx->seqnum_ssrc1_map) {
     g_hash_table_destroy (rtx->seqnum_ssrc1_map);
     rtx->seqnum_ssrc1_map = NULL;
   }
 
-  if (rtx->rtx_payload_type_set) {
-    g_hash_table_destroy (rtx->rtx_payload_type_set);
-    rtx->rtx_payload_type_set = NULL;
-  }
+  g_hash_table_unref (rtx->rtx_pt_map);
+  if (rtx->pending_rtx_pt_map)
+    gst_structure_free (rtx->pending_rtx_pt_map);
 
   g_mutex_clear (&rtx->lock);
 
@@ -286,10 +275,10 @@ gst_rtp_rtx_receive_init (GstRtpRtxReceive * rtx)
   gst_element_add_pad (GST_ELEMENT (rtx), rtx->sinkpad);
 
   rtx->ssrc2_ssrc1_map = g_hash_table_new (g_direct_hash, g_direct_equal);
-  rtx->ssrc1_payload_type_map =
-      g_hash_table_new (g_direct_hash, g_direct_equal);
   rtx->seqnum_ssrc1_map = g_hash_table_new (g_direct_hash, g_direct_equal);
-  rtx->rtx_payload_type_set = g_hash_table_new (g_direct_hash, g_direct_equal);
+
+  rtx->rtx_pt_map = g_hash_table_new (g_direct_hash, g_direct_equal);
+  rtx->rtx_pt_map_changed = FALSE;
 
   g_mutex_init (&rtx->lock);
 }
@@ -401,6 +390,23 @@ gst_rtp_rtx_receive_src_event (GstPad * pad, GstObject * parent,
   return res;
 }
 
+static gboolean
+structure_to_hash_table_inv (GQuark field_id, const GValue * value,
+    gpointer hash)
+{
+  const gchar *field_str;
+  guint field_uint;
+  guint value_uint;
+
+  field_str = g_quark_to_string (field_id);
+  field_uint = atoi (field_str);
+  value_uint = g_value_get_uint (value);
+  g_hash_table_insert ((GHashTable *) hash, GUINT_TO_POINTER (value_uint),
+      GUINT_TO_POINTER (field_uint));
+
+  return TRUE;
+}
+
 /* Copy fixed header and extension. Replace current ssrc by ssrc1,
  * remove OSN and replace current seq num by OSN.
  * Copy memory to avoid to manually copy each rtp buffer field.
@@ -486,14 +492,27 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   /* check if we have a retransmission packet (this information comes from SDP) */
   g_mutex_lock (&rtx->lock);
+
+  /* transfer payload type while holding the lock */
+  if (rtx->rtx_pt_map_changed) {
+    g_hash_table_remove_all (rtx->rtx_pt_map);
+    gst_structure_foreach (rtx->pending_rtx_pt_map, structure_to_hash_table_inv,
+        rtx->rtx_pt_map);
+    rtx->rtx_pt_map_changed = FALSE;
+  }
+
   is_rtx =
-      g_hash_table_lookup_extended (rtx->rtx_payload_type_set,
+      g_hash_table_lookup_extended (rtx->rtx_pt_map,
       GUINT_TO_POINTER (payload_type), NULL, NULL);
+
   g_mutex_unlock (&rtx->lock);
 
   if (is_rtx) {
     /* read OSN in the rtx payload */
     orign_seqnum = GST_READ_UINT16_BE (gst_rtp_buffer_get_payload (&rtp));
+    origin_payload_type =
+        GPOINTER_TO_UINT (g_hash_table_lookup (rtx->rtx_pt_map,
+            GUINT_TO_POINTER (payload_type)));
   }
 
   g_mutex_lock (&rtx->lock);
@@ -512,12 +531,6 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
           " already associated to master stream %" G_GUINT32_FORMAT, ssrc,
           GPOINTER_TO_UINT (ssrc1));
       ssrc2 = ssrc;
-
-      /* also retrieve the payload type of the original stream in order to
-       * reconstruct the packet */
-      origin_payload_type =
-          GPOINTER_TO_UINT (g_hash_table_lookup (rtx->ssrc1_payload_type_map,
-              ssrc1));
     } else {
       /* the current retransmisted packet has its rtx stream not already
        * associated to a master stream, so retrieve it from our request
@@ -551,11 +564,6 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
          */
         g_hash_table_insert (rtx->ssrc2_ssrc1_map, ssrc1,
             GUINT_TO_POINTER (ssrc2));
-
-        /* retrieve the original payload type */
-        origin_payload_type =
-            GPOINTER_TO_UINT (g_hash_table_lookup (rtx->ssrc1_payload_type_map,
-                ssrc1));
       } else {
         /* we are not able to associate this rtx packet with a master stream */
         GST_DEBUG
@@ -564,10 +572,6 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
         drop = TRUE;
       }
     }
-  } else {                      /* not rtx */
-    /* store ssrc -> pt association */
-    g_hash_table_insert (rtx->ssrc1_payload_type_map, GUINT_TO_POINTER (ssrc),
-        GUINT_TO_POINTER (payload_type));
   }
 
   /* if not dropped the packet was successfully associated */
@@ -608,34 +612,17 @@ gst_rtp_rtx_receive_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 }
 
 static void
-construct_pt_string (gpointer key, gpointer value, gpointer user_data)
-{
-  GString **str = (GString **) user_data;
-  if (!(*str)) {
-    *str = g_string_new (NULL);
-    g_string_printf (*str, "%d", GPOINTER_TO_UINT (key));
-  } else {
-    g_string_append_printf (*str, ":%d", GPOINTER_TO_UINT (key));
-  }
-}
-
-static void
 gst_rtp_rtx_receive_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
   GstRtpRtxReceive *rtx = GST_RTP_RTX_RECEIVE (object);
 
   switch (prop_id) {
-    case PROP_RTX_PAYLOAD_TYPES:{
-      GString *str = NULL;
+    case PROP_PAYLOAD_TYPE_MAP:
       g_mutex_lock (&rtx->lock);
-      g_hash_table_foreach (rtx->rtx_payload_type_set,
-          (GHFunc) construct_pt_string, &str);
-      if (str)
-        g_value_take_string (value, g_string_free (str, FALSE));
+      g_value_set_boxed (value, rtx->pending_rtx_pt_map);
       g_mutex_unlock (&rtx->lock);
       break;
-    }
     case PROP_NUM_RTX_REQUESTS:
       g_mutex_lock (&rtx->lock);
       g_value_set_uint (value, rtx->num_rtx_requests);
@@ -662,30 +649,14 @@ gst_rtp_rtx_receive_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
   GstRtpRtxReceive *rtx = GST_RTP_RTX_RECEIVE (object);
-  gchar **str_fmtp = NULL;
-  guint nb_fmtp = 0;
-  gint i = 0;
 
   switch (prop_id) {
-    case PROP_RTX_PAYLOAD_TYPES:
+    case PROP_PAYLOAD_TYPE_MAP:
       g_mutex_lock (&rtx->lock);
-      /* parses string ex: 97:101:122 */
-      str_fmtp = g_strsplit (g_value_get_string (value), ":", -1);
-      nb_fmtp = g_strv_length (str_fmtp);
-      if (nb_fmtp > 0) {
-        for (i = 0; i < nb_fmtp; ++i) {
-          gdouble fmtpd = g_strtod (str_fmtp[i], NULL);
-          /* dynamic range is in [95, 127] */
-          if (fmtpd > 95 && fmtpd < 128) {
-            guint8 fmtp = fmtpd;
-            g_hash_table_add (rtx->rtx_payload_type_set,
-                GUINT_TO_POINTER (fmtp));
-            GST_INFO ("add rtx payload type %" G_GUINT16_FORMAT, fmtp);
-          }
-        }
-      }
-      if (str_fmtp)
-        g_strfreev (str_fmtp);
+      if (rtx->pending_rtx_pt_map)
+        gst_structure_free (rtx->pending_rtx_pt_map);
+      rtx->pending_rtx_pt_map = g_value_dup_boxed (value);
+      rtx->rtx_pt_map_changed = TRUE;
       g_mutex_unlock (&rtx->lock);
       break;
     default:

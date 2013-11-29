@@ -52,20 +52,15 @@ struct _GstRtpRtxReceive
    * as we make sure all ssrc are unique */
   GHashTable *ssrc2_ssrc1_map;
 
-  /* retrieve master payload type from master stream ssrc */
-  GHashTable *ssrc1_payload_type_map;
-
   /* contains seqnum of request packets of whom their ssrc have
    * not been associated to a rtx stream yet */
   GHashTable *seqnum_ssrc1_map;
 
-  /* contains a set of payload type for all retranmission stream
-   * that this element should handle (usually using SDP)
-   * it allow to recognize if the current packet is from a rtx stream
-   * or not. It's not deterministic because several rtx streams can use
-   * the same payload type
-   */
-  GHashTable *rtx_payload_type_set;
+  /* rtx pt (uint) -> origin pt (uint) */
+  GHashTable *rtx_pt_map;
+  /* origin pt (string) -> rtx pt (uint) */
+  GstStructure *pending_rtx_pt_map;
+  gboolean rtx_pt_map_changed;
 
   /* statistics */
   guint num_rtx_requests;

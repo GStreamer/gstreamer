@@ -220,7 +220,7 @@ GST_START_TEST (test_push_forward_seq)
   pt_map = gst_structure_new ("application/x-rtp-pt-map",
       "0", G_TYPE_UINT, 97, NULL);
   g_object_set (rtprtxsend, "payload-type-map", pt_map, NULL);
-  g_object_set (rtprtxreceive, "rtx-payload-types", "97", NULL);
+  g_object_set (rtprtxreceive, "payload-type-map", pt_map, NULL);
   gst_structure_free (pt_map);
 
   /* push buffers: 0,1,2, */
@@ -408,7 +408,7 @@ start_test_drop_and_check_results (GstElement * bin, GstElement * rtppayloader,
   g_object_set (rtppayloader, "pt", 96, NULL);
   g_object_set (rtppayloader, "seqnum-offset", 1, NULL);
   g_object_set (rtprtxsend, "payload-type-map", pt_map, NULL);
-  g_object_set (rtprtxreceive, "rtx-payload-types", "99:111:125", NULL);
+  g_object_set (rtprtxreceive, "payload-type-map", pt_map, NULL);
   gst_structure_free (pt_map);
 
   send_rtxdata->count = 1;
@@ -994,6 +994,7 @@ GST_START_TEST (test_drop_multiple_sender)
   guint drop_every_n_packets = 0;
   GList *send_rtxdata_list = NULL;
   RTXReceiveMultipleData receive_rtxdata;
+  GstStructure *pt_map;
 
   GST_INFO ("preparing test");
 
@@ -1031,6 +1032,12 @@ GST_START_TEST (test_drop_multiple_sender)
       g_list_append (send_rtxdata_list, add_sender (bin, "videotestsrc",
           "rtpvrawpay", 99, 124));
 
+  pt_map = gst_structure_new ("application/x-rtp-pt-map",
+      "96", G_TYPE_UINT, 121, "97", G_TYPE_UINT, 122,
+      "98", G_TYPE_UINT, 123, "99", G_TYPE_UINT, 124, NULL);
+  g_object_set (rtprtxreceive, "payload-type-map", pt_map, NULL);
+  gst_structure_free (pt_map);
+
   res = gst_element_link (funnel, rtprtxreceive);
   fail_unless (res == TRUE, NULL);
   res = gst_element_link (rtprtxreceive, sink);
@@ -1053,7 +1060,6 @@ GST_START_TEST (test_drop_multiple_sender)
 
   for (drop_every_n_packets = 2; drop_every_n_packets < 10;
       drop_every_n_packets++) {
-    g_object_set (rtprtxreceive, "rtx-payload-types", "121:122:123:124", NULL);
     nb_eos = 0;
     start_test_drop_multiple_and_check_results (bin, send_rtxdata_list,
         &receive_rtxdata, drop_every_n_packets);
@@ -1402,7 +1408,7 @@ GST_START_TEST (test_rtxreceive_data_reconstruction)
   pt_map = gst_structure_new ("application/x-rtp-pt-map",
       "96", G_TYPE_UINT, 99, NULL);
   g_object_set (rtxsend, "payload-type-map", pt_map, NULL);
-  g_object_set (rtxrecv, "rtx-payload-types", "99", NULL);
+  g_object_set (rtxrecv, "payload-type-map", pt_map, NULL);
   gst_structure_free (pt_map);
 
   fail_unless_equals_int (gst_element_link (rtxsend, rtxrecv), TRUE);

@@ -247,11 +247,15 @@ request_aux_receiver (GstElement * rtpbin, guint sessid, SessionData * session)
   GstElement *rtx, *bin;
   GstPad *pad;
   gchar *name;
+  GstStructure *pt_map;
 
   GST_INFO ("creating AUX receiver");
   bin = gst_bin_new (NULL);
   rtx = gst_element_factory_make ("rtprtxreceive", NULL);
-  g_object_set (rtx, "rtx-payload-types", "99", NULL);
+  pt_map = gst_structure_new ("application/x-rtp-pt-map",
+      "96", G_TYPE_UINT, 99, NULL);
+  g_object_set (rtx, "payload-type-map", pt_map, NULL);
+  gst_structure_free (pt_map);
   gst_bin_add (GST_BIN (bin), rtx);
 
   pad = gst_element_get_static_pad (rtx, "src");
@@ -296,7 +300,7 @@ join_session (GstElement * pipeline, GstElement * rtpBin, SessionData * session)
 
   /* enable RFC4588 retransmission handling by setting rtprtxreceive
    * as the "aux" element of rtpbin */
-  g_signal_emit_by_name (rtpBin, "request-aux-receiver",
+  g_signal_connect (rtpBin, "request-aux-receiver",
       (GCallback) request_aux_receiver, session);
 
   gst_bin_add_many (GST_BIN (pipeline), rtpSrc, rtcpSrc, rtcpSink, NULL);
