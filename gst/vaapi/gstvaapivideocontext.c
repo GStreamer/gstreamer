@@ -169,11 +169,6 @@ gst_vaapi_video_context_propagate(GstElement *element, GstVaapiDisplay *display)
     GstContext *context;
     GstMessage *msg;
 
-    if (!display) {
-        GST_ERROR_OBJECT(element, "failed to get VA-API display connection");
-        return;
-    }
-
     context = gst_vaapi_video_context_new_with_display(display, FALSE);
 
     GST_CAT_INFO_OBJECT(GST_CAT_CONTEXT, element,

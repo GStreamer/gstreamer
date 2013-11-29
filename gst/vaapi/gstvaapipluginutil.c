@@ -139,12 +139,12 @@ gst_vaapi_ensure_display(
 
     /* If no neighboor, or application not interested, use system default */
     display = gst_vaapi_create_display(&display_type);
-
-    if (display_ptr)
-        *display_ptr = display;
+    if (!display)
+        return FALSE;
 
     gst_vaapi_video_context_propagate(context, display);
-    return display != NULL;
+    *display_ptr = display;
+    return TRUE;
 }
 
 void
