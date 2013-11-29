@@ -1419,6 +1419,37 @@ static void no_more_pads_cb (GstElement * element, GstDecodeChain * chain);
 static GstDecodeGroup *gst_decode_chain_get_current_group (GstDecodeChain *
     chain);
 
+static gboolean
+clear_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GST_DEBUG_OBJECT (pad, "clearing sticky event %" GST_PTR_FORMAT, *event);
+  gst_event_unref (*event);
+  *event = NULL;
+  return TRUE;
+}
+
+static gboolean
+copy_sticky_events (GstPad * pad, GstEvent ** event, gpointer user_data)
+{
+  GstPad *gpad = GST_PAD_CAST (user_data);
+
+  GST_DEBUG_OBJECT (gpad, "store sticky event %" GST_PTR_FORMAT, *event);
+  gst_pad_store_sticky_event (gpad, *event);
+
+  return TRUE;
+}
+
+static void
+decode_pad_set_target (GstDecodePad * dpad, GstPad * target)
+{
+  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), target);
+  if (target == NULL)
+    gst_pad_sticky_events_foreach (GST_PAD_CAST (dpad), clear_sticky_events,
+        NULL);
+  else
+    gst_pad_sticky_events_foreach (target, copy_sticky_events, dpad);
+}
+
 /* called when a new pad is discovered. It will perform some basic actions
  * before trying to link something to it.
  *
@@ -1492,7 +1523,7 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
 
   dpad = gst_object_ref (chain->current_pad);
   gst_pad_set_active (GST_PAD_CAST (dpad), TRUE);
-  gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), pad);
+  decode_pad_set_target (dpad, pad);
 
   /* 1. Emit 'autoplug-continue' the result will tell us if this pads needs
    * further autoplugging. Only do this for fixed caps, for unfixed caps
@@ -1670,12 +1701,12 @@ analyze_new_pad (GstDecodeBin * dbin, GstElement * src, GstPad * pad,
     gst_element_set_state (delem->capsfilter, GST_STATE_PAUSED);
     gst_bin_add (GST_BIN_CAST (dbin), gst_object_ref (delem->capsfilter));
 
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), NULL);
+    decode_pad_set_target (dpad, NULL);
     p = gst_element_get_static_pad (delem->capsfilter, "sink");
     gst_pad_link_full (pad, p, GST_PAD_LINK_CHECK_NOTHING);
     gst_object_unref (p);
     p = gst_element_get_static_pad (delem->capsfilter, "src");
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), p);
+    decode_pad_set_target (dpad, p);
     pad = p;
 
     if (!gst_caps_is_fixed (caps)) {
@@ -1855,12 +1886,12 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
         "is a demuxer, connecting the pad through multiqueue '%s'",
         GST_OBJECT_NAME (chain->parent->multiqueue));
 
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), NULL);
+    decode_pad_set_target (dpad, NULL);
     if (!(mqpad = gst_decode_group_control_demuxer_pad (chain->parent, pad)))
       goto beach;
     src = chain->parent->multiqueue;
     pad = mqpad;
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), pad);
+    decode_pad_set_target (dpad, pad);
   }
 
   /* 2. Try to create an element and link to it */
@@ -1876,7 +1907,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     /* Set dpad target to pad again, it might've been unset
      * below but we came back here because something failed
      */
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), pad);
+    decode_pad_set_target (dpad, pad);
 
     /* take first factory */
     factory = g_value_get_object (g_value_array_get_nth (factories, 0));
@@ -1985,7 +2016,7 @@ connect_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
     }
 
     /* 2.0. Unlink pad */
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), NULL);
+    decode_pad_set_target (dpad, NULL);
 
     /* 2.1. Try to create an element */
     if ((element = gst_element_factory_create (factory, NULL)) == NULL) {
@@ -2352,11 +2383,11 @@ expose_pad (GstDecodeBin * dbin, GstElement * src, GstDecodePad * dpad,
   if (chain->parent && !chain->elements && src != chain->parent->multiqueue) {
     GST_LOG_OBJECT (src, "connecting the pad through multiqueue");
 
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), NULL);
+    decode_pad_set_target (dpad, NULL);
     if (!(mqpad = gst_decode_group_control_demuxer_pad (chain->parent, pad)))
       goto beach;
     pad = mqpad;
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (dpad), pad);
+    decode_pad_set_target (dpad, pad);
   }
 
   gst_decode_pad_activate (dpad, chain);
@@ -2889,7 +2920,7 @@ gst_decode_chain_free_internal (GstDecodeChain * chain, gboolean hide)
           GST_PAD_CAST (chain->endpad));
     }
 
-    gst_ghost_pad_set_target (GST_GHOST_PAD_CAST (chain->endpad), NULL);
+    decode_pad_set_target (chain->endpad, NULL);
     chain->endpad->exposed = FALSE;
     if (!hide) {
       gst_object_unref (chain->endpad);
