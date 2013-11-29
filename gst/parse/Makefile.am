@@ -43,6 +43,9 @@ lex.priv_gst_parse_yy.c: parse.l grammar.tab.h
 	echo '#ifdef HAVE_CONFIG_H' > lex.priv_gst_parse_yy_tmp2.c && \
 	echo '#include <config.h>' >> lex.priv_gst_parse_yy_tmp2.c && \
 	echo '#endif' >> lex.priv_gst_parse_yy_tmp2.c && \
+	{ grep -q priv_gst_parse_yyget_column parse_lex.h || \
+	{ echo 'int priv_gst_parse_yyget_column  (void * yyscanner);' >> lex.priv_gst_parse_yy_tmp2.c && \
+	echo 'void priv_gst_parse_yyset_column (int column_no , void * yyscanner);' >> lex.priv_gst_parse_yy_tmp2.c; }; } && \
 	cat lex.priv_gst_parse_yy_tmp.c >> lex.priv_gst_parse_yy_tmp2.c && \
 	rm lex.priv_gst_parse_yy_tmp.c && \
 	mv lex.priv_gst_parse_yy_tmp2.c lex.priv_gst_parse_yy.c
