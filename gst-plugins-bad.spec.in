@@ -274,19 +274,15 @@ make ERROR_CFLAGS='' ERROR_CXXFLAGS=''
 %{_libdir}/gstreamer-%{majorminor}/libgstrsvg.so
 %{_libdir}/gstreamer-%{majorminor}/libgstschro.so
 %{_libdir}/gstreamer-%{majorminor}/libgstfrei0r.so
+%{_libdir}/gstreamer-%{majorminor}/libgstaudiomixer.so
+%{_libdir}/gstreamer-%{majorminor}/libgstopencv.so
+%{_datadir}/gst-plugins-bad/1.0/opencv_haarcascades/fist.xml
+%{_datadir}/gst-plugins-bad/1.0/opencv_haarcascades/palm.xml
 
-%{_libdir}/libgstbasecamerabinsrc-1.0.so
-%{_libdir}/libgstbasecamerabinsrc-1.0.so.0
-%{_libdir}/libgstbasecamerabinsrc-1.0.so.0.102.0
-%{_libdir}/libgstegl-1.0.so
-%{_libdir}/libgstegl-1.0.so.0
-%{_libdir}/libgstegl-1.0.so.0.102.0
-%{_libdir}/libgstmpegts-1.0.so
-%{_libdir}/libgstmpegts-1.0.so.0
-%{_libdir}/libgstmpegts-1.0.so.0.102.0
-%{_libdir}/libgsturidownloader-1.0.so
-%{_libdir}/libgsturidownloader-1.0.so.0
-%{_libdir}/libgsturidownloader-1.0.so.0.102.0
+%{_libdir}/libgstbasecamerabinsrc-*
+%{_libdir}/libgstegl-*
+%{_libdir}/libgstmpegts-*
+%{_libdir}/libgsturidownloader*
 
 
 #debugging plugin
