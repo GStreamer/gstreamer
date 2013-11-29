@@ -376,9 +376,13 @@ static GstFlowReturn
 gst_asf_mux_push_buffer (GstAsfMux * asfmux, GstBuffer * buf)
 {
   GstFlowReturn ret;
+  gsize bufsize = gst_buffer_get_size (buf);
+
   ret = gst_pad_push (asfmux->srcpad, buf);
+
   if (ret == GST_FLOW_OK)
-    asfmux->file_size += gst_buffer_get_size (buf);
+    asfmux->file_size += bufsize;
+
   return ret;
 }
 
