@@ -1937,9 +1937,11 @@ handle_request (GstRTSPClient * client, GstRTSPMessage * request)
     gst_rtsp_message_dump (request);
   }
 
-  GST_INFO ("client %p: received a request", client);
-
   gst_rtsp_message_parse_request (request, &method, &uristr, &version);
+
+  GST_INFO ("client %p: received a request %s %s %s", client,
+      gst_rtsp_method_as_text (method), uristr,
+      gst_rtsp_version_as_text (version));
 
   /* we can only handle 1.0 requests */
   if (version != GST_RTSP_VERSION_1_0)

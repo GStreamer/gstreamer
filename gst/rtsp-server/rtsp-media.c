@@ -1325,7 +1325,8 @@ gst_rtsp_media_get_range_string (GstRTSPMedia * media, gboolean play,
   priv = media->priv;
 
   g_rec_mutex_lock (&priv->state_lock);
-  if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED)
+  if (priv->status != GST_RTSP_MEDIA_STATUS_PREPARED &&
+      priv->status != GST_RTSP_MEDIA_STATUS_SUSPENDED)
     goto not_prepared;
 
   g_mutex_lock (&priv->lock);
@@ -1993,7 +1994,8 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   g_rec_mutex_lock (&priv->state_lock);
   priv->prepare_count++;
 
-  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED)
+  if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARED ||
+      priv->status == GST_RTSP_MEDIA_STATUS_SUSPENDED)
     goto was_prepared;
 
   if (priv->status == GST_RTSP_MEDIA_STATUS_PREPARING)
