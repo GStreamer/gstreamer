@@ -126,6 +126,10 @@ gst_gl_window_new (GstGLDisplay * display)
   user_choice = g_getenv ("GST_GL_WINDOW");
   GST_INFO ("creating a window, user choice:%s", user_choice);
 
+#if GST_GL_HAVE_WINDOW_COCOA
+  if (!window && (!user_choice || g_strstr_len (user_choice, 5, "cocoa")))
+    window = GST_GL_WINDOW (gst_gl_window_cocoa_new ());
+#endif
 #if GST_GL_HAVE_WINDOW_X11
   if (!window && (!user_choice || g_strstr_len (user_choice, 3, "x11")))
     window = GST_GL_WINDOW (gst_gl_window_x11_new ());
@@ -133,11 +137,6 @@ gst_gl_window_new (GstGLDisplay * display)
 #if GST_GL_HAVE_WINDOW_WIN32
   if (!window && (!user_choice || g_strstr_len (user_choice, 5, "win32")))
     window = GST_GL_WINDOW (gst_gl_window_win32_new ());
-#endif
-#if GST_GL_HAVE_WINDOW_COCOA
-  if (!window && (!user_choice || g_strstr_len (user_choice, 5, "cocoa"))) {
-    window = GST_GL_WINDOW (gst_gl_window_cocoa_new ());
-  }
 #endif
 #if GST_GL_HAVE_WINDOW_WAYLAND
   if (!window && (!user_choice || g_strstr_len (user_choice, 7, "wayland")))
