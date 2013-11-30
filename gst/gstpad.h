@@ -503,7 +503,7 @@ typedef enum
  * @GST_PAD_PROBE_DROP: drop data in data probes. For push mode this means that
  *        the data item is not sent downstream. For pull mode, it means that the
  *        data item is not passed upstream. In both cases, this result code
- *        returns #GST_FLOW_OK or %TRUE to the caller.
+ *        means that #GST_FLOW_OK or %TRUE is returned to the caller.
  * @GST_PAD_PROBE_REMOVE: remove probe
  * @GST_PAD_PROBE_PASS: pass the data item in the block probe and block on
  *                         the next item
@@ -611,8 +611,8 @@ typedef gboolean  (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent **
  *                            reconfiguration happened.
  * @GST_PAD_FLAG_PENDING_EVENTS: the pad has pending events
  * @GST_PAD_FLAG_FIXED_CAPS: the pad is using fixed caps this means that once the
- *                      caps are set on the pad, the caps query function only
- *                      returns those caps.
+ *                      caps are set on the pad, the caps query function will only
+ *                      return those caps.
  * @GST_PAD_FLAG_PROXY_CAPS: the default event and query handler will forward
  *                      all events and queries to the internally linked pads
  *                      instead of discarding them.

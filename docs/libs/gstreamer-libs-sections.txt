@@ -76,6 +76,8 @@ GST_TIMED_VALUE_CONTROL_SOURCE_CLASS
 GST_IS_TIMED_VALUE_CONTROL_SOURCE_CLASS
 GST_TIMED_VALUE_CONTROL_SOURCE_GET_CLASS
 GST_TYPE_TIMED_VALUE_CONTROL_SOURCE
+GST_TIMED_VALUE_CONTROL_SOURCE_LOCK
+GST_TIMED_VALUE_CONTROL_SOURCE_UNLOCK
 <SUBSECTION Private>
 gst_timed_value_control_source_get_type
 </SECTION>
@@ -130,6 +132,7 @@ gst_lfo_waveform_get_type
 <INCLUDE>libs/controller/gsttriggercontrolsource.h</INCLUDE>
 GstTriggerControlSource
 gst_trigger_control_source_new
+GST_TYPE_TRIGGER_WAVEFORM
 <SUBSECTION Standard>
 GstTriggerControlSourceClass
 GstTriggerControlSourcePrivate
@@ -161,9 +164,12 @@ gst_adapter_available
 gst_adapter_available_fast
 gst_adapter_take
 gst_adapter_take_buffer
+gst_adapter_take_buffer_fast
 gst_adapter_take_list
 gst_adapter_prev_pts
 gst_adapter_prev_dts
+gst_adapter_prev_pts_at_offset
+gst_adapter_prev_dts_at_offset
 gst_adapter_masked_scan_uint32
 gst_adapter_masked_scan_uint32_peek
 <SUBSECTION Standard>
@@ -194,6 +200,9 @@ gst_base_parse_set_syncable
 gst_base_parse_set_has_timing_info
 gst_base_parse_set_frame_rate
 gst_base_parse_set_latency
+gst_base_parse_set_infer_ts
+gst_base_parse_set_pts_interpolation
+gst_base_parse_set_ts_at_offset
 gst_base_parse_convert_default
 gst_base_parse_add_index_entry
 
@@ -236,6 +245,8 @@ GstBaseSrcClass
 GstBaseSrcFlags
 
 gst_base_src_wait_playing
+gst_base_src_start_wait
+gst_base_src_start_complete
 gst_base_src_is_live
 gst_base_src_set_live
 gst_base_src_set_format
@@ -249,8 +260,12 @@ gst_base_src_new_seamless_segment
 gst_base_src_set_caps
 gst_base_src_get_allocator
 gst_base_src_get_buffer_pool
+gst_base_src_is_async
+gst_base_src_set_async
 
 GST_BASE_SRC_PAD
+GST_BASE_SRC_IS_STARTED
+GST_BASE_SRC_IS_STARTING
 <SUBSECTION Standard>
 GstBaseSrcPrivate
 GST_BASE_SRC
@@ -274,6 +289,7 @@ GstBaseSinkClass
 gst_base_sink_query_latency
 gst_base_sink_get_latency
 gst_base_sink_do_preroll
+gst_base_sink_wait
 gst_base_sink_wait_preroll
 gst_base_sink_wait_clock
 gst_base_sink_wait_eos
@@ -296,6 +312,10 @@ gst_base_sink_set_blocksize
 gst_base_sink_get_blocksize
 gst_base_sink_get_throttle_time
 gst_base_sink_set_throttle_time
+gst_base_sink_set_max_bitrate
+gst_base_sink_get_max_bitrate
+gst_base_sink_set_last_sample_enabled
+gst_base_sink_is_last_sample_enabled
 
 GST_BASE_SINK_PAD
 GST_BASE_SINK_GET_PREROLL_COND
@@ -307,6 +327,7 @@ GST_BASE_SINK_PREROLL_TIMED_WAIT
 GST_BASE_SINK_PREROLL_TRYLOCK
 GST_BASE_SINK_PREROLL_UNLOCK
 GST_BASE_SINK_PREROLL_WAIT
+GST_BASE_SINK_PREROLL_WAIT_UNTIL
 
 <SUBSECTION Standard>
 GST_BASE_SINK
@@ -342,6 +363,8 @@ gst_base_transform_suggest
 gst_base_transform_reconfigure
 gst_base_transform_get_allocator
 gst_base_transform_get_buffer_pool
+gst_base_transform_reconfigure_sink
+gst_base_transform_reconfigure_src
 
 GST_BASE_TRANSFORM_SINK_NAME
 GST_BASE_TRANSFORM_SRC_NAME
@@ -626,6 +649,9 @@ gst_byte_writer_put_string_utf8
 gst_byte_writer_put_data
 gst_byte_writer_fill
 
+gst_byte_writer_put_buffer
+gst_byte_writer_put_buffer_unchecked
+
 gst_byte_writer_put_int8_unchecked
 gst_byte_writer_put_int16_be_unchecked
 gst_byte_writer_put_int16_le_unchecked
@@ -666,9 +692,11 @@ GstCollectData
 
 GstCollectDataDestroyNotify
 GstCollectPadsBufferFunction
+GstCollectPadsClipFunction
 GstCollectPadsCompareFunction
 GstCollectPadsEventFunction
-GstCollectPadsClipFunction
+GstCollectPadsFlushFunction
+GstCollectPadsQueryFunction
 GstCollectPadsFunction
 GstCollectPadsStateFlags
 
@@ -699,15 +727,26 @@ gst_collect_pads_read
 gst_collect_pads_read_buffer
 gst_collect_pads_take_buffer
 
+gst_collect_pads_clip_running_time
+
+gst_collect_pads_query_default
+
+gst_collect_pads_event_default
+gst_collect_pads_src_event_default
+
 gst_collect_pads_set_buffer_function
+gst_collect_pads_set_clip_function
 gst_collect_pads_set_compare_function
 gst_collect_pads_set_event_function
-gst_collect_pads_set_clip_function
+gst_collect_pads_set_flush_function
+gst_collect_pads_set_query_function
 gst_collect_pads_set_flushing
 gst_collect_pads_set_function
 gst_collect_pads_set_waiting
 <SUBSECTION Standard>
 GstCollectPadsClass
+GstCollectPadsPrivate
+GstCollectDataPrivate
 GST_COLLECT_PADS
 GST_COLLECT_PADS_CLASS
 GST_TYPE_COLLECT_PADS
@@ -763,6 +802,7 @@ gst_data_queue_new
 gst_data_queue_push
 gst_data_queue_push_force
 gst_data_queue_pop
+gst_data_queue_peek
 gst_data_queue_flush
 gst_data_queue_set_flushing
 gst_data_queue_drop_head
@@ -772,6 +812,7 @@ gst_data_queue_get_level
 gst_data_queue_limits_changed
 <SUBSECTION Standard>
 GstDataQueueClass
+GstDataQueuePrivate
 GST_DATA_QUEUE
 GST_IS_DATA_QUEUE
 GST_TYPE_DATA_QUEUE
@@ -800,6 +841,22 @@ gst_queue_array_find
 # net
 
 <SECTION>
+<FILE>gstnetaddressmeta</FILE>
+<TITLE>GstNetAddressMeta</TITLE>
+<INCLUDE>gst/net/gstnetaddressmeta.h</INCLUDE>
+GstNetAddressMeta
+gst_buffer_add_net_address_meta
+gst_buffer_get_net_address_meta
+gst_net_address_meta_get_info
+<SUBSECTION Standard>
+GST_NET_ADDRESS_META_API_TYPE
+GST_NET_ADDRESS_META_INFO
+<SUBSECTION Private>
+gst_net_address_meta_api_get_type
+</SECTION>
+
+
+<SECTION>
 <FILE>gstnetclientclock</FILE>
 <TITLE>GstNetClientClock</TITLE>
 <INCLUDE>gst/net/gstnet.h</INCLUDE>
@@ -825,11 +882,14 @@ gst_net_client_clock_get_type
 GstNetTimePacket
 GST_NET_TIME_PACKET_SIZE
 gst_net_time_packet_new
+gst_net_time_packet_copy
+gst_net_time_packet_free
 gst_net_time_packet_receive
 gst_net_time_packet_send
 gst_net_time_packet_serialize
 <SUBSECTION Standard>
 <SUBSECTION Private>
+gst_net_time_packet_get_type
 socklen_t
 </SECTION>
 
@@ -1019,6 +1079,7 @@ tcase_add_loop_test
 tcase_add_loop_test_raise_signal
 tcase_add_test
 tcase_add_test_raise_signal
+tcase_skip_broken_test
 teardown_messaging
 tr_create
 tr_fprint
@@ -1047,6 +1108,7 @@ GstStreamConsistency
 gst_consistency_checker_new
 gst_consistency_checker_reset
 gst_consistency_checker_free
+gst_consistency_checker_add_pad
 </SECTION>
 
 <SECTION>

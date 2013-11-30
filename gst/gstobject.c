@@ -1136,8 +1136,8 @@ gst_object_set_control_bindings_disabled (GstObject * object, gboolean disabled)
  * @disabled: boolean that specifies whether to disable the controller
  * or not.
  *
- * This function is used to disable the #GstController on a property for
- * some time, i.e. gst_controller_sync_values() will do nothing for the
+ * This function is used to disable the control bindings on a property for
+ * some time, i.e. gst_object_sync_values() will do nothing for the
  * property.
  */
 void

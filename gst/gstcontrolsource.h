@@ -113,7 +113,6 @@ struct _GstControlSource {
 /**
  * GstControlSourceClass:
  * @parent_class: Parent class
- * @bind: Class method for binding the #GstControlSource to a specific GParamSpec
  *
  * The class structure of #GstControlSource.
  */

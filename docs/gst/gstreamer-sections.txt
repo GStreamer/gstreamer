@@ -198,6 +198,7 @@ gst_buffer_get_sizes_range
 gst_buffer_resize_range
 gst_buffer_resize
 gst_buffer_set_size
+gst_buffer_get_max_memory
 
 gst_buffer_peek_memory
 
@@ -281,6 +282,7 @@ GstMetaTransformCopy
 GST_META_TRANSFORM_IS_COPY
 gst_meta_api_type_register
 gst_meta_api_type_has_tag
+gst_meta_api_type_get_tags
 GST_META_TAG_MEMORY
 GST_META_TAG_MEMORY_STR
 gst_meta_register
@@ -458,6 +460,9 @@ gst_caps_intersect_mode_get_type
 <FILE>gstcapsfeatures</FILE>
 <TITLE>GstCapsFeatures</TITLE>
 GstCapsFeatures
+GST_CAPS_FEATURES_ANY
+GST_CAPS_FEATURES_MEMORY_SYSTEM_MEMORY
+GST_CAPS_FEATURE_MEMORY_SYSTEM_MEMORY
 gst_caps_features_new
 gst_caps_features_new_empty
 gst_caps_features_new_any
@@ -509,6 +514,7 @@ gst_sample_get_segment
 gst_sample_new
 gst_sample_ref
 gst_sample_unref
+gst_sample_copy
 <SUBSECTION Standard>
 GST_IS_SAMPLE
 GST_SAMPLE
@@ -713,6 +719,7 @@ GST_CONTROL_BINDING_CLASS
 GST_IS_CONTROL_BINDING_CLASS
 GST_CONTROL_BINDING_GET_CLASS
 GST_TYPE_CONTROL_BINDING
+GST_CONTROL_BINDING_PSPEC
 <SUBSECTION Private>
 GstControlBindingConvert
 gst_control_binding_get_type
@@ -1055,6 +1062,7 @@ gst_event_parse_gap
 
 gst_event_new_stream_start
 gst_event_parse_stream_start
+GstStreamFlags
 gst_event_set_stream_flags
 gst_event_parse_stream_flags
 gst_event_set_group_id
@@ -1117,6 +1125,7 @@ GST_TYPE_SEEK_TYPE
 GST_TYPE_SEEK_FLAGS
 GST_TYPE_QOS_TYPE
 GST_TYPE_EVENT_TYPE_FLAGS
+GST_TYPE_STREAM_FLAGS
 <SUBSECTION Private>
 GST_EVENT_TYPE_SHIFT
 GST_EVENT_MAX_STICKY
@@ -1131,6 +1140,7 @@ gst_seek_type_get_type
 gst_seek_flags_get_type
 gst_qos_type_get_type
 gst_event_type_flags_get_type
+gst_stream_flags_get_type
 </SECTION>
 
 <SECTION>
@@ -1209,6 +1219,7 @@ gst_ghost_pad_get_type
 GstDebugLevel
 GST_LEVEL_DEFAULT
 GstDebugColorFlags
+GstDebugColorMode
 GstDebugCategory
 GstDebugGraphDetails
 GST_STR_NULL
@@ -1295,6 +1306,7 @@ gst_debug_bin_to_dot_file
 gst_debug_bin_to_dot_file_with_ts
 <SUBSECTION Standard>
 GST_TYPE_DEBUG_COLOR_FLAGS
+GST_TYPE_DEBUG_COLOR_MODE
 GST_TYPE_DEBUG_LEVEL
 GST_TYPE_DEBUG_GRAPH_DETAILS
 <SUBSECTION Private>
@@ -1304,6 +1316,7 @@ GST_DEBUG_FORMAT_MASK
 GstDebugFuncPtr
 GstDebugMessage
 gst_debug_color_flags_get_type
+gst_debug_color_mode_get_type
 gst_debug_level_get_type
 gst_debug_graph_details_get_type
 GST_CAT_LEVEL_LOG_valist
@@ -2121,6 +2134,8 @@ GstPluginDesc
 GstPluginInitFunc
 GstPluginInitFullFunc
 GST_PLUGIN_DEFINE
+GST_PLUGIN_STATIC_DECLARE
+GST_PLUGIN_STATIC_REGISTER
 GST_LICENSE_UNKNOWN
 GstPluginFilter
 gst_plugin_get_name
@@ -2343,6 +2358,8 @@ gst_query_parse_nth_buffering_range
 gst_query_new_uri
 gst_query_parse_uri
 gst_query_set_uri
+gst_query_parse_uri_redirection
+gst_query_set_uri_redirection
 
 gst_query_new_allocation
 gst_query_parse_allocation
@@ -2420,6 +2437,8 @@ gst_registry_feature_filter
 gst_registry_find_plugin
 gst_registry_find_feature
 gst_registry_lookup_feature
+gst_registry_add_path
+gst_registry_get_path_list
 gst_registry_scan_path
 gst_registry_lookup
 gst_registry_remove_feature
@@ -2659,6 +2678,8 @@ GST_TAG_DEVICE_MODEL
 GST_TAG_APPLICATION_NAME
 GST_TAG_APPLICATION_DATA
 GST_TAG_IMAGE_ORIENTATION
+GST_TAG_PUBLISHER
+GST_TAG_INTERPRETED_BY
 
 gst_tag_register
 gst_tag_register_static
@@ -3163,6 +3184,7 @@ GST_TYPE_LIST
 GST_VALUE_HOLDS_ARRAY
 GST_TYPE_ARRAY
 gst_value_list_append_value
+gst_value_list_append_and_take_value
 gst_value_list_prepend_value
 gst_value_list_concat
 gst_value_list_merge
@@ -3242,6 +3264,7 @@ gst_value_intersect
 gst_value_can_intersect
 gst_value_is_subset
 gst_value_array_append_value
+gst_value_array_append_and_take_value
 gst_value_array_get_size
 gst_value_array_get_value
 gst_value_array_prepend_value

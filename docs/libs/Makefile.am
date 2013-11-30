@@ -44,6 +44,7 @@ IGNORE_HFILES = \
 	gstinterpolationcontrolsourceprivate.h \
 	gstlfocontrolsourceprivate.h \
 	gstgetbits_inl.h \
+	gstindex.h \
 	dp-private.h
 
 # Images to copy into HTML directory.

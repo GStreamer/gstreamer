@@ -47,12 +47,6 @@ GST_STATIC_PAD_TEMPLATE ("src_%u",
     GST_PAD_REQUEST,
     GST_STATIC_CAPS_ANY);
 
-enum GstOutputSelectorPadNegotiationMode
-{
-  GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE,
-  GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL,
-  GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ACTIVE
-};
 #define GST_TYPE_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE (gst_output_selector_pad_negotiation_mode_get_type())
 static GType
 gst_output_selector_pad_negotiation_mode_get_type (void)

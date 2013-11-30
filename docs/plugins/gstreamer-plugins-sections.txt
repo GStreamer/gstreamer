@@ -144,6 +144,7 @@ gst_identity_get_type
 <FILE>element-input-selector</FILE>
 <TITLE>input-selector</TITLE>
 GstInputSelector
+GstInputSelectorSyncMode
 <SUBSECTION Standard>
 GstInputSelectorClass
 GST_INPUT_SELECTOR
@@ -170,6 +171,7 @@ GstQueueClass
 GST_QUEUE
 GST_IS_QUEUE
 GST_QUEUE_CLASS
+GST_QUEUE_CAST
 GST_IS_QUEUE_CLASS
 GST_TYPE_QUEUE
 <SUBSECTION Private>
@@ -215,6 +217,7 @@ gst_multi_queue_get_type
 <FILE>element-output-selector</FILE>
 <TITLE>output-selector</TITLE>
 GstOutputSelector
+GstOutputSelectorPadNegotiationMode
 <SUBSECTION Standard>
 GstOutputSelectorClass
 GST_OUTPUT_SELECTOR

@@ -61,6 +61,25 @@ struct _GstOutputSelectorClass {
   GstElementClass parent_class;
 };
 
+/**
+ * GstOutputSelectorPadNegotiationMode:
+ * @GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE: don't propagate the input
+ * stream.
+ * @GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL: direct input stream to all
+ * output pads.
+ * @GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ACTIVE: direct input stream to the
+ * currently active output pad as described by the #GstOutputSelector:active-pad
+ * property.
+ *
+ * To what output pad the input stream should be directed.
+ */
+typedef enum
+{
+  GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_NONE,
+  GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ALL,
+  GST_OUTPUT_SELECTOR_PAD_NEGOTIATION_MODE_ACTIVE
+} GstOutputSelectorPadNegotiationMode;
+
 G_GNUC_INTERNAL GType gst_output_selector_get_type (void);
 
 G_END_DECLS

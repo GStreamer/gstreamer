@@ -141,6 +141,7 @@ gst_context_init (GstContext * context)
 
 /**
  * gst_context_new:
+ * @context_type: Context type
  * @persistent: Persistent context
  *
  * Create a new context.
