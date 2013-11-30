@@ -136,16 +136,6 @@ matrix_yuv_to_rgb (guint8 * tmpline, guint width)
   }
 }
 
-#define BLEND00(ret, alpha, v0, v1) \
-G_STMT_START { \
-  ret = (v0 * alpha + v1 * (255 - alpha)) / 255; \
-} G_STMT_END
-
-#define BLEND10(ret, alpha, v0, v1) \
-G_STMT_START { \
-  ret = v0 + (v1 * (255 - alpha)) / 255; \
-} G_STMT_END
-
 /**
  * gst_video_blend_scale_linear_RGBA:
  * @src: the #GstVideoInfo describing the video data in @src_buffer
@@ -248,6 +238,41 @@ gst_video_blend_scale_linear_RGBA (GstVideoInfo * src, GstBuffer * src_buffer,
   g_free (tmpbuf);
 }
 
+/*
+ * A OVER B alpha compositing operation, with:
+ *  alphaG: global alpha to apply on the source color
+ *     -> only needed for premultiplied source
+ *  alphaA: source pixel alpha
+ *  colorA: source pixel color
+ *  alphaB: destination pixel alpha
+ *  colorB: destination pixel color
+ *  alphaD: blended pixel alpha
+ *     -> only needed for premultiplied destination
+ */
+
+/* Source non-premultiplied, Destination non-premultiplied */
+#define OVER00(alphaG, alphaA, colorA, alphaB, colorB, alphaD) \
+  ((colorA * alphaA + colorB * alphaB * (255 - alphaA) / 255) / alphaD)
+
+/* Source premultiplied, Destination non-premultiplied */
+#define OVER10(alphaG, alphaA, colorA, alphaB, colorB, alphaD) \
+  ((colorA * alphaG + colorB * alphaB * (255 - alphaA) / 255) / alphaD)
+
+/* Source non-premultiplied, Destination premultiplied */
+#define OVER01(alphaG, alphaA, colorA, alphaB, colorB, alphaD) \
+  ((colorA * alphaA + colorB * (255 - alphaA)) / 255)
+
+/* Source premultiplied, Destination premultiplied */
+#define OVER11(alphaG, alphaA, colorA, alphaB, colorB, alphaD) \
+  ((colorA * alphaG + colorB * (255 - alphaA)) / 255)
+
+#define BLENDC(op, global_alpha, aa, ca, ab, cb, dest_alpha) \
+G_STMT_START { \
+  int c = op(global_alpha, aa, ca, ab, cb, dest_alpha); \
+  cb = MIN(c, 255); \
+} G_STMT_END
+
+
 /**
  * gst_video_blend:
  * @dest: The #GstVideoFrame where to blend @src in
@@ -273,16 +298,12 @@ gst_video_blend (GstVideoFrame * dest,
   g_assert (dest != NULL);
   g_assert (src != NULL);
 
-  global_alpha_val = 256.0 * global_alpha;
+  global_alpha_val = 255.0 * global_alpha;
 
   dest_premultiplied_alpha =
       GST_VIDEO_INFO_FLAGS (&dest->info) & GST_VIDEO_FLAG_PREMULTIPLIED_ALPHA;
   src_premultiplied_alpha =
       GST_VIDEO_INFO_FLAGS (&src->info) & GST_VIDEO_FLAG_PREMULTIPLIED_ALPHA;
-
-  /* we do no support writing to premultiplied alpha, though that should
-     just be a matter of adding blenders below (BLEND01 and BLEND11) */
-  g_return_val_if_fail (!dest_premultiplied_alpha, FALSE);
 
   src_width = GST_VIDEO_FRAME_WIDTH (src);
   src_height = GST_VIDEO_FRAME_HEIGHT (src);
@@ -372,40 +393,47 @@ gst_video_blend (GstVideoFrame * dest,
 
     matrix (tmpsrcline, src_width);
 
-    /* Here dest and src are both either in AYUV or ARGB
-     * TODO: Make the orc version working properly*/
-#define BLENDLOOP(blender,alpha_val,alpha_scale)                                  \
-  do {                                                                            \
-    for (j = 0; j < src_width * 4; j += 4) {                                      \
-      guint8 alpha;                                                               \
-                                                                                  \
-      alpha = (tmpsrcline[j] * alpha_val) / alpha_scale;                          \
-                                                                                  \
-      blender (tmpdestline[j + 1], alpha, tmpsrcline[j + 1], tmpdestline[j + 1]); \
-      blender (tmpdestline[j + 2], alpha, tmpsrcline[j + 2], tmpdestline[j + 2]); \
-      blender (tmpdestline[j + 3], alpha, tmpsrcline[j + 3], tmpdestline[j + 3]); \
-    }                                                                             \
-  } while(0)
+#define BLENDLOOP(op, alpha_val)                                                              \
+  G_STMT_START {                                                                              \
+    for (j = 0; j < src_width * 4; j += 4) {                                                  \
+      guint8 asrc, adst;                                                                      \
+      gint final_alpha;                                                                       \
+                                                                                              \
+      asrc = tmpsrcline[j] * alpha_val / 255;                                                 \
+      if (!asrc)                                                                              \
+        continue;                                                                             \
+                                                                                              \
+      adst = tmpdestline[j];                                                                  \
+      final_alpha = asrc + adst * (255 - asrc) / 255;                                         \
+      tmpdestline[j] = final_alpha;                                                           \
+      if (final_alpha == 0)                                                                   \
+        final_alpha = 1;                                                                      \
+                                                                                              \
+      BLENDC (op, alpha_val, asrc, tmpsrcline[j + 1], adst, tmpdestline[j + 1], final_alpha); \
+      BLENDC (op, alpha_val, asrc, tmpsrcline[j + 2], adst, tmpdestline[j + 2], final_alpha); \
+      BLENDC (op, alpha_val, asrc, tmpsrcline[j + 3], adst, tmpdestline[j + 3], final_alpha); \
+    }                                                                                         \
+  } G_STMT_END
 
     if (G_LIKELY (global_alpha == 1.0)) {
       if (src_premultiplied_alpha && dest_premultiplied_alpha) {
-        /* BLENDLOOP (BLEND11, 1, 1); */
+        BLENDLOOP (OVER11, 255);
       } else if (!src_premultiplied_alpha && dest_premultiplied_alpha) {
-        /* BLENDLOOP (BLEND01, 1, 1); */
+        BLENDLOOP (OVER01, 255);
       } else if (src_premultiplied_alpha && !dest_premultiplied_alpha) {
-        BLENDLOOP (BLEND10, 1, 1);
+        BLENDLOOP (OVER10, 255);
       } else {
-        BLENDLOOP (BLEND00, 1, 1);
+        BLENDLOOP (OVER00, 255);
       }
     } else {
       if (src_premultiplied_alpha && dest_premultiplied_alpha) {
-        /* BLENDLOOP (BLEND11, global_alpha_val, 256); */
+        BLENDLOOP (OVER11, global_alpha_val);
       } else if (!src_premultiplied_alpha && dest_premultiplied_alpha) {
-        /* BLENDLOOP (BLEND01, global_alpha_val, 256); */
+        BLENDLOOP (OVER01, global_alpha_val);
       } else if (src_premultiplied_alpha && !dest_premultiplied_alpha) {
-        BLENDLOOP (BLEND10, global_alpha_val, 256);
+        BLENDLOOP (OVER10, global_alpha_val);
       } else {
-        BLENDLOOP (BLEND00, global_alpha_val, 256);
+        BLENDLOOP (OVER00, global_alpha_val);
       }
     }
 
