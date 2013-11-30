@@ -175,25 +175,39 @@ gst_gl_window_cocoa_set_window_handle (GstGLWindow * window, guintptr handle)
 
   window_cocoa = GST_GL_WINDOW_COCOA (window);
   priv = window_cocoa->priv;
-
-  priv->parent = (NSWindow*) handle;
+  
   if (priv->internal_win_id) {
     GstGLContextCocoa *context = (GstGLContextCocoa *) gst_gl_window_get_context (window);
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     AppThreadPerformer* app_thread_performer = [[AppThreadPerformer alloc] init:window_cocoa];
 
-
     GSRegisterCurrentThread();
 
     if (context) {
-      g_source_remove (context->priv->source_id);
+      if (context->priv->source_id) {
+        g_source_remove (context->priv->source_id);
+        context->priv->source_id = 0;
+      }
       gst_object_unref (context);
     }
 
+    if (handle) {
+      priv->parent = (NSWindow*) handle;
+      priv->visible = TRUE;
+    } else {
+      /* bring back our internal window */
+      priv->parent = priv->internal_win_id;
+      priv->visible = FALSE;
+    }
+   
     [app_thread_performer performSelectorOnMainThread:@selector(setWindow) 
         withObject:0 waitUntilDone:YES];
 
     [pool release];
+  } else {
+    /* not internal window yet so delay it to the next drawing */
+    priv->parent = (NSWindow*) handle;
+    priv->visible = FALSE;
   }
 }
 
@@ -214,6 +228,13 @@ gst_gl_window_cocoa_draw (GstGLWindow * window, guint width, guint height)
   app_thread_performer = [[AppThreadPerformer alloc] init:window_cocoa];
   [app_thread_performer performSelector:@selector(updateWindow) 
       onThread:priv->thread withObject:nil waitUntilDone:YES];
+
+  /* useful when set_window_handle is called before
+   * the internal NSWindow */
+  if (priv->parent && !priv->visible) {
+    gst_gl_window_cocoa_set_window_handle (window, (guintptr) priv->parent);
+    priv->visible = TRUE;
+  }
 
   if (!priv->parent && !priv->visible) {
     static gint x = 0;
@@ -566,9 +587,9 @@ gst_gl_window_cocoa_send_message_async (GstGLWindow * window,
 - (void) setWindow {
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   NSWindow *window = m_cocoa->priv->parent;
-  
+
   [m_cocoa->priv->internal_win_id orderOut:m_cocoa->priv->internal_win_id];
-  
+
   [window setContentView: [m_cocoa->priv->internal_win_id contentView]];
 
   [pool release];
