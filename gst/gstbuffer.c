@@ -91,7 +91,7 @@
  *
  * Several flags of the buffer can be set and unset with the
  * GST_BUFFER_FLAG_SET() and GST_BUFFER_FLAG_UNSET() macros. Use
- * GST_BUFFER_FLAG_IS_SET() to test if a certain #GstBufferFlag is set.
+ * GST_BUFFER_FLAG_IS_SET() to test if a certain #GstBufferFlags flag is set.
  *
  * Buffers can be efficiently merged into a larger buffer with
  * gst_buffer_append(). Copying of memory will only be done when absolutely

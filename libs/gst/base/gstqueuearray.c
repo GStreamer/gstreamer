@@ -297,7 +297,7 @@ gst_queue_array_drop_element (GstQueueArray * array, guint idx)
  * Note that the index is not 0-based, but an internal index number with a
  * random offset. The index can be used in connection with
  * gst_queue_array_drop_element(). FIXME: return index 0-based and make
- * _drop_element() take a 0-based index.
+ * gst_queue_array_drop_element() take a 0-based index.
  *
  * Returns: Index of the found element or -1 if nothing was found.
  *

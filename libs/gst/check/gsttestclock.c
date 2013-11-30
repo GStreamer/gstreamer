@@ -57,7 +57,7 @@
  * #GstClock allows for setting up single shot or periodic clock notifications
  * as well as waiting for these notifications synchronously (using
  * gst_clock_id_wait()) or asynchronously (using gst_clock_id_wait_async() or
- * gst_clock_id_wait_async_full()). This is used by many GStreamer elements,
+ * gst_clock_id_wait_async()). This is used by many GStreamer elements,
  * among them #GstBaseSrc and #GstBaseSink.
  *
  * #GstTestClock keeps track of these clock notifications. By calling
@@ -79,9 +79,9 @@
  * gst_test_clock_wait_for_pending_id_count() then these functions may block
  * for a long time. If they block forever then the expected clock notifications
  * were never requested from #GstTestClock, and so the assumptions in the code
- * of the unit test are wrong. The unit test case runner in #GstCheck is
+ * of the unit test are wrong. The unit test case runner in gstcheck is
  * expected to catch these cases either by the default test case timeout or the
- * one set for the unit test by calling tcase_set_timeout().
+ * one set for the unit test by calling tcase_set_timeout\(\).
  *
  * The sample code below assumes that the element under test will delay a
  * buffer pushed on the source pad by some latency until it arrives on the sink

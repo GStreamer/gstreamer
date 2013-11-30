@@ -26,7 +26,7 @@
  * SECTION:gsttimedvaluecontrolsource
  * @short_description: timed value control source base class
  *
- * Base class for #GstContrlSources that use time-stamped values.
+ * Base class for #GstControlSource that use time-stamped values.
  *
  * When overriding bind, chain up first to give this bind implementation a
  * chance to setup things.

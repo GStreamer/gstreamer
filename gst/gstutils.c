@@ -2436,7 +2436,7 @@ query_accept_caps_func (GstPad * pad, QueryAcceptCapsData * data)
  * @pad: a #GstPad to proxy.
  * @query: an ACCEPT_CAPS #GstQuery.
  *
- * Calls gst_pad_accept_caps() for all internally linked pads of @pad and
+ * Checks if all internally linked pads of @pad accepts the caps in @query and
  * returns the intersection of the results.
  *
  * This function is useful as a default accept caps query function for an element

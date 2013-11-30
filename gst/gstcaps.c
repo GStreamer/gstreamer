@@ -866,7 +866,7 @@ gst_caps_get_features (const GstCaps * caps, guint index)
  * gst_caps_set_features:
  * @caps: a #GstCaps
  * @index: the index of the structure
- * @features: (allow-none) (transfer full): the #GstFeatures to set
+ * @features: (allow-none) (transfer full): the #GstCapsFeatures to set
  *
  * Sets the #GstCapsFeatures @features for the structure at @index.
  *

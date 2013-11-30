@@ -65,11 +65,6 @@
  *     no pad is blocked and the element can finish streaming.
  *   </para></listitem>
  *   <listitem><para>
- *     gst_collect_pads_collect() and gst_collect_pads_collect_range() can be used by
- *     elements that start a #GstTask to drive the collect_pads. This feature is however
- *     not yet implemented.
- *   </para></listitem>
- *   <listitem><para>
  *     gst_collect_pads_set_waiting() sets a pad to waiting or non-waiting mode.
  *     CollectPads element is not waiting for data to be collected on non-waiting pads.
  *     Thus these pads may but need not have data when the callback is called.

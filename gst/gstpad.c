@@ -47,7 +47,7 @@
  *
  * gst_pad_get_parent() will retrieve the #GstElement that owns the pad.
  *
- * After two pads are retrieved from an element with gst_element_get_pad(),
+ * After two pads are retrieved from an element by gst_element_get_static_pad(),
  * the pads can be linked with gst_pad_link(). (For quick links,
  * you can also use gst_element_link(), which will make the obvious
  * link for you if it's straightforward.). Pads can be unlinked again with

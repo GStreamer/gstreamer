@@ -2722,7 +2722,7 @@ gst_base_transform_get_buffer_pool (GstBaseTransform * trans)
  * @allocator: (out) (allow-none) (transfer full): the #GstAllocator
  * used
  * @params: (out) (allow-none) (transfer full): the
- * #GstAllocatorParams of @allocator
+ * #GstAllocationParams of @allocator
  *
  * Lets #GstBaseTransform sub-classes to know the memory @allocator
  * used by the base class and its @params.

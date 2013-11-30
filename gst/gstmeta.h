@@ -83,6 +83,7 @@ typedef enum {
 
 /**
  * GST_META_TAG_MEMORY_STR:
+ *
  * This metadata stays relevant as long as memory layout is unchanged.
  *
  * Since: 1.2
