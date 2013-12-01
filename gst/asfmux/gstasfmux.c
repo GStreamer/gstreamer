@@ -373,10 +373,9 @@ gst_asf_mux_sink_event (GstCollectPads * pads, GstCollectData * cdata,
  * Returns: the result of #gst_pad_push on the buffer
  */
 static GstFlowReturn
-gst_asf_mux_push_buffer (GstAsfMux * asfmux, GstBuffer * buf)
+gst_asf_mux_push_buffer (GstAsfMux * asfmux, GstBuffer * buf, gsize bufsize)
 {
   GstFlowReturn ret;
-  gsize bufsize = gst_buffer_get_size (buf);
 
   ret = gst_pad_push (asfmux->srcpad, buf);
 
@@ -1264,6 +1263,7 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
   guint64 padding = asfmux->prop_padding;
   GstSegment segment;
   GstMapInfo map;
+  gsize bufsize;
   gchar s_id[32];
 
   if (padding < ASF_PADDING_OBJECT_SIZE)
@@ -1309,6 +1309,7 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
 
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
   bufdata = map.data;
+  bufsize = map.size;
 
   gst_asf_mux_write_header_object (asfmux, &bufdata, map.size -
       ASF_DATA_OBJECT_SIZE, 2 + stream_num);
@@ -1371,7 +1372,7 @@ gst_asf_mux_start_file (GstAsfMux * asfmux)
 
   g_assert (bufdata - map.data == map.size);
   gst_buffer_unmap (buf, &map);
-  return gst_asf_mux_push_buffer (asfmux, buf);
+  return gst_asf_mux_push_buffer (asfmux, buf, bufsize);
 }
 
 /**
@@ -1412,16 +1413,16 @@ gst_asf_mux_add_simple_index_entry (GstAsfMux * asfmux,
  * Returns: the result of pushing the buffer downstream
  */
 static GstFlowReturn
-gst_asf_mux_send_packet (GstAsfMux * asfmux, GstBuffer * buf)
+gst_asf_mux_send_packet (GstAsfMux * asfmux, GstBuffer * buf, gsize bufsize)
 {
-  g_assert (gst_buffer_get_size (buf) == asfmux->packet_size);
+  g_assert (bufsize == asfmux->packet_size);
   asfmux->total_data_packets++;
   GST_LOG_OBJECT (asfmux,
       "Pushing a packet of size %" G_GSIZE_FORMAT " and timestamp %"
-      G_GUINT64_FORMAT, gst_buffer_get_size (buf), GST_BUFFER_TIMESTAMP (buf));
+      G_GUINT64_FORMAT, bufsize, GST_BUFFER_TIMESTAMP (buf));
   GST_LOG_OBJECT (asfmux, "Total data packets: %" G_GUINT64_FORMAT,
       asfmux->total_data_packets);
-  return gst_asf_mux_push_buffer (asfmux, buf);
+  return gst_asf_mux_push_buffer (asfmux, buf, bufsize);
 }
 
 /**
@@ -1442,6 +1443,7 @@ gst_asf_mux_flush_payloads (GstAsfMux * asfmux)
   GstClockTime send_ts = GST_CLOCK_TIME_NONE;
   guint64 size_left;
   guint8 *data;
+  gsize size;
   GSList *walk;
   GstAsfPad *pad;
   gboolean has_keyframe;
@@ -1581,6 +1583,8 @@ gst_asf_mux_flush_payloads (GstAsfMux * asfmux)
 
   /* fill payload parsing info */
   data = map.data;
+  size = map.size;
+
   /* flags */
   GST_WRITE_UINT8 (data, (0x0 << 7) |   /* no error correction */
       (ASF_FIELD_TYPE_DWORD << 5) |     /* packet length type */
@@ -1597,7 +1601,7 @@ gst_asf_mux_flush_payloads (GstAsfMux * asfmux)
   offset++;
 
   /* Due to a limitation in WMP while streaming through WMSP we reduce the
-   * packet & padding size to 16bit if theay are <= 65535 bytes 
+   * packet & padding size to 16bit if they are <= 65535 bytes
    */
   if (asfmux->packet_size > 65535) {
     GST_WRITE_UINT32_LE (data + offset, asfmux->packet_size - size_left);
@@ -1636,10 +1640,12 @@ gst_asf_mux_flush_payloads (GstAsfMux * asfmux)
   if (payloads_count == 0) {
     GST_WARNING_OBJECT (asfmux, "Sending packet without any payload");
   }
-  asfmux->data_object_size += gst_buffer_get_size (buf);
+  asfmux->data_object_size += size;
+
   if (!has_keyframe)
     GST_BUFFER_FLAG_SET (buf, GST_BUFFER_FLAG_DELTA_UNIT);
-  return gst_asf_mux_send_packet (asfmux, buf);
+
+  return gst_asf_mux_send_packet (asfmux, buf, size);
 }
 
 /**
@@ -1664,11 +1670,15 @@ gst_asf_mux_push_simple_index (GstAsfMux * asfmux, GstAsfVideoPad * pad)
 {
   guint64 object_size = ASF_SIMPLE_INDEX_OBJECT_SIZE +
       g_slist_length (pad->simple_index) * ASF_SIMPLE_INDEX_ENTRY_SIZE;
-  GstBuffer *buf = gst_buffer_new_and_alloc (object_size);
+  GstBuffer *buf;
   GSList *walk;
   guint8 *data;
   guint32 entries_count = g_slist_length (pad->simple_index);
   GstMapInfo map;
+  gsize bufsize;
+
+  buf = gst_buffer_new_and_alloc (object_size);
+  bufsize = object_size;
 
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
   data = map.data;
@@ -1700,7 +1710,7 @@ gst_asf_mux_push_simple_index (GstAsfMux * asfmux, GstAsfVideoPad * pad)
   GST_DEBUG_OBJECT (asfmux, "Pushing the simple index");
   g_assert (data - map.data == object_size);
   gst_buffer_unmap (buf, &map);
-  return gst_asf_mux_push_buffer (asfmux, buf);
+  return gst_asf_mux_push_buffer (asfmux, buf, bufsize);
 }
 
 static GstFlowReturn
