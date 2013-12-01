@@ -103,6 +103,7 @@ EXPORTS
 	gst_video_decoder_have_frame
 	gst_video_decoder_merge_tags
 	gst_video_decoder_negotiate
+	gst_video_decoder_release_frame
 	gst_video_decoder_set_estimate_rate
 	gst_video_decoder_set_latency
 	gst_video_decoder_set_max_errors
