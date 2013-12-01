@@ -2234,7 +2234,7 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
         for (i = gst_value_list_get_size (val); i > 0; i--) {
           gint n, d;
 
-          lval = gst_value_list_get_value (val, i);
+          lval = gst_value_list_get_value (val, i - 1);
 
           if (G_VALUE_TYPE (lval) != GST_TYPE_FRACTION)
             continue;
