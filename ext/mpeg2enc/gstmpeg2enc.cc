@@ -71,8 +71,7 @@ GST_DEBUG_CATEGORY (mpeg2enc_debug);
 static GstStaticPadTemplate sink_template = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw, "
-        "format = (string) { I420 }, " COMMON_VIDEO_CAPS)
+    GST_STATIC_CAPS ("video/x-raw, format = (string) I420, " COMMON_VIDEO_CAPS)
     );
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
