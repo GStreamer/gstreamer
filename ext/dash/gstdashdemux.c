@@ -239,7 +239,8 @@ static GstPad *gst_dash_demux_create_pad (GstDashDemux * demux);
 #define gst_dash_demux_parent_class parent_class
 G_DEFINE_TYPE_WITH_CODE (GstDashDemux, gst_dash_demux, GST_TYPE_ELEMENT,
     GST_DEBUG_CATEGORY_INIT (gst_dash_demux_debug, "dashdemux", 0,
-        "dashdemux element"););
+        "dashdemux element");
+    );
 
 static void
 gst_dash_demux_dispose (GObject * obj)
@@ -1210,7 +1211,8 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
         break;
       }
     } else {
-      GST_DEBUG_OBJECT (demux, "Non buffers have preference %" GST_PTR_FORMAT, item->object);
+      GST_DEBUG_OBJECT (demux, "Non buffers have preference %" GST_PTR_FORMAT,
+          item->object);
       selected_stream = stream;
       break;
     }
@@ -2230,9 +2232,9 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux,
     brate = (size_buffer * 8) / ((double) diff / GST_SECOND);
 #endif
     GST_INFO_OBJECT (demux,
-        "Stream: %d Download rate = %" G_GUINT64_FORMAT " Kbits/s (%" G_GUINT64_FORMAT
-        " Ko in %.2f s)", selected_stream->index,
-        brate / 1000, size_buffer / 1024, ((double) diff / GST_SECOND));
+        "Stream: %d Download rate = %" G_GUINT64_FORMAT " Kbits/s (%"
+        G_GUINT64_FORMAT " Ko in %.2f s)", selected_stream->index, brate / 1000,
+        size_buffer / 1024, ((double) diff / GST_SECOND));
   }
   return TRUE;
 }
