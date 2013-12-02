@@ -305,6 +305,8 @@ gst_openni2_src_get_caps (GstBaseSrc * src, GstCaps * filter)
 {
   GstOpenni2Src *ni2src;
   GstCaps *caps;
+  GstVideoInfo info;
+  GstVideoFormat format;
 
   ni2src = GST_OPENNI2_SRC (src);
 
@@ -317,35 +319,25 @@ gst_openni2_src_get_caps (GstBaseSrc * src, GstCaps * filter)
         : gst_caps_ref (ni2src->gst_caps);
   }
   // If we are here, we need to compose the caps and return them.
-  caps = gst_caps_new_empty ();
   if (ni2src->colorpixfmt != openni::PIXEL_FORMAT_RGB888)
-    return caps;                /* Uh oh,  not RGB :? Not supported. */
+    return gst_caps_new_empty ();       /* Uh oh,  not RGB :? Not supported. */
 
   if (ni2src->depth.isValid () && ni2src->color.isValid () &&
       ni2src->sourcetype == SOURCETYPE_BOTH) {
-    caps = gst_caps_new_simple ("video/x-raw",
-        "format", G_TYPE_STRING, "RGBA",
-        "framerate", GST_TYPE_FRACTION, ni2src->fps, 1,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
-        "width", G_TYPE_INT, ni2src->width,
-        "height", G_TYPE_INT, ni2src->height, NULL);
+    format = GST_VIDEO_FORMAT_RGBA;
   } else if (ni2src->depth.isValid () && ni2src->sourcetype == SOURCETYPE_DEPTH) {
-    caps = gst_caps_new_simple ("video/x-raw",
-        "format", G_TYPE_STRING, "GRAY16_LE",
-        "framerate", GST_TYPE_FRACTION, ni2src->fps, 1,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
-        "width", G_TYPE_INT, ni2src->width,
-        "height", G_TYPE_INT, ni2src->height, NULL);
+    format = GST_VIDEO_FORMAT_GRAY16_LE;
   } else if (ni2src->color.isValid () && ni2src->sourcetype == SOURCETYPE_COLOR) {
-    caps = gst_caps_new_simple ("video/x-raw",
-        "format", G_TYPE_STRING, "RGB",
-        "framerate", GST_TYPE_FRACTION, ni2src->fps, 1,
-        "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
-        "width", G_TYPE_INT, ni2src->width,
-        "height", G_TYPE_INT, ni2src->height, NULL);
+    format = GST_VIDEO_FORMAT_RGB;
   }
+
+  gst_video_info_set_format (&info, format, ni2src->width, ni2src->height);
+  info.fps_n = ni2src->fps;
+  info.fps_d = 1;
+  caps = gst_video_info_to_caps (&info);
+
   GST_INFO_OBJECT (ni2src, "probed caps: %" GST_PTR_FORMAT, caps);
-  ni2src->gst_caps = gst_caps_ref (caps);
+  ni2src->gst_caps = caps;
   GST_OBJECT_UNLOCK (ni2src);
   return (filter)
       ? gst_caps_intersect_full (filter, ni2src->gst_caps,
