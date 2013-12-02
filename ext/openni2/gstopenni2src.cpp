@@ -150,7 +150,7 @@ G_DEFINE_TYPE (GstOpenni2Src, gst_openni2_src, GST_TYPE_PUSH_SRC)
       gst_static_pad_template_get (&srctemplate));
 
   gst_element_class_set_static_metadata (element_class, "Openni2 client source",
-      "Source/Device",
+      "Source/Video",
       "Extract readings from an OpenNI supported device (Kinect etc). ",
       "Miguel Casas-Sanchez <miguelecasassanchez@gmail.com>");
 
