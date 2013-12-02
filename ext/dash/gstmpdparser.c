@@ -139,17 +139,6 @@ static GstClockTime gst_mpd_client_get_segment_duration (GstMpdClient * client,
 static GstDateTime *gst_mpd_client_get_availability_start_time (GstMpdClient *
     client);
 
-/* Adaptation Set */
-static GstAdaptationSetNode
-    * gst_mpdparser_get_first_adapt_set_with_mimeType (GList * AdaptationSets,
-    const gchar * mimeType);
-static GstAdaptationSetNode
-    * gst_mpdparser_get_adapt_set_with_mimeType_and_idx (GList * AdaptationSets,
-    const gchar * mimeType, gint idx);
-static GstAdaptationSetNode
-    * gst_mpdparser_get_first_adapt_set_with_mimeType_and_lang (GList *
-    AdaptationSets, const gchar * mimeType, const gchar * lang);
-
 /* Representation */
 static GstRepresentationNode *gst_mpdparser_get_lowest_representation (GList *
     Representations);
@@ -1931,114 +1920,25 @@ strncmp_ext (const char *s1, const char *s2)
 }
 
 /* navigation functions */
-static GstAdaptationSetNode *
-gst_mpdparser_get_first_adapt_set_with_mimeType (GList * AdaptationSets,
-    const gchar * mimeType)
+static GstStreamMimeType
+gst_mpdparser_representation_get_mimetype (GstAdaptationSetNode * adapt_set,
+    GstRepresentationNode * rep)
 {
-  GList *list;
-  GstAdaptationSetNode *adapt_set;
-
-  if (AdaptationSets == NULL)
-    return NULL;
-
-  for (list = g_list_first (AdaptationSets); list; list = g_list_next (list)) {
-    adapt_set = (GstAdaptationSetNode *) list->data;
-    if (adapt_set) {
-      gchar *this_mimeType = NULL;
-      GstRepresentationNode *rep;
-      rep =
-          gst_mpdparser_get_lowest_representation (adapt_set->Representations);
-      if (rep->RepresentationBase)
-        this_mimeType = rep->RepresentationBase->mimeType;
-      if (!this_mimeType && adapt_set->RepresentationBase) {
-        this_mimeType = adapt_set->RepresentationBase->mimeType;
-      }
-      GST_DEBUG ("Looking for mime type %s -> %s", mimeType, this_mimeType);
-      if (strncmp_ext (this_mimeType, mimeType) == 0)
-        return adapt_set;
-    }
+  gchar *mime = NULL;
+  if (rep->RepresentationBase)
+    mime = rep->RepresentationBase->mimeType;
+  if (mime == NULL && adapt_set->RepresentationBase) {
+    mime = adapt_set->RepresentationBase->mimeType;
   }
 
-  return NULL;
-}
+  if (strncmp_ext (mime, "audio"))
+    return GST_STREAM_AUDIO;
+  if (strncmp_ext (mime, "video"))
+    return GST_STREAM_VIDEO;
+  if (strncmp_ext (mime, "application"))
+    return GST_STREAM_APPLICATION;
 
-/* if idx < 0, returns the highest adaptation set with the given mimeType
- * if idx >= 0, returns the highest adaptation set with the given mimeType and an index <= idx
- */
-static GstAdaptationSetNode *
-gst_mpdparser_get_adapt_set_with_mimeType_and_idx (GList * AdaptationSets,
-    const gchar * mimeType, gint idx)
-{
-  GList *list;
-  GstAdaptationSetNode *adapt_set, *selected = NULL;
-  gint i = 0;
-
-  if (AdaptationSets == NULL)
-    return NULL;
-
-  /* FIXME Use ContentComponent to determine if this adaptation set contains
-   * the content type we're looking for. */
-  for (list = g_list_first (AdaptationSets); list; list = g_list_next (list)) {
-    adapt_set = (GstAdaptationSetNode *) list->data;
-    if (adapt_set) {
-      gchar *this_mimeType = NULL;
-      GstRepresentationNode *rep;
-      rep =
-          gst_mpdparser_get_lowest_representation (adapt_set->Representations);
-      if (rep->RepresentationBase)
-        this_mimeType = rep->RepresentationBase->mimeType;
-      if (!this_mimeType && adapt_set->RepresentationBase)
-        this_mimeType = adapt_set->RepresentationBase->mimeType;
-      GST_DEBUG ("Looking for mime type %s -> %i: %s", mimeType, i,
-          this_mimeType);
-      if (strncmp_ext (this_mimeType, mimeType) == 0) {
-        if (idx < 0 || i <= idx)
-          selected = adapt_set;
-        i++;
-      }
-    }
-  }
-
-  return selected;
-}
-
-static GstAdaptationSetNode *
-gst_mpdparser_get_first_adapt_set_with_mimeType_and_lang (GList *
-    AdaptationSets, const gchar * mimeType, const gchar * lang)
-{
-  GList *list;
-  GstAdaptationSetNode *adapt_set;
-
-  if (AdaptationSets == NULL)
-    return NULL;
-
-  for (list = g_list_first (AdaptationSets); list; list = g_list_next (list)) {
-    adapt_set = (GstAdaptationSetNode *) list->data;
-    if (adapt_set) {
-      GstRepresentationNode *rep;
-      gchar *this_lang = adapt_set->lang;
-      gchar *this_mimeType = NULL;
-      rep =
-          gst_mpdparser_get_lowest_representation (adapt_set->Representations);
-#ifndef GST_DISABLE_GST_DEBUG
-      if (rep && rep->BaseURLs) {
-        GstBaseURL *url = rep->BaseURLs->data;
-        GST_DEBUG ("%s", url->baseURL);
-      }
-#endif
-      if (rep->RepresentationBase)
-        this_mimeType = rep->RepresentationBase->mimeType;
-      if (!this_mimeType && adapt_set->RepresentationBase) {
-        this_mimeType = adapt_set->RepresentationBase->mimeType;
-      }
-      GST_DEBUG ("Looking for mime type %s -> %s", mimeType, this_mimeType);
-      if (strncmp_ext (this_mimeType, mimeType) == 0
-          && strncmp_ext (this_lang, lang) == 0)
-        return adapt_set;
-    }
-  }
-
-  return NULL;
+  return GST_STREAM_UNKNOWN;
 }
 
 static GstRepresentationNode *
@@ -3394,80 +3294,40 @@ no_mem:
   return FALSE;
 }
 
-gboolean
-gst_mpd_client_setup_streaming (GstMpdClient * client,
-    GstStreamMimeType mimeType, const gchar * lang)
+static GList *
+gst_mpd_client_get_adaptation_sets_for_period (GstMpdClient * client,
+    GstStreamPeriod * period)
 {
-  GstActiveStream *stream;
+  g_return_val_if_fail (period != NULL, NULL);
+  return period->period->AdaptationSets;
+}
+
+GList *
+gst_mpd_client_get_adaptation_sets (GstMpdClient * client)
+{
   GstStreamPeriod *stream_period;
-  GstAdaptationSetNode *adapt_set;
-  GstRepresentationNode *representation;
-  GList *rep_list = NULL;
 
   stream_period = gst_mpdparser_get_stream_period (client);
   if (stream_period == NULL || stream_period->period == NULL) {
     GST_DEBUG ("No more Period nodes in the MPD file, terminating...");
-    return FALSE;
+    return NULL;
   }
 
-  switch (mimeType) {
-    case GST_STREAM_VIDEO:
-      /* select the adaptation set for the video pipeline */
-      adapt_set =
-          gst_mpdparser_get_adapt_set_with_mimeType_and_idx
-          (stream_period->period->AdaptationSets, "video", 0);
-      if (!adapt_set) {
-        GST_INFO ("No video adaptation set found");
-        return FALSE;
-      }
-      /* retrive the list of representations */
-      rep_list = adapt_set->Representations;
-      if (!rep_list) {
-        GST_WARNING ("Can not retrieve any representation, aborting...");
-        return FALSE;
-      }
-      break;
-    case GST_STREAM_AUDIO:
-      adapt_set =
-          gst_mpdparser_get_first_adapt_set_with_mimeType_and_lang
-          (stream_period->period->AdaptationSets, "audio", lang);
-      /* if we did not found the requested audio language, get the first one */
-      if (!adapt_set)
-        adapt_set =
-            gst_mpdparser_get_first_adapt_set_with_mimeType
-            (stream_period->period->AdaptationSets, "audio");
-      if (!adapt_set) {
-        GST_INFO ("No audio adaptation set found");
-        return FALSE;
-      }
-      rep_list = adapt_set->Representations;
-      if (!rep_list) {
-        GST_WARNING ("Can not retrieve any representation, aborting...");
-        return FALSE;
-      }
-      break;
-    case GST_STREAM_APPLICATION:
-      adapt_set =
-          gst_mpdparser_get_first_adapt_set_with_mimeType_and_lang
-          (stream_period->period->AdaptationSets, "application", lang);
-      /* if we did not found the requested subtitles language, get the first one */
-      if (!adapt_set)
-        adapt_set =
-            gst_mpdparser_get_first_adapt_set_with_mimeType
-            (stream_period->period->AdaptationSets, "application");
-      if (!adapt_set) {
-        GST_INFO ("No application adaptation set found");
-        return FALSE;
-      }
-      rep_list = adapt_set->Representations;
-      if (!rep_list) {
-        GST_WARNING ("Can not retrieve any representation, aborting...");
-        return FALSE;
-      }
-      break;
-    default:
-      GST_WARNING ("Unsupported mimeType %d", mimeType);
-      return FALSE;
+  return gst_mpd_client_get_adaptation_sets_for_period (client, stream_period);
+}
+
+gboolean
+gst_mpd_client_setup_streaming (GstMpdClient * client,
+    GstAdaptationSetNode * adapt_set)
+{
+  GstRepresentationNode *representation;
+  GList *rep_list = NULL;
+  GstActiveStream *stream;
+
+  rep_list = adapt_set->Representations;
+  if (!rep_list) {
+    GST_WARNING ("Can not retrieve any representation, aborting...");
+    return FALSE;
   }
 
   stream = g_slice_new0 (GstActiveStream);
@@ -3476,10 +3336,8 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
     return FALSE;
   }
   gst_mpdparser_init_active_stream_segments (stream);
-  client->active_streams = g_list_append (client->active_streams, stream);
 
   stream->baseURL_idx = 0;
-  stream->mimeType = mimeType;
   stream->cur_adapt_set = adapt_set;
 
   GST_DEBUG ("0. Current stream %p", stream);
@@ -3508,12 +3366,19 @@ gst_mpd_client_setup_streaming (GstMpdClient * client,
     GST_WARNING ("No valid representation in the MPD file, aborting...");
     return FALSE;
   }
+  stream->mimeType =
+      gst_mpdparser_representation_get_mimetype (adapt_set, representation);
+  if (stream->mimeType == GST_STREAM_UNKNOWN) {
+    g_slice_free (GstActiveStream, stream);
+    return FALSE;
+  }
 
+  client->active_streams = g_list_append (client->active_streams, stream);
   if (!gst_mpd_client_setup_representation (client, stream, representation))
     return FALSE;
 
   GST_INFO ("Successfully setup the download pipeline for mimeType %d",
-      mimeType);
+      stream->mimeType);
 
   return TRUE;
 }

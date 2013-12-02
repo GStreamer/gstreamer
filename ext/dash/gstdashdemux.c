@@ -650,43 +650,20 @@ static gboolean
 gst_dash_demux_setup_mpdparser_streams (GstDashDemux * demux,
     GstMpdClient * client)
 {
-  GList *listLang = NULL;
-  guint i, nb_audio;
-  gchar *lang;
   gboolean has_streams = FALSE;
+  GList *adapt_sets, *iter;
 
-  if (!gst_mpd_client_setup_streaming (client, GST_STREAM_VIDEO, ""))
-    GST_INFO_OBJECT (demux, "No video adaptation set found");
-  else
+  adapt_sets = gst_mpd_client_get_adaptation_sets (client);
+  for (iter = adapt_sets; iter; iter = g_list_next (iter)) {
+    GstAdaptationSetNode *adapt_set_node = iter->data;
+
+    gst_mpd_client_setup_streaming (client, adapt_set_node);
     has_streams = TRUE;
-
-  nb_audio =
-      gst_mpdparser_get_list_and_nb_of_audio_language (client, &listLang);
-  if (nb_audio == 0)
-    nb_audio = 1;
-  GST_INFO_OBJECT (demux, "Number of languages is=%d", nb_audio);
-
-  for (i = 0; i < nb_audio; i++) {
-    lang = (gchar *) g_list_nth_data (listLang, i);
-    GST_INFO ("nb adaptation set: %i",
-        gst_mpdparser_get_nb_adaptationSet (client));
-    if (!gst_mpd_client_setup_streaming (client, GST_STREAM_AUDIO, lang))
-      GST_INFO_OBJECT (demux, "No audio adaptation set found");
-    else
-      has_streams = TRUE;
-
-    if (gst_mpdparser_get_nb_adaptationSet (client) > nb_audio) {
-      if (!gst_mpd_client_setup_streaming (client,
-              GST_STREAM_APPLICATION, lang)) {
-        GST_INFO_OBJECT (demux, "No application adaptation set found");
-      } else {
-        has_streams = TRUE;
-      }
-    }
   }
+
   if (!has_streams) {
     GST_ELEMENT_ERROR (demux, STREAM, DEMUX, ("Manifest has no playable "
-        "streams"), ("No streams could be activated from the manifest"));
+            "streams"), ("No streams could be activated from the manifest"));
   }
   return has_streams;
 }

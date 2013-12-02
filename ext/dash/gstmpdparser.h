@@ -67,6 +67,7 @@ typedef struct _GstMultSegmentBaseType    GstMultSegmentBaseType;
 
 typedef enum
 {
+  GST_STREAM_UNKNOWN,
   GST_STREAM_VIDEO,           /* video stream (the main one) */
   GST_STREAM_AUDIO,           /* audio stream (optional) */
   GST_STREAM_APPLICATION      /* application stream (optional): for timed text/subtitles */
@@ -482,8 +483,9 @@ gboolean gst_mpd_parse (GstMpdClient *client, const gchar *data, gint size);
 
 /* Streaming management */
 gboolean gst_mpd_client_setup_media_presentation (GstMpdClient *client);
-gboolean gst_mpd_client_setup_streaming (GstMpdClient *client, GstStreamMimeType mimeType, const gchar* lang);
+gboolean gst_mpd_client_setup_streaming (GstMpdClient * client, GstAdaptationSetNode * adapt_set);
 gboolean gst_mpd_client_setup_representation (GstMpdClient *client, GstActiveStream *stream, GstRepresentationNode *representation);
+GList * gst_mpd_client_get_adaptation_sets (GstMpdClient * client);
 GstClockTime gst_mpd_client_get_next_fragment_duration (GstMpdClient * client, GstActiveStream * stream);
 GstClockTime gst_mpd_client_get_media_presentation_duration (GstMpdClient *client);
 gboolean gst_mpd_client_get_last_fragment_timestamp (GstMpdClient * client, guint stream_idx, GstClockTime * ts);
