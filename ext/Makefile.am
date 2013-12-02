@@ -232,6 +232,12 @@ else
 OPENEXR_DIR =
 endif
 
+if USE_OPENNI2
+OPENNI2_DIR=openni2
+else
+OPENNI2_DIR=
+endif
+
 if USE_OPENJPEG
 OPENJPEG_DIR = openjpeg
 else
@@ -425,6 +431,7 @@ SUBDIRS=\
 	$(OPENCV_DIR) \
 	$(OPENEXR_DIR) \
 	$(OPENJPEG_DIR) \
+	$(OPENNI2_DIR) \
 	$(OPUS_DIR) \
 	$(RSVG_DIR) \
 	$(SBC_DIR) \
@@ -484,6 +491,7 @@ DIST_SUBDIRS = \
 	openal \
 	opencv \
 	openexr \
+	openni2 \
 	openjpeg \
 	opus \
 	rsvg \

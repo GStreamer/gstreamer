@@ -1791,6 +1791,14 @@ AG_GST_CHECK_FEATURE(OPENJPEG, [openjpeg library], openjpeg, [
   AC_SUBST(OPENJPEG_LIBS)
 ])
 
+dnl *** OpenNI2 ***
+translit(dnm, m, l) AM_CONDITIONAL(USE_OPENNI2, true)
+AG_GST_CHECK_FEATURE(OPENNI2, [openni2 library], openni2, [
+  PKG_CHECK_MODULES(OPENNI2, libopenni2 >= 0.26, HAVE_OPENNI2="yes", [ HAVE_OPENNI2="no" ] )
+  AC_SUBST(OPENNI2_CFLAGS)
+  AC_SUBST(OPENNI2_LIBS)
+])
+
 dnl *** Opus ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_OPUS, true)
 AG_GST_CHECK_FEATURE(OPUS, [opus], opus, [
@@ -2239,6 +2247,7 @@ AM_CONDITIONAL(USE_OFA, false)
 AM_CONDITIONAL(USE_OPENAL, false)
 AM_CONDITIONAL(USE_OPENCV, false)
 AM_CONDITIONAL(USE_OPENJPEG, false)
+AM_CONDITIONAL(USE_OPENNI2, false)
 AM_CONDITIONAL(USE_OPUS, false)
 AM_CONDITIONAL(USE_PVR, false)
 AM_CONDITIONAL(USE_RSVG, false)
@@ -2507,6 +2516,7 @@ ext/openal/Makefile
 ext/opencv/Makefile
 ext/openexr/Makefile
 ext/openjpeg/Makefile
+ext/openni2/Makefile
 ext/opus/Makefile
 ext/rsvg/Makefile
 ext/resindvd/Makefile

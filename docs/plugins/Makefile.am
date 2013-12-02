@@ -99,6 +99,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/opencv/gstpyramidsegment.h \
 	$(top_srcdir)/ext/opencv/gsttemplatematch.h \
 	$(top_srcdir)/ext/opencv/gsttextoverlay.h \
+	$(top_srcdir)/ext/openni2/gstopenni2src.h \
 	$(top_srcdir)/ext/rsvg/gstrsvgdec.h \
 	$(top_srcdir)/ext/rsvg/gstrsvgoverlay.h \
 	$(top_srcdir)/ext/spandsp/gstspanplc.h \
