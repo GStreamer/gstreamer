@@ -116,13 +116,6 @@ gst_sphere_get_property (GObject * object, guint prop_id,
   }
 }
 
-/* Clean up */
-static void
-gst_sphere_finalize (GObject * obj)
-{
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
 /* TODO we could have horizontal and vertical 'radius' */
 static gboolean
 sphere_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
@@ -195,9 +188,8 @@ gst_sphere_class_init (GstSphereClass * klass)
       "Applies 'sphere' geometric transform to the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_sphere_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_sphere_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_sphere_get_property);
+  gobject_class->set_property = gst_sphere_set_property;
+  gobject_class->get_property = gst_sphere_get_property;
 
   g_object_class_install_property (gobject_class, PROP_REFRACTION,
       g_param_spec_double ("refraction", "refraction",

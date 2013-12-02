@@ -190,9 +190,9 @@ gst_diffuse_class_init (GstDiffuseClass * klass)
       "Diffuses the image by moving its pixels in random directions",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_diffuse_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_diffuse_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_diffuse_get_property);
+  gobject_class->finalize = gst_diffuse_finalize;
+  gobject_class->set_property = gst_diffuse_set_property;
+  gobject_class->get_property = gst_diffuse_get_property;
 
   g_object_class_install_property (gobject_class, PROP_SCALE,
       g_param_spec_double ("scale", "scale",

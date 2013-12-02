@@ -116,13 +116,6 @@ gst_twirl_get_property (GObject * object, guint prop_id,
   }
 }
 
-/* Clean up */
-static void
-gst_twirl_finalize (GObject * obj)
-{
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
 static gboolean
 twirl_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     gdouble * in_y)
@@ -173,9 +166,8 @@ gst_twirl_class_init (GstTwirlClass * klass)
       "Twists the image from the center out",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_twirl_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_twirl_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_twirl_get_property);
+  gobject_class->set_property = gst_twirl_set_property;
+  gobject_class->get_property = gst_twirl_get_property;
 
   g_object_class_install_property (gobject_class, PROP_ANGLE,
       g_param_spec_double ("angle", "angle",

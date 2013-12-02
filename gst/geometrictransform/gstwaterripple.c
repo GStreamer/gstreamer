@@ -141,13 +141,6 @@ gst_water_ripple_get_property (GObject * object, guint prop_id,
   }
 }
 
-/* Clean up */
-static void
-gst_water_ripple_finalize (GObject * obj)
-{
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
 static gboolean
 water_ripple_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     gdouble * in_y)
@@ -203,11 +196,8 @@ gst_water_ripple_class_init (GstWaterRippleClass * klass)
       "Creates a water ripple effect on the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_water_ripple_finalize);
-  gobject_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_water_ripple_set_property);
-  gobject_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_water_ripple_get_property);
+  gobject_class->set_property = gst_water_ripple_set_property;
+  gobject_class->get_property = gst_water_ripple_get_property;
 
   g_object_class_install_property (gobject_class, PROP_AMPLITUDE,
       g_param_spec_double ("amplitude", "amplitude", "amplitude",

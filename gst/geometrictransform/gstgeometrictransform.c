@@ -371,10 +371,8 @@ gst_geometric_transform_class_init (gpointer klass, gpointer class_data)
 
   parent_class = g_type_class_peek_parent (klass);
 
-  obj_class->set_property =
-      GST_DEBUG_FUNCPTR (gst_geometric_transform_set_property);
-  obj_class->get_property =
-      GST_DEBUG_FUNCPTR (gst_geometric_transform_get_property);
+  obj_class->set_property = gst_geometric_transform_set_property;
+  obj_class->get_property = gst_geometric_transform_get_property;
 
   trans_class->stop = GST_DEBUG_FUNCPTR (gst_geometric_transform_stop);
   trans_class->before_transform =

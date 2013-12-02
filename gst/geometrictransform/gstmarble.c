@@ -229,9 +229,9 @@ gst_marble_class_init (GstMarbleClass * klass)
       "Applies a marbling effect to the image",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_marble_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_marble_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_marble_get_property);
+  gobject_class->finalize = gst_marble_finalize;
+  gobject_class->set_property = gst_marble_set_property;
+  gobject_class->get_property = gst_marble_get_property;
 
   g_object_class_install_property (gobject_class, PROP_XSCALE,
       g_param_spec_double ("x-scale", "x-scale",

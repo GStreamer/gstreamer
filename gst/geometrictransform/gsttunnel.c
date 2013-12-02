@@ -57,13 +57,6 @@ GST_DEBUG_CATEGORY_STATIC (gst_tunnel_debug);
 #define gst_tunnel_parent_class parent_class
 G_DEFINE_TYPE (GstTunnel, gst_tunnel, GST_TYPE_CIRCLE_GEOMETRIC_TRANSFORM);
 
-/* Clean up */
-static void
-gst_tunnel_finalize (GObject * obj)
-{
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
 static gboolean
 tunnel_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     gdouble * in_y)
@@ -106,11 +99,9 @@ tunnel_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
 static void
 gst_tunnel_class_init (GstTunnelClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
   GstGeometricTransformClass *gstgt_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
 
@@ -120,8 +111,6 @@ gst_tunnel_class_init (GstTunnelClass * klass)
       "tunnel",
       "Transform/Effect/Video",
       "Light tunnel effect", "Filippo Argiolas <filippo.argiolas@gmail.com>");
-
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_tunnel_finalize);
 
   gstgt_class->map_func = tunnel_map;
 }

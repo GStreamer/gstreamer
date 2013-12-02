@@ -117,13 +117,6 @@ gst_rotate_get_property (GObject * object, guint prop_id,
   }
 }
 
-/* Clean up */
-static void
-gst_rotate_finalize (GObject * obj)
-{
-  G_OBJECT_CLASS (parent_class)->finalize (obj);
-}
-
 static gboolean
 rotate_map (GstGeometricTransform * gt, gint x, gint y, gdouble * in_x,
     gdouble * in_y)
@@ -191,9 +184,8 @@ gst_rotate_class_init (GstRotateClass * klass)
       "Rotates the picture by an arbitrary angle",
       "Thiago Santos<thiago.sousa.santos@collabora.co.uk>");
 
-  gobject_class->finalize = GST_DEBUG_FUNCPTR (gst_rotate_finalize);
-  gobject_class->set_property = GST_DEBUG_FUNCPTR (gst_rotate_set_property);
-  gobject_class->get_property = GST_DEBUG_FUNCPTR (gst_rotate_get_property);
+  gobject_class->set_property = gst_rotate_set_property;
+  gobject_class->get_property = gst_rotate_get_property;
 
   g_object_class_install_property (gobject_class, PROP_ANGLE,
       g_param_spec_double ("angle", "angle",
