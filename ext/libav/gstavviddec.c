@@ -926,7 +926,8 @@ gst_ffmpegviddec_negotiate (GstFFMpegVidDec * ffmpegdec,
     out_info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
 
   /* try to find a good framerate */
-  if (in_info->fps_d) {
+  if ((in_info->fps_d && in_info->fps_n) ||
+      GST_VIDEO_INFO_FLAG_IS_SET (in_info, GST_VIDEO_FLAG_VARIABLE_FPS)) {
     /* take framerate from input when it was specified (#313970) */
     fps_n = in_info->fps_n;
     fps_d = in_info->fps_d;
