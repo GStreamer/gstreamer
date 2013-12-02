@@ -2604,12 +2604,17 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
             format.fmt.pix_mp.plane_fmt[i].bytesperline);
 #endif
 
-      if (format.fmt.pix_mp.width != width
-          || format.fmt.pix_mp.height != height)
-        goto invalid_dimensions;
-
       if (format.fmt.pix_mp.pixelformat != pixelformat)
         goto invalid_pixelformat;
+
+      /* we set the dimensions just in case but don't validate them afterwards
+       * For some codecs the dimensions are *not* in the bitstream, IIRC VC1
+       * in ASF mode for example. */
+      if (info.finfo->format != GST_VIDEO_FORMAT_ENCODED) {
+        if (format.fmt.pix_mp.width != width
+            || format.fmt.pix_mp.height != height)
+          goto invalid_dimensions;
+      }
 
       if (format.fmt.pix_mp.num_planes != n_v4l_planes)
         goto invalid_planes;
@@ -2659,8 +2664,13 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
           format.fmt.pix.height, GST_FOURCC_ARGS (format.fmt.pix.pixelformat),
           format.fmt.pix.bytesperline);
 
-      if (format.fmt.pix.width != width || format.fmt.pix.height != height)
-        goto invalid_dimensions;
+      /* we set the dimensions just in case but don't validate them afterwards
+       * For some codecs the dimensions are *not* in the bitstream, IIRC VC1
+       * in ASF mode for example. */
+      if (info.finfo->format != GST_VIDEO_FORMAT_ENCODED) {
+        if (format.fmt.pix.width != width || format.fmt.pix.height != height)
+          goto invalid_dimensions;
+      }
 
       if (format.fmt.pix.pixelformat != pixelformat)
         goto invalid_pixelformat;
