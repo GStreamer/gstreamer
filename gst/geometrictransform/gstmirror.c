@@ -197,8 +197,6 @@ gst_mirror_class_init (GstMirrorClass * klass)
           GST_TYPE_MIRROR_MODE, DEFAULT_PROP_MODE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gstgt_class->map_func = mirror_map;
 }
 

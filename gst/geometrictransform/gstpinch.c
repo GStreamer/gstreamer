@@ -168,8 +168,6 @@ gst_pinch_class_init (GstPinchClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gst_element_class_set_static_metadata (gstelement_class,
       "pinch",
       "Transform/Effect/Video",
@@ -178,7 +176,6 @@ gst_pinch_class_init (GstPinchClass * klass)
 
   gobject_class->set_property = gst_pinch_set_property;
   gobject_class->get_property = gst_pinch_get_property;
-
 
   g_object_class_install_property (gobject_class, PROP_INTENSITY,
       g_param_spec_double ("intensity", "intensity",

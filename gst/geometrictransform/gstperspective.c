@@ -201,8 +201,6 @@ gst_perspective_class_init (GstPerspectiveClass * klass)
   gstelement_class = (GstElementClass *) klass;
   gstgt_class = (GstGeometricTransformClass *) klass;
 
-  parent_class = g_type_class_peek_parent (klass);
-
   gst_element_class_set_static_metadata (gstelement_class,
       "perspective",
       "Transform/Effect/Video",
