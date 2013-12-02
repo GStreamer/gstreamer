@@ -1189,8 +1189,10 @@ test_rtxsender_packet_retention (gboolean test_with_time)
   const gint num_buffers = test_with_time ? 30 : 10;
   const gint half_buffers = num_buffers / 2;
   const guint ssrc = 1234567;
+  const guint rtx_ssrc = 7654321;
   const guint rtx_payload_type = 99;
   GstStructure *pt_map;
+  GstStructure *ssrc_map;
   GList *in_buffers, *node;
   guint payload_type;
   GstElement *rtxsend;
@@ -1211,6 +1213,8 @@ test_rtxsender_packet_retention (gboolean test_with_time)
 
   pt_map = gst_structure_new ("application/x-rtp-pt-map",
       "96", G_TYPE_UINT, rtx_payload_type, NULL);
+  ssrc_map = gst_structure_new ("application/x-rtp-ssrc-map",
+      "1234567", G_TYPE_UINT, rtx_ssrc, NULL);
 
   /* in both cases we want the rtxsend queue to store 'half_buffers'
    * amount of buffers at most. In max-size-packets mode, it's trivial.
@@ -1219,8 +1223,9 @@ test_rtxsender_packet_retention (gboolean test_with_time)
   g_object_set (rtxsend,
       "max-size-packets", test_with_time ? 0 : half_buffers,
       "max-size-time", test_with_time ? 499 : 0,
-      "payload-type-map", pt_map, NULL);
+      "payload-type-map", pt_map, "ssrc-map", ssrc_map, NULL);
   gst_structure_free (pt_map);
+  gst_structure_free (ssrc_map);
 
   srcpad = gst_check_setup_src_pad (rtxsend, &srctemplate);
   fail_unless_equals_int (gst_pad_set_active (srcpad, TRUE), TRUE);
@@ -1295,6 +1300,7 @@ test_rtxsender_packet_retention (gboolean test_with_time)
         fail_unless_equals_int (res, TRUE);
 
         fail_if (gst_rtp_buffer_get_ssrc (&rtp) == ssrc);
+        fail_unless_equals_int (gst_rtp_buffer_get_ssrc (&rtp), rtx_ssrc);
         fail_unless_equals_int (gst_rtp_buffer_get_payload_type (&rtp),
             rtx_payload_type);
         fail_unless_equals_int (GST_READ_UINT16_BE (gst_rtp_buffer_get_payload (&rtp)), j);     /* j == rtx seqnum */
