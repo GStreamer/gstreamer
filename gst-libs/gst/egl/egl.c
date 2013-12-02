@@ -384,3 +384,241 @@ gst_egl_display_get (GstEGLDisplay * display)
 G_DEFINE_BOXED_TYPE (GstEGLDisplay, gst_egl_display,
     (GBoxedCopyFunc) gst_egl_display_ref,
     (GBoxedFreeFunc) gst_egl_display_unref);
+
+
+struct _GstEGLImageBufferPoolPrivate
+{
+  GstAllocator *allocator;
+  GstAllocationParams params;
+  GstVideoInfo info;
+  gboolean add_metavideo;
+  gboolean want_eglimage;
+  GstBuffer *last_buffer;
+  GstEGLImageBufferPoolSendBlockingAllocate send_blocking_allocate_func;
+  gpointer send_blocking_allocate_data;
+  GDestroyNotify send_blocking_allocate_destroy;
+};
+
+G_DEFINE_TYPE (GstEGLImageBufferPool, gst_egl_image_buffer_pool,
+    GST_TYPE_VIDEO_BUFFER_POOL);
+
+GstBufferPool *
+gst_egl_image_buffer_pool_new (GstEGLImageBufferPoolSendBlockingAllocate
+    blocking_allocate_func, gpointer blocking_allocate_data,
+    GDestroyNotify destroy_func)
+{
+  GstEGLImageBufferPool *pool =
+      g_object_new (GST_TYPE_EGL_IMAGE_BUFFER_POOL, NULL);
+  GstEGLImageBufferPoolPrivate *priv =
+      G_TYPE_INSTANCE_GET_PRIVATE (pool, GST_TYPE_EGL_IMAGE_BUFFER_POOL,
+      GstEGLImageBufferPoolPrivate);
+
+  pool->priv = priv;
+
+  priv->allocator = NULL;
+  priv->last_buffer = NULL;
+  priv->send_blocking_allocate_func = blocking_allocate_func;
+  priv->send_blocking_allocate_data = blocking_allocate_data;
+  priv->send_blocking_allocate_destroy = destroy_func;
+
+  return (GstBufferPool *) pool;
+}
+
+void
+gst_egl_image_buffer_pool_replace_last_buffer (GstEGLImageBufferPool * pool,
+    GstBuffer * buffer)
+{
+  g_return_if_fail (pool != NULL);
+
+  gst_buffer_replace (&pool->priv->last_buffer, buffer);
+}
+
+static const gchar **
+gst_egl_image_buffer_pool_get_options (GstBufferPool * bpool)
+{
+  static const gchar *options[] = { GST_BUFFER_POOL_OPTION_VIDEO_META, NULL
+  };
+
+  return options;
+}
+
+static gboolean
+gst_egl_image_buffer_pool_set_config (GstBufferPool * bpool,
+    GstStructure * config)
+{
+  GstEGLImageBufferPool *pool = GST_EGL_IMAGE_BUFFER_POOL (bpool);
+  GstEGLImageBufferPoolPrivate *priv = pool->priv;
+  GstCaps *caps;
+  GstVideoInfo info;
+
+  if (priv->allocator)
+    gst_object_unref (priv->allocator);
+  priv->allocator = NULL;
+
+  if (!GST_BUFFER_POOL_CLASS
+      (gst_egl_image_buffer_pool_parent_class)->set_config (bpool, config))
+    return FALSE;
+
+  if (!gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL)
+      || !caps)
+    return FALSE;
+
+  if (!gst_video_info_from_caps (&info, caps))
+    return FALSE;
+
+  if (!gst_buffer_pool_config_get_allocator (config, &priv->allocator,
+          &priv->params))
+    return FALSE;
+  if (priv->allocator)
+    gst_object_ref (priv->allocator);
+
+  priv->add_metavideo =
+      gst_buffer_pool_config_has_option (config,
+      GST_BUFFER_POOL_OPTION_VIDEO_META);
+
+  priv->want_eglimage = (priv->allocator
+      && g_strcmp0 (priv->allocator->mem_type, GST_EGL_IMAGE_MEMORY_TYPE) == 0);
+
+  priv->info = info;
+
+  return TRUE;
+}
+
+static GstFlowReturn
+gst_egl_image_buffer_pool_alloc_buffer (GstBufferPool * bpool,
+    GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
+{
+  GstEGLImageBufferPool *pool = GST_EGL_IMAGE_BUFFER_POOL (bpool);
+  GstEGLImageBufferPoolPrivate *priv = pool->priv;
+
+  *buffer = NULL;
+
+  if (!priv->add_metavideo || !priv->want_eglimage)
+    return
+        GST_BUFFER_POOL_CLASS
+        (gst_egl_image_buffer_pool_parent_class)->alloc_buffer (bpool,
+        buffer, params);
+
+  if (!priv->allocator)
+    return GST_FLOW_NOT_NEGOTIATED;
+
+  switch (priv->info.finfo->format) {
+    case GST_VIDEO_FORMAT_RGB:
+    case GST_VIDEO_FORMAT_BGR:
+    case GST_VIDEO_FORMAT_RGB16:
+    case GST_VIDEO_FORMAT_NV12:
+    case GST_VIDEO_FORMAT_NV21:
+    case GST_VIDEO_FORMAT_RGBA:
+    case GST_VIDEO_FORMAT_BGRA:
+    case GST_VIDEO_FORMAT_ARGB:
+    case GST_VIDEO_FORMAT_ABGR:
+    case GST_VIDEO_FORMAT_RGBx:
+    case GST_VIDEO_FORMAT_BGRx:
+    case GST_VIDEO_FORMAT_xRGB:
+    case GST_VIDEO_FORMAT_xBGR:
+    case GST_VIDEO_FORMAT_AYUV:
+    case GST_VIDEO_FORMAT_YV12:
+    case GST_VIDEO_FORMAT_I420:
+    case GST_VIDEO_FORMAT_Y444:
+    case GST_VIDEO_FORMAT_Y42B:
+    case GST_VIDEO_FORMAT_Y41B:{
+
+      if (priv->send_blocking_allocate_func)
+        *buffer = priv->send_blocking_allocate_func (bpool,
+            priv->send_blocking_allocate_data);
+
+      if (!*buffer) {
+        GST_WARNING ("Fallback memory allocation");
+        return
+            GST_BUFFER_POOL_CLASS
+            (gst_egl_image_buffer_pool_parent_class)->alloc_buffer (bpool,
+            buffer, params);
+      }
+
+      return GST_FLOW_OK;
+      break;
+    }
+    default:
+      return
+          GST_BUFFER_POOL_CLASS
+          (gst_egl_image_buffer_pool_parent_class)->alloc_buffer (bpool,
+          buffer, params);
+      break;
+  }
+
+  return GST_FLOW_ERROR;
+}
+
+static GstFlowReturn
+gst_egl_image_buffer_pool_acquire_buffer (GstBufferPool * bpool,
+    GstBuffer ** buffer, GstBufferPoolAcquireParams * params)
+{
+  GstFlowReturn ret;
+  GstEGLImageBufferPool *pool;
+
+  ret =
+      GST_BUFFER_POOL_CLASS
+      (gst_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool,
+      buffer, params);
+  if (ret != GST_FLOW_OK || !*buffer)
+    return ret;
+
+  pool = GST_EGL_IMAGE_BUFFER_POOL (bpool);
+
+  /* XXX: Don't return the memory we just rendered, glEGLImageTargetTexture2DOES()
+   * keeps the EGLImage unmappable until the next one is uploaded
+   */
+  if (*buffer && *buffer == pool->priv->last_buffer) {
+    GstBuffer *oldbuf = *buffer;
+
+    ret =
+        GST_BUFFER_POOL_CLASS
+        (gst_egl_image_buffer_pool_parent_class)->acquire_buffer (bpool,
+        buffer, params);
+    gst_object_replace ((GstObject **) & oldbuf->pool, (GstObject *) pool);
+    gst_buffer_unref (oldbuf);
+  }
+
+  return ret;
+}
+
+static void
+gst_egl_image_buffer_pool_finalize (GObject * object)
+{
+  GstEGLImageBufferPool *pool = GST_EGL_IMAGE_BUFFER_POOL (object);
+  GstEGLImageBufferPoolPrivate *priv = pool->priv;
+
+  if (priv->allocator)
+    gst_object_unref (priv->allocator);
+  priv->allocator = NULL;
+
+  gst_egl_image_buffer_pool_replace_last_buffer (pool, NULL);
+
+  if (priv->send_blocking_allocate_destroy)
+    priv->send_blocking_allocate_destroy (priv->send_blocking_allocate_data);
+  priv->send_blocking_allocate_destroy = NULL;
+  priv->send_blocking_allocate_data = NULL;
+
+  G_OBJECT_CLASS (gst_egl_image_buffer_pool_parent_class)->finalize (object);
+}
+
+static void
+gst_egl_image_buffer_pool_class_init (GstEGLImageBufferPoolClass * klass)
+{
+  GObjectClass *gobject_class = (GObjectClass *) klass;
+  GstBufferPoolClass *gstbufferpool_class = (GstBufferPoolClass *) klass;
+
+  g_type_class_add_private (klass, sizeof (GstEGLImageBufferPoolPrivate));
+
+  gobject_class->finalize = gst_egl_image_buffer_pool_finalize;
+  gstbufferpool_class->get_options = gst_egl_image_buffer_pool_get_options;
+  gstbufferpool_class->set_config = gst_egl_image_buffer_pool_set_config;
+  gstbufferpool_class->alloc_buffer = gst_egl_image_buffer_pool_alloc_buffer;
+  gstbufferpool_class->acquire_buffer =
+      gst_egl_image_buffer_pool_acquire_buffer;
+}
+
+static void
+gst_egl_image_buffer_pool_init (GstEGLImageBufferPool * pool)
+{
+}

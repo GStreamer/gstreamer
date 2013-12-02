@@ -69,5 +69,42 @@ GstEGLDisplay *gst_egl_display_ref (GstEGLDisplay * display);
 void gst_egl_display_unref (GstEGLDisplay * display);
 EGLDisplay gst_egl_display_get (GstEGLDisplay * display);
 
+/* EGLImage buffer pool */
+
+#define GST_TYPE_EGL_IMAGE_BUFFER_POOL         (gst_egl_image_buffer_pool_get_type())
+#define GST_EGL_IMAGE_BUFFER_POOL(o)           (G_TYPE_CHECK_INSTANCE_CAST((o), GST_TYPE_EGL_IMAGE_BUFFER_POOL, GstEGLImageBufferPool))
+#define GST_EGL_IMAGE_BUFFER_POOL_CLASS(k)     (G_TYPE_CHECK_CLASS((k), GST_EGL_IMAGE_BUFFER_POOL, GstEGLImageBufferPoolClass))
+#define GST_EGL_IS_IMAGE_BUFFER_POOL(o)        (G_TYPE_CHECK_INSTANCE_TYPE((o), GST_TYPE_EGL_IMAGE_BUFFER_POOL))
+#define GST_EGL_IS_IMAGE_BUFFER_POOL_CLASS(k)  (G_TYPE_CHECK_CLASS_TYPE((k), GST_TYPE_EGL_IMAGE_BUFFER_POOL))
+#define  GST_EGL_IMAGE_BUFFER_POO_GET_CLASS(o) (G_TYPE_INSTANCE_GET_CLASS((o), GST_TYPE_EGL_IMAGE_BUFFER_POOL, GstEGLImageBufferPoolClass))
+
+typedef struct _GstEGLImageBufferPool        GstEGLImageBufferPool;
+typedef struct _GstEGLImageBufferPoolClass   GstEGLImageBufferPoolClass;
+typedef struct _GstEGLImageBufferPoolPrivate GstEGLImageBufferPoolPrivate;
+
+struct _GstEGLImageBufferPool {
+  GstVideoBufferPool parent;
+
+  GstEGLImageBufferPoolPrivate *priv;
+
+  gpointer _reserved[GST_PADDING];
+};
+
+struct _GstEGLImageBufferPoolClass {
+  GstVideoBufferPoolClass parent_class;
+
+  gpointer _reserved[GST_PADDING];
+};
+
+GType gst_egl_image_buffer_pool_get_type     (void);
+
+typedef GstBuffer *(*GstEGLImageBufferPoolSendBlockingAllocate) (GstBufferPool *
+    pool, gpointer data);
+
+GstBufferPool *gst_egl_image_buffer_pool_new (
+    GstEGLImageBufferPoolSendBlockingAllocate blocking_allocate_func,
+    gpointer blocking_allocate_data, GDestroyNotify destroy_func);
+void gst_egl_image_buffer_pool_replace_last_buffer (GstEGLImageBufferPool * pool, GstBuffer * buffer);
+
 G_END_DECLS
 #endif /* __GST_EGL_H__ */
