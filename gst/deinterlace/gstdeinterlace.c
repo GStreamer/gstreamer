@@ -2208,11 +2208,10 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
         gst_value_set_fraction (&nmax, n, d);
         gst_value_set_fraction_range (&nrange, &nmin, &nmax);
 
-        gst_structure_set_value (s, "framerate", &nrange);
+        gst_structure_take_value (s, "framerate", &nrange);
 
         g_value_unset (&nmin);
         g_value_unset (&nmax);
-        g_value_unset (&nrange);
       } else if (G_VALUE_TYPE (val) == GST_TYPE_LIST) {
         const GValue *lval;
         GValue nlist = { 0, };
@@ -2240,11 +2239,9 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
           g_value_init (&nval, GST_TYPE_FRACTION);
 
           gst_value_set_fraction (&nval, n, d);
-          gst_value_list_append_value (&nlist, &nval);
-          g_value_unset (&nval);
+          gst_value_list_append_and_take_value (&nlist, &nval);
         }
-        gst_structure_set_value (s, "framerate", &nlist);
-        g_value_unset (&nlist);
+        gst_structure_take_value (s, "framerate", &nlist);
       }
     }
   }
