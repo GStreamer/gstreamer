@@ -422,10 +422,9 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
   GstV4l2Object *obj = pool->obj;
   GstCaps *caps;
-  guint size, min_buffers, max_buffers, num_buffers, copy_threshold;
+  guint size, min_buffers, max_buffers;
   GstAllocator *allocator;
   GstAllocationParams params;
-  struct v4l2_requestbuffers breq;
 
   GST_DEBUG_OBJECT (pool, "set config");
 
@@ -459,10 +458,89 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
           &max_buffers))
     goto wrong_config;
 
+  /* FIXME Check alignement, and S_FMT with new size if different */
+
   if (!gst_buffer_pool_config_get_allocator (config, &allocator, &params))
     goto wrong_config;
 
   GST_DEBUG_OBJECT (pool, "config %" GST_PTR_FORMAT, config);
+
+  if (obj->mode == GST_V4L2_IO_DMABUF)
+    allocator = gst_dmabuf_allocator_new ();
+
+  if (pool->allocator)
+    gst_object_unref (pool->allocator);
+  if ((pool->allocator = allocator))
+    gst_object_ref (allocator);
+  pool->params = params;
+
+  gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
+      max_buffers);
+
+  return GST_BUFFER_POOL_CLASS (parent_class)->set_config (bpool, config);
+
+  /* ERRORS */
+missing_video_api:
+  {
+    GST_ERROR_OBJECT (pool, "missing GstMetaVideo API in config, "
+        "default stride: %d, wanted stride %u",
+        GST_VIDEO_INFO_PLANE_STRIDE (&obj->info, 0), obj->bytesperline[0]);
+    return FALSE;
+  }
+wrong_config:
+  {
+    GST_ERROR_OBJECT (pool, "invalid config %" GST_PTR_FORMAT, config);
+    return FALSE;
+  }
+}
+
+static gboolean
+start_streaming (GstV4l2BufferPool * pool)
+{
+  GstV4l2Object *obj = pool->obj;
+
+  switch (obj->mode) {
+    case GST_V4L2_IO_RW:
+      break;
+    case GST_V4L2_IO_MMAP:
+    case GST_V4L2_IO_USERPTR:
+    case GST_V4L2_IO_DMABUF:
+      GST_DEBUG_OBJECT (pool, "STREAMON");
+      if (v4l2_ioctl (pool->video_fd, VIDIOC_STREAMON, &obj->type) < 0)
+        goto start_failed;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  pool->streaming = TRUE;
+
+  return TRUE;
+
+  /* ERRORS */
+start_failed:
+  {
+    GST_ERROR_OBJECT (pool, "error with STREAMON %d (%s)", errno,
+        g_strerror (errno));
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
+{
+  GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
+  GstV4l2Object *obj = pool->obj;
+  GstStructure *config;
+  GstCaps *caps;
+  guint size, num_buffers, min_buffers, max_buffers, copy_threshold;
+  struct v4l2_requestbuffers breq;
+
+  config = gst_buffer_pool_get_config (bpool);
+  if (!gst_buffer_pool_config_get_params (config, &caps, &size, &min_buffers,
+          &max_buffers))
+    goto wrong_config;
 
   switch (obj->mode) {
     case GST_V4L2_IO_RW:
@@ -518,6 +596,9 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
          * copy */
         copy_threshold = 0;
       }
+
+      /* FIXME try to call CREATEBUFS with count 0 to check if max shall
+       * remain 0 */
       break;
     }
     case GST_V4L2_IO_USERPTR:
@@ -532,86 +613,9 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
   pool->num_buffers = num_buffers;
   pool->copy_threshold = copy_threshold;
 
-  if (obj->mode == GST_V4L2_IO_DMABUF)
-    allocator = gst_dmabuf_allocator_new ();
-
-  if (pool->allocator)
-    gst_object_unref (pool->allocator);
-  if ((pool->allocator = allocator))
-    gst_object_ref (allocator);
-  pool->params = params;
-
   gst_buffer_pool_config_set_params (config, caps, size, min_buffers,
       max_buffers);
-
-  return GST_BUFFER_POOL_CLASS (parent_class)->set_config (bpool, config);
-
-  /* ERRORS */
-missing_video_api:
-  {
-    GST_ERROR_OBJECT (pool, "missing GstMetaVideo API in config, "
-        "default stride: %d, wanted stride %u",
-        GST_VIDEO_INFO_PLANE_STRIDE (&obj->info, 0), obj->bytesperline[0]);
-    return FALSE;
-  }
-wrong_config:
-  {
-    GST_ERROR_OBJECT (pool, "invalid config %" GST_PTR_FORMAT, config);
-    return FALSE;
-  }
-reqbufs_failed:
-  {
-    GST_ERROR_OBJECT (pool,
-        "error requesting %d buffers: %s", num_buffers, g_strerror (errno));
-    return FALSE;
-  }
-no_buffers:
-  {
-    GST_ERROR_OBJECT (pool,
-        "we received %d from device '%s', we want at least %d",
-        breq.count, obj->videodev, GST_V4L2_MIN_BUFFERS);
-    return FALSE;
-  }
-}
-
-static gboolean
-start_streaming (GstV4l2BufferPool * pool)
-{
-  GstV4l2Object *obj = pool->obj;
-
-  switch (obj->mode) {
-    case GST_V4L2_IO_RW:
-      break;
-    case GST_V4L2_IO_MMAP:
-    case GST_V4L2_IO_USERPTR:
-    case GST_V4L2_IO_DMABUF:
-      GST_DEBUG_OBJECT (pool, "STREAMON");
-      if (v4l2_ioctl (pool->video_fd, VIDIOC_STREAMON, &obj->type) < 0)
-        goto start_failed;
-      break;
-    default:
-      g_assert_not_reached ();
-      break;
-  }
-
-  pool->streaming = TRUE;
-
-  return TRUE;
-
-  /* ERRORS */
-start_failed:
-  {
-    GST_ERROR_OBJECT (pool, "error with STREAMON %d (%s)", errno,
-        g_strerror (errno));
-    return FALSE;
-  }
-}
-
-static gboolean
-gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
-{
-  GstV4l2BufferPool *pool = GST_V4L2_BUFFER_POOL (bpool);
-  GstV4l2Object *obj = pool->obj;
+  GST_BUFFER_POOL_CLASS (parent_class)->set_config (bpool, config);
 
   pool->obj = obj;
   pool->buffers = g_new0 (GstBuffer *, pool->num_buffers);
@@ -632,6 +636,24 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
   return TRUE;
 
   /* ERRORS */
+wrong_config:
+  {
+    GST_ERROR_OBJECT (pool, "invalid config %" GST_PTR_FORMAT, config);
+    return FALSE;
+  }
+reqbufs_failed:
+  {
+    GST_ERROR_OBJECT (pool,
+        "error requesting %d buffers: %s", num_buffers, g_strerror (errno));
+    return FALSE;
+  }
+no_buffers:
+  {
+    GST_ERROR_OBJECT (pool,
+        "we received %d from device '%s', we want at least %d",
+        breq.count, obj->videodev, GST_V4L2_MIN_BUFFERS);
+    return FALSE;
+  }
 start_failed:
   {
     GST_ERROR_OBJECT (pool, "failed to start streaming");
