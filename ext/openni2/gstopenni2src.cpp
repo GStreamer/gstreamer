@@ -327,15 +327,15 @@ gst_openni2_src_get_caps (GstBaseSrc * src, GstCaps * filter)
         : gst_caps_ref (ni2src->gst_caps);
   }
   // If we are here, we need to compose the caps and return them.
-  if (ni2src->colorpixfmt != openni::PIXEL_FORMAT_RGB888)
-    return gst_caps_new_empty ();       /* Uh oh,  not RGB :? Not supported. */
 
   if (ni2src->depth.isValid () && ni2src->color.isValid () &&
-      ni2src->sourcetype == SOURCETYPE_BOTH) {
+      ni2src->sourcetype == SOURCETYPE_BOTH
+      && ni2src->colorpixfmt == openni::PIXEL_FORMAT_RGB888) {
     format = GST_VIDEO_FORMAT_RGBA;
   } else if (ni2src->depth.isValid () && ni2src->sourcetype == SOURCETYPE_DEPTH) {
     format = GST_VIDEO_FORMAT_GRAY16_LE;
-  } else if (ni2src->color.isValid () && ni2src->sourcetype == SOURCETYPE_COLOR) {
+  } else if (ni2src->color.isValid () && ni2src->sourcetype == SOURCETYPE_COLOR
+      && ni2src->colorpixfmt == openni::PIXEL_FORMAT_RGB888) {
     format = GST_VIDEO_FORMAT_RGB;
   } else {
     return gst_caps_new_empty ();
@@ -452,7 +452,8 @@ gst_openni2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 
   if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
     GST_DEBUG_OBJECT (pool, "activate Video Meta");
-    gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+    gst_buffer_pool_config_add_option (config,
+        GST_BUFFER_POOL_OPTION_VIDEO_META);
   }
 
   gst_buffer_pool_set_config (pool, config);
