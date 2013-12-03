@@ -1731,8 +1731,10 @@ gst_multi_queue_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_RECONFIGURE:
       GST_MULTI_QUEUE_MUTEX_LOCK (mq);
-      if (sq->srcresult == GST_FLOW_NOT_LINKED)
+      if (sq->srcresult == GST_FLOW_NOT_LINKED) {
         sq->srcresult = GST_FLOW_OK;
+        g_cond_signal (&sq->turn);
+      }
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mq);
 
       ret = gst_pad_push_event (sq->sinkpad, event);
