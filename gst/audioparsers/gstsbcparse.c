@@ -121,6 +121,7 @@ static void
 gst_sbc_parse_init (GstSbcParse * sbcparse)
 {
   gst_sbc_parse_reset (sbcparse);
+  GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (sbcparse));
 }
 
 static gboolean
@@ -335,13 +336,6 @@ gst_sbc_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
 
     res = gst_caps_intersect_full (peercaps, templ, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
-    res = gst_caps_make_writable (res);
-
-    /* Append the template caps because we still want to accept
-     * caps without any fields in the case upstream does not
-     * know anything.
-     */
-    gst_caps_append (res, templ);
   } else {
     res = templ;
   }

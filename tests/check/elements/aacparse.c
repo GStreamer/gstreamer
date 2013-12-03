@@ -185,6 +185,50 @@ GST_START_TEST (test_parse_handle_codec_data)
 
 GST_END_TEST;
 
+GST_START_TEST (test_parse_proxy_constraints)
+{
+  GstCaps *caps;
+  GstElement *parse, *filter;
+  GstPad *sinkpad;
+  GstStructure *s;
+
+  parse = gst_element_factory_make ("aacparse", NULL);
+  filter = gst_element_factory_make ("capsfilter", NULL);
+
+  /* constraint on rate and version */
+  caps = gst_caps_from_string ("audio/mpeg,mpegversion=2,rate=44100");
+  g_object_set (filter, "caps", caps, NULL);
+  gst_caps_unref (caps);
+
+  gst_element_link (parse, filter);
+
+  sinkpad = gst_element_get_static_pad (parse, "sink");
+  caps = gst_pad_query_caps (sinkpad, NULL);
+  GST_LOG ("caps %" GST_PTR_FORMAT, caps);
+
+  fail_unless (gst_caps_get_size (caps) == 1);
+
+  /* getcaps should proxy the rate constraint */
+  s = gst_caps_get_structure (caps, 0);
+  fail_unless (gst_structure_has_name (s, "audio/mpeg"));
+  fail_unless_structure_field_int_equals (s, "rate", 44100);
+  gst_caps_unref (caps);
+
+  /* should accept without the constraint */
+  caps = gst_caps_from_string ("audio/mpeg,mpegversion=2");
+  fail_unless (gst_pad_query_accept_caps (sinkpad, caps));
+  gst_caps_unref (caps);
+
+  /* should not accept with conflicting version */
+  caps = gst_caps_from_string ("audio/mpeg,mpegversion=4");
+  fail_if (gst_pad_query_accept_caps (sinkpad, caps));
+  gst_caps_unref (caps);
+
+  gst_object_unref (sinkpad);
+
+}
+
+GST_END_TEST;
 
 static Suite *
 aacparse_suite (void)
@@ -206,6 +250,9 @@ aacparse_suite (void)
 
   /* Other tests */
   tcase_add_test (tc_chain, test_parse_handle_codec_data);
+
+  /* caps tests */
+  tcase_add_test (tc_chain, test_parse_proxy_constraints);
 
   return s;
 }

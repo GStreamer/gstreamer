@@ -128,7 +128,7 @@ gst_amr_parse_init (GstAmrParse * amrparse)
   /* init rest */
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (amrparse), 62);
   GST_DEBUG ("initialized");
-
+  GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (amrparse));
 }
 
 
