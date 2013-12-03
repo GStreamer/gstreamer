@@ -231,7 +231,7 @@ gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 timeout)
 
   status = gst_vaapi_encoder_get_buffer (encode->encoder,
       &out_frame, &codedbuf_proxy, timeout);
-  if (status == GST_VAAPI_ENCODER_STATUS_TIMEOUT)
+  if (status == GST_VAAPI_ENCODER_STATUS_NO_BUFFER)
     return GST_VAAPI_ENCODE_FLOW_TIMEOUT;
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     goto error_get_buffer;

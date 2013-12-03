@@ -208,7 +208,7 @@ gst_vaapi_encoder_free_sync_pictures (GstVaapiEncoder * encoder)
   GST_VAAPI_ENCODER_UNLOCK (encoder);
 }
 
-static gboolean
+static void
 gst_vaapi_encoder_push_sync_picture (GstVaapiEncoder * encoder,
     GstVaapiEncoderSyncPic * sync_pic)
 {
@@ -216,7 +216,6 @@ gst_vaapi_encoder_push_sync_picture (GstVaapiEncoder * encoder,
   g_queue_push_tail (&encoder->sync_pictures, sync_pic);
   GST_VAAPI_ENCODER_SYNC_SIGNAL (encoder);
   GST_VAAPI_ENCODER_UNLOCK (encoder);
-  return TRUE;
 }
 
 static GstVaapiEncoderStatus
@@ -233,7 +232,7 @@ gst_vaapi_encoder_pop_sync_picture (GstVaapiEncoder * encoder,
     goto timeout;
 
   if (g_queue_is_empty (&encoder->sync_pictures)) {
-    ret = GST_VAAPI_ENCODER_STATUS_UNKNOWN_ERR;
+    ret = GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
     goto end;
   }
 
@@ -244,7 +243,7 @@ gst_vaapi_encoder_pop_sync_picture (GstVaapiEncoder * encoder,
   goto end;
 
 timeout:
-  ret = GST_VAAPI_ENCODER_STATUS_TIMEOUT;
+  ret = GST_VAAPI_ENCODER_STATUS_NO_BUFFER;
 
 end:
   GST_VAAPI_ENCODER_UNLOCK (encoder);
@@ -265,21 +264,14 @@ again:
   picture = NULL;
   sync_pic = NULL;
   ret = klass->reordering (encoder, frame, FALSE, &picture);
-
-  if (ret == GST_VAAPI_ENCODER_STATUS_FRAME_NOT_READY)
+  if (ret == GST_VAAPI_ENCODER_STATUS_NO_SURFACE)
     return GST_VAAPI_ENCODER_STATUS_SUCCESS;
-
-  g_assert (picture);
   if (ret != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     goto error;
-  if (!picture) {
-    ret = GST_VAAPI_ENCODER_STATUS_PICTURE_ERR;
-    goto error;
-  }
 
   coded_buf = gst_vaapi_encoder_create_coded_buffer (encoder);
   if (!coded_buf) {
-    ret = GST_VAAPI_ENCODER_STATUS_OBJECT_ERR;
+    ret = GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
     goto error;
   }
 
@@ -291,11 +283,7 @@ again:
   sync_pic = _create_sync_picture (picture, coded_buf);
   gst_vaapi_coded_buffer_proxy_replace (&coded_buf, NULL);
   gst_vaapi_enc_picture_replace (&picture, NULL);
-
-  if (!gst_vaapi_encoder_push_sync_picture (encoder, sync_pic)) {
-    ret = GST_VAAPI_ENCODER_STATUS_THREAD_ERR;
-    goto error;
-  }
+  gst_vaapi_encoder_push_sync_picture (encoder, sync_pic);
 
   frame = NULL;
   goto again;
@@ -326,11 +314,11 @@ gst_vaapi_encoder_get_buffer (GstVaapiEncoder * encoder,
   picture = sync_pic->picture;
 
   if (!picture->surface || !gst_vaapi_surface_sync (picture->surface)) {
-    ret = GST_VAAPI_ENCODER_STATUS_PARAM_ERR;
+    ret = GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
     goto end;
   }
   if (!gst_vaapi_surface_query_status (picture->surface, &surface_status)) {
-    ret = GST_VAAPI_ENCODER_STATUS_PICTURE_ERR;
+    ret = GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_SURFACE;
     goto end;
   }
   if (frame)

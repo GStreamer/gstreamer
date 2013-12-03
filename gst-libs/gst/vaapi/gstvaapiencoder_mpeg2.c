@@ -501,7 +501,7 @@ gst_vaapi_encoder_mpeg2_encode (GstVaapiEncoder * base,
     GstVaapiEncPicture * picture, GstVaapiCodedBufferProxy * codedbuf)
 {
   GstVaapiEncoderMpeg2 *encoder = GST_VAAPI_ENCODER_MPEG2_CAST (base);
-  GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_UNKNOWN_ERR;
+  GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
   GstVaapiSurfaceProxy *reconstruct = NULL;
 
   reconstruct = gst_vaapi_encoder_create_surface (base);
@@ -564,7 +564,7 @@ gst_vaapi_encoder_mpeg2_reordering (GstVaapiEncoder * base,
       encoder->dump_frames = FALSE;
     }
     if (!encoder->dump_frames) {
-      return GST_VAAPI_ENCODER_STATUS_FRAME_NOT_READY;
+      return GST_VAAPI_ENCODER_STATUS_NO_SURFACE;
     }
     picture = g_queue_pop_head (&encoder->b_frames);
     g_assert (picture);
@@ -575,7 +575,7 @@ gst_vaapi_encoder_mpeg2_reordering (GstVaapiEncoder * base,
   if (!picture) {
     GST_WARNING ("create MPEG2 picture failed, frame timestamp:%"
         GST_TIME_FORMAT, GST_TIME_ARGS (frame->pts));
-    return GST_VAAPI_ENCODER_STATUS_OBJECT_ERR;
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
   }
 
   if (encoder->frame_num >= encoder->intra_period) {
@@ -594,7 +594,7 @@ gst_vaapi_encoder_mpeg2_reordering (GstVaapiEncoder * base,
       encoder->dump_frames = TRUE;
     } else {
       picture->type = GST_VAAPI_PICTURE_TYPE_B;
-      status = GST_VAAPI_ENCODER_STATUS_FRAME_NOT_READY;
+      status = GST_VAAPI_ENCODER_STATUS_NO_SURFACE;
     }
 
   }

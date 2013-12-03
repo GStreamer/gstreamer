@@ -1350,7 +1350,7 @@ gst_vaapi_encoder_h264_encode (GstVaapiEncoder * base,
     GstVaapiEncPicture * picture, GstVaapiCodedBufferProxy * codedbuf)
 {
   GstVaapiEncoderH264 *encoder = GST_VAAPI_ENCODER_H264_CAST (base);
-  GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_UNKNOWN_ERR;
+  GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
   GstVaapiSurfaceProxy *reconstruct = NULL;
 
   reconstruct = gst_vaapi_encoder_create_surface (base);
@@ -1412,19 +1412,19 @@ gst_vaapi_encoder_h264_get_avcC_codec_data (GstVaapiEncoderH264 * encoder,
 
   g_assert (buffer);
   if (!encoder->sps_data || !encoder->pps_data)
-    return GST_VAAPI_ENCODER_STATUS_NOT_READY;
+    return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_HEADER;
 
   if (!gst_buffer_map (encoder->sps_data, &sps_info, GST_MAP_READ))
-    return GST_VAAPI_ENCODER_STATUS_MEM_ERROR;
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
 
   if (FALSE == _read_sps_attributes (sps_info.data, sps_info.size,
           &profile, &profile_comp, &level_idc)) {
-    ret = GST_VAAPI_ENCODER_STATUS_UNKNOWN_ERR;
+    ret = GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_HEADER;
     goto end;
   }
 
   if (!gst_buffer_map (encoder->pps_data, &pps_info, GST_MAP_READ)) {
-    ret = GST_VAAPI_ENCODER_STATUS_MEM_ERROR;
+    ret = GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
     goto end;
   }
 
@@ -1453,7 +1453,7 @@ gst_vaapi_encoder_h264_get_avcC_codec_data (GstVaapiEncoderH264 * encoder,
       GST_BIT_WRITER_BIT_SIZE (&writer) / 8);
   g_assert (avc_codec);
   if (!avc_codec) {
-    ret = GST_VAAPI_ENCODER_STATUS_MEM_ERROR;
+    ret = GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
     goto clear_writer;
   }
   *buffer = avc_codec;
@@ -1498,13 +1498,13 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base,
 
   if (!frame) {
     if (encoder->reorder_state != GST_VAAPI_ENC_H264_REORD_DUMP_FRAMES)
-      return GST_VAAPI_ENCODER_STATUS_FRAME_NOT_READY;
+      return GST_VAAPI_ENCODER_STATUS_NO_SURFACE;
 
     /* reorder_state = GST_VAAPI_ENC_H264_REORD_DUMP_FRAMES
        dump B frames from queue, sometime, there may also have P frame or I frame */
     g_assert (encoder->b_frame_num > 0);
     g_return_val_if_fail (!g_queue_is_empty (&encoder->reorder_frame_list),
-        GST_VAAPI_ENCODER_STATUS_UNKNOWN_ERR);
+        GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN);
     picture = g_queue_pop_head (&encoder->reorder_frame_list);
     g_assert (picture);
     if (g_queue_is_empty (&encoder->reorder_frame_list)) {
@@ -1518,7 +1518,7 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base,
   if (!picture) {
     GST_WARNING ("create H264 picture failed, frame timestamp:%"
         GST_TIME_FORMAT, GST_TIME_ARGS (frame->pts));
-    return GST_VAAPI_ENCODER_STATUS_OBJECT_ERR;
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
   }
   ++encoder->cur_present_index;
   picture->poc = ((encoder->cur_present_index * 2) %
@@ -1562,7 +1562,7 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base,
       g_queue_get_length (&encoder->reorder_frame_list) <
       encoder->b_frame_num) {
     g_queue_push_tail (&encoder->reorder_frame_list, picture);
-    return GST_VAAPI_ENCODER_STATUS_FRAME_NOT_READY;
+    return GST_VAAPI_ENCODER_STATUS_NO_SURFACE;
   }
 
   ++encoder->cur_frame_num;
