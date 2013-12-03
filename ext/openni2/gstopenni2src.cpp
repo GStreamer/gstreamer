@@ -174,7 +174,7 @@ gst_openni2_src_class_init (GstOpenni2SrcClass * klass)
 static void
 gst_openni2_src_init (GstOpenni2Src * ni2src)
 {
-  gst_base_src_set_format (GST_BASE_SRC (ni2src), GST_FORMAT_BYTES);
+  gst_base_src_set_format (GST_BASE_SRC (ni2src), GST_FORMAT_TIME);
 }
 
 static void
@@ -598,31 +598,37 @@ openni2_read_gstbuffer (GstOpenni2Src * src, GstBuffer * buf)
           openni::OpenNI::getExtendedError ());
       return GST_FLOW_ERROR;
     }
-    if ((src->colorFrame.getStrideInBytes () != src->colorFrame.getWidth ()) ||
-        (src->depthFrame.getStrideInBytes () !=
-            2 * src->depthFrame.getWidth ())) {
+
+    if ((src->colorFrame.getStrideInBytes () !=
+            GST_ROUND_UP_4 (3 * src->colorFrame.getWidth ()))
+        || (src->depthFrame.getStrideInBytes () !=
+            GST_ROUND_UP_4 (2 * src->depthFrame.getWidth ()))) {
       // This case is not handled - yet :B
       GST_ERROR_OBJECT (src, "Stride does not coincide with width");
       return GST_FLOW_ERROR;
     }
 
-    int framesize =
-        src->colorFrame.getDataSize () + src->depthFrame.getDataSize () / 2;
-    buf = gst_buffer_new_and_alloc (framesize);
     /* Copy colour information */
     gst_buffer_map (buf, &info, (GstMapFlags) (GST_MAP_WRITE));
-    memcpy (info.data, src->colorFrame.getData (),
-        src->colorFrame.getDataSize ());
-    guint8 *pData = info.data + src->colorFrame.getDataSize ();
+    guint8 *pData = info.data;
+    guint8 *pColor = (guint8 *) src->colorFrame.getData ();
     /* Add depth as 8bit alpha channel, depth is 16bit samples. */
     guint16 *pDepth = (guint16 *) src->depthFrame.getData ();
-    for (int i = 0; i < src->depthFrame.getDataSize () / 2; ++i)
-      pData[i] = pDepth[i] >> 8;
+    for (int i = 0; i < src->colorFrame.getHeight (); ++i) {
+      for (int j = 0; j < src->colorFrame.getWidth (); ++j) {
+        pData[0] = pColor[0];
+        pData[1] = pColor[1];
+        pData[2] = pColor[2];
+        pData[3] = pDepth[0] >> 8;
+        pData += 4;
+        pColor += 3;
+        pDepth += 1;
+      }
+    }
     GST_BUFFER_PTS (buf) = src->colorFrame.getTimestamp () * 1000;
-    GST_LOG_OBJECT (src, "sending buffer (%d+%d)B [%08llu]",
+    GST_LOG_OBJECT (src, "sending buffer (%d+%d)B [%" GST_TIME_FORMAT "]",
         src->colorFrame.getDataSize (),
-        src->depthFrame.getDataSize (),
-        (long long) src->depthFrame.getTimestamp ());
+        src->depthFrame.getDataSize (), GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
     gst_buffer_unmap (buf, &info);
   } else if (src->depth.isValid () && src->sourcetype == SOURCETYPE_DEPTH) {
     rc = src->depth.readFrame (&src->depthFrame);
@@ -631,22 +637,21 @@ openni2_read_gstbuffer (GstOpenni2Src * src, GstBuffer * buf)
           openni::OpenNI::getExtendedError ());
       return GST_FLOW_ERROR;
     }
-    if (src->depthFrame.getStrideInBytes () != 2 * src->depthFrame.getWidth ()) {
+
+    if (src->depthFrame.getStrideInBytes () !=
+        GST_ROUND_UP_4 (2 * src->depthFrame.getWidth ())) {
       // This case is not handled - yet :B
       GST_ERROR_OBJECT (src, "Stride does not coincide with width");
       return GST_FLOW_ERROR;
     }
 
-    int framesize = src->depthFrame.getDataSize ();
-    buf = gst_buffer_new_and_alloc (framesize);
     gst_buffer_map (buf, &info, (GstMapFlags) (GST_MAP_WRITE));
-    memcpy (info.data, src->depthFrame.getData (), framesize);
+    memcpy (info.data, src->depthFrame.getData (), info.size);
     GST_BUFFER_PTS (buf) = src->depthFrame.getTimestamp () * 1000;
-    GST_LOG_OBJECT (src, "sending buffer (%dx%d)=%dB [%08llu]",
+    GST_LOG_OBJECT (src, "sending buffer (%dx%d)=%dB [%" GST_TIME_FORMAT "]",
         src->depthFrame.getWidth (),
         src->depthFrame.getHeight (),
-        src->depthFrame.getDataSize (),
-        (long long) src->depthFrame.getTimestamp ());
+        src->depthFrame.getDataSize (), GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
     gst_buffer_unmap (buf, &info);
   } else if (src->color.isValid () && src->sourcetype == SOURCETYPE_COLOR) {
     rc = src->color.readFrame (&src->colorFrame);
@@ -655,22 +660,21 @@ openni2_read_gstbuffer (GstOpenni2Src * src, GstBuffer * buf)
           openni::OpenNI::getExtendedError ());
       return GST_FLOW_ERROR;
     }
-    if (src->colorFrame.getStrideInBytes () != src->colorFrame.getWidth ()) {
+
+    if (src->colorFrame.getStrideInBytes () !=
+        GST_ROUND_UP_4 (3 * src->colorFrame.getWidth ())) {
       // This case is not handled - yet :B
       GST_ERROR_OBJECT (src, "Stride does not coincide with width");
       return GST_FLOW_ERROR;
     }
 
-    int framesize = src->colorFrame.getDataSize ();
-    buf = gst_buffer_new_and_alloc (framesize);
     gst_buffer_map (buf, &info, (GstMapFlags) (GST_MAP_WRITE));
-    memcpy (info.data, src->depthFrame.getData (), framesize);
+    memcpy (info.data, src->colorFrame.getData (), info.size);
     GST_BUFFER_PTS (buf) = src->colorFrame.getTimestamp () * 1000;
-    GST_LOG_OBJECT (src, "sending buffer (%dx%d)=%dB [%08llu]",
+    GST_LOG_OBJECT (src, "sending buffer (%dx%d)=%dB [%" GST_TIME_FORMAT "]",
         src->colorFrame.getWidth (),
         src->colorFrame.getHeight (),
-        src->colorFrame.getDataSize (),
-        (long long) src->colorFrame.getTimestamp ());
+        src->colorFrame.getDataSize (), GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
     gst_buffer_unmap (buf, &info);
   }
   return GST_FLOW_OK;
