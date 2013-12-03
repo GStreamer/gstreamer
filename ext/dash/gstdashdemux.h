@@ -94,6 +94,8 @@ struct _GstDashDemuxStream
   gboolean has_data_queued;
 
   GstDataQueue *queue;
+  GstTask *download_task;
+  GRecMutex download_task_lock;
 
   GstDownloadRate dnl_rate;
 };
@@ -135,8 +137,6 @@ struct _GstDashDemux
   GRecMutex stream_task_lock;
 
   /* Download task */
-  GstTask *download_task;
-  GRecMutex download_task_lock;
   GMutex download_mutex;
   GCond download_cond;
   gboolean cancelled;
