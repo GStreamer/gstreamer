@@ -121,6 +121,7 @@ struct _GstRTSPMediaClass {
                                       GstRTSPRangeUnit unit);
   gboolean        (*query_position)  (GstRTSPMedia *media, gint64 *position);
   gboolean        (*query_stop)      (GstRTSPMedia *media, gint64 *stop);
+  GstElement *    (*create_rtpbin)   (GstRTSPMedia *media);
   gboolean        (*setup_rtpbin)    (GstRTSPMedia *media, GstElement *rtpbin);
 
   /* signals */

@@ -176,6 +176,7 @@ static gboolean default_convert_range (GstRTSPMedia * media,
 static gboolean default_query_position (GstRTSPMedia * media,
     gint64 * position);
 static gboolean default_query_stop (GstRTSPMedia * media, gint64 * stop);
+static GstElement *default_create_rtpbin (GstRTSPMedia * media);
 
 static gboolean wait_preroll (GstRTSPMedia * media);
 
@@ -292,6 +293,7 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
   klass->convert_range = default_convert_range;
   klass->query_position = default_query_position;
   klass->query_stop = default_query_stop;
+  klass->create_rtpbin = default_create_rtpbin;
 }
 
 static void
@@ -442,6 +444,16 @@ default_query_stop (GstRTSPMedia * media, gint64 * stop)
   }
   gst_query_unref (query);
   return res;
+}
+
+static GstElement *
+default_create_rtpbin (GstRTSPMedia * media)
+{
+  GstElement *rtpbin;
+
+  rtpbin = gst_element_factory_make ("rtpbin", NULL);
+
+  return rtpbin;
 }
 
 /* must be called with state lock */
@@ -1985,6 +1997,7 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   GstRTSPMediaPrivate *priv;
   GstBus *bus;
   GSource *source;
+  GstRTSPMediaClass *klass;
 
   g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
   g_return_val_if_fail (GST_IS_RTSP_THREAD (thread), FALSE);
@@ -2007,12 +2020,15 @@ gst_rtsp_media_prepare (GstRTSPMedia * media, GstRTSPThread * thread)
   if (!priv->reusable && priv->reused)
     goto is_reused;
 
-  priv->rtpbin = gst_element_factory_make ("rtpbin", NULL);
+  klass = GST_RTSP_MEDIA_GET_CLASS (media);
+
+  if (!klass->create_rtpbin)
+    goto no_create_rtpbin;
+
+  priv->rtpbin = klass->create_rtpbin (media);
   if (priv->rtpbin != NULL) {
-    GstRTSPMediaClass *klass;
     gboolean success = TRUE;
 
-    klass = GST_RTSP_MEDIA_GET_CLASS (media);
     if (klass->setup_rtpbin)
       success = klass->setup_rtpbin (media, priv->rtpbin);
 
@@ -2088,6 +2104,14 @@ is_reused:
     priv->prepare_count--;
     g_rec_mutex_unlock (&priv->state_lock);
     GST_WARNING ("can not reuse media %p", media);
+    return FALSE;
+  }
+no_create_rtpbin:
+  {
+    priv->prepare_count--;
+    g_rec_mutex_unlock (&priv->state_lock);
+    GST_ERROR ("no create_rtpbin function");
+    g_critical ("no create_rtpbin vmethod function set");
     return FALSE;
   }
 no_rtpbin:
