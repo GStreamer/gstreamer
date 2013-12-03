@@ -259,6 +259,16 @@ class Fraction(Gst.Fraction):
 Fraction = override(Fraction)
 __all__.append('Fraction')
 
+def TIME_ARGS(time):
+    if time == Gst.CLOCK_TIME_NONE:
+        return "CLOCK_TIME_NONE"
+
+    return "%u:%02u:%02u.%09u" % (time / (Gst.SECOND * 60 * 60),
+                                  (time / (Gst.SECOND * 60)) % 60,
+                                  (time / Gst.SECOND) % 60,
+                                  time % Gst.SECOND)
+__all__.append('TIME_ARGS')
+
 import _gi_gst
 _gi_gst
 
