@@ -97,6 +97,8 @@ static void gst_openni2_src_get_property (GObject * object, guint prop_id,
 static gboolean gst_openni2_src_start (GstBaseSrc * bsrc);
 static gboolean gst_openni2_src_stop (GstBaseSrc * bsrc);
 static GstCaps *gst_openni2_src_get_caps (GstBaseSrc * src, GstCaps * filter);
+static gboolean gst_openni2src_decide_allocation (GstBaseSrc * bsrc,
+    GstQuery * query);
 
 /* element methods */
 static GstStateChangeReturn gst_openni2_src_change_state (GstElement * element,
@@ -147,6 +149,8 @@ gst_openni2_src_class_init (GstOpenni2SrcClass * klass)
   basesrc_class->start = GST_DEBUG_FUNCPTR (gst_openni2_src_start);
   basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_openni2_src_stop);
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_openni2_src_get_caps);
+  basesrc_class->decide_allocation =
+      GST_DEBUG_FUNCPTR (gst_openni2src_decide_allocation);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&srctemplate));
@@ -331,8 +335,11 @@ gst_openni2_src_get_caps (GstBaseSrc * src, GstCaps * filter)
     format = GST_VIDEO_FORMAT_GRAY16_LE;
   } else if (ni2src->color.isValid () && ni2src->sourcetype == SOURCETYPE_COLOR) {
     format = GST_VIDEO_FORMAT_RGB;
+  } else {
+    return gst_caps_new_empty ();
   }
 
+  gst_video_info_init (&info);
   gst_video_info_set_format (&info, format, ni2src->width, ni2src->height);
   info.fps_n = ni2src->fps;
   info.fps_d = 1;
@@ -397,6 +404,48 @@ gst_openni2src_fill (GstPushSrc * src, GstBuffer * buf)
 {
   GstOpenni2Src *ni2src = GST_OPENNI2_SRC (src);
   return openni2_read_gstbuffer (ni2src, buf);
+}
+
+static gboolean
+gst_openni2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
+{
+  GstBufferPool *pool;
+  guint size, min, max;
+  gboolean update;
+  GstStructure *config;
+  GstCaps *caps;
+  GstVideoInfo info;
+
+  gst_query_parse_allocation (query, &caps, NULL);
+  gst_video_info_from_caps (&info, caps);
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    update = TRUE;
+  } else {
+    pool = NULL;
+    min = max = 0;
+    size = info.size;
+    update = FALSE;
+  }
+
+  GST_DEBUG_OBJECT (bsrc, "allocation: size:%u min:%u max:%u pool:%"
+      GST_PTR_FORMAT " caps:%" GST_PTR_FORMAT, size, min, max, pool, caps);
+
+  if (!pool)
+    pool = gst_video_buffer_pool_new ();
+
+  config = gst_buffer_pool_get_config (pool);
+  gst_buffer_pool_config_set_params (config, caps, size, min, max);
+
+  gst_buffer_pool_set_config (pool, config);
+
+  if (update)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  return GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
 }
 
 gboolean
