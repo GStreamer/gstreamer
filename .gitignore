@@ -41,6 +41,7 @@ TODO
 *.lo
 *.la
 *~
+*.so
 gst-python*.tar.*
 
 pygst.py
