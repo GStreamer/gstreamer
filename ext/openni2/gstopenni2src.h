@@ -54,6 +54,7 @@ struct _GstOpenni2Src
   GstOpenni2State state;
   gchar *uri_name;
   gint sourcetype;
+  GstVideoInfo info;
   GstCaps *gst_caps;
 
   /* OpenNI2 variables */
@@ -63,7 +64,6 @@ struct _GstOpenni2Src
   openni::PixelFormat depthpixfmt, colorpixfmt;
   int width, height, fps;
   openni::VideoFrameRef depthFrame, colorFrame;
-
 };
 
 struct _GstOpenni2SrcClass

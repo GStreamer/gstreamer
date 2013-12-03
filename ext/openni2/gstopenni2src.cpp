@@ -96,6 +96,7 @@ static void gst_openni2_src_get_property (GObject * object, guint prop_id,
 /* basesrc methods */
 static gboolean gst_openni2_src_start (GstBaseSrc * bsrc);
 static gboolean gst_openni2_src_stop (GstBaseSrc * bsrc);
+static gboolean gst_openni2_src_set_caps (GstBaseSrc * src, GstCaps * caps);
 static GstCaps *gst_openni2_src_get_caps (GstBaseSrc * src, GstCaps * filter);
 static gboolean gst_openni2src_decide_allocation (GstBaseSrc * bsrc,
     GstQuery * query);
@@ -149,6 +150,7 @@ gst_openni2_src_class_init (GstOpenni2SrcClass * klass)
   basesrc_class->start = GST_DEBUG_FUNCPTR (gst_openni2_src_start);
   basesrc_class->stop = GST_DEBUG_FUNCPTR (gst_openni2_src_stop);
   basesrc_class->get_caps = GST_DEBUG_FUNCPTR (gst_openni2_src_get_caps);
+  basesrc_class->set_caps = GST_DEBUG_FUNCPTR (gst_openni2_src_set_caps);
   basesrc_class->decide_allocation =
       GST_DEBUG_FUNCPTR (gst_openni2src_decide_allocation);
 
@@ -352,6 +354,16 @@ gst_openni2_src_get_caps (GstBaseSrc * src, GstCaps * filter)
       ? gst_caps_intersect_full (filter, ni2src->gst_caps,
       GST_CAPS_INTERSECT_FIRST)
       : gst_caps_ref (ni2src->gst_caps);
+}
+
+static gboolean
+gst_openni2_src_set_caps (GstBaseSrc * src, GstCaps * caps)
+{
+  GstOpenni2Src *ni2src;
+
+  ni2src = GST_OPENNI2_SRC (src);
+
+  return gst_video_info_from_caps (&ni2src->info, caps);
 }
 
 static GstStateChangeReturn
@@ -573,7 +585,7 @@ openni2_read_gstbuffer (GstOpenni2Src * src, GstBuffer * buf)
   openni::Status rc = openni::STATUS_OK;
   openni::VideoStream * pStream = &(src->depth);
   int changedStreamDummy;
-  GstMapInfo info;
+  GstVideoFrame vframe;
 
   /* Block until we get some data */
   rc = openni::OpenNI::waitForAnyStream (&pStream, 1, &changedStreamDummy,
@@ -599,37 +611,31 @@ openni2_read_gstbuffer (GstOpenni2Src * src, GstBuffer * buf)
       return GST_FLOW_ERROR;
     }
 
-    if ((src->colorFrame.getStrideInBytes () !=
-            GST_ROUND_UP_4 (3 * src->colorFrame.getWidth ()))
-        || (src->depthFrame.getStrideInBytes () !=
-            GST_ROUND_UP_4 (2 * src->depthFrame.getWidth ()))) {
-      // This case is not handled - yet :B
-      GST_ERROR_OBJECT (src, "Stride does not coincide with width");
-      return GST_FLOW_ERROR;
-    }
-
     /* Copy colour information */
-    gst_buffer_map (buf, &info, (GstMapFlags) (GST_MAP_WRITE));
-    guint8 *pData = info.data;
+    gst_video_frame_map (&vframe, &src->info, buf, GST_MAP_WRITE);
+
+    guint8 *pData = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
     guint8 *pColor = (guint8 *) src->colorFrame.getData ();
     /* Add depth as 8bit alpha channel, depth is 16bit samples. */
     guint16 *pDepth = (guint16 *) src->depthFrame.getData ();
+
     for (int i = 0; i < src->colorFrame.getHeight (); ++i) {
       for (int j = 0; j < src->colorFrame.getWidth (); ++j) {
-        pData[0] = pColor[0];
-        pData[1] = pColor[1];
-        pData[2] = pColor[2];
-        pData[3] = pDepth[0] >> 8;
-        pData += 4;
-        pColor += 3;
-        pDepth += 1;
+        pData[4 * j + 0] = pColor[3 * j + 0];
+        pData[4 * j + 1] = pColor[3 * j + 1];
+        pData[4 * j + 2] = pColor[3 * j + 2];
+        pData[4 * j + 3] = pDepth[j] >> 8;
       }
+      pData += GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
+      pColor += src->colorFrame.getStrideInBytes ();
+      pDepth += src->depthFrame.getStrideInBytes () / 2;
     }
+    gst_video_frame_unmap (&vframe);
+
     GST_BUFFER_PTS (buf) = src->colorFrame.getTimestamp () * 1000;
     GST_LOG_OBJECT (src, "sending buffer (%d+%d)B [%" GST_TIME_FORMAT "]",
         src->colorFrame.getDataSize (),
         src->depthFrame.getDataSize (), GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
-    gst_buffer_unmap (buf, &info);
   } else if (src->depth.isValid () && src->sourcetype == SOURCETYPE_DEPTH) {
     rc = src->depth.readFrame (&src->depthFrame);
     if (rc != openni::STATUS_OK) {
@@ -638,21 +644,24 @@ openni2_read_gstbuffer (GstOpenni2Src * src, GstBuffer * buf)
       return GST_FLOW_ERROR;
     }
 
-    if (src->depthFrame.getStrideInBytes () !=
-        GST_ROUND_UP_4 (2 * src->depthFrame.getWidth ())) {
-      // This case is not handled - yet :B
-      GST_ERROR_OBJECT (src, "Stride does not coincide with width");
-      return GST_FLOW_ERROR;
-    }
+    /* Copy depth information */
+    gst_video_frame_map (&vframe, &src->info, buf, GST_MAP_WRITE);
 
-    gst_buffer_map (buf, &info, (GstMapFlags) (GST_MAP_WRITE));
-    memcpy (info.data, src->depthFrame.getData (), info.size);
+    guint16 *pData = (guint16 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
+    guint16 *pDepth = (guint16 *) src->depthFrame.getData ();
+
+    for (int i = 0; i < src->depthFrame.getHeight (); ++i) {
+      memcpy (pData, pDepth, 2 * src->depthFrame.getWidth ());
+      pDepth += src->depthFrame.getStrideInBytes () / 2;
+      pData += GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0) / 2;
+    }
+    gst_video_frame_unmap (&vframe);
+
     GST_BUFFER_PTS (buf) = src->depthFrame.getTimestamp () * 1000;
     GST_LOG_OBJECT (src, "sending buffer (%dx%d)=%dB [%" GST_TIME_FORMAT "]",
         src->depthFrame.getWidth (),
         src->depthFrame.getHeight (),
         src->depthFrame.getDataSize (), GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
-    gst_buffer_unmap (buf, &info);
   } else if (src->color.isValid () && src->sourcetype == SOURCETYPE_COLOR) {
     rc = src->color.readFrame (&src->colorFrame);
     if (rc != openni::STATUS_OK) {
@@ -661,21 +670,23 @@ openni2_read_gstbuffer (GstOpenni2Src * src, GstBuffer * buf)
       return GST_FLOW_ERROR;
     }
 
-    if (src->colorFrame.getStrideInBytes () !=
-        GST_ROUND_UP_4 (3 * src->colorFrame.getWidth ())) {
-      // This case is not handled - yet :B
-      GST_ERROR_OBJECT (src, "Stride does not coincide with width");
-      return GST_FLOW_ERROR;
-    }
+    gst_video_frame_map (&vframe, &src->info, buf, GST_MAP_WRITE);
 
-    gst_buffer_map (buf, &info, (GstMapFlags) (GST_MAP_WRITE));
-    memcpy (info.data, src->colorFrame.getData (), info.size);
+    guint8 *pData = (guint8 *) GST_VIDEO_FRAME_PLANE_DATA (&vframe, 0);
+    guint8 *pColor = (guint8 *) src->colorFrame.getData ();
+
+    for (int i = 0; i < src->colorFrame.getHeight (); ++i) {
+      memcpy (pData, pColor, 3 * src->colorFrame.getWidth ());
+      pColor += src->colorFrame.getStrideInBytes ();
+      pData += GST_VIDEO_FRAME_PLANE_STRIDE (&vframe, 0);
+    }
+    gst_video_frame_unmap (&vframe);
+
     GST_BUFFER_PTS (buf) = src->colorFrame.getTimestamp () * 1000;
     GST_LOG_OBJECT (src, "sending buffer (%dx%d)=%dB [%" GST_TIME_FORMAT "]",
         src->colorFrame.getWidth (),
         src->colorFrame.getHeight (),
         src->colorFrame.getDataSize (), GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
-    gst_buffer_unmap (buf, &info);
   }
   return GST_FLOW_OK;
 }
