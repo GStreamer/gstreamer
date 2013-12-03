@@ -1,6 +1,6 @@
 %define majorminor  @GST_API_VERSION@
-%define gstreamer   gstreamer011
-%define gst_minver  0.11.0
+%define gstreamer   gstreamer1
+%define gst_minver  1.0
 %define gst_majorminor  1.0
 
 Name: 		%{gstreamer}-libav
@@ -14,9 +14,9 @@ Vendor:		GStreamer Backpackers Team <package@gstreamer.net>
 Source:		http://gstreamer.freedesktop.org/src/gst-ffmpeg/gst-ffmpeg/gst-libav-%{version}.tar.xz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
 
-Requires:  	%{gstreamer} >= 0.9.7
-BuildRequires: 	%{gstreamer}-devel >= 0.9.7
-BuildRequires: 	%{gstreamer}-plugins-base-devel >= 0.9.7
+Requires:  	%{gstreamer} >= 1.0.0
+BuildRequires: 	%{gstreamer}-devel >= 1.0.0
+BuildRequires: 	%{gstreamer}-plugins-base-devel >= 1.0.0
 
 %description
 GStreamer is a streaming-media framework, based on graphs of filters which
@@ -51,9 +51,6 @@ rm -rf $RPM_BUILD_ROOT
 %defattr(-, root, root, -)
 %doc AUTHORS COPYING README gst-libav.doap
 %{_libdir}/gstreamer-%{gst_majorminor}/libgstlibav.so
-%{_libdir}/gstreamer-%{gst_majorminor}/libgstpostproc.so
-%{_libdir}/gstreamer-%{gst_majorminor}/libgstavscale.so
-
 
 %changelog
 * Fri Aug 03 2012 Christian Schaller <uraeus@linuxrising.org>
