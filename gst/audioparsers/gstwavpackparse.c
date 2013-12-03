@@ -608,6 +608,19 @@ more:
   return GST_FLOW_OK;
 }
 
+static void
+remove_fields (GstCaps * caps)
+{
+  guint i, n;
+
+  n = gst_caps_get_size (caps);
+  for (i = 0; i < n; i++) {
+    GstStructure *s = gst_caps_get_structure (caps, i);
+
+    gst_structure_remove_field (s, "framed");
+  }
+}
+
 static GstCaps *
 gst_wavpack_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
 {
@@ -618,16 +631,9 @@ gst_wavpack_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
   peercaps = gst_pad_peer_query_caps (GST_BASE_PARSE_SRC_PAD (parse), filter);
 
   if (peercaps) {
-    guint i, n;
-
     /* Remove the framed field */
     peercaps = gst_caps_make_writable (peercaps);
-    n = gst_caps_get_size (peercaps);
-    for (i = 0; i < n; i++) {
-      GstStructure *s = gst_caps_get_structure (peercaps, i);
-
-      gst_structure_remove_field (s, "framed");
-    }
+    remove_fields (peercaps);
 
     res = gst_caps_intersect_full (peercaps, templ, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
