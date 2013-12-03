@@ -57,6 +57,8 @@ struct _GstDashDemuxStream
 {
   GstPad *pad;
 
+  GstDashDemux *demux;
+
   gint index;
 
   GstCaps *input_caps;
