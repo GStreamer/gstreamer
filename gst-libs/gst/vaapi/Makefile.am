@@ -155,7 +155,9 @@ libgstvaapi_enc_source_h =			\
 
 libgstvaapi_enc_source_priv_h =			\
 	gstvaapicodedbuffer_priv.h		\
-	gstvaapicodedbufferpool_priv.h		\
+	gstvaapicodedbufferproxy_priv.h		\
+	gstvaapiencoder_h264_priv.h		\
+	gstvaapiencoder_mpeg2_priv.h		\
 	gstvaapiencoder_objects.h		\
 	gstvaapiencoder_priv.h			\
 	$(NULL)
@@ -448,8 +450,11 @@ BUILT_SOURCES	= gstvaapiversion.h
 EXTRA_DIST	= gstvaapiversion.h.in $(PKG_VERSION_FILE)
 
 EXTRA_DIST += \
-	$(libgstvaapi_jpegdec_source_c)	\
-	$(libgstvaapi_jpegdec_source_h)	\
+	$(libgstvaapi_enc_source_c)		\
+	$(libgstvaapi_enc_source_h)		\
+	$(libgstvaapi_enc_source_priv_h)	\
+	$(libgstvaapi_jpegdec_source_c)		\
+	$(libgstvaapi_jpegdec_source_h)		\
 	$(NULL)
 
 CLEANFILES = \
