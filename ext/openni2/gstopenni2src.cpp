@@ -43,6 +43,7 @@
 #include "gstopenni2src.h"
 
 GST_DEBUG_CATEGORY_STATIC (openni2src_debug);
+#define GST_CAT_DEFAULT openni2src_debug
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
@@ -112,9 +113,10 @@ static GstFlowReturn openni2_read_gstbuffer (GstOpenni2Src * src,
 static void openni2_finalise (GstOpenni2Src * src);
 
 #define parent_class gst_openni2_src_parent_class
-G_DEFINE_TYPE (GstOpenni2Src, gst_openni2_src, GST_TYPE_PUSH_SRC)
+G_DEFINE_TYPE (GstOpenni2Src, gst_openni2_src, GST_TYPE_PUSH_SRC);
 
-     static void gst_openni2_src_class_init (GstOpenni2SrcClass * klass)
+static void
+gst_openni2_src_class_init (GstOpenni2SrcClass * klass)
 {
   GObjectClass *gobject_class;
   GstPushSrcClass *pushsrc_class;
@@ -406,7 +408,7 @@ gst_openni2src_plugin_init (GstPlugin * plugin)
 
 
 static gboolean
-openni2_initialise_library ()
+openni2_initialise_library (void)
 {
   openni::Status rc = openni::STATUS_OK;
   rc = openni::OpenNI::initialize ();
