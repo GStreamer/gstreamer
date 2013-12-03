@@ -537,6 +537,7 @@ gst_qtdemux_init (GstQTDemux * qtdemux)
   qtdemux->restoredata_buffer = NULL;
   qtdemux->restoredata_offset = GST_CLOCK_TIME_NONE;
   qtdemux->fragment_start = -1;
+  qtdemux->fragment_start_offset = -1;
   qtdemux->media_caps = NULL;
   qtdemux->exposed = FALSE;
   qtdemux->mss_mode = FALSE;
@@ -1841,6 +1842,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     qtdemux->upstream_size = 0;
 
     qtdemux->fragment_start = -1;
+    qtdemux->fragment_start_offset = -1;
     qtdemux->duration = 0;
     qtdemux->mfra_offset = 0;
     qtdemux->moof_offset = 0;
@@ -4592,17 +4594,7 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
 {
   GstQTDemux *demux;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstClockTime timestamp;
-
   demux = GST_QTDEMUX (parent);
-
-  timestamp = GST_BUFFER_TIMESTAMP (inbuf);
-
-  if (G_UNLIKELY (GST_CLOCK_TIME_IS_VALID (timestamp))) {
-    demux->fragment_start = timestamp;
-    GST_DEBUG_OBJECT (demux, "got fragment_start %" GST_TIME_FORMAT,
-        GST_TIME_ARGS (timestamp));
-  }
 
   gst_adapter_push (demux->adapter, inbuf);
 
@@ -4786,11 +4778,35 @@ gst_qtdemux_chain (GstPad * sinkpad, GstObject * parent, GstBuffer * inbuf)
           }
         } else if (fourcc == FOURCC_moof) {
           if ((demux->got_moov || demux->media_caps) && demux->fragmented) {
+            guint64 dist = 0;
+            GstClockTime prev_pts;
+            guint64 prev_offset;
+
             GST_DEBUG_OBJECT (demux, "Parsing [moof]");
 
-            /* the timestamp of the moof buffer is relevant as some scenarios
-             * won't have the initial timestamp in the atoms */
-            demux->fragment_start = gst_adapter_prev_pts (demux->adapter, NULL);
+            /*
+             * The timestamp of the moof buffer is relevant as some scenarios
+             * won't have the initial timestamp in the atoms. Whenever a new
+             * buffer has started, we get that buffer's PTS and use it as a base
+             * timestamp for the trun entries.
+             *
+             * To keep track of the current buffer timestamp and starting point
+             * we use gst_adapter_prev_pts that gives us the PTS and the distance
+             * from the beggining of the buffer, with the distance and demux->offset
+             * we know if it is still the same buffer or not.
+             */
+            prev_pts = gst_adapter_prev_pts (demux->adapter, &dist);
+            prev_offset = demux->offset - dist;
+            if (demux->fragment_start_offset == -1
+                || prev_offset > demux->fragment_start_offset) {
+              demux->fragment_start_offset = prev_offset;
+              demux->fragment_start = prev_pts;
+              GST_DEBUG_OBJECT (demux,
+                  "New fragment start found at: %" G_GUINT64_FORMAT " : %"
+                  GST_TIME_FORMAT, demux->fragment_start_offset,
+                  GST_TIME_ARGS (demux->fragment_start));
+            }
+
             if (!qtdemux_parse_moof (demux, data, demux->neededbytes,
                     demux->offset, NULL)) {
               gst_adapter_unmap (demux->adapter);

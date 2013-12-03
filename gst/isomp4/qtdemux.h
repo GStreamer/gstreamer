@@ -134,6 +134,7 @@ struct _GstQTDemux {
   gboolean exposed;
   gboolean mss_mode; /* flag to indicate that we're working with a smoothstreaming fragment */
   guint64 fragment_start;
+  guint64 fragment_start_offset;
     
   gint64 chapters_track_id;
 
