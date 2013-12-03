@@ -25,7 +25,6 @@
 #include <gst/gst.h>
 #include <gst/video/gstvideoencoder.h>
 #include <gst/vaapi/gstvaapiencoder.h>
-#include "gst/vaapi/gstvaapiencoder_objects.h"
 #include "gstvaapiuploader.h"
 
 G_BEGIN_DECLS

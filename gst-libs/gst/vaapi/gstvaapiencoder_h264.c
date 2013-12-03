@@ -24,6 +24,7 @@
 #include "gstvaapiencoder_h264.h"
 #include "gstvaapiencoder_h264_priv.h"
 #include "gstvaapiencoder_priv.h"
+#include "gstvaapicodedbufferproxy_priv.h"
 
 #include <va/va.h>
 #include <va/va_enc_h264.h>
@@ -948,7 +949,7 @@ fill_va_picture_param (GstVaapiEncoderH264 * encoder,
   for (; i < 16; ++i) {
     pic->ReferenceFrames[i].picture_id = VA_INVALID_ID;
   }
-  pic->coded_buf = codedbuf->buf_id;
+  pic->coded_buf = GST_VAAPI_OBJECT_ID (codedbuf);
 
   pic->pic_parameter_set_id = 0;
   pic->seq_parameter_set_id = 0;
@@ -1148,11 +1149,11 @@ error:
 }
 
 static gboolean
-ensure_picture (GstVaapiEncoderH264 * encoder,
-    GstVaapiEncPicture * picture,
-    GstVaapiCodedBufferProxy * buf_proxy, GstVaapiSurfaceProxy * surface)
+ensure_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
+    GstVaapiCodedBufferProxy * codedbuf_proxy, GstVaapiSurfaceProxy * surface)
 {
-  GstVaapiCodedBuffer *codedbuf = buf_proxy->buffer;
+  GstVaapiCodedBuffer *const codedbuf =
+    GST_VAAPI_CODED_BUFFER_PROXY_BUFFER (codedbuf_proxy);
 
   if (!fill_va_picture_param (encoder, picture, codedbuf, surface))
     return FALSE;

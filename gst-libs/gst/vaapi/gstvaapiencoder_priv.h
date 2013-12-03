@@ -25,6 +25,7 @@
 #include <gst/vaapi/gstvaapiencoder.h>
 #include <gst/vaapi/gstvaapiencoder_objects.h>
 #include <gst/vaapi/gstvaapicontext.h>
+#include <gst/vaapi/gstvaapivideopool.h>
 #include <gst/video/gstvideoutils.h>
 
 G_BEGIN_DECLS
@@ -75,7 +76,6 @@ G_BEGIN_DECLS
     goto end;                                                           \
   }
 
-typedef struct _GstVaapiCodedBufferProxyClass GstVaapiCodedBufferProxyClass;
 typedef struct _GstVaapiEncoderClass GstVaapiEncoderClass;
 
 struct _GstVaapiEncoder
@@ -92,13 +92,11 @@ struct _GstVaapiEncoder
   GstVideoInfo video_info;
   GstVaapiRateControl rate_control;
 
-  guint buf_count;
-  guint max_buf_num;
-  guint buf_size;
   GMutex lock;
-  GCond codedbuf_free;
   GCond surface_free;
-  GQueue coded_buffers;
+  GCond codedbuf_free;
+  guint codedbuf_size;
+  GstVaapiVideoPool *codedbuf_pool;
 
   /* queue for sync */
   GQueue sync_pictures;
@@ -134,21 +132,6 @@ struct _GstVaapiEncoderClass
                                            GstBuffer ** codec_data);
 };
 
-struct _GstVaapiCodedBufferProxy
-{
-  /*< private >*/
-  GstVaapiMiniObject parent_instance;
-  GstVaapiEncoder *encoder;
-
-  /*< public >*/
-  GstVaapiCodedBuffer *buffer;
-};
-
-struct _GstVaapiCodedBufferProxyClass
-{
-  GstVaapiMiniObjectClass parent_class;
-};
-
 void
 gst_vaapi_encoder_class_init (GstVaapiEncoderClass * klass);
 
@@ -166,22 +149,6 @@ gst_vaapi_encoder_create_surface (GstVaapiEncoder *
 void
 gst_vaapi_encoder_release_surface (GstVaapiEncoder * encoder,
     GstVaapiSurfaceProxy * surface);
-
-/* ------------------  GstVaapiCodedBufferProxy ---------------------------- */
-
-GstVaapiCodedBufferProxy *
-gst_vaapi_coded_buffer_proxy_new (GstVaapiEncoder *
-    encoder);
-
-GstVaapiCodedBufferProxy *
-gst_vaapi_coded_buffer_proxy_ref (GstVaapiCodedBufferProxy * proxy);
-
-void
-gst_vaapi_coded_buffer_proxy_unref (GstVaapiCodedBufferProxy * proxy);
-
-void
-gst_vaapi_coded_buffer_proxy_replace (GstVaapiCodedBufferProxy ** old_proxy_ptr,
-    GstVaapiCodedBufferProxy * new_proxy);
 
 G_END_DECLS
 

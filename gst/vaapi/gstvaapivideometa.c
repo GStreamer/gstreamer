@@ -282,6 +282,7 @@ GstVaapiVideoMeta *
 gst_vaapi_video_meta_new_from_pool(GstVaapiVideoPool *pool)
 {
     GstVaapiVideoMeta *meta;
+    GstVaapiVideoPoolObjectType object_type;
 
     g_return_val_if_fail(pool != NULL, NULL);
 
@@ -289,7 +290,8 @@ gst_vaapi_video_meta_new_from_pool(GstVaapiVideoPool *pool)
     if (G_UNLIKELY(!meta))
         return NULL;
 
-    switch (gst_vaapi_video_pool_get_object_type(pool)) {
+    object_type = gst_vaapi_video_pool_get_object_type(pool);
+    switch (object_type) {
     case GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE:
         if (!set_image_from_pool(meta, pool))
             goto error;
@@ -298,6 +300,9 @@ gst_vaapi_video_meta_new_from_pool(GstVaapiVideoPool *pool)
         if (!set_surface_proxy_from_pool(meta, pool))
             goto error;
         break;
+    default:
+        GST_ERROR("unsupported video buffer pool of type %d", object_type);
+        goto error;
     }
     set_display(meta, gst_vaapi_video_pool_get_display(pool));
     return meta;

@@ -36,52 +36,6 @@ typedef struct _GstVaapiCodedBuffer GstVaapiCodedBuffer;
 typedef struct _GstVaapiEncPackedHeader GstVaapiEncPackedHeader;
 
 /* ------------------------------------------------------------------------- */
-/* --- Encoder Coded Buffer                                              --- */
-/* ------------------------------------------------------------------------- */
-
-#define GST_VAAPI_CODED_BUFFER_CAST(obj) \
-    ((GstVaapiCodedBuffer *)(obj))
-
-#define GST_VAAPI_CODED_BUFFER(obj)      \
-    GST_VAAPI_CODED_BUFFER_CAST(obj)
-
-#define GST_VAAPI_IS_CODED_BUFFER(obj)   \
-    (GST_VAAPI_CODED_BUFFER(obj) != NULL)
-
-/**
- * GstVaapiCodedBuffer:
- *
- * A #GstVaapiCodecObject holding an encoded buffer.
- */
-struct _GstVaapiCodedBuffer
-{
-  /*< private > */
-  GstVaapiCodecObject parent_instance;
-  VABufferID buf_id;
-
-  /*< public > */
-  VACodedBufferSegment *segment_list;
-};
-
-G_GNUC_INTERNAL
-GstVaapiCodedBuffer *
-gst_vaapi_coded_buffer_new (GstVaapiEncoder * encoder,
-    gconstpointer param, guint param_size);
-
-gboolean
-gst_vaapi_coded_buffer_map (GstVaapiCodedBuffer * buf, void **data);
-
-void
-gst_vaapi_coded_buffer_unmap (GstVaapiCodedBuffer * buf);
-
-gint32
-gst_vaapi_coded_buffer_get_size (GstVaapiCodedBuffer * buf);
-
-gboolean
-gst_vaapi_coded_buffer_get_buffer (GstVaapiCodedBuffer * buf,
-    GstBuffer * output);
-
-/* ------------------------------------------------------------------------- */
 /* --- Encoder Packed Header                                             --- */
 /* ------------------------------------------------------------------------- */
 

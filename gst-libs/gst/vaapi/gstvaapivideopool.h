@@ -39,12 +39,14 @@ typedef struct _GstVaapiVideoPool               GstVaapiVideoPool;
  * GstVaapiVideoPoolObjectType:
  * @GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE: #GstVaapiImage objects.
  * @GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE: #GstVaapiSurface objects.
+ * @GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_CODED_BUFFER: #GstVaapiCodedBuffer objects.
  *
  * The set of all supported #GstVaapiVideoPool object types.
  */
 typedef enum {
     GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_IMAGE = 1,
-    GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE
+    GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_SURFACE,
+    GST_VAAPI_VIDEO_POOL_OBJECT_TYPE_CODED_BUFFER
 } GstVaapiVideoPoolObjectType;
 
 GstVaapiVideoPool *

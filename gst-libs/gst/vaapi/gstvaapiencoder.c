@@ -28,8 +28,6 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-typedef struct _GstVaapiCodedBufferProxyClass GstVaapiCodedBufferProxyClass;
-
 #define GST_VAAPI_ENCODER_LOCK(encoder)                         \
   G_STMT_START {                                                \
     g_mutex_lock (&(GST_VAAPI_ENCODER_CAST(encoder))->lock);    \
@@ -74,99 +72,11 @@ GST_VAAPI_ENCODER_SYNC_WAIT_TIMEOUT (GstVaapiEncoder * encoder, gint64 timeout)
   return g_cond_wait_until (&encoder->sync_ready, &encoder->lock, end_time);
 }
 
-static GstVaapiCodedBuffer *
-gst_vaapi_encoder_dequeue_coded_buffer (GstVaapiEncoder * encoder);
-
-static void
-gst_vaapi_encoder_queue_coded_buffer (GstVaapiEncoder * encoder,
-    GstVaapiCodedBuffer * buf);
-
 typedef struct
 {
   GstVaapiEncPicture *picture;
   GstVaapiCodedBufferProxy *buf;
 } GstVaapiEncoderSyncPic;
-
-static void
-gst_vaapi_coded_buffer_proxy_finalize (GstVaapiCodedBufferProxy * proxy)
-{
-  if (proxy->buffer) {
-    gst_vaapi_coded_buffer_unmap (proxy->buffer);
-    if (proxy->encoder)
-      gst_vaapi_encoder_queue_coded_buffer (proxy->encoder, proxy->buffer);
-    else {
-      g_assert (FALSE);
-      gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (proxy->buffer));
-    }
-    proxy->buffer = NULL;
-  }
-  gst_vaapi_encoder_replace (&proxy->encoder, NULL);
-}
-
-static void
-gst_vaapi_coded_buffer_proxy_class_init (GstVaapiCodedBufferProxyClass * klass)
-{
-  GstVaapiMiniObjectClass *const object_class =
-      GST_VAAPI_MINI_OBJECT_CLASS (klass);
-
-  object_class->size = sizeof (GstVaapiCodedBufferProxy);
-  object_class->finalize =
-      (GDestroyNotify) gst_vaapi_coded_buffer_proxy_finalize;
-}
-
-static inline const GstVaapiCodedBufferProxyClass *
-gst_vaapi_coded_buffer_proxy_class (void)
-{
-  static GstVaapiCodedBufferProxyClass g_class;
-  static gsize g_class_init = FALSE;
-
-  if (g_once_init_enter (&g_class_init)) {
-    gst_vaapi_coded_buffer_proxy_class_init (&g_class);
-    g_once_init_leave (&g_class_init, TRUE);
-  }
-  return (&g_class);
-}
-
-GstVaapiCodedBufferProxy *
-gst_vaapi_coded_buffer_proxy_new (GstVaapiEncoder * encoder)
-{
-  GstVaapiCodedBuffer *buf;
-  GstVaapiCodedBufferProxy *ret;
-
-  g_assert (encoder);
-  buf = gst_vaapi_encoder_dequeue_coded_buffer (encoder);
-  if (!buf)
-    return NULL;
-
-  ret = (GstVaapiCodedBufferProxy *)
-      gst_vaapi_mini_object_new0 (GST_VAAPI_MINI_OBJECT_CLASS
-      (gst_vaapi_coded_buffer_proxy_class ()));
-  g_assert (ret);
-  ret->encoder = gst_vaapi_encoder_ref (encoder);
-  ret->buffer = buf;
-  return ret;
-}
-
-GstVaapiCodedBufferProxy *
-gst_vaapi_coded_buffer_proxy_ref (GstVaapiCodedBufferProxy * proxy)
-{
-  return (GstVaapiCodedBufferProxy *)
-      gst_vaapi_mini_object_ref (GST_VAAPI_MINI_OBJECT (proxy));
-}
-
-void
-gst_vaapi_coded_buffer_proxy_unref (GstVaapiCodedBufferProxy * proxy)
-{
-  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (proxy));
-}
-
-void
-gst_vaapi_coded_buffer_proxy_replace (GstVaapiCodedBufferProxy ** old_proxy_ptr,
-    GstVaapiCodedBufferProxy * new_proxy)
-{
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) old_proxy_ptr,
-      GST_VAAPI_MINI_OBJECT (new_proxy));
-}
 
 GstVaapiEncoder *
 gst_vaapi_encoder_ref (GstVaapiEncoder * encoder)
@@ -187,90 +97,38 @@ gst_vaapi_encoder_replace (GstVaapiEncoder ** old_encoder_ptr,
   gst_vaapi_object_replace (old_encoder_ptr, new_encoder);
 }
 
-static gboolean
-gst_vaapi_encoder_init_coded_buffer_queue (GstVaapiEncoder * encoder,
-    guint count)
-{
-  GstVaapiCodedBuffer *buf;
-  guint i = 0;
-
-  GST_VAAPI_ENCODER_LOCK (encoder);
-  if (count > encoder->max_buf_num)
-    count = encoder->max_buf_num;
-
-  g_assert (encoder->buf_size);
-  for (i = 0; i < count; ++i) {
-    buf = GST_VAAPI_CODED_BUFFER_NEW (encoder, encoder->buf_size);
-    g_queue_push_tail (&encoder->coded_buffers, buf);
-    ++encoder->buf_count;
-  }
-  g_assert (encoder->buf_count <= encoder->max_buf_num);
-
-  GST_VAAPI_ENCODER_UNLOCK (encoder);
-  return TRUE;
-}
-
-static GstVaapiCodedBuffer *
-gst_vaapi_encoder_dequeue_coded_buffer (GstVaapiEncoder * encoder)
-{
-  GstVaapiCodedBuffer *ret = NULL;
-
-  GST_VAAPI_ENCODER_LOCK (encoder);
-  while (encoder->buf_count >= encoder->max_buf_num &&
-      g_queue_is_empty (&encoder->coded_buffers)) {
-    GST_VAAPI_ENCODER_BUF_FREE_WAIT (encoder);
-  }
-  if (!g_queue_is_empty (&encoder->coded_buffers)) {
-    ret = (GstVaapiCodedBuffer *) g_queue_pop_head (&encoder->coded_buffers);
-    goto end;
-  }
-
-  g_assert (encoder->buf_size);
-  ret = GST_VAAPI_CODED_BUFFER_NEW (encoder, encoder->buf_size);
-  if (ret)
-    ++encoder->buf_count;
-
-end:
-  GST_VAAPI_ENCODER_UNLOCK (encoder);
-  return ret;
-}
-
 static void
-gst_vaapi_encoder_queue_coded_buffer (GstVaapiEncoder * encoder,
-    GstVaapiCodedBuffer * buf)
+_coded_buffer_proxy_released_notify (GstVaapiEncoder * encoder)
 {
-  g_assert (buf);
-  g_return_if_fail (buf);
-
   GST_VAAPI_ENCODER_LOCK (encoder);
-  g_queue_push_tail (&encoder->coded_buffers, buf);
   GST_VAAPI_ENCODER_BUF_FREE_SIGNAL (encoder);
   GST_VAAPI_ENCODER_UNLOCK (encoder);
 }
 
-static gboolean
-gst_vaapi_encoder_free_coded_buffers (GstVaapiEncoder * encoder)
+static GstVaapiCodedBufferProxy *
+gst_vaapi_encoder_create_coded_buffer (GstVaapiEncoder * encoder)
 {
-  GstVaapiCodedBuffer *buf;
-  guint count = 0;
-  gboolean ret;
+  GstVaapiCodedBufferPool *const pool =
+    GST_VAAPI_CODED_BUFFER_POOL (encoder->codedbuf_pool);
+  GstVaapiCodedBufferProxy *codedbuf_proxy;
 
   GST_VAAPI_ENCODER_LOCK (encoder);
-  while (!g_queue_is_empty (&encoder->coded_buffers)) {
-    buf = (GstVaapiCodedBuffer *) g_queue_pop_head (&encoder->coded_buffers);
-    g_assert (buf);
-    gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (buf));
-    ++count;
-  }
-  ret = (count == encoder->buf_count);
+  do {
+    codedbuf_proxy = gst_vaapi_coded_buffer_proxy_new_from_pool (pool);
+    if (codedbuf_proxy)
+      break;
+
+    /* Wait for a free coded buffer to become available */
+    GST_VAAPI_ENCODER_BUF_FREE_WAIT (encoder);
+    codedbuf_proxy = gst_vaapi_coded_buffer_proxy_new_from_pool (pool);
+  } while (0);
   GST_VAAPI_ENCODER_UNLOCK (encoder);
+  if (!codedbuf_proxy)
+    return NULL;
 
-  if (!ret) {
-    GST_ERROR ("coded buffer leak, freed count:%d, total buf:%d",
-        count, encoder->buf_count);
-  }
-
-  return ret;
+  gst_vaapi_coded_buffer_proxy_set_destroy_notify (codedbuf_proxy,
+      (GDestroyNotify)_coded_buffer_proxy_released_notify, encoder);
+  return codedbuf_proxy;
 }
 
 static void
@@ -343,7 +201,9 @@ gst_vaapi_encoder_free_sync_pictures (GstVaapiEncoder * encoder)
   while (!g_queue_is_empty (&encoder->sync_pictures)) {
     sync =
         (GstVaapiEncoderSyncPic *) g_queue_pop_head (&encoder->sync_pictures);
+    GST_VAAPI_ENCODER_UNLOCK (encoder);
     _free_sync_picture (encoder, sync);
+    GST_VAAPI_ENCODER_LOCK (encoder);
   }
   GST_VAAPI_ENCODER_UNLOCK (encoder);
 }
@@ -420,7 +280,7 @@ again:
     goto error;
   }
 
-  coded_buf = gst_vaapi_coded_buffer_proxy_new (encoder);
+  coded_buf = gst_vaapi_encoder_create_coded_buffer (encoder);
   if (!coded_buf) {
     ret = GST_VAAPI_ENCODER_STATUS_OBJECT_ERR;
     goto error;
@@ -577,13 +437,16 @@ gst_vaapi_encoder_set_format (GstVaapiEncoder * encoder,
   if (!gst_vaapi_encoder_ensure_context (encoder))
     goto error;
 
-  encoder->buf_size = (GST_VAAPI_ENCODER_WIDTH (encoder) *
+  encoder->codedbuf_size = (GST_VAAPI_ENCODER_WIDTH (encoder) *
       GST_VAAPI_ENCODER_HEIGHT (encoder) * 400) / (16 * 16);
 
-  if (!gst_vaapi_encoder_init_coded_buffer_queue (encoder, 5)) {
-    GST_ERROR ("encoder init coded buffer failed");
+  encoder->codedbuf_pool = gst_vaapi_coded_buffer_pool_new (encoder,
+      encoder->codedbuf_size);
+  if (!encoder->codedbuf_pool) {
+    GST_ERROR ("failed to initialized coded buffer pool");
     goto error;
   }
+  gst_vaapi_video_pool_set_capacity (encoder->codedbuf_pool, 5);
 
   return out_caps;
 
@@ -613,14 +476,9 @@ gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)
 
   gst_video_info_init (&encoder->video_info);
 
-  encoder->buf_count = 0;
-  encoder->max_buf_num = 10;
-  encoder->buf_size = 0;
-
   g_mutex_init (&encoder->lock);
   g_cond_init (&encoder->codedbuf_free);
   g_cond_init (&encoder->surface_free);
-  g_queue_init (&encoder->coded_buffers);
   g_queue_init (&encoder->sync_pictures);
   g_cond_init (&encoder->sync_ready);
 
@@ -637,8 +495,8 @@ gst_vaapi_encoder_destroy (GstVaapiEncoder * encoder)
   if (klass->destroy)
     klass->destroy (encoder);
 
-  gst_vaapi_encoder_free_coded_buffers (encoder);
   gst_vaapi_encoder_free_sync_pictures (encoder);
+  gst_vaapi_video_pool_replace (&encoder->codedbuf_pool, NULL);
 
   gst_vaapi_object_replace (&encoder->context, NULL);
   gst_vaapi_display_replace (&encoder->display, NULL);
@@ -646,7 +504,6 @@ gst_vaapi_encoder_destroy (GstVaapiEncoder * encoder)
   g_mutex_clear (&encoder->lock);
   g_cond_clear (&encoder->codedbuf_free);
   g_cond_clear (&encoder->surface_free);
-  g_queue_clear (&encoder->coded_buffers);
   g_queue_clear (&encoder->sync_pictures);
   g_cond_clear (&encoder->sync_ready);
 }

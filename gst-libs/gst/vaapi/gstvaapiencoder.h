@@ -22,10 +22,8 @@
 #ifndef GST_VAAPI_ENCODER_H
 #define GST_VAAPI_ENCODER_H
 
-#include <gst/video/video.h>
 #include <gst/video/gstvideoutils.h>
-#include <gst/vaapi/gstvaapiobject.h>
-#include <gst/vaapi/gstvaapiprofile.h>
+#include <gst/vaapi/gstvaapicodedbufferproxy.h>
 
 G_BEGIN_DECLS
 
@@ -49,7 +47,6 @@ typedef enum
 } GstVaapiEncoderStatus;
 
 typedef struct _GstVaapiEncoder GstVaapiEncoder;
-typedef struct _GstVaapiCodedBufferProxy GstVaapiCodedBufferProxy;
 
 #define GST_VAAPI_ENCODER(encoder)  \
     ((GstVaapiEncoder *)(encoder))

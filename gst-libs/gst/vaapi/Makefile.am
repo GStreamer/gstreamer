@@ -135,6 +135,9 @@ libgstvaapi_source_h += $(libgstvaapi_jpegdec_source_h)
 endif
 
 libgstvaapi_enc_source_c =			\
+	gstvaapicodedbuffer.c			\
+	gstvaapicodedbufferpool.c		\
+	gstvaapicodedbufferproxy.c		\
 	gstvaapiencoder.c			\
 	gstvaapiencoder_h264.c			\
 	gstvaapiencoder_mpeg2.c			\
@@ -142,12 +145,17 @@ libgstvaapi_enc_source_c =			\
 	$(NULL)
 
 libgstvaapi_enc_source_h =			\
+	gstvaapicodedbuffer.h			\
+	gstvaapicodedbufferpool.h		\
+	gstvaapicodedbufferproxy.h		\
 	gstvaapiencoder.h			\
 	gstvaapiencoder_h264.h			\
 	gstvaapiencoder_mpeg2.h			\
 	$(NULL)
 
 libgstvaapi_enc_source_priv_h =			\
+	gstvaapicodedbuffer_priv.h		\
+	gstvaapicodedbufferpool_priv.h		\
 	gstvaapiencoder_objects.h		\
 	gstvaapiencoder_priv.h			\
 	$(NULL)

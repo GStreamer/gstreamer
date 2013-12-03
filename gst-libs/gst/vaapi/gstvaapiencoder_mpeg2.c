@@ -25,6 +25,7 @@
 #include "gstvaapiencoder_mpeg2.h"
 #include "gstvaapiencoder_mpeg2_priv.h"
 #include "gstvaapiencoder_priv.h"
+#include "gstvaapicodedbufferproxy_priv.h"
 
 #include <va/va.h>
 #include <va/va_enc_mpeg2.h>
@@ -228,7 +229,7 @@ fill_picture (GstVaapiEncoderMpeg2 * encoder,
   memset (pic, 0, sizeof (VAEncPictureParameterBufferMPEG2));
 
   pic->reconstructed_picture = GST_VAAPI_SURFACE_PROXY_SURFACE_ID (surface);
-  pic->coded_buf = codedbuf->buf_id;
+  pic->coded_buf = GST_VAAPI_OBJECT_ID (codedbuf);
   pic->picture_type = get_va_enc_picture_type (picture->type);
   pic->temporal_reference = picture->frame_num & (1024 - 1);
   pic->vbv_delay = 0xFFFF;
@@ -385,11 +386,11 @@ error:
 }
 
 static gboolean
-ensure_picture (GstVaapiEncoderMpeg2 * encoder,
-    GstVaapiEncPicture * picture,
-    GstVaapiCodedBufferProxy * buf_proxy, GstVaapiSurfaceProxy * surface)
+ensure_picture (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncPicture * picture,
+    GstVaapiCodedBufferProxy * codedbuf_proxy, GstVaapiSurfaceProxy * surface)
 {
-  GstVaapiCodedBuffer *codedbuf = buf_proxy->buffer;
+  GstVaapiCodedBuffer *const codedbuf =
+    GST_VAAPI_CODED_BUFFER_PROXY_BUFFER (codedbuf_proxy);
 
   if (!fill_picture (encoder, picture, codedbuf, surface))
     return FALSE;
