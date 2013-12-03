@@ -450,6 +450,11 @@ gst_openni2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
   config = gst_buffer_pool_get_config (pool);
   gst_buffer_pool_config_set_params (config, caps, size, min, max);
 
+  if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
+    GST_DEBUG_OBJECT (pool, "activate Video Meta");
+    gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
+  }
+
   gst_buffer_pool_set_config (pool, config);
 
   if (update)
