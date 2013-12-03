@@ -622,6 +622,10 @@ typedef gboolean  (*GstPadStickyEventsForeachFunction) (GstPad *pad, GstEvent **
  * @GST_PAD_FLAG_PROXY_SCHEDULING: the default query handler will forward
  *                      scheduling queries to the internally linked pads
  *                      instead of discarding them.
+ * @GST_PAD_FLAG_ACCEPT_INTERSECT: the default accept-caps handler will check
+ *                      it the caps intersect the query-caps result instead
+ *                      of checking for a subset. This is interesting for
+ *                      parsers that can accept incompletely specified caps.
  * @GST_PAD_FLAG_LAST: offset to define more flags
  *
  * Pad state flags
@@ -638,6 +642,7 @@ typedef enum {
   GST_PAD_FLAG_PROXY_CAPS       = (GST_OBJECT_FLAG_LAST << 8),
   GST_PAD_FLAG_PROXY_ALLOCATION = (GST_OBJECT_FLAG_LAST << 9),
   GST_PAD_FLAG_PROXY_SCHEDULING = (GST_OBJECT_FLAG_LAST << 10),
+  GST_PAD_FLAG_ACCEPT_INTERSECT = (GST_OBJECT_FLAG_LAST << 11),
   /* padding */
   GST_PAD_FLAG_LAST        = (GST_OBJECT_FLAG_LAST << 16)
 } GstPadFlags;
@@ -790,6 +795,10 @@ struct _GstPadClass {
 #define GST_PAD_IS_PROXY_SCHEDULING(pad)    (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_PROXY_SCHEDULING))
 #define GST_PAD_SET_PROXY_SCHEDULING(pad)   (GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_PROXY_SCHEDULING))
 #define GST_PAD_UNSET_PROXY_SCHEDULING(pad) (GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_PROXY_SCHEDULING))
+
+#define GST_PAD_IS_ACCEPT_INTERSECT(pad)    (GST_OBJECT_FLAG_IS_SET (pad, GST_PAD_FLAG_ACCEPT_INTERSECT))
+#define GST_PAD_SET_ACCEPT_INTERSECT(pad)   (GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_ACCEPT_INTERSECT))
+#define GST_PAD_UNSET_ACCEPT_INTERSECT(pad) (GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_ACCEPT_INTERSECT))
 
 /**
  * GST_PAD_GET_STREAM_LOCK:
