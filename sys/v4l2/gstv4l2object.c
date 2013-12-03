@@ -1357,6 +1357,83 @@ gst_v4l2_object_get_format_list (GstV4l2Object * v4l2object)
   return v4l2object->formats;
 }
 
+static GstVideoFormat
+gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
+{
+  GstVideoFormat format;
+
+  switch (fourcc) {
+    case V4L2_PIX_FMT_GREY:    /*  8  Greyscale     */
+      format = GST_VIDEO_FORMAT_GRAY8;
+      break;
+    case V4L2_PIX_FMT_RGB555:
+      format = GST_VIDEO_FORMAT_RGB15;
+      break;
+    case V4L2_PIX_FMT_RGB565:
+      format = GST_VIDEO_FORMAT_RGB16;
+      break;
+    case V4L2_PIX_FMT_RGB24:
+      format = GST_VIDEO_FORMAT_RGB;
+      break;
+    case V4L2_PIX_FMT_BGR24:
+      format = GST_VIDEO_FORMAT_BGR;
+      break;
+    case V4L2_PIX_FMT_RGB32:
+      format = GST_VIDEO_FORMAT_RGBx;
+      break;
+    case V4L2_PIX_FMT_BGR32:
+      format = GST_VIDEO_FORMAT_BGRx;
+      break;
+    case V4L2_PIX_FMT_NV12:
+    case V4L2_PIX_FMT_NV12M:
+      format = GST_VIDEO_FORMAT_NV12;
+      break;
+    case V4L2_PIX_FMT_NV21:
+    case V4L2_PIX_FMT_NV21M:
+      format = GST_VIDEO_FORMAT_NV21;
+      break;
+    case V4L2_PIX_FMT_YVU410:
+      format = GST_VIDEO_FORMAT_YVU9;
+      break;
+    case V4L2_PIX_FMT_YUV410:
+      format = GST_VIDEO_FORMAT_YUV9;
+      break;
+    case V4L2_PIX_FMT_YUV420:
+      format = GST_VIDEO_FORMAT_I420;
+      break;
+    case V4L2_PIX_FMT_YUYV:
+      format = GST_VIDEO_FORMAT_YUY2;
+      break;
+    case V4L2_PIX_FMT_YVU420:
+      format = GST_VIDEO_FORMAT_YV12;
+      break;
+    case V4L2_PIX_FMT_UYVY:
+      format = GST_VIDEO_FORMAT_UYVY;
+      break;
+#if 0
+    case V4L2_PIX_FMT_Y41P:
+      format = GST_VIDEO_FORMAT_Y41P;
+      break;
+#endif
+    case V4L2_PIX_FMT_YUV411P:
+      format = GST_VIDEO_FORMAT_Y41B;
+      break;
+    case V4L2_PIX_FMT_YUV422P:
+      format = GST_VIDEO_FORMAT_Y42B;
+      break;
+#ifdef V4L2_PIX_FMT_YVYU
+    case V4L2_PIX_FMT_YVYU:
+      format = GST_VIDEO_FORMAT_YVYU;
+      break;
+#endif
+    default:
+      format = GST_VIDEO_FORMAT_UNKNOWN;
+      g_assert_not_reached ();
+      break;
+  }
+
+  return format;
+}
 
 GstStructure *
 gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
@@ -1426,76 +1503,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
 #endif
     case V4L2_PIX_FMT_YUV411P:{
       GstVideoFormat format;
-
-      switch (fourcc) {
-        case V4L2_PIX_FMT_GREY:        /*  8  Greyscale     */
-          format = GST_VIDEO_FORMAT_GRAY8;
-          break;
-        case V4L2_PIX_FMT_RGB555:
-          format = GST_VIDEO_FORMAT_RGB15;
-          break;
-        case V4L2_PIX_FMT_RGB565:
-          format = GST_VIDEO_FORMAT_RGB16;
-          break;
-        case V4L2_PIX_FMT_RGB24:
-          format = GST_VIDEO_FORMAT_RGB;
-          break;
-        case V4L2_PIX_FMT_BGR24:
-          format = GST_VIDEO_FORMAT_BGR;
-          break;
-        case V4L2_PIX_FMT_RGB32:
-          format = GST_VIDEO_FORMAT_RGBx;
-          break;
-        case V4L2_PIX_FMT_BGR32:
-          format = GST_VIDEO_FORMAT_BGRx;
-          break;
-        case V4L2_PIX_FMT_NV12:
-        case V4L2_PIX_FMT_NV12M:
-          format = GST_VIDEO_FORMAT_NV12;
-          break;
-        case V4L2_PIX_FMT_NV21:
-        case V4L2_PIX_FMT_NV21M:
-          format = GST_VIDEO_FORMAT_NV21;
-          break;
-        case V4L2_PIX_FMT_YVU410:
-          format = GST_VIDEO_FORMAT_YVU9;
-          break;
-        case V4L2_PIX_FMT_YUV410:
-          format = GST_VIDEO_FORMAT_YUV9;
-          break;
-        case V4L2_PIX_FMT_YUV420:
-          format = GST_VIDEO_FORMAT_I420;
-          break;
-        case V4L2_PIX_FMT_YUYV:
-          format = GST_VIDEO_FORMAT_YUY2;
-          break;
-        case V4L2_PIX_FMT_YVU420:
-          format = GST_VIDEO_FORMAT_YV12;
-          break;
-        case V4L2_PIX_FMT_UYVY:
-          format = GST_VIDEO_FORMAT_UYVY;
-          break;
-#if 0
-        case V4L2_PIX_FMT_Y41P:
-          format = GST_VIDEO_FORMAT_Y41P;
-          break;
-#endif
-        case V4L2_PIX_FMT_YUV411P:
-          format = GST_VIDEO_FORMAT_Y41B;
-          break;
-        case V4L2_PIX_FMT_YUV422P:
-          format = GST_VIDEO_FORMAT_Y42B;
-          break;
-#ifdef V4L2_PIX_FMT_YVYU
-        case V4L2_PIX_FMT_YVYU:
-          format = GST_VIDEO_FORMAT_YVYU;
-          break;
-#endif
-        default:
-          format = GST_VIDEO_FORMAT_UNKNOWN;
-          g_assert_not_reached ();
-          break;
-      }
+      format = gst_v4l2_object_v4l2fourcc_to_video_format (fourcc);
       if (format != GST_VIDEO_FORMAT_UNKNOWN)
         structure = gst_structure_new ("video/x-raw",
             "format", G_TYPE_STRING, gst_video_format_to_string (format), NULL);
@@ -2306,6 +2314,9 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
 
   fd = v4l2object->video_fd;
 
+  memset (&fmt, 0, sizeof (struct v4l2_format));
+  memset (&prevfmt, 0, sizeof (struct v4l2_format));
+
   /* Some drivers are buggy and will modify the currently set format
      when processing VIDIOC_TRY_FMT, so we remember what is set at the
      minute, and will reset it when done. */
@@ -2625,7 +2636,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
     v4l2object->sizeimage = 0;
     for (i = 0; i < format.fmt.pix_mp.num_planes; i++) {
       /* For compatibility reasons with the non-v4l2-multiplanar mode
-       * we have to use the bytesperline of the first v4l plane
+       * we have to use the bytesperline of<F3> the first v4l plane
        * See plane_fmt[0] instead of plane_fmt[i] in next line */
       v4l2object->bytesperline[i] = format.fmt.pix_mp.plane_fmt[0].bytesperline;
       v4l2object->sizeimage += format.fmt.pix_mp.plane_fmt[i].sizeimage;
