@@ -681,5 +681,4 @@ openni2_finalise (GstOpenni2Src * src)
 {
   src->depth.destroy ();
   src->color.destroy ();
-  openni::OpenNI::shutdown ();
 }
