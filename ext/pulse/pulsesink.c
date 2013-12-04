@@ -2392,6 +2392,8 @@ out:
   if (format)
     pa_format_info_free (format);
 
+  free_device_info (&device_info);
+
   if (o)
     pa_operation_unref (o);
 
