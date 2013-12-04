@@ -248,6 +248,9 @@ LevelNameEntry;
 static GMutex __cat_mutex;
 static GSList *__categories = NULL;
 
+static GstDebugCategory *_gst_debug_get_category_locked (const gchar * name);
+
+
 /* all registered debug handlers */
 typedef struct
 {
@@ -1523,7 +1526,13 @@ _gst_debug_category_new (const gchar * name, guint color,
 
   /* add to category list */
   g_mutex_lock (&__cat_mutex);
-  __categories = g_slist_prepend (__categories, cat);
+  if (_gst_debug_get_category_locked (name)) {
+    g_free ((gpointer) cat->name);
+    g_free ((gpointer) cat->description);
+    g_slice_free (GstDebugCategory, cat);
+  } else {
+    __categories = g_slist_prepend (__categories, cat);
+  }
   g_mutex_unlock (&__cat_mutex);
 
   return cat;
