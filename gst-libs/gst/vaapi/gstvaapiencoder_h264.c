@@ -1711,10 +1711,10 @@ gst_vaapi_encoder_h264_init (GstVaapiEncoder * base)
 }
 
 static void
-gst_vaapi_encoder_h264_destroy (GstVaapiEncoder * base)
+gst_vaapi_encoder_h264_finalize (GstVaapiEncoder * base)
 {
   /*free private buffers */
-  GstVaapiEncoderH264 *encoder = GST_VAAPI_ENCODER_H264 (base);
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base);
   GstVaapiEncPicture *pic;
   GstVaapiEncoderH264Ref *ref;
 
@@ -1736,38 +1736,14 @@ gst_vaapi_encoder_h264_destroy (GstVaapiEncoder * base)
 
 }
 
-static void
-gst_vaapi_encoder_h264_class_init (GstVaapiEncoderH264Class * klass)
-{
-  GstVaapiMiniObjectClass *const object_class =
-      GST_VAAPI_MINI_OBJECT_CLASS (klass);
-  GstVaapiEncoderClass *const encoder_class = GST_VAAPI_ENCODER_CLASS (klass);
-
-  gst_vaapi_encoder_class_init (encoder_class);
-
-  object_class->size = sizeof (GstVaapiEncoderH264);
-
-  encoder_class->init = gst_vaapi_encoder_h264_init;
-  encoder_class->destroy = gst_vaapi_encoder_h264_destroy;
-  encoder_class->set_format = gst_vaapi_encoder_h264_set_format;
-  encoder_class->get_context_info = gst_vaapi_encoder_h264_get_context_info;
-  encoder_class->reordering = gst_vaapi_encoder_h264_reordering;
-  encoder_class->encode = gst_vaapi_encoder_h264_encode;
-  encoder_class->get_codec_data = gst_vaapi_encoder_h264_get_codec_data;
-  encoder_class->flush = gst_vaapi_encoder_h264_flush;
-}
-
 static inline const GstVaapiEncoderClass *
 gst_vaapi_encoder_h264_class ()
 {
-  static GstVaapiEncoderH264Class g_class;
-  static gsize g_class_init = FALSE;
-
-  if (g_once_init_enter (&g_class_init)) {
-    gst_vaapi_encoder_h264_class_init (&g_class);
-    g_once_init_leave (&g_class_init, TRUE);
-  }
-  return GST_VAAPI_ENCODER_CLASS (&g_class);
+  static const GstVaapiEncoderClass GstVaapiEncoderH264Class = {
+    GST_VAAPI_ENCODER_CLASS_INIT (H264, h264),
+    .get_codec_data = gst_vaapi_encoder_h264_get_codec_data
+  };
+  return &GstVaapiEncoderH264Class;
 }
 
 GstVaapiEncoder *

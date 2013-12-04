@@ -741,7 +741,7 @@ push_reference (GstVaapiEncoderMpeg2 * encoder, GstVaapiSurfaceProxy * ref)
 }
 
 static void
-gst_vaapi_encoder_mpeg2_destroy (GstVaapiEncoder * base)
+gst_vaapi_encoder_mpeg2_finalize (GstVaapiEncoder * base)
 {
   /*free private buffers */
   GstVaapiEncoderMpeg2 *encoder = GST_VAAPI_ENCODER_MPEG2 (base);
@@ -756,37 +756,13 @@ gst_vaapi_encoder_mpeg2_destroy (GstVaapiEncoder * base)
   g_queue_clear (&encoder->b_frames);
 }
 
-static void
-gst_vaapi_encoder_mpeg2_class_init (GstVaapiEncoderMpeg2Class * klass)
-{
-  GstVaapiMiniObjectClass *const object_class =
-      GST_VAAPI_MINI_OBJECT_CLASS (klass);
-  GstVaapiEncoderClass *const encoder_class = GST_VAAPI_ENCODER_CLASS (klass);
-
-  gst_vaapi_encoder_class_init (encoder_class);
-
-  object_class->size = sizeof (GstVaapiEncoderMpeg2);
-
-  encoder_class->init = gst_vaapi_encoder_mpeg2_init;
-  encoder_class->destroy = gst_vaapi_encoder_mpeg2_destroy;
-  encoder_class->set_format = gst_vaapi_encoder_mpeg2_set_format;
-  encoder_class->get_context_info = gst_vaapi_encoder_mpeg2_get_context_info;
-  encoder_class->reordering = gst_vaapi_encoder_mpeg2_reordering;
-  encoder_class->encode = gst_vaapi_encoder_mpeg2_encode;
-  encoder_class->flush = gst_vaapi_encoder_mpeg2_flush;
-}
-
 static inline const GstVaapiEncoderClass *
 gst_vaapi_encoder_mpeg2_class ()
 {
-  static GstVaapiEncoderMpeg2Class g_class;
-  static gsize g_class_init = FALSE;
-
-  if (g_once_init_enter (&g_class_init)) {
-    gst_vaapi_encoder_mpeg2_class_init (&g_class);
-    g_once_init_leave (&g_class_init, TRUE);
-  }
-  return GST_VAAPI_ENCODER_CLASS (&g_class);
+  static const GstVaapiEncoderClass GstVaapiEncoderMpeg2Class = {
+    GST_VAAPI_ENCODER_CLASS_INIT (Mpeg2, mpeg2),
+  };
+  return &GstVaapiEncoderMpeg2Class;
 }
 
 GstVaapiEncoder *

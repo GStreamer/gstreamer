@@ -32,14 +32,6 @@ G_BEGIN_DECLS
         ((GstVaapiEncoderMpeg2 *)(encoder))
 #define GST_VAAPI_ENCODER_MPEG2_CAST(encoder) \
         ((GstVaapiEncoderMpeg2 *)(encoder))
-#define GST_VAAPI_ENCODER_MPEG2_CLASS(klass) \
-    ((GstVaapiEncoderMpeg2Class *)(klass))
-#define GST_IS_VAAPI_ENCODER_MPEG2_CLASS(klass) \
-    ((klass) != NULL)
-#define GST_VAAPI_ENCODER_MPEG2_GET_CLASS(obj) \
-    GST_VAAPI_ENCODER_MPEG2_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
-
-typedef struct _GstVaapiEncoderMpeg2Class GstVaapiEncoderMpeg2Class;
 
 typedef enum
 {
@@ -103,12 +95,6 @@ struct _GstVaapiEncoderMpeg2
   GstVaapiSurfaceProxy *forward;
   GstVaapiSurfaceProxy *backward;
   guint32 frame_num;            /* same value picture header, but it's not mod by 1024 */
-};
-
-struct _GstVaapiEncoderMpeg2Class
-{
-  /*< private > */
-  GstVaapiEncoderClass parent_class;
 };
 
 G_END_DECLS

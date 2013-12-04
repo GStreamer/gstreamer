@@ -261,9 +261,6 @@ gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,
   GstVaapiCodedBufferProxy *coded_buf = NULL;
   GstVaapiEncoderSyncPic *sync_pic = NULL;
 
-  if (!klass->reordering || !klass->encode)
-    goto error;
-
 again:
   picture = NULL;
   sync_pic = NULL;
@@ -350,18 +347,9 @@ end:
 GstVaapiEncoderStatus
 gst_vaapi_encoder_flush (GstVaapiEncoder * encoder)
 {
-  GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_SUCCESS;
   GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
 
-  if (!klass->flush)
-    goto error;
-
-  ret = klass->flush (encoder);
-  return ret;
-
-error:
-  GST_ERROR ("flush failed");
-  return GST_VAAPI_ENCODER_STATUS_FUNC_PTR_ERR;
+  return klass->flush (encoder);
 }
 
 GstVaapiEncoderStatus
@@ -390,9 +378,8 @@ gst_vaapi_encoder_ensure_context (GstVaapiEncoder * encoder)
     return TRUE;
 
   memset (&info, 0, sizeof (info));
-  if (!klass->get_context_info || !klass->get_context_info (encoder, &info)) {
+  if (!klass->get_context_info (encoder, &info))
     return FALSE;
-  }
 
   context = gst_vaapi_context_new_full (GST_VAAPI_ENCODER_DISPLAY (encoder),
       &info);
@@ -417,9 +404,6 @@ gst_vaapi_encoder_set_format (GstVaapiEncoder * encoder,
     return NULL;
   }
   GST_VAAPI_ENCODER_VIDEO_INFO (encoder) = in_state->info;
-
-  if (!klass->set_format)
-    goto error;
 
   out_caps = klass->set_format (encoder, in_state, ref_caps);
   if (!out_caps)
@@ -460,19 +444,28 @@ error:
 static gboolean
 gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)
 {
-  GstVaapiEncoderClass *kclass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
+  GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
 
-  g_assert (kclass);
-  g_assert (display);
+  g_return_val_if_fail (display != NULL, FALSE);
 
-  g_return_val_if_fail (display, FALSE);
-  g_return_val_if_fail (encoder->display == NULL, FALSE);
+#define CHECK_VTABLE_HOOK(FUNC) do {            \
+    if (!klass->FUNC)                           \
+      goto error_invalid_vtable;                \
+  } while (0)
+
+  CHECK_VTABLE_HOOK (init);
+  CHECK_VTABLE_HOOK (finalize);
+  CHECK_VTABLE_HOOK (encode);
+  CHECK_VTABLE_HOOK (reordering);
+  CHECK_VTABLE_HOOK (flush);
+  CHECK_VTABLE_HOOK (get_context_info);
+  CHECK_VTABLE_HOOK (set_format);
+
+#undef CHECK_VTABLE_HOOK
 
   encoder->display = gst_vaapi_display_ref (display);
   encoder->va_display = gst_vaapi_display_get_display (display);
-  encoder->context = NULL;
   encoder->va_context = VA_INVALID_ID;
-  encoder->caps = NULL;
 
   gst_video_info_init (&encoder->video_info);
 
@@ -482,18 +475,22 @@ gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)
   g_queue_init (&encoder->sync_pictures);
   g_cond_init (&encoder->sync_ready);
 
-  if (kclass->init)
-    return kclass->init (encoder);
-  return TRUE;
+  return klass->init (encoder);
+
+  /* ERRORS */
+error_invalid_vtable:
+  {
+    GST_ERROR ("invalid subclass hook (internal error)");
+    return FALSE;
+  }
 }
 
-static void
-gst_vaapi_encoder_destroy (GstVaapiEncoder * encoder)
+void
+gst_vaapi_encoder_finalize (GstVaapiEncoder * encoder)
 {
   GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
 
-  if (klass->destroy)
-    klass->destroy (encoder);
+  klass->finalize (encoder);
 
   gst_vaapi_encoder_free_sync_pictures (encoder);
   gst_vaapi_video_pool_replace (&encoder->codedbuf_pool, NULL);
@@ -506,22 +503,6 @@ gst_vaapi_encoder_destroy (GstVaapiEncoder * encoder)
   g_cond_clear (&encoder->surface_free);
   g_queue_clear (&encoder->sync_pictures);
   g_cond_clear (&encoder->sync_ready);
-}
-
-void
-gst_vaapi_encoder_finalize (GstVaapiEncoder * encoder)
-{
-  gst_vaapi_encoder_destroy (encoder);
-}
-
-void
-gst_vaapi_encoder_class_init (GstVaapiEncoderClass * klass)
-{
-  GstVaapiMiniObjectClass *const object_class =
-      GST_VAAPI_MINI_OBJECT_CLASS (klass);
-
-  object_class->size = sizeof (GstVaapiEncoder);
-  object_class->finalize = (GDestroyNotify) gst_vaapi_encoder_finalize;
 }
 
 GstVaapiEncoder *

@@ -33,14 +33,6 @@ G_BEGIN_DECLS
     ((GstVaapiEncoderH264 *)(encoder))
 #define GST_VAAPI_ENCODER_H264_CAST(encoder) \
     ((GstVaapiEncoderH264 *)(encoder))
-#define GST_VAAPI_ENCODER_H264_CLASS(klass) \
-    ((GstVaapiEncoderH264Class *)(klass))
-#define GST_IS_VAAPI_ENCODER_H264_CLASS(klass) \
-    ((klass) != NULL)
-#define GST_VAAPI_ENCODER_H264_GET_CLASS(obj) \
-    GST_VAAPI_ENCODER_H264_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
-
-typedef struct _GstVaapiEncoderH264Class GstVaapiEncoderH264Class;
 
 typedef enum
 {
@@ -113,12 +105,6 @@ struct _GstVaapiEncoderH264
   GstBuffer *sps_data;
   GstBuffer *pps_data;
 
-};
-
-struct _GstVaapiEncoderH264Class
-{
-  /*< private > */
-  GstVaapiEncoderClass parent_class;
 };
 
 G_END_DECLS

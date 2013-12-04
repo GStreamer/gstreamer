@@ -105,10 +105,10 @@ struct _GstVaapiEncoder
 
 struct _GstVaapiEncoderClass
 {
-  GObjectClass parent_class;
+  GstVaapiMiniObjectClass parent_class;
 
   gboolean              (*init)         (GstVaapiEncoder * encoder);
-  void                  (*destroy)      (GstVaapiEncoder * encoder);
+  void                  (*finalize)     (GstVaapiEncoder * encoder);
 
   GstCaps *             (*set_format)   (GstVaapiEncoder * encoder,
                                          GstVideoCodecState * in_state,
@@ -132,13 +132,31 @@ struct _GstVaapiEncoderClass
                                            GstBuffer ** codec_data);
 };
 
-void
-gst_vaapi_encoder_class_init (GstVaapiEncoderClass * klass);
+#define GST_VAAPI_ENCODER_CLASS_HOOK(codec, func) \
+  .func = G_PASTE (G_PASTE (G_PASTE (gst_vaapi_encoder_,codec),_), func)
 
+#define GST_VAAPI_ENCODER_CLASS_INIT_BASE(CODEC)                \
+  .parent_class = {                                             \
+    .size = sizeof (G_PASTE (GstVaapiEncoder, CODEC)),          \
+    .finalize = (GDestroyNotify) gst_vaapi_encoder_finalize     \
+  }
+
+#define GST_VAAPI_ENCODER_CLASS_INIT(CODEC, codec)              \
+  GST_VAAPI_ENCODER_CLASS_INIT_BASE (CODEC),                    \
+    GST_VAAPI_ENCODER_CLASS_HOOK (codec, init),                 \
+    GST_VAAPI_ENCODER_CLASS_HOOK (codec, finalize),             \
+    GST_VAAPI_ENCODER_CLASS_HOOK (codec, set_format),           \
+    GST_VAAPI_ENCODER_CLASS_HOOK (codec, get_context_info),     \
+    GST_VAAPI_ENCODER_CLASS_HOOK (codec, reordering),           \
+    GST_VAAPI_ENCODER_CLASS_HOOK (codec, encode),               \
+    GST_VAAPI_ENCODER_CLASS_HOOK (codec, flush)
+
+G_GNUC_INTERNAL
 GstVaapiEncoder *
 gst_vaapi_encoder_new (const GstVaapiEncoderClass * klass,
     GstVaapiDisplay * display);
 
+G_GNUC_INTERNAL
 void
 gst_vaapi_encoder_finalize (GstVaapiEncoder * encoder);
 
