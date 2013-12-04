@@ -317,25 +317,10 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
               obj->bytesperline[i]);
 
           offset[i] = offs;
+          stride[i] = obj->bytesperline[i];
 
-          switch (info->finfo->format) {
-            case GST_VIDEO_FORMAT_NV12:
-            case GST_VIDEO_FORMAT_NV21:
-            case GST_VIDEO_FORMAT_NV16:
-            case GST_VIDEO_FORMAT_NV24:
-              stride[i] =
-                  (i == 0 ? 1 : 2) * GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo,
-                  i, obj->bytesperline[i]);
-              break;
-            default:
-              stride[i] =
-                  GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i,
-                  obj->bytesperline[i]);
-              break;
-          }
-
-          /* when using multiplanar mode and if there is one v4l plane for
-           * each gst plane
+          /* when using multiplanar mode and if there is more then one v4l
+           * plane for each gst plane
            */
           if (V4L2_TYPE_IS_MULTIPLANAR (obj->type) && meta->n_planes > 1)
             /* non_contiguous case here so we have to make sure that gst goes to the

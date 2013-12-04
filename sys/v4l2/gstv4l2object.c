@@ -2504,7 +2504,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   guint32 pixelformat;
   struct v4l2_fmtdesc *fmtdesc;
   GstVideoInfo info;
-  gint width, height, fps_n, fps_d, stride;
+  gint width, height, fps_n, fps_d;
   gint i = 0;
 
   GST_V4L2_CHECK_OPEN (v4l2object);
@@ -2518,7 +2518,6 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   height = GST_VIDEO_INFO_HEIGHT (&info);
   fps_n = GST_VIDEO_INFO_FPS_N (&info);
   fps_d = GST_VIDEO_INFO_FPS_D (&info);
-  stride = GST_VIDEO_INFO_PLANE_STRIDE (&info, 0);
 
   /* get bytesperline for each plane */
   for (i = 0; i < GST_VIDEO_INFO_N_PLANES (&info); i++)
@@ -2537,7 +2536,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
 
   GST_DEBUG_OBJECT (v4l2object->element, "Desired format %dx%d, format "
       "%" GST_FOURCC_FORMAT " stride: %d", width, height,
-      GST_FOURCC_ARGS (pixelformat), stride);
+      GST_FOURCC_ARGS (pixelformat), v4l2object->bytesperline[0]);
 
   /* MPEG-TS source cameras don't get their format set for some reason.
    * It looks wrong and we weren't able to track down the reason for that code
@@ -2628,10 +2627,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
     v4l2object->n_v4l2_planes = format.fmt.pix_mp.num_planes;
     v4l2object->sizeimage = 0;
     for (i = 0; i < format.fmt.pix_mp.num_planes; i++) {
-      /* For compatibility reasons with the non-v4l2-multiplanar mode
-       * we have to use the bytesperline of<F3> the first v4l plane
-       * See plane_fmt[0] instead of plane_fmt[i] in next line */
-      v4l2object->bytesperline[i] = format.fmt.pix_mp.plane_fmt[0].bytesperline;
+      v4l2object->bytesperline[i] = format.fmt.pix_mp.plane_fmt[i].bytesperline;
       v4l2object->sizeimage += format.fmt.pix_mp.plane_fmt[i].sizeimage;
     }
   } else {
@@ -2650,7 +2646,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
       /* something different, set the format */
       GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
           "%" GST_FOURCC_FORMAT " bytesperline %d", width, height,
-          GST_FOURCC_ARGS (pixelformat), stride);
+          GST_FOURCC_ARGS (pixelformat), v4l2object->bytesperline[0]);
 
       format.type = v4l2object->type;
       format.fmt.pix.width = width;
@@ -2658,7 +2654,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
       format.fmt.pix.pixelformat = pixelformat;
       format.fmt.pix.field = field;
       /* try to ask our prefered stride */
-      format.fmt.pix.bytesperline = stride;
+      format.fmt.pix.bytesperline = v4l2object->bytesperline[0];
 
       if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
         goto set_fmt_failed;
@@ -2684,12 +2680,27 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
     v4l2object->n_v4l2_planes = 1;
 
     /* figure out the frame layout */
-    for (i = 0; i < GST_VIDEO_MAX_PLANES; i++) {
-      /* In non-multiplanar mode, there is only one field for bytesperline
-       * Just set it everywhere in order to the code factorized
-       * with multiplanar case in gstv4l2bufferpool.c::alloc_buffer function
-       */
-      v4l2object->bytesperline[i] = format.fmt.pix.bytesperline;
+    for (i = 0; i < info.finfo->n_planes; i++) {
+      const GstVideoFormatInfo *finfo = info.finfo;
+      guint stride = format.fmt.pix.bytesperline;
+
+      switch (info.finfo->format) {
+        case GST_VIDEO_FORMAT_NV12:
+        case GST_VIDEO_FORMAT_NV21:
+        case GST_VIDEO_FORMAT_NV16:
+        case GST_VIDEO_FORMAT_NV24:
+          v4l2object->bytesperline[i] = (i == 0 ? 1 : 2) *
+              GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, stride);
+          break;
+        default:
+          v4l2object->bytesperline[i] =
+              GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, stride);
+          break;
+      }
+
+      GST_DEBUG_OBJECT (v4l2object->element,
+          "Extrapolated stride for plane %d from %d to %d", i, stride,
+          v4l2object->bytesperline[i]);
     }
 
     v4l2object->sizeimage = format.fmt.pix.sizeimage;
