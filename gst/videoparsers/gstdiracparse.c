@@ -136,6 +136,7 @@ gst_dirac_parse_init (GstDiracParse * diracparse)
 {
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (diracparse), 13);
   gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (diracparse), FALSE);
+  GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (diracparse));
 }
 
 void
@@ -423,13 +424,7 @@ gst_dirac_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
 
     res = gst_caps_intersect_full (peercaps, templ, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
-    res = gst_caps_make_writable (res);
-
-    /* Append the template caps because we still want to accept
-     * caps without any fields in the case upstream does not
-     * know anything.
-     */
-    gst_caps_append (res, templ);
+    gst_caps_unref (templ);
   } else {
     res = templ;
   }

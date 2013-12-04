@@ -234,6 +234,7 @@ gst_vc1_parse_init (GstVC1Parse * vc1parse)
   gst_base_parse_set_has_timing_info (GST_BASE_PARSE (vc1parse), FALSE);
 
   gst_vc1_parse_reset (vc1parse);
+  GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (vc1parse));
 }
 
 static void

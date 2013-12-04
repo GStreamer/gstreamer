@@ -142,6 +142,7 @@ gst_h265_parse_init (GstH265Parse * h265parse)
 {
   h265parse->frame_out = gst_adapter_new ();
   gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (h265parse), FALSE);
+  GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (h265parse));
 }
 
 
@@ -1869,13 +1870,7 @@ gst_h265_parse_get_caps (GstBaseParse * parse, GstCaps * filter)
 
     res = gst_caps_intersect_full (peercaps, templ, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
-    res = gst_caps_make_writable (res);
-
-    /* Append the template caps because we still want to accept
-     * caps without any fields in the case upstream does not
-     * know anything.
-     */
-    gst_caps_append (res, templ);
+    gst_caps_unref (templ);
   } else {
     res = templ;
   }

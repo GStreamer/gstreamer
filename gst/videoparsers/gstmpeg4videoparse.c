@@ -187,6 +187,7 @@ gst_mpeg4vparse_init (GstMpeg4VParse * parse)
   parse->last_report = GST_CLOCK_TIME_NONE;
 
   gst_base_parse_set_pts_interpolation (GST_BASE_PARSE (parse), FALSE);
+  GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (parse));
 }
 
 static void
@@ -867,13 +868,7 @@ gst_mpeg4vparse_get_caps (GstBaseParse * parse, GstCaps * filter)
 
     res = gst_caps_intersect_full (peercaps, templ, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
-    res = gst_caps_make_writable (res);
-
-    /* Append the template caps because we still want to accept
-     * caps without any fields in the case upstream does not
-     * know anything.
-     */
-    gst_caps_append (res, templ);
+    gst_caps_unref (templ);
   } else {
     res = templ;
   }

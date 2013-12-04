@@ -91,6 +91,7 @@ gst_h263_parse_class_init (GstH263ParseClass * klass)
 static void
 gst_h263_parse_init (GstH263Parse * h263parse)
 {
+  GST_PAD_SET_ACCEPT_INTERSECT (GST_BASE_PARSE_SINK_PAD (h263parse));
 }
 
 static gboolean
@@ -397,13 +398,7 @@ gst_h263_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
 
     res = gst_caps_intersect_full (peercaps, templ, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
-    res = gst_caps_make_writable (res);
-
-    /* Append the template caps because we still want to accept
-     * caps without any fields in the case upstream does not
-     * know anything.
-     */
-    gst_caps_append (res, templ);
+    gst_caps_unref (templ);
   } else {
     res = templ;
   }
