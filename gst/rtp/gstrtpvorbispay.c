@@ -500,6 +500,8 @@ gst_rtp_vorbis_pay_finish_headers (GstRTPBasePayload * basepayload)
   configuration = g_base64_encode (config, configlen);
 
   /* store for later re-sending */
+  if (rtpvorbispay->config_data)
+    g_free (rtpvorbispay->config_data);
   rtpvorbispay->config_size = configlen - 4 - 3 - 2;
   rtpvorbispay->config_data = g_malloc (rtpvorbispay->config_size);
   rtpvorbispay->config_extra_len = extralen;
