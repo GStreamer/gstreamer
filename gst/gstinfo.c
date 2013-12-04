@@ -1674,8 +1674,8 @@ gst_debug_get_all_categories (void)
   return ret;
 }
 
-GstDebugCategory *
-_gst_debug_get_category (const gchar * name)
+static GstDebugCategory *
+_gst_debug_get_category_locked (const gchar * name)
 {
   GstDebugCategory *ret = NULL;
   GSList *node;
@@ -1687,6 +1687,18 @@ _gst_debug_get_category (const gchar * name)
     }
   }
   return NULL;
+}
+
+GstDebugCategory *
+_gst_debug_get_category (const gchar * name)
+{
+  GstDebugCategory *ret;
+
+  g_mutex_lock (&__cat_mutex);
+  ret = _gst_debug_get_category_locked (name);
+  g_mutex_unlock (&__cat_mutex);
+
+  return ret;
 }
 
 static gboolean
