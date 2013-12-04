@@ -1585,23 +1585,15 @@ end:
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
-static gboolean
-gst_vaapi_encoder_h264_get_context_info (GstVaapiEncoder * base,
-    GstVaapiContextInfo * info)
+static void
+gst_vaapi_encoder_h264_set_context_info (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderH264 *encoder = GST_VAAPI_ENCODER_H264 (base);
-  const static guint default_surface_num = 3;
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
+  GstVaapiContextInfo *const cip = &base_encoder->context_info;
+  const guint DEFAULT_SURFACES_COUNT = 3;
 
-  g_return_val_if_fail (info, FALSE);
-
-  info->profile = encoder->profile;
-  info->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
-  info->width = GST_VAAPI_ENCODER_WIDTH (encoder);
-  info->height = GST_VAAPI_ENCODER_HEIGHT (encoder);
-  info->ref_frames = (encoder->b_frame_num ? 2 : 1) + default_surface_num;
-  info->rc_mode = GST_VAAPI_ENCODER_RATE_CONTROL (encoder);
-
-  return TRUE;
+  cip->profile = encoder->profile;
+  cip->ref_frames = (encoder->b_frame_num ? 2 : 1) + DEFAULT_SURFACES_COUNT;
 }
 
 static GstCaps *

@@ -627,22 +627,14 @@ to_vaapi_profile (guint32 profile)
   return p;
 }
 
-static gboolean
-gst_vaapi_encoder_mpeg2_get_context_info (GstVaapiEncoder * base,
-    GstVaapiContextInfo * info)
+static void
+gst_vaapi_encoder_mpeg2_set_context_info (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderMpeg2 *encoder = GST_VAAPI_ENCODER_MPEG2 (base);
+  GstVaapiEncoderMpeg2 *const encoder = GST_VAAPI_ENCODER_MPEG2 (base_encoder);
+  GstVaapiContextInfo *const cip = &base_encoder->context_info;
 
-  g_return_val_if_fail (info, FALSE);
-
-  info->profile = to_vaapi_profile (encoder->profile);
-  info->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
-  info->width = GST_VAAPI_ENCODER_WIDTH (encoder);
-  info->height = GST_VAAPI_ENCODER_HEIGHT (encoder);
-  info->ref_frames = 2;
-  info->rc_mode = GST_VAAPI_ENCODER_RATE_CONTROL (encoder);
-
-  return TRUE;
+  cip->profile = to_vaapi_profile (encoder->profile);
+  cip->ref_frames = 2;
 }
 
 static gboolean

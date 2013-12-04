@@ -80,6 +80,7 @@ struct _GstVaapiEncoder
 
   GstVaapiDisplay *display;
   GstVaapiContext *context;
+  GstVaapiContextInfo context_info;
   GstCaps *caps;
 
   VADisplay va_display;
@@ -106,8 +107,7 @@ struct _GstVaapiEncoderClass
                                          GstVideoCodecState * in_state,
                                          GstCaps * ref_caps);
 
-  gboolean              (*get_context_info) (GstVaapiEncoder * encoder,
-                                             GstVaapiContextInfo * info);
+  void                  (*set_context_info) (GstVaapiEncoder * encoder);
 
   GstVaapiEncoderStatus (*reordering)   (GstVaapiEncoder * encoder,
                                          GstVideoCodecFrame * in,
@@ -137,7 +137,7 @@ struct _GstVaapiEncoderClass
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, init),                 \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, finalize),             \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, set_format),           \
-    GST_VAAPI_ENCODER_CLASS_HOOK (codec, get_context_info),     \
+    GST_VAAPI_ENCODER_CLASS_HOOK (codec, set_context_info),     \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, reordering),           \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, encode),               \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, flush)

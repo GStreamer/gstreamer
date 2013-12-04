@@ -307,18 +307,21 @@ static gboolean
 gst_vaapi_encoder_ensure_context (GstVaapiEncoder * encoder)
 {
   GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
-  GstVaapiContextInfo info;
+  GstVaapiContextInfo *const cip = &encoder->context_info;
   GstVaapiContext *context;
 
   if (GST_VAAPI_ENCODER_CONTEXT (encoder))
     return TRUE;
 
-  memset (&info, 0, sizeof (info));
-  if (!klass->get_context_info (encoder, &info))
-    return FALSE;
+  cip->profile = GST_VAAPI_PROFILE_UNKNOWN;
+  cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
+  cip->rc_mode = GST_VAAPI_ENCODER_RATE_CONTROL (encoder);
+  cip->width = GST_VAAPI_ENCODER_WIDTH (encoder);
+  cip->height = GST_VAAPI_ENCODER_HEIGHT (encoder);
+  cip->ref_frames = 0;
+  klass->set_context_info (encoder);
 
-  context = gst_vaapi_context_new_full (GST_VAAPI_ENCODER_DISPLAY (encoder),
-      &info);
+  context = gst_vaapi_context_new_full (encoder->display, cip);
   if (!context)
     return FALSE;
 
@@ -406,7 +409,7 @@ gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)
   CHECK_VTABLE_HOOK (encode);
   CHECK_VTABLE_HOOK (reordering);
   CHECK_VTABLE_HOOK (flush);
-  CHECK_VTABLE_HOOK (get_context_info);
+  CHECK_VTABLE_HOOK (set_context_info);
   CHECK_VTABLE_HOOK (set_format);
 
 #undef CHECK_VTABLE_HOOK
