@@ -1095,7 +1095,8 @@ gst_audio_decoder_finish_frame (GstAudioDecoder * dec, GstBuffer * buf,
   }
 
   /* still no valid ts, track the segment one */
-  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (priv->base_ts))) {
+  if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (priv->base_ts)) &&
+      dec->output_segment.rate > 0.0) {
     priv->base_ts = dec->output_segment.start;
   }
 
