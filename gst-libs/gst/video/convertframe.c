@@ -96,7 +96,7 @@ get_encoder (const GstCaps * caps, GError ** err)
   encoder = gst_element_factory_create (factory, NULL);
 
   GST_INFO ("created encoder element %p, %s", encoder,
-      gst_element_get_name (encoder));
+      GST_ELEMENT_NAME (encoder));
 
 fail:
   if (encoders)
