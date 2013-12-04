@@ -551,7 +551,7 @@ gst_vaapi_encoder_mpeg2_flush (GstVaapiEncoder * base)
 
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_mpeg2_reordering (GstVaapiEncoder * base,
-    GstVideoCodecFrame * frame, gboolean flush, GstVaapiEncPicture ** output)
+    GstVideoCodecFrame * frame, GstVaapiEncPicture ** output)
 {
   GstVaapiEncoderMpeg2 *encoder = GST_VAAPI_ENCODER_MPEG2 (base);
   GstVaapiEncPicture *picture = NULL;

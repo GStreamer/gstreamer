@@ -1488,7 +1488,7 @@ gst_vaapi_encoder_h264_get_codec_data (GstVaapiEncoder * base,
 
 static GstVaapiEncoderStatus
 gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base,
-    GstVideoCodecFrame * frame, gboolean flush, GstVaapiEncPicture ** output)
+    GstVideoCodecFrame * frame, GstVaapiEncPicture ** output)
 {
   GstVaapiEncoderH264 *encoder = GST_VAAPI_ENCODER_H264 (base);
   GstVaapiEncPicture *picture;

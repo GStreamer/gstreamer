@@ -27,6 +27,11 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstVaapiEncoder GstVaapiEncoder;
+
+#define GST_VAAPI_ENCODER(encoder)  \
+    ((GstVaapiEncoder *)(encoder))
+
 /**
  * GstVaapiEncoderStatus:
  * @GST_VAAPI_ENCODER_STATUS_SUCCESS: Success.
@@ -55,14 +60,6 @@ typedef enum
   GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_HEADER = -103,
 } GstVaapiEncoderStatus;
 
-typedef struct _GstVaapiEncoder GstVaapiEncoder;
-
-#define GST_VAAPI_ENCODER(encoder)  \
-    ((GstVaapiEncoder *)(encoder))
-
-#define GST_VAAPI_ENCODER_CAST(encoder) \
-    ((GstVaapiEncoder *)(encoder))
-
 GstVaapiEncoder *
 gst_vaapi_encoder_ref (GstVaapiEncoder * encoder);
 
@@ -73,20 +70,19 @@ void
 gst_vaapi_encoder_replace (GstVaapiEncoder ** old_encoder_ptr,
     GstVaapiEncoder * new_encoder);
 
-GstCaps *gst_vaapi_encoder_set_format (GstVaapiEncoder * encoder,
-    GstVideoCodecState * state, GstCaps * ref_caps);
-
 GstVaapiEncoderStatus
 gst_vaapi_encoder_get_codec_data (GstVaapiEncoder * encoder,
-    GstBuffer ** codec_data_ptr);
+    GstBuffer ** out_codec_data_ptr);
+
+GstCaps *gst_vaapi_encoder_set_format (GstVaapiEncoder * encoder,
+    GstVideoCodecState * state, GstCaps * ref_caps);
 
 GstVaapiEncoderStatus
 gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,
     GstVideoCodecFrame * frame);
 
 GstVaapiEncoderStatus
-gst_vaapi_encoder_get_buffer (GstVaapiEncoder * encoder,
-    GstVideoCodecFrame ** out_frame_ptr,
+gst_vaapi_encoder_get_buffer_with_timeout (GstVaapiEncoder * encoder,
     GstVaapiCodedBufferProxy ** out_codedbuf_proxy_ptr, guint64 timeout);
 
 GstVaapiEncoderStatus

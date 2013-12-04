@@ -18,6 +18,7 @@
  *  Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
  *  Boston, MA 02110-1301 USA
  */
+
 #include "sysdeps.h"
 #include "gstvaapicompat.h"
 #include "gstvaapiencoder.h"
@@ -28,18 +29,42 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
+/**
+ * gst_vaapi_encoder_ref:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Atomically increases the reference count of the given @encoder by one.
+ *
+ * Returns: The same @encoder argument
+ */
 GstVaapiEncoder *
 gst_vaapi_encoder_ref (GstVaapiEncoder * encoder)
 {
   return gst_vaapi_object_ref (encoder);
 }
 
+/**
+ * gst_vaapi_encoder_unref:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Atomically decreases the reference count of the @encoder by one. If
+ * the reference count reaches zero, the encoder will be free'd.
+ */
 void
 gst_vaapi_encoder_unref (GstVaapiEncoder * encoder)
 {
   gst_vaapi_object_unref (encoder);
 }
 
+/**
+ * gst_vaapi_encoder_replace:
+ * @old_encoder_ptr: a pointer to a #GstVaapiEncoder
+ * @new_encoder: a #GstVaapiEncoder
+ *
+ * Atomically replaces the encoder encoder held in @old_encoder_ptr
+ * with @new_encoder. This means that @old_encoder_ptr shall reference
+ * a valid encoder. However, @new_encoder can be NULL.
+ */
 void
 gst_vaapi_encoder_replace (GstVaapiEncoder ** old_encoder_ptr,
     GstVaapiEncoder * new_encoder)
@@ -47,6 +72,7 @@ gst_vaapi_encoder_replace (GstVaapiEncoder ** old_encoder_ptr,
   gst_vaapi_object_replace (old_encoder_ptr, new_encoder);
 }
 
+/* Notifies gst_vaapi_encoder_create_coded_buffer() that a new buffer is free */
 static void
 _coded_buffer_proxy_released_notify (GstVaapiEncoder * encoder)
 {
@@ -55,6 +81,7 @@ _coded_buffer_proxy_released_notify (GstVaapiEncoder * encoder)
   g_mutex_unlock (&encoder->mutex);
 }
 
+/* Creates a new VA coded buffer object proxy, backed from a pool */
 static GstVaapiCodedBufferProxy *
 gst_vaapi_encoder_create_coded_buffer (GstVaapiEncoder * encoder)
 {
@@ -81,6 +108,7 @@ gst_vaapi_encoder_create_coded_buffer (GstVaapiEncoder * encoder)
   return codedbuf_proxy;
 }
 
+/* Notifies gst_vaapi_encoder_create_surface() that a new surface is free */
 static void
 _surface_proxy_released_notify (GstVaapiEncoder * encoder)
 {
@@ -89,6 +117,8 @@ _surface_proxy_released_notify (GstVaapiEncoder * encoder)
   g_mutex_unlock (&encoder->mutex);
 }
 
+/* Creates a new VA surface object proxy, backed from a pool and
+   useful to allocate reconstructed surfaces */
 GstVaapiSurfaceProxy *
 gst_vaapi_encoder_create_surface (GstVaapiEncoder * encoder)
 {
@@ -112,13 +142,16 @@ gst_vaapi_encoder_create_surface (GstVaapiEncoder * encoder)
   return proxy;
 }
 
-void
-gst_vaapi_encoder_release_surface (GstVaapiEncoder * encoder,
-    GstVaapiSurfaceProxy * surface)
-{
-  gst_vaapi_surface_proxy_unref (surface);
-}
-
+/**
+ * gst_vaapi_encoder_put_frame:
+ * @encoder: a #GstVaapiEncoder
+ * @frame: a #GstVideoCodecFrame
+ *
+ * Queues a #GstVideoCodedFrame to the HW encoder. The encoder holds
+ * an extra reference to the @frame.
+ *
+ * Return value: a #GstVaapiEncoderStatus
+ */
 GstVaapiEncoderStatus
 gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,
     GstVideoCodecFrame * frame)
@@ -130,7 +163,7 @@ gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,
 
   for (;;) {
     picture = NULL;
-    status = klass->reordering (encoder, frame, FALSE, &picture);
+    status = klass->reordering (encoder, frame, &picture);
     if (status == GST_VAAPI_ENCODER_STATUS_NO_SURFACE)
       break;
     if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
@@ -174,9 +207,26 @@ error_encode:
   }
 }
 
+/**
+ * gst_vaapi_encoder_get_buffer_with_timeout:
+ * @encoder: a #GstVaapiEncoder
+ * @out_codedbuf_proxy_ptr: the next coded buffer as a #GstVaapiCodedBufferProxy
+ * @timeout: the number of microseconds to wait for the coded buffer, at most
+ *
+ * Upon successful return, *@out_codedbuf_proxy_ptr contains the next
+ * coded buffer as a #GstVaapiCodedBufferProxy. The caller owns this
+ * object, so gst_vaapi_coded_buffer_proxy_unref() shall be called
+ * after usage. Otherwise, @GST_VAAPI_DECODER_STATUS_ERROR_NO_BUFFER
+ * is returned if no coded buffer is available so far (timeout).
+ *
+ * The parent frame is available as a #GstVideoCodecFrame attached to
+ * the user-data anchor of the output coded buffer. Ownership of the
+ * frame is transferred to the coded buffer.
+ *
+ * Return value: a #GstVaapiEncoderStatus
+ */
 GstVaapiEncoderStatus
-gst_vaapi_encoder_get_buffer (GstVaapiEncoder * encoder,
-    GstVideoCodecFrame ** out_frame_ptr,
+gst_vaapi_encoder_get_buffer_with_timeout (GstVaapiEncoder * encoder,
     GstVaapiCodedBufferProxy ** out_codedbuf_proxy_ptr, guint64 timeout)
 {
   GstVaapiEncPicture *picture;
@@ -191,9 +241,9 @@ gst_vaapi_encoder_get_buffer (GstVaapiEncoder * encoder,
   if (!gst_vaapi_surface_sync (picture->surface))
     goto error_invalid_buffer;
 
-  if (out_frame_ptr)
-    *out_frame_ptr = gst_video_codec_frame_ref (picture->frame);
-  gst_vaapi_coded_buffer_proxy_set_user_data (codedbuf_proxy, NULL, NULL);
+  gst_vaapi_coded_buffer_proxy_set_user_data (codedbuf_proxy,
+      gst_video_codec_frame_ref (picture->frame),
+      (GDestroyNotify) gst_video_codec_frame_unref);
 
   if (out_codedbuf_proxy_ptr)
     *out_codedbuf_proxy_ptr = gst_vaapi_coded_buffer_proxy_ref (codedbuf_proxy);
@@ -209,6 +259,14 @@ error_invalid_buffer:
   }
 }
 
+/**
+ * gst_vaapi_encoder_flush:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Submits any pending (reordered) frame for encoding.
+ *
+ * Return value: a #GstVaapiEncoderStatus
+ */
 GstVaapiEncoderStatus
 gst_vaapi_encoder_flush (GstVaapiEncoder * encoder)
 {
@@ -217,21 +275,34 @@ gst_vaapi_encoder_flush (GstVaapiEncoder * encoder)
   return klass->flush (encoder);
 }
 
+/**
+ * gst_vaapi_encoder_get_codec_data:
+ * @encoder: a #GstVaapiEncoder
+ * @out_codec_data_ptr: the pointer to the resulting codec-data (#GstBuffer)
+ *
+ * Returns a codec-data buffer that best represents the encoded
+ * bitstream. Upon successful return, and if the @out_codec_data_ptr
+ * contents is not NULL, then the caller function shall deallocates
+ * that buffer with gst_buffer_unref().
+ *
+ * Return value: a #GstVaapiEncoderStatus
+ */
 GstVaapiEncoderStatus
 gst_vaapi_encoder_get_codec_data (GstVaapiEncoder * encoder,
-    GstBuffer ** codec_data)
+    GstBuffer ** out_codec_data_ptr)
 {
   GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_SUCCESS;
   GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
 
-  *codec_data = NULL;
+  *out_codec_data_ptr = NULL;
   if (!klass->get_codec_data)
     return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
-  ret = klass->get_codec_data (encoder, codec_data);
+  ret = klass->get_codec_data (encoder, out_codec_data_ptr);
   return ret;
 }
 
+/* Ensures the underlying VA context for encoding is created */
 static gboolean
 gst_vaapi_encoder_ensure_context (GstVaapiEncoder * encoder)
 {
@@ -256,21 +327,32 @@ gst_vaapi_encoder_ensure_context (GstVaapiEncoder * encoder)
   return TRUE;
 }
 
+/**
+ * gst_vaapi_encoder_set_format:
+ * @encoder: a #GstVaapiEncoder
+ * @state : a #GstVideoCodecState
+ * @ref_caps: the set of reference caps (from pad template)
+ *
+ * Notifies the encoder of incoming data format (video resolution),
+ * and additional information like framerate.
+ *
+ * Return value: the newly allocated set of caps
+ */
 GstCaps *
 gst_vaapi_encoder_set_format (GstVaapiEncoder * encoder,
-    GstVideoCodecState * in_state, GstCaps * ref_caps)
+    GstVideoCodecState * state, GstCaps * ref_caps)
 {
   GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
   GstCaps *out_caps = NULL;
 
-  if (!GST_VIDEO_INFO_WIDTH (&in_state->info) ||
-      !GST_VIDEO_INFO_HEIGHT (&in_state->info)) {
+  if (!GST_VIDEO_INFO_WIDTH (&state->info) ||
+      !GST_VIDEO_INFO_HEIGHT (&state->info)) {
     GST_WARNING ("encoder set format failed, width or height equal to 0.");
     return NULL;
   }
-  GST_VAAPI_ENCODER_VIDEO_INFO (encoder) = in_state->info;
+  GST_VAAPI_ENCODER_VIDEO_INFO (encoder) = state->info;
 
-  out_caps = klass->set_format (encoder, in_state, ref_caps);
+  out_caps = klass->set_format (encoder, state, ref_caps);
   if (!out_caps)
     goto error;
 
@@ -306,6 +388,7 @@ error:
   return NULL;
 }
 
+/* Base encoder initialization (internal) */
 static gboolean
 gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)
 {
@@ -353,6 +436,7 @@ error_invalid_vtable:
   }
 }
 
+/* Base encoder cleanup (internal) */
 void
 gst_vaapi_encoder_finalize (GstVaapiEncoder * encoder)
 {
@@ -374,6 +458,7 @@ gst_vaapi_encoder_finalize (GstVaapiEncoder * encoder)
   g_mutex_clear (&encoder->mutex);
 }
 
+/* Helper function to create new GstVaapiEncoder instances (internal) */
 GstVaapiEncoder *
 gst_vaapi_encoder_new (const GstVaapiEncoderClass * klass,
     GstVaapiDisplay * display)

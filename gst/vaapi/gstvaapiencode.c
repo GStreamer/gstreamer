@@ -223,19 +223,23 @@ gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 timeout)
 {
   GstVideoEncoder *const venc = GST_VIDEO_ENCODER_CAST (encode);
   GstVaapiEncodeClass *const klass = GST_VAAPIENCODE_GET_CLASS (encode);
-  GstVideoCodecFrame *out_frame = NULL;
+  GstVideoCodecFrame *out_frame;
   GstVaapiCodedBufferProxy *codedbuf_proxy = NULL;
   GstVaapiEncoderStatus status;
   GstBuffer *out_buffer;
   GstFlowReturn ret;
 
-  status = gst_vaapi_encoder_get_buffer (encode->encoder,
-      &out_frame, &codedbuf_proxy, timeout);
+  status = gst_vaapi_encoder_get_buffer_with_timeout (encode->encoder,
+      &codedbuf_proxy, timeout);
   if (status == GST_VAAPI_ENCODER_STATUS_NO_BUFFER)
     return GST_VAAPI_ENCODE_FLOW_TIMEOUT;
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     goto error_get_buffer;
 
+  out_frame = gst_vaapi_coded_buffer_proxy_get_user_data (codedbuf_proxy);
+  if (!out_frame)
+    goto error_get_buffer;
+  gst_video_codec_frame_ref (out_frame);
   gst_video_codec_frame_set_user_data (out_frame, NULL, NULL);
 
   /* Allocate and copy buffer into system memory */
@@ -287,8 +291,6 @@ gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 timeout)
 error_get_buffer:
   {
     GST_ERROR ("failed to get encoded buffer (status %d)", status);
-    if (out_frame)
-      gst_video_codec_frame_unref (out_frame);
     if (codedbuf_proxy)
       gst_vaapi_coded_buffer_proxy_unref (codedbuf_proxy);
     return GST_FLOW_ERROR;
@@ -298,6 +300,7 @@ error_allocate_buffer:
     GST_ERROR ("failed to allocate encoded buffer in system memory");
     if (out_buffer)
       gst_buffer_unref (out_buffer);
+    gst_video_codec_frame_unref (out_frame);
     return ret;
   }
 error_codec_data:

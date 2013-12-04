@@ -30,11 +30,11 @@
 
 G_BEGIN_DECLS
 
+#define GST_VAAPI_ENCODER_CAST(encoder) \
+    ((GstVaapiEncoder *)(encoder))
+
 #define GST_VAAPI_ENCODER_CLASS(klass) \
     ((GstVaapiEncoderClass *)(klass))
-
-#define GST_IS_VAAPI_ENCODER_CLASS(klass) \
-    ((klass) != NULL)
 
 #define GST_VAAPI_ENCODER_GET_CLASS(obj) \
     GST_VAAPI_ENCODER_CLASS(GST_VAAPI_MINI_OBJECT_GET_CLASS(obj))
@@ -63,11 +63,6 @@ G_BEGIN_DECLS
 #define GST_VAAPI_ENCODER_FPS_D(encoder)      (GST_VAAPI_ENCODER_CAST(encoder)->video_info.fps_d)
 #define GST_VAAPI_ENCODER_RATE_CONTROL(encoder)   \
     (GST_VAAPI_ENCODER_CAST(encoder)->rate_control)
-
-#define GST_VAAPI_ENCODER_LOG_ERROR(...)   GST_ERROR( __VA_ARGS__)
-#define GST_VAAPI_ENCODER_LOG_WARNING(...) GST_WARNING( __VA_ARGS__)
-#define GST_VAAPI_ENCODER_LOG_DEBUG(...)   GST_DEBUG( __VA_ARGS__)
-#define GST_VAAPI_ENCODER_LOG_INFO(...)    GST_INFO( __VA_ARGS__)
 
 #define GST_VAAPI_ENCODER_CHECK_STATUS(exp, err_num, err_reason, ...)   \
   if (!(exp)) {                                                         \
@@ -116,7 +111,6 @@ struct _GstVaapiEncoderClass
 
   GstVaapiEncoderStatus (*reordering)   (GstVaapiEncoder * encoder,
                                          GstVideoCodecFrame * in,
-                                         gboolean flush,
                                          GstVaapiEncPicture ** out);
   GstVaapiEncoderStatus (*encode)       (GstVaapiEncoder * encoder,
                                          GstVaapiEncPicture * picture,
@@ -157,13 +151,17 @@ G_GNUC_INTERNAL
 void
 gst_vaapi_encoder_finalize (GstVaapiEncoder * encoder);
 
+G_GNUC_INTERNAL
 GstVaapiSurfaceProxy *
 gst_vaapi_encoder_create_surface (GstVaapiEncoder *
     encoder);
 
-void
+static inline void
 gst_vaapi_encoder_release_surface (GstVaapiEncoder * encoder,
-    GstVaapiSurfaceProxy * surface);
+    GstVaapiSurfaceProxy * proxy)
+{
+  gst_vaapi_surface_proxy_unref (proxy);
+}
 
 G_END_DECLS
 
