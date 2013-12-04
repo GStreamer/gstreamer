@@ -1611,29 +1611,36 @@ gst_v4l2_object_get_codec_caps (void)
   return gst_caps_ref (caps);
 }
 
-/* if the device actually support multi-planar
- * we also allow to use plane in a contiguous manner
- * if the device can do that. Through prefered_non_contiguous */
-static gboolean
-gst_v4l2_object_has_mplane (GstV4l2Object * obj)
+/* gst_v4l2_object_choose_fourcc:
+ * @obj a #GstV4l2Object
+ * @fourcc_splane The format type in single plane representation
+ * @fourcc_mplane The format type in multi-plane representation
+ * @fourcc Set to the first format to try
+ * @fourcc_alt The alternative format to use, or zero if mplane is not
+ * supported. Note that if alternate is used, the prefered_non_contiguous
+ * setting need to be inversed.
+ *
+ * Certain format can be stored into multi-planar buffer type with two
+ * representation. As an example, NV12, which has two planes, can be stored
+ * into 1 plane of multi-planar buffer sturcture, or two. This function will
+ * choose the right format to use base on the object settings.
+ */
+static void
+gst_v4l2_object_choose_fourcc (GstV4l2Object * obj, guint32 fourcc_splane,
+    guint32 fourcc_mplane, guint32 * fourcc, guint32 * fourcc_alt)
 {
-  gboolean ret = FALSE;
-
-  switch (obj->type) {
-    case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
-      ret = (obj->vcap.capabilities & V4L2_CAP_VIDEO_CAPTURE_MPLANE) != 0
-          && obj->prefered_non_contiguous;
-      break;
-    case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
-      ret = (obj->vcap.capabilities & V4L2_CAP_VIDEO_OUTPUT_MPLANE) != 0
-          && obj->prefered_non_contiguous;
-      break;
-    default:
-      ret = FALSE;
-      break;
+  if (V4L2_TYPE_IS_MULTIPLANAR (obj->type)) {
+    if (obj->prefered_non_contiguous) {
+      *fourcc = fourcc_mplane;
+      *fourcc_alt = fourcc_splane;
+    } else {
+      *fourcc = fourcc_splane;
+      *fourcc_alt = fourcc_mplane;
+    }
+  } else {
+    *fourcc = fourcc_splane;
+    *fourcc_alt = 0;
   }
-
-  return ret;
 }
 
 /* collect data for the given caps
@@ -1648,7 +1655,7 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
     struct v4l2_fmtdesc **format, GstVideoInfo * info)
 {
   GstStructure *structure;
-  guint32 fourcc;
+  guint32 fourcc, fourcc_alt = 0;
   const gchar *mimetype;
   struct v4l2_fmtdesc *fmt;
 
@@ -1688,14 +1695,12 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
         fourcc = V4L2_PIX_FMT_YUV422P;
         break;
       case GST_VIDEO_FORMAT_NV12:
-        fourcc =
-            gst_v4l2_object_has_mplane (v4l2object) ? V4L2_PIX_FMT_NV12M :
-            V4L2_PIX_FMT_NV12;
+        gst_v4l2_object_choose_fourcc (v4l2object, V4L2_PIX_FMT_NV12,
+            V4L2_PIX_FMT_NV12M, &fourcc, &fourcc_alt);
         break;
       case GST_VIDEO_FORMAT_NV21:
-        fourcc =
-            gst_v4l2_object_has_mplane (v4l2object) ? V4L2_PIX_FMT_NV21M :
-            V4L2_PIX_FMT_NV21;
+        gst_v4l2_object_choose_fourcc (v4l2object, V4L2_PIX_FMT_NV21,
+            V4L2_PIX_FMT_NV21M, &fourcc, &fourcc_alt);
         break;
 #ifdef V4L2_PIX_FMT_YVYU
       case GST_VIDEO_FORMAT_YVYU:
@@ -1769,6 +1774,15 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
     goto unhandled_format;
 
   fmt = gst_v4l2_object_get_format_from_fourcc (v4l2object, fourcc);
+
+  if (fmt == NULL && fourcc_alt != 0) {
+    GST_DEBUG_OBJECT (v4l2object, "No support for %" GST_FOURCC_FORMAT
+        " trying %" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (fourcc),
+        GST_FOURCC_ARGS (fourcc_alt));
+    v4l2object->prefered_non_contiguous = !v4l2object->prefered_non_contiguous;
+    fmt = gst_v4l2_object_get_format_from_fourcc (v4l2object, fourcc_alt);
+  }
+
   if (fmt == NULL)
     goto unsupported_format;
 
@@ -1793,7 +1807,6 @@ unsupported_format:
     return FALSE;
   }
 }
-
 
 static gboolean
 gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
@@ -2494,28 +2507,8 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   gint width, height, fps_n, fps_d, stride;
   gint i = 0;
 
-  if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
-    /* gst does not distinguish GST_VIDEO_FORMAT_NV21 than GST_VIDEO_FORMAT_NV21M so
-     * we have to check it blindly
-     */
-    if (!gst_v4l2_object_get_caps_info (v4l2object, caps, &fmtdesc, &info)) {
-      /* for example if the device supports NV21 and not NV21M, let's try with
-       * the non prefered one if we initially prefered_non_contiguous to TRUE
-       * in this case.
-       */
-      GST_DEBUG_OBJECT (v4l2object->element,
-          "prefered multiplanar does not exist, try the other one");
-
-      v4l2object->prefered_non_contiguous =
-          !v4l2object->prefered_non_contiguous;
-
-      if (!gst_v4l2_object_get_caps_info (v4l2object, caps, &fmtdesc, &info))
-        goto invalid_caps;
-    }
-  } else {
-    if (!gst_v4l2_object_get_caps_info (v4l2object, caps, &fmtdesc, &info))
-      goto invalid_caps;
-  }
+  if (!gst_v4l2_object_get_caps_info (v4l2object, caps, &fmtdesc, &info))
+    goto invalid_caps;
 
   pixelformat = fmtdesc->pixelformat;
   width = GST_VIDEO_INFO_WIDTH (&info);
