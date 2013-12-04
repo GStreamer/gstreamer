@@ -189,29 +189,10 @@ static GstFlowReturn
 gst_openexr_dec_parse (GstVideoDecoder * decoder,
     GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos)
 {
-  GstByteReader reader;
-  const guint8 *data;
+  guint8 data[8];
   gsize size;
-  guint32 u32;
-  guint64 u64;
-  guint8 version;
-  gboolean single_tile, long_name;
-  gboolean non_image, multipart;
-  /* *INDENT-OFF * */
-  struct
-  {
-    guint32 x1, y1, x2, y2;
-  } data_window = {
-  (guint32) - 1, (guint32) - 1, (guint32) - 1, (guint32) - 1};
-  struct
-  {
-    guint32 w, h;
-    guint8 mode;
-  } tile_desc = {
-  (guint32) - 1, (guint32) - 1, (guint8) - 1};
-  guint8 compression = (guint8) - 1;
-  guint32 chunk_count = (guint32) - 1;
-  /* *INDENT-ON * */
+  guint32 magic, flags;
+  gssize offset;
 
   size = gst_adapter_available (adapter);
 
@@ -221,216 +202,43 @@ gst_openexr_dec_parse (GstVideoDecoder * decoder,
   if (size < 8)
     goto need_more_data;
 
-  data = (const guint8 *) gst_adapter_map (adapter, size);
+  gst_adapter_copy (adapter, data, 0, 8);
 
-  gst_byte_reader_init (&reader, data, size);
-
-  /* Must start with the OpenEXR magic number */
-  if (!gst_byte_reader_peek_uint32_le (&reader, &u32))
-    goto need_more_data;
-
-  if (u32 != 0x01312f76) {
-    for (;;) {
-      guint offset;
-
-      offset = gst_byte_reader_masked_scan_uint32 (&reader, 0xffffffff,
-          0x762f3101, 0, gst_byte_reader_get_remaining (&reader));
-
-      if (offset == (guint) - 1) {
-        gst_adapter_flush (adapter,
-            gst_byte_reader_get_remaining (&reader) - 4);
-        goto need_more_data;
-      }
-
-      if (!gst_byte_reader_skip (&reader, offset))
-        goto need_more_data;
-
-      if (!gst_byte_reader_peek_uint32_le (&reader, &u32))
-        goto need_more_data;
-
-      if (u32 == 0x01312f76) {
-        /* We're skipping, go out, we'll be back */
-        gst_adapter_flush (adapter, gst_byte_reader_get_pos (&reader));
-        goto need_more_data;
-      }
-      if (!gst_byte_reader_skip (&reader, 4))
-        goto need_more_data;
-    }
-  }
-
-  /* Now we're at the magic number */
-  if (!gst_byte_reader_skip (&reader, 4))
-    goto need_more_data;
-
-  /* version and flags */
-  if (!gst_byte_reader_get_uint32_le (&reader, &u32))
-    goto need_more_data;
-
-  version = (u32 & 0xff);
-  if (version != 1 && version != 2) {
-    GST_ERROR_OBJECT (decoder, "Unsupported OpenEXR version %d", version);
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-  single_tile = ! !(u32 & 0x200);
-  long_name = ! !(u32 & 0x400);
-  non_image = ! !(u32 & 0x800);
-  multipart = ! !(u32 & 0x1000);
-  GST_DEBUG_OBJECT (decoder,
-      "OpenEXR image version %d, single tile %d, long name %d, non-image %d, multipart %d",
-      version, single_tile, long_name, non_image, multipart);
-
-  /* attributes */
-  if (multipart) {
-    GST_WARNING_OBJECT (decoder, "Multipart files not supported");
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-  if (non_image) {
-    GST_WARNING_OBJECT (decoder, "Deep-data images not supported");
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-
-  /* Read attributes */
-  for (;;) {
-    const gchar *name, *type;
-    guint8 u8;
-
-    if (!gst_byte_reader_peek_uint8 (&reader, &u8))
+  magic = GST_READ_UINT32_LE (data);
+  flags = GST_READ_UINT32_LE (data + 4);
+  if (magic != 0x01312f76 || ((flags & 0xff) != 1 && (flags & 0xff) != 2) || ((flags & 0x200) && (flags & 0x1800))) {
+    offset = gst_adapter_masked_scan_uint32_peek (adapter, 0xffffffff, 0x762f3101, 0, size, NULL);
+    if (offset == -1) {
+      gst_adapter_flush (adapter, size - 4);
       goto need_more_data;
-    if (u8 == 0) {
-      gst_byte_reader_skip (&reader, 1);
-      break;
     }
 
-    if (!gst_byte_reader_get_string_utf8 (&reader, &name))
-      goto need_more_data;
-    if (!gst_byte_reader_get_string_utf8 (&reader, &type))
-      goto need_more_data;
-    if (!gst_byte_reader_get_uint32_le (&reader, &u32))
-      goto need_more_data;
-    if (gst_byte_reader_get_remaining (&reader) < u32)
-      goto need_more_data;
-
-    if (strcmp (name, "dataWindow") == 0) {
-      if (strcmp (type, "box2i") != 0 || u32 != 16)
-        return GST_FLOW_ERROR;
-
-      data_window.x1 = gst_byte_reader_get_uint32_le_unchecked (&reader);
-      data_window.y1 = gst_byte_reader_get_uint32_le_unchecked (&reader);
-      data_window.x2 = gst_byte_reader_get_uint32_le_unchecked (&reader);
-      data_window.y2 = gst_byte_reader_get_uint32_le_unchecked (&reader);
-    } else if (strcmp (name, "tiles") == 0) {
-      if (strcmp (type, "tiledesc") != 0 || u32 != 9)
-        return GST_FLOW_ERROR;
-      tile_desc.w = gst_byte_reader_get_uint32_le_unchecked (&reader);
-      tile_desc.h = gst_byte_reader_get_uint32_le_unchecked (&reader);
-      tile_desc.mode = gst_byte_reader_get_uint8_unchecked (&reader);
-    } else if (strcmp (name, "compression") == 0) {
-      if (strcmp (type, "compression") != 0 || u32 != 1)
-        return GST_FLOW_ERROR;
-      compression = gst_byte_reader_get_uint8_unchecked (&reader);
-    } else if (strcmp (name, "chunkCount") == 0) {
-      if (strcmp (type, "int") != 0 || u32 != 4)
-        return GST_FLOW_ERROR;
-      chunk_count = gst_byte_reader_get_uint32_le_unchecked (&reader);
-    } else {
-      gst_byte_reader_skip_unchecked (&reader, u32);
-    }
-  }
-
-  if (data_window.x1 == (guint32) - 1)
-    return GST_FLOW_ERROR;
-  if (data_window.x2 < data_window.x1)
-    return GST_FLOW_ERROR;
-  if (data_window.y2 < data_window.y1)
-    return GST_FLOW_ERROR;
-  if (compression == (guint8) - 1)
-    return GST_FLOW_ERROR;
-  if (single_tile && tile_desc.w == (guint32) - 1)
-    return GST_FLOW_ERROR;
-
-  GST_DEBUG_OBJECT (decoder, "Have data window (%u, %u)x(%u, %u)",
-      data_window.x1, data_window.y1, data_window.x2, data_window.y2);
-  GST_DEBUG_OBJECT (decoder, "Have compression %u", compression);
-  if (single_tile)
-    GST_DEBUG_OBJECT (decoder, "Have tiles (%u, %u), mode %u", tile_desc.w,
-        tile_desc.h, tile_desc.mode);
-
-  /* offset table */
-  if (chunk_count == (guint32) - 1) {
-    if (single_tile) {
-      guint xt, yt;
-
-      xt = data_window.x2 - data_window.x1 + 1;
-      xt = (xt + tile_desc.w - 1) / tile_desc.w;
-
-      yt = data_window.y2 - data_window.y1 + 1;
-      yt = (yt + tile_desc.h - 1) / tile_desc.h;
-
-      chunk_count = xt * yt;
-      GST_DEBUG_OBJECT (decoder, "Have %ux%u tiles", xt, yt);
-    } else {
-      chunk_count = data_window.y2 - data_window.y1 + 1;
-
-      switch (compression) {
-        case 0:                /* NO */
-        case 1:                /* RLE */
-        case 2:                /* ZIPS */
-          break;
-        case 3:                /* ZIP */
-        case 5:                /* PXR24 */
-          chunk_count = (chunk_count + 15) / 16;
-          break;
-        case 4:                /* PIZ */
-        case 6:                /* B44 */
-        case 7:                /* B44A */
-          chunk_count = (chunk_count + 31) / 32;
-          break;
-        default:
-          GST_WARNING_OBJECT (decoder, "Unsupported compression %u",
-              compression);
-          return GST_FLOW_NOT_NEGOTIATED;
-      }
-    }
-  } else {
-    GST_WARNING_OBJECT (decoder, "Chunk data not supported");
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
-
-  if (gst_byte_reader_get_remaining (&reader) < chunk_count * 8)
+    /* come back into this function after flushing some data */
+    gst_adapter_flush (adapter, offset);
     goto need_more_data;
-
-  gst_byte_reader_skip_unchecked (&reader, (chunk_count - 1) * 8);
-  u64 = gst_byte_reader_get_uint64_le_unchecked (&reader);
-
-  GST_DEBUG_OBJECT (decoder, "Offset of last chunk %" G_GUINT64_FORMAT, u64);
-
-  /* pixel data */
-
-  /* go to the last pixel data chunk */
-  if (!gst_byte_reader_set_pos (&reader, u64))
-    goto need_more_data;
-
-  /* and read its size and skip it */
-  if (single_tile) {
-    if (!gst_byte_reader_skip (&reader, 4 * 4))
-      goto need_more_data;
-    if (!gst_byte_reader_get_uint32_le (&reader, &u32))
-      goto need_more_data;
-    if (!gst_byte_reader_skip (&reader, u32))
-      goto need_more_data;
-  } else {
-    if (!gst_byte_reader_skip (&reader, 4))
-      goto need_more_data;
-    if (!gst_byte_reader_get_uint32_le (&reader, &u32))
-      goto need_more_data;
-    if (!gst_byte_reader_skip (&reader, u32))
-      goto need_more_data;
   }
 
-  GST_DEBUG_OBJECT (decoder, "Have complete image of size %u",
-      gst_byte_reader_get_pos (&reader));
+  /* valid header, now let's try to find the next one unless we're EOS */
+  if (!at_eos) {
+    gboolean found = FALSE;
 
-  gst_video_decoder_add_to_frame (decoder, gst_byte_reader_get_pos (&reader));
+    while (!found) {
+      offset = gst_adapter_masked_scan_uint32_peek (adapter, 0xffffffff, 0x762f3101, 8, size - 8 - 4, NULL);
+      if (offset == -1)
+        goto need_more_data;
+
+      gst_adapter_copy (adapter, data, offset, 8);
+      magic = GST_READ_UINT32_LE (data);
+      flags = GST_READ_UINT32_LE (data + 4);
+      if (magic == 0x01312f76 && ((flags & 0xff) == 1 || (flags & 0xff) == 2) && (!(flags & 0x200) || !(flags & 0x1800)))
+        found = TRUE;
+    }
+    size = offset;
+  }
+
+  GST_DEBUG_OBJECT (decoder, "Have complete image of size %" G_GSSIZE_FORMAT, size);
+
+  gst_video_decoder_add_to_frame (decoder, size);
 
   return gst_video_decoder_have_frame (decoder);
 
