@@ -2507,6 +2507,9 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   gint width, height, fps_n, fps_d, stride;
   gint i = 0;
 
+  GST_V4L2_CHECK_OPEN (v4l2object);
+  GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
+
   if (!gst_v4l2_object_get_caps_info (v4l2object, caps, &fmtdesc, &info))
     goto invalid_caps;
 
@@ -2535,9 +2538,6 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   GST_DEBUG_OBJECT (v4l2object->element, "Desired format %dx%d, format "
       "%" GST_FOURCC_FORMAT " stride: %d", width, height,
       GST_FOURCC_ARGS (pixelformat), stride);
-
-  GST_V4L2_CHECK_OPEN (v4l2object);
-  GST_V4L2_CHECK_NOT_ACTIVE (v4l2object);
 
   /* MPEG-TS source cameras don't get their format set for some reason.
    * It looks wrong and we weren't able to track down the reason for that code
