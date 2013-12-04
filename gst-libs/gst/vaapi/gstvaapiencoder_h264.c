@@ -1594,6 +1594,12 @@ gst_vaapi_encoder_h264_set_context_info (GstVaapiEncoder * base_encoder)
 
   cip->profile = encoder->profile;
   cip->ref_frames = (encoder->b_frame_num ? 2 : 1) + DEFAULT_SURFACES_COUNT;
+
+  /* Only YUV 4:2:0 formats are supported for now. This means that we
+     have a limit of 3200 bits per macroblock. */
+  /* XXX: check profile and compute RawMbBits */
+  base_encoder->codedbuf_size = (GST_ROUND_UP_16 (cip->width) *
+      GST_ROUND_UP_16 (cip->height) / 256) * 400;
 }
 
 static GstCaps *

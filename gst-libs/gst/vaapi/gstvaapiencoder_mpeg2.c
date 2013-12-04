@@ -635,6 +635,11 @@ gst_vaapi_encoder_mpeg2_set_context_info (GstVaapiEncoder * base_encoder)
 
   cip->profile = to_vaapi_profile (encoder->profile);
   cip->ref_frames = 2;
+
+  /* Only YUV 4:2:0 formats are supported for now. This means that we
+     have a limit of 4608 bits per macroblock. */
+  base_encoder->codedbuf_size = (GST_ROUND_UP_16 (cip->width) *
+      GST_ROUND_UP_16 (cip->height) / 256) * 576;
 }
 
 static gboolean

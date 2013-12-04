@@ -371,9 +371,6 @@ gst_vaapi_encoder_set_format (GstVaapiEncoder * encoder,
   if (!gst_vaapi_encoder_ensure_context (encoder))
     goto error;
 
-  encoder->codedbuf_size = (GST_VAAPI_ENCODER_WIDTH (encoder) *
-      GST_VAAPI_ENCODER_HEIGHT (encoder) * 400) / (16 * 16);
-
   encoder->codedbuf_pool = gst_vaapi_coded_buffer_pool_new (encoder,
       encoder->codedbuf_size);
   if (!encoder->codedbuf_pool) {
