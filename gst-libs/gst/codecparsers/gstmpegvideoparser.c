@@ -124,7 +124,10 @@ static const VLCTable mpeg2_mbaddr_vlc_table[] = {
 GST_DEBUG_CATEGORY (mpegvideo_parser_debug);
 #define GST_CAT_DEFAULT mpegvideo_parser_debug
 
-static gboolean initialized = FALSE;
+#define INITIALIZE_DEBUG_CATEGORY \
+  GST_DEBUG_CATEGORY_INIT (mpegvideo_parser_debug, "codecparsers_mpegvideo", \
+      0, "Mpegvideo parser library");
+
 
 /* Set the Pixel Aspect Ratio in our hdr from a ASR code in the data */
 static void
@@ -232,11 +235,7 @@ gst_mpeg_video_parse (GstMpegVideoPacket * packet,
   gint off;
   GstByteReader br;
 
-  if (!initialized) {
-    GST_DEBUG_CATEGORY_INIT (mpegvideo_parser_debug, "codecparsers_mpegvideo",
-        0, "Mpegvideo parser library");
-    initialized = TRUE;
-  }
+  INITIALIZE_DEBUG_CATEGORY;
 
   if (size <= offset) {
     GST_DEBUG ("Can't parse from offset %d, buffer is to small", offset);
@@ -303,6 +302,8 @@ gst_mpeg_video_packet_parse_sequence_header (const GstMpegVideoPacket * packet,
 
   if (packet->size < 8)
     return FALSE;
+
+  INITIALIZE_DEBUG_CATEGORY;
 
   gst_bit_reader_init (&br, &packet->data[packet->offset], packet->size);
 
