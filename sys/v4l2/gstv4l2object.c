@@ -2558,12 +2558,6 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   }
 
   if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
-    /* even in v4l2 multiplanar mode we can work in contiguous mode
-     * if the device supports it */
-    gint n_v4l_planes =
-        v4l2object->prefered_non_contiguous ? GST_VIDEO_INFO_N_PLANES (&info) :
-        1;
-
     GST_DEBUG_OBJECT (v4l2object->element, "Got format to %dx%d, format "
         "%" GST_FOURCC_FORMAT " colorspace %d, nb planes %d",
         format.fmt.pix_mp.width, format.fmt.pix_mp.height,
@@ -2575,6 +2569,15 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
         format.fmt.pix_mp.height != height ||
         format.fmt.pix_mp.pixelformat != pixelformat ||
         format.fmt.pix_mp.field != field) {
+      /* even in v4l2 multiplanar mode we can work in contiguous mode
+       * if the device supports it */
+      gint n_v4l_planes;
+
+      if (v4l2object->prefered_non_contiguous)
+        n_v4l_planes = GST_VIDEO_INFO_N_PLANES (&info);
+      else
+        n_v4l_planes = 1;
+
       /* something different, set the format */
       GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
           "%" GST_FOURCC_FORMAT, width, height, GST_FOURCC_ARGS (pixelformat));
