@@ -507,6 +507,8 @@ gst_rtp_theora_pay_finish_headers (GstRTPBasePayload * basepayload)
   configuration = g_base64_encode (config, configlen);
 
   /* store for later re-sending */
+  if (rtptheorapay->config_data)
+    g_free (rtptheorapay->config_data);
   rtptheorapay->config_size = configlen - 4 - 3 - 2;
   rtptheorapay->config_data = g_malloc (rtptheorapay->config_size);
   rtptheorapay->config_extra_len = extralen;
