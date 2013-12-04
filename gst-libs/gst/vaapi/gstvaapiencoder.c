@@ -28,56 +28,6 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
-#define GST_VAAPI_ENCODER_LOCK(encoder)                         \
-  G_STMT_START {                                                \
-    g_mutex_lock (&(GST_VAAPI_ENCODER_CAST(encoder))->lock);    \
-  } G_STMT_END
-
-#define GST_VAAPI_ENCODER_UNLOCK(encoder)                               \
-  G_STMT_START {                                                        \
-    g_mutex_unlock (&(GST_VAAPI_ENCODER_CAST(encoder))->lock);          \
-  } G_STMT_END
-
-#define GST_VAAPI_ENCODER_BUF_FREE_WAIT(encoder)                        \
-  G_STMT_START {                                                        \
-    g_cond_wait (&(GST_VAAPI_ENCODER_CAST(encoder))->codedbuf_free,     \
-                 &(GST_VAAPI_ENCODER_CAST(encoder))->lock);             \
-  } G_STMT_END
-
-#define GST_VAAPI_ENCODER_BUF_FREE_SIGNAL(encoder)                      \
-  G_STMT_START {                                                        \
-    g_cond_signal (&(GST_VAAPI_ENCODER_CAST(encoder))->codedbuf_free);  \
-  } G_STMT_END
-
-#define GST_VAAPI_ENCODER_FREE_SURFACE_WAIT(encoder)                    \
-  G_STMT_START {                                                        \
-    g_cond_wait (&(GST_VAAPI_ENCODER_CAST(encoder))->surface_free,      \
-                 &(GST_VAAPI_ENCODER_CAST(encoder))->lock);             \
-  } G_STMT_END
-
-#define GST_VAAPI_ENCODER_FREE_SURFACE_SIGNAL(encoder)                  \
-  G_STMT_START {                                                        \
-    g_cond_signal (&(GST_VAAPI_ENCODER_CAST(encoder))->surface_free);   \
-  } G_STMT_END
-
-#define GST_VAAPI_ENCODER_SYNC_SIGNAL(encoder)                          \
-  G_STMT_START {                                                        \
-    g_cond_signal (&(GST_VAAPI_ENCODER_CAST(encoder))->sync_ready);     \
-  } G_STMT_END
-
-static inline gboolean
-GST_VAAPI_ENCODER_SYNC_WAIT_TIMEOUT (GstVaapiEncoder * encoder, gint64 timeout)
-{
-  gint64 end_time = g_get_monotonic_time () + timeout;
-  return g_cond_wait_until (&encoder->sync_ready, &encoder->lock, end_time);
-}
-
-typedef struct
-{
-  GstVaapiEncPicture *picture;
-  GstVaapiCodedBufferProxy *buf;
-} GstVaapiEncoderSyncPic;
-
 GstVaapiEncoder *
 gst_vaapi_encoder_ref (GstVaapiEncoder * encoder)
 {
@@ -100,9 +50,9 @@ gst_vaapi_encoder_replace (GstVaapiEncoder ** old_encoder_ptr,
 static void
 _coded_buffer_proxy_released_notify (GstVaapiEncoder * encoder)
 {
-  GST_VAAPI_ENCODER_LOCK (encoder);
-  GST_VAAPI_ENCODER_BUF_FREE_SIGNAL (encoder);
-  GST_VAAPI_ENCODER_UNLOCK (encoder);
+  g_mutex_lock (&encoder->mutex);
+  g_cond_signal (&encoder->codedbuf_free);
+  g_mutex_unlock (&encoder->mutex);
 }
 
 static GstVaapiCodedBufferProxy *
@@ -112,17 +62,17 @@ gst_vaapi_encoder_create_coded_buffer (GstVaapiEncoder * encoder)
     GST_VAAPI_CODED_BUFFER_POOL (encoder->codedbuf_pool);
   GstVaapiCodedBufferProxy *codedbuf_proxy;
 
-  GST_VAAPI_ENCODER_LOCK (encoder);
+  g_mutex_lock (&encoder->mutex);
   do {
     codedbuf_proxy = gst_vaapi_coded_buffer_proxy_new_from_pool (pool);
     if (codedbuf_proxy)
       break;
 
     /* Wait for a free coded buffer to become available */
-    GST_VAAPI_ENCODER_BUF_FREE_WAIT (encoder);
+    g_cond_wait (&encoder->codedbuf_free, &encoder->mutex);
     codedbuf_proxy = gst_vaapi_coded_buffer_proxy_new_from_pool (pool);
   } while (0);
-  GST_VAAPI_ENCODER_UNLOCK (encoder);
+  g_mutex_unlock (&encoder->mutex);
   if (!codedbuf_proxy)
     return NULL;
 
@@ -134,7 +84,9 @@ gst_vaapi_encoder_create_coded_buffer (GstVaapiEncoder * encoder)
 static void
 _surface_proxy_released_notify (GstVaapiEncoder * encoder)
 {
-  GST_VAAPI_ENCODER_FREE_SURFACE_SIGNAL (encoder);
+  g_mutex_lock (&encoder->mutex);
+  g_cond_signal (&encoder->surface_free);
+  g_mutex_unlock (&encoder->mutex);
 }
 
 GstVaapiSurfaceProxy *
@@ -142,19 +94,21 @@ gst_vaapi_encoder_create_surface (GstVaapiEncoder * encoder)
 {
   GstVaapiSurfaceProxy *proxy;
 
-  g_assert (encoder && encoder->context);
-  g_return_val_if_fail (encoder->context, NULL);
+  g_return_val_if_fail (encoder->context != NULL, NULL);
 
-  GST_VAAPI_ENCODER_LOCK (encoder);
-  while (!gst_vaapi_context_get_surface_count (encoder->context)) {
-    GST_VAAPI_ENCODER_FREE_SURFACE_WAIT (encoder);
+  g_mutex_lock (&encoder->mutex);
+  for (;;) {
+    proxy = gst_vaapi_context_get_surface_proxy (encoder->context);
+    if (proxy)
+      break;
+
+    /* Wait for a free surface proxy to become available */
+    g_cond_wait (&encoder->surface_free, &encoder->mutex);
   }
-  proxy = gst_vaapi_context_get_surface_proxy (encoder->context);
-  GST_VAAPI_ENCODER_UNLOCK (encoder);
+  g_mutex_unlock (&encoder->mutex);
 
   gst_vaapi_surface_proxy_set_destroy_notify (proxy,
       (GDestroyNotify) _surface_proxy_released_notify, encoder);
-
   return proxy;
 }
 
@@ -162,174 +116,97 @@ void
 gst_vaapi_encoder_release_surface (GstVaapiEncoder * encoder,
     GstVaapiSurfaceProxy * surface)
 {
-  GST_VAAPI_ENCODER_LOCK (encoder);
   gst_vaapi_surface_proxy_unref (surface);
-  GST_VAAPI_ENCODER_UNLOCK (encoder);
-}
-
-static GstVaapiEncoderSyncPic *
-_create_sync_picture (GstVaapiEncPicture * picture,
-    GstVaapiCodedBufferProxy * coded_buf)
-{
-  GstVaapiEncoderSyncPic *sync = g_slice_new0 (GstVaapiEncoderSyncPic);
-
-  g_assert (picture && coded_buf);
-  sync->picture = gst_vaapi_enc_picture_ref (picture);
-  sync->buf = gst_vaapi_coded_buffer_proxy_ref (coded_buf);
-  return sync;
-}
-
-static void
-_free_sync_picture (GstVaapiEncoder * encoder,
-    GstVaapiEncoderSyncPic * sync_pic)
-{
-  g_assert (sync_pic);
-
-  if (sync_pic->picture)
-    gst_vaapi_enc_picture_unref (sync_pic->picture);
-  if (sync_pic->buf)
-    gst_vaapi_coded_buffer_proxy_unref (sync_pic->buf);
-  g_slice_free (GstVaapiEncoderSyncPic, sync_pic);
-}
-
-static void
-gst_vaapi_encoder_free_sync_pictures (GstVaapiEncoder * encoder)
-{
-  GstVaapiEncoderSyncPic *sync;
-
-  GST_VAAPI_ENCODER_LOCK (encoder);
-  while (!g_queue_is_empty (&encoder->sync_pictures)) {
-    sync =
-        (GstVaapiEncoderSyncPic *) g_queue_pop_head (&encoder->sync_pictures);
-    GST_VAAPI_ENCODER_UNLOCK (encoder);
-    _free_sync_picture (encoder, sync);
-    GST_VAAPI_ENCODER_LOCK (encoder);
-  }
-  GST_VAAPI_ENCODER_UNLOCK (encoder);
-}
-
-static void
-gst_vaapi_encoder_push_sync_picture (GstVaapiEncoder * encoder,
-    GstVaapiEncoderSyncPic * sync_pic)
-{
-  GST_VAAPI_ENCODER_LOCK (encoder);
-  g_queue_push_tail (&encoder->sync_pictures, sync_pic);
-  GST_VAAPI_ENCODER_SYNC_SIGNAL (encoder);
-  GST_VAAPI_ENCODER_UNLOCK (encoder);
-}
-
-static GstVaapiEncoderStatus
-gst_vaapi_encoder_pop_sync_picture (GstVaapiEncoder * encoder,
-    GstVaapiEncoderSyncPic ** sync_pic, guint64 timeout)
-{
-  GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_SUCCESS;
-
-  *sync_pic = NULL;
-
-  GST_VAAPI_ENCODER_LOCK (encoder);
-  if (g_queue_is_empty (&encoder->sync_pictures) &&
-      !GST_VAAPI_ENCODER_SYNC_WAIT_TIMEOUT (encoder, timeout))
-    goto timeout;
-
-  if (g_queue_is_empty (&encoder->sync_pictures)) {
-    ret = GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN;
-    goto end;
-  }
-
-  *sync_pic =
-      (GstVaapiEncoderSyncPic *) g_queue_pop_head (&encoder->sync_pictures);
-  g_assert (*sync_pic);
-  ret = GST_VAAPI_ENCODER_STATUS_SUCCESS;
-  goto end;
-
-timeout:
-  ret = GST_VAAPI_ENCODER_STATUS_NO_BUFFER;
-
-end:
-  GST_VAAPI_ENCODER_UNLOCK (encoder);
-  return ret;
 }
 
 GstVaapiEncoderStatus
 gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,
     GstVideoCodecFrame * frame)
 {
-  GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_SUCCESS;
-  GstVaapiEncoderClass *klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
-  GstVaapiEncPicture *picture = NULL;
-  GstVaapiCodedBufferProxy *coded_buf = NULL;
-  GstVaapiEncoderSyncPic *sync_pic = NULL;
+  GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
+  GstVaapiEncoderStatus status;
+  GstVaapiEncPicture *picture;
+  GstVaapiCodedBufferProxy *codedbuf_proxy;
 
-again:
-  picture = NULL;
-  sync_pic = NULL;
-  ret = klass->reordering (encoder, frame, FALSE, &picture);
-  if (ret == GST_VAAPI_ENCODER_STATUS_NO_SURFACE)
-    return GST_VAAPI_ENCODER_STATUS_SUCCESS;
-  if (ret != GST_VAAPI_ENCODER_STATUS_SUCCESS)
-    goto error;
+  for (;;) {
+    picture = NULL;
+    status = klass->reordering (encoder, frame, FALSE, &picture);
+    if (status == GST_VAAPI_ENCODER_STATUS_NO_SURFACE)
+      break;
+    if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+      goto error_reorder_frame;
 
-  coded_buf = gst_vaapi_encoder_create_coded_buffer (encoder);
-  if (!coded_buf) {
-    ret = GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
-    goto error;
+    codedbuf_proxy = gst_vaapi_encoder_create_coded_buffer (encoder);
+    if (!codedbuf_proxy)
+      goto error_create_coded_buffer;
+
+    status = klass->encode (encoder, picture, codedbuf_proxy);
+    if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+      goto error_encode;
+
+    gst_vaapi_coded_buffer_proxy_set_user_data (codedbuf_proxy,
+        picture, (GDestroyNotify) gst_vaapi_enc_picture_unref);
+    g_async_queue_push (encoder->codedbuf_queue, codedbuf_proxy);
+
+    /* Try again with any pending reordered frame now available for encoding */
+    frame = NULL;
   }
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
-  ret = klass->encode (encoder, picture, coded_buf);
-  if (ret != GST_VAAPI_ENCODER_STATUS_SUCCESS)
-    goto error;
-
-  /* another thread would sync and get coded buffer */
-  sync_pic = _create_sync_picture (picture, coded_buf);
-  gst_vaapi_coded_buffer_proxy_replace (&coded_buf, NULL);
-  gst_vaapi_enc_picture_replace (&picture, NULL);
-  gst_vaapi_encoder_push_sync_picture (encoder, sync_pic);
-
-  frame = NULL;
-  goto again;
-
-error:
-  gst_vaapi_enc_picture_replace (&picture, NULL);
-  gst_vaapi_coded_buffer_proxy_replace (&coded_buf, NULL);
-  if (sync_pic)
-    _free_sync_picture (encoder, sync_pic);
-  GST_ERROR ("encoding failed, error:%d", ret);
-  return ret;
+  /* ERRORS */
+error_reorder_frame:
+  {
+    GST_ERROR ("failed to process reordered frames");
+    return status;
+  }
+error_create_coded_buffer:
+  {
+    GST_ERROR ("failed to allocate coded buffer");
+    gst_vaapi_enc_picture_unref (picture);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
+  }
+error_encode:
+  {
+    GST_ERROR ("failed to encode frame (status = %d)", status);
+    gst_vaapi_enc_picture_unref (picture);
+    gst_vaapi_coded_buffer_proxy_unref (codedbuf_proxy);
+    return status;
+  }
 }
 
 GstVaapiEncoderStatus
 gst_vaapi_encoder_get_buffer (GstVaapiEncoder * encoder,
-    GstVideoCodecFrame ** frame,
-    GstVaapiCodedBufferProxy ** codedbuf, gint64 us_of_timeout)
+    GstVideoCodecFrame ** out_frame_ptr,
+    GstVaapiCodedBufferProxy ** out_codedbuf_proxy_ptr, guint64 timeout)
 {
-  GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_SUCCESS;
-  GstVaapiEncoderSyncPic *sync_pic = NULL;
-  GstVaapiSurfaceStatus surface_status;
   GstVaapiEncPicture *picture;
+  GstVaapiCodedBufferProxy *codedbuf_proxy;
 
-  ret = gst_vaapi_encoder_pop_sync_picture (encoder, &sync_pic, us_of_timeout);
-  if (ret != GST_VAAPI_ENCODER_STATUS_SUCCESS)
-    goto end;
+  codedbuf_proxy = g_async_queue_timeout_pop (encoder->codedbuf_queue, timeout);
+  if (!codedbuf_proxy)
+    return GST_VAAPI_ENCODER_STATUS_NO_BUFFER;
 
-  picture = sync_pic->picture;
+  /* Wait for completion of all operations and report any error that occurred */
+  picture = gst_vaapi_coded_buffer_proxy_get_user_data (codedbuf_proxy);
+  if (!gst_vaapi_surface_sync (picture->surface))
+    goto error_invalid_buffer;
 
-  if (!picture->surface || !gst_vaapi_surface_sync (picture->surface)) {
-    ret = GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
-    goto end;
+  if (out_frame_ptr)
+    *out_frame_ptr = gst_video_codec_frame_ref (picture->frame);
+  gst_vaapi_coded_buffer_proxy_set_user_data (codedbuf_proxy, NULL, NULL);
+
+  if (out_codedbuf_proxy_ptr)
+    *out_codedbuf_proxy_ptr = gst_vaapi_coded_buffer_proxy_ref (codedbuf_proxy);
+  gst_vaapi_coded_buffer_proxy_unref (codedbuf_proxy);
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  /* ERRORS */
+error_invalid_buffer:
+  {
+    GST_ERROR ("failed to encode the frame");
+    gst_vaapi_coded_buffer_proxy_unref (codedbuf_proxy);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_SURFACE;
   }
-  if (!gst_vaapi_surface_query_status (picture->surface, &surface_status)) {
-    ret = GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_SURFACE;
-    goto end;
-  }
-  if (frame)
-    *frame = gst_video_codec_frame_ref (picture->frame);
-  if (codedbuf)
-    *codedbuf = gst_vaapi_coded_buffer_proxy_ref (sync_pic->buf);
-
-end:
-  if (sync_pic)
-    _free_sync_picture (encoder, sync_pic);
-  return ret;
 }
 
 GstVaapiEncoderStatus
@@ -457,11 +334,14 @@ gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)
 
   gst_video_info_init (&encoder->video_info);
 
-  g_mutex_init (&encoder->lock);
-  g_cond_init (&encoder->codedbuf_free);
+  g_mutex_init (&encoder->mutex);
   g_cond_init (&encoder->surface_free);
-  g_queue_init (&encoder->sync_pictures);
-  g_cond_init (&encoder->sync_ready);
+  g_cond_init (&encoder->codedbuf_free);
+
+  encoder->codedbuf_queue = g_async_queue_new_full ((GDestroyNotify)
+      gst_vaapi_coded_buffer_proxy_unref);
+  if (!encoder->codedbuf_queue)
+    return FALSE;
 
   return klass->init (encoder);
 
@@ -480,17 +360,18 @@ gst_vaapi_encoder_finalize (GstVaapiEncoder * encoder)
 
   klass->finalize (encoder);
 
-  gst_vaapi_encoder_free_sync_pictures (encoder);
-  gst_vaapi_video_pool_replace (&encoder->codedbuf_pool, NULL);
-
   gst_vaapi_object_replace (&encoder->context, NULL);
   gst_vaapi_display_replace (&encoder->display, NULL);
   encoder->va_display = NULL;
-  g_mutex_clear (&encoder->lock);
-  g_cond_clear (&encoder->codedbuf_free);
+
+  gst_vaapi_video_pool_replace (&encoder->codedbuf_pool, NULL);
+  if (encoder->codedbuf_queue) {
+    g_async_queue_unref (encoder->codedbuf_queue);
+    encoder->codedbuf_queue = NULL;
+  }
   g_cond_clear (&encoder->surface_free);
-  g_queue_clear (&encoder->sync_pictures);
-  g_cond_clear (&encoder->sync_ready);
+  g_cond_clear (&encoder->codedbuf_free);
+  g_mutex_clear (&encoder->mutex);
 }
 
 GstVaapiEncoder *

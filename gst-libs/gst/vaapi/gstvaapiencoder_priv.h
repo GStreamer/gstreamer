@@ -92,15 +92,12 @@ struct _GstVaapiEncoder
   GstVideoInfo video_info;
   GstVaapiRateControl rate_control;
 
-  GMutex lock;
+  GMutex mutex;
   GCond surface_free;
   GCond codedbuf_free;
   guint codedbuf_size;
   GstVaapiVideoPool *codedbuf_pool;
-
-  /* queue for sync */
-  GQueue sync_pictures;
-  GCond sync_ready;
+  GAsyncQueue *codedbuf_queue;
 };
 
 struct _GstVaapiEncoderClass

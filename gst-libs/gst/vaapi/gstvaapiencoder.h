@@ -87,7 +87,7 @@ gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,
 GstVaapiEncoderStatus
 gst_vaapi_encoder_get_buffer (GstVaapiEncoder * encoder,
     GstVideoCodecFrame ** out_frame_ptr,
-    GstVaapiCodedBufferProxy ** out_codedbuf_ptr, gint64 timeout);
+    GstVaapiCodedBufferProxy ** out_codedbuf_proxy_ptr, guint64 timeout);
 
 GstVaapiEncoderStatus
 gst_vaapi_encoder_flush (GstVaapiEncoder * encoder);
