@@ -63,6 +63,10 @@ struct _GstDashDemuxStream
 
   GstCaps *input_caps;
 
+  GstFlowReturn last_ret;
+  GstClockTime position;
+  gboolean restart_download;
+
   /*
    * Need to store the status for the download and
    * stream tasks separately as they are working at
@@ -94,6 +98,10 @@ struct _GstDashDemuxStream
   gboolean has_data_queued;
 
   GstDataQueue *queue;
+
+  /* Download task */
+  GMutex download_mutex;
+  GCond download_cond;
   GstTask *download_task;
   GRecMutex download_task_lock;
 
@@ -124,6 +132,8 @@ struct _GstDashDemux
   GstBuffer *manifest;
   GstUriDownloader *downloader;
   GstMpdClient *client;         /* MPD client */
+  GMutex client_lock;
+
   gboolean end_of_period;
   gboolean end_of_manifest;
 
@@ -136,9 +146,6 @@ struct _GstDashDemux
   GstTask *stream_task;
   GRecMutex stream_task_lock;
 
-  /* Download task */
-  GMutex download_mutex;
-  GCond download_cond;
   gboolean cancelled;
 
   /* Manifest update */
