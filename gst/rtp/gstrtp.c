@@ -98,6 +98,7 @@
 #include "gstrtpvrawdepay.h"
 #include "gstrtpvrawpay.h"
 #include "gstrtpstreampay.h"
+#include "gstrtpstreamdepay.h"
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -327,6 +328,9 @@ plugin_init (GstPlugin * plugin)
     return FALSE;
 
   if (!gst_rtp_stream_pay_plugin_init (plugin))
+    return FALSE;
+
+  if (!gst_rtp_stream_depay_plugin_init (plugin))
     return FALSE;
 
   return TRUE;
