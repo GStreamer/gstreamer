@@ -2574,8 +2574,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
         format.fmt.pix_mp.width != width ||
         format.fmt.pix_mp.height != height ||
         format.fmt.pix_mp.pixelformat != pixelformat ||
-        format.fmt.pix_mp.field != field ||
-        format.fmt.pix_mp.num_planes != n_v4l_planes) {
+        format.fmt.pix_mp.field != field) {
       /* something different, set the format */
       GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
           "%" GST_FOURCC_FORMAT, width, height, GST_FOURCC_ARGS (pixelformat));
@@ -2641,8 +2640,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
         format.fmt.pix.width != width ||
         format.fmt.pix.height != height ||
         format.fmt.pix.pixelformat != pixelformat ||
-        format.fmt.pix.field != field
-        || format.fmt.pix.bytesperline != stride) {
+        format.fmt.pix.field != field) {
       /* something different, set the format */
       GST_DEBUG_OBJECT (v4l2object->element, "Setting format to %dx%d, format "
           "%" GST_FOURCC_FORMAT " bytesperline %d", width, height,
