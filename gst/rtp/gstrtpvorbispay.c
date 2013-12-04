@@ -761,8 +761,14 @@ gst_rtp_vorbis_pay_handle_buffer (GstRTPBasePayload * basepayload,
     ret = GST_FLOW_OK;
     goto done;
   } else if (rtpvorbispay->headers) {
-    if (!gst_rtp_vorbis_pay_finish_headers (basepayload))
-      goto header_error;
+    if (rtpvorbispay->need_headers) {
+      if (!gst_rtp_vorbis_pay_finish_headers (basepayload))
+        goto header_error;
+    } else {
+      g_list_free_full (rtpvorbispay->headers,
+          (GDestroyNotify) gst_buffer_unref);
+      rtpvorbispay->headers = NULL;
+    }
   }
 
   /* there is a config request, see if we need to insert it */
