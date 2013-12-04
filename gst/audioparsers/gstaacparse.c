@@ -1392,6 +1392,7 @@ gst_aac_parse_sink_getcaps (GstBaseParse * parse, GstCaps * filter)
 
     res = gst_caps_intersect_full (peercaps, templ, GST_CAPS_INTERSECT_FIRST);
     gst_caps_unref (peercaps);
+    gst_caps_unref (templ);
   } else {
     res = templ;
   }
