@@ -2536,6 +2536,8 @@ gst_video_decoder_set_estimate_rate
 gst_video_decoder_set_output_state
 gst_video_decoder_set_max_errors
 gst_video_decoder_set_packetized
+gst_video_decoder_get_needs_format
+gst_video_decoder_set_needs_format
 gst_video_decoder_merge_tags
 <SUBSECTION Standard>
 GST_IS_VIDEO_DECODER

@@ -316,6 +316,11 @@ void     gst_video_decoder_set_max_errors (GstVideoDecoder * dec,
 
 gint     gst_video_decoder_get_max_errors (GstVideoDecoder * dec);
 
+void     gst_video_decoder_set_needs_format (GstVideoDecoder * dec,
+                                             gboolean enabled);
+
+gboolean gst_video_decoder_get_needs_format (GstVideoDecoder * dec);
+
 void     gst_video_decoder_set_latency (GstVideoDecoder *decoder,
 					GstClockTime min_latency,
 					GstClockTime max_latency);

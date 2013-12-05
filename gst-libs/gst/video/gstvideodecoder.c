@@ -336,6 +336,7 @@ struct _GstVideoDecoderPrivate
   gboolean had_output_data;
   gboolean had_input_data;
 
+  gboolean needs_format;
   gboolean do_caps;
 
   /* ... being tracked here;
@@ -558,6 +559,7 @@ gst_video_decoder_init (GstVideoDecoder * decoder, GstVideoDecoderClass * klass)
   decoder->priv->input_adapter = gst_adapter_new ();
   decoder->priv->output_adapter = gst_adapter_new ();
   decoder->priv->packetized = TRUE;
+  decoder->priv->needs_format = FALSE;
 
   gst_video_decoder_reset (decoder, TRUE, TRUE);
 }
@@ -1980,6 +1982,9 @@ gst_video_decoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     }
     decoder->priv->do_caps = FALSE;
   }
+
+  if (G_UNLIKELY (!decoder->priv->input_state && decoder->priv->needs_format))
+    goto not_negotiated;
 
   GST_LOG_OBJECT (decoder,
       "chain PTS %" GST_TIME_FORMAT ", DTS %" GST_TIME_FORMAT " duration %"
@@ -3444,6 +3449,50 @@ gst_video_decoder_get_max_errors (GstVideoDecoder * dec)
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (dec), 0);
 
   return dec->priv->max_errors;
+}
+
+/**
+ * gst_video_decoder_set_needs_format:
+ * @dec: a #GstVideoDecoder
+ * @enabled: new state
+ *
+ * Configures decoder format needs.  If enabled, subclass needs to be
+ * negotiated with format caps before it can process any data.  It will then
+ * never be handed any data before it has been configured.
+ * Otherwise, it might be handed data without having been configured and
+ * is then expected being able to do so either by default
+ * or based on the input data.
+ *
+ * Since: 1.4
+ */
+void
+gst_video_decoder_set_needs_format (GstVideoDecoder * dec, gboolean enabled)
+{
+  g_return_if_fail (GST_IS_VIDEO_DECODER (dec));
+
+  dec->priv->needs_format = enabled;
+}
+
+/**
+ * gst_video_decoder_get_needs_format:
+ * @dec: a #GstVideoDecoder
+ *
+ * Queries decoder required format handling.
+ *
+ * Returns: TRUE if required format handling is enabled.
+ *
+ * Since: 1.4
+ */
+gboolean
+gst_video_decoder_get_needs_format (GstVideoDecoder * dec)
+{
+  gboolean result;
+
+  g_return_val_if_fail (GST_IS_VIDEO_DECODER (dec), FALSE);
+
+  result = dec->priv->needs_format;
+
+  return result;
 }
 
 /**
