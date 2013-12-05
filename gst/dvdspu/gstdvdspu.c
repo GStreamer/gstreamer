@@ -1242,9 +1242,10 @@ gst_dvd_spu_subpic_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_CUSTOM_DOWNSTREAM_OOB:
     {
       const GstStructure *structure = gst_event_get_structure (event);
+      const gchar *name = gst_structure_get_name (structure);
       gboolean need_push;
 
-      if (!gst_structure_has_name (structure, "application/x-gst-dvd")) {
+      if (!g_str_has_prefix (name, "application/x-gst-dvd")) {
         res = gst_pad_event_default (pad, parent, event);
         break;
       }
