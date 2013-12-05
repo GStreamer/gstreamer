@@ -2954,7 +2954,7 @@ gst_audio_decoder_get_needs_format (GstAudioDecoder * dec)
 {
   gboolean result;
 
-  g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), 0);
+  g_return_val_if_fail (GST_IS_AUDIO_DECODER (dec), FALSE);
 
   GST_OBJECT_LOCK (dec);
   result = dec->priv->needs_format;
