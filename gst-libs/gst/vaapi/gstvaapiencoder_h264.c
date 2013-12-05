@@ -1592,6 +1592,15 @@ gst_vaapi_encoder_h264_set_context_info (GstVaapiEncoder * base_encoder)
   GstVaapiContextInfo *const cip = &base_encoder->context_info;
   const guint DEFAULT_SURFACES_COUNT = 3;
 
+  /* Maximum sizes for common headers (in bits) */
+  enum {
+    MAX_SPS_HDR_SIZE = 16473,
+    MAX_VUI_PARAMS_SIZE = 210,
+    MAX_HRD_PARAMS_SIZE = 4103,
+    MAX_PPS_HDR_SIZE = 101,
+    MAX_SLICE_HDR_SIZE = 397 + 2572 + 6670 + 2402,
+  };
+
   cip->profile = encoder->profile;
   cip->ref_frames = (encoder->b_frame_num ? 2 : 1) + DEFAULT_SURFACES_COUNT;
 
@@ -1600,6 +1609,19 @@ gst_vaapi_encoder_h264_set_context_info (GstVaapiEncoder * base_encoder)
   /* XXX: check profile and compute RawMbBits */
   base_encoder->codedbuf_size = (GST_ROUND_UP_16 (cip->width) *
       GST_ROUND_UP_16 (cip->height) / 256) * 400;
+
+  /* Account for SPS header */
+  /* XXX: exclude scaling lists, MVC/SVC extensions */
+  base_encoder->codedbuf_size += 4 + GST_ROUND_UP_8 (MAX_SPS_HDR_SIZE +
+      MAX_VUI_PARAMS_SIZE + 2 * MAX_HRD_PARAMS_SIZE) / 8;
+
+  /* Account for PPS header */
+  /* XXX: exclude slice groups, scaling lists, MVC/SVC extensions */
+  base_encoder->codedbuf_size += 4 + GST_ROUND_UP_8 (MAX_PPS_HDR_SIZE) / 8;
+
+  /* Account for slice header. At most 200 slices are supported */
+  base_encoder->codedbuf_size += 200 * (4 +
+      GST_ROUND_UP_8 (MAX_SLICE_HDR_SIZE) / 8);
 }
 
 static GstCaps *

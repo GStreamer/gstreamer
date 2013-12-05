@@ -633,6 +633,16 @@ gst_vaapi_encoder_mpeg2_set_context_info (GstVaapiEncoder * base_encoder)
   GstVaapiEncoderMpeg2 *const encoder = GST_VAAPI_ENCODER_MPEG2 (base_encoder);
   GstVaapiContextInfo *const cip = &base_encoder->context_info;
 
+  /* Maximum sizes for common headers (in bytes) */
+  enum {
+    MAX_SEQ_HDR_SIZE = 140,
+    MAX_SEQ_EXT_SIZE = 10,
+    MAX_GOP_SIZE = 8,
+    MAX_PIC_HDR_SIZE = 10,
+    MAX_PIC_EXT_SIZE = 11,
+    MAX_SLICE_HDR_SIZE = 8,
+  };
+
   cip->profile = to_vaapi_profile (encoder->profile);
   cip->ref_frames = 2;
 
@@ -640,6 +650,18 @@ gst_vaapi_encoder_mpeg2_set_context_info (GstVaapiEncoder * base_encoder)
      have a limit of 4608 bits per macroblock. */
   base_encoder->codedbuf_size = (GST_ROUND_UP_16 (cip->width) *
       GST_ROUND_UP_16 (cip->height) / 256) * 576;
+
+  /* Account for Sequence, GOP, and Picture headers */
+  /* XXX: exclude unused Sequence Display Extension, Sequence Scalable
+     Extension, Quantization Matrix Extension, Picture Display Extension,
+     Picture Temporal Scalable Extension, Picture Spatial Scalable
+     Extension */
+  base_encoder->codedbuf_size += MAX_SEQ_HDR_SIZE + MAX_SEQ_EXT_SIZE +
+      MAX_GOP_SIZE + MAX_PIC_HDR_SIZE + MAX_PIC_EXT_SIZE;
+
+  /* Account for Slice headers. We use one slice per line of macroblock */
+  base_encoder->codedbuf_size += (GST_ROUND_UP_16 (cip->height) / 16) *
+      MAX_SLICE_HDR_SIZE;
 }
 
 static gboolean
