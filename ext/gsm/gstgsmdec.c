@@ -104,6 +104,7 @@ gst_gsmdec_class_init (GstGSMDecClass * klass)
 static void
 gst_gsmdec_init (GstGSMDec * gsmdec)
 {
+  gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (gsmdec), TRUE);
 }
 
 static gboolean
