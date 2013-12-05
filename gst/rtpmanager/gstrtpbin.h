@@ -83,7 +83,11 @@ struct _GstRtpBinClass {
   /* action signals */
   void        (*clear_pt_map)         (GstRtpBin *rtpbin);
   void        (*reset_sync)           (GstRtpBin *rtpbin);
-  RTPSession* (*get_internal_session) (GstRtpBin *rtpbin, guint session_id);
+  RTPSession* (*get_internal_session) (GstRtpBin *rtpbin, guint session);
+  GstElement* (*request_rtp_encoder)  (GstRtpBin *rtpbin, guint session);
+  GstElement* (*request_rtp_decoder)  (GstRtpBin *rtpbin, guint session);
+  GstElement* (*request_rtcp_encoder) (GstRtpBin *rtpbin, guint session);
+  GstElement* (*request_rtcp_decoder) (GstRtpBin *rtpbin, guint session);
 
   /* session manager signals */
   void     (*on_new_ssrc)       (GstRtpBin *rtpbin, guint session, guint32 ssrc);
