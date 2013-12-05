@@ -176,7 +176,7 @@ gst_flac_dec_class_init (GstFlacDecClass * klass)
 static void
 gst_flac_dec_init (GstFlacDec * flacdec)
 {
-  /* nothing to do here */
+  gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (flacdec), TRUE);
 }
 
 static gboolean
