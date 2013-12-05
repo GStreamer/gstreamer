@@ -1858,8 +1858,9 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   }
 
   /* always resync after a discont */
-  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT))) {
-    GST_DEBUG_OBJECT (sink, "resync after discont");
+  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_DISCONT) ||
+          GST_BUFFER_FLAG_IS_SET (buf, GST_BUFFER_FLAG_RESYNC))) {
+    GST_DEBUG_OBJECT (sink, "resync after discont/resync");
     goto no_align;
   }
 
