@@ -141,6 +141,8 @@ gst_wavpack_dec_init (GstWavpackDec * dec)
   dec->context = NULL;
   dec->stream_reader = gst_wavpack_stream_reader_new ();
 
+  gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (dec), TRUE);
+
   gst_wavpack_dec_reset (dec);
 }
 
