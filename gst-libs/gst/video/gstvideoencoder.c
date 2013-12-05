@@ -1260,6 +1260,9 @@ gst_video_encoder_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
     encoder->priv->do_caps = FALSE;
   }
 
+  if (!encoder->priv->input_state)
+    goto not_negotiated;
+
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
   pts = GST_BUFFER_PTS (buf);
