@@ -455,6 +455,7 @@ adpcmdec_stop (GstAudioDecoder * dec)
 static void
 adpcmdec_init (ADPCMDec * dec)
 {
+  gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (dec), TRUE);
 }
 
 static void
