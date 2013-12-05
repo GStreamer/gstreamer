@@ -278,6 +278,8 @@ gboolean      gst_v4l2_object_setup_format (GstV4l2Object * v4l2object,
                                             GstVideoInfo * info,
                                             GstVideoAlignment * align);
 
+gboolean      gst_v4l2_object_decide_allocation (GstV4l2Object * v4l2object,
+                                                 GstQuery * query);
 
 
 #define GST_IMPLEMENT_V4L2_PROBE_METHODS(Type_Class, interface_as_function)                 \

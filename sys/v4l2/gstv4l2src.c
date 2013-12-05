@@ -464,94 +464,13 @@ gst_v4l2src_set_caps (GstBaseSrc * src, GstCaps * caps)
 static gboolean
 gst_v4l2src_decide_allocation (GstBaseSrc * bsrc, GstQuery * query)
 {
-  GstV4l2Src *src;
-  GstV4l2Object *obj;
-  GstBufferPool *pool;
-  guint size, min, max;
-  gboolean update;
+  GstV4l2Src *src = GST_V4L2SRC (bsrc);
+  gboolean ret = FALSE;
 
-  src = GST_V4L2SRC (bsrc);
-  obj = src->v4l2object;
+  if (gst_v4l2_object_decide_allocation (src->v4l2object, query))
+    ret = GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
 
-  if (gst_query_get_n_allocation_pools (query) > 0) {
-    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
-    update = TRUE;
-  } else {
-    pool = NULL;
-    min = max = 0;
-    size = 0;
-    update = FALSE;
-  }
-
-  GST_DEBUG_OBJECT (src, "allocation: size:%u min:%u max:%u pool:%"
-      GST_PTR_FORMAT, size, min, max, pool);
-
-  if (min != 0) {
-    /* if there is a min-buffers suggestion, use it. We add 1 because we need 1
-     * buffer extra to capture while the other two buffers are downstream */
-    min += 1;
-  } else {
-    min = 2;
-  }
-
-  /* select a pool */
-  switch (obj->mode) {
-    case GST_V4L2_IO_RW:
-      if (pool == NULL) {
-        /* no downstream pool, use our own then */
-        GST_DEBUG_OBJECT (src,
-            "read/write mode: no downstream pool, using our own");
-        pool = GST_BUFFER_POOL_CAST (obj->pool);
-        size = obj->sizeimage;
-      } else {
-        /* in READ/WRITE mode, prefer a downstream pool because our own pool
-         * doesn't help much, we have to write to it as well */
-        GST_DEBUG_OBJECT (src, "read/write mode: using downstream pool");
-        /* use the bigest size, when we use our own pool we can't really do any
-         * other size than what the hardware gives us but for downstream pools
-         * we can try */
-        size = MAX (size, obj->sizeimage);
-      }
-      break;
-    case GST_V4L2_IO_MMAP:
-    case GST_V4L2_IO_USERPTR:
-    case GST_V4L2_IO_DMABUF:
-      /* in streaming mode, prefer our own pool */
-      pool = GST_BUFFER_POOL_CAST (obj->pool);
-      size = obj->sizeimage;
-      GST_DEBUG_OBJECT (src,
-          "streaming mode: using our own pool %" GST_PTR_FORMAT, pool);
-      break;
-    case GST_V4L2_IO_AUTO:
-    default:
-      GST_WARNING_OBJECT (src, "unhandled mode");
-      break;
-  }
-
-  if (pool) {
-    GstStructure *config;
-    GstCaps *caps;
-
-    config = gst_buffer_pool_get_config (pool);
-    gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL);
-    gst_buffer_pool_config_set_params (config, caps, size, min, max);
-
-    /* if downstream supports video metadata, add this to the pool config */
-    if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
-      GST_DEBUG_OBJECT (pool, "activate Video Meta");
-      gst_buffer_pool_config_add_option (config,
-          GST_BUFFER_POOL_OPTION_VIDEO_META);
-    }
-
-    gst_buffer_pool_set_config (pool, config);
-  }
-
-  if (update)
-    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
-  else
-    gst_query_add_allocation_pool (query, pool, size, min, max);
-
-  return GST_BASE_SRC_CLASS (parent_class)->decide_allocation (bsrc, query);
+  return ret;
 }
 
 static gboolean

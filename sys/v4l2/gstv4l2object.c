@@ -3139,3 +3139,104 @@ gst_v4l2_object_get_caps (GstV4l2Object * v4l2object, GstCaps * filter)
 
   return ret;
 }
+
+gboolean
+gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
+{
+  GstBufferPool *pool;
+  guint size, min, max;
+  gboolean update;
+
+  GST_DEBUG_OBJECT (obj->element, "decide allocation");
+
+  g_return_val_if_fail (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE ||
+      obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE, FALSE);
+
+  if (gst_query_get_n_allocation_pools (query) > 0) {
+    gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
+    update = TRUE;
+  } else {
+    pool = NULL;
+    min = max = 0;
+    size = 0;
+    update = FALSE;
+  }
+
+  GST_DEBUG_OBJECT (obj->element, "allocation: size:%u min:%u max:%u pool:%"
+      GST_PTR_FORMAT, size, min, max, pool);
+
+  if (min != 0) {
+    /* if there is a min-buffers suggestion, use it. We add 1 because we need 1
+     * buffer extra to capture while the other two buffers are downstream */
+    min += 1;
+  } else {
+    min = 2;
+  }
+
+  /* select a pool */
+  switch (obj->mode) {
+    case GST_V4L2_IO_RW:
+      if (pool == NULL) {
+        /* no downstream pool, use our own then */
+        GST_DEBUG_OBJECT (obj->element,
+            "read/write mode: no downstream pool, using our own");
+        pool = GST_BUFFER_POOL_CAST (obj->pool);
+        size = obj->sizeimage;
+      } else {
+        /* in READ/WRITE mode, prefer a downstream pool because our own pool
+         * doesn't help much, we have to write to it as well */
+        GST_DEBUG_OBJECT (obj->element,
+            "read/write mode: using downstream pool");
+        /* use the bigest size, when we use our own pool we can't really do any
+         * other size than what the hardware gives us but for downstream pools
+         * we can try */
+        size = MAX (size, obj->sizeimage);
+      }
+      break;
+    case GST_V4L2_IO_MMAP:
+    case GST_V4L2_IO_USERPTR:
+    case GST_V4L2_IO_DMABUF:
+      /* in streaming mode, prefer our own pool */
+      pool = GST_BUFFER_POOL_CAST (obj->pool);
+      size = obj->sizeimage;
+      GST_DEBUG_OBJECT (obj->element,
+          "streaming mode: using our own pool %" GST_PTR_FORMAT, pool);
+      break;
+    case GST_V4L2_IO_AUTO:
+    default:
+      GST_WARNING_OBJECT (obj->element, "unhandled mode");
+      break;
+  }
+
+  if (pool) {
+    GstStructure *config;
+    GstCaps *caps;
+
+    config = gst_buffer_pool_get_config (pool);
+    gst_buffer_pool_config_get_params (config, &caps, NULL, NULL, NULL);
+    gst_buffer_pool_config_set_params (config, caps, size, min, max);
+
+    /* if downstream supports video metadata, add this to the pool config */
+    if (gst_query_find_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL)) {
+      GST_DEBUG_OBJECT (pool, "activate Video Meta");
+      gst_buffer_pool_config_add_option (config,
+          GST_BUFFER_POOL_OPTION_VIDEO_META);
+    }
+
+    gst_buffer_pool_set_config (pool, config);
+  }
+
+  if (update)
+    gst_query_set_nth_allocation_pool (query, 0, pool, size, min, max);
+  else
+    gst_query_add_allocation_pool (query, pool, size, min, max);
+
+  return TRUE;
+
+pool_failed:
+  {
+    GST_ELEMENT_ERROR (obj->element, RESOURCE, SETTINGS,
+        (_("Video device could not create buffer pool.")), GST_ERROR_SYSTEM);
+    return FALSE;
+  }
+}
