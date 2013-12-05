@@ -108,6 +108,7 @@ gst_openjpeg_dec_init (GstOpenJPEGDec * self)
   GstVideoDecoder *decoder = (GstVideoDecoder *) self;
 
   gst_video_decoder_set_packetized (decoder, TRUE);
+  gst_video_decoder_set_needs_format (decoder, TRUE);
   opj_set_default_decoder_parameters (&self->params);
 #ifdef HAVE_OPENJPEG_1
   self->params.cp_limit_decoding = NO_LIMITATION;
