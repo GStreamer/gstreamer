@@ -341,6 +341,7 @@ static gboolean gst_audio_encoder_decide_allocation_default (GstAudioEncoder *
 static gboolean gst_audio_encoder_propose_allocation_default (GstAudioEncoder *
     enc, GstQuery * query);
 static gboolean gst_audio_encoder_negotiate_default (GstAudioEncoder * enc);
+static gboolean gst_audio_encoder_negotiate_unlocked (GstAudioEncoder * enc);
 
 static void
 gst_audio_encoder_class_init (GstAudioEncoderClass * klass)
@@ -605,6 +606,7 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
   GstAudioEncoderPrivate *priv;
   GstAudioEncoderContext *ctx;
   GstFlowReturn ret = GST_FLOW_OK;
+  gboolean needs_reconfigure = FALSE;
 
   klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
   priv = enc->priv;
@@ -624,9 +626,9 @@ gst_audio_encoder_finish_frame (GstAudioEncoder * enc, GstBuffer * buf,
       "accepting %" G_GSIZE_FORMAT " bytes encoded data as %d samples",
       buf ? gst_buffer_get_size (buf) : -1, samples);
 
-  if (G_UNLIKELY (ctx->output_caps_changed
-          || gst_pad_check_reconfigure (enc->srcpad))) {
-    if (!gst_audio_encoder_negotiate (enc)) {
+  needs_reconfigure = gst_pad_check_reconfigure (enc->srcpad);
+  if (G_UNLIKELY (ctx->output_caps_changed || needs_reconfigure)) {
+    if (!gst_audio_encoder_negotiate_unlocked (enc)) {
       gst_pad_mark_reconfigure (enc->srcpad);
       if (GST_PAD_IS_FLUSHING (enc->srcpad))
         ret = GST_FLOW_FLUSHING;
@@ -2618,12 +2620,26 @@ no_decide_allocation:
   }
 }
 
+static gboolean
+gst_audio_encoder_negotiate_unlocked (GstAudioEncoder * enc)
+{
+  GstAudioEncoderClass *klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
+  gboolean ret = TRUE;
+
+  if (G_LIKELY (klass->negotiate))
+    ret = klass->negotiate (enc);
+
+  return ret;
+}
+
 /**
  * gst_audio_encoder_negotiate:
  * @enc: a #GstAudioEncoder
  *
- * Negotiate with downstreame elements to currently configured #GstCaps.
- *
+ * Negotiate with downstream elements to currently configured #GstCaps.
+ * Unmark GST_PAD_FLAG_NEED_RECONFIGURE in any case. But mark it again if
+ * negotiate fails.
+ * 
  * Returns: #TRUE if the negotiation succeeded, else #FALSE.
  */
 gboolean
@@ -2637,8 +2653,12 @@ gst_audio_encoder_negotiate (GstAudioEncoder * enc)
   klass = GST_AUDIO_ENCODER_GET_CLASS (enc);
 
   GST_AUDIO_ENCODER_STREAM_LOCK (enc);
-  if (klass->negotiate)
+  gst_pad_check_reconfigure (enc->srcpad);
+  if (klass->negotiate) {
     ret = klass->negotiate (enc);
+    if (!ret)
+      gst_pad_mark_reconfigure (enc->srcpad);
+  }
   GST_AUDIO_ENCODER_STREAM_UNLOCK (enc);
 
   return ret;
@@ -2704,6 +2724,7 @@ GstBuffer *
 gst_audio_encoder_allocate_output_buffer (GstAudioEncoder * enc, gsize size)
 {
   GstBuffer *buffer = NULL;
+  gboolean needs_reconfigure = FALSE;
 
   g_return_val_if_fail (size > 0, NULL);
 
@@ -2711,9 +2732,10 @@ gst_audio_encoder_allocate_output_buffer (GstAudioEncoder * enc, gsize size)
 
   GST_AUDIO_ENCODER_STREAM_LOCK (enc);
 
+  needs_reconfigure = gst_pad_check_reconfigure (enc->srcpad);
   if (G_UNLIKELY (enc->priv->ctx.output_caps_changed || (enc->priv->ctx.caps
-              && gst_pad_check_reconfigure (enc->srcpad)))) {
-    if (!gst_audio_encoder_negotiate (enc)) {
+              && needs_reconfigure))) {
+    if (!gst_audio_encoder_negotiate_unlocked (enc)) {
       GST_INFO_OBJECT (enc, "Failed to negotiate, fallback allocation");
       gst_pad_mark_reconfigure (enc->srcpad);
       goto fallback;
