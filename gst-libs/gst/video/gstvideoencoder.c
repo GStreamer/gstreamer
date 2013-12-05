@@ -232,6 +232,8 @@ static gboolean gst_video_encoder_decide_allocation_default (GstVideoEncoder *
 static gboolean gst_video_encoder_propose_allocation_default (GstVideoEncoder *
     encoder, GstQuery * query);
 static gboolean gst_video_encoder_negotiate_default (GstVideoEncoder * encoder);
+static gboolean gst_video_encoder_negotiate_unlocked (GstVideoEncoder *
+    encoder);
 
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
@@ -1570,11 +1572,25 @@ no_decide_allocation:
   }
 }
 
+static gboolean
+gst_video_encoder_negotiate_unlocked (GstVideoEncoder * encoder)
+{
+  GstVideoEncoderClass *klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
+  gboolean ret = TRUE;
+
+  if (G_LIKELY (klass->negotiate))
+    ret = klass->negotiate (encoder);
+
+  return ret;
+}
+
 /**
  * gst_video_encoder_negotiate:
  * @encoder: a #GstVideoEncoder
  *
  * Negotiate with downstream elements to currently configured #GstVideoCodecState.
+ * Unmark GST_PAD_FLAG_NEED_RECONFIGURE in any case. But mark it again if
+ * negotiate fails.
  *
  * Returns: #TRUE if the negotiation succeeded, else #FALSE.
  */
@@ -1590,8 +1606,12 @@ gst_video_encoder_negotiate (GstVideoEncoder * encoder)
   klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
-  if (klass->negotiate)
+  gst_pad_check_reconfigure (encoder->srcpad);
+  if (klass->negotiate) {
     ret = klass->negotiate (encoder);
+    if (!ret)
+      gst_pad_mark_reconfigure (encoder->srcpad);
+  }
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
 
   return ret;
@@ -1611,16 +1631,17 @@ GstBuffer *
 gst_video_encoder_allocate_output_buffer (GstVideoEncoder * encoder, gsize size)
 {
   GstBuffer *buffer;
+  gboolean needs_reconfigure = FALSE;
 
   g_return_val_if_fail (size > 0, NULL);
 
   GST_DEBUG ("alloc src buffer");
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
+  needs_reconfigure = gst_pad_check_reconfigure (encoder->srcpad);
   if (G_UNLIKELY (encoder->priv->output_state_changed
-          || (encoder->priv->output_state
-              && gst_pad_check_reconfigure (encoder->srcpad)))) {
-    if (!gst_video_encoder_negotiate (encoder)) {
+          || (encoder->priv->output_state && needs_reconfigure))) {
+    if (!gst_video_encoder_negotiate_unlocked (encoder)) {
       GST_DEBUG_OBJECT (encoder, "Failed to negotiate, fallback allocation");
       gst_pad_mark_reconfigure (encoder->srcpad);
       goto fallback;
@@ -1666,13 +1687,15 @@ GstFlowReturn
 gst_video_encoder_allocate_output_frame (GstVideoEncoder *
     encoder, GstVideoCodecFrame * frame, gsize size)
 {
+  gboolean needs_reconfigure = FALSE;
+
   g_return_val_if_fail (frame->output_buffer == NULL, GST_FLOW_ERROR);
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
+  needs_reconfigure = gst_pad_check_reconfigure (encoder->srcpad);
   if (G_UNLIKELY (encoder->priv->output_state_changed
-          || (encoder->priv->output_state
-              && gst_pad_check_reconfigure (encoder->srcpad)))) {
-    if (!gst_video_encoder_negotiate (encoder)) {
+          || (encoder->priv->output_state && needs_reconfigure))) {
+    if (!gst_video_encoder_negotiate_unlocked (encoder)) {
       GST_DEBUG_OBJECT (encoder, "Failed to negotiate, fallback allocation");
       gst_pad_mark_reconfigure (encoder->srcpad);
     }
@@ -1733,6 +1756,7 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
   gboolean send_headers = FALSE;
   gboolean discont = (frame->presentation_frame_number == 0);
   GstBuffer *buffer;
+  gboolean needs_reconfigure = FALSE;
 
   encoder_class = GST_VIDEO_ENCODER_GET_CLASS (encoder);
 
@@ -1745,9 +1769,10 @@ gst_video_encoder_finish_frame (GstVideoEncoder * encoder,
 
   GST_VIDEO_ENCODER_STREAM_LOCK (encoder);
 
+  needs_reconfigure = gst_pad_check_reconfigure (encoder->srcpad);
   if (G_UNLIKELY (priv->output_state_changed || (priv->output_state
-              && gst_pad_check_reconfigure (encoder->srcpad)))) {
-    if (!gst_video_encoder_negotiate (encoder)) {
+              && needs_reconfigure))) {
+    if (!gst_video_encoder_negotiate_unlocked (encoder)) {
       gst_pad_mark_reconfigure (encoder->srcpad);
       if (GST_PAD_IS_FLUSHING (encoder->srcpad))
         ret = GST_FLOW_FLUSHING;
