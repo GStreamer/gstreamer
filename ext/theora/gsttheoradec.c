@@ -207,6 +207,7 @@ gst_theora_dec_init (GstTheoraDec * dec)
   /* input is packetized,
    * but is not marked that way so data gets parsed and keyframes marked */
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (dec), FALSE);
+  gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (dec), TRUE);
 }
 
 static gboolean
@@ -397,9 +398,6 @@ theora_handle_type_packet (GstTheoraDec * dec)
   GstVideoCodecState *state;
   GstVideoFormat fmt;
   GstVideoInfo *info;
-
-  if (!dec->input_state)
-    return GST_FLOW_NOT_NEGOTIATED;
 
   info = &dec->input_state->info;
 
