@@ -3153,6 +3153,14 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   g_return_val_if_fail (obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE ||
       obj->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE, FALSE);
 
+  if (obj->pool == NULL) {
+    GstCaps *caps;
+    gst_query_parse_allocation (query, &caps, NULL);
+
+    if (!gst_v4l2_object_setup_pool (obj, caps))
+      goto pool_failed;
+  }
+
   if (gst_query_get_n_allocation_pools (query) > 0) {
     gst_query_parse_nth_allocation_pool (query, 0, &pool, &size, &min, &max);
     update = TRUE;
