@@ -134,6 +134,7 @@ static void
 gst_mpeg2dec_init (GstMpeg2dec * mpeg2dec)
 {
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (mpeg2dec), TRUE);
+  gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (mpeg2dec), TRUE);
 
   /* initialize the mpeg2dec acceleration */
 }
