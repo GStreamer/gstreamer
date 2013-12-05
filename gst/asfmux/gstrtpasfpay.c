@@ -287,9 +287,7 @@ gst_rtp_asf_pay_handle_packet (GstRtpAsfPay * rtpasfpay, GstBuffer * buffer)
       rtppay->timestamp = packetinfo->send_time;
 
       GST_DEBUG_OBJECT (rtpasfpay, "Pushing rtp buffer");
-      ret =
-          gst_pad_push (GST_RTP_BASE_PAYLOAD_SRCPAD (rtppay),
-          rtpasfpay->current);
+      ret = gst_rtp_base_payload_push (rtppay, rtpasfpay->current);
       rtpasfpay->current = NULL;
       if (ret != GST_FLOW_OK) {
         gst_buffer_unref (buffer);
