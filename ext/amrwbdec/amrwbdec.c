@@ -106,6 +106,7 @@ gst_amrwbdec_class_init (GstAmrwbDecClass * klass)
 static void
 gst_amrwbdec_init (GstAmrwbDec * amrwbdec)
 {
+  gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (amrwbdec), TRUE);
 }
 
 static gboolean
@@ -211,9 +212,6 @@ gst_amrwbdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
   /* no fancy flushing */
   if (!buffer || !gst_buffer_get_size (buffer))
     return GST_FLOW_OK;
-
-  if (amrwbdec->rate == 0 || amrwbdec->channels == 0)
-    goto not_negotiated;
 
   /* the library seems to write into the source data, hence the copy. */
   /* should be no problem */
