@@ -165,6 +165,8 @@ gst_opus_dec_init (GstOpusDec * dec)
   dec->use_inband_fec = FALSE;
   dec->apply_gain = DEFAULT_APPLY_GAIN;
 
+  gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (dec), TRUE);
+
   gst_opus_dec_reset (dec);
 }
 
