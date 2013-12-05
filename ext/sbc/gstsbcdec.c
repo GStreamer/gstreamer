@@ -75,9 +75,6 @@ gst_sbc_dec_handle_frame (GstAudioDecoder * audio_dec, GstBuffer * buf)
   if (G_UNLIKELY (buf == NULL))
     return GST_FLOW_OK;
 
-  if (G_UNLIKELY (dec->frame_len == 0))
-    return GST_FLOW_NOT_NEGOTIATED;
-
   gst_buffer_map (buf, &in_map, GST_MAP_READ);
 
   if (G_UNLIKELY (in_map.size == 0))
@@ -238,6 +235,8 @@ gst_sbc_dec_class_init (GstSbcDecClass * klass)
 static void
 gst_sbc_dec_init (GstSbcDec * dec)
 {
+  gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (dec), TRUE);
+
   dec->samples_per_frame = 0;
   dec->frame_len = 0;
 }
