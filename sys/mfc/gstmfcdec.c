@@ -132,6 +132,7 @@ gst_mfc_dec_init (GstMFCDec * self)
   GstVideoDecoder *decoder = (GstVideoDecoder *) self;
 
   gst_video_decoder_set_packetized (decoder, TRUE);
+  gst_video_decoder_set_needs_format (decoder, TRUE);
 }
 
 static gboolean
