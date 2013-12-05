@@ -1155,6 +1155,28 @@ gst_dash_demux_advance_period (GstDashDemux * demux)
   return TRUE;
 }
 
+static GstFlowReturn
+gst_dash_demux_combine_flows (GstDashDemux * demux)
+{
+  gboolean all_notlinked = TRUE;
+  GSList *iter;
+
+  for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+    GstDashDemuxStream *stream = iter->data;
+
+    if (stream->last_ret != GST_FLOW_NOT_LINKED)
+      all_notlinked = FALSE;
+
+    if (stream->last_ret <= GST_FLOW_NOT_NEGOTIATED
+        || stream->last_ret == GST_FLOW_FLUSHING)
+      return stream->last_ret;
+  }
+  if (all_notlinked)
+    return GST_FLOW_NOT_LINKED;
+  return GST_FLOW_OK;
+}
+
+
 /* gst_dash_demux_stream_loop:
  * 
  * Loop for the "stream' task that pushes fragments to the src pads.
@@ -1326,19 +1348,28 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       gst_dash_demux_advance_period (demux);
     }
   }
-  GST_DASH_DEMUX_STREAM_DOWNLOAD_LOCK (selected_stream);
-  if (ret != selected_stream->last_ret) {
-    gst_task_start (selected_stream->download_task);
-    selected_stream->last_ret = ret;
+
+  if (selected_stream) {
+    GST_DASH_DEMUX_STREAM_DOWNLOAD_LOCK (selected_stream);
+    if (ret != selected_stream->last_ret) {
+      gst_task_start (selected_stream->download_task);
+      selected_stream->last_ret = ret;
+    }
+    switch (selected_stream->last_ret) {
+      case GST_FLOW_NOT_LINKED:
+        gst_data_queue_set_flushing (selected_stream->queue, TRUE);
+        break;
+      default:
+        break;
+    }
+
+    GST_DASH_DEMUX_STREAM_DOWNLOAD_UNLOCK (selected_stream);
+    /* combine flow returns */
+    ret = gst_dash_demux_combine_flows (demux);
+    if (ret < 0) {
+      goto error;
+    }
   }
-  switch (selected_stream->last_ret) {
-    case GST_FLOW_NOT_LINKED:
-      gst_data_queue_set_flushing (selected_stream->queue, TRUE);
-      break;
-    default:
-      break;
-  }
-  GST_DASH_DEMUX_STREAM_DOWNLOAD_UNLOCK (selected_stream);
 
 end:
   GST_INFO_OBJECT (demux, "Leaving streaming task");
@@ -1358,17 +1389,14 @@ end_of_manifest:
     return;
   }
 
-#if 0
-error_pushing:
+error:
   {
-    /* FIXME: handle error */
     GST_ERROR_OBJECT (demux,
         "Error pushing buffer: %s... terminating the demux",
         gst_flow_get_name (ret));
     gst_task_stop (demux->stream_task);
     return;
   }
-#endif
 }
 
 static void
