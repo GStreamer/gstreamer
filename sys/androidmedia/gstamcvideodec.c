@@ -434,6 +434,7 @@ static void
 gst_amc_video_dec_init (GstAmcVideoDec * self)
 {
   gst_video_decoder_set_packetized (GST_VIDEO_DECODER (self), TRUE);
+  gst_video_decoder_set_needs_format (GST_VIDEO_DECODER (self), TRUE);
 
   g_mutex_init (&self->drain_lock);
   g_cond_init (&self->drain_cond);
