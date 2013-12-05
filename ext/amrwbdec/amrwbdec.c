@@ -230,12 +230,4 @@ gst_amrwbdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 
   /* send out */
   return gst_audio_decoder_finish_frame (dec, out, 1);
-
-  /* ERRORS */
-not_negotiated:
-  {
-    GST_ELEMENT_ERROR (amrwbdec, STREAM, TYPE_NOT_FOUND, (NULL),
-        ("Decoder is not initialized"));
-    return GST_FLOW_NOT_NEGOTIATED;
-  }
 }
