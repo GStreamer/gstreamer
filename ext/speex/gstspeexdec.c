@@ -156,6 +156,8 @@ gst_speex_dec_reset (GstSpeexDec * dec)
 static void
 gst_speex_dec_init (GstSpeexDec * dec)
 {
+  gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (dec), TRUE);
+
   dec->enh = DEFAULT_ENH;
 
   gst_speex_dec_reset (dec);
