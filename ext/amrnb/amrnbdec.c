@@ -143,6 +143,7 @@ gst_amrnbdec_class_init (GstAmrnbDecClass * klass)
 static void
 gst_amrnbdec_init (GstAmrnbDec * amrnbdec)
 {
+  gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (amrnbdec), TRUE);
 }
 
 static gboolean
@@ -288,9 +289,6 @@ gst_amrnbdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
   /* no fancy flushing */
   if (!buffer || !gst_buffer_get_size (buffer))
     return GST_FLOW_OK;
-
-  if (amrnbdec->rate == 0 || amrnbdec->channels == 0)
-    goto not_negotiated;
 
   gst_buffer_map (buffer, &inmap, GST_MAP_READ);
 
