@@ -2889,6 +2889,102 @@ pool_failed:
   }
 }
 
+/**
+ * gst_v4l2_object_setup_format:
+ * @v4l2object the object
+ * @info a GstVideoInfo to be filled
+ * @align a GstVideoAlignment to be filled
+ *
+ * Setup the format base on the currently configured format. This is useful in
+ * decoder or encoder elements where the output format is dictated by the
+ * input.
+ *
+ * Returns: %TRUE on success, %FALSE on failure.
+ */
+gboolean
+gst_v4l2_object_setup_format (GstV4l2Object * v4l2object,
+    GstVideoInfo * info, GstVideoAlignment * align)
+{
+  struct v4l2_fmtdesc *fmtdesc;
+  struct v4l2_format fmt;
+  struct v4l2_crop crop;
+  GstVideoFormat format;
+  guint width, height;
+
+  gst_video_info_init (info);
+  gst_video_alignment_reset (align);
+
+  memset (&fmt, 0x00, sizeof (struct v4l2_format));
+  fmt.type = v4l2object->type;
+  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_FMT, &fmt) < 0)
+    goto get_fmt_failed;
+
+  fmtdesc = gst_v4l2_object_get_format_from_fourcc (v4l2object,
+      fmt.fmt.pix.pixelformat);
+  if (fmtdesc == NULL)
+    goto unsupported_format;
+
+  /* No need to care about mplane, the four first params are the same */
+  format = gst_v4l2_object_v4l2fourcc_to_video_format (fmt.fmt.pix.pixelformat);
+  width = fmt.fmt.pix.width;
+  height = fmt.fmt.pix.height;
+
+  memset (&crop, 0, sizeof (struct v4l2_crop));
+  crop.type = v4l2object->type;
+  if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_CROP, &crop) >= 0) {
+    align->padding_left = crop.c.left;
+    align->padding_top = crop.c.top;
+    align->padding_right = width - crop.c.width - crop.c.left;
+    align->padding_bottom = height - crop.c.height - crop.c.top;
+    width = crop.c.width;
+    height = crop.c.height;
+  }
+
+  gst_video_info_set_format (info, format, width, height);
+
+  switch (fmt.fmt.pix.field) {
+    case V4L2_FIELD_ANY:
+    case V4L2_FIELD_NONE:
+      info->interlace_mode = GST_VIDEO_INTERLACE_MODE_PROGRESSIVE;
+      break;
+    case V4L2_FIELD_INTERLACED:
+    case V4L2_FIELD_INTERLACED_TB:
+    case V4L2_FIELD_INTERLACED_BT:
+      info->interlace_mode = GST_VIDEO_INTERLACE_MODE_INTERLEAVED;
+      break;
+    default:
+      goto unsupported_field;
+  }
+
+  gst_v4l2_object_save_format (v4l2object, fmtdesc, &fmt, info);
+
+  /* Shall we setup the pool ? */
+
+  return TRUE;
+
+get_fmt_failed:
+  {
+    GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
+        (_("Video device did not provide output format.")), GST_ERROR_SYSTEM);
+    return FALSE;
+  }
+unsupported_field:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+        (_("Video devices uses an unsupported interlacing method.")),
+        ("V4L2 field type %d not supported", fmt.fmt.pix.field));
+    return FALSE;
+  }
+unsupported_format:
+  {
+    GST_ELEMENT_ERROR (v4l2object->element, RESOURCE, SETTINGS,
+        (_("Video devices uses an unsupported pixel format.")),
+        ("V4L2 format %" GST_FOURCC_FORMAT " not supported",
+            GST_FOURCC_ARGS (fmt.fmt.pix.pixelformat)));
+    return FALSE;
+  }
+}
+
 gboolean
 gst_v4l2_object_caps_equal (GstV4l2Object * v4l2object, GstCaps * caps)
 {

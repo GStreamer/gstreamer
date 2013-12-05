@@ -274,6 +274,10 @@ gboolean      gst_v4l2_object_copy        (GstV4l2Object * v4l2object,
 GstCaps *     gst_v4l2_object_get_caps    (GstV4l2Object * v4l2object,
                                            GstCaps * filter);
 
+gboolean      gst_v4l2_object_setup_format (GstV4l2Object * v4l2object,
+                                            GstVideoInfo * info,
+                                            GstVideoAlignment * align);
+
 
 
 #define GST_IMPLEMENT_V4L2_PROBE_METHODS(Type_Class, interface_as_function)                 \
