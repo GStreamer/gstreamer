@@ -159,4 +159,5 @@ gst_mulawdec_class_init (GstMuLawDecClass * klass)
 static void
 gst_mulawdec_init (GstMuLawDec * mulawdec)
 {
+  gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (mulawdec), TRUE);
 }
