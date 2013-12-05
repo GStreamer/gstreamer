@@ -3146,6 +3146,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   GstBufferPool *pool;
   guint size, min, max;
   gboolean update;
+  struct v4l2_control ctl = { 0, };
 
   GST_DEBUG_OBJECT (obj->element, "decide allocation");
 
@@ -3171,6 +3172,14 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
     min += 1;
   } else {
     min = 2;
+  }
+
+  /* Certain driver may expose a minimum through controls */
+  ctl.id = V4L2_CID_MIN_BUFFERS_FOR_CAPTURE;
+  if (v4l2_ioctl (obj->video_fd, VIDIOC_G_CTRL, &ctl) >= 0) {
+    GST_DEBUG_OBJECT (obj->element, "driver require a minimum of %d buffers",
+        ctl.value);
+    min += ctl.value;
   }
 
   /* select a pool */
