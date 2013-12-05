@@ -205,6 +205,8 @@ gst_vp8_dec_init (GstVP8Dec * gst_vp8_dec)
   gst_vp8_dec->post_processing_flags = DEFAULT_POST_PROCESSING_FLAGS;
   gst_vp8_dec->deblocking_level = DEFAULT_DEBLOCKING_LEVEL;
   gst_vp8_dec->noise_level = DEFAULT_NOISE_LEVEL;
+
+  gst_video_decoder_set_needs_format (decoder, TRUE);
 }
 
 static void
