@@ -881,6 +881,7 @@ dvdbin_pad_blocked_cb (GstPad * opad,
   GstPad *pad;
   gboolean added_last_pad = FALSE;
   gboolean added = FALSE;
+  guint pad_block_id = 0;
 
   dvdbin = ctx->dvdbin;
   pad = ctx->pad;
@@ -896,10 +897,12 @@ dvdbin_pad_blocked_cb (GstPad * opad,
       added_last_pad = ((dvdbin->audio_broken || dvdbin->audio_added)
           && dvdbin->video_added);
     }
+    pad_block_id = ctx->pad_block_id;
+    ctx->pad_block_id = 0;
     DVDBIN_PREROLL_UNLOCK (dvdbin);
 
-    if (ctx->pad_block_id)
-      gst_pad_remove_probe (opad, ctx->pad_block_id);
+    if (pad_block_id)
+      gst_pad_remove_probe (opad, pad_block_id);
   } else if (pad == dvdbin->audio_pad) {
     GST_DEBUG_OBJECT (opad, "Pad block -> audio pad");
     DVDBIN_PREROLL_LOCK (dvdbin);
@@ -910,10 +913,12 @@ dvdbin_pad_blocked_cb (GstPad * opad,
       gst_element_add_pad (GST_ELEMENT (dvdbin), dvdbin->audio_pad);
       added_last_pad = (dvdbin->subpicture_added && dvdbin->video_added);
     }
+    pad_block_id = ctx->pad_block_id;
+    ctx->pad_block_id = 0;
     DVDBIN_PREROLL_UNLOCK (dvdbin);
 
-    if (ctx->pad_block_id)
-      gst_pad_remove_probe (opad, ctx->pad_block_id);
+    if (pad_block_id)
+      gst_pad_remove_probe (opad, pad_block_id);
   } else if (pad == dvdbin->video_pad) {
     GST_DEBUG_OBJECT (opad, "Pad block -> video pad");
 
@@ -926,10 +931,12 @@ dvdbin_pad_blocked_cb (GstPad * opad,
       added_last_pad = (dvdbin->subpicture_added && (dvdbin->audio_added
               || dvdbin->audio_broken));
     }
+    pad_block_id = ctx->pad_block_id;
+    ctx->pad_block_id = 0;
     DVDBIN_PREROLL_UNLOCK (dvdbin);
 
-    if (ctx->pad_block_id)
-      gst_pad_remove_probe (opad, ctx->pad_block_id);
+    if (pad_block_id)
+      gst_pad_remove_probe (opad, pad_block_id);
   }
 
   if (added_last_pad) {
