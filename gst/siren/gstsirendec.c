@@ -95,6 +95,7 @@ gst_siren_dec_class_init (GstSirenDecClass * klass)
 static void
 gst_siren_dec_init (GstSirenDec * dec)
 {
+  gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (dec), TRUE);
 }
 
 static gboolean
