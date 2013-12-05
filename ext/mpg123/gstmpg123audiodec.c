@@ -196,6 +196,7 @@ void
 gst_mpg123_audio_dec_init (GstMpg123AudioDec * mpg123_decoder)
 {
   mpg123_decoder->handle = NULL;
+  gst_audio_decoder_set_needs_format (GST_AUDIO_DECODER (mpg123_decoder), TRUE);
 }
 
 
