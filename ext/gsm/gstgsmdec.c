@@ -191,16 +191,16 @@ gst_gsmdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
   size = gst_adapter_available (adapter);
   g_return_val_if_fail (size > 0, GST_FLOW_ERROR);
 
-  /* WAV49 requires alternating 33 and 32 bytes of input */
-  if (gsmdec->use_wav49) {
-    gsmdec->needed = (gsmdec->needed == 33 ? 32 : 33);
-  }
-
   if (size < gsmdec->needed)
     return GST_FLOW_EOS;
 
   *offset = 0;
   *length = gsmdec->needed;
+
+  /* WAV49 requires alternating 33 and 32 bytes of input */
+  if (gsmdec->use_wav49) {
+    gsmdec->needed = (gsmdec->needed == 33 ? 32 : 33);
+  }
 
   return GST_FLOW_OK;
 }
