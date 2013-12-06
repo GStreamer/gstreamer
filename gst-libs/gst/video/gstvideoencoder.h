@@ -298,8 +298,6 @@ GstFlowReturn        gst_video_encoder_finish_frame (GstVideoEncoder *encoder,
 GstCaps *            gst_video_encoder_proxy_getcaps (GstVideoEncoder * enc,
 						      GstCaps         * caps,
                                                       GstCaps         * filter);
-void                 gst_video_encoder_set_discont (GstVideoEncoder *encoder);
-gboolean             gst_video_encoder_get_discont (GstVideoEncoder *encoder);
 
 void                 gst_video_encoder_set_latency (GstVideoEncoder *encoder,
 						    GstClockTime min_latency,
