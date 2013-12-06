@@ -22,7 +22,6 @@
 #define _GST_JP2K_DECIMATOR_H_
 
 #include <gst/gst.h>
-#include <gst/base/gstbasetransform.h>
 
 G_BEGIN_DECLS
 

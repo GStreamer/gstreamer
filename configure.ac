@@ -338,7 +338,7 @@ dnl Non ported plugins (non-dependant, then dependant)
 dnl Make sure you have a space before and after all plugins
 GST_PLUGINS_NONPORTED=" cdxaparse \
  dccp faceoverlay \
- hdvparse ivfparse jp2kdecimator \
+ hdvparse ivfparse \
  mve mythtv nuvdemux \
  patchdetect real \
  sdi stereo tta \

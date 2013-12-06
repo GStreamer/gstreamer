@@ -933,7 +933,7 @@ parse_packet (GstJP2kDecimator * self, GstByteReader * reader,
 
     if (marker != MARKER_SOP) {
       GST_ERROR_OBJECT (self, "No SOP marker");
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
       goto done;
     }
 
@@ -1452,7 +1452,7 @@ parse_main_header (GstJP2kDecimator * self, GstByteReader * reader,
       break;
     } else if (marker == MARKER_EOC) {
       GST_WARNING_OBJECT (self, "EOC marker before SOT");
-      ret = GST_FLOW_UNEXPECTED;
+      ret = GST_FLOW_EOS;
       goto done;
     }
 
