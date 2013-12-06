@@ -757,15 +757,22 @@ get_profile(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
 {
     GstVaapiDecoderH264Private * const priv = &decoder->priv;
     GstVaapiDisplay * const display = GST_VAAPI_DECODER_DISPLAY(decoder);
-    GstVaapiProfile profile, profiles[2];
+    GstVaapiProfile profile, profiles[4];
     guint i, n_profiles = 0;
 
     profile = gst_vaapi_utils_h264_get_profile(sps->profile_idc);
     if (!profile)
         return GST_VAAPI_PROFILE_UNKNOWN;
 
+    if (sps->constraint_set1_flag && profile == GST_VAAPI_PROFILE_H264_BASELINE)
+        profile = GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
+
     profiles[n_profiles++] = profile;
     switch (profile) {
+    case GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE:
+        profiles[n_profiles++] = GST_VAAPI_PROFILE_H264_BASELINE;
+        profiles[n_profiles++] = GST_VAAPI_PROFILE_H264_MAIN;
+        // fall-through
     case GST_VAAPI_PROFILE_H264_MAIN:
         profiles[n_profiles++] = GST_VAAPI_PROFILE_H264_HIGH;
         break;

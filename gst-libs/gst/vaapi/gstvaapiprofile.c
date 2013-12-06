@@ -176,7 +176,7 @@ static GstVaapiProfile
 gst_vaapi_profile_from_codec_data_h264(GstBuffer *buffer)
 {
     /* MPEG-4 Part 15: Advanced Video Coding (AVC) file format */
-    guchar buf[2];
+    guchar buf[3];
 
     if (gst_buffer_extract(buffer, 0, buf, sizeof(buf)) != sizeof(buf))
         return 0;
@@ -185,7 +185,9 @@ gst_vaapi_profile_from_codec_data_h264(GstBuffer *buffer)
         return 0;
 
     switch (buf[1]) {   /* AVCProfileIndication */
-    case 66:    return GST_VAAPI_PROFILE_H264_BASELINE;
+    case 66:    return ((buf[2] & 0x40) ?
+                        GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE :
+                        GST_VAAPI_PROFILE_H264_BASELINE);
     case 77:    return GST_VAAPI_PROFILE_H264_MAIN;
     case 100:   return GST_VAAPI_PROFILE_H264_HIGH;
     }
