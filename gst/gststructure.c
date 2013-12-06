@@ -51,7 +51,7 @@
  * gst_structure_remove_fields().
  *
  * Strings in structures must be ASCII or UTF-8 encoded. Other encodings are
- * not allowed. Strings must not be empty either, but may be NULL.
+ * not allowed. Strings may be NULL however.
  *
  * Be aware that the current #GstCaps / #GstStructure serialization into string
  * has limited support for nested #GstCaps / #GstStructure fields. It can only

@@ -25,9 +25,8 @@
  *
  * List of tags and values used to describe media metadata.
  *
- * Strings must be in ASCII or UTF-8 encoding. No other encodings are allowed.
- *
- * Last reviewed on 2009-06-09 (0.10.23)
+ * Strings in structures must be ASCII or UTF-8 encoded. Other encodings are
+ * not allowed. Strings must not be empty or NULL.
  */
 
 #ifdef HAVE_CONFIG_H
