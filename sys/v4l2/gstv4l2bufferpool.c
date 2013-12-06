@@ -540,7 +540,7 @@ gst_v4l2_buffer_pool_start (GstBufferPool * bpool)
       /* request a reasonable number of buffers when no max specified. We will
        * copy when we run out of buffers */
       if (max_buffers == 0)
-        num_buffers = 4;
+        num_buffers = MAX (4, min_buffers);
       else
         num_buffers = max_buffers;
 
