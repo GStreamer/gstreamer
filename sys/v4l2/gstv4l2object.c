@@ -3216,6 +3216,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
       /* in streaming mode, prefer our own pool */
       pool = GST_BUFFER_POOL_CAST (obj->pool);
       size = obj->sizeimage;
+      max = 0;
       GST_DEBUG_OBJECT (obj->element,
           "streaming mode: using our own pool %" GST_PTR_FORMAT, pool);
       break;
