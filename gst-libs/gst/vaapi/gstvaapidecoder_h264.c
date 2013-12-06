@@ -34,6 +34,7 @@
 #include "gstvaapidecoder_priv.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiobject_priv.h"
+#include "gstvaapiutils_h264.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -762,45 +763,6 @@ gst_vaapi_decoder_h264_create(GstVaapiDecoder *base_decoder)
     return TRUE;
 }
 
-static guint
-h264_get_profile(GstH264SPS *sps)
-{
-    guint profile = 0;
-
-    switch (sps->profile_idc) {
-    case GST_H264_PROFILE_BASELINE:
-        profile = GST_VAAPI_PROFILE_H264_BASELINE;
-        break;
-    case GST_H264_PROFILE_MAIN:
-        profile = GST_VAAPI_PROFILE_H264_MAIN;
-        break;
-    case GST_H264_PROFILE_HIGH:
-        profile = GST_VAAPI_PROFILE_H264_HIGH;
-        break;
-    }
-    return profile;
-}
-
-static guint
-h264_get_chroma_type(GstH264SPS *sps)
-{
-    guint chroma_type = 0;
-
-    switch (sps->chroma_format_idc) {
-    case 1:
-        chroma_type = GST_VAAPI_CHROMA_TYPE_YUV420;
-        break;
-    case 2:
-        chroma_type = GST_VAAPI_CHROMA_TYPE_YUV422;
-        break;
-    case 3:
-        if (!sps->separate_colour_plane_flag)
-            chroma_type = GST_VAAPI_CHROMA_TYPE_YUV444;
-        break;
-    }
-    return chroma_type;
-}
-
 static GstVaapiProfile
 get_profile(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
 {
@@ -809,7 +771,7 @@ get_profile(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     GstVaapiProfile profile, profiles[2];
     guint i, n_profiles = 0;
 
-    profile = h264_get_profile(sps);
+    profile = gst_vaapi_utils_h264_get_profile(sps->profile_idc);
     if (!profile)
         return GST_VAAPI_PROFILE_UNKNOWN;
 
@@ -857,7 +819,7 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
         priv->profile = profile;
     }
 
-    chroma_type = h264_get_chroma_type(sps);
+    chroma_type = gst_vaapi_utils_h264_get_chroma_type(sps->chroma_format_idc);
     if (!chroma_type || chroma_type != GST_VAAPI_CHROMA_TYPE_YUV420) {
         GST_ERROR("unsupported chroma_format_idc %u", sps->chroma_format_idc);
         return GST_VAAPI_DECODER_STATUS_ERROR_UNSUPPORTED_CHROMA_FORMAT;
