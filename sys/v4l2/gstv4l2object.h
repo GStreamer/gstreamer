@@ -241,6 +241,10 @@ GValueArray* gst_v4l2_probe_get_values      (GstPropertyProbe * probe, guint pro
 
 GstCaps*      gst_v4l2_object_get_all_caps (void);
 
+GstCaps*      gst_v4l2_object_get_raw_caps (void);
+
+GstCaps*      gst_v4l2_object_get_codec_caps (void);
+
 GstStructure* gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
 
 gboolean      gst_v4l2_object_set_format  (GstV4l2Object * v4l2object, GstCaps * caps);

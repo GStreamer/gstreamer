@@ -943,82 +943,91 @@ gst_v4l2_object_close (GstV4l2Object * v4l2object)
 /*
  * common format / caps utilities:
  */
+typedef enum
+{
+  GST_V4L2_RAW = 1 << 0,
+  GST_V4L2_CODEC = 1 << 1,
+  GST_V4L2_TRANSPORT = 1 << 2,
+  GST_V4L2_ALL = 0xffff
+} GstV4L2FormatFlags;
+
 typedef struct
 {
   guint32 format;
   gboolean dimensions;
+  GstV4L2FormatFlags flags;
 } GstV4L2FormatDesc;
 
 static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   /* from Linux 2.6.15 videodev2.h */
-  {V4L2_PIX_FMT_RGB332, TRUE},
-  {V4L2_PIX_FMT_RGB555, TRUE},
-  {V4L2_PIX_FMT_RGB565, TRUE},
-  {V4L2_PIX_FMT_RGB555X, TRUE},
-  {V4L2_PIX_FMT_RGB565X, TRUE},
-  {V4L2_PIX_FMT_BGR24, TRUE},
-  {V4L2_PIX_FMT_RGB24, TRUE},
-  {V4L2_PIX_FMT_BGR32, TRUE},
-  {V4L2_PIX_FMT_RGB32, TRUE},
-  {V4L2_PIX_FMT_GREY, TRUE},
-  {V4L2_PIX_FMT_YVU410, TRUE},
-  {V4L2_PIX_FMT_YVU420, TRUE},
-  {V4L2_PIX_FMT_YUYV, TRUE},
-  {V4L2_PIX_FMT_UYVY, TRUE},
-  {V4L2_PIX_FMT_YUV422P, TRUE},
-  {V4L2_PIX_FMT_YUV411P, TRUE},
-  {V4L2_PIX_FMT_Y41P, TRUE},
+  {V4L2_PIX_FMT_RGB332, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_RGB555, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_RGB565, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_RGB555X, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_RGB565X, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_BGR24, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_RGB24, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_BGR32, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_RGB32, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_GREY, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YVU410, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YVU420, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YUYV, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_UYVY, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YUV422P, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YUV411P, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_Y41P, TRUE, GST_V4L2_RAW},
 
   /* two planes -- one Y, one Cr + Cb interleaved  */
-  {V4L2_PIX_FMT_NV12, TRUE},
-  {V4L2_PIX_FMT_NV12M, TRUE},
-  {V4L2_PIX_FMT_NV21, TRUE},
-  {V4L2_PIX_FMT_NV21M, TRUE},
+  {V4L2_PIX_FMT_NV12, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_NV12M, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_NV21, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_NV21M, TRUE, GST_V4L2_RAW},
 
   /*  The following formats are not defined in the V4L2 specification */
-  {V4L2_PIX_FMT_YUV410, TRUE},
-  {V4L2_PIX_FMT_YUV420, TRUE},
-  {V4L2_PIX_FMT_YYUV, TRUE},
-  {V4L2_PIX_FMT_HI240, TRUE},
+  {V4L2_PIX_FMT_YUV410, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YUV420, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_YYUV, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_HI240, TRUE, GST_V4L2_RAW},
 
   /* see http://www.siliconimaging.com/RGB%20Bayer.htm */
 #ifdef V4L2_PIX_FMT_SBGGR8
-  {V4L2_PIX_FMT_SBGGR8, TRUE},
+  {V4L2_PIX_FMT_SBGGR8, TRUE, GST_V4L2_CODEC},
 #endif
 
   /* compressed formats */
-  {V4L2_PIX_FMT_MJPEG, TRUE},
-  {V4L2_PIX_FMT_JPEG, TRUE},
+  {V4L2_PIX_FMT_MJPEG, TRUE, GST_V4L2_CODEC},
+  {V4L2_PIX_FMT_JPEG, TRUE, GST_V4L2_CODEC},
 #ifdef V4L2_PIX_FMT_PJPG
-  {V4L2_PIX_FMT_PJPG, TRUE},
+  {V4L2_PIX_FMT_PJPG, TRUE, GST_V4L2_CODEC},
 #endif
-  {V4L2_PIX_FMT_DV, TRUE},
-  {V4L2_PIX_FMT_MPEG, FALSE},
+  {V4L2_PIX_FMT_DV, TRUE, GST_V4L2_TRANSPORT},
+  {V4L2_PIX_FMT_MPEG, FALSE, GST_V4L2_TRANSPORT},
 #ifdef V4L2_PIX_FMT_MPEG4
-  {V4L2_PIX_FMT_MPEG4, TRUE},
+  {V4L2_PIX_FMT_MPEG4, TRUE, GST_V4L2_CODEC},
 #endif
 
 #ifdef V4L2_PIX_FMT_H263
-  {V4L2_PIX_FMT_H263, TRUE},
+  {V4L2_PIX_FMT_H263, TRUE, GST_V4L2_CODEC},
 #endif
 #ifdef V4L2_PIX_FMT_H264
-  {V4L2_PIX_FMT_H264, TRUE},
+  {V4L2_PIX_FMT_H264, TRUE, GST_V4L2_CODEC},
 #endif
 
   /*  Vendor-specific formats   */
-  {V4L2_PIX_FMT_WNVA, TRUE},
+  {V4L2_PIX_FMT_WNVA, TRUE, GST_V4L2_CODEC},
 
 #ifdef V4L2_PIX_FMT_SN9C10X
-  {V4L2_PIX_FMT_SN9C10X, TRUE},
+  {V4L2_PIX_FMT_SN9C10X, TRUE, GST_V4L2_CODEC},
 #endif
 #ifdef V4L2_PIX_FMT_PWC1
-  {V4L2_PIX_FMT_PWC1, TRUE},
+  {V4L2_PIX_FMT_PWC1, TRUE, GST_V4L2_CODEC},
 #endif
 #ifdef V4L2_PIX_FMT_PWC2
-  {V4L2_PIX_FMT_PWC2, TRUE},
+  {V4L2_PIX_FMT_PWC2, TRUE, GST_V4L2_CODEC},
 #endif
 #ifdef V4L2_PIX_FMT_YVYU
-  {V4L2_PIX_FMT_YVYU, TRUE},
+  {V4L2_PIX_FMT_YVYU, TRUE, GST_V4L2_RAW},
 #endif
 };
 
@@ -1515,36 +1524,67 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
 }
 
 
+static GstCaps *
+gst_v4l2_object_get_caps_helper (GstV4L2FormatFlags flags)
+{
+  GstStructure *structure;
+  GstCaps *caps;
+  guint i;
+
+  caps = gst_caps_new_empty ();
+  for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
+
+    if ((gst_v4l2_formats[i].flags & flags) == 0)
+      continue;
+
+    structure =
+        gst_v4l2_object_v4l2fourcc_to_structure (gst_v4l2_formats[i].format);
+    if (structure) {
+      if (gst_v4l2_formats[i].dimensions) {
+        gst_structure_set (structure,
+            "width", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
+            "height", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
+            "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1, NULL);
+      }
+      gst_caps_append_structure (caps, structure);
+    }
+  }
+
+  return gst_caps_simplify (caps);
+}
 
 GstCaps *
 gst_v4l2_object_get_all_caps (void)
 {
   static GstCaps *caps = NULL;
 
-  if (caps == NULL) {
-    GstStructure *structure;
-
-    guint i;
-
-    caps = gst_caps_new_empty ();
-    for (i = 0; i < GST_V4L2_FORMAT_COUNT; i++) {
-      structure =
-          gst_v4l2_object_v4l2fourcc_to_structure (gst_v4l2_formats[i].format);
-      if (structure) {
-        if (gst_v4l2_formats[i].dimensions) {
-          gst_structure_set (structure,
-              "width", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
-              "height", GST_TYPE_INT_RANGE, 1, GST_V4L2_MAX_SIZE,
-              "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1, NULL);
-        }
-        gst_caps_append_structure (caps, structure);
-      }
-    }
-  }
+  if (caps == NULL)
+    caps = gst_v4l2_object_get_caps_helper (GST_V4L2_ALL);
 
   return gst_caps_ref (caps);
 }
 
+GstCaps *
+gst_v4l2_object_get_raw_caps (void)
+{
+  static GstCaps *caps = NULL;
+
+  if (caps == NULL)
+    caps = gst_v4l2_object_get_caps_helper (GST_V4L2_RAW);
+
+  return gst_caps_ref (caps);
+}
+
+GstCaps *
+gst_v4l2_object_get_codec_caps (void)
+{
+  static GstCaps *caps = NULL;
+
+  if (caps == NULL)
+    caps = gst_v4l2_object_get_caps_helper (GST_V4L2_CODEC);
+
+  return gst_caps_ref (caps);
+}
 
 /* if the device actually support multi-planar
  * we also allow to use plane in a contiguous manner
