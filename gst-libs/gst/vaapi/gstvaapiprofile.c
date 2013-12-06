@@ -80,6 +80,12 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
     { GST_VAAPI_PROFILE_H264_BASELINE, VAProfileH264Baseline,
       "video/x-h264", "baseline"
     },
+#if VA_CHECK_VERSION(0,31,1)
+    { GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE,
+      VAProfileH264ConstrainedBaseline,
+      "video/x-h264", "constrained-baseline"
+    },
+#endif
     { GST_VAAPI_PROFILE_H264_MAIN, VAProfileH264Main,
       "video/x-h264", "main"
     },

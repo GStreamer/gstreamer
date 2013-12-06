@@ -40,6 +40,9 @@ gst_vaapi_utils_h264_get_profile (guint8 profile_idc)
     case GST_H264_PROFILE_HIGH:
       profile = GST_VAAPI_PROFILE_H264_HIGH;
       break;
+    case GST_H264_PROFILE_HIGH10:
+      profile = GST_VAAPI_PROFILE_H264_HIGH10;
+      break;
     default:
       g_assert (0 && "unsupported profile_idc value");
       profile = GST_VAAPI_PROFILE_UNKNOWN;
@@ -56,6 +59,7 @@ gst_vaapi_utils_h264_get_profile_idc (GstVaapiProfile profile)
 
   switch (profile) {
     case GST_VAAPI_PROFILE_H264_BASELINE:
+    case GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE:
       profile_idc = GST_H264_PROFILE_BASELINE;
       break;
     case GST_VAAPI_PROFILE_H264_MAIN:
@@ -63,6 +67,9 @@ gst_vaapi_utils_h264_get_profile_idc (GstVaapiProfile profile)
       break;
     case GST_VAAPI_PROFILE_H264_HIGH:
       profile_idc = GST_H264_PROFILE_HIGH;
+      break;
+    case GST_VAAPI_PROFILE_H264_HIGH10:
+      profile_idc = GST_H264_PROFILE_HIGH10;
       break;
     default:
       g_assert (0 && "unsupported GstVaapiProfile value");
