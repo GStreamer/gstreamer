@@ -24,6 +24,31 @@
 #include <gst/codecparsers/gsth264parser.h>
 #include "gstvaapiutils_h264.h"
 
+/* Table A-1 - Level limits */
+/* *INDENT-OFF* */
+static const GstVaapiH264LevelLimits gst_vaapi_h264_level_limits[] = {
+  /* level                     idc   MaxMBPS   MaxFS MaxDpbMbs   MaxBR */
+  { GST_VAAPI_LEVEL_H264_L1,    10,     1485,     99,     396,      64 },
+  { GST_VAAPI_LEVEL_H264_L1b,   11,     1485,     99,     396,     128 },
+  { GST_VAAPI_LEVEL_H264_L1_1,  11,     3000,    396,     900,     192 },
+  { GST_VAAPI_LEVEL_H264_L1_2,  12,     6000,    396,    2376,     384 },
+  { GST_VAAPI_LEVEL_H264_L1_3,  13,    11880,    396,    2376,     768 },
+  { GST_VAAPI_LEVEL_H264_L2,    20,    11880,    396,    2376,    2000 },
+  { GST_VAAPI_LEVEL_H264_L2_1,  21,    19800,    792,    4752,    4000 },
+  { GST_VAAPI_LEVEL_H264_L2_2,  22,    20250,   1620,    8100,    4000 },
+  { GST_VAAPI_LEVEL_H264_L3,    30,    40500,   1620,    8100,   10000 },
+  { GST_VAAPI_LEVEL_H264_L3_1,  31,   108000,   3600,   18000,   14000 },
+  { GST_VAAPI_LEVEL_H264_L3_2,  32,   216000,   5120,   20480,   20000 },
+  { GST_VAAPI_LEVEL_H264_L4,    40,   245760,   8192,   32768,   20000 },
+  { GST_VAAPI_LEVEL_H264_L4_1,  41,   245760,   8192,   32768,   50000 },
+  { GST_VAAPI_LEVEL_H264_L4_2,  42,   522240,   8704,   34816,   50000 },
+  { GST_VAAPI_LEVEL_H264_L5,    50,   589824,  22080,  110400,  135000 },
+  { GST_VAAPI_LEVEL_H264_L5_1,  51,   983040,  36864,  184320,  240000 },
+  { GST_VAAPI_LEVEL_H264_L5_2,  52,  2073600,  36864,  184320,  240000 },
+  { 0, }
+};
+/* *INDENT-ON* */
+
 /** Returns GstVaapiProfile from H.264 profile_idc value */
 GstVaapiProfile
 gst_vaapi_utils_h264_get_profile (guint8 profile_idc)
@@ -77,6 +102,52 @@ gst_vaapi_utils_h264_get_profile_idc (GstVaapiProfile profile)
       break;
   }
   return profile_idc;
+}
+
+/** Returns GstVaapiLevelH264 from H.264 level_idc value */
+GstVaapiLevelH264
+gst_vaapi_utils_h264_get_level (guint8 level_idc)
+{
+  const GstVaapiH264LevelLimits *llp;
+
+  // Prefer Level 1.1 over level 1b
+  if (G_UNLIKELY (level_idc == 11))
+    return GST_VAAPI_LEVEL_H264_L1_1;
+
+  for (llp = gst_vaapi_h264_level_limits; llp->level != 0; llp++) {
+    if (llp->level_idc == level_idc)
+      return llp->level;
+  }
+  g_assert (0 && "unsupported level_idc value");
+  return (GstVaapiLevelH264) 0;
+}
+
+/** Returns H.264 level_idc value from GstVaapiLevelH264 */
+guint8
+gst_vaapi_utils_h264_get_level_idc (GstVaapiLevelH264 level)
+{
+  const GstVaapiH264LevelLimits *const llp =
+     gst_vaapi_utils_h264_get_level_limits (level);
+
+  return llp ? llp->level_idc : 0;
+}
+
+/** Returns level limits as specified in Table A-1 of the H.264 standard */
+const GstVaapiH264LevelLimits *
+gst_vaapi_utils_h264_get_level_limits (GstVaapiLevelH264 level)
+{
+  if (level < GST_VAAPI_LEVEL_H264_L1 || level > GST_VAAPI_LEVEL_H264_L5_2)
+    return NULL;
+  return &gst_vaapi_h264_level_limits[level - GST_VAAPI_LEVEL_H264_L1];
+}
+
+/** Returns the Table A-1 specification */
+const GstVaapiH264LevelLimits *
+gst_vaapi_utils_h264_get_level_limits_table (guint * out_length_ptr)
+{
+  if (out_length_ptr)
+    *out_length_ptr = G_N_ELEMENTS (gst_vaapi_h264_level_limits) - 1;
+  return gst_vaapi_h264_level_limits;
 }
 
 /** Returns GstVaapiChromaType from H.264 chroma_format_idc value */

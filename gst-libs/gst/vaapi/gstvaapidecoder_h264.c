@@ -417,34 +417,23 @@ exec_ref_pic_marking(GstVaapiDecoderH264 *decoder, GstVaapiPictureH264 *picture)
 static guint
 get_max_dec_frame_buffering(GstH264SPS *sps)
 {
-    guint max_dec_frame_buffering, MaxDpbMbs, PicSizeMbs;
+    guint max_dec_frame_buffering, PicSizeMbs;
+    GstVaapiLevelH264 level;
+    const GstVaapiH264LevelLimits *level_limits;
 
     /* Table A-1 - Level limits */
-    switch (sps->level_idc) {
-    case 10: MaxDpbMbs = 396;    break;
-    case 11: MaxDpbMbs = 900;    break;
-    case 12: MaxDpbMbs = 2376;   break;
-    case 13: MaxDpbMbs = 2376;   break;
-    case 20: MaxDpbMbs = 2376;   break;
-    case 21: MaxDpbMbs = 4752;   break;
-    case 22: MaxDpbMbs = 8100;   break;
-    case 30: MaxDpbMbs = 8100;   break;
-    case 31: MaxDpbMbs = 18000;  break;
-    case 32: MaxDpbMbs = 20480;  break;
-    case 40: MaxDpbMbs = 32768;  break;
-    case 41: MaxDpbMbs = 32768;  break;
-    case 42: MaxDpbMbs = 34816;  break;
-    case 50: MaxDpbMbs = 110400; break;
-    case 51: MaxDpbMbs = 184320; break;
-    default:
-        g_assert(0 && "unhandled level");
-        break;
-    }
+    if (G_UNLIKELY(sps->level_idc == 11 && sps->constraint_set3_flag))
+        level = GST_VAAPI_LEVEL_H264_L1b;
+    else
+        level = gst_vaapi_utils_h264_get_level(sps->level_idc);
+    level_limits = gst_vaapi_utils_h264_get_level_limits(level);
+    if (!level_limits)
+        return 16;
 
     PicSizeMbs = ((sps->pic_width_in_mbs_minus1 + 1) *
                   (sps->pic_height_in_map_units_minus1 + 1) *
                   (sps->frame_mbs_only_flag ? 1 : 2));
-    max_dec_frame_buffering = MaxDpbMbs / PicSizeMbs;
+    max_dec_frame_buffering = level_limits->MaxDpbMbs / PicSizeMbs;
 
     /* VUI parameters */
     if (sps->vui_parameters_present_flag) {
