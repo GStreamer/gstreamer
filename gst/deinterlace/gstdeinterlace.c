@@ -277,16 +277,19 @@ gst_deinterlace_locking_get_type (void)
 
 #define DEINTERLACE_CAPS GST_VIDEO_CAPS_MAKE(DEINTERLACE_VIDEO_FORMATS)
 
+#define DEINTERLACE_ALL_CAPS DEINTERLACE_CAPS ";" \
+    GST_VIDEO_CAPS_MAKE_WITH_FEATURES ("ANY", GST_VIDEO_FORMATS_ALL)
+
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (DEINTERLACE_CAPS)
+    GST_STATIC_CAPS (DEINTERLACE_ALL_CAPS)
     );
 
 static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (DEINTERLACE_CAPS)
+    GST_STATIC_CAPS (DEINTERLACE_ALL_CAPS)
     );
 
 static void gst_deinterlace_finalize (GObject * self);
@@ -2126,12 +2129,21 @@ gst_deinterlace_getcaps (GstDeinterlace * self, GstPad * pad, GstCaps * filter)
   GstCaps *ourcaps;
   GstCaps *peercaps;
   gboolean half;
+  GstVideoInterlaceMode interlacing_mode;
 
   otherpad = (pad == self->srcpad) ? self->sinkpad : self->srcpad;
   half = pad != self->srcpad;
 
   ourcaps = gst_pad_get_pad_template_caps (pad);
   peercaps = gst_pad_peer_query_caps (otherpad, NULL);
+
+  interlacing_mode = GST_VIDEO_INFO_INTERLACE_MODE (&self->vinfo);
+  if (self->mode == GST_DEINTERLACE_MODE_INTERLACED ||
+      (self->mode == GST_DEINTERLACE_MODE_AUTO &&
+          interlacing_mode != GST_VIDEO_INTERLACE_MODE_PROGRESSIVE)) {
+    gst_caps_unref (ourcaps);
+    ourcaps = gst_caps_from_string (DEINTERLACE_CAPS);
+  }
 
   if (peercaps) {
     GST_DEBUG_OBJECT (pad, "Peer has caps %" GST_PTR_FORMAT, peercaps);
