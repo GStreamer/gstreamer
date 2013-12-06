@@ -3190,6 +3190,10 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
     min += ctl.value;
   }
 
+  /* Request a bigger max, if one was suggested but it's too small */
+  if (max != 0 && max < min)
+    max = min;
+
   /* select a pool */
   switch (obj->mode) {
     case GST_V4L2_IO_RW:
