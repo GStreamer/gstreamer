@@ -1163,7 +1163,8 @@ gst_v4l2_buffer_pool_release_buffer (GstBufferPool * bpool, GstBuffer * buffer)
               for (i = 0; i < meta->n_planes; i++)
                 total_length += meta->vplanes[i].length;
 
-              if (total_length != gst_buffer_get_size (buffer)) {
+              if (total_length != gst_buffer_get_size (buffer) &&
+                  obj->info.finfo->n_planes > 1) {
                 /* FIXME if the lengths has actually changed it may require
                  * to restore the sizes of the individual memories and
                  * re-add them */
