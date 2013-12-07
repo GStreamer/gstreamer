@@ -372,12 +372,10 @@ vmnc_fill_buffer (GstVMncDec * dec, GstVideoCodecFrame * frame)
 
   memcpy (map.data, dec->imagedata, map.size);
 
-  if (dec->cursor.visible) {
+  if (dec->cursor.visible)
     render_cursor (dec, map.data);
-  }
 
   gst_buffer_unmap (frame->output_buffer, &map);
-
 
   return GST_FLOW_OK;
 }
