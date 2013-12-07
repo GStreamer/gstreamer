@@ -1509,7 +1509,7 @@ GstDebugCategory *
 _gst_debug_category_new (const gchar * name, guint color,
     const gchar * description)
 {
-  GstDebugCategory *cat;
+  GstDebugCategory *cat, *catfound;
 
   g_return_val_if_fail (name != NULL, NULL);
 
@@ -1526,10 +1526,12 @@ _gst_debug_category_new (const gchar * name, guint color,
 
   /* add to category list */
   g_mutex_lock (&__cat_mutex);
-  if (_gst_debug_get_category_locked (name)) {
+  catfound = _gst_debug_get_category_locked (name);
+  if (catfound) {
     g_free ((gpointer) cat->name);
     g_free ((gpointer) cat->description);
     g_slice_free (GstDebugCategory, cat);
+    cat = catfound;
   } else {
     __categories = g_slist_prepend (__categories, cat);
   }
