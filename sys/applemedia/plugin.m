@@ -32,11 +32,12 @@
 #endif
 #include "vth264decbin.h"
 #include "vth264encbin.h"
-#include "vtenc.h"
 #include "vtdec.h"
 #include "atdec.h"
 
 #ifndef HAVE_IOS
+void gst_vtenc_register_elements (GstPlugin * plugin);
+
 static void
 enable_mt_mode (void)
 {
@@ -76,8 +77,8 @@ plugin_init (GstPlugin * plugin)
   res &= gst_element_register (plugin, "atdec", GST_RANK_PRIMARY, GST_TYPE_ATDEC);
 
 #ifndef HAVE_IOS
+  res &= gst_element_register (plugin, "vtdec", GST_RANK_PRIMARY, GST_TYPE_VTDEC);
   gst_vtenc_register_elements (plugin);
-  gst_vtdec_register_elements (plugin);
 #endif
 
   return res;

@@ -1,5 +1,6 @@
-/*
- * Copyright (C) 2010 Ole André Vadla Ravnås <oleavr@soundrop.com>
+/* GStreamer
+ * Copyright (C) 2010, 2013 Ole André Vadla Ravnås <oleavr@soundrop.com>
+ * Copyright (C) 2012, 2013 Alessandro Decina <alessandro.d@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -17,62 +18,42 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __GST_VTDEC_H__
-#define __GST_VTDEC_H__
+#ifndef _GST_VTDEC_H_
+#define _GST_VTDEC_H_
 
-#include <gst/gst.h>
 #include <gst/video/video.h>
-
-#include "coremediactx.h"
+#include <gst/video/gstvideodecoder.h>
+#include <CoreMedia/CoreMedia.h>
+#include <VideoToolbox/VideoToolbox.h>
 
 G_BEGIN_DECLS
 
-#define GST_VTDEC_CAST(obj) \
-  ((GstVTDec *) (obj))
-#define GST_VTDEC_CLASS_GET_CODEC_DETAILS(klass) \
-  ((const GstVTDecoderDetails *) g_type_get_qdata (G_OBJECT_CLASS_TYPE (klass), \
-      GST_VTDEC_CODEC_DETAILS_QDATA))
+#define GST_TYPE_VTDEC   (gst_vtdec_get_type())
+#define GST_VTDEC(obj)   (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VTDEC,GstVtdec))
+#define GST_VTDEC_CLASS(klass)   (G_TYPE_CHECK_CLASS_CAST((klass),GST_TYPE_VTDEC,GstVtdecClass))
+#define GST_IS_VTDEC(obj)   (G_TYPE_CHECK_INSTANCE_TYPE((obj),GST_TYPE_VTDEC))
+#define GST_IS_VTDEC_CLASS(obj)   (G_TYPE_CHECK_CLASS_TYPE((klass),GST_TYPE_VTDEC))
 
-typedef struct _GstVTDecoderDetails GstVTDecoderDetails;
+typedef struct _GstVtdec GstVtdec;
+typedef struct _GstVtdecClass GstVtdecClass;
 
-typedef struct _GstVTDecClassParams GstVTDecClassParams;
-typedef struct _GstVTDecClass GstVTDecClass;
-typedef struct _GstVTDec GstVTDec;
-
-struct _GstVTDecoderDetails
+struct _GstVtdec
 {
-  const gchar * name;
-  const gchar * element_name;
-  const gchar * mimetype;
-  VTFormatId format_id;
-};
-
-struct _GstVTDecClass
-{
-  GstElementClass parent_class;
-};
-
-struct _GstVTDec
-{
-  GstElement parent;
-
-  const GstVTDecoderDetails * details;
-
-  GstPad * sinkpad;
-  GstPad * srcpad;
-
-  GstCoreMediaCtx * ctx;
-
-  GstVideoInfo vinfo;
-  CMFormatDescriptionRef fmt_desc;
+  GstVideoDecoder base_vtdec;
+  GstVideoInfo video_info;
+  CMFormatDescriptionRef format_description;
   VTDecompressionSessionRef session;
-
-  GQueue * cur_outbufs;
-  gboolean flush;
+  GAsyncQueue *reorder_queue;
+  gint reorder_queue_frame_delay;
 };
 
-void gst_vtdec_register_elements (GstPlugin * plugin);
+struct _GstVtdecClass
+{
+  GstVideoDecoderClass base_vtdec_class;
+};
+
+GType gst_vtdec_get_type (void);
 
 G_END_DECLS
 
-#endif /* __GST_VTDEC_H__ */
+#endif

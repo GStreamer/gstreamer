@@ -54,6 +54,10 @@ libgstapplemedia_la_LDFLAGS =			\
 	-Wl,-framework -Wl,CoreVideo 		\
 	-Wl,-framework -Wl,AudioToolbox
 
+if !HAVE_IOS
+libgstapplemedia_la_LDFLAGS += -Wl,-framework -Wl,VideoToolbox
+endif
+
 noinst_HEADERS =				\
 	qtkitvideosrc.h				\
 	avfvideosrc.h				\

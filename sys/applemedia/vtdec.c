@@ -1,5 +1,6 @@
-/*
+/* GStreamer
  * Copyright (C) 2010, 2013 Ole André Vadla Ravnås <oleavr@soundrop.com>
+ * Copyright (C) 2012, 2013 Alessandro Decina <alessandro.d@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -13,46 +14,72 @@
  *
  * You should have received a copy of the GNU Library General Public
  * License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
- * Boston, MA 02110-1301, USA.
+ * Free Software Foundation, Inc., 51 Franklin Street, Suite 500,
+ * Boston, MA 02110-1335, USA.
+ */
+/**
+ * SECTION:element-gstvtdec
+ *
+ * Apple VideoToolbox based decoder.
+ *
+ * <refsect2>
+ * <title>Example launch line</title>
+ * |[
+ * gst-launch -v filesrc location=file.mov ! qtdemux ! queue ! h264parse ! vtdec ! videoconvert ! autovideosink
+ * ]|
+ * Decode h264 video from a mov file.
+ * </refsect2>
  */
 
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include <gst/gst.h>
+#include <gst/video/video.h>
+#include <gst/video/gstvideodecoder.h>
 #include "vtdec.h"
-
-#include "corevideobuffer.h"
 #include "vtutil.h"
+#include "corevideobuffer.h"
+#include <string.h>
 
-GST_DEBUG_CATEGORY (gst_vtdec_debug);
-#define GST_CAT_DEFAULT (gst_vtdec_debug)
+GST_DEBUG_CATEGORY_STATIC (gst_vtdec_debug_category);
+#define GST_CAT_DEFAULT gst_vtdec_debug_category
 
-#define GST_VTDEC_CODEC_DETAILS_QDATA \
-    g_quark_from_static_string ("vtdec-codec-details")
+static void gst_vtdec_finalize (GObject * object);
 
-static GstElementClass *parent_class = NULL;
+static gboolean gst_vtdec_start (GstVideoDecoder * decoder);
+static gboolean gst_vtdec_stop (GstVideoDecoder * decoder);
+static gboolean gst_vtdec_set_format (GstVideoDecoder * decoder,
+    GstVideoCodecState * state);
+static gboolean gst_vtdec_flush (GstVideoDecoder * decoder);
+static GstFlowReturn gst_vtdec_finish (GstVideoDecoder * decoder);
+static GstFlowReturn gst_vtdec_handle_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame);
 
-static GstStateChangeReturn gst_vtdec_change_state (GstElement * element,
-    GstStateChange transition);
-static gboolean gst_vtdec_sink_setcaps (GstVTDec * dec, GstCaps * caps);
-static GstFlowReturn gst_vtdec_chain (GstPad * pad, GstObject * parent,
+static gboolean gst_vtdec_create_session (GstVtdec * vtdec);
+static void gst_vtdec_invalidate_session (GstVtdec * vtdec);
+static CMSampleBufferRef cm_sample_buffer_from_gst_buffer (GstVtdec * vtdec,
     GstBuffer * buf);
-
-static CMFormatDescriptionRef gst_vtdec_create_format_description
-    (GstVTDec * self);
+static GstFlowReturn gst_vtdec_push_frames_if_needed (GstVtdec * vtdec,
+    gboolean drain, gboolean flush);
+static CMFormatDescriptionRef create_format_description (GstVtdec * vtdec,
+    CMVideoCodecType cm_format);
 static CMFormatDescriptionRef
-gst_vtdec_create_format_description_from_codec_data (GstVTDec * self,
-    GstBuffer * codec_data);
-static VTDecompressionSessionRef gst_vtdec_create_session (GstVTDec * self,
-    CMFormatDescriptionRef fmt_desc);
-static void gst_vtdec_destroy_session (GstVTDec * self,
-    VTDecompressionSessionRef * session);
-static GstFlowReturn gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf);
-static void gst_vtdec_enqueue_frame (void *data1, void *data2, VTStatus result,
-    VTDecodeInfoFlags info, CVBufferRef cvbuf, CMTime pts, CMTime dts);
-static gboolean gst_vtdec_sink_event (GstPad * pad, GstObject * parent,
-    GstEvent * event);
+create_format_description_from_codec_data (GstVtdec * vtdec,
+    CMVideoCodecType cm_format, GstBuffer * codec_data);
+static void gst_vtdec_session_output_callback (void
+    *decompression_output_ref_con, void *source_frame_ref_con, OSStatus status,
+    VTDecodeInfoFlags info_flags, CVImageBufferRef image_buffer, CMTime pts,
+    CMTime duration);
 
-static CMSampleBufferRef gst_vtdec_sample_buffer_from (GstVTDec * self,
-    GstBuffer * buf);
+static GstStaticPadTemplate gst_vtdec_sink_template =
+    GST_STATIC_PAD_TEMPLATE ("sink",
+    GST_PAD_SINK,
+    GST_PAD_ALWAYS,
+    GST_STATIC_CAPS ("video/x-h264, stream-format=avc, alignment=au;"
+        "video/mpeg;" "image/jpeg")
+    );
 
 #ifdef HAVE_IOS
 #define GST_VTDEC_VIDEO_FORMAT_STR "NV12"
@@ -64,348 +91,299 @@ static CMSampleBufferRef gst_vtdec_sample_buffer_from (GstVTDec * self,
 #define GST_VTDEC_CV_VIDEO_FORMAT kCVPixelFormatType_422YpCbCr8
 #endif
 
+#define VIDEO_SRC_CAPS \
+    GST_VIDEO_CAPS_MAKE("{" GST_VTDEC_VIDEO_FORMAT_STR "}")
+
+G_DEFINE_TYPE_WITH_CODE (GstVtdec, gst_vtdec, GST_TYPE_VIDEO_DECODER,
+    GST_DEBUG_CATEGORY_INIT (gst_vtdec_debug_category, "vtdec", 0,
+        "debug category for vtdec element"));
+
 static void
-gst_vtdec_base_init (GstVTDecClass * klass)
+gst_vtdec_class_init (GstVtdecClass * klass)
 {
-  const GstVTDecoderDetails *codec_details =
-      GST_VTDEC_CLASS_GET_CODEC_DETAILS (klass);
-  GstElementClass *element_class = GST_ELEMENT_CLASS (klass);
-  const int min_width = 1, max_width = G_MAXINT;
-  const int min_height = 1, max_height = G_MAXINT;
-  const int min_fps_n = 0, max_fps_n = G_MAXINT;
-  const int min_fps_d = 1, max_fps_d = 1;
-  GstPadTemplate *sink_template, *src_template;
-  GstCaps *sink_caps;
-  gchar *longname, *description;
+  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
+  GstVideoDecoderClass *video_decoder_class = GST_VIDEO_DECODER_CLASS (klass);
 
-  longname = g_strdup_printf ("%s decoder", codec_details->name);
-  description = g_strdup_printf ("%s decoder", codec_details->name);
+  /* Setting up pads and setting metadata should be moved to
+     base_class_init if you intend to subclass this class. */
+  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
+      gst_static_pad_template_get (&gst_vtdec_sink_template));
+  gst_element_class_add_pad_template (GST_ELEMENT_CLASS (klass),
+      gst_pad_template_new ("src", GST_PAD_SRC, GST_PAD_ALWAYS,
+          gst_caps_from_string (VIDEO_SRC_CAPS)));
 
-  gst_element_class_set_metadata (element_class, longname,
-      "Codec/Decoder/Video", description,
-      "Ole André Vadla Ravnås <oleavr@soundrop.com>");
+  gst_element_class_set_static_metadata (GST_ELEMENT_CLASS (klass),
+      "Apple VideoToolbox decoder",
+      "Codec/Decoder/Video",
+      "Apple VideoToolbox Decoder",
+      "Ole André Vadla Ravnås <oleavr@soundrop.com>; "
+      "Alessandro Decina <alessandro.d@gmail.com>");
 
-  g_free (longname);
-  g_free (description);
-
-  sink_caps = gst_caps_new_simple (codec_details->mimetype,
-      "width", GST_TYPE_INT_RANGE, min_width, max_width,
-      "height", GST_TYPE_INT_RANGE, min_height, max_height,
-      "framerate", GST_TYPE_FRACTION_RANGE,
-      min_fps_n, min_fps_d, max_fps_n, max_fps_d, NULL);
-  if (codec_details->format_id == kVTFormatH264) {
-    gst_structure_set (gst_caps_get_structure (sink_caps, 0),
-        "stream-format", G_TYPE_STRING, "avc", NULL);
-  } else if (codec_details->format_id == kVTFormatMPEG2) {
-    gst_structure_set (gst_caps_get_structure (sink_caps, 0),
-        "mpegversion", GST_TYPE_INT_RANGE, 1, 2,
-        "systemstream", G_TYPE_BOOLEAN, FALSE, NULL);
-  }
-  sink_template = gst_pad_template_new ("sink", GST_PAD_SINK, GST_PAD_ALWAYS,
-      sink_caps);
-  gst_element_class_add_pad_template (element_class, sink_template);
-
-  src_template = gst_pad_template_new ("src",
-      GST_PAD_SRC,
-      GST_PAD_ALWAYS,
-      gst_caps_new_simple ("video/x-raw",
-          "format", G_TYPE_STRING, GST_VTDEC_VIDEO_FORMAT_STR,
-          "width", GST_TYPE_INT_RANGE, min_width, max_width,
-          "height", GST_TYPE_INT_RANGE, min_height, max_height,
-          "framerate", GST_TYPE_FRACTION_RANGE,
-          min_fps_n, min_fps_d, max_fps_n, max_fps_d, NULL));
-  gst_element_class_add_pad_template (element_class, src_template);
+  gobject_class->finalize = gst_vtdec_finalize;
+  video_decoder_class->start = GST_DEBUG_FUNCPTR (gst_vtdec_start);
+  video_decoder_class->stop = GST_DEBUG_FUNCPTR (gst_vtdec_stop);
+  video_decoder_class->set_format = GST_DEBUG_FUNCPTR (gst_vtdec_set_format);
+  video_decoder_class->flush = GST_DEBUG_FUNCPTR (gst_vtdec_flush);
+  video_decoder_class->finish = GST_DEBUG_FUNCPTR (gst_vtdec_finish);
+  video_decoder_class->handle_frame =
+      GST_DEBUG_FUNCPTR (gst_vtdec_handle_frame);
 }
 
 static void
-gst_vtdec_class_init (GstVTDecClass * klass)
+gst_vtdec_init (GstVtdec * vtdec)
 {
-  GstElementClass *gstelement_class;
-
-  gstelement_class = (GstElementClass *) klass;
-
-  parent_class = g_type_class_peek_parent (klass);
-
-  gstelement_class->change_state = gst_vtdec_change_state;
+  vtdec->reorder_queue = g_async_queue_new ();
 }
 
-static void
-gst_vtdec_init (GstVTDec * self)
+void
+gst_vtdec_finalize (GObject * object)
 {
-  GstVTDecClass *klass = (GstVTDecClass *) G_OBJECT_GET_CLASS (self);
-  GstElementClass *element_klass = GST_ELEMENT_CLASS (klass);
-  GstElement *element = GST_ELEMENT (self);
+  GstVtdec *vtdec = GST_VTDEC (object);
 
-  self->details = GST_VTDEC_CLASS_GET_CODEC_DETAILS (klass);
+  GST_DEBUG_OBJECT (vtdec, "finalize");
 
-  self->sinkpad = gst_pad_new_from_template
-      (gst_element_class_get_pad_template (element_klass, "sink"), "sink");
-  gst_element_add_pad (element, self->sinkpad);
-  gst_pad_set_event_function (self->sinkpad, gst_vtdec_sink_event);
-  gst_pad_set_chain_function (self->sinkpad, gst_vtdec_chain);
+  g_async_queue_unref (vtdec->reorder_queue);
 
-  self->srcpad = gst_pad_new_from_template
-      (gst_element_class_get_pad_template (element_klass, "src"), "src");
-  gst_element_add_pad (element, self->srcpad);
-}
-
-static GstStateChangeReturn
-gst_vtdec_change_state (GstElement * element, GstStateChange transition)
-{
-  GstVTDec *self = GST_VTDEC_CAST (element);
-  GError *error = NULL;
-  GstStateChangeReturn ret;
-
-  if (transition == GST_STATE_CHANGE_NULL_TO_READY) {
-    self->ctx = gst_core_media_ctx_new (GST_API_VIDEO_TOOLBOX, &error);
-    if (error != NULL)
-      goto api_error;
-
-    self->cur_outbufs = g_queue_new ();
-  }
-
-  ret = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  if (transition == GST_STATE_CHANGE_READY_TO_NULL) {
-    gst_vtdec_destroy_session (self, &self->session);
-
-    if (self->fmt_desc != NULL) {
-      CFRelease (self->fmt_desc);
-      self->fmt_desc = NULL;
-    }
-
-    gst_video_info_init (&self->vinfo);
-
-    g_queue_free_full (self->cur_outbufs, (GDestroyNotify) gst_buffer_unref);
-
-    g_object_unref (self->ctx);
-    self->ctx = NULL;
-  }
-
-  return ret;
-
-api_error:
-  {
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED, ("API error"),
-        ("%s", error->message));
-    g_clear_error (&error);
-    return GST_STATE_CHANGE_FAILURE;
-  }
+  G_OBJECT_CLASS (gst_vtdec_parent_class)->finalize (object);
 }
 
 static gboolean
-gst_vtdec_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
+gst_vtdec_start (GstVideoDecoder * decoder)
 {
-  GstVTDec *self = GST_VTDEC_CAST (parent);
-  gboolean forward = TRUE;
-  gboolean res = TRUE;
+  GstVtdec *vtdec = GST_VTDEC (decoder);
 
-  switch (GST_EVENT_TYPE (event)) {
-    case GST_EVENT_CAPS:
-    {
-      GstCaps *caps;
-
-      gst_event_parse_caps (event, &caps);
-      res = gst_vtdec_sink_setcaps (self, caps);
-    }
-    default:
-      break;
-  }
-
-  if (forward)
-    res = gst_pad_event_default (pad, parent, event);
-  return res;
-}
-
-static gboolean
-gst_vtdec_sink_setcaps (GstVTDec * self, GstCaps * caps)
-{
-  GstStructure *structure;
-  CMFormatDescriptionRef fmt_desc = NULL;
-  GstVideoFormat format = GST_VTDEC_VIDEO_FORMAT;
-  gint width, height;
-  gint fps_n, fps_d;
-  gint par_n, par_d;
-
-  structure = gst_caps_get_structure (caps, 0);
-  if (!gst_structure_get_int (structure, "width", &width))
-    goto incomplete_caps;
-  if (!gst_structure_get_int (structure, "height", &height))
-    goto incomplete_caps;
-
-  gst_video_info_init (&self->vinfo);
-  gst_video_info_set_format (&self->vinfo, format, width, height);
-
-  if (gst_structure_get_fraction (structure, "framerate", &fps_n, &fps_d)) {
-    if (fps_n == 0) {
-      /* variable framerate */
-      self->vinfo.flags |= GST_VIDEO_FLAG_VARIABLE_FPS;
-      /* see if we have a max-framerate */
-      gst_structure_get_fraction (structure, "max-framerate", &fps_n, &fps_d);
-    }
-    self->vinfo.fps_n = fps_n;
-    self->vinfo.fps_d = fps_d;
-  } else {
-    /* unspecified is variable framerate */
-    self->vinfo.fps_n = 0;
-    self->vinfo.fps_d = 1;
-  }
-  if (gst_structure_get_fraction (structure, "pixel-aspect-ratio",
-          &par_n, &par_d)) {
-    self->vinfo.par_n = par_n;
-    self->vinfo.par_d = par_d;
-  } else {
-    self->vinfo.par_n = 1;
-    self->vinfo.par_d = 1;
-  }
-
-  if (self->details->format_id == kVTFormatH264) {
-    const GValue *codec_data_value;
-
-    codec_data_value = gst_structure_get_value (structure, "codec_data");
-    if (codec_data_value != NULL) {
-      fmt_desc = gst_vtdec_create_format_description_from_codec_data (self,
-          gst_value_get_buffer (codec_data_value));
-    } else {
-      GST_DEBUG_OBJECT (self, "no codec_data in caps, awaiting future setcaps");
-    }
-  } else {
-    fmt_desc = gst_vtdec_create_format_description (self);
-  }
-
-  if (fmt_desc != NULL) {
-    gst_vtdec_destroy_session (self, &self->session);
-    if (self->fmt_desc != NULL) {
-      CFRelease (self->fmt_desc);
-    }
-
-    self->fmt_desc = fmt_desc;
-    self->session = gst_vtdec_create_session (self, fmt_desc);
-    if (self->session == NULL)
-      goto session_create_error;
-  }
-
-  /* renegotiate when upstream caps change */
-  gst_pad_mark_reconfigure (self->srcpad);
+  GST_DEBUG_OBJECT (vtdec, "start");
 
   return TRUE;
+}
 
-  /* ERRORS */
-incomplete_caps:
-  {
+static gboolean
+gst_vtdec_stop (GstVideoDecoder * decoder)
+{
+  GstVtdec *vtdec = GST_VTDEC (decoder);
+
+  if (vtdec->session)
+    gst_vtdec_invalidate_session (vtdec);
+
+  GST_DEBUG_OBJECT (vtdec, "stop");
+
+  return TRUE;
+}
+
+static gboolean
+gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
+{
+  GstStructure *structure;
+  CMVideoCodecType cm_format;
+  CMFormatDescriptionRef format_description = NULL;
+  const char *caps_name;
+  GstVtdec *vtdec = GST_VTDEC (decoder);
+
+  GST_DEBUG_OBJECT (vtdec, "set_format");
+
+  structure = gst_caps_get_structure (state->caps, 0);
+  caps_name = gst_structure_get_name (structure);
+  if (!strcmp (caps_name, "video/x-h264") && state->codec_data == NULL) {
+    GST_INFO_OBJECT (vtdec, "no codec data, wait for one");
     return TRUE;
   }
-session_create_error:
-  {
-    GST_ELEMENT_ERROR (self, RESOURCE, FAILED,
-        ("failed to create session"), (NULL));
+
+  vtdec->reorder_queue_frame_delay = 0;
+
+  if (!strcmp (caps_name, "video/x-h264")) {
+    cm_format = kCMVideoCodecType_H264;
+    vtdec->reorder_queue_frame_delay = 16;
+  } else if (!strcmp (caps_name, "video/mpeg")) {
+    cm_format = kCMVideoCodecType_MPEG4Video;
+  } else if (!strcmp (caps_name, "image/jpeg")) {
+    cm_format = kCMVideoCodecType_JPEG;
+  }
+
+  gst_video_info_from_caps (&vtdec->video_info, state->caps);
+
+  if (state->codec_data) {
+    format_description = create_format_description_from_codec_data (vtdec,
+        cm_format, state->codec_data);
+  } else {
+    format_description = create_format_description (vtdec, cm_format);
+  }
+
+  if (vtdec->session)
+    gst_vtdec_invalidate_session (vtdec);
+
+  if (vtdec->format_description)
+    CFRelease (vtdec->format_description);
+  vtdec->format_description = format_description;
+
+  if (!gst_vtdec_create_session (vtdec))
     return FALSE;
-  }
+
+  gst_video_decoder_set_output_state (decoder,
+      GST_VTDEC_VIDEO_FORMAT, vtdec->video_info.width, vtdec->video_info.height,
+      state);
+
+  return TRUE;
 }
 
 static gboolean
-gst_vtdec_is_negotiated (GstVTDec * self)
+gst_vtdec_flush (GstVideoDecoder * decoder)
 {
-  return self->vinfo.width != 0;
-}
+  GstVtdec *vtdec = GST_VTDEC (decoder);
 
-static gboolean
-gst_vtdec_negotiate_downstream (GstVTDec * self)
-{
-  gboolean result;
-  GstCaps *caps;
+  GST_DEBUG_OBJECT (vtdec, "flush");
 
-  if (!gst_pad_check_reconfigure (self->srcpad))
-    return TRUE;
+  gst_vtdec_push_frames_if_needed (vtdec, FALSE, TRUE);
 
-  caps = gst_video_info_to_caps (&self->vinfo);
-  result = gst_pad_push_event (self->srcpad, gst_event_new_caps (caps));
-  gst_caps_unref (caps);
-
-  return result;
+  return TRUE;
 }
 
 static GstFlowReturn
-gst_vtdec_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
+gst_vtdec_finish (GstVideoDecoder * decoder)
 {
-  GstVTDec *self = GST_VTDEC_CAST (parent);
+  GstVtdec *vtdec = GST_VTDEC (decoder);
 
-  if (!gst_vtdec_is_negotiated (self))
-    goto not_negotiated;
+  GST_DEBUG_OBJECT (vtdec, "finish");
 
-  if (self->session == NULL)
-    goto pending_caps;
-
-  return gst_vtdec_decode_buffer (self, buf);
-
-not_negotiated:
-  GST_DEBUG_OBJECT (self, "chain called while not negotiated");
-  gst_buffer_unref (buf);
-  return GST_FLOW_NOT_NEGOTIATED;
-
-pending_caps:
-  gst_buffer_unref (buf);
-  GST_DEBUG_OBJECT (self, "dropped buffer %p (waiting for complete caps)", buf);
-  return GST_FLOW_OK;
+  return gst_vtdec_push_frames_if_needed (vtdec, TRUE, FALSE);
 }
 
-static CMFormatDescriptionRef
-gst_vtdec_create_format_description (GstVTDec * self)
+static GstFlowReturn
+gst_vtdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
 {
-  CMFormatDescriptionRef fmt_desc;
+  OSStatus status;
+  CMSampleBufferRef cm_sample_buffer = NULL;
+  VTDecodeFrameFlags input_flags, output_flags;
+  GstVtdec *vtdec = GST_VTDEC (decoder);
+  GstFlowReturn ret = GST_FLOW_OK;
+  int decode_frame_number = frame->decode_frame_number;
+
+  GST_LOG_OBJECT (vtdec, "got input frame %d", decode_frame_number);
+
+  ret = gst_vtdec_push_frames_if_needed (vtdec, FALSE, FALSE);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  /* don't bother enabling kVTDecodeFrame_EnableTemporalProcessing at all since
+   * it's not mandatory for the underlying VT codec to respect it. KISS and do
+   * reordering ourselves.
+   */
+  input_flags = kVTDecodeFrame_EnableAsynchronousDecompression;
+  output_flags = 0;
+
+  cm_sample_buffer =
+      cm_sample_buffer_from_gst_buffer (vtdec, frame->input_buffer);
+  status =
+      VTDecompressionSessionDecodeFrame (vtdec->session, cm_sample_buffer,
+      input_flags, frame, NULL);
+  if (status != noErr && FALSE)
+    goto error;
+
+out:
+  GST_LOG_OBJECT (vtdec, "submitted input frame %d", decode_frame_number);
+
+  CFRelease (cm_sample_buffer);
+  return ret;
+
+error:
+  GST_ELEMENT_ERROR (vtdec, STREAM, DECODE, (NULL),
+      ("VTDecompressionSessionDecodeFrame returned %d", status));
+  ret = GST_FLOW_ERROR;
+  goto out;
+}
+
+static gboolean
+gst_vtdec_create_session (GstVtdec * vtdec)
+{
+  CFMutableDictionaryRef output_image_buffer_attrs;
+  VTDecompressionOutputCallbackRecord callback;
   OSStatus status;
 
-  status = CMVideoFormatDescriptionCreate (NULL,
-      self->details->format_id, self->vinfo.width, self->vinfo.height,
-      NULL, &fmt_desc);
-  if (status == noErr)
-    return fmt_desc;
-  else
-    return NULL;
+  output_image_buffer_attrs =
+      CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
+      &kCFTypeDictionaryValueCallBacks);
+  gst_vtutil_dict_set_i32 (output_image_buffer_attrs,
+      kCVPixelBufferPixelFormatTypeKey, GST_VTDEC_CV_VIDEO_FORMAT);
+  gst_vtutil_dict_set_i32 (output_image_buffer_attrs, kCVPixelBufferWidthKey,
+      vtdec->video_info.width);
+  gst_vtutil_dict_set_i32 (output_image_buffer_attrs, kCVPixelBufferHeightKey,
+      vtdec->video_info.height);
+  gst_vtutil_dict_set_i32 (output_image_buffer_attrs,
+      kCVPixelBufferBytesPerRowAlignmentKey, 2 * vtdec->video_info.width);
+
+  callback.decompressionOutputCallback = gst_vtdec_session_output_callback;
+  callback.decompressionOutputRefCon = vtdec;
+
+  status = VTDecompressionSessionCreate (NULL, vtdec->format_description,
+      NULL, output_image_buffer_attrs, &callback, &vtdec->session);
+
+  CFRelease (output_image_buffer_attrs);
+
+  if (status != noErr) {
+    GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
+        ("VTDecompressionSessionCreate returned %d", status));
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static void
+gst_vtdec_invalidate_session (GstVtdec * vtdec)
+{
+  g_return_if_fail (vtdec->session);
+
+  VTDecompressionSessionInvalidate (vtdec->session);
+  CFRelease (vtdec->session);
+  vtdec->session = NULL;
 }
 
 static CMFormatDescriptionRef
-gst_vtdec_create_format_description_from_codec_data (GstVTDec * self,
-    GstBuffer * codec_data)
+create_format_description (GstVtdec * vtdec, CMVideoCodecType cm_format)
+{
+  return NULL;
+}
+
+static CMFormatDescriptionRef
+create_format_description_from_codec_data (GstVtdec * vtdec,
+    CMVideoCodecType cm_format, GstBuffer * codec_data)
 {
   CMFormatDescriptionRef fmt_desc;
   CFMutableDictionaryRef extensions, par, atoms;
   GstMapInfo map;
   OSStatus status;
 
-  gst_buffer_map (codec_data, &map, GST_MAP_READ);
-
-  /* CVPixelAspectRatio dict */
-  par = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
-      &kCFTypeDictionaryValueCallBacks);
-  gst_vtutil_dict_set_i32 (par, CFSTR ("HorizontalSpacing"),
-      self->vinfo.par_n);
-  gst_vtutil_dict_set_i32 (par, CFSTR ("VerticalSpacing"),
-      self->vinfo.par_d);
-
-  /* SampleDescriptionExtensionAtoms dict */
-  atoms = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
-      &kCFTypeDictionaryValueCallBacks);
-  gst_vtutil_dict_set_data (atoms, CFSTR ("avcC"), map.data, map.size);
-
   /* Extensions dict */
-  extensions = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
+  extensions =
+      CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
       &kCFTypeDictionaryValueCallBacks);
   gst_vtutil_dict_set_string (extensions,
       CFSTR ("CVImageBufferChromaLocationBottomField"), "left");
   gst_vtutil_dict_set_string (extensions,
       CFSTR ("CVImageBufferChromaLocationTopField"), "left");
-  gst_vtutil_dict_set_boolean (extensions, CFSTR("FullRangeVideo"), FALSE);
+  gst_vtutil_dict_set_boolean (extensions, CFSTR ("FullRangeVideo"), FALSE);
+
+  /* CVPixelAspectRatio dict */
+  par = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
+      &kCFTypeDictionaryValueCallBacks);
+  gst_vtutil_dict_set_i32 (par, CFSTR ("HorizontalSpacing"),
+      vtdec->video_info.par_n);
+  gst_vtutil_dict_set_i32 (par, CFSTR ("VerticalSpacing"),
+      vtdec->video_info.par_d);
   gst_vtutil_dict_set_object (extensions, CFSTR ("CVPixelAspectRatio"),
       (CFTypeRef *) par);
+
+  /* SampleDescriptionExtensionAtoms dict */
+  gst_buffer_map (codec_data, &map, GST_MAP_READ);
+  atoms = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
+      &kCFTypeDictionaryValueCallBacks);
+  gst_vtutil_dict_set_data (atoms, CFSTR ("avcC"), map.data, map.size);
   gst_vtutil_dict_set_object (extensions,
       CFSTR ("SampleDescriptionExtensionAtoms"), (CFTypeRef *) atoms);
+  gst_buffer_unmap (codec_data, &map);
 
   status = CMVideoFormatDescriptionCreate (NULL,
-      self->details->format_id, self->vinfo.width, self->vinfo.height,
+      cm_format, vtdec->video_info.width, vtdec->video_info.height,
       extensions, &fmt_desc);
-
-  gst_buffer_unmap (codec_data, &map);
 
   if (status == noErr)
     return fmt_desc;
@@ -413,148 +391,8 @@ gst_vtdec_create_format_description_from_codec_data (GstVTDec * self,
     return NULL;
 }
 
-static VTDecompressionSessionRef
-gst_vtdec_create_session (GstVTDec * self, CMFormatDescriptionRef fmt_desc)
-{
-  VTDecompressionSessionRef session = NULL;
-  CFMutableDictionaryRef pb_attrs;
-  VTDecompressionOutputCallback callback;
-  VTStatus status;
-
-  pb_attrs = CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
-      &kCFTypeDictionaryValueCallBacks);
-  gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferPixelFormatTypeKey,
-      GST_VTDEC_CV_VIDEO_FORMAT);
-  gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferWidthKey,
-      self->vinfo.width);
-  gst_vtutil_dict_set_i32 (pb_attrs, kCVPixelBufferHeightKey,
-      self->vinfo.height);
-  gst_vtutil_dict_set_i32 (pb_attrs,
-      kCVPixelBufferBytesPerRowAlignmentKey, 2 * self->vinfo.width);
-
-  callback.func = gst_vtdec_enqueue_frame;
-  callback.data = self;
-
-  status = self->ctx->vt->VTDecompressionSessionCreate (NULL, fmt_desc,
-      NULL, pb_attrs, &callback, &session);
-  GST_INFO_OBJECT (self, "VTDecompressionSessionCreate for %d x %d => %d",
-      self->vinfo.width, self->vinfo.height, status);
-
-  CFRelease (pb_attrs);
-
-  return session;
-}
-
-static void
-gst_vtdec_destroy_session (GstVTDec * self, VTDecompressionSessionRef * session)
-{
-  self->ctx->vt->VTDecompressionSessionInvalidate (*session);
-  if (*session != NULL) {
-    CFRelease (*session);
-    *session = NULL;
-  }
-}
-
-static gint
-_sort_buffers (GstBuffer *buf1, GstBuffer *buf2, void *data)
-{
-  return GST_BUFFER_PTS(buf1) - GST_BUFFER_PTS(buf2);
-}
-
-static GstFlowReturn
-gst_vtdec_decode_buffer (GstVTDec * self, GstBuffer * buf)
-{
-  GstVTApi *vt = self->ctx->vt;
-  CMSampleBufferRef sbuf;
-  VTStatus status;
-  VTDecodeFrameFlags frame_flags = 0;
-  GstFlowReturn ret = GST_FLOW_OK;
-
-  sbuf = gst_vtdec_sample_buffer_from (self, buf);
-
-  self->flush = FALSE;
-  status = vt->VTDecompressionSessionDecodeFrame (self->session, sbuf,
-      frame_flags, buf, NULL);
-  if (status != 0) {
-    GST_WARNING_OBJECT (self, "VTDecompressionSessionDecodeFrame returned %d",
-        status);
-  }
-
-  status = vt->VTDecompressionSessionWaitForAsynchronousFrames (self->session);
-  if (status != 0) {
-    GST_WARNING_OBJECT (self,
-        "VTDecompressionSessionWaitForAsynchronousFrames returned %d", status);
-  }
-
-  CFRelease (sbuf);
-  gst_buffer_unref (buf);
-
-  if (self->flush) {
-    if (!gst_vtdec_negotiate_downstream (self)) {
-      ret = GST_FLOW_NOT_NEGOTIATED;
-      goto error;
-    }
-
-    g_queue_sort (self->cur_outbufs, (GCompareDataFunc) _sort_buffers, NULL);
-    while (!g_queue_is_empty (self->cur_outbufs)) {
-      buf = g_queue_pop_head (self->cur_outbufs);
-      GST_LOG_OBJECT (self, "Pushing buffer with PTS:%" GST_TIME_FORMAT,
-          GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
-      ret = gst_pad_push (self->srcpad, buf);
-      if (ret != GST_FLOW_OK) {
-        goto error;
-      }
-    }
-  };
-
-exit:
-  return ret;
-
-error:
-  {
-    g_queue_free_full (self->cur_outbufs, (GDestroyNotify) gst_buffer_unref);
-    self->cur_outbufs = g_queue_new ();
-    goto exit;
-  }
-}
-
-static void
-gst_vtdec_enqueue_frame (void *data1, void *data2, VTStatus result,
-    VTDecodeInfoFlags info, CVBufferRef cvbuf, CMTime pts, CMTime duration)
-{
-  GstVTDec *self = GST_VTDEC_CAST (data1);
-  GstBuffer *src_buf = GST_BUFFER (data2);
-  GstBuffer *buf;
-
-  if (result != kVTSuccess) {
-    GST_ERROR_OBJECT (self, "Error decoding frame %d", result);
-    goto beach;
-  }
-
-  if (kVTDecodeInfo_FrameDropped & info) {
-    GST_WARNING_OBJECT (self, "Frame dropped");
-    goto beach;
-  }
-
-  buf = gst_core_video_buffer_new (cvbuf, &self->vinfo);
-  gst_buffer_copy_into (buf, src_buf, GST_BUFFER_COPY_METADATA, 0, -1);
-  GST_BUFFER_PTS (buf) = pts.value;
-  GST_BUFFER_DURATION (buf) = duration.value;
-
-  g_queue_push_head (self->cur_outbufs, buf);
-  if (GST_BUFFER_PTS (src_buf) <= GST_BUFFER_DTS (src_buf)) {
-    GST_LOG_OBJECT (self, "Flushing interal queue of buffers");
-    self->flush = TRUE;
-  } else {
-    GST_LOG_OBJECT (self, "Queuing buffer");
-  }
-
-beach:
-  return;
-}
-
 static CMSampleBufferRef
-gst_vtdec_sample_buffer_from (GstVTDec * self, GstBuffer * buf)
+cm_sample_buffer_from_gst_buffer (GstVtdec * vtdec, GstBuffer * buf)
 {
   OSStatus status;
   CMBlockBufferRef bbuf = NULL;
@@ -563,10 +401,11 @@ gst_vtdec_sample_buffer_from (GstVTDec * self, GstBuffer * buf)
   CMSampleTimingInfo sample_timing;
   CMSampleTimingInfo time_array[1];
 
-  g_assert (self->fmt_desc != NULL);
+  g_return_val_if_fail (vtdec->format_description, NULL);
 
   gst_buffer_map (buf, &map, GST_MAP_READ);
 
+  /* create a block buffer,  the CoreMedia equivalent of GstMemory */
   status = CMBlockBufferCreateWithMemoryBlock (NULL,
       map.data, (gint64) map.size, kCFAllocatorNull, NULL, 0, (gint64) map.size,
       FALSE, &bbuf);
@@ -574,75 +413,130 @@ gst_vtdec_sample_buffer_from (GstVTDec * self, GstBuffer * buf)
   gst_buffer_unmap (buf, &map);
 
   if (status != noErr)
-    goto error;
+    goto block_error;
 
+  /* create a sample buffer, the CoreMedia equivalent of GstBuffer */
   sample_timing.duration = CMTimeMake (GST_BUFFER_DURATION (buf), 1);
   sample_timing.presentationTimeStamp = CMTimeMake (GST_BUFFER_PTS (buf), 1);
   sample_timing.decodeTimeStamp = CMTimeMake (GST_BUFFER_DTS (buf), 1);
   time_array[0] = sample_timing;
 
-  status = CMSampleBufferCreate (NULL, bbuf, TRUE, 0, 0, self->fmt_desc,
+  status =
+      CMSampleBufferCreate (NULL, bbuf, TRUE, 0, 0, vtdec->format_description,
       1, 1, time_array, 0, NULL, &sbuf);
   if (status != noErr)
-    goto error;
+    goto sample_error;
 
-beach:
-  CFRelease (bbuf);
+out:
   return sbuf;
 
-error:
-  GST_ERROR_OBJECT (self, "err %d", status);
-  goto beach;
+block_error:
+  GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
+      ("CMBlockBufferCreateWithMemoryBlock returned %d", status));
+  goto out;
+
+sample_error:
+  GST_ELEMENT_ERROR (vtdec, RESOURCE, FAILED, (NULL),
+      ("CMSampleBufferCreate returned %d", status));
+
+  if (bbuf)
+    CFRelease (bbuf);
+
+  goto out;
+}
+
+static gint
+sort_frames_by_pts (gconstpointer f1, gconstpointer f2, gpointer user_data)
+{
+  GstVideoCodecFrame *frame1, *frame2;
+  GstClockTime pts1, pts2;
+
+  frame1 = (GstVideoCodecFrame *) f1;
+  frame2 = (GstVideoCodecFrame *) f2;
+  pts1 = GST_BUFFER_PTS (frame1->output_buffer);
+  pts2 = GST_BUFFER_PTS (frame2->output_buffer);
+
+  if (!GST_CLOCK_TIME_IS_VALID (pts1) || !GST_CLOCK_TIME_IS_VALID (pts2))
+    return 0;
+
+  if (pts1 < pts2)
+    return -1;
+  else if (pts1 == pts2)
+    return 0;
+  else
+    return 1;
 }
 
 static void
-gst_vtdec_register (GstPlugin * plugin,
-    const GstVTDecoderDetails * codec_details)
+gst_vtdec_session_output_callback (void *decompression_output_ref_con,
+    void *source_frame_ref_con, OSStatus status, VTDecodeInfoFlags info_flags,
+    CVImageBufferRef image_buffer, CMTime pts, CMTime duration)
 {
-  GTypeInfo type_info = {
-    sizeof (GstVTDecClass),
-    (GBaseInitFunc) gst_vtdec_base_init,
-    NULL,
-    (GClassInitFunc) gst_vtdec_class_init,
-    NULL,
-    NULL,
-    sizeof (GstVTDecClass),
-    0,
-    (GInstanceInitFunc) gst_vtdec_init,
-  };
-  gchar *type_name;
-  GType type;
-  gboolean result;
+  GstVtdec *vtdec = (GstVtdec *) decompression_output_ref_con;
+  GstVideoCodecFrame *frame = (GstVideoCodecFrame *) source_frame_ref_con;
+  GstBuffer *buf;
 
-  type_name = g_strdup_printf ("vtdec_%s", codec_details->element_name);
+  GST_LOG_OBJECT (vtdec, "got output frame %p %d", frame,
+      frame->decode_frame_number);
 
-  type = g_type_register_static (GST_TYPE_ELEMENT, type_name, &type_info, 0);
-
-  g_type_set_qdata (type, GST_VTDEC_CODEC_DETAILS_QDATA,
-      (gpointer) codec_details);
-
-  result = gst_element_register (plugin, type_name, GST_RANK_NONE, type);
-  if (!result) {
-    GST_ERROR_OBJECT (plugin, "failed to register element %s", type_name);
+  if (status != noErr) {
+    GST_ERROR_OBJECT (vtdec, "Error decoding frame %d", status);
+    goto drop;
   }
 
-  g_free (type_name);
+  if (info_flags & kVTDecodeInfo_FrameDropped)
+    goto drop;
+
+  /* FIXME: use gst_video_decoder_allocate_output_buffer */
+  buf = gst_core_video_buffer_new (image_buffer, &vtdec->video_info);
+  frame->output_buffer = buf;
+
+  gst_buffer_copy_into (buf, frame->input_buffer,
+      GST_BUFFER_COPY_METADATA | GST_BUFFER_COPY_FLAGS, 0, -1);
+  GST_BUFFER_PTS (buf) = pts.value;
+  GST_BUFFER_DURATION (buf) = duration.value;
+
+  g_async_queue_push_sorted (vtdec->reorder_queue, frame,
+      sort_frames_by_pts, NULL);
+
+  return;
+
+drop:
+  GST_WARNING_OBJECT (vtdec, "Frame dropped %p %d", frame,
+      frame->decode_frame_number);
+  gst_video_decoder_drop_frame (GST_VIDEO_DECODER (vtdec), frame);
 }
 
-static const GstVTDecoderDetails gst_vtdec_codecs[] = {
-  {"H.264", "h264", "video/x-h264", kVTFormatH264},
-  {"MPEG-2", "mpeg2", "video/mpeg", kVTFormatMPEG2},
-  {"JPEG", "jpeg", "image/jpeg", kVTFormatJPEG}
-};
-
-void
-gst_vtdec_register_elements (GstPlugin * plugin)
+static GstFlowReturn
+gst_vtdec_push_frames_if_needed (GstVtdec * vtdec, gboolean drain,
+    gboolean flush)
 {
-  guint i;
+  GstVideoCodecFrame *frame;
+  GstFlowReturn ret = GST_FLOW_OK;
+  GstVideoDecoder *decoder = GST_VIDEO_DECODER (vtdec);
 
-  GST_DEBUG_CATEGORY_INIT (gst_vtdec_debug, "vtdec",
-      0, "Apple VideoToolbox Decoder Wrapper");
+  if (drain)
+    VTDecompressionSessionWaitForAsynchronousFrames (vtdec->session);
 
-  for (i = 0; i != G_N_ELEMENTS (gst_vtdec_codecs); i++)
-    gst_vtdec_register (plugin, &gst_vtdec_codecs[i]);
+  /* push a buffer if there are enough frames to guarantee that we push in PTS
+   * order
+   */
+  while ((g_async_queue_length (vtdec->reorder_queue) >=
+          vtdec->reorder_queue_frame_delay) || drain || flush) {
+    frame = (GstVideoCodecFrame *) g_async_queue_try_pop (vtdec->reorder_queue);
+    /* we need to check this in case reorder_queue_frame_delay=0 (jpeg for
+     * example) or we're draining/flushing
+     */
+    if (frame) {
+      if (flush)
+        gst_video_decoder_drop_frame (decoder, frame);
+      else
+        ret = gst_video_decoder_finish_frame (decoder, frame);
+    }
+
+    if (!frame || ret != GST_FLOW_OK)
+      break;
+  }
+
+  return ret;
 }
