@@ -314,6 +314,22 @@ GST_START_TEST (info_old_printf_extensions)
 }
 
 GST_END_TEST;
+
+GST_START_TEST (info_register_same_debug_category_twice)
+{
+  GstDebugCategory *cat1 = NULL, *cat2 = NULL;
+
+  GST_DEBUG_CATEGORY_INIT (cat1, "dupli-cat", 0, "Going once");
+  GST_DEBUG_CATEGORY_INIT (cat2, "dupli-cat", 0, "Going twice");
+
+  fail_unless_equals_pointer (cat1, cat2);
+
+  fail_unless_equals_string (gst_debug_category_get_name (cat1), "dupli-cat");
+  fail_unless_equals_string (gst_debug_category_get_description (cat1),
+      "Going once");
+}
+
+GST_END_TEST;
 #endif
 
 static Suite *
@@ -332,6 +348,7 @@ gst_info_suite (void)
   tcase_add_test (tc_chain, info_dump_mem);
   tcase_add_test (tc_chain, info_fixme);
   tcase_add_test (tc_chain, info_old_printf_extensions);
+  tcase_add_test (tc_chain, info_register_same_debug_category_twice);
 #endif
 
   return s;
