@@ -18,9 +18,9 @@
  */
 
 /*
- * This is a decoder for the VMWare VMnc video codec, which VMWare uses for 
+ * This is a decoder for the VMWare VMnc video codec, which VMWare uses for
  * recording * of virtual machine instances.
- * It's essentially a serialisation of RFB (the VNC protocol) 
+ * It's essentially a serialisation of RFB (the VNC protocol)
  * 'FramebufferUpdate' messages, with some special encoding-types for VMnc
  * extensions. There's some documentation (with fixes from VMWare employees) at:
  *   http://wiki.multimedia.cx/index.php?title=VMware_Video
@@ -30,18 +30,20 @@
 #  include "config.h"
 #endif
 
-#include <gst/gst.h>
-#include <gst/base/gstadapter.h>
-#include <gst/video/video.h>
+#include "vmncdec.h"
+
 #include <string.h>
+
+static gboolean gst_vmnc_dec_reset (GstVideoDecoder * decoder);
+static gboolean gst_vmnc_dec_set_format (GstVideoDecoder * decoder,
+    GstVideoCodecState * state);
+static GstFlowReturn gst_vmnc_dec_handle_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame);
+static GstFlowReturn gst_vmnc_dec_parse (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame, GstAdapter * adapter, gboolean at_eos);
 
 #define GST_CAT_DEFAULT vmnc_debug
 GST_DEBUG_CATEGORY_STATIC (GST_CAT_DEFAULT);
-
-#define GST_TYPE_VMNC_DEC \
-  (gst_vmnc_dec_get_type())
-#define GST_VMNC_DEC(obj) \
-  (G_TYPE_CHECK_INSTANCE_CAST((obj),GST_TYPE_VMNC_DEC,GstVMncDec))
 
 #define RFB_GET_UINT32(ptr) GST_READ_UINT32_BE(ptr)
 #define RFB_GET_UINT16(ptr) GST_READ_UINT16_BE(ptr)
@@ -58,87 +60,12 @@ enum
   ERROR_INSUFFICIENT_DATA = -2  /* Haven't received enough data yet */
 };
 
-#define MAKE_TYPE(a,b,c,d) ((a<<24)|(b<<16)|(c<<8)|d)
-enum
-{
-  TYPE_RAW = 0,
-  TYPE_COPY = 1,
-  TYPE_RRE = 2,
-  TYPE_CoRRE = 4,
-  TYPE_HEXTILE = 5,
-
-  TYPE_WMVd = MAKE_TYPE ('W', 'M', 'V', 'd'),
-  TYPE_WMVe = MAKE_TYPE ('W', 'M', 'V', 'e'),
-  TYPE_WMVf = MAKE_TYPE ('W', 'M', 'V', 'f'),
-  TYPE_WMVg = MAKE_TYPE ('W', 'M', 'V', 'g'),
-  TYPE_WMVh = MAKE_TYPE ('W', 'M', 'V', 'h'),
-  TYPE_WMVi = MAKE_TYPE ('W', 'M', 'V', 'i'),
-  TYPE_WMVj = MAKE_TYPE ('W', 'M', 'V', 'j')
-};
-
-struct RFBFormat
-{
-  int width;
-  int height;
-  int stride;
-  int bytes_per_pixel;
-  int depth;
-  int big_endian;
-
-  guint8 descriptor[16];        /* The raw format descriptor block */
-};
-
-enum CursorType
-{
-  CURSOR_COLOUR = 0,
-  CURSOR_ALPHA = 1
-};
-
-struct Cursor
-{
-  enum CursorType type;
-  int visible;
-  int x;
-  int y;
-  int width;
-  int height;
-  int hot_x;
-  int hot_y;
-  guint8 *cursordata;
-  guint8 *cursormask;
-};
-
-typedef struct
-{
-  GstElement element;
-
-  GstPad *sinkpad;
-  GstPad *srcpad;
-
-  GstCaps *caps;
-  gboolean have_format;
-
-  int parsed;
-  GstAdapter *adapter;
-
-  int framerate_num;
-  int framerate_denom;
-
-  struct Cursor cursor;
-  struct RFBFormat format;
-  guint8 *imagedata;
-} GstVMncDec;
-
-typedef struct
-{
-  GstElementClass parent_class;
-} GstVMncDecClass;
-
 static GstStaticPadTemplate vmnc_dec_src_factory =
 GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("video/x-raw-rgb"));
+    GST_STATIC_CAPS (GST_VIDEO_CAPS_MAKE ("{ RGBx, BGRx, xRGB, xBGR,"
+            " RGB15, BGR15, RGB16, BGR16, GRAY8 }")));
 
 static GstStaticPadTemplate vmnc_dec_sink_factory =
 GST_STATIC_PAD_TEMPLATE ("sink",
@@ -149,107 +76,60 @@ GST_STATIC_PAD_TEMPLATE ("sink",
         "width=(int)[0, max], " "height=(int)[0, max]")
     );
 
-GType gst_vmnc_dec_get_type (void);
-GST_BOILERPLATE (GstVMncDec, gst_vmnc_dec, GstElement, GST_TYPE_ELEMENT);
-
-static void vmnc_dec_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec);
-static void vmnc_dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec);
-
-static GstFlowReturn vmnc_dec_chain (GstPad * pad, GstBuffer * buffer);
-static gboolean vmnc_dec_setcaps (GstPad * pad, GstCaps * caps);
-static GstStateChangeReturn vmnc_dec_change_state (GstElement * element,
-    GstStateChange transition);
-static void vmnc_dec_finalize (GObject * object);
-
-static void
-gst_vmnc_dec_base_init (gpointer g_class)
-{
-  GstElementClass *element_class = GST_ELEMENT_CLASS (g_class);
-
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&vmnc_dec_src_factory));
-  gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&vmnc_dec_sink_factory));
-  gst_element_class_set_static_metadata (element_class, "VMnc video decoder",
-      "Codec/Decoder/Video",
-      "Decode VmWare video to raw (RGB) video",
-      "Michael Smith <msmith@xiph.org>");
-}
+G_DEFINE_TYPE (GstVMncDec, gst_vmnc_dec, GST_TYPE_VIDEO_DECODER);
 
 static void
 gst_vmnc_dec_class_init (GstVMncDecClass * klass)
 {
-  GObjectClass *gobject_class = G_OBJECT_CLASS (klass);
   GstElementClass *gstelement_class = GST_ELEMENT_CLASS (klass);
+  GstVideoDecoderClass *decoder_class = GST_VIDEO_DECODER_CLASS (klass);
 
-  gobject_class->set_property = vmnc_dec_set_property;
-  gobject_class->get_property = vmnc_dec_get_property;
+  decoder_class->start = gst_vmnc_dec_reset;
+  decoder_class->stop = gst_vmnc_dec_reset;
+  decoder_class->parse = gst_vmnc_dec_parse;
+  decoder_class->handle_frame = gst_vmnc_dec_handle_frame;
+  decoder_class->set_format = gst_vmnc_dec_set_format;
 
-  gobject_class->finalize = vmnc_dec_finalize;
-
-  gstelement_class->change_state = vmnc_dec_change_state;
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&vmnc_dec_src_factory));
+  gst_element_class_add_pad_template (gstelement_class,
+      gst_static_pad_template_get (&vmnc_dec_sink_factory));
+  gst_element_class_set_static_metadata (gstelement_class, "VMnc video decoder",
+      "Codec/Decoder/Video",
+      "Decode VmWare video to raw (RGB) video",
+      "Michael Smith <msmith@xiph.org>");
 
   GST_DEBUG_CATEGORY_INIT (vmnc_debug, "vmncdec", 0, "VMnc decoder");
 }
 
 static void
-gst_vmnc_dec_init (GstVMncDec * dec, GstVMncDecClass * g_class)
+gst_vmnc_dec_init (GstVMncDec * dec)
 {
-  dec->sinkpad =
-      gst_pad_new_from_static_template (&vmnc_dec_sink_factory, "sink");
-  gst_pad_set_chain_function (dec->sinkpad, vmnc_dec_chain);
-  gst_pad_set_setcaps_function (dec->sinkpad, vmnc_dec_setcaps);
-  gst_element_add_pad (GST_ELEMENT (dec), dec->sinkpad);
-
-  dec->srcpad = gst_pad_new_from_static_template (&vmnc_dec_src_factory, "src");
-  gst_pad_use_fixed_caps (dec->srcpad);
-
-  gst_element_add_pad (GST_ELEMENT (dec), dec->srcpad);
-
-  dec->adapter = gst_adapter_new ();
 }
 
-static void
-vmnc_dec_finalize (GObject * object)
+static gboolean
+gst_vmnc_dec_reset (GstVideoDecoder * decoder)
 {
-  GstVMncDec *dec = GST_VMNC_DEC (object);
+  GstVMncDec *dec = GST_VMNC_DEC (decoder);
 
-  g_object_unref (dec->adapter);
+  g_free (dec->imagedata);
+  dec->imagedata = NULL;
 
-  G_OBJECT_CLASS (parent_class)->finalize (object);
-}
+  g_free (dec->cursor.cursordata);
+  dec->cursor.cursordata = NULL;
 
-static void
-gst_vmnc_dec_reset (GstVMncDec * dec)
-{
-  if (dec->caps) {
-    gst_caps_unref (dec->caps);
-    dec->caps = NULL;
-  }
-  if (dec->imagedata) {
-    g_free (dec->imagedata);
-    dec->imagedata = NULL;
-  }
+  g_free (dec->cursor.cursormask);
+  dec->cursor.cursormask = NULL;
 
-  if (dec->cursor.cursordata) {
-    g_free (dec->cursor.cursordata);
-    dec->cursor.cursordata = NULL;
-  }
-  if (dec->cursor.cursormask) {
-    g_free (dec->cursor.cursormask);
-    dec->cursor.cursormask = NULL;
-  }
   dec->cursor.visible = 0;
-
-  /* Use these as defaults if the container doesn't provide anything */
-  dec->framerate_num = 5;
-  dec->framerate_denom = 1;
 
   dec->have_format = FALSE;
 
-  gst_adapter_clear (dec->adapter);
+  if (dec->input_state)
+    gst_video_codec_state_unref (dec->input_state);
+  dec->input_state = NULL;
+
+  return TRUE;
 }
 
 struct RfbRectangle
@@ -272,7 +152,7 @@ static int
 vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
     const guint8 * data, int len, gboolean decode)
 {
-  GstCaps *caps;
+  GstVideoFormat format;
   gint bpp, tc;
   guint32 redmask, greenmask, bluemask;
   guint32 endianness, dataendianness;
@@ -284,7 +164,7 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   }
 
   /* We only compare 13 bytes; ignoring the 3 padding bytes at the end */
-  if (dec->caps && memcmp (data, dec->format.descriptor, 13) == 0) {
+  if (dec->have_format && memcmp (data, dec->format.descriptor, 13) == 0) {
     /* Nothing changed, so just exit */
     return 16;
   }
@@ -346,30 +226,33 @@ vmnc_handle_wmvi_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
     }
   }
 
+  format = gst_video_format_from_masks (dec->format.depth, bpp, endianness,
+      redmask, greenmask, bluemask, 0);
+
+  GST_DEBUG_OBJECT (dec, "From depth: %d bpp: %u endianess: %s redmask: %X "
+      "greenmask: %X bluemask: %X got format %s",
+      dec->format.depth, bpp, endianness == G_BIG_ENDIAN ? "BE" : "LE",
+      GUINT32_FROM_BE (redmask), GUINT32_FROM_BE (greenmask),
+      GUINT32_FROM_BE (bluemask),
+      format == GST_VIDEO_FORMAT_UNKNOWN ? "UNKOWN" :
+      gst_video_format_to_string (format));
+
+  if (format == GST_VIDEO_FORMAT_UNKNOWN) {
+    GST_WARNING_OBJECT (dec, "Video format unknown to GStreamer");
+    return ERROR_INVALID;
+  }
+
   dec->have_format = TRUE;
   if (!decode) {
-    GST_DEBUG_OBJECT (dec, "Parsing, not setting caps");
+    GST_LOG_OBJECT (dec, "Parsing, not setting caps");
     return 16;
   }
 
-  caps = gst_caps_new_simple ("video/x-raw-rgb",
-      "framerate", GST_TYPE_FRACTION, dec->framerate_num, dec->framerate_denom,
-      "pixel-aspect-ratio", GST_TYPE_FRACTION, 1, 1,
-      "width", G_TYPE_INT, rect->width, "height", G_TYPE_INT, rect->height,
-      "bpp", G_TYPE_INT, bpp,
-      "depth", G_TYPE_INT, dec->format.depth,
-      "endianness", G_TYPE_INT, endianness,
-      "red_mask", G_TYPE_INT, redmask,
-      "green_mask", G_TYPE_INT, greenmask,
-      "blue_mask", G_TYPE_INT, bluemask, NULL);
-  gst_pad_set_caps (dec->srcpad, caps);
 
-  if (dec->caps)
-    gst_caps_unref (dec->caps);
-  dec->caps = caps;
+  gst_video_decoder_set_output_state (GST_VIDEO_DECODER (dec), format,
+      rect->width, rect->height, dec->input_state);
 
-  if (dec->imagedata)
-    g_free (dec->imagedata);
+  g_free (dec->imagedata);
   dec->imagedata = g_malloc (dec->format.width * dec->format.height *
       dec->format.bytes_per_pixel);
   GST_DEBUG_OBJECT (dec, "Allocated image data at %p", dec->imagedata);
@@ -474,26 +357,29 @@ render_cursor (GstVMncDec * dec, guint8 * data)
   }
 }
 
-static GstBuffer *
-vmnc_make_buffer (GstVMncDec * dec, GstBuffer * inbuf)
+static GstFlowReturn
+vmnc_fill_buffer (GstVMncDec * dec, GstVideoCodecFrame * frame)
 {
-  int size = dec->format.stride * dec->format.height;
-  GstBuffer *buf = gst_buffer_new_and_alloc (size);
-  guint8 *data = GST_BUFFER_DATA (buf);
+  GstFlowReturn ret;
+  GstMapInfo map;
 
-  memcpy (data, dec->imagedata, size);
+  ret =
+      gst_video_decoder_allocate_output_frame (GST_VIDEO_DECODER (dec), frame);
+  if (ret != GST_FLOW_OK)
+    return ret;
+
+  gst_buffer_map (frame->output_buffer, &map, GST_MAP_READWRITE);
+
+  memcpy (map.data, dec->imagedata, map.size);
 
   if (dec->cursor.visible) {
-    render_cursor (dec, data);
+    render_cursor (dec, map.data);
   }
 
-  if (inbuf) {
-    gst_buffer_copy_metadata (buf, inbuf, GST_BUFFER_COPY_TIMESTAMPS);
-  }
+  gst_buffer_unmap (frame->output_buffer, &map);
 
-  gst_buffer_set_caps (buf, dec->caps);
 
-  return buf;
+  return GST_FLOW_OK;
 }
 
 static int
@@ -505,7 +391,7 @@ vmnc_handle_wmvd_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   int type, size;
 
   if (len < datalen) {
-    GST_DEBUG_OBJECT (dec, "Cursor data too short");
+    GST_LOG_OBJECT (dec, "Cursor data too short");
     return ERROR_INSUFFICIENT_DATA;
   }
 
@@ -521,7 +407,7 @@ vmnc_handle_wmvd_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   }
 
   if (len < datalen) {
-    GST_DEBUG_OBJECT (dec, "Cursor data too short");
+    GST_LOG_OBJECT (dec, "Cursor data too short");
     return ERROR_INSUFFICIENT_DATA;
   } else if (!decode)
     return datalen;
@@ -533,10 +419,8 @@ vmnc_handle_wmvd_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   dec->cursor.hot_x = rect->x;
   dec->cursor.hot_y = rect->y;
 
-  if (dec->cursor.cursordata)
-    g_free (dec->cursor.cursordata);
-  if (dec->cursor.cursormask)
-    g_free (dec->cursor.cursormask);
+  g_free (dec->cursor.cursordata);
+  g_free (dec->cursor.cursormask);
 
   if (type == 0) {
     size = rect->width * rect->height * dec->format.bytes_per_pixel;
@@ -560,7 +444,7 @@ vmnc_handle_wmve_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
 
   /* Cursor state. */
   if (len < 2) {
-    GST_DEBUG_OBJECT (dec, "Cursor data too short");
+    GST_LOG_OBJECT (dec, "Cursor data too short");
     return ERROR_INSUFFICIENT_DATA;
   } else if (!decode)
     return 2;
@@ -587,7 +471,7 @@ vmnc_handle_wmvg_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
 {
   /* Keyboard stuff; not interesting for playback */
   if (len < 10) {
-    GST_DEBUG_OBJECT (dec, "Keyboard data too short");
+    GST_LOG_OBJECT (dec, "Keyboard data too short");
     return ERROR_INSUFFICIENT_DATA;
   }
   return 10;
@@ -599,7 +483,7 @@ vmnc_handle_wmvh_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
 {
   /* More keyboard stuff; not interesting for playback */
   if (len < 4) {
-    GST_DEBUG_OBJECT (dec, "Keyboard data too short");
+    GST_LOG_OBJECT (dec, "Keyboard data too short");
     return ERROR_INSUFFICIENT_DATA;
   }
   return 4;
@@ -611,7 +495,7 @@ vmnc_handle_wmvj_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
 {
   /* VM state info, not interesting for playback */
   if (len < 2) {
-    GST_DEBUG_OBJECT (dec, "VM state data too short");
+    GST_LOG_OBJECT (dec, "VM state data too short");
     return ERROR_INSUFFICIENT_DATA;
   }
   return 2;
@@ -665,7 +549,7 @@ vmnc_handle_raw_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   int datalen = rect->width * rect->height * dec->format.bytes_per_pixel;
 
   if (len < datalen) {
-    GST_DEBUG_OBJECT (dec, "Raw data too short");
+    GST_LOG_OBJECT (dec, "Raw data too short");
     return ERROR_INSUFFICIENT_DATA;
   }
 
@@ -684,7 +568,7 @@ vmnc_handle_copy_rectangle (GstVMncDec * dec, struct RfbRectangle *rect,
   int i;
 
   if (len < 4) {
-    GST_DEBUG_OBJECT (dec, "Copy data too short");
+    GST_LOG_OBJECT (dec, "Copy data too short");
     return ERROR_INSUFFICIENT_DATA;
   } else if (!decode)
     return 4;
@@ -856,7 +740,7 @@ vmnc_handle_packet (GstVMncDec * dec, const guint8 * data, int len,
   int offset = 0;
 
   if (len < 4) {
-    GST_DEBUG_OBJECT (dec, "Packet too short");
+    GST_LOG_OBJECT (dec, "Packet too short");
     return ERROR_INSUFFICIENT_DATA;
   }
 
@@ -876,12 +760,12 @@ vmnc_handle_packet (GstVMncDec * dec, const guint8 * data, int len,
         rectangle_handler handler;
 
         if (len < offset + 12) {
-          GST_DEBUG_OBJECT (dec,
+          GST_LOG_OBJECT (dec,
               "Packet too short for rectangle header: %d < %d",
               len, offset + 12);
           return ERROR_INSUFFICIENT_DATA;
         }
-        GST_DEBUG_OBJECT (dec, "Reading rectangle %d", i);
+        GST_LOG_OBJECT (dec, "Reading rectangle %d", i);
         r.x = RFB_GET_UINT16 (data + offset);
         r.y = RFB_GET_UINT16 (data + offset + 2);
         r.width = RFB_GET_UINT16 (data + offset + 4);
@@ -957,174 +841,90 @@ vmnc_handle_packet (GstVMncDec * dec, const guint8 * data, int len,
 }
 
 static gboolean
-vmnc_dec_setcaps (GstPad * pad, GstCaps * caps)
+gst_vmnc_dec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 {
+  GstVMncDec *dec = GST_VMNC_DEC (decoder);
+
   /* We require a format descriptor in-stream, so we ignore the info from the
    * container here. We just use the framerate */
-  GstVMncDec *dec = GST_VMNC_DEC (gst_pad_get_parent (pad));
 
-  if (gst_caps_get_size (caps) > 0) {
-    GstStructure *structure = gst_caps_get_structure (caps, 0);
+  /* Declare it packetized if a valid framerate was parsed, not ideal */
+  gst_video_decoder_set_packetized (decoder,
+      state->info.fps_n && state->info.fps_d);
 
-    /* We gave these a default in reset(), so we don't need to check for failure
-     * here */
-    gst_structure_get_fraction (structure, "framerate",
-        &dec->framerate_num, &dec->framerate_denom);
-
-    dec->parsed = TRUE;
-  } else {
-    GST_DEBUG_OBJECT (dec, "Unparsed input");
-    dec->parsed = FALSE;
-  }
-
-  gst_object_unref (dec);
+  if (dec->input_state)
+    gst_video_codec_state_unref (dec->input_state);
+  dec->input_state = gst_video_codec_state_ref (state);
 
   return TRUE;
 }
 
 static GstFlowReturn
-vmnc_dec_chain_frame (GstVMncDec * dec, GstBuffer * inbuf,
-    const guint8 * data, int len)
+gst_vmnc_dec_handle_frame (GstVideoDecoder * decoder,
+    GstVideoCodecFrame * frame)
 {
+  GstVMncDec *dec = GST_VMNC_DEC (decoder);
   int res;
   GstFlowReturn ret = GST_FLOW_OK;
-  GstBuffer *outbuf;
+  GstMapInfo map;
 
-  res = vmnc_handle_packet (dec, data, len, TRUE);
+  if (!gst_buffer_map (frame->input_buffer, &map, GST_MAP_READ))
+    return GST_FLOW_ERROR;
 
-  if (res < 0) {
+  res = vmnc_handle_packet (dec, map.data, map.size, TRUE);
+
+  gst_buffer_unmap (frame->input_buffer, &map);
+
+  if (!dec->have_format) {
+    GST_VIDEO_DECODER_ERROR (decoder, 2, STREAM, DECODE, (NULL),
+        ("Data found before header"), ret);
+    gst_video_decoder_drop_frame (decoder, frame);
+  } else if (res < 0) {
     ret = GST_FLOW_ERROR;
-    GST_ELEMENT_ERROR (dec, STREAM, DECODE, (NULL), ("Couldn't decode packet"));
+    gst_video_decoder_drop_frame (decoder, frame);
+    GST_VIDEO_DECODER_ERROR (decoder, 1, STREAM, DECODE, (NULL),
+        ("Couldn't decode packet"), ret);
   } else {
-    GST_DEBUG_OBJECT (dec, "read %d bytes of %d", res, len);
+    GST_LOG_OBJECT (dec, "read %d bytes of %" G_GSIZE_FORMAT, res,
+        gst_buffer_get_size (frame->input_buffer));
     /* inbuf may be NULL; that's ok */
-    outbuf = vmnc_make_buffer (dec, inbuf);
-    ret = gst_pad_push (dec->srcpad, outbuf);
+    ret = vmnc_fill_buffer (dec, frame);
+    if (ret == GST_FLOW_OK)
+      gst_video_decoder_finish_frame (decoder, frame);
+    else
+      gst_video_decoder_drop_frame (decoder, frame);
   }
 
   return ret;
 }
+
 
 static GstFlowReturn
-vmnc_dec_chain (GstPad * pad, GstBuffer * buf)
+gst_vmnc_dec_parse (GstVideoDecoder * decoder, GstVideoCodecFrame * frame,
+    GstAdapter * adapter, gboolean at_eos)
 {
-  GstVMncDec *dec;
-  GstFlowReturn ret = GST_FLOW_OK;
+  GstVMncDec *dec = GST_VMNC_DEC (decoder);
+  const guint8 *data;
+  int avail;
+  int len;
 
-  dec = GST_VMNC_DEC (gst_pad_get_parent (pad));
+  avail = gst_adapter_available (adapter);
+  data = gst_adapter_map (adapter, avail);
 
-  if (!dec->parsed) {
-    /* Submit our input buffer to adapter, then parse. Push each frame found
-     * through the decoder
-     */
-    int avail;
-    const guint8 *data;
-    int read = 0;
+  GST_LOG_OBJECT (dec, "Parsing %d bytes", avail);
 
-    gst_adapter_push (dec->adapter, buf);
+  len = vmnc_handle_packet (dec, data, avail, FALSE);
 
-
-    avail = gst_adapter_available (dec->adapter);
-    data = gst_adapter_peek (dec->adapter, avail);
-
-    GST_DEBUG_OBJECT (dec, "Parsing %d bytes", avail);
-
-    while (TRUE) {
-      int len = vmnc_handle_packet (dec, data, avail, FALSE);
-
-      if (len == ERROR_INSUFFICIENT_DATA) {
-        GST_DEBUG_OBJECT (dec, "Not enough data yet");
-        ret = GST_FLOW_OK;
-        break;
-      } else if (len < 0) {
-        GST_DEBUG_OBJECT (dec, "Fatal error in bitstream");
-        ret = GST_FLOW_ERROR;
-        break;
-      }
-
-      GST_DEBUG_OBJECT (dec, "Parsed packet: %d bytes", len);
-
-      ret = vmnc_dec_chain_frame (dec, NULL, data, len);
-      avail -= len;
-      data += len;
-
-      read += len;
-
-      if (ret != GST_FLOW_OK)
-        break;
-    }
-    GST_DEBUG_OBJECT (dec, "Flushing %d bytes", read);
-
-    gst_adapter_flush (dec->adapter, read);
+  if (len == ERROR_INSUFFICIENT_DATA) {
+    GST_LOG_OBJECT (dec, "Not enough data yet");
+    return GST_VIDEO_DECODER_FLOW_NEED_DATA;
+  } else if (len < 0) {
+    GST_ERROR_OBJECT (dec, "Fatal error in bitstream");
+    return GST_FLOW_ERROR;
   } else {
-    ret = vmnc_dec_chain_frame (dec, buf, GST_BUFFER_DATA (buf),
-        GST_BUFFER_SIZE (buf));
-    gst_buffer_unref (buf);
-  }
-
-  gst_object_unref (dec);
-
-  return ret;
-}
-
-static GstStateChangeReturn
-vmnc_dec_change_state (GstElement * element, GstStateChange transition)
-{
-  GstVMncDec *dec = GST_VMNC_DEC (element);
-  GstStateChangeReturn ret;
-
-  switch (transition) {
-    case GST_STATE_CHANGE_NULL_TO_READY:
-      break;
-    case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_vmnc_dec_reset (dec);
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_PLAYING:
-      break;
-    default:
-      break;
-  }
-
-  ret = parent_class->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_PLAYING_TO_PAUSED:
-      break;
-    case GST_STATE_CHANGE_PAUSED_TO_READY:
-      gst_vmnc_dec_reset (dec);
-      break;
-    case GST_STATE_CHANGE_READY_TO_NULL:
-      break;
-    default:
-      break;
-  }
-
-  return ret;
-}
-
-static void
-vmnc_dec_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  /*GstVMncDec *dec = GST_VMNC_DEC (object); */
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-vmnc_dec_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  /*GstVMncDec *dec = GST_VMNC_DEC (object); */
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+    GST_LOG_OBJECT (dec, "Parsed packet: %d bytes", len);
+    gst_video_decoder_add_to_frame (decoder, len);
+    return gst_video_decoder_have_frame (decoder);
   }
 }
 
@@ -1132,7 +932,7 @@ static gboolean
 plugin_init (GstPlugin * plugin)
 {
   if (!gst_element_register (plugin, "vmncdec", GST_RANK_PRIMARY,
-          gst_vmnc_dec_get_type ()))
+          GST_TYPE_VMNC_DEC))
     return FALSE;
   return TRUE;
 }
