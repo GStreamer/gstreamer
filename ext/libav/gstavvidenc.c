@@ -859,6 +859,10 @@ gst_ffmpegvidenc_stop (GstVideoEncoder * encoder)
     g_free (ffmpegenc->working_buf);
     ffmpegenc->working_buf = NULL;
   }
+  if (ffmpegenc->input_state) {
+    gst_video_codec_state_unref (ffmpegenc->input_state);
+    ffmpegenc->input_state = NULL;
+  }
 
   return TRUE;
 }
