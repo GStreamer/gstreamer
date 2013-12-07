@@ -795,7 +795,7 @@ gst_base_src_get_do_timestamp (GstBaseSrc * src)
  * @src: The source
  * @start: The new start value for the segment
  * @stop: Stop value for the new segment
- * @time: The new time value for the start of the new segent
+ * @time: The new time value for the start of the new segment
  *
  * Prepare a new seamless segment for emission downstream. This function must
  * only be called by derived sub-classes, and only from the create() function,

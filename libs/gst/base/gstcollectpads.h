@@ -134,7 +134,7 @@ struct _GstCollectData
 
 /**
  * GstCollectPadsFunction:
- * @pads: the #GstCollectPads that trigered the callback
+ * @pads: the #GstCollectPads that triggered the callback
  * @user_data: user data passed to gst_collect_pads_set_function()
  *
  * A function that will be called when all pads have received data.
@@ -145,7 +145,7 @@ typedef GstFlowReturn (*GstCollectPadsFunction) (GstCollectPads *pads, gpointer 
 
 /**
  * GstCollectPadsBufferFunction:
- * @pads: the #GstCollectPads that trigered the callback
+ * @pads: the #GstCollectPads that triggered the callback
  * @data: the #GstCollectData of pad that has received the buffer
  * @buffer: (transfer full): the #GstBuffer
  * @user_data: user data passed to gst_collect_pads_set_buffer_function()
@@ -172,7 +172,7 @@ typedef GstFlowReturn (*GstCollectPadsBufferFunction) (GstCollectPads *pads, Gst
  *
  * Returns: Integer less than zero when first timestamp is deemed older than the second one.
  *          Zero if the timestamps are deemed equally old.
- *          Integer greate than zero when second timestamp is deemed older than the first one.
+ *          Integer greater than zero when second timestamp is deemed older than the first one.
  */
 typedef gint (*GstCollectPadsCompareFunction) (GstCollectPads *pads,
                                                GstCollectData * data1, GstClockTime timestamp1,
@@ -181,7 +181,7 @@ typedef gint (*GstCollectPadsCompareFunction) (GstCollectPads *pads,
 
 /**
  * GstCollectPadsEventFunction:
- * @pads: the #GstCollectPads that trigered the callback
+ * @pads: the #GstCollectPads that triggered the callback
  * @pad: the #GstPad that received an event
  * @event: the #GstEvent received
  * @user_data: user data passed to gst_collect_pads_set_event_function()
@@ -199,7 +199,7 @@ typedef gboolean (*GstCollectPadsEventFunction)        (GstCollectPads *pads, Gs
 
 /**
  * GstCollectPadsQueryFunction:
- * @pads: the #GstCollectPads that trigered the callback
+ * @pads: the #GstCollectPads that triggered the callback
  * @pad: the #GstPad that received an event
  * @query: the #GstEvent received
  * @user_data: user data passed to gst_collect_pads_set_query_function()
@@ -222,7 +222,7 @@ typedef gboolean (*GstCollectPadsQueryFunction)        (GstCollectPads *pads, Gs
  * @user_data: user data
  *
  * A function that will be called when @inbuffer is received on the pad managed
- * by @data in the collecpad object @pads.
+ * by @data in the collectpad object @pads.
  *
  * The function should use the segment of @data and the negotiated media type on
  * the pad to perform clipping of @inbuffer.

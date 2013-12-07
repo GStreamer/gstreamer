@@ -384,7 +384,7 @@ gst_message_new_eos (GstObject * src)
  *
  * Create a new error message. The message will copy @error and
  * @debug. This message is posted by element when a fatal event
- * occured. The pipeline will probably (partially) stop. The application
+ * occurred. The pipeline will probably (partially) stop. The application
  * receiving this message should stop the pipeline.
  *
  * Returns: (transfer full): the new error message.
@@ -649,7 +649,7 @@ gst_message_new_clock_lost (GstObject * src, GstClock * clock)
  * @clock: (transfer none): the new selected clock
  *
  * Create a new clock message. This message is posted whenever the
- * pipeline selectes a new clock for the pipeline.
+ * pipeline selects a new clock for the pipeline.
  *
  * Returns: (transfer full): The new new clock message.
  *
@@ -912,7 +912,7 @@ gst_message_new_latency (GstObject * src)
  * changed. A typical use case would be an audio server that wants to pause the
  * pipeline because a higher priority stream is being played.
  *
- * Returns: (transfer full): the new requst state message.
+ * Returns: (transfer full): the new request state message.
  *
  * MT safe.
  */
@@ -1684,7 +1684,7 @@ gst_message_parse_step_done (GstMessage * message, GstFormat * format,
  *
  * @active is set to TRUE when the element has activated the step operation and
  * is now ready to start executing the step in the streaming thread. After this
- * message is emited, the application can queue a new step operation in the
+ * message is emitted, the application can queue a new step operation in the
  * element.
  *
  * Returns: (transfer full): The new step_start message. 
@@ -2064,7 +2064,7 @@ gst_message_new_toc (GstObject * src, GstToc * toc, gboolean updated)
  * @toc: (out) (transfer full): return location for the TOC.
  * @updated: (out): return location for the updated flag.
  *
- * Extract thef TOC from the #GstMessage. The TOC returned in the
+ * Extract the TOC from the #GstMessage. The TOC returned in the
  * output argument is a copy; the caller must free it with
  * gst_toc_unref() when done.
  *

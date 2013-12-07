@@ -94,7 +94,7 @@ G_BEGIN_DECLS
  *    that regular segment clipping can still be performed (as opposed to
  *    any custom one having been done).
  * @GST_BASE_PARSE_FRAME_FLAG_DROP: indicates to @finish_frame that the
- *    the frame should be dropped (and might be handled internall by subclass)
+ *    the frame should be dropped (and might be handled internally by subclass)
  * @GST_BASE_PARSE_FRAME_FLAG_QUEUE: indicates to @finish_frame that the
  *    the frame should be queued for now and processed fully later
  *    when the first non-queued frame is finished

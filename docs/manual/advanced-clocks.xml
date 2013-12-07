@@ -131,7 +131,7 @@
     <title>Buffer stream-time</title>
     <para>
       The buffer stream-time, also known as the position in the stream,
-      is calculated from the buffer timestamps and the preceeding SEGMENT
+      is calculated from the buffer timestamps and the preceding SEGMENT
       event. It represents the time inside the media as a value between
       0 and the total duration of the media.
     </para>

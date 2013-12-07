@@ -22,7 +22,7 @@
  * SECTION:element-typefind
  *
  * Determines the media-type of a stream. It applies typefind functions in the
- * order of their rank. One the type has been deteted it sets its src pad caps
+ * order of their rank. Once the type has been detected it sets its src pad caps
  * to the found media type.
  *
  * Whenever a type is found the #GstTypeFindElement::have-type signal is

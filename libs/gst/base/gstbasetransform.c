@@ -2642,7 +2642,7 @@ gst_base_transform_set_gap_aware (GstBaseTransform * trans, gboolean gap_aware)
  * transform_caps vmethod.
  *
  * If set to %FALSE, the element must order the caps returned from the
- * transform_caps function in such a way that the prefered format is
+ * transform_caps function in such a way that the preferred format is
  * first in the list. This can be interesting for transforms that can do
  * passthrough transforms but prefer to do something else, like a
  * capsfilter.

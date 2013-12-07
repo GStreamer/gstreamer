@@ -408,7 +408,7 @@ gst_bin_class_init (GstBinClass * klass)
    * @bin: the #GstBin
    *
    * Will be emitted when the bin needs to perform latency calculations. This
-   * signal is only emited for toplevel bins or when async-handling is
+   * signal is only emitted for toplevel bins or when async-handling is
    * enabled.
    *
    * Only one signal handler is invoked. If no signals are connected, the

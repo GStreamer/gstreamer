@@ -25,14 +25,14 @@
  * @see_also: #GstFdSink
  *
  * Read data from a unix file descriptor.
- * 
- * To generate data, enter some data on the console folowed by enter.
+ *
+ * To generate data, enter some data on the console followed by enter.
  * The above mentioned pipeline should dump data packets to the console.
- * 
+ *
  * If the #GstFdSrc:timeout property is set to a value bigger than 0, fdsrc will
  * generate an element message named
  * <classname>&quot;GstFdSrcTimeout&quot;</classname>
- * if no data was recieved in the given timeout.
+ * if no data was received in the given timeout.
  * The message's structure contains one field:
  * <itemizedlist>
  * <listitem>
@@ -43,7 +43,7 @@
  *   </para>
  * </listitem>
  * </itemizedlist>
- * 
+ *
  * <refsect2>
  * <title>Example launch line</title>
  * |[
@@ -51,7 +51,7 @@
  * ]| A simple pipeline to read from the standard input and dump the data
  * with a fakesink as hex ascii block.
  * </refsect2>
- * 
+ *
  * Last reviewed on 2008-06-20 (0.10.21)
  */
 

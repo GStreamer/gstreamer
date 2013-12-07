@@ -152,7 +152,7 @@ information.
 
 When the SKIP flag is set, frames can be dropped in the elements. If S is the
 speedup factor, a good algorithm for implementing frame skipping is to send audio in
-chunks of Nms (usualy 300ms is good) and then skip ((S-1) * Nns) of audio data.
+chunks of Nms (usually 300ms is good) and then skip ((S-1) * Nns) of audio data.
 For the video we send only the keyframes in the (S * Nns) interval. In this
 case, the demuxer would scale the timestamps and would set an applied rate of S.
 

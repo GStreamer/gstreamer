@@ -731,10 +731,10 @@ done:
 
 /**
  * gst_data_queue_limits_changed:
- * @queue: The #GstDataQueue 
+ * @queue: The #GstDataQueue
  *
  * Inform the queue that the limits for the fullness check have changed and that
- * any blocking gst_data_queue_push() should be unblocked to recheck the limts.
+ * any blocking gst_data_queue_push() should be unblocked to recheck the limits.
  *
  * Since: 1.2
  */

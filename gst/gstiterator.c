@@ -34,7 +34,7 @@
  *
  * In general, whenever calling a GstIterator function results in your code
  * receiving a refcounted object, the refcount for that object will have been
- * increased.  Your code is responsible for unrefing that object after use.
+ * increased.  Your code is responsible for unreffing that object after use.
  *
  * The basic use pattern of an iterator is as follows:
  *

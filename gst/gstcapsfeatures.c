@@ -411,7 +411,7 @@ gst_caps_features_free (GstCapsFeatures * features)
  * |[
  * GST_LOG ("features is %" GST_PTR_FORMAT, features);
  * ]|
- * This prints the features in human readble form.
+ * This prints the features in human readable form.
  *
  * Free-function: g_free
  *

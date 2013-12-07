@@ -377,7 +377,7 @@ gst_queue_class_init (GstQueueClass * klass)
    * Flushing the queue on EOS might be useful when capturing and encoding
    * from a live source, to finish up the recording quickly in cases when
    * the encoder is slow. Note that this might mean some data from the end of
-   * the recoding data might be lost though (never more than the configured
+   * the recording data might be lost though (never more than the configured
    * max. sizes though).
    *
    * Since: 1.2

@@ -133,7 +133,7 @@ typedef enum {
  * @GST_FLOW_FLUSHING:	         Pad is flushing.
  * @GST_FLOW_EOS:                Pad is EOS.
  * @GST_FLOW_NOT_NEGOTIATED:	 Pad is not negotiated.
- * @GST_FLOW_ERROR:		 Some (fatal) error occured. Element generating
+ * @GST_FLOW_ERROR:		 Some (fatal) error occurred. Element generating
  *                               this error should post an error message with more
  *                               details.
  * @GST_FLOW_NOT_SUPPORTED:	 This operation is not supported.

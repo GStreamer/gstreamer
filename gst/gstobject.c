@@ -813,7 +813,7 @@ gst_object_has_ancestor (GstObject * object, GstObject * ancestor)
  * does not do any locking of any kind. You might want to protect the
  * provided list with the lock of the owner of the list. This function
  * will lock each #GstObject in the list to compare the name, so be
- * carefull when passing a list with a locked object.
+ * careful when passing a list with a locked object.
  *
  * Returns: TRUE if a #GstObject named @name does not appear in @list,
  * FALSE if it does.

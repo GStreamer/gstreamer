@@ -204,7 +204,7 @@ _gst_parse_escape (const gchar * str)
  * @error: pointer to a #GError
  *
  * Create a new element based on command line syntax.
- * @error will contain an error message if an erroneuos pipeline is specified.
+ * @error will contain an error message if an erroneous pipeline is specified.
  * An error does not mean that the pipeline could not be constructed.
  *
  * Returns: (transfer floating): a new element on success and %NULL on failure.

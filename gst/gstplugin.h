@@ -277,7 +277,7 @@ G_END_DECLS
 /**
  * GST_LICENSE_UNKNOWN:
  *
- * To be used in GST_PLUGIN_DEFINE if usure about the licence.
+ * To be used in GST_PLUGIN_DEFINE if unsure about the licence.
  */
 #define GST_LICENSE_UNKNOWN "unknown"
 

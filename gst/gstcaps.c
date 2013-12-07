@@ -650,7 +650,7 @@ gst_caps_append_structure_full (GstCaps * caps, GstStructure * structure,
  * @caps: the #GstCaps to remove from
  * @idx: Index of the structure to remove
  *
- * removes the stucture with the given index from the list of structures
+ * removes the structure with the given index from the list of structures
  * contained in @caps.
  */
 void

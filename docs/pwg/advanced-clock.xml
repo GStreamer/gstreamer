@@ -125,7 +125,7 @@
     <sect2>
       <title>Parser/Decoder/Encoder elements </title>
       <para>
-        Parser/Decoder elements must use the incomming timestamps and transfer
+        Parser/Decoder elements must use the incoming timestamps and transfer
         those to the resulting output buffers. They are allowed to interpolate
         or reconstruct timestamps on missing input buffers when they can.
       </para>
@@ -137,7 +137,7 @@
         Demuxer elements can usually set the timestamps stored inside the media
         file onto the outgoing buffers. They need to make sure that outgoing
         buffers that are to be played at the same time have the same
-        running-time. Demuxers also need to take into account the incomming
+        running-time. Demuxers also need to take into account the incoming
         timestamps on buffers and use that to calculate an offset on the outgoing
         buffer timestamps.
       </para>
@@ -146,8 +146,8 @@
     <sect2>
       <title>Muxer elements</title>
       <para>
-        Muxer elements should use the incomming buffer running-time to mux the
-        different streams together. They should copy the incomming running-time
+        Muxer elements should use the incoming buffer running-time to mux the
+        different streams together. They should copy the incoming running-time
         to the outgoing buffers.
       </para>
     </sect2>

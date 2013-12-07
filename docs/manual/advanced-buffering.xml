@@ -207,7 +207,7 @@
       the file on the server.
     </para>
     <para>
-      In this case, buffering messages will be emited as usual when the
+      In this case, buffering messages will be emitted as usual when the
       requested range is not within the downloaded area + buffersize. The
       buffering message will also contain an indication that incremental
       download is being performed. This flag can be used to let the application
@@ -233,7 +233,7 @@
     </para>
     <para>
       This mode is suitable for all live streams. As with the incremental
-      download mode, buffering messages are emited along with an indication
+      download mode, buffering messages are emitted along with an indication
       that timeshifting download is in progress.
     </para>
   </sect1>
@@ -246,7 +246,7 @@
       a queue (such as a jitterbuffer) or by other means (in the audiosink).
     </para>
     <para>
-      Buffering messages can be emited in those live pipelines as well and
+      Buffering messages can be emitted in those live pipelines as well and
       serve as an indication to the user of the latency buffering. The
       application usually does not react to these buffering messages with a
       state change.

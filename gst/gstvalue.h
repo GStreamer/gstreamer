@@ -219,7 +219,7 @@ G_BEGIN_DECLS
 /**
  * GST_TYPE_DOUBLE_RANGE:
  *
- * a #GValue type that represents a floating point range with double precission
+ * a #GValue type that represents a floating point range with double precision
  *
  * Returns: the #GType of GstIntRange
  */

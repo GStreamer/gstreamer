@@ -56,7 +56,7 @@ typedef enum {
  * @GST_SEEK_FLAG_KEY_UNIT: seek to the nearest keyframe. This might be
  *                     faster but less accurate.
  * @GST_SEEK_FLAG_SEGMENT: perform a segment seek.
- * @GST_SEEK_FLAG_SKIP: when doing fast foward or fast reverse playback, allow
+ * @GST_SEEK_FLAG_SKIP: when doing fast forward or fast reverse playback, allow
  *                     elements to skip frames instead of generating all
  *                     frames.
  * @GST_SEEK_FLAG_SNAP_BEFORE: go to a location before the requested position,
@@ -81,7 +81,7 @@ typedef enum {
  * complete scan of the file in those cases.
  *
  * When performing a segment seek: after the playback of the segment completes,
- * no EOS will be emmited by the element that performed the seek, but a
+ * no EOS will be emitted by the element that performed the seek, but a
  * #GST_MESSAGE_SEGMENT_DONE message will be posted on the bus by the element.
  * When this message is posted, it is possible to send a new seek event to
  * continue playback. With this seek method it is possible to perform seamless

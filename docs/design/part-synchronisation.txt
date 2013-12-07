@@ -73,7 +73,7 @@ This value is monotonically increasing at the rate of the clock.
 Timestamps
 ~~~~~~~~~~
  
-The GstBuffer timestamps and the preceeding SEGMENT event (See
+The GstBuffer timestamps and the preceding SEGMENT event (See
 part-streams.txt) define a transformation of the buffer timestamps to
 running_time as follows:
 
@@ -82,7 +82,7 @@ The following notation is used:
  B: GstBuffer 
   - B.timestamp = buffer timestamp (GST_BUFFER_PTS or GST_BUFFER_DTS)
 
- S:  SEGMENT event preceeding the buffers.
+ S:  SEGMENT event preceding the buffers.
   - S.start: start field in the SEGMENT event. This is the lowest allowed
              timestamp.
   - S.stop: stop field in the SEGMENT event. This is the highers allowed
@@ -130,7 +130,7 @@ As we have seen, we can get a running_time:
 
     C.running_time = absolute_time - base_time
 
- - using the buffer timestamp and the preceeding SEGMENT event as (assuming
+ - using the buffer timestamp and the preceding SEGMENT event as (assuming
    positive playback rate):
 
     B.running_time = (B.timestamp - (S.start + S.offset)) / ABS (S.rate) + S.base
@@ -187,7 +187,7 @@ Additional fields in the SEGMENT are used:
   - S.time: time field in the SEGMENT event. This the stream-time of S.start
   - S.applied_rate: The rate already applied to the stream.
 
-Stream time is calculated using the buffer times and the preceeding SEGMENT
+Stream time is calculated using the buffer times and the preceding SEGMENT
 event as follows:
 
     stream_time = (B.timestamp - S.start) * ABS (S.applied_rate) + S.time

@@ -38,15 +38,15 @@ The main reason for adding these extra progress notifications is twofold:
     have at least DNS resolving and server connections and requests be well
     defined.
 
- 2) To make the state changes non-blocking and cancelable.
+ 2) To make the state changes non-blocking and cancellable.
 
     Currently state changes such as going to the READY or PAUSED state often do
     blocking calls such as resolving DNS or connecting to a remote server. These
-    operations often block the main thread and are often not cancelable, causing
+    operations often block the main thread and are often not cancellable, causing
     application lockups.
 
     We would like to make the state change function, instead, start a separate
-    thread that performs the blocking operations in a cancelable way. When going
+    thread that performs the blocking operations in a cancellable way. When going
     back to the NULL state, all pending operations would be canceled immediately.
 
     For downward state changes, we want to let the application implement its own
@@ -143,7 +143,7 @@ Messages
 
   - "code", G_TYPE_STRING
 
-     A generic extensible string that can be used to programatically determine the
+     A generic extensible string that can be used to programmatically determine the
      action that is in progress. Some standard predefined codes will be
      defined.
 
@@ -176,7 +176,7 @@ Implementation
 Elements should not do blocking operations from the state change function.
 Instead, elements should post an appropriate progress message with the right
 code and of type GST_PROGRESS_TYPE_START and then start a thread to perform
-the blocking calls in a cancelable manner.
+the blocking calls in a cancellable manner.
 
 It is highly recommended to only start async operations from the READY to PAUSED
 state and onwards and not from the NULL to READY state. The reason for this is

@@ -72,7 +72,7 @@
  * #GST_ELEMENT_FLAG_REQUIRE_CLOCK() flag is set, a clock should be set on the
  * element with gst_element_set_clock().
  *
- * Note that clock slection and distribution is normally handled by the
+ * Note that clock selection and distribution is normally handled by the
  * toplevel #GstPipeline so the clock functions are only to be used in very
  * specific situations.
  *
@@ -1535,7 +1535,7 @@ gst_element_default_send_event (GstElement * element, GstEvent * event)
  * event handler, the event will be pushed on a random linked sink pad for
  * upstream events or a random linked source pad for downstream events.
  *
- * This function takes owership of the provided event so you should
+ * This function takes ownership of the provided event so you should
  * gst_event_ref() it if you want to reuse the event after this call.
  *
  * MT safe.

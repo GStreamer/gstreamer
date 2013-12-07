@@ -76,7 +76,7 @@ Plugin development
     loop based
   buffers
   metadata
-  subbufers
+  subbuffers
   adding pads
   libraries
   plugin registry

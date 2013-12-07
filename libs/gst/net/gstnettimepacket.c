@@ -210,7 +210,7 @@ short_packet:
  *
  * MT safe.
  *
- * Returns: TRUE if successful, FALSE in case an error occured.
+ * Returns: TRUE if successful, FALSE in case an error occurred.
  */
 gboolean
 gst_net_time_packet_send (const GstNetTimePacket * packet,

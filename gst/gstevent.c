@@ -481,7 +481,7 @@ gst_event_new_flush_start (void)
  * pads accept data again.
  *
  * Elements can process this event synchronized with the dataflow since
- * the preceeding FLUSH_START event stopped the dataflow.
+ * the preceding FLUSH_START event stopped the dataflow.
  *
  * This event is typically generated to complete a seek and to resume
  * dataflow.
@@ -934,7 +934,7 @@ gst_event_parse_buffer_size (GstEvent * event, GstFormat * format,
  * increasing value.
  *
  * The upstream element can use the @diff and @timestamp values to decide
- * whether to process more buffers. For possitive @diff, all buffers with
+ * whether to process more buffers. For positive @diff, all buffers with
  * timestamp <= @timestamp + @diff will certainly arrive late in the sink
  * as well. A (negative) @diff value so that @timestamp + @diff would yield a
  * result smaller than 0 is not allowed.
@@ -1097,9 +1097,9 @@ gst_event_new_seek (gdouble rate, GstFormat format, GstSeekFlags flags,
  * @format: (out): result location for the stream format
  * @flags:  (out): result location for the #GstSeekFlags
  * @start_type: (out): result location for the #GstSeekType of the start position
- * @start: (out): result location for the start postion expressed in @format
+ * @start: (out): result location for the start position expressed in @format
  * @stop_type:  (out): result location for the #GstSeekType of the stop position
- * @stop: (out): result location for the stop postion expressed in @format
+ * @stop: (out): result location for the stop position expressed in @format
  *
  * Parses a seek @event and stores the results in the given result locations.
  */
@@ -1298,7 +1298,7 @@ gst_event_parse_step (GstEvent * event, GstFormat * format, guint64 * amount,
 /**
  * gst_event_new_reconfigure:
 
- * Create a new reconfigure event. The purpose of the reconfingure event is
+ * Create a new reconfigure event. The purpose of the reconfigure event is
  * to travel upstream and make elements renegotiate their caps or reconfigure
  * their buffer pools. This is useful when changing properties on elements
  * or changing the topology of the pipeline.

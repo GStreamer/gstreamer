@@ -856,7 +856,7 @@ gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
 
 /**
  * gst_test_clock_process_next_clock_id:
- * @test_clock: a #GstTestClock for which to retrive the next pending clock
+ * @test_clock: a #GstTestClock for which to retrieve the next pending clock
  * notification
  *
  * MT safe.

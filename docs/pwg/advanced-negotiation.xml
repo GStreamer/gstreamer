@@ -463,7 +463,7 @@ gst_my_filter_chain (GstPad    *pad,
       to reconfigure its caps by doing a new query for the allowed caps and then
       choosing a new caps. The element that sends out the RECONFIGURE event
       would influence the selection of the new caps by returning the new
-      prefered caps from its GST_QUERY_CAPS query function. The RECONFIGURE
+      preferred caps from its GST_QUERY_CAPS query function. The RECONFIGURE
       event will set the GST_PAD_FLAG_NEED_RECONFIGURE on all pads that it
       travels over.
     </para>
@@ -477,7 +477,7 @@ gst_my_filter_chain (GstPad    *pad,
           Elements that want to propose a new format upstream need to first
           check if the new caps are acceptable upstream with an ACCEPT_CAPS
           query. Then they would send a RECONFIGURE event and be prepared to
-          answer the CAPS query with the new prefered format. It should be
+          answer the CAPS query with the new preferred format. It should be
           noted that when there is no upstream element that can (or wants)
           to renegotiate, the element needs to deal with the currently
           configured format.

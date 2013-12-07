@@ -25,7 +25,7 @@
  *
  * #GstQueueArray is an object that provides standard queue functionality
  * based on an array instead of linked lists. This reduces the overhead
- * caused by memory managment by a large factor.
+ * caused by memory management by a large factor.
  */
 
 

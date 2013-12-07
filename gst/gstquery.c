@@ -727,7 +727,7 @@ gst_query_get_structure (GstQuery * query)
  * @query: a #GstQuery
  *
  * Get the structure of a query. This method should be called with a writable
- * @query so that the returned structure is guranteed to be writable.
+ * @query so that the returned structure is guaranteed to be writable.
  *
  * Returns: (transfer none): the #GstStructure of the query. The structure is
  *     still owned by the query and will therefore be freed when the query
@@ -1136,7 +1136,7 @@ gst_query_set_buffering_stats (GstQuery * query, GstBufferingMode mode,
  * @query: A valid #GstQuery of type GST_QUERY_BUFFERING.
  * @mode: (out) (allow-none): a buffering mode, or NULL
  * @avg_in: (out) (allow-none): the average input rate, or NULL
- * @avg_out: (out) (allow-none): the average output rat, or NULLe
+ * @avg_out: (out) (allow-none): the average output rat, or NULL
  * @buffering_left: (out) (allow-none): amount of buffering time left in
  *     milliseconds, or NULL
  *
@@ -1175,7 +1175,7 @@ gst_query_parse_buffering_stats (GstQuery * query,
  * @start: the start to set
  * @stop: the stop to set
  * @estimated_total: estimated total amount of download time remaining in
- *     miliseconds
+ *     milliseconds
  *
  * Set the available query result fields in @query.
  */
@@ -1204,7 +1204,7 @@ gst_query_set_buffering_range (GstQuery * query, GstFormat format,
  * @start: (out) (allow-none): the start to set, or NULL
  * @stop: (out) (allow-none): the stop to set, or NULL
  * @estimated_total: (out) (allow-none): estimated total amount of download
- *     time remaining in miliseconds, or NULL
+ *     time remaining in milliseconds, or NULL
  *
  * Parse an available query, writing the format into @format, and
  * other results into the passed parameters, if the respective parameters
@@ -1954,7 +1954,7 @@ gst_query_get_n_allocation_params (GstQuery * query)
  * @allocator: (out) (transfer full) (allow-none): variable to hold the result
  * @params: (out) (allow-none): parameters for the allocator
  *
- * Parse an available query and get the alloctor and its params
+ * Parse an available query and get the allocator and its params
  * at @index of the allocator array.
  */
 void
@@ -1988,7 +1988,7 @@ gst_query_parse_nth_allocation_param (GstQuery * query, guint index,
  * @allocator: (transfer none) (allow-none): new allocator to set
  * @params: (transfer none) (allow-none): parameters for the allocator
  *
- * Parse an available query and get the alloctor and its params
+ * Parse an available query and get the allocator and its params
  * at @index of the allocator array.
  */
 void
@@ -2129,7 +2129,7 @@ gst_query_parse_scheduling (GstQuery * query, GstSchedulingFlags * flags,
  * @query: a GST_QUERY_SCHEDULING type query #GstQuery
  * @mode: a #GstPadMode
  *
- * Add @mode as aone of the supported scheduling modes to @query.
+ * Add @mode as one of the supported scheduling modes to @query.
  */
 void
 gst_query_add_scheduling_mode (GstQuery * query, GstPadMode mode)

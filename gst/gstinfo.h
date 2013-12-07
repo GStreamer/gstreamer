@@ -34,10 +34,10 @@ G_BEGIN_DECLS
  * GstDebugLevel:
  * @GST_LEVEL_NONE: No debugging level specified or desired. Used to deactivate
  *  debugging output.
- * @GST_LEVEL_ERROR: Error messages are to be used only when an error occured
+ * @GST_LEVEL_ERROR: Error messages are to be used only when an error occurred
  *  that stops the application from keeping working correctly.
  *  An examples is gst_element_error, which outputs a message with this priority.
- *  It does not mean that the application is terminating as with g_errror.
+ *  It does not mean that the application is terminating as with g_error.
  * @GST_LEVEL_WARNING: Warning messages are to inform about abnormal behaviour
  *  that could lead to problems or weird behaviour later on. An example of this
  *  would be clocking issues ("your computer is pretty slow") or broken input

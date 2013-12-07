@@ -129,7 +129,7 @@ struct _GstBaseTransform {
  *                    downstream allocation query. This function is only called
  *                    when not operating in passthrough mode. The default
  *                    implementation will remove all memory dependent metadata.
- *                    If there is ia @filter_meta method implementation, it will
+ *                    If there is a @filter_meta method implementation, it will
  *                    be called for all metadata API in the downstream query,
  *                    otherwise the metadata API is removed.
  * @filter_meta: Return TRUE if the metadata API should be proposed in the

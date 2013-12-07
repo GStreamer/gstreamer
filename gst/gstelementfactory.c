@@ -27,7 +27,7 @@
  * @see_also: #GstElement, #GstPlugin, #GstPluginFeature, #GstPadTemplate.
  *
  * #GstElementFactory is used to create instances of elements. A
- * GstElementfactory can be added to a #GstPlugin as it is also a
+ * GstElementFactory can be added to a #GstPlugin as it is also a
  * #GstPluginFeature.
  *
  * Use the gst_element_factory_find() and gst_element_factory_create()
@@ -818,7 +818,7 @@ gst_element_factory_list_get_elements (GstElementFactoryListType type,
  * whose pad templates caps can intersect with @caps will be returned.
  *
  * Returns: (transfer full) (element-type Gst.ElementFactory): a #GList of
- *     #GstElementFactory elements that match the given requisits.
+ *     #GstElementFactory elements that match the given requisites.
  *     Use #gst_plugin_feature_list_free after usage.
  */
 GList *

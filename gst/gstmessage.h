@@ -33,11 +33,11 @@ typedef struct _GstMessage GstMessage;
  * only receive this message in the PLAYING state and every time it sets a
  * pipeline to PLAYING that is in the EOS state. The application can perform a
  * flushing seek in the pipeline, which will undo the EOS state again.
- * @GST_MESSAGE_ERROR: an error occured. When the application receives an error
+ * @GST_MESSAGE_ERROR: an error occurred. When the application receives an error
  * message it should stop playback of the pipeline and not assume that more
  * data will be played.
- * @GST_MESSAGE_WARNING: a warning occured.
- * @GST_MESSAGE_INFO: an info message occured
+ * @GST_MESSAGE_WARNING: a warning occurred.
+ * @GST_MESSAGE_INFO: an info message occurred
  * @GST_MESSAGE_TAG: a tag was found.
  * @GST_MESSAGE_BUFFERING: the pipeline is buffering. When the application
  * receives a buffering message in the PLAYING state for a non-live pipeline it
@@ -260,7 +260,7 @@ typedef enum {
  *          posted on the bus.
  *
  * The type of a %GST_MESSAGE_PROGRESS. The progress messages inform the
- * application of the status of assynchronous tasks.
+ * application of the status of asynchronous tasks.
  */
 typedef enum {
   GST_PROGRESS_TYPE_START    = 0,

@@ -62,7 +62,7 @@ typedef gboolean (*GstMiniObjectDisposeFunction) (GstMiniObject *obj);
  * GstMiniObjectFreeFunction:
  * @obj: MiniObject to free
  *
- * Virtual function prototype for methods to free ressources used by
+ * Virtual function prototype for methods to free resources used by
  * mini-objects.
  */
 typedef void (*GstMiniObjectFreeFunction) (GstMiniObject *obj);
@@ -114,7 +114,7 @@ typedef void (*GstMiniObjectNotify) (gpointer user_data, GstMiniObject * obj);
  * @obj: MiniObject to unset flag in.
  * @flag: Flag to set, must be a single bit in guint32.
  *
- * This macro usets the given bits.
+ * This macro unsets the given bits.
  */
 #define GST_MINI_OBJECT_FLAG_UNSET(obj,flag)         (GST_MINI_OBJECT_FLAGS (obj) &= ~(flag))
 

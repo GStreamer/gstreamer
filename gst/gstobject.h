@@ -145,7 +145,7 @@ typedef enum
  * @obj: a #GstObject
  * @flag: Flag to set
  *
- * This macro usets the given bits.
+ * This macro unsets the given bits.
  */
 #define GST_OBJECT_FLAG_UNSET(obj,flag)        (GST_OBJECT_FLAGS (obj) &= ~(flag))
 

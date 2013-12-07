@@ -460,7 +460,7 @@ buffer_event_function (GstPad * pad, GstObject * noparent, GstEvent * event)
  * gst_check_element_push_buffer_list:
  * @element_name: name of the element that needs to be created
  * @buffer_in: (element-type GstBuffer) (transfer full): a list of buffers that needs to be
- *  puched to the element
+ *  pushed to the element
  * @buffer_out: (element-type GstBuffer) (transfer full): a list of buffers that we expect from
  * the element
  * @last_flow_return: the last buffer push needs to give this GstFlowReturn
@@ -730,7 +730,7 @@ _gst_check_run_test_func (const gchar * func_name)
  * @format: The #GstFormat of the default segment to send
  * @stream_id: A unique identifier for the stream
  *
- * Push stream-start, caps and segment event, which concist of the minimum
+ * Push stream-start, caps and segment event, which consist of the minimum
  * required events to allow streaming. Caps is optional to allow raw src
  * testing.
  */
@@ -756,7 +756,7 @@ gst_check_setup_events_with_stream_id (GstPad * srcpad, GstElement * element,
  * @caps: (allow-none): #GstCaps in case caps event must be sent
  * @format: The #GstFormat of the default segment to send
  *
- * Push stream-start, caps and segment event, which concist of the minimum
+ * Push stream-start, caps and segment event, which consist of the minimum
  * required events to allow streaming. Caps is optional to allow raw src
  * testing. If @element has more than one src or sink pad, use
  * gst_check_setup_events_with_stream_id() instead.

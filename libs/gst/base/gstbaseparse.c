@@ -184,7 +184,7 @@
  *      buffer time metadata (which will be taken from upstream as much as
  *      possible). Internally keeping track of frame durations and respective
  *      sizes that have been pushed provides GstBaseParse with an estimated
- *      bitrate. A default @convert (used if not overriden) will then use these
+ *      bitrate. A default @convert (used if not overridden) will then use these
  *      rates to perform obvious conversions.  These rates are also used to
  *      update (estimated) duration at regular frame intervals.
  *   </para></listitem>
@@ -3563,7 +3563,7 @@ gst_base_parse_set_pts_interpolation (GstBaseParse * parse,
  * By default, the base class might try to infer PTS from DTS and vice
  * versa.  While this is generally correct for audio data, it may not
  * be otherwise. Sub-classes implementing such formats should disable
- * timestamp infering.
+ * timestamp inferring.
  */
 void
 gst_base_parse_set_infer_ts (GstBaseParse * parse, gboolean infer_ts)

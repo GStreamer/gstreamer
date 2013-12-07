@@ -3813,7 +3813,7 @@ no_function:
  * The function returns #GST_FLOW_FLUSHING if the pad was flushing.
  *
  * If the buffer type is not acceptable for @pad (as negotiated with a
- * preceeding GST_EVENT_CAPS event), this function returns
+ * preceding GST_EVENT_CAPS event), this function returns
  * #GST_FLOW_NOT_NEGOTIATED.
  *
  * The function proceeds calling the chain function installed on @pad (see
@@ -4278,7 +4278,7 @@ get_range_failed:
  * When this function returns any other result value than #GST_FLOW_OK, @buffer
  * will be unchanged.
  *
- * This is a lowlevel function. Usualy gst_pad_pull_range() is used.
+ * This is a lowlevel function. Usually gst_pad_pull_range() is used.
  *
  * Returns: a #GstFlowReturn from the pad.
  *
@@ -4764,7 +4764,7 @@ idle_probe_stopped:
  * mainly used by elements to send events to their peer
  * elements.
  *
- * This function takes owership of the provided event so you should
+ * This function takes ownership of the provided event so you should
  * gst_event_ref() it if you want to reuse the event after this call.
  *
  * Returns: TRUE if the event was handled.
@@ -5132,7 +5132,7 @@ precheck_failed:
  * plugin doesn't need to bother itself with this information; the core handles
  * all necessary locks and checks.
  *
- * This function takes owership of the provided event so you should
+ * This function takes ownership of the provided event so you should
  * gst_event_ref() it if you want to reuse the event after this call.
  *
  * Returns: TRUE if the event was handled.

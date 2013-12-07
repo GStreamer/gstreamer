@@ -117,7 +117,7 @@ gst_util_set_value_from_string (GValue * value, const gchar * value_str)
  * @name: the name of the argument to set
  * @value: the string value to set
  *
- * Convertes the string value to the type of the objects argument and
+ * Converts the string value to the type of the objects argument and
  * sets the argument with it.
  *
  * Note that this function silently returns if @object has no property named
@@ -2441,7 +2441,7 @@ query_accept_caps_func (GstPad * pad, QueryAcceptCapsData * data)
  *
  * This function is useful as a default accept caps query function for an element
  * that can handle any stream format, but requires caps that are acceptable for
- * all oposite pads.
+ * all opposite pads.
  *
  * Returns: TRUE if @query could be executed
  */
@@ -2500,7 +2500,7 @@ query_caps_func (GstPad * pad, QueryCapsData * data)
  * @pad: a #GstPad to proxy.
  * @query: a CAPS #GstQuery.
  *
- * Calls gst_pad_query_caps() for all internally linked pads fof @pad and returns
+ * Calls gst_pad_query_caps() for all internally linked pads of @pad and returns
  * the intersection of the results.
  *
  * This function is useful as a default caps query function for an element
@@ -2740,7 +2740,7 @@ gst_pad_peer_query_convert (GstPad * pad, GstFormat src_format, gint64 src_val,
  * When called on sinkpads @filter contains the caps that
  * upstream could produce in the order preferred by upstream. When
  * called on srcpads @filter contains the caps accepted by
- * downstream in the preffered order. @filter might be %NULL but
+ * downstream in the preferred order. @filter might be %NULL but
  * if it is not %NULL the returned caps will be a subset of @filter.
  *
  * Note that this function does not return writable #GstCaps, use
@@ -2787,7 +2787,7 @@ gst_pad_query_caps (GstPad * pad, GstCaps * filter)
  * When called on srcpads @filter contains the caps that
  * upstream could produce in the order preferred by upstream. When
  * called on sinkpads @filter contains the caps accepted by
- * downstream in the preffered order. @filter might be %NULL but
+ * downstream in the preferred order. @filter might be %NULL but
  * if it is not %NULL the returned caps will be a subset of @filter.
  *
  * Returns: the caps of the peer pad with incremented ref-count. When there is
@@ -3765,7 +3765,7 @@ gst_pad_create_stream_id (GstPad * pad, GstElement * parent,
  * The returned stream-id string should be treated as an opaque string, its
  * contents should not be interpreted.
  *
- * Returns: a newly-allocated copy of the stream-idfor @pad, or %NULL.
+ * Returns: a newly-allocated copy of the stream-id for @pad, or %NULL.
  *     g_free() the returned string when no longer needed.
  *
  * Since: 1.2

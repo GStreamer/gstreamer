@@ -587,7 +587,7 @@ __gst_date_time_compare (const GstDateTime * dt1, const GstDateTime * dt2)
  *
  * Note that @tzoffset is a float and was chosen so for being able to handle
  * some fractional timezones, while it still keeps the readability of
- * represeting it in hours for most timezones.
+ * representing it in hours for most timezones.
  *
  * If value is -1 then all over value will be ignored. For example
  * if @month == -1, then #GstDateTime will created only for @year. If

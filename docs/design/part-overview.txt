@@ -212,7 +212,7 @@ the buffer (see part-negotiation.txt).
 
 When an element pad receives a CAPS event, it has to check if it understand the
 media type. The element must refuse following buffers if the media type
-preceeding it was not accepted.
+preceding it was not accepted.
 
 Both gst_pad_push() and gst_pad_pull_range() have a return value indicating whether
 the operation succeeded. An error code means that no more data should be sent

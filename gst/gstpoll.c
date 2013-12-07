@@ -24,7 +24,7 @@
 /**
  * SECTION:gstpoll
  * @short_description: Keep track of file descriptors and make it possible
- *                     to wait on them in a cancelable way
+ *                     to wait on them in a cancellable way
  *
  * A #GstPoll keeps track of file descriptors much like fd_set (used with
  * select()) or a struct pollfd array (used with poll()). Once created with

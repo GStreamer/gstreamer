@@ -986,7 +986,7 @@ GST_BYTE_READER_SKIP_STRING (32);
  * gst_byte_reader_peek_string:
  * @reader: a #GstByteReader instance
  * @str: (out) (transfer none) (array zero-terminated=1): address of a
- *     #gchar pointer varieble in which to store the result
+ *     #gchar pointer variable in which to store the result
  *
  * Returns a constant pointer to the current data position if there is
  * a NUL-terminated string in the data (this could be just a NUL terminator).
@@ -1002,7 +1002,7 @@ GST_BYTE_READER_SKIP_STRING (32);
  * gst_byte_reader_peek_string_utf8:
  * @reader: a #GstByteReader instance
  * @str: (out) (transfer none) (array zero-terminated=1): address of a
- *     #gchar pointer varieble in which to store the result
+ *     #gchar pointer variable in which to store the result
  *
  * Returns a constant pointer to the current data position if there is
  * a NUL-terminated string in the data (this could be just a NUL terminator).
@@ -1035,7 +1035,7 @@ gst_byte_reader_peek_string_utf8 (const GstByteReader * reader,
  * gst_byte_reader_get_string_utf8:
  * @reader: a #GstByteReader instance
  * @str: (out) (transfer none) (array zero-terminated=1): address of a
- *     #gchar pointer varieble in which to store the result
+ *     #gchar pointer variable in which to store the result
  *
  * Returns a constant pointer to the current data position if there is
  * a NUL-terminated string in the data (this could be just a NUL terminator),
@@ -1091,7 +1091,7 @@ gst_byte_reader_dup_string_utf##bits (GstByteReader * reader, type ** str) \
  * gst_byte_reader_dup_string_utf8:
  * @reader: a #GstByteReader instance
  * @str: (out) (transfer full) (array zero-terminated=1): address of a
- *     #gchar pointer varieble in which to store the result
+ *     #gchar pointer variable in which to store the result
  *
  * Free-function: g_free
  *
@@ -1111,7 +1111,7 @@ GST_BYTE_READER_DUP_STRING (8, gchar);
  * gst_byte_reader_dup_string_utf16:
  * @reader: a #GstByteReader instance
  * @str: (out) (transfer full) (array zero-terminated=1): address of a
- *     #guint16 pointer varieble in which to store the result
+ *     #guint16 pointer variable in which to store the result
  *
  * Free-function: g_free
  *
@@ -1137,7 +1137,7 @@ GST_BYTE_READER_DUP_STRING (16, guint16);
  * gst_byte_reader_dup_string_utf32:
  * @reader: a #GstByteReader instance
  * @str: (out) (transfer full) (array zero-terminated=1): address of a
- *     #guint32 pointer varieble in which to store the result
+ *     #guint32 pointer variable in which to store the result
  *
  * Free-function: g_free
  *

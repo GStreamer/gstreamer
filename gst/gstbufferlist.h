@@ -66,7 +66,7 @@ typedef gboolean   (*GstBufferListFunc)   (GstBuffer **buffer, guint idx,
  *
  * Increases the refcount of the given buffer list by one.
  *
- * Note that the refcount affects the writeability of @list and its data, see
+ * Note that the refcount affects the writability of @list and its data, see
  * gst_buffer_list_make_writable(). It is important to note that keeping
  * additional references to GstBufferList instances can potentially increase
  * the number of memcpy operations in a pipeline.

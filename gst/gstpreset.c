@@ -940,7 +940,7 @@ no_presets:
  * Get a copy of preset names as a NULL terminated string array.
  *
  * Returns: (transfer full) (array zero-terminated=1) (element-type gchar*):
- *     list with names, ue g_strfreev() after usage.
+ *     list with names, use g_strfreev() after usage.
  */
 gchar **
 gst_preset_get_preset_names (GstPreset * preset)

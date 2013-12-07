@@ -212,7 +212,7 @@ typedef enum {
  *   </para></listitem>
  *   <listitem><para>
  *     The pipeline selects a #GstClock and distributes this to all the children
- *     before setting them to PLAYING. This means that it is only alowed to
+ *     before setting them to PLAYING. This means that it is only allowed to
  *     synchronize on the #GstClock in the PLAYING state.
  *   </para></listitem>
  *   <listitem><para>

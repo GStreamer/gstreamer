@@ -661,8 +661,8 @@ CREATE_WRITE_STRING_FUNC (32, guint32);
 /**
  * gst_byte_writer_fill:
  * @writer: #GstByteWriter instance
- * @value: Value to be writen
- * @size: Number of bytes to be writen
+ * @value: Value to be written
+ * @size: Number of bytes to be written
  *
  * Writes @size bytes containing @value to @writer.
  *

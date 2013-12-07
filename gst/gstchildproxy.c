@@ -100,7 +100,7 @@ gst_child_proxy_default_get_child_by_name (GstChildProxy * parent,
 /**
  * gst_child_proxy_get_child_by_name:
  * @parent: the parent object to get the child from
- * @name: the childs name
+ * @name: the child's name
  *
  * Looks up a child element by the given name.
  *
@@ -125,7 +125,7 @@ gst_child_proxy_get_child_by_name (GstChildProxy * parent, const gchar * name)
 /**
  * gst_child_proxy_get_child_by_index:
  * @parent: the parent object to get the child from
- * @index: the childs position in the child list
+ * @index: the child's position in the child list
  *
  * Fetches a child by its number.
  *

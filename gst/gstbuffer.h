@@ -319,7 +319,7 @@ void        gst_buffer_extract_dup         (GstBuffer *buffer, gsize offset,
  *
  * Increases the refcount of the given buffer by one.
  *
- * Note that the refcount affects the writeability
+ * Note that the refcount affects the writability
  * of @buf and its metadata, see gst_buffer_is_writable().
  * It is important to note that keeping additional references to
  * GstBuffer instances can potentially increase the number

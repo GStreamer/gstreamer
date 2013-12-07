@@ -36,7 +36,7 @@ typedef struct _GstTypeFind GstTypeFind;
 /**
  * GstTypeFindFunction:
  * @find: A #GstTypeFind structure
- * @user_data: optionnal data to pass to the function
+ * @user_data: optional data to pass to the function
  *
  * A function that will be called by typefinding.
  */

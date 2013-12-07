@@ -303,7 +303,7 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
 
   /**
    * GstMultiQueue::underrun:
-   * @multiqueue: the multqueue instance
+   * @multiqueue: the multiqueue instance
    *
    * This signal is emitted from the streaming thread when there is
    * no data in any of the queues inside the multiqueue instance (underrun).
@@ -371,7 +371,7 @@ gst_multi_queue_class_init (GstMultiQueueClass * klass)
    * GstMultiQueue:use-buffering
    * 
    * Enable the buffering option in multiqueue so that BUFFERING messages are
-   * emited based on low-/high-percent thresholds.
+   * emitted based on low-/high-percent thresholds.
    */
   g_object_class_install_property (gobject_class, PROP_USE_BUFFERING,
       g_param_spec_boolean ("use-buffering", "Use buffering",

@@ -34,7 +34,7 @@ G_BEGIN_DECLS
  *
  * Opaque atomic data queue.
  *
- * Use the acessor functions to get the stored values.
+ * Use the accessor functions to get the stored values.
  */
 typedef struct _GstAtomicQueue GstAtomicQueue;
 

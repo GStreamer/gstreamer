@@ -23,7 +23,7 @@
  * @see_also: #GstMessage
  *
  * GStreamer elements can throw non-fatal warnings and fatal errors.
- * Higher-level elements and applications can programatically filter
+ * Higher-level elements and applications can programmatically filter
  * the ones they are interested in or can recover from,
  * and have a default handler handle the rest of them.
  *

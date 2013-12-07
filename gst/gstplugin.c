@@ -39,7 +39,7 @@
  * Once you have a handle to a #GstPlugin (e.g. from the #GstRegistry), you
  * can add any object that subclasses #GstPluginFeature.
  *
- * Usually plugins are always automaticlly loaded so you don't need to call
+ * Usually plugins are always automatically loaded so you don't need to call
  * gst_plugin_load() explicitly to bring it into memory. There are options to
  * statically link plugins to an app or even use GStreamer without a plugin
  * repository in which case gst_plugin_load() can be needed to bring the plugin

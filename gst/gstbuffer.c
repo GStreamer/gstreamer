@@ -71,7 +71,7 @@
  * produced so far. For compressed data, it could be the byte offset in a
  * source or destination file. Likewise, the end offset will be the offset of
  * the end of the buffer. These can only be meaningfully interpreted if you
- * know the media type of the buffer (the preceeding CAPS event). Either or both
+ * know the media type of the buffer (the preceding CAPS event). Either or both
  * can be set to #GST_BUFFER_OFFSET_NONE.
  *
  * gst_buffer_ref() is used to increase the refcount of a buffer. This must be
@@ -1281,7 +1281,7 @@ gst_buffer_get_sizes_range (GstBuffer * buffer, guint idx, gint length,
 /**
  * gst_buffer_resize:
  * @buffer: a #GstBuffer.
- * @offset: the offset adjustement
+ * @offset: the offset adjustment
  * @size: the new size or -1 to just adjust the offset
  *
  * Set the offset and total size of the memory blocks in @buffer.
@@ -1310,7 +1310,7 @@ gst_buffer_set_size (GstBuffer * buffer, gssize size)
  * @buffer: a #GstBuffer.
  * @idx: an index
  * @length: a length
- * @offset: the offset adjustement
+ * @offset: the offset adjustment
  * @size: the new size or -1 to just adjust the offset
  *
  * Set the total size of the @length memory blocks starting at @idx in
@@ -1997,7 +1997,7 @@ gst_buffer_remove_meta (GstBuffer * buffer, GstMeta * meta)
  * Retrieve the next #GstMeta after @current. If @state points
  * to %NULL, the first metadata is returned.
  *
- * @state will be updated with an opage state pointer 
+ * @state will be updated with an opaque state pointer
  *
  * Returns: (transfer none): The next #GstMeta or %NULL when there are
  * no more items.

@@ -258,8 +258,9 @@ void gst_byte_writer_put_data_unchecked (GstByteWriter *writer, const guint8 *da
 /**
  * gst_byte_writer_fill_unchecked:
  * @writer: #GstByteWriter instance
- * @value: Value to be writen
- * @size: Number of bytes to be writen
+ * @value: Value to be written
+ * @size: Number of bytes to be written
+
  *
  * Writes @size bytes containing @value to @writer without
  * checking if there is enough free space available in the byte writer.

@@ -32,7 +32,7 @@
  * If a subsystem is disabled, most of this changes are done in an API
  * compatible way, so you don't need to adapt your code in most cases. It is
  * never done in an ABI compatible way though. So if you want to disable a
- * suybsystem, you have to rebuild all programs depending on GStreamer, too.
+ * subsystem, you have to rebuild all programs depending on GStreamer, too.
  *
  * If a subsystem is disabled in GStreamer, a value is defined in
  * &lt;gst/gst.h&gt;. You can check this if you do subsystem-specific stuff.

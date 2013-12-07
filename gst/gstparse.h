@@ -37,7 +37,7 @@ GQuark gst_parse_error_quark (void);
 
 /**
  * GstParseError:
- * @GST_PARSE_ERROR_SYNTAX: A syntax error occured.
+ * @GST_PARSE_ERROR_SYNTAX: A syntax error occurred.
  * @GST_PARSE_ERROR_NO_SUCH_ELEMENT: The description contained an unknown element
  * @GST_PARSE_ERROR_NO_SUCH_PROPERTY: An element did not have a specified property
  * @GST_PARSE_ERROR_LINK: There was an error linking two pads.

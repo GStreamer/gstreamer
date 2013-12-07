@@ -1052,7 +1052,7 @@ gst_value_get_int_range_min (const GValue * value)
  *
  * Gets the maximum of the range specified by @value.
  *
- * Returns: the maxumum of the range
+ * Returns: the maximum of the range
  */
 gint
 gst_value_get_int_range_max (const GValue * value)
@@ -1304,7 +1304,7 @@ gst_value_get_int64_range_min (const GValue * value)
  *
  * Gets the maximum of the range specified by @value.
  *
- * Returns: the maxumum of the range
+ * Returns: the maximum of the range
  */
 gint64
 gst_value_get_int64_range_max (const GValue * value)
@@ -1495,7 +1495,7 @@ gst_value_get_double_range_min (const GValue * value)
  *
  * Gets the maximum of the range specified by @value.
  *
- * Returns: the maxumum of the range
+ * Returns: the maximum of the range
  */
 gdouble
 gst_value_get_double_range_max (const GValue * value)
@@ -4600,7 +4600,7 @@ gst_value_can_union (const GValue * value1, const GValue * value2)
  *
  * Creates a GValue corresponding to the union of @value1 and @value2.
  *
- * Returns: TRUE if the union suceeded.
+ * Returns: TRUE if the union succeeded.
  */
 gboolean
 gst_value_union (GValue * dest, const GValue * value1, const GValue * value2)

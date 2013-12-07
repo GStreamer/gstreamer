@@ -105,7 +105,7 @@
  * #GstBaseSinkClass.start() and #GstBaseSinkClass.stop() calls.
  *
  * The #GstBaseSinkClass.event() virtual method will be called when an event is
- * received by #GstBaseSink. Normally this method should only be overriden by
+ * received by #GstBaseSink. Normally this method should only be overridden by
  * very specific elements (such as file sinks) which need to handle the
  * newsegment event specially.
  *
@@ -483,7 +483,7 @@ gst_base_sink_class_init (GstBaseSinkClass * klass)
    *
    * The last buffer that arrived in the sink and was used for preroll or for
    * rendering. This property can be used to generate thumbnails. This property
-   * can be NULL when the sink has not yet received a bufer.
+   * can be NULL when the sink has not yet received a buffer.
    */
   g_object_class_install_property (gobject_class, PROP_LAST_SAMPLE,
       g_param_spec_boxed ("last-sample", "Last Sample",
@@ -691,7 +691,7 @@ gst_base_sink_finalize (GObject * object)
  *
  * Configures @sink to synchronize on the clock or not. When
  * @sync is FALSE, incoming samples will be played as fast as
- * possible. If @sync is TRUE, the timestamps of the incomming
+ * possible. If @sync is TRUE, the timestamps of the incoming
  * buffers will be used to schedule the exact render time of its
  * contents.
  */
@@ -814,7 +814,7 @@ gst_base_sink_is_qos_enabled (GstBaseSink * sink)
  * @sink: the sink
  * @enabled: the new async value.
  *
- * Configures @sink to perform all state changes asynchronusly. When async is
+ * Configures @sink to perform all state changes asynchronously. When async is
  * disabled, the sink will immediately go to PAUSED instead of waiting for a
  * preroll buffer. This feature is useful if the sink does not synchronize
  * against the clock or when it is dealing with sparse streams.
@@ -1041,7 +1041,7 @@ gst_base_sink_get_latency (GstBaseSink * sink)
  *
  * If both @live and @upstream_live are TRUE, the sink will want to compensate
  * for the latency introduced by the upstream elements by setting the
- * @min_latency to a strictly possitive value.
+ * @min_latency to a strictly positive value.
  *
  * This function is mostly used by subclasses.
  *
@@ -2031,7 +2031,7 @@ gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
  * This function will block until @time is reached. It is usually called by
  * subclasses that use their own internal synchronisation.
  *
- * If @time is not valid, no sycnhronisation is done and #GST_CLOCK_BADTIME is
+ * If @time is not valid, no synchronisation is done and #GST_CLOCK_BADTIME is
  * returned. Likewise, if synchronisation is disabled in the element or there
  * is no clock, no synchronisation is done and #GST_CLOCK_BADTIME is returned.
  *

@@ -137,7 +137,7 @@ struct _GstBaseSink {
  * @preroll: Called to present the preroll buffer if desired.
  * @render: Called when a buffer should be presented or output, at the
  *     correct moment if the #GstBaseSink has been set to sync to the clock.
- * @render_list: Same as @render but used whith buffer lists instead of
+ * @render_list: Same as @render but used with buffer lists instead of
  *     buffers.
  *
  * Subclasses can override any of the available virtual methods or not, as
