@@ -527,6 +527,7 @@ typedef struct
   GstVideoCodecFrame *frame;
   gboolean mapped;
   GstVideoFrame vframe;
+  GstBuffer *buffer;
 } GstFFMpegVidDecVideoFrame;
 
 static GstFFMpegVidDecVideoFrame *
@@ -547,6 +548,7 @@ gst_ffmpegviddec_video_frame_free (GstFFMpegVidDec * ffmpegdec,
   if (frame->mapped)
     gst_video_frame_unmap (&frame->vframe);
   gst_video_decoder_release_frame (GST_VIDEO_DECODER (ffmpegdec), frame->frame);
+  gst_buffer_replace (&frame->buffer, NULL);
   g_slice_free (GstFFMpegVidDecVideoFrame, frame);
 }
 
@@ -570,6 +572,8 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
    * picture back from ffmpeg we can use this to correctly timestamp the output
    * buffer */
   picture->reordered_opaque = context->reordered_opaque;
+  GST_DEBUG_OBJECT (ffmpegdec, "opaque value SN %d",
+      (gint32) picture->reordered_opaque);
 
   frame =
       gst_video_decoder_get_frame (GST_VIDEO_DECODER (ffmpegdec),
@@ -605,9 +609,16 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
   if (ret != GST_FLOW_OK)
     goto alloc_failed;
 
+  /* piggy-backed alloc'ed on the frame,
+   * and there was much rejoicing and we are grateful.
+   * Now take away buffer from frame, we will give it back later when decoded.
+   * This allows multiple request for a buffer per frame; unusual but possible. */
+  gst_buffer_replace (&dframe->buffer, frame->output_buffer);
+  gst_buffer_replace (&frame->output_buffer, NULL);
+
   /* Fill avpicture */
   info = &ffmpegdec->output_state->info;
-  if (!gst_video_frame_map (&dframe->vframe, info, dframe->frame->output_buffer,
+  if (!gst_video_frame_map (&dframe->vframe, info, dframe->buffer,
           GST_MAP_READWRITE))
     goto invalid_frame;
   dframe->mapped = TRUE;
@@ -635,7 +646,7 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
         }
         gst_video_frame_unmap (&dframe->vframe);
         dframe->mapped = FALSE;
-        gst_buffer_replace (&frame->output_buffer, NULL);
+        gst_buffer_replace (&dframe->buffer, NULL);
         ffmpegdec->current_dr = FALSE;
 
         goto no_dr;
@@ -652,7 +663,7 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
    * the opaque data. */
   picture->type = FF_BUFFER_TYPE_USER;
 
-  GST_LOG_OBJECT (ffmpegdec, "returned frame %p", frame->output_buffer);
+  GST_LOG_OBJECT (ffmpegdec, "returned frame %p", dframe->buffer);
 
   return 0;
 
@@ -677,8 +688,7 @@ invalid_frame:
   {
     /* alloc default buffer when we can't get one from downstream */
     GST_LOG_OBJECT (ffmpegdec, "failed to map frame, fallback alloc");
-    gst_buffer_unref (frame->output_buffer);
-    frame->output_buffer = NULL;
+    gst_buffer_replace (&dframe->buffer, NULL);
     goto fallback;
   }
 fallback:
@@ -704,6 +714,8 @@ no_frame:
   }
 }
 
+/* this should havesame effect as _get_buffer wrt opaque metadata,
+ * but preserving current content, if any */
 static int
 gst_ffmpegviddec_reget_buffer (AVCodecContext * context, AVFrame * picture)
 {
@@ -764,7 +776,7 @@ gst_ffmpegviddec_release_buffer (AVCodecContext * context, AVFrame * picture)
 
   ffmpegdec = (GstFFMpegVidDec *) context->opaque;
   frame = (GstFFMpegVidDecVideoFrame *) picture->opaque;
-  GST_DEBUG_OBJECT (ffmpegdec, "release frame %d",
+  GST_DEBUG_OBJECT (ffmpegdec, "release frame SN %d",
       frame->frame->system_frame_number);
 
   /* check if it was our buffer */
@@ -1213,6 +1225,10 @@ gst_ffmpegviddec_video_frame (GstFFMpegVidDec * ffmpegdec,
   /* get the output picture timing info again */
   out_dframe = ffmpegdec->picture->opaque;
   out_frame = gst_video_codec_frame_ref (out_dframe->frame);
+
+  /* also give back a buffer allocated by the frame, if any */
+  gst_buffer_replace (&out_frame->output_buffer, out_dframe->buffer);
+  gst_buffer_replace (&out_dframe->buffer, NULL);
 
   GST_DEBUG_OBJECT (ffmpegdec,
       "pts %" G_GUINT64_FORMAT " duration %" G_GUINT64_FORMAT,
