@@ -146,7 +146,7 @@ GST_START_TEST (segment_seek_nosize)
   update = FALSE;
   /* add 100 to start (to 300), set stop to 200, this is not allowed.
    * nothing should be updated in the segment. A g_warning is
-   * emited. */
+   * emitted. */
   ASSERT_CRITICAL (gst_segment_do_seek (&segment, 1.0,
           GST_FORMAT_BYTES,
           GST_SEEK_FLAG_NONE,

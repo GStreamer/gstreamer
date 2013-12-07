@@ -279,7 +279,7 @@ struct _GstBaseSinkPrivate
 #define UPDATE_RUNNING_AVG(avg,val)   DO_RUNNING_AVG(avg,val,8)
 
 /* the windows for these running averages are experimentally obtained.
- * possitive values get averaged more while negative values use a small
+ * positive values get averaged more while negative values use a small
  * window so we can react faster to badness. */
 #define UPDATE_RUNNING_AVG_P(avg,val) DO_RUNNING_AVG(avg,val,16)
 #define UPDATE_RUNNING_AVG_N(avg,val) DO_RUNNING_AVG(avg,val,4)
@@ -2002,7 +2002,7 @@ gst_base_sink_adjust_time (GstBaseSink * basesink, GstClockTime time)
 
   time += basesink->priv->latency;
 
-  /* apply offset, be carefull for underflows */
+  /* apply offset, be careful for underflows */
   ts_offset = basesink->priv->ts_offset;
   if (ts_offset < 0) {
     ts_offset = -ts_offset;

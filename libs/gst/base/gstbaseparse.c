@@ -3569,7 +3569,7 @@ void
 gst_base_parse_set_infer_ts (GstBaseParse * parse, gboolean infer_ts)
 {
   parse->priv->infer_ts = infer_ts;
-  GST_INFO_OBJECT (parse, "TS infering: %s", (infer_ts) ? "yes" : "no");
+  GST_INFO_OBJECT (parse, "TS inferring: %s", (infer_ts) ? "yes" : "no");
 }
 
 /**

@@ -921,7 +921,7 @@ gst_object_get_path_string (GstObject * object)
   path = g_strdup ("");
 
   /* first walk the object hierarchy to build a list of the parents,
-   * be carefull here with refcounting. */
+   * be careful here with refcounting. */
   do {
     if (GST_IS_OBJECT (object)) {
       parent = gst_object_get_parent (object);

@@ -210,7 +210,7 @@ GST_START_TEST (test_to_from_string)
 
   fail_unless (st2 != NULL);
 
-  /* need to put stuctures into caps to compare */
+  /* need to put structures into caps to compare */
   caps1 = gst_caps_new_empty ();
   gst_caps_append_structure (caps1, st1);
   caps2 = gst_caps_new_empty ();
@@ -258,7 +258,7 @@ GST_START_TEST (test_string_properties)
 
   fail_unless (st2 != NULL);
 
-  /* need to put stuctures into caps to compare */
+  /* need to put structures into caps to compare */
   caps1 = gst_caps_new_empty ();
   gst_caps_append_structure (caps1, st1);
   caps2 = gst_caps_new_empty ();

@@ -1558,7 +1558,7 @@ default_prepare_output_buffer (GstBaseTransform * trans,
 
   /* figure out how to allocate an output buffer */
   if (priv->passthrough) {
-    /* passthrough, we will not modify the incomming buffer so we can just
+    /* passthrough, we will not modify the incoming buffer so we can just
      * reuse it */
     GST_DEBUG_OBJECT (trans, "passthrough: reusing input buffer");
     *outbuf = inbuf;
