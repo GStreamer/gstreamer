@@ -207,10 +207,11 @@ typedef enum
  * @input_buffer: the input #GstBuffer that created this frame. The buffer is owned
  *           by the frame and references to the frame instead of the buffer should
  * @output_buffer: the output #GstBuffer. Implementations should set this either
- *           directly, or by using the @gst_video_decoder_alloc_output_frame() or
- *           @gst_video_decoder_alloc_output_buffer() methods. The buffer is owned
- *           by the frame and references to the frame instead of the buffer should
- *           be kept.
+ *           directly, or by using the
+ *           @gst_video_decoder_allocate_output_frame() or
+ *           @gst_video_decoder_allocate_output_buffer() methods. The buffer is
+ *           owned by the frame and references to the frame instead of the
+ *           buffer should be kept.
  * @deadline: Running time when the frame will be used.
  * @events: Events that will be pushed downstream before this frame is pushed.
  *
