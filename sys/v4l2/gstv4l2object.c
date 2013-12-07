@@ -2919,6 +2919,9 @@ gst_v4l2_object_setup_format (GstV4l2Object * v4l2object,
   if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_FMT, &fmt) < 0)
     goto get_fmt_failed;
 
+  if (fmt.fmt.pix.width == 0 || fmt.fmt.pix.height == 0)
+    goto invalid_dimensions;
+
   fmtdesc = gst_v4l2_object_get_format_from_fourcc (v4l2object,
       fmt.fmt.pix.pixelformat);
   if (fmtdesc == NULL)
@@ -2966,6 +2969,14 @@ get_fmt_failed:
   {
     GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
         (_("Video device did not provide output format.")), GST_ERROR_SYSTEM);
+    return FALSE;
+  }
+invalid_dimensions:
+  {
+    GST_ELEMENT_WARNING (v4l2object->element, RESOURCE, SETTINGS,
+        (_("Video device returned invalid dimensions.")),
+        ("Expected non 0 dimensions, got %dx%d", fmt.fmt.pix.width,
+            fmt.fmt.pix.height));
     return FALSE;
   }
 unsupported_field:
