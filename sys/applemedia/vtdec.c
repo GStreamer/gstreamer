@@ -78,7 +78,7 @@ static GstStaticPadTemplate gst_vtdec_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("video/x-h264, stream-format=avc, alignment=au;"
-        "video/mpeg;" "image/jpeg")
+        "video/mpeg, mpegversion=2;" "image/jpeg")
     );
 
 #ifdef HAVE_IOS
@@ -197,7 +197,7 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     cm_format = kCMVideoCodecType_H264;
     vtdec->reorder_queue_frame_delay = 16;
   } else if (!strcmp (caps_name, "video/mpeg")) {
-    cm_format = kCMVideoCodecType_MPEG4Video;
+    cm_format = kCMVideoCodecType_MPEG2Video;
   } else if (!strcmp (caps_name, "image/jpeg")) {
     cm_format = kCMVideoCodecType_JPEG;
   }
