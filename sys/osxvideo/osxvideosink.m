@@ -39,6 +39,7 @@
 #include "config.h"
 #include <gst/video/videooverlay.h>
 #include <gst/video/navigation.h>
+#include <gst/video/video.h>
 
 #include "osxvideosink.h"
 #include <unistd.h>
@@ -49,7 +50,7 @@ GST_DEBUG_CATEGORY (gst_debug_osx_video_sink);
 
 #ifdef RUN_NS_APP_THREAD
 #include <pthread.h>
-extern  void _CFRunLoopSetCurrent(CFRunLoopRef rl);
+extern void _CFRunLoopSetCurrent (CFRunLoopRef rl);
 extern pthread_t _CFMainPThread;
 #endif
 
@@ -357,7 +358,7 @@ gst_osx_video_sink_osxwindow_resize (GstOSXVideoSink * osxvideosink,
 
   /* Directly resize the underlying view */
   GST_DEBUG_OBJECT (osxvideosink, "Calling setVideoSize on %p", osxwindow->gstview);
-  gst_osx_video_sink_call_from_main_thread(osxvideosink, object,
+  gst_osx_video_sink_call_from_main_thread (osxvideosink, object,
       @selector(resize), (id)nil, YES);
 
   [pool release];
@@ -899,29 +900,50 @@ gst_osx_video_sink_get_type (void)
 - (void) showFrame: (GstBufferObject *) object
 {
   GstMapInfo info;
-  guint8 *viewdata;
+  GstVideoMeta *vmeta;
+  guint8 *data, *readp, *writep;
+  gint i, active_width, stride;
+  guint8 *texture_buffer;
   NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
   GstBuffer *buf = object->buf;
 
   GST_OBJECT_LOCK (osxvideosink);
-  if (osxvideosink->osxwindow != NULL)
-  {
-    gst_buffer_map (buf, &info, GST_MAP_READ);
-    viewdata = (guint8 *) [osxvideosink->osxwindow->gstview getTextureBuffer];
-
-    if (G_UNLIKELY (viewdata == NULL)) {
-      GST_ELEMENT_ERROR (osxvideosink, RESOURCE, WRITE,
-        ("Could not get a texture buffer"), (NULL));
-    } else {
-      memcpy (viewdata, info.data, info.size);
-      [osxvideosink->osxwindow->gstview displayTexture];
-      gst_buffer_unmap (buf, &info);
-    }
+  if (osxvideosink->osxwindow == NULL)
+      goto no_window;
+  
+  texture_buffer = (guint8 *) [osxvideosink->osxwindow->gstview getTextureBuffer];
+  if (G_UNLIKELY (texture_buffer == NULL))
+      goto no_texture_buffer;
+  
+  vmeta = (GstVideoMeta *) gst_buffer_get_meta (buf, GST_VIDEO_META_API_TYPE);
+  gst_video_meta_map (vmeta, 0, &info, (gpointer *) &data, &stride, GST_MAP_READ);
+  readp = data;
+  writep = texture_buffer;
+  active_width = GST_VIDEO_SINK_WIDTH (osxvideosink) * sizeof (short);
+  for (i = 0; i < GST_VIDEO_SINK_HEIGHT (osxvideosink); i++) {
+      memcpy (writep, readp, active_width);
+      writep += active_width;
+      readp += stride;
   }
+  [osxvideosink->osxwindow->gstview displayTexture];
+
+  gst_video_meta_unmap (vmeta, 0, &info);
+
+out:
   GST_OBJECT_UNLOCK (osxvideosink);
   [object release];
 
   [pool release];
+  return;
+
+no_window:
+  GST_WARNING_OBJECT (osxvideosink, "not showing frame since we have no window (!?)");
+  goto out;
+
+no_texture_buffer:
+  GST_ELEMENT_ERROR (osxvideosink, RESOURCE, WRITE, (NULL),
+          ("the texture buffer is NULL"));
+  goto out;
 }
 
 -(void) destroy

@@ -687,9 +687,6 @@ const gchar* gst_keycode_to_keyname(gint16 keycode)
   width = w;
   height = h;
 
-//  if (data) g_free(data);
-
-//  data = g_malloc0 (2 * w * h);
   [self initTextures];
   [self reshape];
 }
