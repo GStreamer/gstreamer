@@ -188,6 +188,9 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
     return TRUE;
   }
 
+  if (vtdec->session)
+    gst_vtdec_invalidate_session (vtdec);
+
   vtdec->reorder_queue_frame_delay = 0;
 
   if (!strcmp (caps_name, "video/x-h264")) {
@@ -207,9 +210,6 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   } else {
     format_description = create_format_description (vtdec, cm_format);
   }
-
-  if (vtdec->session)
-    gst_vtdec_invalidate_session (vtdec);
 
   if (vtdec->format_description)
     CFRelease (vtdec->format_description);
@@ -346,7 +346,16 @@ gst_vtdec_invalidate_session (GstVtdec * vtdec)
 static CMFormatDescriptionRef
 create_format_description (GstVtdec * vtdec, CMVideoCodecType cm_format)
 {
-  return NULL;
+  OSStatus status;
+  CMFormatDescriptionRef format_description;
+
+  status = CMVideoFormatDescriptionCreate (NULL,
+      cm_format, vtdec->video_info.width, vtdec->video_info.height,
+      NULL, &format_description);
+  if (status != noErr)
+    return NULL;
+
+  return format_description;
 }
 
 static CMFormatDescriptionRef
