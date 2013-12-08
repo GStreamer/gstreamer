@@ -257,6 +257,11 @@ gst_vtdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   GstFlowReturn ret = GST_FLOW_OK;
   int decode_frame_number = frame->decode_frame_number;
 
+  if (vtdec->format_description == NULL) {
+    ret = GST_FLOW_NOT_NEGOTIATED;
+    goto out;
+  }
+
   GST_LOG_OBJECT (vtdec, "got input frame %d", decode_frame_number);
 
   ret = gst_vtdec_push_frames_if_needed (vtdec, FALSE, FALSE);
@@ -278,10 +283,11 @@ gst_vtdec_handle_frame (GstVideoDecoder * decoder, GstVideoCodecFrame * frame)
   if (status != noErr && FALSE)
     goto error;
 
-out:
   GST_LOG_OBJECT (vtdec, "submitted input frame %d", decode_frame_number);
 
-  CFRelease (cm_sample_buffer);
+out:
+  if (cm_sample_buffer)
+    CFRelease (cm_sample_buffer);
   return ret;
 
 error:
