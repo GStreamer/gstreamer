@@ -23,8 +23,7 @@ static void
 gst_core_video_meta_free (GstCoreVideoMeta * meta, GstBuffer * buf)
 {
   if (meta->pixbuf != NULL) {
-    CVPixelBufferUnlockBaseAddress (meta->pixbuf,
-        kCVPixelBufferLock_ReadOnly);
+    CVPixelBufferUnlockBaseAddress (meta->pixbuf, kCVPixelBufferLock_ReadOnly);
   }
 
   CVBufferRelease (meta->cvbuf);
@@ -60,8 +59,7 @@ gst_core_video_meta_get_info (void)
 }
 
 GstBuffer *
-gst_core_video_buffer_new (CVBufferRef cvbuf,
-    GstVideoInfo * vinfo)
+gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo)
 {
   void *data;
   size_t size;
@@ -112,7 +110,8 @@ gst_core_video_buffer_new (CVBufferRef cvbuf,
     size = tmp_vinfo.size;
   } else {
     n_planes = 1;
-    size = CVPixelBufferGetBytesPerRow (pixbuf) * height;
+    stride[0] = CVPixelBufferGetBytesPerRow (pixbuf);
+    size = stride[0] * height;
   }
 
   gst_buffer_append_memory (buf,
