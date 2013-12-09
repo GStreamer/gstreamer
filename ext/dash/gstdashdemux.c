@@ -692,10 +692,35 @@ gst_dash_demux_setup_mpdparser_streams (GstDashDemux * demux,
 }
 
 static gboolean
+gst_dash_demux_all_streams_eop (GstDashDemux * demux)
+{
+  GSList *iter = NULL;
+
+  GST_DEBUG_OBJECT (demux, "Checking if all streams are EOP");
+
+  for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
+    GstDashDemuxStream *stream = iter->data;
+
+    GST_LOG_OBJECT (stream->pad, "EOP: %d (linked: %d)",
+        stream->download_end_of_period,
+        stream->last_ret != GST_FLOW_NOT_LINKED);
+
+    if (!stream->download_end_of_period
+        && stream->last_ret != GST_FLOW_NOT_LINKED)
+      return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 gst_dash_demux_setup_all_streams (GstDashDemux * demux)
 {
   guint i;
   GSList *streams = NULL;
+
+  GST_DEBUG_OBJECT (demux, "Setting up streams for period %d",
+      gst_mpd_client_get_period_index (demux->client));
 
   GST_MPD_CLIENT_LOCK (demux->client);
   /* clean old active stream list, if any */
@@ -1346,6 +1371,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
       goto end_of_manifest;
     } else if (eop) {
       gst_dash_demux_advance_period (demux);
+      demux->need_segment = TRUE;
     }
   }
 
@@ -1749,24 +1775,33 @@ gst_dash_demux_stream_download_loop (GstDashDemuxStream * stream)
     case GST_FLOW_OK:
       break;
     case GST_FLOW_EOS:
+      g_mutex_lock (&demux->streams_lock);
       GST_DASH_DEMUX_STREAM_DOWNLOAD_LOCK (stream);
-      if (demux->end_of_period) {
+      if (gst_dash_demux_all_streams_eop (demux)) {
         GST_INFO_OBJECT (stream->pad, "Reached the end of the Period");
-        /* setup video, audio and subtitle streams, starting from the next Period */
-        if (!gst_mpd_client_set_period_index (demux->client,
-                gst_mpd_client_get_period_index (demux->client) + 1)
-            || !gst_dash_demux_setup_all_streams (demux)) {
+
+        if (gst_mpd_client_has_next_period (demux->client)) {
+          /* setup video, audio and subtitle streams, starting from the next Period */
+          if (!gst_mpd_client_set_period_index (demux->client,
+                  gst_mpd_client_get_period_index (demux->client) + 1)
+              || !gst_dash_demux_setup_all_streams (demux)) {
+          }
+          /* start playing from the first segment of the new period */
+          gst_mpd_client_set_segment_index_for_all_streams (demux->client, 0);
+          demux->end_of_period = FALSE;
+          gst_task_start (demux->stream_task);
+        } else if (!demux->end_of_manifest) {
           GST_INFO_OBJECT (stream->pad, "Reached the end of the manifest file");
           demux->end_of_manifest = TRUE;
           gst_task_start (demux->stream_task);
+          GST_DASH_DEMUX_STREAM_DOWNLOAD_UNLOCK (stream);
+          g_mutex_unlock (&demux->streams_lock);
           goto end_of_manifest;
         }
-        /* start playing from the first segment of the new period */
-        gst_mpd_client_set_segment_index_for_all_streams (demux->client, 0);
-        demux->end_of_period = FALSE;
       }
       gst_task_pause (stream->download_task);
       GST_DASH_DEMUX_STREAM_DOWNLOAD_UNLOCK (stream);
+      g_mutex_unlock (&demux->streams_lock);
       break;
     case GST_FLOW_ERROR:
       /* Download failed 'by itself'
