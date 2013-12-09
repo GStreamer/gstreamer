@@ -235,6 +235,11 @@ static gboolean gst_video_encoder_negotiate_default (GstVideoEncoder * encoder);
 static gboolean gst_video_encoder_negotiate_unlocked (GstVideoEncoder *
     encoder);
 
+static gboolean gst_video_encoder_sink_query_default (GstVideoEncoder * encoder,
+    GstQuery * query);
+static gboolean gst_video_encoder_src_query_default (GstVideoEncoder * encoder,
+    GstQuery * query);
+
 /* we can't use G_DEFINE_ABSTRACT_TYPE because we need the klass in the _init
  * method to get to the padtemplates */
 GType
@@ -296,6 +301,8 @@ gst_video_encoder_class_init (GstVideoEncoderClass * klass)
   klass->propose_allocation = gst_video_encoder_propose_allocation_default;
   klass->decide_allocation = gst_video_encoder_decide_allocation_default;
   klass->negotiate = gst_video_encoder_negotiate_default;
+  klass->sink_query = gst_video_encoder_sink_query_default;
+  klass->src_query = gst_video_encoder_src_query_default;
 }
 
 static gboolean
@@ -812,13 +819,11 @@ config_failed:
 }
 
 static gboolean
-gst_video_encoder_sink_query (GstPad * pad, GstObject * parent,
+gst_video_encoder_sink_query_default (GstVideoEncoder * encoder,
     GstQuery * query)
 {
-  GstVideoEncoder *encoder;
+  GstPad *pad = GST_VIDEO_ENCODER_SINK_PAD (encoder);
   gboolean res = FALSE;
-
-  encoder = GST_VIDEO_ENCODER (parent);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_CAPS:
@@ -841,10 +846,30 @@ gst_video_encoder_sink_query (GstPad * pad, GstObject * parent,
       break;
     }
     default:
-      res = gst_pad_query_default (pad, parent, query);
+      res = gst_pad_query_default (pad, GST_OBJECT (encoder), query);
       break;
   }
   return res;
+}
+
+static gboolean
+gst_video_encoder_sink_query (GstPad * pad, GstObject * parent,
+    GstQuery * query)
+{
+  GstVideoEncoder *encoder;
+  GstVideoEncoderClass *encoder_class;
+  gboolean ret = FALSE;
+
+  encoder = GST_VIDEO_ENCODER (parent);
+  encoder_class = GST_VIDEO_ENCODER_GET_CLASS (encoder);
+
+  GST_DEBUG_OBJECT (encoder, "received query %d, %s", GST_QUERY_TYPE (query),
+      GST_QUERY_TYPE_NAME (query));
+
+  if (encoder_class->sink_query)
+    ret = encoder_class->sink_query (encoder, query);
+
+  return ret;
 }
 
 static void
@@ -1141,13 +1166,12 @@ gst_video_encoder_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 }
 
 static gboolean
-gst_video_encoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+gst_video_encoder_src_query_default (GstVideoEncoder * enc, GstQuery * query)
 {
+  GstPad *pad = GST_VIDEO_ENCODER_SRC_PAD (enc);
   GstVideoEncoderPrivate *priv;
-  GstVideoEncoder *enc;
   gboolean res;
 
-  enc = GST_VIDEO_ENCODER (parent);
   priv = enc->priv;
 
   GST_LOG_OBJECT (enc, "handling query: %" GST_PTR_FORMAT, query);
@@ -1193,13 +1217,32 @@ gst_video_encoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
     }
       break;
     default:
-      res = gst_pad_query_default (pad, parent, query);
+      res = gst_pad_query_default (pad, GST_OBJECT (enc), query);
   }
   return res;
 
 error:
   GST_DEBUG_OBJECT (enc, "query failed");
   return res;
+}
+
+static gboolean
+gst_video_encoder_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstVideoEncoder *encoder;
+  GstVideoEncoderClass *encoder_class;
+  gboolean ret = FALSE;
+
+  encoder = GST_VIDEO_ENCODER (parent);
+  encoder_class = GST_VIDEO_ENCODER_GET_CLASS (encoder);
+
+  GST_DEBUG_OBJECT (encoder, "received query %d, %s", GST_QUERY_TYPE (query),
+      GST_QUERY_TYPE_NAME (query));
+
+  if (encoder_class->src_query)
+    ret = encoder_class->src_query (encoder, query);
+
+  return ret;
 }
 
 static GstVideoCodecFrame *
