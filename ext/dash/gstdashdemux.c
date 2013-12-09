@@ -184,9 +184,6 @@ enum
 #define GST_DASH_DEMUX_CLIENT_LOCK(d) g_mutex_lock (&d->client_lock)
 #define GST_DASH_DEMUX_CLIENT_UNLOCK(d) g_mutex_unlock (&d->client_lock)
 
-#define GST_DASH_DEMUX_STREAM_DOWNLOAD_LOCK(s) g_mutex_lock (&s->download_mutex)
-#define GST_DASH_DEMUX_STREAM_DOWNLOAD_UNLOCK(s) g_mutex_unlock (&s->download_mutex)
-
 /* Custom internal event to signal end of period */
 #define GST_EVENT_DASH_EOP GST_EVENT_MAKE_TYPE(81, GST_EVENT_TYPE_DOWNSTREAM | GST_EVENT_TYPE_SERIALIZED)
 static GstEvent *
@@ -269,7 +266,6 @@ gst_dash_demux_dispose (GObject * obj)
     demux->downloader = NULL;
   }
 
-  g_mutex_clear (&demux->streams_lock);
   g_mutex_clear (&demux->client_lock);
 
   G_OBJECT_CLASS (parent_class)->dispose (obj);
@@ -352,7 +348,6 @@ gst_dash_demux_init (GstDashDemux * demux)
       gst_task_new ((GstTaskFunction) gst_dash_demux_stream_loop, demux, NULL);
   gst_task_set_lock (demux->stream_task, &demux->stream_task_lock);
 
-  g_mutex_init (&demux->streams_lock);
   g_mutex_init (&demux->client_lock);
 }
 
@@ -597,7 +592,6 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
             return FALSE;
 
           gst_dash_demux_expose_streams (demux);
-
           gst_dash_demux_remove_streams (demux, streams);
         }
 
@@ -643,11 +637,11 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
     case GST_EVENT_RECONFIGURE:{
       GSList *iter;
 
+      GST_DASH_DEMUX_CLIENT_LOCK (demux);
       for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
         GstDashDemuxStream *stream = iter->data;
 
         if (stream->pad == pad) {
-          GST_DASH_DEMUX_STREAM_DOWNLOAD_LOCK (stream);
           if (stream->last_ret == GST_FLOW_NOT_LINKED) {
             stream->last_ret = GST_FLOW_OK;
             stream->restart_download = TRUE;
@@ -655,11 +649,12 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
             GST_DEBUG_OBJECT (stream->pad, "Restarting download loop");
           }
           gst_task_start (stream->download_task);
-          GST_DASH_DEMUX_STREAM_DOWNLOAD_UNLOCK (stream);
+          GST_DASH_DEMUX_CLIENT_UNLOCK (demux);
           gst_event_unref (event);
           return TRUE;
         }
       }
+      GST_DASH_DEMUX_CLIENT_UNLOCK (demux);
     }
       break;
     default:
@@ -1151,7 +1146,7 @@ static gboolean
 gst_dash_demux_advance_period (GstDashDemux * demux)
 {
   GSList *old_period = NULL;
-  g_mutex_lock (&demux->streams_lock);
+  GST_DASH_DEMUX_CLIENT_LOCK (demux);
 
   GST_DEBUG_OBJECT (demux, "Advancing period from %p", demux->streams);
 
@@ -1169,14 +1164,14 @@ gst_dash_demux_advance_period (GstDashDemux * demux)
     demux->streams = demux->next_periods->data;
   } else {
     GST_DEBUG_OBJECT (demux, "No next periods, return FALSE");
-    g_mutex_unlock (&demux->streams_lock);
+    GST_DASH_DEMUX_CLIENT_UNLOCK (demux);
     return FALSE;
   }
 
   gst_dash_demux_expose_streams (demux);
   gst_dash_demux_remove_streams (demux, old_period);
 
-  g_mutex_unlock (&demux->streams_lock);
+  GST_DASH_DEMUX_CLIENT_UNLOCK (demux);
   return TRUE;
 }
 
@@ -1376,7 +1371,7 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
   }
 
   if (selected_stream) {
-    GST_DASH_DEMUX_STREAM_DOWNLOAD_LOCK (selected_stream);
+    GST_DASH_DEMUX_CLIENT_LOCK (demux);
     if (ret != selected_stream->last_ret) {
       gst_task_start (selected_stream->download_task);
       selected_stream->last_ret = ret;
@@ -1389,12 +1384,12 @@ gst_dash_demux_stream_loop (GstDashDemux * demux)
         break;
     }
 
-    GST_DASH_DEMUX_STREAM_DOWNLOAD_UNLOCK (selected_stream);
     /* combine flow returns */
     ret = gst_dash_demux_combine_flows (demux);
     if (ret < 0) {
       goto error;
     }
+    GST_DASH_DEMUX_CLIENT_UNLOCK (demux);
   }
 
 end:
@@ -1731,19 +1726,19 @@ gst_dash_demux_stream_download_loop (GstDashDemuxStream * stream)
 
   GST_LOG_OBJECT (stream->pad, "Starting download loop");
 
-  GST_DASH_DEMUX_STREAM_DOWNLOAD_LOCK (stream);
+  GST_DASH_DEMUX_CLIENT_LOCK (demux);
   if (stream->last_ret < GST_FLOW_OK) {
     if (demux->cancelled) {
-      GST_DASH_DEMUX_STREAM_DOWNLOAD_UNLOCK (stream);
+      GST_DASH_DEMUX_CLIENT_UNLOCK (demux);
       goto cancelled;
     }
     GST_DEBUG_OBJECT (stream->pad, "Download loop waiting due to flow return: "
         "%d %s", stream->last_ret, gst_flow_get_name (stream->last_ret));
     gst_task_pause (stream->download_task);
-    GST_DASH_DEMUX_STREAM_DOWNLOAD_UNLOCK (stream);
+    GST_DASH_DEMUX_CLIENT_UNLOCK (demux);
     return;
   }
-  GST_DASH_DEMUX_STREAM_DOWNLOAD_UNLOCK (stream);
+  GST_DASH_DEMUX_CLIENT_UNLOCK (demux);
 
   if (demux->cancelled) {
     goto cancelled;
@@ -1775,8 +1770,7 @@ gst_dash_demux_stream_download_loop (GstDashDemuxStream * stream)
     case GST_FLOW_OK:
       break;
     case GST_FLOW_EOS:
-      g_mutex_lock (&demux->streams_lock);
-      GST_DASH_DEMUX_STREAM_DOWNLOAD_LOCK (stream);
+      GST_DASH_DEMUX_CLIENT_LOCK (demux);
       if (gst_dash_demux_all_streams_eop (demux)) {
         GST_INFO_OBJECT (stream->pad, "Reached the end of the Period");
 
@@ -1794,14 +1788,12 @@ gst_dash_demux_stream_download_loop (GstDashDemuxStream * stream)
           GST_INFO_OBJECT (stream->pad, "Reached the end of the manifest file");
           demux->end_of_manifest = TRUE;
           gst_task_start (demux->stream_task);
-          GST_DASH_DEMUX_STREAM_DOWNLOAD_UNLOCK (stream);
-          g_mutex_unlock (&demux->streams_lock);
+          GST_DASH_DEMUX_CLIENT_UNLOCK (demux);
           goto end_of_manifest;
         }
       }
       gst_task_pause (stream->download_task);
-      GST_DASH_DEMUX_STREAM_DOWNLOAD_UNLOCK (stream);
-      g_mutex_unlock (&demux->streams_lock);
+      GST_DASH_DEMUX_CLIENT_UNLOCK (demux);
       break;
     case GST_FLOW_ERROR:
       /* Download failed 'by itself'

@@ -123,7 +123,6 @@ struct _GstDashDemux
 
   GSList *streams;
   GSList *next_periods;
-  GMutex streams_lock;
 
   GstSegment segment;
   gboolean need_segment;
