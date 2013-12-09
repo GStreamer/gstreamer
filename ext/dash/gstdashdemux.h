@@ -60,6 +60,7 @@ struct _GstDashDemuxStream
   GstDashDemux *demux;
 
   gint index;
+  GstActiveStream *active_stream;
 
   GstCaps *input_caps;
 

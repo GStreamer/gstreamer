@@ -222,8 +222,7 @@ static gboolean
 gst_dash_demux_stream_select_representation_unlocked (GstDashDemuxStream *
     stream);
 static GstFlowReturn gst_dash_demux_get_next_fragment (GstDashDemux * demux,
-    GstDashDemuxStream * stream, GstActiveStream ** active_stream,
-    GstClockTime * next_ts);
+    GstDashDemuxStream * stream, GstClockTime * next_ts);
 static gboolean gst_dash_demux_advance_period (GstDashDemux * demux);
 static void gst_dash_demux_download_wait (GstDashDemuxStream * stream,
     GstClockTime time_diff);
@@ -474,8 +473,7 @@ gst_dash_demux_stream_seek (GstDashDemuxStream * stream,
   GstClockTime current_pos = 0;
   GstDashDemux *demux = stream->demux;
 
-  active_stream =
-      gst_mpdparser_get_active_stream_by_index (demux->client, stream->index);
+  active_stream = stream->active_stream;
   for (seg_i = 0; seg_i < active_stream->segments->len; seg_i++) {
     chunk = g_ptr_array_index (active_stream->segments, seg_i);
     current_pos = chunk->start_time;
@@ -739,6 +737,7 @@ gst_dash_demux_setup_all_streams (GstDashDemux * demux)
 
     stream = g_new0 (GstDashDemuxStream, 1);
     stream->demux = demux;
+    stream->active_stream = active_stream;
     caps = gst_dash_demux_get_input_caps (demux, active_stream);
     stream->queue =
         gst_data_queue_new ((GstDataQueueCheckFullFunction) _check_queue_full,
@@ -888,11 +887,7 @@ gst_dash_demux_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         }
         for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
           GstDashDemuxStream *stream = iter->data;
-          GstActiveStream *active_stream;
-
-          active_stream =
-              gst_mpdparser_get_active_stream_by_index (demux->client,
-              stream->index);
+          GstActiveStream *active_stream = stream->active_stream;
 
           /* Get segment index corresponding to current time. */
           seg_idx =
@@ -1622,12 +1617,8 @@ gst_dash_demux_refresh_mpd (GstDashDemux * demux)
           /* update the streams to play from the next segment */
           for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
             GstDashDemuxStream *demux_stream = iter->data;
-            GstActiveStream *new_stream;
+            GstActiveStream *new_stream = demux_stream->active_stream;
             GstClockTime ts;
-
-            new_stream =
-                gst_mpdparser_get_active_stream_by_index (new_client,
-                demux_stream->index);
 
             if (!new_stream) {
               GST_DEBUG_OBJECT (demux,
@@ -1720,7 +1711,6 @@ static void
 gst_dash_demux_stream_download_loop (GstDashDemuxStream * stream)
 {
   GstClockTime fragment_ts = GST_CLOCK_TIME_NONE;
-  GstActiveStream *fragment_stream = NULL;
   GstDashDemux *demux = stream->demux;
   GstFlowReturn flow_ret = GST_FLOW_OK;
 
@@ -1763,8 +1753,7 @@ gst_dash_demux_stream_download_loop (GstDashDemuxStream * stream)
   GST_DASH_DEMUX_CLIENT_UNLOCK (demux);
 
   /* fetch the next fragment */
-  flow_ret = gst_dash_demux_get_next_fragment (demux, stream, &fragment_stream,
-      &fragment_ts);
+  flow_ret = gst_dash_demux_get_next_fragment (demux, stream, &fragment_ts);
 
   switch (flow_ret) {
     case GST_FLOW_OK:
@@ -1805,8 +1794,8 @@ gst_dash_demux_stream_download_loop (GstDashDemuxStream * stream)
         gint pos;
 
         pos =
-            gst_mpd_client_check_time_position (demux->client, fragment_stream,
-            fragment_ts, &time_diff);
+            gst_mpd_client_check_time_position (demux->client,
+            stream->active_stream, fragment_ts, &time_diff);
         GST_DEBUG_OBJECT (stream->pad,
             "Checked position for fragment ts %" GST_TIME_FORMAT
             ", res: %d, diff: %" G_GINT64_FORMAT, GST_TIME_ARGS (fragment_ts),
@@ -1827,12 +1816,12 @@ gst_dash_demux_stream_download_loop (GstDashDemuxStream * stream)
 
           GST_DEBUG_OBJECT (stream->pad,
               "Waiting for next segment to be created");
-          gst_mpd_client_set_segment_index (fragment_stream,
-              fragment_stream->segment_idx - 1);
+          gst_mpd_client_set_segment_index (stream->active_stream,
+              stream->active_stream->segment_idx - 1);
           gst_dash_demux_download_wait (stream, time_diff);
         } else {
-          gst_mpd_client_set_segment_index (fragment_stream,
-              fragment_stream->segment_idx - 1);
+          gst_mpd_client_set_segment_index (stream->active_stream,
+              stream->active_stream->segment_idx - 1);
           demux->client->update_failed_count++;
         }
       } else {
@@ -1917,8 +1906,7 @@ gst_dash_demux_stream_select_representation_unlocked (GstDashDemuxStream *
   GstDashDemux *demux = stream->demux;
   guint64 bitrate;
 
-  active_stream =
-      gst_mpdparser_get_active_stream_by_index (demux->client, stream->index);
+  active_stream = stream->active_stream;
   if (active_stream == NULL)
     return FALSE;
 
@@ -2126,14 +2114,15 @@ gst_dash_demux_get_input_caps (GstDashDemux * demux, GstActiveStream * stream)
 
 static void
 gst_dash_demux_wait_for_fragment_to_be_available (GstDashDemux * demux,
-    GstDashDemuxStream * dash_stream, GstActiveStream * stream)
+    GstDashDemuxStream * stream)
 {
   GstDateTime *seg_end_time;
   GstDateTime *cur_time = gst_date_time_new_now_utc ();
+  GstActiveStream *active_stream = stream->active_stream;
 
   seg_end_time =
       gst_mpd_client_get_next_segment_availability_end_time (demux->client,
-      stream);
+      active_stream);
 
   if (seg_end_time) {
     gint64 diff;
@@ -2147,7 +2136,7 @@ gst_dash_demux_wait_for_fragment_to_be_available (GstDashDemux * demux,
       GST_DEBUG_OBJECT (demux,
           "Selected fragment has end timestamp > now (%" PRIi64
           "), delaying download", diff);
-      gst_dash_demux_download_wait (dash_stream, diff);
+      gst_dash_demux_download_wait (stream, diff);
     }
   }
 }
@@ -2241,8 +2230,7 @@ gst_dash_demux_get_next_fragment_for_stream (GstDashDemux * demux,
       return FALSE;
     }
 
-    active_stream =
-        gst_mpdparser_get_active_stream_by_index (demux->client, stream_idx);
+    active_stream = stream->active_stream;
     if (active_stream == NULL) {
       gst_media_fragment_info_clear (&fragment);
       g_object_unref (download);
@@ -2343,8 +2331,7 @@ gst_dash_demux_get_next_fragment_for_stream (GstDashDemux * demux,
  */
 static GstFlowReturn
 gst_dash_demux_get_next_fragment (GstDashDemux * demux,
-    GstDashDemuxStream * stream, GstActiveStream ** active_stream,
-    GstClockTime * selected_ts)
+    GstDashDemuxStream * stream, GstClockTime * selected_ts)
 {
   guint64 buffer_size = 0;
   GstClockTime diff;
@@ -2386,8 +2373,6 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux,
     stream->download_end_of_period = TRUE;
     gst_dash_demux_stream_push_event (stream, event);
   }
-  *active_stream =
-      gst_mpdparser_get_active_stream_by_index (demux->client, stream->index);
 
   /*
    * If this is a live stream, check the segment end time to make sure
@@ -2396,8 +2381,7 @@ gst_dash_demux_get_next_fragment (GstDashDemux * demux,
   if (stream && gst_mpd_client_is_live (demux->client) &&
       demux->client->mpd_node->minimumUpdatePeriod != -1) {
 
-    gst_dash_demux_wait_for_fragment_to_be_available (demux, stream,
-        *active_stream);
+    gst_dash_demux_wait_for_fragment_to_be_available (demux, stream);
   }
 
   /* Get the fragment corresponding to each stream index */
