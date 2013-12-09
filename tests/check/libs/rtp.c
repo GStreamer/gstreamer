@@ -955,6 +955,24 @@ GST_START_TEST (test_rtp_buffer_get_payload_bytes)
 
 GST_END_TEST;
 
+
+GST_START_TEST (test_rtp_buffer_empty_payload)
+{
+  GstRTPBuffer rtp = { NULL };
+  GstBuffer *paybuf, *outbuf;
+
+  paybuf = gst_rtp_buffer_new_allocate (0, 0, 0);
+
+  gst_rtp_buffer_map (paybuf, GST_MAP_READ, &rtp);
+  outbuf = gst_rtp_buffer_get_payload_buffer (&rtp);
+  gst_rtp_buffer_unmap (&rtp);
+
+  gst_buffer_unref (paybuf);
+  gst_buffer_unref (outbuf);
+}
+
+GST_END_TEST;
+
 static Suite *
 rtp_suite (void)
 {
@@ -974,6 +992,7 @@ rtp_suite (void)
 
   tcase_add_test (tc_chain, test_rtp_buffer_get_payload_bytes);
   tcase_add_test (tc_chain, test_rtp_buffer_get_extension_bytes);
+  tcase_add_test (tc_chain, test_rtp_buffer_empty_payload);
 
   //tcase_add_test (tc_chain, test_rtp_buffer_list);
 

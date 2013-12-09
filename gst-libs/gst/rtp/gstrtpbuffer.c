@@ -1044,7 +1044,7 @@ gst_rtp_buffer_set_timestamp (GstRTPBuffer * rtp, guint32 timestamp)
  *
  * Create a subbuffer of the payload of the RTP packet in @buffer. @offset bytes
  * are skipped in the payload and the subbuffer will be of size @len.
- * If @len is -1 the total payload starting from @offset if subbuffered.
+ * If @len is -1 the total payload starting from @offset is subbuffered.
  *
  * Returns: A new buffer with the specified data of the payload.
  */
@@ -1056,7 +1056,7 @@ gst_rtp_buffer_get_payload_subbuffer (GstRTPBuffer * rtp, guint offset,
 
   plen = gst_rtp_buffer_get_payload_len (rtp);
   /* we can't go past the length */
-  if (G_UNLIKELY (offset >= plen))
+  if (G_UNLIKELY (offset > plen))
     goto wrong_offset;
 
   /* apply offset */
@@ -1073,7 +1073,7 @@ gst_rtp_buffer_get_payload_subbuffer (GstRTPBuffer * rtp, guint offset,
   /* ERRORS */
 wrong_offset:
   {
-    g_warning ("offset=%u should be less then plen=%u", offset, plen);
+    g_warning ("offset=%u should be less than plen=%u", offset, plen);
     return NULL;
   }
 }
