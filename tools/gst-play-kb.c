@@ -137,6 +137,7 @@ gboolean
 gst_play_kb_set_key_handler (GstPlayKbFunc key_func, gpointer user_data)
 {
   GST_FIXME ("Keyboard handling for this OS needs to be implemented");
+  return FALSE;
 }
 
 #endif /* !G_OS_UNIX */
