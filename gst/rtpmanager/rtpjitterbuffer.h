@@ -111,10 +111,12 @@ struct _RTPJitterBufferClass {
  * @data: the data of the item
  * @next: pointer to next item
  * @prev: pointer to previous item
- * @type: the type of @data
+ * @type: the type of @data, used freely by caller
  * @dts: input DTS
  * @pts: output PTS
- * @seqnum: seqnum
+ * @seqnum: seqnum, the seqnum is used to insert the item in the
+ *   right position in the jitterbuffer and detect duplicates. Use -1 to
+ *   append.
  * @count: amount of seqnum in this item
  * @rtptime: rtp timestamp
  *

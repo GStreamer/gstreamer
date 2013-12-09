@@ -653,10 +653,13 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
   g_return_val_if_fail (jbuf != NULL, FALSE);
   g_return_val_if_fail (item != NULL, FALSE);
 
-  seqnum = item->seqnum;
   /* no seqnum, simply append then */
-  if (seqnum == -1)
+  if (item->seqnum == -1) {
+    list = jbuf->packets->head;
     goto append;
+  }
+
+  seqnum = item->seqnum;
 
   /* loop the list to skip strictly smaller seqnum buffers */
   for (list = jbuf->packets->head; list; list = g_list_next (list)) {
@@ -664,9 +667,10 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
     gint gap;
     RTPJitterBufferItem *qitem = (RTPJitterBufferItem *) list;
 
-    qseq = qitem->seqnum;
-    if (qseq == -1)
+    if (qitem->seqnum == -1)
       continue;
+
+    qseq = qitem->seqnum;
 
     /* compare the new seqnum to the one in the buffer */
     gap = gst_rtp_buffer_compare_seqnum (seqnum, qseq);
@@ -681,10 +685,10 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
   }
 
   dts = item->dts;
-  rtptime = item->rtptime;
-
-  if (rtptime == -1)
+  if (item->rtptime == -1)
     goto append;
+
+  rtptime = item->rtptime;
 
   /* rtp time jumps are checked for during skew calculation, but bypassed
    * in other mode, so mind those here and reset jb if needed.
