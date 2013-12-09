@@ -864,30 +864,22 @@ ensure_context(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
 static void
 fill_iq_matrix_4x4(VAIQMatrixBufferH264 *iq_matrix, const GstH264PPS *pps)
 {
-    const guint8 (* const ScalingList4x4)[6][16] = &pps->scaling_lists_4x4;
-    guint i, j;
+    guint i;
 
     /* There are always 6 4x4 scaling lists */
     g_assert(G_N_ELEMENTS(iq_matrix->ScalingList4x4) == 6);
     g_assert(G_N_ELEMENTS(iq_matrix->ScalingList4x4[0]) == 16);
 
-    if (sizeof(iq_matrix->ScalingList4x4[0][0]) == 1)
-        memcpy(iq_matrix->ScalingList4x4, *ScalingList4x4,
-               sizeof(iq_matrix->ScalingList4x4));
-    else {
-        for (i = 0; i < G_N_ELEMENTS(iq_matrix->ScalingList4x4); i++) {
-            for (j = 0; j < G_N_ELEMENTS(iq_matrix->ScalingList4x4[i]); j++)
-                iq_matrix->ScalingList4x4[i][j] = (*ScalingList4x4)[i][j];
-        }
-    }
+    for (i = 0; i < G_N_ELEMENTS(iq_matrix->ScalingList4x4); i++)
+        gst_h264_video_quant_matrix_4x4_get_raster_from_zigzag(
+            iq_matrix->ScalingList4x4[i], pps->scaling_lists_4x4[i]);
 }
 
 static void
 fill_iq_matrix_8x8(VAIQMatrixBufferH264 *iq_matrix, const GstH264PPS *pps)
 {
-    const guint8 (* const ScalingList8x8)[6][64] = &pps->scaling_lists_8x8;
     const GstH264SPS * const sps = pps->sequence;
-    guint i, j, n;
+    guint i, n;
 
     /* If chroma_format_idc != 3, there are up to 2 8x8 scaling lists */
     if (!pps->transform_8x8_mode_flag)
@@ -896,15 +888,10 @@ fill_iq_matrix_8x8(VAIQMatrixBufferH264 *iq_matrix, const GstH264PPS *pps)
     g_assert(G_N_ELEMENTS(iq_matrix->ScalingList8x8) >= 2);
     g_assert(G_N_ELEMENTS(iq_matrix->ScalingList8x8[0]) == 64);
 
-    if (sizeof(iq_matrix->ScalingList8x8[0][0]) == 1)
-        memcpy(iq_matrix->ScalingList8x8, *ScalingList8x8,
-               sizeof(iq_matrix->ScalingList8x8));
-    else {
-        n = (sps->chroma_format_idc != 3) ? 2 : 6;
-        for (i = 0; i < n; i++) {
-            for (j = 0; j < G_N_ELEMENTS(iq_matrix->ScalingList8x8[i]); j++)
-                iq_matrix->ScalingList8x8[i][j] = (*ScalingList8x8)[i][j];
-        }
+    n = (sps->chroma_format_idc != 3) ? 2 : 6;
+    for (i = 0; i < n; i++) {
+        gst_h264_video_quant_matrix_8x8_get_raster_from_zigzag(
+            iq_matrix->ScalingList8x8[i], pps->scaling_lists_8x8[i]);
     }
 }
 
