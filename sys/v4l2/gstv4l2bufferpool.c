@@ -56,7 +56,6 @@
 #define V4L2_FIELD_INTERLACED_BT 9
 #endif
 
-
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 #define GST_CAT_DEFAULT v4l2_debug
 
@@ -317,7 +316,21 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
               obj->bytesperline[i]);
 
           offset[i] = offs;
-          stride[i] = obj->bytesperline[i];
+
+          if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
+            guint x_tiles, y_tiles, ws, hs, tile_height;
+
+            ws = GST_VIDEO_FORMAT_INFO_TILE_WS (finfo);
+            hs = GST_VIDEO_FORMAT_INFO_TILE_HS (finfo);
+            tile_height = 1 << hs;
+
+            x_tiles = obj->bytesperline[i] >> ws;
+            y_tiles = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i,
+                GST_ROUND_UP_N (height, tile_height) >> hs);
+            stride[i] = GST_VIDEO_TILE_MAKE_STRIDE (x_tiles, y_tiles);
+          } else {
+            stride[i] = obj->bytesperline[i];
+          }
 
           /* when using multiplanar mode and if there is more then one v4l
            * plane for each gst plane
@@ -329,10 +342,10 @@ gst_v4l2_buffer_pool_alloc_buffer (GstBufferPool * bpool, GstBuffer ** buffer,
              * the gst buffer point of view. */
             offs += meta->vplanes[i].length;
           else
-            offs +=
-                stride[i] * GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i,
-                height);
+            offs += obj->bytesperline[i] *
+                GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, i, height);
         }
+
         gst_buffer_add_video_meta_full (newbuf, GST_VIDEO_FRAME_FLAG_NONE,
             GST_VIDEO_INFO_FORMAT (info), width, height, n_gst_planes,
             offset, stride);
@@ -429,6 +442,11 @@ gst_v4l2_buffer_pool_set_config (GstBufferPool * bpool, GstStructure * config)
       /* we don't have video metadata, and we are dealing with raw video,
        * see if the strides are compatible */
       stride = GST_VIDEO_INFO_PLANE_STRIDE (&obj->info, i);
+
+      if (GST_VIDEO_FORMAT_INFO_IS_TILED (obj->info.finfo)) {
+        stride = GST_VIDEO_TILE_X_TILES (stride) <<
+            GST_VIDEO_FORMAT_INFO_TILE_WS ((obj->info.finfo));
+      }
 
       GST_DEBUG_OBJECT (pool, "no videometadata, checking strides %d and %u",
           stride, obj->bytesperline[i]);

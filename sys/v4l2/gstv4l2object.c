@@ -58,6 +58,9 @@
 #ifndef V4L2_PIX_FMT_NV12M
 #define V4L2_PIX_FMT_NV12M GST_MAKE_FOURCC ('N', 'M', '1', '2')
 #endif
+#ifndef V4L2_PIX_FMT_NV12MT
+#define V4L2_PIX_FMT_NV12MT GST_MAKE_FOURCC ('T', 'M', '1', '2')
+#endif
 #ifndef V4L2_PIX_FMT_NV21M
 #define V4L2_PIX_FMT_NV21M GST_MAKE_FOURCC ('N', 'M', '2', '1')
 #endif
@@ -1007,6 +1010,7 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
   /* two planes -- one Y, one Cr + Cb interleaved  */
   {V4L2_PIX_FMT_NV12, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_NV12M, TRUE, GST_V4L2_RAW},
+  {V4L2_PIX_FMT_NV12MT, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_NV21, TRUE, GST_V4L2_RAW},
   {V4L2_PIX_FMT_NV21M, TRUE, GST_V4L2_RAW},
 
@@ -1167,6 +1171,7 @@ gst_v4l2_object_format_get_rank (const struct v4l2_fmtdesc *fmt)
 
     case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
     case V4L2_PIX_FMT_NV12M:   /* Same as NV12      */
+    case V4L2_PIX_FMT_NV12MT:  /* NV12 64x32 tile   */
     case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
     case V4L2_PIX_FMT_NV21M:   /* Same as NV21      */
     case V4L2_PIX_FMT_YYUV:    /* 16  YUV 4:2:2     */
@@ -1402,6 +1407,9 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
     case V4L2_PIX_FMT_NV12M:
       format = GST_VIDEO_FORMAT_NV12;
       break;
+    case V4L2_PIX_FMT_NV12MT:
+      format = GST_VIDEO_FORMAT_NV12_64Z32;
+      break;
     case V4L2_PIX_FMT_NV21:
     case V4L2_PIX_FMT_NV21M:
       format = GST_VIDEO_FORMAT_NV21;
@@ -1511,6 +1519,7 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
     case V4L2_PIX_FMT_BGR32:
     case V4L2_PIX_FMT_NV12:    /* 12  Y/CbCr 4:2:0  */
     case V4L2_PIX_FMT_NV12M:
+    case V4L2_PIX_FMT_NV12MT:
     case V4L2_PIX_FMT_NV21:    /* 12  Y/CrCb 4:2:0  */
     case V4L2_PIX_FMT_NV21M:
     case V4L2_PIX_FMT_YVU410:
@@ -1722,6 +1731,9 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
       case GST_VIDEO_FORMAT_NV12:
         gst_v4l2_object_choose_fourcc (v4l2object, V4L2_PIX_FMT_NV12,
             V4L2_PIX_FMT_NV12M, &fourcc, &fourcc_alt);
+        break;
+      case GST_VIDEO_FORMAT_NV12_64Z32:
+        fourcc = V4L2_PIX_FMT_NV12MT;
         break;
       case GST_VIDEO_FORMAT_NV21:
         gst_v4l2_object_choose_fourcc (v4l2object, V4L2_PIX_FMT_NV21,
