@@ -1522,7 +1522,7 @@ static gint
 gst_value_compare_double_range (const GValue * value1, const GValue * value2)
 {
   if (value2->data[0].v_double == value1->data[0].v_double &&
-      value2->data[0].v_double == value1->data[0].v_double)
+      value2->data[1].v_double == value1->data[1].v_double)
     return GST_VALUE_EQUAL;
   return GST_VALUE_UNORDERED;
 }
