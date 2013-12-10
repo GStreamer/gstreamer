@@ -524,7 +524,7 @@ static gboolean
 {
   GstControlSource *csource = GST_CONTROL_SOURCE (self);
 
-  if (mode >= num_interpolation_modes && (int) mode < 0) {
+  if (mode >= num_interpolation_modes || (int) mode < 0) {
     GST_WARNING ("interpolation mode %d invalid or not implemented yet", mode);
     return FALSE;
   }
