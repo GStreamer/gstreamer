@@ -234,7 +234,6 @@ gst_mss_demux_stream_new (GstMssDemux * mssdemux,
   stream->downloader = gst_uri_downloader_new ();
   stream->dataqueue =
       gst_data_queue_new (_data_queue_check_full, NULL, NULL, stream);
-  g_mutex_init (&stream->mutex);
 
   /* Downloading task */
   g_rec_mutex_init (&stream->download_lock);
@@ -293,7 +292,6 @@ gst_mss_demux_stream_free (GstMssDemuxStream * stream)
   }
   if (stream->caps)
     gst_caps_unref (stream->caps);
-  g_mutex_clear (&stream->mutex);
   g_free (stream);
 }
 
@@ -649,13 +647,13 @@ gst_mss_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GstMssDemuxStream *stream = iter->data;
 
         if (stream->pad == pad) {
-          GST_MSS_DEMUX_STREAM_LOCK (stream);
+          GST_OBJECT_LOCK (mssdemux);
           if (GST_TASK_STATE (stream->download_task) == GST_TASK_PAUSED
               && stream->last_ret == GST_FLOW_NOT_LINKED) {
             stream->restart_download = TRUE;
             gst_task_start (stream->download_task);
           }
-          GST_MSS_DEMUX_STREAM_UNLOCK (stream);
+          GST_OBJECT_UNLOCK (mssdemux);
           gst_event_unref (event);
           return TRUE;
         }
@@ -1193,8 +1191,6 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
     GstClockTime cur, ts;
     gint64 pos;
 
-    GST_MSS_DEMUX_STREAM_LOCK (stream);
-
     GST_DEBUG_OBJECT (mssdemux,
         "Activating stream %p due to reconfigure " "event", stream);
 
@@ -1247,8 +1243,6 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
 
     gst_data_queue_set_flushing (stream->dataqueue, FALSE);
     stream->restart_download = FALSE;
-    gst_task_start (mssdemux->stream_task);
-    GST_MSS_DEMUX_STREAM_UNLOCK (stream);
   }
 
   GST_DEBUG_OBJECT (mssdemux,
@@ -1297,10 +1291,12 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
         GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 
     if (catch_up) {
-      ret = stream->last_ret = gst_pad_push (stream->pad, buffer);
+      ret = gst_pad_push (stream->pad, buffer);
       if (G_LIKELY (ret == GST_FLOW_OK))
         stream->last_ret = GST_FLOW_CUSTOM_SUCCESS;
-      /* TODO handle return */
+      else {
+        /* TODO handle return */
+      }
     } else {
       gst_mss_demux_stream_store_object (stream, GST_MINI_OBJECT_CAST (buffer));
     }
@@ -1358,12 +1354,12 @@ cancelled:
   }
 notlinked:
   {
-    GST_MSS_DEMUX_STREAM_LOCK (stream);
+    GST_OBJECT_LOCK (mssdemux);
     if (stream->last_ret == GST_FLOW_NOT_LINKED) {
       gst_task_pause (stream->download_task);
       gst_data_queue_set_flushing (stream->dataqueue, TRUE);
     }
-    GST_MSS_DEMUX_STREAM_UNLOCK (stream);
+    GST_OBJECT_UNLOCK (mssdemux);
   }
 }
 
@@ -1385,7 +1381,7 @@ gst_mss_demux_select_latest_stream (GstMssDemux * mssdemux,
     GstDataQueueItem *item;
 
     other = iter->data;
-    if (other->eos || other->last_ret == GST_FLOW_NOT_LINKED) {
+    if (other->eos || other->last_ret != GST_FLOW_OK) {
       GST_DEBUG_OBJECT (mssdemux, "Skipping stream %p eos:%d last-ret:%d",
           other, other->eos, other->last_ret);
       continue;
@@ -1516,7 +1512,8 @@ gst_mss_demux_stream_loop (GstMssDemux * mssdemux)
 
     stream->have_data = TRUE;
     mssdemux->segment.position = GST_BUFFER_TIMESTAMP (object);
-    stream->last_ret = gst_pad_push (stream->pad, GST_BUFFER_CAST (object));
+
+    ret = gst_pad_push (stream->pad, GST_BUFFER_CAST (object));
     GST_DEBUG_OBJECT (mssdemux, "Pushed on pad %s:%s result: %d (%s)",
         GST_DEBUG_PAD_NAME (stream->pad), ret, gst_flow_get_name (ret));
   } else if (GST_IS_EVENT (object)) {
@@ -1526,13 +1523,14 @@ gst_mss_demux_stream_loop (GstMssDemux * mssdemux)
     GST_DEBUG_OBJECT (mssdemux, "Pushing event %p on pad %s", object,
         GST_PAD_NAME (stream->pad));
     gst_pad_push_event (stream->pad, GST_EVENT_CAST (object));
-    stream->last_ret = GST_FLOW_EOS;
+    ret = GST_FLOW_EOS;
   } else {
     g_return_if_reached ();
   }
 
   /* Lock as this may change the tasks state */
   GST_OBJECT_LOCK (mssdemux);
+  stream->last_ret = ret;
   ret = gst_mss_demux_combine_flows (mssdemux);
   switch (ret) {
     case GST_FLOW_EOS:

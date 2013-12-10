@@ -52,13 +52,8 @@ typedef struct _GstMssDemuxStream GstMssDemuxStream;
 typedef struct _GstMssDemux GstMssDemux;
 typedef struct _GstMssDemuxClass GstMssDemuxClass;
 
-#define GST_MSS_DEMUX_STREAM_LOCK(s) g_mutex_lock (&(s)->mutex)
-#define GST_MSS_DEMUX_STREAM_UNLOCK(s) g_mutex_unlock (&(s)->mutex)
-
 struct _GstMssDemuxStream {
   GstPad *pad;
-
-  GMutex mutex;
 
   GstCaps *caps;
 
