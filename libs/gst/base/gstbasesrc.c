@@ -2187,7 +2187,11 @@ gst_base_src_do_sync (GstBaseSrc * basesrc, GstBuffer * buffer)
       if (do_timestamp) {
         dts = running_time;
       } else {
-        dts = 0;
+        if (GST_CLOCK_TIME_IS_VALID (basesrc->segment.start)) {
+          dts = basesrc->segment.start;
+        } else {
+          dts = 0;
+        }
       }
       GST_BUFFER_DTS (buffer) = dts;
 
