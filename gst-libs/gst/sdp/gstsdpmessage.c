@@ -2874,6 +2874,13 @@ gst_sdp_parse_line (SDPContext * c, gchar type, gchar * buffer)
     case 't':
       break;
     case 'k':
+      read_string_del (str, sizeof (str), ':', &p);
+      if (*p != '\0')
+        p++;
+      if (c->state == SDP_SESSION)
+        gst_sdp_message_set_key (c->msg, str, p);
+      else
+        gst_sdp_media_set_key (c->media, str, p);
       break;
     case 'a':
       read_string_del (str, sizeof (str), ':', &p);
