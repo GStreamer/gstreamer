@@ -1295,7 +1295,7 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
       if (G_LIKELY (ret == GST_FLOW_OK))
         stream->last_ret = GST_FLOW_CUSTOM_SUCCESS;
       else {
-        /* TODO handle return */
+        stream->last_ret = ret;
       }
     } else {
       gst_mss_demux_stream_store_object (stream, GST_MINI_OBJECT_CAST (buffer));
@@ -1311,7 +1311,11 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
       goto error;
     case GST_FLOW_NOT_LINKED:
       goto notlinked;
+    case GST_FLOW_FLUSHING:
+      goto flushing;
     default:
+      if (ret < GST_FLOW_ERROR)
+        goto error;
       break;
   }
 
@@ -1360,6 +1364,23 @@ notlinked:
       gst_data_queue_set_flushing (stream->dataqueue, TRUE);
     }
     GST_OBJECT_UNLOCK (mssdemux);
+    return;
+  }
+flushing:
+  {
+    GSList *iter;
+
+    GST_OBJECT_LOCK (mssdemux);
+    gst_task_pause (mssdemux->stream_task);
+    for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
+      GstMssDemuxStream *other;
+
+      other = iter->data;
+      gst_task_pause (other->download_task);
+      gst_data_queue_set_flushing (other->dataqueue, TRUE);
+    }
+    GST_OBJECT_UNLOCK (mssdemux);
+    return;
   }
 }
 
@@ -1534,14 +1555,19 @@ gst_mss_demux_stream_loop (GstMssDemux * mssdemux)
   ret = gst_mss_demux_combine_flows (mssdemux);
   switch (ret) {
     case GST_FLOW_EOS:
-      goto eos;                 /* EOS ? */
+      goto eos;
     case GST_FLOW_ERROR:
       goto error;
+    case GST_FLOW_FLUSHING:
+      goto stop;
     case GST_FLOW_NOT_LINKED:
       /* stream won't download any more data until it gets a reconfigure */
       break;
     case GST_FLOW_OK:
+      break;
     default:
+      if (ret < GST_FLOW_ERROR)
+        goto error;
       break;
   }
   GST_OBJECT_UNLOCK (mssdemux);
