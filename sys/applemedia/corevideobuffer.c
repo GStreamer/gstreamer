@@ -102,10 +102,9 @@ gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo)
     for (i = 0; i < n_planes; ++i)
       stride[i] = CVPixelBufferGetBytesPerRowOfPlane (pixbuf, i);
 
-    /* FIXME: don't hardcode NV12 */
     gst_video_info_init (&tmp_vinfo);
     gst_video_info_set_format (&tmp_vinfo,
-        GST_VIDEO_FORMAT_NV12, stride[0], height);
+        vinfo->finfo->format, stride[0], height);
     offset[1] = tmp_vinfo.offset[1];
     size = tmp_vinfo.size;
   } else {
@@ -124,7 +123,7 @@ gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo)
     width = vinfo->width;
     video_meta =
         gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
-        GST_VIDEO_FORMAT_NV12, width, height, n_planes, offset, stride);
+        vinfo->finfo->format, width, height, n_planes, offset, stride);
   }
 
   return buf;

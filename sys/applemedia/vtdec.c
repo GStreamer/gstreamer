@@ -490,6 +490,7 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
   GstVtdec *vtdec = (GstVtdec *) decompression_output_ref_con;
   GstVideoCodecFrame *frame = (GstVideoCodecFrame *) source_frame_ref_con;
   GstBuffer *buf;
+  GstVideoCodecState *state;
 
   GST_LOG_OBJECT (vtdec, "got output frame %p %d", frame,
       frame->decode_frame_number);
@@ -503,7 +504,9 @@ gst_vtdec_session_output_callback (void *decompression_output_ref_con,
     goto drop;
 
   /* FIXME: use gst_video_decoder_allocate_output_buffer */
-  buf = gst_core_video_buffer_new (image_buffer, &vtdec->video_info);
+  state = gst_video_decoder_get_output_state (GST_VIDEO_DECODER (vtdec));
+  buf = gst_core_video_buffer_new (image_buffer, &state->info);
+  gst_video_codec_state_unref (state);
   frame->output_buffer = buf;
 
   gst_buffer_copy_into (buf, frame->input_buffer,
