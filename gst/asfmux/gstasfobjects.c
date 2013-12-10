@@ -544,6 +544,21 @@ gboolean
 gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
     gboolean trust_delta_flag, guint packet_size)
 {
+  gboolean ret;
+  GstMapInfo map;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  ret = gst_asf_parse_packet_from_data (map.data, map.size, buffer, packet,
+      trust_delta_flag, packet_size);
+  gst_buffer_unmap (buffer, &map);
+
+  return ret;
+}
+
+gboolean
+gst_asf_parse_packet_from_data (guint8 * data, gsize size, GstBuffer * buffer,
+    GstAsfPacketInfo * packet, gboolean trust_delta_flag, guint packet_size)
+{
 /* Might be useful in future:
   guint8 rep_data_len_type;
   guint8 mo_number_len_type;
@@ -565,16 +580,14 @@ gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
   gboolean has_keyframe;
   GstMapInfo map;
 
-  if (packet_size != 0 && gst_buffer_get_size (buffer) != packet_size) {
+  if (packet_size != 0 && size != packet_size) {
     GST_WARNING ("ASF packets should be aligned with buffers");
     return FALSE;
   }
 
-  gst_buffer_map (buffer, &map, GST_MAP_READ);
-  reader = gst_byte_reader_new (map.data, map.size);
+  reader = gst_byte_reader_new (data, size);
 
-  GST_LOG ("Starting packet parsing, size: %" G_GSIZE_FORMAT,
-      gst_buffer_get_size (buffer));
+  GST_LOG ("Starting packet parsing, size: %" G_GSIZE_FORMAT, size);
   if (!gst_byte_reader_get_uint8 (reader, &first))
     goto error;
 
@@ -700,7 +713,6 @@ gst_asf_parse_packet (GstBuffer * buffer, GstAsfPacketInfo * packet,
   packet->seq_field_type = seq_len_type;
   packet->err_cor_len = err_length;
 
-  gst_buffer_unmap (buffer, &map);
   gst_byte_reader_free (reader);
   return ret;
 

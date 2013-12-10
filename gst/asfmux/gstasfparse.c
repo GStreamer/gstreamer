@@ -107,6 +107,47 @@ error:
   return ret;
 }
 
+static GstFlowReturn
+gst_asf_parse_parse_packet (GstAsfParse * asfparse, GstBaseParseFrame * frame,
+    GstMapInfo * map)
+{
+  GstBuffer *buffer = frame->buffer;
+  GstAsfPacketInfo *packetinfo = asfparse->packetinfo;
+
+  /* gst_asf_parse_packet_* won't accept size larger than the packet size, so we assume
+   * it will always be packet_size here */
+  g_return_val_if_fail (map->size >= asfparse->asfinfo->packet_size,
+      GST_FLOW_ERROR);
+
+  if (!gst_asf_parse_packet_from_data (map->data,
+          asfparse->asfinfo->packet_size, buffer, packetinfo, FALSE,
+          asfparse->asfinfo->packet_size))
+    goto error;
+
+  GST_DEBUG_OBJECT (asfparse, "Received packet of length %" G_GUINT32_FORMAT
+      ", padding %" G_GUINT32_FORMAT ", send time %" G_GUINT32_FORMAT
+      ", duration %" G_GUINT16_FORMAT " and %s keyframe(s)",
+      packetinfo->packet_size, packetinfo->padding,
+      packetinfo->send_time, packetinfo->duration,
+      (packetinfo->has_keyframe) ? "with" : "without");
+
+  /* set gstbuffer fields */
+  if (!packetinfo->has_keyframe) {
+    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+  }
+  GST_BUFFER_TIMESTAMP (buffer) = ((GstClockTime) packetinfo->send_time)
+      * GST_MSECOND;
+  GST_BUFFER_DURATION (buffer) = ((GstClockTime) packetinfo->duration)
+      * GST_MSECOND;
+
+  return GST_FLOW_OK;
+
+error:
+  GST_ERROR_OBJECT (asfparse, "Error while parsing data packet");
+  return GST_FLOW_ERROR;
+}
+
+
 /* reads the next object and pushes it through without parsing */
 static GstFlowReturn
 gst_asf_parse_handle_frame_push_object (GstAsfParse * asfparse,
@@ -268,25 +309,30 @@ gst_asf_parse_handle_frame_packets (GstAsfParse * asfparse,
   GST_LOG_OBJECT (asfparse, "Packet parsing");
   gst_buffer_map (buffer, &map, GST_MAP_READ);
   if (G_LIKELY (map.size >= asfparse->asfinfo->packet_size)) {
-    gst_buffer_unmap (buffer, &map);
 
     GST_DEBUG_OBJECT (asfparse, "Parsing packet %" G_GUINT64_FORMAT,
         asfparse->parsed_packets);
-    asfparse->parsed_packets++;
-    gst_base_parse_finish_frame (GST_BASE_PARSE_CAST (asfparse), frame,
-        asfparse->asfinfo->packet_size);
 
-    /* test if all packets have been processed */
-    if (G_UNLIKELY (!asfparse->asfinfo->broadcast &&
-            asfparse->parsed_packets == asfparse->asfinfo->packets_count)) {
-      GST_INFO_OBJECT (asfparse,
-          "All %" G_GUINT64_FORMAT " packets processed",
-          asfparse->parsed_packets);
-      asfparse->parse_state = ASF_PARSING_INDEXES;
-      gst_base_parse_set_min_frame_size (GST_BASE_PARSE_CAST (asfparse),
-          ASF_GUID_OBJSIZE_SIZE);
+    ret = gst_asf_parse_parse_packet (asfparse, frame, &map);
+
+    gst_buffer_unmap (buffer, &map);
+
+    if (ret == GST_FLOW_OK) {
+      asfparse->parsed_packets++;
+      gst_base_parse_finish_frame (GST_BASE_PARSE_CAST (asfparse), frame,
+          asfparse->asfinfo->packet_size);
+
+      /* test if all packets have been processed */
+      if (G_UNLIKELY (!asfparse->asfinfo->broadcast &&
+              asfparse->parsed_packets == asfparse->asfinfo->packets_count)) {
+        GST_INFO_OBJECT (asfparse,
+            "All %" G_GUINT64_FORMAT " packets processed",
+            asfparse->parsed_packets);
+        asfparse->parse_state = ASF_PARSING_INDEXES;
+        gst_base_parse_set_min_frame_size (GST_BASE_PARSE_CAST (asfparse),
+            ASF_GUID_OBJSIZE_SIZE);
+      }
     }
-
   } else {
     gst_base_parse_set_min_frame_size (GST_BASE_PARSE_CAST (asfparse),
         asfparse->asfinfo->packet_size);
@@ -329,42 +375,6 @@ gst_asf_parse_handle_frame (GstBaseParse * parse,
   g_assert_not_reached ();
   return GST_FLOW_ERROR;
 }
-
-
-#if 0
-static GstFlowReturn
-gst_asf_parse_parse_packet (GstAsfParse * asfparse, GstBuffer * buffer)
-{
-  GstAsfPacketInfo *packetinfo = asfparse->packetinfo;
-
-  if (!gst_asf_parse_packet (buffer, packetinfo, FALSE,
-          asfparse->asfinfo->packet_size))
-    goto error;
-
-  GST_DEBUG_OBJECT (asfparse, "Received packet of length %" G_GUINT32_FORMAT
-      ", padding %" G_GUINT32_FORMAT ", send time %" G_GUINT32_FORMAT
-      ", duration %" G_GUINT16_FORMAT " and %s keyframe(s)",
-      packetinfo->packet_size, packetinfo->padding,
-      packetinfo->send_time, packetinfo->duration,
-      (packetinfo->has_keyframe) ? "with" : "without");
-
-  /* set gstbuffer fields */
-  if (!packetinfo->has_keyframe) {
-    GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
-  }
-  GST_BUFFER_TIMESTAMP (buffer) = ((GstClockTime) packetinfo->send_time)
-      * GST_MSECOND;
-  GST_BUFFER_DURATION (buffer) = ((GstClockTime) packetinfo->duration)
-      * GST_MSECOND;
-
-  return gst_asf_parse_push (asfparse, buffer);
-
-error:
-  GST_ERROR_OBJECT (asfparse, "Error while parsing data packet");
-  return GST_FLOW_ERROR;
-}
-
-#endif
 
 static void
 gst_asf_parse_finalize (GObject * object)
