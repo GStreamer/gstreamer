@@ -2268,7 +2268,7 @@ update_estimated_eos (GstRtpJitterBuffer * jitterbuffer,
 
 /* take a buffer from the queue and push it */
 static GstFlowReturn
-pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum)
+pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint seqnum)
 {
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   GstFlowReturn result;
@@ -2324,8 +2324,10 @@ pop_and_push_next (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum)
 
   /* now we are ready to push the buffer. Save the seqnum and release the lock
    * so the other end can push stuff in the queue again. */
-  priv->last_popped_seqnum = seqnum;
-  priv->next_seqnum = (seqnum + item->count) & 0xffff;
+  if (seqnum != -1) {
+    priv->last_popped_seqnum = seqnum;
+    priv->next_seqnum = (seqnum + item->count) & 0xffff;
+  }
   JBUF_UNLOCK (priv);
 
   item->data = NULL;
@@ -2374,7 +2376,7 @@ handle_next_buffer (GstRtpJitterBuffer * jitterbuffer)
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   GstFlowReturn result = GST_FLOW_OK;
   RTPJitterBufferItem *item;
-  guint16 seqnum;
+  guint seqnum;
   guint32 next_seqnum;
   gint gap;
 
@@ -2394,6 +2396,8 @@ again:
 
   /* get the seqnum and the next expected seqnum */
   seqnum = item->seqnum;
+  if (seqnum == -1)
+    goto do_push;
 
   next_seqnum = priv->next_seqnum;
 
@@ -2410,6 +2414,7 @@ again:
     gap = gst_rtp_buffer_compare_seqnum (next_seqnum, seqnum);
 
     if (G_LIKELY (gap == 0)) {
+    do_push:
       /* no missing packet, pop and push */
       result = pop_and_push_next (jitterbuffer, seqnum);
     } else if (G_UNLIKELY (gap < 0)) {
