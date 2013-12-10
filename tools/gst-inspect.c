@@ -640,19 +640,6 @@ print_clocking_info (GstElement * element)
 }
 
 static void
-print_index_info (GstElement * element)
-{
-  if (GST_OBJECT_FLAG_IS_SET (element, GST_ELEMENT_FLAG_INDEXABLE)) {
-    n_print ("\n");
-    n_print ("Indexing capabilities:\n");
-    n_print ("  element can do indexing\n");
-  } else {
-    n_print ("\n");
-    n_print ("Element has no indexing capabilities.\n");
-  }
-}
-
-static void
 print_uri_handler_info (GstElement * element)
 {
   if (GST_IS_URI_HANDLER (element)) {
@@ -1145,7 +1132,6 @@ print_plugin_features (GstPlugin * plugin)
   gint num_features = 0;
   gint num_elements = 0;
   gint num_typefinders = 0;
-  gint num_indexes = 0;
   gint num_other = 0;
 
   origlist = features =
@@ -1203,8 +1189,6 @@ print_plugin_features (GstPlugin * plugin)
     n_print ("  +-- %d elements\n", num_elements);
   if (num_typefinders > 0)
     n_print ("  +-- %d typefinders\n", num_typefinders);
-  if (num_indexes > 0)
-    n_print ("  +-- %d indexes\n", num_indexes);
   if (num_other > 0)
     n_print ("  +-- %d other objects\n", num_other);
 
@@ -1270,7 +1254,6 @@ print_element_info (GstElementFactory * factory, gboolean print_names)
   print_element_flag_info (element);
   print_implementation_info (element);
   print_clocking_info (element);
-  print_index_info (element);
   print_uri_handler_info (element);
   print_pad_info (element);
   print_element_properties_info (element);
