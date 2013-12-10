@@ -2494,6 +2494,68 @@ no_supported_capture_method:
   }
 }
 
+static void
+gst_v4l2_object_save_format (GstV4l2Object * v4l2object,
+    struct v4l2_fmtdesc *fmtdesc, struct v4l2_format *format,
+    GstVideoInfo * info)
+{
+  const GstVideoFormatInfo *finfo = info->finfo;
+  gint i;
+
+  if (V4L2_TYPE_IS_MULTIPLANAR (v4l2object->type)) {
+    /* figure out the frame layout */
+    v4l2object->n_v4l2_planes = MAX (1, format->fmt.pix_mp.num_planes);
+    v4l2object->sizeimage = 0;
+    for (i = 0; i < format->fmt.pix_mp.num_planes; i++) {
+      v4l2object->bytesperline[i] =
+          format->fmt.pix_mp.plane_fmt[i].bytesperline;
+      v4l2object->sizeimage += format->fmt.pix_mp.plane_fmt[i].sizeimage;
+    }
+  } else {
+    /* only one plane in non-MPLANE mode */
+    v4l2object->n_v4l2_planes = 1;
+
+    /* figure out the frame layout */
+    for (i = 0; i < finfo->n_planes; i++) {
+      guint stride = format->fmt.pix.bytesperline;
+
+      switch (finfo->format) {
+        case GST_VIDEO_FORMAT_NV12:
+        case GST_VIDEO_FORMAT_NV21:
+        case GST_VIDEO_FORMAT_NV16:
+        case GST_VIDEO_FORMAT_NV24:
+          v4l2object->bytesperline[i] = (i == 0 ? 1 : 2) *
+              GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, stride);
+          break;
+        default:
+          v4l2object->bytesperline[i] =
+              GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, stride);
+          break;
+      }
+
+      GST_DEBUG_OBJECT (v4l2object->element,
+          "Extrapolated stride for plane %d from %d to %d", i, stride,
+          v4l2object->bytesperline[i]);
+    }
+
+    v4l2object->sizeimage = format->fmt.pix.sizeimage;
+  }
+
+  GST_DEBUG_OBJECT (v4l2object->element, "Got sizeimage %u",
+      v4l2object->sizeimage);
+
+  v4l2object->info = *info;
+  v4l2object->fmtdesc = fmtdesc;
+
+  /* if we have a framerate pre-calculate duration */
+  if (info->fps_n > 0 && info->fps_d > 0) {
+    v4l2object->duration = gst_util_uint64_scale_int (GST_SECOND, info->fps_d,
+        info->fps_n);
+  } else {
+    v4l2object->duration = GST_CLOCK_TIME_NONE;
+  }
+}
+
 gboolean
 gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
 {
@@ -2676,39 +2738,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
       if (format.fmt.pix.pixelformat != pixelformat)
         goto invalid_pixelformat;
     }
-
-    /* only one plane in non-MPLANE mode */
-    v4l2object->n_v4l2_planes = 1;
-
-    /* figure out the frame layout */
-    for (i = 0; i < info.finfo->n_planes; i++) {
-      const GstVideoFormatInfo *finfo = info.finfo;
-      guint stride = format.fmt.pix.bytesperline;
-
-      switch (info.finfo->format) {
-        case GST_VIDEO_FORMAT_NV12:
-        case GST_VIDEO_FORMAT_NV21:
-        case GST_VIDEO_FORMAT_NV16:
-        case GST_VIDEO_FORMAT_NV24:
-          v4l2object->bytesperline[i] = (i == 0 ? 1 : 2) *
-              GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, stride);
-          break;
-        default:
-          v4l2object->bytesperline[i] =
-              GST_VIDEO_FORMAT_INFO_SCALE_WIDTH (finfo, i, stride);
-          break;
-      }
-
-      GST_DEBUG_OBJECT (v4l2object->element,
-          "Extrapolated stride for plane %d from %d to %d", i, stride,
-          v4l2object->bytesperline[i]);
-    }
-
-    v4l2object->sizeimage = format.fmt.pix.sizeimage;
   }
-
-  GST_DEBUG_OBJECT (v4l2object->element, "Got sizeimage %u",
-      v4l2object->sizeimage);
 
   /* Is there a reason we require the caller to always specify a framerate? */
   GST_DEBUG_OBJECT (v4l2object->element, "Desired framerate: %u/%u", fps_n,
@@ -2765,14 +2795,7 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
   }
 
 done:
-  /* if we have a framerate pre-calculate duration */
-  if (fps_n > 0 && fps_d > 0) {
-    v4l2object->duration = gst_util_uint64_scale_int (GST_SECOND, fps_d, fps_n);
-  } else {
-    v4l2object->duration = GST_CLOCK_TIME_NONE;
-  }
-  v4l2object->info = info;
-  v4l2object->fmtdesc = fmtdesc;
+  gst_v4l2_object_save_format (v4l2object, fmtdesc, &format, &info);
 
   /* now configure ther pools */
   if (!gst_v4l2_object_setup_pool (v4l2object, caps))
