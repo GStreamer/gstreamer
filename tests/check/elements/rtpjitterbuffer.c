@@ -536,8 +536,12 @@ setup_testharness (TestData * data)
   gst_pad_set_caps (data->test_src_pad, generate_caps ());
   gst_pad_push_event (data->test_src_pad, gst_event_new_segment (&seg));
 
-  while ((obj = g_async_queue_try_pop (data->sink_event_queue)))
-    gst_mini_object_unref (obj);
+  obj = g_async_queue_pop (data->sink_event_queue);
+  gst_mini_object_unref (obj);
+  obj = g_async_queue_pop (data->sink_event_queue);
+  gst_mini_object_unref (obj);
+  obj = g_async_queue_pop (data->sink_event_queue);
+  gst_mini_object_unref (obj);
 }
 
 static void
