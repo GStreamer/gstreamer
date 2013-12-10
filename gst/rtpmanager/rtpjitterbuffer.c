@@ -251,20 +251,20 @@ get_buffer_level (RTPJitterBuffer * jbuf)
   guint64 level;
 
   /* first first buffer with timestamp */
-  high_buf = (RTPJitterBufferItem *) g_queue_peek_head_link (jbuf->packets);
+  high_buf = (RTPJitterBufferItem *) g_queue_peek_tail_link (jbuf->packets);
   while (high_buf) {
     if (high_buf->dts != -1)
       break;
 
-    high_buf = (RTPJitterBufferItem *) g_list_next (high_buf);
+    high_buf = (RTPJitterBufferItem *) g_list_previous (high_buf);
   }
 
-  low_buf = (RTPJitterBufferItem *) g_queue_peek_tail_link (jbuf->packets);
+  low_buf = (RTPJitterBufferItem *) g_queue_peek_head_link (jbuf->packets);
   while (low_buf) {
     if (low_buf->dts != -1)
       break;
 
-    low_buf = (RTPJitterBufferItem *) g_list_previous (low_buf);
+    low_buf = (RTPJitterBufferItem *) g_list_next (low_buf);
   }
 
   if (!high_buf || !low_buf || high_buf == low_buf) {
@@ -655,7 +655,6 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
 
   /* no seqnum, simply append then */
   if (item->seqnum == -1) {
-    list = jbuf->packets->head;
     goto append;
   }
 
@@ -679,8 +678,8 @@ rtp_jitter_buffer_insert (RTPJitterBuffer * jbuf, RTPJitterBufferItem * item,
     if (G_UNLIKELY (gap == 0))
       goto duplicate;
 
-    /* seqnum > qseq, we can stop looking */
-    if (G_LIKELY (gap < 0))
+    /* seqnum < qseq, we can stop looking */
+    if (G_LIKELY (gap > 0))
       break;
   }
 
@@ -781,13 +780,13 @@ rtp_jitter_buffer_pop (RTPJitterBuffer * jbuf, gint * percent)
 
   queue = jbuf->packets;
 
-  item = queue->tail;
+  item = queue->head;
   if (item) {
-    queue->tail = item->prev;
-    if (queue->tail)
-      queue->tail->next = NULL;
+    queue->head = item->next;
+    if (queue->head)
+      queue->head->prev = NULL;
     else
-      queue->head = NULL;
+      queue->tail = NULL;
     queue->length--;
   }
 
@@ -815,7 +814,7 @@ rtp_jitter_buffer_peek (RTPJitterBuffer * jbuf)
 {
   g_return_val_if_fail (jbuf != NULL, NULL);
 
-  return (RTPJitterBufferItem *) jbuf->packets->tail;
+  return (RTPJitterBufferItem *) jbuf->packets->head;
 }
 
 /**
