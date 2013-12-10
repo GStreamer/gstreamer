@@ -115,6 +115,7 @@ guint64 gst_asf_match_and_peek_obj_size (const guint8 * data,
 guint64 gst_asf_match_and_peek_obj_size_buf (GstBuffer * buf,
     const Guid * guid);
 gboolean gst_asf_parse_headers (GstBuffer * buffer, GstAsfFileInfo * file_info);
+gboolean gst_asf_parse_headers_from_data (guint8 * data, guint size, GstAsfFileInfo * file_info);
 
 /* ASF tags
  * found at http://msdn.microsoft.com/en-us/library/dd562330(VS.85).aspx

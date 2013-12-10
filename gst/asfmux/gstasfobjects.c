@@ -762,25 +762,35 @@ gst_asf_parse_file_properties_obj (GstByteReader * reader,
 gboolean
 gst_asf_parse_headers (GstBuffer * buffer, GstAsfFileInfo * file_info)
 {
+  GstMapInfo map;
+  gboolean ret;
+
+  gst_buffer_map (buffer, &map, GST_MAP_READ);
+  ret = gst_asf_parse_headers_from_data (map.data, map.size, file_info);
+  gst_buffer_unmap (buffer, &map);
+
+  return ret;
+}
+
+gboolean
+gst_asf_parse_headers_from_data (guint8 * data, guint size,
+    GstAsfFileInfo * file_info)
+{
   gboolean ret = TRUE;
   guint32 header_objects = 0;
   guint32 i;
   GstByteReader *reader;
   guint64 object_size;
-  GstMapInfo map;
 
-  gst_buffer_map (buffer, &map, GST_MAP_READ);
-
-  object_size = gst_asf_match_and_peek_obj_size (map.data,
+  object_size = gst_asf_match_and_peek_obj_size (data,
       &(guids[ASF_HEADER_OBJECT_INDEX]));
   if (object_size == 0) {
     GST_WARNING ("ASF: Cannot parse, header guid not found at the beginning "
         " of data");
-    gst_buffer_unmap (buffer, &map);
     return FALSE;
   }
 
-  reader = gst_byte_reader_new (map.data, map.size);
+  reader = gst_byte_reader_new (data, size);
 
   if (!gst_byte_reader_skip (reader, ASF_GUID_OBJSIZE_SIZE))
     goto error;
@@ -818,7 +828,6 @@ error:
   ret = FALSE;
   GST_WARNING ("ASF: Error while parsing headers");
 end:
-  gst_buffer_unmap (buffer, &map);
   gst_byte_reader_free (reader);
   return ret;
 }

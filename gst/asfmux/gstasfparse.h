@@ -23,6 +23,7 @@
 
 
 #include <gst/gst.h>
+#include <gst/base/gstbaseparse.h>
 #include <gst/base/gstadapter.h>
 #include <gst/base/gstbytereader.h>
 
@@ -54,29 +55,19 @@ typedef struct _GstAsfParse GstAsfParse;
 typedef struct _GstAsfParseClass GstAsfParseClass;
 
 struct _GstAsfParse {
-  GstElement element;
+  GstBaseParse baseparse;
 
   enum GstAsfParsingState parse_state;
 
-  GstAdapter *adapter;
-
-  GstPad *srcpad;
-  GstPad *sinkpad;
-  GstCaps *outcaps;
-
   guint64 parsed_packets;
-
-  guint64 offset; /* used in pull mode */
 
   /* parsed info */
   GstAsfFileInfo *asfinfo;
-  GstAsfPacketInfo *packetinfo; /* we keep it here to avoid allocs */
-  guint64 headers_size;
-  guint64 data_size;
+  GstAsfPacketInfo *packetinfo;
 };
 
 struct _GstAsfParseClass {
-  GstElementClass parent_class;
+  GstBaseParseClass parent_class;
 };
 
 GType gst_asf_parse_get_type(void);
