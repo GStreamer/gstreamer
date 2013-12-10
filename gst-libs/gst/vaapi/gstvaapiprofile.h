@@ -85,11 +85,33 @@ typedef enum {
  * @GST_VAAPI_PROFILE_H263_BASELINE:
  *   H.263 baseline profile
  * @GST_VAAPI_PROFILE_H264_BASELINE:
- *   H.264 (MPEG-4 Part-10) baseline profile
+ *   H.264 (MPEG-4 Part-10) baseline profile [A.2.1]
+ * @GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE:
+ *   H.264 (MPEG-4 Part-10) constrained baseline profile [A.2.1.1]
  * @GST_VAAPI_PROFILE_H264_MAIN:
- *   H.264 (MPEG-4 Part-10) main profile
+ *   H.264 (MPEG-4 Part-10) main profile [A.2.2]
+ * @GST_VAAPI_PROFILE_H264_EXTENDED:
+ *   H.264 (MPEG-4 Part 10) extended profile [A.2.3]
  * @GST_VAAPI_PROFILE_H264_HIGH:
- *   H.264 (MPEG-4 Part-10) high profile
+ *   H.264 (MPEG-4 Part-10) high profile [A.2.4]
+ * @GST_VAAPI_PROFILE_H264_HIGH10:
+ *   H.264 (MPEG-4 Part-10) high 10 profile [A.2.5], or high 10 intra
+ *   profile [A.2.8], depending on constraint_set3_flag
+ * @GST_VAAPI_PROFILE_H264_HIGH_422:
+ *   H.264 (MPEG-4 Part-10) high 4:2:2 profile [A.2.6], or high 4:2:2
+ *   intra profile [A.2.9], depending on constraint_set3_flag
+ * @GST_VAAPI_PROFILE_H264_HIGH_444:
+ *   H.264 (MPEG-4 Part-10) high 4:4:4 predictive profile [A.2.7], or
+ *   high 4:4:4 intra profile [A.2.10], depending on constraint_set3_flag
+ * @GST_VAAPI_PROFILE_H264_SCALABLE_BASELINE:
+ *   H.264 (MPEG-4 Part-10) scalable baseline profile [G.10.1.1]
+ * @GST_VAAPI_PROFILE_H264_SCALABLE_HIGH:
+ *   H.264 (MPEG-4 Part-10) scalable high profile [G.10.1.2], or scalable
+ *   high intra profile [G.10.1.3], depending on constraint_set3_flag
+ * @GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH:
+ *   H.264 (MPEG-4 Part-10) multiview high profile [H.10.1.1]
+ * @GST_VAAPI_PROFILE_H264_STEREO_HIGH:
+ *   H.264 (MPEG-4 Part-10) stereo high profile [H.10.1.2]
  * @GST_VAAPI_PROFILE_VC1_SIMPLE:
  *   VC-1 simple profile
  * @GST_VAAPI_PROFILE_VC1_MAIN:
@@ -115,8 +137,16 @@ typedef enum {
     GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE =
                                               GST_VAAPI_MAKE_PROFILE(H264,9),
     GST_VAAPI_PROFILE_H264_MAIN             = GST_VAAPI_MAKE_PROFILE(H264,2),
+    GST_VAAPI_PROFILE_H264_EXTENDED         = GST_VAAPI_MAKE_PROFILE(H264,10),
     GST_VAAPI_PROFILE_H264_HIGH             = GST_VAAPI_MAKE_PROFILE(H264,3),
     GST_VAAPI_PROFILE_H264_HIGH10           = GST_VAAPI_MAKE_PROFILE(H264,7),
+    GST_VAAPI_PROFILE_H264_HIGH_422         = GST_VAAPI_MAKE_PROFILE(H264,4),
+    GST_VAAPI_PROFILE_H264_HIGH_444         = GST_VAAPI_MAKE_PROFILE(H264,8),
+    GST_VAAPI_PROFILE_H264_SCALABLE_BASELINE =
+                                              GST_VAAPI_MAKE_PROFILE(H264,5),
+    GST_VAAPI_PROFILE_H264_SCALABLE_HIGH    = GST_VAAPI_MAKE_PROFILE(H264,6),
+    GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH   = GST_VAAPI_MAKE_PROFILE(H264,11),
+    GST_VAAPI_PROFILE_H264_STEREO_HIGH      = GST_VAAPI_MAKE_PROFILE(H264,15),
     GST_VAAPI_PROFILE_VC1_SIMPLE            = GST_VAAPI_MAKE_PROFILE(VC1,1),
     GST_VAAPI_PROFILE_VC1_MAIN              = GST_VAAPI_MAKE_PROFILE(VC1,2),
     GST_VAAPI_PROFILE_VC1_ADVANCED          = GST_VAAPI_MAKE_PROFILE(VC1,3),
