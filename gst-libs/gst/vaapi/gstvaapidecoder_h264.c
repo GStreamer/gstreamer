@@ -752,6 +752,23 @@ gst_vaapi_decoder_h264_create(GstVaapiDecoder *base_decoder)
     return TRUE;
 }
 
+static void
+fill_profiles(GstVaapiProfile profiles[16], guint *n_profiles_ptr,
+    GstVaapiProfile profile)
+{
+    guint n_profiles = *n_profiles_ptr;
+
+    profiles[n_profiles++] = profile;
+    switch (profile) {
+    case GST_VAAPI_PROFILE_H264_MAIN:
+        profiles[n_profiles++] = GST_VAAPI_PROFILE_H264_HIGH;
+        break;
+    default:
+        break;
+    }
+    *n_profiles_ptr = n_profiles;
+}
+
 static GstVaapiProfile
 get_profile(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
 {
@@ -764,17 +781,21 @@ get_profile(GstVaapiDecoderH264 *decoder, GstH264SPS *sps)
     if (!profile)
         return GST_VAAPI_PROFILE_UNKNOWN;
 
-    if (sps->constraint_set1_flag && profile == GST_VAAPI_PROFILE_H264_BASELINE)
-        profile = GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
-
-    profiles[n_profiles++] = profile;
+    fill_profiles(profiles, &n_profiles, profile);
     switch (profile) {
-    case GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE:
-        profiles[n_profiles++] = GST_VAAPI_PROFILE_H264_BASELINE;
-        profiles[n_profiles++] = GST_VAAPI_PROFILE_H264_MAIN;
-        // fall-through
-    case GST_VAAPI_PROFILE_H264_MAIN:
-        profiles[n_profiles++] = GST_VAAPI_PROFILE_H264_HIGH;
+    case GST_VAAPI_PROFILE_H264_BASELINE:
+        if (sps->constraint_set1_flag) { // A.2.2 (main profile)
+            fill_profiles(profiles, &n_profiles,
+                GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE);
+            fill_profiles(profiles, &n_profiles,
+                GST_VAAPI_PROFILE_H264_MAIN);
+        }
+        break;
+    case GST_VAAPI_PROFILE_H264_EXTENDED:
+        if (sps->constraint_set1_flag) { // A.2.2 (main profile)
+            fill_profiles(profiles, &n_profiles,
+                GST_VAAPI_PROFILE_H264_MAIN);
+        }
         break;
     default:
         break;
