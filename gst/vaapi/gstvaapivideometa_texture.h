@@ -31,6 +31,8 @@
 
 G_BEGIN_DECLS
 
+typedef struct _GstVaapiVideoMetaTexture        GstVaapiVideoMetaTexture;
+
 G_GNUC_INTERNAL
 gboolean
 gst_buffer_add_texture_upload_meta(GstBuffer *buffer);

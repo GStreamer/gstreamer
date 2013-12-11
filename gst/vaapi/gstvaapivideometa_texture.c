@@ -30,13 +30,31 @@
 #include "gstvaapipluginutil.h"
 
 #if GST_CHECK_VERSION(1,1,0) && USE_GLX
-static void
-gst_vaapi_texure_upload_free(gpointer data)
-{
-    GstVaapiTexture * const texture = data;
+struct _GstVaapiVideoMetaTexture {
+    GstVaapiTexture *texture;
+};
 
-    if (texture)
-        gst_vaapi_texture_unref(texture);
+static void
+meta_texture_free(GstVaapiVideoMetaTexture *meta)
+{
+    if (G_UNLIKELY(!meta))
+        return;
+
+    gst_vaapi_texture_replace(&meta->texture, NULL);
+    g_slice_free(GstVaapiVideoMetaTexture, meta);
+}
+
+static GstVaapiVideoMetaTexture *
+meta_texture_new(void)
+{
+    GstVaapiVideoMetaTexture *meta;
+
+    meta = g_slice_new(GstVaapiVideoMetaTexture);
+    if (!meta)
+        return NULL;
+
+    meta->texture = NULL;
+    return meta;
 }
 
 static gboolean
@@ -44,36 +62,32 @@ gst_vaapi_texture_upload(GstVideoGLTextureUploadMeta *meta, guint texture_id[4])
 {
     GstVaapiVideoMeta * const vmeta =
         gst_buffer_get_vaapi_video_meta(meta->buffer);
-    GstVaapiTexture *texture = meta->user_data;
+    GstVaapiVideoMetaTexture * const meta_texture = meta->user_data;
     GstVaapiSurface * const surface = gst_vaapi_video_meta_get_surface(vmeta);
-    GstVaapiDisplay * const dpy =
-        gst_vaapi_object_get_display(GST_VAAPI_OBJECT(surface));
+    GstVaapiDisplay * const dpy = GST_VAAPI_OBJECT_DISPLAY(surface);
 
     if (gst_vaapi_display_get_display_type(dpy) != GST_VAAPI_DISPLAY_TYPE_GLX)
         return FALSE;
 
-    if (texture) {
-        GstVaapiDisplay * const tex_dpy =
-            gst_vaapi_object_get_display(GST_VAAPI_OBJECT(texture));
-        if (tex_dpy != dpy) {
-            gst_vaapi_texture_replace(&texture, NULL);
-            meta->user_data = NULL;
-        }
-    }
-
-    if (!texture) {
+    if (!meta_texture->texture ||
+        /* Check whether VA display changed */
+        GST_VAAPI_OBJECT_DISPLAY(meta_texture->texture) != dpy ||
+        /* Check whether texture id changed */
+        gst_vaapi_texture_get_id(meta_texture->texture) != texture_id[0]) {
         /* FIXME: should we assume target? */
-        texture = gst_vaapi_texture_new_with_texture(dpy, texture_id[0],
-            GL_TEXTURE_2D, GL_RGBA);
+        GstVaapiTexture * const texture =
+            gst_vaapi_texture_new_with_texture(dpy, texture_id[0],
+                GL_TEXTURE_2D, GL_RGBA);
+        gst_vaapi_texture_replace(&meta_texture->texture, texture);
         if (!texture)
             return FALSE;
-        meta->user_data = texture;
+        gst_vaapi_texture_unref(texture);
     }
 
     if (!gst_vaapi_apply_composition(surface, meta->buffer))
         GST_WARNING("could not update subtitles");
 
-    return gst_vaapi_texture_put_surface(texture, surface,
+    return gst_vaapi_texture_put_surface(meta_texture->texture, surface,
         gst_vaapi_video_meta_get_render_flags(vmeta));
 }
 
@@ -82,15 +96,26 @@ gst_buffer_add_texture_upload_meta(GstBuffer *buffer)
 {
     GstVideoGLTextureUploadMeta *meta = NULL;
     GstVideoGLTextureType tex_type[] = { GST_VIDEO_GL_TEXTURE_TYPE_RGBA };
+    GstVaapiVideoMetaTexture *meta_texture;
 
     if (!buffer)
+        return FALSE;
+
+    meta_texture = meta_texture_new();
+    if (!meta_texture)
         return FALSE;
 
     meta = gst_buffer_add_video_gl_texture_upload_meta(buffer,
         GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL,
         1, tex_type, gst_vaapi_texture_upload,
-        NULL, NULL, gst_vaapi_texure_upload_free);
-    return meta != NULL;
+        meta_texture, NULL, (GBoxedFreeFunc)meta_texture_free);
+    if (!meta)
+        goto error;
+    return TRUE;
+
+error:
+    meta_texture_free(meta_texture);
+    return FALSE;
 }
 
 gboolean
