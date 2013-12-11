@@ -110,10 +110,12 @@ gst_vaapi_decoder_state_changed(GstVaapiDecoder *decoder,
     const GstVideoCodecState *codec_state, gpointer user_data)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(user_data);
+    GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
 
     g_assert(decode->decoder == decoder);
 
     gst_vaapidecode_update_src_caps(decode, codec_state);
+    gst_video_decoder_negotiate(vdec);
 }
 
 static inline gboolean
@@ -130,6 +132,14 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
     GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
     GstVideoCodecState *state;
     GstVideoInfo *vi, vis;
+#if GST_CHECK_VERSION(1,1,0)
+    GstCapsFeatures *features = NULL;
+    GstVaapiCapsFeature feature;
+
+    feature = gst_vaapi_find_preferred_caps_feature(
+        GST_VIDEO_DECODER_SRC_PAD(vdec),
+        GST_VIDEO_INFO_FORMAT(&ref_state->info));
+#endif
 
     state = gst_video_decoder_set_output_state(vdec,
         GST_VIDEO_INFO_FORMAT(&ref_state->info),
@@ -149,15 +159,32 @@ gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
 
 #if GST_CHECK_VERSION(1,1,0)
     vis = *vi;
-    if (GST_VIDEO_INFO_FORMAT(vi) == GST_VIDEO_FORMAT_ENCODED) {
-        /* XXX: this is a workaround until auto-plugging is fixed when
-           format=ENCODED + memory:VASurface caps feature are provided.
-           Meanwhile, providing a random format here works but this is
-           a terribly wrong thing per se. */
-        gst_video_info_set_format(&vis, GST_VIDEO_FORMAT_NV12,
+    switch (feature) {
+    case GST_VAAPI_CAPS_FEATURE_GL_TEXTURE_UPLOAD_META:
+        gst_video_info_set_format(&vis, GST_VIDEO_FORMAT_RGBA,
             GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
+        features = gst_caps_features_new(
+            GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
+        break;
+    default:
+        if (GST_VIDEO_INFO_FORMAT(vi) == GST_VIDEO_FORMAT_ENCODED) {
+            /* XXX: this is a workaround until auto-plugging is fixed when
+            format=ENCODED + memory:VASurface caps feature are provided.
+            Meanwhile, providing a random format here works but this is
+            a terribly wrong thing per se. */
+            gst_video_info_set_format(&vis, GST_VIDEO_FORMAT_NV12,
+                GST_VIDEO_INFO_WIDTH(vi), GST_VIDEO_INFO_HEIGHT(vi));
+#if GST_CHECK_VERSION(1,3,0)
+            if (feature == GST_VAAPI_CAPS_FEATURE_VAAPI_SURFACE)
+                features = gst_caps_features_new(
+                    GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE, NULL);
+#endif
+        }
+        break;
     }
     state->caps = gst_video_info_to_caps(&vis);
+    if (features)
+        gst_caps_set_features(state->caps, 0, features);
 #else
     /* XXX: gst_video_info_to_caps() from GStreamer 0.10 does not
        reconstruct suitable caps for "encoded" video formats */
@@ -461,11 +488,37 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
     GstVideoInfo vi;
     guint size, min, max;
     gboolean need_pool, update_pool;
+    gboolean has_video_meta = FALSE;
+    GstVideoCodecState *state;
+#if GST_CHECK_VERSION(1,1,0) && USE_GLX
+    GstCapsFeatures *features, *features2;
+#endif
 
     gst_query_parse_allocation(query, &caps, &need_pool);
 
     if (!caps)
         goto error_no_caps;
+
+    state = gst_video_decoder_get_output_state(vdec);
+
+    decode->has_texture_upload_meta = FALSE;
+    has_video_meta = gst_query_find_allocation_meta(query, GST_VIDEO_META_API_TYPE, NULL);
+#if GST_CHECK_VERSION(1,1,0) && USE_GLX
+    if (has_video_meta)
+        decode->has_texture_upload_meta = gst_query_find_allocation_meta(query,
+            GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL);
+
+    features = gst_caps_get_features(state->caps, 0);
+    features2 = gst_caps_features_new(GST_CAPS_FEATURE_META_GST_VIDEO_GL_TEXTURE_UPLOAD_META, NULL);
+
+    /* Update src caps if feature is not handled downstream */
+    if (!decode->has_texture_upload_meta &&
+        gst_caps_features_is_equal(features, features2))
+        gst_vaapidecode_update_src_caps (decode, state);
+    gst_caps_features_free(features2);
+#endif
+
+    gst_video_codec_state_unref(state);
 
     gst_video_info_init(&vi);
     gst_video_info_from_caps(&vi, caps);
@@ -503,14 +556,11 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
         gst_buffer_pool_set_config(pool, config);
     }
 
-    decode->has_texture_upload_meta = FALSE;
-    if (gst_query_find_allocation_meta(query, GST_VIDEO_META_API_TYPE, NULL)) {
+    if (has_video_meta) {
         config = gst_buffer_pool_get_config(pool);
         gst_buffer_pool_config_add_option(config,
             GST_BUFFER_POOL_OPTION_VIDEO_META);
 #if GST_CHECK_VERSION(1,1,0) && USE_GLX
-        decode->has_texture_upload_meta = gst_query_find_allocation_meta(query,
-            GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL);
         if (decode->has_texture_upload_meta)
             gst_buffer_pool_config_add_option(config,
                 GST_BUFFER_POOL_OPTION_VIDEO_GL_TEXTURE_UPLOAD_META);
@@ -716,6 +766,8 @@ gst_vaapidecode_set_format(GstVideoDecoder *vdec, GstVideoCodecState *state)
     if (!gst_vaapidecode_update_sink_caps(decode, state->caps))
         return FALSE;
     if (!gst_vaapidecode_update_src_caps(decode, state))
+        return FALSE;
+    if (!gst_video_decoder_negotiate(vdec))
         return FALSE;
     if (!gst_vaapi_plugin_base_set_caps(plugin, decode->sinkpad_caps,
             decode->srcpad_caps))
