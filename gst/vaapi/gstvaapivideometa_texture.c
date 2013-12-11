@@ -55,14 +55,18 @@ gst_vaapi_texture_upload(GstVideoGLTextureUploadMeta *meta, guint texture_id[4])
     if (texture) {
         GstVaapiDisplay * const tex_dpy =
             gst_vaapi_object_get_display(GST_VAAPI_OBJECT(texture));
-        if (tex_dpy != dpy)
+        if (tex_dpy != dpy) {
             gst_vaapi_texture_replace(&texture, NULL);
+            meta->user_data = NULL;
+        }
     }
 
     if (!texture) {
         /* FIXME: should we assume target? */
         texture = gst_vaapi_texture_new_with_texture(dpy, texture_id[0],
             GL_TEXTURE_2D, GL_RGBA);
+        if (!texture)
+            return FALSE;
         meta->user_data = texture;
     }
 
