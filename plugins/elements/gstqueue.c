@@ -753,16 +753,16 @@ no_item:
 static gboolean
 gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
+  gboolean ret = TRUE;
   GstQueue *queue;
 
   queue = GST_QUEUE (parent);
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_FLUSH_START:
-    {
       STATUS (queue, pad, "received flush start event");
       /* forward event */
-      gst_pad_push_event (queue->srcpad, event);
+      ret = gst_pad_push_event (queue->srcpad, event);
 
       /* now unblock the chain function */
       GST_QUEUE_MUTEX_LOCK (queue);
@@ -778,13 +778,11 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
        * flush_start downstream. */
       gst_pad_pause_task (queue->srcpad);
       GST_CAT_LOG_OBJECT (queue_dataflow, queue, "loop stopped");
-      goto done;
-    }
+      break;
     case GST_EVENT_FLUSH_STOP:
-    {
       STATUS (queue, pad, "received flush stop event");
       /* forward event */
-      gst_pad_push_event (queue->srcpad, event);
+      ret = gst_pad_push_event (queue->srcpad, event);
 
       GST_QUEUE_MUTEX_LOCK (queue);
       gst_queue_locked_flush (queue, FALSE);
@@ -796,8 +794,7 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       GST_QUEUE_MUTEX_UNLOCK (queue);
 
       STATUS (queue, pad, "after flush");
-      goto done;
-    }
+      break;
     default:
       if (GST_EVENT_IS_SERIALIZED (event)) {
         /* serialized events go in the queue */
@@ -819,12 +816,11 @@ gst_queue_handle_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
         GST_QUEUE_MUTEX_UNLOCK (queue);
       } else {
         /* non-serialized events are forwarded downstream immediately */
-        gst_pad_push_event (queue->srcpad, event);
+        ret = gst_pad_push_event (queue->srcpad, event);
       }
       break;
   }
-done:
-  return TRUE;
+  return ret;
 
   /* ERRORS */
 out_eos:
