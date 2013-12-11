@@ -179,7 +179,7 @@ static gboolean
 gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 {
   GstStructure *structure;
-  CMVideoCodecType cm_format;
+  CMVideoCodecType cm_format = 0;
   CMFormatDescriptionRef format_description = NULL;
   const char *caps_name;
   GstVtdec *vtdec = GST_VTDEC (decoder);
