@@ -2186,6 +2186,7 @@ static gboolean
 gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
     GstEvent * event)
 {
+  gboolean ret = TRUE;
   GstQueue2 *queue;
 
   queue = GST_QUEUE2 (parent);
@@ -2196,7 +2197,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
       GST_CAT_LOG_OBJECT (queue_dataflow, queue, "received flush start event");
       if (GST_PAD_MODE (queue->srcpad) == GST_PAD_MODE_PUSH) {
         /* forward event */
-        gst_pad_push_event (queue->srcpad, event);
+        ret = gst_pad_push_event (queue->srcpad, event);
 
         /* now unblock the chain function */
         GST_QUEUE2_MUTEX_LOCK (queue);
@@ -2224,7 +2225,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
 
         gst_event_unref (event);
       }
-      goto done;
+      break;
     }
     case GST_EVENT_FLUSH_STOP:
     {
@@ -2232,7 +2233,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
 
       if (GST_PAD_MODE (queue->srcpad) == GST_PAD_MODE_PUSH) {
         /* forward event */
-        gst_pad_push_event (queue->srcpad, event);
+        ret = gst_pad_push_event (queue->srcpad, event);
 
         GST_QUEUE2_MUTEX_LOCK (queue);
         gst_queue2_locked_flush (queue, FALSE);
@@ -2257,7 +2258,7 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
 
         gst_event_unref (event);
       }
-      goto done;
+      break;
     }
     default:
       if (GST_EVENT_IS_SERIALIZED (event)) {
@@ -2270,12 +2271,11 @@ gst_queue2_handle_sink_event (GstPad * pad, GstObject * parent,
         GST_QUEUE2_MUTEX_UNLOCK (queue);
       } else {
         /* non-serialized events are passed upstream. */
-        gst_pad_push_event (queue->srcpad, event);
+        ret = gst_pad_push_event (queue->srcpad, event);
       }
       break;
   }
-done:
-  return TRUE;
+  return ret;
 
   /* ERRORS */
 out_flushing:
