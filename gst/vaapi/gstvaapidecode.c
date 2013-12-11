@@ -37,7 +37,7 @@
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideocontext.h"
 #include "gstvaapivideobuffer.h"
-#if GST_CHECK_VERSION(1,1,0)
+#if GST_CHECK_VERSION(1,1,0) && USE_GLX
 #include "gstvaapivideometa_texture.h"
 #endif
 #if GST_CHECK_VERSION(1,0,0)
@@ -341,7 +341,7 @@ gst_vaapidecode_push_decoded_frame(GstVideoDecoder *vdec,
             }
         }
 
-#if GST_CHECK_VERSION(1,1,0)
+#if GST_CHECK_VERSION(1,1,0) && USE_GLX
         if (decode->has_texture_upload_meta)
             gst_buffer_ensure_texture_upload_meta(out_frame->output_buffer);
 #endif
@@ -552,7 +552,7 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
         config = gst_buffer_pool_get_config(pool);
         gst_buffer_pool_config_add_option(config,
             GST_BUFFER_POOL_OPTION_VIDEO_META);
-#if GST_CHECK_VERSION(1,1,0)
+#if GST_CHECK_VERSION(1,1,0) && USE_GLX
         decode->has_texture_upload_meta = gst_query_find_allocation_meta(query,
             GST_VIDEO_GL_TEXTURE_UPLOAD_META_API_TYPE, NULL);
         if (decode->has_texture_upload_meta)

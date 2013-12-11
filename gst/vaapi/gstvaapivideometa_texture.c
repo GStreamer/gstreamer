@@ -76,9 +76,7 @@ gst_vaapi_texture_upload(GstVideoGLTextureUploadMeta *meta, guint texture_id[4])
     return gst_vaapi_texture_put_surface(texture, surface,
         gst_vaapi_video_meta_get_render_flags(vmeta));
 }
-#endif
 
-#if GST_CHECK_VERSION(1,1,0)
 gboolean
 gst_buffer_add_texture_upload_meta(GstBuffer *buffer)
 {
@@ -88,12 +86,10 @@ gst_buffer_add_texture_upload_meta(GstBuffer *buffer)
     if (!buffer)
         return FALSE;
 
-#if USE_GLX
     meta = gst_buffer_add_video_gl_texture_upload_meta(buffer,
         GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL,
         1, tex_type, gst_vaapi_texture_upload,
         NULL, NULL, gst_vaapi_texure_upload_free);
-#endif
     return meta != NULL;
 }
 
