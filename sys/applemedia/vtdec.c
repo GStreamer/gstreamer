@@ -74,6 +74,9 @@ static void gst_vtdec_session_output_callback (void
     CMTime duration);
 static gboolean compute_h264_decode_picture_buffer_length (GstVtdec * vtdec,
     GstBuffer * codec_data, int *length);
+static gboolean gst_vtdec_compute_reorder_queue_size (GstVtdec * vtdec,
+    CMVideoCodecType cm_format, GstBuffer * codec_data);
+static void gst_vtdec_set_latency (GstVtdec * vtdec);
 
 static GstStaticPadTemplate gst_vtdec_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -203,14 +206,10 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 
   gst_video_info_from_caps (&vtdec->video_info, state->caps);
 
-  if (cm_format == kCMVideoCodecType_H264) {
-    if (!compute_h264_decode_picture_buffer_length (vtdec, state->codec_data,
-            &vtdec->reorder_queue_frame_delay)) {
-      return FALSE;
-    }
-  } else {
-    vtdec->reorder_queue_frame_delay = 0;
-  }
+  if (!gst_vtdec_compute_reorder_queue_size (vtdec, cm_format,
+          state->codec_data))
+    return FALSE;
+  gst_vtdec_set_latency (vtdec);
 
   if (state->codec_data) {
     format_description = create_format_description_from_codec_data (vtdec,
@@ -652,6 +651,22 @@ get_dpb_max_mb_s_from_level (int level)
 }
 
 static gboolean
+gst_vtdec_compute_reorder_queue_size (GstVtdec * vtdec,
+    CMVideoCodecType cm_format, GstBuffer * codec_data)
+{
+  if (cm_format == kCMVideoCodecType_H264) {
+    if (!compute_h264_decode_picture_buffer_length (vtdec, codec_data,
+            &vtdec->reorder_queue_frame_delay)) {
+      return FALSE;
+    }
+  } else {
+    vtdec->reorder_queue_frame_delay = 0;
+  }
+
+  return TRUE;
+}
+
+static gboolean
 compute_h264_decode_picture_buffer_length (GstVtdec * vtdec,
     GstBuffer * codec_data, int *length)
 {
@@ -678,4 +693,16 @@ compute_h264_decode_picture_buffer_length (GstVtdec * vtdec,
   *length = MIN (floor (max_dpb_mb_s / (width_in_mb_s * height_in_mb_s)),
       max_dpb_size_frames);
   return TRUE;
+}
+
+static void
+gst_vtdec_set_latency (GstVtdec * vtdec)
+{
+  GstClockTime frame_duration = gst_util_uint64_scale (GST_SECOND,
+      vtdec->video_info.fps_d, vtdec->video_info.fps_n);
+  GstClockTime latency = frame_duration * vtdec->reorder_queue_frame_delay;
+
+  GST_INFO_OBJECT (vtdec, "setting latency frames:%d time:%" GST_TIME_FORMAT,
+      vtdec->reorder_queue_frame_delay, GST_TIME_ARGS (latency));
+  gst_video_decoder_set_latency (GST_VIDEO_DECODER (vtdec), latency, latency);
 }
