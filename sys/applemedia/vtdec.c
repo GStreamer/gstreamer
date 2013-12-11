@@ -72,6 +72,8 @@ static void gst_vtdec_session_output_callback (void
     *decompression_output_ref_con, void *source_frame_ref_con, OSStatus status,
     VTDecodeInfoFlags info_flags, CVImageBufferRef image_buffer, CMTime pts,
     CMTime duration);
+static gboolean compute_h264_decode_picture_buffer_length (GstVtdec * vtdec,
+    GstBuffer * codec_data, int *length);
 
 static GstStaticPadTemplate gst_vtdec_sink_template =
     GST_STATIC_PAD_TEMPLATE ("sink",
@@ -183,7 +185,15 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
 
   structure = gst_caps_get_structure (state->caps, 0);
   caps_name = gst_structure_get_name (structure);
-  if (!strcmp (caps_name, "video/x-h264") && state->codec_data == NULL) {
+  if (!strcmp (caps_name, "video/x-h264")) {
+    cm_format = kCMVideoCodecType_H264;
+  } else if (!strcmp (caps_name, "video/mpeg")) {
+    cm_format = kCMVideoCodecType_MPEG2Video;
+  } else if (!strcmp (caps_name, "image/jpeg")) {
+    cm_format = kCMVideoCodecType_JPEG;
+  }
+
+  if (cm_format == kCMVideoCodecType_H264 && state->codec_data == NULL) {
     GST_INFO_OBJECT (vtdec, "no codec data, wait for one");
     return TRUE;
   }
@@ -191,18 +201,16 @@ gst_vtdec_set_format (GstVideoDecoder * decoder, GstVideoCodecState * state)
   if (vtdec->session)
     gst_vtdec_invalidate_session (vtdec);
 
-  vtdec->reorder_queue_frame_delay = 0;
-
-  if (!strcmp (caps_name, "video/x-h264")) {
-    cm_format = kCMVideoCodecType_H264;
-    vtdec->reorder_queue_frame_delay = 16;
-  } else if (!strcmp (caps_name, "video/mpeg")) {
-    cm_format = kCMVideoCodecType_MPEG2Video;
-  } else if (!strcmp (caps_name, "image/jpeg")) {
-    cm_format = kCMVideoCodecType_JPEG;
-  }
-
   gst_video_info_from_caps (&vtdec->video_info, state->caps);
+
+  if (cm_format == kCMVideoCodecType_H264) {
+    if (!compute_h264_decode_picture_buffer_length (vtdec, state->codec_data,
+            &vtdec->reorder_queue_frame_delay)) {
+      return FALSE;
+    }
+  } else {
+    vtdec->reorder_queue_frame_delay = 0;
+  }
 
   if (state->codec_data) {
     format_description = create_format_description_from_codec_data (vtdec,
@@ -557,4 +565,117 @@ gst_vtdec_push_frames_if_needed (GstVtdec * vtdec, gboolean drain,
   }
 
   return ret;
+}
+
+static gboolean
+parse_h264_profile_and_level_from_codec_data (GstVtdec * vtdec,
+    GstBuffer * codec_data, int *profile, int *level)
+{
+  GstMapInfo map;
+  guint8 *data;
+  gint size;
+  gboolean ret = TRUE;
+
+  gst_buffer_map (codec_data, &map, GST_MAP_READ);
+  data = map.data;
+  size = map.size;
+
+  /* parse the avcC data */
+  if (size < 7)
+    goto avcc_too_small;
+
+  /* parse the version, this must be 1 */
+  if (data[0] != 1)
+    goto wrong_version;
+
+  /* AVCProfileIndication */
+  /* profile_compat */
+  /* AVCLevelIndication */
+  if (profile)
+    *profile = data[1];
+
+  if (level)
+    *level = data[3];
+
+out:
+  gst_buffer_unmap (codec_data, &map);
+
+  return ret;
+
+avcc_too_small:
+  GST_ELEMENT_ERROR (vtdec, STREAM, DECODE, (NULL),
+      ("invalid codec_data buffer length"));
+  ret = FALSE;
+  goto out;
+
+wrong_version:
+  GST_ELEMENT_ERROR (vtdec, STREAM, DECODE, (NULL),
+      ("wrong avcC version in codec_data"));
+  ret = FALSE;
+  goto out;
+}
+
+static int
+get_dpb_max_mb_s_from_level (int level)
+{
+  switch (level) {
+    case 10:
+      /* 1b?? */
+      return 396;
+    case 11:
+      return 900;
+    case 12:
+    case 13:
+    case 20:
+      return 2376;
+    case 21:
+      return 4752;
+    case 22:
+      return 8100;
+    case 31:
+      return 18000;
+    case 32:
+      return 20480;
+    case 40:
+    case 41:
+      return 32768;
+    case 42:
+      return 34816;
+    case 50:
+      return 110400;
+    case 51:
+    case 52:
+      return 184320;
+    default:
+      return -1;
+  }
+}
+
+static gboolean
+compute_h264_decode_picture_buffer_length (GstVtdec * vtdec,
+    GstBuffer * codec_data, int *length)
+{
+  int profile, level;
+  int dpb_mb_size = 16;
+  int max_dpb_size_frames = 16;
+  int max_dpb_mb_s = -1;
+  int width_in_mb_s = vtdec->video_info.width / dpb_mb_size;
+  int height_in_mb_s = vtdec->video_info.height / dpb_mb_size;
+
+  if (!parse_h264_profile_and_level_from_codec_data (vtdec, codec_data,
+          &profile, &level))
+    return FALSE;
+
+  max_dpb_mb_s = get_dpb_max_mb_s_from_level (level);
+  if (max_dpb_mb_s == -1) {
+    GST_ELEMENT_ERROR (vtdec, STREAM, DECODE, (NULL),
+        ("invalid level in codec_data, could not compute max_dpb_mb_s"));
+    return FALSE;
+  }
+
+  /* this formula is specified in sections A.3.1.h and A.3.2.f of the 2009
+   * edition of the standard */
+  *length = MIN (floor (max_dpb_mb_s / (width_in_mb_s * height_in_mb_s)),
+      max_dpb_size_frames);
+  return TRUE;
 }
