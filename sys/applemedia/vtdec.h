@@ -44,7 +44,7 @@ struct _GstVtdec
   CMFormatDescriptionRef format_description;
   VTDecompressionSessionRef session;
   GAsyncQueue *reorder_queue;
-  gint reorder_queue_frame_delay;
+  gint reorder_queue_length;
 };
 
 struct _GstVtdecClass
