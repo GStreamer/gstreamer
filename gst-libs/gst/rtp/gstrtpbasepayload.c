@@ -430,13 +430,52 @@ gst_rtp_base_payload_src_event_default (GstRTPBasePayload * rtpbasepayload,
     GstEvent * event)
 {
   GstObject *parent = GST_OBJECT_CAST (rtpbasepayload);
-  gboolean res = FALSE;
+  gboolean res = TRUE, forward = TRUE;
 
   switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_CUSTOM_UPSTREAM:
+    {
+      const GstStructure *s = gst_event_get_structure (event);
+
+      if (gst_structure_has_name (s, "GstRTPCollision")) {
+        guint ssrc = 0;
+
+        if (!gst_structure_get_uint (s, "ssrc", &ssrc))
+          ssrc = -1;
+
+        GST_DEBUG_OBJECT (rtpbasepayload, "collided ssrc: %" G_GUINT32_FORMAT,
+            ssrc);
+
+        /* choose another ssrc for our stream */
+        if (ssrc == rtpbasepayload->current_ssrc) {
+          GstCaps *caps;
+
+          do {
+            rtpbasepayload->current_ssrc = g_random_int ();
+          } while (ssrc == rtpbasepayload->current_ssrc);
+
+          caps = gst_pad_get_current_caps (rtpbasepayload->srcpad);
+          caps = gst_caps_make_writable (caps);
+          gst_caps_set_simple (caps,
+              "ssrc", G_TYPE_UINT, rtpbasepayload->current_ssrc, NULL);
+          res = gst_pad_set_caps (rtpbasepayload->srcpad, caps);
+          gst_caps_unref (caps);
+
+          /* the event was for us */
+          forward = FALSE;
+        }
+      }
+      break;
+    }
     default:
-      res = gst_pad_event_default (rtpbasepayload->srcpad, parent, event);
       break;
   }
+
+  if (forward)
+    res = gst_pad_event_default (rtpbasepayload->srcpad, parent, event);
+  else
+    gst_event_unref (event);
+
   return res;
 }
 
