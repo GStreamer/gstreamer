@@ -513,6 +513,20 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     deint_changed = deint != ds->deint;
     if (deint_changed || (ds->num_surfaces > 0 && tff != ds->tff))
         ds_reset(ds);
+
+    deint_method = postproc->deinterlace_method;
+    deint_refs = deint_method_is_advanced(deint_method);
+    if (deint_refs) {
+        GstBuffer * const prev_buf = ds_get_buffer(ds, 0);
+        GstClockTime prev_pts, pts = GST_BUFFER_TIMESTAMP(inbuf);
+        /* Reset deinterlacing state when there is a discontinuity */
+        if (prev_buf && (prev_pts = GST_BUFFER_TIMESTAMP(prev_buf)) != pts) {
+            const GstClockTimeDiff pts_diff = GST_CLOCK_DIFF(prev_pts, pts);
+            if (pts_diff < 0 || pts_diff > postproc->field_duration * 2)
+                ds_reset(ds);
+        }
+    }
+
     ds->deint = deint;
     ds->tff = tff;
 
@@ -520,8 +534,6 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
         ~GST_VAAPI_PICTURE_STRUCTURE_MASK;
 
     /* First field */
-    deint_method = postproc->deinterlace_method;
-    deint_refs = deint_method_is_advanced(deint_method);
     if (postproc->flags & GST_VAAPI_POSTPROC_FLAG_DEINTERLACE) {
         fieldbuf = create_output_buffer(postproc);
         if (!fieldbuf)
