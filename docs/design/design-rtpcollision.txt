@@ -11,19 +11,15 @@ the gstrtpsession element when it detects a conflict between ssrc.
 (same session id and same ssrc)
 
 It's an upstream event so that means this event is for now only
-useful on pipeline sender side. Because rtppayloader and rtpaux elements
-are placed upstream from the gstrtpsession.
-
-On pipeline receiver side, gstrtpsession is the most upstream element
-compared to other rtp elements like rtpauxreceive, ssrcdemux, rtpjitterbuffer
-and rtpdepayloader.
+useful on pipeline sender side. Because elements generating packets with the
+collided SSRC are placed upstream from the gstrtpsession.
 
 rtppayloader
 ------------
 
 When handling a GstRTPCollision event, the rtppayloader has to choose another
-ssrc. Actually this is the gstrtpsession that suggests him a newer ssrc through
-the caps.
+ssrc. 
+
 
 BYE only the corresponding source, not the whole session.
 ---------------------------------------------------------
@@ -32,12 +28,3 @@ When a collision happens for the given ssrc, the associated source is marked
 bye. But we make sure that the whole session is not itself set bye.
 Because internally, gstrtpsession can manages several sources and all have
 their own distinct ssrc.
-
-For example when using rtprtxreceive, it uses one session which contains
-2 internal rtpsources. One for the master stream, and one for the rtx stream.
-Actually in this case there are always 3 sources because the session always
-has an other internal one, maybe for rtcp but I'm still nore sure about that.
-Then gstrtpsession make sure to only bye the rtx stream if this is the one
-which collided.
-Then gstrtpsession make sure to only bye the master stream if this is the one
-which collided.
