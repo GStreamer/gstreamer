@@ -1992,6 +1992,10 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
   if (!source)
     return;
 
+  /* skip non-bye packets for sources that are marked BYE */
+  if (sess->scheduled_bye && RTP_SOURCE_IS_MARKED_BYE (source))
+    goto out;
+
   /* don't try to do lip-sync for sources that sent a BYE */
   if (RTP_SOURCE_IS_MARKED_BYE (source))
     *do_sync = FALSE;
@@ -2010,6 +2014,8 @@ rtp_session_process_sr (RTPSession * sess, GstRTCPPacket * packet,
     on_new_ssrc (sess, source);
 
   rtp_session_process_rb (sess, source, packet, pinfo);
+
+out:
   g_object_unref (source);
 }
 
@@ -2035,10 +2041,16 @@ rtp_session_process_rr (RTPSession * sess, GstRTCPPacket * packet,
   if (!source)
     return;
 
+  /* skip non-bye packets for sources that are marked BYE */
+  if (sess->scheduled_bye && RTP_SOURCE_IS_MARKED_BYE (source))
+    goto out;
+
   if (created)
     on_new_ssrc (sess, source);
 
   rtp_session_process_rb (sess, source, packet, pinfo);
+
+out:
   g_object_unref (source);
 }
 
@@ -2071,6 +2083,10 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
     source = obtain_source (sess, ssrc, &created, pinfo, FALSE);
     if (!source)
       return;
+
+    /* skip non-bye packets for sources that are marked BYE */
+    if (sess->scheduled_bye && RTP_SOURCE_IS_MARKED_BYE (source))
+      goto next;
 
     sdes = gst_structure_new_empty ("application/x-rtp-source-sdes");
 
@@ -2123,6 +2139,7 @@ rtp_session_process_sdes (RTPSession * sess, GstRTCPPacket * packet,
     if (changed)
       on_ssrc_sdes (sess, source);
 
+  next:
     g_object_unref (source);
 
     more_items = gst_rtcp_packet_sdes_next_item (packet);
@@ -2370,6 +2387,12 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
   guint fci_length = 4 * gst_rtcp_packet_fb_get_fci_length (packet);
   RTPSource *src;
 
+  src = find_source (sess, media_ssrc);
+
+  /* skip non-bye packets for sources that are marked BYE */
+  if (sess->scheduled_bye && src && RTP_SOURCE_IS_MARKED_BYE (src))
+    return;
+
   GST_DEBUG ("received feedback %d:%d from %08X about %08X with FCI of "
       "length %d", type, fbtype, sender_ssrc, media_ssrc, fci_length);
 
@@ -2395,7 +2418,6 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
       gst_buffer_unref (fci_buffer);
   }
 
-  src = find_source (sess, media_ssrc);
   if (!src)
     return;
 
@@ -2479,12 +2501,6 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
 
     type = gst_rtcp_packet_get_type (&packet);
 
-    /* when we are leaving the session, we should ignore all non-BYE messages */
-    if (sess->scheduled_bye && type != GST_RTCP_TYPE_BYE) {
-      GST_DEBUG ("ignoring non-BYE RTCP packet because we are leaving");
-      goto next;
-    }
-
     switch (type) {
       case GST_RTCP_TYPE_SR:
         rtp_session_process_sr (sess, &packet, &pinfo, &do_sync);
@@ -2512,7 +2528,6 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
         GST_WARNING ("got unknown RTCP packet");
         break;
     }
-  next:
     more = gst_rtcp_packet_move_to_next (&packet);
   }
 
