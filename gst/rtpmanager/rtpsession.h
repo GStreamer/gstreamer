@@ -245,6 +245,7 @@ struct _RTPSession {
   gpointer              notify_nack_user_data;
 
   RTPSessionStats stats;
+  RTPSessionStats bye_stats;
 
   gboolean      favor_new;
   GstClockTime  rtcp_feedback_retention_window;

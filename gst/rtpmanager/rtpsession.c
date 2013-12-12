@@ -2535,15 +2535,14 @@ rtp_session_process_rtcp (RTPSession * sess, GstBuffer * buffer,
 
   /* if we are scheduling a BYE, we only want to count bye packets, else we
    * count everything */
-  if (sess->scheduled_bye) {
-    if (is_bye) {
-      sess->stats.bye_members++;
-      UPDATE_AVG (sess->stats.avg_rtcp_packet_size, pinfo.bytes);
-    }
-  } else {
-    /* keep track of average packet size */
-    UPDATE_AVG (sess->stats.avg_rtcp_packet_size, pinfo.bytes);
+  if (sess->scheduled_bye && is_bye) {
+    sess->bye_stats.bye_members++;
+    UPDATE_AVG (sess->bye_stats.avg_rtcp_packet_size, pinfo.bytes);
   }
+
+  /* keep track of average packet size */
+  UPDATE_AVG (sess->stats.avg_rtcp_packet_size, pinfo.bytes);
+
   GST_DEBUG ("%p, received RTCP packet, avg size %u, %u", &sess->stats,
       sess->stats.avg_rtcp_packet_size, pinfo.bytes);
   RTP_SESSION_UNLOCK (sess);
@@ -2680,6 +2679,7 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
     gboolean first)
 {
   GstClockTime result;
+  RTPSessionStats *stats;
 
   /* recalculate bandwidth when it changed */
   if (sess->recalc_bandwidth) {
@@ -2705,17 +2705,19 @@ calculate_rtcp_interval (RTPSession * sess, gboolean deterministic,
   }
 
   if (sess->scheduled_bye) {
-    result = rtp_stats_calculate_bye_interval (&sess->stats);
+    stats = &sess->bye_stats;
+    result = rtp_stats_calculate_bye_interval (stats);
   } else {
-    result = rtp_stats_calculate_rtcp_interval (&sess->stats,
-        sess->stats.internal_sender_sources > 0, first);
+    stats = &sess->stats;
+    result = rtp_stats_calculate_rtcp_interval (stats,
+        stats->internal_sender_sources > 0, first);
   }
 
   GST_DEBUG ("next deterministic interval: %" GST_TIME_FORMAT ", first %d",
       GST_TIME_ARGS (result), first);
 
   if (!deterministic && result != GST_CLOCK_TIME_NONE)
-    result = rtp_stats_add_rtcp_jitter (&sess->stats, result);
+    result = rtp_stats_add_rtcp_jitter (stats, result);
 
   GST_DEBUG ("next interval: %" GST_TIME_FORMAT, GST_TIME_ARGS (result));
 
@@ -2763,8 +2765,9 @@ rtp_session_schedule_bye_locked (RTPSession * sess, GstClockTime current_time)
   /* we schedule BYE now */
   sess->scheduled_bye = TRUE;
   /* at least one member wants to send a BYE */
-  INIT_AVG (sess->stats.avg_rtcp_packet_size, 100);
-  sess->stats.bye_members = 1;
+  memcpy (&sess->bye_stats, &sess->stats, sizeof (RTPSessionStats));
+  INIT_AVG (sess->bye_stats.avg_rtcp_packet_size, 100);
+  sess->bye_stats.bye_members = 1;
   sess->first_rtcp = TRUE;
   sess->allow_early = TRUE;
 
@@ -2852,7 +2855,7 @@ rtp_session_next_timeout (RTPSession * sess, GstClockTime current_time)
   }
 
   if (sess->scheduled_bye) {
-    if (sess->stats.active_sources >= 50) {
+    if (sess->bye_stats.active_sources >= 50) {
       GST_DEBUG ("reconsider BYE, more than 50 sources");
       /* reconsider BYE if members >= 50 */
       interval = calculate_rtcp_interval (sess, FALSE, TRUE);
@@ -3371,6 +3374,12 @@ is_rtcp_time (RTPSession * sess, GstClockTime current_time, ReportData * data)
 {
   GstClockTime new_send_time, elapsed;
   GstClockTime interval;
+  RTPSessionStats *stats;
+
+  if (sess->scheduled_bye)
+    stats = &sess->bye_stats;
+  else
+    stats = &sess->stats;
 
   if (GST_CLOCK_TIME_IS_VALID (sess->next_early_rtcp_time))
     data->is_early = TRUE;
@@ -3400,7 +3409,7 @@ early:
   /* take interval and add jitter */
   interval = data->interval;
   if (interval != GST_CLOCK_TIME_NONE)
-    interval = rtp_stats_add_rtcp_jitter (&sess->stats, interval);
+    interval = rtp_stats_add_rtcp_jitter (stats, interval);
 
   /* perform forward reconsideration */
   if (interval != GST_CLOCK_TIME_NONE) {
@@ -3423,9 +3432,9 @@ early:
     sess->next_rtcp_check_time = current_time + interval;
   } else if (interval != GST_CLOCK_TIME_NONE) {
     /* Apply the rules from RFC 4585 section 3.5.3 */
-    if (sess->stats.min_interval != 0 && !sess->first_rtcp) {
+    if (stats->min_interval != 0 && !sess->first_rtcp) {
       GstClockTime T_rr_current_interval =
-          g_random_double_range (0.5, 1.5) * sess->stats.min_interval;
+          g_random_double_range (0.5, 1.5) * stats->min_interval;
 
       /* This will caused the RTCP to be suppressed if no FB packets are added */
       if (sess->last_rtcp_send_time + T_rr_current_interval > new_send_time) {
@@ -3433,7 +3442,7 @@ early:
             " last: %" GST_TIME_FORMAT
             " + T_rr_current_interval: %" GST_TIME_FORMAT
             " >  new_send_time: %" GST_TIME_FORMAT,
-            GST_TIME_ARGS (sess->stats.min_interval),
+            GST_TIME_ARGS (stats->min_interval),
             GST_TIME_ARGS (sess->last_rtcp_send_time),
             GST_TIME_ARGS (T_rr_current_interval),
             GST_TIME_ARGS (new_send_time));
