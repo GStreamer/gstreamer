@@ -105,6 +105,10 @@ enum {
     PROP_DEINTERLACE_METHOD,
     PROP_DENOISE,
     PROP_SHARPEN,
+    PROP_HUE,
+    PROP_SATURATION,
+    PROP_BRIGHTNESS,
+    PROP_CONTRAST,
 };
 
 #define DEFAULT_FORMAT                  GST_VIDEO_FORMAT_ENCODED
@@ -446,6 +450,26 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
     if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_SHARPEN) &&
         !gst_vaapi_filter_set_sharpening_level(postproc->filter,
             postproc->sharpen_level))
+        return GST_FLOW_NOT_SUPPORTED;
+
+    if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_HUE) &&
+        !gst_vaapi_filter_set_hue(postproc->filter,
+            postproc->hue))
+        return GST_FLOW_NOT_SUPPORTED;
+
+    if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_SATURATION) &&
+        !gst_vaapi_filter_set_saturation(postproc->filter,
+            postproc->saturation))
+        return GST_FLOW_NOT_SUPPORTED;
+
+    if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_BRIGHTNESS) &&
+        !gst_vaapi_filter_set_brightness(postproc->filter,
+            postproc->brightness))
+        return GST_FLOW_NOT_SUPPORTED;
+
+    if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_CONTRAST) &&
+        !gst_vaapi_filter_set_contrast(postproc->filter,
+            postproc->contrast))
         return GST_FLOW_NOT_SUPPORTED;
 
     inbuf_meta = gst_buffer_get_vaapi_video_meta(inbuf);
@@ -1226,6 +1250,22 @@ gst_vaapipostproc_set_property(
          postproc->sharpen_level = g_value_get_float(value);
          postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SHARPEN;
          break;
+    case PROP_HUE:
+        postproc->hue = g_value_get_float(value);
+        postproc->flags |= GST_VAAPI_POSTPROC_FLAG_HUE;
+        break;
+    case PROP_SATURATION:
+        postproc->saturation = g_value_get_float(value);
+        postproc->flags |= GST_VAAPI_POSTPROC_FLAG_SATURATION;
+        break;
+    case PROP_BRIGHTNESS:
+        postproc->brightness = g_value_get_float(value);
+        postproc->flags |= GST_VAAPI_POSTPROC_FLAG_BRIGHTNESS;
+        break;
+    case PROP_CONTRAST:
+        postproc->contrast = g_value_get_float(value);
+        postproc->flags |= GST_VAAPI_POSTPROC_FLAG_CONTRAST;
+        break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
         break;
@@ -1266,6 +1306,18 @@ gst_vaapipostproc_get_property(
         break;
     case PROP_SHARPEN:
         g_value_set_float(value, postproc->sharpen_level);
+        break;
+    case PROP_HUE:
+        g_value_set_float(value, postproc->hue);
+        break;
+    case PROP_SATURATION:
+        g_value_set_float(value, postproc->saturation);
+        break;
+    case PROP_BRIGHTNESS:
+        g_value_set_float(value, postproc->brightness);
+        break;
+    case PROP_CONTRAST:
+        g_value_set_float(value, postproc->contrast);
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, prop_id, pspec);
@@ -1434,6 +1486,50 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
     if (filter_op)
         g_object_class_install_property(object_class,
             PROP_SHARPEN, filter_op->pspec);
+
+    /**
+     * GstVaapiPostproc:hue:
+     *
+     * The color hue, expressed as a float value. Range is -180.0 to
+     * 180.0. Default value is 0.0 and represents no modification.
+     */
+    filter_op = find_filter_op(filter_ops, GST_VAAPI_FILTER_OP_HUE);
+    if (filter_op)
+        g_object_class_install_property(object_class,
+            PROP_HUE, filter_op->pspec);
+
+    /**
+     * GstVaapiPostproc:saturation:
+     *
+     * The color saturation, expressed as a float value. Range is 0.0
+     * to 2.0. Default value is 1.0 and represents no modification.
+     */
+    filter_op = find_filter_op(filter_ops, GST_VAAPI_FILTER_OP_SATURATION);
+    if (filter_op)
+        g_object_class_install_property(object_class,
+            PROP_SATURATION, filter_op->pspec);
+
+    /**
+     * GstVaapiPostproc:brightness:
+     *
+     * The color brightness, expressed as a float value. Range is -1.0
+     * to 1.0. Default value is 0.0 and represents no modification.
+     */
+    filter_op = find_filter_op(filter_ops, GST_VAAPI_FILTER_OP_BRIGHTNESS);
+    if (filter_op)
+        g_object_class_install_property(object_class,
+            PROP_BRIGHTNESS, filter_op->pspec);
+
+    /**
+     * GstVaapiPostproc:contrast:
+     *
+     * The color contrast, expressed as a float value. Range is 0.0 to
+     * 2.0. Default value is 1.0 and represents no modification.
+     */
+    filter_op = find_filter_op(filter_ops, GST_VAAPI_FILTER_OP_CONTRAST);
+    if (filter_op)
+        g_object_class_install_property(object_class,
+            PROP_CONTRAST, filter_op->pspec);
 
     g_ptr_array_unref(filter_ops);
 }

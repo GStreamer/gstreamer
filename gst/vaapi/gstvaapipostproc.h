@@ -160,6 +160,12 @@ struct _GstVaapiPostproc {
     gfloat                      denoise_level;
     gfloat                      sharpen_level;
 
+    /* Color balance filter values */
+    gfloat                      hue;
+    gfloat                      saturation;
+    gfloat                      brightness;
+    gfloat                      contrast;
+
     guint                       is_raw_yuv      : 1;
     guint                       use_vpp         : 1;
     guint                       keep_aspect     : 1;

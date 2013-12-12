@@ -483,14 +483,14 @@ op_data_ensure_caps(GstVaapiFilterOpData *op_data, gpointer filter_caps,
     guint num_filter_caps)
 {
     guchar *filter_cap = filter_caps;
-    guint i;
+    guint i, va_num_caps = num_filter_caps;
 
     // Find the VA filter cap matching the op info sub-type
     if (op_data->va_subtype) {
         for (i = 0; i < num_filter_caps; i++) {
             /* XXX: sub-type shall always be the first field */
             if (op_data->va_subtype == *(guint *)filter_cap) {
-                num_filter_caps = 1;
+                va_num_caps= 1;
                 break;
             }
             filter_cap += op_data->va_cap_size;
@@ -500,11 +500,11 @@ op_data_ensure_caps(GstVaapiFilterOpData *op_data, gpointer filter_caps,
     }
 
     op_data->va_caps = g_memdup(filter_cap,
-        op_data->va_cap_size * num_filter_caps);
+        op_data->va_cap_size * va_num_caps);
     if (!op_data->va_caps)
         return FALSE;
 
-    op_data->va_num_caps = num_filter_caps;
+    op_data->va_num_caps = va_num_caps;
     return TRUE;
 }
 
