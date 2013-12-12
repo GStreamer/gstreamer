@@ -57,6 +57,19 @@ meta_texture_new(void)
     return meta;
 }
 
+static GstVaapiVideoMetaTexture *
+meta_texture_copy(GstVaapiVideoMetaTexture *meta)
+{
+    GstVaapiVideoMetaTexture *copy;
+
+    copy = meta_texture_new();
+    if (!copy)
+        return NULL;
+
+    gst_vaapi_texture_replace(&copy->texture, meta->texture);
+    return copy;
+}
+
 static gboolean
 gst_vaapi_texture_upload(GstVideoGLTextureUploadMeta *meta, guint texture_id[4])
 {
@@ -108,7 +121,8 @@ gst_buffer_add_texture_upload_meta(GstBuffer *buffer)
     meta = gst_buffer_add_video_gl_texture_upload_meta(buffer,
         GST_VIDEO_GL_TEXTURE_ORIENTATION_X_NORMAL_Y_NORMAL,
         1, tex_type, gst_vaapi_texture_upload,
-        meta_texture, NULL, (GBoxedFreeFunc)meta_texture_free);
+        meta_texture, (GBoxedCopyFunc)meta_texture_copy,
+        (GBoxedFreeFunc)meta_texture_free);
     if (!meta)
         goto error;
     return TRUE;
