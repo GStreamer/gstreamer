@@ -74,6 +74,8 @@ GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
 #define DEFAULT_PROP_FREQUENCY          0
 #define DEFAULT_PROP_IO_MODE            GST_V4L2_IO_AUTO
 
+#define ENCODED_BUFFER_SIZE             (1 * 1024 * 1024)
+
 enum
 {
   PROP_0,
@@ -2656,6 +2658,10 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
         format.fmt.pix_mp.plane_fmt[i].bytesperline =
             v4l2object->bytesperline[i];
 
+      if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_ENCODED) {
+        format.fmt.pix_mp.plane_fmt[0].sizeimage = ENCODED_BUFFER_SIZE;
+      }
+
       if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
         goto set_fmt_failed;
 
@@ -2718,6 +2724,10 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
       format.fmt.pix.field = field;
       /* try to ask our prefered stride */
       format.fmt.pix.bytesperline = v4l2object->bytesperline[0];
+
+      if (GST_VIDEO_INFO_FORMAT (&info) == GST_VIDEO_FORMAT_ENCODED) {
+        format.fmt.pix.sizeimage = ENCODED_BUFFER_SIZE;
+      }
 
       if (v4l2_ioctl (fd, VIDIOC_S_FMT, &format) < 0)
         goto set_fmt_failed;
