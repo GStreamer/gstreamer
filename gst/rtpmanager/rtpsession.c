@@ -3482,6 +3482,10 @@ generate_rtcp (const gchar * key, RTPSource * source, ReportData * data)
   if (!source->internal || source->sent_bye)
     return;
 
+  /* ignore other sources when we do the timeout after a scheduled BYE */
+  if (sess->scheduled_bye && !source->marked_bye)
+    return;
+
   data->source = source;
 
   /* open packet */
