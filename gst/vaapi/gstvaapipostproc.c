@@ -444,7 +444,7 @@ gst_vaapipostproc_process_vpp(GstBaseTransform *trans, GstBuffer *inbuf,
         return GST_FLOW_NOT_SUPPORTED;
 
     if ((postproc->flags & GST_VAAPI_POSTPROC_FLAG_SHARPEN) &&
-        !gst_vaapi_filter_set_denoising_level(postproc->filter,
+        !gst_vaapi_filter_set_sharpening_level(postproc->filter,
             postproc->sharpen_level))
         return GST_FLOW_NOT_SUPPORTED;
 
