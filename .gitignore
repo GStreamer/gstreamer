@@ -50,8 +50,12 @@ stamp-h.in
 /tests/check/gst/media
 /tests/check/gst/mediafactory
 /tests/check/gst/mountpoints
+/tests/check/gst/permissions
 /tests/check/gst/rtspserver
+/tests/check/gst/sessionmedia
+/tests/check/gst/stream
 /tests/check/gst/threadpool
+/tests/check/gst/token
 /tests/check/test-registry.reg
 /tests/test-reuse
 
