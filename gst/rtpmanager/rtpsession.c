@@ -3614,6 +3614,7 @@ rtp_session_on_timeout (RTPSession * sess, GstClockTime current_time,
     sess->last_rtcp_send_time = data.current_time;
   sess->first_rtcp = FALSE;
   sess->next_early_rtcp_time = GST_CLOCK_TIME_NONE;
+  sess->scheduled_bye = FALSE;
 
 done:
   RTP_SESSION_UNLOCK (sess);
