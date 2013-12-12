@@ -108,6 +108,10 @@ static gboolean gst_rtp_base_payload_sink_event_default (GstRTPBasePayload *
     rtpbasepayload, GstEvent * event);
 static gboolean gst_rtp_base_payload_sink_event (GstPad * pad,
     GstObject * parent, GstEvent * event);
+static gboolean gst_rtp_base_payload_src_event_default (GstRTPBasePayload *
+    rtpbasepayload, GstEvent * event);
+static gboolean gst_rtp_base_payload_src_event (GstPad * pad,
+    GstObject * parent, GstEvent * event);
 static gboolean gst_rtp_base_payload_query_default (GstRTPBasePayload *
     rtpbasepayload, GstPad * pad, GstQuery * query);
 static gboolean gst_rtp_base_payload_query (GstPad * pad, GstObject * parent,
@@ -243,6 +247,7 @@ gst_rtp_base_payload_class_init (GstRTPBasePayloadClass * klass)
 
   klass->get_caps = gst_rtp_base_payload_getcaps_default;
   klass->sink_event = gst_rtp_base_payload_sink_event_default;
+  klass->src_event = gst_rtp_base_payload_src_event_default;
   klass->query = gst_rtp_base_payload_query_default;
 
   GST_DEBUG_CATEGORY_INIT (rtpbasepayload_debug, "rtpbasepayload", 0,
@@ -263,6 +268,8 @@ gst_rtp_base_payload_init (GstRTPBasePayload * rtpbasepayload, gpointer g_class)
   g_return_if_fail (templ != NULL);
 
   rtpbasepayload->srcpad = gst_pad_new_from_template (templ, "src");
+  gst_pad_set_event_function (rtpbasepayload->srcpad,
+      gst_rtp_base_payload_src_event);
   gst_element_add_pad (GST_ELEMENT (rtpbasepayload), rtpbasepayload->srcpad);
 
   templ =
@@ -417,6 +424,41 @@ gst_rtp_base_payload_sink_event (GstPad * pad, GstObject * parent,
 
   return res;
 }
+
+static gboolean
+gst_rtp_base_payload_src_event_default (GstRTPBasePayload * rtpbasepayload,
+    GstEvent * event)
+{
+  GstObject *parent = GST_OBJECT_CAST (rtpbasepayload);
+  gboolean res = FALSE;
+
+  switch (GST_EVENT_TYPE (event)) {
+    default:
+      res = gst_pad_event_default (rtpbasepayload->srcpad, parent, event);
+      break;
+  }
+  return res;
+}
+
+static gboolean
+gst_rtp_base_payload_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event)
+{
+  GstRTPBasePayload *rtpbasepayload;
+  GstRTPBasePayloadClass *rtpbasepayload_class;
+  gboolean res = FALSE;
+
+  rtpbasepayload = GST_RTP_BASE_PAYLOAD (parent);
+  rtpbasepayload_class = GST_RTP_BASE_PAYLOAD_GET_CLASS (rtpbasepayload);
+
+  if (rtpbasepayload_class->src_event)
+    res = rtpbasepayload_class->src_event (rtpbasepayload, event);
+  else
+    gst_event_unref (event);
+
+  return res;
+}
+
 
 static gboolean
 gst_rtp_base_payload_query_default (GstRTPBasePayload * rtpbasepayload,
