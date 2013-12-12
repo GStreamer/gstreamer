@@ -2072,7 +2072,8 @@ return_data:
      * value */
     gst_structure_set_value (s, "framerate", &rates);
     g_value_unset (&rates);
-  } else {
+  } else if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE ||
+      v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
     gst_structure_set (s, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, 100, 1,
         NULL);
   }
@@ -2311,7 +2312,8 @@ default_frame_sizes:
     if (fix_num) {
       gst_structure_set (tmp, "framerate", GST_TYPE_FRACTION, fix_num,
           fix_denom, NULL);
-    } else {
+    } else if (v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE ||
+        v4l2object->type == V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE) {
       /* if norm can't be used, copy the template framerate */
       gst_structure_set (tmp, "framerate", GST_TYPE_FRACTION_RANGE, 0, 1,
           100, 1, NULL);
