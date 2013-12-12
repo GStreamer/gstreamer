@@ -61,6 +61,15 @@
 #ifndef V4L2_PIX_FMT_NV21M
 #define V4L2_PIX_FMT_NV21M GST_MAKE_FOURCC ('N', 'M', '2', '1')
 #endif
+#ifndef V4L2_PIX_FMT_MPEG1
+#define V4L2_PIX_FMT_MPEG1 GST_MAKE_FOURCC ('M', 'P', 'G', '1')
+#endif
+#ifndef V4L2_PIX_FMT_MPEG2
+#define V4L2_PIX_FMT_MPEG2 GST_MAKE_FOURCC ('M', 'P', 'G', '2')
+#endif
+#ifndef V4L2_PIX_FMT_MPEG4
+#define V4L2_PIX_FMT_MPEG4 GST_MAKE_FOURCC ('M', 'P', 'G', '4')
+#endif
 
 GST_DEBUG_CATEGORY_EXTERN (v4l2_debug);
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
@@ -1020,9 +1029,9 @@ static const GstV4L2FormatDesc gst_v4l2_formats[] = {
 #endif
   {V4L2_PIX_FMT_DV, TRUE, GST_V4L2_TRANSPORT},
   {V4L2_PIX_FMT_MPEG, FALSE, GST_V4L2_TRANSPORT},
-#ifdef V4L2_PIX_FMT_MPEG4
+  {V4L2_PIX_FMT_MPEG1, TRUE, GST_V4L2_CODEC},
+  {V4L2_PIX_FMT_MPEG2, TRUE, GST_V4L2_CODEC},
   {V4L2_PIX_FMT_MPEG4, TRUE, GST_V4L2_CODEC},
-#endif
 
 #ifdef V4L2_PIX_FMT_H263
   {V4L2_PIX_FMT_H263, TRUE, GST_V4L2_CODEC},
@@ -1454,13 +1463,19 @@ gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
     case V4L2_PIX_FMT_HI240:   /*  8  8-bit color   */
       /* FIXME: get correct fourccs here */
       break;
-#ifdef V4L2_PIX_FMT_MPEG4
+    case V4L2_PIX_FMT_MPEG1:
+      structure = gst_structure_new ("video/mpeg",
+          "mpegversion", G_TYPE_INT, 2, NULL);
+      break;
+    case V4L2_PIX_FMT_MPEG2:
+      structure = gst_structure_new ("video/mpeg",
+          "mpegversion", G_TYPE_INT, 2, NULL);
+      break;
     case V4L2_PIX_FMT_MPEG4:
       structure = gst_structure_new ("video/mpeg",
           "mpegversion", G_TYPE_INT, 4, "systemstream",
           G_TYPE_BOOLEAN, FALSE, NULL);
       break;
-#endif
 #ifdef V4L2_PIX_FMT_H263
     case V4L2_PIX_FMT_H263:
       structure = gst_structure_new ("video/x-h263",
@@ -1741,10 +1756,23 @@ gst_v4l2_object_get_caps_info (GstV4l2Object * v4l2object, GstCaps * caps,
       fourcc = V4L2_PIX_FMT_DV;
     } else if (g_str_equal (mimetype, "image/jpeg")) {
       fourcc = V4L2_PIX_FMT_JPEG;
-#ifdef V4L2_PIX_FMT_MPEG4
     } else if (g_str_equal (mimetype, "video/mpeg")) {
-      fourcc = V4L2_PIX_FMT_MPEG4;
-#endif
+      gint version;
+      if (gst_structure_get_int (structure, "mpegversion", &version)) {
+        switch (version) {
+          case 1:
+            fourcc = V4L2_PIX_FMT_MPEG1;
+            break;
+          case 2:
+            fourcc = V4L2_PIX_FMT_MPEG2;
+            break;
+          case 4:
+            fourcc = V4L2_PIX_FMT_MPEG4;
+            break;
+          default:
+            break;
+        }
+      }
 #ifdef V4L2_PIX_FMT_H263
     } else if (g_str_equal (mimetype, "video/x-h263")) {
       fourcc = V4L2_PIX_FMT_H263;
