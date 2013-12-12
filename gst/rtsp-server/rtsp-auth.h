@@ -48,7 +48,9 @@ G_BEGIN_DECLS
 struct _GstRTSPAuth {
   GObject       parent;
 
+  /*< private >*/
   GstRTSPAuthPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -70,6 +72,8 @@ struct _GstRTSPAuthClass {
   gboolean           (*authenticate) (GstRTSPAuth *auth, GstRTSPContext *ctx);
   gboolean           (*check)        (GstRTSPAuth *auth, GstRTSPContext *ctx,
                                       const gchar *check);
+  /*< private >*/
+  gpointer            _gst_reserved[GST_PADDING];
 };
 
 GType               gst_rtsp_auth_get_type          (void);

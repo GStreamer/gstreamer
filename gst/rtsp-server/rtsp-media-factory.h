@@ -54,6 +54,7 @@ struct _GstRTSPMediaFactory {
 
   /*< private >*/
   GstRTSPMediaFactoryPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -91,6 +92,9 @@ struct _GstRTSPMediaFactoryClass {
   /* signals */
   void            (*media_constructed)  (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
   void            (*media_configure)    (GstRTSPMediaFactory *factory, GstRTSPMedia *media);
+
+  /*< private >*/
+  gpointer         _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType                 gst_rtsp_media_factory_get_type     (void);

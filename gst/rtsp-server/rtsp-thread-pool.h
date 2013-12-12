@@ -127,6 +127,7 @@ struct _GstRTSPThreadPool {
 
   /*< private >*/
   GstRTSPThreadPoolPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -157,6 +158,9 @@ struct _GstRTSPThreadPoolClass {
                                         GstRTSPThread *thread);
   void            (*thread_leave)      (GstRTSPThreadPool *pool,
                                         GstRTSPThread *thread);
+
+  /*< private >*/
+  gpointer         _gst_reserved[GST_PADDING];
 };
 
 GType               gst_rtsp_thread_pool_get_type        (void);

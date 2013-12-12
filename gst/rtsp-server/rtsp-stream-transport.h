@@ -74,10 +74,14 @@ struct _GstRTSPStreamTransport {
 
   /*< private >*/
   GstRTSPStreamTransportPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstRTSPStreamTransportClass {
   GObjectClass parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType                    gst_rtsp_stream_transport_get_type (void);

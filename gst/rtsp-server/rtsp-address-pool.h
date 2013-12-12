@@ -134,6 +134,7 @@ struct _GstRTSPAddressPool {
 
   /*< private >*/
   GstRTSPAddressPoolPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -143,6 +144,9 @@ struct _GstRTSPAddressPool {
  */
 struct _GstRTSPAddressPoolClass {
   GObjectClass  parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType                  gst_rtsp_address_pool_get_type        (void);

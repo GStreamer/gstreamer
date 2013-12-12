@@ -48,7 +48,9 @@ typedef struct _GstRTSPMediaFactoryURIPrivate GstRTSPMediaFactoryURIPrivate;
 struct _GstRTSPMediaFactoryURI {
   GstRTSPMediaFactory   parent;
 
+  /*< private >*/
   GstRTSPMediaFactoryURIPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -58,6 +60,9 @@ struct _GstRTSPMediaFactoryURI {
  */
 struct _GstRTSPMediaFactoryURIClass {
   GstRTSPMediaFactoryClass  parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType                 gst_rtsp_media_factory_uri_get_type   (void);

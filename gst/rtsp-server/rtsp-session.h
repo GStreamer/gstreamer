@@ -69,10 +69,14 @@ struct _GstRTSPSession {
 
   /*< private >*/
   GstRTSPSessionPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstRTSPSessionClass {
   GObjectClass  parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType                  gst_rtsp_session_get_type             (void);

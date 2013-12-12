@@ -51,7 +51,9 @@ typedef struct _GstRTSPServerPrivate GstRTSPServerPrivate;
 struct _GstRTSPServer {
   GObject      parent;
 
+  /*< private >*/
   GstRTSPServerPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -71,6 +73,9 @@ struct _GstRTSPServerClass {
 
   /* signals */
   void            (*client_connected)   (GstRTSPServer *server, GstRTSPClient *client);
+
+  /*< private >*/
+  gpointer         _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType                 gst_rtsp_server_get_type             (void);

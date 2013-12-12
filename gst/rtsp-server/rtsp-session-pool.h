@@ -50,6 +50,7 @@ struct _GstRTSPSessionPool {
 
   /*< private >*/
   GstRTSPSessionPoolPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -63,6 +64,9 @@ struct _GstRTSPSessionPoolClass {
 
   gchar *          (*create_session_id)   (GstRTSPSessionPool *pool);
   GstRTSPSession * (*create_session)      (GstRTSPSessionPool *pool, const gchar *id);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
 /**

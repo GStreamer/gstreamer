@@ -69,6 +69,9 @@ struct _GstRTSPContext {
   GstRTSPMedia        *media;
   GstRTSPStream       *stream;
   GstRTSPMessage      *response;
+
+  /*< private >*/
+  gpointer            _gst_reserved[GST_PADDING];
 };
 
 GType gst_rtsp_context_get_type (void);

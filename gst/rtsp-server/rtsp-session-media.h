@@ -50,11 +50,15 @@ struct _GstRTSPSessionMedia
 
   /*< private >*/
   GstRTSPSessionMediaPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 struct _GstRTSPSessionMediaClass
 {
   GObjectClass  parent_class;
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType                    gst_rtsp_session_media_get_type       (void);

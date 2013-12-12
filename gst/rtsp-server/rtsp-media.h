@@ -98,6 +98,7 @@ struct _GstRTSPMedia {
 
   /*< private >*/
   GstRTSPMediaPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -132,6 +133,9 @@ struct _GstRTSPMediaClass {
   void            (*unprepared)      (GstRTSPMedia *media);
 
   void            (*new_state)       (GstRTSPMedia *media, GstState state);
+
+  /*< private >*/
+  gpointer         _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType                 gst_rtsp_media_get_type         (void);

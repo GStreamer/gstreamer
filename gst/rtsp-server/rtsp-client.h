@@ -68,7 +68,9 @@ typedef gboolean (*GstRTSPClientSendFunc)      (GstRTSPClient *client,
 struct _GstRTSPClient {
   GObject       parent;
 
+  /*< private >*/
   GstRTSPClientPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -106,6 +108,9 @@ struct _GstRTSPClientClass {
   void     (*set_parameter_request)   (GstRTSPClient *client, GstRTSPContext *ctx);
   void     (*get_parameter_request)   (GstRTSPClient *client, GstRTSPContext *ctx);
   void     (*handle_response)         (GstRTSPClient *client, GstRTSPContext *ctx);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING_LARGE];
 };
 
 GType                 gst_rtsp_client_get_type          (void);

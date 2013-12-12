@@ -49,6 +49,7 @@ struct _GstRTSPMountPoints {
 
   /*< private >*/
   GstRTSPMountPointsPrivate *priv;
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 /**
@@ -62,6 +63,9 @@ struct _GstRTSPMountPointsClass {
 
   gchar * (*make_path) (GstRTSPMountPoints *mounts,
                         const GstRTSPUrl *url);
+
+  /*< private >*/
+  gpointer _gst_reserved[GST_PADDING];
 };
 
 GType                 gst_rtsp_mount_points_get_type       (void);

@@ -39,7 +39,7 @@ GType gst_rtsp_token_get_type(void);
  * GstRTSPToken:
  *
  * An opaque object used for checking authorisations.
- * It is generated after successfull authentication.
+ * It is generated after successful authentication.
  */
 struct _GstRTSPToken {
   GstMiniObject mini_object;
