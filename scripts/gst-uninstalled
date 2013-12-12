@@ -92,6 +92,10 @@ PATH=$GST/gst-editing-services/tools:$PATH
 LD_LIBRARY_PATH=$GST/gst-plugins-gl/gst-libs/gst/gl/.libs:$LD_LIBRARY_PATH
 DYLD_LIBRARY_PATH=$GST/gst-plugins-gl/gst-libs/gst/gl/.libs:$DYLD_LIBRARY_PATH
 
+# GStreamer plugins vaapi libraries
+LD_LIBRARY_PATH=$GST/gstreamer-vaapi/gst-libs/gst/vaapi/.libs:$LD_LIBRARY_PATH
+DYLD_LIBRARY_PATH=$GST/gstreamer-vaapi/gst-libs/gst/vaapi/.libs:$DYLD_LIBRARY_PATH
+
 # GStreamer plugins base libraries
 for path in allocators app audio fft pbutils riff rtp rtsp sdp tag utils video
 do
@@ -135,6 +139,7 @@ $GST_PREFIX/lib/pkgconfig\
 :$GST/gst-rtsp-server/pkgconfig\
 :$GST/gst-editing-services/pkgconfig\
 :$GST/gstreamer-sharp/pkgconfig\
+:$GST/gstreamer-vaapi/pkgconfig\
 :$GST/orc\
 :$GST/farsight2\
 :$GST/libnice/nice\
@@ -161,6 +166,7 @@ $GST/gstreamer/plugins\
 :$GST/gst-omx/omx/.libs\
 :$GST/gst-plugins-gl/gst/gl/.libs\
 :$GST/clutter-gst/clutter-gst/.libs\
+:$GST/gstreamer-vaapi/gst/vaapi/.libs\
 :$GST/plugins\
 :$GST/farsight2/gst\
 :$GST/farsight2/transmitters\
