@@ -190,6 +190,17 @@ gst_gsmdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
   guint size;
 
   size = gst_adapter_available (adapter);
+
+  /* if input format is TIME each buffer should be self-contained and
+   * the data is presumably packetised, and we should start with a clean
+   * slate/state at the beginning of each buffer (for wav49 case) */
+  if (dec->input_segment.format == GST_FORMAT_TIME) {
+    *offset = 0;
+    *length = size;
+    gsmdec->needed = 33;
+    return GST_FLOW_OK;
+  }
+
   g_return_val_if_fail (size > 0, GST_FLOW_ERROR);
 
   if (size < gsmdec->needed)
@@ -206,14 +217,33 @@ gst_gsmdec_parse (GstAudioDecoder * dec, GstAdapter * adapter,
   return GST_FLOW_OK;
 }
 
+static guint
+gst_gsmdec_get_frame_count (GstGSMDec * dec, gsize buffer_size)
+{
+  guint count;
+
+  if (dec->use_wav49) {
+    count = (buffer_size / (33 + 32)) * 2;
+    if (buffer_size % (33 + 32) >= dec->needed)
+      ++count;
+  } else {
+    count = buffer_size / 33;
+  }
+
+  return count;
+}
+
 static GstFlowReturn
 gst_gsmdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 {
   GstGSMDec *gsmdec;
+  gsm_signal *out_data;
   gsm_byte *data;
   GstFlowReturn ret = GST_FLOW_OK;
   GstBuffer *outbuf;
   GstMapInfo map, omap;
+  gsize outsize;
+  guint frames, i, errors = 0;
 
   /* no fancy draining */
   if (G_UNLIKELY (!buffer))
@@ -221,25 +251,40 @@ gst_gsmdec_handle_frame (GstAudioDecoder * dec, GstBuffer * buffer)
 
   gsmdec = GST_GSMDEC (dec);
 
-  /* always the same amount of output samples */
-  outbuf = gst_buffer_new_and_alloc (ENCODED_SAMPLES * sizeof (gsm_signal));
-
-  /* now encode frame into the output buffer */
   gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+  frames = gst_gsmdec_get_frame_count (gsmdec, map.size);
+
+  /* always the same amount of output samples (20ms worth per frame) */
+  outsize = ENCODED_SAMPLES * frames * sizeof (gsm_signal);
+  outbuf = gst_buffer_new_and_alloc (outsize);
+
   gst_buffer_map (outbuf, &omap, GST_MAP_WRITE);
+  out_data = (gsm_signal *) omap.data;
   data = (gsm_byte *) map.data;
-  if (gsm_decode (gsmdec->state, data, (gsm_signal *) omap.data) < 0) {
-    /* invalid frame */
-    GST_AUDIO_DECODER_ERROR (gsmdec, 1, STREAM, DECODE, (NULL),
-        ("tried to decode an invalid frame"), ret);
-    gst_buffer_unmap (outbuf, &omap);
-    gst_buffer_unref (outbuf);
-    outbuf = NULL;
-  } else {
-    gst_buffer_unmap (outbuf, &omap);
+
+  for (i = 0; i < frames; ++i) {
+    /* now encode frame into the output buffer */
+    if (gsm_decode (gsmdec->state, data, out_data) < 0) {
+      /* invalid frame */
+      GST_AUDIO_DECODER_ERROR (gsmdec, 1, STREAM, DECODE, (NULL),
+          ("tried to decode an invalid frame"), ret);
+      memset (out_data, 0, ENCODED_SAMPLES * sizeof (gsm_signal));
+      ++errors;
+    }
+    out_data += ENCODED_SAMPLES;
+    data += gsmdec->needed;
+    if (gsmdec->use_wav49)
+      gsmdec->needed = (gsmdec->needed == 33 ? 32 : 33);
   }
 
+  gst_buffer_unmap (outbuf, &omap);
   gst_buffer_unmap (buffer, &map);
+
+  if (errors == frames) {
+    gst_buffer_unref (outbuf);
+    outbuf = NULL;
+  }
 
   gst_audio_decoder_finish_frame (dec, outbuf, 1);
 
