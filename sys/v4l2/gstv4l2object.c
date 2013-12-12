@@ -3292,6 +3292,8 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
     case GST_V4L2_IO_USERPTR:
     case GST_V4L2_IO_DMABUF:
       /* in streaming mode, prefer our own pool */
+      if (pool)
+        gst_object_unref (pool);
       pool = GST_BUFFER_POOL_CAST (obj->pool);
       size = obj->sizeimage;
       max = 0;
