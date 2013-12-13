@@ -2354,6 +2354,8 @@ rtp_session_process_nack (RTPSession * sess, guint32 sender_ssrc,
     guint32 media_ssrc, guint8 * fci_data, guint fci_length,
     GstClockTime current_time)
 {
+  sess->stats.nacks_received++;
+
   if (!sess->callbacks.notify_nack)
     return;
 
@@ -2395,8 +2397,6 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
 
   GST_DEBUG ("received feedback %d:%d from %08X about %08X with FCI of "
       "length %d", type, fbtype, sender_ssrc, media_ssrc, fci_length);
-
-  sess->stats.nacks_received++;
 
   if (g_signal_has_handler_pending (sess,
           rtp_session_signals[SIGNAL_ON_FEEDBACK_RTCP], 0, TRUE)) {
