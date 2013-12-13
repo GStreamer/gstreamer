@@ -61,6 +61,10 @@ typedef enum {
 GType
 gst_vaapi_display_type_get_type(void) G_GNUC_CONST;
 
+gboolean
+gst_vaapi_display_type_is_compatible(GstVaapiDisplayType type1,
+    GstVaapiDisplayType type2);
+
 /**
  * GstVaapiDisplayInfo:
  *

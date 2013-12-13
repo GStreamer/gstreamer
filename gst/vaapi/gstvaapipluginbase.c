@@ -101,14 +101,6 @@ gst_vaapi_plugin_base_set_display_type (GstVaapiPluginBase * plugin,
   plugin->display_type_req = display_type;
 }
 
-/* Checks wether display type 1 is compatible with display type 2 */
-static gboolean
-display_type_is_compatible (GstVaapiDisplayType type1,
-    GstVaapiDisplayType type2)
-{
-  return (type1 == type2 || type2 == GST_VAAPI_DISPLAY_TYPE_ANY);
-}
-
 /**
  * gst_vaapi_plugin_base_ensure_display:
  * @plugin: a #GstVaapiPluginBase
@@ -122,7 +114,8 @@ display_type_is_compatible (GstVaapiDisplayType type1,
 gboolean
 gst_vaapi_plugin_base_ensure_display (GstVaapiPluginBase * plugin)
 {
-  if (plugin->display && display_type_is_compatible (plugin->display_type,
+  if (plugin->display
+      && gst_vaapi_display_type_is_compatible (plugin->display_type,
           plugin->display_type_req))
     return TRUE;
   gst_vaapi_display_replace (&plugin->display, NULL);

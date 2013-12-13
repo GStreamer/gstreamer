@@ -176,6 +176,34 @@ gst_vaapi_display_type_get_type(void)
     return g_type;
 }
 
+/**
+ * gst_vaapi_display_type_is_compatible:
+ * @type1: the #GstVaapiDisplayType to test
+ * @type2: the reference #GstVaapiDisplayType
+ *
+ * Compares whether #GstVaapiDisplay @type1 is compatible with @type2.
+ * That is, if @type2 is in "any" category, or derived from @type1.
+ *
+ * Returns: %TRUE if @type1 is compatible with @type2, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_display_type_is_compatible(GstVaapiDisplayType type1,
+    GstVaapiDisplayType type2)
+{
+    if (type1 == type2)
+        return TRUE;
+
+    switch (type1) {
+    case GST_VAAPI_DISPLAY_TYPE_GLX:
+        if (type2 == GST_VAAPI_DISPLAY_TYPE_X11)
+            return TRUE;
+        break;
+    default:
+        break;
+    }
+    return type2 == GST_VAAPI_DISPLAY_TYPE_ANY;
+}
+
 /* Append GstVideoFormat to formats array */
 static inline void
 append_format(GArray *formats, GstVideoFormat format, guint flags)

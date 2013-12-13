@@ -121,7 +121,8 @@ gst_vaapi_ensure_display(gpointer element, GstVaapiDisplayType type)
     gst_vaapi_video_context_prepare(context, display_types);
 
     /* Neighbour found and it updated the display */
-    if (plugin->display)
+    if (plugin->display && gst_vaapi_display_type_is_compatible(
+            plugin->display_type, type))
         return TRUE;
 
     /* If no neighboor, or application not interested, use system default */
