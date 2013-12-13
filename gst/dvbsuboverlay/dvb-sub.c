@@ -1172,10 +1172,10 @@ _dvb_sub_parse_display_definition_segment (DvbSub * dvb_sub, guint8 * buf,
   if (buf_size >= 13 && dvb_sub->display_def.window_flag) {
     dvb_sub->display_def.window_x = GST_READ_UINT16_BE (buf);
     buf += 2;
-    dvb_sub->display_def.window_y = GST_READ_UINT16_BE (buf);
-    buf += 2;
     dvb_sub->display_def.window_width =
         GST_READ_UINT16_BE (buf) - dvb_sub->display_def.window_x + 1;
+    buf += 2;
+    dvb_sub->display_def.window_y = GST_READ_UINT16_BE (buf);
     buf += 2;
     dvb_sub->display_def.window_height =
         GST_READ_UINT16_BE (buf) - dvb_sub->display_def.window_y + 1;
