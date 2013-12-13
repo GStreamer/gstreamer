@@ -399,6 +399,7 @@ GST_START_TEST (test_rtx_ssrc_collision)
       gst_pad_push_event (srcpad,
       gst_event_new_stream_start ("my_rtcp_stream_id"));
   fail_if (res == FALSE);
+  gst_segment_init (&segment, GST_FORMAT_TIME);
   res = gst_pad_push_event (srcpad, gst_event_new_segment (&segment));
   fail_if (res == FALSE);
 
