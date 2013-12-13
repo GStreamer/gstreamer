@@ -82,14 +82,22 @@ play_new (gchar ** uris, const gchar * audio_sink, const gchar * video_sink,
   play->playbin = gst_element_factory_make ("playbin", "playbin");
 
   if (audio_sink != NULL) {
-    sink = gst_element_factory_make (audio_sink, NULL);
+    if (strchr (audio_sink, ' ') != NULL)
+      sink = gst_parse_bin_from_description (audio_sink, TRUE, NULL);
+    else
+      sink = gst_element_factory_make (audio_sink, NULL);
+
     if (sink != NULL)
       g_object_set (play->playbin, "audio-sink", sink, NULL);
     else
       g_warning ("Couldn't create specified audio sink '%s'", audio_sink);
   }
   if (video_sink != NULL) {
-    sink = gst_element_factory_make (video_sink, NULL);
+    if (strchr (video_sink, ' ') != NULL)
+      sink = gst_parse_bin_from_description (video_sink, TRUE, NULL);
+    else
+      sink = gst_element_factory_make (video_sink, NULL);
+
     if (sink != NULL)
       g_object_set (play->playbin, "video-sink", sink, NULL);
     else
