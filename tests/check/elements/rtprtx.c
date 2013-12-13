@@ -21,7 +21,6 @@
 
 #include <gst/check/gstcheck.h>
 #include <gst/check/gstconsistencychecker.h>
-#include <gst/check/gsttestclock.h>
 
 #include <gst/rtp/gstrtpbuffer.h>
 
@@ -58,7 +57,6 @@ static void
 setup_rtprtx (GstElement * rtprtxsend, GstElement * rtprtxreceive,
     gint num_buffers)
 {
-  GstClock *clock;
   GstBuffer *buffer;
   GstPad *sendsrcpad;
   GstPad *receivesinkpad;
@@ -77,11 +75,6 @@ setup_rtprtx (GstElement * rtprtxsend, GstElement * rtprtxreceive,
   GstClockTime ts = G_GUINT64_CONSTANT (0);
   GstClockTime tso = gst_util_uint64_scale (RTP_FRAME_SIZE, GST_SECOND, 8000);
   gint i;
-
-  /* we need a clock here */
-  clock = gst_system_clock_obtain ();
-  gst_element_set_clock (rtprtxsend, clock);
-  gst_object_unref (clock);
 
   srcpad = gst_check_setup_src_pad (rtprtxsend, &srctemplate);
   sendsrcpad = gst_element_get_static_pad (rtprtxsend, "src");
@@ -128,15 +121,6 @@ static GstStateChangeReturn
 start_rtprtx (GstElement * element)
 {
   GstStateChangeReturn ret;
-  GstClockTime now;
-  GstClock *clock;
-
-  clock = gst_element_get_clock (element);
-  if (clock) {
-    now = gst_clock_get_time (clock);
-    gst_object_unref (clock);
-    gst_element_set_base_time (element, now);
-  }
 
   ret = gst_element_set_state (element, GST_STATE_PLAYING);
   ck_assert_int_ne (ret, GST_STATE_CHANGE_FAILURE);
