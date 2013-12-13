@@ -105,6 +105,7 @@ struct _GstDashDemuxStream
   GCond download_cond;
   GstTask *download_task;
   GRecMutex download_task_lock;
+  GstUriDownloader *downloader;
 
   GstDownloadRate dnl_rate;
 };
