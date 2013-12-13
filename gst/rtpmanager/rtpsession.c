@@ -2418,14 +2418,11 @@ rtp_session_process_feedback (RTPSession * sess, GstRTCPPacket * packet,
       gst_buffer_unref (fci_buffer);
   }
 
-  if (!src)
-    return;
-
-  if (sess->rtcp_feedback_retention_window) {
+  if (src && sess->rtcp_feedback_retention_window) {
     rtp_source_retain_rtcp_packet (src, packet, pinfo->running_time);
   }
 
-  if (src->internal ||
+  if ((src && src->internal) ||
       /* PSFB FIR puts the media ssrc inside the FCI */
       (type == GST_RTCP_TYPE_PSFB && fbtype == GST_RTCP_PSFB_TYPE_FIR)) {
     switch (type) {
