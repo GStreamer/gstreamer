@@ -1,7 +1,7 @@
 Moving around plug-ins between source modules
 ---------------------------------------------
 
-Last updated: 2009-08-11
+Last updated: 2013-12-13
 
 Contents:
   1. How to get your plug-in out of -bad and into -good or -ugly (ie. policies)
@@ -50,7 +50,7 @@ CHECKLIST
 ---------
 - The plug-in's code:
   - should descend from an applicable base class if possible
-  - make use of GST_BOILERPLATE macros
+  - make use of G_DEFINE_TYPE macros
   - conform to the GStreamer coding style
   - use a custom debug category
   - use GST_(DEBUG/*)_OBJECT
