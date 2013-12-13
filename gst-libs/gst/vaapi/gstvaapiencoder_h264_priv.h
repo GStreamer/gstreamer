@@ -47,6 +47,8 @@ struct _GstVaapiEncoderH264
   guint32 num_bframes;
   guint32 mb_width;
   guint32 mb_height;
+  gboolean use_cabac;
+  gboolean use_dct8x8;
 
   /* re-ordering */
   GQueue reorder_frame_list;

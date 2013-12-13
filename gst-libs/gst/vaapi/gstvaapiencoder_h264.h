@@ -39,6 +39,9 @@ typedef struct _GstVaapiEncoderH264 GstVaapiEncoderH264;
  * @GST_VAAPI_ENCODER_H264_PROP_INIT_QP: Initial quantizer value (uint).
  * @GST_VAAPI_ENCODER_H264_PROP_MIN_QP: Minimal quantizer value (uint).
  * @GST_VAAPI_ENCODER_H264_PROP_NUM_SLICES: Number of slices per frame (uint).
+ * @GST_VAAPI_ENCODER_H264_PROP_CABAC: Enable CABAC entropy coding mode (bool).
+ * @GST_VAAPI_ENCODER_H264_PROP_DCT8X8: Enable adaptive use of 8x8
+ *   transforms in I-frames (bool).
  *
  * The set of H.264 encoder specific configurable properties.
  */
@@ -47,6 +50,8 @@ typedef enum {
   GST_VAAPI_ENCODER_H264_PROP_INIT_QP = -2,
   GST_VAAPI_ENCODER_H264_PROP_MIN_QP = -3,
   GST_VAAPI_ENCODER_H264_PROP_NUM_SLICES = -4,
+  GST_VAAPI_ENCODER_H264_PROP_CABAC = -5,
+  GST_VAAPI_ENCODER_H264_PROP_DCT8X8 = -6,
 } GstVaapiEncoderH264Prop;
 
 GstVaapiEncoder *

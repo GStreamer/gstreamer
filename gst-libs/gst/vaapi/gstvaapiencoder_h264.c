@@ -55,12 +55,6 @@
 
 typedef enum
 {
-  GST_VAAPI_ENCODER_H264_ENTROPY_MODE_CAVLC = 0,
-  GST_VAAPI_ENCODER_H264_ENTROPY_MODE_CABAC = 1
-} GstVaapiEncoderH264EntropyMode;
-
-typedef enum
-{
   GST_VAAPI_ENCODER_H264_NAL_UNKNOWN = 0,
   GST_VAAPI_ENCODER_H264_NAL_NON_IDR = 1,
   GST_VAAPI_ENCODER_H264_NAL_IDR = 5,   /* ref_idc != 0 */
@@ -214,8 +208,12 @@ ensure_profile (GstVaapiEncoderH264 * encoder)
   profile = GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
 
   /* Main profile coding tools */
-  if (encoder->num_bframes > 0)
+  if (encoder->num_bframes > 0 || encoder->use_cabac)
     profile = GST_VAAPI_PROFILE_H264_MAIN;
+
+  /* High profile coding tools */
+  if (encoder->use_dct8x8)
+    profile = GST_VAAPI_PROFILE_H264_HIGH;
 
   encoder->profile = profile;
   encoder->profile_idc = gst_vaapi_utils_h264_get_profile_idc (profile);
@@ -966,12 +964,11 @@ fill_va_picture_param (GstVaapiEncoderH264 * encoder,
       GST_VAAPI_ENC_PICTURE_IS_IDR (picture);
   pic_param->pic_fields.bits.reference_pic_flag =
       (picture->type != GST_VAAPI_PICTURE_TYPE_B);
-  pic_param->pic_fields.bits.entropy_coding_mode_flag =
-      GST_VAAPI_ENCODER_H264_ENTROPY_MODE_CABAC;
+  pic_param->pic_fields.bits.entropy_coding_mode_flag = encoder->use_cabac;
   pic_param->pic_fields.bits.weighted_pred_flag = FALSE;
   pic_param->pic_fields.bits.weighted_bipred_idc = 0;
   pic_param->pic_fields.bits.constrained_intra_pred_flag = 0;
-  pic_param->pic_fields.bits.transform_8x8_mode_flag = (encoder->profile_idc >= 100);       /* enable 8x8 */
+  pic_param->pic_fields.bits.transform_8x8_mode_flag = encoder->use_dct8x8;
   /* enable debloking */
   pic_param->pic_fields.bits.deblocking_filter_control_present_flag = TRUE;
   pic_param->pic_fields.bits.redundant_pic_cnt_present_flag = FALSE;
@@ -1685,6 +1682,12 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_H264_PROP_NUM_SLICES:
       encoder->num_slices = g_value_get_uint (value);
       break;
+    case GST_VAAPI_ENCODER_H264_PROP_CABAC:
+      encoder->use_cabac = g_value_get_boolean (value);
+      break;
+    case GST_VAAPI_ENCODER_H264_PROP_DCT8X8:
+      encoder->use_dct8x8 = g_value_get_boolean (value);
+      break;
     default:
       return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
   }
@@ -1784,6 +1787,34 @@ gst_vaapi_encoder_h264_get_default_properties (void)
           "Number of Slices",
           "Number of slices per frame",
           1, 200, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:cabac:
+   *
+   * Enable CABAC entropy coding mode for improved compression ratio,
+   * at the expense that the minimum target profile is Main. Default
+   * is CAVLC entropy coding mode.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_CABAC,
+      g_param_spec_boolean ("cabac",
+          "Enable CABAC",
+          "Enable CABAC entropy coding mode",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:dct8x8:
+   *
+   * Enable adaptive use of 8x8 transforms in I-frames. This improves
+   * the compression ratio by the minimum target profile is High.
+   * Default is to use 4x4 DCT only.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_DCT8X8,
+      g_param_spec_boolean ("dct8x8",
+          "Enable 8x8 DCT",
+          "Enable adaptive use of 8x8 transforms in I-frames",
+          FALSE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
 }
