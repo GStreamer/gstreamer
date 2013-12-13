@@ -25,7 +25,7 @@
 #ifndef GST_VAAPIUPLOAD_H
 #define GST_VAAPIUPLOAD_H
 
-#include <gst/base/gstbasetransform.h>
+#include "gstvaapipluginbase.h"
 #include "gstvaapiuploader.h"
 
 G_BEGIN_DECLS
@@ -59,15 +59,14 @@ typedef struct _GstVaapiUploadClass             GstVaapiUploadClass;
 
 struct _GstVaapiUpload {
     /*< private >*/
-    GstBaseTransform    parent_instance;
+    GstVaapiPluginBase  parent_instance;
 
-    GstVaapiDisplay    *display;
     GstVaapiUploader   *uploader;
 };
 
 struct _GstVaapiUploadClass {
     /*< private >*/
-    GstBaseTransformClass parent_class;
+    GstVaapiPluginBaseClass parent_class;
 };
 
 GType

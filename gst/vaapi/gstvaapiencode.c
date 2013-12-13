@@ -68,7 +68,7 @@ gst_vaapiencode_set_context (GstElement * element, GstContext * context)
 
   if (gst_vaapi_video_context_get_display (context, &display)) {
     GST_INFO_OBJECT (element, "set display %p", display);
-    gst_vaapi_display_replace (&encode->display, display);
+    GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE (encode, display);
     gst_vaapi_display_unref (display);
   }
 }
@@ -79,7 +79,7 @@ gst_vaapiencode_set_video_context (GstVideoContext * context,
 {
   GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (context);
 
-  gst_vaapi_set_display (type, value, &encode->display);
+  gst_vaapi_set_display (type, value, &GST_VAAPI_PLUGIN_BASE_DISPLAY (encode));
 }
 
 static void
@@ -114,7 +114,7 @@ static inline gboolean
 ensure_display (GstVaapiEncode * encode)
 {
   return gst_vaapi_ensure_display (encode,
-      GST_VAAPI_DISPLAY_TYPE_ANY, &encode->display);
+      GST_VAAPI_DISPLAY_TYPE_ANY, &GST_VAAPI_PLUGIN_BASE_DISPLAY (encode));
 }
 
 static gboolean
@@ -125,12 +125,14 @@ ensure_uploader (GstVaapiEncode * encode)
     return FALSE;
 
   if (!encode->uploader) {
-    encode->uploader = gst_vaapi_uploader_new (encode->display);
+    encode->uploader = gst_vaapi_uploader_new (
+        GST_VAAPI_PLUGIN_BASE_DISPLAY (encode));
     if (!encode->uploader)
       return FALSE;
   }
 
-  if (!gst_vaapi_uploader_ensure_display (encode->uploader, encode->display))
+  if (!gst_vaapi_uploader_ensure_display (encode->uploader,
+           GST_VAAPI_PLUGIN_BASE_DISPLAY (encode)))
     return FALSE;
 #endif
   return TRUE;
@@ -157,7 +159,7 @@ gst_vaapiencode_query (GST_PAD_QUERY_FUNCTION_ARGS)
 
   GST_INFO_OBJECT (encode, "query type %s", GST_QUERY_TYPE_NAME (query));
 
-  if (gst_vaapi_reply_to_query (query, encode->display))
+  if (gst_vaapi_reply_to_query (query, GST_VAAPI_PLUGIN_BASE_DISPLAY (encode)))
     success = TRUE;
   else if (GST_PAD_IS_SINK (pad))
     success = GST_PAD_QUERY_FUNCTION_CALL (encode->sinkpad_query,
@@ -379,7 +381,6 @@ gst_vaapiencode_destroy (GstVaapiEncode * encode)
   g_clear_object (&encode->uploader);
   gst_caps_replace (&encode->sinkpad_caps, NULL);
   gst_caps_replace (&encode->srcpad_caps, NULL);
-  gst_vaapi_display_replace (&encode->display, NULL);
   return TRUE;
 }
 
@@ -397,7 +398,8 @@ ensure_encoder (GstVaapiEncode * encode)
   if (!ensure_uploader_caps (encode))
     return FALSE;
 
-  encode->encoder = klass->create_encoder (encode, encode->display);
+  encode->encoder = klass->create_encoder (encode,
+      GST_VAAPI_PLUGIN_BASE_DISPLAY (encode));
   if (!encode->encoder)
     return FALSE;
   return TRUE;
@@ -407,10 +409,13 @@ static gboolean
 gst_vaapiencode_open (GstVideoEncoder * venc)
 {
   GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
-  GstVaapiDisplay *const old_display = encode->display;
+  GstVaapiDisplay *const old_display = GST_VAAPI_PLUGIN_BASE_DISPLAY (encode);
   gboolean success;
 
-  encode->display = NULL;
+  if (!gst_vaapi_plugin_base_open (GST_VAAPI_PLUGIN_BASE (encode)))
+    return FALSE;
+
+  GST_VAAPI_PLUGIN_BASE_DISPLAY (encode) = NULL;
   success = ensure_display (encode);
   if (old_display)
     gst_vaapi_display_unref (old_display);
@@ -422,7 +427,9 @@ gst_vaapiencode_close (GstVideoEncoder * venc)
 {
   GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
 
-  return gst_vaapiencode_destroy (encode);
+  gst_vaapiencode_destroy (encode);
+  gst_vaapi_plugin_base_close (GST_VAAPI_PLUGIN_BASE (encode));
+  return TRUE;
 }
 
 static inline gboolean
@@ -436,7 +443,7 @@ gst_vaapiencode_update_sink_caps (GstVaapiEncode * encode,
   if (GST_VIDEO_INFO_IS_YUV (&encode->sink_video_info)) {
     /* Ensure the uploader is set up for upstream allocated buffers */
     GstVaapiUploader *const uploader = encode->uploader;
-    if (!gst_vaapi_uploader_ensure_display (uploader, encode->display))
+    if (!gst_vaapi_uploader_ensure_display (uploader, GST_VAAPI_PLUGIN_BASE_DISPLAY (encode)))
       return FALSE;
     if (!gst_vaapi_uploader_ensure_caps (uploader, state->caps, NULL))
       return FALSE;
@@ -527,7 +534,7 @@ gst_vaapiencode_ensure_video_buffer_pool (GstVaapiEncode * encode,
     encode->video_buffer_size = 0;
   }
 
-  pool = gst_vaapi_video_buffer_pool_new (encode->display);
+  pool = gst_vaapi_video_buffer_pool_new (GST_VAAPI_PLUGIN_BASE_DISPLAY (encode));
   if (!pool)
     goto error_create_pool;
 
@@ -903,12 +910,15 @@ gst_vaapiencode_finalize (GObject * object)
   encode->sinkpad = NULL;
   encode->srcpad = NULL;
 
+  gst_vaapi_plugin_base_finalize (GST_VAAPI_PLUGIN_BASE (object));
   G_OBJECT_CLASS (gst_vaapiencode_parent_class)->finalize (object);
 }
 
 static void
 gst_vaapiencode_init (GstVaapiEncode * encode)
 {
+  gst_vaapi_plugin_base_init (GST_VAAPI_PLUGIN_BASE (encode), GST_CAT_DEFAULT);
+
   /* sink pad */
   encode->sinkpad = GST_VIDEO_ENCODER_SINK_PAD (encode);
   encode->sinkpad_query = GST_PAD_QUERYFUNC (encode->sinkpad);
@@ -934,6 +944,8 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
 
   GST_DEBUG_CATEGORY_INIT (gst_vaapiencode_debug,
       GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
+
+  gst_vaapi_plugin_base_class_init (GST_VAAPI_PLUGIN_BASE_CLASS (klass));
 
   object_class->finalize = gst_vaapiencode_finalize;
   object_class->set_property = gst_vaapiencode_set_property;

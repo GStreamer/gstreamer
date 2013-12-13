@@ -25,10 +25,7 @@
 #ifndef GST_VAAPIDECODE_H
 #define GST_VAAPIDECODE_H
 
-#include <gst/gst.h>
-#include <gst/gsttask.h>
-#include <gst/video/gstvideodecoder.h>
-#include <gst/vaapi/gstvaapidisplay.h>
+#include "gstvaapipluginbase.h"
 #include <gst/vaapi/gstvaapidecoder.h>
 
 G_BEGIN_DECLS
@@ -62,7 +59,7 @@ typedef struct _GstVaapiDecodeClass             GstVaapiDecodeClass;
 
 struct _GstVaapiDecode {
     /*< private >*/
-    GstVideoDecoder     parent_instance;
+    GstVaapiPluginBase  parent_instance;
 
     GstPad             *sinkpad;
     GstCaps            *sinkpad_caps;
@@ -70,7 +67,6 @@ struct _GstVaapiDecode {
     GstPad             *srcpad;
     GstCaps            *srcpad_caps;
     GstPadQueryFunction srcpad_query;
-    GstVaapiDisplay    *display;
     GstVaapiDecoder    *decoder;
     GMutex              decoder_mutex;
     GCond               decoder_ready;
@@ -85,7 +81,7 @@ struct _GstVaapiDecode {
 
 struct _GstVaapiDecodeClass {
     /*< private >*/
-    GstVideoDecoderClass parent_class;
+    GstVaapiPluginBaseClass parent_class;
 };
 
 GType

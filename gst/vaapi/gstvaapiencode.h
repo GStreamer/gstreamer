@@ -22,8 +22,7 @@
 #ifndef GST_VAAPIENCODE_H
 #define GST_VAAPIENCODE_H
 
-#include <gst/gst.h>
-#include <gst/video/gstvideoencoder.h>
+#include "gstvaapipluginbase.h"
 #include <gst/vaapi/gstvaapiencoder.h>
 #include "gstvaapiuploader.h"
 
@@ -50,7 +49,7 @@ typedef struct _GstVaapiEncodeClass GstVaapiEncodeClass;
 struct _GstVaapiEncode
 {
   /*< private >*/
-  GstVideoEncoder parent_instance;
+  GstVaapiPluginBase parent_instance;
 
   GstPad *sinkpad;
   GstCaps *sinkpad_caps;
@@ -61,7 +60,6 @@ struct _GstVaapiEncode
   GstCaps *srcpad_caps;
   GstPadQueryFunction srcpad_query;
 
-  GstVaapiDisplay *display;
   GstVaapiEncoder *encoder;
   GstVaapiUploader *uploader;
 
@@ -79,7 +77,7 @@ struct _GstVaapiEncode
 struct _GstVaapiEncodeClass
 {
   /*< private >*/
-  GstVideoEncoderClass parent_class;
+  GstVaapiPluginBaseClass parent_class;
 
   gboolean            (*check_ratecontrol) (GstVaapiEncode * encode,
                                             GstVaapiRateControl rate_control);

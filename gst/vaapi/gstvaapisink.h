@@ -25,8 +25,7 @@
 #ifndef GST_VAAPISINK_H
 #define GST_VAAPISINK_H
 
-#include <gst/video/gstvideosink.h>
-#include <gst/vaapi/gstvaapidisplay.h>
+#include "gstvaapipluginbase.h"
 #include <gst/vaapi/gstvaapiwindow.h>
 #if USE_GLX
 #include <gst/vaapi/gstvaapitexture.h>
@@ -68,11 +67,10 @@ typedef struct _GstVaapiTexture                 GstVaapiTexture;
 
 struct _GstVaapiSink {
     /*< private >*/
-    GstVideoSink parent_instance;
+    GstVaapiPluginBase  parent_instance;
 
     GstVaapiUploader   *uploader;
     GstCaps            *caps;
-    GstVaapiDisplay    *display;
     GstVaapiDisplayType display_type;
     GstVaapiWindow     *window;
     guint               window_width;
@@ -104,7 +102,7 @@ struct _GstVaapiSink {
 
 struct _GstVaapiSinkClass {
     /*< private >*/
-    GstVideoSinkClass parent_class;
+    GstVaapiPluginBaseClass parent_class;
 };
 
 GType

@@ -25,8 +25,7 @@
 #ifndef GST_VAAPIDOWNLOAD_H
 #define GST_VAAPIDOWNLOAD_H
 
-#include <gst/base/gstbasetransform.h>
-#include <gst/vaapi/gstvaapidisplay.h>
+#include "gstvaapipluginbase.h"
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapiimagepool.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>

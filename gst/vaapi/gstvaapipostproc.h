@@ -23,8 +23,7 @@
 #ifndef GST_VAAPIPOSTPROC_H
 #define GST_VAAPIPOSTPROC_H
 
-#include <gst/base/gstbasetransform.h>
-#include <gst/vaapi/gstvaapidisplay.h>
+#include "gstvaapipluginbase.h"
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
 #include <gst/vaapi/gstvaapifilter.h>
@@ -135,9 +134,8 @@ struct _GstVaapiDeinterlaceState {
 
 struct _GstVaapiPostproc {
     /*< private >*/
-    GstBaseTransform            parent_instance;
+    GstVaapiPluginBase          parent_instance;
 
-    GstVaapiDisplay            *display;
     GstVaapiUploader           *uploader;
     GstVaapiFilter             *filter;
     GPtrArray                  *filter_ops;
@@ -177,7 +175,7 @@ struct _GstVaapiPostproc {
 
 struct _GstVaapiPostprocClass {
     /*< private >*/
-    GstBaseTransformClass       parent_class;
+    GstVaapiPluginBaseClass     parent_class;
 };
 
 GType

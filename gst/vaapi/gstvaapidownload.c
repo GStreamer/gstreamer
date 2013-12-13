@@ -75,9 +75,8 @@ struct _TransformSizeCache {
 
 struct _GstVaapiDownload {
     /*< private >*/
-    GstBaseTransform    parent_instance;
+    GstVaapiPluginBase  parent_instance;
 
-    GstVaapiDisplay    *display;
     GstCaps            *allowed_caps;
     TransformSizeCache  transform_size_cache[2];
     GstVaapiVideoPool  *images;
@@ -89,7 +88,7 @@ struct _GstVaapiDownload {
 
 struct _GstVaapiDownloadClass {
     /*< private >*/
-    GstBaseTransformClass parent_class;
+    GstVaapiPluginBaseClass parent_class;
 };
 
 /* GstImplementsInterface interface */
@@ -114,7 +113,7 @@ gst_vaapidownload_set_video_context(GstVideoContext *context, const gchar *type,
     const GValue *value)
 {
   GstVaapiDownload *download = GST_VAAPIDOWNLOAD (context);
-  gst_vaapi_set_display (type, value, &download->display);
+  gst_vaapi_set_display (type, value, &GST_VAAPI_PLUGIN_BASE_DISPLAY(download));
 }
 
 static void
@@ -199,7 +198,7 @@ gst_vaapidownload_destroy(GstVaapiDownload *download)
     }
 
     gst_vaapi_video_pool_replace(&download->images, NULL);
-    gst_vaapi_display_replace(&download->display, NULL);
+    GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE(download, NULL);
 }
 
 static void
@@ -207,6 +206,7 @@ gst_vaapidownload_finalize(GObject *object)
 {
     gst_vaapidownload_destroy(GST_VAAPIDOWNLOAD(object));
 
+    gst_vaapi_plugin_base_finalize(GST_VAAPI_PLUGIN_BASE(object));
     G_OBJECT_CLASS(gst_vaapidownload_parent_class)->finalize(object);
 }
 
@@ -220,6 +220,8 @@ gst_vaapidownload_class_init(GstVaapiDownloadClass *klass)
 
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapidownload,
                             GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
+
+    gst_vaapi_plugin_base_class_init(GST_VAAPI_PLUGIN_BASE_CLASS(klass));
 
     object_class->finalize        = gst_vaapidownload_finalize;
     trans_class->start            = gst_vaapidownload_start;
@@ -250,7 +252,8 @@ gst_vaapidownload_init(GstVaapiDownload *download)
 {
     GstPad *sinkpad, *srcpad;
 
-    download->display           = NULL;
+    gst_vaapi_plugin_base_init(GST_VAAPI_PLUGIN_BASE(download), GST_CAT_DEFAULT);
+
     download->allowed_caps      = NULL;
     download->images            = NULL;
     download->images_reset      = FALSE;
@@ -273,7 +276,7 @@ static inline gboolean
 gst_vaapidownload_ensure_display(GstVaapiDownload *download)
 {
     return gst_vaapi_ensure_display(download, GST_VAAPI_DISPLAY_TYPE_ANY,
-        &download->display);
+        &GST_VAAPI_PLUGIN_BASE_DISPLAY(download));
 }
 
 static gboolean
@@ -281,6 +284,8 @@ gst_vaapidownload_start(GstBaseTransform *trans)
 {
     GstVaapiDownload * const download = GST_VAAPIDOWNLOAD(trans);
 
+    if (!gst_vaapi_plugin_base_open(GST_VAAPI_PLUGIN_BASE(trans)))
+        return FALSE;
     if (!gst_vaapidownload_ensure_display(download))
         return FALSE;
     return TRUE;
@@ -289,9 +294,7 @@ gst_vaapidownload_start(GstBaseTransform *trans)
 static gboolean
 gst_vaapidownload_stop(GstBaseTransform *trans)
 {
-    GstVaapiDownload * const download = GST_VAAPIDOWNLOAD(trans);
-
-    gst_vaapi_display_replace(&download->display, NULL);
+    gst_vaapi_plugin_base_close(GST_VAAPI_PLUGIN_BASE(trans));
     return TRUE;
 }
 
@@ -443,7 +446,8 @@ gst_vaapidownload_transform_caps(
         if (download->allowed_caps)
             allowed_caps = gst_caps_ref(download->allowed_caps);
         else {
-            allowed_caps = gst_vaapi_display_get_image_caps(download->display);
+            allowed_caps = gst_vaapi_display_get_image_caps(
+                GST_VAAPI_PLUGIN_BASE_DISPLAY(download));
             if (!allowed_caps)
                 return NULL;
         }
@@ -504,7 +508,8 @@ gst_vaapidownload_ensure_image_pool(GstVaapiDownload *download, GstCaps *caps)
         download->image_width  = width;
         download->image_height = height;
         gst_vaapi_video_pool_replace(&download->images, NULL);
-        download->images = gst_vaapi_image_pool_new(download->display, &vi);
+        download->images = gst_vaapi_image_pool_new(
+            GST_VAAPI_PLUGIN_BASE_DISPLAY(download), &vi);
         if (!download->images)
             return FALSE;
         download->images_reset = TRUE;
@@ -587,11 +592,12 @@ static gboolean
 gst_vaapidownload_query(GstPad *pad, GstQuery *query)
 {
     GstVaapiDownload * const download = GST_VAAPIDOWNLOAD(gst_pad_get_parent_element(pad));
+    GstVaapiDisplay * const display = GST_VAAPI_PLUGIN_BASE_DISPLAY(download);
     gboolean res;
 
-    GST_DEBUG("sharing display %p", download->display);
+    GST_DEBUG("sharing display %p", display);
 
-    if (gst_vaapi_reply_to_query(query, download->display))
+    if (gst_vaapi_reply_to_query(query, display))
         res = TRUE;
     else
         res = gst_pad_query_default(pad, query);

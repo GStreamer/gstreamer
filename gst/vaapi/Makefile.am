@@ -36,6 +36,7 @@ endif
 libgstvaapi_source_c = \
 	gstvaapi.c		\
 	gstvaapidecode.c	\
+	gstvaapipluginbase.c	\
 	gstvaapipluginutil.c	\
 	gstvaapipostproc.c	\
 	gstvaapisink.c		\
@@ -47,6 +48,7 @@ libgstvaapi_source_c = \
 
 libgstvaapi_source_h = \
 	gstvaapidecode.h	\
+	gstvaapipluginbase.h	\
 	gstvaapipluginutil.h	\
 	gstvaapipostproc.h	\
 	gstvaapisink.h		\

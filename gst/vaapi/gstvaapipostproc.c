@@ -118,10 +118,10 @@ gst_vaapipostproc_set_video_context(
 {
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(context);
 
-    gst_vaapi_set_display(type, value, &postproc->display);
+    gst_vaapi_set_display(type, value, &GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc));
 
     if (postproc->uploader)
-        gst_vaapi_uploader_ensure_display(postproc->uploader, postproc->display);
+        gst_vaapi_uploader_ensure_display(postproc->uploader, GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc));
 }
 
 static void
@@ -263,7 +263,7 @@ gst_vaapipostproc_set_context(GstElement *element, GstContext *context)
 
     if (gst_vaapi_video_context_get_display(context, &display)) {
         GST_INFO_OBJECT(element, "set display %p", display);
-        gst_vaapi_display_replace(&postproc->display, display);
+        GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE(postproc, display);
         gst_vaapi_display_unref(display);
     }
 }
@@ -273,7 +273,7 @@ static inline gboolean
 gst_vaapipostproc_ensure_display(GstVaapiPostproc *postproc)
 {
     return gst_vaapi_ensure_display(postproc, GST_VAAPI_DISPLAY_TYPE_ANY,
-        &postproc->display);
+        &GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc));
 }
 
 static gboolean
@@ -283,13 +283,14 @@ gst_vaapipostproc_ensure_uploader(GstVaapiPostproc *postproc)
         return FALSE;
 
     if (!postproc->uploader) {
-        postproc->uploader = gst_vaapi_uploader_new(postproc->display);
+        postproc->uploader = gst_vaapi_uploader_new(
+            GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc));
         if (!postproc->uploader)
             return FALSE;
     }
 
     if (!gst_vaapi_uploader_ensure_display(postproc->uploader,
-            postproc->display))
+            GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc)))
         return FALSE;
     return TRUE;
 }
@@ -314,7 +315,8 @@ gst_vaapipostproc_ensure_filter(GstVaapiPostproc *postproc)
     if (!gst_vaapipostproc_ensure_display(postproc))
         return FALSE;
 
-    postproc->filter = gst_vaapi_filter_new(postproc->display);
+    postproc->filter = gst_vaapi_filter_new(
+        GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc));
     if (!postproc->filter)
         return FALSE;
     return TRUE;
@@ -339,6 +341,8 @@ gst_vaapipostproc_ensure_filter_caps(GstVaapiPostproc *postproc)
 static gboolean
 gst_vaapipostproc_create(GstVaapiPostproc *postproc)
 {
+    if (!gst_vaapi_plugin_base_open(GST_VAAPI_PLUGIN_BASE(postproc)))
+        return FALSE;
     if (!gst_vaapipostproc_ensure_display(postproc))
         return FALSE;
     if (!gst_vaapipostproc_ensure_uploader(postproc))
@@ -375,12 +379,12 @@ gst_vaapipostproc_destroy(GstVaapiPostproc *postproc)
 #endif
     g_clear_object(&postproc->uploader);
     gst_vaapipostproc_destroy_filter(postproc);
-    gst_vaapi_display_replace(&postproc->display, NULL);
 
     gst_caps_replace(&postproc->allowed_sinkpad_caps, NULL);
     gst_caps_replace(&postproc->sinkpad_caps, NULL);
     gst_caps_replace(&postproc->allowed_srcpad_caps, NULL);
     gst_caps_replace(&postproc->srcpad_caps,  NULL);
+    gst_vaapi_plugin_base_close(GST_VAAPI_PLUGIN_BASE(postproc));
 }
 
 static gboolean
@@ -389,6 +393,8 @@ gst_vaapipostproc_start(GstBaseTransform *trans)
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
 
     ds_reset(&postproc->deinterlace_state);
+    if (!gst_vaapi_plugin_base_open(GST_VAAPI_PLUGIN_BASE(postproc)))
+        return FALSE;
     if (!gst_vaapipostproc_ensure_display(postproc))
         return FALSE;
     return TRUE;
@@ -400,7 +406,7 @@ gst_vaapipostproc_stop(GstBaseTransform *trans)
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
 
     ds_reset(&postproc->deinterlace_state);
-    gst_vaapi_display_replace(&postproc->display, NULL);
+    gst_vaapi_plugin_base_close(GST_VAAPI_PLUGIN_BASE(postproc));
     return TRUE;
 }
 
@@ -859,7 +865,7 @@ gst_vaapipostproc_update_sink_caps(GstVaapiPostproc *postproc, GstCaps *caps,
     if (postproc->is_raw_yuv) {
         /* Ensure the uploader is set up for upstream allocated buffers */
         GstVaapiUploader * const uploader = postproc->uploader;
-        if (!gst_vaapi_uploader_ensure_display(uploader, postproc->display))
+        if (!gst_vaapi_uploader_ensure_display(uploader, GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc)))
             return FALSE;
         if (!gst_vaapi_uploader_ensure_caps(uploader, caps, NULL))
             return FALSE;
@@ -1360,7 +1366,8 @@ ensure_sinkpad_buffer_pool(GstVaapiPostproc *postproc, GstCaps *caps)
         postproc->sinkpad_buffer_size = 0;
     }
 
-    pool = gst_vaapi_video_buffer_pool_new(postproc->display);
+    pool = gst_vaapi_video_buffer_pool_new(
+        GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc));
     if (!pool)
         goto error_create_pool;
 
@@ -1417,7 +1424,7 @@ ensure_srcpad_buffer_pool(GstVaapiPostproc *postproc, GstCaps *caps)
         return TRUE;
     postproc->filter_pool_info = vi;
 
-    pool = gst_vaapi_surface_pool_new(postproc->display,
+    pool = gst_vaapi_surface_pool_new(GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc),
         &postproc->filter_pool_info);
     if (!pool)
         return FALSE;
@@ -1462,8 +1469,8 @@ gst_vaapipostproc_query(GstBaseTransform *trans, GstPadDirection direction,
 
     GST_INFO_OBJECT(trans, "query type `%s'", GST_QUERY_TYPE_NAME(query));
 
-    if (gst_vaapi_reply_to_query(query, postproc->display)) {
-        GST_DEBUG("sharing display %p", postproc->display);
+    if (gst_vaapi_reply_to_query(query, GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc))) {
+        GST_DEBUG("sharing display %p", GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc));
         return TRUE;
     }
 
@@ -1521,6 +1528,7 @@ gst_vaapipostproc_finalize(GObject *object)
 
     gst_vaapipostproc_destroy(postproc);
 
+    gst_vaapi_plugin_base_finalize(GST_VAAPI_PLUGIN_BASE(postproc));
     G_OBJECT_CLASS(gst_vaapipostproc_parent_class)->finalize(object);
 }
 
@@ -1620,6 +1628,8 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
 
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapipostproc,
                             GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
+
+    gst_vaapi_plugin_base_class_init(GST_VAAPI_PLUGIN_BASE_CLASS(klass));
 
     object_class->finalize      = gst_vaapipostproc_finalize;
     object_class->set_property  = gst_vaapipostproc_set_property;
@@ -1778,6 +1788,8 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
 static void
 gst_vaapipostproc_init(GstVaapiPostproc *postproc)
 {
+    gst_vaapi_plugin_base_init(GST_VAAPI_PLUGIN_BASE(postproc), GST_CAT_DEFAULT);
+
     postproc->format                    = DEFAULT_FORMAT;
     postproc->deinterlace_mode          = DEFAULT_DEINTERLACE_MODE;
     postproc->deinterlace_method        = DEFAULT_DEINTERLACE_METHOD;

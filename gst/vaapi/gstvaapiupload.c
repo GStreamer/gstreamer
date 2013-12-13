@@ -92,10 +92,11 @@ gst_vaapiupload_set_video_context(GstVideoContext *context, const gchar *type,
 {
     GstVaapiUpload * const upload = GST_VAAPIUPLOAD(context);
 
-    gst_vaapi_set_display(type, value, &upload->display);
+    gst_vaapi_set_display(type, value, &GST_VAAPI_PLUGIN_BASE_DISPLAY(upload));
 
     if (upload->uploader)
-        gst_vaapi_uploader_ensure_display(upload->uploader, upload->display);
+        gst_vaapi_uploader_ensure_display(upload->uploader,
+            GST_VAAPI_PLUGIN_BASE_DISPLAY(upload));
 }
 
 static void
@@ -176,7 +177,6 @@ static void
 gst_vaapiupload_destroy(GstVaapiUpload *upload)
 {
     g_clear_object(&upload->uploader);
-    gst_vaapi_display_replace(&upload->display, NULL);
 }
 
 static void
@@ -184,6 +184,7 @@ gst_vaapiupload_finalize(GObject *object)
 {
     gst_vaapiupload_destroy(GST_VAAPIUPLOAD(object));
 
+    gst_vaapi_plugin_base_finalize(GST_VAAPI_PLUGIN_BASE(object));
     G_OBJECT_CLASS(gst_vaapiupload_parent_class)->finalize(object);
 }
 
@@ -197,6 +198,8 @@ gst_vaapiupload_class_init(GstVaapiUploadClass *klass)
 
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapiupload,
                             GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
+
+    gst_vaapi_plugin_base_class_init(GST_VAAPI_PLUGIN_BASE_CLASS(klass));
 
     object_class->finalize      = gst_vaapiupload_finalize;
 
@@ -228,6 +231,8 @@ gst_vaapiupload_init(GstVaapiUpload *upload)
 {
     GstPad *sinkpad, *srcpad;
 
+    gst_vaapi_plugin_base_init(GST_VAAPI_PLUGIN_BASE(upload), GST_CAT_DEFAULT);
+
     /* Override buffer allocator on sink pad */
     sinkpad = gst_element_get_static_pad(GST_ELEMENT(upload), "sink");
     gst_pad_set_bufferalloc_function(
@@ -247,7 +252,7 @@ static inline gboolean
 gst_vaapiupload_ensure_display(GstVaapiUpload *upload)
 {
     return gst_vaapi_ensure_display(upload, GST_VAAPI_DISPLAY_TYPE_ANY,
-        &upload->display);
+        &GST_VAAPI_PLUGIN_BASE_DISPLAY(upload));
 }
 
 static gboolean
@@ -257,11 +262,13 @@ gst_vaapiupload_ensure_uploader(GstVaapiUpload *upload)
         return FALSE;
 
     if (!upload->uploader) {
-        upload->uploader = gst_vaapi_uploader_new(upload->display);
+        upload->uploader = gst_vaapi_uploader_new(
+            GST_VAAPI_PLUGIN_BASE_DISPLAY(upload));
         if (!upload->uploader)
             return FALSE;
     }
-    if (!gst_vaapi_uploader_ensure_display(upload->uploader, upload->display))
+    if (!gst_vaapi_uploader_ensure_display(upload->uploader,
+            GST_VAAPI_PLUGIN_BASE_DISPLAY(upload)))
         return FALSE;
     return TRUE;
 }
@@ -271,6 +278,8 @@ gst_vaapiupload_start(GstBaseTransform *trans)
 {
     GstVaapiUpload * const upload = GST_VAAPIUPLOAD(trans);
 
+    if (!gst_vaapi_plugin_base_open(GST_VAAPI_PLUGIN_BASE(trans)))
+        return FALSE;
     if (!gst_vaapiupload_ensure_uploader(upload))
         return FALSE;
     return TRUE;
@@ -279,9 +288,7 @@ gst_vaapiupload_start(GstBaseTransform *trans)
 static gboolean
 gst_vaapiupload_stop(GstBaseTransform *trans)
 {
-    GstVaapiUpload * const upload = GST_VAAPIUPLOAD(trans);
-
-    gst_vaapi_display_replace(&upload->display, NULL);
+    gst_vaapi_plugin_base_close(GST_VAAPI_PLUGIN_BASE(trans));
     return TRUE;
 }
 
@@ -396,7 +403,8 @@ gst_vaapiupload_buffer_alloc(
 
     *pbuf = NULL;
 
-    if (!gst_vaapi_uploader_ensure_display(upload->uploader, upload->display))
+    if (!gst_vaapi_uploader_ensure_display(upload->uploader,
+            GST_VAAPI_PLUGIN_BASE_DISPLAY(upload)))
         return GST_FLOW_NOT_SUPPORTED;
     if (!gst_vaapi_uploader_ensure_caps(upload->uploader, caps, NULL))
         return GST_FLOW_NOT_SUPPORTED;
@@ -465,9 +473,9 @@ gst_vaapiupload_query(GstPad *pad, GstQuery *query)
   GstVaapiUpload *upload = GST_VAAPIUPLOAD (gst_pad_get_parent_element (pad));
   gboolean res;
 
-  GST_DEBUG ("sharing display %p", upload->display);
+  GST_DEBUG ("sharing display %p", GST_VAAPI_PLUGIN_BASE_DISPLAY(upload));
 
-  if (gst_vaapi_reply_to_query (query, upload->display))
+  if (gst_vaapi_reply_to_query (query, GST_VAAPI_PLUGIN_BASE_DISPLAY(upload)))
     res = TRUE;
   else
     res = gst_pad_query_default (pad, query);

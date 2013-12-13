@@ -120,7 +120,7 @@ gst_vaapidecode_set_video_context(GstVideoContext *context, const gchar *type,
     const GValue *value)
 {
     GstVaapiDecode *decode = GST_VAAPIDECODE (context);
-    gst_vaapi_set_display (type, value, &decode->display);
+    gst_vaapi_set_display (type, value, &GST_VAAPI_PLUGIN_BASE_DISPLAY(decode));
 }
 
 static void
@@ -518,7 +518,7 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
         gst_video_info_set_format(&vi, GST_VIDEO_FORMAT_NV12,
             GST_VIDEO_INFO_WIDTH(&vi), GST_VIDEO_INFO_HEIGHT(&vi));
 
-    g_return_val_if_fail(decode->display != NULL, FALSE);
+    g_return_val_if_fail(GST_VAAPI_PLUGIN_BASE_DISPLAY(decode) != NULL, FALSE);
 
     if (gst_query_get_n_allocation_pools(query) > 0) {
         gst_query_parse_nth_allocation_pool(query, 0, &pool, &size, &min, &max);
@@ -536,7 +536,8 @@ gst_vaapidecode_decide_allocation(GstVideoDecoder *vdec, GstQuery *query)
             GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META)) {
         GST_INFO("no pool or doesn't support GstVaapiVideoMeta, "
             "making new pool");
-        pool = gst_vaapi_video_buffer_pool_new(decode->display);
+        pool = gst_vaapi_video_buffer_pool_new(
+            GST_VAAPI_PLUGIN_BASE_DISPLAY(decode));
         if (!pool)
             goto error_create_pool;
 
@@ -593,7 +594,7 @@ gst_vaapidecode_set_context(GstElement *element, GstContext *context)
 
     if (gst_vaapi_video_context_get_display(context, &display)) {
         GST_INFO_OBJECT(element, "set display %p", display);
-        gst_vaapi_display_replace(&decode->display, display);
+        GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE(decode, display);
         gst_vaapi_display_unref(display);
     }
 }
@@ -603,7 +604,7 @@ static inline gboolean
 gst_vaapidecode_ensure_display(GstVaapiDecode *decode)
 {
     return gst_vaapi_ensure_display(decode, GST_VAAPI_DISPLAY_TYPE_ANY,
-        &decode->display);
+        &GST_VAAPI_PLUGIN_BASE_DISPLAY(decode));
 }
 
 static inline guint
@@ -619,7 +620,7 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
 
     if (!gst_vaapidecode_ensure_display(decode))
         return FALSE;
-    dpy = decode->display;
+    dpy = GST_VAAPI_PLUGIN_BASE_DISPLAY(decode);
 
     switch (gst_vaapi_codec_from_caps(caps)) {
     case GST_VAAPI_CODEC_MPEG2:
@@ -716,12 +717,11 @@ gst_vaapidecode_finalize(GObject *object)
     gst_caps_replace(&decode->srcpad_caps,  NULL);
     gst_caps_replace(&decode->allowed_caps, NULL);
 
-    gst_vaapi_display_replace(&decode->display, NULL);
-
     g_cond_clear(&decode->decoder_finish_done);
     g_cond_clear(&decode->decoder_ready);
     g_mutex_clear(&decode->decoder_mutex);
 
+    gst_vaapi_plugin_base_finalize(GST_VAAPI_PLUGIN_BASE(object));
     G_OBJECT_CLASS(gst_vaapidecode_parent_class)->finalize(object);
 }
 
@@ -729,15 +729,18 @@ static gboolean
 gst_vaapidecode_open(GstVideoDecoder *vdec)
 {
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
-    GstVaapiDisplay * const old_display = decode->display;
+    GstVaapiDisplay * const old_display = GST_VAAPI_PLUGIN_BASE_DISPLAY(decode);
     gboolean success;
+
+    if (!gst_vaapi_plugin_base_open(GST_VAAPI_PLUGIN_BASE(decode)))
+        return FALSE;
 
     /* Let GstVideoContext ask for a proper display to its neighbours */
     /* Note: steal old display that may be allocated from get_caps()
        so that to retain a reference to it, thus avoiding extra
        initialization steps if we turn out to simply re-use the
        existing (cached) VA display */
-    decode->display = NULL;
+    GST_VAAPI_PLUGIN_BASE_DISPLAY(decode) = NULL;
     success = gst_vaapidecode_ensure_display(decode);
     if (old_display)
         gst_vaapi_display_unref(old_display);
@@ -750,7 +753,7 @@ gst_vaapidecode_close(GstVideoDecoder *vdec)
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
 
     gst_vaapidecode_destroy(decode);
-    gst_vaapi_display_replace(&decode->display, NULL);
+    gst_vaapi_plugin_base_close(GST_VAAPI_PLUGIN_BASE(decode));
     return TRUE;
 }
 
@@ -835,6 +838,8 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapidecode,
                             GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
 
+    gst_vaapi_plugin_base_class_init(GST_VAAPI_PLUGIN_BASE_CLASS(klass));
+
     object_class->finalize   = gst_vaapidecode_finalize;
 
     vdec_class->open         = GST_DEBUG_FUNCPTR(gst_vaapidecode_open);
@@ -881,7 +886,8 @@ gst_vaapidecode_ensure_allowed_caps(GstVaapiDecode *decode)
     if (!gst_vaapidecode_ensure_display(decode))
         goto error_no_display;
 
-    decode_caps = gst_vaapi_display_get_decode_caps(decode->display);
+    decode_caps = gst_vaapi_display_get_decode_caps(
+        GST_VAAPI_PLUGIN_BASE_DISPLAY(decode));
     if (!decode_caps)
         goto error_no_decode_caps;
     n_decode_caps = gst_caps_get_size(decode_caps);
@@ -945,8 +951,8 @@ gst_vaapidecode_query(GST_PAD_QUERY_FUNCTION_ARGS)
 
     GST_INFO_OBJECT(decode, "query type %s", GST_QUERY_TYPE_NAME(query));
 
-    if (gst_vaapi_reply_to_query(query, decode->display)) {
-        GST_DEBUG("sharing display %p", decode->display);
+    if (gst_vaapi_reply_to_query(query, GST_VAAPI_PLUGIN_BASE_DISPLAY(decode))) {
+        GST_DEBUG("sharing display %p", GST_VAAPI_PLUGIN_BASE_DISPLAY(decode));
         res = TRUE;
     }
     else if (GST_PAD_IS_SINK(pad)) {
@@ -979,7 +985,8 @@ gst_vaapidecode_init(GstVaapiDecode *decode)
 {
     GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
 
-    decode->display             = NULL;
+    gst_vaapi_plugin_base_init(GST_VAAPI_PLUGIN_BASE(decode), GST_CAT_DEFAULT);
+
     decode->decoder             = NULL;
     decode->decoder_caps        = NULL;
     decode->allowed_caps        = NULL;
