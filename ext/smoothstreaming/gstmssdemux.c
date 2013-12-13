@@ -650,6 +650,7 @@ gst_mss_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
           GST_OBJECT_LOCK (mssdemux);
           if (GST_TASK_STATE (stream->download_task) == GST_TASK_PAUSED
               && stream->last_ret == GST_FLOW_NOT_LINKED) {
+            GST_DEBUG_OBJECT (stream->pad, "Received reconfigure");
             stream->restart_download = TRUE;
             gst_task_start (stream->download_task);
           }
@@ -1010,28 +1011,30 @@ gst_mss_demux_reconfigure_stream (GstMssDemuxStream * stream)
     new_bitrate = MIN (mssdemux->connection_speed, new_bitrate);
   }
 
-  GST_DEBUG_OBJECT (mssdemux,
-      "Current stream %s download bitrate %" G_GUINT64_FORMAT,
-      GST_PAD_NAME (stream->pad), new_bitrate);
+  GST_DEBUG_OBJECT (stream->pad,
+      "Current stream download bitrate %" G_GUINT64_FORMAT, new_bitrate);
 
   if (gst_mss_stream_select_bitrate (stream->manifest_stream, new_bitrate)) {
     GstEvent *capsevent;
     GstCaps *caps;
     caps = gst_mss_stream_get_caps (stream->manifest_stream);
 
+    GST_DEBUG_OBJECT (stream->pad,
+        "Starting streams reconfiguration due to bitrate changes");
     if (stream->caps)
       gst_caps_unref (stream->caps);
     stream->caps = create_mss_caps (stream, caps);
     gst_caps_unref (caps);
 
-    GST_DEBUG_OBJECT (mssdemux,
-        "Stream %s changed bitrate to %" G_GUINT64_FORMAT " caps: %"
-        GST_PTR_FORMAT, GST_PAD_NAME (stream->pad),
+    GST_DEBUG_OBJECT (stream->pad,
+        "Stream changed bitrate to %" G_GUINT64_FORMAT " caps: %"
+        GST_PTR_FORMAT,
         gst_mss_stream_get_current_bitrate (stream->manifest_stream), caps);
 
     capsevent = gst_event_new_caps (stream->caps);
     gst_mss_demux_stream_store_object (stream,
         GST_MINI_OBJECT_CAST (capsevent));
+    GST_DEBUG_OBJECT (stream->pad, "Finished streams reconfiguration");
   }
 }
 
@@ -1184,15 +1187,15 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
   gboolean buffer_downloaded = FALSE;
   GstEvent *gap = NULL;
 
-  GST_LOG_OBJECT (mssdemux, "download loop start %p", stream);
+  GST_LOG_OBJECT (stream->pad, "download loop start");
 
   GST_OBJECT_LOCK (mssdemux);
   if (G_UNLIKELY (stream->restart_download)) {
     GstClockTime cur, ts;
     gint64 pos;
 
-    GST_DEBUG_OBJECT (mssdemux,
-        "Activating stream %p due to reconfigure " "event", stream);
+    GST_DEBUG_OBJECT (stream->pad,
+        "Activating stream due to reconfigure event");
 
     cur = GST_CLOCK_TIME_IS_VALID (stream->next_timestamp) ?
         stream->next_timestamp : 0;
@@ -1210,9 +1213,9 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
     /* we might have already pushed this data */
     ts = MAX (ts, stream->next_timestamp);
 
-    GST_DEBUG_OBJECT (mssdemux, "Restarting stream %p %s:%s at "
+    GST_DEBUG_OBJECT (stream->pad, "Restarting stream at "
         "position %" GST_TIME_FORMAT ", catching up until segment position %"
-        GST_TIME_FORMAT, stream, GST_DEBUG_PAD_NAME (stream->pad),
+        GST_TIME_FORMAT,
         GST_TIME_ARGS (ts), GST_TIME_ARGS (mssdemux->segment.position));
 
     if (GST_CLOCK_TIME_IS_VALID (ts)) {
@@ -1245,10 +1248,7 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
     stream->restart_download = FALSE;
   }
 
-  GST_DEBUG_OBJECT (mssdemux,
-      "Starting streams reconfiguration due to bitrate changes");
   gst_mss_demux_reconfigure_stream (stream);
-  GST_DEBUG_OBJECT (mssdemux, "Finished streams reconfiguration");
   GST_OBJECT_UNLOCK (mssdemux);
 
   if (gap != NULL)
@@ -1268,7 +1268,7 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
 
     /* Check if this stream is on catch up mode */
     if (stream->last_ret == GST_FLOW_CUSTOM_SUCCESS) {
-      GST_DEBUG_OBJECT (mssdemux,
+      GST_DEBUG_OBJECT (stream->pad,
           "Catch up ts: %" GST_TIME_FORMAT ", buffer:%" GST_TIME_FORMAT,
           GST_TIME_ARGS (mssdemux->segment.position),
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)));
@@ -1282,11 +1282,10 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
       }
     }
 
-    GST_DEBUG_OBJECT (mssdemux,
-        "%s buffer for stream %p - %s. Timestamp: %" GST_TIME_FORMAT
+    GST_DEBUG_OBJECT (stream->pad,
+        "%s buffer for stream. Timestamp: %" GST_TIME_FORMAT
         " Duration: %" GST_TIME_FORMAT,
-        catch_up ? "Catch up push for" : "Storing", stream,
-        GST_PAD_NAME (stream->pad),
+        catch_up ? "Catch up push for" : "Storing",
         GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buffer)),
         GST_TIME_ARGS (GST_BUFFER_DURATION (buffer)));
 
@@ -1325,7 +1324,7 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
     gst_mss_stream_advance_fragment (stream->manifest_stream);
   }
 
-  GST_LOG_OBJECT (mssdemux, "download loop end %p", stream);
+  GST_LOG_OBJECT (stream->pad, "download loop end");
   return;
 
 eos:
@@ -1541,8 +1540,8 @@ gst_mss_demux_stream_loop (GstMssDemux * mssdemux)
     if (GST_EVENT_TYPE (object) == GST_EVENT_EOS) {
       stream->eos = TRUE;
     }
-    GST_DEBUG_OBJECT (mssdemux, "Pushing event %p on pad %s", object,
-        GST_PAD_NAME (stream->pad));
+    GST_DEBUG_OBJECT (mssdemux, "Pushing event %" GST_PTR_FORMAT " on pad %s",
+        object, GST_PAD_NAME (stream->pad));
     gst_pad_push_event (stream->pad, GST_EVENT_CAST (object));
     ret = GST_FLOW_EOS;
   } else {
