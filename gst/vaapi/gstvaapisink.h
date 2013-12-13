@@ -71,7 +71,6 @@ struct _GstVaapiSink {
 
     GstVaapiUploader   *uploader;
     GstCaps            *caps;
-    GstVaapiDisplayType display_type;
     GstVaapiWindow     *window;
     guint               window_width;
     guint               window_height;

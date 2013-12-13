@@ -24,12 +24,20 @@
 
 #include "gst/vaapi/sysdeps.h"
 #include "gstvaapipluginbase.h"
+#include "gstvaapipluginutil.h"
 
+/* Default debug category is from the subclass */
 #define GST_CAT_DEFAULT (plugin->debug_category)
+
+static void
+default_display_changed (GstVaapiPluginBase * plugin)
+{
+}
 
 void
 gst_vaapi_plugin_base_class_init (GstVaapiPluginBaseClass * klass)
 {
+  klass->display_changed = default_display_changed;
 }
 
 void
@@ -37,6 +45,9 @@ gst_vaapi_plugin_base_init (GstVaapiPluginBase * plugin,
     GstDebugCategory * debug_category)
 {
   plugin->debug_category = debug_category;
+
+  plugin->display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
+  plugin->display_type_req = GST_VAAPI_DISPLAY_TYPE_ANY;
 }
 
 void
@@ -73,4 +84,53 @@ void
 gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
 {
   gst_vaapi_display_replace (&plugin->display, NULL);
+}
+
+/**
+ * gst_vaapi_plugin_base_set_display_type:
+ * @plugin: a #GstVaapiPluginBase
+ * @display_type: the new request #GstVaapiDisplayType
+ *
+ * Requests a new display type. The change is effective at the next
+ * call to gst_vaapi_plugin_base_ensure_display().
+ */
+void
+gst_vaapi_plugin_base_set_display_type (GstVaapiPluginBase * plugin,
+    GstVaapiDisplayType display_type)
+{
+  plugin->display_type_req = display_type;
+}
+
+/* Checks wether display type 1 is compatible with display type 2 */
+static gboolean
+display_type_is_compatible (GstVaapiDisplayType type1,
+    GstVaapiDisplayType type2)
+{
+  return (type1 == type2 || type2 == GST_VAAPI_DISPLAY_TYPE_ANY);
+}
+
+/**
+ * gst_vaapi_plugin_base_ensure_display:
+ * @plugin: a #GstVaapiPluginBase
+ *
+ * Ensures the display stored in @plugin complies with the requested
+ * display type constraints.
+ *
+ * Returns: %TRUE if the display was created to match the requested
+ *   type, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_plugin_base_ensure_display (GstVaapiPluginBase * plugin)
+{
+  if (plugin->display && display_type_is_compatible (plugin->display_type,
+          plugin->display_type_req))
+    return TRUE;
+  gst_vaapi_display_replace (&plugin->display, NULL);
+
+  if (!gst_vaapi_ensure_display (plugin, plugin->display_type_req))
+    return FALSE;
+  plugin->display_type = gst_vaapi_display_get_display_type (plugin->display);
+
+  GST_VAAPI_PLUGIN_BASE_GET_CLASS (plugin)->display_changed (plugin);
+  return TRUE;
 }

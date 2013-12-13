@@ -603,8 +603,7 @@ gst_vaapidecode_set_context(GstElement *element, GstContext *context)
 static inline gboolean
 gst_vaapidecode_ensure_display(GstVaapiDecode *decode)
 {
-    return gst_vaapi_ensure_display(decode, GST_VAAPI_DISPLAY_TYPE_ANY,
-        &GST_VAAPI_PLUGIN_BASE_DISPLAY(decode));
+    return gst_vaapi_plugin_base_ensure_display(GST_VAAPI_PLUGIN_BASE(decode));
 }
 
 static inline guint

@@ -187,18 +187,23 @@ static GstFlowReturn
 gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *buffer);
 
 static void
-gst_vaapisink_video_overlay_set_window_handle(GstVideoOverlay *overlay, guintptr window)
+gst_vaapisink_video_overlay_set_window_handle(GstVideoOverlay *overlay,
+    guintptr window)
 {
     GstVaapiSink * const sink = GST_VAAPISINK(overlay);
+    GstVaapiDisplayType display_type = GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink);
 
     /* Disable GLX rendering when vaapisink is using a foreign X
        window. It's pretty much useless */
-    if (sink->display_type == GST_VAAPI_DISPLAY_TYPE_GLX)
-        sink->display_type = GST_VAAPI_DISPLAY_TYPE_X11;
+    if (display_type == GST_VAAPI_DISPLAY_TYPE_GLX) {
+        display_type = GST_VAAPI_DISPLAY_TYPE_X11;
+        gst_vaapi_plugin_base_set_display_type(GST_VAAPI_PLUGIN_BASE(sink),
+            display_type);
+    }
 
     sink->foreign_window = TRUE;
 
-    switch (sink->display_type) {
+    switch (display_type) {
 #if USE_X11
     case GST_VAAPI_DISPLAY_TYPE_X11:
         gst_vaapisink_ensure_window_xid(sink, window);
@@ -347,28 +352,26 @@ get_display_type_name(GstVaapiDisplayType display_type)
 static inline gboolean
 gst_vaapisink_ensure_display(GstVaapiSink *sink)
 {
-    GstVaapiDisplayType display_type;
+    return gst_vaapi_plugin_base_ensure_display(GST_VAAPI_PLUGIN_BASE(sink));
+}
+
+static void
+gst_vaapisink_display_changed(GstVaapiPluginBase *plugin)
+{
+    GstVaapiSink * const sink = GST_VAAPISINK(plugin);
     GstVaapiRenderMode render_mode;
-    const gboolean had_display = GST_VAAPI_PLUGIN_BASE_DISPLAY(sink) != NULL;
 
-    if (!gst_vaapi_ensure_display(sink, sink->display_type, &GST_VAAPI_PLUGIN_BASE_DISPLAY(sink)))
-        return FALSE;
+    GST_INFO("created %s %p", get_display_type_name(plugin->display_type),
+             plugin->display);
 
-    display_type = gst_vaapi_display_get_display_type(GST_VAAPI_PLUGIN_BASE_DISPLAY(sink));
-    if (display_type != sink->display_type || (!had_display && GST_VAAPI_PLUGIN_BASE_DISPLAY(sink))) {
-        GST_INFO("created %s %p", get_display_type_name(display_type),
-            GST_VAAPI_PLUGIN_BASE_DISPLAY(sink));
-        sink->display_type = display_type;
+    sink->use_overlay =
+        gst_vaapi_display_get_render_mode(plugin->display, &render_mode) &&
+        render_mode == GST_VAAPI_RENDER_MODE_OVERLAY;
+    GST_DEBUG("use %s rendering mode",
+              sink->use_overlay ? "overlay" : "texture");
 
-        sink->use_overlay =
-            gst_vaapi_display_get_render_mode(GST_VAAPI_PLUGIN_BASE_DISPLAY(sink), &render_mode) &&
-            render_mode == GST_VAAPI_RENDER_MODE_OVERLAY;
-        GST_DEBUG("use %s rendering mode", sink->use_overlay ? "overlay" : "texture");
-
-        sink->use_rotation = gst_vaapi_display_has_property(
-            GST_VAAPI_PLUGIN_BASE_DISPLAY(sink), GST_VAAPI_DISPLAY_PROP_ROTATION);
-    }
-    return TRUE;
+    sink->use_rotation = gst_vaapi_display_has_property(plugin->display,
+        GST_VAAPI_DISPLAY_PROP_ROTATION);
 }
 
 static gboolean
@@ -512,7 +515,9 @@ gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
     GstVaapiDisplay * const display = GST_VAAPI_PLUGIN_BASE_DISPLAY(sink);
 
     if (!sink->window) {
-        switch (sink->display_type) {
+        const GstVaapiDisplayType display_type =
+            GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink);
+        switch (display_type) {
 #if USE_GLX
         case GST_VAAPI_DISPLAY_TYPE_GLX:
             sink->window = gst_vaapi_window_glx_new(display, width, height);
@@ -536,7 +541,7 @@ gst_vaapisink_ensure_window(GstVaapiSink *sink, guint width, guint height)
             break;
 #endif
         default:
-            GST_ERROR("unsupported display type %d", sink->display_type);
+            GST_ERROR("unsupported display type %d", display_type);
             return FALSE;
         }
     }
@@ -580,7 +585,7 @@ gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id)
 
     gst_vaapi_window_replace(&sink->window, NULL);
 
-    switch (sink->display_type) {
+    switch (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink)) {
 #if USE_GLX
     case GST_VAAPI_DISPLAY_TYPE_GLX:
         sink->window = gst_vaapi_window_glx_new_with_xid(display, xid);
@@ -590,7 +595,8 @@ gst_vaapisink_ensure_window_xid(GstVaapiSink *sink, guintptr window_id)
         sink->window = gst_vaapi_window_x11_new_with_xid(display, xid);
         break;
     default:
-        GST_ERROR("unsupported display type %d", sink->display_type);
+        GST_ERROR("unsupported display type %d",
+                  GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink));
         return FALSE;
     }
     return sink->window != NULL;
@@ -780,8 +786,12 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     GstVaapiDisplay *display;
     guint win_width, win_height;
 
+    if (!gst_vaapisink_ensure_display(sink))
+        return FALSE;
+    display = GST_VAAPI_PLUGIN_BASE_DISPLAY(sink);
+
 #if USE_DRM
-    if (sink->display_type == GST_VAAPI_DISPLAY_TYPE_DRM)
+    if (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink) == GST_VAAPI_DISPLAY_TYPE_DRM)
         return TRUE;
 #endif
 
@@ -799,10 +809,6 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
               sink->video_par_n, sink->video_par_d);
 
     gst_caps_replace(&sink->caps, caps);
-
-    if (!gst_vaapisink_ensure_display(sink))
-        return FALSE;
-    display = GST_VAAPI_PLUGIN_BASE_DISPLAY(sink);
 
 #if !GST_CHECK_VERSION(1,0,0)
     if (sink->use_video_raw) {
@@ -1228,7 +1234,7 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
     if (!gst_vaapi_apply_composition(surface, src_buffer))
         GST_WARNING("could not update subtitles");
 
-    switch (sink->display_type) {
+    switch (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink)) {
 #if USE_DRM
     case GST_VAAPI_DISPLAY_TYPE_DRM:
         success = TRUE;
@@ -1254,7 +1260,8 @@ gst_vaapisink_show_frame(GstBaseSink *base_sink, GstBuffer *src_buffer)
         break;
 #endif
     default:
-        GST_ERROR("unsupported display type %d", sink->display_type);
+        GST_ERROR("unsupported display type %d",
+                  GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink));
         success = FALSE;
         break;
     }
@@ -1403,7 +1410,8 @@ gst_vaapisink_set_property(
 
     switch (prop_id) {
     case PROP_DISPLAY_TYPE:
-        sink->display_type = g_value_get_enum(value);
+        gst_vaapi_plugin_base_set_display_type(GST_VAAPI_PLUGIN_BASE(sink),
+            g_value_get_enum(value));
         break;
     case PROP_FULLSCREEN:
         sink->fullscreen = g_value_get_boolean(value);
@@ -1441,7 +1449,7 @@ gst_vaapisink_get_property(
 
     switch (prop_id) {
     case PROP_DISPLAY_TYPE:
-        g_value_set_enum(value, sink->display_type);
+        g_value_set_enum(value, GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink));
         break;
     case PROP_FULLSCREEN:
         g_value_set_boolean(value, sink->fullscreen);
@@ -1473,12 +1481,15 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     GObjectClass * const     object_class   = G_OBJECT_CLASS(klass);
     GstElementClass * const  element_class  = GST_ELEMENT_CLASS(klass);
     GstBaseSinkClass * const basesink_class = GST_BASE_SINK_CLASS(klass);
+    GstVaapiPluginBaseClass * const base_plugin_class =
+        GST_VAAPI_PLUGIN_BASE_CLASS(klass);
     GstPadTemplate *pad_template;
 
     GST_DEBUG_CATEGORY_INIT(gst_debug_vaapisink,
                             GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
 
-    gst_vaapi_plugin_base_class_init(GST_VAAPI_PLUGIN_BASE_CLASS(klass));
+    gst_vaapi_plugin_base_class_init(base_plugin_class);
+    base_plugin_class->display_changed  = gst_vaapisink_display_changed;
 
     object_class->finalize       = gst_vaapisink_finalize;
     object_class->set_property   = gst_vaapisink_set_property;
@@ -1598,7 +1609,10 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
 static void
 gst_vaapisink_init(GstVaapiSink *sink)
 {
-    gst_vaapi_plugin_base_init(GST_VAAPI_PLUGIN_BASE(sink), GST_CAT_DEFAULT);
+    GstVaapiPluginBase * const plugin = GST_VAAPI_PLUGIN_BASE(sink);
+
+    gst_vaapi_plugin_base_init(plugin, GST_CAT_DEFAULT);
+    gst_vaapi_plugin_base_set_display_type(plugin, DEFAULT_DISPLAY_TYPE);
 
     sink->caps           = NULL;
     sink->window         = NULL;
@@ -1613,7 +1627,6 @@ gst_vaapisink_init(GstVaapiSink *sink)
     sink->foreign_window = FALSE;
     sink->fullscreen     = FALSE;
     sink->synchronous    = FALSE;
-    sink->display_type   = DEFAULT_DISPLAY_TYPE;
     sink->rotation       = DEFAULT_ROTATION;
     sink->rotation_req   = DEFAULT_ROTATION;
     sink->use_reflection = FALSE;

@@ -37,6 +37,7 @@
 # include <gst/vaapi/gstvaapidisplay_wayland.h>
 #endif
 #include "gstvaapipluginutil.h"
+#include "gstvaapipluginbase.h"
 
 /* Preferred first */
 static const char *display_types[] = {
@@ -88,45 +89,31 @@ static const DisplayMap g_display_map[] = {
 };
 
 static GstVaapiDisplay *
-gst_vaapi_create_display(GstVaapiDisplayType *display_type)
+gst_vaapi_create_display(GstVaapiDisplayType display_type)
 {
     GstVaapiDisplay *display = NULL;
     const DisplayMap *m;
 
     for (m = g_display_map; m->type_str != NULL; m++) {
-        if (*display_type != GST_VAAPI_DISPLAY_TYPE_ANY &&
-            *display_type != m->type)
+        if (display_type != GST_VAAPI_DISPLAY_TYPE_ANY &&
+            display_type != m->type)
             continue;
 
         display = m->create_display(NULL);
-        if (display) {
-            *display_type = m->type;
-            break;
-        }
-
-        if (*display_type != GST_VAAPI_DISPLAY_TYPE_ANY)
+        if (display || display_type != GST_VAAPI_DISPLAY_TYPE_ANY)
             break;
     }
     return display;
 }
 
 gboolean
-gst_vaapi_ensure_display(
-    gpointer             element,
-    GstVaapiDisplayType  display_type,
-    GstVaapiDisplay    **display_ptr
-)
+gst_vaapi_ensure_display(gpointer element, GstVaapiDisplayType type)
 {
+    GstVaapiPluginBase * const plugin = GST_VAAPI_PLUGIN_BASE(element);
     GstVaapiDisplay *display;
     GstVideoContext *context;
 
     g_return_val_if_fail(GST_IS_VIDEO_CONTEXT(element), FALSE);
-    g_return_val_if_fail(display_ptr != NULL, FALSE);
-
-    /* Already exist ? */
-    display = *display_ptr;
-    if (display)
-        return TRUE;
 
     context = GST_VIDEO_CONTEXT(element);
     g_return_val_if_fail(context != NULL, FALSE);
@@ -134,16 +121,17 @@ gst_vaapi_ensure_display(
     gst_vaapi_video_context_prepare(context, display_types);
 
     /* Neighbour found and it updated the display */
-    if (*display_ptr)
+    if (plugin->display)
         return TRUE;
 
     /* If no neighboor, or application not interested, use system default */
-    display = gst_vaapi_create_display(&display_type);
+    display = gst_vaapi_create_display(type);
     if (!display)
         return FALSE;
 
     gst_vaapi_video_context_propagate(context, display);
-    *display_ptr = display;
+    GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE(plugin, display);
+    gst_vaapi_display_unref(display);
     return TRUE;
 }
 

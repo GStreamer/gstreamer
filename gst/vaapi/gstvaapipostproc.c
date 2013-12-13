@@ -272,8 +272,7 @@ gst_vaapipostproc_set_context(GstElement *element, GstContext *context)
 static inline gboolean
 gst_vaapipostproc_ensure_display(GstVaapiPostproc *postproc)
 {
-    return gst_vaapi_ensure_display(postproc, GST_VAAPI_DISPLAY_TYPE_ANY,
-        &GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc));
+    return gst_vaapi_plugin_base_ensure_display(GST_VAAPI_PLUGIN_BASE(postproc));
 }
 
 static gboolean

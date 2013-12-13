@@ -275,8 +275,7 @@ gst_vaapidownload_init(GstVaapiDownload *download)
 static inline gboolean
 gst_vaapidownload_ensure_display(GstVaapiDownload *download)
 {
-    return gst_vaapi_ensure_display(download, GST_VAAPI_DISPLAY_TYPE_ANY,
-        &GST_VAAPI_PLUGIN_BASE_DISPLAY(download));
+    return gst_vaapi_plugin_base_ensure_display(GST_VAAPI_PLUGIN_BASE(download));
 }
 
 static gboolean

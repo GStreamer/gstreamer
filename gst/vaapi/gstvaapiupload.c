@@ -251,8 +251,7 @@ gst_vaapiupload_init(GstVaapiUpload *upload)
 static inline gboolean
 gst_vaapiupload_ensure_display(GstVaapiUpload *upload)
 {
-    return gst_vaapi_ensure_display(upload, GST_VAAPI_DISPLAY_TYPE_ANY,
-        &GST_VAAPI_PLUGIN_BASE_DISPLAY(upload));
+    return gst_vaapi_plugin_base_ensure_display(GST_VAAPI_PLUGIN_BASE(upload));
 }
 
 static gboolean

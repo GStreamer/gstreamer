@@ -70,6 +70,8 @@ typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
 
 #define GST_VAAPI_PLUGIN_BASE_DISPLAY(plugin) \
   (GST_VAAPI_PLUGIN_BASE(plugin)->display)
+#define GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(plugin) \
+  (GST_VAAPI_PLUGIN_BASE(plugin)->display_type)
 #define GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE(plugin, new_display) \
   (gst_vaapi_display_replace(&GST_VAAPI_PLUGIN_BASE_DISPLAY(plugin), \
        (new_display)))
@@ -89,6 +91,8 @@ struct _GstVaapiPluginBase
   GstDebugCategory *debug_category;
 
   GstVaapiDisplay *display;
+  GstVaapiDisplayType display_type;
+  GstVaapiDisplayType display_type_req;
 };
 
 struct _GstVaapiPluginBaseClass
@@ -102,6 +106,8 @@ struct _GstVaapiPluginBaseClass
     GstBaseTransformClass transform;
     GstVideoSinkClass sink;
   } parent_class;
+
+  void (*display_changed) (GstVaapiPluginBase * plugin);
 };
 
 G_GNUC_INTERNAL
@@ -124,6 +130,15 @@ gst_vaapi_plugin_base_open (GstVaapiPluginBase * plugin);
 G_GNUC_INTERNAL
 void
 gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin);
+
+G_GNUC_INTERNAL
+void
+gst_vaapi_plugin_base_set_display_type (GstVaapiPluginBase * plugin,
+    GstVaapiDisplayType display_type);
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_plugin_base_ensure_display (GstVaapiPluginBase * plugin);
 
 G_END_DECLS
 

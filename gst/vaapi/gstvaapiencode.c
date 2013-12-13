@@ -113,8 +113,7 @@ enum
 static inline gboolean
 ensure_display (GstVaapiEncode * encode)
 {
-  return gst_vaapi_ensure_display (encode,
-      GST_VAAPI_DISPLAY_TYPE_ANY, &GST_VAAPI_PLUGIN_BASE_DISPLAY (encode));
+  return gst_vaapi_plugin_base_ensure_display (GST_VAAPI_PLUGIN_BASE (encode));
 }
 
 static gboolean
