@@ -2308,6 +2308,7 @@ gst_dash_demux_get_next_fragment_for_stream (GstDashDemux * demux,
       }
     }
 
+    *size_buffer += gst_buffer_get_size (buffer);
     if (catch_up) {
       GstFlowReturn ret;
 
@@ -2319,8 +2320,6 @@ gst_dash_demux_get_next_fragment_for_stream (GstDashDemux * demux,
       gst_dash_demux_stream_push_data (stream, buffer);
       stream->has_data_queued = TRUE;
     }
-
-    *size_buffer += gst_buffer_get_size (buffer);
   } else {
     GST_WARNING_OBJECT (demux, "Failed to download fragment for stream %p %d",
         stream, stream->index);
