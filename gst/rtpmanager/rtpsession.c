@@ -607,6 +607,8 @@ rtp_session_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_INTERNAL_SSRC:
+      GST_ERROR_OBJECT (object, "Setting the \"internal-ssrc\" property"
+          " is deprecated and ignored");
       break;
     case PROP_BANDWIDTH:
       RTP_SESSION_LOCK (sess);
