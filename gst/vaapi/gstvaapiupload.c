@@ -68,23 +68,6 @@ static GstStaticPadTemplate gst_vaapiupload_src_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapiupload_vaapi_caps_str));
 
-
-/* GstImplementsInterface interface */
-static gboolean
-gst_vaapiupload_implements_interface_supported(
-    GstImplementsInterface *iface,
-    GType                   type
-)
-{
-    return (type == GST_TYPE_VIDEO_CONTEXT);
-}
-
-static void
-gst_vaapiupload_implements_iface_init(GstImplementsInterfaceClass *iface)
-{
-    iface->supported = gst_vaapiupload_implements_interface_supported;
-}
-
 /* GstVideoContext interface */
 static void
 gst_vaapiupload_set_video_context(GstVideoContext *context, const gchar *type,
@@ -110,8 +93,7 @@ G_DEFINE_TYPE_WITH_CODE(
     GstVaapiUpload,
     gst_vaapiupload,
     GST_TYPE_BASE_TRANSFORM,
-    G_IMPLEMENT_INTERFACE(GST_TYPE_IMPLEMENTS_INTERFACE,
-                          gst_vaapiupload_implements_iface_init);
+    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES
     G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
                           gst_video_context_interface_init))
 

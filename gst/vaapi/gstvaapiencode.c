@@ -42,22 +42,6 @@
 GST_DEBUG_CATEGORY_STATIC (gst_vaapiencode_debug);
 #define GST_CAT_DEFAULT gst_vaapiencode_debug
 
-/* GstImplementsInterface interface */
-#if !GST_CHECK_VERSION(1,0,0)
-static gboolean
-gst_vaapiencode_implements_interface_supported (GstImplementsInterface * iface,
-    GType type)
-{
-  return (type == GST_TYPE_VIDEO_CONTEXT);
-}
-
-static void
-gst_vaapiencode_implements_iface_init (GstImplementsInterfaceClass * iface)
-{
-  iface->supported = gst_vaapiencode_implements_interface_supported;
-}
-#endif
-
 /* GstContext interface */
 #if GST_CHECK_VERSION(1,1,0)
 static void
@@ -93,10 +77,7 @@ gst_video_context_interface_init (GstVideoContextInterface * iface)
 
 G_DEFINE_TYPE_WITH_CODE (GstVaapiEncode,
     gst_vaapiencode, GST_TYPE_VIDEO_ENCODER,
-#if !GST_CHECK_VERSION(1,0,0)
-    G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
-        gst_vaapiencode_implements_iface_init);
-#endif
+    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES
 #if !GST_CHECK_VERSION(1,1,0)
     G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_CONTEXT,
         gst_video_context_interface_init)

@@ -95,24 +95,6 @@ static GstStaticPadTemplate gst_vaapidecode_src_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapidecode_src_caps_str));
 
-/* GstImplementsInterface interface */
-#if !GST_CHECK_VERSION(1,0,0)
-static gboolean
-gst_vaapidecode_implements_interface_supported(
-    GstImplementsInterface *iface,
-    GType                   type
-)
-{
-    return (type == GST_TYPE_VIDEO_CONTEXT);
-}
-
-static void
-gst_vaapidecode_implements_iface_init(GstImplementsInterfaceClass *iface)
-{
-    iface->supported = gst_vaapidecode_implements_interface_supported;
-}
-#endif
-
 /* GstVideoContext interface */
 #if !GST_CHECK_VERSION(1,1,0)
 static void
@@ -136,10 +118,7 @@ G_DEFINE_TYPE_WITH_CODE(
     GstVaapiDecode,
     gst_vaapidecode,
     GST_TYPE_VIDEO_DECODER,
-#if !GST_CHECK_VERSION(1,0,0)
-    G_IMPLEMENT_INTERFACE(GST_TYPE_IMPLEMENTS_INTERFACE,
-                          gst_vaapidecode_implements_iface_init);
-#endif
+    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES
 #if !GST_CHECK_VERSION(1,1,0)
     G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
                           gst_video_context_interface_init)

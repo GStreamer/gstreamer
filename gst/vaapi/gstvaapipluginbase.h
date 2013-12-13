@@ -68,6 +68,9 @@ typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
 #define GST_VAAPI_PLUGIN_BASE_SINK_CLASS(plugin) \
   (&GST_VAAPI_PLUGIN_BASE_PARENT_CLASS(plugin)->sink)
 
+#define GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES \
+  gst_vaapi_plugin_base_init_interfaces(g_define_type_id);
+
 #define GST_VAAPI_PLUGIN_BASE_DISPLAY(plugin) \
   (GST_VAAPI_PLUGIN_BASE(plugin)->display)
 #define GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(plugin) \
@@ -107,8 +110,13 @@ struct _GstVaapiPluginBaseClass
     GstVideoSinkClass sink;
   } parent_class;
 
+  gboolean  (*has_interface) (GstVaapiPluginBase * plugin, GType type);
   void (*display_changed) (GstVaapiPluginBase * plugin);
 };
+
+G_GNUC_INTERNAL
+void
+gst_vaapi_plugin_base_init_interfaces (GType type);
 
 G_GNUC_INTERNAL
 void

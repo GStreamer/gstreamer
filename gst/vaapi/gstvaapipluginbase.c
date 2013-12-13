@@ -29,6 +29,38 @@
 /* Default debug category is from the subclass */
 #define GST_CAT_DEFAULT (plugin->debug_category)
 
+/* GstImplementsInterface interface */
+#if !GST_CHECK_VERSION(1,0,0)
+static gboolean
+implements_interface_supported (GstImplementsInterface * iface, GType type)
+{
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (iface);
+
+  return GST_VAAPI_PLUGIN_BASE_GET_CLASS (plugin)->has_interface (plugin, type);
+}
+
+static void
+implements_interface_init (GstImplementsInterfaceClass * iface)
+{
+  iface->supported = implements_interface_supported;
+}
+#endif
+
+void
+gst_vaapi_plugin_base_init_interfaces (GType g_define_type_id)
+{
+#if !GST_CHECK_VERSION(1,0,0)
+  G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
+      implements_interface_init);
+#endif
+}
+
+static gboolean
+default_has_interface (GstVaapiPluginBase * plugin, GType type)
+{
+  return FALSE;
+}
+
 static void
 default_display_changed (GstVaapiPluginBase * plugin)
 {
@@ -37,6 +69,7 @@ default_display_changed (GstVaapiPluginBase * plugin)
 void
 gst_vaapi_plugin_base_class_init (GstVaapiPluginBaseClass * klass)
 {
+  klass->has_interface = default_has_interface;
   klass->display_changed = default_display_changed;
 }
 
@@ -45,7 +78,6 @@ gst_vaapi_plugin_base_init (GstVaapiPluginBase * plugin,
     GstDebugCategory * debug_category)
 {
   plugin->debug_category = debug_category;
-
   plugin->display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
   plugin->display_type_req = GST_VAAPI_DISPLAY_TYPE_ANY;
 }

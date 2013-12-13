@@ -107,25 +107,6 @@ static GstStaticPadTemplate gst_vaapisink_sink_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapisink_sink_caps_str));
 
-/* GstImplementsInterface interface */
-#if !GST_CHECK_VERSION(1,0,0)
-static gboolean
-gst_vaapisink_implements_interface_supported(
-    GstImplementsInterface *iface,
-    GType                   type
-)
-{
-    return (type == GST_TYPE_VIDEO_CONTEXT ||
-            type == GST_TYPE_VIDEO_OVERLAY);
-}
-
-static void
-gst_vaapisink_implements_iface_init(GstImplementsInterfaceClass *iface)
-{
-    iface->supported = gst_vaapisink_implements_interface_supported;
-}
-#endif
-
 /* GstVideoContext interface */
 #if !GST_CHECK_VERSION(1,1,0)
 static void
@@ -143,6 +124,12 @@ gst_vaapisink_video_context_iface_init(GstVideoContextInterface *iface)
 }
 #endif
 
+static gboolean
+gst_vaapisink_has_interface(GstVaapiPluginBase *plugin, GType type)
+{
+    return type == GST_TYPE_VIDEO_OVERLAY;
+}
+
 static void
 gst_vaapisink_video_overlay_iface_init(GstVideoOverlayInterface *iface);
 
@@ -150,10 +137,7 @@ G_DEFINE_TYPE_WITH_CODE(
     GstVaapiSink,
     gst_vaapisink,
     GST_TYPE_VIDEO_SINK,
-#if !GST_CHECK_VERSION(1,0,0)
-    G_IMPLEMENT_INTERFACE(GST_TYPE_IMPLEMENTS_INTERFACE,
-                          gst_vaapisink_implements_iface_init);
-#endif
+    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES
 #if !GST_CHECK_VERSION(1,1,0)
     G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
                           gst_vaapisink_video_context_iface_init);
@@ -1489,6 +1473,7 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
                             GST_PLUGIN_NAME, 0, GST_PLUGIN_DESC);
 
     gst_vaapi_plugin_base_class_init(base_plugin_class);
+    base_plugin_class->has_interface    = gst_vaapisink_has_interface;
     base_plugin_class->display_changed  = gst_vaapisink_display_changed;
 
     object_class->finalize       = gst_vaapisink_finalize;
