@@ -2402,7 +2402,7 @@ no_output_buffer:
  * without any processing other than removing it from list of pending frames,
  * after which it is considered finished and released.
  *
- * Since: 1.4
+ * Since: 1.2.2
  */
 void
 gst_video_decoder_release_frame (GstVideoDecoder * dec,
