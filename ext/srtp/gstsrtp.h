@@ -52,7 +52,8 @@
 typedef enum
 {
   GST_SRTP_CIPHER_NULL,
-  GST_SRTP_CIPHER_AES_128_ICM
+  GST_SRTP_CIPHER_AES_128_ICM,
+  GST_SRTP_CIPHER_AES_256_ICM
 } GstSrtpCipherType;
 
 typedef enum
@@ -73,5 +74,6 @@ gint enum_value_from_nick (GType enum_gtype, const gchar *nick);
 void set_crypto_policy_cipher_auth (GstSrtpCipherType cipher,
     GstSrtpAuthType auth, crypto_policy_t * policy);
 
+guint cipher_key_size (GstSrtpCipherType cipher);
 
 #endif /* __GST_SRTP_H__ */

@@ -65,13 +65,13 @@
  * mecanisms available are :
  *
  * Encryption
- * - AES_128_ICM (default, maximum security)
- * - STRONGHOLD_CIPHER (same as AES_128_ICM)
+ * - AES_ICM 256 bits (maximum security)
+ * - AES_ICM 128 bits (default)
  * - NULL
  *
  * Authentication
- * - HMAC_SHA1 (default, maximum protection)
- * - STRONGHOLD_AUTH (same as HMAC_SHA1)
+ * - HMAC_SHA1 80 bits (default, maximum protection)
+ * - HMAC_SHA1 32 bits
  * - NULL
  *
  * Note that for SRTP protection, authentication is mandatory (non-null)

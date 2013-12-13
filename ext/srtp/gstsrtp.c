@@ -177,8 +177,12 @@ set_crypto_policy_cipher_auth (GstSrtpCipherType cipher,
 {
   switch (cipher) {
     case GST_SRTP_CIPHER_AES_128_ICM:
-      policy->cipher_type = AES_128_ICM;
+      policy->cipher_type = AES_ICM;
       policy->cipher_key_len = 30;
+      break;
+    case GST_SRTP_CIPHER_AES_256_ICM:
+      policy->cipher_type = AES_ICM;
+      policy->cipher_key_len = 46;
       break;
     case GST_SRTP_CIPHER_NULL:
       policy->cipher_type = NULL_CIPHER;
@@ -214,6 +218,28 @@ set_crypto_policy_cipher_auth (GstSrtpCipherType cipher,
     policy->sec_serv = sec_serv_conf;
   else
     policy->sec_serv = sec_serv_conf_and_auth;
+}
+
+guint
+cipher_key_size (GstSrtpCipherType cipher)
+{
+  guint size = 0;
+
+  switch (cipher) {
+    case GST_SRTP_CIPHER_AES_128_ICM:
+      size = 30;
+      break;
+    case GST_SRTP_CIPHER_AES_256_ICM:
+      size = 46;
+      break;
+    case GST_SRTP_CIPHER_NULL:
+      size = 0;
+      break;
+    default:
+      g_assert_not_reached ();
+  }
+
+  return size;
 }
 
 static gboolean

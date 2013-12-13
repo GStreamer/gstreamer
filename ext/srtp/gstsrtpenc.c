@@ -62,17 +62,18 @@
  * uses the default RTP and RTCP encryption and authentication mechanisms,
  * unless the user has set the relevant properties first. It also uses
  * a master key that MUST be set by property (key) at the beginning. The
- * master key must be of a maximum length of 30 characters. The
- * encryption and authentication mecanisms available are :
+ * master key must be of a maximum length of 46 characters (14 characters
+ * for the salt plus the key). The encryption and authentication mecanisms
+ * available are :
  *
  * Encryption (properties rtp-cipher and rtcp-cipher)
- * - AES_128_ICM (default, maximum security)
- * - STRONGHOLD_CIPHER (same as AES_128_ICM)
+ * - AES_ICM 256 bits (maximum security)
+ * - AES_ICM 128 bits (default)
  * - NULL
  *
  * Authentication (properties rtp-auth and rtcp-auth)
- * - HMAC_SHA1 (default, maximum protection)
- * - STRONGHOLD_AUTH (same as HMAC_SHA1)
+ * - HMAC_SHA1 80 bits (default, maximum protection)
+ * - HMAC_SHA1 32 bits
  * - NULL
  *
  * Note that for SRTP protection, authentication is mandatory (non-null)
@@ -109,6 +110,12 @@
 
 GST_DEBUG_CATEGORY_STATIC (gst_srtp_enc_debug);
 #define GST_CAT_DEFAULT gst_srtp_enc_debug
+
+/* 128 bit key size: 14 (salt) + 16 */
+#define MASTER_128_KEY_SIZE 30
+
+/* 256 bit key size: 14 (salt) + 16 + 16 */
+#define MASTER_256_KEY_SIZE 46
 
 /* Properties default values */
 #define DEFAULT_MASTER_KEY      NULL
@@ -259,8 +266,9 @@ gst_srtp_enc_class_init (GstSrtpEncClass * klass)
 
   /* Install properties */
   g_object_class_install_property (gobject_class, PROP_MKEY,
-      g_param_spec_boxed ("key", "Key", "Master key (of "
-          G_STRINGIFY (SRTP_MASTER_KEY_LEN) " bytes)",
+      g_param_spec_boxed ("key", "Key", "Master key (minimum of "
+          G_STRINGIFY (MASTER_128_KEY_SIZE) " and maximum of "
+          G_STRINGIFY (MASTER_256_KEY_SIZE) " bytes)",
           GST_TYPE_BUFFER, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (gobject_class, PROP_RTP_CIPHER,
@@ -315,6 +323,36 @@ gst_srtp_enc_init (GstSrtpEnc * filter)
   filter->ssrcs_set = g_hash_table_new (g_direct_hash, g_direct_equal);
 }
 
+static guint
+max_cipher_key_size (GstSrtpEnc * filter)
+{
+  guint rtp_size, rtcp_size;
+
+  rtp_size = cipher_key_size (filter->rtp_cipher);
+  rtcp_size = cipher_key_size (filter->rtcp_cipher);
+
+  return (rtp_size > rtcp_size) ? rtp_size : rtcp_size;
+}
+
+static gboolean
+check_key_size (GstSrtpEnc * filter)
+{
+  guint expected;
+  gboolean res;
+
+  expected = max_cipher_key_size (filter);
+
+  res = gst_buffer_get_size (filter->key) == expected;
+
+  if (!res) {
+    GST_ELEMENT_ERROR (filter, LIBRARY, SETTINGS,
+        ("Master key size is wrong"),
+        ("Expected master key of %d bytes, but received %" G_GSIZE_FORMAT
+            " bytes", expected, gst_buffer_get_size (filter->key)));
+  }
+
+  return res;
+}
 
 /* Create stream
  */
@@ -342,13 +380,8 @@ check_new_stream_locked (GstSrtpEnc * filter, guint32 ssrc)
           ("Cipher is not NULL, key must be set"));
       return FALSE;
     }
-    if (gst_buffer_get_size (filter->key) != SRTP_MASTER_KEY_LEN) {
+    if (!check_key_size (filter)) {
       GST_OBJECT_UNLOCK (filter);
-      GST_ELEMENT_ERROR (filter, LIBRARY, SETTINGS,
-          ("Master key size is wrong"),
-          ("Expected master key of %d bytes, but received %" G_GSIZE_FORMAT
-              " bytes", SRTP_MASTER_KEY_LEN,
-              gst_buffer_get_size (filter->key)));
       return FALSE;
     }
   }
@@ -870,6 +903,7 @@ static void
 gst_srtp_enc_replace_random_key (GstSrtpEnc * filter)
 {
   guint i;
+  guint key_size;
   GstMapInfo map;
 
   GST_DEBUG_OBJECT (filter, "Generating random key");
@@ -877,7 +911,9 @@ gst_srtp_enc_replace_random_key (GstSrtpEnc * filter)
   if (filter->key)
     gst_buffer_unref (filter->key);
 
-  filter->key = gst_buffer_new_allocate (NULL, 16 + 14, NULL);
+  key_size = max_cipher_key_size (filter);
+
+  filter->key = gst_buffer_new_allocate (NULL, key_size, NULL);
 
   gst_buffer_map (filter->key, &map, GST_MAP_WRITE);
   for (i = 0; i < map.size; i += 4)
