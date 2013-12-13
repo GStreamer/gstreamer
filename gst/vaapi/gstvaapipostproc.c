@@ -34,7 +34,6 @@
 
 #include "gstvaapipostproc.h"
 #include "gstvaapipluginutil.h"
-#include "gstvaapivideocontext.h"
 #include "gstvaapivideobuffer.h"
 #if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideobufferpool.h"
@@ -89,42 +88,11 @@ static GstStaticPadTemplate gst_vaapipostproc_src_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapipostproc_src_caps_str));
 
-/* GstVideoContext interface */
-#if !GST_CHECK_VERSION(1,1,0)
-static void
-gst_vaapipostproc_set_video_context(
-    GstVideoContext *context,
-    const gchar     *type,
-    const GValue    *value
-)
-{
-    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(context);
-
-    gst_vaapi_set_display(type, value, &GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc));
-
-    if (postproc->uploader)
-        gst_vaapi_uploader_ensure_display(postproc->uploader, GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc));
-}
-
-static void
-gst_video_context_interface_init(GstVideoContextInterface *iface)
-{
-    iface->set_context = gst_vaapipostproc_set_video_context;
-}
-
-#define GstVideoContextClass GstVideoContextInterface
-#endif
-
 G_DEFINE_TYPE_WITH_CODE(
     GstVaapiPostproc,
     gst_vaapipostproc,
     GST_TYPE_BASE_TRANSFORM,
-    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES
-#if !GST_CHECK_VERSION(1,1,0)
-    G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
-                          gst_video_context_interface_init)
-#endif
-    )
+    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES)
 
 enum {
     PROP_0,
@@ -232,21 +200,6 @@ find_filter_op(GPtrArray *filter_ops, GstVaapiFilterOp op)
     }
     return NULL;
 }
-
-#if GST_CHECK_VERSION(1,1,0)
-static void
-gst_vaapipostproc_set_context(GstElement *element, GstContext *context)
-{
-    GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(element);
-    GstVaapiDisplay *display = NULL;
-
-    if (gst_vaapi_video_context_get_display(context, &display)) {
-        GST_INFO_OBJECT(element, "set display %p", display);
-        GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE(postproc, display);
-        gst_vaapi_display_unref(display);
-    }
-}
-#endif
 
 static inline gboolean
 gst_vaapipostproc_ensure_display(GstVaapiPostproc *postproc)
@@ -1626,10 +1579,6 @@ gst_vaapipostproc_class_init(GstVaapiPostprocClass *klass)
 
     trans_class->prepare_output_buffer =
         gst_vaapipostproc_prepare_output_buffer;
-
-#if GST_CHECK_VERSION(1,1,0)
-    element_class->set_context = gst_vaapipostproc_set_context;
-#endif
 
     gst_element_class_set_static_metadata(element_class,
         "VA-API video postprocessing",

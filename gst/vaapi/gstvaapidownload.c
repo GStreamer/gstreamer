@@ -32,7 +32,6 @@
 #include "gst/vaapi/sysdeps.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/video/videocontext.h>
 
 #include "gstvaapidownload.h"
 #include "gstvaapipluginutil.h"
@@ -91,29 +90,11 @@ struct _GstVaapiDownloadClass {
     GstVaapiPluginBaseClass parent_class;
 };
 
-/* GstVideoContext interface */
-static void
-gst_vaapidownload_set_video_context(GstVideoContext *context, const gchar *type,
-    const GValue *value)
-{
-  GstVaapiDownload *download = GST_VAAPIDOWNLOAD (context);
-  gst_vaapi_set_display (type, value, &GST_VAAPI_PLUGIN_BASE_DISPLAY(download));
-}
-
-static void
-gst_video_context_interface_init(GstVideoContextInterface *iface)
-{
-    iface->set_context = gst_vaapidownload_set_video_context;
-}
-
-#define GstVideoContextClass GstVideoContextInterface
 G_DEFINE_TYPE_WITH_CODE(
     GstVaapiDownload,
     gst_vaapidownload,
     GST_TYPE_BASE_TRANSFORM,
-    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES
-    G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
-                          gst_video_context_interface_init))
+    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES)
 
 static gboolean
 gst_vaapidownload_start(GstBaseTransform *trans);

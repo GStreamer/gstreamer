@@ -23,7 +23,6 @@
 #include <gst/vaapi/gstvaapivalue.h>
 #include <gst/vaapi/gstvaapidisplay.h>
 #include "gstvaapiencode.h"
-#include "gstvaapivideocontext.h"
 #include "gstvaapipluginutil.h"
 #include "gstvaapivideometa.h"
 #if GST_CHECK_VERSION(1,0,0)
@@ -42,47 +41,9 @@
 GST_DEBUG_CATEGORY_STATIC (gst_vaapiencode_debug);
 #define GST_CAT_DEFAULT gst_vaapiencode_debug
 
-/* GstContext interface */
-#if GST_CHECK_VERSION(1,1,0)
-static void
-gst_vaapiencode_set_context (GstElement * element, GstContext * context)
-{
-  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (element);
-  GstVaapiDisplay *display = NULL;
-
-  if (gst_vaapi_video_context_get_display (context, &display)) {
-    GST_INFO_OBJECT (element, "set display %p", display);
-    GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE (encode, display);
-    gst_vaapi_display_unref (display);
-  }
-}
-#else
-static void
-gst_vaapiencode_set_video_context (GstVideoContext * context,
-    const gchar * type, const GValue * value)
-{
-  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (context);
-
-  gst_vaapi_set_display (type, value, &GST_VAAPI_PLUGIN_BASE_DISPLAY (encode));
-}
-
-static void
-gst_video_context_interface_init (GstVideoContextInterface * iface)
-{
-  iface->set_context = gst_vaapiencode_set_video_context;
-}
-
-#define GstVideoContextClass GstVideoContextInterface
-#endif
-
 G_DEFINE_TYPE_WITH_CODE (GstVaapiEncode,
     gst_vaapiencode, GST_TYPE_VIDEO_ENCODER,
-    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES
-#if !GST_CHECK_VERSION(1,1,0)
-    G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_CONTEXT,
-        gst_video_context_interface_init)
-#endif
-    )
+    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES)
 
 enum
 {
@@ -917,9 +878,6 @@ static void
 gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
 {
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
-#if GST_CHECK_VERSION(1,1,0)
-  GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
-#endif
   GstVideoEncoderClass *const venc_class = GST_VIDEO_ENCODER_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (gst_vaapiencode_debug,
@@ -930,10 +888,6 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
   object_class->finalize = gst_vaapiencode_finalize;
   object_class->set_property = gst_vaapiencode_set_property;
   object_class->get_property = gst_vaapiencode_get_property;
-
-#if GST_CHECK_VERSION(1,1,0)
-  element_class->set_context = GST_DEBUG_FUNCPTR (gst_vaapiencode_set_context);
-#endif
 
   venc_class->open = GST_DEBUG_FUNCPTR (gst_vaapiencode_open);
   venc_class->close = GST_DEBUG_FUNCPTR (gst_vaapiencode_close);

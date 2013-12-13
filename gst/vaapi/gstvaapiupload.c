@@ -33,7 +33,6 @@
 #include "gst/vaapi/sysdeps.h"
 #include <gst/gst.h>
 #include <gst/video/video.h>
-#include <gst/video/videocontext.h>
 
 #include "gstvaapiupload.h"
 #include "gstvaapipluginutil.h"
@@ -68,34 +67,11 @@ static GstStaticPadTemplate gst_vaapiupload_src_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapiupload_vaapi_caps_str));
 
-/* GstVideoContext interface */
-static void
-gst_vaapiupload_set_video_context(GstVideoContext *context, const gchar *type,
-    const GValue *value)
-{
-    GstVaapiUpload * const upload = GST_VAAPIUPLOAD(context);
-
-    gst_vaapi_set_display(type, value, &GST_VAAPI_PLUGIN_BASE_DISPLAY(upload));
-
-    if (upload->uploader)
-        gst_vaapi_uploader_ensure_display(upload->uploader,
-            GST_VAAPI_PLUGIN_BASE_DISPLAY(upload));
-}
-
-static void
-gst_video_context_interface_init(GstVideoContextInterface *iface)
-{
-    iface->set_context = gst_vaapiupload_set_video_context;
-}
-
-#define GstVideoContextClass GstVideoContextInterface
 G_DEFINE_TYPE_WITH_CODE(
     GstVaapiUpload,
     gst_vaapiupload,
     GST_TYPE_BASE_TRANSFORM,
-    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES
-    G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
-                          gst_video_context_interface_init))
+    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES)
 
 static gboolean
 gst_vaapiupload_start(GstBaseTransform *trans);

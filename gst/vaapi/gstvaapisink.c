@@ -71,7 +71,6 @@
 
 #include "gstvaapisink.h"
 #include "gstvaapipluginutil.h"
-#include "gstvaapivideocontext.h"
 #include "gstvaapivideometa.h"
 #if GST_CHECK_VERSION(1,0,0)
 #include "gstvaapivideobufferpool.h"
@@ -107,23 +106,6 @@ static GstStaticPadTemplate gst_vaapisink_sink_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapisink_sink_caps_str));
 
-/* GstVideoContext interface */
-#if !GST_CHECK_VERSION(1,1,0)
-static void
-gst_vaapisink_set_video_context(GstVideoContext *context, const gchar *type,
-    const GValue *value)
-{
-  GstVaapiSink *sink = GST_VAAPISINK (context);
-  gst_vaapi_set_display (type, value, &GST_VAAPI_PLUGIN_BASE_DISPLAY(sink));
-}
-
-static void
-gst_vaapisink_video_context_iface_init(GstVideoContextInterface *iface)
-{
-    iface->set_context = gst_vaapisink_set_video_context;
-}
-#endif
-
 static gboolean
 gst_vaapisink_has_interface(GstVaapiPluginBase *plugin, GType type)
 {
@@ -138,10 +120,6 @@ G_DEFINE_TYPE_WITH_CODE(
     gst_vaapisink,
     GST_TYPE_VIDEO_SINK,
     GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES
-#if !GST_CHECK_VERSION(1,1,0)
-    G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
-                          gst_vaapisink_video_context_iface_init);
-#endif
     G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_OVERLAY,
                           gst_vaapisink_video_overlay_iface_init))
 
@@ -1342,21 +1320,6 @@ gst_vaapisink_buffer_alloc(
 }
 #endif
 
-#if GST_CHECK_VERSION(1,1,0)
-static void
-gst_vaapisink_set_context(GstElement *element, GstContext *context)
-{
-    GstVaapiSink * const sink = GST_VAAPISINK(element);
-    GstVaapiDisplay *display = NULL;
-
-    if (gst_vaapi_video_context_get_display(context, &display)) {
-        GST_INFO_OBJECT(element, "set display %p", display);
-        GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE(sink, display);
-        gst_vaapi_display_unref(display);
-    }
-}
-#endif
-
 static gboolean
 gst_vaapisink_query(GstBaseSink *base_sink, GstQuery *query)
 {
@@ -1491,10 +1454,6 @@ gst_vaapisink_class_init(GstVaapiSinkClass *klass)
     basesink_class->propose_allocation = gst_vaapisink_propose_allocation;
 #else
     basesink_class->buffer_alloc = gst_vaapisink_buffer_alloc;
-#endif
-
-#if GST_CHECK_VERSION(1,1,0)
-    element_class->set_context = gst_vaapisink_set_context;
 #endif
 
     gst_element_class_set_static_metadata(element_class,

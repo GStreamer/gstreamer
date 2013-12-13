@@ -35,7 +35,6 @@
 
 #include "gstvaapidecode.h"
 #include "gstvaapipluginutil.h"
-#include "gstvaapivideocontext.h"
 #include "gstvaapivideobuffer.h"
 #if GST_CHECK_VERSION(1,1,0) && USE_GLX
 #include "gstvaapivideometa_texture.h"
@@ -95,35 +94,11 @@ static GstStaticPadTemplate gst_vaapidecode_src_factory =
         GST_PAD_ALWAYS,
         GST_STATIC_CAPS(gst_vaapidecode_src_caps_str));
 
-/* GstVideoContext interface */
-#if !GST_CHECK_VERSION(1,1,0)
-static void
-gst_vaapidecode_set_video_context(GstVideoContext *context, const gchar *type,
-    const GValue *value)
-{
-    GstVaapiDecode *decode = GST_VAAPIDECODE (context);
-    gst_vaapi_set_display (type, value, &GST_VAAPI_PLUGIN_BASE_DISPLAY(decode));
-}
-
-static void
-gst_video_context_interface_init(GstVideoContextInterface *iface)
-{
-    iface->set_context = gst_vaapidecode_set_video_context;
-}
-
-#define GstVideoContextClass GstVideoContextInterface
-#endif
-
 G_DEFINE_TYPE_WITH_CODE(
     GstVaapiDecode,
     gst_vaapidecode,
     GST_TYPE_VIDEO_DECODER,
-    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES
-#if !GST_CHECK_VERSION(1,1,0)
-    G_IMPLEMENT_INTERFACE(GST_TYPE_VIDEO_CONTEXT,
-                          gst_video_context_interface_init)
-#endif
-    )
+    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES)
 
 static gboolean
 gst_vaapidecode_update_src_caps(GstVaapiDecode *decode,
@@ -564,21 +539,6 @@ error_create_pool:
 }
 #endif
 
-#if GST_CHECK_VERSION(1,1,0)
-static void
-gst_vaapidecode_set_context(GstElement *element, GstContext *context)
-{
-    GstVaapiDecode * const decode = GST_VAAPIDECODE(element);
-    GstVaapiDisplay *display = NULL;
-
-    if (gst_vaapi_video_context_get_display(context, &display)) {
-        GST_INFO_OBJECT(element, "set display %p", display);
-        GST_VAAPI_PLUGIN_BASE_DISPLAY_REPLACE(decode, display);
-        gst_vaapi_display_unref(display);
-    }
-}
-#endif
-
 static inline gboolean
 gst_vaapidecode_ensure_display(GstVaapiDecode *decode)
 {
@@ -831,10 +791,6 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
 #if GST_CHECK_VERSION(1,0,0)
     vdec_class->decide_allocation =
         GST_DEBUG_FUNCPTR(gst_vaapidecode_decide_allocation);
-#endif
-
-#if GST_CHECK_VERSION(1,1,0)
-    element_class->set_context = GST_DEBUG_FUNCPTR(gst_vaapidecode_set_context);
 #endif
 
     gst_element_class_set_static_metadata(element_class,

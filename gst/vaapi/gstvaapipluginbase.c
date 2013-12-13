@@ -25,6 +25,7 @@
 #include "gst/vaapi/sysdeps.h"
 #include "gstvaapipluginbase.h"
 #include "gstvaapipluginutil.h"
+#include "gstvaapivideocontext.h"
 
 /* Default debug category is from the subclass */
 #define GST_CAT_DEFAULT (plugin->debug_category)
@@ -36,6 +37,8 @@ implements_interface_supported (GstImplementsInterface * iface, GType type)
 {
   GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (iface);
 
+  if (type == GST_TYPE_VIDEO_CONTEXT)
+    return TRUE;
   return GST_VAAPI_PLUGIN_BASE_GET_CLASS (plugin)->has_interface (plugin, type);
 }
 
@@ -46,12 +49,48 @@ implements_interface_init (GstImplementsInterfaceClass * iface)
 }
 #endif
 
+/* GstVideoContext interface */
+#if GST_CHECK_VERSION(1,1,0)
+static void
+plugin_set_context (GstElement * element, GstContext * context)
+{
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (element);
+  GstVaapiDisplay *display = NULL;
+
+  if (gst_vaapi_video_context_get_display (context, &display)) {
+    GST_INFO_OBJECT (element, "set display %p", display);
+    gst_vaapi_display_replace (&plugin->display, display);
+    gst_vaapi_display_unref (display);
+  }
+}
+#else
+static void
+plugin_set_context (GstVideoContext * context, const gchar * type,
+    const GValue * value)
+{
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (context);
+
+  gst_vaapi_set_display (type, value, &plugin->display);
+}
+
+static void
+video_context_interface_init (GstVideoContextInterface * iface)
+{
+  iface->set_context = plugin_set_context;
+}
+
+#define GstVideoContextClass GstVideoContextInterface
+#endif
+
 void
 gst_vaapi_plugin_base_init_interfaces (GType g_define_type_id)
 {
 #if !GST_CHECK_VERSION(1,0,0)
   G_IMPLEMENT_INTERFACE (GST_TYPE_IMPLEMENTS_INTERFACE,
       implements_interface_init);
+#endif
+#if !GST_CHECK_VERSION(1,1,0)
+  G_IMPLEMENT_INTERFACE (GST_TYPE_VIDEO_CONTEXT, video_context_interface_init);
 #endif
 }
 
@@ -71,6 +110,11 @@ gst_vaapi_plugin_base_class_init (GstVaapiPluginBaseClass * klass)
 {
   klass->has_interface = default_has_interface;
   klass->display_changed = default_display_changed;
+
+#if GST_CHECK_VERSION(1,1,0)
+  GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
+  element_class->set_context = GST_DEBUG_FUNCPTR (plugin_set_context);
+#endif
 }
 
 void
