@@ -176,6 +176,7 @@ gst_decklink_src_init (GstDecklinkSrc * decklinksrc)
       GST_DEBUG_FUNCPTR (gst_decklink_src_video_src_query));
   gst_element_add_pad (GST_ELEMENT (decklinksrc), decklinksrc->videosrcpad);
 
+  GST_OBJECT_FLAG_SET (decklinksrc, GST_ELEMENT_FLAG_SOURCE);
 
   g_cond_init (&decklinksrc->cond);
   g_mutex_init (&decklinksrc->mutex);
