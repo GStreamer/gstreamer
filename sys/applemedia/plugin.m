@@ -21,13 +21,13 @@
 # include <config.h>
 #endif
 
+#include <Foundation/Foundation.h>
 #ifdef HAVE_IOS
 #include "iosassetsrc.h"
 #else
 #include "qtkitvideosrc.h"
 #endif
 #ifdef HAVE_AVFOUNDATION
-#include <Foundation/Foundation.h>
 #include "avfvideosrc.h"
 #endif
 #include "vth264decbin.h"
