@@ -255,11 +255,11 @@ gst_gl_video_mixer_callback (gpointer stuff)
       -1.0, -1.0, -1.0f,
       0.0f, 0.0f,
       1.0, -1.0, -1.0f,
-      in_width, 0.0f,
+      1.0f, 0.0f,
       1.0, 1.0, -1.0f,
-      in_width, in_height,
+      1.0f, 1.0f,
       -1.0, 1.0, -1.0f,
-      0.0f, in_height,
+      0.0f, 1.0f,
     };
     /* *INDENT-ON* */
 
