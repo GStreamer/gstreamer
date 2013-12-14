@@ -111,7 +111,7 @@ gst_queue_array_pop_head (GstQueueArray * array)
 }
 
 /**
- * gst_queue_array_pop_head:
+ * gst_queue_array_peek_head:
  * @array: a #GstQueueArray object
  *
  * Returns and head of the queue @array and does not
