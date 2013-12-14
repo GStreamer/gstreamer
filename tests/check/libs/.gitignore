@@ -3,8 +3,11 @@ adapter
 basesink
 basesrc
 bitreader
+bitreader-noinline
 bytereader
+bytereader-noinline
 bytewriter
+bytewriter-noinline
 gdp
 collectpads
 controller

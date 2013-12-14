@@ -137,6 +137,9 @@ check_PROGRAMS =				\
 	libs/bitreader				\
 	libs/bytereader				\
 	libs/bytewriter				\
+	libs/bitreader-noinline		\
+	libs/bytereader-noinline	\
+	libs/bytewriter-noinline	\
 	libs/collectpads			\
 	libs/gstnetclientclock			\
 	libs/gstnettimeprovider			\
