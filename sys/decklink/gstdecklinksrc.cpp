@@ -362,6 +362,7 @@ gst_decklink_src_send_event (GstElement * element, GstEvent * event)
     case GST_EVENT_EOS:
       g_atomic_int_set (&src->pending_eos, TRUE);
       GST_INFO_OBJECT (src, "EOS pending");
+      g_cond_signal (&src->cond);
       result = TRUE;
       break;
       break;
@@ -745,7 +746,8 @@ gst_decklink_src_task (void *priv)
   GST_DEBUG_OBJECT (decklinksrc, "task");
 
   g_mutex_lock (&decklinksrc->mutex);
-  while (decklinksrc->video_frame == NULL && !decklinksrc->stop) {
+  while (decklinksrc->video_frame == NULL && !decklinksrc->stop &&
+      !decklinksrc->pending_eos) {
     g_cond_wait (&decklinksrc->cond, &decklinksrc->mutex);
   }
   video_frame = decklinksrc->video_frame;
@@ -761,6 +763,13 @@ gst_decklink_src_task (void *priv)
       audio_frame->Release ();
     GST_DEBUG ("stopping task");
     return;
+  }
+
+  if (g_atomic_int_compare_and_exchange (&decklinksrc->pending_eos, TRUE,
+      FALSE)) {
+    GST_INFO_OBJECT (decklinksrc, "EOS pending");
+    flow = GST_FLOW_EOS;
+    goto pause;
   }
 
   /* warning on dropped frames */
@@ -886,12 +895,6 @@ gst_decklink_src_task (void *priv)
     flow = GST_FLOW_EOS;
   else
     flow = video_flow;
-
-  if (g_atomic_int_compare_and_exchange (&decklinksrc->pending_eos, TRUE,
-      FALSE)) {
-    GST_INFO_OBJECT (decklinksrc, "EOS pending");
-    flow = GST_FLOW_EOS;
-  }
 
   if (flow != GST_FLOW_OK)
     goto pause;
