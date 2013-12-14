@@ -333,6 +333,9 @@ __GST_BYTE_READER_GET_PEEK_BITS_INLINE(64,gdouble,float64_be)
 
 #ifndef GST_BYTE_READER_DISABLE_INLINES
 
+#define gst_byte_reader_init(reader,data,size) \
+    _gst_byte_reader_init_inline(reader,data,size)
+
 #define gst_byte_reader_get_remaining(reader) \
     _gst_byte_reader_get_remaining_inline(reader)
 
@@ -435,6 +438,16 @@ __GST_BYTE_READER_GET_PEEK_BITS_INLINE(64,gdouble,float64_be)
     G_LIKELY(_gst_byte_reader_peek_float64_be_inline(reader,val))
 
 #endif /* GST_BYTE_READER_DISABLE_INLINES */
+
+static inline void
+_gst_byte_reader_init_inline (GstByteReader * reader, const guint8 * data, guint size)
+{
+  g_return_if_fail (reader != NULL);
+
+  reader->data = data;
+  reader->size = size;
+  reader->byte = 0;
+}
 
 static inline gboolean
 _gst_byte_reader_dup_data_inline (GstByteReader * reader, guint size, guint8 ** val)
