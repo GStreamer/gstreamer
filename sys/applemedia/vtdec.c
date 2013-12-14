@@ -615,7 +615,7 @@ wrong_version:
 }
 
 static int
-get_dpb_max_mb_s_from_level (int level)
+get_dpb_max_mb_s_from_level (GstVtdec * vtdec, int level)
 {
   switch (level) {
     case 10:
@@ -630,6 +630,7 @@ get_dpb_max_mb_s_from_level (int level)
     case 21:
       return 4752;
     case 22:
+    case 30:
       return 8100;
     case 31:
       return 18000;
@@ -646,6 +647,7 @@ get_dpb_max_mb_s_from_level (int level)
     case 52:
       return 184320;
     default:
+      GST_ERROR_OBJECT (vtdec, "unknown level %d", level);
       return -1;
   }
 }
@@ -681,7 +683,7 @@ compute_h264_decode_picture_buffer_length (GstVtdec * vtdec,
           &profile, &level))
     return FALSE;
 
-  max_dpb_mb_s = get_dpb_max_mb_s_from_level (level);
+  max_dpb_mb_s = get_dpb_max_mb_s_from_level (vtdec, level);
   if (max_dpb_mb_s == -1) {
     GST_ELEMENT_ERROR (vtdec, STREAM, DECODE, (NULL),
         ("invalid level in codec_data, could not compute max_dpb_mb_s"));
