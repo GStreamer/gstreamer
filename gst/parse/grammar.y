@@ -33,9 +33,6 @@
 #define YYLTYPE_IS_TRIVIAL 0
 #endif
 
-typedef void* yyscan_t;
-
-
 #ifdef __GST_PARSE_TRACE
 static guint __strings;
 static guint __links;
