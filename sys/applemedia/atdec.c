@@ -75,7 +75,7 @@ static GstStaticPadTemplate gst_atdec_sink_template =
     GST_PAD_SINK,
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("audio/mpeg, mpegversion=4, framed=true, channels=[1,max];"
-        "audio/mpeg, mpegversion=1, layer=3")
+        "audio/mpeg, mpegversion=1, layer=[1, 3]")
     );
 
 G_DEFINE_TYPE_WITH_CODE (GstATDec, gst_atdec, GST_TYPE_AUDIO_DECODER,
@@ -84,7 +84,7 @@ G_DEFINE_TYPE_WITH_CODE (GstATDec, gst_atdec, GST_TYPE_AUDIO_DECODER,
 
 static GstStaticCaps aac_caps = GST_STATIC_CAPS ("audio/mpeg, mpegversion=4");
 static GstStaticCaps mp3_caps =
-GST_STATIC_CAPS ("audio/mpeg, mpegversion=1, layer=3");
+GST_STATIC_CAPS ("audio/mpeg, mpegversion=1, layer=[1, 3]");
 static GstStaticCaps raw_caps = GST_STATIC_CAPS ("audio/x-raw");
 
 static void
