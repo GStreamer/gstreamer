@@ -78,6 +78,8 @@ struct _GstH264Parse
   gboolean have_sps;
   gboolean have_pps;
 
+  gboolean sent_codec_tag;
+
   /* collected SPS and PPS NALUs */
   GstBuffer *sps_nals[GST_H264_MAX_SPS_COUNT];
   GstBuffer *pps_nals[GST_H264_MAX_PPS_COUNT];
