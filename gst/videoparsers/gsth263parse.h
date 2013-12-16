@@ -60,6 +60,7 @@ struct _GstH263Parse
   guint bitrate;
 
   H263ParseState state;
+  gboolean sent_codec_tag;
 };
 
 struct _GstH263ParseClass

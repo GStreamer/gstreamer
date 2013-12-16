@@ -29,7 +29,8 @@
 #  include "config.h"
 #endif
 
-#include <gst/base/gstbytereader.h>
+#include <gst/base/base.h>
+#include <gst/pbutils/pbutils.h>
 #include "gsth263parse.h"
 
 #include <string.h>
@@ -59,6 +60,8 @@ static gboolean gst_h263_parse_sink_event (GstBaseParse * parse,
     GstEvent * event);
 static GstFlowReturn gst_h263_parse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize);
+static GstFlowReturn gst_h263_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
 static GstCaps *gst_h263_parse_get_sink_caps (GstBaseParse * parse,
     GstCaps * filter);
 
@@ -85,6 +88,8 @@ gst_h263_parse_class_init (GstH263ParseClass * klass)
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_h263_parse_stop);
   parse_class->sink_event = GST_DEBUG_FUNCPTR (gst_h263_parse_sink_event);
   parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_h263_parse_handle_frame);
+  parse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_h263_parse_pre_push_frame);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_h263_parse_get_sink_caps);
 }
 
@@ -106,6 +111,8 @@ gst_h263_parse_start (GstBaseParse * parse)
   h263parse->level = -1;
 
   h263parse->state = PARSING;
+
+  h263parse->sent_codec_tag = FALSE;
 
   gst_base_parse_set_min_frame_size (parse, 4);
 
@@ -413,4 +420,31 @@ gst_h263_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
   }
 
   return res;
+}
+
+static GstFlowReturn
+gst_h263_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  GstH263Parse *h263parse = GST_H263_PARSE (parse);
+
+  if (!h263parse->sent_codec_tag) {
+    GstTagList *taglist;
+    GstCaps *caps;
+
+    taglist = gst_tag_list_new_empty ();
+
+    /* codec tag */
+    caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    gst_pb_utils_add_codec_description_to_tag_list (taglist,
+        GST_TAG_VIDEO_CODEC, caps);
+    gst_caps_unref (caps);
+
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (h263parse),
+        gst_event_new_tag (taglist));
+
+    /* also signals the end of first-frame processing */
+    h263parse->sent_codec_tag = TRUE;
+  }
+
+  return GST_FLOW_OK;
 }
