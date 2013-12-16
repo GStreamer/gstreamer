@@ -749,11 +749,28 @@ add_image_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
 
         id3v2_frame_write_string (&frame, encoding, mime_type, TRUE);
 
-        /* FIXME set image type properly from caps */
-        if (strcmp (tag, GST_TAG_PREVIEW_IMAGE) == 0)
+        if (strcmp (tag, GST_TAG_PREVIEW_IMAGE) == 0) {
           id3v2_frame_write_uint8 (&frame, ID3V2_APIC_PICTURE_FILE_ICON);
-        else
-          id3v2_frame_write_uint8 (&frame, ID3V2_APIC_PICTURE_OTHER);
+        } else {
+          const GstStructure *info_struct;
+          int image_type;
+
+          info_struct = gst_sample_get_info (sample);
+          if (info_struct
+              && gst_structure_has_name (info_struct, "GstTagImageInfo")) {
+            if (gst_structure_get (info_struct, "image-type",
+                    GST_TYPE_TAG_IMAGE_TYPE, &image_type, NULL)) {
+              if (image_type > 0 && image_type <= 18) {
+                image_type += 2;
+              } else {
+                image_type = ID3V2_APIC_PICTURE_OTHER;
+              }
+            } else {
+              image_type = ID3V2_APIC_PICTURE_OTHER;
+            }
+          }
+          id3v2_frame_write_uint8 (&frame, image_type);
+        }
 
         id3v2_frame_write_string (&frame, encoding, desc, TRUE);
 
