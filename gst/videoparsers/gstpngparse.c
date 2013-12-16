@@ -24,7 +24,8 @@
 
 #include "gstpngparse.h"
 
-#include <gst/base/gstbytereader.h>
+#include <gst/base/base.h>
+#include <gst/pbutils/pbutils.h>
 
 #define PNG_SIGNATURE G_GUINT64_CONSTANT (0x89504E470D0A1A0A)
 
@@ -50,6 +51,8 @@ G_DEFINE_TYPE (GstPngParse, gst_png_parse, GST_TYPE_BASE_PARSE);
 static gboolean gst_png_parse_start (GstBaseParse * parse);
 static GstFlowReturn gst_png_parse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize);
+static GstFlowReturn gst_png_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
 
 static void
 gst_png_parse_class_init (GstPngParseClass * klass)
@@ -70,6 +73,8 @@ gst_png_parse_class_init (GstPngParseClass * klass)
   /* Override BaseParse vfuncs */
   parse_class->start = GST_DEBUG_FUNCPTR (gst_png_parse_start);
   parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_png_parse_handle_frame);
+  parse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_png_parse_pre_push_frame);
 }
 
 static void
@@ -89,6 +94,8 @@ gst_png_parse_start (GstBaseParse * parse)
 
   pngparse->width = 0;
   pngparse->height = 0;
+
+  pngparse->sent_codec_tag = FALSE;
 
   return TRUE;
 }
@@ -208,4 +215,31 @@ beach:
   gst_buffer_unmap (frame->buffer, &map);
 
   return ret;
+}
+
+static GstFlowReturn
+gst_png_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  GstPngParse *pngparse = GST_PNG_PARSE (parse);
+
+  if (!pngparse->sent_codec_tag) {
+    GstTagList *taglist;
+    GstCaps *caps;
+
+    taglist = gst_tag_list_new_empty ();
+
+    /* codec tag */
+    caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    gst_pb_utils_add_codec_description_to_tag_list (taglist,
+        GST_TAG_VIDEO_CODEC, caps);
+    gst_caps_unref (caps);
+
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (pngparse),
+        gst_event_new_tag (taglist));
+
+    /* also signals the end of first-frame processing */
+    pngparse->sent_codec_tag = TRUE;
+  }
+
+  return GST_FLOW_OK;
 }

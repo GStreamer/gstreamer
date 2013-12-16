@@ -49,6 +49,8 @@ struct _GstPngParse
 
   guint width;
   guint height;
+  
+  gboolean sent_codec_tag;
 };
 
 struct _GstPngParseClass
