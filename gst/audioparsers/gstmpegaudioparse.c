@@ -49,6 +49,7 @@
 
 #include "gstmpegaudioparse.h"
 #include <gst/base/gstbytereader.h>
+#include <gst/pbutils/pbutils.h>
 
 GST_DEBUG_CATEGORY_STATIC (mpeg_audio_parse_debug);
 #define GST_CAT_DEFAULT mpeg_audio_parse_debug
@@ -1332,17 +1333,16 @@ gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
    * have already been sent */
 
   if (!mp3parse->sent_codec_tag) {
-    gchar *codec;
+    GstCaps *caps;
+
+    taglist = gst_tag_list_new_empty ();
 
     /* codec tag */
-    if (mp3parse->layer == 3) {
-      codec = g_strdup_printf ("MPEG %d Audio, Layer %d (MP3)",
-          mp3parse->version, mp3parse->layer);
-    } else {
-      codec = g_strdup_printf ("MPEG %d Audio, Layer %d",
-          mp3parse->version, mp3parse->layer);
-    }
-    taglist = gst_tag_list_new (GST_TAG_AUDIO_CODEC, codec, NULL);
+    caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    gst_pb_utils_add_codec_description_to_tag_list (taglist,
+        GST_TAG_AUDIO_CODEC, caps);
+    gst_caps_unref (caps);
+
     if (mp3parse->hdr_bitrate > 0 && mp3parse->xing_bitrate == 0 &&
         mp3parse->vbri_bitrate == 0) {
       /* We don't have a VBR bitrate, so post the available bitrate as
@@ -1352,7 +1352,6 @@ gst_mpeg_audio_parse_pre_push_frame (GstBaseParse * parse,
     }
     gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (mp3parse),
         gst_event_new_tag (taglist));
-    g_free (codec);
 
     /* also signals the end of first-frame processing */
     mp3parse->sent_codec_tag = TRUE;
