@@ -46,8 +46,8 @@
 #include <string.h>
 
 #include "gstac3parse.h"
-#include <gst/base/gstbytereader.h>
-#include <gst/base/gstbitreader.h>
+#include <gst/base/base.h>
+#include <gst/pbutils/pbutils.h>
 
 GST_DEBUG_CATEGORY_STATIC (ac3_parse_debug);
 #define GST_CAT_DEFAULT ac3_parse_debug
@@ -162,6 +162,8 @@ static gboolean gst_ac3_parse_start (GstBaseParse * parse);
 static gboolean gst_ac3_parse_stop (GstBaseParse * parse);
 static GstFlowReturn gst_ac3_parse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize);
+static GstFlowReturn gst_ac3_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
 static gboolean gst_ac3_parse_src_event (GstBaseParse * parse,
     GstEvent * event);
 static GstCaps *gst_ac3_parse_get_sink_caps (GstBaseParse * parse,
@@ -196,6 +198,8 @@ gst_ac3_parse_class_init (GstAc3ParseClass * klass)
   parse_class->start = GST_DEBUG_FUNCPTR (gst_ac3_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_ac3_parse_stop);
   parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_ac3_parse_handle_frame);
+  parse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_ac3_parse_pre_push_frame);
   parse_class->src_event = GST_DEBUG_FUNCPTR (gst_ac3_parse_src_event);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_ac3_parse_get_sink_caps);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_ac3_parse_set_sink_caps);
@@ -208,6 +212,7 @@ gst_ac3_parse_reset (GstAc3Parse * ac3parse)
   ac3parse->sample_rate = -1;
   ac3parse->blocks = -1;
   ac3parse->eac = FALSE;
+  ac3parse->sent_codec_tag = FALSE;
   g_atomic_int_set (&ac3parse->align, GST_AC3_PARSE_ALIGN_NONE);
 }
 
@@ -768,6 +773,33 @@ bad_first_access_parameter:
     gst_buffer_unref (buf);
     return GST_FLOW_ERROR;
   }
+}
+
+static GstFlowReturn
+gst_ac3_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  GstAc3Parse *ac3parse = GST_AC3_PARSE (parse);
+
+  if (!ac3parse->sent_codec_tag) {
+    GstTagList *taglist;
+    GstCaps *caps;
+
+    taglist = gst_tag_list_new_empty ();
+
+    /* codec tag */
+    caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    gst_pb_utils_add_codec_description_to_tag_list (taglist,
+        GST_TAG_AUDIO_CODEC, caps);
+    gst_caps_unref (caps);
+
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (ac3parse),
+        gst_event_new_tag (taglist));
+
+    /* also signals the end of first-frame processing */
+    ac3parse->sent_codec_tag = TRUE;
+  }
+
+  return GST_FLOW_OK;
 }
 
 static gboolean
