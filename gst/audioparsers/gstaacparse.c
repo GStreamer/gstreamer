@@ -45,7 +45,7 @@
 #include <string.h>
 
 #include <gst/base/gstbitreader.h>
-#include <gst/pbutils/codec-utils.h>
+#include <gst/pbutils/pbutils.h>
 #include "gstaacparse.h"
 
 
@@ -1303,6 +1303,25 @@ gst_aac_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstAacParse *aacparse = GST_AAC_PARSE (parse);
 
+  if (!aacparse->sent_codec_tag) {
+    GstTagList *taglist;
+    GstCaps *caps;
+
+    taglist = gst_tag_list_new_empty ();
+
+    /* codec tag */
+    caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    gst_pb_utils_add_codec_description_to_tag_list (taglist,
+        GST_TAG_AUDIO_CODEC, caps);
+    gst_caps_unref (caps);
+
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (aacparse),
+        gst_event_new_tag (taglist));
+
+    /* also signals the end of first-frame processing */
+    aacparse->sent_codec_tag = TRUE;
+  }
+
   /* As a special case, we can remove the ADTS framing and output raw AAC. */
   if (aacparse->header_type == DSPAAC_HEADER_ADTS
       && aacparse->output_header_type == DSPAAC_HEADER_NONE) {
@@ -1336,6 +1355,7 @@ gst_aac_parse_start (GstBaseParse * parse)
   GST_DEBUG ("start");
   aacparse->frame_samples = 1024;
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (aacparse), ADTS_MAX_SIZE);
+  aacparse->sent_codec_tag = FALSE;
   return TRUE;
 }
 

@@ -81,6 +81,8 @@ struct _GstAacParse {
 
   GstAacHeaderType header_type;
   GstAacHeaderType output_header_type;
+
+  gboolean sent_codec_tag;
 };
 
 /**
