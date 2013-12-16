@@ -89,6 +89,8 @@ struct _GstH265Parse
   /* props */
   guint interval;
 
+  gboolean sent_codec_tag;
+
   GstClockTime pending_key_unit_ts;
   GstEvent *force_key_unit_event;
 };

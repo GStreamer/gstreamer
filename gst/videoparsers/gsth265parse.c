@@ -22,9 +22,8 @@
 #  include "config.h"
 #endif
 
-#include <gst/base/gstbytereader.h>
-#include <gst/base/gstbytewriter.h>
-#include <gst/base/gstadapter.h>
+#include <gst/base/base.h>
+#include <gst/pbutils/pbutils.h>
 #include <gst/video/video.h>
 #include "gsth265parse.h"
 
@@ -197,6 +196,8 @@ gst_h265_parse_reset (GstH265Parse * h265parse)
   h265parse->have_pps = FALSE;
   h265parse->have_sps = FALSE;
   h265parse->have_vps = FALSE;
+
+  h265parse->sent_codec_tag = FALSE;
 
   h265parse->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
   h265parse->force_key_unit_event = NULL;
@@ -1518,6 +1519,26 @@ gst_h265_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   GstEvent *event;
 
   h265parse = GST_H265_PARSE (parse);
+
+  if (!h265parse->sent_codec_tag) {
+    GstTagList *taglist;
+    GstCaps *caps;
+
+    taglist = gst_tag_list_new_empty ();
+
+    /* codec tag */
+    caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    gst_pb_utils_add_codec_description_to_tag_list (taglist,
+        GST_TAG_VIDEO_CODEC, caps);
+    gst_caps_unref (caps);
+
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (h265parse),
+        gst_event_new_tag (taglist));
+
+    /* also signals the end of first-frame processing */
+    h265parse->sent_codec_tag = TRUE;
+  }
+
   buffer = frame->buffer;
 
   if ((event = check_pending_key_unit_event (h265parse->force_key_unit_event,
