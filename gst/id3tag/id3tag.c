@@ -726,10 +726,16 @@ add_image_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
       s = gst_caps_get_structure (caps, 0);
       mime_type = gst_structure_get_name (s);
       if (mime_type != NULL) {
-        const gchar *desc;
+        const gchar *desc = NULL;
         GstId3v2Frame frame;
         GstMapInfo mapinfo;
         int encoding;
+        const GstStructure *info_struct;
+
+        info_struct = gst_sample_get_info (sample);
+        if (!info_struct
+            || !gst_structure_has_name (info_struct, "GstTagImageInfo"))
+          info_struct = NULL;
 
         /* APIC frame specifies "-->" if we're providing a URL to the image
            rather than directly embedding it */
@@ -741,7 +747,8 @@ add_image_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
 
         id3v2_frame_init (&frame, "APIC", 0);
 
-        desc = gst_structure_get_string (s, "image-description");
+        if (info_struct)
+          desc = gst_structure_get_string (info_struct, "image-description");
         if (!desc)
           desc = "";
         encoding = id3v2_tag_string_encoding (id3v2tag, desc);
@@ -752,12 +759,9 @@ add_image_tag (GstId3v2Tag * id3v2tag, const GstTagList * list,
         if (strcmp (tag, GST_TAG_PREVIEW_IMAGE) == 0) {
           id3v2_frame_write_uint8 (&frame, ID3V2_APIC_PICTURE_FILE_ICON);
         } else {
-          const GstStructure *info_struct;
           int image_type;
 
-          info_struct = gst_sample_get_info (sample);
-          if (info_struct
-              && gst_structure_has_name (info_struct, "GstTagImageInfo")) {
+          if (info_struct) {
             if (gst_structure_get (info_struct, "image-type",
                     GST_TYPE_TAG_IMAGE_TYPE, &image_type, NULL)) {
               if (image_type > 0 && image_type <= 18) {
