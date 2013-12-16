@@ -61,6 +61,8 @@ struct _GstSbcParse {
   gint                    n_blocks;
   gint                    n_subbands;
   gint                    bitpool;
+
+  gboolean                sent_codec_tag;
 };
 
 struct _GstSbcParseClass {
