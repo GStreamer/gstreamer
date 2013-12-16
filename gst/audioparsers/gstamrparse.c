@@ -43,7 +43,7 @@
 #include <string.h>
 
 #include "gstamrparse.h"
-
+#include <gst/pbutils/pbutils.h>
 
 static GstStaticPadTemplate src_template = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
@@ -81,6 +81,8 @@ static GstCaps *gst_amr_parse_sink_getcaps (GstBaseParse * parse,
 
 static GstFlowReturn gst_amr_parse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize);
+static GstFlowReturn gst_amr_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
 
 G_DEFINE_TYPE (GstAmrParse, gst_amr_parse, GST_TYPE_BASE_PARSE);
 
@@ -113,6 +115,8 @@ gst_amr_parse_class_init (GstAmrParseClass * klass)
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_amr_parse_sink_setcaps);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_amr_parse_sink_getcaps);
   parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_amr_parse_handle_frame);
+  parse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_amr_parse_pre_push_frame);
 }
 
 
@@ -338,6 +342,7 @@ gst_amr_parse_start (GstBaseParse * parse)
   GST_DEBUG ("start");
   amrparse->need_header = TRUE;
   amrparse->header = 0;
+  amrparse->sent_codec_tag = FALSE;
   return TRUE;
 }
 
@@ -409,4 +414,31 @@ gst_amr_parse_sink_getcaps (GstBaseParse * parse, GstCaps * filter)
   }
 
   return res;
+}
+
+static GstFlowReturn
+gst_amr_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  GstAmrParse *amrparse = GST_AMR_PARSE (parse);
+
+  if (!amrparse->sent_codec_tag) {
+    GstTagList *taglist;
+    GstCaps *caps;
+
+    taglist = gst_tag_list_new_empty ();
+
+    /* codec tag */
+    caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    gst_pb_utils_add_codec_description_to_tag_list (taglist,
+        GST_TAG_AUDIO_CODEC, caps);
+    gst_caps_unref (caps);
+
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (amrparse),
+        gst_event_new_tag (taglist));
+
+    /* also signals the end of first-frame processing */
+    amrparse->sent_codec_tag = TRUE;
+  }
+
+  return GST_FLOW_OK;
 }

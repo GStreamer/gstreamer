@@ -61,6 +61,7 @@ struct _GstAmrParse {
   GstBaseParse element;
   const gint *block_size;
   gboolean need_header;
+  gboolean sent_codec_tag;
   gint header;
   gboolean wide;
 };
