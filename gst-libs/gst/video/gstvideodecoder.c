@@ -1758,6 +1758,17 @@ gst_video_decoder_reset (GstVideoDecoder * decoder, gboolean full,
 
     priv->decode_frame_number = 0;
     priv->base_picture_number = 0;
+
+    if (priv->pool) {
+      gst_buffer_pool_set_active (priv->pool, FALSE);
+      gst_object_unref (priv->pool);
+      priv->pool = NULL;
+    }
+
+    if (priv->allocator) {
+      gst_object_unref (priv->allocator);
+      priv->allocator = NULL;
+    }
   }
 
   priv->discont = TRUE;
