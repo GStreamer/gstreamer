@@ -41,7 +41,8 @@
 
 #include "gstwavpackparse.h"
 
-#include <gst/base/gstbytereader.h>
+#include <gst/base/base.h>
+#include <gst/pbutils/pbutils.h>
 #include <gst/audio/audio.h>
 
 GST_DEBUG_CATEGORY_STATIC (wavpack_parse_debug);
@@ -70,6 +71,8 @@ static GstFlowReturn gst_wavpack_parse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize);
 static GstCaps *gst_wavpack_parse_get_sink_caps (GstBaseParse * parse,
     GstCaps * filter);
+static GstFlowReturn gst_wavpack_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
 
 #define gst_wavpack_parse_parent_class parent_class
 G_DEFINE_TYPE (GstWavpackParse, gst_wavpack_parse, GST_TYPE_BASE_PARSE);
@@ -92,6 +95,8 @@ gst_wavpack_parse_class_init (GstWavpackParseClass * klass)
       GST_DEBUG_FUNCPTR (gst_wavpack_parse_handle_frame);
   parse_class->get_sink_caps =
       GST_DEBUG_FUNCPTR (gst_wavpack_parse_get_sink_caps);
+  parse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_wavpack_parse_pre_push_frame);
 
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&sink_template));
@@ -111,6 +116,7 @@ gst_wavpack_parse_reset (GstWavpackParse * wvparse)
   wvparse->sample_rate = -1;
   wvparse->width = -1;
   wvparse->total_samples = 0;
+  wvparse->sent_codec_tag = FALSE;
 }
 
 static void
@@ -660,4 +666,32 @@ gst_wavpack_parse_get_sink_caps (GstBaseParse * parse, GstCaps * filter)
   }
 
   return res;
+}
+
+static GstFlowReturn
+gst_wavpack_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame)
+{
+  GstWavpackParse *wavpackparse = GST_WAVPACK_PARSE (parse);
+
+  if (!wavpackparse->sent_codec_tag) {
+    GstTagList *taglist;
+    GstCaps *caps;
+
+    taglist = gst_tag_list_new_empty ();
+
+    /* codec tag */
+    caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    gst_pb_utils_add_codec_description_to_tag_list (taglist,
+        GST_TAG_AUDIO_CODEC, caps);
+    gst_caps_unref (caps);
+
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (wavpackparse),
+        gst_event_new_tag (taglist));
+
+    /* also signals the end of first-frame processing */
+    wavpackparse->sent_codec_tag = TRUE;
+  }
+
+  return GST_FLOW_OK;
 }
