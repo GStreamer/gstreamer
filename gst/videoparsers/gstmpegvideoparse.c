@@ -27,7 +27,8 @@
 #endif
 
 #include <string.h>
-#include <gst/base/gstbytereader.h>
+#include <gst/base/base.h>
+#include <gst/pbutils/pbutils.h>
 #include <gst/codecparsers/gstmpegvideometa.h>
 
 #include "gstmpegvideoparse.h"
@@ -943,16 +944,16 @@ gst_mpegv_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
    * have already been sent */
 
   if (G_UNLIKELY (mpvparse->send_codec_tag)) {
-    gchar *codec;
+    GstCaps *caps;
 
     /* codec tag */
-    codec =
-        g_strdup_printf ("MPEG %d Video",
-        (mpvparse->config_flags & FLAG_MPEG2) ? 2 : 1);
-    taglist = gst_tag_list_new (GST_TAG_VIDEO_CODEC, codec, NULL);
-    g_free (codec);
+    taglist = gst_tag_list_new_empty ();
+    caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    gst_pb_utils_add_codec_description_to_tag_list (taglist,
+        GST_TAG_VIDEO_CODEC, caps);
+    gst_caps_unref (caps);
 
-    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (mpvparse),
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (parse),
         gst_event_new_tag (taglist));
 
     mpvparse->send_codec_tag = FALSE;
