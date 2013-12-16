@@ -1089,7 +1089,7 @@ AG_GST_CHECK_FEATURE(BZ2, [bz2 library], bz2, [
   if test "x$HAVE_BZ2" = "xyes"; then
     BZ2_LIBS="-lbz2"
   fi
-  AC_SUBST(BZ2_LIBS):w
+  AC_SUBST(BZ2_LIBS)
 
 ])
 
