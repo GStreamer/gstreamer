@@ -9,6 +9,7 @@ libgstcheck_@GST_API_VERSION@_la_SOURCES =	\
 	gstbufferstraw.c			\
 	gstcheck.c				\
 	gstconsistencychecker.c			\
+	gstharness.c				\
 	gsttestclock.c
 
 libgstcheck_@GST_API_VERSION@_la_CFLAGS = $(GST_OBJ_CFLAGS) \
@@ -29,6 +30,7 @@ libgstcheck_@GST_API_VERSION@include_HEADERS =	\
 	gstbufferstraw.h			\
 	gstcheck.h				\
 	gstconsistencychecker.h			\
+	gstharness.h				\
 	gsttestclock.h
 
 nodist_libgstcheck_@GST_API_VERSION@include_HEADERS =	\
@@ -93,6 +95,75 @@ LIBGSTCHECK_EXPORTED_FUNCS = \
 	gst_consistency_checker_new \
 	gst_consistency_checker_reset \
 	gst_consistency_checker_free \
+	gst_harness_add_element_src_pad \
+	gst_harness_add_probe \
+	gst_harness_add_sink \
+	gst_harness_add_sink_parse \
+	gst_harness_add_src \
+	gst_harness_add_src_parse \
+	gst_harness_buffers_received \
+	gst_harness_buffers_in_queue \
+	gst_harness_crank_multiple_clock_waits \
+	gst_harness_crank_single_clock_wait \
+	gst_harness_create_buffer \
+	gst_harness_dump_to_file \
+	gst_harness_events_received \
+	gst_harness_events_in_queue \
+	gst_harness_find_element \
+	gst_harness_get \
+	gst_harness_get_allocator \
+	gst_harness_get_last_pushed_timestamp \
+	gst_harness_get_testclock \
+	gst_harness_new \
+	gst_harness_new_full \
+	gst_harness_new_parse \
+	gst_harness_new_with_element \
+	gst_harness_new_with_padnames \
+	gst_harness_new_with_templates \
+	gst_harness_play \
+	gst_harness_pull \
+	gst_harness_pull_event \
+	gst_harness_pull_upstream_event \
+	gst_harness_push \
+	gst_harness_push_and_pull \
+	gst_harness_push_event \
+	gst_harness_push_from_src \
+	gst_harness_push_to_sink \
+	gst_harness_query_latency \
+	gst_harness_push_upstream_event \
+	gst_harness_set \
+	gst_harness_set_caps \
+	gst_harness_set_caps_str \
+	gst_harness_set_drop_buffers \
+	gst_harness_set_blocking_push_mode \
+	gst_harness_set_propose_allocator \
+	gst_harness_set_sink_caps \
+	gst_harness_set_src_caps \
+	gst_harness_set_src_caps_str \
+	gst_harness_set_sink_caps_str \
+	gst_harness_set_time \
+	gst_harness_set_upstream_latency \
+	gst_harness_sink_push_many \
+	gst_harness_src_crank_and_push_many \
+	gst_harness_src_push_event \
+	gst_harness_stress_custom_start \
+	gst_harness_stress_property_start_full \
+	gst_harness_stress_push_buffer_start_full \
+	gst_harness_stress_push_buffer_with_cb_start_full \
+	gst_harness_stress_push_event_start_full \
+	gst_harness_stress_push_upstream_event_start_full \
+	gst_harness_stress_requestpad_start_full \
+	gst_harness_stress_statechange_start_full \
+	gst_harness_stress_thread_stop \
+	gst_harness_teardown \
+	gst_harness_try_pull \
+	gst_harness_try_pull_event \
+	gst_harness_try_pull_upstream_event \
+	gst_harness_upstream_events_received \
+	gst_harness_upstream_events_in_queue \
+	gst_harness_use_systemclock \
+	gst_harness_use_testclock \
+	gst_harness_wait_for_clock_id_waits \
 	gst_test_clock_get_type \
 	gst_test_clock_new \
 	gst_test_clock_new_with_start_time \
