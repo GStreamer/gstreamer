@@ -909,7 +909,7 @@ gst_xvimagesink_show_frame (GstVideoSink * vsink, GstBuffer * buf)
 {
   GstFlowReturn res;
   GstXvImageSink *xvimagesink;
-  GstBuffer *to_put;
+  GstBuffer *to_put = NULL;
   GstMemory *mem;
 
   xvimagesink = GST_XVIMAGESINK (vsink);

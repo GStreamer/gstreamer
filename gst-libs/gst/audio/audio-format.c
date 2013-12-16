@@ -416,7 +416,7 @@ gst_audio_format_to_string (GstAudioFormat format)
 {
   g_return_val_if_fail (format != GST_AUDIO_FORMAT_UNKNOWN, NULL);
 
-  if (format >= G_N_ELEMENTS (formats))
+  if ((gint) format >= G_N_ELEMENTS (formats))
     return NULL;
 
   return GST_AUDIO_FORMAT_INFO_NAME (&formats[format]);
@@ -433,7 +433,7 @@ gst_audio_format_to_string (GstAudioFormat format)
 const GstAudioFormatInfo *
 gst_audio_format_get_info (GstAudioFormat format)
 {
-  g_return_val_if_fail (format < G_N_ELEMENTS (formats), NULL);
+  g_return_val_if_fail ((gint) format < G_N_ELEMENTS (formats), NULL);
 
   return &formats[format];
 }
