@@ -62,7 +62,6 @@ struct _GstMssDemuxStream {
   GstMssStream *manifest_stream;
 
   GstUriDownloader *downloader;
-  GstDataQueue *dataqueue;
 
   GstEvent *pending_newsegment;
 
@@ -105,10 +104,6 @@ struct _GstMssDemux {
   guint n_audios;
 
   gboolean update_bitrates;
-
-  /* Streaming task */
-  GstTask *stream_task;
-  GRecMutex stream_lock;
 
   /* properties */
   guint64 connection_speed; /* in bps */
