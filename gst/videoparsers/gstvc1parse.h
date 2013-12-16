@@ -88,6 +88,8 @@ struct _GstVC1Parse
   /* TRUE if the srcpads should be updated */
   gboolean update_caps;
 
+  gboolean sent_codec_tag;
+
   VC1HeaderFormat input_header_format;
   VC1HeaderFormat output_header_format;
   VC1StreamFormat input_stream_format;

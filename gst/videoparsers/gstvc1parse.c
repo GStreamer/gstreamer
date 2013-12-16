@@ -81,7 +81,8 @@
 
 #include "gstvc1parse.h"
 
-#include <gst/base/gstbytereader.h>
+#include <gst/base/base.h>
+#include <gst/pbutils/pbutils.h>
 #include <string.h>
 
 GST_DEBUG_CATEGORY (vc1_parse_debug);
@@ -1217,6 +1218,25 @@ static GstFlowReturn
 gst_vc1_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstVC1Parse *vc1parse = GST_VC1_PARSE (parse);
+
+  if (!vc1parse->sent_codec_tag) {
+    GstTagList *taglist;
+    GstCaps *caps;
+
+    taglist = gst_tag_list_new_empty ();
+
+    /* codec tag */
+    caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    gst_pb_utils_add_codec_description_to_tag_list (taglist,
+        GST_TAG_VIDEO_CODEC, caps);
+    gst_caps_unref (caps);
+
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (vc1parse),
+        gst_event_new_tag (taglist));
+
+    /* also signals the end of first-frame processing */
+    vc1parse->sent_codec_tag = TRUE;
+  }
 
   if (vc1parse->input_header_format != vc1parse->output_header_format ||
       vc1parse->input_stream_format != vc1parse->output_stream_format) {
