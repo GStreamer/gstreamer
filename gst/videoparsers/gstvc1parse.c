@@ -747,7 +747,7 @@ gst_vc1_parse_update_caps (GstVC1Parse * vc1parse)
         /* 0x0000000c */
         GST_WRITE_UINT32_BE (data + 20, 0x0000000c);
         /* structB */
-        if (vc1parse->level != -1)
+        if ((gint) vc1parse->level != -1)
           data[24] = (vc1parse->level << 5);
         else
           data[24] = 0x40;      /* Use HIGH level */
