@@ -458,11 +458,25 @@ add_image_tag (ID3v2::Tag * id3v2tag, const GstTagList * list,
 
         frame->setDescription ((desc) ? desc : "");
 
-        /* FIXME set image type properly from caps */
         if (strcmp (tag, GST_TAG_PREVIEW_IMAGE) == 0) {
           frame->setType (ID3v2::AttachedPictureFrame::FileIcon);
         } else {
-          frame->setType (ID3v2::AttachedPictureFrame::Other);
+          int image_type;
+
+          if (info_struct) {
+            if (gst_structure_get (info_struct, "image-type",
+                    GST_TYPE_TAG_IMAGE_TYPE, &image_type, NULL)) {
+              if (image_type > 0 && image_type <= 18) {
+                image_type += 2;
+              } else {
+                image_type = ID3v2::AttachedPictureFrame::Other;
+              }
+            } else {
+              image_type = ID3v2::AttachedPictureFrame::Other;
+            }
+          }
+
+          frame->setType ((TagLib::ID3v2::AttachedPictureFrame::Type) image_type);
         }
       }
     } else {
