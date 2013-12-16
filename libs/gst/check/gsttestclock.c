@@ -2,6 +2,8 @@
  *
  * Copyright (C) 2008 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
  * Copyright (C) 2012 Sebastian Rasmussen <sebastian.rasmussen@axis.com>
+ * Copyright (C) 2012 Havard Graff <havard@pexip.com>
+ * Copyright (C) 2013 Haakon Sporsheim <haakon@pexip.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -62,7 +64,7 @@
  *
  * #GstTestClock keeps track of these clock notifications. By calling
  * gst_test_clock_wait_for_next_pending_id() or
- * gst_test_clock_wait_for_pending_id_count() a unit tests may wait for the
+ * gst_test_clock_wait_for_multiple_pending_ids() a unit tests may wait for the
  * next one or several clock notifications to be requested. Additionally unit
  * tests may release blocked waits in a controlled fashion by calling
  * gst_test_clock_process_next_clock_id(). This way a unit test can control the
@@ -76,7 +78,7 @@
  *
  * N.B.: When a unit test waits for a certain amount of clock notifications to
  * be requested in gst_test_clock_wait_for_next_pending_id() or
- * gst_test_clock_wait_for_pending_id_count() then these functions may block
+ * gst_test_clock_wait_for_multiple_pending_ids() then these functions may block
  * for a long time. If they block forever then the expected clock notifications
  * were never requested from #GstTestClock, and so the assumptions in the code
  * of the unit test are wrong. The unit test case runner in gstcheck is
@@ -388,6 +390,7 @@ gst_test_clock_set_property (GObject * object, guint property_id,
 static GstClockTime
 gst_test_clock_get_resolution (GstClock * clock)
 {
+  (void) clock;
   return 1;
 }
 
@@ -590,6 +593,55 @@ gst_clock_entry_context_compare_func (gconstpointer a, gconstpointer b)
   const GstClockEntryContext *ctx_b = b;
 
   return gst_clock_id_compare_func (ctx_a->clock_entry, ctx_b->clock_entry);
+}
+
+static void
+process_entry_context_unlocked (GstTestClock * test_clock,
+    GstClockEntryContext * ctx)
+{
+  GstTestClockPrivate *priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+  GstClockEntry *entry = ctx->clock_entry;
+
+  if (ctx->time_diff >= 0)
+    GST_CLOCK_ENTRY_STATUS (entry) = GST_CLOCK_OK;
+  else
+    GST_CLOCK_ENTRY_STATUS (entry) = GST_CLOCK_EARLY;
+
+  if (entry->func != NULL) {
+    GST_OBJECT_UNLOCK (test_clock);
+    entry->func (GST_CLOCK (test_clock), priv->internal_time, entry,
+        entry->user_data);
+    GST_OBJECT_LOCK (test_clock);
+  }
+
+  gst_test_clock_remove_entry (test_clock, entry);
+
+  if (GST_CLOCK_ENTRY_TYPE (entry) == GST_CLOCK_ENTRY_PERIODIC) {
+    GST_CLOCK_ENTRY_TIME (entry) += GST_CLOCK_ENTRY_INTERVAL (entry);
+
+    if (entry->func != NULL)
+      gst_test_clock_add_entry (test_clock, entry, NULL);
+  }
+}
+
+static GstTestClockIDList *
+gst_test_clock_get_pending_id_list_unlocked (GstTestClock * test_clock)
+{
+  GstTestClockPrivate *priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+  GstTestClockIDList *result = g_new0 (GstTestClockIDList, 1);
+
+  if (priv->entry_contexts != NULL) {
+    GList *cur;
+    for (cur = priv->entry_contexts; cur != NULL; cur = cur->next) {
+      GstClockEntryContext *ctx = cur->data;
+
+      result->cur =
+          g_list_append (result->cur, gst_clock_id_ref (ctx->clock_entry));
+    }
+  }
+  result->length = g_list_length (result->cur);
+
+  return result;
 }
 
 /**
@@ -824,37 +876,6 @@ gst_test_clock_wait_for_next_pending_id (GstTestClock * test_clock,
 }
 
 /**
- * gst_test_clock_wait_for_pending_id_count:
- * @test_clock: #GstTestClock for which to await having enough pending clock
- * @count: the number of pending clock notifications to wait for
- *
- * Blocks until at least @count clock notifications have been requested from
- * @test_clock. There is no timeout for this wait, see the main description of
- * #GstTestClock.
- *
- * MT safe.
- *
- * Since: 1.2
- */
-void
-gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
-    guint count)
-{
-  GstTestClockPrivate *priv;
-
-  g_return_if_fail (GST_IS_TEST_CLOCK (test_clock));
-
-  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
-
-  GST_OBJECT_LOCK (test_clock);
-
-  while (gst_test_clock_peek_id_count_unlocked (test_clock) < count)
-    g_cond_wait (&priv->entry_added_cond, GST_OBJECT_GET_LOCK (test_clock));
-
-  GST_OBJECT_UNLOCK (test_clock);
-}
-
-/**
  * gst_test_clock_process_next_clock_id:
  * @test_clock: a #GstTestClock for which to retrieve the next pending clock
  * notification
@@ -888,30 +909,8 @@ gst_test_clock_process_next_clock_id (GstTestClock * test_clock)
       result = gst_clock_id_ref (ctx->clock_entry);
   }
 
-  if (result != NULL) {
-    GstClockEntry *entry = ctx->clock_entry;
-
-    if (ctx->time_diff >= 0)
-      GST_CLOCK_ENTRY_STATUS (entry) = GST_CLOCK_OK;
-    else
-      GST_CLOCK_ENTRY_STATUS (entry) = GST_CLOCK_EARLY;
-
-    if (entry->func != NULL) {
-      GST_OBJECT_UNLOCK (test_clock);
-      entry->func (GST_CLOCK (test_clock), priv->internal_time, entry,
-          entry->user_data);
-      GST_OBJECT_LOCK (test_clock);
-    }
-
-    gst_test_clock_remove_entry (test_clock, entry);
-
-    if (GST_CLOCK_ENTRY_TYPE (entry) == GST_CLOCK_ENTRY_PERIODIC) {
-      GST_CLOCK_ENTRY_TIME (entry) += GST_CLOCK_ENTRY_INTERVAL (entry);
-
-      if (entry->func != NULL)
-        gst_test_clock_add_entry (test_clock, entry, NULL);
-    }
-  }
+  if (result != NULL)
+    process_entry_context_unlocked (test_clock, ctx);
 
   GST_OBJECT_UNLOCK (test_clock);
 
@@ -956,4 +955,126 @@ gst_test_clock_get_next_entry_time (GstTestClock * test_clock)
   GST_OBJECT_UNLOCK (test_clock);
 
   return result;
+}
+
+/**
+ * gst_test_clock_wait_for_multiple_pending_ids:
+ * @test_clock: #GstTestClock for which to await having enough pending clock
+ * @count: the number of pending clock notifications to wait for
+ * @pending_list: A #GstTestClockIDList with pending #GstClockIDs
+ *
+ * Blocks until at least @count clock notifications have been requested from
+ * @test_clock. There is no timeout for this wait, see the main description of
+ * #GstTestClock.
+ *
+ * MT safe.
+ *
+ * Since: 1.2
+ */
+void
+gst_test_clock_wait_for_multiple_pending_ids (GstTestClock * test_clock,
+    guint count, GstTestClockIDList ** pending_list)
+{
+  GstTestClockPrivate *priv;
+
+  g_return_if_fail (GST_IS_TEST_CLOCK (test_clock));
+  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+
+  GST_OBJECT_LOCK (test_clock);
+
+  while (g_list_length (priv->entry_contexts) < count)
+    g_cond_wait (&priv->entry_added_cond, GST_OBJECT_GET_LOCK (test_clock));
+
+  if (pending_list)
+    *pending_list = gst_test_clock_get_pending_id_list_unlocked (test_clock);
+
+  GST_OBJECT_UNLOCK (test_clock);
+}
+
+/**
+ * gst_test_clock_process_id_list:
+ * @test_clock: #GstTestClock for which to process the pending IDs
+ * @pending_list: A #GstTestClockIDList with pending #GstClockIDs
+ *
+ * Processes and releases the pending IDs in #GstTestClockIDList
+ *
+ * MT safe.
+ *
+ * Since: 1.2
+ */
+guint
+gst_test_clock_process_id_list (GstTestClock * test_clock,
+    GstTestClockIDList * pending_list)
+{
+  GstTestClockPrivate *priv;
+  GList *cur;
+  guint result = 0;
+
+  g_return_val_if_fail (GST_IS_TEST_CLOCK (test_clock), 0);
+  priv = GST_TEST_CLOCK_GET_PRIVATE (test_clock);
+
+  GST_OBJECT_LOCK (test_clock);
+
+  for (cur = pending_list->cur; cur != NULL; cur = cur->next) {
+    GstClockID pending_id = cur->data;
+    GstClockEntryContext *ctx =
+        gst_test_clock_lookup_entry_context (test_clock, pending_id);
+    if (ctx) {
+      process_entry_context_unlocked (test_clock, ctx);
+      result++;
+    }
+  }
+  GST_OBJECT_UNLOCK (test_clock);
+
+  return result;
+}
+
+/**
+ * gst_test_clock_id_list_get_latest_time:
+ * @pending_list: A #GstTestClockIDList with pending #GstClockIDs
+ *
+ * Finds the latest time inside the #GstTestClockIDList
+ *
+ * MT safe.
+ *
+ * Since: 1.2
+ */
+GstClockTime
+gst_test_clock_id_list_get_latest_time (GstTestClockIDList * pending_list)
+{
+  GList *cur;
+  GstClockTime result = 0;
+
+  for (cur = pending_list->cur; cur != NULL; cur = cur->next) {
+    GstClockID *pending_id = cur->data;
+    GstClockTime time = gst_clock_id_get_time (pending_id);
+    if (time > result)
+      result = time;
+  }
+
+  return result;
+}
+
+/**
+ * gst_test_clock_id_list_free:
+ * @pending_list: A #GstTestClockIDList with pending #GstClockIDs
+ *
+ * Free the supplied #GstTestClockIDList
+ *
+ * MT safe.
+ *
+ * Since: 1.2
+ */
+void
+gst_test_clock_id_list_free (GstTestClockIDList * pending_list)
+{
+  GList *cur;
+
+  for (cur = pending_list->cur; cur != NULL; cur = cur->next) {
+    GstClockID *pending_id = cur->data;
+    gst_clock_id_unref (pending_id);
+  }
+
+  g_list_free (pending_list->cur);
+  g_free (pending_list);
 }

@@ -2,6 +2,8 @@
  *
  * Copyright (C) 2008 Ole André Vadla Ravnås <ole.andre.ravnas@tandberg.com>
  * Copyright (C) 2012 Sebastian Rasmussen <sebastian.rasmussen@axis.com>
+ * Copyright (C) 2012 Havard Graff <havard@pexip.com>
+ * Copyright (C) 2013 Haakon Sporsheim <haakon@pexip.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -43,6 +45,8 @@ typedef struct _GstTestClock GstTestClock;
 typedef struct _GstTestClockClass GstTestClockClass;
 typedef struct _GstTestClockPrivate GstTestClockPrivate;
 
+typedef struct _GstTestClockIDList GstTestClockIDList;
+
 /**
  * GstTestClock:
  *
@@ -72,17 +76,32 @@ struct _GstTestClockClass
   GstClockClass parent_class;
 };
 
+/**
+ * GstTestClockIDList:
+ * @cur: A #GList with all pending #GstClockID
+ * @length: A #guint with the length of the list
+ *
+ * A #GstTestClockIDList structure, which is returned when waiting for multiple IDs
+ *
+ * Since: 1.2
+ */
+ struct _GstTestClockIDList
+{
+  GList * cur;
+  guint length;
+};
+
 GType         gst_test_clock_get_type (void);
 
 GstClock *    gst_test_clock_new (void);
 
 GstClock *    gst_test_clock_new_with_start_time (GstClockTime start_time);
 
-void          gst_test_clock_set_time     (GstTestClock * test_clock,
-                                           GstClockTime new_time);
+void          gst_test_clock_set_time (GstTestClock * test_clock,
+                                      GstClockTime   new_time);
 
-void          gst_test_clock_advance_time (GstTestClock * test_clock,
-                                           GstClockTimeDiff delta);
+void          gst_test_clock_advance_time (GstTestClock *   test_clock,
+                                          GstClockTimeDiff delta);
 
 guint         gst_test_clock_peek_id_count (GstTestClock * test_clock);
 
@@ -91,15 +110,23 @@ gboolean      gst_test_clock_has_id (GstTestClock * test_clock, GstClockID id);
 gboolean      gst_test_clock_peek_next_pending_id (GstTestClock * test_clock,
                                                    GstClockID   * pending_id);
 
-void          gst_test_clock_wait_for_next_pending_id  (GstTestClock * test_clock,
-                                                        GstClockID   * pending_id);
-
-void          gst_test_clock_wait_for_pending_id_count (GstTestClock * test_clock,
-                                                        guint          count);
+void          gst_test_clock_wait_for_next_pending_id (GstTestClock * test_clock,
+                                                       GstClockID   * pending_id);
 
 GstClockID    gst_test_clock_process_next_clock_id (GstTestClock * test_clock);
 
 GstClockTime  gst_test_clock_get_next_entry_time   (GstTestClock * test_clock);
+
+void          gst_test_clock_wait_for_multiple_pending_ids (GstTestClock        * test_clock,
+                                                            guint                 count,
+                                                            GstTestClockIDList ** pending_list);
+
+guint         gst_test_clock_process_id_list (GstTestClock       * test_clock,
+                                              GstTestClockIDList * pending_list);
+
+GstClockTime  gst_test_clock_id_list_get_latest_time (GstTestClockIDList * list);
+
+void          gst_test_clock_id_list_free (GstTestClockIDList * list);
 
 G_END_DECLS
 

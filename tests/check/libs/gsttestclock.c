@@ -630,13 +630,13 @@ GST_START_TEST (test_single_shot_sync_simultaneous_no_timeout)
   context_b.clock_id = gst_clock_id_ref (clock_id_b);
   context_b.jitter = 0;
 
-  gst_test_clock_wait_for_pending_id_count (test_clock, 0);
+  gst_test_clock_wait_for_multiple_pending_ids (test_clock, 0, NULL);
 
   worker_thread_b =
       g_thread_new ("worker_thread_b",
       test_wait_pending_single_shot_id_sync_worker, &context_b);
 
-  gst_test_clock_wait_for_pending_id_count (test_clock, 1);
+  gst_test_clock_wait_for_multiple_pending_ids (test_clock, 1, NULL);
   gst_test_clock_wait_for_next_pending_id (test_clock, &pending_id);
   assert_pending_id (pending_id, clock_id_b, GST_CLOCK_ENTRY_SINGLE,
       6 * GST_SECOND);
@@ -646,7 +646,7 @@ GST_START_TEST (test_single_shot_sync_simultaneous_no_timeout)
       g_thread_new ("worker_thread_a",
       test_wait_pending_single_shot_id_sync_worker, &context_a);
 
-  gst_test_clock_wait_for_pending_id_count (test_clock, 2);
+  gst_test_clock_wait_for_multiple_pending_ids (test_clock, 2, NULL);
   gst_test_clock_wait_for_next_pending_id (test_clock, &pending_id);
   assert_pending_id (pending_id, clock_id_a, GST_CLOCK_ENTRY_SINGLE,
       5 * GST_SECOND);
@@ -660,7 +660,7 @@ GST_START_TEST (test_single_shot_sync_simultaneous_no_timeout)
       GST_CLOCK_OK);
   gst_clock_id_unref (processed_id);
 
-  gst_test_clock_wait_for_pending_id_count (test_clock, 1);
+  gst_test_clock_wait_for_multiple_pending_ids (test_clock, 1, NULL);
   gst_test_clock_wait_for_next_pending_id (test_clock, &pending_id);
   assert_pending_id (pending_id, clock_id_b, GST_CLOCK_ENTRY_SINGLE,
       6 * GST_SECOND);
@@ -674,7 +674,7 @@ GST_START_TEST (test_single_shot_sync_simultaneous_no_timeout)
       GST_CLOCK_OK);
   gst_clock_id_unref (processed_id);
 
-  gst_test_clock_wait_for_pending_id_count (test_clock, 0);
+  gst_test_clock_wait_for_multiple_pending_ids (test_clock, 0, NULL);
 
   g_thread_join (worker_thread_a);
   g_thread_join (worker_thread_b);
@@ -690,7 +690,70 @@ GST_START_TEST (test_single_shot_sync_simultaneous_no_timeout)
 
   gst_object_unref (clock);
 }
+GST_END_TEST;
 
+GST_START_TEST (test_processing_multiple_ids)
+{
+  GstClock *clock;
+  GstTestClock *test_clock;
+  GstClockID clock_id_a;
+  GstClockID clock_id_b;
+  SyncClockWaitContext context_a;
+  SyncClockWaitContext context_b;
+  GThread *worker_thread_a;
+  GThread *worker_thread_b;
+  GstTestClockIDList * pending_list;
+
+  clock = gst_test_clock_new_with_start_time (GST_SECOND);
+  test_clock = GST_TEST_CLOCK (clock);
+
+  /* register a wait for 5 seconds */
+  clock_id_a = gst_clock_new_single_shot_id (clock, 5 * GST_SECOND);
+  context_a.clock_id = gst_clock_id_ref (clock_id_a);
+  context_a.jitter = 0;
+  worker_thread_a =
+      g_thread_new ("worker_thread_a",
+      test_wait_pending_single_shot_id_sync_worker, &context_a);
+
+  /* register another wait for 6 seconds */
+  clock_id_b = gst_clock_new_single_shot_id (clock, 6 * GST_SECOND);
+  context_b.clock_id = gst_clock_id_ref (clock_id_b);
+  context_b.jitter = 0;
+  worker_thread_b =
+      g_thread_new ("worker_thread_b",
+      test_wait_pending_single_shot_id_sync_worker, &context_b);
+
+  /* wait for two waits */
+  gst_test_clock_wait_for_multiple_pending_ids (test_clock, 2, &pending_list);
+
+  /* assert they are correct */
+  assert_pending_id (pending_list->cur->data, clock_id_a, GST_CLOCK_ENTRY_SINGLE,
+      5 * GST_SECOND);
+  assert_pending_id (pending_list->cur->next->data, clock_id_b, GST_CLOCK_ENTRY_SINGLE,
+      6 * GST_SECOND);
+
+  /* verify we are waiting for 6 seconds as the latest time */
+  fail_unless_equals_int64 (6 * GST_SECOND,
+      gst_test_clock_id_list_get_latest_time (pending_list));
+
+  /* process both ID's at the same time */
+  gst_test_clock_process_id_list (test_clock, pending_list);
+  gst_test_clock_id_list_free (pending_list);
+
+  g_thread_join (worker_thread_a);
+  g_thread_join (worker_thread_b);
+
+  fail_unless_equals_int64 (-4 * GST_SECOND, context_a.jitter);
+  fail_unless_equals_int64 (-5 * GST_SECOND, context_b.jitter);
+
+  gst_clock_id_unref (context_a.clock_id);
+  gst_clock_id_unref (context_b.clock_id);
+
+  gst_clock_id_unref (clock_id_a);
+  gst_clock_id_unref (clock_id_b);
+
+  gst_object_unref (clock);
+}
 GST_END_TEST;
 
 GST_START_TEST (test_single_shot_async_past)
@@ -954,6 +1017,7 @@ gst_test_clock_suite (void)
   tcase_add_test (tc_chain, test_wait_pending_single_shot_id);
   tcase_add_test (tc_chain, test_wait_pending_periodic_id);
   tcase_add_test (tc_chain, test_single_shot_sync_simultaneous_no_timeout);
+  tcase_add_test (tc_chain, test_processing_multiple_ids);
   tcase_add_test (tc_chain, test_single_shot_sync_past);
   tcase_add_test (tc_chain, test_single_shot_sync_present);
   tcase_add_test (tc_chain, test_single_shot_sync_future);
