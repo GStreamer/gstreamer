@@ -820,9 +820,9 @@ gst_deinterlace_reset (GstDeinterlace * self)
   self->passthrough = FALSE;
 
   self->reconfigure = FALSE;
-  if (self->new_mode != -1)
+  if ((gint) self->new_mode != -1)
     self->mode = self->new_mode;
-  if (self->new_fields != -1)
+  if ((gint) self->new_fields != -1)
     self->fields = self->new_fields;
   self->new_mode = -1;
   self->new_fields = -1;
@@ -2024,9 +2024,9 @@ gst_deinterlace_chain (GstPad * pad, GstObject * parent, GstBuffer * buf)
   if (self->reconfigure) {      /* FIXME: reconfigure should probably work differently */
     GstCaps *caps;
 
-    if (self->new_fields != -1)
+    if ((gint) self->new_fields != -1)
       self->fields = self->new_fields;
-    if (self->new_mode != -1)
+    if ((gint) self->new_mode != -1)
       self->mode = self->new_mode;
     self->new_mode = -1;
     self->new_fields = -1;
