@@ -289,7 +289,7 @@ gst_ffmpegdeinterlace_chain (GstPad * pad, GstObject * parent,
 
   GST_OBJECT_LOCK (deinterlace);
   if (deinterlace->reconfigure) {
-    if (deinterlace->new_mode != -1)
+    if ((gint) deinterlace->new_mode != -1)
       deinterlace->mode = deinterlace->new_mode;
     deinterlace->new_mode = -1;
 

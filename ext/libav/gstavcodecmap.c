@@ -1712,6 +1712,7 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
           format = GST_AUDIO_FORMAT_U8;
           break;
         default:
+          format = 0;
           g_assert (0);         /* don't worry, we never get here */
           break;
       }
