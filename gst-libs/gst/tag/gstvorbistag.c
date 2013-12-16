@@ -568,9 +568,22 @@ gst_tag_to_metadata_block_picture (const gchar * tag,
     mime_type = "-->";
   mime_type_len = strlen (mime_type);
 
+  /* FIXME 2.0: Remove the image-type reading from the caps, this was
+   * a bug until 1.2.2. The image-type is only supposed to be in the
+   * info structure */
   gst_structure_get (mime_struct, "image-type", GST_TYPE_TAG_IMAGE_TYPE,
       &image_type, "width", G_TYPE_INT, &width, "height", G_TYPE_INT, &height,
       NULL);
+
+  if (image_type == GST_TAG_IMAGE_TYPE_NONE) {
+    const GstStructure *info_struct;
+
+    info_struct = gst_sample_get_info (sample);
+    if (info_struct && gst_structure_has_name (info_struct, "GstTagImageInfo")) {
+      gst_structure_get (info_struct, "image-type", GST_TYPE_TAG_IMAGE_TYPE,
+          &image_type, NULL);
+    }
+  }
 
   metadata_block_len = 32 + mime_type_len + gst_buffer_get_size (buffer);
   gst_byte_writer_init_with_size (&writer, metadata_block_len, TRUE);
