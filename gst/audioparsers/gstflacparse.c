@@ -58,9 +58,8 @@
 #include <string.h>
 #include <gst/tag/tag.h>
 #include <gst/audio/audio.h>
-
-#include <gst/base/gstbitreader.h>
-#include <gst/base/gstbytereader.h>
+#include <gst/base/base.h>
+#include <gst/pbutils/pbutils.h>
 
 GST_DEBUG_CATEGORY_STATIC (flacparse_debug);
 #define GST_CAT_DEFAULT flacparse_debug
@@ -337,6 +336,8 @@ gst_flac_parse_start (GstBaseParse * parse)
   flacparse->block_size = 0;
   flacparse->sample_number = 0;
   flacparse->strategy_checked = FALSE;
+
+  flacparse->sent_codec_tag = FALSE;
 
   /* "fLaC" marker */
   gst_base_parse_set_min_frame_size (GST_BASE_PARSE (flacparse), 4);
@@ -1689,6 +1690,25 @@ static GstFlowReturn
 gst_flac_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
   GstFlacParse *flacparse = GST_FLAC_PARSE (parse);
+
+  if (!flacparse->sent_codec_tag) {
+    GstTagList *taglist;
+    GstCaps *caps;
+
+    taglist = gst_tag_list_new_empty ();
+
+    /* codec tag */
+    caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    gst_pb_utils_add_codec_description_to_tag_list (taglist,
+        GST_TAG_AUDIO_CODEC, caps);
+    gst_caps_unref (caps);
+
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (flacparse),
+        gst_event_new_tag (taglist));
+
+    /* also signals the end of first-frame processing */
+    flacparse->sent_codec_tag = TRUE;
+  }
 
   /* Push tags */
   if (flacparse->tags) {

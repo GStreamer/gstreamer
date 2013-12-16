@@ -76,6 +76,8 @@ struct _GstFlacParse {
   guint64 sample_number;
   gboolean strategy_checked;
 
+  gboolean sent_codec_tag;
+
   GstTagList *tags;
   GstToc *toc;
 
