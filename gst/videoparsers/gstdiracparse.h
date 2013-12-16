@@ -42,6 +42,8 @@ struct _GstDiracParse
   DiracSequenceHeader sequence_header;
 
   guint32 frame_number;
+
+  gboolean sent_codec_tag;
 };
 
 struct _GstDiracParseClass

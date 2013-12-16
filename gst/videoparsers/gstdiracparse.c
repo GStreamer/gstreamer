@@ -35,7 +35,8 @@
 #endif
 
 #include <gst/gst.h>
-#include <gst/base/gstbytereader.h>
+#include <gst/base/base.h>
+#include <gst/pbutils/pbutils.h>
 #include <string.h>
 #include "gstdiracparse.h"
 #include "dirac_parse.h"
@@ -189,7 +190,11 @@ gst_dirac_parse_finalize (GObject * object)
 static gboolean
 gst_dirac_parse_start (GstBaseParse * parse)
 {
+  GstDiracParse *diracparse = GST_DIRAC_PARSE (parse);
+
   gst_base_parse_set_min_frame_size (parse, 13);
+
+  diracparse->sent_codec_tag = FALSE;
 
   return TRUE;
 }
@@ -384,6 +389,26 @@ gst_dirac_parse_convert (GstBaseParse * parse, GstFormat src_format,
 static GstFlowReturn
 gst_dirac_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
 {
+  GstDiracParse *diracparse = GST_DIRAC_PARSE (parse);
+
+  if (!diracparse->sent_codec_tag) {
+    GstTagList *taglist;
+    GstCaps *caps;
+
+    taglist = gst_tag_list_new_empty ();
+
+    /* codec tag */
+    caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    gst_pb_utils_add_codec_description_to_tag_list (taglist,
+        GST_TAG_VIDEO_CODEC, caps);
+    gst_caps_unref (caps);
+
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (diracparse),
+        gst_event_new_tag (taglist));
+
+    /* also signals the end of first-frame processing */
+    diracparse->sent_codec_tag = TRUE;
+  }
 
   return GST_FLOW_OK;
 }
