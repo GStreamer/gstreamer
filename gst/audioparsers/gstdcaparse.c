@@ -48,8 +48,8 @@
 #include <string.h>
 
 #include "gstdcaparse.h"
-#include <gst/base/gstbytereader.h>
-#include <gst/base/gstbitreader.h>
+#include <gst/base/base.h>
+#include <gst/pbutils/pbutils.h>
 
 GST_DEBUG_CATEGORY_STATIC (dca_parse_debug);
 #define GST_CAT_DEFAULT dca_parse_debug
@@ -76,6 +76,8 @@ static gboolean gst_dca_parse_start (GstBaseParse * parse);
 static gboolean gst_dca_parse_stop (GstBaseParse * parse);
 static GstFlowReturn gst_dca_parse_handle_frame (GstBaseParse * parse,
     GstBaseParseFrame * frame, gint * skipsize);
+static GstFlowReturn gst_dca_parse_pre_push_frame (GstBaseParse * parse,
+    GstBaseParseFrame * frame);
 static GstCaps *gst_dca_parse_get_sink_caps (GstBaseParse * parse,
     GstCaps * filter);
 static gboolean gst_dca_parse_set_sink_caps (GstBaseParse * parse,
@@ -99,6 +101,8 @@ gst_dca_parse_class_init (GstDcaParseClass * klass)
   parse_class->start = GST_DEBUG_FUNCPTR (gst_dca_parse_start);
   parse_class->stop = GST_DEBUG_FUNCPTR (gst_dca_parse_stop);
   parse_class->handle_frame = GST_DEBUG_FUNCPTR (gst_dca_parse_handle_frame);
+  parse_class->pre_push_frame =
+      GST_DEBUG_FUNCPTR (gst_dca_parse_pre_push_frame);
   parse_class->get_sink_caps = GST_DEBUG_FUNCPTR (gst_dca_parse_get_sink_caps);
   parse_class->set_sink_caps = GST_DEBUG_FUNCPTR (gst_dca_parse_set_sink_caps);
 
@@ -122,6 +126,7 @@ gst_dca_parse_reset (GstDcaParse * dcaparse)
   dcaparse->block_size = -1;
   dcaparse->frame_size = -1;
   dcaparse->last_sync = 0;
+  dcaparse->sent_codec_tag = FALSE;
 }
 
 static void
@@ -542,4 +547,31 @@ gst_dca_parse_set_sink_caps (GstBaseParse * parse, GstCaps * caps)
     gst_pad_set_chain_function (parse->sinkpad, dcaparse->baseparse_chainfunc);
   }
   return TRUE;
+}
+
+static GstFlowReturn
+gst_dca_parse_pre_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
+{
+  GstDcaParse *dcaparse = GST_DCA_PARSE (parse);
+
+  if (!dcaparse->sent_codec_tag) {
+    GstTagList *taglist;
+    GstCaps *caps;
+
+    taglist = gst_tag_list_new_empty ();
+
+    /* codec tag */
+    caps = gst_pad_get_current_caps (GST_BASE_PARSE_SRC_PAD (parse));
+    gst_pb_utils_add_codec_description_to_tag_list (taglist,
+        GST_TAG_AUDIO_CODEC, caps);
+    gst_caps_unref (caps);
+
+    gst_pad_push_event (GST_BASE_PARSE_SRC_PAD (dcaparse),
+        gst_event_new_tag (taglist));
+
+    /* also signals the end of first-frame processing */
+    dcaparse->sent_codec_tag = TRUE;
+  }
+
+  return GST_FLOW_OK;
 }

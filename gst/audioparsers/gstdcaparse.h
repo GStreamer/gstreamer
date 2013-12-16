@@ -58,6 +58,8 @@ struct _GstDcaParse {
   gint                  block_size;
   gint                  frame_size;
 
+  gboolean              sent_codec_tag;
+
   guint32               last_sync;
 
   GstPadChainFunction   baseparse_chainfunc;
