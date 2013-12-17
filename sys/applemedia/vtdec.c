@@ -96,6 +96,13 @@ static GstStaticPadTemplate gst_vtdec_sink_template =
 #define GST_VTDEC_CV_VIDEO_FORMAT kCVPixelFormatType_422YpCbCr8
 #endif
 
+/* define EnableHardwareAcceleratedVideoDecoder in < 10.9 */
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1090
+const CFStringRef
+    kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder =
+CFSTR ("EnableHardwareAcceleratedVideoDecoder");
+#endif
+
 #define VIDEO_SRC_CAPS \
     GST_VIDEO_CAPS_MAKE("{" GST_VTDEC_VIDEO_FORMAT_STR "}")
 
@@ -309,7 +316,14 @@ gst_vtdec_create_session (GstVtdec * vtdec)
 {
   CFMutableDictionaryRef output_image_buffer_attrs;
   VTDecompressionOutputCallbackRecord callback;
+  CFMutableDictionaryRef videoDecoderSpecification;
   OSStatus status;
+
+  videoDecoderSpecification =
+      CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
+      &kCFTypeDictionaryValueCallBacks);
+  gst_vtutil_dict_set_boolean (videoDecoderSpecification,
+      kVTVideoDecoderSpecification_EnableHardwareAcceleratedVideoDecoder, TRUE);
 
   output_image_buffer_attrs =
       CFDictionaryCreateMutable (NULL, 0, &kCFTypeDictionaryKeyCallBacks,
@@ -327,7 +341,8 @@ gst_vtdec_create_session (GstVtdec * vtdec)
   callback.decompressionOutputRefCon = vtdec;
 
   status = VTDecompressionSessionCreate (NULL, vtdec->format_description,
-      NULL, output_image_buffer_attrs, &callback, &vtdec->session);
+      videoDecoderSpecification, output_image_buffer_attrs, &callback,
+      &vtdec->session);
 
   CFRelease (output_image_buffer_attrs);
 
