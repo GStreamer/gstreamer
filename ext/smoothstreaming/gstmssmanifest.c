@@ -341,6 +341,22 @@ _gst_mss_stream_audio_caps_from_fourcc (gchar * fourcc)
   return NULL;
 }
 
+static GstCaps *
+_gst_mss_stream_audio_caps_from_audio_tag (gint audiotag)
+{
+  switch (audiotag) {
+    case 83:                   /* MP3 */
+      return gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 1,
+          "layer", G_TYPE_INT, 3, NULL);
+    case 255:                  /* AAC */
+      return gst_caps_new_simple ("audio/mpeg", "mpegversion", G_TYPE_INT, 4,
+          NULL);
+    default:
+      break;
+  }
+  return NULL;
+}
+
 /* copied and adapted from h264parse */
 static GstBuffer *
 _make_h264_codec_data (GstBuffer * sps, GstBuffer * pps)
@@ -567,9 +583,10 @@ static GstCaps *
 _gst_mss_stream_audio_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
 {
   xmlNodePtr node = q->xmlnode;
-  GstCaps *caps;
+  GstCaps *caps = NULL;
   GstStructure *structure;
   gchar *fourcc = (gchar *) xmlGetProp (node, (xmlChar *) "FourCC");
+  gchar *audiotag = (gchar *) xmlGetProp (node, (xmlChar *) "AudioTag");
   gchar *channels_str = (gchar *) xmlGetProp (node, (xmlChar *) "Channels");
   gchar *rate_str = (gchar *) xmlGetProp (node, (xmlChar *) "SamplingRate");
   gchar *block_align_str =
@@ -580,11 +597,18 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
   gint block_align = 0;
   gint rate = 0;
   gint channels = 0;
+  gint atag = 0;
 
   if (!fourcc)                  /* sometimes the fourcc is omitted, we fallback to the Subtype in the StreamIndex node */
     fourcc = (gchar *) xmlGetProp (node->parent, (xmlChar *) "Subtype");
 
-  caps = _gst_mss_stream_audio_caps_from_fourcc (fourcc);
+  if (fourcc) {
+    caps = _gst_mss_stream_audio_caps_from_fourcc (fourcc);
+  } else if (audiotag) {
+    atag = g_ascii_strtoull (audiotag, NULL, 10);
+    caps = _gst_mss_stream_audio_caps_from_audio_tag (atag);
+  }
+
   if (!caps)
     goto end;
 
@@ -632,7 +656,8 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
     }
   }
 
-  if (!codec_data && strcmp (fourcc, "AACL") == 0 && rate && channels) {
+  if (!codec_data && ((fourcc && strcmp (fourcc, "AACL") == 0) || atag == 255)
+      && rate && channels) {
     codec_data = _make_aacl_codec_data (rate, channels);
   }
 
@@ -656,6 +681,7 @@ end:
   if (codec_data)
     gst_buffer_unref (codec_data);
   xmlFree (fourcc);
+  xmlFree (audiotag);
   xmlFree (channels_str);
   xmlFree (rate_str);
   xmlFree (block_align_str);
