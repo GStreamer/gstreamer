@@ -769,6 +769,22 @@ gst_vaapidecode_parse(GstVideoDecoder *vdec,
     return ret;
 }
 
+static GstStateChangeReturn
+gst_vaapidecode_change_state (GstElement * element, GstStateChange transition)
+{
+    GstVaapiDecode * const decode = GST_VAAPIDECODE(element);
+
+    switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+        gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
+        break;
+    default:
+        break;
+    }
+    return GST_ELEMENT_CLASS(gst_vaapidecode_parent_class)->change_state(
+        element, transition);
+}
+
 static void
 gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
 {
@@ -783,6 +799,9 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
     gst_vaapi_plugin_base_class_init(GST_VAAPI_PLUGIN_BASE_CLASS(klass));
 
     object_class->finalize   = gst_vaapidecode_finalize;
+
+    element_class->change_state =
+        GST_DEBUG_FUNCPTR(gst_vaapidecode_change_state);
 
     vdec_class->open         = GST_DEBUG_FUNCPTR(gst_vaapidecode_open);
     vdec_class->close        = GST_DEBUG_FUNCPTR(gst_vaapidecode_close);
