@@ -140,6 +140,8 @@ static GstFlowReturn gst_mss_demux_stream_push_event (GstMssDemuxStream *
 static GstFlowReturn gst_mss_demux_combine_flows (GstMssDemux * mssdemux);
 
 static gboolean gst_mss_demux_process_manifest (GstMssDemux * mssdemux);
+static void
+gst_mss_demux_stop_tasks (GstMssDemux * mssdemux, gboolean immediate);
 
 static void
 gst_mss_demux_class_init (GstMssDemuxClass * klass)
@@ -278,13 +280,7 @@ gst_mss_demux_reset (GstMssDemux * mssdemux)
 {
   GSList *iter;
 
-  for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
-    GstMssDemuxStream *stream = iter->data;
-
-    if (stream->downloader)
-      gst_uri_downloader_cancel (stream->downloader);
-
-  }
+  gst_mss_demux_stop_tasks (mssdemux, TRUE);
 
   if (mssdemux->manifest_buffer) {
     gst_buffer_unref (mssdemux->manifest_buffer);
@@ -481,16 +477,16 @@ gst_mss_demux_stop_tasks (GstMssDemux * mssdemux, gboolean immediate)
   for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
     GstMssDemuxStream *stream = iter->data;
 
+    gst_task_stop (stream->download_task);
     stream->cancelled = TRUE;
     if (immediate)
       gst_uri_downloader_cancel (stream->downloader);
-    gst_task_pause (stream->download_task);
   }
 
   for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
     GstMssDemuxStream *stream = iter->data;
-    g_rec_mutex_lock (&stream->download_lock);
-    stream->cancelled = FALSE;
+
+    gst_task_join (stream->download_task);
     stream->download_error_count = 0;
   }
 }
@@ -502,11 +498,7 @@ gst_mss_demux_restart_tasks (GstMssDemux * mssdemux)
   for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
     GstMssDemuxStream *stream = iter->data;
     gst_uri_downloader_reset (stream->downloader);
-    g_rec_mutex_unlock (&stream->download_lock);
-  }
-  for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
-    GstMssDemuxStream *stream = iter->data;
-
+    stream->cancelled = FALSE;
     gst_task_start (stream->download_task);
   }
 }
@@ -1232,7 +1224,6 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
 cancelled:
   {
     GST_DEBUG_OBJECT (mssdemux, "Stream %p has been cancelled", stream);
-    gst_task_pause (stream->download_task);
     return;
   }
 }
