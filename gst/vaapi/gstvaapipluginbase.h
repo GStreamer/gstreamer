@@ -30,6 +30,7 @@
 #include <gst/video/gstvideoencoder.h>
 #include <gst/video/gstvideosink.h>
 #include <gst/vaapi/gstvaapidisplay.h>
+#include "gstvaapiuploader.h"
 
 G_BEGIN_DECLS
 
@@ -96,6 +97,13 @@ typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
   (gst_vaapi_display_replace(&GST_VAAPI_PLUGIN_BASE_DISPLAY(plugin), \
        (new_display)))
 
+#define GST_VAAPI_PLUGIN_BASE_UPLOADER(plugin) \
+  (GST_VAAPI_PLUGIN_BASE(plugin)->uploader)
+#define GST_VAAPI_PLUGIN_BASE_UPLOADER_CAPS(plugin) \
+  (gst_vaapi_uploader_get_caps(GST_VAAPI_PLUGIN_BASE_UPLOADER(plugin)))
+#define GST_VAAPI_PLUGIN_BASE_UPLOADER_USED(plugin) \
+  (GST_VAAPI_PLUGIN_BASE(plugin)->uploader_used)
+
 struct _GstVaapiPluginBase
 {
   /*< private >*/
@@ -115,6 +123,10 @@ struct _GstVaapiPluginBase
   gboolean sinkpad_caps_changed;
   GstVideoInfo sinkpad_info;
   GstPadQueryFunction sinkpad_query;
+#if GST_CHECK_VERSION(1,0,0)
+  GstBufferPool *sinkpad_buffer_pool;
+  guint sinkpad_buffer_size;
+#endif
 
   GstPad *srcpad;
   GstCaps *srcpad_caps;
@@ -125,6 +137,9 @@ struct _GstVaapiPluginBase
   GstVaapiDisplay *display;
   GstVaapiDisplayType display_type;
   GstVaapiDisplayType display_type_req;
+
+  GstVaapiUploader *uploader;
+  gboolean uploader_used;
 };
 
 struct _GstVaapiPluginBaseClass
@@ -179,8 +194,27 @@ gst_vaapi_plugin_base_ensure_display (GstVaapiPluginBase * plugin);
 
 G_GNUC_INTERNAL
 gboolean
+gst_vaapi_plugin_base_ensure_uploader (GstVaapiPluginBase * plugin);
+
+G_GNUC_INTERNAL
+gboolean
 gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
     GstCaps * outcaps);
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_plugin_base_propose_allocation (GstVaapiPluginBase * plugin,
+    GstQuery * query);
+
+G_GNUC_INTERNAL
+GstFlowReturn
+gst_vaapi_plugin_base_allocate_input_buffer (GstVaapiPluginBase * plugin,
+    GstCaps * caps, GstBuffer ** outbuf_ptr);
+
+G_GNUC_INTERNAL
+GstFlowReturn
+gst_vaapi_plugin_base_get_input_buffer (GstVaapiPluginBase * plugin,
+    GstBuffer * inbuf, GstBuffer ** outbuf_ptr);
 
 G_END_DECLS
 

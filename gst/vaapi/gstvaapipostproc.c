@@ -212,29 +212,8 @@ gst_vaapipostproc_ensure_uploader(GstVaapiPostproc *postproc)
 {
     if (!gst_vaapipostproc_ensure_display(postproc))
         return FALSE;
-
-    if (!postproc->uploader) {
-        postproc->uploader = gst_vaapi_uploader_new(
-            GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc));
-        if (!postproc->uploader)
-            return FALSE;
-    }
-
-    if (!gst_vaapi_uploader_ensure_display(postproc->uploader,
-            GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc)))
+    if (!gst_vaapi_plugin_base_ensure_uploader(GST_VAAPI_PLUGIN_BASE(postproc)))
         return FALSE;
-    return TRUE;
-}
-
-static gboolean
-gst_vaapipostproc_ensure_uploader_caps(GstVaapiPostproc *postproc)
-{
-#if !GST_CHECK_VERSION(1,0,0)
-    GstVaapiPluginBase * const plugin = GST_VAAPI_PLUGIN_BASE(postproc);
-    if (postproc->is_raw_yuv && !gst_vaapi_uploader_ensure_caps(
-            postproc->uploader, plugin->sinkpad_caps, NULL))
-        return FALSE;
-#endif
     return TRUE;
 }
 
@@ -279,8 +258,6 @@ gst_vaapipostproc_create(GstVaapiPostproc *postproc)
         return FALSE;
     if (!gst_vaapipostproc_ensure_uploader(postproc))
         return FALSE;
-    if (!gst_vaapipostproc_ensure_uploader_caps(postproc))
-        return FALSE;
     if (gst_vaapipostproc_ensure_filter(postproc))
         postproc->use_vpp = TRUE;
     return TRUE;
@@ -306,10 +283,6 @@ static void
 gst_vaapipostproc_destroy(GstVaapiPostproc *postproc)
 {
     ds_reset(&postproc->deinterlace_state);
-#if GST_CHECK_VERSION(1,0,0)
-    g_clear_object(&postproc->sinkpad_buffer_pool);
-#endif
-    g_clear_object(&postproc->uploader);
     gst_vaapipostproc_destroy_filter(postproc);
 
     gst_caps_replace(&postproc->allowed_sinkpad_caps, NULL);
@@ -791,16 +764,6 @@ gst_vaapipostproc_update_sink_caps(GstVaapiPostproc *postproc, GstCaps *caps,
         (1 + deinterlace) * GST_VIDEO_INFO_FPS_N(&vi));
 
     postproc->is_raw_yuv = GST_VIDEO_INFO_IS_YUV(&vi);
-#if !GST_CHECK_VERSION(1,0,0)
-    if (postproc->is_raw_yuv) {
-        /* Ensure the uploader is set up for upstream allocated buffers */
-        GstVaapiUploader * const uploader = postproc->uploader;
-        if (!gst_vaapi_uploader_ensure_display(uploader, GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc)))
-            return FALSE;
-        if (!gst_vaapi_uploader_ensure_caps(uploader, caps, NULL))
-            return FALSE;
-    }
-#endif
     return TRUE;
 }
 
@@ -849,7 +812,7 @@ ensure_allowed_sinkpad_caps(GstVaapiPostproc *postproc)
 
     /* Append YUV caps */
     if (gst_vaapipostproc_ensure_uploader(postproc)) {
-        yuv_caps = gst_vaapi_uploader_get_caps(postproc->uploader);
+        yuv_caps = GST_VAAPI_PLUGIN_BASE_UPLOADER_CAPS(postproc);
         if (yuv_caps) {
             out_caps = gst_caps_make_writable(out_caps);
             gst_caps_append(out_caps, gst_caps_copy(yuv_caps));
@@ -1117,107 +1080,6 @@ gst_vaapipostproc_transform_size(GstBaseTransform *trans,
     return TRUE;
 }
 
-static GstBuffer *
-get_source_buffer(GstVaapiPostproc *postproc, GstBuffer *inbuf)
-{
-    GstVaapiVideoMeta *meta;
-    GstBuffer *outbuf;
-#if GST_CHECK_VERSION(1,0,0)
-    GstVideoFrame src_frame, out_frame;
-#endif
-
-    meta = gst_buffer_get_vaapi_video_meta(inbuf);
-    if (meta)
-        return gst_buffer_ref(inbuf);
-
-#if GST_CHECK_VERSION(1,0,0)
-    if (!postproc->is_raw_yuv)
-        goto error_invalid_buffer;
-
-    if (!postproc->sinkpad_buffer_pool)
-        goto error_no_pool;
-
-    if (!gst_buffer_pool_set_active(postproc->sinkpad_buffer_pool, TRUE))
-        goto error_active_pool;
-
-    outbuf = NULL;
-    if (gst_buffer_pool_acquire_buffer(postproc->sinkpad_buffer_pool,
-            &outbuf, NULL) != GST_FLOW_OK)
-        goto error_create_buffer;
-
-    if (!gst_video_frame_map(&src_frame, &postproc->sinkpad_info, inbuf,
-            GST_MAP_READ))
-        goto error_map_src_buffer;
-
-    if (!gst_video_frame_map(&out_frame, &postproc->sinkpad_info, outbuf,
-            GST_MAP_WRITE))
-        goto error_map_dst_buffer;
-
-    if (!gst_video_frame_copy(&out_frame, &src_frame))
-        goto error_copy_buffer;
-
-    gst_video_frame_unmap(&out_frame);
-    gst_video_frame_unmap(&src_frame);
-    gst_buffer_copy_into(outbuf, inbuf, GST_BUFFER_COPY_TIMESTAMPS, 0, -1);
-    return outbuf;
-
-    /* ERRORS */
-error_invalid_buffer:
-    {
-        GST_ERROR("failed to validate source buffer");
-        return NULL;
-    }
-error_no_pool:
-    {
-        GST_ERROR("no buffer pool was negotiated");
-        return NULL;
-    }
-error_active_pool:
-    {
-        GST_ERROR("failed to activate buffer pool");
-        return NULL;
-    }
-error_map_dst_buffer:
-    {
-        gst_video_frame_unmap(&src_frame);
-        // fall-through
-    }
-error_map_src_buffer:
-    {
-        GST_ERROR("failed to map buffer");
-        gst_buffer_unref(outbuf);
-        return NULL;
-    }
-#else
-    outbuf = gst_vaapi_uploader_get_buffer(postproc->uploader);
-    if (!outbuf)
-        goto error_create_buffer;
-    if (!gst_vaapi_uploader_process(postproc->uploader, inbuf, outbuf))
-        goto error_copy_buffer;
-
-    gst_buffer_copy_metadata(outbuf, inbuf,
-        GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
-    return outbuf;
-#endif
-
-    /* ERRORS */
-error_create_buffer:
-    {
-        GST_ERROR("failed to create buffer");
-        return NULL;
-    }
-error_copy_buffer:
-    {
-        GST_ERROR("failed to upload buffer to VA surface");
-#if GST_CHECK_VERSION(1,0,0)
-        gst_video_frame_unmap(&out_frame);
-        gst_video_frame_unmap(&src_frame);
-#endif
-        gst_buffer_unref(outbuf);
-        return NULL;
-    }
-}
-
 static GstFlowReturn
 gst_vaapipostproc_transform(GstBaseTransform *trans, GstBuffer *inbuf,
     GstBuffer *outbuf)
@@ -1226,8 +1088,9 @@ gst_vaapipostproc_transform(GstBaseTransform *trans, GstBuffer *inbuf,
     GstBuffer *buf;
     GstFlowReturn ret;
 
-    buf = get_source_buffer(postproc, inbuf);
-    if (!buf)
+    ret = gst_vaapi_plugin_base_get_input_buffer(
+        GST_VAAPI_PLUGIN_BASE(postproc), inbuf, &buf);
+    if (ret != GST_FLOW_OK)
         return GST_FLOW_ERROR;
 
     ret = GST_FLOW_NOT_SUPPORTED;
@@ -1273,73 +1136,6 @@ gst_vaapipostproc_prepare_output_buffer(GstBaseTransform *trans,
 }
 
 static gboolean
-ensure_sinkpad_buffer_pool(GstVaapiPostproc *postproc, GstCaps *caps)
-{
-#if GST_CHECK_VERSION(1,0,0)
-    GstBufferPool *pool;
-    GstCaps *pool_caps;
-    GstStructure *config;
-    GstVideoInfo vi;
-    gboolean need_pool;
-
-    if (!gst_vaapipostproc_ensure_display(postproc))
-        return FALSE;
-
-    if (postproc->sinkpad_buffer_pool) {
-        config = gst_buffer_pool_get_config(postproc->sinkpad_buffer_pool);
-        gst_buffer_pool_config_get_params(config, &pool_caps, NULL, NULL, NULL);
-        need_pool = !gst_caps_is_equal(caps, pool_caps);
-        gst_structure_free(config);
-        if (!need_pool)
-            return TRUE;
-        g_clear_object(&postproc->sinkpad_buffer_pool);
-        postproc->sinkpad_buffer_size = 0;
-    }
-
-    pool = gst_vaapi_video_buffer_pool_new(
-        GST_VAAPI_PLUGIN_BASE_DISPLAY(postproc));
-    if (!pool)
-        goto error_create_pool;
-
-    gst_video_info_init(&vi);
-    gst_video_info_from_caps(&vi, caps);
-    if (GST_VIDEO_INFO_FORMAT(&vi) == GST_VIDEO_FORMAT_ENCODED) {
-        GST_DEBUG("assume sink pad buffer pool format is NV12");
-        gst_video_info_set_format(&vi, GST_VIDEO_FORMAT_NV12,
-            GST_VIDEO_INFO_WIDTH(&vi), GST_VIDEO_INFO_HEIGHT(&vi));
-    }
-    postproc->sinkpad_buffer_size = vi.size;
-
-    config = gst_buffer_pool_get_config(pool);
-    gst_buffer_pool_config_set_params(config, caps,
-        postproc->sinkpad_buffer_size, 0, 0);
-    gst_buffer_pool_config_add_option(config,
-        GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META);
-    gst_buffer_pool_config_add_option(config,
-        GST_BUFFER_POOL_OPTION_VIDEO_META);
-    if (!gst_buffer_pool_set_config(pool, config))
-        goto error_pool_config;
-    postproc->sinkpad_buffer_pool = pool;
-    return TRUE;
-
-    /* ERRORS */
-error_create_pool:
-    {
-        GST_ERROR("failed to create buffer pool");
-        return FALSE;
-    }
-error_pool_config:
-    {
-        GST_ERROR("failed to reset buffer pool config");
-        gst_object_unref(pool);
-        return FALSE;
-    }
-#else
-    return TRUE;
-#endif
-}
-
-static gboolean
 ensure_srcpad_buffer_pool(GstVaapiPostproc *postproc, GstCaps *caps)
 {
     GstVideoInfo vi;
@@ -1378,15 +1174,13 @@ gst_vaapipostproc_set_caps(GstBaseTransform *trans, GstCaps *caps,
 
     if (caps_changed) {
         gst_vaapipostproc_destroy(postproc);
+        if (!gst_vaapipostproc_create(postproc))
+            return FALSE;
         if (!gst_vaapi_plugin_base_set_caps(GST_VAAPI_PLUGIN_BASE(trans),
                 caps, out_caps))
             return FALSE;
-        if (!gst_vaapipostproc_create(postproc))
-            return FALSE;
     }
 
-    if (!ensure_sinkpad_buffer_pool(postproc, caps))
-        return FALSE;
     if (!ensure_srcpad_buffer_pool(postproc, out_caps))
         return FALSE;
     return TRUE;
@@ -1415,40 +1209,14 @@ gst_vaapipostproc_propose_allocation(GstBaseTransform *trans,
     GstQuery *decide_query, GstQuery *query)
 {
     GstVaapiPostproc * const postproc = GST_VAAPIPOSTPROC(trans);
-    GstCaps *caps = NULL;
-    gboolean need_pool;
+    GstVaapiPluginBase * const plugin = GST_VAAPI_PLUGIN_BASE(trans);
 
     /* Let vaapidecode allocate the video buffers */
     if (!postproc->is_raw_yuv)
         return FALSE;
-
-    gst_query_parse_allocation(query, &caps, &need_pool);
-
-    if (need_pool) {
-        if (!caps)
-            goto error_no_caps;
-        if (!ensure_sinkpad_buffer_pool(postproc, caps))
-            return FALSE;
-        gst_query_add_allocation_pool(query, postproc->sinkpad_buffer_pool,
-            postproc->sinkpad_buffer_size, 0, 0);
-    }
-
-    gst_query_add_allocation_meta(query,
-        GST_VAAPI_VIDEO_META_API_TYPE, NULL);
-    gst_query_add_allocation_meta(query,
-        GST_VIDEO_META_API_TYPE, NULL);
-    gst_query_add_allocation_meta(query,
-        GST_VIDEO_CROP_META_API_TYPE, NULL);
-    gst_query_add_allocation_meta(query,
-        GST_VIDEO_OVERLAY_COMPOSITION_META_API_TYPE, NULL);
-    return TRUE;
-
-    /* ERRORS */
-error_no_caps:
-    {
-        GST_ERROR("no caps specified");
+    if (!gst_vaapi_plugin_base_propose_allocation(plugin, query))
         return FALSE;
-    }
+    return TRUE;
 }
 #endif
 

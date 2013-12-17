@@ -27,7 +27,6 @@
 #include <gst/vaapi/gstvaapisurface.h>
 #include <gst/vaapi/gstvaapisurfacepool.h>
 #include <gst/vaapi/gstvaapifilter.h>
-#include "gstvaapiuploader.h"
 
 G_BEGIN_DECLS
 
@@ -136,7 +135,6 @@ struct _GstVaapiPostproc {
     /*< private >*/
     GstVaapiPluginBase          parent_instance;
 
-    GstVaapiUploader           *uploader;
     GstVaapiFilter             *filter;
     GPtrArray                  *filter_ops;
     GstVaapiVideoPool          *filter_pool;
@@ -149,10 +147,6 @@ struct _GstVaapiPostproc {
 
     GstCaps                    *allowed_sinkpad_caps;
     GstVideoInfo                sinkpad_info;
-#if GST_CHECK_VERSION(1,0,0)
-    GstBufferPool              *sinkpad_buffer_pool;
-#endif
-    guint                       sinkpad_buffer_size;
     GstCaps                    *allowed_srcpad_caps;
     GstVideoInfo                srcpad_info;
 

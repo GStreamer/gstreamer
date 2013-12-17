@@ -31,7 +31,6 @@
 #include <gst/vaapi/gstvaapitexture.h>
 #endif
 #include "gstvaapipluginutil.h"
-#include "gstvaapiuploader.h"
 
 G_BEGIN_DECLS
 
@@ -69,7 +68,6 @@ struct _GstVaapiSink {
     /*< private >*/
     GstVaapiPluginBase  parent_instance;
 
-    GstVaapiUploader   *uploader;
     GstCaps            *caps;
     GstVaapiWindow     *window;
     guint               window_width;
@@ -96,7 +94,6 @@ struct _GstVaapiSink {
     guint               use_overlay     : 1;
     guint               use_rotation    : 1;
     guint               keep_aspect     : 1;
-    guint               use_video_raw   : 1;
 };
 
 struct _GstVaapiSinkClass {

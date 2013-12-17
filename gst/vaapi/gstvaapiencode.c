@@ -61,33 +61,10 @@ ensure_display (GstVaapiEncode * encode)
 static gboolean
 ensure_uploader (GstVaapiEncode * encode)
 {
-#if !GST_CHECK_VERSION(1,0,0)
   if (!ensure_display (encode))
     return FALSE;
-
-  if (!encode->uploader) {
-    encode->uploader = gst_vaapi_uploader_new (
-        GST_VAAPI_PLUGIN_BASE_DISPLAY (encode));
-    if (!encode->uploader)
-      return FALSE;
-  }
-
-  if (!gst_vaapi_uploader_ensure_display (encode->uploader,
-           GST_VAAPI_PLUGIN_BASE_DISPLAY (encode)))
+  if (!gst_vaapi_plugin_base_ensure_uploader (GST_VAAPI_PLUGIN_BASE (encode)))
     return FALSE;
-#endif
-  return TRUE;
-}
-
-static gboolean
-ensure_uploader_caps (GstVaapiEncode * encode)
-{
-#if !GST_CHECK_VERSION(1,0,0)
-  if (GST_VIDEO_INFO_IS_YUV (&encode->sink_video_info) &&
-      !gst_vaapi_uploader_ensure_caps (encode->uploader, encode->sinkpad_caps,
-          NULL))
-    return FALSE;
-#endif
   return TRUE;
 }
 
@@ -283,7 +260,7 @@ gst_vaapiencode_get_caps_impl (GstVideoEncoder * venc)
     caps = gst_caps_from_string (GST_VAAPI_SURFACE_CAPS);
 
     if (caps && ensure_uploader (encode)) {
-      GstCaps *const yuv_caps = gst_vaapi_uploader_get_caps (encode->uploader);
+      GstCaps *const yuv_caps = GST_VAAPI_PLUGIN_BASE_UPLOADER_CAPS (encode);
       if (yuv_caps) {
         caps = gst_caps_make_writable (caps);
         gst_caps_append (caps, gst_caps_copy (yuv_caps));
@@ -316,10 +293,6 @@ static gboolean
 gst_vaapiencode_destroy (GstVaapiEncode * encode)
 {
   gst_vaapi_encoder_replace (&encode->encoder, NULL);
-#if GST_CHECK_VERSION(1,0,0)
-  g_clear_object (&encode->video_buffer_pool);
-#endif
-  g_clear_object (&encode->uploader);
   gst_caps_replace (&encode->sinkpad_caps, NULL);
   gst_caps_replace (&encode->srcpad_caps, NULL);
   return TRUE;
@@ -332,11 +305,7 @@ ensure_encoder (GstVaapiEncode * encode)
 
   g_return_val_if_fail (klass->create_encoder, FALSE);
 
-  if (!ensure_display (encode))
-    return FALSE;
   if (!ensure_uploader (encode))
-    return FALSE;
-  if (!ensure_uploader_caps (encode))
     return FALSE;
 
   encode->encoder = klass->create_encoder (encode,
@@ -378,18 +347,6 @@ gst_vaapiencode_update_sink_caps (GstVaapiEncode * encode,
     GstVideoCodecState * state)
 {
   gst_caps_replace (&encode->sinkpad_caps, state->caps);
-  encode->sink_video_info = state->info;
-
-#if !GST_CHECK_VERSION(1,0,0)
-  if (GST_VIDEO_INFO_IS_YUV (&encode->sink_video_info)) {
-    /* Ensure the uploader is set up for upstream allocated buffers */
-    GstVaapiUploader *const uploader = encode->uploader;
-    if (!gst_vaapi_uploader_ensure_display (uploader, GST_VAAPI_PLUGIN_BASE_DISPLAY (encode)))
-      return FALSE;
-    if (!gst_vaapi_uploader_ensure_caps (uploader, state->caps, NULL))
-      return FALSE;
-  }
-#endif
   return TRUE;
 }
 
@@ -451,86 +408,21 @@ gst_vaapiencode_update_src_caps (GstVaapiEncode * encode,
 }
 
 static gboolean
-gst_vaapiencode_ensure_video_buffer_pool (GstVaapiEncode * encode,
-    GstCaps * caps)
-{
-#if GST_CHECK_VERSION(1,0,0)
-  GstBufferPool *pool;
-  GstCaps *pool_caps;
-  GstStructure *config;
-  GstVideoInfo vi;
-  gboolean need_pool;
-
-  if (!ensure_display (encode))
-    return FALSE;
-
-  if (encode->video_buffer_pool) {
-    config = gst_buffer_pool_get_config (encode->video_buffer_pool);
-    gst_buffer_pool_config_get_params (config, &pool_caps, NULL, NULL, NULL);
-    need_pool = !gst_caps_is_equal (caps, pool_caps);
-    gst_structure_free (config);
-    if (!need_pool)
-      return TRUE;
-    g_clear_object (&encode->video_buffer_pool);
-    encode->video_buffer_size = 0;
-  }
-
-  pool = gst_vaapi_video_buffer_pool_new (GST_VAAPI_PLUGIN_BASE_DISPLAY (encode));
-  if (!pool)
-    goto error_create_pool;
-
-  gst_video_info_init (&vi);
-  gst_video_info_from_caps (&vi, caps);
-  if (GST_VIDEO_INFO_FORMAT (&vi) == GST_VIDEO_FORMAT_ENCODED) {
-    GST_DEBUG ("assume video buffer pool format is NV12");
-    gst_video_info_set_format (&vi, GST_VIDEO_FORMAT_NV12,
-        GST_VIDEO_INFO_WIDTH (&vi), GST_VIDEO_INFO_HEIGHT (&vi));
-  }
-  encode->video_buffer_size = vi.size;
-
-  config = gst_buffer_pool_get_config (pool);
-  gst_buffer_pool_config_set_params (config, caps, encode->video_buffer_size,
-      0, 0);
-  gst_buffer_pool_config_add_option (config,
-      GST_BUFFER_POOL_OPTION_VAAPI_VIDEO_META);
-  gst_buffer_pool_config_add_option (config, GST_BUFFER_POOL_OPTION_VIDEO_META);
-  if (!gst_buffer_pool_set_config (pool, config))
-    goto error_pool_config;
-  encode->video_buffer_pool = pool;
-  return TRUE;
-
-  /* ERRORS */
-error_create_pool:
-  {
-    GST_ERROR ("failed to create buffer pool");
-    return FALSE;
-  }
-error_pool_config:
-  {
-    GST_ERROR ("failed to reset buffer pool config");
-    gst_object_unref (pool);
-    return FALSE;
-  }
-#else
-  return TRUE;
-#endif
-}
-
-static gboolean
 gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
 {
   GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
 
   g_return_val_if_fail (state->caps != NULL, FALSE);
 
-  if (!gst_vaapiencode_ensure_video_buffer_pool (encode, state->caps))
-    return FALSE;
-
   if (!ensure_encoder (encode))
     return FALSE;
   if (!gst_vaapiencode_update_sink_caps (encode, state))
     return FALSE;
   if (!gst_vaapiencode_update_src_caps (encode, state))
+    return FALSE;
+
+  if (!gst_vaapi_plugin_base_set_caps (GST_VAAPI_PLUGIN_BASE (encode),
+          encode->sinkpad_caps, encode->srcpad_caps))
     return FALSE;
 
 #if GST_CHECK_VERSION(1,0,0)
@@ -558,114 +450,6 @@ gst_vaapiencode_reset (GstVideoEncoder * venc, gboolean hard)
 }
 
 static GstFlowReturn
-get_source_buffer (GstVaapiEncode * encode, GstBuffer * src_buffer,
-    GstBuffer ** out_buffer_ptr)
-{
-  GstVaapiVideoMeta *meta;
-  GstBuffer *out_buffer;
-#if GST_CHECK_VERSION(1,0,0)
-  GstVideoFrame src_frame, out_frame;
-  gboolean success;
-#endif
-
-  meta = gst_buffer_get_vaapi_video_meta (src_buffer);
-  if (meta) {
-    *out_buffer_ptr = gst_buffer_ref (src_buffer);
-    return GST_FLOW_OK;
-  }
-
-#if GST_CHECK_VERSION(1,0,0)
-  if (!GST_VIDEO_INFO_IS_YUV (&encode->sink_video_info))
-    goto error_invalid_buffer;
-
-  if (!encode->video_buffer_pool)
-    goto error_no_pool;
-
-  if (!gst_buffer_pool_set_active (encode->video_buffer_pool, TRUE))
-    goto error_activate_pool;
-
-  out_buffer = NULL;
-  success = gst_buffer_pool_acquire_buffer (encode->video_buffer_pool,
-      &out_buffer, NULL) == GST_FLOW_OK;
-  if (!success)
-    goto error_create_buffer;
-
-  if (!gst_video_frame_map (&src_frame, &encode->sink_video_info, src_buffer,
-          GST_MAP_READ))
-    goto error_map_src_buffer;
-
-  if (!gst_video_frame_map (&out_frame, &encode->sink_video_info, out_buffer,
-          GST_MAP_WRITE))
-    goto error_map_dst_buffer;
-
-  success = gst_video_frame_copy (&out_frame, &src_frame);
-  gst_video_frame_unmap (&out_frame);
-  gst_video_frame_unmap (&src_frame);
-  if (!success)
-    goto error_copy_buffer;
-
-  gst_buffer_copy_into (out_buffer, src_buffer, GST_BUFFER_COPY_TIMESTAMPS, 0,
-      -1);
-
-  *out_buffer_ptr = out_buffer;
-  return GST_FLOW_OK;
-
-  /* ERRORS */
-error_invalid_buffer:
-  {
-    GST_ERROR ("unsupported video buffer");
-    return GST_FLOW_EOS;
-  }
-error_no_pool:
-  {
-    GST_ERROR ("no buffer pool was negotiated");
-    return GST_FLOW_ERROR;
-  }
-error_activate_pool:
-  {
-    GST_ERROR ("failed to activate buffer pool");
-    return GST_FLOW_ERROR;
-  }
-error_map_dst_buffer:
-  {
-    gst_video_frame_unmap (&src_frame);
-    // fall-through
-  }
-error_map_src_buffer:
-  {
-    GST_WARNING ("failed to map buffer. Skipping this frame");
-    gst_buffer_unref (out_buffer);
-    return GST_FLOW_OK;
-  }
-#else
-  out_buffer = gst_vaapi_uploader_get_buffer (encode->uploader);
-  if (!out_buffer)
-    goto error_create_buffer;
-  if (!gst_vaapi_uploader_process (encode->uploader, src_buffer, out_buffer))
-    goto error_copy_buffer;
-
-  gst_buffer_copy_metadata (out_buffer, src_buffer,
-      GST_BUFFER_COPY_FLAGS | GST_BUFFER_COPY_TIMESTAMPS);
-
-  *out_buffer_ptr = out_buffer;
-  return GST_FLOW_OK;
-#endif
-
-  /* ERRORS */
-error_create_buffer:
-  {
-    GST_WARNING ("failed to create buffer. Skipping this frame");
-    return GST_FLOW_OK;
-  }
-error_copy_buffer:
-  {
-    GST_WARNING ("failed to upload buffer to VA surface. Skipping this frame");
-    gst_buffer_unref (out_buffer);
-    return GST_FLOW_OK;
-  }
-}
-
-static GstFlowReturn
 gst_vaapiencode_handle_frame (GstVideoEncoder * venc,
     GstVideoCodecFrame * frame)
 {
@@ -677,7 +461,8 @@ gst_vaapiencode_handle_frame (GstVideoEncoder * venc,
   GstBuffer *buf;
 
   buf = NULL;
-  ret = get_source_buffer (encode, frame->input_buffer, &buf);
+  ret = gst_vaapi_plugin_base_get_input_buffer (GST_VAAPI_PLUGIN_BASE (encode),
+      frame->input_buffer, &buf);
   if (ret != GST_FLOW_OK)
     goto error_buffer_invalid;
 
@@ -759,31 +544,11 @@ gst_vaapiencode_finish (GstVideoEncoder * venc)
 static gboolean
 gst_vaapiencode_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
-  GstCaps *caps = NULL;
-  gboolean need_pool;
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (venc);
 
-  gst_query_parse_allocation (query, &caps, &need_pool);
-
-  if (need_pool) {
-    if (!caps)
-      goto error_no_caps;
-    if (!gst_vaapiencode_ensure_video_buffer_pool (encode, caps))
-      return FALSE;
-    gst_query_add_allocation_pool (query, encode->video_buffer_pool,
-        encode->video_buffer_size, 0, 0);
-  }
-
-  gst_query_add_allocation_meta (query, GST_VAAPI_VIDEO_META_API_TYPE, NULL);
-  gst_query_add_allocation_meta (query, GST_VIDEO_META_API_TYPE, NULL);
-  return TRUE;
-
-  /* ERRORS */
-error_no_caps:
-  {
-    GST_ERROR ("no caps specified");
+  if (!gst_vaapi_plugin_base_propose_allocation (plugin, query))
     return FALSE;
-  }
+  return TRUE;
 }
 #endif
 
@@ -864,7 +629,6 @@ gst_vaapiencode_init (GstVaapiEncode * encode)
   encode->sinkpad = GST_VIDEO_ENCODER_SINK_PAD (encode);
   encode->sinkpad_query = GST_PAD_QUERYFUNC (encode->sinkpad);
   gst_pad_set_query_function (encode->sinkpad, gst_vaapiencode_query);
-  gst_video_info_init (&encode->sink_video_info);
 
   /* src pad */
   encode->srcpad = GST_VIDEO_ENCODER_SRC_PAD (encode);

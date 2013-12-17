@@ -24,7 +24,6 @@
 
 #include "gstvaapipluginbase.h"
 #include <gst/vaapi/gstvaapiencoder.h>
-#include "gstvaapiuploader.h"
 
 G_BEGIN_DECLS
 
@@ -54,19 +53,12 @@ struct _GstVaapiEncode
   GstPad *sinkpad;
   GstCaps *sinkpad_caps;
   GstPadQueryFunction sinkpad_query;
-  GstVideoInfo sink_video_info;
 
   GstPad *srcpad;
   GstCaps *srcpad_caps;
   GstPadQueryFunction srcpad_query;
 
   GstVaapiEncoder *encoder;
-  GstVaapiUploader *uploader;
-
-#if GST_CHECK_VERSION(1,0,0)
-  GstBufferPool *video_buffer_pool;
-#endif
-  guint video_buffer_size;
 
   GstVaapiRateControl rate_control;
   guint32 bitrate;              /* kbps */
