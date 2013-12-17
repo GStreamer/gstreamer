@@ -357,6 +357,11 @@ gst_video_encoder_reset (GstVideoEncoder * encoder, gboolean hard)
     g_list_free (priv->headers);
     priv->headers = NULL;
     priv->new_headers = FALSE;
+
+    if (priv->allocator) {
+      gst_object_unref (priv->allocator);
+      priv->allocator = NULL;
+    }
   }
 
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encoder);
