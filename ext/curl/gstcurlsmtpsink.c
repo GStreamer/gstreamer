@@ -122,7 +122,8 @@ static gboolean gst_curl_smtp_sink_prepare_transfer (GstCurlBaseSink * bcsink);
 static size_t gst_curl_smtp_sink_transfer_data_buffer (GstCurlBaseSink * sink,
     void *curl_ptr, size_t block_size, guint * last_chunk);
 static size_t gst_curl_smtp_sink_flush_data_unlocked (GstCurlBaseSink * bcsink,
-    void *curl_ptr, size_t block_size, gboolean new_file, gboolean close_transfer);
+    void *curl_ptr, size_t block_size, gboolean new_file,
+    gboolean close_transfer);
 
 /* private functions */
 
@@ -750,14 +751,16 @@ gst_curl_smtp_sink_flush_data_unlocked (GstCurlBaseSink * bcsink,
   gint len;
   gchar *data_out;
 
-  GST_DEBUG ("live: %d, num attachments: %d, num attachments_left: %d, eos: %d, "
+  GST_DEBUG
+      ("live: %d, num attachments: %d, num attachments_left: %d, eos: %d, "
       "close_transfer: %d, final boundary: %d, array_len: %d", bcsink->is_live,
-      sink->nbr_attachments, sink->nbr_attachments_left, sink->eos, close_transfer,
-      sink->final_boundary_added, array->len);
+      sink->nbr_attachments, sink->nbr_attachments_left, sink->eos,
+      close_transfer, sink->final_boundary_added, array->len);
 
 
   if ((bcsink->is_live && (sink->nbr_attachments_left == sink->nbr_attachments))
-      || (sink->nbr_attachments == 1) || sink->eos || sink->final_boundary_added) {
+      || (sink->nbr_attachments == 1) || sink->eos
+      || sink->final_boundary_added) {
     bcsink->is_live = FALSE;
     sink->reset_transfer_options = TRUE;
     sink->final_boundary_added = FALSE;
