@@ -41,6 +41,8 @@ GST_START_TEST (test_properties)
   gchar *res_location = NULL;
   gchar *res_file_name = NULL;
   gchar *res_ftp_port = NULL;
+  gchar *res_tmp_file_name = NULL;
+  gboolean res_create_tmpfile;
   gboolean res_epsv_mode;
   gboolean res_create_dirs;
 
@@ -51,6 +53,8 @@ GST_START_TEST (test_properties)
   g_object_set (G_OBJECT (sink), "ftp-port", "1.2.3.4:0", NULL);
   g_object_set (G_OBJECT (sink), "epsv-mode", FALSE, NULL);
   g_object_set (G_OBJECT (sink), "create-dirs", FALSE, NULL);
+  g_object_set (G_OBJECT (sink), "create-tmp-file", FALSE, NULL);
+  g_object_set (G_OBJECT (sink), "temp-file-name", "test_tmp_file_", NULL);
 
   g_object_get (sink,
       "location", &res_location,
@@ -58,6 +62,8 @@ GST_START_TEST (test_properties)
       "ftp-port", &res_ftp_port,
       "epsv-mode", &res_epsv_mode,
       "create-dirs", &res_create_dirs,
+      "create-tmp-file", &res_create_tmpfile,
+      "temp-file-name", &res_tmp_file_name,
       NULL);
 
   fail_unless (strncmp (res_location, "mylocation", strlen ("mylocation"))
@@ -66,11 +72,16 @@ GST_START_TEST (test_properties)
       == 0);
   fail_unless (strncmp (res_ftp_port, "1.2.3.4:0", strlen ("1.2.3.4:0"))
       == 0);
+  fail_unless (strncmp (res_tmp_file_name, "test_tmp_file_", strlen ("test_tmp_file_"))
+      == 0);
   fail_unless (res_epsv_mode == FALSE);
   fail_unless (res_create_dirs == FALSE);
+  fail_unless (res_create_tmpfile == FALSE);
+  
   g_free (res_location);
   g_free (res_file_name);
   g_free (res_ftp_port);
+  g_free (res_tmp_file_name);
 
   /* change properties */
   g_object_set (G_OBJECT (sink), "location", "newlocation", NULL);
@@ -78,6 +89,8 @@ GST_START_TEST (test_properties)
   g_object_set (G_OBJECT (sink), "ftp-port", "", NULL);
   g_object_set (G_OBJECT (sink), "epsv-mode", TRUE, NULL);
   g_object_set (G_OBJECT (sink), "create-dirs", TRUE, NULL);
+  g_object_set (G_OBJECT (sink), "create-tmp-file", TRUE, NULL);
+  g_object_set (G_OBJECT (sink), "temp-file-name", "test_tmp_file_", NULL);
 
   g_object_get (sink,
       "location", &res_location,
@@ -85,6 +98,8 @@ GST_START_TEST (test_properties)
       "ftp-port", &res_ftp_port,
       "epsv-mode", &res_epsv_mode,
       "create-dirs", &res_create_dirs,
+      "create-tmp-file", &res_create_tmpfile,
+      "temp-file-name", &res_tmp_file_name,
       NULL);
 
   fail_unless (strncmp (res_location, "newlocation", strlen ("newlocation"))
@@ -93,11 +108,17 @@ GST_START_TEST (test_properties)
       == 0);
   fail_unless (strncmp (res_ftp_port, "", strlen (""))
       == 0);
+  fail_unless (strncmp (res_tmp_file_name, "test_tmp_file_", strlen ("test_tmp_file_"))
+      == 0);
   fail_unless (res_epsv_mode == TRUE);
   fail_unless (res_create_dirs == TRUE);
+  fail_unless (res_create_dirs == TRUE);
+  fail_unless (res_create_tmpfile == TRUE);
+  
   g_free (res_location);
   g_free (res_file_name);
   g_free (res_ftp_port);
+  g_free (res_tmp_file_name);
 
   cleanup_curlftpsink (sink);
 }
