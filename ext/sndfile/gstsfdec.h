@@ -52,6 +52,7 @@ struct _GstSFDec {
   GstPad *srcpad;
   
   guint64 pos;
+  guint64 duration;
 
   SNDFILE *file;
   sf_count_t offset;

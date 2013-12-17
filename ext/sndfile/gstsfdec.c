@@ -48,6 +48,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_sf_dec_debug);
 
 #define DEFAULT_BUFFER_FRAMES	(256)
 
+static gboolean gst_sf_dec_src_query (GstPad * pad, GstObject * parent,
+    GstQuery * query);
 static GstStateChangeReturn gst_sf_dec_change_state (GstElement * element,
     GstStateChange transition);
 
@@ -69,13 +71,13 @@ G_DEFINE_TYPE_WITH_CODE (GstSFDec, gst_sf_dec, GST_TYPE_ELEMENT, _do_init);
 static sf_count_t
 gst_sf_vio_get_filelen (void *user_data)
 {
-  GstElement *element = GST_ELEMENT (user_data);
+  GstSFDec *self = GST_SF_DEC (user_data);
   gint64 dur;
 
-  if (gst_element_query_duration (element, GST_FORMAT_BYTES, &dur)) {
+  if (gst_pad_peer_query_duration (self->sinkpad, GST_FORMAT_BYTES, &dur)) {
     return (sf_count_t) dur;
   }
-  GST_WARNING_OBJECT (element, "query_duration failed");
+  GST_WARNING_OBJECT (self, "query_duration failed");
   return -1;
 }
 
@@ -179,8 +181,50 @@ gst_sf_dec_init (GstSFDec * self)
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->srcpad = gst_pad_new_from_static_template (&sf_dec_src_factory, "src");
-  /* TODO(ensonic): event + query functions */
+  /* TODO(ensonic): event function */
+  gst_pad_set_query_function (self->srcpad,
+      GST_DEBUG_FUNCPTR (gst_sf_dec_src_query));
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
+}
+
+static gboolean
+gst_sf_dec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
+{
+  GstSFDec *self = GST_SF_DEC (parent);
+  GstFormat format;
+  gboolean res = FALSE;
+
+  GST_DEBUG_OBJECT (self, "query %s", GST_QUERY_TYPE_NAME (query));
+
+  switch (GST_QUERY_TYPE (query)) {
+    case GST_QUERY_DURATION:
+      if (!self->file)
+        goto done;
+      gst_query_parse_duration (query, &format, NULL);
+      if (format == GST_FORMAT_TIME) {
+        gst_query_set_duration (query, format,
+            gst_util_uint64_scale_int (self->duration, GST_SECOND, self->rate));
+        res = TRUE;
+      }
+      break;
+    case GST_QUERY_POSITION:
+      if (!self->file)
+        goto done;
+      gst_query_parse_position (query, &format, NULL);
+      if (format == GST_FORMAT_TIME) {
+        gst_query_set_position (query, format,
+            gst_util_uint64_scale_int (self->pos, GST_SECOND, self->rate));
+        res = TRUE;
+      }
+      break;
+    default:
+      res = gst_pad_query_default (pad, parent, query);
+      break;
+  }
+
+done:
+  GST_DEBUG_OBJECT (self, "query %s: %d", GST_QUERY_TYPE_NAME (query), res);
+  return res;
 }
 
 static GstStateChangeReturn
@@ -188,6 +232,10 @@ gst_sf_dec_change_state (GstElement * element, GstStateChange transition)
 {
   GstStateChangeReturn ret;
   GstSFDec *self = GST_SF_DEC (element);
+
+  GST_INFO_OBJECT (self, "transition: %s -> %s",
+      gst_element_state_get_name (GST_STATE_TRANSITION_CURRENT (transition)),
+      gst_element_state_get_name (GST_STATE_TRANSITION_NEXT (transition)));
 
   switch (transition) {
     case GST_STATE_CHANGE_READY_TO_PAUSED:
@@ -212,8 +260,6 @@ gst_sf_dec_change_state (GstElement * element, GstStateChange transition)
 static gboolean
 gst_sf_dec_start (GstSFDec * self)
 {
-  self->file = NULL;
-
   return TRUE;
 }
 
@@ -233,6 +279,9 @@ gst_sf_dec_stop (GstSFDec * self)
   self->offset = 0;
   self->channels = 0;
   self->rate = 0;
+
+  self->pos = 0;
+  self->duration = 0;
 
   return TRUE;
 
@@ -288,6 +337,7 @@ gst_sf_dec_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
     case GST_PAD_MODE_PULL:
       if (active) {
         /* if we have a scheduler we can start the task */
+        GST_DEBUG_OBJECT (sinkpad, "start task");
         res = gst_pad_start_task (sinkpad, (GstTaskFunction) gst_sf_dec_loop,
             sinkpad, NULL);
       } else {
@@ -304,7 +354,7 @@ gst_sf_dec_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
 static gboolean
 gst_sf_dec_open_file (GstSFDec * self)
 {
-  SF_INFO info;
+  SF_INFO info = { 0, };
   GstCaps *caps;
   GstStructure *s;
   GstSegment seg;
@@ -313,9 +363,7 @@ gst_sf_dec_open_file (GstSFDec * self)
   gchar *stream_id;
 
   GST_DEBUG_OBJECT (self, "opening the stream");
-  info.format = 0;
-  self->file = sf_open_virtual (&gst_sf_vio, SFM_READ, &info, self);
-  if (!self->file)
+  if (!(self->file = sf_open_virtual (&gst_sf_vio, SFM_READ, &info, self)))
     goto open_failed;
 
   stream_id =
@@ -325,8 +373,8 @@ gst_sf_dec_open_file (GstSFDec * self)
 
   self->channels = info.channels;
   self->rate = info.samplerate;
+  self->duration = info.frames;
   /* TODO(ensonic): do something with info.seekable? */
-  /* TODO(ensonic): calculate duration info.frames */
 
   /* negotiate srcpad caps */
   if ((caps = gst_pad_get_allowed_caps (self->srcpad)) == NULL) {
@@ -366,7 +414,7 @@ gst_sf_dec_open_file (GstSFDec * self)
   gst_caps_unref (caps);
 
   gst_segment_init (&seg, GST_FORMAT_TIME);
-  /* TODO: calculate seg.stop = song_length; */
+  seg.stop = gst_util_uint64_scale_int (self->duration, GST_SECOND, self->rate);
   gst_pad_push_event (self->srcpad, gst_event_new_segment (&seg));
 
   return TRUE;
