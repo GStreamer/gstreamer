@@ -627,32 +627,35 @@ _gst_mss_stream_audio_caps_from_qualitylevel_xml (GstMssStreamQuality * q)
   if (!codec_data) {
     gint codec_data_len;
     codec_data_str = (gchar *) xmlGetProp (node, (xmlChar *) "WaveFormatEx");
-    codec_data_len = strlen (codec_data_str) / 2;
 
-    /* a WAVEFORMATEX structure is 18 bytes */
-    if (codec_data_str && codec_data_len >= 18) {
-      GstMapInfo mapinfo;
-      codec_data = gst_buffer_from_hex_string ((gchar *) codec_data_str);
+    if (codec_data_str != NULL) {
+      codec_data_len = strlen (codec_data_str) / 2;
 
-      /* since this is a WAVEFORMATEX, try to get the block_align and rate */
-      gst_buffer_map (codec_data, &mapinfo, GST_MAP_READ);
-      if (!channels_str) {
-        channels = GST_READ_UINT16_LE (mapinfo.data + 2);
-      }
-      if (!rate_str) {
-        rate = GST_READ_UINT32_LE (mapinfo.data + 4);
-      }
-      if (!block_align) {
-        block_align = GST_READ_UINT16_LE (mapinfo.data + 12);
-      }
-      gst_buffer_unmap (codec_data, &mapinfo);
+      /* a WAVEFORMATEX structure is 18 bytes */
+      if (codec_data_str && codec_data_len >= 18) {
+        GstMapInfo mapinfo;
+        codec_data = gst_buffer_from_hex_string ((gchar *) codec_data_str);
 
-      /* Consume all the WAVEFORMATEX structure, and pass only the rest of
-       * the data as the codec private data */
-      gst_buffer_resize (codec_data, 18, -1);
-    } else {
-      GST_WARNING ("Dropping WaveFormatEx: data is %d bytes, "
-          "but at least 18 bytes are expected", codec_data_len);
+        /* since this is a WAVEFORMATEX, try to get the block_align and rate */
+        gst_buffer_map (codec_data, &mapinfo, GST_MAP_READ);
+        if (!channels_str) {
+          channels = GST_READ_UINT16_LE (mapinfo.data + 2);
+        }
+        if (!rate_str) {
+          rate = GST_READ_UINT32_LE (mapinfo.data + 4);
+        }
+        if (!block_align) {
+          block_align = GST_READ_UINT16_LE (mapinfo.data + 12);
+        }
+        gst_buffer_unmap (codec_data, &mapinfo);
+
+        /* Consume all the WAVEFORMATEX structure, and pass only the rest of
+         * the data as the codec private data */
+        gst_buffer_resize (codec_data, 18, -1);
+      } else {
+        GST_WARNING ("Dropping WaveFormatEx: data is %d bytes, "
+            "but at least 18 bytes are expected", codec_data_len);
+      }
     }
   }
 
