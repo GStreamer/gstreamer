@@ -566,7 +566,7 @@ gst_decklink_sink_videosink_query (GstPad * pad, GstObject * parent,
       mode_caps = gst_decklink_mode_get_caps (decklinksink->mode);
       gst_query_parse_caps (query, &filter);
       if (filter) {
-        caps = gst_caps_intersect (mode_caps, filter);
+        caps = gst_caps_intersect_full (filter, mode_caps, GST_CAPS_INTERSECT_FIRST);
         gst_caps_unref (mode_caps);
       } else {
         caps = mode_caps;
