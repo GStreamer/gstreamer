@@ -595,6 +595,22 @@ gst_vaapiencode_finish (GstVideoEncoder * venc)
   return ret;
 }
 
+static GstStateChangeReturn
+gst_vaapiencode_change_state (GstElement * element, GstStateChange transition)
+{
+  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (element);
+
+  switch (transition) {
+    case GST_STATE_CHANGE_PAUSED_TO_READY:
+      gst_pad_stop_task (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
+      break;
+    default:
+      break;
+  }
+  return GST_ELEMENT_CLASS (gst_vaapiencode_parent_class)->
+      change_state (element, transition);
+}
+
 #if GST_CHECK_VERSION(1,0,0)
 static gboolean
 gst_vaapiencode_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
@@ -639,6 +655,7 @@ static void
 gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
 {
   GObjectClass *const object_class = G_OBJECT_CLASS (klass);
+  GstElementClass *const element_class = GST_ELEMENT_CLASS (klass);
   GstVideoEncoderClass *const venc_class = GST_VIDEO_ENCODER_CLASS (klass);
 
   GST_DEBUG_CATEGORY_INIT (gst_vaapiencode_debug,
@@ -647,6 +664,9 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
   gst_vaapi_plugin_base_class_init (GST_VAAPI_PLUGIN_BASE_CLASS (klass));
 
   object_class->finalize = gst_vaapiencode_finalize;
+
+  element_class->change_state =
+      GST_DEBUG_FUNCPTR (gst_vaapiencode_change_state);
 
   venc_class->open = GST_DEBUG_FUNCPTR (gst_vaapiencode_open);
   venc_class->close = GST_DEBUG_FUNCPTR (gst_vaapiencode_close);
