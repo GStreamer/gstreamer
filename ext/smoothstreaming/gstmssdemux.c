@@ -231,6 +231,8 @@ gst_mss_demux_stream_new (GstMssDemux * mssdemux,
   gst_download_rate_set_max_length (&stream->download_rate,
       DOWNLOAD_RATE_MAX_HISTORY_LENGTH);
 
+  gst_segment_init (&stream->segment, GST_FORMAT_TIME);
+
   return stream;
 }
 
@@ -389,15 +391,6 @@ gst_mss_demux_change_state (GstElement * element, GstStateChange transition)
   }
 
   result = GST_ELEMENT_CLASS (parent_class)->change_state (element, transition);
-
-  switch (transition) {
-    case GST_STATE_CHANGE_READY_TO_PAUSED:{
-      gst_segment_init (&mssdemux->segment, GST_FORMAT_TIME);
-      break;
-    }
-    default:
-      break;
-  }
 
   return result;
 }
@@ -564,11 +557,6 @@ gst_mss_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         goto not_supported;
       }
 
-      gst_segment_do_seek (&mssdemux->segment, rate, format, flags,
-          start_type, start, stop_type, stop, &update);
-
-      newsegment = gst_event_new_segment (&mssdemux->segment);
-      gst_event_set_seqnum (newsegment, gst_event_get_seqnum (event));
       for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
         GstMssDemuxStream *stream = iter->data;
 
@@ -576,9 +564,16 @@ gst_mss_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         if (flags & GST_SEEK_FLAG_FLUSH) {
           stream->last_ret = GST_FLOW_OK;
         }
-        gst_event_replace (&stream->pending_newsegment, newsegment);
+
+        gst_segment_do_seek (&stream->segment, rate, format, flags,
+            start_type, start, stop_type, stop, &update);
+
+        newsegment = gst_event_new_segment (&stream->segment);
+        gst_event_set_seqnum (newsegment, gst_event_get_seqnum (event));
+        if (stream->pending_newsegment)
+          gst_event_unref (stream->pending_newsegment);
+        stream->pending_newsegment = newsegment;
       }
-      gst_event_unref (newsegment);
 
       if (flags & GST_SEEK_FLAG_FLUSH) {
         GstEvent *flush = gst_event_new_flush_stop (TRUE);
@@ -843,11 +838,12 @@ gst_mss_demux_expose_stream (GstMssDemux * mssdemux, GstMssDemuxStream * stream)
       gst_pad_push_event (stream->pad, gst_event_new_tag (tags));
     }
 
+    gst_pad_push_event (stream->pad, gst_event_new_segment (&stream->segment));
+
     GST_INFO_OBJECT (mssdemux, "Adding srcpad %s:%s with caps %" GST_PTR_FORMAT,
         GST_DEBUG_PAD_NAME (pad), caps);
     gst_object_ref (pad);
 
-    stream->pending_newsegment = gst_event_new_segment (&mssdemux->segment);
     gst_element_add_pad (GST_ELEMENT_CAST (mssdemux), pad);
   } else {
     GST_WARNING_OBJECT (mssdemux,
@@ -1132,7 +1128,7 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
     } else {
       GST_DEBUG_OBJECT (mssdemux, "Downstream position query failed, "
           "failling back to segment position");
-      ts = mssdemux->segment.position;
+      ts = stream->segment.position;
     }
 
     /* we might have already pushed this data */
@@ -1291,7 +1287,7 @@ gst_mss_demux_stream_push (GstMssDemuxStream * stream, GstBuffer * buf)
       GST_BUFFER_TIMESTAMP (buf) + GST_BUFFER_DURATION (buf);
 
   stream->have_data = TRUE;
-  stream->parent->segment.position = GST_BUFFER_TIMESTAMP (buf);
+  stream->segment.position = GST_BUFFER_TIMESTAMP (buf);
 
   ret = gst_pad_push (stream->pad, GST_BUFFER_CAST (buf));
   GST_DEBUG_OBJECT (stream->pad, "Pushed. result: %d (%s)",
