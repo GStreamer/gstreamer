@@ -565,8 +565,12 @@ gst_decklink_sink_videosink_query (GstPad * pad, GstObject * parent,
        * should probably return the template caps instead */
       mode_caps = gst_decklink_mode_get_caps (decklinksink->mode);
       gst_query_parse_caps (query, &filter);
-      caps = gst_caps_intersect (mode_caps, filter);
-      gst_caps_unref (mode_caps);
+      if (filter) {
+        caps = gst_caps_intersect (mode_caps, filter);
+        gst_caps_unref (mode_caps);
+      } else {
+        caps = mode_caps;
+      }
       gst_query_set_caps_result (query, caps);
       gst_caps_unref (caps);
       res = TRUE;
