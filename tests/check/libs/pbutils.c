@@ -263,7 +263,7 @@ static const gchar *caps_strings[] = {
   "audio/x-svx", "audio/x-tta", "audio/x-ttafile",
   "audio/x-vnd.sony.atrac3", "audio/x-vorbis", "audio/x-voc", "audio/x-w64",
   "audio/x-wav", "audio/x-wavpack", "audio/x-wavpack-correction",
-  "audio/x-wms", "audio/x-voxware", "video/sp5x", "video/vivo",
+  "audio/x-wms", "audio/x-voxware", "audio/x-xi", "video/sp5x", "video/vivo",
   "video/x-4xm", "video/x-apple-video", "video/x-camtasia",
   "video/x-cdxa", "video/x-cinepak", "video/x-cirrus-logic-accupak",
   "video/x-compressed-yuv", "video/x-dirac", "subpicture/x-dvd",

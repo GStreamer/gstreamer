@@ -181,6 +181,7 @@ static const FormatInfo formats[] = {
   {"audio/x-wavpack-correction", "Wavpack", 0, "wpc"},
   {"audio/x-wms", N_("Windows Media Speech"), FLAG_AUDIO, ""},
   {"audio/x-voxware", "Voxware", FLAG_AUDIO, ""},
+  {"audio/x-xi", "Fasttracker 2 Extended Instrument", FLAG_AUDIO, "xi"},
 
 
   /* video formats with static descriptions */

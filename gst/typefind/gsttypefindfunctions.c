@@ -5716,6 +5716,9 @@ plugin_init (GstPlugin * plugin)
   TYPE_FIND_REGISTER (plugin, "video/x-pva", GST_RANK_SECONDARY,
       pva_type_find, "pva", PVA_CAPS, NULL, NULL);
 
+  TYPE_FIND_REGISTER_START_WITH (plugin, "audio/x-xi", GST_RANK_SECONDARY,
+      "xi", "Extended Instrument: ", 21, GST_TYPE_FIND_MAXIMUM);
+
   return TRUE;
 }
 
