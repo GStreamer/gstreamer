@@ -346,7 +346,7 @@ GST_PLUGINS_NONPORTED=" cdxaparse \
  linsys vcd \
  apexsink dc1394 \
  gsettings \
- musepack nas sdl sndfile timidity \
+ musepack nas sdl timidity \
  directdraw acm wininet \
  xvid lv2 teletextdec sndio osx_video quicktime"
 AC_SUBST(GST_PLUGINS_NONPORTED)
@@ -1952,7 +1952,7 @@ AG_GST_CHECK_FEATURE(SMOOTHSTREAMING, [Smooth Streaming plug-in], smoothstreamin
 
 dnl *** sndfile ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_SNDFILE, true)
-AG_GST_CHECK_FEATURE(SNDFILE, [sndfile plug-in], sfsrc sfsink, [
+AG_GST_CHECK_FEATURE(SNDFILE, [sndfile plug-in], sfdec sfenc, [
   PKG_CHECK_MODULES(SNDFILE, sndfile >= 1.0.16, HAVE_SNDFILE="yes", HAVE_SNDFILE="no")
   AC_SUBST(SNDFILE_CFLAGS)
   AC_SUBST(SNDFILE_LIBS)

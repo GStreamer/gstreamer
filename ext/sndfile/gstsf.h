@@ -28,6 +28,7 @@
 
 G_BEGIN_DECLS
 
+GstCaps *gst_sf_create_audio_template_caps (void);
 
 #define GST_TYPE_SF_MAJOR_TYPES (gst_sf_major_types_get_type())
 #define GST_TYPE_SF_MINOR_TYPES (gst_sf_minor_types_get_type())
@@ -35,9 +36,7 @@ G_BEGIN_DECLS
 GType gst_sf_major_types_get_type (void);
 GType gst_sf_minor_types_get_type (void);
 
-GType gst_sf_sink_get_type (void);
-GType gst_sf_src_get_type (void);
-
+GType gst_sf_dec_get_type (void);
 
 G_END_DECLS
 
