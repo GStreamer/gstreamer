@@ -29,7 +29,10 @@ G_BEGIN_DECLS
 /**
  * GstVideoFormat:
  * @GST_VIDEO_FORMAT_UNKNOWN: Unknown or unset video format id
- * @GST_VIDEO_FORMAT_ENCODED: Encoded video format
+ * @GST_VIDEO_FORMAT_ENCODED: Encoded video format. Only ever use that in caps for
+ *                            special video formats in combination with non-system
+ *                            memory GstCapsFeatures where it does not make sense
+ *                            to specify a real video format.
  * @GST_VIDEO_FORMAT_I420: planar 4:2:0 YUV
  * @GST_VIDEO_FORMAT_YV12: planar 4:2:0 YVU (like I420 but UV planes swapped)
  * @GST_VIDEO_FORMAT_YUY2: packed 4:2:2 YUV (Y0-U0-Y1-V0 Y2-U2-Y3-V2 Y4 ...)
