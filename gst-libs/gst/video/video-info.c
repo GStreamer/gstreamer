@@ -317,7 +317,6 @@ gst_video_info_to_caps (GstVideoInfo * info)
   g_return_val_if_fail (info != NULL, NULL);
   g_return_val_if_fail (info->finfo != NULL, NULL);
   g_return_val_if_fail (info->finfo->format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
-  g_return_val_if_fail (info->finfo->format != GST_VIDEO_FORMAT_ENCODED, NULL);
 
   format = gst_video_format_to_string (info->finfo->format);
   g_return_val_if_fail (format != NULL, NULL);
