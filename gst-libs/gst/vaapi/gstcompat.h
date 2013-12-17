@@ -314,6 +314,8 @@ gst_compat_pad_start_task(GstPad *pad, GstTaskFunction func, gpointer user_data,
     gst_compat_pad_start_task(pad, func, user_data, notify)
 
 /* GstElement */
+#undef  GST_ELEMENT_FLAG_SINK
+#define GST_ELEMENT_FLAG_SINK GST_ELEMENT_IS_SINK
 #undef  gst_element_class_set_static_metadata
 #define gst_element_class_set_static_metadata(klass, name, path, desc, author) \
     gst_compat_element_class_set_static_metadata(klass, name, path, desc, author)

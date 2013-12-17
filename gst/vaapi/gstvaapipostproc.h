@@ -148,14 +148,12 @@ struct _GstVaapiPostproc {
     guint                       flags;
 
     GstCaps                    *allowed_sinkpad_caps;
-    GstCaps                    *sinkpad_caps;
     GstVideoInfo                sinkpad_info;
 #if GST_CHECK_VERSION(1,0,0)
     GstBufferPool              *sinkpad_buffer_pool;
 #endif
     guint                       sinkpad_buffer_size;
     GstCaps                    *allowed_srcpad_caps;
-    GstCaps                    *srcpad_caps;
     GstVideoInfo                srcpad_info;
 
     /* Deinterlacing */

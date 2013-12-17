@@ -61,12 +61,8 @@ struct _GstVaapiDecode {
     /*< private >*/
     GstVaapiPluginBase  parent_instance;
 
-    GstPad             *sinkpad;
     GstCaps            *sinkpad_caps;
-    GstPadQueryFunction sinkpad_query;
-    GstPad             *srcpad;
     GstCaps            *srcpad_caps;
-    GstPadQueryFunction srcpad_query;
     GstVaapiDecoder    *decoder;
     GMutex              decoder_mutex;
     GCond               decoder_ready;

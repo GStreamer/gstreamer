@@ -399,7 +399,7 @@ gst_vaapidecode_decode_loop(GstVaapiDecode *decode)
 
     /* Suspend the task if an error occurred */
     if (ret != GST_VIDEO_DECODER_FLOW_NEED_DATA)
-        gst_pad_pause_task(decode->srcpad);
+        gst_pad_pause_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
 }
 
 static gboolean
@@ -444,7 +444,7 @@ gst_vaapidecode_finish(GstVideoDecoder *vdec)
     decode->decoder_finish = TRUE;
     g_cond_wait(&decode->decoder_finish_done, &decode->decoder_mutex);
     g_mutex_unlock(&decode->decoder_mutex);
-    gst_pad_stop_task(decode->srcpad);
+    gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
     GST_VIDEO_DECODER_STREAM_LOCK(vdec);
     return ret;
 }
@@ -591,14 +591,14 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
         gst_vaapi_decoder_state_changed, decode);
 
     decode->decoder_caps = gst_caps_ref(caps);
-    return gst_pad_start_task(decode->srcpad,
+    return gst_pad_start_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode),
         (GstTaskFunction)gst_vaapidecode_decode_loop, decode, NULL);
 }
 
 static void
 gst_vaapidecode_destroy(GstVaapiDecode *decode)
 {
-    gst_pad_stop_task(decode->srcpad);
+    gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
     gst_vaapi_decoder_replace(&decode->decoder, NULL);
     gst_caps_replace(&decode->decoder_caps, NULL);
     gst_vaapidecode_release(decode);
@@ -621,7 +621,7 @@ gst_vaapidecode_reset_full(GstVaapiDecode *decode, GstCaps *caps, gboolean hard)
 
         gst_vaapi_decoder_flush(decode->decoder);
         GST_VIDEO_DECODER_STREAM_UNLOCK(vdec);
-        gst_pad_stop_task(decode->srcpad);
+        gst_pad_stop_task(GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode));
         GST_VIDEO_DECODER_STREAM_LOCK(vdec);
         decode->decoder_loop_status = GST_FLOW_OK;
 
@@ -709,11 +709,15 @@ gst_vaapidecode_reset(GstVideoDecoder *vdec, gboolean hard)
 static gboolean
 gst_vaapidecode_set_format(GstVideoDecoder *vdec, GstVideoCodecState *state)
 {
+    GstVaapiPluginBase * const plugin = GST_VAAPI_PLUGIN_BASE(vdec);
     GstVaapiDecode * const decode = GST_VAAPIDECODE(vdec);
 
     if (!gst_vaapidecode_update_sink_caps(decode, state->caps))
         return FALSE;
     if (!gst_vaapidecode_update_src_caps(decode, state))
+        return FALSE;
+    if (!gst_vaapi_plugin_base_set_caps(plugin, decode->sinkpad_caps,
+            decode->srcpad_caps))
         return FALSE;
     if (!gst_vaapidecode_reset_full(decode, decode->sinkpad_caps, FALSE))
         return FALSE;
@@ -881,12 +885,13 @@ gst_vaapidecode_query(GST_PAD_QUERY_FUNCTION_ARGS)
 {
     GstVaapiDecode * const decode =
         GST_VAAPIDECODE(gst_pad_get_parent_element(pad));
+    GstVaapiPluginBase * const plugin = GST_VAAPI_PLUGIN_BASE(decode);
     gboolean res;
 
     GST_INFO_OBJECT(decode, "query type %s", GST_QUERY_TYPE_NAME(query));
 
-    if (gst_vaapi_reply_to_query(query, GST_VAAPI_PLUGIN_BASE_DISPLAY(decode))) {
-        GST_DEBUG("sharing display %p", GST_VAAPI_PLUGIN_BASE_DISPLAY(decode));
+    if (gst_vaapi_reply_to_query(query, plugin->display)) {
+        GST_DEBUG("sharing display %p", plugin->display);
         res = TRUE;
     }
     else if (GST_PAD_IS_SINK(pad)) {
@@ -901,14 +906,14 @@ gst_vaapidecode_query(GST_PAD_QUERY_FUNCTION_ARGS)
         }
 #endif
         default:
-            res = GST_PAD_QUERY_FUNCTION_CALL(decode->sinkpad_query,
-                decode->sinkpad, parent, query);
+            res = GST_PAD_QUERY_FUNCTION_CALL(plugin->sinkpad_query, pad,
+                parent, query);
             break;
         }
     }
     else
-        res = GST_PAD_QUERY_FUNCTION_CALL(decode->srcpad_query,
-            decode->srcpad, parent, query);
+        res = GST_PAD_QUERY_FUNCTION_CALL(plugin->srcpad_query, pad,
+            parent, query);
 
     gst_object_unref(decode);
     return res;
@@ -918,6 +923,7 @@ static void
 gst_vaapidecode_init(GstVaapiDecode *decode)
 {
     GstVideoDecoder * const vdec = GST_VIDEO_DECODER(decode);
+    GstPad *pad;
 
     gst_vaapi_plugin_base_init(GST_VAAPI_PLUGIN_BASE(decode), GST_CAT_DEFAULT);
 
@@ -933,15 +939,13 @@ gst_vaapidecode_init(GstVaapiDecode *decode)
     gst_video_decoder_set_packetized(vdec, FALSE);
 
     /* Pad through which data comes in to the element */
-    decode->sinkpad = GST_VIDEO_DECODER_SINK_PAD(vdec);
-    decode->sinkpad_query = GST_PAD_QUERYFUNC(decode->sinkpad);
-    gst_pad_set_query_function(decode->sinkpad, gst_vaapidecode_query);
+    pad = GST_VAAPI_PLUGIN_BASE_SINK_PAD(decode);
+    gst_pad_set_query_function(pad, gst_vaapidecode_query);
 #if !GST_CHECK_VERSION(1,0,0)
-    gst_pad_set_getcaps_function(decode->sinkpad, gst_vaapidecode_get_caps);
+    gst_pad_set_getcaps_function(pad, gst_vaapidecode_get_caps);
 #endif
 
     /* Pad through which data goes out of the element */
-    decode->srcpad = GST_VIDEO_DECODER_SRC_PAD(vdec);
-    decode->srcpad_query = GST_PAD_QUERYFUNC(decode->srcpad);
-    gst_pad_set_query_function(decode->srcpad, gst_vaapidecode_query);
+    pad = GST_VAAPI_PLUGIN_BASE_SRC_PAD(decode);
+    gst_pad_set_query_function(pad, gst_vaapidecode_query);
 }

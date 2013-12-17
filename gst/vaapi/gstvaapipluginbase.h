@@ -71,6 +71,23 @@ typedef struct _GstVaapiPluginBaseClass GstVaapiPluginBaseClass;
 #define GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES \
   gst_vaapi_plugin_base_init_interfaces(g_define_type_id);
 
+#define GST_VAAPI_PLUGIN_BASE_SINK_PAD(plugin) \
+  (GST_VAAPI_PLUGIN_BASE(plugin)->sinkpad)
+#define GST_VAAPI_PLUGIN_BASE_SINK_PAD_CAPS(plugin) \
+  (GST_VAAPI_PLUGIN_BASE(plugin)->sinkpad_caps)
+#define GST_VAAPI_PLUGIN_BASE_SINK_PAD_INFO(plugin) \
+  (&GST_VAAPI_PLUGIN_BASE(plugin)->sinkpad_info)
+#define GST_VAAPI_PLUGIN_BASE_SINK_PAD_QUERYFUNC(plugin) \
+  (GST_VAAPI_PLUGIN_BASE(plugin)->sinkpad_query)
+#define GST_VAAPI_PLUGIN_BASE_SRC_PAD(plugin) \
+  (GST_VAAPI_PLUGIN_BASE(plugin)->srcpad)
+#define GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAPS(plugin) \
+  (GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_caps)
+#define GST_VAAPI_PLUGIN_BASE_SRC_PAD_INFO(plugin) \
+  (&GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_info)
+#define GST_VAAPI_PLUGIN_BASE_SRC_PAD_QUERYFYNC(plugin) \
+  (GST_VAAPI_PLUGIN_BASE(plugin)->srcpad_query)
+
 #define GST_VAAPI_PLUGIN_BASE_DISPLAY(plugin) \
   (GST_VAAPI_PLUGIN_BASE(plugin)->display)
 #define GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(plugin) \
@@ -92,6 +109,18 @@ struct _GstVaapiPluginBase
   } parent_instance;
 
   GstDebugCategory *debug_category;
+
+  GstPad *sinkpad;
+  GstCaps *sinkpad_caps;
+  gboolean sinkpad_caps_changed;
+  GstVideoInfo sinkpad_info;
+  GstPadQueryFunction sinkpad_query;
+
+  GstPad *srcpad;
+  GstCaps *srcpad_caps;
+  gboolean srcpad_caps_changed;
+  GstVideoInfo srcpad_info;
+  GstPadQueryFunction srcpad_query;
 
   GstVaapiDisplay *display;
   GstVaapiDisplayType display_type;
@@ -147,6 +176,11 @@ gst_vaapi_plugin_base_set_display_type (GstVaapiPluginBase * plugin,
 G_GNUC_INTERNAL
 gboolean
 gst_vaapi_plugin_base_ensure_display (GstVaapiPluginBase * plugin);
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
+    GstCaps * outcaps);
 
 G_END_DECLS
 

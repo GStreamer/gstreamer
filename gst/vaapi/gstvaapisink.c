@@ -743,6 +743,7 @@ gst_vaapisink_get_caps(GstBaseSink *base_sink, GstCaps *filter)
 static gboolean
 gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
 {
+    GstVaapiPluginBase * const plugin = GST_VAAPI_PLUGIN_BASE(base_sink);
     GstVaapiSink * const sink = GST_VAAPISINK(base_sink);
     GstVideoInfo * const vip = &sink->video_info;
     GstVaapiDisplay *display;
@@ -756,6 +757,9 @@ gst_vaapisink_set_caps(GstBaseSink *base_sink, GstCaps *caps)
     if (GST_VAAPI_PLUGIN_BASE_DISPLAY_TYPE(sink) == GST_VAAPI_DISPLAY_TYPE_DRM)
         return TRUE;
 #endif
+
+    if (!gst_vaapi_plugin_base_set_caps(plugin, caps, NULL))
+        return FALSE;
 
     if (!gst_vaapisink_ensure_video_buffer_pool(sink, caps))
         return FALSE;

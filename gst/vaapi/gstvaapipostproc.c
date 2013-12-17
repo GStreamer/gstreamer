@@ -230,8 +230,9 @@ static gboolean
 gst_vaapipostproc_ensure_uploader_caps(GstVaapiPostproc *postproc)
 {
 #if !GST_CHECK_VERSION(1,0,0)
+    GstVaapiPluginBase * const plugin = GST_VAAPI_PLUGIN_BASE(postproc);
     if (postproc->is_raw_yuv && !gst_vaapi_uploader_ensure_caps(
-            postproc->uploader, postproc->sinkpad_caps, NULL))
+            postproc->uploader, plugin->sinkpad_caps, NULL))
         return FALSE;
 #endif
     return TRUE;
@@ -312,9 +313,7 @@ gst_vaapipostproc_destroy(GstVaapiPostproc *postproc)
     gst_vaapipostproc_destroy_filter(postproc);
 
     gst_caps_replace(&postproc->allowed_sinkpad_caps, NULL);
-    gst_caps_replace(&postproc->sinkpad_caps, NULL);
     gst_caps_replace(&postproc->allowed_srcpad_caps, NULL);
-    gst_caps_replace(&postproc->srcpad_caps,  NULL);
     gst_vaapi_plugin_base_close(GST_VAAPI_PLUGIN_BASE(postproc));
 }
 
@@ -375,7 +374,7 @@ create_output_buffer(GstVaapiPostproc *postproc)
         goto error_create_buffer;
 
 #if !GST_CHECK_VERSION(1,0,0)
-    gst_buffer_set_caps(outbuf, postproc->srcpad_caps);
+    gst_buffer_set_caps(outbuf, GST_VAAPI_PLUGIN_BASE_SRC_PAD_CAPS(postproc));
 #endif
     return outbuf;
 
@@ -1379,8 +1378,9 @@ gst_vaapipostproc_set_caps(GstBaseTransform *trans, GstCaps *caps,
 
     if (caps_changed) {
         gst_vaapipostproc_destroy(postproc);
-        gst_caps_replace(&postproc->sinkpad_caps, caps);
-        gst_caps_replace(&postproc->srcpad_caps, out_caps);
+        if (!gst_vaapi_plugin_base_set_caps(GST_VAAPI_PLUGIN_BASE(trans),
+                caps, out_caps))
+            return FALSE;
         if (!gst_vaapipostproc_create(postproc))
             return FALSE;
     }

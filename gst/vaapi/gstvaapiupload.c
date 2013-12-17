@@ -320,8 +320,11 @@ gst_vaapiupload_set_caps(
     GstCaps          *outcaps
 )
 {
+    GstVaapiPluginBase * const plugin = GST_VAAPI_PLUGIN_BASE(trans);
     GstVaapiUpload * const upload = GST_VAAPIUPLOAD(trans);
 
+    if (!gst_vaapi_plugin_base_set_caps(plugin, incaps, outcaps))
+        return FALSE;
     if (!gst_vaapi_uploader_ensure_caps(upload->uploader, incaps, outcaps))
         return FALSE;
     return TRUE;

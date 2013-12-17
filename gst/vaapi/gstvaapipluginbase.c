@@ -124,13 +124,28 @@ gst_vaapi_plugin_base_init (GstVaapiPluginBase * plugin,
   plugin->debug_category = debug_category;
   plugin->display_type = GST_VAAPI_DISPLAY_TYPE_ANY;
   plugin->display_type_req = GST_VAAPI_DISPLAY_TYPE_ANY;
+
+  /* sink pad */
+  plugin->sinkpad = gst_element_get_static_pad (GST_ELEMENT (plugin), "sink");
+  plugin->sinkpad_query = GST_PAD_QUERYFUNC (plugin->sinkpad);
+  gst_video_info_init (&plugin->sinkpad_info);
+
+  /* src pad */
+  if (!(GST_OBJECT_FLAGS (plugin) & GST_ELEMENT_FLAG_SINK)) {
+    plugin->srcpad = gst_element_get_static_pad (GST_ELEMENT (plugin), "src");
+    plugin->srcpad_query = GST_PAD_QUERYFUNC (plugin->srcpad);
+  }
+  gst_video_info_init (&plugin->srcpad_info);
 }
 
 void
 gst_vaapi_plugin_base_finalize (GstVaapiPluginBase * plugin)
 {
   gst_vaapi_plugin_base_close (plugin);
-
+  if (plugin->sinkpad)
+    gst_object_unref (plugin->sinkpad);
+  if (plugin->srcpad)
+    gst_object_unref (plugin->srcpad);
   gst_debug_category_free (plugin->debug_category);
 }
 
@@ -160,6 +175,14 @@ void
 gst_vaapi_plugin_base_close (GstVaapiPluginBase * plugin)
 {
   gst_vaapi_display_replace (&plugin->display, NULL);
+
+  gst_caps_replace (&plugin->sinkpad_caps, NULL);
+  plugin->sinkpad_caps_changed = FALSE;
+  gst_video_info_init (&plugin->sinkpad_info);
+
+  gst_caps_replace (&plugin->srcpad_caps, NULL);
+  plugin->srcpad_caps_changed = FALSE;
+  gst_video_info_init (&plugin->srcpad_info);
 }
 
 /**
@@ -201,5 +224,36 @@ gst_vaapi_plugin_base_ensure_display (GstVaapiPluginBase * plugin)
   plugin->display_type = gst_vaapi_display_get_display_type (plugin->display);
 
   GST_VAAPI_PLUGIN_BASE_GET_CLASS (plugin)->display_changed (plugin);
+  return TRUE;
+}
+
+/**
+ * gst_vaapi_plugin_base_set_caps:
+ * @plugin: a #GstVaapiPluginBase
+ * @incaps: the sink pad (input) caps
+ * @outcaps: the src pad (output) caps
+ *
+ * Notifies the base plugin object of the new input and output caps,
+ * obtained from the subclass.
+ *
+ * Returns: %TRUE if the update of caps was successful, %FALSE otherwise.
+ */
+gboolean
+gst_vaapi_plugin_base_set_caps (GstVaapiPluginBase * plugin, GstCaps * incaps,
+    GstCaps * outcaps)
+{
+  if (incaps && incaps != plugin->sinkpad_caps) {
+    gst_caps_replace (&plugin->sinkpad_caps, incaps);
+    if (!gst_video_info_from_caps (&plugin->sinkpad_info, incaps))
+      return FALSE;
+    plugin->sinkpad_caps_changed = TRUE;
+  }
+
+  if (outcaps && outcaps != plugin->srcpad_caps) {
+    gst_caps_replace (&plugin->srcpad_caps, outcaps);
+    if (!gst_video_info_from_caps (&plugin->srcpad_info, outcaps))
+      return FALSE;
+    plugin->srcpad_caps_changed = TRUE;
+  }
   return TRUE;
 }

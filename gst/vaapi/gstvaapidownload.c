@@ -499,8 +499,11 @@ gst_vaapidownload_set_caps(
     GstCaps          *outcaps
 )
 {
+    GstVaapiPluginBase * const plugin = GST_VAAPI_PLUGIN_BASE(trans);
     GstVaapiDownload * const download = GST_VAAPIDOWNLOAD(trans);
 
+    if (!gst_vaapi_plugin_base_set_caps(plugin, incaps, outcaps))
+        return FALSE;
     if (!gst_vaapidownload_negotiate_buffers(download, incaps, outcaps))
         return FALSE;
     return TRUE;
