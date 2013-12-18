@@ -1287,6 +1287,34 @@ gst_sub_parse_data_format_autodetect (gchar * match_str)
     GST_LOG ("QTtext (time based) format detected");
     return GST_SUB_PARSE_FORMAT_QTTEXT;
   }
+  /* We assume the LRC file starts immediately */
+  if (match_str[0] == '[') {
+    gboolean all_lines_good = TRUE;
+    gchar **split;
+    gchar **ptr;
+
+    ptr = split = g_strsplit (match_str, "\n", -1);
+    while (*ptr && *(ptr + 1)) {
+      gchar *str = *ptr;
+      gint len = strlen (str);
+
+      if (sscanf (str, "[%u:%02u.%02u]", &n1, &n2, &n3) == 3 ||
+          sscanf (str, "[%u:%02u.%03u]", &n1, &n2, &n3) == 3) {
+        all_lines_good = TRUE;
+      } else if (str[len - 1] == ']' && strchr (str, ':') != NULL) {
+        all_lines_good = TRUE;
+      } else {
+        all_lines_good = FALSE;
+        break;
+      }
+
+      ptr++;
+    }
+    g_strfreev (split);
+
+    if (all_lines_good)
+      return GST_SUB_PARSE_FORMAT_LRC;
+  }
 
   GST_DEBUG ("no subtitle format detected");
   return GST_SUB_PARSE_FORMAT_UNKNOWN;
@@ -1672,6 +1700,9 @@ static GstStaticCaps qttext_caps =
 GST_STATIC_CAPS ("application/x-subtitle-qttext");
 #define QTTEXT_CAPS (gst_static_caps_get (&qttext_caps))
 
+static GstStaticCaps lrc_caps = GST_STATIC_CAPS ("application/x-subtitle-lrc");
+#define LRC_CAPS (gst_static_caps_get (&lrc_caps))
+
 static void
 gst_subparse_type_find (GstTypeFind * tf, gpointer private)
 {
@@ -1771,6 +1802,10 @@ gst_subparse_type_find (GstTypeFind * tf, gpointer private)
     case GST_SUB_PARSE_FORMAT_QTTEXT:
       GST_DEBUG ("QTtext format detected");
       caps = QTTEXT_CAPS;
+      break;
+    case GST_SUB_PARSE_FORMAT_LRC:
+      GST_DEBUG ("LRC format detected");
+      caps = LRC_CAPS;
       break;
     default:
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
