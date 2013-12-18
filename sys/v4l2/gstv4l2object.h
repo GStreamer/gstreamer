@@ -283,6 +283,8 @@ gboolean      gst_v4l2_object_setup_format (GstV4l2Object * v4l2object,
 gboolean      gst_v4l2_object_decide_allocation (GstV4l2Object * v4l2object,
                                                  GstQuery * query);
 
+GstStructure * gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc);
+
 
 #define GST_IMPLEMENT_V4L2_PROBE_METHODS(Type_Class, interface_as_function)                 \
                                                                                             \

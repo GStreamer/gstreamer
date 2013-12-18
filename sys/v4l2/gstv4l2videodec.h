@@ -76,6 +76,8 @@ struct _GstV4l2VideoDecClass
 
 GType gst_v4l2_video_dec_get_type (void);
 
+gboolean gst_v4l2_video_dec_register (GstPlugin * plugin);
+
 G_END_DECLS
 
 #endif /* __GST_V4L2_VIDEO_DEC_H__ */

@@ -1457,7 +1457,7 @@ gst_v4l2_object_v4l2fourcc_to_video_format (guint32 fourcc)
   return format;
 }
 
-static GstStructure *
+GstStructure *
 gst_v4l2_object_v4l2fourcc_to_structure (guint32 fourcc)
 {
   GstStructure *structure = NULL;
