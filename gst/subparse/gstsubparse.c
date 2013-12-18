@@ -60,7 +60,8 @@ static GstStaticPadTemplate sink_templ = GST_STATIC_PAD_TEMPLATE ("sink",
     GST_PAD_ALWAYS,
     GST_STATIC_CAPS ("application/x-subtitle; application/x-subtitle-sami; "
         "application/x-subtitle-tmplayer; application/x-subtitle-mpl2; "
-        "application/x-subtitle-dks; application/x-subtitle-qttext")
+        "application/x-subtitle-dks; application/x-subtitle-qttext;"
+        "application/x-subtitle-lrc;")
     );
 
 static GstStaticPadTemplate src_templ = GST_STATIC_PAD_TEMPLATE ("src",
@@ -373,6 +374,8 @@ gst_sub_parse_get_format_description (GstSubParseFormat format)
       return "DKS";
     case GST_SUB_PARSE_FORMAT_QTTEXT:
       return "QTtext";
+    case GST_SUB_PARSE_FORMAT_LRC:
+      return "LRC";
     default:
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
       break;
@@ -917,6 +920,34 @@ parse_subrip (ParserState * state, const gchar * line)
   }
 }
 
+static gchar *
+parse_lrc (ParserState * state, const gchar * line)
+{
+  gint m, s, c;
+  const gchar *start;
+  gint milli;
+
+  if (line[0] != '[')
+    return NULL;
+
+  if (sscanf (line, "[%u:%02u.%03u]", &m, &s, &c) != 3 &&
+      sscanf (line, "[%u:%02u.%02u]", &m, &s, &c) != 3)
+    return NULL;
+
+  start = strchr (line, ']');
+  if (start - line == 9)
+    milli = 10;
+  else
+    milli = 1;
+
+  state->start_time = gst_util_uint64_scale (m, 60 * GST_SECOND, 1)
+      + gst_util_uint64_scale (s, GST_SECOND, 1)
+      + gst_util_uint64_scale (c, milli * GST_MSECOND, 1);
+  state->duration = GST_CLOCK_TIME_NONE;
+
+  return g_strdup (start + 1);
+}
+
 static void
 unescape_newlines_br (gchar * read)
 {
@@ -1379,6 +1410,10 @@ gst_sub_parse_format_autodetect (GstSubParse * self)
       qttext_context_init (&self->state);
       return gst_caps_new_simple ("text/x-raw",
           "format", G_TYPE_STRING, "pango-markup", NULL);
+    case GST_SUB_PARSE_FORMAT_LRC:
+      self->parse_line = parse_lrc;
+      return gst_caps_new_simple ("text/x-raw",
+          "format", G_TYPE_STRING, "utf8", NULL);
     case GST_SUB_PARSE_FORMAT_UNKNOWN:
     default:
       GST_DEBUG ("no subtitle format detected");
