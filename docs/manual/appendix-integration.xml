@@ -57,9 +57,9 @@
       onwards. Nowadays, a whole bunch of GNOME applications make use of
       &GStreamer; for media-processing, including (but not limited to)
       <ulink type="http" url="http://www.rhythmbox.org/">Rhythmbox</ulink>,
-      <ulink type="http" url="http://projects.gnome.org/totem/">Totem</ulink>
+      <ulink type="http" url="https://wiki.gnome.org/Apps/Videos">Videos</ulink>
       and <ulink type="http"
-      url="http://www.burtonini.com/blog/computers/sound-juicer">Sound
+      url="https://wiki.gnome.org/Apps/SoundJuicer">Sound
       Juicer</ulink>.
     </para>
     <para>
