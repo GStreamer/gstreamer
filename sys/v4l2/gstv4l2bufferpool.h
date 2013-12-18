@@ -108,6 +108,8 @@ GstBufferPool *     gst_v4l2_buffer_pool_new     (GstV4l2Object *obj, GstCaps *c
 
 GstFlowReturn       gst_v4l2_buffer_pool_process (GstV4l2BufferPool * bpool, GstBuffer * buf);
 
+gboolean gst_v4l2_buffer_pool_flush (GstV4l2BufferPool * pool);
+
 G_END_DECLS
 
 #endif /*__GST_V4L2_BUFFER_POOL_H__ */

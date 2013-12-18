@@ -664,6 +664,43 @@ gst_v4l2_buffer_pool_free_buffers (GstV4l2BufferPool * pool)
 }
 
 static gboolean
+stop_streaming (GstV4l2BufferPool * pool)
+{
+  GstV4l2Object *obj = pool->obj;
+
+  GST_DEBUG_OBJECT (pool, "stopping stream");
+
+  gst_poll_set_flushing (obj->poll, TRUE);
+
+  switch (obj->mode) {
+    case GST_V4L2_IO_RW:
+      break;
+    case GST_V4L2_IO_MMAP:
+    case GST_V4L2_IO_USERPTR:
+    case GST_V4L2_IO_DMABUF:
+      GST_DEBUG_OBJECT (pool, "STREAMOFF");
+      if (v4l2_ioctl (pool->video_fd, VIDIOC_STREAMOFF, &obj->type) < 0)
+        goto stop_failed;
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+
+  pool->streaming = FALSE;
+
+  return TRUE;
+
+  /* ERRORS */
+stop_failed:
+  {
+    GST_ERROR_OBJECT (pool, "error with STREAMOFF %d (%s)", errno,
+        g_strerror (errno));
+    return FALSE;
+  }
+}
+
+static gboolean
 gst_v4l2_buffer_pool_stop (GstBufferPool * bpool)
 {
   gboolean ret;
@@ -1511,5 +1548,91 @@ start_failed:
   {
     GST_ERROR_OBJECT (obj->element, "failed to start streaming");
     return GST_FLOW_ERROR;
+  }
+}
+
+
+/**
+ * gst_v4l2_buffer_pool_flush:
+ * @bpool: a #GstBufferPool
+ *
+ * First, set obj->poll to be flushing
+ * Call STREAMOFF to clear QUEUED flag on every driver buffers.
+ * Then release all buffers that are in pool->buffers array.
+ * Finally call STREAMON if CAPTURE type
+ * The caller is responsible to unset flushing on obj->pool
+ * 
+ * Returns: TRUE on success.
+ */
+gboolean
+gst_v4l2_buffer_pool_flush (GstV4l2BufferPool * pool)
+{
+  GstBufferPool *bpool = GST_BUFFER_POOL_CAST (pool);
+  GstV4l2Object *obj = pool->obj;
+  gint i = 0;
+
+  GST_DEBUG_OBJECT (pool, "flush");
+
+  stop_streaming (pool);
+
+  switch (obj->type) {
+    case V4L2_BUF_TYPE_VIDEO_CAPTURE:
+    case V4L2_BUF_TYPE_VIDEO_CAPTURE_MPLANE:
+    case V4L2_BUF_TYPE_VIDEO_OUTPUT:
+    case V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE:
+      switch (obj->mode) {
+        case GST_V4L2_IO_RW:
+          break;
+        case GST_V4L2_IO_MMAP:
+        case GST_V4L2_IO_USERPTR:
+        case GST_V4L2_IO_DMABUF:
+        {
+          for (i = 0; i < pool->num_buffers; i++) {
+            GstBuffer *buf = pool->buffers[i];
+            if (buf) {
+              /* it's necessary to set to NULL before to call
+               * gst_v4l2_buffer_pool_release_buffer
+               * otherwise it won't go back to the pool */
+              pool->buffers[i] = NULL;
+
+              /* dicrease counter */
+              pool->num_queued--;
+
+              /* in CAPTURE mode the pool->num_queued will be re-incremented
+               * because the buffers are queued when released */
+              if (buf->pool)
+                gst_buffer_unref (buf);
+              else
+                gst_v4l2_buffer_pool_release_buffer (bpool, buf);
+            }
+          }
+
+          /* do not set pool->num_queued to 0 because
+           * the buffers are queued when released */
+          break;
+        }
+
+        default:
+          g_assert_not_reached ();
+          break;
+      }
+      break;
+    default:
+      g_assert_not_reached ();
+      break;
+  }
+  /* we can start capturing now, we wait for the playback
+   * case until we queued the first buffer */
+  if (!V4L2_TYPE_IS_OUTPUT (obj->type))
+    if (!start_streaming (pool))
+      goto start_failed;
+
+  return TRUE;
+
+  /* ERRORS */
+start_failed:
+  {
+    GST_ERROR_OBJECT (pool, "failed to start streaming");
+    return FALSE;
   }
 }
