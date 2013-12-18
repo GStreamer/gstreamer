@@ -797,6 +797,25 @@ GST_START_TEST (test_sami_comment)
 
 GST_END_TEST;
 
+GST_START_TEST (test_lrc)
+{
+  SubParseInputChunk lrc_input[] = {
+    {"[ar:123]\n" "[ti:Title]\n" "[al:Album]\n" "[00:02.23]Line 1\n",
+          2230 * GST_MSECOND, GST_CLOCK_TIME_NONE,
+        "Line 1"},
+    {"[00:05.10]Line 2\n",
+          5100 * GST_MSECOND, GST_CLOCK_TIME_NONE,
+        "Line 2"},
+    {"[00:06.123]Line 3\n",
+          6123 * GST_MSECOND, GST_CLOCK_TIME_NONE,
+        "Line 3"}
+  };
+
+  do_test (lrc_input, G_N_ELEMENTS (lrc_input), "utf8");
+}
+
+GST_END_TEST;
+
 /* TODO:
  *  - add/modify tests so that lines aren't dogfed to the parsers in complete
  *    lines or sets of complete lines, but rather in random chunks
@@ -830,6 +849,7 @@ subparse_suite (void)
   tcase_add_test (tc_chain, test_sami_html_entities);
   tcase_add_test (tc_chain, test_sami_bad_entities);
   tcase_add_test (tc_chain, test_sami_comment);
+  tcase_add_test (tc_chain, test_lrc);
   return s;
 }
 
