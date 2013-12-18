@@ -112,6 +112,14 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
     { GST_VAAPI_PROFILE_H264_HIGH, VAProfileH264High,
       "video/x-h264", "high"
     },
+#if VA_CHECK_VERSION(0,35,2)
+    { GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH, VAProfileH264MultiviewHigh,
+      "video/x-h264", "multiview-high"
+    },
+    { GST_VAAPI_PROFILE_H264_STEREO_HIGH, VAProfileH264StereoHigh,
+      "video/x-h264", "stereo-high"
+    },
+#endif
     { GST_VAAPI_PROFILE_VC1_SIMPLE, VAProfileVC1Simple,
       "video/x-wmv, wmvversion=3", "simple"
     },
@@ -275,6 +283,9 @@ gst_vaapi_profile_from_codec_data_h264(GstBuffer *buffer)
                         GST_VAAPI_PROFILE_H264_BASELINE);
     case 77:    return GST_VAAPI_PROFILE_H264_MAIN;
     case 100:   return GST_VAAPI_PROFILE_H264_HIGH;
+    case 118:   return GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH;
+    case 128:   return GST_VAAPI_PROFILE_H264_STEREO_HIGH;
+
     }
     return 0;
 }
