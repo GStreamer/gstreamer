@@ -9,5 +9,5 @@ Name: GStreamer Bad Plugin libraries
 Description: Streaming media framework, bad plugins libraries
 Requires: gstreamer-@GST_API_VERSION@
 Version: @VERSION@
-Libs: -L${libdir}
+Libs: -L${libdir} -lgstmpegts-@GST_API_VERSION@
 Cflags: -I${includedir}
