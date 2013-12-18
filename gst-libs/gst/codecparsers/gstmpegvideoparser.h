@@ -95,10 +95,10 @@ typedef enum {
 
 /**
  * GstMpegVideoSequenceScalableMode:
- * GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_DATA_PARTITIONING: Data partitioning
- * GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_SPATIAL: Spatial Scalability            
- * GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_SNR: SNR Scalability                
- * GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_TEMPORAL: Temporal Scalability   
+ * @GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_DATA_PARTITIONING: Data partitioning
+ * @GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_SPATIAL: Spatial Scalability
+ * @GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_SNR: SNR Scalability
+ * @GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_TEMPORAL: Temporal Scalability
  */
 typedef enum {
   GST_MPEG_VIDEO_SEQ_SCALABLE_MODE_DATA_PARTITIONING  = 0x00,
