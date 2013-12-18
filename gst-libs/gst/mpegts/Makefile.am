@@ -17,8 +17,8 @@ libgstmpegts_@GST_API_VERSION@include_HEADERS = \
 	gst-dvb-section.h			\
 	gstmpegtsdescriptor.h			\
 	gst-dvb-descriptor.h			\
-	mpegts.h
-
+	mpegts.h \
+	gstmpegts-enumtypes.h
 
 libgstmpegts_@GST_API_VERSION@_la_CFLAGS = \
 	$(GST_PLUGINS_BAD_CFLAGS) \
@@ -45,7 +45,7 @@ glib_gen_prefix=gst_mpegts
 glib_gen_basename=gstmpegts
 
 BUILT_SOURCES = gstmpegts-enumtypes.c gstmpegts-enumtypes.h
-nodist_libgstmpegts_@GST_API_VERSION@_la_SOURCES = $(BUILT_SOURCES)
+nodist_libgstmpegts_@GST_API_VERSION@_la_SOURCES = gstmpegts-enumtypes.c
 
 CLEANFILES = $(BUILT_SOURCES)
 
