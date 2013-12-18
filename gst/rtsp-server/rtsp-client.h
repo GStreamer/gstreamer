@@ -76,6 +76,9 @@ struct _GstRTSPClient {
 /**
  * GstRTSPClientClass:
  * @create_sdp: called when the SDP needs to be created for media.
+ * @configure_client_media: called when the stream in media needs to be configured.
+ *    The default implementation will configure the blocksize on the payloader when
+ *    spcified in the request headers.
  * @configure_client_transport: called when the client transport needs to be
  *    configured.
  * @params_set: set parameters. This function should also initialize the
@@ -89,6 +92,9 @@ struct _GstRTSPClientClass {
   GObjectClass  parent_class;
 
   GstSDPMessage * (*create_sdp) (GstRTSPClient *client, GstRTSPMedia *media);
+  gboolean        (*configure_client_media)     (GstRTSPClient * client,
+                                                 GstRTSPMedia * media, GstRTSPStream * stream,
+                                                 GstRTSPContext * ctx);
   gboolean        (*configure_client_transport) (GstRTSPClient * client,
                                                  GstRTSPContext * ctx,
                                                  GstRTSPTransport * ct);

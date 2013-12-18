@@ -127,6 +127,8 @@ static void client_session_finalized (GstRTSPClient * client,
     GstRTSPSession * session);
 static void unlink_session_transports (GstRTSPClient * client,
     GstRTSPSession * session, GstRTSPSessionMedia * sessmedia);
+static gboolean default_configure_client_media (GstRTSPClient * client,
+    GstRTSPMedia * media, GstRTSPStream * stream, GstRTSPContext * ctx);
 static gboolean default_configure_client_transport (GstRTSPClient * client,
     GstRTSPContext * ctx, GstRTSPTransport * ct);
 static GstRTSPResult default_params_set (GstRTSPClient * client,
@@ -152,6 +154,7 @@ gst_rtsp_client_class_init (GstRTSPClientClass * klass)
   gobject_class->finalize = gst_rtsp_client_finalize;
 
   klass->create_sdp = create_sdp;
+  klass->configure_client_media = default_configure_client_media;
   klass->configure_client_transport = default_configure_client_transport;
   klass->params_set = default_params_set;
   klass->params_get = default_params_get;
@@ -1265,11 +1268,11 @@ parse_transport (const char *transport, GstRTSPLowerTrans supported,
 }
 
 static gboolean
-handle_blocksize (GstRTSPMedia * media, GstRTSPStream * stream,
-    GstRTSPMessage * request)
+default_configure_client_media (GstRTSPClient * client, GstRTSPMedia * media,
+    GstRTSPStream * stream, GstRTSPContext * ctx)
 {
+  GstRTSPMessage *request = ctx->request;
   gchar *blocksize_str;
-  gboolean ret = TRUE;
 
   if (gst_rtsp_message_get_header (request, GST_RTSP_HDR_BLOCKSIZE,
           &blocksize_str, 0) == GST_RTSP_OK) {
@@ -1277,21 +1280,29 @@ handle_blocksize (GstRTSPMedia * media, GstRTSPStream * stream,
     gchar *end;
 
     blocksize = g_ascii_strtoull (blocksize_str, &end, 10);
-    if (end == blocksize_str) {
-      GST_ERROR ("failed to parse blocksize");
-      ret = FALSE;
-    } else {
-      /* we don't want to change the mtu when this media
-       * can be shared because it impacts other clients */
-      if (gst_rtsp_media_is_shared (media))
-        return TRUE;
+    if (end == blocksize_str)
+      goto parse_failed;
 
-      if (blocksize > G_MAXUINT)
-        blocksize = G_MAXUINT;
-      gst_rtsp_stream_set_mtu (stream, blocksize);
-    }
+    /* we don't want to change the mtu when this media
+     * can be shared because it impacts other clients */
+    if (gst_rtsp_media_is_shared (media))
+      goto done;
+
+    if (blocksize > G_MAXUINT)
+      blocksize = G_MAXUINT;
+
+    gst_rtsp_stream_set_mtu (stream, blocksize);
   }
-  return ret;
+done:
+  return TRUE;
+
+  /* ERRORS */
+parse_failed:
+  {
+    GST_ERROR_OBJECT (client, "failed to parse blocksize");
+    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    return FALSE;
+  }
 }
 
 static gboolean
@@ -1518,9 +1529,8 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   ctx->sessmedia = sessmedia;
 
-  /* set blocksize on this stream */
-  if (!handle_blocksize (media, stream, ctx->request))
-    goto invalid_blocksize;
+  if (!klass->configure_client_media (client, media, stream, ctx))
+    goto configure_media_failed_no_reply;
 
   gst_rtsp_transport_new (&ct);
 
@@ -1649,12 +1659,12 @@ sessmedia_unavailable:
     g_free (path);
     return FALSE;
   }
-invalid_blocksize:
+configure_media_failed_no_reply:
   {
-    GST_ERROR ("client %p: invalid blocksize", client);
-    send_generic_response (client, GST_RTSP_STS_BAD_REQUEST, ctx);
+    GST_ERROR ("client %p: configure_media failed", client);
     g_object_unref (session);
     g_free (path);
+    /* error reply is already sent */
     return FALSE;
   }
 unsupported_transports:
