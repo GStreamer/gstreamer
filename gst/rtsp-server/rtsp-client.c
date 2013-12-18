@@ -1719,7 +1719,7 @@ create_sdp (GstRTSPClient * client, GstRTSPMedia * media)
   info.server_ip = priv->server_ip;
 
   /* create an SDP for the media object */
-  if (!gst_rtsp_sdp_from_media (sdp, &info, media))
+  if (!gst_rtsp_media_setup_sdp (media, sdp, &info))
     goto no_sdp;
 
   return sdp;

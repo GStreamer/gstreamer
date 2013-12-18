@@ -177,6 +177,8 @@ static gboolean default_query_position (GstRTSPMedia * media,
     gint64 * position);
 static gboolean default_query_stop (GstRTSPMedia * media, gint64 * stop);
 static GstElement *default_create_rtpbin (GstRTSPMedia * media);
+static gboolean default_setup_sdp (GstRTSPMedia * media, GstSDPMessage * sdp,
+    GstSDPInfo * info);
 
 static gboolean wait_preroll (GstRTSPMedia * media);
 
@@ -294,6 +296,7 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
   klass->query_position = default_query_position;
   klass->query_stop = default_query_stop;
   klass->create_rtpbin = default_create_rtpbin;
+  klass->setup_sdp = default_setup_sdp;
 }
 
 static void
@@ -2393,6 +2396,60 @@ gst_rtsp_media_get_time_provider (GstRTSPMedia * media, const gchar * address,
     gst_object_ref (provider);
 
   return provider;
+}
+
+static gboolean
+default_setup_sdp (GstRTSPMedia * media, GstSDPMessage * sdp, GstSDPInfo * info)
+{
+  return gst_rtsp_sdp_from_media (sdp, info, media);
+}
+
+/**
+ * gst_rtsp_media_setup_sdp:
+ * @sdp: a #GstSDPMessage
+ * @info: info
+ * @media: a #GstRTSPMedia
+ *
+ * Add @media specific info to @sdp. @info is used to configure the connection
+ * information in the SDP.
+ *
+ * Returns: TRUE on success.
+ */
+gboolean
+gst_rtsp_media_setup_sdp (GstRTSPMedia * media, GstSDPMessage * sdp,
+    GstSDPInfo * info)
+{
+  GstRTSPMediaPrivate *priv;
+  GstRTSPMediaClass *klass;
+  gboolean res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), FALSE);
+  g_return_val_if_fail (sdp != NULL, FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
+
+  priv = media->priv;
+
+  g_rec_mutex_lock (&priv->state_lock);
+
+  klass = GST_RTSP_MEDIA_GET_CLASS (media);
+
+  if (!klass->setup_sdp)
+    goto no_setup_sdp;
+
+  res = klass->setup_sdp (media, sdp, info);
+
+  g_rec_mutex_unlock (&priv->state_lock);
+
+  return res;
+
+  /* ERRORS */
+no_setup_sdp:
+  {
+    g_rec_mutex_unlock (&priv->state_lock);
+    GST_ERROR ("no setup_sdp function");
+    g_critical ("no setup_sdp vmethod function set");
+    return FALSE;
+  }
 }
 
 /**

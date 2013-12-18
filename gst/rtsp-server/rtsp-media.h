@@ -84,6 +84,7 @@ GType gst_rtsp_suspend_mode_get_type (void);
 #include "rtsp-thread-pool.h"
 #include "rtsp-permissions.h"
 #include "rtsp-address-pool.h"
+#include "rtsp-sdp.h"
 
 /**
  * GstRTSPMedia:
@@ -124,6 +125,7 @@ struct _GstRTSPMediaClass {
   gboolean        (*query_stop)      (GstRTSPMedia *media, gint64 *stop);
   GstElement *    (*create_rtpbin)   (GstRTSPMedia *media);
   gboolean        (*setup_rtpbin)    (GstRTSPMedia *media, GstElement *rtpbin);
+  gboolean        (*setup_sdp)       (GstRTSPMedia *media, GstSDPMessage *sdp, GstSDPInfo *info);
 
   /* signals */
   void            (*new_stream)      (GstRTSPMedia *media, GstRTSPStream * stream);
@@ -184,6 +186,9 @@ GstRTSPSuspendMode    gst_rtsp_media_get_suspend_mode (GstRTSPMedia *media);
 
 gboolean              gst_rtsp_media_suspend          (GstRTSPMedia *media);
 gboolean              gst_rtsp_media_unsuspend        (GstRTSPMedia *media);
+
+gboolean              gst_rtsp_media_setup_sdp        (GstRTSPMedia * media, GstSDPMessage * sdp,
+                                                       GstSDPInfo * info);
 
 /* creating streams */
 void                  gst_rtsp_media_collect_streams  (GstRTSPMedia *media);
