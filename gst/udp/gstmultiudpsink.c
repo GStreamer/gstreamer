@@ -535,8 +535,8 @@ gst_multiudpsink_render (GstBaseSink * bsink, GstBuffer * buffer)
   if (n_mem == 0)
     goto no_data;
 
-  /* allocated on the stack, the max number of memory blocks is limited so this
-   * should not cause stack overflows */
+  /* pre-allocated, the max number of memory blocks is limited so this
+   * should not cause overflows */
   vec = sink->vec;
   map = sink->map;
 
