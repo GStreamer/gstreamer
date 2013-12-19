@@ -334,8 +334,6 @@ gst_vtdec_create_session (GstVtdec * vtdec)
       vtdec->video_info.width);
   gst_vtutil_dict_set_i32 (output_image_buffer_attrs, kCVPixelBufferHeightKey,
       vtdec->video_info.height);
-  gst_vtutil_dict_set_i32 (output_image_buffer_attrs,
-      kCVPixelBufferBytesPerRowAlignmentKey, 2 * vtdec->video_info.width);
 
   callback.decompressionOutputCallback = gst_vtdec_session_output_callback;
   callback.decompressionOutputRefCon = vtdec;
