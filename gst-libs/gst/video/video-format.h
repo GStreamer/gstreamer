@@ -166,6 +166,8 @@ typedef struct _GstVideoFormatInfo GstVideoFormatInfo;
  *   can't be described with the usual information in the #GstVideoFormatInfo.
  * @GST_VIDEO_FORMAT_FLAG_UNPACK: This format can be used in a
  *   #GstVideoFormatUnpack and #GstVideoFormatPack function.
+ * @GST_VIDEO_FORMAT_FLAG_TILED: The format is tiled, there is tiling information
+ *   in the last plane.
  *
  * The different video flags that a format info can have.
  */
@@ -178,7 +180,8 @@ typedef enum
   GST_VIDEO_FORMAT_FLAG_LE       = (1 << 4),
   GST_VIDEO_FORMAT_FLAG_PALETTE  = (1 << 5),
   GST_VIDEO_FORMAT_FLAG_COMPLEX  = (1 << 6),
-  GST_VIDEO_FORMAT_FLAG_UNPACK   = (1 << 7)
+  GST_VIDEO_FORMAT_FLAG_UNPACK   = (1 << 7),
+  GST_VIDEO_FORMAT_FLAG_TILED    = (1 << 8)
 } GstVideoFormatFlags;
 
 /* YUV components */
@@ -347,6 +350,7 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_IS_LE(info)        ((info)->flags & GST_VIDEO_FORMAT_FLAG_LE)
 #define GST_VIDEO_FORMAT_INFO_HAS_PALETTE(info)  ((info)->flags & GST_VIDEO_FORMAT_FLAG_PALETTE)
 #define GST_VIDEO_FORMAT_INFO_IS_COMPLEX(info)   ((info)->flags & GST_VIDEO_FORMAT_FLAG_COMPLEX)
+#define GST_VIDEO_FORMAT_INFO_IS_TILED(info)     ((info)->flags & GST_VIDEO_FORMAT_FLAG_TILED)
 
 #define GST_VIDEO_FORMAT_INFO_BITS(info)         ((info)->bits)
 #define GST_VIDEO_FORMAT_INFO_N_COMPONENTS(info) ((info)->n_components)
