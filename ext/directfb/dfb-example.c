@@ -1,5 +1,10 @@
 
 #include <directfb.h>
+
+#ifdef __no_instrument_function__
+#undef __no_instrument_function__
+#endif
+
 #include <stdio.h>
 #include <gst/gst.h>
 
