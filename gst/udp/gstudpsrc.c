@@ -390,7 +390,7 @@ gst_udpsrc_create (GstPushSrc * psrc, GstBuffer ** buf)
 {
   GstFlowReturn ret;
   GstUDPSrc *udpsrc;
-  GstBuffer *outbuf;
+  GstBuffer *outbuf = NULL;
   GstMapInfo info;
   GSocketAddress *saddr = NULL;
   gsize offset;
@@ -555,8 +555,10 @@ alloc_failed:
   }
 receive_error:
   {
-    gst_buffer_unmap (outbuf, &info);
-    gst_buffer_unref (outbuf);
+    if (outbuf != NULL) {
+      gst_buffer_unmap (outbuf, &info);
+      gst_buffer_unref (outbuf);
+    }
 
     if (g_error_matches (err, G_IO_ERROR, G_IO_ERROR_BUSY) ||
         g_error_matches (err, G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
