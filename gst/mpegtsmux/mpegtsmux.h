@@ -185,8 +185,7 @@ struct MpegTsPadData {
   TsMuxStream *stream;
 
   /* most recent valid TS for this stream */
-  GstClockTime last_pts;
-  GstClockTime last_dts;
+  GstClockTime min_dts;
 
 #if 0
   /* (optional) index writing */

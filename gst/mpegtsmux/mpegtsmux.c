@@ -321,8 +321,7 @@ static void
 mpegtsmux_pad_reset (MpegTsPadData * pad_data)
 {
   pad_data->pid = 0;
-  pad_data->last_pts = GST_CLOCK_TIME_NONE;
-  pad_data->last_dts = GST_CLOCK_TIME_NONE;
+  pad_data->min_dts = GST_CLOCK_TIME_NONE;
   pad_data->prog_id = -1;
 #if 0
   pad_data->prog_id = -1;
@@ -1020,7 +1019,6 @@ mpegtsmux_clip_inc_running_time (GstCollectPads * pads,
       GST_LOG_OBJECT (cdata->pad, "buffer pts %" GST_TIME_FORMAT " -> %"
           GST_TIME_FORMAT " running time",
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_TIME_ARGS (time));
-      pad_data->last_pts = time;
       buf = *outbuf = gst_buffer_make_writable (buf);
       GST_BUFFER_TIMESTAMP (*outbuf) = time;
     }
@@ -1039,14 +1037,11 @@ mpegtsmux_clip_inc_running_time (GstCollectPads * pads,
       GST_LOG_OBJECT (cdata->pad, "buffer dts %" GST_TIME_FORMAT " -> %"
           GST_TIME_FORMAT " running time",
           GST_TIME_ARGS (GST_BUFFER_TIMESTAMP (buf)), GST_TIME_ARGS (time));
-      if (GST_CLOCK_TIME_IS_VALID (pad_data->last_dts) &&
-          time < pad_data->last_dts) {
-        /* FIXME DTS/PTS mess again;
-         * probably needs a whole lot more subtle handling (cf qtmux) */
+      if (GST_CLOCK_TIME_IS_VALID (pad_data->min_dts) &&
+          time < pad_data->min_dts) {
+        /* Ignore DTS going backward */
         GST_WARNING_OBJECT (cdata->pad, "ignoring DTS going backward");
-        time = pad_data->last_dts;
-      } else {
-        pad_data->last_dts = time;
+        time = pad_data->min_dts;
       }
       buf = *outbuf = gst_buffer_make_writable (buf);
       GST_BUFFER_DTS (*outbuf) = time;
@@ -1154,18 +1149,16 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
   GST_DEBUG_OBJECT (COLLECT_DATA_PAD (best),
       "Chose stream for output (PID: 0x%04x)", best->pid);
 
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buf)) &&
-      GST_CLOCK_TIME_IS_VALID (best->last_pts)) {
-    pts = GSTTIME_TO_MPEGTIME (best->last_pts);
+  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_PTS (buf))) {
+    pts = GSTTIME_TO_MPEGTIME (GST_BUFFER_PTS (buf));
     GST_DEBUG_OBJECT (mux, "Buffer has PTS %" GST_TIME_FORMAT " pts %"
-        G_GINT64_FORMAT, GST_TIME_ARGS (best->last_pts), pts);
+        G_GINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (buf)), pts);
   }
 
-  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (buf)) &&
-      GST_CLOCK_TIME_IS_VALID (best->last_dts)) {
-    dts = GSTTIME_TO_MPEGTIME (best->last_dts);
+  if (GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (buf))) {
+    dts = GSTTIME_TO_MPEGTIME (GST_BUFFER_DTS (buf));
     GST_DEBUG_OBJECT (mux, "Buffer has DTS %" GST_TIME_FORMAT " dts %"
-        G_GINT64_FORMAT, GST_TIME_ARGS (best->last_dts), dts);
+        G_GINT64_FORMAT, GST_TIME_ARGS (GST_BUFFER_DTS (buf)), dts);
   }
 
   /* should not have a DTS without PTS */
@@ -1197,8 +1190,8 @@ mpegtsmux_collected_buffer (GstCollectPads * pads, GstCollectData * data,
   if (prog->pcr_stream == best->stream) {
     /* prefer DTS if present for PCR as it should be monotone */
     mux->last_ts =
-        GST_CLOCK_TIME_IS_VALID (best->last_dts) ? best->last_dts : best->
-        last_pts;
+        GST_CLOCK_TIME_IS_VALID (GST_BUFFER_DTS (buf)) ?
+        GST_BUFFER_DTS (buf) : GST_BUFFER_PTS (buf);
   }
 
   mux->is_delta = delta;
