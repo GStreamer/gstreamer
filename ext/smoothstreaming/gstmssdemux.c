@@ -1180,7 +1180,7 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
 
     case GST_FLOW_EOS:
       GST_DEBUG_OBJECT (stream->pad, "EOS, stopping download loop");
-      gst_mss_demux_stream_push_event (stream, gst_event_new_eos ());
+      /* we push the EOS after releasing the object lock */
       gst_task_pause (stream->download_task);
       break;
 
@@ -1223,6 +1223,10 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
       break;
   }
   GST_OBJECT_UNLOCK (mssdemux);
+
+  if (G_UNLIKELY (ret == GST_FLOW_EOS)) {
+    gst_mss_demux_stream_push_event (stream, gst_event_new_eos ());
+  }
 
   if (buffer_downloaded) {
     stream->download_error_count = 0;
