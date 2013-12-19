@@ -520,11 +520,16 @@ gst_v4l2_video_dec_decide_allocation (GstVideoDecoder * decoder,
     GstQuery * query)
 {
   GstV4l2VideoDec *self = GST_V4L2_VIDEO_DEC (decoder);
+  GstClockTime latency;
   gboolean ret = FALSE;
 
   if (gst_v4l2_object_decide_allocation (self->v4l2capture, query))
     ret = GST_VIDEO_DECODER_CLASS (parent_class)->decide_allocation (decoder,
         query);
+
+  latency = self->v4l2capture->min_buffers_for_capture *
+      self->v4l2capture->duration;
+  gst_video_decoder_set_latency (decoder, latency, latency);
 
   return ret;
 }

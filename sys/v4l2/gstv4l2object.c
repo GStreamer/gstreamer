@@ -3296,6 +3296,7 @@ gst_v4l2_object_decide_allocation (GstV4l2Object * obj, GstQuery * query)
   if (v4l2_ioctl (obj->video_fd, VIDIOC_G_CTRL, &ctl) >= 0) {
     GST_DEBUG_OBJECT (obj->element, "driver require a minimum of %d buffers",
         ctl.value);
+    obj->min_buffers_for_capture = ctl.value;
     min += ctl.value;
   }
 
