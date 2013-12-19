@@ -61,12 +61,10 @@ gst_core_video_meta_get_info (void)
 GstBuffer *
 gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo)
 {
-  void *data;
-  size_t size;
   CVPixelBufferRef pixbuf = NULL;
   GstBuffer *buf;
   GstCoreVideoMeta *meta;
-  guint width, height, n_planes, i;
+  guint n_planes;
   gsize offset[GST_VIDEO_MAX_PLANES];
   gint stride[GST_VIDEO_MAX_PLANES];
 
@@ -93,37 +91,42 @@ gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo)
   memset (&offset, 0, sizeof (offset));
   memset (&stride, 0, sizeof (stride));
 
-  data = CVPixelBufferGetBaseAddress (pixbuf);
-  height = CVPixelBufferGetHeight (pixbuf);
   if (CVPixelBufferIsPlanar (pixbuf)) {
-    GstVideoInfo tmp_vinfo;
+    int i, size, off;
 
     n_planes = CVPixelBufferGetPlaneCount (pixbuf);
-    for (i = 0; i < n_planes; ++i)
+    off = 0;
+    for (i = 0; i < n_planes; ++i) {
       stride[i] = CVPixelBufferGetBytesPerRowOfPlane (pixbuf, i);
+      size = stride[i] * CVPixelBufferGetHeightOfPlane (pixbuf, i);
+      offset[i] = off;
+      off += size;
 
-    gst_video_info_init (&tmp_vinfo);
-    gst_video_info_set_format (&tmp_vinfo,
-        vinfo->finfo->format, stride[0], height);
-    offset[1] = tmp_vinfo.offset[1];
-    size = tmp_vinfo.size;
+      gst_buffer_append_memory (buf,
+          gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
+              CVPixelBufferGetBaseAddressOfPlane (pixbuf, i), size, 0, size,
+              NULL, NULL));
+    }
   } else {
+    int size;
+
     n_planes = 1;
     stride[0] = CVPixelBufferGetBytesPerRow (pixbuf);
-    size = stride[0] * height;
-  }
+    offset[0] = 0;
+    size = stride[0] * vinfo->height;
 
-  gst_buffer_append_memory (buf,
-      gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE, data,
-          size, 0, size, NULL, NULL));
+    gst_buffer_append_memory (buf,
+        gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
+            CVPixelBufferGetBaseAddress (pixbuf), size, 0, size, NULL, NULL));
+  }
 
   if (vinfo) {
     GstVideoMeta *video_meta;
 
-    width = vinfo->width;
     video_meta =
         gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
-        vinfo->finfo->format, width, height, n_planes, offset, stride);
+        vinfo->finfo->format, vinfo->width, vinfo->height,
+        n_planes, offset, stride);
   }
 
   return buf;
