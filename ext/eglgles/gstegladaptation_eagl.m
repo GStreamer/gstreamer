@@ -113,14 +113,9 @@ gst_egl_adaptation_create_egl_context (GstEglAdaptationContext * ctx)
   __block EAGLContext *context;
 
   dispatch_sync(dispatch_get_main_queue(), ^{
-    EAGLContext *cur_ctx = [EAGLContext currentContext];
-    if (cur_ctx) {
-      context = cur_ctx;
-    } else {
-      context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
-      if (context == nil) {
-        GST_ERROR_OBJECT (ctx->element, "Failed to create EAGL GLES2 context");
-      }
+    context = [[EAGLContext alloc] initWithAPI:kEAGLRenderingAPIOpenGLES2];
+    if (context == nil) {
+      GST_ERROR_OBJECT (ctx->element, "Failed to create EAGL GLES2 context");
     }
   });
 
@@ -154,10 +149,6 @@ gst_egl_adaptation_context_make_current (GstEglAdaptationContext * ctx,
       return FALSE;
     }
     ctx_to_set = ctx->eaglctx->eagl_context;
-    dispatch_sync(dispatch_get_main_queue(), ^{
-      [EAGLContext setCurrentContext: ctx_to_set];
-    });
-
   } else {
     GST_DEBUG_OBJECT (ctx->element, "Detaching context from thread %p",
         g_thread_self ());
@@ -184,6 +175,8 @@ gst_egl_adaptation_create_surface (GstEglAdaptationContext * ctx)
 
   dispatch_sync(dispatch_get_main_queue(), ^{
 
+    gst_egl_adaptation_context_make_current (ctx, TRUE);
+
     if (ctx->eaglctx->framebuffer) {
       framebuffer = ctx->eaglctx->framebuffer;
     } else {
@@ -209,6 +202,8 @@ gst_egl_adaptation_create_surface (GstEglAdaptationContext * ctx)
     glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT16, width, height);
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                               GL_RENDERBUFFER, depthRenderbuffer);
+
+    gst_egl_adaptation_context_make_current (ctx, FALSE);
   });
 
   glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
