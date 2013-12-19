@@ -421,8 +421,11 @@ gst_rtsp_stream_has_control (GstRTSPStream * stream, const gchar * control)
     res = (g_strcmp0 (priv->control, control) == 0);
   else {
     guint streamid;
-    sscanf (control, "stream=%u", &streamid);
-    res = (streamid == priv->idx);
+
+    if (sscanf (control, "stream=%u", &streamid) > 0)
+      res = (streamid == priv->idx);
+    else
+      res = FALSE;
   }
   g_mutex_unlock (&priv->lock);
 
@@ -1031,10 +1034,6 @@ cleanup:
     if (udpsink0) {
       gst_element_set_state (udpsink0, GST_STATE_NULL);
       gst_object_unref (udpsink0);
-    }
-    if (udpsink1) {
-      gst_element_set_state (udpsink1, GST_STATE_NULL);
-      gst_object_unref (udpsink1);
     }
     if (inetaddr)
       g_object_unref (inetaddr);
