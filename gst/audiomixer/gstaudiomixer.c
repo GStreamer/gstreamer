@@ -1289,7 +1289,9 @@ gst_audio_mixer_fill_buffer (GstAudioMixer * audiomixer, GstCollectPads * pads,
   start_offset = gst_util_uint64_scale (start_time, rate, GST_SECOND);
   end_offset = start_offset + adata->size / bpf;
 
-  if (GST_BUFFER_IS_DISCONT (inbuf) || adata->next_offset == -1) {
+  if (GST_BUFFER_IS_DISCONT (inbuf)
+      || GST_BUFFER_FLAG_IS_SET (inbuf, GST_BUFFER_FLAG_RESYNC)
+      || adata->next_offset == -1) {
     discont = TRUE;
   } else {
     guint64 diff, max_sample_diff;
