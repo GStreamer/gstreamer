@@ -1533,21 +1533,17 @@ gst_audio_base_sink_get_alignment (GstAudioBaseSink * sink,
   gboolean discont = FALSE;
   gint rate;
 
-  /* now try to align the sample to the previous one, first see how big the
-   * difference is. */
-  if (sample_offset >= sink->next_sample)
-    sample_diff = sample_offset - sink->next_sample;
-  else
-    sample_diff = sink->next_sample - sample_offset;
+  /* now try to align the sample to the previous one. */
 
-  rate = GST_AUDIO_INFO_RATE (&ringbuf->spec.info);
+  /* calc align with previous sample and determine how big the
+   * difference is. */
+  align = sink->next_sample - sample_offset;
+  sample_diff = ABS (align);
 
   /* calculate the max allowed drift in units of samples. */
+  rate = GST_AUDIO_INFO_RATE (&ringbuf->spec.info);
   max_sample_diff = gst_util_uint64_scale_int (sink->priv->alignment_threshold,
       rate, GST_SECOND);
-
-  /* calc align with previous sample */
-  align = sink->next_sample - sample_offset;
 
   /* don't align if it means writing behind the read-segment */
   if (sample_diff > headroom && align < 0)
