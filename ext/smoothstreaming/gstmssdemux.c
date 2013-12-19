@@ -474,6 +474,7 @@ gst_mss_demux_stop_tasks (GstMssDemux * mssdemux, gboolean immediate)
 {
   GSList *iter;
 
+  GST_OBJECT_LOCK (mssdemux);
   for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
     GstMssDemuxStream *stream = iter->data;
 
@@ -482,6 +483,7 @@ gst_mss_demux_stop_tasks (GstMssDemux * mssdemux, gboolean immediate)
     if (immediate)
       gst_uri_downloader_cancel (stream->downloader);
   }
+  GST_OBJECT_UNLOCK (mssdemux);
 
   for (iter = mssdemux->streams; iter; iter = g_slist_next (iter)) {
     GstMssDemuxStream *stream = iter->data;
@@ -1151,11 +1153,14 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
   ret = gst_mss_demux_stream_download_fragment (stream, &buffer);
   buffer_downloaded = buffer != NULL;
 
+  GST_OBJECT_LOCK (mssdemux);
   if (stream->cancelled) {
     if (buffer)
       gst_buffer_unref (buffer);
+    GST_OBJECT_UNLOCK (mssdemux);
     goto cancelled;
   }
+  GST_OBJECT_UNLOCK (mssdemux);
 
   if (buffer) {
     ret = gst_mss_demux_stream_push (stream, buffer);
@@ -1163,6 +1168,12 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
 
   GST_OBJECT_LOCK (mssdemux);
   stream->last_ret = ret;
+
+  if (stream->cancelled) {
+    GST_OBJECT_UNLOCK (mssdemux);
+    goto cancelled;
+  }
+
   switch (ret) {
     case GST_FLOW_OK:
       break;                    /* all is good, let's go */
@@ -1223,7 +1234,7 @@ gst_mss_demux_download_loop (GstMssDemuxStream * stream)
 
 cancelled:
   {
-    GST_DEBUG_OBJECT (mssdemux, "Stream %p has been cancelled", stream);
+    GST_DEBUG_OBJECT (stream->pad, "Stream has been cancelled");
     return;
   }
 }
