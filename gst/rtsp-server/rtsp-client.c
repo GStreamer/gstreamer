@@ -1752,7 +1752,7 @@ handle_describe_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   /* check what kind of format is accepted, we don't really do anything with it
    * and always return SDP for now. */
-  for (i = 0; i++;) {
+  for (i = 0;; i++) {
     gchar *accept;
 
     res =
