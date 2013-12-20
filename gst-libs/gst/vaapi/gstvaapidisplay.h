@@ -141,6 +141,9 @@ void
 gst_vaapi_display_get_pixel_aspect_ratio (GstVaapiDisplay * display,
     guint * par_n, guint * par_d);
 
+gboolean
+gst_vaapi_display_has_video_processing (GstVaapiDisplay * display);
+
 GstCaps *
 gst_vaapi_display_get_decode_caps (GstVaapiDisplay * display);
 

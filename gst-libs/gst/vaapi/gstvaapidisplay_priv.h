@@ -126,7 +126,7 @@ typedef void (*GstVaapiDisplayGetSizeMFunc) (GstVaapiDisplay * display,
  */
 #undef  GST_VAAPI_DISPLAY_HAS_VPP
 #define GST_VAAPI_DISPLAY_HAS_VPP(display) \
-    (GST_VAAPI_DISPLAY_GET_PRIVATE(display)->has_vpp)
+    gst_vaapi_display_has_video_processing(GST_VAAPI_DISPLAY_CAST(display))
 
 struct _GstVaapiDisplayPrivate
 {
@@ -147,6 +147,7 @@ struct _GstVaapiDisplayPrivate
   GArray *properties;
   guint use_foreign_display:1;
   guint has_vpp:1;
+  guint has_profiles:1;
 };
 
 /**
