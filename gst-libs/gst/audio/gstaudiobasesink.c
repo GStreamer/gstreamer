@@ -160,6 +160,8 @@ static gboolean gst_audio_base_sink_query (GstElement * element, GstQuery *
     query);
 
 static GstClock *gst_audio_base_sink_provide_clock (GstElement * elem);
+static inline void gst_audio_base_sink_reset_sync (GstAudioBaseSink * sink,
+    gboolean sync_skew);
 static GstClockTime gst_audio_base_sink_get_time (GstClock * clock,
     GstAudioBaseSink * sink);
 static void gst_audio_base_sink_callback (GstAudioRingBuffer * rbuf,
@@ -464,6 +466,7 @@ gst_audio_base_sink_query (GstElement * element, GstQuery * query)
           /* the max latency is the max of the peer, we can delay an infinite
            * amount of time. */
           max_latency = (max_l == -1) ? -1 : (base_latency + max_l);
+
 
           GST_DEBUG_OBJECT (basesink,
               "peer min %" GST_TIME_FORMAT ", our min latency: %"
@@ -882,10 +885,7 @@ gst_audio_base_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     goto acquire_error;
 
   /* We need to resync since the ringbuffer restarted */
-  sink->priv->avg_skew = -1;
-  sink->next_sample = -1;
-  sink->priv->eos_time = -1;
-  sink->priv->discont_time = -1;
+  gst_audio_base_sink_reset_sync (sink, TRUE);
 
   if (bsink->pad_mode == GST_PAD_MODE_PUSH) {
     GST_DEBUG_OBJECT (sink, "activate ringbuffer");
@@ -955,6 +955,17 @@ gst_audio_base_sink_fixate (GstBaseSink * bsink, GstCaps * caps)
   caps = GST_BASE_SINK_CLASS (parent_class)->fixate (bsink, caps);
 
   return caps;
+}
+
+static inline void
+gst_audio_base_sink_reset_sync (GstAudioBaseSink * sink, gboolean sync_skew)
+{
+  sink->next_sample = -1;
+  sink->priv->eos_time = -1;
+  sink->priv->discont_time = -1;
+
+  if (sync_skew)
+    sink->priv->avg_skew = -1;
 }
 
 static void
@@ -1070,10 +1081,7 @@ gst_audio_base_sink_event (GstBaseSink * bsink, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_STOP:
       /* always resync on sample after a flush */
-      sink->priv->avg_skew = -1;
-      sink->next_sample = -1;
-      sink->priv->eos_time = -1;
-      sink->priv->discont_time = -1;
+      gst_audio_base_sink_reset_sync (sink, TRUE);
       if (sink->ringbuffer)
         gst_audio_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       break;
@@ -1489,10 +1497,7 @@ gst_audio_base_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
       break;
   }
 
-  sink->priv->avg_skew = -1;
-  sink->next_sample = -1;
-  sink->priv->eos_time = -1;
-  sink->priv->discont_time = -1;
+  gst_audio_base_sink_reset_sync (sink, TRUE);
 
   return GST_FLOW_OK;
 
@@ -2161,10 +2166,8 @@ gst_audio_base_sink_change_state (GstElement * element,
         goto open_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      sink->next_sample = -1;
+      gst_audio_base_sink_reset_sync (sink, FALSE);
       sink->priv->last_align = -1;
-      sink->priv->eos_time = -1;
-      sink->priv->discont_time = -1;
       gst_audio_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       gst_audio_ring_buffer_may_start (sink->ringbuffer, FALSE);
 
