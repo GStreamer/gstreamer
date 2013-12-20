@@ -158,15 +158,15 @@ gboolean
 gst_vaapi_display_has_encoder (GstVaapiDisplay * display,
     GstVaapiProfile profile, GstVaapiEntrypoint entrypoint);
 
-GstCaps *
-gst_vaapi_display_get_image_caps (GstVaapiDisplay * display);
+GArray *
+gst_vaapi_display_get_image_formats (GstVaapiDisplay * display);
 
 gboolean
 gst_vaapi_display_has_image_format (GstVaapiDisplay * display,
     GstVideoFormat format);
 
-GstCaps *
-gst_vaapi_display_get_subpicture_caps (GstVaapiDisplay * display);
+GArray *
+gst_vaapi_display_get_subpicture_formats (GstVaapiDisplay * display);
 
 gboolean
 gst_vaapi_display_has_subpicture_format (GstVaapiDisplay * display,

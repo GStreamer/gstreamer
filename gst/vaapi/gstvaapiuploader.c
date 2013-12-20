@@ -112,8 +112,9 @@ ensure_allowed_caps(GstVaapiUploader *uploader)
 {
     GstVaapiUploaderPrivate * const priv = uploader->priv;
     GstVaapiSurface *surface = NULL;
-    GstCaps *out_caps, *image_caps = NULL;
-    guint i, n_structures;
+    GArray *image_formats = NULL;
+    GstCaps *out_caps;
+    guint i;
     gboolean success = FALSE;
 
     enum { WIDTH = 64, HEIGHT = 64 };
@@ -125,8 +126,8 @@ ensure_allowed_caps(GstVaapiUploader *uploader)
     if (!out_caps)
         return FALSE;
 
-    image_caps = gst_vaapi_display_get_image_caps(priv->display);
-    if (!image_caps)
+    image_formats = gst_vaapi_display_get_image_formats(priv->display);
+    if (!image_formats)
         goto end;
 
     surface = gst_vaapi_surface_new(priv->display,
@@ -134,20 +135,18 @@ ensure_allowed_caps(GstVaapiUploader *uploader)
     if (!surface)
         goto end;
 
-    n_structures = gst_caps_get_size(image_caps);
-    for (i = 0; i < n_structures; i++) {
-        GstStructure * const structure = gst_caps_get_structure(image_caps, i);
+    for (i = 0; i < image_formats->len; i++) {
+        const GstVideoFormat format =
+            g_array_index(image_formats, GstVideoFormat, i);
         GstVaapiImage *image;
-        GstVideoFormat format;
 
-        format = gst_vaapi_video_format_from_structure(structure);
         if (format == GST_VIDEO_FORMAT_UNKNOWN)
             continue;
         image = gst_vaapi_image_new(priv->display, format, WIDTH, HEIGHT);
         if (!image)
             continue;
         if (ensure_image(image) && gst_vaapi_surface_put_image(surface, image))
-            gst_caps_append_structure(out_caps, gst_structure_copy(structure));
+            gst_caps_append(out_caps, gst_vaapi_video_format_to_caps(format));
         gst_vaapi_object_unref(image);
     }
 
@@ -156,8 +155,8 @@ ensure_allowed_caps(GstVaapiUploader *uploader)
 
 end:
     gst_caps_unref(out_caps);
-    if (image_caps)
-        gst_caps_unref(image_caps);
+    if (image_formats)
+        g_array_unref(image_formats);
     if (surface)
         gst_vaapi_object_unref(surface);
     return success;

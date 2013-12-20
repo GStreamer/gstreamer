@@ -394,24 +394,22 @@ find_format (GArray * formats, GstVideoFormat format)
 }
 
 /* Convert formats array to GstCaps */
-static GstCaps *
-get_format_caps (GArray * formats)
+static GArray *
+get_formats (GArray * formats)
 {
   const GstVaapiFormatInfo *fip;
-  GstCaps *out_caps, *caps;
+  GArray *out_formats;
   guint i;
 
-  out_caps = gst_caps_new_empty ();
-  if (!out_caps)
+  out_formats = g_array_new (FALSE, FALSE, sizeof (GstVideoFormat));
+  if (!out_formats)
     return NULL;
 
   for (i = 0; i < formats->len; i++) {
     fip = &g_array_index (formats, GstVaapiFormatInfo, i);
-    caps = gst_vaapi_video_format_to_caps (fip->format);
-    if (caps)
-      gst_caps_append (out_caps, caps);
+    g_array_append_val (out_formats, fip->format);
   }
-  return out_caps;
+  return out_formats;
 }
 
 /* Find display attribute */
@@ -1448,11 +1446,11 @@ gst_vaapi_display_has_encoder (GstVaapiDisplay * display,
 }
 
 /**
- * gst_vaapi_display_get_image_caps:
+ * gst_vaapi_display_get_image_formats:
  * @display: a #GstVaapiDisplay
  *
  * Gets the supported image formats for gst_vaapi_surface_get_image()
- * or gst_vaapi_surface_put_image() as #GstCaps capabilities.
+ * or gst_vaapi_surface_put_image().
  *
  * Note that this method does not necessarily map image formats
  * returned by vaQueryImageFormats(). The set of capabilities can be
@@ -1461,17 +1459,21 @@ gst_vaapi_display_has_encoder (GstVaapiDisplay * display,
  * driver. e.g. I420 can be supported even if the driver only exposes
  * YV12.
  *
- * Return value: a newly allocated #GstCaps object, possibly empty
+ * Note: the caller owns an extra reference to the resulting array of
+ * #GstVideoFormat elements, so it shall be released with
+ * g_array_unref() after usage.
+ *
+ * Return value: a newly allocated #GArray, or %NULL on error or if
+ *   the set is empty
  */
-GstCaps *
-gst_vaapi_display_get_image_caps (GstVaapiDisplay * display)
+GArray *
+gst_vaapi_display_get_image_formats (GstVaapiDisplay * display)
 {
   g_return_val_if_fail (display != NULL, NULL);
 
   if (!ensure_image_formats (display))
     return NULL;
-  return get_format_caps (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->
-      image_formats);
+  return get_formats (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->image_formats);
 }
 
 /**
@@ -1509,26 +1511,31 @@ gst_vaapi_display_has_image_format (GstVaapiDisplay * display,
 }
 
 /**
- * gst_vaapi_display_get_subpicture_caps:
+ * gst_vaapi_display_get_subpicture_formats:
  * @display: a #GstVaapiDisplay
  *
- * Gets the supported subpicture formats as #GstCaps capabilities.
+ * Gets the supported subpicture formats.
  *
  * Note that this method does not necessarily map subpicture formats
  * returned by vaQuerySubpictureFormats(). The set of capabilities can
  * be stripped down if gstreamer-vaapi does not support the
  * format. e.g. this is the case for paletted formats like IA44.
  *
- * Return value: a newly allocated #GstCaps object, possibly empty
+ * Note: the caller owns an extra reference to the resulting array of
+ * #GstVideoFormat elements, so it shall be released with
+ * g_array_unref() after usage.
+ *
+ * Return value: a newly allocated #GArray, or %NULL on error of if
+ *   the set is empty
  */
-GstCaps *
-gst_vaapi_display_get_subpicture_caps (GstVaapiDisplay * display)
+GArray *
+gst_vaapi_display_get_subpicture_formats (GstVaapiDisplay * display)
 {
   g_return_val_if_fail (display != NULL, NULL);
 
   if (!ensure_subpicture_formats (display))
     return NULL;
-  return get_format_caps (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->
+  return get_formats (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->
       subpicture_formats);
 }
 

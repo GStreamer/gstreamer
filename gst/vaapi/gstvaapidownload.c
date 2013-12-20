@@ -391,6 +391,8 @@ gst_vaapidownload_transform_caps(
     GstPad *srcpad;
     GstCaps *allowed_caps, *inter_caps, *out_caps = NULL;
     GstStructure *structure;
+    GArray *formats;
+    guint i;
 
     g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
 
@@ -409,10 +411,21 @@ gst_vaapidownload_transform_caps(
         if (download->allowed_caps)
             allowed_caps = gst_caps_ref(download->allowed_caps);
         else {
-            allowed_caps = gst_vaapi_display_get_image_caps(
-                GST_VAAPI_PLUGIN_BASE_DISPLAY(download));
+            allowed_caps = gst_caps_new_empty();
             if (!allowed_caps)
                 return NULL;
+
+            formats = gst_vaapi_display_get_image_formats(
+                GST_VAAPI_PLUGIN_BASE_DISPLAY(download));
+            if (formats) {
+                for (i = 0; i < formats->len; i++) {
+                    const GstVideoFormat format =
+                        g_array_index(formats, GstVideoFormat, i);
+                    gst_caps_merge(allowed_caps,
+                        gst_vaapi_video_format_to_caps(format));
+                }
+                g_array_unref(formats);
+            }
         }
         inter_caps = gst_caps_intersect(out_caps, allowed_caps);
         gst_caps_unref(allowed_caps);

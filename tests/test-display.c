@@ -94,7 +94,7 @@ print_profile_caps(GstCaps *caps, const gchar *name)
 }
 
 static void
-print_format_caps_yuv(const VAImageFormat *va_format)
+print_format_yuv(const VAImageFormat *va_format)
 {
     const guint32 fourcc = va_format->fourcc;
 
@@ -106,7 +106,7 @@ print_format_caps_yuv(const VAImageFormat *va_format)
 }
 
 static void
-print_format_caps_rgb(const VAImageFormat *va_format)
+print_format_rgb(const VAImageFormat *va_format)
 {
     g_print(" %d bits per pixel, %s endian,",
             va_format->bits_per_pixel,
@@ -119,34 +119,26 @@ print_format_caps_rgb(const VAImageFormat *va_format)
 }
 
 static void
-print_format_caps(GstCaps *caps, const gchar *name)
+print_formats(GArray *formats, const gchar *name)
 {
-    guint i, n_caps = gst_caps_get_size(caps);
+    guint i;
 
-    g_print("%u %s caps\n", n_caps, name);
+    g_print("%u %s caps\n", formats->len, name);
 
-    for (i = 0; i < gst_caps_get_size(caps); i++) {
-        GstStructure * const structure = gst_caps_get_structure(caps, i);
+    for (i = 0; i < formats->len; i++) {
+        const GstVideoFormat format = g_array_index(formats, GstVideoFormat, i);
         const VAImageFormat *va_format;
-        GstVideoFormat format;
 
-        if (!structure)
-            g_error("could not get caps structure %d", i);
-
-        g_print("  %s:", gst_structure_get_name(structure));
-
-        format = gst_vaapi_video_format_from_structure(structure);
-        if (format == GST_VIDEO_FORMAT_UNKNOWN)
-            g_error("could not determine format");
+        g_print("  %s:", gst_vaapi_video_format_to_string(format));
 
         va_format = gst_vaapi_video_format_to_va_format(format);
         if (!va_format)
             g_error("could not determine VA format");
 
         if (gst_vaapi_video_format_is_yuv(format))
-            print_format_caps_yuv(va_format);
+            print_format_yuv(va_format);
         else
-            print_format_caps_rgb(va_format);
+            print_format_rgb(va_format);
         g_print("\n");
     }
 }
@@ -240,6 +232,7 @@ end:
 static void
 dump_info(GstVaapiDisplay *display)
 {
+    GArray *formats;
     GstCaps *caps;
 
     caps = gst_vaapi_display_get_decode_caps(display);
@@ -256,19 +249,19 @@ dump_info(GstVaapiDisplay *display)
     print_profile_caps(caps, "encoders");
     gst_caps_unref(caps);
 
-    caps = gst_vaapi_display_get_image_caps(display);
-    if (!caps)
-        g_error("could not get VA image caps");
+    formats = gst_vaapi_display_get_image_formats(display);
+    if (!formats)
+        g_error("could not get VA image formats");
 
-    print_format_caps(caps, "image");
-    gst_caps_unref(caps);
+    print_formats(formats, "image");
+    g_array_unref(formats);
 
-    caps = gst_vaapi_display_get_subpicture_caps(display);
-    if (!caps)
-        g_error("could not get VA subpicture caps");
+    formats = gst_vaapi_display_get_subpicture_formats(display);
+    if (!formats)
+        g_error("could not get VA subpicture formats");
 
-    print_format_caps(caps, "subpicture");
-    gst_caps_unref(caps);
+    print_formats(formats, "subpicture");
+    g_array_unref(formats);
 
     dump_properties(display);
 }
