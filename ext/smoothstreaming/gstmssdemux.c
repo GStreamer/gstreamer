@@ -53,16 +53,14 @@
  *
  * The Manifest is parsed and the streams are exposed, 1 pad for each, with
  * a initially selected QualityLevel. Each stream starts its own GstTaks that
- * is responsible for downloading fragments and storing in its own GstDataQueue.
- *
- * The mssdemux starts another GstTask, this one iterates through the streams
- * and selects the fragment with the smaller timestamp to push and repeats this.
+ * is responsible for downloading fragments and pushing them downstream.
  *
  * When a new connection-speed is set, mssdemux evaluates the available
  * QualityLevels and might decide to switch to another one. In this case it
- * exposes new pads for each stream, pushes EOS to the old ones and removes
- * them. This should make decodebin2 pad switching mechanism act and the
- * switch would be smooth for the final user.
+ * pushes a new GstCaps event indicating the new caps on the pads.
+ *
+ * All operations that intend to update the GstTasks state should be protected
+ * with the GST_OBJECT_LOCK.
  */
 
 #ifdef HAVE_CONFIG_H
@@ -159,7 +157,7 @@ gst_mss_demux_class_init (GstMssDemuxClass * klass)
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_mss_demux_audiosrc_template));
   gst_element_class_set_static_metadata (gstelement_class,
-      "Smooth Streaming demuxer", "Demuxer",
+      "Smooth Streaming demuxer", "Demuxer/Adaptative",
       "Parse and demultiplex a Smooth Streaming manifest into audio and video "
       "streams", "Thiago Santos <thiago.sousa.santos@collabora.com>");
 
