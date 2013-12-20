@@ -249,41 +249,6 @@ done:
   }
 }
 
-/* Must be called with mutex locked. */
-static void
-gst_uri_downloader_stop (GstUriDownloader * downloader)
-{
-  GstPad *pad;
-  GstElement *urisrc;
-
-  if (!downloader->priv->urisrc)
-    return;
-
-  GST_DEBUG_OBJECT (downloader, "Stopping source element %s",
-      GST_ELEMENT_NAME (downloader->priv->urisrc));
-
-  /* remove the bus' sync handler */
-  gst_bus_set_sync_handler (downloader->priv->bus, NULL, NULL, NULL);
-  /* unlink the source element from the internal pad */
-  pad = gst_pad_get_peer (downloader->priv->pad);
-  if (pad) {
-    gst_pad_unlink (pad, downloader->priv->pad);
-    gst_object_unref (pad);
-  }
-  urisrc = downloader->priv->urisrc;
-  downloader->priv->urisrc = NULL;
-
-  GST_DEBUG_OBJECT (downloader, "Stopping source element %s",
-      GST_ELEMENT_NAME (urisrc));
-
-  /* set the element state to NULL */
-  gst_bus_set_flushing (downloader->priv->bus, TRUE);
-  gst_element_set_state (urisrc, GST_STATE_NULL);
-  gst_element_get_state (urisrc, NULL, NULL, GST_CLOCK_TIME_NONE);
-  gst_element_set_bus (urisrc, NULL);
-  gst_object_unref (urisrc);
-}
-
 void
 gst_uri_downloader_reset (GstUriDownloader * downloader)
 {
@@ -464,8 +429,35 @@ gst_uri_downloader_fetch_uri_with_range (GstUriDownloader * downloader,
 
 quit:
   {
-    gst_uri_downloader_stop (downloader);
-    GST_OBJECT_UNLOCK (downloader);
+    if (downloader->priv->urisrc) {
+      GstPad *pad;
+      GstElement *urisrc;
+
+      GST_DEBUG_OBJECT (downloader, "Stopping source element %s",
+          GST_ELEMENT_NAME (downloader->priv->urisrc));
+
+      /* remove the bus' sync handler */
+      gst_bus_set_sync_handler (downloader->priv->bus, NULL, NULL, NULL);
+      /* unlink the source element from the internal pad */
+      pad = gst_pad_get_peer (downloader->priv->pad);
+      if (pad) {
+        gst_pad_unlink (pad, downloader->priv->pad);
+        gst_object_unref (pad);
+      }
+      urisrc = downloader->priv->urisrc;
+      downloader->priv->urisrc = NULL;
+      GST_OBJECT_UNLOCK (downloader);
+
+      GST_DEBUG_OBJECT (downloader, "Stopping source element %s",
+          GST_ELEMENT_NAME (urisrc));
+
+      /* set the element state to NULL */
+      gst_bus_set_flushing (downloader->priv->bus, TRUE);
+      gst_element_set_state (urisrc, GST_STATE_NULL);
+      gst_element_get_state (urisrc, NULL, NULL, GST_CLOCK_TIME_NONE);
+      gst_element_set_bus (urisrc, NULL);
+      gst_object_unref (urisrc);
+    }
     g_mutex_unlock (&downloader->priv->download_lock);
     return download;
   }
