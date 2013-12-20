@@ -152,10 +152,6 @@ static void gst_audio_base_sink_set_property (GObject * object, guint prop_id,
 static void gst_audio_base_sink_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-#if 0
-static GstStateChangeReturn gst_audio_base_sink_async_play (GstBaseSink *
-    basesink);
-#endif
 static GstStateChangeReturn gst_audio_base_sink_change_state (GstElement *
     element, GstStateChange transition);
 static gboolean gst_audio_base_sink_activate_pull (GstBaseSink * basesink,
@@ -2147,27 +2143,6 @@ gst_audio_base_sink_activate_pull (GstBaseSink * basesink, gboolean active)
 
   return ret;
 }
-
-#if 0
-/* should be called with the LOCK */
-static GstStateChangeReturn
-gst_audio_base_sink_async_play (GstBaseSink * basesink)
-{
-  GstAudioBaseSink *sink;
-
-  sink = GST_AUDIO_BASE_SINK (basesink);
-
-  GST_DEBUG_OBJECT (sink, "ringbuffer may start now");
-  sink->priv->sync_latency = TRUE;
-  gst_audio_ring_buffer_may_start (sink->ringbuffer, TRUE);
-  if (basesink->pad_mode == GST_PAD_MODE_PULL) {
-    /* we always start the ringbuffer in pull mode immediatly */
-    gst_audio_ring_buffer_start (sink->ringbuffer);
-  }
-
-  return GST_STATE_CHANGE_SUCCESS;
-}
-#endif
 
 static GstStateChangeReturn
 gst_audio_base_sink_change_state (GstElement * element,
