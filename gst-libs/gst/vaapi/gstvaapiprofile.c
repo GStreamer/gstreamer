@@ -34,19 +34,38 @@
 #include "gstvaapiprofile.h"
 #include "gstvaapiworkarounds.h"
 
+typedef struct _GstVaapiCodecMap                GstVaapiCodecMap;
 typedef struct _GstVaapiProfileMap              GstVaapiProfileMap;
 typedef struct _GstVaapiEntrypointMap           GstVaapiEntrypointMap;
+
+struct _GstVaapiCodecMap {
+    GstVaapiCodec               codec;
+    const gchar                *name;
+};
 
 struct _GstVaapiProfileMap {
     GstVaapiProfile             profile;
     VAProfile                   va_profile;
-    const char                 *caps_str;
+    const char                 *media_str;
     const gchar                *profile_str;
 };
 
 struct _GstVaapiEntrypointMap {
     GstVaapiEntrypoint          entrypoint;
     VAEntrypoint                va_entrypoint;
+};
+
+/* Codecs */
+static const GstVaapiCodecMap gst_vaapi_codecs[] = {
+    { GST_VAAPI_CODEC_MPEG1,    "mpeg1" },
+    { GST_VAAPI_CODEC_MPEG2,    "mpeg2" },
+    { GST_VAAPI_CODEC_MPEG4,    "mpeg4" },
+    { GST_VAAPI_CODEC_H263,     "h263"  },
+    { GST_VAAPI_CODEC_H264,     "h264"  },
+    { GST_VAAPI_CODEC_WMV3,     "wmv3"  },
+    { GST_VAAPI_CODEC_VC1,      "vc1"   },
+    { GST_VAAPI_CODEC_JPEG,     "jpeg"  },
+    { 0, }
 };
 
 /* Profiles */
@@ -120,6 +139,17 @@ static const GstVaapiEntrypointMap gst_vaapi_entrypoints[] = {
     { 0, }
 };
 
+static const GstVaapiCodecMap *
+get_codecs_map(GstVaapiCodec codec)
+{
+    const GstVaapiCodecMap *m;
+
+    for (m = gst_vaapi_codecs; m->codec; m++)
+        if (m->codec == codec)
+            return m;
+    return NULL;
+}
+
 static const GstVaapiProfileMap *
 get_profiles_map(GstVaapiProfile profile)
 {
@@ -143,6 +173,22 @@ get_entrypoints_map(GstVaapiEntrypoint entrypoint)
 }
 
 /**
+ * gst_vaapi_codec_get_name:
+ * @codec: a #GstVaapiCodec
+ *
+ * Returns a string representation for the supplied @codec type.
+ *
+ * Return value: the statically allocated string representation of @codec
+ */
+const gchar *
+gst_vaapi_codec_get_name(GstVaapiCodec codec)
+{
+    const GstVaapiCodecMap * const m = get_codecs_map(codec);
+
+    return m ? m->name : NULL;
+}
+
+/**
  * gst_vaapi_profile:
  * @profile: a #VAProfile
  *
@@ -161,6 +207,40 @@ gst_vaapi_profile(VAProfile profile)
         if (m->va_profile == profile)
             return m->profile;
     return 0;
+}
+
+/**
+ * gst_vaapi_profile_get_name:
+ * @profile: a #GstVaapiProfile
+ *
+ * Returns a string representation for the supplied @profile.
+ *
+ * Return value: the statically allocated string representation of @profile
+ */
+const gchar *
+gst_vaapi_profile_get_name(GstVaapiProfile profile)
+{
+    const GstVaapiProfileMap * const m = get_profiles_map(profile);
+
+    return m ? m->profile_str : NULL;
+}
+
+/**
+ * gst_vaapi_profile_get_media_type_name:
+ * @profile: a #GstVaapiProfile
+ *
+ * Returns a string representation for the media type of the supplied
+ * @profile.
+ *
+ * Return value: the statically allocated string representation of
+ *   @profile media type
+ */
+const gchar *
+gst_vaapi_profile_get_media_type_name(GstVaapiProfile profile)
+{
+    const GstVaapiProfileMap * const m = get_profiles_map(profile);
+
+    return m ? m->media_str : NULL;
 }
 
 /**
@@ -256,9 +336,9 @@ gst_vaapi_profile_from_caps(const GstCaps *caps)
     profile = 0;
     best_profile = 0;
     for (m = gst_vaapi_profiles; !profile && m->profile; m++) {
-        if (strncmp(name, m->caps_str, namelen) != 0)
+        if (strncmp(name, m->media_str, namelen) != 0)
             continue;
-        caps_test = gst_caps_from_string(m->caps_str);;
+        caps_test = gst_caps_from_string(m->media_str);
         if (gst_caps_is_always_compatible(caps, caps_test)) {
             best_profile = m->profile;
             if (profile_str && m->profile_str &&
@@ -322,7 +402,7 @@ gst_vaapi_profile_get_caps(GstVaapiProfile profile)
     for (m = gst_vaapi_profiles; m->profile; m++) {
         if (m->profile != profile)
             continue;
-        caps = gst_caps_from_string(m->caps_str);
+        caps = gst_caps_from_string(m->media_str);
         if (!caps)
             continue;
         gst_caps_set_simple(

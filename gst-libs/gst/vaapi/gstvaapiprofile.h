@@ -169,11 +169,20 @@ typedef enum {
     GST_VAAPI_ENTRYPOINT_SLICE_ENCODE
 } GstVaapiEntrypoint;
 
+const gchar *
+gst_vaapi_codec_get_name(GstVaapiCodec codec);
+
 GstVaapiProfile
 gst_vaapi_profile(VAProfile profile);
 
 GstVaapiProfile
 gst_vaapi_profile_from_caps(const GstCaps *caps);
+
+const gchar *
+gst_vaapi_profile_get_name(GstVaapiProfile profile);
+
+const gchar *
+gst_vaapi_profile_get_media_type_name(GstVaapiProfile profile);
 
 VAProfile
 gst_vaapi_profile_get_va_profile(GstVaapiProfile profile);
