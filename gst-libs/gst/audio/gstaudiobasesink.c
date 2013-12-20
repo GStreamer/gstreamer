@@ -2164,7 +2164,7 @@ gst_audio_base_sink_change_state (GstElement * element,
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
       gst_audio_base_sink_reset_sync (sink);
-      sink->priv->last_align = -1;
+      sink->priv->last_align = 0;
       gst_audio_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       gst_audio_ring_buffer_may_start (sink->ringbuffer, FALSE);
 
