@@ -160,8 +160,7 @@ static gboolean gst_audio_base_sink_query (GstElement * element, GstQuery *
     query);
 
 static GstClock *gst_audio_base_sink_provide_clock (GstElement * elem);
-static inline void gst_audio_base_sink_reset_sync (GstAudioBaseSink * sink,
-    gboolean sync_skew);
+static inline void gst_audio_base_sink_reset_sync (GstAudioBaseSink * sink);
 static GstClockTime gst_audio_base_sink_get_time (GstClock * clock,
     GstAudioBaseSink * sink);
 static void gst_audio_base_sink_callback (GstAudioRingBuffer * rbuf,
@@ -885,7 +884,7 @@ gst_audio_base_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
     goto acquire_error;
 
   /* We need to resync since the ringbuffer restarted */
-  gst_audio_base_sink_reset_sync (sink, TRUE);
+  gst_audio_base_sink_reset_sync (sink);
 
   if (bsink->pad_mode == GST_PAD_MODE_PUSH) {
     GST_DEBUG_OBJECT (sink, "activate ringbuffer");
@@ -958,14 +957,12 @@ gst_audio_base_sink_fixate (GstBaseSink * bsink, GstCaps * caps)
 }
 
 static inline void
-gst_audio_base_sink_reset_sync (GstAudioBaseSink * sink, gboolean sync_skew)
+gst_audio_base_sink_reset_sync (GstAudioBaseSink * sink)
 {
   sink->next_sample = -1;
   sink->priv->eos_time = -1;
   sink->priv->discont_time = -1;
-
-  if (sync_skew)
-    sink->priv->avg_skew = -1;
+  sink->priv->avg_skew = -1;
 }
 
 static void
@@ -1081,7 +1078,7 @@ gst_audio_base_sink_event (GstBaseSink * bsink, GstEvent * event)
       break;
     case GST_EVENT_FLUSH_STOP:
       /* always resync on sample after a flush */
-      gst_audio_base_sink_reset_sync (sink, TRUE);
+      gst_audio_base_sink_reset_sync (sink);
       if (sink->ringbuffer)
         gst_audio_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       break;
@@ -1497,7 +1494,7 @@ gst_audio_base_sink_sync_latency (GstBaseSink * bsink, GstMiniObject * obj)
       break;
   }
 
-  gst_audio_base_sink_reset_sync (sink, TRUE);
+  gst_audio_base_sink_reset_sync (sink);
 
   return GST_FLOW_OK;
 
@@ -2166,7 +2163,7 @@ gst_audio_base_sink_change_state (GstElement * element,
         goto open_failed;
       break;
     case GST_STATE_CHANGE_READY_TO_PAUSED:
-      gst_audio_base_sink_reset_sync (sink, FALSE);
+      gst_audio_base_sink_reset_sync (sink);
       sink->priv->last_align = -1;
       gst_audio_ring_buffer_set_flushing (sink->ringbuffer, FALSE);
       gst_audio_ring_buffer_may_start (sink->ringbuffer, FALSE);
