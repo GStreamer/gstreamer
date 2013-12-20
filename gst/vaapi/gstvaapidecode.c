@@ -815,8 +815,9 @@ gst_vaapidecode_class_init(GstVaapiDecodeClass *klass)
 static gboolean
 gst_vaapidecode_ensure_allowed_caps(GstVaapiDecode *decode)
 {
-    GstCaps *decode_caps;
-    guint i, n_decode_caps;
+    GstCaps *caps, *allowed_caps;
+    GArray *profiles;
+    guint i;
 
     if (decode->allowed_caps)
         return TRUE;
@@ -824,30 +825,32 @@ gst_vaapidecode_ensure_allowed_caps(GstVaapiDecode *decode)
     if (!gst_vaapidecode_ensure_display(decode))
         goto error_no_display;
 
-    decode_caps = gst_vaapi_display_get_decode_caps(
+    profiles = gst_vaapi_display_get_decode_profiles(
         GST_VAAPI_PLUGIN_BASE_DISPLAY(decode));
-    if (!decode_caps)
-        goto error_no_decode_caps;
-    n_decode_caps = gst_caps_get_size(decode_caps);
+    if (!profiles)
+        goto error_no_profiles;
 
-    decode->allowed_caps = gst_caps_new_empty();
-    if (!decode->allowed_caps)
+    allowed_caps = gst_caps_new_empty();
+    if (!allowed_caps)
         goto error_no_memory;
 
-    for (i = 0; i < n_decode_caps; i++) {
-        GstStructure *structure;
-        structure = gst_caps_get_structure(decode_caps, i);
-        if (!structure)
-            continue;
-        structure = gst_structure_copy(structure);
-        if (!structure)
-            continue;
-        gst_structure_remove_field(structure, "profile");
-        decode->allowed_caps =
-            gst_caps_merge_structure(decode->allowed_caps, structure);
-    }
+    for (i = 0; i < profiles->len; i++) {
+        const GstVaapiProfile profile =
+            g_array_index(profiles, GstVaapiProfile, i);
+        const gchar *media_type_name;
 
-    gst_caps_unref(decode_caps);
+        media_type_name = gst_vaapi_profile_get_media_type_name(profile);
+        if (!media_type_name)
+            continue;
+
+        caps = gst_caps_from_string(media_type_name);
+        if (!caps)
+            continue;
+        allowed_caps = gst_caps_merge(allowed_caps, caps);
+    }
+    decode->allowed_caps = allowed_caps;
+
+    g_array_unref(profiles);
     return TRUE;
 
     /* ERRORS */
@@ -856,15 +859,15 @@ error_no_display:
         GST_ERROR("failed to retrieve VA display");
         return FALSE;
     }
-error_no_decode_caps:
+error_no_profiles:
     {
-        GST_ERROR("failed to retrieve VA decode caps");
+        GST_ERROR("failed to retrieve VA decode profiles");
         return FALSE;
     }
 error_no_memory:
     {
         GST_ERROR("failed to allocate allowed-caps set");
-        gst_caps_unref(decode_caps);
+        g_array_unref(profiles);
         return FALSE;
     }
 }

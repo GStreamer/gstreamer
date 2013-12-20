@@ -347,28 +347,39 @@ append_h263_config (GArray * configs)
   }
 }
 
+/* Sort profiles. Group per codec */
+static gint
+compare_profiles (gconstpointer a, gconstpointer b)
+{
+  const GstVaapiConfig *const config1 = (GstVaapiConfig *) a;
+  const GstVaapiConfig *const config2 = (GstVaapiConfig *) b;
+
+  if (config1->profile == config2->profile)
+    return config1->entrypoint - config2->entrypoint;
+
+  return config1->profile - config2->profile;
+}
+
 /* Convert configs array to profiles as GstCaps */
-static GstCaps *
-get_profile_caps (GArray * configs)
+static GArray *
+get_profiles (GArray * configs)
 {
   GstVaapiConfig *config;
-  GstCaps *out_caps, *caps;
+  GArray *out_profiles;
   guint i;
 
   if (!configs)
     return NULL;
 
-  out_caps = gst_caps_new_empty ();
-  if (!out_caps)
+  out_profiles = g_array_new (FALSE, FALSE, sizeof (GstVaapiProfile));
+  if (!out_profiles)
     return NULL;
 
   for (i = 0; i < configs->len; i++) {
     config = &g_array_index (configs, GstVaapiConfig, i);
-    caps = gst_vaapi_profile_get_caps (config->profile);
-    if (caps)
-      out_caps = gst_caps_merge (out_caps, caps);
+    g_array_append_val (out_profiles, config->profile);
   }
-  return out_caps;
+  return out_profiles;
 }
 
 /* Find format info */
@@ -553,6 +564,9 @@ ensure_profiles (GstVaapiDisplay * display)
     }
   }
   append_h263_config (priv->decoders);
+
+  g_array_sort (priv->decoders, compare_profiles);
+  g_array_sort (priv->encoders, compare_profiles);
 
   /* Video processing API */
 #if USE_VA_VPP
@@ -1364,21 +1378,24 @@ gst_vaapi_display_has_video_processing (GstVaapiDisplay * display)
 }
 
 /**
- * gst_vaapi_display_get_decode_caps:
+ * gst_vaapi_display_get_decode_profiles:
  * @display: a #GstVaapiDisplay
  *
- * Gets the supported profiles for decoding as #GstCaps capabilities.
+ * Gets the supported profiles for decoding. The caller owns an extra
+ * reference to the resulting array of #GstVaapiProfile elements, so
+ * it shall be released with g_array_unref() after usage.
  *
- * Return value: a newly allocated #GstCaps object, possibly empty
+ * Return value: a newly allocated #GArray, or %NULL or error or if
+ *   decoding is not supported at all
  */
-GstCaps *
-gst_vaapi_display_get_decode_caps (GstVaapiDisplay * display)
+GArray *
+gst_vaapi_display_get_decode_profiles (GstVaapiDisplay * display)
 {
   g_return_val_if_fail (display != NULL, NULL);
 
   if (!ensure_profiles (display))
     return NULL;
-  return get_profile_caps (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->decoders);
+  return get_profiles (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->decoders);
 }
 
 /**
@@ -1405,21 +1422,24 @@ gst_vaapi_display_has_decoder (GstVaapiDisplay * display,
 }
 
 /**
- * gst_vaapi_display_get_encode_caps:
+ * gst_vaapi_display_get_encode_profiles:
  * @display: a #GstVaapiDisplay
  *
- * Gets the supported profiles for decoding as #GstCaps capabilities.
+ * Gets the supported profiles for encoding. The caller owns an extra
+ * reference to the resulting array of #GstVaapiProfile elements, so
+ * it shall be released with g_array_unref() after usage.
  *
- * Return value: a newly allocated #GstCaps object, possibly empty
+ * Return value: a newly allocated #GArray, or %NULL or error or if
+ *   encoding is not supported at all
  */
-GstCaps *
-gst_vaapi_display_get_encode_caps (GstVaapiDisplay * display)
+GArray *
+gst_vaapi_display_get_encode_profiles (GstVaapiDisplay * display)
 {
   g_return_val_if_fail (display != NULL, NULL);
 
   if (!ensure_profiles (display))
     return NULL;
-  return get_profile_caps (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->encoders);
+  return get_profiles (GST_VAAPI_DISPLAY_GET_PRIVATE (display)->encoders);
 }
 
 /**

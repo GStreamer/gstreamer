@@ -144,15 +144,15 @@ gst_vaapi_display_get_pixel_aspect_ratio (GstVaapiDisplay * display,
 gboolean
 gst_vaapi_display_has_video_processing (GstVaapiDisplay * display);
 
-GstCaps *
-gst_vaapi_display_get_decode_caps (GstVaapiDisplay * display);
+GArray *
+gst_vaapi_display_get_decode_profiles (GstVaapiDisplay * display);
 
 gboolean
 gst_vaapi_display_has_decoder (GstVaapiDisplay * display,
     GstVaapiProfile profile, GstVaapiEntrypoint entrypoint);
 
-GstCaps *
-gst_vaapi_display_get_encode_caps (GstVaapiDisplay * display);
+GArray *
+gst_vaapi_display_get_encode_profiles (GstVaapiDisplay * display);
 
 gboolean
 gst_vaapi_display_has_encoder (GstVaapiDisplay * display,

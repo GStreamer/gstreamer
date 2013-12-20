@@ -63,33 +63,31 @@ print_value(const GValue *value, const gchar *name)
 }
 
 static void
-print_profile_caps(GstCaps *caps, const gchar *name)
+print_profiles(GArray *profiles, const gchar *name)
 {
-    guint i, n_caps = gst_caps_get_size(caps);
-    gint version;
-    const gchar *profile;
-    gboolean has_version;
+    GstVaapiCodec codec;
+    const gchar *codec_name, *profile_name;
+    guint i;
 
-    g_print("%u %s caps\n", n_caps, name);
+    g_print("%u %s caps\n", profiles->len, name);
 
-    for (i = 0; i < gst_caps_get_size(caps); i++) {
-        GstStructure * const structure = gst_caps_get_structure(caps, i);
-        if (!structure)
-            g_error("could not get caps structure %d", i);
+    for (i = 0; i < profiles->len; i++) {
+        const GstVaapiProfile profile =
+            g_array_index(profiles, GstVaapiProfile, i);
 
-        has_version = (
-            gst_structure_get_int(structure, "version", &version) ||
-            gst_structure_get_int(structure, "mpegversion", &version)
-        );
+        codec = gst_vaapi_profile_get_codec(profile);
+        if (!codec)
+            continue;
 
-        g_print("  %s", gst_structure_get_name(structure));
-        if (has_version)
-            g_print("%d", version);
+        codec_name = gst_vaapi_codec_get_name(codec);
+        if (!codec_name)
+            continue;
 
-        profile = gst_structure_get_string(structure, "profile");
-        if (!profile)
-            g_error("could not get structure profile");
-        g_print(": %s profile\n", profile);
+        profile_name = gst_vaapi_profile_get_name(profile);
+        if (!profile_name)
+            continue;
+
+        g_print("  %s: %s profile\n", codec_name, profile_name);
     }
 }
 
@@ -232,22 +230,21 @@ end:
 static void
 dump_info(GstVaapiDisplay *display)
 {
-    GArray *formats;
-    GstCaps *caps;
+    GArray *profiles, *formats;
 
-    caps = gst_vaapi_display_get_decode_caps(display);
-    if (!caps)
-        g_error("could not get VA decode caps");
+    profiles = gst_vaapi_display_get_decode_profiles(display);
+    if (!profiles)
+        g_error("could not get VA decode profiles");
 
-    print_profile_caps(caps, "decoders");
-    gst_caps_unref(caps);
+    print_profiles(profiles, "decoders");
+    g_array_unref(profiles);
 
-    caps = gst_vaapi_display_get_encode_caps(display);
-    if (!caps)
-        g_error("could not get VA encode caps");
+    profiles = gst_vaapi_display_get_encode_profiles(display);
+    if (!profiles)
+        g_error("could not get VA encode profiles");
 
-    print_profile_caps(caps, "encoders");
-    gst_caps_unref(caps);
+    print_profiles(profiles, "encoders");
+    g_array_unref(profiles);
 
     formats = gst_vaapi_display_get_image_formats(display);
     if (!formats)
