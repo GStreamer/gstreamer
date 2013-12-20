@@ -215,8 +215,8 @@ gst_audio_base_sink_class_init (GstAudioBaseSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LATENCY_TIME,
       g_param_spec_int64 ("latency-time", "Latency Time",
-          "The minimum amount of data to write in each iteration in microseconds",
-          1, G_MAXINT64, DEFAULT_LATENCY_TIME,
+          "The minimum amount of data to write in each iteration "
+          "in microseconds", 1, G_MAXINT64, DEFAULT_LATENCY_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PROVIDE_CLOCK,
@@ -555,7 +555,8 @@ gst_audio_base_sink_get_time (GstClock * clock, GstAudioBaseSink * sink)
  *
  * Controls whether @sink will provide a clock or not. If @provide is %TRUE,
  * gst_element_provide_clock() will return a clock that reflects the datarate
- * of @sink. If @provide is %FALSE, gst_element_provide_clock() will return NULL.
+ * of @sink. If @provide is %FALSE, gst_element_provide_clock() will return
+ * NULL.
  */
 void
 gst_audio_base_sink_set_provide_clock (GstAudioBaseSink * sink,
@@ -1284,8 +1285,8 @@ gst_audio_base_sink_skew_slaving (GstAudioBaseSink * sink,
     driftsamples = (sink->ringbuffer->spec.info.rate * mdrift) / GST_SECOND;
     last_align = sink->priv->last_align;
 
-    /* if we were aligning in the wrong direction or we aligned more than what we
-     * will correct, resync */
+    /* if we were aligning in the wrong direction or we aligned more than what
+     * we will correct, resync */
     if (last_align < 0 || last_align > driftsamples)
       sink->next_sample = -1;
 
@@ -1312,8 +1313,8 @@ gst_audio_base_sink_skew_slaving (GstAudioBaseSink * sink,
     driftsamples = (sink->ringbuffer->spec.info.rate * mdrift) / GST_SECOND;
     last_align = sink->priv->last_align;
 
-    /* if we were aligning in the wrong direction or we aligned more than what we
-     * will correct, resync */
+    /* if we were aligning in the wrong direction or we aligned more than what
+     * we will correct, resync */
     if (last_align > 0 || -last_align > driftsamples)
       sink->next_sample = -1;
 
@@ -1780,8 +1781,8 @@ gst_audio_base_sink_render (GstBaseSink * bsink, GstBuffer * buf)
   }
 
   if (G_UNLIKELY (sync_offset != 0)) {
-    /* compensate for ts-offset and delay we know this will not underflow because we
-     * clipped above. */
+    /* compensate for ts-offset and delay. We know this will not underflow
+     * because we clipped above. */
     GST_DEBUG_OBJECT (sink,
         "compensating for sync-offset %" GST_TIME_FORMAT,
         GST_TIME_ARGS (sync_offset));
@@ -2008,9 +2009,9 @@ sync_latency_failed:
  * gst_audio_base_sink_create_ringbuffer:
  * @sink: a #GstAudioBaseSink.
  *
- * Create and return the #GstAudioRingBuffer for @sink. This function will call the
- * ::create_ringbuffer vmethod and will set @sink as the parent of the returned
- * buffer (see gst_object_set_parent()).
+ * Create and return the #GstAudioRingBuffer for @sink. This function will
+ * call the ::create_ringbuffer vmethod and will set @sink as the parent of
+ * the returned buffer (see gst_object_set_parent()).
  *
  * Returns: (transfer none): The new ringbuffer of @sink.
  */
@@ -2046,7 +2047,7 @@ gst_audio_base_sink_callback (GstAudioRingBuffer * rbuf, guint8 * data,
   GST_PAD_STREAM_LOCK (basesink->sinkpad);
 
   /* would be nice to arrange for pad_alloc_buffer to return data -- as it is we
-     will copy twice, once into data, once into DMA */
+   * will copy twice, once into data, once into DMA */
   GST_LOG_OBJECT (basesink, "pulling %u bytes offset %" G_GUINT64_FORMAT
       " to fill audio buffer", len, basesink->offset);
   ret =
