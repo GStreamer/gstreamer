@@ -49,6 +49,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_sf_dec_debug);
 
 #define DEFAULT_BUFFER_FRAMES	(256)
 
+static gboolean gst_sf_dec_src_event (GstPad * pad, GstObject * parent,
+    GstEvent * event);
 static gboolean gst_sf_dec_src_query (GstPad * pad, GstObject * parent,
     GstQuery * query);
 static GstStateChangeReturn gst_sf_dec_change_state (GstElement * element,
@@ -182,10 +184,132 @@ gst_sf_dec_init (GstSFDec * self)
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->srcpad = gst_pad_new_from_static_template (&sf_dec_src_factory, "src");
-  /* TODO(ensonic): event function */
+  gst_pad_set_event_function (self->srcpad,
+      GST_DEBUG_FUNCPTR (gst_sf_dec_src_event));
   gst_pad_set_query_function (self->srcpad,
       GST_DEBUG_FUNCPTR (gst_sf_dec_src_query));
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
+}
+
+static gboolean
+gst_sf_dec_do_seek (GstSFDec * self, GstEvent * event)
+{
+  gdouble rate;
+  GstFormat format;
+  GstSeekFlags flags;
+  GstSeekType cur_type, stop_type;
+  gboolean flush;
+  gint64 cur, stop, pos;
+  GstSegment seg;
+  guint64 song_length = gst_util_uint64_scale_int (self->duration, GST_SECOND,
+      self->rate);
+
+  gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
+      &stop_type, &stop);
+
+  if (format != GST_FORMAT_TIME)
+    goto unsupported_format;
+
+  /* FIXME: we should be using GstSegment for all this */
+  if (cur_type != GST_SEEK_TYPE_SET || stop_type != GST_SEEK_TYPE_NONE)
+    goto unsuported_type;
+
+  if (stop_type == GST_SEEK_TYPE_NONE)
+    stop = GST_CLOCK_TIME_NONE;
+  if (!GST_CLOCK_TIME_IS_VALID (stop) && song_length > 0)
+    stop = song_length;
+
+  cur = CLAMP (cur, -1, song_length);
+
+  /* cur -> pos */
+  pos = gst_util_uint64_scale_int (cur, self->rate, GST_SECOND);
+  if ((pos = sf_seek (self->file, pos, SEEK_SET) == -1))
+    goto seek_failed;
+
+  /* pos -> cur */
+  cur = gst_util_uint64_scale_int (pos, GST_SECOND, self->rate);
+
+  GST_DEBUG_OBJECT (self, "seek to %" GST_TIME_FORMAT,
+      GST_TIME_ARGS ((guint64) cur));
+
+  flush = ((flags & GST_SEEK_FLAG_FLUSH) == GST_SEEK_FLAG_FLUSH);
+
+  if (flush) {
+    gst_pad_push_event (self->srcpad, gst_event_new_flush_start ());
+  } else {
+    gst_pad_stop_task (self->sinkpad);
+  }
+
+  GST_PAD_STREAM_LOCK (self->sinkpad);
+
+  if (flags & GST_SEEK_FLAG_SEGMENT) {
+    gst_element_post_message (GST_ELEMENT (self),
+        gst_message_new_segment_start (GST_OBJECT (self), format, cur));
+  }
+
+  if (flush) {
+    gst_pad_push_event (self->srcpad, gst_event_new_flush_stop (TRUE));
+  }
+
+  GST_LOG_OBJECT (self, "sending newsegment from %" GST_TIME_FORMAT "-%"
+      GST_TIME_FORMAT ", pos=%" GST_TIME_FORMAT,
+      GST_TIME_ARGS ((guint64) cur), GST_TIME_ARGS ((guint64) stop),
+      GST_TIME_ARGS ((guint64) cur));
+
+  gst_segment_init (&seg, GST_FORMAT_TIME);
+  seg.rate = rate;
+  seg.start = cur;
+  seg.stop = stop;
+  seg.time = cur;
+  gst_pad_push_event (self->srcpad, gst_event_new_segment (&seg));
+
+  gst_pad_start_task (self->sinkpad,
+      (GstTaskFunction) gst_sf_dec_loop, self, NULL);
+
+  GST_PAD_STREAM_UNLOCK (self->sinkpad);
+
+  return TRUE;
+
+  /* ERROR */
+unsupported_format:
+  {
+    GST_DEBUG_OBJECT (self, "seeking is only supported in TIME format");
+    return FALSE;
+  }
+unsuported_type:
+  {
+    GST_DEBUG_OBJECT (self, "unsupported seek type");
+    return FALSE;
+  }
+seek_failed:
+  {
+    GST_DEBUG_OBJECT (self, "seek failed");
+    return FALSE;
+  }
+}
+
+static gboolean
+gst_sf_dec_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
+{
+  GstSFDec *self = GST_SF_DEC (parent);
+  gboolean res = FALSE;
+
+  GST_DEBUG_OBJECT (self, "event %s, %" GST_PTR_FORMAT,
+      GST_EVENT_TYPE_NAME (event), event);
+
+  switch (GST_EVENT_TYPE (event)) {
+    case GST_EVENT_SEEK:
+      if (!self->file || !self->seekable)
+        goto done;
+      res = gst_sf_dec_do_seek (self, event);
+      break;
+    default:
+      res = gst_pad_event_default (pad, parent, event);
+      break;
+  }
+done:
+  GST_DEBUG_OBJECT (self, "event %s: %d", GST_EVENT_TYPE_NAME (event), res);
+  return res;
 }
 
 static gboolean
@@ -195,7 +319,8 @@ gst_sf_dec_src_query (GstPad * pad, GstObject * parent, GstQuery * query)
   GstFormat format;
   gboolean res = FALSE;
 
-  GST_DEBUG_OBJECT (self, "query %s", GST_QUERY_TYPE_NAME (query));
+  GST_DEBUG_OBJECT (self, "query %s, %" GST_PTR_FORMAT,
+      GST_QUERY_TYPE_NAME (query), query);
 
   switch (GST_QUERY_TYPE (query)) {
     case GST_QUERY_DURATION:
@@ -379,7 +504,9 @@ gst_sf_dec_open_file (GstSFDec * self)
   self->channels = info.channels;
   self->rate = info.samplerate;
   self->duration = info.frames;
-  /* TODO(ensonic): do something with info.seekable? */
+  self->seekable = info.seekable;
+  GST_DEBUG_OBJECT (self, "stream openend: channels=%d, rate=%d, seekable=%d",
+      info.channels, info.samplerate, info.seekable);
 
   /* negotiate srcpad caps */
   if ((caps = gst_pad_get_allowed_caps (self->srcpad)) == NULL) {

@@ -51,8 +51,10 @@ struct _GstSFDec {
   GstPad *sinkpad;
   GstPad *srcpad;
   
-  guint64 pos;
-  guint64 duration;
+  guint64 pos;      /* in bytes */
+  guint64 duration; /* in frames */
+  
+  gboolean seekable;
 
   SNDFILE *file;
   sf_count_t offset;
