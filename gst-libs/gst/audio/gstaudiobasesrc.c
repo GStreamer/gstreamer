@@ -169,7 +169,7 @@ gst_audio_base_src_class_init (GstAudioBaseSrcClass * klass)
   /* FIXME: 2.0, handle BUFFER_TIME and LATENCY in nanoseconds */
   g_object_class_install_property (gobject_class, PROP_BUFFER_TIME,
       g_param_spec_int64 ("buffer-time", "Buffer Time",
-          "Size of audio buffer in microseconds, this is the maximum amount "
+          "Size of audio buffer in microseconds. This is the maximum amount "
           "of data that is buffered in the device and the maximum latency that "
           "the source reports", 1, G_MAXINT64, DEFAULT_BUFFER_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
@@ -177,7 +177,7 @@ gst_audio_base_src_class_init (GstAudioBaseSrcClass * klass)
   g_object_class_install_property (gobject_class, PROP_LATENCY_TIME,
       g_param_spec_int64 ("latency-time", "Latency Time",
           "The minimum amount of data to read in each iteration in "
-          "microseconds, this is the minimum latency that the source reports",
+          "microseconds. This is the minimum latency that the source reports",
           1, G_MAXINT64, DEFAULT_LATENCY_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -210,7 +210,7 @@ gst_audio_base_src_class_init (GstAudioBaseSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_SLAVE_METHOD,
       g_param_spec_enum ("slave-method", "Slave Method",
-          "Algorithm to use to match the rate of the masterclock",
+          "Algorithm used to match the rate of the masterclock",
           GST_TYPE_AUDIO_BASE_SRC_SLAVE_METHOD, DEFAULT_SLAVE_METHOD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -595,7 +595,7 @@ static void
 gst_audio_base_src_get_times (GstBaseSrc * bsrc, GstBuffer * buffer,
     GstClockTime * start, GstClockTime * end)
 {
-  /* no need to sync to a clock here, we schedule the samples based
+  /* No need to sync to a clock here. We schedule the samples based
    * on our own clock for the moment. */
   *start = GST_CLOCK_TIME_NONE;
   *end = GST_CLOCK_TIME_NONE;
@@ -647,7 +647,7 @@ gst_audio_base_src_query (GstBaseSrc * bsrc, GstQuery * query)
     }
     case GST_QUERY_SCHEDULING:
     {
-      /* We allow limited pull base operation. Basically pulling can be
+      /* We allow limited pull base operation. Basically, pulling can be
        * done on any number of bytes as long as the offset is -1 or
        * sequentially increasing. */
       gst_query_set_scheduling (query, GST_SCHEDULING_FLAG_SEQUENTIAL, 1, -1,
@@ -701,7 +701,7 @@ gst_audio_base_src_event (GstBaseSrc * bsrc, GstEvent * event)
   return res;
 }
 
-/* get the next offset in the ringbuffer for reading samples.
+/* Get the next offset in the ringbuffer for reading samples.
  * If the next sample is too far away, this function will position itself to the
  * next most recent sample, creating discontinuity */
 static guint64
@@ -728,9 +728,9 @@ gst_audio_base_src_get_offset (GstAudioBaseSrc * src)
      * the sample should be read from. */
     readseg = sample / sps;
 
-    /* see how far away it is from the read segment, normally segdone (where new
-     * data is written in the ringbuffer) is bigger than readseg (where we are
-     * reading). */
+    /* See how far away it is from the read segment. Normally, segdone (where
+     * new data is written in the ringbuffer) is bigger than readseg
+     * (where we are reading). */
     diff = segdone - readseg;
     if (diff >= segtotal) {
       GST_DEBUG_OBJECT (src, "dropped, align to segment %d", segdone);
@@ -796,7 +796,7 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     if (src->next_sample != -1 && sample != src->next_sample)
       goto wrong_offset;
   } else {
-    /* calculate the sequentially next sample we need to read. This can jump and
+    /* Calculate the sequentially-next sample we need to read. This can jump and
      * create a DISCONT. */
     sample = gst_audio_base_src_get_offset (src);
   }
@@ -875,8 +875,8 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
     /* we are slaved, check how to handle this */
     switch (src->priv->slave_method) {
       case GST_AUDIO_BASE_SRC_SLAVE_RESAMPLE:
-        /* not implemented, use skew algorithm. This algorithm should
-         * work on the readout pointer and produces more or less samples based
+        /* Not implemented, use skew algorithm. This algorithm should
+         * work on the readout pointer and produce more or less samples based
          * on the clock drift */
       case GST_AUDIO_BASE_SRC_SLAVE_SKEW:
       {
@@ -986,7 +986,7 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
       {
         GstClockTime base_time, latency;
 
-        /* We are slaved to another clock, take running time of the pipeline
+        /* We are slaved to another clock. Take running time of the pipeline
          * clock and timestamp against it. Somebody else in the pipeline should
          * figure out the clock drift. We keep the duration we calculated
          * above. */
