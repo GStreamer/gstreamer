@@ -131,6 +131,7 @@ gst_audio_info_set_format (GstAudioInfo * info, GstAudioFormat format,
   info->bpf = (finfo->width * channels) / 8;
 
   memset (&info->position, 0xff, sizeof (info->position));
+  memset (&info->_gst_reserved, 0xff, sizeof (info->_gst_reserved));
 
   if (!position && channels == 1) {
     info->position[0] = GST_AUDIO_CHANNEL_POSITION_MONO;

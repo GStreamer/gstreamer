@@ -110,6 +110,7 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
   }
 
   fill_planes (info);
+  memset (&info->_gst_reserved, 0xff, sizeof (info->_gst_reserved));
 }
 
 static const gchar *interlace_mode[] = {
