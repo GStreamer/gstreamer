@@ -80,7 +80,7 @@ enum
   LAST_SIGNAL
 };
 
-/* FIXME: 0.11, store the buffer_time and latency_time in nanoseconds */
+/* FIXME: 2.0, store the buffer_time and latency_time in nanoseconds */
 #define DEFAULT_BUFFER_TIME     ((200 * GST_MSECOND) / GST_USECOND)
 #define DEFAULT_LATENCY_TIME    ((10 * GST_MSECOND) / GST_USECOND)
 #define DEFAULT_PROVIDE_CLOCK   TRUE
@@ -900,7 +900,7 @@ gst_audio_base_sink_setcaps (GstBaseSink * bsink, GstCaps * caps)
       crate_denom);
 
   /* calculate actual latency and buffer times.
-   * FIXME: In 0.11, store the latency_time internally in ns */
+   * FIXME: In 2.0, store the latency_time internally in ns */
   spec->latency_time = gst_util_uint64_scale (spec->segsize,
       (GST_SECOND / GST_USECOND), spec->info.rate * spec->info.bpf);
 
