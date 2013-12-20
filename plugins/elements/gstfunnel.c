@@ -121,8 +121,6 @@ gst_funnel_init (GstFunnel * funnel)
       "src");
   gst_pad_use_fixed_caps (funnel->srcpad);
 
-  GST_OBJECT_FLAG_SET (funnel->srcpad, GST_PAD_FLAG_PROXY_CAPS);
-
   gst_element_add_pad (GST_ELEMENT (funnel), funnel->srcpad);
 }
 
