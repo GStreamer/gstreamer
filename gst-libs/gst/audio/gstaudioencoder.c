@@ -89,7 +89,7 @@
  * </orderedlist>
  *
  * Subclass is responsible for providing pad template caps for
- * source and sink pads. The pads need to be named "sink" and "src". It also 
+ * source and sink pads. The pads need to be named "sink" and "src". It also
  * needs to set the fixed caps on srcpad, when the format is ensured.  This
  * is typically when base class calls subclass' @set_format function, though
  * it might be delayed until calling @gst_audio_encoder_finish_frame.
@@ -2640,7 +2640,7 @@ gst_audio_encoder_negotiate_unlocked (GstAudioEncoder * enc)
  * Negotiate with downstream elements to currently configured #GstCaps.
  * Unmark GST_PAD_FLAG_NEED_RECONFIGURE in any case. But mark it again if
  * negotiate fails.
- * 
+ *
  * Returns: #TRUE if the negotiation succeeded, else #FALSE.
  */
 gboolean

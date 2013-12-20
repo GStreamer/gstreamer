@@ -196,7 +196,7 @@ typedef guint (*ReadFunc)
 
 /* this internal thread does nothing else but read samples from the audio device.
  * It will read each segment in the ringbuffer and will update the play
- * pointer. 
+ * pointer.
  * The start/stop methods control the thread.
  */
 static void

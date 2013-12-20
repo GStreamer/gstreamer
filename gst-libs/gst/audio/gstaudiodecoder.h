@@ -268,7 +268,7 @@ struct _GstAudioDecoderClass
                                        GstEvent *event);
 
   gboolean      (*open)               (GstAudioDecoder *dec);
-  
+
   gboolean      (*close)              (GstAudioDecoder *dec);
 
   gboolean      (*negotiate)          (GstAudioDecoder *dec);

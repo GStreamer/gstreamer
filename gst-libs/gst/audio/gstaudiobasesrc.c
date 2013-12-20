@@ -2,7 +2,7 @@
  * Copyright (C) 1999,2000 Erik Walthinsen <omega@cse.ogi.edu>
  *                    2005 Wim Taymans <wim@fluendo.com>
  *
- * gstaudiobasesrc.c: 
+ * gstaudiobasesrc.c:
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -247,7 +247,7 @@ gst_audio_base_src_init (GstAudioBaseSrc * audiobasesrc)
   else
     GST_OBJECT_FLAG_UNSET (audiobasesrc, GST_ELEMENT_FLAG_PROVIDE_CLOCK);
   audiobasesrc->priv->slave_method = DEFAULT_SLAVE_METHOD;
-  /* reset blocksize we use latency time to calculate a more useful 
+  /* reset blocksize we use latency time to calculate a more useful
    * value based on negotiated format. */
   GST_BASE_SRC (audiobasesrc)->blocksize = 0;
 
@@ -359,7 +359,7 @@ gst_audio_base_src_get_time (GstClock * clock, GstAudioBaseSrc * src)
  * @src: a #GstAudioBaseSrc
  * @provide: new state
  *
- * Controls whether @src will provide a clock or not. If @provide is %TRUE, 
+ * Controls whether @src will provide a clock or not. If @provide is %TRUE,
  * gst_element_provide_clock() will return a clock that reflects the datarate
  * of @src. If @provide is %FALSE, gst_element_provide_clock() will return NULL.
  */

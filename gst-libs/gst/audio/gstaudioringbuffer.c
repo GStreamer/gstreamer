@@ -1214,7 +1214,7 @@ gst_audio_ring_buffer_set_sample (GstAudioRingBuffer * buf, guint64 sample)
   if (G_UNLIKELY (buf->samples_per_seg == 0))
     return;
 
-  /* FIXME, we assume the ringbuffer can restart at a random 
+  /* FIXME, we assume the ringbuffer can restart at a random
    * position, round down to the beginning and keep track of
    * offset when calculating the processed samples. */
   buf->segbase = buf->segdone - sample / buf->samples_per_seg;
@@ -1661,7 +1661,7 @@ gst_audio_ring_buffer_commit (GstAudioRingBuffer * buf, guint64 * sample,
  * @len: the number of samples in data to read
  * @timestamp: where the timestamp is returned
  *
- * Read @len samples from the ringbuffer into the memory pointed 
+ * Read @len samples from the ringbuffer into the memory pointed
  * to by @data.
  * The first sample should be read from position @sample in
  * the ringbuffer.
@@ -1850,7 +1850,7 @@ gst_audio_ring_buffer_prepare_read (GstAudioRingBuffer * buf, gint * segment,
  * @buf: the #GstAudioRingBuffer to advance
  * @advance: the number of segments written
  *
- * Subclasses should call this function to notify the fact that 
+ * Subclasses should call this function to notify the fact that
  * @advance segments are now processed by the device.
  *
  * MT safe.
@@ -1915,7 +1915,7 @@ gst_audio_ring_buffer_clear (GstAudioRingBuffer * buf, gint segment)
  * @allowed: the new value
  *
  * Tell the ringbuffer that it is allowed to start playback when
- * the ringbuffer is filled with samples. 
+ * the ringbuffer is filled with samples.
  *
  * MT safe.
  */

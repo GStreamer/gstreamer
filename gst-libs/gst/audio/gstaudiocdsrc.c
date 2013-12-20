@@ -1102,7 +1102,7 @@ gst_audio_cd_src_uri_handler_init (gpointer g_iface, gpointer iface_data)
  * gst_audio_cd_src_add_track:
  * @src: a #GstAudioCdSrc
  * @track: address of #GstAudioCdSrcTrack to add
- * 
+ *
  * CDDA sources use this function from their start vfunc to announce the
  * available data and audio tracks to the base source class. The caller
  * should allocate @track on the stack, the base source will do a shallow
