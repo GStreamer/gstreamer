@@ -78,7 +78,7 @@ static const gchar *greedyh_fragment_source =
 
   "void main () {\n"
   "  vec2 texcoord = gl_TexCoord[0].xy;\n"
-  "  if (int(mod(texcoord.y * width, 2.0)) == 0) {\n"
+  "  if (int(mod(texcoord.y * height, 2.0)) == 0) {\n"
   "    gl_FragColor = vec4(texture2D(tex_prev, texcoord).rgb, 1.0);\n"
   "  } else {\n"
   "    vec2 texcoord_L1_a1, texcoord_L3_a1, texcoord_L1, texcoord_L3, texcoord_L1_1, texcoord_L3_1;\n"
