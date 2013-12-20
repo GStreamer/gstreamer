@@ -1,8 +1,8 @@
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 libdir=@libdir@
-includedir=@includedir@/gstreamer-@GST_API_VERSION@
-pluginsdir=@libdir@/gstreamer-@GST_API_VERSION@
+includedir=@includedir@/gstreamer-@GST_PKG_VERSION@
+pluginsdir=@libdir@/gstreamer-@GST_PKG_VERSION@
 
 Name: GStreamer VA-API (GLX) Plugins Libraries
 Description: Streaming media framework, VA-API (GLX) plugins libraries

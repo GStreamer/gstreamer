@@ -447,10 +447,9 @@ dnl Check for the GStreamer plugins directory
 AC_ARG_VAR([GST_PLUGIN_PATH], [installation path for gstreamer-vaapi plugin elements for GStreamer 0.10])
 AC_ARG_VAR([GST_PLUGIN_PATH_1_0], [installation path for gstreamer-vaapi plugin elements for GStreamer 1.0])
 AC_MSG_CHECKING([for GStreamer plugins directory])
-case $GST_API_VERSION in
+case $GST_PKG_VERSION in
 0.10)   _gst_plugin_path="$GST_PLUGIN_PATH";;
 1.0)    _gst_plugin_path="$GST_PLUGIN_PATH_1_0";;
-1.2)    _gst_plugin_path="$GST_PLUGIN_PATH_1_0";;
 esac
 if test -d "$_gst_plugin_path"; then
     GST_PLUGINS_DIR="$_gst_plugin_path"
