@@ -176,9 +176,9 @@ gst_audio_base_src_class_init (GstAudioBaseSrcClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_LATENCY_TIME,
       g_param_spec_int64 ("latency-time", "Latency Time",
-          "The minimum amount of data to read in each iteration in microseconds, "
-          "this is the minimum latency that the source reports", 1,
-          G_MAXINT64, DEFAULT_LATENCY_TIME,
+          "The minimum amount of data to read in each iteration in "
+          "microseconds, this is the minimum latency that the source reports",
+          1, G_MAXINT64, DEFAULT_LATENCY_TIME,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
@@ -895,7 +895,8 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
         segments_written = g_atomic_int_get (&ringbuffer->segdone);
 
         /* subtract the base to segments_written to get the number of the
-           last written segment in the ringbuffer (one segment written = segment 0) */
+         * last written segment in the ringbuffer
+         * (one segment written = segment 0) */
         last_written_segment = segments_written - ringbuffer->segbase - 1;
 
         /* samples per segment */
@@ -910,7 +911,8 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
         /* get the running_time */
         running_time = current_time - base_time;
 
-        /* the running_time converted to a sample (relative to the ringbuffer) */
+        /* the running_time converted to a sample
+         * (relative to the ringbuffer) */
         running_time_sample =
             gst_util_uint64_scale_int (running_time, rate, GST_SECOND);
 
@@ -920,7 +922,8 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
         /* the segment currently read from the ringbuffer */
         last_read_segment = sample / sps;
 
-        /* the skew we have between running_time and the ringbuffertime (last written to) */
+        /* the skew we have between running_time and the ringbuffertime
+         * (last written to) */
         segment_skew = running_time_segment - last_written_segment;
 
         GST_DEBUG_OBJECT (bsrc,
@@ -983,9 +986,10 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
       {
         GstClockTime base_time, latency;
 
-        /* We are slaved to another clock, take running time of the pipeline clock and
-         * timestamp against it. Somebody else in the pipeline should figure out the
-         * clock drift. We keep the duration we calculated above. */
+        /* We are slaved to another clock, take running time of the pipeline
+         * clock and timestamp against it. Somebody else in the pipeline should
+         * figure out the clock drift. We keep the duration we calculated
+         * above. */
         timestamp = gst_clock_get_time (clock);
         base_time = GST_ELEMENT_CAST (src)->base_time;
 
@@ -1011,7 +1015,8 @@ gst_audio_base_src_create (GstBaseSrc * bsrc, guint64 offset, guint length,
       /* the read method returned a timestamp so we use this instead */
       timestamp = rb_timestamp;
     } else {
-      /* to get the timestamp against the clock we also need to add our offset */
+      /* to get the timestamp against the clock we also need to add our
+       * offset */
       timestamp = gst_audio_clock_adjust (clock, timestamp);
     }
 
@@ -1085,9 +1090,9 @@ got_error:
  * gst_audio_base_src_create_ringbuffer:
  * @src: a #GstAudioBaseSrc.
  *
- * Create and return the #GstAudioRingBuffer for @src. This function will call the
- * ::create_ringbuffer vmethod and will set @src as the parent of the returned
- * buffer (see gst_object_set_parent()).
+ * Create and return the #GstAudioRingBuffer for @src. This function will call
+ * the ::create_ringbuffer vmethod and will set @src as the parent of the
+ * returned buffer (see gst_object_set_parent()).
  *
  * Returns: (transfer none): The new ringbuffer of @src.
  */
