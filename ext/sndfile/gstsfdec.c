@@ -394,11 +394,9 @@ gst_sf_dec_stop (GstSFDec * self)
 {
   int err = 0;
 
-  g_return_val_if_fail (self->file != NULL, FALSE);
-
   GST_INFO_OBJECT (self, "Closing sndfile stream");
 
-  if ((err = sf_close (self->file)))
+  if (self->file && (err = sf_close (self->file)))
     goto close_failed;
 
   self->file = NULL;
