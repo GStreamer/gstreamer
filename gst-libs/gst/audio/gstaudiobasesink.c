@@ -90,7 +90,7 @@ enum
 #define DEFAULT_CAN_ACTIVATE_PULL FALSE
 
 /* when timestamps drift for more than 40ms we resync. This should
- * be anough to compensate for timestamp rounding errors. */
+ * be enough to compensate for timestamp rounding errors. */
 #define DEFAULT_ALIGNMENT_THRESHOLD   (40 * GST_MSECOND)
 
 /* when clock slaving drift for more than 40ms we resync. This is
@@ -226,7 +226,7 @@ gst_audio_base_sink_class_init (GstAudioBaseSinkClass * klass)
 
   g_object_class_install_property (gobject_class, PROP_SLAVE_METHOD,
       g_param_spec_enum ("slave-method", "Slave Method",
-          "Algorithm to use to match the rate of the masterclock",
+          "Algorithm used to match the rate of the masterclock",
           GST_TYPE_AUDIO_BASE_SINK_SLAVE_METHOD, DEFAULT_SLAVE_METHOD,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
@@ -450,7 +450,7 @@ gst_audio_base_sink_query (GstElement * element, GstQuery * query)
             GST_OBJECT_UNLOCK (basesink);
 
             GST_DEBUG_OBJECT (basesink,
-                "we are not yet negotiated, can't report latency yet");
+                "we are not negotiated, can't report latency yet");
             res = FALSE;
             goto done;
           }
@@ -2262,7 +2262,7 @@ gst_audio_base_sink_change_state (GstElement * element,
       gst_audio_ring_buffer_release (sink->ringbuffer);
       break;
     case GST_STATE_CHANGE_READY_TO_NULL:
-      /* we release again here because the aqcuire happens when setting the
+      /* we release again here because the acquire happens when setting the
        * caps, which happens before we commit the state to PAUSED and thus the
        * PAUSED->READY state change (see above, where we release the ringbuffer)
        * might not be called when we get here. */
