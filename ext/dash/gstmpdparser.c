@@ -2923,6 +2923,8 @@ gst_mpdparser_get_chunk_by_index (GstMpdClient * client, guint indexStream,
     segment->duration = list_segment->duration;
   } else {
     GstClockTime duration;
+    GstStreamPeriod *stream_period;
+
     g_return_val_if_fail (stream->cur_seg_template->
         MultSegBaseType->SegmentTimeline == NULL, FALSE);
     /* segment template generator */
@@ -2930,13 +2932,17 @@ gst_mpdparser_get_chunk_by_index (GstMpdClient * client, guint indexStream,
     if (!GST_CLOCK_TIME_IS_VALID (duration))
       return FALSE;
 
-    /* TODO check PeriodEnd for segment beyond end of period */
+    stream_period = gst_mpdparser_get_stream_period (client);
 
     segment->number = indexChunk
         + stream->cur_seg_template->MultSegBaseType->startNumber;
     segment->start_time = duration * indexChunk;
     segment->duration = duration;
     segment->SegmentURL = NULL;
+
+    if (segment->start_time > stream_period->start + stream_period->duration) {
+      return FALSE;
+    }
   }
   return TRUE;
 }
