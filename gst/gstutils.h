@@ -866,6 +866,14 @@ GST_WRITE_DOUBLE_BE(guint8 *data, gdouble num)
  * Rounds an integer value down to the next multiple of 64.
  */
 #define GST_ROUND_DOWN_64(num) ((num)&(~63))
+/**
+ * GST_ROUND_DOWN_128:
+ * @num: integer value to round down
+ *
+ * Rounds an integer value down to the next multiple of 128.
+ * Since: 1.4
+ */
+#define GST_ROUND_DOWN_128(num) ((num)&(~127))
 
 void                    gst_object_default_error        (GstObject    * source,
                                                          const GError * error,
