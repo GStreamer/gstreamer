@@ -76,15 +76,16 @@ typedef struct _GstVaapiDisplayX11Class         GstVaapiDisplayX11Class;
 #define GST_VAAPI_DISPLAY_HAS_XRENDER(display) \
     (GST_VAAPI_DISPLAY_X11_PRIVATE(display)->has_xrender)
 
-struct _GstVaapiDisplayX11Private {
-    gchar              *display_name;
-    Display            *x11_display;
-    int                 x11_screen;
-    GArray             *pixmap_formats;
-    guint               use_foreign_display     : 1; // Foreign native_display?
-    guint               use_xrandr              : 1;
-    guint               has_xrender             : 1; // Has XRender extension?
-    guint               synchronous             : 1;
+struct _GstVaapiDisplayX11Private
+{
+  gchar *display_name;
+  Display *x11_display;
+  int x11_screen;
+  GArray *pixmap_formats;
+  guint use_foreign_display:1;  // Foreign native_display?
+  guint use_xrandr:1;
+  guint has_xrender:1;          // Has XRender extension?
+  guint synchronous:1;
 };
 
 /**
@@ -92,11 +93,12 @@ struct _GstVaapiDisplayX11Private {
  *
  * VA/X11 display wrapper.
  */
-struct _GstVaapiDisplayX11 {
-    /*< private >*/
-    GstVaapiDisplay parent_instance;
+struct _GstVaapiDisplayX11
+{
+  /*< private >*/
+  GstVaapiDisplay parent_instance;
 
-    GstVaapiDisplayX11Private priv;
+  GstVaapiDisplayX11Private priv;
 };
 
 /**
@@ -104,22 +106,23 @@ struct _GstVaapiDisplayX11 {
  *
  * VA/X11 display wrapper clas.
  */
-struct _GstVaapiDisplayX11Class {
-    /*< private >*/
-    GstVaapiDisplayClass parent_class;
+struct _GstVaapiDisplayX11Class
+{
+  /*< private >*/
+  GstVaapiDisplayClass parent_class;
 };
 
 void
-gst_vaapi_display_x11_class_init(GstVaapiDisplayX11Class *klass);
+gst_vaapi_display_x11_class_init (GstVaapiDisplayX11Class * klass);
 
 G_GNUC_INTERNAL
 GstVideoFormat
-gst_vaapi_display_x11_get_pixmap_format(GstVaapiDisplayX11 *display,
+gst_vaapi_display_x11_get_pixmap_format (GstVaapiDisplayX11 * display,
     guint depth);
 
 G_GNUC_INTERNAL
 guint
-gst_vaapi_display_x11_get_pixmap_depth(GstVaapiDisplayX11 *display,
+gst_vaapi_display_x11_get_pixmap_depth (GstVaapiDisplayX11 * display,
     GstVideoFormat format);
 
 G_END_DECLS

@@ -53,19 +53,20 @@ typedef struct _GstVaapiDisplayWaylandClass     GstVaapiDisplayWaylandClass;
 #define GST_VAAPI_DISPLAY_WL_DISPLAY(display) \
     GST_VAAPI_DISPLAY_WAYLAND_GET_PRIVATE(display)->wl_display
 
-struct _GstVaapiDisplayWaylandPrivate {
-    gchar                      *display_name;
-    struct wl_display          *wl_display;
-    struct wl_compositor       *compositor;
-    struct wl_shell            *shell;
-    struct wl_output           *output;
-    struct wl_registry         *registry;
-    guint                       width;
-    guint                       height;
-    guint                       phys_width;
-    guint                       phys_height;
-    gint                        event_fd;
-    guint                       use_foreign_display : 1;
+struct _GstVaapiDisplayWaylandPrivate
+{
+  gchar *display_name;
+  struct wl_display *wl_display;
+  struct wl_compositor *compositor;
+  struct wl_shell *shell;
+  struct wl_output *output;
+  struct wl_registry *registry;
+  guint width;
+  guint height;
+  guint phys_width;
+  guint phys_height;
+  gint event_fd;
+  guint use_foreign_display:1;
 };
 
 /**
@@ -73,11 +74,12 @@ struct _GstVaapiDisplayWaylandPrivate {
  *
  * VA/Wayland display wrapper.
  */
-struct _GstVaapiDisplayWayland {
-    /*< private >*/
-    GstVaapiDisplay parent_instance;
+struct _GstVaapiDisplayWayland
+{
+  /*< private >*/
+  GstVaapiDisplay parent_instance;
 
-    GstVaapiDisplayWaylandPrivate priv;
+  GstVaapiDisplayWaylandPrivate priv;
 };
 
 /**
@@ -85,9 +87,10 @@ struct _GstVaapiDisplayWayland {
  *
  * VA/Wayland display wrapper clas.
  */
-struct _GstVaapiDisplayWaylandClass {
-    /*< private >*/
-    GstVaapiDisplayClass parent_class;
+struct _GstVaapiDisplayWaylandClass
+{
+  /*< private >*/
+  GstVaapiDisplayClass parent_class;
 };
 
 G_END_DECLS

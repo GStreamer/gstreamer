@@ -25,66 +25,48 @@
 
 #include <gst/vaapi/gstvaapidisplay.h>
 
-typedef struct _GstVaapiDisplayCache    GstVaapiDisplayCache;
+typedef struct _GstVaapiDisplayCache            GstVaapiDisplayCache;
 
 G_GNUC_INTERNAL
 GstVaapiDisplayCache *
-gst_vaapi_display_cache_new(void);
+gst_vaapi_display_cache_new (void);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_display_cache_free(GstVaapiDisplayCache *cache);
+gst_vaapi_display_cache_free (GstVaapiDisplayCache * cache);
 
 G_GNUC_INTERNAL
 guint
-gst_vaapi_display_cache_get_size(GstVaapiDisplayCache *cache);
+gst_vaapi_display_cache_get_size (GstVaapiDisplayCache * cache);
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_display_cache_add(
-    GstVaapiDisplayCache       *cache,
-    GstVaapiDisplayInfo        *info
-);
+gst_vaapi_display_cache_add (GstVaapiDisplayCache * cache,
+    GstVaapiDisplayInfo * info);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_display_cache_remove(
-    GstVaapiDisplayCache       *cache,
-    GstVaapiDisplay            *display
-);
+gst_vaapi_display_cache_remove (GstVaapiDisplayCache * cache,
+    GstVaapiDisplay * display);
 
 const GstVaapiDisplayInfo *
-gst_vaapi_display_cache_lookup(
-    GstVaapiDisplayCache       *cache,
-    GstVaapiDisplay            *display
-);
+gst_vaapi_display_cache_lookup (GstVaapiDisplayCache
+    * cache, GstVaapiDisplay * display);
 
 const GstVaapiDisplayInfo *
-gst_vaapi_display_cache_lookup_custom(
-    GstVaapiDisplayCache       *cache,
-    GCompareFunc                func,
-    gconstpointer               data,
-    guint                       display_types
-);
+gst_vaapi_display_cache_lookup_custom (GstVaapiDisplayCache * cache,
+    GCompareFunc func, gconstpointer data, guint display_types);
 
 const GstVaapiDisplayInfo *
-gst_vaapi_display_cache_lookup_by_va_display(
-    GstVaapiDisplayCache       *cache,
-    VADisplay                   va_display
-);
+gst_vaapi_display_cache_lookup_by_va_display (GstVaapiDisplayCache * cache,
+    VADisplay va_display);
 
 const GstVaapiDisplayInfo *
-gst_vaapi_display_cache_lookup_by_native_display(
-    GstVaapiDisplayCache       *cache,
-    gpointer                    native_display,
-    guint                       display_types
-);
+gst_vaapi_display_cache_lookup_by_native_display (GstVaapiDisplayCache *
+    cache, gpointer native_display, guint display_types);
 
 const GstVaapiDisplayInfo *
-gst_vaapi_display_cache_lookup_by_name(
-    GstVaapiDisplayCache       *cache,
-    const gchar                *display_name,
-    guint                       display_types
-);
+gst_vaapi_display_cache_lookup_by_name (GstVaapiDisplayCache * cache,
+    const gchar * display_name, guint display_types);
 
 #endif /* GSTVAAPIDISPLAYCACHE_H */

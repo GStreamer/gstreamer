@@ -37,10 +37,10 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiDisplayGLX              GstVaapiDisplayGLX;
 
 GstVaapiDisplay *
-gst_vaapi_display_glx_new(const gchar *display_name);
+gst_vaapi_display_glx_new (const gchar * display_name);
 
 GstVaapiDisplay *
-gst_vaapi_display_glx_new_with_display(Display *x11_display);
+gst_vaapi_display_glx_new_with_display (Display * x11_display);
 
 G_END_DECLS
 

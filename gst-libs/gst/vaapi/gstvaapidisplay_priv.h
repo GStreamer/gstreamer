@@ -50,22 +50,22 @@ typedef struct _GstVaapiDisplayPrivate          GstVaapiDisplayPrivate;
 typedef struct _GstVaapiDisplayClass            GstVaapiDisplayClass;
 typedef enum _GstVaapiDisplayInitType           GstVaapiDisplayInitType;
 
-typedef void     (*GstVaapiDisplayInitFunc)    (GstVaapiDisplay *display);
-typedef gboolean (*GstVaapiDisplayBindFunc)    (GstVaapiDisplay *display,
+typedef void (*GstVaapiDisplayInitFunc) (GstVaapiDisplay * display);
+typedef gboolean (*GstVaapiDisplayBindFunc) (GstVaapiDisplay * display,
     gpointer native_dpy);
-typedef gboolean (*GstVaapiDisplayOpenFunc)    (GstVaapiDisplay *display,
-    const gchar *name);
-typedef void     (*GstVaapiDisplayCloseFunc)   (GstVaapiDisplay *display);
-typedef void     (*GstVaapiDisplayLockFunc)    (GstVaapiDisplay *display);
-typedef void     (*GstVaapiDisplayUnlockFunc)  (GstVaapiDisplay *display);
-typedef void     (*GstVaapiDisplaySyncFunc)    (GstVaapiDisplay *display);
-typedef void     (*GstVaapiDisplayFlushFunc)   (GstVaapiDisplay *display);
-typedef gboolean (*GstVaapiDisplayGetInfoFunc) (GstVaapiDisplay *display,
-    GstVaapiDisplayInfo *info);
-typedef void     (*GstVaapiDisplayGetSizeFunc) (GstVaapiDisplay *display,
-    guint *pwidth, guint *pheight);
-typedef void     (*GstVaapiDisplayGetSizeMFunc)(GstVaapiDisplay *display,
-    guint *pwidth, guint *pheight);
+typedef gboolean (*GstVaapiDisplayOpenFunc) (GstVaapiDisplay * display,
+    const gchar * name);
+typedef void (*GstVaapiDisplayCloseFunc) (GstVaapiDisplay * display);
+typedef void (*GstVaapiDisplayLockFunc) (GstVaapiDisplay * display);
+typedef void (*GstVaapiDisplayUnlockFunc) (GstVaapiDisplay * display);
+typedef void (*GstVaapiDisplaySyncFunc) (GstVaapiDisplay * display);
+typedef void (*GstVaapiDisplayFlushFunc) (GstVaapiDisplay * display);
+typedef gboolean (*GstVaapiDisplayGetInfoFunc) (GstVaapiDisplay * display,
+    GstVaapiDisplayInfo * info);
+typedef void (*GstVaapiDisplayGetSizeFunc) (GstVaapiDisplay * display,
+    guint * pwidth, guint * pheight);
+typedef void (*GstVaapiDisplayGetSizeMFunc) (GstVaapiDisplay * display,
+    guint * pwidth, guint * pheight);
 
 /**
  * GST_VAAPI_DISPLAY_VADISPLAY:
@@ -128,24 +128,25 @@ typedef void     (*GstVaapiDisplayGetSizeMFunc)(GstVaapiDisplay *display,
 #define GST_VAAPI_DISPLAY_HAS_VPP(display) \
     (GST_VAAPI_DISPLAY_GET_PRIVATE(display)->has_vpp)
 
-struct _GstVaapiDisplayPrivate {
-    GstVaapiDisplay    *parent;
-    GRecMutex           mutex;
-    GstVaapiDisplayType display_type;
-    VADisplay           display;
-    guint               width;
-    guint               height;
-    guint               width_mm;
-    guint               height_mm;
-    guint               par_n;
-    guint               par_d;
-    GArray             *decoders;
-    GArray             *encoders;
-    GArray             *image_formats;
-    GArray             *subpicture_formats;
-    GArray             *properties;
-    guint               use_foreign_display     : 1;
-    guint               has_vpp                 : 1;
+struct _GstVaapiDisplayPrivate
+{
+  GstVaapiDisplay *parent;
+  GRecMutex mutex;
+  GstVaapiDisplayType display_type;
+  VADisplay display;
+  guint width;
+  guint height;
+  guint width_mm;
+  guint height_mm;
+  guint par_n;
+  guint par_d;
+  GArray *decoders;
+  GArray *encoders;
+  GArray *image_formats;
+  GArray *subpicture_formats;
+  GArray *properties;
+  guint use_foreign_display:1;
+  guint has_vpp:1;
 };
 
 /**
@@ -153,11 +154,12 @@ struct _GstVaapiDisplayPrivate {
  *
  * Base class for VA displays.
  */
-struct _GstVaapiDisplay {
-    /*< private >*/
-    GstVaapiMiniObject parent_instance;
+struct _GstVaapiDisplay
+{
+  /*< private >*/
+  GstVaapiMiniObject parent_instance;
 
-    GstVaapiDisplayPrivate priv;
+  GstVaapiDisplayPrivate priv;
 };
 
 /**
@@ -174,51 +176,53 @@ struct _GstVaapiDisplay {
  *
  * Base class for VA displays.
  */
-struct _GstVaapiDisplayClass {
-    /*< private >*/
-    GstVaapiMiniObjectClass parent_class;
+struct _GstVaapiDisplayClass
+{
+  /*< private >*/
+  GstVaapiMiniObjectClass parent_class;
 
-    /*< protected >*/
-    guint                       display_types;
+  /*< protected >*/
+  guint display_types;
 
-    /*< public >*/
-    GstVaapiDisplayInitFunc     init;
-    GstVaapiDisplayBindFunc     bind_display;
-    GstVaapiDisplayOpenFunc     open_display;
-    GstVaapiDisplayCloseFunc    close_display;
-    GstVaapiDisplayLockFunc     lock;
-    GstVaapiDisplayUnlockFunc   unlock;
-    GstVaapiDisplaySyncFunc     sync;
-    GstVaapiDisplayFlushFunc    flush;
-    GstVaapiDisplayGetInfoFunc  get_display;
-    GstVaapiDisplayGetSizeFunc  get_size;
-    GstVaapiDisplayGetSizeMFunc get_size_mm;
+  /*< public >*/
+  GstVaapiDisplayInitFunc init;
+  GstVaapiDisplayBindFunc bind_display;
+  GstVaapiDisplayOpenFunc open_display;
+  GstVaapiDisplayCloseFunc close_display;
+  GstVaapiDisplayLockFunc lock;
+  GstVaapiDisplayUnlockFunc unlock;
+  GstVaapiDisplaySyncFunc sync;
+  GstVaapiDisplayFlushFunc flush;
+  GstVaapiDisplayGetInfoFunc get_display;
+  GstVaapiDisplayGetSizeFunc get_size;
+  GstVaapiDisplayGetSizeMFunc get_size_mm;
 };
 
 /* Initialization types */
-enum _GstVaapiDisplayInitType {
-    GST_VAAPI_DISPLAY_INIT_FROM_DISPLAY_NAME = 1,
-    GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY,
-    GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY
+enum _GstVaapiDisplayInitType
+{
+  GST_VAAPI_DISPLAY_INIT_FROM_DISPLAY_NAME = 1,
+  GST_VAAPI_DISPLAY_INIT_FROM_NATIVE_DISPLAY,
+  GST_VAAPI_DISPLAY_INIT_FROM_VA_DISPLAY
 };
 
 void
-gst_vaapi_display_class_init(GstVaapiDisplayClass *klass);
+gst_vaapi_display_class_init (GstVaapiDisplayClass * klass);
 
 GstVaapiDisplay *
-gst_vaapi_display_new(const GstVaapiDisplayClass *klass,
+gst_vaapi_display_new (const GstVaapiDisplayClass * klass,
     GstVaapiDisplayInitType init_type, gpointer init_value);
 
 GstVaapiDisplayCache *
-gst_vaapi_display_get_cache(void);
+gst_vaapi_display_get_cache (void);
 
 static inline guint
-gst_vaapi_display_get_display_types(GstVaapiDisplay *display)
+gst_vaapi_display_get_display_types (GstVaapiDisplay * display)
 {
-    const GstVaapiDisplayClass * const dpy_class =
-        GST_VAAPI_DISPLAY_GET_CLASS(display);
+  const GstVaapiDisplayClass *const dpy_class =
+      GST_VAAPI_DISPLAY_GET_CLASS (display);
 
-    return dpy_class->display_types;
+  return dpy_class->display_types;
 }
 
 /* Inline reference counting for core libgstvaapi library */

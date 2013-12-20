@@ -51,11 +51,12 @@ typedef struct _GstVaapiDisplayDRMClass         GstVaapiDisplayDRMClass;
 #define GST_VAAPI_DISPLAY_DRM_DEVICE(display) \
     GST_VAAPI_DISPLAY_DRM_PRIVATE(display)->drm_device
 
-struct _GstVaapiDisplayDRMPrivate {
-    gchar              *device_path_default;
-    gchar              *device_path;
-    gint                drm_device;
-    guint               use_foreign_display     : 1; // Foreign native_display?
+struct _GstVaapiDisplayDRMPrivate
+{
+  gchar *device_path_default;
+  gchar *device_path;
+  gint drm_device;
+  guint use_foreign_display:1;  // Foreign native_display?
 };
 
 /**
@@ -63,11 +64,12 @@ struct _GstVaapiDisplayDRMPrivate {
  *
  * VA/DRM display wrapper.
  */
-struct _GstVaapiDisplayDRM {
-    /*< private >*/
-    GstVaapiDisplay parent_instance;
+struct _GstVaapiDisplayDRM
+{
+  /*< private >*/
+  GstVaapiDisplay parent_instance;
 
-    GstVaapiDisplayDRMPrivate priv;
+  GstVaapiDisplayDRMPrivate priv;
 };
 
 /**
@@ -75,9 +77,10 @@ struct _GstVaapiDisplayDRM {
  *
  * VA/DRM display wrapper clas.
  */
-struct _GstVaapiDisplayDRMClass {
-    /*< private >*/
-    GstVaapiDisplayClass parent_class;
+struct _GstVaapiDisplayDRMClass
+{
+  /*< private >*/
+  GstVaapiDisplayClass parent_class;
 };
 
 G_END_DECLS

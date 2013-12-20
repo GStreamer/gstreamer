@@ -29,134 +29,136 @@
 #include "gstvaapidebug.h"
 
 typedef struct _CacheEntry CacheEntry;
-struct _CacheEntry {
-    GstVaapiDisplayInfo info;
+struct _CacheEntry
+{
+  GstVaapiDisplayInfo info;
 };
 
-struct _GstVaapiDisplayCache {
-    GMutex              mutex;
-    GList              *list;
+struct _GstVaapiDisplayCache
+{
+  GMutex mutex;
+  GList *list;
 };
 
 static void
-cache_entry_free(CacheEntry *entry)
+cache_entry_free (CacheEntry * entry)
 {
-    GstVaapiDisplayInfo *info;
+  GstVaapiDisplayInfo *info;
 
-    if (!entry)
-        return;
+  if (!entry)
+    return;
 
-    info = &entry->info;
+  info = &entry->info;
 
-    if (info->display_name) {
-        g_free(info->display_name);
-        info->display_name = NULL;
-    }
-    g_slice_free(CacheEntry, entry);
+  if (info->display_name) {
+    g_free (info->display_name);
+    info->display_name = NULL;
+  }
+  g_slice_free (CacheEntry, entry);
 }
 
 static CacheEntry *
-cache_entry_new(const GstVaapiDisplayInfo *di)
+cache_entry_new (const GstVaapiDisplayInfo * di)
 {
-    GstVaapiDisplayInfo *info;
-    CacheEntry *entry;
+  GstVaapiDisplayInfo *info;
+  CacheEntry *entry;
 
-    entry = g_slice_new(CacheEntry);
-    if (!entry)
-        return NULL;
+  entry = g_slice_new (CacheEntry);
+  if (!entry)
+    return NULL;
 
-    info                 = &entry->info;
-    info->display        = di->display;
-    info->va_display     = di->va_display;
-    info->native_display = di->native_display;
-    info->display_type   = di->display_type;
-    info->display_name   = NULL;
+  info = &entry->info;
+  info->display = di->display;
+  info->va_display = di->va_display;
+  info->native_display = di->native_display;
+  info->display_type = di->display_type;
+  info->display_name = NULL;
 
-    if (di->display_name) {
-        info->display_name = g_strdup(di->display_name);
-        if (!info->display_name)
-            goto error;
-    }
-    return entry;
+  if (di->display_name) {
+    info->display_name = g_strdup (di->display_name);
+    if (!info->display_name)
+      goto error;
+  }
+  return entry;
 
 error:
-    cache_entry_free(entry);
-    return NULL;
+  cache_entry_free (entry);
+  return NULL;
 }
 
 static inline gboolean
-is_compatible_display_type(const GstVaapiDisplayType display_type,
+is_compatible_display_type (const GstVaapiDisplayType display_type,
     guint display_types)
 {
-    if (display_type == GST_VAAPI_DISPLAY_TYPE_ANY)
-        return TRUE;
-    if (display_types == GST_VAAPI_DISPLAY_TYPE_ANY)
-        return TRUE;
-    return ((1U << display_type) & display_types) != 0;
+  if (display_type == GST_VAAPI_DISPLAY_TYPE_ANY)
+    return TRUE;
+  if (display_types == GST_VAAPI_DISPLAY_TYPE_ANY)
+    return TRUE;
+  return ((1U << display_type) & display_types) != 0;
 }
 
 static GList *
-cache_lookup_1(GstVaapiDisplayCache *cache, GCompareFunc func,
+cache_lookup_1 (GstVaapiDisplayCache * cache, GCompareFunc func,
     gconstpointer data, guint display_types)
 {
-    GList *l;
+  GList *l;
 
-    g_mutex_lock(&cache->mutex);
-    for (l = cache->list; l != NULL; l = l->next) {
-        GstVaapiDisplayInfo * const info = &((CacheEntry *)l->data)->info;
-        if (!is_compatible_display_type(info->display_type, display_types))
-            continue;
-        if (func(info, data))
-            break;
-    }
-    g_mutex_unlock(&cache->mutex);
-    return l;
+  g_mutex_lock (&cache->mutex);
+  for (l = cache->list; l != NULL; l = l->next) {
+    GstVaapiDisplayInfo *const info = &((CacheEntry *) l->data)->info;
+    if (!is_compatible_display_type (info->display_type, display_types))
+      continue;
+    if (func (info, data))
+      break;
+  }
+  g_mutex_unlock (&cache->mutex);
+  return l;
 }
 
 static inline const GstVaapiDisplayInfo *
-cache_lookup(GstVaapiDisplayCache *cache, GCompareFunc func,
+cache_lookup (GstVaapiDisplayCache * cache, GCompareFunc func,
     gconstpointer data, guint display_types)
 {
-    GList * const m = cache_lookup_1(cache, func, data, display_types);
+  GList *const m = cache_lookup_1 (cache, func, data, display_types);
 
-    return m ? &((CacheEntry *)m->data)->info : NULL;
+  return m ? &((CacheEntry *) m->data)->info : NULL;
 }
 
 static gint
-compare_display(gconstpointer a, gconstpointer display)
+compare_display (gconstpointer a, gconstpointer display)
 {
-    const GstVaapiDisplayInfo * const info = a;
+  const GstVaapiDisplayInfo *const info = a;
 
-    return info->display == display;
+  return info->display == display;
 }
 
 static gint
-compare_va_display(gconstpointer a, gconstpointer va_display)
+compare_va_display (gconstpointer a, gconstpointer va_display)
 {
-    const GstVaapiDisplayInfo * const info = a;
+  const GstVaapiDisplayInfo *const info = a;
 
-    return info->va_display == va_display;
+  return info->va_display == va_display;
 }
 
 static gint
-compare_native_display(gconstpointer a, gconstpointer native_display)
+compare_native_display (gconstpointer a, gconstpointer native_display)
 {
-    const GstVaapiDisplayInfo * const info = a;
+  const GstVaapiDisplayInfo *const info = a;
 
-    return info->native_display == native_display;
+  return info->native_display == native_display;
 }
 
 static gint
-compare_display_name(gconstpointer a, gconstpointer b)
+compare_display_name (gconstpointer a, gconstpointer b)
 {
-    const GstVaapiDisplayInfo * const info = a;
-    const gchar * const display_name = b;
+  const GstVaapiDisplayInfo *const info = a;
+  const gchar *const display_name = b;
 
-    if (info->display_name == NULL && display_name == NULL)
-        return TRUE;
-    if (!info->display_name || !display_name)
-        return FALSE;
-    return strcmp(info->display_name, display_name) == 0;
+  if (info->display_name == NULL && display_name == NULL)
+    return TRUE;
+  if (!info->display_name || !display_name)
+    return FALSE;
+  return strcmp (info->display_name, display_name) == 0;
 }
 
 /**
@@ -167,16 +169,16 @@ compare_display_name(gconstpointer a, gconstpointer b)
  * Return value: the newly created #GstVaapiDisplayCache object
  */
 GstVaapiDisplayCache *
-gst_vaapi_display_cache_new(void)
+gst_vaapi_display_cache_new (void)
 {
-    GstVaapiDisplayCache *cache;
+  GstVaapiDisplayCache *cache;
 
-    cache = g_slice_new0(GstVaapiDisplayCache);
-    if (!cache)
-        return NULL;
+  cache = g_slice_new0 (GstVaapiDisplayCache);
+  if (!cache)
+    return NULL;
 
-    g_mutex_init(&cache->mutex);
-    return cache;
+  g_mutex_init (&cache->mutex);
+  return cache;
 }
 
 /**
@@ -186,21 +188,21 @@ gst_vaapi_display_cache_new(void)
  * Destroys a VA display cache.
  */
 void
-gst_vaapi_display_cache_free(GstVaapiDisplayCache *cache)
+gst_vaapi_display_cache_free (GstVaapiDisplayCache * cache)
 {
-    GList *l;
+  GList *l;
 
-    if (!cache)
-        return;
+  if (!cache)
+    return;
 
-    if (cache->list) {
-        for (l = cache->list; l != NULL; l = l->next)
-            cache_entry_free(l->data);
-        g_list_free(cache->list);
-        cache->list = NULL;
-    }
-    g_mutex_clear(&cache->mutex);
-    g_slice_free(GstVaapiDisplayCache, cache);
+  if (cache->list) {
+    for (l = cache->list; l != NULL; l = l->next)
+      cache_entry_free (l->data);
+    g_list_free (cache->list);
+    cache->list = NULL;
+  }
+  g_mutex_clear (&cache->mutex);
+  g_slice_free (GstVaapiDisplayCache, cache);
 }
 
 /**
@@ -212,16 +214,16 @@ gst_vaapi_display_cache_free(GstVaapiDisplayCache *cache)
  * Return value: the size of the display cache
  */
 guint
-gst_vaapi_display_cache_get_size(GstVaapiDisplayCache *cache)
+gst_vaapi_display_cache_get_size (GstVaapiDisplayCache * cache)
 {
-    guint size;
+  guint size;
 
-    g_return_val_if_fail(cache != NULL, 0);
+  g_return_val_if_fail (cache != NULL, 0);
 
-    g_mutex_lock(&cache->mutex);
-    size = g_list_length(cache->list);
-    g_mutex_unlock(&cache->mutex);
-    return size;
+  g_mutex_lock (&cache->mutex);
+  size = g_list_length (cache->list);
+  g_mutex_unlock (&cache->mutex);
+  return size;
 }
 
 /**
@@ -235,24 +237,22 @@ gst_vaapi_display_cache_get_size(GstVaapiDisplayCache *cache)
  * Return value: %TRUE on success
  */
 gboolean
-gst_vaapi_display_cache_add(
-    GstVaapiDisplayCache       *cache,
-    GstVaapiDisplayInfo        *info
-)
+gst_vaapi_display_cache_add (GstVaapiDisplayCache * cache,
+    GstVaapiDisplayInfo * info)
 {
-    CacheEntry *entry;
+  CacheEntry *entry;
 
-    g_return_val_if_fail(cache != NULL, FALSE);
-    g_return_val_if_fail(info != NULL, FALSE);
+  g_return_val_if_fail (cache != NULL, FALSE);
+  g_return_val_if_fail (info != NULL, FALSE);
 
-    entry = cache_entry_new(info);
-    if (!entry)
-        return FALSE;
+  entry = cache_entry_new (info);
+  if (!entry)
+    return FALSE;
 
-    g_mutex_lock(&cache->mutex);
-    cache->list = g_list_prepend(cache->list, entry);
-    g_mutex_unlock(&cache->mutex);
-    return TRUE;
+  g_mutex_lock (&cache->mutex);
+  cache->list = g_list_prepend (cache->list, entry);
+  g_mutex_unlock (&cache->mutex);
+  return TRUE;
 }
 
 /**
@@ -263,22 +263,20 @@ gst_vaapi_display_cache_add(
  * Removes any cache entry that matches the specified #GstVaapiDisplay.
  */
 void
-gst_vaapi_display_cache_remove(
-    GstVaapiDisplayCache       *cache,
-    GstVaapiDisplay            *display
-)
+gst_vaapi_display_cache_remove (GstVaapiDisplayCache * cache,
+    GstVaapiDisplay * display)
 {
-    GList *m;
+  GList *m;
 
-    m = cache_lookup_1(cache, compare_display, display,
-        GST_VAAPI_DISPLAY_TYPE_ANY);
-    if (!m)
-        return;
+  m = cache_lookup_1 (cache, compare_display, display,
+      GST_VAAPI_DISPLAY_TYPE_ANY);
+  if (!m)
+    return;
 
-    cache_entry_free(m->data);
-    g_mutex_lock(&cache->mutex);
-    cache->list = g_list_delete_link(cache->list, m);
-    g_mutex_unlock(&cache->mutex);
+  cache_entry_free (m->data);
+  g_mutex_lock (&cache->mutex);
+  cache->list = g_list_delete_link (cache->list, m);
+  g_mutex_unlock (&cache->mutex);
 }
 
 /**
@@ -292,16 +290,14 @@ gst_vaapi_display_cache_remove(
  *   none was found
  */
 const GstVaapiDisplayInfo *
-gst_vaapi_display_cache_lookup(
-    GstVaapiDisplayCache       *cache,
-    GstVaapiDisplay            *display
-)
+gst_vaapi_display_cache_lookup (GstVaapiDisplayCache * cache,
+    GstVaapiDisplay * display)
 {
-    g_return_val_if_fail(cache != NULL, NULL);
-    g_return_val_if_fail(display != NULL, NULL);
+  g_return_val_if_fail (cache != NULL, NULL);
+  g_return_val_if_fail (display != NULL, NULL);
 
-    return cache_lookup(cache, compare_display, display,
-        GST_VAAPI_DISPLAY_TYPE_ANY);
+  return cache_lookup (cache, compare_display, display,
+      GST_VAAPI_DISPLAY_TYPE_ANY);
 }
 
 /**
@@ -324,17 +320,13 @@ gst_vaapi_display_cache_lookup(
  *   (i.e. returning %TRUE), or %NULL if none was found
  */
 const GstVaapiDisplayInfo *
-gst_vaapi_display_cache_lookup_custom(
-    GstVaapiDisplayCache       *cache,
-    GCompareFunc                func,
-    gconstpointer               data,
-    guint                       display_types
-)
+gst_vaapi_display_cache_lookup_custom (GstVaapiDisplayCache * cache,
+    GCompareFunc func, gconstpointer data, guint display_types)
 {
-    g_return_val_if_fail(cache != NULL, NULL);
-    g_return_val_if_fail(func != NULL, NULL);
+  g_return_val_if_fail (cache != NULL, NULL);
+  g_return_val_if_fail (func != NULL, NULL);
 
-    return cache_lookup(cache, func, data, display_types);
+  return cache_lookup (cache, func, data, display_types);
 }
 
 /**
@@ -348,16 +340,14 @@ gst_vaapi_display_cache_lookup_custom(
  *   if none was found
  */
 const GstVaapiDisplayInfo *
-gst_vaapi_display_cache_lookup_by_va_display(
-    GstVaapiDisplayCache       *cache,
-    VADisplay                   va_display
-)
+gst_vaapi_display_cache_lookup_by_va_display (GstVaapiDisplayCache * cache,
+    VADisplay va_display)
 {
-    g_return_val_if_fail(cache != NULL, NULL);
-    g_return_val_if_fail(va_display != NULL, NULL);
+  g_return_val_if_fail (cache != NULL, NULL);
+  g_return_val_if_fail (va_display != NULL, NULL);
 
-    return cache_lookup(cache, compare_va_display, va_display,
-        GST_VAAPI_DISPLAY_TYPE_ANY);
+  return cache_lookup (cache, compare_va_display, va_display,
+      GST_VAAPI_DISPLAY_TYPE_ANY);
 }
 
 /**
@@ -371,17 +361,14 @@ gst_vaapi_display_cache_lookup_by_va_display(
  *   %NULL if none was found
  */
 const GstVaapiDisplayInfo *
-gst_vaapi_display_cache_lookup_by_native_display(
-    GstVaapiDisplayCache       *cache,
-    gpointer                    native_display,
-    guint                       display_types
-)
+gst_vaapi_display_cache_lookup_by_native_display (GstVaapiDisplayCache * cache,
+    gpointer native_display, guint display_types)
 {
-    g_return_val_if_fail(cache != NULL, NULL);
-    g_return_val_if_fail(native_display != NULL, NULL);
+  g_return_val_if_fail (cache != NULL, NULL);
+  g_return_val_if_fail (native_display != NULL, NULL);
 
-    return cache_lookup(cache, compare_native_display, native_display,
-        display_types);
+  return cache_lookup (cache, compare_native_display, native_display,
+      display_types);
 }
 
 /**
@@ -395,14 +382,11 @@ gst_vaapi_display_cache_lookup_by_native_display(
  *   %NULL if none was found
  */
 const GstVaapiDisplayInfo *
-gst_vaapi_display_cache_lookup_by_name(
-    GstVaapiDisplayCache       *cache,
-    const gchar                *display_name,
-    guint                       display_types
-)
+gst_vaapi_display_cache_lookup_by_name (GstVaapiDisplayCache * cache,
+    const gchar * display_name, guint display_types)
 {
-    g_return_val_if_fail(cache != NULL, NULL);
+  g_return_val_if_fail (cache != NULL, NULL);
 
-    return cache_lookup(cache, compare_display_name, display_name,
-        display_types);
+  return cache_lookup (cache, compare_display_name, display_name,
+      display_types);
 }

@@ -36,19 +36,19 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiDisplayX11              GstVaapiDisplayX11;
 
 GstVaapiDisplay *
-gst_vaapi_display_x11_new(const gchar *display_name);
+gst_vaapi_display_x11_new (const gchar * display_name);
 
 GstVaapiDisplay *
-gst_vaapi_display_x11_new_with_display(Display *x11_display);
+gst_vaapi_display_x11_new_with_display (Display * x11_display);
 
 Display *
-gst_vaapi_display_x11_get_display(GstVaapiDisplayX11 *display);
+gst_vaapi_display_x11_get_display (GstVaapiDisplayX11 * display);
 
 int
-gst_vaapi_display_x11_get_screen(GstVaapiDisplayX11 *display);
+gst_vaapi_display_x11_get_screen (GstVaapiDisplayX11 * display);
 
 void
-gst_vaapi_display_x11_set_synchronous(GstVaapiDisplayX11 *display,
+gst_vaapi_display_x11_set_synchronous (GstVaapiDisplayX11 * display,
     gboolean synchronous);
 
 G_END_DECLS

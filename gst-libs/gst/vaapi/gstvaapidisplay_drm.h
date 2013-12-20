@@ -33,16 +33,17 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiDisplayDRM              GstVaapiDisplayDRM;
 
 GstVaapiDisplay *
-gst_vaapi_display_drm_new(const gchar *device_path);
+gst_vaapi_display_drm_new (const gchar * device_path);
 
 GstVaapiDisplay *
-gst_vaapi_display_drm_new_with_device(gint device);
+gst_vaapi_display_drm_new_with_device (gint device);
 
 gint
-gst_vaapi_display_drm_get_device(GstVaapiDisplayDRM *display);
+gst_vaapi_display_drm_get_device (GstVaapiDisplayDRM * display);
 
 const gchar *
-gst_vaapi_display_drm_get_device_path(GstVaapiDisplayDRM *display);
+gst_vaapi_display_drm_get_device_path (GstVaapiDisplayDRM *
+    display);
 
 G_END_DECLS
 

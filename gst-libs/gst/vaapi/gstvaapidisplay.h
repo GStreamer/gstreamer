@@ -47,22 +47,23 @@ typedef struct _GstVaapiDisplay                 GstVaapiDisplay;
  * @GST_VAAPI_DISPLAY_TYPE_WAYLAND: VA/Wayland display.
  * @GST_VAAPI_DISPLAY_TYPE_DRM: VA/DRM display.
  */
-typedef enum {
-    GST_VAAPI_DISPLAY_TYPE_ANY = 0,
-    GST_VAAPI_DISPLAY_TYPE_X11,
-    GST_VAAPI_DISPLAY_TYPE_GLX,
-    GST_VAAPI_DISPLAY_TYPE_WAYLAND,
-    GST_VAAPI_DISPLAY_TYPE_DRM,
+typedef enum
+{
+  GST_VAAPI_DISPLAY_TYPE_ANY = 0,
+  GST_VAAPI_DISPLAY_TYPE_X11,
+  GST_VAAPI_DISPLAY_TYPE_GLX,
+  GST_VAAPI_DISPLAY_TYPE_WAYLAND,
+  GST_VAAPI_DISPLAY_TYPE_DRM,
 } GstVaapiDisplayType;
 
 #define GST_VAAPI_TYPE_DISPLAY_TYPE \
     (gst_vaapi_display_type_get_type())
 
 GType
-gst_vaapi_display_type_get_type(void) G_GNUC_CONST;
+gst_vaapi_display_type_get_type (void) G_GNUC_CONST;
 
 gboolean
-gst_vaapi_display_type_is_compatible(GstVaapiDisplayType type1,
+gst_vaapi_display_type_is_compatible (GstVaapiDisplayType type1,
     GstVaapiDisplayType type2);
 
 /**
@@ -70,12 +71,13 @@ gst_vaapi_display_type_is_compatible(GstVaapiDisplayType type1,
  *
  * Generic class to retrieve VA display info
  */
-struct _GstVaapiDisplayInfo {
-    GstVaapiDisplay    *display;
-    GstVaapiDisplayType display_type;
-    gchar              *display_name;
-    VADisplay           va_display;
-    gpointer            native_display;
+struct _GstVaapiDisplayInfo
+{
+  GstVaapiDisplay *display;
+  GstVaapiDisplayType display_type;
+  gchar *display_name;
+  VADisplay va_display;
+  gpointer native_display;
 };
 
 /**
@@ -95,122 +97,103 @@ struct _GstVaapiDisplayInfo {
 #define GST_VAAPI_DISPLAY_PROP_CONTRAST         "contrast"
 
 GstVaapiDisplay *
-gst_vaapi_display_new_with_display(VADisplay va_display);
+gst_vaapi_display_new_with_display (VADisplay va_display);
 
 GstVaapiDisplay *
-gst_vaapi_display_ref(GstVaapiDisplay *display);
+gst_vaapi_display_ref (GstVaapiDisplay * display);
 
 void
-gst_vaapi_display_unref(GstVaapiDisplay *display);
+gst_vaapi_display_unref (GstVaapiDisplay * display);
 
 void
-gst_vaapi_display_replace(GstVaapiDisplay **old_display_ptr,
-    GstVaapiDisplay *new_display);
+gst_vaapi_display_replace (GstVaapiDisplay ** old_display_ptr,
+    GstVaapiDisplay * new_display);
 
 void
-gst_vaapi_display_lock(GstVaapiDisplay *display);
+gst_vaapi_display_lock (GstVaapiDisplay * display);
 
 void
-gst_vaapi_display_unlock(GstVaapiDisplay *display);
+gst_vaapi_display_unlock (GstVaapiDisplay * display);
 
 void
-gst_vaapi_display_sync(GstVaapiDisplay *display);
+gst_vaapi_display_sync (GstVaapiDisplay * display);
 
 void
-gst_vaapi_display_flush(GstVaapiDisplay *display);
+gst_vaapi_display_flush (GstVaapiDisplay * display);
 
 GstVaapiDisplayType
-gst_vaapi_display_get_display_type(GstVaapiDisplay *display);
+gst_vaapi_display_get_display_type (GstVaapiDisplay * display);
 
 VADisplay
-gst_vaapi_display_get_display(GstVaapiDisplay *display);
+gst_vaapi_display_get_display (GstVaapiDisplay * display);
 
 guint
-gst_vaapi_display_get_width(GstVaapiDisplay *display);
+gst_vaapi_display_get_width (GstVaapiDisplay * display);
 
 guint
-gst_vaapi_display_get_height(GstVaapiDisplay *display);
+gst_vaapi_display_get_height (GstVaapiDisplay * display);
 
 void
-gst_vaapi_display_get_size(GstVaapiDisplay *display, guint *pwidth, guint *pheight);
+gst_vaapi_display_get_size (GstVaapiDisplay * display, guint * pwidth,
+    guint * pheight);
 
 void
-gst_vaapi_display_get_pixel_aspect_ratio(
-    GstVaapiDisplay *display,
-    guint           *par_n,
-    guint           *par_d
-);
+gst_vaapi_display_get_pixel_aspect_ratio (GstVaapiDisplay * display,
+    guint * par_n, guint * par_d);
 
 GstCaps *
-gst_vaapi_display_get_decode_caps(GstVaapiDisplay *display);
+gst_vaapi_display_get_decode_caps (GstVaapiDisplay * display);
 
 gboolean
-gst_vaapi_display_has_decoder(
-    GstVaapiDisplay    *display,
-    GstVaapiProfile     profile,
-    GstVaapiEntrypoint  entrypoint
-);
+gst_vaapi_display_has_decoder (GstVaapiDisplay * display,
+    GstVaapiProfile profile, GstVaapiEntrypoint entrypoint);
 
 GstCaps *
-gst_vaapi_display_get_encode_caps(GstVaapiDisplay *display);
+gst_vaapi_display_get_encode_caps (GstVaapiDisplay * display);
 
 gboolean
-gst_vaapi_display_has_encoder(
-    GstVaapiDisplay    *display,
-    GstVaapiProfile     profile,
-    GstVaapiEntrypoint  entrypoint
-);
+gst_vaapi_display_has_encoder (GstVaapiDisplay * display,
+    GstVaapiProfile profile, GstVaapiEntrypoint entrypoint);
 
 GstCaps *
-gst_vaapi_display_get_image_caps(GstVaapiDisplay *display);
+gst_vaapi_display_get_image_caps (GstVaapiDisplay * display);
 
 gboolean
-gst_vaapi_display_has_image_format(
-    GstVaapiDisplay    *display,
-    GstVideoFormat      format
-);
+gst_vaapi_display_has_image_format (GstVaapiDisplay * display,
+    GstVideoFormat format);
 
 GstCaps *
-gst_vaapi_display_get_subpicture_caps(GstVaapiDisplay *display);
+gst_vaapi_display_get_subpicture_caps (GstVaapiDisplay * display);
 
 gboolean
-gst_vaapi_display_has_subpicture_format(
-    GstVaapiDisplay    *display,
-    GstVideoFormat      format,
-    guint              *flags_ptr
-);
+gst_vaapi_display_has_subpicture_format (GstVaapiDisplay * display,
+    GstVideoFormat format, guint * flags_ptr);
 
 gboolean
-gst_vaapi_display_has_property(GstVaapiDisplay *display, const gchar *name);
+gst_vaapi_display_has_property (GstVaapiDisplay * display, const gchar * name);
 
 gboolean
-gst_vaapi_display_get_property(GstVaapiDisplay *display, const gchar *name,
-    GValue *out_value);
+gst_vaapi_display_get_property (GstVaapiDisplay * display, const gchar * name,
+    GValue * out_value);
 
 gboolean
-gst_vaapi_display_set_property(GstVaapiDisplay *display, const gchar *name,
-    const GValue *value);
+gst_vaapi_display_set_property (GstVaapiDisplay * display, const gchar * name,
+    const GValue * value);
 
 gboolean
-gst_vaapi_display_get_render_mode(
-    GstVaapiDisplay    *display,
-    GstVaapiRenderMode *pmode
-);
+gst_vaapi_display_get_render_mode (GstVaapiDisplay * display,
+    GstVaapiRenderMode * pmode);
 
 gboolean
-gst_vaapi_display_set_render_mode(
-    GstVaapiDisplay   *display,
-    GstVaapiRenderMode mode
-);
+gst_vaapi_display_set_render_mode (GstVaapiDisplay * display,
+    GstVaapiRenderMode mode);
 
 GstVaapiRotation
-gst_vaapi_display_get_rotation(GstVaapiDisplay *display);
+gst_vaapi_display_get_rotation (GstVaapiDisplay * display);
 
 gboolean
-gst_vaapi_display_set_rotation(
-    GstVaapiDisplay *display,
-    GstVaapiRotation rotation
-);
+gst_vaapi_display_set_rotation (GstVaapiDisplay * display,
+    GstVaapiRotation rotation);
 
 G_END_DECLS
 

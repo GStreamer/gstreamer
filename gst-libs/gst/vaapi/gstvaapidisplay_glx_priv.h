@@ -49,9 +49,10 @@ typedef struct _GstVaapiDisplayGLXClass         GstVaapiDisplayGLXClass;
  *
  * VA/GLX display wrapper.
  */
-struct _GstVaapiDisplayGLX {
-    /*< private >*/
-    GstVaapiDisplayX11 parent_instance;
+struct _GstVaapiDisplayGLX
+{
+  /*< private >*/
+  GstVaapiDisplayX11 parent_instance;
 };
 
 /**
@@ -59,11 +60,12 @@ struct _GstVaapiDisplayGLX {
  *
  * VA/GLX display wrapper clas.
  */
-struct _GstVaapiDisplayGLXClass {
-    /*< private >*/
-    GstVaapiDisplayX11Class parent_class;
+struct _GstVaapiDisplayGLXClass
+{
+  /*< private >*/
+  GstVaapiDisplayX11Class parent_class;
 
-    GstVaapiDisplayGetInfoFunc  parent_get_display;
+  GstVaapiDisplayGetInfoFunc parent_get_display;
 };
 
 G_END_DECLS
