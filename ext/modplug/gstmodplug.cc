@@ -345,8 +345,8 @@ gst_modplug_do_seek (GstModPlug * modplug, GstEvent * event)
       modplug->frequency);
 #endif
 
-  gst_event_parse_seek (event, &rate, &format, &flags,
-      &cur_type, &cur, &stop_type, &stop);
+  gst_event_parse_seek (event, &rate, &format, &flags, &cur_type, &cur,
+      &stop_type, &stop);
 
   if (format != GST_FORMAT_TIME)
     goto no_time;
@@ -357,8 +357,10 @@ gst_modplug_do_seek (GstModPlug * modplug, GstEvent * event)
 
   if (stop_type == GST_SEEK_TYPE_NONE)
     stop = GST_CLOCK_TIME_NONE;
+  if (!GST_CLOCK_TIME_IS_VALID (stop) && modplug->song_length > 0)
+    stop = modplug->song_length;
 
-  cur = CLAMP (cur, 0, modplug->song_length);
+  cur = CLAMP (cur, -1, modplug->song_length);
 
   GST_DEBUG_OBJECT (modplug, "seek to %" GST_TIME_FORMAT,
       GST_TIME_ARGS ((guint64) cur));
@@ -379,8 +381,6 @@ gst_modplug_do_seek (GstModPlug * modplug, GstEvent * event)
     gst_element_post_message (GST_ELEMENT (modplug),
         gst_message_new_segment_start (GST_OBJECT (modplug), format, cur));
   }
-  if (stop == -1 && modplug->song_length > 0)
-    stop = modplug->song_length;
 
   if (flush) {
     gst_pad_push_event (modplug->srcpad, gst_event_new_flush_stop (TRUE));
