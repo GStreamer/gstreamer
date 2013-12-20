@@ -2082,6 +2082,238 @@ pack_I422_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   }
 }
 
+/**
+ * GstVideoTileMode:
+ * @GST_VIDEO_TILE_MODE_UNKNOWN: Unknown or unset video format id
+ * @GST_VIDEO_TILE_MODE_ZFLIPZ_2X2: Every four adjacent buffers - two
+ *    horizontally and two vertically are grouped together and are located
+ *    in memory in Z or flipped Z order.
+ *
+ * Enum value describing the most common video formats.
+ */
+typedef enum
+{
+  GST_VIDEO_TILE_MODE_NONE,
+  GST_VIDEO_TILE_MODE_ZFLIPZ_2X2,
+} GstVideoTileMode;
+
+/**
+ * gst_video_tile_get_index:
+ * @mode: a #GstVideoTileMode
+ * @x: x coordinate
+ * @y: y coordinate
+ * @x_tiles: number of horizintal tiles
+ * @y_tiles: number of vertical tiles
+ *
+ * Get the tile index of the tile at coordinates @x and @y.
+ *
+ * Returns: the index of the tile at @x and @y in the tiled image of
+ *   @x_tiles by @y_tiles.
+ */
+static gsize
+gst_video_tile_get_index (GstVideoTileMode mode, gint x, gint y,
+    gint x_tiles, gint y_tiles)
+{
+  gsize offset;
+
+  switch (mode) {
+    case GST_VIDEO_TILE_MODE_ZFLIPZ_2X2:
+      /* Due to the zigzag pattern we know that tiles are numbered like:
+       * (see http://linuxtv.org/downloads/v4l-dvb-apis/re31.html)
+       *
+       *         |             Column (x)
+       *         |   0    1    2    3    4    5    6    7
+       *  -------|---------------------------------------
+       *       0 |   0    1    6    7    8    9   14   15
+       *    R  1 |   2    3    4    5   10   11   12   13
+       *    o  2 |  16   17   22   23   24   25   30   31
+       *    w  3 |  18   19   20   21   26   27   28   29
+       *       4 |  32   33   38   39   40   41   46   47
+       *   (y) 5 |  34   35   36   37   42   43   44   45
+       *       6 |  48   49   50   51   52   53   54   55
+       *
+       * From this we can see that:
+       *
+       * For even rows:
+       * - The first block in a row is always mapped to memory block 'y * width'.
+       * - For all even rows, except for the last one when 'y' is odd, from the first
+       *   block number an offset is then added to obtain the block number for
+       *   the other blocks in the row. The offset is 'x' plus the corresponding
+       *   number in the series [0, 0, 4, 4, 4, 4, 8, 8, 8, 8, 12, ...], which can be
+       *   expressed as 'GST_ROUND_DOWN_4 (x + 2)'.
+       *       f(x,y,width,height) = y * width + x + GST_ROUND_DOWN_4 (x + 2)
+       *
+       * - For the last row when 'y' is odd the offset is simply 'x'.
+       *       f(x,y,width,height) = y * width + x
+       * - Note that 'y' is even, so 'GST_ROUNDOWN_2 (y) == y' in this case
+       *
+       *  For odd rows:
+       * - The first block in the row is always mapped to memory block
+       *   'GST_ROUND_DOWN_2(y) * width + 2'.
+       * - From the first block number an offset is then added to obtain the block
+       *   number for the other blocks in the row. The offset is 'x' plus the
+       *   corresponding number in the series [0, 0, 0, 0, 4, 4, 4, 4, 8, 8, 8, 8, 12, ...],
+       *   which can be  expressed as GST_ROUND_DOWN_4 (x).
+       *       f(x,y,width,height) = GST_ROUND_DOWN_2 (y) * width + bx 2 + GST_ROUND_DOWN_4 (x)
+       */
+      /* Common to all cases */
+      offset = GST_ROUND_DOWN_2 (y) * x_tiles + x;
+
+      if (y & 1) {
+        /* For odd row */
+        offset += 2 + GST_ROUND_DOWN_4 (x);
+      } else if ((y_tiles & 1) == 0 || y != (y_tiles - 1)) {
+        /* For even row except for the last row when odd height */
+        offset += GST_ROUND_DOWN_4 (x + 2);
+      }
+      break;
+    default:
+      offset = 0;
+      break;
+  }
+  return offset;
+}
+
+static void
+get_tile_NV12 (gint tile_width, gint tile_height, gint tile_size, gint tx,
+    gint ty, gint x_tiles, gint y_tiles,
+    const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES],
+    gpointer tile_data[GST_VIDEO_MAX_PLANES],
+    gint tile_stride[GST_VIDEO_MAX_PLANES])
+{
+  gsize offset;
+
+  /* index of Y tile */
+  offset = gst_video_tile_get_index (GST_VIDEO_TILE_MODE_ZFLIPZ_2X2,
+      tx, ty, x_tiles, y_tiles);
+  offset *= tile_size;
+  tile_data[0] = ((guint8 *) data[0]) + offset;
+  tile_stride[0] = tile_width;
+
+  /* index of UV tile */
+  offset = gst_video_tile_get_index (GST_VIDEO_TILE_MODE_ZFLIPZ_2X2,
+      tx, ty >> 1, x_tiles, (y_tiles + 1) >> 1);
+  offset *= tile_size;
+  /* On odd rows we return the second part of the UV tile */
+  if (ty & 1)
+    offset += tile_width * (tile_height >> 1);
+  tile_data[1] = ((guint8 *) data[1]) + offset;
+  tile_stride[1] = tile_width;
+}
+
+#define PACK_NV12T GST_VIDEO_FORMAT_AYUV, unpack_NV12T, 1, pack_NV12T
+static void
+unpack_NV12T (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    gpointer dest, const gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], gint x, gint y, gint width)
+{
+  const GstVideoFormatInfo *unpack_info, *finfo;
+  guint8 *line = dest;
+  gint x_tiles, y_tiles;
+  gint tile_width, tile_height, tile_size;
+  gint ntx, tx, ty;
+  gint unpack_pstride;
+
+  tile_width = 1 << info->w_sub[3];
+  tile_height = 1 << info->h_sub[3];
+  tile_size = tile_width * tile_height;
+
+  x_tiles = stride[0] / 64;
+  y_tiles = stride[2];
+
+  /* we reuse these unpack functions */
+  finfo = gst_video_format_get_info (GST_VIDEO_FORMAT_NV12);
+
+  /* get pstride of unpacked format */
+  unpack_info = gst_video_format_get_info (info->unpack_format);
+  unpack_pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (unpack_info, 0);
+
+  /* first x tile to convert */
+  tx = x / tile_width;
+  /* Last tile to convert */
+  ntx = (x + width) / tile_width;
+  /* The row we are going to convert */
+  ty = y / tile_height;
+
+  /* y position in a tile */
+  y = y & (tile_height - 1);
+  /* x position in a tile */
+  x = x & (tile_width - 1);
+
+  for (; tx <= ntx; tx++) {
+    gpointer tdata[GST_VIDEO_MAX_PLANES];
+    gint tstride[GST_VIDEO_MAX_PLANES];
+    gint unpack_width;
+
+    get_tile_NV12 (tile_width, tile_height, tile_size, tx, ty, x_tiles, y_tiles,
+        data, stride, tdata, tstride);
+
+    /* the number of bytes left to unpack */
+    unpack_width = MIN (width - x, tile_width - x);
+
+    finfo->unpack_func (finfo, flags, line, tdata, tstride, x, y, unpack_width);
+
+    x = 0;
+    width -= unpack_width;
+    line += unpack_width * unpack_pstride;
+  }
+}
+
+static void
+pack_NV12T (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
+    const gpointer src, gint sstride, gpointer data[GST_VIDEO_MAX_PLANES],
+    const gint stride[GST_VIDEO_MAX_PLANES], GstVideoChromaSite chroma_site,
+    gint y, gint width)
+{
+  const GstVideoFormatInfo *pack_info, *finfo;
+  guint8 *line = src;
+  gint x_tiles, y_tiles;
+  gint tile_width, tile_height, tile_size;
+  gint ntx, tx, ty;
+  gint pack_pstride;
+
+  tile_width = 1 << info->w_sub[3];
+  tile_height = 1 << info->h_sub[3];
+  tile_size = tile_width * tile_height;
+
+  x_tiles = stride[0] / 64;
+  y_tiles = stride[2];
+
+  /* we reuse these pack functions */
+  finfo = gst_video_format_get_info (GST_VIDEO_FORMAT_NV12);
+
+  /* get pstride of packed format */
+  pack_info = gst_video_format_get_info (info->unpack_format);
+  pack_pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (pack_info, 0);
+
+  /* Last tile to convert */
+  ntx = width / tile_width;
+  /* The row we are going to convert */
+  ty = y / tile_height;
+
+  /* y position in a tile */
+  y = y & (tile_height - 1);
+
+  for (tx = 0; tx < ntx; tx++) {
+    gpointer tdata[GST_VIDEO_MAX_PLANES];
+    gint tstride[GST_VIDEO_MAX_PLANES];
+    gint pack_width;
+
+    get_tile_NV12 (tile_width, tile_height, tile_size, tx, ty, x_tiles, y_tiles,
+        data, stride, tdata, tstride);
+
+    /* the number of bytes left to pack */
+    pack_width = MIN (width, tile_width);
+
+    finfo->pack_func (finfo, flags, line, sstride, tdata, tstride,
+        chroma_site, y, pack_width);
+
+    width -= pack_width;
+    line += pack_width * pack_pstride;
+  }
+}
+
 typedef struct
 {
   guint32 fourcc;
@@ -2094,6 +2326,7 @@ typedef struct
 #define DPTH8_32         8, 2, { 0, 0, 0, 0 }, { 8, 32, 0, 0 }
 #define DPTH888          8, 3, { 0, 0, 0, 0 }, { 8, 8, 8, 0 }
 #define DPTH8888         8, 4, { 0, 0, 0, 0 }, { 8, 8, 8, 8 }
+#define DPTH8880         8, 4, { 0, 0, 0, 0 }, { 8, 8, 8, 0 }
 #define DPTH10_10_10     10, 3, { 0, 0, 0, 0 }, { 10, 10, 10, 0 }
 #define DPTH16           16, 1, { 0, 0, 0, 0 }, { 16, 0, 0, 0 }
 #define DPTH16_16_16     16, 3, { 0, 0, 0, 0 }, { 16, 16, 16, 0 }
@@ -2108,6 +2341,7 @@ typedef struct
 #define PSTR111           { 1, 1, 1, 0 }
 #define PSTR1111          { 1, 1, 1, 1 }
 #define PSTR122           { 1, 2, 2, 0 }
+#define PSTR122T(mode)    { 1, 2, 2, GST_VIDEO_TILE_MODE_ ##mode }
 #define PSTR2             { 2, 0, 0, 0 }
 #define PSTR222           { 2, 2, 2, 0 }
 #define PSTR244           { 2, 4, 4, 0 }
@@ -2122,6 +2356,7 @@ typedef struct
 #define PLANE0            1, { 0, 0, 0, 0 }
 #define PLANE01           2, { 0, 1, 0, 0 }
 #define PLANE011          2, { 0, 1, 1, 0 }
+#define PLANE0110         3, { 0, 1, 1, 0 }
 #define PLANE012          3, { 0, 1, 2, 0 }
 #define PLANE0123         4, { 0, 1, 2, 3 }
 #define PLANE021          3, { 0, 2, 1, 0 }
@@ -2150,6 +2385,7 @@ typedef struct
 #define SUB410            { 0, 2, 2, 0 }, { 0, 2, 2, 0 }
 #define SUB411            { 0, 2, 2, 0 }, { 0, 0, 0, 0 }
 #define SUB420            { 0, 1, 1, 0 }, { 0, 1, 1, 0 }
+#define SUB420T64x32      { 0, 1, 1, 6 }, { 0, 1, 1, 5 }
 #define SUB422            { 0, 1, 1, 0 }, { 0, 0, 0, 0 }
 #define SUB4              { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
 #define SUB44             { 0, 0, 0, 0 }, { 0, 0, 0, 0 }
@@ -2169,6 +2405,8 @@ typedef struct
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_ALPHA | GST_VIDEO_FORMAT_FLAG_UNPACK | GST_VIDEO_FORMAT_FLAG_LE, depth, pstride, plane, offs, sub, pack } }
 #define MAKE_YUV_C_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack) \
  { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_COMPLEX, depth, pstride, plane, offs, sub, pack } }
+#define MAKE_YUV_T_FORMAT(name, desc, fourcc, depth, pstride, plane, offs, sub, pack) \
+ { fourcc, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_YUV | GST_VIDEO_FORMAT_FLAG_COMPLEX | GST_VIDEO_FORMAT_FLAG_TILED, depth, pstride, plane, offs, sub, pack } }
 
 #define MAKE_RGB_FORMAT(name, desc, depth, pstride, plane, offs, sub, pack) \
  { 0x00000000, {GST_VIDEO_FORMAT_ ##name, G_STRINGIFY(name), desc, GST_VIDEO_FORMAT_FLAG_RGB, depth, pstride, plane, offs, sub, pack } }
@@ -2322,6 +2560,9 @@ static VideoFormat formats[] = {
       DPTH888, PSTR111, PLANE011, OFFS001, SUB422, PACK_NV16),
   MAKE_YUV_FORMAT (NV24, "raw video", GST_MAKE_FOURCC ('N', 'V', '2', '4'),
       DPTH888, PSTR111, PLANE011, OFFS001, SUB444, PACK_NV24),
+  MAKE_YUV_T_FORMAT (NV12T, "raw video",
+      GST_MAKE_FOURCC ('T', 'M', '1', '2'), DPTH8880, PSTR122T (ZFLIPZ_2X2),
+      PLANE0110, OFFS001, SUB420T64x32, PACK_NV12T),
 };
 
 static GstVideoFormat
