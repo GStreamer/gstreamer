@@ -50,7 +50,7 @@ GType
 gst_audio_base_src_slave_method_get_type (void)
 {
   static volatile gsize slave_method_type = 0;
-  /* FIXME 0.11: nick should be "retimestamp" not "re-timestamp" */
+  /* FIXME 2.0: nick should be "retimestamp" not "re-timestamp" */
   static const GEnumValue slave_method[] = {
     {GST_AUDIO_BASE_SRC_SLAVE_RESAMPLE,
         "GST_AUDIO_BASE_SRC_SLAVE_RESAMPLE", "resample"},
