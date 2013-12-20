@@ -85,6 +85,7 @@ enum
   LAST_SIGNAL
 };
 
+/* FIXME: 2.0, handle BUFFER_TIME and LATENCY in nanoseconds */
 #define DEFAULT_BUFFER_TIME     ((200 * GST_MSECOND) / GST_USECOND)
 #define DEFAULT_LATENCY_TIME    ((10 * GST_MSECOND) / GST_USECOND)
 #define DEFAULT_ACTUAL_BUFFER_TIME     -1
@@ -165,6 +166,7 @@ gst_audio_base_src_class_init (GstAudioBaseSrcClass * klass)
   gobject_class->get_property = gst_audio_base_src_get_property;
   gobject_class->dispose = gst_audio_base_src_dispose;
 
+  /* FIXME: 2.0, handle BUFFER_TIME and LATENCY in nanoseconds */
   g_object_class_install_property (gobject_class, PROP_BUFFER_TIME,
       g_param_spec_int64 ("buffer-time", "Buffer Time",
           "Size of audio buffer in microseconds, this is the maximum amount "
