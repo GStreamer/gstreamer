@@ -362,6 +362,49 @@ gst_vaapi_apply_composition (GstVaapiSurface * surface, GstBuffer * buffer)
 }
 
 gboolean
+gst_vaapi_value_set_format (GValue * value, GstVideoFormat format)
+{
+#if GST_CHECK_VERSION(1,0,0)
+  const gchar *str;
+
+  str = gst_video_format_to_string (format);
+  if (!str)
+    return FALSE;
+
+  g_value_init (value, G_TYPE_STRING);
+  g_value_set_string (value, str);
+#else
+  guint32 fourcc;
+
+  fourcc = gst_video_format_to_fourcc (format);
+  if (!fourcc)
+    return FALSE;
+
+  g_value_init (value, GST_TYPE_FOURCC);
+  gst_value_set_fourcc (value, fourcc);
+#endif
+  return TRUE;
+}
+
+gboolean
+gst_vaapi_value_set_format_list (GValue * value, GArray * formats)
+{
+  GValue v_format = G_VALUE_INIT;
+  guint i;
+
+  g_value_init (value, GST_TYPE_LIST);
+  for (i = 0; i < formats->len; i++) {
+    GstVideoFormat const format = g_array_index (formats, GstVideoFormat, i);
+
+    if (!gst_vaapi_value_set_format (&v_format, format))
+      continue;
+    gst_value_list_append_value (value, &v_format);
+    g_value_unset (&v_format);
+  }
+  return TRUE;
+}
+
+gboolean
 gst_caps_set_interlaced (GstCaps * caps, GstVideoInfo * vip)
 {
 #if GST_CHECK_VERSION(1,0,0)

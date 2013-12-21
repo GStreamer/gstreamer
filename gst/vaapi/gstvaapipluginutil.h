@@ -55,6 +55,15 @@ gst_vaapi_apply_composition (GstVaapiSurface * surface, GstBuffer * buffer);
     } while (0)
 #endif
 
+/* Helpers for GValue construction for video formats */
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_value_set_format (GValue * value, GstVideoFormat format);
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapi_value_set_format_list (GValue * value, GArray * formats);
+
 /* Helpers to handle interlaced contents */
 #if GST_CHECK_VERSION(1,0,0)
 # define GST_CAPS_INTERLACED_MODES \

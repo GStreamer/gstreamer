@@ -826,57 +826,11 @@ ensure_allowed_sinkpad_caps(GstVaapiPostproc *postproc)
     return TRUE;
 }
 
-/* Build list of supported formats */
-static gboolean
-build_format_list_value(GArray *formats, GValue *out_value)
-{
-    GValue v_format = { 0, };
-    guint i;
-#if GST_CHECK_VERSION(1,0,0)
-    const gchar *str;
-
-    g_value_init(out_value, GST_TYPE_LIST);
-
-    g_value_init(&v_format, G_TYPE_STRING);
-    g_value_set_string(&v_format, "encoded");
-    gst_value_list_append_value(out_value, &v_format);
-
-    for (i = 0; i < formats->len; i++) {
-        GstVideoFormat const format =
-            g_array_index(formats, GstVideoFormat, i);
-
-        str = gst_vaapi_video_format_to_string(format);
-        if (!str)
-            continue;
-        g_value_set_string(&v_format, str);
-        gst_value_list_append_value(out_value, &v_format);
-    }
-#else
-    guint32 fourcc;
-
-    g_value_init(out_value, GST_TYPE_LIST);
-    g_value_init(&v_format, GST_TYPE_FOURCC);
-    for (i = 0; i < formats->len; i++) {
-        GstVideoFormat const format =
-            g_array_index(formats, GstVideoFormat, i);
-
-        fourcc = gst_video_format_to_fourcc(format);
-        if (!fourcc)
-            continue;
-        gst_value_set_fourcc(&v_format, fourcc);
-        gst_value_list_append_value(out_value, &v_format);
-    }
-#endif
-
-    g_value_unset(&v_format);
-    return TRUE;
-}
-
 /* Fixup output caps so that to reflect the supported set of pixel formats */
 static GstCaps *
 expand_allowed_srcpad_caps(GstVaapiPostproc *postproc, GstCaps *caps)
 {
-    GValue value = { 0, };
+    GValue value = G_VALUE_INIT, v_format = G_VALUE_INIT;
     guint i, num_structures;
     gboolean had_filter;
 
@@ -887,8 +841,12 @@ expand_allowed_srcpad_caps(GstVaapiPostproc *postproc, GstCaps *caps)
         goto cleanup;
 
     /* Reset "format" field for each structure */
-    if (!build_format_list_value(postproc->filter_formats, &value))
+    if (!gst_vaapi_value_set_format_list(&value, postproc->filter_formats))
         goto cleanup;
+    if (gst_vaapi_value_set_format(&v_format, GST_VIDEO_FORMAT_ENCODED)) {
+        gst_value_list_prepend_value(&value, &v_format);
+        g_value_unset(&v_format);
+    }
 
     num_structures = gst_caps_get_size(caps);
     for (i = 0; i < num_structures; i++) {
