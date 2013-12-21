@@ -25,7 +25,6 @@
 #ifndef GST_VAAPI_VIDEO_FORMAT_H
 #define GST_VAAPI_VIDEO_FORMAT_H
 
-#include <gst/gstvalue.h>
 #include <gst/video/video.h>
 
 G_BEGIN_DECLS
@@ -41,15 +40,6 @@ gst_vaapi_video_format_is_rgb (GstVideoFormat format);
 
 gboolean
 gst_vaapi_video_format_is_yuv (GstVideoFormat format);
-
-GstVideoFormat
-gst_vaapi_video_format_from_structure (GstStructure * structure);
-
-GstVideoFormat
-gst_vaapi_video_format_from_caps (GstCaps * caps);
-
-GstCaps *
-gst_vaapi_video_format_to_caps (GstVideoFormat format);
 
 GstVideoFormat
 gst_vaapi_video_format_from_va_fourcc (guint32 fourcc);
