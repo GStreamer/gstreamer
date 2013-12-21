@@ -1,8 +1,0 @@
-
-[DllImport ("libgstreamer-0.10.dll") ]
-static extern void gst_debug_set_default_threshold (Gst.DebugLevel debug_level);
-
-public static void SetDefaultThreshold (Gst.DebugLevel debug_level) {
-  gst_debug_set_default_threshold (debug_level);
-}
-

@@ -1,4 +1,0 @@
-public Registry() : base (IntPtr.Zero)
-{
-  CreateNativeObject (new string [0], new Gst.GLib.Value [0]);
-}

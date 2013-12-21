@@ -1,5 +1,0 @@
-- Interfaces currently contain things that should only be called by implementors
-- Check vmethods and write them by hand if there are parameters that should be hidden (Gst.Index!)
-- Check ownership of callback parameters and vmethods
-- Make sure callbacks are only GC'd when they can be (TagMergeFunc, TypeFind, ..)
-- Make many functions of base classes protected

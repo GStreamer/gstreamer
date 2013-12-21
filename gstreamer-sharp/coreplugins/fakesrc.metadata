@@ -1,7 +1,0 @@
-<?xml version="1.0"?>
-<metadata>
-  <attr path="/element/element-signals/signal/name[child::text()='handoff']/../params/type[1]" name="name">Buffer</attr>
-  <attr path="/element/element-signals/signal/name[child::text()='handoff']/../params/type[2]" name="name">Pad</attr>
-  <add-node path="/element/element-properties/element-property/name[child::text()='data']/.."><managed_name>Datatype</managed_name></add-node>
-</metadata>
-

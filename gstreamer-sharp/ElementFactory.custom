@@ -1,3 +1,0 @@
-public static Gst.Element Make (string factoryname) {
-  return Make (factoryname, null);
-}

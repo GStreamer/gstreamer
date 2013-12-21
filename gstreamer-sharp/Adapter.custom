@@ -1,6 +1,0 @@
-[DllImport ("gstreamersharpglue-0.10.dll") ]
-static extern IntPtr gstsharp_gst_adapter_peek_buffer (IntPtr adapter, uint size);
-
-public Gst.Buffer Peek (uint size) {
-  return (Gst.Buffer) Gst.MiniObject.GetObject (gstsharp_gst_adapter_peek_buffer (Handle, size), true);
-}

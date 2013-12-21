@@ -1,5 +1,0 @@
-<?xml version="1.0"?>
-<metadata>
-  <attr path="/element/element-signals/signal/name[child::text()='have-type']/../params/type[1]" name="name">Probability</attr>
-  <attr path="/element/element-signals/signal/name[child::text()='have-type']/../params/type[2]" name="name">Caps</attr>
-</metadata>

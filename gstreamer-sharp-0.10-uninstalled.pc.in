@@ -1,9 +1,0 @@
-prefix=@prefix@
-exec_prefix=${prefix}
-libdir=${pcfiledir}/gstreamer-sharp
-
-
-Name: Gst#
-Description: Gst# - GStreamer .NET Binding
-Version: @VERSION@
-Libs: -r:${libdir}/gstreamer-sharp.dll
