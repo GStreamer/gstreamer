@@ -282,6 +282,7 @@ gst_vaapidownload_update_src_caps(GstVaapiDownload *download, GstBuffer *buffer)
     GstVaapiVideoMeta *meta;
     GstVaapiSurface *surface;
     GstVideoFormat format;
+    GstVideoInfo vi;
     GstPad *srcpad;
     GstCaps *in_caps, *out_caps;
 
@@ -297,20 +298,22 @@ gst_vaapidownload_update_src_caps(GstVaapiDownload *download, GstBuffer *buffer)
         return TRUE;
 
     in_caps = GST_BUFFER_CAPS(buffer);
-    if (!in_caps) {
+    if (!in_caps || !gst_caps_is_fixed(in_caps)) {
         GST_WARNING("failed to retrieve caps from buffer");
         return FALSE;
     }
 
-    out_caps = gst_vaapi_video_format_to_caps(download->image_format);
-    if (!out_caps) {
-        GST_WARNING("failed to create caps from format %s",
-                    gst_video_format_to_string(download->image_format));
+    if (!gst_video_info_from_caps(&vi, in_caps)) {
+        GST_WARNING("failed to parse caps %" GST_PTR_FORMAT, in_caps);
         return FALSE;
     }
 
-    if (!gst_vaapi_append_surface_caps(out_caps, in_caps)) {
-        gst_caps_unref(out_caps);
+    gst_video_info_set_format(&vi, download->image_format,
+        GST_VIDEO_INFO_WIDTH(&vi), GST_VIDEO_INFO_HEIGHT(&vi));
+    out_caps = gst_video_info_to_caps(&vi);
+    if (!out_caps) {
+        GST_WARNING("failed to create caps from format %s",
+                    gst_video_format_to_string(download->image_format));
         return FALSE;
     }
 
