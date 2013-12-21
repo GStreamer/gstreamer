@@ -30,27 +30,24 @@
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_ensure_display(gpointer element, GstVaapiDisplayType type);
+gst_vaapi_ensure_display (gpointer element, GstVaapiDisplayType type);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_set_display(
-    const gchar      *type,
-    const GValue     *value,
-    GstVaapiDisplay **display
-);
+gst_vaapi_set_display (const gchar * type,
+    const GValue * value, GstVaapiDisplay ** display_ptr);
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_reply_to_query(GstQuery *query, GstVaapiDisplay *display);
+gst_vaapi_reply_to_query (GstQuery * query, GstVaapiDisplay * display);
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_append_surface_caps (GstCaps *out_caps, GstCaps *in_caps);
+gst_vaapi_append_surface_caps (GstCaps * out_caps, GstCaps * in_caps);
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_apply_composition(GstVaapiSurface *surface, GstBuffer *buffer);
+gst_vaapi_apply_composition (GstVaapiSurface * surface, GstBuffer * buffer);
 
 #ifndef G_PRIMITIVE_SWAP
 #define G_PRIMITIVE_SWAP(type, a, b) do {       \
@@ -73,6 +70,6 @@ gst_vaapi_apply_composition(GstVaapiSurface *surface, GstBuffer *buffer);
 
 G_GNUC_INTERNAL
 gboolean
-gst_caps_set_interlaced(GstCaps *caps, GstVideoInfo *vip);
+gst_caps_set_interlaced (GstCaps * caps, GstVideoInfo * vip);
 
 #endif /* GST_VAAPI_PLUGIN_UTIL_H */

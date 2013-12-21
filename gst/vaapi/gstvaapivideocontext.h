@@ -41,35 +41,36 @@
 
 G_GNUC_INTERNAL
 GstContext *
-gst_vaapi_video_context_new_with_display(GstVaapiDisplay *display,
+gst_vaapi_video_context_new_with_display (GstVaapiDisplay * display,
     gboolean persistent);
 
 G_GNUC_INTERNAL
 gboolean
-gst_vaapi_video_context_get_display(GstContext *context,
-    GstVaapiDisplay **display_ptr);
+gst_vaapi_video_context_get_display (GstContext * context,
+    GstVaapiDisplay ** display_ptr);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_video_context_prepare(GstElement *element, const gchar **types);
+gst_vaapi_video_context_prepare (GstElement * element, const gchar ** types);
 
 G_GNUC_INTERNAL
 void
-gst_vaapi_video_context_propagate(GstElement *element,
-    GstVaapiDisplay *display);
+gst_vaapi_video_context_propagate (GstElement * element,
+    GstVaapiDisplay * display);
 
 #else
 #include <gst/video/videocontext.h>
 
 static inline void
-gst_vaapi_video_context_prepare(GstVideoContext *context, const gchar **types)
+gst_vaapi_video_context_prepare (GstVideoContext * context,
+    const gchar ** types)
 {
-    gst_video_context_prepare(context, types);
+  gst_video_context_prepare (context, types);
 }
 
 static inline void
-gst_vaapi_video_context_propagate(GstVideoContext *context,
-    GstVaapiDisplay *display)
+gst_vaapi_video_context_propagate (GstVideoContext * context,
+    GstVaapiDisplay * display)
 {
 }
 
