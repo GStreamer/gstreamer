@@ -31,40 +31,40 @@
 G_BEGIN_DECLS
 
 GstVideoFormat
-gst_vaapi_video_format_from_string(const gchar *str);
+gst_vaapi_video_format_from_string (const gchar * str);
 
-const char *
-gst_vaapi_video_format_to_string(GstVideoFormat format);
-
-gboolean
-gst_vaapi_video_format_is_rgb(GstVideoFormat format);
+const gchar *
+gst_vaapi_video_format_to_string (GstVideoFormat format);
 
 gboolean
-gst_vaapi_video_format_is_yuv(GstVideoFormat format);
+gst_vaapi_video_format_is_rgb (GstVideoFormat format);
+
+gboolean
+gst_vaapi_video_format_is_yuv (GstVideoFormat format);
 
 GstVideoFormat
-gst_vaapi_video_format_from_structure(GstStructure *structure);
+gst_vaapi_video_format_from_structure (GstStructure * structure);
 
 GstVideoFormat
-gst_vaapi_video_format_from_caps(GstCaps *caps);
+gst_vaapi_video_format_from_caps (GstCaps * caps);
 
 GstCaps *
-gst_vaapi_video_format_to_caps(GstVideoFormat format);
+gst_vaapi_video_format_to_caps (GstVideoFormat format);
 
 GstVideoFormat
-gst_vaapi_video_format_from_va_fourcc(guint32 fourcc);
+gst_vaapi_video_format_from_va_fourcc (guint32 fourcc);
 
 GstVideoFormat
-gst_vaapi_video_format_from_va_format(const VAImageFormat *va_format);
+gst_vaapi_video_format_from_va_format (const VAImageFormat * va_format);
 
 const VAImageFormat *
-gst_vaapi_video_format_to_va_format(GstVideoFormat format);
+gst_vaapi_video_format_to_va_format (GstVideoFormat format);
 
 guint
-gst_vaapi_video_format_get_chroma_type(GstVideoFormat format);
+gst_vaapi_video_format_get_chroma_type (GstVideoFormat format);
 
 guint
-gst_vaapi_video_format_get_score(GstVideoFormat format);
+gst_vaapi_video_format_get_score (GstVideoFormat format);
 
 G_END_DECLS
 
