@@ -356,6 +356,10 @@ gst_rtsp_mount_points_remove_factory (GstRTSPMountPoints * mounts,
   GST_INFO ("removing media factory for path %s", path);
 
   g_mutex_lock (&priv->lock);
+  if (priv->dirty) {
+    g_sequence_sort (priv->mounts, data_item_compare, mounts);
+    priv->dirty = FALSE;
+  }
   iter = g_sequence_lookup (priv->mounts, &item, data_item_compare, mounts);
   if (iter) {
     g_sequence_remove (iter);
