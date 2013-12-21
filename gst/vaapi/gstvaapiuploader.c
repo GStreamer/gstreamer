@@ -30,6 +30,7 @@
 #include <gst/vaapi/gstvaapisurfacepool.h>
 
 #include "gstvaapiuploader.h"
+#include "gstvaapipluginutil.h"
 #include "gstvaapivideobuffer.h"
 
 #define GST_HELPER_NAME "vaapiupload"
@@ -112,7 +113,7 @@ ensure_allowed_caps(GstVaapiUploader *uploader)
 {
     GstVaapiUploaderPrivate * const priv = uploader->priv;
     GstVaapiSurface *surface = NULL;
-    GArray *image_formats = NULL;
+    GArray *formats = NULL, *out_formats = NULL;
     GstCaps *out_caps;
     guint i;
     gboolean success = FALSE;
@@ -122,22 +123,23 @@ ensure_allowed_caps(GstVaapiUploader *uploader)
     if (priv->allowed_caps)
         return TRUE;
 
-    out_caps = gst_caps_new_empty();
-    if (!out_caps)
-        return FALSE;
+    formats = gst_vaapi_display_get_image_formats(priv->display);
+    if (!formats)
+        goto cleanup;
 
-    image_formats = gst_vaapi_display_get_image_formats(priv->display);
-    if (!image_formats)
-        goto end;
+    out_formats = g_array_sized_new(FALSE, FALSE, sizeof(GstVideoFormat),
+        formats->len);
+    if (!out_formats)
+        goto cleanup;
 
     surface = gst_vaapi_surface_new(priv->display,
         GST_VAAPI_CHROMA_TYPE_YUV420, WIDTH, HEIGHT);
     if (!surface)
-        goto end;
+        goto cleanup;
 
-    for (i = 0; i < image_formats->len; i++) {
+    for (i = 0; i < formats->len; i++) {
         const GstVideoFormat format =
-            g_array_index(image_formats, GstVideoFormat, i);
+            g_array_index(formats, GstVideoFormat, i);
         GstVaapiImage *image;
 
         if (format == GST_VIDEO_FORMAT_UNKNOWN)
@@ -146,17 +148,23 @@ ensure_allowed_caps(GstVaapiUploader *uploader)
         if (!image)
             continue;
         if (ensure_image(image) && gst_vaapi_surface_put_image(surface, image))
-            gst_caps_append(out_caps, gst_vaapi_video_format_to_caps(format));
+            g_array_append_val(out_formats, format);
         gst_vaapi_object_unref(image);
     }
 
+    out_caps = gst_vaapi_video_format_new_template_caps_from_list(out_formats);
+    if (!out_caps)
+        goto cleanup;
+
     gst_caps_replace(&priv->allowed_caps, out_caps);
+    gst_caps_unref(out_caps);
     success = TRUE;
 
-end:
-    gst_caps_unref(out_caps);
-    if (image_formats)
-        g_array_unref(image_formats);
+cleanup:
+    if (out_formats)
+        g_array_unref(out_formats);
+    if (formats)
+        g_array_unref(formats);
     if (surface)
         gst_vaapi_object_unref(surface);
     return success;

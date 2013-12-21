@@ -64,6 +64,15 @@ G_GNUC_INTERNAL
 gboolean
 gst_vaapi_value_set_format_list (GValue * value, GArray * formats);
 
+/* Helpers to build video caps */
+G_GNUC_INTERNAL
+GstCaps *
+gst_vaapi_video_format_new_template_caps (GstVideoFormat format);
+
+G_GNUC_INTERNAL
+GstCaps *
+gst_vaapi_video_format_new_template_caps_from_list (GArray * formats);
+
 /* Helpers to handle interlaced contents */
 #if GST_CHECK_VERSION(1,0,0)
 # define GST_CAPS_INTERLACED_MODES \

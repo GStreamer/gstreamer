@@ -389,10 +389,9 @@ gst_vaapidownload_transform_caps(
 {
     GstVaapiDownload * const download = GST_VAAPIDOWNLOAD(trans);
     GstPad *srcpad;
-    GstCaps *allowed_caps, *inter_caps, *out_caps = NULL;
+    GstCaps *allowed_caps, *tmp_caps, *out_caps = NULL;
     GstStructure *structure;
     GArray *formats;
-    guint i;
 
     g_return_val_if_fail(GST_IS_CAPS(caps), NULL);
 
@@ -411,35 +410,31 @@ gst_vaapidownload_transform_caps(
         if (download->allowed_caps)
             allowed_caps = gst_caps_ref(download->allowed_caps);
         else {
-            allowed_caps = gst_caps_new_empty();
-            if (!allowed_caps)
-                return NULL;
-
             formats = gst_vaapi_display_get_image_formats(
                 GST_VAAPI_PLUGIN_BASE_DISPLAY(download));
-            if (formats) {
-                for (i = 0; i < formats->len; i++) {
-                    const GstVideoFormat format =
-                        g_array_index(formats, GstVideoFormat, i);
-                    gst_caps_merge(allowed_caps,
-                        gst_vaapi_video_format_to_caps(format));
-                }
+            if (G_UNLIKELY(!formats))
+                allowed_caps = gst_caps_new_empty();
+            else {
+                allowed_caps =
+                    gst_vaapi_video_format_new_template_caps_from_list(formats);
                 g_array_unref(formats);
             }
+            if (!allowed_caps)
+                return NULL;
         }
-        inter_caps = gst_caps_intersect(out_caps, allowed_caps);
+        tmp_caps = gst_caps_intersect(out_caps, allowed_caps);
         gst_caps_unref(allowed_caps);
         gst_caps_unref(out_caps);
-        out_caps = inter_caps;
+        out_caps = tmp_caps;
 
         /* Intersect with allowed caps from the peer, if any */
         srcpad = gst_element_get_static_pad(GST_ELEMENT(download), "src");
         allowed_caps = gst_pad_peer_get_caps(srcpad);
         if (allowed_caps) {
-            inter_caps = gst_caps_intersect(out_caps, allowed_caps);
+            tmp_caps = gst_caps_intersect(out_caps, allowed_caps);
             gst_caps_unref(allowed_caps);
             gst_caps_unref(out_caps);
-            out_caps = inter_caps;
+            out_caps = tmp_caps;
         }
     }
     else {

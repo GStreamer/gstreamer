@@ -404,6 +404,77 @@ gst_vaapi_value_set_format_list (GValue * value, GArray * formats)
   return TRUE;
 }
 
+void
+set_video_template_caps (GstCaps * caps)
+{
+  GstStructure *const structure = gst_caps_get_structure (caps, 0);
+
+  gst_structure_set (structure,
+      "width", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "height", GST_TYPE_INT_RANGE, 1, G_MAXINT,
+      "framerate", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1,
+      "pixel-aspect-ratio", GST_TYPE_FRACTION_RANGE, 0, 1, G_MAXINT, 1, NULL);
+}
+
+GstCaps *
+gst_vaapi_video_format_new_template_caps (GstVideoFormat format)
+{
+#if GST_CHECK_VERSION(1,0,0)
+  GstCaps *caps;
+
+  g_return_val_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN, NULL);
+
+  caps = gst_caps_new_empty_simple ("video/x-raw");
+  if (!caps)
+    return NULL;
+
+  gst_caps_set_simple (caps,
+      "format", G_TYPE_STRING, gst_video_format_to_string (format), NULL);
+  set_video_template_caps (caps);
+  return caps;
+#else
+  return gst_video_format_new_template_caps (format);
+#endif
+}
+
+GstCaps *
+gst_vaapi_video_format_new_template_caps_from_list (GArray * formats)
+{
+#if GST_CHECK_VERSION(1,0,0)
+  GValue v_formats = G_VALUE_INIT;
+  GstCaps *caps;
+
+  caps = gst_caps_new_empty_simple ("video/x-raw");
+  if (!caps)
+    return NULL;
+
+  if (!gst_vaapi_value_set_format_list (&v_formats, formats)) {
+    gst_caps_unref (caps);
+    return NULL;
+  }
+
+  gst_caps_set_value (caps, "format", &v_formats);
+  set_video_template_caps (caps);
+#else
+  GstCaps *caps, *tmp_caps;
+  guint i;
+
+  g_return_val_if_fail (formats != NULL, NULL);
+
+  caps = gst_caps_new_empty ();
+  if (!caps)
+    return NULL;
+
+  for (i = 0; i < formats->len; i++) {
+    const GstVideoFormat format = g_array_index (formats, GstVideoFormat, i);
+    tmp_caps = gst_vaapi_video_format_new_template_caps (format);
+    if (tmp_caps)
+      gst_caps_append (caps, tmp_caps);
+  }
+#endif
+  return caps;
+}
+
 gboolean
 gst_caps_set_interlaced (GstCaps * caps, GstVideoInfo * vip)
 {
