@@ -20,7 +20,7 @@ namespace Gst {
 
 	partial class Message
 	{
-		[DllImport ("gstreamer-1.0") ]
+		[DllImport ("libgstreamer-1.0-0.dll") ]
 		static extern void gst_message_parse_error (IntPtr msg, out IntPtr err, out IntPtr debug);
 
 		public void ParseError (out GLib.GException error, out string debug) {
@@ -43,10 +43,10 @@ namespace Gst {
 			error = new GLib.GException (err);
 		}
 
-		[DllImport("gstreamer-1.0", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern IntPtr gst_message_get_stream_status_object(IntPtr raw);
 
-		[DllImport("gstreamer-1.0", CallingConvention = CallingConvention.Cdecl)]
+		[DllImport("libgstreamer-1.0-0.dll", CallingConvention = CallingConvention.Cdecl)]
 		static extern void gst_message_set_stream_status_object(IntPtr raw, IntPtr value);
 
 		public GLib.Value StreamStatusObject { 
