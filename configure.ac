@@ -42,9 +42,9 @@ AC_SUBST(GST_API_VERSION)
 AS_LIBTOOL(GST, 0, 0, 0)
 
 dnl *** required versions of GStreamer stuff ***
-GST_REQ=1.0.0
-GSTPB_REQ=1.1.0.1
-GSTPG_REQ=1.0.0
+GST_REQ=1.2.0
+GSTPB_REQ=1.2.0
+GSTPG_REQ=1.2.0
 
 dnl *** autotools stuff ****
 
