@@ -219,9 +219,10 @@ gst_caps_to_at_format (GstCaps * caps, AudioStreamBasicDescription * format)
   format->mSampleRate = rate;
   format->mChannelsPerFrame = channels;
 
-  if (can_intersect_static_caps (caps, &aac_caps))
+  if (can_intersect_static_caps (caps, &aac_caps)) {
     format->mFormatID = kAudioFormatMPEG4AAC;
-  else if (can_intersect_static_caps (caps, &mp3_caps))
+    format->mFramesPerPacket = 1024;
+  } else if (can_intersect_static_caps (caps, &mp3_caps))
     format->mFormatID = kAudioFormatMPEGLayer3;
   else if (can_intersect_static_caps (caps, &raw_caps)) {
     GstAudioFormat audio_format;
