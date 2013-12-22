@@ -113,7 +113,7 @@ gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo)
     n_planes = 1;
     stride[0] = CVPixelBufferGetBytesPerRow (pixbuf);
     offset[0] = 0;
-    size = stride[0] * vinfo->height;
+    size = stride[0] * CVPixelBufferGetHeight (pixbuf);
 
     gst_buffer_append_memory (buf,
         gst_memory_new_wrapped (GST_MEMORY_FLAG_NO_SHARE,
@@ -125,8 +125,8 @@ gst_core_video_buffer_new (CVBufferRef cvbuf, GstVideoInfo * vinfo)
 
     video_meta =
         gst_buffer_add_video_meta_full (buf, GST_VIDEO_FRAME_FLAG_NONE,
-        vinfo->finfo->format, vinfo->width, vinfo->height,
-        n_planes, offset, stride);
+        vinfo->finfo->format, CVPixelBufferGetWidth (pixbuf),
+        CVPixelBufferGetHeight (pixbuf), n_planes, offset, stride);
   }
 
   return buf;
