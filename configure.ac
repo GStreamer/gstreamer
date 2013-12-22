@@ -2,9 +2,9 @@ AC_PREREQ(2.62)
 dnl initialize autoconf
 dnl when going to/from release please set the nano (fourth number) right !
 dnl releases only do Wall, cvs and prerelease does Werror too
-AC_INIT(Gst-RTSP, 0.11.90.1,
-    http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer,
-    gst-rtsp)
+AC_INIT([GStreamer RTSP Server Library], [0.11.90.1],
+    [http://bugzilla.gnome.org/enter_bug.cgi?product=GStreamer],
+    [gst-rtsp-server])
 AG_GST_INIT
 
 dnl initialize automake
