@@ -72,15 +72,9 @@ fi
 toplevel_check $srcfile
 
 # autopoint
-#    older autopoint (< 0.12) has a tendency to complain about mkinstalldirs
-if test -x mkinstalldirs; then rm mkinstalldirs; fi
-#    first remove patch if necessary, then run autopoint, then reapply
-if test -f po/Makefile.in.in;
-then
-  patch -p0 -R --forward < common/gettext.patch
-fi
-tool_run "$autopoint" "--force" "patch -p0 < common/gettext.patch"
-patch -p0 < common/gettext.patch
+#if test -d po ; then
+#  tool_run "$autopoint" "--force"
+#fi
 
 # aclocal
 # if test -f acinclude.m4; then rm acinclude.m4; fi

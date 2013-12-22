@@ -57,9 +57,9 @@ AC_CONFIG_MACRO_DIR([m4])
 
 dnl set up gettext
 dnl the version check needs to stay here because autopoint greps for it
-AM_GNU_GETTEXT_VERSION([0.17])
-AM_GNU_GETTEXT([external])
-AG_GST_GETTEXT([gstreamer-$GST_API_VERSION])
+#AM_GNU_GETTEXT_VERSION([0.17])
+#AM_GNU_GETTEXT([external])
+#AG_GST_GETTEXT([gst-rtsp-server-$GST_API_VERSION])
 
 dnl *** check for arguments to configure ***
 
