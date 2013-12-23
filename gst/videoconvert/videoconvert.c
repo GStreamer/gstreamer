@@ -1246,33 +1246,13 @@ convert_I420_BGRA (VideoConvert * convert, GstVideoFrame * dest,
     const GstVideoFrame * src)
 {
   int i;
-  int quality = 0;
   gint width = convert->width;
   gint height = convert->height;
 
-  if (quality > 3) {
-    for (i = 0; i < height; i++) {
-      if (i & 1) {
-        video_convert_orc_convert_I420_BGRA_avg (FRAME_GET_LINE (dest, i),
-            FRAME_GET_Y_LINE (src, i),
-            FRAME_GET_U_LINE (src, i >> 1),
-            FRAME_GET_U_LINE (src, (i >> 1) + 1),
-            FRAME_GET_V_LINE (src, i >> 1),
-            FRAME_GET_V_LINE (src, (i >> 1) + 1), width);
-      } else {
-        video_convert_orc_convert_I420_BGRA (FRAME_GET_LINE (dest, i),
-            FRAME_GET_Y_LINE (src, i),
-            FRAME_GET_U_LINE (src, i >> 1),
-            FRAME_GET_V_LINE (src, i >> 1), width);
-      }
-    }
-  } else {
-    for (i = 0; i < height; i++) {
-      video_convert_orc_convert_I420_BGRA (FRAME_GET_LINE (dest, i),
-          FRAME_GET_Y_LINE (src, i),
-          FRAME_GET_U_LINE (src, i >> 1),
-          FRAME_GET_V_LINE (src, i >> 1), width);
-    }
+  for (i = 0; i < height; i++) {
+    video_convert_orc_convert_I420_BGRA (FRAME_GET_LINE (dest, i),
+        FRAME_GET_Y_LINE (src, i),
+        FRAME_GET_U_LINE (src, i >> 1), FRAME_GET_V_LINE (src, i >> 1), width);
   }
 }
 #endif

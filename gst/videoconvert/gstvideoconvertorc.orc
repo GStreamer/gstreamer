@@ -725,7 +725,6 @@ x4 addb argb, x, 128
 .temp 1 r
 .temp 1 g
 .temp 1 b
-.temp 4 x
 .const 1 c8 8
 .const 1 c128 128
 
@@ -767,81 +766,10 @@ convssswb g, wg
 convssswb b, wb
 
 mergebw t1, b, g
+x2 subb t1, t1, c128
+subb    r, r, c128
 mergebw t2, r, 255
-mergewl x, t1, t2
-x4 addb argb, x, c128
-
-
-
-.function video_convert_orc_convert_I420_BGRA_avg
-.dest 4 argb guint8
-.source 1 y guint8
-.source 1 u1 guint8
-.source 1 u2 guint8
-.source 1 v1 guint8
-.source 1 v2 guint8
-.temp 2 t1
-.temp 2 t2
-.temp 1 t3
-.temp 1 t4
-.temp 2 wy
-.temp 2 wu
-.temp 2 wv
-.temp 2 wr
-.temp 2 wg
-.temp 2 wb
-.temp 1 r
-.temp 1 g
-.temp 1 b
-.temp 4 x
-.const 1 c8 8
-.const 1 c128 128
-
-subb t3, y, c128
-convsbw wy, t3
-loadupib t3, u1
-loadupib t4, u2
-avgub t3, t3, t4
-subb t3, t3, c128
-convsbw wu, t3
-loadupib t3, v1
-loadupib t4, v2
-avgub t3, t3, t4
-subb t3, t3, c128
-convsbw wv, t3
-
-mullw t1, wy, 42
-shrsw t1, t1, c8
-addssw wy, wy, t1
-
-addssw wr, wy, wv
-mullw t1, wv, 103
-shrsw t1, t1, c8
-subssw wr, wr, t1
-addssw wr, wr, wv
-
-addssw wb, wy, wu
-addssw wb, wb, wu
-mullw t1, wu, 4
-shrsw t1, t1, c8
-addssw wb, wb, t1
-
-mullw t1, wu, 100
-shrsw t1, t1, c8
-subssw wg, wy, t1
-mullw t1, wv, 104
-shrsw t1, t1, c8
-subssw wg, wg, t1
-subssw wg, wg, t1
-
-convssswb r, wr
-convssswb g, wg
-convssswb b, wb
-
-mergebw t1, b, g
-mergebw t2, r, 255
-mergewl x, t1, t2
-x4 addb argb, x, c128
+mergewl argb, t1, t2
 
 
 
