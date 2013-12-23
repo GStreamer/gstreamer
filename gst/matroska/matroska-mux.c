@@ -178,7 +178,7 @@ static GstStaticPadTemplate audiosink_templ =
         "channels = (int) {1, 2}, " "rate = (int) [ 8000, 192000 ]; "
         "audio/x-adpcm, "
         "layout = (string)dvi, "
-        "block_align = (int)[64, 8096], "
+        "block_align = (int)[64, 8192], "
         "channels = (int) { 1, 2 }, " "rate = (int) [ 8000, 96000 ]; ")
     );
 
