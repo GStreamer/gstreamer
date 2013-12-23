@@ -1933,8 +1933,7 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
         GST_WARNING_OBJECT (mux, "Missing block_align on adpcm caps");
         goto refuse_caps;
       }
-      /*support for IMA/WAV ADPCM */
-      format = GST_RIFF_WAVE_FORMAT_ADPCM_IMA_WAV;
+      format = GST_RIFF_WAVE_FORMAT_DVI_ADPCM;
 
     }
     g_assert (format != 0);
