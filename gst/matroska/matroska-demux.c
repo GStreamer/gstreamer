@@ -5432,8 +5432,8 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
   } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_ACM)) {
     gst_riff_strf_auds auds;
 
-    if (data) {
-      GstBuffer *codec_data;
+    if (data && size >= 18) {
+      GstBuffer *codec_data = NULL;
 
       /* little-endian -> byte-order */
       auds.format = GST_READ_UINT16_LE (data);
@@ -5444,8 +5444,10 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       auds.bits_per_sample = GST_READ_UINT16_LE (data + 16);
 
       /* 18 is the waveformatex size */
-      codec_data = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
-          data + 18, auds.bits_per_sample, 0, auds.bits_per_sample, NULL, NULL);
+      if (size > 18) {
+        codec_data = gst_buffer_new_wrapped_full (GST_MEMORY_FLAG_READONLY,
+            data + 18, size - 18, 0, size - 18, NULL, NULL);
+      }
 
       if (riff_audio_fmt)
         *riff_audio_fmt = auds.format;
@@ -5453,11 +5455,14 @@ gst_matroska_demux_audio_caps (GstMatroskaTrackAudioContext *
       /* FIXME: Handle reorder map */
       caps = gst_riff_create_audio_caps (auds.format, NULL, &auds, NULL,
           codec_data, codec_name, NULL);
-      gst_buffer_unref (codec_data);
+      if (codec_data)
+        gst_buffer_unref (codec_data);
 
       if (caps == NULL) {
         GST_WARNING ("Unhandled RIFF audio format 0x%02x", auds.format);
       }
+    } else {
+      GST_WARNING ("Invalid codec data size (%d expected, got %d)", 18, size);
     }
   } else if (g_str_has_prefix (codec_id, GST_MATROSKA_CODEC_ID_AUDIO_AAC)) {
     GstBuffer *priv = NULL;
