@@ -142,6 +142,7 @@ adpcmenc_setup (ADPCMEnc * enc)
   guint64 sample_bytes;
   const char *layout;
   GstCaps *caps;
+  gboolean ret;
 
   switch (enc->layout) {
     case LAYOUT_ADPCM_DVI:
@@ -163,14 +164,14 @@ adpcmenc_setup (ADPCMEnc * enc)
       "layout", G_TYPE_STRING, layout,
       "block_align", G_TYPE_INT, enc->blocksize, NULL);
 
-  gst_pad_set_caps (GST_AUDIO_ENCODER_SRC_PAD (enc), caps);
+  ret = gst_audio_encoder_set_output_format (GST_AUDIO_ENCODER (enc), caps);
   gst_caps_unref (caps);
 
   /* Step index state is carried between blocks. */
   enc->step_index[0] = 0;
   enc->step_index[1] = 0;
 
-  return TRUE;
+  return ret;
 }
 
 static gboolean
