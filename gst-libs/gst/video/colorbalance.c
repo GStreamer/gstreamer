@@ -114,12 +114,13 @@ gst_color_balance_base_init (GstColorBalanceInterface * iface)
 /**
  * gst_color_balance_list_channels:
  * @balance: A #GstColorBalance instance
- * 
+ *
  * Retrieve a list of the available channels.
  *
- * Returns: A GList containing pointers to #GstColorBalanceChannel objects.
- *          The list is owned by the #GstColorBalance instance and must not
- *          be freed.
+ * Returns: (element-type GstColorBalanceChannel) (tranfer none): A
+ *          GList containing pointers to #GstColorBalanceChannel
+ *          objects. The list is owned by the #GstColorBalance
+ *          instance and must not be freed.
  */
 const GList *
 gst_color_balance_list_channels (GstColorBalance * balance)
