@@ -106,8 +106,6 @@ const guint32 ges_title_source_get_background_color (GESTitleSource *source);
 const gdouble ges_title_source_get_xpos (GESTitleSource *source);
 const gdouble ges_title_source_get_ypos (GESTitleSource *source);
 
-GESTitleSource* ges_title_source_new (void);
-
 G_END_DECLS
 
 #endif /* _GES_TITLE_SOURCE */

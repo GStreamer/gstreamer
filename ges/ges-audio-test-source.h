@@ -81,8 +81,6 @@ void ges_audio_test_source_set_volume(GESAudioTestSource *self,
 
 double ges_audio_test_source_get_freq(GESAudioTestSource *self);
 double ges_audio_test_source_get_volume(GESAudioTestSource *self);
-
-GESAudioTestSource* ges_audio_test_source_new (void);
 G_END_DECLS
 
 #endif /* _GES_AUDIO_TEST_SOURCE */

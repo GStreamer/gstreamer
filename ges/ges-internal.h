@@ -293,4 +293,15 @@ G_GNUC_INTERNAL GstElement *ges_source_create_topbin (const gchar * bin_name, Gs
 
 G_GNUC_INTERNAL void ges_track_set_caps (GESTrack *track, const GstCaps *caps);
 
+
+/*********************************************
+ *  GESTrackElement subclasses contructores  *
+ ********************************************/
+G_GNUC_INTERNAL GESAudioTestSource * ges_audio_test_source_new (void);
+G_GNUC_INTERNAL GESAudioUriSource  * ges_audio_uri_source_new  (gchar *uri);
+G_GNUC_INTERNAL GESVideoUriSource  * ges_video_uri_source_new  (gchar *uri);
+G_GNUC_INTERNAL GESImageSource     * ges_image_source_new      (gchar *uri);
+G_GNUC_INTERNAL GESTitleSource     * ges_title_source_new      (void);
+G_GNUC_INTERNAL GESVideoTestSource * ges_video_test_source_new (void);
+
 #endif /* __GES_INTERNAL_H__ */

@@ -71,8 +71,6 @@ struct _GESVideoUriSourceClass {
 
 GType ges_video_uri_source_get_type (void);
 
-GESVideoUriSource* ges_video_uri_source_new (gchar *uri);
-
 G_END_DECLS
 
 #endif /* _GES_VIDEO_URI_SOURCE */

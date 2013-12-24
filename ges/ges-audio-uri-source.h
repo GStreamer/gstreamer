@@ -71,8 +71,6 @@ struct _GESAudioUriSourceClass {
 
 GType ges_audio_uri_source_get_type (void);
 
-GESAudioUriSource* ges_audio_uri_source_new (gchar *uri);
-
 G_END_DECLS
 
 #endif /* _GES_AUDIO_URI_SOURCE */

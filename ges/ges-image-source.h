@@ -70,8 +70,6 @@ struct _GESImageSourceClass {
 
 GType ges_image_source_get_type (void);
 
-GESImageSource* ges_image_source_new (gchar *uri);
-
 G_END_DECLS
 
 #endif /* _GES_IMAGE_SOURCE */

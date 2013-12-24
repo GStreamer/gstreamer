@@ -227,7 +227,6 @@ ges_audio_source_get_type
 <FILE>ges-video-uri-source</FILE>
 <TITLE>GESVideoUriSource</TITLE>
 GESVideoUriSource
-ges_video_uri_source_new
 <SUBSECTION Standard>
 GESVideoUriSourceClass
 GESVideoUriSourcePrivate
@@ -244,7 +243,6 @@ ges_video_uri_source_get_type
 <FILE>ges-audio-uri-source</FILE>
 <TITLE>GESAudioUriSource</TITLE>
 GESAudioUriSource
-ges_audio_uri_source_new
 <SUBSECTION Standard>
 GESAudioUriSourceClass
 GESAudioUriSourcePrivate
@@ -261,7 +259,6 @@ ges_audio_uri_source_get_type
 <FILE>ges-image-source</FILE>
 <TITLE>GESImageSource</TITLE>
 GESImageSource
-ges_image_source_new
 <SUBSECTION Standard>
 GESImageSourcePrivate
 GES_IS_IMAGE_SOURCE
@@ -763,7 +760,6 @@ GES_TYPE_OVERLAY_TEXT_CLIP
 <FILE>ges-video-test-source</FILE>
 <TITLE>GESVideoTestSource</TITLE>
 GESVideoTestSource
-ges_video_test_source_new
 ges_video_test_source_set_pattern
 ges_video_test_source_get_pattern
 <SUBSECTION Standard>
@@ -782,7 +778,6 @@ GES_TYPE_VIDEO_TEST_SOURCE
 <FILE>ges-audio-test-source</FILE>
 <TITLE>GESAudioTestSource</TITLE>
 GESAudioTestSource
-ges_audio_test_source_new
 ges_audio_test_source_set_freq
 ges_audio_test_source_set_volume
 ges_audio_test_source_get_freq
@@ -803,7 +798,6 @@ GES_IS_AUDIO_TEST_SOURCE_CLASS
 <FILE>ges-title-source</FILE>
 <TITLE>GESTitleSource</TITLE>
 GESTitleSource
-ges_title_source_new
 ges_title_source_set_text
 ges_title_source_set_font_desc
 ges_title_source_set_halignment

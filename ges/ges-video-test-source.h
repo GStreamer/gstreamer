@@ -69,8 +69,6 @@ struct _GESVideoTestSourceClass {
 
 GType ges_video_test_source_get_type (void);
 
-GESVideoTestSource* ges_video_test_source_new (void);
-
 void
 ges_video_test_source_set_pattern(GESVideoTestSource *self,
 					GESVideoTestPattern pattern);
