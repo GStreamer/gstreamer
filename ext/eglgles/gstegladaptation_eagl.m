@@ -305,6 +305,12 @@ gst_egl_adaptation_destroy_surface (GstEglAdaptationContext * ctx)
   if (ctx->eaglctx->framebuffer) {
     glDeleteFramebuffers (1, &ctx->eaglctx->framebuffer);
     ctx->eaglctx->framebuffer = 0;
+
+    glDeleteRenderbuffers(1, &ctx->eaglctx->depth_renderbuffer);
+    ctx->eaglctx->depth_renderbuffer = 0;
+    glDeleteRenderbuffers(1, &ctx->eaglctx->color_renderbuffer);
+    ctx->eaglctx->color_renderbuffer = 0;
+
     ctx->have_surface = FALSE;
   }
 }
@@ -330,8 +336,7 @@ void
 gst_egl_adaptation_destroy_context (GstEglAdaptationContext * ctx)
 {
   if (ctx->eaglctx->eagl_context) {
-    /* Do not release/dealloc as it seems that EAGL expects to do all
-     * the cleanup by itself when a new context replaces the old one */
+    [ctx->eaglctx->eagl_context release];
     ctx->eaglctx->eagl_context = NULL;
   }
 }
