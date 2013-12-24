@@ -46,6 +46,7 @@ struct _GESBaseXmlFormatter
   /* <private> */
   GESBaseXmlFormatterPrivate *priv;
 
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 /**
@@ -60,6 +61,7 @@ struct _GESBaseXmlFormatterClass
 
   GString * (*save) (GESFormatter *formatter, GESTimeline *timeline, GError **error);
 
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_base_xml_formatter_get_type    (void);

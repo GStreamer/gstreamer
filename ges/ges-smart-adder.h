@@ -40,6 +40,8 @@ typedef struct _GESSmartAdder GESSmartAdder;
 struct _GESSmartAdderClass
 {
   GstBinClass parent_class;
+
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 struct _GESSmartAdder
@@ -54,6 +56,8 @@ struct _GESSmartAdder
   GstCaps *caps;
 
   GESTrack *track;
+
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType         ges_smart_adder_get_type (void) G_GNUC_CONST;

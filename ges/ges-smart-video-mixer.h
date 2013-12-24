@@ -40,6 +40,8 @@ typedef struct _GESSmartMixer GESSmartMixer;
 struct _GESSmartMixerClass
 {
   GstBinClass parent_class;
+
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 struct _GESSmartMixer
@@ -54,6 +56,8 @@ struct _GESSmartMixer
   GstCaps *caps;
 
   GESTrack *track;
+
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType         ges_smart_mixer_get_type (void) G_GNUC_CONST;

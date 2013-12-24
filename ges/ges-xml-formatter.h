@@ -37,12 +37,15 @@ typedef struct
   GESBaseXmlFormatter parent;
 
   GESXmlFormatterPrivate *priv;
+
+  gpointer _ges_reserved[GES_PADDING];
 } GESXmlFormatter;
 
 typedef struct
 {
   GESBaseXmlFormatterClass parent;
 
+  gpointer _ges_reserved[GES_PADDING];
 } GESXmlFormatterClass;
 
 GType ges_xml_formatter_get_type (void);

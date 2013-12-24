@@ -55,6 +55,8 @@ struct _GstFramePositionner
   gint track_height;
   gint fps_n;
   gint fps_d;
+
+  /*  This should never be made public, no padding needed */
 };
 
 struct _GstFramePositionnerClass

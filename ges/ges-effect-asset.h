@@ -41,6 +41,8 @@ typedef struct _GESEffectAssetPrivate GESEffectAssetPrivate;
 struct _GESEffectAssetClass
 {
   GESTrackElementAssetClass parent_class;
+
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 struct _GESEffectAsset
@@ -48,6 +50,8 @@ struct _GESEffectAsset
   GESTrackElementAsset parent_instance;
 
   GESEffectAssetPrivate *priv;
+
+  gpointer _ges_reserved[GES_PADDING];
 };
 
 GType ges_effect_asset_get_type (void) G_GNUC_CONST;
