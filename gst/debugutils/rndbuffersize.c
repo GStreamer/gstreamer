@@ -159,11 +159,17 @@ gst_rnd_buffer_size_init (GstRndBufferSize * self)
       GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_sink_event));
   gst_pad_set_chain_function (self->sinkpad,
       GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_chain));
+  GST_OBJECT_FLAG_SET (self->sinkpad, GST_PAD_FLAG_PROXY_CAPS);
+  GST_OBJECT_FLAG_SET (self->sinkpad, GST_PAD_FLAG_PROXY_ALLOCATION);
+  GST_OBJECT_FLAG_SET (self->sinkpad, GST_PAD_FLAG_PROXY_SCHEDULING);
   gst_element_add_pad (GST_ELEMENT (self), self->sinkpad);
 
   self->srcpad = gst_pad_new_from_static_template (&src_template, "src");
   gst_pad_set_event_function (self->srcpad,
       GST_DEBUG_FUNCPTR (gst_rnd_buffer_size_src_event));
+  GST_OBJECT_FLAG_SET (self->srcpad, GST_PAD_FLAG_PROXY_CAPS);
+  GST_OBJECT_FLAG_SET (self->srcpad, GST_PAD_FLAG_PROXY_ALLOCATION);
+  GST_OBJECT_FLAG_SET (self->srcpad, GST_PAD_FLAG_PROXY_SCHEDULING);
   gst_element_add_pad (GST_ELEMENT (self), self->srcpad);
 }
 
@@ -296,8 +302,7 @@ gst_rnd_buffer_size_src_event (GstPad * pad, GstObject * parent,
   gint64 start;
 
   if (GST_EVENT_TYPE (event) != GST_EVENT_SEEK) {
-    GST_WARNING_OBJECT (pad, "dropping %s event", GST_EVENT_TYPE_NAME (event));
-    return FALSE;
+    return gst_pad_event_default (pad, parent, event);
   }
 
   self = GST_RND_BUFFER_SIZE (parent);
@@ -417,7 +422,7 @@ gst_rnd_buffer_size_sink_event (GstPad * pad, GstObject * parent,
       break;
   }
 
-  return gst_pad_push_event (rnd->srcpad, event);
+  return gst_pad_event_default (pad, parent, event);
 }
 
 static GstFlowReturn
