@@ -529,9 +529,14 @@ int mfc_dec_enqueue_input(struct mfc_dec_context *ctx, struct mfc_buffer *buffer
 
 static int input_dqbuf(struct mfc_dec_context *ctx, struct mfc_buffer **buffer)
 {
+    struct v4l2_plane planes[NUM_INPUT_PLANES] = {{.length = 0}};
     struct v4l2_buffer qbuf = {
         .type = V4L2_BUF_TYPE_VIDEO_OUTPUT_MPLANE,
         .memory = V4L2_MEMORY_MMAP,
+        .length = NUM_INPUT_PLANES,
+        .m = {
+            .planes = planes,
+        }
     };
     struct pollfd fd = {
         .fd = ctx->fd,
