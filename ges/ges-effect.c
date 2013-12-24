@@ -238,8 +238,6 @@ ges_effect_create_element (GESTrackElement * object)
  *
  * Returns: a newly created #GESEffect, or %NULL if something went
  * wrong.
- *
- * Since: 0.10.2
  */
 GESEffect *
 ges_effect_new (const gchar * bin_description)

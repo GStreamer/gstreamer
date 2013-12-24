@@ -674,8 +674,6 @@ ges_clip_class_init (GESClipClass * klass)
    * GESClip:supported-formats:
    *
    * The formats supported by the clip.
-   *
-   * Since: 0.10.XX
    */
   properties[PROP_SUPPORTED_FORMATS] = g_param_spec_flags ("supported-formats",
       "Supported formats", "Formats supported by the file",
@@ -1031,8 +1029,6 @@ ges_clip_get_layer (GESClip * clip)
  * #GESBaseEffect that are applied on @clip order by ascendant priorities.
  * The refcount of the objects will be increased. The user will have to
  * unref each #GESBaseEffect and free the #GList.
- *
- * Since: 0.10.2
  */
 GList *
 ges_clip_get_top_effects (GESClip * clip)
@@ -1061,8 +1057,6 @@ ges_clip_get_top_effects (GESClip * clip)
  * Gets the top position of an effect.
  *
  * Returns: The top position of the effect, -1 if something went wrong.
- *
- * Since: 0.10.2
  */
 gint
 ges_clip_get_top_effect_position (GESClip * clip, GESBaseEffect * effect)
@@ -1088,8 +1082,6 @@ ges_clip_get_top_effect_position (GESClip * clip, GESBaseEffect * effect)
  * This is a convenience method that lets you set the priority of a top effect.
  *
  * Returns: %TRUE if @effect was successfuly moved, %FALSE otherwise.
- *
- * Since: 0.10.2
  */
 gboolean
 ges_clip_set_top_effect_priority (GESClip * clip,
@@ -1243,8 +1235,6 @@ ges_clip_split (GESClip * clip, guint64 position)
  * @supportedformats: the #GESTrackType defining formats supported by @clip
  *
  * Sets the formats supported by the file.
- *
- * Since: 0.10.XX
  */
 void
 ges_clip_set_supported_formats (GESClip * clip, GESTrackType supportedformats)
@@ -1261,8 +1251,6 @@ ges_clip_set_supported_formats (GESClip * clip, GESTrackType supportedformats)
  * Get the formats supported by @clip.
  *
  * Returns: The formats supported by @clip.
- *
- * Since: 0.10.XX
  */
 GESTrackType
 ges_clip_get_supported_formats (GESClip * clip)

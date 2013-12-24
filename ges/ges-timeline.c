@@ -479,8 +479,6 @@ ges_timeline_class_init (GESTimelineClass * klass)
    * @position: the position where the two objects finally snapping.
    *
    * Will be emitted when the 2 #GESTrackElement first snapped
-   *
-   * Since: 0.10.XX
    */
   ges_timeline_signals[SNAPING_STARTED] =
       g_signal_new ("snapping-started", G_TYPE_FROM_CLASS (klass),
@@ -496,8 +494,6 @@ ges_timeline_class_init (GESTimelineClass * klass)
    * @position: the position where the two objects finally snapping.
    *
    * Will be emitted when the 2 #GESTrackElement ended to snap
-   *
-   * Since: 0.10.XX
    */
   ges_timeline_signals[SNAPING_ENDED] =
       g_signal_new ("snapping-ended", G_TYPE_FROM_CLASS (klass),
@@ -512,8 +508,6 @@ ges_timeline_class_init (GESTimelineClass * klass)
    * @track-element: The #GESTrackElement for which to choose the tracks it should land into
    *
    * Returns: (transfer full) (element-type GESTrack): a #GPtrArray of #GESTrack-s where that object should be added
-   *
-   * Since: 0.10.XX
    */
   ges_timeline_signals[SELECT_TRACKS_FOR_OBJECT] =
       g_signal_new ("select-tracks-for-object", G_TYPE_FROM_CLASS (klass),

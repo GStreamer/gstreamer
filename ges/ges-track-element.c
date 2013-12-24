@@ -245,8 +245,6 @@ ges_track_element_class_init (GESTrackElementClass * klass)
    *
    * The deep notify signal is used to be notified of property changes of all
    * the childs of @track_element
-   *
-   * Since: 0.10.2
    */
   ges_track_element_signals[DEEP_NOTIFY] =
       g_signal_new ("deep-notify", G_TYPE_FROM_CLASS (klass),
@@ -981,8 +979,6 @@ ges_track_element_get_element (GESTrackElement * object)
  * or not.
  *
  * Returns: %TRUE if @object is active, %FALSE otherwize
- *
- * Since: 0.10.2
  */
 gboolean
 ges_track_element_is_active (GESTrackElement * object)
@@ -1015,8 +1011,6 @@ ges_track_element_is_active (GESTrackElement * object)
  * Returns: TRUE if @element and @pspec could be found. FALSE otherwise. In that
  * case the values for @pspec and @element are not modified. Unref @element after
  * usage.
- *
- * Since: 0.10.2
  */
 gboolean
 ges_track_element_lookup_child (GESTrackElement * object,
@@ -1066,8 +1060,6 @@ ges_track_element_lookup_child (GESTrackElement * object,
  * @value: the value
  *
  * Sets a property of a child of @object.
- *
- * Since: 0.10.2
  */
 void
 ges_track_element_set_child_property_by_pspec (GESTrackElement * object,
@@ -1103,8 +1095,6 @@ not_found:
  * that have the same property name, you can distinguish them using the following
  * syntax: 'ClasseName::property_name' as property name. If you don't, the
  * corresponding property of the first element found will be set.
- *
- * Since: 0.10.2
  */
 void
 ges_track_element_set_child_property_valist (GESTrackElement * object,
@@ -1174,8 +1164,6 @@ cant_copy:
  * that have the same property name, you can distinguish them using the following
  * syntax: 'ClasseName::property_name' as property name. If you don't, the
  * corresponding property of the first element found will be set.
- *
- * Since: 0.10.2
  */
 void
 ges_track_element_set_child_properties (GESTrackElement * object,
@@ -1202,8 +1190,6 @@ ges_track_element_set_child_properties (GESTrackElement * object,
  * that have the same property name, you can distinguish them using the following
  * syntax: 'ClasseName::property_name' as property name. If you don't, the
  * corresponding property of the first element found will be set.
- *
- * Since: 0.10.2
  */
 void
 ges_track_element_get_child_property_valist (GESTrackElement * object,
@@ -1260,8 +1246,6 @@ cant_copy:
  *
  * Returns: (transfer full) (array length=n_properties): an array of #GParamSpec* which should be freed after use or
  * %NULL if something went wrong
- *
- * Since: 0.10.2
  */
 GParamSpec **
 ges_track_element_list_children_properties (GESTrackElement * object,
@@ -1284,8 +1268,6 @@ ges_track_element_list_children_properties (GESTrackElement * object,
  * name/return location pairs, followed by NULL
  *
  * Gets properties of a child of @object.
- *
- * Since: 0.10.2
  */
 void
 ges_track_element_get_child_properties (GESTrackElement * object,
@@ -1308,8 +1290,6 @@ ges_track_element_get_child_properties (GESTrackElement * object,
  * @value: (out): return location for the value
  *
  * Gets a property of a child of @object.
- *
- * Since: 0.10.2
  */
 void
 ges_track_element_get_child_property_by_pspec (GESTrackElement * object,
@@ -1560,8 +1540,6 @@ ges_track_element_split_bindings (GESTrackElement * element,
  *
  * Returns: %TRUE if the object as been edited properly, %FALSE if an error
  * occured
- *
- * Since: 0.10.XX
  */
 gboolean
 ges_track_element_edit (GESTrackElement * object,
@@ -1624,8 +1602,6 @@ ges_track_element_edit (GESTrackElement * object,
  *
  * Returns: %TRUE if the binding could be created and added, %FALSE if an error
  * occured
- *
- * Since: 1.0.XX
  */
 gboolean
 ges_track_element_set_control_source (GESTrackElement * object,
@@ -1699,8 +1675,6 @@ ges_track_element_set_control_source (GESTrackElement * object,
  *
  * Returns: (transfer none): the #GstControlBinding associated with @property_name, or %NULL
  * if that property is not controlled.
- *
- * Since: 1.0.XX
  */
 GstControlBinding *
 ges_track_element_get_control_binding (GESTrackElement * object,

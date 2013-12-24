@@ -380,8 +380,6 @@ ges_text_overlay_clip_set_valign (GESTextOverlayClip * self,
  * @color: The color @self is being set to
  *
  * Sets the color of the text.
- *
- * Since: 0.10.2
  */
 void
 ges_text_overlay_clip_set_color (GESTextOverlayClip * self, guint32 color)
@@ -408,8 +406,6 @@ ges_text_overlay_clip_set_color (GESTextOverlayClip * self, guint32 color)
  * @position: The horizontal position @self is being set to
  *
  * Sets the horizontal position of the text.
- *
- * Since: 0.10.2
  */
 void
 ges_text_overlay_clip_set_xpos (GESTextOverlayClip * self, gdouble position)
@@ -436,8 +432,6 @@ ges_text_overlay_clip_set_xpos (GESTextOverlayClip * self, gdouble position)
  * @position: The vertical position @self is being set to
  *
  * Sets the vertical position of the text.
- *
- * Since: 0.10.2
  */
 void
 ges_text_overlay_clip_set_ypos (GESTextOverlayClip * self, gdouble position)
@@ -522,8 +516,6 @@ ges_text_overlay_clip_get_valignment (GESTextOverlayClip * self)
  * Get the color used by @source.
  *
  * Returns: The color used by @source.
- *
- * Since: 0.10.2
  */
 
 const guint32
@@ -539,8 +531,6 @@ ges_text_overlay_clip_get_color (GESTextOverlayClip * self)
  * Get the horizontal position used by @source.
  *
  * Returns: The horizontal position used by @source.
- *
- * Since: 0.10.2
  */
 
 const gdouble
@@ -556,8 +546,6 @@ ges_text_overlay_clip_get_xpos (GESTextOverlayClip * self)
  * Get the vertical position used by @source.
  *
  * Returns: The vertical position used by @source.
- *
- * Since: 0.10.2
  */
 
 const gdouble

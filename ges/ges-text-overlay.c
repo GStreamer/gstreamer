@@ -271,8 +271,6 @@ ges_text_overlay_set_halignment (GESTextOverlay * self, GESTextHAlign halign)
  * @color: The color @self is being set to
  *
  * Sets the color of the text.
- *
- * Since: 0.10.2
  */
 void
 ges_text_overlay_set_color (GESTextOverlay * self, guint32 color)
@@ -290,8 +288,6 @@ ges_text_overlay_set_color (GESTextOverlay * self, guint32 color)
  * @position: The horizontal position @self is being set to
  *
  * Sets the horizontal position of the text.
- *
- * Since: 0.10.2
  */
 void
 ges_text_overlay_set_xpos (GESTextOverlay * self, gdouble position)
@@ -309,8 +305,6 @@ ges_text_overlay_set_xpos (GESTextOverlay * self, gdouble position)
  * @position: The vertical position @self is being set to
  *
  * Sets the vertical position of the text.
- *
- * Since: 0.10.2
  */
 void
 ges_text_overlay_set_ypos (GESTextOverlay * self, gdouble position)
@@ -385,8 +379,6 @@ ges_text_overlay_get_valignment (GESTextOverlay * self)
  * Get the color used by @source.
  *
  * Returns: The color used by @source.
- *
- * Since: 0.10.2
  */
 const guint32
 ges_text_overlay_get_color (GESTextOverlay * self)
@@ -401,8 +393,6 @@ ges_text_overlay_get_color (GESTextOverlay * self)
  * Get the horizontal position used by @source.
  *
  * Returns: The horizontal position used by @source.
- *
- * Since: 0.10.2
  */
 const gdouble
 ges_text_overlay_get_xpos (GESTextOverlay * self)
@@ -417,8 +407,6 @@ ges_text_overlay_get_xpos (GESTextOverlay * self)
  * Get the vertical position used by @source.
  *
  * Returns: The vertical position used by @source.
- *
- * Since: 0.10.2
  */
 const gdouble
 ges_text_overlay_get_ypos (GESTextOverlay * self)

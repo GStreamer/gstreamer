@@ -383,8 +383,6 @@ ges_title_clip_set_valignment (GESTitleClip * self, GESTextVAlign valign)
  * @color: The color @self is being set to
  *
  * Sets the color of the text.
- *
- * Since: 0.10.2
  */
 void
 ges_title_clip_set_color (GESTitleClip * self, guint32 color)
@@ -430,8 +428,6 @@ ges_title_clip_set_background (GESTitleClip * self, guint32 background)
  * @position: The horizontal position @self is being set to
  *
  * Sets the horizontal position of the text.
- *
- * Since: 0.10.2
  */
 void
 ges_title_clip_set_xpos (GESTitleClip * self, gdouble position)
@@ -453,8 +449,6 @@ ges_title_clip_set_xpos (GESTitleClip * self, gdouble position)
  * @position: The vertical position @self is being set to
  *
  * Sets the vertical position of the text.
- *
- * Since: 0.10.2
  */
 void
 ges_title_clip_set_ypos (GESTitleClip * self, gdouble position)
@@ -537,8 +531,6 @@ ges_title_clip_get_valignment (GESTitleClip * self)
  * Get the color used by @self.
  *
  * Returns: The color used by @self.
- *
- * Since: 0.10.2
  */
 const guint32
 ges_title_clip_get_text_color (GESTitleClip * self)
@@ -567,8 +559,6 @@ ges_title_clip_get_background_color (GESTitleClip * self)
  * Get the horizontal position used by @self.
  *
  * Returns: The horizontal position used by @self.
- *
- * Since: 0.10.2
  */
 const gdouble
 ges_title_clip_get_xpos (GESTitleClip * self)
@@ -583,8 +573,6 @@ ges_title_clip_get_xpos (GESTitleClip * self)
  * Get the vertical position used by @self.
  *
  * Returns: The vertical position used by @self.
- *
- * Since: 0.10.2
  */
 const gdouble
 ges_title_clip_get_ypos (GESTitleClip * self)

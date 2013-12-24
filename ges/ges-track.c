@@ -568,8 +568,6 @@ ges_track_class_init (GESTrackClass * klass)
    * @effect: the #GESTrackElement that was added.
    *
    * Will be emitted after a track element was added to the track.
-   *
-   * Since: 0.10.2
    */
   ges_track_signals[TRACK_ELEMENT_ADDED] =
       g_signal_new ("track-element-added", G_TYPE_FROM_CLASS (klass),
@@ -582,8 +580,6 @@ ges_track_class_init (GESTrackClass * klass)
    * @effect: the #GESTrackElement that was removed.
    *
    * Will be emitted after a track element was removed from the track.
-   *
-   * Since: 0.10.2
    */
   ges_track_signals[TRACK_ELEMENT_REMOVED] =
       g_signal_new ("track-element-removed", G_TYPE_FROM_CLASS (klass),

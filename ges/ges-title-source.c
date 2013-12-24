@@ -270,8 +270,6 @@ ges_title_source_set_halignment (GESTitleSource * self, GESTextHAlign halign)
  * @color: the color @self is being set to
  *
  * Sets the color of the text.
- *
- * Since: 0.10.2
  */
 void
 ges_title_source_set_text_color (GESTitleSource * self, guint32 color)
@@ -306,8 +304,6 @@ ges_title_clip_set_background_color_color (GESTitleSource * self, guint32 color)
  * @position: the horizontal position @self is being set to
  *
  * Sets the horizontal position of the text.
- *
- * Since: 0.10.2
  */
 void
 ges_title_source_set_xpos (GESTitleSource * self, gdouble position)
@@ -325,8 +321,6 @@ ges_title_source_set_xpos (GESTitleSource * self, gdouble position)
  * @position: the color @self is being set to
  *
  * Sets the vertical position of the text.
- *
- * Since: 0.10.2
  */
 void
 ges_title_source_set_ypos (GESTitleSource * self, gdouble position)
@@ -402,8 +396,6 @@ ges_title_source_get_valignment (GESTitleSource * source)
  * Get the color used by @source.
  *
  * Returns: The color used by @source.
- *
- * Since: 0.10.2
  */
 const guint32
 ges_title_source_get_text_color (GESTitleSource * source)
@@ -432,8 +424,6 @@ ges_title_source_get_background_color (GESTitleSource * source)
  * Get the horizontal position used by @source.
  *
  * Returns: The horizontal position used by @source.
- *
- * Since: 0.10.2
  */
 const gdouble
 ges_title_source_get_xpos (GESTitleSource * source)
@@ -448,8 +438,6 @@ ges_title_source_get_xpos (GESTitleSource * source)
  * Get the vertical position used by @source.
  *
  * Returns: The vertical position used by @source.
- *
- * Since: 0.10.2
  */
 const gdouble
 ges_title_source_get_ypos (GESTitleSource * source)

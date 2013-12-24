@@ -178,8 +178,6 @@ _create_track_element (GESClip * self, GESTrackType type)
  *
  * Returns: a newly created #GESEffectClip, or
  * %NULL if something went wrong.
- *
- * Since: 0.10.2
  */
 GESEffectClip *
 ges_effect_clip_new (const gchar * video_bin_description,

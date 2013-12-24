@@ -79,7 +79,7 @@ struct _GESTrackElement {
  *                            like to configure.
  *                            The default implementation will create an object
  *                            of type @gnlobject_factorytype and call
- *                            @create_element. Since: 0.10.2
+ *                            @create_element.
  *
  * Subclasses can override the @create_gnl_object method to override what type
  * of GNonLin object will be created.
