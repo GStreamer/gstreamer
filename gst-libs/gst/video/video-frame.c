@@ -235,14 +235,20 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
   sp = src->data[plane];
   dp = dest->data[plane];
 
-  ss = sinfo->stride[plane];
-  ds = dinfo->stride[plane];
+  if (plane == 1 && GST_VIDEO_FORMAT_INFO_HAS_PALETTE (sinfo->finfo)) {
+    ss = ds = 0;
+    w = 256 * 4;
+    h = 1;
+  } else {
+    ss = sinfo->stride[plane];
+    ds = dinfo->stride[plane];
 
-  /* FIXME. assumes subsampling of component N is the same as plane N, which is
-   * currently true for all formats we have but it might not be in the future. */
-  w = GST_VIDEO_FRAME_COMP_WIDTH (dest,
-      plane) * GST_VIDEO_FRAME_COMP_PSTRIDE (dest, plane);
-  h = GST_VIDEO_FRAME_COMP_HEIGHT (dest, plane);
+    /* FIXME. assumes subsampling of component N is the same as plane N, which is
+     * currently true for all formats we have but it might not be in the future. */
+    w = GST_VIDEO_FRAME_COMP_WIDTH (dest,
+        plane) * GST_VIDEO_FRAME_COMP_PSTRIDE (dest, plane);
+    h = GST_VIDEO_FRAME_COMP_HEIGHT (dest, plane);
+  }
 
   GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy plane %d, w:%d h:%d ", plane, w, h);
 
@@ -281,10 +287,6 @@ gst_video_frame_copy (GstVideoFrame * dest, const GstVideoFrame * src)
       && dinfo->height == sinfo->height, FALSE);
 
   n_planes = dinfo->finfo->n_planes;
-  if (GST_VIDEO_FORMAT_INFO_HAS_PALETTE (sinfo->finfo)) {
-    memcpy (dest->data[1], src->data[1], 256 * 4);
-    n_planes = 1;
-  }
 
   for (i = 0; i < n_planes; i++)
     gst_video_frame_copy_plane (dest, src, i);
