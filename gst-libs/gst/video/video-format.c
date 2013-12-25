@@ -27,6 +27,7 @@
 #include <stdio.h>
 
 #include "video-format.h"
+#include "video-tile.h"
 
 /**
  * SECTION:gstvideo
@@ -2080,98 +2081,6 @@ pack_I422_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     GST_WRITE_UINT16_BE (destU + (i >> 1), U);
     GST_WRITE_UINT16_BE (destV + (i >> 1), V);
   }
-}
-
-/**
- * GstVideoTileMode:
- * @GST_VIDEO_TILE_MODE_UNKNOWN: Unknown or unset video format id
- * @GST_VIDEO_TILE_MODE_ZFLIPZ_2X2: Every four adjacent buffers - two
- *    horizontally and two vertically are grouped together and are located
- *    in memory in Z or flipped Z order.
- *
- * Enum value describing the most common video formats.
- */
-typedef enum
-{
-  GST_VIDEO_TILE_MODE_NONE,
-  GST_VIDEO_TILE_MODE_ZFLIPZ_2X2,
-} GstVideoTileMode;
-
-/**
- * gst_video_tile_get_index:
- * @mode: a #GstVideoTileMode
- * @x: x coordinate
- * @y: y coordinate
- * @x_tiles: number of horizintal tiles
- * @y_tiles: number of vertical tiles
- *
- * Get the tile index of the tile at coordinates @x and @y.
- *
- * Returns: the index of the tile at @x and @y in the tiled image of
- *   @x_tiles by @y_tiles.
- */
-static gsize
-gst_video_tile_get_index (GstVideoTileMode mode, gint x, gint y,
-    gint x_tiles, gint y_tiles)
-{
-  gsize offset;
-
-  switch (mode) {
-    case GST_VIDEO_TILE_MODE_ZFLIPZ_2X2:
-      /* Due to the zigzag pattern we know that tiles are numbered like:
-       * (see http://linuxtv.org/downloads/v4l-dvb-apis/re31.html)
-       *
-       *         |             Column (x)
-       *         |   0    1    2    3    4    5    6    7
-       *  -------|---------------------------------------
-       *       0 |   0    1    6    7    8    9   14   15
-       *    R  1 |   2    3    4    5   10   11   12   13
-       *    o  2 |  16   17   22   23   24   25   30   31
-       *    w  3 |  18   19   20   21   26   27   28   29
-       *       4 |  32   33   38   39   40   41   46   47
-       *   (y) 5 |  34   35   36   37   42   43   44   45
-       *       6 |  48   49   50   51   52   53   54   55
-       *
-       * From this we can see that:
-       *
-       * For even rows:
-       * - The first block in a row is always mapped to memory block 'y * width'.
-       * - For all even rows, except for the last one when 'y' is odd, from the first
-       *   block number an offset is then added to obtain the block number for
-       *   the other blocks in the row. The offset is 'x' plus the corresponding
-       *   number in the series [0, 0, 4, 4, 4, 4, 8, 8, 8, 8, 12, ...], which can be
-       *   expressed as 'GST_ROUND_DOWN_4 (x + 2)'.
-       *       f(x,y,width,height) = y * width + x + GST_ROUND_DOWN_4 (x + 2)
-       *
-       * - For the last row when 'y' is odd the offset is simply 'x'.
-       *       f(x,y,width,height) = y * width + x
-       * - Note that 'y' is even, so 'GST_ROUNDOWN_2 (y) == y' in this case
-       *
-       *  For odd rows:
-       * - The first block in the row is always mapped to memory block
-       *   'GST_ROUND_DOWN_2(y) * width + 2'.
-       * - From the first block number an offset is then added to obtain the block
-       *   number for the other blocks in the row. The offset is 'x' plus the
-       *   corresponding number in the series [0, 0, 0, 0, 4, 4, 4, 4, 8, 8, 8, 8, 12, ...],
-       *   which can be  expressed as GST_ROUND_DOWN_4 (x).
-       *       f(x,y,width,height) = GST_ROUND_DOWN_2 (y) * width + bx 2 + GST_ROUND_DOWN_4 (x)
-       */
-      /* Common to all cases */
-      offset = GST_ROUND_DOWN_2 (y) * x_tiles + x;
-
-      if (y & 1) {
-        /* For odd row */
-        offset += 2 + GST_ROUND_DOWN_4 (x);
-      } else if ((y_tiles & 1) == 0 || y != (y_tiles - 1)) {
-        /* For even row except for the last row when odd height */
-        offset += GST_ROUND_DOWN_4 (x + 2);
-      }
-      break;
-    default:
-      offset = 0;
-      break;
-  }
-  return offset;
 }
 
 static void
