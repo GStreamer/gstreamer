@@ -280,8 +280,8 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
     dy_tiles = dinfo->stride[tidx];
 
     /* this is the amount of tiles to copy */
-    w = (w + (1 << ws) - 1) >> ws;
-    h = (h + (1 << hs) - 1) >> hs;
+    w = ((w - 1) >> ws) + 1;
+    h = ((h - 1) >> hs) + 1;
 
     /* FIXME can possibly do better when no retiling is needed, it depends on
      * the stride and the tile_size */

@@ -2142,7 +2142,7 @@ unpack_NV12T (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   /* first x tile to convert */
   tx = x >> ws;
   /* Last tile to convert */
-  ntx = (x + width) >> ws;
+  ntx = ((x + width - 1) >> ws) + 1;
   /* The row we are going to convert */
   ty = y >> hs;
 
@@ -2151,7 +2151,7 @@ unpack_NV12T (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   /* x position in a tile */
   x = x & (tile_width - 1);
 
-  for (; tx <= ntx; tx++) {
+  for (; tx < ntx; tx++) {
     gpointer tdata[GST_VIDEO_MAX_PLANES];
     gint tstride[GST_VIDEO_MAX_PLANES];
     gint unpack_width;
@@ -2200,7 +2200,7 @@ pack_NV12T (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   pack_pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (pack_info, 0);
 
   /* Last tile to convert */
-  ntx = width >> ws;
+  ntx = ((width - 1) >> ws) + 1;
   /* The row we are going to convert */
   ty = y >> hs;
 
