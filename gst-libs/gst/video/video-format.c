@@ -2084,7 +2084,7 @@ pack_I422_10BE (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
 }
 
 static void
-get_tile_NV12 (gint tile_width, gint tile_height, gint tile_size, gint tx,
+get_tile_NV12 (gint tile_width, gint ts, gint tx,
     gint ty, gint x_tiles, gint y_tiles,
     const gpointer data[GST_VIDEO_MAX_PLANES],
     const gint stride[GST_VIDEO_MAX_PLANES],
@@ -2096,19 +2096,18 @@ get_tile_NV12 (gint tile_width, gint tile_height, gint tile_size, gint tx,
   /* index of Y tile */
   offset = gst_video_tile_get_index (GST_VIDEO_TILE_MODE_ZFLIPZ_2X2,
       tx, ty, x_tiles, y_tiles);
-  offset *= tile_size;
+  offset <<= ts;
   tile_data[0] = ((guint8 *) data[0]) + offset;
-  tile_stride[0] = tile_width;
 
   /* index of UV tile */
   offset = gst_video_tile_get_index (GST_VIDEO_TILE_MODE_ZFLIPZ_2X2,
       tx, ty >> 1, x_tiles, (y_tiles + 1) >> 1);
-  offset *= tile_size;
+  offset <<= ts;
   /* On odd rows we return the second part of the UV tile */
-  if (ty & 1)
-    offset += tile_width * (tile_height >> 1);
+  offset |= (ty & 1) << (ts - 1);
   tile_data[1] = ((guint8 *) data[1]) + offset;
-  tile_stride[1] = tile_width;
+
+  tile_stride[0] = tile_stride[1] = tile_width;
 }
 
 #define PACK_NV12T GST_VIDEO_FORMAT_AYUV, unpack_NV12T, 1, pack_NV12T
@@ -2120,15 +2119,17 @@ unpack_NV12T (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   const GstVideoFormatInfo *unpack_info, *finfo;
   guint8 *line = dest;
   gint x_tiles, y_tiles;
-  gint tile_width, tile_height, tile_size;
+  gint ws, hs, ts, tile_width;
   gint ntx, tx, ty;
   gint unpack_pstride;
 
-  tile_width = 1 << info->w_sub[3];
-  tile_height = 1 << info->h_sub[3];
-  tile_size = tile_width * tile_height;
+  ws = info->w_sub[GST_VIDEO_COMP_TILEINFO];
+  hs = info->h_sub[GST_VIDEO_COMP_TILEINFO];
+  ts = ws + hs;
 
-  x_tiles = stride[0] / 64;
+  tile_width = 1 << ws;
+
+  x_tiles = stride[0] >> ws;
   y_tiles = stride[2];
 
   /* we reuse these unpack functions */
@@ -2139,14 +2140,14 @@ unpack_NV12T (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   unpack_pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (unpack_info, 0);
 
   /* first x tile to convert */
-  tx = x / tile_width;
+  tx = x >> ws;
   /* Last tile to convert */
-  ntx = (x + width) / tile_width;
+  ntx = (x + width) >> ws;
   /* The row we are going to convert */
-  ty = y / tile_height;
+  ty = y >> hs;
 
   /* y position in a tile */
-  y = y & (tile_height - 1);
+  y = y & ((1 << hs) - 1);
   /* x position in a tile */
   x = x & (tile_width - 1);
 
@@ -2155,7 +2156,7 @@ unpack_NV12T (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
     gint tstride[GST_VIDEO_MAX_PLANES];
     gint unpack_width;
 
-    get_tile_NV12 (tile_width, tile_height, tile_size, tx, ty, x_tiles, y_tiles,
+    get_tile_NV12 (tile_width, ts, tx, ty, x_tiles, y_tiles,
         data, stride, tdata, tstride);
 
     /* the number of bytes left to unpack */
@@ -2178,15 +2179,17 @@ pack_NV12T (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   const GstVideoFormatInfo *pack_info, *finfo;
   guint8 *line = src;
   gint x_tiles, y_tiles;
-  gint tile_width, tile_height, tile_size;
+  gint ws, hs, ts, tile_width;
   gint ntx, tx, ty;
   gint pack_pstride;
 
-  tile_width = 1 << info->w_sub[3];
-  tile_height = 1 << info->h_sub[3];
-  tile_size = tile_width * tile_height;
+  ws = info->w_sub[GST_VIDEO_COMP_TILEINFO];
+  hs = info->h_sub[GST_VIDEO_COMP_TILEINFO];
+  ts = ws + hs;
 
-  x_tiles = stride[0] / 64;
+  tile_width = 1 << ws;
+
+  x_tiles = stride[0] >> ws;
   y_tiles = stride[2];
 
   /* we reuse these pack functions */
@@ -2197,19 +2200,19 @@ pack_NV12T (const GstVideoFormatInfo * info, GstVideoPackFlags flags,
   pack_pstride = GST_VIDEO_FORMAT_INFO_PSTRIDE (pack_info, 0);
 
   /* Last tile to convert */
-  ntx = width / tile_width;
+  ntx = width >> ws;
   /* The row we are going to convert */
-  ty = y / tile_height;
+  ty = y >> hs;
 
   /* y position in a tile */
-  y = y & (tile_height - 1);
+  y = y & ((1 << hs) - 1);
 
   for (tx = 0; tx < ntx; tx++) {
     gpointer tdata[GST_VIDEO_MAX_PLANES];
     gint tstride[GST_VIDEO_MAX_PLANES];
     gint pack_width;
 
-    get_tile_NV12 (tile_width, tile_height, tile_size, tx, ty, x_tiles, y_tiles,
+    get_tile_NV12 (tile_width, ts, tx, ty, x_tiles, y_tiles,
         data, stride, tdata, tstride);
 
     /* the number of bytes left to pack */
