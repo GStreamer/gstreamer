@@ -203,6 +203,9 @@ typedef enum
 #define GST_VIDEO_COMP_INDEX    0
 #define GST_VIDEO_COMP_PALETTE  1
 
+/* tile info component, we don't support planar alpha and tiled */
+#define GST_VIDEO_COMP_TILEINFO 3
+
 #include <gst/video/video-chroma.h>
 
 /**

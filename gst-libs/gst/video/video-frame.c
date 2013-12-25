@@ -28,6 +28,7 @@
 
 #include <gst/video/video.h>
 #include "video-frame.h"
+#include "video-tile.h"
 #include "gstvideometa.h"
 
 GST_DEBUG_CATEGORY_EXTERN (GST_CAT_PERFORMANCE);
@@ -217,9 +218,9 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
 {
   const GstVideoInfo *sinfo;
   GstVideoInfo *dinfo;
-  guint w, h, j;
+  const GstVideoFormatInfo *finfo;
   guint8 *sp, *dp;
-  gint ss, ds;
+  guint w, h;
 
   g_return_val_if_fail (dest != NULL, FALSE);
   g_return_val_if_fail (src != NULL, FALSE);
@@ -228,35 +229,89 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
   dinfo = &dest->info;
 
   g_return_val_if_fail (dinfo->finfo->format == sinfo->finfo->format, FALSE);
+
+  finfo = dinfo->finfo;
+
   g_return_val_if_fail (dinfo->width == sinfo->width
       && dinfo->height == sinfo->height, FALSE);
-  g_return_val_if_fail (dinfo->finfo->n_planes > plane, FALSE);
+  g_return_val_if_fail (finfo->n_planes > plane, FALSE);
 
   sp = src->data[plane];
   dp = dest->data[plane];
 
-  if (plane == 1 && GST_VIDEO_FORMAT_INFO_HAS_PALETTE (sinfo->finfo)) {
-    ss = ds = 0;
-    w = 256 * 4;
-    h = 1;
+  if (GST_VIDEO_FORMAT_INFO_HAS_PALETTE (finfo) && plane == 1) {
+    /* copy the palette and we're done */
+    memcpy (dp, sp, 256 * 4);
+    return TRUE;
+  }
+
+  /* FIXME. assumes subsampling of component N is the same as plane N, which is
+   * currently true for all formats we have but it might not be in the future. */
+  w = GST_VIDEO_FRAME_COMP_WIDTH (dest,
+      plane) * GST_VIDEO_FRAME_COMP_PSTRIDE (dest, plane);
+  h = GST_VIDEO_FRAME_COMP_HEIGHT (dest, plane);
+
+  if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
+    gint tile_size;
+    gint sx_tiles, sy_tiles, dx_tiles, dy_tiles;
+    guint i, j, ws, hs, ts;
+    GstVideoTileMode mode;
+    gint tidx;
+
+    /* plane index of tile info */
+    tidx = finfo->n_planes - 1;
+
+    /* ignore tile info plane */
+    if (plane == tidx)
+      return TRUE;
+
+    ws = finfo->w_sub[GST_VIDEO_COMP_TILEINFO];
+    hs = finfo->h_sub[GST_VIDEO_COMP_TILEINFO];
+    ts = ws + hs;
+
+    tile_size = 1 << ts;
+
+    mode = finfo->pixel_stride[tidx];
+
+    sx_tiles = sinfo->stride[plane] >> ws;
+    sy_tiles = sinfo->stride[tidx];
+
+    dx_tiles = dinfo->stride[plane] >> ws;
+    dy_tiles = dinfo->stride[tidx];
+
+    /* this is the amount of tiles to copy */
+    w = (w + (1 << ws) - 1) >> ws;
+    h = (h + (1 << hs) - 1) >> hs;
+
+    /* FIXME can possibly do better when no retiling is needed, it depends on
+     * the stride and the tile_size */
+    for (j = 0; j < h; j++) {
+      for (i = 0; i < w; i++) {
+        guint si, di;
+
+        si = gst_video_tile_get_index (mode, i, j, sx_tiles, sy_tiles);
+        di = gst_video_tile_get_index (mode, i, j, dx_tiles, dy_tiles);
+
+        memcpy (dp + (di << ts), sp + (si << ts), tile_size);
+      }
+    }
   } else {
+    gint ss, ds;
+    guint j;
+
     ss = sinfo->stride[plane];
     ds = dinfo->stride[plane];
 
-    /* FIXME. assumes subsampling of component N is the same as plane N, which is
-     * currently true for all formats we have but it might not be in the future. */
-    w = GST_VIDEO_FRAME_COMP_WIDTH (dest,
-        plane) * GST_VIDEO_FRAME_COMP_PSTRIDE (dest, plane);
-    h = GST_VIDEO_FRAME_COMP_HEIGHT (dest, plane);
+    GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy plane %d, w:%d h:%d ", plane, w,
+        h);
+
+    for (j = 0; j < h; j++) {
+      memcpy (dp, sp, w);
+      dp += ds;
+      sp += ss;
+    }
   }
 
-  GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy plane %d, w:%d h:%d ", plane, w, h);
-
-  for (j = 0; j < h; j++) {
-    memcpy (dp, sp, w);
-    dp += ds;
-    sp += ss;
-  }
   return TRUE;
 }
 
