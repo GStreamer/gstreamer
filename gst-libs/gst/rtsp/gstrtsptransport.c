@@ -97,6 +97,8 @@ typedef struct
 static const RTSPProfileMap profiles[] = {
   {"avp", GST_RTSP_PROFILE_AVP},
   {"savp", GST_RTSP_PROFILE_SAVP},
+  {"avpf", GST_RTSP_PROFILE_AVPF},
+  {"savpf", GST_RTSP_PROFILE_SAVPF},
   {NULL, GST_RTSP_PROFILE_UNKNOWN}
 };
 

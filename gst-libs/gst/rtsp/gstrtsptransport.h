@@ -65,15 +65,19 @@ typedef enum {
 /**
  * GstRTSPProfile:
  * @GST_RTSP_PROFILE_UNKNOWN: invalid profile
- * @GST_RTSP_PROFILE_AVP: the Audio/Visual profile
- * @GST_RTSP_PROFILE_SAVP: the secure Audio/Visual profile
+ * @GST_RTSP_PROFILE_AVP: the Audio/Visual profile (RFC 3551)
+ * @GST_RTSP_PROFILE_SAVP: the secure Audio/Visual profile (RFC 3711)
+ * @GST_RTSP_PROFILE_AVPF: the Audio/Visual profile with feedback (RFC 4585)
+ * @GST_RTSP_PROFILE_SAVPF: the secure Audio/Visual profile with feedback (RFC 5124)
  *
  * The transfer profile to use.
  */
 typedef enum {
   GST_RTSP_PROFILE_UNKNOWN =  0,
   GST_RTSP_PROFILE_AVP     = (1 << 0),
-  GST_RTSP_PROFILE_SAVP    = (1 << 1)
+  GST_RTSP_PROFILE_SAVP    = (1 << 1),
+  GST_RTSP_PROFILE_AVPF    = (1 << 2),
+  GST_RTSP_PROFILE_SAVPF   = (1 << 3),
 } GstRTSPProfile;
 
 /**
