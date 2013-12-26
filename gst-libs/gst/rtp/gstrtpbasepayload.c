@@ -449,10 +449,13 @@ gst_rtp_base_payload_src_event_default (GstRTPBasePayload * rtpbasepayload,
         /* choose another ssrc for our stream */
         if (ssrc == rtpbasepayload->current_ssrc) {
           GstCaps *caps;
+          guint suggested_ssrc = 0;
 
-          do {
+          if (gst_structure_get_uint (s, "suggested-ssrc", &suggested_ssrc))
+            rtpbasepayload->current_ssrc = suggested_ssrc;
+
+          while (ssrc == rtpbasepayload->current_ssrc)
             rtpbasepayload->current_ssrc = g_random_int ();
-          } while (ssrc == rtpbasepayload->current_ssrc);
 
           caps = gst_pad_get_current_caps (rtpbasepayload->srcpad);
           caps = gst_caps_make_writable (caps);
