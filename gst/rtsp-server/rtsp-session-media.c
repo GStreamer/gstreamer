@@ -233,6 +233,74 @@ gst_rtsp_session_media_get_base_time (GstRTSPSessionMedia * media)
 }
 
 /**
+ * gst_rtsp_session_media_get_rtpinfo:
+ * @media: a #GstRTSPSessionMedia
+ *
+ * Retrieve the RTP-Info header string for all streams in @media
+ * with configured transports.
+ *
+ * Returns: (transfer full): The RTP-Info as a string, g_free()
+ *   after usage.
+ */
+gchar *
+gst_rtsp_session_media_get_rtpinfo (GstRTSPSessionMedia * media)
+{
+  GstRTSPSessionMediaPrivate *priv;
+  GString *rtpinfo = NULL;
+  GstRTSPStreamTransport *transport;
+  guint i, n_streams;
+
+  g_return_val_if_fail (GST_IS_RTSP_SESSION_MEDIA (media), NULL);
+
+  priv = media->priv;
+  g_mutex_lock (&priv->lock);
+
+  n_streams = priv->transports->len;
+
+  GST_LOG_OBJECT (media, "collecting RTP info for %d transports", n_streams);
+
+  for (i = 0; i < n_streams; i++) {
+    gchar *stream_rtpinfo;
+
+    transport = g_ptr_array_index (priv->transports, i);
+    if (transport == NULL) {
+      GST_DEBUG_OBJECT (media, "ignoring unconfigured transport %d", i);
+      continue;
+    }
+
+    stream_rtpinfo = gst_rtsp_stream_transport_get_rtpinfo (transport);
+    if (stream_rtpinfo == NULL)
+      goto stream_rtpinfo_missing;
+
+    if (rtpinfo == NULL)
+      rtpinfo = g_string_new ("");
+    else
+      g_string_append (rtpinfo, ", ");
+
+    g_string_append (rtpinfo, stream_rtpinfo);
+    g_free (stream_rtpinfo);
+  }
+
+  if (rtpinfo == NULL) {
+    GST_INFO_OBJECT (media, "no transports configured, RTP info is empty");
+    rtpinfo = g_string_new ("");
+  }
+
+  g_mutex_unlock (&priv->lock);
+
+  return g_string_free (rtpinfo, FALSE);
+
+  /* ERRORS */
+stream_rtpinfo_missing:
+  {
+    g_mutex_unlock (&priv->lock);
+    g_string_free (rtpinfo, TRUE);
+    GST_ERROR_OBJECT (media, "could not get stream %d rtpinfo", i);
+    return NULL;
+  }
+}
+
+/**
  * gst_rtsp_session_media_set_transport:
  * @media: a #GstRTSPSessionMedia
  * @stream: a #GstRTSPStream

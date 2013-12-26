@@ -90,6 +90,8 @@ GstRTSPStreamTransport * gst_rtsp_session_media_get_transport  (GstRTSPSessionMe
 gboolean                 gst_rtsp_session_media_alloc_channels (GstRTSPSessionMedia *media,
                                                                 GstRTSPRange *range);
 
+gchar *                  gst_rtsp_session_media_get_rtpinfo    (GstRTSPSessionMedia * media);
+
 G_END_DECLS
 
 #endif /* __GST_RTSP_SESSION_MEDIA_H__ */

@@ -658,6 +658,32 @@ link_transport (GstRTSPClient * client, GstRTSPSession * session,
 }
 
 static void
+link_session_transports (GstRTSPClient * client, GstRTSPSession * session,
+    GstRTSPSessionMedia * sessmedia)
+{
+  guint n_streams, i;
+
+  n_streams =
+      gst_rtsp_media_n_streams (gst_rtsp_session_media_get_media (sessmedia));
+  for (i = 0; i < n_streams; i++) {
+    GstRTSPStreamTransport *trans;
+    const GstRTSPTransport *tr;
+
+    /* get the transport, if there is no transport configured, skip this stream */
+    trans = gst_rtsp_session_media_get_transport (sessmedia, i);
+    if (trans == NULL)
+      continue;
+
+    tr = gst_rtsp_stream_transport_get_transport (trans);
+
+    if (tr->lower_transport == GST_RTSP_LOWER_TRANS_TCP) {
+      /* for TCP, link the stream to the TCP connection of the client */
+      link_transport (client, session, trans);
+    }
+  }
+}
+
+static void
 unlink_transport (GstRTSPClient * client, GstRTSPSession * session,
     GstRTSPStreamTransport * trans)
 {
@@ -1042,14 +1068,12 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPMedia *media;
   GstRTSPStatusCode code;
   GstRTSPUrl *uri;
-  GString *rtpinfo;
-  guint n_streams, i, infocount;
   gchar *str;
   GstRTSPTimeRange *range;
   GstRTSPResult res;
   GstRTSPState rtspstate;
   GstRTSPRangeUnit unit = GST_RTSP_RANGE_NPT;
-  gchar *path;
+  gchar *path, *rtpinfo;
   gint matched;
 
   if (!(session = ctx->session))
@@ -1068,6 +1092,8 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   if (path[matched] != '\0')
     goto no_aggregate;
+
+  g_free (path);
 
   ctx->sessmedia = sessmedia;
   ctx->media = media = gst_rtsp_session_media_get_media (sessmedia);
@@ -1092,49 +1118,11 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
     }
   }
 
-  /* grab RTPInfo from the payloaders now */
-  rtpinfo = g_string_new ("");
+  /* link the all TCP callbacks */
+  link_session_transports (client, session, sessmedia);
 
-  n_streams = gst_rtsp_media_n_streams (media);
-  for (i = 0, infocount = 0; i < n_streams; i++) {
-    GstRTSPStreamTransport *trans;
-    GstRTSPStream *stream;
-    const GstRTSPTransport *tr;
-    guint rtptime, seq;
-
-    /* get the transport, if there is no transport configured, skip this stream */
-    trans = gst_rtsp_session_media_get_transport (sessmedia, i);
-    if (trans == NULL) {
-      GST_INFO ("stream %d is not configured", i);
-      continue;
-    }
-    tr = gst_rtsp_stream_transport_get_transport (trans);
-
-    if (tr->lower_transport == GST_RTSP_LOWER_TRANS_TCP) {
-      /* for TCP, link the stream to the TCP connection of the client */
-      link_transport (client, session, trans);
-    }
-
-    stream = gst_rtsp_stream_transport_get_stream (trans);
-    if (gst_rtsp_stream_get_rtpinfo (stream, &rtptime, &seq)) {
-      const GstRTSPUrl *url;
-      gchar *url_str;
-
-      if (infocount > 0)
-        g_string_append (rtpinfo, ", ");
-
-      url = gst_rtsp_stream_transport_get_url (trans);
-      url_str = gst_rtsp_url_get_request_uri (url);
-      g_string_append_printf (rtpinfo, "url=%s;seq=%u;rtptime=%u",
-          url_str, seq, rtptime);
-      g_free (url_str);
-
-      infocount++;
-    } else {
-      GST_WARNING ("RTP-Info cannot be determined for stream %d", i);
-    }
-  }
-  g_free (path);
+  /* grab RTPInfo from the media now */
+  rtpinfo = gst_rtsp_session_media_get_rtpinfo (sessmedia);
 
   /* construct the response now */
   code = GST_RTSP_STS_OK;
@@ -1142,12 +1130,9 @@ handle_play_request (GstRTSPClient * client, GstRTSPContext * ctx)
       gst_rtsp_status_as_text (code), ctx->request);
 
   /* add the RTP-Info header */
-  if (infocount > 0) {
-    str = g_string_free (rtpinfo, FALSE);
-    gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_RTP_INFO, str);
-  } else {
-    g_string_free (rtpinfo, TRUE);
-  }
+  if (rtpinfo)
+    gst_rtsp_message_take_header (ctx->response, GST_RTSP_HDR_RTP_INFO,
+        rtpinfo);
 
   /* add the range */
   str = gst_rtsp_media_get_range_string (media, TRUE, unit);
@@ -1197,14 +1182,12 @@ invalid_state:
     GST_ERROR ("client %p: not PLAYING or READY", client);
     send_generic_response (client, GST_RTSP_STS_METHOD_NOT_VALID_IN_THIS_STATE,
         ctx);
-    g_free (path);
     return FALSE;
   }
 unsuspend_failed:
   {
     GST_ERROR ("client %p: unsuspend failed", client);
     send_generic_response (client, GST_RTSP_STS_SERVICE_UNAVAILABLE, ctx);
-    g_free (path);
     return FALSE;
   }
 }

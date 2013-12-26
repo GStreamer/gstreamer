@@ -310,6 +310,40 @@ gst_rtsp_stream_transport_get_url (GstRTSPStreamTransport * trans)
   return trans->priv->url;
 }
 
+ /**
+ * gst_rtsp_stream_transport_get_rtpinfo:
+ * @trans: a #GstRTSPStreamTransport
+ *
+ * Get the RTPInfo string for @trans.
+ *
+ * Returns: the RTPInfo string for @trans. g_free() after
+ * usage.
+ */
+gchar *
+gst_rtsp_stream_transport_get_rtpinfo (GstRTSPStreamTransport * trans)
+{
+  GstRTSPStreamTransportPrivate *priv;
+  gchar *url_str;
+  GString *rtpinfo;
+  guint rtptime, seq;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans), NULL);
+
+  priv = trans->priv;
+
+  if (!gst_rtsp_stream_get_rtpinfo (priv->stream, &rtptime, &seq))
+    return NULL;
+
+  rtpinfo = g_string_new ("");
+
+  url_str = gst_rtsp_url_get_request_uri (trans->priv->url);
+  g_string_append_printf (rtpinfo, "url=%s;seq=%u;rtptime=%u",
+      url_str, seq, rtptime);
+  g_free (url_str);
+
+  return g_string_free (rtpinfo, FALSE);
+}
+
 /**
  * gst_rtsp_stream_transport_set_active:
  * @trans: a #GstRTSPStreamTransport
