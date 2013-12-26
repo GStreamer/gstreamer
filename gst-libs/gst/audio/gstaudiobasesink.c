@@ -1029,6 +1029,13 @@ gst_audio_base_sink_wait_event (GstBaseSink * bsink, GstEvent * event)
       GstMapInfo minfo;
 
       spec = &sink->ringbuffer->spec;
+      if (G_UNLIKELY (spec->info.rate == 0)) {
+        GST_ELEMENT_ERROR (sink, STREAM, FORMAT, (NULL),
+            ("Sink not negotiated before GAP event."));
+        ret = GST_FLOW_ERROR;
+        break;
+      }
+
       gst_event_parse_gap (event, &timestamp, &duration);
 
       /* If the GAP event has a duration, handle it like a

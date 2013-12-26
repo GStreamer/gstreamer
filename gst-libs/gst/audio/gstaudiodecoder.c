@@ -1732,6 +1732,86 @@ gst_audio_decoder_do_byte (GstAudioDecoder * dec)
       dec->priv->ctx.info.rate <= dec->priv->samples_out;
 }
 
+/* Must be called holding the GST_AUDIO_DECODER_STREAM_LOCK */
+static gboolean
+gst_audio_decoder_negotiate_default_caps (GstAudioDecoder * dec)
+{
+  GstCaps *caps;
+
+  caps = gst_pad_get_current_caps (dec->srcpad);
+  if (caps && !gst_audio_info_from_caps (&dec->priv->ctx.info, caps))
+    return FALSE;
+
+  caps = gst_pad_get_allowed_caps (dec->srcpad);
+  if (!caps || gst_caps_is_empty (caps) || gst_caps_is_any (caps))
+    return FALSE;
+
+  caps = gst_caps_fixate (caps);
+  if (!caps || !gst_audio_info_from_caps (&dec->priv->ctx.info, caps))
+    return FALSE;
+
+  GST_INFO_OBJECT (dec,
+      "Chose default caps %" GST_PTR_FORMAT " for initial gap", caps);
+  gst_caps_unref (caps);
+
+  if (!gst_audio_decoder_negotiate_unlocked (dec)) {
+    GST_INFO_OBJECT (dec, "Failed to negotiate default caps for initial gap");
+    gst_pad_mark_reconfigure (dec->srcpad);
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+static gboolean
+gst_audio_decoder_handle_gap (GstAudioDecoder * dec, GstEvent * event)
+{
+  gboolean ret;
+  GstClockTime timestamp, duration;
+
+  /* Ensure we have caps first */
+  GST_AUDIO_DECODER_STREAM_LOCK (dec);
+  if (!GST_AUDIO_INFO_IS_VALID (&dec->priv->ctx.info)) {
+    if (!gst_audio_decoder_negotiate_default_caps (dec)) {
+      GST_ELEMENT_ERROR (dec, STREAM, FORMAT, (NULL),
+          ("Decoder output not negotiated before GAP event."));
+      GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+      return FALSE;
+    }
+  }
+  GST_AUDIO_DECODER_STREAM_UNLOCK (dec);
+
+  gst_event_parse_gap (event, &timestamp, &duration);
+
+  /* time progressed without data, see if we can fill the gap with
+   * some concealment data */
+  GST_DEBUG_OBJECT (dec,
+      "gap event: plc %d, do_plc %d, position %" GST_TIME_FORMAT
+      " duration %" GST_TIME_FORMAT,
+      dec->priv->plc, dec->priv->ctx.do_plc,
+      GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
+
+  if (dec->priv->plc && dec->priv->ctx.do_plc && dec->input_segment.rate > 0.0) {
+    GstAudioDecoderClass *klass = GST_AUDIO_DECODER_GET_CLASS (dec);
+    GstBuffer *buf;
+
+    /* hand subclass empty frame with duration that needs covering */
+    buf = gst_buffer_new ();
+    GST_BUFFER_TIMESTAMP (buf) = timestamp;
+    GST_BUFFER_DURATION (buf) = duration;
+    /* best effort, not much error handling */
+    gst_audio_decoder_handle_frame (dec, klass, buf);
+    ret = TRUE;
+    gst_event_unref (event);
+  } else {
+    /* sub-class doesn't know how to handle empty buffers,
+     * so just try sending GAP downstream */
+    send_pending_events (dec);
+    ret = gst_audio_decoder_push_event (dec, event);
+  }
+  return ret;
+}
+
 static gboolean
 gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
 {
@@ -1819,39 +1899,9 @@ gst_audio_decoder_sink_eventfunc (GstAudioDecoder * dec, GstEvent * event)
       ret = TRUE;
       break;
     }
-    case GST_EVENT_GAP:{
-      GstClockTime timestamp, duration;
-      gst_event_parse_gap (event, &timestamp, &duration);
-
-      /* time progressed without data, see if we can fill the gap with
-       * some concealment data */
-      GST_DEBUG_OBJECT (dec,
-          "gap event: plc %d, do_plc %d, position %" GST_TIME_FORMAT
-          " duration %" GST_TIME_FORMAT,
-          dec->priv->plc, dec->priv->ctx.do_plc,
-          GST_TIME_ARGS (timestamp), GST_TIME_ARGS (duration));
-      if (dec->priv->plc && dec->priv->ctx.do_plc &&
-          dec->input_segment.rate > 0.0) {
-        GstAudioDecoderClass *klass;
-        GstBuffer *buf;
-
-        klass = GST_AUDIO_DECODER_GET_CLASS (dec);
-        /* hand subclass empty frame with duration that needs covering */
-        buf = gst_buffer_new ();
-        GST_BUFFER_TIMESTAMP (buf) = timestamp;
-        GST_BUFFER_DURATION (buf) = duration;
-        /* best effort, not much error handling */
-        gst_audio_decoder_handle_frame (dec, klass, buf);
-        ret = TRUE;
-        gst_event_unref (event);
-      } else {
-        /* FIXME: sub-class doesn't know how to handle empty buffers,
-         * so just try sending GAP downstream */
-        send_pending_events (dec);
-        ret = gst_audio_decoder_push_event (dec, event);
-      }
+    case GST_EVENT_GAP:
+      ret = gst_audio_decoder_handle_gap (dec, event);
       break;
-    }
     case GST_EVENT_FLUSH_STOP:
       GST_AUDIO_DECODER_STREAM_LOCK (dec);
       /* prepare for fresh start */
