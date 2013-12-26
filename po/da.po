@@ -6,10 +6,10 @@
 # Mogens Jaeger <mogensjaeger@gmail.com>, 2007, 2010, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.1.4\n"
+"Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-11-09 12:05+0100\n"
-"PO-Revision-Date: 2013-09-15 18:44+0200\n"
+"POT-Creation-Date: 2013-12-26 16:44+0100\n"
+"PO-Revision-Date: 2013-12-08 12:41+0100\n"
 "Last-Translator: Mogens Jaeger <mogensjaeger@gmail.com>\n"
 "Language-Team: Danish <dansk@dansk-gruppen.dk>\n"
 "Language: da\n"
@@ -28,11 +28,10 @@ msgstr "Gør alle advarsler fatale"
 msgid "Print available debug categories and exit"
 msgstr "Udskriv tilgængelige fejlsøgningskategorier og afslut"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Standard fejlsøgningsniveau fra 1 (kun fejl) til 5 (alt) eller 0 for ingen "
+"Standard fejlsøgningsniveau fra 1 (kun fejl) til 9 (alt) eller 0 for ingen "
 "uddata"
 
 msgid "LEVEL"
@@ -1173,9 +1172,9 @@ msgstr "Fremdrift: (%s) %s\n"
 msgid "Missing element: %s\n"
 msgstr "Manglende element: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "Fik kontekst fra element '%s': %s\n"
+msgstr "Fik kontekst fra element '%s': %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Uddatamærkater (også kendt som metadata)"

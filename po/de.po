@@ -1,4 +1,4 @@
-# German translation for gstreamer 1.1.4
+# German translation for gstreamer 1.2.1
 # Copyright (C) 2004 Free Software Foundation, Inc.
 # This file is distributed under the same license as the gstreamer package.
 #
@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.1.4\n"
+"Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-11-09 12:05+0100\n"
-"PO-Revision-Date: 2013-09-21 15:38+0100\n"
+"POT-Creation-Date: 2013-12-26 16:44+0100\n"
+"PO-Revision-Date: 2013-12-16 00:01+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -29,11 +29,10 @@ msgstr "Alle Warnungen wie Fehler behandeln"
 msgid "Print available debug categories and exit"
 msgstr "Verfügbare Fehlerdiagnosekategorien ausgeben und Programm beenden"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Vorgegebene Fehlerdiagnosestufe von 1 (nur Fehler) bis 5 (Alles) oder 0 für "
+"Vorgegebene Fehlerdiagnosestufe von 1 (nur Fehler) bis 9 (Alles) oder 0 für "
 "keine Ausgabe"
 
 msgid "LEVEL"
@@ -1199,9 +1198,9 @@ msgstr "Fortschritt: (%s) %s\n"
 msgid "Missing element: %s\n"
 msgstr "Fehlendes Element »%s«\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "Kontext von Element »%s« erhalten: %s\n"
+msgstr "Kontext von Element »%s« erhalten: %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Kennzeichen (auch bekannt als Metadaten) ausgeben"

@@ -7,10 +7,10 @@
 # Yuri Kozlov <yuray@komyakino.ru>, 2010, 2011, 2012, 2013.
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer-1.1.4\n"
+"Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-11-09 12:05+0100\n"
-"PO-Revision-Date: 2013-09-15 08:55+0400\n"
+"POT-Creation-Date: 2013-12-26 16:44+0100\n"
+"PO-Revision-Date: 2013-12-08 12:44+0400\n"
 "Last-Translator: Yuri Kozlov <yuray@komyakino.ru>\n"
 "Language-Team: Russian <gnu@mx.ru>\n"
 "Language: ru\n"
@@ -30,11 +30,10 @@ msgstr "Сделать все предупреждения фатальными"
 msgid "Print available debug categories and exit"
 msgstr "Вывести доступные категории отладки и выйти"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Уровень отладки по умолчанию: от 1 (только ошибки) до 5 (всё), или 0 (ничего "
+"Уровень отладки по умолчанию: от 1 (только ошибки) до 9 (всё), или 0 (ничего "
 "не печатать)"
 
 msgid "LEVEL"
@@ -1174,9 +1173,9 @@ msgstr "Ход выполнения: (%s) %s\n"
 msgid "Missing element: %s\n"
 msgstr "Элемент отсутствует: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "Получен контекст из элемента «%s»: %s\n"
+msgstr "Получен контекст из элемента «%s»: %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Выводить теги (метаданные)"

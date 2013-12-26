@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gstreamer 1.1.4\n"
+"Project-Id-Version: gstreamer 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-11-09 12:05+0100\n"
-"PO-Revision-Date: 2013-09-15 10:23+0200\n"
+"POT-Creation-Date: 2013-12-26 16:44+0100\n"
+"PO-Revision-Date: 2013-12-08 08:57+0100\n"
 "Last-Translator: Jakub Bogusz <qboosh@pld-linux.org>\n"
 "Language-Team: Polish <translation-team-pl@lists.sourceforge.net>\n"
 "Language: pl\n"
@@ -26,11 +26,10 @@ msgstr "Uczynienie wszystkich ostrzeżeń krytycznymi"
 msgid "Print available debug categories and exit"
 msgstr "Wypisanie dostępnych kategorii diagnostyki i zakończenie"
 
-#, fuzzy
 msgid ""
 "Default debug level from 1 (only error) to 9 (anything) or 0 for no output"
 msgstr ""
-"Domyślny poziom diagnostyki od 1 (tylko błędy) do 5 (wszystko) lub 0 dla "
+"Domyślny poziom diagnostyki od 1 (tylko błędy) do 9 (wszystko) lub 0 dla "
 "braku wyjścia"
 
 msgid "LEVEL"
@@ -1176,9 +1175,9 @@ msgstr "Postęp: (%s) %s\n"
 msgid "Missing element: %s\n"
 msgstr "Brak elementu: %s\n"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Got context from element '%s': %s=%s\n"
-msgstr "Otrzymano kontekst od elementu '%s': %s\n"
+msgstr "Otrzymano kontekst od elementu '%s': %s=%s\n"
 
 msgid "Output tags (also known as metadata)"
 msgstr "Wypisanie znaczników (znanych także jako metadane)"
