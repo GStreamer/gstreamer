@@ -3258,15 +3258,27 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
         byetimeout = TRUE;
       }
     }
-    /* sources that were inactive for more than 5 times the deterministic reporting
-     * interval get timed out. the min timeout is 5 seconds. */
-    /* mind old time that might pre-date last time going to PLAYING */
-    btime = MAX (source->last_activity, sess->start_time);
-    if (data->current_time > btime) {
-      interval = MAX (binterval * 5, 5 * GST_SECOND);
-      if (data->current_time - btime > interval) {
-        GST_DEBUG ("removing timeout source %08x, last %" GST_TIME_FORMAT,
-            source->ssrc, GST_TIME_ARGS (btime));
+  }
+
+  /* sources that were inactive for more than 5 times the deterministic reporting
+   * interval get timed out. the min timeout is 5 seconds. */
+  /* mind old time that might pre-date last time going to PLAYING */
+  btime = MAX (source->last_activity, sess->start_time);
+  if (data->current_time > btime) {
+    interval = MAX (binterval * 5, 5 * GST_SECOND);
+    if (data->current_time - btime > interval) {
+      GST_DEBUG ("removing timeout source %08x, last %" GST_TIME_FORMAT,
+          source->ssrc, GST_TIME_ARGS (btime));
+      if (source->internal) {
+        /* this is an internal source that is not using our suggested ssrc.
+         * since there must be another source using this ssrc, we can remove
+         * this one instead of making it a receiver forever */
+        if (source->ssrc != sess->suggested_ssrc) {
+          rtp_source_mark_bye (source, "timed out");
+          /* do not schedule bye here, since we are inside the RTCP timeout
+           * processing and scheduling bye will interfere with SR/RR sending */
+        }
+      } else {
         remove = TRUE;
       }
     }
