@@ -1006,6 +1006,7 @@ main (int argc, char *argv[])
     gdk_pixbuf_save (pixbuf, "snapshot.png", "png", &error, NULL);
 #endif
     gst_buffer_unmap (buffer, &map);
+    gst_sample_unref (sample);
   } else {
     g_print ("could not make snapshot\n");
   }
