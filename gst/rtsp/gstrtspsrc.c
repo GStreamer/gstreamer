@@ -1258,6 +1258,23 @@ gst_rtspsrc_collect_connections (GstRTSPSrc * src, const GstSDPMessage * sdp,
   }
 }
 
+static const gchar *
+get_aggregate_control (GstRTSPSrc * src)
+{
+  const gchar *base;
+
+  if (src->control)
+    base = src->control;
+  else if (src->content_base)
+    base = src->content_base;
+  else if (src->conninfo.url_str)
+    base = src->conninfo.url_str;
+  else
+    base = "/";
+
+  return base;
+}
+
 static GstRTSPStream *
 gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
 {
@@ -1351,14 +1368,7 @@ gst_rtspsrc_create_stream (GstRTSPSrc * src, GstSDPMessage * sdp, gint idx)
       if (g_strcmp0 (control_url, "*") == 0)
         control_url = "";
 
-      if (src->control)
-        base = src->control;
-      else if (src->content_base)
-        base = src->content_base;
-      else if (src->conninfo.url_str)
-        base = src->conninfo.url_str;
-      else
-        base = "/";
+      base = get_aggregate_control (src);
 
       /* check if the base ends or control starts with / */
       has_slash = g_str_has_prefix (control_url, "/");
@@ -3847,7 +3857,7 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
   GstRTSPMessage request = { 0 };
   GstRTSPResult res;
   GstRTSPMethod method;
-  gchar *control;
+  const gchar *control;
 
   if (src->do_rtsp_keep_alive == FALSE) {
     GST_DEBUG_OBJECT (src, "do-rtsp-keep-alive is FALSE, not sending.");
@@ -3863,11 +3873,7 @@ gst_rtspsrc_send_keep_alive (GstRTSPSrc * src)
   else
     method = GST_RTSP_OPTIONS;
 
-  if (src->control)
-    control = src->control;
-  else
-    control = src->conninfo.url_str;
-
+  control = get_aggregate_control (src);
   if (control == NULL)
     goto no_control;
 
@@ -6298,7 +6304,7 @@ gst_rtspsrc_close (GstRTSPSrc * src, gboolean async, gboolean only_close)
   GstRTSPMessage response = { 0 };
   GstRTSPResult res = GST_RTSP_OK;
   GList *walk;
-  gchar *control;
+  const gchar *control;
 
   GST_DEBUG_OBJECT (src, "TEARDOWN...");
 
@@ -6313,17 +6319,14 @@ gst_rtspsrc_close (GstRTSPSrc * src, gboolean async, gboolean only_close)
     goto close;
 
   /* construct a control url */
-  if (src->control)
-    control = src->control;
-  else
-    control = src->conninfo.url_str;
+  control = get_aggregate_control (src);
 
   if (!(src->methods & (GST_RTSP_PLAY | GST_RTSP_TEARDOWN)))
     goto not_supported;
 
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
-    gchar *setup_url;
+    const gchar *setup_url;
     GstRTSPConnInfo *info;
 
     /* try aggregate control first but do non-aggregate control otherwise */
@@ -6603,7 +6606,7 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
   GList *walk;
   gchar *hval;
   gint hval_idx;
-  gchar *control;
+  const gchar *control;
 
   GST_DEBUG_OBJECT (src, "PLAY...");
 
@@ -6630,14 +6633,11 @@ gst_rtspsrc_play (GstRTSPSrc * src, GstSegment * segment, gboolean async)
   gst_rtspsrc_set_state (src, GST_STATE_PLAYING);
 
   /* construct a control url */
-  if (src->control)
-    control = src->control;
-  else
-    control = src->conninfo.url_str;
+  control = get_aggregate_control (src);
 
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
-    gchar *setup_url;
+    const gchar *setup_url;
     GstRTSPConnection *conn;
 
     /* try aggregate control first but do non-aggregate control otherwise */
@@ -6821,7 +6821,7 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean async)
   GstRTSPMessage request = { 0 };
   GstRTSPMessage response = { 0 };
   GList *walk;
-  gchar *control;
+  const gchar *control;
 
   GST_DEBUG_OBJECT (src, "PAUSE...");
 
@@ -6838,17 +6838,14 @@ gst_rtspsrc_pause (GstRTSPSrc * src, gboolean async)
     goto no_connection;
 
   /* construct a control url */
-  if (src->control)
-    control = src->control;
-  else
-    control = src->conninfo.url_str;
+  control = get_aggregate_control (src);
 
   /* loop over the streams. We might exit the loop early when we could do an
    * aggregate control */
   for (walk = src->streams; walk; walk = g_list_next (walk)) {
     GstRTSPStream *stream = (GstRTSPStream *) walk->data;
     GstRTSPConnection *conn;
-    gchar *setup_url;
+    const gchar *setup_url;
 
     /* try aggregate control first but do non-aggregate control otherwise */
     if (control)
