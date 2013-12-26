@@ -331,7 +331,7 @@ gst_rtsp_stream_transport_get_rtpinfo (GstRTSPStreamTransport * trans)
 
   priv = trans->priv;
 
-  if (!gst_rtsp_stream_get_rtpinfo (priv->stream, &rtptime, &seq))
+  if (!gst_rtsp_stream_get_rtpinfo (priv->stream, &rtptime, &seq, NULL))
     return NULL;
 
   rtpinfo = g_string_new ("");

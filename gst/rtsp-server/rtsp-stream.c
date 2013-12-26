@@ -1749,34 +1749,37 @@ was_not_joined:
 /**
  * gst_rtsp_stream_get_rtpinfo:
  * @stream: a #GstRTSPStream
- * @rtptime: result RTP timestamp
- * @seq: result RTP seqnum
+ * @rtptime: (allow-none): result RTP timestamp
+ * @seq: (allow-none): result RTP seqnum
+ * @running_time: (allow-none): result running-time
  *
- * Retrieve the current rtptime and seq. This is used to
+ * Retrieve the current rtptime, seq and running-time. This is used to
  * construct a RTPInfo reply header.
  *
- * Returns: %TRUE when rtptime and seq could be determined.
+ * Returns: %TRUE when rtptime, seq and running-time could be determined.
  */
 gboolean
 gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
-    guint * rtptime, guint * seq)
+    guint * rtptime, guint * seq, GstClockTime * running_time)
 {
   GstRTSPStreamPrivate *priv;
   GObjectClass *payobjclass;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
-  g_return_val_if_fail (rtptime != NULL, FALSE);
-  g_return_val_if_fail (seq != NULL, FALSE);
 
   priv = stream->priv;
 
   payobjclass = G_OBJECT_GET_CLASS (priv->payloader);
 
-  if (!g_object_class_find_property (payobjclass, "seqnum") ||
-      !g_object_class_find_property (payobjclass, "timestamp"))
-    return FALSE;
+  if (seq && g_object_class_find_property (payobjclass, "seqnum"))
+    g_object_get (priv->payloader, "seqnum", seq, NULL);
 
-  g_object_get (priv->payloader, "seqnum", seq, "timestamp", rtptime, NULL);
+  if (rtptime && g_object_class_find_property (payobjclass, "timestamp"))
+    g_object_get (priv->payloader, "timestamp", rtptime, NULL);
+
+  if (running_time
+      && g_object_class_find_property (payobjclass, "running-time"))
+    g_object_get (priv->payloader, "running-time", running_time, NULL);
 
   return TRUE;
 }
