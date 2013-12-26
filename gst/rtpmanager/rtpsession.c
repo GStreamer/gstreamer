@@ -3295,16 +3295,9 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
     if (data->current_time > btime) {
       interval = MAX (binterval * 2, 5 * GST_SECOND);
       if (data->current_time - btime > interval) {
-        if (source->internal && source->sent_bye) {
-          /* an internal source is BYE and stopped sending RTP, remove */
-          GST_DEBUG ("internal BYE source %08x timed out, last %"
-              GST_TIME_FORMAT, source->ssrc, GST_TIME_ARGS (btime));
-          remove = TRUE;
-        } else {
-          GST_DEBUG ("sender source %08x timed out and became receiver, last %"
-              GST_TIME_FORMAT, source->ssrc, GST_TIME_ARGS (btime));
-          sendertimeout = TRUE;
-        }
+        GST_DEBUG ("sender source %08x timed out and became receiver, last %"
+            GST_TIME_FORMAT, source->ssrc, GST_TIME_ARGS (btime));
+        sendertimeout = TRUE;
       }
     }
   }
