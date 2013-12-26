@@ -333,9 +333,25 @@ on_ssrc_collision (RTPSession * session, RTPSource * src, GstRtpSession * sess)
   GST_RTP_SESSION_UNLOCK (sess);
 
   if (send_rtp_sink) {
-    GstEvent *event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
-        gst_structure_new ("GstRTPCollision", "ssrc", G_TYPE_UINT,
-            (guint) src->ssrc, NULL));
+    GstStructure *structure;
+    GstEvent *event;
+    RTPSource *internal_src;
+    guint32 suggested_ssrc;
+
+    structure = gst_structure_new ("GstRTPCollision", "ssrc", G_TYPE_UINT,
+        (guint) src->ssrc, NULL);
+
+    /* if there is no source using the suggested ssrc, most probably because
+     * this ssrc has just collided, suggest upstream to use it */
+    suggested_ssrc = rtp_session_suggest_ssrc (session);
+    internal_src = rtp_session_get_source_by_ssrc (session, suggested_ssrc);
+    if (!internal_src)
+      gst_structure_set (structure, "suggested-ssrc", G_TYPE_UINT,
+          (guint) suggested_ssrc, NULL);
+    else
+      g_object_unref (internal_src);
+
+    event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM, structure);
     gst_pad_push_event (send_rtp_sink, event);
     gst_object_unref (send_rtp_sink);
   }
