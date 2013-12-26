@@ -29,11 +29,15 @@
 
 set -e
 
-# set BRANCH to "0.10" for a GStreamer 0.10.x checkout
+# set BRANCH to e.g. "1.2" to track the stable 1.2 branch instead of master
 BRANCH="master"
 
 # set to "ssh" if you have a developer account and ssh access
 GIT_ACCESS="anongit"
+
+# re-use and reference local master branch checkout if one already exists
+# (saves network bandwidth)
+REUSE_EXISTING_MASTER_CHECKOUT="true"
 
 # git modules to clone
 MODULES="gstreamer gst-plugins-base gst-plugins-good gst-plugins-ugly gst-plugins-bad"
@@ -97,10 +101,17 @@ cd $UNINSTALLED_ROOT/$BRANCH
 
 for m in $MODULES
 do
+  REF=""
+  if test "$BRANCH" != "master" \
+    -a "x$REUSE_EXISTING_MASTER_CHECKOUT" = "xtrue" \
+    -a -d ../master/$m; then
+      REF="--reference=../master/$m"
+  fi
+
   if test "$GIT_ACCESS" = "ssh"; then
-    git clone ssh://git.freedesktop.org/git/gstreamer/$m
+    git clone $REF ssh://git.freedesktop.org/git/gstreamer/$m
   else
-    git clone git://anongit.freedesktop.org/gstreamer/$m
+    git clone $REF git://anongit.freedesktop.org/gstreamer/$m
   fi
 
   cd $m
