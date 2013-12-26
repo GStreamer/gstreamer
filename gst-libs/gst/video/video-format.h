@@ -276,6 +276,11 @@ typedef void (*GstVideoFormatUnpack)         (const GstVideoFormatInfo *info,
  *
  * Subsampled formats will use the horizontally cosited component in the
  * destination. Subsampling should be performed before packing.
+ *
+ * Because tis function does not have a x coordinate, it is not possible to
+ * pack pixels starting from an unaligned position. For tiled images this
+ * means that packing should start from a tile coordinate. For subsampled
+ * formats this means that a complete pixel need to be packed.
  */
 typedef void (*GstVideoFormatPack)           (const GstVideoFormatInfo *info,
                                               GstVideoPackFlags flags,
