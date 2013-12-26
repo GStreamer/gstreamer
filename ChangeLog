@@ -1,9 +1,376 @@
-=== release 1.2.1 ===
+=== release 1.2.2 ===
 
-2013-11-09  Sebastian Dröge <slomo@coaxion.net>
+2013-12-26  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.1
+	  releasing 1.2.2
+
+2013-12-26 16:47:45 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/da.po:
+	  po: Update translations
+
+2013-12-23 15:33:42 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/adpcmenc/adpcmenc.c:
+	  adpcmenc: Properly set output format
+	  Otherwise this will just error out if we only set caps on the srcpad.
+
+2013-12-24 11:51:16 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/eglgles/gstegladaptation_eagl.m:
+	  eglglessink: Properly clean up renderbuffers and EAGL context
+
+2013-12-19 21:36:50 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/eglgles/gstegladaptation_eagl.m:
+	  eglglessink: Don't set the EAGLContext of the main thread and don't reuse it either
+	  ... instead create a new context for every sink instance.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=720421
+
+2013-12-18 13:48:54 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* pkgconfig/gstreamer-plugins-bad.pc.in:
+	  pkgconfig: Don't include libraries in the generic gst-plugins-bad pc file
+
+2013-12-18 13:45:22 +0100  Mariusz Buras <mariusz.buras@youview.com>
+
+	* gst-libs/gst/mpegts/Makefile.am:
+	* pkgconfig/gstreamer-plugins-bad.pc.in:
+	  mpegts: Install generated headers
+	  https://bugzilla.gnome.org/show_bug.cgi?id=720673
+
+2013-12-16 16:07:44 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/id3tag/id3tag.c:
+	  id3tag: Read image-description from the info structure, not the caps
+
+2013-12-16 11:51:00 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/id3tag/id3tag.c:
+	  id3tag: Write image-type into the APIC tag
+
+2013-12-17 10:23:15 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/decklink/gstdecklinksink.cpp:
+	  decklinksink: Give preference to the order of the filter caps when querying caps
+
+2013-12-17 10:21:26 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/decklink/gstdecklinksink.cpp:
+	  decklinksink: Only intersect with the filter caps if there actually is a filter
+
+2013-12-16 11:14:29 +0100  Aurélien Zanelli <aurelien.zanelli@parrot.com>
+
+	* configure.ac:
+	  configure.ac: Fix typo in bz2 check
+	  https://bugzilla.gnome.org/show_bug.cgi?id=720532
+
+2013-12-14 18:12:53 -0500  Todd Agulnick <todd@agulnick.com>
+
+	* sys/decklink/gstdecklinksrc.cpp:
+	  decklinksrc: Process EOS even when there are no incoming video frames.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=680700
+
+2013-12-14 18:42:11 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* sys/decklink/gstdecklinksrc.cpp:
+	  decklinksrc: Set GST_ELEMENT_FLAG_SOURCE on the source
+	  As it does not inherit from basesrc, this flag is not automatically set
+	  and e.g. gst_bin_iterate_sources() and other code does not consider this
+	  element a source.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=680700
+
+2013-12-06 00:22:20 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* ext/gsm/gstgsmdec.c:
+	  gsmdec: fix decoding of audio/ms-gsm variant
+	  Alternates between 33 and 32 byte frames, but must start
+	  with a 33 byte frame. This has been broken for ages since
+	  the element was ported to the audio decoder base class.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=709416
+
+2013-04-17 10:44:48 +0800  Cong Zhong <congx.zhong@intel.com>
+
+	* gst-libs/gst/codecparsers/gsth264parser.c:
+	  codecparsers: h264: fix picture level scaling lists derivation (rule B).
+	  Fix picture level scaling lists derivation from fall-back rule set B,
+	  as specified in 7.4.2.2. More precisely, the sequence level scaling
+	  lists need to be used but intra and inter lists arguments were swapped.
+	  This fixes FRExt/freh5.264 from conformance testing.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=720099
+	  Signed-off-by: Gwenole Beauchesne <gwenole.beauchesne@intel.com>
+
+2013-12-05 16:50:27 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/asfmux/gstrtpasfpay.c:
+	  rtpasfpay: Use GstRTPBasePayload method to push buffer
+	  This way the event is also pushed.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=719553
+
+2013-12-04 17:31:27 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst-libs/gst/codecparsers/gstmpegvideoparser.c:
+	  mpegvideoparser: Also initialize debug category in parse_sequence_header
+	  Also remove the useless initialized flag, this is already done by the macro
+	  https://bugzilla.gnome.org/show_bug.cgi?id=719657
+
+2013-11-29 13:23:40 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/asfmux/gstrtpasfpay.c:
+	  rtpasfpay: init rtp buffer fixing rtp packet creation
+	  https://bugzilla.gnome.org/show_bug.cgi?id=719553
+
+2013-11-29 13:22:56 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/asfmux/gstasfmux.c:
+	  asfmux: don't use buffer after giving away ownership
+	  https://bugzilla.gnome.org/show_bug.cgi?id=719553
+
+2013-11-25 16:57:00 +0000  Lubosz Sarnecki <lubosz@gmail.com>
+
+	* gst/videoparsers/gstpngparse.c:
+	  pngparse: Don't try to set framerate if not from upstream
+	  https://bugzilla.gnome.org/show_bug.cgi?id=715166
+
+2013-12-10 23:06:53 +1100  Jan Schmidt <jan@centricular.com>
+
+	* ext/soundtouch/gstbpmdetect.cc:
+	  soundtouch: Call default event handler for basetransform
+	  Make pipeline end properly at EOS and not leak by passing events
+	  to the default event handler.
+
+2013-09-29 23:43:23 +0100  Tim-Philipp Müller <tim@centricular.net>
+
+	* ext/opencv/gstdisparity.cpp:
+	  opencv: don't unref NULL caps in finalize
+	  Fixes gst-inspect-1.0 -a and generic states unit test.
+
+2013-11-28 15:10:16 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/videoparsers/gsth264parse.c:
+	  h264parse: Fix splitting of multiple NALU per buffer
+	  Conversion to byte-stream/nal crashes without that because the
+	  baseparse frame of all NALUs is finished for the first NALU, then
+	  used again for parsing the second NALU. Just that now the buffer
+	  of the frame is already gone. Instead we create temporary frames
+	  for every NALU.
+
+2013-11-10 12:17:18 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: tweak extension handling
+
+2013-11-10 12:15:33 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/mpegdemux/gstmpegdemux.c:
+	  mpgegdemux: do not use pushed buffer in debug message
+
+2013-11-11 16:15:00 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/videoparsers/gstmpegvideoparse.c:
+	  mpegvideoparse: look beyond start code before leaping
+	  In case more data than a start code alone is needed to decide whether
+	  it ends a frame, arrange for more input data and decide when available.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=711627
+
+2013-11-20 12:46:23 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/dvdspu/gstdvdspu.c:
+	  dvdspu: Handle vobsub packets smaller than 4 bytes
+	  In particular, handle the case of an empty packet with size 0 bytes.
+	  Partially fixes: #712643
+
+2013-11-25 15:17:33 +1100  Jan Schmidt <jan@centricular.com>
+
+	* gst/dvdspu/gstspu-vobsub.c:
+	  dvdspu: Don't unmap an unreffed buffer
+	  gst_dvd_spu_finish_spu_buf drops the reference to the current
+	  buffer, so make sure to call gst_buffer_unmap before it.
+
+2013-11-23 14:35:06 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/dvdspu/gstspu-vobsub.c:
+	  dvdspu: pop new packet when invalid next command block
+	  ... to prevent staying stuck on current command block and busy looping.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=712219
+
+2013-11-23 11:23:35 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst/videoparsers/gstmpeg4videoparse.c:
+	  mpeg4videoparse: accept VideoObjectLayer as start of frame and config
+	  ... which it deserves as much as VideoObject.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=667564
+
+2013-10-02 05:49:34 +0300  Dominik Röttsches <dominik.rottsches@intel.com>
+
+	* sys/applemedia/vtenc.c:
+	* sys/applemedia/vtenc.h:
+	  vtenc: Use correct strides, etc from the GstVideoFrame
+	  https://bugzilla.gnome.org/show_bug.cgi?id=706211
+
+2013-11-19 20:18:48 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/srtp/gstsrtpenc.c:
+	  srtpenc: Set the first session flag to false once one is create
+	  Otherwise it always thinks it's the first session.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711495
+
+2013-11-19 19:10:06 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* ext/srtp/gstsrtpdec.c:
+	  srtpdec: Pass is_rtcp to setcaps function
+
+2013-11-13 22:25:59 -0300  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* ext/smoothstreaming/gstmssdemux.c:
+	  mssdemux: do not try to deinit the downloadrate while it is used
+	  This can cause an assertion or deadlocks.
+
+2013-11-11 16:35:35 -0300  Thiago Santos <ts.santos@partner.samsung.com>
+
+	* ext/smoothstreaming/gstmssdemux.c:
+	  mssdemux: also consider /manifest
+	  The spec says /Manifest, but /manifest is easily found on some
+	  services, so handle that, too.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=710223
+
+2013-11-13 17:16:04 -0300  Thibault Saunier <thibault.saunier@collabora.com>
+
+	* gst/videoparsers/gstpngparse.c:
+	  pngparse: Proxy upstream framerate on srcpad if avalaible
+	  If the user sets it himself with capsfilter, the information should be
+	  kept and transmitted downstream.
+
+=== release 1.2.1 ===
+
+2013-11-09 15:53:48 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/gst-plugins-bad-plugins.args:
+	* docs/plugins/gst-plugins-bad-plugins.hierarchy:
+	* docs/plugins/inspect/plugin-accurip.xml:
+	* docs/plugins/inspect/plugin-adpcmdec.xml:
+	* docs/plugins/inspect/plugin-adpcmenc.xml:
+	* docs/plugins/inspect/plugin-asfmux.xml:
+	* docs/plugins/inspect/plugin-assrender.xml:
+	* docs/plugins/inspect/plugin-audiovisualizers.xml:
+	* docs/plugins/inspect/plugin-autoconvert.xml:
+	* docs/plugins/inspect/plugin-bayer.xml:
+	* docs/plugins/inspect/plugin-bz2.xml:
+	* docs/plugins/inspect/plugin-camerabin.xml:
+	* docs/plugins/inspect/plugin-chromaprint.xml:
+	* docs/plugins/inspect/plugin-coloreffects.xml:
+	* docs/plugins/inspect/plugin-curl.xml:
+	* docs/plugins/inspect/plugin-dataurisrc.xml:
+	* docs/plugins/inspect/plugin-debugutilsbad.xml:
+	* docs/plugins/inspect/plugin-dtsdec.xml:
+	* docs/plugins/inspect/plugin-dvb.xml:
+	* docs/plugins/inspect/plugin-dvbsuboverlay.xml:
+	* docs/plugins/inspect/plugin-dvdspu.xml:
+	* docs/plugins/inspect/plugin-eglglessink.xml:
+	* docs/plugins/inspect/plugin-faac.xml:
+	* docs/plugins/inspect/plugin-faad.xml:
+	* docs/plugins/inspect/plugin-festival.xml:
+	* docs/plugins/inspect/plugin-fieldanalysis.xml:
+	* docs/plugins/inspect/plugin-flite.xml:
+	* docs/plugins/inspect/plugin-fragmented.xml:
+	* docs/plugins/inspect/plugin-frei0r.xml:
+	* docs/plugins/inspect/plugin-gaudieffects.xml:
+	* docs/plugins/inspect/plugin-gdp.xml:
+	* docs/plugins/inspect/plugin-geometrictransform.xml:
+	* docs/plugins/inspect/plugin-gmedec.xml:
+	* docs/plugins/inspect/plugin-gsm.xml:
+	* docs/plugins/inspect/plugin-gstsiren.xml:
+	* docs/plugins/inspect/plugin-id3tag.xml:
+	* docs/plugins/inspect/plugin-inter.xml:
+	* docs/plugins/inspect/plugin-interlace.xml:
+	* docs/plugins/inspect/plugin-jpegformat.xml:
+	* docs/plugins/inspect/plugin-liveadder.xml:
+	* docs/plugins/inspect/plugin-mimic.xml:
+	* docs/plugins/inspect/plugin-mms.xml:
+	* docs/plugins/inspect/plugin-modplug.xml:
+	* docs/plugins/inspect/plugin-mpegpsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsdemux.xml:
+	* docs/plugins/inspect/plugin-mpegtsmux.xml:
+	* docs/plugins/inspect/plugin-mpg123.xml:
+	* docs/plugins/inspect/plugin-neon.xml:
+	* docs/plugins/inspect/plugin-ofa.xml:
+	* docs/plugins/inspect/plugin-openal.xml:
+	* docs/plugins/inspect/plugin-opencv.xml:
+	* docs/plugins/inspect/plugin-opus.xml:
+	* docs/plugins/inspect/plugin-pcapparse.xml:
+	* docs/plugins/inspect/plugin-pnm.xml:
+	* docs/plugins/inspect/plugin-rawparse.xml:
+	* docs/plugins/inspect/plugin-removesilence.xml:
+	* docs/plugins/inspect/plugin-resindvd.xml:
+	* docs/plugins/inspect/plugin-rfbsrc.xml:
+	* docs/plugins/inspect/plugin-rtmp.xml:
+	* docs/plugins/inspect/plugin-schro.xml:
+	* docs/plugins/inspect/plugin-sdp.xml:
+	* docs/plugins/inspect/plugin-segmentclip.xml:
+	* docs/plugins/inspect/plugin-shm.xml:
+	* docs/plugins/inspect/plugin-smooth.xml:
+	* docs/plugins/inspect/plugin-soundtouch.xml:
+	* docs/plugins/inspect/plugin-spandsp.xml:
+	* docs/plugins/inspect/plugin-speed.xml:
+	* docs/plugins/inspect/plugin-subenc.xml:
+	* docs/plugins/inspect/plugin-videoparsersbad.xml:
+	* docs/plugins/inspect/plugin-voaacenc.xml:
+	* docs/plugins/inspect/plugin-voamrwbenc.xml:
+	* docs/plugins/inspect/plugin-waylandsink.xml:
+	* docs/plugins/inspect/plugin-y4mdec.xml:
+	* docs/plugins/inspect/plugin-zbar.xml:
+	* gst-plugins-bad.doap:
+	* win32/common/config.h:
+	  Release 1.2.1
+
+2013-11-09 15:53:37 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/ky.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/mt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-11-09 13:32:21 +0100  Matej Knopp <matej.knopp@gmail.com>
 

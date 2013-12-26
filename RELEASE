@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Bad Plugins 1.2.1
+Release notes for GStreamer Bad Plugins 1.2.2
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -62,26 +62,21 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
+      * 667564 : mpeg4videoparse: does not detect config data when VOP only stream is sent
+      * 680700 : decklinksrc: does not forward EOS events passed via send_event
+      * 706211 : applemedia: Garbled output from vtenc_h264
+      * 709416 : gsmdec: MS GSM playback is broken
+      * 710223 : smoothstreaming: strip both /manifest and /Manifest from the manifest uri
+      * 711495 : srtpenc: new streams remove any existing streams
       * 711627 : mpegvparse: Incorrect repositioning of start code location when input buffer is empty
-      * 690148 : hlsdemux: hangs when network disconnects or when server is unreachable
-      * 707974 : h264parse: Broken conversion to AVC if a SPS/PPS not from the first indizes is used
-      * 708161 : mpegtspacketizer: rework packet extraction and sync
-      * 708222 : tsparse: Pushes unparsed data immediately on the srcpad
-      * 708849 : hlsdemux: occasionally dereferencing NULL in gst_hls_demux_switch_playlist()
-      * 709145 : mpegts: Can't link against mpegts
-      * 709373 : camerabin: Filesink not closing file after stop-capture
-      * 709531 : egl: Make dependency on egl optional
-      * 709886 :  " pitch " plugin prevent pipeline creation
-      * 710392 : geometrictransform: fix setting black background for AYUV buffers
-      * 710433 : androidmedia: gst_amc_avc_profile_from_string not recognize alternative profile names
-      * 710451 : yadif: OSX linking fails because of unresolved symbols: " pb_1 " and " pw_1 " unreferenced
-      * 710657 : avfvideosrc: fix truncated line
-      * 710881 : memory leaks in hlsdemux
-      * 711135 : applemedia-nonpublic: fix plugin name
-      * 711156 : androidmedia: fix access to invalid buffers in the decoding loop
-      * 711214 : androidmedia: fix rank for more software decoders
-      * 711615 : codecparsers: Condition mistake in h264parser
-      * 711721 : mpegvideoparse: Unit test fails
+      * 712219 : dvdspu: stalled playback
+      * 712605 : h264parse: Broken conversion avc/au to byte-stream/nal
+      * 715166 : pngparse: Don't set a framerate from uninitialized variables
+      * 719657 : gstmpegvideoparser: debug category not always initialized soon enough
+      * 720099 : codecparsers: h264: fix picture level scaling lists derivation from fall-back rule set B
+      * 720421 : eglglessink: simultaneous eglglessinks not possible in iOS application
+      * 720532 : configure.ac: Fix typo in bz2-check
+      * 720673 : mpegts: Does not install all headers
 
 ==== Download ====
 
@@ -118,20 +113,17 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Alex Ashley
-      * Andoni Morales Alastruey
-      * Antonio Ospite
-      * Arnaud Vrac
       * Aurélien Zanelli
-      * Brendan Long
-      * Chen Jie
-      * Edward Hervey
-      * Gilles Dartiguelongue
-      * Greg Rutz
-      * Matej Knopp
-      * Matthieu Bouron
+      * Cong Zhong
+      * Dominik Röttsches
+      * Jan Schmidt
+      * Lubosz Sarnecki
+      * Mariusz Buras
+      * Mark Nauwelaerts
       * Olivier Crête
       * Sebastian Dröge
       * Thiago Santos
+      * Thibault Saunier
       * Tim-Philipp Müller
+      * Todd Agulnick
  
