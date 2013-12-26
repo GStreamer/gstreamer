@@ -3247,16 +3247,14 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
   GST_LOG ("timeout base interval %" GST_TIME_FORMAT,
       GST_TIME_ARGS (binterval));
 
-  if (!source->internal) {
-    if (source->marked_bye) {
-      /* if we received a BYE from the source, remove the source after some
-       * time. */
-      if (data->current_time > source->bye_time &&
-          data->current_time - source->bye_time > sess->stats.bye_timeout) {
-        GST_DEBUG ("removing BYE source %08x", source->ssrc);
-        remove = TRUE;
-        byetimeout = TRUE;
-      }
+  if (!source->internal && source->marked_bye) {
+    /* if we received a BYE from the source, remove the source after some
+     * time. */
+    if (data->current_time > source->bye_time &&
+        data->current_time - source->bye_time > sess->stats.bye_timeout) {
+      GST_DEBUG ("removing BYE source %08x", source->ssrc);
+      remove = TRUE;
+      byetimeout = TRUE;
     }
   }
 
