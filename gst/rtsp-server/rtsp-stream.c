@@ -1751,6 +1751,7 @@ was_not_joined:
  * @stream: a #GstRTSPStream
  * @rtptime: (allow-none): result RTP timestamp
  * @seq: (allow-none): result RTP seqnum
+ * @clock_rate: the clock rate
  * @running_time: (allow-none): result running-time
  *
  * Retrieve the current rtptime, seq and running-time. This is used to
@@ -1760,7 +1761,8 @@ was_not_joined:
  */
 gboolean
 gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
-    guint * rtptime, guint * seq, GstClockTime * running_time)
+    guint * rtptime, guint * seq, guint * clock_rate,
+    GstClockTime * running_time)
 {
   GstRTSPStreamPrivate *priv;
   GObjectClass *payobjclass;
@@ -1771,6 +1773,7 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
 
   payobjclass = G_OBJECT_GET_CLASS (priv->payloader);
 
+  g_mutex_lock (&priv->lock);
   if (seq && g_object_class_find_property (payobjclass, "seqnum"))
     g_object_get (priv->payloader, "seqnum", seq, NULL);
 
@@ -1780,6 +1783,16 @@ gst_rtsp_stream_get_rtpinfo (GstRTSPStream * stream,
   if (running_time
       && g_object_class_find_property (payobjclass, "running-time"))
     g_object_get (priv->payloader, "running-time", running_time, NULL);
+
+  if (clock_rate && priv->caps) {
+    GstStructure *s;
+
+    s = gst_caps_get_structure (priv->caps, 0);
+    if (!gst_structure_get_int (s, "clock-rate", (gint *) clock_rate))
+      if (running_time)
+        *running_time = GST_CLOCK_TIME_NONE;
+  }
+  g_mutex_unlock (&priv->lock);
 
   return TRUE;
 }

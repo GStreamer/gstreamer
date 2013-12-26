@@ -276,7 +276,7 @@ gst_rtsp_session_media_get_rtpinfo (GstRTSPSessionMedia * media)
     }
 
     stream = gst_rtsp_stream_transport_get_stream (transport);
-    if (!gst_rtsp_stream_get_rtpinfo (stream, NULL, NULL, &running_time))
+    if (!gst_rtsp_stream_get_rtpinfo (stream, NULL, NULL, NULL, &running_time))
       continue;
 
     GST_LOG_OBJECT (media, "running time of %d stream: %" GST_TIME_FORMAT, i,

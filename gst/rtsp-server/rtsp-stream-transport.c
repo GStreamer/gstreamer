@@ -327,14 +327,34 @@ gst_rtsp_stream_transport_get_rtpinfo (GstRTSPStreamTransport * trans,
   GstRTSPStreamTransportPrivate *priv;
   gchar *url_str;
   GString *rtpinfo;
-  guint rtptime, seq;
+  guint rtptime, seq, clock_rate;
+  GstClockTime running_time = GST_CLOCK_TIME_NONE;
 
   g_return_val_if_fail (GST_IS_RTSP_STREAM_TRANSPORT (trans), NULL);
 
   priv = trans->priv;
 
-  if (!gst_rtsp_stream_get_rtpinfo (priv->stream, &rtptime, &seq, NULL))
+  if (!gst_rtsp_stream_get_rtpinfo (priv->stream, &rtptime, &seq, &clock_rate,
+          &running_time))
     return NULL;
+
+  GST_DEBUG ("RTP time %u, seq %u, rate %u, running-time %" GST_TIME_FORMAT,
+      rtptime, seq, clock_rate, GST_TIME_ARGS (running_time));
+
+  if (GST_CLOCK_TIME_IS_VALID (running_time)
+      && GST_CLOCK_TIME_IS_VALID (start_time)) {
+    if (running_time > start_time) {
+      rtptime -=
+          gst_util_uint64_scale_int (running_time - start_time, clock_rate,
+          GST_SECOND);
+    } else {
+      rtptime +=
+          gst_util_uint64_scale_int (start_time - running_time, clock_rate,
+          GST_SECOND);
+    }
+  }
+  GST_DEBUG ("RTP time %u, for start-time %" GST_TIME_FORMAT,
+      rtptime, GST_TIME_ARGS (start_time));
 
   rtpinfo = g_string_new ("");
 

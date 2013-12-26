@@ -119,6 +119,7 @@ void              gst_rtsp_stream_get_ssrc         (GstRTSPStream *stream,
 
 gboolean          gst_rtsp_stream_get_rtpinfo      (GstRTSPStream *stream,
                                                     guint *rtptime, guint *seq,
+                                                    guint *clock_rate,
                                                     GstClockTime *running_time);
 GstCaps *         gst_rtsp_stream_get_caps         (GstRTSPStream *stream);
 
