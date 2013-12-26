@@ -273,10 +273,12 @@ GObject
           GstJpegDec
           GstPngDec
           GstVP8Dec
+          GstVP9Dec
         GstVideoEncoder
           GstJpegEnc
           GstPngEnc
           GstVP8Enc
+          GstVP9Enc
         GstVideoMixer2
         GstWavEnc
         GstWavParse

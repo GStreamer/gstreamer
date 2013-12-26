@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Good Plugins 1.2.1
+Release notes for GStreamer Good Plugins 1.2.2
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -57,26 +57,24 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 683536 : souphttpsrc: Handles long pause (long enough to timeout TCP socket connection) as EOS
-      * 707933 : matroskademux: Wrong UTF8 detection causes wrong detection of subtitle encoding
-      * 707975 : qtdemux: Can't handle datetimes before 1970 yet
-      * 708505 : matroskademux: sends unnecessary gap events
-      * 708864 : mp4mux: Does not negotiate due to framerate caps not set on peer pad
-      * 709270 : qtdemux: Does not support mp2v fourcc for MPEG-2 video
-      * 709352 : jpegdec: Does not require width/height on caps or parsed input
-      * 709384 : videomixer: Check if the source pad needs reconfiguration and update the source caps in that case
-      * 709390 : videomixer: Update videoconversion code
-      * 709423 : v4l2bufferpool: O_CLOEXEC needs _GNU_SOURCE
-      * 709457 : Do not write out SegmentUID when muxing to WebM
-      * 709507 : deinterlace: Segfault in handling of planar YUV video formats
-      * 709614 : wavenc: Uses invalid caps for alaw and mulaw
-      * 709728 : dvdemux/dvdec: Sends stream-start, caps and segment events in wrong order
-      * 710110 : multiudpsink: Leaks GstMemories when flushing
-      * 710215 : audioiirfilter: Crashes when no coefficients are provided
-      * 710623 : qtdemux: Video captured by iPad couldn't play in push mode
-      * 711230 : rtspsrc: allow setting certificate validation flags
-      * 711497 : rtpvp8pay: Compatibility issue with linphone due to always sending a picture id
-      * 711699 : wavenc: bogus header generated
+      * 688153 : matroskademux: audio gap after seeking on webm with lacing
+      * 709800 : rtpjitterbuffer: stalled stream after gst_rtp_jitter_buffer_clear_pt_map() being called.
+      * 710013 : tests: rtpjitterbuffer test_rtx_packet_delay - spurious failures
+      * 711131 : rtpjitterbuffer: SIGSEGV when do-retransmission=true and a lot of packets are dopped
+      * 711829 : matroskademux: assert on division by zero
+      * 712137 : v4l2sink: fixes for uploading compressed
+      * 712328 : matroskademux: Use GstVideoInfo helper to create caps for raw video
+      * 712335 : qtdemux: Use GstVideoInfo helper to create caps for raw video
+      * 712401 : videomixer: Segfault when generating color backround in UYVY
+      * 712611 : v4l2: clear cached caps on close
+      * 712722 : [regression] rtpbin fails to return not linked when it should
+      * 712744 : matroskamux: Fix handling of negative timestamps
+      * 715039 : rtpjitterbuffer: Fix inconsistency in waking up
+      * 719431 : videomixer: Should fail negotiation if it can't preserve the alpha channel of input streams
+      * 719811 : pulsesink: Leak of device_info in gst_pulsesink_sink_info_cb
+      * 720813 : qtmux: Invalid calculation of descriptor length
+      * 720986 : vp9dec: Don't build with libvpx earlier than 1.3.0 because of non-final bitstream
+      * 721003 : rtspsrc: play requests can't find media with query parameters
 
 ==== Download ====
 
@@ -113,20 +111,16 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaque
-      * Andoni Morales Alastruey
-      * Hans Månsson
-      * Matej Knopp
+      * Brendan Long
+      * George Kiagiadakis
+      * Marc Leeman
+      * Mark Nauwelaerts
       * Mathieu Duponchelle
-      * Matthieu Bouron
-      * Ognyan Tonchev
+      * Michael Olbrich
       * Olivier Crête
-      * Peter Korsgaard
-      * Philippe Normand
-      * Reynaldo H. Verdejo Pinochet
-      * Rico Tzschichholz
+      * Per x Johansson
       * Sebastian Dröge
-      * Thiago Santos
+      * Thibault Saunier
       * Tim-Philipp Müller
       * Wim Taymans
  
