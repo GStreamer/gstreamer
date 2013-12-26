@@ -248,15 +248,51 @@ gst_rtsp_session_media_get_rtpinfo (GstRTSPSessionMedia * media)
   GstRTSPSessionMediaPrivate *priv;
   GString *rtpinfo = NULL;
   GstRTSPStreamTransport *transport;
+  GstRTSPStream *stream;
   guint i, n_streams;
+  GstClockTime earliest = GST_CLOCK_TIME_NONE;
 
   g_return_val_if_fail (GST_IS_RTSP_SESSION_MEDIA (media), NULL);
 
   priv = media->priv;
   g_mutex_lock (&priv->lock);
 
+  if (gst_rtsp_media_get_status (priv->media) != GST_RTSP_MEDIA_STATUS_PREPARED)
+    goto not_prepared;
+
   n_streams = priv->transports->len;
 
+  /* first step, take lowest running-time from all streams */
+  GST_LOG_OBJECT (media, "determining start time among %d transports",
+      n_streams);
+
+  for (i = 0; i < n_streams; i++) {
+    GstClockTime running_time;
+
+    transport = g_ptr_array_index (priv->transports, i);
+    if (transport == NULL) {
+      GST_DEBUG_OBJECT (media, "ignoring unconfigured transport %d", i);
+      continue;
+    }
+
+    stream = gst_rtsp_stream_transport_get_stream (transport);
+    if (!gst_rtsp_stream_get_rtpinfo (stream, NULL, NULL, &running_time))
+      continue;
+
+    GST_LOG_OBJECT (media, "running time of %d stream: %" GST_TIME_FORMAT, i,
+        GST_TIME_ARGS (running_time));
+
+    if (!GST_CLOCK_TIME_IS_VALID (earliest)) {
+      earliest = running_time;
+    } else {
+      earliest = MIN (earliest, running_time);
+    }
+  }
+
+  GST_LOG_OBJECT (media, "media start time: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (earliest));
+
+  /* next step, scale all rtptime of all streams to lowest running-time */
   GST_LOG_OBJECT (media, "collecting RTP info for %d transports", n_streams);
 
   for (i = 0; i < n_streams; i++) {
@@ -268,7 +304,8 @@ gst_rtsp_session_media_get_rtpinfo (GstRTSPSessionMedia * media)
       continue;
     }
 
-    stream_rtpinfo = gst_rtsp_stream_transport_get_rtpinfo (transport);
+    stream_rtpinfo =
+        gst_rtsp_stream_transport_get_rtpinfo (transport, earliest);
     if (stream_rtpinfo == NULL)
       goto stream_rtpinfo_missing;
 
@@ -291,6 +328,12 @@ gst_rtsp_session_media_get_rtpinfo (GstRTSPSessionMedia * media)
   return g_string_free (rtpinfo, FALSE);
 
   /* ERRORS */
+not_prepared:
+  {
+    g_mutex_unlock (&priv->lock);
+    GST_ERROR_OBJECT (media, "media was not prepared");
+    return NULL;
+  }
 stream_rtpinfo_missing:
   {
     g_mutex_unlock (&priv->lock);

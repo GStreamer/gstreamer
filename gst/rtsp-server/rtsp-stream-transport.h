@@ -100,7 +100,8 @@ void                     gst_rtsp_stream_transport_set_url       (GstRTSPStreamT
 const GstRTSPUrl *       gst_rtsp_stream_transport_get_url       (GstRTSPStreamTransport *trans);
 
 
-gchar *                  gst_rtsp_stream_transport_get_rtpinfo   (GstRTSPStreamTransport *trans);
+gchar *                  gst_rtsp_stream_transport_get_rtpinfo   (GstRTSPStreamTransport *trans,
+                                                                  GstClockTime start_time);
 
 void                     gst_rtsp_stream_transport_set_callbacks (GstRTSPStreamTransport *trans,
                                                                   GstRTSPSendFunc send_rtp,

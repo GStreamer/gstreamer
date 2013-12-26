@@ -313,14 +313,16 @@ gst_rtsp_stream_transport_get_url (GstRTSPStreamTransport * trans)
  /**
  * gst_rtsp_stream_transport_get_rtpinfo:
  * @trans: a #GstRTSPStreamTransport
+ * @start_time: a star time
  *
- * Get the RTPInfo string for @trans.
+ * Get the RTPInfo string for @trans and @start_time.
  *
- * Returns: the RTPInfo string for @trans. g_free() after
+ * Returns: the RTPInfo string for @trans and @start_time. g_free() after
  * usage.
  */
 gchar *
-gst_rtsp_stream_transport_get_rtpinfo (GstRTSPStreamTransport * trans)
+gst_rtsp_stream_transport_get_rtpinfo (GstRTSPStreamTransport * trans,
+    GstClockTime start_time)
 {
   GstRTSPStreamTransportPrivate *priv;
   gchar *url_str;
