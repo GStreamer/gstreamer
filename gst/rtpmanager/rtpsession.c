@@ -3258,6 +3258,11 @@ session_cleanup (const gchar * key, RTPSource * source, ReportData * data)
     }
   }
 
+  if (source->internal && source->sent_bye) {
+    GST_DEBUG ("removing internal source that has sent BYE %08x", source->ssrc);
+    remove = TRUE;
+  }
+
   /* sources that were inactive for more than 5 times the deterministic reporting
    * interval get timed out. the min timeout is 5 seconds. */
   /* mind old time that might pre-date last time going to PLAYING */
