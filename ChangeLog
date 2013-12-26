@@ -1,9 +1,212 @@
-=== release 1.2.1 ===
+=== release 1.2.2 ===
 
-2013-11-09  Sebastian Dröge <slomo@coaxion.net>
+2013-12-26  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.1
+	  releasing 1.2.2
+
+2013-12-26 16:44:57 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/da.po:
+	* po/de.po:
+	* po/pl.po:
+	* po/ru.po:
+	* po/uk.po:
+	* po/vi.po:
+	  po: Update translations
+
+2013-12-20 14:30:22 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstfunnel.c:
+	  funnel: Setting the PROXY_CAPS flag on the srcpad does not make much sense
+	  funnel outputs whatever one of the upstreams currently outputs, a caps
+	  query to a random upstream does not give the right answer here.
+
+2013-12-20 11:37:53 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* plugins/elements/gstfunnel.c:
+	  funnel: Proxy CAPS and ALLOCATION queries
+
+2013-11-18 10:46:00 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: post 100% buffering if single queue is not linked
+	  This makes buffering stop in case a stream switch happens. This is
+	  important for adaptive streams that can disable not-linked streams
+	  to avoid consuming the network bandwidth.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=719575
+
+2013-12-11 14:42:34 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* plugins/elements/gstqueue.c:
+	* plugins/elements/gstqueue2.c:
+	  queue: don't ignore event return value
+	  Pass the event return value upstream.
+	  Remove strange goto construct.
+
+2013-11-18 15:28:32 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/gst/gstbus.c:
+	  tests: fix GstBus unit test with latest GLib
+	  g_source_remove() works on the default main context, and
+	  we're doing things with a custom context. Fixes warning
+	  with newer GLib versions.
+
+2013-12-05 00:26:13 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tools/gst-launch.c:
+	  tools: gst-launch: don't try to remove already-removed GSource from main loop
+	  It's considered a programming error in recent GLib versions now.
+	  We may already have removed the source by returning FALSE from
+	  the callback if it was fired. Fixes warning with newer GLibs
+	  when interrupting a pipeline with Control-C.
+
+2013-12-02 22:22:36 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* plugins/elements/gstmultiqueue.c:
+	  multiqueue: Wake up on reconfigure event
+	  After patch bda406c4, the state of the singlequeue was set to OK, but nothing
+	  would then wake up the thread, as the other wakeup functions only look at
+	  singlequeues that are marked as having received as not-linked.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=708200
+
+2013-11-19 11:41:54 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* gst/gstutils.c:
+	  gstpad: drop assertion on gst_pad_peer_query_position
+	  It is a 'both' query, so it can be sent both ways
+
+2013-11-18 18:11:56 -0300  Thiago Santos <ts.santos@sisa.samsung.com>
+
+	* plugins/elements/gstinputselector.c:
+	  inputselector: handle gap events
+	  Use gap events to advance the selector's pad position.
+	  This is relevant to keep sync_streams mode working when one of the
+	  streams doesn't have data all the time.
+
+2013-11-29 17:02:41 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstghostpad.c:
+	  Revert "ghostpad: copy sticky events to SRC ghostpads"
+	  This reverts commit 8162a583a4dd68582bf186e2e47a8f0d68fa1980.
+	  Automatically copying the sticky events makes it impossible for apps
+	  and elements to filter the events with event probes. This causes
+	  regressions (See #719437). The best option is to let the app/element
+	  copy and filter the events themselves after the ghostpad target is
+	  set.
+
+2013-11-15 07:32:48 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/gstbin.c:
+	  bin: Resync iterator if necessary
+
+2013-11-16 15:17:57 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* libs/gst/base/gstbaseparse.c:
+	  baseparse: ensure to preserve upstream timestamps
+	  ... rather than have subclass coming up with an internally parsed one.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=707230
+
+2013-11-21 14:13:16 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/gstghostpad.c:
+	  ghostpad: copy sticky events to SRC ghostpads
+	  Update the sticky events on SRC ghostpads when retargeting. This ensures
+	  that the ghostpad has the exect same sticky events as the target pad. We
+	  don't want to do this for SINK ghostpads, they got the events from
+	  downstream and we don't want to overwrite them with the target pad
+	  events.
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=707621
+
+2013-11-22 01:35:18 +0100  Sebastian Rasmussen <sebras@hotmail.com>
+
+	* gst/gstutils.c:
+	  gstutils: Escape stream id format in comments
+	  These must be escaped for gtk-doc to parse the comments without warnings.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=714989
+
+2013-11-25 19:04:38 -0500  Olivier Crête <olivier.crete@collabora.com>
+
+	* gst/gstquery.c:
+	  query: Fix gi annotations of gst_structure_new_custom()
+
+2013-11-14 15:32:59 +0100  Philippe Normand <philn@igalia.com>
+
+	* tools/gst-launch.c:
+	  gst-launch: exit with an error code when an error occured
+	  If the pipeline failed to pre-roll or the user interrupted the
+	  execution then set the exit code to a positive value.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=712300
+
+2013-11-18 21:39:54 +0100  Wim Taymans <wim.taymans@gmail.com>
+
+	* gst/gstpluginloader.c:
+	  pluginloader: check read/write before closed
+	  first try to read or write on the socket before checking the closed state. This
+	  makes sure we handle all data on the socket before erroring out.
+
+2013-11-18 21:37:06 +0100  Wim Taymans <wim.taymans@gmail.com>
+
+	* gst/gstpoll.c:
+	  poll: improve debug
+	  So that we can see the return values of functions in the log.
+
+=== release 1.2.1 ===
+
+2013-11-09 12:09:00 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-coreelements.xml:
+	* gstreamer.doap:
+	* win32/common/config.h:
+	* win32/common/gstversion.h:
+	  Release 1.2.1
+
+2013-11-09 12:08:51 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/be.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/rw.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	* po/zh_TW.po:
+	  Update .po files
 
 2013-11-09 12:00:23 +0100  Sebastian Dröge <sebastian@centricular.com>
 

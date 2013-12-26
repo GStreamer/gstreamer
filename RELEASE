@@ -1,5 +1,5 @@
 
-Release notes for GStreamer 1.2.1
+Release notes for GStreamer 1.2.2
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -42,7 +42,12 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 709832 : max DEBUG_LEVEL Incongruence on docs & autocompletion logic between 5 and 9
+      * 712597 : regression: playbin: buffering of live radio stream never finishes
+      * 719437 : ghostpad: Clearing ghostpad sticky events when switching targets causes regressions
+      * 707230 : flacparse: disregards container timestamps
+      * 712300 : gst-launch: exits with 0 error code even after an error occurred
+      * 714989 : docs/gst-utils: Fix escaping of stream id format
+      * 719575 : multiqueue: improve for adaptive scenario
 
 ==== Download ====
 
@@ -79,14 +84,12 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Edward Hervey
-      * Fabian Kirsch
-      * Jan Schmidt
       * Mark Nauwelaerts
-      * Reynaldo H. Verdejo Pinochet
+      * Olivier Crête
+      * Philippe Normand
       * Sebastian Dröge
-      * Stefan Sauer
-      * Thibault Saunier
+      * Sebastian Rasmussen
+      * Thiago Santos
       * Tim-Philipp Müller
       * Wim Taymans
  
