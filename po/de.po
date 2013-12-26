@@ -1,4 +1,4 @@
-# German messages for gst-plugins-base 1.1.4
+# German messages for gst-plugins-base 1.2.1
 # Copyright © 2006 Karl Eichwalder
 # This file is distributed under the same license as the gst-plugins-base package.
 # Karl Eichwalder <ke@suse.de>, 2006.
@@ -7,10 +7,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: gst-plugins-base 1.1.4\n"
+"Project-Id-Version: gst-plugins-base 1.2.1\n"
 "Report-Msgid-Bugs-To: http://bugzilla.gnome.org/\n"
-"POT-Creation-Date: 2013-11-09 12:14+0100\n"
-"PO-Revision-Date: 2013-09-21 12:26+0100\n"
+"POT-Creation-Date: 2013-12-26 16:45+0100\n"
+"PO-Revision-Date: 2013-12-16 00:25+0100\n"
 "Last-Translator: Christian Kirbach <christian.kirbach@gmail.com>\n"
 "Language-Team: German <translation-team-de@lists.sourceforge.net>\n"
 "Language: de\n"
@@ -209,7 +209,7 @@ msgid "Run-length encoding"
 msgstr "RLE-Codierung"
 
 msgid "Timed Text"
-msgstr ""
+msgstr "Zeitlich abgepasster Text"
 
 msgid "Subtitle"
 msgstr "Untertitel"
@@ -238,25 +238,25 @@ msgstr "Unkomprimiertes Video"
 msgid "Uncompressed gray"
 msgstr "Unkomprimiertes Grau"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed packed YUV %s"
-msgstr "Unkomprimiertes gepacktes YUV 4:2:2"
+msgstr "Unkomprimiertes gepacktes YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed semi-planar YUV %s"
-msgstr "Unkomprimiertes ungepacktes YUV 4:2:0"
+msgstr "Unkomprimiertes halbflaches YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed planar YUV %s"
-msgstr "Unkomprimiertes ungepacktes YUV 4:2:0"
+msgstr "Unkomprimiertes flaches YUV %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed palettized %d-bit %s"
-msgstr "Unkomprimiertes %s%d-Bit %s"
+msgstr "Unkomprimiertes palletiertes %d-Bit %s"
 
-#, fuzzy, c-format
+#, c-format
 msgid "Uncompressed %d-bit %s"
-msgstr "Unkomprimiertes %s%d-Bit %s"
+msgstr "Unkomprimiertes %d-Bit %s"
 
 #, c-format
 msgid "DivX MPEG-4 Version %d"
@@ -519,26 +519,28 @@ msgid "Initial key in which the sound starts"
 msgstr "Anfänglicher Schlüssel, in dem der Ton startet"
 
 msgid "Buffering..."
-msgstr ""
+msgstr "Zwischenspeichern …"
 
 msgid "Print version information and exit"
-msgstr ""
+msgstr "Versionsinformationen ausgeben und beenden"
 
 msgid "Video sink to use (default is autovideosink)"
-msgstr ""
+msgstr "Zu verwendende Video-Ziel (Voreinstellung ist »autovideosink«)"
 
 msgid "Audio sink to use (default is autoaudiosink)"
-msgstr ""
+msgstr "Zu verwendende Audio-Ziel (Voreinstellung ist »autoaudiosink«)"
 
 msgid "Enable gapless playback"
-msgstr ""
+msgstr "Lückenlose Wiedergabe einschalten"
 
 #, c-format
 msgid "Usage: %s FILE1|URI1 [FILE2|URI2] [FILE3|URI3] ..."
-msgstr ""
+msgstr "Aufruf: %s DATEI1|URI1 [DATEI2|URI2] [DATEI3|URI3] ..."
 
 msgid "You must provide at least one filename or URI to play."
 msgstr ""
+"Sie müssen mindestens einen Dateinamen oder eine Adresse zur Wiedergabe "
+"angeben."
 
 #~ msgid "Uncompressed %s YUV %s"
 #~ msgstr "Unkomprimiertes %s YUV %s"
