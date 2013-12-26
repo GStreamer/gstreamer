@@ -1,5 +1,5 @@
 
-Release notes for GStreamer Base Plugins 1.2.1
+Release notes for GStreamer Base Plugins 1.2.2
 
 
 The GStreamer team is proud to announce a new bug-fix release
@@ -60,23 +60,15 @@ contains a set of codecs plugins based on libav (formerly gst-ffmpeg)
 
 Bugs fixed in this release
      
-      * 701813 : Reverse playback not working with videotestsrc
-      * 708689 : rtspconnection: RTSP watch is dispatched after closing the connection
-      * 708773 : pbutils: add MPEG 2 AAC description
-      * 708789 : playbin: make sure elements are in null before disposing
-      * 708880 : rtspconnection: Not connecting to proxy when specified
-      * 708952 : audio: change buffer ts when clipping buffer even if data length is same
-      * 708953 : audiorate: clip buffers before pushing them out
-      * 708954 : pbutils: add entry for text/x-raw
-      * 709210 : Hangs on startup getting PulseAudio volume
-      * 709408 : audioconvert: modifies buffer mapped for READ
-      * 709637 : oggmux: Make sure we end up sending EOS if we received EOS on all sinkpads
-      * 709754 : audioringbuffer: Clears need_reorder flag wrongly
-      * 709938 : navigation: Missing gobject-introspection annotations
-      * 710325 : playback: Add subpicture/x-dvb as raw caps
-      * 711003 : videoscale: borders are filled with green when using NV12 pixelformat
-      * 711231 : rtspconnection: allow setting tls certificate validation flags
-      * 711550 : appsrc: Deadlocking because holding mutex while setting caps
+      * 715138 : xvimagesink 1.2 ignores resize events when used on a QWidget
+      * 708200 : multiqueue: Switching audio tracks doesn't work on some files
+      * 707621 : decodebin: stream-id can't be retrieved from autoplug-continue signal
+      * 709965 : vorbisdec: Does not put timestamps on first buffer sometimes
+      * 711819 : rtpbuffer: gst_rtp_buffer_ext_timestamp() returns wrong value when compiled with clang 5 on iOS/ARM
+      * 712280 : playsink: Unable to play audio stream with visualization plugin
+      * 712796 : videodecoder: incorrect timestamps sequence
+      * 712805 : subparse: crashes when loading a sami subtitle
+      * 678011 : typefinding: some mpeg files are not identified as mpeg files
 
 ==== Download ====
 
@@ -113,17 +105,11 @@ subscribe to the gstreamer-devel list.
         
 Contributors to this release
     
-      * Aleix Conchillo Flaque
-      * Antonio Ospite
-      * Hans Månsson
-      * Matej Knopp
-      * Ognyan Tonchev
+      * Jihyun Cho
+      * Justin Joy
+      * Mark Nauwelaerts
+      * Reynaldo H. Verdejo Pinochet
       * Sebastian Dröge
-      * Stefan Sauer
-      * Stephan Sundermann
-      * Takashi Iwai
-      * Thiago Santos
-      * Thibault Saunier
       * Tim-Philipp Müller
-      * Tom Greenwood
+      * Wim Taymans
  

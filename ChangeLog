@@ -1,9 +1,267 @@
-=== release 1.2.1 ===
+=== release 1.2.2 ===
 
-2013-11-09  Sebastian Dröge <slomo@coaxion.net>
+2013-12-26  Sebastian Dröge <slomo@coaxion.net>
 
 	* configure.ac:
-	  releasing 1.2.1
+	  releasing 1.2.2
+
+2013-12-26 16:45:54 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/da.po:
+	* po/de.po:
+	* po/pl.po:
+	* po/ru.po:
+	* po/uk.po:
+	* po/vi.po:
+	  po: Update translations
+
+2013-12-23 14:54:02 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/videoconvert/gstvideoconvertorc.orc:
+	* gst/videoconvert/videoconvert.c:
+	  videoconvert: Fix I420 to BGRA fast-path alpha setting
+	  This fast-path was adding 128 to every component including
+	  alpha while it should only be done for all components except
+	  alpha. This caused wrong alpha values to be generated.
+	  Also remove the high-quality I420 to BGRA fast-path as it needs
+	  the same fix, which causes an additional instruction, which causes
+	  orc to emit more than 96 variables, which then just crashes.
+	  This can only be fixed in orc by breaking ABI and allowing more
+	  variables.
+
+2013-12-16 11:35:12 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/tag/gstvorbistag.c:
+	  vorbistag: Read image-type from the GstSample info struct
+	  But for backwards compatibility keep reading it from the caps and only
+	  use the info struct if the caps don't contain the image-type.
+
+2013-12-13 14:36:41 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: gst_video_decoder_release_frame() is available since 1.2.2
+
+2013-12-01 12:37:52 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* docs/libs/gst-plugins-base-libs-sections.txt:
+	* win32/common/libgstvideo.def:
+	  videodecoder: add new API to docs and defs
+
+2013-11-26 20:51:58 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: fix spelling error in debug message
+
+2013-11-26 20:50:33 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	* gst-libs/gst/video/gstvideodecoder.h:
+	  videodecoder: make _release_frame external API
+	  ... so subclasses can release a frame all the way (also from frame list)
+	  without having to pass through _finish_frame or _drop_frame.
+	  The latter may not be applicable, or may or may not have already
+	  been called for the frame in question.
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=693772
+
+2013-12-05 00:27:14 +0900  Justin Joy <justin.joy.9to5@gmail.com>
+
+	* gst-libs/gst/video/convertframe.c:
+	  convertframe: Fix trivial memory leak in debug statement
+	  gst_element_get_name() requires the caller to g_free() the return value
+	  https://bugzilla.gnome.org/show_bug.cgi?id=719850
+	  convertframe: Fix indention
+
+2013-12-04 19:24:08 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	  audiodecoder: no fallback to segment start for reverse playback
+	  See https://bugzilla.gnome.org/show_bug.cgi?id=709965
+
+2013-12-02 20:35:04 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst-libs/gst/audio/gstaudiodecoder.c:
+	  audiodecoder: use segment start as fallback ts if no other available
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=709965
+
+2013-11-29 17:26:13 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin2: copy sticky events
+
+2013-11-29 17:30:09 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/playback/gsturidecodebin.c:
+	  uridecodebin: copy sticky events
+
+2013-11-29 13:32:55 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ext/theora/gsttheoraparse.c:
+	  theoraparse: Fix event handling
+	  Send CAPS event before any SEGMENT events or any other events
+	  that must come in order after the CAPS event.
+
+2013-11-28 16:22:01 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/tcp/gsttcpserversink.c:
+	  tcp: fix compilation with MSVC
+	  error C2440 at line 165 of gsttcpserversink.c
+	  type cast error: cannot convert from GSocket* to GstMultiSinkHandle
+
+2013-11-28 11:25:20 +0100  Wim Taymans <wtaymans@redhat.com>
+
+	* gst/playback/gstdecodebin2.c:
+	  decodebin2: activate ghost pad before targetting
+	  Activate the decodebin2 pad before setting the target. This makes sure
+	  that the events are copied.
+
+2013-11-21 21:33:59 +0100  Mark Nauwelaerts <mnauw@users.sourceforge.net>
+
+	* gst-libs/gst/video/gstvideodecoder.c:
+	  videodecoder: avoid descending output timestamps
+	  Fixes https://bugzilla.gnome.org/show_bug.cgi?id=712796
+
+2013-11-26 12:03:24 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst/playback/gstplaysink.c:
+	  playsink: Fix visualizations if no visualization plugin was set
+	  https://bugzilla.gnome.org/show_bug.cgi?id=712280
+
+2013-11-21 22:04:46 +0900  Jihyun Cho <jihyun.jo@gmail.com>
+
+	* gst/subparse/samiparse.c:
+	  subparse: fix null pointer access in sami parser
+	  https://bugzilla.gnome.org/show_bug.cgi?id=712805
+
+2013-11-21 15:19:47 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* gst/subparse/gstssaparse.c:
+	* gst/subparse/gstsubparse.c:
+	  subparse: g_memmove() is deprecated
+	  Just use plain memmove(), g_memmove() is deprecated in
+	  recent GLib versions.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=712811
+
+2013-11-18 19:27:14 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/icles/input-selector-test.c:
+	  tests: fix input-selector-test
+	  Update for pad template name changes.
+
+2013-11-18 16:03:07 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/appsrc.c:
+	  tests: fix appsrc test with latest GLib version
+	  With the latest GLib, g_source_remove() complains about not finding
+	  the timeout source with the given ID here, since it was already
+	  destroyed by returning FALSE from the timeout callback. Also return
+	  FALSE from the bus watches when we don't want to be called any more.
+
+2013-11-14 01:53:31 -0300  Reynaldo H. Verdejo Pinochet <r.verdejo@sisa.samsung.com>
+
+	* gst/typefind/gsttypefindfunctions.c:
+	  typefind: Fix identification of some MPEG files
+	  Make sure we begin by peeking at MPEG2_MAX_PROBE_LENGTH
+	  bytes.
+	  Fixes:
+	  https://bugzilla.gnome.org/show_bug.cgi?id=678011
+
+2013-11-13 20:12:48 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* gst-libs/gst/rtp/gstrtpbuffer.c:
+	  rtpbuffer: Fix gst_rtp_buffer_ext_timestamp() with clang 5 on iOS/ARM
+	  The bitwise NOT operator is not defined on signed integers.
+	  Thanks to Wim Taymans for finding the cause.
+	  https://bugzilla.gnome.org/show_bug.cgi?id=711819
+
+2013-11-12 18:58:43 +0000  Tim-Philipp Müller <tim@centricular.com>
+
+	* tests/check/elements/streamsynchronizer.c:
+	  tests: fix race in streamsynchronizer test
+	  Wait for thread to exit before starting to free the
+	  to_push list, otherwise thread might check the final
+	  to_push->next node only after we've freed it already.
+
+=== release 1.2.1 ===
+
+2013-11-09 12:15:57 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* ChangeLog:
+	* NEWS:
+	* RELEASE:
+	* configure.ac:
+	* docs/plugins/inspect/plugin-adder.xml:
+	* docs/plugins/inspect/plugin-alsa.xml:
+	* docs/plugins/inspect/plugin-app.xml:
+	* docs/plugins/inspect/plugin-audioconvert.xml:
+	* docs/plugins/inspect/plugin-audiorate.xml:
+	* docs/plugins/inspect/plugin-audioresample.xml:
+	* docs/plugins/inspect/plugin-audiotestsrc.xml:
+	* docs/plugins/inspect/plugin-cdparanoia.xml:
+	* docs/plugins/inspect/plugin-encoding.xml:
+	* docs/plugins/inspect/plugin-gio.xml:
+	* docs/plugins/inspect/plugin-ivorbisdec.xml:
+	* docs/plugins/inspect/plugin-libvisual.xml:
+	* docs/plugins/inspect/plugin-ogg.xml:
+	* docs/plugins/inspect/plugin-pango.xml:
+	* docs/plugins/inspect/plugin-playback.xml:
+	* docs/plugins/inspect/plugin-subparse.xml:
+	* docs/plugins/inspect/plugin-tcp.xml:
+	* docs/plugins/inspect/plugin-theora.xml:
+	* docs/plugins/inspect/plugin-typefindfunctions.xml:
+	* docs/plugins/inspect/plugin-videoconvert.xml:
+	* docs/plugins/inspect/plugin-videorate.xml:
+	* docs/plugins/inspect/plugin-videoscale.xml:
+	* docs/plugins/inspect/plugin-videotestsrc.xml:
+	* docs/plugins/inspect/plugin-volume.xml:
+	* docs/plugins/inspect/plugin-vorbis.xml:
+	* docs/plugins/inspect/plugin-ximagesink.xml:
+	* docs/plugins/inspect/plugin-xvimagesink.xml:
+	* gst-plugins-base.doap:
+	* win32/common/_stdint.h:
+	* win32/common/config.h:
+	  Release 1.2.1
+
+2013-11-09 12:15:37 +0100  Sebastian Dröge <sebastian@centricular.com>
+
+	* po/af.po:
+	* po/az.po:
+	* po/bg.po:
+	* po/ca.po:
+	* po/cs.po:
+	* po/da.po:
+	* po/de.po:
+	* po/el.po:
+	* po/en_GB.po:
+	* po/eo.po:
+	* po/es.po:
+	* po/eu.po:
+	* po/fi.po:
+	* po/fr.po:
+	* po/gl.po:
+	* po/hr.po:
+	* po/hu.po:
+	* po/id.po:
+	* po/it.po:
+	* po/ja.po:
+	* po/lt.po:
+	* po/lv.po:
+	* po/nb.po:
+	* po/nl.po:
+	* po/or.po:
+	* po/pl.po:
+	* po/pt_BR.po:
+	* po/ro.po:
+	* po/ru.po:
+	* po/sk.po:
+	* po/sl.po:
+	* po/sq.po:
+	* po/sr.po:
+	* po/sv.po:
+	* po/tr.po:
+	* po/uk.po:
+	* po/vi.po:
+	* po/zh_CN.po:
+	  Update .po files
 
 2013-11-09 12:01:11 +0100  Sebastian Dröge <sebastian@centricular.com>
 
