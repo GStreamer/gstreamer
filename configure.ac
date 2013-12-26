@@ -335,6 +335,7 @@ if test "$enable_builtin_codecparsers" = "yes"; then
     ac_cv_have_gst_mpeg2_parser="no"
     ac_cv_have_gst_h264_parser="no"
     ac_cv_have_gst_jpeg_parser="no"
+    ac_cv_have_gst_vp8_parser="no"
 else
 PKG_CHECK_MODULES([GST_CODEC_PARSERS],
     [gstreamer-codecparsers-$GST_PKG_VERSION >= $GST_PLUGINS_BAD_VERSION_REQUIRED])
@@ -412,6 +413,26 @@ AC_CACHE_CHECK([for JPEG parser],
 ])
 AM_CONDITIONAL([USE_LOCAL_CODEC_PARSERS_JPEG],
     [test "$ac_cv_have_gst_jpeg_parser" != "yes"])
+
+dnl ... VP8 parser, not upstream yet
+AC_CACHE_CHECK([for VP8 parser],
+    ac_cv_have_gst_vp8_parser, [
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $GST_CFLAGS $GST_CODEC_PARSERS_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $GST_LIBS $GST_CODEC_PARSERS_LIBS"
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM(
+            [[#include <gst/codecparsers/gstvp8parser.h>]],
+            [[GstVp8FrameHdr frame_hdr;]])],
+        [ac_cv_have_gst_vp8_parser="yes"],
+        [ac_cv_have_gst_vp8_parser="no"]
+    )
+    CPPFLAGS="$saved_CPPFLAGS"
+    LIBS="$saved_LIBS"
+])
+AM_CONDITIONAL([USE_LOCAL_CODEC_PARSERS_VP8],
+    [test "$ac_cv_have_gst_vp8_parser" != "yes"])
 
 case $GST_API_VERSION in
 0.10)   lt_bias=gst0_vaapi_lt_current_bias;;
@@ -665,6 +686,31 @@ AC_CACHE_CHECK([for JPEG decoding API],
     LIBS="$saved_LIBS"
 ])
 
+dnl Check for VP8 decoding API (0.34+)
+USE_VP8_DECODER=0
+AC_CACHE_CHECK([for VP8 decoding API],
+    ac_cv_have_vp8_decoding_api, [
+    saved_CPPFLAGS="$CPPFLAGS"
+    CPPFLAGS="$CPPFLAGS $LIBVA_CFLAGS"
+    saved_LIBS="$LIBS"
+    LIBS="$LIBS $LIBVA_LIBS"
+    AC_COMPILE_IFELSE(
+        [AC_LANG_PROGRAM(
+            [[#include <va/va.h>
+              #include <va/va_dec_vp8.h>
+            ]],
+            [[VAPictureParameterBufferVP8 pic_param;
+              VASliceParameterBufferVP8 slice_param;
+              VAProbabilityDataBufferVP8 prob_data;
+              VAIQMatrixBufferVP8 iq_matrix;]])],
+        [ac_cv_have_vp8_decoding_api="yes" USE_VP8_DECODER=1],
+        [ac_cv_have_vp8_decoding_api="no"]
+    )
+    CPPFLAGS="$saved_CPPFLAGS"
+    LIBS="$saved_LIBS"
+])
+
+
 dnl Check for vpp (video post-processing) support
 USE_VA_VPP=0
 AC_CACHE_CHECK([for video post-postprocessing API],
@@ -736,6 +782,10 @@ AM_CONDITIONAL(USE_VA_VPP, test $USE_VA_VPP -eq 1)
 AC_DEFINE_UNQUOTED(USE_JPEG_DECODER, $USE_JPEG_DECODER,
     [Defined to 1 if JPEG decoder is used])
 AM_CONDITIONAL(USE_JPEG_DECODER, test $USE_JPEG_DECODER -eq 1)
+
+AC_DEFINE_UNQUOTED(USE_VP8_DECODER, $USE_VP8_DECODER,
+    [Defined to 1 if JPEG decoder is used])
+AM_CONDITIONAL(USE_VP8_DECODER, test $USE_VP8_DECODER -eq 1)
 
 AC_DEFINE_UNQUOTED(USE_DRM, $USE_DRM,
     [Defined to 1 if DRM is enabled])

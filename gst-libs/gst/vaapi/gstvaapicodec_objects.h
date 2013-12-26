@@ -27,6 +27,9 @@
 
 #include <gst/vaapi/gstvaapiminiobject.h>
 #include <gst/vaapi/gstvaapidecoder.h>
+#if USE_VP8_DECODER
+#include <va/va_dec_vp8.h>
+#endif
 
 G_BEGIN_DECLS
 
@@ -36,6 +39,7 @@ typedef struct _GstVaapiCodecObjectClass        GstVaapiCodecObjectClass;
 typedef struct _GstVaapiIqMatrix                GstVaapiIqMatrix;
 typedef struct _GstVaapiBitPlane                GstVaapiBitPlane;
 typedef struct _GstVaapiHuffmanTable            GstVaapiHuffmanTable;
+typedef struct _GstVaapiProbabilityTable        GstVaapiProbabilityTable;
 
 /* ------------------------------------------------------------------------- */
 /* --- Base Codec Object                                                 --- */
@@ -196,6 +200,33 @@ gst_vaapi_huffman_table_new (GstVaapiDecoder * decoder, guint8 * data,
     guint data_size);
 
 /* ------------------------------------------------------------------------- */
+/* ---                   Probability (Update) Table                      --- */
+/* ------------------------------------------------------------------------- */
+
+#define GST_VAAPI_PROBABILITY_TABLE_CAST(obj) \
+    ((GstVaapiProbabilityTable *)(obj))
+
+/**
+ * GstVaapiProbabilityTable:
+ *
+ * A #GstVaapiCodecObject holding an Probability (Update) Table for RAC decoding
+ */
+struct _GstVaapiProbabilityTable
+{
+  /*< private > */
+  GstVaapiCodecObject parent_instance;
+  VABufferID param_id;
+
+  /*< public > */
+  gpointer param;
+};
+
+G_GNUC_INTERNAL
+GstVaapiProbabilityTable *
+gst_vaapi_probability_table_new (GstVaapiDecoder * decoder,
+    gconstpointer param, guint param_size);
+
+/* ------------------------------------------------------------------------- */
 /* --- Helpers to create codec-dependent objects                         --- */
 /* ------------------------------------------------------------------------- */
 
@@ -229,6 +260,10 @@ static const GstVaapiCodecObjectClass G_PASTE (type, Class) = {         \
 #define GST_VAAPI_HUFFMAN_TABLE_NEW(codec, decoder)                     \
   gst_vaapi_huffman_table_new (GST_VAAPI_DECODER_CAST (decoder),        \
       NULL, sizeof (G_PASTE (VAHuffmanTableBuffer, codec)))
+
+#define GST_VAAPI_PROBABILITY_TABLE_NEW(codec, decoder)                 \
+  gst_vaapi_probability_table_new (GST_VAAPI_DECODER_CAST (decoder),    \
+      NULL, sizeof (G_PASTE (VAProbabilityDataBuffer, codec)))
 
 G_END_DECLS
 

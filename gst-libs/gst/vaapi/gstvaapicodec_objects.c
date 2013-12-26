@@ -212,3 +212,39 @@ gst_vaapi_huffman_table_new (GstVaapiDecoder * decoder,
   return GST_VAAPI_HUFFMAN_TABLE_CAST (object);
 }
 #endif
+#if USE_VP8_DECODER
+GST_VAAPI_CODEC_DEFINE_TYPE (GstVaapiProbabilityTable,
+    gst_vaapi_probability_table);
+
+void
+gst_vaapi_probability_table_destroy (GstVaapiProbabilityTable * prob_table)
+{
+  vaapi_destroy_buffer (GET_VA_DISPLAY (prob_table), &prob_table->param_id);
+  prob_table->param = NULL;
+}
+
+gboolean
+gst_vaapi_probability_table_create (GstVaapiProbabilityTable * prob_table,
+    const GstVaapiCodecObjectConstructorArgs * args)
+{
+  prob_table->param_id = VA_INVALID_ID;
+  return vaapi_create_buffer (GET_VA_DISPLAY (prob_table),
+      GET_VA_CONTEXT (prob_table),
+      VAProbabilityBufferType,
+      args->param_size, args->param, &prob_table->param_id, &prob_table->param);
+}
+
+GstVaapiProbabilityTable *
+gst_vaapi_probability_table_new (GstVaapiDecoder * decoder,
+    gconstpointer param, guint param_size)
+{
+  GstVaapiCodecObject *object;
+
+  object = gst_vaapi_codec_object_new (&GstVaapiProbabilityTableClass,
+      GST_VAAPI_CODEC_BASE (decoder), param, param_size, NULL, 0, 0);
+  if (!object)
+    return NULL;
+  return GST_VAAPI_PROBABILITY_TABLE_CAST (object);
+}
+
+#endif

@@ -71,6 +71,7 @@ gst_vaapi_picture_destroy (GstVaapiPicture * picture)
   gst_vaapi_codec_object_replace (&picture->iq_matrix, NULL);
   gst_vaapi_codec_object_replace (&picture->huf_table, NULL);
   gst_vaapi_codec_object_replace (&picture->bitplane, NULL);
+  gst_vaapi_codec_object_replace (&picture->prob_table, NULL);
 
   if (picture->proxy) {
     gst_vaapi_surface_proxy_unref (picture->proxy);
@@ -223,6 +224,7 @@ gst_vaapi_picture_decode (GstVaapiPicture * picture)
   GstVaapiIqMatrix *iq_matrix;
   GstVaapiBitPlane *bitplane;
   GstVaapiHuffmanTable *huf_table;
+  GstVaapiProbabilityTable *prob_table;
   VADisplay va_display;
   VAContextID va_context;
   VAStatus status;
@@ -255,6 +257,11 @@ gst_vaapi_picture_decode (GstVaapiPicture * picture)
   huf_table = picture->huf_table;
   if (huf_table && !do_decode (va_display, va_context,
           &huf_table->param_id, (void **) &huf_table->param))
+    return FALSE;
+
+  prob_table = picture->prob_table;
+  if (prob_table && !do_decode (va_display, va_context,
+          &prob_table->param_id, (void **) &prob_table->param))
     return FALSE;
 
   for (i = 0; i < picture->slices->len; i++) {

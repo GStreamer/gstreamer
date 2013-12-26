@@ -65,6 +65,7 @@ static const GstVaapiCodecMap gst_vaapi_codecs[] = {
     { GST_VAAPI_CODEC_WMV3,     "wmv3"  },
     { GST_VAAPI_CODEC_VC1,      "vc1"   },
     { GST_VAAPI_CODEC_JPEG,     "jpeg"  },
+    { GST_VAAPI_CODEC_VP8,      "vp8"   },
     { 0, }
 };
 
@@ -125,6 +126,8 @@ static const GstVaapiProfileMap gst_vaapi_profiles[] = {
       "image/jpeg", "baseline"
     },
 #endif
+    {GST_VAAPI_PROFILE_VP8, VAProfileVP8Version0_3,
+      "video/x-vp8", "Version0_3"},
     { 0, }
 };
 

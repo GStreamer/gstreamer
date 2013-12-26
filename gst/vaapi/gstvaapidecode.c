@@ -49,6 +49,7 @@
 #include <gst/vaapi/gstvaapidecoder_mpeg2.h>
 #include <gst/vaapi/gstvaapidecoder_mpeg4.h>
 #include <gst/vaapi/gstvaapidecoder_vc1.h>
+#include <gst/vaapi/gstvaapidecoder_vp8.h>
 
 #define GST_PLUGIN_NAME "vaapidecode"
 #define GST_PLUGIN_DESC "A VA-API based video decoder"
@@ -67,6 +68,7 @@ static const char gst_vaapidecode_sink_caps_str[] =
     GST_CAPS_CODEC("video/x-h263")
     GST_CAPS_CODEC("video/x-h264")
     GST_CAPS_CODEC("video/x-wmv")
+    GST_CAPS_CODEC("video/x-vp8")
     GST_CAPS_CODEC("image/jpeg")
     ;
 
@@ -631,6 +633,9 @@ gst_vaapidecode_create(GstVaapiDecode *decode, GstCaps *caps)
         decode->decoder = gst_vaapi_decoder_jpeg_new(dpy, caps);
         break;
 #endif
+    case GST_VAAPI_CODEC_VP8:
+        decode->decoder = gst_vaapi_decoder_vp8_new(dpy, caps);
+        break;
     default:
         decode->decoder = NULL;
         break;

@@ -51,6 +51,7 @@ typedef enum {
     GST_VAAPI_CODEC_WMV3        = GST_MAKE_FOURCC('W','M','V',0),
     GST_VAAPI_CODEC_VC1         = GST_MAKE_FOURCC('V','C','1',0),
     GST_VAAPI_CODEC_JPEG        = GST_MAKE_FOURCC('J','P','G',0),
+    GST_VAAPI_CODEC_VP8         = GST_MAKE_FOURCC('V','P','8',0),
 } GstVaapiCodec;
 
 /**
@@ -151,6 +152,7 @@ typedef enum {
     GST_VAAPI_PROFILE_VC1_MAIN              = GST_VAAPI_MAKE_PROFILE(VC1,2),
     GST_VAAPI_PROFILE_VC1_ADVANCED          = GST_VAAPI_MAKE_PROFILE(VC1,3),
     GST_VAAPI_PROFILE_JPEG_BASELINE         = GST_VAAPI_MAKE_PROFILE(JPEG,1),
+    GST_VAAPI_PROFILE_VP8                   = GST_VAAPI_MAKE_PROFILE(VP8,1),
 } GstVaapiProfile;
 
 /**

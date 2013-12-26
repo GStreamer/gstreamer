@@ -134,6 +134,7 @@ struct _GstVaapiPicture
   GstVaapiIqMatrix *iq_matrix;
   GstVaapiHuffmanTable *huf_table;
   GstVaapiBitPlane *bitplane;
+  GstVaapiProbabilityTable *prob_table;
   GstClockTime pts;
   gint32 poc;
   guint structure;

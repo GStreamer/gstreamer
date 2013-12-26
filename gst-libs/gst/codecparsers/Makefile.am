@@ -40,6 +40,14 @@ gen_source_c += gsth264parser.c
 gen_source_h += gsth264parser.h
 endif
 
+if USE_LOCAL_CODEC_PARSERS_VP8
+gen_source_c += gstvp8parser.c
+gen_source_h += gstvp8parser.h gstvp8rangedecoder.h vp8utils.h
+
+gen_source_c += dboolhuff.c gstvp8rangedecoder.c vp8utils.c
+gen_source_h += dboolhuff.h
+endif
+
 GENFILES = \
 	$(gen_source_c)				\
 	$(gen_source_h)				\

@@ -9,6 +9,7 @@ codecparsers_source_c = \
 	gstmpeg4parser.c	\
 	gstmpegvideoparser.c	\
 	gstvc1parser.c		\
+	gstvp8parser.c		\
 	parserutils.c		\
 	$(NULL)
 
@@ -20,6 +21,7 @@ codecparsers_source_h = \
 	gstmpeg4parser.h	\
 	gstmpegvideoparser.h	\
 	gstvc1parser.h		\
+	gstvp8parser.h		\
 	parserutils.h		\
 	$(NULL)
 
