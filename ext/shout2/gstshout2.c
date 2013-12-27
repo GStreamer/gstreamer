@@ -35,7 +35,7 @@ GST_DEBUG_CATEGORY_STATIC (shout2_debug);
 
 enum
 {
-  SIGNAL_CONNECTION_PROBLEM,    /* 0.11 FIXME: remove this */
+  SIGNAL_CONNECTION_PROBLEM,    /* FIXME 2.0: remove this */
   LAST_SIGNAL
 };
 
