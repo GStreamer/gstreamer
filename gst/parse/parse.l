@@ -11,6 +11,22 @@
 #include "../gsturi.h"
 #include "grammar.tab.h"
 
+#ifdef malloc
+#undef malloc
+#endif
+
+#ifdef free
+#undef free
+#endif
+
+#ifdef realloc
+#undef realloc
+#endif
+
+#define malloc g_malloc
+#define free g_free
+#define realloc g_realloc
+
 /* Override the default ECHO so as to avoid fortify warnings. Ignore the
    embedded-NUL case for now. We know yytext is NUL-terminated. */
 #define ECHO g_fprintf(yyout, "%s", yytext)
