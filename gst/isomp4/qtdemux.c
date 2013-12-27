@@ -911,7 +911,6 @@ gst_qtdemux_push_pending_newsegment (GstQTDemux * qtdemux)
   if (qtdemux->pending_newsegment) {
     gst_qtdemux_push_event (qtdemux, qtdemux->pending_newsegment);
     qtdemux->pending_newsegment = NULL;
-    qtdemux->upstream_newsegment = FALSE;
   }
 }
 
@@ -1559,7 +1558,7 @@ gst_qtdemux_handle_src_event (GstPad * pad, GstObject * parent,
       GstClockTime ts = gst_util_get_timestamp ();
 #endif
 
-      if (qtdemux->mss_mode || qtdemux->fragmented) {
+      if (qtdemux->upstream_newsegment || qtdemux->fragmented) {
         /* seek should be handled by upstream, we might need to re-download fragments */
         GST_DEBUG_OBJECT (qtdemux,
             "leting upstream handle seek for smoothstreaming");
@@ -1789,6 +1788,8 @@ gst_qtdemux_setcaps (GstQTDemux * demux, GstCaps * caps)
       }
     }
     gst_caps_replace (&demux->media_caps, (GstCaps *) mediacaps);
+  } else {
+    demux->mss_mode = FALSE;
   }
 
   return TRUE;
@@ -1802,7 +1803,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
   GST_DEBUG_OBJECT (qtdemux, "Resetting demux");
   gst_pad_stop_task (qtdemux->sinkpad);
 
-  if (hard || qtdemux->mss_mode) {
+  if (hard || qtdemux->upstream_newsegment) {
     qtdemux->state = QTDEMUX_STATE_INITIAL;
     qtdemux->neededbytes = 16;
     qtdemux->todrop = 0;
@@ -1839,7 +1840,7 @@ gst_qtdemux_reset (GstQTDemux * qtdemux, gboolean hard)
     if (qtdemux->pending_newsegment)
       gst_event_unref (qtdemux->pending_newsegment);
     qtdemux->pending_newsegment = NULL;
-    qtdemux->upstream_newsegment = TRUE;
+    qtdemux->upstream_newsegment = FALSE;
     qtdemux->upstream_seekable = FALSE;
     qtdemux->upstream_size = 0;
 
@@ -1914,11 +1915,9 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
       } else {
         GST_DEBUG_OBJECT (demux, "Not storing upstream newsegment, "
             "not in time format");
-      }
 
-      /* chain will send initial newsegment after pads have been added */
-      if (demux->state != QTDEMUX_STATE_MOVIE || !demux->n_streams) {
-        if (!demux->mss_mode) {
+        /* chain will send initial newsegment after pads have been added */
+        if (demux->state != QTDEMUX_STATE_MOVIE || !demux->n_streams) {
           GST_DEBUG_OBJECT (demux, "still starting, eating event");
           goto exit;
         }
@@ -2002,7 +2001,7 @@ gst_qtdemux_handle_sink_event (GstPad * sinkpad, GstObject * parent,
         demux->neededbytes = demux->todrop + stream->samples[idx].size;
       } else {
         /* set up for EOS */
-        if (demux->mss_mode) {
+        if (demux->upstream_newsegment) {
           demux->neededbytes = 16;
         } else {
           demux->neededbytes = -1;
