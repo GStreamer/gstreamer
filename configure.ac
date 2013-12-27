@@ -257,39 +257,7 @@ if test "x$with_system_libav" = "xyes"; then
   AC_DEFINE([LIBAV_SOURCE], ["system install"], [Describes where the Libav libraries come from.])
   HAVE_LIBAV_UNINSTALLED=0
   AC_MSG_NOTICE([Using system-installed libav code])
-  AC_MSG_WARN([
-  ======================================================================
-   WARNING: you have chosen to build gst-libav against a random
-   external version of Libav instead of building it against the tested
-   internal Libav snapshot that is included with gst-libav.
-   
-   This is a very bad idea.  So bad in fact that words cannot express
-   just how bad it is.  Suffice to say that it is BAD.
-   
-   The GStreamer developers cannot and will not support a gst-libav
-   built this way.  Any bug reports that indicate there is an external
-   version of Libav involved will be closed immediately without further
-   investigation.
-   
-   The reason such a setup can't be supported is that the Libav API
-   and ABI is in constant flux, yet there aren't any official releases
-   of the Libav library to develop against.  This makes it impossible
-   to guarantee that gst-libav will work reliably, or even compile,
-   with a randomly picked version Libav.  Even if gst-libav compiles
-   and superficially appears to work fine against your chosen external
-   Libav version, that might just not be the case on other systems, or
-   even the same system at a later time, or when using decoders,
-   encoders, demuxers or muxers that have not been tested.
-   
-   Please do not create or distribute binary packages of gst-Libav
-   that link against an external libav. Thank you!
-  ======================================================================
-  ])
-
-  dnl No, this is not too extreme, we want people to see and read the above
-  sleep 15
 else
-
   AC_MSG_NOTICE([Using local Libav snapshot])
   
   dnl libgstlibav.la: include dirs
