@@ -141,7 +141,7 @@ static GstStaticPadTemplate src_factory = GST_STATIC_PAD_TEMPLATE ("src",
 #define DEFAULT_INBAND_FEC      FALSE
 #define DEFAULT_DTX             FALSE
 #define DEFAULT_PACKET_LOSS_PERCENT 0
-#define DEFAULT_MAX_PAYLOAD_SIZE 1024
+#define DEFAULT_MAX_PAYLOAD_SIZE 4000
 
 enum
 {
@@ -270,7 +270,7 @@ gst_opus_enc_class_init (GstOpusEncClass * klass)
           GST_PARAM_MUTABLE_PLAYING));
   g_object_class_install_property (G_OBJECT_CLASS (klass),
       PROP_MAX_PAYLOAD_SIZE, g_param_spec_uint ("max-payload-size",
-          "Max payload size", "Maximum payload size in bytes", 2, 1275,
+          "Max payload size", "Maximum payload size in bytes", 2, 4000,
           DEFAULT_MAX_PAYLOAD_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS |
           GST_PARAM_MUTABLE_PLAYING));
