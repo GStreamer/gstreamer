@@ -2490,6 +2490,7 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
   GstRtpJitterBufferPrivate *priv = jitterbuffer->priv;
   GstEvent *event;
   guint delay;
+  GstClock *clock;
 
   GST_DEBUG_OBJECT (jitterbuffer, "expected %d didn't arrive", timer->seqnum);
 
@@ -2507,7 +2508,15 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
 
   priv->num_rtx_requests++;
   timer->num_rtx_retry++;
-  timer->rtx_last = now;
+
+  GST_OBJECT_LOCK (jitterbuffer);
+  if ((clock = GST_ELEMENT_CLOCK (jitterbuffer))) {
+    timer->rtx_last = gst_clock_get_time (clock);
+    timer->rtx_last -= GST_ELEMENT_CAST (jitterbuffer)->base_time;
+  } else {
+    timer->rtx_last = now;
+  }
+  GST_OBJECT_UNLOCK (jitterbuffer);
 
   /* calculate the timeout for the next retransmission attempt */
   timer->rtx_retry += (priv->rtx_retry_timeout * GST_MSECOND);
