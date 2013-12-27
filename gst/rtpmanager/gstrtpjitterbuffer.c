@@ -281,6 +281,11 @@ struct _GstRtpJitterBufferPrivate
   guint64 num_rtx_failed;
   gdouble avg_rtx_num;
   guint64 avg_rtx_rtt;
+
+  /* for the jitter */
+  GstClockTime last_dts;
+  guint64 last_rtptime;
+  GstClockTime avg_jitter;
 };
 
 typedef enum
@@ -688,6 +693,9 @@ gst_rtp_jitter_buffer_init (GstRtpJitterBuffer * jitterbuffer)
   priv->rtx_retry_timeout = DEFAULT_RTX_RETRY_TIMEOUT;
   priv->rtx_retry_period = DEFAULT_RTX_RETRY_PERIOD;
 
+  priv->last_dts = -1;
+  priv->last_rtptime = -1;
+  priv->avg_jitter = 0;
   priv->timers = g_array_new (FALSE, TRUE, sizeof (TimerData));
   priv->jbuf = rtp_jitter_buffer_new ();
   g_mutex_init (&priv->jbuf_lock);
@@ -1140,6 +1148,9 @@ gst_rtp_jitter_buffer_flush_stop (GstRtpJitterBuffer * jitterbuffer)
   priv->estimated_eos = -1;
   priv->last_elapsed = 0;
   priv->ext_timestamp = -1;
+  priv->avg_jitter = 0;
+  priv->last_dts = -1;
+  priv->last_rtptime = -1;
   GST_DEBUG_OBJECT (jitterbuffer, "flush and reset jitterbuffer");
   rtp_jitter_buffer_flush (priv->jbuf, (GFunc) free_item, NULL);
   rtp_jitter_buffer_reset_skew (priv->jbuf);
@@ -1804,7 +1815,7 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
   } else if (timer && timer->type != TIMER_TYPE_DEADLINE) {
 
     if (timer->num_rtx_retry > 0) {
-      GstClockTime rtx_last;
+      GstClockTime rtx_last, delay;
 
       /* we scheduled a retry for this packet and now we have it */
       priv->num_rtx_success++;
@@ -1819,7 +1830,6 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
        * packet, start with when we scheduled this timeout last */
       rtx_last = timer->rtx_last;
       if (dts > rtx_last) {
-        GstClockTime delay;
         /* we have a valid delay if this packet arrived after we scheduled the
          * request */
         delay = dts - rtx_last;
@@ -1827,13 +1837,16 @@ update_timers (GstRtpJitterBuffer * jitterbuffer, guint16 seqnum,
           priv->avg_rtx_rtt = delay;
         else
           priv->avg_rtx_rtt = (delay + 7 * priv->avg_rtx_rtt) / 8;
-      }
+      } else
+        delay = 0;
+
       GST_LOG_OBJECT (jitterbuffer,
           "RTX success %" G_GUINT64_FORMAT ", failed %" G_GUINT64_FORMAT
           ", requests %" G_GUINT64_FORMAT ", dups %" G_GUINT64_FORMAT
-          ", avg-num %g, avg-rtt %" G_GUINT64_FORMAT, priv->num_rtx_success,
-          priv->num_rtx_failed, priv->num_rtx_requests, priv->num_duplicates,
-          priv->avg_rtx_num, priv->avg_rtx_rtt);
+          ", avg-num %g, delay %" GST_TIME_FORMAT ", avg-rtt %" GST_TIME_FORMAT,
+          priv->num_rtx_success, priv->num_rtx_failed, priv->num_rtx_requests,
+          priv->num_duplicates, priv->avg_rtx_num, GST_TIME_ARGS (delay),
+          GST_TIME_ARGS (priv->avg_rtx_rtt));
     }
     /* if we had a timer, remove it, we don't know when to expect the next
      * packet. */
@@ -1950,6 +1963,59 @@ calculate_expected (GstRtpJitterBuffer * jitterbuffer, guint32 expected,
   }
 }
 
+static void
+calculate_jitter (GstRtpJitterBuffer * jitterbuffer, GstClockTime dts,
+    guint rtptime)
+{
+  gint32 rtpdiff;
+  GstClockTimeDiff dtsdiff, rtpdiffns, diff;
+  GstRtpJitterBufferPrivate *priv;
+
+  priv = jitterbuffer->priv;
+
+  if (G_UNLIKELY (dts == GST_CLOCK_TIME_NONE) || priv->clock_rate <= 0)
+    goto no_time;
+
+  if (priv->last_dts != -1)
+    dtsdiff = dts - priv->last_dts;
+  else
+    dtsdiff = 0;
+
+  if (priv->last_rtptime != -1)
+    rtpdiff = rtptime - (guint32) priv->last_rtptime;
+  else
+    rtpdiff = 0;
+
+  priv->last_dts = dts;
+  priv->last_rtptime = rtptime;
+
+  if (rtpdiff > 0)
+    rtpdiffns =
+        gst_util_uint64_scale_int (rtpdiff, GST_SECOND, priv->clock_rate);
+  else
+    rtpdiffns =
+        -gst_util_uint64_scale_int (-rtpdiff, GST_SECOND, priv->clock_rate);
+
+  diff = ABS (dtsdiff - rtpdiffns);
+
+  /* jitter is stored in nanoseconds */
+  priv->avg_jitter = (diff + (15 * priv->avg_jitter)) >> 4;
+
+  GST_LOG ("dtsdiff %" GST_TIME_FORMAT " rtptime %" GST_TIME_FORMAT
+      ", clock-rate %d, diff %" GST_TIME_FORMAT ", jitter: %" GST_TIME_FORMAT,
+      GST_TIME_ARGS (dtsdiff), GST_TIME_ARGS (rtpdiffns), priv->clock_rate,
+      GST_TIME_ARGS (diff), GST_TIME_ARGS (priv->avg_jitter));
+
+  return;
+
+  /* ERRORS */
+no_time:
+  {
+    GST_WARNING ("no dts or no clock-rate");
+    return;
+  }
+}
+
 static GstFlowReturn
 gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
     GstBuffer * buffer)
@@ -2032,6 +2098,8 @@ gst_rtp_jitter_buffer_chain (GstPad * pad, GstObject * parent,
   /* don't accept more data on EOS */
   if (G_UNLIKELY (priv->eos))
     goto have_eos;
+
+  calculate_jitter (jitterbuffer, dts, rtptime);
 
   expected = priv->next_in_seqnum;
 
