@@ -1844,6 +1844,20 @@ gst_shape_wipe_get_type
 </SECTION>
 
 <SECTION>
+<FILE>element-shout2send</FILE>
+<TITLE>shout2send</TITLE>
+GstShout2send
+<SUBSECTION Standard>
+GstShout2sendClass
+GST_SHOUT2SEND
+GST_SHOUT2SEND_CLASS
+GST_IS_SHOUT2SEND
+GST_IS_SHOUT2SEND_CLASS
+GST_TYPE_SHOUT2SEND
+gst_shout2send_get_type
+</SECTION>
+
+<SECTION>
 <FILE>element-smpte</FILE>
 <TITLE>smpte</TITLE>
 GstSMPTE

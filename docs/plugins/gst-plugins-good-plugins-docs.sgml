@@ -152,6 +152,7 @@
     <xi:include href="xml/element-scaletempo.xml" />
     <xi:include href="xml/element-shagadelictv.xml" />
     <xi:include href="xml/element-shapewipe.xml" />
+    <xi:include href="xml/element-shout2send.xml" />
     <xi:include href="xml/element-smpte.xml" />
     <xi:include href="xml/element-smptealpha.xml" />
     <xi:include href="xml/element-souphttpsrc.xml" />

@@ -69,6 +69,7 @@ EXTRA_HFILES = \
 	$(top_srcdir)/ext/libpng/gstpngenc.h \
 	$(top_srcdir)/ext/raw1394/gstdv1394src.h \
 	$(top_srcdir)/ext/raw1394/gsthdv1394src.h \
+	$(top_srcdir)/ext/shout2/gstshout2.h \
 	$(top_srcdir)/ext/soup/gstsouphttpsrc.h \
 	$(top_srcdir)/ext/taglib/gstapev2mux.h \
 	$(top_srcdir)/ext/taglib/gstid3v2mux.h \
