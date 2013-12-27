@@ -42,7 +42,7 @@ enum
 enum
 {
   ARG_0,
-  ARG_IP,                       /* the ip of the server */
+  ARG_IP,                       /* the IP address or hostname of the server */
   ARG_PORT,                     /* the encoder port number on the server */
   ARG_PASSWORD,                 /* the encoder password on the server */
   ARG_USERNAME,                 /* the encoder username on the server */
@@ -142,8 +142,9 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
   gobject_class->get_property = gst_shout2send_get_property;
   gobject_class->finalize = (GObjectFinalizeFunc) gst_shout2send_finalize;
 
+  /* FIXME: 2.0 Should probably change this prop name to "server" */
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_IP,
-      g_param_spec_string ("ip", "ip", "ip", DEFAULT_IP,
+      g_param_spec_string ("ip", "ip", "IP address or hostname", DEFAULT_IP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_PORT,
       g_param_spec_int ("port", "port", "port", 1, G_MAXUSHORT, DEFAULT_PORT,
@@ -433,10 +434,8 @@ gst_shout2send_start (GstBaseSink * basesink)
   if (shout_set_protocol (sink->conn, proto) != SHOUTERR_SUCCESS)
     goto set_failed;
 
-  /* --- FIXME: shout requires an ip, and fails if it is given a host. */
-  /* may want to put convert_to_ip(shout2send->ip) here */
   cur_prop = "ip";
-  GST_DEBUG_OBJECT (sink, "setting ip: %s", sink->ip);
+  GST_DEBUG_OBJECT (sink, "setting IP/hostname: %s", sink->ip);
   if (shout_set_host (sink->conn, sink->ip) != SHOUTERR_SUCCESS)
     goto set_failed;
 
