@@ -31,6 +31,8 @@ G_DEFINE_ABSTRACT_TYPE (GESBaseXmlFormatter, ges_base_xml_formatter,
 #define _GET_PRIV(o)\
   (G_TYPE_INSTANCE_GET_PRIVATE ((o), GES_TYPE_BASE_XML_FORMATTER, GESBaseXmlFormatterPrivate))
 
+static void _loading_done (GESFormatter * self);
+
 typedef struct PendingEffects
 {
   gchar *track_id;
@@ -230,6 +232,10 @@ _load_from_uri (GESFormatter * self, GESTimeline * timeline, const gchar * uri,
 
   if (!priv->parsecontext)
     return FALSE;
+
+  if (g_hash_table_size (priv->assetid_pendingclips) == 0 &&
+      priv->pending_assets == NULL)
+    g_idle_add ((GSourceFunc) _loading_done, self);
 
   return TRUE;
 }
