@@ -183,7 +183,6 @@ struct _GstMpegTsBATStream
 
 /**
  * GstMpegTsBAT:
- *
  * @descriptors: (element-type GstMpegTsDescriptor):
  * @streams: (element-type GstMpegTsBATStream):
  *
@@ -210,7 +209,6 @@ typedef struct _GstMpegTsSDT GstMpegTsSDT;
 
 /**
  * GstMpegTsSDTService:
- *
  * @descriptors: (element-type GstMpegTsDescriptor): List of descriptors
  *
  */
@@ -228,7 +226,6 @@ struct _GstMpegTsSDTService
 
 /**
  * GstMpegTsSDT:
- *
  * @services: (element-type GstMpegTsSDTService): List of services
  *
  * Service Description Table (EN 300 468)
@@ -257,7 +254,6 @@ typedef struct _GstMpegTsEIT GstMpegTsEIT;
 
 /**
  * GstMpegTsEITEvent:
- *
  * @descriptors: (element-type GstMpegTsDescriptor): List of descriptors
  *
  * Event from a @GstMpegTsEIT
@@ -277,7 +273,6 @@ struct _GstMpegTsEITEvent
 
 /**
  * GstMpegTsEIT:
- *
  * @events: (element-type GstMpegTsEITEvent): List of events
  *
  * Event Information Table (EN 300 468)
@@ -310,7 +305,6 @@ typedef struct _GstMpegTsTOT GstMpegTsTOT;
 #define GST_TYPE_MPEGTS_TOT (gst_mpegts_tot_get_type())
 /**
  * GstMpegTsTOT:
- *
  * @descriptors: (element-type GstMpegTsDescriptor): List of descriptors
  *
  * Time Offset Table (EN 300 468)
