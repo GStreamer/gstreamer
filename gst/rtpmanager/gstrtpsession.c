@@ -1551,7 +1551,7 @@ gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstObject * parent,
           forward = FALSE;
       } else if (gst_structure_has_name (s, "GstRTPRetransmissionRequest")) {
         GstClockTime running_time;
-        guint seqnum, delay, deadline, max_delay;
+        guint seqnum, delay, deadline, max_delay, avg_rtt;
 
         GST_RTP_SESSION_LOCK (rtpsession);
         rtpsession->priv->rtx_count++;
@@ -1567,14 +1567,16 @@ gst_rtp_session_event_recv_rtp_src (GstPad * pad, GstObject * parent,
           delay = 0;
         if (!gst_structure_get_uint (s, "deadline", &deadline))
           deadline = 100;
+        if (!gst_structure_get_uint (s, "avg-rtt", &avg_rtt))
+          avg_rtt = 40;
 
         /* remaining time to receive the packet */
         max_delay = deadline;
         if (max_delay > delay)
           max_delay -= delay;
         /* estimated RTT */
-        if (max_delay > 40)
-          max_delay -= 40;
+        if (max_delay > avg_rtt)
+          max_delay -= avg_rtt;
         else
           max_delay = 0;
 

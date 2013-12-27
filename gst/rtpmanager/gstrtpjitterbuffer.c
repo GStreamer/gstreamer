@@ -2504,7 +2504,9 @@ do_expected_timeout (GstRtpJitterBuffer * jitterbuffer, TimerData * timer,
           "frequency", G_TYPE_UINT, priv->rtx_retry_timeout,
           "period", G_TYPE_UINT, priv->rtx_retry_period,
           "deadline", G_TYPE_UINT, priv->latency_ms,
-          "packet-spacing", G_TYPE_UINT64, priv->packet_spacing, NULL));
+          "packet-spacing", G_TYPE_UINT64, priv->packet_spacing,
+          "avg-rtt", G_TYPE_UINT, GST_TIME_AS_MSECONDS (priv->avg_rtx_rtt),
+          NULL));
 
   priv->num_rtx_requests++;
   timer->num_rtx_retry++;
