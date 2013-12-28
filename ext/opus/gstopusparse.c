@@ -107,11 +107,6 @@ static gboolean
 gst_opus_parse_start (GstBaseParse * base)
 {
   GstOpusParse *parse = GST_OPUS_PARSE (base);
-  GstCaps *caps;
-
-  caps = gst_caps_new_empty_simple ("audio/x-opus");
-  gst_pad_set_caps (GST_BASE_PARSE_SRC_PAD (GST_BASE_PARSE (parse)), caps);
-  gst_caps_unref (caps);
 
   parse->header_sent = FALSE;
   parse->next_ts = 0;
