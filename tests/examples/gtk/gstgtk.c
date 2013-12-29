@@ -21,35 +21,50 @@
 #include "config.h"
 #endif
 
+#include <gst/gl/gl.h>
 #include "gstgtk.h"
 
-#if defined(GDK_WINDOWING_WIN32)
+#if defined(GST_GL_HAVE_WINDOW_WIN32) && defined(GDK_WINDOWING_WIN32)
 #include <gdk/gdkwin32.h>
-#elif defined(GDK_WINDOWING_X11)
+#endif
+#if defined(GST_GL_HAVE_WINDOW_X11) && defined(GDK_WINDOWING_X11)
 #include <gdk/gdkx.h>
-#elif defined(GDK_WINDOWING_QUARTZ)
+#endif
+#if defined(GST_GL_HAVE_WINDOW_COCOA) && defined(GDK_WINDOWING_QUARTZ)
 #include <gdk/gdkquartz.h>
-#else
-#error unimplemented GTK backend
 #endif
 
 
 void
 gst_video_overlay_set_gtk_window (GstVideoOverlay * videooverlay,
-    GtkWidget * window)
+    GtkWidget * widget)
 {
+  GdkWindow *window;
+  GdkDisplay *display;
+  const gchar *user_choice = g_getenv ("GST_GL_WINDOW");
 
-#if defined(GDK_WINDOWING_WIN32)
-  gst_video_overlay_set_window_handle (videooverlay,
-      (guintptr) GDK_WINDOW_HWND (window->window));
-#elif defined(GDK_WINDOWING_QUARTZ)
-  gst_video_overlay_set_window_handle (videooverlay,
-      (guintptr) gdk_quartz_window_get_nswindow (window->window));
-#elif defined(GDK_WINDOWING_X11)
-  gst_video_overlay_set_window_handle (videooverlay,
-      GDK_WINDOW_XWINDOW (window->window));
-#else
-#error unimplemented GTK backend
+  window = gtk_widget_get_window (widget);
+  display = gdk_window_get_display (window);
+
+#if defined(GST_GL_HAVE_WINDOW_WIN32) && defined(GDK_WINDOWING_WIN32)
+  if (GDK_IS_WIN32_DISPLAY (display) && (!user_choice
+          || g_strcmp0 (user_choice, "win32") == 0)) {
+    gst_video_overlay_set_window_handle (videooverlay,
+        (guintptr) GDK_WINDOW_HWND (window));
+  } else
 #endif
-
+#if defined(GST_GL_HAVE_WINDOW_COCOA) && defined(GDK_WINDOWING_QUARTZ)
+  if (GDK_IS_QUARTZ_DISPLAY (display) && (!user_choice
+          || g_strcmp0 (user_choice, "cocoa") == 0)) {
+    gst_video_overlay_set_window_handle (videooverlay, (guintptr)
+        gdk_quartz_window_get_nswindow (window));
+  } else
+#endif
+#if defined(GST_GL_HAVE_WINDOW_X11) && defined(GDK_WINDOWING_X11)
+  if (GDK_IS_X11_DISPLAY (display) && (!user_choice
+          || g_strcmp0 (user_choice, "x11") == 0)) {
+    gst_video_overlay_set_window_handle (videooverlay, GDK_WINDOW_XID (window));
+  } else
+#endif
+    g_error ("Unsupported Gtk+ backend");
 }

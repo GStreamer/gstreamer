@@ -35,7 +35,7 @@
 
 /* TODO: use video overlay in the proper way (like suggested in docs, see gtkvideooverlay example) */
 static gboolean
-expose_cb (GtkWidget * widget, GdkEventExpose * event, gpointer data)
+expose_cb (GtkWidget * widget, gpointer data)
 {
   GstVideoOverlay *overlay =
       GST_VIDEO_OVERLAY (gst_bin_get_by_interface (GST_BIN (data),
@@ -69,7 +69,7 @@ apply_fx (GtkWidget * widget, gpointer data)
           (G_OBJECT (data)), "effect")
       )->enum_class;
 
-  fx = gtk_combo_box_get_active_text (GTK_COMBO_BOX (widget));
+  fx = gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT (widget));
   g_print ("setting: %s - %s\n", fx, g_enum_get_value_by_nick (p_class,
           fx)->value_name);
   g_object_set (G_OBJECT (data), "effect", g_enum_get_value_by_nick (p_class,
@@ -190,34 +190,34 @@ main (gint argc, gchar * argv[])
 
   gtk_widget_set_size_request (screen, 640, 480);       // 500 x 376
 
-  vbox = gtk_vbox_new (FALSE, 2);
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
 
   gtk_box_pack_start (GTK_BOX (vbox), screen, TRUE, TRUE, 0);
 
-  combo = gtk_combo_box_new_text ();
+  combo = gtk_combo_box_text_new ();
 
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "identity");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "mirror");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "squeeze");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "stretch");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "fisheye");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "twirl");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "bulge");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "tunnel");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "square");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "heat");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "xpro");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "lumaxpro");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "sepia");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "xray");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "sin");
-  gtk_combo_box_append_text (GTK_COMBO_BOX (combo), "glow");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "identity");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "mirror");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "squeeze");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "stretch");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "fisheye");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "twirl");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "bulge");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "tunnel");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "square");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "heat");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "xpro");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "lumaxpro");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "sepia");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "xray");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "sin");
+  gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (combo), "glow");
 
   g_signal_connect (G_OBJECT (combo), "changed", G_CALLBACK (apply_fx), filter);
 
   gtk_box_pack_start (GTK_BOX (vbox), combo, FALSE, FALSE, 0);
 
-  hbox = gtk_hbox_new (FALSE, 0);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 
   play = gtk_button_new_with_label ("PLAY");
 
@@ -246,7 +246,7 @@ main (gint argc, gchar * argv[])
 
   gtk_container_add (GTK_CONTAINER (window), vbox);
 
-  g_signal_connect (screen, "expose-event", G_CALLBACK (expose_cb), pipeline);
+  g_signal_connect (screen, "realize", G_CALLBACK (expose_cb), pipeline);
 
   ret = gst_element_set_state (pipeline, GST_STATE_PLAYING);
   if (ret == GST_STATE_CHANGE_FAILURE) {
