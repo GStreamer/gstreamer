@@ -2235,6 +2235,11 @@ mpegts_packetizer_ts_to_offset (MpegTSPacketizer2 * packetizer,
       break;
     }
 
+    if (tmp->next == NULL) {
+      GST_DEBUG ("pcr is beyond last group");
+      break;
+    }
+
     prevgroup = nextgroup;
 
     /* Maybe it's in this group */
