@@ -72,7 +72,7 @@ message_cb (GstBus * bus, GstMessage * message, GstElement * pipeline)
 }
 
 static gboolean
-expose_cb (GtkWidget * widget, GdkEventExpose * event, GstElement * videosink)
+expose_cb (GtkWidget * widget, cairo_t * cr, GstElement * videosink)
 {
   gst_video_overlay_expose (GST_VIDEO_OVERLAY (videosink));
   return FALSE;
@@ -264,11 +264,11 @@ main (gint argc, gchar * argv[])
 
   gtk_widget_set_size_request (screen, 640, 480);       // 500 x 376
 
-  vbox = gtk_vbox_new (FALSE, 2);
+  vbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
 
   gtk_box_pack_start (GTK_BOX (vbox), screen, TRUE, TRUE, 0);
 
-  hbox = gtk_hbox_new (FALSE, 0);
+  hbox = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 
   play = gtk_button_new_with_label ("PLAY");
 
@@ -307,7 +307,7 @@ main (gint argc, gchar * argv[])
   g_signal_connect (bus, "message::warning", G_CALLBACK (message_cb), pipeline);
   g_signal_connect (bus, "message::eos", G_CALLBACK (message_cb), pipeline);
   gst_object_unref (bus);
-  g_signal_connect (screen, "expose-event", G_CALLBACK (expose_cb), sink);
+  g_signal_connect (screen, "draw", G_CALLBACK (expose_cb), sink);
 
   gtk_drag_dest_set (screen, GTK_DEST_DEFAULT_ALL, NULL, 0, GDK_ACTION_COPY);
   gtk_drag_dest_add_uri_targets (screen);
