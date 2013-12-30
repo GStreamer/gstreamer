@@ -1905,6 +1905,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * element will be added to the bin if not previously added.
    *
    * If no handler is connected, no encoder will be used.
+   *
+   * Since: 1.4
    */
   gst_rtp_bin_signals[SIGNAL_REQUEST_RTP_ENCODER] =
       g_signal_new ("request-rtp-encoder", G_TYPE_FROM_CLASS (klass),
@@ -1921,6 +1923,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * element will be added to the bin if not previously added.
    *
    * If no handler is connected, no encoder will be used.
+   *
+   * Since: 1.4
    */
   gst_rtp_bin_signals[SIGNAL_REQUEST_RTP_DECODER] =
       g_signal_new ("request-rtp-decoder", G_TYPE_FROM_CLASS (klass),
@@ -1937,6 +1941,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * element will be added to the bin if not previously added.
    *
    * If no handler is connected, no encoder will be used.
+   *
+   * Since: 1.4
    */
   gst_rtp_bin_signals[SIGNAL_REQUEST_RTCP_ENCODER] =
       g_signal_new ("request-rtcp-encoder", G_TYPE_FROM_CLASS (klass),
@@ -1953,6 +1959,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    * element will be added to the bin if not previously added.
    *
    * If no handler is connected, no encoder will be used.
+   *
+   * Since: 1.4
    */
   gst_rtp_bin_signals[SIGNAL_REQUEST_RTCP_DECODER] =
       g_signal_new ("request-rtcp-decoder", G_TYPE_FROM_CLASS (klass),
@@ -1969,6 +1977,8 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    *
    * Notify that a new @jitterbuffer was created for @session and @ssrc.
    * This signal can, for example, be used to configure @jitterbuffer.
+   *
+   * Since: 1.4
    */
   gst_rtp_bin_signals[SIGNAL_NEW_JITTERBUFFER] =
       g_signal_new ("new-jitterbuffer", G_TYPE_FROM_CLASS (klass),
