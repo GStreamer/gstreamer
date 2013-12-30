@@ -89,6 +89,8 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
   g_return_if_fail (info != NULL);
   g_return_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN);
 
+  memset (info, 0, sizeof (GstVideoInfo));
+
   finfo = gst_video_format_get_info (format);
 
   info->flags = 0;
@@ -110,7 +112,6 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
   }
 
   fill_planes (info);
-  memset (&info->_gst_reserved, 0xff, sizeof (info->_gst_reserved));
 }
 
 static const gchar *interlace_mode[] = {

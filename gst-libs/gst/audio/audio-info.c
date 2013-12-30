@@ -96,8 +96,6 @@ gst_audio_info_init (GstAudioInfo * info)
   memset (info, 0, sizeof (GstAudioInfo));
 
   info->finfo = gst_audio_format_get_info (GST_AUDIO_FORMAT_UNKNOWN);
-
-  memset (&info->position, 0xff, sizeof (info->position));
 }
 
 /**
@@ -121,6 +119,8 @@ gst_audio_info_set_format (GstAudioInfo * info, GstAudioFormat format,
   g_return_if_fail (format != GST_AUDIO_FORMAT_UNKNOWN);
   g_return_if_fail (channels <= 64 || position == NULL);
 
+  memset (info, 0, sizeof (GstAudioInfo));
+
   finfo = gst_audio_format_get_info (format);
 
   info->flags = 0;
@@ -131,7 +131,6 @@ gst_audio_info_set_format (GstAudioInfo * info, GstAudioFormat format,
   info->bpf = (finfo->width * channels) / 8;
 
   memset (&info->position, 0xff, sizeof (info->position));
-  memset (&info->_gst_reserved, 0xff, sizeof (info->_gst_reserved));
 
   if (!position && channels == 1) {
     info->position[0] = GST_AUDIO_CHANNEL_POSITION_MONO;
