@@ -1067,7 +1067,7 @@ gst_tag_list_copy (const GstTagList * taglist)
  * of the audio track. This is useful for sample instruments and in particular
  * for multi-samples.
  *
- * Since: 1.2
+ * Since: 1.3
  */
 #define GST_TAG_MIDI_BASE_NOTE                    "midi-base-note"
 
