@@ -79,6 +79,8 @@ static const GstVideoColorimetry default_color[] = {
  * @height: a height
  *
  * Set the default info for a video frame of @format and @width and @height.
+ *
+ * Note: This initializes @info first, no values are preserved.
  */
 void
 gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
@@ -89,7 +91,7 @@ gst_video_info_set_format (GstVideoInfo * info, GstVideoFormat format,
   g_return_if_fail (info != NULL);
   g_return_if_fail (format != GST_VIDEO_FORMAT_UNKNOWN);
 
-  memset (info, 0, sizeof (GstVideoInfo));
+  gst_video_info_init (info);
 
   finfo = gst_video_format_get_info (format);
 
@@ -767,8 +769,9 @@ gst_video_info_align (GstVideoInfo * info, GstVideoAlignment * align)
   do {
     GST_LOG ("padded dimension %u-%u", padded_width, padded_height);
 
-    gst_video_info_set_format (info, GST_VIDEO_INFO_FORMAT (info),
-        padded_width, padded_height);
+    info->width = padded_width;
+    info->height = padded_height;
+    fill_planes (info);
 
     /* check alignment */
     aligned = TRUE;
