@@ -1133,7 +1133,7 @@ gst_riff_wave_add_default_channel_mask (GstCaps * caps,
   }
 
   if (channel_reorder_map)
-    memcpy (channel_reorder_map, reorder_maps[nchannels],
+    memcpy (channel_reorder_map, reorder_maps[nchannels - 1],
         sizeof (gint) * nchannels);
 
   gst_caps_set_simple (caps, "channel-mask", GST_TYPE_BITMASK, channel_mask,
