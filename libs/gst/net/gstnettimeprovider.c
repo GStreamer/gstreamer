@@ -209,9 +209,6 @@ gst_net_time_provider_thread (gpointer data)
     }
   }
 
-  if (err != NULL)
-    g_error_free (err);
-
   GST_INFO_OBJECT (self, "time provider thread is stopping");
   return NULL;
 }
