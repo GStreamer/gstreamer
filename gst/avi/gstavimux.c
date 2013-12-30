@@ -583,6 +583,7 @@ gst_avi_mux_vidsink_set_caps (GstPad * pad, GstCaps * vscaps)
             break;
           case 3:
             avipad->vids.compression = GST_MAKE_FOURCC ('W', 'M', 'V', '3');
+            break;
           default:
             valid_caps = FALSE;
             break;
