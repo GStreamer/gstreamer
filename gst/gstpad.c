@@ -1285,6 +1285,9 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
       GstPadProbeInfo info = { GST_PAD_PROBE_TYPE_IDLE, res, };
       GstPadProbeReturn ret;
 
+      /* Keep another ref, the callback could destroy the pad */
+      gst_object_ref (pad);
+
       /* the pad is idle now, we can signal the idle callback now */
       GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
           "pad is idle, trigger idle callback");
@@ -1314,6 +1317,8 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
           break;
       }
       GST_OBJECT_UNLOCK (pad);
+
+      gst_object_unref (pad);
     }
   } else {
     GST_OBJECT_UNLOCK (pad);
