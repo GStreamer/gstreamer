@@ -1254,6 +1254,42 @@ gst_wavparse_note_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
 }
 
 /*
+ * gst_wavparse_smpl_chunk:
+ * @wav GstWavParse object
+ * @data holder for data
+ * @size holder for data size
+ *
+ * Parse smpl chunk from @data.
+ *
+ * Returns: %TRUE when cue chunk is available
+ */
+static gboolean
+gst_wavparse_smpl_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
+{
+  guint32 note_number;
+
+  /*
+     manufacturer_id = GST_READ_UINT32_LE (data);
+     product_id = GST_READ_UINT32_LE (data + 4);
+     sample_period = GST_READ_UINT32_LE (data + 8);
+   */
+  note_number = GST_READ_UINT32_LE (data + 12);
+  /*
+     pitch_fraction = GST_READ_UINT32_LE (data + 16);
+     SMPTE_format = GST_READ_UINT32_LE (data + 20);
+     SMPTE_offset = GST_READ_UINT32_LE (data + 24);
+     num_sample_loops = GST_READ_UINT32_LE (data + 28);
+     List of Sample Loops, 24 bytes each
+   */
+
+  if (!wav->tags)
+    wav->tags = gst_tag_list_new_empty ();
+  gst_tag_list_add (wav->tags, GST_TAG_MERGE_REPLACE,
+      GST_TAG_MIDI_BASE_NOTE, (guint) note_number, NULL);
+  return TRUE;
+}
+
+/*
  * gst_wavparse_adtl_chunk:
  * @wav GstWavParse object
  * @data holder for data
@@ -1819,6 +1855,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
                   data_size);
               gst_buffer_unmap (buf, &map);
             }
+            break;
           }
           default:
             GST_INFO_OBJECT (wav, "Ignoring LIST chunk %" GST_FOURCC_FORMAT,
@@ -1859,6 +1896,50 @@ gst_wavparse_stream_headers (GstWavParse * wav)
             goto header_read_error;
           gst_buffer_map (buf, &map, GST_MAP_READ);
           if (!gst_wavparse_cue_chunk (wav, (const guint8 *) map.data,
+                  data_size)) {
+            goto header_read_error;
+          }
+          gst_buffer_unmap (buf, &map);
+        }
+        size = GST_ROUND_UP_2 (size);
+        if (wav->streaming) {
+          gst_adapter_flush (wav->adapter, size);
+        } else {
+          gst_buffer_unref (buf);
+        }
+        size = GST_ROUND_UP_2 (size);
+        wav->offset += size;
+        break;
+      }
+      case GST_RIFF_TAG_smpl:{
+        const gint data_size = size;
+
+        GST_DEBUG_OBJECT (wav, "Have 'smpl' TAG, size : %u", data_size);
+        if (wav->streaming) {
+          const guint8 *data = NULL;
+
+          if (!gst_wavparse_peek_chunk (wav, &tag, &size)) {
+            goto exit;
+          }
+          gst_adapter_flush (wav->adapter, 8);
+          wav->offset += 8;
+          data = gst_adapter_map (wav->adapter, data_size);
+          if (!gst_wavparse_smpl_chunk (wav, data, data_size)) {
+            goto header_read_error;
+          }
+          gst_adapter_unmap (wav->adapter);
+        } else {
+          GstMapInfo map;
+
+          wav->offset += 8;
+          gst_buffer_unref (buf);
+          buf = NULL;
+          if ((res =
+                  gst_pad_pull_range (wav->sinkpad, wav->offset,
+                      data_size, &buf)) != GST_FLOW_OK)
+            goto header_read_error;
+          gst_buffer_map (buf, &map, GST_MAP_READ);
+          if (!gst_wavparse_smpl_chunk (wav, (const guint8 *) map.data,
                   data_size)) {
             goto header_read_error;
           }
