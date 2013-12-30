@@ -474,8 +474,6 @@ gst_video_rate_setcaps (GstBaseTransform * trans, GstCaps * in_caps,
   gboolean ret = TRUE;
   gint rate_numerator, rate_denominator;
 
-  videorate = GST_VIDEO_RATE (trans);
-
   GST_DEBUG_OBJECT (trans, "setcaps called in: %" GST_PTR_FORMAT
       " out: %" GST_PTR_FORMAT, in_caps, out_caps);
 
