@@ -944,8 +944,6 @@ gst_jpeg_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   GstJpegParse *parse = GST_JPEG_PARSE (parent);
   gboolean res = TRUE;
 
-  parse = GST_JPEG_PARSE (gst_pad_get_parent (pad));
-
   GST_DEBUG_OBJECT (parse, "event : %s", GST_EVENT_TYPE_NAME (event));
 
   switch (GST_EVENT_TYPE (event)) {
@@ -1002,7 +1000,6 @@ gst_jpeg_parse_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
       break;
   }
 
-  gst_object_unref (parse);
   return res;
 }
 
