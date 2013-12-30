@@ -227,6 +227,9 @@ struct _GstRtpBinPrivate
 
   /* UNIX (ntp) time of last SR sync used */
   guint64 last_unix;
+
+  /* list of extra elements */
+  GList *elements;
 };
 
 /* signals and args */
@@ -666,10 +669,49 @@ no_demux:
   }
 }
 
+static gboolean
+bin_manage_element (GstRtpBin * bin, GstElement * element)
+{
+  GstRtpBinPrivate *priv = bin->priv;
+
+  if (g_list_find (priv->elements, element)) {
+    GST_DEBUG_OBJECT (bin, "requested element %p already in bin", element);
+  } else {
+    GST_DEBUG_OBJECT (bin, "adding requested element %p", element);
+    if (!gst_bin_add (GST_BIN_CAST (bin), element))
+      goto add_failed;
+    if (!gst_element_sync_state_with_parent (element))
+      GST_WARNING_OBJECT (bin, "unable to sync element state with rtpbin");
+  }
+  /* we add the element multiple times, each we need an equal number of
+   * removes to really remove the element from the bin */
+  priv->elements = g_list_prepend (priv->elements, element);
+
+  return TRUE;
+
+  /* ERRORS */
+add_failed:
+  {
+    GST_WARNING_OBJECT (bin, "unable to add element");
+    return FALSE;
+  }
+}
+
 static void
 remove_bin_element (GstElement * element, GstRtpBin * bin)
 {
-  gst_bin_remove (GST_BIN_CAST (bin), element);
+  GstRtpBinPrivate *priv = bin->priv;
+  GList *find;
+
+  find = g_list_find (priv->elements, element);
+  if (find) {
+    priv->elements = g_list_delete_link (priv->elements, find);
+
+    if (!g_list_find (priv->elements, element))
+      gst_bin_remove (GST_BIN_CAST (bin), element);
+    else
+      gst_object_unref (element);
+  }
 }
 
 /* called with RTP_BIN_LOCK */
@@ -2532,31 +2574,21 @@ static GstElement *
 session_request_encoder (GstRtpBinSession * session, guint signal)
 {
   GstElement *encoder = NULL;
+  GstRtpBin *bin = session->bin;
 
-  g_signal_emit (session->bin, gst_rtp_bin_signals[signal], 0, session->id,
-      &encoder);
+  g_signal_emit (bin, gst_rtp_bin_signals[signal], 0, session->id, &encoder);
 
   if (encoder) {
-    if (g_slist_find (session->encoders, encoder)) {
-      GST_DEBUG_OBJECT (session->bin, "requested encoder %p already in bin",
-          encoder);
-    } else {
-      GST_DEBUG_OBJECT (session->bin, "adding requested encoder %p", encoder);
-      if (!gst_bin_add (GST_BIN_CAST (session->bin), encoder))
-        goto add_failed;
-      if (!gst_element_sync_state_with_parent (encoder))
-        GST_WARNING_OBJECT (session->bin,
-            "unable to sync encoder state with rtpbin");
-      session->encoders = g_slist_append (session->encoders, encoder);
-    }
+    if (!bin_manage_element (bin, encoder))
+      goto manage_failed;
+    session->encoders = g_slist_prepend (session->encoders, encoder);
   }
-
   return encoder;
 
   /* ERRORS */
-add_failed:
+manage_failed:
   {
-    GST_WARNING_OBJECT (session->bin, "unable to add encoder");
+    GST_WARNING_OBJECT (bin, "unable to manage encoder");
     gst_object_unref (encoder);
     return NULL;
   }
@@ -2566,31 +2598,21 @@ static GstElement *
 session_request_decoder (GstRtpBinSession * session, guint signal)
 {
   GstElement *decoder = NULL;
+  GstRtpBin *bin = session->bin;
 
-  g_signal_emit (session->bin, gst_rtp_bin_signals[signal], 0, session->id,
-      &decoder);
+  g_signal_emit (bin, gst_rtp_bin_signals[signal], 0, session->id, &decoder);
 
   if (decoder) {
-    if (g_slist_find (session->decoders, decoder)) {
-      GST_DEBUG_OBJECT (session->bin, "requested decoder %p already in bin",
-          decoder);
-    } else {
-      GST_DEBUG_OBJECT (session->bin, "adding requested decoder %p", decoder);
-      if (!gst_bin_add (GST_BIN_CAST (session->bin), decoder))
-        goto add_failed;
-      if (!gst_element_sync_state_with_parent (decoder))
-        GST_WARNING_OBJECT (session->bin,
-            "unable to sync decoder state with rtpbin");
-      session->decoders = g_slist_append (session->decoders, decoder);
-    }
+    if (!bin_manage_element (bin, decoder))
+      goto manage_failed;
+    session->decoders = g_slist_prepend (session->decoders, decoder);
   }
-
   return decoder;
 
   /* ERRORS */
-add_failed:
+manage_failed:
   {
-    GST_WARNING_OBJECT (session->bin, "unable to add decoder");
+    GST_WARNING_OBJECT (bin, "unable to manage decoder");
     gst_object_unref (decoder);
     return NULL;
   }
