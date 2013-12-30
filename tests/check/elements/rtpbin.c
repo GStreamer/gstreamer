@@ -430,6 +430,48 @@ GST_START_TEST (test_request_pad_by_template_name)
 
 GST_END_TEST;
 
+static GstElement *
+encoder_cb (GstElement * rtpbin, guint sessid, gpointer user_data)
+{
+  GstElement *bin;
+  GstPad *srcpad, *sinkpad;
+
+  fail_unless (sessid == 2);
+
+  bin = gst_bin_new ("rtpenc");
+  GST_DEBUG ("making encoder");
+
+  sinkpad = gst_ghost_pad_new_no_target ("rtp_sink_2", GST_PAD_SINK);
+  srcpad = gst_ghost_pad_new_no_target ("rtp_src_2", GST_PAD_SRC);
+
+  gst_element_add_pad (bin, sinkpad);
+  gst_element_add_pad (bin, srcpad);
+
+  return bin;
+}
+
+GST_START_TEST (test_encoder)
+{
+  GstElement *rtpbin;
+  GstPad *rtp_sink1;
+
+  rtpbin = gst_element_factory_make ("rtpbin", "rtpbin");
+
+  g_signal_connect (rtpbin, "request-rtp-encoder", (GCallback) encoder_cb,
+      NULL);
+
+  rtp_sink1 = gst_element_get_request_pad (rtpbin, "send_rtp_sink_2");
+  fail_unless (rtp_sink1 != NULL);
+  fail_unless_equals_string (GST_PAD_NAME (rtp_sink1), "send_rtp_sink_2");
+  ASSERT_OBJECT_REFCOUNT (rtp_sink1, "rtp_sink1", 2);
+
+  gst_object_unref (rtp_sink1);
+
+  gst_object_unref (rtpbin);
+}
+
+GST_END_TEST;
+
 static Suite *
 gstrtpbin_suite (void)
 {
@@ -442,6 +484,7 @@ gstrtpbin_suite (void)
   tcase_add_test (tc_chain, test_cleanup_recv);
   tcase_add_test (tc_chain, test_cleanup_recv2);
   tcase_add_test (tc_chain, test_request_pad_by_template_name);
+  tcase_add_test (tc_chain, test_encoder);
 
   return s;
 }
