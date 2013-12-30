@@ -1459,12 +1459,15 @@ gst_video_encoder_negotiate_default (GstVideoEncoder * encoder)
   GstAllocationParams params;
   gboolean ret = TRUE;
   GstVideoCodecState *state = encoder->priv->output_state;
-  GstVideoInfo *info = &state->info;
+  GstVideoInfo *info = NULL;
   GstQuery *query = NULL;
   GstVideoCodecFrame *frame;
   GstCaps *prevcaps;
 
+  g_return_val_if_fail (state, FALSE);
   g_return_val_if_fail (state->caps != NULL, FALSE);
+
+  info = &state->info;
 
   if (encoder->priv->output_state_changed) {
     state->caps = gst_caps_make_writable (state->caps);
@@ -1598,7 +1601,6 @@ gst_video_encoder_negotiate (GstVideoEncoder * encoder)
   gboolean ret = TRUE;
 
   g_return_val_if_fail (GST_IS_VIDEO_ENCODER (encoder), FALSE);
-  g_return_val_if_fail (encoder->priv->output_state, FALSE);
 
   klass = GST_VIDEO_ENCODER_GET_CLASS (encoder);
 

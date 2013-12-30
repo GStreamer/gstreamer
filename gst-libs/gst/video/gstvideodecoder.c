@@ -3032,6 +3032,7 @@ gst_video_decoder_negotiate_default (GstVideoDecoder * decoder)
   GstVideoCodecFrame *frame;
   GstCaps *prevcaps;
 
+  g_return_val_if_fail (state, FALSE);
   g_return_val_if_fail (GST_VIDEO_INFO_WIDTH (&state->info) != 0, FALSE);
   g_return_val_if_fail (GST_VIDEO_INFO_HEIGHT (&state->info) != 0, FALSE);
 
@@ -3176,7 +3177,6 @@ gst_video_decoder_negotiate (GstVideoDecoder * decoder)
   gboolean ret = TRUE;
 
   g_return_val_if_fail (GST_IS_VIDEO_DECODER (decoder), FALSE);
-  g_return_val_if_fail (decoder->priv->output_state, FALSE);
 
   klass = GST_VIDEO_DECODER_GET_CLASS (decoder);
 
