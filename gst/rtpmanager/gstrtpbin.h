@@ -84,10 +84,6 @@ struct _GstRtpBinClass {
   void        (*clear_pt_map)         (GstRtpBin *rtpbin);
   void        (*reset_sync)           (GstRtpBin *rtpbin);
   RTPSession* (*get_internal_session) (GstRtpBin *rtpbin, guint session);
-  GstElement* (*request_rtp_encoder)  (GstRtpBin *rtpbin, guint session);
-  GstElement* (*request_rtp_decoder)  (GstRtpBin *rtpbin, guint session);
-  GstElement* (*request_rtcp_encoder) (GstRtpBin *rtpbin, guint session);
-  GstElement* (*request_rtcp_decoder) (GstRtpBin *rtpbin, guint session);
 
   /* session manager signals */
   void     (*on_new_ssrc)       (GstRtpBin *rtpbin, guint session, guint32 ssrc);
@@ -100,6 +96,11 @@ struct _GstRtpBinClass {
   void     (*on_timeout)        (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_sender_timeout) (GstRtpBin *rtpbin, guint session, guint32 ssrc);
   void     (*on_npt_stop)       (GstRtpBin *rtpbin, guint session, guint32 ssrc);
+
+  GstElement* (*request_rtp_encoder)  (GstRtpBin *rtpbin, guint session);
+  GstElement* (*request_rtp_decoder)  (GstRtpBin *rtpbin, guint session);
+  GstElement* (*request_rtcp_encoder) (GstRtpBin *rtpbin, guint session);
+  GstElement* (*request_rtcp_decoder) (GstRtpBin *rtpbin, guint session);
 };
 
 GType gst_rtp_bin_get_type (void);

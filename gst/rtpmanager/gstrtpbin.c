@@ -63,7 +63,7 @@
  * RTPSession object which further provides action signals to retrieve the
  * internal source and other sources.
  *
- * #GstRtpBin also has action signals (#GstRtpBin::request-rtp-encoder,
+ * #GstRtpBin also has signals (#GstRtpBin::request-rtp-encoder,
  * #GstRtpBin::request-rtp-decoder, #GstRtpBin::request-rtcp-encoder and
  * #GstRtpBin::request-rtp-decoder) to dynamically request for RTP and RTCP encoders
  * and decoders in order to support SRTP. The encoders must provide the pads
@@ -871,12 +871,14 @@ gst_rtp_bin_get_internal_session (GstRtpBin * bin, guint session_id)
 static GstElement *
 gst_rtp_bin_request_encoder (GstRtpBin * bin, guint session_id)
 {
+  GST_DEBUG_OBJECT (bin, "return NULL encoder");
   return NULL;
 }
 
 static GstElement *
 gst_rtp_bin_request_decoder (GstRtpBin * bin, guint session_id)
 {
+  GST_DEBUG_OBJECT (bin, "return NULL decoder");
   return NULL;
 }
 
@@ -1602,6 +1604,22 @@ static void gst_rtp_bin_handle_message (GstBin * bin, GstMessage * message);
 #define gst_rtp_bin_parent_class parent_class
 G_DEFINE_TYPE (GstRtpBin, gst_rtp_bin, GST_TYPE_BIN);
 
+static gboolean
+_gst_element_accumulator (GSignalInvocationHint * ihint,
+    GValue * return_accu, const GValue * handler_return, gpointer dummy)
+{
+  GstElement *element;
+
+  element = g_value_get_object (handler_return);
+  GST_DEBUG ("got element %" GST_PTR_FORMAT, element);
+
+  if (!(ihint->run_type & G_SIGNAL_RUN_CLEANUP))
+    g_value_set_object (return_accu, element);
+
+  /* stop emission if we have an element */
+  return (element == NULL);
+}
+
 static void
 gst_rtp_bin_class_init (GstRtpBinClass * klass)
 {
@@ -1844,9 +1862,9 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    */
   gst_rtp_bin_signals[SIGNAL_REQUEST_RTP_ENCODER] =
       g_signal_new ("request-rtp-encoder", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRtpBinClass,
-          request_rtp_encoder), NULL, NULL, g_cclosure_marshal_generic,
-      GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
+          request_rtp_encoder), _gst_element_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
 
   /**
    * GstRtpBin::request-rtp-decoder:
@@ -1860,9 +1878,9 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    */
   gst_rtp_bin_signals[SIGNAL_REQUEST_RTP_DECODER] =
       g_signal_new ("request-rtp-decoder", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRtpBinClass,
-          request_rtp_decoder), NULL, NULL, g_cclosure_marshal_generic,
-      GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
+          request_rtp_decoder), _gst_element_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
 
   /**
    * GstRtpBin::request-rtcp-encoder:
@@ -1876,9 +1894,9 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    */
   gst_rtp_bin_signals[SIGNAL_REQUEST_RTCP_ENCODER] =
       g_signal_new ("request-rtcp-encoder", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRtpBinClass,
-          request_rtcp_encoder), NULL, NULL, g_cclosure_marshal_generic,
-      GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
+          request_rtcp_encoder), _gst_element_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
 
   /**
    * GstRtpBin::request-rtcp-decoder:
@@ -1892,9 +1910,9 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
    */
   gst_rtp_bin_signals[SIGNAL_REQUEST_RTCP_DECODER] =
       g_signal_new ("request-rtcp-decoder", G_TYPE_FROM_CLASS (klass),
-      G_SIGNAL_RUN_LAST | G_SIGNAL_ACTION, G_STRUCT_OFFSET (GstRtpBinClass,
-          request_rtcp_decoder), NULL, NULL, g_cclosure_marshal_generic,
-      GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
+          request_rtcp_decoder), _gst_element_accumulator, NULL,
+      g_cclosure_marshal_generic, GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
 
   g_object_class_install_property (gobject_class, PROP_SDES,
       g_param_spec_boxed ("sdes", "SDES",
