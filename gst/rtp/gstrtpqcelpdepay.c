@@ -113,9 +113,6 @@ gst_rtp_qcelp_depay_class_init (GstRtpQCELPDepayClass * klass)
 static void
 gst_rtp_qcelp_depay_init (GstRtpQCELPDepay * rtpqcelpdepay)
 {
-  GstRTPBaseDepayload G_GNUC_UNUSED *depayload;
-
-  depayload = GST_RTP_BASE_DEPAYLOAD (rtpqcelpdepay);
 }
 
 static void
