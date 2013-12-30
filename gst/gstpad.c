@@ -1177,6 +1177,31 @@ gst_pad_is_active (GstPad * pad)
   return result;
 }
 
+static void
+cleanup_hook (GstPad * pad, GHook * hook)
+{
+  GstPadProbeType type;
+
+  if (!G_HOOK_IS_VALID (hook))
+    return;
+
+  type = (hook->flags) >> G_HOOK_FLAG_USER_SHIFT;
+
+  if (type & GST_PAD_PROBE_TYPE_BLOCKING) {
+    /* unblock when we remove the last blocking probe */
+    pad->num_blocked--;
+    GST_DEBUG_OBJECT (pad, "remove blocking probe, now %d left",
+        pad->num_blocked);
+    if (pad->num_blocked == 0) {
+      GST_DEBUG_OBJECT (pad, "last blocking probe removed, unblocking");
+      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_BLOCKED);
+      GST_PAD_BLOCK_BROADCAST (pad);
+    }
+  }
+  g_hook_destroy_link (&pad->probes, hook);
+  pad->num_probes--;
+}
+
 /**
  * gst_pad_add_probe:
  * @pad: the #GstPad to add the probe to
@@ -1258,43 +1283,42 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
       GST_OBJECT_UNLOCK (pad);
     } else {
       GstPadProbeInfo info = { GST_PAD_PROBE_TYPE_IDLE, res, };
+      GstPadProbeReturn ret;
 
       /* the pad is idle now, we can signal the idle callback now */
       GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
           "pad is idle, trigger idle callback");
       GST_OBJECT_UNLOCK (pad);
 
-      callback (pad, &info, user_data);
+      ret = callback (pad, &info, user_data);
+
+      GST_OBJECT_LOCK (pad);
+      switch (ret) {
+        case GST_PAD_PROBE_REMOVE:
+          /* remove the probe */
+          GST_DEBUG_OBJECT (pad, "asked to remove hook");
+          cleanup_hook (pad, hook);
+          res = 0;
+          break;
+        case GST_PAD_PROBE_DROP:
+          GST_DEBUG_OBJECT (pad, "asked to drop item");
+          break;
+        case GST_PAD_PROBE_PASS:
+          GST_DEBUG_OBJECT (pad, "asked to pass item");
+          break;
+        case GST_PAD_PROBE_OK:
+          GST_DEBUG_OBJECT (pad, "probe returned OK");
+          break;
+        default:
+          GST_DEBUG_OBJECT (pad, "probe returned %d", ret);
+          break;
+      }
+      GST_OBJECT_UNLOCK (pad);
     }
   } else {
     GST_OBJECT_UNLOCK (pad);
   }
   return res;
-}
-
-static void
-cleanup_hook (GstPad * pad, GHook * hook)
-{
-  GstPadProbeType type;
-
-  if (!G_HOOK_IS_VALID (hook))
-    return;
-
-  type = (hook->flags) >> G_HOOK_FLAG_USER_SHIFT;
-
-  if (type & GST_PAD_PROBE_TYPE_BLOCKING) {
-    /* unblock when we remove the last blocking probe */
-    pad->num_blocked--;
-    GST_DEBUG_OBJECT (pad, "remove blocking probe, now %d left",
-        pad->num_blocked);
-    if (pad->num_blocked == 0) {
-      GST_DEBUG_OBJECT (pad, "last blocking probe removed, unblocking");
-      GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_BLOCKED);
-      GST_PAD_BLOCK_BROADCAST (pad);
-    }
-  }
-  g_hook_destroy_link (&pad->probes, hook);
-  pad->num_probes--;
 }
 
 /**
