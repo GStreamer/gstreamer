@@ -152,6 +152,7 @@ gst_rtp_vraw_pay_setcaps (GstRTPBasePayload * payload, GstCaps * caps)
     case GST_VIDEO_FORMAT_RGB:
       samplingstr = "RGB";
       pgroup = 3;
+      break;
     case GST_VIDEO_FORMAT_BGR:
       samplingstr = "BGR";
       pgroup = 3;
