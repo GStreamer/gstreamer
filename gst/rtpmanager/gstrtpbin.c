@@ -257,6 +257,8 @@ enum
   SIGNAL_REQUEST_RTCP_ENCODER,
   SIGNAL_REQUEST_RTCP_DECODER,
 
+  SIGNAL_NEW_JITTERBUFFER,
+
   LAST_SIGNAL
 };
 
@@ -1492,7 +1494,6 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
     if (!(demux = gst_element_factory_make ("rtpptdemux", NULL)))
       goto no_demux;
 
-
   stream = g_new0 (GstRtpBinStream, 1);
   stream->ssrc = ssrc;
   stream->bin = rtpbin;
@@ -1522,6 +1523,9 @@ create_stream (GstRtpBinSession * session, guint32 ssrc)
   g_object_set (buffer, "do-lost", rtpbin->do_lost, NULL);
   g_object_set (buffer, "mode", rtpbin->buffer_mode, NULL);
   g_object_set (buffer, "do-retransmission", rtpbin->do_retransmission, NULL);
+
+  g_signal_emit (rtpbin, gst_rtp_bin_signals[SIGNAL_NEW_JITTERBUFFER], 0,
+      buffer, session->id, ssrc);
 
   if (!rtpbin->ignore_pt)
     gst_bin_add (GST_BIN_CAST (rtpbin), demux);
@@ -1955,6 +1959,22 @@ gst_rtp_bin_class_init (GstRtpBinClass * klass)
       G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
           request_rtcp_decoder), _gst_element_accumulator, NULL,
       g_cclosure_marshal_generic, GST_TYPE_ELEMENT, 1, G_TYPE_UINT);
+
+  /**
+   * GstRtpBin::new-jitterbuffer:
+   * @rtpbin: the object which received the signal
+   * @jitterbuffer: the new jitterbuffer
+   * @session: the session
+   * @ssrc: the SSRC
+   *
+   * Notify that a new @jitterbuffer was created for @session and @ssrc.
+   * This signal can, for example, be used to configure @jitterbuffer.
+   */
+  gst_rtp_bin_signals[SIGNAL_NEW_JITTERBUFFER] =
+      g_signal_new ("new-jitterbuffer", G_TYPE_FROM_CLASS (klass),
+      G_SIGNAL_RUN_LAST, G_STRUCT_OFFSET (GstRtpBinClass,
+          new_jitterbuffer), NULL, NULL, g_cclosure_marshal_generic,
+      G_TYPE_NONE, 3, GST_TYPE_ELEMENT, G_TYPE_UINT, G_TYPE_UINT);
 
   g_object_class_install_property (gobject_class, PROP_SDES,
       g_param_spec_boxed ("sdes", "SDES",

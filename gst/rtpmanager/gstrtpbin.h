@@ -80,6 +80,8 @@ struct _GstRtpBinClass {
 
   void        (*payload_type_change)  (GstRtpBin *rtpbin, guint session, guint pt);
 
+  void        (*new_jitterbuffer)     (GstRtpBin *rtpbin, guint session, guint32 ssrc);
+
   /* action signals */
   void        (*clear_pt_map)         (GstRtpBin *rtpbin);
   void        (*reset_sync)           (GstRtpBin *rtpbin);
