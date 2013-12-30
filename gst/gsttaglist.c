@@ -395,6 +395,9 @@ _priv_gst_tag_initialize (void)
       _("interpreted-by"),
       _("Information about the people behind a remix and similar "
           "interpretations"), gst_tag_merge_strings_with_comma);
+  gst_tag_register_static (GST_TAG_MIDI_BASE_NOTE, GST_TAG_FLAG_META,
+      G_TYPE_UINT,
+      _("midi-base-note"), _("Midi note number of the audio track."), NULL);
 }
 
 /**
