@@ -74,11 +74,6 @@ GST_STATIC_PAD_TEMPLATE ("sink",
     );
 
 
-static void gst_y4m_encode_set_property (GObject * object,
-    guint prop_id, const GValue * value, GParamSpec * pspec);
-static void gst_y4m_encode_get_property (GObject * object,
-    guint prop_id, GValue * value, GParamSpec * pspec);
-
 static void gst_y4m_encode_reset (GstY4mEncode * filter);
 
 static gboolean gst_y4m_encode_sink_event (GstPad * pad, GstObject * parent,
@@ -94,14 +89,9 @@ G_DEFINE_TYPE (GstY4mEncode, gst_y4m_encode, GST_TYPE_ELEMENT);
 static void
 gst_y4m_encode_class_init (GstY4mEncodeClass * klass)
 {
-  GObjectClass *gobject_class;
   GstElementClass *gstelement_class;
 
-  gobject_class = (GObjectClass *) klass;
   gstelement_class = (GstElementClass *) klass;
-
-  gobject_class->set_property = gst_y4m_encode_set_property;
-  gobject_class->get_property = gst_y4m_encode_get_property;
 
   gstelement_class->change_state =
       GST_DEBUG_FUNCPTR (gst_y4m_encode_change_state);
@@ -304,37 +294,6 @@ not_negotiated:
         ("format wasn't negotiated before chain function"));
     gst_buffer_unref (buf);
     return GST_FLOW_NOT_NEGOTIATED;
-  }
-}
-
-static void
-gst_y4m_encode_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstY4mEncode G_GNUC_UNUSED *filter;
-
-  g_return_if_fail (GST_IS_Y4M_ENCODE (object));
-  filter = GST_Y4M_ENCODE (object);
-
-  switch (prop_id) {
-    default:
-      break;
-  }
-}
-
-static void
-gst_y4m_encode_get_property (GObject * object, guint prop_id, GValue * value,
-    GParamSpec * pspec)
-{
-  GstY4mEncode G_GNUC_UNUSED *filter;
-
-  g_return_if_fail (GST_IS_Y4M_ENCODE (object));
-  filter = GST_Y4M_ENCODE (object);
-
-  switch (prop_id) {
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
   }
 }
 
