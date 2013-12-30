@@ -408,8 +408,8 @@ struct _GstRtpBinSession
   /* list of GstRtpBinStream */
   GSList *streams;
 
-  /* list of encoders */
-  GSList *encoders;
+  /* list of elements */
+  GSList *elements;
 
   /* list of decoders */
   GSList *decoders;
@@ -736,11 +736,8 @@ free_session (GstRtpBinSession * sess, GstRtpBin * bin)
   gst_bin_remove (GST_BIN_CAST (bin), sess->session);
   gst_bin_remove (GST_BIN_CAST (bin), sess->demux);
 
-  g_slist_foreach (sess->encoders, (GFunc) remove_bin_element, bin);
-  g_slist_free (sess->encoders);
-
-  g_slist_foreach (sess->decoders, (GFunc) remove_bin_element, bin);
-  g_slist_free (sess->decoders);
+  g_slist_foreach (sess->elements, (GFunc) remove_bin_element, bin);
+  g_slist_free (sess->elements);
 
   g_slist_foreach (sess->streams, (GFunc) free_stream, bin);
   g_slist_free (sess->streams);
@@ -2601,49 +2598,25 @@ gst_rtp_bin_change_state (GstElement * element, GstStateChange transition)
 }
 
 static GstElement *
-session_request_encoder (GstRtpBinSession * session, guint signal)
+session_request_element (GstRtpBinSession * session, guint signal)
 {
-  GstElement *encoder = NULL;
+  GstElement *element = NULL;
   GstRtpBin *bin = session->bin;
 
-  g_signal_emit (bin, gst_rtp_bin_signals[signal], 0, session->id, &encoder);
+  g_signal_emit (bin, gst_rtp_bin_signals[signal], 0, session->id, &element);
 
-  if (encoder) {
-    if (!bin_manage_element (bin, encoder))
+  if (element) {
+    if (!bin_manage_element (bin, element))
       goto manage_failed;
-    session->encoders = g_slist_prepend (session->encoders, encoder);
+    session->elements = g_slist_prepend (session->elements, element);
   }
-  return encoder;
+  return element;
 
   /* ERRORS */
 manage_failed:
   {
-    GST_WARNING_OBJECT (bin, "unable to manage encoder");
-    gst_object_unref (encoder);
-    return NULL;
-  }
-}
-
-static GstElement *
-session_request_decoder (GstRtpBinSession * session, guint signal)
-{
-  GstElement *decoder = NULL;
-  GstRtpBin *bin = session->bin;
-
-  g_signal_emit (bin, gst_rtp_bin_signals[signal], 0, session->id, &decoder);
-
-  if (decoder) {
-    if (!bin_manage_element (bin, decoder))
-      goto manage_failed;
-    session->decoders = g_slist_prepend (session->decoders, decoder);
-  }
-  return decoder;
-
-  /* ERRORS */
-manage_failed:
-  {
-    GST_WARNING_OBJECT (bin, "unable to manage decoder");
-    gst_object_unref (decoder);
+    GST_WARNING_OBJECT (bin, "unable to manage element");
+    gst_object_unref (element);
     return NULL;
   }
 }
@@ -2925,7 +2898,7 @@ create_recv_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
       (GCallback) caps_changed, session);
 
   GST_DEBUG_OBJECT (rtpbin, "requesting RTP decoder");
-  decoder = session_request_decoder (session, SIGNAL_REQUEST_RTP_DECODER);
+  decoder = session_request_element (session, SIGNAL_REQUEST_RTP_DECODER);
   if (decoder) {
     GstPad *decsrc;
     GstPadLinkReturn ret;
@@ -3088,7 +3061,7 @@ create_recv_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ,
     goto pad_failed;
 
   GST_DEBUG_OBJECT (rtpbin, "getting RTCP decoder");
-  decoder = session_request_decoder (session, SIGNAL_REQUEST_RTCP_DECODER);
+  decoder = session_request_element (session, SIGNAL_REQUEST_RTCP_DECODER);
   if (decoder) {
     GstPad *decsrc;
     GstPadLinkReturn ret;
@@ -3243,7 +3216,7 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
     goto no_srcpad;
 
   GST_DEBUG_OBJECT (rtpbin, "getting RTP encoder");
-  encoder = session_request_encoder (session, SIGNAL_REQUEST_RTP_ENCODER);
+  encoder = session_request_element (session, SIGNAL_REQUEST_RTP_ENCODER);
   if (encoder) {
     gchar *ename;
     GstPad *encsink;
@@ -3384,7 +3357,7 @@ create_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
     goto pad_failed;
 
   GST_DEBUG_OBJECT (rtpbin, "getting RTCP encoder");
-  encoder = session_request_encoder (session, SIGNAL_REQUEST_RTCP_ENCODER);
+  encoder = session_request_element (session, SIGNAL_REQUEST_RTCP_ENCODER);
   if (encoder) {
     gchar *ename;
     GstPad *encsink;
