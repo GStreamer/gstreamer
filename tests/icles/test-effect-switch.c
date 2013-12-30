@@ -110,7 +110,7 @@ pad_probe_cb (GstPad * pad, GstPadProbeInfo * info, gpointer user_data)
 static gboolean
 timeout_cb (gpointer user_data)
 {
-  gst_pad_add_probe (blockpad, GST_PAD_PROBE_TYPE_BLOCK_DOWNSTREAM,
+  gst_pad_add_probe (blockpad, GST_PAD_PROBE_TYPE_IDLE,
       pad_probe_cb, user_data, NULL);
 
   return TRUE;
