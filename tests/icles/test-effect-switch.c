@@ -186,7 +186,7 @@ main (int argc, char **argv)
 
   filter1 = gst_element_factory_make ("capsfilter", NULL);
   gst_util_set_object_arg (G_OBJECT (filter1), "caps",
-      "video/x-raw, format=I420, width=320, height=240, "
+      "video/x-raw, width=320, height=240, "
       "format={ I420, YV12, YUY2, UYVY, AYUV, Y41B, Y42B, "
       "YVYU, Y444, v210, v216, NV12, NV21, UYVP, A420, YUV9, YVU9, IYU1 }");
 
