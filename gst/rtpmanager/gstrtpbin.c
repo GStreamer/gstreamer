@@ -3181,7 +3181,7 @@ create_send_rtp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
 
     GST_DEBUG_OBJECT (rtpbin, "linking RTP encoder");
     ename = g_strdup_printf ("rtp_sink_%d", sessid);
-    encsink = gst_element_get_request_pad (encoder, ename);
+    encsink = gst_element_get_static_pad (encoder, ename);
     g_free (ename);
     ename = g_strdup_printf ("rtp_src_%d", sessid);
     encsrc = gst_element_get_static_pad (encoder, ename);
@@ -3319,7 +3319,7 @@ create_rtcp (GstRtpBin * rtpbin, GstPadTemplate * templ, const gchar * name)
 
     GST_DEBUG_OBJECT (rtpbin, "linking RTCP encoder");
     ename = g_strdup_printf ("rtcp_sink_%d", sessid);
-    encsink = gst_element_get_request_pad (encoder, ename);
+    encsink = gst_element_get_static_pad (encoder, ename);
     g_free (ename);
     ename = g_strdup_printf ("rtcp_src_%d", sessid);
     encsrc = gst_element_get_static_pad (encoder, ename);
