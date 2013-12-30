@@ -480,6 +480,7 @@ gst_sf_dec_open_file (GstSFDec * self)
 {
   SF_INFO info = { 0, };
   SF_LOOP_INFO loop_info = { 0, };
+  SF_INSTRUMENT instrument = { 0, };
   GstCaps *caps;
   GstStructure *s;
   GstSegment seg;
@@ -489,6 +490,8 @@ gst_sf_dec_open_file (GstSFDec * self)
   const gchar *tag;
   const gchar *codec_name;
   gchar *stream_id;
+  gboolean have_loop_info = FALSE;
+  gboolean have_instrument = FALSE;
 
   GST_DEBUG_OBJECT (self, "opening the stream");
   if (!(self->file = sf_open_virtual (&gst_sf_vio, SFM_READ, &info, self)))
@@ -552,6 +555,12 @@ gst_sf_dec_open_file (GstSFDec * self)
   if (sf_command (self->file, SFC_GET_LOOP_INFO, &loop_info,
           sizeof (loop_info))) {
     GST_DEBUG_OBJECT (self, "have loop info");
+    have_loop_info = TRUE;
+  }
+  if (sf_command (self->file, SFC_GET_INSTRUMENT, &instrument,
+          sizeof (instrument))) {
+    GST_DEBUG_OBJECT (self, "have instrument");
+    have_instrument = TRUE;
   }
 
   /* send tags */
@@ -583,12 +592,22 @@ gst_sf_dec_open_file (GstSFDec * self)
   }
   if ((tag = sf_get_string (self->file, SF_STR_TRACKNUMBER))) {
     guint track = atoi (tag);
-    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TRACK_NUMBER, track,
+    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TRACK_NUMBER, track,
         NULL);
   }
-  if (loop_info.bpm != 0.0) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_BEATS_PER_MINUTE,
-        (gdouble) loop_info.bpm, NULL);
+  if (have_loop_info) {
+    if (loop_info.bpm != 0.0) {
+      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_BEATS_PER_MINUTE,
+          (gdouble) loop_info.bpm, NULL);
+    }
+    if (loop_info.root_key != -1) {
+      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_MIDI_BASE_NOTE,
+          (guint) loop_info.root_key, NULL);
+    }
+  }
+  if (have_instrument) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_MIDI_BASE_NOTE,
+        (guint) instrument.basenote, NULL);
   }
   /* TODO: SF_STR_DATE: GST_TAG_DATE / GST_TAG_DATE_TIME */
   /* TODO: calculate bitrate: GST_TAG_BITRATE */
