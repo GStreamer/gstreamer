@@ -3061,8 +3061,9 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   flags = hook->flags >> G_HOOK_FLAG_USER_SHIFT;
   type = info->type;
 
-  /* one of the data types */
-  if ((flags & GST_PAD_PROBE_TYPE_ALL_BOTH & type) == 0)
+  /* one of the data types for non-idle probes */
+  if ((type & GST_PAD_PROBE_TYPE_IDLE) == 0
+      && (flags & GST_PAD_PROBE_TYPE_ALL_BOTH & type) == 0)
     goto no_match;
   /* one of the scheduling types */
   if ((flags & GST_PAD_PROBE_TYPE_SCHEDULING & type) == 0)
@@ -3070,6 +3071,9 @@ probe_hook_marshal (GHook * hook, ProbeMarshall * data)
   /* one of the blocking types must match */
   if ((type & GST_PAD_PROBE_TYPE_BLOCKING) &&
       (flags & GST_PAD_PROBE_TYPE_BLOCKING & type) == 0)
+    goto no_match;
+  if ((type & GST_PAD_PROBE_TYPE_BLOCKING) == 0 &&
+      (flags & GST_PAD_PROBE_TYPE_BLOCKING))
     goto no_match;
   /* only probes that have GST_PAD_PROBE_TYPE_EVENT_FLUSH set */
   if ((type & GST_PAD_PROBE_TYPE_EVENT_FLUSH) &&
