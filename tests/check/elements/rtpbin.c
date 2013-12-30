@@ -154,7 +154,7 @@ chain_rtp_packet (GstPad * pad, CleanupData * data)
     data->seqnum = 0;
   }
 
-  gst_pad_send_event (pad, gst_event_new_stream_start (gst_pad_get_name (pad)));
+  gst_pad_send_event (pad, gst_event_new_stream_start (GST_OBJECT_NAME (pad)));
   gst_pad_send_event (pad, gst_event_new_caps (caps));
   gst_segment_init (&segment, GST_FORMAT_TIME);
   gst_pad_send_event (pad, gst_event_new_segment (&segment));
