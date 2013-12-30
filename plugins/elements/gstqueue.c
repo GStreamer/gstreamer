@@ -620,6 +620,7 @@ gst_queue_locked_flush (GstQueue * queue, gboolean full)
 static inline void
 gst_queue_locked_enqueue_buffer (GstQueue * queue, gpointer item)
 {
+  GstQueueItem *qitem;
   GstBuffer *buffer = GST_BUFFER_CAST (item);
   gsize bsize = gst_buffer_get_size (buffer);
 
@@ -628,19 +629,18 @@ gst_queue_locked_enqueue_buffer (GstQueue * queue, gpointer item)
   queue->cur_level.bytes += bsize;
   apply_buffer (queue, buffer, &queue->sink_segment, TRUE, TRUE);
 
-  if (item) {
-    GstQueueItem *qitem = g_slice_new (GstQueueItem);
-    qitem->item = item;
-    qitem->is_query = FALSE;
-    qitem->size = bsize;
-    gst_queue_array_push_tail (queue->queue, qitem);
-  }
+  qitem = g_slice_new (GstQueueItem);
+  qitem->item = item;
+  qitem->is_query = FALSE;
+  qitem->size = bsize;
+  gst_queue_array_push_tail (queue->queue, qitem);
   GST_QUEUE_SIGNAL_ADD (queue);
 }
 
 static inline void
 gst_queue_locked_enqueue_event (GstQueue * queue, gpointer item)
 {
+  GstQueueItem *qitem;
   GstEvent *event = GST_EVENT_CAST (item);
 
   switch (GST_EVENT_TYPE (event)) {
@@ -671,12 +671,10 @@ gst_queue_locked_enqueue_event (GstQueue * queue, gpointer item)
       break;
   }
 
-  if (item) {
-    GstQueueItem *qitem = g_slice_new (GstQueueItem);
-    qitem->item = item;
-    qitem->is_query = FALSE;
-    gst_queue_array_push_tail (queue->queue, qitem);
-  }
+  qitem = g_slice_new (GstQueueItem);
+  qitem->item = item;
+  qitem->is_query = FALSE;
+  gst_queue_array_push_tail (queue->queue, qitem);
   GST_QUEUE_SIGNAL_ADD (queue);
 }
 
