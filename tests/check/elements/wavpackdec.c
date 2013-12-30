@@ -63,18 +63,21 @@ static GstStaticPadTemplate sinktemplate = GST_STATIC_PAD_TEMPLATE ("sink",
         "channels = (int) 1, " "rate = (int) 44100")
     );
 
+#define WAVPACK_CAPS "audio/x-wavpack, " \
+        "depth = (int) 16, " \
+        "channels = (int) 1, " "rate = (int) 44100, " "framed = (boolean) true"
+
 static GstStaticPadTemplate srctemplate = GST_STATIC_PAD_TEMPLATE ("src",
     GST_PAD_SRC,
     GST_PAD_ALWAYS,
-    GST_STATIC_CAPS ("audio/x-wavpack, "
-        "width = (int) 16, "
-        "channels = (int) 1, " "rate = (int) 44100, " "framed = (boolean) true")
+    GST_STATIC_CAPS (WAVPACK_CAPS)
     );
 
 static GstElement *
 setup_wavpackdec (void)
 {
   GstElement *wavpackdec;
+  GstCaps *caps;
 
   GST_DEBUG ("setup_wavpackdec");
   wavpackdec = gst_check_setup_element ("wavpackdec");
@@ -82,7 +85,10 @@ setup_wavpackdec (void)
   mysinkpad = gst_check_setup_sink_pad (wavpackdec, &sinktemplate);
   gst_pad_set_active (mysrcpad, TRUE);
   gst_pad_set_active (mysinkpad, TRUE);
-  gst_check_setup_events (mysrcpad, wavpackdec, NULL, GST_FORMAT_TIME);
+
+  caps = gst_caps_from_string (WAVPACK_CAPS);
+  gst_check_setup_events (mysrcpad, wavpackdec, caps, GST_FORMAT_TIME);
+  gst_caps_unref (caps);
 
   fail_unless (gst_element_set_state (wavpackdec,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_SUCCESS,
