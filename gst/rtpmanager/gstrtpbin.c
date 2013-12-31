@@ -73,6 +73,18 @@
  * be placed before the #GstRtpSession element, thus they must support SSRC demuxing
  * internally.
  *
+ * #GstRtpBin has signals (#GstRtpBin::request-aux-sender and
+ * #GstRtpBin::request-aux-receiver to dynamically request an element that can be
+ * used to create or merge additional RTP streams. AUX elements are needed to
+ * implement FEC or retransmission (such as RFC 4588). An AUX sender must have one
+ * sink_\%u pad that matches the sessionid in the signal and it should have 1 or
+ * more src_\%u pads. For each src_%\u pad, a session will be made (if needed)
+ * and the pad will be linked to the session send_rtp_sink pad. Each session will
+ * then expose its source pad ad send_rtp_src_\%u on #GstRtpBin.
+ * An AUX receiver has 1 src_\%u pad that much match the sessionid in the signal
+ * and 1 or more sink_\%u pads. A session will be made for each sink_\%u pad
+ * when the corresponding recv_rtp_sink_\%u pad is requested on #GstRtpBin.
+ *
  * <refsect2>
  * <title>Example pipelines</title>
  * |[
