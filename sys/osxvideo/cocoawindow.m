@@ -41,7 +41,7 @@
 /* Debugging category */
 #include <gst/gstinfo.h>
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED <= 1040
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 1050
 #define kVK_ANSI_Keypad0 0x52
 #define kVK_ANSI_Keypad1 0x53
 #define kVK_ANSI_Keypad2 0x54
@@ -87,7 +87,7 @@
 #define kVK_Shift 0x38
 #define kVK_Tab 0x30
 #define kVK_UpArrow 0x7e
-#endif /* MAC_OS_X_VERSION_MAX_ALLOWED <= 1040 */
+#endif /* MAC_OS_X_VERSION_MAX_ALLOWED < 1050 */
 
 static
 const gchar* gst_keycode_to_keyname(gint16 keycode)

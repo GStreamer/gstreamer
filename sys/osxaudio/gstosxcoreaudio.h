@@ -34,7 +34,7 @@
 #else
   #include <CoreAudio/CoreAudio.h>
   #include <AudioToolbox/AudioToolbox.h>
-  #if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_5
+  #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
     #include <CoreServices/CoreServices.h>
     #define AudioComponentFindNext FindNextComponent
     #define AudioComponentInstanceNew OpenAComponent
