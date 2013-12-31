@@ -19,7 +19,6 @@
 
 /**
  * SECTION:element-gdkpixbufoverlay
- * @see_also:
  *
  * The gdkpixbufoverlay element overlays an image loaded from file onto
  * a video stream.
