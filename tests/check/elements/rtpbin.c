@@ -629,6 +629,63 @@ GST_START_TEST (test_aux_sender)
 
 GST_END_TEST;
 
+static GstElement *
+aux_receiver_cb (GstElement * rtpbin, guint sessid, gpointer user_data)
+{
+  GstElement *bin;
+  GstPad *srcpad, *sinkpad;
+
+  bin = gst_bin_new (NULL);
+
+  GST_DEBUG ("making AUX receiver");
+  srcpad = gst_ghost_pad_new_no_target ("src_2", GST_PAD_SRC);
+  gst_element_add_pad (bin, srcpad);
+
+  sinkpad = gst_ghost_pad_new_no_target ("sink_2", GST_PAD_SINK);
+  gst_element_add_pad (bin, sinkpad);
+  sinkpad = gst_ghost_pad_new_no_target ("sink_1", GST_PAD_SINK);
+  gst_element_add_pad (bin, sinkpad);
+  sinkpad = gst_ghost_pad_new_no_target ("sink_3", GST_PAD_SINK);
+  gst_element_add_pad (bin, sinkpad);
+
+  return bin;
+}
+
+GST_START_TEST (test_aux_receiver)
+{
+  GstElement *rtpbin;
+  GstPad *rtp_sink1, *rtp_sink2, *rtcp_sink;
+  gulong id;
+
+  rtpbin = gst_element_factory_make ("rtpbin", "rtpbin");
+
+  id = g_signal_connect (rtpbin, "request-aux-receiver",
+      (GCallback) aux_receiver_cb, NULL);
+
+  rtp_sink1 = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_2");
+  fail_unless (rtp_sink1 != NULL);
+
+  rtp_sink2 = gst_element_get_request_pad (rtpbin, "recv_rtp_sink_1");
+  fail_unless (rtp_sink2 != NULL);
+
+  g_signal_handler_disconnect (rtpbin, id);
+
+  rtcp_sink = gst_element_get_request_pad (rtpbin, "recv_rtcp_sink_1");
+  fail_unless (rtcp_sink != NULL);
+  gst_element_release_request_pad (rtpbin, rtcp_sink);
+  gst_object_unref (rtcp_sink);
+
+  /* remove the session */
+  gst_element_release_request_pad (rtpbin, rtp_sink1);
+  gst_object_unref (rtp_sink1);
+  gst_element_release_request_pad (rtpbin, rtp_sink2);
+  gst_object_unref (rtp_sink2);
+
+  gst_object_unref (rtpbin);
+}
+
+GST_END_TEST;
+
 static Suite *
 gstrtpbin_suite (void)
 {
@@ -644,6 +701,7 @@ gstrtpbin_suite (void)
   tcase_add_test (tc_chain, test_encoder);
   tcase_add_test (tc_chain, test_decoder);
   tcase_add_test (tc_chain, test_aux_sender);
+  tcase_add_test (tc_chain, test_aux_receiver);
 
   return s;
 }
