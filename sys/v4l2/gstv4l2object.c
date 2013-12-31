@@ -2242,6 +2242,7 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
   int fd;
   int r;
   int prevfmt_valid;
+  gboolean ret = FALSE;
 
   g_return_val_if_fail (width != NULL, FALSE);
   g_return_val_if_fail (height != NULL, FALSE);
@@ -2330,14 +2331,21 @@ gst_v4l2_object_get_nearest_size (GstV4l2Object * v4l2object,
       goto error;
   }
 
-  if (prevfmt_valid)
-    v4l2_ioctl (fd, VIDIOC_S_FMT, &prevfmt);
-  return TRUE;
+  ret = TRUE;
 
 error:
+  if (!ret) {
+    GST_WARNING_OBJECT (v4l2object->element,
+        "Unable to try format: %s", g_strerror (errno));
+  }
   if (prevfmt_valid)
-    v4l2_ioctl (fd, VIDIOC_S_FMT, &prevfmt);
-  return FALSE;
+    if (v4l2_ioctl (fd, VIDIOC_S_FMT, &prevfmt) < 0) {
+      GST_WARNING_OBJECT (v4l2object->element,
+          "Unable to restore format after trying format: %s",
+          g_strerror (errno));
+    }
+
+  return ret;
 }
 
 static gboolean
