@@ -42,7 +42,7 @@ GST_DEBUG_CATEGORY_EXTERN (gst_debug_osx_video_sink);
 
 /* The hack doesn't work on leopard, the _CFMainPThread symbol
  * is doesn't exist in the CoreFoundation library */
-#if MAC_OS_X_VERSION_MIN_REQUIRED <= MAC_OS_X_VERSION_10_5
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
 #ifdef RUN_NS_APP_THREAD
 #undef RUN_NS_APP_THREAD
 #endif
