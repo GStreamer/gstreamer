@@ -588,7 +588,7 @@ aux_sender_cb (GstElement * rtpbin, guint sessid, gpointer user_data)
 GST_START_TEST (test_aux_sender)
 {
   GstElement *rtpbin;
-  GstPad *rtp_sink1, *rtp_src;
+  GstPad *rtp_sink1, *rtp_src, *rtcp_src;
   gulong id;
 
   rtpbin = gst_element_factory_make ("rtpbin", "rtpbin");
@@ -610,6 +610,11 @@ GST_START_TEST (test_aux_sender)
   rtp_src = gst_element_get_static_pad (rtpbin, "send_rtp_src_1");
   fail_unless (rtp_src != NULL);
   gst_object_unref (rtp_src);
+
+  rtcp_src = gst_element_get_request_pad (rtpbin, "send_rtcp_src_1");
+  fail_unless (rtcp_src != NULL);
+  gst_element_release_request_pad (rtpbin, rtcp_src);
+  gst_object_unref (rtcp_src);
 
   rtp_src = gst_element_get_static_pad (rtpbin, "send_rtp_src_3");
   fail_unless (rtp_src != NULL);
