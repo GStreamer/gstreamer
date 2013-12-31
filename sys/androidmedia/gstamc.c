@@ -1848,7 +1848,7 @@ scan_codecs (GstPlugin * plugin)
             color_formats_elems[k] = COLOR_TI_FormatYUV420PackedSemiPlanar;
           }
 
-        GST_INFO ("Color format %d: %d", k, color_formats_elems[k]);
+        GST_INFO ("Color format %d: 0x%x", k, color_formats_elems[k]);
         gst_codec_type->color_formats[k] = color_formats_elems[k];
       }
 
@@ -1861,9 +1861,9 @@ scan_codecs (GstPlugin * plugin)
 
         if (!ignore_unknown_color_formats
             && !accepted_color_formats (gst_codec_type, is_encoder)) {
-          GST_ERROR ("Codec has unknown color formats, ignoring");
+          GST_ERROR ("%s codec has unknown color formats, ignoring",
+              is_encoder ? "Encoder" : "Decoder");
           valid_codec = FALSE;
-          g_assert_not_reached ();
           goto next_supported_type;
         }
       }
@@ -2126,7 +2126,8 @@ static const struct
   COLOR_TI_FormatYUV420PackedSemiPlanar, GST_VIDEO_FORMAT_NV12}, {
   COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced, GST_VIDEO_FORMAT_NV12}, {
   COLOR_QCOM_FormatYUV420SemiPlanar, GST_VIDEO_FORMAT_NV12}, {
-  COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka, GST_VIDEO_FORMAT_NV12}
+  COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka, GST_VIDEO_FORMAT_NV12}, {
+  COLOR_OMX_SEC_FormatNV12Tiled, GST_VIDEO_FORMAT_NV12}
 };
 
 static gboolean
@@ -2144,12 +2145,14 @@ accepted_color_formats (GstAmcCodecType * type, gboolean is_encoder)
     for (j = 0; j < G_N_ELEMENTS (color_format_mapping_table); j++) {
       if (color_format_mapping_table[j].color_format == type->color_formats[i]) {
         found = TRUE;
+        accepted++;
         break;
       }
     }
 
-    if (found)
-      accepted++;
+    if (!found) {
+      GST_DEBUG ("Unknown color format 0x%x, ignoring", type->color_formats[i]);
+    }
   }
 
   if (is_encoder)

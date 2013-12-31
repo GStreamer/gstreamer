@@ -97,7 +97,13 @@ enum
   COLOR_QCOM_FormatYUV420SemiPlanar = 0x7fa30c00,
   COLOR_QCOM_FormatYUV420PackedSemiPlanar64x32Tile2m8ka = 0x7fa30c03,
   /* From hardware/ti/omap4xxx/domx/omx_core/inc/OMX_TI_IVCommon.h */
-  COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced = 0x7f000001
+  COLOR_TI_FormatYUV420PackedSemiPlanarInterlaced = 0x7f000001,
+  /* This format is Exynos specific from the OMX vendor-specific
+   * numeric range, but is defined in the Android OMX headers, so
+   * we shouldn't find incompatible usage and crash horribly... right?
+   * FIXME: Not actually implemented in the video decoder, it will just error out
+   * The format seems to be equiv to V4L2_PIX_FMT_NV12MT_16X16 */
+  COLOR_OMX_SEC_FormatNV12Tiled = 0x7fc00002
 };
 
 enum
