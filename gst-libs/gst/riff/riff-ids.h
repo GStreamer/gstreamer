@@ -47,6 +47,7 @@ G_BEGIN_DECLS
 #define GST_RIFF_TAG_idx1 GST_MAKE_FOURCC ('i','d','x','1')
 #define GST_RIFF_TAG_dmlh GST_MAKE_FOURCC ('d','m','l','h')
 #define GST_RIFF_TAG_ID32 GST_MAKE_FOURCC ('I','D','3','2')
+#define GST_RIFF_TAG_id3  GST_MAKE_FOURCC ('i','d','3',' ')
 #define GST_RIFF_TAG_IDVX GST_MAKE_FOURCC ('I','D','V','X')
 /* WAV stuff */
 #define GST_RIFF_TAG_fmt  GST_MAKE_FOURCC ('f','m','t',' ')
