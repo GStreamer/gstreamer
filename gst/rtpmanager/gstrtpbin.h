@@ -103,6 +103,9 @@ struct _GstRtpBinClass {
   GstElement* (*request_rtp_decoder)  (GstRtpBin *rtpbin, guint session);
   GstElement* (*request_rtcp_encoder) (GstRtpBin *rtpbin, guint session);
   GstElement* (*request_rtcp_decoder) (GstRtpBin *rtpbin, guint session);
+
+  GstElement* (*request_aux_sender)   (GstRtpBin *rtpbin, guint session);
+  GstElement* (*request_aux_receiver) (GstRtpBin *rtpbin, guint session);
 };
 
 GType gst_rtp_bin_get_type (void);
