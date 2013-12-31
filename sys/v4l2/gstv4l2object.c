@@ -2571,11 +2571,11 @@ gst_v4l2_object_set_format (GstV4l2Object * v4l2object, GstCaps * caps)
         format.fmt.pix_mp.field != field) {
       /* even in v4l2 multiplanar mode we can work in contiguous mode
        * if the device supports it */
-      gint n_v4l_planes;
+      gint n_v4l_planes = GST_VIDEO_INFO_N_PLANES (&info);
 
-      if (v4l2object->prefered_non_contiguous)
-        n_v4l_planes = GST_VIDEO_INFO_N_PLANES (&info);
-      else
+      /* if encoded format (GST_VIDEO_INFO_N_PLANES return 0)
+       * or if contiguous is prefered */
+      if (!n_v4l_planes || !v4l2object->prefered_non_contiguous)
         n_v4l_planes = 1;
 
       /* something different, set the format */
