@@ -70,7 +70,7 @@ enum
   ARG_PROTOCOL,                 /* Protocol to connect with */
 
   ARG_MOUNT,                    /* mountpoint of stream (icecast only) */
-  ARG_URL                       /* Url of stream (I'm guessing) */
+  ARG_URL                       /* the stream's homepage URL */
 };
 
 #define DEFAULT_IP           "127.0.0.1"
@@ -204,8 +204,8 @@ gst_shout2send_class_init (GstShout2sendClass * klass)
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (G_OBJECT_CLASS (klass), ARG_URL,
-      g_param_spec_string ("url", "url", "url", DEFAULT_URL,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+      g_param_spec_string ("url", "url", "the stream's homepage URL",
+          DEFAULT_URL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /* signals */
   gst_shout2send_signals[SIGNAL_CONNECTION_PROBLEM] =
@@ -723,7 +723,7 @@ gst_shout2send_set_property (GObject * object, guint prop_id,
         g_free (shout2send->mount);
       shout2send->mount = g_strdup (g_value_get_string (value));
       break;
-    case ARG_URL:              /* Url of the stream (I'm guessing) */
+    case ARG_URL:              /* the stream's homepage URL */
       if (shout2send->url)
         g_free (shout2send->url);
       shout2send->url = g_strdup (g_value_get_string (value));
@@ -773,7 +773,7 @@ gst_shout2send_get_property (GObject * object, guint prop_id,
     case ARG_MOUNT:            /* mountpoint of stream (icecast only) */
       g_value_set_string (value, shout2send->mount);
       break;
-    case ARG_URL:              /* Url of stream (I'm guessing) */
+    case ARG_URL:              /* the stream's homepage URL */
       g_value_set_string (value, shout2send->url);
       break;
     default:
