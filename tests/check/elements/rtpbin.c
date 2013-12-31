@@ -563,6 +563,67 @@ GST_START_TEST (test_decoder)
 
 GST_END_TEST;
 
+static GstElement *
+aux_sender_cb (GstElement * rtpbin, guint sessid, gpointer user_data)
+{
+  GstElement *bin;
+  GstPad *srcpad, *sinkpad;
+
+  bin = gst_bin_new (NULL);
+
+  GST_DEBUG ("making AUX sender");
+  sinkpad = gst_ghost_pad_new_no_target ("sink_2", GST_PAD_SINK);
+  gst_element_add_pad (bin, sinkpad);
+
+  srcpad = gst_ghost_pad_new_no_target ("src_2", GST_PAD_SRC);
+  gst_element_add_pad (bin, srcpad);
+  srcpad = gst_ghost_pad_new_no_target ("src_1", GST_PAD_SRC);
+  gst_element_add_pad (bin, srcpad);
+  srcpad = gst_ghost_pad_new_no_target ("src_3", GST_PAD_SRC);
+  gst_element_add_pad (bin, srcpad);
+
+  return bin;
+}
+
+GST_START_TEST (test_aux_sender)
+{
+  GstElement *rtpbin;
+  GstPad *rtp_sink1, *rtp_src;
+  gulong id;
+
+  rtpbin = gst_element_factory_make ("rtpbin", "rtpbin");
+
+  id = g_signal_connect (rtpbin, "request-aux-sender",
+      (GCallback) aux_sender_cb, NULL);
+
+  rtp_sink1 = gst_element_get_request_pad (rtpbin, "send_rtp_sink_2");
+  fail_unless (rtp_sink1 != NULL);
+  fail_unless_equals_string (GST_PAD_NAME (rtp_sink1), "send_rtp_sink_2");
+  ASSERT_OBJECT_REFCOUNT (rtp_sink1, "rtp_sink1", 2);
+
+  g_signal_handler_disconnect (rtpbin, id);
+
+  rtp_src = gst_element_get_static_pad (rtpbin, "send_rtp_src_2");
+  fail_unless (rtp_src != NULL);
+  gst_object_unref (rtp_src);
+
+  rtp_src = gst_element_get_static_pad (rtpbin, "send_rtp_src_1");
+  fail_unless (rtp_src != NULL);
+  gst_object_unref (rtp_src);
+
+  rtp_src = gst_element_get_static_pad (rtpbin, "send_rtp_src_3");
+  fail_unless (rtp_src != NULL);
+  gst_object_unref (rtp_src);
+
+  /* remove the session */
+  gst_element_release_request_pad (rtpbin, rtp_sink1);
+  gst_object_unref (rtp_sink1);
+
+  gst_object_unref (rtpbin);
+}
+
+GST_END_TEST;
+
 static Suite *
 gstrtpbin_suite (void)
 {
@@ -577,6 +638,7 @@ gstrtpbin_suite (void)
   tcase_add_test (tc_chain, test_request_pad_by_template_name);
   tcase_add_test (tc_chain, test_encoder);
   tcase_add_test (tc_chain, test_decoder);
+  tcase_add_test (tc_chain, test_aux_sender);
 
   return s;
 }
