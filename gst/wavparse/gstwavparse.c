@@ -1484,7 +1484,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     if (tag == GST_RIFF_TAG_JUNK || tag == GST_RIFF_TAG_JUNQ ||
         tag == GST_RIFF_TAG_bext || tag == GST_RIFF_TAG_BEXT ||
         tag == GST_RIFF_TAG_LIST || tag == GST_RIFF_TAG_ID32 ||
-        tag == GST_RIFF_TAG_IDVX) {
+        tag == GST_RIFF_TAG_id3  || tag == GST_RIFF_TAG_IDVX) {
       GST_DEBUG_OBJECT (wav, "skipping %" GST_FOURCC_FORMAT " chunk",
           GST_FOURCC_ARGS (tag));
       gst_buffer_unref (buf);
