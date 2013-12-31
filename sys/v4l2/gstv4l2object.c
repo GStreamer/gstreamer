@@ -2919,9 +2919,6 @@ gst_v4l2_object_setup_format (GstV4l2Object * v4l2object,
   if (v4l2_ioctl (v4l2object->video_fd, VIDIOC_G_FMT, &fmt) < 0)
     goto get_fmt_failed;
 
-  if (fmt.fmt.pix.width == 0 || fmt.fmt.pix.height == 0)
-    goto invalid_dimensions;
-
   fmtdesc = gst_v4l2_object_get_format_from_fourcc (v4l2object,
       fmt.fmt.pix.pixelformat);
   if (fmtdesc == NULL)
@@ -2929,6 +2926,20 @@ gst_v4l2_object_setup_format (GstV4l2Object * v4l2object,
 
   /* No need to care about mplane, the four first params are the same */
   format = gst_v4l2_object_v4l2fourcc_to_video_format (fmt.fmt.pix.pixelformat);
+
+  /* FIXME do more work in the whole function if
+   * format is GST_VIDEO_FORMAT_ENCODED
+   * Also gst_v4l2_object_v4l2fourcc_to_video_format should be improved
+   * because for now it never returns GST_VIDEO_FORMAT_ENCODED
+   */
+
+  /* fails if we do no translate the fmt.pix.pixelformat to GstVideoFormat */
+  if (format == GST_VIDEO_FORMAT_UNKNOWN)
+    goto unsupported_format;
+
+  if (fmt.fmt.pix.width == 0 || fmt.fmt.pix.height == 0)
+    goto invalid_dimensions;
+
   width = fmt.fmt.pix.width;
   height = fmt.fmt.pix.height;
 
