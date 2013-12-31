@@ -1,6 +1,7 @@
 ext/gsettings/org.freedesktop.gstreamer.default-elements.gschema.xml.in
 ext/resindvd/resindvdsrc.c
 ext/smoothstreaming/gstmssdemux.c
+ext/sndfile/gstsfdec.c
 ext/sndfile/gstsfsink.c
 ext/sndfile/gstsfsrc.c
 ext/sndio/sndiosink.c
