@@ -21,8 +21,8 @@ import os
 import time
 from urllib import unquote
 from urlparse import urlsplit
-from utils import launch_command
 from gi.repository import GES, Gst, GLib
+from testdefinitions import Test, DEFAULT_QA_SAMPLE_PATH, TestsManager
 
 DURATION_TOLERANCE = Gst.SECOND / 2
 DEFAULT_GES_LAUNCH = "ges-launch-1.0"
@@ -110,8 +110,8 @@ def quote_uri(uri):
 class GESTest(Test):
     def __init__(self, classname, options, reporter, project_uri, scenario,
                  combination=None):
-        super(GESTest, self).__init__(DEFAULT_GES_LAUNCH, classname, options, reporter)
-        self.scenario = scenario
+        super(GESTest, self).__init__(DEFAULT_GES_LAUNCH, classname, options, reporter,
+                                      scenario)
         self.project_uri = project_uri
         self.combination = combination
         proj = GES.Project.new(project_uri)
@@ -160,9 +160,7 @@ class GESTest(Test):
                 self.add_arguments("--sample-paths", "file://" + path)
 
     def build_arguments(self):
-        print "\OOO %s" % self.combination
-        if self.scenario is not None:
-            self.add_arguments("--set-scenario", self.scenario)
+        Test.build_arguments(self)
         if self.combination is not None:
             self.set_rendering_info()
 
@@ -205,19 +203,7 @@ class GESTest(Test):
                     self.set_result(Result.TIMEOUT, "The rendered file add right duration, MISSING EOS?\n",
                                      "failure", e)
             else:
-                if self.result == Result.TIMEOUT:
-                    self.set_result(Result.TIMEOUT, "Application timed out", "timeout")
-                else:
-                    if self.process.returncode == 139:
-                        self.get_backtrace("SEGFAULT")
-                        self.set_result("Application segfaulted")
-                    else:
-                        self.set_result(Result.FAILED,
-                            "Application returned %d (issues: %s)" % (
-                            self.process.returncode,
-                            self.get_validate_criticals_errors()),
-                            "error")
-
+                Test.check_results(self)
 
     def wait_process(self):
         last_val = 0
@@ -263,41 +249,29 @@ class GESTest(Test):
 
 
 class GESTestsManager(TestsManager):
+    name = "ges"
     def __init__(self):
         super(GESTestsManager, self).__init__()
         Gst.init(None)
         GES.init()
 
-        default_opath = GLib.get_user_special_dir(
-            GLib.UserDirectory.DIRECTORY_VIDEOS)
-        if default_opath:
-            self.default_path = os.path.join(default_opath, "ges-projects")
-        else:
-            self.default_path = os.path.join(os.path.expanduser('~'), "Video",
-                                    "ges-projects")
-
-    def add_options(self, parser):
-        parser.add_option("-o", "--output-path", dest="dest",
-                          default=os.path.join(self.default_path, "rendered"),
-                          help="Set the path to which projects should be"
-                          " renderd")
-        parser.add_option("-P", "--sample-path", dest="paths",
-                          default=[],
-                          help="Paths in which to look for moved assets")
-        parser.add_option("-r", "--recurse-paths", dest="recurse_paths",
-                          default=False, action="store_true",
-                          help="Whether to recurse into paths to find assets")
-        parser.add_option("-m", "--mute", dest="mute",
-                          action="store_true", default=False,
-                          help="Mute playback output, which mean that we use "
-                               "a fakesink")
-
+    def add_options(self, group):
+        group.add_option("-o", "--output-path", dest="dest",
+                         default=None,
+                         help="Set the path to which projects should be"
+                         " renderd")
+        group.add_option("-P", "--projects-paths", dest="projects_paths",
+                         default=os.path.join(DEFAULT_QA_SAMPLE_PATH, "ges-projects"),
+                         help="Paths in which to look for moved medias")
+        group.add_option("-r", "--recurse-paths", dest="recurse_paths",
+                         default=False, action="store_true",
+                         help="Whether to recurse into paths to find medias")
 
     def set_settings(self, options, args, reporter):
         TestsManager.set_settings(self, options, args, reporter)
-        if not args and not os.path.exists(self.default_path):
-            launch_command("git clone %s" % DEFAULT_ASSET_REPO,
-                           "Getting assets")
+
+        if options.dest is None:
+            options.dest = os.path.join(options.logsdir, "rendered")
 
         if not Gst.uri_is_valid(options.dest):
             options.dest = GLib.filename_to_uri(options.dest, None)
@@ -311,8 +285,8 @@ class GESTestsManager(TestsManager):
     def list_tests(self):
         projects = list()
         if not self.args:
-            self.options.paths = [os.path.join(self.default_path, "assets")]
-            path = os.path.join(self.default_path, "projects")
+            path = self.options.projects_paths
+            print path
             for root, dirs, files in os.walk(path):
                 for f in files:
                     if not f.endswith(".xges"):

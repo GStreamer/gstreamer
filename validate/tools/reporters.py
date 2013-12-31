@@ -22,9 +22,9 @@
 import os
 import re
 import codecs
-import testdefinitions
+import logging
 from xml.sax import saxutils
-from utils import mkdir, Result
+from utils import mkdir, Result, printc
 
 UNICODE_STRINGS = (type(unicode()) == type(str()))
 
@@ -75,6 +75,7 @@ class Reporter(object):
         self.stats["passed"] += 1
 
     def add_results(self, test):
+        logging.debug("%s", test)
         if test.result == Result.PASSED:
             self.set_passed(test)
         elif test.result == Result.FAILED or \
@@ -84,14 +85,15 @@ class Reporter(object):
             raise UnknownResult("%s" % test.result)
 
     def after_test(self):
-        self.out.close()
-        self.out = None
         self.results.append(self._current_test)
         self.add_results(self._current_test)
+        self.out.close()
+        self.out = None
         self._current_test = None
 
     def final_report(self):
-        pass
+        for test in self.results:
+            printc(test)
 
 
 class XunitReporter(Reporter):
@@ -106,6 +108,7 @@ class XunitReporter(Reporter):
 
     def final_report(self):
         self.report()
+        super(XunitReporter, self).final_report()
 
     def _get_captured(self):
         if self.out:
@@ -129,13 +132,12 @@ class XunitReporter(Reporter):
         The file includes a report of test errors and failures.
 
         """
-        print "Writing XML file to: %s" % self.options.xunit_file
+        logging.debug("Writing XML file to: %s", self.options.xunit_file)
         self.xml_file = codecs.open(self.options.xunit_file, 'w',
                                     self.encoding, 'replace')
         self.stats['encoding'] = self.encoding
         self.stats['total'] = (self.stats['timeout'] + self.stats['failures']
                                + self.stats['passes'] + self.stats['skipped'])
-        print self.stats
         self.xml_file.write( u'<?xml version="1.0" encoding="%(encoding)s"?>'
             u'<testsuite name="gesprojectslauncher" tests="%(total)d" '
             u'errors="%(timeout)d" failures="%(failures)d" '
@@ -149,7 +151,6 @@ class XunitReporter(Reporter):
         """Add failure output to Xunit report.
         """
         self.stats['failures'] += 1
-        self.results.insert(0, test)
         self.errorlist.append(
             '<testcase classname=%(cls)s name=%(name)s time="%(taken).3f">'
             '<failure type=%(errtype)s message=%(message)s>'
@@ -166,7 +167,6 @@ class XunitReporter(Reporter):
         """Add success output to Xunit report.
         """
         self.stats['passes'] += 1
-        self.results.append(test)
         self.errorlist.append(
             '<testcase classname=%(cls)s name=%(name)s '
             'time="%(taken).3f">%(systemout)s</testcase>' %

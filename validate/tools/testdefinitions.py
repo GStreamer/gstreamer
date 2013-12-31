@@ -24,37 +24,46 @@ import re
 import time
 import subprocess
 import reporters
+import logging
+from optparse import OptionGroup
 
-from utils import mkdir, Result
+from utils import mkdir, Result, Colors, printc
 
 DEFAULT_TIMEOUT = 10
 
+DEFAULT_QA_SAMPLE_PATH = os.path.join(os.path.expanduser('~'), "Videos",
+                          "gst-qa-samples")
 
 class Test(object):
 
     """ A class representing a particular test. """
 
-    def __init__(self, application_name, classname, options, reporter):
-        self.timeout = DEFAULT_TIMEOUT
+    def __init__(self, application_name, classname, options, reporter, scenario=None, timeout=DEFAULT_TIMEOUT):
+        self.timeout = timeout
         self.classname = classname
         self.options = options
         self.application = application_name
         self.command = ""
         self.reporter = reporter
         self.process = None
+        if scenario.lower() == "none":
+            self.scenario = None
+        else:
+            self.scenario = scenario
 
-        self.message = None
-        self.error = None
-        self.time_taken = None
+        self.message = ""
+        self.error = ""
+        self.time_taken = 0.0
         self._starting_time = None
         self.result = Result.NOT_RUN
 
     def __str__(self):
         string = self.classname
-        if self.result:
+        if self.result != Result.NOT_RUN:
             string += ": " + self.result
-            if "FAILED" in self.result:
-                string += "\n       You can reproduce with: " + self.command
+            if self.result == Result.FAILED:
+                string += "'%s'\n       You can reproduce with: %s" \
+                        % (self.message, self.command)
 
         return string
 
@@ -63,19 +72,32 @@ class Test(object):
             self.command += " " + arg
 
     def build_arguments(self):
-        pass
+        if self.scenario is not None:
+            self.add_arguments("--set-scenario", self.scenario)
 
-    def set_result(self, result, message=None, error=None):
-        print "SETTING TER"
+    def set_result(self, result, message="", error=""):
         self.result = result
         self.message = message
         self.error = error
 
     def check_results(self):
-        if self.process.returncode == 0:
+        logging.debug("%s returncode: %d", self, self.process.returncode)
+        if self.result == Result.TIMEOUT:
+            self.set_result(Result.TIMEOUT, "Application timed out", "timeout")
+        elif self.process.returncode == 0:
             self.result = Result.PASSED
-
-        self.result = Result.FAILED
+        else:
+            if self.process.returncode == 139:
+                self.get_backtrace("SEGFAULT")
+                self.set_result(Result.FAILED,
+                                "Application segfaulted",
+                                "segfault")
+            else:
+                self.set_result(Result.FAILED,
+                                "Application returned %d (issues: %s)" % (
+                                self.process.returncode,
+                                self.get_validate_criticals_errors()),
+                                "error")
 
     def wait_process(self):
         last_change_ts = time.time()
@@ -96,11 +118,16 @@ class Test(object):
     def get_validate_criticals_errors(self):
         self.reporter.out.seek(0)
         ret = "["
+        errors = []
         for l in self.reporter.out.readlines():
             if "critical : " in l:
                 if ret != "[":
                     ret += ", "
-                ret += l.split("critical : ")[1].replace("\n", '')
+                error = l.split("critical : ")[1].replace("\n", '')
+                print "%s -- %s" %(error, errors)
+                if error not in errors:
+                    ret += error
+                    errors.append(error)
 
         if ret == "[":
             return "No critical"
@@ -111,7 +138,8 @@ class Test(object):
         self.command = "%s " % (self.application)
         self._starting_time = time.time()
         self.build_arguments()
-        print "Launching %s" % self.command
+        printc("Launching:%s '%s' -- logs are in %s" % (Colors.ENDC, self.classname,
+                                                  self.reporter.out.name), Colors.OKBLUE)
         try:
             self.process = subprocess.Popen(self.command,
                                             stderr=self.reporter.out,
@@ -133,6 +161,8 @@ class Test(object):
 class TestsManager(object):
 
     """ A class responsible for managing tests. """
+
+    name = ""
 
     def __init__(self):
         self.tests = []
@@ -163,6 +193,9 @@ class TestsManager(object):
 
 
     def _is_test_wanted(self, test):
+        if not self.wanted_tests_patterns:
+            return True
+
         for pattern in self.wanted_tests_patterns:
             if pattern.findall(test.classname):
                 return True
@@ -190,7 +223,7 @@ class _TestsLauncher(object):
             subclasses = []
             for symb in env.iteritems():
                 try:
-                    if issubclass(symb[1], c):
+                    if issubclass(symb[1], c) and not symb[1] is c:
                         subclasses.append(symb[1])
                 except TypeError:
                     pass
@@ -201,16 +234,34 @@ class _TestsLauncher(object):
         d = os.path.dirname(__file__)
         for f in os.listdir(os.path.join(d, "apps")):
             execfile(os.path.join(d, "apps", f), env)
+
         self.testers = [i() for i in get_subclasses(TestsManager, env)]
-        print self.testers
+
 
     def add_options(self, parser):
         for tester in self.testers:
-            tester.add_options(parser)
+            group = OptionGroup(parser, "%s Options" % tester.name,
+                                "Options specific to the %s test manager"
+                                % tester.name)
+            tester.add_options(group)
+            parser.add_option_group(group)
 
     def set_settings(self, options, args):
         self.reporter = reporters.XunitReporter(options)
         mkdir(options.logsdir)
+
+        wanted_testers = None
+        for tester in self.testers:
+            if tester.name in args:
+                wanted_testers = tester.name
+        if wanted_testers:
+            testers = self.testers
+            self.testers = []
+            for tester in testers:
+                if tester.name in args:
+                    self.testers.append(tester)
+                    args.remove(tester.name)
+
         for tester in self.testers:
             tester.set_settings(options, args, self.reporter)
 

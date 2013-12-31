@@ -53,11 +53,20 @@ def mkdir(directory):
         pass
 
 
-def launch_command(command, name="", color=None):
-    if name != "":
-        if color is not None:
-            print "%s%s" % (color, len(name) * "=")
-        print name
-        if color is not None:
-            print "%s%s" % (len(name) * "=", Colors.ENDC)
+def printc (message, color="", title=False):
+    if title:
+        message = len(message) * '=' + message + len(message) * '='
+    if hasattr(message, "result") and color == '':
+        if message.result == Result.FAILED:
+            color = Colors.FAIL
+        elif message.result == Result.PASSED:
+            color = Colors.OKGREEN
+        else:
+            color = Colors.OKBLUE
+
+    print color + str(message) + Colors.ENDC
+
+
+def launch_command(command, color=None):
+    printc(command, Colors.OKGREEN, True)
     os.system(command)

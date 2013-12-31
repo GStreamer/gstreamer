@@ -1,20 +1,42 @@
 #!/usr//bin/python
+#
+# Copyright (c) 2013,Thibault Saunier <thibault.saunier@collabora.com>
+#
+# This program is free software; you can redistribute it and/or
+# modify it under the terms of the GNU Lesser General Public
+# License as published by the Free Software Foundation; either
+# version 2.1 of the License, or (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+# Lesser General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public
+# License along with this program; if not, write to the
+# Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+# Boston, MA 02110-1301, USA.
+
 import os
-from testdefinitions import _TestsLauncher
+import logging
+from testdefinitions import _TestsLauncher, DEFAULT_QA_SAMPLE_PATH
+from utils import printc
 from optparse import OptionParser
+
 
 def main():
     parser = OptionParser()
-    parser.add_option("-g", "--gdb", dest="gdb",
-                      action="store_true",
-                      default=False,
-                      help="Run applications into gdb")
-    parser.add_option("-f", "--forever", dest="forever",
-                      action="store_true", default=False,
-                      help="Keep running tests until one fails")
-    parser.add_option("-F", "--fatal-error", dest="fatal_error",
-                      action="store_true", default=False,
-                      help="Stop on first fail")
+    # FIXME:
+    #parser.add_option("-g", "--gdb", dest="gdb",
+                      #action="store_true",
+                      #default=False,
+                      #help="Run applications into gdb")
+    #parser.add_option("-f", "--forever", dest="forever",
+                      #action="store_true", default=False,
+                      #help="Keep running tests until one fails")
+    #parser.add_option("-F", "--fatal-error", dest="fatal_error",
+                      #action="store_true", default=False,
+                      #help="Stop on first fail")
     parser.add_option('--xunit-file', action='store',
                       dest='xunit_file', metavar="FILE",
                       default=None,
@@ -31,6 +53,20 @@ def main():
     parser.add_option("-l", "--logs-dir", dest="logsdir",
                       action="store_true", default=os.path.expanduser("~/gst-validate/logs/"),
                       help="Directory where to store logs")
+    parser.add_option("-p", "--medias-paths", dest="paths",
+                      default=[os.path.join(DEFAULT_QA_SAMPLE_PATH, "medias")],
+                      help="Paths in which to look for media files")
+    parser.add_option("-m", "--mute", dest="mute",
+                      action="store_true", default=False,
+                      help="Mute playback output, which mean that we use "
+                      "a fakesink")
+    try:
+        level = getattr(logging,
+                        os.environ["GST_VALIDATE_LAUNCHER_DEBUG"].upper(),
+                        None)
+        logging.basicConfig(level=level)
+    except:
+        pass
 
     tests_launcher = _TestsLauncher()
     tests_launcher.add_options(parser)
@@ -41,7 +77,7 @@ def main():
     tests_launcher.list_tests()
     if options.list_tests:
         for test in tests_launcher.tests:
-            print test
+            printc(test)
         return 0
     tests_launcher.run_tests()
     tests_launcher.final_report()
