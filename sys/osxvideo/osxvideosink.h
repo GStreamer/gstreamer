@@ -89,11 +89,7 @@ struct _GstOSXVideoSinkClass {
   GstVideoSinkClass parent_class;
 
   GstOSXVideoSinkRunLoopState run_loop_state;
-#ifdef RUN_NS_APP_THREAD
   NSThread *ns_app_thread;
-#else
-  guint cocoa_timeout;
-#endif
 };
 
 GType gst_osx_video_sink_get_type(void);
@@ -132,11 +128,9 @@ GType gst_osx_video_sink_get_type(void);
 -(void) destroy;
 -(void) showFrame: (GstBufferObject*) buf;
 -(void) setView: (NSView*) view;
-#ifdef RUN_NS_APP_THREAD
 + (BOOL) isMainThread;
 -(void) nsAppThread;
 -(void) checkMainRunLoop;
-#endif
 @end
 
 G_END_DECLS
