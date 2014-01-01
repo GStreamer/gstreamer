@@ -84,6 +84,7 @@ enum
 #define DEFAULT_MOUNT        ""
 #define DEFAULT_URL          ""
 #define DEFAULT_PROTOCOL     SHOUT2SEND_PROTOCOL_HTTP
+#define DEFAULT_FORMAT       SHOUT_FORMAT_VORBIS
 
 #ifdef SHOUT_FORMAT_WEBM
 #define WEBM_CAPS "; video/webm; audio/webm"
@@ -254,10 +255,10 @@ gst_shout2send_init (GstShout2send * shout2send)
   shout2send->url = g_strdup (DEFAULT_URL);
   shout2send->protocol = DEFAULT_PROTOCOL;
   shout2send->ispublic = DEFAULT_PUBLIC;
+  shout2send->format = DEFAULT_FORMAT;
 
   shout2send->tags = gst_tag_list_new_empty ();
   shout2send->conn = NULL;
-  shout2send->audio_format = SHOUT_FORMAT_VORBIS;
   shout2send->connected = FALSE;
   shout2send->songmetadata = NULL;
   shout2send->songartist = NULL;
@@ -382,8 +383,8 @@ gst_shout2send_event (GstBaseSink * sink, GstEvent * event)
 
   switch (GST_EVENT_TYPE (event)) {
     case GST_EVENT_TAG:{
-      /* vorbis audio doesnt need metadata setting on the icecast level, only mp3 */
-      if (shout2send->tags && shout2send->audio_format == SHOUT_FORMAT_MP3) {
+      /* vorbis audio doesn't need metadata setting on the icecast level, only mp3 */
+      if (shout2send->tags && shout2send->format == SHOUT_FORMAT_MP3) {
         GstTagList *list;
 
         gst_event_parse_tag (event, &list);
@@ -520,15 +521,15 @@ static gboolean
 gst_shout2send_connect (GstShout2send * sink)
 {
   const char *format =
-      (sink->audio_format == SHOUT_FORMAT_VORBIS) ? "vorbis" :
-      ((sink->audio_format == SHOUT_FORMAT_MP3) ? "mp3" : "unknown");
+      (sink->format == SHOUT_FORMAT_VORBIS) ? "vorbis" :
+      ((sink->format == SHOUT_FORMAT_MP3) ? "mp3" : "unknown");
 #ifdef SHOUT_FORMAT_WEBM
-  if (sink->audio_format == SHOUT_FORMAT_WEBM)
+  if (sink->format == SHOUT_FORMAT_WEBM)
     format = "webm";
 #endif
   GST_DEBUG_OBJECT (sink, "Connection format is: %s", format);
 
-  if (shout_set_format (sink->conn, sink->audio_format) != SHOUTERR_SUCCESS)
+  if (shout_set_format (sink->conn, sink->format) != SHOUTERR_SUCCESS)
     goto could_not_set_format;
 
   if (shout_open (sink->conn) != SHOUTERR_SUCCESS)
@@ -796,12 +797,12 @@ gst_shout2send_setcaps (GstBaseSink * basesink, GstCaps * caps)
   GST_DEBUG_OBJECT (shout2send, "mimetype of caps given is: %s", mimetype);
 
   if (!strcmp (mimetype, "audio/mpeg")) {
-    shout2send->audio_format = SHOUT_FORMAT_MP3;
+    shout2send->format = SHOUT_FORMAT_MP3;
   } else if (!strcmp (mimetype, "application/ogg")) {
-    shout2send->audio_format = SHOUT_FORMAT_VORBIS;
+    shout2send->format = SHOUT_FORMAT_VORBIS;
 #ifdef SHOUT_FORMAT_WEBM
   } else if (!strcmp (mimetype, "video/webm")) {
-    shout2send->audio_format = SHOUT_FORMAT_WEBM;
+    shout2send->format = SHOUT_FORMAT_WEBM;
 #endif
   } else {
     ret = FALSE;

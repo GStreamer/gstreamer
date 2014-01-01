@@ -60,7 +60,7 @@ struct _GstShout2send {
   gchar *songmetadata;
   gchar *songartist;
   gchar *songtitle;
-  guint16 audio_format;
+  guint16 format;
 
   GstTagList* tags;
 };
