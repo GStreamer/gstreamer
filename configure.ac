@@ -486,17 +486,17 @@ translit(dnm, m, l) AM_CONDITIONAL(USE_OSX_VIDEO, true)
 HAVE_OSX_VIDEO="no"
 AG_GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosink, [
   AC_CHECK_HEADER(OpenGL/gl.h, HAVE_OSX_VIDEO="yes", HAVE_OSX_VIDEO="no")
-])
-dnl in case header OpenGL/gl.h is found on other platforms
-case "$host" in
-  *-*darwin*)
-    dnl do nothing
-    ;;
-  *)
-    HAVE_OSX_VIDEO="no"
-    ;;
-esac
 
+  dnl in case header OpenGL/gl.h is found on other platforms (or older, unsupported OS X)
+  case "$host" in
+    *-*darwin1*)
+      dnl do nothing on Snow Leopard or newer
+      ;;
+    *)
+      HAVE_OSX_VIDEO="no"
+      ;;
+  esac
+])
 
 dnl *** Video 4 Linux 2 ***
 dnl for information about the header/define, see sys/v4l2/gstv4l2element.h
