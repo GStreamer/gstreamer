@@ -96,6 +96,8 @@ struct _GstTocEntry
   GstClockTime start, stop;
   GList *subentries;
   GstTagList *tags;
+  GstTocLoopType loop_type;
+  gint repeat_count;
 };
 
 struct _GstToc
@@ -487,20 +489,19 @@ gst_toc_entry_set_start_stop_times (GstTocEntry * entry, gint64 start,
 /**
  * gst_toc_entry_get_start_stop_times:
  * @entry: #GstTocEntry to get values from.
- * @start: (out): the storage for the start value, leave #NULL if not need.
- * @stop: (out): the storage for the stop value, leave #NULL if not need.
+ * @start: (out): the storage for the start value, leave %NULL if not need.
+ * @stop: (out): the storage for the stop value, leave %NULL if not need.
  *
- * Get start and stop values from the @entry and write them into appropriate storages.
+ * Get @start and @stop values from the @entry and write them into appropriate
+ * storages.
  *
- * Returns: TRUE if all non-NULL storage pointers were filled with appropriate values,
- * FALSE otherwise.
+ * Returns: %TRUE if all non-%NULL storage pointers were filled with appropriate
+ * values, %FALSE otherwise.
  */
 gboolean
 gst_toc_entry_get_start_stop_times (const GstTocEntry * entry, gint64 * start,
     gint64 * stop)
 {
-  gboolean ret = TRUE;
-
   g_return_val_if_fail (entry != NULL, FALSE);
 
   if (start != NULL)
@@ -508,8 +509,61 @@ gst_toc_entry_get_start_stop_times (const GstTocEntry * entry, gint64 * start,
   if (stop != NULL)
     *stop = entry->stop;
 
-  return ret;
+  return TRUE;
 }
+
+/**
+ * gst_toc_entry_set_loop:
+ * @entry: #GstTocEntry to set values.
+ * @loop_type: loop_type value to set.
+ * @repeat_count: repeat_count value to set.
+ *
+ * Set @loop_type and @repeat_count values for the @entry.
+ *
+ * Since: 1.4
+ */
+void
+gst_toc_entry_set_loop (GstTocEntry * entry, GstTocLoopType loop_type,
+    gint repeat_count)
+{
+  g_return_if_fail (entry != NULL);
+
+  entry->loop_type = loop_type;
+  entry->repeat_count = repeat_count;
+}
+
+/**
+ * gst_toc_entry_get_loop:
+ * @entry: #GstTocEntry to get values from.
+ * @loop_type: (out): the storage for the loop_type value, leave %NULL if not
+ *                    need.
+ * @repeat_count: (out): the storage for the repeat_count value, leave %NULL if
+ *                       not need.
+ *
+ * Get @loop_type and @repeat_count values from the @entry and write them into
+ * appropriate storages. Loops are e.g. used by sampled instruments. GStreamer
+ * is not automatically applying the loop. The application can process this
+ * meta data and use it e.g. to send a seek-event to loop a section.
+ *
+ * Returns: %TRUE if all non-%NULL storage pointers were filled with appropriate
+ * values, %FALSE otherwise.
+ *
+ * Since: 1.4
+ */
+gboolean
+gst_toc_entry_get_loop (const GstTocEntry * entry, GstTocLoopType * loop_type,
+    gint * repeat_count)
+{
+  g_return_val_if_fail (entry != NULL, FALSE);
+
+  if (loop_type != NULL)
+    *loop_type = entry->loop_type;
+  if (repeat_count != NULL)
+    *repeat_count = entry->repeat_count;
+
+  return TRUE;
+}
+
 
 /**
  * gst_toc_entry_type_get_nick:

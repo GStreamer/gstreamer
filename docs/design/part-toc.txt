@@ -54,8 +54,9 @@ item respectively. Field 'tags' is a list of tags related to the item. And field
 
 So, a little more about managing GstToc. Use gst_toc_new() and gst_toc_unref()
 to create/free it. GstTocEntry can be created using gst_toc_entry_new().
-While building GstToc you can set start and stop
-timestamps for each item using gst_toc_entry_set_start_stop().
+While building GstToc you can set start and stop timestamps for each item using
+gst_toc_entry_set_start_stop() and loop_type and repeat_count using
+gst_toc_entry_set_loop().
 The best way to process already created GstToc is to recursively go through
 the 'entries' and 'subentries' fields.
 
