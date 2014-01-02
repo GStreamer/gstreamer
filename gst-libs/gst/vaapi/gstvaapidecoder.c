@@ -101,7 +101,7 @@ push_buffer(GstVaapiDecoder *decoder, GstBuffer *buffer)
         GST_BUFFER_FLAG_SET(buffer, GST_BUFFER_FLAG_EOS);
     }
 
-    GST_DEBUG("queue encoded data buffer %p (%d bytes)",
+    GST_DEBUG("queue encoded data buffer %p (%zu bytes)",
               buffer, gst_buffer_get_size(buffer));
 
     g_async_queue_push(decoder->buffers, buffer);
@@ -117,7 +117,7 @@ pop_buffer(GstVaapiDecoder *decoder)
     if (!buffer)
         return NULL;
 
-    GST_DEBUG("dequeue buffer %p for decoding (%d bytes)",
+    GST_DEBUG("dequeue buffer %p for decoding (%zu bytes)",
               buffer, gst_buffer_get_size(buffer));
 
     return buffer;

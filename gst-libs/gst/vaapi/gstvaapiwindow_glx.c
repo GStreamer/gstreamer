@@ -400,7 +400,7 @@ gst_vaapi_window_glx_new_with_xid(GstVaapiDisplay *display, Window xid)
 {
     GstVaapiWindow *window;
 
-    GST_DEBUG("new window from xid 0x%08x", xid);
+    GST_DEBUG("new window from xid 0x%08x", (guint)xid);
 
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_GLX(display), NULL);
     g_return_val_if_fail(xid != None, NULL);

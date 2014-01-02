@@ -208,7 +208,7 @@ gst_vaapi_pixmap_x11_new(GstVaapiDisplay *display, GstVideoFormat format,
 GstVaapiPixmap *
 gst_vaapi_pixmap_x11_new_with_xid(GstVaapiDisplay *display, Pixmap xid)
 {
-    GST_DEBUG("new pixmap from xid 0x%08x", xid);
+    GST_DEBUG("new pixmap from xid 0x%08x", (guint)xid);
 
     g_return_val_if_fail(GST_VAAPI_IS_DISPLAY_X11(display), NULL);
     g_return_val_if_fail(xid != None, NULL);

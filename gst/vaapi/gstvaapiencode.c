@@ -122,7 +122,7 @@ gst_vaapiencode_default_allocate_buffer (GstVaapiEncode * encode,
   /* ERRORS */
 error_invalid_buffer:
   {
-    GST_ERROR ("invalid GstVaapiCodedBuffer size (%d)", buf_size);
+    GST_ERROR ("invalid GstVaapiCodedBuffer size (%d bytes)", buf_size);
     return GST_VAAPI_ENCODE_FLOW_MEM_ERROR;
   }
 error_create_buffer:
@@ -202,7 +202,7 @@ gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 timeout)
   }
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
 
-  GST_DEBUG ("output:%" GST_TIME_FORMAT ", size:%d",
+  GST_DEBUG ("output:%" GST_TIME_FORMAT ", size:%zu",
       GST_TIME_ARGS (out_frame->pts), gst_buffer_get_size (out_buffer));
 
   return gst_video_encoder_finish_frame (venc, out_frame);
