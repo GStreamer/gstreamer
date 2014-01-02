@@ -2,14 +2,14 @@ Implementing GstToc support in GStreamer elements
 
 1. General info about GstToc structure
 
-GstToc introduces a general way to handle chapters within multimedia
-formats. GstToc can be represented as tree structure with arbitrary
-hierarchy. Tree item can be either of two types: chapter or edition.
-Chapter acts like a part of the media data, for example audio track
-in CUE sheet, or part of the movie. Edition acts like some kind of
-alternative way to process media content, for example DVD angles.
-GstToc has one limitation on tree structure: on the same level of
-hierarchy there couldn't be items of different type, i.e. you shouldn't
+GstToc introduces a general way to handle chapters within multimedia formats.
+GstToc can be represented as tree structure with arbitrary hierarchy. Tree item
+can be either of two types: sequence or alternative. Sequence types acts like a
+part of the media data, for example audio track in CUE sheet, or part of the
+movie. Alternative types acts like some kind of selection to process a different
+version of the media content, for example DVD angles.
+GstToc has one constraint on the tree structure: it does not allow different
+entry types on the same level of the hierarchy, i.e. you shouldn't
 have editions and chapters mixed together. Here is an example of right TOC:
 
   -------  TOC  -------
@@ -19,8 +19,9 @@ have editions and chapters mixed together. Here is an example of right TOC:
    -chapter1   -chapter3
    -chapter2       
 
-Here are two editions, the first contains two chapters, and the second
-has only one chapter. And here is an example of invalid TOC:
+Here are two editions (alternatives), the first contains two chapters (sequence
+type), and the second has only one chapter. And here is an example of invalid
+TOC:
 
   -------  TOC  -------
            /  \
