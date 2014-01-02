@@ -1186,6 +1186,9 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
     case GST_EVENT_GAP:
     {
       GST_DEBUG_OBJECT (parse, "draining current data due to gap event");
+
+      gst_base_parse_push_pending_events (parse);
+
       if (parse->segment.rate > 0.0)
         gst_base_parse_drain (parse);
       else
