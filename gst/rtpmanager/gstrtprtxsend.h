@@ -47,20 +47,22 @@ struct _GstRtpRtxSend
 
   GMutex lock;
 
-  /* history of rtp packets */
-  GSequence *queue;
   /* rtp packets that will be pushed upon next buffer */
   GQueue *pending;
 
-  guint32 master_ssrc;
-  guint32 rtx_ssrc;
-  guint16 next_seqnum;
-  guint8 rtx_payload_type;
+  /* ssrc -> SSRCRtxData */
+  GHashTable *ssrc_data;
+  /* rtx ssrc -> master ssrc */
+  GHashTable *rtx_ssrcs;
 
-  gint clock_rate;
+  /* master ssrc -> rtx ssrc (property) */
+  GstStructure *external_ssrc_map;
 
-  /* retreived from SDP */
-  guint rtx_payload_type_pending;
+  /* orig pt (uint) -> rtx pt (uint) */
+  GHashTable *rtx_pt_map;
+  /* orig pt (string) -> rtx pt (uint) */
+  GstStructure *pending_rtx_pt_map;
+  gboolean rtx_pt_map_changed;
 
   /* buffering control properties */
   guint max_size_time;

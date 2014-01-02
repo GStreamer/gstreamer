@@ -42,6 +42,7 @@
 #include <gst/gst.h>
 #include <gst/rtp/gstrtpbuffer.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "gstrtprtxsend.h"
 
@@ -55,8 +56,8 @@ GST_DEBUG_CATEGORY_STATIC (gst_rtp_rtx_send_debug);
 enum
 {
   PROP_0,
-  PROP_RTX_SSRC,
-  PROP_RTX_PAYLOAD_TYPE,
+  PROP_SSRC_MAP,
+  PROP_PAYLOAD_TYPE_MAP,
   PROP_MAX_SIZE_TIME,
   PROP_MAX_SIZE_PACKETS,
   PROP_NUM_RTX_REQUESTS,
@@ -108,6 +109,35 @@ buffer_queue_item_free (BufferQueueItem * item)
   g_free (item);
 }
 
+typedef struct
+{
+  guint32 rtx_ssrc;
+  guint16 next_seqnum;
+  gint clock_rate;
+
+  /* history of rtp packets */
+  GSequence *queue;
+} SSRCRtxData;
+
+static SSRCRtxData *
+ssrc_rtx_data_new (guint32 rtx_ssrc)
+{
+  SSRCRtxData *data = g_new0 (SSRCRtxData, 1);
+
+  data->rtx_ssrc = rtx_ssrc;
+  data->next_seqnum = g_random_int_range (0, G_MAXUINT16);
+  data->queue = g_sequence_new ((GDestroyNotify) buffer_queue_item_free);
+
+  return data;
+}
+
+static void
+ssrc_rtx_data_free (SSRCRtxData * data)
+{
+  g_sequence_free (data->queue);
+  g_free (data);
+}
+
 static void
 gst_rtp_rtx_send_class_init (GstRtpRtxSendClass * klass)
 {
@@ -121,17 +151,16 @@ gst_rtp_rtx_send_class_init (GstRtpRtxSendClass * klass)
   gobject_class->set_property = gst_rtp_rtx_send_set_property;
   gobject_class->finalize = gst_rtp_rtx_send_finalize;
 
-  g_object_class_install_property (gobject_class, PROP_RTX_SSRC,
-      g_param_spec_uint ("rtx-ssrc", "Retransmission SSRC",
-          "SSRC of the retransmission stream for SSRC-multiplexed mode "
-          "(default = random)", 0, G_MAXUINT, -1,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_SSRC_MAP,
+      g_param_spec_boxed ("ssrc-map", "SSRC Map",
+          "Map of SSRCs to their retransmission SSRCs for SSRC-multiplexed mode"
+          " (default = random)", GST_TYPE_STRUCTURE,
+          G_PARAM_WRITABLE | G_PARAM_STATIC_STRINGS));
 
-  g_object_class_install_property (gobject_class, PROP_RTX_PAYLOAD_TYPE,
-      g_param_spec_uint ("rtx-payload-type", "RTX Payload Type",
-          "Payload type of the retransmission stream (fmtp in SDP)", 0,
-          G_MAXUINT, DEFAULT_RTX_PAYLOAD_TYPE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  g_object_class_install_property (gobject_class, PROP_PAYLOAD_TYPE_MAP,
+      g_param_spec_boxed ("payload-type-map", "Payload Type Map",
+          "Map of original payload types to their retransmission payload types",
+          GST_TYPE_STRUCTURE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_MAX_SIZE_TIME,
       g_param_spec_uint ("max-size-time", "Max Size Time",
@@ -172,13 +201,10 @@ static void
 gst_rtp_rtx_send_reset (GstRtpRtxSend * rtx, gboolean full)
 {
   g_mutex_lock (&rtx->lock);
-  g_sequence_remove_range (g_sequence_get_begin_iter (rtx->queue),
-      g_sequence_get_end_iter (rtx->queue));
   g_queue_foreach (rtx->pending, (GFunc) gst_buffer_unref, NULL);
   g_queue_clear (rtx->pending);
-  rtx->master_ssrc = 0;
-  rtx->next_seqnum = g_random_int_range (0, G_MAXUINT16);
-  rtx->rtx_ssrc = g_random_int ();
+  g_hash_table_remove_all (rtx->ssrc_data);
+  g_hash_table_remove_all (rtx->rtx_ssrcs);
   rtx->num_rtx_requests = 0;
   rtx->num_rtx_packets = 0;
   g_mutex_unlock (&rtx->lock);
@@ -190,7 +216,14 @@ gst_rtp_rtx_send_finalize (GObject * object)
   GstRtpRtxSend *rtx = GST_RTP_RTX_SEND (object);
 
   gst_rtp_rtx_send_reset (rtx, TRUE);
-  g_sequence_free (rtx->queue);
+
+  g_hash_table_unref (rtx->ssrc_data);
+  g_hash_table_unref (rtx->rtx_ssrcs);
+  if (rtx->external_ssrc_map)
+    gst_structure_free (rtx->external_ssrc_map);
+  g_hash_table_unref (rtx->rtx_pt_map);
+  if (rtx->pending_rtx_pt_map)
+    gst_structure_free (rtx->pending_rtx_pt_map);
   g_queue_free (rtx->pending);
   g_mutex_clear (&rtx->lock);
 
@@ -222,30 +255,58 @@ gst_rtp_rtx_send_init (GstRtpRtxSend * rtx)
       GST_DEBUG_FUNCPTR (gst_rtp_rtx_send_chain));
   gst_element_add_pad (GST_ELEMENT (rtx), rtx->sinkpad);
 
-  rtx->queue = g_sequence_new ((GDestroyNotify) buffer_queue_item_free);
-  rtx->pending = g_queue_new ();
   g_mutex_init (&rtx->lock);
-
-  rtx->next_seqnum = g_random_int_range (0, G_MAXUINT16);
-  rtx->rtx_ssrc = g_random_int ();
+  rtx->pending = g_queue_new ();
+  rtx->ssrc_data = g_hash_table_new_full (g_direct_hash, g_direct_equal,
+      NULL, (GDestroyNotify) ssrc_rtx_data_free);
+  rtx->rtx_ssrcs = g_hash_table_new (g_direct_hash, g_direct_equal);
+  rtx->rtx_pt_map = g_hash_table_new (g_direct_hash, g_direct_equal);
+  rtx->rtx_pt_map_changed = FALSE;
 
   rtx->max_size_time = DEFAULT_MAX_SIZE_TIME;
   rtx->max_size_packets = DEFAULT_MAX_SIZE_PACKETS;
 }
 
 static guint32
-choose_ssrc (GstRtpRtxSend * rtx)
+gst_rtp_rtx_send_choose_ssrc (GstRtpRtxSend * rtx, guint32 choice,
+    gboolean consider_choice)
 {
-  guint32 ssrc;
+  guint32 ssrc = consider_choice ? choice : g_random_int ();
 
-  while (TRUE) {
+  /* make sure to be different than any other */
+  while (g_hash_table_contains (rtx->ssrc_data, GUINT_TO_POINTER (ssrc)) ||
+      g_hash_table_contains (rtx->rtx_ssrcs, GUINT_TO_POINTER (ssrc))) {
     ssrc = g_random_int ();
-
-    /* make sure to be different than master */
-    if (ssrc != rtx->master_ssrc)
-      break;
   }
+
   return ssrc;
+}
+
+static SSRCRtxData *
+gst_rtp_rtx_send_get_ssrc_data (GstRtpRtxSend * rtx, guint32 ssrc)
+{
+  SSRCRtxData *data;
+  guint32 rtx_ssrc;
+  gboolean consider = FALSE;
+
+  if (G_UNLIKELY (!g_hash_table_contains (rtx->ssrc_data,
+              GUINT_TO_POINTER (ssrc)))) {
+    if (rtx->external_ssrc_map) {
+      gchar *ssrc_str;
+      ssrc_str = g_strdup_printf ("%" G_GUINT32_FORMAT, ssrc);
+      consider = gst_structure_get_uint (rtx->external_ssrc_map, ssrc_str,
+          &rtx_ssrc);
+      g_free (ssrc_str);
+    }
+    rtx_ssrc = gst_rtp_rtx_send_choose_ssrc (rtx, rtx_ssrc, consider);
+    data = ssrc_rtx_data_new (rtx_ssrc);
+    g_hash_table_insert (rtx->ssrc_data, GUINT_TO_POINTER (ssrc), data);
+    g_hash_table_insert (rtx->rtx_ssrcs, GUINT_TO_POINTER (rtx_ssrc),
+        GUINT_TO_POINTER (ssrc));
+  } else {
+    data = g_hash_table_lookup (rtx->ssrc_data, GUINT_TO_POINTER (ssrc));
+  }
+  return data;
 }
 
 static gint
@@ -271,7 +332,7 @@ gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 
       /* This event usually comes from the downstream gstrtpsession */
       if (gst_structure_has_name (s, "GstRTPRetransmissionRequest")) {
-        guint32 seqnum = 0;
+        guint seqnum = 0;
         guint ssrc = 0;
 
         /* retrieve seqnum of the packet that need to be restransmisted */
@@ -283,20 +344,23 @@ gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
           ssrc = -1;
 
         GST_DEBUG_OBJECT (rtx,
-            "request seqnum: %" G_GUINT16_FORMAT ", ssrc: %" G_GUINT32_FORMAT,
+            "request seqnum: %" G_GUINT32_FORMAT ", ssrc: %" G_GUINT32_FORMAT,
             seqnum, ssrc);
 
         g_mutex_lock (&rtx->lock);
         /* check if request is for us */
-        if (rtx->master_ssrc == ssrc) {
+        if (g_hash_table_contains (rtx->ssrc_data, GUINT_TO_POINTER (ssrc))) {
+          SSRCRtxData *data;
           GSequenceIter *iter;
           BufferQueueItem search_item;
 
           /* update statistics */
           ++rtx->num_rtx_requests;
 
+          data = gst_rtp_rtx_send_get_ssrc_data (rtx, ssrc);
+
           search_item.seqnum = seqnum;
-          iter = g_sequence_lookup (rtx->queue, &search_item,
+          iter = g_sequence_lookup (data->queue, &search_item,
               (GCompareDataFunc) buffer_queue_items_cmp, NULL);
           if (iter) {
             BufferQueueItem *item = g_sequence_get (iter);
@@ -321,16 +385,20 @@ gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         g_mutex_lock (&rtx->lock);
 
         /* choose another ssrc for our retransmited stream */
-        if (ssrc == rtx->rtx_ssrc) {
-          rtx->rtx_ssrc = choose_ssrc (rtx);
+        if (g_hash_table_contains (rtx->rtx_ssrcs, GUINT_TO_POINTER (ssrc))) {
+          guint master_ssrc;
+          SSRCRtxData *data;
 
-          /* clear buffers we already saved */
-          g_sequence_remove_range (g_sequence_get_begin_iter (rtx->queue),
-              g_sequence_get_end_iter (rtx->queue));
+          master_ssrc = GPOINTER_TO_UINT (g_hash_table_lookup (rtx->rtx_ssrcs,
+                  GUINT_TO_POINTER (ssrc)));
+          data = gst_rtp_rtx_send_get_ssrc_data (rtx, master_ssrc);
 
-          /* clear buffers that are about to be retransmited */
-          g_queue_foreach (rtx->pending, (GFunc) gst_buffer_unref, NULL);
-          g_queue_clear (rtx->pending);
+          /* change rtx_ssrc and update the reverse map */
+          data->rtx_ssrc = gst_rtp_rtx_send_choose_ssrc (rtx, 0, FALSE);
+          g_hash_table_remove (rtx->rtx_ssrcs, GUINT_TO_POINTER (ssrc));
+          g_hash_table_insert (rtx->rtx_ssrcs,
+              GUINT_TO_POINTER (data->rtx_ssrc),
+              GUINT_TO_POINTER (master_ssrc));
 
           g_mutex_unlock (&rtx->lock);
 
@@ -340,6 +408,16 @@ gst_rtp_rtx_send_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
           gst_event_unref (event);
           res = TRUE;
         } else {
+          /* if master ssrc has collided, remove it from our data, as it
+           * is not going to be used any longer */
+          if (g_hash_table_contains (rtx->ssrc_data, GUINT_TO_POINTER (ssrc))) {
+            SSRCRtxData *data;
+            data = gst_rtp_rtx_send_get_ssrc_data (rtx, ssrc);
+            g_hash_table_remove (rtx->rtx_ssrcs,
+                GUINT_TO_POINTER (data->rtx_ssrc));
+            g_hash_table_remove (rtx->ssrc_data, GUINT_TO_POINTER (ssrc));
+          }
+
           g_mutex_unlock (&rtx->lock);
 
           /* forward event to payloader in case collided ssrc is
@@ -368,14 +446,19 @@ gst_rtp_rtx_send_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
     {
       GstCaps *caps;
       GstStructure *s;
+      guint ssrc;
+      SSRCRtxData *data;
 
       gst_event_parse_caps (event, &caps);
       g_assert (gst_caps_is_fixed (caps));
 
       s = gst_caps_get_structure (caps, 0);
-      gst_structure_get_int (s, "clock-rate", &rtx->clock_rate);
+      gst_structure_get_uint (s, "ssrc", &ssrc);
+      data = gst_rtp_rtx_send_get_ssrc_data (rtx, ssrc);
+      gst_structure_get_int (s, "clock-rate", &data->clock_rate);
 
-      GST_DEBUG_OBJECT (rtx, "got clock-rate from caps: %d", rtx->clock_rate);
+      GST_DEBUG_OBJECT (rtx, "got clock-rate from caps: %d for ssrc: %u",
+          data->clock_rate, ssrc);
 
       break;
     }
@@ -385,9 +468,25 @@ gst_rtp_rtx_send_sink_event (GstPad * pad, GstObject * parent, GstEvent * event)
   return gst_pad_event_default (pad, parent, event);
 }
 
+static gboolean
+structure_to_hash_table (GQuark field_id, const GValue * value, gpointer hash)
+{
+  const gchar *field_str;
+  guint field_uint;
+  guint value_uint;
+
+  field_str = g_quark_to_string (field_id);
+  field_uint = atoi (field_str);
+  value_uint = g_value_get_uint (value);
+  g_hash_table_insert ((GHashTable *) hash, GUINT_TO_POINTER (field_uint),
+      GUINT_TO_POINTER (value_uint));
+
+  return TRUE;
+}
+
 /* like rtp_jitter_buffer_get_ts_diff() */
 static guint32
-gst_rtp_rtx_send_get_ts_diff (GstRtpRtxSend * self)
+gst_rtp_rtx_send_get_ts_diff (SSRCRtxData * data)
 {
   guint64 high_ts, low_ts;
   BufferQueueItem *high_buf, *low_buf;
@@ -395,8 +494,8 @@ gst_rtp_rtx_send_get_ts_diff (GstRtpRtxSend * self)
 
   high_buf =
       g_sequence_get (g_sequence_iter_prev (g_sequence_get_end_iter
-          (self->queue)));
-  low_buf = g_sequence_get (g_sequence_get_begin_iter (self->queue));
+          (data->queue)));
+  low_buf = g_sequence_get (g_sequence_get_begin_iter (data->queue));
 
   if (!high_buf || !low_buf || high_buf == low_buf)
     return 0;
@@ -412,15 +511,14 @@ gst_rtp_rtx_send_get_ts_diff (GstRtpRtxSend * self)
   }
 
   /* return value in ms instead of clock ticks */
-  return (guint32) gst_util_uint64_scale_int (result, 1000, self->clock_rate);
+  return (guint32) gst_util_uint64_scale_int (result, 1000, data->clock_rate);
 }
 
 /* Copy fixed header and extension. Add OSN before to copy payload
  * Copy memory to avoid to manually copy each rtp buffer field.
  */
 static GstBuffer *
-_gst_rtp_rtx_buffer_new (GstBuffer * buffer, guint32 ssrc, guint16 seqnum,
-    guint8 fmtp)
+_gst_rtp_rtx_buffer_new (GstRtpRtxSend * rtx, GstBuffer * buffer)
 {
   GstMemory *mem = NULL;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
@@ -428,8 +526,24 @@ _gst_rtp_rtx_buffer_new (GstBuffer * buffer, guint32 ssrc, guint16 seqnum,
   GstBuffer *new_buffer = gst_buffer_new ();
   GstMapInfo map;
   guint payload_len = 0;
+  SSRCRtxData *data;
+  guint32 ssrc;
+  guint16 seqnum;
+  guint8 fmtp;
 
   gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
+
+  /* get needed data from GstRtpRtxSend */
+  ssrc = gst_rtp_buffer_get_ssrc (&rtp);
+  data = gst_rtp_rtx_send_get_ssrc_data (rtx, ssrc);
+  ssrc = data->rtx_ssrc;
+  seqnum = data->next_seqnum++;
+  fmtp = GPOINTER_TO_UINT (g_hash_table_lookup (rtx->rtx_pt_map,
+          GUINT_TO_POINTER (gst_rtp_buffer_get_payload_type (&rtp))));
+
+  GST_DEBUG_OBJECT (rtx,
+      "retransmit seqnum: %" G_GUINT16_FORMAT ", ssrc: %" G_GUINT32_FORMAT,
+      seqnum, ssrc);
 
   /* gst_rtp_buffer_map does not map the payload so do it now */
   gst_rtp_buffer_get_payload (&rtp);
@@ -476,17 +590,11 @@ _gst_rtp_rtx_buffer_new (GstBuffer * buffer, guint32 ssrc, guint16 seqnum,
 }
 
 /* push pending retransmission packet.
- * it constructs rtx packet from original paclets */
+ * it constructs rtx packet from original packets */
 static void
 do_push (GstBuffer * buffer, GstRtpRtxSend * rtx)
 {
-  /* RFC4588 two streams multiplexed by sending them in the same session using
-   * different SSRC values, i.e., SSRC-multiplexing.  */
-  GST_DEBUG_OBJECT (rtx,
-      "retransmit seqnum: %" G_GUINT16_FORMAT ", ssrc: %" G_GUINT32_FORMAT,
-      rtx->next_seqnum, rtx->rtx_ssrc);
-  gst_pad_push (rtx->srcpad, _gst_rtp_rtx_buffer_new (buffer, rtx->rtx_ssrc,
-          rtx->next_seqnum++, rtx->rtx_payload_type));
+  gst_pad_push (rtx->srcpad, _gst_rtp_rtx_buffer_new (rtx, buffer));
 }
 
 static GstFlowReturn
@@ -497,6 +605,7 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   GQueue *pending = NULL;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   BufferQueueItem *item;
+  SSRCRtxData *data;
   guint16 seqnum;
   guint32 ssrc, rtptime;
 
@@ -511,27 +620,23 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   g_mutex_lock (&rtx->lock);
 
-  /* retrieve master stream ssrc */
-  rtx->master_ssrc = ssrc;
-  /* check if our initial aux ssrc is equal to master */
-  if (rtx->rtx_ssrc == rtx->master_ssrc)
-    choose_ssrc (rtx);
+  data = gst_rtp_rtx_send_get_ssrc_data (rtx, ssrc);
 
   /* add current rtp buffer to queue history */
   item = g_new0 (BufferQueueItem, 1);
   item->seqnum = seqnum;
   item->timestamp = rtptime;
   item->buffer = gst_buffer_ref (buffer);
-  g_sequence_append (rtx->queue, item);
+  g_sequence_append (data->queue, item);
 
   /* remove oldest packets from history if they are too many */
   if (rtx->max_size_packets) {
-    while (g_sequence_get_length (rtx->queue) > rtx->max_size_packets)
-      g_sequence_remove (g_sequence_get_begin_iter (rtx->queue));
+    while (g_sequence_get_length (data->queue) > rtx->max_size_packets)
+      g_sequence_remove (g_sequence_get_begin_iter (data->queue));
   }
   if (rtx->max_size_time) {
-    while (gst_rtp_rtx_send_get_ts_diff (rtx) > rtx->max_size_time)
-      g_sequence_remove (g_sequence_get_begin_iter (rtx->queue));
+    while (gst_rtp_rtx_send_get_ts_diff (data) > rtx->max_size_time)
+      g_sequence_remove (g_sequence_get_begin_iter (data->queue));
   }
 
   /* within lock, get packets that have to be retransmited */
@@ -544,7 +649,12 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   }
 
   /* transfer payload type while holding the lock */
-  rtx->rtx_payload_type = rtx->rtx_payload_type_pending;
+  if (rtx->rtx_pt_map_changed) {
+    g_hash_table_remove_all (rtx->rtx_pt_map);
+    gst_structure_foreach (rtx->pending_rtx_pt_map, structure_to_hash_table,
+        rtx->rtx_pt_map);
+    rtx->rtx_pt_map_changed = FALSE;
+  }
 
   /* no need to hold the lock to push rtx packets */
   g_mutex_unlock (&rtx->lock);
@@ -557,7 +667,7 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
 
   GST_LOG_OBJECT (rtx,
       "push seqnum: %" G_GUINT16_FORMAT ", ssrc: %" G_GUINT32_FORMAT, seqnum,
-      rtx->master_ssrc);
+      ssrc);
 
   /* push current rtp packet */
   ret = gst_pad_push (rtx->srcpad, buffer);
@@ -572,14 +682,9 @@ gst_rtp_rtx_send_get_property (GObject * object,
   GstRtpRtxSend *rtx = GST_RTP_RTX_SEND (object);
 
   switch (prop_id) {
-    case PROP_RTX_SSRC:
+    case PROP_PAYLOAD_TYPE_MAP:
       g_mutex_lock (&rtx->lock);
-      g_value_set_uint (value, rtx->rtx_ssrc);
-      g_mutex_unlock (&rtx->lock);
-      break;
-    case PROP_RTX_PAYLOAD_TYPE:
-      g_mutex_lock (&rtx->lock);
-      g_value_set_uint (value, rtx->rtx_payload_type_pending);
+      g_value_set_boxed (value, rtx->pending_rtx_pt_map);
       g_mutex_unlock (&rtx->lock);
       break;
     case PROP_MAX_SIZE_TIME:
@@ -615,14 +720,19 @@ gst_rtp_rtx_send_set_property (GObject * object,
   GstRtpRtxSend *rtx = GST_RTP_RTX_SEND (object);
 
   switch (prop_id) {
-    case PROP_RTX_SSRC:
+    case PROP_SSRC_MAP:
       g_mutex_lock (&rtx->lock);
-      rtx->rtx_ssrc = g_value_get_uint (value);
+      if (rtx->external_ssrc_map)
+        gst_structure_free (rtx->external_ssrc_map);
+      rtx->external_ssrc_map = g_value_dup_boxed (value);
       g_mutex_unlock (&rtx->lock);
       break;
-    case PROP_RTX_PAYLOAD_TYPE:
+    case PROP_PAYLOAD_TYPE_MAP:
       g_mutex_lock (&rtx->lock);
-      rtx->rtx_payload_type_pending = g_value_get_uint (value);
+      if (rtx->pending_rtx_pt_map)
+        gst_structure_free (rtx->pending_rtx_pt_map);
+      rtx->pending_rtx_pt_map = g_value_dup_boxed (value);
+      rtx->rtx_pt_map_changed = TRUE;
       g_mutex_unlock (&rtx->lock);
       break;
     case PROP_MAX_SIZE_TIME:

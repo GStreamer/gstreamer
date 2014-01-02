@@ -200,6 +200,7 @@ GST_START_TEST (test_push_forward_seq)
   GList *node;
   gint i = 0;
   GstCaps *caps = NULL;
+  GstStructure *pt_map;
 
   rtprtxsend = gst_check_setup_element ("rtprtxsend");
   rtprtxreceive = gst_check_setup_element ("rtprtxreceive");
@@ -216,8 +217,11 @@ GST_START_TEST (test_push_forward_seq)
   gst_check_setup_events (srcpad, rtprtxsend, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
-  g_object_set (rtprtxsend, "rtx-payload-type", 97, NULL);
+  pt_map = gst_structure_new ("application/x-rtp-pt-map",
+      "0", G_TYPE_UINT, 97, NULL);
+  g_object_set (rtprtxsend, "payload-type-map", pt_map, NULL);
   g_object_set (rtprtxreceive, "rtx-payload-types", "97", NULL);
+  gst_structure_free (pt_map);
 
   /* push buffers: 0,1,2, */
   for (node = inbuffers; node; node = g_list_next (node)) {
@@ -395,13 +399,17 @@ start_test_drop_and_check_results (GstElement * bin, GstElement * rtppayloader,
   guint nbrtxrequests = 0;
   guint nbrtxpackets = 0;
   guint nb_expected_requests = 0;
+  GstStructure *pt_map;
 
   GST_INFO ("starting test");
 
+  pt_map = gst_structure_new ("application/x-rtp-pt-map",
+      "96", G_TYPE_UINT, 99, NULL);
   g_object_set (rtppayloader, "pt", 96, NULL);
   g_object_set (rtppayloader, "seqnum-offset", 1, NULL);
-  g_object_set (rtprtxsend, "rtx-payload-type", 99, NULL);
+  g_object_set (rtprtxsend, "payload-type-map", pt_map, NULL);
   g_object_set (rtprtxreceive, "rtx-payload-types", "99:111:125", NULL);
+  gst_structure_free (pt_map);
 
   send_rtxdata->count = 1;
   send_rtxdata->nb_packets = 0;
@@ -686,6 +694,8 @@ add_sender (GstElement * bin, const gchar * src_name,
   GstPad *srcpad = NULL;
   gboolean res = FALSE;
   RTXSendMultipleData *send_rtxdata = g_slice_new0 (RTXSendMultipleData);
+  gchar *pt_master;
+  GstStructure *pt_map;
 
   send_rtxdata->count = 1;
   send_rtxdata->nb_packets = 0;
@@ -698,13 +708,20 @@ add_sender (GstElement * bin, const gchar * src_name,
   queue = gst_element_factory_make ("queue", NULL);
   funnel = gst_bin_get_by_name (GST_BIN (bin), "funnel");
 
+  pt_master = g_strdup_printf ("%" G_GUINT32_FORMAT, payload_type_master);
+  pt_map = gst_structure_new ("application/x-rtp-pt-map",
+      pt_master, G_TYPE_UINT, payload_type_aux, NULL);
+  g_free (pt_master);
+
   g_object_set (src, "num-buffers", 25, NULL);
   g_object_set (rtppayloader, "pt", payload_type_master, NULL);
   g_object_set (rtppayloader, "seqnum-offset", 1, NULL);
-  g_object_set (rtprtxsend, "rtx-payload-type", payload_type_aux, NULL);
+  g_object_set (rtprtxsend, "payload-type-map", pt_map, NULL);
   /* we want that every drop packet be resent fast */
   g_object_set (queue, "max-size-buffers", 1, NULL);
   g_object_set (queue, "flush-on-eos", FALSE, NULL);
+
+  gst_structure_free (pt_map);
 
   gst_bin_add_many (GST_BIN (bin), src, rtppayloader, rtprtxsend, queue, NULL);
 
@@ -1167,6 +1184,7 @@ test_rtxsender_packet_retention (gboolean test_with_time)
   const gint half_buffers = num_buffers / 2;
   const guint ssrc = 1234567;
   const guint rtx_payload_type = 99;
+  GstStructure *pt_map;
   GList *in_buffers, *node;
   guint payload_type;
   GstElement *rtxsend;
@@ -1185,6 +1203,9 @@ test_rtxsender_packet_retention (gboolean test_with_time)
   /* setup element & pads */
   rtxsend = gst_check_setup_element ("rtprtxsend");
 
+  pt_map = gst_structure_new ("application/x-rtp-pt-map",
+      "96", G_TYPE_UINT, rtx_payload_type, NULL);
+
   /* in both cases we want the rtxsend queue to store 'half_buffers'
    * amount of buffers at most. In max-size-packets mode, it's trivial.
    * In max-size-time mode, we specify almost half a second, which is
@@ -1192,7 +1213,8 @@ test_rtxsender_packet_retention (gboolean test_with_time)
   g_object_set (rtxsend,
       "max-size-packets", test_with_time ? 0 : half_buffers,
       "max-size-time", test_with_time ? 499 : 0,
-      "rtx-payload-type", rtx_payload_type, NULL);
+      "payload-type-map", pt_map, NULL);
+  gst_structure_free (pt_map);
 
   srcpad = gst_check_setup_src_pad (rtxsend, &srctemplate);
   fail_unless_equals_int (gst_pad_set_active (srcpad, TRUE), TRUE);
@@ -1204,7 +1226,8 @@ test_rtxsender_packet_retention (gboolean test_with_time)
 
   caps = gst_caps_from_string ("application/x-rtp, "
       "media = (string)video, payload = (int)96, "
-      "clock-rate = (int)90000, encoding-name = (string)RAW");
+      "ssrc = (uint)1234567, clock-rate = (int)90000, "
+      "encoding-name = (string)RAW");
   gst_check_setup_events (srcpad, rtxsend, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 
@@ -1364,6 +1387,7 @@ GST_START_TEST (test_rtxreceive_data_reconstruction)
   GstCaps *caps;
   GstRTPBuffer rtp = GST_RTP_BUFFER_INIT;
   GstBuffer *buffer;
+  GstStructure *pt_map;
 
   /* generate test data  */
   in_buffers = generate_test_buffers (1, ssrc, &payload_type);
@@ -1375,8 +1399,11 @@ GST_START_TEST (test_rtxreceive_data_reconstruction)
   rtxsend = gst_check_setup_element ("rtprtxsend");
   rtxrecv = gst_check_setup_element ("rtprtxreceive");
 
-  g_object_set (rtxsend, "rtx-payload-type", 99, NULL);
+  pt_map = gst_structure_new ("application/x-rtp-pt-map",
+      "96", G_TYPE_UINT, 99, NULL);
+  g_object_set (rtxsend, "payload-type-map", pt_map, NULL);
   g_object_set (rtxrecv, "rtx-payload-types", "99", NULL);
+  gst_structure_free (pt_map);
 
   fail_unless_equals_int (gst_element_link (rtxsend, rtxrecv), TRUE);
 
@@ -1391,7 +1418,8 @@ GST_START_TEST (test_rtxreceive_data_reconstruction)
 
   caps = gst_caps_from_string ("application/x-rtp, "
       "media = (string)video, payload = (int)96, "
-      "clock-rate = (int)90000, encoding-name = (string)RAW");
+      "ssrc = (uint)1234567, clock-rate = (int)90000, "
+      "encoding-name = (string)RAW");
   gst_check_setup_events (srcpad, rtxsend, caps, GST_FORMAT_TIME);
   gst_caps_unref (caps);
 

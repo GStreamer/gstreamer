@@ -167,11 +167,15 @@ request_aux_sender (GstElement * rtpbin, guint sessid, SessionData * session)
   GstElement *rtx, *bin;
   GstPad *pad;
   gchar *name;
+  GstStructure *pt_map;
 
   GST_INFO ("creating AUX sender");
   bin = gst_bin_new (NULL);
   rtx = gst_element_factory_make ("rtprtxsend", NULL);
-  g_object_set (rtx, "rtx-payload-type", 99, NULL);
+  pt_map = gst_structure_new ("application/x-rtp-pt-map",
+      "96", G_TYPE_UINT, 99, NULL);
+  g_object_set (rtx, "payload-type-map", pt_map, NULL);
+  gst_structure_free (pt_map);
   gst_bin_add (GST_BIN (bin), rtx);
 
   pad = gst_element_get_static_pad (rtx, "src");

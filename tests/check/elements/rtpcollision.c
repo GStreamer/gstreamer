@@ -343,6 +343,7 @@ GST_START_TEST (test_rtx_ssrc_collision)
   GstPad *fake_udp_sinkpad = NULL;
   GstPad *rtcp_srcpad = NULL;
   GstStateChangeReturn state_res = GST_STATE_CHANGE_FAILURE;
+  GstStructure *pt_map;
 
   GST_INFO ("preparing test");
 
@@ -357,7 +358,10 @@ GST_START_TEST (test_rtx_ssrc_collision)
   rtppayloader = gst_element_factory_make ("rtpspeexpay", NULL);
   g_object_set (rtppayloader, "pt", 96, NULL);
   rtprtxsend = gst_element_factory_make ("rtprtxsend", NULL);
-  g_object_set (rtprtxsend, "rtx-payload-type", 99, NULL);
+  pt_map = gst_structure_new ("application/x-rtp-pt-map",
+      "96", G_TYPE_UINT, 99, NULL);
+  g_object_set (rtprtxsend, "payload-type-map", pt_map, NULL);
+  gst_structure_free (pt_map);
   rtpsession = gst_element_factory_make ("rtpsession", NULL);
   sink = gst_element_factory_make ("fakesink", "sink");
   gst_bin_add_many (GST_BIN (bin), src, encoder, rtppayloader, rtprtxsend,

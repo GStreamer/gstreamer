@@ -185,6 +185,7 @@ GST_START_TEST (test_simple_rtpbin_aux)
   GstBus *busreceive;
   gboolean res;
   GstCaps *rtpcaps = NULL;
+  GstStructure *pt_map;
   GstStateChangeReturn state_res = GST_STATE_CHANGE_FAILURE;
   GstPad *srcpad = NULL;
   guint nb_rtx_send_packets = 0;
@@ -254,10 +255,13 @@ GST_START_TEST (test_simple_rtpbin_aux)
   g_signal_connect (rtpbinreceive, "pad-added",
       G_CALLBACK (on_rtpbinreceive_pad_added), rtpdepayloader);
 
+  pt_map = gst_structure_new ("application/x-rtp-pt-map",
+      "96", G_TYPE_UINT, 99, NULL);
   g_object_set (rtppayloader, "pt", 96, NULL);
   g_object_set (rtppayloader, "seqnum-offset", 1, NULL);
-  g_object_set (rtprtxsend, "rtx-payload-type", 99, NULL);
+  g_object_set (rtprtxsend, "payload-type-map", pt_map, NULL);
   g_object_set (rtprtxreceive, "rtx-payload-types", "99:111:125", NULL);
+  gst_structure_free (pt_map);
 
   /* set rtp aux receive */
   g_signal_connect (rtpbinreceive, "request-aux-receiver", (GCallback)
