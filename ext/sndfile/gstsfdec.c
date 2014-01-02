@@ -595,6 +595,20 @@ gst_sf_dec_open_file (GstSFDec * self)
     gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TRACK_NUMBER, track,
         NULL);
   }
+  if ((tag = sf_get_string (self->file, SF_STR_DATE))) {
+    GValue tag_val = { 0, };
+    GType tag_type = gst_tag_get_type (GST_TAG_DATE_TIME);
+
+    g_value_init (&tag_val, tag_type);
+    if (gst_value_deserialize (&tag_val, tag)) {
+      gst_tag_list_add_value (tags, GST_TAG_MERGE_APPEND, GST_TAG_DATE_TIME,
+          &tag_val);
+    } else {
+      GST_WARNING_OBJECT (self, "could not deserialize '%s' into a "
+          "tag %s of type %s", tag, GST_TAG_DATE_TIME, g_type_name (tag_type));
+    }
+    g_value_unset (&tag_val);
+  }
   if (have_loop_info) {
     if (loop_info.bpm != 0.0) {
       gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_BEATS_PER_MINUTE,
@@ -609,7 +623,6 @@ gst_sf_dec_open_file (GstSFDec * self)
     gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_MIDI_BASE_NOTE,
         (guint) instrument.basenote, NULL);
   }
-  /* TODO: SF_STR_DATE: GST_TAG_DATE / GST_TAG_DATE_TIME */
   /* TODO: calculate bitrate: GST_TAG_BITRATE */
   switch (info.format & SF_FORMAT_SUBMASK) {
     case SF_FORMAT_PCM_S8:
