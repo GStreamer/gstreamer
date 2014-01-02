@@ -534,10 +534,16 @@ gst_audio_base_src_setcaps (GstBaseSrc * bsrc, GstCaps * caps)
   GstAudioRingBufferSpec *spec;
   gint bpf, rate;
 
+  spec = &src->ringbuffer->spec;
+
+  if (G_UNLIKELY (spec->caps && gst_caps_is_equal (spec->caps, caps))) {
+    GST_DEBUG_OBJECT (src,
+        "Ringbuffer caps haven't changed, skipping reconfiguration");
+    return TRUE;
+  }
+
   GST_DEBUG ("release old ringbuffer");
   gst_audio_ring_buffer_release (src->ringbuffer);
-
-  spec = &src->ringbuffer->spec;
 
   spec->buffer_time = src->buffer_time;
   spec->latency_time = src->latency_time;
