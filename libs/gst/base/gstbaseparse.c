@@ -476,6 +476,8 @@ static inline GstFlowReturn gst_base_parse_check_sync (GstBaseParse * parse);
 
 static gboolean gst_base_parse_is_seekable (GstBaseParse * parse);
 
+static void gst_base_parse_push_pending_events (GstBaseParse * parse);
+
 static void
 gst_base_parse_clear_queues (GstBaseParse * parse)
 {
@@ -1149,16 +1151,8 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
             ("No valid frames found before end of stream"), (NULL));
       }
       /* newsegment and other serialized events before eos */
-      if (G_UNLIKELY (parse->priv->pending_events)) {
-        GList *l;
+      gst_base_parse_push_pending_events (parse);
 
-        for (l = parse->priv->pending_events; l != NULL; l = l->next) {
-          gst_pad_push_event (parse->srcpad, GST_EVENT (l->data));
-        }
-        g_list_free (parse->priv->pending_events);
-        parse->priv->pending_events = NULL;
-        parse->priv->pending_segment = FALSE;
-      }
       if (parse->priv->framecount < MIN_FRAMES_TO_POST_BITRATE) {
         /* We've not posted bitrate tags yet - do so now */
         gst_base_parse_post_bitrates (parse, TRUE, TRUE, TRUE);
@@ -2008,6 +2002,27 @@ gst_base_parse_handle_buffer (GstBaseParse * parse, GstBuffer * buffer,
   return ret;
 }
 
+/* gst_base_parse_push_pending_events:
+ * @parse: #GstBaseParse
+ *
+ * Pushes the pending events
+ */
+static void
+gst_base_parse_push_pending_events (GstBaseParse * parse)
+{
+  if (G_UNLIKELY (parse->priv->pending_events)) {
+    GList *r = g_list_reverse (parse->priv->pending_events);
+    GList *l;
+
+    parse->priv->pending_events = NULL;
+    for (l = r; l != NULL; l = l->next) {
+      gst_pad_push_event (parse->srcpad, GST_EVENT_CAST (l->data));
+    }
+    g_list_free (r);
+    parse->priv->pending_segment = FALSE;
+  }
+}
+
 /* gst_base_parse_handle_and_push_frame:
  * @parse: #GstBaseParse.
  * @klass: #GstBaseParseClass.
@@ -2180,17 +2195,7 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
   }
 
   /* Push pending events, including SEGMENT events */
-  if (G_UNLIKELY (parse->priv->pending_events)) {
-    GList *r = g_list_reverse (parse->priv->pending_events);
-    GList *l;
-
-    parse->priv->pending_events = NULL;
-    for (l = r; l != NULL; l = l->next) {
-      gst_pad_push_event (parse->srcpad, GST_EVENT (l->data));
-    }
-    g_list_free (r);
-    parse->priv->pending_segment = FALSE;
-  }
+  gst_base_parse_push_pending_events (parse);
 
   /* segment adjustment magic; only if we are running the whole show */
   if (!parse->priv->passthrough && parse->segment.rate > 0.0 &&
@@ -3206,17 +3211,7 @@ pause:
     }
     if (push_eos) {
       /* Push pending events, including SEGMENT events */
-      if (G_UNLIKELY (parse->priv->pending_events)) {
-        GList *r = g_list_reverse (parse->priv->pending_events);
-        GList *l;
-
-        parse->priv->pending_events = NULL;
-        for (l = r; l != NULL; l = l->next) {
-          gst_pad_push_event (parse->srcpad, GST_EVENT (l->data));
-        }
-        g_list_free (r);
-        parse->priv->pending_segment = FALSE;
-      }
+      gst_base_parse_push_pending_events (parse);
 
       gst_pad_push_event (parse->srcpad, gst_event_new_eos ());
     }
