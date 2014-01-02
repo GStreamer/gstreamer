@@ -396,7 +396,8 @@ start_decoder(App *app)
 
     g_timer_start(app->timer);
 
-    app->decoder_thread = g_thread_create(decoder_thread, app, TRUE, NULL);
+    app->decoder_thread = g_thread_try_new("Decoder Thread", decoder_thread,
+        app, NULL);
     if (!app->decoder_thread)
         return FALSE;
     return TRUE;
@@ -571,7 +572,8 @@ flush_decoder_queue(App *app)
 static gboolean
 start_renderer(App *app)
 {
-    app->render_thread = g_thread_create(renderer_thread, app, TRUE, NULL);
+    app->render_thread = g_thread_try_new("Renderer Thread", renderer_thread,
+        app, NULL);
     if (!app->render_thread)
         return FALSE;
     return TRUE;

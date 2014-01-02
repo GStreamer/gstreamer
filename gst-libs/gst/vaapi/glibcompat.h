@@ -134,6 +134,17 @@ g_cond_wait_until(GCompatCond *cond, GStaticMutex *mutex, gint64 end_time)
 #define g_cond_signal(cond)             g_compat_cond_signal(cond)
 #undef  g_cond_wait
 #define g_cond_wait(cond, mutex)        g_compat_cond_wait(cond, mutex)
+
+#undef  g_thread_try_new
+#define g_thread_try_new(name, func, data, error) \
+    g_compat_thread_try_new(name, func, data, error)
+
+static inline GThread *
+g_compat_thread_try_new(const gchar *name, GThreadFunc func, gpointer data,
+    GError **error)
+{
+    return g_thread_create(func, data, TRUE, error);
+}
 #endif
 
 #if !GLIB_CHECK_VERSION(2,31,18)
