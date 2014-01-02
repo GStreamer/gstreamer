@@ -147,12 +147,13 @@ typedef GstClockTime (*RTPSessionRequestTime) (RTPSession *sess,
  * @sess: an #RTPSession
  * @seqnum: the missing seqnum
  * @blp: other missing seqnums
+ * @ssrc: SSRC of requested stream
  * @user_data: user data specified when registering
  *
  * Notifies of NACKed frames.
  */
 typedef void (*RTPSessionNotifyNACK) (RTPSession *sess,
-    guint16 seqnum, guint16 blp, gpointer user_data);
+    guint16 seqnum, guint16 blp, guint32 ssrc, gpointer user_data);
 
 /**
  * RTPSessionCallbacks:

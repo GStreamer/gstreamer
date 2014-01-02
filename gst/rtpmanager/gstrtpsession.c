@@ -273,7 +273,7 @@ static void gst_rtp_session_request_key_unit (RTPSession * sess,
 static GstClockTime gst_rtp_session_request_time (RTPSession * session,
     gpointer user_data);
 static void gst_rtp_session_notify_nack (RTPSession * sess,
-    guint16 seqnum, guint16 blp, gpointer user_data);
+    guint16 seqnum, guint16 blp, guint32 ssrc, gpointer user_data);
 
 static RTPSessionCallbacks callbacks = {
   gst_rtp_session_process_rtp,
@@ -2419,7 +2419,7 @@ gst_rtp_session_request_time (RTPSession * session, gpointer user_data)
 
 static void
 gst_rtp_session_notify_nack (RTPSession * sess, guint16 seqnum,
-    guint16 blp, gpointer user_data)
+    guint16 blp, guint32 ssrc, gpointer user_data)
 {
   GstRtpSession *rtpsession = GST_RTP_SESSION (user_data);
   GstEvent *event;
@@ -2434,7 +2434,8 @@ gst_rtp_session_notify_nack (RTPSession * sess, guint16 seqnum,
     while (TRUE) {
       event = gst_event_new_custom (GST_EVENT_CUSTOM_UPSTREAM,
           gst_structure_new ("GstRTPRetransmissionRequest",
-              "seqnum", G_TYPE_UINT, (guint) seqnum, NULL));
+              "seqnum", G_TYPE_UINT, (guint) seqnum,
+              "ssrc", G_TYPE_UINT, (guint) ssrc, NULL));
       gst_pad_push_event (send_rtp_sink, event);
 
       if (blp == 0)

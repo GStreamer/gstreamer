@@ -2368,10 +2368,10 @@ rtp_session_process_nack (RTPSession * sess, guint32 sender_ssrc,
     seqnum = GST_READ_UINT16_BE (fci_data);
     blp = GST_READ_UINT16_BE (fci_data + 2);
 
-    GST_DEBUG ("NACK #%u, blp %04x", seqnum, blp);
+    GST_DEBUG ("NACK #%u, blp %04x, SSRC 0x%08x", seqnum, blp, media_ssrc);
 
     RTP_SESSION_UNLOCK (sess);
-    sess->callbacks.notify_nack (sess, seqnum, blp,
+    sess->callbacks.notify_nack (sess, seqnum, blp, media_ssrc,
         sess->notify_nack_user_data);
     RTP_SESSION_LOCK (sess);
 
