@@ -78,10 +78,6 @@ gst_tee_pull_mode_get_type (void)
   return type;
 }
 
-/* lock to protect request pads from being removed while downstream */
-#define GST_TEE_DYN_LOCK(tee) g_mutex_lock (&(tee)->dyn_lock)
-#define GST_TEE_DYN_UNLOCK(tee) g_mutex_unlock (&(tee)->dyn_lock)
-
 #define DEFAULT_PROP_NUM_SRC_PADS	0
 #define DEFAULT_PROP_HAS_CHAIN		TRUE
 #define DEFAULT_PROP_SILENT		TRUE
@@ -220,8 +216,6 @@ gst_tee_finalize (GObject * object)
 
   g_free (tee->last_message);
 
-  g_mutex_clear (&tee->dyn_lock);
-
   G_OBJECT_CLASS (parent_class)->finalize (object);
 }
 
@@ -285,8 +279,6 @@ gst_tee_class_init (GstTeeClass * klass)
 static void
 gst_tee_init (GstTee * tee)
 {
-  g_mutex_init (&tee->dyn_lock);
-
   tee->sinkpad = gst_pad_new_from_static_template (&sinktemplate, "sink");
   tee->sink_mode = GST_PAD_MODE_NONE;
 
@@ -404,8 +396,6 @@ gst_tee_release_pad (GstElement * element, GstPad * pad)
 
   GST_DEBUG_OBJECT (tee, "releasing pad");
 
-  /* wait for pending pad_alloc to finish */
-  GST_TEE_DYN_LOCK (tee);
   GST_OBJECT_LOCK (tee);
   /* mark the pad as removed so that future pad_alloc fails with NOT_LINKED. */
   GST_TEE_PAD_CAST (pad)->removed = TRUE;
@@ -419,7 +409,6 @@ gst_tee_release_pad (GstElement * element, GstPad * pad)
   gst_element_remove_pad (GST_ELEMENT_CAST (tee), pad);
 
   gst_pad_set_active (pad, FALSE);
-  GST_TEE_DYN_UNLOCK (tee);
 
   gst_object_unref (pad);
 
