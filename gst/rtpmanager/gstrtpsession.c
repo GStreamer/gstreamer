@@ -1496,6 +1496,27 @@ gst_rtp_session_event_recv_rtp_sink (GstPad * pad, GstObject * parent,
       ret = gst_pad_push_event (rtpsession->recv_rtp_src, event);
       break;
     }
+    case GST_EVENT_EOS:
+    {
+      GstPad *rtcp_src;
+
+      ret =
+          gst_pad_push_event (rtpsession->recv_rtp_src, gst_event_ref (event));
+
+      GST_RTP_SESSION_LOCK (rtpsession);
+      if ((rtcp_src = rtpsession->send_rtcp_src))
+        gst_object_ref (rtcp_src);
+      GST_RTP_SESSION_UNLOCK (rtpsession);
+
+      if (rtcp_src) {
+        ret = gst_pad_push_event (rtcp_src, event);
+        gst_object_unref (rtcp_src);
+      } else {
+        gst_event_unref (event);
+        ret = TRUE;
+      }
+      break;
+    }
     default:
       ret = gst_pad_push_event (rtpsession->recv_rtp_src, event);
       break;
