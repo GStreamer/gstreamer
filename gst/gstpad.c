@@ -1195,10 +1195,13 @@ cleanup_hook (GstPad * pad, GHook * hook)
     pad->num_blocked--;
     GST_DEBUG_OBJECT (pad, "remove blocking probe, now %d left",
         pad->num_blocked);
+
+    /* Might have new probes now that want to be called */
+    GST_PAD_BLOCK_BROADCAST (pad);
+
     if (pad->num_blocked == 0) {
       GST_DEBUG_OBJECT (pad, "last blocking probe removed, unblocking");
       GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_BLOCKED);
-      GST_PAD_BLOCK_BROADCAST (pad);
     }
   }
   g_hook_destroy_link (&pad->probes, hook);
@@ -1273,6 +1276,9 @@ gst_pad_add_probe (GstPad * pad, GstPadProbeType mask,
     GST_OBJECT_FLAG_SET (pad, GST_PAD_FLAG_BLOCKED);
     GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "added blocking probe, "
         "now %d blocking probes", pad->num_blocked);
+
+    /* Might have new probes now that want to be called */
+    GST_PAD_BLOCK_BROADCAST (pad);
   }
 
   /* call the callback if we need to be called for idle callbacks */
@@ -3236,6 +3242,14 @@ again:
       GST_PAD_BLOCK_WAIT (pad);
       GST_OBJECT_FLAG_UNSET (pad, GST_PAD_FLAG_BLOCKING);
       GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad, "We got unblocked");
+
+      /* if the list changed, call the new callbacks (they will not have their
+       * cookie set to data.cookie */
+      if (cookie != pad->priv->probe_list_cookie) {
+        GST_CAT_LOG_OBJECT (GST_CAT_SCHEDULING, pad,
+            "probe list changed, restarting");
+        goto again;
+      }
 
       if (G_UNLIKELY (GST_PAD_IS_FLUSHING (pad)))
         goto flushing;
