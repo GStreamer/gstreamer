@@ -591,6 +591,9 @@ gst_tee_handle_data (GstTee * tee, gpointer data, gboolean is_list)
   if (!pads->next) {
     GstPad *pad = GST_PAD_CAST (pads->data);
 
+    /* Keep another ref around, a pad probe
+     * might release and destroy the pad */
+    gst_object_ref (pad);
     GST_OBJECT_UNLOCK (tee);
 
     if (pad == tee->pull_pad) {
@@ -600,6 +603,9 @@ gst_tee_handle_data (GstTee * tee, gpointer data, gboolean is_list)
     } else {
       ret = gst_pad_push (pad, GST_BUFFER_CAST (data));
     }
+
+    gst_object_unref (pad);
+
     return ret;
   }
 
