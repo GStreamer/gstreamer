@@ -573,7 +573,7 @@ fill_planes (GstVideoInfo * info)
       info->offset[2] = info->offset[1] * 2;
       info->size = info->stride[0] * height * 3;
       break;
-    case GST_VIDEO_FORMAT_NV12T:
+    case GST_VIDEO_FORMAT_NV12_64Z32:
       info->stride[0] = GST_ROUND_UP_128 (width);
       info->stride[1] = info->stride[0];
       info->stride[2] = GST_ROUND_UP_32 (height) / 32;

@@ -1200,7 +1200,7 @@ Formats
  "NV24" planar 4:4:4 YUV with interleaved UV plane
 
 
- "NV12T" planar 4:2:0 YUV with interleaved UV plane in 64x32 tiles zigzag
+ "NV12_64Z32" planar 4:2:0 YUV with interleaved UV plane in 64x32 tiles zigzag
 
         Component 0: Y
           depth:           8
