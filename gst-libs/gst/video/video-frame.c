@@ -271,7 +271,7 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
 
     tile_size = 1 << ts;
 
-    mode = finfo->pixel_stride[tidx];
+    mode = finfo->pixel_stride[GST_VIDEO_COMP_TILEINFO];
 
     sx_tiles = sinfo->stride[plane] >> ws;
     sy_tiles = sinfo->stride[tidx];
