@@ -798,10 +798,10 @@ gst_shout2send_setcaps (GstBaseSink * basesink, GstCaps * caps)
 
   if (!strcmp (mimetype, "audio/mpeg")) {
     shout2send->format = SHOUT_FORMAT_MP3;
-  } else if (!strcmp (mimetype, "application/ogg")) {
+  } else if (g_str_has_suffix (mimetype, "/ogg")) {
     shout2send->format = SHOUT_FORMAT_VORBIS;
 #ifdef SHOUT_FORMAT_WEBM
-  } else if (!strcmp (mimetype, "video/webm")) {
+  } else if (g_str_has_suffix (mimetype, "/webm")) {
     shout2send->format = SHOUT_FORMAT_WEBM;
 #endif
   } else {
