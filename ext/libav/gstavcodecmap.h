@@ -73,7 +73,7 @@ gst_ffmpeg_compliance_get_type (void);
  */
 
 GstCaps *
-gst_ffmpeg_codecid_to_caps   (enum CodecID    codec_id,
+gst_ffmpeg_codecid_to_caps   (enum AVCodecID    codec_id,
                               AVCodecContext *context,
                               gboolean        encode);
 
@@ -84,12 +84,12 @@ gst_ffmpeg_codecid_to_caps   (enum CodecID    codec_id,
 
 GstCaps *
 gst_ffmpeg_codectype_to_audio_caps (AVCodecContext *context, 
-                              enum CodecID codec_id,
+                              enum AVCodecID codec_id,
 				    gboolean encode,
 				    AVCodec *codec);
 GstCaps *
 gst_ffmpeg_codectype_to_video_caps (AVCodecContext *context, 
-                              enum CodecID codec_id,
+                              enum AVCodecID codec_id,
 				    gboolean encode,
 				    AVCodec *codec);
 
@@ -99,7 +99,7 @@ gst_ffmpeg_codectype_to_video_caps (AVCodecContext *context,
  * context and a codecID.
  */
 
-enum CodecID
+enum AVCodecID
 gst_ffmpeg_caps_to_codecid (const GstCaps  *caps,
                             AVCodecContext *context);
 
@@ -109,7 +109,7 @@ gst_ffmpeg_caps_to_codecid (const GstCaps  *caps,
  */
 
 void
-gst_ffmpeg_caps_with_codecid (enum CodecID    codec_id,
+gst_ffmpeg_caps_with_codecid (enum AVCodecID    codec_id,
                               enum AVMediaType  codec_type,
                               const GstCaps  *caps,
                               AVCodecContext *context);
@@ -155,8 +155,8 @@ gst_ffmpeg_formatid_to_caps (const gchar *format_name);
 
 gboolean
 gst_ffmpeg_formatid_get_codecids (const gchar *format_name,
-                                  enum CodecID ** video_codec_list,
-                                  enum CodecID ** audio_codec_list,
+                                  enum AVCodecID ** video_codec_list,
+                                  enum AVCodecID ** audio_codec_list,
 				  AVOutputFormat * plugin);
 
 

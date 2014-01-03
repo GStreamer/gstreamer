@@ -120,7 +120,7 @@ static void gst_ffmpegmux_set_property (GObject * object, guint prop_id,
 static void gst_ffmpegmux_get_property (GObject * object, guint prop_id,
     GValue * value, GParamSpec * pspec);
 
-static GstCaps *gst_ffmpegmux_get_id_caps (enum CodecID *id_list);
+static GstCaps *gst_ffmpegmux_get_id_caps (enum AVCodecID *id_list);
 static void gst_ffmpeg_mux_simple_caps_set_int_list (GstCaps * caps,
     const gchar * field, guint num, const gint * values);
 
@@ -193,7 +193,7 @@ gst_ffmpegmux_base_init (gpointer g_class)
   GstPadTemplate *videosinktempl, *audiosinktempl, *srctempl;
   AVOutputFormat *in_plugin;
   GstCaps *srccaps, *audiosinkcaps, *videosinkcaps;
-  enum CodecID *video_ids = NULL, *audio_ids = NULL;
+  enum AVCodecID *video_ids = NULL, *audio_ids = NULL;
   gchar *longname, *description;
   const char *replacement;
   gboolean is_formatter;
@@ -819,7 +819,7 @@ gst_ffmpegmux_change_state (GstElement * element, GstStateChange transition)
 }
 
 static GstCaps *
-gst_ffmpegmux_get_id_caps (enum CodecID *id_list)
+gst_ffmpegmux_get_id_caps (enum AVCodecID *id_list)
 {
   GstCaps *caps, *t;
   gint i;

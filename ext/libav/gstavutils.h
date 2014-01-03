@@ -86,7 +86,7 @@ int
 gst_ffmpeg_auto_max_threads(void);
 
 G_CONST_RETURN gchar *
-gst_ffmpeg_get_codecid_longname (enum CodecID codec_id);
+gst_ffmpeg_get_codecid_longname (enum AVCodecID codec_id);
 
 gint
 av_smp_format_depth(enum AVSampleFormat smp_fmt);
