@@ -459,6 +459,50 @@ _nal_name (GstH264NalUnitType nal_type)
 }
 #endif
 
+static void
+gst_h264_parse_process_sei (GstH264Parse * h264parse, GstH264NalUnit * nalu)
+{
+  GstH264SEIMessage sei;
+  GstH264NalParser *nalparser = h264parse->nalparser;
+  GstH264ParserResult pres;
+  GArray *messages;
+  guint i;
+
+  pres = gst_h264_parser_parse_sei (nalparser, nalu, &messages);
+  if (pres != GST_H264_PARSER_OK)
+    GST_WARNING_OBJECT (h264parse, "failed to parse one ore more SEI message");
+
+  /* Even if pres != GST_H264_PARSER_OK, some message could have been parsed and
+   * stored in messages.
+   */
+  for (i = 0; i < messages->len; i++) {
+    sei = g_array_index (messages, GstH264SEIMessage, i);
+    switch (sei.payloadType) {
+      case GST_H264_SEI_PIC_TIMING:
+        h264parse->sei_pic_struct_pres_flag =
+            sei.payload.pic_timing.pic_struct_present_flag;
+        h264parse->sei_cpb_removal_delay =
+            sei.payload.pic_timing.cpb_removal_delay;
+        if (h264parse->sei_pic_struct_pres_flag)
+          h264parse->sei_pic_struct = sei.payload.pic_timing.pic_struct;
+        GST_LOG_OBJECT (h264parse, "pic timing updated");
+        break;
+      case GST_H264_SEI_BUF_PERIOD:
+        if (h264parse->ts_trn_nb == GST_CLOCK_TIME_NONE ||
+            h264parse->dts == GST_CLOCK_TIME_NONE)
+          h264parse->ts_trn_nb = 0;
+        else
+          h264parse->ts_trn_nb = h264parse->dts;
+
+        GST_LOG_OBJECT (h264parse,
+            "new buffering period; ts_trn_nb updated: %" GST_TIME_FORMAT,
+            GST_TIME_ARGS (h264parse->ts_trn_nb));
+        break;
+    }
+  }
+  g_array_free (messages, TRUE);
+}
+
 /* caller guarantees 2 bytes of nal payload */
 static void
 gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
@@ -466,7 +510,6 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
   guint nal_type;
   GstH264PPS pps = { 0, };
   GstH264SPS sps = { 0, };
-  GstH264SEIMessage sei;
   GstH264NalParser *nalparser = h264parse->nalparser;
   GstH264ParserResult pres;
 
@@ -527,28 +570,7 @@ gst_h264_parse_process_nal (GstH264Parse * h264parse, GstH264NalUnit * nalu)
       gst_h264_parser_store_nal (h264parse, pps.id, nal_type, nalu);
       break;
     case GST_H264_NAL_SEI:
-      gst_h264_parser_parse_sei (nalparser, nalu, &sei);
-      switch (sei.payloadType) {
-        case GST_H264_SEI_PIC_TIMING:
-          h264parse->sei_pic_struct_pres_flag =
-              sei.payload.pic_timing.pic_struct_present_flag;
-          h264parse->sei_cpb_removal_delay =
-              sei.payload.pic_timing.cpb_removal_delay;
-          if (h264parse->sei_pic_struct_pres_flag)
-            h264parse->sei_pic_struct = sei.payload.pic_timing.pic_struct;
-          break;
-        case GST_H264_SEI_BUF_PERIOD:
-          if (h264parse->ts_trn_nb == GST_CLOCK_TIME_NONE ||
-              h264parse->dts == GST_CLOCK_TIME_NONE)
-            h264parse->ts_trn_nb = 0;
-          else
-            h264parse->ts_trn_nb = h264parse->dts;
-
-          GST_LOG_OBJECT (h264parse,
-              "new buffering period; ts_trn_nb updated: %" GST_TIME_FORMAT,
-              GST_TIME_ARGS (h264parse->ts_trn_nb));
-          break;
-      }
+      gst_h264_parse_process_sei (h264parse, nalu);
       /* mark SEI pos */
       if (h264parse->sei_pos == -1) {
         if (h264parse->transform)

@@ -506,6 +506,14 @@ scan_for_start_codes (const guint8 * data, guint size)
 }
 
 static gboolean
+gst_h264_parser_byte_aligned (NalReader * nr)
+{
+  if (nr->bits_in_cache != 0)
+    return FALSE;
+  return TRUE;
+}
+
+static gboolean
 gst_h264_parser_more_data (NalReader * nr)
 {
   guint remaining;
@@ -1160,6 +1168,78 @@ gst_h264_parser_parse_pic_timing (GstH264NalParser * nalparser,
 
 error:
   GST_WARNING ("error parsing \"Picture timing\"");
+  return GST_H264_PARSER_ERROR;
+}
+
+static GstH264ParserResult
+gst_h264_parser_parse_sei_message (GstH264NalParser * nalparser,
+    NalReader * nr, GstH264SEIMessage * sei)
+{
+  guint32 payloadSize;
+  guint8 payload_type_byte, payload_size_byte;
+#ifndef GST_DISABLE_GST_DEBUG
+  guint remaining, payload_size;
+#endif
+  GstH264ParserResult res;
+
+  GST_DEBUG ("parsing \"Sei message\"");
+
+  sei->payloadType = 0;
+  do {
+    READ_UINT8 (nr, payload_type_byte, 8);
+    sei->payloadType += payload_type_byte;
+  } while (payload_type_byte == 0xff);
+
+  payloadSize = 0;
+  do {
+    READ_UINT8 (nr, payload_size_byte, 8);
+    payloadSize += payload_size_byte;
+  }
+  while (payload_size_byte == 0xff);
+
+#ifndef GST_DISABLE_GST_DEBUG
+  remaining = nal_reader_get_remaining (nr);
+  payload_size = payloadSize * 8 < remaining ? payloadSize * 8 : remaining;
+
+  GST_DEBUG ("SEI message received: payloadType  %u, payloadSize = %u bits",
+      sei->payloadType, payload_size);
+#endif
+
+  if (sei->payloadType == GST_H264_SEI_BUF_PERIOD) {
+    /* size not set; might depend on emulation_prevention_three_byte */
+    res = gst_h264_parser_parse_buffering_period (nalparser,
+        &sei->payload.buffering_period, nr);
+  } else if (sei->payloadType == GST_H264_SEI_PIC_TIMING) {
+    /* size not set; might depend on emulation_prevention_three_byte */
+    res = gst_h264_parser_parse_pic_timing (nalparser,
+        &sei->payload.pic_timing, nr);
+  } else {
+    /* Just consume payloadSize */
+    guint32 i;
+    for (i = 0; i < payloadSize; i++)
+      nal_reader_skip_to_byte (nr);
+    res = GST_H264_PARSER_OK;
+  }
+
+  /* Check for message that doesn't end at byte boundary */
+  if (!gst_h264_parser_byte_aligned (nr)) {
+    guint8 bit_equal_to_one;
+    READ_UINT8 (nr, bit_equal_to_one, 1);
+    if (!bit_equal_to_one)
+      GST_WARNING ("Bit non equal to one.");
+
+    while (!gst_h264_parser_byte_aligned (nr)) {
+      guint8 bit_equal_to_zero;
+      READ_UINT8 (nr, bit_equal_to_zero, 1);
+      if (bit_equal_to_zero)
+        GST_WARNING ("Bit non equal to zero.");
+    }
+  }
+
+  return res;
+
+error:
+  GST_WARNING ("error parsing \"Sei message\"");
   return GST_H264_PARSER_ERROR;
 }
 
@@ -1957,67 +2037,31 @@ error:
  * gst_h264_parser_parse_sei:
  * @nalparser: a #GstH264NalParser
  * @nalu: The #GST_H264_NAL_SEI #GstH264NalUnit to parse
- * @sei: The #GstH264SEIMessage to fill.
+ * @messages: The GArray of #GstH264SEIMessage to fill. The caller must free it when done.
  *
- * Parses @data, and fills the @sei structures.
+ * Parses @data, create and fills the @messages array.
  *
  * Returns: a #GstH264ParserResult
  */
 GstH264ParserResult
 gst_h264_parser_parse_sei (GstH264NalParser * nalparser, GstH264NalUnit * nalu,
-    GstH264SEIMessage * sei)
+    GArray ** messages)
 {
   NalReader nr;
-
-  guint32 payloadSize;
-  guint8 payload_type_byte, payload_size_byte;
-#ifndef GST_DISABLE_GST_DEBUG
-  guint remaining, payload_size;
-#endif
+  GstH264SEIMessage sei;
   GstH264ParserResult res;
 
-  GST_DEBUG ("parsing \"Sei message\"");
-
+  GST_DEBUG ("parsing SEI nal");
   nal_reader_init (&nr, nalu->data + nalu->offset + 1, nalu->size - 1);
+  *messages = g_array_new (FALSE, FALSE, sizeof (GstH264SEIMessage));
 
-  /* init */
-  memset (sei, 0, sizeof (*sei));
-
-  sei->payloadType = 0;
   do {
-    READ_UINT8 (&nr, payload_type_byte, 8);
-    sei->payloadType += payload_type_byte;
-  } while (payload_type_byte == 0xff);
-
-  payloadSize = 0;
-  do {
-    READ_UINT8 (&nr, payload_size_byte, 8);
-    payloadSize += payload_size_byte;
-  }
-  while (payload_size_byte == 0xff);
-
-#ifndef GST_DISABLE_GST_DEBUG
-  remaining = nal_reader_get_remaining (&nr) * 8;
-  payload_size = payloadSize < remaining ? payloadSize : remaining;
-
-  GST_DEBUG ("SEI message received: payloadType  %u, payloadSize = %u bytes",
-      sei->payloadType, payload_size);
-#endif
-
-  if (sei->payloadType == GST_H264_SEI_BUF_PERIOD) {
-    /* size not set; might depend on emulation_prevention_three_byte */
-    res = gst_h264_parser_parse_buffering_period (nalparser,
-        &sei->payload.buffering_period, &nr);
-  } else if (sei->payloadType == GST_H264_SEI_PIC_TIMING) {
-    /* size not set; might depend on emulation_prevention_three_byte */
-    res = gst_h264_parser_parse_pic_timing (nalparser,
-        &sei->payload.pic_timing, &nr);
-  } else
-    res = GST_H264_PARSER_OK;
+    res = gst_h264_parser_parse_sei_message (nalparser, &nr, &sei);
+    if (res == GST_H264_PARSER_OK)
+      g_array_append_val (*messages, sei);
+    else
+      break;
+  } while (gst_h264_parser_more_data (&nr));
 
   return res;
-
-error:
-  GST_WARNING ("error parsing \"Sei message\"");
-  return GST_H264_PARSER_ERROR;
 }
