@@ -65,7 +65,7 @@ struct GstShmClient
   GstPollFD pollfd;
 };
 
-#define DEFAULT_SIZE ( 256 * 1024 )
+#define DEFAULT_SIZE ( 64 * 1024 * 1024 )
 #define DEFAULT_WAIT_FOR_CONNECTION (TRUE)
 /* Default is user read/write, group read */
 #define DEFAULT_PERMS ( S_IRUSR | S_IWUSR | S_IRGRP )
