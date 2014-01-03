@@ -461,7 +461,7 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
     GstBuffer ** outbuf, GstFlowReturn * ret)
 {
   gint len = -1;
-  gint have_data = AVCODEC_MAX_AUDIO_FRAME_SIZE;
+  gint have_data = 0;
   AVPacket packet;
   AVFrame frame;
 
@@ -475,7 +475,7 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
   GST_DEBUG_OBJECT (ffmpegdec,
       "Decode audio: len=%d, have_data=%d", len, have_data);
 
-  if (len >= 0 && have_data > 0) {
+  if (len >= 0 && have_data) {
     BufferInfo *buffer_info = frame.opaque;
     gint nsamples, channels, byte_per_sample;
     gsize output_size;
@@ -569,7 +569,8 @@ gst_ffmpegauddec_audio_frame (GstFFMpegAudDec * ffmpegdec,
       gst_buffer_fill (*outbuf, 0, frame.data[0], output_size);
     }
 
-    GST_DEBUG_OBJECT (ffmpegdec, "Buffer created. Size: %d", have_data);
+    GST_DEBUG_OBJECT (ffmpegdec, "Buffer created. Size: %" G_GSIZE_FORMAT,
+        output_size);
 
     /* Reorder channels to the GStreamer channel order */
     if (ffmpegdec->needs_reorder) {
