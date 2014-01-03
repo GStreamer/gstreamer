@@ -380,8 +380,9 @@ gst_shm_sink_class_init (GstShmSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_SOCKET_PATH,
       g_param_spec_string ("socket-path",
           "Path to the control socket",
-          "The path to the control socket used to control the shared memory"
-          " transport", NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          "The path to the control socket used to control the shared memory "
+          "transport. This may be modified during the NULL->READY transition",
+          NULL, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (gobject_class, PROP_PERMS,
       g_param_spec_uint ("perms",
