@@ -2487,6 +2487,7 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
     guint8 ** p_data, guint64 * p_size)
 {
   GstTagList *tags = NULL;
+  GstStructure *caps_s;
   GstBuffer *extradata = NULL;
   GstPad *src_pad;
   GstCaps *caps;
@@ -2544,10 +2545,14 @@ gst_asf_demux_add_video_stream (GstASFDemux * demux,
     gst_structure_remove_field (s, "framerate");
   }
 
-  /* add fourcc format to caps, some proprietary decoders seem to need it */
-  str = g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (video->tag));
-  gst_caps_set_simple (caps, "format", G_TYPE_STRING, str, NULL);
-  g_free (str);
+  caps_s = gst_caps_get_structure (caps, 0);
+
+  /* add format field with fourcc to WMV/VC1 caps to differentiate variants */
+  if (gst_structure_has_name (caps_s, "video/x-wmv")) {
+    str = g_strdup_printf ("%" GST_FOURCC_FORMAT, GST_FOURCC_ARGS (video->tag));
+    gst_caps_set_simple (caps, "format", G_TYPE_STRING, str, NULL);
+    g_free (str);
+  }
 
   if (codec_name) {
     tags = gst_tag_list_new (GST_TAG_VIDEO_CODEC, codec_name, NULL);
