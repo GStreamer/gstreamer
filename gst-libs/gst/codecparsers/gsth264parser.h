@@ -749,7 +749,7 @@ GstH264ParserResult gst_h264_parser_parse_pps         (GstH264NalParser *nalpars
                                                        GstH264NalUnit *nalu, GstH264PPS *pps);
 
 GstH264ParserResult gst_h264_parser_parse_sei         (GstH264NalParser *nalparser,
-                                                       GstH264NalUnit *nalu, GstH264SEIMessage *sei);
+                                                       GstH264NalUnit *nalu, GArray ** messages);
 
 void gst_h264_nal_parser_free                         (GstH264NalParser *nalparser);
 
