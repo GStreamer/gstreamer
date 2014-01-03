@@ -1391,6 +1391,16 @@ gst_riff_create_audio_caps (guint16 codec_id,
       block_align = TRUE;
       break;
 
+    case GST_RIFF_WAVE_FORMAT_ITU_G726_ADPCM:
+      rate_min = 8000;
+      rate_max = 8000;
+      channels_max = 1;
+      caps = gst_caps_new_simple ("audio/x-adpcm",
+          "layout", G_TYPE_STRING, "g726", NULL);
+      if (codec_name)
+        *codec_name = g_strdup ("G726 ADPCM audio");
+      break;
+
     case GST_RIFF_WAVE_FORMAT_DSP_TRUESPEECH:
       rate_min = 8000;
       rate_max = 8000;

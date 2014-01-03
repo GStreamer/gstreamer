@@ -338,6 +338,7 @@ typedef struct _gst_riff_strf_auds {       /* == WaveHeader (?) */
 #define GST_RIFF_WAVE_FORMAT_ITU_G721_ADPCM (0x0040)
 #define GST_RIFF_WAVE_FORMAT_G728_CELP      (0x0041)
 #define GST_RIFF_WAVE_FORMAT_MSG723         (0x0042)
+#define GST_RIFF_WAVE_FORMAT_ITU_G726_ADPCM (0x0045)
 #define GST_RIFF_WAVE_FORMAT_MPEGL12        (0x0050)
 #define GST_RIFF_WAVE_FORMAT_RT24           (0x0052)
 #define GST_RIFF_WAVE_FORMAT_PAC            (0x0053)
