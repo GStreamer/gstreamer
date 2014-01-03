@@ -121,6 +121,9 @@ struct _GstQTDemux {
   gint64 seek_offset;
   gint64 push_seek_start;
   gint64 push_seek_stop;
+  guint64 segment_base; /* The offset from which playback was started, needs to
+                         * be subtracted from GstSegment.base to get a correct
+                         * running time whenever a new QtSegment is activated */
 
 #if 0
   /* gst index support */
