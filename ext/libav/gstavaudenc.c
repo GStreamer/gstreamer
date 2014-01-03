@@ -297,7 +297,6 @@ gst_ffmpegaudenc_set_format (GstAudioEncoder * encoder, GstAudioInfo * info)
   ffmpegaudenc->context->coder_type = 0;
   ffmpegaudenc->context->context_model = 0;
   ffmpegaudenc->context->scenechange_threshold = 0;
-  ffmpegaudenc->context->inter_threshold = 0;
 
   /* fetch pix_fmt and so on */
   gst_ffmpeg_audioinfo_to_context (info, ffmpegaudenc->context);

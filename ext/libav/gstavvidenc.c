@@ -346,7 +346,6 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   ffmpegenc->context->coder_type = 0;
   ffmpegenc->context->context_model = 0;
   ffmpegenc->context->scenechange_threshold = 0;
-  ffmpegenc->context->inter_threshold = 0;
 
   /* and last but not least the pass; CBR, 2-pass, etc */
   ffmpegenc->context->flags |= ffmpegenc->pass;
