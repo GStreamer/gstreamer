@@ -1438,7 +1438,22 @@ gst_ffmpeg_codecid_to_caps (enum CodecID codec_id,
     case AV_CODEC_ID_VC1:
       caps =
           gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/x-wmv",
-          "wmvversion", G_TYPE_INT, 3, "format", G_TYPE_STRING, "WVC1", NULL);
+          "wmvversion", G_TYPE_INT, 3, NULL);
+      if (!context && !encode) {
+        GValue arr = { 0, };
+        GValue item = { 0, };
+
+        g_value_init (&arr, GST_TYPE_LIST);
+        g_value_init (&item, G_TYPE_STRING);
+        g_value_set_string (&item, "WVC1");
+        gst_value_list_append_value (&arr, &item);
+        g_value_set_string (&item, "WMVA");
+        gst_value_list_append_and_take_value (&arr, &item);
+        gst_caps_set_value (caps, "format", &arr);
+        g_value_unset (&arr);
+      } else {
+        gst_caps_set_simple (caps, "format", G_TYPE_STRING, "WVC1", NULL);
+      }
       break;
     case AV_CODEC_ID_QDM2:
       caps =
