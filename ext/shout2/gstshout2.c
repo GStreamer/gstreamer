@@ -84,7 +84,6 @@ enum
 #define DEFAULT_MOUNT        ""
 #define DEFAULT_URL          ""
 #define DEFAULT_PROTOCOL     SHOUT2SEND_PROTOCOL_HTTP
-#define DEFAULT_FORMAT       SHOUT_FORMAT_VORBIS
 
 #ifdef SHOUT_FORMAT_WEBM
 #define WEBM_CAPS "; video/webm; audio/webm"
@@ -255,8 +254,8 @@ gst_shout2send_init (GstShout2send * shout2send)
   shout2send->url = g_strdup (DEFAULT_URL);
   shout2send->protocol = DEFAULT_PROTOCOL;
   shout2send->ispublic = DEFAULT_PUBLIC;
-  shout2send->format = DEFAULT_FORMAT;
 
+  shout2send->format = -1;
   shout2send->tags = gst_tag_list_new_empty ();
   shout2send->conn = NULL;
   shout2send->connected = FALSE;
@@ -517,17 +516,13 @@ set_failed:
   }
 }
 
-static gboolean
+static GstFlowReturn
 gst_shout2send_connect (GstShout2send * sink)
 {
-  const char *format =
-      (sink->format == SHOUT_FORMAT_VORBIS) ? "vorbis" :
-      ((sink->format == SHOUT_FORMAT_MP3) ? "mp3" : "unknown");
-#ifdef SHOUT_FORMAT_WEBM
-  if (sink->format == SHOUT_FORMAT_WEBM)
-    format = "webm";
-#endif
-  GST_DEBUG_OBJECT (sink, "Connection format is: %s", format);
+  GST_DEBUG_OBJECT (sink, "Connection format is: %d", sink->format);
+
+  if (sink->format == -1)
+    goto no_caps;
 
   if (shout_set_format (sink->conn, sink->format) != SHOUTERR_SUCCESS)
     goto could_not_set_format;
@@ -549,14 +544,21 @@ gst_shout2send_connect (GstShout2send * sink)
     shout_metadata_free (pmetadata);
   }
 
-  return TRUE;
+  return GST_FLOW_OK;
 
 /* ERRORS */
+no_caps:
+  {
+    GST_ELEMENT_ERROR (sink, CORE, NEGOTIATION, (NULL),
+        ("No input caps received."));
+    return GST_FLOW_NOT_NEGOTIATED;
+  }
+
 could_not_set_format:
   {
     GST_ELEMENT_ERROR (sink, LIBRARY, SETTINGS, (NULL),
         ("Error setting connection format: %s", shout_get_error (sink->conn)));
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 
 could_not_connect:
@@ -566,7 +568,7 @@ could_not_connect:
         ("shout_open() failed: err=%s", shout_get_error (sink->conn)));
     g_signal_emit (sink, gst_shout2send_signals[SIGNAL_CONNECTION_PROBLEM], 0,
         shout_get_errno (sink->conn));
-    return FALSE;
+    return GST_FLOW_ERROR;
   }
 }
 
@@ -588,6 +590,7 @@ gst_shout2send_stop (GstBaseSink * basesink)
   }
 
   sink->connected = FALSE;
+  sink->format = -1;
 
   return TRUE;
 }
@@ -624,16 +627,18 @@ gst_shout2send_render (GstBaseSink * basesink, GstBuffer * buf)
   GstShout2send *sink;
   glong ret;
   gint delay;
-  GstFlowReturn fret;
+  GstFlowReturn fret = GST_FLOW_OK;
   GstMapInfo map;
 
   sink = GST_SHOUT2SEND (basesink);
 
-  /* presumably we connect here because we need to know the format before
-   * we can set up the connection, which we don't know yet in _start() */
+  /* we connect here because we need to know the format before we can set up
+   * the connection, which we don't know yet in _start(), and also because we
+   * don't want to block the application thread */
   if (!sink->connected) {
-    if (!gst_shout2send_connect (sink))
-      return GST_FLOW_ERROR;
+    fret = gst_shout2send_connect (sink);
+    if (fret != GST_FLOW_OK)
+      goto done;
   }
 
   delay = shout_delay (sink->conn);
@@ -645,7 +650,7 @@ gst_shout2send_render (GstBaseSink * basesink, GstBuffer * buf)
 
       fret = gst_base_sink_wait_preroll (basesink);
       if (fret != GST_FLOW_OK)
-        return fret;
+        goto done;
     }
   } else {
     GST_LOG_OBJECT (sink, "we're %d msec late", -delay);
@@ -658,7 +663,9 @@ gst_shout2send_render (GstBaseSink * basesink, GstBuffer * buf)
   if (ret != SHOUTERR_SUCCESS)
     goto send_error;
 
-  return GST_FLOW_OK;
+done:
+
+  return fret;
 
 /* ERRORS */
 send_error:
@@ -799,7 +806,7 @@ gst_shout2send_setcaps (GstBaseSink * basesink, GstCaps * caps)
   if (!strcmp (mimetype, "audio/mpeg")) {
     shout2send->format = SHOUT_FORMAT_MP3;
   } else if (g_str_has_suffix (mimetype, "/ogg")) {
-    shout2send->format = SHOUT_FORMAT_VORBIS;
+    shout2send->format = SHOUT_FORMAT_OGG;
 #ifdef SHOUT_FORMAT_WEBM
   } else if (g_str_has_suffix (mimetype, "/webm")) {
     shout2send->format = SHOUT_FORMAT_WEBM;
