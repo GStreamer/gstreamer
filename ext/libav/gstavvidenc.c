@@ -346,7 +346,6 @@ gst_ffmpegvidenc_set_format (GstVideoEncoder * encoder,
   ffmpegenc->context->coder_type = 0;
   ffmpegenc->context->context_model = 0;
   ffmpegenc->context->scenechange_threshold = 0;
-  ffmpegenc->context->inter_threshold = 0;
 
   /* and last but not least the pass; CBR, 2-pass, etc */
   ffmpegenc->context->flags |= ffmpegenc->pass;
@@ -542,34 +541,17 @@ gst_ffmpegvidenc_propose_allocation (GstVideoEncoder * encoder,
       query);
 }
 
-static void
-ffmpegenc_setup_working_buf (GstFFMpegVidEnc * ffmpegenc)
-{
-  guint wanted_size =
-      ffmpegenc->context->width * ffmpegenc->context->height * 6 +
-      FF_MIN_BUFFER_SIZE;
-
-  /* Above is the buffer size used by ffmpeg/ffmpeg.c */
-
-  if (ffmpegenc->working_buf == NULL ||
-      ffmpegenc->working_buf_size != wanted_size) {
-    if (ffmpegenc->working_buf)
-      g_free (ffmpegenc->working_buf);
-    ffmpegenc->working_buf_size = wanted_size;
-    ffmpegenc->working_buf = g_malloc (ffmpegenc->working_buf_size);
-  }
-  ffmpegenc->buffer_size = wanted_size;
-}
-
 static GstFlowReturn
 gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
     GstVideoCodecFrame * frame)
 {
   GstFFMpegVidEnc *ffmpegenc = (GstFFMpegVidEnc *) encoder;
   GstBuffer *outbuf;
-  gint ret_size = 0, c;
+  gint ret = 0, c;
   GstVideoInfo *info = &ffmpegenc->input_state->info;
   GstVideoFrame vframe;
+  AVPacket pkt;
+  int have_data = 0;
 
   if (GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame))
     ffmpegenc->picture->pict_type = AV_PICTURE_TYPE_I;
@@ -595,18 +577,20 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
       gst_ffmpeg_time_gst_to_ff (frame->pts /
       ffmpegenc->context->ticks_per_frame, ffmpegenc->context->time_base);
 
-  ffmpegenc_setup_working_buf (ffmpegenc);
+  have_data = 0;
+  memset (&pkt, 0, sizeof (pkt));
 
-  ret_size = avcodec_encode_video (ffmpegenc->context,
-      ffmpegenc->working_buf, ffmpegenc->working_buf_size, ffmpegenc->picture);
+  ret =
+      avcodec_encode_video2 (ffmpegenc->context, &pkt, ffmpegenc->picture,
+      &have_data);
 
   gst_video_frame_unmap (&vframe);
 
-  if (ret_size < 0)
+  if (ret < 0)
     goto encode_fail;
 
   /* Encoder needs more data */
-  if (!ret_size)
+  if (!have_data)
     return GST_FLOW_OK;
 
   /* save stats info if there is some as well as a stats file */
@@ -621,15 +605,10 @@ gst_ffmpegvidenc_handle_frame (GstVideoEncoder * encoder,
   /* Get oldest frame */
   frame = gst_video_encoder_get_oldest_frame (encoder);
 
-  /* Allocate output buffer */
-  if (gst_video_encoder_allocate_output_frame (encoder, frame,
-          ret_size) != GST_FLOW_OK) {
-    gst_video_codec_frame_unref (frame);
-    goto alloc_fail;
-  }
-
-  outbuf = frame->output_buffer;
-  gst_buffer_fill (outbuf, 0, ffmpegenc->working_buf, ret_size);
+  outbuf =
+      gst_buffer_new_wrapped_full (0, pkt.data, pkt.size, 0, pkt.size, pkt.data,
+      av_free);
+  frame->output_buffer = outbuf;
 
   /* buggy codec may not set coded_frame */
   if (ffmpegenc->context->coded_frame) {
@@ -655,16 +634,6 @@ encode_fail:
 #endif /* GST_DISABLE_GST_DEBUG */
     return GST_FLOW_OK;
   }
-alloc_fail:
-  {
-#ifndef GST_DISABLE_GST_DEBUG
-    GstFFMpegVidEncClass *oclass =
-        (GstFFMpegVidEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
-    GST_ERROR_OBJECT (ffmpegenc,
-        "avenc_%s: failed to allocate buffer", oclass->in_plugin->name);
-#endif /* GST_DISABLE_GST_DEBUG */
-    return GST_FLOW_ERROR;
-  }
 }
 
 static GstFlowReturn
@@ -673,7 +642,9 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
   GstVideoCodecFrame *frame;
   GstFlowReturn flow_ret = GST_FLOW_OK;
   GstBuffer *outbuf;
-  gint ret_size;
+  gint ret;
+  AVPacket pkt;
+  int have_data = 0;
 
   GST_DEBUG_OBJECT (ffmpegenc, "flushing buffers with sending %d", send);
 
@@ -683,13 +654,12 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
 
   while ((frame =
           gst_video_encoder_get_oldest_frame (GST_VIDEO_ENCODER (ffmpegenc)))) {
+    memset (&pkt, 0, sizeof (pkt));
+    have_data = 0;
 
-    ffmpegenc_setup_working_buf (ffmpegenc);
+    ret = avcodec_encode_video2 (ffmpegenc->context, &pkt, NULL, &have_data);
 
-    ret_size = avcodec_encode_video (ffmpegenc->context,
-        ffmpegenc->working_buf, ffmpegenc->working_buf_size, NULL);
-
-    if (ret_size < 0) {         /* there should be something, notify and give up */
+    if (ret < 0) {              /* there should be something, notify and give up */
 #ifndef GST_DISABLE_GST_DEBUG
       GstFFMpegVidEncClass *oclass =
           (GstFFMpegVidEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
@@ -707,20 +677,10 @@ gst_ffmpegvidenc_flush_buffers (GstFFMpegVidEnc * ffmpegenc, gboolean send)
             (("Could not write to file \"%s\"."), ffmpegenc->filename),
             GST_ERROR_SYSTEM);
 
-    if (send) {
-      if (gst_video_encoder_allocate_output_frame (GST_VIDEO_ENCODER
-              (ffmpegenc), frame, ret_size) != GST_FLOW_OK) {
-#ifndef GST_DISABLE_GST_DEBUG
-        GstFFMpegVidEncClass *oclass =
-            (GstFFMpegVidEncClass *) (G_OBJECT_GET_CLASS (ffmpegenc));
-        GST_WARNING_OBJECT (ffmpegenc,
-            "avenc_%s: failed to allocate buffer", oclass->in_plugin->name);
-#endif /* GST_DISABLE_GST_DEBUG */
-        gst_video_codec_frame_unref (frame);
-        break;
-      }
-      outbuf = frame->output_buffer;
-      gst_buffer_fill (outbuf, 0, ffmpegenc->working_buf, ret_size);
+    if (send && have_data) {
+      outbuf = gst_buffer_new_wrapped_full (0, pkt.data, pkt.size, 0, pkt.size,
+          pkt.data, av_free);
+      frame->output_buffer = outbuf;
 
       if (ffmpegenc->context->coded_frame->key_frame)
         GST_VIDEO_CODEC_FRAME_SET_SYNC_POINT (frame);
@@ -854,10 +814,6 @@ gst_ffmpegvidenc_stop (GstVideoEncoder * encoder)
   if (ffmpegenc->file) {
     fclose (ffmpegenc->file);
     ffmpegenc->file = NULL;
-  }
-  if (ffmpegenc->working_buf) {
-    g_free (ffmpegenc->working_buf);
-    ffmpegenc->working_buf = NULL;
   }
   if (ffmpegenc->input_state) {
     gst_video_codec_state_unref (ffmpegenc->input_state);
