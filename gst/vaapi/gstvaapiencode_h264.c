@@ -37,6 +37,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_vaapi_h264_encode_debug);
 
 #define GST_CAPS_CODEC(CODEC) CODEC "; "
 
+/* *INDENT-OFF* */
 static const char gst_vaapiencode_h264_sink_caps_str[] =
 #if GST_CHECK_VERSION(1,1,0)
   GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE,
@@ -53,24 +54,31 @@ static const char gst_vaapiencode_h264_sink_caps_str[] =
   "height = (int) [ 1, MAX ], "
 #endif
   GST_CAPS_INTERLACED_FALSE;
+/* *INDENT-ON* */
 
+/* *INDENT-OFF* */
 static const char gst_vaapiencode_h264_src_caps_str[] =
   GST_CAPS_CODEC ("video/x-h264");
+/* *INDENT-ON* */
 
+/* *INDENT-OFF* */
 static GstStaticPadTemplate gst_vaapiencode_h264_sink_factory =
   GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (gst_vaapiencode_h264_sink_caps_str));
+      GST_PAD_SINK,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (gst_vaapiencode_h264_sink_caps_str));
+/* *INDENT-ON* */
 
+/* *INDENT-OFF* */
 static GstStaticPadTemplate gst_vaapiencode_h264_src_factory =
   GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (gst_vaapiencode_h264_src_caps_str));
+      GST_PAD_SRC,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (gst_vaapiencode_h264_src_caps_str));
+/* *INDENT-ON* */
 
 /* h264 encode */
-G_DEFINE_TYPE (GstVaapiEncodeH264, gst_vaapiencode_h264, GST_TYPE_VAAPIENCODE)
+G_DEFINE_TYPE (GstVaapiEncodeH264, gst_vaapiencode_h264, GST_TYPE_VAAPIENCODE);
 
 enum
 {
@@ -323,13 +331,11 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
 
   /* sink pad */
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vaapiencode_h264_sink_factory)
-      );
+      gst_static_pad_template_get (&gst_vaapiencode_h264_sink_factory));
 
   /* src pad */
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vaapiencode_h264_src_factory)
-      );
+      gst_static_pad_template_get (&gst_vaapiencode_h264_src_factory));
 
   g_object_class_install_property (object_class,
       PROP_KEY_PERIOD,
@@ -344,8 +350,7 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
       g_param_spec_uint ("max-bframes",
           "Max B-Frames",
           "Number of B-frames between I and P",
-          0, 10, 0,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          0, 10, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class,
       PROP_INIT_QP,
@@ -368,6 +373,5 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
       g_param_spec_uint ("num-slices",
           "Number of Slices",
           "Number of slices per frame",
-          1, 200, 1,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+          1, 200, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 }

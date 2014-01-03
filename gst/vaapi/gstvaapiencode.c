@@ -43,7 +43,7 @@ GST_DEBUG_CATEGORY_STATIC (gst_vaapiencode_debug);
 
 G_DEFINE_TYPE_WITH_CODE (GstVaapiEncode,
     gst_vaapiencode, GST_TYPE_VIDEO_ENCODER,
-    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES)
+    GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES);
 
 enum
 {
@@ -479,7 +479,7 @@ gst_vaapiencode_handle_frame (GstVideoEncoder * venc,
 
   gst_video_codec_frame_set_user_data (frame,
       gst_vaapi_surface_proxy_ref (proxy),
-      (GDestroyNotify)gst_vaapi_surface_proxy_unref);
+      (GDestroyNotify) gst_vaapi_surface_proxy_unref);
 
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
   status = gst_vaapi_encoder_put_frame (encode->encoder, frame);

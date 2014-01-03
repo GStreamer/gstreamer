@@ -37,9 +37,10 @@ GST_DEBUG_CATEGORY_STATIC (gst_vaapi_mpeg2_encode_debug);
 
 #define GST_CAPS_CODEC(CODEC) CODEC "; "
 
+/* *INDENT-OFF* */
 static const char gst_vaapiencode_mpeg2_sink_caps_str[] =
 #if GST_CHECK_VERSION(1,1,0)
-  GST_VIDEO_CAPS_MAKE_WITH_FEATURES(GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE,
+  GST_VIDEO_CAPS_MAKE_WITH_FEATURES (GST_CAPS_FEATURE_MEMORY_VAAPI_SURFACE,
       "{ ENCODED, NV12, I420, YV12 }") ", "
 #else
   GST_VAAPI_SURFACE_CAPS ", "
@@ -53,25 +54,33 @@ static const char gst_vaapiencode_mpeg2_sink_caps_str[] =
   "height = (int) [ 1, MAX ], "
 #endif
   GST_CAPS_INTERLACED_FALSE;
+/* *INDENT-ON* */
 
+/* *INDENT-OFF* */
 static const char gst_vaapiencode_mpeg2_src_caps_str[] =
-  GST_CAPS_CODEC ("video/mpeg,"
-    "mpegversion = (int) 2, " "systemstream = (boolean) false");
+  GST_CAPS_CODEC ("video/mpeg, mpegversion = (int) 2, "
+      "systemstream = (boolean) false");
+/* *INDENT-ON* */
 
+/* *INDENT-OFF* */
 static GstStaticPadTemplate gst_vaapiencode_mpeg2_sink_factory =
   GST_STATIC_PAD_TEMPLATE ("sink",
-    GST_PAD_SINK,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (gst_vaapiencode_mpeg2_sink_caps_str));
+      GST_PAD_SINK,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (gst_vaapiencode_mpeg2_sink_caps_str));
+/* *INDENT-ON* */
 
+/* *INDENT-OFF* */
 static GstStaticPadTemplate gst_vaapiencode_mpeg2_src_factory =
   GST_STATIC_PAD_TEMPLATE ("src",
-    GST_PAD_SRC,
-    GST_PAD_ALWAYS,
-    GST_STATIC_CAPS (gst_vaapiencode_mpeg2_src_caps_str));
+      GST_PAD_SRC,
+      GST_PAD_ALWAYS,
+      GST_STATIC_CAPS (gst_vaapiencode_mpeg2_src_caps_str));
+/* *INDENT-ON* */
 
 /* mpeg2 encode */
-G_DEFINE_TYPE (GstVaapiEncodeMpeg2, gst_vaapiencode_mpeg2, GST_TYPE_VAAPIENCODE)
+G_DEFINE_TYPE (GstVaapiEncodeMpeg2, gst_vaapiencode_mpeg2,
+    GST_TYPE_VAAPIENCODE);
 
 enum
 {
@@ -199,13 +208,11 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
 
   /* sink pad */
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vaapiencode_mpeg2_sink_factory)
-      );
+      gst_static_pad_template_get (&gst_vaapiencode_mpeg2_sink_factory));
 
   /* src pad */
   gst_element_class_add_pad_template (element_class,
-      gst_static_pad_template_get (&gst_vaapiencode_mpeg2_src_factory)
-      );
+      gst_static_pad_template_get (&gst_vaapiencode_mpeg2_src_factory));
 
   g_object_class_install_property (object_class,
       PROP_QUANTIZER,
