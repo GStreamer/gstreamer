@@ -274,10 +274,12 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
     mode = finfo->pixel_stride[GST_VIDEO_COMP_TILEINFO];
 
     sx_tiles = sinfo->stride[plane] >> ws;
-    sy_tiles = sinfo->stride[tidx];
+    sy_tiles = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, plane,
+        sinfo->stride[tidx]);
 
     dx_tiles = dinfo->stride[plane] >> ws;
-    dy_tiles = dinfo->stride[tidx];
+    dy_tiles = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, plane,
+        dinfo->stride[tidx]);
 
     /* this is the amount of tiles to copy */
     w = ((w - 1) >> ws) + 1;
