@@ -181,7 +181,9 @@ static GstStaticPadTemplate audiosink_templ =
         "audio/x-adpcm, "
         "layout = (string)dvi, "
         "block_align = (int)[64, 8192], "
-        "channels = (int) { 1, 2 }, " "rate = (int) [ 8000, 96000 ]; ")
+        "channels = (int) { 1, 2 }, " "rate = (int) [ 8000, 96000 ]; "
+        "audio/x-adpcm, "
+        "layout = (string)g726, " "channels = (int)1," "rate = (int)8000; ")
     );
 
 static GstStaticPadTemplate subtitlesink_templ =
@@ -1941,11 +1943,24 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
       block_align = channels;
       bitrate = block_align * samplerate;
     } else if (!strcmp (mimetype, "audio/x-adpcm")) {
+      const char *layout;
+      layout = gst_structure_get_string (structure, "layout");
       if (!gst_structure_get_int (structure, "block_align", &block_align)) {
         GST_WARNING_OBJECT (mux, "Missing block_align on adpcm caps");
         goto refuse_caps;
       }
-      format = GST_RIFF_WAVE_FORMAT_DVI_ADPCM;
+      if (!strcmp (layout, "dvi")) {
+        format = GST_RIFF_WAVE_FORMAT_DVI_ADPCM;
+      } else if (!strcmp (layout, "g726")) {
+        format = GST_RIFF_WAVE_FORMAT_ITU_G726_ADPCM;
+        if (!gst_structure_get_int (structure, "bitrate", &bitrate)) {
+          GST_WARNING_OBJECT (mux, "Missing bitrate on adpcm g726 caps");
+          goto refuse_caps;
+        }
+      } else {
+        GST_WARNING_OBJECT (mux, "Unknown layout on adpcm caps");
+        goto refuse_caps;
+      }
 
     }
     g_assert (format != 0);
