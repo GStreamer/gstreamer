@@ -171,15 +171,17 @@ gst_ffmpeg_idct_algo_get_type (void)
       {FF_IDCT_INT, "JPEG reference Integer", "int"},
       {FF_IDCT_SIMPLE, "Simple", "simple"},
       {FF_IDCT_SIMPLEMMX, "Simple MMX", "simplemmx"},
-      {FF_IDCT_LIBMPEG2MMX, "LIBMPEG2MMX", "libmpeg2mmx"},
       {FF_IDCT_ARM, "ARM", "arm"},
-      {FF_IDCT_ALTIVEC, "ALTIVEC", "altivec"},
+      {FF_IDCT_ALTIVEC, "Altivec", "altivec"},
       {FF_IDCT_SH4, "SH4", "sh4"},
-      {FF_IDCT_SIMPLEARM, "SIMPLEARM", "simplearm"},
-      {FF_IDCT_H264, "H264", "h264"},
-      {FF_IDCT_VP3, "VP3", "vp3"},
+      {FF_IDCT_SIMPLEARM, "Simple ARM", "simplearm"},
       {FF_IDCT_IPP, "IPP", "ipp"},
-      {FF_IDCT_XVIDMMX, "XVIDMMX", "xvidmmx"},
+      {FF_IDCT_XVIDMMX, "XVID MMX", "xvidmmx"},
+      {FF_IDCT_SIMPLEARMV5TE, "Simple ARMV5TE", "simplearmv5te"},
+      {FF_IDCT_SIMPLEARMV6, "Simple ARMV6", "simplearmv6"},
+      {FF_IDCT_SIMPLEVIS, "Simple Vis", "simplevis"},
+      {FF_IDCT_FAAN, "FAAN", "faan"},
+      {FF_IDCT_SIMPLENEON, "Simple NEON", "simpleneon"},
       {0, NULL, NULL},
     };
 
@@ -258,6 +260,7 @@ gst_ffmpeg_flags_get_type (void)
 {
   static GType ffmpeg_flags_type = 0;
 
+  /* FIXME: This needs some serious resyncing with avcodec.h */
   if (!ffmpeg_flags_type) {
     static const GFlagsValue ffmpeg_flags[] = {
       {CODEC_FLAG_QSCALE, "Use fixed qscale", "qscale"},
@@ -274,9 +277,6 @@ gst_ffmpeg_flags_get_type (void)
           "global-headers"},
       {CODEC_FLAG_AC_PRED, "H263 Advanced Intra Coding / MPEG4 AC prediction",
           "aic"},
-      {CODEC_FLAG_CBP_RD, "Rate Distoration Optimization for CBP", "cbp-rd"},
-      {CODEC_FLAG_QP_RD, "Rate Distoration Optimization for QP selection",
-          "qp-rd"},
       {CODEC_FLAG_CLOSED_GOP, "Closed GOP", "closedgop"},
       {0, NULL, NULL},
     };
@@ -564,18 +564,6 @@ gst_ffmpeg_cfg_init (void)
       -100, G_MAXINT, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
   gst_ffmpeg_add_pspec (pspec, max_key_interval, FALSE, mpeg, NULL);
 
-  pspec = g_param_spec_int ("luma-elim-threshold",
-      "Luma Elimination Threshold",
-      "Luma Single Coefficient Elimination Threshold",
-      -99, 99, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  gst_ffmpeg_add_pspec (pspec, config.luma_elim_threshold, FALSE, mpeg, NULL);
-
-  pspec = g_param_spec_int ("chroma-elim-threshold",
-      "Chroma Elimination Threshold",
-      "Chroma Single Coefficient Elimination Threshold",
-      -99, 99, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
-  gst_ffmpeg_add_pspec (pspec, config.chroma_elim_threshold, FALSE, mpeg, NULL);
-
   pspec = g_param_spec_float ("lumi-masking", "Luminance Masking",
       "Luminance Masking", -1.0f, 1.0f, 0.0f,
       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
@@ -697,7 +685,7 @@ gst_ffmpeg_cfg_init (void)
 
 /* return TRUE if property described by pspec applies to the codec with codec_id */
 static gboolean
-gst_ffmpeg_cfg_codec_has_pspec (enum CodecID codec_id, GParamSpec * pspec)
+gst_ffmpeg_cfg_codec_has_pspec (enum AVCodecID codec_id, GParamSpec * pspec)
 {
   GParamSpecData *qdata;
   gint *codec;
