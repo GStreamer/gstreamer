@@ -1307,7 +1307,7 @@ gst_rtp_base_payload_change_state (GstElement * element,
       gst_event_replace (&rtpbasepayload->priv->pending_segment, NULL);
 
       if (priv->seqnum_offset_random)
-        rtpbasepayload->seqnum_base = g_random_int_range (0, G_MAXUINT16);
+        rtpbasepayload->seqnum_base = g_random_int_range (0, G_MAXINT16);
       else
         rtpbasepayload->seqnum_base = rtpbasepayload->seqnum_offset;
       priv->next_seqnum = rtpbasepayload->seqnum_base;
