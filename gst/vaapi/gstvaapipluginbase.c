@@ -150,7 +150,6 @@ gst_vaapi_plugin_base_finalize (GstVaapiPluginBase * plugin)
     gst_object_unref (plugin->sinkpad);
   if (plugin->srcpad)
     gst_object_unref (plugin->srcpad);
-  gst_debug_category_free (plugin->debug_category);
 }
 
 /**
