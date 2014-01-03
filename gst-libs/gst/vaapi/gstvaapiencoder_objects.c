@@ -304,7 +304,7 @@ gboolean
 gst_vaapi_enc_picture_create (GstVaapiEncPicture * picture,
     const GstVaapiCodecObjectConstructorArgs * args)
 {
-  GstVideoCodecFrame *const frame = (GstVideoCodecFrame *)args->data;
+  GstVideoCodecFrame *const frame = (GstVideoCodecFrame *) args->data;
   gboolean success;
 
   g_return_val_if_fail (frame != NULL, FALSE);

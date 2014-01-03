@@ -75,7 +75,7 @@ typedef struct _GstVaapiEncoderClass GstVaapiEncoderClass;
 
 struct _GstVaapiEncoder
 {
-  /*< private > */
+  /*< private >*/
   GstVaapiMiniObject parent_instance;
 
   GstVaapiDisplay *display;
@@ -98,6 +98,7 @@ struct _GstVaapiEncoder
 
 struct _GstVaapiEncoderClass
 {
+  /*< private >*/
   GstVaapiMiniObjectClass parent_class;
 
   gboolean              (*init)         (GstVaapiEncoder * encoder);

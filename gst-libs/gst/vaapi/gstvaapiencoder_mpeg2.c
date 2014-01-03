@@ -50,7 +50,7 @@ gst_bit_writer_write_pps (GstBitWriter * bitwriter,
 static void clear_references (GstVaapiEncoderMpeg2 * encoder);
 
 static void push_reference (GstVaapiEncoderMpeg2 * encoder,
-    GstVaapiSurfaceProxy * ref;);
+    GstVaapiSurfaceProxy * ref);
 
 static struct
 {
@@ -58,6 +58,7 @@ static struct
   int line_per_frame;
   int frame_per_sec;
 } mpeg2_upper_samplings[2][3] = {
+  /* *INDENT-OFF* */
   { { 0, 0, 0},
     { 720, 576, 30 },
     { 0, 0, 0 },
@@ -66,6 +67,7 @@ static struct
     { 720, 576, 30 },
     { 1920, 1152, 60 },
   }
+  /* *INDENT-ON* */
 };
 
 static gboolean
@@ -73,6 +75,7 @@ ensure_sampling_desity (GstVaapiEncoderMpeg2 * encoder)
 {
   guint p, l;
   float fps;
+
   p = encoder->profile;
   l = encoder->level;
   fps = GST_VAAPI_ENCODER_FPS_N (encoder) / GST_VAAPI_ENCODER_FPS_D (encoder);
@@ -132,6 +135,7 @@ static unsigned char
 make_profile_and_level_indication (guint32 profile, guint32 level)
 {
   guint32 p = 4, l = 8;
+
   switch (profile) {
     case GST_ENCODER_MPEG2_PROFILE_SIMPLE:
       p = 5;
@@ -256,7 +260,6 @@ fill_picture (GstVaapiEncoderMpeg2 * encoder,
     pic->f_code[1][1] = 0xf;
     pic->forward_reference_picture = VA_INVALID_SURFACE;
     pic->backward_reference_picture = VA_INVALID_SURFACE;
-
   } else if (pic->picture_type == VAEncPictureTypePredictive) {
     pic->f_code[0][0] = f_code_x;
     pic->f_code[0][1] = f_code_y;
@@ -390,7 +393,7 @@ ensure_picture (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncPicture * picture,
     GstVaapiCodedBufferProxy * codedbuf_proxy, GstVaapiSurfaceProxy * surface)
 {
   GstVaapiCodedBuffer *const codedbuf =
-    GST_VAAPI_CODED_BUFFER_PROXY_BUFFER (codedbuf_proxy);
+      GST_VAAPI_CODED_BUFFER_PROXY_BUFFER (codedbuf_proxy);
 
   if (!fill_picture (encoder, picture, codedbuf, surface))
     return FALSE;
@@ -596,7 +599,6 @@ gst_vaapi_encoder_mpeg2_reordering (GstVaapiEncoder * base,
       picture->type = GST_VAAPI_PICTURE_TYPE_B;
       status = GST_VAAPI_ENCODER_STATUS_NO_SURFACE;
     }
-
   }
   picture->frame_num = encoder->frame_num++;
 
@@ -614,6 +616,7 @@ static GstVaapiProfile
 to_vaapi_profile (guint32 profile)
 {
   GstVaapiProfile p;
+
   switch (profile) {
     case GST_ENCODER_MPEG2_PROFILE_SIMPLE:
       p = GST_VAAPI_PROFILE_MPEG2_SIMPLE;
@@ -634,7 +637,8 @@ gst_vaapi_encoder_mpeg2_set_context_info (GstVaapiEncoder * base_encoder)
   GstVaapiContextInfo *const cip = &base_encoder->context_info;
 
   /* Maximum sizes for common headers (in bytes) */
-  enum {
+  enum
+  {
     MAX_SEQ_HDR_SIZE = 140,
     MAX_SEQ_EXT_SIZE = 10,
     MAX_GOP_SIZE = 8,
@@ -709,7 +713,6 @@ gst_vaapi_encoder_mpeg2_set_format (GstVaapiEncoder * base,
 error:
   gst_caps_unref (result);
   return NULL;
-
 }
 
 static gboolean
@@ -776,7 +779,7 @@ gst_vaapi_encoder_mpeg2_finalize (GstVaapiEncoder * base)
 }
 
 static inline const GstVaapiEncoderClass *
-gst_vaapi_encoder_mpeg2_class ()
+gst_vaapi_encoder_mpeg2_class (void)
 {
   static const GstVaapiEncoderClass GstVaapiEncoderMpeg2Class = {
     GST_VAAPI_ENCODER_CLASS_INIT (Mpeg2, mpeg2),
@@ -795,6 +798,7 @@ static struct
   int code;
   float value;
 } frame_rate_tab[] = {
+  /* *INDENT-OFF* */
   { 1, 23.976 },
   { 2, 24.0   },
   { 3, 25.0   },
@@ -803,6 +807,7 @@ static struct
   { 6, 50     },
   { 7, 59.94  },
   { 8, 60     }
+  /* *INDENT-ON* */
 };
 
 static int
@@ -886,7 +891,6 @@ static gboolean
 gst_bit_writer_write_pps (GstBitWriter * bitwriter,
     VAEncPictureParameterBufferMPEG2 * pic)
 {
-
   gst_bit_writer_put_bits_uint32 (bitwriter, START_CODE_PICUTRE, 32);
   gst_bit_writer_put_bits_uint32 (bitwriter, pic->temporal_reference, 10);
   gst_bit_writer_put_bits_uint32 (bitwriter,

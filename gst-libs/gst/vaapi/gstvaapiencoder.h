@@ -36,7 +36,8 @@ typedef struct _GstVaapiEncoder GstVaapiEncoder;
  * GstVaapiEncoderStatus:
  * @GST_VAAPI_ENCODER_STATUS_SUCCESS: Success.
  * @GST_VAAPI_ENCODER_STATUS_ERROR_NO_SURFACE: No surface left to encode.
- * @GST_VAAPI_ENCODER_STATUS_ERROR_NO_BUFFER: No coded buffer left to hold the encoded picture.
+ * @GST_VAAPI_ENCODER_STATUS_ERROR_NO_BUFFER: No coded buffer left to
+ *   hold the encoded picture.
  * @GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN: Unknown error.
  * @GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED: No memory left.
  * @GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER: Invalid parameter.
@@ -74,7 +75,8 @@ GstVaapiEncoderStatus
 gst_vaapi_encoder_get_codec_data (GstVaapiEncoder * encoder,
     GstBuffer ** out_codec_data_ptr);
 
-GstCaps *gst_vaapi_encoder_set_format (GstVaapiEncoder * encoder,
+GstCaps *
+gst_vaapi_encoder_set_format (GstVaapiEncoder * encoder,
     GstVideoCodecState * state, GstCaps * ref_caps);
 
 GstVaapiEncoderStatus

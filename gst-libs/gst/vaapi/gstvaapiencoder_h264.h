@@ -38,4 +38,5 @@ gboolean
 gst_vaapi_encoder_h264_is_avc (GstVaapiEncoderH264 * encoder);
 
 G_END_DECLS
+
 #endif /*GST_VAAPI_ENCODER_H264_H */

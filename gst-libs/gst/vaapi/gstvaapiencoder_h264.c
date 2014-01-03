@@ -331,7 +331,6 @@ _set_key_frame (GstVaapiEncPicture * picture,
     _set_idr_frame (picture, encoder);
   } else
     _set_i_frame (picture, encoder);
-
 }
 
 gboolean
@@ -1153,7 +1152,7 @@ ensure_picture (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture,
     GstVaapiCodedBufferProxy * codedbuf_proxy, GstVaapiSurfaceProxy * surface)
 {
   GstVaapiCodedBuffer *const codedbuf =
-    GST_VAAPI_CODED_BUFFER_PROXY_BUFFER (codedbuf_proxy);
+      GST_VAAPI_CODED_BUFFER_PROXY_BUFFER (codedbuf_proxy);
 
   if (!fill_va_picture_param (encoder, picture, codedbuf, surface))
     return FALSE;
@@ -1593,7 +1592,8 @@ gst_vaapi_encoder_h264_set_context_info (GstVaapiEncoder * base_encoder)
   const guint DEFAULT_SURFACES_COUNT = 3;
 
   /* Maximum sizes for common headers (in bits) */
-  enum {
+  enum
+  {
     MAX_SPS_HDR_SIZE = 16473,
     MAX_VUI_PARAMS_SIZE = 210,
     MAX_HRD_PARAMS_SIZE = 4103,
@@ -1757,7 +1757,7 @@ gst_vaapi_encoder_h264_finalize (GstVaapiEncoder * base)
 }
 
 static inline const GstVaapiEncoderClass *
-gst_vaapi_encoder_h264_class ()
+gst_vaapi_encoder_h264_class (void)
 {
   static const GstVaapiEncoderClass GstVaapiEncoderH264Class = {
     GST_VAAPI_ENCODER_CLASS_INIT (H264, h264),

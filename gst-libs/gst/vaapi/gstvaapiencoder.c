@@ -86,7 +86,7 @@ static GstVaapiCodedBufferProxy *
 gst_vaapi_encoder_create_coded_buffer (GstVaapiEncoder * encoder)
 {
   GstVaapiCodedBufferPool *const pool =
-    GST_VAAPI_CODED_BUFFER_POOL (encoder->codedbuf_pool);
+      GST_VAAPI_CODED_BUFFER_POOL (encoder->codedbuf_pool);
   GstVaapiCodedBufferProxy *codedbuf_proxy;
 
   g_mutex_lock (&encoder->mutex);
@@ -104,7 +104,7 @@ gst_vaapi_encoder_create_coded_buffer (GstVaapiEncoder * encoder)
     return NULL;
 
   gst_vaapi_coded_buffer_proxy_set_destroy_notify (codedbuf_proxy,
-      (GDestroyNotify)_coded_buffer_proxy_released_notify, encoder);
+      (GDestroyNotify) _coded_buffer_proxy_released_notify, encoder);
   return codedbuf_proxy;
 }
 

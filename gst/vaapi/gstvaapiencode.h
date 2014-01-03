@@ -59,7 +59,6 @@ struct _GstVaapiEncode
   GstPadQueryFunction srcpad_query;
 
   GstVaapiEncoder *encoder;
-
   GstVaapiRateControl rate_control;
   guint32 bitrate;              /* kbps */
 

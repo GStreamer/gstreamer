@@ -104,7 +104,6 @@ struct _GstVaapiEncoderH264
 
   GstBuffer *sps_data;
   GstBuffer *pps_data;
-
 };
 
 G_END_DECLS
