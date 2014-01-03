@@ -740,6 +740,9 @@ gst_multi_queue_change_state (GstElement * element, GstStateChange transition)
         sq = (GstSingleQueue *) tmp->data;
         sq->flushing = TRUE;
         g_cond_signal (&sq->turn);
+
+        sq->last_query = FALSE;
+        g_cond_signal (&sq->query_handled);
       }
       GST_MULTI_QUEUE_MUTEX_UNLOCK (mqueue);
       break;
