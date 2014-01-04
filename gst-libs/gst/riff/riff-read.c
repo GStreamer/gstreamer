@@ -882,7 +882,7 @@ gst_riff_parse_ncdt (GstElement * element,
 
     /* find out the type of metadata */
     switch (tag) {
-      case GST_RIFF_LIST_nctg:{
+      case GST_RIFF_LIST_nctg:
         while (tsize > 4) {
           guint16 sub_tag = GST_READ_UINT16_LE (ptr);
           guint16 sub_size = GST_READ_UINT16_LE (ptr + 2);
@@ -933,26 +933,26 @@ gst_riff_parse_ncdt (GstElement * element,
             "Unknown ncdt (metadata) tag entry %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (tag));
         break;
-      }
-
-        if (tsize & 1) {
-          tsize++;
-          if (tsize > left)
-            tsize = left;
-        }
-
-        ptr += tsize;
-        left -= tsize;
     }
 
-    if (!gst_tag_list_is_empty (taglist)) {
-      GST_INFO_OBJECT (element, "extracted tags: %" GST_PTR_FORMAT, taglist);
-      *_taglist = taglist;
-    } else {
-      *_taglist = NULL;
-      gst_tag_list_unref (taglist);
+    if (tsize & 1) {
+      tsize++;
+      if (tsize > left)
+        tsize = left;
     }
-    gst_buffer_unmap (buf, &info);
 
-    return;
+    ptr += tsize;
+    left -= tsize;
   }
+
+  if (!gst_tag_list_is_empty (taglist)) {
+    GST_INFO_OBJECT (element, "extracted tags: %" GST_PTR_FORMAT, taglist);
+    *_taglist = taglist;
+  } else {
+    *_taglist = NULL;
+    gst_tag_list_unref (taglist);
+  }
+  gst_buffer_unmap (buf, &info);
+
+  return;
+}
