@@ -71,6 +71,7 @@ G_BEGIN_DECLS
 #define GST_RIFF_LIST_INFO GST_MAKE_FOURCC ('I','N','F','O')
 #define GST_RIFF_LIST_AVIX GST_MAKE_FOURCC ('A','V','I','X')
 #define GST_RIFF_LIST_adtl GST_MAKE_FOURCC ('a','d','t','l')
+#define GST_RIFF_LIST_ncdt GST_MAKE_FOURCC ('n','c','d','t')
 
 /* fcc types */
 #define GST_RIFF_FCC_vids GST_MAKE_FOURCC ('v','i','d','s')
@@ -111,6 +112,9 @@ G_BEGIN_DECLS
 
 #define GST_RIFF_INFO_IAAR GST_MAKE_FOURCC ('I','A','A','R') /* album artist */
 #define GST_RIFF_INFO_ITRK GST_MAKE_FOURCC ('I','T','R','K') /* track number */
+
+/* ncdt types - see http://www.sno.phy.queensu.ca/~phil/exiftool/TagNames/Nikon.html#NCDT */
+#define GST_RIFF_LIST_nctg GST_MAKE_FOURCC ('n','c','t','g')
 
 /*********Chunk Names***************/
 #define GST_RIFF_FF00 GST_MAKE_FOURCC (0xFF,0xFF,0x00,0x00)
