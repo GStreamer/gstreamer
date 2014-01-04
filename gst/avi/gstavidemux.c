@@ -3795,6 +3795,22 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
             gst_buffer_unref (sub);
             sub = NULL;
             break;
+          case GST_RIFF_LIST_ncdt:
+            gst_buffer_unmap (sub, &map);
+            gst_buffer_resize (sub, 4, -1);
+            gst_riff_parse_ncdt (element, sub, &tags);
+            if (tags) {
+              if (avi->globaltags) {
+                gst_tag_list_insert (avi->globaltags, tags,
+                    GST_TAG_MERGE_REPLACE);
+              } else {
+                avi->globaltags = tags;
+              }
+            }
+            tags = NULL;
+            gst_buffer_unref (sub);
+            sub = NULL;
+            break;
           default:
             GST_WARNING_OBJECT (avi,
                 "Unknown list %" GST_FOURCC_FORMAT " in AVI header",
@@ -3896,6 +3912,40 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
 
             sub = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, 4, -1);
             gst_riff_parse_info (element, sub, &tags);
+            if (tags) {
+              if (avi->globaltags) {
+                gst_tag_list_insert (avi->globaltags, tags,
+                    GST_TAG_MERGE_REPLACE);
+              } else {
+                avi->globaltags = tags;
+              }
+            }
+            tags = NULL;
+            if (sub) {
+              gst_buffer_unref (sub);
+              sub = NULL;
+            }
+            gst_buffer_unref (buf);
+            /* gst_riff_read_chunk() has already advanced avi->offset */
+            break;
+          case GST_RIFF_LIST_ncdt:
+            res =
+                gst_riff_read_chunk (element, avi->sinkpad, &avi->offset, &tag,
+                &buf);
+            if (res != GST_FLOW_OK) {
+              GST_DEBUG_OBJECT (avi, "couldn't read ncdt chunk");
+              goto pull_range_failed;
+            }
+            GST_DEBUG ("got size %" G_GSIZE_FORMAT, gst_buffer_get_size (buf));
+            if (size < 4) {
+              GST_DEBUG ("skipping ncdt LIST prefix");
+              avi->offset += (4 - GST_ROUND_UP_2 (size));
+              gst_buffer_unref (buf);
+              continue;
+            }
+
+            sub = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, 4, -1);
+            gst_riff_parse_ncdt (element, sub, &tags);
             if (tags) {
               if (avi->globaltags) {
                 gst_tag_list_insert (avi->globaltags, tags,
