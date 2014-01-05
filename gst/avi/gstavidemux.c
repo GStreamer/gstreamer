@@ -124,6 +124,7 @@ static void gst_avi_demux_get_buffer_info (GstAviDemux * avi,
     GstClockTime * ts_end, guint64 * offset, guint64 * offset_end);
 
 static void gst_avi_demux_parse_idit (GstAviDemux * avi, GstBuffer * buf);
+static void gst_avi_demux_parse_strd (GstAviDemux * avi, GstBuffer * buf);
 
 /* GObject methods */
 
@@ -2197,7 +2198,10 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
         if (stream->initdata)
           gst_buffer_unref (stream->initdata);
         stream->initdata = sub;
-        sub = NULL;
+        if (sub != NULL) {
+          gst_avi_demux_parse_strd (avi, sub);
+          sub = NULL;
+        }
         break;
       case GST_RIFF_TAG_strn:
         g_free (stream->name);
@@ -3719,6 +3723,63 @@ parse_tag_value (GstAviDemux * avi, GstTagList * taglist, const gchar * type,
   } else {
     GST_WARNING_OBJECT (avi, "could not extract %s tag", type);
   }
+}
+
+static void
+gst_avi_demux_parse_strd (GstAviDemux * avi, GstBuffer * buf)
+{
+  GstMapInfo map;
+  guint32 tag;
+
+  gst_buffer_map (buf, &map, GST_MAP_READ);
+  if (map.size > 4) {
+    guint8 *ptr = map.data;
+    gsize left = map.size;
+
+    /* parsing based on
+     * http://www.eden-foundation.org/products/code/film_date_stamp/index.html
+     */
+    tag = GST_READ_UINT32_LE (ptr);
+    if ((tag == GST_MAKE_FOURCC ('A', 'V', 'I', 'F')) && (map.size > 98)) {
+      gsize sub_size;
+
+      ptr += 98;
+      left -= 98;
+      if (!memcmp (ptr, "FUJIFILM", 8)) {
+        GST_MEMDUMP_OBJECT (avi, "fujifim tag", ptr, 48);
+
+        ptr += 10;
+        left -= 10;
+        sub_size = 0;
+        while (ptr[sub_size] && sub_size < left)
+          sub_size++;
+
+        if (avi->globaltags == NULL)
+          avi->globaltags = gst_tag_list_new_empty ();
+
+        gst_tag_list_add (avi->globaltags, GST_TAG_MERGE_APPEND,
+            GST_TAG_DEVICE_MANUFACTURER, "FUJIFILM",
+            GST_TAG_DEVICE_MODEL, ptr, NULL);
+
+        while (ptr[sub_size] == '\0' && sub_size < left)
+          sub_size++;
+
+        ptr += sub_size;
+        left -= sub_size;
+        sub_size = 0;
+        while (ptr[sub_size] && sub_size < left)
+          sub_size++;
+        if (ptr[4] == ':')
+          ptr[4] = '-';
+        if (ptr[7] == ':')
+          ptr[7] = '-';
+
+        parse_tag_value (avi, avi->globaltags, GST_TAG_DATE_TIME, ptr,
+            sub_size);
+      }
+    }
+  }
+  gst_buffer_unmap (buf, &map);
 }
 
 /*
