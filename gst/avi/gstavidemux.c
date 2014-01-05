@@ -4109,7 +4109,7 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
             }
 
             sub = gst_buffer_copy_region (buf, GST_BUFFER_COPY_ALL, 4, -1);
-            gst_riff_parse_ncdt (element, sub, &tags);
+            gst_avi_demux_parse_ncdt (avi, sub, &tags);
             if (tags) {
               if (avi->globaltags) {
                 gst_tag_list_insert (avi->globaltags, tags,
