@@ -3263,8 +3263,8 @@ gst_matroska_mux_write_data (GstMatroskaMux * mux, GstMatroskaPad * collect_pad,
   }
 
   timestamp = gst_segment_to_running_time (&collect_pad->collect.segment,
-      GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf))
-      if (!GST_CLOCK_TIME_IS_VALID (timestamp)) {
+      GST_FORMAT_TIME, GST_BUFFER_TIMESTAMP (buf));
+  if (!GST_CLOCK_TIME_IS_VALID (timestamp)) {
     GST_WARNING_OBJECT (collect_pad->collect.pad,
         "Invalid buffer running time; dropping buffer");
     gst_buffer_unref (buf);
