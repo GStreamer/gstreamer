@@ -2213,6 +2213,11 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
           gst_buffer_unmap (sub, &map);
           gst_buffer_unref (sub);
           sub = NULL;
+
+          if (avi->globaltags == NULL)
+            avi->globaltags = gst_tag_list_new_empty ();
+          gst_tag_list_add (avi->globaltags, GST_TAG_MERGE_REPLACE,
+              GST_TAG_TITLE, stream->name, NULL);
         } else {
           stream->name = g_strdup ("");
         }
