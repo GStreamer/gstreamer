@@ -88,6 +88,8 @@ gst_sf_create_audio_template_caps (void)
         fmt = "audio/x-xi";
         break;
       case SF_FORMAT_RF64:     /* RF64 WAV file */
+        fmt = "audio/x-rf64";
+        break;
       case SF_FORMAT_MAT4:     /* Matlab (tm) V4.2 / GNU Octave 2.0 */
       case SF_FORMAT_MAT5:     /* Matlab (tm) V5.0 / GNU Octave 2.1 */
       case SF_FORMAT_PVF:      /* Portable Voice Format */
