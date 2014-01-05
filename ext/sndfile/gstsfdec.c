@@ -702,7 +702,7 @@ gst_sf_dec_loop (GstPad * pad)
   GstBuffer *buf;
   GstMapInfo map;
   GstFlowReturn flow;
-  sf_count_t bytes_read;
+  sf_count_t frames_read;
   guint num_frames = 1024;      /* arbitrary */
 
   if (G_UNLIKELY (!self->file)) {
@@ -713,23 +713,21 @@ gst_sf_dec_loop (GstPad * pad)
 
   buf = gst_buffer_new_and_alloc (self->bytes_per_frame * num_frames);
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
-  bytes_read = self->reader (self->file, map.data, num_frames);
+  frames_read = self->reader (self->file, map.data, num_frames);
   GST_DEBUG_OBJECT (self, "read %d / %d bytes = %d frames of audio",
-      (gint) bytes_read, (gint) map.size, num_frames);
+      (gint) frames_read, (gint) map.size, num_frames);
   gst_buffer_unmap (buf, &map);
 
-  if (G_UNLIKELY (bytes_read < 0))
+  if (G_UNLIKELY (frames_read < 0))
     goto could_not_read;
 
-  if (G_UNLIKELY (bytes_read == 0))
+  if (G_UNLIKELY (frames_read == 0))
     goto eos;
-
-  num_frames = bytes_read / self->bytes_per_frame;
 
   GST_BUFFER_OFFSET (buf) = self->offset;
   GST_BUFFER_TIMESTAMP (buf) = gst_util_uint64_scale_int (self->offset,
       GST_SECOND, self->rate);
-  self->offset += num_frames;
+  self->offset += frames_read;
   GST_BUFFER_DURATION (buf) = gst_util_uint64_scale_int (self->offset,
       GST_SECOND, self->rate) - GST_BUFFER_TIMESTAMP (buf);
 
