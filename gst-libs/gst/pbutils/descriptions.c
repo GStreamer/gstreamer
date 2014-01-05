@@ -160,6 +160,7 @@ static const FormatInfo formats[] = {
   {"audio/x-qdm", "QDesign Music (QDM)", FLAG_AUDIO, ""},
   {"audio/x-qdm2", "QDesign Music (QDM) 2", FLAG_AUDIO, ""},
   {"audio/x-ralf-mpeg4-generic", "Real Audio Lossless (RALF)", FLAG_AUDIO, ""},
+  {"audio/x-rf64", "Broadcast Wave Format", AUDIO_CONTAINER, "rf64"},
   {"audio/x-sbc", "Low Complexity Subband Coding", FLAG_AUDIO, "sbc"},
   {"audio/x-sds", "Midi Sample Dump Standard", FLAG_AUDIO, ""},
   {"audio/x-shorten", "Shorten Lossless", FLAG_AUDIO, "shn"},
