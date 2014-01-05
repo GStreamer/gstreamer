@@ -225,5 +225,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace[@name='Gst.Rtsp']" name="library">libgstrtsp-1.0-0.dll</attr>
 	<attr path="/api/namespace[@name='Gst.Sdp']" name="library">libgstsdp-1.0-0.dll</attr>
 
+	<!-- AppSink fixes -->
+	<attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='pull-sample']" name="hidden">true</attr>
+	<attr path="/api/namespace/object[@cname='GstAppSink']/signal[@cname='pull-preroll']" name="hidden">true</attr>
+	<add-node path="/api/namespace/object[@cname='GstAppSink']">
+	  <method name="PullPreroll" cname="gst_app_sink_pull_preroll">
+        <return-type type="GstSample*" owned="true" />
+        <parameters/>
+      </method>
+	  <method name="PullSample" cname="gst_app_sink_pull_sample">
+        <return-type type="GstSample*" owned="true" />
+        <parameters/>
+      </method>
+	</add-node>
 </metadata>
 
