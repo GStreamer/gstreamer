@@ -82,28 +82,52 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 	<attr path="/api/namespace/object[@cname='GstTask']/field[@cname='notify']" name="hidden">true</attr>
 
 	<!-- These classes are not abstract but should not be instantiable from managed. FIXME: bug in gir metadata? -->
-	<remove-attr path="/api/namespace/object[@cname='GstElement']" name="abstract" />
-	<attr path="/api/namespace/object[@cname='GstElement']" name="defaultconstructoraccess">protected</attr>
-	<remove-attr path="/api/namespace/object[@cname='GstBaseSrc']" name="abstract" />
-	<attr path="/api/namespace/object[@cname='GstBaseSrc']" name="defaultconstructoraccess">protected</attr>
-	<remove-attr path="/api/namespace/object[@cname='GstBaseTransform']" name="abstract" />
-	<attr path="/api/namespace/object[@cname='GstBaseTransform']" name="defaultconstructoraccess">protected</attr>
-	<remove-attr path="/api/namespace/object[@cname='GstAudioFilter']" name="abstract" />
-	<attr path="/api/namespace/object[@cname='GstAudioFilter']" name="defaultconstructoraccess">protected</attr>
-	<remove-attr path="/api/namespace/object[@cname='GstBaseSink']" name="abstract" />
-	<attr path="/api/namespace/object[@cname='GstBaseSink']" name="defaultconstructoraccess">protected</attr>
-	<remove-attr path="/api/namespace/object[@cname='GstBaseParse']" name="abstract" />
-	<attr path="/api/namespace/object[@cname='GstBaseParse']" name="defaultconstructoraccess">protected</attr>
-	<remove-attr path="/api/namespace/object[@cname='GstAudioDecoder']" name="abstract" />
-	<attr path="/api/namespace/object[@cname='GstAudioDecoder']" name="defaultconstructoraccess">protected</attr>
-	<remove-attr path="/api/namespace/object[@cname='GstVideoDecoder']" name="abstract" />
-	<attr path="/api/namespace/object[@cname='GstVideoDecoder']" name="defaultconstructoraccess">protected</attr>
-	<remove-attr path="/api/namespace/object[@cname='GstVideoFilter']" name="abstract" />
-	<attr path="/api/namespace/object[@cname='GstVideoFilter']" name="defaultconstructoraccess">protected</attr>
-	<remove-attr path="/api/namespace/object[@cname='GstTagDemux']" name="abstract" />
-	<attr path="/api/namespace/object[@cname='GstTagDemux']" name="defaultconstructoraccess">protected</attr>
-	<remove-attr path="/api/namespace/object[@cname='GstTagMux']" name="abstract" />
-	<attr path="/api/namespace/object[@cname='GstTagMux']" name="defaultconstructoraccess">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstAllocator']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstAllocator']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstClock']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstClock']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstControlBinding']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstControlBinding']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstControlSource']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstControlSource']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstElement']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstElement']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstObject']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstObject']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstPluginFeature']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstPluginFeature']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstBaseParse']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstBaseParse']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstBaseSink']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstBaseSink']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstBaseSrc']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstBaseSrc']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstBaseTransform']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstBaseTransform']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstTagDemux']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstTagDemux']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstTagMux']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstTagMux']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstVideoDecoder']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstVideoDecoder']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstVideoEncoder']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstVideoEncoder']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstVideoFilter']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstVideoFilter']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstAudioDecoder']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstAudioDecoder']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstAudioEncoder']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstAudioEncoder']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstAudioFilter']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstAudioFilter']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstAudioRingBuffer']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstAudioRingBuffer']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstTimedValueControlSource']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstTimedValueControlSource']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstRTPBaseDepayload']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstRTPBaseDepayload']">protected</attr>
+	<remove-attr name="abstract" path="/api/namespace/object[@cname='GstRTPBasePayload']"/>
+	<attr name="defaultconstructoraccess" path="/api/namespace/object[@cname='GstRTPBasePayload']">protected</attr>
 
 	<!-- Add miniobject methods to all miniobject types -->
 	<copy-node path="/api/namespace/struct[@cname='GstMiniObject']//method">/api/namespace//boxed[field/@cname='mini_object']</copy-node>
