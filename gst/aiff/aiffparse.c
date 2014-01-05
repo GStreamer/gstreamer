@@ -1110,7 +1110,7 @@ no_rate:
 no_bytes_per_sample:
   {
     GST_ELEMENT_ERROR (aiff, STREAM, FAILED, (NULL),
-        ("Could not caluclate bytes per sample - invalid data"));
+        ("Could not calculate bytes per sample - invalid data"));
     return GST_FLOW_ERROR;
   }
 unknown_format:
