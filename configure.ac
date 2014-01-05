@@ -133,8 +133,16 @@ AC_SUBST(MDASSEMBLER)
 AC_SUBST(MONODOCER)
 
 AM_CONDITIONAL(ENABLE_MONODOC, test "x$enable_monodoc" = "xyes")
+
 dnl Check for Gst
-PKG_CHECK_MODULES(GST, gstreamer-1.0)
+GSTREAMER_REQUIRED_VERSION=1.0.0
+PKG_CHECK_MODULES(GST,
+		gstreamer-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-base-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-plugins-base-1.0 >= $GSTREAMER_REQUIRED_VERSION
+		gstreamer-tag-1.0 >= $GSTREAMER_REQUIRED_VERSION
+)
+
 gstreamer_prefix=/usr
 AC_SUBST(gstreamer_prefix)
 AC_SUBST(GST_LIBS)
