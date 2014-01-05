@@ -9,7 +9,6 @@ EXPORTS
 	gst_riff_parse_chunk
 	gst_riff_parse_file_header
 	gst_riff_parse_info
-	gst_riff_parse_ncdt
 	gst_riff_parse_strf_auds
 	gst_riff_parse_strf_iavs
 	gst_riff_parse_strf_vids

@@ -76,10 +76,6 @@ gboolean gst_riff_parse_strf_iavs   (GstElement          * element,
 void gst_riff_parse_info            (GstElement  * element,
                                      GstBuffer   * buf,
                                      GstTagList ** taglist);
-
-void gst_riff_parse_ncdt            (GstElement  * element,
-                                     GstBuffer   * buf,
-                                     GstTagList ** taglist);
 /*
  * Init.
  */
