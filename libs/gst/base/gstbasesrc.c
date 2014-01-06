@@ -3356,7 +3356,8 @@ no_get_range:
   {
     GST_PAD_STREAM_UNLOCK (basesrc->srcpad);
     gst_base_src_stop (basesrc);
-    GST_ERROR_OBJECT (basesrc, "Cannot operate in pull mode, stopping");
+    GST_WARNING_OBJECT (basesrc,
+        "Cannot operate in pull mode, stopping pad task");
     ret = GST_FLOW_ERROR;
     goto error;
   }
