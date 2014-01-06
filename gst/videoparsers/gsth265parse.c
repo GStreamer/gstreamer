@@ -1771,8 +1771,9 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
       gst_buffer_unmap (codec_data, &map);
       goto hvcc_too_small;
     }
-    /* parse the version, this must be one */
-    if (data[0] != 1) {
+    /* parse the version, this must be one but
+     * is zero until the spec is finalized */
+    if (data[0] != 0 && data[0] != 1) {
       gst_buffer_unmap (codec_data, &map);
       goto wrong_version;
     }
@@ -1783,7 +1784,7 @@ gst_h265_parse_set_caps (GstBaseParse * parse, GstCaps * caps)
 
     off = 23;
     for (i = 0; i < data[22]; i++) {
-      num_nals = (data[off + 1] >> 7) | data[off + 2];
+      num_nals = GST_READ_UINT16_BE (data + off + 1);
       for (j = 0; j < num_nals; j++) {
         parseres = gst_h265_parser_identify_nalu_hevc (h265parse->nalparser,
             data, off + 3, size, 2, &nalu);
