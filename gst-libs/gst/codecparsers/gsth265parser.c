@@ -1674,7 +1674,7 @@ gst_h265_parse_vps (GstH265NalUnit * nalu, GstH265VPS * vps)
   guint i, j;
 
   INITIALIZE_DEBUG_CATEGORY;
-  GST_DEBUG ("parsing SPS");
+  GST_DEBUG ("parsing VPS");
 
   nal_reader_init (&nr, nalu->data + nalu->offset + nalu->header_bytes,
       nalu->size - nalu->header_bytes);
