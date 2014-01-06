@@ -5125,6 +5125,26 @@ gst_matroska_demux_video_caps (GstMatroskaTrackVideoContext *
           NULL);
     }
     *codec_name = g_strdup ("H264");
+  } else if (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_MPEGH_HEVC)) {
+    caps = gst_caps_new_empty_simple ("video/x-h265");
+    if (data) {
+      GstBuffer *priv;
+
+      gst_codec_utils_h265_caps_set_level_tier_and_profile (caps, data + 1,
+          size - 1);
+
+      priv = gst_buffer_new_wrapped (g_memdup (data, size), size);
+      gst_caps_set_simple (caps, "codec_data", GST_TYPE_BUFFER, priv, NULL);
+      gst_buffer_unref (priv);
+
+      gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "hvc1",
+          "alignment", G_TYPE_STRING, "au", NULL);
+    } else {
+      GST_WARNING ("No codec data found, assuming output is byte-stream");
+      gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING, "byte-stream",
+          NULL);
+    }
+    *codec_name = g_strdup ("HEVC");
   } else if ((!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO1)) ||
       (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO2)) ||
       (!strcmp (codec_id, GST_MATROSKA_CODEC_ID_VIDEO_REALVIDEO3)) ||
