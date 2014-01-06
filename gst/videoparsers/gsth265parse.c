@@ -437,12 +437,28 @@ static const gchar *nal_names[] = {
   "Slice_RADL_R",
   "SLICE_RASL_N",
   "SLICE_RASL_R",
+  "Invalid (10)",
+  "Invalid (11)",
+  "Invalid (12)",
+  "Invalid (13)",
+  "Invalid (14)",
+  "Invalid (15)",
   "SLICE_BLA_W_LP",
   "SLICE_BLA_W_RADL",
   "SLICE_BLA_N_LP",
   "SLICE_IDR_W_RADL",
   "SLICE_IDR_N_LP",
   "SLICE_CRA_NUT",
+  "Invalid (22)",
+  "Invalid (23)",
+  "Invalid (24)",
+  "Invalid (25)",
+  "Invalid (26)",
+  "Invalid (27)",
+  "Invalid (28)",
+  "Invalid (29)",
+  "Invalid (30)",
+  "Invalid (31)",
   "VPS",
   "SPS",
   "PPS",
@@ -451,7 +467,7 @@ static const gchar *nal_names[] = {
   "EOB",
   "FD",
   "PREFIX_SEI",
-  "PREFIX_SEI"
+  "SUFFIX_SEI"
 };
 
 static const gchar *
