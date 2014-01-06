@@ -732,8 +732,6 @@ gst_vaapi_encoder_mpeg2_init (GstVaapiEncoder * base)
 {
   GstVaapiEncoderMpeg2 *encoder = GST_VAAPI_ENCODER_MPEG2 (base);
 
-  base->rate_control = DEFAULT_RATECONTROL;
-
   /* re-ordering */
   g_queue_init (&encoder->b_frames);
   encoder->dump_frames = FALSE;
@@ -792,6 +790,28 @@ gst_vaapi_encoder_mpeg2_finalize (GstVaapiEncoder * base)
   g_queue_clear (&encoder->b_frames);
 }
 
+static GstVaapiEncoderStatus
+gst_vaapi_encoder_mpeg2_set_property (GstVaapiEncoder * base_encoder,
+    gint prop_id, const GValue * value)
+{
+  GstVaapiEncoderMpeg2 *const encoder = GST_VAAPI_ENCODER_MPEG2 (base_encoder);
+
+  switch (prop_id) {
+    case GST_VAAPI_ENCODER_MPEG2_PROP_QUANTIZER:
+      encoder->cqp = g_value_get_uint (value);
+      break;
+    case GST_VAAPI_ENCODER_MPEG2_PROP_KEY_PERIOD:
+      encoder->intra_period = g_value_get_uint (value);
+      break;
+    case GST_VAAPI_ENCODER_MPEG2_PROP_MAX_BFRAMES:
+      encoder->ip_period = g_value_get_uint (value);
+      break;
+    default:
+      return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
+  }
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+}
+
 GST_VAAPI_ENCODER_DEFINE_CLASS_DATA (MPEG2);
 
 static inline const GstVaapiEncoderClass *
@@ -799,6 +819,7 @@ gst_vaapi_encoder_mpeg2_class (void)
 {
   static const GstVaapiEncoderClass GstVaapiEncoderMpeg2Class = {
     GST_VAAPI_ENCODER_CLASS_INIT (Mpeg2, mpeg2),
+    .set_property = gst_vaapi_encoder_mpeg2_set_property,
   };
   return &GstVaapiEncoderMpeg2Class;
 }
@@ -807,6 +828,55 @@ GstVaapiEncoder *
 gst_vaapi_encoder_mpeg2_new (GstVaapiDisplay * display)
 {
   return gst_vaapi_encoder_new (gst_vaapi_encoder_mpeg2_class (), display);
+}
+
+/**
+ * gst_vaapi_encoder_mpeg2_get_default_properties:
+ *
+ * Determines the set of common and MPEG-2 specific encoder properties.
+ * The caller owns an extra reference to the resulting array of
+ * #GstVaapiEncoderPropInfo elements, so it shall be released with
+ * g_ptr_array_unref() after usage.
+ *
+ * Return value: the set of encoder properties for #GstVaapiEncoderMpeg2,
+ *   or %NULL if an error occurred.
+ */
+GPtrArray *
+gst_vaapi_encoder_mpeg2_get_default_properties (void)
+{
+  const GstVaapiEncoderClass *const klass = gst_vaapi_encoder_mpeg2_class ();
+  GPtrArray *props;
+
+  props = gst_vaapi_encoder_properties_get_default (klass);
+  if (!props)
+    return NULL;
+
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_MPEG2_PROP_QUANTIZER,
+      g_param_spec_uint ("quantizer",
+          "Constant Quantizer",
+          "Constant quantizer (if rate-control mode is CQP)",
+          GST_VAAPI_ENCODER_MPEG2_MIN_CQP, GST_VAAPI_ENCODER_MPEG2_MAX_CQP,
+          GST_VAAPI_ENCODER_MPEG2_DEFAULT_CQP,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_MPEG2_PROP_KEY_PERIOD,
+      g_param_spec_uint ("key-period",
+          "Key Period", "Maximal distance between two key-frames", 1,
+          GST_VAAPI_ENCODER_MPEG2_MAX_GOP_SIZE,
+          GST_VAAPI_ENCODER_MPEG2_DEFAULT_GOP_SIZE,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_MPEG2_PROP_MAX_BFRAMES,
+      g_param_spec_uint ("max-bframes", "Max B-Frames",
+          "Number of B-frames between I and P", 0,
+          GST_VAAPI_ENCODER_MPEG2_MAX_MAX_BFRAMES,
+          GST_VAAPI_ENCODER_MPEG2_DEFAULT_MAX_BFRAMES,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  return props;
 }
 
 static struct

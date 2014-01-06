@@ -1273,9 +1273,7 @@ init_encoder_public_attributes (GstVaapiEncoderH264 * encoder)
 
   _set_level (encoder);
 
-  if (!encoder->intra_period)
-    encoder->intra_period = GST_VAAPI_ENCODER_H264_DEFAULT_INTRA_PERIOD;
-  else if (encoder->intra_period > GST_VAAPI_ENCODER_H264_MAX_INTRA_PERIOD)
+  if (encoder->intra_period > GST_VAAPI_ENCODER_H264_MAX_INTRA_PERIOD)
     encoder->intra_period = GST_VAAPI_ENCODER_H264_MAX_INTRA_PERIOD;
 
   if (encoder->idr_period < encoder->intra_period)
@@ -1283,17 +1281,9 @@ init_encoder_public_attributes (GstVaapiEncoderH264 * encoder)
   if (encoder->idr_period > GST_VAAPI_ENCODER_H264_MAX_IDR_PERIOD)
     encoder->idr_period = GST_VAAPI_ENCODER_H264_MAX_IDR_PERIOD;
 
-  if (-1 == encoder->init_qp)
-    encoder->init_qp = GST_VAAPI_ENCODER_H264_DEFAULT_INIT_QP;
-
-  if (-1 == encoder->min_qp) {
-    if (GST_VAAPI_RATECONTROL_CQP == GST_VAAPI_ENCODER_RATE_CONTROL (encoder))
-      encoder->min_qp = encoder->init_qp;
-    else
-      encoder->min_qp = GST_VAAPI_ENCODER_H264_DEFAULT_MIN_QP;
-  }
-
-  if (encoder->min_qp > encoder->init_qp)
+  if (encoder->min_qp > encoder->init_qp ||
+      (GST_VAAPI_ENCODER_RATE_CONTROL (encoder) == GST_VAAPI_RATECONTROL_CQP &&
+          encoder->min_qp < encoder->init_qp))
     encoder->min_qp = encoder->init_qp;
 
   /* default compress ratio 1: (4*8*1.5) */
@@ -1308,9 +1298,6 @@ init_encoder_public_attributes (GstVaapiEncoderH264 * encoder)
           GST_VAAPI_ENCODER_FPS_D (encoder) / 4 / 1024;
   } else
     base_encoder->bitrate = 0;
-
-  if (!encoder->slice_num)
-    encoder->slice_num = GST_VAAPI_ENCODER_H264_DEFAULT_SLICE_NUM;
 
   width_mbs = (GST_VAAPI_ENCODER_WIDTH (encoder) + 15) / 16;
   height_mbs = (GST_VAAPI_ENCODER_HEIGHT (encoder) + 15) / 16;
@@ -1704,17 +1691,10 @@ gst_vaapi_encoder_h264_init (GstVaapiEncoder * base)
 {
   GstVaapiEncoderH264 *encoder = GST_VAAPI_ENCODER_H264 (base);
 
-  base->rate_control = DEFAULT_RATECONTROL;
-
   /* init attributes */
   encoder->profile = 0;
   encoder->level = 0;
   encoder->idr_period = 0;
-  encoder->intra_period = 0;
-  encoder->init_qp = -1;
-  encoder->min_qp = -1;
-  encoder->slice_num = 0;
-  encoder->b_frame_num = 0;
   //gst_vaapi_base_encoder_set_frame_notify(GST_VAAPI_BASE_ENCODER(encoder), TRUE);
 
   /* init private values */
@@ -1771,6 +1751,34 @@ gst_vaapi_encoder_h264_finalize (GstVaapiEncoder * base)
 
 }
 
+static GstVaapiEncoderStatus
+gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
+    gint prop_id, const GValue * value)
+{
+  GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
+
+  switch (prop_id) {
+    case GST_VAAPI_ENCODER_H264_PROP_KEY_PERIOD:
+      encoder->intra_period = g_value_get_uint (value);
+      break;
+    case GST_VAAPI_ENCODER_H264_PROP_MAX_BFRAMES:
+      encoder->b_frame_num = g_value_get_uint (value);
+      break;
+    case GST_VAAPI_ENCODER_H264_PROP_INIT_QP:
+      encoder->init_qp = g_value_get_uint (value);
+      break;
+    case GST_VAAPI_ENCODER_H264_PROP_MIN_QP:
+      encoder->min_qp = g_value_get_uint (value);
+      break;
+    case GST_VAAPI_ENCODER_H264_PROP_NUM_SLICES:
+      encoder->slice_num = g_value_get_uint (value);
+      break;
+    default:
+      return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
+  }
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+}
+
 GST_VAAPI_ENCODER_DEFINE_CLASS_DATA (H264);
 
 static inline const GstVaapiEncoderClass *
@@ -1778,6 +1786,7 @@ gst_vaapi_encoder_h264_class (void)
 {
   static const GstVaapiEncoderClass GstVaapiEncoderH264Class = {
     GST_VAAPI_ENCODER_CLASS_INIT (H264, h264),
+    .set_property = gst_vaapi_encoder_h264_set_property,
     .get_codec_data = gst_vaapi_encoder_h264_get_codec_data
   };
   return &GstVaapiEncoderH264Class;
@@ -1787,6 +1796,86 @@ GstVaapiEncoder *
 gst_vaapi_encoder_h264_new (GstVaapiDisplay * display)
 {
   return gst_vaapi_encoder_new (gst_vaapi_encoder_h264_class (), display);
+}
+
+/**
+ * gst_vaapi_encoder_h264_get_default_properties:
+ *
+ * Determines the set of common and H.264 specific encoder properties.
+ * The caller owns an extra reference to the resulting array of
+ * #GstVaapiEncoderPropInfo elements, so it shall be released with
+ * g_ptr_array_unref() after usage.
+ *
+ * Return value: the set of encoder properties for #GstVaapiEncoderH264,
+ *   or %NULL if an error occurred.
+ */
+GPtrArray *
+gst_vaapi_encoder_h264_get_default_properties (void)
+{
+  const GstVaapiEncoderClass *const klass = gst_vaapi_encoder_h264_class ();
+  GPtrArray *props;
+
+  props = gst_vaapi_encoder_properties_get_default (klass);
+  if (!props)
+    return NULL;
+
+  /**
+   * GstVaapiEncoderH264:key-period
+   *
+   * The maximal distance between two keyframes.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_KEY_PERIOD,
+      g_param_spec_uint ("key-period",
+          "Key Period", "Maximal distance between two key-frames", 1, 300, 30,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:max-bframes:
+   *
+   * The number of B-frames between I and P.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_MAX_BFRAMES,
+      g_param_spec_uint ("max-bframes",
+          "Max B-Frames", "Number of B-frames between I and P", 0, 10, 0,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:init-qp:
+   *
+   * The initial quantizer value.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_INIT_QP,
+      g_param_spec_uint ("init-qp",
+          "Initial QP", "Initial quantizer value", 1, 51, 26,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:min-qp:
+   *
+   * The minimum quantizer value.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_MIN_QP,
+      g_param_spec_uint ("min-qp",
+          "Minimum QP", "Minimum quantizer value", 1, 51, 1,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoderH264:num-slices:
+   *
+   * The number of slices per frame.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_H264_PROP_NUM_SLICES,
+      g_param_spec_uint ("num-slices",
+          "Number of Slices",
+          "Number of slices per frame",
+          1, 200, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  return props;
 }
 
 void

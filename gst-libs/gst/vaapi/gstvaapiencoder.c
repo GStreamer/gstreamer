@@ -26,9 +26,121 @@
 #include "gstvaapicontext.h"
 #include "gstvaapidisplay_priv.h"
 #include "gstvaapiutils.h"
+#include "gstvaapivalue.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
+
+/* Helper function to create a new encoder property object */
+static GstVaapiEncoderPropData *
+prop_new (gint id, GParamSpec * pspec)
+{
+  GstVaapiEncoderPropData *prop;
+
+  if (!id || !pspec)
+    return NULL;
+
+  prop = g_slice_new (GstVaapiEncoderPropData);
+  if (!prop)
+    return NULL;
+
+  prop->prop = id;
+  prop->pspec = g_param_spec_ref_sink (pspec);
+  return prop;
+}
+
+/* Helper function to release a property object and any memory held herein */
+static void
+prop_free (GstVaapiEncoderPropData * prop)
+{
+  if (!prop)
+    return;
+
+  if (prop->pspec) {
+    g_param_spec_unref (prop->pspec);
+    prop->pspec = NULL;
+  }
+  g_slice_free (GstVaapiEncoderPropData, prop);
+}
+
+/* Helper function to lookup the supplied property specification */
+static GParamSpec *
+prop_find_pspec (GstVaapiEncoder * encoder, gint prop_id)
+{
+  GPtrArray *const props = encoder->properties;
+  guint i;
+
+  if (props) {
+    for (i = 0; i < props->len; i++) {
+      GstVaapiEncoderPropInfo *const prop = g_ptr_array_index (props, i);
+      if (prop->prop == prop_id)
+        return prop->pspec;
+    }
+  }
+  return NULL;
+}
+
+/* Create a new array of properties, or NULL on error */
+GPtrArray *
+gst_vaapi_encoder_properties_append (GPtrArray * props, gint prop_id,
+    GParamSpec * pspec)
+{
+  GstVaapiEncoderPropData *prop;
+
+  if (!props) {
+    props = g_ptr_array_new_with_free_func ((GDestroyNotify) prop_free);
+    if (!props)
+      return NULL;
+  }
+
+  prop = prop_new (prop_id, pspec);
+  if (!prop)
+    goto error_allocation_failed;
+  g_ptr_array_add (props, prop);
+  return props;
+
+  /* ERRORS */
+error_allocation_failed:
+  {
+    GST_ERROR ("failed to allocate encoder property info structure");
+    g_ptr_array_unref (props);
+    return NULL;
+  }
+}
+
+/* Generate the common set of encoder properties */
+GPtrArray *
+gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
+{
+  const GstVaapiEncoderClassData *const cdata = klass->class_data;
+  GPtrArray *props = NULL;
+
+  /**
+   * GstVaapiEncoder:rate-control:
+   *
+   * The desired rate control mode, expressed as a #GstVaapiRateControl.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_PROP_RATECONTROL,
+      g_param_spec_enum ("rate-control",
+          "Rate Control", "Rate control mode",
+          GST_VAAPI_TYPE_RATE_CONTROL, cdata->default_rate_control,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  /**
+   * GstVaapiEncoder:bitrate:
+   *
+   * The desired bitrate, expressed in kbps.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_PROP_BITRATE,
+      g_param_spec_uint ("bitrate",
+          "Bitrate (kbps)",
+          "The desired bitrate expressed in kbps (0: auto-calculate)",
+          0, 100 * 1024, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
+  return props;
+}
 
 /**
  * gst_vaapi_encoder_ref:
@@ -390,6 +502,93 @@ error:
   return NULL;
 }
 
+/**
+ * gst_vaapi_encoder_set_property:
+ * @encoder: a #GstVaapiEncoder
+ * @prop_id: the id of the property to change
+ * @value: the new value to set
+ *
+ * Update the requested property, designed by @prop_id, with the
+ * supplied @value. A @NULL value argument resets the property to its
+ * default value.
+ *
+ * Return value: a #GstVaapiEncoderStatus
+ */
+static GstVaapiEncoderStatus
+set_property (GstVaapiEncoder * encoder, gint prop_id, const GValue * value)
+{
+  GstVaapiEncoderStatus status =
+      GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
+
+  g_assert (value != NULL);
+
+  /* Handle codec-specific properties */
+  if (prop_id < 0) {
+    GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
+
+    if (klass->set_property) {
+      if (encoder->num_codedbuf_queued > 0)
+        goto error_operation_failed;
+      status = klass->set_property (encoder, prop_id, value);
+    }
+    return status;
+  }
+
+  /* Handle common properties */
+  switch (prop_id) {
+    case GST_VAAPI_ENCODER_PROP_RATECONTROL:
+      status = gst_vaapi_encoder_set_rate_control (encoder,
+          g_value_get_enum (value));
+      break;
+    case GST_VAAPI_ENCODER_PROP_BITRATE:
+      status = gst_vaapi_encoder_set_bitrate (encoder,
+          g_value_get_uint (value));
+      break;
+  }
+  return status;
+
+  /* ERRORS */
+error_operation_failed:
+  {
+    GST_ERROR ("could not change codec state after encoding started");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+  }
+}
+
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_property (GstVaapiEncoder * encoder, gint prop_id,
+    const GValue * value)
+{
+  GstVaapiEncoderStatus status;
+  GValue default_value = G_VALUE_INIT;
+
+  g_return_val_if_fail (encoder != NULL,
+      GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER);
+
+  if (!value) {
+    GParamSpec *const pspec = prop_find_pspec (encoder, prop_id);
+    if (!pspec)
+      goto error_invalid_property;
+
+    g_value_init (&default_value, pspec->value_type);
+    g_param_value_set_default (pspec, &default_value);
+    value = &default_value;
+  }
+
+  status = set_property (encoder, prop_id, value);
+
+  if (default_value.g_type)
+    g_value_unset (&default_value);
+  return status;
+
+  /* ERRORS */
+error_invalid_property:
+  {
+    GST_ERROR ("unsupported property (%d)", prop_id);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
+  }
+}
+
 /* Determine the supported rate control modes */
 static gboolean
 get_rate_control_mask (GstVaapiEncoder * encoder)
@@ -524,6 +723,29 @@ error_operation_failed:
   }
 }
 
+/* Initialize default values for configurable properties */
+static gboolean
+gst_vaapi_encoder_init_properties (GstVaapiEncoder * encoder)
+{
+  GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
+  GPtrArray *props;
+  guint i;
+
+  props = klass->get_default_properties ();
+  if (!props)
+    return FALSE;
+
+  encoder->properties = props;
+  for (i = 0; i < props->len; i++) {
+    GstVaapiEncoderPropInfo *const prop = g_ptr_array_index (props, i);
+
+    if (gst_vaapi_encoder_set_property (encoder, prop->prop,
+            NULL) != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+      return FALSE;
+  }
+  return TRUE;
+}
+
 /* Base encoder initialization (internal) */
 static gboolean
 gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)
@@ -539,6 +761,7 @@ gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)
 
   CHECK_VTABLE_HOOK (init);
   CHECK_VTABLE_HOOK (finalize);
+  CHECK_VTABLE_HOOK (get_default_properties);
   CHECK_VTABLE_HOOK (encode);
   CHECK_VTABLE_HOOK (reordering);
   CHECK_VTABLE_HOOK (flush);
@@ -562,7 +785,11 @@ gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)
   if (!encoder->codedbuf_queue)
     return FALSE;
 
-  return klass->init (encoder);
+  if (!klass->init (encoder))
+    return FALSE;
+  if (!gst_vaapi_encoder_init_properties (encoder))
+    return FALSE;
+  return TRUE;
 
   /* ERRORS */
 error_invalid_vtable:
@@ -583,6 +810,11 @@ gst_vaapi_encoder_finalize (GstVaapiEncoder * encoder)
   gst_vaapi_object_replace (&encoder->context, NULL);
   gst_vaapi_display_replace (&encoder->display, NULL);
   encoder->va_display = NULL;
+
+  if (encoder->properties) {
+    g_ptr_array_unref (encoder->properties);
+    encoder->properties = NULL;
+  }
 
   gst_vaapi_video_pool_replace (&encoder->codedbuf_pool, NULL);
   if (encoder->codedbuf_queue) {

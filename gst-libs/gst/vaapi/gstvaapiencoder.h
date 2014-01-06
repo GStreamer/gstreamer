@@ -68,6 +68,30 @@ typedef enum
   GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_HEADER = -103,
 } GstVaapiEncoderStatus;
 
+/**
+ * GstVaapiEncoderProp:
+ * @GST_VAAPI_ENCODER_PROP_RATECONTROL: Rate control (#GstVaapiRateControl).
+ * @GST_VAAPI_ENCODER_PROP_BITRATE: Bitrate expressed in kbps (uint).
+ *
+ * The set of configurable properties for the encoder.
+ */
+typedef enum {
+  GST_VAAPI_ENCODER_PROP_RATECONTROL = 1,
+  GST_VAAPI_ENCODER_PROP_BITRATE,
+} GstVaapiEncoderProp;
+
+/**
+ * GstVaapiEncoderPropInfo:
+ * @prop: the #GstVaapiEncoderProp
+ * @pspec: the #GParamSpec describing the associated configurable value
+ *
+ * A #GstVaapiEncoderProp descriptor.
+ */
+typedef struct {
+  const gint prop;
+  GParamSpec *const pspec;
+} GstVaapiEncoderPropInfo;
+
 GstVaapiEncoder *
 gst_vaapi_encoder_ref (GstVaapiEncoder * encoder);
 
@@ -85,6 +109,10 @@ gst_vaapi_encoder_get_codec_data (GstVaapiEncoder * encoder,
 GstCaps *
 gst_vaapi_encoder_set_format (GstVaapiEncoder * encoder,
     GstVideoCodecState * state, GstCaps * ref_caps);
+
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_property (GstVaapiEncoder * encoder, gint prop_id,
+    const GValue * value);
 
 GstVaapiEncoderStatus
 gst_vaapi_encoder_set_rate_control (GstVaapiEncoder * encoder,

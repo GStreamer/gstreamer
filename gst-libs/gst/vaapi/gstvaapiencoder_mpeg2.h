@@ -28,8 +28,27 @@ G_BEGIN_DECLS
 
 typedef struct _GstVaapiEncoderMpeg2 GstVaapiEncoderMpeg2;
 
+/**
+ * GstVaapiEncoderMpeg2Prop:
+ * @GST_VAAPI_ENCODER_MPEG2_PROP_QUANTIZER: Constant quantizer value (uint).
+ * @GST_VAAPI_ENCODER_MPEG2_PROP_KEY_PERIOD: Maximal distance between two
+ *   keyframes (uint).
+ * @GST_VAAPI_ENCODER_MPEG2_PROP_MAX_BFRAMES: Number of B-frames between I
+ *   and P (uint).
+ *
+ * The set of MPEG-2 encoder specific configurable properties.
+ */
+typedef enum {
+  GST_VAAPI_ENCODER_MPEG2_PROP_QUANTIZER = -1,
+  GST_VAAPI_ENCODER_MPEG2_PROP_KEY_PERIOD = -2,
+  GST_VAAPI_ENCODER_MPEG2_PROP_MAX_BFRAMES = -3,
+} GstVaapiEncoderMpeg2Prop;
+
 GstVaapiEncoder *
 gst_vaapi_encoder_mpeg2_new (GstVaapiDisplay * display);
+
+GPtrArray *
+gst_vaapi_encoder_mpeg2_get_default_properties (void);
 
 G_END_DECLS
 

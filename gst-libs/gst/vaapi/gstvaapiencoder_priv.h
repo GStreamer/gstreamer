@@ -83,11 +83,33 @@ G_BEGIN_DECLS
 typedef struct _GstVaapiEncoderClass GstVaapiEncoderClass;
 typedef struct _GstVaapiEncoderClassData GstVaapiEncoderClassData;
 
+/* Private GstVaapiEncoderPropInfo definition */
+typedef struct {
+  gint prop;
+  GParamSpec *pspec;
+} GstVaapiEncoderPropData;
+
+#define GST_VAAPI_ENCODER_PROPERTIES_APPEND(props, id, pspec) do {      \
+    props = gst_vaapi_encoder_properties_append (props, id, pspec);     \
+    if (!props)                                                         \
+      return NULL;                                                      \
+  } while (0)
+
+G_GNUC_INTERNAL
+GPtrArray *
+gst_vaapi_encoder_properties_append (GPtrArray * props, gint prop_id,
+    GParamSpec *pspec);
+
+G_GNUC_INTERNAL
+GPtrArray *
+gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass);
+
 struct _GstVaapiEncoder
 {
   /*< private >*/
   GstVaapiMiniObject parent_instance;
 
+  GPtrArray *properties;
   GstVaapiDisplay *display;
   GstVaapiContext *context;
   GstVaapiContextInfo context_info;
@@ -141,6 +163,11 @@ struct _GstVaapiEncoderClass
 
   void                  (*set_context_info) (GstVaapiEncoder * encoder);
 
+  GPtrArray *           (*get_default_properties) (void);
+  GstVaapiEncoderStatus (*set_property) (GstVaapiEncoder * encoder,
+                                         gint prop_id,
+                                         const GValue * value);
+
   GstVaapiEncoderStatus (*reordering)   (GstVaapiEncoder * encoder,
                                          GstVideoCodecFrame * in,
                                          GstVaapiEncPicture ** out);
@@ -169,6 +196,7 @@ struct _GstVaapiEncoderClass
     .class_data = &g_class_data,                                \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, init),                 \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, finalize),             \
+    GST_VAAPI_ENCODER_CLASS_HOOK (codec, get_default_properties), \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, set_format),           \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, set_context_info),     \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, reordering),           \
