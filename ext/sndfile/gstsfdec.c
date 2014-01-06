@@ -479,37 +479,37 @@ create_and_send_tags (GstSFDec * self, SF_INFO * info, SF_LOOP_INFO * loop_info,
 
   /* send tags */
   tags = gst_tag_list_new_empty ();
-  if ((tag = sf_get_string (self->file, SF_STR_TITLE))) {
+  if ((tag = sf_get_string (self->file, SF_STR_TITLE)) && *tag) {
     gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, tag, NULL);
   }
-  if ((tag = sf_get_string (self->file, SF_STR_COMMENT))) {
+  if ((tag = sf_get_string (self->file, SF_STR_COMMENT)) && *tag) {
     gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_COMMENT, tag, NULL);
   }
-  if ((tag = sf_get_string (self->file, SF_STR_ARTIST))) {
+  if ((tag = sf_get_string (self->file, SF_STR_ARTIST)) && *tag) {
     gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, tag, NULL);
   }
-  if ((tag = sf_get_string (self->file, SF_STR_ALBUM))) {
+  if ((tag = sf_get_string (self->file, SF_STR_ALBUM)) && *tag) {
     gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ALBUM, tag, NULL);
   }
-  if ((tag = sf_get_string (self->file, SF_STR_GENRE))) {
+  if ((tag = sf_get_string (self->file, SF_STR_GENRE)) && *tag) {
     gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_GENRE, tag, NULL);
   }
-  if ((tag = sf_get_string (self->file, SF_STR_COPYRIGHT))) {
+  if ((tag = sf_get_string (self->file, SF_STR_COPYRIGHT)) && *tag) {
     gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_COPYRIGHT, tag, NULL);
   }
-  if ((tag = sf_get_string (self->file, SF_STR_LICENSE))) {
+  if ((tag = sf_get_string (self->file, SF_STR_LICENSE)) && *tag) {
     gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_LICENSE, tag, NULL);
   }
-  if ((tag = sf_get_string (self->file, SF_STR_SOFTWARE))) {
+  if ((tag = sf_get_string (self->file, SF_STR_SOFTWARE)) && *tag) {
     gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_APPLICATION_NAME, tag,
         NULL);
   }
-  if ((tag = sf_get_string (self->file, SF_STR_TRACKNUMBER))) {
+  if ((tag = sf_get_string (self->file, SF_STR_TRACKNUMBER)) && *tag) {
     guint track = atoi (tag);
     gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TRACK_NUMBER, track,
         NULL);
   }
-  if ((tag = sf_get_string (self->file, SF_STR_DATE))) {
+  if ((tag = sf_get_string (self->file, SF_STR_DATE)) && *tag) {
     GValue tag_val = { 0, };
     GType tag_type = gst_tag_get_type (GST_TAG_DATE_TIME);
 
