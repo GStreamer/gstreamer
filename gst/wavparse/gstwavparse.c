@@ -695,7 +695,8 @@ gst_wavparse_other (GstWavParse * wav)
       break;
 
     default:
-      GST_DEBUG_OBJECT (wav, "skipping tag (%08x) %4.4s", tag, (gchar *) & tag);
+      GST_WARNING_OBJECT (wav, "skipping tag %" GST_FOURCC_FORMAT,
+          GST_FOURCC_ARGS (tag));
       if (!gst_riff_read_skip (wav))
         return FALSE;
       break;
@@ -1315,6 +1316,9 @@ gst_wavparse_adtl_chunk (GstWavParse * wav, const guint8 * data, guint32 size)
         gst_wavparse_note_chunk (wav, data + offset, size);
         break;
       default:
+        GST_WARNING_OBJECT (wav, "Unknowm adtl %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (ltag));
+        GST_MEMDUMP_OBJECT (wav, "Unknowm adtl", &data[offset], lsize);
         break;
     }
     offset += 8 + GST_ROUND_UP_2 (lsize);
@@ -1484,7 +1488,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
     if (tag == GST_RIFF_TAG_JUNK || tag == GST_RIFF_TAG_JUNQ ||
         tag == GST_RIFF_TAG_bext || tag == GST_RIFF_TAG_BEXT ||
         tag == GST_RIFF_TAG_LIST || tag == GST_RIFF_TAG_ID32 ||
-        tag == GST_RIFF_TAG_id3  || tag == GST_RIFF_TAG_IDVX) {
+        tag == GST_RIFF_TAG_id3 || tag == GST_RIFF_TAG_IDVX) {
       GST_DEBUG_OBJECT (wav, "skipping %" GST_FOURCC_FORMAT " chunk",
           GST_FOURCC_ARGS (tag));
       gst_buffer_unref (buf);
@@ -1858,7 +1862,7 @@ gst_wavparse_stream_headers (GstWavParse * wav)
             break;
           }
           default:
-            GST_INFO_OBJECT (wav, "Ignoring LIST chunk %" GST_FOURCC_FORMAT,
+            GST_WARNING_OBJECT (wav, "Ignoring LIST chunk %" GST_FOURCC_FORMAT,
                 GST_FOURCC_ARGS (ltag));
             if (!gst_waveparse_ignore_chunk (wav, buf, tag, size))
               /* need more data */
@@ -1956,6 +1960,8 @@ gst_wavparse_stream_headers (GstWavParse * wav)
         break;
       }
       default:
+        GST_WARNING_OBJECT (wav, "Ignoring chunk %" GST_FOURCC_FORMAT,
+            GST_FOURCC_ARGS (tag));
         if (!gst_waveparse_ignore_chunk (wav, buf, tag, size))
           /* need more data */
           goto exit;

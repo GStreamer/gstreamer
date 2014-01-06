@@ -2239,6 +2239,15 @@ gst_avi_demux_parse_stream (GstAviDemux * avi, GstBuffer * buf)
         GST_WARNING_OBJECT (avi,
             "Unknown stream header tag %" GST_FOURCC_FORMAT ", ignoring",
             GST_FOURCC_ARGS (tag));
+        /* Only get buffer for debugging if the memdump is needed  */
+        if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= 9) {
+          GstMapInfo map;
+
+          gst_buffer_map (sub, &map, GST_MAP_READ);
+          GST_MEMDUMP_OBJECT (avi, "Unknown stream header tag", map.data,
+              map.size);
+          gst_buffer_unmap (sub, &map);
+        }
         /* fall-through */
       case GST_RIFF_TAG_JUNQ:
       case GST_RIFF_TAG_JUNK:
@@ -2503,6 +2512,14 @@ gst_avi_demux_parse_odml (GstAviDemux * avi, GstBuffer * buf)
         GST_WARNING_OBJECT (avi,
             "Unknown tag %" GST_FOURCC_FORMAT " in ODML header",
             GST_FOURCC_ARGS (tag));
+        /* Only get buffer for debugging if the memdump is needed  */
+        if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= 9) {
+          GstMapInfo map;
+
+          gst_buffer_map (sub, &map, GST_MAP_READ);
+          GST_MEMDUMP_OBJECT (avi, "Unknown ODML tag", map.data, map.size);
+          gst_buffer_unmap (sub, &map);
+        }
         /* fall-through */
       case GST_RIFF_TAG_JUNQ:
       case GST_RIFF_TAG_JUNK:
@@ -3364,8 +3381,16 @@ gst_avi_demux_stream_header_push (GstAviDemux * avi)
               goto next;
             default:
               GST_WARNING_OBJECT (avi,
-                  "Unknown off %d tag %" GST_FOURCC_FORMAT " in AVI header",
-                  offset, GST_FOURCC_ARGS (tag));
+                  "Unknown tag %" GST_FOURCC_FORMAT " in AVI header",
+                  GST_FOURCC_ARGS (tag));
+              /* Only get buffer for debugging if the memdump is needed  */
+              if (gst_debug_category_get_threshold (GST_CAT_DEFAULT) >= 9) {
+                GstMapInfo map;
+
+                gst_buffer_map (sub, &map, GST_MAP_READ);
+                GST_MEMDUMP_OBJECT (avi, "Unknown tag", map.data, map.size);
+                gst_buffer_unmap (sub, &map);
+              }
               /* fall-through */
             case GST_RIFF_TAG_JUNQ:
             case GST_RIFF_TAG_JUNK:
@@ -3892,6 +3917,7 @@ gst_avi_demux_parse_ncdt (GstAviDemux * avi, GstBuffer * buf,
         GST_WARNING_OBJECT (avi,
             "Unknown ncdt (metadata) tag entry %" GST_FOURCC_FORMAT,
             GST_FOURCC_ARGS (tag));
+        GST_MEMDUMP_OBJECT (avi, "Unknown ncdt", ptr, tsize);
         break;
     }
 
@@ -4057,8 +4083,8 @@ gst_avi_demux_stream_header_pull (GstAviDemux * avi)
         goto next;
       default:
         GST_WARNING_OBJECT (avi,
-            "Unknown tag %" GST_FOURCC_FORMAT " in AVI header at off %d",
-            GST_FOURCC_ARGS (tag), offset);
+            "Unknown tag %" GST_FOURCC_FORMAT " in AVI header",
+            GST_FOURCC_ARGS (tag));
         GST_MEMDUMP_OBJECT (avi, "Unknown tag", map.data, map.size);
         /* fall-through */
       case GST_RIFF_TAG_JUNQ:
