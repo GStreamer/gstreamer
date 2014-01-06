@@ -1921,6 +1921,7 @@ gst_ffmpegviddec_register (GstPlugin * plugin)
       case AV_CODEC_ID_MPEG4:
       case AV_CODEC_ID_MSMPEG4V3:
       case AV_CODEC_ID_H264:
+      case AV_CODEC_ID_HEVC:
       case AV_CODEC_ID_RV10:
       case AV_CODEC_ID_RV20:
       case AV_CODEC_ID_RV30:

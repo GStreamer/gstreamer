@@ -1195,6 +1195,27 @@ gst_ffmpeg_codecid_to_caps (enum AVCodecID codec_id,
       }
       break;
 
+    case AV_CODEC_ID_HEVC:
+      caps =
+          gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/x-h265",
+          "alignment", G_TYPE_STRING, "au", NULL);
+      if (!encode) {
+        GValue arr = { 0, };
+        GValue item = { 0, };
+        g_value_init (&arr, GST_TYPE_LIST);
+        g_value_init (&item, G_TYPE_STRING);
+        g_value_set_string (&item, "hvc1");
+        gst_value_list_append_value (&arr, &item);
+        g_value_set_string (&item, "hev1");
+        gst_value_list_append_value (&arr, &item);
+        g_value_set_string (&item, "byte-stream");
+        gst_value_list_append_value (&arr, &item);
+        g_value_unset (&item);
+        gst_caps_set_value (caps, "stream-format", &arr);
+        g_value_unset (&arr);
+      }
+      break;
+
     case AV_CODEC_ID_INDEO5:
       caps =
           gst_ff_vid_caps_new (context, NULL, codec_id, encode, "video/x-indeo",
@@ -3863,6 +3884,9 @@ gst_ffmpeg_caps_to_codecid (const GstCaps * caps, AVCodecContext * context)
     audio = TRUE;
   } else if (!strcmp (mimetype, "video/x-h264")) {
     id = AV_CODEC_ID_H264;
+    video = TRUE;
+  } else if (!strcmp (mimetype, "video/x-h265")) {
+    id = AV_CODEC_ID_HEVC;
     video = TRUE;
   } else if (!strcmp (mimetype, "video/x-flash-video")) {
     gint flvversion = 0;
