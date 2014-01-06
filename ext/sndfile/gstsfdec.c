@@ -27,12 +27,6 @@
 
 #include "gstsfdec.h"
 
-enum
-{
-  PROP_0,
-  PROP_LOCATION
-};
-
 #define FORMATS \
     "{ "GST_AUDIO_NE (F32)", "GST_AUDIO_NE (S32)", "GST_AUDIO_NE (S16)" }"
 
