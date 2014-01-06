@@ -91,6 +91,9 @@ gst_vaapi_encoder_set_rate_control (GstVaapiEncoder * encoder,
     GstVaapiRateControl rate_control);
 
 GstVaapiEncoderStatus
+gst_vaapi_encoder_set_bitrate (GstVaapiEncoder * encoder, guint bitrate);
+
+GstVaapiEncoderStatus
 gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,
     GstVideoCodecFrame * frame);
 

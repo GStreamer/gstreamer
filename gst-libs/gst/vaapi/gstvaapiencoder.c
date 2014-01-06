@@ -491,6 +491,39 @@ error_unsupported_rate_control:
   }
 }
 
+/**
+ * gst_vaapi_encoder_set_bitrate:
+ * @encoder: a #GstVaapiEncoder
+ * @bitrate: the requested bitrate (in kbps)
+ *
+ * Notifies the @encoder to use the supplied @bitrate value.
+ *
+ * Note: currently, the bitrate can only be specified before the first
+ * frame is encoded. Afterwards, any change to this parameter is
+ * invalid and @GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED is
+ * returned.
+ *
+ * Return value: a #GstVaapiEncoderStatus
+ */
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_bitrate (GstVaapiEncoder * encoder, guint bitrate)
+{
+  g_return_val_if_fail (encoder != NULL, 0);
+
+  if (encoder->bitrate != bitrate && encoder->num_codedbuf_queued > 0)
+    goto error_operation_failed;
+
+  encoder->bitrate = bitrate;
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  /* ERRORS */
+error_operation_failed:
+  {
+    GST_ERROR ("could not change bitrate value after encoding started");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+  }
+}
+
 /* Base encoder initialization (internal) */
 static gboolean
 gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)

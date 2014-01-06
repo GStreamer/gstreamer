@@ -70,7 +70,6 @@ struct _GstVaapiEncoderH264
   /* public */
   guint32 profile;
   guint32 level;
-  guint32 bitrate;              /*kbps */
   guint32 intra_period;
   guint32 idr_period;
   guint32 init_qp;              /*default 24 */

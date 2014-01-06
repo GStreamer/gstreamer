@@ -852,6 +852,7 @@ static gboolean
 fill_va_sequence_param (GstVaapiEncoderH264 * encoder,
     GstVaapiEncSequence * sequence)
 {
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   VAEncSequenceParameterBufferH264 *seq = sequence->param;
   guint width_in_mbs, height_in_mbs;
 
@@ -863,8 +864,8 @@ fill_va_sequence_param (GstVaapiEncoderH264 * encoder,
   seq->level_idc = encoder->level;
   seq->intra_period = encoder->intra_period;
   seq->ip_period = 0;           // ?
-  if (encoder->bitrate > 0)
-    seq->bits_per_second = encoder->bitrate * 1024;
+  if (base_encoder->bitrate > 0)
+    seq->bits_per_second = base_encoder->bitrate * 1024;
   else
     seq->bits_per_second = 0;
 
@@ -912,12 +913,12 @@ fill_va_sequence_param (GstVaapiEncoderH264 * encoder,
   }
 
   /*vui not set */
-  seq->vui_parameters_present_flag = (encoder->bitrate > 0 ? TRUE : FALSE);
+  seq->vui_parameters_present_flag = (base_encoder->bitrate > 0 ? TRUE : FALSE);
   if (seq->vui_parameters_present_flag) {
     seq->vui_fields.bits.aspect_ratio_info_present_flag = FALSE;
     seq->vui_fields.bits.bitstream_restriction_flag = FALSE;
     seq->vui_fields.bits.timing_info_present_flag =
-        (encoder->bitrate > 0 ? TRUE : FALSE);
+        (base_encoder->bitrate > 0 ? TRUE : FALSE);
     if (seq->vui_fields.bits.timing_info_present_flag) {
       seq->num_units_in_tick = GST_VAAPI_ENCODER_FPS_D (encoder);
       seq->time_scale = GST_VAAPI_ENCODER_FPS_N (encoder) * 2;
@@ -1209,6 +1210,7 @@ ensure_slices (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 static gboolean
 ensure_misc (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 {
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   GstVaapiEncMiscParam *misc = NULL;
   VAEncMiscParameterHRD *hrd;
   VAEncMiscParameterRateControl *rate_control;
@@ -1220,9 +1222,9 @@ ensure_misc (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
     return FALSE;
   gst_vaapi_enc_picture_add_misc_buffer (picture, misc);
   hrd = misc->impl;
-  if (encoder->bitrate > 0) {
-    hrd->initial_buffer_fullness = encoder->bitrate * 1024 * 4;
-    hrd->buffer_size = encoder->bitrate * 1024 * 8;
+  if (base_encoder->bitrate > 0) {
+    hrd->initial_buffer_fullness = base_encoder->bitrate * 1024 * 4;
+    hrd->buffer_size = base_encoder->bitrate * 1024 * 8;
   } else {
     hrd->initial_buffer_fullness = 0;
     hrd->buffer_size = 0;
@@ -1239,8 +1241,8 @@ ensure_misc (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
     gst_vaapi_enc_picture_add_misc_buffer (picture, misc);
     rate_control = misc->impl;
     memset (rate_control, 0, sizeof (VAEncMiscParameterRateControl));
-    if (encoder->bitrate)
-      rate_control->bits_per_second = encoder->bitrate * 1024;
+    if (base_encoder->bitrate)
+      rate_control->bits_per_second = base_encoder->bitrate * 1024;
     else
       rate_control->bits_per_second = 0;
     rate_control->target_percentage = 70;
@@ -1257,6 +1259,7 @@ ensure_misc (GstVaapiEncoderH264 * encoder, GstVaapiEncPicture * picture)
 gboolean
 init_encoder_public_attributes (GstVaapiEncoderH264 * encoder)
 {
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   guint width_mbs, height_mbs, total_mbs;
 
   if (!GST_VAAPI_ENCODER_WIDTH (encoder) ||
@@ -1298,13 +1301,13 @@ init_encoder_public_attributes (GstVaapiEncoderH264 * encoder)
       GST_VAAPI_RATECONTROL_VBR == GST_VAAPI_ENCODER_RATE_CONTROL (encoder) ||
       GST_VAAPI_RATECONTROL_VBR_CONSTRAINED ==
       GST_VAAPI_ENCODER_RATE_CONTROL (encoder)) {
-    if (!encoder->bitrate)
-      encoder->bitrate = GST_VAAPI_ENCODER_WIDTH (encoder) *
+    if (!base_encoder->bitrate)
+      base_encoder->bitrate = GST_VAAPI_ENCODER_WIDTH (encoder) *
           GST_VAAPI_ENCODER_HEIGHT (encoder) *
           GST_VAAPI_ENCODER_FPS_N (encoder) /
           GST_VAAPI_ENCODER_FPS_D (encoder) / 4 / 1024;
   } else
-    encoder->bitrate = 0;
+    base_encoder->bitrate = 0;
 
   if (!encoder->slice_num)
     encoder->slice_num = GST_VAAPI_ENCODER_H264_DEFAULT_SLICE_NUM;
@@ -1706,7 +1709,6 @@ gst_vaapi_encoder_h264_init (GstVaapiEncoder * base)
   /* init attributes */
   encoder->profile = 0;
   encoder->level = 0;
-  encoder->bitrate = 0;
   encoder->idr_period = 0;
   encoder->intra_period = 0;
   encoder->init_qp = -1;

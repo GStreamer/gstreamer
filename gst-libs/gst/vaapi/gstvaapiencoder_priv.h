@@ -98,6 +98,7 @@ struct _GstVaapiEncoder
   GstVideoInfo video_info;
   GstVaapiRateControl rate_control;
   guint32 rate_control_mask;
+  guint bitrate; /* kbps */
 
   GMutex mutex;
   GCond surface_free;

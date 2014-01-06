@@ -318,6 +318,10 @@ ensure_encoder (GstVaapiEncode * encode)
       encode->rate_control);
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     return FALSE;
+
+  status = gst_vaapi_encoder_set_bitrate (encode->encoder, encode->bitrate);
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+    return FALSE;
   return TRUE;
 }
 

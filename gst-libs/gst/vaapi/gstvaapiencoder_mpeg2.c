@@ -105,6 +105,8 @@ ensure_sampling_desity (GstVaapiEncoderMpeg2 * encoder)
 static gboolean
 ensure_public_attributes (GstVaapiEncoderMpeg2 * encoder)
 {
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
+
   if (!GST_VAAPI_ENCODER_WIDTH (encoder) ||
       !GST_VAAPI_ENCODER_HEIGHT (encoder) ||
       !GST_VAAPI_ENCODER_FPS_N (encoder) ||
@@ -128,13 +130,13 @@ ensure_public_attributes (GstVaapiEncoderMpeg2 * encoder)
 
   /* default compress ratio 1: (4*8*1.5) */
   if (GST_VAAPI_RATECONTROL_CBR == GST_VAAPI_ENCODER_RATE_CONTROL (encoder)) {
-    if (!encoder->bitrate)
-      encoder->bitrate = GST_VAAPI_ENCODER_WIDTH (encoder) *
+    if (!base_encoder->bitrate)
+      base_encoder->bitrate = GST_VAAPI_ENCODER_WIDTH (encoder) *
           GST_VAAPI_ENCODER_HEIGHT (encoder) *
           GST_VAAPI_ENCODER_FPS_N (encoder) /
           GST_VAAPI_ENCODER_FPS_D (encoder) / 4 / 1024;
   } else
-    encoder->bitrate = 0;
+    base_encoder->bitrate = 0;
 
   return TRUE;
 }
@@ -176,6 +178,7 @@ make_profile_and_level_indication (guint32 profile, guint32 level)
 static gboolean
 fill_sequence (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncSequence * sequence)
 {
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   VAEncSequenceParameterBufferMPEG2 *seq = sequence->param;
 
   memset (seq, 0, sizeof (VAEncSequenceParameterBufferMPEG2));
@@ -185,8 +188,8 @@ fill_sequence (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncSequence * sequence)
   seq->picture_width = GST_VAAPI_ENCODER_WIDTH (encoder);
   seq->picture_height = GST_VAAPI_ENCODER_HEIGHT (encoder);
 
-  if (encoder->bitrate > 0)
-    seq->bits_per_second = encoder->bitrate * 1024;
+  if (base_encoder->bitrate > 0)
+    seq->bits_per_second = base_encoder->bitrate * 1024;
   else
     seq->bits_per_second = 0;
 
@@ -418,6 +421,7 @@ static gboolean
 set_misc_parameters (GstVaapiEncoderMpeg2 * encoder,
     GstVaapiEncPicture * picture)
 {
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   GstVaapiEncMiscParam *misc = NULL;
   VAEncMiscParameterHRD *hrd;
   VAEncMiscParameterRateControl *rate_control;
@@ -429,9 +433,9 @@ set_misc_parameters (GstVaapiEncoderMpeg2 * encoder,
     return FALSE;
   gst_vaapi_enc_picture_add_misc_buffer (picture, misc);
   hrd = misc->impl;
-  if (encoder->bitrate > 0) {
-    hrd->initial_buffer_fullness = encoder->bitrate * 1024 * 4;
-    hrd->buffer_size = encoder->bitrate * 1024 * 8;
+  if (base_encoder->bitrate > 0) {
+    hrd->initial_buffer_fullness = base_encoder->bitrate * 1024 * 4;
+    hrd->buffer_size = base_encoder->bitrate * 1024 * 8;
   } else {
     hrd->initial_buffer_fullness = 0;
     hrd->buffer_size = 0;
@@ -447,8 +451,8 @@ set_misc_parameters (GstVaapiEncoderMpeg2 * encoder,
     gst_vaapi_enc_picture_add_misc_buffer (picture, misc);
     rate_control = misc->impl;
     memset (rate_control, 0, sizeof (VAEncMiscParameterRateControl));
-    if (encoder->bitrate)
-      rate_control->bits_per_second = encoder->bitrate * 1024;
+    if (base_encoder->bitrate)
+      rate_control->bits_per_second = base_encoder->bitrate * 1024;
     else
       rate_control->bits_per_second = 0;
     rate_control->target_percentage = 70;

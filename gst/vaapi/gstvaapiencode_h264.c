@@ -162,7 +162,6 @@ gst_vaapiencode_h264_create_encoder (GstVaapiEncode * base,
     GstVaapiDisplay * display)
 {
   GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (base);
-  GstVaapiEncode *const base_encode = GST_VAAPIENCODE_CAST (base);
   GstVaapiEncoder *base_encoder;
   GstVaapiEncoderH264 *encoder;
 
@@ -173,7 +172,6 @@ gst_vaapiencode_h264_create_encoder (GstVaapiEncode * base,
 
   encoder->profile = GST_VAAPI_PROFILE_UNKNOWN;
   encoder->level = GST_VAAPI_ENCODER_H264_DEFAULT_LEVEL;
-  encoder->bitrate = base_encode->bitrate;
   encoder->intra_period = encode->intra_period;
   encoder->init_qp = encode->init_qp;
   encoder->min_qp = encode->min_qp;

@@ -80,7 +80,6 @@ struct _GstVaapiEncoderMpeg2
   /* public */
   guint32 profile;
   guint32 level;
-  guint32 bitrate;              /*kbps */
   guint32 cqp;
   guint32 intra_period;
   guint32 ip_period;

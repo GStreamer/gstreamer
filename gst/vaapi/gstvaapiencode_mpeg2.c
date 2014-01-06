@@ -153,7 +153,6 @@ gst_vaapiencode_mpeg2_create_encoder (GstVaapiEncode * base,
     GstVaapiDisplay * display)
 {
   GstVaapiEncodeMpeg2 *const encode = GST_VAAPIENCODE_MPEG2_CAST (base);
-  GstVaapiEncode *const base_encode = GST_VAAPIENCODE_CAST (base);
   GstVaapiEncoder *base_encoder;
   GstVaapiEncoderMpeg2 *encoder;
 
@@ -164,7 +163,6 @@ gst_vaapiencode_mpeg2_create_encoder (GstVaapiEncode * base,
 
   encoder->profile = GST_VAAPI_ENCODER_MPEG2_DEFAULT_PROFILE;
   encoder->level = GST_VAAPI_ENCODER_MPEG2_DEFAULT_LEVEL;
-  encoder->bitrate = base_encode->bitrate;
   encoder->cqp = encode->quantizer;
   encoder->intra_period = encode->intra_period;
   encoder->ip_period = encode->ip_period;
