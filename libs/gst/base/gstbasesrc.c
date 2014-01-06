@@ -3311,24 +3311,30 @@ gst_base_src_start_complete (GstBaseSrc * basesrc, GstFlowReturn ret)
   /* take the stream lock here, we only want to let the task run when we have
    * set the STARTED flag */
   GST_PAD_STREAM_LOCK (basesrc->srcpad);
-  if (mode == GST_PAD_MODE_PUSH) {
-    /* do initial seek, which will start the task */
-    GST_OBJECT_LOCK (basesrc);
-    event = basesrc->pending_seek;
-    basesrc->pending_seek = NULL;
-    GST_OBJECT_UNLOCK (basesrc);
+  switch (mode) {
+    case GST_PAD_MODE_PUSH:
+      /* do initial seek, which will start the task */
+      GST_OBJECT_LOCK (basesrc);
+      event = basesrc->pending_seek;
+      basesrc->pending_seek = NULL;
+      GST_OBJECT_UNLOCK (basesrc);
 
-    /* The perform seek code will start the task when finished. We don't have to
-     * unlock the streaming thread because it is not running yet */
-    if (G_UNLIKELY (!gst_base_src_perform_seek (basesrc, event, FALSE)))
-      goto seek_failed;
+      /* The perform seek code will start the task when finished. We don't have to
+       * unlock the streaming thread because it is not running yet */
+      if (G_UNLIKELY (!gst_base_src_perform_seek (basesrc, event, FALSE)))
+        goto seek_failed;
 
-    if (event)
-      gst_event_unref (event);
-  } else {
-    /* if not random_access, we cannot operate in pull mode for now */
-    if (G_UNLIKELY (!basesrc->random_access))
-      goto no_get_range;
+      if (event)
+        gst_event_unref (event);
+      break;
+    case GST_PAD_MODE_PULL:
+      /* if not random_access, we cannot operate in pull mode for now */
+      if (G_UNLIKELY (!basesrc->random_access))
+        goto no_get_range;
+      break;
+    default:
+      goto not_activated_yet;
+      break;
   }
 
   GST_OBJECT_LOCK (basesrc);
@@ -3356,8 +3362,15 @@ no_get_range:
   {
     GST_PAD_STREAM_UNLOCK (basesrc->srcpad);
     gst_base_src_stop (basesrc);
-    GST_WARNING_OBJECT (basesrc,
-        "Cannot operate in pull mode, stopping pad task");
+    GST_ERROR_OBJECT (basesrc, "Cannot operate in pull mode, stopping");
+    ret = GST_FLOW_ERROR;
+    goto error;
+  }
+not_activated_yet:
+  {
+    GST_PAD_STREAM_UNLOCK (basesrc->srcpad);
+    gst_base_src_stop (basesrc);
+    GST_WARNING_OBJECT (basesrc, "pad not activated yet");
     ret = GST_FLOW_ERROR;
     goto error;
   }
@@ -3638,6 +3651,8 @@ gst_base_src_activate_mode (GstPad * pad, GstObject * parent,
   GstBaseSrc *src = GST_BASE_SRC (parent);
 
   src->priv->stream_start_pending = FALSE;
+
+  GST_DEBUG_OBJECT (pad, "activating in mode %d", mode);
 
   switch (mode) {
     case GST_PAD_MODE_PULL:
