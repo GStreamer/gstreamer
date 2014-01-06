@@ -892,6 +892,13 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
           name = g_strdup_printf ("audio_%04x", bstream->pid);
           caps = gst_caps_new_empty_simple ("audio/x-smpte-302m");
           break;
+        case DRF_ID_HEVC:
+          template = gst_static_pad_template_get (&video_template);
+          name = g_strdup_printf ("video_%04x", bstream->pid);
+          caps = gst_caps_new_simple ("video/x-h265",
+              "stream-format", G_TYPE_STRING, "byte-stream",
+              "alignment", G_TYPE_STRING, "nal", NULL);
+          break;
       }
       if (template)
         break;
@@ -944,6 +951,13 @@ create_pad_for_stream (MpegTSBase * base, MpegTSBaseStream * bstream,
       template = gst_static_pad_template_get (&video_template);
       name = g_strdup_printf ("video_%04x", bstream->pid);
       caps = gst_caps_new_simple ("video/x-h264",
+          "stream-format", G_TYPE_STRING, "byte-stream",
+          "alignment", G_TYPE_STRING, "nal", NULL);
+      break;
+    case GST_MPEG_TS_STREAM_TYPE_VIDEO_HEVC:
+      template = gst_static_pad_template_get (&video_template);
+      name = g_strdup_printf ("video_%04x", bstream->pid);
+      caps = gst_caps_new_simple ("video/x-h265",
           "stream-format", G_TYPE_STRING, "byte-stream",
           "alignment", G_TYPE_STRING, "nal", NULL);
       break;

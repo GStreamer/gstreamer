@@ -297,6 +297,7 @@ typedef enum {
   GST_MPEG_TS_STREAM_TYPE_VIDEO_JP2K                   = 0x21,
   GST_MPEG_TS_STREAM_TYPE_VIDEO_MPEG2_STEREO_ADDITIONAL_VIEW = 0x22,
   GST_MPEG_TS_STREAM_TYPE_VIDEO_H264_STEREO_ADDITIONAL_VIEW  = 0x23,
+  GST_MPEG_TS_STREAM_TYPE_VIDEO_HEVC                   = 0x24,
   /* 0x24 - 0x7e : Rec. ITU-T H.222.0 | ISO/IEC 13818-1 Reserved */
   GST_MPEG_TS_STREAM_TYPE_IPMP_STREAM                  = 0x7f
   /* 0x80 - 0xff : User Private (or defined in other specs) */

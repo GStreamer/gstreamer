@@ -230,5 +230,6 @@
 #define DRF_ID_GA94       0x47413934
 #define DRF_ID_CUEI       0x43554549
 #define DRF_ID_ETV1       0x45545631
+#define DRF_ID_HEVC       0x48455643
 
 #endif /* __GST_MPEG_DESC_H__ */
