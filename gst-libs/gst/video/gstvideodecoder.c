@@ -1870,6 +1870,39 @@ gst_video_decoder_flush_parse (GstVideoDecoder * dec, gboolean at_eos)
     /* move it to the front of the decode queue */
     priv->decode = g_list_concat (walk, priv->decode);
 
+    /* this is reverse playback, check if we need to apply some segment
+     * to the output before decoding, as during decoding the segment.rate
+     * must be used to determine if a buffer should be pushed or added to
+     * the output list for reverse pushing.
+     *
+     * The new segment is not immediately pushed here because we must
+     * wait for negotiation to happen before it can be pushed to avoid
+     * pushing a segment before caps event. Negotiation only happens
+     * when finish_frame is called.
+     */
+    for (walk = frame->events; walk;) {
+      GList *cur = walk;
+      GstEvent *event = walk->data;
+
+      walk = g_list_next (walk);
+      if (GST_EVENT_TYPE (event) <= GST_EVENT_SEGMENT) {
+
+        if (GST_EVENT_TYPE (event) == GST_EVENT_SEGMENT) {
+          GstSegment segment;
+
+          GST_DEBUG_OBJECT (dec, "Segment at frame %p %" GST_TIME_FORMAT,
+              frame, GST_TIME_ARGS (GST_BUFFER_PTS (frame->input_buffer)));
+          gst_event_copy_segment (event, &segment);
+          if (segment.format == GST_FORMAT_TIME) {
+            dec->output_segment = segment;
+          }
+        }
+        dec->priv->pending_events =
+            g_list_append (dec->priv->pending_events, event);
+        frame->events = g_list_delete_link (frame->events, cur);
+      }
+    }
+
     /* if we copied a keyframe, flush and decode the decode queue */
     if (GST_VIDEO_CODEC_FRAME_IS_SYNC_POINT (frame)) {
       GST_DEBUG_OBJECT (dec, "found keyframe %p with PTS %" GST_TIME_FORMAT
