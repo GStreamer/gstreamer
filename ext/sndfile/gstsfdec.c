@@ -600,6 +600,77 @@ create_and_send_tags (GstSFDec * self, SF_INFO * info, SF_LOOP_INFO * loop_info,
 }
 
 static gboolean
+is_valid_loop (gint mode, guint start, guint end)
+{
+  if (!end)
+    return FALSE;
+  if (start >= end)
+    return FALSE;
+  if (!mode)
+    return FALSE;
+
+  return TRUE;
+}
+
+static void
+create_and_send_toc (GstSFDec * self, SF_INFO * info, SF_LOOP_INFO * loop_info,
+    SF_INSTRUMENT * instrument)
+{
+  GstToc *toc;
+  GstTocEntry *entry = NULL, *subentry = NULL;
+  gint64 start, stop;
+  gchar *id;
+  gint i;
+  gboolean have_loops = FALSE;
+
+  if (!instrument)
+    return;
+
+  for (i = 0; i < 16; i++) {
+    if (is_valid_loop (instrument->loops[i].mode, instrument->loops[i].start,
+            instrument->loops[i].end)) {
+      have_loops = TRUE;
+      break;
+    }
+  }
+  if (!have_loops) {
+    GST_INFO_OBJECT (self, "Have no loops");
+    return;
+  }
+
+
+  toc = gst_toc_new (GST_TOC_SCOPE_GLOBAL);
+  GST_DEBUG_OBJECT (self, "have toc");
+
+  /* add cue edition */
+  entry = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_EDITION, "loops");
+  stop = gst_util_uint64_scale_int (self->duration, GST_SECOND, self->rate);
+  gst_toc_entry_set_start_stop_times (entry, 0, stop);
+  gst_toc_append_entry (toc, entry);
+
+  for (i = 0; i < 16; i++) {
+    GST_DEBUG_OBJECT (self,
+        "loop[%2d]: mode=%d, start=%u, end=%u, count=%u", i,
+        instrument->loops[i].mode, instrument->loops[i].start,
+        instrument->loops[i].end, instrument->loops[i].count);
+    if (is_valid_loop (instrument->loops[i].mode, instrument->loops[i].start,
+            instrument->loops[i].end)) {
+      id = g_strdup_printf ("%08x", i);
+      subentry = gst_toc_entry_new (GST_TOC_ENTRY_TYPE_CHAPTER, id);
+      g_free (id);
+      start = gst_util_uint64_scale_int (instrument->loops[i].start,
+          GST_SECOND, self->rate);
+      stop = gst_util_uint64_scale_int (instrument->loops[i].end,
+          GST_SECOND, self->rate);
+      gst_toc_entry_set_start_stop_times (subentry, start, stop);
+      gst_toc_entry_append_sub_entry (entry, subentry);
+    }
+  }
+
+  gst_pad_push_event (self->srcpad, gst_event_new_toc (toc, FALSE));
+}
+
+static gboolean
 gst_sf_dec_open_file (GstSFDec * self)
 {
   SF_INFO info = { 0, };
@@ -687,6 +758,9 @@ gst_sf_dec_open_file (GstSFDec * self)
   create_and_send_tags (self, &info, (have_loop_info ? &loop_info : NULL),
       (have_instrument ? &instrument : NULL));
 
+  create_and_send_toc (self, &info, (have_loop_info ? &loop_info : NULL),
+      (have_instrument ? &instrument : NULL));
+
   return TRUE;
 
 open_failed:
@@ -717,7 +791,7 @@ gst_sf_dec_loop (GstPad * pad)
   buf = gst_buffer_new_and_alloc (self->bytes_per_frame * num_frames);
   gst_buffer_map (buf, &map, GST_MAP_WRITE);
   frames_read = self->reader (self->file, map.data, num_frames);
-  GST_DEBUG_OBJECT (self, "read %d / %d bytes = %d frames of audio",
+  GST_LOG_OBJECT (self, "read %d / %d bytes = %d frames of audio",
       (gint) frames_read, (gint) map.size, num_frames);
   gst_buffer_unmap (buf, &map);
 
