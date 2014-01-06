@@ -93,9 +93,6 @@ enum
 static void
 gst_vaapiencode_mpeg2_init (GstVaapiEncodeMpeg2 * encode)
 {
-  GstVaapiEncode *const base_encode = GST_VAAPIENCODE_CAST (encode);
-
-  base_encode->rate_control = GST_VAAPI_ENCODER_MPEG2_DEFAULT_RATE_CONTROL;
   encode->quantizer = GST_VAAPI_ENCODER_MPEG2_DEFAULT_CQP;
   encode->intra_period = GST_VAAPI_ENCODER_MPEG2_DEFAULT_GOP_SIZE;
   encode->ip_period = GST_VAAPI_ENCODER_MPEG2_DEFAULT_MAX_BFRAMES;
@@ -167,21 +164,11 @@ gst_vaapiencode_mpeg2_create_encoder (GstVaapiEncode * base,
 
   encoder->profile = GST_VAAPI_ENCODER_MPEG2_DEFAULT_PROFILE;
   encoder->level = GST_VAAPI_ENCODER_MPEG2_DEFAULT_LEVEL;
-  GST_VAAPI_ENCODER_RATE_CONTROL (encoder) = base_encode->rate_control;
   encoder->bitrate = base_encode->bitrate;
   encoder->cqp = encode->quantizer;
   encoder->intra_period = encode->intra_period;
   encoder->ip_period = encode->ip_period;
   return base_encoder;
-}
-
-static gboolean
-gst_vaapiencode_mpeg2_check_ratecontrol (GstVaapiEncode * encode,
-    GstVaapiRateControl rate_control)
-{
-  /* XXX: get information from GstVaapiEncoder object */
-  return rate_control == GST_VAAPI_RATECONTROL_CQP ||
-      rate_control == GST_VAAPI_RATECONTROL_CBR;
 }
 
 static void
@@ -199,7 +186,6 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
   object_class->get_property = gst_vaapiencode_mpeg2_get_property;
 
   encode_class->create_encoder = gst_vaapiencode_mpeg2_create_encoder;
-  encode_class->check_ratecontrol = gst_vaapiencode_mpeg2_check_ratecontrol;
 
   gst_element_class_set_static_metadata (element_class,
       "VA-API MPEG-2 encoder",

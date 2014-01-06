@@ -302,6 +302,7 @@ static gboolean
 ensure_encoder (GstVaapiEncode * encode)
 {
   GstVaapiEncodeClass *klass = GST_VAAPIENCODE_GET_CLASS (encode);
+  GstVaapiEncoderStatus status;
 
   g_return_val_if_fail (klass->create_encoder, FALSE);
 
@@ -311,6 +312,11 @@ ensure_encoder (GstVaapiEncode * encode)
   encode->encoder = klass->create_encoder (encode,
       GST_VAAPI_PLUGIN_BASE_DISPLAY (encode));
   if (!encode->encoder)
+    return FALSE;
+
+  status = gst_vaapi_encoder_set_rate_control (encode->encoder,
+      encode->rate_control);
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
     return FALSE;
   return TRUE;
 }
@@ -552,15 +558,6 @@ gst_vaapiencode_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
 }
 #endif
 
-static inline gboolean
-check_ratecontrol (GstVaapiEncode * encode, GstVaapiRateControl rate_control)
-{
-  GstVaapiEncodeClass *const klass = GST_VAAPIENCODE_GET_CLASS (encode);
-
-  return !klass->check_ratecontrol || klass->check_ratecontrol (encode,
-      rate_control);
-}
-
 static void
 gst_vaapiencode_set_property (GObject * object, guint prop_id,
     const GValue * value, GParamSpec * pspec)
@@ -569,15 +566,8 @@ gst_vaapiencode_set_property (GObject * object, guint prop_id,
 
   switch (prop_id) {
     case PROP_RATE_CONTROL:
-    {
-      GstVaapiRateControl rate_control = g_value_get_enum (value);
-      if (check_ratecontrol (encode, rate_control)) {
-        encode->rate_control = rate_control;
-      } else {
-        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      }
+      encode->rate_control = g_value_get_enum (value);
       break;
-    }
     case PROP_BITRATE:
       encode->bitrate = g_value_get_uint (value);
       break;
@@ -677,7 +667,7 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
           "Rate Control",
           "Rate control mode",
           GST_VAAPI_TYPE_RATE_CONTROL,
-          GST_VAAPI_RATECONTROL_NONE,
+          GST_VAAPI_RATECONTROL_CQP,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   g_object_class_install_property (object_class,

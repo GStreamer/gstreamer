@@ -173,7 +173,6 @@ gst_vaapiencode_h264_create_encoder (GstVaapiEncode * base,
 
   encoder->profile = GST_VAAPI_PROFILE_UNKNOWN;
   encoder->level = GST_VAAPI_ENCODER_H264_DEFAULT_LEVEL;
-  GST_VAAPI_ENCODER_RATE_CONTROL (encoder) = base_encode->rate_control;
   encoder->bitrate = base_encode->bitrate;
   encoder->intra_period = encode->intra_period;
   encoder->init_qp = encode->init_qp;

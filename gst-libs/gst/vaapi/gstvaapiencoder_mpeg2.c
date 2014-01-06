@@ -37,6 +37,14 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
+/* Define default rate control mode ("constant-qp") */
+#define DEFAULT_RATECONTROL GST_VAAPI_RATECONTROL_CQP
+
+/* Supported set of VA rate controls, within this implementation */
+#define SUPPORTED_RATECONTROLS                  \
+  (GST_VAAPI_RATECONTROL_MASK (NONE) |          \
+   GST_VAAPI_RATECONTROL_MASK (CQP)  |          \
+   GST_VAAPI_RATECONTROL_MASK (CBR))
 
 static gboolean
 gst_bit_writer_write_sps (GstBitWriter * bitwriter,
@@ -720,6 +728,8 @@ gst_vaapi_encoder_mpeg2_init (GstVaapiEncoder * base)
 {
   GstVaapiEncoderMpeg2 *encoder = GST_VAAPI_ENCODER_MPEG2 (base);
 
+  base->rate_control = DEFAULT_RATECONTROL;
+
   /* re-ordering */
   g_queue_init (&encoder->b_frames);
   encoder->dump_frames = FALSE;
@@ -777,6 +787,8 @@ gst_vaapi_encoder_mpeg2_finalize (GstVaapiEncoder * base)
   }
   g_queue_clear (&encoder->b_frames);
 }
+
+GST_VAAPI_ENCODER_DEFINE_CLASS_DATA (MPEG2);
 
 static inline const GstVaapiEncoderClass *
 gst_vaapi_encoder_mpeg2_class (void)

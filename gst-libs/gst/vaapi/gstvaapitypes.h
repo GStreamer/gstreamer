@@ -144,6 +144,10 @@ typedef enum {
     GST_VAAPI_RATECONTROL_VBR_CONSTRAINED,
 } GstVaapiRateControl;
 
+/* Define a mask for GstVaapiRateControl */
+#define GST_VAAPI_RATECONTROL_MASK(RC) \
+    (1 << G_PASTE(GST_VAAPI_RATECONTROL_,RC))
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_TYPES_H */

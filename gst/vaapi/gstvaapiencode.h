@@ -70,8 +70,6 @@ struct _GstVaapiEncodeClass
   /*< private >*/
   GstVaapiPluginBaseClass parent_class;
 
-  gboolean            (*check_ratecontrol) (GstVaapiEncode * encode,
-                                            GstVaapiRateControl rate_control);
   GstVaapiEncoder *   (*create_encoder)    (GstVaapiEncode * encode,
                                             GstVaapiDisplay * display);
   GstFlowReturn       (*allocate_buffer)   (GstVaapiEncode * encode,

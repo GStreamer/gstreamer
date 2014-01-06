@@ -40,6 +40,11 @@ typedef struct _GstVaapiEncoder GstVaapiEncoder;
  *   hold the encoded picture.
  * @GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN: Unknown error.
  * @GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED: No memory left.
+ * @GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED: The requested
+ *   operation failed to execute properly. e.g. invalid point in time to
+ *   execute the operation.
+ * @GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_RATE_CONTROL:
+ *   Unsupported rate control value.
  * @GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER: Invalid parameter.
  * @GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_BUFFER: Invalid buffer.
  * @GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_SURFACE: Invalid surface.
@@ -55,6 +60,8 @@ typedef enum
 
   GST_VAAPI_ENCODER_STATUS_ERROR_UNKNOWN = -1,
   GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED = -2,
+  GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED = -3,
+  GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_RATE_CONTROL = -4,
   GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER = -100,
   GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_BUFFER = -101,
   GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_SURFACE = -102,
@@ -78,6 +85,10 @@ gst_vaapi_encoder_get_codec_data (GstVaapiEncoder * encoder,
 GstCaps *
 gst_vaapi_encoder_set_format (GstVaapiEncoder * encoder,
     GstVideoCodecState * state, GstCaps * ref_caps);
+
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_rate_control (GstVaapiEncoder * encoder,
+    GstVaapiRateControl rate_control);
 
 GstVaapiEncoderStatus
 gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,

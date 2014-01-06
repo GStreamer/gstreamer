@@ -61,8 +61,17 @@ G_BEGIN_DECLS
 #define GST_VAAPI_ENCODER_HEIGHT(encoder)     (GST_VAAPI_ENCODER_CAST(encoder)->video_info.height)
 #define GST_VAAPI_ENCODER_FPS_N(encoder)      (GST_VAAPI_ENCODER_CAST(encoder)->video_info.fps_n)
 #define GST_VAAPI_ENCODER_FPS_D(encoder)      (GST_VAAPI_ENCODER_CAST(encoder)->video_info.fps_d)
-#define GST_VAAPI_ENCODER_RATE_CONTROL(encoder)   \
-    (GST_VAAPI_ENCODER_CAST(encoder)->rate_control)
+
+/**
+ * GST_VAAPI_ENCODER_RATE_CONTROL:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to the rate control.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_RATE_CONTROL
+#define GST_VAAPI_ENCODER_RATE_CONTROL(encoder) \
+  (GST_VAAPI_ENCODER_CAST (encoder)->rate_control)
 
 #define GST_VAAPI_ENCODER_CHECK_STATUS(exp, err_num, err_reason, ...)   \
   if (!(exp)) {                                                         \
@@ -72,6 +81,7 @@ G_BEGIN_DECLS
   }
 
 typedef struct _GstVaapiEncoderClass GstVaapiEncoderClass;
+typedef struct _GstVaapiEncoderClassData GstVaapiEncoderClassData;
 
 struct _GstVaapiEncoder
 {
@@ -87,6 +97,7 @@ struct _GstVaapiEncoder
   VAContextID va_context;
   GstVideoInfo video_info;
   GstVaapiRateControl rate_control;
+  guint32 rate_control_mask;
 
   GMutex mutex;
   GCond surface_free;
@@ -94,12 +105,31 @@ struct _GstVaapiEncoder
   guint codedbuf_size;
   GstVaapiVideoPool *codedbuf_pool;
   GAsyncQueue *codedbuf_queue;
+  guint32 num_codedbuf_queued;
 };
+
+struct _GstVaapiEncoderClassData
+{
+  /*< private >*/
+  GstVaapiCodec codec;
+
+  GstVaapiRateControl default_rate_control;
+  guint32 rate_control_mask;
+};
+
+#define GST_VAAPI_ENCODER_DEFINE_CLASS_DATA(CODEC)                      \
+  static const GstVaapiEncoderClassData g_class_data = {                \
+    .codec = G_PASTE (GST_VAAPI_CODEC_, CODEC),                         \
+    .default_rate_control = DEFAULT_RATECONTROL,                        \
+    .rate_control_mask = SUPPORTED_RATECONTROLS,                        \
+  }
 
 struct _GstVaapiEncoderClass
 {
   /*< private >*/
   GstVaapiMiniObjectClass parent_class;
+
+  const GstVaapiEncoderClassData *class_data;
 
   gboolean              (*init)         (GstVaapiEncoder * encoder);
   void                  (*finalize)     (GstVaapiEncoder * encoder);
@@ -135,6 +165,7 @@ struct _GstVaapiEncoderClass
 
 #define GST_VAAPI_ENCODER_CLASS_INIT(CODEC, codec)              \
   GST_VAAPI_ENCODER_CLASS_INIT_BASE (CODEC),                    \
+    .class_data = &g_class_data,                                \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, init),                 \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, finalize),             \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, set_format),           \

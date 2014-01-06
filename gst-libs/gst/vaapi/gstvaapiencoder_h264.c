@@ -36,6 +36,17 @@
 #define DEBUG 1
 #include "gstvaapidebug.h"
 
+/* Define default rate control mode ("constant-qp") */
+#define DEFAULT_RATECONTROL GST_VAAPI_RATECONTROL_CQP
+
+/* Supported set of VA rate controls, within this implementation */
+#define SUPPORTED_RATECONTROLS                          \
+  (GST_VAAPI_RATECONTROL_MASK (NONE) |                  \
+   GST_VAAPI_RATECONTROL_MASK (CQP)  |                  \
+   GST_VAAPI_RATECONTROL_MASK (CBR)  |                  \
+   GST_VAAPI_RATECONTROL_MASK (VBR)  |                  \
+   GST_VAAPI_RATECONTROL_MASK (VBR_CONSTRAINED))
+
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_NONE        0
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_LOW         1
 #define GST_VAAPI_ENCODER_H264_NAL_REF_IDC_MEDIUM      2
@@ -1690,6 +1701,8 @@ gst_vaapi_encoder_h264_init (GstVaapiEncoder * base)
 {
   GstVaapiEncoderH264 *encoder = GST_VAAPI_ENCODER_H264 (base);
 
+  base->rate_control = DEFAULT_RATECONTROL;
+
   /* init attributes */
   encoder->profile = 0;
   encoder->level = 0;
@@ -1755,6 +1768,8 @@ gst_vaapi_encoder_h264_finalize (GstVaapiEncoder * base)
   g_queue_clear (&encoder->reorder_frame_list);
 
 }
+
+GST_VAAPI_ENCODER_DEFINE_CLASS_DATA (H264);
 
 static inline const GstVaapiEncoderClass *
 gst_vaapi_encoder_h264_class (void)

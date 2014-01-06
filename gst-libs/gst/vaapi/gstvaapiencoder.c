@@ -25,6 +25,7 @@
 #include "gstvaapiencoder_priv.h"
 #include "gstvaapicontext.h"
 #include "gstvaapidisplay_priv.h"
+#include "gstvaapiutils.h"
 
 #define DEBUG 1
 #include "gstvaapidebug.h"
@@ -180,6 +181,7 @@ gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,
     gst_vaapi_coded_buffer_proxy_set_user_data (codedbuf_proxy,
         picture, (GDestroyNotify) gst_vaapi_enc_picture_unref);
     g_async_queue_push (encoder->codedbuf_queue, codedbuf_proxy);
+    encoder->num_codedbuf_queued++;
 
     /* Try again with any pending reordered frame now available for encoding */
     frame = NULL;
@@ -386,6 +388,107 @@ error:
   gst_caps_replace (&out_caps, NULL);
   GST_ERROR ("encoder set format failed");
   return NULL;
+}
+
+/* Determine the supported rate control modes */
+static gboolean
+get_rate_control_mask (GstVaapiEncoder * encoder)
+{
+  const GstVaapiEncoderClassData *const cdata =
+      GST_VAAPI_ENCODER_GET_CLASS (encoder)->class_data;
+  GstVaapiProfile profile;
+  GArray *profiles;
+  guint i, rate_control_mask = 0;
+
+  if (encoder->rate_control_mask)
+    return encoder->rate_control_mask;
+
+  profiles = gst_vaapi_display_get_encode_profiles (encoder->display);
+  if (!profiles)
+    goto cleanup;
+
+  // Pick a profile matching the class codec
+  for (i = 0; i < profiles->len; i++) {
+    profile = g_array_index (profiles, GstVaapiProfile, i);
+    if (gst_vaapi_profile_get_codec (profile) == cdata->codec)
+      break;
+  }
+
+  if (i != profiles->len) {
+    VAConfigAttrib attrib;
+    VAStatus status;
+
+    attrib.type = VAConfigAttribRateControl;
+    GST_VAAPI_DISPLAY_LOCK (encoder->display);
+    status =
+        vaGetConfigAttributes (GST_VAAPI_DISPLAY_VADISPLAY (encoder->display),
+        gst_vaapi_profile_get_va_profile (profile), VAEntrypointEncSlice,
+        &attrib, 1);
+    GST_VAAPI_DISPLAY_UNLOCK (encoder->display);
+    if (vaapi_check_status (status, "vaGetConfigAttributes()")) {
+      for (i = 0; i < 32; i++) {
+        if (!(attrib.value & (1 << i)))
+          continue;
+        rate_control_mask |= 1 << to_GstVaapiRateControl (1 << i);
+      }
+    }
+  }
+  g_array_unref (profiles);
+  GST_INFO ("supported rate controls: 0x%08x", rate_control_mask);
+
+cleanup:
+  encoder->rate_control_mask = cdata->rate_control_mask & rate_control_mask;
+  return encoder->rate_control_mask;
+}
+
+/**
+ * gst_vaapi_encoder_set_rate_control:
+ * @encoder: a #GstVaapiEncoder
+ * @rate_control: the requested rate control
+ *
+ * Notifies the @encoder to use the supplied @rate_control mode.
+ *
+ * If the underlying encoder does not support that rate control mode,
+ * then @GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_RATE_CONTROL is
+ * returned.
+ *
+ * The rate control mode can only be specified before the first frame
+ * is to be encoded. Afterwards, any change to this parameter is
+ * invalid and @GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED is
+ * returned.
+ *
+ * Return value: a #GstVaapiEncoderStatus
+ */
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_rate_control (GstVaapiEncoder * encoder,
+    GstVaapiRateControl rate_control)
+{
+  guint32 rate_control_mask;
+
+  g_return_val_if_fail (encoder != NULL,
+      GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER);
+
+  if (encoder->rate_control != rate_control && encoder->num_codedbuf_queued > 0)
+    goto error_operation_failed;
+
+  rate_control_mask = get_rate_control_mask (encoder);
+  if (!(rate_control_mask & (1U << rate_control)))
+    goto error_unsupported_rate_control;
+
+  encoder->rate_control = rate_control;
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  /* ERRORS */
+error_operation_failed:
+  {
+    GST_ERROR ("could not change rate control mode after encoding started");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+  }
+error_unsupported_rate_control:
+  {
+    GST_ERROR ("unsupported rate control mode (%d)", rate_control);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_UNSUPPORTED_RATE_CONTROL;
+  }
 }
 
 /* Base encoder initialization (internal) */
