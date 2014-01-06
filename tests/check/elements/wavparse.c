@@ -58,9 +58,15 @@ do_test_empty_file (gboolean can_activate_pull)
   gst_object_unref (pipeline);
 }
 
-GST_START_TEST (test_empty_file)
+GST_START_TEST (test_empty_file_pull)
 {
   do_test_empty_file (TRUE);
+}
+
+GST_END_TEST;
+
+GST_START_TEST (test_empty_file_push)
+{
   do_test_empty_file (FALSE);
 }
 
@@ -73,7 +79,8 @@ wavparse_suite (void)
   TCase *tc_chain = tcase_create ("wavparse");
 
   suite_add_tcase (s, tc_chain);
-  tcase_add_test (tc_chain, test_empty_file);
+  tcase_add_test (tc_chain, test_empty_file_pull);
+  tcase_add_test (tc_chain, test_empty_file_push);
   return s;
 }
 
