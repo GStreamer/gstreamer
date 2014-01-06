@@ -24,6 +24,8 @@
 #ifndef _GST_MPEGTS_PRIVATE_H_
 #define _GST_MPEGTS_PRIVATE_H_
 
+G_BEGIN_DECLS
+
 GST_DEBUG_CATEGORY_EXTERN (gst_mpegts_debug);
 #define GST_CAT_DEFAULT gst_mpegts_debug
 
@@ -36,5 +38,7 @@ G_GNUC_INTERNAL gpointer __common_desc_checks (GstMpegTsSection *section,
 					       guint minsize,
 					       GstMpegTsParseFunc parsefunc,
 					       GDestroyNotify destroynotify);
+
+G_END_DECLS
 
 #endif	/* _GST_MPEGTS_PRIVATE_H_ */

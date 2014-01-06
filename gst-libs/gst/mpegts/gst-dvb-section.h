@@ -28,6 +28,8 @@
 #include <gst/mpegts/gstmpegtssection.h>
 #include <gst/mpegts/gstmpegtsdescriptor.h>
 
+G_BEGIN_DECLS
+
 /**
  * GstMpegTsSectionDVBTableID:
  *
@@ -319,5 +321,7 @@ struct _GstMpegTsTOT
 
 GType gst_mpegts_tot_get_type (void);
 const GstMpegTsTOT *gst_mpegts_section_get_tot (GstMpegTsSection *section);
+
+G_END_DECLS
 
 #endif				/* GST_MPEGTS_SECTION_H */

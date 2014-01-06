@@ -28,6 +28,7 @@
 #include <gst/mpegts/gstmpegtssection.h>
 #include <gst/mpegts/gstmpegtsdescriptor.h>
 
+G_BEGIN_DECLS
 
 /**
  * GstMpegTsScteStreamType:
@@ -95,6 +96,8 @@ typedef enum {
   GST_MTS_TABLE_ID_SCTE_SPLICE   = 0xfc,     /* splice information table */
 
 } GstMpegTsSectionSCTETableID;
+
+G_END_DECLS
 
 #endif  /* GST_SCTE_SECTION_H */
 

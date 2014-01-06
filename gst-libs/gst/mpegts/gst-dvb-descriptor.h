@@ -34,6 +34,8 @@
 
 #include <gst/gst.h>
 
+G_BEGIN_DECLS
+
 /**
  * GstMpegTsDVBDescriptorType:
  *
@@ -358,5 +360,7 @@ guint gst_mpegts_descriptor_parse_dvb_subtitling_nb (const GstMpegTsDescriptor *
 
 /* GST_MTS_DESC_DVB_AC3 (0x6a) */
 /* FIXME : Implement */
+
+G_END_DECLS
 
 #endif				/* GST_MPEGTS_DESCRIPTOR_H */

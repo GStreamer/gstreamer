@@ -37,6 +37,10 @@
 #include <gst/mpegts/gst-scte-section.h>
 #include <gst/mpegts/gstmpegts-enumtypes.h>
 
+G_BEGIN_DECLS
+
 void gst_mpegts_initialize (void);
+
+G_END_DECLS
 
 #endif

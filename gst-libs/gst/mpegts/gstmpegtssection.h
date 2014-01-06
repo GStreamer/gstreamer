@@ -27,6 +27,8 @@
 #include <gst/gst.h>
 #include <gst/mpegts/gstmpegtsdescriptor.h>
 
+G_BEGIN_DECLS
+
 typedef struct _GstMpegTsSection GstMpegTsSection;
 
 #define GST_TYPE_MPEGTS_SECTION (gst_mpegts_section_get_type())
@@ -361,5 +363,7 @@ GstMpegTsSection *gst_message_parse_mpegts_section (GstMessage *message);
 GstMpegTsSection *gst_mpegts_section_new (guint16 pid,
 					   guint8 * data,
 					   gsize data_size);
+
+G_END_DECLS
 
 #endif				/* GST_MPEGTS_SECTION_H */

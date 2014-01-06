@@ -34,6 +34,8 @@
 
 #include <gst/gst.h>
 
+G_BEGIN_DECLS
+
 /*
  * descriptor_tag TS  PS                      Identification
  *        0       n/a n/a Reserved
@@ -314,5 +316,7 @@ struct _GstMpegTsLogicalChannelDescriptor
 gboolean
 gst_mpegts_descriptor_parse_logical_channel (const GstMpegTsDescriptor *descriptor,
 					     GstMpegTsLogicalChannelDescriptor *res);
+
+G_END_DECLS
 
 #endif				/* GST_MPEGTS_DESCRIPTOR_H */

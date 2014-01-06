@@ -28,6 +28,8 @@
 #include <gst/mpegts/gstmpegtssection.h>
 #include <gst/mpegts/gstmpegtsdescriptor.h>
 
+G_BEGIN_DECLS
+
 /**
  * GstMpegTsSectionATSCTableID:
  *
@@ -63,5 +65,7 @@ typedef enum {
   GST_MTS_TABLE_ID_ATSC_AGGREGATE_DATA_EVENT            = 0xD9,
   GST_MTS_TABLE_ID_ATSC_SATELLITE_VIRTUAL_CHANNEL       = 0xDA,
 } GstMpegTsSectionATSCTableID;
+
+G_END_DECLS
 
 #endif				/* GST_MPEGTS_SECTION_H */
