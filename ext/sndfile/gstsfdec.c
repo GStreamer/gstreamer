@@ -469,6 +469,136 @@ gst_sf_dec_sink_activate_mode (GstPad * sinkpad, GstObject * parent,
   return res;
 }
 
+static void
+create_and_send_tags (GstSFDec * self, SF_INFO * info, SF_LOOP_INFO * loop_info,
+    SF_INSTRUMENT * instrument)
+{
+  GstTagList *tags;
+  const gchar *tag;
+  const gchar *codec_name;
+
+  /* send tags */
+  tags = gst_tag_list_new_empty ();
+  if ((tag = sf_get_string (self->file, SF_STR_TITLE))) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, tag, NULL);
+  }
+  if ((tag = sf_get_string (self->file, SF_STR_COMMENT))) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_COMMENT, tag, NULL);
+  }
+  if ((tag = sf_get_string (self->file, SF_STR_ARTIST))) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, tag, NULL);
+  }
+  if ((tag = sf_get_string (self->file, SF_STR_ALBUM))) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ALBUM, tag, NULL);
+  }
+  if ((tag = sf_get_string (self->file, SF_STR_GENRE))) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_GENRE, tag, NULL);
+  }
+  if ((tag = sf_get_string (self->file, SF_STR_COPYRIGHT))) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_COPYRIGHT, tag, NULL);
+  }
+  if ((tag = sf_get_string (self->file, SF_STR_LICENSE))) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_LICENSE, tag, NULL);
+  }
+  if ((tag = sf_get_string (self->file, SF_STR_SOFTWARE))) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_APPLICATION_NAME, tag,
+        NULL);
+  }
+  if ((tag = sf_get_string (self->file, SF_STR_TRACKNUMBER))) {
+    guint track = atoi (tag);
+    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TRACK_NUMBER, track,
+        NULL);
+  }
+  if ((tag = sf_get_string (self->file, SF_STR_DATE))) {
+    GValue tag_val = { 0, };
+    GType tag_type = gst_tag_get_type (GST_TAG_DATE_TIME);
+
+    g_value_init (&tag_val, tag_type);
+    if (gst_value_deserialize (&tag_val, tag)) {
+      gst_tag_list_add_value (tags, GST_TAG_MERGE_APPEND, GST_TAG_DATE_TIME,
+          &tag_val);
+    } else {
+      GST_WARNING_OBJECT (self, "could not deserialize '%s' into a "
+          "tag %s of type %s", tag, GST_TAG_DATE_TIME, g_type_name (tag_type));
+    }
+    g_value_unset (&tag_val);
+  }
+  if (loop_info) {
+    if (loop_info->bpm != 0.0) {
+      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_BEATS_PER_MINUTE,
+          (gdouble) loop_info->bpm, NULL);
+    }
+    if (loop_info->root_key != -1) {
+      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_MIDI_BASE_NOTE,
+          (guint) loop_info->root_key, NULL);
+    }
+  }
+  if (instrument) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_MIDI_BASE_NOTE,
+        (guint) instrument->basenote, NULL);
+  }
+  /* TODO: calculate bitrate: GST_TAG_BITRATE */
+  switch (info->format & SF_FORMAT_SUBMASK) {
+    case SF_FORMAT_PCM_S8:
+    case SF_FORMAT_PCM_16:
+    case SF_FORMAT_PCM_24:
+    case SF_FORMAT_PCM_32:
+    case SF_FORMAT_PCM_U8:
+      codec_name = "Uncompressed PCM audio";
+      break;
+    case SF_FORMAT_FLOAT:
+    case SF_FORMAT_DOUBLE:
+      codec_name = "Uncompressed IEEE float audio";
+      break;
+    case SF_FORMAT_ULAW:
+      codec_name = "µ-law audio";
+      break;
+    case SF_FORMAT_ALAW:
+      codec_name = "A-law audio";
+      break;
+    case SF_FORMAT_IMA_ADPCM:
+    case SF_FORMAT_MS_ADPCM:
+    case SF_FORMAT_VOX_ADPCM:
+    case SF_FORMAT_G721_32:
+    case SF_FORMAT_G723_24:
+    case SF_FORMAT_G723_40:
+      codec_name = "ADPCM audio";
+      break;
+    case SF_FORMAT_GSM610:
+      codec_name = "MS GSM audio";
+      break;
+    case SF_FORMAT_DWVW_12:
+    case SF_FORMAT_DWVW_16:
+    case SF_FORMAT_DWVW_24:
+    case SF_FORMAT_DWVW_N:
+      codec_name = "Delta Width Variable Word encoded audio";
+      break;
+    case SF_FORMAT_DPCM_8:
+    case SF_FORMAT_DPCM_16:
+      codec_name = "differential PCM audio";
+      break;
+    case SF_FORMAT_VORBIS:
+      codec_name = "Vorbis";
+      break;
+    default:
+      codec_name = NULL;
+      GST_WARNING_OBJECT (self, "unmapped codec_type: %d",
+          info->format & SF_FORMAT_SUBMASK);
+      break;
+  }
+  if (codec_name) {
+    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
+        codec_name, NULL);
+  }
+
+  if (!gst_tag_list_is_empty (tags)) {
+    GST_DEBUG_OBJECT (self, "have tags");
+    gst_pad_push_event (self->srcpad, gst_event_new_tag (tags));
+  } else {
+    gst_tag_list_unref (tags);
+  }
+}
+
 static gboolean
 gst_sf_dec_open_file (GstSFDec * self)
 {
@@ -478,11 +608,8 @@ gst_sf_dec_open_file (GstSFDec * self)
   GstCaps *caps;
   GstStructure *s;
   GstSegment seg;
-  GstTagList *tags;
   gint width;
   const gchar *format;
-  const gchar *tag;
-  const gchar *codec_name;
   gchar *stream_id;
   gboolean have_loop_info = FALSE;
   gboolean have_instrument = FALSE;
@@ -557,126 +684,8 @@ gst_sf_dec_open_file (GstSFDec * self)
     have_instrument = TRUE;
   }
 
-  /* send tags */
-  tags = gst_tag_list_new_empty ();
-  if ((tag = sf_get_string (self->file, SF_STR_TITLE))) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_TITLE, tag, NULL);
-  }
-  if ((tag = sf_get_string (self->file, SF_STR_COMMENT))) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_COMMENT, tag, NULL);
-  }
-  if ((tag = sf_get_string (self->file, SF_STR_ARTIST))) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ARTIST, tag, NULL);
-  }
-  if ((tag = sf_get_string (self->file, SF_STR_ALBUM))) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_ALBUM, tag, NULL);
-  }
-  if ((tag = sf_get_string (self->file, SF_STR_GENRE))) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_GENRE, tag, NULL);
-  }
-  if ((tag = sf_get_string (self->file, SF_STR_COPYRIGHT))) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_COPYRIGHT, tag, NULL);
-  }
-  if ((tag = sf_get_string (self->file, SF_STR_LICENSE))) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_LICENSE, tag, NULL);
-  }
-  if ((tag = sf_get_string (self->file, SF_STR_SOFTWARE))) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_APPLICATION_NAME, tag,
-        NULL);
-  }
-  if ((tag = sf_get_string (self->file, SF_STR_TRACKNUMBER))) {
-    guint track = atoi (tag);
-    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_TRACK_NUMBER, track,
-        NULL);
-  }
-  if ((tag = sf_get_string (self->file, SF_STR_DATE))) {
-    GValue tag_val = { 0, };
-    GType tag_type = gst_tag_get_type (GST_TAG_DATE_TIME);
-
-    g_value_init (&tag_val, tag_type);
-    if (gst_value_deserialize (&tag_val, tag)) {
-      gst_tag_list_add_value (tags, GST_TAG_MERGE_APPEND, GST_TAG_DATE_TIME,
-          &tag_val);
-    } else {
-      GST_WARNING_OBJECT (self, "could not deserialize '%s' into a "
-          "tag %s of type %s", tag, GST_TAG_DATE_TIME, g_type_name (tag_type));
-    }
-    g_value_unset (&tag_val);
-  }
-  if (have_loop_info) {
-    if (loop_info.bpm != 0.0) {
-      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_BEATS_PER_MINUTE,
-          (gdouble) loop_info.bpm, NULL);
-    }
-    if (loop_info.root_key != -1) {
-      gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_MIDI_BASE_NOTE,
-          (guint) loop_info.root_key, NULL);
-    }
-  }
-  if (have_instrument) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_REPLACE, GST_TAG_MIDI_BASE_NOTE,
-        (guint) instrument.basenote, NULL);
-  }
-  /* TODO: calculate bitrate: GST_TAG_BITRATE */
-  switch (info.format & SF_FORMAT_SUBMASK) {
-    case SF_FORMAT_PCM_S8:
-    case SF_FORMAT_PCM_16:
-    case SF_FORMAT_PCM_24:
-    case SF_FORMAT_PCM_32:
-    case SF_FORMAT_PCM_U8:
-      codec_name = "Uncompressed PCM audio";
-      break;
-    case SF_FORMAT_FLOAT:
-    case SF_FORMAT_DOUBLE:
-      codec_name = "Uncompressed IEEE float audio";
-      break;
-    case SF_FORMAT_ULAW:
-      codec_name = "µ-law audio";
-      break;
-    case SF_FORMAT_ALAW:
-      codec_name = "A-law audio";
-      break;
-    case SF_FORMAT_IMA_ADPCM:
-    case SF_FORMAT_MS_ADPCM:
-    case SF_FORMAT_VOX_ADPCM:
-    case SF_FORMAT_G721_32:
-    case SF_FORMAT_G723_24:
-    case SF_FORMAT_G723_40:
-      codec_name = "ADPCM audio";
-      break;
-    case SF_FORMAT_GSM610:
-      codec_name = "MS GSM audio";
-      break;
-    case SF_FORMAT_DWVW_12:
-    case SF_FORMAT_DWVW_16:
-    case SF_FORMAT_DWVW_24:
-    case SF_FORMAT_DWVW_N:
-      codec_name = "Delta Width Variable Word encoded audio";
-      break;
-    case SF_FORMAT_DPCM_8:
-    case SF_FORMAT_DPCM_16:
-      codec_name = "differential PCM audio";
-      break;
-    case SF_FORMAT_VORBIS:
-      codec_name = "Vorbis";
-      break;
-    default:
-      codec_name = NULL;
-      GST_WARNING_OBJECT (self, "unmapped codec_type: %d",
-          info.format & SF_FORMAT_SUBMASK);
-      break;
-  }
-  if (codec_name) {
-    gst_tag_list_add (tags, GST_TAG_MERGE_APPEND, GST_TAG_AUDIO_CODEC,
-        codec_name, NULL);
-  }
-
-  if (!gst_tag_list_is_empty (tags)) {
-    GST_DEBUG_OBJECT (self, "have tags");
-    gst_pad_push_event (self->srcpad, gst_event_new_tag (tags));
-  } else {
-    gst_tag_list_unref (tags);
-  }
+  create_and_send_tags (self, &info, (have_loop_info ? &loop_info : NULL),
+      (have_instrument ? &instrument : NULL));
 
   return TRUE;
 
