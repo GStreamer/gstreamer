@@ -330,7 +330,7 @@ gst_file_src_fill (GstBaseSrc * basesrc, guint64 offset, guint length,
 
   src = GST_FILE_SRC_CAST (basesrc);
 
-  if (G_UNLIKELY (src->read_position != offset)) {
+  if (G_UNLIKELY (offset != -1 && src->read_position != offset)) {
     off_t res;
 
     res = lseek (src->fd, offset, SEEK_SET);
