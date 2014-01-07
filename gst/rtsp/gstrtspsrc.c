@@ -3371,7 +3371,7 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
   GstPadTemplate *template;
   gchar *name;
   GstStructure *s;
-  const gchar *mime;
+  const gchar *media_type;
 
   src = stream->parent;
 
@@ -3379,15 +3379,15 @@ gst_rtspsrc_stream_configure_transport (GstRTSPStream * stream,
 
   s = gst_caps_get_structure (stream->caps, 0);
 
-  /* get the proper mime type for this stream now */
-  if (gst_rtsp_transport_get_mime (transport->trans, &mime) < 0)
+  /* get the proper media type for this stream now */
+  if (gst_rtsp_transport_get_media_type (transport, &media_type) < 0)
     goto unknown_transport;
-  if (!mime)
+  if (!media_type)
     goto unknown_transport;
 
-  /* configure the final mime type */
-  GST_DEBUG_OBJECT (src, "setting mime to %s", mime);
-  gst_structure_set_name (s, mime);
+  /* configure the final media type */
+  GST_DEBUG_OBJECT (src, "setting media type to %s", media_type);
+  gst_structure_set_name (s, media_type);
 
   /* try to get and configure a manager, channelpad[0-1] will be configured with
    * the pads for the manager, or NULL when no manager is needed. */
