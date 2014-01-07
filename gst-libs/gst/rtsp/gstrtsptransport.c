@@ -78,24 +78,32 @@ typedef struct
   const gchar *name;
   const GstRTSPTransMode mode;
   const GstRTSPProfile profile;
+  const GstRTSPLowerTrans ltrans;
   const gchar *media_type;
   const gchar *manager[MAX_MANAGERS];
 } GstRTSPTransMap;
 
 static const GstRTSPTransMap transports[] = {
-  {"rtp", GST_RTSP_TRANS_RTP, GST_RTSP_PROFILE_AVP, "application/x-rtp",
+  {"rtp", GST_RTSP_TRANS_RTP, GST_RTSP_PROFILE_AVP,
+        GST_RTSP_LOWER_TRANS_UDP_MCAST, "application/x-rtp",
       {"rtpbin", "rtpdec"}},
-  {"srtp", GST_RTSP_TRANS_RTP, GST_RTSP_PROFILE_SAVP, "application/x-srtp",
+  {"srtp", GST_RTSP_TRANS_RTP, GST_RTSP_PROFILE_SAVP,
+        GST_RTSP_LOWER_TRANS_UDP_MCAST, "application/x-srtp",
       {"rtpbin", "rtpdec"}},
-  {"rtpf", GST_RTSP_TRANS_RTP, GST_RTSP_PROFILE_AVPF, "application/x-rtp",
+  {"rtpf", GST_RTSP_TRANS_RTP, GST_RTSP_PROFILE_AVPF,
+        GST_RTSP_LOWER_TRANS_UDP_MCAST, "application/x-rtp",
       {"rtpbin", "rtpdec"}},
-  {"srtpf", GST_RTSP_TRANS_RTP, GST_RTSP_PROFILE_SAVPF, "application/x-srtp",
+  {"srtpf", GST_RTSP_TRANS_RTP, GST_RTSP_PROFILE_SAVPF,
+        GST_RTSP_LOWER_TRANS_UDP_MCAST, "application/x-srtp",
       {"rtpbin", "rtpdec"}},
-  {"x-real-rdt", GST_RTSP_TRANS_RDT, GST_RTSP_PROFILE_AVP, "application/x-rdt",
+  {"x-real-rdt", GST_RTSP_TRANS_RDT, GST_RTSP_PROFILE_AVP,
+        GST_RTSP_LOWER_TRANS_UNKNOWN, "application/x-rdt",
       {"rdtmanager", NULL}},
-  {"x-pn-tng", GST_RTSP_TRANS_RDT, GST_RTSP_PROFILE_AVP, "application/x-rdt",
+  {"x-pn-tng", GST_RTSP_TRANS_RDT, GST_RTSP_PROFILE_AVP,
+        GST_RTSP_LOWER_TRANS_UNKNOWN, "application/x-rdt",
       {"rdtmanager", NULL}},
-  {NULL, GST_RTSP_TRANS_UNKNOWN, GST_RTSP_PROFILE_UNKNOWN, NULL, {NULL, NULL}}
+  {NULL, GST_RTSP_TRANS_UNKNOWN, GST_RTSP_PROFILE_UNKNOWN,
+      GST_RTSP_LOWER_TRANS_UNKNOWN, NULL, {NULL, NULL}}
 };
 
 typedef struct
@@ -290,6 +298,19 @@ gst_rtsp_transport_get_media_type (GstRTSPTransport * transport,
   *media_type = transports[i].media_type;
 
   return GST_RTSP_OK;
+}
+
+static GstRTSPLowerTrans
+get_default_lower_trans (GstRTSPTransport * transport)
+{
+  gint i;
+
+  for (i = 0; transports[i].name; i++)
+    if (transports[i].mode == transport->trans
+        && transports[i].profile == transport->profile)
+      break;
+
+  return transports[i].ltrans;
 }
 
 /**
@@ -506,11 +527,7 @@ gst_rtsp_transport_parse (const gchar * str, GstRTSPTransport * transport)
     transport->lower_transport = ltrans[i].ltrans;
   } else {
     /* specifying the lower transport is optional */
-    if (transport->trans == GST_RTSP_TRANS_RTP &&
-        transport->profile == GST_RTSP_PROFILE_AVP)
-      transport->lower_transport = GST_RTSP_LOWER_TRANS_UDP_MCAST;
-    else
-      transport->lower_transport = GST_RTSP_LOWER_TRANS_UNKNOWN;
+    transport->lower_transport = get_default_lower_trans (transport);
   }
 
   g_strfreev (transp);
