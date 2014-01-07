@@ -76,6 +76,9 @@ typedef enum {
   GST_RTSP_PROFILE_SAVP    = (1 << 1)
 } GstRTSPProfile;
 
+#define GST_TYPE_RTSP_PROFILE (gst_rtsp_profile_get_type())
+GType gst_rtsp_profile_get_type (void);
+
 /**
  * GstRTSPLowerTrans:
  * @GST_RTSP_LOWER_TRANS_UNKNOWN: invalid transport flag
