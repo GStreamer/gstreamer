@@ -575,7 +575,7 @@ gst_rtsp_stream_is_transport_supported (GstRTSPStream * stream,
 {
   GstRTSPStreamPrivate *priv;
 
-  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), FALSE);
 
   priv = stream->priv;
 
