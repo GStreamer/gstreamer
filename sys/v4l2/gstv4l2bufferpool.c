@@ -1298,7 +1298,8 @@ GstBufferPool *
 gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
 {
   GstV4l2BufferPool *pool;
-  GstStructure *s;
+  GstStructure *config;
+  gboolean res = FALSE;
   gint fd;
 
   fd = v4l2_dup (obj->video_fd);
@@ -1310,9 +1311,12 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
   pool->obj = obj;
   pool->can_alloc = TRUE;
 
-  s = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
-  gst_buffer_pool_config_set_params (s, caps, obj->sizeimage, 2, 0);
-  gst_buffer_pool_set_config (GST_BUFFER_POOL_CAST (pool), s);
+  config = gst_buffer_pool_get_config (GST_BUFFER_POOL_CAST (pool));
+  gst_buffer_pool_config_set_params (config, caps, obj->sizeimage, 2, 0);
+
+  res = gst_buffer_pool_set_config (GST_BUFFER_POOL_CAST (pool), config);
+  if (!res)
+    goto config_failed;
 
   gst_object_ref (obj->element);
 
@@ -1322,6 +1326,11 @@ gst_v4l2_buffer_pool_new (GstV4l2Object * obj, GstCaps * caps)
 dup_failed:
   {
     GST_DEBUG ("failed to dup fd %d (%s)", errno, g_strerror (errno));
+    return NULL;
+  }
+config_failed:
+  {
+    GST_WARNING ("failed to set pool config");
     return NULL;
   }
 }
