@@ -426,9 +426,6 @@ struct _GstRtpBinSession
   /* list of elements */
   GSList *elements;
 
-  /* list of decoders */
-  GSList *decoders;
-
   /* mapping of payload type to caps */
   GHashTable *ptmap;
 
