@@ -81,6 +81,7 @@ EXPORTS
 	gst_rtsp_method_get_type
 	gst_rtsp_options_as_text
 	gst_rtsp_options_from_text
+	gst_rtsp_profile_get_type
 	gst_rtsp_range_convert_units
 	gst_rtsp_range_free
 	gst_rtsp_range_get_times
@@ -94,6 +95,7 @@ EXPORTS
 	gst_rtsp_transport_as_text
 	gst_rtsp_transport_free
 	gst_rtsp_transport_get_manager
+	gst_rtsp_transport_get_media_type
 	gst_rtsp_transport_get_mime
 	gst_rtsp_transport_init
 	gst_rtsp_transport_new
