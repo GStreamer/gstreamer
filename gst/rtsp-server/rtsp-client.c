@@ -1200,10 +1200,10 @@ do_keepalive (GstRTSPSession * session)
 }
 
 /* parse @transport and return a valid transport in @tr. only transports
- * from @supported are returned. Returns FALSE if no valid transport
+ * supported by @stream are returned. Returns FALSE if no valid transport
  * was found. */
 static gboolean
-parse_transport (const char *transport, GstRTSPLowerTrans supported,
+parse_transport (const char *transport, GstRTSPStream * stream,
     GstRTSPTransport * tr)
 {
   gint i;
@@ -1226,13 +1226,8 @@ parse_transport (const char *transport, GstRTSPLowerTrans supported,
       goto next;
     }
 
-    /* we have a transport, see if it's RTP/AVP */
-    if (tr->trans != GST_RTSP_TRANS_RTP || tr->profile != GST_RTSP_PROFILE_AVP) {
-      GST_WARNING ("invalid transport %s", transports[i]);
-      goto next;
-    }
-
-    if (!(tr->lower_transport & supported)) {
+    /* we have a transport, see if it's supported */
+    if (!gst_rtsp_stream_is_transport_supported (stream, tr)) {
       GST_WARNING ("unsupported transport %s", transports[i]);
       goto next;
     }
@@ -1409,7 +1404,6 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
   GstRTSPUrl *uri;
   gchar *transport;
   GstRTSPTransport *ct, *st;
-  GstRTSPLowerTrans supported;
   GstRTSPStatusCode code;
   GstRTSPSession *session;
   GstRTSPStreamTransport *trans;
@@ -1517,11 +1511,8 @@ handle_setup_request (GstRTSPClient * client, GstRTSPContext * ctx)
 
   gst_rtsp_transport_new (&ct);
 
-  /* our supported transports */
-  supported = gst_rtsp_stream_get_protocols (stream);
-
   /* parse and find a usable supported transport */
-  if (!parse_transport (transport, supported, ct))
+  if (!parse_transport (transport, stream, ct))
     goto unsupported_transports;
 
   /* update the client transport */
