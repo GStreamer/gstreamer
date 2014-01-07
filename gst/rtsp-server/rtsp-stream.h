@@ -85,6 +85,9 @@ gint              gst_rtsp_stream_get_dscp_qos     (GstRTSPStream *stream);
 gboolean          gst_rtsp_stream_is_transport_supported  (GstRTSPStream *stream,
                                                            GstRTSPTransport *transport);
 
+void              gst_rtsp_stream_set_profiles     (GstRTSPStream *stream, GstRTSPProfile profiles);
+GstRTSPProfile    gst_rtsp_stream_get_profiles     (GstRTSPStream *stream);
+
 void              gst_rtsp_stream_set_protocols    (GstRTSPStream *stream, GstRTSPLowerTrans protocols);
 GstRTSPLowerTrans gst_rtsp_stream_get_protocols    (GstRTSPStream *stream);
 

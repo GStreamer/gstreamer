@@ -160,6 +160,9 @@ gboolean              gst_rtsp_media_is_shared        (GstRTSPMedia *media);
 void                  gst_rtsp_media_set_reusable     (GstRTSPMedia *media, gboolean reusable);
 gboolean              gst_rtsp_media_is_reusable      (GstRTSPMedia *media);
 
+void                  gst_rtsp_media_set_profiles     (GstRTSPMedia *media, GstRTSPProfile profiles);
+GstRTSPProfile        gst_rtsp_media_get_profiles     (GstRTSPMedia *media);
+
 void                  gst_rtsp_media_set_protocols    (GstRTSPMedia *media, GstRTSPLowerTrans protocols);
 GstRTSPLowerTrans     gst_rtsp_media_get_protocols    (GstRTSPMedia *media);
 

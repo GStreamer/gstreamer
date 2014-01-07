@@ -68,6 +68,7 @@ struct _GstRTSPStreamPrivate
   gboolean is_joined;
   gchar *control;
 
+  GstRTSPProfile profiles;
   GstRTSPLowerTrans protocols;
 
   /* pads on the rtpbin */
@@ -127,6 +128,7 @@ struct _GstRTSPStreamPrivate
 };
 
 #define DEFAULT_CONTROL         NULL
+#define DEFAULT_PROFILES        GST_RTSP_PROFILE_AVP
 #define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | \
                                         GST_RTSP_LOWER_TRANS_TCP
 
@@ -134,6 +136,7 @@ enum
 {
   PROP_0,
   PROP_CONTROL,
+  PROP_PROFILES,
   PROP_PROTOCOLS,
   PROP_LAST
 };
@@ -170,6 +173,11 @@ gst_rtsp_stream_class_init (GstRTSPStreamClass * klass)
           "The control string for this stream", DEFAULT_CONTROL,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_PROFILES,
+      g_param_spec_flags ("profiles", "Profiles",
+          "Allowed transfer profiles", GST_TYPE_RTSP_PROFILE,
+          DEFAULT_PROFILES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_PROTOCOLS,
       g_param_spec_flags ("protocols", "Protocols",
           "Allowed lower transport protocols", GST_TYPE_RTSP_LOWER_TRANS,
@@ -191,6 +199,7 @@ gst_rtsp_stream_init (GstRTSPStream * stream)
 
   priv->dscp_qos = -1;
   priv->control = g_strdup (DEFAULT_CONTROL);
+  priv->profiles = DEFAULT_PROFILES;
   priv->protocols = DEFAULT_PROTOCOLS;
 
   g_mutex_init (&priv->lock);
@@ -238,6 +247,9 @@ gst_rtsp_stream_get_property (GObject * object, guint propid,
     case PROP_CONTROL:
       g_value_take_string (value, gst_rtsp_stream_get_control (stream));
       break;
+    case PROP_PROFILES:
+      g_value_set_flags (value, gst_rtsp_stream_get_profiles (stream));
+      break;
     case PROP_PROTOCOLS:
       g_value_set_flags (value, gst_rtsp_stream_get_protocols (stream));
       break;
@@ -255,6 +267,9 @@ gst_rtsp_stream_set_property (GObject * object, guint propid,
   switch (propid) {
     case PROP_CONTROL:
       gst_rtsp_stream_set_control (stream, g_value_get_string (value));
+      break;
+    case PROP_PROFILES:
+      gst_rtsp_stream_set_profiles (stream, g_value_get_flags (value));
       break;
     case PROP_PROTOCOLS:
       gst_rtsp_stream_set_protocols (stream, g_value_get_flags (value));
@@ -568,7 +583,7 @@ gst_rtsp_stream_is_transport_supported (GstRTSPStream * stream,
   if (transport->trans != GST_RTSP_TRANS_RTP)
     goto unsupported_transmode;
 
-  if (transport->profile != GST_RTSP_PROFILE_AVP)
+  if (!(transport->profile & priv->profiles))
     goto unsupported_profile;
 
   if (!(transport->lower_transport & priv->protocols))
@@ -594,6 +609,52 @@ unsupported_ltrans:
     GST_DEBUG ("unsupported lower transport %d", transport->lower_transport);
     return FALSE;
   }
+}
+
+/**
+ * gst_rtsp_stream_set_profiles:
+ * @stream: a #GstRTSPStream
+ * @profiles: the new profiles
+ *
+ * Configure the allowed profiles for @stream.
+ */
+void
+gst_rtsp_stream_set_profiles (GstRTSPStream * stream, GstRTSPProfile profiles)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->profiles = profiles;
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_stream_get_profiles:
+ * @stream: a #GstRTSPStream
+ *
+ * Get the allowed profiles of @stream.
+ *
+ * Returns: a #GstRTSPProfile
+ */
+GstRTSPProfile
+gst_rtsp_stream_get_profiles (GstRTSPStream * stream)
+{
+  GstRTSPStreamPrivate *priv;
+  GstRTSPProfile res;
+
+  g_return_val_if_fail (GST_IS_RTSP_STREAM (stream), GST_RTSP_PROFILE_UNKNOWN);
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->profiles;
+  g_mutex_unlock (&priv->lock);
+
+  return res;
 }
 
 /**

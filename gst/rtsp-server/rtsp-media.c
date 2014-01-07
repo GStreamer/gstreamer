@@ -82,6 +82,7 @@ struct _GstRTSPMediaPrivate
   gboolean shared;
   gboolean suspend_mode;
   gboolean reusable;
+  GstRTSPProfile profiles;
   GstRTSPLowerTrans protocols;
   gboolean reused;
   gboolean eos_shutdown;
@@ -125,6 +126,7 @@ struct _GstRTSPMediaPrivate
 #define DEFAULT_SHARED          FALSE
 #define DEFAULT_SUSPEND_MODE    GST_RTSP_SUSPEND_MODE_NONE
 #define DEFAULT_REUSABLE        FALSE
+#define DEFAULT_PROFILES        GST_RTSP_PROFILE_AVP
 #define DEFAULT_PROTOCOLS       GST_RTSP_LOWER_TRANS_UDP | GST_RTSP_LOWER_TRANS_UDP_MCAST | \
                                         GST_RTSP_LOWER_TRANS_TCP
 #define DEFAULT_EOS_SHUTDOWN    FALSE
@@ -140,6 +142,7 @@ enum
   PROP_SHARED,
   PROP_SUSPEND_MODE,
   PROP_REUSABLE,
+  PROP_PROFILES,
   PROP_PROTOCOLS,
   PROP_EOS_SHUTDOWN,
   PROP_BUFFER_SIZE,
@@ -237,6 +240,11 @@ gst_rtsp_media_class_init (GstRTSPMediaClass * klass)
           "If this media pipeline can be reused after an unprepare",
           DEFAULT_REUSABLE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  g_object_class_install_property (gobject_class, PROP_PROFILES,
+      g_param_spec_flags ("profiles", "Profiles",
+          "Allowed transfer profiles", GST_TYPE_RTSP_PROFILE,
+          DEFAULT_PROFILES, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   g_object_class_install_property (gobject_class, PROP_PROTOCOLS,
       g_param_spec_flags ("protocols", "Protocols",
           "Allowed lower transport protocols", GST_TYPE_RTSP_LOWER_TRANS,
@@ -314,6 +322,7 @@ gst_rtsp_media_init (GstRTSPMedia * media)
   priv->shared = DEFAULT_SHARED;
   priv->suspend_mode = DEFAULT_SUSPEND_MODE;
   priv->reusable = DEFAULT_REUSABLE;
+  priv->profiles = DEFAULT_PROFILES;
   priv->protocols = DEFAULT_PROTOCOLS;
   priv->eos_shutdown = DEFAULT_EOS_SHUTDOWN;
   priv->buffer_size = DEFAULT_BUFFER_SIZE;
@@ -371,6 +380,9 @@ gst_rtsp_media_get_property (GObject * object, guint propid,
     case PROP_REUSABLE:
       g_value_set_boolean (value, gst_rtsp_media_is_reusable (media));
       break;
+    case PROP_PROFILES:
+      g_value_set_flags (value, gst_rtsp_media_get_profiles (media));
+      break;
     case PROP_PROTOCOLS:
       g_value_set_flags (value, gst_rtsp_media_get_protocols (media));
       break;
@@ -407,6 +419,9 @@ gst_rtsp_media_set_property (GObject * object, guint propid,
       break;
     case PROP_REUSABLE:
       gst_rtsp_media_set_reusable (media, g_value_get_boolean (value));
+      break;
+    case PROP_PROFILES:
+      gst_rtsp_media_set_profiles (media, g_value_get_flags (value));
       break;
     case PROP_PROTOCOLS:
       gst_rtsp_media_set_protocols (media, g_value_get_flags (value));
@@ -809,6 +824,59 @@ gst_rtsp_media_is_reusable (GstRTSPMedia * media)
 
   g_mutex_lock (&priv->lock);
   res = priv->reusable;
+  g_mutex_unlock (&priv->lock);
+
+  return res;
+}
+
+static void
+do_set_profiles (GstRTSPStream * stream, GstRTSPProfile * profiles)
+{
+  gst_rtsp_stream_set_profiles (stream, *profiles);
+}
+
+/**
+ * gst_rtsp_media_set_profiles:
+ * @media: a #GstRTSPMedia
+ * @profiles: the new flags
+ *
+ * Configure the allowed lower transport for @media.
+ */
+void
+gst_rtsp_media_set_profiles (GstRTSPMedia * media, GstRTSPProfile profiles)
+{
+  GstRTSPMediaPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_MEDIA (media));
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  priv->profiles = profiles;
+  g_ptr_array_foreach (priv->streams, (GFunc) do_set_profiles, &profiles);
+  g_mutex_unlock (&priv->lock);
+}
+
+/**
+ * gst_rtsp_media_get_profiles:
+ * @media: a #GstRTSPMedia
+ *
+ * Get the allowed profiles of @media.
+ *
+ * Returns: a #GstRTSPProfile
+ */
+GstRTSPProfile
+gst_rtsp_media_get_profiles (GstRTSPMedia * media)
+{
+  GstRTSPMediaPrivate *priv;
+  GstRTSPProfile res;
+
+  g_return_val_if_fail (GST_IS_RTSP_MEDIA (media), GST_RTSP_PROFILE_UNKNOWN);
+
+  priv = media->priv;
+
+  g_mutex_lock (&priv->lock);
+  res = priv->profiles;
   g_mutex_unlock (&priv->lock);
 
   return res;
