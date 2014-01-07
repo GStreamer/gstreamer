@@ -179,6 +179,9 @@ gchar*             gst_rtsp_transport_as_text      (GstRTSPTransport *transport)
 GstRTSPResult      gst_rtsp_transport_get_mime     (GstRTSPTransMode trans, const gchar **mime);
 GstRTSPResult      gst_rtsp_transport_get_manager  (GstRTSPTransMode trans, const gchar **manager, guint option);
 
+GstRTSPResult      gst_rtsp_transport_get_media_type (GstRTSPTransport *transport,
+                                                      const gchar **media_type);
+
 GstRTSPResult      gst_rtsp_transport_free         (GstRTSPTransport *transport);
 
 G_END_DECLS
