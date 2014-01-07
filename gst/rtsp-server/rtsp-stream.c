@@ -546,6 +546,57 @@ gst_rtsp_stream_get_dscp_qos (GstRTSPStream * stream)
 }
 
 /**
+ * gst_rtsp_stream_is_transport_supported:
+ * @stream: a #GstRTSPStream
+ * @transport: a #GstRTSPTransport
+ *
+ * Check if @transport can be handled by stream
+ *
+ * Returns: %TRUE if @transport can be handled by @stream.
+ */
+gboolean
+gst_rtsp_stream_is_transport_supported (GstRTSPStream * stream,
+    GstRTSPTransport * transport)
+{
+  GstRTSPStreamPrivate *priv;
+
+  g_return_if_fail (GST_IS_RTSP_STREAM (stream));
+
+  priv = stream->priv;
+
+  g_mutex_lock (&priv->lock);
+  if (transport->trans != GST_RTSP_TRANS_RTP)
+    goto unsupported_transmode;
+
+  if (transport->profile != GST_RTSP_PROFILE_AVP)
+    goto unsupported_profile;
+
+  if (!(transport->lower_transport & priv->protocols))
+    goto unsupported_ltrans;
+
+  g_mutex_unlock (&priv->lock);
+
+  return TRUE;
+
+  /* ERRORS */
+unsupported_transmode:
+  {
+    GST_DEBUG ("unsupported transport mode %d", transport->trans);
+    return FALSE;
+  }
+unsupported_profile:
+  {
+    GST_DEBUG ("unsupported profile %d", transport->profile);
+    return FALSE;
+  }
+unsupported_ltrans:
+  {
+    GST_DEBUG ("unsupported lower transport %d", transport->lower_transport);
+    return FALSE;
+  }
+}
+
+/**
  * gst_rtsp_stream_set_protocols:
  * @stream: a #GstRTSPStream
  * @protocols: the new flags
