@@ -191,6 +191,8 @@ guint64      gst_segment_to_position         (const GstSegment *segment, GstForm
 
 gboolean     gst_segment_set_running_time    (GstSegment *segment, GstFormat format, guint64 running_time);
 
+gboolean     gst_segment_offset_running_time (GstSegment *segment, GstFormat format, gint64 offset);
+
 gboolean     gst_segment_clip                (const GstSegment *segment, GstFormat format, guint64 start,
                                               guint64 stop, guint64 *clip_start, guint64 *clip_stop);
 
