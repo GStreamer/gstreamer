@@ -45,6 +45,9 @@ typedef struct _GstVideoDecoderTesterClass GstVideoDecoderTesterClass;
 struct _GstVideoDecoderTester
 {
   GstVideoDecoder parent;
+
+  guint64 last_buf_num;
+  guint64 last_kf_num;
 };
 
 struct _GstVideoDecoderTesterClass
@@ -58,6 +61,11 @@ G_DEFINE_TYPE (GstVideoDecoderTester, gst_video_decoder_tester,
 static gboolean
 gst_video_decoder_tester_start (GstVideoDecoder * dec)
 {
+  GstVideoDecoderTester *dectester = (GstVideoDecoderTester *) dec;
+
+  dectester->last_buf_num = -1;
+  dectester->last_kf_num = -1;
+
   return TRUE;
 }
 
@@ -68,11 +76,22 @@ gst_video_decoder_tester_stop (GstVideoDecoder * dec)
 }
 
 static gboolean
+gst_video_decoder_tester_flush (GstVideoDecoder * dec)
+{
+  GstVideoDecoderTester *dectester = (GstVideoDecoderTester *) dec;
+
+  dectester->last_buf_num = -1;
+  dectester->last_kf_num = -1;
+
+  return TRUE;
+}
+
+static gboolean
 gst_video_decoder_tester_set_format (GstVideoDecoder * dec,
     GstVideoCodecState * state)
 {
   GstVideoCodecState *res = gst_video_decoder_set_output_state (dec,
-      GST_VIDEO_FORMAT_GRAY8, 640, 480, NULL);
+      GST_VIDEO_FORMAT_GRAY8, TEST_VIDEO_WIDTH, TEST_VIDEO_HEIGHT, NULL);
 
   gst_video_codec_state_unref (res);
   return TRUE;
@@ -82,23 +101,40 @@ static GstFlowReturn
 gst_video_decoder_tester_handle_frame (GstVideoDecoder * dec,
     GstVideoCodecFrame * frame)
 {
+  GstVideoDecoderTester *dectester = (GstVideoDecoderTester *) dec;
+  guint64 input_num;
   guint8 *data;
   gint size;
   GstMapInfo map;
 
-  /* the output is gray8 */
-  size = TEST_VIDEO_WIDTH * TEST_VIDEO_HEIGHT;
-  data = g_malloc0 (size);
-
   gst_buffer_map (frame->input_buffer, &map, GST_MAP_READ);
-  memcpy (data, map.data, sizeof (guint64));
+
+  input_num = *((guint64 *) map.data);
+
+  if (input_num == dectester->last_buf_num + 1
+      || !GST_BUFFER_FLAG_IS_SET (frame->input_buffer,
+          GST_BUFFER_FLAG_DELTA_UNIT)) {
+
+    /* the output is gray8 */
+    size = TEST_VIDEO_WIDTH * TEST_VIDEO_HEIGHT;
+    data = g_malloc0 (size);
+
+    memcpy (data, map.data, sizeof (guint64));
+
+    frame->output_buffer = gst_buffer_new_wrapped (data, size);
+    frame->pts = GST_BUFFER_PTS (frame->input_buffer);
+    frame->duration = GST_BUFFER_DURATION (frame->input_buffer);
+    dectester->last_buf_num = input_num;
+    if (!GST_BUFFER_FLAG_IS_SET (frame->input_buffer,
+            GST_BUFFER_FLAG_DELTA_UNIT))
+      dectester->last_kf_num = input_num;
+  }
+
   gst_buffer_unmap (frame->input_buffer, &map);
 
-  frame->output_buffer = gst_buffer_new_wrapped (data, size);
-  frame->pts = GST_BUFFER_PTS (frame->input_buffer);
-  frame->duration = GST_BUFFER_DURATION (frame->input_buffer);
-
-  return gst_video_decoder_finish_frame (dec, frame);
+  if (frame->output_buffer)
+    return gst_video_decoder_finish_frame (dec, frame);
+  return GST_FLOW_OK;
 }
 
 static void
@@ -125,6 +161,7 @@ gst_video_decoder_tester_class_init (GstVideoDecoderTesterClass * klass)
 
   audiosink_class->start = gst_video_decoder_tester_start;
   audiosink_class->stop = gst_video_decoder_tester_stop;
+  audiosink_class->flush = gst_video_decoder_tester_flush;
   audiosink_class->handle_frame = gst_video_decoder_tester_handle_frame;
   audiosink_class->set_format = gst_video_decoder_tester_set_format;
 }
@@ -172,6 +209,26 @@ cleanup_videodecodertest (void)
   gst_check_teardown_element (dec);
 }
 
+static GstBuffer *
+create_test_buffer (guint64 num)
+{
+  GstBuffer *buffer;
+  guint64 *data = g_malloc (sizeof (guint64));
+
+  *data = num;
+
+  buffer = gst_buffer_new_wrapped (data, sizeof (guint64));
+
+  GST_BUFFER_PTS (buffer) =
+      gst_util_uint64_scale_round (num, GST_SECOND * TEST_VIDEO_FPS_D,
+      TEST_VIDEO_FPS_N);
+  GST_BUFFER_DURATION (buffer) =
+      gst_util_uint64_scale_round (GST_SECOND, TEST_VIDEO_FPS_D,
+      TEST_VIDEO_FPS_N);
+
+  return buffer;
+}
+
 static void
 send_startup_events (void)
 {
@@ -211,18 +268,7 @@ GST_START_TEST (videodecoder_playback)
 
   /* push buffers, the data is actually a number so we can track them */
   for (i = 0; i < NUM_BUFFERS; i++) {
-    guint64 *data = g_malloc (sizeof (guint64));
-
-    *data = i;
-
-    buffer = gst_buffer_new_wrapped (data, sizeof (guint64));
-
-    GST_BUFFER_PTS (buffer) =
-        gst_util_uint64_scale_round (i, GST_SECOND * TEST_VIDEO_FPS_D,
-        TEST_VIDEO_FPS_N);
-    GST_BUFFER_DURATION (buffer) =
-        gst_util_uint64_scale_round (GST_SECOND, TEST_VIDEO_FPS_D,
-        TEST_VIDEO_FPS_N);
+    buffer = create_test_buffer (i);
 
     fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
   }
@@ -290,18 +336,7 @@ GST_START_TEST (videodecoder_playback_with_events)
       tags = gst_tag_list_new (GST_TAG_TRACK_NUMBER, i, NULL);
       fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_tag (tags)));
     } else {
-      guint64 *data = g_malloc (sizeof (guint64));
-
-      *data = i;
-
-      buffer = gst_buffer_new_wrapped (data, sizeof (guint64));
-
-      GST_BUFFER_PTS (buffer) =
-          gst_util_uint64_scale_round (i, GST_SECOND * TEST_VIDEO_FPS_D,
-          TEST_VIDEO_FPS_N);
-      GST_BUFFER_DURATION (buffer) =
-          gst_util_uint64_scale_round (GST_SECOND, TEST_VIDEO_FPS_D,
-          TEST_VIDEO_FPS_N);
+      buffer = create_test_buffer (i);
 
       fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
     }
@@ -384,6 +419,88 @@ GST_START_TEST (videodecoder_playback_with_events)
 
 GST_END_TEST;
 
+
+GST_START_TEST (videodecoder_backwards_playback)
+{
+  GstSegment segment;
+  GstBuffer *buffer;
+  guint64 i;
+  GList *iter;
+
+  setup_videodecodertester ();
+
+  gst_pad_set_active (mysrcpad, TRUE);
+  gst_element_set_state (dec, GST_STATE_PLAYING);
+  gst_pad_set_active (mysinkpad, TRUE);
+
+  send_startup_events ();
+
+  /* push a new segment with -1 rate */
+  gst_segment_init (&segment, GST_FORMAT_TIME);
+  segment.rate = -1.0;
+  segment.stop = (NUM_BUFFERS + 1) * gst_util_uint64_scale_round (GST_SECOND,
+      TEST_VIDEO_FPS_D, TEST_VIDEO_FPS_N);
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_segment (&segment)));
+
+  /* push buffers, the data is actually a number so we can track them */
+  i = NUM_BUFFERS;
+  while (i > 0) {
+    gint target = i;
+    gint j;
+
+    /* push groups of 10 buffers
+     * every number that is divisible by 10 is set as a discont,
+     * if it is divisible by 20 it is also a keyframe
+     *
+     * The logic here is that hte current i is the target, and then
+     * it pushes buffers from 'target - 10' up to target.
+     */
+    for (j = MAX (target - 10, 0); j < target; j++) {
+      GstBuffer *buffer = create_test_buffer (j);
+
+      if (j % 10 == 0)
+        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DISCONT);
+      if (j % 20 != 0)
+        GST_BUFFER_FLAG_SET (buffer, GST_BUFFER_FLAG_DELTA_UNIT);
+
+      fail_unless (gst_pad_push (mysrcpad, buffer) == GST_FLOW_OK);
+      i--;
+    }
+  }
+
+  fail_unless (gst_pad_push_event (mysrcpad, gst_event_new_eos ()));
+
+  /* check that all buffers were received by our source pad */
+  fail_unless (g_list_length (buffers) == NUM_BUFFERS);
+  i = NUM_BUFFERS - 1;
+  for (iter = buffers; iter; iter = g_list_next (iter)) {
+    GstMapInfo map;
+    guint64 num;
+
+    buffer = iter->data;
+
+    gst_buffer_map (buffer, &map, GST_MAP_READ);
+
+
+    num = *(guint64 *) map.data;
+    fail_unless (i == num);
+    fail_unless (GST_BUFFER_PTS (buffer) == gst_util_uint64_scale_round (i,
+            GST_SECOND * TEST_VIDEO_FPS_D, TEST_VIDEO_FPS_N));
+    fail_unless (GST_BUFFER_DURATION (buffer) ==
+        gst_util_uint64_scale_round (GST_SECOND, TEST_VIDEO_FPS_D,
+            TEST_VIDEO_FPS_N));
+
+    gst_buffer_unmap (buffer, &map);
+    i--;
+  }
+
+  g_list_free_full (buffers, (GDestroyNotify) gst_buffer_unref);
+  buffers = NULL;
+
+  cleanup_videodecodertest ();
+}
+
+GST_END_TEST;
 static Suite *
 gst_videodecoder_suite (void)
 {
@@ -393,6 +510,8 @@ gst_videodecoder_suite (void)
   suite_add_tcase (s, tc);
   tcase_add_test (tc, videodecoder_playback);
   tcase_add_test (tc, videodecoder_playback_with_events);
+
+  tcase_add_test (tc, videodecoder_backwards_playback);
 
   return s;
 }
