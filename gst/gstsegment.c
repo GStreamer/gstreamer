@@ -651,7 +651,7 @@ gst_segment_to_position (const GstSegment * segment, GstFormat format,
 
   if (G_LIKELY (segment->rate > 0.0)) {
     /* bring to corrected position in segment */
-    result += start;
+    result += start + segment->offset;
 
     /* outside of the segment boundary stop */
     if (G_UNLIKELY (stop != -1 && result > stop))
@@ -663,7 +663,7 @@ gst_segment_to_position (const GstSegment * segment, GstFormat format,
       return -1;
 
     /* bring to corrected position in segment */
-    result = stop - result;
+    result = stop - result - segment->offset;
   }
   return result;
 }
