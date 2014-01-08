@@ -22,7 +22,7 @@
 import os
 import re
 import codecs
-import logging
+from loggable import Loggable
 from xml.sax import saxutils
 from utils import mkdir, Result, printc
 
@@ -46,10 +46,12 @@ def escape_cdata(cdata):
     return xml_safe(cdata).replace(']]>', ']]>]]&gt;<![CDATA[')
 
 
-class Reporter(object):
+class Reporter(Loggable):
     name = 'simple'
 
     def __init__(self, options):
+        Loggable.__init__(self)
+
         self._current_test = None
         self.out = None
         self.options = options
@@ -75,7 +77,7 @@ class Reporter(object):
         self.stats["passed"] += 1
 
     def add_results(self, test):
-        logging.debug("%s", test)
+        self.debug("%s", test)
         if test.result == Result.PASSED:
             self.set_passed(test)
         elif test.result == Result.FAILED or \
@@ -132,7 +134,7 @@ class XunitReporter(Reporter):
         The file includes a report of test errors and failures.
 
         """
-        logging.debug("Writing XML file to: %s", self.options.xunit_file)
+        self.debug("Writing XML file to: %s", self.options.xunit_file)
         self.xml_file = codecs.open(self.options.xunit_file, 'w',
                                     self.encoding, 'replace')
         self.stats['encoding'] = self.encoding

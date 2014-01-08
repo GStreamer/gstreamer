@@ -18,7 +18,7 @@
 # Boston, MA 02110-1301, USA.
 
 import os
-import logging
+import loggable
 from testdefinitions import _TestsLauncher, DEFAULT_QA_SAMPLE_PATH
 from utils import printc
 from optparse import OptionParser
@@ -60,13 +60,7 @@ def main():
                       action="store_true", default=False,
                       help="Mute playback output, which mean that we use "
                       "a fakesink")
-    try:
-        level = getattr(logging,
-                        os.environ["GST_VALIDATE_LAUNCHER_DEBUG"].upper(),
-                        None)
-        logging.basicConfig(level=level)
-    except:
-        pass
+    loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
 
     tests_launcher = _TestsLauncher()
     tests_launcher.add_options(parser)

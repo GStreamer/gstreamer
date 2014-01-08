@@ -21,7 +21,7 @@ import subprocess
 import urlparse
 import urllib
 import ConfigParser
-import logging
+from loggable import Loggable
 
 from testdefinitions import Test, TestsManager, DEFAULT_TIMEOUT
 
@@ -70,12 +70,13 @@ class GstValidateTest(Test):
         self.add_arguments(self.pipeline_desc)
 
 
-class GstValidateManager(TestsManager):
+class GstValidateManager(TestsManager, Loggable):
 
     name = "validate"
 
     def __init__(self):
-        super(GstValidateManager, self).__init__()
+        TestsManager.__init__(self)
+        Loggable.__init__(self)
         self._uris = []
 
     def add_options(self, group):
@@ -92,7 +93,7 @@ class GstValidateManager(TestsManager):
                     self._add_test(name, scenario, pipe)
 
     def _check_discovering_info(self, media_info, uri=None):
-        logging.debug("Checking %s", media_info)
+        self.debug("Checking %s", media_info)
         config = ConfigParser.ConfigParser()
         f = open(media_info)
         config.readfp(f)
@@ -110,7 +111,7 @@ class GstValidateManager(TestsManager):
                     break
             self._uris.append((uri, config))
         except ConfigParser.NoOptionError as e:
-            logging.debug("Exception: %s for %s", e, media_info)
+            self.debug("Exception: %s for %s", e, media_info)
             pass
         f.close()
 
@@ -133,8 +134,8 @@ class GstValidateManager(TestsManager):
 
             return True
 
-        except subprocess.CalledProcessError:
-            logging.debug("Exception: %s", e)
+        except subprocess.CalledProcessError as e:
+            self.debug("Exception: %s", e)
             return False
 
     def _list_uris(self):
@@ -148,7 +149,7 @@ class GstValidateManager(TestsManager):
             for path in self.options.paths:
                 for root, dirs, files in os.walk(path):
                     for f in files:
-                        fpath = os.path.join(path, root,f)
+                        fpath = os.path.join(path, root, f)
                         if os.path.isdir(fpath) or fpath.endswith(MEDIA_INFO_EXT):
                             continue
                         elif fpath.endswith(STREAM_INFO):
@@ -156,7 +157,7 @@ class GstValidateManager(TestsManager):
                         else:
                             self._discover_file(path2url(fpath), fpath)
 
-        logging.debug("Uris found: %s", self._uris)
+        self.debug("Uris found: %s", self._uris)
 
         return self._uris
 
@@ -169,7 +170,7 @@ class GstValidateManager(TestsManager):
 
         return name
 
-    def _add_test(self, name, scenario, pipe):
+    def _add_playback_test(self, name, scenario, pipe):
         if self.options.mute:
             if "autovideosink" in pipe:
                 pipe = pipe.replace("autovideosink", "fakesink")
@@ -181,7 +182,7 @@ class GstValidateManager(TestsManager):
                 npipe = pipe
                 if scenario in SEEKING_REQUIERED_SCENARIO:
                     if config.getboolean("media-info", "seekable") is False:
-                        logging.debug("Do not run %s as %s does not support seeking",
+                        self.debug("Do not run %s as %s does not support seeking",
                                     scenario, uri)
                         continue
 
@@ -193,7 +194,7 @@ class GstValidateManager(TestsManager):
                 fname = "%s.%s" % (self._get_fname(name, scenario,
                                    config.get("file-info", "protocol")),
                                    os.path.basename(uri).replace(".", "_"))
-                logging.debug("Adding: %s", fname)
+                self.debug("Adding: %s", fname)
 
                 self.tests.append(GstValidateTest(fname,
                                                   self.options,
@@ -203,7 +204,7 @@ class GstValidateManager(TestsManager):
                                                   config)
                                  )
         else:
-            logging.debug("Adding: %s", name)
+            self.debug("Adding: %s", name)
             self.tests.append(GstValidateTest(self._get_fname(fname, scenario),
                                               self.options,
                                               self.reporter,

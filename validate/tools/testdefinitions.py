@@ -24,7 +24,7 @@ import re
 import time
 import subprocess
 import reporters
-import logging
+from  loggable import Loggable
 from optparse import OptionGroup
 
 from utils import mkdir, Result, Colors, printc
@@ -34,11 +34,12 @@ DEFAULT_TIMEOUT = 10
 DEFAULT_QA_SAMPLE_PATH = os.path.join(os.path.expanduser('~'), "Videos",
                           "gst-qa-samples")
 
-class Test(object):
+class Test(Loggable):
 
     """ A class representing a particular test. """
 
     def __init__(self, application_name, classname, options, reporter, scenario=None, timeout=DEFAULT_TIMEOUT):
+        Loggable.__init__(self)
         self.timeout = timeout
         self.classname = classname
         self.options = options
@@ -81,7 +82,7 @@ class Test(object):
         self.error = error
 
     def check_results(self):
-        logging.debug("%s returncode: %d", self, self.process.returncode)
+        self.debug("%s returncode: %d", self, self.process.returncode)
         if self.result == Result.TIMEOUT:
             self.set_result(Result.TIMEOUT, "Application timed out", "timeout")
         elif self.process.returncode == 0:
