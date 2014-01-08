@@ -504,7 +504,8 @@ gst_collect_pads_clip_running_time (GstCollectPads * pads,
   if (G_LIKELY (GST_CLOCK_TIME_IS_VALID (time))) {
     time = gst_segment_to_running_time (&cdata->segment, GST_FORMAT_TIME, time);
     if (G_UNLIKELY (!GST_CLOCK_TIME_IS_VALID (time))) {
-      GST_DEBUG_OBJECT (cdata->pad, "clipping buffer on pad outside segment");
+      GST_DEBUG_OBJECT (cdata->pad, "clipping buffer on pad outside segment %"
+          GST_TIME_FORMAT, GST_TIME_ARGS (GST_BUFFER_PTS (buf)));
       gst_buffer_unref (buf);
       *outbuf = NULL;
     } else {
@@ -1716,7 +1717,8 @@ gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
       GST_COLLECT_PADS_STATE_SET (data, GST_COLLECT_PADS_STATE_NEW_SEGMENT);
 
       /* now we can use for e.g. running time */
-      seg.position = gst_collect_pads_clip_time (pads, data, seg.start);
+      seg.position =
+          gst_collect_pads_clip_time (pads, data, seg.start + seg.offset);
       /* update again */
       data->segment = seg;
 
@@ -1739,6 +1741,7 @@ gst_collect_pads_event_default (GstCollectPads * pads, GstCollectData * data,
       GST_COLLECT_PADS_STREAM_LOCK (pads);
 
       gst_event_parse_gap (event, &start, &duration);
+      /* FIXME, handle reverse playback case */
       if (GST_CLOCK_TIME_IS_VALID (duration))
         start += duration;
       /* we do not expect another buffer until after gap,
