@@ -1041,6 +1041,7 @@ EXPORTS
 	gst_segment_get_type
 	gst_segment_init
 	gst_segment_new
+	gst_segment_offset_running_time
 	gst_segment_set_running_time
 	gst_segment_to_position
 	gst_segment_to_running_time

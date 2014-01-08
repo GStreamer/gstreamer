@@ -668,7 +668,6 @@ gst_segment_to_position (const GstSegment * segment, GstFormat format,
   return result;
 }
 
-
 /**
  * gst_segment_set_running_time:
  * @segment: a #GstSegment structure.
@@ -711,5 +710,53 @@ gst_segment_set_running_time (GstSegment * segment, GstFormat format,
   segment->stop = stop;
   segment->base = running_time;
 
+  return TRUE;
+}
+
+/**
+ * gst_segment_offset_running_time:
+ * @segment: a #GstSegment structure.
+ * @format: the format of the segment.
+ * @offset: the offset to apply in the segment
+ *
+ * Adjust the values in @segment so that @offset is applied to all
+ * future running-time calculations.
+ *
+ * Since: 1.4
+ *
+ * Returns: %TRUE if the segment could be updated successfully. If %FALSE is
+ * returned, @offset is not in @segment.
+ */
+gboolean
+gst_segment_offset_running_time (GstSegment * segment, GstFormat format,
+    gint64 offset)
+{
+  g_return_val_if_fail (segment != NULL, FALSE);
+  g_return_val_if_fail (segment->format == format, FALSE);
+
+  if (offset == 0)
+    return TRUE;
+
+  if (offset > 0) {
+    /* positive offset, we can simply apply to the base time */
+    segment->base += offset;
+  } else {
+    offset = -offset;
+    /* negative offset, first try to subtract from base */
+    if (segment->base > offset) {
+      segment->base -= offset;
+    } else {
+      guint64 position;
+
+      /* subtract all from segment.base, remainder in offset */
+      offset -= segment->base;
+      segment->base = 0;
+      position = gst_segment_to_position (segment, format, offset);
+      if (position == -1)
+        return FALSE;
+
+      segment->offset = position;
+    }
+  }
   return TRUE;
 }
