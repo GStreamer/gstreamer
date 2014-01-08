@@ -488,14 +488,13 @@ AG_GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosink, [
   AC_CHECK_HEADER(OpenGL/gl.h, HAVE_OSX_VIDEO="yes", HAVE_OSX_VIDEO="no")
 
   dnl in case header OpenGL/gl.h is found on other platforms (or older, unsupported OS X)
-  case "$host" in
-    *-*darwin1*)
-      dnl do nothing on Snow Leopard or newer
-      ;;
-    *)
-      HAVE_OSX_VIDEO="no"
-      ;;
-  esac
+  dnl also require Snow Leopard or newer
+
+  AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <faad.h>]], [[
+        #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
+        #error Too old OSX version
+        #endif
+    ]])],[HAVE_OSX_VIDEO="yes"],[HAVE_OSX_VIDEO="no"])
 ])
 
 dnl *** Video 4 Linux 2 ***
