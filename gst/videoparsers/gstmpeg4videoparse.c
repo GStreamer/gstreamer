@@ -211,6 +211,7 @@ gst_mpeg4vparse_reset (GstMpeg4VParse * mp4vparse)
   mp4vparse->level = NULL;
   mp4vparse->pending_key_unit_ts = GST_CLOCK_TIME_NONE;
   mp4vparse->force_key_unit_event = NULL;
+  mp4vparse->discont = FALSE;
 
   gst_buffer_replace (&mp4vparse->config, NULL);
   memset (&mp4vparse->vol, 0, sizeof (mp4vparse->vol));
@@ -414,6 +415,11 @@ gst_mpeg4vparse_handle_frame (GstBaseParse * parse,
   gboolean ret = FALSE;
   guint framesize = 0;
 
+  if (G_UNLIKELY (GST_BUFFER_FLAG_IS_SET (frame->buffer,
+              GST_BUFFER_FLAG_DISCONT))) {
+    mp4vparse->discont = TRUE;
+  }
+
   gst_buffer_map (frame->buffer, &map, GST_MAP_READ);
   data = map.data;
   size = map.size;
@@ -528,6 +534,10 @@ out:
     res = gst_mpeg4vparse_parse_frame (parse, frame);
     if (res == GST_BASE_PARSE_FLOW_DROPPED)
       frame->flags |= GST_BASE_PARSE_FRAME_FLAG_DROP;
+    if (G_UNLIKELY (mp4vparse->discont)) {
+      GST_BUFFER_FLAG_SET (frame->buffer, GST_BUFFER_FLAG_DISCONT);
+      mp4vparse->discont = FALSE;
+    }
     return gst_base_parse_finish_frame (parse, frame, framesize);
   }
 

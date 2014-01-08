@@ -59,6 +59,8 @@ struct _GstMpeg4VParse {
   GstMpeg4VisualObject vo;
   gint vo_offset;
 
+  gboolean discont;
+
   GstBuffer *config;
   GstMpeg4VideoObjectLayer vol;
   gboolean vol_offset;
