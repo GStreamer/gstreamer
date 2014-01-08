@@ -578,8 +578,9 @@ apply_pad_offset (GstPad * pad, GstEvent * event)
     gst_event_copy_segment (event, &segment);
     gst_event_unref (event);
 
-    /* adjust and make a new event with the offset applied */
-    segment.base += pad->offset;
+    GST_DEBUG_OBJECT (pad, "apply pad offset %" GST_TIME_FORMAT,
+        GST_TIME_ARGS (pad->offset));
+    gst_segment_offset_running_time (&segment, segment.format, pad->offset);
     event = gst_event_new_segment (&segment);
   }
   return event;
