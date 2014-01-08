@@ -22,7 +22,6 @@
 #include "gst/vaapi/sysdeps.h"
 #include <gst/vaapi/gstvaapidisplay.h>
 #include <gst/vaapi/gstvaapiencoder_mpeg2.h>
-#include "gst/vaapi/gstvaapiencoder_mpeg2_priv.h"
 #include "gstvaapiencode_mpeg2.h"
 #include "gstvaapipluginutil.h"
 #if GST_CHECK_VERSION(1,0,0)
@@ -82,20 +81,10 @@ static GstStaticPadTemplate gst_vaapiencode_mpeg2_src_factory =
 G_DEFINE_TYPE (GstVaapiEncodeMpeg2, gst_vaapiencode_mpeg2,
     GST_TYPE_VAAPIENCODE);
 
-enum
-{
-  PROP_0,
-  PROP_QUANTIZER,
-  PROP_KEY_PERIOD,
-  PROP_MAX_BFRAMES
-};
-
 static void
 gst_vaapiencode_mpeg2_init (GstVaapiEncodeMpeg2 * encode)
 {
-  encode->quantizer = GST_VAAPI_ENCODER_MPEG2_DEFAULT_CQP;
-  encode->intra_period = GST_VAAPI_ENCODER_MPEG2_DEFAULT_GOP_SIZE;
-  encode->ip_period = GST_VAAPI_ENCODER_MPEG2_DEFAULT_MAX_BFRAMES;
+  gst_vaapiencode_init_properties (GST_VAAPIENCODE_CAST (encode));
 }
 
 static void
@@ -108,20 +97,13 @@ static void
 gst_vaapiencode_mpeg2_set_property (GObject * object,
     guint prop_id, const GValue * value, GParamSpec * pspec)
 {
-  GstVaapiEncodeMpeg2 *const encode = GST_VAAPIENCODE_MPEG2_CAST (object);
+  GstVaapiEncodeClass *const encode_class = GST_VAAPIENCODE_GET_CLASS (object);
+  GstVaapiEncode *const base_encode = GST_VAAPIENCODE_CAST (object);
 
   switch (prop_id) {
-    case PROP_QUANTIZER:
-      encode->quantizer = g_value_get_uint (value);
-      break;
-    case PROP_KEY_PERIOD:
-      encode->intra_period = g_value_get_uint (value);
-      break;
-    case PROP_MAX_BFRAMES:
-      encode->ip_period = g_value_get_uint (value);
-      break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      if (!encode_class->set_property (base_encode, prop_id, value))
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -130,20 +112,13 @@ static void
 gst_vaapiencode_mpeg2_get_property (GObject * object,
     guint prop_id, GValue * value, GParamSpec * pspec)
 {
-  GstVaapiEncodeMpeg2 *const encode = GST_VAAPIENCODE_MPEG2_CAST (object);
+  GstVaapiEncodeClass *const encode_class = GST_VAAPIENCODE_GET_CLASS (object);
+  GstVaapiEncode *const base_encode = GST_VAAPIENCODE_CAST (object);
 
   switch (prop_id) {
-    case PROP_QUANTIZER:
-      g_value_set_uint (value, encode->quantizer);
-      break;
-    case PROP_KEY_PERIOD:
-      g_value_set_uint (value, encode->intra_period);
-      break;
-    case PROP_MAX_BFRAMES:
-      g_value_set_uint (value, encode->ip_period);
-      break;
     default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+      if (!encode_class->get_property (base_encode, prop_id, value))
+        G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
 }
@@ -152,21 +127,7 @@ static GstVaapiEncoder *
 gst_vaapiencode_mpeg2_create_encoder (GstVaapiEncode * base,
     GstVaapiDisplay * display)
 {
-  GstVaapiEncodeMpeg2 *const encode = GST_VAAPIENCODE_MPEG2_CAST (base);
-  GstVaapiEncoder *base_encoder;
-  GstVaapiEncoderMpeg2 *encoder;
-
-  base_encoder = gst_vaapi_encoder_mpeg2_new (display);
-  if (!base_encoder)
-    return NULL;
-  encoder = GST_VAAPI_ENCODER_MPEG2 (base_encoder);
-
-  encoder->profile = GST_VAAPI_ENCODER_MPEG2_DEFAULT_PROFILE;
-  encoder->level = GST_VAAPI_ENCODER_MPEG2_DEFAULT_LEVEL;
-  encoder->cqp = encode->quantizer;
-  encoder->intra_period = encode->intra_period;
-  encoder->ip_period = encode->ip_period;
-  return base_encoder;
+  return gst_vaapi_encoder_mpeg2_new (display);
 }
 
 static void
@@ -183,6 +144,7 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
   object_class->set_property = gst_vaapiencode_mpeg2_set_property;
   object_class->get_property = gst_vaapiencode_mpeg2_get_property;
 
+  encode_class->get_properties = gst_vaapi_encoder_mpeg2_get_default_properties;
   encode_class->create_encoder = gst_vaapiencode_mpeg2_create_encoder;
 
   gst_element_class_set_static_metadata (element_class,
@@ -198,33 +160,5 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
   gst_element_class_add_pad_template (element_class,
       gst_static_pad_template_get (&gst_vaapiencode_mpeg2_src_factory));
 
-  g_object_class_install_property (object_class,
-      PROP_QUANTIZER,
-      g_param_spec_uint ("quantizer",
-          "Constant Quantizer",
-          "Constant quantizer (if rate-control mode is CQP)",
-          GST_VAAPI_ENCODER_MPEG2_MIN_CQP,
-          GST_VAAPI_ENCODER_MPEG2_MAX_CQP,
-          GST_VAAPI_ENCODER_MPEG2_DEFAULT_CQP,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (object_class,
-      PROP_KEY_PERIOD,
-      g_param_spec_uint ("key-period",
-          "Key Period",
-          "Maximal distance between two key-frames",
-          1,
-          GST_VAAPI_ENCODER_MPEG2_MAX_GOP_SIZE,
-          GST_VAAPI_ENCODER_MPEG2_DEFAULT_GOP_SIZE,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  g_object_class_install_property (object_class,
-      PROP_MAX_BFRAMES,
-      g_param_spec_uint ("max-bframes",
-          "Max B-Frames",
-          "Number of B-frames between I and P",
-          0,
-          GST_VAAPI_ENCODER_MPEG2_MAX_MAX_BFRAMES,
-          GST_VAAPI_ENCODER_MPEG2_DEFAULT_MAX_BFRAMES,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+  gst_vaapiencode_class_init_properties (encode_class);
 }

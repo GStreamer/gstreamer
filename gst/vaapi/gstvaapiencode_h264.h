@@ -52,12 +52,6 @@ struct _GstVaapiEncodeH264
 {
   /*< private >*/
   GstVaapiEncode parent_instance;
-
-  guint32 intra_period;
-  guint32 init_qp;
-  guint32 min_qp;
-  guint32 num_slices;
-  guint32 max_bframes;
 };
 
 struct _GstVaapiEncodeH264Class

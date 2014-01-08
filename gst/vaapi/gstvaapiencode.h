@@ -59,8 +59,7 @@ struct _GstVaapiEncode
   GstPadQueryFunction srcpad_query;
 
   GstVaapiEncoder *encoder;
-  GstVaapiRateControl rate_control;
-  guint32 bitrate;              /* kbps */
+  GPtrArray *prop_values;
 
   guint32 out_caps_done:1;
 };
@@ -69,6 +68,12 @@ struct _GstVaapiEncodeClass
 {
   /*< private >*/
   GstVaapiPluginBaseClass parent_class;
+
+  GPtrArray *         (*get_properties) (void);
+  gboolean            (*get_property)   (GstVaapiEncode * encode,
+                                         guint prop_id, GValue * value);
+  gboolean            (*set_property)   (GstVaapiEncode * encode,
+                                         guint prop_id, const GValue * value);
 
   GstVaapiEncoder *   (*create_encoder)    (GstVaapiEncode * encode,
                                             GstVaapiDisplay * display);
@@ -79,6 +84,14 @@ struct _GstVaapiEncodeClass
 
 GType
 gst_vaapiencode_get_type (void) G_GNUC_CONST;
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapiencode_init_properties (GstVaapiEncode * encode);
+
+G_GNUC_INTERNAL
+gboolean
+gst_vaapiencode_class_init_properties (GstVaapiEncodeClass * encode_class);
 
 G_END_DECLS
 

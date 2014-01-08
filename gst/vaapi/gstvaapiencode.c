@@ -48,8 +48,8 @@ G_DEFINE_TYPE_WITH_CODE (GstVaapiEncode,
 enum
 {
   PROP_0,
-  PROP_RATE_CONTROL,
-  PROP_BITRATE,
+
+  PROP_BASE,
 };
 
 static inline gboolean
@@ -88,6 +88,88 @@ gst_vaapiencode_query (GST_PAD_QUERY_FUNCTION_ARGS)
 
   gst_object_unref (encode);
   return success;
+}
+
+typedef struct
+{
+  GstVaapiEncoderProp id;
+  GParamSpec *pspec;
+  GValue value;
+} PropValue;
+
+static PropValue *
+prop_value_new (GstVaapiEncoderPropInfo * prop)
+{
+  static const GValue default_value = G_VALUE_INIT;
+  PropValue *prop_value;
+
+  if (!prop || !prop->pspec)
+    return NULL;
+
+  prop_value = g_slice_new (PropValue);
+  if (!prop_value)
+    return NULL;
+
+  prop_value->id = prop->prop;
+  prop_value->pspec = g_param_spec_ref (prop->pspec);
+
+  memcpy (&prop_value->value, &default_value, sizeof (prop_value->value));
+  g_value_init (&prop_value->value, prop->pspec->value_type);
+  g_param_value_set_default (prop->pspec, &prop_value->value);
+  return prop_value;
+}
+
+static void
+prop_value_free (PropValue * prop_value)
+{
+  if (!prop_value)
+    return;
+
+  if (G_VALUE_TYPE (&prop_value->value))
+    g_value_unset (&prop_value->value);
+
+  if (prop_value->pspec) {
+    g_param_spec_unref (prop_value->pspec);
+    prop_value->pspec = NULL;
+  }
+  g_slice_free (PropValue, prop_value);
+}
+
+static inline PropValue *
+prop_value_lookup (GstVaapiEncode * encode, guint prop_id)
+{
+  GPtrArray *const prop_values = encode->prop_values;
+
+  if (prop_values &&
+      (prop_id >= PROP_BASE && prop_id < PROP_BASE + prop_values->len))
+    return g_ptr_array_index (prop_values, prop_id - PROP_BASE);
+  return NULL;
+}
+
+static gboolean
+gst_vaapiencode_default_get_property (GstVaapiEncode * encode, guint prop_id,
+    GValue * value)
+{
+  PropValue *const prop_value = prop_value_lookup (encode, prop_id);
+
+  if (prop_value) {
+    g_value_copy (&prop_value->value, value);
+    return TRUE;
+  }
+  return FALSE;
+}
+
+static gboolean
+gst_vaapiencode_default_set_property (GstVaapiEncode * encode, guint prop_id,
+    const GValue * value)
+{
+  PropValue *const prop_value = prop_value_lookup (encode, prop_id);
+
+  if (prop_value) {
+    g_value_copy (value, &prop_value->value);
+    return TRUE;
+  }
+  return FALSE;
 }
 
 static GstFlowReturn
@@ -303,6 +385,8 @@ ensure_encoder (GstVaapiEncode * encode)
 {
   GstVaapiEncodeClass *klass = GST_VAAPIENCODE_GET_CLASS (encode);
   GstVaapiEncoderStatus status;
+  GPtrArray *const prop_values = encode->prop_values;
+  guint i;
 
   g_return_val_if_fail (klass->create_encoder, FALSE);
 
@@ -314,14 +398,15 @@ ensure_encoder (GstVaapiEncode * encode)
   if (!encode->encoder)
     return FALSE;
 
-  status = gst_vaapi_encoder_set_rate_control (encode->encoder,
-      encode->rate_control);
-  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
-    return FALSE;
-
-  status = gst_vaapi_encoder_set_bitrate (encode->encoder, encode->bitrate);
-  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
-    return FALSE;
+  if (prop_values) {
+    for (i = 0; i < prop_values->len; i++) {
+      PropValue *const prop_value = g_ptr_array_index (prop_values, i);
+      status = gst_vaapi_encoder_set_property (encode->encoder, prop_value->id,
+          &prop_value->value);
+      if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+        return FALSE;
+    }
+  }
   return TRUE;
 }
 
@@ -563,49 +648,16 @@ gst_vaapiencode_propose_allocation (GstVideoEncoder * venc, GstQuery * query)
 #endif
 
 static void
-gst_vaapiencode_set_property (GObject * object, guint prop_id,
-    const GValue * value, GParamSpec * pspec)
-{
-  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (object);
-
-  switch (prop_id) {
-    case PROP_RATE_CONTROL:
-      encode->rate_control = g_value_get_enum (value);
-      break;
-    case PROP_BITRATE:
-      encode->bitrate = g_value_get_uint (value);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
-gst_vaapiencode_get_property (GObject * object, guint prop_id,
-    GValue * value, GParamSpec * pspec)
-{
-  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (object);
-
-  switch (prop_id) {
-    case PROP_RATE_CONTROL:
-      g_value_set_enum (value, encode->rate_control);
-      break;
-    case PROP_BITRATE:
-      g_value_set_uint (value, encode->bitrate);
-      break;
-    default:
-      G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
-  }
-}
-
-static void
 gst_vaapiencode_finalize (GObject * object)
 {
   GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (object);
 
   gst_vaapiencode_destroy (encode);
+
+  if (encode->prop_values) {
+    g_ptr_array_unref (encode->prop_values);
+    encode->prop_values = NULL;
+  }
 
   encode->sinkpad = NULL;
   encode->srcpad = NULL;
@@ -644,8 +696,6 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
   gst_vaapi_plugin_base_class_init (GST_VAAPI_PLUGIN_BASE_CLASS (klass));
 
   object_class->finalize = gst_vaapiencode_finalize;
-  object_class->set_property = gst_vaapiencode_set_property;
-  object_class->get_property = gst_vaapiencode_get_property;
 
   venc_class->open = GST_DEBUG_FUNCPTR (gst_vaapiencode_open);
   venc_class->close = GST_DEBUG_FUNCPTR (gst_vaapiencode_close);
@@ -660,24 +710,61 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
       GST_DEBUG_FUNCPTR (gst_vaapiencode_propose_allocation);
 #endif
 
+  klass->get_property = gst_vaapiencode_default_get_property;
+  klass->set_property = gst_vaapiencode_default_set_property;
   klass->allocate_buffer = gst_vaapiencode_default_allocate_buffer;
 
   /* Registering debug symbols for function pointers */
   GST_DEBUG_REGISTER_FUNCPTR (gst_vaapiencode_query);
+}
 
-  g_object_class_install_property (object_class,
-      PROP_RATE_CONTROL,
-      g_param_spec_enum ("rate-control",
-          "Rate Control",
-          "Rate control mode",
-          GST_VAAPI_TYPE_RATE_CONTROL,
-          GST_VAAPI_RATECONTROL_CQP,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+static inline GPtrArray *
+get_properties (GstVaapiEncodeClass * klass)
+{
+  return klass->get_properties ? klass->get_properties () : NULL;
+}
 
-  g_object_class_install_property (object_class,
-      PROP_BITRATE,
-      g_param_spec_uint ("bitrate",
-          "Bitrate (kbps)",
-          "The desired bitrate expressed in kbps (0: auto-calculate)",
-          0, 100 * 1024, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+gboolean
+gst_vaapiencode_init_properties (GstVaapiEncode * encode)
+{
+  GPtrArray *const props = get_properties (GST_VAAPIENCODE_GET_CLASS (encode));
+  guint i;
+
+  /* XXX: use base_init()/base_finalize() to avoid multiple initializations */
+  if (!props)
+    return FALSE;
+
+  encode->prop_values =
+      g_ptr_array_new_full (props->len, (GDestroyNotify) prop_value_free);
+  if (!encode->prop_values) {
+    g_ptr_array_unref (props);
+    return FALSE;
+  }
+
+  for (i = 0; i < props->len; i++) {
+    PropValue *const prop_value = prop_value_new ((GstVaapiEncoderPropInfo *)
+        g_ptr_array_index (props, i));
+    if (!prop_value)
+      return FALSE;
+    g_ptr_array_add (encode->prop_values, prop_value);
+  }
+  return TRUE;
+}
+
+gboolean
+gst_vaapiencode_class_init_properties (GstVaapiEncodeClass * klass)
+{
+  GObjectClass *const object_class = G_OBJECT_CLASS (klass);
+  GPtrArray *const props = get_properties (klass);
+  guint i;
+
+  if (!props)
+    return FALSE;
+
+  for (i = 0; i < props->len; i++) {
+    GstVaapiEncoderPropInfo *const prop = g_ptr_array_index (props, i);
+    g_object_class_install_property (object_class, PROP_BASE + i, prop->pspec);
+  }
+  g_ptr_array_unref (props);
+  return TRUE;
 }
