@@ -672,6 +672,13 @@ stop_streaming (GstV4l2BufferPool * pool)
 
   gst_poll_set_flushing (obj->poll, TRUE);
 
+  if (!pool->streaming) {
+    /* it avoid error: STREAMOFF 22 (Invalid argument) when
+     * attempting to stop a stream not previously started */
+    GST_DEBUG_OBJECT (pool, "no need to stop, was not previously started");
+    return TRUE;
+  }
+
   switch (obj->mode) {
     case GST_V4L2_IO_RW:
       break;
