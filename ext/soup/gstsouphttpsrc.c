@@ -79,6 +79,7 @@
 #include <gst/gst-i18n-plugin.h>
 #include <libsoup/soup.h>
 #include "gstsouphttpsrc.h"
+#include "gstsouputils.h"
 
 #include <gst/tag/tag.h>
 
@@ -105,11 +106,13 @@ enum
   PROP_COOKIES,
   PROP_IRADIO_MODE,
   PROP_TIMEOUT,
-  PROP_EXTRA_HEADERS
+  PROP_EXTRA_HEADERS,
+  PROP_SOUP_LOG_LEVEL
 };
 
 #define DEFAULT_USER_AGENT           "GStreamer souphttpsrc "
 #define DEFAULT_IRADIO_MODE          TRUE
+#define DEFAULT_SOUP_LOG_LEVEL       SOUP_LOGGER_LOG_NONE
 
 static void gst_soup_http_src_uri_handler_init (gpointer g_iface,
     gpointer iface_data);
@@ -243,6 +246,19 @@ gst_soup_http_src_class_init (GstSoupHTTPSrcClass * klass)
           "Enable internet radio mode (ask server to send shoutcast/icecast "
           "metadata interleaved with the actual stream data)",
           DEFAULT_IRADIO_MODE, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+ /**
+   * GstSoupHTTPSrc::http-log-level:
+   *
+   * If set and > 0, captures and dumps HTTP session data as
+   * log messages if log level >= GST_LEVEL_TRACE
+   *
+   * Since: 1.4
+   */
+  g_object_class_install_property (gobject_class, PROP_SOUP_LOG_LEVEL,
+      g_param_spec_enum ("http-log-level", "HTTP log level",
+          "Set log level for soup's HTTP session log",
+          SOUP_TYPE_LOGGER_LOG_LEVEL, DEFAULT_SOUP_LOG_LEVEL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&srctemplate));
@@ -313,6 +329,7 @@ gst_soup_http_src_init (GstSoupHTTPSrc * src)
   src->context = NULL;
   src->session = NULL;
   src->msg = NULL;
+  src->log_level = DEFAULT_SOUP_LOG_LEVEL;
   proxy = g_getenv ("http_proxy");
   if (proxy && !gst_soup_http_src_set_proxy (src, proxy)) {
     GST_WARNING_OBJECT (src,
@@ -438,6 +455,9 @@ gst_soup_http_src_set_property (GObject * object, guint prop_id,
       src->extra_headers = s ? gst_structure_copy (s) : NULL;
       break;
     }
+    case PROP_SOUP_LOG_LEVEL:
+      src->log_level = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
@@ -498,6 +518,9 @@ gst_soup_http_src_get_property (GObject * object, guint prop_id,
       break;
     case PROP_EXTRA_HEADERS:
       gst_value_set_structure (value, src->extra_headers);
+      break;
+    case PROP_SOUP_LOG_LEVEL:
+      g_value_set_enum (value, src->log_level);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -695,6 +718,10 @@ gst_soup_http_src_session_open (GstSoupHTTPSrc * src)
 
   g_signal_connect (src->session, "authenticate",
       G_CALLBACK (gst_soup_http_src_authenticate_cb), src);
+
+  /* Set up logging */
+  gst_soup_util_log_setup (src->session, src->log_level, GST_ELEMENT (src));
+
   return TRUE;
 }
 
@@ -726,13 +753,6 @@ gst_soup_http_src_authenticate_cb (SoupSession * session, SoupMessage * msg,
 }
 
 static void
-gst_soup_http_src_headers_foreach (const gchar * name, const gchar * val,
-    gpointer src)
-{
-  GST_DEBUG_OBJECT (src, " %s: %s", name, val);
-}
-
-static void
 gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
 {
   const char *value;
@@ -741,9 +761,7 @@ gst_soup_http_src_got_headers_cb (SoupMessage * msg, GstSoupHTTPSrc * src)
   guint64 newsize;
   GHashTable *params = NULL;
 
-  GST_DEBUG_OBJECT (src, "got headers:");
-  soup_message_headers_foreach (msg->response_headers,
-      gst_soup_http_src_headers_foreach, src);
+  GST_INFO_OBJECT (src, "got headers");
 
   if (msg->status_code == SOUP_STATUS_PROXY_AUTHENTICATION_REQUIRED &&
       src->proxy_id && src->proxy_pw)
@@ -1250,10 +1268,6 @@ gst_soup_http_src_build_message (GstSoupHTTPSrc * src, const gchar * method)
       src->stop_position);
 
   gst_soup_http_src_add_extra_headers (src);
-
-  GST_DEBUG_OBJECT (src, "request headers:");
-  soup_message_headers_foreach (src->msg->request_headers,
-      gst_soup_http_src_headers_foreach, src);
 
   return TRUE;
 }

@@ -66,7 +66,7 @@ struct _GstSoupHttpClientSink
   char *user_agent;
   gboolean automatic_redirect;
   gchar **cookies;
-
+  SoupLoggerLogLevel log_level;
 };
 
 struct _GstSoupHttpClientSinkClass

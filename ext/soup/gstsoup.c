@@ -20,7 +20,9 @@
 
 #include "gstsouphttpsrc.h"
 #include "gstsouphttpclientsink.h"
+#include "gstsouputils.h"
 
+GST_DEBUG_CATEGORY (soup_utils_debug);
 
 static gboolean
 plugin_init (GstPlugin * plugin)
@@ -36,6 +38,7 @@ plugin_init (GstPlugin * plugin)
       GST_TYPE_SOUP_HTTP_SRC);
   gst_element_register (plugin, "souphttpclientsink", GST_RANK_NONE,
       GST_TYPE_SOUP_HTTP_CLIENT_SINK);
+  GST_DEBUG_CATEGORY_INIT (soup_utils_debug, "souputils", 0, "Soup utils");
 
   return TRUE;
 }

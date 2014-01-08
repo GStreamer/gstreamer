@@ -41,6 +41,7 @@
 #include <gst/gst.h>
 #include <gst/base/gstbasesink.h>
 #include "gstsouphttpclientsink.h"
+#include "gstsouputils.h"
 
 #include <gst/glib-compat-private.h>
 
@@ -93,10 +94,12 @@ enum
   PROP_PROXY_ID,
   PROP_PROXY_PW,
   PROP_COOKIES,
-  PROP_SESSION
+  PROP_SESSION,
+  PROP_SOUP_LOG_LEVEL
 };
 
 #define DEFAULT_USER_AGENT           "GStreamer souphttpclientsink "
+#define DEFAULT_SOUP_LOG_LEVEL       SOUP_LOGGER_LOG_NONE
 
 /* pad templates */
 
@@ -168,6 +171,19 @@ gst_soup_http_client_sink_class_init (GstSoupHttpClientSinkClass * klass)
   g_object_class_install_property (gobject_class, PROP_COOKIES,
       g_param_spec_boxed ("cookies", "Cookies", "HTTP request cookies",
           G_TYPE_STRV, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+ /**
+   * GstSoupHttpClientSink::http-log-level:
+   *
+   * If set and > 0, captures and dumps HTTP session data as
+   * log messages if log level >= GST_LEVEL_TRACE
+   *
+   * Since: 1.4
+   */
+  g_object_class_install_property (gobject_class, PROP_SOUP_LOG_LEVEL,
+      g_param_spec_enum ("http-log-level", "HTTP log level",
+          "Set log level for soup's HTTP session log",
+          SOUP_TYPE_LOGGER_LOG_LEVEL, DEFAULT_SOUP_LOG_LEVEL,
+          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   gst_element_class_add_pad_template (gstelement_class,
       gst_static_pad_template_get (&gst_soup_http_client_sink_sink_template));
@@ -214,6 +230,7 @@ gst_soup_http_client_sink_init (GstSoupHttpClientSink * souphttpsink)
   souphttpsink->proxy_pw = NULL;
   souphttpsink->prop_session = NULL;
   souphttpsink->timeout = 1;
+  souphttpsink->log_level = DEFAULT_SOUP_LOG_LEVEL;
   proxy = g_getenv ("http_proxy");
   if (proxy && !gst_soup_http_client_sink_set_proxy (souphttpsink, proxy)) {
     GST_WARNING_OBJECT (souphttpsink,
@@ -316,6 +333,9 @@ gst_soup_http_client_sink_set_property (GObject * object, guint property_id,
       g_strfreev (souphttpsink->cookies);
       souphttpsink->cookies = g_strdupv (g_value_get_boxed (value));
       break;
+    case PROP_SOUP_LOG_LEVEL:
+      souphttpsink->log_level = g_value_get_enum (value);
+      break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
       break;
@@ -367,6 +387,9 @@ gst_soup_http_client_sink_get_property (GObject * object, guint property_id,
       break;
     case PROP_COOKIES:
       g_value_set_boxed (value, g_strdupv (souphttpsink->cookies));
+      break;
+    case PROP_SOUP_LOG_LEVEL:
+      g_value_set_enum (value, souphttpsink->log_level);
       break;
     default:
       G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -514,12 +537,13 @@ gst_soup_http_client_sink_start (GstBaseSink * sink)
         souphttpsink->user_agent, SOUP_SESSION_TIMEOUT, souphttpsink->timeout,
         NULL);
 
-    //soup_session_add_feature (souphttpsink->session,
-    //    SOUP_SESSION_FEATURE (soup_logger_new (SOUP_LOGGER_LOG_BODY, 100)));
-
     g_signal_connect (souphttpsink->session, "authenticate",
         G_CALLBACK (authenticate), souphttpsink);
   }
+
+  /* Set up logging */
+  gst_soup_util_log_setup (souphttpsink->session, souphttpsink->log_level,
+      GST_ELEMENT (souphttpsink));
 
   return TRUE;
 }
