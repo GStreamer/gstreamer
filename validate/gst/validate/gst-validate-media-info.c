@@ -177,13 +177,13 @@ gst_validate_media_info_load (const gchar * path, GError ** err)
   gst_validate_media_info_init (mi);
 
   mi->uri = g_key_file_get_string (kf, "file-info", "uri", err);
-  if (err)
+  if (err && *err)
     goto end;
   mi->file_size = g_key_file_get_uint64 (kf, "file-info", "file-size", err);
-  if (err)
+  if (err && *err)
     goto end;
 
-  mi->duration = g_key_file_get_uint64 (kf, "media-info", "duration", NULL);
+  mi->duration = g_key_file_get_uint64 (kf, "media-info", "file-duration", NULL);
   mi->seekable = g_key_file_get_boolean (kf, "media-info", "seekable", NULL);
 
   str = g_key_file_get_string (kf, "media-info", "caps", NULL);
