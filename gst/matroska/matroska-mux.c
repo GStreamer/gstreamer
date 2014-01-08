@@ -1944,11 +1944,18 @@ gst_matroska_mux_audio_pad_setcaps (GstPad * pad, GstCaps * caps)
       bitrate = block_align * samplerate;
     } else if (!strcmp (mimetype, "audio/x-adpcm")) {
       const char *layout;
+
       layout = gst_structure_get_string (structure, "layout");
+      if (!layout) {
+        GST_WARNING_OBJECT (mux, "Missing layout on adpcm caps");
+        goto refuse_caps;
+      }
+
       if (!gst_structure_get_int (structure, "block_align", &block_align)) {
         GST_WARNING_OBJECT (mux, "Missing block_align on adpcm caps");
         goto refuse_caps;
       }
+
       if (!strcmp (layout, "dvi")) {
         format = GST_RIFF_WAVE_FORMAT_DVI_ADPCM;
       } else if (!strcmp (layout, "g726")) {
