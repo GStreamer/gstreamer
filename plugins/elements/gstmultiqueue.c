@@ -1900,6 +1900,7 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
   GList *tmp;
   GstDataQueueSize size;
   gboolean filled = TRUE;
+  gboolean all_not_linked = TRUE;
 
   gst_data_queue_get_level (sq->queue, &size);
 
@@ -1927,18 +1928,25 @@ single_queue_overrun_cb (GstDataQueue * dq, GstSingleQueue * sq)
 
     if (oq->srcresult == GST_FLOW_NOT_LINKED) {
       GST_LOG_OBJECT (mq, "Queue %d is not-linked", oq->id);
-      continue;
+      if (!all_not_linked || tmp->next)
+        continue;
+    } else {
+      all_not_linked = FALSE;
+      GST_LOG_OBJECT (mq, "Checking Queue %d", oq->id);
     }
 
-    GST_LOG_OBJECT (mq, "Checking Queue %d", oq->id);
+    if (gst_data_queue_is_empty (oq->queue)
+        || oq->srcresult == GST_FLOW_NOT_LINKED) {
+      if (oq->srcresult == GST_FLOW_NOT_LINKED)
+        GST_LOG_OBJECT (mq, "All other queues are not linked");
+      else
+        GST_LOG_OBJECT (mq, "Queue %d is empty", oq->id);
 
-    if (gst_data_queue_is_empty (oq->queue)) {
-      GST_LOG_OBJECT (mq, "Queue %d is empty", oq->id);
       if (IS_FILLED (sq, visible, size.visible)) {
         sq->max_size.visible = size.visible + 1;
         GST_DEBUG_OBJECT (mq,
-            "Queue %d is empty, bumping single queue %d max visible to %d",
-            oq->id, sq->id, sq->max_size.visible);
+            "Bumping single queue %d max visible to %d",
+            sq->id, sq->max_size.visible);
         filled = FALSE;
         break;
       }
