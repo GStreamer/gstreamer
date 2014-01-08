@@ -41,7 +41,7 @@
 GST_DEBUG_CATEGORY_STATIC (gst_vaapiencode_debug);
 #define GST_CAT_DEFAULT gst_vaapiencode_debug
 
-G_DEFINE_TYPE_WITH_CODE (GstVaapiEncode,
+G_DEFINE_ABSTRACT_TYPE_WITH_CODE (GstVaapiEncode,
     gst_vaapiencode, GST_TYPE_VIDEO_ENCODER,
     GST_VAAPI_PLUGIN_BASE_INIT_INTERFACES);
 
