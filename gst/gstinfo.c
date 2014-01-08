@@ -744,10 +744,11 @@ gst_debug_print_segment (gpointer ptr)
     }
     case GST_FORMAT_TIME:{
       return g_strdup_printf ("time segment start=%" GST_TIME_FORMAT
-          ", stop=%" GST_TIME_FORMAT ", rate=%f, applied_rate=%f"
-          ", flags=0x%02x, time=%" GST_TIME_FORMAT ", base=%" GST_TIME_FORMAT
-          ", position %" GST_TIME_FORMAT ", duration %" GST_TIME_FORMAT,
-          GST_TIME_ARGS (segment->start), GST_TIME_ARGS (segment->stop),
+          ", offset=%" GST_TIME_FORMAT ", stop=%" GST_TIME_FORMAT
+          ", rate=%f, applied_rate=%f" ", flags=0x%02x, time=%" GST_TIME_FORMAT
+          ", base=%" GST_TIME_FORMAT ", position %" GST_TIME_FORMAT
+          ", duration %" GST_TIME_FORMAT, GST_TIME_ARGS (segment->start),
+          GST_TIME_ARGS (segment->offset), GST_TIME_ARGS (segment->stop),
           segment->rate, segment->applied_rate, (guint) segment->flags,
           GST_TIME_ARGS (segment->time), GST_TIME_ARGS (segment->base),
           GST_TIME_ARGS (segment->position), GST_TIME_ARGS (segment->duration));
@@ -759,12 +760,13 @@ gst_debug_print_segment (gpointer ptr)
       if (G_UNLIKELY (format_name == NULL))
         format_name = "(UNKNOWN FORMAT)";
       return g_strdup_printf ("%s segment start=%" G_GINT64_FORMAT
-          ", stop=%" G_GINT64_FORMAT ", rate=%f, applied_rate=%f"
-          ", flags=0x%02x, time=%" G_GINT64_FORMAT ", base=%" G_GINT64_FORMAT
-          ", position %" G_GINT64_FORMAT ", duration %" G_GINT64_FORMAT,
-          format_name, segment->start, segment->stop, segment->rate,
-          segment->applied_rate, (guint) segment->flags,
-          segment->time, segment->base, segment->position, segment->duration);
+          ", offset=%" G_GINT64_FORMAT ", stop=%" G_GINT64_FORMAT
+          ", rate=%f, applied_rate=%f" ", flags=0x%02x, time=%" G_GINT64_FORMAT
+          ", base=%" G_GINT64_FORMAT ", position %" G_GINT64_FORMAT
+          ", duration %" G_GINT64_FORMAT, format_name, segment->start,
+          segment->offset, segment->stop, segment->rate, segment->applied_rate,
+          (guint) segment->flags, segment->time, segment->base,
+          segment->position, segment->duration);
     }
   }
 }
