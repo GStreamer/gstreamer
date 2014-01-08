@@ -1088,6 +1088,7 @@ gst_base_parse_sink_event_default (GstBaseParse * parse, GstEvent * event)
          * whatever else it might claim */
         parse->priv->upstream_seekable = FALSE;
         next_dts = in_segment->start;
+        gst_event_copy_segment (event, &out_segment);
       }
 
       memcpy (&parse->segment, &out_segment, sizeof (GstSegment));
