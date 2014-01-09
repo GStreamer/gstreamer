@@ -2040,7 +2040,7 @@ AG_GST_CHECK_FEATURE(XVID, [xvid plugins], xvid, [
     AC_CHECK_LIB(xvidcore, xvid_encore, [
       AC_CHECK_LIB(xvidcore, xvid_decore, [
         AC_CHECK_LIB(xvidcore, xvid_global, [
-          AC_MSG_CHECKING([for uptodate XviD API version])
+          AC_MSG_CHECKING([for up-to-date XviD API version])
           AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <xvid.h>]], [[
               #if XVID_API_MAJOR(XVID_API) != 4
               #error "Incompatible XviD API version"
@@ -2064,7 +2064,18 @@ dnl *** dvb ***
 translit(dnm, m, l) AM_CONDITIONAL(USE_DVB, true)
 AG_GST_CHECK_FEATURE(DVB, [DVB Source], dvb, [
   AC_MSG_CHECKING([Checking for up to date dvb installation])
-  AC_CHECK_HEADER(linux/dvb/frontend.h, [HAVE_DVB="yes"], [HAVE_DVB="no"])
+  AC_CHECK_HEADER(linux/dvb/frontend.h, [
+    AC_MSG_CHECKING([for up-to-date dvb API])
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <linux/dvb/frontend.h>]], [[
+        #ifndef SYS_DVBC_ANNEX_AC
+        #error "Incompatible dvb API"
+        #endif
+    ]])], [ AC_MSG_RESULT(yes)
+      HAVE_DVB="yes"
+    ], [ AC_MSG_RESULT(no)
+      HAVE_DVB="no"
+    ])
+  ], [HAVE_DVB="no"])
 ])
 
 dnl *** wininet ***
