@@ -725,6 +725,7 @@ x4 addb argb, x, 128
 .temp 1 r
 .temp 1 g
 .temp 1 b
+.temp 4 x
 .const 1 c8 8
 .const 1 c128 128
 
@@ -766,7 +767,7 @@ convssswb g, wg
 convssswb b, wb
 
 mergebw t1, b, g
-x2 subb t1, t1, c128
-subb    r, r, c128
-mergebw t2, r, 255
-mergewl argb, t1, t2
+mergebw t2, r, 127
+mergewl x, t1, t2
+x4 addb argb, x, c128
+
