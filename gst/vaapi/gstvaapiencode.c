@@ -173,7 +173,7 @@ gst_vaapiencode_default_set_property (GstVaapiEncode * encode, guint prop_id,
 }
 
 static GstFlowReturn
-gst_vaapiencode_default_allocate_buffer (GstVaapiEncode * encode,
+gst_vaapiencode_default_alloc_buffer (GstVaapiEncode * encode,
     GstVaapiCodedBuffer * coded_buf, GstBuffer ** outbuf_ptr)
 {
   GstBuffer *buf;
@@ -246,7 +246,7 @@ gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 timeout)
 
   /* Allocate and copy buffer into system memory */
   out_buffer = NULL;
-  ret = klass->allocate_buffer (encode,
+  ret = klass->alloc_buffer (encode,
       GST_VAAPI_CODED_BUFFER_PROXY_BUFFER (codedbuf_proxy), &out_buffer);
   gst_vaapi_coded_buffer_proxy_replace (&codedbuf_proxy, NULL);
   if (ret != GST_FLOW_OK)
@@ -388,12 +388,12 @@ ensure_encoder (GstVaapiEncode * encode)
   GPtrArray *const prop_values = encode->prop_values;
   guint i;
 
-  g_return_val_if_fail (klass->create_encoder, FALSE);
+  g_return_val_if_fail (klass->alloc_encoder, FALSE);
 
   if (!ensure_uploader (encode))
     return FALSE;
 
-  encode->encoder = klass->create_encoder (encode,
+  encode->encoder = klass->alloc_encoder (encode,
       GST_VAAPI_PLUGIN_BASE_DISPLAY (encode));
   if (!encode->encoder)
     return FALSE;
@@ -712,7 +712,7 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
 
   klass->get_property = gst_vaapiencode_default_get_property;
   klass->set_property = gst_vaapiencode_default_set_property;
-  klass->allocate_buffer = gst_vaapiencode_default_allocate_buffer;
+  klass->alloc_buffer = gst_vaapiencode_default_alloc_buffer;
 
   /* Registering debug symbols for function pointers */
   GST_DEBUG_REGISTER_FUNCPTR (gst_vaapiencode_query);

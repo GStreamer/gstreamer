@@ -122,7 +122,7 @@ gst_vaapiencode_h264_get_property (GObject * object,
 }
 
 static GstVaapiEncoder *
-gst_vaapiencode_h264_create_encoder (GstVaapiEncode * base,
+gst_vaapiencode_h264_alloc_encoder (GstVaapiEncode * base,
     GstVaapiDisplay * display)
 {
   return gst_vaapi_encoder_h264_new (display);
@@ -221,7 +221,7 @@ error:
 }
 
 static GstFlowReturn
-gst_vaapiencode_h264_allocate_buffer (GstVaapiEncode * encode,
+gst_vaapiencode_h264_alloc_buffer (GstVaapiEncode * encode,
     GstVaapiCodedBuffer * coded_buf, GstBuffer ** out_buffer_ptr)
 {
   GstVaapiEncoderH264 *const encoder = (GstVaapiEncoderH264 *) encode->encoder;
@@ -230,7 +230,7 @@ gst_vaapiencode_h264_allocate_buffer (GstVaapiEncode * encode,
   g_return_val_if_fail (encoder != NULL, GST_FLOW_ERROR);
 
   ret =
-      GST_VAAPIENCODE_CLASS (gst_vaapiencode_h264_parent_class)->allocate_buffer
+      GST_VAAPIENCODE_CLASS (gst_vaapiencode_h264_parent_class)->alloc_buffer
       (encode, coded_buf, out_buffer_ptr);
   if (ret != GST_FLOW_OK)
     return ret;
@@ -267,8 +267,8 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
   object_class->get_property = gst_vaapiencode_h264_get_property;
 
   encode_class->get_properties = gst_vaapi_encoder_h264_get_default_properties;
-  encode_class->create_encoder = gst_vaapiencode_h264_create_encoder;
-  encode_class->allocate_buffer = gst_vaapiencode_h264_allocate_buffer;
+  encode_class->alloc_encoder = gst_vaapiencode_h264_alloc_encoder;
+  encode_class->alloc_buffer = gst_vaapiencode_h264_alloc_buffer;
 
   gst_element_class_set_static_metadata (element_class,
       "VA-API H.264 encoder",

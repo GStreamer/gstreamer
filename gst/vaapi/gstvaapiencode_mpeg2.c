@@ -124,7 +124,7 @@ gst_vaapiencode_mpeg2_get_property (GObject * object,
 }
 
 static GstVaapiEncoder *
-gst_vaapiencode_mpeg2_create_encoder (GstVaapiEncode * base,
+gst_vaapiencode_mpeg2_alloc_encoder (GstVaapiEncode * base,
     GstVaapiDisplay * display)
 {
   return gst_vaapi_encoder_mpeg2_new (display);
@@ -145,7 +145,7 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
   object_class->get_property = gst_vaapiencode_mpeg2_get_property;
 
   encode_class->get_properties = gst_vaapi_encoder_mpeg2_get_default_properties;
-  encode_class->create_encoder = gst_vaapiencode_mpeg2_create_encoder;
+  encode_class->alloc_encoder = gst_vaapiencode_mpeg2_alloc_encoder;
 
   gst_element_class_set_static_metadata (element_class,
       "VA-API MPEG-2 encoder",

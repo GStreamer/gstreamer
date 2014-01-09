@@ -75,11 +75,11 @@ struct _GstVaapiEncodeClass
   gboolean            (*set_property)   (GstVaapiEncode * encode,
                                          guint prop_id, const GValue * value);
 
-  GstVaapiEncoder *   (*create_encoder)    (GstVaapiEncode * encode,
-                                            GstVaapiDisplay * display);
-  GstFlowReturn       (*allocate_buffer)   (GstVaapiEncode * encode,
-                                            GstVaapiCodedBuffer * coded_buf,
-                                            GstBuffer ** outbuf_ptr);
+  GstVaapiEncoder *   (*alloc_encoder)  (GstVaapiEncode * encode,
+                                         GstVaapiDisplay * display);
+  GstFlowReturn       (*alloc_buffer)   (GstVaapiEncode * encode,
+                                         GstVaapiCodedBuffer * coded_buf,
+                                         GstBuffer ** outbuf_ptr);
 };
 
 GType
