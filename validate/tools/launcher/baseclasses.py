@@ -234,6 +234,9 @@ class TestsManager(object):
         self.reporter = None
         self.wanted_tests_patterns = []
 
+    def init(self):
+        return False
+
     def list_tests(self):
         pass
 
@@ -273,8 +276,11 @@ class TestsManager(object):
                 self.reporter.after_test()
 
 
-class _TestsLauncher(object):
+class _TestsLauncher(Loggable):
     def __init__(self):
+
+        Loggable.__init__(self)
+
         self.testers = []
         self.tests = []
         self.reporter = None
@@ -299,8 +305,12 @@ class _TestsLauncher(object):
             if f.endswith(".py"):
                 execfile(os.path.join(d, "apps", f), env)
 
-        self.testers = [i() for i in get_subclasses(TestsManager, env)]
-
+        testers = [i() for i in get_subclasses(TestsManager, env)]
+        for tester in testers:
+            if tester.init() is True:
+                self.testers.append(tester)
+            else:
+                self.warning("Can not init tester: %s", tester.name)
 
     def add_options(self, parser):
         for tester in self.testers:

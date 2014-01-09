@@ -176,7 +176,7 @@ class GESTestsManager(TestsManager):
 
 
     def init(self):
-        if os.system("which ges-launch") == 0:
+        if which(DEFAULT_GES_LAUNCH):
             return True
 
         return False
@@ -202,7 +202,6 @@ class GESTestsManager(TestsManager):
         projects = list()
         if not self.args:
             path = self.options.projects_paths
-            print path
             for root, dirs, files in os.walk(path):
                 for f in files:
                     if not f.endswith(".xges"):

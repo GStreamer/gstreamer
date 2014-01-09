@@ -110,6 +110,12 @@ class GstValidateManager(TestsManager, Loggable):
         Loggable.__init__(self)
         self._uris = []
 
+    def init(self):
+        if which(DEFAULT_GST_VALIDATE) and which(DEFAULT_GST_VALIDATE_TRANSCODING):
+            return True
+
+        return False
+
     def add_options(self, group):
         group.add_option("-c", "--check-discovering", dest="check_discovering",
                          default=False, action="store_true",

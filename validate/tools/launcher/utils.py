@@ -61,7 +61,24 @@ def mkdir(directory):
         pass
 
 
-def printc (message, color="", title=False):
+def which(name):
+    result = []
+    exts = filter(None, os.environ.get('PATHEXT', '').split(os.pathsep))
+    path = os.environ.get('PATH', None)
+    if path is None:
+        return []
+    for p in os.environ.get('PATH', '').split(os.pathsep):
+        p = os.path.join(p, name)
+        if os.access(p, os.X_OK):
+            result.append(p)
+        for e in exts:
+            pext = p + e
+            if os.access(pext, os.X_OK):
+                result.append(pext)
+    return result
+
+
+def printc(message, color="", title=False):
     if title:
         length = 0
         for l in message.split("\n"):
