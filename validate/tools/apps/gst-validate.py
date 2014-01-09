@@ -17,57 +17,86 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 import os
-import subprocess
 import urlparse
-import urllib
+import subprocess
 import ConfigParser
 from loggable import Loggable
 
-from testdefinitions import Test, TestsManager, DEFAULT_TIMEOUT
+from testdefinitions import GstValidateTest, TestsManager, DEFAULT_TIMEOUT
+from utils import MediaFormatCombination, get_profile, path2url, Result, get_current_position, get_current_size
 
 
 DEFAULT_GST_VALIDATE = "gst-validate-1.0"
+DEFAULT_GST_VALIDATE_TRANSCODING = "gst-validate-transcoding-1.0"
 DISCOVERER_COMMAND = ["gst-validate-media-check-1.0"]
 MEDIA_INFO_EXT = "media_info"
 STREAM_INFO = "stream_info"
 
-SEEKING_REQUIERED_SCENARIO=["seek_forward", "seek_backward", "scrub_forward_seeking"]
+SEEKING_REQUIERED_SCENARIO = ["seek_forward", "seek_backward", "scrub_forward_seeking"]
 SPECIAL_PROTOCOLS = [("application/x-hls", "hls")]
 
-all_tests = {
-    "playback":
-    {
-        "pipelines": ["playbin uri=__uri__ audio_sink=autoaudiosink video_sink=autovideosink"],
-        "scenarios": ["none", "seek_forward", "seek_backward", "scrub_forward_seeking"]
-    },
-}
+PLAYBACK_TESTS = ["playbin uri=__uri__ audio_sink=autoaudiosink video_sink=autovideosink"]
+SCENARIOS = ["none", "seek_forward", "seek_backward", "scrub_forward_seeking"]
+
+COMBINATIONS = [
+    MediaFormatCombination("ogg", "vorbis", "theora"),
+    MediaFormatCombination("webm", "vorbis", "vp8"),
+    MediaFormatCombination("mp4", "mp3", "h264"),
+    MediaFormatCombination("mkv", "vorbis", "h264")]
 
 
-def path2url(path):
-    return urlparse.urljoin('file:', urllib.pathname2url(path))
-
-
-class GstValidateTest(Test):
-    def __init__(self,
-                 classname,
-                 options,
-                 reporter,
-                 pipeline_desc,
-                 scenario,
-                 file_infos=None,
-                 timeout=DEFAULT_TIMEOUT):
+class GstValidateLaunchTest(GstValidateTest):
+    def __init__(self, classname, options, reporter, pipeline_desc,
+                 timeout=DEFAULT_TIMEOUT, scenario=None, file_infos=None):
         if file_infos is not None:
             timeout = file_infos.get("media-info", "file-duration")
 
-        super(GstValidateTest, self).__init__(DEFAULT_GST_VALIDATE, classname,
-                                              options, reporter, scenario,
-                                              timeout)
+        super(GstValidateLaunchTest, self).__init__(DEFAULT_GST_VALIDATE, classname,
+                                              options, reporter, timeout=timeout,
+                                              scenario=scenario,)
         self.pipeline_desc = pipeline_desc
         self.file_infos = file_infos
 
     def build_arguments(self):
-        Test.build_arguments(self)
+        GstValidateTest.build_arguments(self)
         self.add_arguments(self.pipeline_desc)
+
+    def get_current_value(self):
+        return get_current_position(self)
+
+
+class GstValidateTranscodingTest(GstValidateTest):
+    def __init__(self, classname, options, reporter,
+                 combination, uri, file_infos):
+
+        if file_infos is not None:
+            timeout = file_infos.get("media-info", "file-duration")
+
+        super(GstValidateTranscodingTest, self).__init__(
+            DEFAULT_GST_VALIDATE_TRANSCODING, classname,
+            options, reporter, timeout=timeout, scenario=None)
+        self.uri = uri
+        self.combination = combination
+        self.dest_file = ""
+
+    def set_rendering_info(self):
+        self.dest_file = os.path.join(self.options.dest,
+                                 os.path.basename(self.uri) +
+                                 '-' + self.combination.acodec +
+                                 self.combination.vcodec + '.' +
+                                 self.combination.container)
+        if urlparse.urlparse(self.dest_file).scheme == "":
+            self.dest_file = path2url(self.dest_file)
+
+        profile = get_profile(self.combination)
+        self.add_arguments("-o", profile)
+
+    def build_arguments(self):
+        self.set_rendering_info()
+        self.add_arguments(self.uri, self.dest_file)
+
+    def get_current_value(self):
+        return get_current_size(self)
 
 
 class GstValidateManager(TestsManager, Loggable):
@@ -86,11 +115,22 @@ class GstValidateManager(TestsManager, Loggable):
                          % DISCOVERER_COMMAND[0])
 
     def list_tests(self):
-        for mainname, tests in all_tests.iteritems():
-            name = "validate.%s" % (mainname)
-            for pipe in tests["pipelines"]:
-                for scenario in tests["scenarios"]:
-                    self._add_test(name, scenario, pipe)
+        for test_pipeline in PLAYBACK_TESTS:
+            name = "validate.playback"
+            for scenario in SCENARIOS:
+                self._add_playback_test(name, scenario, test_pipeline)
+
+        for uri, config in self._list_uris():
+            for comb in COMBINATIONS:
+                classname = "validate.transcode"
+                classname = "validate.transcode.from_%s.to_%s" % (os.path.splitext(os.path.basename(uri))[0],
+                                                                  str(comb).replace(' ', '_'))
+                self.tests.append(GstValidateTranscodingTest(classname,
+                                                  self.options,
+                                                  self.reporter,
+                                                  comb,
+                                                  uri,
+                                                  config))
 
     def _check_discovering_info(self, media_info, uri=None):
         self.debug("Checking %s", media_info)
@@ -196,17 +236,17 @@ class GstValidateManager(TestsManager, Loggable):
                                    os.path.basename(uri).replace(".", "_"))
                 self.debug("Adding: %s", fname)
 
-                self.tests.append(GstValidateTest(fname,
+                self.tests.append(GstValidateLaunchTest(fname,
                                                   self.options,
                                                   self.reporter,
                                                   npipe.replace("__uri__", uri),
-                                                  scenario,
-                                                  config)
+                                                  scenario=scenario,
+                                                  file_infos=config)
                                  )
         else:
             self.debug("Adding: %s", name)
-            self.tests.append(GstValidateTest(self._get_fname(fname, scenario),
+            self.tests.append(GstValidateLaunchTest(self._get_fname(fname, scenario),
                                               self.options,
                                               self.reporter,
                                               pipe,
-                                              scenario))
+                                              scenario=scenario))

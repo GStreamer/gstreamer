@@ -18,80 +18,24 @@
 # Boston, MA 02110-1301, USA.
 
 import os
-import time
+import urlparse
 from urllib import unquote
-from urlparse import urlsplit
 from gi.repository import GES, Gst, GLib
-from testdefinitions import Test, DEFAULT_QA_SAMPLE_PATH, TestsManager
+from testdefinitions import GstValidateTest, DEFAULT_GST_QA_ASSETS, TestsManager
+from utils import MediaFormatCombination, get_profile, Result, get_current_position, get_current_size
 
 DURATION_TOLERANCE = Gst.SECOND / 2
 DEFAULT_GES_LAUNCH = "ges-launch-1.0"
 
 
-class Combination(object):
-
-    def __str__(self):
-        return "%s and %s in %s" % (self.acodec, self.vcodec, self.container)
-
-    def __init__(self, container, acodec, vcodec):
-        self.container = container
-        self.acodec = acodec
-        self.vcodec = vcodec
-
-
-FORMATS = {"aac": "audio/mpeg,mpegversion=4",
-           "ac3": "audio/x-ac3",
-           "vorbis": "audio/x-vorbis",
-           "mp3": "audio/mpeg,mpegversion=1,layer=3",
-           "h264": "video/x-h264",
-           "vp8": "video/x-vp8",
-           "theora": "video/x-theora",
-           "ogg": "application/ogg",
-           "mkv": "video/x-matroska",
-           "mp4": "video/quicktime,variant=iso;",
-           "webm": "video/x-matroska"}
-
 COMBINATIONS = [
-    Combination("ogg", "vorbis", "theora"),
-    Combination("webm", "vorbis", "vp8"),
-    Combination("mp4", "mp3", "h264"),
-    Combination("mkv", "vorbis", "h264")]
+    MediaFormatCombination("ogg", "vorbis", "theora"),
+    MediaFormatCombination("webm", "vorbis", "vp8"),
+    MediaFormatCombination("mp4", "mp3", "h264"),
+    MediaFormatCombination("mkv", "vorbis", "h264")]
 
 
 SCENARIOS = ["none", "seek_forward", "seek_backward", "scrub_forward_seeking"]
-
-
-def get_profile_full(muxer, venc, aenc, video_restriction=None,
-                     audio_restriction=None,
-                     audio_presence=0, video_presence=0):
-    ret = "\""
-    if muxer:
-        ret += muxer
-    ret += ":"
-    if venc:
-        if video_restriction is not None:
-            ret = ret + video_restriction + '->'
-        ret += venc
-        if video_presence:
-            ret = ret + '|' + str(video_presence)
-    if aenc:
-        ret += ":"
-        if audio_restriction is not None:
-            ret = ret + audio_restriction + '->'
-        ret += aenc
-        if audio_presence:
-            ret = ret + '|' + str(audio_presence)
-
-    ret += "\""
-    return ret.replace("::", ":")
-
-
-
-def get_profile(combination):
-    return get_profile_full(FORMATS[combination.container],
-                            FORMATS[combination.vcodec],
-                            FORMATS[combination.acodec],
-                            video_restriction="video/x-raw,format=I420")
 
 
 def quote_uri(uri):
@@ -99,7 +43,7 @@ def quote_uri(uri):
     Encode a URI/path according to RFC 2396, without touching the file:/// part.
     """
     # Split off the "file:///" part, if present.
-    parts = urlsplit(uri, allow_fragments=False)
+    parts = urlparse.urlsplit(uri, allow_fragments=False)
     # Make absolutely sure the string is unquoted before quoting again!
     raw_path = unquote(parts.path)
     # For computing thumbnail md5 hashes in the media library, we must adhere to
@@ -107,13 +51,12 @@ def quote_uri(uri):
     return Gst.filename_to_uri(raw_path)
 
 
-class GESTest(Test):
-    def __init__(self, classname, options, reporter, project_uri, scenario,
+class GESTest(GstValidateTest):
+    def __init__(self, classname, options, reporter, project_uri, scenario=None,
                  combination=None):
         super(GESTest, self).__init__(DEFAULT_GES_LAUNCH, classname, options, reporter,
-                                      scenario)
+                                      scenario=scenario)
         self.project_uri = project_uri
-        self.combination = combination
         proj = GES.Project.new(project_uri)
         tl = proj.extract()
         if tl is None:
@@ -124,18 +67,6 @@ class GESTest(Test):
                 self.duration = self.duration / Gst.SECOND
             else:
                 self.duration = 2 * 60
-
-    def set_rendering_info(self):
-        self.dest_file = os.path.join(self.options.dest,
-                                 os.path.basename(self.project_uri) +
-                                 '-' + self.combination.acodec +
-                                 self.combination.vcodec + '.' +
-                                 self.combination.container)
-        if not Gst.uri_is_valid(self.dest_file):
-            self.dest_file = GLib.filename_to_uri(self.dest_file, None)
-
-        profile = get_profile(self.combination)
-        self.add_arguments("-f", profile, "-o", self.dest_file)
 
     def set_sample_paths(self):
         if not self.options.paths:
@@ -155,14 +86,12 @@ class GESTest(Test):
                                                                   root,
                                                                   directory)
                                                      )
-                                          )
+                                           )
             else:
                 self.add_arguments("--sample-paths", "file://" + path)
 
     def build_arguments(self):
-        Test.build_arguments(self)
-        if self.combination is not None:
-            self.set_rendering_info()
+        GstValidateTest.build_arguments(self)
 
         if self.options.mute:
             self.add_arguments(" --mute")
@@ -170,27 +99,55 @@ class GESTest(Test):
         self.set_sample_paths()
         self.add_arguments("-l", self.project_uri)
 
+
+class GESPlaybackTest(GESTest):
+    def __init__(self, classname, options, reporter, project_uri, scenario):
+        super(GESPlaybackTest, self).__init__(classname, options, reporter,
+                                      project_uri, scenario=scenario)
+
+    def get_current_value(self):
+        return get_current_position(self)
+
+
+class GESRenderTest(GESTest):
+    def __init__(self, classname, options, reporter, project_uri, combination):
+        super(GESRenderTest, self).__init__(classname, options, reporter,
+                                      project_uri)
+        self.combination = combination
+
+    def build_arguments(self):
+        GESTest.build_arguments(self)
+        self._set_rendering_info()
+
+    def _set_rendering_info(self):
+        self.dest_file = os.path.join(self.options.dest,
+                                 os.path.basename(self.project_uri) +
+                                 '-' + self.combination.acodec +
+                                 self.combination.vcodec + '.' +
+                                 self.combination.container)
+        if not Gst.uri_is_valid(self.dest_file):
+            self.dest_file = GLib.filename_to_uri(self.dest_file, None)
+
+        profile = get_profile(self.combination)
+        self.add_arguments("-f", profile, "-o", self.dest_file)
+
     def check_results(self):
         if self.process.returncode == 0:
-            if self.combination:
-                try:
-                    asset = GES.UriClipAsset.request_sync(self.dest_file)
-                    if self.duration - DURATION_TOLERANCE <= asset.get_duration() \
-                            <= self.duration + DURATION_TOLERANCE:
-                        self.set_result(Result.FAILURE, "Duration of encoded file is "
-                                        " wrong (%s instead of %s)" %
-                                        (Gst.TIME_ARGS(self.duration),
-                                         Gst.TIME_ARGS(asset.get_duration())),
-                                        "wrong-duration")
-                    else:
-                        self.set_result(Result.PASSED)
-                except GLib.Error as e:
-                    self.set_result(Result.FAILURE, "Wrong rendered file", "failure", e)
-
-            else:
-                self.set_result(Result.PASSED)
+            try:
+                asset = GES.UriClipAsset.request_sync(self.dest_file)
+                if self.duration - DURATION_TOLERANCE <= asset.get_duration() \
+                        <= self.duration + DURATION_TOLERANCE:
+                    self.set_result(Result.FAILURE, "Duration of encoded file is "
+                                    " wrong (%s instead of %s)" %
+                                    (Gst.TIME_ARGS(self.duration),
+                                     Gst.TIME_ARGS(asset.get_duration())),
+                                    "wrong-duration")
+                else:
+                    self.set_result(Result.PASSED)
+            except GLib.Error as e:
+                self.set_result(Result.FAILURE, "Wrong rendered file", "failure", e)
         else:
-            if self.combination and self.result == Result.TIMEOUT:
+            if self.result == Result.TIMEOUT:
                 missing_eos = False
                 try:
                     asset = GES.UriClipAsset.request_sync(self.dest_file)
@@ -203,65 +160,22 @@ class GESTest(Test):
                     self.set_result(Result.TIMEOUT, "The rendered file add right duration, MISSING EOS?\n",
                                      "failure", e)
             else:
-                Test.check_results(self)
+                GstValidateTest.check_results(self)
 
-    def wait_process(self):
-        last_val = 0
-        last_change_ts = time.time()
-        while True:
-            self.process.poll()
-            if self.process.returncode is not None:
-                self.check_results()
-                break
-
-            # Dirty way to avoid eating to much CPU... good enough for us anyway.
-            time.sleep(1)
-
-            if self.combination:
-                val = os.stat(GLib.filename_from_uri(self.dest_file)[0]).st_size
-            else:
-                val = self.get_last_position()
-
-            if val == last_val:
-                if time.time() - last_change_ts > 10:
-                    self.result = Result.TIMEOUT
-            else:
-                last_change_ts = time.time()
-                last_val = val
-
-
-    def get_last_position(self):
-        self.reporter.out.seek(0)
-        m = None
-        for l in self.reporter.out.readlines():
-            if "<Position:" in l:
-                m = l
-
-        if m is None:
-            return ""
-
-        pos = ""
-        for j in m.split("\r"):
-            if j.startswith("<Position:") and j.endswith("/>"):
-                pos = j
-
-        return pos
-
+    def get_current_value(self):
+        return get_current_size(self)
 
 class GESTestsManager(TestsManager):
     name = "ges"
+
     def __init__(self):
         super(GESTestsManager, self).__init__()
         Gst.init(None)
         GES.init()
 
     def add_options(self, group):
-        group.add_option("-o", "--output-path", dest="dest",
-                         default=None,
-                         help="Set the path to which projects should be"
-                         " renderd")
         group.add_option("-P", "--projects-paths", dest="projects_paths",
-                         default=os.path.join(DEFAULT_QA_SAMPLE_PATH, "ges-projects"),
+                         default=os.path.join(DEFAULT_GST_QA_ASSETS, "ges-projects"),
                          help="Paths in which to look for moved medias")
         group.add_option("-r", "--recurse-paths", dest="recurse_paths",
                          default=False, action="store_true",
@@ -269,12 +183,6 @@ class GESTestsManager(TestsManager):
 
     def set_settings(self, options, args, reporter):
         TestsManager.set_settings(self, options, args, reporter)
-
-        if options.dest is None:
-            options.dest = os.path.join(options.logsdir, "rendered")
-
-        if not Gst.uri_is_valid(options.dest):
-            options.dest = GLib.filename_to_uri(options.dest, None)
 
         try:
             os.makedirs(GLib.filename_from_uri(options.dest)[0])
@@ -307,21 +215,18 @@ class GESTestsManager(TestsManager):
             # First playback casses
             for scenario in SCENARIOS:
                 classname = "ges.playback.%s.%s" % (scenario, os.path.basename(proj).replace(".xges", ""))
-                self.tests.append(GESTest(classname,
-                                          self.options,
-                                          self.reporter,
-                                          proj,
-                                          scenario)
+                self.tests.append(GESPlaybackTest(classname,
+                                                  self.options,
+                                                  self.reporter,
+                                                  proj,
+                                                  scenario=scenario)
                                   )
 
             # And now rendering casses
             for comb in COMBINATIONS:
                 classname = "ges.render.%s.%s" % (str(comb).replace(' ', '_'),
-                                              os.path.basename(proj).replace(".xges", ""))
-                self.tests.append(GESTest(classname,
-                                          self.options,
-                                          self.reporter,
-                                          proj,
-                                          None,
-                                          comb)
+                                                  os.path.splitext(os.path.basename(proj))[0])
+                self.tests.append(GESRenderTest(classname, self.options,
+                                                self.reporter, proj,
+                                                combination=comb)
                                   )

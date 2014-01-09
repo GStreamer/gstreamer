@@ -31,14 +31,15 @@ from utils import mkdir, Result, Colors, printc
 
 DEFAULT_TIMEOUT = 10
 
-DEFAULT_QA_SAMPLE_PATH = os.path.join(os.path.expanduser('~'), "Videos",
-                          "gst-qa-samples")
+DEFAULT_GST_QA_ASSETS = os.path.join(os.path.expanduser('~'), "Videos",
+                          "gst-qa-assets")
 
 class Test(Loggable):
 
     """ A class representing a particular test. """
 
-    def __init__(self, application_name, classname, options, reporter, scenario=None, timeout=DEFAULT_TIMEOUT):
+    def __init__(self, application_name, classname, options,
+                 reporter, timeout=DEFAULT_TIMEOUT):
         Loggable.__init__(self)
         self.timeout = timeout
         self.classname = classname
@@ -47,10 +48,6 @@ class Test(Loggable):
         self.command = ""
         self.reporter = reporter
         self.process = None
-        if scenario.lower() == "none":
-            self.scenario = None
-        else:
-            self.scenario = scenario
 
         self.message = ""
         self.error = ""
@@ -73,8 +70,7 @@ class Test(Loggable):
             self.command += " " + arg
 
     def build_arguments(self):
-        if self.scenario is not None:
-            self.add_arguments("--set-scenario", self.scenario)
+        pass
 
     def set_result(self, result, message="", error=""):
         self.result = result
@@ -82,7 +78,10 @@ class Test(Loggable):
         self.error = error
 
     def check_results(self):
-        self.debug("%s returncode: %d", self, self.process.returncode)
+        if self.result is Result.FAILED:
+            return
+
+        self.debug("%s returncode: %s", self, self.process.returncode)
         if self.result == Result.TIMEOUT:
             self.set_result(Result.TIMEOUT, "Application timed out", "timeout")
         elif self.process.returncode == 0:
@@ -97,24 +96,99 @@ class Test(Loggable):
                 self.set_result(Result.FAILED,
                                 "Application returned %d (issues: %s)" % (
                                 self.process.returncode,
-                                self.get_validate_criticals_errors()),
                                 "error")
+                                )
+
+    def get_current_value(self):
+        """
+        Lets subclasses implement a nicer timeout measurement method
+        They should return some value with which we will compare
+        the previous and timeout if they are egual during self.timeout
+        seconds
+        """
+        return Result.NOT_RUN
 
     def wait_process(self):
+        last_val = 0
         last_change_ts = time.time()
         while True:
             self.process.poll()
             if self.process.returncode is not None:
                 break
 
-            if time.time() - last_change_ts > self.timeout:
-                self.result = Result.TIMEOUT
-
             # Dirty way to avoid eating to much CPU...
             # good enough for us anyway.
             time.sleep(1)
 
+            val = self.get_current_value()
+
+            if val is Result.NOT_RUN:
+                # The get_current_value logic is not implemented... dumb timeout
+                if time.time() - last_change_ts > self.timeout:
+                    self.result = Result.TIMEOUT
+                    break
+                continue
+            elif val is Result.FAILED:
+                self.result = Result.FAILED
+                break
+
+            self.log("New val %s" % val)
+
+            if val == last_val:
+                delta = time.time() - last_change_ts
+                self.debug("Same value for %d seconds" % delta)
+                if delta > self.timeout:
+                    self.result = Result.TIMEOUT
+                    break
+            else:
+                last_change_ts = time.time()
+                last_val = val
+
         self.check_results()
+
+    def run(self):
+        self.command = "%s " % (self.application)
+        self._starting_time = time.time()
+        self.build_arguments()
+        printc("Launching:%s '%s' -- logs are in %s" % (Colors.ENDC, self.command,
+                                                  self.reporter.out.name), Colors.OKBLUE)
+        try:
+            self.process = subprocess.Popen(self.command,
+                                            stderr=self.reporter.out,
+                                            stdout=self.reporter.out,
+                                            shell=True)
+            self.wait_process()
+        except KeyboardInterrupt:
+            self.process.kill()
+            raise
+
+        try:
+            self.process.terminate()
+        except OSError:
+            pass
+
+        self.time_taken = time.time() - self._starting_time
+
+
+class GstValidateTest(Test):
+
+    """ A class representing a particular test. """
+
+    def __init__(self, application_name, classname,
+                 options, reporter, timeout=DEFAULT_TIMEOUT,
+                 scenario=None):
+
+        super(GstValidateTest, self).__init__(application_name, classname, options,
+                                              reporter, timeout=DEFAULT_TIMEOUT)
+
+        if scenario is None or scenario.lower() == "none":
+            self.scenario = None
+        else:
+            self.scenario = scenario
+
+    def build_arguments(self):
+        if self.scenario is not None:
+            self.add_arguments("--set-scenario", self.scenario)
 
     def get_validate_criticals_errors(self):
         self.reporter.out.seek(0)
@@ -135,28 +209,6 @@ class Test(Loggable):
         else:
             return ret + "]"
 
-    def run(self):
-        self.command = "%s " % (self.application)
-        self._starting_time = time.time()
-        self.build_arguments()
-        printc("Launching:%s '%s' -- logs are in %s" % (Colors.ENDC, self.classname,
-                                                  self.reporter.out.name), Colors.OKBLUE)
-        try:
-            self.process = subprocess.Popen(self.command,
-                                            stderr=self.reporter.out,
-                                            stdout=self.reporter.out,
-                                            shell=True)
-            self.wait_process()
-        except KeyboardInterrupt:
-            self.process.kill()
-            raise
-
-        try:
-            self.process.terminate()
-        except OSError:
-            pass
-
-        self.time_taken = time.time() - self._starting_time
 
 
 class TestsManager(object):

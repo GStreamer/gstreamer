@@ -19,9 +19,11 @@
 
 import os
 import loggable
-from testdefinitions import _TestsLauncher, DEFAULT_QA_SAMPLE_PATH
-from utils import printc
+import urlparse
+
+from utils import printc, path2url
 from optparse import OptionParser
+from testdefinitions import _TestsLauncher, DEFAULT_GST_QA_ASSETS
 
 
 def main():
@@ -54,12 +56,16 @@ def main():
                       action="store_true", default=os.path.expanduser("~/gst-validate/logs/"),
                       help="Directory where to store logs")
     parser.add_option("-p", "--medias-paths", dest="paths",
-                      default=[os.path.join(DEFAULT_QA_SAMPLE_PATH, "medias")],
+                      default=[os.path.join(DEFAULT_GST_QA_ASSETS, "medias")],
                       help="Paths in which to look for media files")
     parser.add_option("-m", "--mute", dest="mute",
                       action="store_true", default=False,
                       help="Mute playback output, which mean that we use "
                       "a fakesink")
+    parser.add_option("-o", "--output-path", dest="dest",
+                     default=None,
+                     help="Set the path to which projects should be"
+                     " renderd")
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
 
     tests_launcher = _TestsLauncher()
@@ -67,6 +73,10 @@ def main():
     (options, args) = parser.parse_args()
     if options.xunit_file is None:
         options.xunit_file = os.path.join(options.logsdir, "xunit.xml")
+    if options.dest is None:
+        options.dest = os.path.join(options.logsdir, "rendered")
+    if urlparse.urlparse(options.dest).scheme == "":
+        options.dest = path2url(options.dest)
     tests_launcher.set_settings(options, args)
     tests_launcher.list_tests()
     if options.list_tests:
