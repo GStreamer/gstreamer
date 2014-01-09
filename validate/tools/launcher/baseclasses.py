@@ -24,15 +24,11 @@ import re
 import time
 import subprocess
 import reporters
-from  loggable import Loggable
+from loggable import Loggable
 from optparse import OptionGroup
 
-from utils import mkdir, Result, Colors, printc
+from utils import mkdir, Result, Colors, printc, DEFAULT_TIMEOUT
 
-DEFAULT_TIMEOUT = 10
-
-DEFAULT_GST_QA_ASSETS = os.path.join(os.path.expanduser('~'), "Videos",
-                          "gst-qa-assets")
 
 class Test(Loggable):
 
@@ -300,7 +296,8 @@ class _TestsLauncher(object):
         env = globals().copy()
         d = os.path.dirname(__file__)
         for f in os.listdir(os.path.join(d, "apps")):
-            execfile(os.path.join(d, "apps", f), env)
+            if f.endswith(".py"):
+                execfile(os.path.join(d, "apps", f), env)
 
         self.testers = [i() for i in get_subclasses(TestsManager, env)]
 

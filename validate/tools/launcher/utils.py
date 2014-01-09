@@ -24,6 +24,9 @@ import urlparse
 
 
 GST_SECOND = 1000000000
+DEFAULT_TIMEOUT = 10
+DEFAULT_GST_QA_ASSETS = os.path.join(os.path.expanduser('~'), "Videos",
+                          "gst-qa-assets")
 
 
 class Result(object):

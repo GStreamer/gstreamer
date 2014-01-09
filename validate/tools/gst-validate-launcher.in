@@ -1,6 +1,6 @@
 #!/usr//bin/python
 #
-# Copyright (c) 2013,Thibault Saunier <thibault.saunier@collabora.com>
+# Copyright (c) 2014,Thibault Saunier <thibault.saunier@collabora.com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU Lesser General Public
@@ -18,15 +18,30 @@
 # Boston, MA 02110-1301, USA.
 
 import os
-import loggable
+import sys
 import urlparse
-
-from utils import printc, path2url
 from optparse import OptionParser
-from testdefinitions import _TestsLauncher, DEFAULT_GST_QA_ASSETS
+
+LIBDIR = '@LIBDIR@'
+
+
+def _in_devel():
+    root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.exists(os.path.join(root_dir, '.git'))
+
+def _add_gst_launcher_path():
+    if not _in_devel():
+        root = os.path.join(LIBDIR, 'gst-validate-launcher', 'python')
+        sys.path.insert(0, root)
 
 
 def main():
+    _add_gst_launcher_path()
+
+    from launcher import loggable
+    from launcher.baseclasses import _TestsLauncher
+    from launcher.utils import printc, path2url, DEFAULT_GST_QA_ASSETS
+
     parser = OptionParser()
     # FIXME:
     #parser.add_option("-g", "--gdb", dest="gdb",
@@ -79,10 +94,12 @@ def main():
         options.dest = path2url(options.dest)
     tests_launcher.set_settings(options, args)
     tests_launcher.list_tests()
+
     if options.list_tests:
         for test in tests_launcher.tests:
             printc(test)
         return 0
+
     tests_launcher.run_tests()
     tests_launcher.final_report()
     return 0

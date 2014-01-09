@@ -21,8 +21,9 @@ import os
 import urlparse
 from urllib import unquote
 from gi.repository import GES, Gst, GLib
-from testdefinitions import GstValidateTest, DEFAULT_GST_QA_ASSETS, TestsManager
-from utils import MediaFormatCombination, get_profile, Result, get_current_position, get_current_size
+from baseclasses import GstValidateTest, TestsManager
+from utils import MediaFormatCombination, get_profile, Result, get_current_position, \
+    get_current_size, DEFAULT_GST_QA_ASSETS
 
 DURATION_TOLERANCE = Gst.SECOND / 2
 DEFAULT_GES_LAUNCH = "ges-launch-1.0"

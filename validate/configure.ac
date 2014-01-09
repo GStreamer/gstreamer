@@ -240,6 +240,11 @@ dnl LDFLAGS modifier defining exported symbols from built libraries
 GST_LIB_LDFLAGS="-export-symbols-regex \^[_]?\(gst_\|Gst\|GST_\).*"
 AC_SUBST(GST_LIB_LDFLAGS)
 
+AM_PATH_PYTHON(2.7.0)
+AS_AC_EXPAND(LIBDIR, $libdir)
+AC_MSG_NOTICE(Storing library files in $LIBDIR)
+AC_CONFIG_FILES([tools/gst-validate-launcher], [chmod +x tools/gst-validate-launcher])
+
 dnl this really should only contain flags, not libs - they get added before
 dnl whatevertarget_LIBS and -L flags here affect the rest of the linking
 
@@ -253,6 +258,8 @@ common/m4/Makefile
 gst/Makefile
 gst/validate/Makefile
 tools/Makefile
+tools/launcher/Makefile
+tools/launcher/apps/Makefile
 data/Makefile
 pkgconfig/Makefile
 pkgconfig/gst-validate-uninstalled.pc

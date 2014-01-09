@@ -22,8 +22,10 @@ import subprocess
 import ConfigParser
 from loggable import Loggable
 
-from testdefinitions import GstValidateTest, TestsManager, DEFAULT_TIMEOUT
-from utils import MediaFormatCombination, get_profile, path2url, Result, get_current_position, get_current_size
+from baseclasses import GstValidateTest, TestsManager
+from utils import MediaFormatCombination, get_profile,\
+    path2url, get_current_position, get_current_size, \
+    DEFAULT_TIMEOUT
 
 
 DEFAULT_GST_VALIDATE = "gst-validate-1.0"
