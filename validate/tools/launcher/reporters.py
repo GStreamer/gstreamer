@@ -24,7 +24,7 @@ import re
 import codecs
 from loggable import Loggable
 from xml.sax import saxutils
-from utils import mkdir, Result, printc
+from utils import mkdir, Result, printc, Colors
 
 UNICODE_STRINGS = (type(unicode()) == type(str()))
 
@@ -57,7 +57,7 @@ class Reporter(Loggable):
         self.options = options
         self.stats = {'timeout': 0,
                       'failures': 0,
-                      'passes': 0,
+                      'passed': 0,
                       'skipped': 0
                       }
         self.results = []
@@ -71,7 +71,7 @@ class Reporter(Loggable):
         self._current_test = test
 
     def set_failed(self, test):
-        self.stats["failed"] += 1
+        self.stats["failure"] += 1
 
     def set_passed(self, test):
         self.stats["passed"] += 1
@@ -94,8 +94,26 @@ class Reporter(Loggable):
         self._current_test = None
 
     def final_report(self):
+        print "\n"
+        printc("Final Report:", title=True)
         for test in self.results:
             printc(test)
+
+        print "\n"
+        lenstat = (len("Statistics") + 1)
+        printc("Statistics:\n%s" %(lenstat * "-"), Colors.OKBLUE)
+        printc("%sPassed: %d" % (lenstat * " ", self.stats["passed"]), Colors.OKGREEN)
+        printc("%sFailed: %d" % (lenstat * " ", self.stats["failures"]), Colors.FAIL)
+        printc("%s%s" %(lenstat * " ", (len("Failed: 0")) * "-"), Colors.OKBLUE)
+
+        total = self.stats["failures"] + self.stats["passed"]
+        color = Colors.WARNING
+        if total == self.stats["passed"]:
+            color = Colors.OKGREEN
+        elif total == self.stats["failures"]:
+            color = Colors.FAIL
+
+        printc("%sTotal: %d" % (lenstat * " ", total), color)
 
 
 class XunitReporter(Reporter):
@@ -139,7 +157,7 @@ class XunitReporter(Reporter):
                                     self.encoding, 'replace')
         self.stats['encoding'] = self.encoding
         self.stats['total'] = (self.stats['timeout'] + self.stats['failures']
-                               + self.stats['passes'] + self.stats['skipped'])
+                               + self.stats['passed'] + self.stats['skipped'])
         self.xml_file.write( u'<?xml version="1.0" encoding="%(encoding)s"?>'
             u'<testsuite name="gesprojectslauncher" tests="%(total)d" '
             u'errors="%(timeout)d" failures="%(failures)d" '
@@ -168,7 +186,7 @@ class XunitReporter(Reporter):
     def set_passed(self, test):
         """Add success output to Xunit report.
         """
-        self.stats['passes'] += 1
+        self.stats['passed'] += 1
         self.errorlist.append(
             '<testcase classname=%(cls)s name=%(name)s '
             'time="%(taken).3f">%(systemout)s</testcase>' %

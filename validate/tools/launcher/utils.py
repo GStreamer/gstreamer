@@ -63,7 +63,14 @@ def mkdir(directory):
 
 def printc (message, color="", title=False):
     if title:
-        message = len(message) * '=' + message + len(message) * '='
+        length = 0
+        for l in message.split("\n"):
+            if len(l) > length:
+                length = len(l)
+        if length == 0:
+            length = len(message)
+        message = length * '=' + "\n" + str(message) + "\n" + length * '='
+
     if hasattr(message, "result") and color == '':
         if message.result == Result.FAILED:
             color = Colors.FAIL
