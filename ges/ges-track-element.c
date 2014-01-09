@@ -302,6 +302,8 @@ interpolate_values_for_position (GstTimedValue * first_value,
         first_value->value - ((float) (first_value->timestamp -
             position) / (float) interval) * diff;
 
+  value_at_pos = CLAMP (value_at_pos, 0.0, 1.0);
+
   return value_at_pos;
 }
 
