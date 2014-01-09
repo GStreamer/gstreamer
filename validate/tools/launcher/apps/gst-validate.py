@@ -72,6 +72,7 @@ class GstValidateTranscodingTest(GstValidateTest):
         super(GstValidateTranscodingTest, self).__init__(
             DEFAULT_GST_VALIDATE_TRANSCODING, classname,
             options, reporter, scenario=None)
+        self.file_infos = file_infos
         self.uri = uri
         self.combination = combination
         self.dest_file = ""
