@@ -64,6 +64,8 @@ def printc (message, color="", title=False):
     if hasattr(message, "result") and color == '':
         if message.result == Result.FAILED:
             color = Colors.FAIL
+        elif message.result == Result.TIMEOUT:
+            color = Colors.WARNING
         elif message.result == Result.PASSED:
             color = Colors.OKGREEN
         else:

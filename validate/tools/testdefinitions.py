@@ -59,9 +59,9 @@ class Test(Loggable):
         string = self.classname
         if self.result != Result.NOT_RUN:
             string += ": " + self.result
-            if self.result == Result.FAILED:
-                string += "'%s'\n       You can reproduce with: %s" \
-                        % (self.message, self.command)
+            if self.result in [Result.FAILED, Result.TIMEOUT]:
+                string += " '%s'\n       You can reproduce with: %s" \
+                    % (self.message, self.command)
 
         return string
 
