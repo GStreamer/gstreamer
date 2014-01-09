@@ -154,6 +154,8 @@ GST_GL_EXT_FUNCTION (void, Rotatef,
                      (GLfloat angle, GLfloat x, GLfloat y, GLfloat z))
 GST_GL_EXT_FUNCTION (void, Translatef,
                      (GLfloat x, GLfloat y, GLfloat z))
+GST_GL_EXT_FUNCTION (void, Scalef,
+                     (GLfloat x, GLfloat y, GLfloat z))
 GST_GL_EXT_FUNCTION (void, Lightfv,
                      (GLenum light, GLenum pname, const GLfloat *params))
 GST_GL_EXT_FUNCTION (void, ColorMaterial,
