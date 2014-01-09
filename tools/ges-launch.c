@@ -515,10 +515,9 @@ _print_position (void)
         &position);
     gst_element_query_duration (GST_ELEMENT (pipeline), GST_FORMAT_TIME,
         &duration);
-    g_print ("<Position: %" GST_TIME_FORMAT " / %" GST_TIME_FORMAT "/>\r",
-        GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
-    GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (pipeline),
-        GST_DEBUG_GRAPH_SHOW_ALL, "ges-launch-position");
+
+    g_print ("<position: %" GST_TIME_FORMAT " duration: %" GST_TIME_FORMAT
+        "/>\r", GST_TIME_ARGS (position), GST_TIME_ARGS (duration));
   }
 
   return TRUE;
