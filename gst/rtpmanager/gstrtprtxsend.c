@@ -610,8 +610,6 @@ gst_rtp_rtx_send_chain (GstPad * pad, GstObject * parent, GstBuffer * buffer)
   guint8 payload_type;
   guint32 ssrc, rtptime;
 
-  rtx = GST_RTP_RTX_SEND (parent);
-
   /* read the information we want from the buffer */
   gst_rtp_buffer_map (buffer, GST_MAP_READ, &rtp);
   seqnum = gst_rtp_buffer_get_seq (&rtp);
