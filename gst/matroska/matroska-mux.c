@@ -2332,7 +2332,13 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
     case GST_MATROSKA_TRACK_TYPE_SUBTITLE:{
       gpointer buf;
 
+      /* If codec_id and codec data are already known, we can write
+         them now, as for audio/video */
+      if (context->codec_id && context->codec_priv)
+        break;
+
       context->pos = ebml->pos;
+
       /* CodecID is mandatory ... */
       gst_ebml_write_ascii (ebml, GST_MATROSKA_ID_CODECID, "S_SUB_UNKNOWN");
       /* reserve space */
