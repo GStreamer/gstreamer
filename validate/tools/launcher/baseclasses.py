@@ -222,13 +222,16 @@ class GstValidateTest(Test):
                                 ))
 
 
-class TestsManager(object):
+class TestsManager(Loggable):
 
     """ A class responsible for managing tests. """
 
     name = ""
 
     def __init__(self):
+
+        Loggable.__init__(self)
+
         self.tests = []
         self.options = None
         self.args = None

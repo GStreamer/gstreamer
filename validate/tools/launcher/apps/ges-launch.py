@@ -19,6 +19,7 @@
 
 import os
 import urlparse
+import subprocess
 from urllib import unquote
 from gi.repository import GES, Gst, GLib
 from baseclasses import GstValidateTest, TestsManager
@@ -166,10 +167,16 @@ class GESTestsManager(TestsManager):
 
 
     def init(self):
-        if which(DEFAULT_GES_LAUNCH):
-            return True
-
-        return False
+        try:
+            if "--set-scenario=" in subprocess.check_output([DEFAULT_GES_LAUNCH, "--help"]):
+                return True
+            else:
+                self.warning("Can not use ges-launch, it seems not to be compiled against"
+                             " gst-validate")
+        except subprocess.CalledProcessError as e:
+            self.warning("Can not use ges-launch: %s" % e)
+        except OSError as e:
+            self.warning("Can not use ges-launch: %s" % e)
 
     def add_options(self, group):
         group.add_option("-P", "--projects-paths", dest="projects_paths",
