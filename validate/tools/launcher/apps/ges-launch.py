@@ -174,6 +174,13 @@ class GESTestsManager(TestsManager):
         Gst.init(None)
         GES.init()
 
+
+    def init(self):
+        if os.system("which ges-launch") == 0:
+            return True
+
+        return False
+
     def add_options(self, group):
         group.add_option("-P", "--projects-paths", dest="projects_paths",
                          default=os.path.join(DEFAULT_GST_QA_ASSETS, "ges-projects"),
