@@ -96,10 +96,6 @@ gst_vaapi_texture_upload(GstVideoGLTextureUploadMeta *meta, guint texture_id[4])
             return FALSE;
         gst_vaapi_texture_unref(texture);
     }
-
-    if (!gst_vaapi_apply_composition(surface, meta->buffer))
-        GST_WARNING("could not update subtitles");
-
     return gst_vaapi_texture_put_surface(meta_texture->texture, surface,
         gst_vaapi_video_meta_get_render_flags(vmeta));
 }
