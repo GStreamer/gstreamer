@@ -34,7 +34,9 @@
 GST_DEBUG_CATEGORY_STATIC (gst_vaapi_h264_encode_debug);
 #define GST_CAT_DEFAULT gst_vaapi_h264_encode_debug
 
-#define GST_CAPS_CODEC(CODEC) CODEC "; "
+#define GST_CODEC_CAPS                          \
+  "video/x-h264, "                              \
+  "alignment = (string) au"
 
 /* *INDENT-OFF* */
 static const char gst_vaapiencode_h264_sink_caps_str[] =
@@ -57,7 +59,7 @@ static const char gst_vaapiencode_h264_sink_caps_str[] =
 
 /* *INDENT-OFF* */
 static const char gst_vaapiencode_h264_src_caps_str[] =
-  GST_CAPS_CODEC ("video/x-h264");
+  GST_CODEC_CAPS;
 /* *INDENT-ON* */
 
 /* *INDENT-OFF* */
@@ -119,6 +121,39 @@ gst_vaapiencode_h264_get_property (GObject * object,
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
       break;
   }
+}
+
+static GstCaps *
+gst_vaapiencode_h264_get_caps (GstVaapiEncode * base_encode)
+{
+  GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (base_encode);
+  GstCaps *caps, *allowed_caps;
+
+  caps = gst_caps_from_string (GST_CODEC_CAPS);
+
+  /* Check whether "stream-format" is avcC mode */
+  allowed_caps = gst_pad_get_allowed_caps (base_encode->srcpad);
+  if (allowed_caps) {
+    const char *stream_format = NULL;
+    GstStructure *structure;
+    guint i, num_structures;
+
+    num_structures = gst_caps_get_size (allowed_caps);
+    for (i = 0; !stream_format && i < num_structures; i++) {
+      structure = gst_caps_get_structure (allowed_caps, i);
+      if (!gst_structure_has_field_typed (structure, "stream-format",
+              G_TYPE_STRING))
+        continue;
+      stream_format = gst_structure_get_string (structure, "stream-format");
+    }
+    encode->is_avc = stream_format && strcmp (stream_format, "avc") == 0;
+    gst_caps_unref (allowed_caps);
+  }
+  gst_caps_set_simple (caps, "stream-format", G_TYPE_STRING,
+      encode->is_avc ? "avc" : "byte-stream", NULL);
+
+  /* XXX: update profile and level information */
+  return caps;
 }
 
 static GstVaapiEncoder *
@@ -221,21 +256,23 @@ error:
 }
 
 static GstFlowReturn
-gst_vaapiencode_h264_alloc_buffer (GstVaapiEncode * encode,
+gst_vaapiencode_h264_alloc_buffer (GstVaapiEncode * base_encode,
     GstVaapiCodedBuffer * coded_buf, GstBuffer ** out_buffer_ptr)
 {
-  GstVaapiEncoderH264 *const encoder = (GstVaapiEncoderH264 *) encode->encoder;
+  GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (base_encode);
+  GstVaapiEncoderH264 *const encoder = (GstVaapiEncoderH264 *)
+      base_encode->encoder;
   GstFlowReturn ret;
 
   g_return_val_if_fail (encoder != NULL, GST_FLOW_ERROR);
 
   ret =
       GST_VAAPIENCODE_CLASS (gst_vaapiencode_h264_parent_class)->alloc_buffer
-      (encode, coded_buf, out_buffer_ptr);
+      (base_encode, coded_buf, out_buffer_ptr);
   if (ret != GST_FLOW_OK)
     return ret;
 
-  if (!gst_vaapi_encoder_h264_is_avc (encoder))
+  if (!encode->is_avc)
     return GST_FLOW_OK;
 
   /* Convert to avcC format */
@@ -267,6 +304,7 @@ gst_vaapiencode_h264_class_init (GstVaapiEncodeH264Class * klass)
   object_class->get_property = gst_vaapiencode_h264_get_property;
 
   encode_class->get_properties = gst_vaapi_encoder_h264_get_default_properties;
+  encode_class->get_caps = gst_vaapiencode_h264_get_caps;
   encode_class->alloc_encoder = gst_vaapiencode_h264_alloc_encoder;
   encode_class->alloc_buffer = gst_vaapiencode_h264_alloc_buffer;
 

@@ -34,7 +34,9 @@
 GST_DEBUG_CATEGORY_STATIC (gst_vaapi_mpeg2_encode_debug);
 #define GST_CAT_DEFAULT gst_vaapi_mpeg2_encode_debug
 
-#define GST_CAPS_CODEC(CODEC) CODEC "; "
+#define GST_CODEC_CAPS                          \
+  "video/mpeg, mpegversion = (int) 2, "         \
+  "systemstream = (boolean) false"
 
 /* *INDENT-OFF* */
 static const char gst_vaapiencode_mpeg2_sink_caps_str[] =
@@ -57,8 +59,7 @@ static const char gst_vaapiencode_mpeg2_sink_caps_str[] =
 
 /* *INDENT-OFF* */
 static const char gst_vaapiencode_mpeg2_src_caps_str[] =
-  GST_CAPS_CODEC ("video/mpeg, mpegversion = (int) 2, "
-      "systemstream = (boolean) false");
+  GST_CODEC_CAPS;
 /* *INDENT-ON* */
 
 /* *INDENT-OFF* */
@@ -123,6 +124,17 @@ gst_vaapiencode_mpeg2_get_property (GObject * object,
   }
 }
 
+static GstCaps *
+gst_vaapiencode_mpeg2_get_caps (GstVaapiEncode * base_encode)
+{
+  GstCaps *caps;
+
+  caps = gst_caps_from_string (GST_CODEC_CAPS);
+
+  /* XXX: update profile and level information */
+  return caps;
+}
+
 static GstVaapiEncoder *
 gst_vaapiencode_mpeg2_alloc_encoder (GstVaapiEncode * base,
     GstVaapiDisplay * display)
@@ -145,6 +157,7 @@ gst_vaapiencode_mpeg2_class_init (GstVaapiEncodeMpeg2Class * klass)
   object_class->get_property = gst_vaapiencode_mpeg2_get_property;
 
   encode_class->get_properties = gst_vaapi_encoder_mpeg2_get_default_properties;
+  encode_class->get_caps = gst_vaapiencode_mpeg2_get_caps;
   encode_class->alloc_encoder = gst_vaapiencode_mpeg2_alloc_encoder;
 
   gst_element_class_set_static_metadata (element_class,

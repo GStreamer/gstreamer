@@ -36,7 +36,6 @@
 #define GST_VAAPI_ENCODE_FLOW_TIMEOUT           GST_FLOW_CUSTOM_SUCCESS
 #define GST_VAAPI_ENCODE_FLOW_MEM_ERROR         GST_FLOW_CUSTOM_ERROR
 #define GST_VAAPI_ENCODE_FLOW_CONVERT_ERROR     GST_FLOW_CUSTOM_ERROR_1
-#define GST_VAAPI_ENCODE_FLOW_CODEC_DATA_ERROR  GST_FLOW_CUSTOM_ERROR_2
 
 GST_DEBUG_CATEGORY_STATIC (gst_vaapiencode_debug);
 #define GST_CAT_DEFAULT gst_vaapiencode_debug
@@ -220,6 +219,40 @@ error_copy_buffer:
   }
 }
 
+static gboolean
+ensure_output_state (GstVaapiEncode * encode)
+{
+  GstVideoEncoder *const venc = GST_VIDEO_ENCODER_CAST (encode);
+  GstVaapiEncodeClass *const klass = GST_VAAPIENCODE_GET_CLASS (encode);
+  GstVaapiEncoderStatus status;
+  GstCaps *out_caps;
+
+  if (!encode->input_state_changed)
+    return TRUE;
+
+  out_caps = klass->get_caps (encode);
+  if (!out_caps)
+    return FALSE;
+
+  if (encode->output_state)
+    gst_video_codec_state_unref (encode->output_state);
+  encode->output_state = gst_video_encoder_set_output_state (venc, out_caps,
+      encode->input_state);
+
+  status = gst_vaapi_encoder_get_codec_data (encode->encoder,
+      &encode->output_state->codec_data);
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+    return FALSE;
+
+#if GST_CHECK_VERSION(1,0,0)
+  if (!gst_video_encoder_negotiate (venc))
+    return FALSE;
+#endif
+
+  encode->input_state_changed = FALSE;
+  return TRUE;
+}
+
 static GstFlowReturn
 gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 timeout)
 {
@@ -244,6 +277,12 @@ gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 timeout)
   gst_video_codec_frame_ref (out_frame);
   gst_video_codec_frame_set_user_data (out_frame, NULL, NULL);
 
+  /* Update output state */
+  GST_VIDEO_ENCODER_STREAM_LOCK (encode);
+  if (!ensure_output_state (encode))
+    goto error_output_state;
+  GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
+
   /* Allocate and copy buffer into system memory */
   out_buffer = NULL;
   ret = klass->alloc_buffer (encode,
@@ -254,35 +293,6 @@ gst_vaapiencode_push_frame (GstVaapiEncode * encode, gint64 timeout)
 
   gst_buffer_replace (&out_frame->output_buffer, out_buffer);
   gst_buffer_unref (out_buffer);
-
-  /* Check output caps */
-  GST_VIDEO_ENCODER_STREAM_LOCK (encode);
-  if (!encode->out_caps_done) {
-    GstVideoCodecState *old_state, *new_state;
-    GstBuffer *codec_data;
-
-    status = gst_vaapi_encoder_get_codec_data (encode->encoder, &codec_data);
-    if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
-      goto error_codec_data;
-
-    if (codec_data) {
-      encode->srcpad_caps = gst_caps_make_writable (encode->srcpad_caps);
-      gst_caps_set_simple (encode->srcpad_caps,
-          "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
-      gst_buffer_unref (codec_data);
-      old_state =
-          gst_video_encoder_get_output_state (GST_VIDEO_ENCODER_CAST (encode));
-      new_state =
-          gst_video_encoder_set_output_state (GST_VIDEO_ENCODER_CAST (encode),
-          gst_caps_ref (encode->srcpad_caps), old_state);
-      gst_video_codec_state_unref (old_state);
-      gst_video_codec_state_unref (new_state);
-      GST_DEBUG ("updated srcpad caps to: %" GST_PTR_FORMAT,
-          encode->srcpad_caps);
-    }
-    encode->out_caps_done = TRUE;
-  }
-  GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
 
   GST_DEBUG ("output:%" GST_TIME_FORMAT ", size:%zu",
       GST_TIME_ARGS (out_frame->pts), gst_buffer_get_size (out_buffer));
@@ -305,12 +315,12 @@ error_allocate_buffer:
     gst_video_codec_frame_unref (out_frame);
     return ret;
   }
-error_codec_data:
+error_output_state:
   {
-    GST_ERROR ("failed to construct codec-data (status %d)", status);
+    GST_ERROR ("failed to negotiate output state", status);
     GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
     gst_video_codec_frame_unref (out_frame);
-    return GST_VAAPI_ENCODE_FLOW_CODEC_DATA_ERROR;
+    return GST_FLOW_NOT_NEGOTIATED;
   }
 }
 
@@ -374,6 +384,15 @@ gst_vaapiencode_get_caps (GstVideoEncoder * venc, GstCaps * filter)
 static gboolean
 gst_vaapiencode_destroy (GstVaapiEncode * encode)
 {
+  if (encode->input_state) {
+    gst_video_codec_state_unref (encode->input_state);
+    encode->input_state = NULL;
+  }
+
+  if (encode->output_state) {
+    gst_video_codec_state_unref (encode->output_state);
+    encode->output_state = NULL;
+  }
   gst_vaapi_encoder_replace (&encode->encoder, NULL);
   gst_caps_replace (&encode->sinkpad_caps, NULL);
   gst_caps_replace (&encode->srcpad_caps, NULL);
@@ -446,18 +465,11 @@ gst_vaapiencode_update_sink_caps (GstVaapiEncode * encode,
 }
 
 static gboolean
-gst_vaapiencode_update_src_caps (GstVaapiEncode * encode,
-    GstVideoCodecState * in_state)
+set_codec_state (GstVaapiEncode * encode, GstVideoCodecState * state)
 {
-  GstVideoCodecState *out_state;
-  GstStructure *structure;
-  GstCaps *outcaps, *allowed_caps, *template_caps, *intersect;
-  GstVaapiEncoderStatus status;
-  GstBuffer *codec_data = NULL;
+  GstCaps *out_caps, *allowed_caps, *template_caps, *intersect;
 
   g_return_val_if_fail (encode->encoder, FALSE);
-
-  encode->out_caps_done = FALSE;
 
   /* get peer caps for stream-format avc/bytestream, codec_data */
   template_caps = gst_pad_get_pad_template_caps (encode->srcpad);
@@ -467,38 +479,19 @@ gst_vaapiencode_update_src_caps (GstVaapiEncode * encode,
   gst_caps_unref (allowed_caps);
 
   /* codec data was not set */
-  outcaps = gst_vaapi_encoder_set_format (encode->encoder, in_state, intersect);
+  out_caps = gst_vaapi_encoder_set_format (encode->encoder, state, intersect);
   gst_caps_unref (intersect);
-  g_return_val_if_fail (outcaps, FALSE);
+  g_return_val_if_fail (out_caps, FALSE);
 
-  if (!gst_caps_is_fixed (outcaps)) {
+  if (!gst_caps_is_fixed (out_caps)) {
     GST_ERROR ("encoder output caps was not fixed");
-    gst_caps_unref (outcaps);
+    gst_caps_unref (out_caps);
     return FALSE;
   }
-  structure = gst_caps_get_structure (outcaps, 0);
-  if (!gst_structure_has_field (structure, "codec_data")) {
-    status = gst_vaapi_encoder_get_codec_data (encode->encoder, &codec_data);
-    if (status == GST_VAAPI_ENCODER_STATUS_SUCCESS) {
-      if (codec_data) {
-        outcaps = gst_caps_make_writable (outcaps);
-        gst_caps_set_simple (outcaps,
-            "codec_data", GST_TYPE_BUFFER, codec_data, NULL);
-        gst_buffer_replace (&codec_data, NULL);
-      }
-      encode->out_caps_done = TRUE;
-    }
-  } else
-    encode->out_caps_done = TRUE;
 
-  out_state =
-      gst_video_encoder_set_output_state (GST_VIDEO_ENCODER_CAST (encode),
-      outcaps, in_state);
-
-  gst_caps_replace (&encode->srcpad_caps, out_state->caps);
-  gst_video_codec_state_unref (out_state);
-
-  GST_DEBUG ("set srcpad caps to: %" GST_PTR_FORMAT, encode->srcpad_caps);
+  GST_DEBUG ("set srcpad caps to: %" GST_PTR_FORMAT, out_caps);
+  gst_caps_replace (&encode->srcpad_caps, out_caps);
+  gst_caps_unref (out_caps);
   return TRUE;
 }
 
@@ -511,37 +504,23 @@ gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
 
   if (!ensure_encoder (encode))
     return FALSE;
-  if (!gst_vaapiencode_update_sink_caps (encode, state))
+  if (!set_codec_state (encode, state))
     return FALSE;
-  if (!gst_vaapiencode_update_src_caps (encode, state))
+
+  if (!gst_vaapiencode_update_sink_caps (encode, state))
     return FALSE;
 
   if (!gst_vaapi_plugin_base_set_caps (GST_VAAPI_PLUGIN_BASE (encode),
-          encode->sinkpad_caps, encode->srcpad_caps))
+          state->caps, NULL))
     return FALSE;
 
-#if GST_CHECK_VERSION(1,0,0)
-  if (encode->out_caps_done && !gst_video_encoder_negotiate (venc)) {
-    GST_ERROR ("failed to negotiate with caps %" GST_PTR_FORMAT,
-        encode->srcpad_caps);
-    return FALSE;
-  }
-#endif
+  if (encode->input_state)
+    gst_video_codec_state_unref (encode->input_state);
+  encode->input_state = gst_video_codec_state_ref (state);
+  encode->input_state_changed = TRUE;
 
   return gst_pad_start_task (encode->srcpad,
       (GstTaskFunction) gst_vaapiencode_buffer_loop, encode, NULL);
-}
-
-static gboolean
-gst_vaapiencode_reset (GstVideoEncoder * venc, gboolean hard)
-{
-  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
-
-  GST_DEBUG ("vaapiencode starting reset");
-
-  /* FIXME: compare sink_caps with encoder */
-  encode->out_caps_done = FALSE;
-  return TRUE;
 }
 
 static GstFlowReturn
@@ -700,7 +679,6 @@ gst_vaapiencode_class_init (GstVaapiEncodeClass * klass)
   venc_class->open = GST_DEBUG_FUNCPTR (gst_vaapiencode_open);
   venc_class->close = GST_DEBUG_FUNCPTR (gst_vaapiencode_close);
   venc_class->set_format = GST_DEBUG_FUNCPTR (gst_vaapiencode_set_format);
-  venc_class->reset = GST_DEBUG_FUNCPTR (gst_vaapiencode_reset);
   venc_class->handle_frame = GST_DEBUG_FUNCPTR (gst_vaapiencode_handle_frame);
   venc_class->finish = GST_DEBUG_FUNCPTR (gst_vaapiencode_finish);
   venc_class->getcaps = GST_DEBUG_FUNCPTR (gst_vaapiencode_get_caps);

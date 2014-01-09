@@ -59,9 +59,10 @@ struct _GstVaapiEncode
   GstPadQueryFunction srcpad_query;
 
   GstVaapiEncoder *encoder;
+  GstVideoCodecState *input_state;
+  gboolean input_state_changed;
+  GstVideoCodecState *output_state;
   GPtrArray *prop_values;
-
-  guint32 out_caps_done:1;
 };
 
 struct _GstVaapiEncodeClass
@@ -75,6 +76,7 @@ struct _GstVaapiEncodeClass
   gboolean            (*set_property)   (GstVaapiEncode * encode,
                                          guint prop_id, const GValue * value);
 
+  GstCaps *           (*get_caps)       (GstVaapiEncode * encode);
   GstVaapiEncoder *   (*alloc_encoder)  (GstVaapiEncode * encode,
                                          GstVaapiDisplay * display);
   GstFlowReturn       (*alloc_buffer)   (GstVaapiEncode * encode,

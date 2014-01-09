@@ -52,6 +52,8 @@ struct _GstVaapiEncodeH264
 {
   /*< private >*/
   GstVaapiEncode parent_instance;
+
+  guint is_avc:1; /* [FALSE]=byte-stream (default); [TRUE]=avcC */
 };
 
 struct _GstVaapiEncodeH264Class
