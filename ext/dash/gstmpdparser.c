@@ -3394,18 +3394,17 @@ gboolean
 gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
     GstClockTime ts)
 {
-  gint segment_idx = 0;
+  gint index = 0;
   GstMediaSegment *selectedChunk = NULL;
-  gint i;
 
   g_return_val_if_fail (stream != NULL, 0);
 
   GST_MPD_CLIENT_LOCK (client);
   if (stream->segments) {
-    for (i = 0; i < stream->segments->len; i++, segment_idx++) {
-      GstMediaSegment *segment = g_ptr_array_index (stream->segments, i);
+    for (index = 0; index < stream->segments->len; index++) {
+      GstMediaSegment *segment = g_ptr_array_index (stream->segments, index);
 
-      GST_DEBUG ("Looking at fragment sequence chunk %d", segment_idx);
+      GST_DEBUG ("Looking at fragment sequence chunk %d", index);
       if (segment->start_time <= ts
           && ts < segment->start_time + segment->duration) {
         selectedChunk = segment;
@@ -3420,16 +3419,16 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
   } else {
     GstClockTime duration =
         gst_mpd_client_get_segment_duration (client, stream);
-    g_return_val_if_fail (stream->cur_seg_template->
-        MultSegBaseType->SegmentTimeline == NULL, FALSE);
+    g_return_val_if_fail (stream->cur_seg_template->MultSegBaseType->
+        SegmentTimeline == NULL, FALSE);
     if (!GST_CLOCK_TIME_IS_VALID (duration)) {
       GST_MPD_CLIENT_UNLOCK (client);
       return FALSE;
     }
-    segment_idx = ts / duration;
+    index = ts / duration;
   }
 
-  gst_mpd_client_set_segment_index (stream, segment_idx);
+  gst_mpd_client_set_segment_index (stream, index);
 
   GST_MPD_CLIENT_UNLOCK (client);
 
