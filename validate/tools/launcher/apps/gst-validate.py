@@ -50,11 +50,8 @@ COMBINATIONS = [
 class GstValidateLaunchTest(GstValidateTest):
     def __init__(self, classname, options, reporter, pipeline_desc,
                  timeout=DEFAULT_TIMEOUT, scenario=None, file_infos=None):
-        if file_infos is not None:
-            timeout = file_infos.get("media-info", "file-duration")
-
         super(GstValidateLaunchTest, self).__init__(DEFAULT_GST_VALIDATE, classname,
-                                              options, reporter, timeout=timeout,
+                                              options, reporter,
                                               scenario=scenario,)
         self.pipeline_desc = pipeline_desc
         self.file_infos = file_infos
@@ -71,12 +68,9 @@ class GstValidateTranscodingTest(GstValidateTest):
     def __init__(self, classname, options, reporter,
                  combination, uri, file_infos):
 
-        if file_infos is not None:
-            timeout = file_infos.get("media-info", "file-duration")
-
         super(GstValidateTranscodingTest, self).__init__(
             DEFAULT_GST_VALIDATE_TRANSCODING, classname,
-            options, reporter, timeout=timeout, scenario=None)
+            options, reporter, scenario=None)
         self.uri = uri
         self.combination = combination
         self.dest_file = ""
