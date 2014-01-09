@@ -3404,8 +3404,10 @@ gst_mpd_client_stream_seek (GstMpdClient * client, GstActiveStream * stream,
   if (stream->segments) {
     for (i = 0; i < stream->segments->len; i++, segment_idx++) {
       GstMediaSegment *segment = g_ptr_array_index (stream->segments, i);
+
       GST_DEBUG ("Looking at fragment sequence chunk %d", segment_idx);
-      if (segment->start_time >= ts) {
+      if (segment->start_time <= ts
+          && ts < segment->start_time + segment->duration) {
         selectedChunk = segment;
         break;
       }

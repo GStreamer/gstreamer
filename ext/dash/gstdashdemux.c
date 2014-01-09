@@ -396,37 +396,6 @@ gst_dash_demux_change_state (GstElement * element, GstStateChange transition)
   return ret;
 }
 
-static void
-gst_dash_demux_stream_seek (GstDashDemuxStream * stream,
-    GstClockTime target_pos)
-{
-  gint seg_i;
-  guint current_sequence = 0;
-  GstActiveStream *active_stream;
-  GstMediaSegment *chunk;
-  GstClockTime current_pos = 0;
-  GstDashDemux *demux = stream->demux;
-
-  active_stream = stream->active_stream;
-  for (seg_i = 0; seg_i < active_stream->segments->len; seg_i++) {
-    chunk = g_ptr_array_index (active_stream->segments, seg_i);
-    current_pos = chunk->start_time;
-    /* current_sequence = chunk->number; */
-    GST_DEBUG_OBJECT (demux, "current_pos:%" GST_TIME_FORMAT
-        " <= target_pos:%" GST_TIME_FORMAT " duration:%"
-        GST_TIME_FORMAT, GST_TIME_ARGS (current_pos),
-        GST_TIME_ARGS (target_pos), GST_TIME_ARGS (chunk->duration));
-    if (current_pos <= target_pos && target_pos < current_pos + chunk->duration) {
-      GST_DEBUG_OBJECT (demux,
-          "selecting sequence %d for stream %" GST_PTR_FORMAT,
-          current_sequence, stream);
-      break;
-    }
-    current_sequence++;
-  }
-  gst_mpd_client_set_segment_index (active_stream, current_sequence);
-}
-
 static gboolean
 gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
 {
@@ -532,7 +501,8 @@ gst_dash_demux_src_event (GstPad * pad, GstObject * parent, GstEvent * event)
         gst_event_set_seqnum (seg_evt, gst_event_get_seqnum (event));
         for (iter = demux->streams; iter; iter = g_slist_next (iter)) {
           GstDashDemuxStream *stream = iter->data;
-          gst_dash_demux_stream_seek (stream, target_pos);
+          gst_mpd_client_stream_seek (demux->client, stream->active_stream,
+              target_pos);
 
           gst_event_replace (&stream->pending_segment, seg_evt);
         }
@@ -1915,7 +1885,7 @@ gst_dash_demux_stream_download_fragment (GstDashDemux * demux,
         GST_TIME_ARGS (ts), GST_TIME_ARGS (demux->segment.position));
 
     if (GST_CLOCK_TIME_IS_VALID (ts)) {
-      gst_dash_demux_stream_seek (stream, ts);
+      gst_mpd_client_stream_seek (demux->client, stream->active_stream, ts);
 
       if (cur < ts) {
         gap = gst_event_new_gap (cur, ts - cur);
