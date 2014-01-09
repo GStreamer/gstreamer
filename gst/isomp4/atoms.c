@@ -739,7 +739,7 @@ atom_hmhd_free (AtomHMHD * hmhd)
 }
 
 static void
-atom_hdlr_init (AtomHDLR * hdlr)
+atom_hdlr_init (AtomHDLR * hdlr, AtomsContext * context)
 {
   guint8 flags[3] = { 0, 0, 0 };
 
@@ -751,14 +751,17 @@ atom_hdlr_init (AtomHDLR * hdlr)
   hdlr->flags = 0;
   hdlr->flags_mask = 0;
   hdlr->name = g_strdup ("");
+
+  /* Store the flavor to know how to serialize the 'name' string */
+  hdlr->flavor = context->flavor;
 }
 
 static AtomHDLR *
-atom_hdlr_new (void)
+atom_hdlr_new (AtomsContext * context)
 {
   AtomHDLR *hdlr = g_new0 (AtomHDLR, 1);
 
-  atom_hdlr_init (hdlr);
+  atom_hdlr_init (hdlr, context);
   return hdlr;
 }
 
@@ -889,7 +892,7 @@ atom_minf_init (AtomMINF * minf, AtomsContext * context)
   minf->hmhd = NULL;
 
   if (context->flavor == ATOMS_TREE_FLAVOR_MOV) {
-    minf->hdlr = atom_hdlr_new ();
+    minf->hdlr = atom_hdlr_new (context);
     minf->hdlr->component_type = FOURCC_dhlr;
     minf->hdlr->handler_type = FOURCC_alis;
   } else {
@@ -951,7 +954,7 @@ atom_mdia_init (AtomMDIA * mdia, AtomsContext * context)
   atom_header_set (&mdia->header, FOURCC_mdia, 0, 0);
 
   atom_mdhd_init (&mdia->mdhd);
-  atom_hdlr_init (&mdia->hdlr);
+  atom_hdlr_init (&mdia->hdlr, context);
   atom_minf_init (&mdia->minf, context);
 }
 
@@ -1063,12 +1066,12 @@ atom_ilst_free (AtomILST * ilst)
 }
 
 static void
-atom_meta_init (AtomMETA * meta)
+atom_meta_init (AtomMETA * meta, AtomsContext * context)
 {
   guint8 flags[3] = { 0, 0, 0 };
 
   atom_full_init (&meta->header, FOURCC_meta, 0, 0, 0, flags);
-  atom_hdlr_init (&meta->hdlr);
+  atom_hdlr_init (&meta->hdlr, context);
   /* FIXME (ISOM says this is always 0) */
   meta->hdlr.component_type = FOURCC_mhlr;
   meta->hdlr.handler_type = FOURCC_mdir;
@@ -1076,11 +1079,11 @@ atom_meta_init (AtomMETA * meta)
 }
 
 static AtomMETA *
-atom_meta_new (void)
+atom_meta_new (AtomsContext * context)
 {
   AtomMETA *meta = g_new0 (AtomMETA, 1);
 
-  atom_meta_init (meta);
+  atom_meta_init (meta, context);
   return meta;
 }
 
@@ -1521,8 +1524,13 @@ atom_hdlr_copy_data (AtomHDLR * hdlr, guint8 ** buffer, guint64 * size,
   prop_copy_uint32 (hdlr->flags, buffer, size, offset);
   prop_copy_uint32 (hdlr->flags_mask, buffer, size, offset);
 
-  prop_copy_size_string ((guint8 *) hdlr->name, strlen (hdlr->name), buffer,
-      size, offset);
+  if (hdlr->flavor == ATOMS_TREE_FLAVOR_MOV) {
+    prop_copy_size_string ((guint8 *) hdlr->name, strlen (hdlr->name), buffer,
+        size, offset);
+  } else {
+    /* assume isomedia base is more generic and use null terminated */
+    prop_copy_null_terminated_string (hdlr->name, buffer, size, offset);
+  }
 
   atom_write_size (buffer, size, offset, original_offset);
   return *offset - original_offset;
@@ -2829,7 +2837,7 @@ atom_moov_init_metatags (AtomMOOV * moov, AtomsContext * context)
   }
   if (context->flavor != ATOMS_TREE_FLAVOR_3GP) {
     if (!moov->udta->meta) {
-      moov->udta->meta = atom_meta_new ();
+      moov->udta->meta = atom_meta_new (context);
     }
     if (!moov->udta->meta->ilst) {
       moov->udta->meta->ilst = atom_ilst_new ();

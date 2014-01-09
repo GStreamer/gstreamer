@@ -249,6 +249,8 @@ typedef struct _AtomHDLR
   guint32 flags;
   guint32 flags_mask;
   gchar *name;
+
+  AtomsTreeFlavor flavor;
 } AtomHDLR;
 
 typedef struct _AtomVMHD
