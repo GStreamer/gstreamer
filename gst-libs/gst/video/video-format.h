@@ -25,6 +25,7 @@
 G_BEGIN_DECLS
 
 #include <gst/video/video-enumtypes.h>
+#include <gst/video/video-tile.h>
 
 /**
  * GstVideoFormat:
@@ -203,9 +204,6 @@ typedef enum
 #define GST_VIDEO_COMP_INDEX    0
 #define GST_VIDEO_COMP_PALETTE  1
 
-/* tile info component, we don't support planar alpha and tiled */
-#define GST_VIDEO_COMP_TILEINFO 3
-
 #include <gst/video/video-chroma.h>
 
 /**
@@ -322,6 +320,9 @@ typedef void (*GstVideoFormatPack)           (const GstVideoFormatInfo *info,
  * @unpack_func: an unpack function for this format
  * @pack_lines: the amount of lines that will be packed
  * @pack_func: an pack function for this format
+ * @tile_mode: The tiling mode
+ * @tile_ws The width of a tile, in bytes, represented as a shift
+ * @tile_hs The height of a tile, in bytes, represented as a shift
  *
  * Information for a video format.
  */
@@ -345,6 +346,10 @@ struct _GstVideoFormatInfo {
   GstVideoFormatUnpack unpack_func;
   gint pack_lines;
   GstVideoFormatPack pack_func;
+
+  GstVideoTileMode tile_mode;
+  guint tile_ws;
+  guint tile_hs;
 
   gpointer _gst_reserved[GST_PADDING];
 };
@@ -421,6 +426,10 @@ struct _GstVideoFormatInfo {
 #define GST_VIDEO_FORMAT_INFO_STRIDE(info,strides,comp) ((strides)[(info)->plane[comp]])
 #define GST_VIDEO_FORMAT_INFO_OFFSET(info,offsets,comp) \
   (((offsets)[(info)->plane[comp]]) + (info)->poffset[comp])
+
+#define GST_VIDEO_FORMAT_INFO_TILE_MODE(info) ((info)->tile_mode)
+#define GST_VIDEO_FORMAT_INFO_TILE_WS(info) ((info)->tile_ws)
+#define GST_VIDEO_FORMAT_INFO_TILE_HS(info) ((info)->tile_hs)
 
 /* format properties */
 GstVideoFormat gst_video_format_from_masks           (gint depth, gint bpp, gint endianness,

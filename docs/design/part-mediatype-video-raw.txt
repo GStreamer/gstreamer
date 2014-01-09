@@ -1213,21 +1213,21 @@ Formats
           depth            8
           pstride:         2
           default offset:  size (component0)
-          default rstride: RU128 (width)
+          default rstride: (y_tiles << 16) | x_tiles
+          default x_tiles: RU128 (width) >> tile_width
+          default y_tiles: RU32 (height) >> tile_height
 
         Component 2: V
           depth:           8
           pstride:         2
           default offset:  offset (component1) + 1
-          default rstride: RU128 (width)
-
-        Component 3: T
-          pstride          TileMode zigzag
-          w_sub            6
-          h_sub            5
-          default offset:  0
-          default rstride: y_tiles
+          default rstride: (y_tiles << 16) | x_tiles
+          default x_tiles: RU128 (width) >> tile_width
+          default y_tiles: RU64 (height) >> (tile_height + 1)
 
         Image
-          default size: RU128 (width) * RU32 (height) * 3 / 2
+          default size: RU128 (width) * (RU32 (height) + RU64 (height) / 2)
+          tile mode:    ZFLIPZ_2X2
+          tile width:   6
+          tile height:  5
 

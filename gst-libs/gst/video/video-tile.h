@@ -22,8 +22,6 @@
 
 #include <gst/gst.h>
 
-#include <gst/video/video-format.h>
-
 G_BEGIN_DECLS
 
 /**
@@ -67,6 +65,36 @@ typedef enum
  * Check if @mode is an indexed tile type
  */
 #define GST_VIDEO_TILE_MODE_IS_INDEXED(mode) (GST_VIDEO_TILE_MODE_TYPE(mode) == GST_VIDEO_TILE_TYPE_INDEXED)
+
+
+#define GST_VIDEO_TILE_Y_TILES_SHIFT     (16)
+#define GST_VIDEO_TILE_X_TILES_MASK      ((1 << GST_VIDEO_TILE_Y_TILES_SHIFT) - 1)
+
+/**
+ * GST_VIDEO_TILE_MAKE_STRIDE:
+ * @x_tiles: number of tiles in X
+ * @y_tiles: number of tiles in Y
+ *
+ * Encode the number of tile in X and Y into the stride.
+ */
+#define GST_VIDEO_TILE_MAKE_STRIDE(x_tiles, y_tiles) \
+    (((y_tiles) << GST_VIDEO_TILE_Y_TILES_SHIFT) | (x_tiles))
+
+/**
+ * GST_VIDEO_TILE_X_TILES:
+ * @stride: plane stride
+ *
+ * Extract the number of tiles in X from the stride value.
+ */
+#define GST_VIDEO_TILE_X_TILES(stride) ((stride) & GST_VIDEO_TILE_X_TILES_MASK)
+
+/**
+ * GST_VIDEO_TILE_Y_TILES:
+ * @stride: plane stride
+ *
+ * Extract the number of tiles in Y from the stride value.
+ */
+#define GST_VIDEO_TILE_Y_TILES(stride) ((stride) >> GST_VIDEO_TILE_Y_TILES_SHIFT)
 
 /**
  * GstVideoTileMode:

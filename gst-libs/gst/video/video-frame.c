@@ -221,6 +221,7 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
   const GstVideoFormatInfo *finfo;
   guint8 *sp, *dp;
   guint w, h;
+  gint ss, ds;
 
   g_return_val_if_fail (dest != NULL, FALSE);
   g_return_val_if_fail (src != NULL, FALSE);
@@ -251,35 +252,28 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
       plane) * GST_VIDEO_FRAME_COMP_PSTRIDE (dest, plane);
   h = GST_VIDEO_FRAME_COMP_HEIGHT (dest, plane);
 
+  ss = GST_VIDEO_INFO_PLANE_STRIDE (sinfo, plane);
+  ds = GST_VIDEO_INFO_PLANE_STRIDE (dinfo, plane);
+
   if (GST_VIDEO_FORMAT_INFO_IS_TILED (finfo)) {
     gint tile_size;
     gint sx_tiles, sy_tiles, dx_tiles, dy_tiles;
     guint i, j, ws, hs, ts;
     GstVideoTileMode mode;
-    gint tidx;
 
-    /* plane index of tile info */
-    tidx = finfo->n_planes - 1;
-
-    /* ignore tile info plane */
-    if (plane == tidx)
-      return TRUE;
-
-    ws = finfo->w_sub[GST_VIDEO_COMP_TILEINFO];
-    hs = finfo->h_sub[GST_VIDEO_COMP_TILEINFO];
+    ws = GST_VIDEO_FORMAT_INFO_TILE_WS (finfo);
+    hs = GST_VIDEO_FORMAT_INFO_TILE_HS (finfo);
     ts = ws + hs;
 
     tile_size = 1 << ts;
 
-    mode = finfo->pixel_stride[GST_VIDEO_COMP_TILEINFO];
+    mode = GST_VIDEO_FORMAT_INFO_TILE_MODE (finfo);
 
-    sx_tiles = sinfo->stride[plane] >> ws;
-    sy_tiles = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, plane,
-        sinfo->stride[tidx]);
+    sx_tiles = GST_VIDEO_TILE_X_TILES (ss);
+    sy_tiles = GST_VIDEO_TILE_Y_TILES (ss);
 
-    dx_tiles = dinfo->stride[plane] >> ws;
-    dy_tiles = GST_VIDEO_FORMAT_INFO_SCALE_HEIGHT (finfo, plane,
-        dinfo->stride[tidx]);
+    dx_tiles = GST_VIDEO_TILE_X_TILES (ds);
+    dy_tiles = GST_VIDEO_TILE_Y_TILES (ds);
 
     /* this is the amount of tiles to copy */
     w = ((w - 1) >> ws) + 1;
@@ -298,11 +292,7 @@ gst_video_frame_copy_plane (GstVideoFrame * dest, const GstVideoFrame * src,
       }
     }
   } else {
-    gint ss, ds;
     guint j;
-
-    ss = sinfo->stride[plane];
-    ds = dinfo->stride[plane];
 
     GST_CAT_DEBUG (GST_CAT_PERFORMANCE, "copy plane %d, w:%d h:%d ", plane, w,
         h);

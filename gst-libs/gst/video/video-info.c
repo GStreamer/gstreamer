@@ -27,6 +27,7 @@
 #include <stdio.h>
 
 #include "video-info.h"
+#include "video-tile.h"
 
 static int fill_planes (GstVideoInfo * info);
 
@@ -574,12 +575,14 @@ fill_planes (GstVideoInfo * info)
       info->size = info->stride[0] * height * 3;
       break;
     case GST_VIDEO_FORMAT_NV12_64Z32:
-      info->stride[0] = GST_ROUND_UP_128 (width);
-      info->stride[1] = info->stride[0];
-      info->stride[2] = GST_ROUND_UP_32 (height) / 32;
+      info->stride[0] =
+          GST_VIDEO_TILE_MAKE_STRIDE (GST_ROUND_UP_128 (width) / 64,
+          GST_ROUND_UP_32 (height) / 32);
+      info->stride[1] =
+          GST_VIDEO_TILE_MAKE_STRIDE (GST_ROUND_UP_128 (width) / 64,
+          GST_ROUND_UP_64 (height) / 64);
       info->offset[0] = 0;
       info->offset[1] = info->stride[0] * GST_ROUND_UP_32 (height);
-      info->offset[2] = 0;
       info->size =
           info->offset[1] + info->stride[0] * GST_ROUND_UP_64 (height) / 2;
       break;
