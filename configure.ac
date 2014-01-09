@@ -491,6 +491,7 @@ AG_GST_CHECK_FEATURE(OSX_VIDEO, [OSX video], osxvideosink, [
   dnl also require Snow Leopard or newer
 
   AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
+        #include <AvailabilityMacros.h>
         #if MAC_OS_X_VERSION_MIN_REQUIRED < 1060
         #error Too old OSX version
         #endif
