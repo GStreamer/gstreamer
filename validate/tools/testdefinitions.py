@@ -87,17 +87,9 @@ class Test(Loggable):
         elif self.process.returncode == 0:
             self.result = Result.PASSED
         else:
-            if self.process.returncode == 139:
-                self.get_backtrace("SEGFAULT")
-                self.set_result(Result.FAILED,
-                                "Application segfaulted",
-                                "segfault")
-            else:
-                self.set_result(Result.FAILED,
-                                "Application returned %d (issues: %s)" % (
-                                self.process.returncode,
-                                "error")
-                                )
+            self.set_result(Result.FAILED,
+                            "Application returned %d" % (
+                            self.process.returncode))
 
     def get_current_value(self):
         """
@@ -209,6 +201,28 @@ class GstValidateTest(Test):
         else:
             return ret + "]"
 
+
+    def check_results(self):
+        if self.result is Result.FAILED:
+            return
+
+        self.debug("%s returncode: %s", self, self.process.returncode)
+        if self.result == Result.TIMEOUT:
+            self.set_result(Result.TIMEOUT, "Application timed out", "timeout")
+        elif self.process.returncode == 0:
+            self.result = Result.PASSED
+        else:
+            if self.process.returncode == 139:
+                self.get_backtrace("SEGFAULT")
+                self.set_result(Result.FAILED,
+                                "Application segfaulted",
+                                "segfault")
+            else:
+                self.set_result(Result.FAILED,
+                                "Application returned %d (issues: %s)" % (
+                                self.process.returncode,
+                                self.get_validate_criticals_errors()
+                                ))
 
 
 class TestsManager(object):
