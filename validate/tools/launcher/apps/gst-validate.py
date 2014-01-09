@@ -25,7 +25,8 @@ from loggable import Loggable
 from baseclasses import GstValidateTest, TestsManager
 from utils import MediaFormatCombination, get_profile,\
     path2url, get_current_position, get_current_size, \
-    DEFAULT_TIMEOUT
+    DEFAULT_TIMEOUT, which, GST_SECOND, Result, \
+    compare_rendered_with_original
 
 
 DEFAULT_GST_VALIDATE = "gst-validate-1.0"
@@ -94,6 +95,14 @@ class GstValidateTranscodingTest(GstValidateTest):
     def get_current_value(self):
         return get_current_size(self)
 
+    def check_results(self):
+        if self.process.returncode == 0:
+            orig_duration = long(self.file_infos.get("media-info", "file-duration"))
+            res, msg = compare_rendered_with_original(orig_duration, self.dest_file)
+            self.set_result(res, msg)
+        else:
+            GstValidateTest.check_results(self)
+
 
 class GstValidateManager(TestsManager, Loggable):
 
@@ -124,15 +133,13 @@ class GstValidateManager(TestsManager, Loggable):
 
         for uri, config in self._list_uris():
             for comb in COMBINATIONS:
-                classname = "validate.transcode"
                 classname = "validate.transcode.from_%s.to_%s" % (os.path.splitext(os.path.basename(uri))[0],
                                                                   str(comb).replace(' ', '_'))
                 self.tests.append(GstValidateTranscodingTest(classname,
-                                                  self.options,
-                                                  self.reporter,
-                                                  comb,
-                                                  uri,
-                                                  config))
+                                                             self.options,
+                                                             self.reporter,
+                                                             comb, uri,
+                                                             config))
 
     def _check_discovering_info(self, media_info, uri=None):
         self.debug("Checking %s", media_info)
@@ -225,7 +232,7 @@ class GstValidateManager(TestsManager, Loggable):
                 if scenario in SEEKING_REQUIERED_SCENARIO:
                     if config.getboolean("media-info", "seekable") is False:
                         self.debug("Do not run %s as %s does not support seeking",
-                                    scenario, uri)
+                                   scenario, uri)
                         continue
 
                     if self.options.mute:

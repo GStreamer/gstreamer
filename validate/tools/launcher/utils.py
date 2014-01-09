@@ -21,12 +21,17 @@
 import os
 import urllib
 import urlparse
+import tempfile
+import subprocess
+import ConfigParser
 
 
 GST_SECOND = 1000000000
 DEFAULT_TIMEOUT = 10
 DEFAULT_GST_QA_ASSETS = os.path.join(os.path.expanduser('~'), "Videos",
                           "gst-qa-assets")
+DISCOVERER_COMMAND = "gst-discoverer-1.0"
+DURATION_TOLERANCE = GST_SECOND / 2
 
 
 class Result(object):
@@ -172,10 +177,11 @@ def get_profile(combination):
 ##################################################
 
 
+
+
 def _parse_position(p):
     def parse_gsttimeargs(time):
         return int(time.split(":")[0]) * 3600 + int(time.split(":")[1]) * 60 + int(time.split(":")[2].split(".")[0]) * 60
-
     start_stop = p.replace("<Position: ", '').replace("/>", '').split(" / ")
 
     return parse_gsttimeargs(start_stop[0]), parse_gsttimeargs(start_stop[1])
@@ -220,3 +226,30 @@ def get_current_size(test):
         return position
 
     return os.stat(urlparse.urlparse(test.dest_file).path).st_size
+
+
+def compare_rendered_with_original(orig_duration, dest_file, tolerance=DURATION_TOLERANCE):
+        def parse_gsttimeargs(time):
+            stime = time.split(":")
+            sns = stime[2].split(".")
+            stime[2] = sns[0]
+            stime.append(sns[1])
+            return (int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2]) * 60) * GST_SECOND +  int(stime[3])
+        try:
+            res = subprocess.check_output([DISCOVERER_COMMAND, dest_file])
+        except subprocess.CalledProcessError:
+            # gst-media-check returns !0 if seeking is not possible, we do not care in that case.
+            pass
+
+        for l in res.split('\n'):
+            if "Duration: " in l:
+                duration = parse_gsttimeargs(l.replace("Duration: ", ""))
+
+        if orig_duration - tolerance >= duration >= orig_duration + tolerance:
+            return (Result.FAILED, "Duration of encoded file is "
+                    " wrong (%s instead of %s)" %
+                    (orig_duration / GST_SECOND,
+                    duration / GST_SECOND),
+                    "wrong-duration")
+        else:
+            return (Result.PASSED, "")

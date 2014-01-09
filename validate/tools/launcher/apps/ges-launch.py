@@ -23,7 +23,8 @@ from urllib import unquote
 from gi.repository import GES, Gst, GLib
 from baseclasses import GstValidateTest, TestsManager
 from utils import MediaFormatCombination, get_profile, Result, get_current_position, \
-    get_current_size, DEFAULT_GST_QA_ASSETS
+    get_current_size, DEFAULT_GST_QA_ASSETS, which, \
+    compare_rendered_with_original, get_duration
 
 DURATION_TOLERANCE = Gst.SECOND / 2
 DEFAULT_GES_LAUNCH = "ges-launch-1.0"
@@ -134,37 +135,26 @@ class GESRenderTest(GESTest):
 
     def check_results(self):
         if self.process.returncode == 0:
-            try:
-                asset = GES.UriClipAsset.request_sync(self.dest_file)
-                if self.duration - DURATION_TOLERANCE <= asset.get_duration() \
-                        <= self.duration + DURATION_TOLERANCE:
-                    self.set_result(Result.FAILURE, "Duration of encoded file is "
-                                    " wrong (%s instead of %s)" %
-                                    (Gst.TIME_ARGS(self.duration),
-                                     Gst.TIME_ARGS(asset.get_duration())),
-                                    "wrong-duration")
-                else:
-                    self.set_result(Result.PASSED)
-            except GLib.Error as e:
-                self.set_result(Result.FAILURE, "Wrong rendered file", "failure", e)
+            res, msg = compare_rendered_with_original(self.duration, self.dest_file)
+            self.set_result(res, msg)
         else:
             if self.result == Result.TIMEOUT:
                 missing_eos = False
                 try:
-                    asset = GES.UriClipAsset.request_sync(self.dest_file)
-                    if asset.get_duration() == self.duration:
+                    if get_duration(self.dest_file) == self.duration:
                         missing_eos = True
                 except Exception as e:
                     pass
 
                 if missing_eos is True:
                     self.set_result(Result.TIMEOUT, "The rendered file add right duration, MISSING EOS?\n",
-                                     "failure", e)
+                                    "failure", e)
             else:
                 GstValidateTest.check_results(self)
 
     def get_current_value(self):
         return get_current_size(self)
+
 
 class GESTestsManager(TestsManager):
     name = "ges"
