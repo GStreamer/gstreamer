@@ -110,6 +110,7 @@ def launch_command(command, color=None):
     printc(command, Colors.OKGREEN, True)
     os.system(command)
 
+
 def path2url(path):
     return urlparse.urljoin('file:', urllib.pathname2url(path))
 
@@ -138,7 +139,7 @@ FORMATS = {"aac": "audio/mpeg,mpegversion=4",
            "ogg": "application/ogg",
            "mkv": "video/x-matroska",
            "mp4": "video/quicktime,variant=iso;",
-           "webm": "video/x-matroska"}
+           "webm": "video/webm"}
 
 def get_profile_full(muxer, venc, aenc, video_restriction=None,
                      audio_restriction=None,
@@ -177,12 +178,17 @@ def get_profile(combination):
 ##################################################
 
 
-
-
 def _parse_position(p):
     def parse_gsttimeargs(time):
         return int(time.split(":")[0]) * 3600 + int(time.split(":")[1]) * 60 + int(time.split(":")[2].split(".")[0]) * 60
-    start_stop = p.replace("<Position: ", '').replace("/>", '').split(" / ")
+    start_stop = p.replace("<position: ", '').replace("/>", "").split(" duration: ")
+
+    if len(start_stop) < 2:
+        loggable.warning("utils", "Got a unparsable value: %s" % p)
+        return 0, 0
+
+    if " speed:  "in start_stop[1]:
+        start_stop[1] = start_stop[1].split("speed: ")[0]
 
     return parse_gsttimeargs(start_stop[0]), parse_gsttimeargs(start_stop[1])
 
@@ -192,15 +198,17 @@ def _get_position(test):
 
     test.reporter.out.seek(0)
     m = None
-    for l in test.reporter.out.readlines():
-        if "<Position:" in l:
+    for l in reversed(test.reporter.out.readlines()):
+        l = l.lower()
+        if "<position:" in l:
             m = l
+            break
 
     if m is None:
         return position, duration
 
     for j in m.split("\r"):
-        if j.startswith("<Position:") and j.endswith("/>"):
+        if j.startswith("<position:") and j.endswith("/>"):
             position, duration = _parse_position(j)
 
     return position, duration
@@ -227,23 +235,29 @@ def get_current_size(test):
 
     return os.stat(urlparse.urlparse(test.dest_file).path).st_size
 
+def get_duration(media_file):
+    duration = 0
+    def parse_gsttimeargs(time):
+        stime = time.split(":")
+        sns = stime[2].split(".")
+        stime[2] = sns[0]
+        stime.append(sns[1])
+        return (int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2]) * 60) * GST_SECOND +  int(stime[3])
+    try:
+        res = subprocess.check_output([DISCOVERER_COMMAND, media_file])
+    except subprocess.CalledProcessError:
+        # gst-media-check returns !0 if seeking is not possible, we do not care in that case.
+        pass
+
+    for l in res.split('\n'):
+        if "Duration: " in l:
+            duration = parse_gsttimeargs(l.replace("Duration: ", ""))
+            break
+
+    return duration
 
 def compare_rendered_with_original(orig_duration, dest_file, tolerance=DURATION_TOLERANCE):
-        def parse_gsttimeargs(time):
-            stime = time.split(":")
-            sns = stime[2].split(".")
-            stime[2] = sns[0]
-            stime.append(sns[1])
-            return (int(stime[0]) * 3600 + int(stime[1]) * 60 + int(stime[2]) * 60) * GST_SECOND +  int(stime[3])
-        try:
-            res = subprocess.check_output([DISCOVERER_COMMAND, dest_file])
-        except subprocess.CalledProcessError:
-            # gst-media-check returns !0 if seeking is not possible, we do not care in that case.
-            pass
-
-        for l in res.split('\n'):
-            if "Duration: " in l:
-                duration = parse_gsttimeargs(l.replace("Duration: ", ""))
+        duration = get_duration(dest_file)
 
         if orig_duration - tolerance >= duration >= orig_duration + tolerance:
             return (Result.FAILED, "Duration of encoded file is "

@@ -138,8 +138,9 @@ class Test(Loggable):
         self.command = "%s " % (self.application)
         self._starting_time = time.time()
         self.build_arguments()
-        printc("Launching:%s '%s' -- logs are in %s" % (Colors.ENDC, self.command,
-                                                  self.reporter.out.name), Colors.OKBLUE)
+        printc("Launching: %s %s -> '%s' -- logs are in %s"
+               % (Colors.ENDC, self.classname, self.command,
+                  self.reporter.out.name), Colors.OKBLUE)
         try:
             self.process = subprocess.Popen(self.command,
                                             stderr=self.reporter.out,
