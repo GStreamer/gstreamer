@@ -60,29 +60,17 @@ enum
   GST_VAAPI_CREATE_PICTURE_FLAG_FIELD = 1 << 1,
 };
 
-static void
-destroy_slice_cb (gpointer data, gpointer user_data)
-{
-  GstVaapiMiniObject *const object = data;
-
-  gst_vaapi_mini_object_unref (object);
-}
-
 void
 gst_vaapi_picture_destroy (GstVaapiPicture * picture)
 {
   if (picture->slices) {
-    g_ptr_array_foreach (picture->slices, destroy_slice_cb, NULL);
-    g_ptr_array_free (picture->slices, TRUE);
+    g_ptr_array_unref (picture->slices);
     picture->slices = NULL;
   }
 
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) & picture->iq_matrix,
-      NULL);
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) & picture->huf_table,
-      NULL);
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) & picture->bitplane,
-      NULL);
+  gst_vaapi_codec_object_replace (&picture->iq_matrix, NULL);
+  gst_vaapi_codec_object_replace (&picture->huf_table, NULL);
+  gst_vaapi_codec_object_replace (&picture->bitplane, NULL);
 
   if (picture->proxy) {
     gst_vaapi_surface_proxy_unref (picture->proxy);
@@ -164,7 +152,8 @@ gst_vaapi_picture_create (GstVaapiPicture * picture,
     return FALSE;
   picture->param_size = args->param_size;
 
-  picture->slices = g_ptr_array_new ();
+  picture->slices = g_ptr_array_new_with_free_func ((GDestroyNotify)
+      gst_vaapi_mini_object_unref);
   if (!picture->slices)
     return FALSE;
 
@@ -382,8 +371,7 @@ gst_vaapi_slice_destroy (GstVaapiSlice * slice)
 {
   VADisplay const va_display = GET_VA_DISPLAY (slice);
 
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) & slice->huf_table,
-      NULL);
+  gst_vaapi_codec_object_replace (&slice->huf_table, NULL);
 
   vaapi_destroy_buffer (va_display, &slice->data_id);
   vaapi_destroy_buffer (va_display, &slice->param_id);

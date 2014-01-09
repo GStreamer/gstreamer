@@ -176,21 +176,14 @@ void
 gst_vaapi_picture_set_crop_rect (GstVaapiPicture * picture,
     const GstVaapiRectangle * crop_rect);
 
-static inline gpointer
-gst_vaapi_picture_ref (gpointer ptr)
-{
-  return gst_vaapi_mini_object_ref (GST_VAAPI_MINI_OBJECT (ptr));
-}
+#define gst_vaapi_picture_ref(picture) \
+  gst_vaapi_codec_object_ref (picture)
 
-static inline void
-gst_vaapi_picture_unref (gpointer ptr)
-{
-  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (ptr));
-}
+#define gst_vaapi_picture_unref(picture) \
+  gst_vaapi_codec_object_unref (picture)
 
-#define gst_vaapi_picture_replace(old_picture_p, new_picture)             \
-  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) (old_picture_p), \
-      (GstVaapiMiniObject *) (new_picture))
+#define gst_vaapi_picture_replace(old_picture_ptr, new_picture) \
+  gst_vaapi_codec_object_replace (old_picture_ptr, new_picture)
 
 /* ------------------------------------------------------------------------- */
 /* --- Slices                                                            --- */

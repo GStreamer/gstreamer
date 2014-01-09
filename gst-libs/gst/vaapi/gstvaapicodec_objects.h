@@ -104,6 +104,16 @@ gst_vaapi_codec_object_new (const GstVaapiCodecObjectClass * object_class,
     GstVaapiCodecBase * codec, gconstpointer param, guint param_size,
     gconstpointer data, guint data_size, guint flags);
 
+#define gst_vaapi_codec_object_ref(object) \
+  ((gpointer) gst_vaapi_mini_object_ref (GST_VAAPI_MINI_OBJECT (object)))
+
+#define gst_vaapi_codec_object_unref(object) \
+  gst_vaapi_mini_object_unref (GST_VAAPI_MINI_OBJECT (object))
+
+#define gst_vaapi_codec_object_replace(old_object_ptr, new_object) \
+  gst_vaapi_mini_object_replace ((GstVaapiMiniObject **) (old_object_ptr), \
+      GST_VAAPI_MINI_OBJECT (new_object))
+
 /* ------------------------------------------------------------------------- */
 /* --- Inverse Quantization Matrices                                     --- */
 /* ------------------------------------------------------------------------- */

@@ -73,16 +73,17 @@ gst_vaapi_codec_object_new (const GstVaapiCodecObjectClass * object_class,
     GstVaapiCodecBase * codec, gconstpointer param, guint param_size,
     gconstpointer data, guint data_size, guint flags)
 {
-  GstVaapiMiniObject *obj;
-  GstVaapiCodecObject *va_obj;
+  GstVaapiCodecObject *obj;
   GstVaapiCodecObjectConstructorArgs args;
 
-  obj = gst_vaapi_mini_object_new0 (&object_class->parent_class);
+  obj =
+      (GstVaapiCodecObject *)
+      gst_vaapi_mini_object_new0 (GST_VAAPI_MINI_OBJECT_CLASS (object_class));
   if (!obj)
     return NULL;
 
-  va_obj = GST_VAAPI_CODEC_OBJECT (obj);
-  va_obj->codec = codec;
+  obj = GST_VAAPI_CODEC_OBJECT (obj);
+  obj->codec = codec;
 
   args.param = param;
   args.param_size = param_size;
@@ -90,10 +91,10 @@ gst_vaapi_codec_object_new (const GstVaapiCodecObjectClass * object_class,
   args.data_size = data_size;
   args.flags = flags;
 
-  if (gst_vaapi_codec_object_create (va_obj, &args))
-    return va_obj;
+  if (gst_vaapi_codec_object_create (obj, &args))
+    return obj;
 
-  gst_vaapi_mini_object_unref (obj);
+  gst_vaapi_codec_object_unref (obj);
   return NULL;
 }
 
