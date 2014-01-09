@@ -29,8 +29,8 @@
  * Parse a .aiff file into raw or compressed audio.
  * </para>
  * <para>
- * AIFFparse supports both push and pull mode operations, making it possible to
- * stream from a network source.
+ * The aiffparse element supports both push and pull mode operations, making it
+ * possible to stream from a network source.
  * </para>
  * <title>Example launch line</title>
  * <para>
@@ -42,7 +42,7 @@
  * </para>
  * <para>
  * <programlisting>
- * gst-launch gnomevfssrc location=http://www.example.org/sine.aiff ! queue ! aiffparse ! audioconvert ! alsasink
+ * gst-launch souphhtpsrc location=http://www.example.org/sine.aiff ! queue ! aiffparse ! audioconvert ! alsasink
  * </programlisting>
  * Stream data from a network url.
  * </para>
@@ -549,7 +549,8 @@ gst_aiff_parse_peek_chunk_info (GstAiffParse * aiff, guint32 * tag,
   *size = GST_READ_UINT32_BE (data + 4);
   gst_adapter_unmap (aiff->adapter);
 
-  GST_DEBUG ("Next chunk size is %d bytes, type %" GST_FOURCC_FORMAT, *size,
+  GST_DEBUG_OBJECT (aiff,
+      "Next chunk size is %d bytes, type %" GST_FOURCC_FORMAT, *size,
       GST_FOURCC_ARGS (*tag));
 
   return TRUE;
@@ -574,14 +575,14 @@ gst_aiff_parse_peek_chunk (GstAiffParse * aiff, guint32 * tag, guint32 * size)
   if (!gst_aiff_parse_peek_chunk_info (aiff, tag, size))
     return FALSE;
 
-  GST_DEBUG ("Need to peek chunk of %d bytes", *size);
+  GST_DEBUG_OBJECT (aiff, "Need to peek chunk of %d bytes", *size);
   peek_size = (*size + 1) & ~1;
 
   available = gst_adapter_available (aiff->adapter);
   if (available >= (8 + peek_size)) {
     return TRUE;
   } else {
-    GST_LOG ("but only %u bytes available now", available);
+    GST_LOG_OBJECT (aiff, "but only %u bytes available now", available);
     return FALSE;
   }
 }
@@ -631,7 +632,7 @@ gst_aiff_parse_ignore_chunk (GstAiffParse * aiff, guint32 tag, guint32 size)
     if (!gst_aiff_parse_peek_chunk (aiff, &tag, &size))
       return;
   }
-  GST_DEBUG_OBJECT (aiff, "Ignoring tag %" GST_FOURCC_FORMAT,
+  GST_WARNING_OBJECT (aiff, "Ignoring tag %" GST_FOURCC_FORMAT,
       GST_FOURCC_ARGS (tag));
   flush = 8 + ((size + 1) & ~1);
   aiff->offset += flush;
@@ -1140,7 +1141,7 @@ gst_aiff_parse_parse_stream_init (GstAiffParse * aiff)
     /* _take flushes the data */
     tmp = gst_adapter_take_buffer (aiff->adapter, 12);
 
-    GST_DEBUG ("Parsing aiff header");
+    GST_DEBUG_OBJECT (aiff, "Parsing aiff header");
     if (!gst_aiff_parse_parse_file_header (aiff, tmp))
       return GST_FLOW_ERROR;
 
