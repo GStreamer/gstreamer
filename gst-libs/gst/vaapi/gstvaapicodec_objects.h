@@ -43,27 +43,29 @@ typedef struct _GstVaapiHuffmanTable            GstVaapiHuffmanTable;
 
 /* XXX: remove when a common base class for decoder and encoder is available */
 #define GST_VAAPI_CODEC_BASE(obj) \
-    ((GstVaapiCodecBase *)(obj))
+  ((GstVaapiCodecBase *) (obj))
 
 #define GST_VAAPI_CODEC_OBJECT(obj) \
-    ((GstVaapiCodecObject *)(obj))
+  ((GstVaapiCodecObject *) (obj))
 
-enum {
-    GST_VAAPI_CODEC_OBJECT_FLAG_CONSTRUCTED = (1 << 0),
-    GST_VAAPI_CODEC_OBJECT_FLAG_LAST        = (1 << 1)
+enum
+{
+  GST_VAAPI_CODEC_OBJECT_FLAG_CONSTRUCTED = (1 << 0),
+  GST_VAAPI_CODEC_OBJECT_FLAG_LAST        = (1 << 1)
 };
 
-typedef struct {
-    gconstpointer               param;
-    guint                       param_size;
-    gconstpointer               data;
-    guint                       data_size;
-    guint                       flags;
+typedef struct
+{
+  gconstpointer param;
+  guint param_size;
+  gconstpointer data;
+  guint data_size;
+  guint flags;
 } GstVaapiCodecObjectConstructorArgs;
 
 typedef gboolean
-(*GstVaapiCodecObjectCreateFunc)(GstVaapiCodecObject *object,
-    const GstVaapiCodecObjectConstructorArgs *args);
+(*GstVaapiCodecObjectCreateFunc)(GstVaapiCodecObject * object,
+    const GstVaapiCodecObjectConstructorArgs * args);
 
 typedef GDestroyNotify GstVaapiCodecObjectDestroyFunc;
 
@@ -72,10 +74,11 @@ typedef GDestroyNotify GstVaapiCodecObjectDestroyFunc;
  *
  * A #GstVaapiMiniObject holding the base codec object data
  */
-struct _GstVaapiCodecObject {
-    /*< private >*/
-    GstVaapiMiniObject          parent_instance;
-    GstVaapiCodecBase          *codec;
+struct _GstVaapiCodecObject
+{
+  /*< private >*/
+  GstVaapiMiniObject parent_instance;
+  GstVaapiCodecBase *codec;
 };
 
 /**
@@ -83,21 +86,22 @@ struct _GstVaapiCodecObject {
  *
  * The #GstVaapiCodecObject base class.
  */
-struct _GstVaapiCodecObjectClass {
-    /*< private >*/
-    GstVaapiMiniObjectClass parent_class;
+struct _GstVaapiCodecObjectClass
+{
+  /*< private >*/
+  GstVaapiMiniObjectClass parent_class;
 
-    GstVaapiCodecObjectCreateFunc create;
+  GstVaapiCodecObjectCreateFunc create;
 };
 
 G_GNUC_INTERNAL
 const GstVaapiCodecObjectClass *
-gst_vaapi_codec_object_get_class(GstVaapiCodecObject *object) G_GNUC_CONST;
+gst_vaapi_codec_object_get_class (GstVaapiCodecObject * object) G_GNUC_CONST;
 
 G_GNUC_INTERNAL
 GstVaapiCodecObject *
-gst_vaapi_codec_object_new(const GstVaapiCodecObjectClass *object_class,
-    GstVaapiCodecBase *codec, gconstpointer param, guint param_size,
+gst_vaapi_codec_object_new (const GstVaapiCodecObjectClass * object_class,
+    GstVaapiCodecBase * codec, gconstpointer param, guint param_size,
     gconstpointer data, guint data_size, guint flags);
 
 /* ------------------------------------------------------------------------- */
@@ -105,120 +109,116 @@ gst_vaapi_codec_object_new(const GstVaapiCodecObjectClass *object_class,
 /* ------------------------------------------------------------------------- */
 
 #define GST_VAAPI_IQ_MATRIX_CAST(obj) \
-    ((GstVaapiIqMatrix *)(obj))
+  ((GstVaapiIqMatrix *) (obj))
 
 /**
  * GstVaapiIqMatrix:
  *
  * A #GstVaapiCodecObject holding an inverse quantization matrix parameter.
  */
-struct _GstVaapiIqMatrix {
-    /*< private >*/
-    GstVaapiCodecObject         parent_instance;
-    VABufferID                  param_id;
+struct _GstVaapiIqMatrix
+{
+  /*< private >*/
+  GstVaapiCodecObject parent_instance;
+  VABufferID param_id;
 
-    /*< public >*/
-    gpointer                    param;
+  /*< public >*/
+  gpointer param;
 };
 
 G_GNUC_INTERNAL
 GstVaapiIqMatrix *
-gst_vaapi_iq_matrix_new(
-    GstVaapiDecoder *decoder,
-    gconstpointer    param,
-    guint            param_size
-);
+gst_vaapi_iq_matrix_new (GstVaapiDecoder * decoder, gconstpointer param,
+    guint param_size);
 
 /* ------------------------------------------------------------------------- */
 /* --- VC-1 Bit Planes                                                   --- */
 /* ------------------------------------------------------------------------- */
 
 #define GST_VAAPI_BITPLANE_CAST(obj) \
-    ((GstVaapiBitPlane *)(obj))
+  ((GstVaapiBitPlane *) (obj))
 
 /**
  * GstVaapiBitPlane:
  *
  * A #GstVaapiCodecObject holding a VC-1 bit plane parameter.
  */
-struct _GstVaapiBitPlane {
-    /*< private >*/
-    GstVaapiCodecObject         parent_instance;
-    VABufferID                  data_id;
+struct _GstVaapiBitPlane
+{
+  /*< private >*/
+  GstVaapiCodecObject parent_instance;
+  VABufferID data_id;
 
-    /*< public >*/
-    guint8                     *data;
+  /*< public >*/
+  guint8 *data;
 };
 
 G_GNUC_INTERNAL
 GstVaapiBitPlane *
-gst_vaapi_bitplane_new(GstVaapiDecoder *decoder, guint8 *data, guint data_size);
+gst_vaapi_bitplane_new (GstVaapiDecoder * decoder, guint8 * data,
+    guint data_size);
 
 /* ------------------------------------------------------------------------- */
 /* --- JPEG Huffman Tables                                               --- */
 /* ------------------------------------------------------------------------- */
 
 #define GST_VAAPI_HUFFMAN_TABLE_CAST(obj) \
-    ((GstVaapiHuffmanTable *)(obj))
+  ((GstVaapiHuffmanTable *) (obj))
 
 /**
  * GstVaapiHuffmanTable:
  *
  * A #GstVaapiCodecObject holding huffman table.
  */
-struct _GstVaapiHuffmanTable {
-    /*< private >*/
-    GstVaapiCodecObject         parent_instance;
-    VABufferID                  param_id;
+struct _GstVaapiHuffmanTable
+{
+  /*< private >*/
+  GstVaapiCodecObject parent_instance;
+  VABufferID param_id;
 
-    /*< public >*/
-    gpointer                    param;
+  /*< public >*/
+  gpointer param;
 };
 
 G_GNUC_INTERNAL
 GstVaapiHuffmanTable *
-gst_vaapi_huffman_table_new(
-    GstVaapiDecoder *decoder,
-    guint8          *data,
-    guint            data_size
-);
+gst_vaapi_huffman_table_new (GstVaapiDecoder * decoder, guint8 * data,
+    guint data_size);
 
 /* ------------------------------------------------------------------------- */
 /* --- Helpers to create codec-dependent objects                         --- */
 /* ------------------------------------------------------------------------- */
 
-#define GST_VAAPI_CODEC_DEFINE_TYPE(type, prefix)       \
-G_GNUC_INTERNAL                                         \
-void                                                    \
-prefix##_destroy(type *);                               \
-                                                        \
-G_GNUC_INTERNAL                                         \
-gboolean                                                \
-prefix##_create(                                        \
-    type *,                                             \
-    const GstVaapiCodecObjectConstructorArgs *args      \
-);                                                      \
-                                                        \
-static const GstVaapiCodecObjectClass type##Class = {   \
-    .parent_class = {                                   \
-        .size = sizeof(type),                           \
-        .finalize = (GstVaapiCodecObjectDestroyFunc)    \
-            prefix##_destroy                            \
-    },                                                  \
-    .create = (GstVaapiCodecObjectCreateFunc)           \
-        prefix##_create,                                \
+#define GST_VAAPI_CODEC_DEFINE_TYPE(type, prefix)                       \
+G_GNUC_INTERNAL                                                         \
+void                                                                    \
+G_PASTE (prefix, _destroy) (type *);                                    \
+                                                                        \
+G_GNUC_INTERNAL                                                         \
+gboolean                                                                \
+G_PASTE (prefix, _create) (type *,                                      \
+    const GstVaapiCodecObjectConstructorArgs * args);                   \
+                                                                        \
+static const GstVaapiCodecObjectClass G_PASTE (type, Class) = {         \
+  .parent_class = {                                                     \
+    .size = sizeof (type),                                              \
+    .finalize = (GstVaapiCodecObjectDestroyFunc)                        \
+        G_PASTE (prefix, _destroy)                                      \
+  },                                                                    \
+  .create = (GstVaapiCodecObjectCreateFunc)                             \
+      G_PASTE (prefix, _create),                                        \
 }
 
 #define GST_VAAPI_IQ_MATRIX_NEW(codec, decoder)                         \
-    gst_vaapi_iq_matrix_new(GST_VAAPI_DECODER_CAST(decoder),            \
-                            NULL, sizeof(VAIQMatrixBuffer##codec))
+  gst_vaapi_iq_matrix_new (GST_VAAPI_DECODER_CAST (decoder),            \
+      NULL, sizeof (G_PASTE (VAIQMatrixBuffer, codec)))
 
 #define GST_VAAPI_BITPLANE_NEW(decoder, size) \
-    gst_vaapi_bitplane_new(GST_VAAPI_DECODER_CAST(decoder), NULL, size)
+  gst_vaapi_bitplane_new (GST_VAAPI_DECODER_CAST (decoder), NULL, size)
 
 #define GST_VAAPI_HUFFMAN_TABLE_NEW(codec, decoder)                     \
-      gst_vaapi_huffman_table_new(GST_VAAPI_DECODER_CAST(decoder),      \
-                            NULL, sizeof(VAHuffmanTableBuffer##codec))
+  gst_vaapi_huffman_table_new (GST_VAAPI_DECODER_CAST (decoder),        \
+      NULL, sizeof (G_PASTE (VAHuffmanTableBuffer, codec)))
 
 G_END_DECLS
 

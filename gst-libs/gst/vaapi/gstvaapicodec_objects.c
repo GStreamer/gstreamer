@@ -41,60 +41,60 @@
     gst_vaapi_codec_object_get_class(object)
 
 const GstVaapiCodecObjectClass *
-gst_vaapi_codec_object_get_class(GstVaapiCodecObject *object)
+gst_vaapi_codec_object_get_class (GstVaapiCodecObject * object)
 {
-    return (const GstVaapiCodecObjectClass *)
-        GST_VAAPI_MINI_OBJECT_GET_CLASS(object);
+  return (const GstVaapiCodecObjectClass *)
+      GST_VAAPI_MINI_OBJECT_GET_CLASS (object);
 }
 
 static gboolean
-gst_vaapi_codec_object_create(GstVaapiCodecObject *object,
-    const GstVaapiCodecObjectConstructorArgs *args)
+gst_vaapi_codec_object_create (GstVaapiCodecObject * object,
+    const GstVaapiCodecObjectConstructorArgs * args)
 {
-    const GstVaapiCodecObjectClass *klass;
+  const GstVaapiCodecObjectClass *klass;
 
-    g_return_val_if_fail(args->param_size > 0, FALSE);
+  g_return_val_if_fail (args->param_size > 0, FALSE);
 
-    if (GST_VAAPI_MINI_OBJECT_FLAG_IS_SET(object,
-            GST_VAAPI_CODEC_OBJECT_FLAG_CONSTRUCTED))
-        return TRUE;
-
-    klass = GST_VAAPI_CODEC_OBJECT_GET_CLASS(object);
-    if (!klass->create || !klass->create(object, args))
-        return FALSE;
-
-    GST_VAAPI_MINI_OBJECT_FLAG_SET(object,
-        GST_VAAPI_CODEC_OBJECT_FLAG_CONSTRUCTED);
+  if (GST_VAAPI_MINI_OBJECT_FLAG_IS_SET (object,
+          GST_VAAPI_CODEC_OBJECT_FLAG_CONSTRUCTED))
     return TRUE;
+
+  klass = GST_VAAPI_CODEC_OBJECT_GET_CLASS (object);
+  if (!klass->create || !klass->create (object, args))
+    return FALSE;
+
+  GST_VAAPI_MINI_OBJECT_FLAG_SET (object,
+      GST_VAAPI_CODEC_OBJECT_FLAG_CONSTRUCTED);
+  return TRUE;
 }
 
 GstVaapiCodecObject *
-gst_vaapi_codec_object_new(const GstVaapiCodecObjectClass *object_class,
-    GstVaapiCodecBase *codec, gconstpointer param, guint param_size,
+gst_vaapi_codec_object_new (const GstVaapiCodecObjectClass * object_class,
+    GstVaapiCodecBase * codec, gconstpointer param, guint param_size,
     gconstpointer data, guint data_size, guint flags)
 {
-    GstVaapiMiniObject *obj;
-    GstVaapiCodecObject *va_obj;
-    GstVaapiCodecObjectConstructorArgs args;
+  GstVaapiMiniObject *obj;
+  GstVaapiCodecObject *va_obj;
+  GstVaapiCodecObjectConstructorArgs args;
 
-    obj = gst_vaapi_mini_object_new0(&object_class->parent_class);
-    if (!obj)
-        return NULL;
-
-    va_obj = GST_VAAPI_CODEC_OBJECT(obj);
-    va_obj->codec = codec;
-
-    args.param      = param;
-    args.param_size = param_size;
-    args.data       = data;
-    args.data_size  = data_size;
-    args.flags      = flags;
-
-    if (gst_vaapi_codec_object_create(va_obj, &args))
-        return va_obj;
-
-    gst_vaapi_mini_object_unref(obj);
+  obj = gst_vaapi_mini_object_new0 (&object_class->parent_class);
+  if (!obj)
     return NULL;
+
+  va_obj = GST_VAAPI_CODEC_OBJECT (obj);
+  va_obj->codec = codec;
+
+  args.param = param;
+  args.param_size = param_size;
+  args.data = data;
+  args.data_size = data_size;
+  args.flags = flags;
+
+  if (gst_vaapi_codec_object_create (va_obj, &args))
+    return va_obj;
+
+  gst_vaapi_mini_object_unref (obj);
+  return NULL;
 }
 
 #define GET_DECODER(obj)    GST_VAAPI_DECODER_CAST((obj)->parent_instance.codec)
@@ -105,97 +105,73 @@ gst_vaapi_codec_object_new(const GstVaapiCodecObjectClass *object_class,
 /* --- Inverse Quantization Matrices                                     --- */
 /* ------------------------------------------------------------------------- */
 
-GST_VAAPI_CODEC_DEFINE_TYPE(GstVaapiIqMatrix, gst_vaapi_iq_matrix);
+GST_VAAPI_CODEC_DEFINE_TYPE (GstVaapiIqMatrix, gst_vaapi_iq_matrix);
 
 void
-gst_vaapi_iq_matrix_destroy(GstVaapiIqMatrix *iq_matrix)
+gst_vaapi_iq_matrix_destroy (GstVaapiIqMatrix * iq_matrix)
 {
-    vaapi_destroy_buffer(GET_VA_DISPLAY(iq_matrix), &iq_matrix->param_id);
-    iq_matrix->param = NULL;
+  vaapi_destroy_buffer (GET_VA_DISPLAY (iq_matrix), &iq_matrix->param_id);
+  iq_matrix->param = NULL;
 }
 
 gboolean
-gst_vaapi_iq_matrix_create(
-    GstVaapiIqMatrix                         *iq_matrix,
-    const GstVaapiCodecObjectConstructorArgs *args
-)
+gst_vaapi_iq_matrix_create (GstVaapiIqMatrix * iq_matrix,
+    const GstVaapiCodecObjectConstructorArgs * args)
 {
-    iq_matrix->param_id = VA_INVALID_ID;
-    return vaapi_create_buffer(GET_VA_DISPLAY(iq_matrix),
-                               GET_VA_CONTEXT(iq_matrix),
-                               VAIQMatrixBufferType,
-                               args->param_size,
-                               args->param,
-                               &iq_matrix->param_id,
-                               &iq_matrix->param);
+  iq_matrix->param_id = VA_INVALID_ID;
+  return vaapi_create_buffer (GET_VA_DISPLAY (iq_matrix),
+      GET_VA_CONTEXT (iq_matrix), VAIQMatrixBufferType,
+      args->param_size, args->param, &iq_matrix->param_id, &iq_matrix->param);
 }
 
 GstVaapiIqMatrix *
-gst_vaapi_iq_matrix_new(
-    GstVaapiDecoder *decoder,
-    gconstpointer    param,
-    guint            param_size
-)
+gst_vaapi_iq_matrix_new (GstVaapiDecoder * decoder,
+    gconstpointer param, guint param_size)
 {
-    GstVaapiCodecObject *object;
+  GstVaapiCodecObject *object;
 
-    object = gst_vaapi_codec_object_new(
-        &GstVaapiIqMatrixClass,
-        GST_VAAPI_CODEC_BASE(decoder),
-        param, param_size,
-        NULL, 0,
-        0
-    );
-    if (!object)
-        return NULL;
-    return GST_VAAPI_IQ_MATRIX_CAST(object);
+  object = gst_vaapi_codec_object_new (&GstVaapiIqMatrixClass,
+      GST_VAAPI_CODEC_BASE (decoder), param, param_size, NULL, 0, 0);
+  if (!object)
+    return NULL;
+  return GST_VAAPI_IQ_MATRIX_CAST (object);
 }
 
 /* ------------------------------------------------------------------------- */
 /* --- VC-1 Bit Planes                                                   --- */
 /* ------------------------------------------------------------------------- */
 
-GST_VAAPI_CODEC_DEFINE_TYPE(GstVaapiBitPlane, gst_vaapi_bitplane);
+GST_VAAPI_CODEC_DEFINE_TYPE (GstVaapiBitPlane, gst_vaapi_bitplane);
 
 void
-gst_vaapi_bitplane_destroy(GstVaapiBitPlane *bitplane)
+gst_vaapi_bitplane_destroy (GstVaapiBitPlane * bitplane)
 {
-    vaapi_destroy_buffer(GET_VA_DISPLAY(bitplane), &bitplane->data_id);
-    bitplane->data = NULL;
+  vaapi_destroy_buffer (GET_VA_DISPLAY (bitplane), &bitplane->data_id);
+  bitplane->data = NULL;
 }
 
 gboolean
-gst_vaapi_bitplane_create(
-    GstVaapiBitPlane                         *bitplane,
-    const GstVaapiCodecObjectConstructorArgs *args
-)
+gst_vaapi_bitplane_create (GstVaapiBitPlane * bitplane,
+    const GstVaapiCodecObjectConstructorArgs * args)
 {
-    bitplane->data_id = VA_INVALID_ID;
-    return vaapi_create_buffer(GET_VA_DISPLAY(bitplane),
-                               GET_VA_CONTEXT(bitplane),
-                               VABitPlaneBufferType,
-                               args->param_size,
-                               args->param,
-                               &bitplane->data_id,
-                               (void **)&bitplane->data);
+  bitplane->data_id = VA_INVALID_ID;
+  return vaapi_create_buffer (GET_VA_DISPLAY (bitplane),
+      GET_VA_CONTEXT (bitplane), VABitPlaneBufferType, args->param_size,
+      args->param, &bitplane->data_id, (void **) &bitplane->data);
 }
 
 
 GstVaapiBitPlane *
-gst_vaapi_bitplane_new(GstVaapiDecoder *decoder, guint8 *data, guint data_size)
+gst_vaapi_bitplane_new (GstVaapiDecoder * decoder, guint8 * data,
+    guint data_size)
 {
-    GstVaapiCodecObject *object;
+  GstVaapiCodecObject *object;
 
-    object = gst_vaapi_codec_object_new(
-        &GstVaapiBitPlaneClass,
-        GST_VAAPI_CODEC_BASE(decoder),
-        data, data_size,
-        NULL, 0,
-        0
-    );
-    if (!object)
-        return NULL;
-    return GST_VAAPI_BITPLANE_CAST(object);
+  object = gst_vaapi_codec_object_new (&GstVaapiBitPlaneClass,
+      GST_VAAPI_CODEC_BASE (decoder), data, data_size, NULL, 0, 0);
+  if (!object)
+    return NULL;
+  return GST_VAAPI_BITPLANE_CAST (object);
 }
 
 /* ------------------------------------------------------------------------- */
@@ -203,49 +179,35 @@ gst_vaapi_bitplane_new(GstVaapiDecoder *decoder, guint8 *data, guint data_size)
 /* ------------------------------------------------------------------------- */
 
 #if USE_JPEG_DECODER
-GST_VAAPI_CODEC_DEFINE_TYPE(GstVaapiHuffmanTable, gst_vaapi_huffman_table);
+GST_VAAPI_CODEC_DEFINE_TYPE (GstVaapiHuffmanTable, gst_vaapi_huffman_table);
 
 void
-gst_vaapi_huffman_table_destroy(GstVaapiHuffmanTable *huf_table)
+gst_vaapi_huffman_table_destroy (GstVaapiHuffmanTable * huf_table)
 {
-    vaapi_destroy_buffer(GET_VA_DISPLAY(huf_table), &huf_table->param_id);
-    huf_table->param = NULL;
+  vaapi_destroy_buffer (GET_VA_DISPLAY (huf_table), &huf_table->param_id);
+  huf_table->param = NULL;
 }
 
 gboolean
-gst_vaapi_huffman_table_create(
-    GstVaapiHuffmanTable                     *huf_table,
-    const GstVaapiCodecObjectConstructorArgs *args
-)
+gst_vaapi_huffman_table_create (GstVaapiHuffmanTable * huf_table,
+    const GstVaapiCodecObjectConstructorArgs * args)
 {
-    huf_table->param_id = VA_INVALID_ID;
-    return vaapi_create_buffer(GET_VA_DISPLAY(huf_table),
-                               GET_VA_CONTEXT(huf_table),
-                               VAHuffmanTableBufferType,
-                               args->param_size,
-                               args->param,
-                               &huf_table->param_id,
-                               (void **)&huf_table->param);
+  huf_table->param_id = VA_INVALID_ID;
+  return vaapi_create_buffer (GET_VA_DISPLAY (huf_table),
+      GET_VA_CONTEXT (huf_table), VAHuffmanTableBufferType, args->param_size,
+      args->param, &huf_table->param_id, (void **) &huf_table->param);
 }
 
 GstVaapiHuffmanTable *
-gst_vaapi_huffman_table_new(
-    GstVaapiDecoder *decoder,
-    guint8          *data,
-    guint            data_size
-)
+gst_vaapi_huffman_table_new (GstVaapiDecoder * decoder,
+    guint8 * data, guint data_size)
 {
-    GstVaapiCodecObject *object;
+  GstVaapiCodecObject *object;
 
-    object = gst_vaapi_codec_object_new(
-        &GstVaapiHuffmanTableClass,
-        GST_VAAPI_CODEC_BASE(decoder),
-        data, data_size,
-        NULL, 0,
-        0
-    );
-    if (!object)
-        return NULL;
-    return GST_VAAPI_HUFFMAN_TABLE_CAST(object);
+  object = gst_vaapi_codec_object_new (&GstVaapiHuffmanTableClass,
+      GST_VAAPI_CODEC_BASE (decoder), data, data_size, NULL, 0, 0);
+  if (!object)
+    return NULL;
+  return GST_VAAPI_HUFFMAN_TABLE_CAST (object);
 }
 #endif
