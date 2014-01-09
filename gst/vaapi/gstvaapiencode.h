@@ -50,14 +50,6 @@ struct _GstVaapiEncode
   /*< private >*/
   GstVaapiPluginBase parent_instance;
 
-  GstPad *sinkpad;
-  GstCaps *sinkpad_caps;
-  GstPadQueryFunction sinkpad_query;
-
-  GstPad *srcpad;
-  GstCaps *srcpad_caps;
-  GstPadQueryFunction srcpad_query;
-
   GstVaapiEncoder *encoder;
   GstVideoCodecState *input_state;
   gboolean input_state_changed;

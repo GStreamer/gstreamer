@@ -132,7 +132,8 @@ gst_vaapiencode_h264_get_caps (GstVaapiEncode * base_encode)
   caps = gst_caps_from_string (GST_CODEC_CAPS);
 
   /* Check whether "stream-format" is avcC mode */
-  allowed_caps = gst_pad_get_allowed_caps (base_encode->srcpad);
+  allowed_caps =
+      gst_pad_get_allowed_caps (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
   if (allowed_caps) {
     const char *stream_format = NULL;
     GstStructure *structure;

@@ -70,22 +70,22 @@ ensure_uploader (GstVaapiEncode * encode)
 static gboolean
 gst_vaapiencode_query (GST_PAD_QUERY_FUNCTION_ARGS)
 {
-  GstVaapiEncode *const encode =
-      GST_VAAPIENCODE_CAST (gst_pad_get_parent_element (pad));
+  GstVaapiPluginBase *const plugin =
+      GST_VAAPI_PLUGIN_BASE (gst_pad_get_parent_element (pad));
   gboolean success;
 
-  GST_INFO_OBJECT (encode, "query type %s", GST_QUERY_TYPE_NAME (query));
+  GST_INFO_OBJECT (plugin, "query type %s", GST_QUERY_TYPE_NAME (query));
 
-  if (gst_vaapi_reply_to_query (query, GST_VAAPI_PLUGIN_BASE_DISPLAY (encode)))
+  if (gst_vaapi_reply_to_query (query, plugin->display))
     success = TRUE;
   else if (GST_PAD_IS_SINK (pad))
-    success = GST_PAD_QUERY_FUNCTION_CALL (encode->sinkpad_query,
-        encode->sinkpad, parent, query);
+    success = GST_PAD_QUERY_FUNCTION_CALL (plugin->sinkpad_query,
+        plugin->sinkpad, parent, query);
   else
-    success = GST_PAD_QUERY_FUNCTION_CALL (encode->srcpad_query,
-        encode->srcpad, parent, query);
+    success = GST_PAD_QUERY_FUNCTION_CALL (plugin->srcpad_query,
+        plugin->srcpad, parent, query);
 
-  gst_object_unref (encode);
+  gst_object_unref (plugin);
   return success;
 }
 
@@ -334,25 +334,25 @@ gst_vaapiencode_buffer_loop (GstVaapiEncode * encode)
   if (ret == GST_FLOW_OK || ret == GST_VAAPI_ENCODE_FLOW_TIMEOUT)
     return;
 
-  gst_pad_pause_task (encode->srcpad);
+  gst_pad_pause_task (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
 }
 
 static GstCaps *
 gst_vaapiencode_get_caps_impl (GstVideoEncoder * venc)
 {
-  GstVaapiEncode *const encode = GST_VAAPIENCODE_CAST (venc);
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (venc);
   GstCaps *caps;
 
-  if (encode->sinkpad_caps)
-    caps = gst_caps_ref (encode->sinkpad_caps);
+  if (plugin->sinkpad_caps)
+    caps = gst_caps_ref (plugin->sinkpad_caps);
   else {
 #if GST_CHECK_VERSION(1,0,0)
-    caps = gst_pad_get_pad_template_caps (encode->sinkpad);
+    caps = gst_pad_get_pad_template_caps (plugin->sinkpad);
 #else
     caps = gst_caps_from_string (GST_VAAPI_SURFACE_CAPS);
 
-    if (caps && ensure_uploader (encode)) {
-      GstCaps *const yuv_caps = GST_VAAPI_PLUGIN_BASE_UPLOADER_CAPS (encode);
+    if (caps && ensure_uploader (GST_VAAPIENCODE_CAST (plugin))) {
+      GstCaps *const yuv_caps = GST_VAAPI_PLUGIN_BASE_UPLOADER_CAPS (plugin);
       if (yuv_caps) {
         caps = gst_caps_make_writable (caps);
         gst_caps_append (caps, gst_caps_copy (yuv_caps));
@@ -394,8 +394,6 @@ gst_vaapiencode_destroy (GstVaapiEncode * encode)
     encode->output_state = NULL;
   }
   gst_vaapi_encoder_replace (&encode->encoder, NULL);
-  gst_caps_replace (&encode->sinkpad_caps, NULL);
-  gst_caps_replace (&encode->srcpad_caps, NULL);
   return TRUE;
 }
 
@@ -456,24 +454,17 @@ gst_vaapiencode_close (GstVideoEncoder * venc)
   return TRUE;
 }
 
-static inline gboolean
-gst_vaapiencode_update_sink_caps (GstVaapiEncode * encode,
-    GstVideoCodecState * state)
-{
-  gst_caps_replace (&encode->sinkpad_caps, state->caps);
-  return TRUE;
-}
-
 static gboolean
 set_codec_state (GstVaapiEncode * encode, GstVideoCodecState * state)
 {
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (encode);
   GstCaps *out_caps, *allowed_caps, *template_caps, *intersect;
 
   g_return_val_if_fail (encode->encoder, FALSE);
 
   /* get peer caps for stream-format avc/bytestream, codec_data */
-  template_caps = gst_pad_get_pad_template_caps (encode->srcpad);
-  allowed_caps = gst_pad_get_allowed_caps (encode->srcpad);
+  template_caps = gst_pad_get_pad_template_caps (plugin->srcpad);
+  allowed_caps = gst_pad_get_allowed_caps (plugin->srcpad);
   intersect = gst_caps_intersect (template_caps, allowed_caps);
   gst_caps_unref (template_caps);
   gst_caps_unref (allowed_caps);
@@ -490,7 +481,6 @@ set_codec_state (GstVaapiEncode * encode, GstVideoCodecState * state)
   }
 
   GST_DEBUG ("set srcpad caps to: %" GST_PTR_FORMAT, out_caps);
-  gst_caps_replace (&encode->srcpad_caps, out_caps);
   gst_caps_unref (out_caps);
   return TRUE;
 }
@@ -507,9 +497,6 @@ gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
   if (!set_codec_state (encode, state))
     return FALSE;
 
-  if (!gst_vaapiencode_update_sink_caps (encode, state))
-    return FALSE;
-
   if (!gst_vaapi_plugin_base_set_caps (GST_VAAPI_PLUGIN_BASE (encode),
           state->caps, NULL))
     return FALSE;
@@ -519,7 +506,7 @@ gst_vaapiencode_set_format (GstVideoEncoder * venc, GstVideoCodecState * state)
   encode->input_state = gst_video_codec_state_ref (state);
   encode->input_state_changed = TRUE;
 
-  return gst_pad_start_task (encode->srcpad,
+  return gst_pad_start_task (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode),
       (GstTaskFunction) gst_vaapiencode_buffer_loop, encode, NULL);
 }
 
@@ -603,7 +590,7 @@ gst_vaapiencode_finish (GstVideoEncoder * venc)
   status = gst_vaapi_encoder_flush (encode->encoder);
 
   GST_VIDEO_ENCODER_STREAM_UNLOCK (encode);
-  gst_pad_stop_task (encode->srcpad);
+  gst_pad_stop_task (GST_VAAPI_PLUGIN_BASE_SRC_PAD (encode));
   GST_VIDEO_ENCODER_STREAM_LOCK (encode);
 
   while (status == GST_VAAPI_ENCODER_STATUS_SUCCESS && ret == GST_FLOW_OK)
@@ -638,9 +625,6 @@ gst_vaapiencode_finalize (GObject * object)
     encode->prop_values = NULL;
   }
 
-  encode->sinkpad = NULL;
-  encode->srcpad = NULL;
-
   gst_vaapi_plugin_base_finalize (GST_VAAPI_PLUGIN_BASE (object));
   G_OBJECT_CLASS (gst_vaapiencode_parent_class)->finalize (object);
 }
@@ -648,19 +632,13 @@ gst_vaapiencode_finalize (GObject * object)
 static void
 gst_vaapiencode_init (GstVaapiEncode * encode)
 {
+  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (encode);
+
   gst_vaapi_plugin_base_init (GST_VAAPI_PLUGIN_BASE (encode), GST_CAT_DEFAULT);
 
-  /* sink pad */
-  encode->sinkpad = GST_VIDEO_ENCODER_SINK_PAD (encode);
-  encode->sinkpad_query = GST_PAD_QUERYFUNC (encode->sinkpad);
-  gst_pad_set_query_function (encode->sinkpad, gst_vaapiencode_query);
-
-  /* src pad */
-  encode->srcpad = GST_VIDEO_ENCODER_SRC_PAD (encode);
-  encode->srcpad_query = GST_PAD_QUERYFUNC (encode->srcpad);
-  gst_pad_set_query_function (encode->srcpad, gst_vaapiencode_query);
-
-  gst_pad_use_fixed_caps (encode->srcpad);
+  gst_pad_set_query_function (plugin->sinkpad, gst_vaapiencode_query);
+  gst_pad_set_query_function (plugin->srcpad, gst_vaapiencode_query);
+  gst_pad_use_fixed_caps (plugin->srcpad);
 }
 
 static void
