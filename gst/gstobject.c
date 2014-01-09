@@ -172,6 +172,15 @@ gst_object_class_init (GstObjectClass * klass)
       g_param_spec_string ("name", "Name", "The name of the object", NULL,
       G_PARAM_READWRITE | G_PARAM_CONSTRUCT | G_PARAM_STATIC_STRINGS);
 
+  /**
+   * GstObject:parent:
+   *
+   * The parent of the object. Please note, that when changing the 'parent'
+   * property, we don't emit #GObject::notify and #GstObject::deep-notify
+   * signals due to locking issues. In some cases one can use
+   * #GstBin::element-added or #GstBin::element-removed signals on the parent to
+   * achieve a similar effect.
+   */
   properties[PROP_PARENT] =
       g_param_spec_object ("parent", "Parent", "The parent of the object",
       GST_TYPE_OBJECT, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
@@ -691,9 +700,11 @@ gst_object_set_parent (GstObject * object, GstObject * parent)
   gst_object_ref_sink (object);
   GST_OBJECT_UNLOCK (object);
 
-  /* FIXME, this does not work, the deep notify takes the lock from the parent
-   * object and deadlocks when the parent holds its lock when calling this
-   * function (like _element_add_pad()) */
+  /* FIXME-2.0: this does not work, the deep notify takes the lock from the
+   * parent object and deadlocks when the parent holds its lock when calling
+   * this function (like _element_add_pad()), we need to use a GRecMutex
+   * for locking the parent instead.
+   */
   /* g_object_notify_by_pspec ((GObject *)object, properties[PROP_PARENT]); */
 
   return TRUE;
