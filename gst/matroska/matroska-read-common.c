@@ -1104,6 +1104,7 @@ gst_matroska_read_common_parse_chapter_edition (GstMatroskaReadCommon * common,
 
   for (l = subentries; l; l = l->next)
     gst_toc_entry_append_sub_entry (edition_info, l->data);
+  g_list_free (subentries);
 
   if (is_hidden == 0 && subentries != NULL && ret == GST_FLOW_OK)
     gst_toc_append_entry (toc, edition_info);
