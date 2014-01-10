@@ -170,6 +170,11 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
 
   switch (GST_MESSAGE_TYPE (msg)) {
     case GST_MESSAGE_ASYNC_DONE:
+
+      /* dump graph on preroll */
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (play->playbin),
+          GST_DEBUG_GRAPH_SHOW_ALL, "gst-play.async-done");
+
       g_print ("Prerolled.\r");
       if (play->missing != NULL && play_install_missing_plugins (play)) {
         g_print ("New plugins installed, trying again...\n");
@@ -238,6 +243,10 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
       GError *err;
       gchar *dbg = NULL;
 
+      /* dump graph on warning */
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (play->playbin),
+          GST_DEBUG_GRAPH_SHOW_ALL, "gst-play.warning");
+
       gst_message_parse_warning (msg, &err, &dbg);
       g_printerr ("WARNING %s\n", err->message);
       if (dbg != NULL)
@@ -249,6 +258,10 @@ play_bus_msg (GstBus * bus, GstMessage * msg, gpointer user_data)
     case GST_MESSAGE_ERROR:{
       GError *err;
       gchar *dbg;
+
+      /* dump graph on error */
+      GST_DEBUG_BIN_TO_DOT_FILE_WITH_TS (GST_BIN (play->playbin),
+          GST_DEBUG_GRAPH_SHOW_ALL, "gst-play.error");
 
       gst_message_parse_error (msg, &err, &dbg);
       g_printerr ("ERROR %s for %s\n", err->message, play->uris[play->cur_idx]);
