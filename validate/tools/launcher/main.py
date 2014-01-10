@@ -71,6 +71,9 @@ def main():
     parser.add_option("-n", "--no-color", dest="no_color",
                      action="store_true", default=False,
                      help="Set it to output no colored text in the terminal")
+    parser.add_option("-g", "--generate-media-info", dest="generate_info",
+                     action="store_true", default=False,
+                     help="Set it in order to generate the missing .media_infos files")
 
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
 
@@ -91,11 +94,6 @@ def main():
 
     tests_launcher.set_settings(options, args)
 
-    if options.list_tests:
-        for test in tests_launcher.tests:
-            printc(test)
-        return 0
-
     if options.paths == [os.path.join(DEFAULT_GST_QA_ASSETS, "medias")]:
         if os.path.exists(DEFAULT_GST_QA_ASSETS):
             launch_command("cd %s && git pull --rebase" % DEFAULT_GST_QA_ASSETS)
@@ -103,6 +101,12 @@ def main():
             launch_command("git clone %s %s" % (DEFAULT_GST_QA_ASSETS_REPO, DEFAULT_GST_QA_ASSETS))
 
     tests_launcher.list_tests()
+
+    if options.list_tests:
+        for test in tests_launcher.tests:
+            printc(test)
+        return 0
+
     tests_launcher.run_tests()
     tests_launcher.final_report()
 

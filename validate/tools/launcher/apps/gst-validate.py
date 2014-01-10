@@ -179,8 +179,10 @@ class GstValidateManager(TestsManager, Loggable):
                     return True
                 else:
                     args.extend(["--expected-results", media_info])
-            else:
+            elif self.options.generate_info:
                 args.extend(["--output-file", media_info])
+            else:
+                return True
 
             subprocess.check_output(args)
             self._check_discovering_info(media_info, uri)
@@ -233,7 +235,7 @@ class GstValidateManager(TestsManager, Loggable):
         if "__uri__" in pipe:
             for uri, config in self._list_uris():
                 npipe = pipe
-                if scenario in SEEKING_REQUIERED_SCENARIO:
+                if scenario != "none":
                     if config.getboolean("media-info", "seekable") is False:
                         self.debug("Do not run %s as %s does not support seeking",
                                    scenario, uri)
