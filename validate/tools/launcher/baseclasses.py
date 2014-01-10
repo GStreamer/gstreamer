@@ -171,6 +171,13 @@ class Test(Loggable):
 
         self.time_taken = time.time() - self._starting_time
 
+        self.reporter.out.seek(0)
+        self.reporter.out.write("=================\n"
+                                "Test name: %s\n"
+                                "Command: '%s'\n"
+                                "=================\n\n"
+                                % (self.classname, self.command))
+
 
 class GstValidateTest(Test):
 
