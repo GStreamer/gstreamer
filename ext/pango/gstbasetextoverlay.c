@@ -1795,6 +1795,9 @@ gst_base_text_overlay_text_event (GstPad * pad, GstObject * parent,
       GST_BASE_TEXT_OVERLAY_LOCK (overlay);
       GST_BASE_TEXT_OVERLAY_BROADCAST (overlay);
       GST_BASE_TEXT_OVERLAY_UNLOCK (overlay);
+
+      gst_event_unref (event);
+      ret = TRUE;
       break;
     }
     case GST_EVENT_FLUSH_STOP:
