@@ -82,14 +82,6 @@ typedef struct
   guint frame_num;
 } GstVaapiEncoderH264Ref;
 
-#define GST_VAAPI_H264_CAPS                                \
-        "video/x-h264, "                                   \
-        "framerate = (fraction) [0/1, MAX], "              \
-        "width = (int) [ 1, MAX ], "                       \
-        "height = (int) [ 1, MAX ], "                      \
-        "stream-format = (string) { avc, byte-stream }, "  \
-        "alignment = (string) { au } "
-
 typedef enum
 {
   GST_VAAPI_ENC_H264_REORD_NONE = 0,
@@ -1262,12 +1254,6 @@ init_encoder_public_attributes (GstVaapiEncoderH264 * encoder)
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   guint width_mbs, height_mbs, total_mbs;
 
-  if (!GST_VAAPI_ENCODER_WIDTH (encoder) ||
-      !GST_VAAPI_ENCODER_HEIGHT (encoder) ||
-      !GST_VAAPI_ENCODER_FPS_N (encoder) ||
-      !GST_VAAPI_ENCODER_FPS_D (encoder)) {
-    return FALSE;
-  }
   if (!encoder->profile)
     encoder->profile = GST_VAAPI_ENCODER_H264_DEFAULT_PROFILE;
 
@@ -1317,7 +1303,7 @@ init_encoder_public_attributes (GstVaapiEncoderH264 * encoder)
 }
 
 static gboolean
-init_encoder_private_attributes (GstVaapiEncoderH264 * encoder, GstCaps * caps)
+init_encoder_private_attributes (GstVaapiEncoderH264 * encoder)
 {
   if (encoder->b_frame_num)
     encoder->cts_offset = GST_SECOND * GST_VAAPI_ENCODER_FPS_D (encoder) /
@@ -1625,65 +1611,25 @@ gst_vaapi_encoder_h264_set_context_info (GstVaapiEncoder * base_encoder)
       GST_ROUND_UP_8 (MAX_SLICE_HDR_SIZE) / 8);
 }
 
-static GstCaps *
-gst_vaapi_encoder_h264_set_format (GstVaapiEncoder * base,
-    GstVideoCodecState * in_state, GstCaps * ref_caps)
+static GstVaapiEncoderStatus
+gst_vaapi_encoder_h264_reconfigure (GstVaapiEncoder * base_encoder)
 {
-  GstVaapiEncoderH264 *encoder;
-  GstCaps *result = NULL, *tmp;
-  GstStructure *structure;
-  const GValue *value;
-  const gchar *stream_format;
-
-  encoder = GST_VAAPI_ENCODER_H264 (base);
-
-  tmp = gst_caps_from_string ("video/x-h264");
-  gst_caps_set_simple (tmp,
-      "width", G_TYPE_INT, GST_VAAPI_ENCODER_WIDTH (encoder),
-      "height", G_TYPE_INT, GST_VAAPI_ENCODER_HEIGHT (encoder),
-      "framerate", GST_TYPE_FRACTION,
-      GST_VAAPI_ENCODER_FPS_N (encoder), GST_VAAPI_ENCODER_FPS_D (encoder),
-      NULL);
-  result = gst_caps_intersect (tmp, ref_caps);
-  gst_caps_unref (tmp);
-
-  /* fixed stream-format and choose byte-stream first */
-  structure = gst_caps_get_structure (result, 0);
-  value = gst_structure_get_value (structure, "stream-format");
-  if (value) {
-    gst_structure_fixate_field_string (structure, "stream-format",
-        "byte-stream");
-    stream_format = gst_structure_get_string (structure, "stream-format");
-  } else {
-    stream_format = "byte-stream";
-    gst_structure_set (structure, "stream-format", G_TYPE_STRING, stream_format,
-        NULL);
-  }
-
-  if (strcmp (stream_format, "byte-stream") == 0)
-    encoder->is_avc = FALSE;
-  else                          /* need codec data later */
-    encoder->is_avc = TRUE;
-
-#if GST_CHECK_VERSION(1,0,0)
-  result = gst_caps_fixate (result);
-#endif
+  GstVaapiEncoderH264 *const encoder =
+      GST_VAAPI_ENCODER_H264_CAST (base_encoder);
 
   if (!init_encoder_public_attributes (encoder)) {
     GST_WARNING ("encoder ensure public attributes failed ");
     goto error;
   }
 
-  if (!init_encoder_private_attributes (encoder, result)) {
+  if (!init_encoder_private_attributes (encoder)) {
     GST_WARNING ("prepare encoding failed ");
     goto error;
   }
-
-  return result;
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
 error:
-  gst_caps_unref (result);
-  return NULL;
+  return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
 }
 
 static gboolean

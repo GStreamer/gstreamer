@@ -457,31 +457,18 @@ gst_vaapiencode_close (GstVideoEncoder * venc)
 static gboolean
 set_codec_state (GstVaapiEncode * encode, GstVideoCodecState * state)
 {
-  GstVaapiPluginBase *const plugin = GST_VAAPI_PLUGIN_BASE (encode);
-  GstCaps *out_caps, *allowed_caps, *template_caps, *intersect;
+  GstVaapiEncodeClass *const klass = GST_VAAPIENCODE_GET_CLASS (encode);
+  GstVaapiEncoderStatus status;
 
   g_return_val_if_fail (encode->encoder, FALSE);
 
-  /* get peer caps for stream-format avc/bytestream, codec_data */
-  template_caps = gst_pad_get_pad_template_caps (plugin->srcpad);
-  allowed_caps = gst_pad_get_allowed_caps (plugin->srcpad);
-  intersect = gst_caps_intersect (template_caps, allowed_caps);
-  gst_caps_unref (template_caps);
-  gst_caps_unref (allowed_caps);
-
-  /* codec data was not set */
-  out_caps = gst_vaapi_encoder_set_format (encode->encoder, state, intersect);
-  gst_caps_unref (intersect);
-  g_return_val_if_fail (out_caps, FALSE);
-
-  if (!gst_caps_is_fixed (out_caps)) {
-    GST_ERROR ("encoder output caps was not fixed");
-    gst_caps_unref (out_caps);
+  /* Initialize codec specific parameters */
+  if (klass->set_config && !klass->set_config (encode))
     return FALSE;
-  }
 
-  GST_DEBUG ("set srcpad caps to: %" GST_PTR_FORMAT, out_caps);
-  gst_caps_unref (out_caps);
+  status = gst_vaapi_encoder_set_codec_state (encode->encoder, state);
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+    return FALSE;
   return TRUE;
 }
 

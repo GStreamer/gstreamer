@@ -68,6 +68,7 @@ struct _GstVaapiEncodeClass
   gboolean            (*set_property)   (GstVaapiEncode * encode,
                                          guint prop_id, const GValue * value);
 
+  gboolean            (*set_config)     (GstVaapiEncode * encode);
   GstCaps *           (*get_caps)       (GstVaapiEncode * encode);
   GstVaapiEncoder *   (*alloc_encoder)  (GstVaapiEncode * encode,
                                          GstVaapiDisplay * display);

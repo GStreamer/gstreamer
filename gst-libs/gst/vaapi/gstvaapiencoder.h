@@ -106,9 +106,9 @@ GstVaapiEncoderStatus
 gst_vaapi_encoder_get_codec_data (GstVaapiEncoder * encoder,
     GstBuffer ** out_codec_data_ptr);
 
-GstCaps *
-gst_vaapi_encoder_set_format (GstVaapiEncoder * encoder,
-    GstVideoCodecState * state, GstCaps * ref_caps);
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_codec_state (GstVaapiEncoder * encoder,
+    GstVideoCodecState * state);
 
 GstVaapiEncoderStatus
 gst_vaapi_encoder_set_property (GstVaapiEncoder * encoder, gint prop_id,

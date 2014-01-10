@@ -107,13 +107,6 @@ ensure_public_attributes (GstVaapiEncoderMpeg2 * encoder)
 {
   GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
 
-  if (!GST_VAAPI_ENCODER_WIDTH (encoder) ||
-      !GST_VAAPI_ENCODER_HEIGHT (encoder) ||
-      !GST_VAAPI_ENCODER_FPS_N (encoder) ||
-      !GST_VAAPI_ENCODER_FPS_D (encoder)) {
-    return FALSE;
-  }
-
   if (encoder->ip_period > encoder->intra_period) {
     encoder->ip_period = encoder->intra_period - 1;
   }
@@ -680,51 +673,20 @@ gst_vaapi_encoder_mpeg2_set_context_info (GstVaapiEncoder * base_encoder)
       MAX_SLICE_HDR_SIZE;
 }
 
-static gboolean
-prepare_encoding (GstVaapiEncoderMpeg2 * encoder, GstCaps * caps)
+static GstVaapiEncoderStatus
+gst_vaapi_encoder_mpeg2_reconfigure (GstVaapiEncoder * base_encoder)
 {
-  return TRUE;
-}
-
-static GstCaps *
-gst_vaapi_encoder_mpeg2_set_format (GstVaapiEncoder * base,
-    GstVideoCodecState * in_state, GstCaps * ref_caps)
-{
-  GstVaapiEncoderMpeg2 *encoder;
-  GstCaps *result = NULL, *tmp;
-  encoder = GST_VAAPI_ENCODER_MPEG2 (base);
-
-  tmp = gst_caps_from_string ("video/mpeg");
-  gst_caps_set_simple (tmp,
-      "mpegversion", G_TYPE_INT, 2,
-      "systemstream", G_TYPE_BOOLEAN, FALSE,
-      "width", G_TYPE_INT, GST_VAAPI_ENCODER_WIDTH (encoder),
-      "height", G_TYPE_INT, GST_VAAPI_ENCODER_HEIGHT (encoder),
-      "framerate", GST_TYPE_FRACTION,
-      GST_VAAPI_ENCODER_FPS_N (encoder), GST_VAAPI_ENCODER_FPS_D (encoder),
-      NULL);
-  result = gst_caps_intersect (tmp, ref_caps);
-  gst_caps_unref (tmp);
-
-#if GST_CHECK_VERSION(1,0,0)
-  result = gst_caps_fixate (result);
-#endif
+  GstVaapiEncoderMpeg2 *const encoder =
+      GST_VAAPI_ENCODER_MPEG2_CAST (base_encoder);
 
   if (!ensure_public_attributes (encoder)) {
     GST_WARNING ("encoder ensure public attributes failed ");
     goto error;
   }
-
-  if (!prepare_encoding (encoder, result)) {
-    GST_WARNING ("prepare encoding failed ");
-    goto error;
-  }
-
-  return result;
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
 error:
-  gst_caps_unref (result);
-  return NULL;
+  return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
 }
 
 static gboolean

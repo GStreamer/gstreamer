@@ -55,12 +55,60 @@ G_BEGIN_DECLS
 #define GST_VAAPI_ENCODER_VA_CONTEXT(encoder) \
     (GST_VAAPI_ENCODER_CAST(encoder)->va_context)
 
-#define GST_VAAPI_ENCODER_VIDEO_INFO(encoder) (GST_VAAPI_ENCODER_CAST(encoder)->video_info)
-#define GST_VAAPI_ENCODER_CAPS(encoder)       (GST_VAAPI_ENCODER_CAST(encoder)->caps)
-#define GST_VAAPI_ENCODER_WIDTH(encoder)      (GST_VAAPI_ENCODER_CAST(encoder)->video_info.width)
-#define GST_VAAPI_ENCODER_HEIGHT(encoder)     (GST_VAAPI_ENCODER_CAST(encoder)->video_info.height)
-#define GST_VAAPI_ENCODER_FPS_N(encoder)      (GST_VAAPI_ENCODER_CAST(encoder)->video_info.fps_n)
-#define GST_VAAPI_ENCODER_FPS_D(encoder)      (GST_VAAPI_ENCODER_CAST(encoder)->video_info.fps_d)
+/**
+ * GST_VAAPI_ENCODER_VIDEO_INFO:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to the #GstVideoInfo of @encoder.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_VIDEO_INFO
+#define GST_VAAPI_ENCODER_VIDEO_INFO(encoder) \
+  (&GST_VAAPI_ENCODER_CAST (encoder)->video_info)
+
+/**
+ * GST_VAAPI_ENCODER_WIDTH:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to the coded width of the picture.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_WIDTH
+#define GST_VAAPI_ENCODER_WIDTH(encoder) \
+  (GST_VAAPI_ENCODER_VIDEO_INFO (encoder)->width)
+
+/**
+ * GST_VAAPI_ENCODER_HEIGHT:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to the coded height of the picture.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_HEIGHT
+#define GST_VAAPI_ENCODER_HEIGHT(encoder) \
+  (GST_VAAPI_ENCODER_VIDEO_INFO (encoder)->height)
+
+/**
+ * GST_VAAPI_ENCODER_FPS_N:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to the coded framerate numerator.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_FPS_N
+#define GST_VAAPI_ENCODER_FPS_N(encoder) \
+  (GST_VAAPI_ENCODER_VIDEO_INFO (encoder)->fps_n)
+
+/**
+ * GST_VAAPI_ENCODER_FPS_D:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to the coded framerate denominator.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_FPS_D
+#define GST_VAAPI_ENCODER_FPS_D(encoder) \
+  (GST_VAAPI_ENCODER_VIDEO_INFO (encoder)->fps_d)
 
 /**
  * GST_VAAPI_ENCODER_RATE_CONTROL:
@@ -113,7 +161,6 @@ struct _GstVaapiEncoder
   GstVaapiDisplay *display;
   GstVaapiContext *context;
   GstVaapiContextInfo context_info;
-  GstCaps *caps;
 
   VADisplay va_display;
   VAContextID va_context;
@@ -157,11 +204,9 @@ struct _GstVaapiEncoderClass
   gboolean              (*init)         (GstVaapiEncoder * encoder);
   void                  (*finalize)     (GstVaapiEncoder * encoder);
 
-  GstCaps *             (*set_format)   (GstVaapiEncoder * encoder,
-                                         GstVideoCodecState * in_state,
-                                         GstCaps * ref_caps);
-
   void                  (*set_context_info) (GstVaapiEncoder * encoder);
+
+  GstVaapiEncoderStatus (*reconfigure)  (GstVaapiEncoder * encoder);
 
   GPtrArray *           (*get_default_properties) (void);
   GstVaapiEncoderStatus (*set_property) (GstVaapiEncoder * encoder,
@@ -196,8 +241,8 @@ struct _GstVaapiEncoderClass
     .class_data = &g_class_data,                                \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, init),                 \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, finalize),             \
+    GST_VAAPI_ENCODER_CLASS_HOOK (codec, reconfigure),          \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, get_default_properties), \
-    GST_VAAPI_ENCODER_CLASS_HOOK (codec, set_format),           \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, set_context_info),     \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, reordering),           \
     GST_VAAPI_ENCODER_CLASS_HOOK (codec, encode),               \

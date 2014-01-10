@@ -416,16 +416,35 @@ gst_vaapi_encoder_get_codec_data (GstVaapiEncoder * encoder,
   return ret;
 }
 
-/* Ensures the underlying VA context for encoding is created */
-static gboolean
-gst_vaapi_encoder_ensure_context (GstVaapiEncoder * encoder)
+/* Checks video info */
+static GstVaapiEncoderStatus
+check_video_info (GstVaapiEncoder * encoder, const GstVideoInfo * vip)
+{
+  if (!vip->width || !vip->height)
+    goto error_invalid_resolution;
+  if (!vip->fps_n || !vip->fps_d)
+    goto error_invalid_framerate;
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  /* ERRORS */
+error_invalid_resolution:
+  {
+    GST_ERROR ("invalid resolution (%dx%d)", vip->width, vip->height);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
+  }
+error_invalid_framerate:
+  {
+    GST_ERROR ("invalid framerate (%d/%d)", vip->fps_n, vip->fps_d);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER;
+  }
+}
+
+/* Updates video context */
+static void
+set_context_info (GstVaapiEncoder * encoder)
 {
   GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
   GstVaapiContextInfo *const cip = &encoder->context_info;
-  GstVaapiContext *context;
-
-  if (GST_VAAPI_ENCODER_CONTEXT (encoder))
-    return TRUE;
 
   cip->profile = GST_VAAPI_PROFILE_UNKNOWN;
   cip->entrypoint = GST_VAAPI_ENTRYPOINT_SLICE_ENCODE;
@@ -434,72 +453,107 @@ gst_vaapi_encoder_ensure_context (GstVaapiEncoder * encoder)
   cip->height = GST_VAAPI_ENCODER_HEIGHT (encoder);
   cip->ref_frames = 0;
   klass->set_context_info (encoder);
+}
 
-  context = gst_vaapi_context_new_full (encoder->display, cip);
-  if (!context)
-    return FALSE;
+/* Ensures the underlying VA context for encoding is created */
+static gboolean
+gst_vaapi_encoder_ensure_context (GstVaapiEncoder * encoder)
+{
+  GstVaapiContextInfo *const cip = &encoder->context_info;
 
-  GST_VAAPI_ENCODER_CONTEXT (encoder) = context;
-  GST_VAAPI_ENCODER_VA_CONTEXT (encoder) = gst_vaapi_context_get_id (context);
+  set_context_info (encoder);
+
+  if (encoder->context) {
+    if (!gst_vaapi_context_reset_full (encoder->context, cip))
+      return FALSE;
+  } else {
+    encoder->context = gst_vaapi_context_new_full (encoder->display, cip);
+    if (!encoder->context)
+      return FALSE;
+  }
+  encoder->va_context = gst_vaapi_context_get_id (encoder->context);
   return TRUE;
 }
 
-/**
- * gst_vaapi_encoder_set_format:
- * @encoder: a #GstVaapiEncoder
- * @state : a #GstVideoCodecState
- * @ref_caps: the set of reference caps (from pad template)
- *
- * Notifies the encoder of incoming data format (video resolution),
- * and additional information like framerate.
- *
- * Return value: the newly allocated set of caps
- */
-GstCaps *
-gst_vaapi_encoder_set_format (GstVaapiEncoder * encoder,
-    GstVideoCodecState * state, GstCaps * ref_caps)
+/* Reconfigures the encoder with the new properties */
+static GstVaapiEncoderStatus
+gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
 {
   GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
-  GstCaps *out_caps = NULL;
+  GstVaapiEncoderStatus status;
 
-  if (!GST_VIDEO_INFO_WIDTH (&state->info) ||
-      !GST_VIDEO_INFO_HEIGHT (&state->info)) {
-    GST_WARNING ("encoder set format failed, width or height equal to 0.");
-    return NULL;
-  }
-  GST_VAAPI_ENCODER_VIDEO_INFO (encoder) = state->info;
-
-  out_caps = klass->set_format (encoder, state, ref_caps);
-  if (!out_caps)
-    goto error;
-
-  if (GST_VAAPI_ENCODER_CAPS (encoder) &&
-      gst_caps_is_equal (out_caps, GST_VAAPI_ENCODER_CAPS (encoder))) {
-    gst_caps_unref (out_caps);
-    return GST_VAAPI_ENCODER_CAPS (encoder);
-  }
-  gst_caps_replace (&GST_VAAPI_ENCODER_CAPS (encoder), out_caps);
-  g_assert (GST_VAAPI_ENCODER_CONTEXT (encoder) == NULL);
-  gst_vaapi_object_replace (&GST_VAAPI_ENCODER_CONTEXT (encoder), NULL);
+  status = klass->reconfigure (encoder);
+  if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+    return status;
 
   if (!gst_vaapi_encoder_ensure_context (encoder))
-    goto error;
+    goto error_reset_context;
 
   encoder->codedbuf_pool = gst_vaapi_coded_buffer_pool_new (encoder,
       encoder->codedbuf_size);
-  if (!encoder->codedbuf_pool) {
-    GST_ERROR ("failed to initialized coded buffer pool");
-    goto error;
-  }
+  if (!encoder->codedbuf_pool)
+    goto error_codedbuf_pool_allocation_failed;
+
   gst_vaapi_video_pool_set_capacity (encoder->codedbuf_pool, 5);
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
-  return out_caps;
+  /* ERRORS */
+error_codedbuf_pool_allocation_failed:
+  {
+    GST_ERROR ("failed to initialize coded buffer pool");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
+  }
+error_reset_context:
+  {
+    GST_ERROR ("failed to update VA context");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+  }
+}
 
-error:
-  gst_caps_replace (&GST_VAAPI_ENCODER_CAPS (encoder), NULL);
-  gst_caps_replace (&out_caps, NULL);
-  GST_ERROR ("encoder set format failed");
-  return NULL;
+/**
+ * gst_vaapi_encoder_set_codec_state:
+ * @encoder: a #GstVaapiEncoder
+ * @state : a #GstVideoCodecState
+ *
+ * Notifies the encoder about the source surface properties. The
+ * accepted set of properties is: video resolution, colorimetry,
+ * pixel-aspect-ratio and framerate.
+ *
+ * This function is a synchronization point for codec configuration.
+ * This means that, at this point, the encoder is reconfigured to
+ * match the new properties and any other change beyond this point has
+ * zero effect.
+ *
+ * Return value: a #GstVaapiEncoderStatus
+ */
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_codec_state (GstVaapiEncoder * encoder,
+    GstVideoCodecState * state)
+{
+  GstVaapiEncoderStatus status;
+
+  g_return_val_if_fail (encoder != NULL,
+      GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER);
+  g_return_val_if_fail (state != NULL,
+      GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_PARAMETER);
+
+  if (encoder->num_codedbuf_queued > 0)
+    goto error_operation_failed;
+
+  if (!gst_video_info_is_equal (&state->info, &encoder->video_info)) {
+    status = check_video_info (encoder, &state->info);
+    if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
+      return status;
+    encoder->video_info = state->info;
+  }
+  return gst_vaapi_encoder_reconfigure_internal (encoder);
+
+  /* ERRORS */
+error_operation_failed:
+  {
+    GST_ERROR ("could not change codec state after encoding started");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+  }
 }
 
 /**
@@ -762,11 +816,11 @@ gst_vaapi_encoder_init (GstVaapiEncoder * encoder, GstVaapiDisplay * display)
   CHECK_VTABLE_HOOK (init);
   CHECK_VTABLE_HOOK (finalize);
   CHECK_VTABLE_HOOK (get_default_properties);
+  CHECK_VTABLE_HOOK (reconfigure);
   CHECK_VTABLE_HOOK (encode);
   CHECK_VTABLE_HOOK (reordering);
   CHECK_VTABLE_HOOK (flush);
   CHECK_VTABLE_HOOK (set_context_info);
-  CHECK_VTABLE_HOOK (set_format);
 
 #undef CHECK_VTABLE_HOOK
 
