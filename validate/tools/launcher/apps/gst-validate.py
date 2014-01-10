@@ -134,8 +134,7 @@ class GstValidateManager(TestsManager, Loggable):
 
         for uri, config in self._list_uris():
             for comb in COMBINATIONS:
-                classname = "validate.transcode.from_%s.to_%s" % (os.path.splitext(os.path.basename(uri))[0],
-                                                                  str(comb).replace(' ', '_'))
+                classname = "validate.transcode.to_%s" % (str(comb).replace(' ', '_'))
                 self.tests.append(GstValidateTranscodingTest(classname,
                                                              self.options,
                                                              self.reporter,
