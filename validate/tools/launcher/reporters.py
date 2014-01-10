@@ -69,6 +69,7 @@ class Reporter(Loggable):
         mkdir(os.path.dirname(path))
         self.out = open(path, 'w+')
         self._current_test = test
+        test.logfile = path
 
     def set_failed(self, test):
         self.stats["failure"] += 1

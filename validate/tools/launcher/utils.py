@@ -151,6 +151,7 @@ FORMATS = {"aac": "audio/mpeg,mpegversion=4",
            "mp4": "video/quicktime,variant=iso;",
            "webm": "video/webm"}
 
+
 def get_profile_full(muxer, venc, aenc, video_restriction=None,
                      audio_restriction=None,
                      audio_presence=0, video_presence=0):
@@ -174,7 +175,6 @@ def get_profile_full(muxer, venc, aenc, video_restriction=None,
 
     ret += "\""
     return ret.replace("::", ":")
-
 
 
 def get_profile(combination):

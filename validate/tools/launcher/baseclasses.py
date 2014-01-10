@@ -50,14 +50,16 @@ class Test(Loggable):
         self.time_taken = 0.0
         self._starting_time = None
         self.result = Result.NOT_RUN
+        self.logfile = None
 
     def __str__(self):
         string = self.classname
         if self.result != Result.NOT_RUN:
             string += ": " + self.result
             if self.result in [Result.FAILED, Result.TIMEOUT]:
-                string += " '%s'\n       You can reproduce with: %s" \
-                    % (self.message, self.command)
+                string += " '%s'\n       You can reproduce with: %s\n       " \
+                    "You can find logs in: %s" % (self.message, self.command,
+                                                  self.logfile)
 
         return string
 
