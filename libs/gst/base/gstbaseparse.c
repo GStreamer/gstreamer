@@ -473,6 +473,7 @@ static GstFlowReturn gst_base_parse_locate_time (GstBaseParse * parse,
 static GstFlowReturn gst_base_parse_start_fragment (GstBaseParse * parse);
 static GstFlowReturn gst_base_parse_finish_fragment (GstBaseParse * parse,
     gboolean prev_head);
+static GstFlowReturn gst_base_parse_send_buffers (GstBaseParse * parse);
 
 static inline GstFlowReturn gst_base_parse_check_sync (GstBaseParse * parse);
 
@@ -2296,6 +2297,34 @@ gst_base_parse_push_frame (GstBaseParse * parse, GstBaseParseFrame * frame)
           size);
       ret = gst_pad_push (parse->srcpad, buffer);
       GST_LOG_OBJECT (parse, "frame pushed, flow %s", gst_flow_get_name (ret));
+    } else if (!parse->priv->disable_passthrough && parse->priv->passthrough) {
+
+      /* in backwards playback mode, if on passthrough we need to push buffers
+       * directly without accumulating them into the buffers_queued as baseparse
+       * will never check for a DISCONT while on passthrough and those buffers
+       * will never be pushed.
+       *
+       * also, as we are on reverse playback, it might be possible that
+       * passthrough might have just been enabled, so make sure to drain the
+       * buffers_queued list */
+      if (G_UNLIKELY (parse->priv->buffers_queued != NULL)) {
+        gst_base_parse_finish_fragment (parse, TRUE);
+        ret = gst_base_parse_send_buffers (parse);
+      }
+
+      if (ret == GST_FLOW_OK) {
+        GST_LOG_OBJECT (parse,
+            "pushing frame (%" G_GSIZE_FORMAT " bytes) now..", size);
+        ret = gst_pad_push (parse->srcpad, buffer);
+        GST_LOG_OBJECT (parse, "frame pushed, flow %s",
+            gst_flow_get_name (ret));
+      } else {
+        GST_LOG_OBJECT (parse,
+            "frame (%" G_GSIZE_FORMAT " bytes) not pushed: %s", size,
+            gst_flow_get_name (ret));
+        gst_buffer_unref (buffer);
+      }
+
     } else {
       GST_LOG_OBJECT (parse, "frame (%" G_GSIZE_FORMAT " bytes) queued for now",
           size);
