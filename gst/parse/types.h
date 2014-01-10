@@ -6,21 +6,23 @@
 #include "../gstparse.h"
 
 typedef struct {
-  GstElement *src;
-  GstElement *sink;
-  gchar *src_name;
-  gchar *sink_name;
-  GSList *src_pads;
-  GSList *sink_pads;
+  GstElement *element;
+  gchar *name;
+  GSList *pads;
+} reference_t;
+
+typedef struct {
+  reference_t src;
+  reference_t sink;
   GstCaps *caps;
 } link_t;
 
 typedef struct {
   GSList *elements;
-  GstElement *first;
-  GstElement *last;
-  link_t *front;
-  link_t *back;
+  reference_t first;
+  reference_t last;
+  //link_t *front;
+  //link_t *back;
 } chain_t;
 
 typedef struct _graph_t graph_t;
@@ -39,16 +41,16 @@ struct _graph_t {
  * This is not safe from reentrance issues, but that doesn't matter as long as
  * we lock a mutex before parsing anyway.
  */
-#ifdef GST_DEBUG_ENABLED
+//#ifdef GST_DEBUG_ENABLED
 #  define __GST_PARSE_TRACE
-#endif
+//#endif
 
 #ifdef __GST_PARSE_TRACE
 G_GNUC_INTERNAL  gchar  *__gst_parse_strdup (gchar *org);
 G_GNUC_INTERNAL  void	__gst_parse_strfree (gchar *str);
-G_GNUC_INTERNAL  link_t *__gst_parse_link_new ();
+G_GNUC_INTERNAL  link_t *__gst_parse_link_new (void);
 G_GNUC_INTERNAL  void	__gst_parse_link_free (link_t *data);
-G_GNUC_INTERNAL  chain_t *__gst_parse_chain_new ();
+G_GNUC_INTERNAL  chain_t *__gst_parse_chain_new (void);
 G_GNUC_INTERNAL  void	__gst_parse_chain_free (chain_t *data);
 #  define gst_parse_strdup __gst_parse_strdup
 #  define gst_parse_strfree __gst_parse_strfree
