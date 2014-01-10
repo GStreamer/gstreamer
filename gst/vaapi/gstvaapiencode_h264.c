@@ -261,8 +261,8 @@ gst_vaapiencode_h264_alloc_buffer (GstVaapiEncode * base_encode,
     GstVaapiCodedBuffer * coded_buf, GstBuffer ** out_buffer_ptr)
 {
   GstVaapiEncodeH264 *const encode = GST_VAAPIENCODE_H264_CAST (base_encode);
-  GstVaapiEncoderH264 *const encoder = (GstVaapiEncoderH264 *)
-      base_encode->encoder;
+  GstVaapiEncoderH264 *const encoder =
+      GST_VAAPI_ENCODER_H264 (base_encode->encoder);
   GstFlowReturn ret;
 
   g_return_val_if_fail (encoder != NULL, GST_FLOW_ERROR);

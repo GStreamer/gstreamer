@@ -22,15 +22,10 @@
 #ifndef GST_VAAPI_ENCODER_H264_PRIV_H
 #define GST_VAAPI_ENCODER_H264_PRIV_H
 
-#include <glib.h>
-#include <gst/base/gstbitwriter.h>
-#include <gst/vaapi/gstvaapiencoder.h>
-#include <gst/vaapi/gstvaapiencoder_priv.h>
+#include "gstvaapiencoder_priv.h"
 
 G_BEGIN_DECLS
 
-#define GST_VAAPI_ENCODER_H264(encoder) \
-    ((GstVaapiEncoderH264 *)(encoder))
 #define GST_VAAPI_ENCODER_H264_CAST(encoder) \
     ((GstVaapiEncoderH264 *)(encoder))
 
@@ -55,26 +50,22 @@ typedef enum
 
 #define GST_VAAPI_ENCODER_H264_DEFAULT_PROFILE      GST_VAAPI_PROFILE_H264_BASELINE
 #define GST_VAAPI_ENCODER_H264_DEFAULT_LEVEL        GST_VAAPI_ENCODER_H264_LEVEL_31
-#define GST_VAAPI_ENCODER_H264_DEFAULT_INIT_QP      26
-#define GST_VAAPI_ENCODER_H264_DEFAULT_MIN_QP       1
 #define GST_VAAPI_ENCODER_H264_MAX_IDR_PERIOD       512
-
-#define GST_VAAPI_ENCODER_H264_DEFAULT_SLICE_NUM    1
 
 struct _GstVaapiEncoderH264
 {
-  GstVaapiEncoder parent;
+  GstVaapiEncoder parent_instance;
 
-  /* public */
-  guint32 profile;
-  guint32 level;
+  GstVaapiProfile profile;
+  guint32 level_idc;
   guint32 idr_period;
-  guint32 init_qp;              /*default 24 */
-  guint32 min_qp;               /*default 1 */
-  guint32 slice_num;
-  guint32 b_frame_num;
+  guint32 init_qp;
+  guint32 min_qp;
+  guint32 num_slices;
+  guint32 num_bframes;
+  guint32 mb_width;
+  guint32 mb_height;
 
-  /* private */
   gboolean is_avc;              /* avc or bytestream */
   /* re-ordering */
   GQueue reorder_frame_list;
@@ -86,7 +77,7 @@ struct _GstVaapiEncoderH264
 
   /* reference list */
   GQueue ref_list;
-  guint max_ref_num;
+  guint max_ref_frames;
   /* max reflist count */
   guint max_reflist0_count;
   guint max_reflist1_count;
@@ -104,4 +95,4 @@ struct _GstVaapiEncoderH264
 
 G_END_DECLS
 
-#endif /*GST_VAAPI_ENCODER_H264_PRIV_H */
+#endif /* GST_VAAPI_ENCODER_H264_PRIV_H */
