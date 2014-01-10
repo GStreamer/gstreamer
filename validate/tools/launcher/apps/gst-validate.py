@@ -133,6 +133,8 @@ class GstValidateManager(TestsManager, Loggable):
                 self._add_playback_test(name, scenario, test_pipeline)
 
         for uri, config in self._list_uris():
+            if config.getboolean("media-info", "is-image") is True:
+                continue
             for comb in COMBINATIONS:
                 classname = "validate.transcode.to_%s" % (str(comb).replace(' ', '_'))
                 self.tests.append(GstValidateTranscodingTest(classname,
