@@ -792,12 +792,13 @@ gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
                 * GST_SECOND, src->info.fps_d, src->info.fps_n);
             res = TRUE;
             gst_query_set_duration (query, GST_FORMAT_TIME, dur);
-            break;
+            goto done;
           }
           case GST_FORMAT_BYTES:
+            res = TRUE;
             gst_query_set_duration (query, GST_FORMAT_BYTES,
                 bsrc->num_buffers * src->info.size);
-            break;
+            goto done;
           default:
             break;
         }
@@ -808,6 +809,7 @@ gst_video_test_src_query (GstBaseSrc * bsrc, GstQuery * query)
       res = GST_BASE_SRC_CLASS (parent_class)->query (bsrc, query);
       break;
   }
+done:
   return res;
 }
 
