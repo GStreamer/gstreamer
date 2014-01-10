@@ -94,7 +94,7 @@ bus_callback (GstBus * bus, GstMessage * message, gpointer data)
       gchar *debug;
       ret = -1;
       gst_message_parse_error (message, &err, &debug);
-      g_print ("Error: %s\n", err->message);
+      g_print ("Error: %s -- Setting returncode to -1\n", err->message);
       g_error_free (err);
       g_free (debug);
       g_main_loop_quit (loop);
@@ -243,6 +243,7 @@ main (int argc, gchar ** argv)
   if (gst_element_set_state (pipeline,
           GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
     g_print ("Pipeline failed to go to PLAYING state\n");
+    ret = -1;
     goto exit;
   }
 
@@ -251,8 +252,10 @@ main (int argc, gchar ** argv)
   g_main_loop_run (mainloop);
 
   rep_err = gst_validate_runner_printf (runner);
-  if (ret == 0)
+  if (ret == 0) {
     ret = rep_err;
+    g_print ("Returning %d as error where found", rep_err);
+  }
 
 exit:
   gst_element_set_state (pipeline, GST_STATE_NULL);

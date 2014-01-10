@@ -837,8 +837,11 @@ main (int argc, gchar ** argv)
 
   g_print ("Starting pipeline\n");
   if (gst_element_set_state (pipeline,
-          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE)
+          GST_STATE_PLAYING) == GST_STATE_CHANGE_FAILURE) {
+    g_print ("Pipeline failed to go to PLAYING state\n");
+    ret = -1;
     goto exit;
+  }
   g_timeout_add (50, (GSourceFunc) print_position, NULL);
   g_main_loop_run (mainloop);
 
