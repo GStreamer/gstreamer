@@ -21,9 +21,7 @@
 import os
 import urllib
 import urlparse
-import tempfile
 import subprocess
-import ConfigParser
 
 
 GST_SECOND = 1000000000
@@ -113,6 +111,18 @@ def launch_command(command, color=None):
 
 def path2url(path):
     return urlparse.urljoin('file:', urllib.pathname2url(path))
+
+
+def url2path(url):
+    return urlparse.urlparse(url).path
+
+
+def isuri(string):
+    url = urlparse.urlparse(string)
+    if url.scheme != "" and  url.scheme != "":
+        return True
+
+    return False
 
 
 ##############################

@@ -188,7 +188,7 @@ class GstValidateTest(Test):
                 if ret != "[":
                     ret += ", "
                 error = l.split("critical : ")[1].replace("\n", '')
-                print "%s -- %s" %(error, errors)
+                print "%s -- %s" % (error, errors)
                 if error not in errors:
                     ret += error
                     errors.append(error)
@@ -197,7 +197,6 @@ class GstValidateTest(Test):
             return "No critical"
         else:
             return ret + "]"
-
 
     def check_results(self):
         if self.result is Result.FAILED:

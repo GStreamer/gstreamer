@@ -1,4 +1,4 @@
-#!/usr//bin/python
+#!/usr/bin/python
 #
 # Copyright (c) 2013,Thibault Saunier <thibault.saunier@collabora.com>
 #
@@ -20,22 +20,20 @@
 import os
 import urlparse
 import subprocess
+import utils
 from urllib import unquote
-from gi.repository import GES, Gst, GLib
+import xml.etree.ElementTree as ET
 from baseclasses import GstValidateTest, TestsManager
-from utils import MediaFormatCombination, get_profile, Result, get_current_position, \
-    get_current_size, DEFAULT_GST_QA_ASSETS, which, \
-    compare_rendered_with_original, get_duration
 
-DURATION_TOLERANCE = Gst.SECOND / 2
+DURATION_TOLERANCE = utils.GST_SECOND / 2
 DEFAULT_GES_LAUNCH = "ges-launch-1.0"
 
 
 COMBINATIONS = [
-    MediaFormatCombination("ogg", "vorbis", "theora"),
-    MediaFormatCombination("webm", "vorbis", "vp8"),
-    MediaFormatCombination("mp4", "mp3", "h264"),
-    MediaFormatCombination("mkv", "vorbis", "h264")]
+    utils.MediaFormatCombination("ogg", "vorbis", "theora"),
+    utils.MediaFormatCombination("webm", "vorbis", "vp8"),
+    utils.MediaFormatCombination("mp4", "mp3", "h264"),
+    utils.MediaFormatCombination("mkv", "vorbis", "h264")]
 
 
 SCENARIOS = ["none", "seek_forward", "seek_backward", "scrub_forward_seeking"]
@@ -49,9 +47,16 @@ def quote_uri(uri):
     parts = urlparse.urlsplit(uri, allow_fragments=False)
     # Make absolutely sure the string is unquoted before quoting again!
     raw_path = unquote(parts.path)
-    # For computing thumbnail md5 hashes in the media library, we must adhere to
-    # RFC 2396. It is quite tricky to handle all corner cases, leave it to Gst:
-    return Gst.filename_to_uri(raw_path)
+    return utils.path2url(raw_path)
+
+
+def find_xges_duration(path):
+    root = ET.parse(path)
+    for l in root.iter():
+        if l.tag == "timeline":
+            return long(l.attrib['metadatas'].split("duration=(guint64)")[1].split(" ")[0].split(";")[0])
+
+    return None
 
 
 class GESTest(GstValidateTest):
@@ -60,22 +65,17 @@ class GESTest(GstValidateTest):
         super(GESTest, self).__init__(DEFAULT_GES_LAUNCH, classname, options, reporter,
                                       scenario=scenario)
         self.project_uri = project_uri
-        proj = GES.Project.new(project_uri)
-        tl = proj.extract()
-        if tl is None:
-            self.duration = None
+        self.duration = find_xges_duration(utils.url2path(project_uri))
+        if self.duration is not None:
+            self.duration = self.duration / utils.GST_SECOND
         else:
-            self.duration = tl.get_meta("duration")
-            if self.duration is not None:
-                self.duration = self.duration / Gst.SECOND
-            else:
-                self.duration = 2 * 60
+            self.duration = 2 * 60
 
     def set_sample_paths(self):
         if not self.options.paths:
             if not self.options.recurse_paths:
                 return
-            paths = [os.path.dirname(Gst.uri_get_location(self.project_uri))]
+            paths = [os.path.dirname(utils.url2path(self.project_uri))]
         else:
             paths = self.options.paths
 
@@ -109,7 +109,7 @@ class GESPlaybackTest(GESTest):
                                       project_uri, scenario=scenario)
 
     def get_current_value(self):
-        return get_current_position(self)
+        return utils.get_current_position(self)
 
 
 class GESRenderTest(GESTest):
@@ -128,33 +128,33 @@ class GESRenderTest(GESTest):
                                  '-' + self.combination.acodec +
                                  self.combination.vcodec + '.' +
                                  self.combination.container)
-        if not Gst.uri_is_valid(self.dest_file):
-            self.dest_file = GLib.filename_to_uri(self.dest_file, None)
+        if not utils.isuri(self.dest_file):
+            self.dest_file = utils.path2url(self.dest_file)
 
-        profile = get_profile(self.combination)
+        profile = utils.get_profile(self.combination)
         self.add_arguments("-f", profile, "-o", self.dest_file)
 
     def check_results(self):
         if self.process.returncode == 0:
-            res, msg = compare_rendered_with_original(self.duration, self.dest_file)
+            res, msg = utils.compare_rendered_with_original(self.duration, self.dest_file)
             self.set_result(res, msg)
         else:
-            if self.result == Result.TIMEOUT:
+            if self.result == utils.Result.TIMEOUT:
                 missing_eos = False
                 try:
-                    if get_duration(self.dest_file) == self.duration:
+                    if utils.get_duration(self.dest_file) == self.duration:
                         missing_eos = True
                 except Exception as e:
                     pass
 
                 if missing_eos is True:
-                    self.set_result(Result.TIMEOUT, "The rendered file add right duration, MISSING EOS?\n",
+                    self.set_result(utils.Result.TIMEOUT, "The rendered file add right duration, MISSING EOS?\n",
                                     "failure", e)
             else:
                 GstValidateTest.check_results(self)
 
     def get_current_value(self):
-        return get_current_size(self)
+        return utils.get_current_size(self)
 
 
 class GESTestsManager(TestsManager):
@@ -162,9 +162,6 @@ class GESTestsManager(TestsManager):
 
     def __init__(self):
         super(GESTestsManager, self).__init__()
-        Gst.init(None)
-        GES.init()
-
 
     def init(self):
         try:
@@ -180,7 +177,8 @@ class GESTestsManager(TestsManager):
 
     def add_options(self, group):
         group.add_option("-P", "--projects-paths", dest="projects_paths",
-                         default=os.path.join(DEFAULT_GST_QA_ASSETS, "ges-projects"),
+                         default=os.path.join(utils.DEFAULT_GST_QA_ASSETS,
+                                              "ges-projects"),
                          help="Paths in which to look for moved medias")
         group.add_option("-r", "--recurse-paths", dest="recurse_paths",
                          default=False, action="store_true",
@@ -190,7 +188,7 @@ class GESTestsManager(TestsManager):
         TestsManager.set_settings(self, options, args, reporter)
 
         try:
-            os.makedirs(GLib.filename_from_uri(options.dest)[0])
+            os.makedirs(utils.url2path(options.dest)[0])
             print "Created directory: %s" % options.dest
         except OSError:
             pass
@@ -204,16 +202,13 @@ class GESTestsManager(TestsManager):
                     if not f.endswith(".xges"):
                         continue
 
-                    projects.append(GLib.filename_to_uri(os.path.join(path,
-                                                                      root,
-                                                                      f),
-                                    None))
+                    projects.append(utils.path2url(os.path.join(path, root, f)))
         else:
             for proj in self.args:
-                if Gst.uri_is_valid(proj):
+                if utils.isuri(proj):
                     projects.append(proj)
                 else:
-                    projects.append(GLib.filename_to_uri(proj, None))
+                    projects.append(utils.path2url(proj))
 
         for proj in projects:
             # First playback casses
