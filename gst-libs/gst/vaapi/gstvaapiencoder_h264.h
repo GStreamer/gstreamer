@@ -23,6 +23,7 @@
 #define GST_VAAPI_ENCODER_H264_H
 
 #include <gst/vaapi/gstvaapiencoder.h>
+#include <gst/vaapi/gstvaapiutils_h264.h>
 
 G_BEGIN_DECLS
 
@@ -53,6 +54,10 @@ gst_vaapi_encoder_h264_new (GstVaapiDisplay * display);
 
 GPtrArray *
 gst_vaapi_encoder_h264_get_default_properties (void);
+
+gboolean
+gst_vaapi_encoder_h264_get_profile_and_level (GstVaapiEncoderH264 * encoder,
+    GstVaapiProfile * out_profile_ptr, GstVaapiLevelH264 * out_level_ptr);
 
 G_END_DECLS
 

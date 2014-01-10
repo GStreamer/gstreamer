@@ -209,96 +209,52 @@ ensure_profile (GstVaapiEncoderH264 * encoder)
 {
   GstVaapiProfile profile;
 
-  profile = GST_VAAPI_PROFILE_H264_BASELINE;
+  /* Always start from "constrained-baseline" profile for maximum
+     compatibility */
+  profile = GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE;
+
+  /* Main profile coding tools */
+  if (encoder->num_bframes > 0)
+    profile = GST_VAAPI_PROFILE_H264_MAIN;
 
   encoder->profile = profile;
+  encoder->profile_idc = gst_vaapi_utils_h264_get_profile_idc (profile);
   return TRUE;
 }
 
-static void
-_set_level (GstVaapiEncoderH264 * encoder)
+static gboolean
+ensure_level (GstVaapiEncoderH264 * encoder)
 {
-  guint pic_mb_size;
-  guint MaxDpbMbs, MaxMBPS;
-  guint dbp_level, mbps_level, profile_level;
+  const guint bitrate = GST_VAAPI_ENCODER_CAST (encoder)->bitrate;
+  const GstVaapiH264LevelLimits *limits_table;
+  guint i, num_limits, PicSizeMbs, MaxDpbMbs, MaxMBPS;
 
-  if (encoder->level_idc) {
-    if (encoder->level_idc < GST_VAAPI_ENCODER_H264_LEVEL_10)
-      encoder->level_idc = GST_VAAPI_ENCODER_H264_LEVEL_10;
-    else if (encoder->level_idc > GST_VAAPI_ENCODER_H264_LEVEL_51)
-      encoder->level_idc = GST_VAAPI_ENCODER_H264_LEVEL_51;
-    return;
+  PicSizeMbs = encoder->mb_width * encoder->mb_height;
+  MaxDpbMbs = PicSizeMbs * ((encoder->num_bframes) ? 2 : 1);
+  MaxMBPS = gst_util_uint64_scale_int_ceil (PicSizeMbs,
+      GST_VAAPI_ENCODER_FPS_N (encoder), GST_VAAPI_ENCODER_FPS_D (encoder));
+
+  limits_table = gst_vaapi_utils_h264_get_level_limits_table (&num_limits);
+  for (i = 0; i < num_limits; i++) {
+    const GstVaapiH264LevelLimits *const limits = &limits_table[i];
+    if (PicSizeMbs <= limits->MaxFS &&
+        MaxDpbMbs <= limits->MaxDpbMbs &&
+        MaxMBPS <= limits->MaxMBPS && (!bitrate || bitrate <= limits->MaxBR))
+      break;
   }
+  if (i == num_limits)
+    goto error_unsupported_level;
 
-  /* calculate level */
-  pic_mb_size = ((GST_VAAPI_ENCODER_WIDTH (encoder) + 15) / 16) *
-      ((GST_VAAPI_ENCODER_HEIGHT (encoder) + 15) / 16);
-  MaxDpbMbs = pic_mb_size * ((encoder->num_bframes) ? 2 : 1);
-  MaxMBPS = pic_mb_size * GST_VAAPI_ENCODER_FPS_N (encoder) /
-      GST_VAAPI_ENCODER_FPS_D (encoder);
+  encoder->level = limits_table[i].level;
+  encoder->level_idc = limits_table[i].level_idc;
+  return TRUE;
 
-  /* calculate from MaxDbpMbs */
-  if (MaxDpbMbs > 110400)
-    dbp_level = GST_VAAPI_ENCODER_H264_LEVEL_51;
-  else if (MaxDpbMbs > 34816)
-    dbp_level = GST_VAAPI_ENCODER_H264_LEVEL_50;
-  else if (MaxDpbMbs > 32768)
-    dbp_level = GST_VAAPI_ENCODER_H264_LEVEL_42;
-  else if (MaxDpbMbs > 20480)   /* 41 or 40 */
-    dbp_level = GST_VAAPI_ENCODER_H264_LEVEL_41;
-  else if (MaxDpbMbs > 18000)
-    dbp_level = GST_VAAPI_ENCODER_H264_LEVEL_32;
-  else if (MaxDpbMbs > 8100)
-    dbp_level = GST_VAAPI_ENCODER_H264_LEVEL_31;
-  else if (MaxDpbMbs > 4752)    /* 30 or 22 */
-    dbp_level = GST_VAAPI_ENCODER_H264_LEVEL_30;
-  else if (MaxDpbMbs > 2376)
-    dbp_level = GST_VAAPI_ENCODER_H264_LEVEL_21;
-  else if (MaxDpbMbs > 900)     /* 20, 13, 12 */
-    dbp_level = GST_VAAPI_ENCODER_H264_LEVEL_20;
-  else if (MaxDpbMbs > 396)
-    dbp_level = GST_VAAPI_ENCODER_H264_LEVEL_11;
-  else
-    dbp_level = GST_VAAPI_ENCODER_H264_LEVEL_10;
-
-  /* calculate from Max Mb processing rate */
-  if (MaxMBPS > 589824)
-    mbps_level = GST_VAAPI_ENCODER_H264_LEVEL_51;
-  else if (MaxMBPS > 522240)
-    mbps_level = GST_VAAPI_ENCODER_H264_LEVEL_50;
-  else if (MaxMBPS > 245760)
-    mbps_level = GST_VAAPI_ENCODER_H264_LEVEL_42;
-  else if (MaxMBPS > 216000)    /* 40 or 41 */
-    mbps_level = GST_VAAPI_ENCODER_H264_LEVEL_41;
-  else if (MaxMBPS > 108000)
-    mbps_level = GST_VAAPI_ENCODER_H264_LEVEL_32;
-  else if (MaxMBPS > 40500)
-    mbps_level = GST_VAAPI_ENCODER_H264_LEVEL_31;
-  else if (MaxMBPS > 20250)
-    mbps_level = GST_VAAPI_ENCODER_H264_LEVEL_30;
-  else if (MaxMBPS > 19800)
-    mbps_level = GST_VAAPI_ENCODER_H264_LEVEL_22;
-  else if (MaxMBPS > 11800)
-    mbps_level = GST_VAAPI_ENCODER_H264_LEVEL_21;
-  else if (MaxMBPS > 6000)      /*13 or 20 */
-    mbps_level = GST_VAAPI_ENCODER_H264_LEVEL_20;
-  else if (MaxMBPS > 3000)
-    mbps_level = GST_VAAPI_ENCODER_H264_LEVEL_12;
-  else if (MaxMBPS > 1485)
-    mbps_level = GST_VAAPI_ENCODER_H264_LEVEL_11;
-  else
-    mbps_level = GST_VAAPI_ENCODER_H264_LEVEL_10;
-
-  if (encoder->profile == GST_VAAPI_PROFILE_H264_HIGH)
-    profile_level = GST_VAAPI_ENCODER_H264_LEVEL_41;
-  else if (encoder->profile == GST_VAAPI_PROFILE_H264_MAIN)
-    profile_level = GST_VAAPI_ENCODER_H264_LEVEL_30;
-  else
-    profile_level = GST_VAAPI_ENCODER_H264_LEVEL_20;
-
-  encoder->level_idc = (dbp_level > mbps_level ? dbp_level : mbps_level);
-  if (encoder->level_idc < profile_level)
-    encoder->level_idc = profile_level;
+  /* ERRORS */
+error_unsupported_level:
+  {
+    GST_ERROR ("failed to find a suitable level matching codec config");
+    return FALSE;
+  }
 }
 
 static inline void
@@ -1015,7 +971,7 @@ fill_va_picture_param (GstVaapiEncoderH264 * encoder,
   pic_param->pic_fields.bits.weighted_pred_flag = FALSE;
   pic_param->pic_fields.bits.weighted_bipred_idc = 0;
   pic_param->pic_fields.bits.constrained_intra_pred_flag = 0;
-  pic_param->pic_fields.bits.transform_8x8_mode_flag = (encoder->profile >= GST_VAAPI_PROFILE_H264_HIGH);       /* enable 8x8 */
+  pic_param->pic_fields.bits.transform_8x8_mode_flag = (encoder->profile_idc >= 100);       /* enable 8x8 */
   /* enable debloking */
   pic_param->pic_fields.bits.deblocking_filter_control_present_flag = TRUE;
   pic_param->pic_fields.bits.redundant_pic_cnt_present_flag = FALSE;
@@ -1282,8 +1238,8 @@ ensure_profile_and_level (GstVaapiEncoderH264 * encoder)
 {
   if (!ensure_profile (encoder))
     return FALSE;
-
-  _set_level (encoder);
+  if (!ensure_level (encoder))
+    return FALSE;
   return TRUE;
 }
 
@@ -1830,4 +1786,33 @@ gst_vaapi_encoder_h264_get_default_properties (void)
           1, 200, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
+}
+
+/**
+ * gst_vaapi_encoder_h264_get_profile_and_level:
+ * @encoder: a #GstVaapiEncoderH264
+ * @out_profile_ptr: return location for the #GstVaapiProfile
+ * @out_level_ptr: return location for the #GstVaapiLevelH264
+ *
+ * Queries the H.264 @encoder for the active profile and level. That
+ * information is only constructed and valid after the encoder is
+ * configured, i.e. after the gst_vaapi_encoder_set_codec_state()
+ * function is called.
+ *
+ * Return value: %TRUE on success
+ */
+gboolean
+gst_vaapi_encoder_h264_get_profile_and_level (GstVaapiEncoderH264 * encoder,
+    GstVaapiProfile * out_profile_ptr, GstVaapiLevelH264 * out_level_ptr)
+{
+  g_return_val_if_fail (encoder != NULL, FALSE);
+
+  if (!encoder->profile || !encoder->level)
+    return FALSE;
+
+  if (out_profile_ptr)
+    *out_profile_ptr = encoder->profile;
+  if (out_level_ptr)
+    *out_level_ptr = encoder->level;
+  return TRUE;
 }

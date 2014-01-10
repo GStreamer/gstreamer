@@ -23,32 +23,13 @@
 #define GST_VAAPI_ENCODER_H264_PRIV_H
 
 #include "gstvaapiencoder_priv.h"
+#include "gstvaapiutils_h264.h"
 
 G_BEGIN_DECLS
 
 #define GST_VAAPI_ENCODER_H264_CAST(encoder) \
     ((GstVaapiEncoderH264 *)(encoder))
 
-typedef enum
-{
-  GST_VAAPI_ENCODER_H264_LEVEL_10 = 10, /* QCIF format, < 380160 samples/sec */
-  GST_VAAPI_ENCODER_H264_LEVEL_11 = 11, /* CIF format,   < 768000 samples/sec */
-  GST_VAAPI_ENCODER_H264_LEVEL_12 = 12, /* CIF format,   < 1536000  samples/sec */
-  GST_VAAPI_ENCODER_H264_LEVEL_13 = 13, /* CIF format,   < 3041280  samples/sec */
-  GST_VAAPI_ENCODER_H264_LEVEL_20 = 20, /* CIF format,   < 3041280  samples/sec */
-  GST_VAAPI_ENCODER_H264_LEVEL_21 = 21, /* HHR format,  < 5068800  samples/sec */
-  GST_VAAPI_ENCODER_H264_LEVEL_22 = 22, /* SD/4CIF format,     < 5184000      samples/sec */
-  GST_VAAPI_ENCODER_H264_LEVEL_30 = 30, /* SD/4CIF format,     < 10368000    samples/sec */
-  GST_VAAPI_ENCODER_H264_LEVEL_31 = 31, /* 720pHD format,      < 27648000    samples/sec */
-  GST_VAAPI_ENCODER_H264_LEVEL_32 = 32, /* SXGA  format,         < 55296000    samples/sec */
-  GST_VAAPI_ENCODER_H264_LEVEL_40 = 40, /* 2Kx1K format,         < 62914560    samples/sec */
-  GST_VAAPI_ENCODER_H264_LEVEL_41 = 41, /* 2Kx1K format,         < 62914560    samples/sec */
-  GST_VAAPI_ENCODER_H264_LEVEL_42 = 42, /* 2Kx1K format,         < 125829120  samples/sec */
-  GST_VAAPI_ENCODER_H264_LEVEL_50 = 50, /* 3672x1536 format,  < 150994944  samples/sec */
-  GST_VAAPI_ENCODER_H264_LEVEL_51 = 51, /* 4096x2304 format,  < 251658240  samples/sec */
-} GstVaapiEncoderH264Level;
-
-#define GST_VAAPI_ENCODER_H264_DEFAULT_LEVEL        GST_VAAPI_ENCODER_H264_LEVEL_31
 #define GST_VAAPI_ENCODER_H264_MAX_IDR_PERIOD       512
 
 struct _GstVaapiEncoderH264
@@ -56,7 +37,9 @@ struct _GstVaapiEncoderH264
   GstVaapiEncoder parent_instance;
 
   GstVaapiProfile profile;
-  guint32 level_idc;
+  GstVaapiLevelH264 level;
+  guint8 profile_idc;
+  guint8 level_idc;
   guint32 idr_period;
   guint32 init_qp;
   guint32 min_qp;
