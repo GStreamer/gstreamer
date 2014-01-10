@@ -54,12 +54,6 @@ gst_vaapi_encoder_h264_new (GstVaapiDisplay * display);
 GPtrArray *
 gst_vaapi_encoder_h264_get_default_properties (void);
 
-void
-gst_vaapi_encoder_h264_set_avc (GstVaapiEncoderH264 * encoder, gboolean is_avc);
-
-gboolean
-gst_vaapi_encoder_h264_is_avc (GstVaapiEncoderH264 * encoder);
-
 G_END_DECLS
 
 #endif /*GST_VAAPI_ENCODER_H264_H */

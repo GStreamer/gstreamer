@@ -112,23 +112,6 @@ h264_get_slice_type (GstVaapiPictureType type)
   return -1;
 }
 
-static inline gboolean
-_read_sps_attributes (const guint8 * sps_data,
-    guint32 sps_size,
-    guint32 * profile_idc, guint32 * profile_comp, guint32 * level_idc)
-{
-  g_assert (profile_idc && profile_comp && level_idc);
-  g_assert (sps_size >= 4);
-  if (sps_size < 4) {
-    return FALSE;
-  }
-  /* skip sps_data[0], nal_type */
-  *profile_idc = sps_data[1];
-  *profile_comp = sps_data[2];
-  *level_idc = sps_data[3];
-  return TRUE;
-}
-
 /* Get log2_max_frame_num value for H.264 specification */
 static guint
 h264_get_log2_max_frame_num (guint num)
@@ -1384,93 +1367,87 @@ gst_vaapi_encoder_h264_flush (GstVaapiEncoder * base_encoder)
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 }
 
+/* Generate "codec-data" buffer */
 static GstVaapiEncoderStatus
-gst_vaapi_encoder_h264_get_avcC_codec_data (GstVaapiEncoderH264 * encoder,
-    GstBuffer ** buffer)
+gst_vaapi_encoder_h264_get_codec_data (GstVaapiEncoder * base_encoder,
+    GstBuffer ** out_buffer_ptr)
 {
-  GstBuffer *avc_codec;
+  GstVaapiEncoderH264 *const encoder =
+      GST_VAAPI_ENCODER_H264_CAST (base_encoder);
   const guint32 configuration_version = 0x01;
-  const guint32 length_size_minus_one = 0x03;
-  guint32 profile, profile_comp, level_idc;
+  const guint32 nal_length_size = 4;
+  guint8 profile_idc, profile_comp, level_idc;
   GstMapInfo sps_info, pps_info;
-  GstVaapiEncoderStatus ret = GST_VAAPI_ENCODER_STATUS_SUCCESS;
   GstBitWriter writer;
+  GstBuffer *buffer;
 
-  g_assert (buffer);
   if (!encoder->sps_data || !encoder->pps_data)
+    return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_HEADER;
+  if (gst_buffer_get_size (encoder->sps_data) < 4)
     return GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_HEADER;
 
   if (!gst_buffer_map (encoder->sps_data, &sps_info, GST_MAP_READ))
-    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
+    goto error_map_sps_buffer;
 
-  if (FALSE == _read_sps_attributes (sps_info.data, sps_info.size,
-          &profile, &profile_comp, &level_idc)) {
-    ret = GST_VAAPI_ENCODER_STATUS_ERROR_INVALID_HEADER;
-    goto end;
-  }
+  if (!gst_buffer_map (encoder->pps_data, &pps_info, GST_MAP_READ))
+    goto error_map_pps_buffer;
 
-  if (!gst_buffer_map (encoder->pps_data, &pps_info, GST_MAP_READ)) {
-    ret = GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
-    goto end;
-  }
+  /* skip sps_data[0], which is the nal_unit_type */
+  profile_idc = sps_info.data[1];
+  profile_comp = sps_info.data[2];
+  level_idc = sps_info.data[3];
 
+  /* Header */
   gst_bit_writer_init (&writer, (sps_info.size + pps_info.size + 64) * 8);
-  /* codec_data */
   gst_bit_writer_put_bits_uint32 (&writer, configuration_version, 8);
-  gst_bit_writer_put_bits_uint32 (&writer, profile, 8);
+  gst_bit_writer_put_bits_uint32 (&writer, profile_idc, 8);
   gst_bit_writer_put_bits_uint32 (&writer, profile_comp, 8);
   gst_bit_writer_put_bits_uint32 (&writer, level_idc, 8);
-  gst_bit_writer_put_bits_uint32 (&writer, 0x3F, 6);    /*111111 */
-  gst_bit_writer_put_bits_uint32 (&writer, length_size_minus_one, 2);
-  gst_bit_writer_put_bits_uint32 (&writer, 0x07, 3);    /*111 */
+  gst_bit_writer_put_bits_uint32 (&writer, 0x3f, 6);    /* 111111 */
+  gst_bit_writer_put_bits_uint32 (&writer, nal_length_size - 1, 2);
+  gst_bit_writer_put_bits_uint32 (&writer, 0x07, 3);    /* 111 */
 
-  /* write sps */
-  gst_bit_writer_put_bits_uint32 (&writer, 1, 5);       /* sps count = 1 */
+  /* Write SPS */
+  gst_bit_writer_put_bits_uint32 (&writer, 1, 5);       /* SPS count = 1 */
   g_assert (GST_BIT_WRITER_BIT_SIZE (&writer) % 8 == 0);
   gst_bit_writer_put_bits_uint32 (&writer, sps_info.size, 16);
   gst_bit_writer_put_bytes (&writer, sps_info.data, sps_info.size);
 
-  /* write pps */
-  gst_bit_writer_put_bits_uint32 (&writer, 1, 8);       /*pps count = 1 */
+  /* Write PPS */
+  gst_bit_writer_put_bits_uint32 (&writer, 1, 8);       /* PPS count = 1 */
   gst_bit_writer_put_bits_uint32 (&writer, pps_info.size, 16);
   gst_bit_writer_put_bytes (&writer, pps_info.data, pps_info.size);
 
-  avc_codec = gst_buffer_new_wrapped (GST_BIT_WRITER_DATA (&writer),
-      GST_BIT_WRITER_BIT_SIZE (&writer) / 8);
-  g_assert (avc_codec);
-  if (!avc_codec) {
-    ret = GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
-    goto clear_writer;
-  }
-  *buffer = avc_codec;
-
   gst_buffer_unmap (encoder->pps_data, &pps_info);
-  gst_bit_writer_clear (&writer, FALSE);
-  ret = GST_VAAPI_ENCODER_STATUS_SUCCESS;
-  goto end;
-
-clear_writer:
-  gst_bit_writer_clear (&writer, TRUE);
-
-end:
   gst_buffer_unmap (encoder->sps_data, &sps_info);
 
-  return ret;
-}
+  buffer = gst_buffer_new_wrapped (GST_BIT_WRITER_DATA (&writer),
+      GST_BIT_WRITER_BIT_SIZE (&writer) / 8);
+  if (!buffer)
+    goto error_alloc_buffer;
+  *out_buffer_ptr = buffer;
 
-static GstVaapiEncoderStatus
-gst_vaapi_encoder_h264_get_codec_data (GstVaapiEncoder * base_encoder,
-    GstBuffer ** buffer)
-{
-  GstVaapiEncoderH264 *const encoder =
-      GST_VAAPI_ENCODER_H264_CAST (base_encoder);
+  gst_bit_writer_clear (&writer, FALSE);
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
-  *buffer = NULL;
-
-  if (!encoder->is_avc)
-    return GST_VAAPI_ENCODER_STATUS_SUCCESS;
-
-  return gst_vaapi_encoder_h264_get_avcC_codec_data (encoder, buffer);
+  /* ERRORS */
+error_map_sps_buffer:
+  {
+    GST_ERROR ("failed to map SPS packed header");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
+  }
+error_map_pps_buffer:
+  {
+    GST_ERROR ("failed to map PPS packed header");
+    gst_buffer_unmap (encoder->sps_data, &sps_info);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
+  }
+error_alloc_buffer:
+  {
+    GST_ERROR ("failed to allocate codec-data buffer");
+    gst_bit_writer_clear (&writer, TRUE);
+    return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
+  }
 }
 
 static GstVaapiEncoderStatus
@@ -1804,16 +1781,4 @@ gst_vaapi_encoder_h264_get_default_properties (void)
           1, 200, 1, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   return props;
-}
-
-void
-gst_vaapi_encoder_h264_set_avc (GstVaapiEncoderH264 * encoder, gboolean is_avc)
-{
-  encoder->is_avc = is_avc;
-}
-
-gboolean
-gst_vaapi_encoder_h264_is_avc (GstVaapiEncoderH264 * encoder)
-{
-  return encoder->is_avc;
 }

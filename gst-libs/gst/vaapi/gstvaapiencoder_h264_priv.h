@@ -66,7 +66,6 @@ struct _GstVaapiEncoderH264
   guint32 mb_width;
   guint32 mb_height;
 
-  gboolean is_avc;              /* avc or bytestream */
   /* re-ordering */
   GQueue reorder_frame_list;
   guint reorder_state;
