@@ -91,6 +91,7 @@ gst_validate_media_info_init (GstValidateMediaInfo * mi)
   mi->playback_error = NULL;
   mi->reverse_playback_error = NULL;
   mi->track_switch_error = NULL;
+  mi->is_image = FALSE;
 }
 
 void
@@ -125,6 +126,7 @@ gst_validate_media_info_to_string (GstValidateMediaInfo * mi, gsize * length)
   /* media info */
   g_key_file_set_uint64 (kf, "media-info", "file-duration", mi->duration);
   g_key_file_set_boolean (kf, "media-info", "seekable", mi->seekable);
+  g_key_file_set_boolean (kf, "media-info", "is-image", mi->is_image);
 
   if (mi->stream_info && mi->stream_info->caps) {
     str = gst_caps_to_string (mi->stream_info->caps);
@@ -185,6 +187,7 @@ gst_validate_media_info_load (const gchar * path, GError ** err)
 
   mi->duration = g_key_file_get_uint64 (kf, "media-info", "file-duration", NULL);
   mi->seekable = g_key_file_get_boolean (kf, "media-info", "seekable", NULL);
+  mi->is_image = g_key_file_get_boolean (kf, "media-info", "is-image", NULL);
 
   str = g_key_file_get_string (kf, "media-info", "caps", NULL);
   if (str) {
@@ -1037,6 +1040,28 @@ end:
   return ret;
 }
 
+static gboolean
+check_is_image (GstDiscovererInfo *info)
+{
+    gboolean ret = FALSE;
+    GList *video_streams = gst_discoverer_info_get_video_streams (info);
+
+    if (g_list_length (video_streams) == 1) {
+        if (gst_discoverer_video_info_is_image (video_streams->data)) {
+            GList *audio_streams = gst_discoverer_info_get_audio_streams (info);
+
+            if (audio_streams == NULL)
+                ret = TRUE;
+            else
+                gst_discoverer_stream_info_list_free (audio_streams);
+        }
+    }
+
+    gst_discoverer_stream_info_list_free (video_streams);
+
+    return ret;
+}
+
 gboolean
 gst_validate_media_info_inspect_uri (GstValidateMediaInfo * mi,
     const gchar * uri, GError ** err)
@@ -1061,14 +1086,20 @@ gst_validate_media_info_inspect_uri (GstValidateMediaInfo * mi,
     return FALSE;
   }
 
+  mi->is_image = check_is_image (info);
   ret = check_file_size (mi) & ret;
-  ret = check_file_duration (mi, info) & ret;
-  ret = check_seekable (mi, info) & ret;
   ret = check_encoding_profile (mi, info) & ret;
+  ret = check_file_duration (mi, info) & ret;
+
+  if (mi->is_image)
+      goto done;
+
+  ret = check_seekable (mi, info) & ret;
   ret = check_playback (mi, &mi->playback_error) & ret;
   ret = check_reverse_playback (mi, &mi->reverse_playback_error) & ret;
   ret = check_track_selection (mi, &mi->track_switch_error) & ret;
 
+done:
   gst_object_unref (discoverer);
 
   return ret;

@@ -43,6 +43,7 @@ struct _GstValidateMediaInfo {
   /* Value for the expected total duration of the file in nanosecs
    * Set to GST_CLOCK_TIME_NONE if it shouldn't be tested */
   GstClockTime duration;
+  gboolean is_image;
 
   /* Expected file_size, set to 0 to skip test */
   guint64 file_size;
