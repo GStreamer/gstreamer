@@ -139,6 +139,18 @@ gst_vaapi_encoder_properties_get_default (const GstVaapiEncoderClass * klass)
           "The desired bitrate expressed in kbps (0: auto-calculate)",
           0, 100 * 1024, 0, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
+  /**
+   * GstVaapiEncoder:keyframe-period:
+   *
+   * The maximal distance between two keyframes.
+   */
+  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
+      GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD,
+      g_param_spec_uint ("keyframe-period",
+          "Keyframe Period",
+          "Maximal distance between two keyframes (0: auto-calculate)", 1, 300,
+          30, G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
+
   return props;
 }
 
@@ -478,9 +490,14 @@ static GstVaapiEncoderStatus
 gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
 {
   GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
+  GstVideoInfo *const vip = GST_VAAPI_ENCODER_VIDEO_INFO (encoder);
   GstVaapiEncoderStatus status;
   GstVaapiVideoPool *pool;
   guint codedbuf_size;
+
+  /* Generate a keyframe every second */
+  if (!encoder->keyframe_period)
+    encoder->keyframe_period = (vip->fps_n + vip->fps_d - 1) / vip->fps_d;
 
   status = klass->reconfigure (encoder);
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
@@ -601,6 +618,10 @@ set_property (GstVaapiEncoder * encoder, gint prop_id, const GValue * value)
       break;
     case GST_VAAPI_ENCODER_PROP_BITRATE:
       status = gst_vaapi_encoder_set_bitrate (encoder,
+          g_value_get_uint (value));
+      break;
+    case GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD:
+      status = gst_vaapi_encoder_set_keyframe_period (encoder,
           g_value_get_uint (value));
       break;
   }
@@ -778,6 +799,42 @@ gst_vaapi_encoder_set_bitrate (GstVaapiEncoder * encoder, guint bitrate)
 error_operation_failed:
   {
     GST_ERROR ("could not change bitrate value after encoding started");
+    return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
+  }
+}
+
+/**
+ * gst_vaapi_encoder_set_keyframe_period:
+ * @encoder: a #GstVaapiEncoder
+ * @keyframe_period: the maximal distance between two keyframes
+ *
+ * Notifies the @encoder to use the supplied @keyframe_period value.
+ *
+ * Note: currently, the keyframe period can only be specified before
+ * the last call to gst_vaapi_encoder_set_codec_state(), which shall
+ * occur before the first frame is encoded. Afterwards, any change to
+ * this parameter causes gst_vaapi_encoder_set_keyframe_period() to
+ * return @GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED.
+ *
+ * Return value: a #GstVaapiEncoderStatus
+ */
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_keyframe_period (GstVaapiEncoder * encoder,
+    guint keyframe_period)
+{
+  g_return_val_if_fail (encoder != NULL, 0);
+
+  if (encoder->keyframe_period != keyframe_period
+      && encoder->num_codedbuf_queued > 0)
+    goto error_operation_failed;
+
+  encoder->keyframe_period = keyframe_period;
+  return GST_VAAPI_ENCODER_STATUS_SUCCESS;
+
+  /* ERRORS */
+error_operation_failed:
+  {
+    GST_ERROR ("could not change keyframe period after encoding started");
     return GST_VAAPI_ENCODER_STATUS_ERROR_OPERATION_FAILED;
   }
 }

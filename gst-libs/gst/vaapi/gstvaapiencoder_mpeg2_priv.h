@@ -53,9 +53,6 @@ typedef enum
 #define GST_VAAPI_ENCODER_MPEG2_MAX_CQP                 62
 #define GST_VAAPI_ENCODER_MPEG2_DEFAULT_CQP             8
 
-#define GST_VAAPI_ENCODER_MPEG2_MAX_GOP_SIZE            512
-#define GST_VAAPI_ENCODER_MPEG2_DEFAULT_GOP_SIZE        30
-
 #define GST_VAAPI_ENCODER_MPEG2_MAX_MAX_BFRAMES         16
 #define GST_VAAPI_ENCODER_MPEG2_DEFAULT_MAX_BFRAMES     2
 
@@ -81,7 +78,6 @@ struct _GstVaapiEncoderMpeg2
   guint32 profile;
   guint32 level;
   guint32 cqp;
-  guint32 intra_period;
   guint32 ip_period;
 
   /* re-ordering */

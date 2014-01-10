@@ -177,7 +177,7 @@ fill_sequence (GstVaapiEncoderMpeg2 * encoder, GstVaapiEncSequence * sequence)
 
   memset (seq, 0, sizeof (VAEncSequenceParameterBufferMPEG2));
 
-  seq->intra_period = encoder->intra_period;
+  seq->intra_period = base_encoder->keyframe_period;
   seq->ip_period = encoder->ip_period;
   seq->picture_width = GST_VAAPI_ENCODER_WIDTH (encoder);
   seq->picture_height = GST_VAAPI_ENCODER_HEIGHT (encoder);
@@ -587,7 +587,7 @@ gst_vaapi_encoder_mpeg2_reordering (GstVaapiEncoder * base,
     return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;
   }
 
-  if (encoder->frame_num >= encoder->intra_period) {
+  if (encoder->frame_num >= base->keyframe_period) {
     encoder->frame_num = 0;
     clear_references (encoder);
   }
@@ -598,7 +598,7 @@ gst_vaapi_encoder_mpeg2_reordering (GstVaapiEncoder * base,
   } else {
     encoder->new_gop = FALSE;
     if ((encoder->frame_num % (encoder->ip_period + 1)) == 0 ||
-        encoder->frame_num == encoder->intra_period - 1) {
+        encoder->frame_num == base->keyframe_period - 1) {
       picture->type = GST_VAAPI_PICTURE_TYPE_P;
       encoder->dump_frames = TRUE;
     } else {
@@ -680,8 +680,8 @@ gst_vaapi_encoder_mpeg2_reconfigure (GstVaapiEncoder * base_encoder)
   GstVaapiEncoderMpeg2 *const encoder =
       GST_VAAPI_ENCODER_MPEG2_CAST (base_encoder);
 
-  if (encoder->ip_period > encoder->intra_period) {
-    encoder->ip_period = encoder->intra_period - 1;
+  if (encoder->ip_period > base_encoder->keyframe_period) {
+    encoder->ip_period = base_encoder->keyframe_period - 1;
   }
 
   if (!ensure_profile_and_level (encoder))
@@ -771,9 +771,6 @@ gst_vaapi_encoder_mpeg2_set_property (GstVaapiEncoder * base_encoder,
     case GST_VAAPI_ENCODER_MPEG2_PROP_QUANTIZER:
       encoder->cqp = g_value_get_uint (value);
       break;
-    case GST_VAAPI_ENCODER_MPEG2_PROP_KEY_PERIOD:
-      encoder->intra_period = g_value_get_uint (value);
-      break;
     case GST_VAAPI_ENCODER_MPEG2_PROP_MAX_BFRAMES:
       encoder->ip_period = g_value_get_uint (value);
       break;
@@ -829,14 +826,6 @@ gst_vaapi_encoder_mpeg2_get_default_properties (void)
           "Constant quantizer (if rate-control mode is CQP)",
           GST_VAAPI_ENCODER_MPEG2_MIN_CQP, GST_VAAPI_ENCODER_MPEG2_MAX_CQP,
           GST_VAAPI_ENCODER_MPEG2_DEFAULT_CQP,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
-
-  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
-      GST_VAAPI_ENCODER_MPEG2_PROP_KEY_PERIOD,
-      g_param_spec_uint ("key-period",
-          "Key Period", "Maximal distance between two key-frames", 1,
-          GST_VAAPI_ENCODER_MPEG2_MAX_GOP_SIZE,
-          GST_VAAPI_ENCODER_MPEG2_DEFAULT_GOP_SIZE,
           G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,

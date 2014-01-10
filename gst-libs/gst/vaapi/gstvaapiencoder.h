@@ -72,12 +72,15 @@ typedef enum
  * GstVaapiEncoderProp:
  * @GST_VAAPI_ENCODER_PROP_RATECONTROL: Rate control (#GstVaapiRateControl).
  * @GST_VAAPI_ENCODER_PROP_BITRATE: Bitrate expressed in kbps (uint).
+ * @GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD: The maximal distance
+ *   between two keyframes (uint).
  *
  * The set of configurable properties for the encoder.
  */
 typedef enum {
   GST_VAAPI_ENCODER_PROP_RATECONTROL = 1,
   GST_VAAPI_ENCODER_PROP_BITRATE,
+  GST_VAAPI_ENCODER_PROP_KEYFRAME_PERIOD,
 } GstVaapiEncoderProp;
 
 /**
@@ -124,6 +127,10 @@ gst_vaapi_encoder_set_bitrate (GstVaapiEncoder * encoder, guint bitrate);
 GstVaapiEncoderStatus
 gst_vaapi_encoder_put_frame (GstVaapiEncoder * encoder,
     GstVideoCodecFrame * frame);
+
+GstVaapiEncoderStatus
+gst_vaapi_encoder_set_keyframe_period (GstVaapiEncoder * encoder,
+    guint keyframe_period);
 
 GstVaapiEncoderStatus
 gst_vaapi_encoder_get_buffer_with_timeout (GstVaapiEncoder * encoder,

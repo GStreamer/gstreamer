@@ -854,7 +854,7 @@ fill_va_sequence_param (GstVaapiEncoderH264 * encoder,
   memset (seq, 0, sizeof (VAEncSequenceParameterBufferH264));
   seq->seq_parameter_set_id = 0;
   seq->level_idc = encoder->level;
-  seq->intra_period = encoder->intra_period;
+  seq->intra_period = GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder);
   seq->ip_period = 0;           // ?
   if (base_encoder->bitrate > 0)
     seq->bits_per_second = base_encoder->bitrate * 1024;
@@ -1284,13 +1284,11 @@ ensure_bitrate (GstVaapiEncoderH264 * encoder)
 static void
 reset_properties (GstVaapiEncoderH264 * encoder)
 {
+  GstVaapiEncoder *const base_encoder = GST_VAAPI_ENCODER_CAST (encoder);
   guint width_mbs, height_mbs, total_mbs;
 
-  if (encoder->intra_period > GST_VAAPI_ENCODER_H264_MAX_INTRA_PERIOD)
-    encoder->intra_period = GST_VAAPI_ENCODER_H264_MAX_INTRA_PERIOD;
-
-  if (encoder->idr_period < encoder->intra_period)
-    encoder->idr_period = encoder->intra_period;
+  if (encoder->idr_period < base_encoder->keyframe_period)
+    encoder->idr_period = base_encoder->keyframe_period;
   if (encoder->idr_period > GST_VAAPI_ENCODER_H264_MAX_IDR_PERIOD)
     encoder->idr_period = GST_VAAPI_ENCODER_H264_MAX_IDR_PERIOD;
 
@@ -1307,8 +1305,8 @@ reset_properties (GstVaapiEncoderH264 * encoder)
     encoder->slice_num = (total_mbs + 1) / 2;
   g_assert (encoder->slice_num);
 
-  if (encoder->b_frame_num > (encoder->intra_period + 1) / 2)
-    encoder->b_frame_num = (encoder->intra_period + 1) / 2;
+  if (encoder->b_frame_num > (base_encoder->keyframe_period + 1) / 2)
+    encoder->b_frame_num = (base_encoder->keyframe_period + 1) / 2;
 
   if (encoder->b_frame_num > 50)
     encoder->b_frame_num = 50;
@@ -1522,7 +1520,8 @@ gst_vaapi_encoder_h264_reordering (GstVaapiEncoder * base,
 
   /* check key frames */
   if (is_idr || GST_VIDEO_CODEC_FRAME_IS_FORCE_KEYFRAME (frame) ||
-      (encoder->frame_index % encoder->intra_period) == 0) {
+      (encoder->frame_index % GST_VAAPI_ENCODER_KEYFRAME_PERIOD (encoder)) ==
+      0) {
     ++encoder->cur_frame_num;
     ++encoder->frame_index;
 
@@ -1710,9 +1709,6 @@ gst_vaapi_encoder_h264_set_property (GstVaapiEncoder * base_encoder,
   GstVaapiEncoderH264 *const encoder = GST_VAAPI_ENCODER_H264 (base_encoder);
 
   switch (prop_id) {
-    case GST_VAAPI_ENCODER_H264_PROP_KEY_PERIOD:
-      encoder->intra_period = g_value_get_uint (value);
-      break;
     case GST_VAAPI_ENCODER_H264_PROP_MAX_BFRAMES:
       encoder->b_frame_num = g_value_get_uint (value);
       break;
@@ -1770,17 +1766,6 @@ gst_vaapi_encoder_h264_get_default_properties (void)
   props = gst_vaapi_encoder_properties_get_default (klass);
   if (!props)
     return NULL;
-
-  /**
-   * GstVaapiEncoderH264:key-period
-   *
-   * The maximal distance between two keyframes.
-   */
-  GST_VAAPI_ENCODER_PROPERTIES_APPEND (props,
-      GST_VAAPI_ENCODER_H264_PROP_KEY_PERIOD,
-      g_param_spec_uint ("key-period",
-          "Key Period", "Maximal distance between two key-frames", 1, 300, 30,
-          G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS));
 
   /**
    * GstVaapiEncoderH264:max-bframes:

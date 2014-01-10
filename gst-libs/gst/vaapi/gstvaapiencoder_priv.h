@@ -121,6 +121,17 @@ G_BEGIN_DECLS
 #define GST_VAAPI_ENCODER_RATE_CONTROL(encoder) \
   (GST_VAAPI_ENCODER_CAST (encoder)->rate_control)
 
+/**
+ * GST_VAAPI_ENCODER_KEYFRAME_PERIOD:
+ * @encoder: a #GstVaapiEncoder
+ *
+ * Macro that evaluates to the keyframe period.
+ * This is an internal macro that does not do any run-time type check.
+ */
+#undef  GST_VAAPI_ENCODER_KEYFRAME_PERIOD
+#define GST_VAAPI_ENCODER_KEYFRAME_PERIOD(encoder) \
+  (GST_VAAPI_ENCODER_CAST (encoder)->keyframe_period)
+
 #define GST_VAAPI_ENCODER_CHECK_STATUS(exp, err_num, err_reason, ...)   \
   if (!(exp)) {                                                         \
     ret = err_num;                                                      \
@@ -170,6 +181,7 @@ struct _GstVaapiEncoder
   GstVaapiRateControl rate_control;
   guint32 rate_control_mask;
   guint bitrate; /* kbps */
+  guint keyframe_period;
 
   GMutex mutex;
   GCond surface_free;

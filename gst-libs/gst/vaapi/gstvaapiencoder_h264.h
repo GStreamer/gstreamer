@@ -30,8 +30,6 @@ typedef struct _GstVaapiEncoderH264 GstVaapiEncoderH264;
 
 /**
  * GstVaapiEncoderH264Prop:
- * @GST_VAAPI_ENCODER_H264_PROP_KEY_PERIOD: Maximal distance between two
- *   keyframes (uint).
  * @GST_VAAPI_ENCODER_H264_PROP_MAX_BFRAMES: Number of B-frames between I
  *   and P (uint).
  * @GST_VAAPI_ENCODER_H264_PROP_INIT_QP: Initial quantizer value (uint).
@@ -41,11 +39,10 @@ typedef struct _GstVaapiEncoderH264 GstVaapiEncoderH264;
  * The set of H.264 encoder specific configurable properties.
  */
 typedef enum {
-  GST_VAAPI_ENCODER_H264_PROP_KEY_PERIOD = -1,
-  GST_VAAPI_ENCODER_H264_PROP_MAX_BFRAMES = -2,
-  GST_VAAPI_ENCODER_H264_PROP_INIT_QP = -3,
-  GST_VAAPI_ENCODER_H264_PROP_MIN_QP = -4,
-  GST_VAAPI_ENCODER_H264_PROP_NUM_SLICES = -5,
+  GST_VAAPI_ENCODER_H264_PROP_MAX_BFRAMES = -1,
+  GST_VAAPI_ENCODER_H264_PROP_INIT_QP = -2,
+  GST_VAAPI_ENCODER_H264_PROP_MIN_QP = -3,
+  GST_VAAPI_ENCODER_H264_PROP_NUM_SLICES = -4,
 } GstVaapiEncoderH264Prop;
 
 GstVaapiEncoder *

@@ -57,8 +57,6 @@ typedef enum
 #define GST_VAAPI_ENCODER_H264_DEFAULT_LEVEL        GST_VAAPI_ENCODER_H264_LEVEL_31
 #define GST_VAAPI_ENCODER_H264_DEFAULT_INIT_QP      26
 #define GST_VAAPI_ENCODER_H264_DEFAULT_MIN_QP       1
-#define GST_VAAPI_ENCODER_H264_DEFAULT_INTRA_PERIOD 30
-#define GST_VAAPI_ENCODER_H264_MAX_INTRA_PERIOD     512
 #define GST_VAAPI_ENCODER_H264_MAX_IDR_PERIOD       512
 
 #define GST_VAAPI_ENCODER_H264_DEFAULT_SLICE_NUM    1
@@ -70,7 +68,6 @@ struct _GstVaapiEncoderH264
   /* public */
   guint32 profile;
   guint32 level;
-  guint32 intra_period;
   guint32 idr_period;
   guint32 init_qp;              /*default 24 */
   guint32 min_qp;               /*default 1 */
