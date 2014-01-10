@@ -149,9 +149,11 @@ class Test(Loggable):
         self.command = "%s " % (self.application)
         self._starting_time = time.time()
         self.build_arguments()
-        printc("Launching: %s %s -> '%s' -- logs are in %s"
-               % (Colors.ENDC, self.classname, self.command,
-                  self.reporter.out.name), Colors.OKBLUE)
+        printc("Launching: %s%s\n"
+               "           logs are in %s\n"
+               "           Command: '%s'\n"
+               % (Colors.ENDC, self.classname,
+                  self.logfile, self.command), Colors.OKBLUE)
         try:
             self.process = subprocess.Popen(self.command,
                                             stderr=self.reporter.out,
@@ -220,7 +222,8 @@ class GstValidateTest(Test):
             self.result = Result.PASSED
         else:
             if self.process.returncode == 139:
-                self.get_backtrace("SEGFAULT")
+                # FIXME Reimplement something like that if needed
+                # self.get_backtrace("SEGFAULT")
                 self.set_result(Result.FAILED,
                                 "Application segfaulted",
                                 "segfault")
