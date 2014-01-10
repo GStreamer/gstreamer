@@ -71,6 +71,22 @@ typedef enum
   GST_VAAPI_LEVEL_H264_L5_2,
 } GstVaapiLevelH264;
 
+/* Returns GstVaapiProfile from a string representation */
+GstVaapiProfile
+gst_vaapi_utils_h264_get_profile_from_string (const gchar * str);
+
+/* Returns a string representation for the supplied H.264 profile */
+const gchar *
+gst_vaapi_utils_h264_get_profile_string (GstVaapiProfile profile);
+
+/* Returns GstVaapiLevelH264 from a string representation */
+GstVaapiLevelH264
+gst_vaapi_utils_h264_get_level_from_string (const gchar * str);
+
+/* Returns a string representation for the supplied H.264 level */
+const gchar *
+gst_vaapi_utils_h264_get_level_string (GstVaapiLevelH264 level);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_UTILS_H264_H */

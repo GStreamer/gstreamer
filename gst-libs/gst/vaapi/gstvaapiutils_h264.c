@@ -24,6 +24,55 @@
 #include <gst/codecparsers/gsth264parser.h>
 #include "gstvaapiutils_h264_priv.h"
 
+struct map
+{
+  guint value;
+  const gchar *name;
+};
+
+/* Profile string map */
+static const struct map gst_vaapi_h264_profile_map[] = {
+/* *INDENT-OFF* */
+  { GST_VAAPI_PROFILE_H264_CONSTRAINED_BASELINE, "constrained-baseline" },
+  { GST_VAAPI_PROFILE_H264_BASELINE,             "baseline"             },
+  { GST_VAAPI_PROFILE_H264_MAIN,                 "main"                 },
+  { GST_VAAPI_PROFILE_H264_EXTENDED,             "extended"             },
+  { GST_VAAPI_PROFILE_H264_HIGH,                 "high"                 },
+  { GST_VAAPI_PROFILE_H264_HIGH10,               "high-10"              },
+  { GST_VAAPI_PROFILE_H264_HIGH_422,             "high-4:2:2"           },
+  { GST_VAAPI_PROFILE_H264_HIGH_444,             "high-4:4:4"           },
+  { GST_VAAPI_PROFILE_H264_SCALABLE_BASELINE,    "scalable-baseline"    },
+  { GST_VAAPI_PROFILE_H264_SCALABLE_HIGH,        "scalable-high"        },
+  { GST_VAAPI_PROFILE_H264_STEREO_HIGH,          "stereo-high"          },
+  { GST_VAAPI_PROFILE_H264_MULTIVIEW_HIGH,       "multiview-high"       },
+  { 0, NULL }
+/* *INDENT-ON* */
+};
+
+/* Level string map */
+static const struct map gst_vaapi_h264_level_map[] = {
+/* *INDENT-OFF* */
+  { GST_VAAPI_LEVEL_H264_L1,    "1"     },
+  { GST_VAAPI_LEVEL_H264_L1b,   "1b"    },
+  { GST_VAAPI_LEVEL_H264_L1_1,  "1.1"   },
+  { GST_VAAPI_LEVEL_H264_L1_2,  "1.2"   },
+  { GST_VAAPI_LEVEL_H264_L1_3,  "1.3"   },
+  { GST_VAAPI_LEVEL_H264_L2,    "2"     },
+  { GST_VAAPI_LEVEL_H264_L2_1,  "2.1"   },
+  { GST_VAAPI_LEVEL_H264_L2_2,  "2.2"   },
+  { GST_VAAPI_LEVEL_H264_L3,    "3"     },
+  { GST_VAAPI_LEVEL_H264_L3_1,  "3.1"   },
+  { GST_VAAPI_LEVEL_H264_L3_2,  "3.2"   },
+  { GST_VAAPI_LEVEL_H264_L4,    "4"     },
+  { GST_VAAPI_LEVEL_H264_L4_1,  "4.1"   },
+  { GST_VAAPI_LEVEL_H264_L4_2,  "4.2"   },
+  { GST_VAAPI_LEVEL_H264_L5,    "5"     },
+  { GST_VAAPI_LEVEL_H264_L5_1,  "5.1"   },
+  { GST_VAAPI_LEVEL_H264_L5_2,  "5.2"   },
+  { 0, NULL }
+/* *INDENT-ON* */
+};
+
 /* Table A-1 - Level limits */
 /* *INDENT-OFF* */
 static const GstVaapiH264LevelLimits gst_vaapi_h264_level_limits[] = {
@@ -48,6 +97,35 @@ static const GstVaapiH264LevelLimits gst_vaapi_h264_level_limits[] = {
   { 0, }
 };
 /* *INDENT-ON* */
+
+/* Lookup value in map */
+static const struct map *
+map_lookup_value (const struct map *m, guint value)
+{
+  g_return_val_if_fail (m != NULL, NULL);
+
+  for (; m->name != NULL; m++) {
+    if (m->value == value)
+      return m;
+  }
+  return NULL;
+}
+
+/* Lookup name in map */
+static const struct map *
+map_lookup_name (const struct map *m, const gchar * name)
+{
+  g_return_val_if_fail (m != NULL, NULL);
+
+  if (!name)
+    return NULL;
+
+  for (; m->name != NULL; m++) {
+    if (strcmp (m->name, name) == 0)
+      return m;
+  }
+  return NULL;
+}
 
 /** Returns GstVaapiProfile from H.264 profile_idc value */
 GstVaapiProfile
@@ -146,6 +224,25 @@ gst_vaapi_utils_h264_get_profile_idc (GstVaapiProfile profile)
   return profile_idc;
 }
 
+/** Returns GstVaapiProfile from a string representation */
+GstVaapiProfile
+gst_vaapi_utils_h264_get_profile_from_string (const gchar * str)
+{
+  const struct map *const m = map_lookup_name (gst_vaapi_h264_profile_map, str);
+
+  return m ? (GstVaapiProfile) m->value : GST_VAAPI_PROFILE_UNKNOWN;
+}
+
+/** Returns a string representation for the supplied H.264 profile */
+const gchar *
+gst_vaapi_utils_h264_get_profile_string (GstVaapiProfile profile)
+{
+  const struct map *const m =
+      map_lookup_value (gst_vaapi_h264_profile_map, profile);
+
+  return m ? m->name : NULL;
+}
+
 /** Returns GstVaapiLevelH264 from H.264 level_idc value */
 GstVaapiLevelH264
 gst_vaapi_utils_h264_get_level (guint8 level_idc)
@@ -172,6 +269,51 @@ gst_vaapi_utils_h264_get_level_idc (GstVaapiLevelH264 level)
      gst_vaapi_utils_h264_get_level_limits (level);
 
   return llp ? llp->level_idc : 0;
+}
+
+/** Returns GstVaapiLevelH264 from a string representation */
+GstVaapiLevelH264
+gst_vaapi_utils_h264_get_level_from_string (const gchar * str)
+{
+  gint v, level_idc = 0;
+
+  if (!str || !str[0])
+    goto not_found;
+
+  v = g_ascii_digit_value (str[0]);
+  if (v < 0)
+    goto not_found;
+  level_idc = v * 10;
+
+  switch (str[1]) {
+    case '\0':
+      break;
+    case '.':
+      v = g_ascii_digit_value (str[2]);
+      if (v < 0 || str[3] != '\0')
+        goto not_found;
+      level_idc += v;
+      break;
+    case 'b':
+      if (level_idc == 10 && str[2] == '\0')
+        return GST_VAAPI_LEVEL_H264_L1b;
+      // fall-trough
+    default:
+      goto not_found;
+  }
+  return gst_vaapi_utils_h264_get_level (level_idc);
+
+not_found:
+  return (GstVaapiLevelH264) 0;
+}
+
+/** Returns a string representation for the supplied H.264 level */
+const gchar *
+gst_vaapi_utils_h264_get_level_string (GstVaapiLevelH264 level)
+{
+  if (level < GST_VAAPI_LEVEL_H264_L1 || level > GST_VAAPI_LEVEL_H264_L5_2)
+    return NULL;
+  return gst_vaapi_h264_level_map[level - GST_VAAPI_LEVEL_H264_L1].name;
 }
 
 /** Returns level limits as specified in Table A-1 of the H.264 standard */
