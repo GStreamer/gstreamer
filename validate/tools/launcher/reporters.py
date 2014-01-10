@@ -159,7 +159,7 @@ class XunitReporter(Reporter):
         self.stats['total'] = (self.stats['timeout'] + self.stats['failures']
                                + self.stats['passed'] + self.stats['skipped'])
         self.xml_file.write( u'<?xml version="1.0" encoding="%(encoding)s"?>'
-            u'<testsuite name="gesprojectslauncher" tests="%(total)d" '
+            u'<testsuite name="gst-validate-launcher" tests="%(total)d" '
             u'errors="%(timeout)d" failures="%(failures)d" '
             u'skip="%(skipped)d">' % self.stats)
         self.xml_file.write(u''.join([self._forceUnicode(e)
