@@ -68,7 +68,7 @@ _FORMATTED_LEVELS = []
 _LEVEL_NAMES = ['ERROR', 'WARN', 'FIXME', 'INFO', 'DEBUG', 'LOG']
 
 
-class TerminalController:
+class TerminalController(object):
     """
     A class that can be used to portably generate formatted output to
     a terminal.

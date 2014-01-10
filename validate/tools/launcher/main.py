@@ -71,6 +71,7 @@ def main():
     parser.add_option("-n", "--no-color", dest="no_color",
                      action="store_true", default=False,
                      help="Set it to output no colored text in the terminal")
+
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
 
     tests_launcher = _TestsLauncher()
@@ -86,6 +87,7 @@ def main():
         options.dest = path2url(options.dest)
     if options.no_color:
         utils.desactivate_colors()
+
 
     tests_launcher.set_settings(options, args)
 

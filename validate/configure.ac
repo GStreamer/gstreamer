@@ -255,16 +255,16 @@ AC_CONFIG_FILES([
 Makefile
 common/Makefile
 common/m4/Makefile
+data/Makefile
 gst/Makefile
 gst/validate/Makefile
-tools/Makefile
-tools/launcher/Makefile
-tools/launcher/apps/Makefile
-data/Makefile
 pkgconfig/Makefile
 pkgconfig/gst-validate-uninstalled.pc
 pkgconfig/gst-validate.pc
 po/Makefile.in
+tools/Makefile
+tools/launcher/Makefile
+tools/launcher/apps/Makefile
 ])
 AC_OUTPUT
 
