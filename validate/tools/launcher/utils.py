@@ -48,7 +48,7 @@ class Colors(object):
     ENDC = '\033[0m'
 
 
-def desactivate_colors(self):
+def desactivate_colors():
     Colors.HEADER = ''
     Colors.OKBLUE = ''
     Colors.OKGREEN = ''

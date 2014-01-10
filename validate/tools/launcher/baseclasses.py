@@ -313,7 +313,8 @@ class _TestsLauncher(Loggable):
             if tester.init() is True:
                 self.testers.append(tester)
             else:
-                self.warning("Can not init tester: %s", tester.name)
+                self.warning("Can not init tester: %s -- PATH is %s"
+                             % (tester.name, os.environ["PATH"]))
 
     def add_options(self, parser):
         for tester in self.testers:

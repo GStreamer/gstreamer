@@ -17,6 +17,7 @@
 # Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
 # Boston, MA 02110-1301, USA.
 import os
+import utils
 import urlparse
 import loggable
 from optparse import OptionParser
@@ -67,6 +68,9 @@ def main():
                      default=None,
                      help="Set the path to which projects should be"
                      " renderd")
+    parser.add_option("-n", "--no-color", dest="no_color",
+                     action="store_true", default=False,
+                     help="Set it to output no colored text in the terminal")
     loggable.init("GST_VALIDATE_LAUNCHER_DEBUG", True, False)
 
     tests_launcher = _TestsLauncher()
@@ -78,6 +82,9 @@ def main():
         options.dest = os.path.join(options.logsdir, "rendered")
     if urlparse.urlparse(options.dest).scheme == "":
         options.dest = path2url(options.dest)
+    if options.no_color:
+        utils.desactivate_colors()
+
     tests_launcher.set_settings(options, args)
 
     if options.list_tests:
