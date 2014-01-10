@@ -481,6 +481,8 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
 {
   GstVaapiEncoderClass *const klass = GST_VAAPI_ENCODER_GET_CLASS (encoder);
   GstVaapiEncoderStatus status;
+  GstVaapiVideoPool *pool;
+  guint codedbuf_size;
 
   status = klass->reconfigure (encoder);
   if (status != GST_VAAPI_ENCODER_STATUS_SUCCESS)
@@ -489,16 +491,21 @@ gst_vaapi_encoder_reconfigure_internal (GstVaapiEncoder * encoder)
   if (!gst_vaapi_encoder_ensure_context (encoder))
     goto error_reset_context;
 
-  encoder->codedbuf_pool = gst_vaapi_coded_buffer_pool_new (encoder,
-      encoder->codedbuf_size);
-  if (!encoder->codedbuf_pool)
-    goto error_codedbuf_pool_allocation_failed;
-
-  gst_vaapi_video_pool_set_capacity (encoder->codedbuf_pool, 5);
+  codedbuf_size = encoder->codedbuf_pool ?
+      gst_vaapi_coded_buffer_pool_get_buffer_size (GST_VAAPI_CODED_BUFFER_POOL
+      (encoder)) : 0;
+  if (codedbuf_size != encoder->codedbuf_size) {
+    pool = gst_vaapi_coded_buffer_pool_new (encoder, encoder->codedbuf_size);
+    if (!pool)
+      goto error_alloc_codedbuf_pool;
+    gst_vaapi_video_pool_set_capacity (pool, 5);
+    gst_vaapi_video_pool_replace (&encoder->codedbuf_pool, pool);
+    gst_vaapi_video_pool_unref (pool);
+  }
   return GST_VAAPI_ENCODER_STATUS_SUCCESS;
 
   /* ERRORS */
-error_codedbuf_pool_allocation_failed:
+error_alloc_codedbuf_pool:
   {
     GST_ERROR ("failed to initialize coded buffer pool");
     return GST_VAAPI_ENCODER_STATUS_ERROR_ALLOCATION_FAILED;

@@ -111,3 +111,20 @@ gst_vaapi_coded_buffer_pool_new (GstVaapiEncoder * encoder, gsize buf_size)
       context, buf_size);
   return pool;
 }
+
+/**
+ * gst_vaapi_coded_buffer_pool_get_buffer_size:
+ * @pool: a #GstVaapiCodedBufferPool
+ *
+ * Determines the maximum size of each #GstVaapiCodedBuffer held in
+ * the @pool.
+ *
+ * Return value: size of a #GstVaapiCodedBuffer in @pool
+ */
+gsize
+gst_vaapi_coded_buffer_pool_get_buffer_size (GstVaapiCodedBufferPool * pool)
+{
+  g_return_val_if_fail (pool != NULL, 0);
+
+  return pool->buf_size;
+}

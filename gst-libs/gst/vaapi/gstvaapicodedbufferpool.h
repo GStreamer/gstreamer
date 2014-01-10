@@ -37,6 +37,9 @@ GstVaapiVideoPool *
 gst_vaapi_coded_buffer_pool_new (struct _GstVaapiEncoder * encoder,
     gsize buf_size);
 
+gsize
+gst_vaapi_coded_buffer_pool_get_buffer_size (GstVaapiCodedBufferPool * pool);
+
 G_END_DECLS
 
 #endif /* GST_VAAPI_CODED_BUFFER_POOL_H */
