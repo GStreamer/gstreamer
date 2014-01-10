@@ -522,6 +522,7 @@ open_failed:
 
 typedef struct
 {
+  GstFFMpegVidDec *ffmpegdec;
   GstVideoCodecFrame *frame;
   gboolean mapped;
   GstVideoFrame vframe;
@@ -529,12 +530,16 @@ typedef struct
 } GstFFMpegVidDecVideoFrame;
 
 static GstFFMpegVidDecVideoFrame *
-gst_ffmpegviddec_video_frame_new (GstVideoCodecFrame * frame)
+gst_ffmpegviddec_video_frame_new (GstFFMpegVidDec * ffmpegdec,
+    GstVideoCodecFrame * frame)
 {
   GstFFMpegVidDecVideoFrame *dframe;
 
   dframe = g_slice_new0 (GstFFMpegVidDecVideoFrame);
+  dframe->ffmpegdec = ffmpegdec;
   dframe->frame = frame;
+
+  GST_DEBUG_OBJECT (ffmpegdec, "new video frame %p", dframe);
 
   return dframe;
 }
@@ -543,11 +548,21 @@ static void
 gst_ffmpegviddec_video_frame_free (GstFFMpegVidDec * ffmpegdec,
     GstFFMpegVidDecVideoFrame * frame)
 {
+  GST_DEBUG_OBJECT (ffmpegdec, "free video frame %p", frame);
+
   if (frame->mapped)
     gst_video_frame_unmap (&frame->vframe);
   gst_video_decoder_release_frame (GST_VIDEO_DECODER (ffmpegdec), frame->frame);
   gst_buffer_replace (&frame->buffer, NULL);
   g_slice_free (GstFFMpegVidDecVideoFrame, frame);
+}
+
+static void
+dummy_free_buffer (void *opaque, uint8_t * data)
+{
+  GstFFMpegVidDecVideoFrame *frame = opaque;
+
+  gst_ffmpegviddec_video_frame_free (frame->ffmpegdec, frame);
 }
 
 /* called when ffmpeg wants us to allocate a buffer to write the decoded frame
@@ -588,7 +603,8 @@ gst_ffmpegviddec_get_buffer (AVCodecContext * context, AVFrame * picture)
     goto duplicate_frame;
 
   /* GstFFMpegVidDecVideoFrame receives the frame ref */
-  picture->opaque = dframe = gst_ffmpegviddec_video_frame_new (frame);
+  picture->opaque = dframe =
+      gst_ffmpegviddec_video_frame_new (ffmpegdec, frame);
 
   GST_DEBUG_OBJECT (ffmpegdec, "storing opaque %p", dframe);
 
@@ -692,10 +708,18 @@ invalid_frame:
 fallback:
   {
     int c;
+    gboolean first = TRUE;
     int ret = avcodec_default_get_buffer (context, picture);
 
-    for (c = 0; c < AV_NUM_DATA_POINTERS; c++)
+    for (c = 0; c < AV_NUM_DATA_POINTERS; c++) {
       ffmpegdec->stride[c] = picture->linesize[c];
+
+      if (picture->buf[c] == NULL && first) {
+        picture->buf[c] =
+            av_buffer_create (NULL, 0, dummy_free_buffer, dframe, 0);
+        first = FALSE;
+      }
+    }
 
     return ret;
   }
@@ -1667,8 +1691,8 @@ gst_ffmpegviddec_decide_allocation (GstVideoDecoder * decoder, GstQuery * query)
     avcodec_align_dimensions2 (ffmpegdec->context, &width, &height,
         linesize_align);
     edge =
-        ffmpegdec->context->
-        flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
+        ffmpegdec->
+        context->flags & CODEC_FLAG_EMU_EDGE ? 0 : avcodec_get_edge_width ();
     /* increase the size for the padding */
     width += edge << 1;
     height += edge << 1;
