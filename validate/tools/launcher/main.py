@@ -80,6 +80,8 @@ def main():
         options.xunit_file = os.path.join(options.logsdir, "xunit.xml")
     if options.dest is None:
         options.dest = os.path.join(options.logsdir, "rendered")
+    if not os.path.exists(options.dest):
+        os.makedirs(options.dest)
     if urlparse.urlparse(options.dest).scheme == "":
         options.dest = path2url(options.dest)
     if options.no_color:
