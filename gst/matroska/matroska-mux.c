@@ -2371,29 +2371,8 @@ gst_matroska_mux_track_header (GstMatroskaMux * mux,
       break;
     }
 
-      /* this is what we write for now and must be filled
-       * and remainder void'ed later on */
-#define SUBTITLE_DUMMY_SIZE   (1 + 1 + 14 + 1 + 2 + SUBTITLE_MAX_CODEC_PRIVATE)
-
     case GST_MATROSKA_TRACK_TYPE_SUBTITLE:{
-      gpointer buf;
-
-      /* If codec_id and codec data are already known, we can write
-         them now, as for audio/video */
-      if (context->codec_id && context->codec_priv)
-        break;
-
-      context->pos = ebml->pos;
-
-      /* CodecID is mandatory ... */
-      gst_ebml_write_ascii (ebml, GST_MATROSKA_ID_CODECID, "S_SUB_UNKNOWN");
-      /* reserve space */
-      buf = g_malloc0 (SUBTITLE_MAX_CODEC_PRIVATE);
-      gst_ebml_write_binary (ebml, GST_EBML_ID_VOID, buf,
-          SUBTITLE_MAX_CODEC_PRIVATE);
-      g_free (buf);
-      /* real data has to be written at finish */
-      return;
+      break;
     }
     default:
       /* doesn't need type-specific data */
@@ -3034,12 +3013,8 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
       collected = g_slist_next (collected)) {
     GstMatroskaPad *collect_pad;
     GstClockTime min_duration;  /* observed minimum duration */
-    GstMatroskaTrackContext *context;
-    gint voidleft = 0, fill = 0;
-    gpointer codec_id;
 
     collect_pad = (GstMatroskaPad *) collected->data;
-    context = collect_pad->track;
 
     GST_DEBUG_OBJECT (mux,
         "Pad %" GST_PTR_FORMAT " start ts %" GST_TIME_FORMAT
@@ -3061,35 +3036,6 @@ gst_matroska_mux_finish (GstMatroskaMux * mux)
     if (GST_CLOCK_TIME_IS_VALID (collect_pad->duration) &&
         duration < collect_pad->duration)
       duration = collect_pad->duration;
-
-    if (context->type != GST_MATROSKA_TRACK_TYPE_SUBTITLE || !context->pos)
-      continue;
-
-  again:
-    /* write subtitle type and possible private data */
-    gst_ebml_write_seek (ebml, context->pos);
-    /* complex way to write ascii to account for extra filling */
-    codec_id = g_malloc0 (strlen (context->codec_id) + 1 + fill);
-    strcpy (codec_id, context->codec_id);
-    gst_ebml_write_binary (ebml, GST_MATROSKA_ID_CODECID,
-        codec_id, strlen (context->codec_id) + 1 + fill);
-    g_free (codec_id);
-    if (context->codec_priv)
-      gst_ebml_write_binary (ebml, GST_MATROSKA_ID_CODECPRIVATE,
-          context->codec_priv, context->codec_priv_size);
-    voidleft = SUBTITLE_DUMMY_SIZE - (ebml->pos - context->pos);
-    /* void'ify; sigh, variable sized length field */
-    if (voidleft == 1) {
-      fill = 1;
-      goto again;
-    } else if (voidleft && voidleft <= 128)
-      gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, voidleft - 2);
-    else if (voidleft >= 130)
-      gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, voidleft - 3);
-    else if (voidleft == 129) {
-      gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 64);
-      gst_ebml_write_buffer_header (ebml, GST_EBML_ID_VOID, 63);
-    }
   }
 
   /* seek back (optional, but do anyway) */
