@@ -49,10 +49,20 @@ log
 /bindings/python/ges.c
 
 /m4
+
+/test-driver
+/tests/check/*.log
+/tests/check/*.trs
+/tests/check/*/*.log
+/tests/check/*/*.trs
+
+/tests/check/ges/group
+/tests/check/ges/material
+/tests/check/ges/mixers
 /tests/check/ges/timelineedition
 /tests/check/ges/timelinegroup
-/tests/check/ges/material
 /tests/check/ges/uriclip
+/tests/check/integration
 /tests/benchmarks/timeline
 /tests/examples/materials
 
